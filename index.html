@@ -1,0 +1,1666 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pulse — Your people, on repeat</title>
+
+  <!-- Tailwind (Play CDN) — layout utilities only; all color/shape/type is token-driven -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Pulse Design System type: Gabarito (display) · Figtree (UI/body) · IBM Plex Mono (numerals) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Lucide icons via CDN (the DS icon set). Icons are also embedded inline below as an
+       SVG-path fallback so a blocked CDN never yields empty glyphs on camera. -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- React + Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    // Force the CLASSIC JSX runtime (React.createElement via the global React).
+    Babel.registerPreset('react-classic', {
+      presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]],
+    });
+  </script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:      'var(--text-primary)',
+            'ink-2':  'var(--text-secondary)',
+            'ink-3':  'var(--text-tertiary)',
+            accent:   'var(--accent)',
+            paper:    'var(--bg-page)',
+            surface:  'var(--bg-surface)',
+            sunken:   'var(--bg-sunken)',
+            hair:     'var(--border-hairline)',
+          },
+          fontFamily: {
+            display: ['Gabarito', 'system-ui', 'sans-serif'],
+            sans:    ['Figtree', 'system-ui', 'sans-serif'],
+            mono:    ['IBM Plex Mono', 'ui-monospace', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ===== Pulse Design System — token layer (design.md D1), Daylight (default) ===== */
+    :root{
+      --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+      --ink-0:#1f1a17; --ink-1:#352d28; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+      --carnelian-100:#f8e6e3; --carnelian-200:#f0c5c0; --carnelian-300:#e08d84; --carnelian-400:#cf5347;
+      --carnelian-500:#b31b1b; --carnelian-600:#8a1414; --carnelian-700:#680f0f;
+      --moss-500:#3d8a5f; --amber-500:#b6862b; --amber-600:#8a641f; --rose-500:#a04f6a; --slate-500:#59657a;
+      /* semantic */
+      --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-raised:#fffefb; --bg-sunken:var(--paper-2);
+      --bg-blush:var(--carnelian-100); --bg-inverse:var(--ink-0); --bg-scrim:rgba(31,26,23,.44);
+      --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+      --text-inverse:var(--paper-0); --text-link:var(--carnelian-600);
+      --border-hairline:var(--paper-3); --border-strong:var(--ink-0); --border-quiet:rgba(31,26,23,.08);
+      --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+      --status-live:var(--moss-500); --status-forming:var(--amber-500); --status-full:var(--carnelian-500);
+      --unit-dorm:var(--rose-500); --unit-class:var(--slate-500); --unit-major:var(--amber-600);
+      --focus-ring:var(--carnelian-500);
+      /* type */
+      --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+      /* radii */
+      --radius-md:14px; --radius-lg:22px; --radius-xl:28px; --radius-2xl:34px; --radius-pill:999px;
+      /* shadows (warm) */
+      --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+      --shadow-raised:0 8px 26px -12px rgba(80,40,30,.2); --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+      --glow-accent:0 6px 18px -10px var(--carnelian-500);
+      /* motion */
+      --dur-1:120ms; --dur-2:180ms; --dur-3:260ms; --dur-4:420ms;
+      --ease-out:cubic-bezier(.2,.8,.2,1); --ease-settle:cubic-bezier(.16,1,.3,1); --ease-pop:cubic-bezier(.34,1.56,.64,1);
+    }
+    /* ===== Big Red Night ===== */
+    :root[data-theme="afterdark"]{
+      --bg-page:#181310; --bg-surface:#211a16; --bg-raised:#2a221d; --bg-sunken:#12100c; --bg-blush:#2c1815;
+      --text-primary:#f8f1e8; --text-secondary:#bcafa2; --text-tertiary:#8d8074;
+      --border-hairline:#342a24; --border-strong:#4e4139; --border-quiet:rgba(248,241,232,.1);
+      --accent:var(--carnelian-400); --accent-strong:var(--carnelian-300); --accent-quiet:rgba(207,83,71,.16); --accent-ink:#1a0d0b;
+      --focus-ring:var(--carnelian-300);
+      --shadow-card:0 1px 2px rgba(0,0,0,.4); --shadow-raised:0 8px 26px -12px rgba(0,0,0,.7); --shadow-pop:0 28px 60px -24px rgba(0,0,0,.8);
+    }
+
+    html, body { height: 100%; }
+    body{
+      margin:0; background:var(--bg-sunken);
+      font-family:var(--font-sans); color:var(--text-primary);
+      -webkit-font-smoothing:antialiased;
+      transition: background var(--dur-3) var(--ease-out);
+    }
+    input, select, textarea, button { font-family: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    :focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; }
+
+    /* ---- phone frame ---- */
+    .phone{
+      width:390px; max-width:100vw; height:800px; background:var(--bg-surface);
+      border:1px solid var(--border-hairline); border-radius:40px; overflow:hidden;
+      position:relative; display:flex; flex-direction:column; box-shadow:var(--shadow-pop);
+    }
+    .no-scrollbar::-webkit-scrollbar{ width:0; height:0; }
+    .no-scrollbar{ scrollbar-width:none; }
+
+    /* ---- typography helpers ---- */
+    .pls-display{ font-family:var(--font-display); letter-spacing:-.02em; }
+    .pls-mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+    .pls-kicker{ font-family:var(--font-sans); font-weight:600; text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; color:var(--text-tertiary); }
+
+    /* ---- buttons ---- */
+    .pls-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px;
+      padding:0 20px; border-radius:var(--radius-pill); font-family:var(--font-sans); font-weight:600; font-size:15px;
+      cursor:pointer; border:1px solid transparent; user-select:none;
+      transition:background var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+    .pls-btn:disabled{ opacity:.4; cursor:default; }
+    .pls-btn--block{ width:100%; }
+    .pls-btn--sm{ min-height:38px; font-size:14px; padding:0 16px; }
+    .pls-btn--primary{ background:var(--accent); color:var(--accent-ink); box-shadow:var(--glow-accent); }
+    .pls-btn--primary:not(:disabled):active{ background:var(--accent-strong); box-shadow:none; transform:translateY(1px); }
+    .pls-btn--secondary{ background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-strong); }
+    .pls-btn--secondary:not(:disabled):active{ background:var(--bg-sunken); transform:translateY(1px); }
+    .pls-btn--ghost{ background:transparent; color:var(--text-secondary); }
+    .pls-btn--ghost:not(:disabled):active{ background:var(--bg-sunken); }
+
+    .pls-iconbtn{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px;
+      border-radius:var(--radius-pill); background:transparent; color:var(--text-secondary); border:none; cursor:pointer;
+      position:relative; transition:background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out); }
+    .pls-iconbtn:active{ background:var(--bg-sunken); }
+
+    /* ---- surfaces ---- */
+    .pls-card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); }
+    .pls-card--outline{ border:1.5px solid var(--border-strong); box-shadow:none; }
+    .pls-card--sunken{ background:var(--bg-sunken); border:1px solid var(--border-hairline); box-shadow:none; }
+    .pls-blush{ background:var(--bg-blush); border:1px solid var(--border-quiet); border-radius:24px; }
+    .pls-banner{ background:var(--accent-quiet); border:1px solid var(--border-quiet); border-radius:12px; }
+
+    /* ---- badge / chip ---- */
+    .pls-badge{ display:inline-flex; align-items:center; gap:4px; text-transform:uppercase; letter-spacing:.06em;
+      font-weight:700; font-size:10.5px; line-height:1; padding:3px 7px; border-radius:5px; }
+    .pls-chip{ display:inline-flex; align-items:center; gap:5px; font-weight:600; font-size:12px; line-height:1;
+      padding:5px 10px; border-radius:var(--radius-pill); border:1px solid var(--border-hairline);
+      background:var(--bg-surface); color:var(--text-secondary); }
+    .pls-chip--accent{ background:var(--accent-quiet); border-color:transparent; color:var(--accent-strong); }
+    .pls-chip--static{ background:var(--bg-sunken); border-color:transparent; color:var(--text-tertiary); }
+
+    /* ---- inputs ---- */
+    .pls-input{ width:100%; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:12px;
+      padding:13px 14px; font-size:16px; color:var(--text-primary); outline:none;
+      transition:border-color var(--dur-1) var(--ease-out); }
+    .pls-input:focus{ border-color:var(--focus-ring); }
+    .pls-input::placeholder{ color:var(--text-tertiary); }
+    .pls-fieldwrap{ display:flex; align-items:center; gap:8px; background:var(--bg-surface);
+      border:1px solid var(--border-hairline); border-radius:12px; padding:11px 14px;
+      transition:border-color var(--dur-1) var(--ease-out); }
+    .pls-fieldwrap:focus-within{ border-color:var(--focus-ring); }
+
+    /* ---- avatar ---- */
+    .pls-avatar{ display:flex; align-items:center; justify-content:center; border-radius:var(--radius-pill);
+      font-family:var(--font-mono); font-weight:500; flex-shrink:0; user-select:none; line-height:1; }
+
+    /* ---- chrome ---- */
+    .pls-header{ position:relative; z-index:40; background:var(--bg-surface); border-bottom:1px solid var(--border-hairline);
+      display:flex; align-items:center; gap:6px; padding:0 12px; height:56px; flex-shrink:0; }
+    .pls-tabbar{ z-index:40; height:64px; background:var(--bg-surface); border-top:1px solid var(--border-hairline);
+      display:flex; align-items:stretch; flex-shrink:0; }
+    .pls-tab{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+      font-size:10.5px; font-weight:600; color:var(--text-tertiary); background:none; border:none; cursor:pointer; }
+    .pls-tab__glyph{ display:flex; align-items:center; justify-content:center; width:46px; height:28px;
+      border-radius:var(--radius-pill); position:relative; transition:background var(--dur-1) var(--ease-out); }
+    .pls-tab--active{ color:var(--accent-strong); }
+    .pls-tab--active .pls-tab__glyph{ background:var(--accent-quiet); }
+    .pls-fab{ position:absolute; right:18px; bottom:80px; width:56px; height:56px; border-radius:var(--radius-pill);
+      background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center;
+      border:none; cursor:pointer; box-shadow:var(--glow-accent), var(--shadow-raised); z-index:45;
+      transition:transform var(--dur-1) var(--ease-out); }
+    .pls-fab:active{ transform:translateY(1px) scale(.97); }
+
+    /* ---- sheet / scrim / toast ---- */
+    .pls-scrim{ position:absolute; inset:0; background:var(--bg-scrim); backdrop-filter:blur(2px);
+      -webkit-backdrop-filter:blur(2px); z-index:60; display:flex; align-items:flex-end; animation:scrim-in var(--dur-2) ease both; }
+    .pls-sheet{ width:100%; background:var(--bg-surface); border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl);
+      box-shadow:var(--shadow-pop); padding:8px 20px 24px; max-height:86%; overflow-y:auto;
+      animation:sheet-up var(--dur-3) var(--ease-settle) both; }
+    .pls-grab{ width:40px; height:5px; border-radius:999px; background:var(--border-hairline); margin:6px auto 14px; }
+    .pls-toast{ display:flex; align-items:center; gap:12px; background:var(--bg-inverse); color:var(--text-inverse);
+      border-radius:var(--radius-lg); padding:11px 14px; box-shadow:var(--shadow-pop); }
+
+    /* ---- live dot ---- */
+    .pls-livedot{ position:relative; width:9px; height:9px; flex-shrink:0; display:inline-block; }
+    .pls-livedot__core{ position:absolute; inset:0; border-radius:50%; background:var(--status-live); }
+    .pls-livedot__ring{ position:absolute; inset:0; border-radius:50%; background:var(--status-live);
+      animation:pulse-ring 1.8s var(--ease-out) infinite; }
+
+    /* ---- motion keyframes ---- */
+    @keyframes pulse-ring{ 0%{ transform:scale(1); opacity:.5; } 70%{ transform:scale(2.6); opacity:0; } 100%{ opacity:0; } }
+    @keyframes pulse-fold-in{ from{ opacity:0; transform:translateY(6px) scale(.92); } to{ opacity:1; transform:none; } }
+    @keyframes pulse-fill{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+    @keyframes sheet-up{ from{ transform:translateY(100%); } to{ transform:none; } }
+    @keyframes scrim-in{ from{ opacity:0; } to{ opacity:1; } }
+    @keyframes fade-in{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+    @keyframes rise{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+    @keyframes toast-in{ from{ opacity:0; transform:translateY(-14px); } to{ opacity:1; transform:none; } }
+    @keyframes pop{ from{ opacity:0; transform:scale(.9); } to{ opacity:1; transform:scale(1); } }
+    .fade-in{ animation:fade-in var(--dur-3) var(--ease-out) both; }
+    .rise{ animation:rise var(--dur-3) var(--ease-settle) both; }
+    .fold-in{ animation:pulse-fold-in var(--dur-3) var(--ease-pop) both; }
+    .toast-in{ animation:toast-in var(--dur-3) var(--ease-out) both; }
+    .pop{ animation:pop var(--dur-3) var(--ease-pop) both; }
+
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{ animation-duration:1ms !important; animation-iteration-count:1 !important; transition-duration:1ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root" style="min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 12px; gap:14px;"></div>
+
+  <script type="text/babel" data-presets="react-classic">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    /* ============================================================
+       ICONS — Lucide glyphs, embedded inline as an SVG-path map so the
+       demo never depends on a remote image on camera. All inherit
+       currentColor. (CDN <script> above is the belt-and-suspenders.)
+    ============================================================ */
+    const ICONS = {
+      'repeat': '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+      'radio': '<path d="M16.247 7.761a6 6 0 0 1 0 8.478"/><path d="M19.075 4.933a10 10 0 0 1 0 14.134"/><path d="M4.925 19.067a10 10 0 0 1 0-14.134"/><path d="M7.753 16.239a6 6 0 0 1 0-8.478"/><circle cx="12" cy="12" r="2"/>',
+      'circle-dot': '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/>',
+      'users': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>',
+      'clock': '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+      'calendar': '<path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/>',
+      'plus': '<path d="M5 12h14"/><path d="M12 5v14"/>',
+      'arrow-right': '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+      'chevron-left': '<path d="m15 18-6-6 6-6"/>',
+      'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+      'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+      'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+      'send': '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+      'circle-check-big': '<path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/>',
+      'mail': '<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/>',
+      'bell': '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+      'bell-dot': '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M11.68 2.009A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673c-.824-.85-1.678-1.731-2.21-3.348"/><circle cx="18" cy="5" r="3"/>',
+      'search': '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+      'zap': '<path d="M15.914 4a1.5 1.5 0 0 0-2.474-1.561l-9 9A1.5 1.5 0 0 0 5.5 14h4.002a.5.5 0 0 1 .471.666L8.086 20a1.5 1.5 0 0 0 2.475 1.56l9-9A1.5 1.5 0 0 0 18.5 10h-3.997a.5.5 0 0 1-.472-.667z"/>',
+      'house': '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+      'book-open': '<path d="M12 5v16"/><path d="M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/>',
+      'graduation-cap': '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+      'map-pin': '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+      'log-out': '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>',
+      'rotate-ccw': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+      'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+      'mic': '<path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/>',
+      'sun': '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+      'moon': '<path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/>',
+      'check': '<path d="M20 6 9 17l-5-5"/>',
+      'pencil': '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+      'quote': '<path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/>',
+      'circle': '<circle cx="12" cy="12" r="10"/>',
+      'thumbs-up': '<path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/><path d="M7 10v12"/>',
+      'thumbs-down': '<path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/><path d="M17 14V2"/>',
+      'minus': '<path d="M5 12h14"/>',
+      'flag': '<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/>',
+      'life-buoy': '<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/>',
+      'heart-handshake': '<path d="M19.414 14.414C21 12.828 22 11.5 22 9.5a5.5 5.5 0 0 0-9.591-3.676.6.6 0 0 1-.818.001A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.535 5.362a2 2 0 0 0 2.879.052 2.12 2.12 0 0 0-.004-3 2.124 2.124 0 1 0 3-3 2.124 2.124 0 0 0 3.004 0 2 2 0 0 0 0-2.828l-1.881-1.882a2.41 2.41 0 0 0-3.409 0l-1.71 1.71a2 2 0 0 1-2.828 0 2 2 0 0 1 0-2.828l2.823-2.762"/>',
+      'trending-up': '<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',
+      'activity': '<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
+      'message-square': '<path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>',
+      'flame': '<path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/>',
+      'shield': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+      'phone': '<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>',
+    };
+    function Icon({ name, size=20, stroke=2, className='', style }){
+      const inner = ICONS[name] || ICONS['circle'];
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round"
+          className={className} style={style} aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: inner }} />
+      );
+    }
+
+    /* ============================================================
+       SEED DATA  (in-memory only; §7)
+    ============================================================ */
+    const COURSES = [
+      { code: 'CS 2110',   name: 'Object-Oriented Data Structures' },
+      { code: 'CHEM 2070', name: 'General Chemistry I' },
+      { code: 'ECON 1110', name: 'Intro Microeconomics' },
+      { code: 'MATH 1920', name: 'Multivariable Calculus' },
+      { code: 'PSYCH 1101',name: 'Intro Psychology' },
+    ];
+
+    const USERS = {
+      sarah:  { id:'sarah',  name:'Sarah Chen',   dorm:'Donlon 2F', major:'CS' },
+      josh:   { id:'josh',   name:'Josh Park',    dorm:'Balch',     major:'CS' },
+      lydia:  { id:'lydia',  name:'Lydia Osei',   dorm:'Dickson',   major:'CS' },
+      priya:  { id:'priya',  name:'Priya Rao',    dorm:'Mews',      major:'CS' },
+      marcus: { id:'marcus', name:'Marcus Diaz',  dorm:'CKB',       major:'CS' },
+      ryan:   { id:'ryan',   name:'Ryan Cole',    dorm:'Donlon 2F', major:'CS' },
+      maya:   { id:'maya',   name:'Maya Idris',   dorm:'Donlon 2F', major:'CS' },
+    };
+
+    // Unit hue by kind (semantic only)
+    const UNIT_HUE = { dorm:'var(--unit-dorm)', class:'var(--unit-class)', major:'var(--unit-major)' };
+
+    // Assigned counselor — the human the safety route reaches (Stellic advising + wellbeing).
+    const COUNSELOR = { id:'dana', name:'Dana Okafor', role:'your Pulse counselor', unit:'Advising & Wellbeing', hours:'Walk-ins Tue + Thu · 2–4p' };
+
+    /* ============================================================
+       CAMPUS AT SCALE (§ "alive") — a deterministic mock student body.
+       Generated once from a fixed seed so the numbers are stable on
+       camera. Powers AGGREGATE signals only (counts, momentum) — never
+       a browsable feed or stranger profiles (guardrail preserved).
+    ============================================================ */
+    function mulberry32(seed){
+      let a = seed>>>0;
+      return function(){ a=(a+0x6D2B79F5)>>>0; let t=Math.imul(a^(a>>>15), 1|a); t=(t+Math.imul(t^(t>>>7), 61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; };
+    }
+    const CAMPUS_INTERESTS = [
+      { key:'cs2110',   label:'CS 2110',    cat:'study', icon:'book-open' },
+      { key:'chem2070', label:'CHEM 2070',  cat:'study', icon:'book-open' },
+      { key:'math1920', label:'MATH 1920',  cat:'study', icon:'book-open' },
+      { key:'econ1110', label:'ECON 1110',  cat:'study', icon:'book-open' },
+      { key:'psych1101',label:'PSYCH 1101', cat:'study', icon:'book-open' },
+      { key:'boulder',  label:'bouldering', cat:'move',  icon:'activity' },
+      { key:'run',      label:'morning run',cat:'move',  icon:'activity' },
+      { key:'dinner',   label:'dinner crew',cat:'dine',  icon:'users' },
+      { key:'boxing',   label:'boxing',     cat:'move',  icon:'activity' },
+    ];
+    const CAT_META = { study:{ label:'studying', icon:'book-open' }, move:{ label:'moving', icon:'activity' }, dine:{ label:'eating together', icon:'users' } };
+    function buildCampus(total){
+      const rnd = mulberry32(20260816);
+      const ic = {}; CAMPUS_INTERESTS.forEach(i=>ic[i.key]=0);
+      let inLoop=0, dropped=0;
+      for(let s=0;s<total;s++){
+        const k = 1 + Math.floor(rnd()*3);
+        for(let j=0;j<k;j++){ ic[CAMPUS_INTERESTS[Math.floor(rnd()*CAMPUS_INTERESTS.length)].key]++; }
+        if(rnd()<0.63) inLoop++;
+        if(rnd()<0.17) dropped++;
+      }
+      const catCount = { study:0, move:0, dine:0 };
+      CAMPUS_INTERESTS.forEach(i=> catCount[i.cat]+= ic[i.key]);
+      const byCourse = CAMPUS_INTERESTS.filter(i=>i.cat==='study')
+        .map(i=>({ code:i.label, count:ic[i.key] })).sort((a,b)=>b.count-a.count);
+      const byCategory = Object.keys(catCount).map(c=>({ cat:c, label:CAT_META[c].label, icon:CAT_META[c].icon, count:catCount[c] })).sort((a,b)=>b.count-a.count);
+      return {
+        total,
+        inLoop, inLoopPct: Math.round(inLoop/total*100),
+        loopsRunning: Math.round(inLoop/5),
+        intentsWaiting: Object.values(ic).reduce((a,b)=>a+b,0),
+        dropsTonight: Math.round(dropped/6),
+        floorPeers: 12,           // CS 2110 droppers on Donlon 2F (backs "11 others on your floor")
+        byCourse, byCategory,
+      };
+    }
+
+    const seedLoops = () => ([
+      {
+        id:'sunday-hw', title:'Sunday HW crew', target:'CS 2110',
+        unit:{ kind:'class', label:'cs 2110 · section' },
+        status:'active', rhythm:'Sun · 4:00p · Uris · weekly', nextLine:'Sun · 4:00p · Uris',
+        live:false, memberIds:['josh','lydia','priya','marcus'], cap:6,
+        startedWeek:3, streakWeeks:12, streakLeaderId:'lydia',
+        seniority:{ josh:3, lydia:3, priya:5, marcus:4 },
+      },
+      {
+        id:'prelim1', title:'Prelim 1 review', target:'CS 2110',
+        unit:{ kind:'class', label:'cs 2110 · section' },
+        status:'forming', drop:{ count:8, target:10 },
+        memberIds:['marcus','lydia'],
+      },
+      {
+        id:'chem-review', title:'CHEM 2070 review', target:'CHEM 2070',
+        unit:{ kind:'class', label:'chem 2070 · section' },
+        status:'forming', drop:{ count:6, target:10 },
+        memberIds:['priya'],
+      },
+    ]);
+
+    /* ============================================================
+       LAYER A PARSER (§8) — deterministic, never fails on stage
+    ============================================================ */
+    function parseIntent(raw){
+      const text = (raw||'').trim();
+      for (const c of COURSES) {
+        const [dept, num] = c.code.split(' ');
+        if (new RegExp('\\b'+dept+'\\s?'+num+'\\b','i').test(text)) return { type:'study', target:c.code, raw:text };
+      }
+      const m = text.match(/\b([A-Z]{2,5})\s?(\d{4})\b/);
+      if (m) return { type:'study', target:`${m[1]} ${m[2]}`, raw:text };
+      const bare = text.match(/\b(\d{4})\b/);
+      if (bare) { const c = COURSES.find(c => c.code.endsWith(bare[1])); if (c) return { type:'study', target:c.code, raw:text }; }
+      const t = text.toLowerCase();
+      const kw = [
+        { re:/\b(box|boxing)\b/,               target:'boxing',      type:'activity' },
+        { re:/\b(climb|boulder|bouldering)\b/, target:'bouldering',  type:'activity' },
+        { re:/\b(dinner|eat)\b/,               target:'dinner crew', type:'social' },
+        { re:/\b(run|running)\b/,              target:'running',     type:'activity' },
+      ];
+      for (const k of kw) if (k.re.test(t)) return { type:k.type, target:k.target, raw:text };
+      return { type:'unknown', target:null, raw:text };
+    }
+    function isSpinup(raw){
+      return /\b(set ?up|start|create|organi[sz]e|spin)\b/i.test(raw) && /\b(session|study|grind|group|crew|loop)\b/i.test(raw);
+    }
+    function buildDraft(parse, raw){
+      const hw = (raw.match(/\bhw\s?(\d+)\b/i) || [])[1];
+      return {
+        target: parse.target || 'CS 2110',
+        title:  hw ? `HW${hw} grind` : 'Study session',
+        day:'Thu', time:'7:00p', location:'Mann', repeat:true,
+      };
+    }
+
+    /* ============================================================
+       AVATARS — inline SVG, deterministic DS tint from name
+    ============================================================ */
+    const AV_HUES = ['var(--carnelian-500)','var(--rose-500)','var(--slate-500)','var(--moss-500)','var(--amber-600)','var(--carnelian-600)'];
+    function hashInt(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
+    function initials(name){ const p=name.trim().split(/\s+/); return ((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase(); }
+    function Avatar({ id, name, size=38, ring=true }){
+      const label = name || USERS[id]?.name || '?';
+      const hue = AV_HUES[hashInt(id||label) % AV_HUES.length];
+      return (
+        <div aria-label={label} className="pls-avatar"
+          style={{ width:size, height:size, fontSize:Math.round(size*0.34),
+                   background:`color-mix(in srgb, ${hue} 20%, var(--bg-surface))`, color:hue,
+                   boxShadow: ring ? '0 0 0 2px var(--bg-surface)' : 'none' }}>
+          {initials(label)}
+        </div>
+      );
+    }
+    function AvatarStack({ ids, size=30, max=5 }){
+      const shown = ids.slice(0, max);
+      const extra = ids.length - shown.length;
+      return (
+        <div className="flex items-center" style={{ paddingLeft:8 }}>
+          {shown.map((id,i)=>(
+            <div key={id} style={{ marginLeft:-8, zIndex:10-i }}><Avatar id={id} size={size} ring /></div>
+          ))}
+          {extra>0 && (
+            <div style={{ width:size, height:size, marginLeft:-8, background:'var(--bg-sunken)',
+                          color:'var(--text-tertiary)', boxShadow:'0 0 0 2px var(--bg-surface)' }}
+                 className="pls-avatar text-[11px] font-semibold">+{extra}</div>
+          )}
+        </div>
+      );
+    }
+
+    /* ============================================================
+       CORE PRIMITIVES
+    ============================================================ */
+    function Wordmark({ size=24 }){
+      return (
+        <span className="pls-display" style={{ fontWeight:800, fontSize:size, letterSpacing:'-.03em',
+          color:'var(--text-primary)', display:'inline-flex', alignItems:'baseline', lineHeight:1 }}>
+          Pulse
+          <span style={{ width:Math.max(5,size*0.17), height:Math.max(5,size*0.17), borderRadius:'50%',
+            background:'var(--accent)', display:'inline-block', marginLeft:2 }} />
+        </span>
+      );
+    }
+    function Button({ children, onClick, disabled, variant='primary', icon, iconRight, block, size, className='', style }){
+      const cls = ['pls-btn','pls-btn--'+variant, block?'pls-btn--block':'', size==='sm'?'pls-btn--sm':'', className].join(' ');
+      return (
+        <button className={cls} onClick={onClick} disabled={disabled} style={style}>
+          {icon && <Icon name={icon} size={18} />}{children}{iconRight && <Icon name={iconRight} size={18} />}
+        </button>
+      );
+    }
+    function IconButton({ name, onClick, size=20, label, badge, className='' }){
+      return (
+        <button aria-label={label} onClick={onClick} className={"pls-iconbtn "+className}>
+          <Icon name={name} size={size} />
+          {badge>0 && (
+            <span className="pls-mono" style={{ position:'absolute', top:6, right:6, minWidth:16, height:16, padding:'0 4px',
+              borderRadius:999, background:'var(--accent)', color:'var(--accent-ink)', fontSize:10, fontWeight:500,
+              display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 0 2px var(--bg-surface)' }}>{badge}</span>
+          )}
+        </button>
+      );
+    }
+    function Badge({ children, hue='var(--text-secondary)' }){
+      return <span className="pls-badge" style={{ color:hue, background:`color-mix(in srgb, ${hue} 14%, var(--bg-surface))` }}>{children}</span>;
+    }
+    function Chip({ children, variant='default', icon }){
+      const cls = 'pls-chip' + (variant!=='default' ? ' pls-chip--'+variant : '');
+      return <span className={cls}>{icon && <Icon name={icon} size={13} />}{children}</span>;
+    }
+    function LiveDot(){
+      return (
+        <span className="pls-livedot" aria-label="live">
+          <span className="pls-livedot__ring" /><span className="pls-livedot__core" />
+        </span>
+      );
+    }
+    function Card({ children, variant='default', className='', style, onClick }){
+      const cls = 'pls-card' + (variant==='outline'?' pls-card--outline':variant==='sunken'?' pls-card--sunken':'') + ' ' + className;
+      return <div className={cls} style={style} onClick={onClick}>{children}</div>;
+    }
+    function Banner({ icon, title, children, className='' }){
+      return (
+        <div className={"pls-banner p-3.5 flex gap-3 items-start rise "+className}>
+          {icon && <span style={{ color:'var(--accent-strong)', flexShrink:0 }}><Icon name={icon} size={18} /></span>}
+          <div className="min-w-0">
+            <p style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{title}</p>
+            {children && <p className="text-[13px] mt-0.5" style={{ color:'var(--text-secondary)' }}>{children}</p>}
+          </div>
+        </div>
+      );
+    }
+    function EmptyState({ icon='radio', title, children }){
+      return (
+        <div className="text-center px-6 py-8">
+          <div className="mx-auto mb-3 flex items-center justify-center pls-card--sunken pls-card"
+               style={{ width:52, height:52, borderRadius:'50%' }}>
+            <Icon name={icon} size={22} style={{ color:'var(--text-tertiary)' }} />
+          </div>
+          <p className="pls-display" style={{ fontWeight:700, fontSize:17, color:'var(--text-primary)' }}>{title}</p>
+          <p className="text-[13.5px] mt-1.5 leading-relaxed" style={{ color:'var(--text-secondary)' }}>{children}</p>
+        </div>
+      );
+    }
+
+    // Private feedback — like / neutral / dislike. Only the viewer ever sees it.
+    function FeedbackControl({ value, onChange, size=32 }){
+      const opts = [
+        { k:'like',    icon:'thumbs-up',   hue:'var(--status-live)' },
+        { k:'neutral', icon:'minus',       hue:'var(--text-tertiary)' },
+        { k:'dislike', icon:'thumbs-down', hue:'var(--unit-dorm)' },
+      ];
+      return (
+        <div className="flex items-center gap-1.5">
+          {opts.map(o=>{
+            const on = value===o.k;
+            return (
+              <button key={o.k} aria-label={o.k} aria-pressed={on} onClick={()=>onChange(on?null:o.k)}
+                style={{ width:size, height:size, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+                  border:'1px solid '+(on?o.hue:'var(--border-hairline)'),
+                  background: on?`color-mix(in srgb, ${o.hue} 16%, var(--bg-surface))`:'transparent',
+                  color: on?o.hue:'var(--text-tertiary)', cursor:'pointer', transition:'all var(--dur-1) var(--ease-out)' }}>
+                <Icon name={o.icon} size={Math.round(size*0.5)} />
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    /* ============================================================
+       DOMAIN PRIMITIVES
+    ============================================================ */
+    function RhythmLine({ text, icon='repeat' }){
+      return (
+        <div className="flex items-center gap-1.5 pls-mono" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
+          <Icon name={icon} size={14} style={{ color:'var(--text-tertiary)' }} />{text}
+        </div>
+      );
+    }
+    function UnitKicker({ unit }){
+      const hue = UNIT_HUE[unit.kind] || 'var(--text-tertiary)';
+      return (
+        <div className="pls-kicker flex items-center gap-1.5">
+          <span style={{ width:6, height:6, borderRadius:'50%', background:hue, display:'inline-block' }} />
+          <span style={{ color:hue }}>{unit.label}</span>
+        </div>
+      );
+    }
+    function DropMeter({ count, target }){
+      const full = count >= target;
+      const fill = full ? 'var(--status-full)' : 'var(--status-forming)';
+      return (
+        <div>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="pls-mono" style={{ fontSize:13, color: full ? 'var(--status-full)' : 'var(--text-primary)' }}>
+              {count}/{target} <span style={{ color:'var(--text-tertiary)' }}>intents</span>
+            </span>
+            <span className="text-[12px]" style={{ color:'var(--text-secondary)' }}>
+              {full ? 'the drop is firing' : `fires when ${target} want it`}
+            </span>
+          </div>
+          <div style={{ position:'relative', height:10, borderRadius:999, background:'var(--bg-sunken)', overflow:'hidden' }}>
+            <div style={{ width:(Math.min(count,target)/target*100)+'%', height:'100%', background:fill,
+              transformOrigin:'left', animation:'pulse-fill var(--dur-4) var(--ease-settle) both', borderRadius:999 }} />
+            <div style={{ position:'absolute', inset:0, display:'flex' }}>
+              {Array.from({ length:target }).map((_,i)=>(
+                <div key={i} style={{ flex:1, borderRight: i<target-1 ? '1px solid var(--bg-surface)' : 'none', opacity:.55 }} />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    function DigitBox({ v }){
+      return (
+        <span className="pls-mono" style={{ background:'var(--bg-surface)', border:'1px solid var(--border-quiet)',
+          borderRadius:8, padding:'6px 8px', fontSize:20, fontWeight:500, color:'var(--text-primary)', minWidth:30, textAlign:'center' }}>{v}</span>
+      );
+    }
+    function DropCountdown({ start=6*3600+42*60+9 }){
+      const [s, setS] = useState(start);
+      useEffect(()=>{ const t = setInterval(()=> setS(x => x>0 ? x-1 : 0), 1000); return ()=>clearInterval(t); }, []);
+      const hh = String(Math.floor(s/3600)).padStart(2,'0');
+      const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+      const ss = String(s%60).padStart(2,'0');
+      const Colon = () => <span className="pls-mono" style={{ color:'var(--accent)', fontSize:18, fontWeight:500 }}>:</span>;
+      return (
+        <div className="flex items-center gap-1.5">
+          <DigitBox v={hh} /><Colon /><DigitBox v={mm} /><Colon /><DigitBox v={ss} />
+        </div>
+      );
+    }
+
+    function LoopCard({ loop, variant='default', onOpen, showAction=true }){
+      const forming = loop.status === 'forming';
+      const n = loop.memberIds.length;
+      return (
+        <Card variant={variant} className="p-4 rise">
+          <button onClick={onOpen} className="w-full text-left" style={{ background:'none', border:'none', cursor:'pointer', display:'block', padding:0 }}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <UnitKicker unit={loop.unit} />
+                <h3 className="pls-display truncate" style={{ fontWeight:700, fontSize:19, marginTop:4, color:'var(--text-primary)' }}>{loop.title}</h3>
+              </div>
+              {showAction && <Icon name="chevron-right" size={18} style={{ color:'var(--text-tertiary)', marginTop:4 }} />}
+            </div>
+
+            {forming ? (
+              <div className="mt-3"><DropMeter count={loop.drop.count} target={loop.drop.target} /></div>
+            ) : (
+              <div className="mt-2 space-y-1.5">
+                <RhythmLine text={loop.rhythm} />
+                <div className="flex items-center gap-1.5" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
+                  {loop.live
+                    ? <><LiveDot /><span className="pls-mono">meeting now</span></>
+                    : <><Icon name="clock" size={13} style={{ color:'var(--text-tertiary)' }} /><span className="pls-mono">next · {loop.nextLine}</span></>}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mt-3">
+              <AvatarStack ids={loop.memberIds} />
+              <div className="text-right">
+                {forming
+                  ? <span className="pls-mono" style={{ fontSize:12, color:'var(--text-secondary)' }}>{loop.drop.count}/{loop.drop.target} in</span>
+                  : <>
+                      {loop.streakWeeks && (
+                        <div className="flex items-center justify-end gap-1 text-[12.5px]" style={{ color:'var(--text-primary)', fontWeight:600 }}>
+                          <Icon name="flame" size={13} style={{ color:'var(--status-forming)' }} />{loop.streakWeeks}-wk streak
+                        </div>
+                      )}
+                      <div className="pls-mono" style={{ fontSize:11.5, color:'var(--text-tertiary)' }}>{n} in{loop.startedWeek?` · since wk ${loop.startedWeek}`:''}</div>
+                    </>}
+              </div>
+            </div>
+          </button>
+        </Card>
+      );
+    }
+
+    function IntentCard({ raw, author, unit, sameCount, onSame }){
+      return (
+        <Card className="p-4 rise">
+          <div className="flex items-start gap-2">
+            <span style={{ color:'var(--accent)', marginTop:2, flexShrink:0 }}><Icon name="circle-dot" size={18} /></span>
+            <p className="pls-display" style={{ fontWeight:600, fontSize:17, lineHeight:1.35, color:'var(--text-primary)' }}>“{raw}”</p>
+          </div>
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Avatar id={author} size={26} />
+              <span className="text-[12.5px] truncate" style={{ color:'var(--text-secondary)' }}>{USERS[author]?.name.split(' ')[0]}</span>
+              <Chip variant="static">{unit}</Chip>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop:'1px solid var(--border-hairline)' }}>
+            <span className="text-[13px]" style={{ color:'var(--text-secondary)' }}>
+              <span className="pls-mono" style={{ color:'var(--text-primary)' }}>{sameCount}</span> want the same
+            </span>
+            {onSame && <Button variant="secondary" size="sm" onClick={onSame} icon="plus">Same</Button>}
+          </div>
+        </Card>
+      );
+    }
+
+    /* ============================================================
+       CHROME
+    ============================================================ */
+    function StatusBar(){
+      return (
+        <div className="flex items-center justify-between px-6 pt-3 pb-1" style={{ flexShrink:0 }}>
+          <span className="pls-mono" style={{ fontSize:12.5, color:'var(--text-primary)', fontWeight:500 }}>9:41</span>
+          <span className="flex items-center gap-1.5">
+            <span className="pls-mono" style={{ fontSize:11, color:'var(--text-secondary)' }}>5G</span>
+            <span style={{ width:20, height:11, borderRadius:3, border:'1.5px solid var(--text-secondary)', position:'relative', display:'inline-block' }}>
+              <span style={{ position:'absolute', inset:1.5, right:5, borderRadius:1, background:'var(--text-secondary)' }} />
+            </span>
+          </span>
+        </div>
+      );
+    }
+    function AppHeader({ left, title, kicker, right, onBack }){
+      return (
+        <div className="pls-header">
+          {onBack && <IconButton name="chevron-left" size={22} label="Back" onClick={onBack} className="-ml-1" />}
+          {left}
+          <div className="flex-1 min-w-0">
+            {kicker && <div className="pls-kicker">{kicker}</div>}
+            {title && <h1 className="pls-display truncate" style={{ fontWeight:700, fontSize:17, color:'var(--text-primary)' }}>{title}</h1>}
+          </div>
+          <div className="flex items-center">{right}</div>
+        </div>
+      );
+    }
+    function TabBar({ active='pulse', unread=0, onHome, onAlerts, onYou }){
+      const Tab = ({ id, icon, label, onClick }) => (
+        <button className={"pls-tab"+(active===id?' pls-tab--active':'')} onClick={onClick}>
+          <span className="pls-tab__glyph">
+            <Icon name={icon} size={20} stroke={active===id?2.4:2} />
+            {id==='alerts' && unread>0 && (
+              <span style={{ position:'absolute', top:2, right:8, width:7, height:7, borderRadius:'50%', background:'var(--accent)', boxShadow:'0 0 0 2px var(--bg-surface)' }} />
+            )}
+          </span>
+          {label}
+        </button>
+      );
+      return (
+        <div className="pls-tabbar">
+          <Tab id="pulse"  icon="radio"  label="Pulse"  onClick={onHome} />
+          <Tab id="alerts" icon="bell"   label="Alerts" onClick={onAlerts} />
+          <Tab id="you"    icon="circle" label="You"    onClick={onYou} />
+        </div>
+      );
+    }
+
+    /* ============================================================
+       SHEETS  (compose intent · spin-up draft)
+    ============================================================ */
+    function Sheet({ kicker, title, onClose, children }){
+      return (
+        <div className="pls-scrim" onClick={onClose}>
+          <div className="pls-sheet" onClick={e=>e.stopPropagation()}>
+            <div className="pls-grab" />
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                {kicker && <div className="pls-kicker mb-1">{kicker}</div>}
+                <h2 className="pls-display" style={{ fontWeight:700, fontSize:22, color:'var(--text-primary)', lineHeight:1.15 }}>{title}</h2>
+              </div>
+              <IconButton name="x" size={20} label="Close" onClick={onClose} className="-mr-2" />
+            </div>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    function ComposeSheet({ onClose, onSubmit }){
+      const [text, setText] = useState('');
+      return (
+        <Sheet kicker="Drop an intent" title="What are you trying to make happen?" onClose={onClose}>
+          <div className="pls-fieldwrap" style={{ alignItems:'flex-start', padding:'12px 14px' }}>
+            <span style={{ color:'var(--accent)', marginTop:2 }}><Icon name="circle-dot" size={18} /></span>
+            <textarea value={text} onChange={e=>setText(e.target.value)} rows={3} autoFocus
+              placeholder="e.g. lock in for cs 2110 before hw2"
+              style={{ flex:1, border:'none', outline:'none', resize:'none', background:'transparent', fontSize:16, lineHeight:1.5, color:'var(--text-primary)' }} />
+          </div>
+          <p className="text-[13px] mt-3 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+            Drop it and it waits on your floor until enough people want the same thing — then the drop fires and a loop crystallizes.
+          </p>
+          <div className="mt-5">
+            <Button block onClick={()=>onSubmit(text)} disabled={!text.trim()} icon="send">Drop it</Button>
+          </div>
+        </Sheet>
+      );
+    }
+
+    function SpinUpSheet({ draft, onClose, onSend }){
+      const [d, setD] = useState(draft);
+      const set = (k,v) => setD({ ...d, [k]:v });
+      const rhythm = `${d.day} · ${d.time} · ${d.location}${d.repeat?' · weekly':''}`;
+      const inputCls = "pls-input";
+      const preview = {
+        unit:{ kind:'class', label:`${d.target.toLowerCase()} · section` },
+        title:d.title, rhythm, nextLine:`${d.day} · ${d.time} · ${d.location}`,
+        status:'active', live:false, memberIds:['sarah','josh','lydia','ryan'], cap:6,
+      };
+      return (
+        <Sheet kicker="Spin up a loop" title="Here's your draft — send it or tweak it" onClose={onClose}>
+          {d.raw && (
+            <div className="flex items-center gap-1.5 mb-3 text-[12.5px]" style={{ color:'var(--text-tertiary)' }}>
+              <Icon name="quote" size={13} /><span className="truncate">from “{d.raw}”</span>
+            </div>
+          )}
+          <LoopCard loop={preview} variant="outline" showAction={false} onOpen={()=>{}} />
+          <div className="mt-4 space-y-3">
+            <label className="block">
+              <span className="pls-kicker">Title</span>
+              <input value={d.title} onChange={e=>set('title', e.target.value)} className={inputCls+" mt-1.5"} />
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block"><span className="pls-kicker">Day</span>
+                <input value={d.day} onChange={e=>set('day', e.target.value)} className={inputCls+" mt-1.5"} /></label>
+              <label className="block"><span className="pls-kicker">Time</span>
+                <input value={d.time} onChange={e=>set('time', e.target.value)} className={inputCls+" mt-1.5"} /></label>
+            </div>
+            <label className="block"><span className="pls-kicker">Where</span>
+              <input value={d.location} onChange={e=>set('location', e.target.value)} className={inputCls+" mt-1.5"} /></label>
+            <button onClick={()=>set('repeat', !d.repeat)} className="flex items-center gap-2.5" style={{ background:'none', border:'none', cursor:'pointer', padding:0 }}>
+              <span style={{ width:22, height:22, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
+                background: d.repeat?'var(--accent)':'transparent', border:'1.5px solid '+(d.repeat?'var(--accent)':'var(--border-strong)'),
+                color:'var(--accent-ink)', transition:'all var(--dur-1) var(--ease-out)' }}>
+                {d.repeat && <Icon name="check" size={14} />}
+              </span>
+              <span style={{ fontSize:15, fontWeight:500, color:'var(--text-primary)' }}>Keeps its rhythm weekly</span>
+            </button>
+          </div>
+          <div className="mt-6">
+            <Button block onClick={()=>onSend(d)} icon="send">Send it</Button>
+          </div>
+        </Sheet>
+      );
+    }
+
+    function SafetySheet({ subject, onClose, onSend }){
+      const [text, setText] = useState('');
+      const first = COUNSELOR.name.split(' ')[0];
+      return (
+        <Sheet kicker="Confidential" title="Report a safety concern" onClose={onClose}>
+          <div className="pls-banner p-3.5 flex gap-3 items-start" style={{ background:'var(--accent-quiet)' }}>
+            <span style={{ color:'var(--accent-strong)', flexShrink:0 }}><Icon name="shield" size={18} /></span>
+            <p className="text-[13.5px]" style={{ color:'var(--text-primary)', lineHeight:1.5 }}>
+              This goes <b>straight to {COUNSELOR.name}</b>, {COUNSELOR.role}. Not to the loop{subject?`, not to ${subject}`:''}. It stays confidential.
+            </p>
+          </div>
+          {subject && <p className="pls-kicker mt-4">About · {subject}</p>}
+          <div className="pls-fieldwrap mt-2" style={{ alignItems:'flex-start', padding:'12px 14px' }}>
+            <textarea value={text} onChange={e=>setText(e.target.value)} rows={4} autoFocus
+              placeholder="what happened? say as much or as little as you want."
+              style={{ flex:1, border:'none', outline:'none', resize:'none', background:'transparent', fontSize:16, lineHeight:1.5, color:'var(--text-primary)' }} />
+          </div>
+          <p className="text-[12.5px] mt-3 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+            If you're in immediate danger, call Cornell Police at <span className="pls-mono">607-255-1111</span>.
+          </p>
+          <div className="mt-5">
+            <Button block onClick={()=>onSend(text)} disabled={!text.trim()} icon="shield">Send to {first}</Button>
+          </div>
+        </Sheet>
+      );
+    }
+
+    function Toast({ toast, onTap, onClose }){
+      if(!toast) return null;
+      return (
+        <div className="absolute left-3 right-3 top-3 toast-in" style={{ zIndex:70 }}>
+          <div className="pls-toast">
+            {toast.userId
+              ? <Avatar id={toast.userId} size={34} ring={false} />
+              : <span style={{ color:'var(--accent)', flexShrink:0 }}><Icon name={toast.icon || 'circle-check-big'} size={20} /></span>}
+            <button onClick={onTap} className="flex-1 min-w-0 text-left" style={{ background:'none', border:'none', color:'inherit', cursor:'pointer', padding:0 }}>
+              <p style={{ fontWeight:600, fontSize:13.5 }}>{toast.title}</p>
+              {toast.body && <p className="truncate" style={{ fontSize:12.5, opacity:.72 }}>{toast.body}</p>}
+            </button>
+            <button onClick={onClose} aria-label="Dismiss" style={{ background:'none', border:'none', color:'inherit', opacity:.7, cursor:'pointer', padding:4 }}>
+              <Icon name="x" size={16} />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================================
+       ONBOARDING SCREENS
+    ============================================================ */
+    function Splash({ onStart, theme, onToggleTheme }){
+      return (
+        <div className="h-full flex flex-col items-center justify-center text-center px-8 fade-in" style={{ position:'relative' }}>
+          <div className="absolute top-3 right-3">
+            <IconButton name={theme==='afterdark'?'sun':'moon'} label="Toggle theme" onClick={onToggleTheme} />
+          </div>
+          <div className="pop" style={{ marginBottom:28 }}>
+            <span className="pls-livedot" style={{ width:16, height:16 }}>
+              <span className="pls-livedot__ring" style={{ background:'var(--accent)' }} />
+              <span className="pls-livedot__core" style={{ background:'var(--accent)' }} />
+            </span>
+          </div>
+          <Wordmark size={52} />
+          <p className="mt-4 mb-14" style={{ fontSize:18, color:'var(--text-secondary)' }}>Your people, on repeat.</p>
+          <div className="w-full">
+            <Button block onClick={onStart} iconRight="arrow-right">Get started</Button>
+          </div>
+          <p className="mt-4 text-[12.5px]" style={{ color:'var(--text-tertiary)' }}>Not a name to chase — a loop that keeps meeting.</p>
+        </div>
+      );
+    }
+
+    function EmailVerify({ onBack, onNext }){
+      const [email, setEmail] = useState('sarah.chen@cornell.edu');
+      const ok = /@cornell\.edu\s*$/i.test(email.trim());
+      return (
+        <div className="h-full flex flex-col fade-in">
+          <AppHeader title="Verify you're a Cornellian" onBack={onBack} />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-8">
+            <h2 className="pls-display" style={{ fontWeight:700, fontSize:24, lineHeight:1.2, color:'var(--text-primary)' }}>What's your Cornell email?</h2>
+            <div className="pls-fieldwrap mt-6">
+              <Icon name="mail" size={18} style={{ color:'var(--text-tertiary)' }} />
+              <input value={email} onChange={e=>setEmail(e.target.value)} autoFocus
+                style={{ flex:1, border:'none', outline:'none', background:'transparent', fontSize:16, color:'var(--text-primary)' }} placeholder="you@cornell.edu" />
+            </div>
+            <p className="text-[13.5px] mt-3 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+              Only used to confirm you're a Cornellian. <span style={{ color:'var(--text-primary)', fontWeight:500 }}>Nobody in your loops ever sees it.</span>
+            </p>
+            <div className="mt-8">
+              <Button block onClick={()=>onNext(email.trim())} disabled={!ok} icon="shield-check">Verify</Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Basics({ onBack, onNext }){
+      const [name, setName]   = useState('Sarah Chen');
+      const [year, setYear]   = useState('2029');
+      const [dorm, setDorm]   = useState('Donlon 2F');
+      const [major, setMajor] = useState('Computer Science');
+      const dorms = ['Donlon 2F','Balch','Dickson','Court-Kay-Bauer (CKB)','Mews','Toni Morrison','Ganędago','Jameson'];
+      const majors= ['Computer Science','Chemistry','Economics','Mathematics','Psychology','Undecided'];
+      const Select = ({ value, onChange, options }) => (
+        <div className="relative">
+          <select value={value} onChange={onChange} className="pls-input" style={{ appearance:'none', WebkitAppearance:'none' }}>
+            {options.map(o=><option key={o}>{o}</option>)}
+          </select>
+          <Icon name="chevron-down" size={18} style={{ position:'absolute', right:14, top:15, color:'var(--text-tertiary)', pointerEvents:'none' }} />
+        </div>
+      );
+      const field = (label, node) => (
+        <label className="block"><span className="pls-kicker">{label}</span><div className="mt-1.5">{node}</div></label>
+      );
+      return (
+        <div className="h-full flex flex-col fade-in">
+          <AppHeader title="The basics" onBack={onBack} />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-6">
+            <p className="mb-6 text-[14px]" style={{ color:'var(--text-secondary)' }}>That's the whole questionnaire — promise.</p>
+            <div className="space-y-4">
+              {field('Name', <input value={name} onChange={e=>setName(e.target.value)} className="pls-input" />)}
+              {field('Class year', <Select value={year} onChange={e=>setYear(e.target.value)} options={['2029','2028','2027','2026']} />)}
+              {field('Where you live', <Select value={dorm} onChange={e=>setDorm(e.target.value)} options={dorms} />)}
+              {field('Major', <Select value={major} onChange={e=>setMajor(e.target.value)} options={majors} />)}
+            </div>
+            <div className="mt-8">
+              <Button block onClick={()=>onNext({ name, year, dorm, major })} iconRight="arrow-right">Next</Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function FirstIntent({ onBack, onNext }){
+      const [text, setText] = useState('');
+      return (
+        <div className="h-full flex flex-col fade-in">
+          <AppHeader title="One last thing" onBack={onBack} />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-8">
+            <h2 className="pls-display" style={{ fontWeight:700, fontSize:24, lineHeight:1.25, color:'var(--text-primary)' }}>What are you trying to make happen this semester?</h2>
+            <p className="text-[13.5px] mt-2" style={{ color:'var(--text-secondary)' }}>Say it plainly. We'll fold you into a loop, not hand you a stranger.</p>
+            <div className="pls-fieldwrap mt-5" style={{ alignItems:'flex-start', padding:'14px' }}>
+              <span style={{ color:'var(--accent)', marginTop:2 }}><Icon name="circle-dot" size={18} /></span>
+              <textarea value={text} onChange={e=>setText(e.target.value)} rows={4} autoFocus
+                placeholder="e.g. lock in for cs 2110 · get into bouldering · find a dinner crew"
+                style={{ flex:1, border:'none', outline:'none', resize:'none', background:'transparent', fontSize:16, lineHeight:1.5, color:'var(--text-primary)' }} />
+            </div>
+            <div className="mt-6">
+              <Button block onClick={()=>onNext(text)} disabled={!text.trim()} iconRight="arrow-right">See my pulse</Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================================
+       CAMPUS-AT-SCALE surfaces — aggregate momentum, never a feed
+    ============================================================ */
+    function CampusStrip({ campus }){
+      const Item = ({ n, label }) => (
+        <div className="flex flex-col">
+          <span className="pls-mono" style={{ fontSize:17, fontWeight:500, color:'var(--text-primary)' }}>{n}</span>
+          <span className="text-[11px]" style={{ color:'var(--text-tertiary)' }}>{label}</span>
+        </div>
+      );
+      return (
+        <Card variant="sunken" className="p-3.5 mt-4">
+          <div className="flex items-center gap-1.5 pls-kicker mb-2"><Icon name="activity" size={12} style={{ color:'var(--accent)' }} />Cornell · live right now</div>
+          <div className="flex items-center justify-between">
+            <Item n={campus.total.toLocaleString()} label="on Pulse" />
+            <Item n={campus.loopsRunning.toLocaleString()} label="loops running" />
+            <Item n={campus.dropsTonight} label="drops tonight" />
+          </div>
+        </Card>
+      );
+    }
+    function TonightCard({ campus }){
+      return (
+        <Card className="p-4">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Icon name="zap" size={16} style={{ color:'var(--accent)' }} />
+            <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>Tonight across campus</h2>
+          </div>
+          <p className="text-[12.5px] mb-3" style={{ color:'var(--text-secondary)' }}>Intents collecting into loops right now — numbers, never names.</p>
+          <div className="space-y-2.5">
+            {campus.byCategory.map(c=>(
+              <div key={c.cat} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Icon name={c.icon} size={15} style={{ color:'var(--text-tertiary)' }} />
+                  <span className="text-[13.5px]" style={{ color:'var(--text-primary)' }}>{c.label}</span>
+                </div>
+                <span className="pls-mono" style={{ fontSize:13, color:'var(--text-secondary)' }}>{c.count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 pt-3" style={{ borderTop:'1px solid var(--border-hairline)' }}>
+            <p className="pls-kicker mb-2">top study drops forming</p>
+            <div className="flex flex-wrap gap-2">
+              {campus.byCourse.slice(0,4).map(c=>(
+                <Chip key={c.code} variant="static">{c.code} · {c.count.toLocaleString()}</Chip>
+              ))}
+            </div>
+          </div>
+        </Card>
+      );
+    }
+
+    /* ============================================================
+       HOME  ("Your Pulse")  +  SUGGESTIONS (S6)
+    ============================================================ */
+    function DropPanel(){
+      return (
+        <div className="pls-blush p-4 rise">
+          <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
+            <Icon name="zap" size={13} />Next drop · cs 2110 · section
+          </div>
+          <p className="pls-display mt-1.5" style={{ fontWeight:700, fontSize:18, color:'var(--text-primary)' }}>Prelim 1 review is 2 away</p>
+          <div className="my-3.5 flex items-center justify-between">
+            <div>
+              <div className="pls-kicker mb-1.5">fires in</div>
+              <DropCountdown />
+            </div>
+          </div>
+          <DropMeter count={8} target={10} />
+        </div>
+      );
+    }
+
+    function Home({ state, actions }){
+      const { user, loops, suggestions, nudge, unread, theme, campus } = state;
+      const myLoops = loops.filter(l => l.memberIds.includes('sarah'));
+      return (
+        <div className="h-full flex flex-col" style={{ position:'relative' }}>
+          <AppHeader
+            left={<Wordmark size={22} />}
+            right={<>
+              <IconButton name="search" size={20} label="Search" onClick={actions.noop} />
+              <IconButton name="bell" size={20} label="Alerts" badge={unread} onClick={actions.openNotifications} />
+              <IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />
+            </>}
+          />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 fade-in">
+            <div className="pt-4">
+              <p className="pls-kicker">Your pulse</p>
+              <h1 className="pls-display" style={{ fontWeight:800, fontSize:26, color:'var(--text-primary)' }}>{user.name.split(' ')[0]}'s loops</h1>
+            </div>
+
+            <CampusStrip campus={campus} />
+
+            {nudge && (
+              <div className="mt-4">
+                <button onClick={actions.tapNudge} className="w-full text-left pls-banner p-4 rise" style={{ cursor:'pointer' }}>
+                  <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
+                    <Icon name="zap" size={13} />{nudge.kicker}
+                  </div>
+                  <p className="mt-1.5" style={{ fontWeight:500, fontSize:15, color:'var(--text-primary)', lineHeight:1.4 }}>{nudge.body}</p>
+                  <div className="mt-2 flex items-center gap-1 text-[13.5px]" style={{ color:'var(--accent-strong)', fontWeight:600 }}>
+                    {nudge.cta}<Icon name="arrow-right" size={15} />
+                  </div>
+                </button>
+              </div>
+            )}
+
+            <div className="mt-5">
+              {myLoops.length === 0 ? (
+                <EmptyState icon="radio" title="Nothing forming on your floor yet.">
+                  Drop an intent and it waits here until enough people on Donlon 2F want the same thing.
+                </EmptyState>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>Your loops</h2>
+                    <span className="pls-mono text-[12px]" style={{ color:'var(--text-tertiary)' }}>{myLoops.length} running</span>
+                  </div>
+                  <div className="space-y-3">
+                    {myLoops.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="mt-6"><DropPanel /></div>
+
+            <div className="mt-4"><TonightCard campus={campus} /></div>
+
+            {suggestions && (
+              <div className="mt-6">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Icon name="radio" size={16} style={{ color:'var(--accent)' }} />
+                  <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>What your intent lands in</h2>
+                </div>
+                <p className="text-[12.5px] mb-3" style={{ color:'var(--text-secondary)' }}>Not a list of strangers — ways to get folded into a loop.</p>
+                <div className="mb-3">
+                  <IntentCard raw={suggestions.raw} author="sarah" unit="donlon 2f" sameCount={11} />
+                </div>
+                <div className="space-y-3">
+                  {suggestions.cards.map((c,i)=><SuggestionCard key={i} card={c} actions={actions} />)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button className="pls-fab" aria-label="Drop an intent" onClick={actions.openCompose}><Icon name="plus" size={24} /></button>
+
+          <TabBar active="pulse" unread={unread}
+            onHome={()=>{}} onAlerts={actions.openNotifications} onYou={actions.openYou} />
+        </div>
+      );
+    }
+
+    function SuggestionCard({ card, actions }){
+      if (card.kind === 'join') {
+        const l = card.loop;
+        return <LoopCard loop={l} onOpen={()=>actions.openLoop(l.id)} />;
+      }
+      if (card.kind === 'spinup') {
+        return (
+          <Card className="p-4 rise">
+            <div className="flex items-center gap-2 mb-1">
+              <Chip variant="accent" icon="plus">spin up</Chip>
+              <span className="pls-kicker" style={{ color:'var(--unit-class)' }}>{card.target.toLowerCase()} · section</span>
+            </div>
+            <h3 className="pls-display" style={{ fontWeight:700, fontSize:18, color:'var(--text-primary)' }}>Start a {card.target} loop</h3>
+            <p className="text-[13px] mt-1" style={{ color:'var(--text-secondary)' }}>{card.subtitle}</p>
+            <div className="mt-3"><Button variant="secondary" size="sm" onClick={()=>actions.startSpinup(card.target)} icon="plus">Spin one up</Button></div>
+          </Card>
+        );
+      }
+      // forming
+      const l = card.loop;
+      return (
+        <Card className="p-4 rise">
+          <UnitKicker unit={l.unit} />
+          <h3 className="pls-display" style={{ fontWeight:700, fontSize:18, marginTop:4, color:'var(--text-primary)' }}>{l.title}</h3>
+          <div className="mt-3"><DropMeter count={l.drop.count} target={l.drop.target} /></div>
+          <div className="mt-3"><Button variant="secondary" size="sm" onClick={()=>actions.wantThis(l.id)} icon="plus">I want this too</Button></div>
+        </Card>
+      );
+    }
+
+    /* ============================================================
+       LOOP DETAIL (S7)
+    ============================================================ */
+    function LoopDetail({ loop, onBack, actions, highlightId, banner, theme, feedback }){
+      const isMember = loop.memberIds.includes('sarah');
+      const forming = loop.status === 'forming';
+      const others = loop.memberIds.filter(id => id!=='sarah');
+      return (
+        <div className="h-full flex flex-col fade-in">
+          <AppHeader title={loop.title} onBack={onBack}
+            right={<IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />} />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-5 pb-8">
+            <UnitKicker unit={loop.unit} />
+            <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
+              {forming
+                ? <Badge hue="var(--status-forming)">forming</Badge>
+                : <Badge hue="var(--status-live)">running</Badge>}
+              {loop.streakWeeks && <Chip variant="static" icon="flame">{loop.streakWeeks}-wk streak</Chip>}
+              {loop.sameCrew && <Chip variant="static" icon="users">same faces</Chip>}
+            </div>
+
+            {banner && <div className="mb-4"><Banner icon="circle-check-big" title={banner.title}>{banner.body}</Banner></div>}
+
+            {loop.timeMarker && (
+              <div className="mb-3 flex items-center gap-1.5 text-[13px]" style={{ color:'var(--text-secondary)' }}>
+                <Icon name="calendar" size={14} style={{ color:'var(--text-tertiary)' }} />{loop.timeMarker}
+              </div>
+            )}
+
+            {forming ? (
+              <Card variant="sunken" className="p-4 mb-5"><DropMeter count={loop.drop.count} target={loop.drop.target} /></Card>
+            ) : (
+              <Card variant="sunken" className="p-4 mb-5">
+                <div className="pls-kicker mb-2">Rhythm</div>
+                <RhythmLine text={loop.rhythm} />
+                <div className="mt-2.5 flex items-center gap-1.5 pls-mono" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
+                  {loop.live ? <><LiveDot />meeting now</> : <><Icon name="clock" size={13} style={{ color:'var(--text-tertiary)' }} />next · {loop.nextLine}</>}
+                </div>
+                {loop.startedWeek && (
+                  <div className="mt-2.5 flex items-center gap-1.5 pls-mono" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
+                    <Icon name="flame" size={13} style={{ color:'var(--status-forming)' }} />same faces since wk {loop.startedWeek}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="pls-kicker">{loop.memberIds.length} in this loop</p>
+                {loop.streakLeaderId && (
+                  <span className="flex items-center gap-1.5 text-[12px]" style={{ color:'var(--text-secondary)' }}>
+                    <Icon name="flame" size={13} style={{ color:'var(--status-forming)' }} />{USERS[loop.streakLeaderId]?.name.split(' ')[0]} · longest streak
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-4">
+                {loop.memberIds.map(id => {
+                  const u = USERS[id];
+                  const isNew = id === highlightId;
+                  const wk = loop.seniority && loop.seniority[id];
+                  return (
+                    <div key={id} className={"flex flex-col items-center"+(isNew?' fold-in':'')} style={{ width:60 }}>
+                      <div style={{ position:'relative' }}>
+                        <Avatar id={id} size={48} />
+                        {id===loop.streakLeaderId && (
+                          <span title="longest streak" style={{ position:'absolute', top:-4, right:-4, background:'var(--bg-surface)', borderRadius:'50%', padding:3, color:'var(--status-forming)', boxShadow:'0 0 0 1px var(--border-hairline)' }}>
+                            <Icon name="flame" size={12} />
+                          </span>
+                        )}
+                        {isNew && (
+                          <span className="pls-badge" style={{ position:'absolute', bottom:-6, left:'50%', transform:'translateX(-50%)', background:'var(--accent)', color:'var(--accent-ink)' }}>new</span>
+                        )}
+                      </div>
+                      <span className="text-[12px] mt-2 truncate w-full text-center" style={{ color:'var(--text-secondary)' }}>
+                        {u?.name.split(' ')[0]}{id==='sarah'?' · you':''}
+                      </span>
+                      {wk && <span className="pls-mono" style={{ fontSize:10, color:'var(--text-tertiary)' }}>wk {wk}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {!isMember && !forming && <Button block onClick={()=>actions.foldIn(loop.id)} icon="users">Fold me in</Button>}
+              {isMember && (
+                <>
+                  <div className="pls-banner p-3.5 flex items-center gap-2" style={{ color:'var(--text-primary)', fontWeight:600, fontSize:14 }}>
+                    <span style={{ color:'var(--status-live)' }}><Icon name="circle-check-big" size={18} /></span>You're folded into this loop
+                  </div>
+                  <Button variant="ghost" block onClick={()=>actions.leaveLoop(loop.id)} icon="log-out">Leave loop</Button>
+                </>
+              )}
+              {forming && <Button variant="secondary" block onClick={()=>actions.wantThis(loop.id)} icon="plus">I want this too</Button>}
+            </div>
+
+            {isMember && !forming && (
+              <div className="mt-6">
+                <div className="pls-kicker mb-2 flex items-center gap-1.5"><Icon name="circle" size={10} />Private · only you see this</div>
+                <Card variant="sunken" className="p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13.5px]" style={{ color:'var(--text-primary)', fontWeight:500 }}>How's this loop for you?</span>
+                    <FeedbackControl value={feedback[loop.id]} onChange={v=>actions.setFeedbackFor(loop.id, v)} />
+                  </div>
+                  {others.length>0 && (
+                    <div className="mt-3 pt-3 space-y-2.5" style={{ borderTop:'1px solid var(--border-hairline)' }}>
+                      {others.map(id=>(
+                        <div key={id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Avatar id={id} size={28} />
+                            <span className="text-[13px] truncate" style={{ color:'var(--text-secondary)' }}>{USERS[id]?.name.split(' ')[0]}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <FeedbackControl value={feedback[loop.id+':'+id]} onChange={v=>actions.setFeedbackFor(loop.id+':'+id, v)} size={30} />
+                            <button aria-label={"Report a concern about "+USERS[id]?.name.split(' ')[0]} onClick={()=>actions.openSafety(USERS[id]?.name.split(' ')[0])}
+                              style={{ width:30, height:30, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid var(--border-hairline)', background:'transparent', color:'var(--text-tertiary)', cursor:'pointer' }}>
+                              <Icon name="flag" size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
+
+            <button onClick={()=>actions.openSafety(null)} className="w-full text-left mt-4 pls-banner p-4 flex items-start gap-3" style={{ cursor:'pointer' }}>
+              <span style={{ color:'var(--accent-strong)', flexShrink:0 }}><Icon name="shield" size={20} /></span>
+              <div className="min-w-0 flex-1">
+                <p style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>Report a safety concern</p>
+                <p className="text-[12.5px] mt-0.5" style={{ color:'var(--text-secondary)' }}>Goes straight to {COUNSELOR.name}, {COUNSELOR.role}. Confidential — never shown to the loop.</p>
+              </div>
+              <Icon name="chevron-right" size={18} style={{ color:'var(--text-tertiary)', marginTop:2 }} />
+            </button>
+
+            <p className="text-center text-[12.5px] mt-6 flex items-center justify-center gap-1.5" style={{ color:'var(--text-tertiary)' }}>
+              <Icon name="repeat" size={14} />Pulse keeps the rhythm and the next one.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================================
+       NOTIFICATIONS (S9 — fold-in lives here)
+    ============================================================ */
+    function Notifications({ items, onBack, actions }){
+      return (
+        <div className="h-full flex flex-col fade-in">
+          <AppHeader title="Alerts" onBack={onBack} />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-8 space-y-3">
+            {items.length===0 && (
+              <EmptyState icon="bell" title="Quiet for now.">
+                When a drop fires or someone folds into your loop, it lands here.
+              </EmptyState>
+            )}
+            {items.map(n=>(
+              <Card key={n.id} className={"p-4 rise"} style={ n.unread ? { borderColor:'var(--accent)' } : {} }>
+                {n.type==='foldin' ? (
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <Avatar id={n.userId} size={42} />
+                      <p className="text-[14.5px] leading-snug" style={{ color:'var(--text-primary)' }}>
+                        <span style={{ fontWeight:700 }}>{USERS[n.userId]?.name.split(' ')[0]}</span>
+                        <span style={{ color:'var(--text-secondary)' }}> ({USERS[n.userId]?.dorm} · {n.target})</span> folded into your <span style={{ fontWeight:600 }}>{n.loopTitle}</span>.
+                      </p>
+                    </div>
+                    <div className="mt-3">
+                      <Button variant="secondary" size="sm" onClick={()=>actions.openLoop(n.loopId, n.userId)} icon="users">Say hi</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[14.5px]" style={{ color:'var(--text-primary)' }}>{n.body}</p>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================================
+       YOU  — belonging signal + assigned counselor + safety (Stellic
+       advising & wellbeing tie-in) + private-notes recap + theme
+    ============================================================ */
+    function YouScreen({ state, actions }){
+      const { user, loops, campus, theme, feedbackCount, unread } = state;
+      const myLoops = loops.filter(l => l.memberIds.includes('sarah'));
+      const bestStreak = myLoops.reduce((m,l)=>Math.max(m, l.streakWeeks||0), 0);
+      const MiniStat = ({ n, label }) => (
+        <div className="flex flex-col">
+          <span className="pls-mono" style={{ fontSize:18, fontWeight:500, color:'var(--text-primary)' }}>{n}</span>
+          <span className="text-[11px]" style={{ color:'var(--text-tertiary)' }}>{label}</span>
+        </div>
+      );
+      return (
+        <div className="h-full flex flex-col fade-in" style={{ position:'relative' }}>
+          <AppHeader kicker="You" title={user.name}
+            right={<IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />} />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-24">
+            <div className="flex items-center gap-3">
+              <Avatar id="sarah" size={52} />
+              <div className="min-w-0">
+                <p className="text-[13px]" style={{ color:'var(--text-secondary)' }}>{user.dorm} · {user.major}</p>
+                <p className="pls-mono text-[12px]" style={{ color:'var(--text-tertiary)' }}>Class of {user.year}</p>
+              </div>
+            </div>
+
+            {/* belonging / advisement signal */}
+            <Card className="p-4 mt-5">
+              <div className="flex items-center gap-1.5 pls-kicker mb-2" style={{ color:'var(--accent-strong)' }}><Icon name="trending-up" size={13} />Belonging signal</div>
+              <p className="pls-display" style={{ fontWeight:700, fontSize:18, color:'var(--text-primary)' }}>You're in {myLoops.length} loop{myLoops.length===1?'':'s'} this semester.</p>
+              <p className="text-[13px] mt-1 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+                Students in at least one loop stay enrolled and see an advisor earlier. Pulse shares this with advising as one number — a sign to reach out — never your conversations.
+              </p>
+              <div className="flex items-center justify-between mt-3.5">
+                <MiniStat n={myLoops.length} label="your loops" />
+                <MiniStat n={bestStreak} label="best streak · wks" />
+                <MiniStat n={campus.inLoopPct+'%'} label="of campus in a loop" />
+              </div>
+            </Card>
+
+            {/* assigned counselor + safety */}
+            <Card className="p-4 mt-4">
+              <div className="flex items-center gap-3">
+                <div style={{ width:44, height:44, borderRadius:'50%', background:'var(--accent-quiet)', color:'var(--accent-strong)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <Icon name="heart-handshake" size={22} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>{COUNSELOR.name}</p>
+                  <p className="text-[12.5px]" style={{ color:'var(--text-secondary)' }}>{COUNSELOR.role} · {COUNSELOR.unit}</p>
+                </div>
+              </div>
+              <p className="pls-mono text-[12px] mt-2.5" style={{ color:'var(--text-tertiary)' }}>{COUNSELOR.hours}</p>
+              <div className="grid grid-cols-2 gap-2.5 mt-3">
+                <Button variant="secondary" size="sm" icon="message-square" onClick={actions.messageCounselor}>Message {COUNSELOR.name.split(' ')[0]}</Button>
+                <Button variant="secondary" size="sm" icon="shield" onClick={()=>actions.openSafety(null)}>Report a concern</Button>
+              </div>
+            </Card>
+
+            {/* private notes recap */}
+            <Card variant="sunken" className="p-4 mt-4">
+              <div className="pls-kicker mb-1.5 flex items-center gap-1.5"><Icon name="circle" size={10} />Private notes</div>
+              <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+                Your like / neutral / dislike on people and loops stays on this phone. {feedbackCount>0 ? `You've noted ${feedbackCount} so far — nobody is ranked or told.` : 'Nobody is ever ranked, scored, or told.'}
+              </p>
+            </Card>
+
+            {/* theme */}
+            <button onClick={actions.toggleTheme} className="w-full mt-4 pls-card p-4 flex items-center justify-between" style={{ cursor:'pointer' }}>
+              <span className="flex items-center gap-2" style={{ color:'var(--text-primary)', fontWeight:500, fontSize:14 }}>
+                <Icon name={theme==='afterdark'?'sun':'moon'} size={18} />{theme==='afterdark'?'Daylight':'Big Red Night'}
+              </span>
+              <span className="pls-kicker">theme</span>
+            </button>
+          </div>
+          <TabBar active="you" unread={unread}
+            onHome={actions.goHome} onAlerts={actions.openNotifications} onYou={()=>{}} />
+        </div>
+      );
+    }
+
+    /* ============================================================
+       APP  — state machine + all mutations
+    ============================================================ */
+    function App(){
+      const [screen, setScreen] = useState('splash');   // splash|email|basics|intent|home|loop|notifs|you
+      const [sheet, setSheet]   = useState(null);        // null|compose|spinup|safety
+      const [theme, setTheme]   = useState('daylight');  // daylight|afterdark
+      const [user, setUser]     = useState(null);
+      const [loops, setLoops]   = useState(seedLoops);
+      const [suggestions, setSuggestions] = useState(null);
+      const [activeLoopId, setActiveLoopId] = useState(null);
+      const [highlightId, setHighlightId]   = useState(null);
+      const [detailBanner, setDetailBanner] = useState(null);
+      const [draft, setDraft]   = useState(null);
+      const [nudge, setNudge]   = useState(null);
+      const [notifs, setNotifs] = useState([]);
+      const [toast, setToast]   = useState(null);
+      const [foldedIn, setFoldedIn] = useState(false);
+      const [feedback, setFeedback] = useState({});
+      const [safetySubject, setSafetySubject] = useState(null);
+      const campus = useMemo(()=> buildCampus(3128), []);
+
+      useEffect(()=>{
+        const root = document.documentElement;
+        if (theme==='afterdark') root.setAttribute('data-theme','afterdark');
+        else root.removeAttribute('data-theme');
+      }, [theme]);
+
+      const toastTimer = useRef(null);
+      const showToast = (t) => {
+        setToast(t); clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(()=>setToast(null), 7000);
+      };
+      const toggleTheme = () => setTheme(t => t==='afterdark' ? 'daylight' : 'afterdark');
+      const unread = notifs.filter(n=>n.unread).length;
+
+      /* ----- onboarding ----- */
+      const start   = () => setScreen('email');
+      const verify  = (email) => { setUser(u=>({ ...(u||{}), email })); setScreen('basics'); };
+      const basics  = (b) => { setUser({ id:'sarah', ...b }); setScreen('intent'); };
+      const firstIntent = (text) => { runIntent(text); setScreen('home'); };
+
+      /* ----- intent -> suggestions (S6) ----- */
+      const runIntent = (raw) => {
+        const parse = parseIntent(raw);
+        if (isSpinup(raw)) { startSpinupFromText(raw, parse); return; }
+        const cards = [];
+        const activeJoin = loops.find(l => l.target===parse.target && l.status==='active');
+        if (activeJoin) cards.push({ kind:'join', loop:activeJoin });
+        if (parse.type==='study' && parse.target) cards.push({ kind:'spinup', target:parse.target, subtitle:'11 others on your floor dropped this' });
+        const forming = loops.find(l => l.target===parse.target && l.status==='forming');
+        if (forming) cards.push({ kind:'forming', loop:forming });
+        if (cards.length===0) cards.push({ kind:'spinup', target: parse.target || raw.trim(), subtitle:'Be the one who starts it — Pulse fills the seats.' });
+        setSuggestions({ raw: raw.trim().toLowerCase(), parse, cards });
+      };
+      const openCompose = () => setSheet('compose');
+      const submitCompose = (raw) => { setSheet(null); runIntent(raw); if(screen!=='home') setScreen('home'); };
+      const noop = () => {};
+
+      /* ----- fold in (join a running loop) ----- */
+      const foldIn = (loopId) => {
+        setLoops(ls => ls.map(l => l.id===loopId && !l.memberIds.includes('sarah')
+          ? { ...l, memberIds:[...l.memberIds, 'sarah'] } : l));
+        const l = loops.find(x=>x.id===loopId);
+        setSuggestions(null);
+        showToast({ title:`Folded in — ${l?.title}`, body:`Same faces, every week. The crew already knows the rhythm.` });
+        openLoop(loopId);
+        if (loopId==='sunday-hw' && !foldedIn) armFoldIn();
+      };
+      const leaveLoop = (loopId) => {
+        setLoops(ls => ls.map(l => l.id===loopId ? { ...l, memberIds:l.memberIds.filter(id=>id!=='sarah') } : l));
+        showToast({ title:'Left the loop.', body:'The rhythm holds without you. Nobody sees a thing.' });
+        setScreen('home');
+      };
+      const wantThis = (loopId) => {
+        let fired = false;
+        setLoops(ls => ls.map(l => {
+          if (l.id!==loopId || l.status!=='forming') return l;
+          const count = Math.min(l.drop.target, l.drop.count + 1);
+          if (count >= l.drop.target) fired = true;
+          return { ...l, drop:{ ...l.drop, count } };
+        }));
+        const l = loops.find(x=>x.id===loopId);
+        const next = Math.min(l.drop.target, l.drop.count + 1);
+        if (next >= l.drop.target) showToast({ icon:'zap', title:'The drop fired.', body:`${l.title} just crystallized into a loop.` });
+        else showToast({ icon:'circle-dot', title:'Dropped.', body:`${next}/${l.drop.target} in — ${l.drop.target-next} more and this drop fires.` });
+      };
+
+      /* ----- open a loop ----- */
+      const openLoop = (loopId, highlight=null) => {
+        setActiveLoopId(loopId); setHighlightId(highlight);
+        setDetailBanner(highlight==='maya' ? { title:'Folded in. Maya knows the rhythm now.', body:'She lives on Donlon 2F and takes CS 2110 — seated straight into a loop that already meets.' } : null);
+        setScreen('loop');
+        setNotifs(ns => ns.map(n => ({ ...n, unread:false })));
+      };
+      const openNotifications = () => setScreen('notifs');
+      const openYou = () => setScreen('you');
+      const goHome = () => setScreen('home');
+
+      /* ----- private feedback (like/neutral/dislike; only you see it) ----- */
+      const setFeedbackFor = (id, v) => setFeedback(f => { const n={...f}; if(v==null) delete n[id]; else n[id]=v; return n; });
+
+      /* ----- safety report → assigned counselor (confidential) ----- */
+      const openSafety = (subject) => { setSafetySubject(subject); setSheet('safety'); };
+      const sendSafety = () => {
+        const s = safetySubject; setSheet(null); setSafetySubject(null);
+        showToast({ icon:'shield', title:`Sent privately to ${COUNSELOR.name}.`,
+          body: s ? `Your concern about ${s} is confidential — never shown to the loop. She'll reach out.` : `It's confidential — never shown to the loop. She'll reach out.` });
+      };
+      const messageCounselor = () => showToast({ icon:'message-square', title:`Message sent to ${COUNSELOR.name}.`, body:`${COUNSELOR.hours}. She'll reply here.` });
+
+      /* ----- spin-up (S8) ----- */
+      const startSpinup = (target) => { setDraft({ ...buildDraft({ target }, ''), raw:`set up a study loop for ${target}`.toLowerCase(), target }); setSheet('spinup'); };
+      const startSpinupFromText = (raw, parse) => { setDraft({ ...buildDraft(parse, raw), raw:raw.toLowerCase() }); setSheet('spinup'); };
+      const sendDraft = (d) => {
+        const id = 'spun-' + d.title.replace(/\s+/g,'-').toLowerCase();
+        const newLoop = {
+          id, title:d.title, target:d.target, unit:{ kind:'class', label:`${d.target.toLowerCase()} · section` },
+          status:'active', rhythm:`${d.day} · ${d.time} · ${d.location}${d.repeat?' · weekly':''}`,
+          nextLine:`${d.day} · ${d.time} · ${d.location}`, live:true,
+          memberIds:['sarah','josh','lydia','ryan'], cap:6, spun:true,
+          startedWeek:3, streakWeeks:1, streakLeaderId:'sarah',
+          seniority:{ sarah:3, josh:3, lydia:3, ryan:3 },
+        };
+        setLoops(ls => [newLoop, ...ls]);
+        setSheet(null); setSuggestions(null);
+        showToast({ title:'Sent. 3 classmates already folded in.', body:'Pulse holds the time, the place, and the next one.' });
+        openLoop(id);
+        armRecurrence(newLoop);
+      };
+
+      /* ----- recurrence nudge (the payoff, §5.5) ----- */
+      const armRecurrence = (baseLoop) => {
+        setNudge({
+          kicker:'Two weeks later',
+          body:`hw3 is due thursday. Pulse drafted the next ${baseLoop.target} session — same faces?`,
+          cta:'Bring the crew back', base:baseLoop,
+        });
+      };
+      const tapNudge = () => {
+        if (!nudge) return;
+        const base = nudge.base;
+        const recurId = base.id + '-hw3';
+        let existing = loops.find(l=>l.id===recurId);
+        if (!existing) {
+          existing = { ...base, id:recurId, title:`${base.target} · HW3 grind`, live:false,
+            streakWeeks:(base.streakWeeks||1)+2,
+            timeMarker:'Started Week 3 on a pretext · same faces since', sameCrew:true };
+          setLoops(ls => [existing, ...ls.filter(l=>l.id!==base.id)]);
+        }
+        setNudge(null);
+        openLoop(recurId);
+      };
+
+      /* ----- fold-in (Maya, S9) ----- */
+      const armFoldIn = () => {
+        setFoldedIn(true);
+        setTimeout(() => {
+          setLoops(ls => ls.map(l => l.id==='sunday-hw' && !l.memberIds.includes('maya')
+            ? { ...l, memberIds:[...l.memberIds, 'maya'] } : l));
+          setNotifs(ns => [{ id:'foldin-maya', type:'foldin', userId:'maya', target:'CS 2110',
+            loopId:'sunday-hw', loopTitle:'Sunday HW crew', unread:true }, ...ns]);
+          showToast({ userId:'maya', title:'Maya folded into your Sunday HW crew',
+            body:'Donlon 2F · CS 2110 — she knows the rhythm now',
+            open:{ loopId:'sunday-hw', highlight:'maya' } });
+        }, 2600);
+      };
+
+      const actions = {
+        openCompose, noop, foldIn, leaveLoop, wantThis, openLoop, openNotifications,
+        startSpinup, tapNudge, toggleTheme, openYou, goHome,
+        setFeedbackFor, openSafety, messageCounselor,
+      };
+
+      const activeLoop = loops.find(l => l.id===activeLoopId);
+
+      const reset = () => {
+        clearTimeout(toastTimer.current);
+        setScreen('splash'); setSheet(null); setUser(null); setLoops(seedLoops());
+        setSuggestions(null); setActiveLoopId(null); setHighlightId(null); setDetailBanner(null);
+        setDraft(null); setNudge(null); setNotifs([]); setToast(null); setFoldedIn(false);
+        setSheet(null); setFeedback({}); setSafetySubject(null);
+      };
+
+      return (
+        <>
+          <div className="phone">
+            <StatusBar />
+            <div style={{ flex:1, position:'relative', overflow:'hidden' }}>
+              <Toast toast={toast}
+                onTap={()=>{ if(toast?.open){ openLoop(toast.open.loopId, toast.open.highlight); } else { openNotifications(); } setToast(null); }}
+                onClose={()=>setToast(null)} />
+
+              {screen==='splash' && <Splash onStart={start} theme={theme} onToggleTheme={toggleTheme} />}
+              {screen==='email'  && <EmailVerify onBack={()=>setScreen('splash')} onNext={verify} />}
+              {screen==='basics' && <Basics onBack={()=>setScreen('email')} onNext={basics} />}
+              {screen==='intent' && <FirstIntent onBack={()=>setScreen('basics')} onNext={firstIntent} />}
+              {screen==='home'   && user && (
+                <Home state={{ user, loops, suggestions, nudge, unread, theme, campus }} actions={actions} />
+              )}
+              {screen==='loop'   && activeLoop && (
+                <LoopDetail loop={activeLoop} highlightId={highlightId} banner={detailBanner} theme={theme} feedback={feedback}
+                  onBack={()=>setScreen('home')} actions={actions} />
+              )}
+              {screen==='you'    && user && (
+                <YouScreen state={{ user, loops, campus, theme, unread, feedbackCount: Object.keys(feedback).length }} actions={actions} />
+              )}
+              {screen==='notifs' && (
+                <Notifications items={notifs} onBack={()=>setScreen('home')} actions={actions} />
+              )}
+
+              {sheet==='compose' && <ComposeSheet onClose={()=>setSheet(null)} onSubmit={submitCompose} />}
+              {sheet==='spinup' && draft && <SpinUpSheet draft={draft} onClose={()=>setSheet(null)} onSend={sendDraft} />}
+              {sheet==='safety' && <SafetySheet subject={safetySubject} onClose={()=>{ setSheet(null); setSafetySubject(null); }} onSend={sendSafety} />}
+            </div>
+          </div>
+
+          {/* out-of-frame helper for re-recording — not part of the app UI */}
+          <button onClick={reset} className="flex items-center gap-1.5"
+            style={{ background:'none', border:'none', cursor:'pointer', fontSize:12, color:'var(--text-tertiary)' }}>
+            <Icon name="rotate-ccw" size={13} />restart demo
+          </button>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
