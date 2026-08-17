@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Home feed — 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:
+      radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent),
+      var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased;
+    padding:40px 24px 64px;
+  }
+  .wrap{ max-width:1280px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:34px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; color:var(--ink-0); }
+  .gallery-head p{ max-width:60ch; margin:0 auto; color:var(--text-secondary); font-size:15px; }
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:376px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+
+  .phone{
+    width:376px; height:756px; background:var(--bg-surface);
+    border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column;
+    box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05);
+  }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; }
+  .scroll::-webkit-scrollbar{ width:0; } .scroll{ scrollbar-width:none; }
+  .pad{ padding:6px 20px 90px; }
+
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .hicon{ width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); }
+
+  /* live dot */
+  .live{ position:relative; width:8px; height:8px; border-radius:50%; background:var(--status-live); display:inline-block; }
+  .live::after{ content:''; position:absolute; inset:0; border-radius:50%; background:var(--status-live); animation:ping 1.8s var(--ease-out) infinite; }
+  @keyframes ping{ 0%{ transform:scale(1); opacity:.5; } 70%{ transform:scale(2.8); opacity:0; } 100%{ opacity:0; } }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  /* chips */
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:4px 0 12px; scrollbar-width:none; }
+  .chips::-webkit-scrollbar{ height:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface); font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; transition:all .16s var(--ease-out); }
+  .chip .dot{ width:7px; height:7px; border-radius:50%; }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip.acc[data-on="1"]{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
+  /* generic card */
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:20px; padding:15px 16px; }
+  .kick{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px; }
+  .kick .d{ width:6px; height:6px; border-radius:50%; }
+  .title{ font:700 17px/1.2 var(--font-display); letter-spacing:-.01em; margin:6px 0 0; }
+  .sub{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .meter{ height:7px; border-radius:999px; background:var(--bg-sunken); overflow:hidden; margin-top:11px; }
+  .meter > i{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .7s var(--ease-settle); }
+  .meterline{ display:flex; justify-content:space-between; align-items:baseline; margin-top:9px; }
+  .meterline .n{ font:500 12.5px/1 var(--font-mono); color:var(--text-primary); }
+  .meterline .r{ font-size:11px; color:var(--text-tertiary); }
+  .hot{ display:inline-flex; align-items:center; gap:4px; font:700 10px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-quiet); padding:4px 8px; border-radius:999px; }
+  .btn{ margin-top:12px; width:100%; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:12px; padding:9px; font-size:13.5px; font-weight:700; color:var(--text-primary); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
+  .sechead{ display:flex; align-items:center; gap:8px; margin:20px 2px 11px; }
+  .sechead h3{ font:700 15px/1 var(--font-display); margin:0; }
+  .sechead .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+
+  /* entrance */
+  @keyframes slidein{ from{ opacity:0; transform:translateY(-10px) scale(.985); } to{ opacity:1; transform:none; } }
+  .in{ animation:slidein .5s var(--ease-settle) both; }
+  @keyframes flash{ 0%{ background:var(--accent-quiet); } 100%{ background:var(--bg-surface); } }
+  .flash{ animation:flash 1.3s var(--ease-out) both; }
+
+  /* lanes (B) */
+  .lane{ margin-top:6px; }
+  .lanerow{ display:flex; gap:12px; overflow-x:auto; padding:2px 20px 8px; margin:0 -20px; scrollbar-width:none; }
+  .lanerow::-webkit-scrollbar{ height:0; }
+  .tile{ flex:0 0 168px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:13px; position:relative; }
+  .tile .t{ font:700 14px/1.18 var(--font-display); margin:8px 0 0; min-height:34px; }
+  .tile .s{ font-size:11px; color:var(--text-secondary); margin-top:3px; }
+  .newpill{ position:absolute; top:11px; right:11px; font:700 9px/1 var(--font-mono); letter-spacing:.08em; color:var(--accent-ink); background:var(--accent); padding:3px 6px; border-radius:999px; }
+
+  /* pulse (C) */
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; }
+  .seg button{ flex:1; border:0; background:transparent; border-radius:9px; padding:8px 4px; font-size:12px; font-weight:600; color:var(--text-secondary); cursor:pointer; transition:all .18s var(--ease-out); }
+  .seg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+  .spark{ display:flex; align-items:flex-end; gap:3px; height:34px; }
+  .spark i{ flex:1; background:var(--accent-quiet); border-radius:3px 3px 0 0; transition:height .6s var(--ease-settle); }
+  .spark i.on{ background:var(--accent); }
+  .band{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary); margin:18px 2px 9px; }
+  .prow{ display:flex; align-items:center; gap:12px; padding:11px 2px; border-top:1px solid var(--border-hairline); }
+  .prow:first-of-type{ border-top:0; }
+  .mbar{ width:38px; height:38px; border-radius:11px; background:var(--bg-sunken); position:relative; overflow:hidden; flex-shrink:0; }
+  .mbar > i{ position:absolute; left:0; right:0; bottom:0; background:var(--accent); transition:height .7s var(--ease-settle); }
+  .mbar > b{ position:absolute; inset:0; display:grid; place-items:center; font:500 11px/1 var(--font-mono); color:var(--text-primary); }
+  .prow .pm{ flex:1; min-width:0; }
+  .prow .pt{ font:600 14px/1.2 var(--font-sans); display:flex; align-items:center; gap:7px; }
+  .prow .pt .d{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .prow .ps{ font-size:11.5px; color:var(--text-tertiary); margin-top:2px; }
+  .prow .go{ color:var(--text-tertiary); font-size:18px; }
+
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:62px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.6 var(--font-sans); color:var(--text-tertiary); }
+  .tabbar div.on{ color:var(--accent); }
+  .tabbar div .g{ font-size:17px; display:block; }
+
+  .note{ text-align:center; margin-top:30px; color:var(--text-tertiary); font-size:12.5px; }
+  @media (prefers-reduced-motion: reduce){ .in,.flash{ animation:none !important; } .live::after{ animation:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · Home feed</div>
+    <h1>Three ways to make Home feel alive</h1>
+    <p>Same live data, three layouts. Each is interactive: tap the filters, watch crews form and meters fill. Pick the direction that feels right and I'll build it into the real app.</p>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <span class="tag"><b>A</b> Live Wire</span>
+        <h2>A real-time stream</h2>
+        <p>Crews slide in as they form, meters tick up live. One momentum-ranked feed, filterable by interest. Feels like the campus breathing.</p>
+      </div>
+      <div class="phone" id="phoneA"></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <span class="tag"><b>B</b> Discovery Lanes</span>
+        <h2>A browsable board</h2>
+        <p>Horizontal lanes per interest — Filling fast, Your classes, Fitness, Food, Music. Scan by category, jump into any tile. App-store energy.</p>
+      </div>
+      <div class="phone" id="phoneB"></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <span class="tag"><b>C</b> Campus Pulse</span>
+        <h2>A proximity radar</h2>
+        <p>My floor → Donlon → North → Campus. A live activity strip up top, then a dense list that re-ranks by momentum. Scan by distance.</p>
+      </div>
+      <div class="phone" id="phoneC"></div>
+    </div>
+  </div>
+
+  <p class="note">Interactive mock · not wired to real data · carnelian design system from the live app</p>
+</div>
+
+<script>
+const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CATS = {
+  class:  {label:'Classes', hue:'var(--slate)'},
+  fitness:{label:'Fitness', hue:'var(--moss)'},
+  food:   {label:'Food',    hue:'var(--amber-600)'},
+  social: {label:'Social',  hue:'var(--rose)'},
+  music:  {label:'Music',   hue:'var(--violet)'},
+};
+const SEED = [
+  {t:'CS 2110 · Prelim 1 review', c:'class',   u:'Donlon 2F', n:8, g:10, age:'3m'},
+  {t:'Econ 1110 cram',            c:'class',   u:'North',     n:9, g:10, age:'4m'},
+  {t:'Donlon boxing crew',        c:'fitness', u:'Donlon 2F', n:7, g:10, age:'5m'},
+  {t:'North dinner table',        c:'food',    u:'North',     n:5, g:8,  age:'8m'},
+  {t:'CHEM 2070 review',          c:'class',   u:'North',     n:6, g:10, age:'12m'},
+  {t:'Late-night Mac’s crew',     c:'food',    u:'Central',   n:3, g:8,  age:'15m'},
+  {t:'Smash Bros after psets',    c:'social',  u:'Donlon 2F', n:4, g:10, age:'18m'},
+  {t:'MATH 1920 grind',           c:'class',   u:'Donlon',    n:6, g:10, age:'20m'},
+  {t:'Jam session · guitar',      c:'music',   u:'North',     n:3, g:8,  age:'25m'},
+  {t:'Friday board games',        c:'social',  u:'Donlon',    n:6, g:12, age:'30m'},
+  {t:'Beebe Lake morning run',    c:'fitness', u:'North',     n:4, g:8,  age:'40m'},
+  {t:'Okenshields regulars',      c:'food',    u:'North',     n:7, g:8,  age:'2h'},
+];
+const ARRIVALS = [
+  {t:'PSYCH 1101 study group', c:'class',   u:'Donlon',    n:2, g:10, age:'now'},
+  {t:'Bouldering @ Lindseth',  c:'fitness', u:'North',     n:2, g:8,  age:'now'},
+  {t:'Ramen run tonight',      c:'food',    u:'North',     n:3, g:8,  age:'now'},
+  {t:'A cappella pickup',      c:'music',   u:'Central',   n:4, g:10, age:'now'},
+  {t:'Trivia night squad',     c:'social',  u:'North',     n:2, g:10, age:'now'},
+  {t:'Helen Newman lifting',   c:'fitness', u:'North',     n:5, g:10, age:'now'},
+];
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const catDot = c => `<span class="dot" style="background:${CATS[c].hue}"></span>`;
+let arrIdx = 0;
+const nextArrival = () => { const a = {...ARRIVALS[arrIdx % ARRIVALS.length]}; arrIdx++; return a; };
+
+/* ============ A · LIVE WIRE ============ */
+function buildA(){
+  const el = document.getElementById('phoneA');
+  el.innerHTML = `
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead"><span class="wordmark">Loop<i></i></span>
+      <div style="display:flex;gap:2px">
+        <span class="hicon">🔍</span><span class="hicon">🔔</span>
+      </div></div>
+    <div style="padding:2px 20px 0"><div style="display:flex;align-items:center;gap:9px">
+      <span class="live"></span>
+      <span style="font:700 15px/1.2 var(--font-display)"><span class="mono" id="aCount">47</span> crews forming near you</span>
+    </div>
+    <div style="font-size:12.5px;color:var(--text-secondary);margin-top:3px">Live on North Campus tonight · they fill fast.</div>
+    </div>
+    <div style="padding:12px 20px 0"><div class="chips" id="aChips"></div></div>
+    <div class="scroll"><div class="pad"><div id="aFeed"></div></div></div>
+    <div class="tabbar"><div class="on"><span class="g">◉</span>Home</div><div><span class="g">◈</span>Class</div><div><span class="g">◔</span>Alerts</div><div><span class="g">○</span>You</div></div>`;
+  const chips = el.querySelector('#aChips');
+  let filter = 'all';
+  const cs = [['all','All'], ...Object.keys(CATS).map(k=>[k,CATS[k].label])];
+  chips.innerHTML = cs.map(([k,l],i)=>`<button class="chip${k!=='all'?'':''}" data-on="${i===0?1:0}" data-k="${k}">${k!=='all'?catDot(k):''}${l}</button>`).join('');
+  chips.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ filter=ch.dataset.k; chips.querySelectorAll('.chip').forEach(x=>x.dataset.on=0); ch.dataset.on=1; render(); });
+  let feed = SEED.slice(0,6).map(x=>({...x}));
+  const cardHTML = (x, fresh)=>{
+    const pct = Math.round(x.n/x.g*100); const hot = x.n/x.g>=0.7;
+    return `<div class="card ${fresh?'in':''}" style="margin-bottom:12px" data-c="${x.c}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="kick" style="color:${CATS[x.c].hue}"><span class="d" style="background:${CATS[x.c].hue}"></span>${CATS[x.c].label} · ${esc(x.u)}</span>
+        ${hot?'<span class="hot">🔥 filling fast</span>':(x.age==='now'?'<span class="hot" style="color:var(--status-live);background:color-mix(in srgb,var(--status-live) 12%,transparent)">just formed</span>':'')}
+      </div>
+      <h3 class="title">${esc(x.t)}</h3>
+      <div class="sub">${x.age==='now'?'seconds ago':x.age+' ago'} · same faces weekly</div>
+      <div class="meter"><i style="width:${pct}%"></i></div>
+      <div class="meterline"><span class="n">${x.n}/${x.g} in</span><span class="r">${x.g-x.n} more to fire the drop</span></div>
+      <button class="btn p">Count me in</button>
+    </div>`;
+  };
+  function render(){
+    const list = filter==='all'?feed:feed.filter(x=>x.c===filter);
+    el.querySelector('#aFeed').innerHTML = list.map((x,i)=>cardHTML(x,x._fresh&&i===0)).join('') || `<div style="text-align:center;color:var(--text-tertiary);padding:40px 0;font-size:13px">No ${CATS[filter]?.label.toLowerCase()} crews forming this second — check back.</div>`;
+    feed.forEach(x=>x._fresh=false);
+  }
+  render();
+  if(!RM) setInterval(()=>{
+    feed.forEach(x=>{ if(x.age==='now') x.age = (Math.floor(Math.random()*5)+1)+'m'; });
+    const a = nextArrival(); a._fresh=true; feed.unshift(a); if(feed.length>7) feed.pop();
+    feed.forEach(x=>{ if(x!==a && x.n<x.g && Math.random()<0.4) x.n++; });
+    const cc = el.querySelector('#aCount'); cc.textContent = (+cc.textContent + 1);
+    render();
+  }, 2600);
+}
+
+/* ============ B · DISCOVERY LANES ============ */
+function buildB(){
+  const el = document.getElementById('phoneB');
+  el.innerHTML = `
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead"><span class="wordmark">Loop<i></i></span><span class="hicon">🔔</span></div>
+    <div style="padding:2px 20px 0"><div style="font:800 24px/1.05 var(--font-display);letter-spacing:-.02em">Forming around you</div>
+      <div style="font-size:12.5px;color:var(--text-secondary);margin-top:4px">Browse by interest · jump into any crew.</div></div>
+    <div style="padding:12px 20px 0"><div class="chips" id="bChips"></div></div>
+    <div class="scroll"><div style="padding:2px 0 90px" id="bLanes"></div></div>
+    <div class="tabbar"><div class="on"><span class="g">◉</span>Home</div><div><span class="g">◈</span>Class</div><div><span class="g">◔</span>Alerts</div><div><span class="g">○</span>You</div></div>`;
+  const order = ['hot','class','fitness','food','social','music'];
+  const laneMeta = { hot:{label:'🔥 Filling fast', hue:'var(--accent)'}, class:{label:'📚 Your classes',hue:CATS.class.hue}, fitness:{label:'🏃 Fitness',hue:CATS.fitness.hue}, food:{label:'🍜 Food & social',hue:CATS.food.hue}, social:{label:'🎉 Social',hue:CATS.social.hue}, music:{label:'🎶 Music',hue:CATS.music.hue} };
+  let data = SEED.concat(ARRIVALS.slice(0,3)).map(x=>({...x}));
+  const chips = el.querySelector('#bChips');
+  const cs = [['all','All interests'], ...Object.keys(CATS).map(k=>[k,CATS[k].label])];
+  let filter='all';
+  chips.innerHTML = cs.map(([k,l],i)=>`<button class="chip acc" data-on="${i===0?1:0}" data-k="${k}">${k!=='all'?catDot(k):''}${l}</button>`).join('');
+  chips.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ filter=ch.dataset.k; chips.querySelectorAll('.chip').forEach(x=>x.dataset.on=0); ch.dataset.on=1; render(); });
+  const tile = x=>{ const pct=Math.round(x.n/x.g*100); return `<div class="tile">
+      ${x.age==='now'?'<span class="newpill">NEW</span>':''}
+      <span class="kick" style="color:${CATS[x.c].hue}"><span class="d" style="background:${CATS[x.c].hue};width:6px;height:6px;border-radius:50%;display:inline-block"></span>${esc(x.u)}</span>
+      <div class="t">${esc(x.t)}</div>
+      <div class="meter" style="margin-top:9px"><i style="width:${pct}%"></i></div>
+      <div class="s mono" style="margin-top:7px">${x.n}/${x.g} in · ${x.g-x.n} to go</div>
+    </div>`; };
+  function laneFor(key){
+    if(key==='hot') return data.filter(x=>x.n/x.g>=0.7).sort((a,b)=>b.n/b.g-a.n/a.g);
+    return data.filter(x=>x.c===key);
+  }
+  function render(){
+    const lanes = (filter==='all'?order:['hot',filter]).filter((k,i,a)=>a.indexOf(k)===i);
+    el.querySelector('#bLanes').innerHTML = lanes.map(key=>{
+      const items = laneFor(key); if(!items.length) return '';
+      return `<div class="lane"><div class="sechead" style="padding:0 20px"><h3 style="font-size:14.5px">${laneMeta[key].label}</h3><span class="c">${items.length} forming</span></div>
+        <div class="lanerow">${items.map(tile).join('')}</div></div>`;
+    }).join('');
+  }
+  render();
+  if(!RM) setInterval(()=>{
+    data.forEach(x=>{ if(x.n<x.g && Math.random()<0.3) x.n++; });
+    if(Math.random()<0.5){ const a={...nextArrival()}; data.unshift(a); if(data.length>18) data.pop(); }
+    render();
+  }, 2800);
+}
+
+/* ============ C · CAMPUS PULSE ============ */
+function buildC(){
+  const el = document.getElementById('phoneC');
+  el.innerHTML = `
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead"><span class="wordmark">Loop<i></i></span><span class="hicon">🔔</span></div>
+    <div style="padding:2px 20px 0">
+      <div style="display:flex;align-items:center;gap:8px"><span class="live"></span><span style="font:700 15px/1 var(--font-display)">Campus pulse</span>
+        <span class="mono" style="margin-left:auto;font-size:11.5px;color:var(--text-tertiary)"><span id="cLive">42</span> crews live now</span></div>
+      <div class="spark" id="cSpark" style="margin-top:10px"></div>
+      <div class="mono" style="font-size:10px;color:var(--text-tertiary);margin-top:5px;display:flex;justify-content:space-between"><span>6p</span><span>now</span></div>
+    </div>
+    <div style="padding:14px 20px 0"><div class="seg" id="cSeg">
+      <button data-on="1" data-k="floor">My floor</button><button data-k="donlon">Donlon</button><button data-k="north">North</button><button data-k="campus">Campus</button>
+    </div></div>
+    <div style="padding:12px 20px 0"><div class="chips" id="cChips"></div></div>
+    <div class="scroll"><div class="pad" style="padding-top:0" id="cList"></div></div>
+    <div class="tabbar"><div class="on"><span class="g">◉</span>Home</div><div><span class="g">◈</span>Class</div><div><span class="g">◔</span>Alerts</div><div><span class="g">○</span>You</div></div>`;
+  // spark
+  const spark = el.querySelector('#cSpark');
+  spark.innerHTML = Array.from({length:22},(_,i)=>`<i style="height:${20+Math.round(60*Math.abs(Math.sin(i*0.6)))}%${i>18?';':''}" class="${i>18?'on':''}"></i>`).join('');
+  let data = SEED.concat(ARRIVALS.slice(0,2)).map(x=>({...x, mo: Math.round(x.n/x.g*100)}));
+  const bandOf = u => (u==='Donlon 2F'?'floor':(u==='Donlon'?'donlon':(u==='North'||u==='Central'?'north':'campus')));
+  const BANDS = { floor:'On your floor · Donlon 2F', donlon:'In Donlon', north:'Across North', campus:'Anywhere on campus' };
+  let scope='floor', filter='all';
+  const chips = el.querySelector('#cChips');
+  const cs = [['all','All'], ...Object.keys(CATS).map(k=>[k,CATS[k].label])];
+  chips.innerHTML = cs.map(([k,l],i)=>`<button class="chip" data-on="${i===0?1:0}" data-k="${k}">${k!=='all'?catDot(k):''}${l}</button>`).join('');
+  chips.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{ filter=ch.dataset.k; chips.querySelectorAll('.chip').forEach(x=>x.dataset.on=0); ch.dataset.on=1; render(); });
+  el.querySelectorAll('#cSeg button').forEach(b=>b.onclick=()=>{ scope=b.dataset.k; el.querySelectorAll('#cSeg button').forEach(x=>x.dataset.on=0); b.dataset.on=1; render(); });
+  const scopeRank = { floor:['floor'], donlon:['floor','donlon'], north:['floor','donlon','north'], campus:['floor','donlon','north','campus'] };
+  const prow = x=>{ const pct=Math.round(x.n/x.g*100); return `<div class="prow">
+      <div class="mbar"><i style="height:${pct}%"></i><b>${pct}%</b></div>
+      <div class="pm"><div class="pt"><span class="d" style="background:${CATS[x.c].hue}"></span>${esc(x.t)}</div>
+        <div class="ps mono">${x.n}/${x.g} in · ${esc(x.u)} · ${x.age==='now'?'just now':x.age}</div></div>
+      <span class="go">›</span></div>`; };
+  function render(){
+    const bands = scopeRank[scope];
+    let list = data.filter(x=> bands.includes(bandOf(x.u)) && (filter==='all'||x.c===filter));
+    const byBand = {};
+    list.forEach(x=>{ const b=bandOf(x.u); (byBand[b]=byBand[b]||[]).push(x); });
+    const html = bands.filter(b=>byBand[b]&&byBand[b].length).map(b=>{
+      const rows = byBand[b].sort((a,c)=>c.n/c.g-a.n/a.g);
+      return `<div class="band">${BANDS[b]} · ${rows.length}</div><div>${rows.map(prow).join('')}</div>`;
+    }).join('');
+    el.querySelector('#cList').innerHTML = html || `<div style="text-align:center;color:var(--text-tertiary);padding:40px 0;font-size:13px">Nothing in range yet — widen the radius.</div>`;
+  }
+  render();
+  if(!RM) setInterval(()=>{
+    data.forEach(x=>{ if(x.n<x.g && Math.random()<0.35) x.n++; });
+    const cl = el.querySelector('#cLive'); cl.textContent = (+cl.textContent + (Math.random()<0.5?1:0));
+    // animate spark last bar
+    const bars = spark.querySelectorAll('i'); const last = bars[bars.length-1]; if(last) last.style.height = (40+Math.round(Math.random()*55))+'%';
+    render();
+  }, 2500);
+}
+
+buildA(); buildB(); buildC();
+</script>
+</body>
+</html>

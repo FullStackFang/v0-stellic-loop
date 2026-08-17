@@ -454,6 +454,27 @@
         status:'forming', drop:{ count:6, target:10 },
         memberIds:['priya'],
       },
+      // more crews taking shape — variety across classes + activities so Home reads "alive"
+      {
+        id:'donlon-box', title:'Donlon boxing crew', target:'boxing',
+        unit:{ kind:'dorm', label:'donlon 2f · forming' },
+        status:'forming', drop:{ count:7, target:10 }, memberIds:['ryan','marcus'],
+      },
+      {
+        id:'north-dinner', title:'North Campus dinner table', target:'dinner crew',
+        unit:{ kind:'dorm', label:'north · forming' },
+        status:'forming', drop:{ count:5, target:8 }, memberIds:['maya','lydia'],
+      },
+      {
+        id:'beebe-run', title:'Beebe Lake morning run', target:'running',
+        unit:{ kind:'dorm', label:'north · forming' },
+        status:'forming', drop:{ count:4, target:8 }, memberIds:['ryan'],
+      },
+      {
+        id:'math-1920', title:'MATH 1920 grind', target:'MATH 1920',
+        unit:{ kind:'class', label:'math 1920 · section' },
+        status:'forming', drop:{ count:6, target:10 }, memberIds:['priya','marcus'],
+      },
     ]);
 
     /* ============================================================
@@ -1149,6 +1170,200 @@
       );
     }
 
+    /* ------------------------------------------------------------
+       STORY — the narrative onboarding ("The Living Loop"). Five
+       screens that reframe why Loop exists, each carried by one
+       continuous canvas that morphs to match the message:
+       chaos -> anchor -> the group lights up -> a micro-tribe ->
+       the loop, alive and on repeat. The anchor picked on the last
+       screen seeds the first-intent box.
+    ------------------------------------------------------------ */
+    function StoryOnboarding({ onDone, onBack, theme }){
+      const [step, setStep] = useState(0);
+      const cvRef = useRef(null);
+      const stepRef = useRef(0);
+      const colRef = useRef(null);
+      const staticRef = useRef(null);
+      const reduced = useRef(typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+      const term = (t) => <span style={{ color:'var(--accent-strong)', fontWeight:600 }}>{t}</span>;
+      const STEPS = [
+        { k:'The reality', h:'Making friends here is exhausting.',
+          body:<>Group texts get chaotic, plans fizzle, and walking into a room of strangers is genuinely intimidating. It is not your fault. It is a real barrier called {term('Logistical Fatigue')}. (Yes, that is the actual name.)</>,
+          cta:'Wait, what is that?' },
+        { k:'The reframe', h:'Stop networking. Start doing.',
+          body:<>The best friendships never start with small talk. They form around {term('Activity Anchors')}: a coffee run, a study sprint, a new hobby. The shared task carries the conversation, so the pressure just disappears.</>,
+          cta:'That makes sense' },
+        { k:'The safety net', h:'Skip the guessing games.',
+          body:<>You get full {term('Situational Visualization')} (a vibe check, basically): who is going and what the energy is, all before you leave your dorm. No walking in blind.</>,
+          cta:'Show me how' },
+        { k:'The science', h:'Small groups. Big impact.',
+          body:<>Big mixers spike anxiety and leave us feeling more alone. We bond best in {term('Micro-Tribes')}, so every hangout is capped at 4 to 6. Your presence matters, and nobody gets left out.</>,
+          cta:'I prefer smaller groups' },
+        { k:'Your turn', h:'Now, on repeat.',
+          body:<>Friendships come from small moments that keep coming back around. We make the first one effortless, then the loop does the rest. (Fancy term: {term('Psychosocial Investment')}. We just call it hanging out.) What sounds good this week?</>,
+          opts:true },
+      ];
+      const ANCHORS = [
+        { L:'A', t:'A quiet study sprint', seed:'lock in a quiet study sprint this week' },
+        { L:'B', t:'A new cafe or dining spot', seed:'try a new campus cafe or dining spot' },
+        { L:'C', t:'A workout or pickup game', seed:'get a quick workout or intramural game going' },
+        { L:'D', t:'A spontaneous side quest', seed:'down for a random, spontaneous side quest' },
+      ];
+
+      useEffect(()=>{ stepRef.current = step; if(reduced.current && staticRef.current) staticRef.current(); }, [step]);
+
+      useEffect(()=>{
+        const dark = theme==='afterdark';
+        const cs = getComputedStyle(document.documentElement);
+        const g = (n,f)=>{ const v=cs.getPropertyValue(n).trim(); return v && v[0]==='#' ? v : f; };
+        colRef.current = { accent: dark?g('--carnelian-400','#cf5347'):g('--carnelian-500','#b31b1b'), moss:g('--moss-500','#3d8a5f'), faint:g('--ink-3','#98897e') };
+      }, [theme]);
+
+      useEffect(()=>{
+        const cv = cvRef.current; if(!cv) return;
+        const ctx = cv.getContext('2d');
+        const DPR = Math.min(2, window.devicePixelRatio||1);
+        let W=0,H=0,CX=0,CY=0;
+        const measure=()=>{ const r=cv.getBoundingClientRect(); W=r.width; H=r.height; CX=W/2; CY=H*0.19;
+          cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); };
+        measure();
+        const rnd=(a,b)=>a+Math.random()*(b-a);
+        const N=44, CORE=5, TAU=Math.PI*2, bands=[38,58,78];
+        const P=Array.from({length:N},(_,i)=>{ const band=i%3; return {
+          x:rnd(26,W-26), y:rnd(40,H*0.28), vx:rnd(-.35,.35), vy:rnd(-.35,.35),
+          orbR:bands[band]+rnd(-6,6), orbA:rnd(0,TAU), orbW:0.0055-band*0.0012,
+          core:i<CORE, ci:i, a:0.5, halo:0 }; });
+        const trails=Array.from({length:CORE},()=>[]);
+        let liveRot=0, anchorA=0, tMode=0, lastTs=0, energy=null, sparks=[], sparkT=0, rings2=[], ringT2=0, prev=-1, raf=0, cyCur=CY;
+
+        const enter=(st)=>{ tMode=0; if(st===2 && !reduced.current) energy={r:10,a:.45}; if(st!==4) trails.forEach(t=>t.length=0); };
+
+        const frame=(ts)=>{
+          const st=stepRef.current, C=colRef.current||{accent:'#b31b1b',moss:'#3d8a5f',faint:'#98897e'};
+          if(st!==prev){ enter(st); prev=st; }
+          const dt=Math.min(48, ts-lastTs||16); lastTs=ts; tMode+=dt/1000;
+          ctx.clearRect(0,0,W,H);
+          anchorA += ((st>=1?1:0)-anchorA)*0.06;
+          liveRot += (st===4?0.02:st===3?0.006:0);
+          const cyT=H*0.19; cyCur+=(cyT-cyCur)*0.08; const rT=56;
+
+          if(st===1||st===2){ ctx.strokeStyle=C.faint; bands.forEach(r=>{ ctx.globalAlpha=0.06; ctx.beginPath(); ctx.arc(CX,cyCur,r,0,TAU); ctx.stroke(); }); ctx.globalAlpha=1; }
+
+          const cores=[];
+          P.forEach((p)=>{
+            let tx,ty,ta;
+            if(st===0){
+              p.vx+=rnd(-.03,.03); p.vy+=rnd(-.03,.03); const sp=Math.hypot(p.vx,p.vy); if(sp>0.5){p.vx*=0.5/sp;p.vy*=0.5/sp;}
+              p.x+=p.vx; p.y+=p.vy;
+              if(p.x<22){p.x=22;p.vx*=-1;} if(p.x>W-22){p.x=W-22;p.vx*=-1;} if(p.y<40){p.y=40;p.vy*=-1;} if(p.y>H*0.28){p.y=H*0.28;p.vy*=-1;}
+              ta=0.5; p.halo+=(0-p.halo)*0.1;
+            } else {
+              p.orbA+=p.orbW;
+              if(st<=2){ tx=CX+Math.cos(p.orbA)*p.orbR; ty=cyCur+Math.sin(p.orbA)*p.orbR; ta=1;
+                const want=st===2?Math.min(1,Math.max(0,(tMode-p.ci*0.09))*2.2):0; p.halo+=(want-p.halo)*0.12;
+              } else if(p.core){ const a=(p.ci/CORE)*TAU+liveRot-Math.PI/2; tx=CX+Math.cos(a)*rT; ty=cyCur+Math.sin(a)*rT; ta=1; p.halo+=(0-p.halo)*0.08; cores.push(p);
+              } else { tx=CX+Math.cos(p.orbA)*(p.orbR*2.6); ty=cyCur+Math.sin(p.orbA)*(p.orbR*2.6); ta=0; }
+              p.x+=(tx-p.x)*0.075; p.y+=(ty-p.y)*0.075;
+            }
+            p.a+=(ta-p.a)*0.08;
+          });
+
+          if(st===0 && !reduced.current){
+            sparkT+=dt; if(sparkT>420){ sparkT=0; const a=P[(Math.random()*N)|0], b=P[(Math.random()*N)|0]; if(a!==b && Math.hypot(a.x-b.x,a.y-b.y)<130) sparks.push({a,b,t:0}); }
+            ctx.strokeStyle=C.accent; ctx.lineWidth=1;
+            sparks=sparks.filter(s=>{ s.t+=dt; if(s.t>=560) return false; ctx.globalAlpha=Math.sin(s.t/560*Math.PI)*0.4; ctx.beginPath(); ctx.moveTo(s.a.x,s.a.y); ctx.lineTo(s.b.x,s.b.y); ctx.stroke(); return true; });
+            ctx.globalAlpha=1;
+          } else sparks.length=0;
+
+          if(st===2 && energy){ energy.r+=1.4; energy.a*=0.975; if(energy.a<0.02) energy=null;
+            if(energy){ ctx.globalAlpha=energy.a; ctx.strokeStyle=C.accent; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(CX,cyCur,energy.r,0,TAU); ctx.stroke(); ctx.globalAlpha=1; } }
+
+          if((st===3||st===4)&&cores.length>=3){ const pts=cores.slice().sort((u,v)=>Math.atan2(u.y-cyCur,u.x-CX)-Math.atan2(v.y-cyCur,v.x-CX)); const live=st===4;
+            ctx.globalAlpha=live?0.8:0.32; ctx.strokeStyle=live?C.moss:C.accent; ctx.lineWidth=live?2:1.4; ctx.beginPath(); pts.forEach((p,i)=> i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath(); ctx.stroke(); ctx.globalAlpha=1; }
+
+          if(st===4){
+            if(!reduced.current){ ringT2+=dt; if(ringT2>760){ ringT2=0; rings2.push({r:8,a:.5}); } }
+            ctx.strokeStyle=C.moss; ctx.lineWidth=1.3;
+            rings2=rings2.filter(r=>{ r.r+=1.1; r.a*=0.982; if(r.a<=0.02) return false; ctx.globalAlpha=r.a; ctx.beginPath(); ctx.arc(CX,cyCur,r.r,0,TAU); ctx.stroke(); return true; });
+            ctx.globalAlpha=1;
+            if(!reduced.current){ const cp=P.filter(p=>p.core); cp.forEach((p,i)=>{ const tr=trails[i]; tr.push([p.x,p.y]); if(tr.length>10) tr.shift();
+              ctx.strokeStyle=C.accent; ctx.lineWidth=2; for(let j=1;j<tr.length;j++){ ctx.globalAlpha=(j/tr.length)*0.28; ctx.beginPath(); ctx.moveTo(tr[j-1][0],tr[j-1][1]); ctx.lineTo(tr[j][0],tr[j][1]); ctx.stroke(); } }); ctx.globalAlpha=1; }
+          } else rings2.length=0;
+
+          if(anchorA>0.02){ const ar=6+Math.sin(ts*0.004)*1.2; ctx.fillStyle=C.accent;
+            ctx.globalAlpha=anchorA*0.16; ctx.beginPath(); ctx.arc(CX,cyCur,ar+9,0,TAU); ctx.fill();
+            ctx.globalAlpha=anchorA; ctx.beginPath(); ctx.arc(CX,cyCur,ar,0,TAU); ctx.fill(); ctx.globalAlpha=1; }
+
+          P.forEach(p=>{ if(p.a<0.03) return;
+            if(p.halo>0.02){ ctx.fillStyle=C.accent; ctx.globalAlpha=p.halo*0.14; ctx.beginPath(); ctx.arc(p.x,p.y,9,0,TAU); ctx.fill(); }
+            const isLive=st===4&&p.core; ctx.fillStyle=isLive?C.moss:C.accent; ctx.globalAlpha=p.a;
+            ctx.beginPath(); ctx.arc(p.x,p.y,(p.core&&st>=3)?3.6:2.5,0,TAU); ctx.fill(); });
+          ctx.globalAlpha=1;
+
+          if(!reduced.current) raf=requestAnimationFrame(frame);
+        };
+
+        if(reduced.current){
+          staticRef.current = ()=>{ const base=100; for(let i=0;i<160;i++) frame(base+i*16); };
+          staticRef.current();
+        } else { raf=requestAnimationFrame(frame); }
+        const onResize=()=>{ measure(); if(reduced.current && staticRef.current) staticRef.current(); };
+        window.addEventListener('resize', onResize);
+        return ()=>{ cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+      }, []);
+
+      const s = STEPS[step];
+      return (
+        <div className="h-full fade-in" style={{ position:'relative', overflow:'hidden' }}>
+          <canvas ref={cvRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', zIndex:1 }} />
+          <div style={{ position:'relative', zIndex:3, height:'100%', display:'flex', flexDirection:'column', padding:'20px 20px 26px' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <button onClick={()=> step===0 ? onBack() : setStep(step-1)} className="pls-iconbtn" style={{ width:38, height:38 }} aria-label="Back">
+                <Icon name="chevron-left" size={20} />
+              </button>
+              <div style={{ display:'flex', gap:6, flex:1 }}>
+                {STEPS.map((_,i)=>(
+                  <button key={i} onClick={()=>setStep(i)} aria-label={'Screen '+(i+1)}
+                    style={{ flex:1, height:4, padding:0, border:'none', borderRadius:999, cursor:'pointer',
+                      background: i<=step ? 'var(--accent)' : 'var(--border-hairline)', transition:'background var(--dur-2) var(--ease-out)' }} />
+                ))}
+              </div>
+            </div>
+            {/* fixed animation stage up top so every card top-aligns at the same line (level, no scroll) */}
+            <div style={{ height:180, flexShrink:0 }} />
+            <div style={{ flex:1, display:'flex', alignItems:'flex-start', overflowY:'auto' }} className="no-scrollbar">
+              <div key={step} className="fold-in" style={{ width:'100%', background:'var(--bg-surface)', border:'1px solid var(--border-hairline)',
+                borderRadius:'var(--radius-2xl)', boxShadow:'var(--shadow-pop)', padding:'26px 24px 24px', textAlign:'center' }}>
+                <div className="pls-mono" style={{ fontSize:10.5, letterSpacing:'.16em', color:'var(--text-tertiary)', marginBottom:14 }}>
+                  {String(step+1).padStart(2,'0')} · 05
+                </div>
+                <div className="pls-kicker" style={{ color:'var(--accent-strong)', marginBottom:10 }}>{s.k}</div>
+                <h1 className="pls-display" style={{ fontWeight:800, fontSize:29, lineHeight:1.06, letterSpacing:'-.03em', margin:'0 0 12px', color:'var(--text-primary)' }}>{s.h}</h1>
+                <p style={{ fontSize:14, lineHeight:1.62, color:'var(--text-secondary)', margin:'0 auto', maxWidth:'32ch' }}>{s.body}</p>
+                {s.opts ? (
+                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:16, textAlign:'left' }}>
+                    {ANCHORS.map(o=>(
+                      <button key={o.L} onClick={()=>onDone(o.seed)}
+                        style={{ display:'flex', alignItems:'center', gap:12, width:'100%', padding:'11px 14px',
+                          borderRadius:'var(--radius-lg)', background:'var(--bg-page)', border:'1px solid var(--border-hairline)', cursor:'pointer' }}>
+                        <span className="pls-mono" style={{ width:24, height:24, flex:'none', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--accent-quiet)', color:'var(--accent-strong)', fontSize:12 }}>{o.L}</span>
+                        <span style={{ fontSize:13, color:'var(--text-primary)', whiteSpace:'nowrap' }}>{o.t}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ marginTop:22 }}>
+                    <Button block onClick={()=>setStep(step+1)} iconRight="arrow-right">{s.cta}</Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     function EmailVerify({ onBack, onNext }){
       const [email, setEmail] = useState('sarah.chen@cornell.edu');
       const ok = /@cornell\.edu\s*$/i.test(email.trim());
@@ -1210,8 +1425,8 @@
       );
     }
 
-    function FirstIntent({ onBack, onNext }){
-      const [text, setText] = useState('');
+    function FirstIntent({ onBack, onNext, seed }){
+      const [text, setText] = useState(seed || '');
       return (
         <div className="h-full flex flex-col fade-in">
           <AppHeader title="One last thing" onBack={onBack} />
@@ -1308,12 +1523,156 @@
       );
     }
 
+    /* ============================================================
+       PULSE FEED — "campus pulse" (proximity dial) + live forming
+       stream + intent-density spin-up prompts. Adoption-aware: it
+       stays honest when the floor is quiet (auto-widens, leads with
+       what people want), and comes alive at scale. Never fakes a crowd.
+    ============================================================ */
+    const PULSE_CATS = {
+      class:  { label:'Classes', hue:'var(--unit-class)' },
+      fitness:{ label:'Fitness', hue:'var(--moss-500)' },
+      food:   { label:'Food',    hue:'var(--amber-600)' },
+      social: { label:'Social',  hue:'var(--unit-dorm)' },
+      music:  { label:'Music',   hue:'#6b5b95' },
+    };
+    const PULSE_SCOPES = [['floor','My floor'],['donlon','Donlon'],['north','North'],['campus','Campus']];
+    const SCOPE_RANK = { floor:0, donlon:1, north:2, campus:3 };
+    const BAND_BY_ID = { 'sunday-hw':'floor','prelim1':'floor','donlon-box':'floor','math-1920':'donlon','chem-review':'north','north-dinner':'north','beebe-run':'north' };
+    function loopBand(l){
+      if(BAND_BY_ID[l.id]) return BAND_BY_ID[l.id];
+      const u = ((l.unit&&l.unit.label)||'').toLowerCase();
+      return /2f|floor/.test(u) ? 'floor' : (/donlon/.test(u) ? 'donlon' : 'north');
+    }
+    function loopCategory(l){
+      const t = ((l.target||'')+'').toLowerCase();
+      if(/\b[a-z]{2,5}\s?\d{4}\b/i.test(l.target||'') || (l.unit&&l.unit.kind==='class')) return 'class';
+      if(/box|run|climb|boulder|lift|yoga|gym|swim/.test(t)) return 'fitness';
+      if(/dinner|ramen|eat|food|mac|brunch|coffee/.test(t)) return 'food';
+      if(/music|jam|guitar|cappella|band|sing/.test(t)) return 'music';
+      if(/smash|game|trivia|movie|hang|social|party/.test(t)) return 'social';
+      return 'social';
+    }
+    // Intent density — things people dropped that nobody has started yet.
+    const INTENT_DEMAND = [
+      { target:'ECON 1110',    band:'floor',  line:'8 floormates want this',  who:['A','J','+6'] },
+      { target:'a movie night', band:'donlon', line:'6 in Donlon want this',   who:['M','L','+4'] },
+    ];
+    function demandCategory(target){
+      const t = (target||'').toLowerCase();
+      if(/\b[a-z]{2,5}\s?\d{4}\b/i.test(target||'')) return 'class';
+      if(/run|box|climb|lift|yoga/.test(t)) return 'fitness';
+      if(/dinner|food|ramen|coffee|brunch/.test(t)) return 'food';
+      if(/music|jam|sing/.test(t)) return 'music';
+      return 'social';
+    }
+
+    function PulseFeed({ viewerId, user, loops, actions }){
+      const [scope, setScope] = useState('floor');
+      const [interest, setInterest] = useState('all');
+      const scopeName = k => (PULSE_SCOPES.find(s=>s[0]===k)||[])[1] || 'campus';
+      const pool = loops.filter(l => !l.memberIds.includes(viewerId) && (l.status==='active' || l.status==='forming'));
+      const inScope = l => SCOPE_RANK[loopBand(l)] <= SCOPE_RANK[scope];
+      const inInterest = l => interest==='all' || loopCategory(l)===interest;
+      const localCrews = pool.filter(l => inScope(l) && inInterest(l)).sort((a,b)=> (a.status==='forming'?0:1)-(b.status==='forming'?0:1));
+      let crews = localCrews, widenedTo = null;
+      if(localCrews.length === 0){
+        const wider = pool.filter(inInterest).sort((a,b)=> SCOPE_RANK[loopBand(a)]-SCOPE_RANK[loopBand(b)]);
+        if(wider.length){ crews = wider.slice(0,6); widenedTo = scopeName(loopBand(wider[0])); }
+      }
+      const localCount = localCrews.length;
+      const demand = INTENT_DEMAND.filter(d =>
+        SCOPE_RANK[d.band] <= SCOPE_RANK[scope] &&
+        (interest==='all' || demandCategory(d.target)===interest) &&
+        !loops.some(l => (l.target||'').toLowerCase() === d.target.toLowerCase()));
+      const dorm = user.dorm || 'your floor';
+      const empty = crews.length===0 && demand.length===0;
+
+      const Dial = () => (
+        <div style={{ display:'flex', background:'var(--bg-sunken)', borderRadius:12, padding:3, gap:2, marginTop:12 }}>
+          {PULSE_SCOPES.map(([k,l])=>{ const on = scope===k; return (
+            <button key={k} onClick={()=>setScope(k)} style={{ flex:1, border:0, borderRadius:9, padding:'8px 2px', fontSize:12, fontWeight:600, cursor:'pointer',
+              background: on?'var(--bg-surface)':'transparent', color: on?'var(--text-primary)':'var(--text-secondary)', boxShadow: on?'0 1px 3px rgba(80,40,30,.12)':'none' }}>{l}</button>
+          ); })}
+        </div>
+      );
+      const Chips = () => (
+        <div className="no-scrollbar" style={{ display:'flex', gap:8, overflowX:'auto', padding:'12px 0 4px' }}>
+          {[['all','All'], ...Object.keys(PULSE_CATS).map(k=>[k,PULSE_CATS[k].label])].map(([k,l])=>{ const on = interest===k; return (
+            <button key={k} onClick={()=>setInterest(k)} style={{ flexShrink:0, display:'inline-flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:999, whiteSpace:'nowrap', fontSize:12.5, fontWeight:600, cursor:'pointer',
+              border:'1px solid '+(on?'var(--text-primary)':'var(--border-hairline)'), background: on?'var(--text-primary)':'var(--bg-surface)', color: on?'var(--bg-surface)':'var(--text-secondary)' }}>
+              {k!=='all' && <span style={{ width:7, height:7, borderRadius:'50%', background:PULSE_CATS[k].hue }} />}{l}
+            </button>
+          ); })}
+        </div>
+      );
+      const Spark = () => (
+        <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:24, marginTop:10 }} aria-hidden="true">
+          {Array.from({length:20}).map((_,i)=>{ const h = 14 + Math.round(60*Math.abs(Math.sin(i*0.6)));
+            return <span key={i} style={{ flex:1, height:h+'%', borderRadius:'3px 3px 0 0', background: i>16?'var(--accent)':'var(--accent-quiet)' }} />; })}
+        </div>
+      );
+
+      return (
+        <div className="mt-6">
+          <div className="flex items-center gap-2">
+            {localCount>0 ? <LiveDot /> : <span style={{ width:8, height:8, borderRadius:'50%', background:'var(--text-tertiary)', display:'inline-block' }} />}
+            <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>
+              {localCount>0 ? `${localCount} crews forming near you` : `Quiet on ${scope==='floor'?dorm:scopeName(scope)}`}
+            </h2>
+            <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>{localCount>0?'live now':'early'}</span>
+          </div>
+          {widenedTo && <p className="text-[12px] mt-1.5" style={{ color:'var(--text-secondary)' }}>Auto-widened: <b style={{ color:'var(--accent-strong)' }}>{crews.length} forming across {widenedTo}</b> tonight.</p>}
+          {localCount>0 ? <Spark/> : <div style={{ height:1, background:'var(--border-hairline)', margin:'12px 0 2px' }} />}
+
+          <Dial />
+          <Chips />
+
+          {empty ? (
+            <Card className="p-5 mt-2" style={{ borderStyle:'dashed', borderColor:'var(--accent-quiet)', textAlign:'center' }}>
+              <div style={{ width:44, height:44, borderRadius:14, background:'var(--accent-quiet)', color:'var(--accent-strong)', display:'grid', placeItems:'center', margin:'0 auto 12px' }}><Icon name="radio" size={22} /></div>
+              <h3 className="pls-display" style={{ fontWeight:800, fontSize:19, color:'var(--text-primary)' }}>You're early on {dorm}</h3>
+              <p className="text-[13px]" style={{ color:'var(--text-secondary)', maxWidth:'28ch', margin:'6px auto 0', lineHeight:1.5 }}>Nothing's formed here yet, but people already dropped intents. Be the one who starts a loop and it pulls them in.</p>
+              <div className="mt-4"><Button onClick={actions.openCompose} icon="plus">Drop your intent</Button></div>
+            </Card>
+          ) : (
+            <>
+              {demand.length>0 && (
+                <>
+                  <div className="flex items-center gap-1.5 mt-5 mb-2.5">
+                    <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>People want these</h3>
+                    <span className="pls-kicker" style={{ marginLeft:'auto' }}>start one</span>
+                  </div>
+                  <div className="space-y-3">
+                    {demand.map(d => (
+                      <div key={d.target} className="p-4 rise" style={{ borderRadius:20, border:'1px solid color-mix(in srgb, var(--accent) 22%, var(--border-hairline))', background:'var(--accent-quiet)' }}>
+                        <div className="pls-kicker" style={{ color:'var(--accent-strong)' }}>Nobody's started this yet</div>
+                        <h3 className="pls-display" style={{ fontWeight:700, fontSize:17, marginTop:4, color:'var(--text-primary)' }}>Start a {d.target} loop</h3>
+                        <p className="text-[12.5px] mt-0.5" style={{ color:'var(--text-secondary)' }}>{d.line} · you'd be the coordinator</p>
+                        <div className="mt-3"><Button size="sm" onClick={()=>actions.startSpinup(d.target)} icon="plus">Spin it up</Button></div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div className="flex items-center gap-1.5 mt-5 mb-2.5">
+                <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>{widenedTo ? `Forming across ${widenedTo}` : (scope==='floor'?`Forming on ${dorm}`:`Forming across ${scopeName(scope)}`)}</h3>
+                <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>{crews.length} live</span>
+              </div>
+              <div className="space-y-3">
+                {crews.map(l => <SuggestionCard key={l.id} card={{ kind: l.status==='forming'?'forming':'join', loop:l, target:l.target }} actions={actions} />)}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
     function Home({ state, actions }){
       const { user, viewerId='sarah', loops, suggestions, nudge, unread, theme, campus } = state;
       const myLoops = loops.filter(l => l.memberIds.includes(viewerId));
       const latecomerLoop = loops.find(l => l.foldedInFor===viewerId && l.memberIds.includes(viewerId));
       const hostLoop = loops.find(l => l.coordinatorId===viewerId);
-      const nearby = loops.filter(l => !l.memberIds.includes(viewerId) && (l.status==='active' || l.status==='forming')).slice(0,3);
       return (
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
@@ -1329,14 +1688,6 @@
               <p className="pls-kicker">{PERSONA_BY_ID[viewerId]?.tag || 'Home'}</p>
               <h1 className="pls-display" style={{ fontWeight:800, fontSize:26, color:'var(--text-primary)' }}>{user.name.split(' ')[0]}'s loops</h1>
             </div>
-
-            <button onClick={actions.openClass} className="w-full mt-4 pls-card pls-card--sunken p-3 flex items-center justify-between" style={{ cursor:'pointer' }}>
-              <span className="flex items-center gap-2 text-[13px]" style={{ color:'var(--text-secondary)' }}>
-                <Icon name="graduation-cap" size={14} style={{ color:'var(--accent)' }} />
-                <span><span style={{ color:'var(--text-primary)', fontWeight:600 }}>Class of {COHORT.classOf}</span> · {campus.loopsRunning.toLocaleString()} loops running</span>
-              </span>
-              <span className="flex items-center gap-0.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>see the class<Icon name="chevron-right" size={13} /></span>
-            </button>
 
             {latecomerLoop && (
               <button onClick={()=>actions.openLoop(latecomerLoop.id, viewerId)} className="w-full text-left pls-banner p-4 mt-4 rise" style={{ cursor:'pointer' }}>
@@ -1380,23 +1731,17 @@
               </div>
             )}
 
-            <div className="mt-5">
-              {myLoops.length === 0 ? (
-                <EmptyState icon="radio" title="Nothing forming on your floor yet.">
-                  Drop an intent and it waits here until enough people {user.dorm?`on ${user.dorm}`:'nearby'} want the same thing.
-                </EmptyState>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>Your loops</h2>
-                    <span className="pls-mono text-[12px]" style={{ color:'var(--text-tertiary)' }}>{myLoops.length} running</span>
-                  </div>
-                  <div className="space-y-3">
-                    {myLoops.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}
-                  </div>
-                </>
-              )}
-            </div>
+            {myLoops.length > 0 && (
+              <div className="mt-5">
+                <div className="flex items-center justify-between mb-2.5">
+                  <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>Your loops</h2>
+                  <span className="pls-mono text-[12px]" style={{ color:'var(--text-tertiary)' }}>{myLoops.length} running</span>
+                </div>
+                <div className="space-y-3">
+                  {myLoops.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}
+                </div>
+              </div>
+            )}
 
             {suggestions ? (
               <div className="mt-6">
@@ -1412,18 +1757,9 @@
                   {suggestions.cards.map((c,i)=><SuggestionCard key={i} card={c} actions={actions} />)}
                 </div>
               </div>
-            ) : nearby.length>0 ? (
-              <div className="mt-6">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Icon name="map-pin" size={16} style={{ color:'var(--accent)' }} />
-                  <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>Forming near you</h2>
-                </div>
-                <p className="text-[12.5px] mb-3" style={{ color:'var(--text-secondary)' }}>On {user.dorm||'your floor'} · loops you can slot into — same faces, every week.</p>
-                <div className="space-y-3">
-                  {nearby.map(l => <SuggestionCard key={l.id} card={{ kind: l.status==='forming'?'forming':'join', loop:l, target:l.target }} actions={actions} />)}
-                </div>
-              </div>
-            ) : null}
+            ) : (
+              <PulseFeed viewerId={viewerId} user={user} loops={loops} actions={actions} />
+            )}
           </div>
 
           <button className="pls-fab" aria-label="Drop an intent" onClick={actions.openCompose}><Icon name="plus" size={24} /></button>
@@ -2109,10 +2445,11 @@
        APP  — state machine + all mutations
     ============================================================ */
     function App(){
-      const [screen, setScreen] = useState('splash');   // splash|email|basics|intent|home|class|loop|notifs|you|advisor
+      const [screen, setScreen] = useState('splash');   // splash|story|email|basics|intent|home|class|loop|notifs|you|advisor
       const [sheet, setSheet]   = useState(null);        // null|compose|spinup|safety|share
       const [theme, setTheme]   = useState('daylight');  // daylight|afterdark
       const [user, setUser]     = useState(null);
+      const [intentSeed, setIntentSeed] = useState(''); // pre-fill for FirstIntent, chosen in the story onboarding
       const [viewerId, setViewerId] = useState('sarah'); // whose perspective the phone is showing
       const [loops, setLoops]   = useState(seedLoops);
       const [suggestions, setSuggestions] = useState(null);
@@ -2144,7 +2481,8 @@
       const unread = notifs.filter(n=>n.unread).length;
 
       /* ----- onboarding ----- */
-      const start   = () => setScreen('email');
+      const start     = () => setScreen('story');
+      const storyDone = (seed) => { setIntentSeed(seed || ''); setScreen('email'); };
       const verify  = (email) => { setUser(u=>({ ...(u||{}), email })); setScreen('basics'); };
       const basics  = (b) => { setUser({ id:'sarah', ...b }); setScreen('intent'); };
       const firstIntent = (text) => { runIntent(text); setScreen('home'); };
@@ -2349,7 +2687,7 @@
 
       const reset = () => {
         clearTimeout(toastTimer.current);
-        setScreen('splash'); setSheet(null); setUser(null); setViewerId('sarah'); setLoops(seedLoops());
+        setScreen('splash'); setSheet(null); setUser(null); setIntentSeed(''); setViewerId('sarah'); setLoops(seedLoops());
         setSuggestions(null); setActiveLoopId(null); setHighlightId(null); setDetailBanner(null);
         setDraft(null); setNudge(null); setNotifs([]); setToast(null); setFoldedIn(false);
         setSheet(null); setFeedback({}); setSafetySubject(null); setShareLoopId(null);
@@ -2365,9 +2703,10 @@
                 onClose={()=>setToast(null)} />
 
               {screen==='splash' && <Splash onStart={start} theme={theme} onToggleTheme={toggleTheme} />}
-              {screen==='email'  && <EmailVerify onBack={()=>setScreen('splash')} onNext={verify} />}
+              {screen==='story'  && <StoryOnboarding onDone={storyDone} onBack={()=>setScreen('splash')} theme={theme} />}
+              {screen==='email'  && <EmailVerify onBack={()=>setScreen('story')} onNext={verify} />}
               {screen==='basics' && <Basics onBack={()=>setScreen('email')} onNext={basics} />}
-              {screen==='intent' && <FirstIntent onBack={()=>setScreen('basics')} onNext={firstIntent} />}
+              {screen==='intent' && <FirstIntent onBack={()=>setScreen('basics')} onNext={firstIntent} seed={intentSeed} />}
               {screen==='home'   && user && (
                 <Home state={{ user, viewerId, loops, suggestions, nudge, unread, theme, campus }} actions={actions} />
               )}

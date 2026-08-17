@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Pulse feed (A+C blend, adoption-aware)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e;
+    --carnelian-100:#f8e6e3; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber-600);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:radial-gradient(1000px 460px at 50% -8%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:36px 20px 60px; }
+  .wrap{ max-width:1000px; margin:0 auto; text-align:center; }
+  .stage{ display:flex; gap:44px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:28px; text-align:left; }
+  .panel{ width:290px; }
+  .panel-label{ font:600 11px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:12px; }
+  .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  h1{ font:800 28px/1.12 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .lede{ max-width:60ch; margin:0 auto 22px; color:var(--text-secondary); font-size:15px; }
+  .toggle{ display:flex; flex-direction:column; gap:8px; }
+  .toggle button{ text-align:left; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:14px; padding:12px 15px; cursor:pointer; transition:all .18s var(--ease-out); display:flex; flex-direction:column; gap:3px; }
+  .toggle button b{ font:700 15px/1.1 var(--font-display); color:var(--text-primary); }
+  .toggle button span{ font-size:11.5px; color:var(--text-tertiary); }
+  .toggle button[data-on="1"]{ background:var(--accent); border-color:var(--accent); box-shadow:0 12px 26px -14px var(--accent); }
+  .toggle button[data-on="1"] b, .toggle button[data-on="1"] span{ color:var(--accent-ink); }
+  .togsub{ font-size:12.5px; color:var(--text-secondary); margin:16px 2px 0; line-height:1.5; }
+
+  .phone{ width:378px; height:764px; margin:0 auto; background:var(--bg-surface); border:1px solid var(--border-hairline);
+    border-radius:38px; overflow:hidden; position:relative; display:flex; flex-direction:column; text-align:left;
+    box-shadow:0 30px 64px -26px rgba(80,40,30,.36), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:6px 20px 4px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .hicon{ width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); font-size:16px; }
+  .scroll{ flex:1; overflow-y:auto; scrollbar-width:none; } .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:4px 20px 92px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  .live{ position:relative; width:8px; height:8px; border-radius:50%; background:var(--status-live); display:inline-block; }
+  .live::after{ content:''; position:absolute; inset:0; border-radius:50%; background:var(--status-live); animation:ping 1.8s var(--ease-out) infinite; }
+  @keyframes ping{ 0%{ transform:scale(1); opacity:.5; } 70%{ transform:scale(2.8); opacity:0; } 100%{ opacity:0; } }
+
+  .pulsehead{ padding:2px 20px 0; }
+  .pulsetop{ display:flex; align-items:center; gap:9px; }
+  .pulsetop .h{ font:700 15px/1 var(--font-display); }
+  .pulsetop .n{ margin-left:auto; font:500 11.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .widen{ font-size:12px; color:var(--text-secondary); margin-top:6px; }
+  .widen b{ color:var(--accent-strong); font-weight:700; }
+  .spark{ display:flex; align-items:flex-end; gap:3px; height:30px; margin-top:10px; }
+  .spark i{ flex:1; background:var(--accent-quiet); border-radius:3px 3px 0 0; transition:height .6s var(--ease-settle); }
+  .spark i.on{ background:var(--accent); }
+  .calmline{ height:1px; background:var(--border-hairline); margin:14px 0 4px; }
+
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; margin:12px 20px 0; }
+  .seg button{ flex:1; border:0; background:transparent; border-radius:9px; padding:8px 4px; font:600 12px/1 var(--font-sans); color:var(--text-secondary); cursor:pointer; transition:all .18s var(--ease-out); position:relative; }
+  .seg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+  .seg .qd{ position:absolute; top:5px; right:9px; width:5px; height:5px; border-radius:50%; background:var(--status-forming); }
+
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:12px 20px 4px; scrollbar-width:none; } .chips::-webkit-scrollbar{ height:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface); font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; }
+  .chip .dot{ width:7px; height:7px; border-radius:50%; }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:20px; padding:15px 16px; margin-bottom:12px; }
+  .kick{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px; }
+  .kick .d{ width:6px; height:6px; border-radius:50%; }
+  .title{ font:700 17px/1.2 var(--font-display); letter-spacing:-.01em; margin:6px 0 0; }
+  .sub{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .meter{ height:7px; border-radius:999px; background:var(--bg-sunken); overflow:hidden; margin-top:11px; }
+  .meter > i{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .7s var(--ease-settle); }
+  .meterline{ display:flex; justify-content:space-between; align-items:baseline; margin-top:9px; }
+  .meterline .m{ font:500 12.5px/1 var(--font-mono); } .meterline .r{ font-size:11px; color:var(--text-tertiary); }
+  .hot{ display:inline-flex; align-items:center; gap:4px; font:700 10px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--accent); background:var(--accent-quiet); padding:4px 8px; border-radius:999px; }
+  .fresh{ color:var(--status-live); background:color-mix(in srgb, var(--status-live) 12%, transparent); }
+  .btn{ margin-top:12px; width:100%; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:12px; padding:9px; font-size:13.5px; font-weight:700; color:var(--text-primary); cursor:pointer; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
+  /* spin-up prompt (intent density, exists with zero loops) */
+  .prompt{ background:linear-gradient(180deg, var(--accent-quiet), transparent 140%); border:1px solid color-mix(in srgb, var(--accent) 22%, var(--border-hairline)); border-radius:20px; padding:15px 16px; margin-bottom:12px; }
+  .prompt .lab{ font:700 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .avns{ display:flex; margin:10px 0 0; }
+  .avns span{ width:24px; height:24px; border-radius:50%; margin-left:-7px; border:2px solid var(--bg-surface); background:var(--paper-2); font:700 9px/20px var(--font-sans); text-align:center; color:var(--ink-2); }
+  .avns span:first-child{ margin-left:0; }
+
+  /* founder hero (true empty) */
+  .hero{ background:var(--bg-surface); border:1px dashed color-mix(in srgb, var(--accent) 40%, var(--border-hairline)); border-radius:22px; padding:20px 18px; margin-bottom:14px; text-align:center; }
+  .hero .seed{ width:44px; height:44px; border-radius:14px; background:var(--accent-quiet); color:var(--accent-strong); display:grid; place-items:center; margin:0 auto 12px; font-size:22px; }
+  .hero h2{ font:800 20px/1.15 var(--font-display); margin:0 0 6px; letter-spacing:-.01em; }
+  .hero p{ font-size:13px; color:var(--text-secondary); margin:0 auto 14px; max-width:30ch; line-height:1.5; }
+
+  .sechead{ display:flex; align-items:center; gap:8px; margin:18px 2px 11px; }
+  .sechead h3{ font:700 14px/1 var(--font-display); margin:0; } .sechead .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+
+  @keyframes slidein{ from{ opacity:0; transform:translateY(-10px) scale(.985); } to{ opacity:1; transform:none; } }
+  .in{ animation:slidein .5s var(--ease-settle) both; }
+
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:60px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.5 var(--font-sans); color:var(--text-tertiary); } .tabbar div.on{ color:var(--accent); } .tabbar div .g{ font-size:16px; display:block; }
+  @media (prefers-reduced-motion: reduce){ .in{ animation:none; } .live::after{ animation:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · Pulse feed</div>
+  <h1>A + C, and it holds up empty</h1>
+  <p class="lede">C's proximity pulse on top of A's live forming stream. Flip the adoption level: the same screen stays honest and inviting on day one, and comes alive at scale. It never fakes a crowd.</p>
+
+  <div class="stage">
+    <div class="phone" id="phone"></div>
+    <div class="panel">
+      <div class="panel-label">Demo · adoption level</div>
+      <div class="toggle" id="toggle">
+        <button data-k="dayone" data-on="1"><b>Day one</b><span>first users · nothing formed yet</span></button>
+        <button data-k="growing"><b>Growing</b><span>a few weeks in · crews forming</span></button>
+        <button data-k="buzzing"><b>Buzzing</b><span>at scale · live stream</span></button>
+      </div>
+      <p class="togsub" id="togsub"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CATS = { class:{label:'Classes',hue:'var(--slate)'}, fitness:{label:'Fitness',hue:'var(--moss)'}, food:{label:'Food',hue:'var(--amber-600)'}, social:{label:'Social',hue:'var(--rose)'}, music:{label:'Music',hue:'var(--violet)'} };
+const esc = s => (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const catDot = c => `<span class="dot" style="background:${CATS[c].hue}"></span>`;
+
+const STATES = {
+  dayone: {
+    sub: "Day one on your floor. No live crowd to fake, so the feed leads with what people already typed, and invites you to start the first loop. Proximity auto-widens to show the campus isn't empty either.",
+    count: null, scope:'floor', quiet:true, spark:0,
+    hero: { h:"You're early on Donlon 2F", p:"Nothing's formed on your floor yet, but 30 neighbors already dropped intents. Be the one who starts a loop and it pulls them in." },
+    prompts: [
+      { t:'CS 2110', lab:'11 floormates want this', who:['A','J','R','+8'] },
+      { t:'dinner crew', lab:'7 on Donlon 2F want this', who:['M','L','+5'] },
+    ],
+    wider: { scope:'North', crews: [ {t:'Econ 1110 cram', c:'class', u:'North', n:9, g:10, age:'4m', hot:1}, {t:'Beebe Lake run', c:'fitness', u:'North', n:4, g:8, age:'22m'} ] },
+    stream: []
+  },
+  growing: {
+    sub: "A few weeks in. Real crews are forming on your floor now, mixed with spin-up prompts where intent is high. The pulse strip shows gentle, honest activity, not an inflated number.",
+    count: 6, scope:'floor', quiet:false, spark:0.45,
+    hero: null,
+    prompts: [ { t:'MATH 1920', lab:'9 floormates want this', who:['P','M','+7'] } ],
+    stream: [
+      {t:'CS 2110 · Prelim 1 review', c:'class', u:'Donlon 2F', n:8, g:10, age:'3m', hot:1},
+      {t:'Donlon boxing crew', c:'fitness', u:'Donlon 2F', n:6, g:10, age:'9m'},
+      {t:'Smash Bros after psets', c:'social', u:'Donlon 2F', n:4, g:10, age:'18m'},
+    ]
+  },
+  buzzing: {
+    sub: "At scale. The floor alone has enough forming that proximity stays tight, the pulse strip is alive, and new crews slide in as they form. This is the aspirational state, earned, not faked.",
+    count: 43, scope:'floor', quiet:false, spark:1, live:true,
+    hero: null, prompts: [],
+    stream: [
+      {t:'CS 2110 · Prelim 1 review', c:'class', u:'Donlon 2F', n:9, g:10, age:'2m', hot:1},
+      {t:'Donlon boxing crew', c:'fitness', u:'Donlon 2F', n:8, g:10, age:'5m', hot:1},
+      {t:'Late-night ramen run', c:'food', u:'Donlon 2F', n:6, g:8, age:'7m'},
+      {t:'Smash Bros after psets', c:'social', u:'Donlon 2F', n:5, g:10, age:'12m'},
+      {t:'PSYCH 1101 group', c:'class', u:'Donlon 2F', n:4, g:10, age:'15m'},
+    ]
+  }
+};
+const ARRIVALS = [
+  {t:'Bouldering @ Lindseth', c:'fitness', u:'Donlon 2F', n:2, g:8, age:'now'},
+  {t:'Trivia night squad', c:'social', u:'Donlon 2F', n:3, g:10, age:'now'},
+  {t:'ECON office-hours crew', c:'class', u:'Donlon 2F', n:2, g:10, age:'now'},
+  {t:'Guitar jam', c:'music', u:'Donlon 2F', n:2, g:8, age:'now'},
+];
+
+let cur = 'dayone', filter='all', timer=null, arr=0;
+const phone = document.getElementById('phone');
+const streamCard = (x, fresh)=>{ const pct=Math.round(x.n/x.g*100); return `<div class="card ${fresh?'in':''}">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="kick" style="color:${CATS[x.c].hue}"><span class="d" style="background:${CATS[x.c].hue}"></span>${CATS[x.c].label} · ${esc(x.u)}</span>
+      ${x.age==='now'?'<span class="hot fresh">just formed</span>':(x.hot?'<span class="hot">filling fast</span>':'')}
+    </div>
+    <h3 class="title">${esc(x.t)}</h3>
+    <div class="sub">${x.age==='now'?'seconds ago':x.age+' ago'} · same faces weekly</div>
+    <div class="meter"><i style="width:${pct}%"></i></div>
+    <div class="meterline"><span class="m">${x.n}/${x.g} in</span><span class="r">${x.g-x.n} to fire the drop</span></div>
+    <button class="btn p">Count me in</button></div>`; };
+const promptCard = p=>`<div class="prompt">
+    <div class="lab">Nobody's started this yet</div>
+    <h3 class="title" style="margin-top:5px">Start a ${esc(p.t)} loop</h3>
+    <div class="sub">${esc(p.lab)} · you'd be the coordinator</div>
+    <div class="avns">${p.who.map(w=>`<span>${esc(w)}</span>`).join('')}</div>
+    <button class="btn p">Spin it up</button></div>`;
+
+function render(){
+  const S = STATES[cur];
+  const filt = a => filter==='all'? a : a.filter(x=>x.c===filter);
+  const scopeLabel = { floor:'My floor', donlon:'Donlon', north:'North', campus:'Campus' };
+  // spark bars
+  const bars = Array.from({length:20},(_,i)=>{ const base = S.spark; if(base===0) return '<i style="height:8%"></i>'; const h = 12+Math.round(70*base*Math.abs(Math.sin(i*0.6))); return `<i class="${i>17&&base>=1?'on':''}" style="height:${h}%"></i>`; }).join('');
+  const sparkOrCalm = S.spark>0 ? `<div class="spark">${bars}</div><div class="mono" style="font-size:10px;color:var(--text-tertiary);margin-top:5px;display:flex;justify-content:space-between"><span>6p</span><span>now</span></div>` : `<div class="calmline"></div>`;
+  const headline = S.quiet
+    ? `<span class="h">Quiet on your floor</span><span class="n">just getting started</span>`
+    : `<span class="h"><span class="mono" id="cnt">${S.count}</span> crews forming near you</span><span class="n">live now</span>`;
+  const widen = S.quiet && S.wider ? `<div class="widen">Auto-widened: <b>${S.wider.crews.length} forming across ${S.wider.scope}</b> tonight.</div>` : '';
+
+  let body = '';
+  if(S.hero){ body += `<div class="hero"><div class="seed">◎</div><h2>${esc(S.hero.h)}</h2><p>${esc(S.hero.p)}</p><button class="btn p" style="max-width:220px;margin:0 auto">Drop your intent</button></div>`; }
+  const prompts = filt(S.prompts||[]);
+  if(prompts.length){ if(!S.hero) body += `<div class="sechead"><h3>People want these</h3><span class="c">start one</span></div>`; body += prompts.map(promptCard).join(''); }
+  const stream = filt(S.stream||[]);
+  if(stream.length){ body += `<div class="sechead"><h3>Forming on your floor</h3><span class="c">${stream.length} live</span></div>`; body += stream.map((x,i)=>streamCard(x, x._fresh && i===0)).join(''); (S.stream||[]).forEach(x=>x._fresh=false); }
+  if(S.quiet && S.wider){ const wc = filt(S.wider.crews); if(wc.length){ body += `<div class="sechead"><h3>Forming across ${esc(S.wider.scope)}</h3><span class="c">widen radius</span></div>` + wc.map(x=>streamCard(x,false)).join(''); } }
+
+  phone.innerHTML = `
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:2px"><span class="hicon">🔍</span><span class="hicon">🔔</span></div></div>
+    <div class="pulsehead">
+      <div class="pulsetop"><span class="live" style="${S.quiet?'background:var(--ink-3)':''}"></span>${headline}</div>
+      ${widen}
+      ${sparkOrCalm}
+    </div>
+    <div class="seg" id="seg">
+      ${['floor','donlon','north','campus'].map(k=>`<button data-k="${k}" data-on="${k===S.scope?1:0}">${scopeLabel[k]}${S.quiet&&k==='floor'?'<span class="qd"></span>':''}</button>`).join('')}
+    </div>
+    <div class="chips" id="chips">
+      ${[['all','All'],...Object.keys(CATS).map(k=>[k,CATS[k].label])].map(([k,l])=>`<button class="chip" data-k="${k}" data-on="${k===filter?1:0}">${k!=='all'?catDot(k):''}${l}</button>`).join('')}
+    </div>
+    <div class="scroll"><div class="pad">${body || '<div style="text-align:center;color:var(--text-tertiary);padding:40px 0;font-size:13px">Nothing in this filter yet — widen or clear it.</div>'}</div></div>
+    <div class="tabbar"><div class="on"><span class="g">◉</span>Home</div><div><span class="g">◈</span>Class</div><div><span class="g">◔</span>Alerts</div><div><span class="g">○</span>You</div></div>`;
+
+  phone.querySelectorAll('#chips .chip').forEach(c=>c.onclick=()=>{ filter=c.dataset.k; render(); });
+  phone.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ /* visual only in mock */ b.parentNode.querySelectorAll('button').forEach(x=>x.dataset.on=0); b.dataset.on=1; });
+}
+
+function setState(k){
+  cur=k; filter='all';
+  document.getElementById('togsub').textContent = STATES[k].sub;
+  document.querySelectorAll('#toggle button').forEach(b=>b.dataset.on = b.dataset.k===k?1:0);
+  if(timer){ clearInterval(timer); timer=null; }
+  render();
+  if(k==='buzzing' && !RM){
+    timer = setInterval(()=>{
+      const S = STATES.buzzing;
+      S.stream.forEach(x=>{ if(x.age==='now') x.age=(Math.floor(Math.random()*5)+1)+'m'; });
+      const a = {...ARRIVALS[arr++ % ARRIVALS.length]}; a._fresh=true; S.stream.unshift(a); if(S.stream.length>6) S.stream.pop();
+      S.stream.forEach(x=>{ if(x!==a && x.n<x.g && Math.random()<0.4) x.n++; });
+      S.count++;
+      render();
+    }, 2600);
+  }
+}
+document.querySelectorAll('#toggle button').forEach(b=>b.onclick=()=>setState(b.dataset.k));
+setState('dayone');
+</script>
+</body>
+</html>
