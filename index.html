@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pulse — Your people, on repeat</title>
+  <title>Loop — Your people, on repeat</title>
 
   <!-- Tailwind (Play CDN) — layout utilities only; all color/shape/type is token-driven -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -211,6 +211,7 @@
     @keyframes rise{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
     @keyframes toast-in{ from{ opacity:0; transform:translateY(-14px); } to{ opacity:1; transform:none; } }
     @keyframes pop{ from{ opacity:0; transform:scale(.9); } to{ opacity:1; transform:scale(1); } }
+    @keyframes pulse-dot{ 0%,60%,100%{ opacity:.3; transform:translateY(0); } 30%{ opacity:1; transform:translateY(-3px); } }
     .fade-in{ animation:fade-in var(--dur-3) var(--ease-out) both; }
     .rise{ animation:rise var(--dur-3) var(--ease-settle) both; }
     .fold-in{ animation:pulse-fold-in var(--dur-3) var(--ease-pop) both; }
@@ -279,6 +280,10 @@
       'flame': '<path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/>',
       'shield': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
       'phone': '<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>',
+      'share-2': '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
+      'link': '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+      'copy': '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+      'message-circle': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
     };
     function Icon({ name, size=20, stroke=2, className='', style }){
       const inner = ICONS[name] || ICONS['circle'];
@@ -315,7 +320,7 @@
     const UNIT_HUE = { dorm:'var(--unit-dorm)', class:'var(--unit-class)', major:'var(--unit-major)' };
 
     // Assigned counselor — the human the safety route reaches (Stellic advising + wellbeing).
-    const COUNSELOR = { id:'dana', name:'Dana Okafor', role:'your Pulse counselor', unit:'Advising & Wellbeing', hours:'Walk-ins Tue + Thu · 2–4p' };
+    const COUNSELOR = { id:'dana', name:'Dana Okafor', role:'your Loop counselor', unit:'Advising & Wellbeing', hours:'Walk-ins Tue + Thu · 2–4p' };
 
     /* ============================================================
        CAMPUS AT SCALE (§ "alive") — a deterministic mock student body.
@@ -364,6 +369,61 @@
         byCourse, byCategory,
       };
     }
+
+    /* ============================================================
+       CLASS OF 2030 — incoming cohort dashboard data (the "class
+       dashboard" demo concept). Deterministic, fixed-seed so the
+       leaderboard is stable on camera. Ranks LOOPS and HOUSES, never
+       people — the §2 guardrail ("nobody is ranked, scored, or told")
+       is preserved: a crew's streak and a dorm's belonging % are
+       collective, on-thesis signals, never an individual scoreboard.
+    ============================================================ */
+    const COHORT = {
+      classOf: 2030,          // entering fall 2026
+      admitted: 5776,         // real: Ivy Day offers, Class of 2030
+      enrolling: 3462,        // ~first-year yield (Cornell enrolls ~3.4–3.5k)
+      arriving: 'Fall 2026',
+    };
+    // Loops ranked by streak — the thesis ("same faces, on repeat") as a scoreboard.
+    // These are CREWS/SESSIONS, not persons. members carry {id,name} for avatars only.
+    const COHORT_LEADERBOARD = [
+      { id:'libe-owls',  title:'Libe Café Nightowls', target:'CS 2110',    streak:14, trend:2, size:6,
+        members:[{id:'lo1',name:'Ava Lin'},{id:'lo2',name:'Deshawn Ford'},{id:'lo3',name:'Yuki Sato'},{id:'lo4',name:'Nora Beck'},{id:'lo5',name:'Sam Ortiz'},{id:'lo6',name:'Ivy Chan'}] },
+      { id:'sunday-hw',  title:'Sunday HW crew',      target:'CS 2110',    streak:12, trend:1, size:5, seed:true,
+        members:[{id:'josh',name:'Josh Park'},{id:'lydia',name:'Lydia Osei'},{id:'priya',name:'Priya Rao'},{id:'marcus',name:'Marcus Diaz'},{id:'sarah',name:'Sarah Chen'}] },
+      { id:'mann-6',     title:'Mann 6th-floor grind',target:'CHEM 2070',  streak:11, trend:0, size:5,
+        members:[{id:'m1',name:'Kofi Mensah'},{id:'m2',name:'Elena Ruiz'},{id:'m3',name:'Tariq Nabi'},{id:'m4',name:'Grace Hong'},{id:'m5',name:'Leo Vance'}] },
+      { id:'duffield',   title:'Duffield dawn patrol', target:'MATH 1920', streak:9,  trend:3, size:4,
+        members:[{id:'d1',name:'Mia Park'},{id:'d2',name:'Owen Reyes'},{id:'d3',name:'Zoe Ababio'},{id:'d4',name:'Nina Kaur'}] },
+      { id:'okenshields',title:'Okenshields table',   target:'dinner crew',streak:8,  trend:1, size:7,
+        members:[{id:'ok1',name:'Ben Cho'},{id:'ok2',name:'Rae Simmons'},{id:'ok3',name:'Ines Vela'},{id:'ok4',name:'Jack Doyle'},{id:'ok5',name:'Amara Ojo'},{id:'ok6',name:'Tom Fields'},{id:'ok7',name:'Lucy Wen'}] },
+      { id:'noyes-boul', title:'Noyes boulder squad',  target:'bouldering', streak:7,  trend:0, size:5,
+        members:[{id:'nb1',name:'Kai Ito'},{id:'nb2',name:'Sol Reyes'},{id:'nb3',name:'Dara Quinn'},{id:'nb4',name:'Max Ebert'},{id:'nb5',name:'Remy Cole'}] },
+      { id:'klarman-econ',title:'Klarman econ room',   target:'ECON 1110', streak:6,  trend:2, size:6,
+        members:[{id:'ke1',name:'Hana Kim'},{id:'ke2',name:'Paulo Reis'},{id:'ke3',name:'Nadia Ali'},{id:'ke4',name:'Cole Ray'},{id:'ke5',name:'Uma Nair'},{id:'ke6',name:'Finn Ober'}] },
+      { id:'beebe-run',  title:'Beebe Lake morning run',target:'morning run',streak:5, trend:1, size:4,
+        members:[{id:'br1',name:'Tess Lowe'},{id:'br2',name:'Aria Sol'},{id:'br3',name:'Jon Vasquez'},{id:'br4',name:'Pia Rossi'}] },
+    ];
+    // North Campus houses ranked by % of the floor folded into a loop (belonging, collective).
+    const COHORT_HOUSES = [
+      { dorm:'Donlon',            pct:78, loops:41 },
+      { dorm:'Court-Kay-Bauer',   pct:74, loops:37 },
+      { dorm:'Balch',             pct:71, loops:29 },
+      { dorm:'Dickson',           pct:69, loops:33 },
+      { dorm:'Toni Morrison',     pct:66, loops:26 },
+      { dorm:'Mews',              pct:63, loops:24 },
+      { dorm:'Ganędago',          pct:61, loops:22 },
+      { dorm:'Jameson',           pct:58, loops:19 },
+    ];
+    // Aggregate momentum lines that cycle in the "forming right now" ticker (loops, never names).
+    const COHORT_TICKER = [
+      'Mews 3rd floor just spun up a MATH 1920 crew',
+      'Prelim 1 review fired — 10 seats filled on North',
+      'A CHEM 2070 loop in Dickson hit a 6-week streak',
+      'Okenshields dinner table added its 7th regular',
+      'Balch 2nd floor started a Sunday econ room',
+      'Beebe Lake run crew came back for week 5',
+    ];
 
     const seedLoops = () => ([
       {
@@ -465,7 +525,7 @@
       return (
         <span className="pls-display" style={{ fontWeight:800, fontSize:size, letterSpacing:'-.03em',
           color:'var(--text-primary)', display:'inline-flex', alignItems:'baseline', lineHeight:1 }}>
-          Pulse
+          Loop
           <span style={{ width:Math.max(5,size*0.17), height:Math.max(5,size*0.17), borderRadius:'50%',
             background:'var(--accent)', display:'inline-block', marginLeft:2 }} />
         </span>
@@ -722,7 +782,7 @@
         </div>
       );
     }
-    function TabBar({ active='pulse', unread=0, onHome, onAlerts, onYou }){
+    function TabBar({ active='pulse', unread=0, onHome, onClass, onAlerts, onYou }){
       const Tab = ({ id, icon, label, onClick }) => (
         <button className={"pls-tab"+(active===id?' pls-tab--active':'')} onClick={onClick}>
           <span className="pls-tab__glyph">
@@ -736,9 +796,10 @@
       );
       return (
         <div className="pls-tabbar">
-          <Tab id="pulse"  icon="radio"  label="Pulse"  onClick={onHome} />
-          <Tab id="alerts" icon="bell"   label="Alerts" onClick={onAlerts} />
-          <Tab id="you"    icon="circle" label="You"    onClick={onYou} />
+          <Tab id="pulse"  icon="radio"          label="Home"   onClick={onHome} />
+          <Tab id="class"  icon="graduation-cap" label="Class"  onClick={onClass} />
+          <Tab id="alerts" icon="bell"           label="Alerts" onClick={onAlerts} />
+          <Tab id="you"    icon="circle"         label="You"    onClick={onYou} />
         </div>
       );
     }
@@ -854,6 +915,157 @@
           <div className="mt-5">
             <Button block onClick={()=>onSend(text)} disabled={!text.trim()} icon="shield">Send to {first}</Button>
           </div>
+        </Sheet>
+      );
+    }
+
+    /* ============================================================
+       SHARE — "drop a loop": a simulated SMS / WhatsApp OG unfurl.
+       No backend: we render the rich link preview exactly as it
+       lands in a friend's texts, then fold them in from the tap.
+       (Real og: tags are the documented later upgrade, like Layer B.)
+    ============================================================ */
+    function loopSlug(id){ return 'loop.so/j/' + (hashInt(id||'loop').toString(36).slice(0,4)); }
+
+    function OgUnfurl({ loop }){
+      const count  = (loop.memberIds ? loop.memberIds.length : 3);
+      const line   = loop.nextLine || loop.rhythm || 'meets this week';
+      const course = (loop.target || 'study').toString();
+      return (
+        <div style={{ borderRadius:14, overflow:'hidden', border:'1px solid rgba(0,0,0,.10)', background:'#fff', width:242 }}>
+          <div style={{ background:'#FF5C3A', padding:'13px 14px 12px', color:'#fff' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, fontWeight:800, letterSpacing:'-.02em', fontSize:15 }}>
+              <Icon name="flame" size={16} /> Loop
+            </div>
+            <div style={{ marginTop:9, fontSize:11.5, fontWeight:600, opacity:.94, letterSpacing:'.02em' }}>{course} · study loop</div>
+          </div>
+          <div style={{ padding:'11px 13px 12px' }}>
+            <div style={{ fontWeight:700, fontSize:13.5, color:'#111', lineHeight:1.25 }}>{loop.title}</div>
+            <div style={{ fontSize:12, color:'#555', marginTop:3 }}>{line}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:8, fontSize:11.5, color:'#FF5C3A', fontWeight:600 }}>
+              <Icon name="flame" size={13} /> {count} already in · same faces weekly
+            </div>
+            <div style={{ marginTop:8, fontSize:10.5, letterSpacing:'.05em', color:'#9AA0A6', textTransform:'uppercase' }}>{loopSlug(loop.id)}</div>
+          </div>
+        </div>
+      );
+    }
+
+    const CHAT_THEME = {
+      messages: { header:'#F7F7F8', headerInk:'#111', pane:'#fff',     out:'#0B93F6', outInk:'#fff',    in:'#E9E9EB', inInk:'#111',    sub:'iMessage' },
+      whatsapp: { header:'#008069', headerInk:'#fff', pane:'#EFEAE2', out:'#D9FDD3', outInk:'#111B21', in:'#fff',    inInk:'#111B21', sub:'WhatsApp' },
+    };
+
+    function ChatBubble({ side, theme, children }){
+      const out = side==='out';
+      return (
+        <div style={{ display:'flex', justifyContent: out?'flex-end':'flex-start', marginTop:6 }}>
+          <div style={{ maxWidth:'86%', background: out?theme.out:theme.in, color: out?theme.outInk:theme.inInk,
+            borderRadius:16, padding:'8px 10px', fontSize:13.5, lineHeight:1.4, boxShadow:'0 1px 1px rgba(0,0,0,.08)',
+            borderBottomRightRadius: out?4:16, borderBottomLeftRadius: out?16:4 }}>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    function TypingBubble({ theme }){
+      return (
+        <div style={{ display:'flex', justifyContent:'flex-start', marginTop:6 }}>
+          <div style={{ background:theme.in, borderRadius:16, borderBottomLeftRadius:4, padding:'10px 12px', display:'flex', gap:4 }}>
+            {[0,1,2].map(i=>(
+              <span key={i} style={{ width:6, height:6, borderRadius:'50%', background:'#9AA0A6',
+                display:'inline-block', animation:`pulse-dot 1s ${i*0.18}s infinite ease-in-out` }} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function ShareSheet({ loop, onClose, onSent }){
+      const [channel, setChannel] = useState(null);   // null = channel picker, else the thread
+      const [step, setStep]       = useState(0);       // 0 sent · 1 typing · 2 reply · 3 folded in
+      const [copied, setCopied]   = useState(false);
+      useEffect(()=>{
+        if(!channel) return;
+        setStep(0);
+        const a = setTimeout(()=>setStep(1), 850);
+        const b = setTimeout(()=>setStep(2), 2050);
+        const c = setTimeout(()=>setStep(3), 3350);
+        return ()=>{ clearTimeout(a); clearTimeout(b); clearTimeout(c); };
+      }, [channel]);
+
+      if(!channel){
+        const copy = () => { try{ navigator.clipboard && navigator.clipboard.writeText('https://'+loopSlug(loop.id)); }catch(e){} setCopied(true); };
+        const Ch = ({ id, icon, label, bg }) => (
+          <button onClick={()=>setChannel(id)} className="rise"
+            style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:9, padding:'16px 10px',
+              borderRadius:16, border:'1px solid var(--border-hairline)', background:'var(--bg-surface)', cursor:'pointer' }}>
+            <span style={{ width:44, height:44, borderRadius:13, background:bg, color:'#fff',
+              display:'flex', alignItems:'center', justifyContent:'center' }}><Icon name={icon} size={22} /></span>
+            <span style={{ fontSize:13, fontWeight:600, color:'var(--text-primary)' }}>{label}</span>
+          </button>
+        );
+        return (
+          <Sheet kicker="Drop this loop" title="Send it to a friend" onClose={onClose}>
+            <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+              This is exactly what lands in their texts. One tap folds them straight into the rhythm — no cold DM, no feed to scroll.
+            </p>
+            <div className="mt-3.5 flex justify-center"><OgUnfurl loop={loop} /></div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <Ch id="messages" icon="message-square"  label="Messages" bg="#0B93F6" />
+              <Ch id="whatsapp" icon="message-circle"  label="WhatsApp" bg="#25D366" />
+            </div>
+            <button onClick={copy} className="w-full mt-3 pls-card p-3.5 flex items-center justify-center gap-2"
+              style={{ cursor:'pointer', color: copied?'var(--status-live)':'var(--text-secondary)', fontWeight:600, fontSize:13.5 }}>
+              <Icon name={copied?'check':'link'} size={16} />{copied ? 'Link copied' : loopSlug(loop.id)}
+            </button>
+          </Sheet>
+        );
+      }
+
+      const th   = CHAT_THEME[channel];
+      const done = step>=3;
+      return (
+        <Sheet kicker={th.sub} title="Text a friend" onClose={onClose}>
+          <div style={{ borderRadius:16, overflow:'hidden', border:'1px solid var(--border-hairline)' }}>
+            <div style={{ background:th.header, color:th.headerInk, padding:'9px 12px', display:'flex', alignItems:'center', gap:8, fontSize:13, fontWeight:600 }}>
+              <span style={{ opacity:.85 }}><Icon name="chevron-left" size={16} /></span>
+              <Avatar name="Kaia" id="kaia" size={26} ring={false} />
+              <span>Kaia · Donlon 3F</span>
+              <span style={{ marginLeft:'auto', fontSize:11, opacity:.72 }}>{th.sub}</span>
+            </div>
+            <div style={{ background:th.pane, padding:'12px 12px 16px', minHeight:236 }}>
+              <div style={{ textAlign:'center', fontSize:10.5, color:'#9AA0A6', marginBottom:4 }}>now</div>
+              <ChatBubble side="out" theme={th}>
+                <div style={{ marginBottom:7 }}>come lock in with us 🔒 dropping you the loop</div>
+                <OgUnfurl loop={loop} />
+              </ChatBubble>
+              {step===1 && <TypingBubble theme={th} />}
+              {step>=2 && (
+                <div className="fade-in">
+                  <ChatBubble side="in" theme={th}>omg yes i've been meaning to start {loop.target} hw early 😭 count me in</ChatBubble>
+                </div>
+              )}
+              {done && (
+                <div className="fade-in" style={{ textAlign:'center', marginTop:12 }}>
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:6, background:'var(--accent-quiet)', color:'var(--accent-strong)',
+                    fontSize:11.5, fontWeight:700, padding:'5px 11px', borderRadius:999 }}>
+                    <Icon name="flame" size={13} />Kaia tapped the loop
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="mt-4">
+            <Button block disabled={!done} onClick={()=>onSent('Kaia')} icon="users">
+              {done ? "Done — she's folded in" : 'She taps the loop…'}
+            </Button>
+          </div>
+          <button onClick={()=>setChannel(null)} className="w-full mt-2 text-center"
+            style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text-tertiary)', fontSize:12.5 }}>
+            ← try another app
+          </button>
         </Sheet>
       );
     }
@@ -979,7 +1191,7 @@
                 style={{ flex:1, border:'none', outline:'none', resize:'none', background:'transparent', fontSize:16, lineHeight:1.5, color:'var(--text-primary)' }} />
             </div>
             <div className="mt-6">
-              <Button block onClick={()=>onNext(text)} disabled={!text.trim()} iconRight="arrow-right">See my pulse</Button>
+              <Button block onClick={()=>onNext(text)} disabled={!text.trim()} iconRight="arrow-right">See what's forming</Button>
             </div>
           </div>
         </div>
@@ -989,7 +1201,7 @@
     /* ============================================================
        CAMPUS-AT-SCALE surfaces — aggregate momentum, never a feed
     ============================================================ */
-    function CampusStrip({ campus }){
+    function CampusStrip({ campus, onOpen }){
       const Item = ({ n, label }) => (
         <div className="flex flex-col">
           <span className="pls-mono" style={{ fontSize:17, fontWeight:500, color:'var(--text-primary)' }}>{n}</span>
@@ -997,14 +1209,17 @@
         </div>
       );
       return (
-        <Card variant="sunken" className="p-3.5 mt-4">
-          <div className="flex items-center gap-1.5 pls-kicker mb-2"><Icon name="activity" size={12} style={{ color:'var(--accent)' }} />Cornell · live right now</div>
+        <button onClick={onOpen} className="w-full text-left pls-card pls-card--sunken p-3.5 mt-4" style={{ cursor:'pointer' }}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5 pls-kicker"><Icon name="graduation-cap" size={12} style={{ color:'var(--accent)' }} />Class of {COHORT.classOf} · live right now</div>
+            <span className="flex items-center gap-0.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>see the class<Icon name="chevron-right" size={13} /></span>
+          </div>
           <div className="flex items-center justify-between">
-            <Item n={campus.total.toLocaleString()} label="on Pulse" />
+            <Item n={campus.total.toLocaleString()} label="on Loop" />
             <Item n={campus.loopsRunning.toLocaleString()} label="loops running" />
             <Item n={campus.dropsTonight} label="drops tonight" />
           </div>
-        </Card>
+        </button>
       );
     }
     function TonightCard({ campus }){
@@ -1074,11 +1289,11 @@
           />
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 fade-in">
             <div className="pt-4">
-              <p className="pls-kicker">Your pulse</p>
+              <p className="pls-kicker">Home</p>
               <h1 className="pls-display" style={{ fontWeight:800, fontSize:26, color:'var(--text-primary)' }}>{user.name.split(' ')[0]}'s loops</h1>
             </div>
 
-            <CampusStrip campus={campus} />
+            <CampusStrip campus={campus} onOpen={actions.openClass} />
 
             {nudge && (
               <div className="mt-4">
@@ -1136,7 +1351,7 @@
           <button className="pls-fab" aria-label="Drop an intent" onClick={actions.openCompose}><Icon name="plus" size={24} /></button>
 
           <TabBar active="pulse" unread={unread}
-            onHome={()=>{}} onAlerts={actions.openNotifications} onYou={actions.openYou} />
+            onHome={()=>{}} onClass={actions.openClass} onAlerts={actions.openNotifications} onYou={actions.openYou} />
         </div>
       );
     }
@@ -1181,7 +1396,10 @@
       return (
         <div className="h-full flex flex-col fade-in">
           <AppHeader title={loop.title} onBack={onBack}
-            right={<IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />} />
+            right={<>
+              <IconButton name="share-2" size={19} label="Share this loop" onClick={()=>actions.openShare(loop.id)} />
+              <IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />
+            </>} />
           <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-5 pb-8">
             <UnitKicker unit={loop.unit} />
             <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
@@ -1261,6 +1479,7 @@
                   <div className="pls-banner p-3.5 flex items-center gap-2" style={{ color:'var(--text-primary)', fontWeight:600, fontSize:14 }}>
                     <span style={{ color:'var(--status-live)' }}><Icon name="circle-check-big" size={18} /></span>You're folded into this loop
                   </div>
+                  <Button variant="secondary" block onClick={()=>actions.openShare(loop.id)} icon="share-2">Drop this loop to a friend</Button>
                   <Button variant="ghost" block onClick={()=>actions.leaveLoop(loop.id)} icon="log-out">Leave loop</Button>
                 </>
               )}
@@ -1308,7 +1527,7 @@
             </button>
 
             <p className="text-center text-[12.5px] mt-6 flex items-center justify-center gap-1.5" style={{ color:'var(--text-tertiary)' }}>
-              <Icon name="repeat" size={14} />Pulse keeps the rhythm and the next one.
+              <Icon name="repeat" size={14} />Loop keeps the rhythm and the next one.
             </p>
           </div>
         </div>
@@ -1385,7 +1604,7 @@
               <div className="flex items-center gap-1.5 pls-kicker mb-2" style={{ color:'var(--accent-strong)' }}><Icon name="trending-up" size={13} />Belonging signal</div>
               <p className="pls-display" style={{ fontWeight:700, fontSize:18, color:'var(--text-primary)' }}>You're in {myLoops.length} loop{myLoops.length===1?'':'s'} this semester.</p>
               <p className="text-[13px] mt-1 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                Students in at least one loop stay enrolled and see an advisor earlier. Pulse shares this with advising as one number — a sign to reach out — never your conversations.
+                Students in at least one loop stay enrolled and see an advisor earlier. Loop shares this with advising as one number — a sign to reach out — never your conversations.
               </p>
               <div className="flex items-center justify-between mt-3.5">
                 <MiniStat n={myLoops.length} label="your loops" />
@@ -1429,7 +1648,227 @@
             </button>
           </div>
           <TabBar active="you" unread={unread}
-            onHome={actions.goHome} onAlerts={actions.openNotifications} onYou={()=>{}} />
+            onHome={actions.goHome} onClass={actions.openClass} onAlerts={actions.openNotifications} onYou={()=>{}} />
+        </div>
+      );
+    }
+
+    /* ============================================================
+       CLASS OF 2030 — the incoming-cohort "class dashboard" (dynamic,
+       alive). Ranks loops + houses, never people (§2 guardrail).
+    ============================================================ */
+    // Animate a number from 0 → target on mount, so the dashboard reads as live.
+    function useCountUp(target, dur=1100){
+      const [v, setV] = useState(0);
+      useEffect(()=>{
+        let raf, start;
+        const step = (t)=>{
+          if(start==null) start=t;
+          const p = Math.min(1, (t-start)/dur);
+          const eased = 1 - Math.pow(1-p, 3);   // easeOutCubic
+          setV(target*eased);
+          if(p<1) raf=requestAnimationFrame(step);
+          else setV(target);
+        };
+        raf=requestAnimationFrame(step);
+        return ()=>cancelAnimationFrame(raf);
+      }, [target, dur]);
+      return v;
+    }
+    function CountStat({ value, label, suffix='', icon, accent, dur=1100 }){
+      const v = useCountUp(value, dur);
+      const shown = Math.round(v).toLocaleString() + suffix;
+      return (
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-1" style={{ color: accent?'var(--accent-strong)':'var(--text-tertiary)' }}>
+            {icon && <Icon name={icon} size={13} />}
+            <span className="pls-kicker" style={{ color:'inherit' }}>{label}</span>
+          </div>
+          <span className="pls-mono" style={{ fontSize:26, fontWeight:500, lineHeight:1.05,
+            color: accent?'var(--accent-strong)':'var(--text-primary)' }}>{shown}</span>
+        </div>
+      );
+    }
+    // A crew's avatar row (display-only — no tap-through to a profile; guardrail preserved).
+    function CrewFaces({ members, size=22, max=3 }){
+      const shown = members.slice(0, max);
+      const extra = members.length - shown.length;
+      return (
+        <div className="flex items-center" style={{ paddingLeft:8 }}>
+          {shown.map((m,i)=>(
+            <div key={m.id} style={{ marginLeft:-8, zIndex:10-i }}><Avatar id={m.id} name={m.name} size={size} ring /></div>
+          ))}
+          {extra>0 && (
+            <div style={{ width:size, height:size, marginLeft:-8, background:'var(--bg-sunken)',
+                          color:'var(--text-tertiary)', boxShadow:'0 0 0 2px var(--bg-surface)' }}
+                 className="pls-avatar text-[10px] font-semibold">+{extra}</div>
+          )}
+        </div>
+      );
+    }
+    function RankBadge({ rank }){
+      const top3 = rank<=3;
+      const hue = rank===1 ? 'var(--amber-500)' : rank===2 ? 'var(--slate-500)' : rank===3 ? 'var(--carnelian-400)' : 'var(--text-tertiary)';
+      return (
+        <div className="pls-mono flex items-center justify-center" style={{ width:24, height:24, borderRadius:8, flexShrink:0,
+          fontSize:13, fontWeight:500, color: top3?hue:'var(--text-tertiary)',
+          background: top3 ? `color-mix(in srgb, ${hue} 15%, var(--bg-surface))` : 'var(--bg-sunken)' }}>{rank}</div>
+      );
+    }
+    function ClassDashboard({ state, actions }){
+      const { campus, theme, unread } = state;
+      // Live feel: loops-running ticks up gently while you watch.
+      const [liveLoops, setLiveLoops] = useState(campus.loopsRunning);
+      const [tick, setTick] = useState(0);
+      useEffect(()=>{
+        const a = setInterval(()=> setLiveLoops(n => n + (1 + Math.floor((n*7)%3))), 4200);
+        const b = setInterval(()=> setTick(t => (t+1) % COHORT_TICKER.length), 3600);
+        return ()=>{ clearInterval(a); clearInterval(b); };
+      }, []);
+      const topStreak = COHORT_LEADERBOARD[0].streak;
+      const trendLabel = (t)=> t>0 ? `+${t}` : t===0 ? '—' : `${t}`;
+      return (
+        <div className="h-full flex flex-col" style={{ position:'relative' }}>
+          <AppHeader
+            left={
+              <div className="flex items-center gap-2">
+                <div style={{ width:30, height:30, borderRadius:9, background:'var(--accent-quiet)', color:'var(--accent-strong)',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}><Icon name="graduation-cap" size={17} /></div>
+                <div className="leading-none">
+                  <div className="pls-display" style={{ fontWeight:800, fontSize:16, color:'var(--text-primary)' }}>Class of {COHORT.classOf}</div>
+                  <div className="pls-kicker" style={{ fontSize:10 }}>{COHORT.arriving} · North Campus</div>
+                </div>
+              </div>
+            }
+            right={<IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />} />
+
+          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28 fade-in">
+
+            {/* ---- cohort hero ---- */}
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
+                  <LiveDot />the class, right now
+                </div>
+                <h1 className="pls-display mt-1" style={{ fontWeight:800, fontSize:30, lineHeight:1, color:'var(--text-primary)' }}>
+                  Your people are<br/>already forming.
+                </h1>
+              </div>
+            </div>
+
+            <Card className="p-4 mt-4">
+              <div className="grid grid-cols-2 gap-y-4 gap-x-3">
+                <CountStat value={COHORT.enrolling} label="arriving this fall" icon="graduation-cap" />
+                <CountStat value={campus.inLoopPct} suffix="%" label="already in a loop" icon="users" accent />
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1" style={{ color:'var(--text-tertiary)' }}>
+                    <Icon name="radio" size={13} /><span className="pls-kicker" style={{ color:'inherit' }}>loops running</span>
+                  </div>
+                  <span className="pls-mono" style={{ fontSize:26, fontWeight:500, lineHeight:1.05, color:'var(--text-primary)',
+                    transition:'color var(--dur-2)' }}>{liveLoops.toLocaleString()}</span>
+                </div>
+                <CountStat value={topStreak} suffix=" wk" label="longest streak" icon="flame" accent />
+              </div>
+              <p className="pls-mono mt-3.5 pt-3 text-[11px]" style={{ color:'var(--text-tertiary)', borderTop:'1px solid var(--border-hairline)' }}>
+                {COHORT.admitted.toLocaleString()} admitted on Ivy Day · ~{COHORT.enrolling.toLocaleString()} enrolling
+              </p>
+            </Card>
+
+            {/* ---- live ticker ---- */}
+            <div className="mt-3 pls-blush p-3.5 overflow-hidden">
+              <div className="flex items-center gap-2">
+                <Icon name="zap" size={15} style={{ color:'var(--accent-strong)', flexShrink:0 }} />
+                <div key={tick} className="fade-in text-[13px]" style={{ color:'var(--text-primary)', fontWeight:500, minWidth:0,
+                  whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{COHORT_TICKER[tick]}</div>
+              </div>
+            </div>
+
+            {/* ---- streak leaderboard (loops, never people) ---- */}
+            <div className="mt-6 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Icon name="flame" size={17} style={{ color:'var(--accent)' }} />
+                <h2 className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)' }}>Longest-running crews</h2>
+              </div>
+              <span className="pls-kicker">streak · wks</span>
+            </div>
+            <p className="text-[12px] mt-0.5 mb-3" style={{ color:'var(--text-secondary)' }}>Same faces, week after week. Loops rank here — never people.</p>
+
+            <div className="space-y-2">
+              {COHORT_LEADERBOARD.map((c,i)=>(
+                <Card key={c.id} variant={c.seed?'default':'sunken'} className="p-3 rise"
+                  style={{ animationDelay:(i*45)+'ms', ...(c.seed?{ borderColor:'var(--accent-quiet)' }:{}) }}>
+                  <div className="flex items-center gap-2.5">
+                    <RankBadge rank={i+1} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate" style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{c.title}</span>
+                        {c.seed && <span className="pls-badge" style={{ flexShrink:0, color:'var(--accent-strong)', background:'var(--accent-quiet)' }}>yours</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="pls-mono text-[11.5px]" style={{ color:'var(--text-tertiary)', flexShrink:0 }}>{c.target}</span>
+                        <CrewFaces members={c.members} size={20} max={4} />
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end" style={{ minWidth:46, flexShrink:0 }}>
+                      <div className="flex items-center gap-1">
+                        <Icon name="flame" size={15} style={{ color: i<3?'var(--accent)':'var(--text-tertiary)' }} />
+                        <span className="pls-mono" style={{ fontSize:17, fontWeight:500, color:'var(--text-primary)' }}>{c.streak}</span>
+                      </div>
+                      <span className="pls-mono text-[10.5px] mt-0.5" style={{ color: c.trend>0?'var(--moss-500)':'var(--text-tertiary)' }}>
+                        {trendLabel(c.trend)} vs last
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* ---- house standings ---- */}
+            <div className="mt-6 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Icon name="house" size={17} style={{ color:'var(--accent)' }} />
+                <h2 className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)' }}>House standings</h2>
+              </div>
+              <span className="pls-kicker">% floor in a loop</span>
+            </div>
+            <p className="text-[12px] mt-0.5 mb-3" style={{ color:'var(--text-secondary)' }}>Which North Campus houses are folding people in fastest.</p>
+
+            <Card className="p-4">
+              <div className="space-y-3">
+                {COHORT_HOUSES.map((h,i)=>(
+                  <div key={h.dorm} className="flex items-center gap-3">
+                    <span className="pls-mono text-[12px]" style={{ width:16, color:'var(--text-tertiary)', flexShrink:0 }}>{i+1}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="truncate" style={{ fontSize:13.5, fontWeight:i===0?700:500,
+                          color: i===0?'var(--accent-strong)':'var(--text-primary)' }}>{h.dorm}</span>
+                        <span className="pls-mono text-[12px]" style={{ color:'var(--text-secondary)' }}>{h.pct}%</span>
+                      </div>
+                      <div style={{ height:6, borderRadius:999, background:'var(--bg-sunken)', overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:h.pct+'%', borderRadius:999,
+                          background: i===0?'var(--accent)':'color-mix(in srgb, var(--accent) 55%, var(--bg-sunken))',
+                          transformOrigin:'left', animation:`pulse-fill var(--dur-4) var(--ease-settle) ${i*60}ms both` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* ---- what the class is studying ---- */}
+            <div className="mt-4"><TonightCard campus={campus} /></div>
+
+            {/* ---- on-thesis reassurance ---- */}
+            <Card variant="sunken" className="p-4 mt-4">
+              <div className="pls-kicker mb-1.5 flex items-center gap-1.5"><Icon name="shield" size={12} />No scoreboard for people</div>
+              <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+                Crews and houses show up here — never individuals. Nobody in the Class of {COHORT.classOf} is ranked, scored, or told where they land. The only thing Loop counts is how often the same people come back.
+              </p>
+            </Card>
+          </div>
+
+          <TabBar active="class" unread={unread}
+            onHome={actions.goHome} onClass={()=>{}} onAlerts={actions.openNotifications} onYou={actions.openYou} />
         </div>
       );
     }
@@ -1438,8 +1877,8 @@
        APP  — state machine + all mutations
     ============================================================ */
     function App(){
-      const [screen, setScreen] = useState('splash');   // splash|email|basics|intent|home|loop|notifs|you
-      const [sheet, setSheet]   = useState(null);        // null|compose|spinup|safety
+      const [screen, setScreen] = useState('splash');   // splash|email|basics|intent|home|class|loop|notifs|you
+      const [sheet, setSheet]   = useState(null);        // null|compose|spinup|safety|share
       const [theme, setTheme]   = useState('daylight');  // daylight|afterdark
       const [user, setUser]     = useState(null);
       const [loops, setLoops]   = useState(seedLoops);
@@ -1454,7 +1893,8 @@
       const [foldedIn, setFoldedIn] = useState(false);
       const [feedback, setFeedback] = useState({});
       const [safetySubject, setSafetySubject] = useState(null);
-      const campus = useMemo(()=> buildCampus(3128), []);
+      const [shareLoopId, setShareLoopId]     = useState(null);
+      const campus = useMemo(()=> buildCampus(COHORT.enrolling), []);
 
       useEffect(()=>{
         const root = document.documentElement;
@@ -1486,7 +1926,7 @@
         if (parse.type==='study' && parse.target) cards.push({ kind:'spinup', target:parse.target, subtitle:'11 others on your floor dropped this' });
         const forming = loops.find(l => l.target===parse.target && l.status==='forming');
         if (forming) cards.push({ kind:'forming', loop:forming });
-        if (cards.length===0) cards.push({ kind:'spinup', target: parse.target || raw.trim(), subtitle:'Be the one who starts it — Pulse fills the seats.' });
+        if (cards.length===0) cards.push({ kind:'spinup', target: parse.target || raw.trim(), subtitle:'Be the one who starts it — Loop fills the seats.' });
         setSuggestions({ raw: raw.trim().toLowerCase(), parse, cards });
       };
       const openCompose = () => setSheet('compose');
@@ -1531,6 +1971,7 @@
       };
       const openNotifications = () => setScreen('notifs');
       const openYou = () => setScreen('you');
+      const openClass = () => setScreen('class');
       const goHome = () => setScreen('home');
 
       /* ----- private feedback (like/neutral/dislike; only you see it) ----- */
@@ -1538,6 +1979,7 @@
 
       /* ----- safety report → assigned counselor (confidential) ----- */
       const openSafety = (subject) => { setSafetySubject(subject); setSheet('safety'); };
+      const openShare  = (loopId)  => { setShareLoopId(loopId); setSheet('share'); };
       const sendSafety = () => {
         const s = safetySubject; setSheet(null); setSafetySubject(null);
         showToast({ icon:'shield', title:`Sent privately to ${COUNSELOR.name}.`,
@@ -1560,7 +2002,7 @@
         };
         setLoops(ls => [newLoop, ...ls]);
         setSheet(null); setSuggestions(null);
-        showToast({ title:'Sent. 3 classmates already folded in.', body:'Pulse holds the time, the place, and the next one.' });
+        showToast({ title:'Sent. 3 classmates already folded in.', body:'Loop holds the time, the place, and the next one.' });
         openLoop(id);
         armRecurrence(newLoop);
       };
@@ -1569,7 +2011,7 @@
       const armRecurrence = (baseLoop) => {
         setNudge({
           kicker:'Two weeks later',
-          body:`hw3 is due thursday. Pulse drafted the next ${baseLoop.target} session — same faces?`,
+          body:`hw3 is due thursday. Loop drafted the next ${baseLoop.target} session — same faces?`,
           cta:'Bring the crew back', base:baseLoop,
         });
       };
@@ -1604,18 +2046,19 @@
 
       const actions = {
         openCompose, noop, foldIn, leaveLoop, wantThis, openLoop, openNotifications,
-        startSpinup, tapNudge, toggleTheme, openYou, goHome,
-        setFeedbackFor, openSafety, messageCounselor,
+        startSpinup, tapNudge, toggleTheme, openYou, openClass, goHome,
+        setFeedbackFor, openSafety, messageCounselor, openShare,
       };
 
       const activeLoop = loops.find(l => l.id===activeLoopId);
+      const shareLoop  = loops.find(l => l.id===shareLoopId);
 
       const reset = () => {
         clearTimeout(toastTimer.current);
         setScreen('splash'); setSheet(null); setUser(null); setLoops(seedLoops());
         setSuggestions(null); setActiveLoopId(null); setHighlightId(null); setDetailBanner(null);
         setDraft(null); setNudge(null); setNotifs([]); setToast(null); setFoldedIn(false);
-        setSheet(null); setFeedback({}); setSafetySubject(null);
+        setSheet(null); setFeedback({}); setSafetySubject(null); setShareLoopId(null);
       };
 
       return (
@@ -1638,6 +2081,9 @@
                 <LoopDetail loop={activeLoop} highlightId={highlightId} banner={detailBanner} theme={theme} feedback={feedback}
                   onBack={()=>setScreen('home')} actions={actions} />
               )}
+              {screen==='class'  && (
+                <ClassDashboard state={{ campus, theme, unread }} actions={actions} />
+              )}
               {screen==='you'    && user && (
                 <YouScreen state={{ user, loops, campus, theme, unread, feedbackCount: Object.keys(feedback).length }} actions={actions} />
               )}
@@ -1648,6 +2094,10 @@
               {sheet==='compose' && <ComposeSheet onClose={()=>setSheet(null)} onSubmit={submitCompose} />}
               {sheet==='spinup' && draft && <SpinUpSheet draft={draft} onClose={()=>setSheet(null)} onSend={sendDraft} />}
               {sheet==='safety' && <SafetySheet subject={safetySubject} onClose={()=>{ setSheet(null); setSafetySubject(null); }} onSend={sendSafety} />}
+              {sheet==='share' && shareLoop && <ShareSheet loop={shareLoop}
+                onClose={()=>{ setSheet(null); setShareLoopId(null); }}
+                onSent={(name)=>{ setSheet(null); setShareLoopId(null);
+                  showToast({ icon:'users', title:`${name} folded in from your drop`, body:`Straight into ${shareLoop.title} — no cold DM, no feed.` }); }} />}
             </div>
           </div>
 
