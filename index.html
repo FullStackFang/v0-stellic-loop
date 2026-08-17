@@ -1191,8 +1191,8 @@
         { k:'The reframe', h:'Stop networking. Start doing.',
           body:<>The best friendships never start with small talk. They form around {term('Activity Anchors')}: a coffee run, a study sprint, a new hobby. The shared task carries the conversation, so the pressure just disappears.</>,
           cta:'That makes sense' },
-        { k:'The safety net', h:'Skip the guessing games.',
-          body:<>You get full {term('Situational Visualization')} (a vibe check, basically): who is going and what the energy is, all before you leave your dorm. No walking in blind.</>,
+        { k:'Close to home', h:'Start where you already are.',
+          body:<>The easiest hangout is the one two minutes from your door. So Loop starts with the people {term('closest to you')} — your building, your floor — then widens out to your major, your year, and the rest of campus. Less distance, less friction, more actually showing up.</>,
           cta:'Show me how' },
         { k:'The science', h:'Small groups. Big impact.',
           body:<>Big mixers spike anxiety and leave us feeling more alone. We bond best in {term('Micro-Tribes')}, so every hangout is capped at 4 to 6. Your presence matters, and nobody gets left out.</>,
@@ -1204,8 +1204,8 @@
       const ANCHORS = [
         { L:'A', t:'A quiet study sprint', seed:'study sprint' },
         { L:'B', t:'A new cafe or dining spot', seed:'dining spot' },
-        { L:'C', t:'A workout or pickup game', seed:'pickup game' },
-        { L:'D', t:'A spontaneous side quest', seed:'side quest' },
+        { L:'C', t:'A workout or exercise routine', seed:'exercise routine' },
+        { L:'D', t:'A walk around campus', seed:'campus walk' },
       ];
 
       useEffect(()=>{ stepRef.current = step; if(reduced.current && staticRef.current) staticRef.current(); }, [step]);
@@ -2724,7 +2724,7 @@
       };
 
       return (
-        <>
+        <div className="demo-stage" style={{ display:'flex', flexDirection:'row', alignItems:'center', justifyContent:'center', flexWrap:'wrap', gap:28 }}>
           <div className="phone">
             <StatusBar />
             <div style={{ flex:1, position:'relative', overflow:'hidden' }}>
@@ -2771,7 +2771,7 @@
               Not part of the app UI; it's the director's console for the demo. */}
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
             <div className="pls-kicker" style={{ fontSize:10, color:'var(--text-tertiary)' }}>view the demo as</div>
-            <div style={{ display:'flex', gap:6, flexWrap:'wrap', justifyContent:'center', maxWidth:390 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:6, width:172 }}>
               {PERSONAS.map(p => {
                 const on = viewerId===p.id;
                 return (
@@ -2797,7 +2797,7 @@
               <Icon name="rotate-ccw" size={13} />restart demo
             </button>
           </div>
-        </>
+        </div>
       );
     }
 
