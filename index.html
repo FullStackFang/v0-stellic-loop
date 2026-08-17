@@ -425,13 +425,21 @@
       'Beebe Lake run crew came back for week 5',
     ];
 
+    // Wrapped loops — demo history for the Alerts feed. Loops expire naturally
+    // when their pretext is done; the crew (the faces) is what persists.
+    const WRAPPED_LOOPS = [
+      { id:'w-prelim1', title:'Prelim 1 review',          target:'CS 2110',    sessions:5, faces:[{id:'josh',name:'Josh Park'},{id:'lydia',name:'Lydia Osei'},{id:'marcus',name:'Marcus Diaz'},{id:'priya',name:'Priya Rao'}], reason:'wrapped after the exam', when:'2 weeks ago' },
+      { id:'w-hw1',     title:'HW1 grind',                target:'CS 2110',    sessions:3, faces:[{id:'josh',name:'Josh Park'},{id:'sarah',name:'Sarah Chen'},{id:'lydia',name:'Lydia Osei'}], reason:'ran its course', when:'3 weeks ago' },
+      { id:'w-oweek',   title:'Move-in week dinner crew', target:'dinner crew',sessions:4, faces:[{id:'sarah',name:'Sarah Chen'},{id:'lydia',name:'Lydia Osei'},{id:'maya',name:'Maya Idris'}], reason:'wrapped after O-week', when:'last month' },
+    ];
+
     const seedLoops = () => ([
       {
         id:'sunday-hw', title:'Sunday HW crew', target:'CS 2110',
         unit:{ kind:'class', label:'cs 2110 · section' },
         status:'active', rhythm:'Sun · 4:00p · Uris · weekly', nextLine:'Sun · 4:00p · Uris',
         live:false, memberIds:['josh','lydia','priya','marcus'], cap:6,
-        startedWeek:3, streakWeeks:12, streakLeaderId:'lydia',
+        startedWeek:3, streakWeeks:12, streakLeaderId:'lydia', coordinatorId:'josh',
         seniority:{ josh:3, lydia:3, priya:5, marcus:4 },
       },
       {
@@ -447,6 +455,32 @@
         memberIds:['priya'],
       },
     ]);
+
+    /* ============================================================
+       DEMO PERSONAS — cycle the phone through four points of view so
+       the story comes alive on camera (out-of-frame switcher). Seeker,
+       host, latecomer are the student app seen as different viewers;
+       advisor is a separate staff surface. `land` = screen to drop into.
+    ============================================================ */
+    const PERSONAS = [
+      { id:'sarah', name:'Sarah Chen',  role:'seeker',    tag:'looking to join',   dorm:'Donlon 2F', major:'Computer Science', year:'2029', land:'home' },
+      { id:'josh',  name:'Josh Park',   role:'host',      tag:'runs a loop',       dorm:'Balch',     major:'Computer Science', year:'2029', land:'home' },
+      { id:'maya',  name:'Maya Idris',  role:'latecomer', tag:'folded in late',    dorm:'Donlon 2F', major:'Computer Science', year:'2029', land:'home' },
+      { id:'dana',  name:'Dana Okafor', role:'advisor',   tag:'advising & wellbeing', dorm:null,     major:null,               year:null,   land:'advisor' },
+    ];
+    const PERSONA_BY_ID = Object.fromEntries(PERSONAS.map(p=>[p.id, p]));
+
+    /* Advisor caseload — a confidential belonging signal, NOT a feed of
+       intents or messages (§2 guardrail: "one number, a sign to reach
+       out, never your conversations"). Reach-out list = students in zero
+       loops, so Dana knows who to check on. */
+    const ADVISOR_CASELOAD = 128;
+    const ADVISOR_REACH = [
+      { id:'r1', name:'Theo Nguyen',      dorm:'Jameson',   signal:'0 loops · 3 wks in',  note:'Hasn’t landed in a loop yet.' },
+      { id:'r2', name:'Priscilla Adams',  dorm:'Mews',      signal:'left their only loop', note:'Was folded in, then left — worth a check-in.' },
+      { id:'r3', name:'Diego Martín',     dorm:'Ganędago',  signal:'0 loops',             note:'New transfer — no intent dropped.' },
+      { id:'r4', name:'Hannah Weiss',     dorm:'Dickson',   signal:'0 loops · quiet 2 wks',note:'Dropped an intent, never joined.' },
+    ];
 
     /* ============================================================
        LAYER A PARSER (§8) — deterministic, never fails on stage
@@ -1275,8 +1309,11 @@
     }
 
     function Home({ state, actions }){
-      const { user, loops, suggestions, nudge, unread, theme, campus } = state;
-      const myLoops = loops.filter(l => l.memberIds.includes('sarah'));
+      const { user, viewerId='sarah', loops, suggestions, nudge, unread, theme, campus } = state;
+      const myLoops = loops.filter(l => l.memberIds.includes(viewerId));
+      const latecomerLoop = loops.find(l => l.foldedInFor===viewerId && l.memberIds.includes(viewerId));
+      const hostLoop = loops.find(l => l.coordinatorId===viewerId);
+      const nearby = loops.filter(l => !l.memberIds.includes(viewerId) && (l.status==='active' || l.status==='forming')).slice(0,3);
       return (
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
@@ -1289,11 +1326,45 @@
           />
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 fade-in">
             <div className="pt-4">
-              <p className="pls-kicker">Home</p>
+              <p className="pls-kicker">{PERSONA_BY_ID[viewerId]?.tag || 'Home'}</p>
               <h1 className="pls-display" style={{ fontWeight:800, fontSize:26, color:'var(--text-primary)' }}>{user.name.split(' ')[0]}'s loops</h1>
             </div>
 
-            <CampusStrip campus={campus} onOpen={actions.openClass} />
+            <button onClick={actions.openClass} className="w-full mt-4 pls-card pls-card--sunken p-3 flex items-center justify-between" style={{ cursor:'pointer' }}>
+              <span className="flex items-center gap-2 text-[13px]" style={{ color:'var(--text-secondary)' }}>
+                <Icon name="graduation-cap" size={14} style={{ color:'var(--accent)' }} />
+                <span><span style={{ color:'var(--text-primary)', fontWeight:600 }}>Class of {COHORT.classOf}</span> · {campus.loopsRunning.toLocaleString()} loops running</span>
+              </span>
+              <span className="flex items-center gap-0.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>see the class<Icon name="chevron-right" size={13} /></span>
+            </button>
+
+            {latecomerLoop && (
+              <button onClick={()=>actions.openLoop(latecomerLoop.id, viewerId)} className="w-full text-left pls-banner p-4 mt-4 rise" style={{ cursor:'pointer' }}>
+                <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
+                  <Icon name="users" size={13} />You were folded in
+                </div>
+                <p className="mt-1.5" style={{ fontWeight:500, fontSize:15, color:'var(--text-primary)', lineHeight:1.4 }}>
+                  You didn't search — you got seated into the <span style={{ fontWeight:700 }}>{latecomerLoop.title}</span>, a crew that already meets. No cold start.
+                </p>
+                <div className="mt-2 flex items-center gap-1 text-[13.5px]" style={{ color:'var(--accent-strong)', fontWeight:600 }}>
+                  Meet the crew<Icon name="arrow-right" size={15} />
+                </div>
+              </button>
+            )}
+
+            {hostLoop && !latecomerLoop && (
+              <button onClick={()=>actions.openLoop(hostLoop.id)} className="w-full text-left pls-card p-4 mt-4 rise" style={{ cursor:'pointer', borderColor:'var(--accent-quiet)' }}>
+                <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
+                  <Icon name="shield" size={13} />You run this loop
+                </div>
+                <p className="mt-1.5" style={{ fontWeight:500, fontSize:15, color:'var(--text-primary)', lineHeight:1.4 }}>
+                  You've kept the <span style={{ fontWeight:700 }}>{hostLoop.title}</span> coming back {hostLoop.streakWeeks} weeks. Draft the next session when you're ready.
+                </p>
+                <div className="mt-2 flex items-center gap-1 text-[13.5px]" style={{ color:'var(--accent-strong)', fontWeight:600 }}>
+                  Open host controls<Icon name="arrow-right" size={15} />
+                </div>
+              </button>
+            )}
 
             {nudge && (
               <div className="mt-4">
@@ -1312,7 +1383,7 @@
             <div className="mt-5">
               {myLoops.length === 0 ? (
                 <EmptyState icon="radio" title="Nothing forming on your floor yet.">
-                  Drop an intent and it waits here until enough people on Donlon 2F want the same thing.
+                  Drop an intent and it waits here until enough people {user.dorm?`on ${user.dorm}`:'nearby'} want the same thing.
                 </EmptyState>
               ) : (
                 <>
@@ -1327,11 +1398,7 @@
               )}
             </div>
 
-            <div className="mt-6"><DropPanel /></div>
-
-            <div className="mt-4"><TonightCard campus={campus} /></div>
-
-            {suggestions && (
+            {suggestions ? (
               <div className="mt-6">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Icon name="radio" size={16} style={{ color:'var(--accent)' }} />
@@ -1339,13 +1406,24 @@
                 </div>
                 <p className="text-[12.5px] mb-3" style={{ color:'var(--text-secondary)' }}>Not a list of strangers — ways to get folded into a loop.</p>
                 <div className="mb-3">
-                  <IntentCard raw={suggestions.raw} author="sarah" unit="donlon 2f" sameCount={11} />
+                  <IntentCard raw={suggestions.raw} author={viewerId} unit={(user.dorm||'').toLowerCase()} sameCount={11} />
                 </div>
                 <div className="space-y-3">
                   {suggestions.cards.map((c,i)=><SuggestionCard key={i} card={c} actions={actions} />)}
                 </div>
               </div>
-            )}
+            ) : nearby.length>0 ? (
+              <div className="mt-6">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Icon name="map-pin" size={16} style={{ color:'var(--accent)' }} />
+                  <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>Forming near you</h2>
+                </div>
+                <p className="text-[12.5px] mb-3" style={{ color:'var(--text-secondary)' }}>On {user.dorm||'your floor'} · loops you can slot into — same faces, every week.</p>
+                <div className="space-y-3">
+                  {nearby.map(l => <SuggestionCard key={l.id} card={{ kind: l.status==='forming'?'forming':'join', loop:l, target:l.target }} actions={actions} />)}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <button className="pls-fab" aria-label="Drop an intent" onClick={actions.openCompose}><Icon name="plus" size={24} /></button>
@@ -1389,10 +1467,11 @@
     /* ============================================================
        LOOP DETAIL (S7)
     ============================================================ */
-    function LoopDetail({ loop, onBack, actions, highlightId, banner, theme, feedback }){
-      const isMember = loop.memberIds.includes('sarah');
+    function LoopDetail({ loop, viewerId='sarah', onBack, actions, highlightId, banner, theme, feedback }){
+      const isMember = loop.memberIds.includes(viewerId);
       const forming = loop.status === 'forming';
-      const others = loop.memberIds.filter(id => id!=='sarah');
+      const isHost = loop.coordinatorId===viewerId;
+      const others = loop.memberIds.filter(id => id!==viewerId);
       return (
         <div className="h-full flex flex-col fade-in">
           <AppHeader title={loop.title} onBack={onBack}
@@ -1463,7 +1542,7 @@
                         )}
                       </div>
                       <span className="text-[12px] mt-2 truncate w-full text-center" style={{ color:'var(--text-secondary)' }}>
-                        {u?.name.split(' ')[0]}{id==='sarah'?' · you':''}
+                        {u?.name.split(' ')[0]}{id===viewerId?' · you':''}{id===loop.coordinatorId?' · host':''}
                       </span>
                       {wk && <span className="pls-mono" style={{ fontSize:10, color:'var(--text-tertiary)' }}>wk {wk}</span>}
                     </div>
@@ -1471,6 +1550,24 @@
                 })}
               </div>
             </div>
+
+            {isHost && !forming && (
+              <Card className="p-4 mb-4" style={{ borderColor:'var(--accent-quiet)' }}>
+                <div className="flex items-center gap-1.5 pls-kicker mb-2" style={{ color:'var(--accent-strong)' }}>
+                  <Icon name="shield" size={13} />You run this loop
+                </div>
+                <p className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)', lineHeight:1.25 }}>
+                  You've kept the same crew coming back {loop.streakWeeks} weeks.
+                </p>
+                <p className="text-[12.5px] mt-1" style={{ color:'var(--text-secondary)' }}>
+                  {loop.memberIds.length} regulars. Loop drafts the next session — you just send it.
+                </p>
+                <div className="grid grid-cols-2 gap-2.5 mt-3">
+                  <Button size="sm" icon="send" onClick={()=>actions.hostDraftNext(loop)}>Draft next session</Button>
+                  <Button variant="secondary" size="sm" icon="message-square" onClick={()=>actions.messageCrew(loop)}>Message the crew</Button>
+                </div>
+              </Card>
+            )}
 
             <div className="space-y-2.5">
               {!isMember && !forming && <Button block onClick={()=>actions.foldIn(loop.id)} icon="users">Fold me in</Button>}
@@ -1567,6 +1664,37 @@
                 )}
               </Card>
             ))}
+
+            <div className="pt-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Icon name="repeat" size={15} style={{ color:'var(--text-tertiary)' }} />
+                <h2 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Wrapped loops</h2>
+              </div>
+              <p className="text-[12px] mb-3" style={{ color:'var(--text-secondary)' }}>Loops end on their own when the reason does — the crew stays yours.</p>
+              <div className="space-y-2.5">
+                {WRAPPED_LOOPS.map(w => (
+                  <Card key={w.id} variant="sunken" className="p-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate" style={{ fontWeight:600, fontSize:13.5, color:'var(--text-secondary)' }}>{w.title}</span>
+                          <span className="pls-badge" style={{ flexShrink:0, color:'var(--text-tertiary)', background:'var(--bg-sunken)' }}>wrapped</span>
+                        </div>
+                        <div className="text-[11.5px] mt-1" style={{ color:'var(--text-tertiary)' }}>{w.reason} · {w.sessions} sessions · same faces</div>
+                      </div>
+                      <CrewFaces members={w.faces} size={22} max={4} />
+                    </div>
+                    <div className="mt-2.5 pt-2.5 flex items-center justify-between" style={{ borderTop:'1px solid var(--border-hairline)' }}>
+                      <span className="pls-mono text-[11px]" style={{ color:'var(--text-tertiary)' }}>{w.when}</span>
+                      <button onClick={()=>actions.openCompose()} className="flex items-center gap-1 text-[12.5px]"
+                        style={{ background:'none', border:'none', cursor:'pointer', color:'var(--accent-strong)', fontWeight:600 }}>
+                        <Icon name="plus" size={13} />Start the next one
+                      </button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -1577,8 +1705,8 @@
        advising & wellbeing tie-in) + private-notes recap + theme
     ============================================================ */
     function YouScreen({ state, actions }){
-      const { user, loops, campus, theme, feedbackCount, unread } = state;
-      const myLoops = loops.filter(l => l.memberIds.includes('sarah'));
+      const { user, viewerId='sarah', loops, campus, theme, feedbackCount, unread } = state;
+      const myLoops = loops.filter(l => l.memberIds.includes(viewerId));
       const bestStreak = myLoops.reduce((m,l)=>Math.max(m, l.streakWeeks||0), 0);
       const MiniStat = ({ n, label }) => (
         <div className="flex flex-col">
@@ -1592,7 +1720,7 @@
             right={<IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />} />
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-24">
             <div className="flex items-center gap-3">
-              <Avatar id="sarah" size={52} />
+              <Avatar id={viewerId} size={52} />
               <div className="min-w-0">
                 <p className="text-[13px]" style={{ color:'var(--text-secondary)' }}>{user.dorm} · {user.major}</p>
                 <p className="pls-mono text-[12px]" style={{ color:'var(--text-tertiary)' }}>Class of {user.year}</p>
@@ -1874,13 +2002,118 @@
     }
 
     /* ============================================================
+       ADVISOR DASHBOARD — Dana's view (staff surface, not the student
+       app). Shows caseload belonging as ONE number + a reach-out list,
+       never intents or messages (§2 guardrail). This is the "why it
+       matters to the institution" perspective.
+    ============================================================ */
+    function AdvisorDashboard({ state, actions }){
+      const { campus, theme } = state;
+      const inLoop = Math.round(ADVISOR_CASELOAD * campus.inLoopPct/100);
+      const notYet = ADVISOR_CASELOAD - inLoop;
+      const pctIn = useCountUp(campus.inLoopPct, 1100);
+      const ring = Math.round(pctIn);
+      return (
+        <div className="h-full flex flex-col" style={{ position:'relative' }}>
+          <AppHeader
+            left={
+              <div className="flex items-center gap-2">
+                <div style={{ width:30, height:30, borderRadius:9, background:'var(--accent-quiet)', color:'var(--accent-strong)',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}><Icon name="heart-handshake" size={16} /></div>
+                <div className="leading-none">
+                  <div className="pls-display" style={{ fontWeight:800, fontSize:16, color:'var(--text-primary)' }}>Advising & Wellbeing</div>
+                  <div className="pls-kicker" style={{ fontSize:10 }}>{COUNSELOR.name} · staff view</div>
+                </div>
+              </div>
+            }
+            right={<IconButton name={theme==='afterdark'?'sun':'moon'} size={20} label="Toggle theme" onClick={actions.toggleTheme} />} />
+
+          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-8 fade-in">
+            <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
+              <LiveDot />your caseload, right now
+            </div>
+            <h1 className="pls-display mt-1" style={{ fontWeight:800, fontSize:26, lineHeight:1.05, color:'var(--text-primary)' }}>
+              {inLoop} of {ADVISOR_CASELOAD} advisees<br/>are in a loop.
+            </h1>
+
+            {/* belonging ring */}
+            <Card className="p-4 mt-4">
+              <div className="flex items-center gap-4">
+                <div style={{ position:'relative', width:92, height:92, flexShrink:0 }}>
+                  <div style={{ position:'absolute', inset:0, borderRadius:'50%',
+                    background:`conic-gradient(var(--accent) ${ring*3.6}deg, var(--bg-sunken) 0deg)` }} />
+                  <div style={{ position:'absolute', inset:9, borderRadius:'50%', background:'var(--bg-surface)',
+                    display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+                    <span className="pls-mono" style={{ fontSize:22, fontWeight:500, color:'var(--text-primary)', lineHeight:1 }}>{ring}%</span>
+                    <span className="pls-kicker" style={{ fontSize:8.5 }}>in a loop</span>
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+                    Students in at least one loop stay enrolled and see you earlier. Loop shares this as <span style={{ color:'var(--text-primary)', fontWeight:600 }}>one number</span> — a sign of who to reach out to, never their conversations.
+                  </p>
+                  <div className="flex items-center gap-4 mt-3">
+                    <div className="flex flex-col">
+                      <span className="pls-mono" style={{ fontSize:18, fontWeight:500, color:'var(--status-live)' }}>{inLoop}</span>
+                      <span className="text-[11px]" style={{ color:'var(--text-tertiary)' }}>connected</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="pls-mono" style={{ fontSize:18, fontWeight:500, color:'var(--accent-strong)' }}>{notYet}</span>
+                      <span className="text-[11px]" style={{ color:'var(--text-tertiary)' }}>not yet</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* reach-out list */}
+            <div className="mt-6 flex items-center gap-1.5">
+              <Icon name="life-buoy" size={17} style={{ color:'var(--accent)' }} />
+              <h2 className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)' }}>Who to reach out to</h2>
+            </div>
+            <p className="text-[12px] mt-0.5 mb-3" style={{ color:'var(--text-secondary)' }}>Advisees in no loop yet — a nudge from you, not an algorithm.</p>
+
+            <div className="space-y-2.5">
+              {ADVISOR_REACH.map((s,i)=>(
+                <Card key={s.id} className="p-3.5 rise" style={{ animationDelay:(i*45)+'ms' }}>
+                  <div className="flex items-center gap-3">
+                    <Avatar id={s.id} name={s.name} size={40} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate" style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{s.name}</span>
+                        <span className="pls-chip pls-chip--static" style={{ flexShrink:0 }}>{s.dorm}</span>
+                      </div>
+                      <div className="pls-mono text-[11px] mt-0.5" style={{ color:'var(--accent-strong)' }}>{s.signal}</div>
+                      <p className="text-[12px] mt-1" style={{ color:'var(--text-secondary)' }}>{s.note}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <Button size="sm" variant="secondary" icon="message-square" onClick={()=>actions.advisorReach(s.name)}>Reach out</Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <Card variant="sunken" className="p-4 mt-5">
+              <div className="pls-kicker mb-1.5 flex items-center gap-1.5"><Icon name="shield" size={12} />What you never see</div>
+              <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+                No intents, no messages, no who-likes-whom. Only whether a student has landed in a loop — the one signal that predicts whether they'll stay. Everything else stays on their phone.
+              </p>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================================
        APP  — state machine + all mutations
     ============================================================ */
     function App(){
-      const [screen, setScreen] = useState('splash');   // splash|email|basics|intent|home|class|loop|notifs|you
+      const [screen, setScreen] = useState('splash');   // splash|email|basics|intent|home|class|loop|notifs|you|advisor
       const [sheet, setSheet]   = useState(null);        // null|compose|spinup|safety|share
       const [theme, setTheme]   = useState('daylight');  // daylight|afterdark
       const [user, setUser]     = useState(null);
+      const [viewerId, setViewerId] = useState('sarah'); // whose perspective the phone is showing
       const [loops, setLoops]   = useState(seedLoops);
       const [suggestions, setSuggestions] = useState(null);
       const [activeLoopId, setActiveLoopId] = useState(null);
@@ -1935,16 +2168,16 @@
 
       /* ----- fold in (join a running loop) ----- */
       const foldIn = (loopId) => {
-        setLoops(ls => ls.map(l => l.id===loopId && !l.memberIds.includes('sarah')
-          ? { ...l, memberIds:[...l.memberIds, 'sarah'] } : l));
+        setLoops(ls => ls.map(l => l.id===loopId && !l.memberIds.includes(viewerId)
+          ? { ...l, memberIds:[...l.memberIds, viewerId] } : l));
         const l = loops.find(x=>x.id===loopId);
         setSuggestions(null);
         showToast({ title:`Folded in — ${l?.title}`, body:`Same faces, every week. The crew already knows the rhythm.` });
         openLoop(loopId);
-        if (loopId==='sunday-hw' && !foldedIn) armFoldIn();
+        if (loopId==='sunday-hw' && viewerId==='sarah' && !foldedIn) armFoldIn();
       };
       const leaveLoop = (loopId) => {
-        setLoops(ls => ls.map(l => l.id===loopId ? { ...l, memberIds:l.memberIds.filter(id=>id!=='sarah') } : l));
+        setLoops(ls => ls.map(l => l.id===loopId ? { ...l, memberIds:l.memberIds.filter(id=>id!==viewerId) } : l));
         showToast({ title:'Left the loop.', body:'The rhythm holds without you. Nobody sees a thing.' });
         setScreen('home');
       };
@@ -1991,14 +2224,23 @@
       const startSpinup = (target) => { setDraft({ ...buildDraft({ target }, ''), raw:`set up a study loop for ${target}`.toLowerCase(), target }); setSheet('spinup'); };
       const startSpinupFromText = (raw, parse) => { setDraft({ ...buildDraft(parse, raw), raw:raw.toLowerCase() }); setSheet('spinup'); };
       const sendDraft = (d) => {
+        // Host "next session" mode: don't spawn a new loop — just send the next beat to the crew.
+        if (d.host) {
+          setSheet(null);
+          showToast({ icon:'send', title:'Next session sent to the crew',
+            body:`${d.day} · ${d.time} · ${d.location} — ${d.count||0} regulars, same faces. Loop reminds them.` });
+          if (d.loopId) openLoop(d.loopId);
+          return;
+        }
         const id = 'spun-' + d.title.replace(/\s+/g,'-').toLowerCase();
+        const crew = [viewerId, 'josh', 'lydia', 'ryan'].filter((x,i,a)=>a.indexOf(x)===i);
         const newLoop = {
           id, title:d.title, target:d.target, unit:{ kind:'class', label:`${d.target.toLowerCase()} · section` },
           status:'active', rhythm:`${d.day} · ${d.time} · ${d.location}${d.repeat?' · weekly':''}`,
           nextLine:`${d.day} · ${d.time} · ${d.location}`, live:true,
-          memberIds:['sarah','josh','lydia','ryan'], cap:6, spun:true,
-          startedWeek:3, streakWeeks:1, streakLeaderId:'sarah',
-          seniority:{ sarah:3, josh:3, lydia:3, ryan:3 },
+          memberIds:crew, cap:6, spun:true,
+          startedWeek:3, streakWeeks:1, streakLeaderId:viewerId, coordinatorId:viewerId,
+          seniority:Object.fromEntries(crew.map(x=>[x,3])),
         };
         setLoops(ls => [newLoop, ...ls]);
         setSheet(null); setSuggestions(null);
@@ -2044,10 +2286,62 @@
         }, 2600);
       };
 
+      /* ----- host controls (coordinator perspective) ----- */
+      const hostDraftNext = (loop) => {
+        const base = buildDraft({ target: loop.target }, '');
+        setDraft({ ...base, title:`${loop.target} · next session`, target:loop.target, raw:'', host:true, loopId:loop.id, count:loop.memberIds.length });
+        setSheet('spinup');
+      };
+      const messageCrew = (loop) => showToast({ icon:'message-square', title:`Sent to the ${loop.title}`, body:`${loop.memberIds.length} regulars get it — no new thread, no cold DM.` });
+
+      /* ----- advisor controls ----- */
+      const advisorReach = (name) => showToast({ icon:'heart-handshake', title:`Reached out to ${name.split(' ')[0]}`, body:`A warm note from you — Loop never tells them how you knew.` });
+
+      /* ----- persona switcher (out-of-frame; brings the demo alive) ----- */
+      const switchPersona = (pid) => {
+        const p = PERSONA_BY_ID[pid];
+        if (!p) return;
+        clearTimeout(toastTimer.current);
+        setViewerId(pid);
+        setSheet(null); setSuggestions(null); setActiveLoopId(null); setHighlightId(null);
+        setDetailBanner(null); setDraft(null); setNudge(null); setToast(null);
+        setSafetySubject(null); setShareLoopId(null); setFeedback({}); setFoldedIn(false);
+        setUser({ id:p.id, name:p.name, dorm:p.dorm, major:p.major, year:p.year });
+
+        let ls = seedLoops();
+        if (pid==='maya') {
+          // latecomer: seat her into a loop that already meets — no cold start
+          ls = ls.map(l => l.id==='sunday-hw'
+            ? { ...l, memberIds:[...l.memberIds, 'maya'], seniority:{ ...l.seniority, maya:12 }, foldedInFor:'maya' }
+            : l);
+        }
+        setLoops(ls);
+
+        // host sees Maya's fold-in already waiting; others start clean
+        setNotifs(pid==='josh'
+          ? [{ id:'foldin-maya', type:'foldin', userId:'maya', target:'CS 2110', loopId:'sunday-hw', loopTitle:'Sunday HW crew', unread:true }]
+          : []);
+
+        // seeker lands with her intent already dropped, so the suggestions show
+        if (pid==='sarah') {
+          const raw = 'lock in for cs 2110';
+          const parse = parseIntent(raw);
+          const cards = [];
+          const activeJoin = ls.find(l => l.target===parse.target && l.status==='active');
+          if (activeJoin) cards.push({ kind:'join', loop:activeJoin });
+          cards.push({ kind:'spinup', target:parse.target, subtitle:'11 others on your floor dropped this' });
+          const forming = ls.find(l => l.target===parse.target && l.status==='forming');
+          if (forming) cards.push({ kind:'forming', loop:forming });
+          setSuggestions({ raw, parse, cards });
+        }
+        setScreen(p.land);
+      };
+
       const actions = {
         openCompose, noop, foldIn, leaveLoop, wantThis, openLoop, openNotifications,
         startSpinup, tapNudge, toggleTheme, openYou, openClass, goHome,
         setFeedbackFor, openSafety, messageCounselor, openShare,
+        hostDraftNext, messageCrew, advisorReach,
       };
 
       const activeLoop = loops.find(l => l.id===activeLoopId);
@@ -2055,7 +2349,7 @@
 
       const reset = () => {
         clearTimeout(toastTimer.current);
-        setScreen('splash'); setSheet(null); setUser(null); setLoops(seedLoops());
+        setScreen('splash'); setSheet(null); setUser(null); setViewerId('sarah'); setLoops(seedLoops());
         setSuggestions(null); setActiveLoopId(null); setHighlightId(null); setDetailBanner(null);
         setDraft(null); setNudge(null); setNotifs([]); setToast(null); setFoldedIn(false);
         setSheet(null); setFeedback({}); setSafetySubject(null); setShareLoopId(null);
@@ -2075,17 +2369,20 @@
               {screen==='basics' && <Basics onBack={()=>setScreen('email')} onNext={basics} />}
               {screen==='intent' && <FirstIntent onBack={()=>setScreen('basics')} onNext={firstIntent} />}
               {screen==='home'   && user && (
-                <Home state={{ user, loops, suggestions, nudge, unread, theme, campus }} actions={actions} />
+                <Home state={{ user, viewerId, loops, suggestions, nudge, unread, theme, campus }} actions={actions} />
               )}
               {screen==='loop'   && activeLoop && (
-                <LoopDetail loop={activeLoop} highlightId={highlightId} banner={detailBanner} theme={theme} feedback={feedback}
+                <LoopDetail loop={activeLoop} viewerId={viewerId} highlightId={highlightId} banner={detailBanner} theme={theme} feedback={feedback}
                   onBack={()=>setScreen('home')} actions={actions} />
               )}
               {screen==='class'  && (
                 <ClassDashboard state={{ campus, theme, unread }} actions={actions} />
               )}
+              {screen==='advisor' && (
+                <AdvisorDashboard state={{ campus, theme }} actions={actions} />
+              )}
               {screen==='you'    && user && (
-                <YouScreen state={{ user, loops, campus, theme, unread, feedbackCount: Object.keys(feedback).length }} actions={actions} />
+                <YouScreen state={{ user, viewerId, loops, campus, theme, unread, feedbackCount: Object.keys(feedback).length }} actions={actions} />
               )}
               {screen==='notifs' && (
                 <Notifications items={notifs} onBack={()=>setScreen('home')} actions={actions} />
@@ -2101,11 +2398,36 @@
             </div>
           </div>
 
-          {/* out-of-frame helper for re-recording — not part of the app UI */}
-          <button onClick={reset} className="flex items-center gap-1.5"
-            style={{ background:'none', border:'none', cursor:'pointer', fontSize:12, color:'var(--text-tertiary)' }}>
-            <Icon name="rotate-ccw" size={13} />restart demo
-          </button>
+          {/* out-of-frame demo switcher — cycle the phone through each point of view.
+              Not part of the app UI; it's the director's console for the demo. */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+            <div className="pls-kicker" style={{ fontSize:10, color:'var(--text-tertiary)' }}>view the demo as</div>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', justifyContent:'center', maxWidth:390 }}>
+              {PERSONAS.map(p => {
+                const on = viewerId===p.id;
+                return (
+                  <button key={p.id} onClick={()=>switchPersona(p.id)}
+                    style={{ display:'flex', alignItems:'center', gap:7, cursor:'pointer',
+                      padding:'5px 11px 5px 5px', borderRadius:999,
+                      background: on ? 'var(--accent-quiet)' : 'var(--bg-surface)',
+                      border:'1px solid '+(on ? 'transparent' : 'var(--border-hairline)'),
+                      boxShadow: on ? 'var(--glow-accent)' : 'none',
+                      transition:'background var(--dur-1), box-shadow var(--dur-2)' }}>
+                    <Avatar id={p.id} name={p.name} size={24} ring={false} />
+                    <span style={{ textAlign:'left', lineHeight:1.1 }}>
+                      <span style={{ display:'block', fontSize:12.5, fontWeight:600,
+                        color: on ? 'var(--accent-strong)' : 'var(--text-primary)' }}>{p.name.split(' ')[0]}</span>
+                      <span style={{ display:'block', fontSize:10, color:'var(--text-tertiary)' }}>{p.role}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={reset} className="flex items-center gap-1.5"
+              style={{ background:'none', border:'none', cursor:'pointer', fontSize:12, color:'var(--text-tertiary)' }}>
+              <Icon name="rotate-ccw" size={13} />restart demo
+            </button>
+          </div>
         </>
       );
     }
