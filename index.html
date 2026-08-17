@@ -213,6 +213,7 @@
     @keyframes toast-in{ from{ opacity:0; transform:translateY(-14px); } to{ opacity:1; transform:none; } }
     @keyframes pop{ from{ opacity:0; transform:scale(.9); } to{ opacity:1; transform:scale(1); } }
     @keyframes pulse-dot{ 0%,60%,100%{ opacity:.3; transform:translateY(0); } 30%{ opacity:1; transform:translateY(-3px); } }
+    @keyframes demo-in{ from{ opacity:0; transform:translateY(9px); } to{ opacity:1; transform:none; } }
     .fade-in{ animation:fade-in var(--dur-3) var(--ease-out) both; }
     .rise{ animation:rise var(--dur-3) var(--ease-settle) both; }
     .fold-in{ animation:pulse-fold-in var(--dur-3) var(--ease-pop) both; }
@@ -222,6 +223,70 @@
     @media (prefers-reduced-motion: reduce){
       *, *::before, *::after{ animation-duration:1ms !important; animation-iteration-count:1 !important; transition-duration:1ms !important; }
     }
+
+    /* ===== The Floor — intent momentum field (S6) ===== */
+    .flr-week{ display:flex; gap:6px; margin:2px 0 16px; }
+    .flr-wc{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; padding:6px 0; border-radius:11px; cursor:pointer; border:1px solid var(--border-hairline); background:var(--bg-surface); transition:background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+    .flr-wc:active{ transform:scale(.95); }
+    .flr-wc__d{ font-size:11.5px; font-weight:700; color:var(--text-secondary); font-family:var(--font-display); }
+    .flr-wc__dot{ width:5px; height:5px; border-radius:50%; background:transparent; }
+    .flr-wc--has .flr-wc__dot{ background:var(--accent); } .flr-wc--has .flr-wc__d{ color:var(--text-primary); }
+    .flr-wc--on{ background:var(--accent); border-color:var(--accent); } .flr-wc--on .flr-wc__d{ color:var(--accent-ink); } .flr-wc--on .flr-wc__dot{ background:var(--accent-ink); }
+    .flr-sec{ font-family:var(--font-sans); font-weight:700; text-transform:uppercase; letter-spacing:.07em; font-size:11px; color:var(--text-tertiary); margin:6px 2px 10px; display:flex; align-items:center; gap:7px; }
+    .flr-hero{ border-radius:22px; border:1px solid color-mix(in srgb,var(--status-forming) 30%,var(--border-hairline)); background:linear-gradient(165deg, color-mix(in srgb,var(--status-forming) 12%,var(--bg-surface)), var(--bg-surface)); padding:16px 17px; margin-bottom:18px; cursor:pointer; box-shadow:var(--shadow-card); }
+    .flr-badge{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--status-forming); background:color-mix(in srgb,var(--status-forming) 16%,var(--bg-surface)); padding:4px 9px; border-radius:99px; }
+    .flr-hero__t{ font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:-.02em; margin:11px 0 3px; line-height:1.08; color:var(--text-primary); }
+    .flr-hero__meta{ font-size:12.5px; color:var(--text-secondary); display:flex; align-items:center; gap:7px; }
+    .flr-hero__stat{ display:flex; align-items:flex-end; gap:12px; margin:13px 0 4px; }
+    .flr-hero__nn{ font-family:var(--font-mono); font-weight:500; font-size:29px; color:var(--accent-strong); line-height:.9; }
+    .flr-hero__ll{ font-size:12px; color:var(--text-secondary); padding-bottom:3px; }
+    .flr-mini{ height:8px; border-radius:99px; background:var(--bg-sunken); overflow:hidden; margin-top:6px; } .flr-mini>i{ display:block; height:100%; border-radius:99px; background:var(--status-forming); }
+    .flr-acts{ display:flex; gap:9px; margin-top:14px; }
+    .flr-row{ display:flex; align-items:center; gap:13px; padding:13px 2px; border-bottom:1px solid var(--border-hairline); cursor:pointer; }
+    .flr-row:active{ background:var(--bg-sunken); border-radius:12px; }
+    .flr-row__rank{ font-family:var(--font-mono); font-size:12px; color:var(--text-tertiary); width:14px; text-align:center; flex:0 0 auto; }
+    .flr-row__t{ font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--text-primary); display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    .flr-row__sub{ display:flex; align-items:center; gap:8px; margin-top:4px; }
+    .flr-cdot{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:0 0 auto; }
+    .flr-prox{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); }
+    .flr-tagmini{ font-size:10.5px; color:var(--text-tertiary); }
+    .flr-fire{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--status-forming); background:color-mix(in srgb,var(--status-forming) 15%,var(--bg-surface)); padding:2px 6px; border-radius:99px; }
+    .flr-you{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--accent-strong); background:var(--accent-quiet); padding:2px 6px; border-radius:99px; }
+    .flr-ring{ position:relative; width:44px; height:44px; flex:0 0 auto; }
+    .flr-ring svg{ transform:rotate(-90deg); } .flr-ring__num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:11px; font-weight:500; color:var(--text-primary); }
+    .flr-scrim{ position:absolute; inset:0; background:var(--bg-scrim); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); z-index:55; animation:scrim-in var(--dur-2) ease both; }
+    .flr-sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg-surface); border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl); box-shadow:var(--shadow-pop); padding:8px 20px 22px; z-index:56; max-height:92%; overflow-y:auto; scrollbar-width:none; animation:sheet-up var(--dur-3) var(--ease-settle) both; }
+    .flr-sheet::-webkit-scrollbar{ width:0; }
+    .flr-core{ font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:-.02em; margin:8px 0 3px; line-height:1.32; color:var(--text-primary); }
+    .flr-tok{ cursor:pointer; color:var(--accent-strong); border-bottom:2.5px dotted color-mix(in srgb,var(--accent) 45%,transparent); padding:0 2px; white-space:nowrap; }
+    .flr-tok--sub{ color:var(--unit-class); border-color:color-mix(in srgb,var(--unit-class) 45%,transparent); }
+    .flr-tok--mov{ color:var(--unit-major); border-color:color-mix(in srgb,var(--unit-major) 45%,transparent); }
+    .flr-cal{ display:flex; align-items:center; gap:7px; margin-top:9px; font-size:12.5px; color:var(--status-live); font-weight:600; }
+    .flr-prefsh{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); margin:16px 0 8px; display:flex; justify-content:space-between; }
+    .flr-taghost{ position:relative; border:1.5px solid var(--border-hairline); border-radius:12px; padding:9px 10px; background:var(--bg-surface); transition:border-color var(--dur-1) var(--ease-out); }
+    .flr-taghost--focus{ border-color:var(--focus-ring); }
+    .flr-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+    .flr-chip{ display:inline-flex; align-items:center; gap:5px; font-size:13px; font-weight:600; padding:5px 6px 5px 10px; border-radius:9px; background:color-mix(in srgb,var(--accent) 12%,var(--bg-surface)); color:var(--accent-strong); }
+    .flr-chip--where{ background:color-mix(in srgb,var(--unit-class) 14%,var(--bg-surface)); color:var(--unit-class); }
+    .flr-chip--time{ background:color-mix(in srgb,var(--unit-major) 13%,var(--bg-surface)); color:var(--unit-major); }
+    .flr-chip__rm{ width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; opacity:.6; cursor:pointer; }
+    .flr-taginput{ border:none; outline:none; background:transparent; font-family:inherit; font-size:15px; color:var(--text-primary); width:100%; padding:5px 2px 2px; }
+    .flr-taginput::placeholder{ color:var(--text-tertiary); }
+    .flr-openhint{ font-size:12px; color:var(--status-live); font-weight:600; margin-top:8px; display:flex; align-items:center; gap:6px; }
+    .flr-menu{ position:absolute; z-index:60; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:14px; box-shadow:var(--shadow-raised); padding:6px; max-height:250px; overflow-y:auto; scrollbar-width:none; }
+    .flr-menu::-webkit-scrollbar{ width:0; }
+    .flr-menu--block{ position:static; margin-top:6px; box-shadow:none; }
+    .flr-sugcat{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); padding:7px 8px 4px; }
+    .flr-sugrow{ position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; border-radius:10px; cursor:pointer; overflow:hidden; }
+    .flr-sugrow:active{ transform:scale(.99); }
+    .flr-sugrow__bar{ position:absolute; left:0; top:0; bottom:0; background:color-mix(in srgb,var(--accent) 12%,transparent); border-radius:10px; }
+    .flr-sugrow__nm{ position:relative; z-index:1; font-weight:600; font-size:14px; color:var(--text-primary); display:flex; gap:7px; align-items:center; }
+    .flr-sugrow__vl{ position:relative; z-index:1; font-family:var(--font-mono); font-size:11.5px; color:var(--text-secondary); }
+    .flr-compat{ display:flex; align-items:center; gap:12px; margin:16px 0 2px; padding:13px 15px; border-radius:16px; background:linear-gradient(180deg,var(--accent-quiet),var(--bg-surface)); border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border-hairline)); }
+    .flr-compat__big{ font-family:var(--font-mono); font-weight:500; font-size:29px; color:var(--accent-strong); line-height:1; min-width:42px; text-align:center; }
+    .flr-compat__txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.35; } .flr-compat__txt b{ color:var(--text-primary); }
+    .flr-actgrid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; }
+    .flr-toast{ position:absolute; left:16px; right:16px; bottom:84px; z-index:70; }
   </style>
 </head>
 <body>
@@ -912,7 +977,7 @@
         status:'active', live:false, memberIds:['sarah','josh','lydia','ryan'], cap:6,
       };
       return (
-        <Sheet kicker="Spin up a loop" title="Here's your draft — send it or tweak it" onClose={onClose}>
+        <Sheet kicker="Spin up a loop" onClose={onClose}>
           <LoopCard loop={preview} variant="outline" showAction={false} onOpen={()=>{}} />
           <div className="mt-4 space-y-3">
             <label className="block">
@@ -1166,6 +1231,128 @@
       );
     }
 
+    /* ============================================================
+       STORY DEMOS — small, self-contained vignettes that SHOW each
+       onboarding concept instead of describing it. One per step,
+       reusing Avatar / Icon and the shared reveal animations. The
+       card remounts on every step (key={step}), so these staggered
+       CSS reveals replay each time you land on a slide — no timers.
+    ============================================================ */
+    /* One gentle reveal for every demo element — a soft translate-fade
+       (no scale jump), long enough not to feel snappy, on an ease-out
+       curve with a slow tail so staggered items glide in rather than pop. */
+    function reveal(delay){
+      return { animation:`demo-in 640ms cubic-bezier(.25,.46,.45,.94) both`, animationDelay:`${delay}ms` };
+    }
+
+    function DemoBubble({ side, delay, children }){
+      const out = side==='out';
+      return (
+        <div style={{ display:'flex', justifyContent: out?'flex-end':'flex-start', ...reveal(delay) }}>
+          <div style={{ maxWidth:'80%', fontSize:12, lineHeight:1.35, padding:'6px 9px', borderRadius:12,
+            borderBottomRightRadius: out?3:12, borderBottomLeftRadius: out?12:3,
+            background: out?'var(--accent-quiet)':'var(--bg-surface)',
+            color: out?'var(--accent-strong)':'var(--text-secondary)',
+            border: out?'none':'1px solid var(--border-hairline)' }}>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    /* 1 · The reality — a group chat that quietly fizzles out. */
+    function DemoChaos(){
+      return (
+        <div style={{ background:'var(--bg-sunken)', border:'1px solid var(--border-hairline)', borderRadius:14, padding:'12px 12px 10px', display:'flex', flexDirection:'column', gap:6 }}>
+          <div style={{ textAlign:'center', fontSize:10, color:'var(--text-tertiary)', marginBottom:2 }}>the group chat · 11:58pm</div>
+          <DemoBubble side="out" delay={0}>who's free tn??</DemoBubble>
+          <DemoBubble side="in"  delay={360}>ugh stuck in the library 😵</DemoBubble>
+          <DemoBubble side="in"  delay={720}>rain check?</DemoBubble>
+          <DemoBubble side="out" delay={1080}>next week then??</DemoBubble>
+          <div style={{ textAlign:'center', marginTop:4, ...reveal(1560) }}>
+            <span style={{ fontSize:11, fontStyle:'italic', color:'var(--text-tertiary)' }}>— and the plan quietly dies —</span>
+          </div>
+        </div>
+      );
+    }
+
+    /* 2 · The reframe — an activity anchor, with people snapping on. */
+    function DemoAnchor(){
+      const who = [['Kaia','kaia'],['Mateo','mateo'],['Priya','priya'],['Jordan','jordan']];
+      return (
+        <div style={{ background:'var(--bg-sunken)', border:'1px solid var(--border-hairline)', borderRadius:14, padding:14 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:11 }}>
+            <span style={{ width:38, height:38, flex:'none', borderRadius:11, background:'var(--accent-quiet)', color:'var(--accent-strong)', display:'flex', alignItems:'center', justifyContent:'center', ...reveal(0) }}>
+              <Icon name="book-open" size={19} />
+            </span>
+            <div style={{ textAlign:'left', ...reveal(180) }}>
+              <div style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Study sprint</div>
+              <div style={{ fontSize:12, color:'var(--text-secondary)', marginTop:1 }}>Thu · 7:00p · Mann Library</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', marginTop:13, paddingLeft:8 }}>
+            {who.map((w,i)=>(
+              <div key={w[1]} style={{ marginLeft:-8, ...reveal(560+i*300) }}><Avatar id={w[1]} name={w[0]} size={30} ring /></div>
+            ))}
+            <span style={{ marginLeft:12, fontSize:12, fontWeight:600, color:'var(--accent-strong)', ...reveal(560+who.length*300) }}>4 folded in</span>
+          </div>
+        </div>
+      );
+    }
+
+    /* 3 · Close to home — proximity bands lighting up nearest-first. */
+    function DemoProximity(){
+      const bands = [
+        { icon:'house',          label:'Your floor',     names:[['Al','p0'],['Bo','p1'],['Cy','p2']], near:true },
+        { icon:'house',          label:'Your building',  names:[['Di','p3'],['Ez','p4']],             near:true },
+        { icon:'graduation-cap', label:'Your major',     names:[],                                    near:false },
+        { icon:'map-pin',        label:'All of campus',  names:[],                                    near:false },
+      ];
+      return (
+        <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+          {bands.map((b,i)=>(
+            <div key={b.label} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:12,
+              background: b.near?'var(--accent-quiet)':'var(--bg-sunken)', border:'1px solid '+(b.near?'transparent':'var(--border-hairline)'), ...reveal(i*300) }}>
+              <Icon name={b.icon} size={16} style={{ color: b.near?'var(--accent-strong)':'var(--text-tertiary)', flexShrink:0 }} />
+              <span style={{ flex:1, textAlign:'left', fontSize:12.5, fontWeight:600, color: b.near?'var(--accent-strong)':'var(--text-tertiary)' }}>{b.label}</span>
+              {b.names.length>0 && (
+                <span style={{ display:'flex' }}>
+                  {b.names.map(n=><span key={n[1]} style={{ marginLeft:-6 }}><Avatar id={n[1]} name={n[0]} size={22} ring /></span>)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    /* 4 · The science — a micro-tribe filling to its cap, one seat left. */
+    function DemoTribe(){
+      const filled = [['Kaia','kaia'],['Mateo','mateo'],['Priya','priya'],['Jordan','jordan'],['Sam','sam']];
+      return (
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
+          <div style={{ display:'flex', gap:8 }}>
+            {filled.map((w,i)=>(
+              <div key={w[1]} style={reveal(i*300)}><Avatar id={w[1]} name={w[0]} size={38} ring={false} /></div>
+            ))}
+            <div style={{ width:38, height:38, borderRadius:'50%', border:'2px dashed var(--border-hairline)', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-tertiary)', ...reveal(filled.length*300) }}>
+              <Icon name="plus" size={16} />
+            </div>
+          </div>
+          <span style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:999, fontSize:11.5, fontWeight:700,
+            background:'color-mix(in srgb, var(--status-live) 14%, var(--bg-surface))', color:'var(--status-live)', ...reveal(filled.length*300+260) }}>
+            <Icon name="check" size={13} /> Capped at 6 · nobody left out
+          </span>
+        </div>
+      );
+    }
+
+    function StoryDemo({ step }){
+      const D = [DemoChaos, DemoAnchor, DemoProximity, DemoTribe][step];
+      if(!D) return null;
+      return <div style={{ marginTop:20 }}><D /></div>;
+    }
+
     /* ------------------------------------------------------------
        STORY — the narrative onboarding ("The Living Loop"). Five
        screens that reframe why Loop exists, each carried by one
@@ -1186,19 +1373,19 @@
       const term = (t) => <span style={{ color:'var(--accent-strong)', fontWeight:600 }}>{t}</span>;
       const STEPS = [
         { k:'The reality', h:'Making friends here is exhausting.',
-          body:<>Group texts get chaotic, plans fizzle, and walking into a room of strangers is genuinely intimidating. It is not your fault. It is a real barrier called {term('Logistical Fatigue')}. (Yes, that is the actual name.)</>,
+          body:<>Group chats spiral, plans fizzle. The drag is real — it's {term('Logistical Fatigue')}.</>,
           cta:'Wait, what is that?' },
         { k:'The reframe', h:'Stop networking. Start doing.',
-          body:<>The best friendships never start with small talk. They form around {term('Activity Anchors')}: a coffee run, a study sprint, a new hobby. The shared task carries the conversation, so the pressure just disappears.</>,
+          body:<>Friendships grow around a shared task — an {term('Activity Anchor')}, not small talk.</>,
           cta:'That makes sense' },
-        { k:'Close to home', h:'Start where you already are.',
-          body:<>The easiest hangout is the one two minutes from your door. So Loop starts with the people {term('closest to you')} — your building, your floor — then widens out to your major, your year, and the rest of campus. Less distance, less friction, more actually showing up.</>,
+        { k:'Close to home', h:'Start where you are.',
+          body:<>Loop starts with the people {term('closest to you')} — your floor, your building — then widens out.</>,
           cta:'Show me how' },
         { k:'The science', h:'Small groups. Big impact.',
-          body:<>Big mixers spike anxiety and leave us feeling more alone. We bond best in {term('Micro-Tribes')}, so every hangout is capped at 4 to 6. Your presence matters, and nobody gets left out.</>,
+          body:<>We bond best in {term('Micro-Tribes')}, so every hangout is capped at 4–6. Nobody gets left out.</>,
           cta:'I prefer smaller groups' },
         { k:'Your turn', h:'Now, on repeat.',
-          body:<>Friendships come from small moments that keep coming back. Start one, and the loop keeps it going. Pick any that sound good this week.</>,
+          body:<>Start one small moment — the loop keeps it coming back. Pick any that sound good this week.</>,
           opts:true },
       ];
       const ANCHORS = [
@@ -1338,6 +1525,7 @@
                 <div className="pls-kicker" style={{ color:'var(--accent-strong)', marginBottom:10 }}>{s.k}</div>
                 <h1 className="pls-display" style={{ fontWeight:800, fontSize:29, lineHeight:1.06, letterSpacing:'-.03em', margin:'0 0 12px', color:'var(--text-primary)' }}>{s.h}</h1>
                 <p style={{ fontSize:14, lineHeight:1.62, color:'var(--text-secondary)', margin:'0 auto', maxWidth:'32ch' }}>{s.body}</p>
+                <StoryDemo step={step} />
                 {s.opts ? (
                   <div>
                     <div style={{ display:'flex', flexDirection:'column', gap:7, marginTop:14, textAlign:'left' }}>
@@ -1358,7 +1546,7 @@
                         );
                       })}
                     </div>
-                    <div style={{ marginTop:14 }}>
+                    <div style={{ marginTop:16 }}>
                       <Button block disabled={picks.length===0} iconRight="arrow-right"
                         onClick={()=>onDone(ANCHORS.filter(a=>picks.includes(a.L)).map(a=>a.seed).join(' · '))}>
                         {picks.length>1 ? `See what's forming · ${picks.length}` : "See what's forming"}
@@ -1681,6 +1869,306 @@
       );
     }
 
+    /* ============================================================
+       THE FLOOR (S6) — intent momentum field + @-tag shaping
+    ============================================================ */
+    const FLR_DAYS=['Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','Sundays','weekdays','weekends'];
+    const FLR_DAYPOP={ Mondays:6,Tuesdays:5,Wednesdays:6,Thursdays:12,Fridays:12,Saturdays:11,Sundays:9,weekdays:8,weekends:10 };
+    const FLR_WEEK=[['M','Mondays'],['T','Tuesdays'],['W','Wednesdays'],['T','Thursdays'],['F','Fridays'],['S','Saturdays'],['S','Sundays']];
+    const FLR_CADENCE=['weekly','2× a week','every other week','monthly'];
+    const FLR_CADPOP={ weekly:12,'2× a week':6,'every other week':7,monthly:4 };
+    const FLR_CADF={ weekly:1,'2× a week':.9,'every other week':.8,monthly:.65 };
+    const FLR_MEALS=['breakfast','brunch','lunch','coffee','dinner','late-night bites'];
+    const FLR_SPORTS=['a run','a lift','a climb','bouldering','kickboxing','yoga','pickup ball'];
+    const FLR_SUBJECTS=['CS 2110','CHEM 2070','MATH 1920','ECON 1110','PSYCH 1101','any subject'];
+    const FLR_ACTPOP={ dinner:12,lunch:9,brunch:8,coffee:6,breakfast:4,'late-night bites':5,'a run':9,'a lift':8,'a climb':6,bouldering:6,kickboxing:8,yoga:5,'pickup ball':6,'CS 2110':11,'CHEM 2070':8,'MATH 1920':7,'ECON 1110':6,'PSYCH 1101':6,'any subject':9 };
+    const FLR_RING={ floor:{lbl:'your floor',boost:1.0}, building:{lbl:'Donlon',boost:.85}, major:{lbl:'CS majors',boost:.72}, year:{lbl:'Class of ’30',boost:.6} };
+    const FLR_FACETS={
+      dine:[ {key:'time',type:'time',label:'time',opts:['6pm','7pm','8pm','9pm','late']},
+        {key:'cuisine',type:'',label:'cuisine',multi:true,opts:['ramen','sushi','tacos','korean bbq','italian','dumplings','thai','burgers']},
+        {key:'budget',type:'',label:'budget',opts:['$','$$','$$$']},
+        {key:'where',type:'where',label:'where',opts:['Collegetown','North','West','Downtown']},
+        {key:'size',type:'',label:'group',opts:['just 2','small 3-4','big 5+']} ],
+      move:[ {key:'time',type:'time',label:'time',opts:['early','morning','afternoon','evening']},
+        {key:'where',type:'where',label:'where',opts:['Teagle gym','Beebe Lake','Lindseth wall','outdoor loop']},
+        {key:'intensity',type:'',label:'intensity',opts:['chill','moderate','sweaty']},
+        {key:'size',type:'',label:'group',opts:['just 2','small crew','open group']} ],
+      study:[ {key:'time',type:'time',label:'time',opts:['morning','afternoon','evening','late']},
+        {key:'where',type:'where',label:'where',opts:['Libe Café','Mann','Uris','Olin','dorm lounge']},
+        {key:'vibe',type:'',label:'vibe',opts:['silent','light chatter','group work']},
+        {key:'length',type:'',label:'length',opts:['1 hr','2 hrs','all-nighter']} ],
+    };
+    const FLR_OPTPOP={ '7pm':10,'8pm':9,'6pm':7,'9pm':6,late:4, ramen:9,sushi:8,tacos:9,'korean bbq':7,italian:7,dumplings:6,thai:6,burgers:6, '$':6,'$$':11,'$$$':5, Collegetown:12,North:9,West:6,Downtown:5, 'just 2':5,'small 3-4':10,'big 5+':6, early:4,morning:7,afternoon:8,evening:11, 'Teagle gym':10,'Beebe Lake':8,'Lindseth wall':6,'outdoor loop':7, chill:8,moderate:9,sweaty:6, 'small crew':10,'open group':7, 'Libe Café':11,Mann:8,Uris:9,Olin:6,'dorm lounge':7, silent:8,'light chatter':9,'group work':8, '1 hr':7,'2 hrs':10,'all-nighter':4 };
+    const FLR_RETAIN={ time:.68, budget:.7, where:.62, size:.62, intensity:.72, vibe:.72, length:.76, cuisine:.6, custom:.82 };
+    const FLR_CATX={ move:{c:'var(--unit-major)',label:'moving',icon:'🏃',act:'sport'}, study:{c:'var(--unit-class)',label:'studying',icon:'📖',act:'subject'}, dine:{c:'var(--unit-dorm)',label:'eating together',icon:'🍜',act:'meal'} };
+
+    function flrActKey(it){ return FLR_CATX[it.cat].act; }
+    function flrActVal(it){ return it[flrActKey(it)]; }
+    function flrActLabel(it){ return (flrActVal(it)||'plan').replace(/^a /,''); }
+    function flrLabel(it){ if(it.cat==='study') return it.subject==='any subject'?'study sessions':it.subject+' grind'; const a=(it.sport||it.meal).replace(/^a /,''); return it.day.slice(0,3)+' '+a; }
+    function flrCoreText(it){ if(it.cat==='study') return 'Studying '+it.subject+' '+it.day; if(it.cat==='move'){ const s=it.sport.replace(/^a /,''); return s.charAt(0).toUpperCase()+s.slice(1)+' '+it.day; } return it.meal.charAt(0).toUpperCase()+it.meal.slice(1)+' '+it.day; }
+    function flrIsOpen(it,k){ const v=it.prefs[k]; return v==null||(Array.isArray(v)&&v.length===0); }
+    function flrPrefCount(it){ return FLR_FACETS[it.cat].filter(f=>!flrIsOpen(it,f.key)).length + (it.custom?it.custom.length:0); }
+    function flrOnCal(it){ return (it.mine||it.joined)&&!it.dropped; }
+    function flrDayMatch(it,pl){ if(it.day===pl) return true; if(it.day==='weekdays') return ['Mondays','Tuesdays','Wednesdays','Thursdays','Fridays'].includes(pl); if(it.day==='weekends') return ['Saturdays','Sundays'].includes(pl); return false; }
+    function flrCompat(it){ let n=((FLR_ACTPOP[flrActVal(it)]||6)+(FLR_DAYPOP[it.day]||6))/2*(FLR_CADF[it.cadence]||1)*(FLR_RING[it.ring].boost);
+      FLR_FACETS[it.cat].forEach(f=>{ if(!flrIsOpen(it,f.key)){ const v=it.prefs[f.key]; if(f.multi) n*=Math.min(1,.5+.16*v.length); else n*=(FLR_RETAIN[f.key]||.7); } });
+      if(it.custom) it.custom.forEach(()=> n*=FLR_RETAIN.custom);
+      return Math.max(1,Math.min(it.target,Math.round(n))); }
+    function flrMomentum(it){ return it.count/it.target*0.72 + FLR_RING[it.ring].boost*0.28; }
+    function flrTags(it){ const t=[]; FLR_FACETS[it.cat].forEach(f=>{ if(!flrIsOpen(it,f.key)){ const v=it.prefs[f.key]; (Array.isArray(v)?v:[v]).forEach(x=>t.push({v:x,type:f.type,key:f.key})); } }); (it.custom||[]).forEach(x=>t.push({v:x,type:'where',key:'custom'})); return t; }
+    function flrTagsInline(it){ const t=flrTags(it); if(!t.length) return ' · open to all'; return ' · '+t.slice(0,2).map(x=>'@'+x.v).join(' ')+(t.length>2?' +'+(t.length-2):''); }
+    function flrFindFacet(it,term){ const t=term.toLowerCase(); for(const f of FLR_FACETS[it.cat]){ const opt=f.opts.find(o=>o.toLowerCase()===t); if(opt) return {key:f.key,opt}; } return null; }
+    function flrFromRaw(raw){ if(!raw) return null; const p=parseIntent(raw);
+      if(p.type==='study') return { cat:'study', subject:(p.target||'any subject') };
+      if(p.type==='activity'){ const s=p.target; return { cat:'move', sport: s==='running'?'a run':s==='boxing'?'kickboxing':s==='bouldering'?'bouldering':'a lift' }; }
+      return { cat:'dine', meal:'dinner' }; }
+    function flrSeed(seedRaw){
+      const base=[
+        { id:'study', cat:'study', subject:'any subject', day:'Wednesdays', cadence:'weekly', count:9, target:10, ring:'major', prefs:{time:'evening'}, custom:[] },
+        { id:'box',   cat:'move',  sport:'kickboxing',   day:'Wednesdays', cadence:'weekly', count:7, target:10, ring:'building', prefs:{where:'Teagle gym'}, custom:[] },
+        { id:'cs2110',cat:'study', subject:'CS 2110',    day:'Sundays',    cadence:'weekly', count:8, target:10, ring:'major', prefs:{where:'Uris'}, custom:[] },
+        { id:'lift',  cat:'move',  sport:'a lift',       day:'Fridays',    cadence:'2× a week',count:6, target:8, ring:'floor', prefs:{where:'Teagle gym'}, custom:[] },
+        { id:'dinner',cat:'dine',  meal:'dinner',        day:'Thursdays',  cadence:'weekly', count:5, target:8, mine:true, ring:'floor', prefs:{}, custom:[] },
+        { id:'bould', cat:'move',  sport:'bouldering',   day:'Saturdays',  cadence:'weekly', count:5, target:8, ring:'year', prefs:{where:'Lindseth wall'}, custom:[] },
+        { id:'run',   cat:'move',  sport:'a run',        day:'Tuesdays',   cadence:'2× a week',count:4, target:8, ring:'building', prefs:{time:'morning'}, custom:[] },
+        { id:'coffee',cat:'dine',  meal:'coffee',        day:'Mondays',    cadence:'weekly', count:3, target:6, ring:'floor', prefs:{time:'morning'}, custom:[] },
+      ];
+      const d=flrFromRaw(seedRaw);
+      if(d){ base.forEach(x=>{ x.mine=false; }); const mineIt={ id:'mine', day:'Thursdays', cadence:'weekly', target:8, mine:true, ring:'floor', prefs:{}, custom:[], ...d }; mineIt.count=flrCompat(mineIt); base.unshift(mineIt); }
+      return base;
+    }
+    const flrStop = e => { if(e && e.stopPropagation) e.stopPropagation(); };
+
+    function FlrRingGauge({ pct, color, label }){
+      const r=17, circ=2*Math.PI*r, off=circ*(1-Math.max(0,Math.min(1,pct)));
+      return (
+        <div className="flr-ring">
+          <svg width="44" height="44">
+            <circle cx="22" cy="22" r={r} fill="none" stroke="var(--bg-sunken)" strokeWidth="4" />
+            <circle cx="22" cy="22" r={r} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeDasharray={circ.toFixed(1)} strokeDashoffset={off.toFixed(1)} />
+          </svg>
+          <span className="flr-ring__num">{label}</span>
+        </div>
+      );
+    }
+
+    function FlrTagInput({ it, onAdd, onRemove }){
+      const [q, setQ] = useState('');
+      const [focus, setFocus] = useState(false);
+      const tags = flrTags(it);
+      const at = q.lastIndexOf('@');
+      const term = (at>=0 ? q.slice(at+1) : q).toLowerCase().trim();
+      const groups = FLR_FACETS[it.cat].map(f=>({ f, opts: f.opts.filter(o => o.toLowerCase().includes(term) && !((f.multi?(it.prefs[f.key]||[]):[it.prefs[f.key]]).includes(o)) ) })).filter(g=>g.opts.length);
+      const known = term && groups.some(g=>g.opts.some(o=>o.toLowerCase()===term));
+      const showSug = focus && (q.indexOf('@')>=0 || q.trim()!=='') && (groups.length || term);
+      const add = (k,v) => { onAdd(k,v); setQ(''); };
+      return (
+        <div className={"flr-taghost"+(focus?" flr-taghost--focus":"")}>
+          <div className="flr-chips">
+            {tags.map((t,i)=>(
+              <span key={i} className={"flr-chip"+(t.type==='where'?' flr-chip--where':t.type==='time'?' flr-chip--time':'')}>@{t.v}
+                <span className="flr-chip__rm" onMouseDown={e=>{ e.preventDefault(); onRemove(t.key,t.v); }}>×</span>
+              </span>
+            ))}
+          </div>
+          <input className="flr-taginput" value={q} placeholder="open to all — type @ to pin (e.g. @ramen, @Collegetown)" autoComplete="off"
+            onFocus={()=>setFocus(true)} onBlur={()=>setTimeout(()=>setFocus(false),150)} onChange={e=>setQ(e.target.value)}
+            onKeyDown={e=>{ if(e.key==='Enter' && term){ const kf=flrFindFacet(it,term); add(kf?kf.key:'custom', kf?kf.opt:term); } }} />
+          {showSug && (
+            <div className="flr-menu flr-menu--block">
+              {groups.map((g,gi)=>{ const mx=Math.max.apply(null,g.opts.map(o=>FLR_OPTPOP[o]||5)); return (
+                <div key={gi}>
+                  <div className="flr-sugcat">{g.f.label}</div>
+                  {g.opts.slice(0,5).map(o=>{ const iv=FLR_OPTPOP[o]||5; return (
+                    <div key={o} className="flr-sugrow" onMouseDown={e=>{ e.preventDefault(); add(g.f.key,o); }}>
+                      <span className="flr-sugrow__bar" style={{ width:Math.round(iv/mx*100)+'%' }} />
+                      <span className="flr-sugrow__nm">@{o}</span><span className="flr-sugrow__vl">{iv} want</span>
+                    </div>
+                  ); })}
+                </div>
+              ); })}
+              {term && !known && (
+                <div>
+                  <div className="flr-sugcat">custom</div>
+                  <div className="flr-sugrow" onMouseDown={e=>{ e.preventDefault(); add('custom',term); }}>
+                    <span className="flr-sugrow__nm">＋ pin “@{term}”</span><span className="flr-sugrow__vl">be specific</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function FlrSheet({ it, onClose, onCore, onAddTag, onRemoveTag, onJoin, onLeave, onDrop, onMute, onTog }){
+      const sheetRef = useRef();
+      const [menu, setMenu] = useState(null);
+      if(!it) return null;
+      const C=FLR_CATX[it.cat], n=it.count, pc=flrPrefCount(it);
+      const openMenu = (e, which) => {
+        const sr=sheetRef.current.getBoundingClientRect(), tr=e.currentTarget.getBoundingClientRect();
+        let list, cur;
+        if(which==='day'){ cur=it.day; list=FLR_DAYS.map(v=>({v,n:FLR_DAYPOP[v]||5})); }
+        else if(which==='cad'){ cur=it.cadence; list=FLR_CADENCE.map(v=>({v,n:FLR_CADPOP[v]||5})); }
+        else { const opts=it.cat==='dine'?FLR_MEALS:it.cat==='move'?FLR_SPORTS:FLR_SUBJECTS; cur=flrActVal(it); list=opts.map(v=>({v,n:FLR_ACTPOP[v]||5})); }
+        list.sort((a,b)=>b.n-a.n);
+        let left=tr.left-sr.left; left=Math.max(10, Math.min(left, sheetRef.current.clientWidth-240));
+        setMenu({ which, left, top:tr.bottom-sr.top+8, list, cur });
+      };
+      const cls = C.act==='subject' ? 'flr-tok--sub' : C.act==='sport' ? 'flr-tok--mov' : '';
+      const lead = it.cat==='study' ? 'Studying' : it.cat==='move' ? 'Up for' : 'Grabbing';
+      const mx = menu ? Math.max.apply(null, menu.list.map(o=>o.n)) : 1;
+      const primary = it.mine
+        ? <button className="pls-btn pls-btn--secondary pls-btn--block" onClick={onClose}><Icon name="calendar" size={17} />On your calendar · done</button>
+        : it.joined
+        ? <button className="pls-btn pls-btn--secondary pls-btn--block" onClick={()=>onLeave(it.id)}><Icon name="calendar" size={17} />On your week · tap to leave</button>
+        : <button className="pls-btn pls-btn--primary pls-btn--block" onClick={()=>onJoin(it.id)}><Icon name="plus" size={17} />Fold me in · add to my week</button>;
+      const third = it.mine
+        ? <button className="pls-btn pls-btn--ghost pls-btn--sm" style={{ width:'100%' }} onClick={()=>onDrop(it.id)}><Icon name="log-out" size={15} />Drop</button>
+        : it.joined
+        ? <button className="pls-btn pls-btn--ghost pls-btn--sm" style={{ width:'100%' }} onClick={()=>onLeave(it.id)}><Icon name="log-out" size={15} />Leave</button>
+        : <button className="pls-btn pls-btn--ghost pls-btn--sm" style={{ width:'100%' }} onClick={()=>onMute(it.id)}><Icon name="shield" size={15} />Mute</button>;
+      return ReactDOM.createPortal((
+        <>
+          <div className="flr-scrim" onClick={onClose} />
+          <div className="flr-sheet" ref={sheetRef} onClick={()=>menu&&setMenu(null)}>
+            <div className="pls-grab" />
+            <div className="pls-kicker" style={{ color:C.c }}>{C.icon} {C.label} · {FLR_RING[it.ring].lbl}{it.mine?' · yours':''}</div>
+            <div className="flr-core">
+              <span>{lead} </span>
+              <span className={"flr-tok "+cls} onClick={e=>{ flrStop(e); openMenu(e,'act'); }}>{flrActVal(it)}</span>{' '}
+              <span className="flr-tok" onClick={e=>{ flrStop(e); openMenu(e,'day'); }}>{it.day}</span>,{' '}
+              <span className="flr-tok" onClick={e=>{ flrStop(e); openMenu(e,'cad'); }}>{it.cadence}</span>
+            </div>
+            <div style={{ fontSize:12, color:'var(--text-tertiary)', marginTop:1 }}>tap a word to change the rhythm</div>
+            {flrOnCal(it) && <div className="flr-cal"><Icon name="calendar" size={14} />On your calendar — {it.day} · {it.cadence}.</div>}
+            <div className="flr-prefsh"><span>your preferences</span><span>blank = open to all</span></div>
+            <FlrTagInput it={it} onAdd={(k,v)=>onAddTag(it.id,k,v)} onRemove={(k,v)=>onRemoveTag(it.id,k,v)} />
+            {pc===0 && <div className="flr-openhint">✦ open to everything — you fit the most plans</div>}
+            <div className="flr-compat">
+              <div className="flr-compat__big">{n}</div>
+              <div className="flr-compat__txt">
+                {pc===0
+                  ? <><b>Fully open.</b> Any {flrActLabel(it)} {it.day} near you could fold you in — that’s why {n} fit.</>
+                  : <><b>{n} near you</b> fit this. You’ve pinned {pc} preference{pc>1?'s':''} — clear a tag to fit more.</>}
+              </div>
+            </div>
+            <div style={{ marginTop:12 }}>{primary}</div>
+            <div className="flr-actgrid">
+              <button className={"pls-btn pls-btn--ghost pls-btn--sm"+(it.watching?'':'')} style={{ width:'100%', color: it.watching?'var(--accent-strong)':undefined }} onClick={()=>onTog(it.id,'watching')}>{it.watching?'Watching':'Watch'}</button>
+              <button className="pls-btn pls-btn--ghost pls-btn--sm" style={{ width:'100%', color: it.reminded?'var(--accent-strong)':undefined }} onClick={()=>onTog(it.id,'reminded')}><Icon name="bell" size={15} />{it.reminded?'On':'Remind'}</button>
+              {third}
+            </div>
+            {menu && (
+              <div className="flr-menu" style={{ left:menu.left, top:menu.top, width:230 }} onClick={e=>flrStop(e)}>
+                {menu.list.map(o=>(
+                  <div key={o.v} className="flr-sugrow" onClick={()=>{ onCore(it.id, menu.which, o.v); setMenu(null); }}>
+                    <span className="flr-sugrow__bar" style={{ width:Math.round(o.n/mx*100)+'%' }} />
+                    <span className="flr-sugrow__nm">{o.v===menu.cur?'✓ ':''}{o.v}</span>
+                    <span className="flr-sugrow__vl">{o.n} want</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      ), document.querySelector('.phone') || document.body);
+    }
+
+    function TheFloor({ seedRaw, viewerId, user }){
+      const [intents, setIntents] = useState(()=>flrSeed(seedRaw));
+      const [sheetId, setSheetId] = useState(null);
+      const [dayFilter, setDayFilter] = useState(null);
+      const [toast, setToast] = useState(null);
+      const tRef = useRef();
+      const showToast = (t) => { setToast(t); clearTimeout(tRef.current); tRef.current=setTimeout(()=>setToast(null), 4200); };
+      useEffect(()=>()=>clearTimeout(tRef.current), []);
+      useEffect(()=>{
+        const iv=setInterval(()=>{ if(sheetId) return; setIntents(xs=>{ const pool=xs.filter(i=>!i.dropped&&!i.muted&&i.status!=='fired'&&!i.mine&&!i.joined&&i.count<i.target-1); if(!pool.length) return xs; const p=pool[Math.floor(Math.random()*pool.length)]; return xs.map(i=>i.id===p.id?{ ...i, count:i.count+1 }:i); }); }, 6500);
+        return ()=>clearInterval(iv);
+      }, [sheetId]);
+      const patch = (id, fn) => setIntents(xs=>xs.map(i=>{ if(i.id!==id) return i; const c={ ...i, prefs:{ ...i.prefs }, custom:[...(i.custom||[])] }; fn(c); return c; }));
+      const onCore = (id, which, v) => patch(id, x=>{ if(which==='day') x.day=v; else if(which==='cad') x.cadence=v; else x[flrActKey(x)]=v; x.mine=x.mine||!x.joined; x.status=null; x.count=flrCompat(x); });
+      const onAddTag = (id, key, val) => patch(id, x=>{ if(key==='custom'){ if(!x.custom.includes(val)) x.custom.push(val); } else { const f=FLR_FACETS[x.cat].find(ff=>ff.key===key); if(f.multi){ x.prefs[key]=[...(x.prefs[key]||[])]; if(!x.prefs[key].includes(val)) x.prefs[key].push(val); } else x.prefs[key]=val; } x.mine=x.mine||!x.joined; x.status=null; x.count=flrCompat(x); });
+      const onRemoveTag = (id, key, val) => patch(id, x=>{ if(key==='custom'){ x.custom=x.custom.filter(t=>t!==val); } else { const f=FLR_FACETS[x.cat].find(ff=>ff.key===key); if(f&&f.multi){ x.prefs[key]=(x.prefs[key]||[]).filter(t=>t!==val); if(!x.prefs[key].length) delete x.prefs[key]; } else delete x.prefs[key]; } x.count=flrCompat(x); });
+      const onTog = (id, f) => patch(id, x=>{ x[f]=!x[f]; });
+      const onJoin = (id) => { let fired=false, lab=''; setIntents(xs=>xs.map(i=>{ if(i.id!==id) return i; const c={ ...i, joined:true, count:i.count+1 }; lab=flrLabel(c); if(c.count>=c.target && c.status!=='fired'){ c.status='fired'; fired=true; } return c; }));
+        setSheetId(null); showToast(fired?{ icon:'zap', title:'“'+lab+'” fired', body:'A loop is crystallizing. Same faces, on repeat.' }:{ icon:'calendar', title:'Added to your week', body:'You’re folded into '+lab+'.' }); };
+      const onLeave = (id) => { patch(id, x=>{ x.joined=false; x.count=Math.max(0,x.count-1); }); setSheetId(null); showToast({ icon:'log-out', title:'Left the loop', body:'Off your calendar. Nobody sees a thing.' }); };
+      const onDrop = (id) => { setIntents(xs=>xs.map(i=>i.id===id?{ ...i, dropped:true }:i)); setSheetId(null); showToast({ icon:'log-out', title:'Dropped', body:'Off your floor.' }); };
+      const onMute = (id) => { setIntents(xs=>xs.map(i=>i.id===id?{ ...i, muted:true }:i)); setSheetId(null); showToast({ icon:'shield', title:'Muted', body:'It won’t clutter your floor.' }); };
+      const addIntent = () => { const id='flr'+Math.floor(Math.random()*1e6); const c={ id, cat:'dine', meal:'dinner', day:'Thursdays', cadence:'weekly', target:8, mine:true, ring:'floor', prefs:{}, custom:[] }; c.count=flrCompat(c); setIntents(xs=>[c, ...xs]); setSheetId(id); };
+
+      const list = intents.filter(i=>!i.dropped&&!i.muted).slice().sort((a,b)=>flrMomentum(b)-flrMomentum(a));
+      const visible = list.filter(it=>!(dayFilter&&!flrDayMatch(it,dayFilter)));
+      const hero = visible[0];
+      const rest = visible.slice(1);
+      const active = sheetId ? intents.find(i=>i.id===sheetId) : null;
+
+      return (
+        <div className="mt-6">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Icon name="radio" size={16} style={{ color:'var(--accent)' }} />
+            <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>What your intent lands in</h2>
+          </div>
+          <p className="text-[12.5px] mb-3" style={{ color:'var(--text-secondary)' }}>Closest to you, closest to happening.</p>
+
+          <div className="flr-week">
+            {FLR_WEEK.map(([ltr,pl],i)=>{ const cnt=intents.filter(x=>flrOnCal(x)&&flrDayMatch(x,pl)).length; return (
+              <div key={i} className={"flr-wc"+(cnt?" flr-wc--has":"")+(dayFilter===pl?" flr-wc--on":"")} onClick={()=>setDayFilter(dayFilter===pl?null:pl)}>
+                <span className="flr-wc__d">{ltr}</span><span className="flr-wc__dot" />
+              </div>
+            ); })}
+          </div>
+
+          {hero && (()=>{ const near=hero.count>=hero.target-1, c=FLR_CATX[hero.cat].c, pct=hero.count/hero.target; return (
+            <div className="flr-hero" onClick={()=>setSheetId(hero.id)}>
+              <span className="flr-badge">{hero.mine?'★ your intent':near?'🔥 1 more fires it':'closest to happening'}</span>
+              <div className="flr-hero__t">{flrCoreText(hero)}</div>
+              <div className="flr-hero__meta"><span className="flr-cdot" style={{ background:hero.mine?'var(--accent)':c }} />{FLR_RING[hero.ring].lbl}{flrTagsInline(hero)}</div>
+              <div className="flr-hero__stat"><span className="flr-hero__nn">{hero.count}</span><span className="flr-hero__ll">of {hero.target} want it{near?' — you’d be the one that fires it':''}</span></div>
+              <div className="flr-mini"><i style={{ width:Math.round(pct*100)+'%' }} /></div>
+              <div className="flr-acts">
+                <button className="pls-btn pls-btn--secondary pls-btn--sm" style={{ flex:'0 0 auto' }} onClick={e=>{ flrStop(e); setSheetId(hero.id); }}><Icon name="pencil" size={15} />Shape it</button>
+                <button className="pls-btn pls-btn--primary pls-btn--sm" style={{ flex:1 }} onClick={e=>{ flrStop(e); flrOnCal(hero)?setSheetId(hero.id):onJoin(hero.id); }}><Icon name="plus" size={16} />{flrOnCal(hero)?'On your week':'Fold me in'}</button>
+              </div>
+            </div>
+          ); })()}
+
+          <div className="flr-sec"><Icon name="trending-up" size={14} style={{ color:'var(--text-tertiary)' }} />{dayFilter?('more on '+dayFilter):'more forming near you'}</div>
+          {rest.map((it,idx)=>{ const near=it.count>=it.target-1, c=FLR_CATX[it.cat].c, pct=it.count/it.target; return (
+            <div key={it.id} className="flr-row" onClick={()=>setSheetId(it.id)}>
+              <span className="flr-row__rank">{idx+2}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div className="flr-row__t"><span className="flr-cdot" style={{ background:it.mine?'var(--accent)':c }} />{flrLabel(it)}{near&&<span className="flr-fire">1 to fire</span>}{it.mine?<span className="flr-you">yours</span>:(flrOnCal(it)?<span className="flr-you">joined</span>:null)}</div>
+                <div className="flr-row__sub"><span className="flr-prox">{it.cadence} · {FLR_RING[it.ring].lbl}</span><span className="flr-tagmini">{flrTagsInline(it)}</span></div>
+              </div>
+              <FlrRingGauge pct={pct} color={near?'var(--status-forming)':it.mine?'var(--accent)':c} label={it.count+'/'+it.target} />
+            </div>
+          ); })}
+
+          {dayFilter && <div className="flr-sec" style={{ cursor:'pointer', color:'var(--accent-strong)', marginTop:12 }} onClick={()=>setDayFilter(null)}>× clear {dayFilter} filter</div>}
+
+          <div className="mt-4"><Button variant="secondary" block icon="plus" onClick={addIntent}>Drop your own rhythm</Button></div>
+
+          {active && <FlrSheet it={active} onClose={()=>setSheetId(null)} onCore={onCore} onAddTag={onAddTag} onRemoveTag={onRemoveTag} onJoin={onJoin} onLeave={onLeave} onDrop={onDrop} onMute={onMute} onTog={onTog} />}
+          {toast && ReactDOM.createPortal((
+            <div className="flr-toast">
+              <div className="pls-toast toast-in">
+                <span style={{ color:'var(--accent)' }}><Icon name={toast.icon} size={18} /></span>
+                <div style={{ minWidth:0 }}>
+                  <p style={{ fontWeight:600, fontSize:13.5 }}>{toast.title}</p>
+                  <p className="text-[12px]" style={{ color:'var(--text-inverse)', opacity:.78 }}>{toast.body}</p>
+                </div>
+              </div>
+            </div>
+          ), document.querySelector('.phone') || document.body)}
+        </div>
+      );
+    }
+
     function Home({ state, actions }){
       const { user, viewerId='sarah', loops, suggestions, nudge, unread, theme, campus } = state;
       const myLoops = loops.filter(l => l.memberIds.includes(viewerId));
@@ -1757,19 +2245,7 @@
             )}
 
             {suggestions ? (
-              <div className="mt-6">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Icon name="radio" size={16} style={{ color:'var(--accent)' }} />
-                  <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>What your intent lands in</h2>
-                </div>
-                <p className="text-[12.5px] mb-3" style={{ color:'var(--text-secondary)' }}>Not a list of strangers — ways to get folded into a loop.</p>
-                <div className="mb-3">
-                  <IntentCard raw={suggestions.raw} author={viewerId} unit={(user.dorm||'').toLowerCase()} sameCount={11} />
-                </div>
-                <div className="space-y-3">
-                  {suggestions.cards.map((c,i)=><SuggestionCard key={i} card={c} actions={actions} />)}
-                </div>
-              </div>
+              <TheFloor key={suggestions.raw} seedRaw={suggestions.raw} viewerId={viewerId} user={user} />
             ) : (
               <PulseFeed viewerId={viewerId} user={user} loops={loops} actions={actions} />
             )}
