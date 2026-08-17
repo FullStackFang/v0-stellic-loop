@@ -868,7 +868,7 @@
         <div className="pls-scrim" onClick={onClose}>
           <div className="pls-sheet" onClick={e=>e.stopPropagation()}>
             <div className="pls-grab" />
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-6">
               <div>
                 {kicker && <div className="pls-kicker mb-1">{kicker}</div>}
                 <h2 className="pls-display" style={{ fontWeight:700, fontSize:22, color:'var(--text-primary)', lineHeight:1.15 }}>{title}</h2>
@@ -913,11 +913,6 @@
       };
       return (
         <Sheet kicker="Spin up a loop" title="Here's your draft — send it or tweak it" onClose={onClose}>
-          {d.raw && (
-            <div className="flex items-center gap-1.5 mb-3 text-[12.5px]" style={{ color:'var(--text-tertiary)' }}>
-              <Icon name="quote" size={13} /><span className="truncate">from “{d.raw}”</span>
-            </div>
-          )}
           <LoopCard loop={preview} variant="outline" showAction={false} onOpen={()=>{}} />
           <div className="mt-4 space-y-3">
             <label className="block">
