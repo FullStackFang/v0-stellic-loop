@@ -189,8 +189,9 @@
     .pls-scrim{ position:absolute; inset:0; background:var(--bg-scrim); backdrop-filter:blur(2px);
       -webkit-backdrop-filter:blur(2px); z-index:60; display:flex; align-items:flex-end; animation:scrim-in var(--dur-2) ease both; }
     .pls-sheet{ width:100%; background:var(--bg-surface); border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl);
-      box-shadow:var(--shadow-pop); padding:8px 20px 24px; max-height:86%; overflow-y:auto;
+      box-shadow:var(--shadow-pop); padding:8px 20px 24px; max-height:94%; overflow-y:auto; scrollbar-width:none;
       animation:sheet-up var(--dur-3) var(--ease-settle) both; }
+    .pls-sheet::-webkit-scrollbar{ width:0; height:0; }
     .pls-grab{ width:40px; height:5px; border-radius:999px; background:var(--border-hairline); margin:6px auto 14px; }
     .pls-toast{ display:flex; align-items:center; gap:12px; background:var(--bg-inverse); color:var(--text-inverse);
       border-radius:var(--radius-lg); padding:11px 14px; box-shadow:var(--shadow-pop); }
@@ -1180,6 +1181,7 @@
     ------------------------------------------------------------ */
     function StoryOnboarding({ onDone, onBack, theme }){
       const [step, setStep] = useState(0);
+      const [picks, setPicks] = useState([]);   // screen 5 is multiselect
       const cvRef = useRef(null);
       const stepRef = useRef(0);
       const colRef = useRef(null);
@@ -1201,14 +1203,14 @@
           body:<>Big mixers spike anxiety and leave us feeling more alone. We bond best in {term('Micro-Tribes')}, so every hangout is capped at 4 to 6. Your presence matters, and nobody gets left out.</>,
           cta:'I prefer smaller groups' },
         { k:'Your turn', h:'Now, on repeat.',
-          body:<>Friendships come from small moments that keep coming back around. We make the first one effortless, then the loop does the rest. (Fancy term: {term('Psychosocial Investment')}. We just call it hanging out.) What sounds good this week?</>,
+          body:<>Friendships come from small moments that keep coming back. Start one, and the loop keeps it going. Pick any that sound good this week.</>,
           opts:true },
       ];
       const ANCHORS = [
-        { L:'A', t:'A quiet study sprint', seed:'lock in a quiet study sprint this week' },
-        { L:'B', t:'A new cafe or dining spot', seed:'try a new campus cafe or dining spot' },
-        { L:'C', t:'A workout or pickup game', seed:'get a quick workout or intramural game going' },
-        { L:'D', t:'A spontaneous side quest', seed:'down for a random, spontaneous side quest' },
+        { L:'A', t:'A quiet study sprint', seed:'study sprint' },
+        { L:'B', t:'A new cafe or dining spot', seed:'dining spot' },
+        { L:'C', t:'A workout or pickup game', seed:'pickup game' },
+        { L:'D', t:'A spontaneous side quest', seed:'side quest' },
       ];
 
       useEffect(()=>{ stepRef.current = step; if(reduced.current && staticRef.current) staticRef.current(); }, [step]);
@@ -1225,13 +1227,13 @@
         const ctx = cv.getContext('2d');
         const DPR = Math.min(2, window.devicePixelRatio||1);
         let W=0,H=0,CX=0,CY=0;
-        const measure=()=>{ const r=cv.getBoundingClientRect(); W=r.width; H=r.height; CX=W/2; CY=H*0.19;
+        const measure=()=>{ const r=cv.getBoundingClientRect(); W=r.width; H=r.height; CX=W/2; CY=H*0.17;
           cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); };
         measure();
         const rnd=(a,b)=>a+Math.random()*(b-a);
-        const N=44, CORE=5, TAU=Math.PI*2, bands=[38,58,78];
+        const N=44, CORE=5, TAU=Math.PI*2, bands=[30,46,60];
         const P=Array.from({length:N},(_,i)=>{ const band=i%3; return {
-          x:rnd(26,W-26), y:rnd(40,H*0.28), vx:rnd(-.35,.35), vy:rnd(-.35,.35),
+          x:rnd(26,W-26), y:rnd(40,H*0.24), vx:rnd(-.35,.35), vy:rnd(-.35,.35),
           orbR:bands[band]+rnd(-6,6), orbA:rnd(0,TAU), orbW:0.0055-band*0.0012,
           core:i<CORE, ci:i, a:0.5, halo:0 }; });
         const trails=Array.from({length:CORE},()=>[]);
@@ -1246,7 +1248,7 @@
           ctx.clearRect(0,0,W,H);
           anchorA += ((st>=1?1:0)-anchorA)*0.06;
           liveRot += (st===4?0.02:st===3?0.006:0);
-          const cyT=H*0.19; cyCur+=(cyT-cyCur)*0.08; const rT=56;
+          const cyT=H*0.17; cyCur+=(cyT-cyCur)*0.08; const rT=46;
 
           if(st===1||st===2){ ctx.strokeStyle=C.faint; bands.forEach(r=>{ ctx.globalAlpha=0.06; ctx.beginPath(); ctx.arc(CX,cyCur,r,0,TAU); ctx.stroke(); }); ctx.globalAlpha=1; }
 
@@ -1256,7 +1258,7 @@
             if(st===0){
               p.vx+=rnd(-.03,.03); p.vy+=rnd(-.03,.03); const sp=Math.hypot(p.vx,p.vy); if(sp>0.5){p.vx*=0.5/sp;p.vy*=0.5/sp;}
               p.x+=p.vx; p.y+=p.vy;
-              if(p.x<22){p.x=22;p.vx*=-1;} if(p.x>W-22){p.x=W-22;p.vx*=-1;} if(p.y<40){p.y=40;p.vy*=-1;} if(p.y>H*0.28){p.y=H*0.28;p.vy*=-1;}
+              if(p.x<22){p.x=22;p.vx*=-1;} if(p.x>W-22){p.x=W-22;p.vx*=-1;} if(p.y<40){p.y=40;p.vy*=-1;} if(p.y>H*0.24){p.y=H*0.24;p.vy*=-1;}
               ta=0.5; p.halo+=(0-p.halo)*0.1;
             } else {
               p.orbA+=p.orbW;
@@ -1331,7 +1333,7 @@
               </div>
             </div>
             {/* fixed animation stage up top so every card top-aligns at the same line (level, no scroll) */}
-            <div style={{ height:180, flexShrink:0 }} />
+            <div style={{ height:150, flexShrink:0 }} />
             <div style={{ flex:1, display:'flex', alignItems:'flex-start', overflowY:'auto' }} className="no-scrollbar">
               <div key={step} className="fold-in" style={{ width:'100%', background:'var(--bg-surface)', border:'1px solid var(--border-hairline)',
                 borderRadius:'var(--radius-2xl)', boxShadow:'var(--shadow-pop)', padding:'26px 24px 24px', textAlign:'center' }}>
@@ -1342,15 +1344,31 @@
                 <h1 className="pls-display" style={{ fontWeight:800, fontSize:29, lineHeight:1.06, letterSpacing:'-.03em', margin:'0 0 12px', color:'var(--text-primary)' }}>{s.h}</h1>
                 <p style={{ fontSize:14, lineHeight:1.62, color:'var(--text-secondary)', margin:'0 auto', maxWidth:'32ch' }}>{s.body}</p>
                 {s.opts ? (
-                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:16, textAlign:'left' }}>
-                    {ANCHORS.map(o=>(
-                      <button key={o.L} onClick={()=>onDone(o.seed)}
-                        style={{ display:'flex', alignItems:'center', gap:12, width:'100%', padding:'11px 14px',
-                          borderRadius:'var(--radius-lg)', background:'var(--bg-page)', border:'1px solid var(--border-hairline)', cursor:'pointer' }}>
-                        <span className="pls-mono" style={{ width:24, height:24, flex:'none', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--accent-quiet)', color:'var(--accent-strong)', fontSize:12 }}>{o.L}</span>
-                        <span style={{ fontSize:13, color:'var(--text-primary)', whiteSpace:'nowrap' }}>{o.t}</span>
-                      </button>
-                    ))}
+                  <div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:7, marginTop:14, textAlign:'left' }}>
+                      {ANCHORS.map(o=>{
+                        const on = picks.includes(o.L);
+                        return (
+                          <button key={o.L} aria-pressed={on} onClick={()=>setPicks(p=> on ? p.filter(x=>x!==o.L) : [...p, o.L])}
+                            style={{ display:'flex', alignItems:'center', gap:11, width:'100%', padding:'9px 13px',
+                              borderRadius:'var(--radius-lg)', cursor:'pointer',
+                              background: on ? 'var(--accent-quiet)' : 'var(--bg-page)',
+                              border:'1.5px solid '+(on ? 'var(--accent)' : 'var(--border-hairline)'),
+                              transition:'background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out)' }}>
+                            <span className="pls-mono" style={{ width:20, height:20, flex:'none', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
+                              background: on ? 'var(--accent)' : 'var(--accent-quiet)', color: on ? 'var(--accent-ink)' : 'var(--accent-strong)', fontSize:11, transition:'background var(--dur-1) var(--ease-out)' }}>{o.L}</span>
+                            <span style={{ fontSize:12.5, color:'var(--text-primary)', whiteSpace:'nowrap', flex:1 }}>{o.t}</span>
+                            <span style={{ width:16, height:16, flex:'none', color:'var(--accent-strong)', opacity: on ? 1 : 0, transition:'opacity var(--dur-1) var(--ease-out)' }}><Icon name="check" size={16} /></span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{ marginTop:14 }}>
+                      <Button block disabled={picks.length===0} iconRight="arrow-right"
+                        onClick={()=>onDone(ANCHORS.filter(a=>picks.includes(a.L)).map(a=>a.seed).join(' · '))}>
+                        {picks.length>1 ? `See what's forming · ${picks.length}` : "See what's forming"}
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ marginTop:22 }}>
@@ -2488,17 +2506,34 @@
       const firstIntent = (text) => { runIntent(text); setScreen('home'); };
 
       /* ----- intent -> suggestions (S6) ----- */
-      const runIntent = (raw) => {
-        const parse = parseIntent(raw);
-        if (isSpinup(raw)) { startSpinupFromText(raw, parse); return; }
+      // Cards for a single intent phrase.
+      const cardsForIntent = (one) => {
+        const parse = parseIntent(one);
         const cards = [];
         const activeJoin = loops.find(l => l.target===parse.target && l.status==='active');
         if (activeJoin) cards.push({ kind:'join', loop:activeJoin });
         if (parse.type==='study' && parse.target) cards.push({ kind:'spinup', target:parse.target, subtitle:'11 others on your floor dropped this' });
         const forming = loops.find(l => l.target===parse.target && l.status==='forming');
         if (forming) cards.push({ kind:'forming', loop:forming });
-        if (cards.length===0) cards.push({ kind:'spinup', target: parse.target || raw.trim(), subtitle:'Be the one who starts it — Loop fills the seats.' });
-        setSuggestions({ raw: raw.trim().toLowerCase(), parse, cards });
+        if (cards.length===0) cards.push({ kind:'spinup', target: parse.target || one.trim(), subtitle:'Be the one who starts it — Loop fills the seats.' });
+        return cards;
+      };
+      const runIntent = (raw) => {
+        // Multiple activity anchors arrive joined by " · " (the app's multi-intent convention);
+        // each is its own category, so split them into separate suggestion cards.
+        const parts = (raw||'').split(/\s*[·;\n]\s*/).map(s=>s.trim()).filter(Boolean);
+        if (parts.length > 1) {
+          const seen = new Set();
+          const cards = parts.flatMap(cardsForIntent).filter(c => {
+            const key = c.kind + ':' + (c.loop?.id || c.target);
+            if (seen.has(key)) return false; seen.add(key); return true;
+          });
+          setSuggestions({ raw: parts.join(' · '), parse:null, cards });
+          return;
+        }
+        const one = parts[0] || (raw||'').trim();
+        if (isSpinup(one)) { startSpinupFromText(one, parseIntent(one)); return; }
+        setSuggestions({ raw: one.toLowerCase(), parse: parseIntent(one), cards: cardsForIntent(one) });
       };
       const openCompose = () => setSheet('compose');
       const submitCompose = (raw) => { setSheet(null); runIntent(raw); if(screen!=='home') setScreen('home'); };
