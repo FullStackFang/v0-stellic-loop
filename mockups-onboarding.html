@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Onboarding — one page instead of three</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e;
+    --carnelian-100:#f8e6e3; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber-600:#8a641f;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+    --dur-1:120ms; --dur-2:180ms; --dur-3:260ms; --dur-4:420ms;
+    --ease-out:cubic-bezier(.2,.8,.2,1); --ease-settle:cubic-bezier(.16,1,.3,1); --ease-pop:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:radial-gradient(1000px 460px at 50% -8%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:36px 20px 70px; }
+  .wrap{ max-width:1240px; margin:0 auto; text-align:center; }
+  .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 10px; }
+  .lede{ max-width:70ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.55; }
+  .lede b{ color:var(--text-primary); }
+  .stage{ display:flex; gap:40px; align-items:flex-start; justify-content:center; flex-wrap:wrap; margin-top:34px; text-align:left; }
+  .col{ width:378px; }
+  .panel-label{ font:600 11px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 6px 6px; }
+  .panel-title{ font:800 19px/1.15 var(--font-display); letter-spacing:-.02em; margin:0 0 6px 6px; }
+  .panel-sub{ font-size:12.5px; line-height:1.55; color:var(--text-secondary); margin:0 6px 14px; min-height:58px; }
+  .panel-sub b{ color:var(--text-primary); }
+  .tradeoff{ margin:14px 6px 0; font-size:12px; line-height:1.55; color:var(--text-secondary); }
+  .tradeoff b{ color:var(--text-primary); }
+
+  .phone{ width:378px; height:764px; background:var(--bg-page); border:1px solid var(--border-hairline);
+    border-radius:38px; overflow:hidden; position:relative; display:flex; flex-direction:column;
+    box-shadow:0 30px 64px -26px rgba(80,40,30,.36), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; padding:14px 26px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .topbar{ display:flex; align-items:center; gap:8px; padding:12px 20px 0; flex-shrink:0; }
+  .backbtn{ width:38px; height:38px; border-radius:50%; border:1px solid var(--border-hairline); background:var(--bg-surface); display:grid; place-items:center; color:var(--text-primary); cursor:pointer; flex:none; }
+  .prog{ display:flex; gap:6px; flex:1; }
+  .prog i{ flex:1; height:4px; border-radius:999px; background:var(--border-hairline); position:relative; overflow:hidden; }
+  .prog i.on{ background:var(--accent); }
+  .prog i.part::after{ content:''; position:absolute; inset:0; width:var(--pct,0%); background:var(--accent); border-radius:999px; transition:width var(--dur-4) var(--ease-settle); }
+  .scroll{ flex:1; overflow-y:auto; scrollbar-width:none; padding:18px 22px 110px; } .scroll::-webkit-scrollbar{ width:0; }
+  .kicker{ font:600 11.5px/1 var(--font-sans); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); }
+  .stepno{ font:500 10.5px/1 var(--font-mono); letter-spacing:.16em; color:var(--text-tertiary); }
+  h2.big{ font:800 26px/1.1 var(--font-display); letter-spacing:-.025em; margin:10px 0 8px; }
+  h2.q{ font:700 22px/1.2 var(--font-display); letter-spacing:-.02em; margin:0 0 6px; }
+  p.sub{ font-size:13.5px; line-height:1.55; color:var(--text-secondary); margin:0; }
+  .field{ display:flex; align-items:center; gap:8px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:12px; padding:11px 14px; transition:border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
+  .field:focus-within{ border-color:var(--accent); }
+  .field input, .field textarea{ flex:1; border:0; outline:0; background:transparent; font:400 16px/1.4 var(--font-sans); color:var(--text-primary); min-width:0; padding:0; resize:none; }
+  .field input::placeholder, .field textarea::placeholder{ color:var(--text-tertiary); }
+  .field svg{ color:var(--text-tertiary); flex:none; }
+  .field.ok{ border-color:color-mix(in srgb, var(--moss) 55%, var(--border-hairline)); }
+  .field.ok:focus-within{ border-color:var(--moss); }
+  .field .verified{ display:inline-flex; align-items:center; gap:4px; font:600 10.5px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--moss); background:color-mix(in srgb, var(--moss) 12%, var(--bg-surface)); border-radius:999px; padding:5px 8px 5px 6px; opacity:0; transform:scale(.8); transition:opacity var(--dur-2) var(--ease-out), transform var(--dur-3) var(--ease-pop); white-space:nowrap; }
+  .field.ok .verified{ opacity:1; transform:none; }
+  .field .verified svg{ color:var(--moss); }
+  .hint{ font-size:12px; color:var(--text-tertiary); margin:7px 2px 0; line-height:1.5; }
+  .hint b{ color:var(--text-secondary); font-weight:500; }
+  .lbl{ display:block; margin-top:14px; }
+  .lbl .kicker{ display:block; margin-bottom:6px; }
+  select.sel{ width:100%; appearance:none; -webkit-appearance:none; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:12px; padding:12px 38px 12px 14px; font:400 15px/1.3 var(--font-sans); color:var(--text-primary); outline:0; }
+  .selwrap{ position:relative; } .selwrap svg{ position:absolute; right:13px; top:14px; color:var(--text-tertiary); pointer-events:none; }
+  .seg{ display:flex; gap:6px; }
+  .seg button, .chips button{ border:1.5px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-primary); border-radius:999px; padding:9px 12px; font:500 13.5px/1 var(--font-sans); cursor:pointer; transition:background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out); white-space:nowrap; }
+  .seg button{ flex:1; }
+  .seg button[aria-pressed="true"], .chips button[aria-pressed="true"]{ background:var(--accent-quiet); border-color:var(--accent); color:var(--accent-strong); font-weight:600; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .cta{ position:absolute; left:0; right:0; bottom:0; padding:12px 22px 26px; background:linear-gradient(to top, var(--bg-page) 62%, transparent); }
+  .btn{ width:100%; border:0; border-radius:999px; padding:15px 18px; font:700 15px/1 var(--font-sans); background:var(--accent); color:var(--accent-ink); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 18px -10px var(--accent); transition:opacity var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out); }
+  .btn:disabled{ opacity:.42; cursor:not-allowed; box-shadow:none; }
+  .btn:not(:disabled):active{ transform:scale(.985); }
+  .btn.ghost{ background:transparent; color:var(--accent-strong); box-shadow:none; width:auto; padding:8px 10px; font-size:13px; }
+  .row{ display:flex; align-items:center; gap:8px; }
+  .between{ justify-content:space-between; }
+
+  /* progressive reveal (A) */
+  .reveal{ display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows var(--dur-4) var(--ease-settle), opacity var(--dur-3) var(--ease-out); }
+  .reveal > div{ overflow:hidden; min-height:0; }
+  .reveal.open{ grid-template-rows:1fr; opacity:1; }
+  .sec{ margin-top:22px; }
+  .sec-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:10px; }
+  .sec-head .n{ font:500 10.5px/1 var(--font-mono); color:var(--accent); letter-spacing:.1em; }
+  .sec-head .t{ font:700 15px/1.2 var(--font-display); }
+  .sec-head .s{ font-size:12px; color:var(--text-tertiary); margin-left:auto; }
+  .stagger > *{ animation:rise var(--dur-4) var(--ease-settle) both; }
+  .stagger > *:nth-child(2){ animation-delay:60ms; } .stagger > *:nth-child(3){ animation-delay:120ms; } .stagger > *:nth-child(4){ animation-delay:180ms; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  @keyframes fadeup{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+  @keyframes tickin{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+
+  /* receipt (B) */
+  .receipt{ display:flex; flex-direction:column; gap:0; }
+  .rline{ display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--border-hairline); cursor:pointer; animation:tickin var(--dur-3) var(--ease-settle) both; }
+  .rline .ck{ width:18px; height:18px; border-radius:50%; background:color-mix(in srgb, var(--moss) 14%, var(--bg-surface)); color:var(--moss); display:grid; place-items:center; flex:none; }
+  .rline .k{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); width:64px; flex:none; }
+  .rline .v{ font-size:14px; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rline .e{ font-size:11.5px; color:var(--text-tertiary); }
+  .ask{ margin-top:22px; animation:fadeup var(--dur-4) var(--ease-settle) both; }
+  .ask.swap{ animation:none; }
+  .qcount{ font:500 10.5px/1 var(--font-mono); letter-spacing:.16em; color:var(--text-tertiary); margin-bottom:8px; }
+
+  /* intent-first (C) */
+  .idstrip{ margin-top:22px; }
+  .pills{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+  .pill{ display:inline-flex; align-items:center; gap:6px; border:1.5px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:7px 11px 7px 9px; font:500 13px/1 var(--font-sans); color:var(--text-primary); cursor:pointer; transition:border-color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out); max-width:100%; }
+  .pill span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pill svg{ color:var(--text-tertiary); flex:none; }
+  .pill.on{ border-color:var(--accent); background:var(--accent-quiet); color:var(--accent-strong); }
+  .pill.on svg{ color:var(--accent-strong); }
+  .pill.ok svg.chk{ color:var(--moss); }
+  .pill.bad{ border-color:color-mix(in srgb, var(--accent) 45%, var(--border-hairline)); border-style:dashed; }
+  .editor{ margin-top:12px; padding:12px; border:1.5px solid var(--accent); border-radius:16px; background:var(--bg-surface); animation:fadeup var(--dur-3) var(--ease-settle) both; }
+  .editor .kicker{ display:block; margin-bottom:8px; color:var(--accent-strong); }
+  .editor .field{ border-color:var(--border-hairline); }
+  .editor .field:focus-within{ border-color:var(--accent); }
+  .why{ display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12px; color:var(--text-tertiary); line-height:1.5; }
+  .why svg{ color:var(--text-tertiary); flex:none; }
+
+  .note{ margin:44px auto 0; max-width:74ch; text-align:left; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:18px 22px; font-size:13.5px; line-height:1.6; color:var(--text-secondary); }
+  .note h3{ font:700 15px/1.2 var(--font-display); margin:0 0 8px; color:var(--text-primary); }
+  .note ul{ margin:0; padding-left:18px; } .note li{ margin:4px 0; } .note b{ color:var(--text-primary); }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · onboarding · after the story</div>
+  <h1>Verify + basics + intent on one screen</h1>
+  <p class="lede">Today Sarah leaves the story card, then hits three separate screens for six fields (email · name · year · dorm · major · intent), each with its own header, back button and CTA. Same six fields below, <b>one surface, no screen swaps</b>. All three are live: type, tap, clear the email, watch what happens. Pick one and I'll build it into <code>index.html</code>.</p>
+
+  <div class="stage">
+
+    <!-- ============ A · ONE BREATH ============ -->
+    <div class="col">
+      <div class="panel-label">A</div>
+      <div class="panel-title">One breath</div>
+      <p class="panel-sub">One scroll, three tiny sections. Email verifies <b>inline as you type</b> (no "Verify" round-trip), which unlocks the rest with a stagger. Progress bar carries on from the story: 5 of 6 done, the last dash fills as you go.</p>
+      <div class="phone" id="A">
+        <div class="status"><span>9:41</span><span>5G</span></div>
+        <div class="topbar">
+          <div class="backbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></div>
+          <div class="prog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="part" id="A-last"></i></div>
+        </div>
+        <div class="scroll">
+          <div class="stepno">06 · 06</div>
+          <h2 class="big">Now, you.</h2>
+          <p class="sub">Six quick things, then you're in. Your loops never see your email.</p>
+
+          <div class="sec">
+            <div class="sec-head"><span class="n">01</span><span class="t">Cornell email</span></div>
+            <label class="field" id="A-emailwrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <input id="A-email" value="sarah.chen@cornell.edu" placeholder="you@cornell.edu" autocomplete="off" spellcheck="false" />
+              <span class="verified"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Cornellian</span>
+            </label>
+            <div class="hint" id="A-emailhint">Only used to confirm you're a Cornellian.</div>
+          </div>
+
+          <div class="reveal" id="A-r1"><div>
+            <div class="sec">
+              <div class="sec-head"><span class="n">02</span><span class="t">The basics</span><span class="s">so Loop can seat you close</span></div>
+              <div class="stagger">
+                <label class="lbl" style="margin-top:0"><span class="kicker">Name</span><div class="field"><input value="Sarah Chen" /></div></label>
+                <div class="lbl"><span class="kicker">Class year</span>
+                  <div class="seg" data-single><button aria-pressed="true">2029</button><button aria-pressed="false">2028</button><button aria-pressed="false">2027</button><button aria-pressed="false">2026</button></div>
+                </div>
+                <label class="lbl"><span class="kicker">Where you live</span>
+                  <div class="selwrap"><select class="sel"><option>Donlon 2F</option><option>Balch</option><option>Dickson</option><option>Court-Kay-Bauer (CKB)</option><option>Mews</option><option>Toni Morrison</option><option>Ganędago</option><option>Jameson</option></select><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                </label>
+                <label class="lbl"><span class="kicker">Major</span>
+                  <div class="selwrap"><select class="sel"><option>Computer Science</option><option>Chemistry</option><option>Economics</option><option>Mathematics</option><option>Psychology</option><option>Undecided</option></select><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                </label>
+              </div>
+            </div>
+          </div></div>
+
+          <div class="reveal" id="A-r2"><div>
+            <div class="sec">
+              <div class="sec-head"><span class="n">03</span><span class="t">This semester</span></div>
+              <h2 class="q" style="font-size:19px">What are you trying to make happen?</h2>
+              <p class="sub" style="font-size:12.5px;margin-bottom:10px">Say it plainly. We'll loop you in, not hand you a stranger.</p>
+              <label class="field" style="align-items:flex-start;padding:13px 14px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:3px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></svg>
+                <textarea id="A-intent" rows="3" placeholder="e.g. lock in for cs 2110 · get into bouldering · find a dinner crew">study sprint</textarea>
+              </label>
+            </div>
+          </div></div>
+        </div>
+        <div class="cta"><button class="btn" id="A-go" disabled>See what's forming <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+      </div>
+      <p class="tradeoff"><b>Trade-off:</b> longest scroll of the three (~one screen tall with the demo prefills; a fresh signup would scroll once). Least "custom": every control is a standard field, which is right for the product register. Lowest build risk.</p>
+    </div>
+
+    <!-- ============ B · RECEIPT ============ -->
+    <div class="col">
+      <div class="panel-label">B</div>
+      <div class="panel-title">Receipt</div>
+      <p class="panel-sub">One question at a time, but on <b>one page</b>: each answer collapses into a receipt line at the top and the next question rises in below. Tap any line to reopen it. Chips replace dropdowns so year, dorm and major are one tap each. Ends in the intent box.</p>
+      <div class="phone" id="B">
+        <div class="status"><span>9:41</span><span>5G</span></div>
+        <div class="topbar">
+          <div class="backbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></div>
+          <div class="prog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="part" id="B-last"></i></div>
+        </div>
+        <div class="scroll">
+          <div class="stepno">06 · 06</div>
+          <h2 class="big">Now, you.</h2>
+          <div class="receipt" id="B-receipt" style="margin-top:14px"></div>
+          <div class="ask" id="B-ask"></div>
+        </div>
+        <div class="cta"><button class="btn" id="B-go" disabled>See what's forming <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+      </div>
+      <p class="tradeoff"><b>Trade-off:</b> most taps (one per question) but each is a single decision, and it primes the "type what you want" behavior the product runs on. Most custom UI; the receipt is a pattern users don't see often, so it has to be immediately legible. Medium risk.</p>
+    </div>
+
+    <!-- ============ C · INTENT FIRST ============ -->
+    <div class="col">
+      <div class="panel-label">C</div>
+      <div class="panel-title">Intent first</div>
+      <p class="panel-sub">Ride the momentum from the story: the anchor Sarah just picked lands <b>straight in the intent box</b>, cursor blinking. Identity is a row of pills underneath ("so we can seat you close"); tap a pill to edit inline. Email pill shows the Cornellian check the moment it's valid.</p>
+      <div class="phone" id="C">
+        <div class="status"><span>9:41</span><span>5G</span></div>
+        <div class="topbar">
+          <div class="backbtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></div>
+          <div class="prog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="part" id="C-last"></i></div>
+        </div>
+        <div class="scroll">
+          <div class="stepno">06 · 06 · YOUR TURN</div>
+          <h2 class="big" style="font-size:24px">What are you trying to make happen this semester?</h2>
+          <p class="sub">Say it plainly. We'll loop you in, not hand you a stranger.</p>
+          <label class="field" style="align-items:flex-start;padding:14px;margin-top:14px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:3px;color:var(--accent)"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></svg>
+            <textarea id="C-intent" rows="4" placeholder="e.g. lock in for cs 2110 · get into bouldering · find a dinner crew">study sprint</textarea>
+          </label>
+
+          <div class="idstrip">
+            <div class="row between"><span class="kicker">So Loop can seat you close</span><span class="stepno" id="C-count" style="letter-spacing:.08em">5 · 5</span></div>
+            <div class="pills" id="C-pills"></div>
+            <div id="C-editor"></div>
+            <div class="why"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span>Email only confirms you're a Cornellian. Your loops see your name, floor and major, never your inbox.</span></div>
+          </div>
+        </div>
+        <div class="cta"><button class="btn" id="C-go" disabled>See what's forming <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button></div>
+      </div>
+      <p class="tradeoff"><b>Trade-off:</b> best story continuity and shortest apparent form (the identity row reads as a summary, not a questionnaire). Verify happens after the user has already typed, which is a "value before gate" pattern; fine for the demo, and honest for a real product only if the email is still required to submit. Pill-editing is a small custom pattern. Medium risk.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <h3>What I'd change regardless of which you pick</h3>
+    <ul>
+      <li><b>Kill the "Verify" button.</b> The demo accepts any @cornell.edu instantly, so a button that pretends to do a round-trip is a fake step. Verify inline: the moment the address matches, a moss "Cornellian" check appears. In a real build the check would flip after the magic-link comes back; the screen doesn't need to change either way.</li>
+      <li><b>Fix the copy contradiction.</b> "The basics" says "That's the whole questionnaire, promise", then the next screen is titled "One last thing." One page removes the lie by construction.</li>
+      <li><b>Drop the three AppHeader titles.</b> "Verify you're a Cornellian / The basics / One last thing" are process labels. The story screens use a progress bar + step number; this screen should be its 6th dash, not a different app.</li>
+      <li><b>Story card 5's CTA</b> currently reads "See what's forming · 2" but lands on the email screen. Rename it ("Set me up", "Almost there") and let the consolidated screen own "See what's forming", since that's the button that actually shows what's forming.</li>
+      <li><b>Class year as segmented pills, not a dropdown.</b> Four options, one tap. Dorm and major keep a picker (8 and 6 options).</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+  const CORNELL = /@cornell\.edu\s*$/i;
+  const q = (s, r=document)=> r.querySelector(s);
+  const qa = (s, r=document)=> [...r.querySelectorAll(s)];
+  const svgCheck = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  const svgMail  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
+  const svgUser  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>';
+  const svgCap   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.92 12 16 2.58 10.92a1 1 0 0 1 0-1.84L12 4l9.42 5.08a1 1 0 0 1 0 1.84z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>';
+  const svgHome  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>';
+  const svgBook  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>';
+  const DORMS = ['Donlon 2F','Balch','Dickson','CKB','Mews','Toni Morrison','Ganędago','Jameson'];
+  const MAJORS = ['Computer Science','Chemistry','Economics','Mathematics','Psychology','Undecided'];
+  const YEARS = ['2029','2028','2027','2026'];
+
+  /* ---------- A ---------- */
+  (function(){
+    const email = q('#A-email'), wrap = q('#A-emailwrap'), hint = q('#A-emailhint');
+    const r1 = q('#A-r1'), r2 = q('#A-r2'), go = q('#A-go'), intent = q('#A-intent'), last = q('#A-last');
+    const seg = q('#A .seg');
+    seg.addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; qa('button',seg).forEach(x=>x.setAttribute('aria-pressed', x===b)); });
+    const update = ()=>{
+      const ok = CORNELL.test(email.value.trim());
+      wrap.classList.toggle('ok', ok);
+      hint.innerHTML = ok ? 'Only used to confirm you\'re a Cornellian. <b>Nobody in your loops sees it.</b>' : (email.value.trim().length>3 && email.value.includes('@') ? 'Needs to end in <b>@cornell.edu</b>.' : 'Only used to confirm you\'re a Cornellian.');
+      r1.classList.toggle('open', ok);
+      r2.classList.toggle('open', ok);
+      const hasIntent = intent.value.trim().length>0;
+      go.disabled = !(ok && hasIntent);
+      last.style.setProperty('--pct', ok ? (hasIntent ? '100%' : '66%') : '20%');
+    };
+    email.addEventListener('input', update); intent.addEventListener('input', update);
+    // stagger the initial unlock so the demo shows the reveal even with prefills
+    requestAnimationFrame(()=> setTimeout(update, 240));
+  })();
+
+  /* ---------- B ---------- */
+  (function(){
+    const receipt = q('#B-receipt'), ask = q('#B-ask'), go = q('#B-go'), last = q('#B-last');
+    const state = { email:'sarah.chen@cornell.edu', name:'Sarah Chen', year:'2029', dorm:'Donlon 2F', major:'Computer Science', intent:'study sprint' };
+    const done = new Set();
+    const Q = [
+      { id:'email', k:'Email', q:'What\'s your Cornell email?', sub:'Only used to confirm you\'re a Cornellian. Nobody in your loops sees it.', kind:'text', icon:svgMail, valid:v=>CORNELL.test(v.trim()), show:v=>v.replace(/@cornell\.edu$/i,'') + '@cornell.edu' },
+      { id:'name', k:'Name', q:'What should your crew call you?', kind:'text', icon:svgUser, valid:v=>v.trim().length>1 },
+      { id:'year', k:'Year', q:'Class of?', kind:'chips', opts:YEARS, show:v=>'Class of '+v },
+      { id:'dorm', k:'Live', q:'Where do you live?', sub:'Loop starts with your floor and building, then widens out.', kind:'chips', opts:DORMS },
+      { id:'major', k:'Major', q:'What are you studying?', kind:'chips', opts:MAJORS },
+      { id:'intent', k:'Intent', q:'What are you trying to make happen this semester?', sub:'Say it plainly. We\'ll loop you in, not hand you a stranger.', kind:'area', valid:v=>v.trim().length>0 },
+    ];
+    let cur = 0;
+    const renderReceipt = ()=>{
+      receipt.innerHTML = '';
+      Q.forEach((it,i)=>{ if(!done.has(it.id) || i===cur) return;
+        const d = document.createElement('div'); d.className='rline'; d.dataset.i=i;
+        d.innerHTML = `<span class="ck">${svgCheck}</span><span class="k">${it.k}</span><span class="v">${(it.show?it.show(state[it.id]):state[it.id])}</span><span class="e">edit</span>`;
+        d.addEventListener('click', ()=>{ cur=i; render(); });
+        receipt.appendChild(d);
+      });
+    };
+    const finish = ()=>{
+      const all = Q.every(it=>done.has(it.id));
+      go.disabled = !all;
+      last.style.setProperty('--pct', Math.round((done.size/Q.length)*100)+'%');
+    };
+    const commit = (val)=>{ const it=Q[cur]; state[it.id]=val; done.add(it.id); let n=Q.findIndex((x)=>!done.has(x.id)); if(n===-1){ n=Q.length; } cur=n; render(); };
+    const render = ()=>{
+      renderReceipt(); finish();
+      ask.innerHTML=''; ask.classList.remove('swap'); void ask.offsetWidth; // restart animation
+      const it = Q[cur];
+      if(!it){ ask.innerHTML = `<div class="qcount">ALL SET</div><h2 class="q">That's the whole questionnaire.</h2><p class="sub">Tap any line above to change it, or see what's forming.</p>`; return; }
+      const head = `<div class="qcount">${String(cur+1).padStart(2,'0')} · ${String(Q.length).padStart(2,'0')}</div><h2 class="q">${it.q}</h2>${it.sub?`<p class="sub">${it.sub}</p>`:''}`;
+      if(it.kind==='text' || it.kind==='area'){
+        const tag = it.kind==='area' ? 'textarea rows="3"' : 'input';
+        ask.innerHTML = head + `<label class="field" style="margin-top:12px;${it.kind==='area'?'align-items:flex-start;padding:13px 14px':''}">${it.icon||''}<${tag} id="B-in" placeholder="${it.id==='email'?'you@cornell.edu':it.id==='intent'?'e.g. lock in for cs 2110 · get into bouldering · find a dinner crew':''}"></${it.kind==='area'?'textarea':'input'}>${it.id==='email'?`<span class="verified">${svgCheck}Cornellian</span>`:''}</label>
+          <div class="row between" style="margin-top:10px"><span class="hint" id="B-hint" style="margin:0"></span><button class="btn ghost" id="B-next">Next →</button></div>`;
+        const inp = q('#B-in'), next = q('#B-next'), fld = ask.querySelector('.field');
+        inp.value = state[it.id]||''; inp.focus();
+        const upd = ()=>{ const ok = it.valid ? it.valid(inp.value) : true; next.disabled = !ok; next.style.opacity = ok?1:.4; if(it.id==='email'){ fld.classList.toggle('ok', ok); } };
+        inp.addEventListener('input', upd); upd();
+        inp.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey && !next.disabled){ e.preventDefault(); commit(inp.value.trim()); } });
+        next.addEventListener('click', ()=> !next.disabled && commit(inp.value.trim()));
+        if(it.id==='intent'){ next.textContent = 'Done'; }
+      } else {
+        ask.innerHTML = head + `<div class="chips" style="margin-top:12px">${it.opts.map(o=>`<button aria-pressed="${state[it.id]===o}">${o}</button>`).join('')}</div>`;
+        qa('button', ask).forEach(b=> b.addEventListener('click', ()=> commit(b.textContent)));
+      }
+    };
+    render();
+  })();
+
+  /* ---------- C ---------- */
+  (function(){
+    const pillsEl = q('#C-pills'), edEl = q('#C-editor'), go = q('#C-go'), intent = q('#C-intent'), last = q('#C-last'), count = q('#C-count');
+    const state = { email:'sarah.chen@cornell.edu', name:'Sarah Chen', year:'2029', dorm:'Donlon 2F', major:'Computer Science' };
+    let editing = null;
+    const F = [
+      { id:'email', icon:svgMail, kicker:'Cornell email', kind:'text', valid:v=>CORNELL.test(v.trim()), placeholder:'you@cornell.edu', show:v=>v||'add your Cornell email' },
+      { id:'name', icon:svgUser, kicker:'Name', kind:'text', valid:v=>v.trim().length>1, show:v=>v||'your name' },
+      { id:'year', icon:svgCap, kicker:'Class year', kind:'chips', opts:YEARS, show:v=>"'"+v.slice(2) },
+      { id:'dorm', icon:svgHome, kicker:'Where you live', kind:'chips', opts:DORMS },
+      { id:'major', icon:svgBook, kicker:'Major', kind:'chips', opts:MAJORS },
+    ];
+    const validCount = ()=> F.filter(f=> f.valid ? f.valid(state[f.id]||'') : !!state[f.id]).length;
+    const render = ()=>{
+      pillsEl.innerHTML='';
+      F.forEach(f=>{
+        const ok = f.valid ? f.valid(state[f.id]||'') : !!state[f.id];
+        const b = document.createElement('button'); b.className='pill'+(editing===f.id?' on':'')+(ok?' ok':' bad');
+        b.innerHTML = `${f.icon}<span>${f.show?f.show(state[f.id]):state[f.id]}</span>${f.id==='email'&&ok?`<svg class="chk" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`:''}`;
+        b.addEventListener('click', ()=>{ editing = editing===f.id ? null : f.id; render(); });
+        pillsEl.appendChild(b);
+      });
+      edEl.innerHTML='';
+      const f = F.find(x=>x.id===editing);
+      if(f){
+        const box = document.createElement('div'); box.className='editor';
+        if(f.kind==='text'){
+          box.innerHTML = `<span class="kicker">${f.kicker}</span><label class="field">${f.icon}<input id="C-in" placeholder="${f.placeholder||''}"></label><div class="hint" id="C-hint">${f.id==='email'?'Only used to confirm you\'re a Cornellian.':''}</div>`;
+          edEl.appendChild(box);
+          const inp = q('#C-in'); inp.value = state[f.id]||''; inp.focus();
+          inp.addEventListener('input', ()=>{ state[f.id]=inp.value; renderPillsOnly(); });
+          inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ editing=null; render(); } });
+        } else {
+          box.innerHTML = `<span class="kicker">${f.kicker}</span><div class="chips">${f.opts.map(o=>`<button aria-pressed="${state[f.id]===o}">${o}</button>`).join('')}</div>`;
+          edEl.appendChild(box);
+          qa('button', box).forEach(b=> b.addEventListener('click', ()=>{ state[f.id]=b.textContent; editing=null; render(); }));
+        }
+      }
+      finish();
+    };
+    const renderPillsOnly = ()=>{ // update pill text without tearing down the editor
+      F.forEach((f,i)=>{ const p = pillsEl.children[i]; if(!p) return; const ok = f.valid ? f.valid(state[f.id]||'') : !!state[f.id]; p.classList.toggle('ok',ok); p.classList.toggle('bad',!ok);
+        p.querySelector('span').textContent = f.show?f.show(state[f.id]):state[f.id];
+        const chk = p.querySelector('.chk'); if(f.id==='email'){ if(ok && !chk){ p.insertAdjacentHTML('beforeend', `<svg class="chk" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`);} else if(!ok && chk){ chk.remove(); } }
+      });
+      finish();
+    };
+    const finish = ()=>{
+      const n = validCount(); count.textContent = n+' · 5';
+      const ok = CORNELL.test((state.email||'').trim()) && intent.value.trim().length>0 && n===5;
+      go.disabled = !ok;
+      last.style.setProperty('--pct', Math.round(((n/5)*0.6 + (intent.value.trim()?0.4:0))*100)+'%');
+    };
+    intent.addEventListener('input', finish);
+    render();
+    intent.focus(); intent.setSelectionRange(intent.value.length, intent.value.length);
+  })();
+})();
+</script>
+</body>
+</html>

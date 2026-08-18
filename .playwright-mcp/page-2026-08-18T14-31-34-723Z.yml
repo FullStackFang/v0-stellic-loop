@@ -1,0 +1,53 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: 9:41
+      - generic [ref=f1e7]: 5G
+    - generic [ref=f1e61]:
+      - generic [ref=f1e62]:
+        - button "Back" [ref=f1e63] [cursor=pointer]
+        - generic [ref=f1e66]:
+          - button "Screen 1" [ref=f1e67] [cursor=pointer]
+          - button "Screen 2" [ref=f1e68] [cursor=pointer]
+          - button "Screen 3" [ref=f1e69] [cursor=pointer]
+          - button "Screen 4" [ref=f1e70] [cursor=pointer]
+          - button "Screen 5" [ref=f1e71] [cursor=pointer]
+          - button "Screen 6" [disabled] [ref=f1e72]
+      - generic [ref=f1e75]:
+        - generic [ref=f1e76]: 01 · 06
+        - generic [ref=f1e77]: The reality
+        - heading "Making friends here is exhausting." [level=1] [ref=f1e78]
+        - paragraph [ref=f1e79]: Group chats spiral, plans fizzle. The drag is real — it's Logistical Fatigue.
+        - generic [ref=f1e81]:
+          - generic [ref=f1e82]: the group chat · 11:58pm
+          - generic [ref=f1e83]: who's free tn??
+          - generic [ref=f1e85]: ugh stuck in the library 😵
+          - generic [ref=f1e87]: rain check?
+          - generic [ref=f1e89]: next week then??
+          - generic [ref=f1e91]: — and the plan quietly dies —
+        - button "Wait, what is that?" [ref=f1e93] [cursor=pointer]
+  - generic [ref=f1e29]:
+    - generic [ref=f1e30]: view the demo as
+    - generic [ref=f1e31]:
+      - button "Sarah Chen Sarah Donlon 2F" [ref=f1e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=f1e33]: SC
+        - generic [ref=f1e34]:
+          - generic [ref=f1e35]: Sarah
+          - generic [ref=f1e36]: Donlon 2F
+      - button "Josh Park Josh Donlon RA" [ref=f1e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=f1e38]: JP
+        - generic [ref=f1e39]:
+          - generic [ref=f1e40]: Josh
+          - generic [ref=f1e41]: Donlon RA
+      - button "Maya Idris Maya TA CS 2110" [ref=f1e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=f1e43]: MI
+        - generic [ref=f1e44]:
+          - generic [ref=f1e45]: Maya
+          - generic [ref=f1e46]: TA CS 2110
+      - button "Dana Okafor Dana advisor" [ref=f1e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=f1e48]: DO
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: Dana
+          - generic [ref=f1e51]: advisor
+    - button "fold someone in" [ref=f1e52] [cursor=pointer]
+    - button "restart demo" [ref=f1e55] [cursor=pointer]

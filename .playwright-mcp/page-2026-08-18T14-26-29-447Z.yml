@@ -1,0 +1,127 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e1567]:
+      - generic [ref=e1568]:
+        - generic [ref=e1569]: Loop
+        - generic [ref=e1571]:
+          - button "Alerts" [ref=e1572] [cursor=pointer]
+          - button "Account" [ref=e1576] [cursor=pointer]:
+            - generic "Josh Park" [ref=e1577]: JP
+      - generic [ref=e1578]:
+        - button [ref=e1579] [cursor=pointer]:
+          - generic [ref=e1580]: You seeded this loop
+          - paragraph [ref=e1585]: The Sunday HW crew has run itself 12 weeks — 4 regulars, no host. Nothing for you to send.
+          - generic [ref=e1586]: See how it's going
+        - generic [ref=e1589]:
+          - generic [ref=e1590]:
+            - heading "Your loops" [level=2] [ref=e1591]
+            - generic [ref=e1592]: 1 running
+          - button "cs 2110 · section Sunday HW crew Sun · 4:00p · Uris · weekly next · Sun · 4:00p · Uris Josh Park Lydia Osei Priya Rao Marcus Diaz 12-wk streak 4 in · since wk 3" [ref=e1595] [cursor=pointer]:
+            - generic [ref=e1597]:
+              - generic [ref=e1598]: cs 2110 · section
+              - heading "Sunday HW crew" [level=3] [ref=e1601]
+            - generic [ref=e1604]:
+              - generic [ref=e1605]: Sun · 4:00p · Uris · weekly
+              - generic [ref=e1611]: next · Sun · 4:00p · Uris
+            - generic [ref=e1616]:
+              - generic [ref=e1617]:
+                - generic "Josh Park" [ref=e1619]: JP
+                - generic "Lydia Osei" [ref=e1621]: LO
+                - generic "Priya Rao" [ref=e1623]: PR
+                - generic "Marcus Diaz" [ref=e1625]: MD
+              - generic [ref=e1626]:
+                - generic [ref=e1627]: 12-wk streak
+                - generic [ref=e1630]: 4 in · since wk 3
+        - generic [ref=e1631]:
+          - generic [ref=e1632]:
+            - generic "live" [ref=e1633]
+            - heading "4 activities are forming near you" [level=2] [ref=e1636]
+            - generic [ref=e1637]: live now
+          - generic [ref=e1659]:
+            - button "Donlon 2F" [ref=e1660] [cursor=pointer]
+            - button "Donlon" [ref=e1661] [cursor=pointer]
+            - button "North" [ref=e1662] [cursor=pointer]
+            - button "Campus" [ref=e1663] [cursor=pointer]
+          - generic [ref=e1664]:
+            - button "All" [ref=e1665] [cursor=pointer]
+            - button "Classes" [ref=e1666] [cursor=pointer]
+            - button "Fitness" [ref=e1668] [cursor=pointer]
+            - button "Food" [ref=e1670] [cursor=pointer]
+            - button "Social" [ref=e1672] [cursor=pointer]
+            - button "Music" [ref=e1674] [cursor=pointer]
+          - generic [ref=e1676]:
+            - heading "People want these" [level=3] [ref=e1677]
+            - generic [ref=e1678]: start one
+          - generic [ref=e1680]:
+            - generic [ref=e1681]: Nobody's started this yet
+            - heading "Start a ECON 1110 loop" [level=3] [ref=e1682]
+            - paragraph [ref=e1683]: 8 floormates want this · no one runs it — it forms at 3
+            - button "Spin it up" [ref=e1685] [cursor=pointer]
+          - generic [ref=e1687]:
+            - heading "Forming on Donlon 2F" [level=3] [ref=e1688]
+            - generic [ref=e1689]: 4 live
+          - generic [ref=e1690]:
+            - generic [ref=e1691]:
+              - generic [ref=e1692]: cs 2110 · section
+              - heading "Prelim 1 review" [level=3] [ref=e1695]
+              - generic [ref=e1698]:
+                - generic [ref=e1699]: 8/10 intents
+                - generic [ref=e1700]: fires when 10 want it
+              - button "I want this too" [ref=e1714] [cursor=pointer]
+            - generic [ref=e1716]:
+              - generic [ref=e1717]: chem 2070 · section
+              - heading "CHEM 2070 review" [level=3] [ref=e1720]
+              - generic [ref=e1723]:
+                - generic [ref=e1724]: 6/10 intents
+                - generic [ref=e1725]: fires when 10 want it
+              - button "I want this too" [ref=e1739] [cursor=pointer]
+            - generic [ref=e1741]:
+              - generic [ref=e1742]: donlon 2f · forming
+              - heading "Donlon boxing crew" [level=3] [ref=e1745]
+              - generic [ref=e1748]:
+                - generic [ref=e1749]: 7/10 intents
+                - generic [ref=e1750]: fires when 10 want it
+              - button "I want this too" [ref=e1764] [cursor=pointer]
+            - generic [ref=e1766]:
+              - generic [ref=e1767]: math 1920 · section
+              - heading "MATH 1920 grind" [level=3] [ref=e1770]
+              - generic [ref=e1773]:
+                - generic [ref=e1774]: 6/10 intents
+                - generic [ref=e1775]: fires when 10 want it
+              - button "I want this too" [ref=e1789] [cursor=pointer]
+      - button "Drop an intent" [ref=e1791] [cursor=pointer]
+      - generic [ref=e1793]:
+        - button [ref=e1794] [cursor=pointer]
+        - button [ref=e1802] [cursor=pointer]
+        - button "RA Floor" [ref=e1807] [cursor=pointer]:
+          - generic [ref=e1808]: RA
+          - text: Floor
+        - button [ref=e1813] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah Donlon 2F" [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: Donlon 2F
+      - button "Josh Park Josh Donlon RA" [active] [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: Donlon RA
+      - button "Maya Idris Maya TA CS 2110" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: TA CS 2110
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "fold someone in" [ref=e52] [cursor=pointer]
+    - button "restart demo" [ref=e55] [cursor=pointer]

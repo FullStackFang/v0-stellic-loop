@@ -1,0 +1,36 @@
+- generic [ref=f2e3]:
+  - generic [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e6]: 9:41
+      - generic [ref=f2e7]: 5G
+    - generic [ref=f2e12]:
+      - button "Toggle theme" [ref=f2e14] [cursor=pointer]
+      - generic [ref=f2e21]: Loop
+      - paragraph [ref=f2e23]: Your people, on repeat.
+      - button "Get started" [ref=f2e25] [cursor=pointer]
+      - paragraph [ref=f2e28]: Not a name to chase — a loop that keeps meeting.
+  - generic [ref=f2e29]:
+    - generic [ref=f2e30]: view the demo as
+    - generic [ref=f2e31]:
+      - button "Sarah Chen Sarah Donlon 2F" [ref=f2e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=f2e33]: SC
+        - generic [ref=f2e34]:
+          - generic [ref=f2e35]: Sarah
+          - generic [ref=f2e36]: Donlon 2F
+      - button "Josh Park Josh Donlon RA" [ref=f2e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=f2e38]: JP
+        - generic [ref=f2e39]:
+          - generic [ref=f2e40]: Josh
+          - generic [ref=f2e41]: Donlon RA
+      - button "Maya Idris Maya TA CS 2110" [ref=f2e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=f2e43]: MI
+        - generic [ref=f2e44]:
+          - generic [ref=f2e45]: Maya
+          - generic [ref=f2e46]: TA CS 2110
+      - button "Dana Okafor Dana advisor" [ref=f2e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=f2e48]: DO
+        - generic [ref=f2e49]:
+          - generic [ref=f2e50]: Dana
+          - generic [ref=f2e51]: advisor
+    - button "fold someone in" [ref=f2e52] [cursor=pointer]
+    - button "restart demo" [ref=f2e55] [cursor=pointer]

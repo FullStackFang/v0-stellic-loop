@@ -1,0 +1,174 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e1817]:
+      - generic [ref=e1818]:
+        - generic [ref=e1819]:
+          - generic [ref=e1820]: 2F
+          - generic [ref=e1821]:
+            - generic [ref=e1822]: Donlon 2F
+            - generic [ref=e1823]: Josh · RA view · 34 residents
+        - generic [ref=e1824]:
+          - button "Alerts" [ref=e1825] [cursor=pointer]
+          - button "Account" [ref=e1829] [cursor=pointer]:
+            - generic "Josh Park" [ref=e1830]: JP
+      - generic [ref=e1831]:
+        - generic [ref=e1832]:
+          - generic "live" [ref=e1833]
+          - text: your floor · right now
+        - heading "26 of 34 residents are in a loop." [level=1] [ref=e1836]: 26 of 34 residentsare in a loop.
+        - generic [ref=e1838]:
+          - generic [ref=e1841]:
+            - generic [ref=e1842]: 0%
+            - generic [ref=e1843]: in a loop
+          - generic [ref=e1844]:
+            - paragraph [ref=e1845]:
+              - text: Up
+              - generic [ref=e1846]: +3 this week
+              - text: . Donlon avg 78% · North avg 68%. Floors above 70% by week 6 tend to keep it all year.
+            - generic [ref=e1847]:
+              - generic [ref=e1848]:
+                - generic [ref=e1849]: "26"
+                - generic [ref=e1850]: in a loop
+              - generic [ref=e1851]:
+                - generic [ref=e1852]: "8"
+                - generic [ref=e1853]: not yet
+              - generic [ref=e1854]:
+                - generic [ref=e1855]: "4"
+                - generic [ref=e1856]: joined this wk
+        - generic [ref=e1857]:
+          - heading "What the floor wants" [level=2] [ref=e1860]
+          - generic [ref=e1861]: intents · this week
+        - paragraph [ref=e1862]: Aggregate only — counts, never who. Amber = residents who dropped it and aren't in an activity yet.
+        - generic [ref=e1863]:
+          - generic [ref=e1864]:
+            - generic [ref=e1865]:
+              - generic [ref=e1866]: CS 2110 study
+              - generic [ref=e1871]: 11 · 2 wait
+            - generic [ref=e1872]:
+              - generic [ref=e1873]: Dinner crew
+              - generic [ref=e1878]: 7 · 4 wait
+            - generic [ref=e1879]:
+              - generic [ref=e1880]:
+                - generic [ref=e1881]: Lift / gym
+                - generic [ref=e1882]: no loop yet
+              - generic [ref=e1885]: 6 · 6 wait
+            - generic [ref=e1886]:
+              - generic [ref=e1887]: MATH 1920
+              - generic [ref=e1891]: "5"
+            - generic [ref=e1892]:
+              - generic [ref=e1893]: Bouldering
+              - generic [ref=e1897]: "4"
+            - generic [ref=e1898]:
+              - generic [ref=e1899]:
+                - generic [ref=e1900]: Morning run
+                - generic [ref=e1901]: no loop yet
+              - generic [ref=e1904]: 3 · 3 wait
+          - generic [ref=e1905]:
+            - generic [ref=e1906]: in a loop
+            - generic [ref=e1908]: waiting
+        - generic [ref=e1910]:
+          - heading "Seed a loop" [level=2] [ref=e1915]
+          - generic [ref=e1916]: 2 gaps
+        - paragraph [ref=e1917]: You seed it, Loop runs it. You don't own it — you can fade once it holds.
+        - generic [ref=e1918]:
+          - generic [ref=e1919]:
+            - generic [ref=e1920]:
+              - generic [ref=e1921]: "6"
+              - generic [ref=e1922]:
+                - generic [ref=e1923]: Helen Newman lift crew
+                - generic [ref=e1924]: Tue + Thu · 7:00p · Helen Newman
+              - generic [ref=e1925]: gap
+            - paragraph [ref=e1926]: 6 residents dropped "lift" and none is in an activity. Three said evenings. Loop drafts the anchor; they get "your floor is starting a lift loop", not your name.
+            - button "Seed it" [ref=e1928] [cursor=pointer]
+          - generic [ref=e1933]:
+            - generic [ref=e1934]:
+              - generic [ref=e1935]: "3"
+              - generic [ref=e1936]:
+                - generic [ref=e1937]: Beebe Lake morning run
+                - generic [ref=e1938]: Mon · Wed · Fri · 7:30a · Beebe Lake
+              - generic [ref=e1939]: gap
+            - paragraph [ref=e1940]: 3 want it — under quorum. Seeding opens it to Donlon 3F too (5 more there).
+            - button "Seed for 2F + 3F" [ref=e1942] [cursor=pointer]
+        - generic [ref=e1947]:
+          - heading "Throw a floor event" [level=2] [ref=e1950]
+          - generic [ref=e1951]: next 2 weeks
+        - paragraph [ref=e1952]: One-offs that ride an existing rhythm — Loop tells you why now.
+        - generic [ref=e1953]:
+          - generic [ref=e1954]:
+            - generic [ref=e1955]:
+              - generic [ref=e1956]: Wed
+              - generic [ref=e1957]:
+                - generic [ref=e1958]: Prelim-week snack night · lounge
+                - generic [ref=e1959]: Wed Oct 8 · 8:00p · before CS 2110 Prelim 1
+            - paragraph [ref=e1960]: 11 residents are in CS 2110 and the Sunday crew meets three doors down. Floors that host something in prelim week see +9% loop attendance after.
+            - generic [ref=e1961]:
+              - button "Draft event" [ref=e1962] [cursor=pointer]
+              - button "Skip" [ref=e1965] [cursor=pointer]
+          - generic [ref=e1966]:
+            - generic [ref=e1967]:
+              - generic [ref=e1968]: Sun
+              - generic [ref=e1969]:
+                - generic [ref=e1970]: Appel dinner table · 2F takeover
+                - generic [ref=e1971]: Sun Oct 12 · 6:00p · Appel
+            - paragraph [ref=e1972]: 4 residents want a dinner crew and aren’t in one; the Okenshields table is full. A one-off seeds the recurring one.
+            - generic [ref=e1973]:
+              - button "Draft event" [ref=e1974] [cursor=pointer]
+              - button "Skip" [ref=e1977] [cursor=pointer]
+        - generic [ref=e1978]:
+          - heading "Not landed yet" [level=2] [ref=e1986]
+          - generic [ref=e1987]: 8 residents
+        - paragraph [ref=e1988]: Greet, don't nudge. Loop shows who hasn't joined anything — not what they typed.
+        - generic [ref=e1989]:
+          - generic [ref=e1990]:
+            - generic "Theo Nguyen" [ref=e1991]: TN
+            - generic [ref=e1992]:
+              - generic [ref=e1993]: Theo Nguyen
+              - generic [ref=e1994]: 0 loops · 3 wks in
+            - button "Reach out" [ref=e1995] [cursor=pointer]
+          - generic [ref=e1998]:
+            - generic "Hannah Weiss" [ref=e1999]: HW
+            - generic [ref=e2000]:
+              - generic [ref=e2001]: Hannah Weiss
+              - generic [ref=e2002]: dropped an intent · never joined
+            - button "Reach out" [ref=e2003] [cursor=pointer]
+          - generic [ref=e2006]:
+            - generic [ref=e2007]: + 6 more
+            - button "See all" [ref=e2008] [cursor=pointer]
+        - generic [ref=e2011]:
+          - generic [ref=e2012]: What you never see
+          - paragraph [ref=e2015]: No intents by name, no messages, no who-likes-whom.
+      - generic [ref=e2016]:
+        - button [ref=e2017] [cursor=pointer]
+        - button [ref=e2025] [cursor=pointer]
+        - button "RA Floor" [ref=e2030] [cursor=pointer]:
+          - generic [ref=e2031]: RA
+          - text: Floor
+        - button [ref=e2036] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah Donlon 2F" [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: Donlon 2F
+      - button "Josh Park Josh Donlon RA" [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: Donlon RA
+      - button "Maya Idris Maya TA CS 2110" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: TA CS 2110
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "fold someone in" [ref=e52] [cursor=pointer]
+    - button "restart demo" [ref=e55] [cursor=pointer]

@@ -1,0 +1,128 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e1427]:
+      - generic [ref=e1428]:
+        - generic [ref=e1429]:
+          - generic [ref=e1430]: You
+          - heading "Sarah Chen" [level=1] [ref=e1431]
+        - generic [ref=e1432]:
+          - button "Alerts" [ref=e1433] [cursor=pointer]
+          - button "Account" [ref=e1437] [cursor=pointer]:
+            - generic "Sarah Chen" [ref=e1438]: SC
+      - generic [ref=e1439]:
+        - generic [ref=e1440]:
+          - generic "Sarah Chen" [ref=e1441]: SC
+          - generic [ref=e1442]:
+            - paragraph [ref=e1443]: Donlon 2F · CS
+            - paragraph [ref=e1444]: Class of 2029
+        - generic [ref=e1445]:
+          - generic [ref=e1446]:
+            - generic [ref=e1447]: "0"
+            - generic [ref=e1448]: loops running
+          - generic [ref=e1449]:
+            - generic [ref=e1450]: "0"
+            - generic [ref=e1451]: intents waiting
+          - generic [ref=e1452]:
+            - generic [ref=e1453]: "3"
+            - generic [ref=e1454]: to rate
+        - tablist "Your loops" [ref=e1455]:
+          - tab "Upcoming 0" [ref=e1457] [cursor=pointer]:
+            - text: Upcoming
+            - generic [ref=e1458]: "0"
+          - tab "Past 3 3 to rate" [selected] [ref=e1459] [cursor=pointer]:
+            - text: Past
+            - generic [ref=e1460]: "3"
+            - generic "3 to rate" [ref=e1461]
+          - tab "Intents 0" [ref=e1462] [cursor=pointer]:
+            - text: Intents
+            - generic [ref=e1463]: "0"
+        - generic [ref=e1465]:
+          - paragraph [ref=e1466]: 3 still to rate. Loops end when the reason does — rate the loop and the crew, privately. You can change a rating any time.
+          - generic [ref=e1467]:
+            - generic [ref=e1468]:
+              - generic [ref=e1469]:
+                - generic [ref=e1470]:
+                  - generic [ref=e1471]:
+                    - generic [ref=e1472]: Prelim 1 review
+                    - generic [ref=e1473]: wrapped
+                  - generic [ref=e1474]: wrapped after the exam · 5 sessions · 2 weeks ago
+                - generic [ref=e1475]:
+                  - generic "Josh Park" [ref=e1477]: JP
+                  - generic "Lydia Osei" [ref=e1479]: LO
+                  - generic "Marcus Diaz" [ref=e1481]: MD
+                  - generic "Priya Rao" [ref=e1483]: PR
+              - generic [ref=e1484]:
+                - generic [ref=e1485]: Not rated yet
+                - button "Rate it" [ref=e1486] [cursor=pointer]
+            - generic [ref=e1489]:
+              - generic [ref=e1490]:
+                - generic [ref=e1491]:
+                  - generic [ref=e1492]:
+                    - generic [ref=e1493]: HW1 grind
+                    - generic [ref=e1494]: wrapped
+                  - generic [ref=e1495]: ran its course · 3 sessions · 3 weeks ago
+                - generic [ref=e1496]:
+                  - generic "Josh Park" [ref=e1498]: JP
+                  - generic "Lydia Osei" [ref=e1500]: LO
+              - generic [ref=e1501]:
+                - generic [ref=e1502]: Not rated yet
+                - button "Rate it" [ref=e1503] [cursor=pointer]
+            - generic [ref=e1506]:
+              - generic [ref=e1507]:
+                - generic [ref=e1508]:
+                  - generic [ref=e1509]:
+                    - generic [ref=e1510]: Move-in week dinner crew
+                    - generic [ref=e1511]: wrapped
+                  - generic [ref=e1512]: wrapped after O-week · 4 sessions · last month
+                - generic [ref=e1513]:
+                  - generic "Lydia Osei" [ref=e1515]: LO
+                  - generic "Maya Idris" [ref=e1517]: MI
+              - generic [ref=e1518]:
+                - generic [ref=e1519]: Not rated yet
+                - button "Rate it" [ref=e1520] [cursor=pointer]
+        - generic [ref=e1523]:
+          - generic [ref=e1528]:
+            - paragraph [ref=e1529]: Dana Okafor
+            - paragraph [ref=e1530]: your Loop counselor · Advising & Wellbeing
+          - paragraph [ref=e1531]: Walk-ins Tue + Thu · 2–4p
+          - generic [ref=e1532]:
+            - button "Message Dana" [ref=e1533] [cursor=pointer]
+            - button "Report a concern" [ref=e1536] [cursor=pointer]
+        - generic [ref=e1539]:
+          - generic [ref=e1540]: Private notes
+          - paragraph [ref=e1543]: Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.
+        - button "Big Red Night theme" [ref=e1544] [cursor=pointer]:
+          - generic [ref=e1545]: Big Red Night
+          - generic [ref=e1548]: theme
+      - generic [ref=e1549]:
+        - button [ref=e1550] [cursor=pointer]
+        - button [ref=e1558] [cursor=pointer]
+        - button [ref=e1563] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah Donlon 2F" [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: Donlon 2F
+      - button "Josh Park Josh Donlon RA" [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: Donlon RA
+      - button "Maya Idris Maya TA CS 2110" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: TA CS 2110
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "fold someone in" [ref=e52] [cursor=pointer]
+    - button "restart demo" [ref=e55] [cursor=pointer]

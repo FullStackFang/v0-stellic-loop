@@ -1,0 +1,139 @@
+- generic [ref=f1e2]:
+  - generic [ref=f1e3]: Loop · onboarding · after the story
+  - heading "Verify + basics + intent on one screen" [level=1] [ref=f1e4]
+  - paragraph [ref=f1e5]:
+    - text: "Today Sarah leaves the story card, then hits three separate screens for six fields (email · name · year · dorm · major · intent), each with its own header, back button and CTA. Same six fields below, one surface, no screen swaps. All three are live: type, tap, clear the email, watch what happens. Pick one and I'll build it into"
+    - code [ref=f1e6]: index.html
+    - text: .
+  - generic [ref=f1e7]:
+    - generic [ref=f1e8]:
+      - generic [ref=f1e9]: A
+      - generic [ref=f1e10]: One breath
+      - paragraph [ref=f1e11]: "One scroll, three tiny sections. Email verifies inline as you type (no \"Verify\" round-trip), which unlocks the rest with a stagger. Progress bar carries on from the story: 5 of 6 done, the last dash fills as you go."
+      - generic [ref=f1e12]:
+        - generic [ref=f1e13]:
+          - generic [ref=f1e14]: 9:41
+          - generic [ref=f1e15]: 5G
+        - generic [ref=f1e17] [cursor=pointer]
+        - generic [ref=f1e27]:
+          - generic [ref=f1e28]: 06 · 06
+          - heading "Now, you." [level=2] [ref=f1e29]
+          - paragraph [ref=f1e30]: Six quick things, then you're in. Your loops never see your email.
+          - generic [ref=f1e31]:
+            - generic [ref=f1e32]:
+              - generic [ref=f1e33]: "01"
+              - generic [ref=f1e34]: Cornell email
+            - generic [ref=f1e35]:
+              - textbox "Cornellian" [ref=f1e39]:
+                - /placeholder: you@cornell.edu
+                - text: sarah.chen@cornell.edu
+              - generic [ref=f1e40]: Cornellian
+            - generic [ref=f1e43]: Only used to confirm you're a Cornellian.
+          - generic [ref=f1e44]:
+            - generic [ref=f1e45]:
+              - generic [ref=f1e46]: "02"
+              - generic [ref=f1e47]: The basics
+              - generic [ref=f1e48]: so Loop can seat you close
+            - generic [ref=f1e49]:
+              - generic [ref=f1e50]:
+                - generic [ref=f1e51]: Name
+                - textbox "Name" [ref=f1e53]: Sarah Chen
+              - generic [ref=f1e54]:
+                - generic [ref=f1e55]: Class year
+                - generic [ref=f1e56]:
+                  - button "2029" [pressed] [ref=f1e57] [cursor=pointer]
+                  - button "2028" [ref=f1e58] [cursor=pointer]
+                  - button "2027" [ref=f1e59] [cursor=pointer]
+                  - button "2026" [ref=f1e60] [cursor=pointer]
+              - generic [ref=f1e61]:
+                - generic [ref=f1e62]: Where you live
+                - combobox "Where you live" [ref=f1e64]:
+                  - option "Donlon 2F" [selected]
+                  - option "Balch"
+                  - option "Dickson"
+                  - option "Court-Kay-Bauer (CKB)"
+                  - option "Mews"
+                  - option "Toni Morrison"
+                  - option "Ganędago"
+                  - option "Jameson"
+              - generic [ref=f1e65]:
+                - generic [ref=f1e66]: Major
+                - combobox "Major" [ref=f1e68]:
+                  - option "Computer Science" [selected]
+                  - option "Chemistry"
+                  - option "Economics"
+                  - option "Mathematics"
+                  - option "Psychology"
+                  - option "Undecided"
+          - generic [ref=f1e69]:
+            - generic [ref=f1e70]:
+              - generic [ref=f1e71]: "03"
+              - generic [ref=f1e72]: This semester
+            - heading "What are you trying to make happen?" [level=2] [ref=f1e73]
+            - paragraph [ref=f1e74]: Say it plainly. We'll loop you in, not hand you a stranger.
+            - textbox [ref=f1e79]:
+              - /placeholder: e.g. lock in for cs 2110 · get into bouldering · find a dinner crew
+              - text: study sprint
+        - button "See what's forming" [disabled] [ref=f1e81]
+      - paragraph [ref=f1e84]: "Trade-off: longest scroll of the three (~one screen tall with the demo prefills; a fresh signup would scroll once). Least \"custom\": every control is a standard field, which is right for the product register. Lowest build risk."
+    - generic [ref=f1e85]:
+      - generic [ref=f1e86]: B
+      - generic [ref=f1e87]: Receipt
+      - paragraph [ref=f1e88]: "One question at a time, but on one page: each answer collapses into a receipt line at the top and the next question rises in below. Tap any line to reopen it. Chips replace dropdowns so year, dorm and major are one tap each. Ends in the intent box."
+      - generic [ref=f1e89]:
+        - generic [ref=f1e90]:
+          - generic [ref=f1e91]: 9:41
+          - generic [ref=f1e92]: 5G
+        - generic [ref=f1e94] [cursor=pointer]
+        - generic [ref=f1e104]:
+          - generic [ref=f1e105]: 06 · 06
+          - heading "Now, you." [level=2] [ref=f1e106]
+          - generic [ref=f1e107]:
+            - generic [ref=f1e108]: 01 · 06
+            - heading "What's your Cornell email?" [level=2] [ref=f1e109]
+            - paragraph [ref=f1e110]: Only used to confirm you're a Cornellian. Nobody in your loops sees it.
+            - generic [ref=f1e111]:
+              - textbox "Cornellian" [ref=f1e115]:
+                - /placeholder: you@cornell.edu
+                - text: sarah.chen@cornell.edu
+              - generic [ref=f1e116]: Cornellian
+            - button "Next →" [ref=f1e120] [cursor=pointer]
+        - button "See what's forming" [disabled] [ref=f1e122]
+      - paragraph [ref=f1e125]: "Trade-off: most taps (one per question) but each is a single decision, and it primes the \"type what you want\" behavior the product runs on. Most custom UI; the receipt is a pattern users don't see often, so it has to be immediately legible. Medium risk."
+    - generic [ref=f1e126]:
+      - generic [ref=f1e127]: C
+      - generic [ref=f1e128]: Intent first
+      - paragraph [ref=f1e129]: "Ride the momentum from the story: the anchor Sarah just picked lands straight in the intent box, cursor blinking. Identity is a row of pills underneath (\"so we can seat you close\"); tap a pill to edit inline. Email pill shows the Cornellian check the moment it's valid."
+      - generic [ref=f1e130]:
+        - generic [ref=f1e131]:
+          - generic [ref=f1e132]: 9:41
+          - generic [ref=f1e133]: 5G
+        - generic [ref=f1e135] [cursor=pointer]
+        - generic [ref=f1e145]:
+          - generic [ref=f1e146]: 06 · 06 · YOUR TURN
+          - heading "What are you trying to make happen this semester?" [level=2] [ref=f1e147]
+          - paragraph [ref=f1e148]: Say it plainly. We'll loop you in, not hand you a stranger.
+          - textbox [active] [ref=f1e153]:
+            - /placeholder: e.g. lock in for cs 2110 · get into bouldering · find a dinner crew
+            - text: study sprint
+          - generic [ref=f1e154]:
+            - generic [ref=f1e155]:
+              - generic [ref=f1e156]: So Loop can seat you close
+              - generic [ref=f1e157]: 5 · 5
+            - generic [ref=f1e158]:
+              - button "sarah.chen@cornell.edu" [ref=f1e159] [cursor=pointer]
+              - button "Sarah Chen" [ref=f1e166] [cursor=pointer]
+              - button "'29" [ref=f1e171] [cursor=pointer]
+              - button "Donlon 2F" [ref=f1e176] [cursor=pointer]
+              - button "Computer Science" [ref=f1e180] [cursor=pointer]
+            - generic [ref=f1e184]: Email only confirms you're a Cornellian. Your loops see your name, floor and major, never your inbox.
+        - button "See what's forming" [ref=f1e189] [cursor=pointer]
+      - paragraph [ref=f1e192]: "Trade-off: best story continuity and shortest apparent form (the identity row reads as a summary, not a questionnaire). Verify happens after the user has already typed, which is a \"value before gate\" pattern; fine for the demo, and honest for a real product only if the email is still required to submit. Pill-editing is a small custom pattern. Medium risk."
+  - generic [ref=f1e193]:
+    - heading "What I'd change regardless of which you pick" [level=3] [ref=f1e194]
+    - list [ref=f1e195]:
+      - listitem [ref=f1e196]: "Kill the \"Verify\" button. The demo accepts any @cornell.edu instantly, so a button that pretends to do a round-trip is a fake step. Verify inline: the moment the address matches, a moss \"Cornellian\" check appears. In a real build the check would flip after the magic-link comes back; the screen doesn't need to change either way."
+      - listitem [ref=f1e197]: Fix the copy contradiction. "The basics" says "That's the whole questionnaire, promise", then the next screen is titled "One last thing." One page removes the lie by construction.
+      - listitem [ref=f1e198]: Drop the three AppHeader titles. "Verify you're a Cornellian / The basics / One last thing" are process labels. The story screens use a progress bar + step number; this screen should be its 6th dash, not a different app.
+      - listitem [ref=f1e199]: Story card 5's CTA currently reads "See what's forming · 2" but lands on the email screen. Rename it ("Set me up", "Almost there") and let the consolidated screen own "See what's forming", since that's the button that actually shows what's forming.
+      - listitem [ref=f1e200]: Class year as segmented pills, not a dropdown. Four options, one tap. Dorm and major keep a picker (8 and 6 options).

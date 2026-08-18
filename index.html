@@ -361,6 +361,7 @@
       'repeat': '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
       'radio': '<path d="M16.247 7.761a6 6 0 0 1 0 8.478"/><path d="M19.075 4.933a10 10 0 0 1 0 14.134"/><path d="M4.925 19.067a10 10 0 0 1 0-14.134"/><path d="M7.753 16.239a6 6 0 0 1 0-8.478"/><circle cx="12" cy="12" r="2"/>',
       'circle-dot': '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/>',
+      'user': '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
       'users': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>',
       'clock': '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
       'calendar': '<path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/>',
@@ -546,7 +547,7 @@
     ];
     // Aggregate momentum lines that cycle in the "forming right now" ticker (loops, never names).
     const COHORT_TICKER = [
-      'Mews 3rd floor just spun up a MATH 1920 crew',
+      'Mews 3rd floor just spun up a MATH 1920 loop',
       'Prelim 1 review fired — 10 seats filled on North',
       'A CHEM 2070 loop in Dickson hit a 6-week streak',
       'Okenshields dinner table added its 7th regular',
@@ -656,7 +657,7 @@
       ],
       seeds:[
         { id:'ra-lift', title:'Helen Newman lift crew', target:'lift', line:'Tue + Thu · 7:00p · Helen Newman', count:6,
-          why:'6 residents dropped "lift" and none is in a crew. Three said evenings. Loop drafts the anchor; they get "your floor is starting a lift loop", not your name.', cta:'Seed it', hi:true },
+          why:'6 residents dropped "lift" and none is in an activity. Three said evenings. Loop drafts the anchor; they get "your floor is starting a lift loop", not your name.', cta:'Seed it', hi:true },
         { id:'ra-run',  title:'Beebe Lake morning run', target:'running', line:'Mon · Wed · Fri · 7:30a · Beebe Lake', count:3,
           why:'3 want it — under quorum. Seeding opens it to Donlon 3F too (5 more there).', cta:'Seed for 2F + 3F' },
       ],
@@ -679,7 +680,7 @@
       // when the 37 waiting are free (evenings, aggregate) — Mon..Sun, 0..100
       freeHeat:[22,48,100,74,61,30,44], freeTop:'Wed', where:'North 24 · West 8 · C-town 5',
       seed:{ id:'ta-wed', title:'CS 2110 · Wed crew', target:'CS 2110', line:'Wed · 7:00p · Rhodes 571', cta:'Seed it',
-        why:'Loop invites the 37 as "a CS 2110 crew is starting Wed 7p" — no roster, no names to you. Quorum of 3 makes it real.' },
+        why:'Loop invites the 37 as "a CS 2110 loop is starting Wed 7p" — no roster, no names to you. Quorum of 3 makes it real.' },
       // phrases 5+ students used in intents — k-anonymized, never one person's words
       stuck:[ { label:'HW3 · recursion', n:14 }, { label:'Generics', n:9 }, { label:'Prelim 2', n:8 }, { label:'Big-O proofs', n:5 } ],
     };
@@ -1175,15 +1176,12 @@
        tab bar can grow a 5th tab (Floor / CS 2110) for RA/TA personas without every
        screen threading it through. Null for plain students. */
     const StaffCtx = React.createContext(null);
-    function TabBar({ active='pulse', unread=0, onHome, onClass, onAlerts, onYou }){
+    function TabBar({ active='pulse', onHome, onClass, onYou }){
       const staffCtx = useContext(StaffCtx);
       const Tab = ({ id, icon, label, onClick, badge }) => (
         <button className={"pls-tab"+(active===id?' pls-tab--active':'')} onClick={onClick}>
           <span className="pls-tab__glyph">
             <Icon name={icon} size={20} stroke={active===id?2.4:2} />
-            {id==='alerts' && unread>0 && (
-              <span style={{ position:'absolute', top:2, right:8, width:7, height:7, borderRadius:'50%', background:'var(--accent)', boxShadow:'0 0 0 2px var(--bg-surface)' }} />
-            )}
             {badge && (
               <span className="pls-mono" style={{ position:'absolute', top:0, right:2, fontSize:7.5, fontWeight:700, letterSpacing:'.06em', padding:'2px 4px', borderRadius:999, background:'var(--accent)', color:'var(--accent-ink)', lineHeight:1 }}>{badge}</span>
             )}
@@ -1197,7 +1195,6 @@
           <Tab id="pulse"  icon="radio"          label="Home"   onClick={onHome} />
           <Tab id="class"  icon="graduation-cap" label="Class"  onClick={onClass} />
           {staff && <Tab id="staff" icon={staff.kind==='ra' ? 'house' : 'book-open'} label={staff.tab} badge={staff.badge} onClick={staffCtx.onStaff} />}
-          <Tab id="alerts" icon="bell"           label="Alerts" onClick={onAlerts} />
           <Tab id="you"    icon="circle"         label="You"    onClick={onYou} />
         </div>
       );
@@ -1631,8 +1628,9 @@
        the loop, alive and on repeat. The anchor picked on the last
        screen seeds the first-intent box.
     ------------------------------------------------------------ */
-    function StoryOnboarding({ onDone, onBack, theme }){
-      const [step, setStep] = useState(0);
+    const STORY_DASHES = 6; // 5 story cards + the Setup screen
+    function StoryOnboarding({ onDone, onBack, theme, startAt=0 }){
+      const [step, setStep] = useState(startAt);
       const [picks, setPicks] = useState([]);   // screen 5 is multiselect
       const cvRef = useRef(null);
       const stepRef = useRef(0);
@@ -1777,9 +1775,9 @@
                 <Icon name="chevron-left" size={20} />
               </button>
               <div style={{ display:'flex', gap:6, flex:1 }}>
-                {STEPS.map((_,i)=>(
-                  <button key={i} onClick={()=>setStep(i)} aria-label={'Screen '+(i+1)}
-                    style={{ flex:1, height:4, padding:0, border:'none', borderRadius:999, cursor:'pointer',
+                {Array.from({ length:STORY_DASHES }).map((_,i)=>(
+                  <button key={i} onClick={()=> i<STEPS.length && setStep(i)} aria-label={'Screen '+(i+1)} disabled={i>=STEPS.length}
+                    style={{ flex:1, height:4, padding:0, border:'none', borderRadius:999, cursor: i<STEPS.length ? 'pointer' : 'default',
                       background: i<=step ? 'var(--accent)' : 'var(--border-hairline)', transition:'background var(--dur-2) var(--ease-out)' }} />
                 ))}
               </div>
@@ -1790,7 +1788,7 @@
               <div key={step} className="fold-in" style={{ width:'100%', background:'var(--bg-surface)', border:'1px solid var(--border-hairline)',
                 borderRadius:'var(--radius-2xl)', boxShadow:'var(--shadow-pop)', padding:'26px 24px 24px', textAlign:'center' }}>
                 <div className="pls-mono" style={{ fontSize:10.5, letterSpacing:'.16em', color:'var(--text-tertiary)', marginBottom:14 }}>
-                  {String(step+1).padStart(2,'0')} · 05
+                  {String(step+1).padStart(2,'0')} · {String(STORY_DASHES).padStart(2,'0')}
                 </div>
                 <div className="pls-kicker" style={{ color:'var(--accent-strong)', marginBottom:10 }}>{s.k}</div>
                 <h1 className="pls-display" style={{ fontWeight:800, fontSize:29, lineHeight:1.06, letterSpacing:'-.03em', margin:'0 0 12px', color:'var(--text-primary)' }}>{s.h}</h1>
@@ -1819,7 +1817,7 @@
                     <div style={{ marginTop:16 }}>
                       <Button block disabled={picks.length===0} iconRight="arrow-right"
                         onClick={()=>onDone(ANCHORS.filter(a=>picks.includes(a.L)).map(a=>a.seed).join(' · '))}>
-                        {picks.length>1 ? `See what's forming · ${picks.length}` : "See what's forming"}
+                        {picks.length>1 ? `Set me up · ${picks.length} picked` : 'Set me up'}
                       </Button>
                     </div>
                   </div>
@@ -1835,84 +1833,118 @@
       );
     }
 
-    function EmailVerify({ onBack, onNext }){
-      const [email, setEmail] = useState('sarah.chen@cornell.edu');
-      const ok = /@cornell\.edu\s*$/i.test(email.trim());
-      return (
-        <div className="h-full flex flex-col fade-in">
-          <AppHeader title="Verify you're a Cornellian" onBack={onBack} />
-          <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-8">
-            <h2 className="pls-display" style={{ fontWeight:700, fontSize:24, lineHeight:1.2, color:'var(--text-primary)' }}>What's your Cornell email?</h2>
-            <div className="pls-fieldwrap mt-6">
-              <Icon name="mail" size={18} style={{ color:'var(--text-tertiary)' }} />
-              <input value={email} onChange={e=>setEmail(e.target.value)} autoFocus
-                style={{ flex:1, border:'none', outline:'none', background:'transparent', fontSize:16, color:'var(--text-primary)' }} placeholder="you@cornell.edu" />
-            </div>
-            <p className="text-[13.5px] mt-3 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-            <span style={{ color:'var(--text-primary)', fontWeight:500 }}>Confirm that Big Red energy is real.</span>
-            </p>
-            <div className="mt-8">
-              <Button block onClick={()=>onNext(email.trim())} disabled={!ok} icon="shield-check">Verify</Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    function Basics({ onBack, onNext }){
-      const [name, setName]   = useState('Sarah Chen');
-      const [year, setYear]   = useState('2029');
-      const [dorm, setDorm]   = useState('Donlon 2F');
-      const [major, setMajor] = useState('Computer Science');
-      const dorms = ['Donlon 2F','Balch','Dickson','Court-Kay-Bauer (CKB)','Mews','Toni Morrison','Ganędago','Jameson'];
-      const majors= ['Computer Science','Chemistry','Economics','Mathematics','Psychology','Undecided'];
-      const Select = ({ value, onChange, options }) => (
-        <div className="relative">
-          <select value={value} onChange={onChange} className="pls-input" style={{ appearance:'none', WebkitAppearance:'none' }}>
-            {options.map(o=><option key={o}>{o}</option>)}
-          </select>
-          <Icon name="chevron-down" size={18} style={{ position:'absolute', right:14, top:15, color:'var(--text-tertiary)', pointerEvents:'none' }} />
-        </div>
-      );
-      const field = (label, node) => (
-        <label className="block"><span className="pls-kicker">{label}</span><div className="mt-1.5">{node}</div></label>
-      );
-      return (
-        <div className="h-full flex flex-col fade-in">
-          <AppHeader title="The basics" onBack={onBack} />
-          <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-6">
-            <p className="mb-6 text-[14px]" style={{ color:'var(--text-secondary)' }}>That's the whole questionnaire — promise.</p>
-            <div className="space-y-4">
-              {field('Name', <input value={name} onChange={e=>setName(e.target.value)} className="pls-input" />)}
-              {field('Class year', <Select value={year} onChange={e=>setYear(e.target.value)} options={['2029','2028','2027','2026']} />)}
-              {field('Where you live', <Select value={dorm} onChange={e=>setDorm(e.target.value)} options={dorms} />)}
-              {field('Major', <Select value={major} onChange={e=>setMajor(e.target.value)} options={majors} />)}
-            </div>
-            <div className="mt-8">
-              <Button block onClick={()=>onNext({ name, year, dorm, major })} iconRight="arrow-right">Next</Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    function FirstIntent({ onBack, onNext, seed }){
+    /* ------------------------------------------------------------
+       SETUP — the sixth (and last) story dash. Verify + basics +
+       first intent on one surface, intent first: the anchor picked
+       on story card 5 lands straight in the box, cursor blinking;
+       identity is a row of pills underneath (tap to edit inline).
+       The email pill shows the Cornellian check the moment it's a
+       valid @cornell.edu — no separate "Verify" round-trip.
+    ------------------------------------------------------------- */
+    const CORNELL_RE = /@cornell\.edu\s*$/i;
+    const SETUP_FIELDS = [
+      { id:'email', icon:'mail',           kicker:'Cornell email',  kind:'text', placeholder:'you@cornell.edu', hint:"Only used to confirm you're a Cornellian.",
+        valid:v=>CORNELL_RE.test((v||'').trim()), show:v=> v || 'add your Cornell email' },
+      { id:'name',  icon:'user',           kicker:'Name',           kind:'text', valid:v=>(v||'').trim().length>1, show:v=> v || 'your name' },
+      { id:'year',  icon:'graduation-cap', kicker:'Class year',     kind:'chips', opts:['2029','2028','2027','2026'], show:v=> v ? "'"+String(v).slice(2) : 'class year' },
+      { id:'dorm',  icon:'house',          kicker:'Where you live', kind:'chips', opts:['Donlon 2F','Balch','Dickson','Court-Kay-Bauer (CKB)','Mews','Toni Morrison','Ganędago','Jameson'], show:v=> v || 'where you live' },
+      { id:'major', icon:'book-open',      kicker:'Major',          kind:'chips', opts:['Computer Science','Chemistry','Economics','Mathematics','Psychology','Undecided'], show:v=> v || 'major' },
+    ];
+    function Setup({ onBack, onDone, seed, dashes }){
       const [text, setText] = useState(seed || '');
+      const [f, setF] = useState({ email:'sarah.chen@cornell.edu', name:'Sarah Chen', year:'2029', dorm:'Donlon 2F', major:'Computer Science' });
+      const [editing, setEditing] = useState(null);
+      const areaRef = useRef(null);
+      const editRef = useRef(null);
+      useEffect(()=>{ const a=areaRef.current; if(a){ a.focus(); a.setSelectionRange(a.value.length, a.value.length); } }, []);
+      useEffect(()=>{ if(editing && editRef.current) editRef.current.focus(); }, [editing]);
+      const isOk = (fd) => fd.valid ? fd.valid(f[fd.id]) : !!f[fd.id];
+      const okCount = SETUP_FIELDS.filter(isOk).length;
+      const emailOk = CORNELL_RE.test(f.email.trim());
+      const ready = emailOk && okCount===SETUP_FIELDS.length && text.trim().length>0;
+      // last dash: identity is 60% of it, the intent the other 40%
+      const pct = Math.round(((okCount/SETUP_FIELDS.length)*0.6 + (text.trim()?0.4:0))*100);
+      const cur = SETUP_FIELDS.find(x=>x.id===editing);
+      const set = (id, v) => setF(p=>({ ...p, [id]:v }));
       return (
-        <div className="h-full flex flex-col fade-in">
-          <AppHeader title="One last thing" onBack={onBack} />
-          <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-8">
-            <h2 className="pls-display" style={{ fontWeight:700, fontSize:24, lineHeight:1.25, color:'var(--text-primary)' }}>What are you trying to make happen this semester?</h2>
-            <p className="text-[13.5px] mt-2" style={{ color:'var(--text-secondary)' }}>Say it plainly. We'll loop you in, not hand you a stranger.</p>
-            <div className="pls-fieldwrap mt-5" style={{ alignItems:'flex-start', padding:'14px' }}>
-              <span style={{ color:'var(--accent)', marginTop:2 }}><Icon name="circle-dot" size={18} /></span>
-              <textarea value={text} onChange={e=>setText(e.target.value)} rows={4} autoFocus
+        <div className="h-full fade-in" style={{ position:'relative', display:'flex', flexDirection:'column', padding:'20px 20px 0' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <button onClick={onBack} className="pls-iconbtn" style={{ width:38, height:38 }} aria-label="Back"><Icon name="chevron-left" size={20} /></button>
+            <div style={{ display:'flex', gap:6, flex:1 }} aria-label={`Step ${dashes} of ${dashes}`}>
+              {Array.from({ length:dashes }).map((_,i)=>(
+                <span key={i} style={{ flex:1, height:4, borderRadius:999, background: i<dashes-1 ? 'var(--accent)' : 'var(--border-hairline)', position:'relative', overflow:'hidden' }}>
+                  {i===dashes-1 && <span style={{ position:'absolute', inset:0, width:pct+'%', background:'var(--accent)', borderRadius:999, transition:'width var(--dur-4) var(--ease-settle)' }} />}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto no-scrollbar" style={{ padding:'18px 2px 110px' }}>
+            <div className="pls-mono" style={{ fontSize:10.5, letterSpacing:'.16em', color:'var(--text-tertiary)' }}>{String(dashes).padStart(2,'0')} · {String(dashes).padStart(2,'0')} · YOUR TURN</div>
+            <h1 className="pls-display" style={{ fontWeight:800, fontSize:24, lineHeight:1.1, letterSpacing:'-.025em', margin:'10px 0 8px', color:'var(--text-primary)' }}>What are you trying to make happen this semester?</h1>
+            <p style={{ fontSize:13.5, lineHeight:1.55, color:'var(--text-secondary)', margin:0 }}>Say it plainly. We'll loop you in, not hand you a stranger.</p>
+            <div className="pls-fieldwrap" style={{ alignItems:'flex-start', padding:14, marginTop:14 }}>
+              <span style={{ color:'var(--accent)', marginTop:3 }}><Icon name="circle-dot" size={18} /></span>
+              <textarea ref={areaRef} value={text} onChange={e=>setText(e.target.value)} rows={4}
                 placeholder="e.g. lock in for cs 2110 · get into bouldering · find a dinner crew"
                 style={{ flex:1, border:'none', outline:'none', resize:'none', background:'transparent', fontSize:16, lineHeight:1.5, color:'var(--text-primary)' }} />
             </div>
-            <div className="mt-6">
-              <Button block onClick={()=>onNext(text)} disabled={!text.trim()} iconRight="arrow-right">See what's forming</Button>
+
+            <div style={{ marginTop:22 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <span className="pls-kicker">So Loop can seat you close</span>
+                <span className="pls-mono" style={{ fontSize:10.5, letterSpacing:'.08em', color: okCount===SETUP_FIELDS.length ? 'var(--text-tertiary)' : 'var(--accent-strong)' }}>{okCount} · {SETUP_FIELDS.length}</span>
+              </div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:7, marginTop:10 }}>
+                {SETUP_FIELDS.map(fd=>{
+                  const ok = isOk(fd), on = editing===fd.id;
+                  return (
+                    <button key={fd.id} aria-pressed={on} onClick={()=>setEditing(on ? null : fd.id)}
+                      style={{ display:'inline-flex', alignItems:'center', gap:6, maxWidth:'100%', padding:'7px 11px 7px 9px', borderRadius:999, cursor:'pointer',
+                        fontSize:13, fontWeight:500, color: on ? 'var(--accent-strong)' : 'var(--text-primary)',
+                        background: on ? 'var(--accent-quiet)' : 'var(--bg-surface)',
+                        border:'1.5px solid '+(on ? 'var(--accent)' : ok ? 'var(--border-hairline)' : 'var(--accent)'), borderStyle: ok||on ? 'solid' : 'dashed',
+                        transition:'background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out)' }}>
+                      <span style={{ color: on ? 'var(--accent-strong)' : 'var(--text-tertiary)', display:'flex' }}><Icon name={fd.icon} size={14} /></span>
+                      <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{fd.show(f[fd.id])}</span>
+                      {fd.id==='email' && ok && <span className="pop" style={{ color:'var(--status-live)', display:'flex' }}><Icon name="check" size={13} stroke={3} /></span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {cur && (
+                <div key={cur.id} className="rise" style={{ marginTop:12, padding:12, border:'1.5px solid var(--accent)', borderRadius:16, background:'var(--bg-surface)' }}>
+                  <span className="pls-kicker" style={{ display:'block', marginBottom:8, color:'var(--accent-strong)' }}>{cur.kicker}</span>
+                  {cur.kind==='text' ? (
+                    <>
+                      <div className="pls-fieldwrap">
+                        <Icon name={cur.icon} size={18} style={{ color:'var(--text-tertiary)' }} />
+                        <input ref={editRef} value={f[cur.id]} placeholder={cur.placeholder||''} onChange={e=>set(cur.id, e.target.value)}
+                          onKeyDown={e=>{ if(e.key==='Enter') setEditing(null); }}
+                          style={{ flex:1, border:'none', outline:'none', background:'transparent', fontSize:16, color:'var(--text-primary)', minWidth:0 }} />
+                      </div>
+                      {cur.hint && <p style={{ fontSize:12, color:'var(--text-tertiary)', margin:'7px 2px 0', lineHeight:1.5 }}>{cur.hint}{cur.id==='email' && !isOk(cur) && f.email.includes('@') ? <> Needs to end in <b style={{ color:'var(--text-secondary)', fontWeight:500 }}>@cornell.edu</b>.</> : null}</p>}
+                    </>
+                  ) : (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                      {cur.opts.map(o=>{ const on=f[cur.id]===o; return (
+                        <button key={o} aria-pressed={on} onClick={()=>{ set(cur.id, o); setEditing(null); }}
+                          style={{ padding:'9px 12px', borderRadius:999, cursor:'pointer', fontSize:13.5, fontWeight: on?600:500, whiteSpace:'nowrap',
+                            color: on ? 'var(--accent-strong)' : 'var(--text-primary)', background: on ? 'var(--accent-quiet)' : 'var(--bg-surface)',
+                            border:'1.5px solid '+(on ? 'var(--accent)' : 'var(--border-hairline)'), transition:'background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out)' }}>{o}</button>
+                      ); })}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div style={{ display:'flex', alignItems:'flex-start', gap:8, marginTop:12, fontSize:12, color:'var(--text-tertiary)', lineHeight:1.5 }}>
+                <span style={{ flex:'none', marginTop:1, display:'flex' }}><Icon name="shield" size={14} /></span>
+                <span>Email only confirms you're a Cornellian. Your loops see your name, floor and major, never your inbox.</span>
+              </div>
             </div>
+          </div>
+          <div style={{ position:'absolute', left:0, right:0, bottom:0, padding:'12px 20px 26px', background:'linear-gradient(to top, var(--bg-page) 62%, transparent)' }}>
+            <Button block disabled={!ready} iconRight="arrow-right"
+              onClick={()=>onDone({ email:f.email.trim(), name:f.name.trim(), year:f.year, dorm:f.dorm, major:f.major }, text.trim())}>See what's forming</Button>
           </div>
         </div>
       );
@@ -2130,7 +2162,7 @@
           <div className="flex items-center gap-2">
             {localCount>0 ? <LiveDot /> : <span style={{ width:8, height:8, borderRadius:'50%', background:'var(--text-tertiary)', display:'inline-block' }} />}
             <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>
-              {localCount>0 ? `${localCount} crews forming near you` : `Quiet on ${scope==='floor'?dorm:scopeName(scope)}`}
+              {localCount>0 ? `${localCount} ${localCount===1?'activity is':'activities are'} forming near you` : `Quiet on ${scope==='floor'?dorm:scopeName(scope)}`}
             </h2>
             <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>{localCount>0?'live now':'early'}</span>
           </div>
@@ -2203,13 +2235,13 @@
       move:[ {key:'time',type:'time',label:'time',opts:['early','morning','afternoon','evening']},
         {key:'where',type:'where',label:'where',opts:['Teagle gym','Beebe Lake','Lindseth wall','outdoor loop']},
         {key:'intensity',type:'',label:'intensity',opts:['chill','moderate','sweaty']},
-        {key:'size',type:'',label:'group',opts:['just 2','small crew','open group']} ],
+        {key:'size',type:'',label:'group',opts:['just 2','small group','open group']} ],
       study:[ {key:'time',type:'time',label:'time',opts:['morning','afternoon','evening','late']},
         {key:'where',type:'where',label:'where',opts:['Libe Café','Mann','Uris','Olin','dorm lounge']},
         {key:'vibe',type:'',label:'vibe',opts:['silent','light chatter','group work']},
         {key:'length',type:'',label:'length',opts:['1 hr','2 hrs','all-nighter']} ],
     };
-    const FLR_OPTPOP={ '7pm':10,'8pm':9,'6pm':7,'9pm':6,late:4, ramen:9,sushi:8,tacos:9,'korean bbq':7,italian:7,dumplings:6,thai:6,burgers:6, '$':6,'$$':11,'$$$':5, Collegetown:12,North:9,West:6,Downtown:5, 'just 2':5,'small 3-4':10,'big 5+':6, early:4,morning:7,afternoon:8,evening:11, 'Teagle gym':10,'Beebe Lake':8,'Lindseth wall':6,'outdoor loop':7, chill:8,moderate:9,sweaty:6, 'small crew':10,'open group':7, 'Libe Café':11,Mann:8,Uris:9,Olin:6,'dorm lounge':7, silent:8,'light chatter':9,'group work':8, '1 hr':7,'2 hrs':10,'all-nighter':4 };
+    const FLR_OPTPOP={ '7pm':10,'8pm':9,'6pm':7,'9pm':6,late:4, ramen:9,sushi:8,tacos:9,'korean bbq':7,italian:7,dumplings:6,thai:6,burgers:6, '$':6,'$$':11,'$$$':5, Collegetown:12,North:9,West:6,Downtown:5, 'just 2':5,'small 3-4':10,'big 5+':6, early:4,morning:7,afternoon:8,evening:11, 'Teagle gym':10,'Beebe Lake':8,'Lindseth wall':6,'outdoor loop':7, chill:8,moderate:9,sweaty:6, 'small group':10,'open group':7, 'Libe Café':11,Mann:8,Uris:9,Olin:6,'dorm lounge':7, silent:8,'light chatter':9,'group work':8, '1 hr':7,'2 hrs':10,'all-nighter':4 };
     const FLR_RETAIN={ time:.68, budget:.7, where:.62, size:.62, intensity:.72, vibe:.72, length:.76, cuisine:.6, custom:.82 };
     const FLR_CATX={ move:{c:'var(--unit-major)',label:'moving',icon:'🏃',act:'sport'}, study:{c:'var(--unit-class)',label:'studying',icon:'📖',act:'subject'}, dine:{c:'var(--unit-dorm)',label:'eating together',icon:'🍜',act:'meal'} };
 
@@ -2833,7 +2865,7 @@
                   <Icon name="users" size={13} />You were looped in
                 </div>
                 <p className="mt-1.5" style={{ fontWeight:500, fontSize:15, color:'var(--text-primary)', lineHeight:1.4 }}>
-                  You didn't search — you got seated into the <span style={{ fontWeight:700 }}>{latecomerLoop.title}</span>, a crew that already meets. No cold start.
+                  You didn't search — you got seated into the <span style={{ fontWeight:700 }}>{latecomerLoop.title}</span>, an activity that already meets. No cold start.
                 </p>
                 <div className="mt-2 flex items-center gap-1 text-[13.5px]" style={{ color:'var(--accent-strong)', fontWeight:600 }}>
                   Meet the crew<Icon name="arrow-right" size={15} />
@@ -2892,8 +2924,8 @@
 
           <button className="pls-fab" aria-label="Drop an intent" onClick={actions.openCompose}><Icon name="plus" size={24} /></button>
 
-          <TabBar active="pulse" unread={unread}
-            onHome={()=>{}} onClass={actions.openClass} onAlerts={actions.openNotifications} onYou={actions.openYou} />
+          <TabBar active="pulse"
+            onHome={()=>{}} onClass={actions.openClass} onYou={actions.openYou} />
         </div>
       );
     }
@@ -3094,12 +3126,12 @@
     /* ============================================================
        NOTIFICATIONS (S9 — fold-in lives here)
     ============================================================ */
-    function Notifications({ items, unread=0, wrapped=WRAPPED_LOOPS, feedback={}, actions }){
+    function Notifications({ items, wrapped=WRAPPED_LOOPS, feedback={}, actions }){
       const wrapById = Object.fromEntries(wrapped.map(w=>[w.id,w]));
       return (
         <div className="h-full flex flex-col fade-in">
-          <AppHeader title="Alerts" />
-          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-24 space-y-3">
+          <AppHeader title="Alerts" onBack={actions.closeNotifications} />
+          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-8 space-y-3">
             {items.length===0 && (
               <EmptyState icon="bell" title="Quiet for now.">
                 When a drop fires or someone joins your loop, it lands here.
@@ -3181,8 +3213,6 @@
               </div>
             </div>
           </div>
-          <TabBar active="alerts" unread={unread}
-            onHome={actions.goHome} onClass={actions.openClass} onAlerts={()=>{}} onYou={actions.openYou} />
         </div>
       );
     }
@@ -3283,7 +3313,10 @@
       return (
         <div className="h-full flex flex-col fade-in" style={{ position:'relative' }}>
           <AppHeader kicker="You" title={user.name}
-            right={<AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} hideProfile />} />
+            right={<>
+              <IconButton name="bell" size={20} label="Alerts" badge={unread} onClick={actions.openNotifications} />
+              <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} hideProfile />
+            </>} />
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-24">
             <div className="flex items-center gap-3">
               <Avatar id={viewerId} size={52} />
@@ -3335,7 +3368,7 @@
                   <Card variant="sunken" className="p-4">
                     <div className="pls-kicker mb-1.5 flex items-center gap-1.5" style={{ color:'var(--accent-strong)' }}><Icon name="plus" size={12} />Nothing upcoming yet</div>
                     <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                      Drop an intent and Loop seats you into a crew that already meets — it shows up here to reopen, share, or push to your calendar.
+                      Drop an intent and Loop seats you into an activity that already meets — it shows up here to reopen, share, or push to your calendar.
                     </p>
                     <div className="mt-3 flex items-center gap-2.5">
                       <Button size="sm" icon="plus" onClick={actions.openCompose}>Drop an intent</Button>
@@ -3396,7 +3429,7 @@
               {seg==='intents' && (
                 <div>
                   <p className="text-[12px] mb-2.5 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                    What you're up for, in plain English. Loop holds these and pulls you into a crew when enough people near you want the same. Tap the pencil to rewrite one.
+                    What you're up for, in plain English. Loop holds these and pulls you into an activity when enough people near you want the same. Tap the pencil to rewrite one.
                   </p>
                   <IntentQuickAdd onAdd={(it, replaceId)=>{ actions.saveIntent(it, replaceId); setEditingId(null); }}
                     editing={myIntents.find(i=>i.id===editingId) || null} onCancelEdit={()=>setEditingId(null)} />
@@ -3417,7 +3450,7 @@
                                 <span className="truncate" style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{it.label}</span>
                                 {pending && <span className="pls-badge" style={{ flexShrink:0, color:'var(--status-forming)', background:'color-mix(in srgb, var(--status-forming) 15%, var(--bg-surface))' }}>pending review</span>}
                               </div>
-                              <div className="pls-mono text-[11.5px] mt-0.5" style={{ color:'var(--text-tertiary)' }}>{it.rhythm}{pending?' · we’ll add it if it fits':' · waiting for a crew'}</div>
+                              <div className="pls-mono text-[11.5px] mt-0.5" style={{ color:'var(--text-tertiary)' }}>{it.rhythm}{pending?' · we’ll add it if it fits':' · waiting for enough people'}</div>
                             </div>
                             <button onClick={()=>setEditingId(isEditing?null:it.id)} aria-label={isEditing?'Stop editing':'Edit intent'} aria-pressed={isEditing}
                               className="pls-iconbtn" style={{ flexShrink:0, color: isEditing?'var(--accent-strong)':'var(--text-tertiary)' }}>
@@ -3473,8 +3506,8 @@
               <span className="pls-kicker">theme</span>
             </button>
           </div>
-          <TabBar active="you" unread={unread}
-            onHome={actions.goHome} onClass={actions.openClass} onAlerts={actions.openNotifications} onYou={()=>{}} />
+          <TabBar active="you"
+            onHome={actions.goHome} onClass={actions.openClass} onYou={()=>{}} />
         </div>
       );
     }
@@ -3566,7 +3599,10 @@
                 </div>
               </div>
             }
-            right={<AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />} />
+            right={<>
+              <IconButton name="bell" size={20} label="Alerts" badge={unread} onClick={actions.openNotifications} />
+              <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />
+            </>} />
 
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28 fade-in">
 
@@ -3613,7 +3649,7 @@
             <div className="mt-6 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Icon name="flame" size={17} style={{ color:'var(--accent)' }} />
-                <h2 className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)' }}>Longest-running crews</h2>
+                <h2 className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)' }}>Longest-running loops</h2>
               </div>
               <span className="pls-kicker">streak · wks</span>
             </div>
@@ -3688,13 +3724,13 @@
             <Card variant="sunken" className="p-4 mt-4">
               <div className="pls-kicker mb-1.5 flex items-center gap-1.5"><Icon name="shield" size={12} />No scoreboard for people</div>
               <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                Crews and houses show up here — never individuals. Nobody in the Class of {COHORT.classOf} is ranked, scored, or told where they land. The only thing Loop counts is how often the same people come back.
+                Loops and houses show up here — never individuals. Nobody in the Class of {COHORT.classOf} is ranked, scored, or told where they land. The only thing Loop counts is how often the same people come back.
               </p>
             </Card>
           </div>
 
-          <TabBar active="class" unread={unread}
-            onHome={actions.goHome} onClass={()=>{}} onAlerts={actions.openNotifications} onYou={actions.openYou} />
+          <TabBar active="class"
+            onHome={actions.goHome} onClass={()=>{}} onYou={actions.openYou} />
         </div>
       );
     }
@@ -3813,7 +3849,10 @@
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
             left={<StaffHeaderLeft glyph="2F" title={F.scope} kicker={`${user.name.split(' ')[0]} · RA view · ${F.residents} residents`} />}
-            right={<AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />} />
+            right={<>
+              <IconButton name="bell" size={20} label="Alerts" badge={unread} onClick={actions.openNotifications} />
+              <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />
+            </>} />
 
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28 fade-in">
             <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
@@ -3840,7 +3879,7 @@
             </Card>
 
             <StaffSection icon="activity" title="What the floor wants" count="intents · this week"
-              lede="Aggregate only — counts, never who. Amber = residents who dropped it and still have no crew." />
+              lede="Aggregate only — counts, never who. Amber = residents who dropped it and aren't in an activity yet." />
             <Card className="p-3.5">
               <AggBars rows={F.wants} max={14} />
               <div className="flex gap-3 pls-mono mt-2" style={{ fontSize:10.5, color:'var(--text-tertiary)' }}>
@@ -3918,8 +3957,8 @@
 
             <StaffGuard>No intents by name, no messages, no who-likes-whom.</StaffGuard>
           </div>
-          <TabBar active="staff" unread={unread}
-            onHome={actions.goHome} onClass={actions.openClass} onAlerts={actions.openNotifications} onYou={actions.openYou} />
+          <TabBar active="staff"
+            onHome={actions.goHome} onClass={actions.openClass} onYou={actions.openYou} />
         </div>
       );
     }
@@ -3942,7 +3981,10 @@
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
             left={<StaffHeaderLeft glyph="TA" title={C.scope} kicker={`${user.name.split(' ')[0]} · TA view · ${C.enrolled} enrolled`} />}
-            right={<AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />} />
+            right={<>
+              <IconButton name="bell" size={20} label="Alerts" badge={unread} onClick={actions.openNotifications} />
+              <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />
+            </>} />
 
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-28 fade-in">
             <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
@@ -4054,8 +4096,8 @@
 
             <StaffGuard>Who's in which loop by name (faces are display-only), what anyone typed, or attendance per student. Counts, loops and phrases 5+ people share.</StaffGuard>
           </div>
-          <TabBar active="staff" unread={unread}
-            onHome={actions.goHome} onClass={actions.openClass} onAlerts={actions.openNotifications} onYou={actions.openYou} />
+          <TabBar active="staff"
+            onHome={actions.goHome} onClass={actions.openClass} onYou={actions.openYou} />
         </div>
       );
     }
@@ -4066,7 +4108,7 @@
        can act (RAs, TAs, departments), then her own advisee reach-out list.
        Never intents or messages (§2 guardrail). */
     function AdvisorDashboard({ state, actions }){
-      const { campus, theme, user, viewerId, staffDone={} } = state;
+      const { campus, theme, user, viewerId, unread, staffDone={} } = state;
       const S = SCHOOL;
       const [seg, setSeg] = useState('houses');
       const isDone = (id) => !!staffDone[id];
@@ -4081,7 +4123,10 @@
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
             left={<StaffHeaderLeft glyph={<Icon name="heart-handshake" size={16} />} title="Advising & Wellbeing" kicker={`${COUNSELOR.name.split(' ')[0]} · staff view · all undergrads`} />}
-            right={<AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />} />
+            right={<>
+              <IconButton name="bell" size={20} label="Alerts" badge={unread} onClick={actions.openNotifications} />
+              <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />
+            </>} />
 
           <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-8 fade-in">
             <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
@@ -4205,10 +4250,11 @@
        APP  — state machine + all mutations
     ============================================================ */
     function App(){
-      const [screen, setScreen] = useState('splash');   // splash|story|email|basics|intent|home|class|loop|notifs|you|advisor
+      const [screen, setScreen] = useState('splash');   // splash|story|setup|home|class|loop|notifs|you|advisor
+      const [notifsReturn, setNotifsReturn] = useState('home');   // screen the bell was tapped from, so Alerts can back out to it
       const [sheet, setSheet]   = useState(null);        // null|compose|spinup|safety|share
       const [theme, setTheme]   = useState('daylight');  // daylight|afterdark
-      const [intentSeed, setIntentSeed] = useState(''); // pre-fill for FirstIntent, chosen in the story onboarding
+      const [intentSeed, setIntentSeed] = useState(''); // pre-fill for the Setup intent box, chosen in the story onboarding
       const [viewerId, setViewerId] = useState('sarah'); // whose perspective the phone is showing
       const [world, setWorld]   = useState(worldStore.load);   // the one shared, persisted world
       const [suggestions, setSuggestions] = useState(null);
@@ -4278,11 +4324,11 @@
       const unread = myNotifs.filter(n=>n.unread).length;
 
       /* ----- onboarding (writes land in world.profiles[viewerId], not a standalone user) ----- */
-      const start     = () => setScreen('story');
-      const storyDone = (seed) => { setIntentSeed(seed || ''); setScreen('email'); };
-      const verify  = (email) => { setProfileFor(viewerId, { email }); setScreen('basics'); };
-      const basics  = (b) => { setProfileFor(viewerId, b); setScreen('intent'); };
-      const firstIntent = (text) => { runIntent(text); setScreen('home'); armWrap('w-prelim1'); };
+      const [storyStart, setStoryStart] = useState(0); // Back from Setup returns to story card 5, not card 1
+      const start     = () => { setStoryStart(0); setScreen('story'); };
+      const storyDone = (seed) => { setIntentSeed(seed || ''); setScreen('setup'); };
+      // Setup = verify + basics + first intent on one screen. Profile lands in world.profiles, intent runs, home opens.
+      const setupDone = (profile, text) => { setProfileFor(viewerId, profile); runIntent(text); setScreen('home'); armWrap('w-prelim1'); };
 
       /* ----- intent -> suggestions (S6) ----- */
       // Cards for a single intent phrase.
@@ -4354,7 +4400,8 @@
         setScreen('loop');
         setNotifsFor(viewerId, ns => ns.map(n => ({ ...n, unread:false })));
       };
-      const openNotifications = () => setScreen('notifs');
+      const openNotifications = () => { if (screen!=='notifs') setNotifsReturn(screen); setScreen('notifs'); };
+      const closeNotifications = () => setScreen(notifsReturn);
       const openYou = () => setScreen('you');
       const openClass = () => setScreen('class');
       const goHome = () => setScreen('home');
@@ -4599,7 +4646,7 @@
       };
 
       const actions = {
-        openCompose, noop, foldIn, leaveLoop, wantThis, openLoop, openNotifications,
+        openCompose, noop, foldIn, leaveLoop, wantThis, openLoop, openNotifications, closeNotifications,
         startSpinup, tapNudge, toggleTheme, setTheme:applyTheme, openYou, openClass, goHome,
         setFeedbackFor, openRate, openSafety, messageCounselor, openShare, addToCalendar, floorSeat, floorUnseat, saveIntent, removeIntent,
         checkIn, moveTonight, undoMove, messageCrew, advisorReach,
@@ -4628,10 +4675,8 @@
                 onClose={()=>setToast(null)} />
 
               {screen==='splash' && <Splash onStart={start} theme={theme} onToggleTheme={toggleTheme} />}
-              {screen==='story'  && <StoryOnboarding onDone={storyDone} onBack={()=>setScreen('splash')} theme={theme} />}
-              {screen==='email'  && <EmailVerify onBack={()=>setScreen('story')} onNext={verify} />}
-              {screen==='basics' && <Basics onBack={()=>setScreen('email')} onNext={basics} />}
-              {screen==='intent' && <FirstIntent onBack={()=>setScreen('basics')} onNext={firstIntent} seed={intentSeed} />}
+              {screen==='story'  && <StoryOnboarding onDone={storyDone} onBack={()=>setScreen('splash')} theme={theme} startAt={storyStart} />}
+              {screen==='setup'  && <Setup onBack={()=>{ setStoryStart(4); setScreen('story'); }} onDone={setupDone} seed={intentSeed} dashes={STORY_DASHES} />}
               {screen==='home'   && user && (
                 <Home state={{ user, viewerId, loops, suggestions, nudge, unread, theme, campus }} actions={actions} />
               )}
@@ -4648,7 +4693,7 @@
                   : <TADashboard state={{ theme, user, viewerId, unread, loops, staffDone }} actions={actions} />
               )}
               {screen==='advisor' && (
-                <AdvisorDashboard state={{ campus, theme, user, viewerId, staffDone }} actions={actions} />
+                <AdvisorDashboard state={{ campus, theme, user, viewerId, unread, staffDone }} actions={actions} />
               )}
               {screen==='you'    && user && (
                 <YouScreen state={{ user, viewerId, loops, myIntents, campus, theme, unread, wrapped, feedback, feedbackCount: Object.keys(feedback).length }} actions={actions} />

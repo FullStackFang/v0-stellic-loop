@@ -1,0 +1,91 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: 9:41
+      - generic [ref=f1e7]: 5G
+    - generic [ref=f1e303]:
+      - generic [ref=f1e304]:
+        - button "Back" [ref=f1e305] [cursor=pointer]
+        - heading "Alerts" [level=1] [ref=f1e309]
+      - generic [ref=f1e310]:
+        - generic [ref=f1e311]:
+          - paragraph [ref=f1e316]: Quiet for now.
+          - paragraph [ref=f1e317]: When a drop fires or someone joins your loop, it lands here.
+        - generic [ref=f1e318]:
+          - heading "Wrapped loops" [level=2] [ref=f1e325]
+          - paragraph [ref=f1e326]: Loops end on their own when the reason does — the crew stays yours.
+          - generic [ref=f1e327]:
+            - generic [ref=f1e328]:
+              - generic [ref=f1e329]:
+                - generic [ref=f1e330]:
+                  - generic [ref=f1e331]:
+                    - generic [ref=f1e332]: Prelim 1 review
+                    - generic [ref=f1e333]: wrapped
+                  - generic [ref=f1e334]: wrapped after the exam · 5 sessions · same faces
+                - generic [ref=f1e335]:
+                  - generic "Josh Park" [ref=f1e337]: JP
+                  - generic "Lydia Osei" [ref=f1e339]: LO
+                  - generic "Marcus Diaz" [ref=f1e341]: MD
+                  - generic "Priya Rao" [ref=f1e343]: PR
+              - generic [ref=f1e344]:
+                - generic [ref=f1e345]: 2 weeks ago
+                - generic [ref=f1e346]:
+                  - button "Rate it" [ref=f1e347] [cursor=pointer]
+                  - button "Start the next one" [ref=f1e350] [cursor=pointer]
+            - generic [ref=f1e352]:
+              - generic [ref=f1e353]:
+                - generic [ref=f1e354]:
+                  - generic [ref=f1e355]:
+                    - generic [ref=f1e356]: HW1 grind
+                    - generic [ref=f1e357]: wrapped
+                  - generic [ref=f1e358]: ran its course · 3 sessions · same faces
+                - generic [ref=f1e359]:
+                  - generic "Josh Park" [ref=f1e361]: JP
+                  - generic "Sarah Chen" [ref=f1e363]: SC
+                  - generic "Lydia Osei" [ref=f1e365]: LO
+              - generic [ref=f1e366]:
+                - generic [ref=f1e367]: 3 weeks ago
+                - generic [ref=f1e368]:
+                  - button "Rate it" [ref=f1e369] [cursor=pointer]
+                  - button "Start the next one" [ref=f1e372] [cursor=pointer]
+            - generic [ref=f1e374]:
+              - generic [ref=f1e375]:
+                - generic [ref=f1e376]:
+                  - generic [ref=f1e377]:
+                    - generic [ref=f1e378]: Move-in week dinner crew
+                    - generic [ref=f1e379]: wrapped
+                  - generic [ref=f1e380]: wrapped after O-week · 4 sessions · same faces
+                - generic [ref=f1e381]:
+                  - generic "Sarah Chen" [ref=f1e383]: SC
+                  - generic "Lydia Osei" [ref=f1e385]: LO
+                  - generic "Maya Idris" [ref=f1e387]: MI
+              - generic [ref=f1e388]:
+                - generic [ref=f1e389]: last month
+                - generic [ref=f1e390]:
+                  - button "Rate it" [ref=f1e391] [cursor=pointer]
+                  - button "Start the next one" [ref=f1e394] [cursor=pointer]
+  - generic [ref=f1e29]:
+    - generic [ref=f1e30]: view the demo as
+    - generic [ref=f1e31]:
+      - button "Sarah Chen Sarah Donlon 2F" [ref=f1e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=f1e33]: SC
+        - generic [ref=f1e34]:
+          - generic [ref=f1e35]: Sarah
+          - generic [ref=f1e36]: Donlon 2F
+      - button "Josh Park Josh Donlon RA" [ref=f1e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=f1e38]: JP
+        - generic [ref=f1e39]:
+          - generic [ref=f1e40]: Josh
+          - generic [ref=f1e41]: Donlon RA
+      - button "Maya Idris Maya TA CS 2110" [ref=f1e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=f1e43]: MI
+        - generic [ref=f1e44]:
+          - generic [ref=f1e45]: Maya
+          - generic [ref=f1e46]: TA CS 2110
+      - button "Dana Okafor Dana advisor" [ref=f1e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=f1e48]: DO
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: Dana
+          - generic [ref=f1e51]: advisor
+    - button "fold someone in" [ref=f1e52] [cursor=pointer]
+    - button "restart demo" [ref=f1e55] [cursor=pointer]

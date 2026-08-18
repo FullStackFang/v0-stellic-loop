@@ -1,0 +1,115 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e1194]:
+      - generic [ref=e1195]:
+        - generic [ref=e1196]: Loop
+        - generic [ref=e1198]:
+          - button "Alerts" [ref=e1199] [cursor=pointer]
+          - button "Account" [ref=e1203] [cursor=pointer]:
+            - generic "Sarah Chen" [ref=e1204]: SC
+      - generic [ref=e1206]:
+        - generic [ref=e1207]:
+          - generic "live" [ref=e1208]
+          - heading "5 activities are forming near you" [level=2] [ref=e1211]
+          - generic [ref=e1212]: live now
+        - generic [ref=e1234]:
+          - button "Donlon 2F" [ref=e1235] [cursor=pointer]
+          - button "Donlon" [ref=e1236] [cursor=pointer]
+          - button "North" [ref=e1237] [cursor=pointer]
+          - button "Campus" [ref=e1238] [cursor=pointer]
+        - generic [ref=e1239]:
+          - button "All" [ref=e1240] [cursor=pointer]
+          - button "Classes" [ref=e1241] [cursor=pointer]
+          - button "Fitness" [ref=e1243] [cursor=pointer]
+          - button "Food" [ref=e1245] [cursor=pointer]
+          - button "Social" [ref=e1247] [cursor=pointer]
+          - button "Music" [ref=e1249] [cursor=pointer]
+        - generic [ref=e1251]:
+          - heading "People want these" [level=3] [ref=e1252]
+          - generic [ref=e1253]: start one
+        - generic [ref=e1255]:
+          - generic [ref=e1256]: Nobody's started this yet
+          - heading "Start a ECON 1110 loop" [level=3] [ref=e1257]
+          - paragraph [ref=e1258]: 8 floormates want this · no one runs it — it forms at 3
+          - button "Spin it up" [ref=e1260] [cursor=pointer]
+        - generic [ref=e1262]:
+          - heading "Forming on Donlon 2F" [level=3] [ref=e1263]
+          - generic [ref=e1264]: 5 live
+        - generic [ref=e1265]:
+          - generic [ref=e1266]:
+            - generic [ref=e1267]: cs 2110 · section
+            - heading "Prelim 1 review" [level=3] [ref=e1270]
+            - generic [ref=e1273]:
+              - generic [ref=e1274]: 8/10 intents
+              - generic [ref=e1275]: fires when 10 want it
+            - button "I want this too" [ref=e1289] [cursor=pointer]
+          - generic [ref=e1291]:
+            - generic [ref=e1292]: chem 2070 · section
+            - heading "CHEM 2070 review" [level=3] [ref=e1295]
+            - generic [ref=e1298]:
+              - generic [ref=e1299]: 6/10 intents
+              - generic [ref=e1300]: fires when 10 want it
+            - button "I want this too" [ref=e1314] [cursor=pointer]
+          - generic [ref=e1316]:
+            - generic [ref=e1317]: donlon 2f · forming
+            - heading "Donlon boxing crew" [level=3] [ref=e1320]
+            - generic [ref=e1323]:
+              - generic [ref=e1324]: 7/10 intents
+              - generic [ref=e1325]: fires when 10 want it
+            - button "I want this too" [ref=e1339] [cursor=pointer]
+          - generic [ref=e1341]:
+            - generic [ref=e1342]: math 1920 · section
+            - heading "MATH 1920 grind" [level=3] [ref=e1345]
+            - generic [ref=e1348]:
+              - generic [ref=e1349]: 6/10 intents
+              - generic [ref=e1350]: fires when 10 want it
+            - button "I want this too" [ref=e1364] [cursor=pointer]
+          - button "cs 2110 · section Sunday HW crew Sun · 4:00p · Uris · weekly next · Sun · 4:00p · Uris Josh Park Lydia Osei Priya Rao Marcus Diaz 12-wk streak 4 in · since wk 3" [ref=e1367] [cursor=pointer]:
+            - generic [ref=e1369]:
+              - generic [ref=e1370]: cs 2110 · section
+              - heading "Sunday HW crew" [level=3] [ref=e1373]
+            - generic [ref=e1376]:
+              - generic [ref=e1377]: Sun · 4:00p · Uris · weekly
+              - generic [ref=e1383]: next · Sun · 4:00p · Uris
+            - generic [ref=e1388]:
+              - generic [ref=e1389]:
+                - generic "Josh Park" [ref=e1391]: JP
+                - generic "Lydia Osei" [ref=e1393]: LO
+                - generic "Priya Rao" [ref=e1395]: PR
+                - generic "Marcus Diaz" [ref=e1397]: MD
+              - generic [ref=e1398]:
+                - generic [ref=e1399]: 12-wk streak
+                - generic [ref=e1402]: 4 in · since wk 3
+      - button "Drop an intent" [ref=e1403] [cursor=pointer]
+      - generic [ref=e1405]:
+        - button [ref=e1406] [cursor=pointer]
+        - button [ref=e1414] [cursor=pointer]
+        - button [ref=e1419] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah Donlon 2F" [active] [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: Donlon 2F
+      - button "Josh Park Josh Donlon RA" [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: Donlon RA
+      - button "Maya Idris Maya TA CS 2110" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: TA CS 2110
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "fold someone in" [ref=e52] [cursor=pointer]
+    - button "restart demo" [ref=e55] [cursor=pointer]
