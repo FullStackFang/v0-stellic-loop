@@ -1,0 +1,297 @@
+- generic [ref=f5e1]:
+  - heading "Drop an intent · 3 directions" [level=1] [ref=f5e2]
+  - paragraph [ref=f5e3]:
+    - text: Today the FAB opens a blank textarea (
+    - code [ref=f5e4]: ComposeSheet
+    - text: ), and onboarding + the You tab each have their own free-text box. All three directions below replace those with one guided composer that opens already filled with the most popular recent drop on your floor — greyed as a suggestion — so an intent is never a blank page and always lands in the vocabulary The Floor already speaks (
+    - code [ref=f5e5]: Grabbing dinner Thursdays, weekly
+    - text: ). Every token is tappable, every menu is ranked by how many people want it. Tap ↻ another to pipe a different popular drop in.
+  - generic [ref=f5e6]:
+    - generic [ref=f5e7]:
+      - generic [ref=f5e8]:
+        - generic [ref=f5e9]: "01"
+        - heading "Sentence with tappable tokens" [level=2] [ref=f5e10]
+        - generic [ref=f5e11]: recommended
+      - generic [ref=f5e12]:
+        - generic [ref=f5e13]:
+          - generic [ref=f5e14]: 9:41
+          - generic [ref=f5e15]: 5G
+        - generic [ref=f5e18]: Loop
+        - generic [ref=f5e21]:
+          - generic [ref=f5e22]: What your intent lands in
+          - generic [ref=f5e25]:
+            - generic [ref=f5e26]: dinner Thursdays, weekly
+            - generic [ref=f5e27]: 12 want · your floor
+          - generic [ref=f5e30]:
+            - generic [ref=f5e31]: a run Fridays, weekly @Collegetown
+            - generic [ref=f5e32]: 9 want · your floor
+          - generic [ref=f5e35]:
+            - generic [ref=f5e36]: CS 2110 Sundays, weekly @Uris
+            - generic [ref=f5e37]: 11 want · your floor
+          - generic [ref=f5e40]:
+            - generic [ref=f5e41]: kickboxing Wednesdays, weekly @Teagle gym
+            - generic [ref=f5e42]: 8 want · your floor
+          - generic [ref=f5e45]:
+            - generic [ref=f5e46]: coffee Mondays, weekly
+            - generic [ref=f5e47]: 6 want · your floor
+        - generic [ref=f5e49]:
+          - generic [ref=f5e51]:
+            - generic [ref=f5e52]:
+              - generic [ref=f5e53]: Drop an intent
+              - heading "What are you trying to make happen?" [level=2] [ref=f5e54]
+            - button "Close" [ref=f5e55] [cursor=pointer]: ✕
+          - generic [ref=f5e56]:
+            - generic: ✦ popular on your floor
+            - button "↻ another" [ref=f5e58] [cursor=pointer]
+          - generic [ref=f5e59]: Grabbing coffee Thursdays, weekly + where
+          - generic [ref=f5e60]: tap a word to change it · × on @where to open it back up
+          - generic [ref=f5e61]:
+            - generic [ref=f5e62]: "9"
+            - generic [ref=f5e63]: 9 near you want this too. Open on where — that's why it's high.
+          - button "Drop it" [ref=f5e65] [cursor=pointer]
+          - paragraph [ref=f5e66]: Drop it and it waits on your floor until enough people want the same thing — then it fires and a loop crystallizes.
+          - generic [ref=f5e313]:
+            - generic [ref=f5e314] [cursor=pointer]:
+              - generic [ref=f5e316]: ✓ Grabbingpopular
+              - generic [ref=f5e317]: 12 want
+            - generic [ref=f5e318] [cursor=pointer]:
+              - generic [ref=f5e320]: Studying
+              - generic [ref=f5e321]: 11 want
+            - generic [ref=f5e322] [cursor=pointer]:
+              - generic [ref=f5e324]: Up for
+              - generic [ref=f5e325]: 9 want
+      - list [ref=f5e67]:
+        - listitem [ref=f5e68]: Zero-blank start. Opens with the hottest recent drop, all tokens greyed. Tap ↻ to rotate through what's popular; tap a token to change just that word — it turns solid (yours), the rest stay grey.
+        - listitem [ref=f5e69]: Kind token (Grabbing / Studying / Up for) swaps the activity list, mirroring The Floor's dine / study / move.
+        - listitem [ref=f5e70]: Trailing + where slot is optional; leaving it open keeps "N near you" high — same open-to-all logic as the Floor sheet.
+        - listitem [ref=f5e71]:
+          - text: Same component can replace
+          - code [ref=f5e72]: ComposeSheet
+          - text: ", onboarding"
+          - code [ref=f5e73]: FirstIntent
+          - text: and the You-tab quick-add → one composer, one intent shape, less code.
+      - paragraph [ref=f5e74]: "Try: tap dinner → pick coffee · tap Grabbing → Up for · tap ↻ · watch the number react."
+    - generic [ref=f5e75]:
+      - generic [ref=f5e76]:
+        - generic [ref=f5e77]: "02"
+        - heading "Type it, ghost completes it" [level=2] [ref=f5e78]
+      - generic [ref=f5e79]:
+        - generic [ref=f5e80]:
+          - generic [ref=f5e81]: 9:41
+          - generic [ref=f5e82]: 5G
+        - generic [ref=f5e85]: Loop
+        - generic [ref=f5e88]:
+          - generic [ref=f5e89]: What your intent lands in
+          - generic [ref=f5e92]:
+            - generic [ref=f5e93]: dinner Thursdays, weekly
+            - generic [ref=f5e94]: 12 want · your floor
+          - generic [ref=f5e97]:
+            - generic [ref=f5e98]: a run Fridays, weekly @Collegetown
+            - generic [ref=f5e99]: 9 want · your floor
+          - generic [ref=f5e102]:
+            - generic [ref=f5e103]: CS 2110 Sundays, weekly @Uris
+            - generic [ref=f5e104]: 11 want · your floor
+          - generic [ref=f5e107]:
+            - generic [ref=f5e108]: kickboxing Wednesdays, weekly @Teagle gym
+            - generic [ref=f5e109]: 8 want · your floor
+          - generic [ref=f5e112]:
+            - generic [ref=f5e113]: coffee Mondays, weekly
+            - generic [ref=f5e114]: 6 want · your floor
+        - generic [ref=f5e116]:
+          - generic [ref=f5e118]:
+            - generic [ref=f5e119]:
+              - generic [ref=f5e120]: Drop an intent
+              - heading "Say it plainly" [level=2] [ref=f5e121]
+            - button "Close" [ref=f5e122] [cursor=pointer]: ✕
+          - generic [ref=f5e123]:
+            - textbox "e.g. jog weekly on Fridays around Collegetown" [ref=f5e125]: jog weekly on Fridays around Collegetown
+            - generic [ref=f5e126]:
+              - generic [ref=f5e330]:
+                - generic [ref=f5e331]: what
+                - text: a run
+              - generic [ref=f5e332]:
+                - generic [ref=f5e333]: day
+                - text: Fridays
+              - generic [ref=f5e334]:
+                - generic [ref=f5e335]: often
+                - text: weekly
+              - generic [ref=f5e336]:
+                - generic [ref=f5e337]: where
+                - text: "@Collegetown"
+          - generic [ref=f5e128]: grey text is the closest popular drop — tap → or press Tab to take it
+          - generic [ref=f5e129]:
+            - generic [ref=f5e130]: popular on your floor this week
+            - generic [ref=f5e131]:
+              - generic [ref=f5e132] [cursor=pointer]:
+                - generic [ref=f5e133]: 🍜
+                - generic [ref=f5e134]:
+                  - text: grab dinner Thursdays, weekly
+                  - generic [ref=f5e135]: 12 want · your floor
+                - generic [ref=f5e136]: tap to use
+              - generic [ref=f5e137] [cursor=pointer]:
+                - generic [ref=f5e138]: 🏃
+                - generic [ref=f5e139]:
+                  - text: jog weekly on Fridays around Collegetown
+                  - generic [ref=f5e140]: 9 want · your floor
+                - generic [ref=f5e141]: tap to use
+              - generic [ref=f5e142] [cursor=pointer]:
+                - generic [ref=f5e143]: 📖
+                - generic [ref=f5e144]:
+                  - text: study CS 2110 Sundays weekly at Uris
+                  - generic [ref=f5e145]: 11 want · your floor
+                - generic [ref=f5e146]: tap to use
+          - button "Drop it" [ref=f5e148] [cursor=pointer]
+      - list [ref=f5e149]:
+        - listitem [ref=f5e150]: Keeps free typing — but the ghost remainder steers you into a shape that parses (activity · day · cadence · place), like a shell autocomplete.
+        - listitem [ref=f5e151]: Parsed chips below the field show what Loop understood; a dashed + how often chip is a tap-to-fill gap, not an error.
+        - listitem [ref=f5e152]: "Popular list doubles as a one-tap fill. Risk: off-vocabulary text still needs the \"pending review\" path from the You-tab parser."
+      - paragraph [ref=f5e153]: "Try: type jo → ghost fills g weekly on Fridays around Collegetown → Tab · or type dinner thursdays and tap the dashed chip."
+    - generic [ref=f5e154]:
+      - generic [ref=f5e155]:
+        - generic [ref=f5e156]: "03"
+        - heading "Slot rail (builder)" [level=2] [ref=f5e157]
+      - generic [ref=f5e158]:
+        - generic [ref=f5e159]:
+          - generic [ref=f5e160]: 9:41
+          - generic [ref=f5e161]: 5G
+        - generic [ref=f5e164]: Loop
+        - generic [ref=f5e167]:
+          - generic [ref=f5e168]: What your intent lands in
+          - generic [ref=f5e171]:
+            - generic [ref=f5e172]: dinner Thursdays, weekly
+            - generic [ref=f5e173]: 12 want · your floor
+          - generic [ref=f5e176]:
+            - generic [ref=f5e177]: a run Fridays, weekly @Collegetown
+            - generic [ref=f5e178]: 9 want · your floor
+          - generic [ref=f5e181]:
+            - generic [ref=f5e182]: CS 2110 Sundays, weekly @Uris
+            - generic [ref=f5e183]: 11 want · your floor
+          - generic [ref=f5e186]:
+            - generic [ref=f5e187]: kickboxing Wednesdays, weekly @Teagle gym
+            - generic [ref=f5e188]: 8 want · your floor
+          - generic [ref=f5e191]:
+            - generic [ref=f5e192]: coffee Mondays, weekly
+            - generic [ref=f5e193]: 6 want · your floor
+        - generic [ref=f5e195]:
+          - generic [ref=f5e197]:
+            - generic [ref=f5e198]:
+              - generic [ref=f5e199]: Drop an intent
+              - generic [ref=f5e200]: Up for a run Thursdays, weekly
+            - button "Close" [ref=f5e201] [cursor=pointer]: ✕
+          - generic [ref=f5e202]:
+            - button "🍜 Eat" [ref=f5e203] [cursor=pointer]
+            - button "📖 Study" [ref=f5e204] [cursor=pointer]
+            - button "🏃 Move" [active] [ref=f5e205] [cursor=pointer]
+          - generic [ref=f5e206]:
+            - generic [ref=f5e208]:
+              - text: What
+              - emphasis [ref=f5e209]: a run · suggested
+            - generic [ref=f5e210]:
+              - button "✦ a run 9" [ref=f5e338] [cursor=pointer]:
+                - text: ✦ a run
+                - generic [ref=f5e339]: "9"
+              - button "a lift 8" [ref=f5e340] [cursor=pointer]:
+                - text: a lift
+                - generic [ref=f5e341]: "8"
+              - button "kickboxing 8" [ref=f5e342] [cursor=pointer]:
+                - text: kickboxing
+                - generic [ref=f5e343]: "8"
+              - button "a climb 6" [ref=f5e344] [cursor=pointer]:
+                - text: a climb
+                - generic [ref=f5e345]: "6"
+              - button "bouldering 6" [ref=f5e346] [cursor=pointer]:
+                - text: bouldering
+                - generic [ref=f5e347]: "6"
+              - button "pickup ball 6" [ref=f5e348] [cursor=pointer]:
+                - text: pickup ball
+                - generic [ref=f5e349]: "6"
+              - button "yoga 5" [ref=f5e350] [cursor=pointer]:
+                - text: yoga
+                - generic [ref=f5e351]: "5"
+          - generic [ref=f5e223]:
+            - generic [ref=f5e225]:
+              - text: Which day
+              - emphasis [ref=f5e226]: Thursdays · suggested
+            - generic [ref=f5e227]:
+              - button "✦ Thursdays 12" [ref=f5e352] [cursor=pointer]:
+                - text: ✦ Thursdays
+                - generic [ref=f5e353]: "12"
+              - button "Fridays 12" [ref=f5e354] [cursor=pointer]:
+                - text: Fridays
+                - generic [ref=f5e355]: "12"
+              - button "Saturdays 11" [ref=f5e356] [cursor=pointer]:
+                - text: Saturdays
+                - generic [ref=f5e357]: "11"
+              - button "weekends 10" [ref=f5e358] [cursor=pointer]:
+                - text: weekends
+                - generic [ref=f5e359]: "10"
+              - button "Sundays 9" [ref=f5e360] [cursor=pointer]:
+                - text: Sundays
+                - generic [ref=f5e361]: "9"
+              - button "weekdays 8" [ref=f5e362] [cursor=pointer]:
+                - text: weekdays
+                - generic [ref=f5e363]: "8"
+              - button "Mondays 6" [ref=f5e364] [cursor=pointer]:
+                - text: Mondays
+                - generic [ref=f5e365]: "6"
+              - button "Wednesdays 6" [ref=f5e366] [cursor=pointer]:
+                - text: Wednesdays
+                - generic [ref=f5e367]: "6"
+              - button "Tuesdays 5" [ref=f5e368] [cursor=pointer]:
+                - text: Tuesdays
+                - generic [ref=f5e369]: "5"
+          - generic [ref=f5e246]:
+            - generic [ref=f5e248]:
+              - text: How often
+              - emphasis [ref=f5e249]: weekly · suggested
+            - generic [ref=f5e250]:
+              - button "✦ weekly 12" [ref=f5e370] [cursor=pointer]:
+                - text: ✦ weekly
+                - generic [ref=f5e371]: "12"
+              - button "3× a week 7" [ref=f5e372] [cursor=pointer]:
+                - text: 3× a week
+                - generic [ref=f5e373]: "7"
+              - button "every other week 7" [ref=f5e374] [cursor=pointer]:
+                - text: every other week
+                - generic [ref=f5e375]: "7"
+              - button "2× a week 6" [ref=f5e376] [cursor=pointer]:
+                - text: 2× a week
+                - generic [ref=f5e377]: "6"
+              - button "daily 5" [ref=f5e378] [cursor=pointer]:
+                - text: daily
+                - generic [ref=f5e379]: "5"
+              - button "monthly 4" [ref=f5e380] [cursor=pointer]:
+                - text: monthly
+                - generic [ref=f5e381]: "4"
+          - generic [ref=f5e263]:
+            - generic [ref=f5e264]:
+              - generic [ref=f5e265]:
+                - text: Where
+                - emphasis [ref=f5e266]: anywhere
+              - generic [ref=f5e267]: optional · blank = anywhere
+            - generic [ref=f5e268]:
+              - button "anywhere" [ref=f5e382] [cursor=pointer]
+              - button "Collegetown 12" [ref=f5e383] [cursor=pointer]:
+                - text: Collegetown
+                - generic [ref=f5e384]: "12"
+              - button "Teagle gym 10" [ref=f5e385] [cursor=pointer]:
+                - text: Teagle gym
+                - generic [ref=f5e386]: "10"
+              - button "Beebe Lake 8" [ref=f5e387] [cursor=pointer]:
+                - text: Beebe Lake
+                - generic [ref=f5e388]: "8"
+              - button "outdoor loop 7" [ref=f5e389] [cursor=pointer]:
+                - text: outdoor loop
+                - generic [ref=f5e390]: "7"
+              - button "Lindseth wall 6" [ref=f5e391] [cursor=pointer]:
+                - text: Lindseth wall
+                - generic [ref=f5e392]: "6"
+          - generic [ref=f5e278]:
+            - generic [ref=f5e279]: "10"
+            - generic [ref=f5e280]: 10 near you want this too. Open on where — that's why it's high.
+          - button "Drop it" [ref=f5e282] [cursor=pointer]
+      - list [ref=f5e283]:
+        - listitem [ref=f5e284]: Most explicit. Each slot is a horizontal rail ranked by demand; the popular option is pre-selected as a dashed ✦ "suggested" chip until you tap it (or another).
+        - listitem [ref=f5e285]: Sentence composes live in the header, so it still reads as one intent, not a form.
+        - listitem [ref=f5e286]: "Trade-off: taller sheet, more UI chrome; the segmented kind + four rails read as \"settings\" more than \"say what you want\"."
+      - paragraph [ref=f5e287]: "Try: switch Eat → Move, pick a run, tap Fridays, add Collegetown."

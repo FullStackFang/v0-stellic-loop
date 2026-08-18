@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Drop an intent — free text + @ pins, 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-300:#e08d84; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss-500:#3d8a5f; --amber-600:#8a641f; --slate-500:#59657a;
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius-xl:28px; --dur-1:120ms; --dur-2:180ms; --dur-3:260ms;
+    --ease-out:cubic-bezier(.2,.8,.2,1); --ease-settle:cubic-bezier(.16,1,.3,1);
+  }
+  .phone{
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2); --bg-scrim:rgba(31,26,23,.44);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-4);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --unit-class:var(--slate-500); --unit-major:var(--moss-500); --unit-dorm:var(--amber-600); --status-forming:var(--amber-600); --status-live:var(--moss-500);
+    --focus-ring:var(--carnelian-400);
+    --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+    --shadow-raised:0 10px 30px -14px rgba(80,40,30,.28);
+    --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+  }
+  .phone[data-theme="afterdark"]{
+    --bg-page:#181310; --bg-surface:#211a16; --bg-sunken:#12100c; --bg-scrim:rgba(0,0,0,.55);
+    --text-primary:#f8f1e8; --text-secondary:#bcafa2; --text-tertiary:#8d8074;
+    --border-hairline:#342a24; --border-strong:#4a3d35;
+    --accent:var(--carnelian-400); --accent-strong:var(--carnelian-300); --accent-quiet:rgba(207,83,71,.16); --accent-ink:#1a0d0b;
+    --unit-class:#8b98ad; --unit-major:#5fb287; --unit-dorm:#d1a24a; --status-forming:#d1a24a; --status-live:#5fb287;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4); --shadow-raised:0 10px 30px -14px rgba(0,0,0,.7); --shadow-pop:0 28px 60px -24px rgba(0,0,0,.8);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{ background:#ebe3d5; color:var(--ink-0); font-family:var(--font-sans); -webkit-font-smoothing:antialiased; padding:40px 28px 80px; }
+  button{ font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  :focus-visible{ outline:2px solid var(--carnelian-500); outline-offset:2px; }
+  h1{ font-family:var(--font-display); font-weight:800; font-size:30px; letter-spacing:-.03em; margin:0 0 6px; }
+  .lede{ color:var(--ink-2); font-size:15px; max-width:74ch; margin:0 0 14px; line-height:1.5; }
+  .lede code,.notes code{ font-family:var(--font-mono); font-size:13px; background:#fff8ee; padding:1px 5px; border-radius:5px; }
+  .toolbar{ display:flex; gap:10px; margin:0 0 26px; }
+  .toolbar button{ border:1px solid var(--paper-3); background:var(--paper-0); border-radius:999px; padding:7px 14px; font-weight:600; font-size:13px; color:var(--ink-2); }
+  .grid{ display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .col{ width:390px; display:flex; flex-direction:column; gap:14px; }
+  .label{ display:flex; align-items:baseline; gap:10px; }
+  .label .n{ font-family:var(--font-mono); font-size:12px; color:var(--carnelian-600); font-weight:500; }
+  .label h2{ font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:-.02em; margin:0; }
+  .label .rec{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--carnelian-600); background:var(--carnelian-100); padding:2px 8px; border-radius:999px; }
+  .notes{ font-size:13.5px; color:var(--ink-2); line-height:1.5; margin:0; padding-left:18px; }
+  .notes li+li{ margin-top:4px; }
+  .notes b{ color:var(--ink-0); font-weight:600; }
+  .try{ font-size:12.5px; color:var(--ink-3); margin:0; }
+
+  /* phone chrome */
+  .phone{ width:390px; height:760px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:40px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:var(--shadow-pop); color:var(--text-primary); }
+  .status{ display:flex; align-items:center; justify-content:space-between; padding:12px 24px 4px; flex-shrink:0; }
+  .status .t{ font-family:var(--font-mono); font-size:12.5px; font-weight:500; }
+  .status .r{ display:flex; align-items:center; gap:6px; }
+  .status .g{ font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); }
+  .status .bat{ width:20px; height:11px; border-radius:3px; border:1.5px solid var(--text-secondary); position:relative; display:inline-block; }
+  .status .bat::after{ content:""; position:absolute; inset:1.5px; right:5px; border-radius:1px; background:var(--text-secondary); }
+  .header{ display:flex; align-items:center; padding:0 20px; height:56px; border-bottom:1px solid var(--border-hairline); flex-shrink:0; }
+  .wordmark{ font-family:var(--font-display); font-weight:800; letter-spacing:-.03em; font-size:22px; display:inline-flex; align-items:baseline; line-height:1; }
+  .wordmark i{ width:5px; height:5px; border-radius:50%; background:var(--accent); display:inline-block; margin-left:2px; }
+  .bg{ flex:1; padding:16px 20px; overflow:hidden; }
+  .bg .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); margin:6px 0 10px; }
+  .bgrow{ display:flex; align-items:center; gap:12px; padding:12px 2px; border-bottom:1px solid var(--border-hairline); }
+  .bgrow .ring{ width:40px; height:40px; border-radius:50%; border:4px solid var(--bg-sunken); border-top-color:var(--accent); flex:0 0 auto; }
+  .bgrow .t{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .bgrow .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; }
+  .scrim{ position:absolute; inset:0; background:var(--bg-scrim); backdrop-filter:blur(2px); z-index:55; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg-surface); border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl); box-shadow:var(--shadow-pop); padding:8px 20px 22px; z-index:56; max-height:94%; overflow-y:auto; scrollbar-width:none; }
+  .sheet::-webkit-scrollbar{ width:0; }
+  .grab{ width:36px; height:4px; border-radius:99px; background:var(--border-strong); margin:4px auto 16px; opacity:.6; }
+  .kicker{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); }
+  .title{ font-family:var(--font-display); font-weight:700; font-size:22px; line-height:1.15; margin:4px 0 0; letter-spacing:-.01em; }
+  .sheethead{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+  .xbtn{ width:36px; height:36px; border-radius:50%; border:none; background:transparent; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; margin:-4px -8px 0 0; }
+  .srcline{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 8px; }
+  .srcpill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--status-forming); background:color-mix(in srgb,var(--status-forming) 15%,var(--bg-surface)); padding:4px 9px; border-radius:99px; }
+  .linkbtn{ border:none; background:none; color:var(--accent-strong); font-weight:600; font-size:12.5px; padding:4px 2px; display:inline-flex; align-items:center; gap:5px; }
+  .hint{ font-size:12px; color:var(--text-tertiary); margin-top:7px; line-height:1.45; }
+  .hint b{ color:var(--text-secondary); font-weight:600; }
+  .hint kbd{ font-family:var(--font-mono); font-size:11px; border:1px solid var(--border-strong); border-radius:5px; padding:0 5px; color:var(--text-secondary); }
+  .compat{ display:flex; align-items:center; gap:12px; margin:12px 0 2px; padding:12px 15px; border-radius:16px; background:linear-gradient(180deg,var(--accent-quiet),var(--bg-surface)); border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border-hairline)); }
+  .compat__big{ font-family:var(--font-mono); font-weight:500; font-size:29px; color:var(--accent-strong); line-height:1; min-width:42px; text-align:center; }
+  .compat__txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.35; }
+  .compat__txt b{ color:var(--text-primary); }
+  .compat--pending{ background:linear-gradient(180deg,color-mix(in srgb,var(--status-forming) 12%,var(--bg-surface)),var(--bg-surface)); border-color:color-mix(in srgb,var(--status-forming) 30%,var(--border-hairline)); }
+  .compat--pending .compat__big{ color:var(--status-forming); font-size:22px; }
+  .btn{ width:100%; height:50px; border-radius:16px; border:none; font-family:var(--font-display); font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform var(--dur-1), opacity var(--dur-2); }
+  .btn:active{ transform:scale(.985); }
+  .btn--primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn--primary:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn--secondary{ background:var(--bg-sunken); color:var(--text-primary); }
+
+  /* ---- editor field ---- */
+  .field{ position:relative; border:1.5px solid var(--border-hairline); border-radius:18px; padding:14px 14px 12px; background:var(--bg-surface); transition:border-color var(--dur-1); }
+  .field--focus{ border-color:var(--focus-ring); }
+  .ed{ position:relative; z-index:1; min-height:56px; outline:none; font-size:17px; line-height:1.75; color:var(--text-primary); white-space:pre-wrap; word-break:break-word; caret-color:var(--accent); }
+  .ghost{ position:absolute; left:14px; right:14px; top:14px; z-index:0; font-size:17px; line-height:1.75; color:var(--text-tertiary); pointer-events:none; white-space:pre-wrap; }
+  .ghost .ichip{ opacity:.4; filter:saturate(.4); }
+  .ghost kbd{ font-family:var(--font-mono); font-size:10.5px; border:1px solid var(--border-strong); border-radius:5px; padding:0 5px; margin-left:6px; color:var(--text-tertiary); vertical-align:middle; }
+  .ta{ width:100%; border:none; outline:none; background:transparent; resize:none; font:inherit; font-size:17px; line-height:1.6; color:var(--text-primary); padding:0; overflow:hidden; caret-color:var(--accent); position:relative; z-index:1; }
+  .ta::placeholder{ color:transparent; }
+  .fieldfoot{ display:flex; align-items:center; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px solid var(--border-hairline); }
+  .atbtn{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 11px; border-radius:99px; border:1.5px solid var(--border-hairline); background:var(--bg-sunken); font-weight:700; font-size:13px; color:var(--text-secondary); }
+  .atbtn b{ font-family:var(--font-mono); color:var(--accent-strong); font-size:14px; }
+  .count{ font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); }
+
+  /* inline chip inside the editor */
+  .ichip{ display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 9px 0 7px; margin:0 1px; border-radius:9px; font-weight:700; font-size:14.5px; line-height:1; vertical-align:baseline; position:relative; top:-1px; user-select:none; cursor:pointer; background:color-mix(in srgb,var(--c,var(--accent)) 12%,var(--bg-surface)); color:var(--c,var(--accent-strong)); white-space:nowrap; }
+  .ichip .g{ font-size:12px; line-height:1; }
+  .ichip--soft{ background:transparent; border:1.5px dashed color-mix(in srgb,var(--c,var(--accent)) 45%,var(--border-strong)); }
+
+  /* @ popup */
+  .pop{ position:absolute; z-index:60; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:16px; box-shadow:var(--shadow-raised); padding:6px; max-height:270px; overflow-y:auto; scrollbar-width:none; width:262px; }
+  .pop::-webkit-scrollbar{ width:0; }
+  .pop__cat{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); padding:7px 9px 3px; display:flex; justify-content:space-between; }
+  .prow{ position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; cursor:pointer; overflow:hidden; }
+  .prow--hi{ background:var(--bg-sunken); }
+  .prow:active{ transform:scale(.99); }
+  .prow__bar{ position:absolute; left:0; top:0; bottom:0; background:color-mix(in srgb,var(--c,var(--accent)) 12%,transparent); border-radius:10px; }
+  .prow__nm{ position:relative; z-index:1; font-weight:600; font-size:14px; color:var(--text-primary); display:flex; align-items:center; gap:7px; }
+  .prow__nm .g{ font-size:12px; }
+  .prow__vl{ position:relative; z-index:1; font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); }
+  .prow--custom .prow__nm{ color:var(--accent-strong); }
+
+  /* what Loop read */
+  .read{ margin-top:12px; }
+  .read .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); margin:0 2px 7px; display:flex; justify-content:space-between; }
+  .read .k span:last-child{ text-transform:none; letter-spacing:0; font-weight:500; }
+  .rrow{ display:flex; flex-wrap:wrap; gap:6px; }
+  .rp{ display:inline-flex; align-items:center; gap:5px; height:30px; padding:0 10px; border-radius:99px; font-size:13px; font-weight:600; background:color-mix(in srgb,var(--c,var(--accent)) 12%,var(--bg-surface)); color:var(--c,var(--accent-strong)); }
+  .rp .g{ font-size:12px; }
+  .rp .k2{ font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; font-weight:700; }
+  .rp--soft{ background:transparent; border:1.5px dashed color-mix(in srgb,var(--c,var(--accent)) 45%,var(--border-strong)); }
+  .rp--need{ background:transparent; border:1.5px dashed var(--border-strong); color:var(--text-tertiary); cursor:pointer; }
+  .rp--need:active{ background:var(--bg-sunken); }
+  .note{ margin-top:8px; font-size:12.5px; color:var(--text-secondary); line-height:1.4; display:flex; gap:7px; align-items:flex-start; }
+  .note i{ font-style:normal; color:var(--text-tertiary); flex:0 0 auto; }
+  .note q{ quotes:"“" "”"; color:var(--text-primary); }
+</style>
+</head>
+<body>
+
+<h1>Drop an intent · free text + <code style="font-size:22px">@</code> pins</h1>
+<p class="lede">You write whatever you want. Structure is opt-in: type <b>@</b> and Loop offers what people near you already want (what · day · how often · where · time), ranked by demand — or pin your own word. Pinned things are what fires matching; every other word travels with the intent as <b>your note</b>, so nothing you type is thrown away. Opens with the most popular recent drop as a ghost you can take with <kbd style="font-family:var(--font-mono);font-size:12px;border:1px solid #c5b8aa;border-radius:5px;padding:0 5px">Tab</kbd> or ignore.</p>
+<div class="toolbar"><button id="themeBtn">☾ flip theme on all three</button></div>
+
+<div class="grid">
+  <div class="col">
+    <div class="label"><span class="n">01</span><h2>@ mentions, inline</h2><span class="rec">recommended</span></div>
+    <div class="phone" data-variant="at" data-theme="daylight"></div>
+    <ul class="notes">
+      <li>Slack-style: type freely; <b>@</b> opens the ranked picker; the pick lands as an <b>inline chip</b> in your sentence. Everything else stays plain text.</li>
+      <li>Words Loop recognises without an @ (<i>dinner, Fridays, weekly</i>) show underneath as <b>dashed "read from your words"</b> pills — it understood you, you didn't have to do anything. Tap a chip to swap it.</li>
+      <li>No known activity? It still drops — routed as <b>pending</b> for a human read, exactly like the You-tab quick-add today.</li>
+    </ul>
+    <p class="try">Try: <kbd>Tab</kbd> to take the ghost · type <i>@</i> · type <i>@ram</i> → pin your own · type <i>with people who like spicy food</i>.</p>
+  </div>
+  <div class="col">
+    <div class="label"><span class="n">02</span><h2>Plain textarea, @ inserts text</h2></div>
+    <div class="phone" data-variant="plain" data-theme="daylight"></div>
+    <ul class="notes">
+      <li>Nothing fancy in the field — it's a normal textarea. <b>@</b> still opens the ranked picker, but the pick is inserted as text (<code>@Collegetown</code>), like the Floor's tag input.</li>
+      <li>"What Loop read" underneath is the only structure you see; dashed <b>+ day / + often</b> pills are tap-to-fill gaps.</li>
+      <li>Least surprising, least code (reuses <code>parseQuickIntent</code>). Slightly less legible which words are pinned.</li>
+    </ul>
+    <p class="try">Try: type <i>jog fridays</i>, then <i>@</i> → <i>Collegetown</i>; tap <i>+ how often</i>.</p>
+  </div>
+  <div class="col">
+    <div class="label"><span class="n">03</span><h2>Auto-chips as you type, @ for extras</h2></div>
+    <div class="phone" data-variant="auto" data-theme="daylight"></div>
+    <ul class="notes">
+      <li>Like 01, but known words become chips <b>the moment you finish typing them</b> (<i>dinner␣</i> → chip). @ is only for things it wouldn't guess (places, your own words).</li>
+      <li>Fastest to a structured intent; the sentence visibly "locks in" as you write.</li>
+      <li>Trade-off: chips appearing under your fingers can feel presumptuous; needs a clean way to un-chip (backspace does it).</li>
+    </ul>
+    <p class="try">Try: type <i>dinner thursdays weekly </i> slowly and watch; then <i>@</i> → a place.</p>
+  </div>
+</div>
+
+<script>
+/* ---------- vocabulary (mirrors FLR_* / ACTIVITY_CATALOG in index.html) ---------- */
+const DAYS=['Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','Sundays','weekdays','weekends'];
+const DAYPOP={ Mondays:6,Tuesdays:5,Wednesdays:6,Thursdays:12,Fridays:12,Saturdays:11,Sundays:9,weekdays:8,weekends:10 };
+const CADS=['daily','3× a week','2× a week','weekly','every other week','monthly'];
+const CADPOP={ daily:5,'3× a week':7,weekly:12,'2× a week':6,'every other week':7,monthly:4 };
+const CADF={ daily:1.1,'3× a week':.95,weekly:1,'2× a week':.9,'every other week':.8,monthly:.65 };
+const ACTS=[
+  ...['dinner','lunch','brunch','coffee','breakfast','late-night bites','cook together'].map(v=>({v,cat:'dine'})),
+  ...['a run','a lift','a climb','bouldering','kickboxing','yoga','pickup ball','swim','tennis','soccer'].map(v=>({v,cat:'move'})),
+  ...['CS 2110','CHEM 2070','MATH 1920','ECON 1110','PSYCH 1101','any subject','problem sets','exam prep'].map(v=>({v,cat:'study'})),
+];
+const ACTPOP={ dinner:12,lunch:9,brunch:8,coffee:6,breakfast:4,'late-night bites':5,'cook together':4,'a run':9,'a lift':8,'a climb':6,bouldering:6,kickboxing:8,yoga:5,'pickup ball':6,swim:3,tennis:4,soccer:5,'CS 2110':11,'CHEM 2070':8,'MATH 1920':7,'ECON 1110':6,'PSYCH 1101':6,'any subject':9,'problem sets':7,'exam prep':6 };
+const ALIAS=[['jog','a run'],['jogging','a run'],['run','a run'],['running','a run'],['lift','a lift'],['lifting','a lift'],['gym','a lift'],['climb','a climb'],['climbing','a climb'],['boulder','bouldering'],['bouldering','bouldering'],['kickboxing','kickboxing'],['boxing','kickboxing'],['yoga','yoga'],['basketball','pickup ball'],['hoops','pickup ball'],['pickup ball','pickup ball'],['swim','swim'],['swimming','swim'],['tennis','tennis'],['soccer','soccer'],['dinner','dinner'],['lunch','lunch'],['brunch','brunch'],['breakfast','breakfast'],['coffee','coffee'],['late night','late-night bites'],['late-night','late-night bites'],['cook','cook together'],['cooking','cook together'],['cs 2110','CS 2110'],['cs2110','CS 2110'],['chem 2070','CHEM 2070'],['math 1920','MATH 1920'],['econ 1110','ECON 1110'],['psych 1101','PSYCH 1101'],['psets','problem sets'],['pset','problem sets'],['problem sets','problem sets'],['homework','problem sets'],['hw','problem sets'],['exam prep','exam prep'],['prelim','exam prep'],['midterm','exam prep'],['finals','exam prep'],['study','any subject'],['studying','any subject']];
+const WHERES=['Collegetown','North','West','Downtown','Teagle gym','Beebe Lake','Lindseth wall','outdoor loop','Libe Café','Mann','Uris','Olin','dorm lounge','Helen Newman','Noyes'];
+const WHEREPOP={ Collegetown:12,North:9,West:6,Downtown:5,'Teagle gym':10,'Beebe Lake':8,'Lindseth wall':6,'outdoor loop':7,'Libe Café':11,Mann:8,Uris:9,Olin:6,'dorm lounge':7,'Helen Newman':5,Noyes:4 };
+const TIMES=['mornings','afternoons','evenings','nights','early'];
+const TIMEPOP={ mornings:7,afternoons:8,evenings:11,nights:6,early:4 };
+const CADALIAS=[['every other week','every other week'],['biweekly','every other week'],['3x a week','3× a week'],['3× a week','3× a week'],['three times a week','3× a week'],['2x a week','2× a week'],['2× a week','2× a week'],['twice a week','2× a week'],['once a week','weekly'],['every week','weekly'],['weekly','weekly'],['daily','daily'],['every day','daily'],['everyday','daily'],['monthly','monthly']];
+const DAYALIAS=DAYS.flatMap(d=>[[d.toLowerCase(),d],[d.toLowerCase().replace(/s$/,''),d]]).concat([['mon','Mondays'],['tue','Tuesdays'],['tues','Tuesdays'],['wed','Wednesdays'],['thu','Thursdays'],['thurs','Thursdays'],['fri','Fridays'],['sat','Saturdays'],['sun','Sundays'],['weekday','weekdays'],['weekend','weekends']]);
+/* the Floor's @-preferences (FLR_FACETS) — same @ vocabulary, so @ram → ramen */
+const PREFS=['ramen','sushi','tacos','korean bbq','italian','dumplings','thai','burgers','$','$$','$$$','just 2','small 3-4','small crew','open group','chill','moderate','sweaty','silent','light chatter','group work','1 hr','2 hrs','all-nighter'];
+const PREFPOP={ ramen:9,sushi:8,tacos:9,'korean bbq':7,italian:7,dumplings:6,thai:6,burgers:6,'$':6,'$$':11,'$$$':5,'just 2':5,'small 3-4':10,'small crew':10,'open group':7,chill:8,moderate:9,sweaty:6,silent:8,'light chatter':9,'group work':8,'1 hr':7,'2 hrs':10,'all-nighter':4 };
+const TYPE={ what:{ g:'', c:null, lbl:'what' }, day:{ g:'📅', c:'var(--accent)', lbl:'day' }, often:{ g:'↻', c:'var(--accent)', lbl:'how often' }, where:{ g:'📍', c:'var(--unit-class)', lbl:'where' }, time:{ g:'🕖', c:'var(--unit-major)', lbl:'time' }, pref:{ g:'✦', c:'var(--accent-strong)', lbl:'preferences' }, custom:{ g:'@', c:'var(--accent-strong)', lbl:'yours' } };
+const CATC={ dine:'var(--unit-dorm)', study:'var(--unit-class)', move:'var(--unit-major)' };
+const CATG={ dine:'🍜', study:'📖', move:'🏃' };
+const catOf=v=>{ const a=ACTS.find(x=>x.v===v); return a?a.cat:null; };
+const glyph=(type,v)=> type==='what' ? (CATG[catOf(v)]||'✦') : TYPE[type].g;
+const color=(type,v)=> type==='what' ? (CATC[catOf(v)]||'var(--accent)') : TYPE[type].c;
+const POPULAR=[
+  { what:'dinner',     day:'Thursdays', often:'weekly', where:null,        want:12, lead:'Grabbing' },
+  { what:'a run',      day:'Fridays',   often:'weekly', where:'Collegetown',want:9, lead:'Up for' },
+  { what:'CS 2110',    day:'Sundays',   often:'weekly', where:'Uris',      want:11, lead:'Studying' },
+  { what:'kickboxing', day:'Wednesdays',often:'weekly', where:'Teagle gym',want:8,  lead:'Up for' },
+  { what:'coffee',     day:'Mondays',   often:'weekly', where:null,        want:6,  lead:'Grabbing' },
+];
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const rx=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+
+/* ---------- ranked groups for the @ popup ---------- */
+function groupsFor(term, only){
+  const t=(term||'').toLowerCase().trim();
+  const f=(arr)=>arr.filter(o=>!t||o.v.toLowerCase().includes(t)).sort((a,b)=>b.n-a.n).slice(0, t?6:3);
+  const G=[
+    { type:'what',  items:f(ACTS.map(a=>({v:a.v,n:ACTPOP[a.v]||4}))) },
+    { type:'day',   items:f(DAYS.map(v=>({v,n:DAYPOP[v]}))) },
+    { type:'often', items:f(CADS.map(v=>({v,n:CADPOP[v]}))) },
+    { type:'where', items:f(WHERES.map(v=>({v,n:WHEREPOP[v]||4}))) },
+    { type:'time',  items:f(TIMES.map(v=>({v,n:TIMEPOP[v]||4}))) },
+    { type:'pref',  items:f(PREFS.map(v=>({v,n:PREFPOP[v]||4}))) },
+  ].filter(g=>!only||g.type===only).filter(g=>g.items.length);
+  const exact=G.some(g=>g.items.some(o=>o.v.toLowerCase()===t));
+  return { groups:G, custom: t && !exact && !only ? t : null };
+}
+
+/* ---------- soft parse of plain words (what Loop read without @) ---------- */
+function softParse(text){
+  const t=' '+text.toLowerCase()+' ';
+  const find=(pairs)=>{ let best=null; for(const [al,v] of pairs){ const m=new RegExp('(^|[^a-z0-9])'+rx(al)+'(?=[^a-z0-9]|$)').exec(t); if(m && (!best||al.length>best.len)) best={ v, len:al.length }; } return best?best.v:null; };
+  const what=find(ALIAS), day=find(DAYALIAS), often=find(CADALIAS);
+  const where=WHERES.find(w=>t.includes(w.toLowerCase()))||null;
+  const time=TIMES.find(w=>t.includes(w))||null;
+  return { what, day, often, where, time };
+}
+const STOP=/\b(grabbing|grab|studying|study|up for|jog|jogging|run|running|going|go|get|getting|want|wanna|to|on|at|in|near|around|with|the|a|an|and|for|of|ideally|maybe|some|every|weekly|daily|weekdays?|weekends?)\b/gi;
+function noteFrom(text, read){
+  let n=' '+text+' ';
+  ['what','day','often','where','time'].forEach(k=>{ if(read[k]){ [read[k]].concat(ALIAS.filter(a=>a[1]===read[k]).map(a=>a[0]), DAYALIAS.filter(a=>a[1]===read[k]).map(a=>a[0]), CADALIAS.filter(a=>a[1]===read[k]).map(a=>a[0])).forEach(al=>{ n=n.replace(new RegExp('(^|[^a-z0-9])'+rx(al)+'(?=[^a-z0-9]|$)','ig'),'$1'); }); } });
+  const bare=n.replace(STOP,' ').replace(/[@,.!?]/g,' ').replace(/\s+/g,' ').trim();
+  if(!bare) return null;
+  // show the words that were actually yours: drop the lead-in, stray commas, doubled spaces
+  return n.replace(/\b(grabbing|studying|up for)\b/ig,' ').replace(/\s*,\s*/g,', ').replace(/^[\s,.]+|[\s,.]+$/g,'').replace(/\s+/g,' ').replace(/(, )+/g,', ').trim();
+}
+function compat(r){ let n=((ACTPOP[r.what]||6)+(DAYPOP[r.day]||8))/2*(CADF[r.often]||1); if(r.where) n*=.62; if(r.time) n*=.8; if(r.custom&&r.custom.length) n*=Math.pow(.82,r.custom.length); return Math.max(1,Math.min(10,Math.round(n))); }
+
+/* ---------- shell ---------- */
+const SHELL = `
+  <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+  <div class="header"><span class="wordmark">Loop<i></i></span></div>
+  <div class="bg"><div class="k">What your intent lands in</div>${POPULAR.map(p=>`<div class="bgrow"><div class="ring"></div><div><div class="t">${esc(p.what+' '+p.day+', '+p.often+(p.where?' @'+p.where:''))}</div><div class="s">${p.want} want · your floor</div></div></div>`).join('')}</div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheethead"><div><div class="kicker">Drop an intent</div><h2 class="title">What are you trying to make happen?</h2></div><button class="xbtn" aria-label="Close">✕</button></div>
+    <div class="srcline"><span class="srcpill">✦ popular on your floor</span><button class="linkbtn" data-shuffle>↻ another</button></div>
+    <div class="field" data-field>
+      <div class="ghost" data-ghost></div>
+      <div data-editor-slot></div>
+      <div class="fieldfoot"><button class="atbtn" data-atbtn><b>@</b> pin something</button><span class="count" data-count></span></div>
+    </div>
+    <div class="hint" data-hint></div>
+    <div class="read" data-read></div>
+    <div class="compat" data-compat><div class="compat__big" data-n>9</div><div class="compat__txt" data-txt></div></div>
+    <div style="margin-top:12px"><button class="btn btn--primary" data-drop>Drop it</button></div>
+  </div>`;
+
+function makeComposer(phone){
+  const variant=phone.dataset.variant;           // at | plain | auto
+  phone.innerHTML=SHELL;
+  const sheet=phone.querySelector('.sheet'), field=phone.querySelector('[data-field]'), ghost=phone.querySelector('[data-ghost]'), slot=phone.querySelector('[data-editor-slot]');
+  let idx=0, pop=null, popCtx=null;
+
+  /* --- input surface --- */
+  const isRich = variant!=='plain';
+  const ed = document.createElement(isRich?'div':'textarea');
+  if(isRich){ ed.className='ed'; ed.contentEditable='true'; ed.spellcheck=false; }
+  else { ed.className='ta'; ed.rows=2; ed.placeholder=' '; }
+  slot.appendChild(ed);
+
+  const chipEl=(type,v)=>{ const s=document.createElement('span'); s.className='ichip'; s.contentEditable='false'; s.dataset.type=type; s.dataset.v=v; s.style.setProperty('--c',color(type,v)); s.innerHTML=`<span class="g">${glyph(type,v)}</span>${esc(v)}`; return s; };
+
+  /* --- model: chips + free text --- */
+  function model(){
+    const m={ chips:[], text:'' };
+    if(isRich){ ed.childNodes.forEach(n=>{ if(n.nodeType===3) m.text+=n.textContent; else if(n.classList&&n.classList.contains('ichip')) { m.chips.push({type:n.dataset.type,v:n.dataset.v}); m.text+=' '; } else m.text+=n.textContent; }); }
+    else { m.text=ed.value; const at=/@([A-Za-z][\w' -]*?)(?=\s@|,|\.|$|\s(?:on|at|in|near|around|with|weekly|daily)\b)/g; let x; while((x=at.exec(ed.value))){ const v=x[1].trim(); const type = WHERES.map(w=>w.toLowerCase()).includes(v.toLowerCase()) ? 'where' : TIMES.includes(v.toLowerCase()) ? 'time' : PREFS.includes(v.toLowerCase()) ? 'pref' : 'custom'; const canon = type==='where' ? WHERES.find(w=>w.toLowerCase()===v.toLowerCase()) : v; m.chips.push({type,v:canon}); } }
+    return m;
+  }
+  function read(){
+    const m=model(), r={ what:null, day:null, often:null, where:null, time:null, custom:[], soft:{} };
+    m.chips.forEach(c=>{ if(c.type==='custom'||c.type==='pref') r.custom.push({ v:c.v, type:c.type }); else r[c.type]=c.v; });
+    const s=softParse(m.text);
+    ['what','day','often','where','time'].forEach(k=>{ if(!r[k] && s[k]){ r[k]=s[k]; r.soft[k]=true; } });
+    r.note = noteFrom(m.text.replace(/@[\w' -]+/g,' '), r);
+    r.empty = !m.text.trim() && !m.chips.length;
+    return r;
+  }
+
+  /* --- ghost --- */
+  function ghostHTML(p){ if(!isRich) return `${p.lead} ${esc(p.what)} ${p.day}, ${p.often}${p.where?" @"+esc(p.where):""}<kbd>Tab</kbd>`; return `${p.lead} ${chipEl('what',p.what).outerHTML} ${chipEl('day',p.day).outerHTML}, ${chipEl('often',p.often).outerHTML}${p.where?' near '+chipEl('where',p.where).outerHTML:''}<kbd>Tab</kbd>`; }
+  function takeGhost(){
+    const p=POPULAR[idx];
+    if(isRich){ ed.innerHTML=''; ed.append(document.createTextNode(p.lead+' '), chipEl('what',p.what), document.createTextNode(' '), chipEl('day',p.day), document.createTextNode(', '), chipEl('often',p.often)); if(p.where){ ed.append(document.createTextNode(' near '), chipEl('where',p.where)); } ed.append(document.createTextNode(' ')); placeCaretEnd(); }
+    else { ed.value=`${p.lead} ${p.what} ${p.day}, ${p.often}${p.where?' @'+p.where:''} `; ed.focus(); ed.setSelectionRange(ed.value.length,ed.value.length); }
+    render();
+  }
+  function placeCaretEnd(){ ed.focus(); const r=document.createRange(); r.selectNodeContents(ed); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+  /* --- popup --- */
+  function closePop(){ if(pop){ pop.remove(); pop=null; popCtx=null; } }
+  function showPop(anchorRect, term, ctx){
+    const {groups, custom}=groupsFor(term, ctx.only);
+    if(!groups.length && !custom){ closePop(); return; }
+    if(!pop){ pop=document.createElement('div'); pop.className='pop'; pop.addEventListener('mousedown',e=>e.preventDefault()); pop.addEventListener('click',e=>{ e.stopPropagation(); const r=e.target.closest('.prow'); if(r) ctx.onPick(r.dataset.type, r.dataset.v); }); sheet.appendChild(pop); }
+    popCtx=ctx;
+    let h='';
+    groups.forEach(g=>{ const mx=g.items[0].n; h+=`<div class="pop__cat"><span>${TYPE[g.type].lbl}</span><span>ranked by demand</span></div>`+g.items.map((o,i)=>`<div class="prow ${i===0&&!term?'':''}" data-type="${g.type}" data-v="${esc(o.v)}" style="--c:${color(g.type,o.v)}"><span class="prow__bar" style="width:${Math.round(o.n/mx*100)}%"></span><span class="prow__nm"><span class="g">${glyph(g.type,o.v)}</span>${esc(o.v)}</span><span class="prow__vl">${o.n} want</span></div>`).join(''); });
+    if(custom) h+=`<div class="pop__cat"><span>yours</span><span>travels as your note</span></div><div class="prow prow--custom" data-type="custom" data-v="${esc(custom)}"><span class="prow__nm">＋ pin “@${esc(custom)}”</span><span class="prow__vl">be specific</span></div>`;
+    pop.innerHTML=h;
+    const first=pop.querySelector('.prow'); if(first) first.classList.add('prow--hi');
+    const sr=sheet.getBoundingClientRect();
+    let left=anchorRect.left-sr.left; left=Math.max(10,Math.min(left, sheet.clientWidth-272));
+    pop.style.left=left+'px'; pop.style.top=(anchorRect.bottom-sr.top+sheet.scrollTop+6)+'px';
+    const room=sheet.clientHeight-(anchorRect.bottom-sr.top)-6;
+    if(pop.offsetHeight>room) pop.style.top=Math.max(4,(anchorRect.top-sr.top+sheet.scrollTop-6-pop.offsetHeight))+'px';
+  }
+  function pickTop(){ if(!pop) return false; const r=pop.querySelector('.prow--hi')||pop.querySelector('.prow'); if(r&&popCtx){ popCtx.onPick(r.dataset.type,r.dataset.v); return true; } return false; }
+
+  /* --- rich editor: caret + @ term --- */
+  function caret(){ const s=window.getSelection(); if(!s||!s.rangeCount) return null; const r=s.getRangeAt(0); if(!r.collapsed||!ed.contains(r.startContainer)) return null; return r; }
+  function atTerm(){ const r=caret(); if(!r||r.startContainer.nodeType!==3) return null; const t=r.startContainer.textContent.slice(0,r.startOffset); const m=t.match(/@([^@\n]{0,30})$/); if(!m) return null; if((m[1].match(/ /g)||[]).length>2) return null; return { node:r.startContainer, start:r.startOffset-m[0].length, end:r.startOffset, term:m[1] }; }
+  function insertChipAt(node,start,end,type,v){
+    const rng=document.createRange(); rng.setStart(node,start); rng.setEnd(node,end); rng.deleteContents();
+    const c=chipEl(type,v); rng.insertNode(c); const sp=document.createTextNode(' '); c.after(sp);
+    const r2=document.createRange(); r2.setStart(sp,1); r2.collapse(true); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r2);
+  }
+  function autoChip(){   // variant 'auto': known words → chips once a separator follows
+    const r=caret(); const cn=r?r.startContainer:null, co=r?r.startOffset:0;
+    const pairs=[...ALIAS.map(a=>[a[0],'what',a[1]]), ...DAYALIAS.map(a=>[a[0],'day',a[1]]), ...CADALIAS.map(a=>[a[0],'often',a[1]]), ...WHERES.map(w=>[w.toLowerCase(),'where',w]), ...TIMES.map(w=>[w,'time',w])].sort((a,b)=>b[0].length-a[0].length);
+    const re=new RegExp('(^|[^a-z0-9@])('+pairs.map(p=>rx(p[0])).join('|')+')(?=[\\s,.!?;])','i');
+    for(let guard=0; guard<12; guard++){
+      let done=true;
+      for(const n of Array.from(ed.childNodes)){
+        if(n.nodeType!==3) continue;
+        const m=re.exec(n.textContent); if(!m) continue;
+        const start=m.index+m[1].length, end=start+m[2].length;
+        if(n===cn && co<=end) continue;                       // still typing this word
+        const p=pairs.find(x=>x[0]===m[2].toLowerCase()); if(!p) continue;
+        const after=n.textContent.slice(end); n.textContent=n.textContent.slice(0,start);
+        const c=chipEl(p[1],p[2]); n.after(c); const t2=document.createTextNode(after); c.after(t2);
+        if(n===cn){ const r2=document.createRange(); r2.setStart(t2,Math.max(0,co-end)); r2.collapse(true); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r2); }
+        done=false; break;
+      }
+      if(done) break;
+    }
+  }
+  function onRichInput(){
+    if(variant==='auto') autoChip();
+    const a=atTerm();
+    if(a){ const rr=document.createRange(); rr.setStart(a.node,a.start); rr.setEnd(a.node,a.end); showPop(rr.getBoundingClientRect(), a.term, { onPick:(type,v)=>{ const b=atTerm(); if(b) insertChipAt(b.node,b.start,b.end,type,v); closePop(); render(); } }); }
+    else closePop();
+    render();
+  }
+  if(isRich){
+    ed.addEventListener('input',onRichInput);
+    ed.addEventListener('keyup',e=>{ if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) onRichInput(); });
+    ed.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); if(!pickTop()) return; }
+      if(e.key==='Tab'){ if(pop){ e.preventDefault(); pickTop(); } else if(read().empty){ e.preventDefault(); takeGhost(); } }
+      if(e.key==='Escape') closePop();
+    });
+    ed.addEventListener('click',e=>{ const c=e.target.closest('.ichip'); if(!c) return; e.stopPropagation(); showPop(c.getBoundingClientRect(), '', { only:c.dataset.type==='custom'?null:c.dataset.type, onPick:(type,v)=>{ const nc=chipEl(type,v); c.replaceWith(nc); closePop(); render(); } }); });
+    ed.addEventListener('focus',()=>field.classList.add('field--focus'));
+    ed.addEventListener('blur',()=>{ field.classList.remove('field--focus'); });
+  } else {
+    /* plain textarea */
+    ed.addEventListener('input',()=>{ ed.style.height='auto'; ed.style.height=ed.scrollHeight+'px'; const v=ed.value.slice(0,ed.selectionStart); const m=v.match(/@([^@\n]{0,30})$/); if(m && (m[1].match(/ /g)||[]).length<=2){ showPop(field.getBoundingClientRect(), m[1], { onPick:(type,v2)=>{ const before=ed.value.slice(0,ed.selectionStart).replace(/@[^@\n]{0,30}$/,''); const after=ed.value.slice(ed.selectionStart); const ins=(type==='where'||type==='custom'||type==='time'||type==='pref')?'@'+v2:v2; ed.value=before+ins+' '+after; const p=(before+ins+' ').length; ed.focus(); ed.setSelectionRange(p,p); closePop(); render(); } }); } else closePop(); render(); });
+    ed.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); pickTop(); } if(e.key==='Tab'){ if(pop){ e.preventDefault(); pickTop(); } else if(!ed.value.trim()){ e.preventDefault(); takeGhost(); } } if(e.key==='Escape') closePop(); });
+    ed.addEventListener('focus',()=>field.classList.add('field--focus'));
+    ed.addEventListener('blur',()=>field.classList.remove('field--focus'));
+  }
+  /* @ button: inserts an @ at the caret and opens the picker */
+  phone.querySelector('[data-atbtn]').addEventListener('mousedown',e=>e.preventDefault());
+  phone.querySelector('[data-atbtn]').addEventListener('click',e=>{
+    e.stopPropagation();
+    if(isRich){ ed.focus(); let r=caret(); if(!r){ placeCaretEnd(); r=caret(); } const last=ed.lastChild; const needSp = last && last.nodeType===3 ? !/\s$/.test(last.textContent) : !!last; const t=document.createTextNode((needSp?' ':'')+'@'); r.insertNode(t); const r2=document.createRange(); r2.setStart(t,t.length); r2.collapse(true); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r2); onRichInput(); }
+    else { const v=ed.value; const sp=v && !/\s$/.test(v) ? ' ' : ''; ed.value=v+sp+'@'; ed.focus(); ed.setSelectionRange(ed.value.length,ed.value.length); ed.dispatchEvent(new Event('input')); }
+  });
+  ghost.addEventListener('click',()=>{ takeGhost(); });
+  ghost.style.pointerEvents='none';
+  field.addEventListener('click',e=>{ if(e.target===field||e.target===ghost) { if(isRich) placeCaretEnd(); else ed.focus(); } });
+
+  /* --- read row + compat + button --- */
+  function render(){
+    const r=read();
+    ghost.style.display = r.empty ? 'block' : 'none';
+    if(r.empty) ghost.innerHTML=ghostHTML(POPULAR[idx]);
+    const rp=(type,v,soft)=>`<span class="rp ${soft?'rp--soft':''}" style="--c:${color(type,v)}"><span class="g">${glyph(type,v)}</span>${esc(v)}${soft?'<span class="k2">read</span>':''}</span>`;
+    const need=(type,label)=>`<span class="rp rp--need" data-need="${type}">+ ${label}</span>`;
+    let h='';
+    h += r.what ? rp('what',r.what,r.soft.what) : need('what','what');
+    h += r.day ? rp('day',r.day,r.soft.day) : need('day','which day');
+    h += r.often ? rp('often',r.often,r.soft.often) : need('often','how often');
+    h += r.where ? rp('where',r.where,r.soft.where) : `<span class="rp rp--need" data-need="where" style="opacity:.75">+ where</span>`;
+    if(r.time) h+=rp('time',r.time,r.soft.time);
+    r.custom.forEach(c=>{ h+=rp(c.type,c.v,false); });
+    const pins=[r.what,r.day,r.often,r.where,r.time].filter(Boolean).length+r.custom.length;
+    phone.querySelector('[data-read]').innerHTML = r.empty ? '' : `<div class="k"><span>what fires matching</span><span>${pins} pinned · blank = open to all</span></div><div class="rrow">${h}</div>${r.note?`<div class="note"><i>✎</i><span>your note travels too: <q>${esc(r.note)}</q></span></div>`:''}`;
+    phone.querySelector('[data-read]').querySelectorAll('[data-need]').forEach(b=>b.addEventListener('mousedown',e=>e.preventDefault()));
+    phone.querySelector('[data-read]').querySelectorAll('[data-need]').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); const type=b.dataset.need; showPop(b.getBoundingClientRect(),'',{ only:type, onPick:(tp,v)=>{ if(isRich){ placeCaretEnd(); const last=ed.lastChild; const needSp=last&&last.nodeType===3?!/\s$/.test(last.textContent):!!last; if(needSp) ed.append(document.createTextNode(' ')); ed.append(chipEl(tp,v), document.createTextNode(' ')); placeCaretEnd(); } else { const sp=ed.value&&!/\s$/.test(ed.value)?' ':''; ed.value+=sp+((tp==='where'||tp==='time')?'@'+v:v)+' '; } closePop(); render(); } }); }));
+    phone.querySelector('[data-count]').textContent = r.empty ? '' : `${pins} pinned`;
+    const compat_=phone.querySelector('[data-compat]'), nEl=phone.querySelector('[data-n]'), tEl=phone.querySelector('[data-txt]');
+    if(r.empty){ compat_.className='compat'; nEl.textContent=POPULAR[idx].want; tEl.innerHTML=`<b>${POPULAR[idx].want} near you</b> want the ghost above. Take it, or say your own thing.`; }
+    else if(!r.what){ compat_.className='compat compat--pending'; nEl.textContent='new'; tEl.innerHTML=`<b>Not a thing people near you have named yet.</b> Drop it anyway — we'll read it and route it, or <b>@</b> to pin a known activity.`; }
+    else { compat_.className='compat'; const n=compat(r); nEl.textContent=n; tEl.innerHTML = pins<=1 ? `<b>${n} near you</b> want ${esc(r.what)} too — wide open, so it fits the most plans.` : `<b>${n} near you</b> fit this. ${pins} pins narrow it — unpin to fit more.`; }
+    const dropBtn=phone.querySelector('[data-drop]');
+    dropBtn.disabled = r.empty; dropBtn.textContent = r.empty ? 'Say something first' : !r.what ? 'Drop it · pending a read' : 'Drop it';
+    phone.querySelector('[data-hint]').innerHTML = variant==='plain'
+      ? 'Write it however you like. <b>@</b> pins a place, time or your own word so matching sees it — the rest travels as your note.'
+      : variant==='auto'
+      ? 'Write it however you like — words Loop knows lock in as you go. <b>@</b> for a place, a time, or your own word.'
+      : 'Write it however you like. <b>@</b> to pin what · day · how often · where — or your own word. Everything else travels as your note.';
+  }
+  sheet.addEventListener('click',()=>closePop());
+  phone.querySelector('[data-shuffle]').addEventListener('click',e=>{ e.stopPropagation(); idx=(idx+1)%POPULAR.length; if(!read().empty){ if(isRich) ed.innerHTML=''; else ed.value=''; } render(); });
+  phone.querySelector('[data-drop]').addEventListener('click',e=>{ const b=e.currentTarget; const pend=!read().what; b.textContent=pend?'Dropped · we’ll read it soon':'Dropped · waiting on your floor'; b.className='btn btn--secondary'; setTimeout(()=>{ if(isRich) ed.innerHTML=''; else ed.value=''; render(); b.className='btn btn--primary'; },1600); });
+  render();
+}
+document.querySelectorAll('.phone').forEach(makeComposer);
+document.getElementById('themeBtn').addEventListener('click',()=>{ document.querySelectorAll('.phone').forEach(p=>{ p.dataset.theme=p.dataset.theme==='afterdark'?'daylight':'afterdark'; }); });
+</script>
+</body>
+</html>

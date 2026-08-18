@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Drop an intent — 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-300:#e08d84; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss-500:#3d8a5f; --amber-500:#b6862b; --amber-600:#8a641f; --rose-500:#a04f6a; --slate-500:#59657a;
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius-md:14px; --radius-lg:22px; --radius-xl:28px; --radius-pill:999px;
+    --dur-1:120ms; --dur-2:180ms; --dur-3:260ms; --dur-4:420ms;
+    --ease-out:cubic-bezier(.2,.8,.2,1); --ease-settle:cubic-bezier(.16,1,.3,1);
+  }
+  .phone{
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2); --bg-scrim:rgba(31,26,23,.44);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-4);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --unit-class:var(--slate-500); --unit-major:var(--moss-500); --unit-dorm:var(--amber-600); --status-forming:var(--amber-600); --status-live:var(--moss-500);
+    --focus-ring:var(--carnelian-400);
+    --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+    --shadow-raised:0 10px 30px -14px rgba(80,40,30,.28);
+    --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{ background:#ebe3d5; color:var(--ink-0); font-family:var(--font-sans); -webkit-font-smoothing:antialiased; padding:40px 28px 80px; }
+  button{ font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  :focus-visible{ outline:2px solid var(--carnelian-500); outline-offset:2px; }
+
+  h1{ font-family:var(--font-display); font-weight:800; font-size:30px; letter-spacing:-.03em; margin:0 0 6px; }
+  .lede{ color:var(--ink-2); font-size:15px; max-width:70ch; margin:0 0 30px; line-height:1.5; }
+  .lede code{ font-family:var(--font-mono); font-size:13px; background:#fff8ee; padding:1px 5px; border-radius:5px; }
+  .grid{ display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .col{ width:390px; display:flex; flex-direction:column; gap:14px; }
+  .label{ display:flex; align-items:baseline; gap:10px; }
+  .label .n{ font-family:var(--font-mono); font-size:12px; color:var(--carnelian-600); font-weight:500; }
+  .label h2{ font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:-.02em; margin:0; }
+  .label .rec{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--carnelian-600); background:var(--carnelian-100); padding:2px 8px; border-radius:999px; }
+  .notes{ font-size:13.5px; color:var(--ink-2); line-height:1.5; margin:0; padding-left:18px; }
+  .notes li+li{ margin-top:4px; }
+  .notes b{ color:var(--ink-0); font-weight:600; }
+  .try{ font-size:12.5px; color:var(--ink-3); margin:0; }
+
+  /* ---- phone ---- */
+  .phone{ width:390px; height:720px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:40px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:var(--shadow-pop); color:var(--text-primary); }
+  .status{ display:flex; align-items:center; justify-content:space-between; padding:12px 24px 4px; flex-shrink:0; }
+  .status .t{ font-family:var(--font-mono); font-size:12.5px; font-weight:500; }
+  .status .r{ display:flex; align-items:center; gap:6px; }
+  .status .g{ font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); }
+  .status .bat{ width:20px; height:11px; border-radius:3px; border:1.5px solid var(--text-secondary); position:relative; display:inline-block; }
+  .status .bat::after{ content:""; position:absolute; inset:1.5px; right:5px; border-radius:1px; background:var(--text-secondary); }
+  .header{ display:flex; align-items:center; padding:0 20px; height:56px; border-bottom:1px solid var(--border-hairline); flex-shrink:0; }
+  .wordmark{ font-family:var(--font-display); font-weight:800; letter-spacing:-.03em; font-size:22px; display:inline-flex; align-items:baseline; line-height:1; }
+  .wordmark i{ width:5px; height:5px; border-radius:50%; background:var(--accent); display:inline-block; margin-left:2px; }
+  .bg{ flex:1; padding:16px 20px; overflow:hidden; }
+  .bg .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); margin:6px 0 10px; }
+  .bgrow{ display:flex; align-items:center; gap:12px; padding:12px 2px; border-bottom:1px solid var(--border-hairline); }
+  .bgrow .ring{ width:40px; height:40px; border-radius:50%; border:4px solid var(--bg-sunken); border-top-color:var(--accent); flex:0 0 auto; }
+  .bgrow .t{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .bgrow .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; }
+
+  /* sheet */
+  .scrim{ position:absolute; inset:0; background:var(--bg-scrim); backdrop-filter:blur(2px); z-index:55; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg-surface); border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl); box-shadow:var(--shadow-pop); padding:8px 20px 22px; z-index:56; max-height:94%; overflow-y:auto; scrollbar-width:none; }
+  .sheet::-webkit-scrollbar{ width:0; }
+  .grab{ width:36px; height:4px; border-radius:99px; background:var(--border-strong); margin:4px auto 16px; opacity:.6; }
+  .kicker{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); }
+  .title{ font-family:var(--font-display); font-weight:700; font-size:22px; line-height:1.15; margin:4px 0 0; letter-spacing:-.01em; }
+  .sheethead{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; }
+  .xbtn{ width:36px; height:36px; border-radius:50%; border:none; background:transparent; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; margin:-4px -8px 0 0; }
+  .xbtn:active{ background:var(--bg-sunken); }
+
+  /* the sentence */
+  .core{ font-family:var(--font-display); font-weight:800; font-size:24px; letter-spacing:-.02em; line-height:1.38; color:var(--text-primary); margin:6px 0 4px; }
+  .tok{ cursor:pointer; color:var(--accent-strong); border-bottom:2.5px dotted color-mix(in srgb,var(--accent) 45%,transparent); padding:0 2px; white-space:nowrap; transition:color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+  .tok--sub{ color:var(--unit-class); border-color:color-mix(in srgb,var(--unit-class) 45%,transparent); }
+  .tok--mov{ color:var(--unit-major); border-color:color-mix(in srgb,var(--unit-major) 45%,transparent); }
+  /* greyed = suggested, not yet yours */
+  .tok--ghost{ color:var(--text-tertiary); border-bottom-style:dashed; border-color:var(--border-strong); }
+  .tok--empty{ color:var(--text-tertiary); border-bottom:2.5px dashed var(--border-strong); font-weight:600; font-size:.72em; letter-spacing:0; padding:0 6px; vertical-align:middle; }
+  .core .lead{ color:var(--text-primary); }
+  .hint{ font-size:12px; color:var(--text-tertiary); margin-top:2px; }
+  .hint b{ color:var(--text-secondary); font-weight:600; }
+  .srcline{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:2px 0 4px; }
+  .srcpill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--status-forming); background:color-mix(in srgb,var(--status-forming) 15%,var(--bg-surface)); padding:4px 9px; border-radius:99px; transition:opacity var(--dur-2); }
+  .srcpill.off{ opacity:0; pointer-events:none; }
+  .linkbtn{ border:none; background:none; color:var(--accent-strong); font-weight:600; font-size:12.5px; padding:4px 2px; display:inline-flex; align-items:center; gap:5px; }
+  .linkbtn:active{ opacity:.7; }
+
+  /* popover menu */
+  .menu{ position:absolute; z-index:60; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:14px; box-shadow:var(--shadow-raised); padding:6px; max-height:250px; overflow-y:auto; scrollbar-width:none; width:236px; }
+  .menu--block{ position:static; margin-top:6px; box-shadow:none; width:auto; }
+  .sugcat{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); padding:7px 8px 4px; }
+  .sugrow{ position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; border-radius:10px; cursor:pointer; overflow:hidden; }
+  .sugrow:active{ transform:scale(.99); }
+  .sugrow__bar{ position:absolute; left:0; top:0; bottom:0; background:color-mix(in srgb,var(--accent) 12%,transparent); border-radius:10px; }
+  .sugrow__nm{ position:relative; z-index:1; font-weight:600; font-size:14px; color:var(--text-primary); }
+  .sugrow__vl{ position:relative; z-index:1; font-family:var(--font-mono); font-size:11.5px; color:var(--text-secondary); }
+  .sugrow--top .sugrow__nm::after{ content:"popular"; margin-left:7px; font-size:9.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--status-forming); }
+
+  /* compat */
+  .compat{ display:flex; align-items:center; gap:12px; margin:14px 0 2px; padding:12px 15px; border-radius:16px; background:linear-gradient(180deg,var(--accent-quiet),var(--bg-surface)); border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border-hairline)); }
+  .compat__big{ font-family:var(--font-mono); font-weight:500; font-size:29px; color:var(--accent-strong); line-height:1; min-width:42px; text-align:center; }
+  .compat__txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.35; }
+  .compat__txt b{ color:var(--text-primary); }
+  .btn{ width:100%; height:50px; border-radius:16px; border:none; font-family:var(--font-display); font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform var(--dur-1), opacity var(--dur-2); }
+  .btn:active{ transform:scale(.985); }
+  .btn--primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn--primary:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn--secondary{ background:var(--bg-sunken); color:var(--text-primary); }
+  .foot{ font-size:12.5px; color:var(--text-secondary); line-height:1.5; margin:12px 0 0; }
+
+  /* B: typed w/ ghost completion */
+  .field{ position:relative; border:1.5px solid var(--border-hairline); border-radius:16px; padding:14px 14px 12px; background:var(--bg-surface); }
+  .field--focus{ border-color:var(--focus-ring); }
+  .field .ghostwrap{ position:relative; font-size:17px; line-height:1.45; font-family:var(--font-sans); min-height:25px; }
+  .field .ghost{ position:absolute; inset:0; white-space:pre-wrap; word-break:break-word; color:transparent; pointer-events:none; }
+  .field .ghost .rest{ color:var(--text-tertiary); }
+  .field .ghost .accept{ display:inline-block; margin-left:8px; font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); border:1px solid var(--border-strong); border-radius:5px; padding:0 5px; vertical-align:middle; }
+  .field textarea{ position:relative; z-index:1; width:100%; border:none; outline:none; background:transparent; resize:none; font:inherit; color:var(--text-primary); padding:0; line-height:1.45; overflow:hidden; caret-color:var(--accent); }
+  .field textarea::placeholder{ color:var(--text-tertiary); }
+  .parsed{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border-hairline); }
+  .pchip{ display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; padding:5px 10px; border-radius:9px; background:color-mix(in srgb,var(--accent) 12%,var(--bg-surface)); color:var(--accent-strong); border:1.5px solid transparent; }
+  .pchip .k{ font-size:10px; text-transform:uppercase; letter-spacing:.05em; opacity:.7; font-weight:700; }
+  .pchip--where{ background:color-mix(in srgb,var(--unit-class) 14%,var(--bg-surface)); color:var(--unit-class); }
+  .pchip--time{ background:color-mix(in srgb,var(--unit-major) 13%,var(--bg-surface)); color:var(--unit-major); }
+  .pchip--need{ background:transparent; border-color:var(--border-strong); border-style:dashed; color:var(--text-tertiary); cursor:pointer; }
+  .pchip--need:active{ background:var(--bg-sunken); }
+  .poplist{ margin-top:14px; }
+  .poprow{ display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:12px; cursor:pointer; }
+  .poprow:active{ background:var(--bg-sunken); }
+  .poprow .ic{ width:30px; height:30px; border-radius:50%; background:var(--bg-sunken); display:flex; align-items:center; justify-content:center; font-size:14px; flex:0 0 auto; }
+  .poprow .tx{ flex:1; font-weight:600; font-size:14px; }
+  .poprow .tx small{ display:block; font-weight:400; font-size:11.5px; color:var(--text-tertiary); margin-top:1px; }
+  .poprow .n{ font-family:var(--font-mono); font-size:11.5px; color:var(--text-secondary); }
+
+  /* C: slot rail */
+  .slot{ margin-top:12px; }
+  .slot .sh{ display:flex; align-items:baseline; justify-content:space-between; margin:0 2px 7px; }
+  .slot .sh .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); }
+  .slot .sh .k em{ font-style:normal; color:var(--text-primary); text-transform:none; letter-spacing:0; margin-left:6px; font-size:12px; font-weight:600; }
+  .slot .sh .opt{ font-size:11px; color:var(--text-tertiary); }
+  .rail{ display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; padding:2px 2px 4px; margin:0 -20px; padding-left:20px; padding-right:20px; }
+  .rail::-webkit-scrollbar{ height:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 12px; border-radius:99px; border:1.5px solid var(--border-hairline); background:var(--bg-surface); font-size:13.5px; font-weight:600; color:var(--text-primary); white-space:nowrap; transition:all var(--dur-1) var(--ease-out); }
+  .chip .n{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); font-weight:500; }
+  .chip--on{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .chip--on .n{ color:var(--accent-ink); opacity:.8; }
+  .chip--ghost{ border-style:dashed; border-color:var(--border-strong); color:var(--text-secondary); background:color-mix(in srgb,var(--status-forming) 8%,var(--bg-surface)); }
+  .chip--ghost::before{ content:"✦"; color:var(--status-forming); font-size:11px; }
+  .seg{ display:flex; gap:6px; background:var(--bg-sunken); padding:4px; border-radius:14px; }
+  .seg button{ flex:1; height:36px; border-radius:11px; border:none; background:transparent; font-weight:700; font-size:13.5px; color:var(--text-secondary); font-family:var(--font-display); }
+  .seg button.on{ background:var(--bg-surface); color:var(--text-primary); box-shadow:var(--shadow-card); }
+</style>
+</head>
+<body>
+
+<h1>Drop an intent · 3 directions</h1>
+<p class="lede">Today the FAB opens a blank textarea (<code>ComposeSheet</code>), and onboarding + the You tab each have their own free-text box. All three directions below replace those with <b>one guided composer</b> that opens already filled with the <b>most popular recent drop on your floor</b> — greyed as a suggestion — so an intent is never a blank page and always lands in the vocabulary The Floor already speaks (<code>Grabbing dinner Thursdays, weekly</code>). Every token is tappable, every menu is ranked by how many people want it. Tap <b>↻ another</b> to pipe a different popular drop in.</p>
+
+<div class="grid">
+
+  <!-- ============ A ============ -->
+  <div class="col">
+    <div class="label"><span class="n">01</span><h2>Sentence with tappable tokens</h2><span class="rec">recommended</span></div>
+    <div class="phone" id="phA">
+      <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+      <div class="header"><span class="wordmark">Loop<i></i></span></div>
+      <div class="bg" data-bg></div>
+      <div class="scrim"></div>
+      <div class="sheet" id="shA">
+        <div class="grab"></div>
+        <div class="sheethead">
+          <div><div class="kicker">Drop an intent</div><h2 class="title">What are you trying to make happen?</h2></div>
+          <button class="xbtn" aria-label="Close">✕</button>
+        </div>
+        <div class="srcline">
+          <span class="srcpill" id="aPill">✦ popular on your floor</span>
+          <button class="linkbtn" id="aShuffle">↻ another</button>
+        </div>
+        <div class="core" id="aCore"></div>
+        <div class="hint" id="aHint">tap a word to change it · <b>greyed = suggested</b>, tap to make it yours</div>
+        <div class="compat"><div class="compat__big" id="aN">9</div><div class="compat__txt" id="aTxt"></div></div>
+        <div style="margin-top:12px"><button class="btn btn--primary" id="aDrop">Drop it</button></div>
+        <p class="foot">Drop it and it waits on your floor until enough people want the same thing — then it fires and a loop crystallizes.</p>
+      </div>
+    </div>
+    <ul class="notes">
+      <li><b>Zero-blank start.</b> Opens with the hottest recent drop, all tokens greyed. Tap ↻ to rotate through what's popular; tap a token to change just that word — it turns solid (yours), the rest stay grey.</li>
+      <li>Kind token (<b>Grabbing / Studying / Up for</b>) swaps the activity list, mirroring The Floor's dine / study / move.</li>
+      <li>Trailing <b>+ where</b> slot is optional; leaving it open keeps "N near you" high — same open-to-all logic as the Floor sheet.</li>
+      <li>Same component can replace <code>ComposeSheet</code>, onboarding <code>FirstIntent</code> and the You-tab quick-add → one composer, one intent shape, less code.</li>
+    </ul>
+    <p class="try">Try: tap <i>dinner</i> → pick <i>coffee</i> · tap <i>Grabbing</i> → <i>Up for</i> · tap ↻ · watch the number react.</p>
+  </div>
+
+  <!-- ============ B ============ -->
+  <div class="col">
+    <div class="label"><span class="n">02</span><h2>Type it, ghost completes it</h2></div>
+    <div class="phone" id="phB">
+      <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+      <div class="header"><span class="wordmark">Loop<i></i></span></div>
+      <div class="bg" data-bg></div>
+      <div class="scrim"></div>
+      <div class="sheet" id="shB">
+        <div class="grab"></div>
+        <div class="sheethead">
+          <div><div class="kicker">Drop an intent</div><h2 class="title">Say it plainly</h2></div>
+          <button class="xbtn" aria-label="Close">✕</button>
+        </div>
+        <div class="field" id="bField">
+          <div class="ghostwrap">
+            <div class="ghost" id="bGhost"></div>
+            <textarea id="bIn" rows="1" placeholder="e.g. jog weekly on Fridays around Collegetown" spellcheck="false"></textarea>
+          </div>
+          <div class="parsed" id="bParsed"></div>
+        </div>
+        <div class="hint" style="margin-top:6px">grey text is the closest popular drop — <b>tap → or press Tab</b> to take it</div>
+        <div class="poplist">
+          <div class="kicker" style="margin:4px 2px 4px">popular on your floor this week</div>
+          <div id="bPop"></div>
+        </div>
+        <div style="margin-top:10px"><button class="btn btn--primary" id="bDrop" disabled>Drop it</button></div>
+      </div>
+    </div>
+    <ul class="notes">
+      <li><b>Keeps free typing</b> — but the ghost remainder steers you into a shape that parses (activity · day · cadence · place), like a shell autocomplete.</li>
+      <li>Parsed chips below the field show what Loop understood; a dashed <b>+ how often</b> chip is a tap-to-fill gap, not an error.</li>
+      <li>Popular list doubles as a one-tap fill. Risk: off-vocabulary text still needs the "pending review" path from the You-tab parser.</li>
+    </ul>
+    <p class="try">Try: type <i>jo</i> → ghost fills <i>g weekly on Fridays around Collegetown</i> → Tab · or type <i>dinner thursdays</i> and tap the dashed chip.</p>
+  </div>
+
+  <!-- ============ C ============ -->
+  <div class="col">
+    <div class="label"><span class="n">03</span><h2>Slot rail (builder)</h2></div>
+    <div class="phone" id="phC">
+      <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+      <div class="header"><span class="wordmark">Loop<i></i></span></div>
+      <div class="bg" data-bg></div>
+      <div class="scrim"></div>
+      <div class="sheet" id="shC">
+        <div class="grab"></div>
+        <div class="sheethead">
+          <div><div class="kicker">Drop an intent</div><div class="core" id="cCore" style="margin:2px 0 0;font-size:21px"></div></div>
+          <button class="xbtn" aria-label="Close">✕</button>
+        </div>
+        <div class="seg" id="cSeg">
+          <button data-cat="dine">🍜 Eat</button><button data-cat="study">📖 Study</button><button data-cat="move">🏃 Move</button>
+        </div>
+        <div class="slot"><div class="sh"><span class="k">What<em id="cWhatV"></em></span></div><div class="rail" id="cWhat"></div></div>
+        <div class="slot"><div class="sh"><span class="k">Which day<em id="cDayV"></em></span></div><div class="rail" id="cDay"></div></div>
+        <div class="slot"><div class="sh"><span class="k">How often<em id="cCadV"></em></span></div><div class="rail" id="cCad"></div></div>
+        <div class="slot"><div class="sh"><span class="k">Where<em id="cWhereV"></em></span><span class="opt">optional · blank = anywhere</span></div><div class="rail" id="cWhere"></div></div>
+        <div class="compat" style="margin-top:14px"><div class="compat__big" id="cN">9</div><div class="compat__txt" id="cTxt"></div></div>
+        <div style="margin-top:12px"><button class="btn btn--primary" id="cDrop">Drop it</button></div>
+      </div>
+    </div>
+    <ul class="notes">
+      <li><b>Most explicit.</b> Each slot is a horizontal rail ranked by demand; the popular option is pre-selected as a dashed ✦ "suggested" chip until you tap it (or another).</li>
+      <li>Sentence composes live in the header, so it still reads as one intent, not a form.</li>
+      <li>Trade-off: taller sheet, more UI chrome; the segmented kind + four rails read as "settings" more than "say what you want".</li>
+    </ul>
+    <p class="try">Try: switch <i>Eat → Move</i>, pick <i>a run</i>, tap <i>Fridays</i>, add <i>Collegetown</i>.</p>
+  </div>
+
+</div>
+
+<script>
+/* ---------- shared vocabulary (mirrors FLR_* in index.html) ---------- */
+const DAYS=['Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','Sundays','weekdays','weekends'];
+const DAYPOP={ Mondays:6,Tuesdays:5,Wednesdays:6,Thursdays:12,Fridays:12,Saturdays:11,Sundays:9,weekdays:8,weekends:10 };
+const CADS=['daily','3× a week','2× a week','weekly','every other week','monthly'];
+const CADPOP={ daily:5,'3× a week':7,weekly:12,'2× a week':6,'every other week':7,monthly:4 };
+const CADF={ daily:1.1,'3× a week':.95,weekly:1,'2× a week':.9,'every other week':.8,monthly:.65 };
+const ACTS={ dine:['breakfast','brunch','lunch','coffee','dinner','late-night bites'],
+             move:['a run','a lift','a climb','bouldering','kickboxing','yoga','pickup ball'],
+             study:['CS 2110','CHEM 2070','MATH 1920','ECON 1110','PSYCH 1101','any subject'] };
+const ACTPOP={ dinner:12,lunch:9,brunch:8,coffee:6,breakfast:4,'late-night bites':5,'a run':9,'a lift':8,'a climb':6,bouldering:6,kickboxing:8,yoga:5,'pickup ball':6,'CS 2110':11,'CHEM 2070':8,'MATH 1920':7,'ECON 1110':6,'PSYCH 1101':6,'any subject':9 };
+const WHERES={ dine:['Collegetown','North','West','Downtown'], move:['Teagle gym','Beebe Lake','Lindseth wall','Collegetown','outdoor loop'], study:['Libe Café','Mann','Uris','Olin','dorm lounge'] };
+const WHEREPOP={ Collegetown:12,North:9,West:6,Downtown:5,'Teagle gym':10,'Beebe Lake':8,'Lindseth wall':6,'outdoor loop':7,'Libe Café':11,Mann:8,Uris:9,Olin:6,'dorm lounge':7 };
+const LEAD={ dine:'Grabbing', study:'Studying', move:'Up for' };
+const KINDS=[['dine','Grabbing'],['study','Studying'],['move','Up for']];
+const KINDPOP={ dine:12, study:11, move:9 };
+const TOKCLS={ dine:'', study:'tok--sub', move:'tok--mov' };
+const ICON={ dine:'🍜', study:'📖', move:'🏃' };
+
+/* most popular recent drops on your floor — what gets piped in */
+const POPULAR=[
+  { cat:'dine',  act:'dinner',     day:'Thursdays', cad:'weekly', where:null,         want:12 },
+  { cat:'move',  act:'a run',      day:'Fridays',   cad:'weekly', where:'Collegetown',want:9  },
+  { cat:'study', act:'CS 2110',    day:'Sundays',   cad:'weekly', where:'Uris',       want:11 },
+  { cat:'move',  act:'kickboxing', day:'Wednesdays',cad:'weekly', where:'Teagle gym', want:8  },
+  { cat:'dine',  act:'coffee',     day:'Mondays',   cad:'weekly', where:null,         want:6  },
+];
+function compat(s){ let n=((ACTPOP[s.act]||6)+(DAYPOP[s.day]||6))/2*(CADF[s.cad]||1); if(s.where) n*=.62; return Math.max(1,Math.min(10,Math.round(n))); }
+function sentence(s){ return LEAD[s.cat]+' '+s.act+' '+s.day+', '+s.cad+(s.where?' @'+s.where:''); }
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+/* faint floor list behind the sheet */
+document.querySelectorAll('[data-bg]').forEach(el=>{
+  el.innerHTML='<div class="k">What your intent lands in</div>'+POPULAR.map(p=>`<div class="bgrow"><div class="ring"></div><div><div class="t">${esc(sentence(p).replace(/^(Grabbing|Studying|Up for) /,''))}</div><div class="s">${p.want} want · your floor</div></div></div>`).join('');
+});
+
+/* ---------- popover menu helper (A + B) ---------- */
+function openMenu(sheet, anchor, list, cur, onPick){
+  closeMenu(sheet);
+  const sr=sheet.getBoundingClientRect(), tr=anchor.getBoundingClientRect();
+  const mx=Math.max.apply(null,list.map(o=>o.n));
+  const m=document.createElement('div'); m.className='menu';
+  let left=tr.left-sr.left; left=Math.max(10,Math.min(left, sheet.clientWidth-246));
+  m.style.left=left+'px'; m.style.top=(tr.bottom-sr.top+sheet.scrollTop+8)+'px';
+  list.sort((a,b)=>b.n-a.n);
+  m.innerHTML=list.map((o,i)=>`<div class="sugrow${i===0?' sugrow--top':''}" data-v="${esc(o.v)}"><span class="sugrow__bar" style="width:${Math.round(o.n/mx*100)}%"></span><span class="sugrow__nm">${o.v===cur?'✓ ':''}${esc(o.v)}</span><span class="sugrow__vl">${o.n} want</span></div>`).join('');
+  m.addEventListener('click',e=>{ e.stopPropagation(); const r=e.target.closest('.sugrow'); if(!r) return; onPick(r.dataset.v); closeMenu(sheet); });
+  sheet.appendChild(m); sheet._menu=m;
+}
+function closeMenu(sheet){ if(sheet._menu){ sheet._menu.remove(); sheet._menu=null; } }
+document.querySelectorAll('.sheet').forEach(s=>s.addEventListener('click',()=>closeMenu(s)));
+
+/* ====================== A — tokens ====================== */
+(function(){
+  const sheet=document.getElementById('shA'), core=document.getElementById('aCore'), pill=document.getElementById('aPill');
+  let idx=0, st={ ...POPULAR[0] }, mine={};   // mine[k]=true once the user touched that token
+  const tok=(k,txt,cls)=>`<span class="tok ${cls||''} ${mine[k]?'':'tok--ghost'}" data-k="${k}">${esc(txt)}</span>`;
+  function render(){
+    const anyMine=Object.keys(mine).length>0;
+    pill.classList.toggle('off', anyMine);
+    core.innerHTML = tok('kind',LEAD[st.cat])+' '+tok('act',st.act,TOKCLS[st.cat])+' '+tok('day',st.day)+', '+tok('cad',st.cad)
+      + (st.where ? ' '+tok('where','@'+st.where,'tok--sub') : ` <span class="tok tok--empty" data-k="where">+ where</span>`);
+    const n=compat(st); document.getElementById('aN').textContent=n;
+    document.getElementById('aTxt').innerHTML = st.where
+      ? `<b>${n} near you</b> want this too. Pinned to @${esc(st.where)} — clear it to fit more.`
+      : `<b>${n} near you</b> want this too. Open on where — that's why it's high.`;
+    document.getElementById('aHint').innerHTML = anyMine ? 'tap a word to change it · <b>×</b> on @where to open it back up' : 'tap a word to change it · <b>greyed = suggested</b>, tap to make it yours';
+  }
+  core.addEventListener('click',e=>{
+    const t=e.target.closest('.tok'); if(!t) return; e.stopPropagation();
+    const k=t.dataset.k; let list, cur;
+    if(k==='kind'){ list=KINDS.map(([c,l])=>({v:l,n:KINDPOP[c]})); cur=LEAD[st.cat]; }
+    else if(k==='act'){ list=ACTS[st.cat].map(v=>({v,n:ACTPOP[v]||5})); cur=st.act; }
+    else if(k==='day'){ list=DAYS.map(v=>({v,n:DAYPOP[v]||5})); cur=st.day; }
+    else if(k==='cad'){ list=CADS.map(v=>({v,n:CADPOP[v]||5})); cur=st.cad; }
+    else { list=[{v:'anywhere',n:14}].concat(WHERES[st.cat].map(v=>({v,n:WHEREPOP[v]||5}))); cur=st.where||'anywhere'; }
+    openMenu(sheet,t,list,cur,v=>{
+      mine[k]=true;
+      if(k==='kind'){ const c=KINDS.find(x=>x[1]===v)[0]; if(c!==st.cat){ st.cat=c; st.act=ACTS[c].slice().sort((a,b)=>(ACTPOP[b]||0)-(ACTPOP[a]||0))[0]; if(st.where && !WHERES[c].includes(st.where)) st.where=null; mine.act=true; } }
+      else if(k==='act') st.act=v; else if(k==='day') st.day=v; else if(k==='cad') st.cad=v;
+      else st.where = v==='anywhere'?null:v;
+      render();
+    });
+  });
+  document.getElementById('aShuffle').addEventListener('click',e=>{ e.stopPropagation(); idx=(idx+1)%POPULAR.length; st={ ...POPULAR[idx] }; mine={}; closeMenu(sheet); render(); });
+  document.getElementById('aDrop').addEventListener('click',()=>{ const b=document.getElementById('aDrop'); b.textContent='Dropped · waiting on your floor'; b.className='btn btn--secondary'; setTimeout(()=>{ b.textContent='Drop it'; b.className='btn btn--primary'; },1600); });
+  render();
+})();
+
+/* ====================== B — ghost completion ====================== */
+(function(){
+  const sheet=document.getElementById('shB'), inp=document.getElementById('bIn'), ghost=document.getElementById('bGhost'), parsed=document.getElementById('bParsed'), field=document.getElementById('bField'), drop=document.getElementById('bDrop');
+  const PHR=[
+    { t:'jog weekly on Fridays around Collegetown', s:POPULAR[1] },
+    { t:'grab dinner Thursdays, weekly',            s:POPULAR[0] },
+    { t:'study CS 2110 Sundays weekly at Uris',     s:POPULAR[2] },
+    { t:'kickboxing Wednesdays weekly at Teagle gym', s:POPULAR[3] },
+    { t:'coffee Mondays weekly',                    s:POPULAR[4] },
+    { t:'lift 2× a week mornings at Teagle gym',    s:{cat:'move',act:'a lift',day:'weekdays',cad:'2× a week',where:'Teagle gym',want:8} },
+    { t:'dinner Thursdays weekly in Collegetown',   s:{cat:'dine',act:'dinner',day:'Thursdays',cad:'weekly',where:'Collegetown',want:7} },
+  ];
+  const ALIAS=[['jog','a run'],['jogging','a run'],['run','a run'],['running','a run'],['lift','a lift'],['gym','a lift'],['climb','a climb'],['boulder','bouldering'],['bouldering','bouldering'],['kickboxing','kickboxing'],['yoga','yoga'],['basketball','pickup ball'],['hoops','pickup ball'],['dinner','dinner'],['lunch','lunch'],['brunch','brunch'],['breakfast','breakfast'],['coffee','coffee'],['late night','late-night bites'],['cs 2110','CS 2110'],['cs2110','CS 2110'],['chem 2070','CHEM 2070'],['math 1920','MATH 1920'],['econ 1110','ECON 1110'],['psych 1101','PSYCH 1101'],['study','any subject'],['studying','any subject']];
+  const CATOF=a=>ACTS.dine.includes(a)?'dine':ACTS.move.includes(a)?'move':'study';
+  const ALLWHERE=[...new Set([].concat(...Object.values(WHERES)))];
+  function parse(raw){
+    const t=raw.toLowerCase();
+    let act=null; for(const [al,v] of ALIAS){ if(new RegExp('\\b'+al.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(t)){ act=v; break; } }
+    let day=null; for(const d of DAYS){ if(new RegExp('\\b'+d.toLowerCase().replace(/s$/,'s?')+'\\b').test(t)){ day=d; break; } }
+    let cad=null; if(/\b(daily|every ?day)\b/.test(t)) cad='daily'; else if(/\b(3\s?x|three times)/.test(t)) cad='3× a week'; else if(/\b(2\s?x|2×|twice)/.test(t)) cad='2× a week'; else if(/\bevery other week|biweekly\b/.test(t)) cad='every other week'; else if(/\bmonthly\b/.test(t)) cad='monthly'; else if(/\b(weekly|every week|once a week)\b/.test(t)) cad='weekly';
+    let where=null; for(const w of ALLWHERE){ if(t.includes(w.toLowerCase())) { where=w; break; } }
+    let time=null; if(/\bmornings?\b/.test(t)) time='mornings'; else if(/\bevenings?\b/.test(t)) time='evenings'; else if(/\bafternoons?\b/.test(t)) time='afternoons';
+    return { act, day, cad, where, time };
+  }
+  let ghostRest='';
+  function render(){
+    const raw=inp.value; const lo=raw.toLowerCase();
+    const m = raw.trim() ? PHR.find(p=>p.t.toLowerCase().startsWith(lo) && p.t.length>raw.length) : null;
+    ghostRest = m ? m.t.slice(raw.length) : '';
+    ghost.innerHTML = m ? `<span>${esc(raw)}</span><span class="rest">${esc(ghostRest)}</span><span class="accept">Tab</span>` : '';
+    inp.style.height='auto'; inp.style.height=inp.scrollHeight+'px';
+    const p=parse(raw);
+    const chip=(cls,k,v)=>`<span class="pchip ${cls}"><span class="k">${k}</span>${esc(v)}</span>`;
+    const need=(k,label,which)=>`<span class="pchip pchip--need" data-need="${which}">+ ${label}</span>`;
+    let h='';
+    if(!raw.trim()){ h=`<span class="hint">what · which day · how often · where</span>`; }
+    else {
+      h += p.act ? chip('','what',p.act) : need('what','what','act');
+      h += p.day ? chip('','day',p.day) : need('day','which day','day');
+      h += p.cad ? chip('','often',p.cad) : need('often','how often','cad');
+      h += p.where ? chip('pchip--where','where','@'+p.where) : `<span class="pchip pchip--need" data-need="where" style="opacity:.75">+ where (optional)</span>`;
+      if(p.time) h+=chip('pchip--time','time',p.time);
+    }
+    parsed.innerHTML=h;
+    drop.disabled = !(p.act && p.cad);
+    drop.textContent = p.act && !p.cad ? 'Add how often to drop' : 'Drop it';
+  }
+  function accept(){ if(ghostRest){ inp.value += ghostRest; ghostRest=''; render(); inp.setSelectionRange(inp.value.length,inp.value.length); } }
+  inp.addEventListener('input',render);
+  inp.addEventListener('focus',()=>field.classList.add('field--focus'));
+  inp.addEventListener('blur',()=>field.classList.remove('field--focus'));
+  inp.addEventListener('keydown',e=>{ if((e.key==='Tab'||e.key==='ArrowRight'&&inp.selectionStart===inp.value.length) && ghostRest){ e.preventDefault(); accept(); } if(e.key==='Enter'){ e.preventDefault(); } });
+  ghost.addEventListener('click',accept);
+  field.addEventListener('click',e=>{ const g=e.target.closest('.accept'); if(g) accept(); });
+  parsed.addEventListener('click',e=>{
+    const n=e.target.closest('[data-need]'); if(!n) return; e.stopPropagation();
+    const which=n.dataset.need; const p=parse(inp.value); const cat=p.act?CATOF(p.act):'dine';
+    let list;
+    if(which==='act') list=[].concat(...Object.values(ACTS)).map(v=>({v,n:ACTPOP[v]||5}));
+    else if(which==='day') list=DAYS.map(v=>({v,n:DAYPOP[v]||5}));
+    else if(which==='cad') list=CADS.map(v=>({v,n:CADPOP[v]||5}));
+    else list=WHERES[cat].map(v=>({v,n:WHEREPOP[v]||5}));
+    openMenu(sheet,n,list,null,v=>{ inp.value=(inp.value.trim()+' '+(which==='where'?'at '+v:v)).trim(); render(); inp.focus(); });
+  });
+  document.getElementById('bPop').innerHTML = POPULAR.slice(0,3).map((p,i)=>`<div class="poprow" data-i="${i}"><span class="ic">${ICON[p.cat]}</span><span class="tx">${esc(PHR.find(x=>x.s===p).t)}<small>${p.want} want · your floor</small></span><span class="n">tap to use</span></div>`).join('');
+  document.getElementById('bPop').addEventListener('click',e=>{ const r=e.target.closest('.poprow'); if(!r) return; inp.value=PHR.find(x=>x.s===POPULAR[+r.dataset.i]).t; render(); inp.focus(); });
+  drop.addEventListener('click',()=>{ drop.textContent='Dropped · waiting on your floor'; drop.classList.add('btn--secondary'); drop.classList.remove('btn--primary'); setTimeout(()=>{ inp.value=''; render(); drop.classList.add('btn--primary'); drop.classList.remove('btn--secondary'); },1600); });
+  render();
+})();
+
+/* ====================== C — slot rail ====================== */
+(function(){
+  let st={ ...POPULAR[0] }, touched={ act:false, day:false, cad:false, where:false };
+  const rail=(id,items,cur,ghostOn,pop,onPick,allowNone)=>{
+    const el=document.getElementById(id);
+    const sorted=items.slice().sort((a,b)=>(pop[b]||0)-(pop[a]||0));
+    let h='';
+    if(allowNone) h+=`<button class="chip ${!cur?'chip--on':''}" data-v="">anywhere</button>`;
+    h+=sorted.map(v=>{ const on=v===cur; const cls = on ? (ghostOn?'chip--ghost':'chip--on') : ''; return `<button class="chip ${cls}" data-v="${esc(v)}">${esc(v)}<span class="n">${pop[v]||5}</span></button>`; }).join('');
+    el.innerHTML=h;
+    el.onclick=e=>{ const b=e.target.closest('.chip'); if(!b) return; onPick(b.dataset.v); };
+  };
+  function render(){
+    document.querySelectorAll('#cSeg button').forEach(b=>b.classList.toggle('on',b.dataset.cat===st.cat));
+    document.getElementById('cCore').innerHTML = `<span class="lead">${LEAD[st.cat]}</span> <span class="tok ${TOKCLS[st.cat]}" style="cursor:default">${esc(st.act)}</span> <span class="tok" style="cursor:default">${st.day}</span>, <span class="tok" style="cursor:default">${st.cad}</span>${st.where?` <span class="tok tok--sub" style="cursor:default">@${esc(st.where)}</span>`:''}`;
+    rail('cWhat',ACTS[st.cat],st.act,!touched.act,ACTPOP,v=>{ st.act=v; touched.act=true; render(); });
+    rail('cDay',DAYS,st.day,!touched.day,DAYPOP,v=>{ st.day=v; touched.day=true; render(); });
+    rail('cCad',CADS,st.cad,!touched.cad,CADPOP,v=>{ st.cad=v; touched.cad=true; render(); });
+    rail('cWhere',WHERES[st.cat],st.where,false,WHEREPOP,v=>{ st.where=v||null; touched.where=true; render(); },true);
+    const lab=(k,t,v)=>{ document.getElementById(k).textContent = t ? v : v+' · suggested'; };
+    lab('cWhatV',touched.act,st.act); lab('cDayV',touched.day,st.day); lab('cCadV',touched.cad,st.cad); document.getElementById('cWhereV').textContent=st.where||'anywhere';
+    const n=compat(st); document.getElementById('cN').textContent=n;
+    document.getElementById('cTxt').innerHTML = `<b>${n} near you</b> want this too.${st.where?' Pinned to @'+esc(st.where)+' — clear it to fit more.':' Open on where — that\'s why it\'s high.'}`;
+  }
+  document.getElementById('cSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const c=b.dataset.cat; if(c===st.cat) return; st.cat=c; st.act=ACTS[c].slice().sort((a,b)=>(ACTPOP[b]||0)-(ACTPOP[a]||0))[0]; touched.act=false; if(st.where && !WHERES[c].includes(st.where)) st.where=null; render(); });
+  document.getElementById('cDrop').addEventListener('click',()=>{ const b=document.getElementById('cDrop'); b.textContent='Dropped · waiting on your floor'; b.className='btn btn--secondary'; setTimeout(()=>{ b.textContent='Drop it'; b.className='btn btn--primary'; },1600); });
+  render();
+})();
+</script>
+</body>
+</html>

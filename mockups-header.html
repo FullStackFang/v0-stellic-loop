@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · App header — 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-300:#e08d84; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss-500:#3d8a5f; --amber-500:#b6862b; --amber-600:#8a641f; --rose-500:#a04f6a; --slate-500:#59657a;
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius-md:14px; --radius-lg:22px; --radius-pill:999px;
+    --dur-1:120ms; --dur-2:180ms; --dur-3:260ms; --dur-4:420ms;
+    --ease-out:cubic-bezier(.2,.8,.2,1); --ease-settle:cubic-bezier(.16,1,.3,1);
+  }
+  /* theme tokens are scoped to each phone so the three directions can be toggled independently */
+  .phone, .strip{
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2); --bg-scrim:rgba(31,26,23,.44);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-quiet:rgba(31,26,23,.08);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+    --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+    --glow-accent:0 6px 18px -10px var(--carnelian-500);
+  }
+  .phone[data-theme="afterdark"]{
+    --bg-page:#181310; --bg-surface:#211a16; --bg-sunken:#12100c; --bg-scrim:rgba(0,0,0,.55);
+    --text-primary:#f8f1e8; --text-secondary:#bcafa2; --text-tertiary:#8d8074;
+    --border-hairline:#342a24; --border-quiet:rgba(248,241,232,.1);
+    --accent:var(--carnelian-400); --accent-strong:var(--carnelian-300); --accent-quiet:rgba(207,83,71,.16); --accent-ink:#1a0d0b;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4); --shadow-pop:0 28px 60px -24px rgba(0,0,0,.8);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{ background:#ebe3d5; color:var(--ink-0); font-family:var(--font-sans); -webkit-font-smoothing:antialiased; padding:40px 28px 80px; }
+  button{ font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  :focus-visible{ outline:2px solid var(--carnelian-500); outline-offset:2px; }
+
+  h1{ font-family:var(--font-display); font-weight:800; font-size:30px; letter-spacing:-.03em; margin:0 0 6px; }
+  .lede{ color:var(--ink-2); font-size:15px; max-width:64ch; margin:0 0 30px; line-height:1.5; }
+  .lede code{ font-family:var(--font-mono); font-size:13px; background:#fff8ee; padding:1px 5px; border-radius:5px; }
+
+  .grid{ display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .col{ width:390px; display:flex; flex-direction:column; gap:14px; }
+  .col--dim{ opacity:.78; }
+  .label{ display:flex; align-items:baseline; gap:10px; }
+  .label .n{ font-family:var(--font-mono); font-size:12px; color:var(--carnelian-600); font-weight:500; }
+  .label h2{ font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:-.02em; margin:0; }
+  .label .rec{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--carnelian-600); background:var(--carnelian-100); padding:2px 8px; border-radius:999px; }
+  .notes{ font-size:13.5px; color:var(--ink-2); line-height:1.5; margin:0; padding-left:18px; }
+  .notes li+li{ margin-top:4px; }
+  .notes b{ color:var(--ink-0); font-weight:600; }
+  .try{ font-size:12.5px; color:var(--ink-3); margin:0; }
+
+  /* ---- phone ---- */
+  .phone{ width:390px; height:640px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:40px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:var(--shadow-pop); color:var(--text-primary);
+    transition:background var(--dur-3) var(--ease-out); }
+  .status{ display:flex; align-items:center; justify-content:space-between; padding:12px 24px 4px; flex-shrink:0; }
+  .status .t{ font-family:var(--font-mono); font-size:12.5px; font-weight:500; }
+  .status .r{ display:flex; align-items:center; gap:6px; }
+  .status .g{ font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); }
+  .status .bat{ width:20px; height:11px; border-radius:3px; border:1.5px solid var(--text-secondary); position:relative; display:inline-block; }
+  .status .bat::after{ content:""; position:absolute; inset:1.5px; right:5px; border-radius:1px; background:var(--text-secondary); }
+
+  .header{ position:relative; z-index:40; background:var(--bg-surface); border-bottom:1px solid var(--border-hairline);
+    display:flex; align-items:center; gap:6px; padding:0 12px; height:56px; flex-shrink:0; }
+  .header .sp{ flex:1; min-width:0; }
+  .header .actions{ display:flex; align-items:center; }
+  .wordmark{ font-family:var(--font-display); font-weight:800; letter-spacing:-.03em; color:var(--text-primary); display:inline-flex; align-items:baseline; line-height:1; }
+  .wordmark i{ width:5px; height:5px; border-radius:50%; background:var(--accent); display:inline-block; margin-left:2px; }
+  .iconbtn{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:999px; background:transparent;
+    color:var(--text-secondary); border:none; position:relative; transition:background var(--dur-1) var(--ease-out); }
+  .iconbtn:active{ background:var(--bg-sunken); }
+  .iconbtn .badge{ position:absolute; top:6px; right:6px; min-width:16px; height:16px; padding:0 4px; border-radius:999px; background:var(--accent); color:var(--accent-ink);
+    font-family:var(--font-mono); font-size:10px; font-weight:500; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--bg-surface); }
+  .avatar{ display:inline-flex; align-items:center; justify-content:center; border-radius:999px; font-family:var(--font-mono); font-weight:500; line-height:1; flex-shrink:0; user-select:none;
+    background:color-mix(in srgb, var(--rose-500) 20%, var(--bg-surface)); color:var(--rose-500); }
+  .avatar--sarah{ background:color-mix(in srgb, var(--carnelian-500) 20%, var(--bg-surface)); color:var(--carnelian-500); }
+  .avatar--maya{ background:color-mix(in srgb, var(--moss-500) 20%, var(--bg-surface)); color:var(--moss-500); }
+  .avatar--dana{ background:color-mix(in srgb, var(--slate-500) 20%, var(--bg-surface)); color:var(--slate-500); }
+  .avbtn{ width:44px; height:44px; border-radius:999px; background:transparent; border:none; display:inline-flex; align-items:center; justify-content:center; position:relative;
+    transition:background var(--dur-1) var(--ease-out); }
+  .avbtn:active{ background:var(--bg-sunken); }
+  .avbtn .avatar{ width:30px; height:30px; font-size:11px; box-shadow:0 0 0 1.5px var(--border-hairline); transition:box-shadow var(--dur-2) var(--ease-out); }
+  .avbtn[aria-expanded="true"] .avatar{ box-shadow:0 0 0 2px var(--accent); }
+  .kicker{ font-weight:600; text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; color:var(--text-tertiary); }
+  .display{ font-family:var(--font-display); letter-spacing:-.02em; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  .body{ flex:1; overflow-y:auto; scrollbar-width:none; padding:0 20px 96px; }
+  .body::-webkit-scrollbar{ width:0; }
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:var(--radius-md); box-shadow:var(--shadow-card); padding:16px; text-align:left; width:100%; }
+  .card .k{ display:flex; align-items:center; gap:6px; color:var(--accent-strong); }
+  .card p{ margin:6px 0 0; font-weight:500; font-size:15px; line-height:1.4; }
+  .card .cta{ margin-top:8px; display:flex; align-items:center; gap:4px; font-size:13.5px; font-weight:600; color:var(--accent-strong); }
+  .sec{ display:flex; align-items:center; justify-content:space-between; margin:20px 0 10px; }
+  .sec h3{ margin:0; font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .sec span{ font-family:var(--font-mono); font-size:12px; color:var(--text-tertiary); }
+  .loop{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:var(--radius-md); box-shadow:var(--shadow-card); padding:14px 16px; }
+  .loop+.loop{ margin-top:10px; }
+  .loop .t{ font-family:var(--font-display); font-weight:700; font-size:16px; }
+  .loop .m{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .loop .row{ display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+  .stack{ display:flex; padding-left:8px; }
+  .stack .avatar{ width:26px; height:26px; font-size:9px; margin-left:-8px; box-shadow:0 0 0 2px var(--bg-surface); }
+  .live{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--moss-500); font-weight:600; }
+  .live i{ width:7px; height:7px; border-radius:50%; background:var(--moss-500); display:inline-block; }
+  .oldtitle{ padding-top:16px; }
+  .oldtitle h4{ margin:0; font-family:var(--font-display); font-weight:800; font-size:26px; letter-spacing:-.02em; }
+  .old-x{ position:absolute; left:14px; right:14px; border:1.5px dashed var(--carnelian-400); border-radius:10px; pointer-events:none; }
+  .old-x span{ position:absolute; right:8px; top:-9px; background:var(--carnelian-500); color:#fff; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:1px 7px; border-radius:999px; }
+
+  .fab{ position:absolute; right:18px; bottom:80px; width:56px; height:56px; border-radius:999px; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; border:none; box-shadow:var(--glow-accent); z-index:45; }
+  .tabbar{ z-index:40; height:64px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:stretch; flex-shrink:0; }
+  .tab{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:10.5px; font-weight:600; color:var(--text-tertiary); background:none; border:none; }
+  .tab .g{ display:flex; align-items:center; justify-content:center; width:46px; height:28px; border-radius:999px; position:relative; }
+  .tab.on{ color:var(--accent-strong); } .tab.on .g{ background:var(--accent-quiet); }
+  .tab .dot{ position:absolute; top:2px; right:8px; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2px var(--bg-surface); }
+
+  /* ---- A: anchored account popover ---- */
+  .pop-scrim{ position:absolute; inset:0; z-index:58; }
+  .pop{ position:absolute; top:70px; right:12px; width:264px; z-index:60; background:var(--bg-surface); border:1px solid var(--border-hairline);
+    border-radius:18px; box-shadow:var(--shadow-pop); padding:6px; transform-origin:top right;
+    animation:pop-in var(--dur-3) var(--ease-settle) both; }
+  .pop::before{ content:""; position:absolute; top:-6px; right:26px; width:11px; height:11px; background:var(--bg-surface); border-left:1px solid var(--border-hairline); border-top:1px solid var(--border-hairline); transform:rotate(45deg); }
+  @keyframes pop-in{ from{ opacity:0; transform:translateY(-6px) scale(.94); } to{ opacity:1; transform:none; } }
+  .pop .who{ display:flex; align-items:center; gap:12px; padding:10px 10px 12px; }
+  .pop .who .avatar{ width:40px; height:40px; font-size:13.5px; }
+  .pop .who .nm{ font-family:var(--font-display); font-weight:700; font-size:15.5px; line-height:1.1; }
+  .pop .who .sub{ font-size:12px; color:var(--text-secondary); margin-top:3px; }
+  .pop .who .tag{ font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); margin-top:2px; }
+  .pop hr{ border:0; border-top:1px solid var(--border-hairline); margin:2px 6px; }
+  .pop .item{ width:100%; display:flex; align-items:center; gap:10px; padding:10px 10px; border:none; background:none; color:var(--text-primary); font-size:14px; font-weight:500; border-radius:11px; text-align:left; transition:background var(--dur-1) var(--ease-out); }
+  .pop .item:hover{ background:var(--bg-sunken); }
+  .pop .item svg{ color:var(--text-secondary); }
+  .pop .item .chev{ margin-left:auto; color:var(--text-tertiary); }
+  .pop .theme{ padding:6px 10px 10px; }
+  .pop .theme .lb{ font-size:11.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:6px; }
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:11px; padding:3px; position:relative; }
+  .seg button{ flex:1; border:none; background:transparent; color:var(--text-secondary); font-size:12.5px; font-weight:600; padding:7px 4px; border-radius:9px; display:flex; align-items:center; justify-content:center; gap:6px; position:relative; z-index:1; transition:color var(--dur-2) var(--ease-out); }
+  .seg button[aria-pressed="true"]{ color:var(--text-primary); }
+  .seg .thumb{ position:absolute; top:3px; bottom:3px; left:3px; width:calc(50% - 3px); border-radius:9px; background:var(--bg-surface); box-shadow:var(--shadow-card); transition:transform var(--dur-3) var(--ease-settle); }
+  .seg[data-dark="true"] .thumb{ transform:translateX(100%); }
+  .pop .foot{ padding:8px 10px 6px; font-size:11px; color:var(--text-tertiary); }
+
+  /* ---- B: identity drawer ---- */
+  .drawer-scrim{ position:absolute; inset:0; background:var(--bg-scrim); z-index:58; animation:fade var(--dur-2) ease both; }
+  @keyframes fade{ from{ opacity:0; } to{ opacity:1; } }
+  .drawer{ position:absolute; top:0; bottom:0; left:0; width:300px; z-index:60; background:var(--bg-surface); border-right:1px solid var(--border-hairline);
+    box-shadow:var(--shadow-pop); padding:22px 16px 20px; display:flex; flex-direction:column; animation:slide var(--dur-4) var(--ease-settle) both; border-radius:40px 0 0 40px; }
+  @keyframes slide{ from{ transform:translateX(-100%); } to{ transform:none; } }
+  .drawer .who{ display:flex; align-items:center; gap:12px; padding:8px 8px 16px; }
+  .drawer .who .avatar{ width:48px; height:48px; font-size:16px; }
+  .drawer .who .nm{ font-family:var(--font-display); font-weight:800; font-size:20px; letter-spacing:-.02em; line-height:1; }
+  .drawer .who .sub{ font-size:12.5px; color:var(--text-secondary); margin-top:4px; }
+  .drawer .sect{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); padding:14px 8px 6px; }
+  .drawer .item{ width:100%; display:flex; align-items:center; gap:12px; padding:11px 8px; border:none; background:none; color:var(--text-primary); font-size:14.5px; font-weight:500; border-radius:11px; text-align:left; }
+  .drawer .item:hover{ background:var(--bg-sunken); }
+  .drawer .item svg{ color:var(--text-secondary); }
+  .drawer .persona{ display:flex; align-items:center; gap:9px; padding:6px 8px; border-radius:999px; border:1px solid transparent; background:none; width:100%; text-align:left; }
+  .drawer .persona.on{ background:var(--accent-quiet); }
+  .drawer .persona .avatar{ width:26px; height:26px; font-size:9.5px; }
+  .drawer .persona .n{ font-size:13px; font-weight:600; }
+  .drawer .persona.on .n{ color:var(--accent-strong); }
+  .drawer .persona .r{ font-size:10.5px; color:var(--text-tertiary); }
+  .drawer .close{ position:absolute; top:14px; right:8px; }
+  .drawer .spacer{ flex:1; }
+  .drawer .foot{ font-size:11px; color:var(--text-tertiary); padding:8px; }
+
+  /* ---- secondary header strips ---- */
+  .strips{ display:flex; flex-direction:column; gap:8px; }
+  .strips .cap{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); }
+  .strip{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:14px; overflow:hidden; color:var(--text-primary); }
+  .strip .header{ border-bottom:none; }
+  .strip .ttl{ font-family:var(--font-display); font-weight:700; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .strip .glyph{ width:30px; height:30px; border-radius:9px; background:var(--accent-quiet); color:var(--accent-strong); display:flex; align-items:center; justify-content:center; }
+  .strip .two .a{ font-family:var(--font-display); font-weight:800; font-size:16px; line-height:1; }
+  .strip .two .b{ font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin-top:3px; }
+
+  /* View Transitions: circular theme wipe from the switch (direction A only). Falls back to an instant swap. */
+  ::view-transition-old(root), ::view-transition-new(root){ animation:none; mix-blend-mode:normal; }
+  ::view-transition-new(root){ animation:wipe 520ms var(--ease-out) both; }
+  @keyframes wipe{ from{ clip-path:circle(0 at var(--wx,50%) var(--wy,50%)); } to{ clip-path:circle(150% at var(--wx,50%) var(--wy,50%)); } }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{ animation-duration:1ms !important; transition-duration:1ms !important; }
+    ::view-transition-new(root){ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<h1>App header · 3 directions</h1>
+<p class="lede">All three remove the dead <code>search</code> button and the redundant <code>kicker + "Josh's loops"</code> block. They differ in where <b>account</b> and <b>theme</b> live. Everything is clickable: tap the avatar / hamburger, flip the theme, and see how the Class, Loop-detail and You headers follow. Rendered as Josh (host).</p>
+
+<div class="grid">
+
+  <!-- ============ TODAY ============ -->
+  <div class="col col--dim">
+    <div class="label"><span class="n">00</span><h2>Today (for reference)</h2></div>
+    <div class="phone" data-theme="daylight">
+      <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+      <div class="header">
+        <span class="wordmark" style="font-size:22px">Loop<i></i></span>
+        <div class="sp"></div>
+        <div class="actions">
+          <button class="iconbtn" aria-label="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg></button>
+          <button class="iconbtn" aria-label="Alerts"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="badge">1</span></button>
+          <button class="iconbtn" aria-label="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button>
+        </div>
+      </div>
+      <div class="body" style="position:relative">
+        <div class="oldtitle" style="position:relative">
+          <div class="old-x" style="top:8px;bottom:-6px"><span>removed</span></div>
+          <div class="kicker">runs a loop</div>
+          <h4>Josh's loops</h4>
+        </div>
+        <div style="height:16px"></div>
+        <div data-body></div>
+      </div>
+      <button class="fab" aria-label="Drop an intent"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+      <div data-tabbar></div>
+    </div>
+    <ul class="notes">
+      <li>Search does nothing; theme toggle is a top-level action on every screen.</li>
+      <li>Kicker + name repeat what the avatar / tab already say.</li>
+    </ul>
+  </div>
+
+  <!-- ============ A ============ -->
+  <div class="col">
+    <div class="label"><span class="n">01</span><h2>Avatar menu + theme wipe</h2><span class="rec">recommended</span></div>
+    <div class="phone" id="phoneA" data-theme="daylight">
+      <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+      <div class="header">
+        <span class="wordmark" style="font-size:22px">Loop<i></i></span>
+        <div class="sp"></div>
+        <div class="actions">
+          <button class="iconbtn" aria-label="Alerts"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="badge">1</span></button>
+          <button class="avbtn" id="avA" aria-label="Account" aria-haspopup="menu" aria-expanded="false"><span class="avatar">JP</span></button>
+        </div>
+      </div>
+      <div class="body">
+        <div style="height:16px"></div>
+        <div data-body></div>
+      </div>
+      <button class="fab" aria-label="Drop an intent"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+      <div data-tabbar></div>
+
+      <!-- popover -->
+      <div id="popA" hidden>
+        <div class="pop-scrim" data-close></div>
+        <div class="pop" role="menu">
+          <div class="who">
+            <span class="avatar">JP</span>
+            <div><div class="nm">Josh Park</div><div class="sub">Balch · Computer Science</div><div class="tag">Class of 2029 · runs a loop</div></div>
+          </div>
+          <hr>
+          <button class="item" role="menuitem"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>Your profile<svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="item" role="menuitem"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Calendar sync<span class="chev" style="font-size:11px;font-weight:600;color:var(--moss-500)">on</span></button>
+          <hr>
+          <div class="theme">
+            <div class="lb">Theme</div>
+            <div class="seg" id="segA" data-dark="false">
+              <span class="thumb"></span>
+              <button aria-pressed="true" data-theme-pick="daylight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>Daylight</button>
+              <button aria-pressed="false" data-theme-pick="afterdark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>Big Red Night</button>
+            </div>
+          </div>
+          <div class="foot">Loop never shows anyone your activity.</div>
+        </div>
+      </div>
+    </div>
+    <div class="strips">
+      <span class="cap">Other screens</span>
+      <div class="strip"><div class="header">
+        <div style="display:flex;align-items:center;gap:8px"><span class="glyph"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span><div class="two"><div class="a">Class of 2030</div><div class="b">arriving Aug 20 · North Campus</div></div></div>
+        <div class="sp"></div><div class="actions"><button class="avbtn" aria-label="Account"><span class="avatar">JP</span></button></div>
+      </div></div>
+      <div class="strip"><div class="header">
+        <button class="iconbtn" aria-label="Back" style="margin-left:-4px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="sp ttl">Sunday HW crew</div>
+        <div class="actions"><button class="iconbtn" aria-label="Share"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/></svg></button></div>
+      </div></div>
+      <div class="strip"><div class="header">
+        <div class="sp"><div class="kicker">You</div><div class="ttl">Josh Park</div></div>
+        <div class="actions"><button class="iconbtn" aria-label="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div></div>
+    </div>
+    <ul class="notes">
+      <li><b>Header</b>: wordmark · bell · your avatar. Avatar is the account trigger on Home, Class and Advisor.</li>
+      <li><b>Popover</b> anchored to the avatar: identity, profile, calendar sync, theme segmented switch. Not a modal.</li>
+      <li><b>Overdrive</b>: theme switch does a circular wipe from the switch across the phone (View Transitions API, instant fallback, reduced-motion safe).</li>
+      <li>Back-nav screens keep only contextual actions (share). You-tab header gets a gear instead of a theme icon.</li>
+    </ul>
+    <p class="try">Try: tap JP → flip Daylight / Big Red Night.</p>
+  </div>
+
+  <!-- ============ B ============ -->
+  <div class="col">
+    <div class="label"><span class="n">02</span><h2>Avatar-left identity drawer</h2></div>
+    <div class="phone" id="phoneB" data-theme="daylight">
+      <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+      <div class="header">
+        <button class="avbtn" id="avB" aria-label="Account" aria-expanded="false" style="margin-left:-6px"><span class="avatar">JP</span></button>
+        <div class="sp" style="display:flex;justify-content:center"><span class="wordmark" style="font-size:22px">Loop<i></i></span></div>
+        <div class="actions">
+          <button class="iconbtn" aria-label="Alerts"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="badge">1</span></button>
+        </div>
+      </div>
+      <div class="body">
+        <div style="height:16px"></div>
+        <div data-body></div>
+      </div>
+      <button class="fab" aria-label="Drop an intent"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+      <div data-tabbar></div>
+
+      <div id="drawerB" hidden>
+        <div class="drawer-scrim" data-close></div>
+        <div class="drawer">
+          <button class="iconbtn close" data-close aria-label="Close"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          <div class="who"><span class="avatar">JP</span><div><div class="nm">Josh Park</div><div class="sub">Balch · CS · Class of 2029</div></div></div>
+          <button class="item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>Your profile</button>
+          <button class="item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Calendar sync</button>
+          <button class="item" data-theme-toggle><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg><span data-theme-label>Big Red Night</span></button>
+          <div class="sect">View demo as</div>
+          <button class="persona"><span class="avatar avatar--sarah">SC</span><span><span class="n" style="display:block">Sarah</span><span class="r">seeker</span></span></button>
+          <button class="persona on"><span class="avatar">JP</span><span><span class="n" style="display:block">Josh</span><span class="r">host</span></span></button>
+          <button class="persona"><span class="avatar avatar--maya">MI</span><span><span class="n" style="display:block">Maya</span><span class="r">latecomer</span></span></button>
+          <button class="persona"><span class="avatar avatar--dana">DO</span><span><span class="n" style="display:block">Dana</span><span class="r">advisor</span></span></button>
+          <div class="spacer"></div>
+          <div class="foot">Loop never shows anyone your activity.</div>
+        </div>
+      </div>
+    </div>
+    <div class="strips">
+      <span class="cap">Other screens</span>
+      <div class="strip"><div class="header">
+        <button class="avbtn" aria-label="Account" style="margin-left:-6px"><span class="avatar">JP</span></button>
+        <div class="sp" style="display:flex;justify-content:center"><div class="two" style="text-align:center"><div class="a">Class of 2030</div><div class="b">arriving Aug 20 · North Campus</div></div></div>
+        <div class="actions"><span style="width:44px"></span></div>
+      </div></div>
+      <div class="strip"><div class="header">
+        <button class="iconbtn" aria-label="Back" style="margin-left:-4px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="sp ttl">Sunday HW crew</div>
+        <div class="actions"><button class="iconbtn" aria-label="Share"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/></svg></button></div>
+      </div></div>
+      <div class="strip"><div class="header">
+        <button class="avbtn" aria-label="Account" style="margin-left:-6px"><span class="avatar">JP</span></button>
+        <div class="sp ttl" style="text-align:center">You</div>
+        <div class="actions"><span style="width:44px"></span></div>
+      </div></div>
+    </div>
+    <ul class="notes">
+      <li><b>Header</b>: avatar far-left, wordmark centered, bell right (Threads / Slack pattern).</li>
+      <li><b>Drawer</b> slides in over the phone: profile, calendar, theme, and the demo persona switcher moves in-frame.</li>
+      <li>Room to grow (settings, sign out) but heavier chrome; centered wordmark competes with the Class title.</li>
+    </ul>
+    <p class="try">Try: tap JP → open drawer → toggle theme.</p>
+  </div>
+
+  <!-- ============ C ============ -->
+  <div class="col">
+    <div class="label"><span class="n">03</span><h2>Minimal: wordmark + bell</h2></div>
+    <div class="phone" id="phoneC" data-theme="daylight">
+      <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+      <div class="header">
+        <span class="wordmark" style="font-size:22px">Loop<i></i></span>
+        <div class="sp"></div>
+        <div class="actions">
+          <button class="iconbtn" aria-label="Alerts"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="badge">1</span></button>
+        </div>
+      </div>
+      <div class="body">
+        <div style="height:16px"></div>
+        <div data-body></div>
+      </div>
+      <button class="fab" aria-label="Drop an intent"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+      <div data-tabbar></div>
+    </div>
+    <div class="strips">
+      <span class="cap">Other screens</span>
+      <div class="strip"><div class="header">
+        <div style="display:flex;align-items:center;gap:8px"><span class="glyph"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span><div class="two"><div class="a">Class of 2030</div><div class="b">arriving Aug 20 · North Campus</div></div></div>
+        <div class="sp"></div>
+      </div></div>
+      <div class="strip"><div class="header">
+        <button class="iconbtn" aria-label="Back" style="margin-left:-4px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="sp ttl">Sunday HW crew</div>
+        <div class="actions"><button class="iconbtn" aria-label="Share"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/></svg></button></div>
+      </div></div>
+      <div class="strip"><div class="header">
+        <div class="sp"><div class="kicker">You</div><div class="ttl">Josh Park</div></div>
+        <div class="actions"><button class="iconbtn" aria-label="Toggle theme" data-theme-toggle-c><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button></div>
+      </div></div>
+    </div>
+    <ul class="notes">
+      <li><b>Header</b>: wordmark + bell only. No account trigger up top; the You tab is the account.</li>
+      <li>Theme lives only on the You tab (the card that already exists there, plus its header icon).</li>
+      <li>Least chrome, but theme is 2 taps away and Class / Advisor lose any right-side action.</li>
+    </ul>
+    <p class="try">Try: the theme icon on the You strip flips this phone.</p>
+  </div>
+
+</div>
+
+<script>
+  /* shared body + tabbar markup */
+  const BODY = `
+    <button class="card" style="border-color:var(--accent-quiet)">
+      <div class="k kicker"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>You run this loop</div>
+      <p>You've kept the <b>Sunday HW crew</b> coming back 6 weeks. Draft the next session when you're ready.</p>
+      <div class="cta">Open host controls <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+    </button>
+    <div class="sec"><h3>Your loops</h3><span>2 running</span></div>
+    <div class="loop">
+      <div class="t">Sunday HW crew</div><div class="m">CS 2110 · Sundays 7pm · Balch lounge</div>
+      <div class="row"><div class="stack"><span class="avatar">JP</span><span class="avatar avatar--sarah">SC</span><span class="avatar avatar--maya">MI</span><span class="avatar avatar--dana">RK</span></div><span class="live"><i></i>next in 2 days</span></div>
+    </div>
+    <div class="loop">
+      <div class="t">Tue/Thu boxing</div><div class="m">Noyes gym · 6:30am · 3× a week</div>
+      <div class="row"><div class="stack"><span class="avatar">JP</span><span class="avatar avatar--sarah">AL</span><span class="avatar avatar--maya">TN</span></div><span class="live"><i></i>tomorrow</span></div>
+    </div>
+    <div class="sec"><h3>The Floor</h3><span>Donlon 2F · live</span></div>
+    <div class="loop"><div class="t" style="font-size:14.5px">11 on your floor want to lock in for CS 2110</div><div class="m">3 forming · 1 already running · fires Sunday</div></div>
+  `;
+  const TAB = `<div class="tabbar">
+    <button class="tab on"><span class="g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></span>Home</button>
+    <button class="tab"><span class="g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span>Class</button>
+    <button class="tab"><span class="g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="dot"></span></span>Alerts</button>
+    <button class="tab"><span class="g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg></span>You</button>
+  </div>`;
+  document.querySelectorAll('[data-body]').forEach(el => el.innerHTML = BODY);
+  document.querySelectorAll('[data-tabbar]').forEach(el => el.outerHTML = TAB);
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* theme switch with a circular wipe originating from the control that was tapped */
+  function setTheme(phone, theme, origin){
+    const apply = () => phone.dataset.theme = theme;
+    if (!document.startViewTransition || reduced || !origin){ apply(); return; }
+    const r = origin.getBoundingClientRect();
+    document.documentElement.style.setProperty('--wx', (r.left + r.width/2) + 'px');
+    document.documentElement.style.setProperty('--wy', (r.top + r.height/2) + 'px');
+    document.startViewTransition(apply);
+  }
+
+  /* ---- A ---- */
+  const phoneA = document.getElementById('phoneA'), avA = document.getElementById('avA'), popA = document.getElementById('popA'), segA = document.getElementById('segA');
+  const openA = (o) => { popA.hidden = !o; avA.setAttribute('aria-expanded', String(o)); };
+  avA.addEventListener('click', () => openA(popA.hidden));
+  popA.querySelector('[data-close]').addEventListener('click', () => openA(false));
+  segA.querySelectorAll('[data-theme-pick]').forEach(b => b.addEventListener('click', () => {
+    const t = b.dataset.themePick;
+    segA.dataset.dark = String(t==='afterdark');
+    segA.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
+    setTheme(phoneA, t, b);
+  }));
+
+  /* ---- B ---- */
+  const phoneB = document.getElementById('phoneB'), avB = document.getElementById('avB'), drawerB = document.getElementById('drawerB');
+  const openB = (o) => { drawerB.hidden = !o; avB.setAttribute('aria-expanded', String(o)); };
+  avB.addEventListener('click', () => openB(true));
+  drawerB.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => openB(false)));
+  drawerB.querySelector('[data-theme-toggle]').addEventListener('click', (e) => {
+    const next = phoneB.dataset.theme==='afterdark' ? 'daylight' : 'afterdark';
+    setTheme(phoneB, next, null);
+    drawerB.querySelector('[data-theme-label]').textContent = next==='afterdark' ? 'Daylight' : 'Big Red Night';
+  });
+
+  /* ---- C ---- */
+  const phoneC = document.getElementById('phoneC');
+  document.querySelector('[data-theme-toggle-c]').addEventListener('click', () => {
+    setTheme(phoneC, phoneC.dataset.theme==='afterdark' ? 'daylight' : 'afterdark', null);
+  });
+</script>
+</body>
+</html>

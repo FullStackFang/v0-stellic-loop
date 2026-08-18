@@ -1,0 +1,168 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: 9:41
+      - generic [ref=f1e7]: 5G
+    - generic [ref=f1e362]:
+      - generic [ref=f1e363]:
+        - generic [ref=f1e364]: Loop
+        - generic [ref=f1e366]:
+          - button "Search" [ref=f1e367] [cursor=pointer]
+          - button "Alerts" [ref=f1e371] [cursor=pointer]
+          - button "Toggle theme" [ref=f1e375] [cursor=pointer]
+      - generic [ref=f1e378]:
+        - generic [ref=f1e379]:
+          - paragraph [ref=f1e380]: looking to join
+          - heading "Sarah's loops" [level=1] [ref=f1e381]
+        - generic [ref=f1e382]:
+          - heading "What your intent lands in" [level=2] [ref=f1e390]
+          - paragraph [ref=f1e391]: Closest to you, closest to happening.
+          - generic [ref=f1e392]:
+            - generic [ref=f1e393] [cursor=pointer]: M
+            - generic [ref=f1e396] [cursor=pointer]: T
+            - generic [ref=f1e399] [cursor=pointer]: W
+            - generic [ref=f1e402] [cursor=pointer]: T
+            - generic [ref=f1e405] [cursor=pointer]: F
+            - generic [ref=f1e408] [cursor=pointer]: S
+            - generic [ref=f1e411] [cursor=pointer]: S
+          - generic [ref=f1e414] [cursor=pointer]:
+            - generic [ref=f1e415]: ★ your intent
+            - generic [ref=f1e416]: Dinner Thursdays
+            - generic [ref=f1e417]: your floor · open to all
+            - generic [ref=f1e419]:
+              - generic [ref=f1e420]: "8"
+              - generic [ref=f1e421]: of 8 want it — you’d be the one that fires it
+            - generic [ref=f1e424]:
+              - button "Shape it" [ref=f1e425]
+              - button "On your week" [ref=f1e429]
+          - generic [ref=f1e431]: more forming near you
+          - generic [ref=f1e568] [cursor=pointer]:
+            - generic [ref=f1e569]: "2"
+            - generic [ref=f1e570]:
+              - generic [ref=f1e571]:
+                - text: CS 2110 grind
+                - generic [ref=f1e573]: 1 to fire
+                - generic [ref=f1e574]: yours
+              - generic [ref=f1e575]:
+                - generic [ref=f1e576]: weekly · your floor
+                - generic [ref=f1e577]: · open to all
+            - generic [ref=f1e578]: 8/8
+          - generic [ref=f1e449] [cursor=pointer]:
+            - generic [ref=f1e450]: "3"
+            - generic [ref=f1e451]:
+              - generic [ref=f1e452]:
+                - text: Fri lift
+                - generic [ref=f1e583]: 1 to fire
+              - generic [ref=f1e454]:
+                - generic [ref=f1e455]: 2× a week · your floor
+                - generic [ref=f1e456]: · @Teagle gym
+            - generic [ref=f1e457]: 7/8
+          - generic [ref=f1e435] [cursor=pointer]:
+            - generic [ref=f1e436]: "4"
+            - generic [ref=f1e437]:
+              - generic [ref=f1e438]:
+                - text: study sessions
+                - generic [ref=f1e440]: 1 to fire
+              - generic [ref=f1e441]:
+                - generic [ref=f1e442]: weekly · CS majors
+                - generic [ref=f1e443]: · @evening
+            - generic [ref=f1e444]: 9/10
+          - generic [ref=f1e462] [cursor=pointer]:
+            - generic [ref=f1e463]: "5"
+            - generic [ref=f1e464]:
+              - generic [ref=f1e465]: CS 2110 grind
+              - generic [ref=f1e467]:
+                - generic [ref=f1e468]: weekly · CS majors
+                - generic [ref=f1e469]: · @Uris
+            - generic [ref=f1e470]: 8/10
+          - generic [ref=f1e475] [cursor=pointer]:
+            - generic [ref=f1e476]: "6"
+            - generic [ref=f1e477]:
+              - generic [ref=f1e478]: Wed kickboxing
+              - generic [ref=f1e480]:
+                - generic [ref=f1e481]: weekly · Donlon
+                - generic [ref=f1e482]: · @Teagle gym
+            - generic [ref=f1e483]: 7/10
+          - generic [ref=f1e488] [cursor=pointer]:
+            - generic [ref=f1e489]: "7"
+            - generic [ref=f1e490]:
+              - generic [ref=f1e491]: Thu dinner
+              - generic [ref=f1e493]:
+                - generic [ref=f1e494]: weekly · your floor
+                - generic [ref=f1e495]: · open to all
+            - generic [ref=f1e496]: 5/8
+          - generic [ref=f1e501] [cursor=pointer]:
+            - generic [ref=f1e502]: "8"
+            - generic [ref=f1e503]:
+              - generic [ref=f1e504]: Mon coffee
+              - generic [ref=f1e506]:
+                - generic [ref=f1e507]: weekly · your floor
+                - generic [ref=f1e508]: · @morning
+            - generic [ref=f1e509]: 3/6
+          - generic [ref=f1e514] [cursor=pointer]:
+            - generic [ref=f1e515]: "9"
+            - generic [ref=f1e516]:
+              - generic [ref=f1e517]: Sat bouldering
+              - generic [ref=f1e519]:
+                - generic [ref=f1e520]: weekly · Class of ’30
+                - generic [ref=f1e521]: · @Lindseth wall
+            - generic [ref=f1e522]: 5/8
+          - generic [ref=f1e527] [cursor=pointer]:
+            - generic [ref=f1e528]: "10"
+            - generic [ref=f1e529]:
+              - generic [ref=f1e530]: Tue run
+              - generic [ref=f1e532]:
+                - generic [ref=f1e533]: 2× a week · Donlon
+                - generic [ref=f1e534]: · @morning
+            - generic [ref=f1e535]: 4/8
+          - button "Drop your own rhythm" [active] [ref=f1e541] [cursor=pointer]
+      - button "Drop an intent" [ref=f1e543] [cursor=pointer]
+      - generic [ref=f1e545]:
+        - button [ref=f1e584] [cursor=pointer]
+        - button [ref=f1e592] [cursor=pointer]
+        - button [ref=f1e597] [cursor=pointer]
+        - button [ref=f1e602] [cursor=pointer]
+    - generic [ref=f1e607]:
+      - generic [ref=f1e609]: 🍜 eating together · your floor · yours
+      - generic [ref=f1e610]:
+        - generic [ref=f1e611]: Grabbing
+        - text: dinner Thursdays, weekly
+      - generic [ref=f1e612]: tap a word to change the rhythm
+      - generic [ref=f1e613]: On your calendar — Thursdays · weekly.
+      - generic [ref=f1e616]:
+        - generic [ref=f1e617]: your preferences
+        - generic [ref=f1e618]: blank = open to all
+      - textbox "open to all — type @ to pin (e.g. @ramen, @Collegetown)" [ref=f1e620]
+      - generic [ref=f1e621]: ✦ open to everything — you fit the most plans
+      - generic [ref=f1e622]:
+        - generic [ref=f1e623]: "8"
+        - generic [ref=f1e624]: Fully open. Any dinner Thursdays near you could fold you in — that’s why 8 fit.
+      - button "On your calendar · done" [ref=f1e626] [cursor=pointer]
+      - generic [ref=f1e629]:
+        - button "Watch" [ref=f1e630] [cursor=pointer]
+        - button "Remind" [ref=f1e631] [cursor=pointer]
+        - button "Drop" [ref=f1e635] [cursor=pointer]
+  - generic [ref=f1e29]:
+    - generic [ref=f1e30]: view the demo as
+    - generic [ref=f1e31]:
+      - button "Sarah Chen Sarah seeker" [ref=f1e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=f1e33]: SC
+        - generic [ref=f1e34]:
+          - generic [ref=f1e35]: Sarah
+          - generic [ref=f1e36]: seeker
+      - button "Josh Park Josh host" [ref=f1e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=f1e38]: JP
+        - generic [ref=f1e39]:
+          - generic [ref=f1e40]: Josh
+          - generic [ref=f1e41]: host
+      - button "Maya Idris Maya latecomer" [ref=f1e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=f1e43]: MI
+        - generic [ref=f1e44]:
+          - generic [ref=f1e45]: Maya
+          - generic [ref=f1e46]: latecomer
+      - button "Dana Okafor Dana advisor" [ref=f1e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=f1e48]: DO
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: Dana
+          - generic [ref=f1e51]: advisor
+    - button "restart demo" [ref=f1e52] [cursor=pointer]

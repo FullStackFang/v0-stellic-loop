@@ -1,0 +1,344 @@
+- generic [ref=e1]:
+  - heading "App header · 3 directions" [level=1] [ref=e2]
+  - paragraph [ref=e3]:
+    - text: All three remove the dead
+    - code [ref=e4]: search
+    - text: button and the redundant
+    - code [ref=e5]: kicker + "Josh's loops"
+    - text: "block. They differ in where account and theme live. Everything is clickable: tap the avatar / hamburger, flip the theme, and see how the Class, Loop-detail and You headers follow. Rendered as Josh (host)."
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: "00"
+        - heading "Today (for reference)" [level=2] [ref=e10]
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]: 9:41
+          - generic [ref=e14]: 5G
+        - generic [ref=e17]:
+          - generic [ref=e18]: Loop
+          - generic [ref=e20]:
+            - button "Search" [ref=e21] [cursor=pointer]
+            - button "Alerts" [ref=e25] [cursor=pointer]:
+              - generic [ref=e29]: "1"
+            - button "Toggle theme" [ref=e30] [cursor=pointer]
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - generic: removed
+            - generic [ref=e35]: runs a loop
+            - heading "Josh's loops" [level=4] [ref=e36]
+          - generic [ref=e38]:
+            - button [ref=e39] [cursor=pointer]:
+              - generic [ref=e40]: You run this loop
+              - paragraph [ref=e43]: You've kept the Sunday HW crew coming back 6 weeks. Draft the next session when you're ready.
+              - generic [ref=e44]: Open host controls
+            - generic [ref=e47]:
+              - heading "Your loops" [level=3] [ref=e48]
+              - generic [ref=e49]: 2 running
+            - generic [ref=e50]:
+              - generic [ref=e51]: Sunday HW crew
+              - generic [ref=e52]: CS 2110 · Sundays 7pm · Balch lounge
+              - generic [ref=e53]:
+                - generic [ref=e54]:
+                  - generic [ref=e55]: JP
+                  - generic [ref=e56]: SC
+                  - generic [ref=e57]: MI
+                  - generic [ref=e58]: RK
+                - generic [ref=e59]: next in 2 days
+            - generic [ref=e61]:
+              - generic [ref=e62]: Tue/Thu boxing
+              - generic [ref=e63]: Noyes gym · 6:30am · 3× a week
+              - generic [ref=e64]:
+                - generic [ref=e65]:
+                  - generic [ref=e66]: JP
+                  - generic [ref=e67]: AL
+                  - generic [ref=e68]: TN
+                - generic [ref=e69]: tomorrow
+            - generic [ref=e71]:
+              - heading "The Floor" [level=3] [ref=e72]
+              - generic [ref=e73]: Donlon 2F · live
+            - generic [ref=e74]:
+              - generic [ref=e75]: 11 on your floor want to lock in for CS 2110
+              - generic [ref=e76]: 3 forming · 1 already running · fires Sunday
+        - button "Drop an intent" [ref=e77] [cursor=pointer]
+        - generic [ref=e79]:
+          - button [ref=e80] [cursor=pointer]
+          - button [ref=e88] [cursor=pointer]
+          - button [ref=e93] [cursor=pointer]
+          - button [ref=e99] [cursor=pointer]
+      - list [ref=e103]:
+        - listitem [ref=e104]: Search does nothing; theme toggle is a top-level action on every screen.
+        - listitem [ref=e105]: Kicker + name repeat what the avatar / tab already say.
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e108]: "01"
+        - heading "Avatar menu + theme wipe" [level=2] [ref=e109]
+        - generic [ref=e110]: recommended
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - generic [ref=e113]: 9:41
+          - generic [ref=e114]: 5G
+        - generic [ref=e117]:
+          - generic [ref=e118]: Loop
+          - generic [ref=e120]:
+            - button "Alerts" [ref=e121] [cursor=pointer]:
+              - generic [ref=e125]: "1"
+            - button "Account" [expanded] [ref=e126] [cursor=pointer]:
+              - generic [ref=e127]: JP
+        - generic [ref=e130]:
+          - button [ref=e131] [cursor=pointer]:
+            - generic [ref=e132]: You run this loop
+            - paragraph [ref=e135]: You've kept the Sunday HW crew coming back 6 weeks. Draft the next session when you're ready.
+            - generic [ref=e136]: Open host controls
+          - generic [ref=e139]:
+            - heading "Your loops" [level=3] [ref=e140]
+            - generic [ref=e141]: 2 running
+          - generic [ref=e142]:
+            - generic [ref=e143]: Sunday HW crew
+            - generic [ref=e144]: CS 2110 · Sundays 7pm · Balch lounge
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - generic [ref=e147]: JP
+                - generic [ref=e148]: SC
+                - generic [ref=e149]: MI
+                - generic [ref=e150]: RK
+              - generic [ref=e151]: next in 2 days
+          - generic [ref=e153]:
+            - generic [ref=e154]: Tue/Thu boxing
+            - generic [ref=e155]: Noyes gym · 6:30am · 3× a week
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - generic [ref=e158]: JP
+                - generic [ref=e159]: AL
+                - generic [ref=e160]: TN
+              - generic [ref=e161]: tomorrow
+          - generic [ref=e163]:
+            - heading "The Floor" [level=3] [ref=e164]
+            - generic [ref=e165]: Donlon 2F · live
+          - generic [ref=e166]:
+            - generic [ref=e167]: 11 on your floor want to lock in for CS 2110
+            - generic [ref=e168]: 3 forming · 1 already running · fires Sunday
+        - button "Drop an intent" [ref=e169] [cursor=pointer]
+        - generic [ref=e171]:
+          - button [ref=e172] [cursor=pointer]
+          - button [ref=e180] [cursor=pointer]
+          - button [ref=e185] [cursor=pointer]
+          - button [ref=e191] [cursor=pointer]
+        - menu [ref=e490]:
+          - generic [ref=e491]:
+            - generic [ref=e492]: JP
+            - generic [ref=e493]:
+              - generic [ref=e494]: Josh Park
+              - generic [ref=e495]: Balch · Computer Science
+              - generic [ref=e496]: Class of 2029 · runs a loop
+          - separator [ref=e497]
+          - menuitem "Your profile" [ref=e498] [cursor=pointer]
+          - menuitem "Calendar sync on" [ref=e504] [cursor=pointer]:
+            - text: Calendar sync
+            - generic [ref=e507]: "on"
+          - separator [ref=e508]
+          - generic [ref=e509]:
+            - generic [ref=e510]: Theme
+            - generic [ref=e511]:
+              - button "Daylight" [ref=e513] [cursor=pointer]
+              - button "Big Red Night" [active] [pressed] [ref=e520] [cursor=pointer]
+          - generic [ref=e523]: Loop never shows anyone your activity. How it works
+      - generic [ref=e195]:
+        - generic [ref=e196]: Other screens
+        - generic [ref=e198]:
+          - generic [ref=e204]:
+            - generic [ref=e205]: Class of 2030
+            - generic [ref=e206]: arriving Aug 20 · North Campus
+          - button "Account" [ref=e208] [cursor=pointer]:
+            - generic [ref=e209]: JP
+        - generic [ref=e211]:
+          - button "Back" [ref=e212] [cursor=pointer]
+          - generic [ref=e215]: Sunday HW crew
+          - button "Share" [ref=e217] [cursor=pointer]
+        - generic [ref=e225]:
+          - generic [ref=e226]:
+            - generic [ref=e227]: You
+            - generic [ref=e228]: Josh Park
+          - button "Settings" [ref=e230] [cursor=pointer]
+      - list [ref=e234]:
+        - listitem [ref=e235]: "Header: wordmark · bell · your avatar. Avatar is the account trigger on Home, Class and Advisor."
+        - listitem [ref=e236]: "Popover anchored to the avatar: identity, profile, calendar sync, theme segmented switch. Not a modal."
+        - listitem [ref=e237]: "Overdrive: theme switch does a circular wipe from the switch across the phone (View Transitions API, instant fallback, reduced-motion safe)."
+        - listitem [ref=e238]: Back-nav screens keep only contextual actions (share). You-tab header gets a gear instead of a theme icon.
+      - paragraph [ref=e239]: "Try: tap JP → flip Daylight / Big Red Night."
+    - generic [ref=e240]:
+      - generic [ref=e241]:
+        - generic [ref=e242]: "02"
+        - heading "Avatar-left identity drawer" [level=2] [ref=e243]
+      - generic [ref=e244]:
+        - generic [ref=e245]:
+          - generic [ref=e246]: 9:41
+          - generic [ref=e247]: 5G
+        - generic [ref=e250]:
+          - button "Account" [expanded] [ref=e251] [cursor=pointer]:
+            - generic [ref=e252]: JP
+          - generic [ref=e253]: Loop
+          - button "Alerts" [ref=e257] [cursor=pointer]:
+            - generic [ref=e261]: "1"
+        - generic [ref=e264]:
+          - button [ref=e265] [cursor=pointer]:
+            - generic [ref=e266]: You run this loop
+            - paragraph [ref=e269]: You've kept the Sunday HW crew coming back 6 weeks. Draft the next session when you're ready.
+            - generic [ref=e270]: Open host controls
+          - generic [ref=e273]:
+            - heading "Your loops" [level=3] [ref=e274]
+            - generic [ref=e275]: 2 running
+          - generic [ref=e276]:
+            - generic [ref=e277]: Sunday HW crew
+            - generic [ref=e278]: CS 2110 · Sundays 7pm · Balch lounge
+            - generic [ref=e279]:
+              - generic [ref=e280]:
+                - generic [ref=e281]: JP
+                - generic [ref=e282]: SC
+                - generic [ref=e283]: MI
+                - generic [ref=e284]: RK
+              - generic [ref=e285]: next in 2 days
+          - generic [ref=e287]:
+            - generic [ref=e288]: Tue/Thu boxing
+            - generic [ref=e289]: Noyes gym · 6:30am · 3× a week
+            - generic [ref=e290]:
+              - generic [ref=e291]:
+                - generic [ref=e292]: JP
+                - generic [ref=e293]: AL
+                - generic [ref=e294]: TN
+              - generic [ref=e295]: tomorrow
+          - generic [ref=e297]:
+            - heading "The Floor" [level=3] [ref=e298]
+            - generic [ref=e299]: Donlon 2F · live
+          - generic [ref=e300]:
+            - generic [ref=e301]: 11 on your floor want to lock in for CS 2110
+            - generic [ref=e302]: 3 forming · 1 already running · fires Sunday
+        - button "Drop an intent" [ref=e303] [cursor=pointer]
+        - generic [ref=e305]:
+          - button [ref=e306] [cursor=pointer]
+          - button [ref=e314] [cursor=pointer]
+          - button [ref=e319] [cursor=pointer]
+          - button [ref=e325] [cursor=pointer]
+        - generic [ref=e525]:
+          - button "Close" [ref=e526] [cursor=pointer]
+          - generic [ref=e530]:
+            - generic [ref=e531]: JP
+            - generic [ref=e532]:
+              - generic [ref=e533]: Josh Park
+              - generic [ref=e534]: Balch · CS · Class of 2029
+          - button "Your profile" [ref=e535] [cursor=pointer]
+          - button "Calendar sync" [ref=e539] [cursor=pointer]
+          - button "Big Red Night" [ref=e542] [cursor=pointer]
+          - generic [ref=e546]: View demo as
+          - button "SC Sarah seeker" [ref=e547] [cursor=pointer]:
+            - generic [ref=e548]: SC
+            - generic [ref=e549]:
+              - generic [ref=e550]: Sarah
+              - text: seeker
+          - button "JP Josh host" [ref=e551] [cursor=pointer]:
+            - generic [ref=e552]: JP
+            - generic [ref=e553]:
+              - generic [ref=e554]: Josh
+              - text: host
+          - button "MI Maya latecomer" [ref=e555] [cursor=pointer]:
+            - generic [ref=e556]: MI
+            - generic [ref=e557]:
+              - generic [ref=e558]: Maya
+              - text: latecomer
+          - button "DO Dana advisor" [ref=e559] [cursor=pointer]:
+            - generic [ref=e560]: DO
+            - generic [ref=e561]:
+              - generic [ref=e562]: Dana
+              - text: advisor
+          - generic [ref=e564]: Loop never shows anyone your activity.
+      - generic [ref=e329]:
+        - generic [ref=e330]: Other screens
+        - generic [ref=e332]:
+          - button "Account" [ref=e333] [cursor=pointer]:
+            - generic [ref=e334]: JP
+          - generic [ref=e336]:
+            - generic [ref=e337]: Class of 2030
+            - generic [ref=e338]: arriving Aug 20 · North Campus
+        - generic [ref=e340]:
+          - button "Back" [ref=e341] [cursor=pointer]
+          - generic [ref=e344]: Sunday HW crew
+          - button "Share" [ref=e346] [cursor=pointer]
+        - generic [ref=e354]:
+          - button "Account" [ref=e355] [cursor=pointer]:
+            - generic [ref=e356]: JP
+          - generic [ref=e357]: You
+      - list [ref=e358]:
+        - listitem [ref=e359]: "Header: avatar far-left, wordmark centered, bell right (Threads / Slack pattern)."
+        - listitem [ref=e360]: "Drawer slides in over the phone: profile, calendar, theme, and the demo persona switcher moves in-frame."
+        - listitem [ref=e361]: Room to grow (settings, sign out) but heavier chrome; centered wordmark competes with the Class title.
+      - paragraph [ref=e362]: "Try: tap JP → open drawer → toggle theme."
+    - generic [ref=e363]:
+      - generic [ref=e364]:
+        - generic [ref=e365]: "03"
+        - 'heading "Minimal: wordmark + bell" [level=2] [ref=e366]'
+      - generic [ref=e367]:
+        - generic [ref=e368]:
+          - generic [ref=e369]: 9:41
+          - generic [ref=e370]: 5G
+        - generic [ref=e373]:
+          - generic [ref=e374]: Loop
+          - button "Alerts" [ref=e377] [cursor=pointer]:
+            - generic [ref=e381]: "1"
+        - generic [ref=e384]:
+          - button [ref=e385] [cursor=pointer]:
+            - generic [ref=e386]: You run this loop
+            - paragraph [ref=e389]: You've kept the Sunday HW crew coming back 6 weeks. Draft the next session when you're ready.
+            - generic [ref=e390]: Open host controls
+          - generic [ref=e393]:
+            - heading "Your loops" [level=3] [ref=e394]
+            - generic [ref=e395]: 2 running
+          - generic [ref=e396]:
+            - generic [ref=e397]: Sunday HW crew
+            - generic [ref=e398]: CS 2110 · Sundays 7pm · Balch lounge
+            - generic [ref=e399]:
+              - generic [ref=e400]:
+                - generic [ref=e401]: JP
+                - generic [ref=e402]: SC
+                - generic [ref=e403]: MI
+                - generic [ref=e404]: RK
+              - generic [ref=e405]: next in 2 days
+          - generic [ref=e407]:
+            - generic [ref=e408]: Tue/Thu boxing
+            - generic [ref=e409]: Noyes gym · 6:30am · 3× a week
+            - generic [ref=e410]:
+              - generic [ref=e411]:
+                - generic [ref=e412]: JP
+                - generic [ref=e413]: AL
+                - generic [ref=e414]: TN
+              - generic [ref=e415]: tomorrow
+          - generic [ref=e417]:
+            - heading "The Floor" [level=3] [ref=e418]
+            - generic [ref=e419]: Donlon 2F · live
+          - generic [ref=e420]:
+            - generic [ref=e421]: 11 on your floor want to lock in for CS 2110
+            - generic [ref=e422]: 3 forming · 1 already running · fires Sunday
+        - button "Drop an intent" [ref=e423] [cursor=pointer]
+        - generic [ref=e425]:
+          - button [ref=e426] [cursor=pointer]
+          - button [ref=e434] [cursor=pointer]
+          - button [ref=e439] [cursor=pointer]
+          - button [ref=e445] [cursor=pointer]
+      - generic [ref=e449]:
+        - generic [ref=e450]: Other screens
+        - generic [ref=e458]:
+          - generic [ref=e459]: Class of 2030
+          - generic [ref=e460]: arriving Aug 20 · North Campus
+        - generic [ref=e462]:
+          - button "Back" [ref=e463] [cursor=pointer]
+          - generic [ref=e466]: Sunday HW crew
+          - button "Share" [ref=e468] [cursor=pointer]
+        - generic [ref=e476]:
+          - generic [ref=e477]:
+            - generic [ref=e478]: You
+            - generic [ref=e479]: Josh Park
+          - button "Toggle theme" [ref=e481] [cursor=pointer]
+      - list [ref=e484]:
+        - listitem [ref=e485]: "Header: wordmark + bell only. No account trigger up top; the You tab is the account."
+        - listitem [ref=e486]: Theme lives only on the You tab (the card that already exists there, plus its header icon).
+        - listitem [ref=e487]: Least chrome, but theme is 2 taps away and Class / Advisor lose any right-side action.
+      - paragraph [ref=e488]: "Try: the theme icon on the You strip flips this phone."

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Drop an intent — pill styling, 3 looks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-300:#e08d84; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss-500:#3d8a5f; --amber-500:#b6862b; --amber-600:#8a641f; --rose-500:#a04f6a; --slate-500:#59657a;
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius-xl:28px;
+    --dur-1:120ms; --dur-2:180ms; --dur-3:260ms;
+    --ease-out:cubic-bezier(.2,.8,.2,1); --ease-settle:cubic-bezier(.16,1,.3,1);
+  }
+  .phone{
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2); --bg-scrim:rgba(31,26,23,.44);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-4);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --unit-class:var(--slate-500); --unit-major:var(--moss-500); --unit-dorm:var(--amber-600); --status-forming:var(--amber-600); --status-live:var(--moss-500);
+    --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+    --shadow-raised:0 10px 30px -14px rgba(80,40,30,.28);
+    --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+  }
+  .phone[data-theme="afterdark"]{
+    --bg-page:#181310; --bg-surface:#211a16; --bg-sunken:#12100c; --bg-scrim:rgba(0,0,0,.55);
+    --text-primary:#f8f1e8; --text-secondary:#bcafa2; --text-tertiary:#8d8074;
+    --border-hairline:#342a24; --border-strong:#4a3d35;
+    --accent:var(--carnelian-400); --accent-strong:var(--carnelian-300); --accent-quiet:rgba(207,83,71,.16); --accent-ink:#1a0d0b;
+    --unit-class:#8b98ad; --unit-major:#5fb287; --unit-dorm:#d1a24a; --status-forming:#d1a24a; --status-live:#5fb287;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4); --shadow-raised:0 10px 30px -14px rgba(0,0,0,.7); --shadow-pop:0 28px 60px -24px rgba(0,0,0,.8);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{ background:#ebe3d5; color:var(--ink-0); font-family:var(--font-sans); -webkit-font-smoothing:antialiased; padding:40px 28px 80px; }
+  button{ font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  :focus-visible{ outline:2px solid var(--carnelian-500); outline-offset:2px; }
+  h1{ font-family:var(--font-display); font-weight:800; font-size:30px; letter-spacing:-.03em; margin:0 0 6px; }
+  .lede{ color:var(--ink-2); font-size:15px; max-width:70ch; margin:0 0 14px; line-height:1.5; }
+  .lede code{ font-family:var(--font-mono); font-size:13px; background:#fff8ee; padding:1px 5px; border-radius:5px; }
+  .toolbar{ display:flex; gap:10px; margin:0 0 26px; }
+  .toolbar button{ border:1px solid var(--paper-3); background:var(--paper-0); border-radius:999px; padding:7px 14px; font-weight:600; font-size:13px; color:var(--ink-2); }
+  .grid{ display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .col{ width:390px; display:flex; flex-direction:column; gap:14px; }
+  .label{ display:flex; align-items:baseline; gap:10px; }
+  .label .n{ font-family:var(--font-mono); font-size:12px; color:var(--carnelian-600); font-weight:500; }
+  .label h2{ font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:-.02em; margin:0; }
+  .label .rec{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--carnelian-600); background:var(--carnelian-100); padding:2px 8px; border-radius:999px; }
+  .notes{ font-size:13.5px; color:var(--ink-2); line-height:1.5; margin:0; padding-left:18px; }
+  .notes li+li{ margin-top:4px; }
+  .notes b{ color:var(--ink-0); font-weight:600; }
+  .try{ font-size:12.5px; color:var(--ink-3); margin:0; }
+
+  /* ---- phone chrome ---- */
+  .phone{ width:390px; height:740px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:40px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:var(--shadow-pop); color:var(--text-primary); transition:background var(--dur-3); }
+  .status{ display:flex; align-items:center; justify-content:space-between; padding:12px 24px 4px; flex-shrink:0; }
+  .status .t{ font-family:var(--font-mono); font-size:12.5px; font-weight:500; }
+  .status .r{ display:flex; align-items:center; gap:6px; }
+  .status .g{ font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); }
+  .status .bat{ width:20px; height:11px; border-radius:3px; border:1.5px solid var(--text-secondary); position:relative; display:inline-block; }
+  .status .bat::after{ content:""; position:absolute; inset:1.5px; right:5px; border-radius:1px; background:var(--text-secondary); }
+  .header{ display:flex; align-items:center; padding:0 20px; height:56px; border-bottom:1px solid var(--border-hairline); flex-shrink:0; }
+  .wordmark{ font-family:var(--font-display); font-weight:800; letter-spacing:-.03em; font-size:22px; display:inline-flex; align-items:baseline; line-height:1; }
+  .wordmark i{ width:5px; height:5px; border-radius:50%; background:var(--accent); display:inline-block; margin-left:2px; }
+  .bg{ flex:1; padding:16px 20px; overflow:hidden; }
+  .bg .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); margin:6px 0 10px; }
+  .bgrow{ display:flex; align-items:center; gap:12px; padding:12px 2px; border-bottom:1px solid var(--border-hairline); }
+  .bgrow .ring{ width:40px; height:40px; border-radius:50%; border:4px solid var(--bg-sunken); border-top-color:var(--accent); flex:0 0 auto; }
+  .bgrow .t{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .bgrow .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; }
+  .scrim{ position:absolute; inset:0; background:var(--bg-scrim); backdrop-filter:blur(2px); z-index:55; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg-surface); border-top-left-radius:var(--radius-xl); border-top-right-radius:var(--radius-xl); box-shadow:var(--shadow-pop); padding:8px 20px 22px; z-index:56; max-height:94%; overflow-y:auto; scrollbar-width:none; }
+  .sheet::-webkit-scrollbar{ width:0; }
+  .grab{ width:36px; height:4px; border-radius:99px; background:var(--border-strong); margin:4px auto 16px; opacity:.6; }
+  .kicker{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); }
+  .title{ font-family:var(--font-display); font-weight:700; font-size:22px; line-height:1.15; margin:4px 0 0; letter-spacing:-.01em; }
+  .sheethead{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+  .xbtn{ width:36px; height:36px; border-radius:50%; border:none; background:transparent; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; margin:-4px -8px 0 0; }
+  .srcline{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:2px 0 8px; }
+  .srcpill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--status-forming); background:color-mix(in srgb,var(--status-forming) 15%,var(--bg-surface)); padding:4px 9px; border-radius:99px; transition:opacity var(--dur-2); }
+  .srcpill.off{ opacity:0; pointer-events:none; }
+  .linkbtn{ border:none; background:none; color:var(--accent-strong); font-weight:600; font-size:12.5px; padding:4px 2px; display:inline-flex; align-items:center; gap:5px; }
+  .hint{ font-size:12px; color:var(--text-tertiary); margin-top:6px; }
+  .hint b{ color:var(--text-secondary); font-weight:600; }
+  .compat{ display:flex; align-items:center; gap:12px; margin:14px 0 2px; padding:12px 15px; border-radius:16px; background:linear-gradient(180deg,var(--accent-quiet),var(--bg-surface)); border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border-hairline)); }
+  .compat__big{ font-family:var(--font-mono); font-weight:500; font-size:29px; color:var(--accent-strong); line-height:1; min-width:42px; text-align:center; }
+  .compat__txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.35; }
+  .compat__txt b{ color:var(--text-primary); }
+  .btn{ width:100%; height:50px; border-radius:16px; border:none; font-family:var(--font-display); font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform var(--dur-1), opacity var(--dur-2); }
+  .btn:active{ transform:scale(.985); }
+  .btn--primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn--secondary{ background:var(--bg-sunken); color:var(--text-primary); }
+  .foot{ font-size:12.5px; color:var(--text-secondary); line-height:1.5; margin:12px 0 0; }
+
+  /* ---- shared sentence layout ---- */
+  .core{ font-family:var(--font-display); font-weight:800; font-size:22px; letter-spacing:-.02em; color:var(--text-primary); margin:4px 0 2px; display:flex; flex-wrap:wrap; align-items:center; gap:8px 6px; }
+  .core .w{ padding:0 1px; }
+  .chev{ width:12px; height:12px; opacity:.55; flex:0 0 auto; }
+  .kindmark{ font-size:15px; line-height:1; }
+
+  /* ===== 01 · soft pills + dropdown ===== */
+  .p1{ display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 10px 0 13px; border-radius:99px; border:1.5px solid transparent; font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:-.01em; cursor:pointer; background:color-mix(in srgb,var(--c,var(--accent)) 11%,var(--bg-surface)); color:var(--c,var(--accent-strong)); transition:all var(--dur-2) var(--ease-out); user-select:none; }
+  .p1:active{ transform:scale(.97); }
+  .p1--ghost{ background:transparent; border-color:var(--border-strong); border-style:dashed; color:var(--text-tertiary); }
+  .p1--ghost .chev{ opacity:.8; }
+  .p1--add{ background:transparent; border-color:var(--border-hairline); border-style:dashed; color:var(--text-tertiary); font-size:14px; font-weight:600; height:32px; padding:0 12px; }
+  .p1--add .plus{ font-size:16px; line-height:1; margin-right:-1px; }
+  .p1 .x{ width:18px; height:18px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; opacity:.6; margin-left:-2px; }
+  .menu{ position:absolute; z-index:60; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:16px; box-shadow:var(--shadow-raised); padding:6px; max-height:262px; overflow-y:auto; scrollbar-width:none; width:240px; }
+  .menu::-webkit-scrollbar{ width:0; }
+  .sugrow{ position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 11px; border-radius:11px; cursor:pointer; overflow:hidden; }
+  .sugrow:active{ transform:scale(.99); }
+  .sugrow__bar{ position:absolute; left:0; top:0; bottom:0; background:color-mix(in srgb,var(--c,var(--accent)) 12%,transparent); border-radius:11px; }
+  .sugrow__nm{ position:relative; z-index:1; font-weight:600; font-size:14.5px; color:var(--text-primary); display:flex; align-items:center; gap:7px; }
+  .sugrow__vl{ position:relative; z-index:1; font-family:var(--font-mono); font-size:11.5px; color:var(--text-secondary); }
+  .sugrow--cur .sugrow__nm::before{ content:"✓"; color:var(--c,var(--accent-strong)); }
+  .sugrow--top .sugrow__nm::after{ content:"popular"; font-size:9.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--status-forming); }
+
+  /* ===== 02 · bold pills + chip-cloud picker ===== */
+  .p2{ display:inline-flex; align-items:center; gap:7px; height:40px; padding:0 12px 0 15px; border-radius:99px; border:1.5px solid var(--c,var(--accent)); font-family:var(--font-display); font-weight:800; font-size:18px; letter-spacing:-.01em; cursor:pointer; background:var(--c,var(--accent)); color:var(--bg-surface); box-shadow:0 6px 16px -10px var(--c,var(--accent)); transition:all var(--dur-2) var(--ease-out); user-select:none; }
+  .p2:active{ transform:scale(.97); }
+  .p2--ghost{ background:color-mix(in srgb,var(--c,var(--accent)) 12%,var(--bg-surface)); color:color-mix(in srgb,var(--c,var(--accent)) 70%,var(--text-tertiary)); border-style:dashed; border-color:color-mix(in srgb,var(--c,var(--accent)) 45%,var(--border-strong)); box-shadow:none; }
+  .p2--open{ outline:3px solid color-mix(in srgb,var(--c,var(--accent)) 30%,transparent); }
+  .p2--add{ background:transparent; border:1.5px dashed var(--border-strong); color:var(--text-tertiary); box-shadow:none; font-size:14px; font-weight:600; height:36px; padding:0 13px; }
+  .cloud{ margin-top:12px; padding:12px 12px 10px; border-radius:18px; background:var(--bg-sunken); border:1px solid var(--border-hairline); animation:pop var(--dur-2) var(--ease-settle) both; }
+  @keyframes pop{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+  .cloud__h{ display:flex; align-items:center; justify-content:space-between; margin:0 2px 9px; }
+  .cloud__h .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); }
+  .cloud__h .k b{ color:var(--c,var(--accent-strong)); text-transform:none; letter-spacing:0; font-size:12px; margin-left:4px; }
+  .cloud__h .close{ border:none; background:none; color:var(--text-tertiary); font-size:12px; font-weight:600; }
+  .cloud__chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .cc{ display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 12px; border-radius:99px; border:1.5px solid var(--border-hairline); background:var(--bg-surface); font-size:13.5px; font-weight:600; color:var(--text-primary); white-space:nowrap; transition:all var(--dur-1) var(--ease-out); }
+  .cc .n{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); font-weight:500; }
+  .cc--top::before{ content:"✦"; color:var(--status-forming); font-size:11px; }
+  .cc--on{ background:var(--c,var(--accent)); border-color:var(--c,var(--accent)); color:var(--bg-surface); }
+  .cc--on .n{ color:var(--bg-surface); opacity:.85; }
+  .cc:active{ transform:scale(.96); }
+
+  /* ===== 03 · slot cards + rail picker ===== */
+  .core--cards{ gap:8px 6px; }
+  .p3{ display:inline-flex; flex-direction:column; align-items:flex-start; justify-content:center; height:50px; padding:0 12px 0 12px; border-radius:14px; border:1.5px solid var(--border-hairline); background:var(--bg-surface); box-shadow:var(--shadow-card); cursor:pointer; min-width:74px; position:relative; transition:all var(--dur-2) var(--ease-out); user-select:none; }
+  .p3:active{ transform:scale(.97); }
+  .p3 small{ font-family:var(--font-sans); font-size:9.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); line-height:1; margin-bottom:4px; }
+  .p3 b{ font-family:var(--font-display); font-weight:800; font-size:17px; letter-spacing:-.01em; color:var(--c,var(--accent-strong)); line-height:1; white-space:nowrap; }
+  .p3--ghost{ border-style:dashed; border-color:var(--border-strong); background:transparent; box-shadow:none; }
+  .p3--ghost b{ color:var(--text-tertiary); }
+  .p3--ghost small::after{ content:" · suggested"; color:var(--status-forming); }
+  .p3--open{ border-color:var(--c,var(--accent)); box-shadow:0 0 0 3px color-mix(in srgb,var(--c,var(--accent)) 22%,transparent); }
+  .p3--add{ border-style:dashed; border-color:var(--border-hairline); background:transparent; box-shadow:none; }
+  .p3--add b{ color:var(--text-tertiary); font-size:14px; font-weight:700; }
+  .p3 .dot{ position:absolute; top:6px; right:8px; width:6px; height:6px; border-radius:50%; background:var(--c,var(--accent)); }
+  .core--cards .w{ font-size:19px; font-weight:800; color:var(--text-primary); }
+  .railwrap{ margin-top:12px; animation:pop var(--dur-2) var(--ease-settle) both; }
+  .railwrap .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); margin:0 2px 8px; display:flex; justify-content:space-between; }
+  .railwrap .k b{ color:var(--c,var(--accent-strong)); text-transform:none; letter-spacing:0; font-size:12px; }
+  .rail{ display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; margin:0 -20px; padding:2px 20px 4px; }
+  .rail::-webkit-scrollbar{ height:0; }
+  .rail .cc{ flex:0 0 auto; }
+</style>
+</head>
+<body>
+
+<h1>Drop an intent · pill styling, 3 looks</h1>
+<p class="lede">Same composer as direction 01 (opens filled with the most popular recent drop, greyed = suggested; tap a word to make it yours; <b>↻ another</b> rotates through what's popular; the count reacts live). Only the <b>token treatment</b> and the <b>picker</b> change. Flip theme to check both.</p>
+<div class="toolbar"><button id="themeBtn">☾ flip theme on all three</button></div>
+
+<div class="grid">
+  <div class="col">
+    <div class="label"><span class="n">01</span><h2>Soft pills · dropdown</h2><span class="rec">recommended</span></div>
+    <div class="phone" data-variant="soft" data-theme="daylight"></div>
+    <ul class="notes">
+      <li>Pills are <b>tinted by category</b> (eat amber / study slate / move moss) once they're yours; suggested pills are <b>dashed grey outlines</b>, so "yours vs. suggested" reads at a glance.</li>
+      <li>Chevron ▾ signals tappable without the dotted underline. Ranked dropdown menu is unchanged from the Floor sheet.</li>
+      <li>Quietest of the three; sits comfortably in the current sheet with no extra height.</li>
+    </ul>
+    <p class="try">Try: tap <i>dinner</i> → <i>coffee</i> · tap <i>Grabbing</i> → <i>Up for</i> · tap <i>+ where</i>.</p>
+  </div>
+  <div class="col">
+    <div class="label"><span class="n">02</span><h2>Bold pills · chip cloud</h2></div>
+    <div class="phone" data-variant="bold" data-theme="daylight"></div>
+    <ul class="notes">
+      <li>Filled, saturated pills — the sentence looks like a row of chips you'd see on a Floor card. Suggested = tinted + dashed.</li>
+      <li>Tapping a pill opens an <b>inline chip cloud</b> under the sentence (all options visible, ✦ marks popular, counts on each) instead of a floating list — more thumb-friendly, no menu-off-screen problems.</li>
+      <li>Trade-off: louder; four solid pills can compete with the Drop button.</li>
+    </ul>
+    <p class="try">Try: tap <i>Thursdays</i> → cloud → <i>Fridays</i>; tap <i>+ where</i> → <i>Collegetown</i>.</p>
+  </div>
+  <div class="col">
+    <div class="label"><span class="n">03</span><h2>Slot cards · rail</h2></div>
+    <div class="phone" data-variant="cards" data-theme="daylight"></div>
+    <ul class="notes">
+      <li>Each token is a mini card with a <b>tiny label</b> (doing / what / day / often / where) — no guessing what a slot means; "· suggested" lives in the label.</li>
+      <li>Picker is a horizontal rail of chips ranked by demand, so the sentence never gets covered.</li>
+      <li>Most explicit; reads a touch more like a form than a sentence.</li>
+    </ul>
+    <p class="try">Try: tap the <i>often</i> card → rail → <i>2× a week</i>.</p>
+  </div>
+</div>
+
+<script>
+/* ---------- vocabulary (mirrors FLR_* in index.html) ---------- */
+const DAYS=['Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays','Sundays','weekdays','weekends'];
+const DAYPOP={ Mondays:6,Tuesdays:5,Wednesdays:6,Thursdays:12,Fridays:12,Saturdays:11,Sundays:9,weekdays:8,weekends:10 };
+const CADS=['daily','3× a week','2× a week','weekly','every other week','monthly'];
+const CADPOP={ daily:5,'3× a week':7,weekly:12,'2× a week':6,'every other week':7,monthly:4 };
+const CADF={ daily:1.1,'3× a week':.95,weekly:1,'2× a week':.9,'every other week':.8,monthly:.65 };
+const ACTS={ dine:['breakfast','brunch','lunch','coffee','dinner','late-night bites'], move:['a run','a lift','a climb','bouldering','kickboxing','yoga','pickup ball'], study:['CS 2110','CHEM 2070','MATH 1920','ECON 1110','PSYCH 1101','any subject'] };
+const ACTPOP={ dinner:12,lunch:9,brunch:8,coffee:6,breakfast:4,'late-night bites':5,'a run':9,'a lift':8,'a climb':6,bouldering:6,kickboxing:8,yoga:5,'pickup ball':6,'CS 2110':11,'CHEM 2070':8,'MATH 1920':7,'ECON 1110':6,'PSYCH 1101':6,'any subject':9 };
+const WHERES={ dine:['Collegetown','North','West','Downtown'], move:['Teagle gym','Beebe Lake','Lindseth wall','Collegetown','outdoor loop'], study:['Libe Café','Mann','Uris','Olin','dorm lounge'] };
+const WHEREPOP={ Collegetown:12,North:9,West:6,Downtown:5,'Teagle gym':10,'Beebe Lake':8,'Lindseth wall':6,'outdoor loop':7,'Libe Café':11,Mann:8,Uris:9,Olin:6,'dorm lounge':7 };
+const LEAD={ dine:'Grabbing', study:'Studying', move:'Up for' };
+const KINDS=[['dine','Grabbing'],['study','Studying'],['move','Up for']];
+const KINDPOP={ dine:12, study:11, move:9 };
+const CATC={ dine:'var(--unit-dorm)', study:'var(--unit-class)', move:'var(--unit-major)' };
+const ICON={ dine:'🍜', study:'📖', move:'🏃' };
+const POPULAR=[
+  { cat:'dine',  act:'dinner',     day:'Thursdays', cad:'weekly', where:null,         want:12 },
+  { cat:'move',  act:'a run',      day:'Fridays',   cad:'weekly', where:'Collegetown',want:9  },
+  { cat:'study', act:'CS 2110',    day:'Sundays',   cad:'weekly', where:'Uris',       want:11 },
+  { cat:'move',  act:'kickboxing', day:'Wednesdays',cad:'weekly', where:'Teagle gym', want:8  },
+  { cat:'dine',  act:'coffee',     day:'Mondays',   cad:'weekly', where:null,         want:6  },
+];
+function compat(s){ let n=((ACTPOP[s.act]||6)+(DAYPOP[s.day]||6))/2*(CADF[s.cad]||1); if(s.where) n*=.62; return Math.max(1,Math.min(10,Math.round(n))); }
+function sentence(s){ return LEAD[s.cat]+' '+s.act+' '+s.day+', '+s.cad+(s.where?' @'+s.where:''); }
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const CHEV='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+const SLOTLABEL={ kind:'doing', act:'what', day:'day', cad:'often', where:'where' };
+const listFor=(k,st)=>{
+  if(k==='kind') return KINDS.map(([c,l])=>({v:l,n:KINDPOP[c]}));
+  if(k==='act') return ACTS[st.cat].map(v=>({v,n:ACTPOP[v]||5}));
+  if(k==='day') return DAYS.map(v=>({v,n:DAYPOP[v]||5}));
+  if(k==='cad') return CADS.map(v=>({v,n:CADPOP[v]||5}));
+  return [{v:'anywhere',n:14}].concat(WHERES[st.cat].map(v=>({v,n:WHEREPOP[v]||5})));
+};
+const curFor=(k,st)=> k==='kind'?LEAD[st.cat] : k==='act'?st.act : k==='day'?st.day : k==='cad'?st.cad : (st.where||'anywhere');
+
+/* ---------- phone shell ---------- */
+const SHELL = `
+  <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
+  <div class="header"><span class="wordmark">Loop<i></i></span></div>
+  <div class="bg"><div class="k">What your intent lands in</div>${POPULAR.map(p=>`<div class="bgrow"><div class="ring"></div><div><div class="t">${esc(sentence(p).replace(/^(Grabbing|Studying|Up for) /,''))}</div><div class="s">${p.want} want · your floor</div></div></div>`).join('')}</div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheethead"><div><div class="kicker">Drop an intent</div><h2 class="title">What are you trying to make happen?</h2></div><button class="xbtn" aria-label="Close">✕</button></div>
+    <div class="srcline"><span class="srcpill">✦ popular on your floor</span><button class="linkbtn" data-shuffle>↻ another</button></div>
+    <div class="core" data-core></div>
+    <div data-picker></div>
+    <div class="hint" data-hint></div>
+    <div class="compat"><div class="compat__big" data-n>9</div><div class="compat__txt" data-txt></div></div>
+    <div style="margin-top:12px"><button class="btn btn--primary" data-drop>Drop it</button></div>
+    <p class="foot">Drop it and it waits on your floor until enough people want the same thing — then it fires and a loop crystallizes.</p>
+  </div>`;
+
+function makeComposer(phone){
+  const variant=phone.dataset.variant;
+  phone.innerHTML=SHELL;
+  const sheet=phone.querySelector('.sheet'), core=phone.querySelector('[data-core]'), picker=phone.querySelector('[data-picker]'), pill=phone.querySelector('.srcpill');
+  let idx=0, st={ ...POPULAR[0] }, mine={}, open=null;   // open = slot key currently being picked
+
+  const catColor=k => (k==='act'||k==='kind') ? CATC[st.cat] : k==='where' ? 'var(--unit-class)' : 'var(--accent)';
+  const label=k => k==='kind'?LEAD[st.cat] : k==='where'?'@'+st.where : curFor(k,st);
+  const KINDICON = () => `<span class="kindmark">${ICON[st.cat]}</span>`;
+
+  function tokenHTML(k){
+    const ghost=!mine[k], c=catColor(k);
+    if(variant==='soft'){
+      if(k==='where' && !st.where) return `<span class="p1 p1--add" data-k="where"><span class="plus">+</span> where</span>`;
+      return `<span class="p1 ${ghost?'p1--ghost':''}" data-k="${k}" style="--c:${c}">${k==='kind'?KINDICON():''}${esc(label(k))}${k==='where'?'<span class="x" data-clear>×</span>':CHEV}</span>`;
+    }
+    if(variant==='bold'){
+      if(k==='where' && !st.where) return `<span class="p2 p2--add" data-k="where">+ where</span>`;
+      return `<span class="p2 ${ghost?'p2--ghost':''} ${open===k?'p2--open':''}" data-k="${k}" style="--c:${c}">${k==='kind'?KINDICON():''}${esc(label(k))}${CHEV}</span>`;
+    }
+    // cards
+    if(k==='where' && !st.where) return `<span class="p3 p3--add ${open===k?'p3--open':''}" data-k="where" style="--c:${c}"><small>where</small><b>+ add</b></span>`;
+    return `<span class="p3 ${ghost?'p3--ghost':''} ${open===k?'p3--open':''}" data-k="${k}" style="--c:${c}"><small>${SLOTLABEL[k]}</small><b>${esc(label(k))}</b>${!ghost?'<span class="dot"></span>':''}</span>`;
+  }
+  function render(){
+    const anyMine=Object.keys(mine).length>0;
+    pill.classList.toggle('off', anyMine);
+    if(variant==='cards'){
+      core.className='core core--cards';
+      core.innerHTML = tokenHTML('kind')+tokenHTML('act')+`<span class="w">on</span>`+tokenHTML('day')+tokenHTML('cad')+tokenHTML('where');
+    } else {
+      core.innerHTML = tokenHTML('kind')+tokenHTML('act')+tokenHTML('day')+`<span class="w">,</span>`+tokenHTML('cad')+tokenHTML('where');
+    }
+    renderPicker();
+    const n=compat(st); phone.querySelector('[data-n]').textContent=n;
+    phone.querySelector('[data-txt]').innerHTML = st.where
+      ? `<b>${n} near you</b> want this too. Pinned to @${esc(st.where)} — clear it to fit more.`
+      : `<b>${n} near you</b> want this too. Open on where — that's why it's high.`;
+    phone.querySelector('[data-hint]').innerHTML = anyMine ? 'tap a pill to change it · clear <b>where</b> to open it back up' : 'tap a pill to change it · <b>dashed = suggested</b>, tap to make it yours';
+  }
+  function pick(k,v){
+    mine[k]=true;
+    if(k==='kind'){ const c=KINDS.find(x=>x[1]===v)[0]; if(c!==st.cat){ st.cat=c; st.act=ACTS[c].slice().sort((a,b)=>(ACTPOP[b]||0)-(ACTPOP[a]||0))[0]; if(st.where && !WHERES[c].includes(st.where)) st.where=null; mine.act=true; } }
+    else if(k==='act') st.act=v; else if(k==='day') st.day=v; else if(k==='cad') st.cad=v;
+    else st.where = v==='anywhere'?null:v;
+    open=null; closeMenu(); render();
+  }
+  /* --- pickers --- */
+  function closeMenu(){ if(sheet._menu){ sheet._menu.remove(); sheet._menu=null; } }
+  function openMenu(anchor,k){
+    closeMenu();
+    const list=listFor(k,st).sort((a,b)=>b.n-a.n), cur=curFor(k,st), mx=list[0].n, c=catColor(k);
+    const sr=sheet.getBoundingClientRect(), tr=anchor.getBoundingClientRect();
+    const m=document.createElement('div'); m.className='menu'; m.style.setProperty('--c',c);
+    let left=tr.left-sr.left; left=Math.max(10,Math.min(left, sheet.clientWidth-250));
+    m.style.left=left+'px'; m.style.top=(tr.bottom-sr.top+sheet.scrollTop+8)+'px';
+    m.innerHTML=list.map((o,i)=>`<div class="sugrow ${i===0?'sugrow--top':''} ${o.v===cur?'sugrow--cur':''}" data-v="${esc(o.v)}"><span class="sugrow__bar" style="width:${Math.round(o.n/mx*100)}%"></span><span class="sugrow__nm">${esc(o.v)}</span><span class="sugrow__vl">${o.n} want</span></div>`).join('');
+    m.addEventListener('click',e=>{ e.stopPropagation(); const r=e.target.closest('.sugrow'); if(r) pick(k,r.dataset.v); });
+    sheet.appendChild(m); sheet._menu=m;
+    // flip upward when the sheet has no room below the anchor
+    const roomBelow = sheet.clientHeight - (tr.bottom - sr.top) - 8;
+    if(m.offsetHeight > roomBelow){ m.style.top=Math.max(4,(tr.top-sr.top+sheet.scrollTop-8-m.offsetHeight))+'px'; }
+  }
+  function renderPicker(){
+    if(variant==='soft' || !open){ picker.innerHTML=''; return; }
+    const k=open, list=listFor(k,st).sort((a,b)=>b.n-a.n), cur=curFor(k,st), c=catColor(k);
+    const chips=list.map((o,i)=>`<button class="cc ${i===0?'cc--top':''} ${o.v===cur?'cc--on':''}" data-v="${esc(o.v)}">${esc(o.v)}<span class="n">${o.n}</span></button>`).join('');
+    if(variant==='bold'){
+      picker.innerHTML=`<div class="cloud" style="--c:${c}"><div class="cloud__h"><span class="k">${SLOTLABEL[k]}<b>${esc(curFor(k,st))}</b></span><button class="close" data-close>done</button></div><div class="cloud__chips">${chips}</div></div>`;
+    } else {
+      picker.innerHTML=`<div class="railwrap" style="--c:${c}"><div class="k"><span>${SLOTLABEL[k]} · ranked by demand</span><b>${esc(curFor(k,st))}</b></div><div class="rail">${chips}</div></div>`;
+    }
+    picker.querySelectorAll('.cc').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); pick(k,b.dataset.v); }));
+    const cl=picker.querySelector('[data-close]'); if(cl) cl.addEventListener('click',e=>{ e.stopPropagation(); open=null; render(); });
+  }
+  /* --- events --- */
+  core.addEventListener('click',e=>{
+    const t=e.target.closest('[data-k]'); if(!t) return; e.stopPropagation();
+    if(e.target.closest('[data-clear]')){ mine.where=true; st.where=null; render(); return; }
+    const k=t.dataset.k;
+    if(variant==='soft'){ openMenu(t,k); return; }
+    open = open===k ? null : k; render();
+  });
+  sheet.addEventListener('click',()=>{ closeMenu(); if(open){ open=null; render(); } });
+  phone.querySelector('[data-shuffle]').addEventListener('click',e=>{ e.stopPropagation(); idx=(idx+1)%POPULAR.length; st={ ...POPULAR[idx] }; mine={}; open=null; closeMenu(); render(); });
+  phone.querySelector('[data-drop]').addEventListener('click',e=>{ const b=e.currentTarget; b.textContent='Dropped · waiting on your floor'; b.className='btn btn--secondary'; setTimeout(()=>{ b.textContent='Drop it'; b.className='btn btn--primary'; },1600); });
+  render();
+}
+document.querySelectorAll('.phone').forEach(makeComposer);
+document.getElementById('themeBtn').addEventListener('click',()=>{ document.querySelectorAll('.phone').forEach(p=>{ p.dataset.theme = p.dataset.theme==='afterdark'?'daylight':'afterdark'; }); });
+</script>
+</body>
+</html>

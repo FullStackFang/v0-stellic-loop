@@ -1,0 +1,78 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e262]:
+      - generic [ref=e263]:
+        - generic [ref=e264]:
+          - generic [ref=e265]: You
+          - heading "Sarah Chen" [level=1] [ref=e266]
+        - button "Toggle theme" [ref=e268] [cursor=pointer]
+      - generic [ref=e271]:
+        - generic [ref=e272]:
+          - generic "Sarah Chen" [ref=e273]: SC
+          - generic [ref=e274]:
+            - paragraph [ref=e275]: Donlon 2F · Computer Science
+            - paragraph [ref=e276]: Class of 2029
+        - generic [ref=e277]:
+          - generic [ref=e278]: Belonging signal
+          - paragraph [ref=e282]: You're in 0 loops this semester.
+          - paragraph [ref=e283]: Students in at least one loop stay enrolled and see an advisor earlier. Loop shares this with advising as one number — a sign to reach out — never your conversations.
+          - generic [ref=e284]:
+            - generic [ref=e285]:
+              - generic [ref=e286]: "0"
+              - generic [ref=e287]: your loops
+            - generic [ref=e288]:
+              - generic [ref=e289]: "0"
+              - generic [ref=e290]: best streak · wks
+            - generic [ref=e291]:
+              - generic [ref=e292]: 64%
+              - generic [ref=e293]: of campus in a loop
+        - generic [ref=e294]:
+          - generic [ref=e295]: Your loops
+          - paragraph [ref=e297]: You're not in a loop yet. Drop an intent and Loop seats you into a crew that already meets — it shows up here to reopen, share, or push to your calendar.
+          - button "Drop an intent" [ref=e299] [cursor=pointer]
+        - generic [ref=e301]:
+          - generic [ref=e306]:
+            - paragraph [ref=e307]: Dana Okafor
+            - paragraph [ref=e308]: your Loop counselor · Advising & Wellbeing
+          - paragraph [ref=e309]: Walk-ins Tue + Thu · 2–4p
+          - generic [ref=e310]:
+            - button "Message Dana" [ref=e311] [cursor=pointer]
+            - button "Report a concern" [ref=e314] [cursor=pointer]
+        - generic [ref=e317]:
+          - generic [ref=e318]: Private notes
+          - paragraph [ref=e321]: Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.
+        - button "Big Red Night theme" [ref=e322] [cursor=pointer]:
+          - generic [ref=e323]: Big Red Night
+          - generic [ref=e326]: theme
+      - generic [ref=e327]:
+        - button [ref=e328] [cursor=pointer]
+        - button [ref=e336] [cursor=pointer]
+        - button [ref=e341] [cursor=pointer]
+        - button [ref=e346] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah seeker" [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: seeker
+      - button "Josh Park Josh host" [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: host
+      - button "Maya Idris Maya latecomer" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: latecomer
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "restart demo" [ref=e52] [cursor=pointer]

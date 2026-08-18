@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Staff personas — RA · TA · Counselor dashboards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e;
+    --carnelian-100:#f8e6e3; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a;
+    --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber-600);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:radial-gradient(1000px 460px at 50% -8%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:36px 20px 60px; }
+  .wrap{ max-width:1320px; margin:0 auto; text-align:center; }
+  .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  h1{ font:800 28px/1.12 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .lede{ max-width:68ch; margin:0 auto 22px; color:var(--text-secondary); font-size:15px; line-height:1.55; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  .controls{ display:flex; gap:28px; justify-content:center; flex-wrap:wrap; margin:6px auto 26px; text-align:left; }
+  .ctl{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:16px; padding:12px 14px; }
+  .ctl .k{ font:600 10.5px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:8px; }
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; }
+  .seg button{ border:0; background:transparent; border-radius:9px; padding:9px 14px; font:600 12.5px/1 var(--font-sans); color:var(--text-secondary); cursor:pointer; transition:all .18s var(--ease-out); }
+  .seg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+  .ctl .sub{ font-size:12px; color:var(--text-secondary); margin-top:8px; max-width:34ch; line-height:1.5; }
+  .ctl .sub b{ color:var(--text-primary); }
+
+  .stage{ display:flex; gap:34px; align-items:flex-start; justify-content:center; flex-wrap:wrap; text-align:left; }
+  .col{ width:378px; }
+  .col-label{ display:flex; align-items:center; gap:10px; margin:0 6px 12px; }
+  .col-label .av{ width:34px; height:34px; border-radius:50%; background:var(--accent-quiet); color:var(--accent-strong); font:700 11px/34px var(--font-mono); text-align:center; }
+  .col-label b{ font:700 15px/1.1 var(--font-display); display:block; }
+  .col-label span{ font:500 10.5px/1.4 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; }
+  .col-label .chg{ margin-left:auto; flex-shrink:0; font:600 9px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:4px 7px; border-radius:999px; background:color-mix(in srgb, var(--status-forming) 14%, var(--bg-surface)); color:var(--status-forming); }
+
+  .phone{ width:378px; height:790px; background:var(--bg-surface); border:1px solid var(--border-hairline);
+    border-radius:38px; overflow:hidden; position:relative; display:flex; flex-direction:column;
+    box-shadow:0 30px 64px -26px rgba(80,40,30,.36), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .apphead{ padding:6px 18px 10px; border-bottom:1px solid var(--border-hairline); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .apphead .id{ display:flex; align-items:center; gap:9px; min-width:0; }
+  .apphead .ic{ width:30px; height:30px; border-radius:9px; background:var(--accent-quiet); color:var(--accent-strong); display:grid; place-items:center; flex-shrink:0; }
+  .apphead .k{ font:600 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); margin-top:3px; }
+  .apphead h2{ font:800 16px/1.1 var(--font-display); margin:0; letter-spacing:-.01em; white-space:nowrap; }
+  .apphead .av{ width:32px; height:32px; border-radius:50%; background:var(--accent-quiet); color:var(--accent-strong); font:700 10.5px/32px var(--font-mono); text-align:center; flex-shrink:0; }
+  .backpill{ display:inline-flex; align-items:center; gap:5px; border:1px solid var(--border-hairline); border-radius:999px; padding:5px 10px 5px 8px; font:600 11px/1 var(--font-sans); color:var(--text-secondary); background:var(--bg-surface); white-space:nowrap; }
+  .scroll{ flex:1; min-height:0; overflow-y:auto; scrollbar-width:none; } .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:14px 18px 20px; } .pad.tabs{ padding-bottom:84px; }
+
+  .kicker{ display:flex; align-items:center; gap:6px; font:600 10.5px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--accent-strong); }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--status-live); box-shadow:0 0 0 3px color-mix(in srgb, var(--status-live) 22%, transparent); animation:pulse 1.8s infinite; }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 3px color-mix(in srgb, var(--status-live) 22%, transparent);} 50%{ box-shadow:0 0 0 6px color-mix(in srgb, var(--status-live) 8%, transparent);} }
+  .hero{ font:800 25px/1.06 var(--font-display); letter-spacing:-.02em; margin:6px 0 0; }
+  .hero em{ font-style:normal; color:var(--accent-strong); }
+
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:13px 14px; margin-bottom:10px; }
+  .card.sunk{ background:var(--bg-sunken); border-color:transparent; }
+  .card.hi{ border-color:color-mix(in srgb, var(--accent) 35%, var(--border-hairline)); background:color-mix(in srgb, var(--accent-quiet) 45%, var(--bg-surface)); }
+  .ring-row{ display:flex; align-items:center; gap:14px; }
+  .ring{ position:relative; width:86px; height:86px; flex-shrink:0; border-radius:50%; background:conic-gradient(var(--accent) calc(var(--p)*3.6deg), var(--bg-sunken) 0); }
+  .ring::after{ content:''; position:absolute; inset:9px; border-radius:50%; background:var(--bg-surface); }
+  .ring b, .ring span{ position:absolute; left:0; right:0; text-align:center; z-index:1; }
+  .ring b{ top:27px; font:500 21px/1 var(--font-mono); } .ring span{ top:52px; font:600 8.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary); }
+  .ring-txt{ font-size:12.5px; line-height:1.5; color:var(--text-secondary); min-width:0; }
+  .ring-txt b{ color:var(--text-primary); font-weight:600; }
+  .stats{ display:flex; gap:16px; margin-top:8px; }
+  .stats div{ display:flex; flex-direction:column; } .stats b{ font:500 17px/1.1 var(--font-mono); } .stats span{ font-size:10.5px; color:var(--text-tertiary); margin-top:2px; }
+  .stats b.live{ color:var(--status-live); } .stats b.acc{ color:var(--accent-strong); } .stats b.form{ color:var(--status-forming); }
+
+  .sechead{ display:flex; align-items:baseline; gap:8px; margin:20px 0 3px; }
+  .sechead h3{ font:700 15px/1 var(--font-display); margin:0; } .sechead .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .sechead .c.hi{ color:var(--accent-strong); }
+  .lede2{ font-size:12px; color:var(--text-secondary); margin:0 0 10px; line-height:1.5; }
+
+  .bars .b{ display:grid; grid-template-columns:104px 1fr auto; align-items:center; gap:10px; padding:6px 0; }
+  .bars .b:not(:last-child){ border-bottom:1px solid var(--border-hairline); }
+  .bars .b .l{ font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bars .b .l small{ display:block; font:500 10px/1.3 var(--font-mono); color:var(--text-tertiary); font-weight:400; }
+  .track{ height:8px; border-radius:999px; background:var(--bg-sunken); overflow:hidden; display:flex; }
+  .track i{ display:block; height:100%; } .track i.in{ background:var(--status-live); } .track i.wait{ background:var(--status-forming); opacity:.85; } .track i.acc{ background:var(--accent); }
+  .bars .b .n{ font:500 11.5px/1 var(--font-mono); color:var(--text-secondary); white-space:nowrap; }
+  .bars .b .n b{ color:var(--text-primary); font-weight:500; }
+  .legend{ display:flex; gap:12px; font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); margin:8px 0 2px; }
+  .legend i{ display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+  .legend i.in{ background:var(--status-live);} .legend i.wait{ background:var(--status-forming);} .legend i.acc{ background:var(--accent);}
+
+  .row{ display:flex; align-items:center; gap:10px; }
+  .row .ic{ width:34px; height:34px; border-radius:10px; flex-shrink:0; display:grid; place-items:center; background:var(--accent-quiet); color:var(--accent-strong); font:700 12px/1 var(--font-mono); }
+  .row .ic.dim{ background:var(--bg-sunken); color:var(--text-tertiary); }
+  .row .ic.live{ background:color-mix(in srgb, var(--status-live) 14%, var(--bg-surface)); color:var(--status-live); }
+  .row .ic.form{ background:color-mix(in srgb, var(--status-forming) 14%, var(--bg-surface)); color:var(--status-forming); }
+  .row .t{ font:600 13.5px/1.25 var(--font-sans); } .row .s{ font:500 11px/1.5 var(--font-mono); color:var(--text-tertiary); margin-top:2px; }
+  .row .m{ min-width:0; flex:1; }
+  .why{ font-size:12px; color:var(--text-secondary); line-height:1.5; margin-top:8px; }
+  .why b{ color:var(--text-primary); font-weight:600; }
+  .badge{ font:700 9.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:4px 7px; border-radius:999px; background:var(--bg-sunken); color:var(--text-tertiary); flex-shrink:0; }
+  .badge.forming{ color:var(--status-forming); background:color-mix(in srgb, var(--status-forming) 14%, var(--bg-surface)); }
+  .badge.live{ color:var(--status-live); background:color-mix(in srgb, var(--status-live) 14%, var(--bg-surface)); }
+  .badge.acc{ color:var(--accent-strong); background:var(--accent-quiet); }
+  .faces{ display:flex; padding-left:7px; flex-shrink:0; }
+  .faces span{ width:22px; height:22px; border-radius:50%; margin-left:-7px; border:2px solid var(--bg-surface); background:color-mix(in srgb, var(--moss) 20%, var(--bg-surface)); font:700 8.5px/18px var(--font-sans); text-align:center; color:var(--moss); }
+  .foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:9px; border-top:1px solid var(--border-hairline); font-size:12px; color:var(--text-secondary); }
+  .btn{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:7px 12px; font-size:12px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; transition:all .15s var(--ease-out); }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.g{ border-color:transparent; color:var(--accent-strong); padding-left:6px; padding-right:6px; }
+  .btn.done{ background:color-mix(in srgb, var(--status-live) 14%, var(--bg-surface)); border-color:transparent; color:var(--status-live); }
+  .btns{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+
+  /* heat strip (TA availability) */
+  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:8px; }
+  .heat div{ height:26px; border-radius:6px; background:color-mix(in srgb, var(--accent) calc(var(--h)*1%), var(--bg-sunken)); position:relative; }
+  .heat div span{ position:absolute; left:0; right:0; bottom:-15px; text-align:center; font:600 9px/1 var(--font-mono); color:var(--text-tertiary); }
+  .heat div.top{ outline:2px solid var(--accent-strong); outline-offset:1px; }
+  .heat-lab{ display:flex; justify-content:space-between; font:500 10px/1 var(--font-mono); color:var(--text-tertiary); margin-top:20px; }
+
+  /* sparkline */
+  .spark{ display:flex; align-items:flex-end; gap:3px; height:38px; margin-top:6px; }
+  .spark i{ flex:1; display:block; background:var(--paper-3); border-radius:3px 3px 0 0; height:calc(var(--v)*1%); }
+  .spark i.now{ background:var(--accent); }
+  .spark-lab{ display:flex; justify-content:space-between; font:500 10px/1 var(--font-mono); color:var(--text-tertiary); margin-top:4px; }
+
+  /* inner segmented control */
+  .iseg{ display:flex; background:var(--bg-sunken); border-radius:11px; padding:3px; gap:2px; margin:10px 0 8px; }
+  .iseg button{ flex:1; border:0; background:transparent; border-radius:8px; padding:7px 4px; font:600 12px/1 var(--font-sans); color:var(--text-secondary); cursor:pointer; }
+  .iseg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+
+  .guard{ font-size:12.5px; line-height:1.55; color:var(--text-secondary); }
+  .guard .k{ font:600 10.5px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:6px; }
+
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:64px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; padding-bottom:6px; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.5 var(--font-sans); color:var(--text-tertiary); position:relative; } .tabbar div.on{ color:var(--accent); } .tabbar div .g{ font-size:17px; display:block; }
+  .tabbar div .rb{ position:absolute; top:-2px; left:50%; margin-left:6px; font:700 7.5px/1 var(--font-mono); letter-spacing:.06em; padding:2px 4px; border-radius:999px; background:var(--accent); color:var(--accent-ink); }
+
+  .notes{ max-width:900px; margin:34px auto 0; text-align:left; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:18px 22px; }
+  .notes h3{ font:700 15px/1 var(--font-display); margin:0 0 10px; }
+  .notes ul{ margin:0; padding-left:18px; font-size:13.5px; line-height:1.6; color:var(--text-secondary); }
+  .notes li b{ color:var(--text-primary); }
+  .notes .q{ margin-top:12px; font-size:13.5px; color:var(--text-primary); }
+  @keyframes slidein{ from{ opacity:0; transform:translateY(-8px) scale(.99); } to{ opacity:1; transform:none; } }
+  .in{ animation:slidein .45s var(--ease-settle) both; }
+  @media (prefers-reduced-motion: reduce){ .in{ animation:none; } .dot{ animation:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · staff personas</div>
+  <h1>Three staff lenses on the same loops — floor · class · school</h1>
+  <p class="lede">Josh (RA, Donlon 2F), Maya (TA, CS 2110) and Dana (counselor, whole school) each get a dashboard scoped to what they can act on. Same guardrail everywhere: <b>counts and loops, never intents by name</b>. Everything below is clickable — buttons flip to "done", the school view has its own tabs. Pick what to keep, cut, or change.</p>
+
+  <div class="controls">
+    <div class="ctl">
+      <div class="k">Where the staff view lives (Josh &amp; Maya)</div>
+      <div class="seg" id="entry">
+        <button data-v="tab" data-on="1">A · a role tab in their student app</button>
+        <button data-v="surface" data-on="0">B · a separate staff surface</button>
+      </div>
+      <div class="sub" id="entrysub"></div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="notes">
+    <h3>Cast changes this implies (say no to any)</h3>
+    <ul>
+      <li><b>Josh Park → RA of Donlon 2F</b> (Class of 2027). Today he's a Balch resident who "seeded" the Sunday HW crew. Moving him to Donlon 2F puts Sarah on his floor, so his dashboard, the loop he seeded, and Sarah's onboarding all tie together.</li>
+      <li><b>Maya Idris → CS 2110 TA</b> (Class of 2027, Collegetown). Today she's a Donlon 2F freshman "latecomer". The join notification becomes <i>"Maya, your CS 2110 TA, joined the Sunday HW crew"</i> — arguably a stronger beat. If you'd rather keep a student Maya, I'd add a 5th persona for the TA instead.</li>
+      <li><b>Dana Okafor → whole-school view</b>, with her 128-advisee caseload kept as a section at the bottom (the reach-out list she has today).</li>
+      <li>Student personas keep their student app. In direction A, RA/TA see one extra tab; in B they get a "Staff view" entry in the account menu and a "← my Loop" pill to get back.</li>
+    </ul>
+    <p class="q">Once you pick, I'll implement it in <span class="mono">index.html</span>: new <span class="mono">RADashboard</span> / <span class="mono">TADashboard</span> components, <span class="mono">AdvisorDashboard</span> upgraded to school-wide, persona data + switcher updated.</p>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { entry:'tab', school:'houses', done:{} };
+const initials = n => n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const faces = names => `<div class="faces">${names.map(n=>`<span>${initials(n)}</span>`).join('')}</div>`;
+const btn = (id, label, cls='') => {
+  const d = state.done[id];
+  return `<button class="btn ${d?'done':cls}" data-act="${id}">${d ? '✓ '+(typeof d==='string'?d:'done') : label}</button>`;
+};
+
+/* ---------------- JOSH · RA · Donlon 2F ---------------- */
+function josh(){
+  const tabs = state.entry==='tab';
+  return `
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>●●● ᯤ ▮</span></div>
+    <div class="apphead">
+      <div class="id"><div class="ic">2F</div><div><h2>Donlon 2F</h2><div class="k">Josh · RA view · 34 residents</div></div></div>
+      ${tabs ? '<div class="av">JP</div>' : '<span class="backpill">← my Loop</span>'}
+    </div>
+    <div class="scroll"><div class="pad ${tabs?'tabs':''} in">
+      <div class="kicker"><span class="dot"></span>your floor · right now</div>
+      <h1 class="hero">26 of 34 residents<br>are in a loop.</h1>
+
+      <div class="card" style="margin-top:14px">
+        <div class="ring-row">
+          <div class="ring" style="--p:76"><b>76%</b><span>in a loop</span></div>
+          <div class="ring-txt">Up <b>+3 this week</b>. Donlon avg 78% · North avg 68%. Floors above 70% by week 6 keep it all year.
+            <div class="stats"><div><b class="live">26</b><span>in a loop</span></div><div><b class="acc">8</b><span>not yet</span></div><div><b class="form">4</b><span>joined this wk</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sechead"><h3>What the floor wants</h3><span class="c">intents · this week</span></div>
+      <p class="lede2">Aggregate only — counts, never who. Amber = residents who dropped it and still have no crew.</p>
+      <div class="card">
+        <div class="bars">
+          ${bar('CS 2110 study', 11, 9, 2)}
+          ${bar('Dinner crew', 7, 3, 4)}
+          ${bar('Lift / gym', 6, 0, 6, 'no loop yet')}
+          ${bar('MATH 1920', 5, 5, 0)}
+          ${bar('Bouldering', 4, 4, 0)}
+          ${bar('Morning run', 3, 0, 3, 'no loop yet')}
+        </div>
+        <div class="legend"><span><i class="in"></i>in a loop</span><span><i class="wait"></i>waiting</span></div>
+      </div>
+
+      <div class="sechead"><h3>Seed a loop</h3><span class="c hi">2 gaps</span></div>
+      <p class="lede2">You seed it, Loop runs it. You don't own it — you can fade once it holds.</p>
+      <div class="card hi">
+        <div class="row"><div class="ic">6</div><div class="m"><div class="t">Helen Newman lift crew</div><div class="s">Tue + Thu 7p · suggested</div></div><span class="badge acc">gap</span></div>
+        <p class="why"><b>6 residents</b> dropped "lift" and none is in a crew. Three said evenings. Loop drafts the anchor; they get "your floor is starting a lift loop", not your name.</p>
+        <div class="btns">${btn('j-seed1','Seed it','p')}${btn('j-edit1','Edit draft')}</div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="ic">3</div><div class="m"><div class="t">Beebe Lake morning run</div><div class="s">Mon · Wed · Fri 7:30a</div></div><span class="badge acc">gap</span></div>
+        <p class="why"><b>3 want it</b> — under quorum. Seeding opens it to Donlon 3F too (5 more there).</p>
+        <div class="btns">${btn('j-seed2','Seed for 2F + 3F','p')}</div>
+      </div>
+
+      <div class="sechead"><h3>Throw a floor event</h3><span class="c">next 2 weeks</span></div>
+      <p class="lede2">One-offs that ride an existing rhythm — Loop tells you why now.</p>
+      <div class="card">
+        <div class="row"><div class="ic form">Thu</div><div class="m"><div class="t">Prelim-week snack night · lounge</div><div class="s">Wed Oct 8 · 8p · before CS 2110 Prelim 1</div></div></div>
+        <p class="why"><b>11 residents</b> are in CS 2110 and the Sunday crew meets 3 doors down. Floors that host something in prelim week see +9% loop attendance after.</p>
+        <div class="btns">${btn('j-ev1','Draft event','p')}${btn('j-ev1b','Skip')}</div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="ic form">Sun</div><div class="m"><div class="t">Appel dinner table · 2F takeover</div><div class="s">Sun Oct 12 · 6p</div></div></div>
+        <p class="why"><b>4 residents</b> want a dinner crew and aren't in one; the Okenshields table is full. A one-off seeds the recurring one.</p>
+        <div class="btns">${btn('j-ev2','Draft event','p')}</div>
+      </div>
+
+      <div class="sechead"><h3>Not landed yet</h3><span class="c hi">8 residents</span></div>
+      <p class="lede2">Greet, don't nudge. Loop shows who hasn't joined anything — not what they typed.</p>
+      <div class="card">
+        ${who('Theo Nguyen','0 loops · 3 wks in')}
+        ${who('Hannah Weiss','dropped an intent · never joined')}
+        <div class="foot"><span>+ 6 more</span>${btn('j-who','See all','g')}</div>
+      </div>
+
+      <div class="card sunk guard"><div class="k">what you never see</div>No intents by name, no messages, no who-likes-whom. Counts for your floor, the loops meeting on it, and who hasn't landed. Residents aren't told you looked.</div>
+    </div></div>
+    ${tabs ? tabbar('floor','2F') : ''}
+  </div>`;
+}
+
+/* ---------------- MAYA · TA · CS 2110 ---------------- */
+function maya(){
+  const tabs = state.entry==='tab';
+  return `
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>●●● ᯤ ▮</span></div>
+    <div class="apphead">
+      <div class="id"><div class="ic">TA</div><div><h2>CS 2110</h2><div class="k">Maya · TA view · 412 enrolled</div></div></div>
+      ${tabs ? '<div class="av">MI</div>' : '<span class="backpill">← my Loop</span>'}
+    </div>
+    <div class="scroll"><div class="pad ${tabs?'tabs':''} in">
+      <div class="kicker"><span class="dot"></span>your class · this week</div>
+      <h1 class="hero">183 of 412 students<br>are in a study loop.</h1>
+
+      <div class="card" style="margin-top:14px">
+        <div class="ring-row">
+          <div class="ring" style="--p:44"><b>44%</b><span>in a loop</span></div>
+          <div class="ring-txt">Highest of any 2000-level CS this fall (CS 2800: 31%). Students in a loop turned in HW2 at <b>91% vs 74%</b>.
+            <div class="stats"><div><b class="live">183</b><span>in a loop</span></div><div><b class="form">37</b><span>want one</span></div><div><b>9</b><span>loops · 4 dorms</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sechead"><h3>Interested, not yet in a loop</h3><span class="c hi">37 students</span></div>
+      <p class="lede2">They dropped "study CS 2110" and nothing fit. When they're free (evenings, aggregate):</p>
+      <div class="card">
+        <div class="heat">
+          ${heat([22,48,74,100,61,30,44],['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],3)}
+        </div>
+        <div class="heat-lab"><span>where they live · North 24 · West 8 · C-town 5</span></div>
+        <div class="row" style="margin-top:12px"><div class="ic form">Wed</div><div class="m"><div class="t">Seed a Wed 7p loop · Rhodes 571</div><div class="s">most are free then · 2 blocks from Duffield</div></div></div>
+        <p class="why">Loop invites the 37 as "a CS 2110 crew is starting Wed 7p" — <b>no roster, no names to you</b>. Quorum of 3 makes it real.</p>
+        <div class="btns">${btn('m-seed','Seed it','p')}${btn('m-oh','Anchor to my Tue 5p office hours')}</div>
+      </div>
+
+      <div class="sechead"><h3>What they're stuck on</h3><span class="c">from intents · aggregate</span></div>
+      <p class="lede2">Only phrases 5+ students used — nothing traceable to one person.</p>
+      <div class="card">
+        <div class="bars">
+          ${bar('HW3 · recursion', 14, 14, 0, null, 'acc')}
+          ${bar('Generics', 9, 9, 0, null, 'acc')}
+          ${bar('Prelim 2', 8, 8, 0, null, 'acc')}
+          ${bar('Big-O proofs', 5, 5, 0, null, 'acc')}
+        </div>
+        <div class="foot"><span>Worth a recursion review this week?</span>${btn('m-rev','Seed review loop','g')}</div>
+      </div>
+
+      <div class="sechead"><h3>Study loops in your class</h3><span class="c">9 active · 1 forming</span></div>
+      <div class="card">
+        <div class="row"><div class="ic live">14</div><div class="m"><div class="t">Libe Café Nightowls</div><div class="s">Tue 9p · 6 regulars · 14-wk streak</div></div>${faces(['Ava Lin','Deshawn Ford','Yuki Sato','Nora Beck'])}</div>
+        <div class="btns">${btn('m-drop1','Drop in this week')}${btn('m-msg1','Send a hint','g')}</div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="ic live">12</div><div class="m"><div class="t">Sunday HW crew</div><div class="s">Sun 4p · Uris · 5 regulars · 12-wk streak</div></div>${faces(['Josh Park','Lydia Osei','Priya Rao','Sarah Chen'])}</div>
+        <div class="btns">${btn('m-drop2','Drop in this week')}${btn('m-msg2','Send a hint','g')}</div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="ic form">5/8</div><div class="m"><div class="t">Prelim 2 review</div><div class="s">forming · needs 3 more</div></div><span class="badge forming">forming</span></div>
+        <p class="why">A word from you gets it over quorum: Loop posts <b>"your TA will drop by"</b> to the 37 waiting.</p>
+        <div class="btns">${btn('m-boost','Boost it','p')}</div>
+      </div>
+      <div class="foot" style="border:0;padding-top:0"><span>+ 6 more loops</span>${btn('m-all','See all','g')}</div>
+
+      <div class="card sunk guard" style="margin-top:14px"><div class="k">what you never see</div>Who's in which loop by name (faces are display-only), what anyone typed, or attendance per student. Counts, loops and phrases 5+ people share.</div>
+    </div></div>
+    ${tabs ? tabbar('ta','TA') : ''}
+  </div>`;
+}
+
+/* ---------------- DANA · counselor · whole school ---------------- */
+function dana(){
+  const seg = state.school;
+  const houses = [['Donlon',78],['Court-Kay-Bauer',74],['Balch',71],['Dickson',69],['Toni Morrison',66],['Mews',63],['Ganędago',61],['Jameson',58]];
+  const courses = [['CS 2110',44],['CHEM 2070',39],['MATH 1920',36],['CS 2800',31],['ECON 1110',29],['PSYCH 1101',22]];
+  const years = [['Class of 2030',71],['Class of 2029',66],['Class of 2028',58],['Class of 2027',52],['Transfers',41]];
+  const rows = seg==='houses'?houses: seg==='courses'?courses: years;
+  const lo = rows[rows.length-1];
+  return `
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>●●● ᯤ ▮</span></div>
+    <div class="apphead">
+      <div class="id"><div class="ic">◎</div><div><h2>Advising &amp; Wellbeing</h2><div class="k">Dana · staff view · all undergrads</div></div></div>
+      <div class="av">DO</div>
+    </div>
+    <div class="scroll"><div class="pad in">
+      <div class="kicker"><span class="dot"></span>cornell · this week</div>
+      <h1 class="hero"><em>68%</em> of campus<br>is in a loop.</h1>
+
+      <div class="card" style="margin-top:14px">
+        <div class="ring-row">
+          <div class="ring" style="--p:68"><b>68%</b><span>in a loop</span></div>
+          <div class="ring-txt">10,690 of 15,735 undergrads. <b>+2 pts</b> week over week; week 6 is where it usually dips.
+            <div class="stats"><div><b>1,240</b><span>active loops</span></div><div><b class="live">86</b><span>formed this wk</span></div><div><b class="acc">41</b><span>wrapped</span></div></div>
+          </div>
+        </div>
+        <div class="spark">${[38,46,55,59,63,64,66,68].map((v,i)=>`<i style="--v:${v}" class="${i===7?'now':''}"></i>`).join('')}</div>
+        <div class="spark-lab"><span>wk 1</span><span>in a loop, % of campus</span><span>wk 8</span></div>
+      </div>
+
+      <div class="sechead"><h3>Belonging by</h3><span class="c">% in a loop</span></div>
+      <div class="iseg" data-seg="school">
+        <button data-v="houses" data-on="${seg==='houses'?1:0}">House</button>
+        <button data-v="courses" data-on="${seg==='courses'?1:0}">Course</button>
+        <button data-v="years" data-on="${seg==='years'?1:0}">Class year</button>
+      </div>
+      <div class="card">
+        <div class="bars">${rows.map(([l,p])=>`<div class="b"><div class="l">${l}</div><div class="track"><i class="in" style="width:${p}%"></i></div><div class="n"><b>${p}%</b></div></div>`).join('')}</div>
+      </div>
+
+      <div class="sechead"><h3>Cold spots</h3><span class="c hi">3 to look at</span></div>
+      <p class="lede2">Where the number is low or falling — and who can act (RAs, TAs, departments), not students.</p>
+      <div class="card hi">
+        <div class="row"><div class="ic">58</div><div class="m"><div class="t">Jameson · 58%, down 2</div><div class="s">lowest house on North · 19 loops</div></div></div>
+        <p class="why">3 floors have <b>no seeded loop</b>. Ask their RAs — the RA view shows them the gaps.</p>
+        <div class="btns">${btn('d-ra','Nudge Jameson RAs','p')}</div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="ic">29</div><div class="m"><div class="t">ECON 1110 · 412 waiting, 3 loops</div><div class="s">biggest gap between wanting and having</div></div></div>
+        <div class="btns">${btn('d-econ','Flag to course staff','p')}</div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="ic">41</div><div class="m"><div class="t">Transfers · 41%</div><div class="s">no dorm floor to seed from</div></div></div>
+        <div class="btns">${btn('d-tr','Draft transfer mixer loop','p')}</div>
+      </div>
+
+      <div class="sechead"><h3>Your advisees</h3><span class="c">96 of 128 in a loop</span></div>
+      <p class="lede2">The one signal that predicts who stays. Reach out — a nudge from you, not an algorithm.</p>
+      <div class="card">
+        ${who('Theo Nguyen','Jameson · 0 loops · 3 wks in')}
+        ${who('Priscilla Adams','Mews · left their only loop')}
+        <div class="foot"><span>+ 2 more</span>${btn('d-all','See all','g')}</div>
+      </div>
+
+      <div class="card sunk guard"><div class="k">what you never see</div>No intents, no messages, no who-likes-whom. Only whether a student has landed in a loop, rolled up by house, course and year. Everything else stays on their phone.</div>
+    </div></div>
+  </div>`;
+}
+
+/* helpers */
+function bar(label, total, inLoop, waiting, tag, cls){
+  const max = 14;
+  const wIn = inLoop/max*100, wW = waiting/max*100;
+  return `<div class="b"><div class="l">${label}${tag?`<small>${tag}</small>`:''}</div>
+    <div class="track"><i class="${cls||'in'}" style="width:${wIn}%"></i><i class="wait" style="width:${wW}%"></i></div>
+    <div class="n"><b>${total}</b>${waiting?` · ${waiting} wait`:''}</div></div>`;
+}
+function heat(vals, labs, top){ return vals.map((v,i)=>`<div style="--h:${v}" class="${i===top?'top':''}"><span>${labs[i]}</span></div>`).join(''); }
+function who(name, sig){
+  return `<div class="row" style="padding:6px 0"><div class="av" style="width:36px;height:36px;border-radius:50%;background:var(--accent-quiet);color:var(--accent-strong);font:700 11px/36px var(--font-mono);text-align:center;flex-shrink:0">${initials(name)}</div>
+    <div class="m"><div class="t">${name}</div><div class="s" style="color:var(--accent-strong)">${sig}</div></div>${btn('who-'+name,'Reach out')}</div>`;
+}
+function tabbar(id, badge){
+  const t = (k,g,l,extra='') => `<div class="${id===k?'on':''}"><span class="g">${g}</span>${l}${extra}</div>`;
+  return `<div class="tabbar">${t('home','⌂','Home')}${t('class','⌘','Class')}${t(id,'▣', id==='floor'?'Floor':'CS 2110', `<span class="rb">${badge}</span>`)}${t('alerts','◔','Alerts')}${t('you','○','You')}</div>`;
+}
+
+const PEOPLE = [
+  { id:'josh', name:'Josh Park', sub:'RA · Donlon 2F · Class of 2027', chg:'was Balch student', render:josh },
+  { id:'maya', name:'Maya Idris', sub:'TA · CS 2110 · Class of 2027', chg:'was Donlon 2F student', render:maya },
+  { id:'dana', name:'Dana Okafor', sub:'Counselor · Advising & Wellbeing', chg:'caseload → school', render:dana },
+];
+
+function render(){
+  $('#stage').innerHTML = PEOPLE.map(p=>`
+    <div class="col">
+      <div class="col-label"><div class="av">${initials(p.name)}</div><div><b>${p.name}</b><span>${p.sub}</span></div><span class="chg">${p.chg}</span></div>
+      ${p.render()}
+    </div>`).join('');
+  $('#entrysub').innerHTML = state.entry==='tab'
+    ? 'RA/TA keep the normal student app; a 5th tab (<b>Floor</b> / <b>CS 2110</b>) opens their staff view. Dana has no student app — she lands straight on hers.'
+    : 'RA/TA open a separate staff surface from their account menu (no tab bar, "← my Loop" to return) — same pattern Dana has today.';
+  document.querySelectorAll('#entry button').forEach(b=> b.dataset.on = b.dataset.v===state.entry ? 1 : 0);
+}
+document.addEventListener('click', e => {
+  const seg = e.target.closest('#entry button'); if (seg){ state.entry = seg.dataset.v; render(); return; }
+  const is = e.target.closest('.iseg button'); if (is){ state.school = is.dataset.v; render(); return; }
+  const a = e.target.closest('[data-act]'); if (a){
+    const id = a.dataset.act;
+    const label = /seed|Seed/.test(a.textContent) ? 'seeded' : /Draft|Anchor|Boost|Flag|Nudge/.test(a.textContent) ? 'sent' : /Reach/.test(a.textContent) ? 'reached out' : /Drop in/.test(a.textContent) ? 'you\'re in' : 'done';
+    state.done[id] = state.done[id] ? false : label;
+    // preserve scroll positions
+    const scrolls = [...document.querySelectorAll('.scroll')].map(s=>s.scrollTop);
+    render();
+    document.querySelectorAll('.scroll').forEach((s,i)=> s.scrollTop = scrolls[i]||0);
+  }
+});
+render();
+</script>
+</body>
+</html>

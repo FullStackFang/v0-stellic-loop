@@ -1,0 +1,135 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: 9:41
+      - generic [ref=f1e7]: 5G
+    - generic [ref=f1e56]:
+      - generic [ref=f1e57]:
+        - generic [ref=f1e58]: Loop
+        - generic [ref=f1e60]:
+          - button "Search" [ref=f1e61] [cursor=pointer]
+          - button "Alerts" [ref=f1e65] [cursor=pointer]
+          - button "Toggle theme" [ref=f1e69] [cursor=pointer]
+      - generic [ref=f1e72]:
+        - generic [ref=f1e73]:
+          - paragraph [ref=f1e74]: looking to join
+          - heading "Sarah's loops" [level=1] [ref=f1e75]
+        - generic [ref=f1e76]:
+          - heading "What your intent lands in" [level=2] [ref=f1e84]
+          - paragraph [ref=f1e85]: Closest to you, closest to happening.
+          - generic [ref=f1e86]:
+            - generic [ref=f1e87] [cursor=pointer]: M
+            - generic [ref=f1e90] [cursor=pointer]: T
+            - generic [ref=f1e93] [cursor=pointer]: W
+            - generic [ref=f1e96] [cursor=pointer]: T
+            - generic [ref=f1e99] [cursor=pointer]: F
+            - generic [ref=f1e102] [cursor=pointer]: S
+            - generic [ref=f1e105] [cursor=pointer]: S
+          - generic [ref=f1e108] [cursor=pointer]:
+            - generic [ref=f1e109]: ★ your intent
+            - generic [ref=f1e110]: Studying CS 2110 Thursdays
+            - generic [ref=f1e111]: your floor · open to all
+            - generic [ref=f1e113]:
+              - generic [ref=f1e114]: "8"
+              - generic [ref=f1e115]: of 8 want it — you’d be the one that fires it
+            - generic [ref=f1e118]:
+              - button "Shape it" [ref=f1e119]
+              - button "On your week" [ref=f1e123]
+          - generic [ref=f1e125]: more forming near you
+          - generic [ref=f1e129] [cursor=pointer]:
+            - generic [ref=f1e130]: "2"
+            - generic [ref=f1e131]:
+              - generic [ref=f1e132]:
+                - text: study sessions
+                - generic [ref=f1e134]: 1 to fire
+              - generic [ref=f1e135]:
+                - generic [ref=f1e136]: weekly · CS majors
+                - generic [ref=f1e137]: · @evening
+            - generic [ref=f1e138]: 9/10
+          - generic [ref=f1e143] [cursor=pointer]:
+            - generic [ref=f1e144]: "3"
+            - generic [ref=f1e145]:
+              - generic [ref=f1e146]: Fri lift
+              - generic [ref=f1e148]:
+                - generic [ref=f1e149]: 2× a week · your floor
+                - generic [ref=f1e150]: · @Teagle gym
+            - generic [ref=f1e151]: 6/8
+          - generic [ref=f1e156] [cursor=pointer]:
+            - generic [ref=f1e157]: "4"
+            - generic [ref=f1e158]:
+              - generic [ref=f1e159]: CS 2110 grind
+              - generic [ref=f1e161]:
+                - generic [ref=f1e162]: weekly · CS majors
+                - generic [ref=f1e163]: · @Uris
+            - generic [ref=f1e164]: 8/10
+          - generic [ref=f1e169] [cursor=pointer]:
+            - generic [ref=f1e170]: "5"
+            - generic [ref=f1e171]:
+              - generic [ref=f1e172]: Wed kickboxing
+              - generic [ref=f1e174]:
+                - generic [ref=f1e175]: weekly · Donlon
+                - generic [ref=f1e176]: · @Teagle gym
+            - generic [ref=f1e177]: 7/10
+          - generic [ref=f1e182] [cursor=pointer]:
+            - generic [ref=f1e183]: "6"
+            - generic [ref=f1e184]:
+              - generic [ref=f1e185]: Thu dinner
+              - generic [ref=f1e187]:
+                - generic [ref=f1e188]: weekly · your floor
+                - generic [ref=f1e189]: · open to all
+            - generic [ref=f1e190]: 5/8
+          - generic [ref=f1e195] [cursor=pointer]:
+            - generic [ref=f1e196]: "7"
+            - generic [ref=f1e197]:
+              - generic [ref=f1e198]: Mon coffee
+              - generic [ref=f1e200]:
+                - generic [ref=f1e201]: weekly · your floor
+                - generic [ref=f1e202]: · @morning
+            - generic [ref=f1e203]: 3/6
+          - generic [ref=f1e208] [cursor=pointer]:
+            - generic [ref=f1e209]: "8"
+            - generic [ref=f1e210]:
+              - generic [ref=f1e211]: Sat bouldering
+              - generic [ref=f1e213]:
+                - generic [ref=f1e214]: weekly · Class of ’30
+                - generic [ref=f1e215]: · @Lindseth wall
+            - generic [ref=f1e216]: 5/8
+          - generic [ref=f1e221] [cursor=pointer]:
+            - generic [ref=f1e222]: "9"
+            - generic [ref=f1e223]:
+              - generic [ref=f1e224]: Tue run
+              - generic [ref=f1e226]:
+                - generic [ref=f1e227]: 2× a week · Donlon
+                - generic [ref=f1e228]: · @morning
+            - generic [ref=f1e229]: 4/8
+          - button "Drop your own rhythm" [ref=f1e235] [cursor=pointer]
+      - button "Drop an intent" [ref=f1e237] [cursor=pointer]
+      - generic [ref=f1e239]:
+        - button [ref=f1e240] [cursor=pointer]
+        - button [ref=f1e248] [cursor=pointer]
+        - button [ref=f1e253] [cursor=pointer]
+        - button [ref=f1e258] [cursor=pointer]
+  - generic [ref=f1e29]:
+    - generic [ref=f1e30]: view the demo as
+    - generic [ref=f1e31]:
+      - button "Sarah Chen Sarah seeker" [active] [ref=f1e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=f1e33]: SC
+        - generic [ref=f1e34]:
+          - generic [ref=f1e35]: Sarah
+          - generic [ref=f1e36]: seeker
+      - button "Josh Park Josh host" [ref=f1e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=f1e38]: JP
+        - generic [ref=f1e39]:
+          - generic [ref=f1e40]: Josh
+          - generic [ref=f1e41]: host
+      - button "Maya Idris Maya latecomer" [ref=f1e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=f1e43]: MI
+        - generic [ref=f1e44]:
+          - generic [ref=f1e45]: Maya
+          - generic [ref=f1e46]: latecomer
+      - button "Dana Okafor Dana advisor" [ref=f1e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=f1e48]: DO
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: Dana
+          - generic [ref=f1e51]: advisor
+    - button "restart demo" [ref=f1e52] [cursor=pointer]

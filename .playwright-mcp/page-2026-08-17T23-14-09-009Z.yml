@@ -1,0 +1,87 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e1440]:
+      - heading "Alerts" [level=1] [ref=e1443]
+      - generic [ref=e1444]:
+        - generic [ref=e1445]:
+          - paragraph [ref=e1450]: Quiet for now.
+          - paragraph [ref=e1451]: When a drop fires or someone folds into your loop, it lands here.
+        - generic [ref=e1452]:
+          - heading "Wrapped loops" [level=2] [ref=e1459]
+          - paragraph [ref=e1460]: Loops end on their own when the reason does — the crew stays yours.
+          - generic [ref=e1461]:
+            - generic [ref=e1462]:
+              - generic [ref=e1463]:
+                - generic [ref=e1464]:
+                  - generic [ref=e1465]:
+                    - generic [ref=e1466]: Prelim 1 review
+                    - generic [ref=e1467]: wrapped
+                  - generic [ref=e1468]: wrapped after the exam · 5 sessions · same faces
+                - generic [ref=e1469]:
+                  - generic "Josh Park" [ref=e1471]: JP
+                  - generic "Lydia Osei" [ref=e1473]: LO
+                  - generic "Marcus Diaz" [ref=e1475]: MD
+                  - generic "Priya Rao" [ref=e1477]: PR
+              - generic [ref=e1478]:
+                - generic [ref=e1479]: 2 weeks ago
+                - button "Start the next one" [ref=e1480] [cursor=pointer]
+            - generic [ref=e1482]:
+              - generic [ref=e1483]:
+                - generic [ref=e1484]:
+                  - generic [ref=e1485]:
+                    - generic [ref=e1486]: HW1 grind
+                    - generic [ref=e1487]: wrapped
+                  - generic [ref=e1488]: ran its course · 3 sessions · same faces
+                - generic [ref=e1489]:
+                  - generic "Josh Park" [ref=e1491]: JP
+                  - generic "Sarah Chen" [ref=e1493]: SC
+                  - generic "Lydia Osei" [ref=e1495]: LO
+              - generic [ref=e1496]:
+                - generic [ref=e1497]: 3 weeks ago
+                - button "Start the next one" [ref=e1498] [cursor=pointer]
+            - generic [ref=e1500]:
+              - generic [ref=e1501]:
+                - generic [ref=e1502]:
+                  - generic [ref=e1503]:
+                    - generic [ref=e1504]: Move-in week dinner crew
+                    - generic [ref=e1505]: wrapped
+                  - generic [ref=e1506]: wrapped after O-week · 4 sessions · same faces
+                - generic [ref=e1507]:
+                  - generic "Sarah Chen" [ref=e1509]: SC
+                  - generic "Lydia Osei" [ref=e1511]: LO
+                  - generic "Maya Idris" [ref=e1513]: MI
+              - generic [ref=e1514]:
+                - generic [ref=e1515]: last month
+                - button "Start the next one" [ref=e1516] [cursor=pointer]
+      - generic [ref=e1518]:
+        - button [ref=e1519] [cursor=pointer]
+        - button [ref=e1527] [cursor=pointer]
+        - button [ref=e1532] [cursor=pointer]
+        - button [ref=e1537] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah seeker" [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: seeker
+      - button "Josh Park Josh host" [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: host
+      - button "Maya Idris Maya latecomer" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: latecomer
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "restart demo" [ref=e52] [cursor=pointer]

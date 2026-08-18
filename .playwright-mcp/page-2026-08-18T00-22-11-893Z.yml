@@ -1,0 +1,130 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e11]:
+      - generic [ref=e686]:
+        - button [ref=e691] [cursor=pointer]:
+          - paragraph [ref=e692]: Move undone
+          - paragraph [ref=e693]: Everyone confirmed gets the correction.
+        - button "Dismiss" [ref=e694] [cursor=pointer]
+      - generic [ref=e454]:
+        - generic [ref=e455]:
+          - button "Back" [ref=e456] [cursor=pointer]
+          - heading "Sunday HW crew" [level=1] [ref=e460]
+          - button "Share this loop" [ref=e462] [cursor=pointer]
+        - generic [ref=e469]:
+          - generic [ref=e470]: cs 2110 · section
+          - generic [ref=e473]:
+            - generic [ref=e474]: running
+            - generic [ref=e475]: 12-wk streak
+          - generic [ref=e478]:
+            - generic [ref=e479]: Rhythm
+            - generic [ref=e480]: Sun · 4:00p · Uris · weekly
+            - generic [ref=e486]: next · Sun · 4:00p · Uris
+            - generic [ref=e490]: same faces since wk 3
+          - generic [ref=e493]:
+            - generic [ref=e494]:
+              - paragraph [ref=e495]: 4 in this loop
+              - generic [ref=e496]: Lydia · longest streak
+            - generic [ref=e499]:
+              - generic [ref=e500]:
+                - generic "Josh Park" [ref=e502]: JP
+                - generic [ref=e503]: Josh · you · seeded it
+                - generic [ref=e504]: wk 3
+              - generic [ref=e505]:
+                - generic [ref=e506]:
+                  - generic "Lydia Osei" [ref=e507]: LO
+                  - generic "longest streak" [ref=e508]
+                - generic [ref=e511]: Lydia
+                - generic [ref=e512]: wk 3
+              - generic [ref=e513]:
+                - generic "Priya Rao" [ref=e515]: PR
+                - generic [ref=e516]: Priya
+                - generic [ref=e517]: wk 5
+              - generic [ref=e518]:
+                - generic "Marcus Diaz" [ref=e520]: MD
+                - generic [ref=e521]: Marcus
+                - generic [ref=e522]: wk 4
+          - generic [ref=e523]:
+            - generic [ref=e524]: This week · locked
+            - paragraph [ref=e528]: Sun · 4:00p · Uris
+            - paragraph [ref=e529]: Nobody runs it. It locked Sat 4:00p so nothing drifts; whoever's there can move it.
+            - generic [ref=e651]: Josh here · you hold the pin
+            - generic [ref=e530]:
+              - button "We moved →" [ref=e678] [cursor=pointer]
+              - button "Message the crew" [ref=e682] [cursor=pointer]
+          - generic [ref=e538]:
+            - generic [ref=e539]: You're in this loop
+            - button "Drop this loop to a friend" [ref=e544] [cursor=pointer]
+            - button "Leave loop" [ref=e551] [cursor=pointer]
+          - generic [ref=e555]:
+            - generic [ref=e556]: Private · only you see this
+            - generic [ref=e559]:
+              - generic [ref=e560]:
+                - generic [ref=e561]: How's this loop for you?
+                - generic [ref=e562]:
+                  - button "like" [ref=e563] [cursor=pointer]
+                  - button "neutral" [ref=e566] [cursor=pointer]
+                  - button "dislike" [ref=e568] [cursor=pointer]
+              - generic [ref=e571]:
+                - generic [ref=e572]:
+                  - generic [ref=e573]:
+                    - generic "Lydia Osei" [ref=e574]: LO
+                    - generic [ref=e575]: Lydia
+                  - generic [ref=e576]:
+                    - generic [ref=e577]:
+                      - button "like" [ref=e578] [cursor=pointer]
+                      - button "neutral" [ref=e581] [cursor=pointer]
+                      - button "dislike" [ref=e583] [cursor=pointer]
+                    - button "Report a concern about Lydia" [ref=e586] [cursor=pointer]
+                - generic [ref=e589]:
+                  - generic [ref=e590]:
+                    - generic "Priya Rao" [ref=e591]: PR
+                    - generic [ref=e592]: Priya
+                  - generic [ref=e593]:
+                    - generic [ref=e594]:
+                      - button "like" [ref=e595] [cursor=pointer]
+                      - button "neutral" [ref=e598] [cursor=pointer]
+                      - button "dislike" [ref=e600] [cursor=pointer]
+                    - button "Report a concern about Priya" [ref=e603] [cursor=pointer]
+                - generic [ref=e606]:
+                  - generic [ref=e607]:
+                    - generic "Marcus Diaz" [ref=e608]: MD
+                    - generic [ref=e609]: Marcus
+                  - generic [ref=e610]:
+                    - generic [ref=e611]:
+                      - button "like" [ref=e612] [cursor=pointer]
+                      - button "neutral" [ref=e615] [cursor=pointer]
+                      - button "dislike" [ref=e617] [cursor=pointer]
+                    - button "Report a concern about Marcus" [ref=e620] [cursor=pointer]
+          - button [ref=e623] [cursor=pointer]:
+            - generic [ref=e627]:
+              - paragraph [ref=e628]: Report a safety concern
+              - paragraph [ref=e629]: Goes straight to Dana Okafor, your Loop counselor. Confidential — never shown to the loop.
+          - paragraph [ref=e632]: Loop keeps the rhythm and the next one.
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah seeker" [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: seeker
+      - button "Josh Park Josh RA" [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: RA
+      - button "Maya Idris Maya latecomer" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: latecomer
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "restart demo" [ref=e52] [cursor=pointer]

@@ -1,0 +1,442 @@
+- generic [ref=e2]:
+  - generic [ref=e3]: Loop · staff personas
+  - heading "Three staff lenses on the same loops — floor · class · school" [level=1] [ref=e4]
+  - paragraph [ref=e5]: "Josh (RA, Donlon 2F), Maya (TA, CS 2110) and Dana (counselor, whole school) each get a dashboard scoped to what they can act on. Same guardrail everywhere: counts and loops, never intents by name. Everything below is clickable — buttons flip to \"done\", the school view has its own tabs. Pick what to keep, cut, or change."
+  - generic [ref=e7]:
+    - generic [ref=e8]: Where the staff view lives (Josh & Maya)
+    - generic [ref=e9]:
+      - button "A · a role tab in their student app" [ref=e10] [cursor=pointer]
+      - button "B · a separate staff surface" [ref=e11] [cursor=pointer]
+    - generic [ref=e12]: RA/TA keep the normal student app; a 5th tab (Floor / CS 2110) opens their staff view. Dana has no student app — she lands straight on hers.
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: JP
+        - generic [ref=e17]:
+          - generic [ref=e18]: Josh Park
+          - text: RA · Donlon 2F · Class of 2027
+        - generic [ref=e19]: was Balch student
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: 9:41
+          - generic [ref=e23]: ●●● ᯤ ▮
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - generic [ref=e26]: 2F
+            - generic [ref=e27]:
+              - heading "Donlon 2F" [level=2] [ref=e28]
+              - generic [ref=e29]: Josh · RA view · 34 residents
+          - generic [ref=e30]: JP
+        - generic [ref=e32]:
+          - generic [ref=e33]: your floor · right now
+          - heading "26 of 34 residents are in a loop." [level=1] [ref=e35]: 26 of 34 residentsare in a loop.
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]: 76%
+              - generic [ref=e40]: in a loop
+            - generic [ref=e41]:
+              - text: Up +3 this week. Donlon avg 78% · North avg 68%. Floors above 70% by week 6 keep it all year.
+              - generic [ref=e42]:
+                - generic [ref=e43]:
+                  - generic [ref=e44]: "26"
+                  - generic [ref=e45]: in a loop
+                - generic [ref=e46]:
+                  - generic [ref=e47]: "8"
+                  - generic [ref=e48]: not yet
+                - generic [ref=e49]:
+                  - generic [ref=e50]: "4"
+                  - generic [ref=e51]: joined this wk
+          - generic [ref=e52]:
+            - heading "What the floor wants" [level=3] [ref=e53]
+            - generic [ref=e54]: intents · this week
+          - paragraph [ref=e55]: Aggregate only — counts, never who. Amber = residents who dropped it and still have no crew.
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: CS 2110 study
+                - generic [ref=e63]: 11 · 2 wait
+              - generic [ref=e64]:
+                - generic [ref=e65]: Dinner crew
+                - generic [ref=e69]: 7 · 4 wait
+              - generic [ref=e70]:
+                - generic [ref=e71]:
+                  - text: Lift / gym
+                  - generic [ref=e72]: no loop yet
+                - generic [ref=e75]: 6 · 6 wait
+              - generic [ref=e76]:
+                - generic [ref=e77]: MATH 1920
+                - generic [ref=e80]: "5"
+              - generic [ref=e81]:
+                - generic [ref=e82]: Bouldering
+                - generic [ref=e85]: "4"
+              - generic [ref=e86]:
+                - generic [ref=e87]:
+                  - text: Morning run
+                  - generic [ref=e88]: no loop yet
+                - generic [ref=e91]: 3 · 3 wait
+            - generic [ref=e92]:
+              - generic [ref=e93]: in a loop
+              - generic [ref=e95]: waiting
+          - generic [ref=e97]:
+            - heading "Seed a loop" [level=3] [ref=e98]
+            - generic [ref=e99]: 2 gaps
+          - paragraph [ref=e100]: You seed it, Loop runs it. You don't own it — you can fade once it holds.
+          - generic [ref=e101]:
+            - generic [ref=e102]:
+              - generic [ref=e103]: "6"
+              - generic [ref=e104]:
+                - generic [ref=e105]: Helen Newman lift crew
+                - generic [ref=e106]: Tue + Thu 7p · suggested
+              - generic [ref=e107]: gap
+            - paragraph [ref=e108]: 6 residents dropped "lift" and none is in a crew. Three said evenings. Loop drafts the anchor; they get "your floor is starting a lift loop", not your name.
+            - generic [ref=e109]:
+              - button "Seed it" [ref=e110] [cursor=pointer]
+              - button "Edit draft" [ref=e111] [cursor=pointer]
+          - generic [ref=e112]:
+            - generic [ref=e113]:
+              - generic [ref=e114]: "3"
+              - generic [ref=e115]:
+                - generic [ref=e116]: Beebe Lake morning run
+                - generic [ref=e117]: Mon · Wed · Fri 7:30a
+              - generic [ref=e118]: gap
+            - paragraph [ref=e119]: 3 want it — under quorum. Seeding opens it to Donlon 3F too (5 more there).
+            - button "Seed for 2F + 3F" [ref=e121] [cursor=pointer]
+          - generic [ref=e122]:
+            - heading "Throw a floor event" [level=3] [ref=e123]
+            - generic [ref=e124]: next 2 weeks
+          - paragraph [ref=e125]: One-offs that ride an existing rhythm — Loop tells you why now.
+          - generic [ref=e126]:
+            - generic [ref=e127]:
+              - generic [ref=e128]: Thu
+              - generic [ref=e129]:
+                - generic [ref=e130]: Prelim-week snack night · lounge
+                - generic [ref=e131]: Wed Oct 8 · 8p · before CS 2110 Prelim 1
+            - paragraph [ref=e132]: 11 residents are in CS 2110 and the Sunday crew meets 3 doors down. Floors that host something in prelim week see +9% loop attendance after.
+            - generic [ref=e133]:
+              - button "Draft event" [ref=e134] [cursor=pointer]
+              - button "Skip" [ref=e135] [cursor=pointer]
+          - generic [ref=e136]:
+            - generic [ref=e137]:
+              - generic [ref=e138]: Sun
+              - generic [ref=e139]:
+                - generic [ref=e140]: Appel dinner table · 2F takeover
+                - generic [ref=e141]: Sun Oct 12 · 6p
+            - paragraph [ref=e142]: 4 residents want a dinner crew and aren't in one; the Okenshields table is full. A one-off seeds the recurring one.
+            - button "Draft event" [ref=e144] [cursor=pointer]
+          - generic [ref=e145]:
+            - heading "Not landed yet" [level=3] [ref=e146]
+            - generic [ref=e147]: 8 residents
+          - paragraph [ref=e148]: Greet, don't nudge. Loop shows who hasn't joined anything — not what they typed.
+          - generic [ref=e149]:
+            - generic [ref=e150]:
+              - generic [ref=e151]: TN
+              - generic [ref=e152]:
+                - generic [ref=e153]: Theo Nguyen
+                - generic [ref=e154]: 0 loops · 3 wks in
+              - button "Reach out" [ref=e155] [cursor=pointer]
+            - generic [ref=e156]:
+              - generic [ref=e157]: HW
+              - generic [ref=e158]:
+                - generic [ref=e159]: Hannah Weiss
+                - generic [ref=e160]: dropped an intent · never joined
+              - button "Reach out" [ref=e161] [cursor=pointer]
+            - generic [ref=e162]:
+              - generic [ref=e163]: + 6 more
+              - button "See all" [ref=e164] [cursor=pointer]
+          - generic [ref=e165]:
+            - generic [ref=e166]: what you never see
+            - text: No intents by name, no messages, no who-likes-whom. Counts for your floor, the loops meeting on it, and who hasn't landed. Residents aren't told you looked.
+        - generic [ref=e167]:
+          - generic [ref=e168]:
+            - generic [ref=e169]: ⌂
+            - text: Home
+          - generic [ref=e170]:
+            - generic [ref=e171]: ⌘
+            - text: Class
+          - generic [ref=e172]:
+            - generic [ref=e173]: ▣
+            - text: Floor
+            - generic [ref=e174]: 2F
+          - generic [ref=e175]:
+            - generic [ref=e176]: ◔
+            - text: Alerts
+          - generic [ref=e177]:
+            - generic [ref=e178]: ○
+            - text: You
+    - generic [ref=e179]:
+      - generic [ref=e180]:
+        - generic [ref=e181]: MI
+        - generic [ref=e182]:
+          - generic [ref=e183]: Maya Idris
+          - text: TA · CS 2110 · Class of 2027
+        - generic [ref=e184]: was Donlon 2F student
+      - generic [ref=e185]:
+        - generic [ref=e186]:
+          - generic [ref=e187]: 9:41
+          - generic [ref=e188]: ●●● ᯤ ▮
+        - generic [ref=e189]:
+          - generic [ref=e190]:
+            - generic [ref=e191]: TA
+            - generic [ref=e192]:
+              - heading "CS 2110" [level=2] [ref=e193]
+              - generic [ref=e194]: Maya · TA view · 412 enrolled
+          - generic [ref=e195]: MI
+        - generic [ref=e197]:
+          - generic [ref=e198]: your class · this week
+          - heading "183 of 412 students are in a study loop." [level=1] [ref=e200]: 183 of 412 studentsare in a study loop.
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - generic [ref=e204]: 44%
+              - generic [ref=e205]: in a loop
+            - generic [ref=e206]:
+              - text: "Highest of any 2000-level CS this fall (CS 2800: 31%). Students in a loop turned in HW2 at 91% vs 74%."
+              - generic [ref=e207]:
+                - generic [ref=e208]:
+                  - generic [ref=e209]: "183"
+                  - generic [ref=e210]: in a loop
+                - generic [ref=e211]:
+                  - generic [ref=e212]: "37"
+                  - generic [ref=e213]: want one
+                - generic [ref=e214]:
+                  - generic [ref=e215]: "9"
+                  - generic [ref=e216]: loops · 4 dorms
+          - generic [ref=e217]:
+            - heading "Interested, not yet in a loop" [level=3] [ref=e218]
+            - generic [ref=e219]: 37 students
+          - paragraph [ref=e220]: "They dropped \"study CS 2110\" and nothing fit. When they're free (evenings, aggregate):"
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - generic [ref=e223]: Mon
+              - generic [ref=e225]: Tue
+              - generic [ref=e227]: Wed
+              - generic [ref=e229]: Thu
+              - generic [ref=e231]: Fri
+              - generic [ref=e233]: Sat
+              - generic [ref=e235]: Sun
+            - generic [ref=e237]: where they live · North 24 · West 8 · C-town 5
+            - generic [ref=e239]:
+              - generic [ref=e240]: Wed
+              - generic [ref=e241]:
+                - generic [ref=e242]: Seed a Wed 7p loop · Rhodes 571
+                - generic [ref=e243]: most are free then · 2 blocks from Duffield
+            - paragraph [ref=e244]: Loop invites the 37 as "a CS 2110 crew is starting Wed 7p" — no roster, no names to you. Quorum of 3 makes it real.
+            - generic [ref=e245]:
+              - button "Seed it" [ref=e246] [cursor=pointer]
+              - button "Anchor to my Tue 5p office hours" [ref=e247] [cursor=pointer]
+          - generic [ref=e248]:
+            - heading "What they're stuck on" [level=3] [ref=e249]
+            - generic [ref=e250]: from intents · aggregate
+          - paragraph [ref=e251]: Only phrases 5+ students used — nothing traceable to one person.
+          - generic [ref=e252]:
+            - generic [ref=e253]:
+              - generic [ref=e254]:
+                - generic [ref=e255]: HW3 · recursion
+                - generic [ref=e258]: "14"
+              - generic [ref=e259]:
+                - generic [ref=e260]: Generics
+                - generic [ref=e263]: "9"
+              - generic [ref=e264]:
+                - generic [ref=e265]: Prelim 2
+                - generic [ref=e268]: "8"
+              - generic [ref=e269]:
+                - generic [ref=e270]: Big-O proofs
+                - generic [ref=e273]: "5"
+            - generic [ref=e274]:
+              - generic [ref=e275]: Worth a recursion review this week?
+              - button "Seed review loop" [ref=e276] [cursor=pointer]
+          - generic [ref=e277]:
+            - heading "Study loops in your class" [level=3] [ref=e278]
+            - generic [ref=e279]: 9 active · 1 forming
+          - generic [ref=e280]:
+            - generic [ref=e281]:
+              - generic [ref=e282]: "14"
+              - generic [ref=e283]:
+                - generic [ref=e284]: Libe Café Nightowls
+                - generic [ref=e285]: Tue 9p · 6 regulars · 14-wk streak
+              - generic [ref=e286]:
+                - generic [ref=e287]: AL
+                - generic [ref=e288]: DF
+                - generic [ref=e289]: YS
+                - generic [ref=e290]: NB
+            - generic [ref=e291]:
+              - button "Drop in this week" [ref=e292] [cursor=pointer]
+              - button "Send a hint" [ref=e293] [cursor=pointer]
+          - generic [ref=e294]:
+            - generic [ref=e295]:
+              - generic [ref=e296]: "12"
+              - generic [ref=e297]:
+                - generic [ref=e298]: Sunday HW crew
+                - generic [ref=e299]: Sun 4p · Uris · 5 regulars · 12-wk streak
+              - generic [ref=e300]:
+                - generic [ref=e301]: JP
+                - generic [ref=e302]: LO
+                - generic [ref=e303]: PR
+                - generic [ref=e304]: SC
+            - generic [ref=e305]:
+              - button "Drop in this week" [ref=e306] [cursor=pointer]
+              - button "Send a hint" [ref=e307] [cursor=pointer]
+          - generic [ref=e308]:
+            - generic [ref=e309]:
+              - generic [ref=e310]: 5/8
+              - generic [ref=e311]:
+                - generic [ref=e312]: Prelim 2 review
+                - generic [ref=e313]: forming · needs 3 more
+              - generic [ref=e314]: forming
+            - paragraph [ref=e315]: "A word from you gets it over quorum: Loop posts \"your TA will drop by\" to the 37 waiting."
+            - button "Boost it" [ref=e317] [cursor=pointer]
+          - generic [ref=e318]:
+            - generic [ref=e319]: + 6 more loops
+            - button "See all" [ref=e320] [cursor=pointer]
+          - generic [ref=e321]:
+            - generic [ref=e322]: what you never see
+            - text: Who's in which loop by name (faces are display-only), what anyone typed, or attendance per student. Counts, loops and phrases 5+ people share.
+        - generic [ref=e323]:
+          - generic [ref=e324]:
+            - generic [ref=e325]: ⌂
+            - text: Home
+          - generic [ref=e326]:
+            - generic [ref=e327]: ⌘
+            - text: Class
+          - generic [ref=e328]:
+            - generic [ref=e329]: ▣
+            - text: CS 2110
+            - generic [ref=e330]: TA
+          - generic [ref=e331]:
+            - generic [ref=e332]: ◔
+            - text: Alerts
+          - generic [ref=e333]:
+            - generic [ref=e334]: ○
+            - text: You
+    - generic [ref=e335]:
+      - generic [ref=e336]:
+        - generic [ref=e337]: DO
+        - generic [ref=e338]:
+          - generic [ref=e339]: Dana Okafor
+          - text: Counselor · Advising & Wellbeing
+        - generic [ref=e340]: caseload → school
+      - generic [ref=e341]:
+        - generic [ref=e342]:
+          - generic [ref=e343]: 9:41
+          - generic [ref=e344]: ●●● ᯤ ▮
+        - generic [ref=e345]:
+          - generic [ref=e346]:
+            - generic [ref=e347]: ◎
+            - generic [ref=e348]:
+              - heading "Advising & Wellbeing" [level=2] [ref=e349]
+              - generic [ref=e350]: Dana · staff view · all undergrads
+          - generic [ref=e351]: DO
+        - generic [ref=e353]:
+          - generic [ref=e354]: cornell · this week
+          - heading [level=1] [ref=e356]:
+            - emphasis [ref=e357]: 68%
+            - text: of campusis in a loop.
+          - generic [ref=e358]:
+            - generic [ref=e359]:
+              - generic [ref=e360]:
+                - generic [ref=e361]: 68%
+                - generic [ref=e362]: in a loop
+              - generic [ref=e363]:
+                - text: 10,690 of 15,735 undergrads. +2 pts week over week; week 6 is where it usually dips.
+                - generic [ref=e364]:
+                  - generic [ref=e365]:
+                    - generic [ref=e366]: 1,240
+                    - generic [ref=e367]: active loops
+                  - generic [ref=e368]:
+                    - generic [ref=e369]: "86"
+                    - generic [ref=e370]: formed this wk
+                  - generic [ref=e371]:
+                    - generic [ref=e372]: "41"
+                    - generic [ref=e373]: wrapped
+            - generic [ref=e383]:
+              - generic [ref=e384]: wk 1
+              - generic [ref=e385]: in a loop, % of campus
+              - generic [ref=e386]: wk 8
+          - generic [ref=e387]:
+            - heading "Belonging by" [level=3] [ref=e388]
+            - generic [ref=e389]: "% in a loop"
+          - generic [ref=e390]:
+            - button "House" [ref=e391] [cursor=pointer]
+            - button "Course" [ref=e392] [cursor=pointer]
+            - button "Class year" [ref=e393] [cursor=pointer]
+          - generic [ref=e395]:
+            - generic [ref=e396]:
+              - generic [ref=e397]: Donlon
+              - generic [ref=e400]: 78%
+            - generic [ref=e401]:
+              - generic [ref=e402]: Court-Kay-Bauer
+              - generic [ref=e405]: 74%
+            - generic [ref=e406]:
+              - generic [ref=e407]: Balch
+              - generic [ref=e410]: 71%
+            - generic [ref=e411]:
+              - generic [ref=e412]: Dickson
+              - generic [ref=e415]: 69%
+            - generic [ref=e416]:
+              - generic [ref=e417]: Toni Morrison
+              - generic [ref=e420]: 66%
+            - generic [ref=e421]:
+              - generic [ref=e422]: Mews
+              - generic [ref=e425]: 63%
+            - generic [ref=e426]:
+              - generic [ref=e427]: Ganędago
+              - generic [ref=e430]: 61%
+            - generic [ref=e431]:
+              - generic [ref=e432]: Jameson
+              - generic [ref=e435]: 58%
+          - generic [ref=e436]:
+            - heading "Cold spots" [level=3] [ref=e437]
+            - generic [ref=e438]: 3 to look at
+          - paragraph [ref=e439]: Where the number is low or falling — and who can act (RAs, TAs, departments), not students.
+          - generic [ref=e440]:
+            - generic [ref=e441]:
+              - generic [ref=e442]: "58"
+              - generic [ref=e443]:
+                - generic [ref=e444]: Jameson · 58%, down 2
+                - generic [ref=e445]: lowest house on North · 19 loops
+            - paragraph [ref=e446]: 3 floors have no seeded loop. Ask their RAs — the RA view shows them the gaps.
+            - button "Nudge Jameson RAs" [ref=e448] [cursor=pointer]
+          - generic [ref=e449]:
+            - generic [ref=e450]:
+              - generic [ref=e451]: "29"
+              - generic [ref=e452]:
+                - generic [ref=e453]: ECON 1110 · 412 waiting, 3 loops
+                - generic [ref=e454]: biggest gap between wanting and having
+            - button "Flag to course staff" [ref=e456] [cursor=pointer]
+          - generic [ref=e457]:
+            - generic [ref=e458]:
+              - generic [ref=e459]: "41"
+              - generic [ref=e460]:
+                - generic [ref=e461]: Transfers · 41%
+                - generic [ref=e462]: no dorm floor to seed from
+            - button "Draft transfer mixer loop" [ref=e464] [cursor=pointer]
+          - generic [ref=e465]:
+            - heading "Your advisees" [level=3] [ref=e466]
+            - generic [ref=e467]: 96 of 128 in a loop
+          - paragraph [ref=e468]: The one signal that predicts who stays. Reach out — a nudge from you, not an algorithm.
+          - generic [ref=e469]:
+            - generic [ref=e470]:
+              - generic [ref=e471]: TN
+              - generic [ref=e472]:
+                - generic [ref=e473]: Theo Nguyen
+                - generic [ref=e474]: Jameson · 0 loops · 3 wks in
+              - button "Reach out" [ref=e475] [cursor=pointer]
+            - generic [ref=e476]:
+              - generic [ref=e477]: PA
+              - generic [ref=e478]:
+                - generic [ref=e479]: Priscilla Adams
+                - generic [ref=e480]: Mews · left their only loop
+              - button "Reach out" [ref=e481] [cursor=pointer]
+            - generic [ref=e482]:
+              - generic [ref=e483]: + 2 more
+              - button "See all" [ref=e484] [cursor=pointer]
+          - generic [ref=e485]:
+            - generic [ref=e486]: what you never see
+            - text: No intents, no messages, no who-likes-whom. Only whether a student has landed in a loop, rolled up by house, course and year. Everything else stays on their phone.
+  - generic [ref=e487]:
+    - heading "Cast changes this implies (say no to any)" [level=3] [ref=e488]
+    - list [ref=e489]:
+      - listitem [ref=e490]: Josh Park → RA of Donlon 2F (Class of 2027). Today he's a Balch resident who "seeded" the Sunday HW crew. Moving him to Donlon 2F puts Sarah on his floor, so his dashboard, the loop he seeded, and Sarah's onboarding all tie together.
+      - listitem [ref=e491]: Maya Idris → CS 2110 TA (Class of 2027, Collegetown). Today she's a Donlon 2F freshman "latecomer". The join notification becomes "Maya, your CS 2110 TA, joined the Sunday HW crew" — arguably a stronger beat. If you'd rather keep a student Maya, I'd add a 5th persona for the TA instead.
+      - listitem [ref=e492]: Dana Okafor → whole-school view, with her 128-advisee caseload kept as a section at the bottom (the reach-out list she has today).
+      - listitem [ref=e493]: Student personas keep their student app. In direction A, RA/TA see one extra tab; in B they get a "Staff view" entry in the account menu and a "← my Loop" pill to get back.
+    - paragraph [ref=e494]: "Once you pick, I'll implement it in index.html: new RADashboard / TADashboard components, AdvisorDashboard upgraded to school-wide, persona data + switcher updated."

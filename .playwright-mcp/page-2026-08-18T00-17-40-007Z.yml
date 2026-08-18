@@ -1,0 +1,209 @@
+- generic [ref=f1e1]:
+  - heading "Drop an intent · pill styling, 3 looks" [level=1] [ref=f1e2]
+  - paragraph [ref=f1e3]: Same composer as direction 01 (opens filled with the most popular recent drop, greyed = suggested; tap a word to make it yours; ↻ another rotates through what's popular; the count reacts live). Only the token treatment and the picker change. Flip theme to check both.
+  - button "☾ flip theme on all three" [active] [ref=f1e5] [cursor=pointer]
+  - generic [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - generic [ref=f1e8]:
+        - generic [ref=f1e9]: "01"
+        - heading "Soft pills · dropdown" [level=2] [ref=f1e10]
+        - generic [ref=f1e11]: recommended
+      - generic [ref=f1e12]:
+        - generic [ref=f1e13]:
+          - generic [ref=f1e14]: 9:41
+          - generic [ref=f1e15]: 5G
+        - generic [ref=f1e18]: Loop
+        - generic [ref=f1e21]:
+          - generic [ref=f1e22]: What your intent lands in
+          - generic [ref=f1e25]:
+            - generic [ref=f1e26]: dinner Thursdays, weekly
+            - generic [ref=f1e27]: 12 want · your floor
+          - generic [ref=f1e30]:
+            - generic [ref=f1e31]: a run Fridays, weekly @Collegetown
+            - generic [ref=f1e32]: 9 want · your floor
+          - generic [ref=f1e35]:
+            - generic [ref=f1e36]: CS 2110 Sundays, weekly @Uris
+            - generic [ref=f1e37]: 11 want · your floor
+          - generic [ref=f1e40]:
+            - generic [ref=f1e41]: kickboxing Wednesdays, weekly @Teagle gym
+            - generic [ref=f1e42]: 8 want · your floor
+          - generic [ref=f1e45]:
+            - generic [ref=f1e46]: coffee Mondays, weekly
+            - generic [ref=f1e47]: 6 want · your floor
+        - generic [ref=f1e49]:
+          - generic [ref=f1e51]:
+            - generic [ref=f1e52]:
+              - generic [ref=f1e53]: Drop an intent
+              - heading "What are you trying to make happen?" [level=2] [ref=f1e54]
+            - button "Close" [ref=f1e55] [cursor=pointer]: ✕
+          - generic [ref=f1e56]:
+            - generic [ref=f1e57]: ✦ popular on your floor
+            - button "↻ another" [ref=f1e58] [cursor=pointer]
+          - generic [ref=f1e59]:
+            - generic [ref=f1e60] [cursor=pointer]:
+              - generic [ref=f1e61]: 🍜
+              - text: Grabbing
+            - generic [ref=f1e64] [cursor=pointer]: dinner
+            - generic [ref=f1e67] [cursor=pointer]: Thursdays
+            - generic [ref=f1e70]: ","
+            - generic [ref=f1e71] [cursor=pointer]: weekly
+            - generic [ref=f1e74] [cursor=pointer]:
+              - generic [ref=f1e75]: +
+              - text: where
+          - generic [ref=f1e76]: tap a pill to change it · dashed = suggested, tap to make it yours
+          - generic [ref=f1e77]:
+            - generic [ref=f1e78]: "10"
+            - generic [ref=f1e79]: 10 near you want this too. Open on where — that's why it's high.
+          - button "Drop it" [ref=f1e81] [cursor=pointer]
+          - paragraph [ref=f1e82]: Drop it and it waits on your floor until enough people want the same thing — then it fires and a loop crystallizes.
+          - generic [ref=f1e247]:
+            - generic [ref=f1e248] [cursor=pointer]:
+              - generic [ref=f1e250]: ✓ Thursdays popular
+              - generic [ref=f1e251]: 12 want
+            - generic [ref=f1e252] [cursor=pointer]:
+              - generic [ref=f1e254]: Fridays
+              - generic [ref=f1e255]: 12 want
+            - generic [ref=f1e256] [cursor=pointer]:
+              - generic [ref=f1e258]: Saturdays
+              - generic [ref=f1e259]: 11 want
+            - generic [ref=f1e260] [cursor=pointer]:
+              - generic [ref=f1e262]: weekends
+              - generic [ref=f1e263]: 10 want
+            - generic [ref=f1e264] [cursor=pointer]:
+              - generic [ref=f1e266]: Sundays
+              - generic [ref=f1e267]: 9 want
+            - generic [ref=f1e268] [cursor=pointer]:
+              - generic [ref=f1e270]: weekdays
+              - generic [ref=f1e271]: 8 want
+            - generic [ref=f1e272] [cursor=pointer]:
+              - generic [ref=f1e274]: Mondays
+              - generic [ref=f1e275]: 6 want
+            - generic [ref=f1e276] [cursor=pointer]:
+              - generic [ref=f1e278]: Wednesdays
+              - generic [ref=f1e279]: 6 want
+            - generic [ref=f1e280] [cursor=pointer]:
+              - generic [ref=f1e282]: Tuesdays
+              - generic [ref=f1e283]: 5 want
+      - list [ref=f1e83]:
+        - listitem [ref=f1e84]: Pills are tinted by category (eat amber / study slate / move moss) once they're yours; suggested pills are dashed grey outlines, so "yours vs. suggested" reads at a glance.
+        - listitem [ref=f1e85]: Chevron ▾ signals tappable without the dotted underline. Ranked dropdown menu is unchanged from the Floor sheet.
+        - listitem [ref=f1e86]: Quietest of the three; sits comfortably in the current sheet with no extra height.
+      - paragraph [ref=f1e87]: "Try: tap dinner → coffee · tap Grabbing → Up for · tap + where."
+    - generic [ref=f1e88]:
+      - generic [ref=f1e89]:
+        - generic [ref=f1e90]: "02"
+        - heading "Bold pills · chip cloud" [level=2] [ref=f1e91]
+      - generic [ref=f1e92]:
+        - generic [ref=f1e93]:
+          - generic [ref=f1e94]: 9:41
+          - generic [ref=f1e95]: 5G
+        - generic [ref=f1e98]: Loop
+        - generic [ref=f1e101]:
+          - generic [ref=f1e102]: What your intent lands in
+          - generic [ref=f1e105]:
+            - generic [ref=f1e106]: dinner Thursdays, weekly
+            - generic [ref=f1e107]: 12 want · your floor
+          - generic [ref=f1e110]:
+            - generic [ref=f1e111]: a run Fridays, weekly @Collegetown
+            - generic [ref=f1e112]: 9 want · your floor
+          - generic [ref=f1e115]:
+            - generic [ref=f1e116]: CS 2110 Sundays, weekly @Uris
+            - generic [ref=f1e117]: 11 want · your floor
+          - generic [ref=f1e120]:
+            - generic [ref=f1e121]: kickboxing Wednesdays, weekly @Teagle gym
+            - generic [ref=f1e122]: 8 want · your floor
+          - generic [ref=f1e125]:
+            - generic [ref=f1e126]: coffee Mondays, weekly
+            - generic [ref=f1e127]: 6 want · your floor
+        - generic [ref=f1e129]:
+          - generic [ref=f1e131]:
+            - generic [ref=f1e132]:
+              - generic [ref=f1e133]: Drop an intent
+              - heading "What are you trying to make happen?" [level=2] [ref=f1e134]
+            - button "Close" [ref=f1e135] [cursor=pointer]: ✕
+          - generic [ref=f1e136]:
+            - generic [ref=f1e137]: ✦ popular on your floor
+            - button "↻ another" [ref=f1e138] [cursor=pointer]
+          - generic [ref=f1e139]:
+            - generic [ref=f1e140] [cursor=pointer]:
+              - generic [ref=f1e141]: 🍜
+              - text: Grabbing
+            - generic [ref=f1e144] [cursor=pointer]: dinner
+            - generic [ref=f1e147] [cursor=pointer]: Thursdays
+            - generic [ref=f1e150]: ","
+            - generic [ref=f1e151] [cursor=pointer]: weekly
+            - generic [ref=f1e154] [cursor=pointer]: + where
+          - generic [ref=f1e155]: tap a pill to change it · dashed = suggested, tap to make it yours
+          - generic [ref=f1e156]:
+            - generic [ref=f1e157]: "10"
+            - generic [ref=f1e158]: 10 near you want this too. Open on where — that's why it's high.
+          - button "Drop it" [ref=f1e160] [cursor=pointer]
+          - paragraph [ref=f1e161]: Drop it and it waits on your floor until enough people want the same thing — then it fires and a loop crystallizes.
+      - list [ref=f1e162]:
+        - listitem [ref=f1e163]: Filled, saturated pills — the sentence looks like a row of chips you'd see on a Floor card. Suggested = tinted + dashed.
+        - listitem [ref=f1e164]: Tapping a pill opens an inline chip cloud under the sentence (all options visible, ✦ marks popular, counts on each) instead of a floating list — more thumb-friendly, no menu-off-screen problems.
+        - listitem [ref=f1e165]: "Trade-off: louder; four solid pills can compete with the Drop button."
+      - paragraph [ref=f1e166]: "Try: tap Thursdays → cloud → Fridays; tap + where → Collegetown."
+    - generic [ref=f1e167]:
+      - generic [ref=f1e168]:
+        - generic [ref=f1e169]: "03"
+        - heading "Slot cards · rail" [level=2] [ref=f1e170]
+      - generic [ref=f1e171]:
+        - generic [ref=f1e172]:
+          - generic [ref=f1e173]: 9:41
+          - generic [ref=f1e174]: 5G
+        - generic [ref=f1e177]: Loop
+        - generic [ref=f1e180]:
+          - generic [ref=f1e181]: What your intent lands in
+          - generic [ref=f1e184]:
+            - generic [ref=f1e185]: dinner Thursdays, weekly
+            - generic [ref=f1e186]: 12 want · your floor
+          - generic [ref=f1e189]:
+            - generic [ref=f1e190]: a run Fridays, weekly @Collegetown
+            - generic [ref=f1e191]: 9 want · your floor
+          - generic [ref=f1e194]:
+            - generic [ref=f1e195]: CS 2110 Sundays, weekly @Uris
+            - generic [ref=f1e196]: 11 want · your floor
+          - generic [ref=f1e199]:
+            - generic [ref=f1e200]: kickboxing Wednesdays, weekly @Teagle gym
+            - generic [ref=f1e201]: 8 want · your floor
+          - generic [ref=f1e204]:
+            - generic [ref=f1e205]: coffee Mondays, weekly
+            - generic [ref=f1e206]: 6 want · your floor
+        - generic [ref=f1e208]:
+          - generic [ref=f1e210]:
+            - generic [ref=f1e211]:
+              - generic [ref=f1e212]: Drop an intent
+              - heading "What are you trying to make happen?" [level=2] [ref=f1e213]
+            - button "Close" [ref=f1e214] [cursor=pointer]: ✕
+          - generic [ref=f1e215]:
+            - generic [ref=f1e216]: ✦ popular on your floor
+            - button "↻ another" [ref=f1e217] [cursor=pointer]
+          - generic [ref=f1e218]:
+            - generic [ref=f1e219] [cursor=pointer]:
+              - generic [ref=f1e220]: doing · suggested
+              - generic [ref=f1e221]: Grabbing
+            - generic [ref=f1e222] [cursor=pointer]:
+              - generic [ref=f1e223]: what · suggested
+              - generic [ref=f1e224]: dinner
+            - generic [ref=f1e225]: "on"
+            - generic [ref=f1e226] [cursor=pointer]:
+              - generic [ref=f1e227]: day · suggested
+              - generic [ref=f1e228]: Thursdays
+            - generic [ref=f1e229] [cursor=pointer]:
+              - generic [ref=f1e230]: often · suggested
+              - generic [ref=f1e231]: weekly
+            - generic [ref=f1e232] [cursor=pointer]:
+              - generic [ref=f1e233]: where
+              - generic [ref=f1e234]: + add
+          - generic [ref=f1e235]: tap a pill to change it · dashed = suggested, tap to make it yours
+          - generic [ref=f1e236]:
+            - generic [ref=f1e237]: "10"
+            - generic [ref=f1e238]: 10 near you want this too. Open on where — that's why it's high.
+          - button "Drop it" [ref=f1e240] [cursor=pointer]
+          - paragraph [ref=f1e241]: Drop it and it waits on your floor until enough people want the same thing — then it fires and a loop crystallizes.
+      - list [ref=f1e242]:
+        - listitem [ref=f1e243]: Each token is a mini card with a tiny label (doing / what / day / often / where) — no guessing what a slot means; "· suggested" lives in the label.
+        - listitem [ref=f1e244]: Picker is a horizontal rail of chips ranked by demand, so the sentence never gets covered.
+        - listitem [ref=f1e245]: Most explicit; reads a touch more like a form than a sentence.
+      - paragraph [ref=f1e246]: "Try: tap the often card → rail → 2× a week."

@@ -1,0 +1,94 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: 9:41
+      - generic [ref=e7]: 5G
+    - generic [ref=e1238]:
+      - generic [ref=e1239]:
+        - generic [ref=e1240]:
+          - generic [ref=e1241]: You
+          - heading "Sarah Chen" [level=1] [ref=e1242]
+        - button "Toggle theme" [ref=e1244] [cursor=pointer]
+      - generic [ref=e1247]:
+        - generic [ref=e1248]:
+          - generic "Sarah Chen" [ref=e1249]: SC
+          - generic [ref=e1250]:
+            - paragraph [ref=e1251]: Donlon 2F · Computer Science
+            - paragraph [ref=e1252]: Class of 2029
+        - generic [ref=e1253]:
+          - generic [ref=e1254]: Belonging signal
+          - paragraph [ref=e1258]: You're in 1 loop this semester.
+          - paragraph [ref=e1259]: Students in at least one loop stay enrolled and see an advisor earlier. Loop shares this with advising as one number — a sign to reach out — never your conversations.
+          - generic [ref=e1260]:
+            - generic [ref=e1261]:
+              - generic [ref=e1262]: "1"
+              - generic [ref=e1263]: your loops
+            - generic [ref=e1264]:
+              - generic [ref=e1265]: "1"
+              - generic [ref=e1266]: best streak · wks
+            - generic [ref=e1267]:
+              - generic [ref=e1268]: 64%
+              - generic [ref=e1269]: of campus in a loop
+        - generic [ref=e1270]:
+          - generic [ref=e1271]:
+            - heading "Your loops" [level=2] [ref=e1272]
+            - generic [ref=e1273]: 1 running
+          - generic [ref=e1275]:
+            - button "moving · your floor Lift Fridays Fridays · 2× a week next · Fridays Sarah Chen 1-wk streak 1 in · since wk 3" [ref=e1276] [cursor=pointer]:
+              - generic [ref=e1278]:
+                - generic [ref=e1279]: moving · your floor
+                - heading "Lift Fridays" [level=3] [ref=e1282]
+              - generic [ref=e1285]:
+                - generic [ref=e1286]: Fridays · 2× a week
+                - generic [ref=e1292]: next · Fridays
+              - generic [ref=e1297]:
+                - generic "Sarah Chen" [ref=e1300]: SC
+                - generic [ref=e1301]:
+                  - generic [ref=e1302]: 1-wk streak
+                  - generic [ref=e1305]: 1 in · since wk 3
+            - generic [ref=e1306]:
+              - button "Add to calendar" [ref=e1307] [cursor=pointer]
+              - button "Share" [ref=e1310] [cursor=pointer]
+        - generic [ref=e1317]:
+          - generic [ref=e1322]:
+            - paragraph [ref=e1323]: Dana Okafor
+            - paragraph [ref=e1324]: your Loop counselor · Advising & Wellbeing
+          - paragraph [ref=e1325]: Walk-ins Tue + Thu · 2–4p
+          - generic [ref=e1326]:
+            - button "Message Dana" [ref=e1327] [cursor=pointer]
+            - button "Report a concern" [ref=e1330] [cursor=pointer]
+        - generic [ref=e1333]:
+          - generic [ref=e1334]: Private notes
+          - paragraph [ref=e1337]: Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.
+        - button "Big Red Night theme" [ref=e1338] [cursor=pointer]:
+          - generic [ref=e1339]: Big Red Night
+          - generic [ref=e1342]: theme
+      - generic [ref=e1343]:
+        - button [ref=e1344] [cursor=pointer]
+        - button [ref=e1352] [cursor=pointer]
+        - button [ref=e1357] [cursor=pointer]
+        - button [ref=e1362] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]: view the demo as
+    - generic [ref=e31]:
+      - button "Sarah Chen Sarah seeker" [ref=e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=e33]: SC
+        - generic [ref=e34]:
+          - generic [ref=e35]: Sarah
+          - generic [ref=e36]: seeker
+      - button "Josh Park Josh host" [ref=e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=e38]: JP
+        - generic [ref=e39]:
+          - generic [ref=e40]: Josh
+          - generic [ref=e41]: host
+      - button "Maya Idris Maya latecomer" [ref=e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=e43]: MI
+        - generic [ref=e44]:
+          - generic [ref=e45]: Maya
+          - generic [ref=e46]: latecomer
+      - button "Dana Okafor Dana advisor" [ref=e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=e48]: DO
+        - generic [ref=e49]:
+          - generic [ref=e50]: Dana
+          - generic [ref=e51]: advisor
+    - button "restart demo" [ref=e52] [cursor=pointer]

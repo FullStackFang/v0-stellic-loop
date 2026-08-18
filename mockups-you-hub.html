@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · You hub — intents · upcoming · past</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e;
+    --carnelian-100:#f8e6e3; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a;
+    --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber-600);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:radial-gradient(1000px 460px at 50% -8%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:36px 20px 60px; }
+  .wrap{ max-width:1000px; margin:0 auto; text-align:center; }
+  .stage{ display:flex; gap:44px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:28px; text-align:left; }
+  .panel{ width:300px; }
+  .panel-label{ font:600 11px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:12px; }
+  .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  h1{ font:800 28px/1.12 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .lede{ max-width:62ch; margin:0 auto 22px; color:var(--text-secondary); font-size:15px; }
+  .toggle{ display:flex; flex-direction:column; gap:8px; }
+  .toggle button{ text-align:left; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:14px; padding:12px 15px; cursor:pointer; transition:all .18s var(--ease-out); display:flex; flex-direction:column; gap:3px; }
+  .toggle button b{ font:700 15px/1.1 var(--font-display); color:var(--text-primary); }
+  .toggle button span{ font-size:11.5px; color:var(--text-tertiary); }
+  .toggle button[data-on="1"]{ background:var(--accent); border-color:var(--accent); box-shadow:0 12px 26px -14px var(--accent); }
+  .toggle button[data-on="1"] b, .toggle button[data-on="1"] span{ color:var(--accent-ink); }
+  .togsub{ font-size:12.5px; color:var(--text-secondary); margin:16px 2px 0; line-height:1.55; }
+  .togsub b{ color:var(--text-primary); }
+
+  .phone{ width:378px; height:764px; margin:0 auto; background:var(--bg-surface); border:1px solid var(--border-hairline);
+    border-radius:38px; overflow:hidden; position:relative; display:flex; flex-direction:column; text-align:left;
+    box-shadow:0 30px 64px -26px rgba(80,40,30,.36), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .apphead{ padding:6px 20px 10px; border-bottom:1px solid var(--border-hairline); flex-shrink:0; display:flex; align-items:flex-end; justify-content:space-between; }
+  .apphead .k{ font:600 10.5px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); }
+  .apphead h2{ font:800 20px/1.1 var(--font-display); margin:4px 0 0; letter-spacing:-.02em; }
+  .av{ width:34px; height:34px; border-radius:50%; background:var(--accent-quiet); color:var(--accent-strong); font:700 11px/34px var(--font-mono); text-align:center; }
+  .scroll{ flex:1; overflow-y:auto; scrollbar-width:none; } .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:14px 20px 92px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  .who{ display:flex; align-items:center; gap:12px; }
+  .who .av{ width:48px; height:48px; line-height:48px; font-size:15px; }
+  .who .l1{ font-size:13px; color:var(--text-secondary); } .who .l2{ font:500 12px/1.4 var(--font-mono); color:var(--text-tertiary); }
+  .stats{ display:flex; justify-content:space-between; margin-top:14px; padding-top:12px; border-top:1px solid var(--border-hairline); }
+  .stats div{ display:flex; flex-direction:column; } .stats b{ font:500 18px/1.1 var(--font-mono); } .stats span{ font-size:11px; color:var(--text-tertiary); margin-top:2px; }
+  .stats b.hi{ color:var(--accent-strong); }
+
+  .sechead{ display:flex; align-items:baseline; gap:8px; margin:20px 0 4px; }
+  .sechead h3{ font:700 15px/1 var(--font-display); margin:0; } .sechead .c{ margin-left:auto; font:500 11.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .sechead .c.hi{ color:var(--accent-strong); }
+  .lede2{ font-size:12px; color:var(--text-secondary); margin:0 0 10px; line-height:1.5; }
+
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:13px 14px; margin-bottom:10px; }
+  .card.sunk{ background:var(--bg-sunken); border-color:transparent; }
+  .row{ display:flex; align-items:center; gap:10px; }
+  .row .ic{ width:34px; height:34px; border-radius:10px; flex-shrink:0; display:grid; place-items:center; background:var(--accent-quiet); color:var(--accent-strong); font-size:15px; }
+  .row .ic.dim{ background:var(--bg-sunken); color:var(--text-tertiary); }
+  .row .ic.live{ background:color-mix(in srgb, var(--status-live) 14%, var(--bg-surface)); color:var(--status-live); }
+  .row .t{ font:600 14px/1.2 var(--font-sans); } .row .s{ font:500 11.5px/1.5 var(--font-mono); color:var(--text-tertiary); margin-top:2px; }
+  .row .m{ min-width:0; flex:1; }
+  .badge{ font:700 9.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:4px 7px; border-radius:999px; background:var(--bg-sunken); color:var(--text-tertiary); flex-shrink:0; }
+  .badge.forming{ color:var(--status-forming); background:color-mix(in srgb, var(--status-forming) 14%, var(--bg-surface)); }
+  .badge.locked{ color:var(--accent-strong); background:var(--accent-quiet); }
+  .badge.rate{ color:var(--accent-ink); background:var(--accent); }
+  .faces{ display:flex; padding-left:7px; flex-shrink:0; }
+  .faces span{ width:22px; height:22px; border-radius:50%; margin-left:-7px; border:2px solid var(--bg-surface); background:color-mix(in srgb, var(--moss) 20%, var(--bg-surface)); font:700 8.5px/18px var(--font-sans); text-align:center; color:var(--moss); }
+  .foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:9px; border-top:1px solid var(--border-hairline); font-size:12.5px; color:var(--text-secondary); }
+  .foot .mono{ font-size:11px; color:var(--text-tertiary); }
+  .btn{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:7px 12px; font-size:12.5px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.g{ border-color:transparent; color:var(--accent-strong); padding-left:6px; padding-right:6px; }
+  .noted{ display:inline-flex; align-items:center; gap:5px; } .noted i{ font-style:normal; color:var(--status-live); }
+  .meter{ height:5px; border-radius:999px; background:var(--bg-surface); overflow:hidden; margin-top:8px; } .meter i{ display:block; height:100%; background:var(--status-forming); border-radius:999px; }
+
+  /* B — segmented hub */
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; margin:16px 0 12px; }
+  .seg button{ flex:1; border:0; background:transparent; border-radius:9px; padding:9px 4px; font:600 12.5px/1 var(--font-sans); color:var(--text-secondary); cursor:pointer; transition:all .18s var(--ease-out); position:relative; }
+  .seg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+  .seg button small{ font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); margin-left:4px; }
+  .seg button .qd{ position:absolute; top:6px; right:8px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+
+  /* C — ledger */
+  .day{ display:flex; gap:12px; margin-top:14px; }
+  .day .rail{ width:44px; flex-shrink:0; text-align:center; }
+  .day .rail b{ display:block; font:700 10px/1 var(--font-mono); letter-spacing:.1em; color:var(--text-tertiary); text-transform:uppercase; }
+  .day .rail span{ display:block; font:800 20px/1.1 var(--font-display); margin-top:3px; }
+  .day .rail.now span{ color:var(--accent-strong); }
+  .day .rail.past span{ color:var(--text-tertiary); }
+  .day .rail.wait span{ font-size:16px; color:var(--status-forming); }
+  .day .body{ flex:1; min-width:0; }
+  .day .body .card:last-child{ margin-bottom:0; }
+  .divider{ display:flex; align-items:center; gap:10px; margin:18px 0 2px; font:600 10.5px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); }
+  .divider::before, .divider::after{ content:''; flex:1; height:1px; background:var(--border-hairline); }
+
+  @keyframes slidein{ from{ opacity:0; transform:translateY(-8px) scale(.99); } to{ opacity:1; transform:none; } }
+  .in{ animation:slidein .45s var(--ease-settle) both; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:60px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.5 var(--font-sans); color:var(--text-tertiary); } .tabbar div.on{ color:var(--accent); } .tabbar div .g{ font-size:16px; display:block; }
+  @media (prefers-reduced-motion: reduce){ .in{ animation:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · You tab</div>
+  <h1>One place for what you want, what's coming, what wrapped</h1>
+  <p class="lede">Same data every time — Sarah's intents, her upcoming loops, and the loops that wrapped (two still waiting to be rated). Three ways to lay it out. Pick one and I'll build it into the You tab.</p>
+
+  <div class="stage">
+    <div class="phone" id="phone"></div>
+    <div class="panel">
+      <div class="panel-label">Direction</div>
+      <div class="toggle" id="toggle">
+        <button data-k="a" data-on="1"><b>A · Stacked sections</b><span>intents → upcoming → past, all on one scroll</span></button>
+        <button data-k="b"><b>B · Segmented hub</b><span>one list at a time · Upcoming · Past · Intents</span></button>
+        <button data-k="c"><b>C · Ledger</b><span>one chronological rail · waiting → this week → wrapped</span></button>
+      </div>
+      <p class="togsub" id="togsub"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const esc = s => (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const faces = (ids) => `<div class="faces">${ids.map(i=>`<span>${i}</span>`).join('')}</div>`;
+
+const DATA = {
+  intents: [
+    { t:'Studying CS 2110 Thursdays', s:'Thursdays · weekly · 8 of 8 want it', pct:100, badge:'ready to fire', kind:'forming' },
+    { t:'Lift 3× a week, mornings',   s:'Mon/Wed/Fri · Teagle · 4 of 8 want it', pct:50, badge:'forming', kind:'forming' },
+    { t:'Pottery night',              s:'weekly · pending review', pct:0, badge:'pending', kind:'dim' },
+  ],
+  upcoming: [
+    { t:'Sunday HW crew',   s:'Sun · 4:00p · Uris · this week', who:['JP','LO','PR','MD'], badge:'locked', when:'in 2 days', live:false },
+    { t:'Wed kickboxing',   s:'Wed · 7:00p · Teagle · weekly',  who:['MI','LO'],           badge:'meets weekly', when:'in 5 days', live:false },
+    { t:'Late-night ramen', s:'Thu · 10:30p · Collegetown',     who:['JP','SC','MI'],      badge:'meeting now', when:'now', live:true },
+  ],
+  past: [
+    { t:'Prelim 1 review',          s:'wrapped after the exam · 5 sessions', who:['JP','LO','MD','PR'], when:'just now',    rated:null },
+    { t:'HW1 grind',                s:'ran its course · 3 sessions',         who:['JP','LO'],           when:'3 weeks ago', rated:null },
+    { t:'Move-in week dinner crew', s:'wrapped after O-week · 4 sessions',   who:['LO','MI'],           when:'last month',  rated:'like' },
+  ],
+};
+
+const intentCard = it => `
+  <div class="card sunk">
+    <div class="row">
+      <div class="ic ${it.kind==='dim'?'dim':''}">${it.kind==='dim'?'◔':'✦'}</div>
+      <div class="m"><div class="t">${esc(it.t)}</div><div class="s">${esc(it.s)}</div></div>
+      <span class="badge ${it.kind==='dim'?'':'forming'}">${it.badge}</span>
+    </div>
+    ${it.pct?`<div class="meter"><i style="width:${it.pct}%"></i></div>`:''}
+  </div>`;
+
+const upCard = u => `
+  <div class="card">
+    <div class="row">
+      <div class="ic ${u.live?'live':''}">${u.live?'●':'↻'}</div>
+      <div class="m"><div class="t">${esc(u.t)}</div><div class="s">${esc(u.s)}</div></div>
+      ${faces(u.who)}
+    </div>
+    <div class="foot">
+      <span class="badge ${u.badge==='locked'?'locked':''}">${u.badge}</span>
+      <span style="display:flex;gap:6px">${u.live?'<button class="btn p">I\'m here</button>':'<button class="btn">Calendar</button><button class="btn g">Open ›</button>'}</span>
+    </div>
+  </div>`;
+
+const pastCard = p => `
+  <div class="card sunk">
+    <div class="row">
+      <div class="ic dim">✓</div>
+      <div class="m"><div class="t">${esc(p.t)}</div><div class="s">${esc(p.s)} · ${esc(p.when)}</div></div>
+      ${faces(p.who)}
+    </div>
+    <div class="foot">
+      ${p.rated?`<span class="noted"><i>👍</i>You noted it · 2/${p.who.length} of the crew</span><button class="btn">Edit</button>`
+               :`<span>Not rated yet</span><button class="btn p">Rate it</button>`}
+    </div>
+  </div>`;
+
+const toRate = DATA.past.filter(p=>!p.rated).length;
+
+const header = (title, k) => `
+  <div class="status"><span>9:41</span><span>5G ▮</span></div>
+  <div class="apphead"><div><div class="k">${k}</div><h2>${title}</h2></div><div class="av">SC</div></div>`;
+
+const profile = () => `
+  <div class="who"><div class="av">SC</div><div><div class="l1">Donlon 2F · Computer Science</div><div class="l2">Class of 2029</div></div></div>
+  <div class="stats">
+    <div><b>${DATA.upcoming.length}</b><span>loops running</span></div>
+    <div><b>${DATA.intents.length}</b><span>intents waiting</span></div>
+    <div><b class="hi">${toRate}</b><span>to rate</span></div>
+  </div>`;
+
+const tabbar = `<div class="tabbar"><div><span class="g">◉</span>Home</div><div><span class="g">◈</span>Class</div><div><span class="g">◔</span>Alerts</div><div class="on"><span class="g">○</span>You</div></div>`;
+
+const VIEWS = {
+  a: {
+    sub: "<b>What's in the app now, tightened.</b> Everything on one scroll, in the order it happens: what you've asked for, what's about to meet, what's done. Counts in each header; the 'to rate' number is the only thing in accent so it pulls the eye. Longest page of the three.",
+    render: () => `
+      ${profile()}
+      <div class="sechead"><h3>Your intents</h3><span class="c">${DATA.intents.length} waiting</span></div>
+      <p class="lede2">What you're up for. Loop pulls you into a crew when enough people near you want the same.</p>
+      ${DATA.intents.map(intentCard).join('')}
+      <div class="sechead"><h3>Upcoming</h3><span class="c">${DATA.upcoming.length} running</span></div>
+      <p class="lede2">The loops you're in — next meet, push to calendar, check in when you're there.</p>
+      ${DATA.upcoming.map(upCard).join('')}
+      <div class="sechead"><h3>Past loops</h3><span class="c hi">${toRate} to rate</span></div>
+      <p class="lede2">Loops end when the reason does. Rate the loop and the crew — private, only tunes who you're seated with next.</p>
+      ${DATA.past.map(pastCard).join('')}`
+  },
+  b: {
+    sub: "<b>A hub with a segmented control.</b> Profile strip on top, then one list at a time — Upcoming by default (what you'll actually open the tab for), Past carries a dot until everything's rated, Intents is where you shape what's next. Shortest scroll; the counts live in the segments.",
+    seg: 'upcoming',
+    render: (v) => `
+      ${profile()}
+      <div class="seg" id="seg">
+        <button data-k="upcoming" data-on="${v.seg==='upcoming'?1:0}">Upcoming<small>${DATA.upcoming.length}</small></button>
+        <button data-k="past" data-on="${v.seg==='past'?1:0}">Past<small>${DATA.past.length}</small>${toRate?'<span class="qd"></span>':''}</button>
+        <button data-k="intents" data-on="${v.seg==='intents'?1:0}">Intents<small>${DATA.intents.length}</small></button>
+      </div>
+      <div class="in" key="${v.seg}">
+      ${v.seg==='upcoming' ? `<p class="lede2">Next meets first. Tap in to check in, move it, or message the crew.</p>${DATA.upcoming.map(upCard).join('')}`
+       : v.seg==='past'   ? `<p class="lede2">${toRate} still to rate. Private — only tunes who you're seated with next.</p>${DATA.past.map(pastCard).join('')}`
+       :                    `<p class="lede2">What you've said you want. Add one in plain English; Loop holds it until a crew forms.</p><div class="card" style="color:var(--text-tertiary);font-size:13.5px">＋ e.g. lift 3× a week in the mornings</div>${DATA.intents.map(intentCard).join('')}`}
+      </div>`
+  },
+  c: {
+    sub: "<b>A single ledger, ordered by time.</b> Reads like a personal agenda without being a calendar: what's waiting for a crew sits at the top (no date yet), this week's meets follow by day, and wrapped loops trail off underneath with the rate button. Best sense of rhythm; least like a settings page.",
+    render: () => `
+      ${profile()}
+      <div class="divider">Waiting for a crew</div>
+      <div class="day"><div class="rail wait"><b>soon</b><span>◔</span></div><div class="body">${DATA.intents.map(intentCard).join('')}</div></div>
+      <div class="divider">This week</div>
+      <div class="day"><div class="rail now"><b>Thu</b><span>18</span></div><div class="body">${upCard(DATA.upcoming[2])}</div></div>
+      <div class="day"><div class="rail"><b>Sun</b><span>21</span></div><div class="body">${upCard(DATA.upcoming[0])}</div></div>
+      <div class="day"><div class="rail"><b>Wed</b><span>24</span></div><div class="body">${upCard(DATA.upcoming[1])}</div></div>
+      <div class="divider">Wrapped · ${toRate} to rate</div>
+      <div class="day"><div class="rail past"><b>today</b><span>18</span></div><div class="body">${pastCard(DATA.past[0])}</div></div>
+      <div class="day"><div class="rail past"><b>Jul</b><span>28</span></div><div class="body">${pastCard(DATA.past[1])}</div></div>
+      <div class="day"><div class="rail past"><b>Jul</b><span>9</span></div><div class="body">${pastCard(DATA.past[2])}</div></div>`
+  },
+};
+
+const phone = document.getElementById('phone');
+let cur = 'a';
+function render(){
+  const v = VIEWS[cur];
+  phone.innerHTML = header('Sarah Chen', 'You') + `<div class="scroll"><div class="pad in">${v.render(v)}</div></div>` + tabbar;
+  phone.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{ v.seg=b.dataset.k; render(); });
+}
+function setView(k){
+  cur=k;
+  document.getElementById('togsub').innerHTML = VIEWS[k].sub;
+  document.querySelectorAll('#toggle button').forEach(b=>b.dataset.on = b.dataset.k===k?1:0);
+  render();
+}
+document.querySelectorAll('#toggle button').forEach(b=>b.onclick=()=>setView(b.dataset.k));
+setView('a');
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: 9:41
+      - generic [ref=f1e7]: 5G
+    - generic [ref=f1e639]:
+      - generic [ref=f1e640]:
+        - generic [ref=f1e641]:
+          - generic [ref=f1e642]: You
+          - heading "Sarah Chen" [level=1] [ref=f1e643]
+        - button "Toggle theme" [ref=f1e645] [cursor=pointer]
+      - generic [ref=f1e648]:
+        - generic [ref=f1e649]:
+          - generic "Sarah Chen" [ref=f1e650]: SC
+          - generic [ref=f1e651]:
+            - paragraph [ref=f1e652]: Donlon 2F · Computer Science
+            - paragraph [ref=f1e653]: Class of 2029
+        - generic [ref=f1e654]:
+          - generic [ref=f1e655]:
+            - generic [ref=f1e656]: "0"
+            - generic [ref=f1e657]: your loops
+          - generic [ref=f1e658]:
+            - generic [ref=f1e659]: "0"
+            - generic [ref=f1e660]: best streak · wks
+          - generic [ref=f1e661]:
+            - generic [ref=f1e662]: 64%
+            - generic [ref=f1e663]: of campus in a loop
+        - generic [ref=f1e664]:
+          - generic [ref=f1e665]:
+            - heading "Your intents" [level=2] [ref=f1e666]
+            - generic [ref=f1e667]: 2 saved
+          - paragraph [ref=f1e668]: What you're up for. Loop holds onto these and pulls you into a crew when enough people near you want the same.
+          - generic [ref=f1e669]:
+            - generic [ref=f1e671]:
+              - generic [ref=f1e678]:
+                - generic [ref=f1e679]: Dinner Thursdays
+                - generic [ref=f1e680]: Thursdays · weekly · waiting for a crew
+              - button "Remove intent" [ref=f1e681] [cursor=pointer]
+            - generic [ref=f1e686]:
+              - generic [ref=f1e690]:
+                - generic [ref=f1e691]: Studying CS 2110 Thursdays
+                - generic [ref=f1e692]: Thursdays · weekly · waiting for a crew
+              - button "Remove intent" [ref=f1e693] [cursor=pointer]
+        - generic [ref=f1e697]:
+          - generic [ref=f1e698]: Your loops
+          - paragraph [ref=f1e700]: You're not in a loop yet. Drop an intent and Loop seats you into a crew that already meets — it shows up here to reopen, share, or push to your calendar.
+          - button "Drop an intent" [ref=f1e702] [cursor=pointer]
+        - generic [ref=f1e704]:
+          - generic [ref=f1e709]:
+            - paragraph [ref=f1e710]: Dana Okafor
+            - paragraph [ref=f1e711]: your Loop counselor · Advising & Wellbeing
+          - paragraph [ref=f1e712]: Walk-ins Tue + Thu · 2–4p
+          - generic [ref=f1e713]:
+            - button "Message Dana" [ref=f1e714] [cursor=pointer]
+            - button "Report a concern" [ref=f1e717] [cursor=pointer]
+        - generic [ref=f1e720]:
+          - generic [ref=f1e721]: Private notes
+          - paragraph [ref=f1e724]: Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.
+        - button "Big Red Night theme" [ref=f1e725] [cursor=pointer]:
+          - generic [ref=f1e726]: Big Red Night
+          - generic [ref=f1e729]: theme
+      - generic [ref=f1e730]:
+        - button [ref=f1e731] [cursor=pointer]
+        - button [ref=f1e739] [cursor=pointer]
+        - button [ref=f1e744] [cursor=pointer]
+        - button [ref=f1e749] [cursor=pointer]
+  - generic [ref=f1e29]:
+    - generic [ref=f1e30]: view the demo as
+    - generic [ref=f1e31]:
+      - button "Sarah Chen Sarah seeker" [ref=f1e32] [cursor=pointer]:
+        - generic "Sarah Chen" [ref=f1e33]: SC
+        - generic [ref=f1e34]:
+          - generic [ref=f1e35]: Sarah
+          - generic [ref=f1e36]: seeker
+      - button "Josh Park Josh host" [ref=f1e37] [cursor=pointer]:
+        - generic "Josh Park" [ref=f1e38]: JP
+        - generic [ref=f1e39]:
+          - generic [ref=f1e40]: Josh
+          - generic [ref=f1e41]: host
+      - button "Maya Idris Maya latecomer" [ref=f1e42] [cursor=pointer]:
+        - generic "Maya Idris" [ref=f1e43]: MI
+        - generic [ref=f1e44]:
+          - generic [ref=f1e45]: Maya
+          - generic [ref=f1e46]: latecomer
+      - button "Dana Okafor Dana advisor" [ref=f1e47] [cursor=pointer]:
+        - generic "Dana Okafor" [ref=f1e48]: DO
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: Dana
+          - generic [ref=f1e51]: advisor
+    - button "restart demo" [ref=f1e52] [cursor=pointer]
