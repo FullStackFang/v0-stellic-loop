@@ -4271,6 +4271,8 @@
 
       // Auto-save: every mutation produces a new world object; this persists the latest after any change.
       useEffect(()=>{ worldStore.save(world); }, [world]);
+      // The demo never changes URL, so screen views are reported to analytics as custom events.
+      useEffect(()=>{ if (window.va) window.va('event', { name:'screen', data:{ screen, viewer: viewerId } }); }, [screen, viewerId]);
       // Shim so existing mutation bodies keep calling setLoops(fn) unchanged.
       const setLoops = up => setWorld(w => ({ ...w, loops: typeof up==='function' ? up(w.loops) : up }));
       // Viewer-relative read slices — derived from the world, never stored per-persona.
@@ -4756,5 +4758,11 @@
 
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
+
+  <!-- Vercel Web Analytics. Static page, so the stub queues events until script.js loads. -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
