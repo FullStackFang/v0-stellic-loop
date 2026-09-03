@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · The 🔍 filter row — 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e;
+    --carnelian-100:#f8e6e3; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 64px; }
+  .wrap{ max-width:1300px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:34px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:70ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.55; }
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:376px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.5; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.45 var(--font-mono); color:var(--accent-strong); }
+
+  .phone{ width:376px; height:730px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 2px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .searchbar{ display:flex; align-items:center; gap:10px; padding:8px 18px 10px; flex-shrink:0; }
+  .field{ flex:1; display:flex; align-items:center; gap:9px; background:var(--bg-sunken); border-radius:13px; padding:9px 12px; color:var(--text-tertiary); font-size:14px; }
+  .cancel{ font-size:13px; font-weight:700; color:var(--accent-strong); cursor:pointer; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; padding:0 18px 24px; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  svg{ display:block; }
+
+  /* shared chip */
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:999px;
+    border:1px solid var(--border-hairline); background:var(--bg-surface); font:600 12.5px var(--font-sans); color:var(--text-secondary);
+    cursor:pointer; white-space:nowrap; transition:background .16s var(--ease-out), color .16s var(--ease-out), border-color .16s var(--ease-out); }
+  .chip .d{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); font-variant-numeric:tabular-nums; }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .chip[disabled]{ opacity:.34; cursor:default; }
+
+  /* A — ranked rail */
+  .Abar{ display:flex; align-items:center; gap:0; padding:2px 0 10px; flex-shrink:0; }
+  .where{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; margin:0 10px 0 18px; padding:7px 11px 7px 9px; border-radius:11px;
+    background:var(--bg-sunken); border:1px solid transparent; font:700 12.5px var(--font-sans); color:var(--text-primary); cursor:pointer; }
+  .where svg:first-child{ color:var(--accent); }
+  .where .cv{ transition:transform .22s var(--ease-out); color:var(--text-tertiary); }
+  .where[data-open="1"]{ border-color:var(--ink-0); }
+  .where[data-open="1"] .cv{ transform:rotate(180deg); }
+  .Arail{ flex:1; min-width:0; display:flex; gap:8px; overflow-x:auto; padding:3px 18px 3px 0; scrollbar-width:none;
+    scroll-snap-type:x proximity; scroll-padding-inline-start:2px; }
+  .Arail::-webkit-scrollbar{ height:0; }
+  .Arail > *{ scroll-snap-align:start; }
+  .Arail[data-fade="r"]{  -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 30px),transparent 100%); mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 30px),transparent 100%); }
+  .Arail[data-fade="l"]{  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22px); mask-image:linear-gradient(90deg,transparent 0,#000 22px); }
+  .Arail[data-fade="lr"]{ -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22px,#000 calc(100% - 30px),transparent 100%); mask-image:linear-gradient(90deg,transparent 0,#000 22px,#000 calc(100% - 30px),transparent 100%); }
+  .tray{ margin:0 18px 10px; display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; }
+  .tray button{ flex:1; border:0; background:transparent; border-radius:9px; padding:8px 2px; font:600 12px var(--font-sans); color:var(--text-secondary); cursor:pointer; }
+  .tray button .n{ font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); margin-left:4px; }
+  .tray button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+  .tray button[data-on="1"] .n{ color:var(--text-secondary); }
+
+  /* B — summary to sheet */
+  .Bbar{ display:flex; align-items:center; gap:9px; margin:0 18px 4px; padding:10px 12px; border-radius:14px;
+    border:1px solid var(--border-hairline); background:var(--bg-surface); cursor:pointer; flex-shrink:0; }
+  .Bbar .lbl{ flex:1; min-width:0; font:700 13.5px var(--font-sans); }
+  .Bbar .lbl s{ text-decoration:none; color:var(--text-tertiary); font-weight:600; }
+  .Bbar .ct{ font:500 11.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .Btok{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 18px 2px; flex-shrink:0; }
+  .tok{ display:inline-flex; align-items:center; gap:6px; padding:5px 8px 5px 10px; border-radius:999px; background:var(--accent-quiet);
+    color:var(--accent-strong); font:700 11.5px var(--font-sans); cursor:pointer; border:0; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg-surface); border-radius:26px 26px 0 0; z-index:6;
+    box-shadow:0 -20px 50px -24px rgba(80,40,30,.4); padding:10px 18px 20px; transform:translateY(102%); transition:transform .4s var(--ease-settle); }
+  .sheet[data-open="1"]{ transform:none; }
+  .grab{ width:38px; height:4px; border-radius:999px; background:var(--paper-3); margin:0 auto 14px; }
+  .scrim{ position:absolute; inset:0; background:rgba(31,26,23,.32); opacity:0; pointer-events:none; transition:opacity .3s var(--ease-out); z-index:5; }
+  .scrim[data-open="1"]{ opacity:1; pointer-events:auto; }
+  .lab{ font:600 10.5px/1 var(--font-mono); letter-spacing:.13em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 8px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .opt{ display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:12px; border:1px solid var(--border-hairline);
+    background:var(--bg-surface); font:600 13px var(--font-sans); color:var(--text-primary); cursor:pointer; text-align:left; }
+  .opt .d{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .opt .n{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .opt[data-on="1"]{ border-color:var(--ink-0); background:var(--paper-1); }
+  .opt[disabled]{ opacity:.34; cursor:default; }
+  .apply{ width:100%; margin-top:14px; border:0; border-radius:14px; padding:13px; background:var(--accent); color:var(--accent-ink);
+    font:700 14px var(--font-sans); cursor:pointer; }
+
+  /* C — two-line static */
+  .Cwrap{ padding:0 18px 8px; flex-shrink:0; }
+  .Cchips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:9px; }
+
+  /* results */
+  .sechead{ display:flex; align-items:center; gap:7px; margin:16px 2px 9px; }
+  .sechead .d{ width:7px; height:7px; border-radius:50%; }
+  .sechead h3{ font:700 14px/1 var(--font-display); margin:0; }
+  .sechead .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .item{ display:flex; align-items:center; gap:11px; padding:11px 2px; border-top:1px solid var(--border-hairline); }
+  .item:first-child{ border-top:0; }
+  .item .m{ flex:1; min-width:0; }
+  .item .t{ font:600 14px/1.25 var(--font-sans); display:flex; align-items:center; gap:7px; }
+  .item .t .d{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .item .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; }
+  .item .go{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:6px 11px;
+    font:700 11.5px var(--font-sans); color:var(--accent-strong); cursor:pointer; flex-shrink:0; }
+  .none{ text-align:center; padding:40px 18px; color:var(--text-tertiary); font-size:13px; line-height:1.5; }
+  .none b{ display:block; color:var(--text-primary); font:700 15px/1.2 var(--font-display); margin-bottom:6px; }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">🔍 explore · filter row</div>
+    <h1>Seven chips don't fit in 376px</h1>
+    <p>Today the row scrolls, clips pills mid-glyph, gives no hint there's more, and hides the location control the moment you scroll. All three directions fix that. They differ on <b>where the categories live</b>. Click everything: switch scope, tap categories, watch the counts.</p>
+  </div>
+  <div class="rail" id="rail"></div>
+</div>
+
+<script>
+const CATS = {
+  class:  { label:'Classes', hue:'var(--slate)' },
+  fitness:{ label:'Fitness', hue:'var(--moss)' },
+  food:   { label:'Food',    hue:'var(--amber-600)' },
+  social: { label:'Social',  hue:'var(--rose)' },
+  music:  { label:'Music',   hue:'var(--violet)' },
+};
+const CK = Object.keys(CATS);
+const SCOPES = [['floor','Donlon 2F'],['building','Donlon'],['north','North'],['campus','Campus']];
+const RANK = { floor:0, building:1, north:2, campus:3 };
+const ITEMS = [
+  { t:'Prelim 1 review',           s:'CS 2110 · Tue 7:00p · Uris',      cat:'class',   scope:'floor',    kind:'meet' },
+  { t:'Donlon boxing crew',        s:'Tue + Thu · 7:00p · Helen Newman', cat:'fitness', scope:'floor',    kind:'meet' },
+  { t:'Thursday trivia',           s:'4 of 6 want it · Donlon 2F',           cat:'social',  scope:'floor',    kind:'want' },
+  { t:'Monday coffee',             s:'Mon · 9:00a · Libe Café',    cat:'food',    scope:'floor',    kind:'meet' },
+  { t:'MATH 1920 grind',           s:'Wed · 6:00p · Mann',              cat:'class',   scope:'building', kind:'meet' },
+  { t:'Friday movie night',        s:'6 of 8 want it · Donlon',              cat:'social',  scope:'building', kind:'want' },
+  { t:'Sunday brunch table',       s:'3 of 5 want it · Donlon',              cat:'food',    scope:'building', kind:'want' },
+  { t:'Beebe Lake morning run',    s:'Mon · Wed · Fri · 7:30a',    cat:'fitness', scope:'north',    kind:'meet' },
+  { t:'North Campus dinner table', s:'Daily · 6:15p · Appel',           cat:'food',    scope:'north',    kind:'meet' },
+  { t:'CHEM 2070 review',          s:'9 of 12 want it · North',              cat:'class',   scope:'north',    kind:'want' },
+  { t:'Saturday bouldering',       s:'Sat · 2:00p · Lindseth',          cat:'fitness', scope:'campus',   kind:'meet' },
+  { t:'Lift Fridays',              s:'Fri · 5:00p · Teagle',            cat:'fitness', scope:'campus',   kind:'meet' },
+  { t:'ECON 1110 anchor',          s:'8 of 10 want it · campus',             cat:'class',   scope:'campus',   kind:'want' },
+  { t:'Late-night a cappella jam', s:'5 of 8 want it · campus',              cat:'music',   scope:'campus',   kind:'want' },
+];
+const inScope = (it, sc) => RANK[it.scope] <= RANK[sc];
+const poolFor = sc => ITEMS.filter(i => inScope(i, sc));
+const countsFor = sc => { const p = poolFor(sc), o = {}; CK.forEach(k => o[k] = p.filter(i=>i.cat===k).length); return o; };
+const scopeName = k => (SCOPES.find(s=>s[0]===k)||[])[1];
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const ICON = {
+  pin:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>',
+  cv:'<svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  sl:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+  srch:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>',
+  x:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+};
+
+function results(sc, sel){
+  const p = poolFor(sc).filter(i => sel.size===0 || sel.has(i.cat));
+  const want = p.filter(i=>i.kind==='want'), meet = p.filter(i=>i.kind==='meet');
+  if (!p.length) return '<div class="none"><b>Nothing here yet</b>Say what you want and you’re the first.</div>';
+  const rows = xs => xs.map(i => '<div class="item"><div class="m"><div class="t"><span class="d" style="background:'+CATS[i.cat].hue+'"></span>'+i.t+'</div><div class="s">'+i.s+'</div></div><button class="go">'+(i.kind==='want'?'+ Yes':'Join')+'</button></div>').join('');
+  let h = '';
+  if (want.length) h += '<div class="sechead"><span class="d" style="background:var(--status-forming)"></span><h3>Wanted</h3><span class="c">add your yes</span></div>'+rows(want);
+  if (meet.length) h += '<div class="sechead"><span class="d" style="background:var(--status-live)"></span><h3>Meeting</h3><span class="c">join any time</span></div>'+rows(meet);
+  return h;
+}
+
+/* FLIP by key — chips slide to their new rank instead of teleporting */
+function flip(box, mutate){
+  if (RM) { mutate(); return; }
+  const was = new Map();
+  [...box.children].forEach(el => was.set(el.dataset.k, el.getBoundingClientRect()));
+  mutate();
+  [...box.children].forEach(el => {
+    const f = was.get(el.dataset.k);
+    if (!f) { el.animate([{opacity:0,transform:'translateY(5px) scale(.92)'},{opacity:1,transform:'none'}],{duration:280,easing:'cubic-bezier(.16,1,.3,1)'}); return; }
+    const dx = f.left - el.getBoundingClientRect().left;
+    if (Math.abs(dx) > 0.5) el.animate([{transform:'translateX('+dx+'px)'},{transform:'none'}],{duration:400,easing:'cubic-bezier(.16,1,.3,1)'});
+  });
+}
+
+function shell(inner){
+  return '<div class="status"><span>9:41</span><span>Loop</span></div>'
+    + '<div class="searchbar"><div class="field">'+ICON.srch+'Search — climbing, dinner, CS 2110…</div><span class="cancel">Cancel</span></div>'
+    + inner;
+}
+
+/* A — ranked rail */
+function buildA(host){
+  let sc = 'floor', sel = new Set(), open = false;
+  host.innerHTML = shell(
+    '<div class="Abar"><button class="where"></button><div class="Arail"></div></div>'
+    + '<div class="tray" hidden></div><div class="scroll"></div>');
+  const where = host.querySelector('.where'), railEl = host.querySelector('.Arail'),
+        tray = host.querySelector('.tray'), out = host.querySelector('.scroll');
+
+  const order = () => { const c = countsFor(sc);
+    return CK.filter(k => c[k] > 0).sort((a,b) => c[b]-c[a] || CK.indexOf(a)-CK.indexOf(b)).map(k => [k, c[k]]); };
+
+  function fade(){
+    const over = railEl.scrollWidth - railEl.clientWidth;
+    if (over < 4) { railEl.dataset.fade = 'none'; return; }
+    const l = railEl.scrollLeft > 4, r = railEl.scrollLeft < over - 4;
+    railEl.dataset.fade = l && r ? 'lr' : l ? 'l' : r ? 'r' : 'none';
+  }
+  function chips(){
+    railEl.innerHTML = '<button class="chip" data-k="all" data-on="'+(sel.size===0?1:0)+'">All<span class="n">'+poolFor(sc).length+'</span></button>'
+      + order().map(([k,n]) => '<button class="chip" data-k="'+k+'" data-on="'+(sel.has(k)?1:0)+'"><span class="d" style="background:'+CATS[k].hue+'"></span>'+CATS[k].label+'<span class="n">'+n+'</span></button>').join('');
+  }
+  function draw(animate){
+    where.dataset.open = open ? 1 : 0;
+    where.innerHTML = ICON.pin + scopeName(sc) + ICON.cv;
+    if (animate) flip(railEl, chips); else chips();
+    tray.hidden = !open;
+    tray.innerHTML = SCOPES.map(([k,l]) => '<button data-s="'+k+'" data-on="'+(sc===k?1:0)+'">'+l+'<span class="n">'+poolFor(k).length+'</span></button>').join('');
+    out.innerHTML = results(sc, sel);
+    requestAnimationFrame(fade);
+  }
+  railEl.addEventListener('scroll', fade, { passive:true });
+  where.onclick = () => { open = !open; draw(false); };
+  railEl.onclick = e => { const b = e.target.closest('.chip'); if (!b) return;
+    const k = b.dataset.k;
+    if (k==='all') sel.clear(); else if (sel.has(k)) sel.delete(k); else { sel.clear(); sel.add(k); }
+    draw(false); };
+  tray.onclick = e => { const b = e.target.closest('button[data-s]'); if (!b) return;
+    sc = b.dataset.s; open = false;
+    const c = countsFor(sc); [...sel].forEach(k => { if (!c[k]) sel.delete(k); });
+    draw(true); };
+  draw(false);
+}
+
+/* B — summary to sheet */
+function buildB(host){
+  let sc = 'floor', sel = new Set(), open = false;
+  host.innerHTML = shell(
+    '<div class="Bbar"></div><div class="Btok"></div><div class="scroll"></div>'
+    + '<div class="scrim"></div><div class="sheet"></div>');
+  const bar = host.querySelector('.Bbar'), toks = host.querySelector('.Btok'),
+        out = host.querySelector('.scroll'), scrim = host.querySelector('.scrim'), sheet = host.querySelector('.sheet');
+
+  const n = () => poolFor(sc).filter(i => sel.size===0 || sel.has(i.cat)).length;
+  const what = () => sel.size===0 ? 'Anything' : sel.size===1 ? CATS[[...sel][0]].label : sel.size+' kinds';
+  function draw(){
+    bar.innerHTML = ICON.sl + '<span class="lbl">'+scopeName(sc)+' <s>·</s> '+what()+'</span><span class="ct">'+n()+'</span>' + ICON.cv;
+    toks.innerHTML = [...sel].map(k => '<button class="tok" data-k="'+k+'">'+CATS[k].label+ICON.x+'</button>').join('');
+    toks.hidden = sel.size===0;
+    out.innerHTML = results(sc, sel);
+    const c = countsFor(sc);
+    sheet.dataset.open = open?1:0; scrim.dataset.open = open?1:0;
+    sheet.innerHTML = '<div class="grab"></div>'
+      + '<p class="lab">Where</p><div class="tray" style="margin:0 0 16px">'
+      + SCOPES.map(([k,l]) => '<button data-s="'+k+'" data-on="'+(sc===k?1:0)+'">'+l+'<span class="n">'+poolFor(k).length+'</span></button>').join('')
+      + '</div><p class="lab">What · pick any</p><div class="grid2">'
+      + CK.map(k => '<button class="opt" data-k="'+k+'" data-on="'+(sel.has(k)?1:0)+'" '+(c[k]?'':'disabled')+'><span class="d" style="background:'+CATS[k].hue+'"></span>'+CATS[k].label+'<span class="n">'+c[k]+'</span></button>').join('')
+      + '</div><button class="apply">Show '+n()+'</button>';
+  }
+  host.addEventListener('click', e => {
+    if (e.target.closest('.Bbar')) { open = true; return draw(); }
+    if (e.target.closest('.scrim') || e.target.closest('.apply')) { open = false; return draw(); }
+    const t = e.target.closest('.tok'); if (t) { sel.delete(t.dataset.k); return draw(); }
+    const s = e.target.closest('.sheet button[data-s]');
+    if (s) { sc = s.dataset.s; const c = countsFor(sc); [...sel].forEach(k => { if (!c[k]) sel.delete(k); }); return draw(); }
+    const o = e.target.closest('.opt');
+    if (o && !o.disabled) { const k = o.dataset.k; if (sel.has(k)) sel.delete(k); else sel.add(k); return draw(); }
+  });
+  draw();
+}
+
+/* C — two-line static */
+function buildC(host){
+  let sc = 'floor', sel = new Set();
+  host.innerHTML = shell('<div class="Cwrap"><div class="tray"></div><div class="Cchips"></div></div><div class="scroll"></div>');
+  const tray = host.querySelector('.tray'), box = host.querySelector('.Cchips'), out = host.querySelector('.scroll');
+  function draw(){
+    const c = countsFor(sc);
+    tray.innerHTML = SCOPES.map(([k,l]) => '<button data-s="'+k+'" data-on="'+(sc===k?1:0)+'">'+l+'<span class="n">'+poolFor(k).length+'</span></button>').join('');
+    box.innerHTML = '<button class="chip" data-k="all" data-on="'+(sel.size===0?1:0)+'">All<span class="n">'+poolFor(sc).length+'</span></button>'
+      + CK.map(k => '<button class="chip" data-k="'+k+'" data-on="'+(sel.has(k)?1:0)+'" '+(c[k]?'':'disabled')+'><span class="d" style="background:'+CATS[k].hue+'"></span>'+CATS[k].label+'<span class="n">'+c[k]+'</span></button>').join('');
+    out.innerHTML = results(sc, sel);
+  }
+  host.addEventListener('click', e => {
+    const s = e.target.closest('button[data-s]');
+    if (s) { sc = s.dataset.s; const c = countsFor(sc); [...sel].forEach(k => { if (!c[k]) sel.delete(k); }); return draw(); }
+    const b = e.target.closest('.chip');
+    if (b && !b.disabled) { const k = b.dataset.k; if (k==='all') sel.clear(); else if (sel.has(k)) sel.delete(k); else sel.add(k); return draw(); }
+  });
+  draw();
+}
+
+const DIRS = [
+  { n:'A', h:'Ranked rail', build:buildA,
+    p:'Location leaves the rail and becomes its own pinned control, so it never scrolls away. Categories rank by how much is actually behind them, empty ones drop out entirely, each carries its count. The rail still scrolls — but the best two are always already on screen, pills snap flush to the left edge, and the edge fades instead of guillotining a pill.',
+    t:'Try: tap the pin → Campus. Watch Fitness overtake Classes and Music appear.' },
+  { n:'B', h:'One control, one sheet', build:buildB,
+    p:'No row at all. A single summary bar states the current filter and the result count; tapping opens a sheet with Where plus a real multi-select What. Chosen categories come back as removable tokens. Most room for the feed, most powerful filtering. Costs a tap, and categories stop being browsable at a glance.',
+    t:'Try: tap the bar → pick Food + Classes → Show. Then tap a token to drop it.' },
+  { n:'C', h:'Two lines, zero scroll', build:buildC,
+    p:'Where becomes a permanent segmented row; categories wrap onto a second line. Nothing scrolls sideways, nothing clips, everything stays visible. Empty categories dim instead of disappearing. The safe answer — it just eats about 76px above the feed on every screen.',
+    t:'Try: switch scope and watch Music stay dimmed until Campus.' },
+];
+document.getElementById('rail').innerHTML = DIRS.map(d =>
+  '<div class="col"><div class="caption"><span class="tag"><b>'+d.n+'</b>direction '+d.n+'</span><h2>'+d.h+'</h2><p>'+d.p+'</p><div class="try">'+d.t+'</div></div><div class="phone" id="ph'+d.n+'"></div></div>').join('');
+DIRS.forEach(d => d.build(document.getElementById('ph'+d.n)));
+</script>
+</body>
+</html>

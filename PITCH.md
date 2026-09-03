@@ -3,9 +3,8 @@
 *Your people, on repeat.*
 
 A campus belonging app that turns a student's plain-language intent into a
-*recurring, intent-anchored loop* — not a one-off match, and with **no owner** —
-and surfaces that participation as a wellbeing signal for advising (Stellic
-tie-in). The activity is what repeats; your people accrete over time.
+*recurring group with an owner* — not a one-off match — and surfaces that
+participation as a wellbeing signal for advising (Stellic tie-in).
 
 > This doc reflects the current `index.html` demo (renamed **Loop**, with the
 > Stellic advising/wellbeing surfaces and "The Floor" momentum feed). It
@@ -18,22 +17,20 @@ tie-in). The activity is what repeats; your people accrete over time.
 > Every campus app helps you *meet* someone once. Then the group chat spirals,
 > plans fizzle, and you never see them again.
 >
-> **Loop is different. It runs on plain-language intent** — *"I want to box 2–3×
-> a week," "I need to lock in for CS 2110"* — and instead of a match, you get
-> **folded into a recurring loop**: a standing activity with a time and a place
-> that keeps coming back on its own rhythm. **No owner to flake, no roster to
-> maintain** — the *intent* is what holds it together, so it never dies when one
-> person gets busy.
+> **Loop is different. It operates on plain-language intent** — *"I need to lock in
+> for CS 2110"* — and instead of a match, you get **folded into a recurring
+> loop**: a real study crew with a time, a place, that meets on its
+> own rhythm with people that have the *same intent* every week.
 >
-> It starts with the people closest to you — your floor, your building — keeps
-> every group small, and handles the reminders and the next session so you don't
-> have to. The same faces aren't forced; they **accrete** — box with someone a
-> few times, like it, and Loop quietly keeps looping you together. And because
-> being in a loop is the single best predictor a student stays enrolled, **Loop
-> shares that one belonging signal with advising** — so a counselor can reach the
-> freshman who hasn't landed anywhere yet, before they fall through the cracks.
+> It starts with the people closest to you — your floor, your building — intentionally
+> keeps these groups small, and drafts the next session for you and removes fatigue and 
+> friction. And because being in a loop is the single best predictor a student stays
+> enrolled, **Loop quietly shares belonging signal with advising** — so a
+> counselor can reach the freshman who hasn't landed anywhere yet, before they
+> fall through the cracks.
 >
-> Loop turns freshman fatigue into "these are my people" — a place to belong.
+> Loop turns "freshman fatigue and a source of anxiety" into "these are my people" and 
+> a place of belonging.
 
 *Trim to the first two paragraphs for a true 30-second cut.*
 
@@ -62,72 +59,17 @@ names this **Logistical Fatigue**.
 
 ## The core bet (the one thing that can't be lost)
 
-The output is **always a loop, never a match** — and the loop is anchored to an
-**activity, not a person.**
+The output is **always a loop, never a match.**
 
 | | Every other campus feed | **Loop** |
 |---|---|---|
-| Output | a match (name + email, go DIY) | a **loop** — a standing activity with time + place |
-| Anchor | a person you should message | an **intent/activity** that recurs on its own |
-| Job | discovery (meet someone new) | repetition (the activity comes back; your people accrete) |
-| Who runs it | you, until you stop (this is where it fizzles) | **no one owns it** — the intent sustains the cadence; Loop handles reminders |
-| Declining | a visible going/maybe/no grid | never shown — "can't this week" just means you catch the next one |
+| Output | a match (name + email, go DIY) | a **loop** — recurring session with time, place, owner |
+| Job | discovery (meet someone new) | repetition (see the same people again) |
+| After the intro | up to you (this is where it fizzles) | the app drafts the next session; owner taps send |
+| Declining | a visible going/maybe/no grid | never shown — "can't this week" silently reshapes the draft |
 
 **Judge sentence:** *"Every other campus app helps you meet someone once. Loop
-gives you a standing reason to keep showing up — until 'someone' becomes 'your
-people.'"*
-
-### Activity Anchor, not an owner
-
-The one distinction that can't be lost: **you commit to the activity, not to a
-group.** Committing to "the same five people every Thursday" is fragile — one
-flake and it collapses. Committing to "boxing exists, 2–3× a week, drop in when
-you can" is durable. So Loop anchors on the **intent**, keeps membership fluid,
-and lets belonging *emerge*:
-
-- **No owner.** No coordinator whose absence kills the loop. The intent is the
-  organizer.
-- **People accrete, they aren't locked.** It may be the same faces this week, or
-  not. Train with someone you click with, and a lightweight, **private** affinity
-  signal loops you together more often — never a public score, never a roster you
-  can reject.
-- **Frictionless by design.** Showing up should cost nothing: a one-tap check-in
-  (or a tap-to-confirm geo-prompt — *"you're at Noyes, log this session?"* — never
-  passive tracking) is the whole commitment.
-- **Facilitators, not owners.** Campus roles — an RA or a social coordinator — can
-  *seed* an anchor and be a warm first contact, then fade. The loop outlives them.
-
-### How an ownerless loop actually runs
-
-"No owner" only works if the mechanics are boring and obvious. Three rules —
-each borrowed from something that already works without a boss (pickup
-basketball, Parkrun, a Doodle poll):
-
-1. **The anchor is soft; the occurrence locks.** The *anchor* is the recurring
-   template ("CS 2110 study · Thursdays ~7pm · somewhere on campus") and stays
-   editable forever. An *occurrence* is *this* Thursday. Only occurrences ever
-   lock, so the ritual is stable while the details stay concrete.
-2. **Blanks snap, they're never forced.** Nobody is made to fill in "where."
-   The first concrete answer becomes the prefilled default; everyone after sees
-   it and one-taps to accept or counter-proposes. If a blank survives to lock
-   time, Loop fills it with the nearest / most-used spot for that activity —
-   *no answer = default room.* An intent becomes a live loop at **quorum**
-   (~3 people converged on a slot + place); until then it's a proposal, "waiting
-   for a crew."
-3. **Presence is authority.** Inside the lock window (~24h out) the occurrence
-   freezes so nothing drifts silently. If it has to move — room's taken, group
-   relocates — *the people who are already there decide*: before lock, anyone
-   with intent can edit (wiki-style, with a change feed); after lock, only
-   **checked-in** people can move it, and every move is pushed to everyone
-   confirmed. Optionally, first check-in "holds the pin" — a captain-for-the-day,
-   self-assigned, gone by next week. No chair, no vote: electing a leader just
-   rebuilds the single point of failure we're removing.
-
-Guardrails on top: change history and undo, rate-limited moves, and a move is
-never silent — broadcast is the whole point of locking.
-
-*In one line: intents propose → quorum forms → lock freezes tonight → whoever's
-present steers.*
+makes sure you see them again."*
 
 ## Why it works (the evidence)
 
@@ -139,8 +81,7 @@ these forces **operational and measurable** in real time.
 |---|---|---|
 | **Belonging drives retention** — Tinto (1993); Strayhorn (2012) [¹] | Social + academic integration is the strongest predictor of persistence; belonging is a precondition for academic success, not a nice-to-have | Loop's *only* output is a recurring group you belong to — it manufactures integration instead of hoping for it |
 | **The first 2–6 weeks are the danger zone** — Woosley (2003) [²] | Initial social adjustment in the opening weeks statistically predicts long-term degree completion | Loop front-loads belonging in onboarding (drop an intent → land in a loop *now*) and treats the **first ~50 days** as the window that matters |
-| **Recurring peer study groups rescue hard courses** — Treisman / Emerging Scholars (1985) [³] | Students who failed calculus studied *alone*; those who succeeded formed **informal, ownerless** recurring peer groups. Engineering those groups made failure rates collapse | Loop *is* the engineered recurring peer group — anchored to the activity (not a coordinator), weekly cadence, built around a hard course (CS 2110). Ownerless is a feature: Treisman's groups had no boss either |
-| **Small-group work is worth about a letter grade** — UT Emerging Scholars (1988–97) [⁴]; Freeman et al., PNAS (2014) [⁵] | ESP students in freshman calculus earned grades **one-half to one full letter grade higher** than non-ESP peers; across 225 STEM studies, active/collaborative learning raised average grades by **half a letter** and cut failure rates (lecture failure rates were 55% higher) | This is the claim behind the onboarding line *"students who meet in a small group every week land about a letter grade higher."* Loop's study loops are the weekly small-group habit these studies measured |
+| **Recurring peer study groups rescue hard courses** — Treisman / Emerging Scholars (1985) [³] | Students who failed calculus studied *alone*; those who succeeded formed informal, recurring peer groups. Engineering those groups made failure rates collapse | Loop *is* the engineered recurring peer group — same faces, weekly cadence, built around a hard course (CS 2110), owner drafts the next session so it never dissolves |
 
 **The synthesis:** research proves belonging matters, that it's fragile early,
 and that recurring academic peer groups are the fix. Loop is the delivery
@@ -153,24 +94,17 @@ it's working, per student, in time to act.
    major). A short narrative frames the idea: stop networking, start *doing* —
    friendships grow around a shared task (an **Activity Anchor**), in small
    **Micro-Tribes** capped at 4–6 so nobody's left out.
-2. **Drop an intent** in plain language — *"box 2–3× a week," "lock in for CS 2110
-   before HW2."*
+2. **Drop an intent** in plain language — *"lock in for CS 2110 before HW2."*
 3. **Get folded into a loop** — Loop returns a short set of cards: an existing
-   anchor to **join**, one to **spin up**, or one that's **forming**. No feed of
-   strangers, no browsable profiles, no match list.
-4. **The loop just runs** — the intent sets the cadence (*Thu 7pm · Mann Library ·
-   weekly*) and Loop handles the reminders. No one has to host it; there's no
-   "send" button waiting on an owner. Details snap to whatever the first person
-   answered; this week's session locks ~24h out; if it moves, whoever's
-   checked in taps the new spot and everyone confirmed gets the push.
-5. **Show up, frictionless** — a one-tap check-in (or a tap-to-confirm geo prompt)
-   logs the session. That's the entire commitment.
-6. **The payoff — accretion** — over a few weeks the people you keep clicking with
-   surface *("you've boxed with Marcus 6 times")* and Loop quietly loops you
-   together more often. Your people build up from the activity — repetition, not
-   re-discovery, and never a forced roster.
-7. **The fold-in** — a latecomer folds into a running loop with no cold start, and
-   an RA or social coordinator can seed a fresh anchor for a floor that has none.
+   crew to **join**, a session to **spin up**, or one that's **forming**. No feed
+   of strangers, no browsable profiles, no match list.
+4. **Spin-up is natural** — free text → an editable, confident draft
+   (*CS 2110 · HW2 grind · Thu 7pm · Mann Library · repeats weekly*) → one tap to
+   send. Classmates fold in.
+5. **The payoff** — two weeks later, *"HW3 session Thursday? Same crew"* brings
+   back the **same avatars.** Repetition, not re-discovery.
+6. **The fold-in** — a latecomer (*"Maya just joined your Sunday HW Crew"*) is
+   seated into a running loop, no cold start.
 
 ## The Stellic / advising tie-in (what makes it more than social)
 
@@ -200,10 +134,8 @@ the lagging one (a failed midterm, a dropped course) they get today.
 
 No scrollable intent feed. No browsable stranger profiles. No going/declined
 grid. No match list. No stranger DMs — contact happens *inside* a loop that's
-already meeting. **No owner and no public rating** — affinity is private and
-additive (it can only loop you *together* more, never rank or reject anyone), and
-check-in is tap-to-confirm, never passive tracking. Any screen that violates
-these is treated as a bug, not a missing feature.
+already meeting. Any screen that violates these is treated as a bug, not a
+missing feature.
 
 ## Status
 
@@ -212,13 +144,6 @@ A single self-contained `index.html` (React + Tailwind via CDN, in-memory state)
 rebuilt *from* it later (likely Next.js + shadcn/ui to match the other projects).
 Aggregate signals are shown; the Claude-powered intent parse is a documented
 later upgrade, kept out of the live demo so it never fails on stage.
-
-**Known model-vs-demo gap:** the current `index.html` still renders a loop
-coordinator/host (e.g. Josh as "runs a loop," a `coordinatorId`, an "owner taps
-send" step). Under the ownerless model above, that role should be recast — Josh
-becomes an **RA / social coordinator** who *seeds* anchors and greets newcomers
-but doesn't own any loop — and the "send" step should read as the intent's own
-cadence, not an owner's action.
 
 ---
 
@@ -246,24 +171,3 @@ enterprise buyer asks Loop to defend the data.
      recurring peer study groups. Engineering those communities — merging students'
      social and academic lives around hard collaborative work — collapsed failure
      rates.
-4. **The grade effect of recurring peer study (backs "a letter grade higher").**
-   - *Opportunity Without Preference.* (1998). Hoover Institution, Stanford
-     University. — Detailing Dr. Uri Treisman's foundational peer-study model as
-     scaled at UT Austin: *"From 1988 through 1997, nearly 800 University of Texas
-     students participated in UT's Emerging Scholars Program (ESP) for freshman
-     calculus... These grades were, on average, one-half to one whole letter grade
-     higher than those students not in ESP."*
-5. **The same effect at meta-analytic scale (STEM-wide).**
-   - Freeman, S., Eddy, S. L., McDonough, M., Smith, M. K., Okoroafor, N., Jordt,
-     H., & Wenderoth, M. P. (2014). "Active learning increases student performance
-     in science, engineering, and mathematics." *Proceedings of the National
-     Academy of Sciences*, 111(23), 8410–8415. — *"The studies analyzed here
-     document that active learning leads to increases in examination performance
-     that would raise average grades by a half a letter, and that failure rates
-     under traditional lecturing increase by 55% over the rates observed under
-     active learning."*
-
-> **How to phrase it on stage:** the honest range is *half a letter to a full
-> letter grade* (ESP: ½–1; Freeman: ½). "About a letter grade higher" is the
-> upper end of a real, replicated effect — if pressed, say "half to a full letter
-> grade" and point to references 4 and 5.

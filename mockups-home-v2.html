@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Home v2 — 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 64px; }
+  .wrap{ max-width:1280px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:34px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; color:var(--ink-0); }
+  .gallery-head p{ max-width:64ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  /* phone: 390 × 800 to match index.html, 20px side padding → 350px content */
+  .phone{ width:390px; height:800px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:6px 20px 96px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .hicon{ width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); }
+  .avatar{ width:30px; height:30px; border-radius:50%; background:var(--accent-quiet); color:var(--accent-strong); font:700 11px/1 var(--font-mono); display:grid; place-items:center; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .tt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* live dot */
+  .live{ position:relative; width:8px; height:8px; border-radius:50%; background:var(--status-live); display:inline-block; flex-shrink:0; }
+  .live::after{ content:''; position:absolute; inset:0; border-radius:50%; background:var(--status-live); animation:ping 1.8s var(--ease-out) infinite; }
+  @keyframes ping{ 0%{ transform:scale(1); opacity:.5; } 70%{ transform:scale(2.8); opacity:0; } 100%{ opacity:0; } }
+  .livetag{ font:600 10px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--status-live); white-space:nowrap; flex-shrink:0; }
+
+  /* chip row: 🔍 · Upcoming n · Waiting n · Past n, must fit 350px on one line */
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:6px 20px 12px; scrollbar-width:none; flex-shrink:0; }
+  .chips::-webkit-scrollbar{ height:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface);
+    font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; transition:all .16s var(--ease-out); }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .chip.ico{ padding:8px 11px; }
+  .chip.pulse{ animation:chippulse .9s var(--ease-out) 1; }
+  @keyframes chippulse{ 0%{ box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent); } 100%{ box-shadow:0 0 0 12px transparent; } }
+  .chips.cat{ padding:10px 0 2px; gap:6px; }
+  .chips.cat .chip{ padding:6px 9px; font-size:12px; }
+
+  /* rows */
+  .sechead{ display:flex; align-items:center; gap:8px; margin:18px 2px 10px; }
+  .sechead h3{ font:700 15px/1 var(--font-display); margin:0; }
+  .sechead .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .row{ display:flex; align-items:center; gap:12px; padding:12px 2px; border-top:1px solid var(--border-hairline); }
+  .row:first-child{ border-top:0; }
+  .row .ic{ width:40px; height:40px; border-radius:12px; background:var(--bg-sunken); display:grid; place-items:center; font-size:17px; flex-shrink:0; position:relative; overflow:hidden; }
+  .row .ic > i{ position:absolute; left:0; right:0; bottom:0; background:var(--accent); opacity:.28; }
+  .row .ic > b{ position:absolute; inset:0; display:grid; place-items:center; font:500 11px/1 var(--font-mono); color:var(--text-primary); }
+  .row .m{ flex:1; min-width:0; }
+  .row .t{ font:600 14.5px/1.2 var(--font-sans); display:flex; align-items:center; gap:7px; min-width:0; }
+  .row .t .d{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .row .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .go{ color:var(--text-tertiary); font-size:18px; }
+  .join{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:7px 11px; font-size:12px; font-weight:700; color:var(--accent-strong); cursor:pointer; flex-shrink:0; white-space:nowrap; }
+  .pill{ display:inline-flex; align-items:center; gap:4px; font:700 9.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:3px 7px; border-radius:999px; flex-shrink:0; }
+  .pill.wait{ color:var(--amber-600); background:color-mix(in srgb,var(--amber) 16%,transparent); }
+  .pill.run{ color:var(--status-live); background:color-mix(in srgb,var(--status-live) 14%,transparent); }
+  .pill.you{ color:var(--accent-strong); background:var(--accent-quiet); }
+  .empty{ text-align:center; color:var(--text-tertiary); padding:44px 20px; font-size:13px; line-height:1.5; }
+  .empty b{ display:block; color:var(--text-primary); font:700 15px/1.2 var(--font-display); margin-bottom:6px; }
+  .more{ text-align:center; font:500 11.5px/1.4 var(--font-mono); color:var(--text-tertiary); padding:14px 0 4px; }
+  @keyframes flash{ 0%{ background:var(--accent-quiet); } 100%{ background:transparent; } }
+  .flash{ animation:flash 1.4s var(--ease-out) both; border-radius:12px; }
+  @keyframes slidein{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+  .in{ animation:slidein .45s var(--ease-settle) both; }
+
+  /* faces */
+  .faces{ display:inline-flex; flex-shrink:0; }
+  .faces i{ width:24px; height:24px; border-radius:50%; background:var(--bg-sunken); border:2px solid var(--bg-surface); margin-left:-7px; font:700 8.5px/1 var(--font-mono); font-style:normal; display:grid; place-items:center; color:var(--text-secondary); }
+  .faces i:first-child{ margin-left:0; }
+  .faces i.me{ background:var(--accent-quiet); color:var(--accent-strong); }
+  .crew{ display:flex; align-items:center; gap:9px; margin-top:12px; font-size:12px; color:var(--text-secondary); }
+
+  /* buttons */
+  .btn{ margin-top:11px; width:100%; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:12px; padding:9px; font-size:13.5px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.done{ color:var(--status-live); }
+  .actions{ display:flex; gap:8px; margin-top:14px; }
+  .actions .btn{ margin-top:0; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .mini{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:6px 10px; font-size:11.5px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; }
+  .mini.p{ background:var(--ink-0); border-color:var(--ink-0); color:var(--paper-0); }
+  .mini.done{ color:var(--status-live); }
+  .lnk{ border:0; background:transparent; padding:0; font:700 12px/1 var(--font-sans); color:var(--accent-strong); cursor:pointer; }
+
+  /* segmented scope dial */
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; margin-top:6px; }
+  .seg button{ flex:1; min-width:0; border:0; background:transparent; border-radius:9px; padding:8px 2px; font-size:11.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; display:inline-flex; justify-content:center; align-items:center; gap:5px; white-space:nowrap; }
+  .seg button .n{ font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .seg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+
+  /* waiting card */
+  .wcard{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:14px 15px; margin-bottom:10px; }
+  .wtop{ display:flex; align-items:center; justify-content:space-between; }
+  .wn{ font-size:12px; color:var(--text-primary); }
+  .kick{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px; }
+  .kick .d{ width:6px; height:6px; border-radius:50%; }
+  .title{ font:700 16px/1.2 var(--font-display); letter-spacing:-.01em; margin:6px 0 0; }
+  .sub{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .meter{ height:6px; border-radius:999px; background:var(--bg-sunken); overflow:hidden; margin-top:10px; }
+  .meter > i{ display:block; height:100%; border-radius:999px; background:var(--accent); }
+  .wfoot{ display:flex; align-items:center; justify-content:space-between; margin-top:9px; }
+  .wfoot .fire{ font:500 11.5px/1 var(--font-mono); color:var(--amber-600); }
+  .wacts{ display:inline-flex; gap:14px; }
+
+  /* A · header band */
+  .band{ padding:10px 20px 12px; background:var(--paper-1); border-top:1px solid var(--border-hairline); border-bottom:1px solid var(--border-hairline); cursor:pointer; flex-shrink:0; }
+  .bandline{ display:flex; align-items:center; gap:9px; }
+  .bandline .txt{ font:700 14.5px/1.2 var(--font-display); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .band .seg{ background:var(--paper-2); margin-top:10px; }
+  .hero{ margin-top:6px; padding:16px 16px 15px; border-radius:20px; background:var(--ink-0); color:var(--paper-0); }
+  .hero .kick{ color:var(--paper-3); }
+  .hero .kick .d{ background:var(--status-live); }
+  .hero .title{ color:var(--paper-0); font-size:20px; display:block; }
+  .hero .sub{ color:var(--paper-3); }
+  .hero .crew{ color:var(--paper-3); }
+  .hero .faces i{ border-color:var(--ink-0); background:var(--ink-2); color:var(--paper-0); }
+  .hero .faces i.me{ background:var(--accent); color:var(--accent-ink); }
+  .hero .btn{ background:transparent; border-color:rgba(255,253,248,.28); color:var(--paper-0); }
+  .hero .btn.p{ background:var(--paper-0); border-color:var(--paper-0); color:var(--ink-0); }
+  .hero .btn.done{ color:#8fd1ab; }
+
+  /* B · strip + dial + week */
+  .strip{ display:flex; align-items:center; gap:9px; margin:0 20px; padding:9px 0 8px; border-top:1px solid var(--border-hairline); cursor:pointer; flex-shrink:0; }
+  .strip .txt{ font-size:13px; font-weight:600; color:var(--text-secondary); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .strip .txt b{ color:var(--text-primary); }
+  .strip .go{ color:var(--text-tertiary); font-size:16px; line-height:1; }
+  .dial{ display:flex; gap:16px; margin:0 20px; padding-bottom:8px; border-bottom:1px solid var(--border-hairline); flex-shrink:0; }
+  .dial button{ border:0; background:transparent; padding:0 0 5px; font-size:12px; font-weight:600; color:var(--text-tertiary); cursor:pointer; display:inline-flex; gap:4px; align-items:baseline; border-bottom:2px solid transparent; margin-bottom:-9px; white-space:nowrap; }
+  .dial button .n{ font:500 10.5px/1 var(--font-mono); }
+  .dial button[data-on="1"]{ color:var(--text-primary); border-bottom-color:var(--accent); }
+  .wk{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:6px 0 4px; }
+  .wk button{ border:0; background:transparent; border-radius:12px; padding:7px 0 6px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+  .wk .l{ font:600 10px/1 var(--font-mono); color:var(--text-tertiary); letter-spacing:.06em; }
+  .wk .n{ font:600 13.5px/1 var(--font-sans); color:var(--text-primary); }
+  .wk button.past .n{ color:var(--ink-4); }
+  .wk i{ width:5px; height:5px; border-radius:50%; background:transparent; }
+  .wk button.has i{ background:var(--accent); }
+  .wk button.today{ background:var(--ink-0); }
+  .wk button.today .l{ color:var(--paper-3); } .wk button.today .n{ color:var(--paper-0); }
+  .grp{ margin-top:16px; }
+  .glbl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:0 2px 6px; }
+  .glbl .c{ margin-left:auto; color:var(--status-live); }
+  .ag{ display:flex; gap:12px; padding:11px 2px; border-top:1px solid var(--border-hairline); align-items:flex-start; }
+  .ag:first-of-type{ border-top:0; }
+  .agt{ font:500 12px/1.3 var(--font-mono); color:var(--text-secondary); width:44px; flex-shrink:0; padding-top:2px; }
+  .agm{ flex:1; min-width:0; }
+  .ag .t{ font:600 14.5px/1.2 var(--font-sans); }
+  .ag .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .agacts{ display:flex; gap:6px; margin-top:9px; }
+  .grp.next .ag{ background:var(--paper-1); border-radius:14px; padding:12px; border-top:0; }
+  .grp.next .ag .t{ font:700 16px/1.2 var(--font-display); }
+
+  /* C · tiles + timeline */
+  .tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:2px; }
+  .tile{ border:1px solid var(--border-hairline); border-radius:14px; padding:9px 4px 8px; text-align:center; cursor:pointer; background:var(--bg-surface); min-width:0; }
+  .tile b{ display:block; font:700 17px/1 var(--font-display); font-variant-numeric:tabular-nums; }
+  .tile span{ display:block; font:600 9px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--text-tertiary); margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tile[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .tile[data-on="1"] span{ color:var(--paper-3); }
+  .tilesub{ display:flex; align-items:center; gap:8px; margin:10px 2px 2px; font-size:12.5px; color:var(--text-secondary); cursor:pointer; }
+  .tilesub .txt{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tilesub .txt b{ color:var(--text-primary); }
+  .tilesub .go{ color:var(--text-tertiary); font-size:16px; line-height:1; }
+  .tl{ position:relative; padding-left:24px; margin-top:2px; }
+  .tl::before{ content:''; position:absolute; left:5px; top:8px; bottom:14px; width:2px; background:var(--border-hairline); border-radius:2px; }
+  .stop{ position:relative; padding:2px 0 18px; }
+  .tdot{ position:absolute; left:-24px; top:4px; width:12px; height:12px; border-radius:50%; background:var(--bg-surface); border:2px solid var(--ink-4); }
+  .tdot.on{ background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-quiet); }
+  .tlbl{ font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:6px; padding-top:3px; }
+  .stop.next .tlbl{ color:var(--accent-strong); }
+  .tev .t{ font:600 14.5px/1.2 var(--font-sans); }
+  .stop.next .tev .t{ font:700 17px/1.2 var(--font-display); }
+  .tev .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tev.quiet{ font-size:12.5px; color:var(--text-tertiary); }
+  .stop.next .crew{ margin-top:10px; }
+
+  /* search takeover */
+  .overlay{ position:absolute; inset:0; background:var(--bg-surface); display:flex; flex-direction:column; transform:translateY(100%); transition:transform .38s var(--ease-settle); z-index:5; }
+  .overlay[data-open="1"]{ transform:none; }
+  .search{ display:flex; align-items:center; gap:10px; margin:6px 20px 0; background:var(--bg-sunken); border-radius:14px; padding:10px 13px; }
+  .search input{ flex:1; min-width:0; border:0; background:transparent; font:500 14.5px var(--font-sans); color:var(--text-primary); outline:0; }
+  .search input::placeholder{ color:var(--text-tertiary); }
+  .search .x{ font-size:12.5px; font-weight:700; color:var(--accent-strong); cursor:pointer; flex-shrink:0; }
+  .hint{ font-size:12px; color:var(--text-tertiary); margin:8px 22px 0; }
+  .drop{ position:absolute; left:20px; right:20px; bottom:16px; background:var(--accent); color:var(--accent-ink); border:0; border-radius:14px; padding:13px; font:700 14px var(--font-sans); cursor:pointer; box-shadow:0 10px 24px -10px rgba(179,27,27,.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .fab{ position:absolute; right:18px; bottom:76px; width:52px; height:52px; border-radius:18px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font:500 26px/1 var(--font-sans); box-shadow:0 12px 26px -10px rgba(179,27,27,.65); cursor:pointer; z-index:3; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:62px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; z-index:2; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.6 var(--font-sans); color:var(--text-tertiary); cursor:pointer; }
+  .tabbar div.on{ color:var(--accent); }
+  .tabbar div .g{ font-size:17px; display:block; }
+  .toast{ position:absolute; left:20px; right:20px; top:64px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; z-index:9; opacity:0; transform:translateY(-8px); transition:all .3s var(--ease-settle); pointer-events:none; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); }
+  .toast[data-on="1"]{ opacity:1; transform:none; }
+  .note{ text-align:center; margin-top:30px; color:var(--text-tertiary); font-size:12.5px; }
+  @media (prefers-reduced-motion: reduce){ .in,.flash,.chip.pulse{ animation:none !important; } .live::after{ animation:none; } .overlay{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · Home v2</div>
+    <h1>Three homes for the same four chips</h1>
+    <p>Same chip row (🔍 · Upcoming · Waiting · Past), same full-height search takeover behind 🔍, ＋ and the live stats. The directions differ on where the live stats sit and how your next meet shows up. Every phone is clickable; today is Thursday.</p>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>A</b> Header band</div>
+        <h2>Stats above the chips, hero next up</h2>
+        <p>The live sentence and scope dial sit as a full-width band under the wordmark, so the numbers read before anything else. Upcoming opens on a dark Next-up hero: crew faces, calendar, check-in. The rest of the week follows as rows.</p>
+        <div class="try">try: tap the band → Join loop on Study sessions · 🔍 → type “dinner” → Drop it</div>
+      </div>
+      <div class="phone" id="phoneA"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>B</b> Week strip</div>
+        <h2>Chips first, calendar-shaped week</h2>
+        <p>Your chips come first; the live strip and a text scope dial sit quietly beneath them. Upcoming reads like a calendar: M–S with dots on days you have something, then an agenda grouped by day. The next meet carries check-in and calendar inline.</p>
+        <div class="try">try: tap F or S on the week strip · tap Tue · tap the ● strip</div>
+      </div>
+      <div class="phone" id="phoneB"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>C</b> Stat tiles</div>
+        <h2>Numbers you can refer to</h2>
+        <p>The stats are four tiles that double as the scope dial, scrolling with the content on every chip. Upcoming is a timeline that starts at Today, so an empty tonight points you at what’s forming, and the next meet is the first lit stop.</p>
+        <div class="try">try: tap the Donlon tile → tap the sentence → Join loop on Thu board games</div>
+      </div>
+      <div class="phone" id="phoneC"></div>
+    </div>
+  </div>
+  <div class="note">Data is Sarah on a Thursday: Lift Fridays tomorrow, Sunday HW crew, “Dinner Thursdays” waiting at 6/8. Nothing persists.</div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const CAT = { class:{l:'Classes',h:'var(--slate)',i:'📚'}, fitness:{l:'Fitness',h:'var(--moss)',i:'🏋️'}, food:{l:'Food',h:'var(--amber-600)',i:'🍜'}, social:{l:'Social',h:'var(--rose)',i:'🎲'}, music:{l:'Music',h:'var(--violet)',i:'🎸'} };
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAYI = Object.fromEntries(DAYS.map((d,i)=>[d,i]));
+const DATES = [31,1,2,3,4,5,6];
+const TODAY = 3; // Thursday
+const SCOPES = [['floor','Donlon 2F'],['donlon','Donlon'],['north','North'],['campus','Campus']];
+const RANK = { floor:['floor'], donlon:['floor','donlon'], north:['floor','donlon','north'], campus:['floor','donlon','north','campus'] };
+const WHERE = { floor:'near you', donlon:'in Donlon', north:'on North', campus:'on campus' };
+const CAMPUS_EXTRA = 33;
+let uid = 0; const id = p => p + (++uid);
+
+const seed = () => {
+  const D = {
+    upcoming: [
+      { t:'Lift Fridays', c:'fitness', day:'Fri', time:'5:30p', place:'Teagle gym', crew:['SC','JP','PR'] },
+      { t:'Sunday HW crew', c:'class', day:'Sun', time:'4:00p', place:'Uris', crew:['JP','LO','PR','MD','SC'], streak:12 },
+    ],
+    waiting: [ { t:'Dinner Thursdays', s:'weekly · your floor · open to all', c:'food', n:6, g:8 } ],
+    past: [ { t:'Sunday HW crew', c:'class', wk:12 }, { t:'North dinner table', c:'food', wk:8 }, { t:'Beebe run', c:'fitness', wk:6 } ],
+    near: [
+      { t:'Study sessions', c:'class', n:9, g:10, b:'floor', day:'Tue', time:'7:00p', place:'Olin' },
+      { t:'Wed kickboxing', c:'fitness', n:7, g:10, b:'floor', day:'Wed', time:'6:30p', place:'Teagle gym' },
+      { t:'Mon coffee', c:'food', n:3, g:6, b:'floor', day:'Mon', time:'9:00a', place:'Libe Café' },
+      { t:'Sat bouldering', c:'fitness', n:5, g:8, b:'floor', day:'Sat', time:'2:00p', place:'Lindseth' },
+      { t:'Tue run', c:'fitness', n:4, g:8, b:'floor', day:'Tue', time:'7:30a', place:'Beebe Lake' },
+      { t:'Thu board games', c:'social', n:6, g:12, b:'donlon', day:'Thu', time:'8:00p', place:'Donlon lounge' },
+      { t:'Wed ramen run', c:'food', n:4, g:8, b:'donlon', day:'Wed', time:'7:00p', place:'Collegetown' },
+      { t:'Jam session · guitar', c:'music', n:3, g:8, b:'donlon', day:'Sat', time:'4:00p', place:'Donlon basement' },
+      { t:'Mon yoga', c:'fitness', n:5, g:10, b:'donlon', day:'Mon', time:'7:00a', place:'Helen Newman' },
+      { t:'Econ 1110 cram', c:'class', n:9, g:10, b:'north', day:'Thu', time:'7:00p', place:'RPCC' },
+      { t:'Okenshields regulars', c:'food', n:7, g:8, b:'north', day:'Tue', time:'12:15p', place:'Okenshields' },
+      { t:'Trivia night squad', c:'social', n:2, g:10, b:'north', day:'Wed', time:'9:00p', place:'RPCC' },
+      { t:'A cappella pickup', c:'music', n:4, g:10, b:'north', day:'Sun', time:'6:00p', place:'Balch' },
+      { t:'Helen Newman lifting', c:'fitness', n:5, g:10, b:'north', day:'Mon', time:'5:00p', place:'Helen Newman' },
+    ],
+  };
+  Object.values(D).forEach(list => list.forEach(x => x.id = id('x')));
+  return D;
+};
+const CANNED = [ { t:'Ramen run', c:'food' }, { t:'Smash after psets', c:'social' }, { t:'Morning swim', c:'fitness' } ];
+const KW = [[/dinner|eat|food|coffee|ramen|lunch|brunch|snack/i,'food'],[/run|lift|gym|climb|boulder|yoga|box|swim|workout|bike/i,'fitness'],[/study|pset|hw|homework|prelim|cram|review|class|lab/i,'class'],[/game|smash|trivia|party|hang|movie|board/i,'social'],[/jam|guitar|sing|music|band|piano/i,'music']];
+const guess = q => (KW.find(([r]) => r.test(q)) || [])[1];
+const POOL = ['JP','PR','LO','MD','AK','TN','RB'];
+
+const scopeCount = (D,k) => D.near.filter(x => RANK[k].includes(x.b)).length + (k==='campus' ? CAMPUS_EXTRA : 0);
+const sentence = (D,k) => { const n = scopeCount(D,k); return `<b>${n}</b> ${n===1?'activity is':'activities are'} forming ${WHERE[k]}`; };
+const daysOut = x => (DAYI[x.day] - TODAY + 7) % 7;
+const sortedUp = D => D.upcoming.slice().sort((a,b) => daysOut(a) - daysOut(b));
+const whenWord = x => { const d = daysOut(x); return d===0 ? 'Today' : d===1 ? 'Tomorrow' : x.day; };
+const crewLine = x => { const o = x.crew.filter(c => c!=='SC'); return `${o.slice(0,2).join(', ')}${o.length>2?` +${o.length-2}`:''} + you · ${x.crew.length} in`; };
+const faces = (crew, max=4) => `<span class="faces">${crew.slice(0,max).map(c => `<i class="${c==='SC'?'me':''}">${c}</i>`).join('')}${crew.length>max?`<i>+${crew.length-max}</i>`:''}</span>`;
+const dialSeg = (D,S) => `<div class="seg">${SCOPES.map(([k,l]) => `<button data-on="${k===S.scope?1:0}" data-dial="${k}">${l}<span class="n">${scopeCount(D,k)}</span></button>`).join('')}</div>`;
+const tabbar = () => `<div class="tabbar"><div class="on" data-tab="home"><span class="g">◉</span>Home</div><div data-tab="class"><span class="g">◈</span>Class</div><div data-tab="you"><span class="g">○</span>You</div></div>`;
+function toast(el, title, body){ const t = el.querySelector('.toast'); t.innerHTML = `<b>${esc(title)}</b>${esc(body)}`; t.dataset.on = 1; clearTimeout(t._t); t._t = setTimeout(() => t.dataset.on = 0, 2600); }
+
+/* shared rows */
+const chipRow = (chip, D) => `<button class="chip ico" data-search aria-label="Search">🔍</button>` +
+  [['upcoming','Upcoming',D.upcoming.length],['waiting','Waiting',D.waiting.length],['past','Past',D.past.length]]
+  .map(([k,l,n]) => `<button class="chip" data-on="${k===chip?1:0}" data-k="${k}">${l}<span class="n">${n}</span></button>`).join('');
+const rowForming = (x, joinable) => { const pct = Math.round(x.n/x.g*100), left = x.g - x.n;
+  return `<div class="row"><div class="ic"><i style="height:${pct}%"></i><b>${x.n}/${x.g}</b></div><div class="m"><div class="t"><span class="d" style="background:${CAT[x.c].h}"></span><span class="tt">${esc(x.t)}</span>${left===1?'<span class="pill you">1 to fire</span>':''}</div><div class="s">${x.day} · ${x.time} · ${esc(x.place)}${left===1?'':` · ${left} to fire`}</div></div>${joinable?`<button class="join" data-join="${x.id}">Join loop</button>`:'<span class="go">›</span>'}</div>`; };
+const rowUp = x => `<div class="row ${x.fresh?'flash in':''}"><div class="ic">${CAT[x.c].i}</div><div class="m"><div class="t"><span class="d" style="background:${CAT[x.c].h}"></span><span class="tt">${esc(x.t)}</span></div><div class="s">${x.day} · ${x.time} · ${esc(x.place)} · ${x.crew.length} in${x.streak?` · ${x.streak}-wk streak`:''}</div></div>${faces(x.crew,3)}</div>`;
+const emptyUp = `<div class="empty"><b>Nothing on your week yet</b>Join something forming near you, or drop an intent.</div>`;
+const waitingHTML = ({D}) => `<div class="sechead"><h3>Waiting to fire</h3><span class="c">your intents</span></div>` +
+  (D.waiting.map(x => { const pct = Math.round(x.n/x.g*100), left = x.g - x.n;
+    return `<div class="wcard ${x.fresh?'flash in':''}"><div class="wtop"><span class="kick" style="color:var(--amber-600)"><span class="d" style="background:var(--amber)"></span>waiting to fire</span><span class="mono wn">${x.n}/${x.g}</span></div><h3 class="title tt">${esc(x.t)}</h3><div class="sub tt">${esc(x.s)}</div><div class="meter"><i style="width:${pct}%"></i></div><div class="wfoot"><span class="fire">${left} more fires it</span><span class="wacts"><button class="lnk" data-edit="${x.id}">Edit</button><button class="lnk" data-rm="${x.id}">Remove</button></span></div></div>`; }).join('')
+  || `<div class="empty"><b>No intents waiting</b>Tap 🔍 and say what you want.</div>`);
+const pastHTML = ({D}) => `<div class="sechead"><h3>Past loops</h3><span class="c">${D.past.length} wrapped</span></div>` +
+  D.past.map(x => `<div class="row"><div class="ic" style="opacity:.6">${CAT[x.c].i}</div><div class="m"><div class="t"><span class="tt" style="color:var(--text-secondary)">${esc(x.t)}</span></div><div class="s">wrapped · ${x.wk} weeks</div></div>${x.rated?'<span class="pill run">rated</span>':`<button class="join" data-rate="${x.id}">Rate it</button>`}</div>`).join('');
+
+/* ============ SEARCH TAKEOVER (shared) ============ */
+function buildTakeover(el, D, api){
+  const ov = document.createElement('div'); ov.className = 'overlay'; ov.dataset.open = 0;
+  ov.innerHTML = `
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="search"><span>🔍</span><input placeholder="What are you trying to make happen?"><span class="x" data-close>Cancel</span></div>
+    <div class="hint" data-hint></div>
+    <div class="scroll"><div class="pad" style="padding-bottom:92px">
+      <div class="sechead"><h3>What your intent lands in</h3><span class="c">closest to firing first</span></div>
+      <div data-res></div>
+      <div class="sechead" style="margin-top:26px"><h3>Forming near you</h3><span class="c" data-nc></span></div>
+      <div data-scope></div>
+      <div class="chips cat" data-cat></div>
+      <div data-feed></div>
+    </div></div>
+    <button class="drop" data-drop>Drop it</button>`;
+  el.appendChild(ov);
+  const $ = s => ov.querySelector(s);
+  const input = $('input');
+  let scope = 'floor', cat = 'all', editing = null, canned = 0;
+  function renderRes(){
+    const q = input.value.trim(), g = guess(q);
+    let list = D.near.filter(x => x.b!=='north').sort((a,b) => (a.g-a.n)-(b.g-b.n) || (b.n/b.g)-(a.n/a.g));
+    if(g) list = list.filter(x => x.c===g).concat(list.filter(x => x.c!==g));
+    const fits = g ? list.filter(x => x.c===g).length : 0;
+    list = list.slice(0,4);
+    $('[data-res]').innerHTML = list.map(x => rowForming(x,true)).join('') || `<div class="empty">Nothing close yet. Drop it and it waits on your floor.</div>`;
+    $('[data-drop]').textContent = editing ? 'Save changes' : fits ? `Drop it · ${fits} near you fit this` : 'Drop it';
+    $('[data-hint]').textContent = editing ? 'Editing your intent · people already in stay in' : g ? `Sounds like ${CAT[g].l.toLowerCase()}. Join one below, or drop yours.` : 'Say it plain. Loop finds the people.';
+  }
+  function renderFeed(){
+    const items = D.near.filter(x => RANK[scope].includes(x.b) && (cat==='all' || x.c===cat)).sort((a,b) => b.n/b.g - a.n/a.g);
+    $('[data-nc]').textContent = `${scopeCount(D,scope)} live`;
+    $('[data-scope]').innerHTML = `<div class="seg">${SCOPES.map(([k,l]) => `<button data-on="${k===scope?1:0}" data-tscope="${k}">${l}<span class="n">${scopeCount(D,k)}</span></button>`).join('')}</div>`;
+    $('[data-cat]').innerHTML = [['all','All'], ...Object.keys(CAT).map(k => [k,CAT[k].l])].map(([k,l]) => `<button class="chip" data-on="${k===cat?1:0}" data-tcat="${k}">${l}</button>`).join('');
+    const rows = items.map(x => rowForming(x,true)).join('');
+    const tail = scope==='campus' ? `<div class="more">+${CAMPUS_EXTRA} more across campus</div>` : '';
+    $('[data-feed]').innerHTML = (rows || `<div class="empty">No ${cat==='all'?'loops':CAT[cat].l.toLowerCase()} forming ${WHERE[scope]} yet.</div>`) + tail;
+  }
+  input.addEventListener('input', renderRes);
+  ov.addEventListener('click', e => {
+    const q = s => e.target.closest(s); let b;
+    if(q('[data-close]')) return close();
+    if((b = q('[data-tscope]'))){ scope = b.dataset.tscope; renderFeed(); return; }
+    if((b = q('[data-tcat]'))){ cat = b.dataset.tcat; renderFeed(); return; }
+    if((b = q('[data-join]'))){ const x = D.near.find(x => x.id===b.dataset.join); if(x){ close(); api.onJoin(x); } return; }
+    if(q('[data-drop]')){
+      const q0 = input.value.trim();
+      if(editing){ if(q0) editing.t = q0; const x = editing; close(); api.onEdit(x); return; }
+      const c = CANNED[canned++ % CANNED.length];
+      const it = { id:id('w'), t: q0 || c.t, s:'weekly · your floor · open to all', c: guess(q0) || c.c, n:1, g:8, fresh:true };
+      close(); api.onDrop(it); return;
+    }
+  });
+  function open(o={}){ scope = o.scope || scope; editing = o.edit || null; input.value = editing ? editing.t : ''; renderRes(); renderFeed(); ov.dataset.open = 1; $('.scroll').scrollTop = 0; input.focus({preventScroll:true}); }
+  function close(){ ov.dataset.open = 0; editing = null; input.blur(); }
+  return { open, close, el: ov };
+}
+
+/* ============ HOME SHELL (shared) ============ */
+function makePhone(pid, cfg){
+  const el = document.getElementById(pid), D = seed();
+  const S = { chip:'upcoming', scope:'floor', cal:new Set() };
+  el.innerHTML = `
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
+    <div data-top></div>
+    <div class="chips" data-chips></div>
+    <div data-mid></div>
+    <div class="scroll"><div class="pad" data-list></div></div>
+    <div class="fab" data-fab>＋</div>
+    ${tabbar()}
+    <div class="toast"></div>`;
+  const say = (t,b) => toast(el,t,b);
+  const pulse = k => { const c = el.querySelector(`[data-k="${k}"]`); if(c) c.classList.add('pulse'); };
+  const ctx = { el, D, S, say };
+  const tk = buildTakeover(el, D, {
+    onJoin(x){
+      D.near.splice(D.near.indexOf(x),1);
+      D.upcoming.push({ id:id('u'), t:x.t, c:x.c, day:x.day, time:x.time, place:x.place, crew:['SC', ...POOL.filter(p => true).slice(0, Math.min(x.n,3))], fresh:true });
+      S.chip = 'upcoming'; render(); pulse('upcoming'); say('Added to your week', `${x.t} · ${x.day} ${x.time} · ${x.place}`);
+    },
+    onDrop(it){ D.waiting.unshift(it); S.chip = 'waiting'; render(); pulse('waiting'); say('Dropped', 'It waits on your floor until enough people want it.'); },
+    onEdit(x){ x.fresh = true; S.chip = 'waiting'; render(); say('Updated', `${x.t} · still ${x.g-x.n} more fires it`); },
+  });
+  ctx.tk = tk;
+  function render(){
+    el.querySelector('[data-top]').innerHTML = cfg.top ? cfg.top(ctx) : '';
+    el.querySelector('[data-chips]').innerHTML = chipRow(S.chip, D);
+    el.querySelector('[data-mid]').innerHTML = cfg.mid ? cfg.mid(ctx) : '';
+    const body = S.chip==='upcoming' ? cfg.upcoming(ctx) : S.chip==='waiting' ? waitingHTML(ctx) : pastHTML(ctx);
+    el.querySelector('[data-list]').innerHTML = (cfg.pre ? cfg.pre(ctx) : '') + body;
+    D.waiting.forEach(x => x.fresh = false); D.upcoming.forEach(x => x.fresh = false);
+  }
+  ctx.render = render;
+  el.addEventListener('click', e => {
+    if(e.target.closest('.overlay')) return;
+    const q = s => e.target.closest(s); let b;
+    if((b = q('[data-k]'))){ S.chip = b.dataset.k; render(); return; }
+    if((b = q('[data-dial]'))){ S.scope = b.dataset.dial; render(); return; }
+    if(q('[data-search],[data-fab],[data-open-search]')){ tk.open({ scope:S.scope }); return; }
+    if(q('[data-here]')){ say('Check-in opens Fri 5:15p', 'We’ll nudge you 15 min before.'); return; }
+    if((b = q('[data-cal]'))){ S.cal.add(b.dataset.cal); render(); say('On your calendar', `${b.dataset.cal} · repeats weekly`); return; }
+    if((b = q('[data-edit]'))){ tk.open({ edit: D.waiting.find(x => x.id===b.dataset.edit) }); return; }
+    if((b = q('[data-rm]'))){ const i = D.waiting.findIndex(x => x.id===b.dataset.rm); const [x] = D.waiting.splice(i,1); render(); say('Removed', `${x.t} is off your list.`); return; }
+    if((b = q('[data-rate]'))){ const x = D.past.find(x => x.id===b.dataset.rate); x.rated = true; render(); say('Thanks', 'Ratings shape what forms next.'); return; }
+    if((b = q('[data-day]'))){ if(cfg.onDay) cfg.onDay(ctx, +b.dataset.day); return; }
+    if((b = q('[data-tab]'))){ if(b.dataset.tab!=='home') say('Not in this mockup', b.dataset.tab==='class' ? 'Class stays as it is today.' : 'You is profile only now.'); return; }
+  });
+  render();
+}
+
+/* ============ A · HEADER BAND + HERO ============ */
+function buildA(){
+  makePhone('phoneA', {
+    top: ({D,S}) => `<div class="band" data-open-search><div class="bandline"><span class="live"></span><span class="txt">${sentence(D,S.scope)}</span><span class="livetag">live now</span></div>${dialSeg(D,S)}</div>`,
+    upcoming: ({D,S}) => {
+      const ups = sortedUp(D); if(!ups.length) return emptyUp;
+      const [nx, ...rest] = ups; const cal = S.cal.has(nx.t);
+      return `<div class="hero ${nx.fresh?'in':''}"><div class="kick"><span class="d"></span>Next up · ${whenWord(nx).toLowerCase()}</div><h3 class="title tt">${esc(nx.t)}</h3><div class="sub tt">${nx.day} · ${nx.time} · ${esc(nx.place)}</div><div class="crew">${faces(nx.crew,4)}<span class="tt">${crewLine(nx)}${nx.streak?` · ${nx.streak}-wk streak`:''}</span></div><div class="actions"><button class="btn ${cal?'done':'p'}" data-cal="${esc(nx.t)}">${cal?'On your calendar ✓':'＋ Add to calendar'}</button><button class="btn" data-here>I’m here</button></div></div>`
+        + (rest.length ? `<div class="sechead"><h3>Rest of your week</h3><span class="c">${rest.length} more</span></div>` + rest.map(rowUp).join('') : `<div class="empty" style="padding:26px 20px">That’s your week. Drop an intent to add to it.</div>`);
+    },
+  });
+}
+
+/* ============ B · STRIP + WEEK STRIP + AGENDA ============ */
+function buildB(){
+  makePhone('phoneB', {
+    mid: ({D,S}) => `<div class="strip" data-open-search><span class="live"></span><span class="txt">${sentence(D,S.scope)}</span><span class="livetag">live now</span><span class="go">›</span></div>
+      <div class="dial">${SCOPES.map(([k,l]) => `<button data-on="${k===S.scope?1:0}" data-dial="${k}">${l}<span class="n">${scopeCount(D,k)}</span></button>`).join('')}</div>`,
+    upcoming: ({D,S}) => {
+      const ups = sortedUp(D); const has = new Set(ups.map(x => DAYI[x.day]));
+      const wk = `<div class="wk">${['M','T','W','T','F','S','S'].map((l,i) => `<button class="${i===TODAY?'today':''} ${i<TODAY?'past':''} ${has.has(i)?'has':''}" data-day="${i}" aria-label="${DAYS[i]}"><span class="l">${l}</span><span class="n">${DATES[i]}</span><i></i></button>`).join('')}</div>`;
+      if(!ups.length) return wk + emptyUp;
+      const groups = []; ups.forEach(x => { const d = daysOut(x); let g = groups.find(g => g.d===d); if(!g){ g = { d, day:x.day, items:[] }; groups.push(g); } g.items.push(x); });
+      const label = g => (g.d===0 ? 'Today · ' : g.d===1 ? 'Tomorrow · ' : '') + `${g.day} ${DATES[DAYI[g.day]]}`;
+      return wk + groups.map((g,gi) => `<div class="grp ${gi===0?'next':''}" data-grp="${DAYI[g.day]}"><div class="glbl">${label(g)}${gi===0?'<span class="c">next up</span>':''}</div>${g.items.map((x,ii) => { const isNext = gi===0 && ii===0, cal = S.cal.has(x.t);
+        return `<div class="ag ${x.fresh?'flash in':''}"><div class="agt">${x.time}</div><div class="agm"><div class="t tt">${esc(x.t)}</div><div class="s">${esc(x.place)} · ${x.crew.length} in${x.streak?` · ${x.streak}-wk streak`:''}</div>${isNext?`<div class="agacts"><button class="mini p" data-here>I’m here</button><button class="mini ${cal?'done':''}" data-cal="${esc(x.t)}">${cal?'On calendar ✓':'＋ Calendar'}</button></div>`:''}</div>${faces(x.crew,3)}</div>`; }).join('')}</div>`).join('');
+    },
+    onDay: (ctx, i) => {
+      const grp = ctx.el.querySelector(`[data-grp="${i}"]`);
+      if(grp){ grp.scrollIntoView({ behavior:'smooth', block:'nearest' }); grp.classList.remove('flash'); void grp.offsetWidth; grp.classList.add('flash'); }
+      else ctx.say(`Nothing on ${DAYS[i]}${i<TODAY?' this week':''}`, 'Tap 🔍 to make something happen.');
+    },
+  });
+}
+
+/* ============ C · STAT TILES + TIMELINE ============ */
+function buildC(){
+  makePhone('phoneC', {
+    pre: ({D,S}) => `<div class="tiles">${SCOPES.map(([k,l]) => `<button class="tile" data-on="${k===S.scope?1:0}" data-dial="${k}"><b>${scopeCount(D,k)}</b><span>${l}</span></button>`).join('')}</div>
+      <div class="tilesub" data-open-search><span class="live"></span><span class="txt">${sentence(D,S.scope)}</span><span class="livetag">live now</span><span class="go">›</span></div>`,
+    upcoming: ({D,S}) => {
+      const ups = sortedUp(D); const today = ups.filter(x => daysOut(x)===0), later = ups.filter(x => daysOut(x)>0);
+      const stop = (x, isNext) => { const cal = S.cal.has(x.t), d = daysOut(x);
+        return `<div class="stop ${isNext?'next':''} ${x.fresh?'in':''}"><span class="tdot ${isNext?'on':''}"></span><div class="tlbl">${d<=1?whenWord(x)+' · ':''}${x.day} · ${x.time}</div><div class="tev"><div class="t tt">${esc(x.t)}</div><div class="s">${esc(x.place)} · ${isNext?crewLine(x):`${x.crew.length} in`}${x.streak?` · ${x.streak}-wk streak`:''}</div>${isNext?`<div class="crew">${faces(x.crew,4)}</div><div class="agacts"><button class="mini p" data-here>I’m here</button><button class="mini ${cal?'done':''}" data-cal="${esc(x.t)}">${cal?'On calendar ✓':'＋ Calendar'}</button></div>`:''}</div></div>`; };
+      let html = `<div class="sechead"><h3>Your week</h3><span class="c">from today</span></div><div class="tl">`;
+      html += today.length ? today.map((x,i) => stop(x, i===0)).join('') : `<div class="stop"><span class="tdot"></span><div class="tlbl">Today · Thu</div><div class="tev quiet">Nothing tonight. <button class="lnk" data-open-search>See what’s forming</button></div></div>`;
+      html += later.map((x,i) => stop(x, !today.length && i===0)).join('');
+      if(!ups.length) html += `<div class="stop"><span class="tdot"></span><div class="tlbl">Rest of the week</div><div class="tev quiet">Nothing yet. Drop an intent and it waits until it fires.</div></div>`;
+      return html + '</div>';
+    },
+  });
+}
+
+buildA(); buildB(); buildC();
+</script>
+</body>
+</html>

@@ -163,6 +163,63 @@
       padding:7px 4px; border-radius:9px; display:flex; align-items:center; justify-content:center; gap:6px; position:relative; z-index:1;
       transition:color var(--dur-2) var(--ease-out); }
     .pls-seg__opt[aria-pressed="true"]{ color:var(--text-primary); }
+    /* Home chip row (Partiful-style: your stuff first, discovery behind 🔍). The three list
+       chips share the row equally; the search chip is fixed-width. Nothing scrolls or clips. */
+    .hm-chips{ display:flex; align-items:center; gap:6px; padding:8px 20px 10px; flex-shrink:0; }
+    .hm-chip{ flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:5px; height:36px; padding:0 8px;
+      border-radius:var(--radius-pill); border:1px solid var(--border-hairline); background:var(--bg-surface); position:relative;
+      font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap;
+      transition:background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+    .hm-chip--ico{ flex:0 0 42px; padding:0; }
+    .hm-chip__n{ font-size:11px; font-weight:500; color:var(--text-tertiary); }
+    .hm-chip[aria-selected="true"]{ background:var(--text-primary); border-color:var(--text-primary); color:var(--bg-surface); }
+    .hm-chip[aria-selected="true"] .hm-chip__n{ color:var(--bg-surface); opacity:.72; }
+    .hm-chip .pls-seg__dot{ top:-2px; right:-2px; box-shadow:0 0 0 2px var(--bg-surface); }
+    /* live strip + scope dial under the chips: ambient numbers you can refer to; tap → search */
+    .hm-strip{ display:flex; align-items:center; gap:9px; margin:0 20px; padding:9px 0 8px; border:0; border-top:1px solid var(--border-hairline);
+      background:transparent; width:calc(100% - 40px); text-align:left; cursor:pointer; color:var(--text-secondary); font-size:13px; font-weight:600; }
+    .hm-strip__txt{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hm-strip__txt b{ color:var(--text-primary); font-weight:700; }
+    .hm-strip__live{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--status-live); flex-shrink:0; }
+    .hm-dial{ display:flex; gap:16px; margin:0 20px; border-bottom:1px solid var(--border-hairline); flex-shrink:0; }
+    .hm-dial__opt{ border:0; background:transparent; padding:0 0 7px; font-size:12px; font-weight:600; color:var(--text-tertiary); cursor:pointer;
+      display:inline-flex; gap:4px; align-items:baseline; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; }
+    .hm-dial__opt[aria-selected="true"]{ color:var(--text-primary); border-bottom-color:var(--accent); }
+    /* Upcoming as a calendar: week strip + agenda grouped by day */
+    .hm-wk{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:10px 0 4px; }
+    .hm-wk__d{ border:0; background:transparent; border-radius:12px; padding:7px 0 6px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+    .hm-wk__l{ font-size:10px; font-weight:600; color:var(--text-tertiary); letter-spacing:.06em; }
+    .hm-wk__n{ font-size:13.5px; font-weight:600; color:var(--text-primary); }
+    .hm-wk__d[data-past="true"] .hm-wk__n{ color:var(--border-strong); }
+    .hm-wk__dot{ width:5px; height:5px; border-radius:50%; background:transparent; }
+    .hm-wk__d[data-forming="true"] .hm-wk__dot{ background:var(--status-forming); }   /* something to pick that day */
+    .hm-wk__d[data-has="true"] .hm-wk__dot{ background:var(--accent); }                /* you're in something that day */
+    .hm-wk__d[data-sel="true"]{ box-shadow:inset 0 0 0 1.5px var(--accent); }
+    .hm-wk__d[data-sel="true"][data-today="true"]{ box-shadow:inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--text-primary); }
+    .hm-wk__d[data-today="true"]{ background:var(--text-primary); }
+    .hm-wk__d[data-today="true"] .hm-wk__l{ color:var(--bg-sunken); } .hm-wk__d[data-today="true"] .hm-wk__n{ color:var(--bg-surface); }
+    .hm-grp{ margin-top:16px; }
+    .hm-glbl{ display:flex; align-items:baseline; gap:8px; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:0 2px 6px; }
+    .hm-glbl .hm-glbl__c{ margin-left:auto; color:var(--status-live); }
+    .hm-ag{ display:block; padding:11px 2px; border-top:1px solid var(--border-hairline); cursor:pointer; }
+    .hm-ag:first-of-type{ border-top:0; }
+    .hm-ag__row{ display:flex; gap:12px; align-items:flex-start; }
+    .hm-ag__t{ font-size:12px; line-height:1.3; color:var(--text-secondary); width:48px; flex-shrink:0; padding-top:2px; }
+    .hm-ag__m{ flex:1; min-width:0; }
+    .hm-ag__title{ font-size:14.5px; font-weight:600; line-height:1.2; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hm-ag__s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hm-ag__acts{ display:flex; gap:8px; margin-top:11px; }
+    .hm-ag__acts > *{ flex:1 1 0; min-width:0; white-space:nowrap; }
+    .hm-grp--next .hm-ag{ background:var(--bg-page); border-radius:14px; padding:12px; border-top:0; }
+    .hm-grp--next .hm-ag__title{ font-family:var(--font-display); font-weight:700; font-size:16px; }
+    /* search takeover: full-height over Home; compose field on top, Floor or the forming feed below */
+    .hm-search{ position:absolute; inset:0; z-index:45; background:var(--bg-surface); display:flex; flex-direction:column; }
+    .hm-search__field{ flex:1; min-width:0; display:flex; align-items:center; gap:9px; background:var(--bg-sunken); border:0; border-radius:14px; padding:11px 13px;
+      font-size:14px; font-weight:500; color:var(--text-tertiary); cursor:text; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hm-search__field input{ flex:1; min-width:0; border:0; background:transparent; outline:0; font:inherit; font-weight:500; color:var(--text-primary); }
+    .hm-search__field input::placeholder{ color:var(--text-tertiary); }
+    .hm-search__clr{ border:0; background:var(--bg-surface); color:var(--text-secondary); width:22px; height:22px; border-radius:50%; display:grid; place-items:center; cursor:pointer; flex-shrink:0; padding:0; }
+    .hm-search__x{ border:0; background:transparent; padding:0; font-size:13px; font-weight:700; color:var(--accent-strong); cursor:pointer; flex-shrink:0; }
     @keyframes pop-in{ from{ opacity:0; transform:translateY(-6px) scale(.94); } to{ opacity:1; transform:none; } }
     /* theme change: circular wipe from the control that was tapped (View Transitions; instant swap where unsupported) */
     ::view-transition-old(root), ::view-transition-new(root){ animation:none; mix-blend-mode:normal; }
@@ -256,6 +313,31 @@
       *, *::before, *::after{ animation-duration:1ms !important; animation-iteration-count:1 !important; transition-duration:1ms !important; }
       ::view-transition-new(root){ animation:none; }
     }
+
+    /* ===== Hype — tap to pump, flames rise, molten at max ===== */
+    .hype{ position:relative; overflow:visible; gap:7px; }
+    .hype__lbl{ white-space:nowrap; }
+    .hype__meter{ display:inline-flex; gap:2px; flex-shrink:0; }
+    .hype__meter i{ width:5px; height:10px; border-radius:2px; background:var(--bg-sunken); transition:background .2s ease-out, transform .2s ease-out; }
+    .hype__meter i.on{ background:var(--status-forming); transform:scaleY(1.15); }
+    .hype--max{ background:linear-gradient(120deg, var(--accent), #e0842e 70%, #f2b134); color:#fff; border-color:transparent; box-shadow:0 10px 22px -10px var(--accent); }
+    .hype--max .hype__meter i{ background:rgba(255,255,255,.35); } .hype--max .hype__meter i.on{ background:#fff; }
+    .hype--bump{ animation:hype-bump .34s cubic-bezier(.2,.8,.2,1); }
+    @keyframes hype-bump{ 0%{ transform:scale(1); } 40%{ transform:scale(1.07); } 100%{ transform:scale(1); } }
+    .hype__spark{ position:absolute; left:50%; bottom:55%; font-size:15px; line-height:1; pointer-events:none; opacity:0; animation:hype-rise 1.05s cubic-bezier(.2,.8,.2,1) forwards; z-index:3; }
+    @keyframes hype-rise{ 0%{ transform:translate(-50%,0) scale(.5) rotate(0); opacity:0; } 18%{ opacity:1; } 100%{ transform:translate(calc(-50% + var(--dx)), -74px) scale(1.3) rotate(var(--rot)); opacity:0; } }
+    @media (prefers-reduced-motion: reduce){ .hype__spark, .hype--bump{ animation:none !important; } .hype__spark{ display:none; } }
+
+    /* ===== Anchor tiles — a forming anchor is a count, never a crew ===== */
+    .anc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .anc-tile{ border:1px solid var(--border-hairline); border-radius:16px; padding:12px 12px 10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:8px; min-width:0; }
+    .anc-tile--mine{ border-color:color-mix(in srgb,var(--accent) 40%,var(--border-hairline)); }
+    .anc-tile__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; background:none; border:0; padding:0; cursor:pointer; text-align:left; width:100%; color:inherit; font:inherit; }
+    .anc-tile__t{ font-weight:700; font-size:13.5px; line-height:1.2; color:var(--text-primary); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; min-height:32px; }
+    .anc-tile__s{ font-size:10.5px; line-height:1.35; color:var(--text-tertiary); }   /* wraps: the countdown must never clip */
+    .anc-tile__want{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:10px; padding:7px 6px; font-size:12px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-flex; align-items:center; justify-content:center; gap:4px; font-family:inherit; }
+    .anc-tile__want--on{ border-color:transparent; background:var(--accent-quiet); color:var(--accent-strong); }
+    .anc-tile__want--hot{ background:var(--text-primary); border-color:var(--text-primary); color:var(--bg-surface); }
 
     /* ===== The Floor — intent momentum field (S6) ===== */
     .flr-week{ display:flex; gap:6px; margin:2px 0 16px; }
@@ -580,40 +662,87 @@
         status:'active', rhythm:'Sun · 4:00p · Uris · weekly', nextLine:'Sun · 4:00p · Uris',
         live:false, memberIds:['josh','lydia','priya','marcus'], cap:6,
         startedWeek:3, streakWeeks:12, streakLeaderId:'lydia', seededBy:'josh', hereIds:[],
+        hype:{ josh:3, lydia:5, priya:2, marcus:4 },
         seniority:{ josh:3, lydia:3, priya:5, marcus:4 },
       },
+      // Forming loops are ANCHORS: an anonymized count of matching intents. No members, no
+      // avatars — `wantIds` is who said yes (only real users; `drop.count` includes people
+      // outside the demo cast). `nextLine` is the default that snaps in when the anchor fires.
       {
         id:'prelim1', title:'Prelim 1 review', target:'CS 2110',
         unit:{ kind:'class', label:'cs 2110 · section' }, audience:{ scope:'class', course:'CS 2110' },
-        status:'forming', drop:{ count:8, target:10 },
-        memberIds:['marcus','lydia'],
+        status:'forming', drop:{ count:8, target:10 }, wantIds:[], memberIds:[],
+        rhythm:'Wed · 7:00p · Olin · weekly', nextLine:'Wed · 7:00p · Olin',
       },
       {
         id:'chem-review', title:'CHEM 2070 review', target:'CHEM 2070',
         unit:{ kind:'class', label:'chem 2070 · section' }, audience:{ scope:'class', course:'CHEM 2070' },
-        status:'forming', drop:{ count:6, target:10 },
-        memberIds:['priya'],
+        status:'forming', drop:{ count:6, target:10 }, wantIds:[], memberIds:[],
+        rhythm:'Tue · 8:00p · Mann · weekly', nextLine:'Tue · 8:00p · Mann',
       },
-      // more crews taking shape — variety across classes + activities so Home reads "alive"
+      // more anchors taking shape — variety across classes + activities so Home reads "alive"
       {
         id:'donlon-box', title:'Donlon boxing crew', target:'boxing',
         unit:{ kind:'dorm', label:'donlon 2f · forming' }, audience:{ scope:'floor', floor:'Donlon 2F' },
-        status:'forming', drop:{ count:7, target:10 }, memberIds:['ryan','marcus'],
+        status:'forming', drop:{ count:9, target:10 }, wantIds:['ryan','marcus'], memberIds:[],
+        rhythm:'Wed · 6:30p · Teagle gym · weekly', nextLine:'Wed · 6:30p · Teagle gym',
       },
       {
         id:'north-dinner', title:'North Campus dinner table', target:'dinner crew',
         unit:{ kind:'dorm', label:'north · forming' }, audience:{ scope:'north' },
-        status:'forming', drop:{ count:5, target:8 }, memberIds:['maya','lydia'],
+        status:'forming', drop:{ count:5, target:8 }, wantIds:['maya','lydia'], memberIds:[],
+        rhythm:'Thu · 6:30p · North Star · weekly', nextLine:'Thu · 6:30p · North Star',
       },
       {
         id:'beebe-run', title:'Beebe Lake morning run', target:'running',
         unit:{ kind:'dorm', label:'north · forming' }, audience:{ scope:'north' },
-        status:'forming', drop:{ count:4, target:8 }, memberIds:['ryan'],
+        status:'forming', drop:{ count:4, target:8 }, wantIds:['ryan'], memberIds:[],
+        rhythm:'Tue · 7:00a · Beebe Lake · weekly', nextLine:'Tue · 7:00a · Beebe Lake',
       },
       {
         id:'math-1920', title:'MATH 1920 grind', target:'MATH 1920',
         unit:{ kind:'class', label:'math 1920 · section' }, audience:{ scope:'class', course:'MATH 1920' },
-        status:'forming', drop:{ count:6, target:10 }, memberIds:['priya','marcus'],
+        status:'forming', drop:{ count:6, target:10 }, wantIds:['priya','marcus'], memberIds:[],
+        rhythm:'Mon · 7:00p · Uris · weekly', nextLine:'Mon · 7:00p · Uris',
+      },
+      // every day of the week has something to pick — a tapped day is never empty
+      {
+        id:'mon-coffee', title:'Monday coffee', target:'coffee',
+        unit:{ kind:'dorm', label:'donlon 2f · forming' }, audience:{ scope:'floor', floor:'Donlon 2F' },
+        status:'forming', drop:{ count:3, target:6 }, wantIds:['josh'], memberIds:[],
+        rhythm:'Mon · 9:00a · Libe Café · weekly', nextLine:'Mon · 9:00a · Libe Café',
+      },
+      {
+        id:'thu-trivia', title:'Thursday trivia', target:'trivia',
+        unit:{ kind:'dorm', label:'donlon · lounge' }, audience:{ scope:'dorm', dorm:'Donlon' },
+        status:'active', rhythm:'Thu · 8:00p · Donlon lounge · weekly', nextLine:'Thu · 8:00p · Donlon lounge',
+        live:false, memberIds:['lydia','marcus','maya'], cap:8, startedWeek:2, streakWeeks:6, hereIds:[],
+        hype:{ lydia:4, marcus:3, maya:5 },
+      },
+      {
+        id:'fri-lift', title:'Lift Fridays', target:'lifting',
+        unit:{ kind:'dorm', label:'donlon 2f · floor' }, audience:{ scope:'floor', floor:'Donlon 2F' },
+        status:'active', rhythm:'Fri · 5:30p · Teagle gym · weekly', nextLine:'Fri · 5:30p · Teagle gym',
+        live:false, memberIds:['josh','priya','ryan'], cap:6, startedWeek:4, streakWeeks:4, hereIds:[],
+        hype:{ josh:4, priya:3, ryan:5 },
+      },
+      {
+        id:'fri-movie', title:'Friday movie night', target:'a movie night',
+        unit:{ kind:'dorm', label:'donlon · forming' }, audience:{ scope:'dorm', dorm:'Donlon' },
+        status:'forming', drop:{ count:4, target:8 }, wantIds:['ryan'], memberIds:[],
+        rhythm:'Fri · 8:00p · Donlon lounge · weekly', nextLine:'Fri · 8:00p · Donlon lounge',
+      },
+      {
+        id:'sat-boulder', title:'Saturday bouldering', target:'bouldering',
+        unit:{ kind:'dorm', label:'north · forming' }, audience:{ scope:'north' },
+        status:'forming', drop:{ count:5, target:8 }, wantIds:['marcus'], memberIds:[],
+        rhythm:'Sat · 11:00a · Lindseth wall · weekly', nextLine:'Sat · 11:00a · Lindseth wall',
+      },
+      {
+        id:'sun-brunch', title:'Sunday brunch table', target:'brunch',
+        unit:{ kind:'dorm', label:'north · forming' }, audience:{ scope:'north' },
+        status:'forming', drop:{ count:3, target:6 }, wantIds:['lydia'], memberIds:[],
+        rhythm:'Sun · 11:00a · North Star · weekly', nextLine:'Sun · 11:00a · North Star',
       },
     ]);
 
@@ -905,7 +1034,7 @@
         <div>
           <div className="flex items-baseline justify-between mb-1.5">
             <span className="pls-mono" style={{ fontSize:13, color: full ? 'var(--status-full)' : 'var(--text-primary)' }}>
-              {count}/{target} <span style={{ color:'var(--text-tertiary)' }}>intents</span>
+              {count}/{target} <span style={{ color:'var(--text-tertiary)' }}>want it</span>
             </span>
             <span className="text-[12px]" style={{ color:'var(--text-secondary)' }}>
               {full ? 'the drop is firing' : `fires when ${target} want it`}
@@ -2062,6 +2191,7 @@
     function isVisibleTo(loop, viewer){
       if (!viewer) return true;
       if ((loop.memberIds||[]).includes(viewer.id)) return true;
+      if ((loop.wantIds||[]).includes(viewer.id) || (loop.invitedIds||[]).includes(viewer.id)) return true;   // your yes / your invite is always yours to see
       const a = inferAudience(loop);
       switch(a.scope){
         case 'campus': return true;
@@ -2108,104 +2238,104 @@
       return 'social';
     }
 
-    function PulseFeed({ viewerId, user, loops, actions }){
+    // Scope dial is viewer-relative — labels come from the viewer's dorm/building, not a hardcoded floor.
+    const homeScopes = user => [['floor', user.dorm || 'My floor'], ['building', building(user.dorm) || 'My dorm'], ['north','North'], ['campus','Campus']];
+    // How many activities are forming at each scope, for the viewer (what they can see, minus loops they're in).
+    function formingCounts(loops, user, viewerId){
+      const pool = visibleLoops({ loops }, user).filter(l => !l.memberIds.includes(viewerId) && (l.status==='active' || l.status==='forming'));
+      const out = {};
+      Object.keys(SCOPE_RANK).forEach(k => { out[k] = pool.filter(l => SCOPE_RANK[loopLocality(l)] <= SCOPE_RANK[k]).length; });
+      return out;
+    }
+    // EXPLORE — one list of things you can sign up for, filtered by what you type, where, and what
+    // kind (Partiful-style). No momentum headers, no owner-style "start one" cards: anchors are
+    // counts you add a yes to, loops are crews you join. Nothing matches → drop what you typed.
+    function FilterChip({ on, onClick, children }){
+      return (
+        <button onClick={onClick} style={{ flexShrink:0, display:'inline-flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:999, whiteSpace:'nowrap', fontSize:12.5, fontWeight:600, cursor:'pointer',
+          border:'1px solid '+(on?'var(--text-primary)':'var(--border-hairline)'), background:on?'var(--text-primary)':'var(--bg-surface)', color:on?'var(--bg-surface)':'var(--text-secondary)' }}>{children}</button>
+      );
+    }
+    function PulseFeed({ viewerId, user, loops, actions, q='', onDrop }){
       const [scope, setScope] = useState('floor');
+      const [pickScope, setPickScope] = useState(false);
       const [interest, setInterest] = useState('all');
-      // Scope dial is viewer-relative — labels come from the viewer's dorm/building, not a hardcoded floor.
-      const scopes = [['floor', user.dorm || 'My floor'], ['building', building(user.dorm) || 'My dorm'], ['north','North'], ['campus','Campus']];
+      const scopes = homeScopes(user);
       const scopeName = k => (scopes.find(s=>s[0]===k)||[])[1] || 'Campus';
-      // Candidate pool is what the viewer can actually see (audience filter), minus loops they're already in.
+      const text = q.trim().toLowerCase();
+      // Everything you could sign up for: what you can see, minus what you're already in.
       const pool = visibleLoops({ loops }, user).filter(l => !l.memberIds.includes(viewerId) && (l.status==='active' || l.status==='forming'));
       const inScope = l => SCOPE_RANK[loopLocality(l)] <= SCOPE_RANK[scope];
       const inInterest = l => interest==='all' || loopCategory(l)===interest;
-      const localCrews = pool.filter(l => inScope(l) && inInterest(l)).sort((a,b)=> (a.status==='forming'?0:1)-(b.status==='forming'?0:1));
-      let crews = localCrews, widenedTo = null;
-      if(localCrews.length === 0){
-        const wider = pool.filter(inInterest).sort((a,b)=> SCOPE_RANK[loopLocality(a)]-SCOPE_RANK[loopLocality(b)]);
-        if(wider.length){ crews = wider.slice(0,6); widenedTo = scopeName(loopLocality(wider[0])); }
+      const inText = l => !text || ((l.title||'')+' '+(l.target||'')).toLowerCase().includes(text);
+      const local = pool.filter(l => inScope(l) && inInterest(l) && inText(l));
+      let list = local, widenedTo = null;
+      if (local.length===0) {
+        const wider = pool.filter(l => inInterest(l) && inText(l)).sort((a,b)=> SCOPE_RANK[loopLocality(a)]-SCOPE_RANK[loopLocality(b)]);
+        if (wider.length) { list = wider; widenedTo = scopeName(loopLocality(wider[wider.length-1])); }
       }
-      const localCount = localCrews.length;
-      const demand = INTENT_DEMAND.filter(d =>
-        SCOPE_RANK[d.band] <= SCOPE_RANK[scope] &&
-        (interest==='all' || demandCategory(d.target)===interest) &&
-        !loops.some(l => (l.target||'').toLowerCase() === d.target.toLowerCase()));
-      const dorm = user.dorm || 'your floor';
-      const empty = crews.length===0 && demand.length===0;
-
-      const Dial = () => (
-        <div style={{ display:'flex', background:'var(--bg-sunken)', borderRadius:12, padding:3, gap:2, marginTop:12 }}>
-          {scopes.map(([k,l])=>{ const on = scope===k; return (
-            <button key={k} onClick={()=>setScope(k)} style={{ flex:1, border:0, borderRadius:9, padding:'8px 2px', fontSize:12, fontWeight:600, cursor:'pointer',
-              background: on?'var(--bg-surface)':'transparent', color: on?'var(--text-primary)':'var(--text-secondary)', boxShadow: on?'0 1px 3px rgba(80,40,30,.12)':'none' }}>{l}</button>
-          ); })}
-        </div>
-      );
-      const Chips = () => (
-        <div className="no-scrollbar" style={{ display:'flex', gap:8, overflowX:'auto', padding:'12px 0 4px' }}>
-          {[['all','All'], ...Object.keys(PULSE_CATS).map(k=>[k,PULSE_CATS[k].label])].map(([k,l])=>{ const on = interest===k; return (
-            <button key={k} onClick={()=>setInterest(k)} style={{ flexShrink:0, display:'inline-flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:999, whiteSpace:'nowrap', fontSize:12.5, fontWeight:600, cursor:'pointer',
-              border:'1px solid '+(on?'var(--text-primary)':'var(--border-hairline)'), background: on?'var(--text-primary)':'var(--bg-surface)', color: on?'var(--bg-surface)':'var(--text-secondary)' }}>
-              {k!=='all' && <span style={{ width:7, height:7, borderRadius:'50%', background:PULSE_CATS[k].hue }} />}{l}
-            </button>
-          ); })}
-        </div>
-      );
-      const Spark = () => (
-        <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:24, marginTop:10 }} aria-hidden="true">
-          {Array.from({length:20}).map((_,i)=>{ const h = 14 + Math.round(60*Math.abs(Math.sin(i*0.6)));
-            return <span key={i} style={{ flex:1, height:h+'%', borderRadius:'3px 3px 0 0', background: i>16?'var(--accent)':'var(--accent-quiet)' }} />; })}
-        </div>
-      );
-
+      const wanted = list.filter(l => l.status==='forming'), meeting = list.filter(l => l.status==='active');
+      const where = widenedTo ? `across ${widenedTo}` : (scope==='floor' ? 'near you' : `across ${scopeName(scope)}`);
       return (
-        <div className="mt-6">
-          <div className="flex items-center gap-2">
-            {localCount>0 ? <LiveDot /> : <span style={{ width:8, height:8, borderRadius:'50%', background:'var(--text-tertiary)', display:'inline-block' }} />}
-            <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>
-              {localCount>0 ? `${localCount} ${localCount===1?'activity is':'activities are'} forming near you` : `Quiet on ${scope==='floor'?dorm:scopeName(scope)}`}
-            </h2>
-            <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>{localCount>0?'live now':'early'}</span>
+        <div className="mt-1">
+          <div className="no-scrollbar" style={{ display:'flex', gap:8, overflowX:'auto', padding:'6px 0 4px' }}>
+            <FilterChip on={scope!=='floor' || pickScope} onClick={()=>setPickScope(p=>!p)}><Icon name="map-pin" size={13} />{scopeName(scope)}<span aria-hidden="true" style={{ opacity:.7 }}>{pickScope ? '▴' : '▾'}</span></FilterChip>
+            {[['all','All'], ...Object.keys(PULSE_CATS).map(k=>[k,PULSE_CATS[k].label])].map(([k,l]) => (
+              <FilterChip key={k} on={interest===k} onClick={()=>setInterest(k)}>
+                {k!=='all' && <span style={{ width:7, height:7, borderRadius:'50%', background:PULSE_CATS[k].hue }} />}{l}
+              </FilterChip>
+            ))}
           </div>
-          {widenedTo && <p className="text-[12px] mt-1.5" style={{ color:'var(--text-secondary)' }}>Auto-widened: <b style={{ color:'var(--accent-strong)' }}>{crews.length} forming across {widenedTo}</b> tonight.</p>}
-          {localCount>0 ? <Spark/> : <div style={{ height:1, background:'var(--border-hairline)', margin:'12px 0 2px' }} />}
+          {pickScope && (
+            <div style={{ display:'flex', background:'var(--bg-sunken)', borderRadius:12, padding:3, gap:2, marginTop:6 }} role="tablist" aria-label="Where">
+              {scopes.map(([k,l]) => { const on = scope===k; return (
+                <button key={k} role="tab" aria-selected={on} onClick={()=>{ setScope(k); setPickScope(false); }} style={{ flex:1, border:0, borderRadius:9, padding:'8px 2px', fontSize:12, fontWeight:600, cursor:'pointer',
+                  background: on?'var(--bg-surface)':'transparent', color: on?'var(--text-primary)':'var(--text-secondary)', boxShadow: on?'0 1px 3px rgba(80,40,30,.12)':'none' }}>{l}</button>
+              ); })}
+            </div>
+          )}
 
-          <Dial />
-          <Chips />
-
-          {empty ? (
-            <Card className="p-5 mt-2" style={{ borderStyle:'dashed', borderColor:'var(--accent-quiet)', textAlign:'center' }}>
-              <div style={{ width:44, height:44, borderRadius:14, background:'var(--accent-quiet)', color:'var(--accent-strong)', display:'grid', placeItems:'center', margin:'0 auto 12px' }}><Icon name="radio" size={22} /></div>
-              <h3 className="pls-display" style={{ fontWeight:800, fontSize:19, color:'var(--text-primary)' }}>You're early on {dorm}</h3>
-              <p className="text-[13px]" style={{ color:'var(--text-secondary)', maxWidth:'28ch', margin:'6px auto 0', lineHeight:1.5 }}>Nothing's formed here yet, but people already dropped intents. Be the one who starts a loop and it pulls them in.</p>
-              <div className="mt-4"><Button onClick={actions.openCompose} icon="plus">Drop your intent</Button></div>
+          {list.length===0 ? (
+            <Card className="p-5 mt-4" style={{ borderStyle:'dashed', borderColor:'var(--accent-quiet)', textAlign:'center' }}>
+              <div style={{ width:44, height:44, borderRadius:14, background:'var(--accent-quiet)', color:'var(--accent-strong)', display:'grid', placeItems:'center', margin:'0 auto 12px' }}><Icon name={text?'plus':'radio'} size={22} /></div>
+              <h3 className="pls-display" style={{ fontWeight:800, fontSize:18, color:'var(--text-primary)' }}>{text ? `Nothing like “${q.trim()}” yet` : `Quiet ${where}`}</h3>
+              <p className="text-[13px]" style={{ color:'var(--text-secondary)', maxWidth:'30ch', margin:'6px auto 0', lineHeight:1.5 }}>
+                {text ? 'Drop it and you’re the 1st of 6. It fires when enough people near you want the same.' : 'Nothing to sign up for here yet. Say what you want and you’re the first.'}
+              </p>
+              <div className="mt-4">{text ? <Button icon="plus" onClick={onDrop}>Drop “{q.trim()}”</Button> : <Button icon="plus" onClick={actions.openCompose}>Say what you want</Button>}</div>
             </Card>
           ) : (
             <>
-              {demand.length>0 && (
+              {widenedTo && <p className="text-[12px] mt-2" style={{ color:'var(--text-secondary)' }}>Nothing {scope==='floor'?'near you':`in ${scopeName(scope)}`} — showing {where}.</p>}
+              {wanted.length>0 && (
                 <>
-                  <div className="flex items-center gap-1.5 mt-5 mb-2.5">
-                    <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>People want these</h3>
-                    <span className="pls-kicker" style={{ marginLeft:'auto' }}>start one</span>
+                  <div className="flex items-center gap-1.5 mt-4 mb-2.5">
+                    <span style={{ width:7, height:7, borderRadius:'50%', background:'var(--status-forming)', display:'inline-block', flexShrink:0 }} />
+                    <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Wanted {where}</h3>
+                    <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>add your yes</span>
                   </div>
-                  <div className="space-y-3">
-                    {demand.map(d => (
-                      <div key={d.target} className="p-4 rise" style={{ borderRadius:20, border:'1px solid color-mix(in srgb, var(--accent) 22%, var(--border-hairline))', background:'var(--accent-quiet)' }}>
-                        <div className="pls-kicker" style={{ color:'var(--accent-strong)' }}>Nobody's started this yet</div>
-                        <h3 className="pls-display" style={{ fontWeight:700, fontSize:17, marginTop:4, color:'var(--text-primary)' }}>Start a {d.target} loop</h3>
-                        <p className="text-[12.5px] mt-0.5" style={{ color:'var(--text-secondary)' }}>{d.line} · no one runs it — it forms at 3</p>
-                        <div className="mt-3"><Button size="sm" onClick={()=>actions.startSpinup(d.target)} icon="plus">Spin it up</Button></div>
-                      </div>
-                    ))}
+                  <div className="anc-grid">
+                    {wanted.map(l => <AnchorTile key={l.id} loop={l} viewerId={viewerId} actions={actions} />)}
                   </div>
                 </>
               )}
-              <div className="flex items-center gap-1.5 mt-5 mb-2.5">
-                <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>{widenedTo ? `Forming across ${widenedTo}` : (scope==='floor'?`Forming on ${dorm}`:`Forming across ${scopeName(scope)}`)}</h3>
-                <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>{crews.length} live</span>
-              </div>
-              <div className="space-y-3">
-                {crews.map(l => <SuggestionCard key={l.id} card={{ kind: l.status==='forming'?'forming':'join', loop:l, target:l.target }} actions={actions} />)}
-              </div>
+              {meeting.length>0 && (
+                <>
+                  <div className="flex items-center gap-1.5 mt-5 mb-2.5">
+                    <LiveDot />
+                    <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Meeting {where}</h3>
+                    <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>join any time</span>
+                  </div>
+                  <div className="space-y-3">
+                    {meeting.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}
+                  </div>
+                </>
+              )}
+              {text && (
+                <div className="mt-5 text-center">
+                  <Button variant="ghost" size="sm" icon="plus" onClick={onDrop}>Not it? Drop “{q.trim()}” as your own</Button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -2257,7 +2387,7 @@
     function flrCompat(it){ let n=((FLR_ACTPOP[flrActVal(it)]||6)+(FLR_DAYPOP[it.day]||6))/2*(FLR_CADF[it.cadence]||1)*(FLR_RING[it.ring].boost);
       FLR_FACETS[it.cat].forEach(f=>{ if(!flrIsOpen(it,f.key)){ const v=it.prefs[f.key]; if(f.multi) n*=Math.min(1,.5+.16*v.length); else n*=(FLR_RETAIN[f.key]||.7); } });
       if(it.custom) it.custom.forEach(()=> n*=FLR_RETAIN.custom);
-      return Math.max(1,Math.min(it.target,Math.round(n))); }
+      return Math.max(1,Math.min(it.target-1,Math.round(n))); }   // never born at quorum — a yes fires it, not a guess
     function flrMomentum(it){ return it.count/it.target*0.72 + FLR_RING[it.ring].boost*0.28; }
     function flrTags(it){ const t=[]; FLR_FACETS[it.cat].forEach(f=>{ if(!flrIsOpen(it,f.key)){ const v=it.prefs[f.key]; (Array.isArray(v)?v:[v]).forEach(x=>t.push({v:x,type:f.type,key:f.key})); } }); (it.custom||[]).forEach(x=>t.push({v:x,type:'where',key:'custom'})); return t; }
     function flrTagsInline(it){ const t=flrTags(it); if(!t.length) return ' · open to all'; return ' · '+t.slice(0,2).map(x=>'@'+x.v).join(' ')+(t.length>2?' +'+(t.length-2):''); }
@@ -2566,7 +2696,9 @@
         </div>
       );
     }
-    function flrSeed(seedRaw){
+    // mineId: the id the compose sheet already saved this intent under, so the Floor's
+    // "your intent" card edits that record instead of adding a second one to Waiting.
+    function flrSeed(seedRaw, mineId){
       const base=[
         { id:'study', cat:'study', subject:'any subject', day:'Wednesdays', cadence:'weekly', count:9, target:10, ring:'major', prefs:{time:'evening'}, custom:[] },
         { id:'box',   cat:'move',  sport:'kickboxing',   day:'Wednesdays', cadence:'weekly', count:7, target:10, ring:'building', prefs:{where:'Teagle gym'}, custom:[] },
@@ -2578,7 +2710,7 @@
         { id:'coffee',cat:'dine',  meal:'coffee',        day:'Mondays',    cadence:'weekly', count:3, target:6, ring:'floor', prefs:{time:'morning'}, custom:[] },
       ];
       const d=flrFromRaw(seedRaw);
-      if(d){ base.forEach(x=>{ x.mine=false; }); const mineIt={ id:'mine', day:'Thursdays', cadence:'weekly', target:8, mine:true, ring:'floor', prefs:{}, custom:[], ...d }; mineIt.count=flrCompat(mineIt); base.unshift(mineIt); }
+      if(d){ base.forEach(x=>{ x.mine=false; }); const mineIt={ id:mineId||'mine', day:'Thursdays', cadence:'weekly', target:8, mine:true, ring:'floor', prefs:{}, custom:[], ...d }; mineIt.count=flrCompat(mineIt); base.unshift(mineIt); }
       return base;
     }
     const flrStop = e => { if(e && e.stopPropagation) e.stopPropagation(); };
@@ -2666,8 +2798,8 @@
       const primary = it.mine
         ? <button className="pls-btn pls-btn--secondary pls-btn--block" onClick={onClose}><Icon name="calendar" size={17} />On your calendar · done</button>
         : it.joined
-        ? <button className="pls-btn pls-btn--secondary pls-btn--block" onClick={()=>onLeave(it.id)}><Icon name="calendar" size={17} />On your week · tap to leave</button>
-        : <button className="pls-btn pls-btn--primary pls-btn--block" onClick={()=>onJoin(it.id)}><Icon name="plus" size={17} />Join loop · add to your week</button>;
+        ? <button className="pls-btn pls-btn--secondary pls-btn--block" onClick={()=>onLeave(it.id)}><Icon name="check" size={17} />You’re in the count · tap to undo</button>
+        : <button className="pls-btn pls-btn--primary pls-btn--block" onClick={()=>onJoin(it.id)}><Icon name="plus" size={17} />{it.count>=it.target-1 ? 'I want this too · you’d fire it' : 'I want this too'}</button>;
       const third = it.mine
         ? <button className="pls-btn pls-btn--ghost pls-btn--sm" style={{ width:'100%' }} onClick={()=>onDrop(it.id)}><Icon name="log-out" size={15} />Drop</button>
         : it.joined
@@ -2721,29 +2853,28 @@
     }
 
     const FLR_KIND = { study:'class', move:'major', dine:'dorm' };
-    // Turn a Floor intent into a real app-level loop, so joining it shows up in
-    // the Belonging signal + "Your loops" — same shape LoopCard/LoopDetail expect.
+    // Turn a Floor rhythm into a real app-level ANCHOR (a forming loop): the count
+    // travels with it, and the app's engine decides whether your yes fires it.
     function flrToLoop(it, viewerId){
+      const where = it.prefs && it.prefs.where ? ' · '+it.prefs.where : '';
       return {
         id:'flr-loop-'+it.id,
-        title: flrCoreText(it),
+        title: flrCoreText(it), target: flrCoreText(it),
         unit:{ kind: FLR_KIND[it.cat]||'class', label:(FLR_CATX[it.cat]?.label||'loop')+' · '+FLR_RING[it.ring].lbl },
-        status:'active',
-        rhythm: it.day+' · '+it.cadence,
-        nextLine: it.day,
-        live:false,
-        memberIds:[viewerId],
-        cap: it.target,
-        streakWeeks:1, startedWeek:3,
+        status:'forming', drop:{ count:it.count, target:it.target }, wantIds:[], memberIds:[],
+        rhythm: it.day+' · '+it.cadence+where,
+        nextLine: it.day.replace(/s$/,'')+where,
+        live:false, cap: it.target, hereIds:[],
       };
     }
     // A saved intent — what you've said you want, kept even when it hasn't
-    // gathered a crew yet. The anchor people accrete around.
+    // gathered a crew yet. It names the anchor it counts toward (created at the Floor's count).
     function flrIntentSummary(it){
-      return { id:it.id, label:flrCoreText(it), rhythm:it.day+' · '+it.cadence, cat:it.cat, ring:it.ring };
+      return { id:it.id, label:flrCoreText(it), rhythm:it.day+' · '+it.cadence, cat:it.cat, ring:it.ring,
+        loopId:'flr-loop-'+it.id, anchor:{ count:it.count, target:it.target } };
     }
-    function TheFloor({ seedRaw, viewerId, user, onSeat, onUnseat, onSaveIntent, onRemoveIntent }){
-      const [intents, setIntents] = useState(()=>flrSeed(seedRaw));
+    function TheFloor({ seedRaw, mineId, viewerId, user, loops=[], onSeat, onUnseat, onSaveIntent, onRemoveIntent }){
+      const [intents, setIntents] = useState(()=>flrSeed(seedRaw, mineId));
       const [sheetId, setSheetId] = useState(null);
       const [dayFilter, setDayFilter] = useState(null);
       const [toast, setToast] = useState(null);
@@ -2763,6 +2894,14 @@
       const onAddTag = (id, key, val) => { let next=null; patch(id, x=>{ if(key==='custom'){ if(!x.custom.includes(val)) x.custom.push(val); } else { const f=FLR_FACETS[x.cat].find(ff=>ff.key===key); if(f.multi){ x.prefs[key]=[...(x.prefs[key]||[])]; if(!x.prefs[key].includes(val)) x.prefs[key].push(val); } else x.prefs[key]=val; } x.mine=x.mine||!x.joined; x.status=null; x.count=flrCompat(x); next=x; }); saveMine(next); };
       const onRemoveTag = (id, key, val) => patch(id, x=>{ if(key==='custom'){ x.custom=x.custom.filter(t=>t!==val); } else { const f=FLR_FACETS[x.cat].find(ff=>ff.key===key); if(f&&f.multi){ x.prefs[key]=(x.prefs[key]||[]).filter(t=>t!==val); if(!x.prefs[key].length) delete x.prefs[key]; } else delete x.prefs[key]; } x.count=flrCompat(x); });
       const onTog = (id, f) => patch(id, x=>{ x[f]=!x[f]; });
+      // Seated = you're a member of the real loop this intent became (world state).
+      // Once you're in, it's a loop on your week, not a suggestion — it leaves the
+      // floor list. If you leave from Your loops instead of here, the flag resyncs.
+      // inCount = your yes is on the anchor (it stays on the Floor, marked). seated = it fired and
+      // you joined the real loop — only then does it leave the Floor for your week.
+      const inCount = (id) => loops.some(l => l.id==='flr-loop-'+id && ((l.wantIds||[]).includes(viewerId) || l.memberIds.includes(viewerId)));
+      const seated = (id) => loops.some(l => l.id==='flr-loop-'+id && l.status==='active' && l.memberIds.includes(viewerId));
+      useEffect(()=>{ setIntents(xs=>{ let ch=false; const nx=xs.map(i=>{ if(i.joined && !inCount(i.id)){ ch=true; return { ...i, joined:false, count:Math.max(0,i.count-1) }; } return i; }); return ch?nx:xs; }); }, [loops]);
       const onJoin = (id) => {
         const src = intents.find(i=>i.id===id); if(!src) return;
         const joined = { ...src, joined:true, count:src.count+1 };
@@ -2770,13 +2909,13 @@
         const lab = flrLabel(joined);
         setIntents(xs=>xs.map(i=> i.id===id ? { ...i, joined:true, count:i.count+1, status:fired?'fired':i.status } : i));
         if(onSeat) onSeat(flrToLoop(joined, viewerId));
-        setSheetId(null); showToast(fired?{ icon:'zap', title:'“'+lab+'” fired', body:'A loop is crystallizing. Same faces, on repeat.' }:{ icon:'calendar', title:'Added to your week', body:'You’re in the '+lab+' loop.' }); };
+        setSheetId(null); showToast(fired?{ icon:'zap', title:'“'+lab+'” fired', body:'It’s on. Tap Done — you’re asked to join.' }:{ icon:'circle-dot', title:'You’re in the count', body:joined.count+' of '+joined.target+' want '+lab+'. It’s in Waiting.' }); };
       const onLeave = (id) => { patch(id, x=>{ x.joined=false; x.count=Math.max(0,x.count-1); }); if(onUnseat) onUnseat('flr-loop-'+id); setSheetId(null); showToast({ icon:'log-out', title:'Left the loop', body:'Off your calendar. Nobody sees a thing.' }); };
       const onDrop = (id) => { setIntents(xs=>xs.map(i=>i.id===id?{ ...i, dropped:true }:i)); if(onUnseat) onUnseat('flr-loop-'+id); if(onRemoveIntent) onRemoveIntent(id); setSheetId(null); showToast({ icon:'log-out', title:'Dropped', body:'Off your floor.' }); };
       const onMute = (id) => { setIntents(xs=>xs.map(i=>i.id===id?{ ...i, muted:true }:i)); if(onRemoveIntent) onRemoveIntent(id); setSheetId(null); showToast({ icon:'shield', title:'Muted', body:'It won’t clutter your floor.' }); };
       const addIntent = () => { const id='flr'+Math.floor(Math.random()*1e6); const c={ id, cat:'dine', meal:'dinner', day:'Thursdays', cadence:'weekly', target:8, mine:true, ring:'floor', prefs:{}, custom:[] }; c.count=flrCompat(c); setIntents(xs=>[c, ...xs]); saveMine(c); setSheetId(id); };
 
-      const list = intents.filter(i=>!i.dropped&&!i.muted).slice().sort((a,b)=>flrMomentum(b)-flrMomentum(a));
+      const list = intents.filter(i=>!i.dropped&&!i.muted&&!seated(i.id)).slice().sort((a,b)=>flrMomentum(b)-flrMomentum(a));
       const visible = list.filter(it=>!(dayFilter&&!flrDayMatch(it,dayFilter)));
       const hero = visible[0];
       const rest = visible.slice(1);
@@ -2807,7 +2946,7 @@
               <div className="flr-mini"><i style={{ width:Math.round(pct*100)+'%' }} /></div>
               <div className="flr-acts">
                 <button className="pls-btn pls-btn--secondary pls-btn--sm" style={{ flex:'0 0 auto' }} onClick={e=>{ flrStop(e); setSheetId(hero.id); }}><Icon name="pencil" size={15} />Shape it</button>
-                <button className="pls-btn pls-btn--primary pls-btn--sm" style={{ flex:1 }} onClick={e=>{ flrStop(e); flrOnCal(hero)?setSheetId(hero.id):onJoin(hero.id); }}><Icon name="plus" size={16} />{flrOnCal(hero)?'On your week':'Join loop'}</button>
+                <button className="pls-btn pls-btn--primary pls-btn--sm" style={{ flex:1 }} onClick={e=>{ flrStop(e); flrOnCal(hero)?setSheetId(hero.id):onJoin(hero.id); }}><Icon name="plus" size={16} />{flrOnCal(hero)?'In the count':'I want this too'}</button>
               </div>
             </div>
           ); })()}
@@ -2844,11 +2983,32 @@
       );
     }
 
+    // Home is your week under a chip row: 🔍 · Upcoming (loops you're in) · Waiting (intents
+    // you dropped) · Past (wrapped). Counts sit on the chips so what you own is visible without
+    // navigating. Under the chips, a live strip + scope dial are ambient numbers to refer to.
+    // 🔍 (and the strip) open a full-height search: compose on top, the forming feed below;
+    // dropping an intent turns that into the Floor — the intent is the query, "what it lands
+    // in" is the result — and Done returns you to Waiting.
+    // Your week = joined, on your calendar. Waiting = said yes, not fired yet (nothing here is on
+    // your calendar). Past = wrapped. The chip keys stay 'upcoming'/'waiting'/'past' for callers.
+    const HOME_CHIPS = [['upcoming','Your week'],['waiting','Waiting'],['past','Past']];
     function Home({ state, actions }){
-      const { user, viewerId='sarah', loops, suggestions, nudge, unread, theme, campus } = state;
-      const myLoops = loops.filter(l => l.memberIds.includes(viewerId));
+      const { user, viewerId='sarah', loops, suggestions, nudge, unread, theme, campus, homeChip='upcoming', myIntents=[], wrapped=[], feedback={} } = state;
+      const [searchOpen, setSearchOpen] = useState(false);
+      const [q, setQ] = useState('');   // what you typed in Search — filters explore; drops as your intent if nothing matches
+      // Upcoming is real loops only. A forming anchor you said yes to lives in Waiting, never here.
+      const myLoops = loops.filter(l => l.status==='active' && l.memberIds.includes(viewerId));
+      // An anchor you wanted just fired: you're invited, not seated. Joining is the start.
+      const invite = loops.find(l => l.status==='active' && (l.invitedIds||[]).includes(viewerId) && !l.memberIds.includes(viewerId));
+      useEffect(()=>{ if (invite) setSearchOpen(false); }, [invite && invite.id]);
       const latecomerLoop = loops.find(l => l.loopedInFor===viewerId && l.memberIds.includes(viewerId));
       const seededLoop = loops.find(l => l.seededBy===viewerId && l.status==='active');   // forming seeds (RA/TA) show as cards, not here
+      const unrated = wrapped.filter(w => !feedback[w.id]).length;
+      const counts = { upcoming:myLoops.length, waiting:myIntents.length, past:wrapped.length };
+      const chip = homeChip;
+      const overlay = searchOpen || !!suggestions;
+      const closeSearch = () => { setSearchOpen(false); setQ(''); if (suggestions) actions.closeFloor(); };
+      const dropQ = () => { const t = q.trim(); if (!t) return; actions.dropText(t); setQ(''); setSearchOpen(false); };
       return (
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
@@ -2858,7 +3018,31 @@
               <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />
             </>}
           />
-          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 fade-in">
+          <div className="hm-chips" role="tablist" aria-label="Your week">
+            <button className="hm-chip hm-chip--ico" aria-label="Search · drop an intent" onClick={()=>setSearchOpen(true)}><Icon name="search" size={17} /></button>
+            {HOME_CHIPS.map(([k,l]) => (
+              <button key={k} className="hm-chip" role="tab" aria-selected={chip===k} onClick={()=>actions.setHomeChip(k)}>
+                {l}<span className="pls-mono hm-chip__n">{counts[k]}</span>
+                {k==='past' && unrated>0 && <span className="pls-seg__dot" aria-label={unrated+' to rate'} />}
+              </button>
+            ))}
+          </div>
+          <div key={chip} className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 fade-in">
+            {invite && (
+              <div className="flr-hero mt-4 rise" style={{ marginBottom:0 }} onClick={()=>actions.openLoop(invite.id)} role="button" tabIndex={0}>
+                <span className="flr-badge"><Icon name="zap" size={12} />It’s on · fired just now</span>
+                <div className="flr-hero__t">{invite.title}</div>
+                <div className="flr-hero__meta"><Icon name="clock" size={13} />{invite.nextLine} · weekly</div>
+                <div className="flr-hero__stat" style={{ alignItems:'center' }}>
+                  <AvatarStack ids={invite.memberIds} size={26} />
+                  <span className="flr-hero__ll">{(invite.drop && invite.drop.target) || invite.memberIds.length+1} said yes — you’re one of them</span>
+                </div>
+                <div className="flr-acts">
+                  <button className="pls-btn pls-btn--primary pls-btn--sm" style={{ flex:1 }} onClick={e=>{ e.stopPropagation(); actions.foldIn(invite.id); }}><Icon name="plus" size={16} />Join · add to your week</button>
+                  <button className="pls-btn pls-btn--secondary pls-btn--sm" onClick={e=>{ e.stopPropagation(); actions.declineInvite(invite.id); }}>Not now</button>
+                </div>
+              </div>
+            )}
             {latecomerLoop && (
               <button onClick={()=>actions.openLoop(latecomerLoop.id, viewerId)} className="w-full text-left pls-banner p-4 mt-4 rise" style={{ cursor:'pointer' }}>
                 <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
@@ -2901,24 +3085,12 @@
               </div>
             )}
 
-            {myLoops.length > 0 && (
-              <div className="mt-5">
-                <div className="flex items-center justify-between mb-2.5">
-                  <h2 className="pls-display" style={{ fontWeight:700, fontSize:15, color:'var(--text-primary)' }}>Your loops</h2>
-                  <span className="pls-mono text-[12px]" style={{ color:'var(--text-tertiary)' }}>{myLoops.length} running</span>
-                </div>
-                <div className="space-y-3">
-                  {myLoops.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}
-                </div>
-              </div>
-            )}
-
-            {suggestions ? (
-              <TheFloor key={suggestions.raw} seedRaw={suggestions.raw} viewerId={viewerId} user={user}
-                onSeat={actions.floorSeat} onUnseat={actions.floorUnseat}
-                onSaveIntent={actions.saveIntent} onRemoveIntent={actions.removeIntent} />
+            {chip==='upcoming' ? (
+              <UpcomingList myLoops={myLoops} myIntents={myIntents} loops={loops} user={user} viewerId={viewerId} actions={actions} onBrowse={()=>setSearchOpen(true)} />
+            ) : chip==='waiting' ? (
+              <div className="mt-2"><WaitingList myIntents={myIntents} loops={loops} actions={actions} onSearch={()=>setSearchOpen(true)} /></div>
             ) : (
-              <PulseFeed viewerId={viewerId} user={user} loops={loops} actions={actions} />
+              <div className="mt-2"><PastList wrapped={wrapped} feedback={feedback} viewerId={viewerId} actions={actions} /></div>
             )}
           </div>
 
@@ -2926,6 +3098,92 @@
 
           <TabBar active="pulse"
             onHome={()=>{}} onClass={actions.openClass} onYou={actions.openYou} />
+
+          {overlay && (
+            <div className="hm-search fade-in">
+              {suggestions ? (
+                <div className="flex items-center gap-3 px-5 pt-3 pb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="pls-kicker">Your intent</div>
+                    <div className="truncate" style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>“{suggestions.raw}”</div>
+                  </div>
+                  <Button size="sm" variant="secondary" icon="check" onClick={closeSearch}>Done</Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 px-5 pt-3 pb-2">
+                  <label className="hm-search__field" style={{ cursor:'text' }}>
+                    <Icon name="search" size={17} />
+                    <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{ if (e.key==='Enter') dropQ(); if (e.key==='Escape') closeSearch(); }}
+                      placeholder="Search — climbing, dinner, CS 2110…" aria-label="Search" autoFocus />
+                    {q && <button className="hm-search__clr" aria-label="Clear" onClick={()=>setQ('')}><Icon name="x" size={14} /></button>}
+                  </label>
+                  <button className="hm-search__x" onClick={closeSearch}>Cancel</button>
+                </div>
+              )}
+              <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-10">
+                {suggestions ? (
+                  <TheFloor key={suggestions.raw} seedRaw={suggestions.raw} mineId={suggestions.mineId} viewerId={viewerId} user={user} loops={loops}
+                    onSeat={actions.floorWant} onUnseat={actions.floorUnwant}
+                    onSaveIntent={actions.saveIntent} onRemoveIntent={actions.removeIntent} />
+                ) : (
+                  <PulseFeed viewerId={viewerId} user={user} loops={loops} actions={actions} q={q} onDrop={dropQ} />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // HYPE — the easter egg for a meet that isn't today. Tap to pump it (five to max); flames rise
+    // on every tap, the button goes molten at max, and the crew's average reads as flames.
+    const HYPE_LABELS = ['Hype it', 'warming up', 'ready', 'fired up', 'can’t wait', 'LET’S GO'];
+    const HYPE_SPARKS = ['🔥','🔥','🔥','⚡','🎉','💥'];
+    function crewHype(l){ const h = l.hype||{}; const v = (l.memberIds||[]).map(id => h[id]||0).filter(x => x>0); return v.length ? Math.round(v.reduce((a,b)=>a+b,0)/v.length) : 0; }
+    function HypeButton({ loop, viewerId, actions, forLabel }){
+      const level = (loop.hype||{})[viewerId] || 0;
+      const [sparks, setSparks] = useState([]);
+      const [bumping, setBumping] = useState(false);
+      const tap = () => {
+        const next = Math.min(5, level+1);
+        const n = next>=5 ? 9 : 4;
+        const batch = Array.from({ length:n }, (_,i) => ({ id:Date.now()+'-'+i+'-'+Math.random(), dx:Math.round(Math.random()*64-32)+'px', rot:Math.round(Math.random()*50-25)+'deg',
+          e: next>=5 ? HYPE_SPARKS[Math.floor(Math.random()*HYPE_SPARKS.length)] : '🔥', delay:(i*45)+'ms' }));
+        setSparks(s => [...s, ...batch]);
+        setTimeout(()=>setSparks(s => s.filter(x => !batch.includes(x))), 1300);
+        setBumping(true); setTimeout(()=>setBumping(false), 340);
+        if (level<5) actions.hype(loop.id);
+        if (next===5 && level<5) actions.showToast({ icon:'flame', title:'Maxed out.', body:`The crew feels it — ${forLabel} can’t come soon enough.` });
+      };
+      return (
+        <button type="button" className={'pls-btn pls-btn--sm hype'+(level>=5 ? ' hype--max' : ' pls-btn--secondary')+(bumping ? ' hype--bump' : '')}
+          onClick={tap} aria-label={`Hype for ${forLabel} · level ${level} of 5`}>
+          <span className="hype__lbl">{level===0 ? `🔥 Hype ${forLabel}` : `🔥 ${HYPE_LABELS[level]}`}</span>
+          <span className="hype__meter" aria-hidden="true">{[1,2,3,4,5].map(i => <i key={i} className={i<=level ? 'on' : ''} />)}</span>
+          {sparks.map(s => <span key={s.id} className="hype__spark" aria-hidden="true" style={{ '--dx':s.dx, '--rot':s.rot, animationDelay:s.delay }}>{s.e}</span>)}
+        </button>
+      );
+    }
+
+    // A forming anchor as a count tile — a number, never a crew. One action: your yes.
+    function AnchorTile({ loop, viewerId, actions }){
+      const { count, target } = loop.drop;
+      const mine = (loop.wantIds||[]).includes(viewerId);
+      const near = target - count === 1;
+      const now = useNow(); const at = slotDate(loop.nextLine, now);
+      const when = at ? `${WEEK_DAYS[at.getDay()]} ${loopWhen(loop).time || '7:00p'}` : null;
+      return (
+        <div className={'anc-tile rise'+(mine?' anc-tile--mine':'')}>
+          <button className="anc-tile__top" onClick={()=>actions.openLoop(loop.id)} aria-label={'Open '+loop.title}>
+            <div className="anc-tile__t">{loop.title}</div>
+            <FlrRingGauge pct={count/target} color={mine?'var(--accent)':'var(--status-forming)'} label={count+'/'+target} />
+          </button>
+          <div className="anc-tile__s pls-mono" title={at ? `Called ${when}. Fires if ${target} want it by then.` : ''}>
+            {at ? <>{when} · <b style={{ fontWeight:600, color: near ? 'var(--accent-strong)' : 'var(--status-forming)' }}>called in {untilLabel(at - now)}</b></> : 'slot snaps in at fire'}
+          </div>
+          {mine
+            ? <button className="anc-tile__want anc-tile__want--on" onClick={()=>actions.unwant(loop.id)}><Icon name="check" size={13} />you want this</button>
+            : <button className={'anc-tile__want'+(near?' anc-tile__want--hot':'')} onClick={()=>actions.wantThis(loop.id)}><Icon name="plus" size={13} />{near ? 'you’d fire it' : 'I want this too'}</button>}
         </div>
       );
     }
@@ -2971,6 +3229,9 @@
       const hereIds = loop.hereIds || [];
       const isHere = hereIds.includes(viewerId);
       const [picking, setPicking] = useState(false);
+      const now = useNow(); const callAt = forming ? slotDate(loop.nextLine, now) : null;
+      const meet = meetPhase(loop, now); const ch = crewHype(loop);
+      const synced = (loop.calIds||[]).includes(viewerId);   // pushed to your phone's calendar (one-shot, per person)
       const curPlace = (loop.nextLine||'').split(' · ').pop();
       const lockLine = lockLabelFor(loop.nextLine);
       const moveOptions = MOVE_SPOTS.filter(s => s!==curPlace).slice(0,3);
@@ -2997,7 +3258,20 @@
             )}
 
             {forming ? (
-              <Card variant="sunken" className="p-4 mb-5"><DropMeter count={loop.drop.count} target={loop.drop.target} /></Card>
+              <Card variant="sunken" className="p-4 mb-5">
+                <DropMeter count={loop.drop.count} target={loop.drop.target} />
+                {callAt && (
+                  <>
+                    <div className="mt-3 pls-mono" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
+                      <div className="flex items-center gap-1.5"><Icon name="clock" size={13} style={{ color:'var(--text-tertiary)' }} /><span style={{ fontWeight:600, color:'var(--status-forming)' }}>called in {untilLabel(callAt - now)}</span></div>
+                      <div className="mt-1" style={{ paddingLeft:19 }}>{loop.nextLine}</div>
+                    </div>
+                    <p className="text-[12px] mt-1.5 leading-relaxed" style={{ color:'var(--text-tertiary)' }}>
+                      Fires if {loop.drop.target} want it by then and whoever shows up is the loop. If not, the count rolls to next week — nothing is lost.
+                    </p>
+                  </>
+                )}
+              </Card>
             ) : (
               <Card variant="sunken" className="p-4 mb-5">
                 <div className="pls-kicker mb-2">Rhythm</div>
@@ -3005,6 +3279,12 @@
                 <div className="mt-2.5 flex items-center gap-1.5 pls-mono" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
                   {loop.live ? <><LiveDot />meeting now</> : <><Icon name="clock" size={13} style={{ color:'var(--text-tertiary)' }} />next · {loop.nextLine}</>}
                 </div>
+                {isMember && (
+                  <button type="button" className={'pls-btn pls-btn--sm mt-3 '+(synced ? 'pls-btn--ghost' : 'pls-btn--secondary')} style={{ width:'100%' }}
+                    onClick={()=>actions.syncCalendar(loop.id)} aria-pressed={synced}>
+                    <Icon name={synced ? 'check' : 'calendar'} size={16} />{synced ? 'On your phone calendar' : 'Sync to phone calendar'}
+                  </button>
+                )}
                 {loop.startedWeek && (
                   <div className="mt-2.5 flex items-center gap-1.5 pls-mono" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
                     <Icon name="flame" size={13} style={{ color:'var(--status-forming)' }} />same faces since wk {loop.startedWeek}
@@ -3015,7 +3295,7 @@
 
             <div className="mb-5">
               <div className="flex items-center justify-between mb-3">
-                <p className="pls-kicker">{loop.memberIds.length} in this loop</p>
+                <p className="pls-kicker">{forming ? `${loop.drop.count} of ${loop.drop.target} want it · no names until it fires` : `${loop.memberIds.length} in this loop`}</p>
                 {loop.streakLeaderId && (
                   <span className="flex items-center gap-1.5 text-[12px]" style={{ color:'var(--text-secondary)' }}>
                     <Icon name="flame" size={13} style={{ color:'var(--status-forming)' }} />{USERS[loop.streakLeaderId]?.name.split(' ')[0]} · longest streak
@@ -3053,7 +3333,7 @@
             {isMember && !forming && (
               <Card className="p-4 mb-4" style={{ borderColor:'var(--accent-quiet)' }}>
                 <div className="flex items-center gap-1.5 pls-kicker mb-2" style={{ color:'var(--accent-strong)' }}>
-                  <Icon name="lock" size={13} />This week · locked
+                  <Icon name={meet.phase==='past' ? 'circle-check-big' : 'lock'} size={13} />{meet.phase==='past' ? 'This week · closed' : 'This week · locked'}
                 </div>
                 <p className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)', lineHeight:1.25 }}>
                   {loop.nextLine}
@@ -3061,8 +3341,15 @@
                 <p className="text-[12.5px] mt-1" style={{ color:'var(--text-secondary)' }}>
                   {loop.movedFrom
                     ? <>Moved from {loop.movedFrom} — pushed to everyone confirmed.{isHere && <> <button onClick={()=>actions.undoMove(loop.id)} style={{ background:'none', border:'none', padding:0, cursor:'pointer', color:'var(--accent-strong)', fontWeight:600, fontSize:'inherit' }}>Undo</button></>}</>
+                    : meet.phase==='past'
+                    ? <>This week’s already met. The next one is {loop.nextLine}. Nobody runs it — hype it up and the crew feels it.</>
                     : <>Nobody runs it. It locked {lockLine} so nothing drifts; whoever's there can move it.</>}
                 </p>
+                {ch>0 && meet.phase!=='today' && (
+                  <div className="mt-2 flex items-center gap-1.5 pls-mono" style={{ fontSize:12, color:'var(--text-secondary)' }} title={`crew hype ${ch} of 5`}>
+                    crew hype <span aria-hidden="true">{'🔥'.repeat(ch)}</span><span style={{ color:'var(--text-tertiary)' }}>· {ch} of 5</span>
+                  </div>
+                )}
                 {hereIds.length>0 && (
                   <div className="mt-2 flex items-center gap-1.5 pls-mono" style={{ fontSize:12, color:'var(--text-secondary)' }}>
                     <span style={{ color:'var(--status-live)' }}><Icon name="circle-check-big" size={13} /></span>
@@ -3071,7 +3358,9 @@
                 )}
                 {!isHere ? (
                   <div className="grid grid-cols-2 gap-2.5 mt-3">
-                    <Button size="sm" icon="circle-check-big" onClick={()=>actions.checkIn(loop.id)}>I'm here</Button>
+                    {meet.phase==='today'
+                      ? <Button size="sm" icon="circle-check-big" onClick={()=>actions.checkIn(loop.id)}>I'm here</Button>
+                      : <HypeButton loop={loop} viewerId={viewerId} actions={actions} forLabel={meet.phase==='past' ? `next ${meet.day}` : meet.day} />}
                     <Button variant="secondary" size="sm" icon="message-square" onClick={()=>actions.messageCrew(loop)}>Message the crew</Button>
                   </div>
                 ) : !picking ? (
@@ -3103,7 +3392,16 @@
                   <Button variant="ghost" block onClick={()=>actions.leaveLoop(loop.id)} icon="log-out">Leave loop</Button>
                 </>
               )}
-              {forming && <Button variant="secondary" block onClick={()=>actions.wantThis(loop.id)} icon="plus">I want this too</Button>}
+              {forming && ((loop.wantIds||[]).includes(viewerId) ? (
+                <>
+                  <div className="pls-banner p-3.5 flex items-center gap-2" style={{ color:'var(--text-primary)', fontWeight:600, fontSize:14 }}>
+                    <span style={{ color:'var(--status-forming)' }}><Icon name="circle-check-big" size={18} /></span>You're in the count — {loop.drop.target-loop.drop.count===1 ? '1 more fires it' : `${loop.drop.target-loop.drop.count} more fires it`}
+                  </div>
+                  <Button variant="ghost" block onClick={()=>actions.unwant(loop.id)} icon="log-out">Not anymore</Button>
+                </>
+              ) : (
+                <Button block onClick={()=>actions.wantThis(loop.id)} icon="plus">{loop.drop.target-loop.drop.count===1 ? 'I want this too · you’d fire it' : 'I want this too'}</Button>
+              ))}
             </div>
 
             <button onClick={()=>actions.openSafety(null)} className="w-full text-left mt-4 pls-banner p-4 flex items-start gap-3" style={{ cursor:'pointer' }}>
@@ -3163,6 +3461,18 @@
                     <div className="mt-3 flex items-center gap-2.5">
                       <Button size="sm" variant={feedback[n.wrapId]?'secondary':'primary'} onClick={()=>actions.openRate(n.wrapId)} icon={feedback[n.wrapId]?'check':'thumbs-up'}>{feedback[n.wrapId]?'Rated · edit':'Rate the loop'}</Button>
                       <span className="text-[12px]" style={{ color:'var(--text-tertiary)' }}>Private · only you see it</span>
+                    </div>
+                  </div>
+                ) : n.type==='fired' ? (
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span style={{ width:42, height:42, borderRadius:'50%', flexShrink:0, background:'color-mix(in srgb, var(--status-forming) 16%, var(--bg-surface))', color:'var(--status-forming)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon name="zap" size={20} /></span>
+                      <p className="text-[14.5px] leading-snug" style={{ color:'var(--text-primary)' }}>
+                        <span style={{ fontWeight:700 }}>{n.loopTitle}</span> fired — {n.count} said yes. <span style={{ color:'var(--text-secondary)' }}>It’s on. Join?</span>
+                      </p>
+                    </div>
+                    <div className="mt-3">
+                      <Button size="sm" onClick={()=>actions.foldIn(n.loopId)} icon="plus">Join · add to your week</Button>
                     </div>
                   </div>
                 ) : n.type==='staff' ? (
@@ -3292,6 +3602,283 @@
     }
 
     /* ============================================================
+       YOUR WEEK LISTS — the three things you own, rendered under
+       Home's chip row: loops you're in, intents waiting, loops wrapped.
+    ============================================================ */
+    // Upcoming reads like a calendar: a Mon–Sun strip with dots on days you have something, then
+    // an agenda grouped by day. The very next meet carries check-in and calendar inline.
+    const WEEK_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const WEEK_ORDER = [1,2,3,4,5,6,0];   // strip runs Mon → Sun
+    // Loops carry their day inside nextLine/rhythm text ("Sun · 4:00p · Uris", "Fridays · 2× a week").
+    function loopDay(l){ const m = /\b(sun|mon|tue|wed|thu|fri|sat)/i.exec((l.nextLine||'')+' '+(l.rhythm||'')); return m ? WEEK_DAYS.findIndex(d => d.toLowerCase()===m[1].toLowerCase()) : null; }
+    function loopWhen(l){ const p = (l.nextLine||'').split('·').map(s=>s.trim()).filter(Boolean); const timed = /\d/.test(p[1]||''); return { time: timed ? p[1] : '', place: (timed ? p.slice(2) : p.slice(1)).join(' · ') }; }
+    // THE CALL — the next moment a slot line ("Wed · 6:30p · Teagle gym") comes around. For an anchor
+    // that's when the game is called: it fires if enough want it by then, otherwise the count rolls a
+    // week. For a loop it's the next meet. No time in the line → 7:00p. Always in the future.
+    function slotDate(line, now=new Date()){
+      const d = loopDay({ nextLine:line }); if (d==null) return null;
+      const m = /(\d{1,2})(?::(\d{2}))?\s*([ap])/i.exec(line||'');
+      const h = m ? (parseInt(m[1],10) % 12) + (m[3].toLowerCase()==='p' ? 12 : 0) : 19, mi = m && m[2] ? parseInt(m[2],10) : 0;
+      const x = new Date(now); x.setDate(now.getDate() + ((d - now.getDay() + 7) % 7)); x.setHours(h, mi, 0, 0);
+      if (x <= now) x.setDate(x.getDate() + 7);
+      return x;
+    }
+    function untilLabel(ms){ if (ms==null) return ''; const m = Math.max(0, Math.round(ms/60000)); const d = Math.floor(m/1440), h = Math.floor((m%1440)/60), mm = m%60; return d>0 ? `${d}d ${h}h` : h>0 ? `${h}h ${mm}m` : `${mm}m`; }
+    // A ticking clock so countdowns read live on screen.
+    function useNow(step=30000){ const [now, setNow] = useState(()=>new Date()); useEffect(()=>{ const t = setInterval(()=>setNow(new Date()), step); return ()=>clearInterval(t); }, [step]); return now; }
+    // Where this week's occurrence sits relative to today: 'today' (check in), 'future' (say you're
+    // in for it), 'past' (this week's already met — say you're in for the next one).
+    function meetPhase(l, now=new Date()){
+      const d = loopDay(l); if (d==null) return { phase:'future', day:'' };
+      const i = WEEK_ORDER.indexOf(d), t = WEEK_ORDER.indexOf(now.getDay());
+      return { phase: i===t ? 'today' : i<t ? 'past' : 'future', day: WEEK_DAYS[d] };
+    }
+    // One row of your week. Top-level (not a closure) so the hype button keeps its spark state across renders.
+    function WeekRow({ l, isNext, now, viewerId, actions }){
+      const w = loopWhen(l);
+      const at = isNext ? slotDate(l.nextLine, now) : null;
+      const sub = [w.place || l.rhythm, `${l.memberIds.length} in`, l.streakWeeks ? `${l.streakWeeks}-wk streak` : (l.firedNow ? 'first meet' : null), at ? `starts in ${untilLabel(at - now)}` : null].filter(Boolean).join(' · ');
+      return (
+        <div className="hm-ag" onClick={()=>actions.openLoop(l.id)} role="button" tabIndex={0} onKeyDown={e=>{ if(e.key==='Enter') actions.openLoop(l.id); }}>
+          <div className="hm-ag__row">
+            <div className="pls-mono hm-ag__t">{w.time || (l.live ? 'now' : '—')}</div>
+            <div className="hm-ag__m">
+              <div className="hm-ag__title">{l.title}</div>
+              <div className="hm-ag__s">{sub}</div>
+            </div>
+            <AvatarStack ids={l.memberIds} />
+          </div>
+          {(()=>{ const m = meetPhase(l, now), ch = crewHype(l); return (   /* every joined loop gets its action, not just next up */
+            <div onClick={e=>e.stopPropagation()}>
+              {(m.phase==='past' || ch>0) && (
+                <div className="pls-kicker mt-2.5 flex items-center gap-2" style={{ color:'var(--text-tertiary)' }}>
+                  {m.phase==='past' && <span>This week’s closed · next {m.day}</span>}
+                  {ch>0 && <span title={`crew hype ${ch} of 5`}>crew hype <span aria-hidden="true">{'🔥'.repeat(ch)}</span></span>}
+                </div>
+              )}
+              <div className="hm-ag__acts">
+                {m.phase==='today'
+                  ? <Button size="sm" icon="circle-check-big" onClick={()=>actions.checkIn(l.id)}>I’m here</Button>
+                  : <HypeButton loop={l} viewerId={viewerId} actions={actions} forLabel={m.phase==='past' ? `next ${m.day}` : m.day} />}
+              </div>
+            </div>
+          ); })()}
+        </div>
+      );
+    }
+
+    function UpcomingList({ myLoops, myIntents=[], loops=[], user, viewerId, actions, onBrowse }){
+      const today = new Date();
+      const todayDow = today.getDay();
+      const [sel, setSel] = useState(null);   // a tapped day → that day's view; null → the whole week
+      const daysOut = d => d==null ? 8 : (d - todayDow + 7) % 7;
+      const dateOf = d => { const x = new Date(today); x.setDate(today.getDate() + daysOut(d)); return x; };
+      // calendar dates for the Mon→Sun strip of the current week
+      const monday = new Date(today); monday.setDate(today.getDate() - ((todayDow + 6) % 7));
+      const stripDates = WEEK_ORDER.map((d,i) => { const x = new Date(monday); x.setDate(monday.getDate()+i); return x.getDate(); });
+      const dayOf = {}; myLoops.forEach(l => { dayOf[l.id] = loopDay(l); });
+      const has = new Set(myLoops.map(l => dayOf[l.id]).filter(d => d!=null));
+      // Everything else you could pick that day: anchors forming (counts) and loops meeting (join any time).
+      const pool = visibleLoops({ loops }, user).filter(l => !l.memberIds.includes(viewerId));
+      const formingOn = d => pool.filter(l => l.status==='forming' && loopDay(l)===d);
+      const meetingOn = d => pool.filter(l => l.status==='active' && loopDay(l)===d);
+      const open = new Set(pool.map(loopDay).filter(d => d!=null));
+      const sorted = myLoops.slice().sort((a,b) => daysOut(dayOf[a.id]) - daysOut(dayOf[b.id]));
+      const groups = [];
+      sorted.forEach(l => { const d = dayOf[l.id]; let g = groups.find(g => g.d===d); if(!g){ g = { d, items:[] }; groups.push(g); } g.items.push(l); });
+      const dayLabel = d => (daysOut(d)===0 ? 'Today · ' : daysOut(d)===1 ? 'Tomorrow · ' : '') + `${WEEK_DAYS[d]} ${dateOf(d).getDate()}`;
+      const label = g => g.d==null ? 'This week' : dayLabel(g.d);
+      const strip = (
+        <div className="hm-wk" role="group" aria-label="This week">
+          {WEEK_ORDER.map((d,i) => (
+            <button key={d} className="hm-wk__d" data-today={d===todayDow} data-past={i < WEEK_ORDER.indexOf(todayDow)} data-has={has.has(d)} data-forming={open.has(d)} data-sel={sel===d}
+              aria-label={WEEK_DAYS[d]} aria-pressed={sel===d} onClick={()=>setSel(sel===d ? null : d)}>
+              <span className="hm-wk__l">{WEEK_DAYS[d][0]}</span><span className="hm-wk__n">{stripDates[i]}</span><span className="hm-wk__dot" />
+            </button>
+          ))}
+        </div>
+      );
+      const now = useNow();
+      // ---- a tapped day: what's on your week, then what you could add — no search needed ----
+      if (sel != null) {
+        const mine = myLoops.filter(l => dayOf[l.id]===sel);
+        const forming = formingOn(sel), meeting = meetingOn(sel);
+        const dn = WEEK_DAYS[sel];
+        return (
+          <div>
+            {strip}
+            <div className="hm-glbl" style={{ marginTop:14 }}>{dayLabel(sel)}<button className="hm-glbl__c" onClick={()=>setSel(null)} style={{ background:'none', border:0, padding:0, cursor:'pointer', font:'inherit', color:'var(--accent-strong)' }}>whole week</button></div>
+            {mine.length>0 ? (
+              <div className="hm-grp hm-grp--next" style={{ marginTop:4 }}>
+                {mine.map((l,ii) => <WeekRow key={l.id} l={l} isNext={ii===0} now={now} viewerId={viewerId} actions={actions} />)}
+              </div>
+            ) : (
+              <p className="text-[12.5px] mt-1" style={{ color:'var(--text-tertiary)' }}>Nothing on your week {daysOut(sel)===0?'today':dn}. Pick from what's below.</p>
+            )}
+            {forming.length>0 && (
+              <>
+                <div className="flex items-center gap-1.5 mt-5 mb-2.5">
+                  <span style={{ width:7, height:7, borderRadius:'50%', background:'var(--status-forming)', display:'inline-block', flexShrink:0 }} />
+                  <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Forming {dn}</h3>
+                  <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>counts, not crews</span>
+                </div>
+                <div className="anc-grid">{forming.map(l => <AnchorTile key={l.id} loop={l} viewerId={viewerId} actions={actions} />)}</div>
+              </>
+            )}
+            {meeting.length>0 && (
+              <>
+                <div className="flex items-center gap-1.5 mt-5 mb-2.5">
+                  <LiveDot />
+                  <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Meeting {dn}</h3>
+                  <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>join any time</span>
+                </div>
+                <div className="space-y-3">{meeting.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}</div>
+              </>
+            )}
+            {forming.length===0 && meeting.length===0 && (
+              <Card variant="sunken" className="p-4 mt-3">
+                <div className="pls-kicker mb-1.5 flex items-center gap-1.5" style={{ color:'var(--accent-strong)' }}><Icon name="plus" size={12} />Nothing forming {dn} yet</div>
+                <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>Say what you want {dn} and you're the first of 6. It fires when enough people near you want the same.</p>
+                <div className="mt-3"><Button size="sm" icon="plus" onClick={actions.openCompose}>Drop what you want</Button></div>
+              </Card>
+            )}
+          </div>
+        );
+      }
+
+      // ---- no day selected: ONLY what you signed up for, grouped by day, next up first. Options
+      // for a day live behind a tap on that day; browsing lives behind 🔍. ----
+      return (
+        <div>
+          {strip}
+          {myLoops.length === 0 ? (
+            <Card variant="sunken" className="p-3.5 mt-3">
+              <div className="pls-kicker mb-1 flex items-center gap-1.5" style={{ color:'var(--accent-strong)' }}><Icon name="plus" size={12} />Nothing on your week yet</div>
+              <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+                Tap a day to see what's forming and meeting then, or 🔍 to search and say what you want.
+                {myIntents.length>0 && <> <button onClick={()=>actions.setHomeChip('waiting')} style={{ background:'none', border:0, padding:0, cursor:'pointer', color:'var(--accent-strong)', fontWeight:600, font:'inherit' }}>{myIntents.length} waiting →</button></>}
+              </p>
+            </Card>
+          ) : groups.map((g,gi) => (
+            <div key={g.d==null?'x':g.d} className={"hm-grp"+(gi===0?' hm-grp--next':'')} data-grp={g.d==null?'x':g.d}>
+              <div className="hm-glbl">{label(g)}{gi===0 && <span className="hm-glbl__c">next up</span>}</div>
+              {g.items.map((l,ii) => <WeekRow key={l.id} l={l} isNext={gi===0 && ii===0} now={now} viewerId={viewerId} actions={actions} />)}
+            </div>
+          ))}
+
+        </div>
+      );
+    }
+
+    function PastList({ wrapped, feedback={}, viewerId, actions }){
+      const unrated = wrapped.filter(w => !feedback[w.id]).length;
+      return wrapped.length > 0 ? (
+        <div>
+          <p className="text-[12px] mb-2.5 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+            {unrated>0 ? `${unrated} still to rate. ` : 'All rated. '}Loops end when the reason does — rate the loop and the crew, privately. You can change a rating any time.
+          </p>
+          <div className="space-y-2.5">
+            {wrapped.map(w => {
+              const mine = feedback[w.id];
+              const crewNoted = w.faces.filter(f => f.id!==viewerId && feedback[w.id+':'+f.id]).length;
+              const crewTotal = w.faces.filter(f => f.id!==viewerId).length;
+              const hue = mine==='like' ? 'var(--status-live)' : mine==='dislike' ? 'var(--unit-dorm)' : 'var(--text-tertiary)';
+              return (
+                <Card key={w.id} variant="sunken" className="p-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate" style={{ fontWeight:600, fontSize:13.5, color:'var(--text-primary)' }}>{w.title}</span>
+                        <span className="pls-badge" style={{ flexShrink:0, color:'var(--text-tertiary)', background:'var(--bg-surface)' }}>wrapped</span>
+                      </div>
+                      <div className="text-[11.5px] mt-1" style={{ color:'var(--text-tertiary)' }}>{w.reason} · {w.sessions} sessions · {w.when}</div>
+                    </div>
+                    <CrewFaces members={w.faces.filter(f=>f.id!==viewerId)} size={22} max={4} />
+                  </div>
+                  <div className="mt-2.5 pt-2.5 flex items-center justify-between gap-3" style={{ borderTop:'1px solid var(--border-hairline)' }}>
+                    {mine ? (
+                      <span className="flex items-center gap-1.5 text-[12.5px]" style={{ color:'var(--text-secondary)' }}>
+                        <span style={{ color:hue }}><Icon name={mine==='like'?'thumbs-up':mine==='dislike'?'thumbs-down':'minus'} size={14} /></span>
+                        You noted it{crewTotal>0 ? ` · ${crewNoted}/${crewTotal} of the crew` : ''}
+                      </span>
+                    ) : (
+                      <span className="text-[12.5px]" style={{ color:'var(--text-secondary)' }}>Not rated yet</span>
+                    )}
+                    <Button size="sm" variant={mine?'secondary':'primary'} icon={mine?'pencil':'thumbs-up'} onClick={()=>actions.openRate(w.id)}>{mine?'Edit':'Rate it'}</Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <Card variant="sunken" className="p-4">
+          <div className="pls-kicker mb-1.5 flex items-center gap-1.5"><Icon name="repeat" size={12} />No past loops yet</div>
+          <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>When a loop wraps, it lands here and you get asked how it went — privately.</p>
+        </Card>
+      );
+    }
+
+    // WAITING — things you said yes to that don't have enough people yet. Nothing here is on your
+    // calendar. × takes your yes back: the count drops by one, the anchor stays for everyone else.
+    function WaitingList({ myIntents, loops=[], actions, onSearch }){
+      const now = useNow(); const callAt = a => slotDate(a.nextLine, now);
+      if (myIntents.length === 0) return (
+        <Card variant="sunken" className="p-4 mt-1">
+          <div className="pls-kicker mb-1.5 flex items-center gap-1.5" style={{ color:'var(--accent-strong)' }}><Icon name="circle-dot" size={12} />Nothing waiting</div>
+          <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+            Say yes to something in Search and it sits here until enough people want it. Then it fires and moves to Your week.
+          </p>
+          <div className="mt-3"><Button size="sm" icon="search" onClick={onSearch}>Search</Button></div>
+        </Card>
+      );
+      return (
+        <div>
+          <p className="text-[12px] mb-2.5 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+            <b style={{ color:'var(--text-primary)' }}>Said yes, not enough people yet.</b> When it fires you're asked to join and it moves to Your week. × takes your yes back.
+          </p>
+          <div className="space-y-2">
+            {myIntents.map(it => {
+              const pending = it.status==='pending';
+              // the anchor this intent is counting toward — its live count is the row's number
+              const anchor = it.loopId ? loops.find(l => l.id===it.loopId && l.status==='forming') : null;
+              const left = anchor ? anchor.drop.target - anchor.drop.count : null;
+              return (
+              <Card key={it.id} variant="sunken" className="p-3.5" style={pending ? { opacity:.72, borderStyle:'dashed' } : undefined}>
+                <div className="flex items-center gap-3">
+                  {anchor ? (
+                    <button onClick={()=>actions.openLoop(anchor.id)} aria-label={'Open '+anchor.title} style={{ background:'none', border:0, padding:0, cursor:'pointer', flexShrink:0 }}>
+                      <FlrRingGauge pct={anchor.drop.count/anchor.drop.target} color="var(--accent)" label={anchor.drop.count+'/'+anchor.drop.target} />
+                    </button>
+                  ) : (
+                    <div style={{ width:34, height:34, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+                      background: pending?'var(--bg-sunken)':'var(--accent-quiet)', color: pending?'var(--text-tertiary)':'var(--accent-strong)' }}>
+                      <Icon name={pending?'clock':(INTENT_ICON[it.cat] || 'circle-dot')} size={17} />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate" style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{it.label}</span>
+                      {pending && <span className="pls-badge" style={{ flexShrink:0, color:'var(--status-forming)', background:'color-mix(in srgb, var(--status-forming) 15%, var(--bg-surface))' }}>pending review</span>}
+                    </div>
+                    <div className="pls-mono text-[11.5px] mt-0.5" style={{ color:'var(--text-tertiary)' }}>
+                      {it.rhythm}{pending ? ' · we’ll add it if it fits' : anchor ? <> · <b style={{ color:'var(--status-forming)', fontWeight:600 }}>{left===1 ? '1 more fires it' : `${left} more fires it`}</b>{callAt(anchor) && <> · called in {untilLabel(callAt(anchor) - now)}</>}</> : ' · waiting for enough people'}
+                    </div>
+                  </div>
+                  <button onClick={()=>actions.removeIntent(it.id)} aria-label="Take back your yes" title="Take back your yes"
+                    className="pls-iconbtn" style={{ flexShrink:0, color:'var(--text-tertiary)' }}>
+                    <Icon name="x" size={16} />
+                  </button>
+                </div>
+              </Card>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================================
        YOU  — belonging signal + assigned counselor + safety (Stellic
        advising & wellbeing tie-in) + private-notes recap + theme
     ============================================================ */
@@ -3299,16 +3886,13 @@
       const { user, viewerId='sarah', loops, myIntents=[], theme, feedbackCount, unread, wrapped=[], feedback={} } = state;
       const unrated = wrapped.filter(w => !feedback[w.id]).length;
       const myLoops = loops.filter(l => l.memberIds.includes(viewerId));
-      // segmented hub: Upcoming by default; land on Past when there's nothing running but something to rate
-      const SEGS = ['upcoming','past','intents'];
-      const SEG_LABEL = { upcoming:'Upcoming', past:'Past', intents:'Intents' };
-      const [seg, setSeg] = useState(myLoops.length===0 && unrated>0 && myIntents.length===0 ? 'past' : 'upcoming');
-      const [editingId, setEditingId] = useState(null);
-      const MiniStat = ({ n, label, hi }) => (
-        <div className="flex flex-col">
+      // The lists themselves live on Home under the chip row; each stat here jumps to its chip.
+      const MiniStat = ({ n, label, hi, to }) => (
+        <button className="flex flex-col text-left" onClick={()=>actions.goHomeTo(to)} aria-label={`${n} ${label} — open on Home`}
+          style={{ background:'none', border:'none', padding:0, cursor:'pointer' }}>
           <span className="pls-mono" style={{ fontSize:18, fontWeight:500, color: hi?'var(--accent-strong)':'var(--text-primary)' }}>{n}</span>
           <span className="text-[11px]" style={{ color:'var(--text-tertiary)' }}>{label}</span>
-        </div>
+        </button>
       );
       return (
         <div className="h-full flex flex-col fade-in" style={{ position:'relative' }}>
@@ -3328,148 +3912,9 @@
 
             {/* stats strip — the three things this tab is for */}
             <div className="flex items-center justify-between mt-4 pt-3.5" style={{ borderTop:'1px solid var(--border-hairline)' }}>
-              <MiniStat n={myLoops.length} label="loops running" />
-              <MiniStat n={myIntents.length} label="intents waiting" />
-              <MiniStat n={unrated} label="to rate" hi={unrated>0} />
-            </div>
-
-            {/* segmented hub — one list at a time. Everything in it is editable:
-                open/leave a loop, rate or re-rate a wrapped one, rewrite or remove an intent. */}
-            <div className="pls-seg pls-seg--3 mt-4" role="tablist" aria-label="Your loops" style={{ '--seg-i': SEGS.indexOf(seg) }}>
-              <span className="pls-seg__thumb" />
-              {SEGS.map(k => {
-                const n = k==='upcoming' ? myLoops.length : k==='past' ? wrapped.length : myIntents.length;
-                return (
-                  <button key={k} className="pls-seg__opt" role="tab" aria-selected={seg===k} aria-pressed={seg===k} onClick={()=>setSeg(k)}>
-                    {SEG_LABEL[k]}<span className="pls-mono" style={{ fontSize:11, color:'var(--text-tertiary)', fontWeight:500 }}>{n}</span>
-                    {k==='past' && unrated>0 && <span className="pls-seg__dot" aria-label={unrated+' to rate'} />}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div key={seg} className="fade-in mt-3">
-              {seg==='upcoming' && (
-                myLoops.length > 0 ? (
-                  <div>
-                    <p className="text-[12px] mb-2.5 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                      Next meets first. Open one to check in, move it, message the crew, or leave.
-                    </p>
-                    <div className="space-y-3">
-                      {myLoops.map(l => (
-                        <LoopCard key={l.id} loop={l}
-                          onOpen={()=>actions.openLoop(l.id)}
-                          onShare={()=>actions.openShare(l.id)}
-                          onCalendar={l.status==='forming' ? undefined : ()=>actions.addToCalendar(l)} />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <Card variant="sunken" className="p-4">
-                    <div className="pls-kicker mb-1.5 flex items-center gap-1.5" style={{ color:'var(--accent-strong)' }}><Icon name="plus" size={12} />Nothing upcoming yet</div>
-                    <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                      Drop an intent and Loop seats you into an activity that already meets — it shows up here to reopen, share, or push to your calendar.
-                    </p>
-                    <div className="mt-3 flex items-center gap-2.5">
-                      <Button size="sm" icon="plus" onClick={actions.openCompose}>Drop an intent</Button>
-                      {myIntents.length>0 && <Button size="sm" variant="secondary" onClick={()=>setSeg('intents')}>See your {myIntents.length} waiting</Button>}
-                    </div>
-                  </Card>
-                )
-              )}
-
-              {seg==='past' && (
-                wrapped.length > 0 ? (
-                  <div>
-                    <p className="text-[12px] mb-2.5 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                      {unrated>0 ? `${unrated} still to rate. ` : 'All rated. '}Loops end when the reason does — rate the loop and the crew, privately. You can change a rating any time.
-                    </p>
-                    <div className="space-y-2.5">
-                      {wrapped.map(w => {
-                        const mine = feedback[w.id];
-                        const crewNoted = w.faces.filter(f => f.id!==viewerId && feedback[w.id+':'+f.id]).length;
-                        const crewTotal = w.faces.filter(f => f.id!==viewerId).length;
-                        const hue = mine==='like' ? 'var(--status-live)' : mine==='dislike' ? 'var(--unit-dorm)' : 'var(--text-tertiary)';
-                        return (
-                          <Card key={w.id} variant="sunken" className="p-3.5">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="truncate" style={{ fontWeight:600, fontSize:13.5, color:'var(--text-primary)' }}>{w.title}</span>
-                                  <span className="pls-badge" style={{ flexShrink:0, color:'var(--text-tertiary)', background:'var(--bg-surface)' }}>wrapped</span>
-                                </div>
-                                <div className="text-[11.5px] mt-1" style={{ color:'var(--text-tertiary)' }}>{w.reason} · {w.sessions} sessions · {w.when}</div>
-                              </div>
-                              <CrewFaces members={w.faces.filter(f=>f.id!==viewerId)} size={22} max={4} />
-                            </div>
-                            <div className="mt-2.5 pt-2.5 flex items-center justify-between gap-3" style={{ borderTop:'1px solid var(--border-hairline)' }}>
-                              {mine ? (
-                                <span className="flex items-center gap-1.5 text-[12.5px]" style={{ color:'var(--text-secondary)' }}>
-                                  <span style={{ color:hue }}><Icon name={mine==='like'?'thumbs-up':mine==='dislike'?'thumbs-down':'minus'} size={14} /></span>
-                                  You noted it{crewTotal>0 ? ` · ${crewNoted}/${crewTotal} of the crew` : ''}
-                                </span>
-                              ) : (
-                                <span className="text-[12.5px]" style={{ color:'var(--text-secondary)' }}>Not rated yet</span>
-                              )}
-                              <Button size="sm" variant={mine?'secondary':'primary'} icon={mine?'pencil':'thumbs-up'} onClick={()=>actions.openRate(w.id)}>{mine?'Edit':'Rate it'}</Button>
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <Card variant="sunken" className="p-4">
-                    <div className="pls-kicker mb-1.5 flex items-center gap-1.5"><Icon name="repeat" size={12} />No past loops yet</div>
-                    <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>When a loop wraps, it lands here and you get asked how it went — privately.</p>
-                  </Card>
-                )
-              )}
-
-              {seg==='intents' && (
-                <div>
-                  <p className="text-[12px] mb-2.5 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                    What you're up for, in plain English. Loop holds these and pulls you into an activity when enough people near you want the same. Tap the pencil to rewrite one.
-                  </p>
-                  <IntentQuickAdd onAdd={(it, replaceId)=>{ actions.saveIntent(it, replaceId); setEditingId(null); }}
-                    editing={myIntents.find(i=>i.id===editingId) || null} onCancelEdit={()=>setEditingId(null)} />
-                  {myIntents.length > 0 ? (
-                    <div className="space-y-2 mt-2.5">
-                      {myIntents.map(it => {
-                        const pending = it.status==='pending';
-                        const isEditing = it.id===editingId;
-                        return (
-                        <Card key={it.id} variant="sunken" className="p-3.5" style={{ ...(pending?{ opacity:.72, borderStyle:'dashed' }:{}), ...(isEditing?{ outline:'2px solid var(--accent)', outlineOffset:-1 }:{}) }}>
-                          <div className="flex items-center gap-3">
-                            <div style={{ width:34, height:34, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
-                              background: pending?'var(--bg-sunken)':'var(--accent-quiet)', color: pending?'var(--text-tertiary)':'var(--accent-strong)' }}>
-                              <Icon name={pending?'clock':(INTENT_ICON[it.cat] || 'circle-dot')} size={17} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className="truncate" style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{it.label}</span>
-                                {pending && <span className="pls-badge" style={{ flexShrink:0, color:'var(--status-forming)', background:'color-mix(in srgb, var(--status-forming) 15%, var(--bg-surface))' }}>pending review</span>}
-                              </div>
-                              <div className="pls-mono text-[11.5px] mt-0.5" style={{ color:'var(--text-tertiary)' }}>{it.rhythm}{pending?' · we’ll add it if it fits':' · waiting for enough people'}</div>
-                            </div>
-                            <button onClick={()=>setEditingId(isEditing?null:it.id)} aria-label={isEditing?'Stop editing':'Edit intent'} aria-pressed={isEditing}
-                              className="pls-iconbtn" style={{ flexShrink:0, color: isEditing?'var(--accent-strong)':'var(--text-tertiary)' }}>
-                              <Icon name="pencil" size={15} />
-                            </button>
-                            <button onClick={()=>{ if(isEditing) setEditingId(null); actions.removeIntent(it.id); }} aria-label="Remove intent"
-                              className="pls-iconbtn" style={{ flexShrink:0, color:'var(--text-tertiary)' }}>
-                              <Icon name="x" size={16} />
-                            </button>
-                          </div>
-                        </Card>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-[12.5px] mt-3 text-center" style={{ color:'var(--text-tertiary)' }}>Nothing saved yet — type one above, or <button onClick={actions.openCompose} style={{ background:'none', border:'none', padding:0, cursor:'pointer', color:'var(--accent-strong)', fontWeight:600, fontSize:'inherit' }}>drop an intent</button>.</p>
-                  )}
-                </div>
-              )}
+              <MiniStat n={myLoops.length} label="loops running" to="upcoming" />
+              <MiniStat n={myIntents.length} label="intents waiting" to="waiting" />
+              <MiniStat n={unrated} label="to rate" hi={unrated>0} to="past" />
             </div>
 
             {/* assigned counselor + safety */}
@@ -4214,7 +4659,7 @@
        layer hydrates it, auto-saves it, and version-gates stale blobs
        (reseed, no migrations). See specs/shared-world-state + world-persistence.
     ============================================================ */
-    const WORLD_VERSION = 1;
+    const WORLD_VERSION = 4;   // 2: anchors (wantIds, no members, default slot) · 3: every-day seeds · 4: crew hype
     const WORLD_KEY = 'loop.world';
     const seedIntents = () => [];   // authored intents accumulate here (each carries a userId)
     const seedWorld = () => ({
@@ -4258,6 +4703,7 @@
       const [viewerId, setViewerId] = useState('sarah'); // whose perspective the phone is showing
       const [world, setWorld]   = useState(worldStore.load);   // the one shared, persisted world
       const [suggestions, setSuggestions] = useState(null);
+      const [homeChip, setHomeChip] = useState('upcoming');   // Home's chip row: upcoming|waiting|near|past
       const [activeLoopId, setActiveLoopId] = useState(null);
       const [highlightId, setHighlightId]   = useState(null);
       const [detailBanner, setDetailBanner] = useState(null);
@@ -4363,15 +4809,19 @@
         setSuggestions({ raw: one.toLowerCase(), parse: parseIntent(one), cards: cardsForIntent(one) });
       };
       const openCompose = () => setSheet('compose');
-      const submitCompose = (raw, intent) => { setSheet(null); runIntent(raw); if(intent) saveIntent(intent); if(screen!=='home') setScreen('home'); };
+      const submitCompose = (raw, intent) => {
+        setSheet(null); runIntent(raw);
+        if(intent){ saveIntent(intent); setSuggestions(s => s ? { ...s, mineId:intent.id } : s); }   // the Floor's "your intent" upserts this same record
+        if(screen!=='home') setScreen('home');
+      };
       const noop = () => {};
 
       /* ----- fold in (join a running loop) ----- */
       const foldIn = (loopId) => {
         setLoops(ls => ls.map(l => l.id===loopId && !l.memberIds.includes(viewerId)
-          ? { ...l, memberIds:[...l.memberIds, viewerId] } : l));
+          ? { ...l, memberIds:[...l.memberIds, viewerId], invitedIds:(l.invitedIds||[]).filter(id=>id!==viewerId) } : l));
         const l = loops.find(x=>x.id===loopId);
-        setSuggestions(null);
+        setSuggestions(null); setHomeChip('upcoming');
         showToast({ title:`Joined — ${l?.title}`, body:`Same faces, every week. The crew already knows the rhythm.` });
         openLoop(loopId);
       };
@@ -4380,18 +4830,84 @@
         showToast({ title:'Left the loop.', body:'The rhythm holds without you. Nobody sees a thing.' });
         setScreen('home');
       };
+      /* ----- ANCHORS: intent → anchor → fire → loop -----
+         A forming loop is an anchor: an anonymized count of matching intents (`drop`) plus
+         `wantIds` (real users who said yes). Every intent record you hold points at one
+         (`loopId`), so Waiting is just your intents and their live counts. Nobody starts a
+         loop — at quorum the anchor FIRES: status flips to active, the default slot snaps
+         in, and everyone in wantIds is invited (`invitedIds` + a 'fired' alert). Saying yes
+         to that invite is the start. The world updaters below are pure so the compose sheet,
+         the Floor, the feed tiles and the detail screen all share one engine. ----- */
+      const DEMO_CREW = ['josh','lydia','priya','marcus','ryan','maya'];
+      const STOP_WORDS = new Set(['a','an','the','crew','table','group','session','sessions','club','every','weekly']);
+      const toks = s => (s||'').toLowerCase().split(/[^a-z0-9]+/).filter(w => w && !STOP_WORDS.has(w));
+      // The anchor a phrase lands in: every meaningful word of the anchor's target appears in the
+      // phrase ("boxing" ⊂ "kickboxing" counts, so catalog labels still land).
+      const wordHit = (w, t) => w===t || (w.length>=3 && t.length>=3 && (t.includes(w) || w.includes(t)));
+      const anchorFor = (ls, text) => { const T = toks(text); if (!T.length) return null;
+        return ls.find(l => { if (l.status!=='forming') return false; const A = toks(l.target); return A.length>0 && A.every(w => T.some(t => wordHit(w, t))); }) || null; };
+      const mkAnchor = (loopId, rec, hint) => { const dorm = user.dorm || 'your floor'; return {
+        id:loopId, title:rec.label, target:rec.label, unit:{ kind:'dorm', label:dorm.toLowerCase()+' · forming' }, audience:{ scope:'floor', floor:user.dorm },
+        // a fresh anchor is never born at quorum — at most "1 more fires it"; someone else's yes fires it
+        status:'forming', drop:{ count:Math.min((hint&&hint.count)||1, ((hint&&hint.target)||6)-1), target:(hint&&hint.target)||6 }, wantIds:[viewerId], memberIds:[],
+        rhythm:rec.rhythm||'', nextLine:rec.rhythm||'', createdBy:viewerId, hereIds:[] }; };
+      // Pure: fire one anchor. The rest of the count is treated as already in (demo cast fills the crew);
+      // the viewer and every other real yes-sayer are invited, their waiting records are cleared.
+      const fireInWorld = (w, loopId) => {
+        const l = w.loops.find(x=>x.id===loopId); if (!l || l.status!=='forming') return w;
+        const yes = (l.wantIds||[]).filter((x,i,a)=>a.indexOf(x)===i);
+        const others = yes.filter(id=>id!==viewerId);
+        const fill = DEMO_CREW.filter(id => id!==viewerId && !others.includes(id));
+        const memberIds = [...others, ...fill].slice(0, Math.max(1, Math.min(l.drop.target-1, 4)));
+        const nextLine = l.nextLine || 'Thu · 7:00p · dorm lounge';
+        const fired = { ...l, status:'active', live:false, memberIds, invitedIds:yes, wantIds:[], firedNow:true,
+          hype: Object.fromEntries(memberIds.map((id,i) => [id, 2 + (i % 4)])),   // a fresh crew is already a little hyped
+          rhythm: l.rhythm || (nextLine+' · weekly'), nextLine, startedWeek:3, streakWeeks:null, hereIds:[], cap:l.drop.target };
+        const notifs = { ...w.notifs };
+        yes.forEach(rid => { notifs[rid] = [{ id:'fired-'+loopId, type:'fired', loopId, loopTitle:l.title, count:l.drop.target, unread:true }, ...(notifs[rid]||[]).filter(n=>n.id!=='fired-'+loopId)]; });
+        return { ...w, loops: w.loops.map(x => x.id===loopId ? fired : x), intents: w.intents.filter(i => i.loopId!==loopId), notifs };
+      };
+      // Pure: the viewer says yes to an anchor. Upserts their intent record (rec, or a light one
+      // built from the anchor) pointing at it, bumps the count once, and fires at quorum.
+      const wantInWorld = (w, loopId, rec=null) => {
+        const l = w.loops.find(x=>x.id===loopId); if (!l || l.status!=='forming') return w;
+        const already = (l.wantIds||[]).includes(viewerId);
+        const count = already ? l.drop.count : Math.min(l.drop.target, l.drop.count+1);
+        const loops = already ? w.loops : w.loops.map(x => x.id===loopId ? { ...x, drop:{ ...x.drop, count }, wantIds:[...(x.wantIds||[]), viewerId] } : x);
+        const r = { ...(rec || { id:'want-'+loopId, label:l.title, rhythm:l.nextLine||'', cat:({ class:'study', fitness:'move' })[loopCategory(l)] || 'dine' }), loopId, userId:viewerId };
+        const intents = [r, ...w.intents.filter(i => i.id!==r.id && !(i.userId===viewerId && i.loopId===loopId))];
+        const nw = { ...w, loops, intents };
+        return (!already && count >= l.drop.target) ? fireInWorld(nw, loopId) : nw;
+      };
+      // Pure: take the viewer's yes back. An anchor nobody wants anymore disappears.
+      const unwantInWorld = (w, loopId) => {
+        const l = w.loops.find(x=>x.id===loopId); if (!l || l.status!=='forming' || !(l.wantIds||[]).includes(viewerId)) return w;
+        const count = Math.max(0, l.drop.count-1);
+        const loops = count===0 ? w.loops.filter(x=>x.id!==loopId)
+          : w.loops.map(x => x.id===loopId ? { ...x, drop:{ ...x.drop, count }, wantIds:x.wantIds.filter(id=>id!==viewerId) } : x);
+        return { ...w, loops, intents: w.intents.filter(i => !(i.userId===viewerId && i.loopId===loopId)) };
+      };
+      const afterFire = (l) => { setSuggestions(null); setHomeChip('upcoming');
+        showToast({ icon:'zap', title:'It’s on.', body:`${l.title} just fired — ${l.drop.target} said yes. You’re asked to join.` }); };
+      // "I want this too" from a tile, the feed or the detail screen. Returns whether it fired.
       const wantThis = (loopId) => {
-        let fired = false;
-        setLoops(ls => ls.map(l => {
-          if (l.id!==loopId || l.status!=='forming') return l;
-          const count = Math.min(l.drop.target, l.drop.count + 1);
-          if (count >= l.drop.target) fired = true;
-          return { ...l, drop:{ ...l.drop, count } };
-        }));
         const l = loops.find(x=>x.id===loopId);
-        const next = Math.min(l.drop.target, l.drop.count + 1);
-        if (next >= l.drop.target) showToast({ icon:'zap', title:'The drop fired.', body:`${l.title} just crystallized into a loop.` });
-        else showToast({ icon:'circle-dot', title:'Dropped.', body:`${next}/${l.drop.target} in — ${l.drop.target-next} more and this drop fires.` });
+        if (!l || l.status!=='forming' || (l.wantIds||[]).includes(viewerId)) return false;
+        const count = Math.min(l.drop.target, l.drop.count+1);
+        const fired = count >= l.drop.target;
+        setWorld(w => wantInWorld(w, loopId));
+        if (fired) afterFire(l);
+        else showToast({ icon:'circle-dot', title:'You’re in the count.', body:`${count} of ${l.drop.target} — ${l.drop.target-count} more fires it. It’s in Waiting.` });
+        return fired;
+      };
+      const unwant = (loopId) => { setWorld(w => unwantInWorld(w, loopId)); showToast({ icon:'log-out', title:'Not anymore.', body:'Your yes is gone. Nobody sees a thing.' }); };
+      // HYPE — the one thing you can do about a meet that isn't today: show how much you want it.
+      // Five taps to max; the crew's average shows as flames. Pure fun, nothing locks, nothing is owed.
+      const hype = (loopId) => setLoops(ls => ls.map(x => x.id!==loopId ? x : { ...x, hype:{ ...(x.hype||{}), [viewerId]: Math.min(5, ((x.hype||{})[viewerId]||0)+1) } }));
+      // "Not now" on a fired invite: it keeps meeting; you can still join from the feed.
+      const declineInvite = (loopId) => {
+        setLoops(ls => ls.map(l => l.id===loopId ? { ...l, invitedIds:(l.invitedIds||[]).filter(id=>id!==viewerId) } : l));
+        showToast({ icon:'clock', title:'Left it open.', body:'It’s still meeting. Join from 🔍 any time.' });
       };
 
       /* ----- open a loop ----- */
@@ -4405,6 +4921,9 @@
       const openNotifications = () => { if (screen!=='notifs') setNotifsReturn(screen); setScreen('notifs'); };
       const closeNotifications = () => setScreen(notifsReturn);
       const openYou = () => setScreen('you');
+      const goHomeTo = (chip) => { setHomeChip(chip); setScreen('home'); };
+      // Done with the Floor: the intent you dropped is now waiting, so land on Waiting.
+      const closeFloor = () => { setSuggestions(null); setHomeChip(myIntents.length ? 'waiting' : 'upcoming'); };
       const openClass = () => setScreen('class');
       const goHome = () => setScreen('home');
 
@@ -4431,23 +4950,75 @@
       /* ----- safety report → assigned counselor (confidential) ----- */
       const openSafety = (subject) => { setSafetySubject(subject); setSheet('safety'); };
       const openShare  = (loopId)  => { setShareLoopId(loopId); setSheet('share'); };
-      /* ----- The Floor → seat the viewer into a real loop so it lands in
-         Belonging / Your loops. Upsert by id; persists across navigation. ----- */
-      const floorSeat = (loop) => setLoops(ls => ls.some(l=>l.id===loop.id)
-        ? ls.map(l => l.id===loop.id ? { ...l, ...loop, memberIds: l.memberIds.includes(viewerId)?l.memberIds:[...l.memberIds, viewerId] } : l)
-        : [loop, ...ls]);
-      const floorUnseat = (loopId) => setLoops(ls => ls.map(l => l.id===loopId ? { ...l, memberIds:l.memberIds.filter(id=>id!==viewerId) } : l));
-      /* ----- intents you declare (shape / drop your own rhythm) persist in the
-         shared world, authored with your userId. The intent is the anchor.
-         Honors the two-arg edit-replace: drop replaceId when the rebuilt intent
-         got a new id, so editing replaces rather than duplicates. ----- */
+      /* ----- The Floor → "I want this too" on a Floor rhythm. The rhythm becomes a real
+         anchor in the world (upsert by id) and the viewer's yes runs through the same
+         engine, so it can fire from here exactly like a feed tile. ----- */
+      const floorWant = (anchor) => {
+        const exists = loops.find(l=>l.id===anchor.id);
+        const base = exists || anchor;
+        const count = exists ? Math.min(exists.drop.target, exists.drop.count+1) : anchor.drop.count;
+        const fired = !(exists && (exists.wantIds||[]).includes(viewerId)) && count >= base.drop.target;
+        setWorld(w => {
+          // the Floor's count already includes you; insert one short and let wantInWorld add your yes
+          const seeded = w.loops.some(l=>l.id===anchor.id) ? w : { ...w, loops:[{ ...anchor, wantIds:[], drop:{ ...anchor.drop, count:Math.max(0, anchor.drop.count-1) } }, ...w.loops] };
+          return wantInWorld(seeded, anchor.id);
+        });
+        if (fired) afterFire(base);
+      };
+      const floorUnwant = (loopId) => setWorld(w => unwantInWorld(w, loopId));
+      /* ----- intents you declare (compose, quick-add, shape / drop your own rhythm) persist
+         in the shared world, authored with your userId, and every one lands in an anchor:
+         an existing forming loop whose target the phrase matches, or a fresh anchor where
+         you're the 1st of 6. Pending (off-allowlist) requests stay unlinked. Honors the
+         two-arg edit-replace: the old record's yes is taken back first. ----- */
       const saveIntent = (it, replaceId=null) => setWorld(w => {
-        const authored = { ...it, userId:viewerId };
-        let list = replaceId && replaceId!==it.id ? w.intents.filter(i=>i.id!==replaceId) : w.intents;
-        list = list.some(i=>i.id===it.id) ? list.map(i=>i.id===it.id?{ ...i, ...authored }:i) : [authored, ...list];
-        return { ...w, intents:list };
+        let nw = w;
+        if (replaceId && replaceId!==it.id) {
+          const old = w.intents.find(i=>i.id===replaceId);
+          if (old && old.loopId) nw = unwantInWorld(nw, old.loopId);
+          nw = { ...nw, intents: nw.intents.filter(i=>i.id!==replaceId) };
+        }
+        const prev = nw.intents.find(i=>i.id===it.id);
+        const authored = { ...(prev||{}), ...it, userId:viewerId };
+        if (authored.status!=='pending') {
+          if (authored.loopId && !nw.loops.some(l=>l.id===authored.loopId)) {
+            // the Floor named its anchor up front (flr-loop-…): create it at the Floor's count
+            nw = { ...nw, loops:[mkAnchor(authored.loopId, authored, it.anchor), ...nw.loops] };
+          } else if (!authored.loopId) {
+            const hit = anchorFor(nw.loops, authored.label);
+            if (hit) return wantInWorld(nw, hit.id, authored);      // your yes, recorded as this intent
+            const loopId = 'anchor-'+authored.id;
+            nw = { ...nw, loops:[mkAnchor(loopId, authored, it.anchor), ...nw.loops] };
+            authored.loopId = loopId;
+          }
+        }
+        const list = nw.intents.some(i=>i.id===authored.id) ? nw.intents.map(i=>i.id===authored.id?authored:i) : [authored, ...nw.intents];
+        return { ...nw, intents:list };
       });
-      const removeIntent = (id) => setWorld(w => ({ ...w, intents: w.intents.filter(i=>i.id!==id) }));
+      const removeIntent = (id) => setWorld(w => {
+        const it = w.intents.find(i=>i.id===id);
+        const nw = it && it.loopId ? unwantInWorld(w, it.loopId) : w;
+        return { ...nw, intents: nw.intents.filter(i=>i.id!==id) };
+      });
+      // Search → "Drop 'climbing'": the typed phrase becomes your intent (curated allowlist + pending
+      // review still apply), lands in an anchor, and Waiting opens on it.
+      const dropText = (raw) => {
+        const p = parseQuickIntent(raw);
+        if (!p.activity && !p.request) { showToast({ icon:'search', title:'Say it as an activity.', body:'e.g. “climbing”, “dinner thursdays”, “CS 2110”.' }); return; }
+        const it = qiIntentSummary({ ...p, cadence: p.cadence || 'weekly' }, raw);
+        saveIntent(it); setHomeChip('waiting');
+        showToast(it.status==='pending' ? { icon:'clock', title:'Requested.', body:`“${it.label}” isn’t on the list yet — we’ll add it if it fits.` }
+                                        : { icon:'circle-dot', title:'Dropped.', body:`${it.label} is counting. We’ll tell you when it fires.` });
+      };
+      // Calendar export is the one place Loop leaves the app: push the weekly slot to your phone's
+      // calendar. One-shot per person; Loop keeps it in sync if the crew moves it. (Simulated.)
+      const syncCalendar = (loopId) => {
+        const l = loops.find(x=>x.id===loopId); if (!l) return;
+        const on = !(l.calIds||[]).includes(viewerId);
+        setLoops(ls => ls.map(x => x.id!==loopId ? x : { ...x, calIds: on ? [...(x.calIds||[]), viewerId] : (x.calIds||[]).filter(id=>id!==viewerId) }));
+        showToast(on ? { icon:'calendar', title:'On your phone calendar.', body:`Repeats ${l.rhythm || l.nextLine}. Loop keeps it in sync if the crew moves it.` }
+                     : { icon:'calendar', title:'Removed from your phone calendar.', body:'Your week still has it.' });
+      };
       const addToCalendar = (loop) => showToast({ icon:'calendar', title:`${loop.title} added to your calendar`,
         body:`${loop.rhythm || loop.nextLine || 'Weekly'} — repeats weekly, same faces. Loop keeps the crew in sync.` });
       const sendSafety = () => {
@@ -4641,16 +5212,16 @@
         clearTimeout(toastTimer.current); clearTimeout(wrapTimer.current);
         setViewerId(pid);
         setRateId(null);
-        setSheet(null); setSuggestions(null); setActiveLoopId(null); setHighlightId(null);
+        setSheet(null); setSuggestions(null); setHomeChip('upcoming'); setActiveLoopId(null); setHighlightId(null);
         setDetailBanner(null); setDraft(null); setNudge(null); setToast(null);
         setSafetySubject(null); setShareLoopId(null);
         setScreen(p.land);
       };
 
       const actions = {
-        openCompose, noop, foldIn, leaveLoop, wantThis, openLoop, openNotifications, closeNotifications,
+        openCompose, noop, foldIn, leaveLoop, wantThis, unwant, declineInvite, hype, openLoop, openNotifications, closeNotifications, setHomeChip, goHomeTo, closeFloor, showToast,
         startSpinup, tapNudge, toggleTheme, setTheme:applyTheme, openYou, openClass, goHome,
-        setFeedbackFor, openRate, openSafety, messageCounselor, openShare, addToCalendar, floorSeat, floorUnseat, saveIntent, removeIntent,
+        setFeedbackFor, openRate, openSafety, messageCounselor, openShare, addToCalendar, syncCalendar, dropText, floorWant, floorUnwant, saveIntent, removeIntent,
         checkIn, moveTonight, undoMove, messageCrew, advisorReach,
         openStaff, staffMark, staffSeed, staffEvent, staffBoost, staffDropIn, staffHint, staffAnchorOH, staffReach, schoolAct,
       };
@@ -4680,7 +5251,7 @@
               {screen==='story'  && <StoryOnboarding onDone={storyDone} onBack={()=>setScreen('splash')} theme={theme} startAt={storyStart} />}
               {screen==='setup'  && <Setup onBack={()=>{ setStoryStart(4); setScreen('story'); }} onDone={setupDone} seed={intentSeed} dashes={STORY_DASHES} />}
               {screen==='home'   && user && (
-                <Home state={{ user, viewerId, loops, suggestions, nudge, unread, theme, campus }} actions={actions} />
+                <Home state={{ user, viewerId, loops, suggestions, nudge, unread, theme, campus, homeChip, myIntents, wrapped, feedback }} actions={actions} />
               )}
               {screen==='loop'   && activeLoop && (
                 <LoopDetail loop={activeLoop} viewerId={viewerId} highlightId={highlightId} banner={detailBanner} theme={theme}

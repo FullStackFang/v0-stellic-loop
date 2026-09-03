@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Intent → Anchor → Loop — 2 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 64px; }
+  .wrap{ max-width:1100px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:34px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; color:var(--ink-0); }
+  .gallery-head p{ max-width:66ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+  .ladder{ display:flex; justify-content:center; gap:10px; margin:18px auto 0; flex-wrap:wrap; }
+  .ladder span{ font:600 11.5px/1 var(--font-mono); letter-spacing:.06em; padding:8px 12px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-secondary); }
+  .ladder span b{ color:var(--text-primary); }
+  .ladder i{ font-style:normal; color:var(--ink-4); align-self:center; }
+  .rail{ display:flex; gap:44px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+  .world{ margin:12px 4px 0; display:flex; gap:8px; flex-wrap:wrap; }
+  .world button{ border:1px dashed var(--ink-4); background:transparent; border-radius:999px; padding:7px 11px; font:600 11.5px var(--font-mono); color:var(--text-secondary); cursor:pointer; }
+  .world button:disabled{ opacity:.45; cursor:default; }
+  .world .lbl{ width:100%; font:600 10px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary); }
+
+  .phone{ width:390px; height:800px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:6px 20px 96px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .hicon{ width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); position:relative; cursor:pointer; font-size:16px; }
+  .hicon .dot{ position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:var(--accent); border:2px solid var(--bg-surface); }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  .chips{ display:flex; gap:8px; padding:6px 20px 12px; flex-shrink:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface);
+    font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; transition:all .16s var(--ease-out); }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .chip.ico{ padding:8px 11px; }
+  .chip.pulse{ animation:chippulse .9s var(--ease-out) 1; }
+  @keyframes chippulse{ 0%{ box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent); } 100%{ box-shadow:0 0 0 12px transparent; } }
+  .strip{ display:flex; align-items:center; gap:9px; margin:0 20px; padding:9px 0 8px; border-top:1px solid var(--border-hairline); border-bottom:1px solid var(--border-hairline); cursor:pointer; flex-shrink:0; }
+  .strip .txt{ font-size:13px; font-weight:600; color:var(--text-secondary); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .strip .txt b{ color:var(--text-primary); }
+  .strip .go{ color:var(--text-tertiary); font-size:16px; line-height:1; }
+  .live{ position:relative; width:8px; height:8px; border-radius:50%; background:var(--status-live); display:inline-block; flex-shrink:0; }
+  .live::after{ content:''; position:absolute; inset:0; border-radius:50%; background:var(--status-live); animation:ping 1.8s var(--ease-out) infinite; }
+  @keyframes ping{ 0%{ transform:scale(1); opacity:.5; } 70%{ transform:scale(2.8); opacity:0; } 100%{ opacity:0; } }
+
+  .sechead{ display:flex; align-items:center; gap:8px; margin:18px 2px 10px; }
+  .sechead h3{ font:700 15px/1 var(--font-display); margin:0; }
+  .sechead .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .sechead .d{ width:7px; height:7px; border-radius:50%; }
+  .kick{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px; color:var(--text-tertiary); }
+  .kick .d{ width:6px; height:6px; border-radius:50%; }
+  .title{ font:700 16px/1.2 var(--font-display); letter-spacing:-.01em; margin:6px 0 0; }
+  .sub{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .meter{ height:6px; border-radius:999px; background:var(--bg-sunken); overflow:hidden; margin-top:10px; }
+  .meter > i{ display:block; height:100%; border-radius:999px; background:var(--status-forming); transition:width .5s var(--ease-settle); }
+  .meter.mine > i{ background:var(--accent); }
+  .pill{ display:inline-flex; align-items:center; gap:4px; font:700 9.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:3px 7px; border-radius:999px; flex-shrink:0; }
+  .pill.wait{ color:var(--amber-600); background:color-mix(in srgb,var(--amber) 16%,transparent); }
+  .pill.run{ color:var(--status-live); background:color-mix(in srgb,var(--status-live) 14%,transparent); }
+  .pill.you{ color:var(--accent-strong); background:var(--accent-quiet); }
+  .faces{ display:inline-flex; flex-shrink:0; }
+  .faces i{ width:24px; height:24px; border-radius:50%; background:var(--bg-sunken); border:2px solid var(--bg-surface); margin-left:-7px; font:700 8.5px/1 var(--font-mono); font-style:normal; display:grid; place-items:center; color:var(--text-secondary); }
+  .faces i:first-child{ margin-left:0; }
+  .faces i.me{ background:var(--accent-quiet); color:var(--accent-strong); }
+  .crew{ display:flex; align-items:center; gap:9px; margin-top:12px; font-size:12px; color:var(--text-secondary); }
+  .btn{ margin-top:11px; width:100%; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:12px; padding:9px; font-size:13.5px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.w{ background:color-mix(in srgb,var(--amber) 14%,var(--bg-surface)); border-color:transparent; color:var(--amber-600); }
+  .btn.done{ color:var(--status-live); }
+  .actions{ display:flex; gap:8px; margin-top:14px; }
+  .actions .btn{ margin-top:0; width:auto; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .lnk{ border:0; background:transparent; padding:0; font:700 12px/1 var(--font-sans); color:var(--accent-strong); cursor:pointer; }
+  .lnk.q{ color:var(--text-tertiary); }
+  .empty{ text-align:center; color:var(--text-tertiary); padding:36px 20px; font-size:13px; line-height:1.5; }
+  .empty b{ display:block; color:var(--text-primary); font:700 15px/1.2 var(--font-display); margin-bottom:6px; }
+  @keyframes slidein{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+  .in{ animation:slidein .45s var(--ease-settle) both; }
+
+  /* cards (both directions use these for real loops) */
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:14px 15px; margin-bottom:10px; }
+  .card.forming{ border-style:dashed; background:var(--paper-1); }
+  .card.forming .title{ font-size:15.5px; }
+  .wfoot{ display:flex; align-items:center; justify-content:space-between; margin-top:9px; font-size:12px; color:var(--text-secondary); }
+  .wfoot .fire{ font:500 11.5px/1 var(--font-mono); color:var(--amber-600); }
+  .wfoot .fire.hot{ color:var(--accent-strong); font-weight:700; }
+
+  /* B · anchors as count tiles */
+  .tiles{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .tile{ border:1px solid var(--border-hairline); border-radius:16px; padding:12px 12px 10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:8px; min-width:0; position:relative; }
+  .tile.mine{ border-color:color-mix(in srgb,var(--accent) 40%,var(--border-hairline)); }
+  .tile .t{ font:700 13.5px/1.2 var(--font-sans); overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; min-height:32px; }
+  .tile .s{ font:500 10.5px/1.3 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ring{ --p:0; --c:var(--status-forming); width:44px; height:44px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; position:relative;
+    background:conic-gradient(var(--c) calc(var(--p)*1%), var(--bg-sunken) 0); transition:--p .5s; }
+  .ring::before{ content:''; position:absolute; inset:5px; border-radius:50%; background:var(--bg-surface); }
+  .ring b{ position:relative; font:700 11px/1 var(--font-mono); color:var(--text-primary); }
+  .tile .top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .tile .want{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:10px; padding:7px 6px; font-size:12px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tile .want.on{ border-color:transparent; background:var(--accent-quiet); color:var(--accent-strong); }
+  .tile .want.hot{ background:var(--ink-0); border-color:var(--ink-0); color:var(--paper-0); }
+  .row{ display:flex; align-items:center; gap:12px; padding:12px 2px; border-top:1px solid var(--border-hairline); }
+  .row:first-of-type{ border-top:0; }
+  .row .ic{ width:40px; height:40px; border-radius:12px; background:var(--bg-sunken); display:grid; place-items:center; font-size:17px; flex-shrink:0; }
+  .row .m{ flex:1; min-width:0; }
+  .row .t{ font:600 14.5px/1.2 var(--font-sans); display:flex; align-items:center; gap:7px; min-width:0; }
+  .row .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .join{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:7px 11px; font-size:12px; font-weight:700; color:var(--accent-strong); cursor:pointer; flex-shrink:0; white-space:nowrap; }
+  .join.done{ color:var(--status-live); }
+  /* B · waiting as ring rows */
+  .wrow{ display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--border-hairline); }
+  .wrow:first-of-type{ border-top:0; }
+  .wrow .m{ flex:1; min-width:0; }
+  .wrow .t{ font:600 14.5px/1.2 var(--font-sans); }
+  .wrow .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; }
+  .wrow .s b{ color:var(--amber-600); font-weight:600; }
+
+  /* fire banner (same in both) */
+  .hero{ margin:10px 0 4px; padding:16px 16px 15px; border-radius:20px; background:var(--ink-0); color:var(--paper-0); }
+  .hero .kick{ color:#f2c96b; }
+  .hero .title{ color:var(--paper-0); font-size:20px; display:block; }
+  .hero .sub{ color:var(--paper-3); }
+  .hero .crew{ color:var(--paper-3); }
+  .hero .faces i{ border-color:var(--ink-0); background:var(--ink-2); color:var(--paper-0); }
+  .hero .btn{ background:transparent; border-color:rgba(255,253,248,.28); color:var(--paper-0); }
+  .hero .btn.p{ background:var(--paper-0); border-color:var(--paper-0); color:var(--ink-0); }
+
+  /* upcoming agenda */
+  .glbl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:16px 2px 6px; }
+  .ag{ display:flex; gap:12px; padding:11px 2px; border-top:1px solid var(--border-hairline); align-items:flex-start; }
+  .ag.next{ background:var(--paper-1); border-radius:14px; padding:12px; border-top:0; }
+  .agt{ font:500 12px/1.3 var(--font-mono); color:var(--text-secondary); width:44px; flex-shrink:0; padding-top:2px; }
+  .agm{ flex:1; min-width:0; }
+  .ag .t{ font:600 14.5px/1.2 var(--font-sans); }
+  .ag.next .t{ font:700 16px/1.2 var(--font-display); }
+  .ag .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* search takeover */
+  .overlay{ position:absolute; inset:0; background:var(--bg-surface); display:flex; flex-direction:column; transform:translateY(100%); transition:transform .38s var(--ease-settle); z-index:5; }
+  .overlay[data-open="1"]{ transform:none; }
+  .search{ display:flex; align-items:center; gap:10px; margin:14px 20px 0; background:var(--bg-sunken); border-radius:14px; padding:10px 13px; }
+  .search input{ flex:1; min-width:0; border:0; background:transparent; font:500 14.5px var(--font-sans); color:var(--text-primary); outline:0; }
+  .search input::placeholder{ color:var(--text-tertiary); }
+  .search .x{ font-size:12.5px; font-weight:700; color:var(--accent-strong); cursor:pointer; flex-shrink:0; }
+  .hint{ font-size:12px; color:var(--text-tertiary); margin:8px 22px 0; }
+  .drop{ position:absolute; left:20px; right:20px; bottom:16px; background:var(--accent); color:var(--accent-ink); border:0; border-radius:14px; padding:13px; font:700 14px var(--font-sans); cursor:pointer; box-shadow:0 10px 24px -10px rgba(179,27,27,.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .fab{ position:absolute; right:18px; bottom:76px; width:52px; height:52px; border-radius:18px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font:500 26px/1 var(--font-sans); box-shadow:0 12px 26px -10px rgba(179,27,27,.65); cursor:pointer; z-index:3; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:62px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; z-index:2; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.6 var(--font-sans); color:var(--text-tertiary); }
+  .tabbar div.on{ color:var(--accent); }
+  .tabbar div .g{ font-size:17px; display:block; }
+  .toast{ position:absolute; left:20px; right:20px; top:64px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; z-index:9; opacity:0; transform:translateY(-8px); transition:all .3s var(--ease-settle); pointer-events:none; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); }
+  .toast[data-on="1"]{ opacity:1; transform:none; }
+  .note{ text-align:center; margin-top:30px; color:var(--text-tertiary); font-size:12.5px; max-width:70ch; margin-left:auto; margin-right:auto; line-height:1.5; }
+  @media (prefers-reduced-motion: reduce){ .in,.chip.pulse{ animation:none !important; } .live::after{ animation:none; } .overlay{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · intent → anchor → loop</div>
+    <h1>How a forming anchor reads next to a real loop</h1>
+    <p>Same flow on both phones: your intent is personal, it lands in a shared anchor others can add a yes to, and at quorum the anchor fires and everyone who said yes is asked to join. No Join button exists before the fire. The two directions differ only in whether an anchor borrows the loop card's shape or gets its own.</p>
+    <div class="ladder">
+      <span><b>Intent</b> · yours</span><i>→</i>
+      <span><b>Anchor</b> · shared count</span><i>→</i>
+      <span><b>Fire</b> · at quorum</span><i>→</i>
+      <span><b>Loop</b> · invited, on your week</span>
+    </div>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>A</b> One card family</div>
+        <h2>Anchor is a stripped loop card</h2>
+        <p>Forming and real share the same card silhouette. An anchor is dashed, no faces, a meter and "N of M want it", and its only action is <em>I want this too</em>. A real loop has a rhythm line, faces, a streak, and <em>Join loop</em>. Waiting reuses the same anchor card.</p>
+        <div class="try">try: 🔍 → I want this too on Wed kickboxing (you fire it) → Join</div>
+      </div>
+      <div class="phone" id="phoneA"></div>
+      <div class="world" id="worldA"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>B</b> Two shapes</div>
+        <h2>Anchor is a count tile</h2>
+        <p>Anchors are compact tiles with a ring gauge, two to a row, under "Wanted near you". Real loops are full rows with faces under "Meeting near you". The shapes never overlap, so a count can't be mistaken for a crew. Waiting is a list of ring rows.</p>
+        <div class="try">try: 🔍 → type “climbing” → Drop it → then the 🌍 buttons below</div>
+      </div>
+      <div class="phone" id="phoneB"></div>
+      <div class="world" id="worldB"></div>
+    </div>
+  </div>
+  <div class="note">Data is Sarah on a Thursday. She's in Lift Fridays, and she dropped "jogging every Tuesday" which sits in a 4-of-6 anchor. The 🌍 buttons under each phone are the world moving without her: floormates saying yes. Nothing persists.</div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const CAT = { class:{h:'var(--slate)',i:'📚'}, fitness:{h:'var(--moss)',i:'🏃'}, food:{h:'var(--amber-600)',i:'🍜'}, social:{h:'var(--rose)',i:'🎲'} };
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const TODAY = 3;
+const FACES = ['JP','LO','PR','MD','AR','KT','NB'];
+let uid = 0; const nid = () => 'x' + (++uid);
+
+// One collection. status: forming | active. yes = Sarah said yes; member = Sarah joined after fire.
+const seed = () => ([
+  { id:'lift', t:'Lift Fridays',        c:'fitness', status:'active',  day:'Fri', time:'5:30p', place:'Teagle gym',  n:3, g:6, yes:true,  member:true,  crew:['SC','JP','PR'], streak:4 },
+  { id:'hw',   t:'Sunday HW crew',      c:'class',   status:'active',  day:'Sun', time:'4:00p', place:'Uris',        n:4, g:6, yes:false, member:false, crew:['JP','LO','PR','MD'], streak:12 },
+  { id:'run',  t:'Tuesday morning run', c:'fitness', status:'forming', day:'Tue', time:'7:00a', place:'Beebe Lake',  n:4, g:6, yes:true,  member:false, crew:[], mine:true },
+  { id:'kick', t:'Wed kickboxing',      c:'fitness', status:'forming', day:'Wed', time:'6:30p', place:'Teagle gym',  n:5, g:6, yes:false, member:false, crew:[] },
+  { id:'cof',  t:'Mon coffee',          c:'food',    status:'forming', day:'Mon', time:'9:00a', place:'Libe Café',   n:3, g:6, yes:false, member:false, crew:[] },
+  { id:'econ', t:'ECON 1110 prelim grind', c:'class', status:'forming', day:'Thu', time:'8:00p', place:'Olin',       n:2, g:8, yes:false, member:false, crew:[] },
+]);
+
+function Phone(el, worldEl, dir){
+  const S = { items:seed(), chip:'waiting', search:false, q:'', banner:null, unread:0, pulse:null, toastT:null, toast:null };
+  const get = id => S.items.find(x=>x.id===id);
+  const toast = (t,b) => { S.toast={t,b}; render(); clearTimeout(S.toastT); S.toastT=setTimeout(()=>{ S.toast=null; render(); }, 2600); };
+  const daysOut = d => (DAYS.indexOf(d) - TODAY + 7) % 7;
+  const fmtCrew = it => it.crew.map(f=>`<i class="${f==='SC'?'me':''}">${f}</i>`).join('');
+
+  // ---- the engine: one mutation for want, one for fire ----
+  const fire = (it) => {
+    it.status='active'; it.crew = FACES.slice(0, it.n - 1).concat(it.yes?['SC']:[]); it.member=false; it.streak=null;
+    if (it.yes){ S.banner = it.id; S.unread++; toast('It’s on.', `${it.t} just fired. ${it.n} said yes — you’re asked to join.`); }
+  };
+  const want = (id) => {
+    const it = get(id); if (!it || it.status!=='forming' || it.yes) return;
+    it.n = Math.min(it.g, it.n+1); it.yes = true;
+    if (it.n >= it.g){ S.search=false; S.chip='upcoming'; fire(it); }
+    else { S.pulse='waiting'; toast('You’re in the count.', `${it.n} of ${it.g} — ${it.g-it.n} more fires it. It’s in Waiting.`); }
+    render();
+  };
+  const worldYes = (id, k) => {           // floormates say yes; not Sarah
+    const it = get(id); if (!it || it.status!=='forming') return;
+    it.n = Math.min(it.g, it.n+k);
+    if (it.n >= it.g){ S.search=false; if(it.yes){ S.chip='upcoming'; } fire(it); }
+    else toast('Someone near you said yes.', `${it.t} is at ${it.n} of ${it.g}.`);
+    render();
+  };
+  const unyes = (id) => { const it=get(id); if(!it) return; it.yes=false; it.n=Math.max(0,it.n-1); if(it.mine){ S.items=S.items.filter(x=>x.id!==id); } toast('Not anymore.', 'Your yes is gone. Nobody sees a thing.'); render(); };
+  const join = (id) => { const it=get(id); if(!it) return; it.member=true; if(!it.crew.includes('SC')) it.crew.push('SC'); S.banner=null; S.chip='upcoming'; S.pulse='upcoming'; toast(`Joined — ${it.t}`, 'On your week. Same faces, every week.'); render(); };
+  const notNow = () => { S.banner=null; toast('Left it open.', 'It’s still meeting. Join from 🔍 any time this week.'); render(); };
+  const drop = () => {
+    const raw = S.q.trim(); if (!raw) return;
+    const hit = S.items.find(x => x.status==='forming' && x.t.toLowerCase().includes(raw.toLowerCase()));
+    if (hit){ if(!hit.yes) want(hit.id); else toast('Already yours.', `${hit.t} is in Waiting at ${hit.n} of ${hit.g}.`); S.search=false; S.q=''; S.chip='waiting'; render(); return; }
+    const t = raw.charAt(0).toUpperCase()+raw.slice(1);
+    const c = /run|jog|climb|box|lift|yoga|swim/i.test(raw)?'fitness':/dinner|coffee|ramen|food|brunch/i.test(raw)?'food':/\b[a-z]{2,5}\s?\d{4}\b/i.test(raw)?'class':'social';
+    S.items.unshift({ id:nid(), t, c, status:'forming', day:'Thu', time:'7:00p', place:'TBD · snaps in at fire', n:1, g:6, yes:true, member:false, crew:[], mine:true });
+    S.search=false; S.q=''; S.chip='waiting'; S.pulse='waiting';
+    toast('Dropped.', `You’re the 1st of 6. We’ll tell you when it fires.`); render();
+  };
+
+  // ---- renderers ----
+  const anchorCardA = (it, ctx) => {
+    const near = it.g - it.n === 1;
+    return `<div class="card forming in" data-id="${it.id}">
+      <div class="kick"><span class="d" style="background:var(--status-forming)"></span>forming · ${ctx==='waiting'?'your intent':'donlon 2f'}${it.yes?' · <span style="color:var(--accent-strong)">yours</span>':''}</div>
+      <div class="title">${esc(it.t)}</div>
+      <div class="sub">${it.day} · ${it.time} · ${esc(it.place)}</div>
+      <div class="meter ${it.yes?'mine':''}"><i style="width:${Math.round(it.n/it.g*100)}%"></i></div>
+      <div class="wfoot"><span><b class="mono">${it.n}</b> of ${it.g} want it</span><span class="fire ${near?'hot':''}">${near?(it.yes?'1 more fires it':'you’d fire it'):`${it.g-it.n} more fires it`}</span></div>
+      ${it.yes
+        ? `<div class="actions"><button class="btn done" disabled>✓ You’re in the count</button><button class="btn" data-act="unyes" style="flex:0 0 auto">Not anymore</button></div>`
+        : `<button class="btn w" data-act="want">＋ I want this too</button>`}
+    </div>`;
+  };
+  const loopCard = (it) => `<div class="card in" data-id="${it.id}">
+      <div class="kick"><span class="d" style="background:var(--status-live)"></span>meets weekly · donlon 2f</div>
+      <div class="title">${esc(it.t)}</div>
+      <div class="sub">${it.day} · ${it.time} · ${esc(it.place)}</div>
+      <div class="crew"><span class="faces">${fmtCrew(it)}</span><span>${it.crew.length} in${it.streak?` · ${it.streak}-wk streak`:' · just fired'}</span></div>
+      ${it.member ? `<button class="btn done" disabled>✓ On your week</button>` : `<button class="btn p" data-act="join">Join loop</button>`}
+    </div>`;
+  const tileB = (it) => {
+    const near = it.g - it.n === 1, pct = Math.round(it.n/it.g*100);
+    return `<div class="tile in ${it.yes?'mine':''}" data-id="${it.id}">
+      <div class="top"><div class="t">${esc(it.t)}</div><div class="ring" style="--p:${pct};--c:${it.yes?'var(--accent)':'var(--status-forming)'}"><b>${it.n}/${it.g}</b></div></div>
+      <div class="s">${it.day} · ${it.time}${near?' · 1 to fire':''}</div>
+      ${it.yes ? `<button class="want on" data-act="unyes">✓ you want this</button>` : `<button class="want ${near?'hot':''}" data-act="want">${near?'＋ you’d fire it':'＋ I want this too'}</button>`}
+    </div>`;
+  };
+  const loopRowB = (it) => `<div class="row in" data-id="${it.id}">
+      <div class="ic">${CAT[it.c].i}</div>
+      <div class="m"><div class="t">${esc(it.t)}</div><div class="s">${it.day} · ${it.time} · ${it.crew.length} in${it.streak?` · ${it.streak}-wk`:''}</div></div>
+      <span class="faces">${fmtCrew(it)}</span>
+      ${it.member ? `<button class="join done" disabled>✓ in</button>` : `<button class="join" data-act="join">Join loop</button>`}
+    </div>`;
+  const waitRowB = (it) => `<div class="wrow in" data-id="${it.id}">
+      <div class="ring" style="--p:${Math.round(it.n/it.g*100)};--c:var(--accent)"><b>${it.n}/${it.g}</b></div>
+      <div class="m"><div class="t">${esc(it.t)}</div><div class="s">${it.day} · ${it.time} · <b>${it.g-it.n===1?'1 more fires it':`${it.g-it.n} more fires it`}</b></div></div>
+      <button class="lnk q" data-act="unyes">Not anymore</button>
+    </div>`;
+
+  const banner = () => { const it = S.banner && get(S.banner); if(!it) return '';
+    return `<div class="hero in" data-id="${it.id}">
+      <div class="kick"><span class="d" style="background:#f2c96b"></span>it’s on · fired just now</div>
+      <div class="title">${esc(it.t)}</div>
+      <div class="sub">${it.day} · ${it.time} · ${esc(it.place)} · weekly</div>
+      <div class="crew"><span class="faces">${fmtCrew(it)}</span><span>${it.n} said yes — you’re one of them</span></div>
+      <div class="actions"><button class="btn p" data-act="join">Join · add to your week</button><button class="btn" data-act="notnow" style="flex:0 0 auto">Not now</button></div>
+    </div>`; };
+
+  const upcoming = () => {
+    const mine = S.items.filter(x=>x.status==='active' && x.member).sort((a,b)=>daysOut(a.day)-daysOut(b.day));
+    if (!mine.length) return `<div class="empty"><b>Nothing on your week yet</b>Say yes to something forming, or drop what you want.</div>`;
+    return mine.map((it,i)=>`<div class="glbl">${daysOut(it.day)===0?'Today · ':daysOut(it.day)===1?'Tomorrow · ':''}${it.day}${i===0?'<span style="margin-left:auto;color:var(--status-live)">next up</span>':''}</div>
+      <div class="ag ${i===0?'next':''}"><div class="agt">${it.time}</div><div class="agm"><div class="t">${esc(it.t)}</div><div class="s">${esc(it.place)} · ${it.crew.length} in${it.streak?` · ${it.streak}-wk streak`:' · first meet'}</div>
+      ${i===0?`<div class="crew"><span class="faces">${fmtCrew(it)}</span></div>`:''}</div></div>`).join('');
+  };
+  const waiting = () => {
+    const mine = S.items.filter(x=>x.status==='forming' && x.yes);
+    const head = `<p class="sub" style="margin:4px 0 10px">What you said you want. Each one is counting toward an anchor near you; when it fires, you’re asked to join.</p>`;
+    if (!mine.length) return head + `<div class="empty"><b>Nothing waiting</b>Tap 🔍 and say what you’re up for.</div>`;
+    return head + (dir==='A' ? mine.map(it=>anchorCardA(it,'waiting')).join('') : mine.map(waitRowB).join(''));
+  };
+  const past = () => `<div class="row"><div class="ic">🍜</div><div class="m"><div class="t">North dinner table</div><div class="s">wrapped · 8 weeks</div></div></div>`;
+
+  const feed = () => {
+    const q = S.q.trim().toLowerCase();
+    const forming = S.items.filter(x=>x.status==='forming' && (!q || x.t.toLowerCase().includes(q)));
+    const meeting = S.items.filter(x=>x.status==='active' && !x.member && (!q || x.t.toLowerCase().includes(q)));
+    if (dir==='A') return `
+      ${forming.length?`<div class="sechead"><span class="d" style="background:var(--status-forming)"></span><h3>Forming near you</h3><span class="c">no crew yet</span></div>${forming.map(it=>anchorCardA(it,'feed')).join('')}`:''}
+      ${meeting.length?`<div class="sechead"><span class="live"></span><h3>Meeting near you</h3><span class="c">real loops</span></div>${meeting.map(loopCard).join('')}`:''}`;
+    return `
+      ${forming.length?`<div class="sechead"><span class="d" style="background:var(--status-forming)"></span><h3>Wanted near you</h3><span class="c">counts, not crews</span></div><div class="tiles">${forming.map(tileB).join('')}</div>`:''}
+      ${meeting.length?`<div class="sechead"><span class="live"></span><h3>Meeting near you</h3><span class="c">join any time</span></div>${meeting.map(loopRowB).join('')}`:''}`;
+  };
+
+  function render(){
+    const nUp = S.items.filter(x=>x.status==='active'&&x.member).length, nWait = S.items.filter(x=>x.status==='forming'&&x.yes).length;
+    const nForm = S.items.filter(x=>x.status==='forming').length;
+    const q = S.q.trim(); const exact = q && S.items.some(x=>x.status==='forming'&&x.t.toLowerCase().includes(q.toLowerCase()));
+    el.innerHTML = `
+      <div class="status"><span>9:41</span><span>●●● ▲ ▮</span></div>
+      <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:4px"><div class="hicon" data-act="bell">🔔${S.unread?'<span class="dot"></span>':''}</div><div class="hicon" style="background:var(--accent-quiet);color:var(--accent-strong);font:700 11px var(--font-mono)">SC</div></div></div>
+      <div class="chips">
+        <div class="chip ico" data-act="search">🔍</div>
+        <div class="chip ${S.pulse==='upcoming'?'pulse':''}" data-on="${S.chip==='upcoming'?1:0}" data-chip="upcoming">Upcoming <span class="n">${nUp}</span></div>
+        <div class="chip ${S.pulse==='waiting'?'pulse':''}" data-on="${S.chip==='waiting'?1:0}" data-chip="waiting">Waiting <span class="n">${nWait}</span></div>
+        <div class="chip" data-on="${S.chip==='past'?1:0}" data-chip="past">Past <span class="n">1</span></div>
+      </div>
+      <div class="strip" data-act="search"><span class="live"></span><span class="txt"><b>${nForm} forming</b> near you · 2 meeting</span><span class="go">›</span></div>
+      <div class="scroll"><div class="pad">
+        ${banner()}
+        ${S.chip==='upcoming'?upcoming():S.chip==='waiting'?waiting():past()}
+      </div></div>
+      <div class="fab" data-act="search">+</div>
+      <div class="tabbar"><div class="on"><span class="g">⌂</span>Home</div><div><span class="g">◎</span>Belonging</div><div><span class="g">☰</span>You</div></div>
+      <div class="overlay" data-open="${S.search?1:0}">
+        <div class="status"><span>9:41</span><span>●●● ▲ ▮</span></div>
+        <div class="search"><span>🔍</span><input id="q" placeholder="What are you up for?" value="${esc(S.q)}" /><span class="x" data-act="close">Done</span></div>
+        <div class="hint">${q ? (exact ? 'Matches something forming — tap it, or Drop to add your yes.' : 'Nothing like that yet. Drop it and you’re the 1st of 6.') : 'Type what you want, or add a yes to something below.'}</div>
+        <div class="scroll"><div class="pad">${feed()}</div></div>
+        ${q ? `<button class="drop" data-act="drop">${exact?'Drop it · add your yes':`Drop “${esc(q)}” · you’d be 1 of 6`}</button>` : ''}
+      </div>
+      <div class="toast" data-on="${S.toast?1:0}">${S.toast?`<b>${esc(S.toast.t)}</b>${esc(S.toast.b)}`:''}</div>`;
+    S.pulse = null;
+    const inp = el.querySelector('#q'); if (inp && S.search){ const at = inp.value.length; inp.focus(); inp.setSelectionRange(at,at); }
+    worldEl.innerHTML = `<span class="lbl">🌍 the world moves without Sarah</span>
+      <button data-w="run" ${get('run')?.status!=='forming'?'disabled':''}>2 floormates say yes to Tuesday jogging</button>
+      <button data-w="cof" ${get('cof')?.status!=='forming'?'disabled':''}>3 floormates want Mon coffee</button>
+      <button data-w="reset">reset</button>`;
+  }
+
+  el.addEventListener('click', e => {
+    const a = e.target.closest('[data-act]'); const chip = e.target.closest('[data-chip]');
+    if (chip){ S.chip = chip.dataset.chip; S.banner = S.banner; render(); return; }
+    if (!a) return;
+    const id = a.closest('[data-id]')?.dataset.id; const act = a.dataset.act;
+    if (act==='search'){ S.search=true; render(); }
+    else if (act==='close'){ S.search=false; render(); }
+    else if (act==='drop'){ drop(); }
+    else if (act==='want'){ want(id); }
+    else if (act==='unyes'){ unyes(id); }
+    else if (act==='join'){ join(id); }
+    else if (act==='notnow'){ notNow(); }
+    else if (act==='bell'){ S.unread=0; if (S.banner) S.chip='upcoming'; else toast('Nothing new.', 'When an anchor you want fires, it lands here.'); render(); }
+  });
+  el.addEventListener('input', e => { if (e.target.id==='q'){ S.q = e.target.value; render(); } });
+  el.addEventListener('keydown', e => { if (e.target.id==='q' && e.key==='Enter') drop(); });
+  worldEl.addEventListener('click', e => {
+    const b = e.target.closest('[data-w]'); if(!b) return;
+    if (b.dataset.w==='reset'){ Object.assign(S, { items:seed(), chip:'waiting', search:false, q:'', banner:null, unread:0 }); render(); return; }
+    worldYes(b.dataset.w, b.dataset.w==='run'?2:3);
+  });
+  render();
+}
+Phone(document.getElementById('phoneA'), document.getElementById('worldA'), 'A');
+Phone(document.getElementById('phoneB'), document.getElementById('worldB'), 'B');
+</script>
+</body>
+</html>

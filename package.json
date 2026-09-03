@@ -1,0 +1,7 @@
+{
+  "name": "v0-stellic-loop",
+  "private": true,
+  "scripts": {
+    "demo": "npx --yes serve . -l 3000"
+  }
+}

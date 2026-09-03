@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Where your stuff lives — 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 64px; }
+  .wrap{ max-width:1280px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:34px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; color:var(--ink-0); }
+  .gallery-head p{ max-width:64ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:376px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  .phone{ width:376px; height:756px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:6px 20px 96px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .hicon{ width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); }
+  .avatar{ width:30px; height:30px; border-radius:50%; background:var(--accent-quiet); color:var(--accent-strong); font:700 11px/1 var(--font-mono); display:grid; place-items:center; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  /* Partiful-style category row */
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:6px 20px 12px; scrollbar-width:none; flex-shrink:0; }
+  .chips::-webkit-scrollbar{ height:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; padding:8px 13px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface);
+    font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; transition:all .16s var(--ease-out); }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .chip.ico{ padding:8px 11px; }
+  .chip.pulse{ animation:chippulse .9s var(--ease-out) 1; }
+  @keyframes chippulse{ 0%{ box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent); } 100%{ box-shadow:0 0 0 12px transparent; } }
+
+  /* rows */
+  .sechead{ display:flex; align-items:center; gap:8px; margin:18px 2px 10px; }
+  .sechead h3{ font:700 15px/1 var(--font-display); margin:0; }
+  .sechead .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .sechead .lnk{ margin-left:auto; font-size:12px; font-weight:700; color:var(--accent-strong); cursor:pointer; }
+  .row{ display:flex; align-items:center; gap:12px; padding:12px 2px; border-top:1px solid var(--border-hairline); cursor:pointer; }
+  .row:first-child{ border-top:0; }
+  .row .ic{ width:40px; height:40px; border-radius:12px; background:var(--bg-sunken); display:grid; place-items:center; font-size:17px; flex-shrink:0; position:relative; overflow:hidden; }
+  .row .ic > i{ position:absolute; left:0; right:0; bottom:0; background:var(--accent); opacity:.28; }
+  .row .ic > b{ position:absolute; inset:0; display:grid; place-items:center; font:500 11px/1 var(--font-mono); color:var(--text-primary); }
+  .row .m{ flex:1; min-width:0; }
+  .row .t{ font:600 14.5px/1.2 var(--font-sans); display:flex; align-items:center; gap:7px; }
+  .row .t .d{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .row .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; }
+  .row .go{ color:var(--text-tertiary); font-size:18px; }
+  .row .join{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:7px 11px; font-size:12px; font-weight:700; color:var(--accent-strong); cursor:pointer; flex-shrink:0; }
+  .pill{ display:inline-flex; align-items:center; gap:4px; font:700 9.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:3px 7px; border-radius:999px; }
+  .pill.wait{ color:var(--amber-600); background:color-mix(in srgb,var(--amber) 16%,transparent); }
+  .pill.run{ color:var(--status-live); background:color-mix(in srgb,var(--status-live) 14%,transparent); }
+  .pill.you{ color:var(--accent-strong); background:var(--accent-quiet); }
+  .empty{ text-align:center; color:var(--text-tertiary); padding:44px 20px; font-size:13px; line-height:1.5; }
+  .empty b{ display:block; color:var(--text-primary); font:700 15px/1.2 var(--font-display); margin-bottom:6px; }
+  @keyframes flash{ 0%{ background:var(--accent-quiet); } 100%{ background:transparent; } }
+  .flash{ animation:flash 1.4s var(--ease-out) both; border-radius:12px; }
+  @keyframes slidein{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+  .in{ animation:slidein .45s var(--ease-settle) both; }
+
+  /* your-week block (B) */
+  .block{ background:var(--bg-surface); border:1px solid var(--accent-quiet); border-radius:20px; padding:4px 14px; margin-top:8px; box-shadow:0 1px 0 var(--accent-quiet); }
+  .block .row{ padding:11px 0; }
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:14px 15px; margin-bottom:10px; }
+  .kick{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px; }
+  .kick .d{ width:6px; height:6px; border-radius:50%; }
+  .title{ font:700 16px/1.2 var(--font-display); letter-spacing:-.01em; margin:6px 0 0; }
+  .sub{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .meter{ height:6px; border-radius:999px; background:var(--bg-sunken); overflow:hidden; margin-top:10px; }
+  .meter > i{ display:block; height:100%; border-radius:999px; background:var(--accent); }
+  .btn{ margin-top:11px; width:100%; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:12px; padding:9px; font-size:13.5px; font-weight:700; color:var(--text-primary); cursor:pointer; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
+  /* segmented (C) */
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; margin-top:6px; }
+  .seg button{ flex:1; border:0; background:transparent; border-radius:9px; padding:8px 4px; font-size:12px; font-weight:600; color:var(--text-secondary); cursor:pointer; display:inline-flex; justify-content:center; gap:5px; }
+  .seg button .n{ font:500 11px/1.4 var(--font-mono); color:var(--text-tertiary); }
+  .seg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+
+  /* search overlay (A) */
+  .overlay{ position:absolute; inset:0; background:var(--bg-surface); display:flex; flex-direction:column; transform:translateY(100%); transition:transform .38s var(--ease-settle); z-index:5; }
+  .overlay[data-open="1"]{ transform:none; }
+  .search{ display:flex; align-items:center; gap:10px; margin:6px 20px 0; background:var(--bg-sunken); border-radius:14px; padding:10px 13px; }
+  .search input{ flex:1; border:0; background:transparent; font:500 14.5px var(--font-sans); color:var(--text-primary); outline:0; }
+  .search .x{ font-size:12.5px; font-weight:700; color:var(--accent-strong); cursor:pointer; }
+  .hint{ font-size:12px; color:var(--text-tertiary); margin:8px 22px 0; }
+  .drop{ position:absolute; left:20px; right:20px; bottom:16px; background:var(--accent); color:var(--accent-ink); border:0; border-radius:14px; padding:13px; font:700 14px var(--font-sans); cursor:pointer; box-shadow:0 10px 24px -10px rgba(179,27,27,.6); }
+
+  .fab{ position:absolute; right:18px; bottom:76px; width:52px; height:52px; border-radius:18px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font:500 26px/1 var(--font-sans); box-shadow:0 12px 26px -10px rgba(179,27,27,.65); cursor:pointer; z-index:3; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:62px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; z-index:2; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.6 var(--font-sans); color:var(--text-tertiary); cursor:pointer; }
+  .tabbar div.on{ color:var(--accent); }
+  .tabbar div .g{ font-size:17px; display:block; }
+  .toast{ position:absolute; left:20px; right:20px; top:64px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; z-index:9; opacity:0; transform:translateY(-8px); transition:all .3s var(--ease-settle); pointer-events:none; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); }
+  .toast[data-on="1"]{ opacity:1; transform:none; }
+  .note{ text-align:center; margin-top:30px; color:var(--text-tertiary); font-size:12.5px; }
+  @media (prefers-reduced-motion: reduce){ .in,.flash,.chip.pulse{ animation:none !important; } .overlay{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · Where your stuff lives</div>
+    <h1>Three ways to keep your loops and intents one tap away</h1>
+    <p>Today a dropped intent only exists on the Floor, then hides under You → Intents. Commitment apps (Partiful, Luma, Airbnb Trips) put <em>yours</em> on the first screen and let discovery sit beside it. Each phone is clickable: switch chips, join a row, tap ＋ to drop an intent and watch where it lands.</p>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>A</b> Partiful row</div>
+        <h2>Chips over one list</h2>
+        <p>Home is one scrollable list with a Partiful-style category row: 🔍 · Upcoming · Waiting · Near you · Past, counts on each. 🔍 opens the intent composer full-height, and its result is the Floor. You tab becomes profile and safety only.</p>
+        <div class="try">try: tap 🔍 → Drop it · tap Join on a Near you row</div>
+      </div>
+      <div class="phone" id="phoneA"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>B</b> Luma / Meetup</div>
+        <h2>“Your week” pinned above the feed</h2>
+        <p>The discovery feed stays as is. A pinned block at the top lists your running loops and waiting intents together, tappable, with a “See all” into You. Least change, one glance answers “what did I sign up for?”</p>
+        <div class="try">try: tap ＋ to drop an intent · watch the block</div>
+      </div>
+      <div class="phone" id="phoneB"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>C</b> Airbnb Trips</div>
+        <h2>“Mine” as its own tab</h2>
+        <p>Bottom bar gains a Mine tab: Upcoming · Waiting · Past, defaulting to Upcoming. Dropping an intent lands you on Mine → Waiting so you see it exist. Home stays pure discovery; profile stays in the avatar.</p>
+        <div class="try">try: switch Home / Mine · tap ＋ from Home</div>
+      </div>
+      <div class="phone" id="phoneC"></div>
+    </div>
+  </div>
+  <div class="note">Data is Sarah after joining Lift Fridays and dropping “Dinner Thursdays.” Nothing persists.</div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const HUE = { move:'var(--moss)', dine:'var(--amber-600)', study:'var(--slate)', social:'var(--rose)' };
+const ICO = { move:'🏋️', dine:'🍜', study:'📚', social:'🎲' };
+const seed = () => ({
+  upcoming: [ { t:'Lift Fridays', s:'Fri · 2× a week · Teagle', c:'move', n:1 } ],
+  waiting:  [ { t:'Dinner Thursdays', s:'weekly · your floor · open to all', c:'dine', n:6, g:8 },
+              { t:'CS 2110 grind', s:'weekly · CS majors · @Uris', c:'study', n:9, g:10 } ],
+  near:     [ { t:'Study sessions', s:'weekly · CS majors · @evening', c:'study', n:9, g:10 },
+              { t:'Wed kickboxing', s:'weekly · Donlon · @Teagle gym', c:'move', n:7, g:10 },
+              { t:'Mon coffee', s:'weekly · your floor · @morning', c:'dine', n:3, g:6 },
+              { t:'Sat bouldering', s:'weekly · Class of ’30 · @Lindseth', c:'move', n:5, g:8 },
+              { t:'Tue run', s:'2× a week · Donlon · @morning', c:'move', n:4, g:8 } ],
+  past:     [ { t:'Sunday HW crew', s:'wrapped · 12 weeks', c:'study' }, { t:'North dinner table', s:'wrapped · 8 weeks', c:'dine' }, { t:'Beebe run', s:'wrapped · 6 weeks', c:'move' } ],
+});
+let dropN = 0;
+const newIntent = () => { dropN++; const o=[{ t:'Ramen run', s:'Fridays · weekly · your floor', c:'dine', n:2, g:8 },{ t:'Smash after psets', s:'Wednesdays · weekly · Donlon', c:'social', n:1, g:6 }][dropN%2]; return { ...o, fresh:true }; };
+
+const rowUpcoming = x => `<div class="row"><div class="ic">${ICO[x.c]}</div><div class="m"><div class="t"><span class="d" style="background:${HUE[x.c]}"></span>${esc(x.t)}<span class="pill run">running</span></div><div class="s">${esc(x.s)}</div></div><span class="go">›</span></div>`;
+const rowWaiting = x => `<div class="row ${x.fresh?'flash in':''}"><div class="ic"><i style="height:${Math.round(x.n/x.g*100)}%"></i><b>${x.n}/${x.g}</b></div><div class="m"><div class="t"><span class="d" style="background:${HUE[x.c]}"></span>${esc(x.t)}<span class="pill wait">waiting</span></div><div class="s">${esc(x.s)} · ${x.g-x.n} more fires it</div></div><span class="go">›</span></div>`;
+const rowNear = (x,i,joinable) => `<div class="row"><div class="ic"><i style="height:${Math.round(x.n/x.g*100)}%"></i><b>${x.n}/${x.g}</b></div><div class="m"><div class="t"><span class="d" style="background:${HUE[x.c]}"></span>${esc(x.t)}${x.n>=x.g-1?'<span class="pill you">1 to fire</span>':''}</div><div class="s">${esc(x.s)}</div></div>${joinable?`<button class="join" data-join="${i}">Join</button>`:'<span class="go">›</span>'}</div>`;
+const rowPast = x => `<div class="row"><div class="ic" style="opacity:.6">${ICO[x.c]}</div><div class="m"><div class="t" style="color:var(--text-secondary)">${esc(x.t)}</div><div class="s">${esc(x.s)} · tap to rate</div></div><span class="go">›</span></div>`;
+const tabbar = (on, tabs) => `<div class="tabbar">${tabs.map(([k,g,l])=>`<div class="${k===on?'on':''}" data-tab="${k}"><span class="g">${g}</span>${l}</div>`).join('')}</div>`;
+function toast(el, title, body){ const t=el.querySelector('.toast'); t.innerHTML=`<b>${esc(title)}</b>${esc(body)}`; t.dataset.on=1; clearTimeout(t._t); t._t=setTimeout(()=>t.dataset.on=0, 2600); }
+
+/* ============ A · PARTIFUL ROW ============ */
+function buildA(){
+  const el=document.getElementById('phoneA'); const D=seed(); let chip='upcoming';
+  el.innerHTML=`
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
+    <div class="chips" id="aChips"></div>
+    <div class="scroll"><div class="pad" id="aList"></div></div>
+    <div class="fab" id="aFab">＋</div>
+    ${tabbar('home',[['home','◉','Home'],['class','◈','Class'],['you','○','You']])}
+    <div class="overlay" id="aOv">
+      <div class="status"><span>9:41</span><span>5G</span></div>
+      <div class="search"><span>🔍</span><input placeholder="What are you trying to make happen?" value="dinner on Thursdays"><span class="x" id="aClose">Cancel</span></div>
+      <div class="hint">@ pins what fires matching · the rest travels as your note</div>
+      <div class="scroll"><div class="pad" id="aRes"></div></div>
+      <button class="drop" id="aDrop">Drop it · 10 near you fit this</button>
+    </div>
+    <div class="toast"></div>`;
+  const chips=el.querySelector('#aChips'), list=el.querySelector('#aList'), ov=el.querySelector('#aOv');
+  function renderChips(){
+    const cs=[['upcoming','Upcoming',D.upcoming.length],['waiting','Waiting',D.waiting.length],['near','Near you',null],['past','Past',D.past.length]];
+    chips.innerHTML=`<button class="chip ico" id="aSearch">🔍</button>`+cs.map(([k,l,n])=>`<button class="chip" data-on="${k===chip?1:0}" data-k="${k}">${l}${n!=null?`<span class="n">${n}</span>`:''}</button>`).join('');
+    chips.querySelectorAll('[data-k]').forEach(c=>c.onclick=()=>{ chip=c.dataset.k; render(); });
+    chips.querySelector('#aSearch').onclick=()=>openSearch();
+  }
+  function render(){
+    renderChips();
+    if(chip==='upcoming') list.innerHTML=`<div class="sechead"><h3>On your week</h3><span class="c">next meets first</span></div>`+(D.upcoming.map(rowUpcoming).join('')||`<div class="empty"><b>Nothing on your week yet</b>Join something near you, or drop an intent.</div>`);
+    if(chip==='waiting') list.innerHTML=`<div class="sechead"><h3>Waiting to fire</h3><span class="c">your intents</span></div>`+(D.waiting.map(rowWaiting).join('')||`<div class="empty"><b>No intents waiting</b>Tap 🔍 and say what you want.</div>`);
+    if(chip==='near') list.innerHTML=`<div class="sechead"><h3>Forming near you</h3><span class="c">Donlon 2F · North</span></div>`+D.near.map((x,i)=>rowNear(x,i,true)).join('');
+    if(chip==='past') list.innerHTML=`<div class="sechead"><h3>Past loops</h3><span class="c">${D.past.length} wrapped</span></div>`+D.past.map(rowPast).join('');
+    D.waiting.forEach(x=>x.fresh=false);
+    list.querySelectorAll('[data-join]').forEach(b=>b.onclick=()=>{ const x=D.near.splice(+b.dataset.join,1)[0]; D.upcoming.unshift({ ...x, s:x.s }); chip='upcoming'; render(); chips.querySelector('[data-k="upcoming"]').classList.add('pulse'); toast(el,'Added to your week','You’re in the '+x.t+' loop.'); });
+  }
+  function openSearch(){ el.querySelector('#aRes').innerHTML=`<div class="sechead"><h3>What your intent lands in</h3><span class="c">closest first</span></div>`+D.near.filter(x=>x.c==='dine').concat(D.near.filter(x=>x.c!=='dine')).map((x,i)=>rowNear(x,i,false)).join(''); ov.dataset.open=1; }
+  el.querySelector('#aClose').onclick=()=>ov.dataset.open=0;
+  el.querySelector('#aFab').onclick=openSearch;
+  el.querySelector('#aDrop').onclick=()=>{ ov.dataset.open=0; D.waiting.unshift(newIntent()); chip='waiting'; render(); chips.querySelector('[data-k="waiting"]').classList.add('pulse'); toast(el,'Dropped','It waits on your floor until enough people want it.'); };
+  render();
+}
+
+/* ============ B · YOUR WEEK BLOCK ============ */
+function buildB(){
+  const el=document.getElementById('phoneB'); const D=seed();
+  el.innerHTML=`
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
+    <div class="scroll"><div class="pad" id="bBody"></div></div>
+    <div class="fab" id="bFab">＋</div>
+    ${tabbar('home',[['home','◉','Home'],['class','◈','Class'],['you','○','You']])}
+    <div class="toast"></div>`;
+  const body=el.querySelector('#bBody');
+  function render(){
+    const mine=D.upcoming.map(rowUpcoming).join('')+D.waiting.map(rowWaiting).join('');
+    body.innerHTML=`
+      <div class="sechead" style="margin-top:6px"><h3>Your week</h3><span class="c">${D.upcoming.length} running · ${D.waiting.length} waiting</span></div>
+      <div class="block">${mine}<div class="row" style="justify-content:center;padding:10px 0"><span style="font-size:12.5px;font-weight:700;color:var(--accent-strong)">See all, incl. ${D.past.length} past →</span></div></div>
+      <div class="sechead" style="margin-top:22px"><h3>Forming near you</h3><span class="c">4 live</span></div>
+      ${D.near.slice(0,4).map(x=>`<div class="card"><span class="kick" style="color:${HUE[x.c]}"><span class="d" style="background:${HUE[x.c]}"></span>${x.c==='study'?'class':x.c==='move'?'fitness':'food'} · Donlon 2F</span><h3 class="title">${esc(x.t)}</h3><div class="sub">${esc(x.s)}</div><div class="meter"><i style="width:${Math.round(x.n/x.g*100)}%"></i></div><button class="btn p">I want this too</button></div>`).join('')}`;
+    D.waiting.forEach(x=>x.fresh=false);
+  }
+  el.querySelector('#bFab').onclick=()=>{ D.waiting.unshift(newIntent()); render(); el.querySelector('.scroll').scrollTo({top:0,behavior:'smooth'}); toast(el,'Dropped','Waiting on your week until it fires.'); };
+  render();
+}
+
+/* ============ C · MINE TAB ============ */
+function buildC(){
+  const el=document.getElementById('phoneC'); const D=seed(); let tab='home', seg='upcoming';
+  el.innerHTML=`
+    <div class="status"><span>9:41</span><span>5G</span></div>
+    <div class="apphead" id="cHead"></div>
+    <div id="cSeg" style="padding:0 20px"></div>
+    <div class="scroll"><div class="pad" id="cBody"></div></div>
+    <div class="fab" id="cFab">＋</div>
+    <div id="cTabs"></div>
+    <div class="toast"></div>`;
+  const body=el.querySelector('#cBody');
+  function render(){
+    el.querySelector('#cHead').innerHTML=`<span class="wordmark">${tab==='mine'?'Mine':'Loop'}<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div>`;
+    el.querySelector('#cTabs').innerHTML=tabbar(tab,[['home','◉','Home'],['mine','◎','Mine'],['class','◈','Class']]);
+    el.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>{ tab=t.dataset.tab==='class'?tab:t.dataset.tab; render(); });
+    if(tab==='home'){
+      el.querySelector('#cSeg').innerHTML='';
+      body.innerHTML=`<div style="display:flex;align-items:center;gap:9px;margin:4px 2px 0"><span style="width:8px;height:8px;border-radius:50%;background:var(--status-live);display:inline-block"></span><span style="font:700 15px/1.2 var(--font-display)">${D.near.length} activities forming near you</span></div><div class="sub" style="margin:3px 2px 0">Donlon 2F · live now</div>
+        <div style="margin-top:14px">${D.near.map(x=>`<div class="card"><span class="kick" style="color:${HUE[x.c]}"><span class="d" style="background:${HUE[x.c]}"></span>${x.c==='study'?'class':x.c==='move'?'fitness':'food'} · Donlon 2F</span><h3 class="title">${esc(x.t)}</h3><div class="sub">${esc(x.s)}</div><div class="meter"><i style="width:${Math.round(x.n/x.g*100)}%"></i></div><button class="btn p">I want this too</button></div>`).join('')}</div>`;
+    } else {
+      const segs=[['upcoming','Upcoming',D.upcoming.length],['waiting','Waiting',D.waiting.length],['past','Past',D.past.length]];
+      el.querySelector('#cSeg').innerHTML=`<div class="seg">${segs.map(([k,l,n])=>`<button data-on="${k===seg?1:0}" data-s="${k}">${l}<span class="n">${n}</span></button>`).join('')}</div>`;
+      el.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{ seg=b.dataset.s; render(); });
+      body.innerHTML = seg==='upcoming' ? `<div class="sechead"><h3>On your week</h3><span class="c">next meets first</span></div>`+D.upcoming.map(rowUpcoming).join('')
+        : seg==='waiting' ? `<div class="sechead"><h3>Waiting to fire</h3><span class="c">your intents</span></div>`+D.waiting.map(rowWaiting).join('')
+        : `<div class="sechead"><h3>Past loops</h3><span class="c">${D.past.length} wrapped</span></div>`+D.past.map(rowPast).join('');
+      D.waiting.forEach(x=>x.fresh=false);
+    }
+  }
+  el.querySelector('#cFab').onclick=()=>{ D.waiting.unshift(newIntent()); tab='mine'; seg='waiting'; render(); toast(el,'Dropped','Here it is, waiting to fire.'); };
+  render();
+}
+buildA(); buildB(); buildC();
+</script>
+</body>
+</html>
