@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · the loop card — 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-1:#352d28; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --moss-500:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-0);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1); --ease-quint:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; }
+  button,input{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 72px; }
+  .wrap{ max-width:1300px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:26px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; color:var(--ink-0); }
+  .gallery-head p{ max-width:66ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+
+  /* research brief */
+  .brief{ max-width:1000px; margin:0 auto 34px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .q{ background:var(--paper-0); border:1px solid var(--border-hairline); border-radius:16px; padding:13px 15px; }
+  .q .k{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--accent-strong); }
+  .q b{ display:block; font:700 15px/1.25 var(--font-display); margin:6px 0 4px; }
+  .q p{ margin:0; font-size:12.5px; line-height:1.45; color:var(--text-secondary); }
+  .guard{ grid-column:1/-1; text-align:center; font:500 11.5px/1.5 var(--font-mono); color:var(--text-tertiary); padding:2px 8px 0; }
+  .guard b{ color:var(--text-secondary); font-weight:500; }
+
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  /* phone: 390 × 800 to match index.html */
+  .phone{ width:390px; height:800px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:6px 20px 96px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .kicker{ font:600 11.5px/1 var(--font-sans); text-transform:uppercase; letter-spacing:.08em; color:var(--text-tertiary); }
+  .av{ display:grid; place-items:center; border-radius:999px; font:700 10px/1 var(--font-mono); box-shadow:0 0 0 2px var(--bg-surface); flex-shrink:0; }
+  .faces{ display:flex; align-items:center; padding-left:8px; isolation:isolate; }
+  .faces > div{ margin-left:-8px; }
+
+  /* ---- Home (Your week) excerpt, matches index.html classes ---- */
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:6px 20px 8px; scrollbar-width:none; flex-shrink:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface); font-size:12.5px; font-weight:600; color:var(--text-secondary); white-space:nowrap; }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .wk{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:4px 0 4px; }
+  .wk div{ border-radius:12px; padding:7px 0 6px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .wk .l{ font:600 10px/1 var(--font-mono); color:var(--text-tertiary); letter-spacing:.06em; }
+  .wk .n{ font:600 13.5px/1 var(--font-sans); color:var(--text-primary); }
+  .wk div.past .n{ color:var(--ink-4); }
+  .wk i{ width:5px; height:5px; border-radius:50%; background:transparent; }
+  .wk div.has i{ background:var(--accent); }
+  .wk div.today{ background:var(--ink-0); }
+  .wk div.today .l{ color:var(--paper-3); } .wk div.today .n{ color:var(--paper-0); }
+  .grp{ margin-top:14px; }
+  .glbl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:0 2px 6px; }
+  .glbl .c{ margin-left:auto; color:var(--status-live); }
+  .hm-ag{ display:block; padding:11px 2px; border-top:1px solid var(--border-hairline); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .hm-ag:first-of-type{ border-top:0; }
+  .hm-ag__row{ display:flex; gap:12px; align-items:flex-start; }
+  .hm-ag__t{ font-size:12px; line-height:1.3; color:var(--text-secondary); width:48px; flex-shrink:0; padding-top:2px; }
+  .hm-ag__m{ flex:1; min-width:0; }
+  .hm-ag__title{ font-size:14.5px; font-weight:600; line-height:1.2; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hm-ag__s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hm-ag__acts{ display:flex; gap:8px; margin-top:11px; }
+  .hm-ag__acts > *{ flex:1 1 0; min-width:0; white-space:nowrap; }
+  .grp.next .hm-ag{ background:var(--bg-page); border-radius:14px; padding:12px; border-top:0; transition:background .18s var(--ease-out); }
+  .grp.next .hm-ag:active{ background:var(--paper-2); }
+  .grp.next .hm-ag__title{ font-family:var(--font-display); font-weight:700; font-size:16px; }
+  .hm-ag .hint{ display:flex; align-items:center; justify-content:flex-end; gap:4px; margin-top:9px; font:600 11px/1 var(--font-mono); color:var(--accent-strong); }
+  .hm-ag .hint .go{ font-size:14px; line-height:1; }
+
+  /* buttons (pls-btn vocabulary) */
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; padding:0 14px; border-radius:12px; border:1px solid transparent; font:600 13px/1 var(--font-sans); cursor:pointer; white-space:nowrap; transition:transform .12s var(--ease-out), background .18s var(--ease-out), color .18s var(--ease-out); }
+  .btn:active{ transform:translateY(1px); }
+  .btn.p{ background:var(--accent); color:var(--accent-ink); }
+  .btn.s{ background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-strong); }
+  .btn.g{ background:transparent; color:var(--text-secondary); border-color:var(--border-hairline); }
+  .btn.g[data-on="1"]{ color:var(--status-live); }
+  .hype{ position:relative; overflow:visible; }
+  .hype .meter{ display:inline-flex; gap:2px; margin-left:2px; }
+  .hype .meter i{ width:5px; height:9px; border-radius:2px; background:var(--paper-3); transition:background .18s var(--ease-out); }
+  .hype .meter i.on{ background:var(--accent); }
+  .hype.max{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .hype.max .meter i.on{ background:#ff9d5c; }
+  .hype.bump{ animation:bump .34s var(--ease-quint); }
+  @keyframes bump{ 0%{ transform:scale(1); } 40%{ transform:scale(1.06); } 100%{ transform:scale(1); } }
+  .spark{ position:absolute; left:50%; bottom:70%; font-size:15px; pointer-events:none; animation:spark 1.1s var(--ease-out) forwards; }
+  @keyframes spark{ 0%{ transform:translate(-50%,0) rotate(0); opacity:1; } 100%{ transform:translate(calc(-50% + var(--dx)), -64px) rotate(var(--rot)); opacity:0; } }
+
+  /* ---- shared card anatomy ---- */
+  .lc-kick{ display:inline-flex; align-items:center; gap:6px; font:600 11px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
+  .lc-kick i{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .lc-title{ font:800 24px/1.05 var(--font-display); letter-spacing:-.02em; margin:6px 0 0; }
+  .lc-rhythm{ font-size:12.5px; color:var(--text-secondary); margin-top:5px; }
+  .nxt{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:16px; padding:14px 0 12px; border-top:1px solid var(--border-hairline); border-bottom:1px solid var(--border-hairline); }
+  .nxt .big{ font:800 26px/1 var(--font-display); letter-spacing:-.02em; }
+  .nxt .big small{ font:600 14px/1 var(--font-sans); color:var(--text-secondary); margin-left:6px; letter-spacing:0; }
+  .nxt .place{ font-size:13px; color:var(--text-secondary); margin-top:5px; }
+  .cd{ text-align:right; flex-shrink:0; }
+  .cd b{ display:block; font:500 15px/1 var(--font-mono); color:var(--accent-strong); font-variant-numeric:tabular-nums; }
+  .cd span{ display:block; font:600 10px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); margin-top:5px; }
+  .crew{ display:flex; gap:6px; margin-top:14px; }
+  .crew .p{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center; }
+  .crew .p .nm{ font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .crew .p .st{ font:500 10px/1 var(--font-mono); color:var(--text-tertiary); letter-spacing:.02em; }
+  .crew .p.me .nm{ color:var(--accent-strong); }
+  .crew .p.open .av{ border:1.5px dashed var(--ink-4); background:transparent; color:var(--ink-4); box-shadow:none; font-size:14px; }
+  .acts{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+  .sechd{ display:flex; align-items:baseline; gap:8px; margin:20px 0 8px; }
+  .sechd .kicker{ color:var(--text-tertiary); }
+  .sechd .c{ margin-left:auto; font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .post{ display:flex; gap:10px; padding:9px 0; border-top:1px solid var(--border-hairline); animation:none; }
+  .post:first-of-type{ border-top:0; }
+  .post .b{ flex:1; min-width:0; }
+  .post .who{ display:flex; align-items:baseline; gap:6px; font-size:12.5px; }
+  .post .who b{ font-weight:700; }
+  .post .who .by{ font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .post .who .when{ margin-left:auto; font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); flex-shrink:0; }
+  .post .tx{ font-size:13.5px; line-height:1.4; margin-top:3px; color:var(--text-primary); }
+  .post .rx{ display:inline-flex; align-items:center; gap:4px; margin-top:6px; padding:3px 8px; border-radius:999px; border:1px solid var(--border-hairline); background:transparent; font:500 11px/1 var(--font-mono); color:var(--text-secondary); cursor:pointer; transition:all .18s var(--ease-out); }
+  .post .rx[data-on="1"]{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-quiet); }
+  .post.sys{ align-items:center; }
+  .post.sys .tx{ font:500 12px/1.4 var(--font-mono); color:var(--text-tertiary); margin:0; }
+  .post.sys .dot{ width:26px; height:26px; border-radius:999px; display:grid; place-items:center; background:var(--bg-sunken); font-size:12px; flex-shrink:0; }
+  .post.in{ animation:postin .5s var(--ease-settle) both; }
+  @keyframes postin{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+  .compose{ display:flex; gap:8px; align-items:center; margin-top:10px; }
+  .compose input{ flex:1; min-width:0; border:1px solid var(--border-hairline); background:var(--bg-sunken); border-radius:999px; padding:10px 14px; font:500 13px var(--font-sans); color:var(--text-primary); outline:0; }
+  .compose input:focus{ border-color:var(--ink-0); }
+  .compose input::placeholder{ color:var(--text-tertiary); }
+  .compose button{ border:0; background:var(--ink-0); color:var(--paper-0); border-radius:999px; padding:10px 14px; font:700 12.5px var(--font-sans); cursor:pointer; }
+  .compose button:disabled{ opacity:.35; cursor:default; }
+  .more{ display:flex; justify-content:center; gap:18px; margin-top:18px; font:600 11.5px/1 var(--font-sans); color:var(--text-tertiary); }
+  .more span{ cursor:pointer; }
+  .foot{ text-align:center; font-size:12px; color:var(--text-tertiary); margin-top:16px; }
+
+  /* ---- A · sheet ---- */
+  .scrim{ position:absolute; inset:0; background:rgba(31,26,23,.44); opacity:0; pointer-events:none; transition:opacity .38s var(--ease-out); z-index:6; }
+  .scrim[data-on="1"]{ opacity:1; pointer-events:auto; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; max-height:88%; background:var(--bg-surface); border-radius:28px 28px 0 0; transform:translateY(100%); transition:transform .46s var(--ease-settle); z-index:7; display:flex; flex-direction:column; box-shadow:0 -12px 40px -20px rgba(80,40,30,.4); }
+  .sheet[data-open="1"]{ transform:none; }
+  .sheet.drag{ transition:none; }
+  .grab{ width:38px; height:5px; border-radius:999px; background:var(--paper-3); margin:10px auto 2px; flex-shrink:0; cursor:grab; }
+  .sheet .body{ overflow-y:auto; scrollbar-width:none; padding:8px 22px 26px; }
+  .sheet .body::-webkit-scrollbar{ width:0; }
+  .sheet .head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; touch-action:none; }
+  .sheet .x{ width:30px; height:30px; border-radius:999px; background:var(--bg-sunken); border:0; display:grid; place-items:center; font-size:14px; color:var(--text-secondary); cursor:pointer; flex-shrink:0; }
+  .ghost{ position:absolute; z-index:8; pointer-events:none; font-family:var(--font-display); font-weight:700; white-space:nowrap; transform-origin:left top; }
+
+  /* ---- screens (B, C): slide over Home ---- */
+  .screen{ position:absolute; inset:0; background:var(--bg-surface); display:flex; flex-direction:column; transform:translateX(100%); transition:transform .42s var(--ease-settle); z-index:6; }
+  .screen[data-open="1"]{ transform:none; }
+  .sbar{ display:flex; align-items:center; gap:8px; padding:12px 14px 6px; flex-shrink:0; }
+  .sbar .back{ border:0; background:transparent; font:600 13px var(--font-sans); color:var(--text-secondary); cursor:pointer; display:inline-flex; align-items:center; gap:4px; padding:6px 6px; border-radius:10px; }
+  .sbar .back:hover{ background:var(--bg-sunken); }
+  .sbar .ttl{ flex:1; text-align:center; font:700 14px var(--font-display); }
+  .sbar .dots{ width:34px; text-align:right; color:var(--text-tertiary); font-size:18px; letter-spacing:1px; cursor:pointer; }
+
+  /* B · pass */
+  .stage{ perspective:1000px; padding:6px 20px 0; }
+  .pass{ position:relative; border-radius:22px; background:var(--bg-surface); border:1px solid var(--border-hairline); box-shadow:0 18px 40px -22px rgba(80,40,30,.45), 0 1px 2px rgba(80,40,30,.06); transform-style:preserve-3d; transition:transform .5s var(--ease-quint); will-change:transform; }
+  .pass.tilting{ transition:transform .08s linear; }
+  .pass__top{ padding:18px 20px 16px; background:var(--ink-0); color:var(--paper-0); border-radius:21px 21px 0 0; }
+  .pass__top .lc-kick{ color:var(--paper-3); }
+  .pass__top .lc-kick i{ background:var(--rose); }
+  .pass__top .lc-rhythm{ color:var(--paper-3); }
+  .pass__top .nxt{ border-color:rgba(255,253,248,.16); margin-top:14px; padding:12px 0 2px; border-bottom:0; }
+  .pass__top .nxt .place{ color:var(--paper-3); }
+  .pass__top .cd b{ color:#ffb08a; } .pass__top .cd span{ color:var(--paper-3); }
+  .pass__top .streak{ display:inline-flex; align-items:center; gap:6px; margin-top:14px; font:500 11px/1 var(--font-mono); color:var(--paper-3); }
+  .pass__top .streak i{ display:inline-flex; gap:3px; }
+  .pass__top .streak i b{ width:14px; height:5px; border-radius:2px; background:rgba(255,253,248,.22); }
+  .pass__top .streak i b.on{ background:#ffb08a; }
+  .tear{ position:relative; height:0; border-top:1.5px dashed var(--paper-3); margin:0 12px; }
+  .tear::before,.tear::after{ content:''; position:absolute; top:-9px; width:18px; height:18px; border-radius:50%; background:var(--bg-surface); border:1px solid var(--border-hairline); }
+  .tear::before{ left:-22px; clip-path:inset(0 0 0 50%); } .tear::after{ right:-22px; clip-path:inset(0 50% 0 0); }
+  .pass__bot{ padding:12px 16px 14px; }
+  .stub{ display:flex; align-items:center; gap:11px; padding:8px 4px; opacity:0; transform:translateY(6px); }
+  .stub.show{ animation:stubin .5s var(--ease-settle) forwards; }
+  @keyframes stubin{ to{ opacity:1; transform:none; } }
+  .stub .m{ flex:1; min-width:0; }
+  .stub .nm{ font-size:13.5px; font-weight:700; }
+  .stub .nm em{ font-style:normal; font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); margin-left:6px; }
+  .stub .dm{ font-size:11.5px; color:var(--text-tertiary); margin-top:2px; }
+  .stub .fl{ font:500 11px/1 var(--font-mono); color:var(--text-secondary); white-space:nowrap; }
+  .stub .fl.max{ color:var(--accent-strong); }
+  .stub.open .av{ border:1.5px dashed var(--ink-4); background:transparent; color:var(--ink-4); box-shadow:none; }
+  .stub.open .nm{ color:var(--text-tertiary); font-weight:600; }
+  .pass__acts{ padding:4px 16px 16px; }
+  .pass__acts .acts{ margin-top:6px; }
+  .after{ padding:0 20px 40px; }
+
+  /* C · board first */
+  .sum{ position:sticky; top:0; z-index:2; background:var(--bg-surface); padding:4px 20px 10px; border-bottom:1px solid var(--border-hairline); transition:padding .25s var(--ease-out); }
+  .sum .lc-title{ transition:font-size .25s var(--ease-out); }
+  .sum .line{ display:flex; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; }
+  .sum .line b{ color:var(--text-primary); font-weight:700; }
+  .sum .line .cdi{ margin-left:auto; font:500 12px/1 var(--font-mono); color:var(--accent-strong); flex-shrink:0; }
+  .sum .who{ display:flex; align-items:center; gap:10px; margin-top:10px; overflow:hidden; max-height:60px; transition:max-height .25s var(--ease-out), margin .25s var(--ease-out), opacity .2s; }
+  .sum .who .names{ font-size:12px; color:var(--text-secondary); min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sum .who .names b{ color:var(--accent-strong); }
+  .sum .acts{ margin-top:10px; max-height:60px; overflow:hidden; transition:max-height .25s var(--ease-out), margin .25s var(--ease-out), opacity .2s; }
+  .sum.compact .lc-title{ font-size:17px; }
+  .sum.compact .who,.sum.compact .acts{ max-height:0; margin-top:0; opacity:0; }
+  .board{ padding:6px 20px 90px; }
+  .board .day{ text-align:center; font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); margin:16px 0 4px; }
+  .dock{ position:absolute; left:0; right:0; bottom:0; padding:10px 16px 16px; background:linear-gradient(to top, var(--bg-surface) 70%, transparent); z-index:3; }
+  .dock .compose{ margin-top:0; }
+
+  /* researcher notes */
+  .notes{ max-width:1000px; margin:44px auto 0; }
+  .notes h3{ font:800 20px/1.2 var(--font-display); letter-spacing:-.01em; margin:0 0 4px; }
+  .notes > p{ font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0 0 16px; max-width:70ch; }
+  table{ width:100%; border-collapse:collapse; background:var(--paper-0); border:1px solid var(--border-hairline); border-radius:16px; overflow:hidden; font-size:13px; }
+  th,td{ text-align:left; padding:10px 13px; border-top:1px solid var(--border-hairline); vertical-align:top; line-height:1.4; }
+  th{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); border-top:0; background:var(--paper-1); }
+  td:first-child{ font-weight:600; width:26%; }
+  .rec{ margin-top:16px; background:var(--ink-0); color:var(--paper-0); border-radius:16px; padding:16px 18px; font-size:14px; line-height:1.5; }
+  .rec b{ font-family:var(--font-display); font-size:15px; }
+  .rec p{ margin:6px 0 0; color:var(--paper-3); }
+  .toast{ position:absolute; left:20px; right:20px; top:64px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; z-index:9; opacity:0; transform:translateY(-8px); transition:all .3s var(--ease-settle); pointer-events:none; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); }
+  .toast[data-on="1"]{ opacity:1; transform:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    .post.in,.stub.show,.hype.bump,.spark{ animation:none !important; } .stub{ opacity:1; transform:none; }
+    .sheet,.screen,.scrim,.pass,.sum,.sum *{ transition:none !important; } .pass{ transform:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · tap a row in Your week</div>
+    <h1>What opens when you tap Lift Fridays</h1>
+    <p>Three shapes for the loop card. Each phone starts on Home. Tap the Lift Fridays row, then poke the card: hype it, post to the crew, close it. Same content in all three; only the container changes.</p>
+  </div>
+
+  <div class="brief">
+    <div class="q"><div class="k">Q1 · glance</div><b>Am I going, and when?</b><p>The next meet, the countdown, and my own state (in, hyped, on my calendar). Answered before anything scrolls.</p></div>
+    <div class="q"><div class="k">Q2 · people</div><b>Who else is in?</b><p>The same four faces, named. A crew is a small fixed set, so show every member, not a stack with a +3.</p></div>
+    <div class="q"><div class="k">Q3 · change</div><b>What did I miss?</b><p>Short posts from the crew and from Loop itself. Announcements, not chat. Newest first, three visible, no threads.</p></div>
+    <div class="guard"><b>Guardrails kept:</b> no going / declined grid · no stranger DMs (posts live inside a loop that already meets) · "can't this week" stays private · share, leave, report live behind "···"</div>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>A</b> Sheet</div>
+        <h2>The row lifts into a sheet</h2>
+        <p>Home stays underneath. The card rises from the row you tapped, the title morphs into place, and a drag on the handle drops it back. Best for the glance-and-go case.</p>
+        <div class="try">try: tap the row · drag the handle down · hype it · post</div>
+      </div>
+      <div class="phone" data-dir="a"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>B</b> Pass</div>
+        <h2>A pass you could screenshot</h2>
+        <p>One artifact per loop: your standing ticket. Top half is the meet, bottom half is the crew stubs. The board sits under the pass. Best for identity and sharing.</p>
+        <div class="try">try: tap the row · move the pointer over the pass · post</div>
+      </div>
+      <div class="phone" data-dir="b"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>C</b> Board</div>
+        <h2>The crew's board, summary pinned</h2>
+        <p>The loop is its feed. A compact summary stays pinned and shrinks as you scroll; posts from people and from Loop fill the page. Best if the board becomes the daily reason to open a loop.</p>
+        <div class="try">try: tap the row · scroll the board · react 🔥 · post from the dock</div>
+      </div>
+      <div class="phone" data-dir="c"></div>
+    </div>
+  </div>
+
+  <section class="notes">
+    <h3>Researcher read</h3>
+    <p>All three answer the three questions above the fold. They differ in what the loop <em>is</em> to a member: a moment (A), a membership (B), or a place (C).</p>
+    <table>
+      <thead><tr><th>Criterion</th><th>A · Sheet</th><th>B · Pass</th><th>C · Board</th></tr></thead>
+      <tbody>
+        <tr><td>Time to Q1 (am I going)</td><td>Fastest. Sheet opens over Home; the countdown is the first thing that lands.</td><td>Fast. Dark top half is the meet; one screen push.</td><td>Fast, then it recedes. The summary compacts as soon as you scroll.</td></tr>
+        <tr><td>Q2 (who's in) fidelity</td><td>Four named faces with hype. Good enough for a crew of six or fewer.</td><td>Richest. One stub per person with dorm and hype; open seats shown as dashed stubs.</td><td>Thinnest. Names in one line, faces stacked. Fine for six, weak at eight.</td></tr>
+        <tr><td>Q3 (what changed)</td><td>Three posts, then the sheet ends. Enough for announcements.</td><td>Posts below the pass; you scroll past the artifact to reach them.</td><td>The whole page. Loop's own system posts (moved, streak, hype) read as part of the story.</td></tr>
+        <tr><td>Interaction cost to close</td><td>Lowest: drag, tap scrim, or the ×. You never left Home.</td><td>Back button. One push, one pop.</td><td>Back button, plus you may have scrolled.</td></tr>
+        <tr><td>Guardrail risk</td><td>Low. Nothing browsable; sheet has no room for extras.</td><td>Low. The pass is shareable, which is the intended vector (drop to a friend).</td><td>Medium. A feed invites feed habits: threads, likes, noise. Announcement-only posting has to be enforced by design.</td></tr>
+        <tr><td>Where the current LoopDetail content goes</td><td colspan="3">Governance copy (locked, presence moves it), safety report, share, leave: all move behind "···" or into contextual moments (a "We moved" post from Loop, a "Report" entry in the overflow). The card itself never explains the rules; it shows the state.</td></tr>
+      </tbody>
+    </table>
+    <div class="rec">
+      <b>Recommendation: ship A as the tap target, keep B's pass as the share artifact.</b>
+      <p>The sheet keeps the tap cheap, which is what an agenda row promises. The board is worth having in every version but at three posts, not a page. If usage shows people opening loops daily to read the board rather than to check the time, promote C.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------------- data (mirrors index.html seed: Lift Fridays, viewer = Sarah) ---------------- */
+const USERS = {
+  sarah:{ name:'Sarah Chen', dorm:'Donlon 2F', hue:'var(--carnelian-600)' },
+  josh: { name:'Josh Park',  dorm:'Donlon 2F', hue:'var(--amber-600)', by:'Donlon RA' },
+  priya:{ name:'Priya Rao',  dorm:'Mews',      hue:'var(--moss-500)' },
+  ryan: { name:'Ryan Cole',  dorm:'Donlon 2F', hue:'var(--amber-600)' },
+};
+const ME = 'sarah';
+const LOOP = { title:'Lift Fridays', unit:'donlon 2f · floor', place:'Teagle gym', day:'Fri', time:'5:30p', rhythm:'Fridays · 5:30p · Teagle gym · weekly',
+  streak:4, members:['josh','priya','ryan','sarah'], cap:6, hype:{ josh:4, priya:3, ryan:5, sarah:1 } };
+const POSTS = [
+  { who:'priya', when:'2h',    text:'Bringing straps and a spare belt if anyone wants one 🏋️', fire:2 },
+  { who:'josh',  when:'yest',  text:'Front desk badges you in until 6p on Fridays. Get there before then.', fire:3 },
+  { who:'loop',  when:'Mon',   text:'Week 4. Same four faces since week 1.' },
+  { who:'ryan',  when:'Fri',   text:'that last set was criminal. same time next week', fire:1 },
+  { who:'loop',  when:'Fri',   text:'Moved to Teagle 2nd floor. Everyone confirmed got the push.' },
+];
+const HYPE_LABELS = ['Hype it', 'warming up', 'ready', 'fired up', 'can’t wait', 'LET’S GO'];
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- helpers ---------------- */
+const initials = n => n.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+const first = id => USERS[id].name.split(' ')[0];
+function av(id, size=30){ const u = USERS[id]; return `<div class="av" aria-label="${u.name}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.34)}px;background:color-mix(in srgb, ${u.hue} 20%, var(--bg-surface));color:${u.hue}">${initials(u.name)}</div>`; }
+function faces(ids, size=30){ return `<div class="faces">${ids.map((id,i)=>`<div style="z-index:${10-i}">${av(id,size)}</div>`).join('')}</div>`; }
+function nextFriday(now=new Date()){ const x = new Date(now); x.setDate(now.getDate() + ((5 - now.getDay() + 7) % 7)); x.setHours(17,30,0,0); if (x<=now) x.setDate(x.getDate()+7); return x; }
+function until(ms){ const m = Math.max(0, Math.round(ms/60000)); const d = Math.floor(m/1440), h = Math.floor((m%1440)/60), mm = m%60; return d>0 ? `${d}d ${h}h` : h>0 ? `${h}h ${mm}m` : `${mm}m`; }
+const flames = n => '🔥'.repeat(n);
+function crewHype(hype){ const v = Object.values(hype).filter(x=>x>0); return v.length ? Math.round(v.reduce((a,b)=>a+b,0)/v.length) : 0; }
+
+/* ---------------- shared fragments ---------------- */
+function hypeBtn(level, forLabel){
+  return `<button type="button" class="btn s hype${level>=5?' max':''}" data-act="hype" aria-label="Hype for ${forLabel} · level ${level} of 5">
+    <span class="lbl">🔥 ${level===0 ? 'Hype '+forLabel : HYPE_LABELS[level]}</span>
+    <span class="meter" aria-hidden="true">${[1,2,3,4,5].map(i=>`<i class="${i<=level?'on':''}"></i>`).join('')}</span></button>`;
+}
+function calBtn(on){ return `<button type="button" class="btn g" data-act="cal" data-on="${on?1:0}" aria-pressed="${on}">${on ? '✓ On your calendar' : '📅 Add to calendar'}</button>`; }
+function nextBlock(now, dark){
+  const at = nextFriday(now);
+  return `<div class="nxt"><div><div class="big">Fri <span class="mono" style="font-weight:600">5:30p</span><small>tomorrow</small></div><div class="place">${LOOP.place} · 2nd floor</div></div>
+    <div class="cd"><b data-cd>in ${until(at-now)}</b><span>starts</span></div></div>`;
+}
+function crewRow(st){
+  const cells = LOOP.members.map(id => `<div class="p${id===ME?' me':''}">${av(id,44)}<div class="nm">${first(id)}</div><div class="st">${id===ME ? 'you' : (st.hype[id] ? flames(st.hype[id]) : 'in')}</div></div>`);
+  for (let i=LOOP.members.length; i<LOOP.cap; i++) cells.push(`<div class="p open"><div class="av" style="width:44px;height:44px">+</div><div class="nm" style="color:var(--text-tertiary);font-weight:500">open</div><div class="st">&nbsp;</div></div>`);
+  return `<div class="crew">${cells.join('')}</div>`;
+}
+function postHTML(p, i, fresh){
+  if (p.who==='loop') return `<div class="post sys${fresh?' in':''}"><div class="dot">↻</div><div class="b"><div class="tx">${p.text}</div></div><span class="when mono" style="font-size:10.5px;color:var(--text-tertiary)">${p.when}</span></div>`;
+  const u = USERS[p.who];
+  return `<div class="post${fresh?' in':''}">${av(p.who,28)}<div class="b">
+    <div class="who"><b>${p.who===ME?'You':first(p.who)}</b>${u.by?`<span class="by">${u.by}</span>`:''}<span class="when">${p.when}</span></div>
+    <div class="tx">${p.text}</div>
+    ${p.fire!=null ? `<button class="rx" data-act="rx" data-i="${i}" data-on="${p.mine?1:0}">🔥 ${p.fire}</button>` : ''}
+  </div></div>`;
+}
+function composeHTML(){ return `<form class="compose" data-act="compose"><input placeholder="Say something to the crew" maxlength="140" aria-label="Post to the crew"><button type="submit" disabled>Post</button></form>`; }
+
+/* ---------------- Home excerpt ---------------- */
+function homeHTML(st, now){
+  const at = nextFriday(now);
+  const dow = now.getDay(); const order=[1,2,3,4,5,6,0]; const lbl=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const mon = new Date(now); mon.setDate(now.getDate() - ((dow+6)%7));
+  const wk = order.map((d,i)=>{ const x=new Date(mon); x.setDate(mon.getDate()+i); const past = order.indexOf(d) < order.indexOf(dow); const has = d===5||d===0;
+    return `<div class="${d===dow?'today':''}${past?' past':''}${has?' has':''}"><span class="l">${lbl[d]}</span><span class="n">${x.getDate()}</span><i></i></div>`; }).join('');
+  const ch = crewHype(st.hype);
+  return `
+  <div class="status"><span>9:41</span><span>●●●</span></div>
+  <div class="apphead"><span class="wordmark">Loop<i></i></span>${av('sarah',30)}</div>
+  <div class="chips"><span class="chip">🔍</span><span class="chip" data-on="1">Your week <span class="n">2</span></span><span class="chip">Waiting <span class="n">1</span></span><span class="chip">Past <span class="n">2</span></span></div>
+  <div class="scroll"><div class="pad">
+    <div class="wk">${wk}</div>
+    <div class="grp next"><div class="glbl">Fri · tomorrow <span class="c">next up</span></div>
+      <div class="hm-ag" role="button" tabindex="0" data-act="open">
+        <div class="hm-ag__row"><div class="mono hm-ag__t">5:30p</div>
+          <div class="hm-ag__m"><div class="hm-ag__title" data-rowtitle>Lift Fridays</div><div class="hm-ag__s">Teagle gym · 4 in · 4-wk streak · starts in ${until(at-now)}</div></div>
+          ${faces(LOOP.members)}</div>
+        <div data-stop>
+          <div class="kicker" style="margin-top:10px;display:flex;gap:8px;align-items:center">${ch>0?`<span title="crew hype ${ch} of 5">crew hype <span aria-hidden="true">${flames(ch)}</span></span>`:''}</div>
+          <div class="hm-ag__acts">${hypeBtn(st.hype[ME], 'Fri')}</div>
+        </div>
+        <div class="hint">open loop <span class="go">›</span></div>
+      </div>
+    </div>
+    <div class="grp"><div class="glbl">Sun</div>
+      <div class="hm-ag" role="button" tabindex="0" style="opacity:.75">
+        <div class="hm-ag__row"><div class="mono hm-ag__t">4:00p</div>
+          <div class="hm-ag__m"><div class="hm-ag__title">CS 2110 · Sunday HW Crew</div><div class="hm-ag__s">Uris Cocktail Lounge · 5 in · 3-wk streak</div></div>
+          <div class="faces"><div style="z-index:10">${av('josh')}</div><div style="z-index:9">${av('priya')}</div><div style="z-index:8">${av('sarah')}</div></div></div>
+      </div>
+    </div>
+    <div class="foot" style="margin-top:28px">Loop keeps the rhythm and the next one.</div>
+  </div></div>
+  <div class="toast"></div>`;
+}
+
+/* ---------------- card bodies per direction ---------------- */
+function cardA(st, now){
+  return `
+  <div class="grab" data-grab></div>
+  <div class="body">
+    <div class="head" data-grab>
+      <div><div class="lc-kick" style="color:var(--rose)"><i></i>${LOOP.unit}</div><h2 class="lc-title" data-sheettitle>${LOOP.title}</h2><div class="lc-rhythm">${LOOP.rhythm} · <span class="mono">${LOOP.streak}-wk streak</span></div></div>
+      <button class="x" data-act="close" aria-label="Close">✕</button>
+    </div>
+    ${nextBlock(now)}
+    <div class="sechd"><span class="kicker">${LOOP.members.length} in · ${LOOP.cap-LOOP.members.length} open</span><span class="c">crew hype ${flames(crewHype(st.hype))}</span></div>
+    ${crewRow(st)}
+    <div class="acts">${hypeBtn(st.hype[ME],'Fri')}${calBtn(st.cal)}</div>
+    <div class="sechd"><span class="kicker">Crew board</span><span class="c">${st.posts.length}</span></div>
+    <div data-posts>${st.posts.slice(0,3).map((p,i)=>postHTML(p,i,p.fresh)).join('')}</div>
+    ${st.posts.length>3 ? `<div class="foot" style="margin-top:6px;text-align:left"><span style="color:var(--accent-strong);font-weight:600;cursor:pointer">${st.posts.length-3} older</span></div>` : ''}
+    ${composeHTML()}
+    <div class="more"><span>Drop to a friend</span><span>Can’t this week</span><span>···</span></div>
+  </div>`;
+}
+function cardB(st, now){
+  const stubs = LOOP.members.map((id,i)=>{ const u=USERS[id]; const h=st.hype[id]||0; return `<div class="stub show" style="animation-delay:${120+i*70}ms">${av(id,36)}<div class="m"><div class="nm">${id===ME?'You':u.name}${u.by?`<em>${u.by}</em>`:''}</div><div class="dm">${u.dorm}${i===0?' · seeded it':''}</div></div><div class="fl${h>=5?' max':''}">${h?flames(h):'in'}</div></div>`; });
+  for (let i=LOOP.members.length;i<LOOP.cap;i++) stubs.push(`<div class="stub open show" style="animation-delay:${120+i*70}ms"><div class="av" style="width:36px;height:36px">+</div><div class="m"><div class="nm">Open seat</div><div class="dm">anyone on Donlon 2F can join</div></div></div>`);
+  return `
+  <div class="sbar"><button class="back" data-act="close">‹ Your week</button><span class="ttl">Your pass</span><span class="dots" title="Share · Leave · Report">···</span></div>
+  <div class="scroll">
+    <div class="stage"><div class="pass" data-pass>
+      <div class="pass__top">
+        <div class="lc-kick"><i></i>${LOOP.unit}</div>
+        <h2 class="lc-title">${LOOP.title}</h2>
+        <div class="lc-rhythm">${LOOP.rhythm}</div>
+        ${nextBlock(now, true)}
+        <div class="streak">week 5 of the streak <i>${[1,2,3,4,5].map(i=>`<b class="${i<=4?'on':''}"></b>`).join('')}</i></div>
+      </div>
+      <div class="tear"></div>
+      <div class="pass__bot">
+        <div class="sechd" style="margin:2px 4px 4px"><span class="kicker">${LOOP.members.length} in</span><span class="c">crew hype ${flames(crewHype(st.hype))}</span></div>
+        ${stubs.join('')}
+      </div>
+      <div class="pass__acts"><div class="acts">${hypeBtn(st.hype[ME],'Fri')}${calBtn(st.cal)}</div></div>
+    </div></div>
+    <div class="after">
+      <div class="sechd"><span class="kicker">Crew board</span><span class="c">${st.posts.length}</span></div>
+      <div data-posts>${st.posts.slice(0,3).map((p,i)=>postHTML(p,i,p.fresh)).join('')}</div>
+      ${composeHTML()}
+      <div class="foot">Nobody runs it. Whoever's there can move it.</div>
+    </div>
+  </div>`;
+}
+function cardC(st, now){
+  const at = nextFriday(now);
+  const names = LOOP.members.map(id=> id===ME ? '<b>you</b>' : first(id)).join(', ');
+  const groups = [['Today', st.posts.filter(p=>['2h','now'].includes(p.when))], ['Yesterday', st.posts.filter(p=>p.when==='yest')], ['This week', st.posts.filter(p=>['Mon','Fri'].includes(p.when))]];
+  return `
+  <div class="sbar"><button class="back" data-act="close">‹ Your week</button><span class="ttl"></span><span class="dots" title="Share · Leave · Report">···</span></div>
+  <div class="scroll" data-boardscroll>
+    <div class="sum" data-sum>
+      <div class="lc-kick" style="color:var(--rose)"><i></i>${LOOP.unit}</div>
+      <h2 class="lc-title">${LOOP.title}</h2>
+      <div class="line"><b>Fri 5:30p</b><span>${LOOP.place}</span><span>·</span><span class="mono">${LOOP.streak}-wk streak</span><span class="cdi" data-cd>in ${until(at-now)}</span></div>
+      <div class="who">${faces(LOOP.members,28)}<div class="names">${names}<span style="color:var(--text-tertiary)"> · ${LOOP.cap-LOOP.members.length} open</span></div></div>
+      <div class="acts">${hypeBtn(st.hype[ME],'Fri')}${calBtn(st.cal)}</div>
+    </div>
+    <div class="board" data-posts>
+      ${groups.map(([d,ps]) => ps.length ? `<div class="day">${d}</div>${ps.map(p=>postHTML(p, st.posts.indexOf(p), p.fresh)).join('')}` : '').join('')}
+      <div class="day">Week 3</div>
+      <div class="post sys"><div class="dot">↻</div><div class="b"><div class="tx">Ryan hyped it to LET’S GO. Crew hype hit 🔥🔥🔥🔥.</div></div></div>
+      <div class="post">${av('priya',28)}<div class="b"><div class="who"><b>Priya</b><span class="when">Aug 21</span></div><div class="tx">PR on deadlift. Not saying the number, but it happened.</div><button class="rx" data-act="rx" data-i="-1" data-on="1">🔥 4</button></div></div>
+      <div class="post sys"><div class="dot">↻</div><div class="b"><div class="tx">Sarah joined. Same rhythm, no cold start.</div></div></div>
+      <div class="foot">The board is for announcements. Loop posts the moves, streaks and joins itself.</div>
+    </div>
+  </div>
+  <div class="dock">${composeHTML()}</div>`;
+}
+
+/* ---------------- controller per phone ---------------- */
+function mount(phone){
+  const dir = phone.dataset.dir;
+  const st = { hype:{...LOOP.hype}, cal:false, posts:POSTS.map(p=>({...p})), open:false };
+  let now = new Date();
+  const toast = (title, body) => { const t = phone.querySelector('.toast'); if(!t) return; t.innerHTML = `<b>${title}</b>${body}`; t.dataset.on='1'; clearTimeout(t._t); t._t = setTimeout(()=>t.dataset.on='0', 2200); };
+
+  const homeEl = document.createElement("div"); homeEl.style.display="contents"; phone.appendChild(homeEl);
+  function renderHome(){ homeEl.innerHTML = homeHTML(st, now); }
+  renderHome();
+
+  // overlay container
+  const overlay = document.createElement('div');
+  if (dir==='a'){ const scrim = document.createElement('div'); scrim.className='scrim'; scrim.dataset.act='close'; phone.appendChild(scrim); overlay.className='sheet'; }
+  else overlay.className='screen';
+  phone.appendChild(overlay);
+
+  function renderCard(){
+    overlay.innerHTML = dir==='a' ? cardA(st, now) : dir==='b' ? cardB(st, now) : cardC(st, now);
+    st.posts.forEach(p=>delete p.fresh);
+    if (dir==='b') wireTilt(overlay.querySelector('[data-pass]'));
+    if (dir==='c') wireCompact(overlay);
+    wireCompose(overlay);
+  }
+
+  function open(){
+    st.open = true;
+    renderCard();
+    if (dir==='a'){
+      phone.querySelector('.scrim').dataset.on='1';
+      // FLIP: the row title flies to the sheet title
+      const rowT = phone.querySelector('[data-rowtitle]');
+      overlay.style.transition='none'; overlay.dataset.open='1';
+      const toRect = overlay.querySelector('[data-sheettitle]').getBoundingClientRect();
+      overlay.dataset.open='0'; overlay.getBoundingClientRect(); overlay.style.transition='';
+      requestAnimationFrame(()=>{ overlay.dataset.open='1'; });
+      if (!REDUCED && rowT){
+        const from = rowT.getBoundingClientRect(), pr = phone.getBoundingClientRect();
+        const g = document.createElement('div'); g.className='ghost'; g.textContent=LOOP.title;
+        g.style.cssText = `left:${from.left-pr.left}px;top:${from.top-pr.top}px;font-size:16px;color:var(--ink-0)`;
+        phone.appendChild(g);
+        const title = overlay.querySelector('[data-sheettitle]'); title.style.opacity='0';
+        g.animate([{ transform:'translate(0,0) scale(1)', opacity:1 }, { transform:`translate(${toRect.left-from.left}px, ${toRect.top-from.top}px) scale(1.5)`, opacity:1 }], { duration:460, easing:'cubic-bezier(.16,1,.3,1)', fill:'forwards' })
+          .onfinish = () => { g.remove(); title.style.opacity=''; };
+      }
+    } else { requestAnimationFrame(()=>{ overlay.dataset.open='1'; }); }
+  }
+  function close(){ st.open=false; overlay.dataset.open='0'; overlay.classList.remove('drag'); overlay.style.transform=''; if (dir==='a') phone.querySelector('.scrim').dataset.on='0'; renderHome(); }
+
+  // hype with sparks
+  function hype(btn){
+    const level = st.hype[ME]; if (level>=5) return;
+    st.hype[ME] = level+1;
+    btn.classList.add('bump'); setTimeout(()=>btn.classList.remove('bump'), 340);
+    if (!REDUCED){ const n = st.hype[ME]>=5 ? 9 : 4; for (let i=0;i<n;i++){ const s=document.createElement('span'); s.className='spark'; s.textContent = st.hype[ME]>=5 ? ['🔥','⚡','🎉','💥'][i%4] : '🔥'; s.style.setProperty('--dx', (Math.random()*64-32)+'px'); s.style.setProperty('--rot', (Math.random()*50-25)+'deg'); s.style.animationDelay=(i*45)+'ms'; btn.appendChild(s); setTimeout(()=>s.remove(),1300); } }
+    if (st.hype[ME]>=5) toast('Maxed out.', 'The crew feels it. Friday can’t come soon enough.');
+    // re-render just the buttons so sparks keep flying
+    setTimeout(()=>{ if (st.open) renderCard(); else renderHome(); }, 1200);
+    btn.querySelector('.lbl').textContent = '🔥 '+HYPE_LABELS[st.hype[ME]];
+    btn.querySelectorAll('.meter i').forEach((el,i)=>el.classList.toggle('on', i<st.hype[ME]));
+    if (st.hype[ME]>=5) btn.classList.add('max');
+  }
+
+  function wireCompose(root){
+    const f = root.querySelector('[data-act="compose"]'); if(!f) return;
+    const inp = f.querySelector('input'), b = f.querySelector('button');
+    inp.addEventListener('input', ()=>{ b.disabled = !inp.value.trim(); });
+    f.addEventListener('submit', e=>{ e.preventDefault(); const t = inp.value.trim(); if(!t) return;
+      st.posts.unshift({ who:ME, when:'now', text:t, fire:0, fresh:true }); renderCard(); toast('Posted to the crew.', 'Four people see it. Nobody else.'); });
+  }
+  function wireTilt(pass){
+    if (!pass || REDUCED) return;
+    pass.addEventListener('pointermove', e=>{ const r = pass.getBoundingClientRect(); const x = (e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5; pass.classList.add('tilting'); pass.style.transform = `rotateY(${x*9}deg) rotateX(${-y*7}deg) translateZ(4px)`; });
+    pass.addEventListener('pointerleave', ()=>{ pass.classList.remove('tilting'); pass.style.transform=''; });
+  }
+  function wireCompact(root){
+    const sc = root.querySelector('[data-boardscroll]'), sum = root.querySelector('[data-sum]');
+    sc.addEventListener('scroll', ()=>{ sum.classList.toggle('compact', sc.scrollTop>36); root.querySelector('.ttl').textContent = sc.scrollTop>36 ? LOOP.title : ''; }, { passive:true });
+  }
+  // sheet drag (A)
+  if (dir==='a'){
+    let y0=null, dy=0;
+    overlay.addEventListener('pointerdown', e=>{ if(!e.target.closest('[data-grab]')) return; y0=e.clientY; dy=0; overlay.classList.add('drag'); overlay.setPointerCapture(e.pointerId); });
+    overlay.addEventListener('pointermove', e=>{ if(y0==null) return; dy=Math.max(0, e.clientY-y0); overlay.style.transform=`translateY(${dy}px)`; });
+    const up = e=>{ if(y0==null) return; y0=null; overlay.classList.remove('drag'); overlay.style.transform=''; if (dy>90) close(); };
+    overlay.addEventListener('pointerup', up); overlay.addEventListener('pointercancel', up);
+  }
+
+  phone.addEventListener('click', e=>{
+    const act = e.target.closest('[data-act]'); if(!act) return;
+    const a = act.dataset.act;
+    if (a==='open'){ if (e.target.closest('[data-stop]')) return; open(); }
+    else if (a==='close') close();
+    else if (a==='hype') hype(act);
+    else if (a==='cal'){ st.cal=!st.cal; act.dataset.on = st.cal?1:0; act.textContent = st.cal ? '✓ On your calendar' : '📅 Add to calendar'; toast(st.cal ? 'Added to your calendar.' : 'Removed from your calendar.', 'Every Friday 5:30p, until you leave the loop.'); }
+    else if (a==='rx'){ const i=+act.dataset.i; const on = act.dataset.on==='1'; act.dataset.on = on?0:1; if (i>=0){ st.posts[i].fire += on?-1:1; st.posts[i].mine=!on; act.textContent = '🔥 '+st.posts[i].fire; } else { act.textContent = '🔥 '+(on?3:4); } }
+  });
+  phone.addEventListener('keydown', e=>{ if (e.key==='Enter' && e.target.matches('[data-act="open"]')) open(); if (e.key==='Escape' && st.open) close(); });
+
+  // live countdown
+  setInterval(()=>{ now = new Date(); const at = nextFriday(now); phone.querySelectorAll('[data-cd]').forEach(el=>el.textContent='in '+until(at-now)); }, 30000);
+}
+document.querySelectorAll('.phone').forEach(mount);
+</script>
+</body>
+</html>

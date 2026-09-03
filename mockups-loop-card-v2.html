@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · the loop card v2 — compact, 3 directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --moss-500:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-0);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 72px; }
+  .wrap{ max-width:1300px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:22px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:66ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+
+  /* scenario switch */
+  .scen{ display:flex; justify-content:center; gap:4px; margin:0 auto 30px; background:var(--paper-0); border:1px solid var(--border-hairline); border-radius:14px; padding:4px; width:max-content; }
+  .scen button{ border:0; background:transparent; border-radius:10px; padding:9px 16px; font:600 13px var(--font-sans); color:var(--text-secondary); cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+  .scen button[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); }
+  .scen button .d{ width:7px; height:7px; border-radius:50%; background:var(--ink-4); }
+  .scen button[data-s="live"] .d{ background:var(--status-live); }
+  .scen button[data-on="1"] .d{ box-shadow:0 0 0 2px rgba(255,253,248,.25); }
+
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  .phone{ width:390px; height:800px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:6px 20px 96px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .kicker{ font:600 11px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; color:var(--text-tertiary); }
+  .av{ display:grid; place-items:center; border-radius:999px; font:700 10px/1 var(--font-mono); box-shadow:0 0 0 2px var(--bg-surface); flex-shrink:0; position:relative; }
+  .faces{ display:flex; align-items:center; padding-left:8px; isolation:isolate; }
+  .faces > div{ margin-left:-8px; }
+
+  /* Home excerpt (index.html classes) */
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:6px 20px 8px; scrollbar-width:none; flex-shrink:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface); font-size:12.5px; font-weight:600; color:var(--text-secondary); white-space:nowrap; }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .wk{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:4px 0 4px; }
+  .wk div{ border-radius:12px; padding:7px 0 6px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .wk .l{ font:600 10px/1 var(--font-mono); color:var(--text-tertiary); letter-spacing:.06em; }
+  .wk .n{ font:600 13.5px/1 var(--font-sans); color:var(--text-primary); }
+  .wk div.past .n{ color:var(--ink-4); }
+  .wk i{ width:5px; height:5px; border-radius:50%; background:transparent; }
+  .wk div.has i{ background:var(--accent); }
+  .wk div.today{ background:var(--ink-0); }
+  .wk div.today .l{ color:var(--paper-3); } .wk div.today .n{ color:var(--paper-0); }
+  .grp{ margin-top:14px; }
+  .glbl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:0 2px 6px; }
+  .glbl .c{ margin-left:auto; color:var(--status-live); }
+  .glbl .c.live{ display:inline-flex; align-items:center; gap:6px; }
+  .hm-ag{ display:block; padding:11px 2px; border-top:1px solid var(--border-hairline); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .hm-ag:first-of-type{ border-top:0; }
+  .hm-ag__row{ display:flex; gap:12px; align-items:flex-start; }
+  .hm-ag__t{ font-size:12px; line-height:1.3; color:var(--text-secondary); width:48px; flex-shrink:0; padding-top:2px; }
+  .hm-ag__m{ flex:1; min-width:0; }
+  .hm-ag__title{ font-size:14.5px; font-weight:600; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hm-ag__s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .grp.up .hm-ag{ background:var(--bg-page); border-radius:14px; padding:12px; border-top:0; transition:background .18s var(--ease-out); }
+  .grp.up .hm-ag__title{ font-family:var(--font-display); font-weight:700; font-size:16px; }
+  .hm-ag .go{ color:var(--text-tertiary); font-size:16px; line-height:1; padding-top:4px; }
+
+  /* live dot */
+  .ld{ position:relative; width:8px; height:8px; border-radius:50%; background:var(--status-live); display:inline-block; flex-shrink:0; }
+  .ld::after{ content:''; position:absolute; inset:0; border-radius:50%; background:var(--status-live); animation:ping 1.8s var(--ease-out) infinite; }
+  @keyframes ping{ 0%{ transform:scale(1); opacity:.5; } 70%{ transform:scale(2.8); opacity:0; } 100%{ opacity:0; } }
+
+  /* buttons */
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:0 14px; border-radius:12px; border:1px solid transparent; font:600 13px/1 var(--font-sans); cursor:pointer; white-space:nowrap; transition:transform .12s var(--ease-out), background .18s var(--ease-out), color .18s var(--ease-out); }
+  .btn:active{ transform:translateY(1px); }
+  .btn.p{ background:var(--accent); color:var(--accent-ink); }
+  .btn.s{ background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-strong); }
+  .btn.g{ background:transparent; color:var(--text-secondary); border-color:var(--border-hairline); }
+  .btn[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .btn.here[data-on="1"]{ background:var(--status-live); border-color:var(--status-live); color:#fff; }
+  .btn.sm{ min-height:34px; padding:0 12px; font-size:12.5px; border-radius:10px; }
+  .hype .meter{ display:inline-flex; gap:2px; margin-left:2px; }
+  .hype .meter i{ width:5px; height:9px; border-radius:2px; background:var(--paper-3); }
+  .hype .meter i.on{ background:var(--accent); }
+  .btn.bump{ animation:bump .34s var(--ease-out); }
+  @keyframes bump{ 40%{ transform:scale(1.05); } }
+
+  /* ---- the compact card anatomy ---- */
+  .lc{ display:flex; flex-direction:column; gap:0; }
+  .lc-kick{ display:inline-flex; align-items:center; gap:6px; font:600 11px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--rose); }
+  .lc-kick i{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .lc-title{ font:800 22px/1.05 var(--font-display); letter-spacing:-.02em; margin:5px 0 0; }
+  .state{ display:inline-flex; align-items:center; gap:7px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:5px 9px; border-radius:999px; background:var(--bg-sunken); color:var(--text-secondary); white-space:nowrap; }
+  .state.live{ background:color-mix(in srgb, var(--status-live) 14%, transparent); color:var(--status-live); }
+  .state.done{ background:var(--bg-sunken); color:var(--text-secondary); }
+  .fact{ display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:0 8px; padding:9px 0; border-top:1px solid var(--border-hairline); }
+  .fact .ic{ font-size:14px; text-align:center; color:var(--text-tertiary); }
+  .fact .m{ min-width:0; }
+  .fact .m b{ display:block; font-size:14px; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fact .m span{ display:block; font-size:11.5px; color:var(--text-tertiary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fact .r{ font:500 12px/1 var(--font-mono); color:var(--accent-strong); white-space:nowrap; text-align:right; }
+  .fact .r.q{ color:var(--text-tertiary); }
+  .fact .r a{ color:inherit; text-decoration:none; }
+  .facts .fact:first-child{ border-top:0; }
+  .who{ padding:10px 0 2px; border-top:1px solid var(--border-hairline); }
+  .who .ln{ display:flex; align-items:center; gap:10px; }
+  .who .ln .fc{ display:flex; gap:6px; }
+  .who .ln .tx{ font-size:12.5px; color:var(--text-secondary); min-width:0; line-height:1.35; }
+  .who .ln .tx b{ color:var(--text-primary); }
+  .who .ln .tx em{ font-style:normal; color:var(--accent-strong); font-weight:600; }
+  .av.here::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:2px solid var(--status-live); }
+  .av.omw::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:2px dashed var(--amber); }
+  .av.dim{ opacity:.45; }
+  .av .chk{ position:absolute; right:-4px; bottom:-4px; width:14px; height:14px; border-radius:50%; background:var(--status-live); color:#fff; font-size:9px; display:grid; place-items:center; box-shadow:0 0 0 2px var(--bg-surface); }
+  .av .omwi{ position:absolute; right:-4px; bottom:-4px; width:14px; height:14px; border-radius:50%; background:var(--amber); color:#fff; font-size:8px; display:grid; place-items:center; box-shadow:0 0 0 2px var(--bg-surface); }
+  .legend{ display:flex; gap:12px; margin-top:8px; font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .legend i{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:-1px; }
+  .legend i.h{ border:2px solid var(--status-live); } .legend i.o{ border:2px dashed var(--amber); }
+  .note{ display:flex; gap:8px; align-items:flex-start; margin-top:10px; padding:9px 11px; border-radius:10px; background:var(--bg-sunken); font-size:12.5px; line-height:1.35; color:var(--text-primary); }
+  .note .k{ font:600 10px/1.4 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); white-space:nowrap; padding-top:2px; }
+  .acts{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+  .acts.one{ grid-template-columns:1fr; }
+  .more{ display:flex; justify-content:center; gap:18px; margin-top:12px; font:600 11.5px/1 var(--font-sans); color:var(--text-tertiary); }
+  .more span{ cursor:pointer; }
+
+  /* A · half sheet */
+  .scrim{ position:absolute; inset:0; background:rgba(31,26,23,.44); opacity:0; pointer-events:none; transition:opacity .38s var(--ease-out); z-index:6; }
+  .scrim[data-on="1"]{ opacity:1; pointer-events:auto; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg-surface); border-radius:26px 26px 0 0; transform:translateY(102%); transition:transform .44s var(--ease-settle); z-index:7; padding:8px 20px 22px; box-shadow:0 -12px 40px -20px rgba(80,40,30,.4); }
+  .sheet[data-open="1"]{ transform:none; }
+  .sheet.drag{ transition:none; }
+  .grab{ width:38px; height:5px; border-radius:999px; background:var(--paper-3); margin:0 auto 10px; cursor:grab; touch-action:none; }
+  .sheet .hd{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .ghost{ position:absolute; z-index:8; pointer-events:none; font-family:var(--font-display); font-weight:700; white-space:nowrap; transform-origin:left top; }
+
+  /* B · inline expand */
+  .xp{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .4s var(--ease-settle); }
+  .xp[data-open="1"]{ grid-template-rows:1fr; }
+  .xp > div{ overflow:hidden; min-height:0; }
+  .xp .lc{ padding-top:8px; }
+  .hm-ag[data-open="1"]{ background:var(--bg-surface) !important; box-shadow:0 0 0 1px var(--border-strong) inset; }
+  .hm-ag .hm-ag__s .cnt{ color:var(--accent-strong); }
+  .hm-ag .go{ transition:transform .3s var(--ease-settle); display:inline-block; }
+  .hm-ag[data-open="1"] .go{ transform:rotate(90deg); }
+
+  /* C · the row is the card */
+  .rowcard{ background:var(--bg-page); border-radius:16px; padding:12px 12px 12px; }
+  .rowcard .lc-title{ font-size:17px; margin:0; }
+  .rowcard .top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .rowcard .fact{ padding:7px 0; }
+  .rowcard .fact .m b{ font-size:13.5px; }
+  .rowcard .who{ padding-top:8px; }
+  .rowcard .acts{ margin-top:10px; }
+  .rowcard .open{ display:flex; justify-content:flex-end; align-items:center; gap:4px; margin-top:10px; font:600 11px/1 var(--font-mono); color:var(--text-tertiary); cursor:pointer; }
+
+  .toast{ position:absolute; left:20px; right:20px; top:64px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; z-index:9; opacity:0; transform:translateY(-8px); transition:all .3s var(--ease-settle); pointer-events:none; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); }
+  .toast[data-on="1"]{ opacity:1; transform:none; }
+
+  /* notes */
+  .notes{ max-width:1000px; margin:44px auto 0; }
+  .notes h3{ font:800 20px/1.2 var(--font-display); letter-spacing:-.01em; margin:0 0 4px; }
+  .notes > p{ font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0 0 16px; max-width:70ch; }
+  table{ width:100%; border-collapse:collapse; background:var(--paper-0); border:1px solid var(--border-hairline); border-radius:16px; overflow:hidden; font-size:13px; }
+  th,td{ text-align:left; padding:10px 13px; border-top:1px solid var(--border-hairline); vertical-align:top; line-height:1.4; }
+  th{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); border-top:0; background:var(--paper-1); }
+  td:first-child{ font-weight:600; width:24%; }
+  .rec{ margin-top:16px; background:var(--ink-0); color:var(--paper-0); border-radius:16px; padding:16px 18px; font-size:14px; line-height:1.5; }
+  .rec b{ font-family:var(--font-display); font-size:15px; }
+  .rec p{ margin:6px 0 0; color:var(--paper-3); }
+  @media (prefers-reduced-motion: reduce){ .ld::after{ animation:none; } .sheet,.scrim,.xp,.hm-ag .go{ transition:none !important; } .btn.bump{ animation:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · tap a row in Your week · v2</div>
+    <h1>Where, when, who. Nothing else.</h1>
+    <p>Three compact treatments of the loop card. No board, no chat. Every card is four facts: the time, the place (with the walk from your dorm), the crew with their live state, and your one action. Switch the scenario to see the card before, during and after the meet.</p>
+  </div>
+  <div class="scen" role="tablist">
+    <button data-s="soon" data-on="1"><span class="d"></span>Tomorrow 5:30p</button>
+    <button data-s="live"><span class="d"></span>Live now · 5:41p</button>
+    <button data-s="done"><span class="d"></span>Just met · 7:05p</button>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>A</b> Half sheet</div>
+        <h2>A half sheet over Home</h2>
+        <p>The row lifts into a sheet that takes under half the screen. Four facts, one action, drag it away. Home stays in view behind it.</p>
+        <div class="try">try: tap the row · drag the handle · tap the action</div>
+      </div>
+      <div class="phone" data-dir="a"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>B</b> Inline</div>
+        <h2>The row opens in place</h2>
+        <p>No sheet, no screen. Tap and the row grows to reveal the facts, tap again to fold. The rest of your week never leaves the screen.</p>
+        <div class="try">try: tap the row · tap again to fold · tap Sunday's row too</div>
+      </div>
+      <div class="phone" data-dir="b"></div>
+    </div>
+    <div class="col">
+      <div class="caption">
+        <div class="tag"><b>C</b> Zero tap</div>
+        <h2>The next-up row is already the card</h2>
+        <p>If the card is this small, why hide it? Next up carries the facts and the live state on Home itself. Tapping goes to the full loop only when you want more.</p>
+        <div class="try">try: switch scenarios · tap the action · nothing to open</div>
+      </div>
+      <div class="phone" data-dir="c"></div>
+    </div>
+  </div>
+
+  <section class="notes">
+    <h3>Researcher read</h3>
+    <p>The card is a presence instrument, not a page. Its job changes with the clock: before the meet it answers "when and where", during it answers "who is there yet", after it answers "did it happen, when is the next". The crew's state (here, on my way, not yet) is the connection signal; it replaces both chat and a going/declined grid.</p>
+    <table>
+      <thead><tr><th>Criterion</th><th>A · Half sheet</th><th>B · Inline</th><th>C · Zero tap</th></tr></thead>
+      <tbody>
+        <tr><td>Taps to the facts</td><td>1, plus 1 to close.</td><td>1, plus 1 to fold. Several rows can stay open.</td><td>0 for next up. 1 for any other row (opens B-style or a sheet).</td></tr>
+        <tr><td>Live presence</td><td>Faces ring green as people check in; "on my way" is a dashed ring. Your action flips to I'm here.</td><td>Same faces, but visible in the list, so two live loops on one day compare at a glance.</td><td>Strongest. Home itself shows "2 here, Ryan on the way" the moment you open the app.</td></tr>
+        <tr><td>Location</td><td colspan="3">Place plus room detail, the walk from your dorm, and a Directions link. A moved pin is a fact update, not a message: "Moved to 2nd floor, by Josh (here)".</td></tr>
+        <tr><td>Crucial info only</td><td>One pinned heads-up line, set by whoever's there. No composer.</td><td>Same.</td><td>Same, and it is the only text on the card beyond the facts.</td></tr>
+        <tr><td>Risk</td><td>A sheet still feels like leaving the list.</td><td>Home gets tall if people leave rows open.</td><td>Home's next-up block grows by ~110px; every other row stays a line.</td></tr>
+      </tbody>
+    </table>
+    <div class="rec">
+      <b>Recommendation: C for next up, B for every other row.</b>
+      <p>Presence is only interesting for the loop that is happening now or next, so put it on Home with no tap. Other rows fold open in place with the same four facts. The full loop screen keeps share, leave, report and the rules, reached from the "open loop" corner.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const USERS = {
+  sarah:{ name:'Sarah Chen', dorm:'Donlon 2F', hue:'var(--carnelian-600)' },
+  josh: { name:'Josh Park',  dorm:'Donlon 2F', hue:'var(--amber-600)', by:'Donlon RA' },
+  priya:{ name:'Priya Rao',  dorm:'Mews',      hue:'var(--moss-500)' },
+  ryan: { name:'Ryan Cole',  dorm:'Donlon 2F', hue:'var(--amber-600)' },
+};
+const ME = 'sarah';
+const LOOP = { title:'Lift Fridays', unit:'donlon 2f · floor', place:'Teagle gym', room:'2nd floor, racks by the window', walk:'6 min walk from Donlon', members:['josh','priya','ryan','sarah'], cap:6, streak:4, hype:{ josh:4, priya:3, ryan:5 } };
+const HYPE_LABELS = ['Hype it','warming up','ready','fired up','can’t wait','LET’S GO'];
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* scenarios: what the clock says */
+const SCEN = {
+  soon:{ label:'Tomorrow 5:30p', state:'soon', when:'Fri 5:30p', whenSub:'tomorrow · weekly · 4-wk streak', cd:'in 1d 17h', here:{}, omw:[], note:{ by:'josh', text:'Front desk badges you in until 6p. Come before then.' } },
+  live:{ label:'Live now', state:'live', when:'Now · started 5:30p', whenSub:'11 min in · usually runs 90 min', cd:'11m in', here:{ josh:'5:24p', priya:'5:33p' }, omw:['ryan'], note:{ by:'josh', text:'2nd floor, racks by the window.', here:true } },
+  done:{ label:'Just met', state:'done', when:'Met today · 5:30p to 7:02p', whenSub:'4 of 4 showed · streak is 5', cd:'next Fri', here:{ josh:'5:24p', priya:'5:33p', ryan:'5:47p', sarah:'5:41p' }, omw:[], note:null },
+};
+let scenario = 'soon';
+
+const initials = n => n.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+const first = id => USERS[id].name.split(' ')[0];
+function av(id, size=30, cls=''){ const u = USERS[id]; return `<div class="av ${cls}" aria-label="${u.name}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.34)}px;background:color-mix(in srgb, ${u.hue} 20%, var(--bg-surface));color:${u.hue}">${initials(u.name)}${cls.includes('here')?'<span class="chk">✓</span>':cls.includes('omw')?'<span class="omwi">›</span>':''}</div>`; }
+function faces(ids, size=30){ return `<div class="faces">${ids.map((id,i)=>`<div style="z-index:${10-i}">${av(id,size)}</div>`).join('')}</div>`; }
+const flames = n => '🔥'.repeat(n);
+
+/* ---- the card, one renderer for all three directions ---- */
+function card(st, S, opts={}){
+  const meHere = st.here, meOmw = st.omw;
+  const stateChip = S.state==='live' ? `<span class="state live"><span class="ld"></span>live · ${Object.keys(S.here).length + (meHere?1:0)} here</span>`
+                  : S.state==='done' ? `<span class="state done">✓ met · next Fri</span>`
+                  : `<span class="state">${S.cd}</span>`;
+  const faceCls = id => id===ME ? ((meHere||S.here[id])?'here':meOmw?'omw':S.state==='live'?'dim':'') : S.here[id] ? 'here' : S.omw.includes(id) ? 'omw' : S.state==='live' ? 'dim' : '';
+  const fc = LOOP.members.map(id => av(id, 34, faceCls(id))).join('');
+  let whoText;
+  if (S.state==='live'){
+    const h = Object.keys(S.here).map(id=>`<b>${first(id)}</b> ${S.here[id]}`); if (meHere) h.push('<b>you</b>');
+    const o = [...S.omw, ...(meOmw?['you']:[])].map(x => x==='you' ? '<em>you</em>' : first(x));
+    whoText = `${h.length ? h.join(', ')+' here' : 'nobody here yet'}${o.length ? ` · ${o.join(', ')} on the way` : ''}${!meHere && !meOmw ? ' · <em>you?</em>' : ''}`;
+  } else if (S.state==='done'){
+    whoText = `<b>all four</b> showed · you got there 5:41p`;
+  } else {
+    whoText = `${LOOP.members.filter(x=>x!==ME).map(first).join(', ')} and <b>you</b> · ${LOOP.cap-LOOP.members.length} open · hype ${flames(4)}`;
+  }
+  const act = S.state==='live'
+    ? (meHere ? `<button class="btn here" data-act="here" data-on="1">✓ You’re here · 5:41p</button>`
+              : `<button class="btn p here" data-act="here">✓ I’m here</button><button class="btn s" data-act="omw" data-on="${meOmw?1:0}">${meOmw?'🚶 On your way':'🚶 On my way'}</button>`)
+    : S.state==='done'
+    ? `<button class="btn s hype" data-act="hype"><span class="lbl">🔥 ${st.hype===0?'Hype next Fri':HYPE_LABELS[st.hype]}</span><span class="meter">${[1,2,3,4,5].map(i=>`<i class="${i<=st.hype?'on':''}"></i>`).join('')}</span></button><button class="btn g" data-act="cal" data-on="${st.cal?1:0}">${st.cal?'✓ On calendar':'📅 Calendar'}</button>`
+    : `<button class="btn s hype" data-act="hype"><span class="lbl">🔥 ${st.hype===0?'Hype Fri':HYPE_LABELS[st.hype]}</span><span class="meter">${[1,2,3,4,5].map(i=>`<i class="${i<=st.hype?'on':''}"></i>`).join('')}</span></button><button class="btn g" data-act="cal" data-on="${st.cal?1:0}">${st.cal?'✓ On calendar':'📅 Calendar'}</button>`;
+  const note = S.note ? `<div class="note"><span class="k">heads up</span><span>${S.note.text} <span style="color:var(--text-tertiary)">· ${first(S.note.by)}${S.note.here?' (here)':''}</span></span></div>` : '';
+  const acts = `<div class="acts${S.state==='live' && meHere ? ' one' : ''}">${act}</div>`;
+  return `
+    ${opts.head!==false ? `<div class="hd"><div><div class="lc-kick"><i></i>${LOOP.unit}</div><h2 class="lc-title" data-ctitle>${LOOP.title}</h2></div>${opts.close ? `<button class="btn g sm" data-act="close" aria-label="Close" style="min-height:30px;padding:0 10px">✕</button>` : stateChip}</div>` : ''}
+    <div class="facts">
+      <div class="fact"><span class="ic">🕓</span><div class="m"><b>${S.when}</b><span>${S.whenSub}</span></div><span class="r${S.state==='soon'?'':' q'}">${opts.head===false||opts.close ? S.cd : ''}</span></div>
+      <div class="fact"><span class="ic">📍</span><div class="m"><b>${LOOP.place} · 2nd floor</b><span>${LOOP.walk}</span></div><span class="r"><a href="#">Directions ›</a></span></div>
+    </div>
+    <div class="who"><div class="ln"><div class="fc">${fc}</div><div class="tx">${whoText}</div></div>
+      ${S.state==='live' ? `<div class="legend"><span><i class="h"></i>here</span><span><i class="o"></i>on the way</span></div>` : ''}
+    </div>
+    ${note}${acts}`;
+}
+
+/* ---- Home excerpt ---- */
+function homeHTML(st, S, dir){
+  const now = new Date(); const dow = S.state==='soon' ? 4 : 5; const order=[1,2,3,4,5,6,0]; const lbl=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const wk = order.map((d,i)=>{ const past = order.indexOf(d) < order.indexOf(dow); const has = d===5||d===0;
+    return `<div class="${d===dow?'today':''}${past?' past':''}${has?' has':''}"><span class="l">${lbl[d]}</span><span class="n">${(30+i)%31+1}</span><i></i></div>`; }).join('');
+  const glbl = S.state==='soon' ? `Fri · tomorrow <span class="c">next up</span>` : S.state==='live' ? `Fri · today <span class="c live"><span class="ld"></span>meeting now</span>` : `Fri · today <span class="c" style="color:var(--text-tertiary)">met</span>`;
+  const sub = S.state==='soon' ? `Teagle gym · 4 in · 4-wk streak · <span class="cnt">starts in 1d 17h</span>` : S.state==='live' ? `Teagle gym · <span class="cnt">${Object.keys(S.here).length+(st.here?1:0)} here${S.omw.length||st.omw?', '+(S.omw.length+(st.omw?1:0))+' on the way':''}</span>` : `Teagle gym · 4 of 4 showed · streak 5`;
+  const time = S.state==='live' ? 'now' : '5:30p';
+  let next;
+  if (dir==='c'){
+    next = `<div class="rowcard lc">
+      <div class="top"><div><div class="lc-kick"><i></i>${LOOP.unit}</div><h2 class="lc-title">${LOOP.title}</h2></div>${S.state==='live' ? `<span class="state live"><span class="ld"></span>live</span>` : S.state==='done' ? `<span class="state done">✓ met</span>` : `<span class="state">${S.cd}</span>`}</div>
+      <div style="margin-top:8px">${card(st, S, { head:false })}</div>
+      <div class="open" data-act="full">open loop <span>›</span></div>
+    </div>`;
+  } else {
+    next = `<div class="hm-ag" role="button" tabindex="0" data-act="open" data-open="${st.open?1:0}">
+      <div class="hm-ag__row"><div class="mono hm-ag__t">${time}</div>
+        <div class="hm-ag__m"><div class="hm-ag__title" data-rowtitle>${LOOP.title}</div><div class="hm-ag__s">${sub}</div></div>
+        ${st.open && dir==='b' ? '' : faces(LOOP.members)}<span class="go">›</span></div>
+      ${dir==='b' ? `<div class="xp" data-open="${st.open?1:0}"><div><div class="lc">${card(st, S, { head:false })}<div class="more"><span data-act="full">Open loop</span><span>Can’t this week</span></div></div></div></div>` : ''}
+    </div>`;
+  }
+  return `
+  <div class="status"><span>${S.state==='soon'?'9:41':S.state==='live'?'5:41':'7:05'}</span><span>●●●</span></div>
+  <div class="apphead"><span class="wordmark">Loop<i></i></span>${av('sarah',30)}</div>
+  <div class="chips"><span class="chip">🔍</span><span class="chip" data-on="1">Your week <span class="n">2</span></span><span class="chip">Waiting <span class="n">1</span></span><span class="chip">Past <span class="n">2</span></span></div>
+  <div class="scroll"><div class="pad">
+    <div class="wk">${wk}</div>
+    <div class="grp up"><div class="glbl">${glbl}</div>${next}</div>
+    <div class="grp"><div class="glbl">Sun</div>
+      <div class="hm-ag" role="button" tabindex="0" data-act="open2" data-open="${st.open2?1:0}">
+        <div class="hm-ag__row"><div class="mono hm-ag__t">4:00p</div>
+          <div class="hm-ag__m"><div class="hm-ag__title">CS 2110 · Sunday HW Crew</div><div class="hm-ag__s">Uris Cocktail Lounge · 5 in · 3-wk streak</div></div>
+          <div class="faces"><div style="z-index:10">${av('josh')}</div><div style="z-index:9">${av('priya')}</div><div style="z-index:8">${av('sarah')}</div></div><span class="go">›</span></div>
+        ${dir==='b' ? `<div class="xp" data-open="${st.open2?1:0}"><div><div class="lc" style="padding-top:8px">
+          <div class="facts"><div class="fact"><span class="ic">🕓</span><div class="m"><b>Sun 4:00p</b><span>in 2d 22h · weekly · 3-wk streak</span></div><span class="r">in 2d 22h</span></div>
+          <div class="fact"><span class="ic">📍</span><div class="m"><b>Uris Cocktail Lounge</b><span>9 min walk from Donlon</span></div><span class="r"><a href="#">Directions ›</a></span></div></div>
+          <div class="who"><div class="ln"><div class="fc">${av('josh',34)}${av('lydia'in USERS?'lydia':'priya',34)}${av('priya',34)}${av('sarah',34)}</div><div class="tx">Josh, Lydia, Priya, Marcus and <b>you</b> · 1 open</div></div></div>
+          <div class="acts"><button class="btn s">🔥 Hype Sun</button><button class="btn g">📅 Calendar</button></div>
+          <div class="more"><span>Open loop</span><span>Can’t this week</span></div></div></div></div>` : ''}
+      </div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--text-tertiary);margin-top:28px">Loop keeps the rhythm and the next one.</div>
+  </div></div>
+  <div class="toast"></div>`;
+}
+
+/* ---- controller ---- */
+function mount(phone){
+  const dir = phone.dataset.dir;
+  const st = { hype:0, cal:false, here:false, omw:false, open:false, open2:false };
+  const homeEl = document.createElement('div'); homeEl.style.display='contents'; phone.appendChild(homeEl);
+  let scrim, sheet;
+  if (dir==='a'){ scrim = document.createElement('div'); scrim.className='scrim'; scrim.dataset.act='close'; phone.appendChild(scrim); sheet = document.createElement('div'); sheet.className='sheet'; phone.appendChild(sheet); }
+  const S = () => SCEN[scenario];
+  const toast = (title, body) => { const t = phone.querySelector('.toast'); if(!t) return; t.innerHTML = `<b>${title}</b>${body}`; t.dataset.on='1'; clearTimeout(t._t); t._t = setTimeout(()=>t.dataset.on='0', 2200); };
+  function render(){ homeEl.innerHTML = homeHTML(st, S(), dir); if (dir==='a' && st.open) sheet.innerHTML = `<div class="grab" data-grab></div><div class="lc">${card(st, S(), { close:true })}<div class="more"><span data-act="full">Open loop</span><span>Can’t this week</span></div></div>`; }
+  render();
+
+  function openSheet(){
+    st.open = true; render();
+    scrim.dataset.on='1';
+    const rowT = phone.querySelector('[data-rowtitle]');
+    sheet.style.transition='none'; sheet.dataset.open='1';
+    const to = sheet.querySelector('[data-ctitle]').getBoundingClientRect();
+    sheet.dataset.open='0'; sheet.getBoundingClientRect(); sheet.style.transition='';
+    requestAnimationFrame(()=>{ sheet.dataset.open='1'; });
+    if (!REDUCED && rowT){
+      const from = rowT.getBoundingClientRect(), pr = phone.getBoundingClientRect();
+      const g = document.createElement('div'); g.className='ghost'; g.textContent=LOOP.title; g.style.cssText=`left:${from.left-pr.left}px;top:${from.top-pr.top}px;font-size:16px;color:var(--ink-0)`; phone.appendChild(g);
+      const title = sheet.querySelector('[data-ctitle]'); title.style.opacity='0';
+      g.animate([{ transform:'translate(0,0) scale(1)' }, { transform:`translate(${to.left-from.left}px, ${to.top-from.top}px) scale(1.375)` }], { duration:440, easing:'cubic-bezier(.16,1,.3,1)', fill:'forwards' }).onfinish = () => { g.remove(); title.style.opacity=''; };
+    }
+  }
+  function closeSheet(){ st.open=false; sheet.dataset.open='0'; sheet.classList.remove('drag'); sheet.style.transform=''; scrim.dataset.on='0'; render(); }
+  if (dir==='a'){
+    let y0=null, dy=0;
+    sheet.addEventListener('pointerdown', e=>{ if(!e.target.closest('[data-grab]')) return; y0=e.clientY; dy=0; sheet.classList.add('drag'); sheet.setPointerCapture(e.pointerId); });
+    sheet.addEventListener('pointermove', e=>{ if(y0==null) return; dy=Math.max(0,e.clientY-y0); sheet.style.transform=`translateY(${dy}px)`; });
+    const up = ()=>{ if(y0==null) return; y0=null; sheet.classList.remove('drag'); sheet.style.transform=''; if(dy>70) closeSheet(); };
+    sheet.addEventListener('pointerup', up); sheet.addEventListener('pointercancel', up);
+  }
+
+  phone.addEventListener('click', e=>{
+    const el = e.target.closest('[data-act]'); if(!el) return; const a = el.dataset.act;
+    if (a==='open'){ if (e.target.closest('.btn,.more,a')) return; if (dir==='a') openSheet(); else if (dir==='b'){ st.open=!st.open; render(); } }
+    else if (a==='open2'){ if (e.target.closest('.btn,.more,a')) return; if (dir==='b'){ st.open2=!st.open2; render(); } else toast('Sunday HW Crew', 'Would open the same way.'); }
+    else if (a==='close') closeSheet();
+    else if (a==='full'){ toast('Full loop screen', 'Share, leave, report, and the rules live there.'); }
+    else if (a==='hype'){ if (st.hype<5) st.hype++; el.classList.add('bump'); setTimeout(()=>{ render(); }, 300); if (st.hype>=5) toast('Maxed out.','The crew feels it.'); }
+    else if (a==='cal'){ st.cal=!st.cal; render(); toast(st.cal?'Added to your calendar.':'Removed.', 'Every Friday 5:30p, until you leave the loop.'); }
+    else if (a==='here'){ if (st.here) return; st.here=true; st.omw=false; render(); toast('You’re here. 5:41p', 'Josh and Priya can see you made it. Whoever’s here holds the pin.'); }
+    else if (a==='omw'){ st.omw=!st.omw; render(); if (st.omw) toast('On your way.', 'The crew sees a dashed ring on you until you check in.'); }
+  });
+  phone.addEventListener('keydown', e=>{ if (e.key==='Escape' && st.open && dir==='a') closeSheet(); });
+  phone._reset = () => { st.here=false; st.omw=false; st.hype=0; if (dir==='a' && st.open) closeSheet(); else render(); };
+}
+document.querySelectorAll('.phone').forEach(mount);
+document.querySelectorAll('.scen button').forEach(b => b.addEventListener('click', ()=>{ scenario = b.dataset.s; document.querySelectorAll('.scen button').forEach(x=>x.dataset.on = x===b?1:0); document.querySelectorAll('.phone').forEach(p=>p._reset()); }));
+</script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · the loop card v4 — raised band, two color codes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --moss-500:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-0);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss);
+    /* unit hues (already in index.html) */
+    --unit-dorm:var(--rose); --unit-class:var(--slate); --unit-major:var(--amber-600); --unit-north:var(--ink-3);
+    /* activity hues (new; drawn from the same palette) */
+    --cat-class:var(--slate); --cat-fitness:var(--moss); --cat-food:var(--amber); --cat-social:var(--rose); --cat-music:var(--violet);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 72px; }
+  .wrap{ max-width:1300px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:22px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:66ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+
+  .pick{ display:flex; justify-content:center; gap:10px; margin:0 auto 14px; flex-wrap:wrap; }
+  .pick button{ border:1px solid var(--border-hairline); background:var(--paper-0); border-radius:14px; padding:10px 14px; font:600 13px var(--font-sans); color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; gap:10px; text-align:left; }
+  .pick button small{ display:block; font:500 11px/1.3 var(--font-mono); color:var(--text-tertiary); margin-top:2px; }
+  .pick button b{ width:22px; height:22px; border-radius:7px; background:var(--paper-2); color:var(--text-secondary); display:grid; place-items:center; font-family:var(--font-display); flex-shrink:0; }
+  .pick button[data-on="1"]{ border-color:var(--ink-0); color:var(--text-primary); box-shadow:0 0 0 1px var(--ink-0) inset; }
+  .pick button[data-on="1"] b{ background:var(--accent); color:var(--accent-ink); }
+  .swatches{ display:flex; justify-content:center; gap:14px; margin:0 auto 30px; font:500 11.5px/1 var(--font-mono); color:var(--text-secondary); flex-wrap:wrap; }
+  .swatches span{ display:inline-flex; align-items:center; gap:6px; }
+  .swatches i{ width:12px; height:12px; border-radius:4px; }
+  .swatches[hidden]{ display:none; }
+
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  .phone{ width:390px; height:800px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:6px 20px 96px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .av{ display:grid; place-items:center; border-radius:999px; font:700 10px/1 var(--font-mono); box-shadow:0 0 0 2px var(--bg-surface); flex-shrink:0; position:relative; }
+  .faces{ display:flex; align-items:center; padding-left:8px; isolation:isolate; }
+  .faces > div{ margin-left:-8px; }
+
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:6px 20px 8px; scrollbar-width:none; flex-shrink:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface); font-size:12.5px; font-weight:600; color:var(--text-secondary); white-space:nowrap; }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .wk{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:4px 0 4px; }
+  .wk div{ border-radius:12px; padding:7px 0 6px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .wk .l{ font:600 10px/1 var(--font-mono); color:var(--text-tertiary); letter-spacing:.06em; }
+  .wk .n{ font:600 13.5px/1 var(--font-sans); color:var(--text-primary); }
+  .wk div.past .n{ color:var(--ink-4); }
+  .wk i{ width:5px; height:5px; border-radius:50%; background:transparent; }
+  .wk div.has i{ background:var(--accent); }
+  .wk div.today{ background:var(--ink-0); }
+  .wk div.today .l{ color:var(--paper-3); } .wk div.today .n{ color:var(--paper-0); }
+  .grp{ margin-top:16px; }
+  .glbl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:0 2px 7px; }
+  .glbl .c{ margin-left:auto; color:var(--status-live); }
+  .glbl .c.live{ display:inline-flex; align-items:center; gap:6px; }
+  .hm-ag{ display:flex; gap:12px; align-items:flex-start; padding:11px 2px; border-top:1px solid var(--border-hairline); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .hm-ag:first-of-type{ border-top:0; }
+  .hm-ag__t{ font-size:12px; line-height:1.3; color:var(--text-secondary); width:48px; flex-shrink:0; padding-top:2px; }
+  .hm-ag__m{ flex:1; min-width:0; }
+  .hm-ag__title{ font-size:14.5px; font-weight:600; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px; }
+  .hm-ag__title .d{ width:7px; height:7px; border-radius:50%; background:var(--hue); flex-shrink:0; }
+  .hm-ag__s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hm-ag .go{ color:var(--text-tertiary); font-size:16px; line-height:1; padding-top:4px; }
+  .card + .card, .hm-ag + .card{ margin-top:10px; }
+
+  .ld{ position:relative; width:8px; height:8px; border-radius:50%; background:var(--status-live); display:inline-block; flex-shrink:0; }
+  .ld::after{ content:''; position:absolute; inset:0; border-radius:50%; background:var(--status-live); animation:ping 1.8s var(--ease-out) infinite; }
+  @keyframes ping{ 0%{ transform:scale(1); opacity:.5; } 70%{ transform:scale(2.8); opacity:0; } 100%{ opacity:0; } }
+
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:0 14px; border-radius:12px; border:1px solid transparent; font:600 13px/1 var(--font-sans); cursor:pointer; white-space:nowrap; transition:transform .12s var(--ease-out), background .18s var(--ease-out); }
+  .btn:active{ transform:translateY(1px); }
+  .btn.p{ background:var(--accent); color:var(--accent-ink); }
+  .btn.s{ background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-strong); }
+  .btn.g{ background:transparent; color:var(--text-secondary); border-color:var(--border-hairline); }
+  .btn.g[data-on="1"]{ color:var(--status-live); border-color:var(--status-live); }
+  .btn.here[data-on="1"]{ background:var(--status-live); border-color:var(--status-live); color:#fff; }
+  .hype .meter{ display:inline-flex; gap:2px; margin-left:2px; }
+  .hype .meter i{ width:5px; height:9px; border-radius:2px; background:var(--paper-3); }
+  .hype .meter i.on{ background:var(--accent); }
+
+  /* =========================================================
+     THE LOOP CARD · finish = raised + band.
+     --hue comes from the color scheme: unit or activity.
+     ========================================================= */
+  .card{ border-radius:18px; overflow:hidden; background:var(--bg-surface); border:1px solid var(--border-strong);
+    box-shadow:0 12px 28px -14px rgba(80,40,30,.38), 0 1px 2px rgba(80,40,30,.06); animation:cardin .4s var(--ease-settle) both; }
+  @keyframes cardin{ from{ opacity:0; transform:translateY(6px); } }
+  .card__hd{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:12px 14px 11px; cursor:pointer;
+    background:color-mix(in srgb, var(--hue) 13%, var(--bg-surface)); border-bottom:1px solid color-mix(in srgb, var(--hue) 22%, var(--border-hairline)); }
+  .card__kick{ display:inline-flex; align-items:center; gap:6px; font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--hue); }
+  .card__kick i{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .card__kick .g{ font-size:12px; letter-spacing:0; }
+  .card__title{ font:800 19px/1.05 var(--font-display); letter-spacing:-.02em; margin:5px 0 0; }
+  .card__right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .state{ display:inline-flex; align-items:center; gap:6px; font:600 10.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:6px 9px; border-radius:999px; background:var(--bg-surface); color:var(--hue); border:1px solid color-mix(in srgb, var(--hue) 30%, transparent); white-space:nowrap; }
+  .state.live{ background:var(--status-live); color:#fff; border-color:var(--status-live); }
+  .fold{ color:var(--text-tertiary); font-size:14px; }
+  .card__bd{ padding:0 14px 12px; }
+  .fact{ display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:0 8px; padding:8px 0; border-top:1px solid var(--border-hairline); }
+  .fact:first-child{ border-top:0; }
+  .fact .ic{ font-size:14px; text-align:center; }
+  .fact .m{ min-width:0; }
+  .fact .m b{ display:block; font-size:13.5px; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fact .m span{ display:block; font-size:11.5px; color:var(--text-tertiary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fact .r{ font:500 12px/1 var(--font-mono); color:var(--accent-strong); white-space:nowrap; text-align:right; }
+  .fact .r.q{ color:var(--text-tertiary); }
+  .who{ padding:9px 0 2px; border-top:1px solid var(--border-hairline); }
+  .who .ln{ display:flex; align-items:center; gap:10px; }
+  .who .fc{ display:flex; gap:6px; flex-shrink:0; }
+  .who .tx{ font-size:12.5px; color:var(--text-secondary); min-width:0; line-height:1.35; }
+  .who .tx b{ color:var(--text-primary); }
+  .who .tx em{ font-style:normal; color:var(--accent-strong); font-weight:600; }
+  .av.here::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:2px solid var(--status-live); }
+  .av.omw::after{ content:''; position:absolute; inset:-3px; border-radius:50%; border:2px dashed var(--amber); }
+  .av.dim{ opacity:.45; }
+  .av .chk{ position:absolute; right:-4px; bottom:-4px; width:14px; height:14px; border-radius:50%; background:var(--status-live); color:#fff; font-size:9px; display:grid; place-items:center; box-shadow:0 0 0 2px var(--bg-surface); }
+  .av .omwi{ position:absolute; right:-4px; bottom:-4px; width:14px; height:14px; border-radius:50%; background:var(--amber); color:#fff; font-size:8px; display:grid; place-items:center; box-shadow:0 0 0 2px var(--bg-surface); }
+  .legend{ display:flex; gap:12px; margin-top:8px; font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .legend i{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:-1px; }
+  .legend i.h{ border:2px solid var(--status-live); } .legend i.o{ border:2px dashed var(--amber); }
+  .note{ display:flex; gap:8px; align-items:flex-start; margin-top:10px; padding:8px 11px; border-radius:10px; background:var(--bg-sunken); font-size:12.5px; line-height:1.35; }
+  .note .k{ font:600 10px/1.4 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); white-space:nowrap; padding-top:2px; }
+  .acts{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+  .card__ft{ display:flex; justify-content:flex-end; align-items:center; gap:4px; margin-top:10px; font:600 11px/1 var(--font-mono); color:var(--text-tertiary); cursor:pointer; }
+
+  .toast{ position:absolute; left:20px; right:20px; top:64px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; z-index:9; opacity:0; transform:translateY(-8px); transition:all .3s var(--ease-settle); pointer-events:none; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); }
+  .toast[data-on="1"]{ opacity:1; transform:none; }
+
+  .spec{ max-width:1000px; margin:44px auto 0; }
+  .spec h3{ font:800 20px/1.2 var(--font-display); letter-spacing:-.01em; margin:0 0 4px; }
+  .spec > p{ font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0 0 16px; max-width:70ch; }
+  table{ width:100%; border-collapse:collapse; background:var(--paper-0); border:1px solid var(--border-hairline); border-radius:16px; overflow:hidden; font-size:13px; }
+  th,td{ text-align:left; padding:10px 13px; border-top:1px solid var(--border-hairline); vertical-align:top; line-height:1.4; }
+  th{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); border-top:0; background:var(--paper-1); }
+  td:first-child{ font-weight:600; width:22%; }
+  .rec{ margin-top:16px; background:var(--ink-0); color:var(--paper-0); border-radius:16px; padding:16px 18px; font-size:14px; line-height:1.5; }
+  .rec b{ font-family:var(--font-display); font-size:15px; }
+  .rec p{ margin:6px 0 0; color:var(--paper-3); }
+  @media (prefers-reduced-motion: reduce){ .ld::after{ animation:none; } .card{ animation:none; } }
+</style>
+</head>
+<body data-scheme="activity">
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · the loop card · v4</div>
+    <h1>Raised, banded, and color coded</h1>
+    <p>The finish is settled: ink border, a lift, and a tinted header band. The open question is what the tint means. Two schemes below, drawn from the app's existing palette. Your week now has four loops of different kinds so the coding is visible; tap any row to open the same card.</p>
+  </div>
+  <div class="pick" role="tablist">
+    <button data-c="activity" data-on="1"><b>A</b><span>By activity<small>class · fitness · food · social · music (the app already classifies loops this way)</small></span></button>
+    <button data-c="unit"><b>B</b><span>By unit<small>dorm rose · class slate · north neutral (the app's existing unit hues)</small></span></button>
+  </div>
+  <div class="swatches" data-sw="activity"><span><i style="background:var(--cat-class)"></i>📚 class</span><span><i style="background:var(--cat-fitness)"></i>🏋️ fitness</span><span><i style="background:var(--cat-food)"></i>🍜 food</span><span><i style="background:var(--cat-social)"></i>🎲 social</span><span><i style="background:var(--cat-music)"></i>🎵 music</span></div>
+  <div class="swatches" data-sw="unit" hidden><span><i style="background:var(--unit-dorm)"></i>dorm / floor</span><span><i style="background:var(--unit-class)"></i>class</span><span><i style="background:var(--unit-major)"></i>major</span><span><i style="background:var(--unit-north)"></i>north / campus</span></div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption"><div class="tag">Thu · 9:41a</div><h2>Tonight, tomorrow, Sunday</h2><p>Trivia tonight is next up and open. Lift Fridays, brunch and the HW crew are rows until tapped.</p><div class="try">try: tap each row · compare the four header tints</div></div>
+      <div class="phone" data-s="soon"></div>
+    </div>
+    <div class="col">
+      <div class="caption"><div class="tag">Fri · 5:41p</div><h2>Live now</h2><p>The live chip goes solid green on any tint. Presence rings stay green and amber regardless of the card color.</p><div class="try">try: On my way · I'm here · open brunch</div></div>
+      <div class="phone" data-s="live"></div>
+    </div>
+    <div class="col">
+      <div class="caption"><div class="tag">Fri · 7:05p</div><h2>Just met</h2><p>Met chip in the loop's own hue. The next card down is the one that matters now.</p><div class="try">try: Hype next Fri · fold it · open Sunday</div></div>
+      <div class="phone" data-s="done"></div>
+    </div>
+  </div>
+
+  <section class="spec">
+    <h3>Which meaning should the color carry?</h3>
+    <p>Both schemes use hues already in the palette (rose, slate, moss, amber) plus one new violet for music. The band tint is 13% of the hue over the surface, so it stays paper-like and never fights the carnelian accent.</p>
+    <table>
+      <thead><tr><th>Criterion</th><th>A · By activity</th><th>B · By unit</th></tr></thead>
+      <tbody>
+        <tr><td>What a glance tells you</td><td>What kind of thing this is. Four different colors in a week means a varied week; a wall of slate means all study.</td><td>Which world it came from: your floor, your class, campus. Tells you who these people are to you.</td></tr>
+        <tr><td>Fits the rest of the app</td><td>The app already classifies loops into these five kinds for the explore filters, but has no colors for them yet. This adds them.</td><td>Reuses the unit kicker hues that already exist on every card and tile. No new vocabulary.</td></tr>
+        <tr><td>Weak spot</td><td>Most loops in the first weeks are study loops, so slate dominates. Unit is lost from the color (still in the kicker text).</td><td>Nearly everything is dorm rose or class slate; north and campus loops go neutral. Less variety, less "stands out".</td></tr>
+        <tr><td>Accessibility</td><td>Glyph in the kicker (📚 🏋️ 🍜 🎲 🎵) carries the meaning without color.</td><td>Kicker text carries the meaning without color.</td></tr>
+      </tbody>
+    </table>
+    <div class="rec">
+      <b>Recommendation: A, by activity, with the unit kept as text in the kicker.</b>
+      <p>Activity is the thing a student decides on ("do I want to go lift, or eat, or grind"), so it earns the color. The unit is context, and the kicker already says it. If study loops dominate a given week, slate cards still read as one calm block, which is honest.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const USERS = {
+  sarah:{ name:'Sarah Chen', hue:'var(--carnelian-600)' }, josh:{ name:'Josh Park', hue:'var(--amber-600)' },
+  priya:{ name:'Priya Rao', hue:'var(--moss-500)' }, ryan:{ name:'Ryan Cole', hue:'var(--amber-600)' },
+  lydia:{ name:'Lydia Osei', hue:'var(--slate)' }, marcus:{ name:'Marcus Diaz', hue:'var(--rose)' }, maya:{ name:'Maya Idris', hue:'var(--violet)' },
+};
+const ME = 'sarah';
+const HYPE_LABELS = ['Hype it','warming up','ready','fired up','can’t wait','LET’S GO'];
+const CAT = { class:{ g:'📚', label:'class' }, fitness:{ g:'🏋️', label:'fitness' }, food:{ g:'🍜', label:'food' }, social:{ g:'🎲', label:'social' }, music:{ g:'🎵', label:'music' } };
+const initials = n => n.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+const first = id => id===ME ? 'you' : USERS[id].name.split(' ')[0];
+const flames = n => '🔥'.repeat(n);
+function av(id, size=30, cls=''){ const u = USERS[id]; return `<div class="av ${cls}" aria-label="${u.name}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.34)}px;background:color-mix(in srgb, ${u.hue} 20%, var(--bg-surface));color:${u.hue}">${initials(u.name)}${cls.includes('here')?'<span class="chk">✓</span>':cls.includes('omw')?'<span class="omwi">›</span>':''}</div>`; }
+function faces(ids, size=30){ return `<div class="faces">${ids.map((id,i)=>`<div style="z-index:${10-i}">${av(id,size)}</div>`).join('')}</div>`; }
+const hueFor = L => document.body.dataset.scheme==='unit' ? `var(--unit-${L.unitKind})` : `var(--cat-${L.cat})`;
+
+const LOOPS = {
+  thu:{ id:'thu', title:'Thursday trivia', unit:'donlon · lounge', unitKind:'dorm', cat:'social', place:'Donlon lounge', room:'', walk:'downstairs', members:['lydia','marcus','maya','sarah'], cap:8, streak:6, hype:{ lydia:4, marcus:3, maya:5 }, rowTime:'8:00p' },
+  fri:{ id:'fri', title:'Lift Fridays', unit:'donlon 2f · floor', unitKind:'dorm', cat:'fitness', place:'Teagle gym', room:'2nd floor', walk:'6 min walk from Donlon', members:['josh','priya','ryan','sarah'], cap:6, streak:4, hype:{ josh:4, priya:3, ryan:5 }, rowTime:'5:30p' },
+  brunch:{ id:'brunch', title:'Sunday brunch table', unit:'north · campus', unitKind:'north', cat:'food', place:'North Star', room:'', walk:'4 min walk from Donlon', members:['lydia','maya','sarah'], cap:6, streak:2, hype:{ lydia:2, maya:3 }, rowTime:'11:00a' },
+  sun:{ id:'sun', title:'CS 2110 · Sunday HW Crew', unit:'cs 2110 · class', unitKind:'class', cat:'class', place:'Uris Cocktail Lounge', room:'', walk:'9 min walk from Donlon', members:['josh','lydia','priya','marcus','sarah'], cap:6, streak:3, hype:{ josh:2, lydia:3, marcus:2 }, rowTime:'4:00p' },
+};
+const soonS = (when, sub, cd, note) => ({ state:'soon', when, whenSub:sub, cd, here:{}, omw:[], note });
+const MOMENTS = {
+  soon:{ clock:'9:41', today:4, open:'thu',
+    groups:[ ['Thu · today', ['thu'], 'next up'], ['Fri · tomorrow', ['fri']], ['Sun', ['brunch','sun']] ],
+    thu: soonS('Thu 8:00p','tonight · weekly · 6-wk streak','in 10h 19m',{ by:'maya', text:'Theme is 2000s movies. Bring a pen.' }),
+    fri: soonS('Fri 5:30p','tomorrow · weekly · 4-wk streak','in 1d 7h',{ by:'josh', text:'Front desk badges you in until 6p. Come before then.' }),
+    brunch: soonS('Sun 11:00a','in 3 days · weekly · 2-wk streak','in 3d 1h',null),
+    sun: soonS('Sun 4:00p','in 3 days · weekly · 3-wk streak','in 3d 6h',{ by:'lydia', text:'Bring the HW3 handout, Uris printers are down.' }) },
+  live:{ clock:'5:41', today:5, open:'fri',
+    groups:[ ['Fri · today', ['fri'], 'live'], ['Sun', ['brunch','sun']] ],
+    fri:{ state:'live', when:'Now · started 5:30p', whenSub:'11 min in · usually runs 90 min', cd:'11m in', here:{ josh:'5:24p', priya:'5:33p' }, omw:['ryan'], note:{ by:'josh', text:'2nd floor, racks by the window.', here:true } },
+    brunch: soonS('Sun 11:00a','in 2 days · weekly · 2-wk streak','in 1d 17h',null),
+    sun: soonS('Sun 4:00p','in 2 days · weekly · 3-wk streak','in 1d 22h',{ by:'lydia', text:'Bring the HW3 handout, Uris printers are down.' }) },
+  done:{ clock:'7:05', today:5, open:'fri',
+    groups:[ ['Fri · today', ['fri'], 'met'], ['Sun', ['brunch','sun']] ],
+    fri:{ state:'done', when:'Met today · 5:30p to 7:02p', whenSub:'4 of 4 showed · streak is 5', cd:'next Fri', here:{ josh:'5:24p', priya:'5:33p', ryan:'5:47p', sarah:'5:41p' }, omw:[], note:null },
+    brunch: soonS('Sun 11:00a','in 2 days · weekly · 2-wk streak','in 1d 16h',null),
+    sun: soonS('Sun 4:00p','in 2 days · weekly · 3-wk streak','in 1d 21h',{ by:'lydia', text:'Bring the HW3 handout, Uris printers are down.' }) },
+};
+
+function cardHTML(L, S, st){
+  const meHere = st.here || !!S.here[ME], meOmw = st.omw;
+  const nHere = Object.keys(S.here).filter(x=>x!==ME).length + (meHere?1:0);
+  const chip = S.state==='live' ? `<span class="state live"><span class="ld" style="background:#fff"></span>live · ${nHere} here</span>` : S.state==='done' ? `<span class="state">✓ met</span>` : `<span class="state">${S.cd}</span>`;
+  const cls = id => id===ME ? (meHere?'here':meOmw?'omw':S.state==='live'?'dim':'') : S.here[id] ? 'here' : S.omw.includes(id) ? 'omw' : S.state==='live' ? 'dim' : '';
+  const fc = L.members.map(id => av(id, 32, cls(id))).join('');
+  let who;
+  if (S.state==='live'){
+    const h = Object.keys(S.here).filter(x=>x!==ME).map(id=>`<b>${first(id)}</b> ${S.here[id]}`); if (meHere) h.push('<b>you</b>');
+    const o = [...S.omw.map(first), ...(meOmw?['<em>you</em>']:[])];
+    who = `${h.length ? h.join(', ')+' here' : 'nobody here yet'}${o.length ? ` · ${o.join(', ')} on the way` : ''}${!meHere && !meOmw ? ' · <em>you?</em>' : ''}`;
+  } else if (S.state==='done'){
+    who = `<b>all ${['','','','three','four','five','six'][L.members.length]}</b> showed · you got there ${S.here[ME]}`;
+  } else {
+    const others = L.members.filter(x=>x!==ME).map(first); const avg = Math.round(Object.values(L.hype).reduce((a,b)=>a+b,0)/Object.values(L.hype).length);
+    who = `${others.slice(0,-1).join(', ')}${others.length>1?' and ':''}${others.slice(-1)} and <b>you</b> · ${L.cap-L.members.length} open · hype ${flames(avg)}`;
+  }
+  const hypeBtn = lbl => `<button class="btn s hype" data-act="hype"><span class="lbl">🔥 ${st.hype===0?lbl:HYPE_LABELS[st.hype]}</span><span class="meter">${[1,2,3,4,5].map(i=>`<i class="${i<=st.hype?'on':''}"></i>`).join('')}</span></button>`;
+  const calBtn = `<button class="btn g" data-act="cal" data-on="${st.cal?1:0}">${st.cal?'✓ On calendar':'📅 Calendar'}</button>`;
+  const acts = S.state==='live'
+    ? (meHere ? `<button class="btn here" data-act="here" data-on="1">✓ You’re here · ${S.here[ME]||'5:41p'}</button>${calBtn}`
+              : `<button class="btn p here" data-act="here">✓ I’m here</button><button class="btn s" data-act="omw" data-on="${meOmw?1:0}">${meOmw?'🚶 On your way':'🚶 On my way'}</button>`)
+    : S.state==='done' ? hypeBtn('Hype next Fri')+calBtn : hypeBtn('Hype '+S.when.split(' ')[0])+calBtn;
+  const note = S.note ? `<div class="note"><span class="k">heads up</span><span>${S.note.text} <span style="color:var(--text-tertiary)">· ${USERS[S.note.by].name.split(' ')[0]}${S.note.here?' (here)':''}</span></span></div>` : '';
+  const act = document.body.dataset.scheme==='activity';
+  const kick = act ? `<span class="g">${CAT[L.cat].g}</span>${CAT[L.cat].label} · ${L.unit}` : `<i></i>${L.unit}`;
+  return `<div class="card" data-loop="${L.id}" style="--hue:${hueFor(L)}">
+    <div class="card__hd" data-act="fold"><div><div class="card__kick">${kick}</div><h2 class="card__title">${L.title}</h2></div><div class="card__right">${chip}<span class="fold">⌃</span></div></div>
+    <div class="card__bd">
+      <div class="fact"><span class="ic">🕓</span><div class="m"><b>${S.when}</b><span>${S.whenSub}</span></div><span class="r${S.state==='soon'?'':' q'}">${S.cd}</span></div>
+      <div class="fact"><span class="ic">📍</span><div class="m"><b>${L.place}${L.room?' · '+L.room:''}</b><span>${L.walk}</span></div><span class="r"><a href="#" style="color:inherit;text-decoration:none">Directions ›</a></span></div>
+      <div class="who"><div class="ln"><div class="fc">${fc}</div><div class="tx">${who}</div></div>${S.state==='live' ? `<div class="legend"><span><i class="h"></i>here</span><span><i class="o"></i>on the way</span></div>` : ''}</div>
+      ${note}
+      <div class="acts">${acts}</div>
+      <div class="card__ft" data-act="full">open loop <span>›</span></div>
+    </div>
+  </div>`;
+}
+function rowHTML(L, S, st){
+  const meHere = st.here || !!S.here[ME];
+  const sub = S.state==='live' ? `${L.place} · ${Object.keys(S.here).filter(x=>x!==ME).length+(meHere?1:0)} here${S.omw.length||st.omw?', '+(S.omw.length+(st.omw?1:0))+' on the way':''}`
+            : S.state==='done' ? `${L.place} · ${L.members.length} of ${L.members.length} showed · streak ${L.streak+1}`
+            : `${L.place} · ${L.members.length} in · ${L.streak}-wk streak · starts ${S.cd}`;
+  const act = document.body.dataset.scheme==='activity';
+  return `<div class="hm-ag" role="button" tabindex="0" data-act="unfold" data-loop="${L.id}" style="--hue:${hueFor(L)}">
+    <div class="mono hm-ag__t">${S.state==='live'?'now':L.rowTime}</div>
+    <div class="hm-ag__m"><div class="hm-ag__title"><span class="d"></span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${L.title}</span></div><div class="hm-ag__s">${sub}</div></div>
+    ${faces(L.members.slice(0,4))}<span class="go">›</span></div>`;
+}
+function homeHTML(M, st){
+  const order=[1,2,3,4,5,6,0]; const lbl=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const wk = order.map((d,i)=>{ const past = order.indexOf(d) < order.indexOf(M.today); const has = d===4||d===5||d===0;
+    return `<div class="${d===M.today?'today':''}${past?' past':''}${has?' has':''}"><span class="l">${lbl[d]}</span><span class="n">${(30+i)%31+1}</span><i></i></div>`; }).join('');
+  const tag = t => t==='next up' ? `<span class="c">next up</span>` : t==='live' ? `<span class="c live"><span class="ld"></span>meeting now</span>` : t==='met' ? `<span class="c" style="color:var(--text-tertiary)">met</span>` : '';
+  const groups = M.groups.map(([label, ids, t]) => `<div class="grp"><div class="glbl">${label} ${tag(t)}</div>${ids.map(id => st.open[id] ? cardHTML(LOOPS[id], M[id], st[id]) : rowHTML(LOOPS[id], M[id], st[id])).join('')}</div>`).join('');
+  return `
+  <div class="status"><span>${M.clock}</span><span>●●●</span></div>
+  <div class="apphead"><span class="wordmark">Loop<i></i></span>${av('sarah',30)}</div>
+  <div class="chips"><span class="chip">🔍</span><span class="chip" data-on="1">Your week <span class="n">4</span></span><span class="chip">Waiting <span class="n">1</span></span><span class="chip">Past <span class="n">2</span></span></div>
+  <div class="scroll"><div class="pad"><div class="wk">${wk}</div>${groups}
+    <div style="text-align:center;font-size:12px;color:var(--text-tertiary);margin-top:28px">Loop keeps the rhythm and the next one.</div>
+  </div></div>
+  <div class="toast"></div>`;
+}
+const PHONES = [];
+function mount(phone){
+  const M = MOMENTS[phone.dataset.s];
+  const st = { open:{ [M.open]:true } };
+  Object.keys(LOOPS).forEach(id => st[id] = { hype:0, cal:false, here:false, omw:false });
+  const toast = (title, body) => { const t = phone.querySelector('.toast'); t.innerHTML = `<b>${title}</b>${body}`; t.dataset.on='1'; clearTimeout(t._t); t._t = setTimeout(()=>t.dataset.on='0', 2200); };
+  const render = () => { const sc = phone.querySelector('.scroll'); const y = sc ? sc.scrollTop : 0; phone.innerHTML = homeHTML(M, st); phone.querySelector('.scroll').scrollTop = y; };
+  render(); PHONES.push(render);
+  phone.addEventListener('click', e=>{
+    const el = e.target.closest('[data-act]'); if(!el) return; const a = el.dataset.act;
+    const id = el.closest('[data-loop]')?.dataset.loop; const s = st[id];
+    if (a==='unfold'){ st.open[id]=true; render(); }
+    else if (a==='fold'){ st.open[id]=false; render(); }
+    else if (a==='full'){ toast('Full loop screen', 'Share, leave, report, and the rules live there.'); }
+    else if (a==='hype'){ if (s.hype<5) s.hype++; render(); if (s.hype>=5) toast('Maxed out.', 'The crew feels it.'); }
+    else if (a==='cal'){ s.cal=!s.cal; render(); toast(s.cal?'Added to your calendar.':'Removed.', 'Every week, until you leave the loop.'); }
+    else if (a==='here'){ if (s.here) return; s.here=true; s.omw=false; render(); toast('You’re here. 5:41p', 'Josh and Priya can see you made it.'); }
+    else if (a==='omw'){ s.omw=!s.omw; render(); if (s.omw) toast('On your way.', 'The crew sees a dashed ring on you until you check in.'); }
+  });
+  phone.addEventListener('keydown', e=>{ if (e.key==='Enter' && e.target.matches('[data-act="unfold"]')) e.target.click(); });
+}
+document.querySelectorAll('.phone').forEach(mount);
+document.querySelectorAll('.pick button').forEach(b => b.addEventListener('click', ()=>{
+  document.body.dataset.scheme = b.dataset.c; document.querySelectorAll('.pick button').forEach(x=>x.dataset.on = x===b?1:0);
+  document.querySelectorAll('.swatches').forEach(s => s.hidden = s.dataset.sw!==b.dataset.c); PHONES.forEach(r=>r());
+}));
+</script>
+</body>
+</html>
