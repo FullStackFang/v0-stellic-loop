@@ -370,6 +370,65 @@
       ::view-transition-new(root){ animation:none; }
     }
 
+    /* ===== Advisor (Dana) — three sub tabs on a segmented dial; routed spots are the only cards
+       on the surface, so the card shape means "act here". Everything else is a hairline row. ===== */
+    .adv-seg{ margin:8px 20px 0; }
+    .adv-seg .pls-seg__opt{ flex-direction:column; gap:3px; padding:7px 0 6px; font-size:13px; }
+    .pls-seg__cnt{ font-family:var(--font-mono); font-weight:500; font-size:10.5px; color:var(--text-tertiary); }
+    .pls-seg__opt[aria-pressed="true"] .pls-seg__cnt--acc{ color:var(--accent-strong); }
+    .adv-hero{ font-family:var(--font-display); font-weight:800; font-size:24px; line-height:1.08; letter-spacing:-.02em; margin:0; color:var(--text-primary); }
+    .adv-lede{ font-size:13px; line-height:1.5; color:var(--text-secondary); margin:6px 0 0; max-width:34ch; }
+    .adv-big{ display:flex; align-items:baseline; gap:10px; }
+    .adv-big b{ font-family:var(--font-display); font-weight:800; font-size:44px; line-height:1; letter-spacing:-.035em; font-variant-numeric:tabular-nums; color:var(--text-primary); }
+    .adv-big > span{ font-size:13px; color:var(--text-secondary); }
+    .adv-stats{ display:flex; gap:22px; margin-top:14px; }
+    .adv-stats b{ display:block; font-family:var(--font-mono); font-weight:500; font-size:19px; line-height:1; font-variant-numeric:tabular-nums; color:var(--text-primary); }
+    .adv-stats span{ display:block; margin-top:5px; font-size:11.5px; color:var(--text-tertiary); }
+    .adv-spark{ width:100%; height:44px; display:block; }
+    .adv-spark__area{ fill:var(--bg-sunken); }
+    .adv-spark__line{ fill:none; stroke:var(--text-primary); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round;
+      stroke-dasharray:400; stroke-dashoffset:400; animation:adv-draw .9s var(--ease-settle) .1s forwards; }
+    .adv-spark circle{ fill:var(--accent); }
+    @keyframes adv-draw{ to{ stroke-dashoffset:0; } }
+    .adv-spark__lbl{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--text-tertiary); margin-top:4px; }
+    .adv-grp{ margin-top:24px; }
+    .adv-gl{ display:flex; align-items:baseline; gap:8px; font-weight:600; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:10px; }
+    .adv-gl span{ margin-left:auto; font-family:var(--font-mono); font-weight:500; letter-spacing:0; text-transform:none; }
+    .adv-u{ margin-left:6px; font-weight:600; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-tertiary); }
+    .adv-r{ display:grid; grid-template-columns:1fr auto; column-gap:14px; align-items:center; padding:11px 0; border-top:1px solid var(--border-hairline); }
+    .adv-r:first-of-type{ border-top:0; }
+    .adv-r--person{ grid-template-columns:auto 1fr auto; }
+    .adv-r__t{ font-weight:600; font-size:14.5px; line-height:1.2; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .adv-r__s{ margin-top:3px; font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .adv-r__n{ text-align:right; font-family:var(--font-mono); font-weight:500; font-size:15px; line-height:1; color:var(--text-primary); font-variant-numeric:tabular-nums; flex-shrink:0; }
+    .adv-r__n small{ display:block; margin-top:4px; font-size:10.5px; color:var(--text-tertiary); }
+    .adv-r__n .adv-dn{ color:var(--accent-strong); } .adv-r__n .adv-up{ color:var(--status-live); }
+    .adv-round{ width:34px; height:34px; border-radius:50%; padding:0; display:grid; place-items:center; border:1px solid transparent; cursor:pointer;
+      background:var(--bg-raised); color:var(--text-secondary); box-shadow:var(--edge-lift), var(--shadow-card); transition:all var(--dur-2) var(--ease-out); }
+    .adv-round:disabled{ background:transparent; color:var(--status-live); box-shadow:none; cursor:default; }
+    .adv-card{ --hue:var(--text-tertiary); border-radius:18px; background:var(--bg-surface); border:1px solid var(--border-hairline); box-shadow:var(--shadow-card); overflow:hidden; margin-bottom:10px;
+      transition:box-shadow var(--dur-3) var(--ease-settle), transform var(--dur-3) var(--ease-settle), background var(--dur-2) var(--ease-out); }
+    .adv-card[data-open="true"]{ background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-lift); transform:translateY(-1px);
+      border-color:color-mix(in srgb, var(--hue) 28%, var(--border-hairline)); }
+    .adv-card[data-done="true"]{ box-shadow:none; background:var(--bg-page); border-color:transparent; }
+    .adv-band{ display:flex; align-items:center; gap:12px; width:100%; padding:11px 14px; border:0; cursor:pointer; text-align:left; font:inherit; color:inherit;
+      background:color-mix(in srgb, var(--hue) 11%, var(--bg-surface)); }
+    .adv-card[data-done="true"] .adv-band{ background:transparent; }
+    .adv-band__k{ font-weight:600; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--hue); }
+    .adv-band__t{ margin-top:4px; font-family:var(--font-display); font-weight:700; font-size:17px; line-height:1.1; letter-spacing:-.015em; color:var(--text-primary); }
+    .adv-band .adv-r__n{ font-size:17px; }
+    .adv-fold{ display:grid; grid-template-rows:0fr; transition:grid-template-rows var(--dur-3) var(--ease-settle); }
+    .adv-fold > div{ overflow:hidden; min-height:0; }
+    .adv-fold[data-open="true"]{ grid-template-rows:1fr; }
+    .adv-cb{ padding:4px 14px 14px; }
+    .adv-fact{ display:grid; grid-template-columns:62px 1fr; gap:10px; padding:9px 0; border-top:1px solid var(--border-hairline); font-size:13px; line-height:1.45; color:var(--text-primary); }
+    .adv-fact:first-child{ border-top:0; padding-top:8px; }
+    .adv-fact__l{ font-weight:600; font-size:10px; line-height:1.6; letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); }
+    .adv-fact small{ display:block; color:var(--text-secondary); font-size:12px; }
+    .adv-sent.pls-btn:disabled{ opacity:1; background:transparent; color:var(--status-live); box-shadow:none; }
+    .adv-guard{ margin:26px 0 0; padding-top:12px; border-top:1px solid var(--border-hairline); font-size:12px; line-height:1.45; color:var(--text-tertiary); }
+    .adv-guard b{ font-weight:600; color:var(--text-secondary); }
+
     /* ===== Hype — tap to pump, flames rise, molten at max ===== */
     .hype{ position:relative; overflow:visible; gap:7px; }
     .hype__lbl{ white-space:nowrap; }
@@ -970,18 +1029,37 @@
       // phrases 5+ students used in intents — k-anonymized, never one person's words
       stuck:[ { label:'HW3 · recursion', n:14 }, { label:'Generics', n:9 }, { label:'Prelim 2', n:8 }, { label:'Big-O proofs', n:5 } ],
     };
-    // Counselor · whole school (Dana). % in a loop by house lives in COHORT_HOUSES.
+    // Counselor · whole school (Dana). Houses come from COHORT_HOUSES; deltas are pts wk over wk.
+    const SCHOOL_HOUSE_DELTA = { 'Donlon':2, 'Court-Kay-Bauer':1, 'Balch':1, 'Dickson':2, 'Toni Morrison':1, 'Mews':0, 'Ganędago':-1, 'Jameson':-2 };
+    // Cold spots with someone to send them to. `id` is what schoolAct keys off; it never reaches students.
+    const SCHOOL_ROUTED = {
+      'Jameson':   { id:'cold-jameson',  to:'Jameson RAs',     cta:'Nudge RAs',     line:'lowest house on North, 19 loops', why:'3 floors have no seeded loop. Their RAs see the gaps in the Floor view.' },
+      'ECON 1110': { id:'cold-econ',     to:'ECON 1110 staff', cta:'Flag to staff', line:'412 waiting, 3 loops',             why:'The biggest gap on campus between wanting a loop and having one.' },
+      'Transfers': { id:'cold-transfer', to:'a mixer loop',    cta:'Draft mixer',   line:'no dorm floor to seed from',        why:'No floor, no RA. A campus-wide mixer loop appears to them as "Advising & Wellbeing is starting…".' },
+    };
+    // Slipping, but still above the line for its kind: nothing to route yet.
+    const SCHOOL_WATCH = { 'Class of 2027':'flat since week 4', 'Ganędago':'22 loops' };
     const SCHOOL = {
       undergrads:15735, activeLoops:1240, formedThisWeek:86, wrappedThisWeek:41, delta:2,
       trend:[38,46,55,59,63,64,66,68],
-      byCourse:[ ['CS 2110',44],['CHEM 2070',39],['MATH 1920',36],['CS 2800',31],['ECON 1110',29],['PSYCH 1101',22] ],
-      byYear:[ ['Class of 2030',71],['Class of 2029',66],['Class of 2028',58],['Class of 2027',52],['Transfers',41] ],
-      cold:[
-        { id:'cold-jameson', n:'58', title:'Jameson · 58%, down 2', line:'lowest house on North · 19 loops', why:'3 floors have no seeded loop. Ask their RAs — the RA view shows them the gaps.', cta:'Nudge Jameson RAs', hi:true },
-        { id:'cold-econ',    n:'29', title:'ECON 1110 · 412 waiting, 3 loops', line:'biggest gap between wanting and having', cta:'Flag to course staff' },
-        { id:'cold-transfer',n:'41', title:'Transfers · 41%', line:'no dorm floor to seed from', cta:'Draft transfer mixer loop' },
-      ],
+      // every scope Dana can see, one shape: unit h(ouse) · c(ourse) · y(ear); pct = % in a loop
+      scopes:[
+        ...COHORT_HOUSES.map(h => ({ id:'h-'+h.dorm, unit:'h', label:h.dorm, pct:h.pct, delta:SCHOOL_HOUSE_DELTA[h.dorm] ?? 0, line:`${h.loops} loops` })),
+        { id:'c-cs2110',  unit:'c', label:'CS 2110',    pct:44, delta:2,  line:'9 loops, highest 2000-level' },
+        { id:'c-chem',    unit:'c', label:'CHEM 2070',  pct:39, delta:1,  line:'12 loops' },
+        { id:'c-math',    unit:'c', label:'MATH 1920',  pct:36, delta:3,  line:'14 loops' },
+        { id:'c-cs2800',  unit:'c', label:'CS 2800',    pct:31, delta:2,  line:'11 loops' },
+        { id:'c-econ',    unit:'c', label:'ECON 1110',  pct:29, delta:0,  line:'' },
+        { id:'c-psych',   unit:'c', label:'PSYCH 1101', pct:22, delta:1,  line:'1,120 enrolled, 6 loops' },
+        { id:'y-2030',    unit:'y', label:'Class of 2030', pct:71, delta:3,  line:'first-years' },
+        { id:'y-2029',    unit:'y', label:'Class of 2029', pct:66, delta:2,  line:'' },
+        { id:'y-2028',    unit:'y', label:'Class of 2028', pct:58, delta:1,  line:'' },
+        { id:'y-2027',    unit:'y', label:'Class of 2027', pct:52, delta:-1, line:'' },
+        { id:'y-transfer',unit:'y', label:'Transfers',     pct:41, delta:-1, line:'' },
+      ].map(s => ({ ...s, act:SCHOOL_ROUTED[s.label] || null, watch:SCHOOL_WATCH[s.label] || null,
+                    line:(SCHOOL_ROUTED[s.label]?.line) || SCHOOL_WATCH[s.label] || s.line })),
     };
+    const SCHOOL_UNIT = { h:{ name:'house', plural:'Houses', hue:'var(--unit-dorm)' }, c:{ name:'course', plural:'Courses', hue:'var(--unit-class)' }, y:{ name:'year', plural:'Class years', hue:'var(--unit-major)' } };
 
     /* Advisor caseload — a confidential belonging signal, NOT a feed of
        intents or messages (§2 guardrail: "one number, a sign to reach
@@ -989,10 +1067,16 @@
        loops, so Dana knows who to check on. */
     const ADVISOR_CASELOAD = 128;
     const ADVISOR_REACH = [
-      { id:'r1', name:'Theo Nguyen',      dorm:'Jameson',   signal:'0 loops · 3 wks in',  note:'Hasn’t landed in a loop yet.' },
-      { id:'r2', name:'Priscilla Adams',  dorm:'Mews',      signal:'left their only loop', note:'Was in a loop, then left — worth a check-in.' },
-      { id:'r3', name:'Diego Martín',     dorm:'Ganędago',  signal:'0 loops',             note:'New transfer — no intent dropped.' },
-      { id:'r4', name:'Hannah Weiss',     dorm:'Dickson',   signal:'0 loops · quiet 2 wks',note:'Dropped an intent, never joined.' },
+      { id:'r1', name:'Theo Nguyen',      dorm:'Jameson',   signal:'0 loops, 3 weeks in' },
+      { id:'r2', name:'Priscilla Adams',  dorm:'Mews',      signal:'left their only loop' },
+      { id:'r3', name:'Diego Martín',     dorm:'Ganędago',  signal:'new transfer, 0 loops' },
+      { id:'r4', name:'Hannah Weiss',     dorm:'Dickson',   signal:'0 loops, quiet 2 weeks' },
+    ];
+    // The good news line on Check on: advisees who landed in a loop this week (count + two names).
+    const ADVISOR_LANDED_N = 6;
+    const ADVISOR_LANDED = [
+      { id:'l1', name:'Nora Bell',   dorm:'Balch',  signal:'joined CHEM 2070 on Tue' },
+      { id:'l2', name:'Owen Park',   dorm:'Donlon', signal:'joined 6am run on Mon' },
     ];
 
     /* ============================================================
@@ -4858,105 +4942,163 @@
     }
 
     /* ---------- Counselor · the whole school (Dana) ----------
-       Staff surface, not the student app. Campus belonging as ONE number
-       rolled up by house / course / year, cold spots routed to people who
-       can act (RAs, TAs, departments), then her own advisee reach-out list.
-       Never intents or messages (§2 guardrail). */
+       Staff surface, not the student app. Three sub tabs, one job each:
+       Check on = her caseload, Route = cold spots with someone to send them
+       to (plus what is slipping), Pulse = the campus number and every house,
+       course and year. Routed spots are the only cards on the surface: the
+       card shape means "act here". Never intents or messages (§2 guardrail).
+       Picked from mockups-advisor-tabs (B) → -b (B3 cards) → -dial (D1). */
+    function CountNum({ n, suffix='' }){
+      const v = useCountUp(n, 640);
+      return <>{Math.round(v).toLocaleString()}{suffix}</>;
+    }
+    function TrendLine({ values, label }){
+      const w=350, h=44, pad=3, min=Math.min(...values)-8, max=Math.max(...values)+3;
+      const pts = values.map((v,i)=>[pad + i*(w-2*pad)/(values.length-1), h-pad - (v-min)/(max-min)*(h-2*pad)]);
+      const line = pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ');
+      const last = pts[pts.length-1];
+      return (
+        <div>
+          <svg className="adv-spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+            <polygon className="adv-spark__area" points={`${pts[0][0]},${h} ${line} ${last[0]},${h}`} />
+            <polyline className="adv-spark__line" points={line} />
+            <circle cx={last[0]} cy={last[1]} r="3" />
+          </svg>
+          <div className="adv-spark__lbl"><span>week 1</span><span>{label}</span></div>
+        </div>
+      );
+    }
+    function Delta({ d }){
+      return d<0 ? <small className="adv-dn">{d} this wk</small> : d>0 ? <small className="adv-up">+{d} this wk</small> : <small>flat</small>;
+    }
+    const ADV_TABS = [ ['check','Check on'], ['route','Route'], ['pulse','Pulse'] ];
     function AdvisorDashboard({ state, actions }){
-      const { campus, theme, user, viewerId, unread, staffDone={} } = state;
+      const { campus, theme, user, viewerId, staffDone={} } = state;
       const S = SCHOOL;
-      const [seg, setSeg] = useState('houses');
+      const [tab, setTab] = useState('route');
+      const routed = S.scopes.filter(s=>s.act);
+      const watching = S.scopes.filter(s=>s.watch);
+      const [open, setOpen] = useState(routed[0]?.id || null);   // one routed card open at a time
       const isDone = (id) => !!staffDone[id];
       const pct = campus.inLoopPct;
-      const inLoopCampus = Math.round(S.undergrads * pct/100);
       const inLoop = Math.round(ADVISOR_CASELOAD * pct/100);
-      const rows = seg==='houses' ? COHORT_HOUSES.map(h=>({ label:h.dorm, total:h.pct, pct:h.pct }))
-                 : seg==='courses' ? S.byCourse.map(([l,p])=>({ label:l, total:p, pct:p }))
-                 : S.byYear.map(([l,p])=>({ label:l, total:p, pct:p }));
+      const notIn = ADVISOR_CASELOAD - inLoop;
       const trend = [...S.trend.slice(0,-1), pct];
+      const counts = { check:[ADVISOR_REACH.length, true], route:[routed.length, true], pulse:[pct+'%', false] };
+
+      const ScopeRow = ({ s, i, unitTag=true }) => (
+        <div className="adv-r rise" style={{ animationDelay:(i*36)+'ms' }}>
+          <div style={{ minWidth:0 }}>
+            <div className="adv-r__t">{s.label}{unitTag && <span className="adv-u">{SCHOOL_UNIT[s.unit].name}</span>}</div>
+            {s.line && <div className="adv-r__s">{s.line}</div>}
+          </div>
+          <div className="adv-r__n">{s.pct}%<Delta d={s.delta} /></div>
+        </div>
+      );
+      const PersonRow = ({ p, i, landed }) => {
+        const done = isDone('reach-'+p.id);
+        return (
+          <div className="adv-r adv-r--person rise" style={{ animationDelay:(i*36)+'ms' }}>
+            <Avatar id={p.id} name={p.name} size={34} />
+            <div style={{ minWidth:0 }}><div className="adv-r__t">{p.name}</div><div className="adv-r__s">{p.dorm} · {p.signal}</div></div>
+            {!landed && (
+              <button className="adv-round" disabled={done} aria-label={done ? `Reached out to ${p.name}` : `Reach out to ${p.name}`}
+                onClick={()=>actions.staffReach(p.name, 'reach-'+p.id)}><Icon name={done?'check':'message-square'} size={16} /></button>
+            )}
+          </div>
+        );
+      };
+      const RoutedCard = ({ s, i }) => {
+        const a = s.act, done = isDone(a.id), isOpen = open===s.id;
+        return (
+          <div className="adv-card rise" data-open={isOpen} data-done={done} style={{ '--hue':SCHOOL_UNIT[s.unit].hue, animationDelay:(i*36)+'ms' }}>
+            <button className="adv-band" aria-expanded={isOpen} onClick={()=>setOpen(isOpen ? null : s.id)}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div className="adv-band__k">{SCHOOL_UNIT[s.unit].name} · to {a.to}</div>
+                <div className="adv-band__t">{s.label}</div>
+              </div>
+              <div className="adv-r__n">{s.pct}%<Delta d={s.delta} /></div>
+            </button>
+            <div className="adv-fold" data-open={isOpen}><div>
+              <div className="adv-cb">
+                <div className="adv-fact"><div className="adv-fact__l">why</div><div>{a.why}</div></div>
+                <div className="adv-fact"><div className="adv-fact__l">goes to</div><div>{a.to}<small>They get the count, never who.</small></div></div>
+                <Button block size="sm" className={'mt-2.5'+(done?' adv-sent':'')} variant={done?'ghost':'primary'} icon={done?'check':'send'} disabled={done}
+                  onClick={()=>actions.schoolAct(a)}>{done ? 'Sent' : a.cta}</Button>
+              </div>
+            </div></div>
+          </div>
+        );
+      };
+      const Guard = () => (
+        <p className="adv-guard"><b>What you never see:</b> intents, messages, who likes whom. Only whether a student has landed in a loop, by house, course and year.</p>
+      );
+
+      const screens = {
+        check: () => (
+          <>
+            <h1 className="adv-hero">{notIn} of your {ADVISOR_CASELOAD} advisees<br/>aren't in a loop.</h1>
+            <p className="adv-lede">The one signal that predicts who stays. A nudge from you, not an algorithm.</p>
+            <div className="adv-grp" style={{ marginTop:18 }}>
+              <div className="adv-gl">Worth a check-in<span>{ADVISOR_REACH.length}</span></div>
+              {ADVISOR_REACH.map((p,i)=><PersonRow key={p.id} p={p} i={i+1} />)}
+            </div>
+            <div className="adv-grp">
+              <div className="adv-gl">Landed this week<span>{ADVISOR_LANDED_N}</span></div>
+              {ADVISOR_LANDED.map((p,i)=><PersonRow key={p.id} p={p} i={i+5} landed />)}
+            </div>
+            <Guard />
+          </>
+        ),
+        route: () => (
+          <>
+            <h1 className="adv-hero">{routed.length} cold spots, {watching.length} slipping.</h1>
+            <p className="adv-lede">Each card goes to someone who can act. They get the count, never who.</p>
+            <div style={{ marginTop:16 }}>{routed.map((s,i)=><RoutedCard key={s.id} s={s} i={i+1} />)}</div>
+            <div className="adv-grp">
+              <div className="adv-gl">Watch<span>{watching.length} · nothing to do yet</span></div>
+              {watching.map((s,i)=><ScopeRow key={s.id} s={s} i={i+4} />)}
+            </div>
+            <Guard />
+          </>
+        ),
+        pulse: () => (
+          <>
+            <div className="adv-big"><b><CountNum n={pct} suffix="%" /></b><span>of campus in a loop, up {S.delta} this week</span></div>
+            <div style={{ marginTop:12 }}><TrendLine values={trend} label={`${pct}% now`} /></div>
+            <div className="adv-stats">
+              <div><b><CountNum n={S.activeLoops} /></b><span>active loops</span></div>
+              <div><b><CountNum n={S.formedThisWeek} /></b><span>formed this week</span></div>
+              <div><b><CountNum n={S.wrappedThisWeek} /></b><span>wrapped</span></div>
+            </div>
+            {['h','c','y'].map((u,k)=>(
+              <div className="adv-grp" key={u}>
+                <div className="adv-gl">{SCHOOL_UNIT[u].plural}<span>% in a loop</span></div>
+                {S.scopes.filter(s=>s.unit===u).sort((a,b)=>a.pct-b.pct).map((s,i)=><ScopeRow key={s.id} s={s} i={i+3+k} unitTag={false} />)}
+              </div>
+            ))}
+            <Guard />
+          </>
+        ),
+      };
+
       return (
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
             left={<StaffHeaderLeft glyph={<Icon name="heart-handshake" size={16} />} title="Advising & Wellbeing" kicker={`${COUNSELOR.name.split(' ')[0]} · staff view · all undergrads`} />}
-            right={<>
-              <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />
-            </>} />
+            right={<AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />} />
 
-          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-8 fade-in">
-            <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
-              <LiveDot />cornell · this week
-            </div>
-            <h1 className="pls-display mt-1" style={{ fontWeight:800, fontSize:26, lineHeight:1.05, color:'var(--text-primary)' }}>
-              <span style={{ color:'var(--accent-strong)' }}>{pct}%</span> of campus<br/>is in a loop.
-            </h1>
+          <div className="pls-seg pls-seg--3 adv-seg" role="tablist" style={{ '--seg-i': ADV_TABS.findIndex(t=>t[0]===tab) }}>
+            <span className="pls-seg__thumb" />
+            {ADV_TABS.map(([k,l])=>(
+              <button key={k} className="pls-seg__opt" role="tab" aria-selected={tab===k} aria-pressed={tab===k} onClick={()=>setTab(k)}>
+                {l}<span className={'pls-seg__cnt'+(counts[k][1]?' pls-seg__cnt--acc':'')}>{counts[k][0]}</span>
+              </button>
+            ))}
+          </div>
 
-            <Card className="p-4 mt-4">
-              <div className="flex items-center gap-4">
-                <BelongingRing pct={pct} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                    {inLoopCampus.toLocaleString()} of {S.undergrads.toLocaleString()} undergrads. <span style={{ color:'var(--text-primary)', fontWeight:600 }}>+{S.delta} pts</span> week over week; week 6 is where it usually dips.
-                  </p>
-                  <div className="flex items-center gap-4 mt-3">
-                    <StaffStat n={S.activeLoops.toLocaleString()} label="active loops" />
-                    <StaffStat n={S.formedThisWeek} label="formed this wk" tone="live" />
-                    <StaffStat n={S.wrappedThisWeek} label="wrapped" tone="acc" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-end gap-1 mt-3" style={{ height:38 }}>
-                {trend.map((v,i)=>(
-                  <div key={i} style={{ flex:1, height:Math.max(3, Math.round(v/100*38)), borderRadius:'3px 3px 0 0', background: i===trend.length-1 ? 'var(--accent)' : 'var(--border-hairline)' }} />
-                ))}
-              </div>
-              <div className="flex justify-between pls-mono mt-1" style={{ fontSize:10, color:'var(--text-tertiary)' }}><span>wk 1</span><span>in a loop · % of campus</span><span>wk {trend.length}</span></div>
-            </Card>
-
-            <StaffSection icon="trending-up" title="Belonging by" count="% in a loop" />
-            <div className="pls-seg pls-seg--3" role="tablist" style={{ marginBottom:10, '--seg-i': ['houses','courses','years'].indexOf(seg) }}>
-              <span className="pls-seg__thumb" />
-              {[['houses','House'],['courses','Course'],['years','Class year']].map(([k,l])=>(
-                <button key={k} className="pls-seg__opt" role="tab" aria-selected={seg===k} aria-pressed={seg===k} onClick={()=>setSeg(k)}>{l}</button>
-              ))}
-            </div>
-            <Card className="p-3.5">
-              <AggBars rows={rows} max={100} />
-            </Card>
-
-            <StaffSection icon="flag" title="Cold spots" count={`${S.cold.length} to look at`} countAccent
-              lede="Where the number is low or falling — routed to who can act (RAs, TAs, departments), not students." />
-            <div className="space-y-2.5">
-              {S.cold.map((c,i)=>{
-                const done = isDone(c.id);
-                return (
-                  <Card key={c.id} className="p-3.5 rise" style={{ animationDelay:(i*45)+'ms', ...(c.hi && !done ? { borderColor:'var(--accent)' } : {}) }}>
-                    <div className="flex items-center gap-3">
-                      <div className="pls-mono" style={{ width:34, height:34, borderRadius:10, background:'var(--accent-quiet)', color:'var(--accent-strong)', display:'grid', placeItems:'center', fontWeight:700, fontSize:12 }}>{c.n}</div>
-                      <div className="min-w-0 flex-1">
-                        <div style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>{c.title}</div>
-                        <div className="pls-mono text-[11px] mt-0.5" style={{ color:'var(--text-tertiary)' }}>{c.line}</div>
-                      </div>
-                    </div>
-                    {c.why && <p className="text-[12.5px] mt-2 leading-relaxed" style={{ color:'var(--text-secondary)' }}>{c.why}</p>}
-                    <div className="mt-3">
-                      <Button size="sm" variant={done?'secondary':'primary'} icon={done?'check':'send'} disabled={done}
-                        onClick={()=>actions.schoolAct(c)}>{done ? 'Sent' : c.cta}</Button>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-
-            <StaffSection icon="life-buoy" title="Your advisees" count={`${inLoop} of ${ADVISOR_CASELOAD} in a loop`}
-              lede="The one signal that predicts who stays. Reach out — a nudge from you, not an algorithm." />
-            <Card className="p-3.5">
-              {ADVISOR_REACH.map(s => (
-                <StaffPerson key={s.id} id={s.id} name={s.name} signal={`${s.dorm} · ${s.signal}`} done={isDone('reach-'+s.id)}
-                  onReach={()=>actions.staffReach(s.name, 'reach-'+s.id)} />
-              ))}
-            </Card>
-
-            <StaffGuard>No intents, no messages, no who-likes-whom. Only whether a student has landed in a loop, rolled up by house, course and year. Everything else stays on their phone.</StaffGuard>
+          <div className="flex-1 overflow-y-auto no-scrollbar">
+            <div key={tab} className="px-5 pb-8 fade-in" style={{ paddingTop:18 }}>{screens[tab]()}</div>
           </div>
         </div>
       );

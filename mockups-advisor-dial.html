@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Advisor (Dana) v4 — B3 cards, three sub-tab dials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-raised:#fffefb; --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss);
+    --unit-dorm:var(--rose); --unit-class:var(--slate); --unit-year:var(--amber-600);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+    --shadow-raised:0 8px 26px -12px rgba(80,40,30,.2);
+    --shadow-lift:0 2px 5px rgba(80,40,30,.07), 0 18px 34px -16px rgba(80,40,30,.38);
+    --edge-lift:inset 0 1px 0 rgba(255,253,248,.9);
+    --glow-accent:0 6px 18px -10px var(--carnelian-500);
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1); --ease-quint:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 72px; }
+  .wrap{ max-width:1320px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:22px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:70ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+  .rail{ display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-top:28px; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  /* ================= phone chrome ================= */
+  .phone{ width:390px; height:800px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 14px 6px 20px; flex-shrink:0; }
+  .apphead .id{ display:flex; align-items:center; gap:9px; min-width:0; }
+  .apphead .ic{ width:30px; height:30px; border-radius:9px; background:var(--accent-quiet); color:var(--accent-strong); display:grid; place-items:center; flex-shrink:0; }
+  .apphead h2{ font:800 16px/1.1 var(--font-display); margin:0; letter-spacing:-.01em; white-space:nowrap; }
+  .apphead .k{ font:500 11px/1 var(--font-sans); color:var(--text-tertiary); margin-top:4px; white-space:nowrap; }
+  .apphead .av{ width:32px; height:32px; border-radius:50%; background:var(--accent-quiet); color:var(--accent-strong); font:600 10.5px/32px var(--font-mono); text-align:center; flex-shrink:0; }
+  .scroll{ flex:1; min-height:0; overflow-y:auto; scrollbar-width:none; overscroll-behavior:contain; } .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:18px 20px 30px; }
+  .in{ animation:in .34s var(--ease-quint) both; animation-delay:calc(var(--i,0) * 36ms); }
+  @keyframes in{ from{ opacity:0; transform:translateY(7px); } }
+  .toast{ position:absolute; left:20px; right:20px; top:72px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:12.5px; z-index:9; opacity:0; transform:translateY(-8px); transition:all .3s var(--ease-settle); pointer-events:none; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); margin-bottom:2px; }
+  .toast[data-on="1"]{ opacity:1; transform:none; }
+  .guard{ margin-top:26px; padding:12px 0 0; border-top:1px solid var(--border-hairline); font-size:12px; line-height:1.45; color:var(--text-tertiary); }
+  .guard b{ font-weight:600; color:var(--text-secondary); }
+
+  /* ================= the three dials ================= */
+  /* D1 · segmented: the app's pls-seg. A sunken track, a raised thumb that slides. Count sits under the label. */
+  .seg{ position:relative; display:flex; margin:6px 20px 0; padding:3px; border-radius:13px; background:var(--bg-sunken); flex-shrink:0; }
+  .seg .thumb{ position:absolute; top:3px; bottom:3px; left:3px; width:calc((100% - 6px)/3); border-radius:10px; background:var(--bg-surface); box-shadow:var(--edge-lift), var(--shadow-card);
+    transform:translateX(calc(var(--i,0) * 100%)); transition:transform .32s var(--ease-quint); }
+  .seg button{ flex:1; position:relative; z-index:1; border:0; background:transparent; cursor:pointer; padding:7px 0 6px; display:flex; flex-direction:column; align-items:center; gap:3px;
+    font:600 13px/1 var(--font-sans); color:var(--text-secondary); transition:color .18s var(--ease-out); }
+  .seg button i{ font:500 10.5px/1 var(--font-mono); font-style:normal; color:var(--text-tertiary); }
+  .seg button[data-on="1"]{ color:var(--text-primary); }
+  .seg button[data-on="1"] i.acc{ color:var(--accent-strong); }
+
+  /* D2 · chips: the Home row. Three raised pills sharing the width; the one you are on is accent-quiet with the glow. */
+  .chips{ display:flex; gap:6px; margin:6px 20px 0; flex-shrink:0; }
+  .chip{ flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:5px; height:36px; padding:0 8px; border-radius:999px; border:1px solid transparent;
+    background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-card); font:600 13px/1 var(--font-sans); color:var(--text-secondary); cursor:pointer; white-space:nowrap;
+    transition:background .18s var(--ease-out), color .18s var(--ease-out), box-shadow .18s var(--ease-out); }
+  .chip i{ font:500 11px/1 var(--font-mono); font-style:normal; color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+  .chip[data-on="1"] i{ color:var(--accent-strong); opacity:.7; }
+
+  /* D3 · tab strip: three equal cells, the count as a small badge. Accent-quiet badge when the count is something to do;
+     plain when it is a reading. Underline is the width of the cell. Closest to what you have, tidied. */
+  .strip{ position:relative; display:flex; margin:4px 20px 0; border-bottom:1px solid var(--border-hairline); flex-shrink:0; }
+  .strip button{ flex:1; border:0; background:transparent; cursor:pointer; padding:9px 0 11px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    font:600 13.5px/1 var(--font-sans); color:var(--text-tertiary); transition:color .18s var(--ease-out); }
+  .strip button[data-on="1"]{ color:var(--text-primary); }
+  .strip .bd{ font:600 10.5px/1 var(--font-mono); padding:4px 6px; border-radius:999px; background:var(--bg-sunken); color:var(--text-tertiary); }
+  .strip .bd.acc{ background:var(--accent-quiet); color:var(--accent-strong); }
+  .strip button[data-on="1"] .bd:not(.acc){ color:var(--text-secondary); }
+  .strip .ul{ position:absolute; bottom:-1px; height:2px; border-radius:2px; background:var(--accent); width:calc(100%/3); left:calc(var(--i,0) * 100%/3); transition:left .32s var(--ease-quint); }
+
+  /* ================= B3 body (unchanged) ================= */
+  .hero{ font:800 24px/1.08 var(--font-display); letter-spacing:-.02em; margin:0; color:var(--text-primary); }
+  .lede{ font-size:13px; line-height:1.5; color:var(--text-secondary); margin:6px 0 0; max-width:34ch; }
+  .num{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .u{ font:600 10px/1 var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:var(--text-tertiary); }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:0 14px; border-radius:999px; border:1px solid transparent; cursor:pointer;
+    font:600 13px/1 var(--font-sans); white-space:nowrap; transition:background .16s var(--ease-out), box-shadow .16s var(--ease-out), transform .12s var(--ease-out), color .16s; flex-shrink:0; }
+  .btn.p{ background:var(--accent); color:var(--accent-ink); box-shadow:var(--glow-accent); }
+  .btn:active{ transform:translateY(1px); box-shadow:none; }
+  .btn[data-done="1"]{ background:transparent; color:var(--status-live); box-shadow:none; cursor:default; }
+  .round{ width:34px; height:34px; border-radius:50%; padding:0; display:grid; place-items:center; border:1px solid transparent; cursor:pointer; flex-shrink:0;
+    background:var(--bg-raised); color:var(--text-secondary); box-shadow:var(--edge-lift), var(--shadow-card); transition:all .16s var(--ease-out); }
+  .round[data-done="1"]{ background:transparent; color:var(--status-live); box-shadow:none; cursor:default; }
+  .av{ width:34px; height:34px; border-radius:50%; background:var(--bg-sunken); color:var(--text-secondary); font:500 11px/34px var(--font-mono); text-align:center; flex-shrink:0; }
+  .spark{ width:100%; height:44px; display:block; }
+  .spark polyline{ fill:none; stroke:var(--text-primary); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round; }
+  .spark .area{ fill:var(--bg-sunken); stroke:none; } .spark circle{ fill:var(--accent); }
+  .spark .draw{ stroke-dasharray:var(--len); stroke-dashoffset:var(--len); animation:draw .9s var(--ease-quint) .1s forwards; }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .sparklbl{ display:flex; justify-content:space-between; font:500 10px/1 var(--font-mono); color:var(--text-tertiary); margin-top:4px; }
+  .fold{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .32s var(--ease-quint); }
+  .fold > div{ overflow:hidden; min-height:0; }
+  .fold[data-open="1"]{ grid-template-rows:1fr; }
+  .grp{ margin-top:24px; } .grp.first{ margin-top:18px; }
+  .gl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-sans); letter-spacing:.09em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:10px; }
+  .gl span{ margin-left:auto; font:500 11px/1 var(--font-mono); letter-spacing:0; text-transform:none; }
+  .card{ --hue:var(--ink-3); border-radius:18px; background:var(--bg-surface); border:1px solid var(--border-hairline); box-shadow:var(--shadow-card); overflow:hidden; margin-bottom:10px;
+    transition:box-shadow .28s var(--ease-quint), transform .28s var(--ease-quint), background .2s; }
+  .card[data-open="1"]{ background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-lift); transform:translateY(-1px); border-color:color-mix(in srgb, var(--hue) 28%, var(--border-hairline)); }
+  .card[data-done="1"]{ box-shadow:none; background:var(--bg-page); border-color:transparent; }
+  .band{ display:flex; align-items:center; gap:12px; padding:11px 14px; cursor:pointer; background:color-mix(in srgb, var(--hue) 11%, var(--bg-surface)); border:0; width:100%; text-align:left; font:inherit; color:inherit; }
+  .card[data-done="1"] .band{ background:transparent; }
+  .band .k{ font:600 10px/1 var(--font-sans); letter-spacing:.08em; text-transform:uppercase; color:var(--hue); }
+  .band .t{ margin-top:4px; font:700 17px/1.1 var(--font-display); letter-spacing:-.015em; color:var(--text-primary); }
+  .band .m{ flex:1; min-width:0; }
+  .band .n{ text-align:right; font:500 17px/1 var(--font-mono); color:var(--text-primary); }
+  .band .n small{ display:block; margin-top:4px; font-size:10.5px; color:var(--text-tertiary); }
+  .band .n small.dn{ color:var(--accent-strong); }
+  .cb{ padding:4px 14px 14px; }
+  .fact{ display:grid; grid-template-columns:62px 1fr; gap:10px; padding:9px 0; border-top:1px solid var(--border-hairline); font-size:13px; line-height:1.45; color:var(--text-primary); }
+  .fact:first-child{ border-top:0; padding-top:8px; }
+  .fact .l{ font:600 10px/1.6 var(--font-sans); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); }
+  .fact small{ display:block; color:var(--text-secondary); font-size:12px; }
+  .cb .btn{ width:100%; margin-top:10px; min-height:40px; }
+  .r{ display:grid; grid-template-columns:1fr auto; column-gap:14px; align-items:center; padding:11px 0; border-top:1px solid var(--border-hairline); }
+  .r:first-of-type{ border-top:0; }
+  .r.person{ grid-template-columns:auto 1fr auto; }
+  .r .t{ font:600 14.5px/1.2 var(--font-sans); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .r .t .u{ margin-left:6px; }
+  .r .s{ margin-top:3px; font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .r .n{ text-align:right; font:500 15px/1 var(--font-mono); color:var(--text-primary); }
+  .r .n small{ display:block; margin-top:4px; font-size:10.5px; color:var(--text-tertiary); }
+  .r .n small.dn{ color:var(--accent-strong); } .r .n small.up{ color:var(--status-live); }
+  .stats{ display:flex; gap:22px; margin-top:14px; }
+  .stats b{ display:block; font:500 19px/1 var(--font-mono); color:var(--text-primary); }
+  .stats div > span{ display:block; margin-top:5px; font-size:11.5px; color:var(--text-tertiary); }
+  .bigline{ display:flex; align-items:baseline; gap:10px; }
+  .bigline b{ font:800 44px/1 var(--font-display); letter-spacing:-.035em; color:var(--text-primary); }
+  .bigline > span{ font-size:13px; color:var(--text-secondary); }
+
+  .spec{ max-width:1000px; margin:44px auto 0; }
+  .spec h3{ font:800 20px/1.2 var(--font-display); letter-spacing:-.01em; margin:0 0 4px; }
+  .spec > p{ font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0 0 16px; max-width:72ch; }
+  table{ width:100%; border-collapse:collapse; background:var(--paper-0); border:1px solid var(--border-hairline); border-radius:16px; overflow:hidden; font-size:13px; }
+  th,td{ text-align:left; padding:10px 13px; border-top:1px solid var(--border-hairline); vertical-align:top; line-height:1.4; }
+  th{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); border-top:0; background:var(--paper-1); }
+  td:first-child{ font-weight:600; width:22%; }
+  @media (prefers-reduced-motion: reduce){ .in, .spark .draw{ animation:none; } .spark .draw{ stroke-dashoffset:0; } .fold, .seg .thumb, .strip .ul, .card, .chip{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · Advisor · Dana · v4</div>
+    <h1>B3 cards, with three sub-tab dials</h1>
+    <p>The body is B3 as picked. Only the row under the header changes. Each dial is a control the app already uses somewhere, so whichever you pick, Dana's tabs will look like something she has tapped before.</p>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption"><div class="tag">D1 · segmented</div><h2>A track and a thumb</h2><p>The app's segmented control: a sunken track, a raised thumb that slides to the tab you are on. The count sits under the label, so three cells share the width evenly without truncating. Reads as "one of three views".</p><div class="try">try: tap Check on, then Pulse</div></div>
+      <div class="phone" data-d="1"></div>
+    </div>
+    <div class="col">
+      <div class="caption"><div class="tag">D2 · chips</div><h2>The Home row</h2><p>Three raised pills, the same ones as Your week · Waiting · Past on Home. The one you are on is accent-quiet with the glow, which the app already uses for "this is yours / this is on". Reads as "three lists".</p><div class="try">try: tap Route, then Pulse</div></div>
+      <div class="phone" data-d="2"></div>
+    </div>
+    <div class="col">
+      <div class="caption"><div class="tag">D3 · tab strip</div><h2>Equal cells, count as a badge</h2><p>The underline dial tidied: three equal cells so the underline is a fixed width, and the count moves into a badge. Accent-quiet when it is something to do (4 people, 3 spots), plain when it is a reading (66%). Reads as "tabs".</p><div class="try">try: tap Check on, then Route</div></div>
+      <div class="phone" data-d="3"></div>
+    </div>
+  </div>
+
+  <section class="spec">
+    <h3>How they differ</h3>
+    <p>All three sit in the same 36 to 44px band under the header.</p>
+    <table>
+      <tr><th></th><th>D1 · segmented</th><th>D2 · chips</th><th>D3 · tab strip</th></tr>
+      <tr><td>Already in the app as</td><td>theme toggle, Belonging-by segments</td><td>Home chip row</td><td>Home scope dial (refined)</td></tr>
+      <tr><td>Selected state</td><td>raised thumb</td><td>accent-quiet fill + glow</td><td>ink label + accent underline</td></tr>
+      <tr><td>Where the count goes</td><td>under the label, mono</td><td>beside the label, muted</td><td>badge; accent when actionable</td></tr>
+      <tr><td>Says</td><td>one of three views of the same thing</td><td>three lists</td><td>tabs</td></tr>
+    </table>
+  </section>
+</div>
+
+<script>
+const S = { pct:66, undergrads:15735, activeLoops:1240, formed:86, wrapped:41, delta:2, trend:[38,46,55,59,63,64,66,66] };
+const CASE = { n:128, inLoop:84, landed:6 };
+const PEOPLE = [
+  { id:'r1', name:'Theo Nguyen',     ini:'TN', dorm:'Jameson',  signal:'0 loops, 3 weeks in' },
+  { id:'r2', name:'Priscilla Adams', ini:'PA', dorm:'Mews',     signal:'left their only loop' },
+  { id:'r3', name:'Diego Martín',    ini:'DM', dorm:'Ganędago', signal:'new transfer, 0 loops' },
+  { id:'r4', name:'Hannah Weiss',    ini:'HW', dorm:'Dickson',  signal:'0 loops, quiet 2 weeks' },
+];
+const LANDED = [ { id:'l1', name:'Maya Chen', ini:'MC', dorm:'Balch', signal:'joined CHEM 2070 on Tue' }, { id:'l2', name:'Owen Park', ini:'OP', dorm:'Donlon', signal:'joined 6am run on Mon' } ];
+const SCOPES = [
+  { id:'jameson',  unit:'h', label:'Jameson',       pct:58, delta:-2, cold:true, line:'lowest house on North, 19 loops', why:'3 floors have no seeded loop. Their RAs see the gaps in the Floor view.', to:'Jameson RAs', cta:'Nudge RAs' },
+  { id:'econ',     unit:'c', label:'ECON 1110',     pct:29, delta:0,  cold:true, line:'412 waiting, 3 loops', why:'The biggest gap on campus between wanting a loop and having one.', to:'ECON 1110 staff', cta:'Flag to staff' },
+  { id:'transfer', unit:'y', label:'Transfers',     pct:41, delta:-1, cold:true, line:'no dorm floor to seed from', why:'No floor, no RA. A campus-wide mixer loop appears to them as "Advising & Wellbeing is starting…".', to:'a mixer loop', cta:'Draft mixer' },
+  { id:'c2027',    unit:'y', label:'Class of 2027', pct:52, delta:-1, watch:true, line:'flat since week 4' },
+  { id:'ganedago', unit:'h', label:'Ganędago',      pct:61, delta:-1, watch:true, line:'22 loops' },
+  { id:'psych',    unit:'c', label:'PSYCH 1101',    pct:22, delta:1,  line:'1,120 enrolled, 6 loops' },
+  { id:'cs2800',   unit:'c', label:'CS 2800',       pct:31, delta:2,  line:'11 loops' },
+  { id:'mews',     unit:'h', label:'Mews',          pct:63, delta:0,  line:'24 loops' },
+  { id:'toni',     unit:'h', label:'Toni Morrison', pct:66, delta:1,  line:'26 loops' },
+  { id:'math',     unit:'c', label:'MATH 1920',     pct:36, delta:3,  line:'14 loops' },
+  { id:'chem',     unit:'c', label:'CHEM 2070',     pct:39, delta:1,  line:'12 loops' },
+  { id:'cs2110',   unit:'c', label:'CS 2110',       pct:44, delta:2,  line:'9 loops, highest 2000-level' },
+  { id:'c2028',    unit:'y', label:'Class of 2028', pct:58, delta:1,  line:'' },
+  { id:'dickson',  unit:'h', label:'Dickson',       pct:69, delta:2,  line:'33 loops' },
+  { id:'c2029',    unit:'y', label:'Class of 2029', pct:66, delta:2,  line:'' },
+  { id:'balch',    unit:'h', label:'Balch',         pct:71, delta:1,  line:'29 loops' },
+  { id:'c2030',    unit:'y', label:'Class of 2030', pct:71, delta:3,  line:'first-years' },
+  { id:'ckb',      unit:'h', label:'Court-Kay-Bauer', pct:74, delta:1, line:'37 loops' },
+  { id:'donlon',   unit:'h', label:'Donlon',        pct:78, delta:2,  line:'41 loops, highest house' },
+];
+const UNIT = { h:{ name:'house', plural:'Houses', hue:'var(--unit-dorm)' }, c:{ name:'course', plural:'Courses', hue:'var(--unit-class)' }, y:{ name:'year', plural:'Class years', hue:'var(--unit-year)' } };
+const cold = SCOPES.filter(s=>s.cold), watch = SCOPES.filter(s=>s.watch);
+const byUnit = u => SCOPES.filter(s=>s.unit===u).sort((a,b)=>a.pct-b.pct);
+const I = {
+  msg:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  check:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  send:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>',
+  heart:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/></svg>',
+};
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const dn = d => d<0 ? `<small class="dn">${d} this wk</small>` : d>0 ? `<small class="up">+${d} this wk</small>` : `<small>flat</small>`;
+const numEl = (n, suffix='') => `<span class="num" data-n="${n}" data-suffix="${suffix}">${n.toLocaleString()}${suffix}</span>`;
+function spark(){
+  const w=350,h=44,pad=3, t=S.trend, min=Math.min(...t)-8, max=Math.max(...t)+3;
+  const pts = t.map((v,i)=>[pad + i*(w-2*pad)/(t.length-1), h-pad - (v-min)/(max-min)*(h-2*pad)]);
+  const line = pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '); const last = pts[pts.length-1];
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polygon class="area" points="${pts[0][0]},${h} ${line} ${last[0]},${h}"/><polyline class="draw" style="--len:400" points="${line}"/><circle cx="${last[0]}" cy="${last[1]}" r="3"/></svg>
+    <div class="sparklbl"><span>week 1</span><span>${S.pct}% now</span></div>`;
+}
+const head = () => `<div class="status"><span>9:41</span><span>●●● ᯤ ▮</span></div>
+  <div class="apphead"><div class="id"><div class="ic">${I.heart}</div><div><h2>Advising &amp; Wellbeing</h2><div class="k">Dana · all undergrads</div></div></div><div class="av">DO</div></div>`;
+const guard = () => `<div class="guard"><b>What you never see:</b> intents, messages, who likes whom. Only whether a student has landed in a loop, by house, course and year.</div>`;
+
+const V3 = {
+  card: (s, i, open) => `<div class="card in" style="--i:${i}; --hue:${UNIT[s.unit].hue}" data-card="${s.id}" data-open="${open?1:0}">
+      <button class="band" data-toggle="${s.id}"><div class="m"><div class="k">${UNIT[s.unit].name} · to ${esc(s.to)}</div><div class="t">${esc(s.label)}</div></div><div class="n">${s.pct}%${dn(s.delta)}</div></button>
+      <div class="fold" data-body="${s.id}" data-open="${open?1:0}"><div><div class="cb">
+        <div class="fact"><div class="l">why</div><div>${esc(s.why)}</div></div>
+        <div class="fact"><div class="l">goes to</div><div>${esc(s.to)}<small>They get the count, never who.</small></div></div>
+        <button class="btn p" data-act="${s.id}">${I.send}${s.cta}</button></div></div></div></div>`,
+  row: (s, i, nou) => `<div class="r in" style="--i:${i}"><div><div class="t">${esc(s.label)}${nou?'':`<span class="u">${UNIT[s.unit].name}</span>`}</div><div class="s">${esc(s.line)}</div></div><div class="n">${s.pct}%${dn(s.delta)}</div></div>`,
+  person: (p, i, ok) => `<div class="r person in" style="--i:${i}"><div class="av">${p.ini}</div><div style="min-width:0"><div class="t">${esc(p.name)}</div><div class="s">${p.dorm} · ${p.signal}</div></div>${ok?'':`<button class="round" data-reach="${p.id}" aria-label="Message">${I.msg}</button>`}</div>`,
+  route(){ return `<h1 class="hero in">${cold.length} cold spots, ${watch.length} slipping.</h1><p class="lede in" style="--i:1">Each card goes to someone who can act. They get the count, never who.</p>
+    <div class="grp first" style="margin-top:16px">${cold.map((s,i)=>V3.card(s,i+2,i===0)).join('')}</div>
+    <div class="grp in" style="--i:5"><div class="gl">Watch<span>${watch.length} · nothing to do yet</span></div>${watch.map((s,i)=>V3.row(s,i+5)).join('')}</div>${guard()}`; },
+  check(){ const not=CASE.n-CASE.inLoop; return `<h1 class="hero in">${not} of your ${CASE.n} advisees<br>aren't in a loop.</h1><p class="lede in" style="--i:1">The one signal that predicts who stays. A nudge from you, not an algorithm.</p>
+    <div class="grp first"><div class="gl in" style="--i:2">Worth a check-in<span>${PEOPLE.length}</span></div>${PEOPLE.map((p,i)=>V3.person(p,i+2)).join('')}</div>
+    <div class="grp"><div class="gl in" style="--i:6">Landed this week<span>${CASE.landed}</span></div>${LANDED.map((p,i)=>V3.person(p,i+6,true)).join('')}</div>${guard()}`; },
+  pulse(){ return `<div class="bigline in"><b>${numEl(S.pct,'%')}</b><span>of campus in a loop, up ${S.delta} this week</span></div>
+    <div class="in" style="--i:1; margin-top:12px">${spark()}</div>
+    <div class="stats in" style="--i:2"><div><b>${numEl(S.activeLoops)}</b><span>active loops</span></div><div><b>${numEl(S.formed)}</b><span>formed this week</span></div><div><b>${numEl(S.wrapped)}</b><span>wrapped</span></div></div>
+    ${['h','c','y'].map((u,k)=>`<div class="grp"><div class="gl in" style="--i:${3+k}">${UNIT[u].plural}<span>% in a loop</span></div>${byUnit(u).map((s,i)=>V3.row(s,i+3+k,true)).join('')}</div>`).join('')}${guard()}`; },
+};
+
+const TABS = [ { k:'check', l:'Check on', n:PEOPLE.length, acc:true }, { k:'route', l:'Route', n:cold.length, acc:true }, { k:'pulse', l:'Pulse', n:S.pct+'%' } ];
+const DIAL = {
+  '1': (cur) => `<div class="seg"><span class="thumb" style="--i:${TABS.findIndex(t=>t.k===cur)}"></span>${TABS.map(t=>`<button data-tab="${t.k}" data-on="${t.k===cur?1:0}">${t.l}<i class="${t.acc?'acc':''}">${t.n}</i></button>`).join('')}</div>`,
+  '2': (cur) => `<div class="chips">${TABS.map(t=>`<button class="chip" data-tab="${t.k}" data-on="${t.k===cur?1:0}">${t.l}<i>${t.n}</i></button>`).join('')}</div>`,
+  '3': (cur) => `<div class="strip">${TABS.map(t=>`<button data-tab="${t.k}" data-on="${t.k===cur?1:0}">${t.l}<span class="bd ${t.acc?'acc':''}">${t.n}</span></button>`).join('')}<span class="ul" style="--i:${TABS.findIndex(t=>t.k===cur)}"></span></div>`,
+};
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function countUp(root){
+  root.querySelectorAll('.num[data-n]').forEach(el=>{
+    const n=+el.dataset.n, suf=el.dataset.suffix||''; if (reduced || n===0) return;
+    const t0=performance.now(), dur=640;
+    const tick = now => { const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,5); el.textContent = Math.round(n*e).toLocaleString()+suf; if (p<1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+}
+document.querySelectorAll('.phone').forEach(ph=>{
+  const d = ph.dataset.d; let cur='route';
+  const render = () => { ph.innerHTML = head() + DIAL[d](cur) + `<div class="scroll"><div class="pad">${V3[cur]()}</div></div><div class="toast"></div>`; countUp(ph); };
+  render();
+  let tt; const say = (t,b) => { const toast = ph.querySelector('.toast'); toast.innerHTML = `<b>${t}</b>${b}`; toast.dataset.on='1'; clearTimeout(tt); tt=setTimeout(()=>toast.dataset.on='0', 2600); };
+  ph.addEventListener('click', e=>{
+    const tab = e.target.closest('[data-tab]');
+    if (tab){ if (tab.dataset.tab===cur) return; cur = tab.dataset.tab;
+      // move the indicator first so the slide is visible, then swap the body
+      const i = TABS.findIndex(t=>t.k===cur); const mv = ph.querySelector('.thumb, .ul'); if (mv) mv.style.setProperty('--i', i);
+      ph.querySelectorAll('[data-tab]').forEach(b=>b.dataset.on = b.dataset.tab===cur?'1':'0');
+      setTimeout(render, 140); return; }
+    const reach = e.target.closest('[data-reach]');
+    if (reach && reach.dataset.done!=='1'){ reach.dataset.done='1'; reach.innerHTML=I.check; const name = reach.closest('.r').querySelector('.t').textContent; say(`Reached out to ${name.split(' ')[0]}`, 'A warm note from you. Loop never tells them how you knew.'); return; }
+    const act = e.target.closest('[data-act]');
+    if (act && act.dataset.done!=='1'){ act.dataset.done='1'; act.innerHTML = I.check+' Sent'; const s = SCOPES.find(s=>s.id===act.dataset.act);
+      const card = ph.querySelector(`[data-card="${s.id}"]`); if (card) card.dataset.done='1'; say(s.cta, `${s.to} get the count, never who.`); return; }
+    const tg = e.target.closest('[data-toggle]');
+    if (tg){ const id = tg.dataset.toggle; const body = ph.querySelector(`[data-body="${id}"]`); const open = body.dataset.open==='1';
+      if (!open) ph.querySelectorAll('[data-body][data-open="1"]').forEach(b=>{ b.dataset.open='0'; b.closest('.card').dataset.open='0'; });
+      body.dataset.open = open?'0':'1'; tg.closest('.card').dataset.open = open?'0':'1';
+      if (!open) setTimeout(()=>body.scrollIntoView({ block:'nearest', behavior:'smooth' }), 340); return; }
+  });
+});
+</script>
+</body>
+</html>
