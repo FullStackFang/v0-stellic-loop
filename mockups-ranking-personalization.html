@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · ranking personalization: how much lift does the top pick get?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --rose:#a04f6a; --slate:#59657a;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-raised:#fffefb; --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-0);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-ink:var(--paper-0);
+    --status-live:var(--moss);
+    --cat-class:var(--slate); --cat-fitness:var(--moss); --cat-food:var(--amber); --cat-social:var(--rose);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+    --tabbar:64px; --fade:36px; --clear:24px;
+    /* elevation ladder, straight from the Pulse token layer in index.html.
+       Warm brown-tinted, never black: these shadows are light falling on paper. */
+    --shadow-card:0 1px 2px rgba(80,40,30,.05), 0 4px 14px -10px rgba(80,40,30,.14);
+    --shadow-raised:0 2px 5px rgba(80,40,30,.07), 0 18px 34px -16px rgba(80,40,30,.38);
+    --edge-top:inset 0 1px 0 rgba(255,253,248,.9);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:36px 24px 110px; }
+  .wrap{ max-width:1340px; margin:0 auto; }
+
+  /* ---------- demo framing (everything here is OUTSIDE the phone) ---------- */
+  .gallery-head{ text-align:center; margin-bottom:10px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:70ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+  .rule{ max-width:70ch; margin:16px auto 26px; border:1px dashed var(--paper-3); border-radius:14px; background:rgba(255,253,248,.55);
+    padding:11px 14px; font:500 12.5px/1.55 var(--font-mono); color:var(--text-secondary); text-align:left; }
+  .rule b{ color:var(--accent-strong); font-weight:600; }
+
+  .rail{ display:flex; gap:30px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; min-height:140px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption h2{ font:700 19px/1.2 var(--font-display); margin:9px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.45; }
+  .caption .trace{ margin-top:8px; font:500 11.5px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  /* ---------- phone ---------- */
+  .phone{ width:390px; height:838px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .av{ display:grid; place-items:center; border-radius:999px; font:700 10px/1 var(--font-mono); box-shadow:0 0 0 2px var(--bg-surface); flex-shrink:0; }
+  .me{ width:32px; height:32px; font-size:11px; background:var(--carnelian-100); color:var(--accent-strong); }
+  .faces{ display:flex; align-items:center; padding-left:8px; isolation:isolate; }
+  .faces > div{ margin-left:-8px; width:21px; height:21px; }
+
+  .searchbar{ margin:2px 20px 6px; height:40px; border-radius:14px; background:var(--bg-sunken); display:flex; align-items:center; gap:9px; padding:0 13px;
+    color:var(--text-tertiary); font-size:13.5px; flex-shrink:0; }
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:4px 20px 8px; scrollbar-width:none; flex-shrink:0; }
+  .chips::-webkit-scrollbar{ height:0; }
+  .chip{ flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; border:1px solid var(--border-hairline);
+    background:var(--bg-surface); font-size:12.5px; font-weight:600; color:var(--text-secondary); white-space:nowrap; }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; position:relative; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:2px 20px calc(var(--tabbar) + var(--clear) + 16px); }
+  .fade{ position:absolute; left:0; right:0; bottom:var(--tabbar); height:var(--fade); pointer-events:none; z-index:2;
+    background:linear-gradient(to bottom, transparent, var(--bg-surface)); }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:var(--tabbar); background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; z-index:3; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.6 var(--font-sans); color:var(--text-tertiary); }
+  .tabbar div.on{ color:var(--accent); }
+  .tabbar div .g{ font-size:17px; display:block; }
+
+  .glbl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:16px 2px 8px; }
+  .glbl:first-child{ margin-top:6px; }
+  .glbl .c{ margin-left:auto; }
+
+  /* ---------- the standardized loop card (facts only, collapsed) ---------- */
+  .card{ position:relative; border-radius:16px; overflow:hidden; background:var(--bg-surface); border:1px solid var(--border-hairline);
+    box-shadow:var(--shadow-card); margin-bottom:9px; animation:cardin .4s var(--ease-settle) both; }
+  @keyframes cardin{ from{ opacity:0; transform:translateY(6px); } }
+  .card__hd{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:10px 14px 9px;
+    background:color-mix(in srgb, var(--hue) 11%, var(--bg-surface)); border-bottom:1px solid color-mix(in srgb, var(--hue) 20%, var(--border-hairline)); }
+  .card__kick{ display:inline-flex; align-items:center; gap:6px; font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--hue); }
+  .card__kick .g{ font-size:12px; letter-spacing:0; }
+  .card__title{ font:800 17.5px/1.05 var(--font-display); letter-spacing:-.02em; margin:4px 0 0; }
+  .state{ display:inline-flex; align-items:center; gap:6px; font:600 10.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase;
+    padding:6px 9px; border-radius:999px; background:var(--bg-surface); color:var(--hue); border:1px solid color-mix(in srgb, var(--hue) 30%, transparent); white-space:nowrap; flex-shrink:0; }
+  .card__bd{ padding:8px 14px 10px; }
+  .fact{ display:flex; align-items:center; gap:7px; font-size:12.5px; line-height:1.25; color:var(--text-secondary); }
+  .fact .ic{ font-size:13px; }
+  .fact .walk{ margin-left:auto; padding-left:8px; font:500 11.5px/1 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; }
+  .who{ display:flex; align-items:center; gap:10px; margin-top:8px; padding-top:8px; border-top:1px solid var(--border-hairline); }
+  .who .n{ font:500 11.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .btn{ margin-left:auto; display:inline-flex; align-items:center; justify-content:center; min-height:32px; padding:0 13px; border-radius:11px;
+    border:1px solid var(--border-strong); background:var(--bg-surface); color:var(--text-primary); font:600 12.5px/1 var(--font-sans); cursor:pointer; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn{ transition:background .16s var(--ease-out), border-color .16s var(--ease-out), transform .1s var(--ease-out); }
+  .btn:hover{ background:var(--bg-sunken); }
+  .btn.p:hover{ background:var(--accent-strong); border-color:var(--accent-strong); }
+  .btn:active{ transform:translateY(1px); }
+  .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- QUIET LIFT · four ways to raise the top card ----------
+     Rule for all four: the lifted card is never darker than the resting one.
+     Elevation here is paper physics — a card closer to the light gets a lighter
+     face, a brighter top edge, and a softer, wider shadow. An ink border says
+     "outlined and flat" in this system (.pls-card--outline), so it is never
+     the way to say "raised". The activity band is identical on every card;
+     elevation is the only thing that changes. ---------------------------- */
+
+  /* 1 · Raised paper — lighter face, warm edge, one step up the shadow ladder */
+  body[data-v="raised"] .card.top{
+    background:var(--bg-raised);
+    border-color:color-mix(in srgb, var(--ink-4) 38%, var(--paper-3));
+    box-shadow:var(--edge-top), var(--shadow-raised); }
+
+  /* 2 · Warm halo — no edge at all; the shadow alone lifts it off the page */
+  body[data-v="halo"] .card.top{
+    background:var(--bg-raised);
+    border-color:transparent;
+    box-shadow:var(--edge-top), 0 2px 4px rgba(80,40,30,.05), 0 14px 32px -14px rgba(80,40,30,.3); }
+
+  /* 3 · Warm edge — the hairline picks up a trace of carnelian, not ink */
+  body[data-v="edge"] .card.top{
+    background:var(--bg-raised);
+    border-color:color-mix(in srgb, var(--accent) 24%, var(--paper-3));
+    box-shadow:var(--edge-top), var(--shadow-raised); }
+
+  /* 4 · None — baseline: the top card is identical to every other card */
+
+  /* ---------- switcher ---------- */
+  .switcher{ position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:20; display:flex; align-items:center; gap:6px;
+    background:var(--ink-0); color:var(--paper-0); border-radius:999px; padding:7px; box-shadow:0 18px 42px -20px rgba(31,26,23,.8); }
+  .switcher a{ color:inherit; text-decoration:none; min-width:36px; height:38px; border-radius:999px; display:grid; place-items:center; font-weight:800; }
+  .switcher a:hover{ background:rgba(255,253,248,.14); }
+  .switcher .lbl{ min-width:340px; text-align:center; font:600 13px/1.25 var(--font-sans); padding:0 8px; }
+  .switcher .lbl b{ font-family:var(--font-mono); color:#f0a08f; margin-right:7px; }
+  .switcher .lbl span{ display:block; font:500 11px/1.3 var(--font-mono); color:var(--paper-3); margin-top:3px; }
+
+  @media (max-width:1300px){ .rail{ gap:24px; } }
+  @media (prefers-reduced-motion:reduce){ .card{ animation:none; } }
+</style>
+</head>
+<body data-v="raised">
+  <main class="wrap">
+    <header class="gallery-head">
+      <p class="eyebrow">Prototype · ranking personalization</p>
+      <h1>Same seeded run. Three people. Nothing on screen explains itself.</h1>
+      <p>Josh seeds a Beebe Lake run on Donlon 2F. Sarah lives on that floor; Maya lives across campus. All three see the same world. Only the order, the walk time, and the state pill change.</p>
+      <div class="rule">
+        <b>Rule for this prototype:</b> no card says “recommended because…”, “near your floor”, or “staff seeded”. Ranking is felt through ordinary product cues: where a card sits in the feed, the walk time already printed on it, and how much lift the top pick gets. Every word of explanation lives out here in the captions, never inside the phone.
+      </div>
+    </header>
+    <section class="rail" id="rail"></section>
+  </main>
+
+  <nav class="switcher" aria-label="Variants">
+    <a id="prev" href="#none" aria-label="Previous lift treatment">&lt;</a>
+    <div class="lbl" id="lbl"></div>
+    <a id="next" href="#halo" aria-label="Next lift treatment">&gt;</a>
+  </nav>
+
+<script>
+const VARIANTS = {
+  raised: { name:"Raised paper",  note:"lighter face, warm edge, one step up the shadow ladder" },
+  halo:   { name:"Warm halo",     note:"no border at all; the shadow does the lifting" },
+  edge:   { name:"Warm edge",     note:"the hairline picks up a trace of carnelian, not ink" },
+  none:   { name:"None",          note:"baseline: order alone, no lift" }
+};
+
+const HUE = { fitness:"var(--cat-fitness)", food:"var(--cat-food)", class:"var(--cat-class)", social:"var(--cat-social)" };
+const GLYPH = { fitness:"🏃", food:"🍜", class:"📗", social:"🎧" };
+
+// One shared world. Everybody sees the same anchors, ordered by their own context,
+// with the walk time measured from where they actually live.
+const A = {
+  beebe:  { cat:"fitness", title:"Beebe Lake run",           when:"Tue 7:30a", place:"Beebe Lake boathouse", here:6, cap:8,  faces:["JP","SC","RM","DL"] },
+  coffee: { cat:"food",    title:"Monday coffee",            when:"Mon 9:00a", place:"Libe Café",            here:3, cap:6,  faces:["EM","SC","BR"] },
+  recur:  { cat:"class",   title:"CS 2110 recursion review", when:"Thu 6:00p", place:"Rhodes 571",           here:9, cap:14, faces:["MI","AK","JR","PV"] },
+  mews:   { cat:"food",    title:"Mews dinner table",        when:"Thu 6:30p", place:"North Star",           here:5, cap:8,  faces:["MI","LO","TN","BR"] },
+  prelim: { cat:"class",   title:"Prelim 1 review",          when:"Wed 7:00p", place:"Olin 155",             here:8, cap:10, faces:["SC","DL","RM"] }
+};
+
+const PEOPLE = [
+  {
+    id:"JP", name:"Josh Park", byline:"Donlon 2F",
+    who:"He seeded it",
+    blurb:"Josh gets ownership state, not a recommendation. His anchor sits in <b>Yours</b> with the count and one action: invite the floor. Nothing tells him it is ranking well for anyone.",
+    trace:"Beebe Lake run · Yours · seeded",
+    chips:["Everything","Donlon","This week"],
+    groups:[
+      { label:"Yours", count:"seeded 2h ago", rows:[
+        { a:A.beebe, walk:"3 min", state:"seeded", action:"Invite floor", primary:true }
+      ] },
+      { label:"Around you", count:"3", rows:[
+        { a:A.prelim, walk:"9 min",  state:"forming", action:"Join loop" },
+        { a:A.coffee, walk:"6 min",  state:"forming", action:"Join loop" },
+        { a:A.recur,  walk:"12 min", state:"forming", action:"Join loop" }
+      ] }
+    ]
+  },
+  {
+    id:"SC", name:"Sarah Chen", byline:"Donlon 2F",
+    who:"Same floor",
+    blurb:"The run lands first. No badge says why. It is a three-minute walk and it came out of her own floor, so the feed simply opens with it.",
+    trace:"Beebe Lake run · 1st of 4 · 3 min walk",
+    chips:["For you","Donlon","This week"],
+    groups:[
+      { label:"For you", count:"4", rows:[
+        { a:A.beebe,  walk:"3 min",  state:"forming", action:"Join loop", primary:true, top:true },
+        { a:A.prelim, walk:"9 min",  state:"forming", action:"Join loop" },
+        { a:A.coffee, walk:"6 min",  state:"forming", action:"Join loop" },
+        { a:A.mews,   walk:"18 min", state:"forming", action:"Join loop" }
+      ] }
+    ]
+  },
+  {
+    id:"MI", name:"Maya Idris", byline:"Mews · CS 2110",
+    who:"Across campus",
+    blurb:"Her class and her own dorm come first. The same run is still on the same screen, third, as a plain card with a 21-minute walk on it. Nothing marks it as demoted.",
+    trace:"Beebe Lake run · 3rd of 4 · 21 min walk",
+    chips:["For you","Mews","This week"],
+    groups:[
+      { label:"For you", count:"4", rows:[
+        { a:A.recur,  walk:"4 min",  state:"forming", action:"Join loop", primary:true, top:true },
+        { a:A.mews,   walk:"2 min",  state:"forming", action:"Join loop" },
+        { a:A.beebe,  walk:"21 min", state:"forming", action:"Join loop" },
+        { a:A.coffee, walk:"11 min", state:"forming", action:"Join loop" }
+      ] }
+    ]
+  }
+];
+
+const faceTint = i => ["var(--carnelian-100)","var(--paper-2)","#e6ece7","#efe6d4"][i % 4];
+
+function cardHTML(r){
+  const a = r.a;
+  const faces = a.faces.slice(0,4).map((f,i)=>
+    `<div class="av" style="background:${faceTint(i)};color:var(--text-secondary)">${f}</div>`).join("");
+  return `<article class="card ${r.top ? "top" : ""}" style="--hue:${HUE[a.cat]}">
+    <div class="card__hd">
+      <div>
+        <div class="card__kick"><span class="g">${GLYPH[a.cat]}</span>${a.cat}</div>
+        <h3 class="card__title">${a.title}</h3>
+      </div>
+      <span class="state">${r.state}</span>
+    </div>
+    <div class="card__bd">
+      <div class="fact"><span class="ic">🕘</span>${a.when} · ${a.place}<span class="walk">${r.walk} walk</span></div>
+      <div class="who">
+        <div class="faces">${faces}</div>
+        <span class="n">${a.here} of ${a.cap}</span>
+        <button class="btn ${r.primary ? "p" : ""}">${r.action}</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function phoneHTML(p){
+  const groups = p.groups.map(g => `
+    <div class="glbl"><span>${g.label}</span><span class="c">${g.count}</span></div>
+    ${g.rows.map(cardHTML).join("")}`).join("");
+  return `<div class="phone">
+    <div class="status"><span>9:41</span><span class="mono">5G</span></div>
+    <div class="apphead">
+      <div class="wordmark">Loop<i></i></div>
+      <div class="av me">${p.id}</div>
+    </div>
+    <div class="searchbar">🔍 run, study, dinner…</div>
+    <div class="chips">${p.chips.map((c,i)=>`<span class="chip" data-on="${i===0?1:0}">${c}</span>`).join("")}</div>
+    <div class="scroll"><div class="pad">${groups}</div></div>
+    <div class="fade"></div>
+    <div class="tabbar">
+      <div class="on"><span class="g">🏠</span>Home</div>
+      <div><span class="g">✳️</span>Floor</div>
+      <div><span class="g">🔔</span>Waiting</div>
+      <div><span class="g">🙂</span>You</div>
+    </div>
+  </div>`;
+}
+
+function colHTML(p){
+  return `<div class="col">
+    <div class="caption">
+      <span class="tag">${p.who}</span>
+      <h2>${p.name} · <span style="color:var(--text-tertiary);font-weight:600">${p.byline}</span></h2>
+      <p>${p.blurb}</p>
+      <div class="trace">${p.trace}</div>
+    </div>
+    ${phoneHTML(p)}
+  </div>`;
+}
+
+const keys = Object.keys(VARIANTS);
+const current = () => { const h = location.hash.replace("#",""); return VARIANTS[h] ? h : "raised"; };
+function render(){
+  const v = current();
+  document.body.dataset.v = v;
+  document.getElementById("rail").innerHTML = PEOPLE.map(colHTML).join("");
+  document.getElementById("lbl").innerHTML =
+    `<b>${keys.indexOf(v) + 1}/${keys.length}</b>${VARIANTS[v].name}<span>${VARIANTS[v].note}</span>`;
+  const i = keys.indexOf(v);
+  document.getElementById("prev").href = "#" + keys[(i + keys.length - 1) % keys.length];
+  document.getElementById("next").href = "#" + keys[(i + 1) % keys.length];
+}
+addEventListener("hashchange", render);
+addEventListener("keydown", e => {
+  const i = keys.indexOf(current());
+  if(e.key === "ArrowLeft")  location.hash = keys[(i + keys.length - 1) % keys.length];
+  if(e.key === "ArrowRight") location.hash = keys[(i + 1) % keys.length];
+});
+render();
+</script>
+</body>
+</html>

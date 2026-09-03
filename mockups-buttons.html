@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop — button elevation directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ===== tokens — copied verbatim from index.html ===== */
+:root{
+  --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+  --ink-0:#1f1a17; --ink-1:#352d28; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+  --carnelian-100:#f8e6e3; --carnelian-200:#f0c5c0; --carnelian-300:#e08d84; --carnelian-400:#cf5347;
+  --carnelian-500:#b31b1b; --carnelian-600:#8a1414; --carnelian-700:#680f0f;
+  --moss-500:#3d8a5f; --amber-500:#b6862b; --amber-600:#8a641f; --rose-500:#a04f6a; --slate-500:#59657a;
+  --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-raised:#fffefb; --bg-sunken:var(--paper-2);
+  --bg-blush:var(--carnelian-100); --bg-inverse:var(--ink-0); --bg-scrim:rgba(31,26,23,.44);
+  --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+  --text-inverse:var(--paper-0); --text-link:var(--carnelian-600);
+  --border-hairline:var(--paper-3); --border-strong:var(--ink-0); --border-quiet:rgba(31,26,23,.08);
+  --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+  --status-live:var(--moss-500); --status-forming:var(--amber-500); --status-full:var(--carnelian-500);
+  --unit-dorm:var(--rose-500); --unit-class:var(--slate-500); --unit-major:var(--amber-600);
+  --focus-ring:var(--carnelian-500);
+  --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --radius-md:14px; --radius-lg:22px; --radius-xl:28px; --radius-2xl:34px; --radius-pill:999px;
+  --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+  --shadow-raised:0 8px 26px -12px rgba(80,40,30,.2); --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+  --shadow-lift:0 2px 5px rgba(80,40,30,.07), 0 18px 34px -16px rgba(80,40,30,.38);
+  --edge-lift:inset 0 1px 0 rgba(255,253,248,.9);
+  --glow-accent:0 6px 18px -10px var(--carnelian-500);
+  --dur-1:120ms; --dur-2:180ms; --dur-3:260ms; --dur-4:420ms;
+  --ease-out:cubic-bezier(.2,.8,.2,1); --ease-settle:cubic-bezier(.16,1,.3,1); --ease-pop:cubic-bezier(.34,1.56,.64,1);
+}
+:root[data-theme="afterdark"]{
+  --bg-page:#181310; --bg-surface:#211a16; --bg-raised:#2a221d; --bg-sunken:#12100c; --bg-blush:#2c1815;
+  --text-primary:#f8f1e8; --text-secondary:#bcafa2; --text-tertiary:#8d8074;
+  --border-hairline:#342a24; --border-strong:#4e4139; --border-quiet:rgba(248,241,232,.1);
+  --accent:var(--carnelian-400); --accent-strong:var(--carnelian-300); --accent-quiet:rgba(207,83,71,.16); --accent-ink:#1a0d0b;
+  --focus-ring:var(--carnelian-300);
+  --shadow-card:0 1px 2px rgba(0,0,0,.4); --shadow-raised:0 8px 26px -12px rgba(0,0,0,.7); --shadow-pop:0 28px 60px -24px rgba(0,0,0,.8);
+  --shadow-lift:0 2px 5px rgba(0,0,0,.5), 0 18px 34px -16px rgba(0,0,0,.8);
+  --edge-lift:inset 0 1px 0 rgba(248,241,232,.07);
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--bg-sunken); font-family:var(--font-sans); color:var(--text-primary);
+  -webkit-font-smoothing:antialiased; padding:26px 20px 60px; transition:background var(--dur-3); }
+button{ font-family:inherit; -webkit-tap-highlight-color:transparent; }
+.pls-display{ font-family:var(--font-display); letter-spacing:-.02em; }
+.pls-mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+/* ===== page chrome ===== */
+.hd{ max-width:1740px; margin:0 auto 22px; display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap; }
+.hd h1{ font-family:var(--font-display); font-size:26px; font-weight:800; margin:0; letter-spacing:-.02em; }
+.hd p{ margin:6px 0 0; font-size:13.5px; color:var(--text-secondary); max-width:640px; line-height:1.5; }
+.hd .sp{ flex:1; }
+.tgl{ display:flex; gap:6px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:999px; padding:4px; }
+.tgl button{ border:0; background:transparent; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--text-tertiary);
+  padding:7px 14px; border-radius:999px; }
+.tgl button[aria-pressed="true"]{ background:var(--text-primary); color:var(--bg-surface); }
+.grid{ max-width:1740px; margin:0 auto; display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; justify-content:center; }
+.col{ width:390px; flex:0 0 390px; }
+.colhd{ margin:0 0 10px; }
+.colhd b{ font-family:var(--font-display); font-size:16px; font-weight:800; display:block; }
+.colhd span{ font-size:12px; color:var(--text-secondary); line-height:1.45; display:block; margin-top:3px; }
+.phone{ width:390px; height:1180px; background:var(--bg-surface); border:1px solid var(--border-hairline);
+  border-radius:40px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:var(--shadow-pop); }
+.scroll{ flex:1; overflow-y:auto; scrollbar-width:none; padding:0 20px 24px; }
+.scroll::-webkit-scrollbar{ width:0; }
+.sect{ font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--text-tertiary); margin:18px 0 9px; }
+
+/* ===== app components — baseline (= today's index.html) ===== */
+.pls-header{ position:relative; z-index:40; background:var(--bg-surface); border-bottom:1px solid var(--border-hairline);
+  display:flex; align-items:center; gap:6px; padding:0 12px; height:56px; flex-shrink:0; }
+.wm{ font-family:var(--font-display); font-weight:800; font-size:22px; letter-spacing:-.03em; }
+.wm i{ color:var(--accent); font-style:normal; }
+.pls-iconbtn{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px;
+  border-radius:var(--radius-pill); background:transparent; color:var(--text-secondary); border:none; cursor:pointer; }
+.pls-avatar{ display:flex; align-items:center; justify-content:center; border-radius:var(--radius-pill);
+  font-family:var(--font-mono); font-weight:500; flex-shrink:0; user-select:none; line-height:1; }
+/* the reference control the founder pointed at */
+.acct{ display:flex; align-items:center; gap:7px; cursor:pointer; padding:5px 11px 5px 5px; border-radius:999px;
+  background:var(--accent-quiet); border:1px solid transparent; box-shadow:var(--glow-accent);
+  transition:background var(--dur-1), box-shadow var(--dur-2); }
+.acct__n{ text-align:left; line-height:1.1; }
+.acct__n b{ display:block; font-size:12.5px; font-weight:600; color:var(--accent-strong); }
+.acct__n span{ display:block; font-size:10px; color:var(--text-tertiary); }
+
+.pls-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px;
+  padding:0 20px; border-radius:var(--radius-pill); font-family:var(--font-sans); font-weight:600; font-size:15px;
+  cursor:pointer; border:1px solid transparent; user-select:none;
+  transition:background var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out); }
+.pls-btn--block{ width:100%; }
+.pls-btn--sm{ min-height:38px; font-size:14px; padding:0 16px; }
+.pls-btn--primary{ background:var(--accent); color:var(--accent-ink); box-shadow:var(--glow-accent); }
+.pls-btn--ink{ background:var(--text-primary); color:var(--bg-surface); border-color:var(--text-primary); }
+.pls-btn--secondary{ background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-strong); }
+.pls-btn--ghost{ background:transparent; color:var(--text-secondary); }
+
+.hm-chips{ display:flex; align-items:center; gap:6px; padding:8px 20px 10px; flex-shrink:0; }
+.hm-chip{ flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:5px; height:36px; padding:0 8px;
+  border-radius:var(--radius-pill); border:1px solid var(--border-hairline); background:var(--bg-surface); position:relative;
+  font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; }
+.hm-chip--ico{ flex:0 0 42px; padding:0; }
+.hm-chip__n{ font-size:11px; font-weight:500; color:var(--text-tertiary); }
+.hm-chip[aria-selected="true"]{ background:var(--text-primary); border-color:var(--text-primary); color:var(--bg-surface); }
+.hm-chip[aria-selected="true"] .hm-chip__n{ color:var(--bg-surface); opacity:.72; }
+
+.pls-card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); }
+.card{ padding:15px 16px 16px; }
+.card h4{ font-family:var(--font-display); font-size:17px; font-weight:700; margin:0; letter-spacing:-.01em; }
+.card .meta{ font-family:var(--font-mono); font-size:11.5px; color:var(--text-tertiary); margin-top:5px; }
+.acts{ display:flex; gap:8px; margin-top:13px; }
+.acts > *{ flex:1 1 0; min-width:0; }
+
+.fx-bar{ width:100%; display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:14px; cursor:pointer;
+  border:1px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-primary); text-align:left; }
+.fx-bar__pin{ color:var(--accent); flex-shrink:0; display:flex; }
+.fx-bar__lbl{ flex:1; min-width:0; font-weight:700; font-size:13.5px; }
+.fx-bar__n{ font-size:11.5px; color:var(--text-tertiary); }
+.fx-bar__cv{ color:var(--text-tertiary); display:flex; }
+
+.anc-row{ display:flex; align-items:center; gap:10px; padding:13px 0 12px; position:relative; }
+.anc-row::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:2px; border-radius:2px; background:var(--bg-sunken); }
+.anc-row::before{ content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--w,0%); border-radius:2px;
+  background:var(--cat); z-index:1; }
+.anc-row__m{ flex:1; min-width:0; background:none; border:0; padding:0; text-align:left; cursor:pointer; color:inherit; font:inherit; }
+.anc-row__t{ font-weight:600; font-size:15.5px; line-height:1.2; letter-spacing:-.01em; color:var(--text-primary); }
+.anc-row__s{ margin-top:4px; font-family:var(--font-mono); font-size:11.5px; line-height:1; color:var(--text-tertiary); }
+.anc-row__s b{ font-weight:600; color:var(--cat); }
+.anc-row__yes{ flex-shrink:0; width:32px; height:32px; border-radius:50%; padding:0; cursor:pointer; display:grid; place-items:center;
+  background:var(--bg-surface); border:1px solid var(--border-hairline); color:var(--text-secondary); }
+.anc-row[data-near="true"] .anc-row__yes{ background:var(--text-primary); border-color:var(--text-primary); color:var(--bg-surface); }
+.anc-row[data-mine="true"] .anc-row__yes{ background:var(--accent-quiet); border-color:transparent; color:var(--accent-strong); }
+
+.pls-fab{ position:absolute; right:18px; bottom:80px; width:56px; height:56px; border-radius:var(--radius-pill);
+  background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center;
+  border:none; cursor:pointer; box-shadow:var(--glow-accent), var(--shadow-raised); z-index:45; }
+.pls-tabbar{ z-index:40; height:64px; background:var(--bg-surface); border-top:1px solid var(--border-hairline);
+  display:flex; align-items:stretch; flex-shrink:0; }
+.pls-tab{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  font-size:10.5px; font-weight:600; color:var(--text-tertiary); background:none; border:none; cursor:pointer; }
+.pls-tab__glyph{ display:flex; align-items:center; justify-content:center; width:46px; height:28px; border-radius:var(--radius-pill); }
+.pls-tab--active{ color:var(--accent-strong); }
+.pls-tab--active .pls-tab__glyph{ background:var(--accent-quiet); }
+
+/* =========================================================================
+   DIRECTION A — Tinted & lifted
+   The literal read: every non-primary control wears the account chip's
+   recipe — accent-quiet face, no border, accent glow.
+   ========================================================================= */
+[data-dir="a"] .pls-btn--secondary{
+  background:var(--accent-quiet); color:var(--accent-strong); border-color:transparent; box-shadow:var(--glow-accent); }
+[data-dir="a"] .pls-btn--ghost{ background:transparent; color:var(--text-secondary); box-shadow:none; }
+[data-dir="a"] .pls-btn--ink{ box-shadow:var(--shadow-raised); }
+[data-dir="a"] .hm-chip{ border-color:transparent; background:var(--bg-page); box-shadow:var(--shadow-card); }
+[data-dir="a"] .hm-chip[aria-selected="true"]{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+[data-dir="a"] .hm-chip[aria-selected="true"] .hm-chip__n{ color:var(--accent-strong); opacity:.7; }
+[data-dir="a"] .fx-bar{ border-color:transparent; background:var(--accent-quiet); box-shadow:var(--glow-accent); }
+[data-dir="a"] .fx-bar__lbl{ color:var(--accent-strong); }
+[data-dir="a"] .anc-row__yes{ border-color:transparent; background:var(--bg-page); box-shadow:var(--shadow-card); }
+[data-dir="a"] .anc-row[data-near="true"] .anc-row__yes,
+[data-dir="a"] .anc-row[data-mine="true"] .anc-row__yes{
+  background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+
+/* =========================================================================
+   DIRECTION B — Raised paper
+   Same elevation grammar (no ink outlines, warm shadow, lit top edge) but
+   the tint stays reserved: accent-quiet + glow only means "this is yours /
+   this is on". Neutral controls are lifted paper.
+   ========================================================================= */
+[data-dir="b"] .pls-btn--secondary{
+  background:var(--bg-raised); color:var(--text-primary); border-color:transparent;
+  box-shadow:var(--edge-lift), var(--shadow-card); }
+[data-dir="b"] .pls-btn--ghost{ background:transparent; color:var(--text-secondary); box-shadow:none; }
+[data-dir="b"] .pls-btn--ink{ border-color:transparent; box-shadow:var(--shadow-raised); }
+[data-dir="b"] .hm-chip{ border-color:transparent; background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-card); }
+[data-dir="b"] .hm-chip[aria-selected="true"]{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+[data-dir="b"] .hm-chip[aria-selected="true"] .hm-chip__n{ color:var(--accent-strong); opacity:.7; }
+[data-dir="b"] .fx-bar{ border-color:transparent; background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-card); }
+[data-dir="b"] .anc-row__yes{ border-color:transparent; background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-card); }
+[data-dir="b"] .anc-row[data-near="true"] .anc-row__yes{ background:var(--text-primary); color:var(--bg-surface); box-shadow:var(--shadow-raised); }
+[data-dir="b"] .anc-row[data-mine="true"] .anc-row__yes{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+
+/* =========================================================================
+   DIRECTION C — Tint = state
+   Like B at rest, like A when the control is on/yours. Resting neutral
+   controls are lifted paper; the moment something is selected, mine, or
+   the thing you'd tap next, it becomes the account chip.
+   Secondary buttons keep a warm face but pick up the accent glow, so the
+   whole app shares one shadow.
+   ========================================================================= */
+[data-dir="c"] .pls-btn--secondary{
+  background:var(--bg-raised); color:var(--text-primary); border-color:transparent;
+  box-shadow:var(--edge-lift), var(--glow-accent); }
+[data-dir="c"] .pls-btn--ghost{ background:transparent; color:var(--text-secondary); box-shadow:none; }
+[data-dir="c"] .pls-btn--ink{ border-color:transparent; box-shadow:var(--glow-accent), var(--shadow-raised); }
+[data-dir="c"] .hm-chip{ border-color:transparent; background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-card); }
+[data-dir="c"] .hm-chip[aria-selected="true"]{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+[data-dir="c"] .hm-chip[aria-selected="true"] .hm-chip__n{ color:var(--accent-strong); opacity:.7; }
+[data-dir="c"] .fx-bar{ border-color:transparent; background:var(--bg-raised); box-shadow:var(--edge-lift), var(--glow-accent); }
+[data-dir="c"] .anc-row__yes{ border-color:transparent; background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-card); }
+[data-dir="c"] .anc-row[data-near="true"] .anc-row__yes{ background:var(--text-primary); color:var(--bg-surface); box-shadow:var(--glow-accent), var(--shadow-raised); }
+[data-dir="c"] .anc-row[data-mine="true"] .anc-row__yes{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div>
+    <h1>Buttons: one elevation language</h1>
+    <p>Same screen, three ways to make every control agree with the account chip (top right of each frame — the thing you pointed at). Baseline is today’s app: ink-outlined secondary, hairline chips, no shadow.</p>
+  </div>
+  <div class="sp"></div>
+  <div class="tgl" id="theme">
+    <button data-t="daylight" aria-pressed="true">Daylight</button>
+    <button data-t="afterdark" aria-pressed="false">Big Red Night</button>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const FRAMES = [
+  { dir:'base', name:'Today', note:'Ink-outlined secondary, hairline chips, flat. The chip is the only lit thing on the screen.' },
+  { dir:'a',    name:'A · Tinted & lifted', note:'Every non-primary control wears the chip’s recipe: accent-quiet face, no border, accent glow.' },
+  { dir:'b',    name:'B · Raised paper',    note:'Same grammar — no outlines, warm shadow, lit top edge — but tint stays reserved for “yours / on”.' },
+  { dir:'c',    name:'C · Tint = state',    note:'Paper at rest, chip when it’s on. Secondary keeps a warm face but shares the accent glow.' },
+];
+
+const ic = (n, s=16) => `<i data-lucide="${n}" style="width:${s}px;height:${s}px"></i>`;
+
+const body = () => `
+  <div class="pls-header">
+    <span class="wm">Loop<i>.</i></span>
+    <div style="flex:1"></div>
+    <button class="pls-iconbtn">${ic('bell',20)}</button>
+    <button class="acct">
+      <div class="pls-avatar" style="width:24px;height:24px;font-size:8px;background:color-mix(in srgb, var(--carnelian-600) 20%, var(--bg-surface));color:var(--carnelian-600)">SC</div>
+      <span class="acct__n"><b>Sarah</b><span>Donlon 2F</span></span>
+    </button>
+  </div>
+
+  <div class="hm-chips">
+    <button class="hm-chip hm-chip--ico">${ic('search',17)}</button>
+    <button class="hm-chip" aria-selected="true">Your week <span class="hm-chip__n">2</span></button>
+    <button class="hm-chip">Waiting <span class="hm-chip__n">3</span></button>
+    <button class="hm-chip">Past <span class="hm-chip__n">3</span></button>
+  </div>
+
+  <div class="scroll">
+    <div class="sect">A loop on your week</div>
+    <div class="pls-card card">
+      <h4>Donlon boxing crew</h4>
+      <div class="meta">Wed · 6:30p · Teagle gym · 5 going</div>
+      <button class="pls-btn pls-btn--sm pls-btn--secondary" style="width:100%;margin-top:12px">${ic('calendar')}Sync to phone calendar</button>
+      <div class="acts">
+        <button class="pls-btn pls-btn--sm pls-btn--secondary">${ic('pencil',15)}Shape it</button>
+        <button class="pls-btn pls-btn--sm pls-btn--primary">${ic('plus')}I want this too</button>
+      </div>
+      <button class="pls-btn pls-btn--sm pls-btn--ghost" style="width:100%;margin-top:6px">${ic('log-out',15)}Leave</button>
+    </div>
+
+    <div class="sect">The yes that fires it</div>
+    <button class="pls-btn pls-btn--ink pls-btn--block">${ic('zap',17)}Your yes fires this</button>
+
+    <div class="sect">Search</div>
+    <button class="fx-bar">
+      <span class="fx-bar__pin">${ic('map-pin',15)}</span>
+      <span class="fx-bar__lbl">Collegetown · Anything</span>
+      <span class="fx-bar__n pls-mono">5</span>
+      <span class="fx-bar__cv">${ic('chevron-down')}</span>
+    </button>
+    <div style="margin-top:10px">
+      <div class="anc-row" data-mine="true" data-near="false" style="--cat:var(--unit-class);--w:90%">
+        <button class="anc-row__m"><div class="anc-row__t">Prelim 1 review</div><div class="anc-row__s"><b>1 more fires it</b> · Wed 7:00p</div></button>
+        <button class="anc-row__yes">${ic('check')}</button>
+      </div>
+      <div class="anc-row" data-near="true" style="--cat:var(--unit-dorm);--w:60%">
+        <button class="anc-row__m"><div class="anc-row__t">Eddy St porch hang</div><div class="anc-row__s"><b>3 more</b> · Fri 9:00p</div></button>
+        <button class="anc-row__yes">${ic('plus')}</button>
+      </div>
+      <div class="anc-row" style="--cat:var(--unit-class);--w:40%">
+        <button class="anc-row__m"><div class="anc-row__t">MATH 1920 grind</div><div class="anc-row__s"><b>4 more</b> · Mon 7:00p</div></button>
+        <button class="anc-row__yes">${ic('plus')}</button>
+      </div>
+    </div>
+
+    <div class="sect">Every variant, side by side</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="pls-btn pls-btn--primary pls-btn--block">${ic('plus',17)}Primary</button>
+      <button class="pls-btn pls-btn--ink pls-btn--block">${ic('zap',17)}Ink</button>
+      <button class="pls-btn pls-btn--secondary pls-btn--block">${ic('calendar',17)}Secondary</button>
+      <button class="pls-btn pls-btn--ghost pls-btn--block">${ic('shield',17)}Ghost</button>
+    </div>
+  </div>
+
+  <button class="pls-fab">${ic('plus',24)}</button>
+  <div class="pls-tabbar">
+    <button class="pls-tab pls-tab--active"><span class="pls-tab__glyph">${ic('radio',19)}</span>Home</button>
+    <button class="pls-tab"><span class="pls-tab__glyph">${ic('graduation-cap',19)}</span>Class</button>
+  </div>`;
+
+document.getElementById('grid').innerHTML = FRAMES.map(f => `
+  <div class="col">
+    <div class="colhd"><b>${f.name}</b><span>${f.note}</span></div>
+    <div class="phone" data-dir="${f.dir}">${body()}</div>
+  </div>`).join('');
+
+lucide.createIcons();
+
+document.getElementById('theme').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]'); if (!b) return;
+  document.documentElement.setAttribute('data-theme', b.dataset.t);
+  document.querySelectorAll('#theme button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+});
+</script>
+</body>
+</html>

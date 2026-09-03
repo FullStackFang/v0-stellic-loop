@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · search, minimal — three rows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-raised:#fffefb; --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-0);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --cat-class:var(--slate); --cat-fitness:var(--moss); --cat-food:var(--amber-600); --cat-social:var(--rose); --cat-music:var(--violet);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 520px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 80px; }
+  .wrap{ max-width:1360px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:30px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 31px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:72ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.55; }
+
+  .rail{ display:flex; gap:36px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; min-height:128px; }
+  .caption .tag{ font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption h2{ font:700 20px/1.2 var(--font-display); margin:9px 0 5px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.5; }
+  .caption .bet{ margin-top:8px; font:500 11.5px/1.45 var(--font-mono); color:var(--accent-strong); }
+
+  .phone{ width:390px; height:760px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .body{ flex:1; overflow-y:auto; overflow-x:hidden; padding:0 20px 28px; scrollbar-width:none; }
+  .body::-webkit-scrollbar{ width:0; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+  /* shared shell, unchanged from index.html */
+  .fx-bar{ width:100%; display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:14px; cursor:pointer;
+    border:1px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-primary); text-align:left; margin-top:4px; }
+  .fx-bar__pin{ color:var(--accent); flex-shrink:0; display:flex; }
+  .fx-bar__lbl{ flex:1; min-width:0; font-weight:700; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fx-bar__lbl i{ font-style:normal; color:var(--text-tertiary); font-weight:600; }
+  .fx-bar__n{ font:400 11.5px/1 var(--font-mono); color:var(--text-tertiary); flex-shrink:0; }
+  .sec{ display:flex; align-items:center; gap:7px; margin:20px 0 4px; }
+  .sec h3{ font:700 14px/1 var(--font-display); margin:0; }
+  .sec .dot{ width:7px; height:7px; border-radius:50%; background:var(--status-forming); flex-shrink:0; }
+  .sec .live{ width:7px; height:7px; border-radius:50%; background:var(--status-live); flex-shrink:0; }
+  .sec .hint{ margin-left:auto; font:400 11px/1 var(--font-mono); color:var(--text-tertiary); }
+
+  /* the yes button, one grammar across all three */
+  .yes{ flex-shrink:0; width:32px; height:32px; border-radius:50%; border:1px solid var(--border-hairline); background:var(--bg-surface);
+    color:var(--text-secondary); cursor:pointer; display:grid; place-items:center; padding:0;
+    transition:background 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+  .yes:active{ transform:translateY(1px); }
+  [data-near="true"] .yes{ background:var(--text-primary); border-color:var(--text-primary); color:var(--paper-0); }
+  [data-mine="true"] .yes{ background:var(--accent-quiet); border-color:transparent; color:var(--accent-strong); }
+  [data-fired="true"] .yes{ background:var(--cat); border-color:var(--cat); color:var(--paper-0); }
+
+  /* ───────────── M1 · GAUGE RULE — the divider is the count ───────────── */
+  .m1{ display:flex; flex-direction:column; }
+  .m1-row{ display:flex; align-items:center; gap:12px; padding:13px 0 12px; position:relative; }
+  .m1-row::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:2px; border-radius:2px; background:var(--bg-sunken); }
+  .m1-row::before{ content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--w); border-radius:2px; background:var(--cat); z-index:1;
+    transition:width 520ms var(--ease-settle); }
+  .m1-row:last-child::after, .m1-row:last-child::before{ bottom:0; }
+  .m1-row__m{ flex:1; min-width:0; background:none; border:0; padding:0; text-align:left; cursor:pointer; }
+  .m1-row__t{ font:600 15.5px/1.2 var(--font-sans); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-.01em; }
+  .m1-row__s{ margin-top:4px; font:400 11.5px/1 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .m1-row__s b{ font-weight:600; color:var(--cat); }
+  .m1-row__s u{ text-decoration:none; color:var(--text-secondary); }
+  .m1-row[data-soon="true"] .m1-row__s u{ color:var(--accent-strong); font-weight:600; }
+
+  /* ───────────── M2 · COUNT COLUMN — the list reads as a ledger ───────────── */
+  .m2{ display:flex; flex-direction:column; }
+  .m2-row{ display:flex; align-items:center; gap:13px; padding:13px 0 12px; border-bottom:1px solid var(--border-hairline); }
+  .m2-row__n{ flex:0 0 42px; text-align:right; font:600 15px/1 var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.04em; color:var(--cat); }
+  .m2-row__n s{ text-decoration:none; font-weight:400; font-size:11px; color:var(--text-tertiary); }
+  .m2-row__m{ flex:1; min-width:0; background:none; border:0; padding:0; text-align:left; cursor:pointer; }
+  .m2-row__t{ font:600 15.5px/1.2 var(--font-sans); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-.01em; }
+  .m2-row__s{ margin-top:4px; font:400 11.5px/1 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .m2-row__s b{ font-weight:600; color:var(--cat); }
+  .m2-row__s u{ text-decoration:none; color:var(--text-secondary); }
+  .m2-row[data-soon="true"] .m2-row__s u{ color:var(--accent-strong); font-weight:600; }
+  .m2-row__live{ flex:0 0 42px; display:flex; justify-content:flex-end; }
+  .m2-row__live i{ width:7px; height:7px; border-radius:50%; background:var(--status-live); }
+
+  /* ───────────── M3 · CLOCK RIGHT — time is the constant column ───────────── */
+  .m3{ display:flex; flex-direction:column; }
+  .m3-row{ display:flex; align-items:center; gap:11px; padding:13px 0 12px; border-bottom:1px solid var(--border-hairline); }
+  .m3-row__m{ flex:1; min-width:0; background:none; border:0; padding:0; text-align:left; cursor:pointer; }
+  .m3-row__top{ display:flex; align-items:baseline; gap:8px; }
+  .m3-row__t{ flex:1; min-width:0; font:600 15.5px/1.2 var(--font-sans); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-.01em; }
+  .m3-row__clock{ flex-shrink:0; font:500 12.5px/1 var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.03em; color:var(--text-secondary); }
+  .m3-row[data-soon="true"] .m3-row__clock{ color:var(--accent); font-weight:600; }
+  .m3-row__s{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .m3-row__bar{ width:46px; height:3px; border-radius:2px; background:var(--bg-sunken); overflow:hidden; flex-shrink:0; }
+  .m3-row__bar i{ display:block; height:100%; border-radius:2px; background:var(--cat); transition:width 520ms var(--ease-settle); }
+  .m3-row__meta{ font:400 11.5px/1 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .m3-row__meta b{ font-weight:600; color:var(--cat); }
+
+  @media (prefers-reduced-motion:reduce){
+    .m1-row::before, .m3-row__bar i{ transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · 🔍 search · minimal</div>
+    <h1>One list, no tiles</h1>
+    <p>B and C crossed and stripped: a single ordered list, closest to firing first, with the countdown kept and everything else cut. Each row carries the name, how close it is, and when it gets called. Who is going, where it lands, the full story — all of that is one tap away, not on the row. Meeting loops use the same row so the screen reads as one thing.</p>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag">M1 · gauge rule</div>
+        <h2>The divider is the count</h2>
+        <p>The hairline between rows fills to the count in the activity colour. No bars, no rings, no extra ink — the separator you already needed does the work. The list scans like an equaliser.</p>
+        <div class="bet">least ink · count read peripherally</div>
+      </div>
+      <div class="phone"><div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div><div class="body" id="p1"></div></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <div class="tag">M2 · count column</div>
+        <h2>A ledger of yeses</h2>
+        <p>A fixed numeric column on the left, tabular and right-aligned, so the counts stack into a readable column. The list reads like a standings table: name, number, when.</p>
+        <div class="bet">most precise · exact numbers, no estimating</div>
+      </div>
+      <div class="phone"><div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div><div class="body" id="p2"></div></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <div class="tag">M3 · clock right</div>
+        <h2>Time is the right-hand column</h2>
+        <p>Title left, live countdown right, in one straight mono column all the way down. Under it, a 46px bar and the gap. Anything inside 24h turns carnelian on its own.</p>
+        <div class="bet">most B · the call stays the loudest fact</div>
+      </div>
+      <div class="phone"><div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div><div class="body" id="p3"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const HOUR = 36e5, DAY = 24 * HOUR, T0 = Date.now();
+const DATA = [
+  { id:'box',    t:'Donlon boxing crew', cat:'fitness', count:9, target:10, slot:'Wed 6:30p',  at:T0 + 6*DAY + 6*HOUR },
+  { id:'prelim', t:'Prelim 1 review',    cat:'class',   count:8, target:10, slot:'Wed 7:00p',  at:T0 + 6*DAY + 6*HOUR },
+  { id:'mac',    t:'2F late-night mac',  cat:'food',    count:4, target:6,  slot:'Tue 11:00p', at:T0 + 5*DAY + 10*HOUR, mine:true },
+  { id:'math',   t:'MATH 1920 grind',    cat:'class',   count:6, target:10, slot:'Mon 7:00p',  at:T0 + 4*DAY + 6*HOUR },
+  { id:'chem',   t:'CHEM 2070 review',   cat:'class',   count:6, target:10, slot:'Tue 8:00p',  at:T0 + 5*DAY + 7*HOUR },
+  { id:'coffee', t:'Monday coffee',      cat:'food',    count:3, target:6,  slot:'Mon 9:00a',  at:T0 + 14*HOUR + 20*6e4 },
+];
+// meeting loops share the row grammar; their facts are simply already settled
+const MEET = [
+  { id:'lift',   t:'Noyes lift crew', cat:'fitness', slot:'Sat 4:00p', where:'Noyes',      going:6, at:T0 + 3*DAY + 2*HOUR },
+  { id:'brunch', t:'Sunday brunch',   cat:'food',    slot:'Sun 11:00a', where:'North Star', going:5, at:T0 + 4*DAY + 9*HOUR },
+];
+const state = DATA.map(d => ({ ...d, mine: !!d.mine }));
+const el = h => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstElementChild; };
+const pct   = d => Math.round(Math.min(1, d.count / d.target) * 100);
+const gap   = d => Math.max(0, d.target - d.count);
+const near  = d => gap(d) === 1;
+const fired = d => d.count >= d.target;
+const soon  = d => d.at - Date.now() < DAY;
+
+function until(ms){
+  if (ms <= 0) return 'now';
+  const dd = Math.floor(ms / DAY), h = Math.floor(ms % DAY / HOUR), m = Math.floor(ms % HOUR / 6e4), s = Math.floor(ms % 6e4 / 1000);
+  if (dd) return dd + 'd ' + h + 'h';
+  if (h)  return h + 'h ' + m + 'm';
+  return m + 'm ' + s + 's';
+}
+const SVG = {
+  pin:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>',
+  chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  bolt:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>',
+  arrow:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+};
+// the row's one action, in every variant
+const yesIcon = d => fired(d) ? SVG.bolt : d.mine ? SVG.check : SVG.plus;
+const yesLabel = d => fired(d) ? 'Join loop' : d.mine ? 'Take back your yes' : 'I want this too';
+// the one quiet phrase that says how close it is
+const gapWord = d => fired(d) ? 'it’s on' : near(d) ? '1 more fires it' : gap(d) + ' more';
+
+function head(n){
+  return '<button class="fx-bar"><span class="fx-bar__pin">' + SVG.pin + '</span>' +
+    '<span class="fx-bar__lbl">Donlon 2F <i>·</i> Anything</span>' +
+    '<span class="fx-bar__n">' + n + '</span>' +
+    '<span class="fx-bar__pin" style="color:var(--text-tertiary)">' + SVG.chev + '</span></button>';
+}
+const secWanted = '<div class="sec"><span class="dot"></span><h3>Wanted near you</h3><span class="hint">closest first</span></div>';
+const secMeet   = '<div class="sec" style="margin-top:26px"><span class="live"></span><h3>Meeting near you</h3><span class="hint">join any time</span></div>';
+const ordered = () => [...state].sort((a, b) => gap(a) - gap(b) || a.at - b.at);
+
+function toggle(id){
+  const d = state.find(x => x.id === id);
+  d.mine = !d.mine;
+  d.count += d.mine ? 1 : -1;
+  render();
+}
+function wire(row, d){
+  row.querySelector('.yes').onclick = () => toggle(d.id);
+  return row;
+}
+const flags = d => ' data-mine="' + d.mine + '" data-near="' + near(d) + '" data-fired="' + fired(d) + '" data-soon="' + soon(d) + '"';
+
+/* ── M1 · gauge rule ─────────────────────────────────────────── */
+function render1(){
+  const host = document.getElementById('p1'); host.innerHTML = '';
+  host.appendChild(el(head(state.length)));
+  host.appendChild(el(secWanted));
+  const list = el('<div class="m1"></div>');
+  ordered().forEach(d => {
+    list.appendChild(wire(el(
+      '<div class="m1-row" style="--cat:var(--cat-' + d.cat + '); --w:' + pct(d) + '%"' + flags(d) + '>' +
+        '<button class="m1-row__m">' +
+          '<div class="m1-row__t">' + d.t + '</div>' +
+          '<div class="m1-row__s"><b>' + gapWord(d) + '</b> · ' + d.slot + ' · <u data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</u></div>' +
+        '</button>' +
+        '<button class="yes" aria-label="' + yesLabel(d) + '">' + yesIcon(d) + '</button>' +
+      '</div>'), d));
+  });
+  host.appendChild(list);
+  host.appendChild(el(secMeet));
+  const m = el('<div class="m1"></div>');
+  MEET.forEach(d => m.appendChild(el(
+    '<div class="m1-row" style="--cat:var(--cat-' + d.cat + '); --w:100%">' +
+      '<button class="m1-row__m">' +
+        '<div class="m1-row__t">' + d.t + '</div>' +
+        '<div class="m1-row__s"><b>' + d.going + ' going</b> · ' + d.slot + ' · ' + d.where + '</div>' +
+      '</button>' +
+      '<button class="yes" aria-label="Open ' + d.t + '">' + SVG.arrow + '</button>' +
+    '</div>')));
+  host.appendChild(m);
+}
+
+/* ── M2 · count column ───────────────────────────────────────── */
+function render2(){
+  const host = document.getElementById('p2'); host.innerHTML = '';
+  host.appendChild(el(head(state.length)));
+  host.appendChild(el(secWanted));
+  const list = el('<div class="m2"></div>');
+  ordered().forEach(d => {
+    list.appendChild(wire(el(
+      '<div class="m2-row" style="--cat:var(--cat-' + d.cat + ')"' + flags(d) + '>' +
+        '<div class="m2-row__n">' + d.count + '<s>/' + d.target + '</s></div>' +
+        '<button class="m2-row__m">' +
+          '<div class="m2-row__t">' + d.t + '</div>' +
+          '<div class="m2-row__s"><b>' + gapWord(d) + '</b> · ' + d.slot + ' · <u data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</u></div>' +
+        '</button>' +
+        '<button class="yes" aria-label="' + yesLabel(d) + '">' + yesIcon(d) + '</button>' +
+      '</div>'), d));
+  });
+  host.appendChild(list);
+  host.appendChild(el(secMeet));
+  const m = el('<div class="m2"></div>');
+  MEET.forEach(d => m.appendChild(el(
+    '<div class="m2-row" style="--cat:var(--cat-' + d.cat + ')">' +
+      '<div class="m2-row__live"><i></i></div>' +
+      '<button class="m2-row__m">' +
+        '<div class="m2-row__t">' + d.t + '</div>' +
+        '<div class="m2-row__s"><b>' + d.going + ' going</b> · ' + d.slot + ' · ' + d.where + '</div>' +
+      '</button>' +
+      '<button class="yes" aria-label="Open ' + d.t + '">' + SVG.arrow + '</button>' +
+    '</div>')));
+  host.appendChild(m);
+}
+
+/* ── M3 · clock right ────────────────────────────────────────── */
+function render3(){
+  const host = document.getElementById('p3'); host.innerHTML = '';
+  host.appendChild(el(head(state.length)));
+  host.appendChild(el(secWanted));
+  const list = el('<div class="m3"></div>');
+  ordered().forEach(d => {
+    list.appendChild(wire(el(
+      '<div class="m3-row" style="--cat:var(--cat-' + d.cat + ')"' + flags(d) + '>' +
+        '<button class="m3-row__m">' +
+          '<div class="m3-row__top">' +
+            '<span class="m3-row__t">' + d.t + '</span>' +
+            '<span class="m3-row__clock" data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</span>' +
+          '</div>' +
+          '<div class="m3-row__s">' +
+            '<span class="m3-row__bar"><i style="width:' + pct(d) + '%"></i></span>' +
+            '<span class="m3-row__meta"><b>' + gapWord(d) + '</b> · ' + d.slot + '</span>' +
+          '</div>' +
+        '</button>' +
+        '<button class="yes" aria-label="' + yesLabel(d) + '">' + yesIcon(d) + '</button>' +
+      '</div>'), d));
+  });
+  host.appendChild(list);
+  host.appendChild(el(secMeet));
+  const m = el('<div class="m3"></div>');
+  MEET.forEach(d => m.appendChild(el(
+    '<div class="m3-row" style="--cat:var(--cat-' + d.cat + ')">' +
+      '<button class="m3-row__m">' +
+        '<div class="m3-row__top">' +
+          '<span class="m3-row__t">' + d.t + '</span>' +
+          '<span class="m3-row__clock" data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</span>' +
+        '</div>' +
+        '<div class="m3-row__s">' +
+          '<span class="m3-row__bar"><i style="width:100%"></i></span>' +
+          '<span class="m3-row__meta"><b>' + d.going + ' going</b> · ' + d.slot + ' · ' + d.where + '</span>' +
+        '</div>' +
+      '</button>' +
+      '<button class="yes" aria-label="Open ' + d.t + '">' + SVG.arrow + '</button>' +
+    '</div>')));
+  host.appendChild(m);
+}
+
+function render(){ render1(); render2(); render3(); }
+render();
+setInterval(() => {
+  document.querySelectorAll('[data-tick]').forEach(n => {
+    const d = state.find(x => x.id === n.dataset.tick) || MEET.find(x => x.id === n.dataset.tick);
+    if (d) n.textContent = until(d.at - Date.now());
+  });
+}, 1000);
+</script>
+</body>
+</html>

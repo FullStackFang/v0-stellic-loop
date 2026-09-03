@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · wanted-near-you tiles — three directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-raised:#fffefb; --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-0);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --cat-class:var(--slate); --cat-fitness:var(--moss); --cat-food:var(--amber-600); --cat-social:var(--rose); --cat-music:var(--violet);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+    --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+    --shadow-lift:0 2px 5px rgba(80,40,30,.07), 0 18px 34px -16px rgba(80,40,30,.38);
+    --edge-lift:inset 0 1px 0 rgba(255,253,248,.9);
+  }
+  /* inherits, so the liquid and the waterline both read the tile's level; registering it
+     is what lets a percentage interpolate instead of snapping. */
+  @property --fill { syntax: "<percentage>"; initial-value: 0%; inherits: true; }
+
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 520px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 80px; }
+  .wrap{ max-width:1360px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:14px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 31px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:70ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.55; }
+  .swatches{ display:flex; justify-content:center; gap:16px; margin:22px auto 30px; font:500 11.5px/1 var(--font-mono); color:var(--text-secondary); flex-wrap:wrap; }
+  .swatches span{ display:inline-flex; align-items:center; gap:6px; }
+  .swatches i{ width:12px; height:12px; border-radius:4px; }
+
+  .rail{ display:flex; gap:36px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; min-height:150px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption h2{ font:700 20px/1.2 var(--font-display); margin:9px 0 5px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.5; }
+  .caption .bet{ margin-top:8px; font:500 11.5px/1.45 var(--font-mono); color:var(--accent-strong); }
+
+  .phone{ width:390px; height:812px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .body{ flex:1; overflow-y:auto; overflow-x:hidden; padding:0 20px 28px; scrollbar-width:none; }
+  .body::-webkit-scrollbar{ width:0; }
+
+  /* the filter bar, lifted verbatim from index.html so the tiles are judged in place */
+  .fx-bar{ width:100%; display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:14px; cursor:pointer;
+    border:1px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-primary); text-align:left; margin-top:4px; }
+  .fx-bar__pin{ color:var(--accent); flex-shrink:0; display:flex; }
+  .fx-bar__lbl{ flex:1; min-width:0; font-weight:700; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fx-bar__lbl i{ font-style:normal; color:var(--text-tertiary); font-weight:600; }
+  .fx-bar__n{ font-size:11.5px; color:var(--text-tertiary); flex-shrink:0; font-family:var(--font-mono); }
+  .sec{ display:flex; align-items:center; gap:7px; margin:18px 0 11px; }
+  .sec h3{ font:700 14px/1 var(--font-display); margin:0; }
+  .sec .dot{ width:7px; height:7px; border-radius:50%; background:var(--status-forming); flex-shrink:0; }
+  .sec .hint{ margin-left:auto; font:400 11px/1 var(--font-mono); color:var(--text-tertiary); }
+
+  /* ─────────────────────────── A · THE FILL ─────────────────────────── */
+  .fl-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .fl{ position:relative; border-radius:17px; overflow:hidden; background:var(--bg-surface);
+    border:1px solid var(--border-hairline); box-shadow:var(--shadow-card);
+    display:flex; flex-direction:column; min-width:0; min-height:158px; isolation:isolate;
+    transition:--fill 620ms var(--ease-settle), box-shadow 320ms var(--ease-out); }
+  /* the vessel: paper soaks up the activity colour to the height of the count.
+     denser at the bottom, thinner at the surface, hard stop at the waterline. */
+  .fl__liq{ position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:linear-gradient(to top,
+      color-mix(in srgb, var(--cat) 30%, transparent) 0%,
+      color-mix(in srgb, var(--cat) 15%, transparent) var(--fill),
+      transparent var(--fill)); }
+  /* the meniscus: light gathering just under the surface. A hard rule here would read as a
+     strikethrough the moment it crossed the count, so the surface glows instead of ruling. */
+  .fl__line{ position:absolute; left:0; right:0; bottom:var(--fill); height:7px; z-index:1; pointer-events:none;
+    transform:translateY(100%);
+    background:linear-gradient(to top, transparent, color-mix(in srgb, var(--cat) 42%, transparent)); }
+  .fl__in{ position:relative; z-index:2; padding:11px 12px 11px; display:flex; flex-direction:column; gap:4px; flex:1; }
+  .fl__t{ font:700 13.5px/1.22 var(--font-sans); color:var(--text-primary); text-align:left; background:none; border:0; padding:0; cursor:pointer;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:8px; }
+  .fl__cnt{ display:flex; align-items:baseline; gap:5px; margin-top:auto; }
+  .fl__n{ font:800 32px/.82 var(--font-display); letter-spacing:-.035em; color:var(--cat); font-variant-numeric:tabular-nums; }
+  .fl__of{ font:500 11px/1 var(--font-mono); color:var(--text-secondary); }
+  .fl__gap{ font:600 11px/1.2 var(--font-sans); color:var(--cat); margin-top:2px; }
+  .fl__when{ font:400 10.5px/1.35 var(--font-mono); color:var(--text-tertiary); margin-top:3px; }
+  .fl__when b{ font-weight:600; color:var(--text-secondary); }
+  .fl__act{ position:relative; z-index:2; margin:0; border:0; border-top:1px solid color-mix(in srgb,var(--cat) 18%,var(--border-hairline));
+    background:color-mix(in srgb,var(--cat) 7%, var(--bg-surface)); color:var(--cat); cursor:pointer;
+    font:700 12px/1 var(--font-sans); padding:10px 6px; display:flex; align-items:center; justify-content:center; gap:5px;
+    transition:background 160ms var(--ease-out); }
+  .fl__act:active{ background:color-mix(in srgb,var(--cat) 16%, var(--bg-surface)); }
+  .fl[data-mine="true"]{ border-color:color-mix(in srgb,var(--accent) 34%,var(--border-hairline)); }
+  .fl[data-mine="true"] .fl__act{ background:var(--accent-quiet); color:var(--accent-strong); border-top-color:transparent; }
+  /* one away: the waterline breathes and the tile lifts off the paper */
+  .fl[data-near="true"]{ background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-lift);
+    border-color:color-mix(in srgb, var(--text-tertiary) 22%, var(--border-hairline)); }
+  .fl[data-near="true"] .fl__line{ height:11px; animation:breathe 2.8s var(--ease-out) infinite; }
+  .fl[data-near="true"] .fl__act{ background:var(--text-primary); color:var(--paper-0); border-top-color:var(--text-primary); }
+  @keyframes breathe{ 0%,100%{ opacity:.5; } 50%{ opacity:1; } }
+  .fl.pour .fl__n{ animation:tick 420ms var(--ease-settle); }
+  @keyframes tick{ from{ transform:translateY(8px); opacity:0; } to{ transform:none; opacity:1; } }
+  /* quorum: the vessel is full, the anchor is a loop, the only thing left to do is join */
+  .fl[data-fired="true"]{ border-color:var(--cat); }
+  .fl[data-fired="true"] .fl__line{ display:none; }
+  .fl[data-fired="true"] .fl__gap{ font-weight:700; letter-spacing:.01em; }
+  .fl[data-fired="true"] .fl__act,
+  .fl[data-fired="true"][data-mine="true"] .fl__act{ background:var(--cat); color:var(--paper-0); border-top-color:var(--cat); }
+
+  /* ─────────────────────────── B · THE CALL ─────────────────────────── */
+  .cl-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .cl{ border-radius:17px; background:var(--bg-surface); border:1px solid var(--border-hairline); box-shadow:var(--shadow-card);
+    display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+  .cl--hero{ grid-column:1 / -1; background:var(--bg-raised); box-shadow:var(--edge-lift), var(--shadow-lift);
+    border-color:color-mix(in srgb, var(--text-tertiary) 22%, var(--border-hairline)); }
+  .cl__in{ padding:11px 12px 10px; display:flex; flex-direction:column; gap:8px; flex:1; text-align:left; }
+  .cl--hero .cl__in{ padding:14px 15px 12px; gap:9px; }
+  .cl__kick{ display:flex; align-items:center; gap:6px; font:600 9.5px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--cat); }
+  .cl__kick i{ width:6px; height:6px; border-radius:50%; background:var(--cat); flex-shrink:0; }
+  .cl__t{ font:700 13.5px/1.22 var(--font-sans); color:var(--text-primary); background:none; border:0; padding:0; cursor:pointer; text-align:left;
+    display:flex; align-items:baseline; gap:6px; }
+  .cl__t i{ width:6px; height:6px; border-radius:50%; background:var(--cat); flex-shrink:0; align-self:center; }
+  .cl__t span{ min-width:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .cl--hero .cl__t{ font:800 21px/1.14 var(--font-display); letter-spacing:-.025em; }
+  .cl--hero .cl__t span{ -webkit-line-clamp:1; }
+  /* the clock is the point */
+  .cl__clock{ display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
+  .cl__num{ font:500 22px/1 var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.04em; color:var(--text-primary); }
+  .cl--hero .cl__num{ font-size:36px; }
+  .cl__cap{ font:600 9.5px/1.2 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); }
+  .cl[data-soon="true"] .cl__num{ color:var(--accent); }
+  .cl[data-soon="true"] .cl__cap{ color:var(--accent-strong); }
+  .cl__slot{ font:400 10.5px/1.35 var(--font-mono); color:var(--text-tertiary); }
+  /* the count drops to pips you can literally count — filled yeses, hollow gap */
+  .cl__pips{ display:flex; gap:3px; align-items:center; flex-wrap:wrap; }
+  .cl__pips u{ width:7px; height:7px; border-radius:50%; background:var(--cat); text-decoration:none; }
+  .cl__pips u[data-off]{ background:transparent; box-shadow:inset 0 0 0 1.2px color-mix(in srgb,var(--cat) 34%,var(--paper-3)); }
+  .cl__pips span{ margin-left:4px; font:500 10.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .cl__act{ border:0; border-top:1px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-primary); cursor:pointer;
+    font:700 12px/1 var(--font-sans); padding:10px 6px; display:flex; align-items:center; justify-content:center; gap:5px; }
+  .cl--hero .cl__act{ font-size:13.5px; padding:13px; }
+  .cl__act:active{ background:var(--bg-sunken); }
+  .cl[data-near="true"] .cl__act{ background:var(--text-primary); color:var(--paper-0); border-top-color:var(--text-primary); }
+  .cl[data-mine="true"]{ border-color:color-mix(in srgb,var(--accent) 34%,var(--border-hairline)); }
+  .cl[data-mine="true"] .cl__act{ background:var(--accent-quiet); color:var(--accent-strong); border-top-color:transparent; }
+  .cl[data-fired="true"]{ border-color:var(--cat); }
+  .cl[data-fired="true"] .cl__act,
+  .cl[data-fired="true"][data-mine="true"] .cl__act{ background:var(--cat); color:var(--paper-0); border-top-color:var(--cat); }
+
+  /* ─────────────────────────── C · THE LADDER ─────────────────────────── */
+  .ld{ display:flex; flex-direction:column; }
+  .ld__lbl{ font:600 9.5px/1 var(--font-mono); letter-spacing:.15em; text-transform:uppercase; color:var(--text-tertiary); margin:16px 2px 8px; }
+  .ld__lbl b{ color:var(--accent-strong); font-weight:600; }
+  /* the top rung: everything, full width */
+  .ld-hero{ border-radius:19px; background:var(--bg-raised); border:1px solid color-mix(in srgb, var(--text-tertiary) 22%, var(--border-hairline));
+    box-shadow:var(--edge-lift), var(--shadow-lift); overflow:hidden; }
+  .ld-hero__in{ padding:14px 16px 13px; display:flex; flex-direction:column; gap:11px; }
+  .ld-hero__kick{ display:flex; align-items:center; gap:7px; font:600 9.5px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--cat); }
+  .ld-hero__kick i{ width:6px; height:6px; border-radius:50%; background:var(--cat); }
+  .ld-hero__t{ font:800 22px/1.14 var(--font-display); letter-spacing:-.025em; color:var(--text-primary); background:none; border:0; padding:0; text-align:left; cursor:pointer; }
+  .ld-hero__row{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+  .ld-hero__cnt{ display:flex; align-items:baseline; gap:5px; }
+  .ld-hero__n{ font:800 31px/.85 var(--font-display); letter-spacing:-.03em; color:var(--cat); font-variant-numeric:tabular-nums; }
+  .ld-hero__of{ font:500 11.5px/1 var(--font-mono); color:var(--text-tertiary); }
+  .ld-hero__when{ text-align:right; font:400 11px/1.4 var(--font-mono); color:var(--text-tertiary); }
+  .ld-hero__when b{ display:block; font:500 16px/1.15 var(--font-mono); color:var(--text-primary); font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .ld-hero__bar{ height:5px; border-radius:3px; background:var(--bg-sunken); overflow:hidden; }
+  .ld-hero__bar i{ display:block; height:100%; border-radius:3px; background:var(--cat); transition:width 520ms var(--ease-settle); }
+  .ld-hero__act{ width:100%; border:0; background:var(--text-primary); color:var(--paper-0); cursor:pointer;
+    font:700 13.5px/1 var(--font-sans); padding:14px; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .ld-hero__act:active{ opacity:.86; }
+  .ld-hero[data-mine="true"] .ld-hero__act{ background:var(--accent-quiet); color:var(--accent-strong); }
+  .ld-hero[data-fired="true"]{ border-color:var(--cat); }
+  .ld-hero[data-fired="true"] .ld-hero__act,
+  .ld-hero[data-fired="true"][data-mine="true"] .ld-hero__act{ background:var(--cat); color:var(--paper-0); }
+  /* the cooler rungs: one line each */
+  .ld-row{ display:flex; align-items:center; gap:11px; padding:12px 2px; border-top:1px solid var(--border-hairline); }
+  .ld-row:first-of-type{ border-top:0; }
+  .ld-row__m{ flex:1; min-width:0; background:none; border:0; padding:0; text-align:left; cursor:pointer; }
+  .ld-row__t{ font:600 14px/1.2 var(--font-sans); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ld-row__s{ display:flex; align-items:center; gap:8px; margin-top:5px; }
+  .ld-row__bar{ width:60px; height:5px; border-radius:3px; background:var(--bg-sunken); overflow:hidden; flex-shrink:0; }
+  .ld-row__bar i{ display:block; height:100%; border-radius:3px; background:var(--cat); transition:width 520ms var(--ease-settle); }
+  .ld-row__meta{ font:400 11px/1 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ld-row__meta u{ text-decoration:none; font-weight:600; color:var(--cat); }
+  .ld-row__meta b{ font-weight:600; color:var(--text-secondary); }
+  .ld-row__act{ flex-shrink:0; width:34px; height:34px; border-radius:50%; border:1px solid var(--border-hairline); background:var(--bg-surface);
+    color:var(--text-primary); cursor:pointer; display:grid; place-items:center; }
+  .ld-row__act:active{ background:var(--bg-sunken); }
+  .ld-row[data-mine="true"] .ld-row__act{ background:var(--accent-quiet); border-color:transparent; color:var(--accent-strong); }
+
+  @media (prefers-reduced-motion:reduce){
+    .fl__liq, .fl__line, .ld-hero__bar i, .ld-row__bar i{ transition:none; }
+    .fl[data-near="true"] .fl__line{ animation:none; opacity:1; }
+    .fl.pour .fl__n{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · 🔍 search</div>
+    <h1>Wanted near you — three ways to make six anchors enticing</h1>
+    <p>Same six anchors, same moment, same two actions. What changes is what the tile makes you feel first: how full it is, how soon it gets called, or whether it deserves your eyes at all. Every tile is live — tap a yes and watch it move.</p>
+  </div>
+  <div class="swatches">
+    <span><i style="background:var(--slate)"></i>class</span>
+    <span><i style="background:var(--moss)"></i>fitness</span>
+    <span><i style="background:var(--amber-600)"></i>food</span>
+    <span><i style="background:var(--rose)"></i>social</span>
+    <span><i style="background:var(--violet)"></i>music</span>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag">A · the fill</div>
+        <h2>The tile is a vessel</h2>
+        <p>Paper soaks up the activity colour to the height of the count, with a waterline where it actually stands. Six tiles become a heat map — you see which are nearly full before you read a word. The one-away tile lifts off the page and its waterline breathes.</p>
+        <div class="bet">bet: quantity · tap a yes, the level rises</div>
+      </div>
+      <div class="phone"><div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div><div class="body" id="pA"></div></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <div class="tag">B · the call</div>
+        <h2>The countdown is the headline</h2>
+        <p>The clock leads and ticks live; the count drops to pips you can count on sight. Whatever gets called soonest takes the full-width top slot, and anything inside 24h turns carnelian.</p>
+        <div class="bet">bet: time · coffee is called in hours, not days</div>
+      </div>
+      <div class="phone"><div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div><div class="body" id="pB"></div></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <div class="tag">C · the ladder</div>
+        <h2>Weight falls with heat</h2>
+        <p>No grid. One anchor is a single yes from real, so it gets a whole card and a black button. Everything colder compresses to a one-line rung. Reading down the list is reading a thermometer cooling.</p>
+        <div class="bet">bet: hierarchy · six things, one decision</div>
+      </div>
+      <div class="phone"><div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div><div class="body" id="pC"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const HOUR = 36e5, DAY = 24 * HOUR, T0 = Date.now();
+// One dataset, three renderings. Coffee is deliberately hours away, so time and count disagree.
+const DATA = [
+  { id:'prelim', t:'Prelim 1 review',    cat:'class',   count:8, target:10, slot:'Wed 7:00p',  at:T0 + 6*DAY + 6*HOUR },
+  { id:'math',   t:'MATH 1920 grind',    cat:'class',   count:6, target:10, slot:'Mon 7:00p',  at:T0 + 4*DAY + 6*HOUR },
+  { id:'box',    t:'Donlon boxing crew', cat:'fitness', count:9, target:10, slot:'Wed 6:30p',  at:T0 + 6*DAY + 6*HOUR },
+  { id:'mac',    t:'2F late-night mac',  cat:'food',    count:4, target:6,  slot:'Tue 11:00p', at:T0 + 5*DAY + 10*HOUR, mine:true },
+  { id:'coffee', t:'Monday coffee',      cat:'food',    count:3, target:6,  slot:'Mon 9:00a',  at:T0 + 14*HOUR + 20*6e4 },
+  { id:'chem',   t:'CHEM 2070 review',   cat:'class',   count:6, target:10, slot:'Tue 8:00p',  at:T0 + 5*DAY + 7*HOUR },
+];
+const state = DATA.map(d => ({ ...d, mine: !!d.mine }));
+const el = h => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstElementChild; };
+const pct   = d => Math.round(Math.min(1, d.count / d.target) * 100);
+const gap   = d => Math.max(0, d.target - d.count);
+const near  = d => gap(d) === 1;
+const fired = d => d.count >= d.target;   // quorum reached: the anchor becomes a loop
+
+function until(ms){
+  if (ms <= 0) return 'now';
+  const dd = Math.floor(ms / DAY), h = Math.floor(ms % DAY / HOUR), m = Math.floor(ms % HOUR / 6e4), s = Math.floor(ms % 6e4 / 1000);
+  if (dd) return dd + 'd ' + h + 'h';
+  if (h)  return h + 'h ' + m + 'm';
+  return m + 'm ' + s + 's';
+}
+const SVG = {
+  pin:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>',
+  chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>',
+  plus:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+  plus2:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+  check:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  check2:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  bolt:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>',
+  bolt2:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>',
+};
+const head = n =>
+  '<button class="fx-bar"><span class="fx-bar__pin">' + SVG.pin + '</span>' +
+  '<span class="fx-bar__lbl">Donlon 2F <i>·</i> Anything</span>' +
+  '<span class="fx-bar__n">' + n + '</span>' +
+  '<span class="fx-bar__pin" style="color:var(--text-tertiary)">' + SVG.chev + '</span></button>';
+
+function toggle(id){
+  const d = state.find(x => x.id === id);
+  d.mine = !d.mine;
+  d.count += d.mine ? 1 : -1;
+  patchA(id);   // A stays in place so the level can visibly rise
+  renderB(); renderC();
+}
+
+// A never re-renders on a yes — the tile mutates, so --fill interpolates and the level rises.
+function patchA(id){
+  const d = state.find(x => x.id === id);
+  const tile = document.querySelector('#pA .fl[data-id="' + id + '"]');
+  if (!tile) return renderA();
+  tile.style.setProperty('--fill', pct(d) + '%');
+  tile.dataset.mine = d.mine;
+  tile.dataset.near = near(d);
+  tile.dataset.fired = fired(d);
+  tile.querySelector('.fl__n').textContent = d.count;
+  tile.querySelector('.fl__gap').textContent = gapText(d);
+  tile.querySelector('.fl__act').innerHTML = label(d);
+  tile.classList.remove('pour'); void tile.offsetWidth; tile.classList.add('pour');
+}
+const label = d => fired(d) ? SVG.bolt + 'Join loop'
+  : d.mine ? SVG.check + 'you want this'
+  : near(d) ? SVG.bolt + 'you would fire it'
+  : SVG.plus + 'I want this too';
+const gapText = d => fired(d) ? 'it fired · it’s on' : near(d) ? '1 more fires it' : gap(d) + ' more to fire';
+
+/* ── A · THE FILL ──────────────────────────────────────────────── */
+function renderA(){
+  const host = document.getElementById('pA');
+  host.innerHTML = '';
+  host.appendChild(el(head(state.length)));
+  host.appendChild(el('<div class="sec"><span class="dot"></span><h3>Wanted near you</h3><span class="hint">add your yes</span></div>'));
+  const grid = el('<div class="fl-grid"></div>');
+  state.forEach(d => {
+    const tile = el(
+      '<div class="fl" data-id="' + d.id + '" style="--cat:var(--cat-' + d.cat + '); --fill:' + pct(d) + '%" data-mine="' + d.mine + '" data-near="' + near(d) + '" data-fired="' + fired(d) + '">' +
+        '<span class="fl__liq"></span><span class="fl__line"></span>' +
+        '<div class="fl__in">' +
+          '<button class="fl__t">' + d.t + '</button>' +
+          '<div class="fl__cnt">' +
+            '<span class="fl__n">' + d.count + '</span><span class="fl__of">of ' + d.target + '</span>' +
+          '</div>' +
+          '<div class="fl__gap">' + gapText(d) + '</div>' +
+          '<div class="fl__when mono">' + d.slot + ' · <b data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</b></div>' +
+        '</div>' +
+        '<button class="fl__act">' + label(d) + '</button>' +
+      '</div>');
+    tile.querySelector('.fl__act').onclick = () => toggle(d.id);
+    grid.appendChild(tile);
+  });
+  host.appendChild(grid);
+}
+
+/* ── B · THE CALL ──────────────────────────────────────────────── */
+function renderB(){
+  const host = document.getElementById('pB');
+  host.innerHTML = '';
+  host.appendChild(el(head(state.length)));
+  host.appendChild(el('<div class="sec"><span class="dot"></span><h3>Wanted near you</h3><span class="hint">called soonest first</span></div>'));
+  const grid = el('<div class="cl-grid"></div>');
+  [...state].sort((a, b) => a.at - b.at).forEach((d, i) => {
+    const soon = d.at - Date.now() < DAY, hero = i === 0;
+    const pips = Array.from({ length:d.target }, (_, k) => '<u' + (k < d.count ? '' : ' data-off') + '></u>').join('');
+    const tile = el(
+      '<div class="cl' + (hero ? ' cl--hero' : '') + '" style="--cat:var(--cat-' + d.cat + ')" data-mine="' + d.mine + '" data-near="' + near(d) + '" data-soon="' + soon + '" data-fired="' + fired(d) + '">' +
+        '<div class="cl__in">' +
+          (hero ? '<div class="cl__kick"><i></i>called soonest</div>' : '') +
+          '<button class="cl__t">' + (hero ? '' : '<i></i>') + '<span>' + d.t + '</span></button>' +
+          '<div class="cl__clock"><span class="cl__num" data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</span>' +
+            (hero || soon ? '<span class="cl__cap">till the call</span>' : '') + '</div>' +
+          '<div class="cl__pips">' + pips + '<span>' + d.count + '/' + d.target + '</span></div>' +
+          '<div class="cl__slot">' + d.slot + ' · ' + (fired(d) ? 'it’s on' : near(d) ? '1 yes short' : 'needs ' + gap(d)) + '</div>' +
+        '</div>' +
+        '<button class="cl__act">' + label(d) + '</button>' +
+      '</div>');
+    tile.querySelector('.cl__act').onclick = () => toggle(d.id);
+    grid.appendChild(tile);
+  });
+  host.appendChild(grid);
+}
+
+/* ── C · THE LADDER ────────────────────────────────────────────── */
+function renderC(){
+  const host = document.getElementById('pC');
+  host.innerHTML = '';
+  host.appendChild(el(head(state.length)));
+  host.appendChild(el('<div class="sec"><span class="dot"></span><h3>Wanted near you</h3><span class="hint">closest to real first</span></div>'));
+  const ld = el('<div class="ld"></div>');
+  const sorted = [...state].sort((a, b) => gap(a) - gap(b) || a.at - b.at);
+  const top = sorted[0], rest = sorted.slice(1);
+  ld.appendChild(el('<div class="ld__lbl" style="margin-top:2px">' +
+    (fired(top) ? '<b>it fired · it’s on</b>' : near(top) ? '<b>one yes from real</b>' : 'closest to real') + '</div>'));
+  const hero = el(
+    '<div class="ld-hero" style="--cat:var(--cat-' + top.cat + ')" data-mine="' + top.mine + '" data-fired="' + fired(top) + '">' +
+      '<div class="ld-hero__in">' +
+        '<div class="ld-hero__kick"><i></i>' + top.cat + '</div>' +
+        '<button class="ld-hero__t">' + top.t + '</button>' +
+        '<div class="ld-hero__row">' +
+          '<div class="ld-hero__cnt"><span class="ld-hero__n">' + top.count + '</span><span class="ld-hero__of">of ' + top.target + ' want it</span></div>' +
+          '<div class="ld-hero__when">called ' + top.slot + '<b data-tick="' + top.id + '">' + until(top.at - Date.now()) + '</b></div>' +
+        '</div>' +
+        '<div class="ld-hero__bar"><i style="width:' + pct(top) + '%"></i></div>' +
+      '</div>' +
+      '<button class="ld-hero__act">' +
+        (fired(top) ? SVG.bolt2 + 'Join loop' : top.mine ? SVG.check2 + 'you want this' : near(top) ? SVG.bolt2 + 'You would fire it' : SVG.plus2 + 'I want this too') +
+      '</button>' +
+    '</div>');
+  hero.querySelector('.ld-hero__act').onclick = () => toggle(top.id);
+  ld.appendChild(hero);
+  ld.appendChild(el('<div class="ld__lbl">still filling</div>'));
+  rest.forEach(d => {
+    const row = el(
+      '<div class="ld-row" style="--cat:var(--cat-' + d.cat + ')" data-mine="' + d.mine + '">' +
+        '<button class="ld-row__m">' +
+          '<div class="ld-row__t">' + d.t + '</div>' +
+          '<div class="ld-row__s">' +
+            '<span class="ld-row__bar"><i style="width:' + pct(d) + '%"></i></span>' +
+            '<span class="ld-row__meta"><u>' + gap(d) + ' more</u> · ' + d.slot + ' · <b data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</b></span>' +
+          '</div>' +
+        '</button>' +
+        '<button class="ld-row__act" aria-label="I want this too">' + (d.mine ? SVG.check2 : SVG.plus2) + '</button>' +
+      '</div>');
+    row.querySelector('.ld-row__act').onclick = () => toggle(d.id);
+    ld.appendChild(row);
+  });
+  host.appendChild(ld);
+}
+
+renderA(); renderB(); renderC();
+setInterval(() => {
+  document.querySelectorAll('[data-tick]').forEach(n => {
+    const d = state.find(x => x.id === n.dataset.tick);
+    if (d) n.textContent = until(d.at - Date.now());
+  });
+}, 1000);
+</script>
+</body>
+</html>

@@ -77,6 +77,9 @@
       /* shadows (warm) */
       --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
       --shadow-raised:0 8px 26px -12px rgba(80,40,30,.2); --shadow-pop:0 28px 60px -24px rgba(80,40,30,.3);
+      /* the lift — one step above a resting card, for the viewer's best match in a feed */
+      --shadow-lift:0 2px 5px rgba(80,40,30,.07), 0 18px 34px -16px rgba(80,40,30,.38);
+      --edge-lift:inset 0 1px 0 rgba(255,253,248,.9);
       --glow-accent:0 6px 18px -10px var(--carnelian-500);
       /* motion */
       --dur-1:120ms; --dur-2:180ms; --dur-3:260ms; --dur-4:420ms;
@@ -90,6 +93,9 @@
       --accent:var(--carnelian-400); --accent-strong:var(--carnelian-300); --accent-quiet:rgba(207,83,71,.16); --accent-ink:#1a0d0b;
       --focus-ring:var(--carnelian-300);
       --shadow-card:0 1px 2px rgba(0,0,0,.4); --shadow-raised:0 8px 26px -12px rgba(0,0,0,.7); --shadow-pop:0 28px 60px -24px rgba(0,0,0,.8);
+      /* after dark the raised face still catches more light than the resting one — same physics, less of it */
+      --shadow-lift:0 2px 5px rgba(0,0,0,.5), 0 18px 34px -16px rgba(0,0,0,.8);
+      --edge-lift:inset 0 1px 0 rgba(248,241,232,.07);
     }
 
     html, body { height: 100%; }
@@ -117,7 +123,11 @@
     .pls-mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
     .pls-kicker{ font-family:var(--font-sans); font-weight:600; text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; color:var(--text-tertiary); }
 
-    /* ---- buttons ---- */
+    /* ---- buttons ----
+       One elevation language, shared with every control in the app (chips, the 🔍 filter bar,
+       the anchor rows, the account chip): no ink outlines — a control is a lit face with a lit
+       top edge and one warm shadow. The face carries the meaning; the shadow is the same
+       everywhere. accent-quiet only ever means "this is yours / this is on". */
     .pls-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px;
       padding:0 20px; border-radius:var(--radius-pill); font-family:var(--font-sans); font-weight:600; font-size:15px;
       cursor:pointer; border:1px solid transparent; user-select:none;
@@ -127,8 +137,12 @@
     .pls-btn--sm{ min-height:38px; font-size:14px; padding:0 16px; }
     .pls-btn--primary{ background:var(--accent); color:var(--accent-ink); box-shadow:var(--glow-accent); }
     .pls-btn--primary:not(:disabled):active{ background:var(--accent-strong); box-shadow:none; transform:translateY(1px); }
-    .pls-btn--secondary{ background:var(--bg-surface); color:var(--text-primary); border-color:var(--border-strong); }
-    .pls-btn--secondary:not(:disabled):active{ background:var(--bg-sunken); transform:translateY(1px); }
+    /* ink — reserved for the one tap that makes something real (the yes that fires an anchor).
+       Carnelian is the ordinary primary; ink is the escalation, and it means that everywhere. */
+    .pls-btn--ink{ background:var(--text-primary); color:var(--bg-surface); box-shadow:var(--glow-accent), var(--shadow-raised); }
+    .pls-btn--ink:not(:disabled):active{ opacity:.86; box-shadow:none; transform:translateY(1px); }
+    .pls-btn--secondary{ background:var(--bg-raised); color:var(--text-primary); box-shadow:var(--edge-lift), var(--glow-accent); }
+    .pls-btn--secondary:not(:disabled):active{ background:var(--bg-sunken); box-shadow:none; transform:translateY(1px); }
     .pls-btn--ghost{ background:transparent; color:var(--text-secondary); }
     .pls-btn--ghost:not(:disabled):active{ background:var(--bg-sunken); }
 
@@ -167,13 +181,14 @@
        chips share the row equally; the search chip is fixed-width. Nothing scrolls or clips. */
     .hm-chips{ display:flex; align-items:center; gap:6px; padding:8px 20px 10px; flex-shrink:0; }
     .hm-chip{ flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:5px; height:36px; padding:0 8px;
-      border-radius:var(--radius-pill); border:1px solid var(--border-hairline); background:var(--bg-surface); position:relative;
+      border-radius:var(--radius-pill); border:1px solid transparent; background:var(--bg-raised); position:relative;
+      box-shadow:var(--edge-lift), var(--shadow-card);
       font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap;
-      transition:background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+      transition:background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
     .hm-chip--ico{ flex:0 0 42px; padding:0; }
     .hm-chip__n{ font-size:11px; font-weight:500; color:var(--text-tertiary); }
-    .hm-chip[aria-selected="true"]{ background:var(--text-primary); border-color:var(--text-primary); color:var(--bg-surface); }
-    .hm-chip[aria-selected="true"] .hm-chip__n{ color:var(--bg-surface); opacity:.72; }
+    .hm-chip[aria-selected="true"]{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+    .hm-chip[aria-selected="true"] .hm-chip__n{ color:var(--accent-strong); opacity:.7; }
     .hm-chip .pls-seg__dot{ top:-2px; right:-2px; box-shadow:0 0 0 2px var(--bg-surface); }
     /* live strip + scope dial under the chips: ambient numbers you can refer to; tap → search */
     .hm-strip{ display:flex; align-items:center; gap:9px; margin:0 20px; padding:9px 0 8px; border:0; border-top:1px solid var(--border-hairline);
@@ -220,6 +235,41 @@
     .hm-search__field input::placeholder{ color:var(--text-tertiary); }
     .hm-search__clr{ border:0; background:var(--bg-surface); color:var(--text-secondary); width:22px; height:22px; border-radius:50%; display:grid; place-items:center; cursor:pointer; flex-shrink:0; padding:0; }
     .hm-search__x{ border:0; background:transparent; padding:0; font-size:13px; font-weight:700; color:var(--accent-strong); cursor:pointer; flex-shrink:0; }
+
+    /* 🔍 filter — one summary bar, one dropdown anchored under it. Never a scrolling chip row. */
+    .fx-bar{ width:100%; display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:14px; cursor:pointer;
+      border:1px solid transparent; background:var(--bg-raised); color:var(--text-primary); text-align:left;
+      box-shadow:var(--edge-lift), var(--glow-accent);
+      transition:box-shadow var(--dur-2) var(--ease-out);
+      position:relative; z-index:3; }   /* stays above its own scrim — the control you're using is never dimmed */
+    /* open reads as an accent ring, the same way the account trigger does — never an ink outline */
+    .fx-bar[aria-expanded="true"]{ box-shadow:var(--edge-lift), var(--glow-accent), 0 0 0 1.5px var(--accent); }
+    .fx-bar__pin{ color:var(--accent); flex-shrink:0; }
+    .fx-bar__lbl{ flex:1; min-width:0; font-weight:700; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .fx-bar__lbl i{ font-style:normal; color:var(--text-tertiary); font-weight:600; }
+    .fx-bar__n{ font-size:11.5px; color:var(--text-tertiary); flex-shrink:0; }
+    .fx-bar__cv{ color:var(--text-tertiary); flex-shrink:0; transition:transform var(--dur-2) var(--ease-out); }
+    .fx-bar[aria-expanded="true"] .fx-bar__cv{ transform:rotate(180deg); }
+    .fx-toks{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; position:relative; z-index:3; }
+    .fx-tok{ display:inline-flex; align-items:center; gap:6px; padding:5px 8px 5px 10px; border:0; border-radius:var(--radius-pill);
+      background:var(--accent-quiet); color:var(--accent-strong); font-size:11.5px; font-weight:700; cursor:pointer; }
+    .fx-anchor{ position:relative; height:0; z-index:3; }
+    .fx-pop{ position:absolute; left:0; right:0; top:8px; background:var(--bg-surface); border:1px solid var(--border-hairline);
+      border-radius:var(--radius-lg); padding:14px; box-shadow:var(--shadow-pop); animation:fxpop var(--dur-3) var(--ease-settle) both; }
+    @keyframes fxpop{ from{ opacity:0; transform:translateY(-9px); } to{ opacity:1; transform:none; } }
+    .fx-scrim{ position:absolute; inset:0; z-index:2; background:rgba(31,26,23,.12); animation:fxfade var(--dur-2) var(--ease-out) both; }
+    @keyframes fxfade{ from{ opacity:0; } to{ opacity:1; } }
+    .fx-lab{ margin:0 0 8px; font-family:var(--font-mono); font-size:10.5px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--text-tertiary); }
+    .fx-grid{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .fx-opt{ display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:12px; cursor:pointer; text-align:left;
+      border:1px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-primary); font-size:13px; font-weight:600; }
+    .fx-opt[aria-pressed="true"]{ border-color:var(--text-primary); background:var(--bg-page); }
+    .fx-opt:disabled{ opacity:.34; cursor:default; }
+    .fx-opt__d{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .fx-opt__n{ margin-left:auto; font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); }
+    .fx-show{ width:100%; margin-top:14px; border:0; border-radius:14px; padding:13px; cursor:pointer;
+      background:var(--accent); color:var(--accent-ink); font-size:14px; font-weight:700; }
+    @media (prefers-reduced-motion:reduce){ .fx-pop, .fx-scrim{ animation:none; } }
     @keyframes pop-in{ from{ opacity:0; transform:translateY(-6px) scale(.94); } to{ opacity:1; transform:none; } }
     /* theme change: circular wipe from the control that was tapped (View Transitions; instant swap where unsupported) */
     ::view-transition-old(root), ::view-transition-new(root){ animation:none; mix-blend-mode:normal; }
@@ -230,6 +280,12 @@
     .pls-card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); }
     .pls-card--outline{ border:1.5px solid var(--border-strong); box-shadow:none; }
     .pls-card--sunken{ background:var(--bg-sunken); border:1px solid var(--border-hairline); box-shadow:none; }
+    /* THE LIFT — one card in a feed can be the viewer's best match. It says so by sitting
+       higher off the paper: a lighter face, a lit top edge, a wider warm shadow. Never a
+       badge, never a word, never an ink border (that means "outlined and flat" here). */
+    .pls-card--lift, .anc-tile--lift{ background:var(--bg-raised);
+      border-color:color-mix(in srgb, var(--text-tertiary) 22%, var(--border-hairline));
+      box-shadow:var(--edge-lift), var(--shadow-lift); }
     .pls-blush{ background:var(--bg-blush); border:1px solid var(--border-quiet); border-radius:24px; }
     .pls-banner{ background:var(--accent-quiet); border:1px solid var(--border-quiet); border-radius:12px; }
 
@@ -328,16 +384,60 @@
     @keyframes hype-rise{ 0%{ transform:translate(-50%,0) scale(.5) rotate(0); opacity:0; } 18%{ opacity:1; } 100%{ transform:translate(calc(-50% + var(--dx)), -74px) scale(1.3) rotate(var(--rot)); opacity:0; } }
     @media (prefers-reduced-motion: reduce){ .hype__spark, .hype--bump{ animation:none !important; } .hype__spark{ display:none; } }
 
-    /* ===== Anchor tiles — a forming anchor is a count, never a crew ===== */
-    .anc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .anc-tile{ border:1px solid var(--border-hairline); border-radius:16px; padding:12px 12px 10px; background:var(--bg-surface); display:flex; flex-direction:column; gap:8px; min-width:0; }
-    .anc-tile--mine{ border-color:color-mix(in srgb,var(--accent) 40%,var(--border-hairline)); }
-    .anc-tile__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; background:none; border:0; padding:0; cursor:pointer; text-align:left; width:100%; color:inherit; font:inherit; }
-    .anc-tile__t{ font-weight:700; font-size:13.5px; line-height:1.2; color:var(--text-primary); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; min-height:32px; }
-    .anc-tile__s{ font-size:10.5px; line-height:1.35; color:var(--text-tertiary); }   /* wraps: the countdown must never clip */
-    .anc-tile__want{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:10px; padding:7px 6px; font-size:12px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-flex; align-items:center; justify-content:center; gap:4px; font-family:inherit; }
-    .anc-tile__want--on{ border-color:transparent; background:var(--accent-quiet); color:var(--accent-strong); }
-    .anc-tile__want--hot{ background:var(--text-primary); border-color:var(--text-primary); color:var(--bg-surface); }
+    /* ===== Browse row — anchors and loops share one row, so a browse screen reads as one
+       list instead of tiles stacked on cards. The divider under a row IS the count: it fills
+       to count/target in the activity colour, which is why there is no ring, bar or tile. */
+    .anc-list{ display:flex; flex-direction:column; }
+    .anc-row{ display:flex; align-items:center; gap:10px; padding:13px 0 12px; position:relative; }
+    .anc-row::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:2px; border-radius:2px; background:var(--bg-sunken); }
+    .anc-row::before{ content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--w,0%); border-radius:2px;
+      background:var(--cat); z-index:1; transition:width var(--dur-4) var(--ease-settle); }
+    .anc-row__m{ flex:1; min-width:0; background:none; border:0; padding:0; text-align:left; cursor:pointer; color:inherit; font:inherit; }
+    .anc-row__t{ font-weight:600; font-size:15.5px; line-height:1.2; letter-spacing:-.01em; color:var(--text-primary);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .anc-row__s{ margin-top:4px; font-family:var(--font-mono); font-size:11.5px; line-height:1; color:var(--text-tertiary);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .anc-row__s b{ font-weight:600; color:var(--cat); }
+    .anc-row__s u{ text-decoration:none; color:var(--text-secondary); }
+    .anc-row[data-soon="true"] .anc-row__s u{ color:var(--accent-strong); font-weight:600; }
+    /* one action, and the ladder it climbs: raised paper to ask, ink when your yes is the one
+       that would fire it, accent once it is already yours. */
+    .anc-row__yes{ flex-shrink:0; width:32px; height:32px; border-radius:50%; padding:0; cursor:pointer; display:grid; place-items:center;
+      border:1px solid transparent; background:var(--bg-raised); color:var(--text-secondary);
+      box-shadow:var(--edge-lift), var(--shadow-card);
+      transition:background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
+    .anc-row__yes:active{ transform:translateY(1px); }
+    .anc-row[data-near="true"] .anc-row__yes{ background:var(--text-primary); color:var(--bg-surface); box-shadow:var(--glow-accent), var(--shadow-raised); }
+    .anc-row[data-mine="true"] .anc-row__yes{ background:var(--accent-quiet); color:var(--accent-strong); box-shadow:var(--glow-accent); }
+
+    /* ===== Anchor detail — the count as a hero over the same gauge, then label/value facts.
+       No cards here: hairlines carry the structure, the way the list does. */
+    .dta-head{ display:flex; align-items:baseline; gap:7px; }
+    .dta-n{ font-family:var(--font-display); font-weight:800; font-size:34px; line-height:.85; letter-spacing:-.035em;
+      color:var(--cat); font-variant-numeric:tabular-nums; }
+    .dta-of{ font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); }
+    .dta-gap{ margin-left:auto; font-weight:600; font-size:12px; color:var(--cat); }
+    .dta-rule{ margin-top:11px; height:3px; border-radius:2px; background:var(--bg-sunken); position:relative; }
+    .dta-rule i{ position:absolute; left:0; top:0; bottom:0; border-radius:2px; background:var(--cat);
+      transition:width var(--dur-4) var(--ease-settle); }
+    .dta-facts{ margin-top:22px; border-top:1px solid var(--border-hairline); }
+    .dta-fact{ display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border-hairline); align-items:flex-start; }
+    .dta-fact:last-child{ border-bottom:0; }
+    .dta-fact__l{ flex:0 0 62px; font-family:var(--font-mono); font-weight:600; font-size:10px; line-height:1.5; letter-spacing:.13em;
+      text-transform:uppercase; color:var(--text-tertiary); padding-top:2px; }
+    .dta-fact__v{ flex:1; min-width:0; font-weight:500; font-size:14px; line-height:1.42; color:var(--text-primary); }
+    .dta-fact__v small{ display:block; margin-top:4px; font-weight:400; font-size:12px; line-height:1.45; color:var(--text-secondary); }
+    .dta-clock{ font-family:var(--font-mono); font-weight:500; font-size:17px; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+    .dta-fact[data-soon="true"] .dta-clock{ color:var(--accent); }
+    .dta-who{ display:flex; align-items:center; gap:11px; }
+    .dta-who__t{ flex:1; min-width:0; font-weight:500; font-size:14px; line-height:1.4; }
+    .dta-who__t b{ font-weight:700; }
+    .dta-names{ display:flex; flex-direction:column; gap:11px; margin-top:13px; }
+    .dta-name{ display:flex; align-items:center; gap:10px; }
+    .dta-name__n{ font-weight:600; font-size:13.5px; line-height:1.2; color:var(--text-primary); }
+    .dta-name__s{ margin-top:3px; font-family:var(--font-mono); font-size:11px; line-height:1; color:var(--text-tertiary); }
+    /* someone you have not met is a shape, never initials — the rest of the count stays anonymous */
+    .pls-avatar--anon{ background:var(--bg-sunken); color:var(--text-tertiary); }
 
     /* ===== The Floor — intent momentum field (S6) ===== */
     .flr-week{ display:flex; gap:6px; margin:2px 0 16px; }
@@ -630,7 +730,7 @@
     // Aggregate momentum lines that cycle in the "forming right now" ticker (loops, never names).
     const COHORT_TICKER = [
       'Mews 3rd floor just spun up a MATH 1920 loop',
-      'Prelim 1 review fired — 10 seats filled on North',
+      'Prelim 0 review fired - 10 seats filled on North',
       'A CHEM 2070 loop in Dickson hit a 6-week streak',
       'Okenshields dinner table added its 7th regular',
       'Balch 2nd floor started a Sunday econ room',
@@ -640,7 +740,7 @@
     // Wrapped loops — demo history for the Alerts feed. Loops expire naturally
     // when their pretext is done; the crew (the faces) is what persists.
     const WRAPPED_LOOPS = [
-      { id:'w-prelim1', title:'Prelim 1 review',          target:'CS 2110',    sessions:5, faces:[{id:'josh',name:'Josh Park'},{id:'lydia',name:'Lydia Osei'},{id:'marcus',name:'Marcus Diaz'},{id:'priya',name:'Priya Rao'}], reason:'wrapped after the exam', when:'2 weeks ago' },
+      { id:'w-prelim1', title:'Prelim 0 review',          target:'CS 2110',    sessions:5, faces:[{id:'josh',name:'Josh Park'},{id:'lydia',name:'Lydia Osei'},{id:'marcus',name:'Marcus Diaz'},{id:'priya',name:'Priya Rao'}], reason:'wrapped after the exam', when:'2 weeks ago' },
       { id:'w-hw1',     title:'HW1 grind',                target:'CS 2110',    sessions:3, faces:[{id:'josh',name:'Josh Park'},{id:'sarah',name:'Sarah Chen'},{id:'lydia',name:'Lydia Osei'}], reason:'ran its course', when:'3 weeks ago' },
       { id:'w-oweek',   title:'Move-in week dinner crew', target:'dinner crew',sessions:4, faces:[{id:'sarah',name:'Sarah Chen'},{id:'lydia',name:'Lydia Osei'},{id:'maya',name:'Maya Idris'}], reason:'wrapped after O-week', when:'last month' },
     ];
@@ -660,10 +760,10 @@
         id:'sunday-hw', title:'Sunday HW crew', target:'CS 2110',
         unit:{ kind:'class', label:'cs 2110 · section' }, audience:{ scope:'class', course:'CS 2110' },
         status:'active', rhythm:'Sun · 4:00p · Uris · weekly', nextLine:'Sun · 4:00p · Uris',
-        live:false, memberIds:['josh','lydia','priya','marcus'], cap:6,
+        live:false, memberIds:['josh','lydia','priya','marcus','sarah'], cap:6,
         startedWeek:3, streakWeeks:12, streakLeaderId:'lydia', seededBy:'josh', hereIds:[],
-        hype:{ josh:3, lydia:5, priya:2, marcus:4 },
-        seniority:{ josh:3, lydia:3, priya:5, marcus:4 },
+        hype:{ josh:3, lydia:5, priya:2, marcus:4, sarah:4 },
+        seniority:{ josh:3, lydia:3, priya:5, marcus:4, sarah:3 },
       },
       // Forming loops are ANCHORS: an anonymized count of matching intents. No members, no
       // avatars — `wantIds` is who said yes (only real users; `drop.count` includes people
@@ -716,15 +816,15 @@
         id:'thu-trivia', title:'Thursday trivia', target:'trivia',
         unit:{ kind:'dorm', label:'donlon · lounge' }, audience:{ scope:'dorm', dorm:'Donlon' },
         status:'active', rhythm:'Thu · 8:00p · Donlon lounge · weekly', nextLine:'Thu · 8:00p · Donlon lounge',
-        live:false, memberIds:['lydia','marcus','maya'], cap:8, startedWeek:2, streakWeeks:6, hereIds:[],
-        hype:{ lydia:4, marcus:3, maya:5 },
+        live:false, memberIds:['lydia','marcus','maya','sarah'], cap:8, startedWeek:2, streakWeeks:6, hereIds:[],
+        hype:{ lydia:4, marcus:3, maya:5, sarah:4 },
       },
       {
         id:'fri-lift', title:'Lift Fridays', target:'lifting',
         unit:{ kind:'dorm', label:'donlon 2f · floor' }, audience:{ scope:'floor', floor:'Donlon 2F' },
         status:'active', rhythm:'Fri · 5:30p · Teagle gym · weekly', nextLine:'Fri · 5:30p · Teagle gym',
-        live:false, memberIds:['josh','priya','ryan'], cap:6, startedWeek:4, streakWeeks:4, hereIds:[],
-        hype:{ josh:4, priya:3, ryan:5 },
+        live:false, memberIds:['josh','priya','ryan','sarah'], cap:6, startedWeek:4, streakWeeks:4, hereIds:[],
+        hype:{ josh:4, priya:3, ryan:5, sarah:3 },
       },
       {
         id:'fri-movie', title:'Friday movie night', target:'a movie night',
@@ -743,6 +843,63 @@
         unit:{ kind:'dorm', label:'north · forming' }, audience:{ scope:'north' },
         status:'forming', drop:{ count:3, target:6 }, wantIds:['lydia'], memberIds:[],
         rhythm:'Sun · 11:00a · North Star · weekly', nextLine:'Sun · 11:00a · North Star',
+      },
+
+      /* ---- campus-scope: the only things a viewer who doesn't live on North can see.
+         Maya is in Collegetown, so `north` and `dorm:Donlon` are invisible to her —
+         without these her week and her feed are class loops and nothing else. ---- */
+      {
+        id:'tue-ramen', title:'Collegetown ramen run', target:'ramen',
+        unit:{ kind:'dorm', label:'campus · open' }, audience:{ scope:'campus' },
+        status:'active', rhythm:'Tue · 7:00p · Kenka · weekly', nextLine:'Tue · 7:00p · Kenka',
+        live:false, memberIds:['maya','lydia','priya'], cap:6, startedWeek:5, streakWeeks:3, hereIds:[],
+        hype:{ maya:5, lydia:3, priya:4 },
+      },
+      {
+        id:'wed-jam', title:'Wednesday jam session', target:'jam session',
+        unit:{ kind:'dorm', label:'campus · open' }, audience:{ scope:'campus' },
+        status:'active', rhythm:'Wed · 7:30p · Lincoln 220 · weekly', nextLine:'Wed · 7:30p · Lincoln 220',
+        live:false, memberIds:['ryan','marcus','maya'], cap:8, startedWeek:6, streakWeeks:2, hereIds:[],
+        hype:{ ryan:4, marcus:5, maya:3 },
+      },
+      {
+        id:'sat-hoops', title:'Saturday pickup ball', target:'pickup ball',
+        unit:{ kind:'dorm', label:'north · court' }, audience:{ scope:'north' },
+        status:'active', rhythm:'Sat · 2:00p · Helen Newman court · weekly', nextLine:'Sat · 2:00p · Helen Newman court',
+        live:false, memberIds:['josh','ryan','marcus'], cap:10, startedWeek:4, streakWeeks:5, seededBy:'josh', hereIds:[],
+        hype:{ josh:5, ryan:4, marcus:3 },
+      },
+      {
+        id:'ctown-tacos', title:'Collegetown taco dinner', target:'taco dinner',
+        unit:{ kind:'dorm', label:'campus · forming' }, audience:{ scope:'campus' },
+        status:'forming', drop:{ count:4, target:8 }, wantIds:['maya'], memberIds:[],
+        rhythm:'Wed · 7:00p · Mexeo · weekly', nextLine:'Wed · 7:00p · Mexeo',
+      },
+      {
+        id:'thu-yoga', title:'Sunrise yoga', target:'yoga',
+        unit:{ kind:'dorm', label:'campus · forming' }, audience:{ scope:'campus' },
+        status:'forming', drop:{ count:5, target:8 }, wantIds:['priya'], memberIds:[],
+        rhythm:'Thu · 7:00a · Appel courtyard · weekly', nextLine:'Thu · 7:00a · Appel courtyard',
+      },
+      {
+        id:'sat-farmers', title:'Farmers market run', target:'farmers market',
+        unit:{ kind:'dorm', label:'campus · forming' }, audience:{ scope:'campus' },
+        status:'forming', drop:{ count:6, target:10 }, wantIds:['lydia','maya'], memberIds:[],
+        rhythm:'Sat · 10:00a · Ithaca Commons · weekly', nextLine:'Sat · 10:00a · Ithaca Commons',
+      },
+      {
+        id:'donlon-mac', title:'2F late-night mac', target:'late-night mac',
+        unit:{ kind:'dorm', label:'donlon 2f · forming' }, audience:{ scope:'floor', floor:'Donlon 2F' },
+        status:'forming', drop:{ count:4, target:6 }, wantIds:['ryan','josh'], memberIds:[],
+        rhythm:'Tue · 11:00p · 2F kitchen · weekly', nextLine:'Tue · 11:00p · 2F kitchen',
+      },
+      // Collegetown is Maya's "floor": without something at her closest scope her default
+      // feed is coursework and nothing else, while Donlon 2F gives Sarah and Josh a street.
+      {
+        id:'ctown-porch', title:'Eddy St porch hang', target:'a porch hang',
+        unit:{ kind:'dorm', label:'collegetown · forming' }, audience:{ scope:'floor', floor:'Collegetown' },
+        status:'forming', drop:{ count:3, target:6 }, wantIds:['maya'], memberIds:[],
+        rhythm:'Fri · 9:00p · Eddy St porch · weekly', nextLine:'Fri · 9:00p · Eddy St porch',
       },
     ]);
 
@@ -901,8 +1058,9 @@
           ))}
           {extra>0 && (
             <div style={{ width:size, height:size, marginLeft:-8, background:'var(--bg-sunken)',
-                          color:'var(--text-tertiary)', boxShadow:'0 0 0 2px var(--bg-surface)' }}
-                 className="pls-avatar text-[11px] font-semibold">+{extra}</div>
+                          color:'var(--text-tertiary)', boxShadow:'0 0 0 2px var(--bg-surface)',
+                          fontSize:Math.max(9, Math.round(size*0.36)) }}
+                 className="pls-avatar font-semibold">+{extra}</div>
           )}
         </div>
       );
@@ -1131,11 +1289,11 @@
       );
     }
 
-    function LoopCard({ loop, variant='default', onOpen, showAction=true, onShare, onCalendar }){
+    function LoopCard({ loop, variant='default', onOpen, showAction=true, onShare, onCalendar, lift=false }){
       const forming = loop.status === 'forming';
       const n = loop.memberIds.length;
       return (
-        <Card variant={variant} className="p-4 rise">
+        <Card variant={variant} className={'p-4 rise'+(lift?' pls-card--lift':'')}>
           <button onClick={onOpen} className="w-full text-left" style={{ background:'none', border:'none', cursor:'pointer', display:'block', padding:0 }}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -1272,16 +1430,21 @@
                     {tag  && <div className="pls-mono truncate" style={{ fontSize:11, color:'var(--text-tertiary)', marginTop:2 }}>{tag}</div>}
                   </div>
                 </div>
-                {!hideProfile && !staff && (
+                <hr className="pls-pop__hr" />
+                {!staff && (
                   <>
-                    <hr className="pls-pop__hr" />
-                    <button className="pls-pop__item" role="menuitem" onClick={()=>{ setOpen(false); actions.openYou(); }}>
-                      <Icon name="circle" size={17} style={{ color:'var(--text-secondary)' }} />Your profile
+                    <button className="pls-pop__item" role="menuitem" onClick={()=>{ setOpen(false); actions.messageCounselor(); }}>
+                      <Icon name="heart-handshake" size={17} style={{ color:'var(--accent-strong)' }} />{COUNSELOR.name}
+                      <small>{COUNSELOR.role}</small>
                       <Icon name="chevron-right" size={15} style={{ marginLeft:'auto', color:'var(--text-tertiary)' }} />
                     </button>
+                    <button className="pls-pop__item" role="menuitem" onClick={()=>{ setOpen(false); actions.openSafety(null); }}>
+                      <Icon name="shield" size={17} style={{ color:'var(--accent-strong)' }} />Report a concern
+                      <Icon name="chevron-right" size={15} style={{ marginLeft:'auto', color:'var(--text-tertiary)' }} />
+                    </button>
+                    <hr className="pls-pop__hr" />
                   </>
                 )}
-                <hr className="pls-pop__hr" />
                 <div style={{ padding:'6px 10px 10px' }}>
                   <div className="pls-kicker" style={{ marginBottom:6 }}>Theme</div>
                   <div className="pls-seg" data-dark={dark} role="radiogroup" aria-label="Theme">
@@ -1324,7 +1487,6 @@
           <Tab id="pulse"  icon="radio"          label="Home"   onClick={onHome} />
           <Tab id="class"  icon="graduation-cap" label="Class"  onClick={onClass} />
           {staff && <Tab id="staff" icon={staff.kind==='ra' ? 'house' : 'book-open'} label={staff.tab} badge={staff.badge} onClick={staffCtx.onStaff} />}
-          <Tab id="you"    icon="circle"         label="You"    onClick={onYou} />
         </div>
       );
     }
@@ -1350,10 +1512,10 @@
       );
     }
 
-    function ComposeSheet({ onClose, onSubmit }){
+    function ComposeSheet({ onClose, onSubmit, initialText='' }){
       return (
         <Sheet kicker="Drop an intent" title="What are you trying to make happen?" onClose={onClose}>
-          <IntentComposer onSubmit={onSubmit} />
+          <IntentComposer onSubmit={onSubmit} initialText={initialText} />
           <p className="text-[13px] mt-3 leading-relaxed" style={{ color:'var(--text-secondary)' }}>
             Drop it and it waits on your floor until enough people want the same thing — then the drop fires and a loop crystallizes.
           </p>
@@ -2224,6 +2386,40 @@
       if(/smash|game|trivia|movie|hang|social|party/.test(t)) return 'social';
       return 'social';
     }
+    /* FEED RANKING — silent by design. The viewer never sees a score, a reason chip, or a
+       "recommended because" line: order is the whole signal, the way it is in any feed. The
+       inputs are things the card already shows anyway — how near it is, whether it's a class
+       you're actually in, how close it is to happening — so the ranking reads as the app
+       knowing where you live, not as the app explaining itself. */
+    function rankScore(l, user, viewerId){
+      let s = (3 - SCOPE_RANK[loopLocality(l)]) * 10;                       // your floor beats campus
+      const a = inferAudience(l);
+      if (a.scope==='class' && (user.courses||[]).includes(a.course)) s += 14;   // a course you're in, not just your major
+      if (a.scope==='floor' && (user.dorm||'')===(a.floor||'')) s += 6;
+      // Something the RA of your own floor (or the TA of your own class) put up carries weight.
+      // It is never labelled as staff-seeded: see specs/advising-stays-invisible.
+      const seeder = PERSONA_BY_ID[l.seededBy]?.staff;
+      if (seeder && (seeder.scope===user.dorm || (user.courses||[]).includes(seeder.scope))) s += 8;
+      if (l.status==='forming' && l.drop && l.drop.target) s += Math.round((l.drop.count / l.drop.target) * 8);
+      return s;
+    }
+    const rankForViewer = (list, user, viewerId) =>
+      list.slice().sort((a,b) => rankScore(b, user, viewerId) - rankScore(a, user, viewerId));
+
+    /* WHO YOU KNOW — the private, additive affinity signal, read rather than stored: you know
+       someone once you have actually been in a loop with them. It is the only reason a name
+       ever appears on something that has not fired yet; everyone else stays part of the count. */
+    function knownToViewer(loops, viewerId){
+      const s = new Set();
+      (loops||[]).forEach(l => {
+        if (!(l.memberIds||[]).includes(viewerId)) return;
+        l.memberIds.forEach(id => { if (id !== viewerId) s.add(id); });
+      });
+      return s;
+    }
+    const knownOn = (l, known) =>
+      ((l.status==='forming' ? l.wantIds : l.memberIds) || []).filter(id => known.has(id));
+
     // Intent density — things people dropped that nobody has started yet.
     const INTENT_DEMAND = [
       { target:'ECON 1110',    band:'floor',    line:'8 floormates want this',  who:['A','J','+6'] },
@@ -2250,23 +2446,17 @@
     // EXPLORE — one list of things you can sign up for, filtered by what you type, where, and what
     // kind (Partiful-style). No momentum headers, no owner-style "start one" cards: anchors are
     // counts you add a yes to, loops are crews you join. Nothing matches → drop what you typed.
-    function FilterChip({ on, onClick, children }){
-      return (
-        <button onClick={onClick} style={{ flexShrink:0, display:'inline-flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:999, whiteSpace:'nowrap', fontSize:12.5, fontWeight:600, cursor:'pointer',
-          border:'1px solid '+(on?'var(--text-primary)':'var(--border-hairline)'), background:on?'var(--text-primary)':'var(--bg-surface)', color:on?'var(--bg-surface)':'var(--text-secondary)' }}>{children}</button>
-      );
-    }
     function PulseFeed({ viewerId, user, loops, actions, q='', onDrop }){
       const [scope, setScope] = useState('floor');
-      const [pickScope, setPickScope] = useState(false);
-      const [interest, setInterest] = useState('all');
+      const [open, setOpen] = useState(false);          // the where/what dropdown
+      const [cats, setCats] = useState([]);             // [] means anything — multi-select
       const scopes = homeScopes(user);
       const scopeName = k => (scopes.find(s=>s[0]===k)||[])[1] || 'Campus';
       const text = q.trim().toLowerCase();
       // Everything you could sign up for: what you can see, minus what you're already in.
       const pool = visibleLoops({ loops }, user).filter(l => !l.memberIds.includes(viewerId) && (l.status==='active' || l.status==='forming'));
       const inScope = l => SCOPE_RANK[loopLocality(l)] <= SCOPE_RANK[scope];
-      const inInterest = l => interest==='all' || loopCategory(l)===interest;
+      const inInterest = l => cats.length===0 || cats.includes(loopCategory(l));
       const inText = l => !text || ((l.title||'')+' '+(l.target||'')).toLowerCase().includes(text);
       const local = pool.filter(l => inScope(l) && inInterest(l) && inText(l));
       let list = local, widenedTo = null;
@@ -2274,26 +2464,74 @@
         const wider = pool.filter(l => inInterest(l) && inText(l)).sort((a,b)=> SCOPE_RANK[loopLocality(a)]-SCOPE_RANK[loopLocality(b)]);
         if (wider.length) { list = wider; widenedTo = scopeName(loopLocality(wider[wider.length-1])); }
       }
-      const wanted = list.filter(l => l.status==='forming'), meeting = list.filter(l => l.status==='active');
+      // Order is the whole ranking signal (see rankForViewer), and it is frozen for as long as
+      // a given filter is on screen: adding your yes nudges the score, and a row must never
+      // move out from under the thumb that just tapped it. Change what you're filtering by and
+      // it re-ranks.
+      const orderKey = scope+'|'+cats.join(',')+'|'+text;
+      const order = useRef({ key:null, ids:[] });
+      if (order.current.key !== orderKey) order.current = { key:orderKey, ids:rankForViewer(list, user, viewerId).map(l=>l.id) };
+      const at = id => { const i = order.current.ids.indexOf(id); return i<0 ? 1e6 : i; };   // anything new lands at the end
+      const ranked = list.slice().sort((a,b) => at(a.id) - at(b.id));
+      const wanted = ranked.filter(l => l.status==='forming'), meeting = ranked.filter(l => l.status==='active');
+      const known = knownToViewer(loops, viewerId);
       const where = widenedTo ? `across ${widenedTo}` : (scope==='floor' ? 'near you' : `across ${scopeName(scope)}`);
+      // What's behind each option at a given scope — an option that leads nowhere reads 0 and goes flat.
+      const scopeCount = sc => pool.filter(l => SCOPE_RANK[loopLocality(l)] <= SCOPE_RANK[sc] && inText(l)).length;
+      const catCountAt = (k, sc) => pool.filter(l => SCOPE_RANK[loopLocality(l)] <= SCOPE_RANK[sc] && inText(l) && loopCategory(l)===k).length;
+      const whatLabel = cats.length===0 ? 'Anything' : cats.length===1 ? PULSE_CATS[cats[0]].label : `${cats.length} kinds`;
+      const toggleCat = k => setCats(cs => cs.includes(k) ? cs.filter(x=>x!==k) : cs.concat(k));
+      // Moving out means some picks may now be empty — drop those rather than show an empty feed.
+      const pickScope = k => { setScope(k); setCats(cs => cs.filter(c => catCountAt(c, k) > 0)); };
+      useEffect(() => {
+        if (!open) return;
+        const esc = e => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } };
+        window.addEventListener('keydown', esc, true);
+        return () => window.removeEventListener('keydown', esc, true);
+      }, [open]);
       return (
         <div className="mt-1">
-          <div className="no-scrollbar" style={{ display:'flex', gap:8, overflowX:'auto', padding:'6px 0 4px' }}>
-            <FilterChip on={scope!=='floor' || pickScope} onClick={()=>setPickScope(p=>!p)}><Icon name="map-pin" size={13} />{scopeName(scope)}<span aria-hidden="true" style={{ opacity:.7 }}>{pickScope ? '▴' : '▾'}</span></FilterChip>
-            {[['all','All'], ...Object.keys(PULSE_CATS).map(k=>[k,PULSE_CATS[k].label])].map(([k,l]) => (
-              <FilterChip key={k} on={interest===k} onClick={()=>setInterest(k)}>
-                {k!=='all' && <span style={{ width:7, height:7, borderRadius:'50%', background:PULSE_CATS[k].hue }} />}{l}
-              </FilterChip>
-            ))}
-          </div>
-          {pickScope && (
-            <div style={{ display:'flex', background:'var(--bg-sunken)', borderRadius:12, padding:3, gap:2, marginTop:6 }} role="tablist" aria-label="Where">
-              {scopes.map(([k,l]) => { const on = scope===k; return (
-                <button key={k} role="tab" aria-selected={on} onClick={()=>{ setScope(k); setPickScope(false); }} style={{ flex:1, border:0, borderRadius:9, padding:'8px 2px', fontSize:12, fontWeight:600, cursor:'pointer',
-                  background: on?'var(--bg-surface)':'transparent', color: on?'var(--text-primary)':'var(--text-secondary)', boxShadow: on?'0 1px 3px rgba(80,40,30,.12)':'none' }}>{l}</button>
-              ); })}
+          <button className="fx-bar" aria-expanded={open} aria-haspopup="dialog" onClick={()=>setOpen(o=>!o)}>
+            <span className="fx-bar__pin"><Icon name="map-pin" size={15} /></span>
+            <span className="fx-bar__lbl">{scopeName(scope)} <i>·</i> {whatLabel}</span>
+            <span className="fx-bar__n pls-mono">{list.length}</span>
+            <span className="fx-bar__cv"><Icon name="chevron-down" size={16} /></span>
+          </button>
+          {cats.length > 0 && (
+            <div className="fx-toks">
+              {cats.map(k => (
+                <button key={k} className="fx-tok" onClick={()=>toggleCat(k)} aria-label={`Remove ${PULSE_CATS[k].label}`}>
+                  {PULSE_CATS[k].label}<Icon name="x" size={11} />
+                </button>
+              ))}
             </div>
           )}
+          <div className="fx-anchor">
+            {open && (
+              <div className="fx-pop" role="dialog" aria-label="Where and what">
+                <p className="fx-lab">Where</p>
+                <div style={{ display:'flex', background:'var(--bg-sunken)', borderRadius:12, padding:3, gap:2, marginBottom:16 }} role="tablist" aria-label="Where">
+                  {scopes.map(([k,l]) => { const on = scope===k; return (
+                    <button key={k} role="tab" aria-selected={on} onClick={()=>pickScope(k)} style={{ flex:1, border:0, borderRadius:9, padding:'8px 2px', fontSize:12, fontWeight:600, cursor:'pointer',
+                      background: on?'var(--bg-surface)':'transparent', color: on?'var(--text-primary)':'var(--text-secondary)', boxShadow: on?'0 1px 3px rgba(80,40,30,.12)':'none' }}>
+                      {l}<span className="pls-mono" style={{ fontSize:10.5, marginLeft:4, color:on?'var(--text-secondary)':'var(--text-tertiary)' }}>{scopeCount(k)}</span>
+                    </button>
+                  ); })}
+                </div>
+                <p className="fx-lab">What · pick any</p>
+                <div className="fx-grid">
+                  {Object.keys(PULSE_CATS).map(k => { const n = catCountAt(k, scope), on = cats.includes(k); return (
+                    <button key={k} className="fx-opt" aria-pressed={on} disabled={n===0 && !on} onClick={()=>toggleCat(k)}>
+                      <span className="fx-opt__d" style={{ background:PULSE_CATS[k].hue }} />{PULSE_CATS[k].label}
+                      <span className="fx-opt__n">{n}</span>
+                    </button>
+                  ); })}
+                </div>
+                <button className="fx-show" onClick={()=>setOpen(false)}>Show {list.length}</button>
+              </div>
+            )}
+          </div>
+          {open && <div className="fx-scrim" onClick={()=>setOpen(false)} />}
 
           {list.length===0 ? (
             <Card className="p-5 mt-4" style={{ borderStyle:'dashed', borderColor:'var(--accent-quiet)', textAlign:'center' }}>
@@ -2314,8 +2552,8 @@
                     <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Wanted {where}</h3>
                     <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>add your yes</span>
                   </div>
-                  <div className="anc-grid">
-                    {wanted.map(l => <AnchorTile key={l.id} loop={l} viewerId={viewerId} actions={actions} />)}
+                  <div className="anc-list">
+                    {wanted.map(l => <AnchorRow key={l.id} loop={l} viewerId={viewerId} known={known} actions={actions} />)}
                   </div>
                 </>
               )}
@@ -2326,8 +2564,8 @@
                     <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Meeting {where}</h3>
                     <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>join any time</span>
                   </div>
-                  <div className="space-y-3">
-                    {meeting.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}
+                  <div className="anc-list">
+                    {meeting.map(l => <MeetRow key={l.id} loop={l} known={known} actions={actions} />)}
                   </div>
                 </>
               )}
@@ -2546,13 +2784,20 @@
       if(r.where) it.prefs.where=r.where; if(r.time) it.prefs.time=r.time;
       return flrCompat(it);
     }
-    function IntentComposer({ onSubmit }){
+    function IntentComposer({ onSubmit, initialText='' }){
       const edRef=useRef(), hostRef=useRef();
       const [gi, setGi]   = useState(0);                       // which popular drop the ghost shows
       const [m, setM]     = useState({ chips:[], text:'' });    // editor model (chips + free text)
       const [pop, setPop] = useState(null);                    // { left, top, groups, custom, onPick }
       const popRef=useRef(null); popRef.current=pop;
-      useEffect(()=>{ if(edRef.current) edRef.current.focus(); }, []);
+      useEffect(()=>{
+        const ed = edRef.current; if(!ed) return;
+        if(initialText && !ed.textContent.trim()){
+          ed.textContent = initialText + ' ';
+          sync();
+        }
+        placeCaretEnd();
+      }, [initialText]);
 
       /* --- editor model --- */
       const readModel=()=>{ const r={ chips:[], text:'' }; const ed=edRef.current; if(!ed) return r;
@@ -2777,7 +3022,7 @@
       );
     }
 
-    function FlrSheet({ it, onClose, onCore, onAddTag, onRemoveTag, onJoin, onLeave, onDrop, onMute, onTog }){
+    function FlrSheet({ it, onClose, onCore, onAddTag, onRemoveTag, onJoin, onLeave, onDrop, onMute }){
       const sheetRef = useRef();
       const [menu, setMenu] = useState(null);
       if(!it) return null;
@@ -2832,8 +3077,6 @@
             </div>
             <div style={{ marginTop:12 }}>{primary}</div>
             <div className="flr-actgrid">
-              <button className={"pls-btn pls-btn--ghost pls-btn--sm"+(it.watching?'':'')} style={{ width:'100%', color: it.watching?'var(--accent-strong)':undefined }} onClick={()=>onTog(it.id,'watching')}>{it.watching?'Watching':'Watch'}</button>
-              <button className="pls-btn pls-btn--ghost pls-btn--sm" style={{ width:'100%', color: it.reminded?'var(--accent-strong)':undefined }} onClick={()=>onTog(it.id,'reminded')}><Icon name="bell" size={15} />{it.reminded?'On':'Remind'}</button>
               {third}
             </div>
             {menu && (
@@ -2893,7 +3136,6 @@
       const onCore = (id, which, v) => { let next=null; patch(id, x=>{ if(which==='day') x.day=v; else if(which==='cad') x.cadence=v; else x[flrActKey(x)]=v; x.mine=x.mine||!x.joined; x.status=null; x.count=flrCompat(x); next=x; }); saveMine(next); };
       const onAddTag = (id, key, val) => { let next=null; patch(id, x=>{ if(key==='custom'){ if(!x.custom.includes(val)) x.custom.push(val); } else { const f=FLR_FACETS[x.cat].find(ff=>ff.key===key); if(f.multi){ x.prefs[key]=[...(x.prefs[key]||[])]; if(!x.prefs[key].includes(val)) x.prefs[key].push(val); } else x.prefs[key]=val; } x.mine=x.mine||!x.joined; x.status=null; x.count=flrCompat(x); next=x; }); saveMine(next); };
       const onRemoveTag = (id, key, val) => patch(id, x=>{ if(key==='custom'){ x.custom=x.custom.filter(t=>t!==val); } else { const f=FLR_FACETS[x.cat].find(ff=>ff.key===key); if(f&&f.multi){ x.prefs[key]=(x.prefs[key]||[]).filter(t=>t!==val); if(!x.prefs[key].length) delete x.prefs[key]; } else delete x.prefs[key]; } x.count=flrCompat(x); });
-      const onTog = (id, f) => patch(id, x=>{ x[f]=!x[f]; });
       // Seated = you're a member of the real loop this intent became (world state).
       // Once you're in, it's a loop on your week, not a suggestion — it leaves the
       // floor list. If you leave from Your loops instead of here, the flag resyncs.
@@ -2967,7 +3209,7 @@
 
           <div className="mt-4"><Button variant="secondary" block icon="plus" onClick={addIntent}>Drop your own rhythm</Button></div>
 
-          {active && <FlrSheet it={active} onClose={()=>setSheetId(null)} onCore={onCore} onAddTag={onAddTag} onRemoveTag={onRemoveTag} onJoin={onJoin} onLeave={onLeave} onDrop={onDrop} onMute={onMute} onTog={onTog} />}
+          {active && <FlrSheet it={active} onClose={()=>setSheetId(null)} onCore={onCore} onAddTag={onAddTag} onRemoveTag={onRemoveTag} onJoin={onJoin} onLeave={onLeave} onDrop={onDrop} onMute={onMute} />}
           {toast && ReactDOM.createPortal((
             <div className="flr-toast">
               <div className="pls-toast toast-in">
@@ -2994,21 +3236,26 @@
     const HOME_CHIPS = [['upcoming','Your week'],['waiting','Waiting'],['past','Past']];
     function Home({ state, actions }){
       const { user, viewerId='sarah', loops, suggestions, nudge, unread, theme, campus, homeChip='upcoming', myIntents=[], wrapped=[], feedback={} } = state;
-      const [searchOpen, setSearchOpen] = useState(false);
-      const [q, setQ] = useState('');   // what you typed in Search — filters explore; drops as your intent if nothing matches
+      // Search lives on App state, not here: opening a loop unmounts Home, and backing out of
+      // the detail has to land you back in the search you came from.
+      const { searchOpen, searchQ:q } = state;   // q = what you typed in Search — filters explore; drops as your intent if nothing matches
+      const { setSearchOpen, setSearchQ:setQ } = actions;
       // Upcoming is real loops only. A forming anchor you said yes to lives in Waiting, never here.
       const myLoops = loops.filter(l => l.status==='active' && l.memberIds.includes(viewerId));
       // An anchor you wanted just fired: you're invited, not seated. Joining is the start.
       const invite = loops.find(l => l.status==='active' && (l.invitedIds||[]).includes(viewerId) && !l.memberIds.includes(viewerId));
-      useEffect(()=>{ if (invite) setSearchOpen(false); }, [invite && invite.id]);
       const latecomerLoop = loops.find(l => l.loopedInFor===viewerId && l.memberIds.includes(viewerId));
-      const seededLoop = loops.find(l => l.seededBy===viewerId && l.status==='active');   // forming seeds (RA/TA) show as cards, not here
       const unrated = wrapped.filter(w => !feedback[w.id]).length;
       const counts = { upcoming:myLoops.length, waiting:myIntents.length, past:wrapped.length };
       const chip = homeChip;
       const overlay = searchOpen || !!suggestions;
       const closeSearch = () => { setSearchOpen(false); setQ(''); if (suggestions) actions.closeFloor(); };
-      const dropQ = () => { const t = q.trim(); if (!t) return; actions.dropText(t); setQ(''); setSearchOpen(false); };
+      const dropQ = () => { const t = q.trim(); if (!t) return; actions.openCompose(t); setQ(''); setSearchOpen(false); };
+      const focusFirstSearchResult = () => {
+        const root = document.querySelector('.hm-search');
+        const first = root && root.querySelector('.anc-tile__top, .pls-card button, .hm-ag, .flr-hero, .flr-row');
+        if (first) first.focus();
+      };
       return (
         <div className="h-full flex flex-col" style={{ position:'relative' }}>
           <AppHeader
@@ -3057,19 +3304,6 @@
               </button>
             )}
 
-            {seededLoop && !latecomerLoop && (
-              <button onClick={()=>actions.openLoop(seededLoop.id)} className="w-full text-left pls-card p-4 mt-4 rise" style={{ cursor:'pointer', borderColor:'var(--accent-quiet)' }}>
-                <div className="flex items-center gap-1.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>
-                  <Icon name="sprout" size={13} />You seeded this loop
-                </div>
-                <p className="mt-1.5" style={{ fontWeight:500, fontSize:15, color:'var(--text-primary)', lineHeight:1.4 }}>
-                  The <span style={{ fontWeight:700 }}>{seededLoop.title}</span> has run itself {seededLoop.streakWeeks} weeks — {seededLoop.memberIds.length} regulars, no host. Nothing for you to send.
-                </p>
-                <div className="mt-2 flex items-center gap-1 text-[13.5px]" style={{ color:'var(--accent-strong)', fontWeight:600 }}>
-                  See how it's going<Icon name="arrow-right" size={15} />
-                </div>
-              </button>
-            )}
 
             {nudge && (
               <div className="mt-4">
@@ -3113,7 +3347,7 @@
                 <div className="flex items-center gap-3 px-5 pt-3 pb-2">
                   <label className="hm-search__field" style={{ cursor:'text' }}>
                     <Icon name="search" size={17} />
-                    <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{ if (e.key==='Enter') dropQ(); if (e.key==='Escape') closeSearch(); }}
+                    <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{ if (e.key==='Enter') { e.preventDefault(); focusFirstSearchResult(); } if (e.key==='Escape') closeSearch(); }}
                       placeholder="Search — climbing, dinner, CS 2110…" aria-label="Search" autoFocus />
                     {q && <button className="hm-search__clr" aria-label="Clear" onClick={()=>setQ('')}><Icon name="x" size={14} /></button>}
                   </label>
@@ -3165,25 +3399,62 @@
       );
     }
 
-    // A forming anchor as a count tile — a number, never a crew. One action: your yes.
-    function AnchorTile({ loop, viewerId, actions }){
+    // Faces of the people on a row you have actually met. Absent when you know nobody, so
+    // that faces mean something the moment they appear.
+    function KnownFaces({ ids }){
+      if (!ids.length) return null;
+      return <AvatarStack ids={ids} size={22} max={3} />;
+    }
+    const catHue = l => (PULSE_CATS[loopCategory(l)] || PULSE_CATS.social).hue;
+
+    // A forming anchor as a row. Four facts, one action; the divider carries the count.
+    // Who else wants it, where it would land and what the call means live one tap in.
+    function AnchorRow({ loop, viewerId, known, actions }){
       const { count, target } = loop.drop;
       const mine = (loop.wantIds||[]).includes(viewerId);
-      const near = target - count === 1;
+      const seededByViewer = loop.seededBy === viewerId || loop.createdBy === viewerId;
+      const gap = Math.max(0, target - count);
+      const near = gap === 1;
       const now = useNow(); const at = slotDate(loop.nextLine, now);
+      const soon = at ? (at - now) < 864e5 : false;
       const when = at ? `${WEEK_DAYS[at.getDay()]} ${loopWhen(loop).time || '7:00p'}` : null;
       return (
-        <div className={'anc-tile rise'+(mine?' anc-tile--mine':'')}>
-          <button className="anc-tile__top" onClick={()=>actions.openLoop(loop.id)} aria-label={'Open '+loop.title}>
-            <div className="anc-tile__t">{loop.title}</div>
-            <FlrRingGauge pct={count/target} color={mine?'var(--accent)':'var(--status-forming)'} label={count+'/'+target} />
+        <div className="anc-row" data-mine={mine||seededByViewer} data-near={near} data-soon={soon}
+          style={{ '--cat':catHue(loop), '--w':Math.round(Math.min(1, count/target)*100)+'%' }}>
+          <button className="anc-row__m" onClick={()=>actions.openLoop(loop.id)} aria-label={'Open '+loop.title}>
+            <div className="anc-row__t">{loop.title}</div>
+            <div className="anc-row__s" title={at ? `Called ${when}. Fires if ${target} want it by then.` : ''}>
+              <b>{gap===0 ? 'it’s on' : near ? '1 more fires it' : `${gap} more`}</b>
+              {at ? <> · {when} · <u>{untilLabel(at - now)}</u></> : ' · slot snaps in at fire'}
+            </div>
           </button>
-          <div className="anc-tile__s pls-mono" title={at ? `Called ${when}. Fires if ${target} want it by then.` : ''}>
-            {at ? <>{when} · <b style={{ fontWeight:600, color: near ? 'var(--accent-strong)' : 'var(--status-forming)' }}>called in {untilLabel(at - now)}</b></> : 'slot snaps in at fire'}
-          </div>
-          {mine
-            ? <button className="anc-tile__want anc-tile__want--on" onClick={()=>actions.unwant(loop.id)}><Icon name="check" size={13} />you want this</button>
-            : <button className={'anc-tile__want'+(near?' anc-tile__want--hot':'')} onClick={()=>actions.wantThis(loop.id)}><Icon name="plus" size={13} />{near ? 'you’d fire it' : 'I want this too'}</button>}
+          <KnownFaces ids={knownOn(loop, known)} />
+          {seededByViewer
+            ? <button className="anc-row__yes" onClick={()=>actions.openLoop(loop.id)} aria-label="You seeded this — open it"><Icon name="sprout" size={16} /></button>
+            : mine
+            ? <button className="anc-row__yes" onClick={()=>actions.unwant(loop.id)} aria-label="Take back your yes"><Icon name="check" size={16} /></button>
+            : <button className="anc-row__yes" onClick={()=>actions.wantThis(loop.id)} aria-label={near ? 'Your yes would fire it' : 'I want this too'}><Icon name="plus" size={16} /></button>}
+        </div>
+      );
+    }
+
+    // A loop that already meets, in the same row. Nothing left to fill, so the gauge reads
+    // full and the action opens it rather than adding to a count.
+    function MeetRow({ loop, known, actions }){
+      const n = loop.memberIds.length;
+      const now = useNow(); const at = slotDate(loop.nextLine, now); const when = loopWhen(loop);
+      // nextLine is dot-separated already; rebuilt here so the row has one separator rhythm.
+      const line = at ? [`${WEEK_DAYS[at.getDay()]} ${when.time||''}`.trim(), when.place].filter(Boolean).join(' · ') : loop.nextLine;
+      return (
+        <div className="anc-row" style={{ '--cat':catHue(loop), '--w':'100%' }}>
+          <button className="anc-row__m" onClick={()=>actions.openLoop(loop.id)} aria-label={'Open '+loop.title}>
+            <div className="anc-row__t">{loop.title}</div>
+            <div className="anc-row__s">
+              <b>{n} going</b> · {loop.live ? 'meeting now' : line}
+            </div>
+          </button>
+          <KnownFaces ids={knownOn(loop, known)} />
+          <button className="anc-row__yes" onClick={()=>actions.openLoop(loop.id)} aria-label={'Open '+loop.title}><Icon name="arrow-right" size={16} /></button>
         </div>
       );
     }
@@ -3221,20 +3492,119 @@
     /* ============================================================
        LOOP DETAIL (S7)
     ============================================================ */
-    function LoopDetail({ loop, viewerId='sarah', onBack, actions, highlightId, banner, theme }){
+    // Someone you have not met stays a shape — never initials, never a name.
+    function AnonAvatar({ size=30, ring=true }){
+      return (
+        <div aria-label="someone near you" className="pls-avatar pls-avatar--anon"
+          style={{ width:size, height:size, boxShadow: ring ? '0 0 0 2px var(--bg-surface)' : 'none' }}>
+          <Icon name="user" size={Math.round(size*0.55)} />
+        </div>
+      );
+    }
+    // "Maya and Josh want this" — first names, and only for people you have actually met.
+    function namesLine(ids){
+      const f = ids.map(id => (USERS[id]||{}).name?.split(' ')[0]).filter(Boolean);
+      return f.length===1 ? f[0] : f.length===2 ? `${f[0]} and ${f[1]}` : `${f.slice(0,-1).join(', ')} and ${f[f.length-1]}`;
+    }
+    // Where a person sits relative to you, so a name lands with a reason attached.
+    function whereFrom(id){
+      const u = USERS[id]; if (!u) return '';
+      return [u.dorm, (u.courses||[])[0]].filter(Boolean).join(' · ');
+    }
+
+    /* THE ANCHOR, OPENED — the count as a hero over the gauge from the list, then the facts a
+       row leaves out: what the call actually means, who is in it that you know, where it would
+       land, how often it repeats. Names appear only for people you have met; the rest of the
+       count stays anonymous until it fires. */
+    function AnchorFacts({ loop, viewerId, known, callAt, now }){
+      const { count, target } = loop.drop;
+      const gap = Math.max(0, target - count);
+      const mine = (loop.wantIds||[]).includes(viewerId);
+      const faces = knownOn(loop, known);
+      const rest = Math.max(0, count - faces.length - (mine ? 1 : 0));
+      const soon = callAt ? (callAt - now) < 864e5 : false;
+      const when = loopWhen(loop);
+      const slot = callAt ? `${WEEK_DAYS[callAt.getDay()]} ${when.time || '7:00p'}` : null;
+      return (
+        <div className="mb-5" style={{ '--cat':catHue(loop) }}>
+          <div className="dta-head">
+            <span className="dta-n">{count}</span>
+            <span className="dta-of">of {target} want it</span>
+            <span className="dta-gap">{gap===0 ? 'it’s on' : gap===1 ? '1 more fires it' : `${gap} more`}</span>
+          </div>
+          <div className="dta-rule"><i style={{ width:Math.round(Math.min(1, count/target)*100)+'%' }} /></div>
+
+          <div className="dta-facts">
+            {callAt && (
+              <div className="dta-fact" data-soon={soon}>
+                <div className="dta-fact__l">the call</div>
+                <div className="dta-fact__v">
+                  {slot} · <span className="dta-clock">{untilLabel(callAt - now)}</span>
+                  <small>Fires if {target} want it by then, and whoever shows up is the loop. If not, the count rolls to next week — nothing is lost.</small>
+                </div>
+              </div>
+            )}
+            <div className="dta-fact">
+              <div className="dta-fact__l">who</div>
+              <div className="dta-fact__v">
+                <div className="dta-who">
+                  {faces.length
+                    ? <AvatarStack ids={faces} size={30} max={3} />
+                    : <div className="flex items-center" style={{ paddingLeft:8 }}>
+                        {[0,1,2].map(i => <div key={i} style={{ marginLeft:-8 }}><AnonAvatar size={30} /></div>)}
+                      </div>}
+                  <div className="dta-who__t">
+                    {faces.length
+                      ? <><b>{namesLine(faces)} want this</b>{rest>0 ? `, with ${rest} more near you.` : '.'}</>
+                      : <><b>{count} people near you</b> want this.</>}
+                    <small>Nobody else is named until it fires.</small>
+                  </div>
+                </div>
+                {faces.length>0 && (
+                  <div className="dta-names">
+                    {faces.map(id => (
+                      <div className="dta-name" key={id}>
+                        <Avatar id={id} size={34} ring={false} />
+                        <div style={{ minWidth:0 }}>
+                          <div className="dta-name__n">{USERS[id]?.name}</div>
+                          <div className="dta-name__s">{whereFrom(id)}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="dta-fact">
+              <div className="dta-fact__l">where</div>
+              <div className="dta-fact__v">
+                {when.place
+                  ? <>{when.place}<small>Anyone can still move it before it fires.</small></>
+                  : <>Not set yet<small>The spot snaps in when it fires — the nearest one that fits, unless someone picks first.</small></>}
+              </div>
+            </div>
+            <div className="dta-fact">
+              <div className="dta-fact__l">rhythm</div>
+              <div className="dta-fact__v">Weekly<small>Same slot every week. Miss one and you're still in.</small></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function LoopDetail({ loop, loops=[], viewerId='sarah', onBack, actions, highlightId, banner, theme }){
       const isMember = loop.memberIds.includes(viewerId);
       const forming = loop.status === 'forming';
+      const known = knownToViewer(loops, viewerId);
       // Ownerless governance: this week's occurrence is what locks; whoever's
       // checked in ("here") can move it — presence is authority, no host.
       const hereIds = loop.hereIds || [];
       const isHere = hereIds.includes(viewerId);
-      const [picking, setPicking] = useState(false);
       const now = useNow(); const callAt = forming ? slotDate(loop.nextLine, now) : null;
       const meet = meetPhase(loop, now); const ch = crewHype(loop);
       const synced = (loop.calIds||[]).includes(viewerId);   // pushed to your phone's calendar (one-shot, per person)
-      const curPlace = (loop.nextLine||'').split(' · ').pop();
       const lockLine = lockLabelFor(loop.nextLine);
-      const moveOptions = MOVE_SPOTS.filter(s => s!==curPlace).slice(0,3);
+      const firstMeet = loop.firedNow && !hereIds.length;
       return (
         <div className="h-full flex flex-col fade-in">
           <AppHeader title={loop.title} onBack={onBack}
@@ -3242,9 +3612,9 @@
           <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-5 pb-8">
             <UnitKicker unit={loop.unit} />
             <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
-              {forming
-                ? <Badge hue="var(--status-forming)">forming</Badge>
-                : <Badge hue="var(--status-live)">running</Badge>}
+              {/* the unit kicker already reads "… · forming", and the gauge says it again in
+                  numbers — a badge would be the third time. */}
+              {!forming && <Badge hue="var(--status-live)">running</Badge>}
               {loop.streakWeeks && <Chip variant="static" icon="flame">{loop.streakWeeks}-wk streak</Chip>}
               {loop.sameCrew && <Chip variant="static" icon="users">same faces</Chip>}
             </div>
@@ -3258,20 +3628,9 @@
             )}
 
             {forming ? (
-              <Card variant="sunken" className="p-4 mb-5">
-                <DropMeter count={loop.drop.count} target={loop.drop.target} />
-                {callAt && (
-                  <>
-                    <div className="mt-3 pls-mono" style={{ fontSize:12.5, color:'var(--text-secondary)' }}>
-                      <div className="flex items-center gap-1.5"><Icon name="clock" size={13} style={{ color:'var(--text-tertiary)' }} /><span style={{ fontWeight:600, color:'var(--status-forming)' }}>called in {untilLabel(callAt - now)}</span></div>
-                      <div className="mt-1" style={{ paddingLeft:19 }}>{loop.nextLine}</div>
-                    </div>
-                    <p className="text-[12px] mt-1.5 leading-relaxed" style={{ color:'var(--text-tertiary)' }}>
-                      Fires if {loop.drop.target} want it by then and whoever shows up is the loop. If not, the count rolls to next week — nothing is lost.
-                    </p>
-                  </>
-                )}
-              </Card>
+              /* The anchor, in the language of the list it came from: the count as a hero over
+                 the same gauge, then the facts a row deliberately left out. */
+              <AnchorFacts loop={loop} viewerId={viewerId} known={known} callAt={callAt} now={now} />
             ) : (
               <Card variant="sunken" className="p-4 mb-5">
                 <div className="pls-kicker mb-2">Rhythm</div>
@@ -3293,9 +3652,13 @@
               </Card>
             )}
 
-            <div className="mb-5">
+            {/* A forming anchor has no crew to show — AnchorFacts already answered "who". */}
+            <div className="mb-5" hidden={forming}>
               <div className="flex items-center justify-between mb-3">
-                <p className="pls-kicker">{forming ? `${loop.drop.count} of ${loop.drop.target} want it · no names until it fires` : `${loop.memberIds.length} in this loop`}</p>
+                <p className="pls-kicker">
+                  {loop.memberIds.length} in this loop
+                  {knownOn(loop, known).length>0 && <span style={{ color:'var(--text-secondary)', textTransform:'none', letterSpacing:0 }}> · {knownOn(loop, known).length} you know</span>}
+                </p>
                 {loop.streakLeaderId && (
                   <span className="flex items-center gap-1.5 text-[12px]" style={{ color:'var(--text-secondary)' }}>
                     <Icon name="flame" size={13} style={{ color:'var(--status-forming)' }} />{USERS[loop.streakLeaderId]?.name.split(' ')[0]} · longest streak
@@ -3333,7 +3696,7 @@
             {isMember && !forming && (
               <Card className="p-4 mb-4" style={{ borderColor:'var(--accent-quiet)' }}>
                 <div className="flex items-center gap-1.5 pls-kicker mb-2" style={{ color:'var(--accent-strong)' }}>
-                  <Icon name={meet.phase==='past' ? 'circle-check-big' : 'lock'} size={13} />{meet.phase==='past' ? 'This week · closed' : 'This week · locked'}
+                  <Icon name={meet.phase==='past' ? 'circle-check-big' : firstMeet ? 'zap' : 'lock'} size={13} />{firstMeet ? 'First meet' : meet.phase==='past' ? 'This week - closed' : 'This week - locked'}
                 </div>
                 <p className="pls-display" style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)', lineHeight:1.25 }}>
                   {loop.nextLine}
@@ -3341,8 +3704,10 @@
                 <p className="text-[12.5px] mt-1" style={{ color:'var(--text-secondary)' }}>
                   {loop.movedFrom
                     ? <>Moved from {loop.movedFrom} — pushed to everyone confirmed.{isHere && <> <button onClick={()=>actions.undoMove(loop.id)} style={{ background:'none', border:'none', padding:0, cursor:'pointer', color:'var(--accent-strong)', fontWeight:600, fontSize:'inherit' }}>Undo</button></>}</>
+                    : firstMeet
+                    ? <>The crew just fired. The first meet is {loop.nextLine}; the row on Home owns hype and messages.</>
                     : meet.phase==='past'
-                    ? <>This week’s already met. The next one is {loop.nextLine}. Nobody runs it — hype it up and the crew feels it.</>
+                    ? <>This week's already met. The next one is {loop.nextLine}. Nobody runs it - hype it up and the crew feels it.</>
                     : <>Nobody runs it. It locked {lockLine} so nothing drifts; whoever's there can move it.</>}
                 </p>
                 {ch>0 && meet.phase!=='today' && (
@@ -3356,28 +3721,6 @@
                     {hereIds.map(id => USERS[id]?.name.split(' ')[0]).join(', ')} here{hereIds[0]===viewerId?' · you hold the pin':''}
                   </div>
                 )}
-                {!isHere ? (
-                  <div className="grid grid-cols-2 gap-2.5 mt-3">
-                    {meet.phase==='today'
-                      ? <Button size="sm" icon="circle-check-big" onClick={()=>actions.checkIn(loop.id)}>I'm here</Button>
-                      : <HypeButton loop={loop} viewerId={viewerId} actions={actions} forLabel={meet.phase==='past' ? `next ${meet.day}` : meet.day} />}
-                    <Button variant="secondary" size="sm" icon="message-square" onClick={()=>actions.messageCrew(loop)}>Message the crew</Button>
-                  </div>
-                ) : !picking ? (
-                  <div className="grid grid-cols-2 gap-2.5 mt-3">
-                    <Button size="sm" icon="map-pin" onClick={()=>setPicking(true)}>We moved →</Button>
-                    <Button variant="secondary" size="sm" icon="message-square" onClick={()=>actions.messageCrew(loop)}>Message the crew</Button>
-                  </div>
-                ) : (
-                  <div className="mt-3">
-                    <div className="pls-kicker mb-1.5">Where to? · everyone confirmed gets the push</div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {moveOptions.map(s => (
-                        <Button key={s} variant="secondary" size="sm" onClick={()=>{ setPicking(false); actions.moveTonight(loop.id, s); }}>{s}</Button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </Card>
             )}
 
@@ -3385,10 +3728,6 @@
               {!isMember && !forming && <Button block onClick={()=>actions.foldIn(loop.id)} icon="users">Join loop</Button>}
               {isMember && (
                 <>
-                  <div className="pls-banner p-3.5 flex items-center gap-2" style={{ color:'var(--text-primary)', fontWeight:600, fontSize:14 }}>
-                    <span style={{ color:'var(--status-live)' }}><Icon name="circle-check-big" size={18} /></span>You're in this loop
-                  </div>
-                  <Button variant="secondary" block onClick={()=>actions.openShare(loop.id)} icon="share-2">Drop this loop to a friend</Button>
                   <Button variant="ghost" block onClick={()=>actions.leaveLoop(loop.id)} icon="log-out">Leave loop</Button>
                 </>
               )}
@@ -3400,18 +3739,12 @@
                   <Button variant="ghost" block onClick={()=>actions.unwant(loop.id)} icon="log-out">Not anymore</Button>
                 </>
               ) : (
-                <Button block onClick={()=>actions.wantThis(loop.id)} icon="plus">{loop.drop.target-loop.drop.count===1 ? 'I want this too · you’d fire it' : 'I want this too'}</Button>
+                <Button block variant={loop.drop.target-loop.drop.count===1 ? 'ink' : 'primary'} onClick={()=>actions.wantThis(loop.id)} icon="plus">
+                  {loop.drop.target-loop.drop.count===1 ? 'You would fire it' : 'I want this too'}
+                </Button>
               ))}
             </div>
 
-            <button onClick={()=>actions.openSafety(null)} className="w-full text-left mt-4 pls-banner p-4 flex items-start gap-3" style={{ cursor:'pointer' }}>
-              <span style={{ color:'var(--accent-strong)', flexShrink:0 }}><Icon name="shield" size={20} /></span>
-              <div className="min-w-0 flex-1">
-                <p style={{ fontWeight:600, fontSize:14, color:'var(--text-primary)' }}>Report a safety concern</p>
-                <p className="text-[12.5px] mt-0.5" style={{ color:'var(--text-secondary)' }}>Goes straight to {COUNSELOR.name}, {COUNSELOR.role}. Confidential — never shown to the loop.</p>
-              </div>
-              <Icon name="chevron-right" size={18} style={{ color:'var(--text-tertiary)', marginTop:2 }} />
-            </button>
 
             <p className="text-center text-[12.5px] mt-6 flex items-center justify-center gap-1.5" style={{ color:'var(--text-tertiary)' }}>
               <Icon name="repeat" size={14} />Loop keeps the rhythm and the next one.
@@ -3466,13 +3799,13 @@
                 ) : n.type==='fired' ? (
                   <div>
                     <div className="flex items-center gap-3">
-                      <span style={{ width:42, height:42, borderRadius:'50%', flexShrink:0, background:'color-mix(in srgb, var(--status-forming) 16%, var(--bg-surface))', color:'var(--status-forming)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon name="zap" size={20} /></span>
+                      <span style={{ width:42, height:42, borderRadius:'50%', flexShrink:0, background:'color-mix(in srgb, var(--status-live) 16%, var(--bg-surface))', color:'var(--status-live)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon name="circle-check-big" size={20} /></span>
                       <p className="text-[14.5px] leading-snug" style={{ color:'var(--text-primary)' }}>
-                        <span style={{ fontWeight:700 }}>{n.loopTitle}</span> fired — {n.count} said yes. <span style={{ color:'var(--text-secondary)' }}>It’s on. Join?</span>
+                        You joined the <span style={{ fontWeight:700 }}>{n.loopTitle}</span>. <span style={{ color:'var(--text-secondary)' }}>{n.count} said yes.</span>
                       </p>
                     </div>
                     <div className="mt-3">
-                      <Button size="sm" onClick={()=>actions.foldIn(n.loopId)} icon="plus">Join · add to your week</Button>
+                      <Button size="sm" variant="secondary" onClick={()=>actions.foldIn(n.loopId)} icon="arrow-right">Open</Button>
                     </div>
                   </div>
                 ) : n.type==='staff' ? (
@@ -3486,42 +3819,6 @@
               </Card>
             ))}
 
-            <div className="pt-2">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Icon name="repeat" size={15} style={{ color:'var(--text-tertiary)' }} />
-                <h2 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Wrapped loops</h2>
-              </div>
-              <p className="text-[12px] mb-3" style={{ color:'var(--text-secondary)' }}>Loops end on their own when the reason does — the crew stays yours.</p>
-              <div className="space-y-2.5">
-                {wrapped.map(w => (
-                  <Card key={w.id} variant="sunken" className="p-3.5">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="truncate" style={{ fontWeight:600, fontSize:13.5, color:'var(--text-secondary)' }}>{w.title}</span>
-                          <span className="pls-badge" style={{ flexShrink:0, color:'var(--text-tertiary)', background:'var(--bg-sunken)' }}>wrapped</span>
-                        </div>
-                        <div className="text-[11.5px] mt-1" style={{ color:'var(--text-tertiary)' }}>{w.reason} · {w.sessions} sessions · same faces</div>
-                      </div>
-                      <CrewFaces members={w.faces} size={22} max={4} />
-                    </div>
-                    <div className="mt-2.5 pt-2.5 flex items-center justify-between" style={{ borderTop:'1px solid var(--border-hairline)' }}>
-                      <span className="pls-mono text-[11px]" style={{ color:'var(--text-tertiary)' }}>{w.when}</span>
-                      <div className="flex items-center gap-3.5">
-                        <button onClick={()=>actions.openRate(w.id)} className="flex items-center gap-1 text-[12.5px]"
-                          style={{ background:'none', border:'none', cursor:'pointer', color: feedback[w.id]?'var(--text-tertiary)':'var(--accent-strong)', fontWeight:600 }}>
-                          <Icon name={feedback[w.id]?'check':'thumbs-up'} size={13} />{feedback[w.id]?'Rated':'Rate it'}
-                        </button>
-                        <button onClick={()=>actions.openCompose()} className="flex items-center gap-1 text-[12.5px]"
-                          style={{ background:'none', border:'none', cursor:'pointer', color:'var(--accent-strong)', fontWeight:600 }}>
-                          <Icon name="plus" size={13} />Start the next one
-                        </button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       );
@@ -3626,12 +3923,27 @@
     function untilLabel(ms){ if (ms==null) return ''; const m = Math.max(0, Math.round(ms/60000)); const d = Math.floor(m/1440), h = Math.floor((m%1440)/60), mm = m%60; return d>0 ? `${d}d ${h}h` : h>0 ? `${h}h ${mm}m` : `${mm}m`; }
     // A ticking clock so countdowns read live on screen.
     function useNow(step=30000){ const [now, setNow] = useState(()=>new Date()); useEffect(()=>{ const t = setInterval(()=>setNow(new Date()), step); return ()=>clearInterval(t); }, [step]); return now; }
-    // Where this week's occurrence sits relative to today: 'today' (check in), 'future' (say you're
-    // in for it), 'past' (this week's already met — say you're in for the next one).
+    // Where this week's occurrence sits relative to now: 'today' (check-in window open — within
+    // CHECKIN_WINDOW_MS either side of start), 'future' (say you're in for it — includes the
+    // earlier hours of meet day), 'past' (this week's already met — say you're in for the next one).
+    const CHECKIN_WINDOW_MS = 60*60*1000;   // ±1h around start
     function meetPhase(l, now=new Date()){
       const d = loopDay(l); if (d==null) return { phase:'future', day:'' };
+      const day = WEEK_DAYS[d];
+      if (l.firedNow && !(l.hereIds||[]).length) return { phase:'future', day, at:slotDate(l.nextLine, now) };
+      const startOn = (x) => slotDate(l.nextLine, new Date(x.getFullYear(), x.getMonth(), x.getDate()));
+      // Check yesterday/today/tomorrow for the matching weekday, so a window that
+      // crosses midnight still reads as open.
+      for (const off of [-1, 0, 1]){
+        const x = new Date(now); x.setDate(now.getDate() + off);
+        if (x.getDay() !== d) continue;
+        const at = startOn(x);
+        if (at && Math.abs(at - now) <= CHECKIN_WINDOW_MS) return { phase:'today', day, at };
+      }
       const i = WEEK_ORDER.indexOf(d), t = WEEK_ORDER.indexOf(now.getDay());
-      return { phase: i===t ? 'today' : i<t ? 'past' : 'future', day: WEEK_DAYS[d] };
+      if (i !== t) return { phase: i<t ? 'past' : 'future', day };
+      const at = startOn(now);
+      return { phase: at && now < at ? 'future' : 'past', day, at };
     }
     // One row of your week. Top-level (not a closure) so the hype button keeps its spark state across renders.
     function WeekRow({ l, isNext, now, viewerId, actions }){
@@ -3659,7 +3971,7 @@
               <div className="hm-ag__acts">
                 {m.phase==='today'
                   ? <Button size="sm" icon="circle-check-big" onClick={()=>actions.checkIn(l.id)}>I’m here</Button>
-                  : <HypeButton loop={l} viewerId={viewerId} actions={actions} forLabel={m.phase==='past' ? `next ${m.day}` : m.day} />}
+                  : <HypeButton loop={l} viewerId={viewerId} actions={actions} forLabel={m.phase==='past' ? `next ${m.day}` : m.at ? 'today' : m.day} />}
               </div>
             </div>
           ); })()}
@@ -3673,13 +3985,14 @@
       const [sel, setSel] = useState(null);   // a tapped day → that day's view; null → the whole week
       const daysOut = d => d==null ? 8 : (d - todayDow + 7) % 7;
       const dateOf = d => { const x = new Date(today); x.setDate(today.getDate() + daysOut(d)); return x; };
-      // calendar dates for the Mon→Sun strip of the current week
-      const monday = new Date(today); monday.setDate(today.getDate() - ((todayDow + 6) % 7));
-      const stripDates = WEEK_ORDER.map((d,i) => { const x = new Date(monday); x.setDate(monday.getDate()+i); return x.getDate(); });
+      // calendar dates for the next seven days, starting today, so the strip and agenda agree.
+      const stripDays = Array.from({ length:7 }, (_,i) => (todayDow + i) % 7);
+      const stripDates = stripDays.map((d,i) => { const x = new Date(today); x.setDate(today.getDate()+i); return x.getDate(); });
       const dayOf = {}; myLoops.forEach(l => { dayOf[l.id] = loopDay(l); });
       const has = new Set(myLoops.map(l => dayOf[l.id]).filter(d => d!=null));
       // Everything else you could pick that day: anchors forming (counts) and loops meeting (join any time).
       const pool = visibleLoops({ loops }, user).filter(l => !l.memberIds.includes(viewerId));
+      const known = knownToViewer(loops, viewerId);
       const formingOn = d => pool.filter(l => l.status==='forming' && loopDay(l)===d);
       const meetingOn = d => pool.filter(l => l.status==='active' && loopDay(l)===d);
       const open = new Set(pool.map(loopDay).filter(d => d!=null));
@@ -3690,8 +4003,8 @@
       const label = g => g.d==null ? 'This week' : dayLabel(g.d);
       const strip = (
         <div className="hm-wk" role="group" aria-label="This week">
-          {WEEK_ORDER.map((d,i) => (
-            <button key={d} className="hm-wk__d" data-today={d===todayDow} data-past={i < WEEK_ORDER.indexOf(todayDow)} data-has={has.has(d)} data-forming={open.has(d)} data-sel={sel===d}
+          {stripDays.map((d,i) => (
+            <button key={d} className="hm-wk__d" data-today={i===0} data-past={false} data-has={has.has(d)} data-forming={open.has(d)} data-sel={sel===d}
               aria-label={WEEK_DAYS[d]} aria-pressed={sel===d} onClick={()=>setSel(sel===d ? null : d)}>
               <span className="hm-wk__l">{WEEK_DAYS[d][0]}</span><span className="hm-wk__n">{stripDates[i]}</span><span className="hm-wk__dot" />
             </button>
@@ -3722,7 +4035,7 @@
                   <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Forming {dn}</h3>
                   <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>counts, not crews</span>
                 </div>
-                <div className="anc-grid">{forming.map(l => <AnchorTile key={l.id} loop={l} viewerId={viewerId} actions={actions} />)}</div>
+                <div className="anc-list">{forming.map(l => <AnchorRow key={l.id} loop={l} viewerId={viewerId} known={known} actions={actions} />)}</div>
               </>
             )}
             {meeting.length>0 && (
@@ -3732,7 +4045,7 @@
                   <h3 className="pls-display" style={{ fontWeight:700, fontSize:14, color:'var(--text-primary)' }}>Meeting {dn}</h3>
                   <span className="pls-mono" style={{ marginLeft:'auto', fontSize:11, color:'var(--text-tertiary)' }}>join any time</span>
                 </div>
-                <div className="space-y-3">{meeting.map(l => <LoopCard key={l.id} loop={l} onOpen={()=>actions.openLoop(l.id)} />)}</div>
+                <div className="anc-list">{meeting.map(l => <MeetRow key={l.id} loop={l} known={known} actions={actions} />)}</div>
               </>
             )}
             {forming.length===0 && meeting.length===0 && (
@@ -4396,7 +4709,6 @@
               ))}
               <div className="flex items-center justify-between mt-1 pt-2" style={{ borderTop:'1px solid var(--border-hairline)' }}>
                 <span className="text-[12px]" style={{ color:'var(--text-secondary)' }}>+ {F.notLandedTotal - F.notLanded.length} more</span>
-                <Button size="sm" variant="ghost" iconRight="chevron-right" onClick={actions.noop}>See all</Button>
               </div>
             </Card>
 
@@ -4480,8 +4792,6 @@
                 {seeded
                   ? <Button size="sm" variant="secondary" icon="check" onClick={()=>actions.openLoop(C.seed.id)}>Seeded · open it</Button>
                   : <Button size="sm" icon="sprout" onClick={()=>actions.staffSeed(C.seed)}>{C.seed.cta}</Button>}
-                <Button size="sm" variant={isDone('oh')?'ghost':'secondary'} icon={isDone('oh')?'check':'clock'} disabled={isDone('oh')}
-                  onClick={actions.staffAnchorOH}>{isDone('oh') ? 'Office hours anchored' : 'Anchor to my Tue 5p office hours'}</Button>
               </div>
             </Card>
 
@@ -4569,7 +4879,6 @@
           <AppHeader
             left={<StaffHeaderLeft glyph={<Icon name="heart-handshake" size={16} />} title="Advising & Wellbeing" kicker={`${COUNSELOR.name.split(' ')[0]} · staff view · all undergrads`} />}
             right={<>
-              <IconButton name="bell" size={20} label="Alerts" badge={unread} onClick={actions.openNotifications} />
               <AccountTrigger user={user} viewerId={viewerId} theme={theme} actions={actions} />
             </>} />
 
@@ -4704,10 +5013,13 @@
       const [world, setWorld]   = useState(worldStore.load);   // the one shared, persisted world
       const [suggestions, setSuggestions] = useState(null);
       const [homeChip, setHomeChip] = useState('upcoming');   // Home's chip row: upcoming|waiting|near|past
+      const [searchOpen, setSearchOpen] = useState(false);    // 🔍 takeover on Home — held here so a loop detail can back out into it
+      const [searchQ, setSearchQ] = useState('');
       const [activeLoopId, setActiveLoopId] = useState(null);
       const [highlightId, setHighlightId]   = useState(null);
       const [detailBanner, setDetailBanner] = useState(null);
       const [draft, setDraft]   = useState(null);
+      const [composeSeed, setComposeSeed] = useState('');
       const [nudge, setNudge]   = useState(null);
       const [toast, setToast]   = useState(null);
       const [rateId, setRateId]     = useState(null);          // wrapped loop currently open in the Rate sheet
@@ -4727,6 +5039,10 @@
       const feedback = world.feedback[viewerId] || {};
       const myIntents = world.intents.filter(i => i.userId===viewerId);
       const user = { ...PERSONA_BY_ID[viewerId], ...(USERS[viewerId]||{}), ...(world.profiles[viewerId]||{}) };
+      // An anchor you wanted just fired: drop out of Search so the invite is the thing you see.
+      // Lives here, not in Home — Home remounts on every trip to a loop detail and would fire it again.
+      const inviteId = (loops.find(l => l.status==='active' && (l.invitedIds||[]).includes(viewerId) && !l.memberIds.includes(viewerId))||{}).id;
+      useEffect(()=>{ if (inviteId) setSearchOpen(false); }, [inviteId]);
       // Writers: profiles (onboarding), per-recipient notifs, per-user feedback.
       const setProfileFor = (id, patch) => setWorld(w => ({ ...w, profiles: { ...w.profiles, [id]: { ...(w.profiles[id]||{}), ...patch } } }));
       const setNotifsFor  = (recipientId, updater) => setWorld(w => ({ ...w, notifs: { ...w.notifs, [recipientId]: updater(w.notifs[recipientId] || []) } }));
@@ -4808,14 +5124,12 @@
         if (isSpinup(one)) { startSpinupFromText(one, parseIntent(one)); return; }
         setSuggestions({ raw: one.toLowerCase(), parse: parseIntent(one), cards: cardsForIntent(one) });
       };
-      const openCompose = () => setSheet('compose');
+      const openCompose = (seed='') => { setComposeSeed(typeof seed === 'string' ? seed : ''); setSheet('compose'); };
       const submitCompose = (raw, intent) => {
-        setSheet(null); runIntent(raw);
+        setSheet(null); setComposeSeed(''); runIntent(raw);
         if(intent){ saveIntent(intent); setSuggestions(s => s ? { ...s, mineId:intent.id } : s); }   // the Floor's "your intent" upserts this same record
         if(screen!=='home') setScreen('home');
       };
-      const noop = () => {};
-
       /* ----- fold in (join a running loop) ----- */
       const foldIn = (loopId) => {
         setLoops(ls => ls.map(l => l.id===loopId && !l.memberIds.includes(viewerId)
@@ -4860,7 +5174,8 @@
         const fill = DEMO_CREW.filter(id => id!==viewerId && !others.includes(id));
         const memberIds = [...others, ...fill].slice(0, Math.max(1, Math.min(l.drop.target-1, 4)));
         const nextLine = l.nextLine || 'Thu · 7:00p · dorm lounge';
-        const fired = { ...l, status:'active', live:false, memberIds, invitedIds:yes, wantIds:[], firedNow:true,
+        const unit = l.unit ? { ...l.unit, label:(l.unit.label||'').replace(/\bforming\b/i, 'running') } : l.unit;
+        const fired = { ...l, unit, status:'active', live:false, memberIds, invitedIds:yes, wantIds:[], firedNow:true,
           hype: Object.fromEntries(memberIds.map((id,i) => [id, 2 + (i % 4)])),   // a fresh crew is already a little hyped
           rhythm: l.rhythm || (nextLine+' · weekly'), nextLine, startedWeek:3, streakWeeks:null, hereIds:[], cap:l.drop.target };
         const notifs = { ...w.notifs };
@@ -4921,11 +5236,11 @@
       const openNotifications = () => { if (screen!=='notifs') setNotifsReturn(screen); setScreen('notifs'); };
       const closeNotifications = () => setScreen(notifsReturn);
       const openYou = () => setScreen('you');
-      const goHomeTo = (chip) => { setHomeChip(chip); setScreen('home'); };
+      const goHomeTo = (chip) => { setHomeChip(chip); setSearchOpen(false); setScreen('home'); };
       // Done with the Floor: the intent you dropped is now waiting, so land on Waiting.
       const closeFloor = () => { setSuggestions(null); setHomeChip(myIntents.length ? 'waiting' : 'upcoming'); };
       const openClass = () => setScreen('class');
-      const goHome = () => setScreen('home');
+      const goHome = () => { setSearchOpen(false); setScreen('home'); };
 
       /* ----- a loop concludes → you get asked. Rate sheet reopens from Past loops.
          (private feedback writer setFeedbackFor is defined up top, keyed per viewer) ----- */
@@ -5019,8 +5334,6 @@
         showToast(on ? { icon:'calendar', title:'On your phone calendar.', body:`Repeats ${l.rhythm || l.nextLine}. Loop keeps it in sync if the crew moves it.` }
                      : { icon:'calendar', title:'Removed from your phone calendar.', body:'Your week still has it.' });
       };
-      const addToCalendar = (loop) => showToast({ icon:'calendar', title:`${loop.title} added to your calendar`,
-        body:`${loop.rhythm || loop.nextLine || 'Weekly'} — repeats weekly, same faces. Loop keeps the crew in sync.` });
       const sendSafety = () => {
         const s = safetySubject; setSheet(null); setSafetySubject(null);
         showToast({ icon:'shield', title:`Sent privately to ${COUNSELOR.name}.`,
@@ -5187,10 +5500,6 @@
         staffMark('hint-'+l.id);
         showToast({ icon:'message-square', title:`Hint sent to the ${l.title}`, body:`Lands in their Alerts, bylined ${bylineFor(viewerId)} — no thread, no DM.` });
       };
-      const staffAnchorOH = () => {
-        staffMark('oh');
-        showToast({ icon:'clock', title:'Office hours anchored', body:`Your Tue 5p is now a loop anchor for ${TA_CLASS.scope} — the 14 waiting who are free then get invited.` });
-      };
       const staffReach = (name, id) => {
         if (id) staffMark(id);
         showToast({ icon:'heart-handshake', title:`Reached out to ${name.split(' ')[0]}`, body:`A warm note from you — Loop never tells them how you knew.` });
@@ -5219,11 +5528,11 @@
       };
 
       const actions = {
-        openCompose, noop, foldIn, leaveLoop, wantThis, unwant, declineInvite, hype, openLoop, openNotifications, closeNotifications, setHomeChip, goHomeTo, closeFloor, showToast,
+        openCompose, foldIn, leaveLoop, wantThis, unwant, declineInvite, hype, openLoop, openNotifications, closeNotifications, setHomeChip, goHomeTo, closeFloor, showToast, setSearchOpen, setSearchQ,
         startSpinup, tapNudge, toggleTheme, setTheme:applyTheme, openYou, openClass, goHome,
-        setFeedbackFor, openRate, openSafety, messageCounselor, openShare, addToCalendar, syncCalendar, dropText, floorWant, floorUnwant, saveIntent, removeIntent,
+        setFeedbackFor, openRate, openSafety, messageCounselor, openShare, syncCalendar, dropText, floorWant, floorUnwant, saveIntent, removeIntent,
         checkIn, moveTonight, undoMove, messageCrew, advisorReach,
-        openStaff, staffMark, staffSeed, staffEvent, staffBoost, staffDropIn, staffHint, staffAnchorOH, staffReach, schoolAct,
+        openStaff, staffMark, staffSeed, staffEvent, staffBoost, staffDropIn, staffHint, staffReach, schoolAct,
       };
 
       const activeLoop = loops.find(l => l.id===activeLoopId);
@@ -5232,7 +5541,7 @@
       const reset = () => {
         clearTimeout(toastTimer.current); clearTimeout(wrapTimer.current);
         setWorld(worldStore.reset());   // clear persisted blob + re-seed the world
-        setRateId(null); setScreen('splash'); setSheet(null); setIntentSeed(''); setViewerId('sarah');
+        setRateId(null); setScreen('splash'); setSheet(null); setIntentSeed(''); setViewerId('sarah'); setSearchOpen(false); setSearchQ('');
         setSuggestions(null); setActiveLoopId(null); setHighlightId(null); setDetailBanner(null);
         setDraft(null); setNudge(null); setToast(null); setSafetySubject(null); setShareLoopId(null);
       };
@@ -5251,10 +5560,10 @@
               {screen==='story'  && <StoryOnboarding onDone={storyDone} onBack={()=>setScreen('splash')} theme={theme} startAt={storyStart} />}
               {screen==='setup'  && <Setup onBack={()=>{ setStoryStart(4); setScreen('story'); }} onDone={setupDone} seed={intentSeed} dashes={STORY_DASHES} />}
               {screen==='home'   && user && (
-                <Home state={{ user, viewerId, loops, suggestions, nudge, unread, theme, campus, homeChip, myIntents, wrapped, feedback }} actions={actions} />
+                <Home state={{ user, viewerId, loops, suggestions, nudge, unread, theme, campus, homeChip, myIntents, wrapped, feedback, searchOpen, searchQ }} actions={actions} />
               )}
               {screen==='loop'   && activeLoop && (
-                <LoopDetail loop={activeLoop} viewerId={viewerId} highlightId={highlightId} banner={detailBanner} theme={theme}
+                <LoopDetail loop={activeLoop} loops={loops} viewerId={viewerId} highlightId={highlightId} banner={detailBanner} theme={theme}
                   onBack={()=>setScreen('home')} actions={actions} />
               )}
               {screen==='class'  && (
@@ -5275,7 +5584,7 @@
                 <Notifications items={myNotifs} unread={unread} wrapped={wrapped} feedback={feedback} actions={actions} />
               )}
 
-              {sheet==='compose' && <ComposeSheet onClose={()=>setSheet(null)} onSubmit={submitCompose} />}
+              {sheet==='compose' && <ComposeSheet onClose={()=>{ setSheet(null); setComposeSeed(''); }} onSubmit={submitCompose} initialText={composeSeed} />}
               {sheet==='spinup' && draft && <SpinUpSheet draft={draft} onClose={()=>setSheet(null)} onSend={sendDraft} />}
               {sheet==='safety' && <SafetySheet subject={safetySubject} onClose={()=>{ setSheet(null); setSafetySubject(null); }} onSend={sendSafety} />}
               {sheet==='rate' && rateId && wrapped.find(w=>w.id===rateId) &&

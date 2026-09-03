@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Redundancy cuts — 6 decisions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 80px; }
+  .wrap{ max-width:1320px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:26px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 30px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; color:var(--ink-0); }
+  .gallery-head p{ max-width:66ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.5; }
+
+  /* picks summary */
+  .picks{ position:sticky; top:12px; z-index:50; margin:0 auto 34px; max-width:980px; background:var(--ink-0); color:var(--paper-0); border-radius:16px; padding:12px 16px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; box-shadow:0 18px 40px -18px rgba(0,0,0,.5); }
+  .picks .lbl{ font:700 11px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--paper-3); }
+  .picks .p{ font:600 12.5px/1 var(--font-sans); padding:6px 10px; border-radius:999px; background:rgba(255,253,248,.1); }
+  .picks .p b{ color:#ffb3a8; margin-left:5px; font-family:var(--font-mono); font-weight:600; }
+  .picks .p.unset{ opacity:.45; }
+  .picks .copy{ margin-left:auto; border:1px solid rgba(255,253,248,.28); background:transparent; color:var(--paper-0); border-radius:999px; padding:7px 12px; font:700 12px var(--font-sans); cursor:pointer; }
+
+  section{ margin:0 0 56px; padding-top:18px; border-top:1px solid var(--paper-3); scroll-margin-top:84px; }
+  .sec-head{ display:flex; align-items:flex-start; gap:18px; margin-bottom:20px; flex-wrap:wrap; }
+  .sec-head .num{ width:34px; height:34px; border-radius:10px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font:800 16px var(--font-display); flex-shrink:0; }
+  .sec-head h2{ font:800 22px/1.15 var(--font-display); margin:2px 0 4px; letter-spacing:-.015em; }
+  .sec-head p{ margin:0; max-width:72ch; color:var(--text-secondary); font-size:13.5px; line-height:1.5; }
+  .sec-head .txt{ flex:1; min-width:280px; }
+  .pick{ display:flex; gap:6px; align-items:center; flex-shrink:0; margin-top:4px; }
+  .pick span{ font:600 11px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary); margin-right:4px; }
+  .pick button{ border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:7px 12px; font:700 12.5px var(--font-sans); color:var(--text-primary); cursor:pointer; }
+  .pick button[data-on="1"]{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
+  .rail{ display:flex; gap:30px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 12px; min-height:88px; }
+  .caption .tag{ display:inline-flex; align-items:center; gap:7px; font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption .tag b{ width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--font-display); }
+  .caption.now .tag{ color:var(--text-tertiary); }
+  .caption.now .tag b{ background:var(--ink-4); }
+  .caption h3{ font:700 17px/1.2 var(--font-display); margin:8px 0 4px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:12.5px; color:var(--text-secondary); line-height:1.45; }
+  .caption .try{ margin-top:6px; font:500 11px/1.4 var(--font-mono); color:var(--accent-strong); }
+  .col.now .phone{ filter:saturate(.85); }
+
+  /* phone */
+  .phone{ width:390px; height:720px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .scroll::-webkit-scrollbar{ width:0; }
+  .pad{ padding:6px 20px 96px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; flex-shrink:0; gap:8px; }
+  .apphead .ttl{ font:700 17px/1.1 var(--font-display); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .apphead .back{ width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); font-size:18px; cursor:pointer; }
+  .apphead .kick{ display:block; margin-bottom:3px; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:2px; }
+  .hicons{ display:flex; align-items:center; gap:4px; }
+  .hicon{ width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); font-size:17px; cursor:pointer; position:relative; }
+  .hicon .dot{ position:absolute; top:6px; right:7px; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+  .avatar{ width:30px; height:30px; border-radius:50%; background:var(--accent-quiet); color:var(--accent-strong); font:700 11px/1 var(--font-mono); display:grid; place-items:center; cursor:pointer; flex-shrink:0; }
+  .avatar.lg{ width:52px; height:52px; font-size:16px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .kick{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px; color:var(--text-tertiary); }
+  .kick.acc{ color:var(--accent-strong); }
+  .kick.form{ color:var(--amber-600); }
+  .kick.live{ color:var(--status-live); }
+  .kick .d{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  /* chips + week */
+  .chips{ display:flex; gap:8px; padding:6px 20px 12px; flex-shrink:0; }
+  .chip{ flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px; border-radius:999px; border:1px solid var(--border-hairline); background:var(--bg-surface);
+    font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; position:relative; }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .chip[data-on="1"]{ background:var(--ink-0); color:var(--paper-0); border-color:var(--ink-0); }
+  .chip[data-on="1"] .n{ color:var(--paper-3); }
+  .chip.ico{ flex:0 0 42px; padding:8px 0; }
+  .chip .rdot{ position:absolute; top:-2px; right:2px; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+  .wk{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:6px 0 4px; }
+  .wk button{ border:0; background:transparent; border-radius:12px; padding:7px 0 6px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+  .wk .l{ font:600 10px/1 var(--font-mono); color:var(--text-tertiary); letter-spacing:.06em; }
+  .wk .n{ font:600 13.5px/1 var(--font-sans); color:var(--text-primary); }
+  .wk button.past .n{ color:var(--ink-4); }
+  .wk i{ width:5px; height:5px; border-radius:50%; background:var(--amber); }
+  .wk button.has i{ background:var(--accent); }
+  .wk button.today{ background:var(--ink-0); }
+  .wk button.today .l{ color:var(--paper-3); } .wk button.today .n{ color:var(--paper-0); }
+  .glbl{ display:flex; align-items:baseline; gap:8px; font:600 11px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); margin:14px 2px 6px; }
+  .glbl .c{ margin-left:auto; color:var(--status-live); }
+  .ag{ background:var(--paper-1); border-radius:14px; padding:12px; }
+  .ag .top{ display:flex; gap:12px; align-items:flex-start; }
+  .agt{ font:500 12px/1.3 var(--font-mono); color:var(--text-secondary); width:44px; flex-shrink:0; padding-top:2px; }
+  .agm{ flex:1; min-width:0; }
+  .ag .t{ font:700 16px/1.2 var(--font-display); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ag .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ag .meta{ display:flex; justify-content:space-between; margin-top:10px; font:600 10px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--text-tertiary); }
+  .ag .meta.bad{ color:var(--carnelian-400); }
+  .agacts{ margin-top:9px; }
+
+  /* faces */
+  .faces{ display:inline-flex; flex-shrink:0; }
+  .faces i{ width:24px; height:24px; border-radius:50%; background:var(--bg-sunken); border:2px solid var(--bg-surface); margin-left:-7px; font:700 8.5px/1 var(--font-mono); font-style:normal; display:grid; place-items:center; color:var(--text-secondary); }
+  .faces i:first-child{ margin-left:0; }
+  .faces i.me{ background:var(--accent-quiet); color:var(--accent-strong); }
+  .member{ display:inline-flex; flex-direction:column; align-items:center; width:60px; gap:6px; font-size:12px; color:var(--text-secondary); }
+  .member i{ width:48px; height:48px; border-radius:50%; background:var(--bg-sunken); font:700 14px/1 var(--font-mono); font-style:normal; display:grid; place-items:center; color:var(--text-secondary); }
+  .member i.me{ background:var(--accent-quiet); color:var(--accent-strong); }
+
+  /* cards + buttons */
+  .card{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:14px 15px; margin-top:12px; }
+  .card.sunken{ background:var(--bg-sunken); border-color:transparent; }
+  .card.acc{ border-color:var(--accent-quiet); }
+  .card.hot{ border-color:var(--accent); }
+  .card h4{ font:700 15px/1.2 var(--font-display); margin:4px 0 0; }
+  .card p{ margin:6px 0 0; font-size:12.5px; color:var(--text-secondary); line-height:1.45; }
+  .card .big{ font:700 16px/1.25 var(--font-display); margin-top:6px; color:var(--text-primary); }
+  .btn{ margin-top:11px; width:100%; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:12px; padding:9px; font-size:13.5px; font-weight:700; color:var(--text-primary); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .btn.p{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.ghost{ border-color:transparent; color:var(--text-secondary); }
+  .btn.hype{ background:linear-gradient(90deg,#b31b1b,#e88a2a); border:0; color:#fff; }
+  .btn.sm{ padding:7px 10px; font-size:12.5px; width:auto; margin-top:0; }
+  .actions{ display:flex; gap:8px; margin-top:12px; }
+  .actions .btn{ margin-top:0; flex:1; min-width:0; }
+  .row2{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .banner{ margin-top:12px; background:var(--accent-quiet); border-radius:14px; padding:12px 14px; font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .banner.q{ background:var(--paper-1); font-weight:500; font-size:12.5px; color:var(--text-secondary); }
+  .banner .go{ margin-left:auto; color:var(--text-tertiary); }
+  .stat3{ display:flex; justify-content:space-between; margin-top:14px; padding-top:12px; border-top:1px solid var(--border-hairline); }
+  .stat3 div b{ display:block; font:500 18px/1 var(--font-mono); }
+  .stat3 div span{ font-size:11px; color:var(--text-tertiary); }
+  .stat3 div.hi b{ color:var(--accent-strong); }
+  .strike{ position:relative; }
+  .strike::after{ content:''; position:absolute; inset:-4px; border:2px dashed var(--carnelian-400); border-radius:16px; pointer-events:none; }
+  .strike::before{ content:attr(data-why); position:absolute; top:-11px; right:8px; background:var(--carnelian-400); color:#fff; font:700 9.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:4px 7px; border-radius:999px; z-index:2; }
+  .note{ margin-top:10px; font:500 11px/1.4 var(--font-mono); color:var(--accent-strong); }
+
+  /* popover */
+  .scrim{ position:absolute; inset:0; background:rgba(31,26,23,.18); z-index:6; }
+  .pop{ position:absolute; top:58px; right:14px; width:262px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:8px; z-index:7; box-shadow:0 24px 50px -20px rgba(80,40,30,.45); }
+  .pop .who{ display:flex; gap:10px; align-items:center; padding:8px 8px 10px; }
+  .pop .who b{ display:block; font:700 15px/1.1 var(--font-display); }
+  .pop .who span{ display:block; font-size:12px; color:var(--text-secondary); margin-top:3px; }
+  .pop .who em{ display:block; font:500 11px/1 var(--font-mono); font-style:normal; color:var(--text-tertiary); margin-top:3px; }
+  .pop hr{ border:0; border-top:1px solid var(--border-hairline); margin:4px 0; }
+  .pop .item{ display:flex; align-items:center; gap:10px; padding:9px 8px; font-size:13.5px; font-weight:600; border-radius:10px; cursor:pointer; }
+  .pop .item .go{ margin-left:auto; color:var(--text-tertiary); }
+  .pop .item small{ font-weight:500; color:var(--text-tertiary); font-size:11px; }
+  .pop .sect{ padding:6px 8px 8px; }
+  .seg{ display:flex; background:var(--bg-sunken); border-radius:12px; padding:3px; gap:2px; margin-top:6px; }
+  .seg button{ flex:1; min-width:0; border:0; background:transparent; border-radius:9px; padding:8px 2px; font-size:11.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; white-space:nowrap; }
+  .seg button[data-on="1"]{ background:var(--bg-surface); color:var(--text-primary); box-shadow:0 1px 3px rgba(80,40,30,.12); }
+  .pop .foot{ padding:6px 8px 4px; font-size:11px; color:var(--text-tertiary); }
+
+  /* search overlay + tiles */
+  .search{ display:flex; align-items:center; gap:10px; margin:6px 20px 0; }
+  .search .field{ flex:1; display:flex; align-items:center; gap:8px; background:var(--bg-sunken); border-radius:14px; padding:10px 13px; font:500 14.5px var(--font-sans); }
+  .search .field .caret{ width:2px; height:16px; background:var(--accent); animation:blink 1s steps(2) infinite; }
+  @keyframes blink{ to{ opacity:0; } }
+  .search .x{ font-size:12.5px; font-weight:700; color:var(--accent-strong); cursor:pointer; }
+  .fxbar{ display:flex; align-items:center; gap:8px; margin:10px 20px 0; padding:9px 12px; border:1px solid var(--border-hairline); border-radius:12px; font-size:13px; font-weight:600; }
+  .fxbar .n{ margin-left:auto; font:500 12px var(--font-mono); color:var(--text-tertiary); }
+  .sech{ display:flex; align-items:center; gap:7px; margin:16px 20px 10px; }
+  .sech h5{ font:700 14px/1 var(--font-display); margin:0; }
+  .sech .c{ margin-left:auto; font:500 11px var(--font-mono); color:var(--text-tertiary); }
+  .tiles{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 20px; }
+  .tile{ border:1px solid var(--border-hairline); border-radius:16px; padding:12px; background:var(--bg-surface); position:relative; }
+  .tile.focus{ outline:2px solid var(--ink-0); outline-offset:2px; }
+  .tile.mine{ border-color:var(--accent-quiet); background:color-mix(in srgb,var(--accent-quiet) 45%,var(--bg-surface)); }
+  .tile .t{ font:700 14px/1.2 var(--font-display); min-height:34px; }
+  .tile .ring{ width:34px; height:34px; border-radius:50%; margin-top:6px; display:grid; place-items:center; font:500 9.5px var(--font-mono); background:conic-gradient(var(--amber) calc(var(--p)*360deg), var(--bg-sunken) 0); position:relative; }
+  .tile .ring::before{ content:''; position:absolute; inset:4px; border-radius:50%; background:var(--bg-surface); }
+  .tile .ring b{ position:relative; font-weight:500; }
+  .tile.mine .ring{ background:conic-gradient(var(--accent) calc(var(--p)*360deg), var(--bg-sunken) 0); }
+  .tile .s{ font:500 10.5px/1.3 var(--font-mono); color:var(--text-tertiary); margin-top:6px; }
+  .tile .want{ margin-top:8px; width:100%; border:1px solid var(--border-hairline); background:var(--bg-surface); border-radius:999px; padding:6px; font:700 11.5px var(--font-sans); color:var(--accent-strong); cursor:pointer; }
+  .tile .want.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tile .want.seed{ background:transparent; color:var(--text-tertiary); border-style:dashed; cursor:default; }
+  .ghost{ margin:14px 20px 0; text-align:center; }
+  .ghost button{ border:0; background:transparent; font:700 12.5px var(--font-sans); color:var(--accent-strong); cursor:pointer; }
+  .keyhint{ margin:12px 22px 0; font:500 11px/1.4 var(--font-mono); color:var(--text-tertiary); }
+  .keyhint kbd{ font:600 10px var(--font-mono); border:1px solid var(--border-hairline); border-radius:5px; padding:1px 5px; color:var(--text-secondary); background:var(--bg-surface); }
+
+  /* toast */
+  .toast{ position:absolute; left:20px; right:20px; top:64px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; z-index:9; display:flex; gap:10px; align-items:flex-start; }
+  .toast b{ display:block; font:700 13.5px var(--font-display); }
+  .toast span{ color:var(--paper-3); }
+
+  /* alerts */
+  .alert{ background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:18px; padding:14px; margin-top:10px; }
+  .alert.unread{ border-color:var(--accent); }
+  .alert .l{ display:flex; gap:12px; align-items:center; font-size:14.5px; line-height:1.35; }
+  .alert .ic{ width:42px; height:42px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; font-size:18px; background:var(--accent-quiet); color:var(--accent-strong); }
+  .alert .ic.amb{ background:color-mix(in srgb,var(--amber) 16%,var(--bg-surface)); color:var(--amber-600); }
+  .alert .ic.live{ background:color-mix(in srgb,var(--status-live) 16%,var(--bg-surface)); color:var(--status-live); }
+  .alert .m{ color:var(--text-secondary); }
+  .alert .acts{ display:flex; gap:10px; align-items:center; margin-top:10px; }
+  .alert .acts small{ font-size:11.5px; color:var(--text-tertiary); }
+  .wrapped{ margin-top:22px; }
+  .wrapped h5{ font:700 14px/1 var(--font-display); margin:0 0 4px; }
+  .wrapped p{ margin:0 0 8px; font-size:12px; color:var(--text-secondary); }
+  .wcard{ background:var(--bg-sunken); border-radius:16px; padding:12px 14px; margin-top:8px; }
+  .wcard .t{ font:600 13.5px var(--font-sans); display:flex; gap:8px; align-items:center; }
+  .wcard .pill{ font:700 9.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:3px 7px; border-radius:999px; background:var(--bg-surface); color:var(--text-tertiary); }
+  .wcard .s{ font-size:11.5px; color:var(--text-tertiary); margin-top:4px; }
+  .wcard .f{ display:flex; justify-content:space-between; align-items:center; margin-top:9px; padding-top:9px; border-top:1px solid var(--border-hairline); font:500 11px var(--font-mono); color:var(--text-tertiary); }
+  .wcard .f .lk{ font:700 12.5px var(--font-sans); color:var(--accent-strong); margin-left:14px; }
+
+  /* composer sheet */
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--bg-surface); border-radius:26px 26px 0 0; padding:12px 20px 24px; z-index:12; box-shadow:0 -20px 50px -20px rgba(80,40,30,.4); transform:translateY(105%); transition:transform .4s var(--ease-settle); }
+  .sheet[data-open="1"]{ transform:none; }
+  .sheet .grab{ width:40px; height:4px; border-radius:999px; background:var(--paper-3); margin:0 auto 12px; }
+  .sheet h4{ font:800 20px/1.1 var(--font-display); margin:6px 0 10px; }
+  .ic-field{ border:1.5px solid var(--accent); border-radius:16px; padding:12px 14px; font-size:15px; line-height:1.7; min-height:76px; }
+  .ic-chip{ display:inline-flex; align-items:center; gap:4px; background:var(--accent-quiet); color:var(--accent-strong); border-radius:999px; padding:2px 9px; font-weight:600; font-size:13.5px; }
+  .ic-chip.amb{ background:color-mix(in srgb,var(--amber) 16%,var(--bg-surface)); color:var(--amber-600); }
+  .ic-hint{ font-size:12px; color:var(--text-tertiary); margin-top:8px; }
+  .compat{ display:flex; gap:12px; align-items:center; margin-top:12px; background:var(--paper-1); border-radius:14px; padding:12px; }
+  .compat b{ font:800 28px/1 var(--font-display); color:var(--accent-strong); }
+  .compat span{ font-size:12.5px; color:var(--text-secondary); line-height:1.4; }
+
+  /* fixes table */
+  .fixes{ margin:0 20px; }
+  .fix{ padding:14px 0; border-top:1px solid var(--border-hairline); }
+  .fix:first-child{ border-top:0; }
+  .fix .k{ font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:8px; }
+  .fix .pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .fix .cell{ border-radius:12px; padding:10px 11px; font-size:12.5px; line-height:1.45; }
+  .fix .cell.bad{ background:color-mix(in srgb,var(--carnelian-400) 9%,var(--bg-surface)); color:var(--carnelian-600); }
+  .fix .cell.good{ background:color-mix(in srgb,var(--status-live) 10%,var(--bg-surface)); color:#2a6a47; }
+  .fix .cell em{ display:block; font:600 9.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px; opacity:.7; font-style:normal; }
+  .fix .cell code{ font:500 11.5px var(--font-mono); }
+
+  .fab{ position:absolute; right:18px; bottom:76px; width:52px; height:52px; border-radius:18px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font:500 26px/1 var(--font-sans); box-shadow:0 12px 26px -10px rgba(179,27,27,.65); cursor:pointer; z-index:3; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:62px; background:var(--bg-surface); border-top:1px solid var(--border-hairline); display:flex; align-items:center; z-index:2; }
+  .tabbar div{ flex:1; text-align:center; font:600 10px/1.6 var(--font-sans); color:var(--text-tertiary); cursor:pointer; position:relative; }
+  .tabbar div.on{ color:var(--accent); }
+  .tabbar div .g{ font-size:17px; display:block; }
+  .tabbar div .b{ position:absolute; top:-2px; left:calc(50% + 6px); font:700 7.5px var(--font-mono); background:var(--accent); color:#fff; border-radius:999px; padding:2px 4px; }
+  .tabbar.two div{ flex:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · UX review · redundancy cuts</div>
+    <h1>Six places the app says the same thing twice.</h1>
+    <p>Each section is one decision. The grey frame is what ships today, opened in the state that shows the overlap. The red frames are the cut. Tap a pick per section; the bar keeps your choices.</p>
+  </div>
+
+  <div class="picks" id="picks"></div>
+
+  <!-- ============ 1 · IDENTITY & SETTINGS ============ -->
+  <section id="s1">
+    <div class="sec-head">
+      <div class="num">1</div>
+      <div class="txt">
+        <h2>Identity and settings live in two places</h2>
+        <p>The avatar popover shows name, floor, major, year, a "Your profile" link and the theme switch. The You tab shows the same four facts again, a stats strip that mirrors the Home chips, and a second theme control. Splash has a third theme button. One home for "who I am and what I can change".</p>
+      </div>
+      <div class="pick" data-sec="1"><span>Pick</span><button data-v="A">A</button><button data-v="B">B</button></div>
+    </div>
+    <div class="rail">
+      <div class="col now">
+        <div class="caption now"><div class="tag"><b>0</b>Now</div><h3>You tab with the popover open</h3><p>Name and floor appear three times on one screen. Stats jump to Home chips. Theme twice. "Your profile" points at the screen you're already on.</p></div>
+        <div class="phone" id="p1-now"></div>
+      </div>
+      <div class="col">
+        <div class="caption"><div class="tag"><b>A</b>Popover only</div><h3>Delete the You tab</h3><p>The avatar is the account. Popover holds identity, Dana, Report a concern, private-notes note, theme. Tab bar becomes Home · Class (RA/TA keep their third tab).</p><div class="try">try: tap the avatar</div></div>
+        <div class="phone" id="p1-a"></div>
+      </div>
+      <div class="col">
+        <div class="caption"><div class="tag"><b>B</b>You tab only</div><h3>Delete the popover</h3><p>Avatar tap opens You. You = identity, Dana, safety, private notes, theme. No stats strip (that's the chip row). Splash loses its theme button too.</p><div class="try">try: tap the avatar</div></div>
+        <div class="phone" id="p1-b"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · ALERTS ============ -->
+  <section id="s2">
+    <div class="sec-head">
+      <div class="num">2</div>
+      <div class="txt">
+        <h2>Alerts repeats the Past chip and keeps asking you to join a loop you're in</h2>
+        <p>Every wrapped loop is listed on the Past chip with "Rate it", then again at the bottom of Alerts with "Rate it" and "Start the next one" (just the compose sheet). And after Sarah joins a fired loop, the "fired, Join?" card stays. Dana sees the students' wrapped loops with student actions.</p>
+      </div>
+      <div class="pick" data-sec="2"><span>Pick</span><button data-v="A">A</button><button data-v="keep">Keep</button></div>
+    </div>
+    <div class="rail">
+      <div class="col now">
+        <div class="caption now"><div class="tag"><b>0</b>Now</div><h3>Sarah's Alerts after joining the boxing crew</h3><p>Still offered "Join". Below it, three wrapped loops she already sees under Past.</p></div>
+        <div class="phone" id="p2-now"></div>
+      </div>
+      <div class="col">
+        <div class="caption"><div class="tag"><b>A</b>Alerts are events</div><h3>Every card is something that happened</h3><p>Fired card resolves to "You joined" once she's in. A wrapped loop shows up once as an event ("Prelim 1 review wrapped · Rate it"), not as a list. Nothing on Alerts that is also a chip. Staff get no bell.</p></div>
+        <div class="phone" id="p2-a"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · SEARCH ENTER ============ -->
+  <section id="s3">
+    <div class="sec-head">
+      <div class="num">3</div>
+      <div class="txt">
+        <h2>Two composers, and the search box commits on Enter</h2>
+        <p>The + FAB opens the chip composer and lands on the Floor. Typing in 🔍 and pressing Enter drops the raw text through a second parser and lands on Waiting. Today, "coffee" + Enter silently added Sarah's yes to the Monday coffee anchor with a match visible on screen.</p>
+      </div>
+      <div class="pick" data-sec="3"><span>Pick</span><button data-v="A">A</button><button data-v="keep">Keep</button></div>
+    </div>
+    <div class="rail">
+      <div class="col now">
+        <div class="caption now"><div class="tag"><b>0</b>Now</div><h3>Typed "coffee", pressed Enter</h3><p>The match was right there. Enter dropped anyway, closed search, and moved her to Waiting.</p></div>
+        <div class="phone" id="p3-now"></div>
+      </div>
+      <div class="col">
+        <div class="caption"><div class="tag"><b>A</b>Search only searches</div><h3>Enter focuses the first tile. Drop opens the one composer.</h3><p>The tile's own button is the only yes. "Not it? Drop 'coffee'" opens the same chip composer the FAB does, prefilled with @coffee, so there is one parser and one landing (the Floor).</p><div class="try">try: tap "Drop 'coffee'"</div></div>
+        <div class="phone" id="p3-a"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · LOOP DETAIL ============ -->
+  <section id="s4">
+    <div class="sec-head">
+      <div class="num">4</div>
+      <div class="txt">
+        <h2>Loop detail: two shares, two safety entries, and the row's action again</h2>
+        <p>Header share icon and "Drop this loop to a friend" open the same sheet. "Report a safety concern" sits on every loop but carries no loop (same as the You-tab button). Hype / I'm here is on the week row and again in the "This week" card. "You're in this loop" is a banner next to a Leave button.</p>
+      </div>
+      <div class="pick" data-sec="4"><span>Pick</span><button data-v="A">A</button><button data-v="B">B</button></div>
+    </div>
+    <div class="rail">
+      <div class="col now">
+        <div class="caption now"><div class="tag"><b>0</b>Now</div><h3>Detail, scrolled to the action stack</h3><p>Hype (again), Message the crew, You're in, Drop to a friend, Leave, Report a concern. Plus the share icon up top.</p></div>
+        <div class="phone" id="p4-now"></div>
+      </div>
+      <div class="col">
+        <div class="caption"><div class="tag"><b>A</b>Row acts, detail informs</div><h3>Detail has one share and one leave</h3><p>"This week" card is a fact block: when, where, who's here, crew hype as a read-out. Hype / I'm here stay on the week row only. Share is the header icon. Safety moves to the account popover (with an optional "about this loop" on the sheet).</p></div>
+        <div class="phone" id="p4-a"></div>
+      </div>
+      <div class="col">
+        <div class="caption"><div class="tag"><b>B</b>Detail acts, row is a tap</div><h3>Week rows lose their button</h3><p>The row becomes time · title · faces, tap to open. Detail keeps I'm here / Hype and Message the crew in the "This week" card. Same single share and single leave as A.</p></div>
+        <div class="phone" id="p4-b"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · STAFF SELF-SEED ============ -->
+  <section id="s5">
+    <div class="sec-head">
+      <div class="num">5</div>
+      <div class="txt">
+        <h2>Josh can want his own seed, and gets a permanent card about it</h2>
+        <p>An RA seed is a forming anchor. It shows in Josh's own 🔍 as "I want this too", so he can count toward it. His Home also pins a "You seeded this loop" card for the Sunday HW crew that sits two rows below and again as YOURS on Class.</p>
+      </div>
+      <div class="pick" data-sec="5"><span>Pick</span><button data-v="A">A</button><button data-v="keep">Keep</button></div>
+    </div>
+    <div class="rail">
+      <div class="col now">
+        <div class="caption now"><div class="tag"><b>0</b>Now</div><h3>Josh's 🔍 right after seeding</h3><p>His seed is the first tile with a yes button. Behind the overlay, Home carries "You seeded this loop".</p></div>
+        <div class="phone" id="p5-now"></div>
+      </div>
+      <div class="col">
+        <div class="caption"><div class="tag"><b>A</b>Seeds are provenance, not options</div><h3>Your own seed reads as a count you can open, never want</h3><p>Tile shows "seeded by you · 6/8" with no button. The Home card is gone; the Floor tab already says "Seeded · open it". Class keeps the quiet YOURS badge.</p></div>
+        <div class="phone" id="p5-a"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · STATE FIXES ============ -->
+  <section id="s6">
+    <div class="sec-head">
+      <div class="num">6</div>
+      <div class="txt">
+        <h2>Copy that contradicts itself on one card</h2>
+        <p>Not design choices, just fixes. Listed so they don't get lost. No pick needed.</p>
+      </div>
+      <div class="pick" data-sec="6"><span>Pick</span><button data-v="fix">Fix all</button></div>
+    </div>
+    <div class="rail">
+      <div class="col">
+        <div class="caption"><div class="tag"><b>!</b>Before / after</div><h3>Four contradictions seen while walking</h3><p>Each pair is one card as it renders today and the line that replaces it.</p></div>
+        <div class="phone" id="p6"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------- shared bits ---------- */
+const q = (s, r=document) => r.querySelector(s);
+const status = () => `<div class="status"><span>9:41</span><span>5G ▮</span></div>`;
+const tabbar = (on='home', opts={}) => {
+  const tabs = [['home','◉','Home'],['class','◈','Class']];
+  if (opts.staff) tabs.push(['staff', opts.staff.g, opts.staff.l, opts.staff.b]);
+  if (!opts.noYou) tabs.push(['you','○','You']);
+  return `<div class="tabbar">${tabs.map(([k,g,l,b])=>`<div class="${on===k?'on':''}"><span class="g">${g}</span>${l}${b?`<span class="b">${b}</span>`:''}</div>`).join('')}</div>`;
+};
+const head = (right, left) => `<div class="apphead">${left||'<span class="wordmark">Loop<i></i></span>'}<div class="hicons">${right}</div></div>`;
+const bell = (dot) => `<div class="hicon">🔔${dot?'<span class="dot"></span>':''}</div>`;
+const av = (t='SC') => `<div class="avatar" data-av>${t}</div>`;
+const faces = (arr) => `<span class="faces">${arr.map(f=>`<i class="${f==='SC'||f==='JP'&&false?'me':''}">${f}</i>`).join('')}</span>`;
+const chips = (on='upcoming', counts={u:1,w:0,p:3}) => `<div class="chips"><div class="chip ico">🔍</div><div class="chip" data-on="${on==='upcoming'?1:0}">Your week <span class="n">${counts.u}</span></div><div class="chip" data-on="${on==='waiting'?1:0}">Waiting <span class="n">${counts.w}</span></div><div class="chip" data-on="${on==='past'?1:0}">Past <span class="n">${counts.p}</span>${counts.dot?'<span class="rdot"></span>':''}</div></div>`;
+const week = () => `<div class="wk">${[['M','31','past'],['T','1','past'],['W','2','past has'],['T','3','today'],['F','4',''],['S','5',''],['S','6','']].map(([l,n,c])=>`<button class="${c}"><span class="l">${l}</span><span class="n">${n}</span><i></i></button>`).join('')}</div>`;
+const boxRow = (opts={}) => `<div class="ag"><div class="top"><div class="agt">6:30p</div><div class="agm"><div class="t">Donlon boxing crew</div><div class="s">${opts.sub || 'Teagle gym · 5 in · 4-wk streak · Wed'}</div></div>${faces(['RC','MD','JP','LO','SC'])}</div>${opts.meta!==false?`<div class="meta ${opts.bad?'bad':''}"><span>${opts.metaL || 'next Wed · 6d 16h'}</span><span>crew hype 🔥🔥🔥🔥</span></div>`:''}${opts.act!==false?`<div class="agacts"><button class="btn hype" style="margin-top:0">🔥 LET’S GO ▮▮▮▮▮</button></div>`:''}</div>`;
+
+/* ---------- 1 · identity ---------- */
+const popNow = `<div class="scrim" data-close></div><div class="pop">
+  <div class="who">${av('SC').replace('data-av','')}<div><b>Sarah Chen</b><span>Donlon 2F · CS</span><em>Class of 2029</em></div></div>
+  <hr><div class="item">○ Your profile <span class="go">›</span></div>
+  <hr><div class="sect"><span class="kick">Theme</span><div class="seg"><button data-on="1">☀ Daylight</button><button>☾ Big Red Night</button></div></div>
+  <div class="foot">Loop never shows anyone your activity.</div></div>`;
+q('#p1-now').innerHTML = `${status()}${head(bell()+av('SC'), '<div><span class="kick">You</span><div class="ttl" style="font-size:19px">Sarah Chen</div></div>')}
+<div class="scroll"><div class="pad">
+  <div style="display:flex;gap:12px;align-items:center;margin-top:6px">${av('SC').replace('class="avatar"','class="avatar lg"')}<div><div style="font-size:13px;color:var(--text-secondary)">Donlon 2F · CS</div><div class="mono" style="font-size:12px;color:var(--text-tertiary);margin-top:2px">Class of 2029</div></div></div>
+  <div class="stat3 strike" data-why="= home chips"><div><b>1</b><span>loops running</span></div><div><b>0</b><span>intents waiting</span></div><div class="hi"><b>3</b><span>to rate</span></div></div>
+  <div class="card" style="margin-top:22px"><div class="row2"><div style="width:44px;height:44px;border-radius:50%;background:var(--accent-quiet);display:grid;place-items:center">💚</div><div style="flex:1"><div style="font-weight:700;font-size:15px">Dana Okafor</div><div style="font-size:12.5px;color:var(--text-secondary)">your Loop counselor · Advising & Wellbeing</div></div></div><div class="mono" style="font-size:12px;color:var(--text-tertiary);margin-top:10px">Walk-ins Tue + Thu · 2–4p</div><div class="actions"><button class="btn">💬 Message Dana</button><button class="btn">🛡 Report a concern</button></div></div>
+  <div class="card sunken"><span class="kick">○ Private notes</span><p>Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.</p></div>
+  <div class="card strike" data-why="theme again" style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:14px">☾ Big Red Night</span><span class="kick">theme</span></div>
+</div></div>${popNow}${tabbar('you')}`;
+
+const popA = `<div class="scrim" data-close></div><div class="pop">
+  <div class="who">${av('SC').replace('data-av','')}<div><b>Sarah Chen</b><span>Donlon 2F · CS · Class of 2029</span></div></div>
+  <hr><div class="item">💚 Dana Okafor <small>counselor · Tue + Thu 2–4p</small><span class="go">›</span></div>
+  <div class="item">🛡 Report a concern <span class="go">›</span></div>
+  <hr><div class="sect"><span class="kick">Theme</span><div class="seg"><button data-on="1">☀ Daylight</button><button>☾ Big Red Night</button></div></div>
+  <div class="foot">Your notes on people and loops stay on this phone. Loop never shows anyone your activity.</div></div>`;
+const homeA = (extra='') => `${status()}${head(bell()+av('SC'))}${chips()}<div class="scroll"><div class="pad">${week()}<div class="glbl">Wed 9 <span class="c">next up</span></div>${boxRow()}</div></div><div class="fab">+</div>${extra}`;
+const p1a = q('#p1-a');
+p1a.innerHTML = homeA(popA + tabbar('home', { noYou:true }));
+p1a.addEventListener('click', e => { if (e.target.closest('[data-close]')) { q('.scrim',p1a).remove(); q('.pop',p1a).remove(); } else if (e.target.closest('[data-av]') && !q('.pop',p1a)) { p1a.insertAdjacentHTML('beforeend', popA); } });
+
+const youB = `${status()}${head(bell()+av('SC'), '<div class="back">‹</div><div class="ttl">You</div>')}
+<div class="scroll"><div class="pad">
+  <div style="display:flex;gap:12px;align-items:center;margin-top:6px">${av('SC').replace('class="avatar"','class="avatar lg"')}<div><div style="font:700 17px var(--font-display)">Sarah Chen</div><div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Donlon 2F · CS · Class of 2029</div></div></div>
+  <div class="card" style="margin-top:18px"><div class="row2"><div style="width:44px;height:44px;border-radius:50%;background:var(--accent-quiet);display:grid;place-items:center">💚</div><div style="flex:1"><div style="font-weight:700;font-size:15px">Dana Okafor</div><div style="font-size:12.5px;color:var(--text-secondary)">your Loop counselor · Tue + Thu 2–4p</div></div></div><div class="actions"><button class="btn">💬 Message Dana</button><button class="btn">🛡 Report a concern</button></div></div>
+  <div class="card sunken"><span class="kick">○ Private notes</span><p>Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.</p></div>
+  <div class="card" style="padding:12px 15px"><span class="kick">Theme</span><div class="seg"><button data-on="1">☀ Daylight</button><button>☾ Big Red Night</button></div></div>
+  <div class="note">no stats strip · no popover · no splash toggle</div>
+</div></div>${tabbar('you')}`;
+const p1b = q('#p1-b');
+p1b.innerHTML = homeA(tabbar('home'));
+p1b.addEventListener('click', e => { if (e.target.closest('[data-av]')) p1b.innerHTML = youB; else if (e.target.closest('.back')) p1b.innerHTML = homeA(tabbar('home')); });
+
+/* ---------- 2 · alerts ---------- */
+const wrappedList = `<div class="wrapped strike" data-why="= past chip"><h5>⟳ Wrapped loops</h5><p>Loops end on their own when the reason does — the crew stays yours.</p>
+  ${[['Prelim 1 review','wrapped after the exam · 5 sessions','2 weeks ago',['JP','LO','MD','PR']],['HW1 grind','ran its course · 3 sessions','3 weeks ago',['JP','SC','LO']],['Move-in week dinner crew','wrapped after O-week · 4 sessions','last month',['SC','LO','MI']]].map(([t,s,w,f])=>`<div class="wcard"><div class="row2"><div><div class="t">${t} <span class="pill">wrapped</span></div><div class="s">${s} · same faces</div></div>${faces(f)}</div><div class="f"><span>${w}</span><span><span class="lk">👍 Rate it</span><span class="lk">+ Start the next one</span></span></div></div>`).join('')}</div>`;
+q('#p2-now').innerHTML = `${status()}${head('', '<div class="back">‹</div><div class="ttl">Alerts</div>')}<div class="scroll"><div class="pad" style="padding-top:10px">
+  <div class="alert unread strike" data-why="already joined"><div class="l"><div class="ic amb">⚡</div><div><b>Donlon boxing crew</b> fired — 10 said yes. <span class="m">It’s on. Join?</span></div></div><div class="acts"><button class="btn p sm">+ Join · add to your week</button></div></div>
+  ${wrappedList}
+</div></div>`;
+q('#p2-a').innerHTML = `${status()}${head('', '<div class="back">‹</div><div class="ttl">Alerts</div>')}<div class="scroll"><div class="pad" style="padding-top:10px">
+  <div class="alert"><div class="l"><div class="ic live">✓</div><div>You joined the <b>Donlon boxing crew</b>. <span class="m">Wed · 6:30p · Teagle gym.</span></div></div><div class="acts"><button class="btn sm">Open</button><small>10 said yes · you’re one of them</small></div></div>
+  <div class="alert unread"><div class="l"><div class="ic">${'<span style="font:700 14px var(--font-mono)">JP</span>'}</div><div><b>Josh</b> <span class="m">(Donlon RA · CS 2110)</span> joined your <b>Sunday HW crew</b>.</div></div><div class="acts"><button class="btn sm">👋 Say hi</button></div></div>
+  <div class="alert"><div class="l"><div class="ic">⟳</div><div><b>Prelim 1 review</b> wrapped after the exam. <span class="m">How was it?</span></div></div><div class="acts"><button class="btn p sm">👍 Rate the loop</button><small>Private · only you see it</small></div></div>
+  <div class="alert"><div class="l"><div class="ic">🌱</div><div><span class="m">Donlon RA (Josh) is hosting</span> <b>Prelim-week snack night</b> · Wed Oct 8 · 8p. <span class="m">It’s on your Home if you want in.</span></div></div></div>
+  <div class="note">no list at the bottom · wrapped loops live under Past · Dana has no bell</div>
+</div></div>`;
+
+/* ---------- 3 · search enter ---------- */
+const tile = (t, p, lbl, s, btn, cls='') => `<div class="tile ${cls}"><div class="t">${t}</div><div class="ring" style="--p:${p}"><b>${lbl}</b></div><div class="s">${s}</div>${btn}</div>`;
+q('#p3-now').innerHTML = `${status()}<div class="toast"><span>◎</span><div><b>Dropped.</b><span>coffee is counting. We’ll tell you when it fires.</span></div></div>${head(bell()+av('SC'))}${chips('waiting',{u:1,w:1,p:3})}<div class="scroll"><div class="pad">
+  <p style="font-size:12px;color:var(--text-secondary);margin:6px 0 10px"><b style="color:var(--text-primary)">Said yes, not enough people yet.</b> When it fires you’re asked to join and it moves to Your week.</p>
+  <div class="card strike" data-why="enter = yes" style="margin-top:6px"><div class="row2"><div class="ring" style="--p:.66;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:500 9.5px var(--font-mono);background:conic-gradient(var(--accent) 240deg,var(--bg-sunken) 0);position:relative"><span style="position:absolute;inset:4px;border-radius:50%;background:var(--bg-surface)"></span><b style="position:relative;font-weight:500">4/6</b></div><div style="flex:1"><div style="font-weight:600;font-size:14px">coffee</div><div class="mono" style="font-size:11.5px;color:var(--text-tertiary);margin-top:2px">weekly · <b style="color:var(--amber-600)">2 more fires it</b> · called in 4d 6h</div></div><span style="color:var(--text-tertiary)">✕</span></div></div>
+  <div class="note">she never tapped a tile. Enter matched "Monday coffee" and said yes for her.</div>
+</div></div><div class="fab">+</div>${tabbar('home')}`;
+
+const p3a = q('#p3-a');
+const composer = `<div class="scrim" data-close></div><div class="sheet" data-open="0" id="sheet3"><div class="grab"></div><span class="kick acc">Drop an intent</span><h4>What are you trying to make happen?</h4>
+  <div class="ic-field">Grabbing <span class="ic-chip">🍜 coffee</span> <span class="ic-chip amb">📅 Mondays</span>, <span class="ic-chip amb">↻ weekly</span> <span class="caret" style="display:inline-block;width:2px;height:16px;background:var(--accent);vertical-align:middle"></span></div>
+  <div class="ic-hint">Write it your way. <b>@</b> pins what fires matching — the rest travels as your note.</div>
+  <div class="compat"><b>3</b><span><b style="font:inherit;color:var(--text-primary)">3 near you</b> want coffee Mondays too — this lands in the Monday coffee anchor, 4 of 6.</span></div>
+  <button class="btn p">➤ Drop it</button></div>`;
+p3a.innerHTML = `${status()}<div class="search"><div class="field">🔍 coffee<span class="caret"></span></div><span class="x">Cancel</span></div>
+<div class="fxbar">📍 Donlon 2F · Anything <span class="n">1</span> ▾</div>
+<div class="keyhint"><kbd>↵</kbd> moves focus to the first match · nothing is sent</div>
+<div class="sech"><span class="kick form"><span class="d"></span></span><h5>Wanted near you</h5><span class="c">add your yes</span></div>
+<div class="tiles">${tile('Monday coffee', .5, '3/6', 'Mon 9:00a · called in 4d 6h', '<button class="want">+ I want this too</button>', 'focus')}</div>
+<div class="ghost"><button data-drop>Not it? Drop “coffee” as your own</button></div>
+<div class="note" style="margin:16px 22px 0">the only yes is the tile button · Drop opens the same composer as +</div>
+${composer}`;
+p3a.addEventListener('click', e => { if (e.target.closest('[data-drop]')) { q('#sheet3',p3a).dataset.open='1'; q('.scrim',p3a).style.display='block'; } else if (e.target.closest('[data-close]')) { q('#sheet3',p3a).dataset.open='0'; q('.scrim',p3a).style.display='none'; } });
+q('.scrim',p3a).style.display='none';
+
+/* ---------- 4 · loop detail ---------- */
+const detailHead = (share=true) => head(share?'<div class="hicon">⇪</div>':'', '<div class="back">‹</div><div class="ttl">Donlon boxing crew</div>');
+const rhythm = `<div class="card sunken" style="margin-top:8px"><span class="kick">Rhythm</span><div class="mono" style="font-size:13px;margin-top:8px">⟳ Wed · 6:30p · Teagle gym · weekly</div><div class="mono" style="font-size:12.5px;color:var(--text-secondary);margin-top:6px">◷ next · Wed · 6:30p · Teagle gym</div><button class="btn">📅 Sync to phone calendar</button></div>`;
+const members = `<div class="kick" style="margin-top:18px">5 in this loop</div><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">${[['RC','Ryan'],['MD','Marcus'],['JP','Josh'],['LO','Lydia'],['SC','Sarah · you']].map(([a,n])=>`<span class="member"><i class="${a==='SC'?'me':''}">${a}</i>${n}</span>`).join('')}</div>`;
+q('#p4-now').innerHTML = `${status()}${detailHead(true)}<div class="scroll" id="sc4"><div class="pad" style="padding-top:8px">
+  <span class="kick acc"><span class="d"></span> Donlon 2F · forming</span><br><span class="kick live" style="margin-top:6px;background:color-mix(in srgb,var(--status-live) 14%,transparent);padding:4px 7px;border-radius:999px">running</span>
+  ${rhythm}${members}
+  <div class="card acc"><span class="kick acc">✓ This week · closed</span><div class="big">Wed · 6:30p · Teagle gym</div><p>This week’s already met. The next one is Wed · 6:30p · Teagle gym. Nobody runs it — hype it up and the crew feels it.</p><div class="mono" style="font-size:12px;color:var(--text-secondary);margin-top:8px">crew hype 🔥🔥🔥🔥 · 4 of 5</div>
+    <div class="actions strike" data-why="row does this"><button class="btn hype">🔥 LET’S GO ▮▮▮▮▮</button><button class="btn">💬 Message the crew</button></div></div>
+  <div class="banner">✓ You're in this loop</div>
+  <div class="strike" data-why="share again" style="margin-top:14px"><button class="btn" style="margin-top:0">⇪ Drop this loop to a friend</button></div>
+  <button class="btn ghost">⇥ Leave loop</button>
+  <div class="banner q strike" data-why="= you tab" style="align-items:flex-start;gap:12px"><span style="font-size:18px;color:var(--accent-strong)">🛡</span><div><b style="color:var(--text-primary);font-size:14px">Report a safety concern</b><br>Goes straight to Dana Okafor, your Loop counselor. Confidential — never shown to the loop.</div><span class="go">›</span></div>
+</div></div>`;
+const weekCardInfo = `<div class="card acc"><span class="kick acc">✓ This week · closed</span><div class="big">Wed · 6:30p · Teagle gym</div><p>Already met this week. Next one Wed 6:30p. Nobody runs it; whoever checks in can move it.</p><div class="mono" style="font-size:12px;color:var(--text-secondary);margin-top:8px">crew hype 🔥🔥🔥🔥 · 4 of 5 &nbsp;·&nbsp; Ryan, Lydia were here</div></div>`;
+const stackA = `<button class="btn ghost" style="margin-top:14px">⇥ Leave loop <span style="font-weight:500;color:var(--text-tertiary)">· you’re in since wk 3</span></button><div class="note">share = header icon only · safety = account popover · hype = week row</div>`;
+q('#p4-a').innerHTML = `${status()}${detailHead(true)}<div class="scroll"><div class="pad" style="padding-top:8px">
+  <span class="kick live"><span class="d"></span> Donlon 2F · running</span>${rhythm}${members}${weekCardInfo}${stackA}</div></div>`;
+q('#p4-b').innerHTML = `${status()}${detailHead(true)}<div class="scroll"><div class="pad" style="padding-top:8px">
+  <span class="kick live"><span class="d"></span> Donlon 2F · running</span>${rhythm}${members}
+  <div class="card acc"><span class="kick acc">✓ This week · closed</span><div class="big">Wed · 6:30p · Teagle gym</div><p>Already met this week. Next one Wed 6:30p. Nobody runs it; whoever checks in can move it.</p><div class="mono" style="font-size:12px;color:var(--text-secondary);margin-top:8px">crew hype 🔥🔥🔥🔥 · 4 of 5</div><div class="actions"><button class="btn hype">🔥 LET’S GO ▮▮▮▮▮</button><button class="btn">💬 Message the crew</button></div></div>
+  <button class="btn ghost" style="margin-top:14px">⇥ Leave loop <span style="font-weight:500;color:var(--text-tertiary)">· you’re in since wk 3</span></button>
+  <div class="glbl" style="margin-top:22px">the week row becomes</div>${boxRow({ meta:false, act:false, sub:'Teagle gym · 5 in · 4-wk streak · next Wed' })}
+  <div class="note">row = tap to open · every action lives here</div></div></div>`;
+requestAnimationFrame(()=>{ const s=q('#sc4'); s.scrollTop = s.scrollHeight; });
+
+/* ---------- 5 · staff self-seed ---------- */
+const joshSearch = (mineTile) => `${status()}<div class="search"><div class="field">🔍 <span style="color:var(--text-tertiary)">Search — climbing, dinner, CS 2110…</span></div><span class="x">Cancel</span></div>
+<div class="fxbar">📍 Donlon 2F · Anything <span class="n">5</span> ▾</div>
+<div class="sech"><span class="kick form"><span class="d"></span></span><h5>Wanted near you</h5><span class="c">add your yes</span></div>
+<div class="tiles">${mineTile}${tile('Prelim 1 review', .8, '8/10', 'Wed 7:00p · called in 6d 16h', '<button class="want">+ I want this too</button>')}${tile('CHEM 2070 review', .6, '6/10', 'Tue 8:00p · called in 5d 17h', '<button class="want">+ I want this too</button>')}${tile('MATH 1920 grind', .6, '6/10', 'Mon 7:00p · called in 4d 16h', '<button class="want">+ I want this too</button>')}</div>`;
+q('#p5-now').innerHTML = joshSearch(`<div class="strike" data-why="his own seed">${tile('Helen Newman lift crew', .75, '6/8', 'Tue 7:00p · called in 5d 16h', '<button class="want">+ I want this too</button>')}</div>`) + `<div class="note" style="margin:16px 22px 0">behind this overlay, Home also pins “You seeded this loop · Sunday HW crew”</div>`;
+q('#p5-a').innerHTML = joshSearch(tile('Helen Newman lift crew', .75, '6/8', 'Tue 7:00p · called in 5d 16h', '<button class="want seed">🌱 seeded by you · open</button>', 'mine')) + `<div class="note" style="margin:16px 22px 0">no “You seeded” card on Home · Floor tab keeps “Seeded · open it”</div>`;
+
+/* ---------- 6 · fixes ---------- */
+q('#p6').innerHTML = `${status()}${head('', '<div class="ttl">State fixes</div>')}<div class="scroll"><div class="fixes" style="padding-bottom:30px">
+  <div class="fix"><div class="k">week row · boxing crew</div><div class="pair"><div class="cell bad"><em>now</em>first meet · starts in 6d 16h<br><b>This week’s closed · next Wed</b></div><div class="cell good"><em>after</em>first meet · Wed 9 · in 6d 16h<br><code>firedNow</code> wins over <code>meetPhase</code> until it has met once</div></div></div>
+  <div class="fix"><div class="k">loop detail · kicker</div><div class="pair"><div class="cell bad"><em>now</em>DONLON 2F · FORMING &nbsp;+&nbsp; <b>RUNNING</b> badge</div><div class="cell good"><em>after</em>DONLON 2F · RUNNING<br><code>unit.label</code> rewritten at fire in <code>fireInWorld</code></div></div></div>
+  <div class="fix"><div class="k">seed data · one title, two states</div><div class="pair"><div class="cell bad"><em>now</em>“Prelim 1 review” is forming 8/10 <b>and</b> wrapped after the exam, in the same lists</div><div class="cell good"><em>after</em>wrapped one becomes “Prelim 0 review” or the forming one becomes “Prelim 2 review”<br><code>index.html:675</code> vs <code>:704</code></div></div></div>
+  <div class="fix"><div class="k">week strip vs agenda</div><div class="pair"><div class="cell bad"><em>now</em>strip shows Mon 31 – Sun 6 (Wed 2 is past) while the agenda under it says <b>Wed 9</b></div><div class="cell good"><em>after</em>strip is the next 7 days from today (Thu 3 → Wed 9), so a tap and a label agree</div></div></div>
+  <div class="fix"><div class="k">dead controls</div><div class="pair"><div class="cell bad"><em>now</em>Floor sheet Watch / Remind toggles; RA “See all” no-op; TA “Anchor to office hours” toast-only; <code>addToCalendar</code> unused</div><div class="cell good"><em>after</em>removed. A button that changes nothing is noise on camera.</div></div></div>
+</div></div>`;
+
+/* ---------- picks ---------- */
+const NAMES = { 1:'Identity', 2:'Alerts', 3:'Search', 4:'Loop detail', 5:'Self-seed', 6:'Fixes' };
+const KEY = 'loop.mock.redundancy';
+let picks = {}; try { picks = JSON.parse(localStorage.getItem(KEY)||'{}'); } catch(e){}
+function renderPicks(){
+  const bar = q('#picks');
+  bar.innerHTML = `<span class="lbl">Your picks</span>` + Object.keys(NAMES).map(k=>`<span class="p ${picks[k]?'':'unset'}">${NAMES[k]}<b>${picks[k]||'—'}</b></span>`).join('') + `<button class="copy" id="copyPicks">Copy summary</button>`;
+  document.querySelectorAll('.pick').forEach(p => { const k=p.dataset.sec; p.querySelectorAll('button').forEach(b => b.dataset.on = picks[k]===b.dataset.v ? 1 : 0); });
+  q('#copyPicks').onclick = () => { const t = Object.keys(NAMES).map(k=>`${k}. ${NAMES[k]}: ${picks[k]||'—'}`).join('\n'); navigator.clipboard && navigator.clipboard.writeText(t); q('#copyPicks').textContent='Copied'; setTimeout(()=>q('#copyPicks').textContent='Copy summary',1200); };
+}
+document.querySelectorAll('.pick button').forEach(b => b.addEventListener('click', () => { const k=b.closest('.pick').dataset.sec; picks[k] = picks[k]===b.dataset.v ? null : b.dataset.v; try{ localStorage.setItem(KEY, JSON.stringify(picks)); }catch(e){} renderPicks(); }));
+renderPicks();
+</script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · M1 with faces, and what a tap opens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --amber:#b6862b; --amber-600:#8a641f; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --bg-page:var(--paper-1); --bg-surface:var(--paper-0); --bg-raised:#fffefb; --bg-sunken:var(--paper-2);
+    --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-tertiary:var(--ink-3);
+    --border-hairline:var(--paper-3); --border-strong:var(--ink-0);
+    --accent:var(--carnelian-500); --accent-strong:var(--carnelian-600); --accent-quiet:var(--carnelian-100); --accent-ink:var(--paper-0);
+    --status-live:var(--moss); --status-forming:var(--amber);
+    --cat-class:var(--slate); --cat-fitness:var(--moss); --cat-food:var(--amber-600); --cat-social:var(--rose); --cat-music:var(--violet);
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --ease-settle:cubic-bezier(.16,1,.3,1); --ease-out:cubic-bezier(.2,.8,.2,1);
+    --shadow-card:0 1px 2px rgba(80,40,30,.05),0 4px 14px -10px rgba(80,40,30,.14);
+  }
+  *{ box-sizing:border-box; }
+  button{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 520px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--text-primary); -webkit-font-smoothing:antialiased; padding:40px 24px 80px; }
+  .wrap{ max-width:1360px; margin:0 auto; }
+  .gallery-head{ text-align:center; margin-bottom:30px; }
+  .gallery-head .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .gallery-head h1{ font:800 31px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 8px; }
+  .gallery-head p{ max-width:72ch; margin:0 auto; color:var(--text-secondary); font-size:15px; line-height:1.55; }
+
+  .rail{ display:flex; gap:36px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; }
+  .caption{ margin:0 4px 14px; min-height:118px; }
+  .caption .tag{ font:700 12px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-strong); }
+  .caption h2{ font:700 20px/1.2 var(--font-display); margin:9px 0 5px; letter-spacing:-.01em; }
+  .caption p{ margin:0; font-size:13px; color:var(--text-secondary); line-height:1.5; }
+  .caption .bet{ margin-top:8px; font:500 11.5px/1.45 var(--font-mono); color:var(--accent-strong); }
+
+  .phone{ width:390px; height:780px; background:var(--bg-surface); border:1px solid var(--border-hairline); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:12px 22px 4px; font:600 12px/1 var(--font-mono); color:var(--ink-2); flex-shrink:0; }
+  .body{ flex:1; overflow-y:auto; overflow-x:hidden; padding:0 20px 28px; scrollbar-width:none; }
+  .body::-webkit-scrollbar{ width:0; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+  /* shared shell */
+  .fx-bar{ width:100%; display:flex; align-items:center; gap:9px; padding:10px 12px; border-radius:14px; cursor:pointer;
+    border:1px solid var(--border-hairline); background:var(--bg-surface); color:var(--text-primary); text-align:left; margin-top:4px; }
+  .fx-bar__pin{ color:var(--accent); flex-shrink:0; display:flex; }
+  .fx-bar__lbl{ flex:1; min-width:0; font-weight:700; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fx-bar__lbl i{ font-style:normal; color:var(--text-tertiary); font-weight:600; }
+  .fx-bar__n{ font:400 11.5px/1 var(--font-mono); color:var(--text-tertiary); flex-shrink:0; }
+  .sec{ display:flex; align-items:center; gap:7px; margin:20px 0 4px; }
+  .sec h3{ font:700 14px/1 var(--font-display); margin:0; }
+  .sec .dot{ width:7px; height:7px; border-radius:50%; background:var(--status-forming); flex-shrink:0; }
+  .sec .live{ width:7px; height:7px; border-radius:50%; background:var(--status-live); flex-shrink:0; }
+  .sec .hint{ margin-left:auto; font:400 11px/1 var(--font-mono); color:var(--text-tertiary); }
+
+  /* avatars, same grammar as index.html */
+  .av{ display:flex; align-items:center; justify-content:center; border-radius:999px; font-family:var(--font-mono);
+    font-weight:500; flex-shrink:0; user-select:none; line-height:1; }
+  .av svg{ width:100%; height:100%; display:block; }
+  .avs{ display:flex; align-items:center; padding-left:7px; flex-shrink:0; }
+  .avs > *{ margin-left:-7px; }
+
+  .yes{ flex-shrink:0; width:32px; height:32px; border-radius:50%; border:1px solid var(--border-hairline); background:var(--bg-surface);
+    color:var(--text-secondary); cursor:pointer; display:grid; place-items:center; padding:0;
+    transition:background 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+  .yes:active{ transform:translateY(1px); }
+  [data-near="true"] > .yes{ background:var(--text-primary); border-color:var(--text-primary); color:var(--paper-0); }
+  [data-mine="true"] > .yes{ background:var(--accent-quiet); border-color:transparent; color:var(--accent-strong); }
+  [data-fired="true"] > .yes{ background:var(--cat); border-color:var(--cat); color:var(--paper-0); }
+
+  /* ───────── M1 · the row. The divider is the count. ───────── */
+  .m1{ display:flex; flex-direction:column; }
+  .m1-row{ display:flex; align-items:center; gap:10px; padding:13px 0 12px; position:relative; cursor:pointer; }
+  .m1-row::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:2px; border-radius:2px; background:var(--bg-sunken); }
+  .m1-row::before{ content:""; position:absolute; left:0; bottom:0; height:2px; width:var(--w); border-radius:2px; background:var(--cat); z-index:1;
+    transition:width 520ms var(--ease-settle); }
+  .m1-row__m{ flex:1; min-width:0; background:none; border:0; padding:0; text-align:left; cursor:pointer; color:inherit; }
+  .m1-row__t{ font:600 15.5px/1.2 var(--font-sans); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-.01em; }
+  .m1-row__s{ margin-top:4px; font:400 11.5px/1 var(--font-mono); color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .m1-row__s b{ font-weight:600; color:var(--cat); }
+  .m1-row__s u{ text-decoration:none; color:var(--text-secondary); }
+  .m1-row[data-soon="true"] .m1-row__s u{ color:var(--accent-strong); font-weight:600; }
+  .m1-row.on{ background:color-mix(in srgb, var(--cat) 5%, transparent); box-shadow:0 0 0 10px color-mix(in srgb, var(--cat) 5%, transparent); border-radius:2px; }
+
+  /* ───────── the detail screen a tap opens ───────── */
+  .dt-head{ display:flex; align-items:center; gap:4px; padding:4px 8px 6px; flex-shrink:0; }
+  .dt-ico{ width:40px; height:40px; border-radius:50%; border:0; background:transparent; color:var(--text-secondary); cursor:pointer; display:grid; place-items:center; }
+  .dt-ico:active{ background:var(--bg-sunken); }
+  .dt-head__sp{ flex:1; }
+  .dt-kick{ display:flex; align-items:center; gap:7px; font:600 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--cat); margin-top:6px; }
+  .dt-kick i{ width:7px; height:7px; border-radius:50%; background:var(--cat); }
+  .dt-t{ font:800 27px/1.12 var(--font-display); letter-spacing:-.03em; margin:9px 0 0; }
+
+  /* the count, in the same gauge language as the row */
+  .dt-gauge{ margin-top:18px; }
+  .dt-gauge__row{ display:flex; align-items:baseline; gap:7px; }
+  .dt-gauge__n{ font:800 34px/.85 var(--font-display); letter-spacing:-.035em; color:var(--cat); font-variant-numeric:tabular-nums; }
+  .dt-gauge__of{ font:500 12px/1 var(--font-mono); color:var(--text-secondary); }
+  .dt-gauge__gap{ margin-left:auto; font:600 12px/1 var(--font-sans); color:var(--cat); }
+  .dt-gauge__rule{ margin-top:11px; height:3px; border-radius:2px; background:var(--bg-sunken); position:relative; }
+  .dt-gauge__rule i{ position:absolute; left:0; top:0; bottom:0; border-radius:2px; background:var(--cat); transition:width 520ms var(--ease-settle); }
+
+  /* facts: one label column, one value column, hairlines between */
+  .dt-facts{ margin-top:22px; border-top:1px solid var(--border-hairline); }
+  .dt-fact{ display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border-hairline); align-items:flex-start; }
+  .dt-fact__l{ flex:0 0 62px; font:600 10px/1.5 var(--font-mono); letter-spacing:.13em; text-transform:uppercase; color:var(--text-tertiary); padding-top:2px; }
+  .dt-fact__v{ flex:1; min-width:0; font:500 14px/1.42 var(--font-sans); color:var(--text-primary); }
+  .dt-fact__v small{ display:block; margin-top:4px; font:400 12px/1.45 var(--font-sans); color:var(--text-secondary); }
+  .dt-fact__v .clock{ font:500 17px/1 var(--font-mono); font-variant-numeric:tabular-nums; letter-spacing:-.03em; }
+  .dt-fact--soon .dt-fact__v .clock{ color:var(--accent); }
+  .dt-link{ background:none; border:0; padding:0; margin-top:7px; font:600 12.5px/1 var(--font-sans); color:var(--accent-strong); cursor:pointer;
+    display:inline-flex; align-items:center; gap:5px; }
+
+  /* who — the part that makes it worth tapping */
+  .dt-who{ display:flex; align-items:center; gap:11px; }
+  .dt-who__t{ flex:1; min-width:0; font:500 14px/1.4 var(--font-sans); color:var(--text-primary); }
+  .dt-who__t b{ font-weight:700; }
+  .dt-who__t small{ display:block; margin-top:3px; font:400 12px/1.4 var(--font-sans); color:var(--text-secondary); }
+  .dt-names{ display:flex; flex-direction:column; gap:11px; margin-top:13px; }
+  .dt-name{ display:flex; align-items:center; gap:10px; }
+  .dt-name__m{ flex:1; min-width:0; }
+  .dt-name__n{ font:600 13.5px/1.2 var(--font-sans); color:var(--text-primary); }
+  .dt-name__s{ margin-top:3px; font:400 11px/1 var(--font-mono); color:var(--text-tertiary); }
+  .dt-name__tag{ flex-shrink:0; font:600 10px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:5px 8px; border-radius:999px;
+    background:var(--bg-sunken); color:var(--text-tertiary); }
+  .dt-name__tag[data-here="true"]{ background:color-mix(in srgb,var(--status-live) 15%,transparent); color:var(--moss); }
+
+  /* the one action, pinned */
+  .dt-foot{ flex-shrink:0; padding:12px 20px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--border-hairline); background:var(--bg-surface);
+    display:flex; flex-direction:column; gap:9px; }
+  /* the same ladder as the list: outline to ask, ink when your yes is the one that fires it,
+     activity colour once it is real. Black never means "ordinary" on either surface. */
+  .dt-act{ width:100%; border:1.5px solid var(--border-strong); border-radius:999px; padding:14px; cursor:pointer; font:700 15px/1 var(--font-sans);
+    background:var(--bg-surface); color:var(--text-primary); display:flex; align-items:center; justify-content:center; gap:8px; }
+  .dt-act:active{ transform:translateY(1px); }
+  .dt-act--fire{ background:var(--text-primary); border-color:var(--text-primary); color:var(--paper-0); }
+  .dt-act--quiet{ background:var(--accent-quiet); border-color:transparent; color:var(--accent-strong); }
+  .dt-act--go{ background:var(--cat); border-color:var(--cat); color:var(--paper-0); }
+  .dt-sub{ background:none; border:0; padding:2px; font:600 12.5px/1 var(--font-sans); color:var(--text-tertiary); cursor:pointer; align-self:center; }
+
+  @media (prefers-reduced-motion:reduce){ .m1-row::before, .dt-gauge__rule i{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="gallery-head">
+    <div class="eyebrow">Loop · 🔍 search → detail</div>
+    <h1>M1 with faces, and what a tap opens</h1>
+    <p>The row keeps its four facts and gains one thing: the people on it you already know. Everything else you might want — who else, where it would land, what the call actually means — waits behind the tap. Tap any row on the left and the matching screen loads beside it.</p>
+  </div>
+
+  <div class="rail">
+    <div class="col">
+      <div class="caption">
+        <div class="tag">the list</div>
+        <h2>Four facts and a face</h2>
+        <p>Name, how close, when it is called, one plus — plus a small stack of people you know. Rows where you know nobody stay bare, so the faces mean something when they appear.</p>
+        <div class="bet">tap a row → it opens on the right</div>
+      </div>
+      <div class="phone"><div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div><div class="body" id="list"></div></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <div class="tag">tap · a forming anchor</div>
+        <h2>What the count is made of</h2>
+        <p>The count becomes a hero, the call gets explained in one sentence, and the people you know are named. Everyone else stays a number — an anchor has wanters, not a roster.</p>
+        <div class="bet">the ask is still one button</div>
+      </div>
+      <div class="phone" id="pAnchor"></div>
+    </div>
+
+    <div class="col">
+      <div class="caption">
+        <div class="tag">tap · a meeting loop</div>
+        <h2>Same screen, settled facts</h2>
+        <p>Once it has fired there is no count left to grow, so the gauge is gone and the crew is real: who is going, who is already there, how far you have to walk.</p>
+        <div class="bet">time · place · who · one action</div>
+      </div>
+      <div class="phone" id="pLoop"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const HOUR = 36e5, DAY = 24 * HOUR, T0 = Date.now();
+
+/* people you already know on this campus. Named on a card only when you know them —
+   everyone else stays part of the count. */
+const KNOWN = {
+  box:    ['Maya Idris', 'Josh Park'],
+  prelim: ['Josh Park'],
+  mac:    ['Maya Idris', 'Josh Park', 'Ella Roan'],
+  math:   [],
+  chem:   ['Priya Nair'],
+  coffee: [],
+  lift:   ['Maya Idris', 'Josh Park', 'Ella Roan'],
+  brunch: ['Priya Nair'],
+};
+const SUB = {
+  'Maya Idris':'CS 2110 · Collegetown', 'Josh Park':'Donlon 2F · your floor',
+  'Ella Roan':'Donlon 2F · your floor',  'Priya Nair':'CHEM 2070 · your section',
+};
+const DATA = [
+  { id:'box',    t:'Donlon boxing crew', cat:'fitness', count:9, target:10, slot:'Wed 6:30p',  at:T0 + 6*DAY + 6*HOUR,
+    where:'Teagle gym', walk:'8 min from Donlon', settled:false },
+  { id:'prelim', t:'Prelim 1 review',    cat:'class',   count:8, target:10, slot:'Wed 7:00p',  at:T0 + 6*DAY + 6*HOUR,
+    where:'Uris 262', walk:'11 min from Donlon', settled:true },
+  { id:'mac',    t:'2F late-night mac',  cat:'food',    count:4, target:6,  slot:'Tue 11:00p', at:T0 + 5*DAY + 10*HOUR, mine:true,
+    where:'2F kitchen', walk:'same floor', settled:true },
+  { id:'math',   t:'MATH 1920 grind',    cat:'class',   count:6, target:10, slot:'Mon 7:00p',  at:T0 + 4*DAY + 6*HOUR,
+    where:null, walk:null, settled:false },
+  { id:'chem',   t:'CHEM 2070 review',   cat:'class',   count:6, target:10, slot:'Tue 8:00p',  at:T0 + 5*DAY + 7*HOUR,
+    where:'Olin 218', walk:'12 min from Donlon', settled:true },
+  { id:'coffee', t:'Monday coffee',      cat:'food',    count:3, target:6,  slot:'Mon 9:00a',  at:T0 + 14*HOUR + 20*6e4,
+    where:'Libe Café', walk:'9 min from Donlon', settled:true },
+];
+const MEET = [
+  { id:'lift',   t:'Noyes lift crew', cat:'fitness', slot:'Sat 4:00p',  at:T0 + 3*DAY + 2*HOUR, where:'Noyes gym',  walk:'6 min from Donlon', going:6, here:2 },
+  { id:'brunch', t:'Sunday brunch',   cat:'food',    slot:'Sun 11:00a', at:T0 + 4*DAY + 9*HOUR, where:'North Star', walk:'4 min from Donlon', going:5, here:0 },
+];
+const state = DATA.map(d => ({ ...d, mine: !!d.mine }));
+let openId = 'box', openMeetId = 'lift';
+
+const el = h => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstElementChild; };
+const pct   = d => Math.round(Math.min(1, d.count / d.target) * 100);
+const gap   = d => Math.max(0, d.target - d.count);
+const near  = d => gap(d) === 1;
+const fired = d => d.count >= d.target;
+const soon  = d => d.at - Date.now() < DAY;
+function until(ms){
+  if (ms <= 0) return 'now';
+  const dd = Math.floor(ms / DAY), h = Math.floor(ms % DAY / HOUR), m = Math.floor(ms % HOUR / 6e4), s = Math.floor(ms % 6e4 / 1000);
+  if (dd) return dd + 'd ' + h + 'h';
+  if (h)  return h + 'h ' + m + 'm';
+  return m + 'm ' + s + 's';
+}
+const SVG = {
+  pin:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>',
+  chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>',
+  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  dots:'<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>',
+  share:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+  plusL:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  checkL:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  bolt:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>',
+  boltL:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>',
+  arrow:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+  flame:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s4 4.5 4 8a4 4 0 0 1-8 0c0-1 .5-2 .5-2S6 10.5 6 14a6 6 0 0 0 12 0c0-5-6-12-6-12"/></svg>',
+};
+
+/* avatars: deterministic tint from the name, same as index.html */
+const AV_HUES = ['var(--carnelian-500)','var(--rose)','var(--slate)','var(--moss)','var(--amber-600)','var(--carnelian-600)'];
+const hashInt = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; };
+const initials = n => n.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+// someone you have not met is a shape, never a set of initials — the count is anonymous by design
+const isAnon = n => n.startsWith('Someone');
+const USER_GLYPH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>';
+function av(name, size, ring){
+  const box = 'width:' + size + 'px;height:' + size + 'px;' + (ring ? 'box-shadow:0 0 0 2px var(--bg-surface);' : '');
+  if (isAnon(name)) return '<div class="av" aria-label="someone near you" style="' + box +
+    'background:var(--bg-sunken);color:var(--ink-4);padding:' + Math.round(size * .22) + 'px">' + USER_GLYPH + '</div>';
+  const hue = AV_HUES[hashInt(name) % AV_HUES.length];
+  return '<div class="av" aria-label="' + name + '" style="' + box + 'font-size:' + Math.round(size * .34) + 'px;' +
+    'background:color-mix(in srgb,' + hue + ' 20%, var(--bg-surface));color:' + hue + '">' + initials(name) + '</div>';
+}
+function avs(names, size, max){
+  const shown = names.slice(0, max || 3), extra = names.length - shown.length;
+  if (!names.length) return '';
+  return '<div class="avs">' + shown.map(n => av(n, size, true)).join('') +
+    (extra > 0 ? '<div class="av" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * .34) +
+      'px;background:var(--bg-sunken);color:var(--text-tertiary);box-shadow:0 0 0 2px var(--bg-surface);font-weight:600">+' + extra + '</div>' : '') +
+    '</div>';
+}
+// "Maya and Josh want this" — names only for people you already know
+function knownLine(id, verb){
+  const k = KNOWN[id] || [];
+  if (!k.length) return null;
+  const f = k.map(n => n.split(' ')[0]);
+  return f.length === 1 ? f[0] + ' ' + verb
+    : f.length === 2 ? f[0] + ' and ' + f[1] + ' ' + verb
+    : f.slice(0, -1).join(', ') + ' and ' + f.slice(-1) + ' ' + verb;
+}
+
+const yesIcon = d => fired(d) ? SVG.bolt : d.mine ? SVG.check : SVG.plus;
+const gapWord = d => fired(d) ? 'it’s on' : near(d) ? '1 more fires it' : gap(d) + ' more';
+const flags = d => ' data-mine="' + d.mine + '" data-near="' + near(d) + '" data-fired="' + fired(d) + '" data-soon="' + soon(d) + '"';
+
+function toggle(id, e){
+  if (e) e.stopPropagation();
+  const d = state.find(x => x.id === id);
+  d.mine = !d.mine;
+  d.count += d.mine ? 1 : -1;
+  render();
+}
+
+/* ── the list ─────────────────────────────────────────────────── */
+function renderList(){
+  const host = document.getElementById('list'); host.innerHTML = '';
+  host.appendChild(el('<button class="fx-bar"><span class="fx-bar__pin">' + SVG.pin + '</span>' +
+    '<span class="fx-bar__lbl">Donlon 2F <i>·</i> Anything</span><span class="fx-bar__n">' + state.length + '</span>' +
+    '<span class="fx-bar__pin" style="color:var(--text-tertiary)">' + SVG.chev + '</span></button>'));
+  host.appendChild(el('<div class="sec"><span class="dot"></span><h3>Wanted near you</h3><span class="hint">closest first</span></div>'));
+
+  const list = el('<div class="m1"></div>');
+  [...state].sort((a, b) => gap(a) - gap(b) || a.at - b.at).forEach(d => {
+    const row = el(
+      '<div class="m1-row' + (d.id === openId ? ' on' : '') + '" style="--cat:var(--cat-' + d.cat + '); --w:' + pct(d) + '%"' + flags(d) + '>' +
+        '<button class="m1-row__m">' +
+          '<div class="m1-row__t">' + d.t + '</div>' +
+          '<div class="m1-row__s"><b>' + gapWord(d) + '</b> · ' + d.slot + ' · <u data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</u></div>' +
+        '</button>' +
+        avs(KNOWN[d.id] || [], 22, 3) +
+        '<button class="yes">' + yesIcon(d) + '</button>' +
+      '</div>');
+    row.onclick = () => { openId = d.id; render(); };
+    row.querySelector('.yes').onclick = e => toggle(d.id, e);
+    list.appendChild(row);
+  });
+  host.appendChild(list);
+
+  host.appendChild(el('<div class="sec" style="margin-top:26px"><span class="live"></span><h3>Meeting near you</h3><span class="hint">join any time</span></div>'));
+  const m = el('<div class="m1"></div>');
+  MEET.forEach(d => {
+    const row = el(
+      '<div class="m1-row' + (d.id === openMeetId ? ' on' : '') + '" style="--cat:var(--cat-' + d.cat + '); --w:100%">' +
+        '<button class="m1-row__m">' +
+          '<div class="m1-row__t">' + d.t + '</div>' +
+          '<div class="m1-row__s"><b>' + d.going + ' going</b> · ' + d.slot + ' · ' + d.where + '</div>' +
+        '</button>' +
+        avs(KNOWN[d.id] || [], 22, 3) +
+        '<button class="yes">' + SVG.arrow + '</button>' +
+      '</div>');
+    row.onclick = () => { openMeetId = d.id; render(); };
+    m.appendChild(row);
+  });
+  host.appendChild(m);
+}
+
+const detailHead = () =>
+  '<div class="dt-head">' +
+    '<button class="dt-ico">' + SVG.back + '</button><span class="dt-head__sp"></span>' +
+    '<button class="dt-ico">' + SVG.share + '</button><button class="dt-ico">' + SVG.dots + '</button>' +
+  '</div>';
+
+/* ── a forming anchor ─────────────────────────────────────────── */
+function renderAnchor(){
+  const d = state.find(x => x.id === openId);
+  const host = document.getElementById('pAnchor'); host.innerHTML = '';
+  host.style.setProperty('--cat', 'var(--cat-' + d.cat + ')');
+  host.appendChild(el('<div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div>'));
+  host.appendChild(el(detailHead()));
+
+  const known = KNOWN[d.id] || [], rest = d.count - known.length;
+  const body = el('<div class="body" style="--cat:var(--cat-' + d.cat + ')"></div>');
+  body.appendChild(el(
+    '<div>' +
+      '<div class="dt-kick"><i></i>forming · ' + d.cat + '</div>' +
+      '<h1 class="dt-t">' + d.t + '</h1>' +
+      '<div class="dt-gauge">' +
+        '<div class="dt-gauge__row">' +
+          '<span class="dt-gauge__n">' + d.count + '</span><span class="dt-gauge__of">of ' + d.target + ' want it</span>' +
+          '<span class="dt-gauge__gap">' + gapWord(d) + '</span>' +
+        '</div>' +
+        '<div class="dt-gauge__rule"><i style="width:' + pct(d) + '%"></i></div>' +
+      '</div>' +
+      '<div class="dt-facts">' +
+        '<div class="dt-fact' + (soon(d) ? ' dt-fact--soon' : '') + '">' +
+          '<div class="dt-fact__l">the call</div>' +
+          '<div class="dt-fact__v">' + d.slot + ' · <span class="clock" data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</span>' +
+            '<small>Fires if ' + d.target + ' want it by then, and whoever shows up is the loop. If not, the count rolls to next week — nothing is lost.</small>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dt-fact">' +
+          '<div class="dt-fact__l">who</div>' +
+          '<div class="dt-fact__v">' +
+            '<div class="dt-who">' + avs(known.length ? known : ['Someone a', 'Someone b', 'Someone c'], 30, 3) +
+              '<div class="dt-who__t">' +
+                (known.length
+                  ? '<b>' + knownLine(d.id, 'want this') + '</b>' + (rest > 0 ? ', with ' + rest + ' more near you.' : '.')
+                  : '<b>' + d.count + ' people near you</b> want this.') +
+                '<small>Nobody else is named until it fires.</small>' +
+              '</div>' +
+            '</div>' +
+            (known.length ? '<div class="dt-names">' + known.map(n =>
+              '<div class="dt-name">' + av(n, 34, false) +
+                '<div class="dt-name__m"><div class="dt-name__n">' + n + '</div><div class="dt-name__s">' + (SUB[n] || '') + '</div></div>' +
+              '</div>').join('') + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="dt-fact">' +
+          '<div class="dt-fact__l">where</div>' +
+          '<div class="dt-fact__v">' +
+            (d.where ? d.where + '<small>' + d.walk + ' · anyone can still move it before it fires.</small>'
+                     : 'Not set yet<small>The spot snaps in when it fires — nearest one that fits, unless someone picks first.</small>') +
+          '</div>' +
+        '</div>' +
+        '<div class="dt-fact" style="border-bottom:0">' +
+          '<div class="dt-fact__l">rhythm</div>' +
+          '<div class="dt-fact__v">Weekly<small>Same slot every week. Miss one and you are still in.</small></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>'));
+  host.appendChild(body);
+
+  const foot = el('<div class="dt-foot" style="--cat:var(--cat-' + d.cat + ')"></div>');
+  const act = el('<button class="dt-act' + (fired(d) ? ' dt-act--go' : d.mine ? ' dt-act--quiet' : near(d) ? ' dt-act--fire' : '') + '">' +
+    (fired(d) ? SVG.boltL + 'Join loop' : d.mine ? SVG.checkL + 'You want this' : near(d) ? SVG.boltL + 'You would fire it' : SVG.plusL + 'I want this too') +
+    '</button>');
+  act.onclick = () => toggle(d.id);
+  foot.appendChild(act);
+  foot.appendChild(el('<button class="dt-sub">' + (d.mine ? 'Take back your yes' : 'Not for me') + '</button>'));
+  host.appendChild(foot);
+}
+
+/* ── a meeting loop ───────────────────────────────────────────── */
+function renderLoop(){
+  const d = MEET.find(x => x.id === openMeetId);
+  const host = document.getElementById('pLoop'); host.innerHTML = '';
+  host.appendChild(el('<div class="status"><span>9:41</span><span>▮▮▮ ▮</span></div>'));
+  host.appendChild(el(detailHead()));
+  const known = KNOWN[d.id] || [], rest = d.going - known.length;
+  const crew = known.concat(Array.from({ length: rest }, (_, i) => 'Someone ' + (i + 1)));
+
+  const body = el('<div class="body" style="--cat:var(--cat-' + d.cat + ')"></div>');
+  body.appendChild(el(
+    '<div>' +
+      '<div class="dt-kick"><i></i>on · ' + d.cat + '</div>' +
+      '<h1 class="dt-t">' + d.t + '</h1>' +
+      '<div class="dt-facts" style="margin-top:20px">' +
+        '<div class="dt-fact">' +
+          '<div class="dt-fact__l">when</div>' +
+          '<div class="dt-fact__v">' + d.slot + ' · <span class="clock" data-tick="' + d.id + '">' + until(d.at - Date.now()) + '</span>' +
+            '<small>Weekly. On your phone calendar.</small></div>' +
+        '</div>' +
+        '<div class="dt-fact">' +
+          '<div class="dt-fact__l">where</div>' +
+          '<div class="dt-fact__v">' + d.where + '<small>' + d.walk + '</small>' +
+            '<button class="dt-link">Directions ' + SVG.arrow + '</button></div>' +
+        '</div>' +
+        '<div class="dt-fact" style="border-bottom:0">' +
+          '<div class="dt-fact__l">who</div>' +
+          '<div class="dt-fact__v">' +
+            '<div class="dt-who">' + avs(crew, 30, 4) +
+              '<div class="dt-who__t"><b>' + d.going + ' going</b>' +
+                (known.length ? ' · ' + known.length + ' you know' : '') +
+                (d.here ? '<small>' + d.here + ' already there.</small>' : '<small>Nobody there yet.</small>') +
+              '</div>' +
+            '</div>' +
+            '<div class="dt-names">' + crew.slice(0, 4).map((n, i) =>
+              '<div class="dt-name">' + av(n, 34, false) +
+                '<div class="dt-name__m"><div class="dt-name__n">' + (SUB[n] ? n : 'Someone from Donlon') + '</div>' +
+                '<div class="dt-name__s">' + (SUB[n] || 'in your dorm') + '</div></div>' +
+                '<span class="dt-name__tag" data-here="' + (i < d.here) + '">' + (i < d.here ? 'here' : 'going') + '</span>' +
+              '</div>').join('') + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>'));
+  host.appendChild(body);
+
+  const foot = el('<div class="dt-foot" style="--cat:var(--cat-' + d.cat + ')"></div>');
+  foot.appendChild(el('<button class="dt-act dt-act--go">' + SVG.flame + 'Hype it</button>'));
+  foot.appendChild(el('<button class="dt-sub">Leave this loop</button>'));
+  host.appendChild(foot);
+}
+
+function render(){ renderList(); renderAnchor(); renderLoop(); }
+render();
+setInterval(() => {
+  document.querySelectorAll('[data-tick]').forEach(n => {
+    const d = state.find(x => x.id === n.dataset.tick) || MEET.find(x => x.id === n.dataset.tick);
+    if (d) n.textContent = until(d.at - Date.now());
+  });
+}, 1000);
+</script>
+</body>
+</html>

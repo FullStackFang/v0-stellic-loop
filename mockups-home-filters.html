@@ -95,6 +95,7 @@
   .grab{ width:38px; height:4px; border-radius:999px; background:var(--paper-3); margin:0 auto 14px; }
   .scrim{ position:absolute; inset:0; background:rgba(31,26,23,.32); opacity:0; pointer-events:none; transition:opacity .3s var(--ease-out); z-index:5; }
   .scrim[data-open="1"]{ opacity:1; pointer-events:auto; }
+  .scrim.soft{ background:rgba(31,26,23,.12); }
   .lab{ font:600 10.5px/1 var(--font-mono); letter-spacing:.13em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 8px; }
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
   .opt{ display:flex; align-items:center; gap:9px; padding:10px 11px; border-radius:12px; border:1px solid var(--border-hairline);
@@ -105,6 +106,14 @@
   .opt[disabled]{ opacity:.34; cursor:default; }
   .apply{ width:100%; margin-top:14px; border:0; border-radius:14px; padding:13px; background:var(--accent); color:var(--accent-ink);
     font:700 14px var(--font-sans); cursor:pointer; }
+
+  /* B — how the panel opens */
+  .panel{ margin:8px 18px 0; border:1px solid var(--border-hairline); border-radius:16px; background:var(--bg-surface); padding:14px; }
+  .panel[hidden]{ display:none; }
+  .panel.anim{ animation:panelin .3s var(--ease-settle) both; }
+  @keyframes panelin{ from{ opacity:0; transform:translateY(-9px); } to{ opacity:1; transform:none; } }
+  .dropAnchor{ position:relative; height:0; z-index:6; }
+  .dropAnchor .panel{ position:absolute; left:0; right:0; top:0; margin:8px 18px 0; box-shadow:0 22px 44px -22px rgba(80,40,30,.42); }
 
   /* C — two-line static */
   .Cwrap{ padding:0 18px 8px; flex-shrink:0; }
@@ -136,6 +145,13 @@
     <p>Today the row scrolls, clips pills mid-glyph, gives no hint there's more, and hides the location control the moment you scroll. All three directions fix that. They differ on <b>where the categories live</b>. Click everything: switch scope, tap categories, watch the counts.</p>
   </div>
   <div class="rail" id="rail"></div>
+
+  <div class="gallery-head" style="margin-top:64px">
+    <div class="eyebrow">if B wins</div>
+    <h1>Where should the panel come from?</h1>
+    <p>A bottom sheet is the reflex, not necessarily the answer. The panel here is short, and the control that opens it sits at the top of the screen. These three are identical in function — only the opening differs. Tap the bar in each.</p>
+  </div>
+  <div class="rail" id="rail2"></div>
 </div>
 
 <script>
@@ -254,36 +270,44 @@ function buildA(host){
   draw(false);
 }
 
-/* B — summary to sheet */
-function buildB(host){
-  let sc = 'floor', sel = new Set(), open = false;
+/* B — summary bar + panel. mode: 'sheet' | 'inline' | 'drop' */
+function buildB(host, mode, startOpen, startScope){
+  mode = mode || 'sheet';
+  let sc = startScope || 'floor', sel = new Set(), open = !!startOpen;
   host.innerHTML = shell(
-    '<div class="Bbar"></div><div class="Btok"></div><div class="scroll"></div>'
-    + '<div class="scrim"></div><div class="sheet"></div>');
-  const bar = host.querySelector('.Bbar'), toks = host.querySelector('.Btok'),
-        out = host.querySelector('.scroll'), scrim = host.querySelector('.scrim'), sheet = host.querySelector('.sheet');
+    '<div class="Bbar"></div><div class="Btok"></div>'
+    + (mode==='inline' ? '<div class="panel" hidden></div>' : '')
+    + (mode==='drop'   ? '<div class="dropAnchor"><div class="panel" hidden></div></div>' : '')
+    + '<div class="scroll"></div>'
+    + (mode!=='inline' ? '<div class="scrim'+(mode==='drop'?' soft':'')+'"></div>' : '')
+    + (mode==='sheet'  ? '<div class="sheet"></div>' : ''));
+  const bar = host.querySelector('.Bbar'), toks = host.querySelector('.Btok'), out = host.querySelector('.scroll'),
+        scrim = host.querySelector('.scrim'), sheet = host.querySelector('.sheet'), panel = host.querySelector('.panel');
 
   const n = () => poolFor(sc).filter(i => sel.size===0 || sel.has(i.cat)).length;
   const what = () => sel.size===0 ? 'Anything' : sel.size===1 ? CATS[[...sel][0]].label : sel.size+' kinds';
-  function draw(){
-    bar.innerHTML = ICON.sl + '<span class="lbl">'+scopeName(sc)+' <s>·</s> '+what()+'</span><span class="ct">'+n()+'</span>' + ICON.cv;
-    toks.innerHTML = [...sel].map(k => '<button class="tok" data-k="'+k+'">'+CATS[k].label+ICON.x+'</button>').join('');
-    toks.hidden = sel.size===0;
-    out.innerHTML = results(sc, sel);
+  function body(){
     const c = countsFor(sc);
-    sheet.dataset.open = open?1:0; scrim.dataset.open = open?1:0;
-    sheet.innerHTML = '<div class="grab"></div>'
-      + '<p class="lab">Where</p><div class="tray" style="margin:0 0 16px">'
+    return '<p class="lab">Where</p><div class="tray" style="margin:0 0 16px">'
       + SCOPES.map(([k,l]) => '<button data-s="'+k+'" data-on="'+(sc===k?1:0)+'">'+l+'<span class="n">'+poolFor(k).length+'</span></button>').join('')
       + '</div><p class="lab">What · pick any</p><div class="grid2">'
       + CK.map(k => '<button class="opt" data-k="'+k+'" data-on="'+(sel.has(k)?1:0)+'" '+(c[k]?'':'disabled')+'><span class="d" style="background:'+CATS[k].hue+'"></span>'+CATS[k].label+'<span class="n">'+c[k]+'</span></button>').join('')
       + '</div><button class="apply">Show '+n()+'</button>';
   }
+  function draw(justOpened){
+    bar.innerHTML = ICON.sl + '<span class="lbl">'+scopeName(sc)+' <s>·</s> '+what()+'</span><span class="ct">'+n()+'</span>' + ICON.cv;
+    toks.innerHTML = [...sel].map(k => '<button class="tok" data-k="'+k+'">'+CATS[k].label+ICON.x+'</button>').join('');
+    toks.hidden = sel.size===0;
+    out.innerHTML = results(sc, sel);
+    if (scrim) scrim.dataset.open = (open && mode!=='inline') ? 1 : 0;
+    if (mode==='sheet') { sheet.dataset.open = open?1:0; sheet.innerHTML = '<div class="grab"></div>' + body(); }
+    else { panel.hidden = !open; panel.innerHTML = body(); if (open && justOpened && !RM) { panel.classList.remove('anim'); void panel.offsetWidth; panel.classList.add('anim'); } }
+  }
   host.addEventListener('click', e => {
-    if (e.target.closest('.Bbar')) { open = true; return draw(); }
+    if (e.target.closest('.Bbar')) { const was = open; open = true; return draw(!was); }
     if (e.target.closest('.scrim') || e.target.closest('.apply')) { open = false; return draw(); }
     const t = e.target.closest('.tok'); if (t) { sel.delete(t.dataset.k); return draw(); }
-    const s = e.target.closest('.sheet button[data-s]');
+    const s = e.target.closest('.sheet button[data-s], .panel button[data-s]');
     if (s) { sc = s.dataset.s; const c = countsFor(sc); [...sel].forEach(k => { if (!c[k]) sel.delete(k); }); return draw(); }
     const o = e.target.closest('.opt');
     if (o && !o.disabled) { const k = o.dataset.k; if (sel.has(k)) sel.delete(k); else sel.add(k); return draw(); }
@@ -323,9 +347,25 @@ const DIRS = [
     p:'Where becomes a permanent segmented row; categories wrap onto a second line. Nothing scrolls sideways, nothing clips, everything stays visible. Empty categories dim instead of disappearing. The safe answer — it just eats about 76px above the feed on every screen.',
     t:'Try: switch scope and watch Music stay dimmed until Campus.' },
 ];
+const OPENS = [
+  { n:'B1', h:'Bottom sheet', mode:'sheet',
+    p:'The panel flies up from the bottom over a scrim. Options land under your thumb, which is real ergonomics. But you tapped something at the top and a layer moved at the bottom — the thing you touched and the thing that happened are 600px apart. It is also a modal: scrim, dismiss gesture, focus trap.',
+    t:'Convention: Airbnb, Google Maps. Best when the panel is tall.' },
+  { n:'B2', h:'Inline expand', mode:'inline',
+    p:'The panel opens directly beneath the bar and pushes the feed down. Perfect spatial continuity — it grows out of the control you touched. No scrim, no modal, no dismiss gesture to teach. This is already how the scope tray behaves in index.html, so it adds no new pattern.',
+    t:'Watch: the feed slides down. Nothing covers it.' },
+  { n:'B3', h:'Anchored dropdown', mode:'drop',
+    p:'The panel drops from the bar and floats over the feed instead of pushing it. Same spatial link as B2, but the feed never jumps — your place in the list is preserved while you fiddle. Costs a soft scrim and a shadow, and it hides the top of the results while open.',
+    t:'Watch: the feed stays exactly where it was.' },
+];
+
 document.getElementById('rail').innerHTML = DIRS.map(d =>
   '<div class="col"><div class="caption"><span class="tag"><b>'+d.n+'</b>direction '+d.n+'</span><h2>'+d.h+'</h2><p>'+d.p+'</p><div class="try">'+d.t+'</div></div><div class="phone" id="ph'+d.n+'"></div></div>').join('');
 DIRS.forEach(d => d.build(document.getElementById('ph'+d.n)));
+
+document.getElementById('rail2').innerHTML = OPENS.map(d =>
+  '<div class="col"><div class="caption"><span class="tag"><b>'+d.n.slice(1)+'</b>opening '+d.n.slice(1)+'</span><h2>'+d.h+'</h2><p>'+d.p+'</p><div class="try">'+d.t+'</div></div><div class="phone" id="ph'+d.n+'"></div></div>').join('');
+OPENS.forEach(d => buildB(document.getElementById('ph'+d.n), d.mode, true, 'campus'));
 </script>
 </body>
 </html>
