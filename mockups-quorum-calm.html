@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quorum · Luma, aigma, HAI, Delta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400..600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --hair:rgba(31,26,23,.09); --line:rgba(31,26,23,.14); --tint:rgba(31,26,23,.045);
+    --carnelian:#b31b1b; --carnelian-deep:#8a1414; --carnelian-tint:#f8e6e3;
+    --moss:#3d8a5f; --moss-deep:#2f6e4a; --moss-tint:#e3f0e8;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --expo:cubic-bezier(.16,1,.3,1);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; }
+  body{ margin:0; background:#efe7da; font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; padding:40px 24px 80px; font-feature-settings:"tnum"; }
+  .intro{ max-width:1760px; margin:0 auto 26px; }
+  .intro h1{ font-family:var(--serif); font-size:28px; font-weight:500; letter-spacing:-.02em; margin:0 0 6px; }
+  .intro p{ color:var(--ink-2); font-size:14px; line-height:1.5; margin:0; max-width:80ch; }
+  .rail{ display:flex; gap:28px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1760px; margin:0 auto; }
+  .col{ width:390px; }
+  .col .cap{ font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:0 0 8px 6px; display:flex; justify-content:space-between; }
+  .col .cap b{ color:var(--ink); }
+  .col .why{ font-size:12.5px; line-height:1.5; color:var(--ink-2); margin:12px 6px 0; }
+  .col .why b{ color:var(--ink); font-weight:600; }
+  .phone{ width:390px; height:844px; background:var(--paper-1); border:1px solid var(--line); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px rgba(60,30,20,.4); }
+  .phone iframe{ width:390px; height:844px; border:0; display:block; }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; }
+  .screen{ flex:1; overflow:auto; padding:0 16px 110px; scrollbar-width:none; }
+  .screen::-webkit-scrollbar{ display:none; }
+
+  /* ===== shared, grown-up base: Luma surfaces + buttons, Geist body, serif only for display ===== */
+  .head{ display:flex; align-items:center; justify-content:space-between; padding:12px 22px 6px; }
+  .wordmark{ font-family:var(--serif); font-size:21px; font-weight:500; letter-spacing:-.01em; }
+  .meta{ font-size:12.5px; color:var(--ink-3); }
+  .mast{ padding:14px 6px 4px; }
+  .mast h2{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin:0; }
+  .mast h2 em{ font-style:italic; color:var(--carnelian-deep); }
+  .mast p{ margin:8px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-2); max-width:34ch; }
+  .lab{ font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; }
+  .plate{ width:36px; height:36px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; }
+  .plate svg{ width:20px; height:20px; }
+  .av{ width:24px; height:24px; border-radius:50%; border:1.5px solid var(--paper-0); display:grid; place-items:center; font-size:9.5px; font-weight:600; color:var(--ink-2); margin-left:-6px; flex:0 0 24px; background:var(--paper-2); }
+  .av:first-child{ margin-left:0; }
+  .pile{ display:inline-flex; align-items:center; }
+  .ghost{ height:34px; padding:0 14px; border-radius:11px; border:0; background:var(--tint); font-size:13px; font-weight:500; color:var(--ink); display:inline-flex; align-items:center; gap:6px; }
+  .ghost.on{ background:var(--ink); color:var(--paper-0); }
+  .ghost svg{ width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .solid{ height:40px; padding:0 18px; border-radius:12px; border:0; background:var(--ink); color:var(--paper-0); font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  .solid.red{ background:var(--carnelian); }
+  .solid svg{ width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .tabbar{ position:absolute; left:16px; right:16px; bottom:18px; display:flex; gap:4px; padding:4px; border-radius:16px; background:var(--paper-0); border:1px solid var(--hair); box-shadow:0 10px 30px -18px rgba(60,30,20,.4); }
+  .tabbar button{ flex:1; border:0; background:transparent; height:40px; border-radius:12px; font-size:13px; font-weight:500; color:var(--ink-2); }
+  .tabbar button.on{ background:var(--tint); color:var(--ink); font-weight:600; }
+  .strip{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 6px 0; }
+  .strip .plate{ width:40px; height:40px; border-radius:10px; } .strip .plate svg{ width:22px; height:22px; }
+  .mini{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .mini div{ height:26px; border-radius:6px; display:grid; place-items:center; font-size:11px; font-weight:500; color:var(--ink-3); background:var(--tint); }
+  .mini div.best{ background:var(--carnelian-tint); color:var(--carnelian-deep); font-weight:600; }
+  .mini div.on{ background:var(--moss-tint); color:var(--moss-deep); font-weight:600; }
+  .minil{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-top:3px; }
+  .minil div{ text-align:center; font-size:9px; font-weight:500; color:var(--ink-4); letter-spacing:.04em; }
+  .minil div.best{ color:var(--carnelian-deep); }
+  @keyframes pop{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+
+  /* ===== A · Luma list ===== */
+  .dA .sect{ display:flex; align-items:baseline; justify-content:space-between; padding:20px 6px 6px; }
+  .dA .sect .lab b{ color:var(--ink); font-weight:600; }
+  .dA .row{ display:flex; gap:12px; padding:14px 6px; border-top:1px solid var(--hair); align-items:flex-start; }
+  .dA .row:first-of-type{ border-top:0; }
+  .dA .row .t{ flex:1; min-width:0; }
+  .dA .when{ font-size:12.5px; color:var(--ink-3); }
+  .dA .when b{ color:var(--carnelian-deep); font-weight:600; }
+  .dA .title{ font-size:16px; font-weight:600; letter-spacing:-.01em; line-height:1.25; margin-top:2px; }
+  .dA .sub{ font-size:12.5px; color:var(--ink-3); margin-top:3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .dA .sub .pile{ margin-right:2px; }
+  .dA .count{ flex:0 0 auto; text-align:right; }
+  .dA .count b{ display:block; font-family:var(--serif); font-size:20px; font-weight:500; line-height:1; color:var(--ink); }
+  .dA .count small{ display:block; font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-top:3px; }
+  .dA .count.ready b{ color:var(--carnelian); } .dA .count.on b{ color:var(--moss-deep); }
+  .dA .mini{ margin:8px 0 2px; }
+  .dA .acts{ display:flex; gap:6px; margin-top:10px; }
+  .dA .acts .ghost{ height:30px; padding:0 12px; font-size:12.5px; border-radius:9px; }
+  .dA .reg{ margin:4px 6px 6px; border:1px solid var(--hair); border-radius:14px; background:var(--paper-0); overflow:hidden; }
+  .dA .reg .band{ padding:8px 14px; background:var(--tint); font-size:12px; color:var(--ink-2); display:flex; justify-content:space-between; }
+  .dA .reg .body{ padding:12px 14px 14px; }
+  .dA .reg .line{ font-size:14px; line-height:1.4; }
+  .dA .reg .line b{ font-weight:600; }
+  .dA .reg .solid{ width:100%; margin-top:12px; }
+  .dA .reg .me{ margin-top:10px; font-size:13px; color:var(--moss-deep); font-weight:500; display:flex; align-items:center; gap:6px; animation:pop .3s var(--expo) both; }
+
+  /* ===== B · aigma ledger ===== */
+  .dB .mast h2{ font-size:32px; }
+  .dB .sect{ display:flex; align-items:center; gap:10px; padding:22px 6px 10px; }
+  .dB .sect .num{ font-family:var(--serif); font-size:13px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .dB .sect .dots{ flex:1; border-bottom:1.5px dotted var(--ink-4); }
+  .dB .sect .no{ font-size:11px; color:var(--ink-3); letter-spacing:.06em; }
+  .dB .card{ background:var(--paper-0); border:1px solid var(--hair); border-radius:18px; padding:16px 16px 14px; margin-bottom:12px; }
+  .dB .card.ready{ background:#fdf7f4; border-color:rgba(179,27,27,.12); }
+  .dB .card.on{ background:#f3f8f4; border-color:rgba(61,138,95,.16); }
+  .dB .top{ display:flex; gap:12px; align-items:flex-start; }
+  .dB .top .t{ flex:1; min-width:0; }
+  .dB .title{ font-size:16.5px; font-weight:600; letter-spacing:-.01em; line-height:1.25; }
+  .dB .facts{ font-size:12.5px; color:var(--ink-3); margin-top:3px; }
+  .dB .stat{ display:flex; align-items:baseline; gap:8px; margin-top:14px; }
+  .dB .stat b{ font-family:var(--serif); font-size:40px; font-weight:500; line-height:.9; letter-spacing:-.02em; color:var(--carnelian); }
+  .dB .card.on .stat b{ color:var(--moss-deep); }
+  .dB .card.open .stat b{ color:var(--ink); }
+  .dB .stat .of{ font-family:var(--serif); font-size:16px; color:var(--ink-2); font-style:italic; }
+  .dB .tag{ display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:999px; background:var(--paper-0); border:1px solid var(--line); font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); margin-left:auto; }
+  .dB .tag.red{ color:var(--carnelian-deep); border-color:rgba(179,27,27,.25); }
+  .dB .tag.green{ color:var(--moss-deep); border-color:rgba(61,138,95,.3); }
+  .dB .mini{ margin-top:12px; }
+  .dB .foot{ display:flex; align-items:center; gap:10px; margin-top:12px; padding-top:10px; border-top:1px dotted var(--ink-4); font-size:12px; color:var(--ink-3); }
+  .dB .foot .pile{ margin-right:2px; }
+  .dB .foot b{ color:var(--ink-2); font-weight:600; }
+  .dB .go{ margin-left:auto; width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--paper-0); display:grid; place-items:center; color:var(--ink); }
+  .dB .go svg{ width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .dB .go.red{ background:var(--carnelian); border-color:var(--carnelian); color:var(--paper-0); }
+  .dB .ask{ margin-top:12px; padding:10px 12px; border-radius:12px; background:var(--paper-0); border:1px solid var(--hair); font-size:13.5px; line-height:1.4; display:flex; align-items:center; gap:10px; }
+  .dB .ask .q{ flex:1; } .dB .ask .q b{ font-weight:600; }
+  .dB .ask .me{ color:var(--moss-deep); font-weight:500; animation:pop .3s var(--expo) both; }
+  .dB .acts{ display:flex; gap:6px; margin-top:12px; }
+  .dB .acts .ghost{ flex:1; justify-content:center; }
+
+  /* ===== C · HAI editorial ===== */
+  .dC .mast{ padding:12px 0 0; }
+  .dC .hero{ margin:6px 0 0; background:var(--ink); color:var(--paper-0); border-radius:22px 22px 22px 4px; padding:18px 18px 16px; position:relative; overflow:hidden; }
+  .dC .hero h2{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.08; margin:0; }
+  .dC .hero h2 em{ font-style:italic; color:#f2b73c; }
+  .dC .hero p{ margin:8px 0 0; font-size:13px; line-height:1.45; color:rgba(255,253,248,.72); max-width:32ch; }
+  .dC .hero .pills{ display:flex; gap:8px; margin-top:14px; }
+  .dC .pill{ height:36px; padding:0 14px 0 16px; border-radius:999px; border:0; background:var(--paper-0); color:var(--ink); font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:8px; }
+  .dC .pill.ghost{ background:rgba(255,253,248,.14); color:var(--paper-0); }
+  .dC .pill svg{ width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .dC .sect{ display:flex; align-items:center; justify-content:space-between; padding:22px 6px 10px; }
+  .dC .sect .n{ font-family:var(--serif); font-size:15px; color:var(--ink-2); }
+  .dC .card{ background:var(--paper-0); border:1px solid var(--hair); border-radius:20px 20px 20px 4px; padding:14px 14px 14px; margin-bottom:12px; display:grid; grid-template-columns:52px 1fr; gap:12px; }
+  .dC .card.on{ background:var(--moss-tint); border-color:transparent; }
+  .dC .date{ width:52px; border-radius:12px; border:1px solid var(--line); background:var(--paper-0); text-align:center; padding:6px 0 7px; align-self:start; }
+  .dC .date small{ display:block; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
+  .dC .date b{ display:block; font-family:var(--serif); font-size:22px; font-weight:500; line-height:1.05; color:var(--ink); }
+  .dC .date i{ display:block; font-style:normal; font-size:9px; color:var(--ink-3); margin-top:2px; }
+  .dC .date.ready{ border-color:var(--carnelian); } .dC .date.ready b{ color:var(--carnelian); }
+  .dC .date.on{ border-color:var(--moss-deep); background:var(--moss-deep); } .dC .date.on b, .dC .date.on small, .dC .date.on i{ color:var(--paper-0); }
+  .dC .date.none{ border-style:dashed; } .dC .date.none b{ font-size:12px; line-height:1.2; padding:5px 0; color:var(--ink-3); }
+  .dC .t{ min-width:0; }
+  .dC .titlerow{ display:flex; align-items:center; gap:10px; }
+  .dC .titlerow .plate{ width:30px; height:30px; border-radius:8px; } .dC .titlerow .plate svg{ width:17px; height:17px; }
+  .dC .title{ font-size:16.5px; font-weight:600; letter-spacing:-.01em; line-height:1.2; }
+  .dC .facts{ font-size:12.5px; color:var(--ink-3); margin-top:5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .dC .facts b{ color:var(--ink-2); font-weight:600; }
+  .dC .chip{ display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:999px; background:#d6f55e; color:var(--ink); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+  .dC .chip.red{ background:var(--carnelian); color:var(--paper-0); } .dC .chip.green{ background:var(--moss-deep); color:var(--paper-0); }
+  .dC .mini{ margin-top:10px; }
+  .dC .ask{ margin-top:12px; display:flex; align-items:center; gap:10px; font-size:13.5px; line-height:1.35; }
+  .dC .ask .q{ flex:1; } .dC .ask .q b{ font-weight:600; }
+  .dC .ask .pill{ height:34px; font-size:12.5px; padding:0 12px 0 14px; background:var(--carnelian); color:var(--paper-0); flex:0 0 auto; }
+  .dC .ask .me{ color:var(--moss-deep); font-weight:500; animation:pop .3s var(--expo) both; }
+  .dC .acts{ display:flex; gap:6px; margin-top:12px; }
+  .dC .acts .ghost{ border-radius:999px; }
+
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>Quorum · the grown-up combination</h1>
+  <p>Same board, same data. All three share one base: Luma's calm (Geist, ghost buttons with no border, hairlines, time first), aigma's serif for the one display moment, Delta only in the icons and kept small. No seals, no stickers, no speech bubbles, no wonky italics. They differ in which reference leads the structure. Pick one, or name the bits you want mixed.</p>
+</div>
+<div class="rail">
+
+  <div class="col">
+    <div class="cap"><span>0 · Now</span><b>the Mix, for reference</b></div>
+    <div class="phone"><iframe src="quorum.html" title="Current Quorum v4 Mix" scrolling="no"></iframe></div>
+    <p class="why">Fraunces wonky italic, seals, bubble ask, 48px saturated plates.</p>
+  </div>
+
+  <div class="col">
+    <div class="cap"><span>A · Luma list</span><b>rows, time first, one registration card</b></div>
+    <div class="phone dA" data-dir="A"></div>
+    <div class="strip" data-strip="A"></div>
+    <p class="why"><b>Luma leads.</b> Intents are rows on hairlines, not cards: day on top in grey, title, faces and cost under. The count sits right like a price. Only the one that's ready gets a card, styled like Luma's "Registration" box with a grey band and a full-width button. Delta plate at 36px, true Delta colours.</p>
+  </div>
+
+  <div class="col">
+    <div class="cap"><span>B · aigma ledger</span><b>numbered sections, the count as a stat</b></div>
+    <div class="phone dB" data-dir="B"></div>
+    <div class="strip" data-strip="B"></div>
+    <p class="why"><b>aigma leads.</b> "01 Open · 02 On" with dotted leaders and a № counter. Each card is a stat card: a big serif numeral in carnelian, "of 8 can do Tue" in italic serif, a tiny tracked tag. Dotted rule above the footer, go-circle on the right. Delta plates tinted into the paper with the glyph in the plate's darker shade.</p>
+  </div>
+
+  <div class="col">
+    <div class="cap"><span>C · HAI editorial</span><b>dark hero, date blocks, pills with arrows</b></div>
+    <div class="phone dC" data-dir="C"></div>
+    <div class="strip" data-strip="C"></div>
+    <p class="why"><b>HAI leads.</b> One ink hero block with one square corner carries the mast and two pill buttons. Every intent gets a date block (month, day) like HAI's events; the best day is the date. Cards keep the tucked corner. One lime chip for "ready", the way HAI tags news. Delta plates small next to the title.</p>
+  </div>
+
+</div>
+
+<script>
+// Phosphor Fill paths (MIT · https://phosphoricons.com)
+const ICONS = {
+  coatHanger:'M241.57,171.2,141.33,96l23.46-17.6A8,8,0,0,0,168,72a40,40,0,1,0-80,0,8,8,0,0,0,16,0,24,24,0,0,1,47.69-3.78L14.43,171.2A16,16,0,0,0,24,200H232a16,16,0,0,0,9.6-28.8ZM32.73,184C53.6,170.59,89.49,152,128,152s74.4,18.59,95.27,32Z',
+  tShirt:'M247.59,61.22,195.83,33A8,8,0,0,0,192,32H160a8,8,0,0,0-8,8,24,24,0,0,1-48,0,8,8,0,0,0-8-8H64a8,8,0,0,0-3.84,1L8.41,61.22A15.76,15.76,0,0,0,1.82,82.48l19.27,36.81A16.37,16.37,0,0,0,35.67,128H56v80a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V128h20.34a16.37,16.37,0,0,0,14.58-8.71l19.27-36.81A15.76,15.76,0,0,0,247.59,61.22ZM35.67,112a.62.62,0,0,1-.41-.13L16.09,75.26,56,53.48V112Zm185.07-.14a.55.55,0,0,1-.41.14H200V53.48l39.92,21.78Z',
+  sailboat:'M160,140V72.85a4,4,0,0,1,7-2.69l55,60.46a8,8,0,0,1,.43,10.26,8.24,8.24,0,0,1-6.58,3.12H164A4,4,0,0,1,160,140Zm87.21,32.53A8,8,0,0,0,240,168H144V8a8,8,0,0,0-14.21-5l-104,128A8,8,0,0,0,32,144h96v24H16a8,8,0,0,0-6.25,13l29.6,37a15.93,15.93,0,0,0,12.49,6H204.16a15.93,15.93,0,0,0,12.49-6l29.6-37A8,8,0,0,0,247.21,172.53Z',
+  airplaneTilt:'M215.52,197.26a8,8,0,0,1-1.86,8.39l-24,24A8,8,0,0,1,184,232a7.09,7.09,0,0,1-.79,0,8,8,0,0,1-5.87-3.52l-44.07-66.12L112,183.59V208a8,8,0,0,1-2.34,5.65s-14,14.06-15.88,15.88A7.91,7.91,0,0,1,91,231.41a8,8,0,0,1-10.41-4.35l-.06-.15-14.7-36.76L29,175.42a8,8,0,0,1-2.69-13.08l16-16A8,8,0,0,1,48,144H72.4l21.27-21.27L27.56,78.65a8,8,0,0,1-1.22-12.32l24-24a8,8,0,0,1,8.39-1.86l85.94,31.25L176.2,40.19a28,28,0,0,1,39.6,39.6l-31.53,31.53Z',
+  bowlFood:'M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM148.12,104a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Z',
+  island:'M239.55,226.65A8,8,0,0,1,232,232H24a8,8,0,0,1-5-14.25c1.63-1.3,38.53-30.26,98.29-33.45A120,120,0,0,1,114,146.37c1.73-21.71,10.91-50.63,42.95-72.48a66.28,66.28,0,0,0-15-1.87l-1.67,0c-19,.62-30.94,11.71-36.5,33.92A8,8,0,0,1,96,112a7.66,7.66,0,0,1-2-.24,8,8,0,0,1-5.82-9.7c9.25-36.95,33.11-45.42,51.5-46a81.43,81.43,0,0,1,21.68,2.45c-3.82-6.33-9.42-12.93-17.21-16.25-10-4.24-22.17-2.39-36.31,5.51a8,8,0,0,1-7.8-14c18.74-10.45,35.72-12.54,50.48-6.2,12.49,5.36,20.73,15.78,25.88,25,6.17-9.64,13.87-16.17,22.38-18.94,11.86-3.87,24.64-.72,38,9.37a8,8,0,0,1-9.64,12.76c-8.91-6.73-16.77-9.06-23.34-6.93-7.3,2.35-12.87,10-16.38,16.61A70.46,70.46,0,0,1,208,73.07c14.61,8.35,32,26.05,32,62.94a8,8,0,0,1-16,0c0-23.46-8.06-40-24-49a50.49,50.49,0,0,0-5.75-2.8,55.64,55.64,0,0,1,5.06,33.06,59.41,59.41,0,0,1-8.86,23.41,8,8,0,0,1-13.09-9.2c.75-1.09,16.33-24.38-3.26-49.37-27,15.21-41.89,37.25-44.16,65.59a104.27,104.27,0,0,0,3.83,36.44c62.65,1.81,101.52,32.33,103.2,33.66A8,8,0,0,1,239.55,226.65ZM52,168a28,28,0,1,0-28-28A28,28,0,0,0,52,168Z',
+  beerStein:'M216,88H200V72a40,40,0,0,0-40-40H148.82c-11.91-10.2-28-16-44.82-16C68.71,16,40,41.12,40,72V208a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16v-8h16a24,24,0,0,0,24-24V112A24,24,0,0,0,216,88ZM104,184a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0ZM57,64c4.46-18.24,23.85-32,47-32,13.87,0,27.06,5,36.21,13.78A8,8,0,0,0,145.74,48H160a24,24,0,0,1,22.62,16ZM224,176a8,8,0,0,1-8,8H200V104h16a8,8,0,0,1,8,8Z',
+  confetti:'M111.49,52.63a15.8,15.8,0,0,0-26,5.77L33,202.78A15.83,15.83,0,0,0,47.76,224a16,16,0,0,0,5.46-1l144.37-52.5a15.8,15.8,0,0,0,5.78-26ZM65.14,161.13l19.2-52.79,63.32,63.32-52.8,19.2ZM160,72a37.8,37.8,0,0,1,3.84-15.58C169.14,45.83,179.14,40,192,40c6.7,0,11-2.29,13.65-7.21A22,22,0,0,0,208,23.94,8,8,0,0,1,224,24c0,12.86-8.52,32-32,32-6.7,0-11,2.29-13.65,7.21A22,22,0,0,0,176,72.06,8,8,0,0,1,160,72ZM136,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm101.66,82.34a8,8,0,1,1-11.32,11.31l-16-16a8,8,0,0,1,11.32-11.32Zm4.87-42.75-24,8a8,8,0,0,1-5.06-15.18l24-8a8,8,0,0,1,5.06,15.18Z',
+  tent:'M255.31,188.75l-64-144A8,8,0,0,0,184,40H72a8,8,0,0,0-7.31,4.75h0l0,.12v0L.69,188.75A8,8,0,0,0,8,200H248a8,8,0,0,0,7.31-11.25ZM64,184H20.31L64,85.7Zm16,0V85.7L123.69,184Z',
+  martini:'M237.66,45.66A8,8,0,0,0,232,32H24a8,8,0,0,0-5.66,13.66L120,147.31V208H88a8,8,0,0,0,0,16h80a8,8,0,0,0,0-16H136V147.31Zm-25,2.34-16,16H59.31l-16-16Z',
+  bus:'M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z',
+  mountains:'M254.88,195.92l-54.56-92.08A15.87,15.87,0,0,0,186.55,96h0a15.85,15.85,0,0,0-13.76,7.84l-15.64,26.39a4,4,0,0,0,0,4.07l26.8,45.47a8.13,8.13,0,0,1-1.89,10.55,8,8,0,0,1-11.8-2.26L101.79,71.88a16,16,0,0,0-27.58,0L1.11,195.94a8,8,0,0,0,1,9.52A8.23,8.23,0,0,0,8.23,208H247.77a8.29,8.29,0,0,0,6.09-2.55A8,8,0,0,0,254.88,195.92ZM64.43,120,88,80l23.57,40ZM140,52a24,24,0,1,1,24,24A24,24,0,0,1,140,52Z',
+  camera:'M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm-44,76a36,36,0,1,1-36-36A36,36,0,0,1,164,132Z',
+};
+// Delta palette plates [plate, glyph, shade]
+const DELTA = {
+  coatHanger:['#ff837d','#fff','#ba6561'], tShirt:['#bd9aff','#fff','#8c72bd'], sailboat:['#9abeff','#fff','#728dbe'],
+  airplaneTilt:['#96dfd3','#fff','#73ada4'], bowlFood:['#f9de81','#56595b','#c39a54'], island:['#98dc9a','#fff','#71a372'],
+  beerStein:['#f8c18c','#56595b','#c39a54'], confetti:['#e85e5c','#fff','#b02a3c'], tent:['#d3b69a','#fff','#8e6f60'],
+  martini:['#8c72bd','#fff','#54688c'], bus:['#728dbe','#fff','#54688c'], mountains:['#71a372','#fff','#4f7a50'], camera:['#56595b','#fff','#4a4a4a'],
+};
+const ico = (k)=>`<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${ICONS[k]}"/></svg>`;
+// A and C: true Delta plate. B: plate tinted into paper, glyph in the shade.
+const plate = (k, mode)=> mode==='B'
+  ? `<span class="plate" style="background:color-mix(in oklch, ${DELTA[k][0]} 42%, var(--paper-0));color:${DELTA[k][2]}">${ico(k)}</span>`
+  : `<span class="plate" style="background:${DELTA[k][0]};color:${DELTA[k][1]}">${ico(k)}</span>`;
+const av = (n)=>`<span class="av">${n}</span>`;
+const pile = (ns, more)=>`<span class="pile">${ns.map(av).join('')}${more?`<span class="av">+${more}</span>`:''}</span>`;
+const ARROW = `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+const CHECK = `<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>`;
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const mini = (vals, best, on)=>`<div class="mini">${vals.map((v,i)=>`<div class="${i===best?(on?'on':'best'):''}">${v||''}</div>`).join('')}</div><div class="minil">${DAYS.map((d,i)=>`<div class="${i===best?'best':''}">${d}</div>`).join('')}</div>`;
+const status = `<div class="status"><span>9:41</span><span>●●●</span></div>`;
+
+function boardA(){
+  return `${status}
+  <div class="head"><span class="wordmark">Quorum</span><span class="meta">EMBA '27 · Feb 14–20</span></div>
+  <div class="screen">
+    <div class="mast"><h2>What we <em>could</em> do</h2><p>Tap in and your free days ride along. When enough of us overlap, Quorum asks the group.</p></div>
+
+    <div class="sect"><span class="lab"><b>Ready</b> · 2</span><span class="lab">anyone in can lock</span></div>
+    <div class="reg" data-lock>
+      <div class="band"><span>Quorum · to everyone in</span><span>Suits in Hoi An</span></div>
+      <div class="body">
+        <div class="line"><b>6 of 8</b> can do Tuesday 16. Lock it in?</div>
+        ${mini([0,3,6,3,2,2,0],2)}
+        <button class="solid red">Lock in Tuesday ${ARROW}</button>
+      </div>
+    </div>
+    <div class="row">
+      ${plate('coatHanger','A')}
+      <div class="t"><div class="when"><b>Tue 16</b> · 3:00pm · ~$250</div><div class="title">Suits in Hoi An</div><div class="sub">${pile(['P','M','D','J'],4)}<span>8 in · 1 maybe · Priya</span></div>
+        <div class="acts"><button class="ghost">I'm in</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div></div>
+      <div class="count ready"><b>6</b><small>of 4</small></div>
+    </div>
+    <div class="row">
+      ${plate('tShirt','A')}
+      <div class="t"><div class="when">No day needed · $25–35</div><div class="title">Cohort shirts</div><div class="sub">${pile(['K','S','A','O'],5)}<span>9 in · Ken</span></div>
+        <div class="acts"><button class="ghost">I'm in</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div></div>
+      <div class="count ready"><b>9</b><small>of 4</small></div>
+    </div>
+
+    <div class="sect"><span class="lab"><b>Forming</b> · 3</span><span class="lab">nearest first</span></div>
+    <div class="row">
+      ${plate('sailboat','A')}
+      <div class="t"><div class="when">Best Wed 17 · ~$180</div><div class="title">Overnight boat</div><div class="sub">${pile(['M','E','T','L'])}<span>4 in · needs 6 · Marcus</span></div>
+        <div class="acts"><button class="ghost">I'm in</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div></div>
+      <div class="count"><b>3</b><small>of 6</small></div>
+    </div>
+    <div class="row">
+      ${plate('bowlFood','A')}
+      <div class="t"><div class="when">Best Thu 18 · 7:30pm · $20</div><div class="title">Street-food crawl</div><div class="sub">${pile(['Y','R','S','K'],1)}<span>5 in · 1 maybe · Ravi</span></div>
+        <div class="acts"><button class="ghost on">${CHECK} In</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div></div>
+      <div class="count"><b>3</b><small>of 4</small></div>
+    </div>
+
+    <div class="sect"><span class="lab"><b>On</b> · 1</span><span class="lab">texts sent · in calendars</span></div>
+    <div class="row">
+      ${plate('airplaneTilt','A')}
+      <div class="t"><div class="when"><b style="color:var(--moss-deep)">Thu 18</b> · 5:10am · $90</div><div class="title">5am flight to Da Nang</div><div class="sub">${pile(['J','M','D','W'])}<span>4 in · Maya locked it</span></div>
+        <div class="acts"><button class="ghost">I'm in</button><button class="ghost">Out</button></div></div>
+      <div class="count on"><b>4</b><small>on</small></div>
+    </div>
+  </div>
+  <div class="tabbar"><button class="on">Board</button><button>Post</button><button>You</button></div>`;
+}
+
+function boardB(){
+  const card=(cls, icon, title, facts, big, of, tag, body, foot, go)=>`
+    <div class="card ${cls}">
+      <div class="top">${plate(icon,'B')}<div class="t"><div class="title">${title}</div><div class="facts">${facts}</div></div>${tag}</div>
+      <div class="stat"><b>${big}</b><span class="of">${of}</span></div>
+      ${body||''}
+      <div class="foot">${foot}<span class="go ${go?'red':''}">${ARROW}</span></div>
+    </div>`;
+  return `${status}
+  <div class="head"><span class="wordmark">Quorum</span><span class="meta" style="letter-spacing:.06em">№ 01 / 03 · Hoi An</span></div>
+  <div class="screen">
+    <div class="mast"><h2>What we <em>could</em> do</h2><p>Tap in and your free days ride along. When enough overlap, Quorum asks the group.</p></div>
+
+    <div class="sect"><span class="num">01</span><span class="lab">Ready</span><span class="dots"></span><span class="no">2 of 6</span></div>
+    <div class="card ready" data-lock>
+      <div class="top">${plate('coatHanger','B')}<div class="t"><div class="title">Suits in Hoi An</div><div class="facts">~$250 · 3:00pm · started by Priya</div></div><span class="tag red">Ready · Tue</span></div>
+      <div class="stat"><b>6</b><span class="of">of 8 can do Tuesday 16</span></div>
+      ${mini([0,3,6,3,2,2,0],2)}
+      <div class="ask"><span class="q">Lock it in? Texts go to the 8, invite lands in calendars.</span><button class="solid red" style="height:34px;padding:0 14px;font-size:12.5px">Lock it in</button></div>
+      <div class="acts"><button class="ghost">I'm in</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div>
+      <div class="foot">${pile(['P','M','D','J'],4)}<span><b>8 in</b> · 1 maybe</span></div>
+    </div>
+    ${card('ready','tShirt','Cohort shirts','$25–35 · no day needed · Ken','9','of 4 want it','<span class="tag red">Ready</span>','', pile(['K','S','A','O'],5)+'<span><b>9 in</b></span>', true)}
+
+    <div class="sect"><span class="num">02</span><span class="lab">Forming</span><span class="dots"></span><span class="no">3 of 6</span></div>
+    ${card('open','sailboat','Overnight boat','~$180 · needs 6 · Marcus','3','of 6 on Wednesday','<span class="tag">3 more</span>', mini([0,0,2,3,2,0,0],3), pile(['M','E','T','L'])+'<span><b>4 in</b></span>')}
+    ${card('open','bowlFood','Street-food crawl','$20 · 7:30pm · Ravi','3','of 4 on Thursday','<span class="tag">1 more</span>', '', pile(['Y','R','S','K'],1)+'<span><b>5 in</b> · you</span>')}
+
+    <div class="sect"><span class="num">03</span><span class="lab">On</span><span class="dots"></span><span class="no">1</span></div>
+    ${card('on','airplaneTilt','5am flight to Da Nang','$90 · 5:10am · Maya locked it','Thu 18','in calendars','<span class="tag green">On</span>','', pile(['J','M','D','W'])+'<span><b>4 in</b></span>')}
+  </div>
+  <div class="tabbar"><button class="on">Board</button><button>Post</button><button>You</button></div>`;
+}
+
+function boardC(){
+  const date=(cls, m, d, i)=>`<div class="date ${cls}"><small>${m}</small><b>${d}</b><i>${i||''}</i></div>`;
+  const card=(cls, dt, icon, title, facts, body)=>`
+    <div class="card ${cls}">${dt}<div class="t"><div class="titlerow">${plate(icon,'C')}<div class="title">${title}</div></div><div class="facts">${facts}</div>${body||''}</div></div>`;
+  return `${status}
+  <div class="head"><span class="wordmark">Quorum</span><span class="meta">EMBA '27</span></div>
+  <div class="screen">
+    <div class="mast">
+      <div class="hero">
+        <h2>What we <em>could</em> do</h2>
+        <p>Trip week, Feb 14 to 20. Tap in and your free days ride along; when enough overlap, Quorum asks.</p>
+        <div class="pills"><button class="pill">Post an intent ${ARROW}</button><button class="pill ghost">Your week</button></div>
+      </div>
+    </div>
+
+    <div class="sect"><span class="lab">Ready</span><span class="n">2</span></div>
+    <div class="card" data-lock>${date('ready','Feb','16','Tue')}<div class="t">
+      <div class="titlerow">${plate('coatHanger','C')}<div class="title">Suits in Hoi An</div></div>
+      <div class="facts"><span class="chip">Ready</span><b>6 of 8</b> can do Tue · ~$250 · 3:00pm</div>
+      ${mini([0,3,6,3,2,2,0],2)}
+      <div class="ask"><span class="q">Lock in Tuesday? Texts go to the 8.</span><button class="pill">Lock it in ${ARROW}</button></div>
+      <div class="facts" style="margin-top:10px">${pile(['P','M','D','J'],4)}<span>8 in · 1 maybe</span></div>
+      <div class="acts"><button class="ghost">I'm in</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div>
+    </div></div>
+    ${card('', date('none','Any','No day'), 'tShirt','Cohort shirts', `<span class="chip">Ready</span><b>9 in</b> · $25–35`, `<div class="ask"><span class="q">Make it happen? One order, delivered before the trip.</span><button class="pill">It's on ${ARROW}</button></div><div class="acts"><button class="ghost">I'm in</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div>`)}
+
+    <div class="sect"><span class="lab">Forming</span><span class="n">3</span></div>
+    ${card('', date('','Feb','17','Wed'), 'sailboat','Overnight boat', `<b>3 of 6</b> on Wed · ~$180 · needs 6`, mini([0,0,2,3,2,0,0],3)+`<div class="acts"><button class="ghost">I'm in</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div>`)}
+    ${card('', date('','Feb','18','Thu'), 'bowlFood','Street-food crawl', `<b>3 of 4</b> on Thu · $20 · 7:30pm`, `<div class="acts"><button class="ghost on">${CHECK} In</button><button class="ghost">Maybe</button><button class="ghost">Out</button></div>`)}
+
+    <div class="sect"><span class="lab">On</span><span class="n">1</span></div>
+    ${card('on', date('on','Feb','18','Thu'), 'airplaneTilt','5am flight to Da Nang', `<span class="chip green">On</span>5:10am · $90 · Maya locked it`, `<div class="facts" style="margin-top:8px">${pile(['J','M','D','W'])}<span>4 in · invites sent</span></div>`)}
+  </div>
+  <div class="tabbar"><button class="on">Board</button><button>Post</button><button>You</button></div>`;
+}
+
+const BOARDS={A:boardA,B:boardB,C:boardC};
+document.querySelectorAll('[data-dir]').forEach(ph=>{ ph.innerHTML=BOARDS[ph.dataset.dir](); });
+document.querySelectorAll('[data-strip]').forEach(s=>{ s.innerHTML=Object.keys(ICONS).map(k=>plate(k,s.dataset.strip)).join(''); });
+
+// live lock: the ask becomes a quiet confirmation
+const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.querySelectorAll('[data-lock]').forEach(c=>{
+  const bt=c.querySelector('.solid, .ask .pill'); if(!bt) return;
+  bt.onclick=()=>{
+    const host=bt.closest('.ask')||bt.closest('.body');
+    const msg=`<div class="me">${CHECK} Locked. Tuesday 16 · texts and invites sent to 8.</div>`;
+    if(bt.closest('.ask')){ bt.closest('.ask').innerHTML=msg; } else { bt.outerHTML=msg; }
+    c.classList.remove('ready'); c.classList.add('on');
+    c.querySelectorAll('.tag').forEach(t=>{ t.className='tag green'; t.textContent='On · Tue'; });
+    c.querySelectorAll('.chip').forEach(t=>{ t.className='chip green'; t.textContent='On'; });
+    c.querySelectorAll('.date').forEach(d=>{ d.className='date on'; });
+    c.querySelectorAll('.stat b').forEach(b=>{ b.textContent='Tue 16'; });
+    c.querySelectorAll('.stat .of').forEach(o=>{ o.textContent='locked · 8 in'; });
+    c.querySelectorAll('.mini div.best').forEach(d=>{ d.className='on'; });
+  };
+});
+document.querySelectorAll('.acts').forEach(g=>g.addEventListener('click',e=>{ const bt=e.target.closest('button'); if(!bt) return; [...g.children].forEach(x=>{ const on = x===bt && !x.classList.contains('on'); x.classList.toggle('on', on); x.innerHTML = on && /in$/i.test(x.textContent.trim()) ? CHECK+' In' : x.textContent.trim().replace(/^In$/, "I'm in"); }); }));
+</script>
+</body>
+</html>
