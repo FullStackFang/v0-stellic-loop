@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quorum · fun directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..800,0..100,0..1;1,9..144,400..800,0..100,0..1&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400..600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --line:rgba(31,26,23,.12); --line-2:rgba(31,26,23,.18); --hair:rgba(31,26,23,.08);
+    --carnelian:#b31b1b; --carnelian-deep:#8a1414; --carnelian-tint:#f8e6e3;
+    --moss:#3d8a5f; --moss-deep:#2f6e4a; --moss-tint:#e3f0e8;
+    --sun:#f2b73c; --sun-deep:#c98f12; --sun-tint:#fdf0cf;
+    --lagoon:#2a9d8f; --lagoon-tint:#dff3ef;
+    --blush:#f6cfc6; --mint:#cfe9d6; --sky:#cfe1f2; --sand:#efe0bf;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Geist',system-ui,sans-serif;
+    --fraunces:'Fraunces',Georgia,serif; --brico:'Bricolage Grotesque','Geist',system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --expo:cubic-bezier(.16,1,.3,1);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; }
+  body{ margin:0; background:#efe7da; font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; padding:40px 24px 80px; font-feature-settings:"tnum"; }
+  .intro{ max-width:1700px; margin:0 auto 26px; }
+  .intro h1{ font-family:var(--serif); font-size:28px; font-weight:500; letter-spacing:-.02em; margin:0 0 6px; }
+  .intro p{ color:var(--ink-2); font-size:14px; line-height:1.5; margin:0; max-width:70ch; }
+  .rail{ display:flex; gap:28px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1700px; margin:0 auto; }
+  .col{ width:390px; }
+  .col .cap{ font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:0 0 8px 6px; display:flex; justify-content:space-between; }
+  .col .cap b{ color:var(--ink); }
+  .col .why{ font-size:12.5px; line-height:1.5; color:var(--ink-2); margin:12px 6px 0; }
+  .phone{ width:390px; height:844px; background:var(--paper-1); border:1px solid var(--line-2); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px rgba(60,30,20,.4); }
+  .phone iframe{ width:390px; height:844px; border:0; display:block; }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; }
+  .screen{ flex:1; overflow:auto; padding:0 16px 40px; scrollbar-width:none; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .lab{ font-size:9.5px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-3); }
+
+  /* ====== A · Sticker book ====== */
+  .dA .head{ display:flex; align-items:center; justify-content:space-between; padding:12px 22px 4px; }
+  .dA .wordmark{ font-family:var(--fraunces); font-variation-settings:"SOFT" 100,"WONK" 1; font-size:24px; font-weight:700; letter-spacing:-.02em; }
+  .stk{ display:inline-block; padding:5px 10px; border-radius:8px; background:var(--sun); color:var(--ink); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; border:1.5px solid var(--ink); box-shadow:2.5px 2.5px 0 var(--ink); transform:rotate(-4deg); }
+  .stk.red{ background:var(--carnelian); color:var(--paper-0); }
+  .stk.lag{ background:var(--lagoon); color:var(--paper-0); }
+  .dA .mast{ padding:10px 8px 2px; }
+  .dA .mast h2{ font-family:var(--fraunces); font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144; font-size:38px; font-weight:600; font-style:italic; letter-spacing:-.025em; line-height:1; margin:0; }
+  .dA .mast h2 .u{ position:relative; display:inline-block; white-space:nowrap; }
+  .dA .mast h2 .u svg{ position:absolute; left:-2%; bottom:-6px; width:104%; height:12px; }
+  .dA .mast p{ margin:10px 0 0; font-size:14px; line-height:1.45; color:var(--ink-2); }
+  .dA .sect{ display:flex; align-items:center; gap:10px; padding:18px 6px 10px; }
+  .dA .sect .lab{ color:var(--ink-2); }
+  .dA .sect .n{ font-family:var(--fraunces); font-size:18px; font-weight:700; font-style:italic; color:var(--carnelian); }
+  .dA .card{ background:var(--paper-0); border:1.5px solid var(--ink); border-radius:22px; padding:16px 16px 14px; margin-bottom:12px; position:relative; box-shadow:4px 4px 0 var(--ink); transition:background .3s var(--ease); }
+  .dA .card.on{ background:var(--lagoon-tint); }
+  .dA .card .row{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+  .dA .title{ font-family:var(--fraunces); font-variation-settings:"SOFT" 100,"WONK" 1; font-size:23px; font-weight:600; letter-spacing:-.015em; line-height:1.15; }
+  .dA .facts{ font-size:12.5px; color:var(--ink-3); margin-top:4px; }
+  .dA .seal{ width:58px; height:58px; border-radius:50%; background:var(--sun); border:1.5px solid var(--ink); box-shadow:2.5px 2.5px 0 var(--ink); display:flex; flex-direction:column; align-items:center; justify-content:center; transform:rotate(7deg); flex-shrink:0; line-height:1; }
+  .dA .seal.red{ background:var(--carnelian); color:var(--paper-0); } .dA .seal.lag{ background:var(--lagoon); color:var(--paper-0); }
+  .dA .seal b{ font-family:var(--fraunces); font-size:24px; font-weight:700; }
+  .dA .seal small{ font-size:8.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-top:1px; }
+  .dA .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:12px; }
+  .dA .heat div{ height:34px; border-radius:10px; display:grid; place-items:center; font-size:12.5px; font-weight:700; color:var(--ink-2); background:var(--paper-2); position:relative; }
+  .dA .heat div.best{ color:var(--carnelian); }
+  .dA .heat div.best svg{ position:absolute; inset:-5px -3px; width:calc(100% + 6px); height:calc(100% + 10px); }
+  .dA .hl{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:4px; }
+  .dA .hl div{ text-align:center; font-size:9.5px; font-weight:600; color:var(--ink-3); }
+  .dA .who{ font-size:13px; color:var(--ink-2); margin-top:10px; } .dA .who b{ color:var(--ink); font-weight:600; }
+  .dA .bubble{ position:relative; margin-top:14px; padding:12px 14px; background:var(--sun-tint); border:1.5px solid var(--ink); border-radius:18px; font-family:var(--fraunces); font-style:italic; font-size:16px; line-height:1.3; display:flex; align-items:center; gap:10px; }
+  .dA .bubble::after{ content:''; position:absolute; left:22px; bottom:-9px; width:14px; height:14px; background:var(--sun-tint); border-right:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); transform:rotate(45deg); }
+  .dA .bubble span{ flex:1; } .dA .bubble b{ font-style:normal; font-weight:700; }
+  .dA .bubble button{ height:38px; padding:0 16px; border-radius:999px; background:var(--carnelian); color:var(--paper-0); border:1.5px solid var(--ink); box-shadow:2.5px 2.5px 0 var(--ink); font:700 12px var(--sans); letter-spacing:.04em; white-space:nowrap; transition:transform .1s, box-shadow .1s; }
+  .dA .bubble button:active{ transform:translate(2px,2px); box-shadow:0 0 0 var(--ink); }
+  .dA .acts{ display:flex; gap:8px; margin-top:16px; }
+  .dA .acts button{ flex:1; height:40px; border-radius:999px; border:1.5px solid var(--ink); background:var(--paper-0); font-size:13px; font-weight:600; }
+  .dA .acts button.sel{ background:var(--ink); color:var(--paper-0); }
+  .dA .stamp{ position:absolute; right:88px; top:8px; padding:8px 14px; border:3px solid var(--lagoon); color:var(--lagoon); border-radius:10px; font:800 20px var(--fraunces); letter-spacing:.06em; text-transform:uppercase; transform:rotate(-8deg); opacity:0; pointer-events:none; mix-blend-mode:multiply; }
+  .dA .stamp.go{ animation:slam .42s var(--expo) forwards; }
+  @keyframes slam{ 0%{ opacity:0; transform:rotate(-14deg) scale(2.6); } 60%{ opacity:1; transform:rotate(-8deg) scale(.96); } 100%{ opacity:1; transform:rotate(-8deg) scale(1); } }
+  .dA .tabbar{ position:absolute; left:50%; bottom:22px; transform:translateX(-50%); display:flex; gap:6px; padding:6px; border-radius:999px; background:var(--paper-0); border:1.5px solid var(--ink); box-shadow:3px 3px 0 var(--ink); }
+  .dA .tabbar button{ height:40px; padding:0 18px; border-radius:999px; border:0; background:transparent; font-size:13px; font-weight:600; }
+  .dA .tabbar button.on{ background:var(--ink); color:var(--paper-0); }
+
+  /* ====== B · Group chat ====== */
+  .dB .head{ display:flex; align-items:center; justify-content:space-between; padding:12px 22px 6px; }
+  .dB .wordmark{ font-family:var(--serif); font-size:23px; font-weight:500; letter-spacing:-.02em; }
+  .dB .pile{ display:flex; align-items:center; }
+  .dB .av{ width:28px; height:28px; border-radius:50%; border:2px solid var(--paper-1); display:grid; place-items:center; font-size:10.5px; font-weight:700; color:var(--ink); margin-left:-8px; }
+  .dB .av:first-child{ margin-left:0; }
+  .dB .av.a{ background:var(--blush); } .dB .av.b{ background:var(--mint); } .dB .av.c{ background:var(--sky); } .dB .av.d{ background:var(--sand); } .dB .av.e{ background:var(--sun); } .dB .av.me{ background:var(--ink); color:var(--paper-0); }
+  .dB .av.more{ background:var(--paper-0); border-color:var(--line-2); font-size:10px; color:var(--ink-2); }
+  .dB .mast{ padding:12px 6px 4px; }
+  .dB .mast h2{ font-size:30px; font-weight:700; letter-spacing:-.03em; line-height:1.05; margin:0; }
+  .dB .mast h2 em{ font-style:normal; color:var(--carnelian); }
+  .dB .mast p{ margin:8px 0 0; font-size:14px; color:var(--ink-2); line-height:1.45; }
+  .dB .sect{ display:flex; align-items:center; justify-content:space-between; padding:18px 6px 10px; }
+  .dB .card{ background:var(--paper-0); border-radius:24px; padding:14px 16px 14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(60,30,20,.05), 0 10px 24px -14px rgba(60,30,20,.35); transition:background .3s var(--ease); }
+  .dB .card.on{ background:var(--moss-tint); }
+  .dB .top{ display:flex; gap:12px; align-items:center; }
+  .dB .emo{ width:48px; height:48px; border-radius:16px; background:var(--paper-2); display:grid; place-items:center; font-size:26px; flex-shrink:0; }
+  .dB .title{ font-size:19px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+  .dB .facts{ font-size:12.5px; color:var(--ink-3); margin-top:2px; }
+  .dB .chip{ display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:999px; font-size:11px; font-weight:700; background:var(--carnelian-tint); color:var(--carnelian-deep); white-space:nowrap; }
+  .dB .chip.on{ background:var(--moss-deep); color:var(--paper-0); }
+  .dB .dots{ display:grid; grid-template-columns:repeat(7,1fr); grid-template-rows:52px; gap:0 6px; margin-top:14px; height:52px; }
+  .dB .dots div{ display:flex; flex-direction:column-reverse; align-items:center; gap:2px; height:52px; }
+  .dB .dots i{ width:7px; height:7px; border-radius:50%; background:var(--ink-4); display:block; }
+  .dB .dots div.best i{ background:var(--carnelian); }
+  .dB .dl{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:5px; } .dB .dl div{ text-align:center; font-size:9.5px; font-weight:600; color:var(--ink-3); } .dB .dl div.best{ color:var(--carnelian-deep); }
+  .dB .pilerow{ display:flex; align-items:center; gap:10px; margin-top:12px; font-size:12.5px; color:var(--ink-2); }
+  .dB .msg{ margin-top:12px; display:flex; flex-direction:column; gap:6px; }
+  .dB .from{ font-size:10.5px; font-weight:600; color:var(--ink-3); margin-left:6px; }
+  .dB .bub{ max-width:88%; padding:10px 14px; border-radius:18px 18px 18px 4px; background:var(--paper-2); font-size:14px; line-height:1.4; }
+  .dB .bub b{ font-weight:700; }
+  .dB .bub.me{ align-self:flex-end; border-radius:18px 18px 4px 18px; background:var(--ink); color:var(--paper-0); }
+  .dB .bub.me.in{ animation:pop .32s var(--expo) both; }
+  @keyframes pop{ from{ opacity:0; transform:translateY(8px) scale(.96); } to{ opacity:1; transform:none; } }
+  .dB .replies{ display:flex; gap:8px; margin-top:4px; margin-left:6px; }
+  .dB .replies button{ height:36px; padding:0 14px; border-radius:999px; border:1px solid var(--line-2); background:var(--paper-0); font-size:13px; font-weight:600; }
+  .dB .replies button.go{ background:var(--carnelian); border-color:var(--carnelian); color:var(--paper-0); }
+  .dB .acts{ display:flex; gap:8px; margin-top:14px; }
+  .dB .acts button{ flex:1; height:40px; border-radius:999px; border:1px solid var(--line-2); background:var(--paper-0); font-size:13px; font-weight:600; }
+  .dB .acts button.sel{ background:var(--ink); border-color:var(--ink); color:var(--paper-0); }
+  .dB .tabbar{ position:absolute; left:50%; bottom:22px; transform:translateX(-50%); display:flex; gap:4px; padding:6px; border-radius:999px; background:var(--paper-0); box-shadow:0 2px 4px rgba(60,30,20,.06), 0 14px 34px -18px rgba(60,30,20,.45); }
+  .dB .tabbar button{ height:40px; padding:0 18px; border-radius:999px; border:0; background:transparent; font-size:13px; font-weight:600; }
+  .dB .tabbar button.on{ background:var(--ink); color:var(--paper-0); }
+
+  /* ====== C · Poster ====== */
+  .dC{ background:var(--paper-1); }
+  .dC .head{ display:flex; align-items:center; justify-content:space-between; padding:12px 22px 6px; }
+  .dC .wordmark{ font-family:var(--brico); font-size:22px; font-weight:800; letter-spacing:-.03em; text-transform:uppercase; }
+  .dC .mast{ margin:8px 0 0; padding:18px 18px 16px; border-radius:22px; background:var(--carnelian); color:var(--paper-0); }
+  .dC .mast .lab{ color:rgba(255,253,248,.75); }
+  .dC .mast h2{ font-family:var(--brico); font-size:44px; font-weight:800; line-height:.9; letter-spacing:-.04em; text-transform:uppercase; margin:8px 0 0; font-variation-settings:"opsz" 96; }
+  .dC .mast .tick{ display:flex; gap:16px; margin-top:16px; font-family:var(--brico); font-weight:700; font-size:13px; letter-spacing:.02em; }
+  .dC .mast .tick b{ font-size:26px; font-weight:800; letter-spacing:-.03em; line-height:1; margin-right:4px; }
+  .dC .sect{ display:flex; align-items:baseline; justify-content:space-between; padding:20px 6px 10px; font-family:var(--brico); font-weight:800; font-size:13px; letter-spacing:.02em; text-transform:uppercase; }
+  .dC .sect span:last-child{ color:var(--ink-3); }
+  .dC .card{ border-radius:22px; padding:16px 16px 14px; margin-bottom:12px; background:var(--paper-0); border:1px solid var(--line); perspective:1200px; transition:background .25s, color .25s, border-color .25s; }
+  .dC .card.ready{ background:var(--sun); border-color:var(--sun); }
+  .dC .card.on{ background:var(--moss-deep); border-color:var(--moss-deep); color:var(--paper-0); }
+  .dC .card.flip{ animation:flip .62s var(--expo); }
+  @keyframes flip{ 0%{ transform:rotateY(0); } 50%{ transform:rotateY(90deg); } 100%{ transform:rotateY(0); } }
+  .dC .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .dC .title{ font-family:var(--brico); font-size:26px; font-weight:800; letter-spacing:-.035em; line-height:.95; text-transform:uppercase; }
+  .dC .facts{ font-size:12.5px; margin-top:6px; opacity:.72; font-weight:500; }
+  .dC .big{ font-family:var(--brico); font-size:48px; font-weight:800; letter-spacing:-.05em; line-height:.85; text-align:right; flex-shrink:0; }
+  .dC .big small{ font-size:14px; letter-spacing:0; font-weight:700; opacity:.7; display:block; margin-top:4px; text-transform:uppercase; }
+  .dC .bars{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; align-items:end; height:44px; margin-top:14px; }
+  .dC .bars i{ display:block; border-radius:4px 4px 2px 2px; background:rgba(31,26,23,.18); }
+  .dC .bars i.best{ background:var(--ink); }
+  .dC .card.on .bars i{ background:rgba(255,253,248,.3); } .dC .card.on .bars i.best{ background:var(--paper-0); }
+  .dC .bl{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:4px; } .dC .bl div{ text-align:center; font-size:9.5px; font-weight:700; opacity:.65; }
+  .dC .who{ font-size:13px; margin-top:10px; opacity:.85; } .dC .who b{ font-weight:700; }
+  .dC .lock{ margin-top:14px; width:100%; height:48px; border-radius:14px; border:0; background:var(--ink); color:var(--paper-0); font-family:var(--brico); font-size:15px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; display:flex; align-items:center; justify-content:space-between; padding:0 16px 0 18px; }
+  .dC .lock svg{ width:18px; height:18px; }
+  .dC .acts{ display:flex; gap:8px; margin-top:12px; }
+  .dC .acts button{ flex:1; height:40px; border-radius:12px; border:1.5px solid rgba(31,26,23,.25); background:transparent; font-family:var(--brico); font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; color:inherit; }
+  .dC .acts button.sel{ background:var(--ink); border-color:var(--ink); color:var(--paper-0); }
+  .dC .card.on .acts button{ border-color:rgba(255,253,248,.4); } .dC .card.on .acts button.sel{ background:var(--paper-0); color:var(--moss-deep); border-color:var(--paper-0); }
+  .dC .tabbar{ position:absolute; left:16px; right:16px; bottom:20px; display:flex; gap:4px; padding:5px; border-radius:16px; background:var(--ink); }
+  .dC .tabbar button{ flex:1; height:42px; border-radius:12px; border:0; background:transparent; color:rgba(255,253,248,.7); font-family:var(--brico); font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.02em; }
+  .dC .tabbar button.on{ background:var(--paper-0); color:var(--ink); }
+
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } .dA .stamp.go{ opacity:1; } }
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>Quorum · three ways to put the fun back</h1>
+  <p>Same board, same data, same warm paper and carnelian. Each frame has a live <b>Lock in</b> so you can feel its signature moment. Scroll inside a phone to see more cards. Pick one, or name the bits you want mixed.</p>
+</div>
+<div class="rail">
+
+  <div class="col">
+    <div class="cap"><span>0 · Now</span><b>v3, for reference</b></div>
+    <div class="phone"><iframe src="quorum.html" title="Current Quorum v3" scrolling="no"></iframe></div>
+    <p class="why">Refined, but it reads like a journal. Numbered sections, § marks, tracked caps.</p>
+  </div>
+
+  <!-- ================= A ================= -->
+  <div class="col">
+    <div class="cap"><span>A · Sticker book</span><b>wonky serif, seals, a stamp</b></div>
+    <div class="phone dA">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="head"><span class="wordmark">Quorum</span><span class="stk">Trip week · Feb 14–20</span></div>
+      <div class="screen">
+        <div class="mast">
+          <h2>What we <span class="u">could<svg viewBox="0 0 120 12" preserveAspectRatio="none"><path d="M2 8 C 30 2, 60 11, 118 5" fill="none" stroke="#f2b73c" stroke-width="5" stroke-linecap="round"/></svg></span> do.</h2>
+          <p>Tap in, your free days ride along. When enough of us overlap, it asks.</p>
+        </div>
+        <div class="sect"><span class="lab">Open</span><span class="n">5</span><span style="flex:1;border-bottom:1.5px dashed var(--ink-4)"></span><span class="lab">On</span><span class="n" style="color:var(--lagoon)">1</span></div>
+
+        <div class="card" data-a>
+          <div class="stamp">On · Tue</div>
+          <div class="row"><div><div class="title">Suits in Hoi An</div><div class="facts">8 in · 1 maybe · ~$250</div></div><div class="seal red"><b>6</b><small>on Tue</small></div></div>
+          <div class="heat"><div></div><div>3</div><div class="best">6<svg viewBox="0 0 60 44" preserveAspectRatio="none"><ellipse cx="30" cy="22" rx="27" ry="19" fill="none" stroke="#b31b1b" stroke-width="2.2" stroke-dasharray="150" stroke-dashoffset="0" transform="rotate(-6 30 22)"/></svg></div><div>3</div><div>2</div><div>2</div><div></div></div>
+          <div class="hl"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="who"><b>Priya, Marcus, Dana, Josh</b> and 4 more · 1 maybe</div>
+          <div class="bubble"><span>6 of 8 can do <b>Tuesday</b>. Lock it in?</span><button>Lock it in</button></div>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card">
+          <div class="row"><div><div class="title">Cohort shirts</div><div class="facts">No day needed · $25–35</div></div><div class="seal red"><b>9</b><small>in</small></div></div>
+          <div class="who"><b>Ken, Sofia, Amara, Omar</b> and 5 more</div>
+          <div class="bubble"><span>9 in. <b>Make it happen?</b></span><button>It's on</button></div>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card">
+          <div class="row"><div><div class="title">Overnight boat</div><div class="facts">4 in · ~$180 · needs 6</div></div><div class="seal"><b>3</b><small>of 6</small></div></div>
+          <div class="heat"><div></div><div></div><div>1</div><div class="best">3</div><div>2</div><div></div><div></div></div>
+          <div class="hl"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="who"><b>Marcus, Elena, Tom, Luis</b></div>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card on">
+          <div class="row"><div><div class="title">5am flight to Da Nang</div><div class="facts">Thu 18 · 5:10am · $90</div></div><div class="seal lag"><b>4</b><small>on</small></div></div>
+          <div class="who"><b>Josh, Maya, Dana, Wei</b> · Maya locked it</div>
+          <div class="acts"><button>I'm in</button><button>Out</button></div>
+        </div>
+      </div>
+      <div class="tabbar"><button class="on">Board</button><button>+</button><button>You</button></div>
+    </div>
+    <p class="why">Fraunces with the wonky axis on, hard offset shadows, round seals that tilt, a marker underline, and a rubber stamp that slams on lock. Carnelian and sunflower do the talking; lagoon means on.</p>
+  </div>
+
+  <!-- ================= B ================= -->
+  <div class="col">
+    <div class="cap"><span>B · Group chat</span><b>faces, emoji, the ask is a message</b></div>
+    <div class="phone dB">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="head"><span class="wordmark">Quorum</span><span class="pile"><span class="av a">P</span><span class="av b">M</span><span class="av c">D</span><span class="av d">J</span><span class="av more">+57</span></span></div>
+      <div class="screen">
+        <div class="mast"><h2>What we <em>could</em> do</h2><p>Tap in. When enough of us can do the same day, Quorum asks the group.</p></div>
+        <div class="sect"><span class="lab">Open · 5</span><span class="lab">On · 1</span></div>
+
+        <div class="card" data-b>
+          <div class="top"><div class="emo">👔</div><div style="flex:1"><div class="title">Suits in Hoi An</div><div class="facts">8 in · 1 maybe · ~$250</div></div><span class="chip" data-chip>6 can do Tue</span></div>
+          <div class="dots"><div></div><div><i></i><i></i><i></i></div><div class="best"><i></i><i></i><i></i><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div><div><i></i><i></i></div><div><i></i><i></i></div><div></div></div>
+          <div class="dl"><div>Sun</div><div>Mon</div><div class="best">Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="pilerow"><span class="pile"><span class="av a">P</span><span class="av b">M</span><span class="av c">D</span><span class="av d">J</span><span class="av e">M</span><span class="av a">E</span><span class="av more">+2</span></span><span>in · Hana maybe</span></div>
+          <div class="msg">
+            <span class="from">Quorum</span>
+            <div class="bub">6 of 8 can do <b>Tue 16</b>. Lock it in?</div>
+            <div class="replies" data-replies><button class="go">Lock it in 🔒</button><button>Not yet</button></div>
+          </div>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card">
+          <div class="top"><div class="emo">👕</div><div style="flex:1"><div class="title">Cohort shirts</div><div class="facts">No day needed · $25–35</div></div><span class="chip">9 in</span></div>
+          <div class="pilerow"><span class="pile"><span class="av e">K</span><span class="av c">S</span><span class="av a">A</span><span class="av d">O</span><span class="av more">+5</span></span><span>in</span></div>
+          <div class="msg"><span class="from">Quorum</span><div class="bub">9 of you want shirts. <b>Make it happen?</b></div><div class="replies"><button class="go">It's on 🎉</button><button>Not yet</button></div></div>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card">
+          <div class="top"><div class="emo">🛥️</div><div style="flex:1"><div class="title">Overnight boat</div><div class="facts">4 in · ~$180 · needs 6</div></div><span class="chip" style="background:var(--paper-2);color:var(--ink-2)">2 more</span></div>
+          <div class="dots"><div></div><div></div><div><i></i></div><div class="best"><i></i><i></i><i></i></div><div><i></i><i></i></div><div></div><div></div></div>
+          <div class="dl"><div>Sun</div><div>Mon</div><div>Tue</div><div class="best">Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="pilerow"><span class="pile"><span class="av b">M</span><span class="av a">E</span><span class="av c">T</span><span class="av d">L</span></span><span>in</span></div>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card on">
+          <div class="top"><div class="emo">✈️</div><div style="flex:1"><div class="title">5am flight to Da Nang</div><div class="facts">$90 · out and back</div></div><span class="chip on">On · Thu 18</span></div>
+          <div class="pilerow"><span class="pile"><span class="av d">J</span><span class="av e">M</span><span class="av c">D</span><span class="av b">W</span></span><span>Maya locked it · invites sent</span></div>
+          <div class="acts"><button>I'm in</button><button>Out</button></div>
+        </div>
+      </div>
+      <div class="tabbar"><button class="on">Board</button><button>+</button><button>You</button></div>
+    </div>
+    <p class="why">Reads like the WhatsApp group it replaces: an emoji seal per intent, faces instead of counts, days as little stacks of people, and the quorum prompt as a message you reply to. Lock posts your reply.</p>
+  </div>
+
+  <!-- ================= C ================= -->
+  <div class="col">
+    <div class="cap"><span>C · Poster</span><b>loud type, colour-block cards</b></div>
+    <div class="phone dC">
+      <div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="head"><span class="wordmark">Quorum</span><span class="lab">EMBA '27 · 61</span></div>
+      <div class="screen">
+        <div class="mast"><span class="lab">Trip week · Feb 14–20</span><h2>What we could do</h2><div class="tick"><span><b>5</b> open</span><span><b>4</b> ready</span><span><b>1</b> on</span></div></div>
+        <div class="sect"><span>Open</span><span>nearest to a yes first</span></div>
+
+        <div class="card ready" data-c>
+          <div class="row"><div><div class="title">Suits in<br>Hoi An</div><div class="facts">8 in · 1 maybe · ~$250</div></div><div class="big">6<small>on Tue</small></div></div>
+          <div class="bars"><i style="height:4px"></i><i style="height:22px"></i><i class="best" style="height:44px"></i><i style="height:22px"></i><i style="height:14px"></i><i style="height:14px"></i><i style="height:4px"></i></div>
+          <div class="bl"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="who"><b>Priya, Marcus, Dana, Josh</b> and 4 more</div>
+          <button class="lock" data-lock>Lock in Tuesday<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card ready">
+          <div class="row"><div><div class="title">Cohort<br>shirts</div><div class="facts">No day needed · $25–35</div></div><div class="big">9<small>in</small></div></div>
+          <div class="who"><b>Ken, Sofia, Amara, Omar</b> and 5 more</div>
+          <button class="lock">It's on<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="card">
+          <div class="row"><div><div class="title">Overnight<br>boat</div><div class="facts">4 in · ~$180 · needs 6</div></div><div class="big">3<small>of 6</small></div></div>
+          <div class="bars"><i style="height:4px"></i><i style="height:4px"></i><i style="height:14px"></i><i class="best" style="height:30px"></i><i style="height:22px"></i><i style="height:4px"></i><i style="height:4px"></i></div>
+          <div class="bl"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="who"><b>Marcus, Elena, Tom, Luis</b></div>
+          <div class="acts"><button>I'm in</button><button>Maybe</button><button>Out</button></div>
+        </div>
+
+        <div class="sect"><span>On</span><span>1</span></div>
+        <div class="card on">
+          <div class="row"><div><div class="title">5am flight<br>to Da Nang</div><div class="facts">Thu 18 · 5:10am · $90</div></div><div class="big">4<small>on</small></div></div>
+          <div class="who"><b>Josh, Maya, Dana, Wei</b> · Maya locked it</div>
+          <div class="acts"><button>I'm in</button><button>Out</button></div>
+        </div>
+      </div>
+      <div class="tabbar"><button class="on">Board</button><button>+</button><button>You</button></div>
+    </div>
+    <p class="why">Bricolage Grotesque at 800, uppercase, tight. Cards wear their status: sunflower when ready, moss when on, paper otherwise. Days are a bar chart. Lock flips the card over into moss.</p>
+  </div>
+
+</div>
+
+<script>
+  const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // A · stamp slam
+  const a=document.querySelector('[data-a]');
+  a.querySelector('.bubble button').onclick=()=>{
+    a.querySelector('.stamp').classList.add('go');
+    setTimeout(()=>{ a.classList.add('on'); const s=a.querySelector('.seal'); s.className='seal lag'; s.innerHTML='<b>8</b><small>on</small>'; a.querySelector('.bubble').remove(); a.querySelector('.acts').innerHTML='<button class="sel">In</button><button>Out</button>'; }, rm?0:260);
+  };
+  // B · reply bubble
+  const b=document.querySelector('[data-b]');
+  b.querySelector('[data-replies] .go').onclick=()=>{
+    const r=b.querySelector('[data-replies]'); r.remove();
+    const m=b.querySelector('.msg'); m.insertAdjacentHTML('beforeend','<div class="bub me in">Locked. It\'s on, Tue 16 🎉</div><span class="from" style="align-self:flex-end;margin-right:6px">You · texts + invites sent to 8</span>');
+    b.classList.add('on'); const c=b.querySelector('[data-chip]'); c.classList.add('on'); c.textContent='On · Tue 16';
+    b.querySelector('.acts').innerHTML='<button class="sel">In</button><button>Out</button>';
+  };
+  // C · flip to moss
+  const c=document.querySelector('[data-c]');
+  c.querySelector('[data-lock]').onclick=()=>{
+    const swap=()=>{ c.classList.remove('ready'); c.classList.add('on'); c.querySelector('.big').innerHTML='8<small>on Tue</small>'; c.querySelector('.who').innerHTML='<b>Priya, Marcus, Dana, Josh</b> and 4 more · you locked it'; c.querySelector('[data-lock]').remove(); c.querySelector('.acts').innerHTML='<button class="sel">In</button><button>Out</button>'; };
+    if(rm){ swap(); return; }
+    c.classList.add('flip'); setTimeout(swap, 300); setTimeout(()=>c.classList.remove('flip'), 700);
+  };
+  // generic in/maybe/out toggles
+  document.querySelectorAll('.acts').forEach(g=>g.addEventListener('click',e=>{ const bt=e.target.closest('button'); if(!bt) return; [...g.children].forEach(x=>x.classList.toggle('sel', x===bt && !x.classList.contains('sel'))); }));
+</script>
+</body>
+</html>
