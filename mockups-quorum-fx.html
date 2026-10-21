@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Quorum · Constellation, four densities</title>
+<title>Quorum · Orbits in the corner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400..600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -104,8 +104,8 @@
 </head>
 <body>
 <div class="intro">
-  <h1>Quorum · Constellation, denser</h1>
-  <p>Your pick (points that find each other) at four densities. Points drift; any two within reach get a hairline that fades as they part. Left is what you saw; each step right adds points, shortens the reach so it stays a mesh rather than a blur, and thins the lines. Pick one, or say "between 2 and 3".</p>
+  <h1>Quorum · Clutter in the top-right corner</h1>
+  <p>Four ways to pile the density where the spotlight is. 1 is the Tender's orbit band moved to the corner; 2 keeps the constellation but pulls its points toward the corner; 3 and 4 mix the two. Everything fades to clean paper before it reaches the title. Pick one, or say what to cross.</p>
 </div>
 <div class="rail" id="rail"></div>
 
@@ -137,14 +137,14 @@ const mini = (vals, best)=>`<div class="mini">${vals.map((v,i)=>`<div class="${i
 const date=(cls, m, d, i)=>`<div class="date ${cls}"><small>${m}</small><b>${d}</b><i>${i||''}</i></div>`;
 
 const FIELDS = [
-  { id:'c1', n:26,  reach:72, lw:0.7, la:0.28, pa:0.75, cap:'1 · As shown',  sub:'26 points, long reach',   why:'<b>The one you saw.</b> Sparse; most of the field is empty and a link is an event.' },
-  { id:'c2', n:48,  reach:66, lw:0.65, la:0.26, pa:0.7, cap:'2 · Busier',   sub:'48 points',              why:'<b>Always a few links alive.</b> Still reads as paper with a drawing on it; the title has clear air.' },
-  { id:'c3', n:80,  reach:58, lw:0.6, la:0.24, pa:0.65, cap:'3 · Crowded',  sub:'80 points, shorter reach', why:'<b>A proper mesh.</b> Links everywhere, lines thinner and paler so the text still wins. Closest to a star chart.' },
-  { id:'c4', n:130, reach:50, lw:0.5, la:0.22, pa:0.55, cap:'4 · Dense',    sub:'130 points',             why:'<b>The most texture.</b> Points become grain that happens to connect. Risk: competes with the grain and the spotlight; included so you can see where too far is.' },
+  { id:'orbits', mode:'orbits', cap:'1 · Orbits',           sub:'rings of dots, counter-rotating', why:'<b>The Tender band, in the corner.</b> Concentric rings of ink dots 11px apart, every other ring turning the opposite way, a few rings tinted coral or lavender. Dense at the corner, gone by the middle of the title.' },
+  { id:'gravity', mode:'gravity', cap:'2 · Gravity',        sub:'constellation, pulled to the corner', why:'<b>Your constellation, crowded where it matters.</b> Same drifting points and hairlines, but 90 points sit within a ring around the corner and 20 wander the rest. Links pile up in the corner; the title gets maybe one.' },
+  { id:'both', mode:'both', cap:"3 · Orbits+mesh", sub:"rings inside, mesh outside", why:'<b>Two textures.</b> The orbit rings fill the corner; a sparse constellation drifts around them and occasionally links into the outer ring. Busiest of the four.' },
+  { id:'rings', mode:'rings', cap:'4 · Ringed',             sub:'hairline circles, dots riding them', why:'<b>The drawn version.</b> Thin concentric circles like a chart, with dots sliding along them. Reads as instrument rather than particle. Calmest motion.' },
 ];
 function hero(f){
   const sub = '· 5 open · 1 on';
-  return `<div class="hero f-dusk" data-fx="links" data-n="${f.n}" data-reach="${f.reach}" data-lw="${f.lw}" data-la="${f.la}" data-pa="${f.pa}"><canvas aria-hidden="true"></canvas>
+  return `<div class="hero f-dusk" data-fx="${f.mode}"><canvas aria-hidden="true"></canvas>
     <p class="k"><i></i>§ 01 · Trip week<small>${sub}</small></p>
     <h2>What we <em>could</em> do</h2>
     <p>Tap in and your free days ride along; when enough of us overlap, Quorum asks.</p>
@@ -204,24 +204,49 @@ function spotlight(g,W,H,t,breathe){
   rg.addColorStop(0,rgba(CORAL,a)); rg.addColorStop(0.45,rgba(CORAL,a*0.33)); rg.addColorStop(1,rgba(CORAL,0));
   g.fillStyle=rg; g.fillRect(0,0,W,H);
 }
+const smooth=(a,b,v)=>{ const t=Math.max(0,Math.min(1,(v-a)/(b-a))); return t*t*(3-2*t); };
 function setup(el){
   const cv=el.querySelector('canvas'); const r=el.getBoundingClientRect(); const dpr=Math.min(2, devicePixelRatio||1);
   const W=r.width, H=r.height; cv.width=W*dpr; cv.height=H*dpr; const g=cv.getContext('2d');
-  const grain=grainLayer(W,H,dpr);
-  const N=+el.dataset.n, REACH=+el.dataset.reach, LW=+el.dataset.lw, LA=+el.dataset.la, PA=+el.dataset.pa;
-  let s=5; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
-  const P=[]; for(let i=0;i<N;i++) P.push({ x:rnd()*W, y:rnd()*H, vx:(rnd()-0.5)*0.12, vy:(rnd()-0.5)*0.12, r:0.9+rnd()*1.1, c:rnd()<0.7?CORAL:LAV });
+  const grain=grainLayer(W,H,dpr); const mode=el.dataset.fx;
+  let s=42; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
+  // corner origin: just outside the top-right corner, like the Tender's right-edge origin
+  const ox=W+6, oy=-6, maxR=Math.hypot(W,H)*0.62;
+  const falloff=(x,y)=>1-smooth(0.22,0.95,Math.hypot(x-ox,y-oy)/maxR); // 1 at the corner, 0 past ~maxR
+  const ACC=[CORAL,LAV,SUN];
+  // orbit dots (modes: orbits, both)
+  const dots=[]; if(mode==='orbits'||mode==='both'){
+    for(let ring=0,rad=10;rad<maxR;ring++,rad+=11){ const n=Math.max(6,Math.round(rad*2*Math.PI/9)); const speed=(ring%2?-1:1)*(0.05+rnd()*0.22); const acc=rnd()<0.2?ACC[Math.floor(rnd()*ACC.length)]:null; for(let k=0;k<n;k++) dots.push({rad,a:k/n*2*Math.PI+rnd()*0.2,speed,acc,r:0.6+rnd()*0.9}); }
+  }
+  // hairline rings with riders (mode: rings)
+  const rings=[]; if(mode==='rings'){
+    for(let ring=0,rad=14;rad<maxR;ring++,rad+=16){ const speed=(ring%2?-1:1)*(0.04+rnd()*0.12); const riders=[]; const n=1+Math.floor(rnd()*3+rad/60); for(let k=0;k<n;k++) riders.push({a:rnd()*Math.PI*2, r:1+rnd()*1.2, c:rnd()<0.55?INK:ACC[Math.floor(rnd()*ACC.length)]}); rings.push({rad,speed,riders}); }
+  }
+  // constellation points (modes: gravity, both)
+  const P=[]; let REACH=0, LA=0.26, LW=0.6;
+  if(mode==='gravity'){ REACH=52;
+    for(let i=0;i<90;i++){ const ang=Math.PI/2+rnd()*Math.PI/2; const d=Math.sqrt(rnd())*maxR*0.52; P.push({x:ox+Math.cos(ang)*d, y:oy+Math.sin(ang)*d, vx:(rnd()-0.5)*0.1, vy:(rnd()-0.5)*0.1, r:0.9+rnd()*1.1, c:rnd()<0.7?CORAL:LAV, home:d}); }
+    for(let i=0;i<20;i++) P.push({x:rnd()*W, y:rnd()*H, vx:(rnd()-0.5)*0.12, vy:(rnd()-0.5)*0.12, r:0.9+rnd()*1.1, c:rnd()<0.6?CORAL:LAV, home:null});
+  }
+  if(mode==='both'){ REACH=60; LA=0.22;
+    for(let i=0;i<34;i++) P.push({x:rnd()*W, y:rnd()*H, vx:(rnd()-0.5)*0.12, vy:(rnd()-0.5)*0.12, r:0.9+rnd()*1.1, c:rnd()<0.6?CORAL:LAV, home:null});
+  }
   const t0=performance.now(); let last=0, visible=true;
   new IntersectionObserver(es=>{ visible=es[0].isIntersecting; if(visible){ RM ? frame(t0+1600) : requestAnimationFrame(frame); } }).observe(el);
   function frame(now){
     if(!visible) return; if(now-last<33){ requestAnimationFrame(frame); return; } last=now;
-    const t=now-t0; g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
-    spotlight(g,W,H,t,false);
-    P.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1; });
-    g.lineWidth=LW; const B=6, buckets=Array.from({length:B},()=>[]);
-    for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){ const a=P[i], b=P[j]; const dx=a.x-b.x, dy=a.y-b.y; if(Math.abs(dx)>REACH||Math.abs(dy)>REACH) continue; const d=Math.hypot(dx,dy); if(d<REACH){ buckets[Math.min(B-1,Math.floor((1-d/REACH)*B))].push(a.x,a.y,b.x,b.y); } }
-    buckets.forEach((q,k)=>{ if(!q.length) return; g.strokeStyle=rgba(LAV,((k+0.5)/B)*LA); g.beginPath(); for(let i=0;i<q.length;i+=4){ g.moveTo(q[i],q[i+1]); g.lineTo(q[i+2],q[i+3]); } g.stroke(); });
-    P.forEach(p=>{ g.fillStyle=rgba(p.c,PA); g.beginPath(); g.arc(p.x,p.y,p.r,0,Math.PI*2); g.fill(); });
+    const t=(now-t0)/1000; g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+    spotlight(g,W,H,now-t0,false);
+    if(dots.length){ for(const d of dots){ const a=d.a+t*d.speed; const x=ox+Math.cos(a)*d.rad, y=oy+Math.sin(a)*d.rad; if(x<-4||y<-4||x>W+4||y>H+4) continue; const wt=falloff(x,y); if(wt<=0.02) continue; g.globalAlpha=(d.acc?0.85:0.42)*wt; g.fillStyle=d.acc?rgba(d.acc,1):rgba(INK,1); g.beginPath(); g.arc(x,y,d.r,0,Math.PI*2); g.fill(); } g.globalAlpha=1; }
+    if(rings.length){ for(const rg of rings){ const wt=1-smooth(0.22,0.95,rg.rad/maxR); if(wt<=0.02) continue; g.strokeStyle=rgba(INK,0.22*wt); g.lineWidth=0.6; g.beginPath(); g.arc(ox,oy,rg.rad,0,Math.PI*2); g.stroke();
+        for(const rd of rg.riders){ const a=rd.a+t*rg.speed; const x=ox+Math.cos(a)*rg.rad, y=oy+Math.sin(a)*rg.rad; if(x<-4||y<-4||x>W+4||y>H+4) continue; g.fillStyle=rgba(rd.c,(rd.c===INK?0.6:0.9)*wt); g.beginPath(); g.arc(x,y,rd.r,0,Math.PI*2); g.fill(); } } }
+    if(P.length){
+      for(const p of P){ p.x+=p.vx; p.y+=p.vy; if(p.home!==null){ const dx=p.x-ox, dy=p.y-oy, d=Math.hypot(dx,dy); if(d>p.home+14||d<Math.max(4,p.home-14)){ p.vx*=-1; p.vy*=-1; } } if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1; }
+      const N=P.length, B=6, buckets=Array.from({length:B},()=>[]); g.lineWidth=LW;
+      for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){ const a=P[i], b=P[j]; const dx=a.x-b.x, dy=a.y-b.y; if(Math.abs(dx)>REACH||Math.abs(dy)>REACH) continue; const d=Math.hypot(dx,dy); if(d<REACH){ buckets[Math.min(B-1,Math.floor((1-d/REACH)*B))].push(a.x,a.y,b.x,b.y); } }
+      buckets.forEach((q,k)=>{ if(!q.length) return; g.strokeStyle=rgba(LAV,((k+0.5)/B)*LA); g.beginPath(); for(let i=0;i<q.length;i+=4){ g.moveTo(q[i],q[i+1]); g.lineTo(q[i+2],q[i+3]); } g.stroke(); });
+      for(const p of P){ g.fillStyle=rgba(p.c,0.7); g.beginPath(); g.arc(p.x,p.y,p.r,0,Math.PI*2); g.fill(); }
+    }
     g.globalAlpha=0.9; g.setTransform(1,0,0,1,0,0); g.drawImage(grain,0,0); g.globalAlpha=1;
     if(!RM) requestAnimationFrame(frame);
   }
