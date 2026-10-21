@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Quorum · mockup</title>
+<title>Quorum · mockup v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
     --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
     --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
     --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
-    --moss:#3d8a5f; --moss-100:#e3f0e8; --amber:#b6862b; --amber-100:#f6ecd6; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --moss:#3d8a5f; --moss-100:#e3f0e8; --amber:#b6862b; --amber-100:#f6ecd6; --amber-600:#8a641f;
     --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
     --lift: inset 0 1px 0 rgba(255,253,248,.7), 0 1px 2px rgba(31,26,23,.10), 0 6px 14px -6px rgba(31,26,23,.22), 0 24px 48px -16px rgba(80,40,30,.5);
     --card: inset 0 1px 0 rgba(255,253,248,.8), 0 1px 2px rgba(31,26,23,.08), 0 4px 10px -6px rgba(31,26,23,.18);
@@ -41,10 +41,11 @@
   .apphead .grp{ font:500 11.5px/1 var(--font-mono); color:var(--ink-3); }
   .screen{ flex:1; overflow:auto; padding:6px 16px 90px; scrollbar-width:none; }
   .screen::-webkit-scrollbar{ display:none; }
-  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:64px; display:flex; background:linear-gradient(to top, var(--paper-0) 70%, rgba(255,253,248,0)); padding:10px 18px 14px; gap:6px; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:64px; display:flex; background:linear-gradient(to top, var(--paper-0) 70%, rgba(255,253,248,0)); padding:10px 18px 14px; gap:6px; align-items:center; }
   .tabbar button{ flex:1; border:0; background:transparent; border-radius:14px; font:700 13px/1 var(--font-display); color:var(--ink-3); padding:10px 0; display:flex; flex-direction:column; align-items:center; gap:4px; }
   .tabbar button.on{ color:var(--carnelian-500); background:var(--paper-1); }
   .tabbar button .n{ font:600 10px/1 var(--font-mono); letter-spacing:.06em; }
+  .tabbar .new{ flex:0 0 auto; width:48px; height:40px; border-radius:14px; background:var(--carnelian-500); color:var(--paper-0); font:800 22px/1 var(--font-display); box-shadow:0 6px 14px -6px rgba(179,27,27,.6); }
 
   h2{ font:800 24px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 2px 4px; }
   .sub{ color:var(--ink-2); font-size:13.5px; margin:0 2px 14px; line-height:1.45; }
@@ -63,73 +64,71 @@
   .count .big small{ font:600 13px/1 var(--font-mono); color:var(--ink-3); letter-spacing:0; }
   .count .lbl{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin-top:4px; }
   .count.on .big, .count.on .lbl{ color:var(--moss); }
-  .count.near .big{ color:var(--carnelian-500); }
-  .bar{ height:4px; border-radius:2px; background:var(--paper-2); margin:10px 0 8px; overflow:hidden; }
-  .bar i{ display:block; height:100%; background:var(--carnelian-400); border-radius:2px; transition:width .35s cubic-bezier(.16,1,.3,1); }
-  .card.on .bar i{ background:var(--moss); }
-  .who{ font-size:12.5px; color:var(--ink-2); line-height:1.4; min-height:18px; }
+  .count.ready .big, .count.ready .lbl{ color:var(--carnelian-500); }
+  .who{ font-size:12.5px; color:var(--ink-2); line-height:1.4; min-height:18px; margin-top:8px; }
   .who b{ color:var(--ink-0); font-weight:600; }
   .acts{ display:flex; gap:6px; margin-top:10px; }
   .acts button{ flex:1; border:0; border-radius:12px; padding:10px 0; font:700 13.5px/1 var(--font-display); background:var(--paper-1); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--paper-3); }
-  .acts button.in.sel{ background:var(--carnelian-500); color:var(--paper-0); box-shadow:none; }
-  .acts button.maybe.sel{ background:var(--amber-100); color:var(--amber-600, #8a641f); box-shadow:inset 0 0 0 1px var(--amber); }
+  .acts button.in.sel{ background:var(--ink-0); color:var(--paper-0); box-shadow:none; }
+  .acts button.maybe.sel{ background:var(--amber-100); color:var(--amber-600); box-shadow:inset 0 0 0 1px var(--amber); }
   .acts button.out.sel{ background:var(--paper-2); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--ink-4); }
-  .card.on .acts button.in.sel{ background:var(--moss); }
-  .flag{ margin-top:8px; font:500 12px/1.4 var(--font-mono); color:var(--amber-600, #8a641f); background:var(--amber-100); border-radius:10px; padding:7px 10px; }
+  .prompt{ margin-top:10px; background:var(--carnelian-100); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
+  .prompt .t{ flex:1; font-size:13px; line-height:1.35; color:var(--carnelian-600); }
+  .prompt .t b{ display:block; font:800 15px/1.2 var(--font-display); color:var(--ink-0); }
+  .prompt button{ border:0; background:var(--carnelian-500); color:var(--paper-0); border-radius:12px; padding:10px 12px; font:700 13px/1 var(--font-display); white-space:nowrap; box-shadow:0 6px 14px -6px rgba(179,27,27,.5); }
+  .flag{ margin-top:8px; font:500 12px/1.4 var(--font-mono); color:var(--amber-600); background:var(--amber-100); border-radius:10px; padding:7px 10px; }
   .pill{ display:inline-flex; align-items:center; gap:5px; font:600 10.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:5px 8px; border-radius:999px; background:var(--paper-2); color:var(--ink-2); }
   .pill.on{ background:var(--moss); color:#fff; }
-  .pill.idle{ background:var(--paper-2); color:var(--ink-3); }
   .link{ background:none; border:0; padding:0; font:600 12.5px/1 var(--font-mono); color:var(--carnelian-600); }
   .ghost{ border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:9px 12px; font:700 13px/1 var(--font-display); color:var(--ink-0); }
   .primary{ border:0; background:var(--carnelian-500); color:var(--paper-0); border-radius:12px; padding:11px 14px; font:700 14px/1 var(--font-display); width:100%; box-shadow:0 6px 14px -6px rgba(179,27,27,.5); }
-  .primary:disabled{ background:var(--ink-4); box-shadow:none; }
+  .primary.quiet{ background:var(--paper-1); color:var(--ink-0); box-shadow:inset 0 0 0 1px var(--paper-3); }
 
-  /* chips */
-  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
-  .chip{ border:0; border-radius:999px; padding:9px 12px; font:600 13px/1 var(--font-sans); background:var(--paper-1); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--paper-3); display:inline-flex; gap:7px; align-items:center; }
-  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--ink-3); }
-  .chip.sel{ background:var(--ink-0); color:var(--paper-0); box-shadow:none; }
-  .chip.sel .n{ color:var(--ink-4); }
-  .addwant{ display:flex; gap:6px; margin-top:10px; }
-  .addwant input{ flex:1; border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:10px 12px; font-size:13.5px; }
-
-  /* day strip */
+  /* day strip / heat */
   .days{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-  .day{ border:0; border-radius:12px; padding:8px 0 7px; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .day{ border:0; border-radius:12px; padding:8px 0 7px; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; }
   .day .d{ font:600 10px/1 var(--font-mono); color:var(--ink-3); letter-spacing:.04em; }
   .day .num{ font:800 16px/1 var(--font-display); }
+  .day .src{ font:500 8.5px/1 var(--font-mono); color:var(--ink-3); }
   .day.free{ background:var(--moss-100); box-shadow:inset 0 0 0 1px #bcdcc8; }
   .day.free .d{ color:var(--moss); }
   .day.busy{ background:var(--paper-2); color:var(--ink-3); }
   .day.busy .num{ text-decoration:line-through; }
-  .day .src{ font:500 8.5px/1 var(--font-mono); color:var(--ink-3); }
+  .day.best{ outline:2px solid var(--carnelian-400); outline-offset:1px; }
+  .day.on{ background:var(--moss); color:#fff; box-shadow:none; } .day.on .d,.day.on .src{ color:#d8eedf; }
+  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:6px 0 2px; }
+  .heat div{ height:30px; border-radius:8px; display:grid; place-items:center; font:600 11px/1 var(--font-mono); color:var(--ink-2); background:var(--paper-2); position:relative; }
+  .heat div.best{ outline:2px solid var(--carnelian-400); outline-offset:1px; color:var(--carnelian-600); }
+  .heat div.you::after{ content:''; position:absolute; bottom:3px; width:5px; height:5px; border-radius:50%; background:var(--ink-0); }
+  .heat .lab{ font:600 9px/1 var(--font-mono); color:var(--ink-3); background:none; height:12px; }
   .toggle{ display:flex; justify-content:space-between; align-items:center; padding:11px 2px; border-top:1px solid var(--paper-2); font-size:13.5px; }
   .toggle small{ display:block; color:var(--ink-3); font-size:11.5px; margin-top:2px; }
   .sw{ width:40px; height:24px; border-radius:999px; background:var(--ink-4); border:0; position:relative; flex-shrink:0; }
   .sw i{ position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s; }
   .sw.on{ background:var(--moss); } .sw.on i{ left:19px; }
 
-  /* planner heat */
-  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin:8px 0 2px; }
-  .heat div{ height:26px; border-radius:6px; display:grid; place-items:center; font:600 10px/1 var(--font-mono); color:var(--ink-2); background:var(--paper-2); }
-  .heat div.best{ outline:2px solid var(--carnelian-400); outline-offset:1px; color:var(--carnelian-600); }
-  .heat .lab{ font:600 9px/1 var(--font-mono); color:var(--ink-3); background:none; height:12px; }
-  .agg{ display:flex; gap:14px; margin-top:8px; font:500 12px/1.4 var(--font-mono); color:var(--ink-2); }
-  .agg b{ display:block; font:800 18px/1 var(--font-display); color:var(--ink-0); letter-spacing:-.02em; margin-bottom:2px; }
-  .privacy{ font:500 11.5px/1.5 var(--font-mono); color:var(--ink-3); background:var(--paper-1); border-radius:12px; padding:9px 12px; margin:0 0 12px; }
-
-  /* form */
   .field{ margin-bottom:10px; }
   .field label{ display:block; font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px; }
   .field input, .field textarea{ width:100%; border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:10px 12px; font-size:14px; }
   .field .hint{ font:500 11px/1.4 var(--font-mono); color:var(--ink-3); margin-top:4px; }
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .more{ width:100%; border:0; background:none; text-align:left; padding:8px 0; font:600 12px/1 var(--font-mono); color:var(--carnelian-600); display:flex; justify-content:space-between; }
+  .more span{ color:var(--ink-3); font-weight:500; }
 
-  /* sheet (detail) */
   .sheet{ position:absolute; inset:0; background:rgba(31,26,23,.35); display:none; align-items:flex-end; z-index:5; }
   .sheet.open{ display:flex; }
   .sheet .panel{ background:var(--paper-0); width:100%; border-radius:28px 28px 38px 38px; padding:16px 16px 22px; max-height:92%; overflow:auto; box-shadow:0 -10px 40px -10px rgba(31,26,23,.4); }
   .handle{ width:40px; height:4px; border-radius:2px; background:var(--paper-3); margin:0 auto 12px; }
+  .details{ background:var(--paper-1); border-radius:14px; padding:4px 12px; }
+  .drow{ display:flex; gap:10px; align-items:baseline; padding:9px 0; border-top:1px solid var(--paper-2); font-size:13px; line-height:1.4; flex-wrap:wrap; }
+  .drow:first-child{ border-top:0; }
+  .drow .k{ font:600 10.5px/1.6 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); width:44px; flex-shrink:0; }
+  .drow > span:not(.k){ flex:1; min-width:120px; }
+  .drow .by{ font:500 10.5px/1 var(--font-mono); color:var(--ink-3); white-space:nowrap; }
+  .linklist{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chipl{ display:inline-flex; align-items:center; border:0; background:var(--paper-0); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:999px; padding:5px 10px; font:600 11.5px/1 var(--font-mono); color:var(--carnelian-600); text-decoration:none; white-space:nowrap; }
+  .addrow{ display:flex; gap:6px; padding:8px 0 6px; }
+  .addrow input{ flex:1; border:0; background:var(--paper-0); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:10px; padding:8px 10px; font-size:12.5px; }
   .unfurl{ display:flex; gap:10px; background:#e7f3e5; border-radius:14px; padding:10px; margin:12px 0; align-items:center; }
   .unfurl .og{ width:92px; height:60px; border-radius:8px; background:var(--ink-0); color:var(--paper-0); display:flex; flex-direction:column; justify-content:center; padding:8px; flex-shrink:0; }
   .unfurl .og b{ font:800 18px/1 var(--font-display); letter-spacing:-.03em; }
@@ -147,30 +146,21 @@
   .sms{ background:var(--ink-0); color:var(--paper-0); border-radius:16px 16px 16px 4px; padding:10px 12px; font-size:12.5px; line-height:1.45; margin:8px 0; }
   .sms u{ color:#f3b2a9; text-decoration:none; }
   .empty{ color:var(--ink-3); font-size:13px; padding:20px 4px; text-align:center; }
-  .details{ background:var(--paper-1); border-radius:14px; padding:4px 12px; }
-  .drow{ display:flex; gap:10px; align-items:baseline; padding:9px 0; border-top:1px solid var(--paper-2); font-size:13px; line-height:1.4; flex-wrap:wrap; }
-  .drow:first-child{ border-top:0; }
-  .drow .k{ font:600 10.5px/1.6 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); width:44px; flex-shrink:0; }
-  .drow > span:not(.k){ flex:1; min-width:120px; }
-  .linklist{ display:flex; flex-wrap:wrap; gap:6px; }
-  .chipl{ display:inline-flex; align-items:center; border:0; background:var(--paper-0); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:999px; padding:5px 10px; font:600 11.5px/1 var(--font-mono); color:var(--carnelian-600); text-decoration:none; white-space:nowrap; }
-  .more{ width:100%; border:0; background:none; text-align:left; padding:8px 0; font:600 12px/1 var(--font-mono); color:var(--carnelian-600); display:flex; justify-content:space-between; }
-  .more span{ color:var(--ink-3); font-weight:500; }
 </style>
 </head>
 <body>
 <div class="wrap"><div class="rail">
   <div class="side">
-    <div class="eyebrow">Quorum · working name · throwaway mockup</div>
-    <h1>Say what you want. Planners get a warm room. Things happen at a number.</h1>
-    <p><b>Inverted planning.</b> Instead of a host guessing and herding, everyone first says what they <em>want</em> and when they're free. Planners see the aggregate, never the individuals. A proposal posted from a want lands on the people who asked for it, and it only becomes real when enough of them tap in.</p>
+    <div class="eyebrow">Quorum · working name · throwaway mockup · v2</div>
+    <h1>Post an intent. Tap in. When enough of you overlap on a day, it asks you to lock it.</h1>
+    <p><b>No host, no number required.</b> "Suits" is enough to post. Anyone can tap in; their free days come with them. Anyone in can add a link, a place, a note. Nobody picks a date: when enough people can do the same day, the board prompts <em>"6 of 9 can do Tue. Lock it in?"</em> and any of them can. That's the ON moment: texts go out, the invite lands in calendars. Until then nobody is on the hook.</p>
     <ol>
-      <li><b>You</b> · tick the things you'd do, mark your free days (or let your calendar do it), choose whether your name shows.</li>
-      <li><b>Plan</b> · the warm room. Counts, best days, typical budget. One tap posts a proposal prefilled from the aggregate.</li>
-      <li><b>Board</b> · proposals with a minimum. In / maybe / out. Hit the number and it's ON: the yeses get a text, the poster gets the list.</li>
+      <li><b>Board</b> · every intent, nearest-to-prompt first. In / maybe / out. Tap a card for the details, the day heat, who's in, the share link.</li>
+      <li><b>You</b> · your free days for the window (or let your calendar mark them), your name visibility, what you're in.</li>
+      <li><b>+</b> · post an intent. Title only is fine; everything else is optional and can be added later, by anyone in.</li>
     </ol>
-    <div class="try">Try: Board → tap <b>I'm in</b> on Suits in Hoi An (two short → the "one more" text) · Overnight boat shows a conflict flag because you're in for Street-food crawl that day · tap any card for the WhatsApp preview and share link · Plan → <b>Post this</b> on Cooking class · You → turn off "show my name", then look at the Board.</div>
-    <div class="note">Static click-through, state resets on reload. Design language = Loop (raised paper, facts-only cards). Names and numbers are made up. Trip week Feb 14–20, 2027.</div>
+    <div class="try">Try: Board → <b>Lock in Tue 16</b> on Suits in Hoi An (6 overlap, prompt showing) · tap <b>I'm in</b> on Overnight boat (your free days attach; conflict flag with Street-food on Wed) · open Street-food crawl → add a link in Details (attributed to you) · + → post "Night market" with just a title · You → mark Sun 14 free and watch the heat on the Board change.</div>
+    <div class="note">Static click-through, state resets on reload. Design language = Loop (raised paper, facts-only cards). Names and numbers are made up. Window: trip week Feb 14–20, 2027. Default quorum when no number is set: 4 on the same day; intents with no day needed prompt at 4 in.</div>
   </div>
 
   <div class="phone">
@@ -178,9 +168,9 @@
     <div class="apphead"><span class="wordmark">Quorum<i></i></span><span class="grp mono">EMBA '27 · 61 people</span></div>
     <div class="screen" id="screen"></div>
     <div class="tabbar">
-      <button data-tab="you"><span>You</span><span class="n" id="n-you"></span></button>
-      <button data-tab="plan"><span>Plan</span><span class="n" id="n-plan"></span></button>
       <button data-tab="board"><span>Board</span><span class="n" id="n-board"></span></button>
+      <button class="new" id="btn-new" title="Post an intent">+</button>
+      <button data-tab="you"><span>You</span><span class="n" id="n-you"></span></button>
     </div>
     <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
     <div class="toast" id="toast"></div>
@@ -190,260 +180,281 @@
 <script>
 // ---------- data ----------
 const DAYS = [['Sun',14],['Mon',15],['Tue',16],['Wed',17],['Thu',18],['Fri',19],['Sat',20]];
-const POOL = ['Priya','Marcus','Dana','Josh','Maya','Elena','Tom','Ravi','Sofia','Ken','Amara','Luis','Nina','Omar','Grace','Wei','Hana','Jules','Ben','Leila'];
-const pick = (n, off=0) => POOL.slice(off, off+n);
+const DEFAULT_QUORUM = 4;
+// a person in an intent: {name, days:[day indexes they can do], maybe?:true}
+const P = (name, days, maybe) => ({name, days:new Set(days), maybe:!!maybe});
 
 const S = {
   tab:'board',
-  you:{ name:'You', showName:true, useCal:true, free:new Set([1,2,4,5]), calBusy:new Set([3]), calBusyLabel:'Wed 17 · client call 2–4pm' },
-  wants:[
-    { id:'w1', title:'Thailand after the trip', count:14, budget:'$400–700', free:[6,5,9,8,11,12,13] },
-    { id:'w2', title:'Cooking class', count:12, budget:'$40–60', free:[3,7,9,6,5,8,4] },
-    { id:'w3', title:'Hoi An suits', count:11, budget:'~$250', free:[5,8,9,4,6,7,3] },
-    { id:'w4', title:'Street-food crawl', count:18, budget:'$15–25', free:[8,12,13,14,11,10,7] },
-    { id:'w5', title:'Overnight boat', count:9, budget:'~$180', free:[2,4,7,7,5,3,2] },
-    { id:'w6', title:'Cohort shirts', count:31, budget:'$25–35', free:null },
-    { id:'w7', title:'Holiday party (Dec)', count:22, budget:'$60–90', free:null },
-  ],
-  youWant:new Set(['w1','w4','w2']),
-  proposals:[
-    { id:'p1', title:'Suits in Hoi An', detail:'Tailor near the Japanese bridge, 24h turnaround.', cost:'~$250', min:8, day:2, time:'3:00pm', deadline:'Mon', poster:'Priya', in:pick(6,0), maybe:['Hana','Jules'], you:null, on:false,
-      place:'Yaly Couture, 47 Nguyen Thai Hoc', mapUrl:'https://maps.google.com/?q=Yaly+Couture+Hoi+An', links:[{label:'yalycouture.com',url:'https://yalycouture.com'},{label:'Reddit: what to ask for',url:'https://reddit.com'}], notes:'Bring a photo of a suit you like. Two fittings: Tue 3pm and Wed 10am. Cash gets a better price.' },
-    { id:'p2', title:'Street-food crawl', detail:'Five stalls, one night, Ravi leads.', cost:'$20', min:6, day:3, time:'7:30pm', poster:'Ravi', in:['Ravi','Sofia','Ken','Amara'], maybe:['Omar'], you:'in', on:false,
-      place:'Meet at the Hoi An night market gate', mapUrl:'https://maps.google.com/?q=Hoi+An+night+market', links:[{label:'Ravi\'s stall list (Google Doc)',url:'https://docs.google.com'}] },
-    { id:'p3', title:'Overnight boat', detail:'Halong-style junk, cabins for two.', cost:'~$180', min:10, day:3, poster:'Marcus', in:['Marcus','Elena','Tom','Luis'], maybe:[], you:null, on:false,
-      links:[{label:'Operator page',url:'https://example.com'}], notes:'Price is per person, twin cabin. Marcus books once we\'re ON.' },
-    { id:'p4', title:'5am flight to Da Nang', detail:'Out and back same day. Not for the faint.', cost:'$90', min:4, day:4, time:'5:10am', poster:'Josh', in:['Josh','Maya','Dana','Wei'], maybe:[], you:null, on:true, onAt:'yesterday 11:02',
-      place:'Da Nang airport, domestic', mapUrl:'https://maps.google.com/?q=Da+Nang+airport', links:[{label:'VN1234 on Vietnam Airlines',url:'https://vietnamairlines.com'}] },
-    { id:'p5', title:'Dinner in NYC the week we\'re back', detail:'Somewhere in Flatiron, splitting the bill.', cost:'~$80', min:6, day:null, deadline:'Mar 1', poster:'Nina', in:['Nina','Grace'], maybe:['Ben'], you:null, on:false },
-    { id:'p6', title:'Sunrise hike', detail:'Marble Mountains, back by 9.', cost:'free', min:5, day:1, deadline:'Sat', poster:'Leila', in:['Leila','Hana'], maybe:[], you:null, on:false, idled:true, idleNote:"didn't reach 5 by Sat" },
+  you:{ showName:true, useCal:true, free:new Set([1,2,4,5]), calBusy:new Set([3]), calBusyLabel:'Wed 17 · client call 2–4pm' },
+  intents:[
+    { id:'i1', title:'Suits in Hoi An', by:'Priya', detail:'Tailor near the Japanese bridge, 24h turnaround.', cost:'~$250', time:'3:00pm', needsDay:true, min:null, on:false,
+      people:[P('Priya',[1,2,3]),P('Marcus',[2,3]),P('Dana',[2]),P('Josh',[2,4]),P('Maya',[1,2]),P('Elena',[2,5]),P('Tom',[3,4]),P('Ravi',[1,5]),P('Hana',[2],true)],
+      you:null, youDays:new Set(),
+      adds:[{k:'Where',v:'Yaly Couture, 47 Nguyen Thai Hoc',url:'https://maps.google.com/?q=Yaly+Couture+Hoi+An',by:'Priya'},{k:'Link',v:'yalycouture.com',url:'https://yalycouture.com',by:'Priya'},{k:'Link',v:'Reddit: what to ask for',url:'https://reddit.com',by:'Marcus'},{k:'Note',v:'Bring a photo of a suit you like. Two fittings, 24h apart.',by:'Priya'}] },
+    { id:'i2', title:'Street-food crawl', by:'Ravi', detail:'Five stalls, one night.', cost:'$20', time:'7:30pm', needsDay:true, min:null, on:false,
+      people:[P('Ravi',[3,4]),P('Sofia',[3]),P('Ken',[4,5]),P('Amara',[3,4]),P('Omar',[3],true)],
+      you:'in', youDays:new Set([1,2,4,5]),
+      adds:[{k:'Where',v:'Meet at the night market gate',url:'https://maps.google.com/?q=Hoi+An+night+market',by:'Ravi'},{k:'Link',v:"Ravi's stall list (Google Doc)",url:'https://docs.google.com',by:'Ravi'}] },
+    { id:'i3', title:'Overnight boat', by:'Marcus', detail:'Halong-style junk, cabins for two.', cost:'~$180', time:null, needsDay:true, min:6, on:false,
+      people:[P('Marcus',[3,4]),P('Elena',[3]),P('Tom',[2,3]),P('Luis',[4])],
+      you:null, youDays:new Set(),
+      adds:[{k:'Link',v:'Operator page',url:'https://example.com',by:'Marcus'},{k:'Note',v:'Per person, twin cabin. Whoever locks it books it.',by:'Tom'}] },
+    { id:'i4', title:'5am flight to Da Nang', by:'Josh', detail:'Out and back same day.', cost:'$90', time:'5:10am', needsDay:true, min:null, on:true, onDay:4, onAt:'yesterday 11:02', lockedBy:'Maya',
+      people:[P('Josh',[4]),P('Maya',[4]),P('Dana',[4,5]),P('Wei',[4])],
+      you:null, youDays:new Set(),
+      adds:[{k:'Link',v:'VN1234 · Vietnam Airlines',url:'https://vietnamairlines.com',by:'Josh'}] },
+    { id:'i5', title:'Thailand after the trip', by:'Nina', detail:'Three or four days. Islands or Bangkok, undecided.', cost:'$400–700', time:null, needsDay:false, min:null, on:false,
+      people:[P('Nina',[]),P('Grace',[]),P('Ben',[]),P('Leila',[]),P('Wei',[]),P('Jules',[],true)],
+      you:'in', youDays:new Set(), noDayNote:'Days after Feb 20 · pick them once it\'s on',
+      adds:[{k:'Link',v:'Koh Samui vs Bangkok (Nina\'s notes)',url:'https://docs.google.com',by:'Nina'}] },
+    { id:'i6', title:'Cohort shirts', by:'Ken', detail:'One order, embroidered, delivered before the trip.', cost:'$25–35', time:null, needsDay:false, min:null, on:false,
+      people:[P('Ken',[]),P('Sofia',[]),P('Amara',[]),P('Omar',[]),P('Luis',[]),P('Hana',[]),P('Grace',[]),P('Priya',[]),P('Tom',[])],
+      you:null, youDays:new Set(),
+      adds:[{k:'Link',v:'Mockup (Canva)',url:'https://canva.com',by:'Ken'}] },
   ],
 };
-let onDay = (p) => p.day===null ? '' : DAYS[p.day][0]+' '+DAYS[p.day][1];
 
 // ---------- helpers ----------
 const $ = (s)=>document.querySelector(s);
 const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
-let toastT; function toast(h){ const t=$('#toast'); t.innerHTML=h; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3200); }
-function yesCount(p){ return p.in.length + (p.you==='in'?1:0); }
-function maybeCount(p){ return p.maybe.length + (p.you==='maybe'?1:0); }
-function youFree(d){ return S.you.free.has(d) && !(S.you.useCal && S.you.calBusy.has(d)); }
-function yourYesOn(day, except){ return S.proposals.filter(p=>p.id!==except && p.you==='in' && p.day===day); }
+let toastT; function toast(h){ const t=$('#toast'); t.innerHTML=h; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3400); }
+const dayLabel = (i)=> i===null||i===undefined ? '' : DAYS[i][0]+' '+DAYS[i][1];
+function youFreeDays(){ const s=new Set(); DAYS.forEach((_,i)=>{ if(S.you.free.has(i) && !(S.you.useCal && S.you.calBusy.has(i))) s.add(i); }); return s; }
+function inPeople(it){ return it.people.filter(p=>!p.maybe); }
+function inCount(it){ return inPeople(it).length + (it.you==='in'?1:0); }
+function maybeCount(it){ return it.people.filter(p=>p.maybe).length + (it.you==='maybe'?1:0); }
+function heat(it){ const h=DAYS.map(()=>0); inPeople(it).forEach(p=>p.days.forEach(d=>h[d]++)); if(it.you==='in') it.youDays.forEach(d=>h[d]++); return h; }
+function best(it){ const h=heat(it); let b=0; h.forEach((n,i)=>{ if(n>h[b]) b=i; }); return {day:b, n:h[b]}; }
+function quorum(it){ return it.min || DEFAULT_QUORUM; }
+function status(it){ // 'on' | 'ready' | 'open'
+  if(it.on) return 'on';
+  if(it.needsDay){ return best(it).n>=quorum(it) ? 'ready':'open'; }
+  return inCount(it)>=quorum(it) ? 'ready':'open';
+}
+function yourYesOn(day, except){ return S.intents.filter(i=>i.id!==except && i.you==='in' && (i.on ? i.onDay===day : false)); }
 
 // ---------- render ----------
 function render(){
-  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on', b.dataset.tab===S.tab));
-  $('#n-you').textContent = S.youWant.size+' wants';
-  $('#n-plan').textContent = S.wants.length+' wants';
-  const open = S.proposals.filter(p=>!p.on && !p.idled).length;
-  $('#n-board').textContent = open+' open';
+  document.querySelectorAll('.tabbar button[data-tab]').forEach(b=>b.classList.toggle('on', b.dataset.tab===S.tab));
+  $('#n-board').textContent = S.intents.filter(i=>!i.on).length+' open';
+  $('#n-you').textContent = S.intents.filter(i=>i.you==='in').length+' in';
   const sc=$('#screen'); sc.innerHTML=''; sc.scrollTop=0;
-  ({you:renderYou, plan:renderPlan, board:renderBoard})[S.tab](sc);
+  ({you:renderYou, board:renderBoard})[S.tab](sc);
+}
+
+function renderBoard(sc){
+  sc.append(el(`<h2>Board</h2>`), el(`<p class="sub">Tap in. Your free days come with you. When enough overlap, it asks.</p>`));
+  const score=(it)=>{ if(it.needsDay) return quorum(it)-best(it).n; return quorum(it)-inCount(it); };
+  const open=S.intents.filter(i=>!i.on).sort((a,b)=>score(a)-score(b));
+  const on=S.intents.filter(i=>i.on);
+  sc.append(el(`<div class="sect"><span>Open · nearest first</span><b>${open.length}</b></div>`)); open.forEach(i=>sc.append(card(i)));
+  sc.append(el(`<div class="sect"><span>On</span><b>${on.length}</b></div>`)); on.forEach(i=>sc.append(card(i)));
+}
+
+function card(it){
+  const st=status(it), n=inCount(it), m=maybeCount(it), b=best(it), q=quorum(it);
+  const c=el(`<div class="card ${st==='on'?'on':''} ${st==='ready'?'lift':''}"></div>`);
+  let facts, big, lbl;
+  if(st==='on'){ facts=`<b>${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b>${it.cost?' · '+it.cost:''}`; big=`${n}`; lbl='ON'; }
+  else if(it.needsDay){ facts=`${n} in${m?` · <span style="color:var(--amber)">${m} maybe</span>`:''}${it.cost?' · '+it.cost:''}`; big=`${b.n}<small>/${q}</small>`; lbl= b.n? `can do ${DAYS[b.day][0]}`:'no days yet'; }
+  else { facts=`${it.noDayNote||'no day needed'}${it.cost?' · '+it.cost:''}`; big=`${n}<small>/${q}</small>`; lbl='in'; }
+  c.append(el(`<div class="row"><div><div class="title">${it.title}</div><div class="facts">${facts}</div></div><div class="count ${st}"><div class="big">${big}</div><div class="lbl">${lbl}</div></div></div>`));
+  if(it.needsDay && st!=='on'){
+    const h=heat(it); const hh=el(`<div class="heat"></div>`);
+    h.forEach((v,i)=>{ const d=el(`<div class="${i===b.day&&v?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}">${v||''}</div>`); d.style.background=`color-mix(in srgb, var(--carnelian-400) ${Math.min(60,Math.round(v/q*45))}%, var(--paper-2))`; hh.append(d); });
+    c.append(hh);
+    c.append(el(`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:2px">${DAYS.map(d=>`<div style="text-align:center;font:600 9px/1 var(--font-mono);color:var(--ink-3)">${d[0]}</div>`).join('')}</div>`));
+  }
+  c.append(el(`<div class="who">${whoLine(it)}</div>`));
+  if(st==='ready'){
+    const pr=el(`<div class="prompt"><div class="t">${it.needsDay?`${b.n} of ${n} can do`:`${n} in`}<b>${it.needsDay?dayLabel(b.day):'Make it happen?'}</b></div><button>${it.needsDay?'Lock it in':'It\'s on'}</button></div>`);
+    pr.querySelector('button').onclick=(e)=>{ e.stopPropagation(); lock(it); };
+    c.append(pr);
+  }
+  if(st!=='on'){
+    const a=el(`<div class="acts"><button class="in ${it.you==='in'?'sel':''}">${it.you==='in'?'In ✓':"I'm in"}</button><button class="maybe ${it.you==='maybe'?'sel':''}">Maybe</button><button class="out ${it.you==='out'?'sel':''}">Out</button></div>`);
+    a.querySelectorAll('button').forEach(bt=>bt.onclick=(e)=>{ e.stopPropagation(); answer(it, bt.classList.contains('in')?'in':bt.classList.contains('maybe')?'maybe':'out'); });
+    c.append(a);
+    if(it.you==='in' && it.needsDay){
+      const conf=[...it.youDays].map(d=>yourYesOn(d,it.id)).flat();
+      if(conf.length) c.append(el(`<div class="flag">You're already ON for <b>${conf[0].title}</b> ${dayLabel(conf[0].onDay)}; that day won't count for you here.</div>`));
+    }
+  } else {
+    const a=el(`<div class="acts"><button class="in ${it.you==='in'?'sel':''}">${it.you==='in'?'In ✓':"I'm in"}</button><button class="out ${it.you==='out'?'sel':''}">${it.you==='in'?'Drop':'Out'}</button></div>`);
+    a.querySelectorAll('button').forEach(bt=>bt.onclick=(e)=>{ e.stopPropagation(); answer(it, bt.classList.contains('in')?'in':'out'); });
+    c.append(a);
+  }
+  c.onclick=()=>openDetail(it);
+  return c;
+}
+function whoLine(it){
+  const names=inPeople(it).map(p=>p.name); if(it.you==='in') names.unshift(S.you.showName?'You':'+1 anonymous');
+  const ms=it.people.filter(p=>p.maybe).length + (it.you==='maybe'?1:0);
+  if(!names.length && !ms) return `<span style="color:var(--ink-3)">Nobody yet · ${it.by} posted</span>`;
+  let s = names.length? `<b>${names.slice(0,4).join(', ')}</b>${names.length>4?` +${names.length-4}`:''}`:'';
+  if(ms) s += `${s?' · ':''}<span style="color:var(--ink-3)">${ms} maybe</span>`;
+  return s;
+}
+
+function answer(it, a){
+  const was=it.you; it.you=(was===a)?null:a;
+  if(it.you==='in' && it.needsDay && !it.youDays.size){ it.youDays=youFreeDays(); // free days attach, minus days you're already ON elsewhere
+    S.intents.forEach(o=>{ if(o.on && o.you==='in' && o.id!==it.id) it.youDays.delete(o.onDay); });
+    toast(`You're in. Your free days attached: <b>${[...it.youDays].map(d=>DAYS[d][0]).join(', ')||'none yet'}</b>. Adjust them on the card's page.`);
+  }
+  if(it.you!=='in' && !it.on) it.youDays=new Set();
+  const st=status(it);
+  if(st==='ready' && !was) toast(`${it.needsDay?best(it).n+' can do '+dayLabel(best(it).day):inCount(it)+' in'}. <b>Anyone in can lock it.</b>`);
+  if(it.on && was==='in' && it.you!=='in') toast(`Dropped. Still ON at ${inCount(it)}. <b>${it.lockedBy||it.by} told</b>, nobody else.`);
+  render();
+}
+function lock(it){
+  const b=best(it);
+  it.on=true; it.onDay=it.needsDay?b.day:null; it.onAt='just now'; it.lockedBy=S.you.showName?'You':'someone';
+  // people who can't do that day stay listed as in but are told
+  const cant = it.needsDay ? inPeople(it).filter(p=>!p.days.has(b.day)).length : 0;
+  toast(`<b>${it.title} is ON${it.needsDay?' · '+dayLabel(b.day):''}.</b> Texts to the ${inCount(it)} in${cant?`; ${cant} can't make that day and were asked`:''}; calendar invite attached.${maybeCount(it)?' Maybes nudged.':''}`);
+  render();
 }
 
 function renderYou(sc){
-  sc.append(el(`<h2>What would you do?</h2>`), el(`<p class="sub">Tick anything you'd be up for. This is a want, not a yes; nothing binds until a proposal hits its number.</p>`));
-  const chips = el(`<div class="chips"></div>`);
-  S.wants.forEach(w=>{
-    const sel=S.youWant.has(w.id);
-    const c=el(`<button class="chip ${sel?'sel':''}">${w.title}<span class="n">${w.count + (sel?0:0)}</span></button>`);
-    c.onclick=()=>{ if(sel){S.youWant.delete(w.id); w.count--;} else {S.youWant.add(w.id); w.count++;} render(); };
-    chips.append(c);
-  });
-  sc.append(chips);
-  const add=el(`<div class="addwant"><input placeholder="Something else… e.g. Night market" /><button class="ghost">Add</button></div>`);
-  add.querySelector('button').onclick=()=>{ const v=add.querySelector('input').value.trim(); if(!v) return; const id='w'+Date.now(); S.wants.push({id,title:v,count:1,budget:'—',free:[3,3,3,3,3,3,3]}); S.youWant.add(id); toast(`Added. Planners now see <b>1 wants</b> ${v}.`); render(); };
-  sc.append(add);
-
+  sc.append(el(`<h2>Your days</h2>`), el(`<p class="sub">Free days for the window. They attach to anything you tap in on; you can adjust per intent.</p>`));
   sc.append(el(`<div class="sect"><span>Free during the trip</span><b>Feb 14–20</b></div>`));
   const days=el(`<div class="days"></div>`);
   DAYS.forEach(([d,n],i)=>{
     const busy = S.you.useCal && S.you.calBusy.has(i);
     const b=el(`<button class="day ${busy?'busy':(S.you.free.has(i)?'free':'')}"><span class="d">${d}</span><span class="num">${n}</span><span class="src">${busy?'cal':(S.you.free.has(i)?'free':'')}</span></button>`);
-    b.onclick=()=>{ if(busy){ toast(`Busy from your calendar: <b>${S.you.calBusyLabel}</b>. Turn off calendar below to override.`); return;} S.you.free.has(i)?S.you.free.delete(i):S.you.free.add(i); render(); };
+    b.onclick=()=>{ if(busy){ toast(`Busy from your calendar: <b>${S.you.calBusyLabel}</b>. Turn the calendar off below to override.`); return;} S.you.free.has(i)?S.you.free.delete(i):S.you.free.add(i);
+      S.intents.forEach(it=>{ if(it.you==='in'&&!it.on&&it.needsDay){ S.you.free.has(i)?it.youDays.add(i):it.youDays.delete(i); } }); render(); };
     days.append(b);
   });
   sc.append(days);
-  sc.append(el(`<p class="hint" style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 2px 4px">Tap a day to toggle. Planners see how many are free each day, never who.</p>`));
-
+  sc.append(el(`<p style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 2px 4px">Tap a day to toggle. Others see how many can do each day, never who.</p>`));
   const t1=el(`<div class="toggle"><div>Use my calendar<small>Google Calendar · connected · busy blocks mark days</small></div><button class="sw ${S.you.useCal?'on':''}"><i></i></button></div>`);
   t1.querySelector('.sw').onclick=()=>{ S.you.useCal=!S.you.useCal; render(); };
-  const t2=el(`<div class="toggle"><div>Show my name when I'm in<small>Off: you count toward the number, listed as "+1 anonymous"</small></div><button class="sw ${S.you.showName?'on':''}"><i></i></button></div>`);
+  const t2=el(`<div class="toggle"><div>Show my name when I'm in<small>Off: you still count, listed as "+1 anonymous"</small></div><button class="sw ${S.you.showName?'on':''}"><i></i></button></div>`);
   t2.querySelector('.sw').onclick=()=>{ S.you.showName=!S.you.showName; render(); };
   sc.append(t1,t2);
-
-  const mine=S.proposals.filter(p=>p.you==='in');
+  const mine=S.intents.filter(i=>i.you==='in');
   sc.append(el(`<div class="sect"><span>You're in</span><b>${mine.length}</b></div>`));
   if(!mine.length) sc.append(el(`<div class="empty">Nothing yet. Tap in on the Board.</div>`));
-  mine.forEach(p=>{ const c=el(`<div class="card"><div class="row"><div><div class="title">${p.title}</div><div class="facts">${onDay(p)||'date open'} · ${p.cost}</div></div><div class="count ${p.on?'on':''}"><div class="big">${yesCount(p)}<small>/${p.min}</small></div><div class="lbl">${p.on?'ON':'in'}</div></div></div></div>`); c.onclick=()=>openDetail(p); sc.append(c); });
-}
-
-function renderPlan(sc){
-  sc.append(el(`<h2>The warm room</h2>`), el(`<p class="sub">What the cohort wants, in aggregate. Post a proposal from a want and the people who asked for it get the link.</p>`));
-  sc.append(el(`<div class="privacy">You see counts, free-day totals and typical budget. Never names. Names appear only once someone taps in on a proposal.</div>`));
-  [...S.wants].sort((a,b)=>b.count-a.count).forEach(w=>{
-    const posted=S.proposals.find(p=>p.fromWant===w.id);
-    const c=el(`<div class="card"></div>`);
-    c.append(el(`<div class="row"><div><div class="title">${w.title}</div><div class="facts"><b>${w.count}</b> want · ${w.budget} typical</div></div>${posted?`<span class="pill ${posted.on?'on':''}">${posted.on?'ON':'posted'}</span>`:''}</div>`));
-    if(w.free){
-      const best=w.free.indexOf(Math.max(...w.free));
-      const h=el(`<div class="heat"></div>`);
-      DAYS.forEach(([d],i)=>h.append(el(`<div class="lab">${d}</div>`)));
-      w.free.forEach((n,i)=>{ const d=el(`<div class="${i===best?'best':''}">${n}</div>`); d.style.background=`color-mix(in srgb, var(--carnelian-400) ${Math.round(n/w.count*55)}%, var(--paper-2))`; h.append(d); });
-      c.append(h);
-      c.append(el(`<div class="agg"><div><b>${DAYS[best][0]} ${DAYS[best][1]}</b>best day</div><div><b>${w.free[best]}</b>free that day</div><div><b>${Math.max(3,Math.round(w.count*0.6))}</b>suggested min</div></div>`));
-    } else {
-      c.append(el(`<div class="agg"><div><b>${w.count}</b>want</div><div><b>${Math.max(3,Math.round(w.count*0.5))}</b>suggested min</div><div><b>—</b>no day needed</div></div>`));
-    }
-    const b=el(`<div class="acts" style="margin-top:12px"><button class="ghost" style="flex:1">${posted?'Post a version':'Post this'}</button></div>`);
-    b.querySelector('button').onclick=()=>openPost(w);
-    c.append(b);
-    sc.append(c);
-  });
-}
-
-function renderBoard(sc){
-  sc.append(el(`<h2>Board</h2>`), el(`<p class="sub">Tap in. Nothing's real until the number. Nobody chases.</p>`));
-  const open=S.proposals.filter(p=>!p.on&&!p.idled).sort((a,b)=>(a.min-yesCount(a))-(b.min-yesCount(b)));
-  const on=S.proposals.filter(p=>p.on);
-  const idle=S.proposals.filter(p=>p.idled);
-  const sec=(t,n)=>sc.append(el(`<div class="sect"><span>${t}</span><b>${n}</b></div>`));
-  sec('Open · nearest first', open.length); open.forEach(p=>sc.append(card(p)));
-  sec('On', on.length); on.forEach(p=>sc.append(card(p)));
-  sec('Didn\'t reach', idle.length); idle.forEach(p=>sc.append(card(p)));
-}
-
-function card(p){
-  const y=yesCount(p), m=maybeCount(p), short=p.min-y;
-  const c=el(`<div class="card ${p.on?'on':''} ${(!p.on&&!p.idled&&short>0&&short<=2)?'lift':''}"></div>`);
-  const lbl = p.on?'ON':(p.idled?'idle':(short<=0?'at number':`need ${short}`));
-  c.append(el(`<div class="row"><div><div class="title">${p.title}</div><div class="facts"><b>${onDay(p)||'date open'}${p.time?' · '+p.time:''}</b> · ${p.cost}${p.deadline&&!p.on?` · by ${p.deadline}`:''}${m?` · <span style="color:var(--amber)">${m} maybe</span>`:''}</div></div><div class="count ${p.on?'on':(short>0&&short<=2?'near':'')}"><div class="big">${y}<small>/${p.min}</small></div><div class="lbl">${lbl}</div></div></div>`));
-  c.append(el(`<div class="bar"><i style="width:${Math.min(100,y/p.min*100)}%"></i></div>`));
-  c.append(el(`<div class="who">${whoLine(p)}</div>`));
-  if(p.idled){ c.append(el(`<div class="flag" style="background:var(--paper-1);color:var(--ink-2)">${p.idleNote}. <button class="link" style="margin-left:4px">Reopen at ${p.min-2}</button></div>`)); c.querySelector('.link').onclick=(e)=>{e.stopPropagation(); p.idled=false; p.min=p.min-2; p.deadline='Thu'; toast(`Reopened at ${p.min}. <b>Fresh link</b> ready to share. No texts sent.`); render();}; }
-  else {
-    const conflict = (p.day!==null && p.you!=='in') ? yourYesOn(p.day,p.id) : [];
-    if(conflict.length) c.append(el(`<div class="flag">You're in for <b>${conflict[0].title}</b> that day.</div>`));
-    const a=el(`<div class="acts"><button class="in ${p.you==='in'?'sel':''}">${p.you==='in'?'In ✓':"I'm in"}</button><button class="maybe ${p.you==='maybe'?'sel':''}">Maybe</button><button class="out ${p.you==='out'?'sel':''}">Out</button></div>`);
-    a.querySelectorAll('button').forEach(b=>b.onclick=(e)=>{e.stopPropagation(); answer(p, b.classList.contains('in')?'in':b.classList.contains('maybe')?'maybe':'out');});
-    c.append(a);
-  }
-  c.onclick=()=>openDetail(p);
-  return c;
-}
-function whoLine(p){
-  const names=[...p.in]; if(p.you==='in') names.unshift(S.you.showName?'You':'+1 anonymous');
-  const ms=[...p.maybe]; if(p.you==='maybe') ms.unshift(S.you.showName?'You':'+1 anonymous');
-  if(!names.length && !ms.length) return `<span style="color:var(--ink-3)">Nobody yet · ${p.poster} posted</span>`;
-  let s = names.length? `<b>${names.slice(0,4).join(', ')}</b>${names.length>4?` +${names.length-4}`:''}`:'';
-  if(ms.length) s += `${s?' · ':''}<span style="color:var(--ink-3)">${ms.length} maybe</span>`;
-  return s;
-}
-
-function answer(p, a){
-  const was=p.you; p.you = (was===a)?null:a;
-  const y=yesCount(p);
-  if(!p.on && y>=p.min){ p.on=true; p.onAt='just now'; toast(`<b>${p.title} is ON.</b> ${y} in. Texts sent to the yeses; ${p.poster} has the list. ${maybeCount(p)?maybeCount(p)+' maybes nudged.':''}`); }
-  else if(!p.on && p.you==='in' && p.min-y<=2 && p.min-y>0){ toast(`${y} of ${p.min}. <b>${p.min-y===1?'One more':'Two more'} and it's on.</b> "One more" text goes to the yeses with a fresh link.`); }
-  else if(p.on && was==='in' && p.you!=='in'){ toast(`Dropped. Still ON at ${y}. <b>${p.poster} told</b>, nobody else.`); }
-  render();
+  mine.forEach(it=>{ const st=status(it); const c=el(`<div class="card"><div class="row"><div><div class="title">${it.title}</div><div class="facts">${it.on?dayLabel(it.onDay)+(it.time?' · '+it.time:''):(it.needsDay?[...it.youDays].map(d=>DAYS[d][0]).join(' ')||'no days yet':'no day needed')}</div></div><div class="count ${st}"><div class="big">${inCount(it)}</div><div class="lbl">${it.on?'ON':'in'}</div></div></div></div>`); c.onclick=()=>openDetail(it); sc.append(c); });
 }
 
 // ---------- detail sheet ----------
-function openDetail(p){
-  const y=yesCount(p), m=maybeCount(p);
-  const names=[...p.in]; const ms=[...p.maybe];
+function openDetail(it){
+  const st=status(it), n=inCount(it), m=maybeCount(it), b=best(it), q=quorum(it);
   const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
   pn.append(el(`<div class="handle"></div>`));
-  pn.append(el(`<div class="row" style="display:flex;justify-content:space-between;gap:10px"><div><div class="title" style="font:800 22px/1.1 var(--font-display)">${p.title}</div><div class="facts" style="font:500 12.5px/1.5 var(--font-mono);color:var(--ink-2);margin-top:4px">${onDay(p)||'date open'} · ${p.cost} · min ${p.min}${p.deadline?` · by ${p.deadline}`:''}<br>posted by ${p.poster}</div></div><span class="pill ${p.on?'on':(p.idled?'idle':'')}">${p.on?'ON':(p.idled?'idle':'open')}</span></div>`));
-  pn.append(el(`<p style="font-size:13.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.45">${p.detail}</p>`));
-  if(p.place||p.time||(p.links&&p.links.length)||p.notes){
-    pn.append(el(`<div class="sect"><span>Details</span><span style="font-weight:500;letter-spacing:0;text-transform:none">${p.poster}'s, not editable here</span></div>`));
-    const d=el(`<div class="details"></div>`);
-    if(p.day!==null||p.time) d.append(el(`<div class="drow"><span class="k">When</span><span>${onDay(p)||'date open'}${p.time?' · '+p.time:''}</span>${p.day!==null?'<button class="chipl" data-cal>Add to calendar</button>':''}</div>`));
-    if(p.place) d.append(el(`<div class="drow"><span class="k">Where</span><span>${p.place}</span>${p.mapUrl?`<a class="chipl" href="${p.mapUrl}" target="_blank" rel="noopener">Maps ↗</a>`:''}</div>`));
-    if(p.links&&p.links.length) d.append(el(`<div class="drow"><span class="k">Links</span><span class="linklist">${p.links.map(l=>`<a class="chipl" href="${l.url}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('')}</span></div>`));
-    if(p.notes) d.append(el(`<div class="drow"><span class="k">Notes</span><span>${p.notes}</span></div>`));
-    const cal=d.querySelector('[data-cal]'); if(cal) cal.onclick=(e)=>{ e.stopPropagation(); toast(`Calendar event: <b>${p.title}</b> · ${onDay(p)}${p.time?' '+p.time:''}${p.place?' · '+p.place:''}. ${p.on?'':'Marked tentative until it\'s ON.'}`); };
-    pn.append(d);
+  pn.append(el(`<div style="display:flex;justify-content:space-between;gap:10px"><div><div style="font:800 22px/1.1 var(--font-display)">${it.title}</div><div style="font:500 12.5px/1.5 var(--font-mono);color:var(--ink-2);margin-top:4px">${it.on?`<b style="color:var(--moss)">ON · ${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b> · locked by ${it.lockedBy}<br>`:''}${it.cost?it.cost+' · ':''}${it.min?`needs ${it.min}`:`quorum ${q} (default)`} · started by ${it.by}</div></div><span class="pill ${st==='on'?'on':''}">${st==='on'?'ON':(st==='ready'?'ready':'open')}</span></div>`));
+  if(it.detail) pn.append(el(`<p style="font-size:13.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.45">${it.detail}</p>`));
+
+  // days
+  if(it.needsDay){
+    pn.append(el(`<div class="sect"><span>${it.on?'Locked day':'Who can do which day'}</span><b>${it.on?'':b.n+' on '+DAYS[b.day][0]}</b></div>`));
+    const h=heat(it); const hh=el(`<div class="heat"></div>`);
+    DAYS.forEach(([d])=>hh.append(el(`<div class="lab">${d}</div>`)));
+    h.forEach((v,i)=>{ const d=el(`<div class="${(!it.on&&i===b.day&&v)?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}" style="${it.on&&i===it.onDay?'background:var(--moss);color:#fff':''}">${v||''}</div>`); if(!(it.on&&i===it.onDay)) d.style.background=`color-mix(in srgb, var(--carnelian-400) ${Math.min(60,Math.round(v/q*45))}%, var(--paper-2))`; hh.append(d); });
+    pn.append(hh);
+    if(it.you==='in' && !it.on){
+      pn.append(el(`<p style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 0 6px">Your days for this one (dot = you). Tap to adjust.</p>`));
+      const ds=el(`<div class="days"></div>`);
+      DAYS.forEach(([d,num],i)=>{ const bt=el(`<button class="day ${it.youDays.has(i)?'free':''}"><span class="d">${d}</span><span class="num">${num}</span><span class="src">${it.youDays.has(i)?'can':''}</span></button>`); bt.onclick=()=>{ it.youDays.has(i)?it.youDays.delete(i):it.youDays.add(i); openDetail(it); render(); }; ds.append(bt); });
+      pn.append(ds);
+    } else if(!it.on) pn.append(el(`<p style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 0 0">Tap in and your free days land here.</p>`));
+    if(st==='ready'){ const pr=el(`<div class="prompt"><div class="t">${b.n} of ${n} can do<b>${dayLabel(b.day)}</b></div><button>Lock it in</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
+  } else {
+    pn.append(el(`<div class="sect"><span>Day</span><b>${it.noDayNote||'none needed'}</b></div>`));
+    if(st==='ready'){ const pr=el(`<div class="prompt"><div class="t">${n} in<b>Make it happen?</b></div><button>It's on</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
   }
+
+  // details (shared, additive)
+  pn.append(el(`<div class="sect"><span>Details</span><span style="font-weight:500;letter-spacing:0;text-transform:none">anyone in can add · title is fixed</span></div>`));
+  const d=el(`<div class="details"></div>`);
+  if(it.time) d.append(el(`<div class="drow"><span class="k">Time</span><span>${it.time}</span><span class="by">${it.by}</span></div>`));
+  it.adds.forEach(a=>{
+    const val = a.url ? `<a class="chipl" href="${a.url}" target="_blank" rel="noopener">${a.v} ↗</a>` : a.v;
+    d.append(el(`<div class="drow"><span class="k">${a.k}</span><span>${val}</span><span class="by">${a.by}</span></div>`));
+  });
+  if(it.needsDay && (it.on||st==='ready')) d.append(el(`<div class="drow"><span class="k">Cal</span><span>${it.on?'Invite sent to everyone in':'Invite goes out when locked'}</span>${it.on?'<button class="chipl" data-cal>Add to calendar</button>':''}</div>`));
+  if(it.you==='in'){
+    const ar=el(`<div class="addrow"><input placeholder="Add a link, a place, a note…" /><button class="ghost">Add</button></div>`);
+    ar.querySelector('button').onclick=()=>{ const v=ar.querySelector('input').value.trim(); if(!v) return; const isUrl=/^(https?:\/\/|www\.)/.test(v)||/\.[a-z]{2,}(\/|$)/.test(v); it.adds.push({k:isUrl?'Link':'Note', v:isUrl?v.replace(/^https?:\/\//,''):v, url:isUrl?(/^https?:/.test(v)?v:'https://'+v):null, by:S.you.showName?'You':'anon'}); toast(`Added, attributed to <b>${S.you.showName?'you':'+1 anonymous'}</b>. Nobody is texted about details.`); openDetail(it); };
+    d.append(ar);
+  } else d.append(el(`<div class="drow" style="color:var(--ink-3)">Tap in to add details.</div>`));
+  const cal=d.querySelector('[data-cal]'); if(cal) cal.onclick=()=>toast(`Calendar event: <b>${it.title}</b> · ${dayLabel(it.onDay)}${it.time?' '+it.time:''}.`);
+  pn.append(d);
+
+  // unfurl
   pn.append(el(`<div class="sect"><span>What the link looks like in WhatsApp</span></div>`));
-  pn.append(el(`<div class="unfurl"><div class="og"><b>${y} of ${p.min}</b><span>${p.on?'ON · ':''}${p.title} · ${onDay(p)||'TBD'}</span></div><div class="txt"><b>${y} of ${p.min} in · ${p.title}${onDay(p)?' · '+onDay(p):''}</b>${p.cost} · tap to say you're in<br><span>quorum.app/p/${p.id}?s=k7f2</span></div></div>`));
-  pn.append(el(`<p style="font:500 11px/1.45 var(--font-mono);color:var(--ink-3);margin:0 0 6px">Every share mints a fresh link, so the preview is right when you send it. Outside the group the preview shows the count only.</p>`));
-  pn.append(el(`<div class="sect"><span>Who's in</span><b>${y}${m?` · ${m} maybe`:''}</b></div>`));
+  const ogBig = it.on ? 'ON' : (it.needsDay ? `${b.n} can do ${DAYS[b.day][0]}` : `${n} in`);
+  pn.append(el(`<div class="unfurl"><div class="og"><b style="font-size:${it.on?18:14}px">${ogBig}</b><span>${it.title}${it.on?' · '+dayLabel(it.onDay):''}</span></div><div class="txt"><b>${it.title} · ${n} in${it.on?' · ON '+dayLabel(it.onDay):''}</b>${it.cost?it.cost+' · ':''}tap to say you're in<br><span>quorum.app/i/${it.id}?s=k7f2</span></div></div>`));
+
+  // who
+  pn.append(el(`<div class="sect"><span>Who's in</span><b>${n}${m?` · ${m} maybe`:''}</b></div>`));
   const nm=el(`<div class="names"></div>`);
-  if(p.you==='in') nm.append(el(`<span class="me">${S.you.showName?'You':'+1 anonymous'}</span>`));
-  names.forEach(n=>nm.append(el(`<span>${n}</span>`)));
-  if(p.you==='maybe') nm.append(el(`<span class="me maybe">You · maybe</span>`));
-  ms.forEach(n=>nm.append(el(`<span class="maybe">${n} · maybe</span>`)));
-  if(!names.length&&!ms.length&&!p.you) nm.append(el(`<span style="box-shadow:none;background:none;color:var(--ink-3)">Nobody yet.</span>`));
+  if(it.you==='in') nm.append(el(`<span class="me">${S.you.showName?'You':'+1 anonymous'}</span>`));
+  inPeople(it).forEach(p=>nm.append(el(`<span>${p.name}</span>`)));
+  if(it.you==='maybe') nm.append(el(`<span class="me maybe">You · maybe</span>`));
+  it.people.filter(p=>p.maybe).forEach(p=>nm.append(el(`<span class="maybe">${p.name} · maybe</span>`)));
   pn.append(nm);
-  if(p.on){
-    pn.append(el(`<div class="sect"><span>The text the yeses got</span><b>${p.onAt}</b></div>`));
-    pn.append(el(`<div class="sms">${p.title} is ON. ${y} in${onDay(p)?', '+onDay(p):''}. ${p.poster} will take it from here.<br><br>Want to run something? Post it: <u>quorum.app/emba27/new</u></div>`));
+  if(it.on){
+    pn.append(el(`<div class="sect"><span>The text everyone in got</span><b>${it.onAt}</b></div>`));
+    pn.append(el(`<div class="sms">${it.title} is ON${it.needsDay?' · '+dayLabel(it.onDay)+(it.time?' '+it.time:''):''}. ${n} in. ${it.lockedBy} locked it. Calendar invite attached.<br><br>Want to run something? Post it: <u>quorum.app/emba27/new</u></div>`));
   }
-  const acts=el(`<div class="acts" style="margin-top:14px"><button class="ghost" style="flex:1">Share link</button><button class="ghost" style="flex:1">Post a version</button>${(p.on||p.idled)?'<button class="ghost" style="flex:1">Run this for your group</button>':''}</div>`);
-  const [b1,b2,b3]=acts.querySelectorAll('button');
-  b1.onclick=()=>toast(`Link copied: <b>quorum.app/p/${p.id}?s=${Math.random().toString(36).slice(2,6)}</b> · fresh preview, attributed to you.`);
-  b2.onclick=()=>{ closeSheet(); openPost(null,p); };
-  if(b3) b3.onclick=()=>toast(`New board created with <b>${p.title}</b> prefilled. Share its link to start the roster.`);
+  const acts=el(`<div class="acts" style="margin-top:14px"><button class="ghost" style="flex:1">Share link</button><button class="ghost" style="flex:1">Post a related intent</button></div>`);
+  const [b1,b2]=acts.querySelectorAll('button');
+  b1.onclick=()=>toast(`Link copied: <b>quorum.app/i/${it.id}?s=${Math.random().toString(36).slice(2,6)}</b> · fresh preview, attributed to you.`);
+  b2.onclick=()=>{ closeSheet(); openPost(it); };
   pn.append(acts);
-  const close=el(`<button class="primary" style="margin-top:10px;background:var(--paper-1);color:var(--ink-0);box-shadow:inset 0 0 0 1px var(--paper-3)">Close</button>`); close.onclick=closeSheet; pn.append(close);
+  const close=el(`<button class="primary quiet" style="margin-top:10px">Close</button>`); close.onclick=closeSheet; pn.append(close);
   sh.classList.add('open');
 }
 function closeSheet(){ $('#sheet').classList.remove('open'); }
 $('#sheet').addEventListener('click',(e)=>{ if(e.target.id==='sheet') closeSheet(); });
 
-// ---------- post form ----------
-function openPost(w, from){
+// ---------- post ----------
+function openPost(from){
   const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
-  const best = w&&w.free ? w.free.indexOf(Math.max(...w.free)) : (from?from.day:null);
-  const sugMin = w ? Math.max(3,Math.round(w.count*(w.free?0.6:0.5))) : (from?Math.max(3,from.min-2):6);
   pn.append(el(`<div class="handle"></div>`));
-  pn.append(el(`<div class="title" style="font:800 22px/1.1 var(--font-display)">${from?'Post a version':'Post it'}</div>`));
-  pn.append(el(`<p style="font-size:13px;color:var(--ink-2);margin:6px 0 12px;line-height:1.45">${w?`<b>${w.count} people</b> want this. They get the link when you post. You're in automatically.`:(from?`Same idea, your terms. Both versions sit on the board; whichever hits its number happens.`:'')}</p>`));
+  pn.append(el(`<div style="font:800 22px/1.1 var(--font-display)">${from?'Post a related intent':'Post an intent'}</div>`));
+  pn.append(el(`<p style="font-size:13px;color:var(--ink-2);margin:6px 0 12px;line-height:1.45">A title is enough. You're in automatically; your free days attach. Everything else is optional and can be added later, by anyone in.</p>`));
   const f=el(`<div>
-    <div class="field"><label>What</label><input id="f-title" value="${w?w.title:(from?from.title:'')}" /></div>
-    <div class="field"><label>One line</label><input id="f-detail" placeholder="Where, roughly when, anything they need to know" value="${from?from.detail:''}" /></div>
-    <div class="grid2">
-      <div class="field"><label>Rough cost</label><input id="f-cost" value="${w?w.budget.split('–')[0].replace(/[^$0-9~]/g,'')||w.budget:(from?from.cost:'')}" /><div class="hint">${w?`typical ${w.budget}`:'text, not a payment'}</div></div>
-      <div class="field"><label>Minimum</label><input id="f-min" type="number" value="${sugMin}" /><div class="hint">${w?`${w.count} want it`:'it\'s on at this number'}</div></div>
-    </div>
-    <div class="field"><label>Day</label><div class="days" id="f-days"></div><div class="hint">${w&&w.free?`${DAYS[best][0]} ${DAYS[best][1]}: ${w.free[best]} of the ${w.count} are free`:'optional'}</div></div>
-    <div class="field"><label>Deadline</label><input id="f-dl" placeholder="optional · e.g. Mon" /><div class="hint">no deadline = stays open, never nags</div></div>
-    <button class="more" id="f-more">+ More details <span>time · place · links · notes · all optional</span></button>
+    <div class="field"><label>What</label><input id="f-title" placeholder="e.g. Suits in Hoi An" value="${from?from.title+' · ':''}" /></div>
+    <button class="more" id="f-more">+ More <span>one line · cost · time · a number · all optional</span></button>
     <div id="f-moreblock" style="display:none">
+      <div class="field"><label>One line</label><input id="f-detail" placeholder="where, roughly what, anything they need to know" /></div>
       <div class="grid2">
-        <div class="field"><label>Time</label><input id="f-time" placeholder="e.g. 3:00pm" value="${from&&from.time?from.time:''}" /></div>
-        <div class="field"><label>Place</label><input id="f-place" placeholder="name or address" value="${from&&from.place?from.place:''}" /></div>
+        <div class="field"><label>Rough cost</label><input id="f-cost" placeholder="e.g. ~$250" /></div>
+        <div class="field"><label>Time</label><input id="f-time" placeholder="e.g. 3:00pm" /></div>
       </div>
-      <div class="field"><label>Map link</label><input id="f-map" placeholder="paste a Google Maps link" value="${from&&from.mapUrl?from.mapUrl:''}" /></div>
-      <div class="field"><label>Links</label><textarea id="f-links" rows="2" placeholder="one per line · website, Google Doc, booking page, menu…">${from&&from.links?from.links.map(l=>l.url).join('\n'):''}</textarea><div class="hint">shown as chips; the page unfurls them</div></div>
-      <div class="field"><label>Notes</label><textarea id="f-notes" rows="3" placeholder="anything they need to know">${from&&from.notes?from.notes:''}</textarea></div>
+      <div class="field"><label>Needs this many</label><input id="f-min" type="number" placeholder="leave blank · default ${DEFAULT_QUORUM}" /><div class="hint">the overlap on one day that triggers the prompt</div></div>
+      <div class="field"><label>Links · one per line</label><textarea id="f-links" rows="2" placeholder="website, Google Doc, Maps…"></textarea></div>
     </div>
+    <div class="toggle" style="border-top:0;padding-top:4px"><div>Needs a day<small>Off for things like a shirt order</small></div><button class="sw on" id="f-day"><i></i></button></div>
   </div>`);
-  f.querySelector('#f-more').onclick=()=>{ const b=f.querySelector('#f-moreblock'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; f.querySelector('#f-more').firstChild.textContent=open?'+ More details ':'− Fewer details '; };
-  let day=best;
-  const dd=f.querySelector('#f-days');
-  const drawDays=()=>{ dd.innerHTML=''; DAYS.forEach(([d,n],i)=>{ const b=el(`<button class="day ${day===i?'free':''}"><span class="d">${d}</span><span class="num">${n}</span><span class="src">${w&&w.free?w.free[i]+' free':''}</span></button>`); b.onclick=()=>{ day=(day===i?null:i); drawDays(); }; dd.append(b); }); };
-  drawDays();
+  f.querySelector('#f-more').onclick=()=>{ const b=f.querySelector('#f-moreblock'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; f.querySelector('#f-more').firstChild.textContent=open?'+ More ':'− Less '; };
+  f.querySelector('#f-day').onclick=(e)=>e.currentTarget.classList.toggle('on');
   pn.append(f);
   const post=el(`<button class="primary" style="margin-top:6px">Post · you're in</button>`);
   post.onclick=()=>{
-    const title=f.querySelector('#f-title').value.trim()||'Untitled';
     const v=(id)=>f.querySelector(id).value.trim();
-    const links=v('#f-links').split('\n').map(s=>s.trim()).filter(Boolean).map(u=>({label:u.replace(/^https?:\/\//,'').split('/')[0], url:/^https?:/.test(u)?u:'https://'+u}));
-    const p={ id:'p'+Date.now(), title, detail:v('#f-detail'), cost:v('#f-cost')||'—', min:Math.max(2,+v('#f-min')||sugMin), day, deadline:v('#f-dl')||null, time:v('#f-time')||null, place:v('#f-place')||null, mapUrl:v('#f-map')||null, links, notes:v('#f-notes')||null, poster:'You', in:[], maybe:[], you:'in', on:false, fromWant:w?w.id:null };
-    S.proposals.unshift(p); closeSheet(); S.tab='board';
-    toast(w?`Posted. <b>${w.count} people</b> who wanted this just got the link. 1 of ${p.min}.`:`Posted next to the original. 1 of ${p.min}.`);
+    const title=v('#f-title').replace(/ · $/,'')||'Untitled';
+    const needsDay=f.querySelector('#f-day').classList.contains('on');
+    const links=v('#f-links').split('\n').map(s=>s.trim()).filter(Boolean).map(u=>({k:'Link', v:u.replace(/^https?:\/\//,'').split('/')[0], url:/^https?:/.test(u)?u:'https://'+u, by:S.you.showName?'You':'anon'}));
+    const it={ id:'i'+Date.now(), title, by:S.you.showName?'You':'someone', detail:v('#f-detail'), cost:v('#f-cost')||null, time:v('#f-time')||null, needsDay, min:+v('#f-min')||null, on:false, people:[], you:'in', youDays:needsDay?youFreeDays():new Set(), adds:links };
+    S.intents.unshift(it); closeSheet(); S.tab='board';
+    toast(`Posted. <b>1 in</b> (you). Share it; when ${quorum(it)} ${needsDay?'can do the same day':'are in'} it'll ask to lock.`);
     render();
   };
   pn.append(post);
-  const cancel=el(`<button class="primary" style="margin-top:8px;background:var(--paper-1);color:var(--ink-0);box-shadow:inset 0 0 0 1px var(--paper-3)">Cancel</button>`); cancel.onclick=closeSheet; pn.append(cancel);
+  const cancel=el(`<button class="primary quiet" style="margin-top:8px">Cancel</button>`); cancel.onclick=closeSheet; pn.append(cancel);
   sh.classList.add('open');
 }
 
-document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>{ S.tab=b.dataset.tab; render(); });
+document.querySelectorAll('.tabbar button[data-tab]').forEach(b=>b.onclick=()=>{ S.tab=b.dataset.tab; render(); });
+$('#btn-new').onclick=()=>openPost(null);
 render();
 </script>
 </body>

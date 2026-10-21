@@ -41,19 +41,40 @@ The test is cheap and real: four months of ordinary cohort life, then one
 dense week where things either happen or don't, then four weeks after to see
 if the board survives the trip.
 
-## The one distinction we cannot lose
+## The model (revised 2026-10-21, afternoon; supersedes the morning draft)
 
-**Threshold, not poll.** A proposal is fixed by the poster. Joiners answer it;
-they do not negotiate it. If you want it on a different day, cheaper, or
-longer, you post that version. Competing versions sit side by side as
-separate cards, and the one that reaches its number is the one that happens.
-Nobody picks. The moment a joiner can enter their own dates or budget into
-someone else's proposal, we have rebuilt Doodle, and Doodle already fails at
-this.
+The morning draft had a poster fix a proposal (day, cost, number) and others
+answer it. The founder's revision, after seeing the first mockup: **an intent
+is shared, not owned, and no number is required.**
 
-Decision-making survives, it just moves to where it's cheap: the poster
-decides the details once it's ON, and the group decides between versions by
-tapping in.
+- **Posting is broadcasting interest.** "Suits in Hoi An" with nothing else
+  is a valid post. Everything else (one line, cost, time, links, place, a
+  number) is optional, at posting or later.
+- **Tapping in brings your days.** Each person keeps free days for the window
+  (manually, or from a connected calendar). Tapping in attaches those days to
+  the intent; you can adjust them per intent. Nobody picks a date.
+- **The board prompts the day.** When enough people overlap on one day, the
+  intent lifts and shows "6 of 9 can do Tue 16. Lock it in?" *Enough* is the
+  number the poster set, or a default (4) if none. Intents that don't need a
+  day (a shirt order) prompt at the same count: "9 in. Make it happen?"
+- **Anyone in can lock it.** Locking is the ON moment: texts to everyone in,
+  calendar invite attached, maybes nudged, people who can't make the locked
+  day asked. Until someone locks it nobody is on the hook. ON is a latch.
+- **Details are shared and additive.** Anyone in can add a link, a place, a
+  note. Every addition shows who added it. The title is fixed once posted;
+  changing what the thing *is* means posting a related intent. Nobody is
+  texted about details.
+- **Names are visible** to the roster on the intent page. Each person can
+  switch their name off and still count ("+1 anonymous"). Day heat shows how
+  many can do each day, never who.
+
+What this keeps from the brief: a yes costs nothing until an explicit ON
+moment; nobody owns or herds; it idles instead of failing. What it drops:
+the poster-fixed proposal, "post a version" as the only way to disagree,
+and the separate wants list. What it is honest about: the day is now chosen
+collectively, which is scheduling. The difference from a Doodle is that the
+board resolves it (a prompt at quorum, a lock, the texts) instead of leaving
+a grid for someone to interpret.
 
 ## Mechanics by which one use creates the next
 
@@ -146,7 +167,11 @@ that needs no profile: conflict-aware yeses (below).
 **Anything with accounts, apps, push, payments, admin roles, or Partiful /
 Luma / Splitwise integration.** Out, per the brief.
 
-## The demand side (added 2026-10-21, after the first review)
+## The demand side (added 2026-10-21 midday; folded into the model above)
+
+*Kept for the record. The separate "wants" list and planner tab were merged
+into the shared-intent model: every intent is a want until it locks, and the
+aggregate (count, day heat) shows on every intent page.*
 
 The board alone still makes a poster guess. The founder's addition inverts
 that: **people say what they want first, and planners post into a warm
@@ -184,14 +209,14 @@ A click-through of this version is at the repo root as `quorum.html`
 
 Each item is shippable on its own; build in this order.
 
-1. **Proposal page + respond + threshold.** Post form (title, one line, rough
-   cost as text, minimum, optional deadline, optional day and time) in under
-   30 seconds. Behind a "more details" fold, all optional: place with a map
-   link, any number of links (website, Google Doc, booking page), and longer
-   notes. Links render as chips on the proposal page with a cached preview.
-   Details belong to the poster; joiners read them, never edit them. Anything
-   with a day gets "Add to calendar" (an `.ics` with the proposal's facts,
-   tentative until ON), and the ON text carries that link. Respond in / out / maybe with one tap. First answer from a new
+1. **Intent page + respond + quorum prompt + lock.** Post form: a title, and
+   a "needs a day" switch (default on). Behind a fold, all optional: one line,
+   rough cost as text, time, a number, links. First answer from a new number
+   asks for a name and creates the person. Tapping in attaches your free days
+   (step 5). The page shows day heat, who's in, shared details with an add
+   row for anyone in, and the prompt at quorum. Lock → ON. Anything ON with a
+   day gets "Add to calendar" (an `.ics` with the intent's facts) and the ON
+   text carries it. Links render as chips with a cached preview. Respond in / out / maybe with one tap. First answer from a new
    number asks for a name and creates the person. Threshold logic: count of
    yeses reaches minimum → ON. Names of yeses and maybes on the page.
 2. **The board.** One link per group. Open proposals sorted nearest-to-
@@ -201,11 +226,11 @@ Each item is shippable on its own; build in this order.
 4. **SMS.** Magic link so a person can change their own answer from any
    device. ON text to yeses (with M3's CTA). List to the poster. The "one
    more" text (M2). The maybe nudge on ON (M6). Weekly digest text (M7).
-5. **Conflict-aware yeses.** Every yes carries the proposal's day. Tapping in
-   on something that overlaps a day you've already said yes to shows "You're
-   in for Hoi An suits that day" and lets you proceed or switch. When a
-   proposal flips ON, the ON text names any other yes of yours on that day.
-   No profile, no stated availability; derived entirely from your answers.
+5. **Your days.** Each person marks free days for the window on their own
+   page (manual day strip first; calendar connection after). Tapping in on an
+   intent copies those days to it; adjustable per intent. A day you're
+   already ON for elsewhere is removed automatically and the card says so.
+   Day heat per intent is computed from these; it shows counts, never who.
 6. **Fork and versions.** M4 ("post a version") on every proposal; M5 ("run
    this for your group") on ON and past proposals, creating a new board.
 7. **Digest page** per group, with the weekly text.
