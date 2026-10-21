@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quorum · Delta mixes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..800,0..100,0..1;1,9..144,400..800,0..100,0..1&family=Geist:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --line:rgba(31,26,23,.12); --line-2:rgba(31,26,23,.18); --hair:rgba(31,26,23,.08);
+    --carnelian:#b31b1b; --carnelian-deep:#8a1414; --carnelian-tint:#f8e6e3;
+    --sun:#f2b73c; --sun-tint:#fdf0cf; --lagoon:#2a9d8f; --lagoon-tint:#dff3ef;
+    /* Delta palette (resources/palettes/palette.gpl) */
+    --d-davy:#56595b; --d-quartz:#4a4a4a; --d-ash:#b1b5bd; --d-taupe:#83868c;
+    --d-coral:#ff837d; --d-fuzzy:#ba6561; --d-melon:#ffb0ac; --d-pink:#ffd6d4; --d-terra:#e85e5c; --d-carmine:#b02a3c;
+    --d-jasmine:#f9de81; --d-camel:#c39a54; --d-gold:#f8c18c; --d-cornsilk:#fdf5d9; --d-antique:#fcecdc;
+    --d-granny:#98dc9a; --d-asparagus:#71a372; --d-platinum:#e0f4e0;
+    --d-robin:#96dfd3; --d-cadet:#73ada4;
+    --d-baby:#9abeff; --d-dpblue:#728dbe; --d-ucla:#54688c;
+    --d-lavender:#bd9aff; --d-ube:#8c72bd; --d-tan:#d3b69a; --d-shadow:#8e6f60;
+    --fraunces:'Fraunces',Georgia,serif; --sans:'Geist',system-ui,sans-serif; --geo:'Outfit','Geist',system-ui,sans-serif;
+    --soft:0 1px 2px rgba(60,30,20,.05), 0 10px 24px -14px rgba(60,30,20,.35);
+    --soft-lg:0 2px 4px rgba(60,30,20,.06), 0 14px 34px -18px rgba(60,30,20,.45);
+    --ease:cubic-bezier(.22,1,.36,1); --expo:cubic-bezier(.16,1,.3,1);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; }
+  body{ margin:0; background:#efe7da; font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; padding:40px 24px 80px; font-feature-settings:"tnum"; }
+  .intro{ max-width:1760px; margin:0 auto 26px; }
+  .intro h1{ font-family:var(--fraunces); font-variation-settings:"SOFT" 100,"WONK" 1; font-size:28px; font-weight:600; letter-spacing:-.02em; margin:0 0 6px; }
+  .intro p{ color:var(--ink-2); font-size:14px; line-height:1.5; margin:0; max-width:78ch; }
+  .rail{ display:flex; gap:28px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1760px; margin:0 auto; }
+  .col{ width:390px; }
+  .col .cap{ font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:0 0 8px 6px; display:flex; justify-content:space-between; }
+  .col .cap b{ color:var(--ink); }
+  .col .why{ font-size:12.5px; line-height:1.5; color:var(--ink-2); margin:12px 6px 0; }
+  .col .why b{ color:var(--ink); font-weight:600; }
+  .phone{ width:390px; height:844px; background:var(--paper-1); border:1px solid var(--line-2); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px rgba(60,30,20,.4); }
+  .phone iframe{ width:390px; height:844px; border:0; display:block; }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; }
+  .screen{ flex:1; overflow:auto; padding:0 16px 110px; scrollbar-width:none; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .lab{ font-size:10px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2); white-space:nowrap; }
+
+  /* ===== shared base: the approved Mix (B surfaces + buttons, A type) ===== */
+  .head{ display:flex; align-items:center; justify-content:space-between; padding:10px 22px 4px; }
+  .wordmark{ font-family:var(--fraunces); font-variation-settings:"SOFT" 100,"WONK" 1; font-size:24px; font-weight:700; letter-spacing:-.02em; }
+  .stk{ display:inline-block; padding:5px 10px; border-radius:999px; background:var(--sun); color:var(--ink); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
+  .mast{ padding:10px 8px 2px; }
+  .mast h2{ font-family:var(--fraunces); font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144; font-size:36px; font-weight:600; font-style:italic; letter-spacing:-.025em; line-height:1; margin:0; }
+  .mast h2 .u{ position:relative; display:inline-block; white-space:nowrap; }
+  .mast h2 .u svg{ position:absolute; left:-2%; bottom:-6px; width:104%; height:12px; }
+  .mast p{ margin:10px 0 0; font-size:14px; line-height:1.45; color:var(--ink-2); }
+  .sect{ display:flex; align-items:center; gap:10px; padding:18px 6px 10px; }
+  .sect .n{ font-family:var(--fraunces); font-size:18px; font-weight:700; font-style:italic; color:var(--carnelian); }
+  .sect .n.lag{ color:var(--lagoon); }
+  .sect .dash{ flex:1; border-bottom:1.5px dashed var(--ink-4); }
+  .sect .plain{ font-size:11px; color:var(--ink-3); white-space:nowrap; }
+  .card{ background:var(--paper-0); border-radius:24px; padding:16px 16px 14px; margin-bottom:14px; position:relative; box-shadow:var(--soft); transition:background .3s var(--ease); }
+  .card.on{ background:var(--lagoon-tint); }
+  .top{ display:flex; gap:12px; align-items:flex-start; }
+  .top > div{ flex:1; min-width:0; }
+  .top > .seal, .top > .tile{ flex:0 0 auto; }
+  .title{ font-family:var(--fraunces); font-variation-settings:"SOFT" 100,"WONK" 1; font-size:22px; font-weight:600; letter-spacing:-.015em; line-height:1.12; }
+  .facts{ font-size:12.5px; color:var(--ink-3); margin-top:4px; line-height:1.4; }
+  .facts b{ color:var(--ink-2); font-weight:600; }
+  .tile{ width:48px; height:48px; border-radius:16px; display:grid; place-items:center; flex:0 0 auto; position:relative; }
+  .tile svg{ width:26px; height:26px; position:relative; }
+  .seal{ width:56px; height:56px; border-radius:50%; background:var(--sun); display:flex; flex-direction:column; align-items:center; justify-content:center; flex:0 0 auto; line-height:1; color:var(--ink); }
+  .seal.red{ background:var(--carnelian); color:var(--paper-0); } .seal.lag{ background:var(--lagoon); color:var(--paper-0); }
+  .seal b{ font-family:var(--fraunces); font-size:24px; font-weight:700; }
+  .seal b small{ font-family:var(--sans); font-size:11px; font-weight:700; opacity:.75; }
+  .seal small{ font-size:8.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-top:1px; }
+  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:14px; }
+  .heat div{ height:34px; border-radius:10px; display:grid; place-items:center; font-size:12.5px; font-weight:700; color:var(--ink-2); background:var(--paper-2); position:relative; }
+  .heat div.best{ color:var(--carnelian); }
+  .heat div.best svg{ position:absolute; inset:-5px -3px; width:calc(100% + 6px); height:calc(100% + 10px); pointer-events:none; }
+  .hl{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:4px; }
+  .hl div{ text-align:center; font-size:9.5px; font-weight:600; color:var(--ink-3); }
+  .who{ display:flex; align-items:center; gap:10px; margin-top:12px; font-size:12.5px; color:var(--ink-2); }
+  .who b{ color:var(--ink); font-weight:600; }
+  .pile{ display:inline-flex; align-items:center; }
+  .av{ width:28px; height:28px; border-radius:50%; border:2px solid var(--paper-0); display:grid; place-items:center; font-size:10.5px; font-weight:700; color:var(--ink); margin-left:-8px; flex:0 0 28px; }
+  .av:first-child{ margin-left:0; }
+  .av.a{ background:#f6cfc6; } .av.b{ background:#cfe9d6; } .av.c{ background:#cfe1f2; } .av.d{ background:#efe0bf; } .av.e{ background:#f2b73c; }
+  .av.more{ background:var(--paper-1); border-color:var(--line-2); font-size:10px; color:var(--ink-2); }
+  .ask{ margin-top:14px; display:flex; flex-direction:column; gap:7px; }
+  .ask .from{ font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-left:8px; }
+  .ask .bub{ padding:12px 14px; background:var(--sun-tint); border-radius:18px 18px 18px 4px; font-family:var(--fraunces); font-style:italic; font-size:16.5px; line-height:1.3; }
+  .ask .bub b{ font-style:normal; font-weight:700; }
+  .ask .bub.me{ align-self:flex-end; background:var(--ink); color:var(--paper-0); border-radius:18px 18px 4px 18px; font-family:var(--sans); font-style:normal; font-size:13.5px; animation:pop .32s var(--expo) both; }
+  .ask .from.me{ align-self:flex-end; margin:0 8px 0 0; }
+  @keyframes pop{ from{ opacity:0; transform:translateY(8px) scale(.96); } to{ opacity:1; transform:none; } }
+  .ask .replies{ display:flex; gap:8px; margin-left:4px; }
+  .ask .replies button, .acts button{ height:38px; padding:0 15px; border-radius:999px; border:1px solid var(--line-2); background:var(--paper-0); font-size:13px; font-weight:600; color:var(--ink); }
+  .ask .replies button.go{ background:var(--carnelian); border-color:var(--carnelian); color:var(--paper-0); font-weight:700; }
+  .acts{ display:flex; gap:8px; margin-top:14px; }
+  .acts button{ flex:1; height:40px; padding:0; }
+  .acts button.sel{ background:var(--ink); border-color:var(--ink); color:var(--paper-0); }
+  .tabbar{ position:absolute; left:50%; bottom:22px; transform:translateX(-50%); display:flex; align-items:center; gap:6px; padding:6px; border-radius:999px; background:var(--paper-0); box-shadow:var(--soft-lg); }
+  .tabbar button{ border:0; background:transparent; height:40px; padding:0 18px; border-radius:999px; font-size:13px; font-weight:600; }
+  .tabbar button.on{ background:var(--ink); color:var(--paper-0); }
+  .strip{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 6px 0; }
+  .strip .tile{ width:44px; height:44px; } .strip .tile svg{ width:24px; height:24px; }
+
+  /* ===== 1 · Delta in the icons only ===== */
+  .d1 .tile{ border-radius:11px; }
+  .d1 .av.a{ background:var(--d-melon); } .d1 .av.b{ background:var(--d-granny); } .d1 .av.c{ background:var(--d-baby); } .d1 .av.d{ background:var(--d-jasmine); } .d1 .av.e{ background:var(--d-lavender); }
+  .d1 .av{ color:var(--d-davy); }
+
+  /* ===== 2 · Delta palette + geometric UI, Fraunces kept for the mast ===== */
+  .d2{ --sun:#f9de81; }
+  .d2 .tile{ border-radius:11px; }
+  .d2 .av.a{ background:var(--d-melon); } .d2 .av.b{ background:var(--d-granny); } .d2 .av.c{ background:var(--d-baby); } .d2 .av.d{ background:var(--d-jasmine); } .d2 .av.e{ background:var(--d-lavender); }
+  .d2 .av{ color:var(--d-davy); }
+  .d2 .wordmark{ font-family:var(--geo); font-variation-settings:normal; font-weight:700; font-size:22px; letter-spacing:-.01em; }
+  .d2 .stk{ background:var(--d-jasmine); color:var(--d-davy); font-family:var(--geo); letter-spacing:.1em; }
+  .d2 .mast h2 .u svg path{ stroke:var(--d-jasmine); }
+  .d2 .sect .n{ font-family:var(--geo); font-style:normal; font-size:16px; font-weight:700; color:var(--d-terra); }
+  .d2 .sect .n.lag{ color:var(--d-cadet); }
+  .d2 .lab{ font-family:var(--geo); font-weight:600; color:var(--d-taupe); }
+  .d2 .title{ font-family:var(--geo); font-variation-settings:normal; font-size:20px; font-weight:700; letter-spacing:-.02em; line-height:1.15; }
+  .d2 .seal{ background:var(--d-jasmine); color:var(--d-davy); }
+  .d2 .seal.red{ background:var(--d-coral); color:#fff; } .d2 .seal.lag{ background:var(--d-cadet); color:#fff; }
+  .d2 .seal b{ font-family:var(--geo); font-size:24px; font-weight:800; } .d2 .seal b small{ font-family:var(--geo); }
+  .d2 .seal small{ font-family:var(--geo); }
+  .d2 .card.on{ background:#e9f6f2; }
+  .d2 .heat div{ color:var(--d-davy); } .d2 .heat div.best{ color:var(--d-carmine); } .d2 .heat div.best svg ellipse{ stroke:var(--d-coral); }
+  .d2 .ask .bub{ background:var(--d-cornsilk); }
+  .d2 .ask .replies button.go{ background:var(--d-coral); border-color:var(--d-coral); color:#fff; }
+  .d2 .ask .bub.me{ background:var(--d-davy); }
+  .d2 .acts button.sel{ background:var(--d-davy); border-color:var(--d-davy); }
+  .d2 .tabbar button.on{ background:var(--d-davy); }
+
+  /* ===== 3 · Delta all the way: flat, geometric, two-tone ===== */
+  .d3{ font-family:var(--geo); --sun:#f9de81; }
+  .d3 .wordmark{ font-family:var(--geo); font-variation-settings:normal; font-weight:800; font-size:20px; letter-spacing:.18em; text-transform:uppercase; color:var(--d-davy); }
+  .d3 .stk{ background:var(--d-coral); color:#fff; font-family:var(--geo); letter-spacing:.1em; }
+  .d3 .mast h2{ font-family:var(--geo); font-variation-settings:normal; font-style:normal; font-size:32px; font-weight:800; letter-spacing:-.03em; line-height:1.05; color:var(--d-davy); }
+  .d3 .mast h2 .u{ color:var(--d-coral); } .d3 .mast h2 .u svg{ display:none; }
+  .d3 .mast p{ color:var(--d-taupe); }
+  .d3 .lab{ font-family:var(--geo); font-weight:700; letter-spacing:.2em; color:var(--d-taupe); }
+  .d3 .sect .n{ font-family:var(--geo); font-style:normal; font-size:14px; font-weight:800; color:var(--d-coral); }
+  .d3 .sect .n.lag{ color:var(--d-cadet); }
+  .d3 .sect .dash{ border-bottom:2px dotted var(--d-ash); }
+  .d3 .card{ box-shadow:none; border-radius:22px; }
+  .d3 .card.on{ background:var(--d-platinum); }
+  .d3 .title{ font-family:var(--geo); font-variation-settings:normal; font-size:20px; font-weight:700; letter-spacing:-.02em; line-height:1.15; color:var(--d-davy); }
+  .d3 .facts{ color:var(--d-taupe); } .d3 .facts b{ color:var(--d-davy); }
+  .d3 .tile{ border-radius:10px; }
+  .d3 .tile svg{ filter:drop-shadow(0 2px 0 var(--shade)); }
+  .d3 .seal{ background:var(--d-jasmine); color:var(--d-davy); box-shadow:inset 0 -5px 0 var(--d-camel); }
+  .d3 .seal.red{ background:var(--d-coral); color:#fff; box-shadow:inset 0 -5px 0 var(--d-fuzzy); }
+  .d3 .seal.lag{ background:var(--d-cadet); color:#fff; box-shadow:inset 0 -5px 0 var(--d-ucla); }
+  .d3 .seal b{ font-family:var(--geo); font-size:23px; font-weight:800; } .d3 .seal b small, .d3 .seal small{ font-family:var(--geo); }
+  .d3 .heat div{ background:var(--d-cornsilk); color:var(--d-davy); border-radius:8px; }
+  .d3 .heat div.best{ background:var(--d-coral) !important; color:#fff; box-shadow:inset 0 -4px 0 var(--d-fuzzy); }
+  .d3 .heat div.best svg{ display:none; }
+  .d3 .heat div.empty{ background:var(--paper-2); }
+  .d3 .hl div{ color:var(--d-taupe); }
+  .d3 .av{ color:var(--d-davy); border-color:var(--paper-0); }
+  .d3 .av.a{ background:var(--d-melon); } .d3 .av.b{ background:var(--d-granny); } .d3 .av.c{ background:var(--d-baby); } .d3 .av.d{ background:var(--d-jasmine); } .d3 .av.e{ background:var(--d-lavender); }
+  .d3 .av.more{ background:var(--paper-2); color:var(--d-taupe); }
+  .d3 .who{ color:var(--d-taupe); } .d3 .who b{ color:var(--d-davy); }
+  .d3 .ask .from{ font-family:var(--geo); color:var(--d-taupe); }
+  .d3 .ask .bub{ background:var(--d-antique); font-family:var(--geo); font-style:normal; font-size:15px; color:var(--d-davy); border-radius:16px 16px 16px 4px; }
+  .d3 .ask .bub.me{ background:var(--d-davy); color:#fff; }
+  .d3 .ask .replies button, .d3 .acts button{ border:0; background:var(--paper-2); color:var(--d-davy); font-family:var(--geo); font-weight:700; border-radius:12px; }
+  .d3 .ask .replies button.go{ background:var(--d-coral); color:#fff; box-shadow:inset 0 -3px 0 var(--d-fuzzy); }
+  .d3 .acts button.sel{ background:var(--d-davy); color:#fff; box-shadow:inset 0 -3px 0 var(--d-quartz); }
+  .d3 .tabbar{ box-shadow:none; background:var(--paper-2); border-radius:18px; }
+  .d3 .tabbar button{ border-radius:12px; font-family:var(--geo); font-weight:700; color:var(--d-davy); }
+  .d3 .tabbar button.on{ background:var(--d-davy); color:#fff; box-shadow:inset 0 -3px 0 var(--d-quartz); }
+
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>Quorum · three ways to bring Delta in</h1>
+  <p>Same board, same data. Delta's recipe: flat plates with no outline and no drop shadow, dusty pastels (coral, baby blue, granny smith, jasmine, lavender), Davy's grey instead of black, white glyphs, small corner radius, geometric type. Each frame takes more of it than the last. Under every phone: the whole icon set in that treatment. Pick one, or name the bits you want mixed.</p>
+</div>
+<div class="rail">
+
+  <div class="col">
+    <div class="cap"><span>0 · Now</span><b>the Mix you approved</b></div>
+    <div class="phone"><iframe src="quorum.html" title="Current Quorum v4 Mix" scrolling="no"></iframe></div>
+    <p class="why">Phosphor glyphs on saturated plates, Fraunces, carnelian, sun.</p>
+  </div>
+
+  <div class="col">
+    <div class="cap"><span>1 · Delta icons</span><b>only the plates and faces change</b></div>
+    <div class="phone d1" data-dir="d1"></div>
+    <div class="strip" data-strip="d1"></div>
+    <p class="why"><b>Smallest step.</b> Delta's dusty palette on squarer plates with white glyphs, Delta pastels on the avatars. Everything else is the Mix untouched: Fraunces, carnelian seals, sun bubble, soft shadows.</p>
+  </div>
+
+  <div class="col">
+    <div class="cap"><span>2 · Delta palette</span><b>geometric UI, Fraunces kept for the mast</b></div>
+    <div class="phone d2" data-dir="d2"></div>
+    <div class="strip" data-strip="d2"></div>
+    <p class="why"><b>The middle.</b> Delta's colours run through the system: coral for ready, cadet for on, jasmine instead of sun, Davy's grey for the dark fills. Card titles, numerals and labels move to Outfit (a Now-alike geometric sans). The one wonky serif line stays on the mast as the warmth.</p>
+  </div>
+
+  <div class="col">
+    <div class="cap"><span>3 · Delta all the way</span><b>flat, two-tone, geometric</b></div>
+    <div class="phone d3" data-dir="d3"></div>
+    <div class="strip" data-strip="d3"></div>
+    <p class="why"><b>Full commitment.</b> No shadows at all; depth is a darker step of the same hue, the way Delta shades. Outfit everywhere, tracked caps wordmark, squared-off buttons, Davy's grey text. Reads like the icon pack became an app.</p>
+  </div>
+
+</div>
+
+<script>
+// Phosphor Fill paths (MIT · https://phosphoricons.com)
+const ICONS = {
+  coatHanger:'M241.57,171.2,141.33,96l23.46-17.6A8,8,0,0,0,168,72a40,40,0,1,0-80,0,8,8,0,0,0,16,0,24,24,0,0,1,47.69-3.78L14.43,171.2A16,16,0,0,0,24,200H232a16,16,0,0,0,9.6-28.8ZM32.73,184C53.6,170.59,89.49,152,128,152s74.4,18.59,95.27,32Z',
+  tShirt:'M247.59,61.22,195.83,33A8,8,0,0,0,192,32H160a8,8,0,0,0-8,8,24,24,0,0,1-48,0,8,8,0,0,0-8-8H64a8,8,0,0,0-3.84,1L8.41,61.22A15.76,15.76,0,0,0,1.82,82.48l19.27,36.81A16.37,16.37,0,0,0,35.67,128H56v80a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V128h20.34a16.37,16.37,0,0,0,14.58-8.71l19.27-36.81A15.76,15.76,0,0,0,247.59,61.22ZM35.67,112a.62.62,0,0,1-.41-.13L16.09,75.26,56,53.48V112Zm185.07-.14a.55.55,0,0,1-.41.14H200V53.48l39.92,21.78Z',
+  sailboat:'M160,140V72.85a4,4,0,0,1,7-2.69l55,60.46a8,8,0,0,1,.43,10.26,8.24,8.24,0,0,1-6.58,3.12H164A4,4,0,0,1,160,140Zm87.21,32.53A8,8,0,0,0,240,168H144V8a8,8,0,0,0-14.21-5l-104,128A8,8,0,0,0,32,144h96v24H16a8,8,0,0,0-6.25,13l29.6,37a15.93,15.93,0,0,0,12.49,6H204.16a15.93,15.93,0,0,0,12.49-6l29.6-37A8,8,0,0,0,247.21,172.53Z',
+  airplaneTilt:'M215.52,197.26a8,8,0,0,1-1.86,8.39l-24,24A8,8,0,0,1,184,232a7.09,7.09,0,0,1-.79,0,8,8,0,0,1-5.87-3.52l-44.07-66.12L112,183.59V208a8,8,0,0,1-2.34,5.65s-14,14.06-15.88,15.88A7.91,7.91,0,0,1,91,231.41a8,8,0,0,1-10.41-4.35l-.06-.15-14.7-36.76L29,175.42a8,8,0,0,1-2.69-13.08l16-16A8,8,0,0,1,48,144H72.4l21.27-21.27L27.56,78.65a8,8,0,0,1-1.22-12.32l24-24a8,8,0,0,1,8.39-1.86l85.94,31.25L176.2,40.19a28,28,0,0,1,39.6,39.6l-31.53,31.53Z',
+  bowlFood:'M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM148.12,104a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Z',
+  island:'M239.55,226.65A8,8,0,0,1,232,232H24a8,8,0,0,1-5-14.25c1.63-1.3,38.53-30.26,98.29-33.45A120,120,0,0,1,114,146.37c1.73-21.71,10.91-50.63,42.95-72.48a66.28,66.28,0,0,0-15-1.87l-1.67,0c-19,.62-30.94,11.71-36.5,33.92A8,8,0,0,1,96,112a7.66,7.66,0,0,1-2-.24,8,8,0,0,1-5.82-9.7c9.25-36.95,33.11-45.42,51.5-46a81.43,81.43,0,0,1,21.68,2.45c-3.82-6.33-9.42-12.93-17.21-16.25-10-4.24-22.17-2.39-36.31,5.51a8,8,0,0,1-7.8-14c18.74-10.45,35.72-12.54,50.48-6.2,12.49,5.36,20.73,15.78,25.88,25,6.17-9.64,13.87-16.17,22.38-18.94,11.86-3.87,24.64-.72,38,9.37a8,8,0,0,1-9.64,12.76c-8.91-6.73-16.77-9.06-23.34-6.93-7.3,2.35-12.87,10-16.38,16.61A70.46,70.46,0,0,1,208,73.07c14.61,8.35,32,26.05,32,62.94a8,8,0,0,1-16,0c0-23.46-8.06-40-24-49a50.49,50.49,0,0,0-5.75-2.8,55.64,55.64,0,0,1,5.06,33.06,59.41,59.41,0,0,1-8.86,23.41,8,8,0,0,1-13.09-9.2c.75-1.09,16.33-24.38-3.26-49.37-27,15.21-41.89,37.25-44.16,65.59a104.27,104.27,0,0,0,3.83,36.44c62.65,1.81,101.52,32.33,103.2,33.66A8,8,0,0,1,239.55,226.65ZM52,168a28,28,0,1,0-28-28A28,28,0,0,0,52,168Z',
+  beerStein:'M216,88H200V72a40,40,0,0,0-40-40H148.82c-11.91-10.2-28-16-44.82-16C68.71,16,40,41.12,40,72V208a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16v-8h16a24,24,0,0,0,24-24V112A24,24,0,0,0,216,88ZM104,184a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0ZM57,64c4.46-18.24,23.85-32,47-32,13.87,0,27.06,5,36.21,13.78A8,8,0,0,0,145.74,48H160a24,24,0,0,1,22.62,16ZM224,176a8,8,0,0,1-8,8H200V104h16a8,8,0,0,1,8,8Z',
+  confetti:'M111.49,52.63a15.8,15.8,0,0,0-26,5.77L33,202.78A15.83,15.83,0,0,0,47.76,224a16,16,0,0,0,5.46-1l144.37-52.5a15.8,15.8,0,0,0,5.78-26ZM65.14,161.13l19.2-52.79,63.32,63.32-52.8,19.2ZM160,72a37.8,37.8,0,0,1,3.84-15.58C169.14,45.83,179.14,40,192,40c6.7,0,11-2.29,13.65-7.21A22,22,0,0,0,208,23.94,8,8,0,0,1,224,24c0,12.86-8.52,32-32,32-6.7,0-11,2.29-13.65,7.21A22,22,0,0,0,176,72.06,8,8,0,0,1,160,72ZM136,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm101.66,82.34a8,8,0,1,1-11.32,11.31l-16-16a8,8,0,0,1,11.32-11.32Zm4.87-42.75-24,8a8,8,0,0,1-5.06-15.18l24-8a8,8,0,0,1,5.06,15.18Z',
+  tent:'M255.31,188.75l-64-144A8,8,0,0,0,184,40H72a8,8,0,0,0-7.31,4.75h0l0,.12v0L.69,188.75A8,8,0,0,0,8,200H248a8,8,0,0,0,7.31-11.25ZM64,184H20.31L64,85.7Zm16,0V85.7L123.69,184Z',
+  martini:'M237.66,45.66A8,8,0,0,0,232,32H24a8,8,0,0,0-5.66,13.66L120,147.31V208H88a8,8,0,0,0,0,16h80a8,8,0,0,0,0-16H136V147.31Zm-25,2.34-16,16H59.31l-16-16Z',
+  bus:'M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z',
+  mountains:'M254.88,195.92l-54.56-92.08A15.87,15.87,0,0,0,186.55,96h0a15.85,15.85,0,0,0-13.76,7.84l-15.64,26.39a4,4,0,0,0,0,4.07l26.8,45.47a8.13,8.13,0,0,1-1.89,10.55,8,8,0,0,1-11.8-2.26L101.79,71.88a16,16,0,0,0-27.58,0L1.11,195.94a8,8,0,0,0,1,9.52A8.23,8.23,0,0,0,8.23,208H247.77a8.29,8.29,0,0,0,6.09-2.55A8,8,0,0,0,254.88,195.92ZM64.43,120,88,80l23.57,40ZM140,52a24,24,0,1,1,24,24A24,24,0,0,1,140,52Z',
+  camera:'M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm-44,76a36,36,0,1,1-36-36A36,36,0,0,1,164,132Z',
+};
+// Delta plate colours per icon: [plate, glyph, shade]
+const DELTA = {
+  coatHanger:['#ff837d','#fff','#ba6561'], tShirt:['#bd9aff','#fff','#8c72bd'], sailboat:['#9abeff','#fff','#728dbe'],
+  airplaneTilt:['#96dfd3','#fff','#73ada4'], bowlFood:['#f9de81','#56595b','#c39a54'], island:['#98dc9a','#fff','#71a372'],
+  beerStein:['#f8c18c','#56595b','#c39a54'], confetti:['#e85e5c','#fff','#b02a3c'], tent:['#d3b69a','#fff','#8e6f60'],
+  martini:['#8c72bd','#fff','#54688c'], bus:['#728dbe','#fff','#54688c'], mountains:['#71a372','#fff','#4f7a50'], camera:['#56595b','#fff','#4a4a4a'],
+};
+const ico = (k)=>`<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${ICONS[k]}"/></svg>`;
+const tile = (k)=>`<span class="tile" style="background:${DELTA[k][0]};color:${DELTA[k][1]};--shade:${DELTA[k][2]}">${ico(k)}</span>`;
+const av = (n,c)=>`<span class="av ${c}">${n}</span>`;
+const UNDER = `<svg viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 C 30 2, 60 11, 118 5" fill="none" stroke="#f2b73c" stroke-width="5" stroke-linecap="round"/></svg>`;
+const RING = `<svg viewBox="0 0 60 44" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="30" cy="22" rx="27" ry="19" fill="none" stroke="#b31b1b" stroke-width="2.2" transform="rotate(-6 30 22)"/></svg>`;
+const HL = `<div class="hl"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>`;
+const heat = (vals, best, q=4)=>`<div class="heat">${vals.map((v,i)=>`<div class="${i===best?'best':''} ${v?'':'empty'}" style="${v&&i!==best?`background:color-mix(in oklch, var(--sun) ${Math.min(55,Math.round(v/q*40))}%, var(--paper-2))`:(i===best?`background:color-mix(in oklch, var(--sun) 55%, var(--paper-2))`:'')}">${v||''}${i===best?RING:''}</div>`).join('')}</div>${HL}`;
+const ask = (line, go)=>`<div class="ask"><span class="from">Quorum · to everyone in</span><div class="bub">${line}</div><div class="replies"><button class="go">${go}</button><button>Not yet</button></div></div>`;
+const acts = (sel)=>`<div class="acts"><button class="${sel==='in'?'sel':''}">${sel==='in'?'In':"I'm in"}</button><button>Maybe</button><button>Out</button></div>`;
+
+function board(){
+  return `
+  <div class="status"><span>9:41</span><span>●●●</span></div>
+  <div class="head"><span class="wordmark">Quorum</span><span class="stk">Trip week · Feb 14–20</span></div>
+  <div class="screen">
+    <div class="mast"><h2>What we <span class="u">could${UNDER}</span> do.</h2><p>Tap in, your free days ride along. When enough of us overlap, Quorum asks the group.</p></div>
+    <div class="sect"><span class="lab">Open</span><span class="n">5</span><span class="dash"></span><span class="lab">On</span><span class="n lag">1</span></div>
+
+    <div class="card" data-lock>
+      <div class="top">${tile('coatHanger')}<div><div class="title">Suits in Hoi An</div><div class="facts">8 in · ~$250</div></div><div class="seal red"><b>6<small>/4</small></b><small>on Tue</small></div></div>
+      ${heat([0,3,6,3,2,2,0],2)}
+      <div class="who"><span class="pile">${av('P','c')}${av('M','e')}${av('D','c')}${av('J','d')}${av('M','e')}<span class="av more">+3</span></span><span><b>8 in</b> · 1 maybe</span></div>
+      ${ask('6 of 8 can do <b>Tuesday 16</b>. Lock it in?','Lock it in')}
+      ${acts()}
+    </div>
+
+    <div class="card">
+      <div class="top">${tile('tShirt')}<div><div class="title">Cohort shirts</div><div class="facts">No day needed · $25–35</div></div><div class="seal red"><b>9<small>/4</small></b><small>in</small></div></div>
+      <div class="who"><span class="pile">${av('K','b')}${av('S','c')}${av('A','a')}${av('O','d')}${av('L','e')}<span class="av more">+4</span></span><span><b>9 in</b></span></div>
+      ${ask('9 of you want this. <b>Make it happen?</b>',"It's on")}
+      ${acts()}
+    </div>
+
+    <div class="card">
+      <div class="top">${tile('sailboat')}<div><div class="title">Overnight boat</div><div class="facts">4 in · ~$180 · needs 6</div></div><div class="seal"><b>3<small>/6</small></b><small>on Wed</small></div></div>
+      ${heat([0,0,2,3,2,0,0],3,6)}
+      <div class="who"><span class="pile">${av('M','e')}${av('E','a')}${av('T','b')}${av('L','d')}</span><span><b>4 in</b></span></div>
+      ${acts()}
+    </div>
+
+    <div class="sect"><span class="lab">On</span><span class="n lag">1</span><span class="dash"></span><span class="plain">texts sent · in calendars</span></div>
+    <div class="card on">
+      <div class="top">${tile('airplaneTilt')}<div><div class="title">5am flight to Da Nang</div><div class="facts"><b>Thu 18 · 5:10am</b> · $90 · Maya locked it</div></div><div class="seal lag"><b>4</b><small>on</small></div></div>
+      <div class="who"><span class="pile">${av('J','d')}${av('M','e')}${av('D','c')}${av('W','b')}</span><span><b>4 in</b></span></div>
+      <div class="acts"><button>I'm in</button><button>Out</button></div>
+    </div>
+  </div>
+  <div class="tabbar"><button class="on">Board</button><button>+</button><button>You</button></div>`;
+}
+document.querySelectorAll('[data-dir]').forEach(ph=>{ ph.innerHTML=board(); });
+document.querySelectorAll('[data-strip]').forEach(s=>{ s.innerHTML=Object.keys(ICONS).map(tile).join(''); });
+
+// live lock: reply posts, card turns on
+const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.querySelectorAll('[data-lock]').forEach(c=>{
+  c.querySelector('.replies .go').onclick=()=>{
+    const a=c.querySelector('.ask'); a.querySelector('.replies').remove();
+    a.insertAdjacentHTML('beforeend', `<div class="bub me">Locked. It's on, Tue 16.</div><span class="from me">You · texts + invites to 8</span>`);
+    setTimeout(()=>{ c.classList.add('on'); const s=c.querySelector('.seal'); s.className='seal lag'; s.innerHTML='<b>8</b><small>on</small>'; c.querySelector('.facts').innerHTML='<b>Tue 16 · 3:00pm</b> · ~$250 · you locked it'; c.querySelector('.acts').innerHTML='<button class="sel">In</button><button>Out</button>'; }, rm?0:900);
+  };
+});
+document.querySelectorAll('.acts').forEach(g=>g.addEventListener('click',e=>{ const bt=e.target.closest('button'); if(!bt) return; [...g.children].forEach(x=>x.classList.toggle('sel', x===bt && !x.classList.contains('sel'))); }));
+</script>
+</body>
+</html>
