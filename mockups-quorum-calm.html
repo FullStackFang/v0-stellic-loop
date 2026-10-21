@@ -43,7 +43,7 @@
   .mast h2 em{ font-style:italic; color:var(--carnelian-deep); }
   .mast p{ margin:8px 0 0; font-size:13.5px; line-height:1.5; color:var(--ink-2); max-width:34ch; }
   .lab{ font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; }
-  .plate{ width:36px; height:36px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; }
+  .plate{ width:36px; height:36px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; box-shadow:inset 0 0 0 1px var(--ring), 0 1px 1.5px rgba(60,30,20,.14), 0 5px 10px -5px rgba(60,30,20,.35); }
   .plate svg{ width:20px; height:20px; }
   .av{ width:24px; height:24px; border-radius:50%; border:1.5px solid var(--paper-0); display:grid; place-items:center; font-size:9.5px; font-weight:600; color:var(--ink-2); margin-left:-6px; flex:0 0 24px; background:var(--paper-2); }
   .av:first-child{ margin-left:0; }
@@ -232,8 +232,8 @@ const DELTA = {
 const ico = (k)=>`<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${ICONS[k]}"/></svg>`;
 // A and C: true Delta plate. B: plate tinted into paper, glyph in the shade.
 const plate = (k, mode)=> mode==='B'
-  ? `<span class="plate" style="background:color-mix(in oklch, ${DELTA[k][0]} 42%, var(--paper-0));color:${DELTA[k][2]}">${ico(k)}</span>`
-  : `<span class="plate" style="background:${DELTA[k][0]};color:${DELTA[k][1]}">${ico(k)}</span>`;
+  ? `<span class="plate" style="background:${DELTA[k][0]};color:${DELTA[k][2]};--ring:color-mix(in oklch, ${DELTA[k][2]} 55%, transparent)">${ico(k)}</span>`
+  : `<span class="plate" style="background:color-mix(in oklch, ${DELTA[k][0]} 86%, ${DELTA[k][2]});color:${DELTA[k][1]};--ring:color-mix(in oklch, ${DELTA[k][2]} 55%, transparent)">${ico(k)}</span>`;
 const av = (n)=>`<span class="av">${n}</span>`;
 const pile = (ns, more)=>`<span class="pile">${ns.map(av).join('')}${more?`<span class="av">+${more}</span>`:''}</span>`;
 const ARROW = `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
