@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quorum · mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
+    --moss:#3d8a5f; --moss-100:#e3f0e8; --amber:#b6862b; --amber-100:#f6ecd6; --rose:#a04f6a; --slate:#59657a; --violet:#6b5b95;
+    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+    --lift: inset 0 1px 0 rgba(255,253,248,.7), 0 1px 2px rgba(31,26,23,.10), 0 6px 14px -6px rgba(31,26,23,.22), 0 24px 48px -16px rgba(80,40,30,.5);
+    --card: inset 0 1px 0 rgba(255,253,248,.8), 0 1px 2px rgba(31,26,23,.08), 0 4px 10px -6px rgba(31,26,23,.18);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; } input,textarea{ font-family:inherit; }
+  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
+    font-family:var(--font-sans); color:var(--ink-0); -webkit-font-smoothing:antialiased; padding:40px 24px 72px; }
+  .wrap{ max-width:1100px; margin:0 auto; }
+  .rail{ display:flex; gap:40px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .side{ width:400px; }
+  .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--carnelian-500); }
+  .side h1{ font:800 32px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 10px; }
+  .side p{ color:var(--ink-2); font-size:14.5px; line-height:1.5; margin:0 0 12px; }
+  .side ol{ padding-left:20px; color:var(--ink-2); font-size:14px; line-height:1.5; }
+  .side li{ margin-bottom:6px; }
+  .side .try{ font:500 12px/1.5 var(--font-mono); color:var(--carnelian-600); margin-top:16px; }
+  .side .note{ font:500 11.5px/1.5 var(--font-mono); color:var(--ink-3); margin-top:22px; }
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  .phone{ width:390px; height:820px; background:var(--paper-0); border:1px solid var(--paper-3); border-radius:38px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; padding:12px 22px 2px; font:600 12px/1 var(--font-mono); color:var(--ink-2); }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; }
+  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
+  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--carnelian-500); margin-left:2px; }
+  .apphead .grp{ font:500 11.5px/1 var(--font-mono); color:var(--ink-3); }
+  .screen{ flex:1; overflow:auto; padding:6px 16px 90px; scrollbar-width:none; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:64px; display:flex; background:linear-gradient(to top, var(--paper-0) 70%, rgba(255,253,248,0)); padding:10px 18px 14px; gap:6px; }
+  .tabbar button{ flex:1; border:0; background:transparent; border-radius:14px; font:700 13px/1 var(--font-display); color:var(--ink-3); padding:10px 0; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .tabbar button.on{ color:var(--carnelian-500); background:var(--paper-1); }
+  .tabbar button .n{ font:600 10px/1 var(--font-mono); letter-spacing:.06em; }
+
+  h2{ font:800 24px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 2px 4px; }
+  .sub{ color:var(--ink-2); font-size:13.5px; margin:0 2px 14px; line-height:1.45; }
+  .sect{ font:600 11px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:18px 2px 10px; display:flex; justify-content:space-between; align-items:center; }
+  .sect b{ color:var(--carnelian-500); font-weight:600; }
+
+  .card{ background:var(--paper-0); border-radius:18px; padding:14px 14px 12px; margin-bottom:10px; box-shadow:var(--card); position:relative; }
+  .card.on{ background:linear-gradient(to bottom, var(--moss-100), var(--paper-0) 60%); }
+  .card.lift{ box-shadow:var(--lift); }
+  .card .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .card .title{ font:700 17px/1.2 var(--font-display); letter-spacing:-.01em; }
+  .card .facts{ font:500 12.5px/1.4 var(--font-mono); color:var(--ink-2); margin-top:3px; }
+  .card .facts b{ color:var(--ink-0); font-weight:500; }
+  .count{ text-align:right; flex-shrink:0; }
+  .count .big{ font:800 26px/1 var(--font-display); letter-spacing:-.03em; }
+  .count .big small{ font:600 13px/1 var(--font-mono); color:var(--ink-3); letter-spacing:0; }
+  .count .lbl{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin-top:4px; }
+  .count.on .big, .count.on .lbl{ color:var(--moss); }
+  .count.near .big{ color:var(--carnelian-500); }
+  .bar{ height:4px; border-radius:2px; background:var(--paper-2); margin:10px 0 8px; overflow:hidden; }
+  .bar i{ display:block; height:100%; background:var(--carnelian-400); border-radius:2px; transition:width .35s cubic-bezier(.16,1,.3,1); }
+  .card.on .bar i{ background:var(--moss); }
+  .who{ font-size:12.5px; color:var(--ink-2); line-height:1.4; min-height:18px; }
+  .who b{ color:var(--ink-0); font-weight:600; }
+  .acts{ display:flex; gap:6px; margin-top:10px; }
+  .acts button{ flex:1; border:0; border-radius:12px; padding:10px 0; font:700 13.5px/1 var(--font-display); background:var(--paper-1); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--paper-3); }
+  .acts button.in.sel{ background:var(--carnelian-500); color:var(--paper-0); box-shadow:none; }
+  .acts button.maybe.sel{ background:var(--amber-100); color:var(--amber-600, #8a641f); box-shadow:inset 0 0 0 1px var(--amber); }
+  .acts button.out.sel{ background:var(--paper-2); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--ink-4); }
+  .card.on .acts button.in.sel{ background:var(--moss); }
+  .flag{ margin-top:8px; font:500 12px/1.4 var(--font-mono); color:var(--amber-600, #8a641f); background:var(--amber-100); border-radius:10px; padding:7px 10px; }
+  .pill{ display:inline-flex; align-items:center; gap:5px; font:600 10.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:5px 8px; border-radius:999px; background:var(--paper-2); color:var(--ink-2); }
+  .pill.on{ background:var(--moss); color:#fff; }
+  .pill.idle{ background:var(--paper-2); color:var(--ink-3); }
+  .link{ background:none; border:0; padding:0; font:600 12.5px/1 var(--font-mono); color:var(--carnelian-600); }
+  .ghost{ border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:9px 12px; font:700 13px/1 var(--font-display); color:var(--ink-0); }
+  .primary{ border:0; background:var(--carnelian-500); color:var(--paper-0); border-radius:12px; padding:11px 14px; font:700 14px/1 var(--font-display); width:100%; box-shadow:0 6px 14px -6px rgba(179,27,27,.5); }
+  .primary:disabled{ background:var(--ink-4); box-shadow:none; }
+
+  /* chips */
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ border:0; border-radius:999px; padding:9px 12px; font:600 13px/1 var(--font-sans); background:var(--paper-1); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--paper-3); display:inline-flex; gap:7px; align-items:center; }
+  .chip .n{ font:500 11px/1 var(--font-mono); color:var(--ink-3); }
+  .chip.sel{ background:var(--ink-0); color:var(--paper-0); box-shadow:none; }
+  .chip.sel .n{ color:var(--ink-4); }
+  .addwant{ display:flex; gap:6px; margin-top:10px; }
+  .addwant input{ flex:1; border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:10px 12px; font-size:13.5px; }
+
+  /* day strip */
+  .days{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .day{ border:0; border-radius:12px; padding:8px 0 7px; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .day .d{ font:600 10px/1 var(--font-mono); color:var(--ink-3); letter-spacing:.04em; }
+  .day .num{ font:800 16px/1 var(--font-display); }
+  .day.free{ background:var(--moss-100); box-shadow:inset 0 0 0 1px #bcdcc8; }
+  .day.free .d{ color:var(--moss); }
+  .day.busy{ background:var(--paper-2); color:var(--ink-3); }
+  .day.busy .num{ text-decoration:line-through; }
+  .day .src{ font:500 8.5px/1 var(--font-mono); color:var(--ink-3); }
+  .toggle{ display:flex; justify-content:space-between; align-items:center; padding:11px 2px; border-top:1px solid var(--paper-2); font-size:13.5px; }
+  .toggle small{ display:block; color:var(--ink-3); font-size:11.5px; margin-top:2px; }
+  .sw{ width:40px; height:24px; border-radius:999px; background:var(--ink-4); border:0; position:relative; flex-shrink:0; }
+  .sw i{ position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s; }
+  .sw.on{ background:var(--moss); } .sw.on i{ left:19px; }
+
+  /* planner heat */
+  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin:8px 0 2px; }
+  .heat div{ height:26px; border-radius:6px; display:grid; place-items:center; font:600 10px/1 var(--font-mono); color:var(--ink-2); background:var(--paper-2); }
+  .heat div.best{ outline:2px solid var(--carnelian-400); outline-offset:1px; color:var(--carnelian-600); }
+  .heat .lab{ font:600 9px/1 var(--font-mono); color:var(--ink-3); background:none; height:12px; }
+  .agg{ display:flex; gap:14px; margin-top:8px; font:500 12px/1.4 var(--font-mono); color:var(--ink-2); }
+  .agg b{ display:block; font:800 18px/1 var(--font-display); color:var(--ink-0); letter-spacing:-.02em; margin-bottom:2px; }
+  .privacy{ font:500 11.5px/1.5 var(--font-mono); color:var(--ink-3); background:var(--paper-1); border-radius:12px; padding:9px 12px; margin:0 0 12px; }
+
+  /* form */
+  .field{ margin-bottom:10px; }
+  .field label{ display:block; font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px; }
+  .field input, .field textarea{ width:100%; border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:10px 12px; font-size:14px; }
+  .field .hint{ font:500 11px/1.4 var(--font-mono); color:var(--ink-3); margin-top:4px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+  /* sheet (detail) */
+  .sheet{ position:absolute; inset:0; background:rgba(31,26,23,.35); display:none; align-items:flex-end; z-index:5; }
+  .sheet.open{ display:flex; }
+  .sheet .panel{ background:var(--paper-0); width:100%; border-radius:28px 28px 38px 38px; padding:16px 16px 22px; max-height:92%; overflow:auto; box-shadow:0 -10px 40px -10px rgba(31,26,23,.4); }
+  .handle{ width:40px; height:4px; border-radius:2px; background:var(--paper-3); margin:0 auto 12px; }
+  .unfurl{ display:flex; gap:10px; background:#e7f3e5; border-radius:14px; padding:10px; margin:12px 0; align-items:center; }
+  .unfurl .og{ width:92px; height:60px; border-radius:8px; background:var(--ink-0); color:var(--paper-0); display:flex; flex-direction:column; justify-content:center; padding:8px; flex-shrink:0; }
+  .unfurl .og b{ font:800 18px/1 var(--font-display); letter-spacing:-.03em; }
+  .unfurl .og span{ font:500 8.5px/1.2 var(--font-mono); color:var(--ink-4); margin-top:3px; }
+  .unfurl .txt{ font-size:12px; line-height:1.35; color:#2b3b2b; }
+  .unfurl .txt b{ display:block; font-weight:700; }
+  .unfurl .txt span{ color:#5d6e5d; font:500 10.5px/1.3 var(--font-mono); }
+  .names{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .names span{ font-size:12.5px; background:var(--paper-1); border-radius:999px; padding:5px 10px; box-shadow:inset 0 0 0 1px var(--paper-3); }
+  .names span.me{ background:var(--ink-0); color:var(--paper-0); box-shadow:none; }
+  .names span.maybe{ opacity:.65; font-style:italic; }
+  .toast{ position:absolute; left:16px; right:16px; bottom:76px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font:500 12.5px/1.4 var(--font-mono); z-index:9; opacity:0; transform:translateY(8px); transition:all .25s; pointer-events:none; box-shadow:0 10px 24px -8px rgba(0,0,0,.4); }
+  .toast.show{ opacity:1; transform:none; }
+  .toast b{ color:#9fd7b5; }
+  .sms{ background:var(--ink-0); color:var(--paper-0); border-radius:16px 16px 16px 4px; padding:10px 12px; font-size:12.5px; line-height:1.45; margin:8px 0; }
+  .sms u{ color:#f3b2a9; text-decoration:none; }
+  .empty{ color:var(--ink-3); font-size:13px; padding:20px 4px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap"><div class="rail">
+  <div class="side">
+    <div class="eyebrow">Quorum · working name · throwaway mockup</div>
+    <h1>Say what you want. Planners get a warm room. Things happen at a number.</h1>
+    <p><b>Inverted planning.</b> Instead of a host guessing and herding, everyone first says what they <em>want</em> and when they're free. Planners see the aggregate, never the individuals. A proposal posted from a want lands on the people who asked for it, and it only becomes real when enough of them tap in.</p>
+    <ol>
+      <li><b>You</b> · tick the things you'd do, mark your free days (or let your calendar do it), choose whether your name shows.</li>
+      <li><b>Plan</b> · the warm room. Counts, best days, typical budget. One tap posts a proposal prefilled from the aggregate.</li>
+      <li><b>Board</b> · proposals with a minimum. In / maybe / out. Hit the number and it's ON: the yeses get a text, the poster gets the list.</li>
+    </ol>
+    <div class="try">Try: Board → tap <b>I'm in</b> on Suits in Hoi An (two short → the "one more" text) · Overnight boat shows a conflict flag because you're in for Street-food crawl that day · tap any card for the WhatsApp preview and share link · Plan → <b>Post this</b> on Cooking class · You → turn off "show my name", then look at the Board.</div>
+    <div class="note">Static click-through, state resets on reload. Design language = Loop (raised paper, facts-only cards). Names and numbers are made up. Trip week Feb 14–20, 2027.</div>
+  </div>
+
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>●●● ⌾</span></div>
+    <div class="apphead"><span class="wordmark">Quorum<i></i></span><span class="grp mono">EMBA '27 · 61 people</span></div>
+    <div class="screen" id="screen"></div>
+    <div class="tabbar">
+      <button data-tab="you"><span>You</span><span class="n" id="n-you"></span></button>
+      <button data-tab="plan"><span>Plan</span><span class="n" id="n-plan"></span></button>
+      <button data-tab="board"><span>Board</span><span class="n" id="n-board"></span></button>
+    </div>
+    <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+    <div class="toast" id="toast"></div>
+  </div>
+</div></div>
+
+<script>
+// ---------- data ----------
+const DAYS = [['Sun',14],['Mon',15],['Tue',16],['Wed',17],['Thu',18],['Fri',19],['Sat',20]];
+const POOL = ['Priya','Marcus','Dana','Josh','Maya','Elena','Tom','Ravi','Sofia','Ken','Amara','Luis','Nina','Omar','Grace','Wei','Hana','Jules','Ben','Leila'];
+const pick = (n, off=0) => POOL.slice(off, off+n);
+
+const S = {
+  tab:'board',
+  you:{ name:'You', showName:true, useCal:true, free:new Set([1,2,4,5]), calBusy:new Set([3]), calBusyLabel:'Wed 17 · client call 2–4pm' },
+  wants:[
+    { id:'w1', title:'Thailand after the trip', count:14, budget:'$400–700', free:[6,5,9,8,11,12,13] },
+    { id:'w2', title:'Cooking class', count:12, budget:'$40–60', free:[3,7,9,6,5,8,4] },
+    { id:'w3', title:'Hoi An suits', count:11, budget:'~$250', free:[5,8,9,4,6,7,3] },
+    { id:'w4', title:'Street-food crawl', count:18, budget:'$15–25', free:[8,12,13,14,11,10,7] },
+    { id:'w5', title:'Overnight boat', count:9, budget:'~$180', free:[2,4,7,7,5,3,2] },
+    { id:'w6', title:'Cohort shirts', count:31, budget:'$25–35', free:null },
+    { id:'w7', title:'Holiday party (Dec)', count:22, budget:'$60–90', free:null },
+  ],
+  youWant:new Set(['w1','w4','w2']),
+  proposals:[
+    { id:'p1', title:'Suits in Hoi An', detail:'Tailor near the Japanese bridge, 24h turnaround.', cost:'~$250', min:8, day:2, deadline:'Mon', poster:'Priya', in:pick(6,0), maybe:['Hana','Jules'], you:null, on:false },
+    { id:'p2', title:'Street-food crawl', detail:'Five stalls, one night, Ravi leads.', cost:'$20', min:6, day:3, poster:'Ravi', in:['Ravi','Sofia','Ken','Amara'], maybe:['Omar'], you:'in', on:false },
+    { id:'p3', title:'Overnight boat', detail:'Halong-style junk, cabins for two.', cost:'~$180', min:10, day:3, poster:'Marcus', in:['Marcus','Elena','Tom','Luis'], maybe:[], you:null, on:false },
+    { id:'p4', title:'5am flight to Da Nang', detail:'Out and back same day. Not for the faint.', cost:'$90', min:4, day:4, poster:'Josh', in:['Josh','Maya','Dana','Wei'], maybe:[], you:null, on:true, onAt:'yesterday 11:02' },
+    { id:'p5', title:'Dinner in NYC the week we\'re back', detail:'Somewhere in Flatiron, splitting the bill.', cost:'~$80', min:6, day:null, deadline:'Mar 1', poster:'Nina', in:['Nina','Grace'], maybe:['Ben'], you:null, on:false },
+    { id:'p6', title:'Sunrise hike', detail:'Marble Mountains, back by 9.', cost:'free', min:5, day:1, deadline:'Sat', poster:'Leila', in:['Leila','Hana'], maybe:[], you:null, on:false, idled:true, idleNote:"didn't reach 5 by Sat" },
+  ],
+};
+let onDay = (p) => p.day===null ? '' : DAYS[p.day][0]+' '+DAYS[p.day][1];
+
+// ---------- helpers ----------
+const $ = (s)=>document.querySelector(s);
+const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
+let toastT; function toast(h){ const t=$('#toast'); t.innerHTML=h; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3200); }
+function yesCount(p){ return p.in.length + (p.you==='in'?1:0); }
+function maybeCount(p){ return p.maybe.length + (p.you==='maybe'?1:0); }
+function youFree(d){ return S.you.free.has(d) && !(S.you.useCal && S.you.calBusy.has(d)); }
+function yourYesOn(day, except){ return S.proposals.filter(p=>p.id!==except && p.you==='in' && p.day===day); }
+
+// ---------- render ----------
+function render(){
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on', b.dataset.tab===S.tab));
+  $('#n-you').textContent = S.youWant.size+' wants';
+  $('#n-plan').textContent = S.wants.length+' wants';
+  const open = S.proposals.filter(p=>!p.on && !p.idled).length;
+  $('#n-board').textContent = open+' open';
+  const sc=$('#screen'); sc.innerHTML=''; sc.scrollTop=0;
+  ({you:renderYou, plan:renderPlan, board:renderBoard})[S.tab](sc);
+}
+
+function renderYou(sc){
+  sc.append(el(`<h2>What would you do?</h2>`), el(`<p class="sub">Tick anything you'd be up for. This is a want, not a yes; nothing binds until a proposal hits its number.</p>`));
+  const chips = el(`<div class="chips"></div>`);
+  S.wants.forEach(w=>{
+    const sel=S.youWant.has(w.id);
+    const c=el(`<button class="chip ${sel?'sel':''}">${w.title}<span class="n">${w.count + (sel?0:0)}</span></button>`);
+    c.onclick=()=>{ if(sel){S.youWant.delete(w.id); w.count--;} else {S.youWant.add(w.id); w.count++;} render(); };
+    chips.append(c);
+  });
+  sc.append(chips);
+  const add=el(`<div class="addwant"><input placeholder="Something else… e.g. Night market" /><button class="ghost">Add</button></div>`);
+  add.querySelector('button').onclick=()=>{ const v=add.querySelector('input').value.trim(); if(!v) return; const id='w'+Date.now(); S.wants.push({id,title:v,count:1,budget:'—',free:[3,3,3,3,3,3,3]}); S.youWant.add(id); toast(`Added. Planners now see <b>1 wants</b> ${v}.`); render(); };
+  sc.append(add);
+
+  sc.append(el(`<div class="sect"><span>Free during the trip</span><b>Feb 14–20</b></div>`));
+  const days=el(`<div class="days"></div>`);
+  DAYS.forEach(([d,n],i)=>{
+    const busy = S.you.useCal && S.you.calBusy.has(i);
+    const b=el(`<button class="day ${busy?'busy':(S.you.free.has(i)?'free':'')}"><span class="d">${d}</span><span class="num">${n}</span><span class="src">${busy?'cal':(S.you.free.has(i)?'free':'')}</span></button>`);
+    b.onclick=()=>{ if(busy){ toast(`Busy from your calendar: <b>${S.you.calBusyLabel}</b>. Turn off calendar below to override.`); return;} S.you.free.has(i)?S.you.free.delete(i):S.you.free.add(i); render(); };
+    days.append(b);
+  });
+  sc.append(days);
+  sc.append(el(`<p class="hint" style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 2px 4px">Tap a day to toggle. Planners see how many are free each day, never who.</p>`));
+
+  const t1=el(`<div class="toggle"><div>Use my calendar<small>Google Calendar · connected · busy blocks mark days</small></div><button class="sw ${S.you.useCal?'on':''}"><i></i></button></div>`);
+  t1.querySelector('.sw').onclick=()=>{ S.you.useCal=!S.you.useCal; render(); };
+  const t2=el(`<div class="toggle"><div>Show my name when I'm in<small>Off: you count toward the number, listed as "+1 anonymous"</small></div><button class="sw ${S.you.showName?'on':''}"><i></i></button></div>`);
+  t2.querySelector('.sw').onclick=()=>{ S.you.showName=!S.you.showName; render(); };
+  sc.append(t1,t2);
+
+  const mine=S.proposals.filter(p=>p.you==='in');
+  sc.append(el(`<div class="sect"><span>You're in</span><b>${mine.length}</b></div>`));
+  if(!mine.length) sc.append(el(`<div class="empty">Nothing yet. Tap in on the Board.</div>`));
+  mine.forEach(p=>{ const c=el(`<div class="card"><div class="row"><div><div class="title">${p.title}</div><div class="facts">${onDay(p)||'date open'} · ${p.cost}</div></div><div class="count ${p.on?'on':''}"><div class="big">${yesCount(p)}<small>/${p.min}</small></div><div class="lbl">${p.on?'ON':'in'}</div></div></div></div>`); c.onclick=()=>openDetail(p); sc.append(c); });
+}
+
+function renderPlan(sc){
+  sc.append(el(`<h2>The warm room</h2>`), el(`<p class="sub">What the cohort wants, in aggregate. Post a proposal from a want and the people who asked for it get the link.</p>`));
+  sc.append(el(`<div class="privacy">You see counts, free-day totals and typical budget. Never names. Names appear only once someone taps in on a proposal.</div>`));
+  [...S.wants].sort((a,b)=>b.count-a.count).forEach(w=>{
+    const posted=S.proposals.find(p=>p.fromWant===w.id);
+    const c=el(`<div class="card"></div>`);
+    c.append(el(`<div class="row"><div><div class="title">${w.title}</div><div class="facts"><b>${w.count}</b> want · ${w.budget} typical</div></div>${posted?`<span class="pill ${posted.on?'on':''}">${posted.on?'ON':'posted'}</span>`:''}</div>`));
+    if(w.free){
+      const best=w.free.indexOf(Math.max(...w.free));
+      const h=el(`<div class="heat"></div>`);
+      DAYS.forEach(([d],i)=>h.append(el(`<div class="lab">${d}</div>`)));
+      w.free.forEach((n,i)=>{ const d=el(`<div class="${i===best?'best':''}">${n}</div>`); d.style.background=`color-mix(in srgb, var(--carnelian-400) ${Math.round(n/w.count*55)}%, var(--paper-2))`; h.append(d); });
+      c.append(h);
+      c.append(el(`<div class="agg"><div><b>${DAYS[best][0]} ${DAYS[best][1]}</b>best day</div><div><b>${w.free[best]}</b>free that day</div><div><b>${Math.max(3,Math.round(w.count*0.6))}</b>suggested min</div></div>`));
+    } else {
+      c.append(el(`<div class="agg"><div><b>${w.count}</b>want</div><div><b>${Math.max(3,Math.round(w.count*0.5))}</b>suggested min</div><div><b>—</b>no day needed</div></div>`));
+    }
+    const b=el(`<div class="acts" style="margin-top:12px"><button class="ghost" style="flex:1">${posted?'Post a version':'Post this'}</button></div>`);
+    b.querySelector('button').onclick=()=>openPost(w);
+    c.append(b);
+    sc.append(c);
+  });
+}
+
+function renderBoard(sc){
+  sc.append(el(`<h2>Board</h2>`), el(`<p class="sub">Tap in. Nothing's real until the number. Nobody chases.</p>`));
+  const open=S.proposals.filter(p=>!p.on&&!p.idled).sort((a,b)=>(a.min-yesCount(a))-(b.min-yesCount(b)));
+  const on=S.proposals.filter(p=>p.on);
+  const idle=S.proposals.filter(p=>p.idled);
+  const sec=(t,n)=>sc.append(el(`<div class="sect"><span>${t}</span><b>${n}</b></div>`));
+  sec('Open · nearest first', open.length); open.forEach(p=>sc.append(card(p)));
+  sec('On', on.length); on.forEach(p=>sc.append(card(p)));
+  sec('Didn\'t reach', idle.length); idle.forEach(p=>sc.append(card(p)));
+}
+
+function card(p){
+  const y=yesCount(p), m=maybeCount(p), short=p.min-y;
+  const c=el(`<div class="card ${p.on?'on':''} ${(!p.on&&!p.idled&&short>0&&short<=2)?'lift':''}"></div>`);
+  const lbl = p.on?'ON':(p.idled?'idle':(short<=0?'at number':`need ${short}`));
+  c.append(el(`<div class="row"><div><div class="title">${p.title}</div><div class="facts"><b>${onDay(p)||'date open'}</b> · ${p.cost}${p.deadline&&!p.on?` · by ${p.deadline}`:''}${m?` · <span style="color:var(--amber)">${m} maybe</span>`:''}</div></div><div class="count ${p.on?'on':(short>0&&short<=2?'near':'')}"><div class="big">${y}<small>/${p.min}</small></div><div class="lbl">${lbl}</div></div></div>`));
+  c.append(el(`<div class="bar"><i style="width:${Math.min(100,y/p.min*100)}%"></i></div>`));
+  c.append(el(`<div class="who">${whoLine(p)}</div>`));
+  if(p.idled){ c.append(el(`<div class="flag" style="background:var(--paper-1);color:var(--ink-2)">${p.idleNote}. <button class="link" style="margin-left:4px">Reopen at ${p.min-2}</button></div>`)); c.querySelector('.link').onclick=(e)=>{e.stopPropagation(); p.idled=false; p.min=p.min-2; p.deadline='Thu'; toast(`Reopened at ${p.min}. <b>Fresh link</b> ready to share. No texts sent.`); render();}; }
+  else {
+    const conflict = (p.day!==null && p.you!=='in') ? yourYesOn(p.day,p.id) : [];
+    if(conflict.length) c.append(el(`<div class="flag">You're in for <b>${conflict[0].title}</b> that day.</div>`));
+    const a=el(`<div class="acts"><button class="in ${p.you==='in'?'sel':''}">${p.you==='in'?'In ✓':"I'm in"}</button><button class="maybe ${p.you==='maybe'?'sel':''}">Maybe</button><button class="out ${p.you==='out'?'sel':''}">Out</button></div>`);
+    a.querySelectorAll('button').forEach(b=>b.onclick=(e)=>{e.stopPropagation(); answer(p, b.classList.contains('in')?'in':b.classList.contains('maybe')?'maybe':'out');});
+    c.append(a);
+  }
+  c.onclick=()=>openDetail(p);
+  return c;
+}
+function whoLine(p){
+  const names=[...p.in]; if(p.you==='in') names.unshift(S.you.showName?'You':'+1 anonymous');
+  const ms=[...p.maybe]; if(p.you==='maybe') ms.unshift(S.you.showName?'You':'+1 anonymous');
+  if(!names.length && !ms.length) return `<span style="color:var(--ink-3)">Nobody yet · ${p.poster} posted</span>`;
+  let s = names.length? `<b>${names.slice(0,4).join(', ')}</b>${names.length>4?` +${names.length-4}`:''}`:'';
+  if(ms.length) s += `${s?' · ':''}<span style="color:var(--ink-3)">${ms.length} maybe</span>`;
+  return s;
+}
+
+function answer(p, a){
+  const was=p.you; p.you = (was===a)?null:a;
+  const y=yesCount(p);
+  if(!p.on && y>=p.min){ p.on=true; p.onAt='just now'; toast(`<b>${p.title} is ON.</b> ${y} in. Texts sent to the yeses; ${p.poster} has the list. ${maybeCount(p)?maybeCount(p)+' maybes nudged.':''}`); }
+  else if(!p.on && p.you==='in' && p.min-y<=2 && p.min-y>0){ toast(`${y} of ${p.min}. <b>${p.min-y===1?'One more':'Two more'} and it's on.</b> "One more" text goes to the yeses with a fresh link.`); }
+  else if(p.on && was==='in' && p.you!=='in'){ toast(`Dropped. Still ON at ${y}. <b>${p.poster} told</b>, nobody else.`); }
+  render();
+}
+
+// ---------- detail sheet ----------
+function openDetail(p){
+  const y=yesCount(p), m=maybeCount(p);
+  const names=[...p.in]; const ms=[...p.maybe];
+  const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
+  pn.append(el(`<div class="handle"></div>`));
+  pn.append(el(`<div class="row" style="display:flex;justify-content:space-between;gap:10px"><div><div class="title" style="font:800 22px/1.1 var(--font-display)">${p.title}</div><div class="facts" style="font:500 12.5px/1.5 var(--font-mono);color:var(--ink-2);margin-top:4px">${onDay(p)||'date open'} · ${p.cost} · min ${p.min}${p.deadline?` · by ${p.deadline}`:''}<br>posted by ${p.poster}</div></div><span class="pill ${p.on?'on':(p.idled?'idle':'')}">${p.on?'ON':(p.idled?'idle':'open')}</span></div>`));
+  pn.append(el(`<p style="font-size:13.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.45">${p.detail}</p>`));
+  pn.append(el(`<div class="sect"><span>What the link looks like in WhatsApp</span></div>`));
+  pn.append(el(`<div class="unfurl"><div class="og"><b>${y} of ${p.min}</b><span>${p.on?'ON · ':''}${p.title} · ${onDay(p)||'TBD'}</span></div><div class="txt"><b>${y} of ${p.min} in · ${p.title}${onDay(p)?' · '+onDay(p):''}</b>${p.cost} · tap to say you're in<br><span>quorum.app/p/${p.id}?s=k7f2</span></div></div>`));
+  pn.append(el(`<p style="font:500 11px/1.45 var(--font-mono);color:var(--ink-3);margin:0 0 6px">Every share mints a fresh link, so the preview is right when you send it. Outside the group the preview shows the count only.</p>`));
+  pn.append(el(`<div class="sect"><span>Who's in</span><b>${y}${m?` · ${m} maybe`:''}</b></div>`));
+  const nm=el(`<div class="names"></div>`);
+  if(p.you==='in') nm.append(el(`<span class="me">${S.you.showName?'You':'+1 anonymous'}</span>`));
+  names.forEach(n=>nm.append(el(`<span>${n}</span>`)));
+  if(p.you==='maybe') nm.append(el(`<span class="me maybe">You · maybe</span>`));
+  ms.forEach(n=>nm.append(el(`<span class="maybe">${n} · maybe</span>`)));
+  if(!names.length&&!ms.length&&!p.you) nm.append(el(`<span style="box-shadow:none;background:none;color:var(--ink-3)">Nobody yet.</span>`));
+  pn.append(nm);
+  if(p.on){
+    pn.append(el(`<div class="sect"><span>The text the yeses got</span><b>${p.onAt}</b></div>`));
+    pn.append(el(`<div class="sms">${p.title} is ON. ${y} in${onDay(p)?', '+onDay(p):''}. ${p.poster} will take it from here.<br><br>Want to run something? Post it: <u>quorum.app/emba27/new</u></div>`));
+  }
+  const acts=el(`<div class="acts" style="margin-top:14px"><button class="ghost" style="flex:1">Share link</button><button class="ghost" style="flex:1">Post a version</button>${(p.on||p.idled)?'<button class="ghost" style="flex:1">Run this for your group</button>':''}</div>`);
+  const [b1,b2,b3]=acts.querySelectorAll('button');
+  b1.onclick=()=>toast(`Link copied: <b>quorum.app/p/${p.id}?s=${Math.random().toString(36).slice(2,6)}</b> · fresh preview, attributed to you.`);
+  b2.onclick=()=>{ closeSheet(); openPost(null,p); };
+  if(b3) b3.onclick=()=>toast(`New board created with <b>${p.title}</b> prefilled. Share its link to start the roster.`);
+  pn.append(acts);
+  const close=el(`<button class="primary" style="margin-top:10px;background:var(--paper-1);color:var(--ink-0);box-shadow:inset 0 0 0 1px var(--paper-3)">Close</button>`); close.onclick=closeSheet; pn.append(close);
+  sh.classList.add('open');
+}
+function closeSheet(){ $('#sheet').classList.remove('open'); }
+$('#sheet').addEventListener('click',(e)=>{ if(e.target.id==='sheet') closeSheet(); });
+
+// ---------- post form ----------
+function openPost(w, from){
+  const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
+  const best = w&&w.free ? w.free.indexOf(Math.max(...w.free)) : (from?from.day:null);
+  const sugMin = w ? Math.max(3,Math.round(w.count*(w.free?0.6:0.5))) : (from?Math.max(3,from.min-2):6);
+  pn.append(el(`<div class="handle"></div>`));
+  pn.append(el(`<div class="title" style="font:800 22px/1.1 var(--font-display)">${from?'Post a version':'Post it'}</div>`));
+  pn.append(el(`<p style="font-size:13px;color:var(--ink-2);margin:6px 0 12px;line-height:1.45">${w?`<b>${w.count} people</b> want this. They get the link when you post. You're in automatically.`:(from?`Same idea, your terms. Both versions sit on the board; whichever hits its number happens.`:'')}</p>`));
+  const f=el(`<div>
+    <div class="field"><label>What</label><input id="f-title" value="${w?w.title:(from?from.title:'')}" /></div>
+    <div class="field"><label>One line</label><input id="f-detail" placeholder="Where, roughly when, anything they need to know" value="${from?from.detail:''}" /></div>
+    <div class="grid2">
+      <div class="field"><label>Rough cost</label><input id="f-cost" value="${w?w.budget.split('–')[0].replace(/[^$0-9~]/g,'')||w.budget:(from?from.cost:'')}" /><div class="hint">${w?`typical ${w.budget}`:'text, not a payment'}</div></div>
+      <div class="field"><label>Minimum</label><input id="f-min" type="number" value="${sugMin}" /><div class="hint">${w?`${w.count} want it`:'it\'s on at this number'}</div></div>
+    </div>
+    <div class="field"><label>Day</label><div class="days" id="f-days"></div><div class="hint">${w&&w.free?`${DAYS[best][0]} ${DAYS[best][1]}: ${w.free[best]} of the ${w.count} are free`:'optional'}</div></div>
+    <div class="field"><label>Deadline</label><input id="f-dl" placeholder="optional · e.g. Mon" /><div class="hint">no deadline = stays open, never nags</div></div>
+  </div>`);
+  let day=best;
+  const dd=f.querySelector('#f-days');
+  const drawDays=()=>{ dd.innerHTML=''; DAYS.forEach(([d,n],i)=>{ const b=el(`<button class="day ${day===i?'free':''}"><span class="d">${d}</span><span class="num">${n}</span><span class="src">${w&&w.free?w.free[i]+' free':''}</span></button>`); b.onclick=()=>{ day=(day===i?null:i); drawDays(); }; dd.append(b); }); };
+  drawDays();
+  pn.append(f);
+  const post=el(`<button class="primary" style="margin-top:6px">Post · you're in</button>`);
+  post.onclick=()=>{
+    const title=f.querySelector('#f-title').value.trim()||'Untitled';
+    const p={ id:'p'+Date.now(), title, detail:f.querySelector('#f-detail').value.trim(), cost:f.querySelector('#f-cost').value.trim()||'—', min:Math.max(2,+f.querySelector('#f-min').value||sugMin), day, deadline:f.querySelector('#f-dl').value.trim()||null, poster:'You', in:[], maybe:[], you:'in', on:false, fromWant:w?w.id:null };
+    S.proposals.unshift(p); closeSheet(); S.tab='board';
+    toast(w?`Posted. <b>${w.count} people</b> who wanted this just got the link. 1 of ${p.min}.`:`Posted next to the original. 1 of ${p.min}.`);
+    render();
+  };
+  pn.append(post);
+  const cancel=el(`<button class="primary" style="margin-top:8px;background:var(--paper-1);color:var(--ink-0);box-shadow:inset 0 0 0 1px var(--paper-3)">Cancel</button>`); cancel.onclick=closeSheet; pn.append(cancel);
+  sh.classList.add('open');
+}
+
+document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>{ S.tab=b.dataset.tab; render(); });
+render();
+</script>
+</body>
+</html>
