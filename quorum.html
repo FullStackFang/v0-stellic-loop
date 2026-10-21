@@ -147,6 +147,15 @@
   .sms{ background:var(--ink-0); color:var(--paper-0); border-radius:16px 16px 16px 4px; padding:10px 12px; font-size:12.5px; line-height:1.45; margin:8px 0; }
   .sms u{ color:#f3b2a9; text-decoration:none; }
   .empty{ color:var(--ink-3); font-size:13px; padding:20px 4px; text-align:center; }
+  .details{ background:var(--paper-1); border-radius:14px; padding:4px 12px; }
+  .drow{ display:flex; gap:10px; align-items:baseline; padding:9px 0; border-top:1px solid var(--paper-2); font-size:13px; line-height:1.4; flex-wrap:wrap; }
+  .drow:first-child{ border-top:0; }
+  .drow .k{ font:600 10.5px/1.6 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); width:44px; flex-shrink:0; }
+  .drow > span:not(.k){ flex:1; min-width:120px; }
+  .linklist{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chipl{ display:inline-flex; align-items:center; border:0; background:var(--paper-0); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:999px; padding:5px 10px; font:600 11.5px/1 var(--font-mono); color:var(--carnelian-600); text-decoration:none; white-space:nowrap; }
+  .more{ width:100%; border:0; background:none; text-align:left; padding:8px 0; font:600 12px/1 var(--font-mono); color:var(--carnelian-600); display:flex; justify-content:space-between; }
+  .more span{ color:var(--ink-3); font-weight:500; }
 </style>
 </head>
 <body>
@@ -198,10 +207,14 @@ const S = {
   ],
   youWant:new Set(['w1','w4','w2']),
   proposals:[
-    { id:'p1', title:'Suits in Hoi An', detail:'Tailor near the Japanese bridge, 24h turnaround.', cost:'~$250', min:8, day:2, deadline:'Mon', poster:'Priya', in:pick(6,0), maybe:['Hana','Jules'], you:null, on:false },
-    { id:'p2', title:'Street-food crawl', detail:'Five stalls, one night, Ravi leads.', cost:'$20', min:6, day:3, poster:'Ravi', in:['Ravi','Sofia','Ken','Amara'], maybe:['Omar'], you:'in', on:false },
-    { id:'p3', title:'Overnight boat', detail:'Halong-style junk, cabins for two.', cost:'~$180', min:10, day:3, poster:'Marcus', in:['Marcus','Elena','Tom','Luis'], maybe:[], you:null, on:false },
-    { id:'p4', title:'5am flight to Da Nang', detail:'Out and back same day. Not for the faint.', cost:'$90', min:4, day:4, poster:'Josh', in:['Josh','Maya','Dana','Wei'], maybe:[], you:null, on:true, onAt:'yesterday 11:02' },
+    { id:'p1', title:'Suits in Hoi An', detail:'Tailor near the Japanese bridge, 24h turnaround.', cost:'~$250', min:8, day:2, time:'3:00pm', deadline:'Mon', poster:'Priya', in:pick(6,0), maybe:['Hana','Jules'], you:null, on:false,
+      place:'Yaly Couture, 47 Nguyen Thai Hoc', mapUrl:'https://maps.google.com/?q=Yaly+Couture+Hoi+An', links:[{label:'yalycouture.com',url:'https://yalycouture.com'},{label:'Reddit: what to ask for',url:'https://reddit.com'}], notes:'Bring a photo of a suit you like. Two fittings: Tue 3pm and Wed 10am. Cash gets a better price.' },
+    { id:'p2', title:'Street-food crawl', detail:'Five stalls, one night, Ravi leads.', cost:'$20', min:6, day:3, time:'7:30pm', poster:'Ravi', in:['Ravi','Sofia','Ken','Amara'], maybe:['Omar'], you:'in', on:false,
+      place:'Meet at the Hoi An night market gate', mapUrl:'https://maps.google.com/?q=Hoi+An+night+market', links:[{label:'Ravi\'s stall list (Google Doc)',url:'https://docs.google.com'}] },
+    { id:'p3', title:'Overnight boat', detail:'Halong-style junk, cabins for two.', cost:'~$180', min:10, day:3, poster:'Marcus', in:['Marcus','Elena','Tom','Luis'], maybe:[], you:null, on:false,
+      links:[{label:'Operator page',url:'https://example.com'}], notes:'Price is per person, twin cabin. Marcus books once we\'re ON.' },
+    { id:'p4', title:'5am flight to Da Nang', detail:'Out and back same day. Not for the faint.', cost:'$90', min:4, day:4, time:'5:10am', poster:'Josh', in:['Josh','Maya','Dana','Wei'], maybe:[], you:null, on:true, onAt:'yesterday 11:02',
+      place:'Da Nang airport, domestic', mapUrl:'https://maps.google.com/?q=Da+Nang+airport', links:[{label:'VN1234 on Vietnam Airlines',url:'https://vietnamairlines.com'}] },
     { id:'p5', title:'Dinner in NYC the week we\'re back', detail:'Somewhere in Flatiron, splitting the bill.', cost:'~$80', min:6, day:null, deadline:'Mar 1', poster:'Nina', in:['Nina','Grace'], maybe:['Ben'], you:null, on:false },
     { id:'p6', title:'Sunrise hike', detail:'Marble Mountains, back by 9.', cost:'free', min:5, day:1, deadline:'Sat', poster:'Leila', in:['Leila','Hana'], maybe:[], you:null, on:false, idled:true, idleNote:"didn't reach 5 by Sat" },
   ],
@@ -304,7 +317,7 @@ function card(p){
   const y=yesCount(p), m=maybeCount(p), short=p.min-y;
   const c=el(`<div class="card ${p.on?'on':''} ${(!p.on&&!p.idled&&short>0&&short<=2)?'lift':''}"></div>`);
   const lbl = p.on?'ON':(p.idled?'idle':(short<=0?'at number':`need ${short}`));
-  c.append(el(`<div class="row"><div><div class="title">${p.title}</div><div class="facts"><b>${onDay(p)||'date open'}</b> · ${p.cost}${p.deadline&&!p.on?` · by ${p.deadline}`:''}${m?` · <span style="color:var(--amber)">${m} maybe</span>`:''}</div></div><div class="count ${p.on?'on':(short>0&&short<=2?'near':'')}"><div class="big">${y}<small>/${p.min}</small></div><div class="lbl">${lbl}</div></div></div>`));
+  c.append(el(`<div class="row"><div><div class="title">${p.title}</div><div class="facts"><b>${onDay(p)||'date open'}${p.time?' · '+p.time:''}</b> · ${p.cost}${p.deadline&&!p.on?` · by ${p.deadline}`:''}${m?` · <span style="color:var(--amber)">${m} maybe</span>`:''}</div></div><div class="count ${p.on?'on':(short>0&&short<=2?'near':'')}"><div class="big">${y}<small>/${p.min}</small></div><div class="lbl">${lbl}</div></div></div>`));
   c.append(el(`<div class="bar"><i style="width:${Math.min(100,y/p.min*100)}%"></i></div>`));
   c.append(el(`<div class="who">${whoLine(p)}</div>`));
   if(p.idled){ c.append(el(`<div class="flag" style="background:var(--paper-1);color:var(--ink-2)">${p.idleNote}. <button class="link" style="margin-left:4px">Reopen at ${p.min-2}</button></div>`)); c.querySelector('.link').onclick=(e)=>{e.stopPropagation(); p.idled=false; p.min=p.min-2; p.deadline='Thu'; toast(`Reopened at ${p.min}. <b>Fresh link</b> ready to share. No texts sent.`); render();}; }
@@ -344,6 +357,16 @@ function openDetail(p){
   pn.append(el(`<div class="handle"></div>`));
   pn.append(el(`<div class="row" style="display:flex;justify-content:space-between;gap:10px"><div><div class="title" style="font:800 22px/1.1 var(--font-display)">${p.title}</div><div class="facts" style="font:500 12.5px/1.5 var(--font-mono);color:var(--ink-2);margin-top:4px">${onDay(p)||'date open'} · ${p.cost} · min ${p.min}${p.deadline?` · by ${p.deadline}`:''}<br>posted by ${p.poster}</div></div><span class="pill ${p.on?'on':(p.idled?'idle':'')}">${p.on?'ON':(p.idled?'idle':'open')}</span></div>`));
   pn.append(el(`<p style="font-size:13.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.45">${p.detail}</p>`));
+  if(p.place||p.time||(p.links&&p.links.length)||p.notes){
+    pn.append(el(`<div class="sect"><span>Details</span><span style="font-weight:500;letter-spacing:0;text-transform:none">${p.poster}'s, not editable here</span></div>`));
+    const d=el(`<div class="details"></div>`);
+    if(p.day!==null||p.time) d.append(el(`<div class="drow"><span class="k">When</span><span>${onDay(p)||'date open'}${p.time?' · '+p.time:''}</span>${p.day!==null?'<button class="chipl" data-cal>Add to calendar</button>':''}</div>`));
+    if(p.place) d.append(el(`<div class="drow"><span class="k">Where</span><span>${p.place}</span>${p.mapUrl?`<a class="chipl" href="${p.mapUrl}" target="_blank" rel="noopener">Maps ↗</a>`:''}</div>`));
+    if(p.links&&p.links.length) d.append(el(`<div class="drow"><span class="k">Links</span><span class="linklist">${p.links.map(l=>`<a class="chipl" href="${l.url}" target="_blank" rel="noopener">${l.label} ↗</a>`).join('')}</span></div>`));
+    if(p.notes) d.append(el(`<div class="drow"><span class="k">Notes</span><span>${p.notes}</span></div>`));
+    const cal=d.querySelector('[data-cal]'); if(cal) cal.onclick=(e)=>{ e.stopPropagation(); toast(`Calendar event: <b>${p.title}</b> · ${onDay(p)}${p.time?' '+p.time:''}${p.place?' · '+p.place:''}. ${p.on?'':'Marked tentative until it\'s ON.'}`); };
+    pn.append(d);
+  }
   pn.append(el(`<div class="sect"><span>What the link looks like in WhatsApp</span></div>`));
   pn.append(el(`<div class="unfurl"><div class="og"><b>${y} of ${p.min}</b><span>${p.on?'ON · ':''}${p.title} · ${onDay(p)||'TBD'}</span></div><div class="txt"><b>${y} of ${p.min} in · ${p.title}${onDay(p)?' · '+onDay(p):''}</b>${p.cost} · tap to say you're in<br><span>quorum.app/p/${p.id}?s=k7f2</span></div></div>`));
   pn.append(el(`<p style="font:500 11px/1.45 var(--font-mono);color:var(--ink-3);margin:0 0 6px">Every share mints a fresh link, so the preview is right when you send it. Outside the group the preview shows the count only.</p>`));
@@ -388,7 +411,18 @@ function openPost(w, from){
     </div>
     <div class="field"><label>Day</label><div class="days" id="f-days"></div><div class="hint">${w&&w.free?`${DAYS[best][0]} ${DAYS[best][1]}: ${w.free[best]} of the ${w.count} are free`:'optional'}</div></div>
     <div class="field"><label>Deadline</label><input id="f-dl" placeholder="optional · e.g. Mon" /><div class="hint">no deadline = stays open, never nags</div></div>
+    <button class="more" id="f-more">+ More details <span>time · place · links · notes · all optional</span></button>
+    <div id="f-moreblock" style="display:none">
+      <div class="grid2">
+        <div class="field"><label>Time</label><input id="f-time" placeholder="e.g. 3:00pm" value="${from&&from.time?from.time:''}" /></div>
+        <div class="field"><label>Place</label><input id="f-place" placeholder="name or address" value="${from&&from.place?from.place:''}" /></div>
+      </div>
+      <div class="field"><label>Map link</label><input id="f-map" placeholder="paste a Google Maps link" value="${from&&from.mapUrl?from.mapUrl:''}" /></div>
+      <div class="field"><label>Links</label><textarea id="f-links" rows="2" placeholder="one per line · website, Google Doc, booking page, menu…">${from&&from.links?from.links.map(l=>l.url).join('\n'):''}</textarea><div class="hint">shown as chips; the page unfurls them</div></div>
+      <div class="field"><label>Notes</label><textarea id="f-notes" rows="3" placeholder="anything they need to know">${from&&from.notes?from.notes:''}</textarea></div>
+    </div>
   </div>`);
+  f.querySelector('#f-more').onclick=()=>{ const b=f.querySelector('#f-moreblock'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; f.querySelector('#f-more').firstChild.textContent=open?'+ More details ':'− Fewer details '; };
   let day=best;
   const dd=f.querySelector('#f-days');
   const drawDays=()=>{ dd.innerHTML=''; DAYS.forEach(([d,n],i)=>{ const b=el(`<button class="day ${day===i?'free':''}"><span class="d">${d}</span><span class="num">${n}</span><span class="src">${w&&w.free?w.free[i]+' free':''}</span></button>`); b.onclick=()=>{ day=(day===i?null:i); drawDays(); }; dd.append(b); }); };
@@ -397,7 +431,9 @@ function openPost(w, from){
   const post=el(`<button class="primary" style="margin-top:6px">Post · you're in</button>`);
   post.onclick=()=>{
     const title=f.querySelector('#f-title').value.trim()||'Untitled';
-    const p={ id:'p'+Date.now(), title, detail:f.querySelector('#f-detail').value.trim(), cost:f.querySelector('#f-cost').value.trim()||'—', min:Math.max(2,+f.querySelector('#f-min').value||sugMin), day, deadline:f.querySelector('#f-dl').value.trim()||null, poster:'You', in:[], maybe:[], you:'in', on:false, fromWant:w?w.id:null };
+    const v=(id)=>f.querySelector(id).value.trim();
+    const links=v('#f-links').split('\n').map(s=>s.trim()).filter(Boolean).map(u=>({label:u.replace(/^https?:\/\//,'').split('/')[0], url:/^https?:/.test(u)?u:'https://'+u}));
+    const p={ id:'p'+Date.now(), title, detail:v('#f-detail'), cost:v('#f-cost')||'—', min:Math.max(2,+v('#f-min')||sugMin), day, deadline:v('#f-dl')||null, time:v('#f-time')||null, place:v('#f-place')||null, mapUrl:v('#f-map')||null, links, notes:v('#f-notes')||null, poster:'You', in:[], maybe:[], you:'in', on:false, fromWant:w?w.id:null };
     S.proposals.unshift(p); closeSheet(); S.tab='board';
     toast(w?`Posted. <b>${w.count} people</b> who wanted this just got the link. 1 of ${p.min}.`:`Posted next to the original. 1 of ${p.min}.`);
     render();

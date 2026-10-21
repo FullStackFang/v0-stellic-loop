@@ -186,7 +186,12 @@ Each item is shippable on its own; build in this order.
 
 1. **Proposal page + respond + threshold.** Post form (title, one line, rough
    cost as text, minimum, optional deadline, optional day and time) in under
-   30 seconds. Respond in / out / maybe with one tap. First answer from a new
+   30 seconds. Behind a "more details" fold, all optional: place with a map
+   link, any number of links (website, Google Doc, booking page), and longer
+   notes. Links render as chips on the proposal page with a cached preview.
+   Details belong to the poster; joiners read them, never edit them. Anything
+   with a day gets "Add to calendar" (an `.ics` with the proposal's facts,
+   tentative until ON), and the ON text carries that link. Respond in / out / maybe with one tap. First answer from a new
    number asks for a name and creates the person. Threshold logic: count of
    yeses reaches minimum → ON. Names of yeses and maybes on the page.
 2. **The board.** One link per group. Open proposals sorted nearest-to-
@@ -333,7 +338,8 @@ wifi is not. See the open questions.
   the poster can reopen or close their own proposal.
 - No availability profile in v1 (see rejected).
 - No editing a live proposal's minimum, day, or cost. Post a version instead.
-  Title and detail line can be fixed for typos.
+  Title, detail line, place, links and notes can be edited by the poster at
+  any time; nobody is texted about it.
 - No push notifications, no app, no email.
 - No integrations.
 - No institution-facing anything. The campus engagement model is parked in
