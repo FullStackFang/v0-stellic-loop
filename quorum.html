@@ -6,146 +6,176 @@
 <title>Quorum · mockup v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
-    --ink-0:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
-    --carnelian-100:#f8e6e3; --carnelian-400:#cf5347; --carnelian-500:#b31b1b; --carnelian-600:#8a1414;
-    --moss:#3d8a5f; --moss-100:#e3f0e8; --amber:#b6862b; --amber-100:#f6ecd6; --amber-600:#8a641f;
-    --font-display:'Gabarito',system-ui,sans-serif; --font-sans:'Figtree',system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,monospace;
-    --lift: inset 0 1px 0 rgba(255,253,248,.7), 0 1px 2px rgba(31,26,23,.10), 0 6px 14px -6px rgba(31,26,23,.22), 0 24px 48px -16px rgba(80,40,30,.5);
-    --card: inset 0 1px 0 rgba(255,253,248,.8), 0 1px 2px rgba(31,26,23,.08), 0 4px 10px -6px rgba(31,26,23,.18);
+    --bg: oklch(99.3% 0.003 80);
+    --bg-2: oklch(97.2% 0.004 80);
+    --bg-3: oklch(94.5% 0.005 80);
+    --ink: oklch(19% 0.012 60);
+    --ink-2: oklch(46% 0.012 60);
+    --ink-3: oklch(63% 0.01 60);
+    --ink-4: oklch(80% 0.008 60);
+    --line: oklch(91.5% 0.006 80);
+    --line-2: oklch(86% 0.007 80);
+    --on: oklch(58% 0.15 152);
+    --on-bg: oklch(96.5% 0.03 152);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    --ease: cubic-bezier(.22,1,.36,1);
   }
-  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; } input,textarea{ font-family:inherit; }
-  body{ margin:0; background:radial-gradient(1200px 500px at 50% -10%, #fbf4e9, transparent), var(--paper-2);
-    font-family:var(--font-sans); color:var(--ink-0); -webkit-font-smoothing:antialiased; padding:40px 24px 72px; }
-  .wrap{ max-width:1100px; margin:0 auto; }
-  .rail{ display:flex; gap:40px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
-  .side{ width:400px; }
-  .eyebrow{ font:600 12px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--carnelian-500); }
-  .side h1{ font:800 32px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 0 10px; }
-  .side p{ color:var(--ink-2); font-size:14.5px; line-height:1.5; margin:0 0 12px; }
-  .side ol{ padding-left:20px; color:var(--ink-2); font-size:14px; line-height:1.5; }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; } input,textarea{ font-family:inherit; color:inherit; }
+  html{ font-size:16px; }
+  body{ margin:0; background:oklch(96% 0.004 80); font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; padding:48px 24px 72px; font-feature-settings:"cv11","ss01","tnum"; }
+  .wrap{ max-width:1040px; margin:0 auto; }
+  .rail{ display:flex; gap:56px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .side{ width:380px; padding-top:8px; }
+  .eyebrow{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
+  .side h1{ font-size:26px; font-weight:600; letter-spacing:-.02em; line-height:1.2; margin:12px 0 12px; }
+  .side p{ color:var(--ink-2); font-size:14px; line-height:1.55; margin:0 0 12px; }
+  .side ol{ padding-left:18px; color:var(--ink-2); font-size:13.5px; line-height:1.55; margin:0; }
   .side li{ margin-bottom:6px; }
-  .side .try{ font:500 12px/1.5 var(--font-mono); color:var(--carnelian-600); margin-top:16px; }
-  .side .note{ font:500 11.5px/1.5 var(--font-mono); color:var(--ink-3); margin-top:22px; }
-  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .side .try{ font-size:12.5px; line-height:1.6; color:var(--ink); margin-top:18px; padding:12px 14px; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
+  .side .try b{ font-weight:600; }
+  .side .note{ font-size:11.5px; line-height:1.55; color:var(--ink-3); margin-top:18px; }
 
-  .phone{ width:390px; height:820px; background:var(--paper-0); border:1px solid var(--paper-3); border-radius:38px; overflow:hidden;
-    position:relative; display:flex; flex-direction:column; box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
-  .status{ display:flex; justify-content:space-between; padding:12px 22px 2px; font:600 12px/1 var(--font-mono); color:var(--ink-2); }
-  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:8px 20px 6px; }
-  .wordmark{ font:800 22px/1 var(--font-display); letter-spacing:-.03em; display:inline-flex; align-items:baseline; }
-  .wordmark i{ width:6px; height:6px; border-radius:50%; background:var(--carnelian-500); margin-left:2px; }
-  .apphead .grp{ font:500 11.5px/1 var(--font-mono); color:var(--ink-3); }
-  .screen{ flex:1; overflow:auto; padding:6px 16px 90px; scrollbar-width:none; }
+  /* phone */
+  .phone{ width:390px; height:844px; background:var(--bg); border:1px solid var(--line-2); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px oklch(30% 0.02 60 / .35), 0 1px 0 oklch(100% 0 0 / .6) inset; }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; }
+  .status svg{ height:11px; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:10px 18px 8px; border-bottom:1px solid var(--line); }
+  .wordmark{ font-size:21px; font-weight:600; letter-spacing:-.035em; }
+  .apphead .grp{ font-size:12px; color:var(--ink-3); font-weight:500; }
+  .screen{ flex:1; overflow:auto; padding:0 0 84px; scrollbar-width:none; }
   .screen::-webkit-scrollbar{ display:none; }
-  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:64px; display:flex; background:linear-gradient(to top, var(--paper-0) 70%, rgba(255,253,248,0)); padding:10px 18px 14px; gap:6px; align-items:center; }
-  .tabbar button{ flex:1; border:0; background:transparent; border-radius:14px; font:700 13px/1 var(--font-display); color:var(--ink-3); padding:10px 0; display:flex; flex-direction:column; align-items:center; gap:4px; }
-  .tabbar button.on{ color:var(--carnelian-500); background:var(--paper-1); }
-  .tabbar button .n{ font:600 10px/1 var(--font-mono); letter-spacing:.06em; }
-  .tabbar .new{ flex:0 0 auto; width:48px; height:40px; border-radius:14px; background:var(--carnelian-500); color:var(--paper-0); font:800 22px/1 var(--font-display); box-shadow:0 6px 14px -6px rgba(179,27,27,.6); }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:76px; display:flex; background:var(--bg); border-top:1px solid var(--line); padding:8px 28px 22px; align-items:center; justify-content:space-between; }
+  .tabbar button{ border:0; background:transparent; padding:8px; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--ink-3); border-radius:8px; }
+  .tabbar button svg{ width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+  .tabbar button.on{ color:var(--ink); }
+  .tabbar button.on svg{ stroke-width:2.25; }
+  .tabbar .n{ font-size:10px; font-weight:500; letter-spacing:.02em; }
+  .tabbar .new svg{ stroke-width:1.75; }
 
-  h2{ font:800 24px/1.1 var(--font-display); letter-spacing:-.02em; margin:12px 2px 4px; }
-  .sub{ color:var(--ink-2); font-size:13.5px; margin:0 2px 14px; line-height:1.45; }
-  .sect{ font:600 11px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:18px 2px 10px; display:flex; justify-content:space-between; align-items:center; }
-  .sect b{ color:var(--carnelian-500); font-weight:600; }
+  h2{ font-size:20px; font-weight:600; letter-spacing:-.02em; margin:0; }
+  .pagehead{ padding:14px 18px 6px; }
+  .sub{ color:var(--ink-3); font-size:13px; margin:4px 0 0; line-height:1.45; }
+  .sect{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); padding:16px 18px 8px; display:flex; justify-content:space-between; align-items:center; }
+  .sect b{ color:var(--ink-2); font-weight:600; letter-spacing:0; }
 
-  .card{ background:var(--paper-0); border-radius:18px; padding:14px 14px 12px; margin-bottom:10px; box-shadow:var(--card); position:relative; }
-  .card.on{ background:linear-gradient(to bottom, var(--moss-100), var(--paper-0) 60%); }
-  .card.lift{ box-shadow:var(--lift); }
-  .card .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-  .card .title{ font:700 17px/1.2 var(--font-display); letter-spacing:-.01em; }
-  .card .facts{ font:500 12.5px/1.4 var(--font-mono); color:var(--ink-2); margin-top:3px; }
-  .card .facts b{ color:var(--ink-0); font-weight:500; }
-  .count{ text-align:right; flex-shrink:0; }
-  .count .big{ font:800 26px/1 var(--font-display); letter-spacing:-.03em; }
-  .count .big small{ font:600 13px/1 var(--font-mono); color:var(--ink-3); letter-spacing:0; }
-  .count .lbl{ font:600 10.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin-top:4px; }
-  .count.on .big, .count.on .lbl{ color:var(--moss); }
-  .count.ready .big, .count.ready .lbl{ color:var(--carnelian-500); }
-  .who{ font-size:12.5px; color:var(--ink-2); line-height:1.4; min-height:18px; margin-top:8px; }
-  .who b{ color:var(--ink-0); font-weight:600; }
-  .acts{ display:flex; gap:6px; margin-top:10px; }
-  .acts button{ flex:1; border:0; border-radius:12px; padding:10px 0; font:700 13.5px/1 var(--font-display); background:var(--paper-1); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--paper-3); }
-  .acts button.in.sel{ background:var(--ink-0); color:var(--paper-0); box-shadow:none; }
-  .acts button.maybe.sel{ background:var(--amber-100); color:var(--amber-600); box-shadow:inset 0 0 0 1px var(--amber); }
-  .acts button.out.sel{ background:var(--paper-2); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--ink-4); }
-  .prompt{ margin-top:10px; background:var(--carnelian-100); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
-  .prompt .t{ flex:1; font-size:13px; line-height:1.35; color:var(--carnelian-600); }
-  .prompt .t b{ display:block; font:800 15px/1.2 var(--font-display); color:var(--ink-0); }
-  .prompt button{ border:0; background:var(--carnelian-500); color:var(--paper-0); border-radius:12px; padding:10px 12px; font:700 13px/1 var(--font-display); white-space:nowrap; box-shadow:0 6px 14px -6px rgba(179,27,27,.5); }
-  .flag{ margin-top:8px; font:500 12px/1.4 var(--font-mono); color:var(--amber-600); background:var(--amber-100); border-radius:10px; padding:7px 10px; }
-  .pill{ display:inline-flex; align-items:center; gap:5px; font:600 10.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; padding:5px 8px; border-radius:999px; background:var(--paper-2); color:var(--ink-2); }
-  .pill.on{ background:var(--moss); color:#fff; }
-  .link{ background:none; border:0; padding:0; font:600 12.5px/1 var(--font-mono); color:var(--carnelian-600); }
-  .ghost{ border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:9px 12px; font:700 13px/1 var(--font-display); color:var(--ink-0); }
-  .primary{ border:0; background:var(--carnelian-500); color:var(--paper-0); border-radius:12px; padding:11px 14px; font:700 14px/1 var(--font-display); width:100%; box-shadow:0 6px 14px -6px rgba(179,27,27,.5); }
-  .primary.quiet{ background:var(--paper-1); color:var(--ink-0); box-shadow:inset 0 0 0 1px var(--paper-3); }
+  /* rows (feed) */
+  .card{ padding:14px 18px 14px; border-bottom:1px solid var(--line); position:relative; }
+  .card:last-child{ border-bottom:0; }
+  .card .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .card .title{ font-size:15.5px; font-weight:600; letter-spacing:-.01em; line-height:1.3; }
+  .card .facts{ font-size:12.5px; color:var(--ink-3); margin-top:2px; line-height:1.4; }
+  .card .facts b{ color:var(--ink-2); font-weight:500; }
+  .count{ text-align:right; flex-shrink:0; padding-top:1px; }
+  .count .big{ font-size:17px; font-weight:600; letter-spacing:-.01em; line-height:1.2; }
+  .count .big small{ font-size:12px; font-weight:500; color:var(--ink-3); }
+  .count .lbl{ font-size:10.5px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); margin-top:1px; }
+  .count.on .big{ color:var(--on); } .count.on .lbl{ color:var(--on); }
+  .count.ready .lbl{ color:var(--ink); }
+  .who{ font-size:13px; color:var(--ink-2); line-height:1.45; margin-top:8px; }
+  .who b{ color:var(--ink); font-weight:500; }
+  .acts{ display:flex; gap:6px; margin-top:12px; }
+  .acts button{ flex:1; height:34px; border:1px solid var(--line-2); border-radius:8px; font-size:13.5px; font-weight:600; background:var(--bg); color:var(--ink); transition:background .15s var(--ease), border-color .15s var(--ease); }
+  .acts button:hover{ background:var(--bg-2); }
+  .acts button.in.sel{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .acts button.maybe.sel{ background:var(--bg-3); border-color:var(--bg-3); }
+  .acts button.out.sel{ background:var(--bg-3); border-color:var(--bg-3); color:var(--ink-2); }
+  .acts button.ghost{ background:var(--bg); }
+  .prompt{ margin-top:12px; display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line-2); border-radius:10px; background:var(--bg-2); }
+  .prompt .t{ flex:1; font-size:13px; line-height:1.35; color:var(--ink-2); }
+  .prompt .t b{ display:block; font-size:14.5px; font-weight:600; color:var(--ink); }
+  .prompt button{ height:34px; padding:0 14px; border:0; border-radius:8px; background:var(--ink); color:var(--bg); font-size:13.5px; font-weight:600; white-space:nowrap; }
+  .flag{ margin-top:10px; font-size:12.5px; line-height:1.45; color:var(--ink-2); padding:8px 10px; background:var(--bg-2); border-radius:8px; }
+  .flag b{ font-weight:600; color:var(--ink); }
+  .pill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; padding:5px 9px; border-radius:999px; background:var(--bg-3); color:var(--ink-2); }
+  .pill.on{ background:var(--on-bg); color:var(--on); }
+  .pill i{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .link{ background:none; border:0; padding:0; font-size:13px; font-weight:600; color:var(--ink); }
+  .ghost{ height:36px; border:1px solid var(--line-2); background:var(--bg); border-radius:8px; padding:0 14px; font-size:13.5px; font-weight:600; color:var(--ink); }
+  .primary{ border:0; background:var(--ink); color:var(--bg); border-radius:8px; height:44px; font-size:14.5px; font-weight:600; width:100%; }
+  .primary.quiet{ background:var(--bg); color:var(--ink); border:1px solid var(--line-2); }
 
   /* day strip / heat */
-  .days{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-  .day{ border:0; border-radius:12px; padding:8px 0 7px; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; }
-  .day .d{ font:600 10px/1 var(--font-mono); color:var(--ink-3); letter-spacing:.04em; }
-  .day .num{ font:800 16px/1 var(--font-display); }
-  .day .src{ font:500 8.5px/1 var(--font-mono); color:var(--ink-3); }
-  .day.free{ background:var(--moss-100); box-shadow:inset 0 0 0 1px #bcdcc8; }
-  .day.free .d{ color:var(--moss); }
-  .day.busy{ background:var(--paper-2); color:var(--ink-3); }
+  .days{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .day{ border:1px solid var(--line); border-radius:10px; padding:7px 0 6px; background:var(--bg); display:flex; flex-direction:column; align-items:center; gap:2px; position:relative; transition:background .15s var(--ease); }
+  .day .d{ font-size:10px; font-weight:500; color:var(--ink-3); letter-spacing:.02em; }
+  .day .num{ font-size:15px; font-weight:600; }
+  .day .src{ font-size:9px; color:var(--ink-3); height:10px; }
+  .day.free{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
+  .day.free .d,.day.free .src{ color:oklch(75% 0.008 60); }
+  .day.busy{ background:var(--bg-2); color:var(--ink-4); }
   .day.busy .num{ text-decoration:line-through; }
-  .day.best{ outline:2px solid var(--carnelian-400); outline-offset:1px; }
-  .day.on{ background:var(--moss); color:#fff; box-shadow:none; } .day.on .d,.day.on .src{ color:#d8eedf; }
-  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:6px 0 2px; }
-  .heat div{ height:30px; border-radius:8px; display:grid; place-items:center; font:600 11px/1 var(--font-mono); color:var(--ink-2); background:var(--paper-2); position:relative; }
-  .heat div.best{ outline:2px solid var(--carnelian-400); outline-offset:1px; color:var(--carnelian-600); }
-  .heat div.you::after{ content:''; position:absolute; bottom:3px; width:5px; height:5px; border-radius:50%; background:var(--ink-0); }
-  .heat .lab{ font:600 9px/1 var(--font-mono); color:var(--ink-3); background:none; height:12px; }
-  .toggle{ display:flex; justify-content:space-between; align-items:center; padding:11px 2px; border-top:1px solid var(--paper-2); font-size:13.5px; }
-  .toggle small{ display:block; color:var(--ink-3); font-size:11.5px; margin-top:2px; }
-  .sw{ width:40px; height:24px; border-radius:999px; background:var(--ink-4); border:0; position:relative; flex-shrink:0; }
-  .sw i{ position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s; }
-  .sw.on{ background:var(--moss); } .sw.on i{ left:19px; }
+  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:10px 0 0; }
+  .heat div{ height:30px; border-radius:7px; display:grid; place-items:center; font-size:12px; font-weight:600; color:var(--ink-2); background:var(--bg-2); position:relative; font-variant-numeric:tabular-nums; }
+  .heat div.best{ box-shadow:inset 0 0 0 1.5px var(--ink); color:var(--ink); }
+  .heat div.you::after{ content:''; position:absolute; bottom:3px; width:4px; height:4px; border-radius:50%; background:currentColor; }
+  .heat .lab{ font-size:9.5px; font-weight:500; color:var(--ink-3); background:none; height:12px; }
+  .heatlab{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:3px; }
+  .heatlab div{ text-align:center; font-size:9.5px; font-weight:500; color:var(--ink-3); }
+  .toggle{ display:flex; justify-content:space-between; align-items:center; padding:13px 18px; border-top:1px solid var(--line); font-size:14px; }
+  .toggle small{ display:block; color:var(--ink-3); font-size:12px; margin-top:2px; }
+  .sw{ width:44px; height:26px; border-radius:999px; background:var(--ink-4); border:0; position:relative; flex-shrink:0; transition:background .2s var(--ease); }
+  .sw i{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s var(--ease); box-shadow:0 1px 2px oklch(0% 0 0 / .2); }
+  .sw.on{ background:var(--ink); } .sw.on i{ left:21px; }
+  .pad{ padding:0 18px; }
+  .hint{ font-size:12px; line-height:1.45; color:var(--ink-3); }
 
-  .field{ margin-bottom:10px; }
-  .field label{ display:block; font:600 10.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px; }
-  .field input, .field textarea{ width:100%; border:0; background:var(--paper-1); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:12px; padding:10px 12px; font-size:14px; }
-  .field .hint{ font:500 11px/1.4 var(--font-mono); color:var(--ink-3); margin-top:4px; }
-  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .more{ width:100%; border:0; background:none; text-align:left; padding:8px 0; font:600 12px/1 var(--font-mono); color:var(--carnelian-600); display:flex; justify-content:space-between; }
-  .more span{ color:var(--ink-3); font-weight:500; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px; }
+  .field input, .field textarea{ width:100%; border:1px solid var(--line-2); background:var(--bg); border-radius:8px; padding:10px 12px; font-size:14px; outline:none; }
+  .field input:focus, .field textarea:focus{ border-color:var(--ink); }
+  .field .hint{ margin-top:5px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .more{ width:100%; border:0; background:none; text-align:left; padding:6px 0 12px; font-size:13px; font-weight:600; color:var(--ink); display:flex; justify-content:space-between; }
+  .more span{ color:var(--ink-3); font-weight:400; }
 
-  .sheet{ position:absolute; inset:0; background:rgba(31,26,23,.35); display:none; align-items:flex-end; z-index:5; }
+  /* sheet */
+  .sheet{ position:absolute; inset:0; background:oklch(10% 0.01 60 / .4); display:none; align-items:flex-end; z-index:5; }
   .sheet.open{ display:flex; }
-  .sheet .panel{ background:var(--paper-0); width:100%; border-radius:28px 28px 38px 38px; padding:16px 16px 22px; max-height:92%; overflow:auto; box-shadow:0 -10px 40px -10px rgba(31,26,23,.4); }
-  .handle{ width:40px; height:4px; border-radius:2px; background:var(--paper-3); margin:0 auto 12px; }
-  .details{ background:var(--paper-1); border-radius:14px; padding:4px 12px; }
-  .drow{ display:flex; gap:10px; align-items:baseline; padding:9px 0; border-top:1px solid var(--paper-2); font-size:13px; line-height:1.4; flex-wrap:wrap; }
+  .sheet .panel{ background:var(--bg); width:100%; border-radius:18px 18px 44px 44px; padding:10px 0 20px; max-height:93%; overflow:auto; scrollbar-width:none; }
+  .panel::-webkit-scrollbar{ display:none; }
+  .handle{ width:36px; height:4px; border-radius:2px; background:var(--line-2); margin:0 auto 14px; }
+  .ptitle{ font-size:20px; font-weight:600; letter-spacing:-.02em; line-height:1.25; }
+  .pmeta{ font-size:12.5px; color:var(--ink-3); margin-top:4px; line-height:1.5; }
+  .pmeta b{ color:var(--on); font-weight:600; }
+  .pbody{ font-size:14px; color:var(--ink-2); margin:10px 0 0; line-height:1.5; }
+  .details{ margin:0 18px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .drow{ display:flex; gap:10px; align-items:baseline; padding:10px 12px; border-top:1px solid var(--line); font-size:13.5px; line-height:1.4; flex-wrap:wrap; }
   .drow:first-child{ border-top:0; }
-  .drow .k{ font:600 10.5px/1.6 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); width:44px; flex-shrink:0; }
+  .drow .k{ font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); width:40px; flex-shrink:0; line-height:1.8; }
   .drow > span:not(.k){ flex:1; min-width:120px; }
-  .drow .by{ font:500 10.5px/1 var(--font-mono); color:var(--ink-3); white-space:nowrap; }
-  .linklist{ display:flex; flex-wrap:wrap; gap:6px; }
-  .chipl{ display:inline-flex; align-items:center; border:0; background:var(--paper-0); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:999px; padding:5px 10px; font:600 11.5px/1 var(--font-mono); color:var(--carnelian-600); text-decoration:none; white-space:nowrap; }
-  .addrow{ display:flex; gap:6px; padding:8px 0 6px; }
-  .addrow input{ flex:1; border:0; background:var(--paper-0); box-shadow:inset 0 0 0 1px var(--paper-3); border-radius:10px; padding:8px 10px; font-size:12.5px; }
-  .unfurl{ display:flex; gap:10px; background:#e7f3e5; border-radius:14px; padding:10px; margin:12px 0; align-items:center; }
-  .unfurl .og{ width:92px; height:60px; border-radius:8px; background:var(--ink-0); color:var(--paper-0); display:flex; flex-direction:column; justify-content:center; padding:8px; flex-shrink:0; }
-  .unfurl .og b{ font:800 18px/1 var(--font-display); letter-spacing:-.03em; }
-  .unfurl .og span{ font:500 8.5px/1.2 var(--font-mono); color:var(--ink-4); margin-top:3px; }
-  .unfurl .txt{ font-size:12px; line-height:1.35; color:#2b3b2b; }
-  .unfurl .txt b{ display:block; font-weight:700; }
-  .unfurl .txt span{ color:#5d6e5d; font:500 10.5px/1.3 var(--font-mono); }
-  .names{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
-  .names span{ font-size:12.5px; background:var(--paper-1); border-radius:999px; padding:5px 10px; box-shadow:inset 0 0 0 1px var(--paper-3); }
-  .names span.me{ background:var(--ink-0); color:var(--paper-0); box-shadow:none; }
-  .names span.maybe{ opacity:.65; font-style:italic; }
-  .toast{ position:absolute; left:16px; right:16px; bottom:76px; background:var(--ink-0); color:var(--paper-0); border-radius:14px; padding:11px 14px; font:500 12.5px/1.4 var(--font-mono); z-index:9; opacity:0; transform:translateY(8px); transition:all .25s; pointer-events:none; box-shadow:0 10px 24px -8px rgba(0,0,0,.4); }
+  .drow .by{ font-size:11px; color:var(--ink-3); white-space:nowrap; }
+  .chipl{ display:inline-flex; align-items:center; gap:4px; border:1px solid var(--line-2); background:var(--bg); border-radius:6px; padding:4px 8px; font-size:12.5px; font-weight:500; color:var(--ink); text-decoration:none; white-space:nowrap; }
+  .addrow{ display:flex; gap:6px; padding:8px 10px; border-top:1px solid var(--line); background:var(--bg-2); }
+  .addrow input{ flex:1; border:1px solid var(--line-2); background:var(--bg); border-radius:7px; padding:7px 10px; font-size:13px; outline:none; }
+  .addrow input:focus{ border-color:var(--ink); }
+  .addrow .ghost{ height:32px; padding:0 12px; font-size:13px; }
+  .unfurl{ margin:0 18px; border:1px solid var(--line); border-radius:10px; overflow:hidden; display:flex; }
+  .unfurl .og{ width:104px; background:var(--ink); color:var(--bg); display:flex; flex-direction:column; justify-content:center; padding:10px; flex-shrink:0; }
+  .unfurl .og b{ font-size:15px; font-weight:600; letter-spacing:-.01em; line-height:1.15; }
+  .unfurl .og span{ font-size:9.5px; color:oklch(72% 0.008 60); margin-top:4px; line-height:1.3; }
+  .unfurl .txt{ padding:10px 12px; font-size:12.5px; line-height:1.4; color:var(--ink-2); }
+  .unfurl .txt b{ display:block; font-weight:600; color:var(--ink); }
+  .unfurl .txt span{ color:var(--ink-3); font-size:11px; }
+  .people{ margin:0 18px; }
+  .person{ display:flex; align-items:center; gap:10px; padding:7px 0; font-size:14px; }
+  .av{ width:30px; height:30px; border-radius:50%; background:var(--bg-3); color:var(--ink-2); display:grid; place-items:center; font-size:11px; font-weight:600; flex-shrink:0; }
+  .person.me .av{ background:var(--ink); color:var(--bg); }
+  .person .s{ margin-left:auto; font-size:12px; color:var(--ink-3); }
+  .toast{ position:absolute; left:18px; right:18px; bottom:90px; background:var(--ink); color:var(--bg); border-radius:10px; padding:11px 14px; font-size:13px; line-height:1.45; z-index:9; opacity:0; transform:translateY(6px); transition:opacity .2s var(--ease), transform .2s var(--ease); pointer-events:none; }
   .toast.show{ opacity:1; transform:none; }
-  .toast b{ color:#9fd7b5; }
-  .sms{ background:var(--ink-0); color:var(--paper-0); border-radius:16px 16px 16px 4px; padding:10px 12px; font-size:12.5px; line-height:1.45; margin:8px 0; }
-  .sms u{ color:#f3b2a9; text-decoration:none; }
-  .empty{ color:var(--ink-3); font-size:13px; padding:20px 4px; text-align:center; }
+  .toast b{ font-weight:600; color:oklch(85% 0.08 152); }
+  .sms{ margin:0 18px; background:var(--bg-2); border-radius:14px 14px 14px 4px; padding:10px 12px; font-size:13px; line-height:1.5; color:var(--ink); }
+  .sms u{ text-decoration:none; font-weight:600; }
+  .empty{ color:var(--ink-3); font-size:13px; padding:20px 18px; }
+  .sheet .acts{ margin:14px 18px 0; }
+  .sheet .primary{ width:auto; margin:10px 18px 0; display:block; width:calc(100% - 36px); }
+  .sheet .days{ margin:0 18px; }
+  .sheet .heat, .sheet .heatlab{ margin-left:18px; margin-right:18px; }
+  .sheet .prompt{ margin:12px 18px 0; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
 </style>
 </head>
 <body>
@@ -153,24 +183,24 @@
   <div class="side">
     <div class="eyebrow">Quorum · working name · throwaway mockup · v2</div>
     <h1>Post an intent. Tap in. When enough of you overlap on a day, it asks you to lock it.</h1>
-    <p><b>No host, no number required.</b> "Suits" is enough to post. Anyone can tap in; their free days come with them. Anyone in can add a link, a place, a note. Nobody picks a date: when enough people can do the same day, the board prompts <em>"6 of 9 can do Tue. Lock it in?"</em> and any of them can. That's the ON moment: texts go out, the invite lands in calendars. Until then nobody is on the hook.</p>
+    <p><b>No host, no number required.</b> "Suits" is enough to post. Anyone can tap in; their free days come with them. Anyone in can add a link, a place, a note. Nobody picks a date: when enough people can do the same day, the board prompts "6 of 9 can do Tue. Lock it in?" and any of them can. That's the ON moment: texts go out, the invite lands in calendars. Until then nobody is on the hook.</p>
     <ol>
-      <li><b>Board</b> · every intent, nearest-to-prompt first. In / maybe / out. Tap a card for the details, the day heat, who's in, the share link.</li>
-      <li><b>You</b> · your free days for the window (or let your calendar mark them), your name visibility, what you're in.</li>
-      <li><b>+</b> · post an intent. Title only is fine; everything else is optional and can be added later, by anyone in.</li>
+      <li><b>Board</b>: every intent, nearest-to-prompt first. In / maybe / out. Tap a row for details, the day heat, who's in, the share link.</li>
+      <li><b>You</b>: your free days for the window (or let your calendar mark them), name visibility, what you're in.</li>
+      <li><b>Post</b>: a title is enough; everything else is optional and can be added later, by anyone in.</li>
     </ol>
-    <div class="try">Try: Board → <b>Lock it in</b> on Suits in Hoi An (6 overlap on Tue, prompt showing) · then tap <b>I'm in</b> on Overnight boat: your free days attach, minus Tue, because you're now ON for suits that day · open Street-food crawl → add a link in Details (attributed to you) · + → post "Night market" with just a title · You → mark Sun 14 free and watch the heat on the Board change.</div>
-    <div class="note">Static click-through, state resets on reload. Design language = Loop (raised paper, facts-only cards). Names and numbers are made up. Window: trip week Feb 14–20, 2027. Default quorum when no number is set: 4 on the same day; intents with no day needed prompt at 4 in.</div>
+    <div class="try">Try: Board, <b>Lock in</b> on Suits in Hoi An (6 overlap on Tue). Then <b>I'm in</b> on Overnight boat: your free days attach, minus Tue, because you're now ON for suits that day. Open Street-food crawl and add a link in Details (attributed to you). Post "Night market" with just a title. On You, mark Sun 14 free and watch the heat on the Board change.</div>
+    <div class="note">Static click-through, state resets on reload. Names and numbers are made up. Window: trip week Feb 14–20, 2027. Default quorum when no number is set: 4 on the same day; intents with no day needed prompt at 4 in.</div>
   </div>
 
   <div class="phone">
-    <div class="status"><span>9:41</span><span>●●● ⌾</span></div>
-    <div class="apphead"><span class="wordmark">Quorum<i></i></span><span class="grp mono">EMBA '27 · 61 people</span></div>
+    <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+    <div class="apphead"><span class="wordmark">Quorum</span><span class="grp">EMBA '27 · 61 people</span></div>
     <div class="screen" id="screen"></div>
     <div class="tabbar">
-      <button data-tab="board"><span>Board</span><span class="n" id="n-board"></span></button>
-      <button class="new" id="btn-new" title="Post an intent">+</button>
-      <button data-tab="you"><span>You</span><span class="n" id="n-you"></span></button>
+      <button data-tab="board" aria-label="Board"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span class="n" id="n-board"></span></button>
+      <button class="new" id="btn-new" aria-label="Post an intent"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg><span class="n">Post</span></button>
+      <button data-tab="you" aria-label="You"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="n" id="n-you"></span></button>
     </div>
     <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
     <div class="toast" id="toast"></div>
@@ -181,7 +211,6 @@
 // ---------- data ----------
 const DAYS = [['Sun',14],['Mon',15],['Tue',16],['Wed',17],['Thu',18],['Fri',19],['Sat',20]];
 const DEFAULT_QUORUM = 4;
-// a person in an intent: {name, days:[day indexes they can do], maybe?:true}
 const P = (name, days, maybe) => ({name, days:new Set(days), maybe:!!maybe});
 
 const S = {
@@ -220,6 +249,7 @@ const $ = (s)=>document.querySelector(s);
 const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
 let toastT; function toast(h){ const t=$('#toast'); t.innerHTML=h; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3400); }
 const dayLabel = (i)=> i===null||i===undefined ? '' : DAYS[i][0]+' '+DAYS[i][1];
+const ini = (n)=> n==='You'?'Y':(n.startsWith('+1')?'+':n.slice(0,1));
 function youFreeDays(){ const s=new Set(); DAYS.forEach((_,i)=>{ if(S.you.free.has(i) && !(S.you.useCal && S.you.calBusy.has(i))) s.add(i); }); return s; }
 function inPeople(it){ return it.people.filter(p=>!p.maybe); }
 function inCount(it){ return inPeople(it).length + (it.you==='in'?1:0); }
@@ -227,61 +257,58 @@ function maybeCount(it){ return it.people.filter(p=>p.maybe).length + (it.you===
 function heat(it){ const h=DAYS.map(()=>0); inPeople(it).forEach(p=>p.days.forEach(d=>h[d]++)); if(it.you==='in') it.youDays.forEach(d=>h[d]++); return h; }
 function best(it){ const h=heat(it); let b=0; h.forEach((n,i)=>{ if(n>h[b]) b=i; }); return {day:b, n:h[b]}; }
 function quorum(it){ return it.min || DEFAULT_QUORUM; }
-function status(it){ // 'on' | 'ready' | 'open'
-  if(it.on) return 'on';
-  if(it.needsDay){ return best(it).n>=quorum(it) ? 'ready':'open'; }
-  return inCount(it)>=quorum(it) ? 'ready':'open';
-}
+function status(it){ if(it.on) return 'on'; if(it.needsDay){ return best(it).n>=quorum(it) ? 'ready':'open'; } return inCount(it)>=quorum(it) ? 'ready':'open'; }
 function yourYesOn(day, except){ return S.intents.filter(i=>i.id!==except && i.you==='in' && (i.on ? i.onDay===day : false)); }
+function heatCell(v, q, cls, extra){ const d=el(`<div class="${cls}">${v||''}</div>`); if(extra) d.setAttribute('style',extra); else d.style.background=`color-mix(in oklch, var(--ink) ${Math.min(26,Math.round(v/q*20))}%, var(--bg-2))`; return d; }
 
 // ---------- render ----------
 function render(){
   document.querySelectorAll('.tabbar button[data-tab]').forEach(b=>b.classList.toggle('on', b.dataset.tab===S.tab));
-  $('#n-board').textContent = S.intents.filter(i=>!i.on).length+' open';
-  $('#n-you').textContent = S.intents.filter(i=>i.you==='in').length+' in';
+  $('#n-board').textContent = 'Board';
+  $('#n-you').textContent = 'You';
   const sc=$('#screen'); sc.innerHTML=''; sc.scrollTop=0;
   ({you:renderYou, board:renderBoard})[S.tab](sc);
 }
 
 function renderBoard(sc){
-  sc.append(el(`<h2>Board</h2>`), el(`<p class="sub">Tap in. Your free days come with you. When enough overlap, it asks.</p>`));
+  sc.append(el(`<div class="pagehead"><h2>Board</h2><p class="sub">Tap in. Your free days come with you. When enough overlap, it asks.</p></div>`));
   const score=(it)=>{ if(it.needsDay) return quorum(it)-best(it).n; return quorum(it)-inCount(it); };
   const open=S.intents.filter(i=>!i.on).sort((a,b)=>score(a)-score(b));
   const on=S.intents.filter(i=>i.on);
-  sc.append(el(`<div class="sect"><span>Open · nearest first</span><b>${open.length}</b></div>`)); open.forEach(i=>sc.append(card(i)));
+  sc.append(el(`<div class="sect"><span>Open</span><b>${open.length}</b></div>`)); open.forEach(i=>sc.append(card(i)));
   sc.append(el(`<div class="sect"><span>On</span><b>${on.length}</b></div>`)); on.forEach(i=>sc.append(card(i)));
 }
 
 function card(it){
   const st=status(it), n=inCount(it), m=maybeCount(it), b=best(it), q=quorum(it);
-  const c=el(`<div class="card ${st==='on'?'on':''} ${st==='ready'?'lift':''}"></div>`);
+  const c=el(`<div class="card"></div>`);
   let facts, big, lbl;
-  if(st==='on'){ facts=`<b>${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b>${it.cost?' · '+it.cost:''}`; big=`${n}`; lbl='ON'; }
-  else if(it.needsDay){ facts=`${n} in${m?` · <span style="color:var(--amber)">${m} maybe</span>`:''}${it.cost?' · '+it.cost:''}`; big=`${b.n}<small>/${q}</small>`; lbl= b.n? `can do ${DAYS[b.day][0]}`:'no days yet'; }
-  else { facts=`${it.noDayNote||'no day needed'}${it.cost?' · '+it.cost:''}`; big=`${n}<small>/${q}</small>`; lbl='in'; }
+  if(st==='on'){ facts=`<b>${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b>${it.cost?' · '+it.cost:''}`; big=`${n}`; lbl='on'; }
+  else if(it.needsDay){ facts=`${n} in${m?` · ${m} maybe`:''}${it.cost?' · '+it.cost:''}`; big=`${b.n}<small> / ${q}</small>`; lbl= b.n? `${DAYS[b.day][0]}`:'no days'; }
+  else { facts=`${it.noDayNote||'No day needed'}${it.cost?' · '+it.cost:''}`; big=`${n}<small> / ${q}</small>`; lbl='in'; }
   c.append(el(`<div class="row"><div><div class="title">${it.title}</div><div class="facts">${facts}</div></div><div class="count ${st}"><div class="big">${big}</div><div class="lbl">${lbl}</div></div></div>`));
   if(it.needsDay && st!=='on'){
     const h=heat(it); const hh=el(`<div class="heat"></div>`);
-    h.forEach((v,i)=>{ const d=el(`<div class="${i===b.day&&v?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}">${v||''}</div>`); d.style.background=`color-mix(in srgb, var(--carnelian-400) ${Math.min(60,Math.round(v/q*45))}%, var(--paper-2))`; hh.append(d); });
+    h.forEach((v,i)=>hh.append(heatCell(v,q,`${i===b.day&&v?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}`)));
     c.append(hh);
-    c.append(el(`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:2px">${DAYS.map(d=>`<div style="text-align:center;font:600 9px/1 var(--font-mono);color:var(--ink-3)">${d[0]}</div>`).join('')}</div>`));
+    c.append(el(`<div class="heatlab">${DAYS.map(d=>`<div>${d[0]}</div>`).join('')}</div>`));
   }
   c.append(el(`<div class="who">${whoLine(it)}</div>`));
   if(st==='ready'){
-    const pr=el(`<div class="prompt"><div class="t">${it.needsDay?`${b.n} of ${n} can do`:`${n} in`}<b>${it.needsDay?dayLabel(b.day):'Make it happen?'}</b></div><button>${it.needsDay?'Lock it in':'It\'s on'}</button></div>`);
+    const pr=el(`<div class="prompt"><div class="t">${it.needsDay?`${b.n} of ${n} can do`:`${n} in`}<b>${it.needsDay?dayLabel(b.day):'Make it happen?'}</b></div><button>${it.needsDay?'Lock in':'It\'s on'}</button></div>`);
     pr.querySelector('button').onclick=(e)=>{ e.stopPropagation(); lock(it); };
     c.append(pr);
   }
   if(st!=='on'){
-    const a=el(`<div class="acts"><button class="in ${it.you==='in'?'sel':''}">${it.you==='in'?'In ✓':"I'm in"}</button><button class="maybe ${it.you==='maybe'?'sel':''}">Maybe</button><button class="out ${it.you==='out'?'sel':''}">Out</button></div>`);
+    const a=el(`<div class="acts"><button class="in ${it.you==='in'?'sel':''}">${it.you==='in'?'In':"I'm in"}</button><button class="maybe ${it.you==='maybe'?'sel':''}">Maybe</button><button class="out ${it.you==='out'?'sel':''}">Out</button></div>`);
     a.querySelectorAll('button').forEach(bt=>bt.onclick=(e)=>{ e.stopPropagation(); answer(it, bt.classList.contains('in')?'in':bt.classList.contains('maybe')?'maybe':'out'); });
     c.append(a);
     if(it.you==='in' && it.needsDay){
       const conf=[...it.youDays].map(d=>yourYesOn(d,it.id)).flat();
-      if(conf.length) c.append(el(`<div class="flag">You're already ON for <b>${conf[0].title}</b> ${dayLabel(conf[0].onDay)}; that day won't count for you here.</div>`));
+      if(conf.length) c.append(el(`<div class="flag">You're already on for <b>${conf[0].title}</b> ${dayLabel(conf[0].onDay)}; that day won't count for you here.</div>`));
     }
   } else {
-    const a=el(`<div class="acts"><button class="in ${it.you==='in'?'sel':''}">${it.you==='in'?'In ✓':"I'm in"}</button><button class="out ${it.you==='out'?'sel':''}">${it.you==='in'?'Drop':'Out'}</button></div>`);
+    const a=el(`<div class="acts"><button class="in ${it.you==='in'?'sel':''}">${it.you==='in'?'In':"I'm in"}</button><button class="out ${it.you==='out'?'sel':''}">${it.you==='in'?'Drop':'Out'}</button></div>`);
     a.querySelectorAll('button').forEach(bt=>bt.onclick=(e)=>{ e.stopPropagation(); answer(it, bt.classList.contains('in')?'in':'out'); });
     c.append(a);
   }
@@ -292,36 +319,35 @@ function whoLine(it){
   const names=inPeople(it).map(p=>p.name); if(it.you==='in') names.unshift(S.you.showName?'You':'+1 anonymous');
   const ms=it.people.filter(p=>p.maybe).length + (it.you==='maybe'?1:0);
   if(!names.length && !ms) return `<span style="color:var(--ink-3)">Nobody yet · ${it.by} posted</span>`;
-  let s = names.length? `<b>${names.slice(0,4).join(', ')}</b>${names.length>4?` +${names.length-4}`:''}`:'';
+  let s = names.length? `<b>${names.slice(0,4).join(', ')}</b>${names.length>4?` and ${names.length-4} more`:''}`:'';
   if(ms) s += `${s?' · ':''}<span style="color:var(--ink-3)">${ms} maybe</span>`;
   return s;
 }
 
 function answer(it, a){
   const was=it.you; it.you=(was===a)?null:a;
-  if(it.you==='in' && it.needsDay && !it.youDays.size){ it.youDays=youFreeDays(); // free days attach, minus days you're already ON elsewhere
+  if(it.you==='in' && it.needsDay && !it.youDays.size){ it.youDays=youFreeDays();
     S.intents.forEach(o=>{ if(o.on && o.you==='in' && o.id!==it.id) it.youDays.delete(o.onDay); });
-    toast(`You're in. Your free days attached: <b>${[...it.youDays].map(d=>DAYS[d][0]).join(', ')||'none yet'}</b>. Adjust them on the card's page.`);
+    toast(`You're in. Your free days attached: <b>${[...it.youDays].map(d=>DAYS[d][0]).join(', ')||'none yet'}</b>. Adjust them on the intent's page.`);
   }
   if(it.you!=='in' && !it.on) it.youDays=new Set();
   const st=status(it);
   if(st==='ready' && !was) toast(`${it.needsDay?best(it).n+' can do '+dayLabel(best(it).day):inCount(it)+' in'}. <b>Anyone in can lock it.</b>`);
-  if(it.on && was==='in' && it.you!=='in') toast(`Dropped. Still ON at ${inCount(it)}. <b>${it.lockedBy||it.by} told</b>, nobody else.`);
+  if(it.on && was==='in' && it.you!=='in') toast(`Dropped. Still on at ${inCount(it)}. <b>${it.lockedBy||it.by} told</b>, nobody else.`);
   render();
 }
 function lock(it){
   const b=best(it);
   it.on=true; it.onDay=it.needsDay?b.day:null; it.onAt='just now'; it.lockedBy=S.you.showName?'You':'someone';
-  // people who can't do that day stay listed as in but are told
   const cant = it.needsDay ? inPeople(it).filter(p=>!p.days.has(b.day)).length : 0;
-  toast(`<b>${it.title} is ON${it.needsDay?' · '+dayLabel(b.day):''}.</b> Texts to the ${inCount(it)} in${cant?`; ${cant} can't make that day and were asked`:''}; calendar invite attached.${maybeCount(it)?' Maybes nudged.':''}`);
+  toast(`<b>${it.title} is on${it.needsDay?' · '+dayLabel(b.day):''}.</b> Texts to the ${inCount(it)} in${cant?`; ${cant} can't make that day and were asked`:''}; calendar invite attached.${maybeCount(it)?' Maybes nudged.':''}`);
   render();
 }
 
 function renderYou(sc){
-  sc.append(el(`<h2>Your days</h2>`), el(`<p class="sub">Free days for the window. They attach to anything you tap in on; you can adjust per intent.</p>`));
+  sc.append(el(`<div class="pagehead"><h2>You</h2><p class="sub">Free days for the window. They attach to anything you tap in on; adjust per intent.</p></div>`));
   sc.append(el(`<div class="sect"><span>Free during the trip</span><b>Feb 14–20</b></div>`));
-  const days=el(`<div class="days"></div>`);
+  const days=el(`<div class="days pad"></div>`);
   DAYS.forEach(([d,n],i)=>{
     const busy = S.you.useCal && S.you.calBusy.has(i);
     const b=el(`<button class="day ${busy?'busy':(S.you.free.has(i)?'free':'')}"><span class="d">${d}</span><span class="num">${n}</span><span class="src">${busy?'cal':(S.you.free.has(i)?'free':'')}</span></button>`);
@@ -330,16 +356,16 @@ function renderYou(sc){
     days.append(b);
   });
   sc.append(days);
-  sc.append(el(`<p style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 2px 4px">Tap a day to toggle. Others see how many can do each day, never who.</p>`));
+  sc.append(el(`<p class="hint pad" style="margin:10px 0 12px">Tap a day to toggle. Others see how many can do each day, never who.</p>`));
   const t1=el(`<div class="toggle"><div>Use my calendar<small>Google Calendar · connected · busy blocks mark days</small></div><button class="sw ${S.you.useCal?'on':''}"><i></i></button></div>`);
   t1.querySelector('.sw').onclick=()=>{ S.you.useCal=!S.you.useCal; render(); };
   const t2=el(`<div class="toggle"><div>Show my name when I'm in<small>Off: you still count, listed as "+1 anonymous"</small></div><button class="sw ${S.you.showName?'on':''}"><i></i></button></div>`);
   t2.querySelector('.sw').onclick=()=>{ S.you.showName=!S.you.showName; render(); };
   sc.append(t1,t2);
   const mine=S.intents.filter(i=>i.you==='in');
-  sc.append(el(`<div class="sect"><span>You're in</span><b>${mine.length}</b></div>`));
+  sc.append(el(`<div class="sect" style="border-top:1px solid var(--line)"><span>You're in</span><b>${mine.length}</b></div>`));
   if(!mine.length) sc.append(el(`<div class="empty">Nothing yet. Tap in on the Board.</div>`));
-  mine.forEach(it=>{ const st=status(it); const c=el(`<div class="card"><div class="row"><div><div class="title">${it.title}</div><div class="facts">${it.on?dayLabel(it.onDay)+(it.time?' · '+it.time:''):(it.needsDay?[...it.youDays].map(d=>DAYS[d][0]).join(' ')||'no days yet':'no day needed')}</div></div><div class="count ${st}"><div class="big">${inCount(it)}</div><div class="lbl">${it.on?'ON':'in'}</div></div></div></div>`); c.onclick=()=>openDetail(it); sc.append(c); });
+  mine.forEach(it=>{ const st=status(it); const c=el(`<div class="card"><div class="row"><div><div class="title">${it.title}</div><div class="facts">${it.on?dayLabel(it.onDay)+(it.time?' · '+it.time:''):(it.needsDay?[...it.youDays].map(d=>DAYS[d][0]).join(' · ')||'no days yet':'no day needed')}</div></div><div class="count ${st}"><div class="big">${inCount(it)}</div><div class="lbl">${it.on?'on':'in'}</div></div></div></div>`); c.onclick=()=>openDetail(it); sc.append(c); });
 }
 
 // ---------- detail sheet ----------
@@ -347,30 +373,28 @@ function openDetail(it){
   const st=status(it), n=inCount(it), m=maybeCount(it), b=best(it), q=quorum(it);
   const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
   pn.append(el(`<div class="handle"></div>`));
-  pn.append(el(`<div style="display:flex;justify-content:space-between;gap:10px"><div><div style="font:800 22px/1.1 var(--font-display)">${it.title}</div><div style="font:500 12.5px/1.5 var(--font-mono);color:var(--ink-2);margin-top:4px">${it.on?`<b style="color:var(--moss)">ON · ${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b> · locked by ${it.lockedBy}<br>`:''}${it.cost?it.cost+' · ':''}${it.min?`needs ${it.min}`:`quorum ${q} (default)`} · started by ${it.by}</div></div><span class="pill ${st==='on'?'on':''}">${st==='on'?'ON':(st==='ready'?'ready':'open')}</span></div>`));
-  if(it.detail) pn.append(el(`<p style="font-size:13.5px;color:var(--ink-2);margin:10px 0 0;line-height:1.45">${it.detail}</p>`));
+  pn.append(el(`<div class="pad" style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="ptitle">${it.title}</div><div class="pmeta">${it.on?`<b>On · ${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b> · locked by ${it.lockedBy}<br>`:''}${it.cost?it.cost+' · ':''}${it.min?`needs ${it.min}`:`quorum ${q}`} · started by ${it.by}</div></div><span class="pill ${st==='on'?'on':''}">${st==='on'?'<i></i>On':(st==='ready'?'Ready':'Open')}</span></div>`));
+  if(it.detail) pn.append(el(`<p class="pbody pad">${it.detail}</p>`));
 
-  // days
   if(it.needsDay){
     pn.append(el(`<div class="sect"><span>${it.on?'Locked day':'Who can do which day'}</span><b>${it.on?'':b.n+' on '+DAYS[b.day][0]}</b></div>`));
-    const h=heat(it); const hh=el(`<div class="heat"></div>`);
-    DAYS.forEach(([d])=>hh.append(el(`<div class="lab">${d}</div>`)));
-    h.forEach((v,i)=>{ const d=el(`<div class="${(!it.on&&i===b.day&&v)?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}" style="${it.on&&i===it.onDay?'background:var(--moss);color:#fff':''}">${v||''}</div>`); if(!(it.on&&i===it.onDay)) d.style.background=`color-mix(in srgb, var(--carnelian-400) ${Math.min(60,Math.round(v/q*45))}%, var(--paper-2))`; hh.append(d); });
+    const h=heat(it); const hh=el(`<div class="heat" style="margin-top:0"></div>`);
+    h.forEach((v,i)=>{ const locked=it.on&&i===it.onDay; hh.append(heatCell(v,q,`${(!it.on&&i===b.day&&v)?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}`, locked?'background:var(--on);color:#fff':null)); });
     pn.append(hh);
+    pn.append(el(`<div class="heatlab">${DAYS.map(d=>`<div>${d[0]}</div>`).join('')}</div>`));
     if(it.you==='in' && !it.on){
-      pn.append(el(`<p style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 0 6px">Your days for this one (dot = you). Tap to adjust.</p>`));
+      pn.append(el(`<p class="hint pad" style="margin:12px 0 8px">Your days for this one (the dot). Tap to adjust.</p>`));
       const ds=el(`<div class="days"></div>`);
       DAYS.forEach(([d,num],i)=>{ const bt=el(`<button class="day ${it.youDays.has(i)?'free':''}"><span class="d">${d}</span><span class="num">${num}</span><span class="src">${it.youDays.has(i)?'can':''}</span></button>`); bt.onclick=()=>{ it.youDays.has(i)?it.youDays.delete(i):it.youDays.add(i); openDetail(it); render(); }; ds.append(bt); });
       pn.append(ds);
-    } else if(!it.on) pn.append(el(`<p style="font:500 11px/1.4 var(--font-mono);color:var(--ink-3);margin:8px 0 0">Tap in and your free days land here.</p>`));
-    if(st==='ready'){ const pr=el(`<div class="prompt"><div class="t">${b.n} of ${n} can do<b>${dayLabel(b.day)}</b></div><button>Lock it in</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
+    } else if(!it.on) pn.append(el(`<p class="hint pad" style="margin:10px 0 0">Tap in and your free days land here.</p>`));
+    if(st==='ready'){ const pr=el(`<div class="prompt"><div class="t">${b.n} of ${n} can do<b>${dayLabel(b.day)}</b></div><button>Lock in</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
   } else {
-    pn.append(el(`<div class="sect"><span>Day</span><b>${it.noDayNote||'none needed'}</b></div>`));
-    if(st==='ready'){ const pr=el(`<div class="prompt"><div class="t">${n} in<b>Make it happen?</b></div><button>It's on</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
+    pn.append(el(`<div class="sect"><span>Day</span><b>${it.noDayNote||'None needed'}</b></div>`));
+    if(st==='ready'){ const pr=el(`<div class="prompt" style="margin-top:0"><div class="t">${n} in<b>Make it happen?</b></div><button>It's on</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
   }
 
-  // details (shared, additive)
-  pn.append(el(`<div class="sect"><span>Details</span><span style="font-weight:500;letter-spacing:0;text-transform:none">anyone in can add · title is fixed</span></div>`));
+  pn.append(el(`<div class="sect"><span>Details</span><span style="font-weight:400;letter-spacing:0;text-transform:none">Anyone in can add. Title is fixed.</span></div>`));
   const d=el(`<div class="details"></div>`);
   if(it.time) d.append(el(`<div class="drow"><span class="k">Time</span><span>${it.time}</span><span class="by">${it.by}</span></div>`));
   it.adds.forEach(a=>{
@@ -379,36 +403,34 @@ function openDetail(it){
   });
   if(it.needsDay && (it.on||st==='ready')) d.append(el(`<div class="drow"><span class="k">Cal</span><span>${it.on?'Invite sent to everyone in':'Invite goes out when locked'}</span>${it.on?'<button class="chipl" data-cal>Add to calendar</button>':''}</div>`));
   if(it.you==='in'){
-    const ar=el(`<div class="addrow"><input placeholder="Add a link, a place, a note…" /><button class="ghost">Add</button></div>`);
+    const ar=el(`<div class="addrow"><input placeholder="Add a link, a place, a note" /><button class="ghost">Add</button></div>`);
     ar.querySelector('button').onclick=()=>{ const v=ar.querySelector('input').value.trim(); if(!v) return; const isUrl=/^(https?:\/\/|www\.)/.test(v)||/\.[a-z]{2,}(\/|$)/.test(v); it.adds.push({k:isUrl?'Link':'Note', v:isUrl?v.replace(/^https?:\/\//,''):v, url:isUrl?(/^https?:/.test(v)?v:'https://'+v):null, by:S.you.showName?'You':'anon'}); toast(`Added, attributed to <b>${S.you.showName?'you':'+1 anonymous'}</b>. Nobody is texted about details.`); openDetail(it); };
     d.append(ar);
   } else d.append(el(`<div class="drow" style="color:var(--ink-3)">Tap in to add details.</div>`));
   const cal=d.querySelector('[data-cal]'); if(cal) cal.onclick=()=>toast(`Calendar event: <b>${it.title}</b> · ${dayLabel(it.onDay)}${it.time?' '+it.time:''}.`);
   pn.append(d);
 
-  // unfurl
-  pn.append(el(`<div class="sect"><span>What the link looks like in WhatsApp</span></div>`));
-  const ogBig = it.on ? 'ON' : (it.needsDay ? `${b.n} can do ${DAYS[b.day][0]}` : `${n} in`);
-  pn.append(el(`<div class="unfurl"><div class="og"><b style="font-size:${it.on?18:14}px">${ogBig}</b><span>${it.title}${it.on?' · '+dayLabel(it.onDay):''}</span></div><div class="txt"><b>${it.title} · ${n} in${it.on?' · ON '+dayLabel(it.onDay):''}</b>${it.cost?it.cost+' · ':''}tap to say you're in<br><span>quorum.app/i/${it.id}?s=k7f2</span></div></div>`));
+  pn.append(el(`<div class="sect"><span>Link preview</span><span style="font-weight:400;letter-spacing:0;text-transform:none">As WhatsApp shows it</span></div>`));
+  const ogBig = it.on ? 'On' : (it.needsDay ? `${b.n} can do ${DAYS[b.day][0]}` : `${n} in`);
+  pn.append(el(`<div class="unfurl"><div class="og"><b>${ogBig}</b><span>${it.title}${it.on?' · '+dayLabel(it.onDay):''}</span></div><div class="txt"><b>${it.title} · ${n} in${it.on?' · on '+dayLabel(it.onDay):''}</b>${it.cost?it.cost+' · ':''}tap to say you're in<br><span>quorum.app/i/${it.id}?s=k7f2</span></div></div>`));
 
-  // who
-  pn.append(el(`<div class="sect"><span>Who's in</span><b>${n}${m?` · ${m} maybe`:''}</b></div>`));
-  const nm=el(`<div class="names"></div>`);
-  if(it.you==='in') nm.append(el(`<span class="me">${S.you.showName?'You':'+1 anonymous'}</span>`));
-  inPeople(it).forEach(p=>nm.append(el(`<span>${p.name}</span>`)));
-  if(it.you==='maybe') nm.append(el(`<span class="me maybe">You · maybe</span>`));
-  it.people.filter(p=>p.maybe).forEach(p=>nm.append(el(`<span class="maybe">${p.name} · maybe</span>`)));
-  pn.append(nm);
+  pn.append(el(`<div class="sect"><span>In</span><b>${n}${m?` · ${m} maybe`:''}</b></div>`));
+  const pl=el(`<div class="people"></div>`);
+  if(it.you==='in') pl.append(el(`<div class="person me"><span class="av">${S.you.showName?'Y':'+'}</span><span>${S.you.showName?'You':'+1 anonymous'}</span></div>`));
+  inPeople(it).forEach(p=>pl.append(el(`<div class="person"><span class="av">${ini(p.name)}</span><span>${p.name}</span>${it.needsDay&&!it.on?`<span class="s">${[...p.days].map(x=>DAYS[x][0]).join(' ')}</span>`:''}</div>`)));
+  if(it.you==='maybe') pl.append(el(`<div class="person me"><span class="av">Y</span><span>You</span><span class="s">maybe</span></div>`));
+  it.people.filter(p=>p.maybe).forEach(p=>pl.append(el(`<div class="person"><span class="av">${ini(p.name)}</span><span>${p.name}</span><span class="s">maybe</span></div>`)));
+  pn.append(pl);
   if(it.on){
     pn.append(el(`<div class="sect"><span>The text everyone in got</span><b>${it.onAt}</b></div>`));
-    pn.append(el(`<div class="sms">${it.title} is ON${it.needsDay?' · '+dayLabel(it.onDay)+(it.time?' '+it.time:''):''}. ${n} in. ${it.lockedBy} locked it. Calendar invite attached.<br><br>Want to run something? Post it: <u>quorum.app/emba27/new</u></div>`));
+    pn.append(el(`<div class="sms">${it.title} is on${it.needsDay?' · '+dayLabel(it.onDay)+(it.time?' '+it.time:''):''}. ${n} in. ${it.lockedBy} locked it. Calendar invite attached.<br><br>Want to run something? Post it: <u>quorum.app/emba27/new</u></div>`));
   }
-  const acts=el(`<div class="acts" style="margin-top:14px"><button class="ghost" style="flex:1">Share link</button><button class="ghost" style="flex:1">Post a related intent</button></div>`);
+  const acts=el(`<div class="acts"><button class="ghost">Share</button><button class="ghost">Post a related intent</button></div>`);
   const [b1,b2]=acts.querySelectorAll('button');
-  b1.onclick=()=>toast(`Link copied: <b>quorum.app/i/${it.id}?s=${Math.random().toString(36).slice(2,6)}</b> · fresh preview, attributed to you.`);
+  b1.onclick=()=>toast(`Link copied: <b>quorum.app/i/${it.id}?s=${Math.random().toString(36).slice(2,6)}</b>. Fresh preview, attributed to you.`);
   b2.onclick=()=>{ closeSheet(); openPost(it); };
   pn.append(acts);
-  const close=el(`<button class="primary quiet" style="margin-top:10px">Close</button>`); close.onclick=closeSheet; pn.append(close);
+  const close=el(`<button class="primary quiet">Close</button>`); close.onclick=closeSheet; pn.append(close);
   sh.classList.add('open');
 }
 function closeSheet(){ $('#sheet').classList.remove('open'); }
@@ -418,30 +440,29 @@ $('#sheet').addEventListener('click',(e)=>{ if(e.target.id==='sheet') closeSheet
 function openPost(from){
   const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
   pn.append(el(`<div class="handle"></div>`));
-  pn.append(el(`<div style="font:800 22px/1.1 var(--font-display)">${from?'Post a related intent':'Post an intent'}</div>`));
-  pn.append(el(`<p style="font-size:13px;color:var(--ink-2);margin:6px 0 12px;line-height:1.45">A title is enough. You're in automatically; your free days attach. Everything else is optional and can be added later, by anyone in.</p>`));
-  const f=el(`<div>
+  pn.append(el(`<div class="pad"><div class="ptitle">${from?'Post a related intent':'Post an intent'}</div><p class="pbody" style="margin-top:6px">A title is enough. You're in automatically; your free days attach. Everything else is optional and can be added later, by anyone in.</p></div>`));
+  const f=el(`<div class="pad" style="margin-top:14px">
     <div class="field"><label>What</label><input id="f-title" placeholder="e.g. Suits in Hoi An" value="${from?from.title+' · ':''}" /></div>
-    <button class="more" id="f-more">+ More <span>one line · cost · time · a number · all optional</span></button>
+    <button class="more" id="f-more">More <span>one line · cost · time · a number · links</span></button>
     <div id="f-moreblock" style="display:none">
-      <div class="field"><label>One line</label><input id="f-detail" placeholder="where, roughly what, anything they need to know" /></div>
+      <div class="field"><label>One line</label><input id="f-detail" placeholder="Where, roughly what, anything they need to know" /></div>
       <div class="grid2">
         <div class="field"><label>Rough cost</label><input id="f-cost" placeholder="e.g. ~$250" /></div>
         <div class="field"><label>Time</label><input id="f-time" placeholder="e.g. 3:00pm" /></div>
       </div>
-      <div class="field"><label>Needs this many</label><input id="f-min" type="number" placeholder="leave blank · default ${DEFAULT_QUORUM}" /><div class="hint">the overlap on one day that triggers the prompt</div></div>
-      <div class="field"><label>Links · one per line</label><textarea id="f-links" rows="2" placeholder="website, Google Doc, Maps…"></textarea></div>
+      <div class="field"><label>Needs this many</label><input id="f-min" type="number" placeholder="Leave blank for ${DEFAULT_QUORUM}" /><div class="hint">The overlap on one day that triggers the prompt.</div></div>
+      <div class="field"><label>Links, one per line</label><textarea id="f-links" rows="2" placeholder="Website, Google Doc, Maps"></textarea></div>
     </div>
-    <div class="toggle" style="border-top:0;padding-top:4px"><div>Needs a day<small>Off for things like a shirt order</small></div><button class="sw on" id="f-day"><i></i></button></div>
   </div>`);
-  f.querySelector('#f-more').onclick=()=>{ const b=f.querySelector('#f-moreblock'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; f.querySelector('#f-more').firstChild.textContent=open?'+ More ':'− Less '; };
-  f.querySelector('#f-day').onclick=(e)=>e.currentTarget.classList.toggle('on');
-  pn.append(f);
-  const post=el(`<button class="primary" style="margin-top:6px">Post · you're in</button>`);
+  const dayT=el(`<div class="toggle"><div>Needs a day<small>Off for things like a shirt order</small></div><button class="sw on" id="f-day"><i></i></button></div>`);
+  f.querySelector('#f-more').onclick=()=>{ const b=f.querySelector('#f-moreblock'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; f.querySelector('#f-more').firstChild.textContent=open?'More ':'Less '; };
+  dayT.querySelector('#f-day').onclick=(e)=>e.currentTarget.classList.toggle('on');
+  pn.append(f, dayT);
+  const post=el(`<button class="primary">Post</button>`);
   post.onclick=()=>{
     const v=(id)=>f.querySelector(id).value.trim();
     const title=v('#f-title').replace(/ · $/,'')||'Untitled';
-    const needsDay=f.querySelector('#f-day').classList.contains('on');
+    const needsDay=dayT.querySelector('#f-day').classList.contains('on');
     const links=v('#f-links').split('\n').map(s=>s.trim()).filter(Boolean).map(u=>({k:'Link', v:u.replace(/^https?:\/\//,'').split('/')[0], url:/^https?:/.test(u)?u:'https://'+u, by:S.you.showName?'You':'anon'}));
     const it={ id:'i'+Date.now(), title, by:S.you.showName?'You':'someone', detail:v('#f-detail'), cost:v('#f-cost')||null, time:v('#f-time')||null, needsDay, min:+v('#f-min')||null, on:false, people:[], you:'in', youDays:needsDay?youFreeDays():new Set(), adds:links };
     S.intents.unshift(it); closeSheet(); S.tab='board';
@@ -449,7 +470,7 @@ function openPost(from){
     render();
   };
   pn.append(post);
-  const cancel=el(`<button class="primary quiet" style="margin-top:8px">Cancel</button>`); cancel.onclick=closeSheet; pn.append(cancel);
+  const cancel=el(`<button class="primary quiet">Cancel</button>`); cancel.onclick=closeSheet; pn.append(cancel);
   sh.classList.add('open');
 }
 
