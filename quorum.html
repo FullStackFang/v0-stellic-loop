@@ -6,175 +6,216 @@
 <title>Quorum · mockup v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400..600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: oklch(99.3% 0.003 80);
-    --bg-2: oklch(97.2% 0.004 80);
-    --bg-3: oklch(94.5% 0.005 80);
-    --ink: oklch(19% 0.012 60);
-    --ink-2: oklch(46% 0.012 60);
-    --ink-3: oklch(63% 0.01 60);
-    --ink-4: oklch(80% 0.008 60);
-    --line: oklch(91.5% 0.006 80);
-    --line-2: oklch(86% 0.007 80);
-    --on: oklch(58% 0.15 152);
-    --on-bg: oklch(96.5% 0.03 152);
-    --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
-    --ease: cubic-bezier(.22,1,.36,1);
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --line:rgba(31,26,23,.12); --line-2:rgba(31,26,23,.18); --hair:rgba(31,26,23,.08);
+    --carnelian:#b31b1b; --carnelian-deep:#8a1414; --carnelian-400:#cf5347; --carnelian-tint:#f8e6e3; --carnelian-line:#efc9c3;
+    --moss:#3d8a5f; --moss-deep:#2f6e4a; --moss-tint:#e3f0e8; --moss-line:#bcdcc8;
+    --slate:#1f4a50; --slate-deep:#193e43; --graphite:#4b413b; --lime:#e5ff66;
+    --on-dark:#fcfbf8; --on-dark-2:rgba(252,251,248,.82); --on-dark-3:rgba(252,251,248,.6);
+    --grad-board:linear-gradient(168deg,#5c524b,#4b413b 55%,#3f3631); --num-board:#e6d4b0;
+    --grad-you:linear-gradient(168deg,#2b5f66,#1f4a50 55%,#193e43); --num-you:#9cf2f2;
+    --grad-intent:linear-gradient(168deg,#a81c1c,#8a1414 55%,#731010); --num-intent:#ffb9ad;
+    --grad-on:linear-gradient(168deg,#3a7f58,#2f6e4a 55%,#28603f); --num-on:#c6f0d4;
+    --shadow-pane:0 6px 16px rgba(60,30,20,.06), 0 34px 70px -26px rgba(60,30,20,.42);
+    --serif:'Source Serif 4',Georgia,'Times New Roman',serif; --sans:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    --r-card:24px 24px 24px 6px; --r-inner:18px 18px 18px 4px;
+    --shadow:0 2px 4px rgba(60,30,20,.06), 0 14px 34px -18px rgba(60,30,20,.45);
+    --ease:cubic-bezier(.22,1,.36,1);
   }
   *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; } input,textarea{ font-family:inherit; color:inherit; }
-  html{ font-size:16px; }
-  body{ margin:0; background:oklch(96% 0.004 80); font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; padding:48px 24px 72px; font-feature-settings:"cv11","ss01","tnum"; }
-  .wrap{ max-width:1040px; margin:0 auto; }
+  body{ margin:0; background:#efe7da; font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; padding:48px 24px 72px; font-feature-settings:"tnum"; }
+  .wrap{ max-width:1060px; margin:0 auto; }
   .rail{ display:flex; gap:56px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
-  .side{ width:380px; padding-top:8px; }
-  .eyebrow{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
-  .side h1{ font-size:26px; font-weight:600; letter-spacing:-.02em; line-height:1.2; margin:12px 0 12px; }
+  .side{ width:390px; padding-top:8px; }
+  .eyebrow{ font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
+  .side h1{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.15; margin:14px 0 12px; }
+  .side h1 em{ font-style:italic; color:var(--carnelian-deep); }
   .side p{ color:var(--ink-2); font-size:14px; line-height:1.55; margin:0 0 12px; }
   .side ol{ padding-left:18px; color:var(--ink-2); font-size:13.5px; line-height:1.55; margin:0; }
   .side li{ margin-bottom:6px; }
-  .side .try{ font-size:12.5px; line-height:1.6; color:var(--ink); margin-top:18px; padding:12px 14px; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
+  .side .try{ font-size:12.5px; line-height:1.6; color:var(--ink); margin-top:18px; padding:12px 14px; background:var(--paper-0); border:1px solid var(--line); border-radius:var(--r-inner); }
   .side .try b{ font-weight:600; }
   .side .note{ font-size:11.5px; line-height:1.55; color:var(--ink-3); margin-top:18px; }
+  .serif{ font-family:var(--serif); }
 
   /* phone */
-  .phone{ width:390px; height:844px; background:var(--bg); border:1px solid var(--line-2); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px oklch(30% 0.02 60 / .35), 0 1px 0 oklch(100% 0 0 / .6) inset; }
+  .phone{ width:390px; height:844px; background:var(--paper-1); border:1px solid var(--line-2); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px rgba(60,30,20,.4); }
   .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; }
   .status svg{ height:11px; }
-  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:10px 18px 8px; border-bottom:1px solid var(--line); }
-  .wordmark{ font-size:21px; font-weight:600; letter-spacing:-.035em; }
-  .apphead .grp{ font-size:12px; color:var(--ink-3); font-weight:500; }
-  .screen{ flex:1; overflow:auto; padding:0 0 84px; scrollbar-width:none; }
+  .apphead{ display:flex; align-items:center; justify-content:space-between; padding:10px 22px 6px; }
+  .wordmark{ font-family:var(--serif); font-size:23px; font-weight:500; letter-spacing:-.02em; }
+  .screen{ flex:1; overflow:auto; padding:0 16px 110px; scrollbar-width:none; }
   .screen::-webkit-scrollbar{ display:none; }
-  .tabbar{ position:absolute; left:0; right:0; bottom:0; height:76px; display:flex; background:var(--bg); border-top:1px solid var(--line); padding:8px 28px 22px; align-items:center; justify-content:space-between; }
-  .tabbar button{ border:0; background:transparent; padding:8px; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--ink-3); border-radius:8px; }
-  .tabbar button svg{ width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
-  .tabbar button.on{ color:var(--ink); }
-  .tabbar button.on svg{ stroke-width:2.25; }
-  .tabbar .n{ font-size:10px; font-weight:500; letter-spacing:.02em; }
-  .tabbar .new svg{ stroke-width:1.75; }
+  .tabbar{ position:absolute; left:50%; bottom:22px; transform:translateX(-50%); display:flex; align-items:center; gap:4px; padding:6px; border-radius:999px; background:var(--paper-0); border:1px solid var(--line); box-shadow:var(--shadow); }
+  .tabbar button{ border:0; background:transparent; height:40px; padding:0 18px; border-radius:999px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:500; color:var(--ink); transition:background .2s var(--ease), color .2s var(--ease); }
+  .tabbar button svg{ width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+  .tabbar button i{ font-style:normal; font-size:10px; font-weight:600; letter-spacing:.1em; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .tabbar button.on{ background:var(--ink); color:var(--paper-0); }
+  .tabbar button.on i{ color:var(--on-dark-3); }
+  .tabbar button.new{ width:40px; padding:0; justify-content:center; }
+  .tabbar button.new svg{ width:20px; height:20px; }
 
-  h2{ font-size:20px; font-weight:600; letter-spacing:-.02em; margin:0; }
-  .pagehead{ padding:14px 18px 6px; }
-  .sub{ color:var(--ink-3); font-size:13px; margin:4px 0 0; line-height:1.45; }
-  .sect{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); padding:16px 18px 8px; display:flex; justify-content:space-between; align-items:center; }
-  .sect b{ color:var(--ink-2); font-weight:600; letter-spacing:0; }
+  h2{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin:0; }
+  .lab{ font-size:9.5px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-3); }
 
-  /* rows (feed) */
-  .card{ padding:14px 18px 14px; border-bottom:1px solid var(--line); position:relative; }
-  .card:last-child{ border-bottom:0; }
+  /* area masthead: one colour per area, italic numeral on the heading's baseline, nameplate foot */
+  .mast{ position:relative; padding:18px 18px 15px; margin:8px 0 4px; border-radius:var(--r-card); color:var(--on-dark); box-shadow:var(--shadow-pane); background-image:radial-gradient(rgba(255,255,255,.10) 1px,transparent 1.2px), var(--grad); background-size:7px 7px, auto; }
+  .mast .lab{ color:var(--on-dark-2); }
+  .mast .hd{ display:flex; align-items:baseline; gap:12px; margin-top:8px; }
+  .mast .num{ font-family:var(--serif); font-style:italic; font-size:40px; line-height:1; letter-spacing:-.03em; font-weight:500; color:var(--numc); font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .mast h2{ color:var(--on-dark); font-size:27px; min-width:0; }
+  .mast .stand{ font-family:var(--serif); font-style:italic; font-size:14.5px; line-height:1.35; color:var(--on-dark-2); margin-top:8px; }
+  .mast .stand b{ font-style:normal; font-weight:600; color:#fff; }
+  .mast .rule{ height:2px; background:var(--on-dark); opacity:.9; margin:14px 0 10px; }
+  .mast .foot{ display:flex; align-items:baseline; gap:10px; font-size:9.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--on-dark-2); font-variant-numeric:tabular-nums; }
+  .mast .foot .lead{ flex:1; border-bottom:1px dotted rgba(255,255,255,.38); transform:translateY(-3px); }
+  .mast.board{ --grad:var(--grad-board); --numc:var(--num-board); }
+  .mast.you{ --grad:var(--grad-you); --numc:var(--num-you); }
+  .mast.intent{ --grad:var(--grad-intent); --numc:var(--num-intent); margin-top:0; }
+  .mast.intent.on{ --grad:var(--grad-on); --numc:var(--num-on); }
+
+  .sect{ font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); padding:20px 6px 10px; display:flex; align-items:baseline; gap:10px; }
+  .sect::after{ content:''; order:1; flex:1; border-bottom:1px dotted var(--ink-4); transform:translateY(-3px); }
+  .sect > :last-child{ order:2; }
+  .sect b{ color:var(--ink-2); font-weight:600; }
+  .sect b.hot{ color:var(--carnelian-deep); }
+  .sect .plain{ font-weight:400; letter-spacing:0; text-transform:none; font-size:11px; }
+  .tag{ min-height:18px; padding:3px 7px; border-radius:4px; background:rgba(31,26,23,.05); font-size:9px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2); display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+  .tag.on{ background:var(--moss-tint); color:var(--moss-deep); }
+  .tag.ready{ background:var(--carnelian-tint); color:var(--carnelian-deep); }
+  .tag.field{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.28); color:rgba(252,251,248,.92); border-radius:999px; padding:3px 9px; }
+  .tag.lime{ background:var(--lime); color:var(--ink); border-radius:999px; padding:3px 9px; }
+  .tag i{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  /* cards */
+  .card{ background:var(--paper-0); border:1px solid var(--line); border-radius:var(--r-card); padding:16px 16px 14px; margin-bottom:10px; position:relative; transition:box-shadow .25s var(--ease); }
+  .card.lift{ box-shadow:var(--shadow); }
+  .card.on{ background:linear-gradient(to bottom, var(--moss-tint), var(--paper-0) 55%); border-color:var(--moss-line); }
   .card .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-  .card .title{ font-size:15.5px; font-weight:600; letter-spacing:-.01em; line-height:1.3; }
-  .card .facts{ font-size:12.5px; color:var(--ink-3); margin-top:2px; line-height:1.4; }
+  .card .title{ font-family:var(--serif); font-size:19px; font-weight:500; letter-spacing:-.01em; line-height:1.25; }
+  .card .facts{ font-size:12.5px; color:var(--ink-3); margin-top:3px; line-height:1.4; }
   .card .facts b{ color:var(--ink-2); font-weight:500; }
-  .count{ text-align:right; flex-shrink:0; padding-top:1px; }
-  .count .big{ font-size:17px; font-weight:600; letter-spacing:-.01em; line-height:1.2; }
-  .count .big small{ font-size:12px; font-weight:500; color:var(--ink-3); }
-  .count .lbl{ font-size:10.5px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); margin-top:1px; }
-  .count.on .big{ color:var(--on); } .count.on .lbl{ color:var(--on); }
-  .count.ready .lbl{ color:var(--ink); }
-  .who{ font-size:13px; color:var(--ink-2); line-height:1.45; margin-top:8px; }
+  .count{ text-align:right; flex-shrink:0; min-width:56px; padding:8px 10px 7px; border-radius:12px 12px 12px 4px; background:var(--paper-1); }
+  .count .big{ font-family:var(--serif); font-size:26px; font-weight:500; letter-spacing:-.02em; line-height:1; }
+  .count .big small{ font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-3); letter-spacing:0; }
+  .count .lbl{ font-size:9px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); margin-top:4px; }
+  .count.on{ background:color-mix(in oklab, var(--moss-deep) 9%, var(--paper-0)); }
+  .count.on .big, .count.on .lbl{ color:var(--moss-deep); }
+  .count.ready{ background:color-mix(in oklab, var(--carnelian) 8%, var(--paper-0)); }
+  .count.ready .big, .count.ready .lbl{ color:var(--carnelian-deep); }
+  .who{ font-size:13px; color:var(--ink-2); line-height:1.45; margin-top:10px; }
   .who b{ color:var(--ink); font-weight:500; }
   .acts{ display:flex; gap:6px; margin-top:12px; }
-  .acts button{ flex:1; height:34px; border:1px solid var(--line-2); border-radius:8px; font-size:13.5px; font-weight:600; background:var(--bg); color:var(--ink); transition:background .15s var(--ease), border-color .15s var(--ease); }
-  .acts button:hover{ background:var(--bg-2); }
-  .acts button.in.sel{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
-  .acts button.maybe.sel{ background:var(--bg-3); border-color:var(--bg-3); }
-  .acts button.out.sel{ background:var(--bg-3); border-color:var(--bg-3); color:var(--ink-2); }
-  .acts button.ghost{ background:var(--bg); }
-  .prompt{ margin-top:12px; display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line-2); border-radius:10px; background:var(--bg-2); }
-  .prompt .t{ flex:1; font-size:13px; line-height:1.35; color:var(--ink-2); }
-  .prompt .t b{ display:block; font-size:14.5px; font-weight:600; color:var(--ink); }
-  .prompt button{ height:34px; padding:0 14px; border:0; border-radius:8px; background:var(--ink); color:var(--bg); font-size:13.5px; font-weight:600; white-space:nowrap; }
-  .flag{ margin-top:10px; font-size:12.5px; line-height:1.45; color:var(--ink-2); padding:8px 10px; background:var(--bg-2); border-radius:8px; }
-  .flag b{ font-weight:600; color:var(--ink); }
-  .pill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; padding:5px 9px; border-radius:999px; background:var(--bg-3); color:var(--ink-2); }
-  .pill.on{ background:var(--on-bg); color:var(--on); }
-  .pill i{ width:6px; height:6px; border-radius:50%; background:currentColor; }
-  .link{ background:none; border:0; padding:0; font-size:13px; font-weight:600; color:var(--ink); }
-  .ghost{ height:36px; border:1px solid var(--line-2); background:var(--bg); border-radius:8px; padding:0 14px; font-size:13.5px; font-weight:600; color:var(--ink); }
-  .primary{ border:0; background:var(--ink); color:var(--bg); border-radius:8px; height:44px; font-size:14.5px; font-weight:600; width:100%; }
-  .primary.quiet{ background:var(--bg); color:var(--ink); border:1px solid var(--line-2); }
+  .pill, .acts button{ height:36px; padding:0 16px; border-radius:999px; border:1px solid var(--line-2); background:var(--paper-0); font-size:13px; font-weight:500; color:var(--ink); display:inline-flex; align-items:center; justify-content:center; transition:background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease); }
+  .acts button{ flex:1; padding:0; }
+  .acts button:hover, .pill:hover{ background:var(--paper-1); }
+  .acts button.in.sel{ background:var(--ink); border-color:var(--ink); color:var(--paper-0); }
+  .acts button.maybe.sel{ background:var(--paper-2); border-color:var(--paper-2); }
+  .acts button.out.sel{ background:var(--paper-2); border-color:var(--paper-2); color:var(--ink-2); }
+  .card.on .acts button.in.sel{ background:var(--moss-deep); border-color:var(--moss-deep); }
+  .pill.primary, .primary{ background:var(--carnelian); border-color:var(--carnelian); color:var(--paper-0); font-weight:600; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; }
+  .go{ width:24px; height:24px; border-radius:50%; display:inline-grid; place-items:center; flex-shrink:0; background:var(--paper-0); color:var(--carnelian-deep); font-size:12px; font-weight:600; letter-spacing:0; margin-left:4px; }
+  .pill .go{ background:var(--ink); color:var(--paper-0); width:22px; height:22px; margin-left:6px; }
+  .pill.primary:hover, .primary:hover{ background:var(--carnelian-deep); border-color:var(--carnelian-deep); }
+  .primary{ height:44px; width:100%; border-radius:999px; border:1px solid var(--carnelian); }
+  .primary.quiet{ background:var(--paper-0); color:var(--ink); border-color:var(--line-2); font-size:13px; letter-spacing:0; text-transform:none; font-weight:500; }
+  .primary.quiet:hover{ background:var(--paper-1); }
+  .prompt{ margin-top:12px; display:flex; align-items:center; gap:12px; padding:10px 6px 10px 14px; border-radius:var(--r-inner); background:color-mix(in oklab, var(--carnelian) 5%, var(--paper-0)); }
+  .prompt .t{ flex:1; line-height:1.3; font-size:12px; color:var(--ink-2); }
+  .prompt .t b{ display:block; font-family:var(--serif); font-size:16px; font-weight:500; letter-spacing:-.01em; color:var(--ink); }
+  .prompt button{ height:38px; padding:0 6px 0 16px; border-radius:999px; border:0; background:var(--carnelian); color:var(--paper-0); font-size:10.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; }
+  .prompt button:hover{ background:var(--carnelian-deep); }
+  .flag{ margin-top:10px; font-size:12.5px; line-height:1.45; color:var(--ink-2); padding:8px 12px; background:var(--paper-1); border-radius:12px 12px 12px 4px; }
+  .flag b{ font-weight:500; color:var(--ink); }
+  .link{ background:none; border:0; padding:0; font-size:13px; font-weight:600; color:var(--carnelian-deep); }
 
   /* day strip / heat */
   .days{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-  .day{ border:1px solid var(--line); border-radius:10px; padding:7px 0 6px; background:var(--bg); display:flex; flex-direction:column; align-items:center; gap:2px; position:relative; transition:background .15s var(--ease); }
+  .day{ height:62px; border-radius:16px; border:1px solid var(--line); background:var(--paper-0); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; transition:background .15s var(--ease); }
   .day .d{ font-size:10px; font-weight:500; color:var(--ink-3); letter-spacing:.02em; }
-  .day .num{ font-size:15px; font-weight:600; }
+  .day .num{ font-size:16px; font-weight:600; }
   .day .src{ font-size:9px; color:var(--ink-3); height:10px; }
-  .day.free{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
-  .day.free .d,.day.free .src{ color:oklch(75% 0.008 60); }
-  .day.busy{ background:var(--bg-2); color:var(--ink-4); }
+  .day.free{ background:var(--ink); border-color:var(--ink); color:var(--paper-0); }
+  .day.free .d,.day.free .src{ color:var(--ink-4); }
+  .screen.you .day.free{ background:var(--slate); border-color:var(--slate); }
+  .screen.you .day.free .d,.screen.you .day.free .src{ color:var(--on-dark-3); }
+  .screen.you .sw.on{ background:var(--slate); }
+  .day.busy{ background:var(--paper-2); color:var(--ink-3); }
   .day.busy .num{ text-decoration:line-through; }
-  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:10px 0 0; }
-  .heat div{ height:30px; border-radius:7px; display:grid; place-items:center; font-size:12px; font-weight:600; color:var(--ink-2); background:var(--bg-2); position:relative; font-variant-numeric:tabular-nums; }
-  .heat div.best{ box-shadow:inset 0 0 0 1.5px var(--ink); color:var(--ink); }
+  .days.compact .day{ height:48px; border-radius:14px; }
+  .days.compact .day .num{ font-size:14px; }
+  .heat{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:12px; }
+  .heat div{ height:30px; border-radius:9px; display:grid; place-items:center; font-size:12px; font-weight:500; color:var(--ink-2); background:var(--paper-2); position:relative; }
+  .heat div.best{ box-shadow:inset 0 0 0 1.5px var(--carnelian); color:var(--carnelian-deep); font-weight:600; }
   .heat div.you::after{ content:''; position:absolute; bottom:3px; width:4px; height:4px; border-radius:50%; background:currentColor; }
-  .heat .lab{ font-size:9.5px; font-weight:500; color:var(--ink-3); background:none; height:12px; }
-  .heatlab{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:3px; }
+  .heatlab{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:4px; }
   .heatlab div{ text-align:center; font-size:9.5px; font-weight:500; color:var(--ink-3); }
-  .toggle{ display:flex; justify-content:space-between; align-items:center; padding:13px 18px; border-top:1px solid var(--line); font-size:14px; }
+  .group{ border:1px solid var(--line); border-radius:var(--r-card); overflow:hidden; background:var(--paper-0); }
+  .toggle{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid var(--hair); font-size:14px; }
+  .toggle:first-child{ border-top:0; }
   .toggle small{ display:block; color:var(--ink-3); font-size:12px; margin-top:2px; }
   .sw{ width:44px; height:26px; border-radius:999px; background:var(--ink-4); border:0; position:relative; flex-shrink:0; transition:background .2s var(--ease); }
-  .sw i{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s var(--ease); box-shadow:0 1px 2px oklch(0% 0 0 / .2); }
+  .sw i{ position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--paper-0); transition:left .2s var(--ease); box-shadow:0 1px 2px rgba(0,0,0,.15); }
   .sw.on{ background:var(--ink); } .sw.on i{ left:21px; }
-  .pad{ padding:0 18px; }
-  .hint{ font-size:12px; line-height:1.45; color:var(--ink-3); }
+  .pad{ padding-left:6px; padding-right:6px; }
+  .hint{ font-size:12px; line-height:1.5; color:var(--ink-3); }
 
   .field{ margin-bottom:12px; }
-  .field label{ display:block; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px; }
-  .field input, .field textarea{ width:100%; border:1px solid var(--line-2); background:var(--bg); border-radius:8px; padding:10px 12px; font-size:14px; outline:none; }
+  .field label{ display:block; font-size:11px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px; }
+  .field input, .field textarea{ width:100%; border:1px solid var(--line-2); background:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:14px; outline:none; transition:border-color .15s var(--ease); }
   .field input:focus, .field textarea:focus{ border-color:var(--ink); }
   .field .hint{ margin-top:5px; }
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .more{ width:100%; border:0; background:none; text-align:left; padding:6px 0 12px; font-size:13px; font-weight:600; color:var(--ink); display:flex; justify-content:space-between; }
+  .more{ width:100%; border:0; background:none; text-align:left; padding:4px 0 12px; font-size:13px; font-weight:600; color:var(--carnelian-deep); display:flex; justify-content:space-between; }
   .more span{ color:var(--ink-3); font-weight:400; }
 
   /* sheet */
-  .sheet{ position:absolute; inset:0; background:oklch(10% 0.01 60 / .4); display:none; align-items:flex-end; z-index:5; }
+  .sheet{ position:absolute; inset:0; background:rgba(31,26,23,.4); display:none; align-items:flex-end; z-index:5; }
   .sheet.open{ display:flex; }
-  .sheet .panel{ background:var(--bg); width:100%; border-radius:18px 18px 44px 44px; padding:10px 0 20px; max-height:93%; overflow:auto; scrollbar-width:none; }
+  .sheet .panel{ background:var(--paper-1); width:100%; border-radius:28px 28px 44px 44px; padding:10px 18px 22px; max-height:93%; overflow:auto; scrollbar-width:none; }
   .panel::-webkit-scrollbar{ display:none; }
-  .handle{ width:36px; height:4px; border-radius:2px; background:var(--line-2); margin:0 auto 14px; }
-  .ptitle{ font-size:20px; font-weight:600; letter-spacing:-.02em; line-height:1.25; }
-  .pmeta{ font-size:12.5px; color:var(--ink-3); margin-top:4px; line-height:1.5; }
-  .pmeta b{ color:var(--on); font-weight:600; }
+  .handle{ width:36px; height:4px; border-radius:2px; background:var(--ink-4); margin:0 auto 14px; }
+  .ptitle{ font-family:var(--serif); font-size:28px; font-weight:500; letter-spacing:-.02em; line-height:1.15; }
+  .pmeta{ font-size:12.5px; color:var(--ink-3); margin-top:6px; line-height:1.5; }
+  .pmeta b{ color:var(--moss-deep); font-weight:600; }
   .pbody{ font-size:14px; color:var(--ink-2); margin:10px 0 0; line-height:1.5; }
-  .details{ margin:0 18px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
-  .drow{ display:flex; gap:10px; align-items:baseline; padding:10px 12px; border-top:1px solid var(--line); font-size:13.5px; line-height:1.4; flex-wrap:wrap; }
+  .sheet .sect{ padding-left:0; padding-right:0; }
+  .details{ border:1px solid var(--line); border-radius:var(--r-inner); overflow:hidden; background:var(--paper-0); }
+  .drow{ display:flex; gap:10px; align-items:baseline; padding:10px 14px; border-top:1px solid var(--hair); font-size:13.5px; line-height:1.45; flex-wrap:wrap; }
   .drow:first-child{ border-top:0; }
-  .drow .k{ font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); width:40px; flex-shrink:0; line-height:1.8; }
-  .drow > span:not(.k){ flex:1; min-width:120px; }
-  .drow .by{ font-size:11px; color:var(--ink-3); white-space:nowrap; }
-  .chipl{ display:inline-flex; align-items:center; gap:4px; border:1px solid var(--line-2); background:var(--bg); border-radius:6px; padding:4px 8px; font-size:12.5px; font-weight:500; color:var(--ink); text-decoration:none; white-space:nowrap; }
-  .addrow{ display:flex; gap:6px; padding:8px 10px; border-top:1px solid var(--line); background:var(--bg-2); }
-  .addrow input{ flex:1; border:1px solid var(--line-2); background:var(--bg); border-radius:7px; padding:7px 10px; font-size:13px; outline:none; }
+  .drow .k{ font-family:var(--serif); font-size:14px; color:var(--ink); width:48px; flex-shrink:0; line-height:1.5; }
+  .drow > span:not(.k):not(.by){ flex:1; min-width:0; }
+  .drow .by{ font-size:11px; color:var(--ink-3); white-space:nowrap; margin-left:auto; flex:0 0 auto; }
+  .chipl{ display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; line-height:24px; height:26px; padding:0 10px; border-radius:999px; border:1px solid var(--line); background:var(--paper-0); font-size:12px; font-weight:500; color:var(--carnelian-deep); text-decoration:none; white-space:nowrap; }
+  .addrow{ display:flex; gap:6px; padding:8px 10px; border-top:1px solid var(--hair); background:var(--paper-1); }
+  .addrow input{ flex:1; height:32px; border:1px solid var(--line); background:var(--paper-0); border-radius:999px; padding:0 12px; font-size:13px; outline:none; }
   .addrow input:focus{ border-color:var(--ink); }
-  .addrow .ghost{ height:32px; padding:0 12px; font-size:13px; }
-  .unfurl{ margin:0 18px; border:1px solid var(--line); border-radius:10px; overflow:hidden; display:flex; }
-  .unfurl .og{ width:104px; background:var(--ink); color:var(--bg); display:flex; flex-direction:column; justify-content:center; padding:10px; flex-shrink:0; }
-  .unfurl .og b{ font-size:15px; font-weight:600; letter-spacing:-.01em; line-height:1.15; }
-  .unfurl .og span{ font-size:9.5px; color:oklch(72% 0.008 60); margin-top:4px; line-height:1.3; }
+  .addrow .pill{ height:32px; padding:0 14px; }
+  .unfurl{ border:1px solid var(--line); border-radius:var(--r-inner); overflow:hidden; display:flex; background:var(--paper-0); }
+  .unfurl .og{ width:104px; background:var(--ink); color:var(--paper-0); display:flex; flex-direction:column; justify-content:center; padding:10px 12px; flex-shrink:0; }
+  .unfurl .og b{ font-family:var(--serif); font-size:16px; font-weight:500; letter-spacing:-.01em; line-height:1.15; }
+  .unfurl .og span{ font-size:9.5px; color:var(--ink-4); margin-top:4px; line-height:1.3; }
   .unfurl .txt{ padding:10px 12px; font-size:12.5px; line-height:1.4; color:var(--ink-2); }
   .unfurl .txt b{ display:block; font-weight:600; color:var(--ink); }
   .unfurl .txt span{ color:var(--ink-3); font-size:11px; }
-  .people{ margin:0 18px; }
-  .person{ display:flex; align-items:center; gap:10px; padding:7px 0; font-size:14px; }
-  .av{ width:30px; height:30px; border-radius:50%; background:var(--bg-3); color:var(--ink-2); display:grid; place-items:center; font-size:11px; font-weight:600; flex-shrink:0; }
-  .person.me .av{ background:var(--ink); color:var(--bg); }
-  .person .s{ margin-left:auto; font-size:12px; color:var(--ink-3); }
-  .toast{ position:absolute; left:18px; right:18px; bottom:90px; background:var(--ink); color:var(--bg); border-radius:10px; padding:11px 14px; font-size:13px; line-height:1.45; z-index:9; opacity:0; transform:translateY(6px); transition:opacity .2s var(--ease), transform .2s var(--ease); pointer-events:none; }
+  .ledger{ display:grid; grid-template-columns:22px minmax(0,auto) minmax(14px,1fr) auto; gap:8px; align-items:baseline; min-height:36px; padding:0 10px; border-radius:11px; font-size:13.5px; color:var(--ink); }
+  .ledger .n{ font-size:10px; font-weight:600; letter-spacing:.08em; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .ledger .lead{ border-bottom:1px dotted var(--ink-4); transform:translateY(-4px); }
+  .ledger .s{ font-size:11.5px; color:var(--ink-3); white-space:nowrap; }
+  .ledger.me{ background:var(--paper-0); box-shadow:0 2px 6px rgba(60,30,20,.05), 0 14px 34px -14px rgba(60,30,20,.24), 0 0 0 1px rgba(31,26,23,.04); font-weight:600; }
+  .ledger.me .n{ color:var(--carnelian-deep); }
+  .toast{ position:absolute; left:18px; right:18px; bottom:92px; background:var(--ink); color:var(--paper-0); border-radius:14px 14px 14px 4px; padding:11px 14px; font-size:13px; line-height:1.45; z-index:9; opacity:0; transform:translateY(6px); transition:opacity .2s var(--ease), transform .2s var(--ease); pointer-events:none; }
   .toast.show{ opacity:1; transform:none; }
-  .toast b{ font-weight:600; color:oklch(85% 0.08 152); }
-  .sms{ margin:0 18px; background:var(--bg-2); border-radius:14px 14px 14px 4px; padding:10px 12px; font-size:13px; line-height:1.5; color:var(--ink); }
-  .sms u{ text-decoration:none; font-weight:600; }
-  .empty{ color:var(--ink-3); font-size:13px; padding:20px 18px; }
-  .sheet .acts{ margin:14px 18px 0; }
-  .sheet .primary{ width:auto; margin:10px 18px 0; display:block; width:calc(100% - 36px); }
-  .sheet .days{ margin:0 18px; }
-  .sheet .heat, .sheet .heatlab{ margin-left:18px; margin-right:18px; }
-  .sheet .prompt{ margin:12px 18px 0; }
+  .toast b{ font-weight:600; color:#cfe6d6; }
+  .sms{ background:var(--paper-0); border:1px solid var(--line); border-radius:16px 16px 16px 4px; padding:10px 12px; font-size:13px; line-height:1.5; color:var(--ink); }
+  .sms u{ text-decoration:none; font-weight:600; color:var(--carnelian-deep); }
+  .empty{ color:var(--ink-3); font-size:13px; padding:14px 6px; }
+  .sheet .acts{ margin-top:14px; }
+  .sheet .primary{ margin-top:10px; }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
 </style>
 </head>
@@ -182,25 +223,25 @@
 <div class="wrap"><div class="rail">
   <div class="side">
     <div class="eyebrow">Quorum · working name · throwaway mockup · v2</div>
-    <h1>Post an intent. Tap in. When enough of you overlap on a day, it asks you to lock it.</h1>
+    <h1>Post an intent. Tap in. When enough of you overlap on a day, it <em>asks</em> you to lock it.</h1>
     <p><b>No host, no number required.</b> "Suits" is enough to post. Anyone can tap in; their free days come with them. Anyone in can add a link, a place, a note. Nobody picks a date: when enough people can do the same day, the board prompts "6 of 9 can do Tue. Lock it in?" and any of them can. That's the ON moment: texts go out, the invite lands in calendars. Until then nobody is on the hook.</p>
     <ol>
-      <li><b>Board</b>: every intent, nearest-to-prompt first. In / maybe / out. Tap a row for details, the day heat, who's in, the share link.</li>
+      <li><b>Board</b>: every intent, nearest-to-prompt first. In / maybe / out. Tap a card for details, the day heat, who's in, the share link.</li>
       <li><b>You</b>: your free days for the window (or let your calendar mark them), name visibility, what you're in.</li>
       <li><b>Post</b>: a title is enough; everything else is optional and can be added later, by anyone in.</li>
     </ol>
-    <div class="try">Try: Board, <b>Lock in</b> on Suits in Hoi An (6 overlap on Tue). Then <b>I'm in</b> on Overnight boat: your free days attach, minus Tue, because you're now ON for suits that day. Open Street-food crawl and add a link in Details (attributed to you). Post "Night market" with just a title. On You, mark Sun 14 free and watch the heat on the Board change.</div>
-    <div class="note">Static click-through, state resets on reload. Names and numbers are made up. Window: trip week Feb 14–20, 2027. Default quorum when no number is set: 4 on the same day; intents with no day needed prompt at 4 in.</div>
+    <div class="try">Try: Board, <b>Lock in</b> on Suits in Hoi An (6 overlap on Tue). Then <b>I'm in</b> on Overnight boat: your free days attach, minus Tue, because you're now on for suits that day. Open Street-food crawl and add a link in Details (attributed to you). Post "Night market" with just a title. On You, mark Sun 14 free and watch the heat on the Board change.</div>
+    <div class="note">Static click-through, state resets on reload. Names and numbers are made up. Window: trip week Feb 14–20, 2027. Default quorum when no number is set: 4 on the same day; intents with no day needed prompt at 4 in. Design: Source Serif 4 + Geist, one colour per area (board, you, intent), numbered sections, one tucked corner.</div>
   </div>
 
   <div class="phone">
     <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
-    <div class="apphead"><span class="wordmark">Quorum</span><span class="grp">EMBA '27 · 61 people</span></div>
+    <div class="apphead"><span class="wordmark">Quorum</span><span class="lab">EMBA '27 · 61 people</span></div>
     <div class="screen" id="screen"></div>
     <div class="tabbar">
-      <button data-tab="board" aria-label="Board"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span class="n" id="n-board"></span></button>
-      <button class="new" id="btn-new" aria-label="Post an intent"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg><span class="n">Post</span></button>
-      <button data-tab="you" aria-label="You"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="n" id="n-you"></span></button>
+      <button data-tab="board"><i>01</i>Board</button>
+      <button class="new" id="btn-new" aria-label="Post an intent"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button data-tab="you"><i>02</i>You</button>
     </div>
     <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
     <div class="toast" id="toast"></div>
@@ -245,10 +286,13 @@ const S = {
 };
 
 // ---------- helpers ----------
+const GO=`<span class="go"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>`;
+const GO_NE=`<span class="go"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span>`;
 const $ = (s)=>document.querySelector(s);
 const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
 let toastT; function toast(h){ const t=$('#toast'); t.innerHTML=h; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3400); }
 const dayLabel = (i)=> i===null||i===undefined ? '' : DAYS[i][0]+' '+DAYS[i][1];
+const dayLong = (i)=> i===null||i===undefined ? '' : ({Sun:'Sunday',Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday'})[DAYS[i][0]]+' '+DAYS[i][1];
 const ini = (n)=> n==='You'?'Y':(n.startsWith('+1')?'+':n.slice(0,1));
 function youFreeDays(){ const s=new Set(); DAYS.forEach((_,i)=>{ if(S.you.free.has(i) && !(S.you.useCal && S.you.calBusy.has(i))) s.add(i); }); return s; }
 function inPeople(it){ return it.people.filter(p=>!p.maybe); }
@@ -259,32 +303,31 @@ function best(it){ const h=heat(it); let b=0; h.forEach((n,i)=>{ if(n>h[b]) b=i;
 function quorum(it){ return it.min || DEFAULT_QUORUM; }
 function status(it){ if(it.on) return 'on'; if(it.needsDay){ return best(it).n>=quorum(it) ? 'ready':'open'; } return inCount(it)>=quorum(it) ? 'ready':'open'; }
 function yourYesOn(day, except){ return S.intents.filter(i=>i.id!==except && i.you==='in' && (i.on ? i.onDay===day : false)); }
-function heatCell(v, q, cls, extra){ const d=el(`<div class="${cls}">${v||''}</div>`); if(extra) d.setAttribute('style',extra); else d.style.background=`color-mix(in oklch, var(--ink) ${Math.min(26,Math.round(v/q*20))}%, var(--bg-2))`; return d; }
+function heatCell(v, q, cls, extra){ const d=el(`<div class="${cls}">${v||''}</div>`); if(extra) d.setAttribute('style',extra); else d.style.background=`color-mix(in oklch, var(--carnelian-400) ${Math.min(42,Math.round(v/q*30))}%, var(--paper-2))`; return d; }
 
 // ---------- render ----------
 function render(){
   document.querySelectorAll('.tabbar button[data-tab]').forEach(b=>b.classList.toggle('on', b.dataset.tab===S.tab));
-  $('#n-board').textContent = 'Board';
-  $('#n-you').textContent = 'You';
-  const sc=$('#screen'); sc.innerHTML=''; sc.scrollTop=0;
+  const sc=$('#screen'); sc.innerHTML=''; sc.scrollTop=0; sc.className='screen '+S.tab;
   ({you:renderYou, board:renderBoard})[S.tab](sc);
 }
 
 function renderBoard(sc){
-  sc.append(el(`<div class="pagehead"><h2>Board</h2><p class="sub">Tap in. Your free days come with you. When enough overlap, it asks.</p></div>`));
   const score=(it)=>{ if(it.needsDay) return quorum(it)-best(it).n; return quorum(it)-inCount(it); };
   const open=S.intents.filter(i=>!i.on).sort((a,b)=>score(a)-score(b));
   const on=S.intents.filter(i=>i.on);
-  sc.append(el(`<div class="sect"><span>Open</span><b>${open.length}</b></div>`)); open.forEach(i=>sc.append(card(i)));
-  sc.append(el(`<div class="sect"><span>On</span><b>${on.length}</b></div>`)); on.forEach(i=>sc.append(card(i)));
+  const ready=open.filter(i=>status(i)==='ready').length;
+  sc.append(el(`<div class="mast board"><div class="lab">Board · trip week · Feb 14–20</div><div class="hd"><span class="num">01</span><h2>What we could do</h2></div><div class="stand">Tap in. Your free days come with you. When enough overlap, it <b>asks</b>.</div><div class="rule"></div><div class="foot"><span>№ ${open.length} open</span><span class="lead"></span><span>${ready} ready · ${on.length} on</span></div></div>`));
+  sc.append(el(`<div class="sect"><span>§ 01 · Open</span><b>${open.length}</b></div>`)); open.forEach(i=>sc.append(card(i)));
+  sc.append(el(`<div class="sect"><span>§ 02 · On</span><b>${on.length}</b></div>`)); on.forEach(i=>sc.append(card(i)));
 }
 
 function card(it){
   const st=status(it), n=inCount(it), m=maybeCount(it), b=best(it), q=quorum(it);
-  const c=el(`<div class="card"></div>`);
+  const c=el(`<div class="card ${st==='on'?'on':''} ${st==='ready'?'lift':''}"></div>`);
   let facts, big, lbl;
   if(st==='on'){ facts=`<b>${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b>${it.cost?' · '+it.cost:''}`; big=`${n}`; lbl='on'; }
-  else if(it.needsDay){ facts=`${n} in${m?` · ${m} maybe`:''}${it.cost?' · '+it.cost:''}`; big=`${b.n}<small> / ${q}</small>`; lbl= b.n? `${DAYS[b.day][0]}`:'no days'; }
+  else if(it.needsDay){ facts=`${n} in${m?` · ${m} maybe`:''}${it.cost?' · '+it.cost:''}${it.min?' · needs '+it.min:''}`; big=`${b.n}<small> / ${q}</small>`; lbl= b.n? `${DAYS[b.day][0]}`:'no days'; }
   else { facts=`${it.noDayNote||'No day needed'}${it.cost?' · '+it.cost:''}`; big=`${n}<small> / ${q}</small>`; lbl='in'; }
   c.append(el(`<div class="row"><div><div class="title">${it.title}</div><div class="facts">${facts}</div></div><div class="count ${st}"><div class="big">${big}</div><div class="lbl">${lbl}</div></div></div>`));
   if(it.needsDay && st!=='on'){
@@ -295,7 +338,7 @@ function card(it){
   }
   c.append(el(`<div class="who">${whoLine(it)}</div>`));
   if(st==='ready'){
-    const pr=el(`<div class="prompt"><div class="t">${it.needsDay?`${b.n} of ${n} can do`:`${n} in`}<b>${it.needsDay?dayLabel(b.day):'Make it happen?'}</b></div><button>${it.needsDay?'Lock in':'It\'s on'}</button></div>`);
+    const pr=el(`<div class="prompt"><div class="t">${it.needsDay?`${b.n} of ${n} can do`:`${n} in`}<b>${it.needsDay?dayLong(b.day):'Make it happen?'}</b></div><button>${it.needsDay?'Lock in':'It\'s on'}${GO}</button></div>`);
     pr.querySelector('button').onclick=(e)=>{ e.stopPropagation(); lock(it); };
     c.append(pr);
   }
@@ -345,9 +388,10 @@ function lock(it){
 }
 
 function renderYou(sc){
-  sc.append(el(`<div class="pagehead"><h2>You</h2><p class="sub">Free days for the window. They attach to anything you tap in on; adjust per intent.</p></div>`));
-  sc.append(el(`<div class="sect"><span>Free during the trip</span><b>Feb 14–20</b></div>`));
-  const days=el(`<div class="days pad"></div>`);
+  const mineN=S.intents.filter(i=>i.you==='in').length, freeN=youFreeDays().size;
+  sc.append(el(`<div class="mast you"><div class="lab">You · free days · Feb 14–20</div><div class="hd"><span class="num">02</span><h2>Your week</h2></div><div class="stand">They attach to anything you tap in on. Others see counts per day, <b>never who</b>.</div><div class="rule"></div><div class="foot"><span>№ ${freeN} free days</span><span class="lead"></span><span>${mineN} in</span></div></div>`));
+  sc.append(el(`<div class="sect"><span>§ 01 · Free during the trip</span><b>Feb 14–20</b></div>`));
+  const days=el(`<div class="days"></div>`);
   DAYS.forEach(([d,n],i)=>{
     const busy = S.you.useCal && S.you.calBusy.has(i);
     const b=el(`<button class="day ${busy?'busy':(S.you.free.has(i)?'free':'')}"><span class="d">${d}</span><span class="num">${n}</span><span class="src">${busy?'cal':(S.you.free.has(i)?'free':'')}</span></button>`);
@@ -356,16 +400,17 @@ function renderYou(sc){
     days.append(b);
   });
   sc.append(days);
-  sc.append(el(`<p class="hint pad" style="margin:10px 0 12px">Tap a day to toggle. Others see how many can do each day, never who.</p>`));
+  sc.append(el(`<p class="hint pad" style="margin:10px 0 14px">Tap a day to toggle. Busy blocks from your calendar are marked.</p>`));
+  const g=el(`<div class="group"></div>`);
   const t1=el(`<div class="toggle"><div>Use my calendar<small>Google Calendar · connected · busy blocks mark days</small></div><button class="sw ${S.you.useCal?'on':''}"><i></i></button></div>`);
   t1.querySelector('.sw').onclick=()=>{ S.you.useCal=!S.you.useCal; render(); };
   const t2=el(`<div class="toggle"><div>Show my name when I'm in<small>Off: you still count, listed as "+1 anonymous"</small></div><button class="sw ${S.you.showName?'on':''}"><i></i></button></div>`);
   t2.querySelector('.sw').onclick=()=>{ S.you.showName=!S.you.showName; render(); };
-  sc.append(t1,t2);
+  g.append(t1,t2); sc.append(g);
   const mine=S.intents.filter(i=>i.you==='in');
-  sc.append(el(`<div class="sect" style="border-top:1px solid var(--line)"><span>You're in</span><b>${mine.length}</b></div>`));
+  sc.append(el(`<div class="sect"><span>§ 02 · You're in</span><b>${mine.length}</b></div>`));
   if(!mine.length) sc.append(el(`<div class="empty">Nothing yet. Tap in on the Board.</div>`));
-  mine.forEach(it=>{ const st=status(it); const c=el(`<div class="card"><div class="row"><div><div class="title">${it.title}</div><div class="facts">${it.on?dayLabel(it.onDay)+(it.time?' · '+it.time:''):(it.needsDay?[...it.youDays].map(d=>DAYS[d][0]).join(' · ')||'no days yet':'no day needed')}</div></div><div class="count ${st}"><div class="big">${inCount(it)}</div><div class="lbl">${it.on?'on':'in'}</div></div></div></div>`); c.onclick=()=>openDetail(it); sc.append(c); });
+  mine.forEach(it=>{ const st=status(it); const c=el(`<div class="card"><div class="row"><div><div class="title">${it.title}</div><div class="facts">${it.on?dayLabel(it.onDay)+(it.time?' · '+it.time:''):(it.needsDay?[...it.youDays].map(d=>DAYS[d][0]).join(' · ')||'no days yet':'No day needed')}</div></div><div class="count ${st}"><div class="big">${inCount(it)}</div><div class="lbl">${it.on?'on':'in'}</div></div></div></div>`); c.onclick=()=>openDetail(it); sc.append(c); });
 }
 
 // ---------- detail sheet ----------
@@ -373,28 +418,30 @@ function openDetail(it){
   const st=status(it), n=inCount(it), m=maybeCount(it), b=best(it), q=quorum(it);
   const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
   pn.append(el(`<div class="handle"></div>`));
-  pn.append(el(`<div class="pad" style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="ptitle">${it.title}</div><div class="pmeta">${it.on?`<b>On · ${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</b> · locked by ${it.lockedBy}<br>`:''}${it.cost?it.cost+' · ':''}${it.min?`needs ${it.min}`:`quorum ${q}`} · started by ${it.by}</div></div><span class="pill ${st==='on'?'on':''}">${st==='on'?'<i></i>On':(st==='ready'?'Ready':'Open')}</span></div>`));
-  if(it.detail) pn.append(el(`<p class="pbody pad">${it.detail}</p>`));
+  const idx=String(S.intents.indexOf(it)+1).padStart(2,'0'), total=String(S.intents.length).padStart(2,'0');
+  const lab=[`Started by ${it.by}`, it.cost, it.on?`locked by ${it.lockedBy}`:(it.min?`needs ${it.min}`:`quorum ${q}`)].filter(Boolean).join(' · ');
+  const badge=st==='on'?`<span class="tag field">On · ${dayLabel(it.onDay)}${it.time?' · '+it.time:''}</span>`:(st==='ready'?'<span class="tag lime">Ready to lock</span>':'<span class="tag field">Open</span>');
+  pn.append(el(`<div class="mast intent ${it.on?'on':''}"><div class="lab">${lab}</div><div class="hd"><span class="num">${idx}</span><h2>${it.title}</h2></div>${it.detail?`<div class="stand">${it.detail}</div>`:''}<div class="rule"></div><div class="foot">${badge}<span class="lead"></span><span>№ ${idx} / ${total}</span></div></div>`));
 
   if(it.needsDay){
-    pn.append(el(`<div class="sect"><span>${it.on?'Locked day':'Who can do which day'}</span><b>${it.on?'':b.n+' on '+DAYS[b.day][0]}</b></div>`));
+    pn.append(el(`<div class="sect"><span>§ 01 · ${it.on?'Locked day':'Who can do which day'}</span><b class="hot">${it.on?dayLabel(it.onDay):b.n+' on '+DAYS[b.day][0]}</b></div>`));
     const h=heat(it); const hh=el(`<div class="heat" style="margin-top:0"></div>`);
-    h.forEach((v,i)=>{ const locked=it.on&&i===it.onDay; hh.append(heatCell(v,q,`${(!it.on&&i===b.day&&v)?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}`, locked?'background:var(--on);color:#fff':null)); });
+    h.forEach((v,i)=>{ const locked=it.on&&i===it.onDay; hh.append(heatCell(v,q,`${(!it.on&&i===b.day&&v)?'best':''} ${(it.you==='in'&&it.youDays.has(i))?'you':''}`, locked?'background:var(--moss-deep);color:#fff':null)); });
     pn.append(hh);
     pn.append(el(`<div class="heatlab">${DAYS.map(d=>`<div>${d[0]}</div>`).join('')}</div>`));
     if(it.you==='in' && !it.on){
-      pn.append(el(`<p class="hint pad" style="margin:12px 0 8px">Your days for this one (the dot). Tap to adjust.</p>`));
-      const ds=el(`<div class="days"></div>`);
-      DAYS.forEach(([d,num],i)=>{ const bt=el(`<button class="day ${it.youDays.has(i)?'free':''}"><span class="d">${d}</span><span class="num">${num}</span><span class="src">${it.youDays.has(i)?'can':''}</span></button>`); bt.onclick=()=>{ it.youDays.has(i)?it.youDays.delete(i):it.youDays.add(i); openDetail(it); render(); }; ds.append(bt); });
+      pn.append(el(`<p class="hint" style="margin:12px 0 8px">Your days for this one (the dot). Tap to adjust.</p>`));
+      const ds=el(`<div class="days compact"></div>`);
+      DAYS.forEach(([d,num],i)=>{ const bt=el(`<button class="day ${it.youDays.has(i)?'free':''}"><span class="d">${d}</span><span class="num">${num}</span></button>`); bt.onclick=()=>{ it.youDays.has(i)?it.youDays.delete(i):it.youDays.add(i); openDetail(it); render(); }; ds.append(bt); });
       pn.append(ds);
-    } else if(!it.on) pn.append(el(`<p class="hint pad" style="margin:10px 0 0">Tap in and your free days land here.</p>`));
-    if(st==='ready'){ const pr=el(`<div class="prompt"><div class="t">${b.n} of ${n} can do<b>${dayLabel(b.day)}</b></div><button>Lock in</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
+    } else if(!it.on) pn.append(el(`<p class="hint" style="margin:10px 0 0">Tap in and your free days land here.</p>`));
+    if(st==='ready'){ const pr=el(`<div class="prompt"><div class="t">${b.n} of ${n} can do<b>${dayLong(b.day)}</b></div><button>Lock in${GO}</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
   } else {
-    pn.append(el(`<div class="sect"><span>Day</span><b>${it.noDayNote||'None needed'}</b></div>`));
-    if(st==='ready'){ const pr=el(`<div class="prompt" style="margin-top:0"><div class="t">${n} in<b>Make it happen?</b></div><button>It's on</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
+    pn.append(el(`<div class="sect"><span>§ 01 · Day</span><b>${it.noDayNote||'None needed'}</b></div>`));
+    if(st==='ready'){ const pr=el(`<div class="prompt" style="margin-top:0"><div class="t">${n} in<b>Make it happen?</b></div><button>It's on${GO}</button></div>`); pr.querySelector('button').onclick=()=>{ lock(it); openDetail(it); }; pn.append(pr); }
   }
 
-  pn.append(el(`<div class="sect"><span>Details</span><span style="font-weight:400;letter-spacing:0;text-transform:none">Anyone in can add. Title is fixed.</span></div>`));
+  pn.append(el(`<div class="sect"><span>§ 02 · Details</span><span class="plain">Anyone in can add · title is fixed</span></div>`));
   const d=el(`<div class="details"></div>`);
   if(it.time) d.append(el(`<div class="drow"><span class="k">Time</span><span>${it.time}</span><span class="by">${it.by}</span></div>`));
   it.adds.forEach(a=>{
@@ -403,29 +450,30 @@ function openDetail(it){
   });
   if(it.needsDay && (it.on||st==='ready')) d.append(el(`<div class="drow"><span class="k">Cal</span><span>${it.on?'Invite sent to everyone in':'Invite goes out when locked'}</span>${it.on?'<button class="chipl" data-cal>Add to calendar</button>':''}</div>`));
   if(it.you==='in'){
-    const ar=el(`<div class="addrow"><input placeholder="Add a link, a place, a note" /><button class="ghost">Add</button></div>`);
+    const ar=el(`<div class="addrow"><input placeholder="Add a link, a place, a note" /><button class="pill">Add</button></div>`);
     ar.querySelector('button').onclick=()=>{ const v=ar.querySelector('input').value.trim(); if(!v) return; const isUrl=/^(https?:\/\/|www\.)/.test(v)||/\.[a-z]{2,}(\/|$)/.test(v); it.adds.push({k:isUrl?'Link':'Note', v:isUrl?v.replace(/^https?:\/\//,''):v, url:isUrl?(/^https?:/.test(v)?v:'https://'+v):null, by:S.you.showName?'You':'anon'}); toast(`Added, attributed to <b>${S.you.showName?'you':'+1 anonymous'}</b>. Nobody is texted about details.`); openDetail(it); };
     d.append(ar);
   } else d.append(el(`<div class="drow" style="color:var(--ink-3)">Tap in to add details.</div>`));
   const cal=d.querySelector('[data-cal]'); if(cal) cal.onclick=()=>toast(`Calendar event: <b>${it.title}</b> · ${dayLabel(it.onDay)}${it.time?' '+it.time:''}.`);
   pn.append(d);
 
-  pn.append(el(`<div class="sect"><span>Link preview</span><span style="font-weight:400;letter-spacing:0;text-transform:none">As WhatsApp shows it</span></div>`));
+  pn.append(el(`<div class="sect"><span>§ 03 · Link preview</span><span class="plain">As WhatsApp shows it</span></div>`));
   const ogBig = it.on ? 'On' : (it.needsDay ? `${b.n} can do ${DAYS[b.day][0]}` : `${n} in`);
   pn.append(el(`<div class="unfurl"><div class="og"><b>${ogBig}</b><span>${it.title}${it.on?' · '+dayLabel(it.onDay):''}</span></div><div class="txt"><b>${it.title} · ${n} in${it.on?' · on '+dayLabel(it.onDay):''}</b>${it.cost?it.cost+' · ':''}tap to say you're in<br><span>quorum.app/i/${it.id}?s=k7f2</span></div></div>`));
 
-  pn.append(el(`<div class="sect"><span>In</span><b>${n}${m?` · ${m} maybe`:''}</b></div>`));
-  const pl=el(`<div class="people"></div>`);
-  if(it.you==='in') pl.append(el(`<div class="person me"><span class="av">${S.you.showName?'Y':'+'}</span><span>${S.you.showName?'You':'+1 anonymous'}</span></div>`));
-  inPeople(it).forEach(p=>pl.append(el(`<div class="person"><span class="av">${ini(p.name)}</span><span>${p.name}</span>${it.needsDay&&!it.on?`<span class="s">${[...p.days].map(x=>DAYS[x][0]).join(' ')}</span>`:''}</div>`)));
-  if(it.you==='maybe') pl.append(el(`<div class="person me"><span class="av">Y</span><span>You</span><span class="s">maybe</span></div>`));
-  it.people.filter(p=>p.maybe).forEach(p=>pl.append(el(`<div class="person"><span class="av">${ini(p.name)}</span><span>${p.name}</span><span class="s">maybe</span></div>`)));
+  pn.append(el(`<div class="sect"><span>§ 04 · In</span><b>${n}${m?` · ${m} maybe`:''}</b></div>`));
+  const pl=el(`<div class="people"></div>`); let k=0;
+  const ledger=(name, s, me)=>el(`<div class="ledger ${me?'me':''}"><span class="n">${String(++k).padStart(2,'0')}</span><span>${name}</span><span class="lead"></span><span class="s">${s||''}</span></div>`);
+  if(it.you==='in') pl.append(ledger(S.you.showName?'You':'+1 anonymous', it.needsDay&&!it.on?[...it.youDays].map(x=>DAYS[x][0]).join(' '):'', true));
+  inPeople(it).forEach(p=>pl.append(ledger(p.name, it.needsDay&&!it.on?[...p.days].map(x=>DAYS[x][0]).join(' '):'')));
+  if(it.you==='maybe') pl.append(ledger('You','maybe',true));
+  it.people.filter(p=>p.maybe).forEach(p=>pl.append(ledger(p.name,'maybe')));
   pn.append(pl);
   if(it.on){
-    pn.append(el(`<div class="sect"><span>The text everyone in got</span><b>${it.onAt}</b></div>`));
+    pn.append(el(`<div class="sect"><span>§ 05 · The text everyone in got</span><b>${it.onAt}</b></div>`));
     pn.append(el(`<div class="sms">${it.title} is on${it.needsDay?' · '+dayLabel(it.onDay)+(it.time?' '+it.time:''):''}. ${n} in. ${it.lockedBy} locked it. Calendar invite attached.<br><br>Want to run something? Post it: <u>quorum.app/emba27/new</u></div>`));
   }
-  const acts=el(`<div class="acts"><button class="ghost">Share</button><button class="ghost">Post a related intent</button></div>`);
+  const acts=el(`<div class="acts"><button class="pill">Share${GO_NE}</button><button class="pill">Post a related intent</button></div>`);
   const [b1,b2]=acts.querySelectorAll('button');
   b1.onclick=()=>toast(`Link copied: <b>quorum.app/i/${it.id}?s=${Math.random().toString(36).slice(2,6)}</b>. Fresh preview, attributed to you.`);
   b2.onclick=()=>{ closeSheet(); openPost(it); };
@@ -440,8 +488,8 @@ $('#sheet').addEventListener('click',(e)=>{ if(e.target.id==='sheet') closeSheet
 function openPost(from){
   const sh=$('#sheet'), pn=$('#panel'); pn.innerHTML='';
   pn.append(el(`<div class="handle"></div>`));
-  pn.append(el(`<div class="pad"><div class="ptitle">${from?'Post a related intent':'Post an intent'}</div><p class="pbody" style="margin-top:6px">A title is enough. You're in automatically; your free days attach. Everything else is optional and can be added later, by anyone in.</p></div>`));
-  const f=el(`<div class="pad" style="margin-top:14px">
+  pn.append(el(`<div><div class="ptitle">${from?'Post a related intent':'Post an intent'}</div><p class="pbody" style="margin-top:6px">A title is enough. You're in automatically; your free days attach. Everything else is optional and can be added later, by anyone in.</p></div>`));
+  const f=el(`<div style="margin-top:16px">
     <div class="field"><label>What</label><input id="f-title" placeholder="e.g. Suits in Hoi An" value="${from?from.title+' · ':''}" /></div>
     <button class="more" id="f-more">More <span>one line · cost · time · a number · links</span></button>
     <div id="f-moreblock" style="display:none">
@@ -454,7 +502,7 @@ function openPost(from){
       <div class="field"><label>Links, one per line</label><textarea id="f-links" rows="2" placeholder="Website, Google Doc, Maps"></textarea></div>
     </div>
   </div>`);
-  const dayT=el(`<div class="toggle"><div>Needs a day<small>Off for things like a shirt order</small></div><button class="sw on" id="f-day"><i></i></button></div>`);
+  const dayT=el(`<div class="group"><div class="toggle"><div>Needs a day<small>Off for things like a shirt order</small></div><button class="sw on" id="f-day"><i></i></button></div></div>`);
   f.querySelector('#f-more').onclick=()=>{ const b=f.querySelector('#f-moreblock'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; f.querySelector('#f-more').firstChild.textContent=open?'More ':'Less '; };
   dayT.querySelector('#f-day').onclick=(e)=>e.currentTarget.classList.toggle('on');
   pn.append(f, dayT);
