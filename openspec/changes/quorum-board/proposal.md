@@ -8,7 +8,7 @@ The cohort (about sixty people, one WhatsApp group, a one-week residency Feb 14â
 
 This change is **slice 1** of the board: the part that is usable by the cohort with no texts at all. Later slices (SMS, fork and versions, digest, stats page, seed script) are separate changes that build on this one.
 
-- New deployable app in `board/` (Next.js App Router, TypeScript, Tailwind, hosted Supabase Postgres used as a plain database with SQL migrations, Vercel with a daily cron). `web/` and `openspec/changes/loop-mvp` are untouched; the root demo stays as the design reference.
+- The repo root becomes the deployable app (Next.js App Router, TypeScript, Tailwind, hosted Supabase Postgres used as a plain database with SQL migrations, Vercel with a daily cron). `web/` and `openspec/changes/loop-mvp` are untouched; the static demos move to `public/demo/` (served at `/demo/â€¦`) and stay as the design reference.
 - **Identity by phone number and name.** No accounts, no passwords, no Supabase Auth. A long-lived signed cookie is the session. A number nobody has seen answers with no round trip; a known number on a cookieless device gets a one-time SMS code (stubbed to a logged code until Twilio exists). Magic-link tokens in texts set the same cookie.
 - **Posting an intent.** Title and a "needs a day" switch (default on); behind a fold, all optional: one line, rough cost as text, time, a number, links. The poster is in. Title is fixed after posting; detail line, place, links, notes are editable by the poster; anyone in can add a link, a place, a note, attributed to them.
 - **Responding.** In / out / maybe, one tap, changeable any time. Maybe never counts toward the number. Each person can switch their name off and still count ("+1 anonymous"). No +1s in v1.
@@ -37,8 +37,8 @@ This change is **slice 1** of the board: the part that is usable by the cohort w
 
 ## Impact
 
-- New directory `board/` with its own `package.json`, Supabase migrations, Vitest tests and SQL tests, `vercel.json` cron, README.
+- The repo root becomes the app: `package.json`, Supabase migrations, Vitest tests and SQL tests, `vercel.json` cron, README.
 - New hosted Supabase projects `board-dev` and `board-test`, and a new Vercel project; nothing shared with `web/` (founder tasks, like `loop-mvp` 1.4).
 - Twilio 10DLC registration should start now; it is not needed to ship this slice.
-- `quorum.html` v5 CSS is ported into `board/app/globals.css` as the token and component source; the static demo stays untouched.
+- `quorum.html` v5 CSS is ported into `app/globals.css` as the token and component source; the static demo is otherwise untouched.
 - Dependencies: `next`, `react`, `@supabase/supabase-js` (service role only, server side), `@vercel/og` via `next/og`, `ics` generation in-house, `jose` or Node crypto for signing.

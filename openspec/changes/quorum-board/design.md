@@ -27,9 +27,9 @@ See proposal.md for motivation and `DESIGN.md` at the repo root for the product 
 
 ## Decisions
 
-**Stack: Next.js App Router + TypeScript + Tailwind in `board/`, Vercel, hosted Supabase Postgres as a plain database.** Same shape as `web/` so the founder's operational knowledge carries over, and Vercel gives the cron and the OG image route for free. Alternatives: reuse `web/` (different model, Supabase Auth by email; rejected per `DESIGN.md` call 1); SQLite on a VPS (no cron, no OG, more ops).
+**Stack: Next.js App Router + TypeScript + Tailwind at the repo root, Vercel, hosted Supabase Postgres as a plain database.** Same shape as `web/` so the founder's operational knowledge carries over, and Vercel gives the cron and the OG image route for free. Alternatives: reuse `web/` (different model, Supabase Auth by email; rejected per `DESIGN.md` call 1); SQLite on a VPS (no cron, no OG, more ops).
 
-**All database access is server-side with the service-role client.** `anon` and `authenticated` get no grants; RLS is enabled with no policies so a leaked anon key reads nothing. Pages are server components; mutations are server actions that check the session cookie and then write. Reason: identity is ours (phone + cookie), so Supabase's row-level model has no `auth.uid()` to key on, and a single trusted path is simpler to audit than policies. The service-role key lives only in Vercel env.
+**All database access is server-side over a direct Postgres connection.** `lib/db.ts` (server-only) talks to Supabase Postgres with `pg` through `DATABASE_URL` (the transaction pooler); there is no service-role key and no supabase-js in the app. `anon` and `authenticated` get no grants; RLS is enabled with no policies so a leaked publishable key reads nothing. Pages are server components; mutations are server actions that check the session cookie and then write inside one real transaction (`Db.tx`). Reason: identity is ours (phone + cookie), so Supabase's row-level model has no `auth.uid()` to key on, and a single trusted path is simpler to audit than policies. A respond is several writes (response, event, roster) that must commit together, which the REST client cannot do; plain SQL also lets the same code run on in-process PGlite in tests. The connection string lives only in Vercel env.
 
 **Identity: person = phone + name, session = signed cookie.** Phone normalised to E.164 with `libphonenumber-js` (default region US). The cookie `qb` is an HMAC-signed payload `{person_id, iat}` (`SESSION_SECRET`), httpOnly, SameSite=Lax, one year, refreshed on every mutation. Rules from `DESIGN.md`:
 - Unknown number: name + number + the answer go through in one request; the person row is created, the cookie set, `person_added` written with the proposal that brought them.
@@ -42,12 +42,12 @@ Alternatives: Supabase Auth phone OTP (sends SMS on every sign-in, which contrad
 - `board(id, slug unique, name, tz default 'America/New_York', window_start date, window_end date, parent_board_id null, created_at)`
 - `person(id, phone unique, name, show_name bool default true, sms_opt_out bool default false, created_at)`
 - `board_person(board_id, person_id, joined_via source, via_proposal_id null, joined_at, pk(board_id, person_id))`
-- `proposal(id, board_id, poster_id, title, detail null, cost_text null, time_text null, needs_day bool, min_count int null, deadline date null, status enum open|on|closed, on_day date null, on_at null, locked_by null, closed_at null, version_of null, created_at)` plus `check (status <> 'on' or on_at is not null)`
+- `proposal(id, board_id, poster_id null, title, icon text default 'confetti', detail null, cost_text null, time_text null, needs_day bool, min_count int null, deadline date null, status enum open|on|closed, on_day date null, on_at null, locked_by null, closed_at null, version_of null, created_at)` plus `check (status <> 'on' or on_at is not null)`
 - `proposal_detail(id, proposal_id, kind enum where|link|note, text, url null, added_by, added_at)`
 - `response(proposal_id, person_id, answer enum in|out|maybe, days date[] not null default '{}', updated_at, pk(proposal_id, person_id))`
 - `free_day(board_id, person_id, day, pk(board_id, person_id, day))`
 - `share(id, proposal_id, token unique, sharer_id null, created_at)`
-- `otp_code(phone, code_hash, expires_at, attempts, pk(phone))`, `magic_token(token_hash pk, person_id, expires_at, used_at null)`
+- `otp_code(phone, code_hash, expires_at, attempts, pending jsonb, pk(phone))` (pending = the answer or post to replay once the code checks out), `magic_token(token_hash pk, person_id, expires_at, used_at null)`
 - `event(id, at, board_id, proposal_id null, person_id null, type event_type, source source, share_id null, data jsonb)` with `create unique index on event(proposal_id) where type = 'threshold_reached'` and the same for `proposal_idled`.
 - enums: `event_type` = proposal_posted | response | threshold_reached | proposal_idled | proposal_reopened | proposal_closed | detail_added | person_added | share_minted | fork_created | text_sent; `source` = group_link | proposal_link | digest_link | on_text | one_more_text | maybe_nudge | fork | seed | direct.
 
@@ -65,13 +65,24 @@ Alternatives: Supabase Auth phone OTP (sends SMS on every sign-in, which contrad
 
 **Routes.** `/b/<slug>` board; `/b/<slug>/new` post form (`?from=<id>` prefills a version); `/b/<slug>/you` your days and settings; `/p/<id>` proposal page (the card expanded: heat, your days, the ask, details with add row, who's in, share); `/p/<id>/og`, `/p/<id>/invite.ics`; `/m/<token>`; `/api/cron/daily`. Everything renders in the phone-width layout of v5 at any viewport; the side rail of the demo is not built.
 
-**Visual port.** `board/app/globals.css` is `quorum.html` v5's `<style>` block with the side-rail and `.phone` chrome removed and the custom properties kept verbatim. Components in `board/components/`: `Hero` (server shell + client `Field` canvas: the Dusk gradient, grain, orbit rings with Twist rotation, graphite mesh, IntersectionObserver pause, reduced-motion still frame, ported from `quorum.html`), `DateBlock`, `Plate` (Phosphor Fill paths on Delta-palette plates), `MiniHeat`, `Ask`, `Acts`, `Chip`, `GhostButton`, `Pill`, `SectionHead`, `Toast`. Fonts via `next/font/google` (Source Serif 4, Geist). No component library.
+**Visual port.** `app/globals.css` is `quorum.html` v5's `<style>` block with the side-rail and `.phone` chrome removed and the custom properties kept verbatim. Components in `components/`: `Hero` (server shell + client `Field` canvas: the Dusk gradient, grain, orbit rings with Twist rotation, graphite mesh, IntersectionObserver pause, reduced-motion still frame, ported from `quorum.html`), `DateBlock`, `Plate` (Phosphor Fill paths on Delta-palette plates), `MiniHeat`, `Ask`, `Acts`, `Chip`, `GhostButton`, `Pill`, `SectionHead`, `Toast`. Fonts via `next/font/google` (Source Serif 4, Geist). No component library.
 
 **Timezone.** `board.tz` governs "today" for deadlines, idling and heat labels; computed with `Intl.DateTimeFormat` and `date-fns-tz`-free helpers in `lib/days.ts` (window days are a `date[]`, which avoids DST arithmetic entirely).
 
 **Cron.** `vercel.json` runs `/api/cron/daily` at 06:00 UTC with `CRON_SECRET` as bearer: writes `proposal_idled` for open proposals past their deadline. Idempotent by the partial unique index.
 
-**Testing.** Vitest for `lib/quorum.ts`, `lib/days.ts`, cookie and token signing, phone normalisation, sort, and component rendering with Testing Library (board, proposal page, post form). SQL tests in `board/supabase/tests/` against `board-test` (reset with `supabase db reset --db-url`, then `db push`, then seed): constraints, the `lock` function's latch under two concurrent calls, the partial unique indexes. Server actions get integration tests against `board-test` for respond (unknown number, known number without cookie, change answer, conflict days) and lock. No Playwright in this slice.
+**Testing.** Vitest for `lib/quorum.ts`, `lib/days.ts`, cookie and token signing, phone normalisation, sort, and component rendering with Testing Library (board, proposal page, post form). SQL tests in `supabase/tests/` against `board-test` (reset with `supabase db reset --db-url`, then `db push`, then seed): constraints, the `lock` function's latch under two concurrent calls, the partial unique indexes. Server actions get integration tests for respond (unknown number, known number without cookie, change answer, conflict days) and lock. The integration suites run on in-process PGlite with the real migrations by default (`npm test`) and against `board-test` under `npm run test:db`, so they run on every change without a hosted project. No Playwright suite in this slice.
+
+## Implementation notes (2026-10-22)
+
+Decided while building; the rest of this document still holds.
+- `poster_id` is nullable because the seeded proposals have no people; `icon` holds the plate glyph the poster picks (the demo's icon set).
+- Identity lives in `lib/identity.ts` (`withIdentity`), called inside each action's transaction, not in a separate `actions/identify.ts`. A replay after a code always *sets* the pending answer; it never toggles it off.
+- Next.js `cacheComponents` is off: every page is per viewer and live.
+- Reopen is refused once the window is over (`window_over`), as well as when not idled.
+- Attached `days` arrays are kept sorted on write.
+- The live database is `supabase-loop` (`gtxvuhxjequvhxuerfdw`), a Vercel-integration Supabase project, standing in for `board-dev`; 0001–0004 and the seed were applied through the Supabase MCP and recorded in `supabase_migrations.schema_migrations`. 0004 pins `lock_proposal`'s search_path (advisor 0011). The app reads `DATABASE_URL`, else the integration's `POSTGRES_URL`, with TLS but no CA verification.
+- `scripts/local-db.mjs` serves PGlite over the wire protocol for local dev and screenshots (no Docker); `--demo` loads the demo's people.
 
 ## Risks / Trade-offs
 
@@ -80,13 +91,13 @@ Alternatives: Supabase Auth phone OTP (sends SMS on every sign-in, which contrad
 - [WhatsApp caches the first preview of a URL] → every share mints a new URL; the board link's own preview is the board's static OG image (name and open count are fine to be stale there).
 - [Day heat reveals a person when only one person is in] → the proposal page already shows names to anyone with the link, so counts of 1 reveal nothing new; the OG image shows totals only.
 - [Free text times and costs] → by design (`DESIGN.md`); `.ics` is all-day with the time in the description.
-- [No RLS, service-role everywhere] → one trusted server path and no public key with grants; the risk moves to the server actions, which is why every mutation checks the cookie and the person's relation to the proposal first and is integration-tested.
+- [No RLS, one server-only connection] → one trusted server path and no public key with grants; the risk moves to the server actions, which is why every mutation checks the cookie and the person's relation to the proposal first and is integration-tested.
 - [Twilio lead time] → not needed for this slice; registration starts now so slice 2 is not blocked.
 - [`libphonenumber-js` default region US] → non-US numbers must include `+country`; the form says so. Revisit with the non-US count.
 
 ## Migration Plan
 
-1. Founder creates `board-dev` and `board-test` Supabase projects and a `board` Vercel project linked to this repo with root directory `board/`; sets `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `SUPABASE_TEST_DB_URL`.
+1. Founder creates `board-dev` and `board-test` Supabase projects and switches the existing `v0-stellic-loop` Vercel project (root directory = repo root) to the Next.js preset; the app is the repo root, and the static demos moved to `public/demo/` (served at `/demo/stellic`, `/demo/quorum`, `/demo/mockups-…`, with old `*.html` URLs redirected); sets `DATABASE_URL`, `SESSION_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`; locally also `SUPABASE_TEST_DB_URL`, `SUPABASE_TEST_URL`, `SUPABASE_TEST_PUBLISHABLE_KEY`.
 2. `supabase db push` to `board-dev`; run the seed (one board `emba27`, window Feb 14–20 2027, the trip five proposals from `DESIGN.md`, no people).
 3. Deploy; founder posts the first real intents and pins `/b/emba27` in the WhatsApp group.
 4. Rollback: the app is additive and separate; unlinking the Vercel project or un-pinning the link is the whole rollback. Data stays in `board-dev`.

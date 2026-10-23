@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quorum · vendor side · mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400..600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --hair:rgba(31,26,23,.09); --line:rgba(31,26,23,.14); --tint:rgba(31,26,23,.045);
+    --carnelian:#b31b1b; --carnelian-deep:#8a1414; --carnelian-tint:#f8e6e3;
+    --moss:#3d8a5f; --moss-deep:#2f6e4a; --moss-tint:#e3f0e8;
+    --lime:#d6f55e;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --expo:cubic-bezier(.16,1,.3,1);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; } input,textarea{ font-family:inherit; color:inherit; }
+  body{ margin:0; background:#efe7da; font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; padding:48px 24px 72px; font-feature-settings:"tnum"; }
+  .wrap{ max-width:1060px; margin:0 auto; }
+  .rail{ display:flex; gap:56px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .side{ width:390px; padding-top:8px; }
+  .eyebrow{ font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
+  .side h1{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.12; margin:14px 0 12px; }
+  .side h1 em{ font-style:italic; color:var(--carnelian-deep); }
+  .side p{ color:var(--ink-2); font-size:14px; line-height:1.55; margin:0 0 12px; }
+  .side ol{ padding-left:18px; color:var(--ink-2); font-size:13.5px; line-height:1.55; margin:0; }
+  .side li{ margin-bottom:6px; }
+  .side .try{ font-size:12.5px; line-height:1.6; color:var(--ink); margin-top:18px; padding:12px 14px; background:var(--paper-0); border:1px solid var(--hair); border-radius:14px; }
+  .side .try b{ font-weight:600; }
+  .side .note{ font-size:11.5px; line-height:1.55; color:var(--ink-3); margin-top:18px; }
+
+  /* phone */
+  .phone{ width:390px; height:844px; background:var(--paper-1); border:1px solid var(--line); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px rgba(60,30,20,.4); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; }
+  .status svg{ height:11px; }
+  .head{ display:flex; align-items:center; justify-content:space-between; padding:12px 22px 6px; }
+  .wordmark{ font-family:var(--serif); font-size:21px; font-weight:500; letter-spacing:-.01em; }
+  .meta{ font-size:12.5px; color:var(--ink-3); }
+  .screen{ flex:1; overflow:auto; padding:0 16px 110px; scrollbar-width:none; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .tabbar{ position:absolute; left:16px; right:16px; bottom:18px; display:flex; gap:4px; padding:4px; border-radius:16px; background:var(--paper-0); border:1px solid var(--hair); box-shadow:0 10px 30px -18px rgba(60,30,20,.4); }
+  .tabbar button{ flex:1; border:0; background:transparent; height:40px; border-radius:12px; font-size:13px; font-weight:500; color:var(--ink-2); }
+  .tabbar button.on{ background:var(--tint); color:var(--ink); font-weight:600; }
+
+  /* atoms */
+  .lab{ font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; }
+  .plate{ width:30px; height:30px; border-radius:8px; display:grid; place-items:center; flex:0 0 auto; box-shadow:inset 0 0 0 1px var(--ring), 0 1px 1.5px rgba(60,30,20,.14), 0 5px 10px -5px rgba(60,30,20,.35); }
+  .plate svg{ width:17px; height:17px; }
+  .plate.lg{ width:44px; height:44px; border-radius:11px; } .plate.lg svg{ width:24px; height:24px; }
+  .av{ width:24px; height:24px; border-radius:50%; border:1.5px solid var(--paper-0); display:grid; place-items:center; font-size:9.5px; font-weight:600; color:var(--ink-2); margin-left:-6px; flex:0 0 24px; background:var(--paper-2); }
+  .av:first-child{ margin-left:0; }
+  .av.me{ background:var(--ink); color:var(--paper-0); } .av.more{ font-size:9px; }
+  .av.maybe{ opacity:.55; }
+  .pile{ display:inline-flex; align-items:center; }
+  .ghost{ height:34px; padding:0 14px; border-radius:999px; border:0; background:var(--tint); font-size:13px; font-weight:500; color:var(--ink); display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:background .15s var(--ease), color .15s var(--ease); }
+  .ghost:hover{ background:rgba(31,26,23,.08); }
+  .ghost.on{ background:var(--ink); color:var(--paper-0); }
+  .ghost.maybe.on{ background:var(--paper-3); color:var(--ink); }
+  .ghost.out.on{ background:var(--paper-2); color:var(--ink-3); }
+  .ghost svg, .pill svg, .me svg, .solid svg{ width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
+  .pill{ height:36px; padding:0 14px 0 16px; border-radius:999px; border:0; background:var(--ink); color:var(--paper-0); font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:transform .1s; }
+  .pill:active{ transform:scale(.97); }
+  .pill.quiet{ background:rgba(31,26,23,.07); color:var(--ink); }
+  .pill.red{ background:var(--carnelian); }
+  .solid{ height:44px; width:100%; border-radius:12px; border:0; background:var(--ink); color:var(--paper-0); font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; }
+  .solid.red{ background:var(--carnelian); }
+  .solid.quiet{ background:var(--tint); color:var(--ink); font-weight:500; }
+  .chip{ display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:999px; background:var(--lime); color:var(--ink); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .chip.green{ background:var(--moss-deep); color:var(--paper-0); } .chip.open{ background:var(--tint); color:var(--ink-2); }
+  .sect{ display:flex; align-items:center; justify-content:space-between; padding:22px 6px 10px; }
+  .sect .n{ font-family:var(--serif); font-size:15px; color:var(--ink-2); }
+  .sect .plain{ font-size:11px; color:var(--ink-3); white-space:nowrap; }
+  .hint{ font-size:12px; line-height:1.5; color:var(--ink-3); }
+  .pad{ padding-left:6px; padding-right:6px; }
+  .empty{ color:var(--ink-3); font-size:13px; padding:14px 6px; }
+
+  /* hero: the Dusk field with orbits + mesh */
+  .mast{ padding:12px 0 0; }
+  .hero{ margin:6px 0 0; position:relative; isolation:isolate; overflow:hidden; border-radius:22px 22px 22px 4px; padding:18px 18px 16px; color:var(--ink);
+         --f0:#f6f2fb; --f1:#e9e2f4; --f2:#d9cfe9; --dot:#ff7b54;
+         background:linear-gradient(168deg, var(--f0) 0%, var(--f1) 55%, var(--f2) 100%); box-shadow:inset 0 0 0 1px rgba(109,63,138,.16); }
+  .hero canvas{ position:absolute; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; }
+  .hero .k{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; font-size:10px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:#5a3a73; margin:0; }
+  .hero .k i{ width:7px; height:7px; border-radius:50%; background:var(--dot); box-shadow:0 0 10px 2px color-mix(in srgb, var(--dot) 70%, transparent); animation:breathe 2.8s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ box-shadow:0 0 8px 1px color-mix(in srgb, var(--dot) 55%, transparent); } 50%{ box-shadow:0 0 14px 4px color-mix(in srgb, var(--dot) 80%, transparent); } }
+  .hero .k small{ font-weight:500; text-transform:none; letter-spacing:.02em; color:#6c5a7d; font-variant-numeric:tabular-nums; }
+  .hero h2{ font-family:var(--serif); font-size:29px; font-weight:500; letter-spacing:-.015em; line-height:1.08; margin:8px 0 0; }
+  .hero h2 em{ font-style:italic; color:var(--carnelian-deep); }
+  .hero p{ margin:8px 0 0; font-size:13px; line-height:1.45; color:#6c5a7d; max-width:32ch; }
+  .hero .pills{ display:flex; gap:8px; margin-top:14px; }
+  .mast h2{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin:0; padding:0 6px; }
+  .mast h2 em{ font-style:italic; color:var(--carnelian-deep); }
+  .mast p{ margin:8px 0 0; padding:0 6px; font-size:13.5px; line-height:1.5; color:var(--ink-2); max-width:34ch; }
+
+  /* cards */
+  .card{ background:var(--paper-0); border:1px solid var(--hair); border-radius:20px 20px 20px 4px; padding:14px; margin-bottom:12px; display:grid; grid-template-columns:52px 1fr; gap:12px; transition:background .3s var(--ease); }
+  .card.on{ background:var(--moss-tint); border-color:transparent; }
+  .date{ width:52px; border-radius:12px; border:1px solid var(--line); background:var(--paper-0); text-align:center; padding:6px 0 7px; align-self:start; }
+  .date small{ display:block; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
+  .date b{ display:block; font-family:var(--serif); font-size:22px; font-weight:500; line-height:1.05; color:var(--ink); }
+  .date i{ display:block; font-style:normal; font-size:9px; color:var(--ink-3); margin-top:2px; }
+  .date.ready{ border-color:var(--carnelian); } .date.ready b{ color:var(--carnelian); }
+  .date.on{ border-color:var(--moss-deep); background:var(--moss-deep); } .date.on b, .date.on small, .date.on i{ color:var(--paper-0); }
+  .date.none{ border-style:dashed; } .date.none b{ font-size:11.5px; line-height:1.2; padding:5px 2px; color:var(--ink-3); font-family:var(--sans); font-weight:500; }
+  .t{ min-width:0; }
+  .titlerow{ display:flex; align-items:center; gap:10px; }
+  .title{ font-size:16.5px; font-weight:600; letter-spacing:-.01em; line-height:1.2; }
+  .facts{ font-size:12.5px; color:var(--ink-3); margin-top:5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; line-height:1.4; }
+  .facts b{ color:var(--ink-2); font-weight:600; }
+  .facts.who{ margin-top:10px; }
+  .mini{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-top:10px; }
+  .mini div{ height:26px; border-radius:6px; display:grid; place-items:center; font-size:11px; font-weight:500; color:var(--ink-3); background:var(--tint); position:relative; }
+  .mini div.best{ background:var(--carnelian-tint); color:var(--carnelian-deep); font-weight:600; }
+  .mini div.on{ background:var(--moss-deep); color:var(--paper-0); font-weight:600; }
+  .mini div.you::after{ content:''; position:absolute; bottom:3px; width:3px; height:3px; border-radius:50%; background:currentColor; }
+  .minil{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-top:3px; }
+  .minil div{ text-align:center; font-size:9px; font-weight:500; color:var(--ink-4); letter-spacing:.04em; }
+  .minil div.best{ color:var(--carnelian-deep); }
+  .ask{ margin-top:12px; display:flex; flex-direction:column; gap:10px; font-size:13.5px; line-height:1.35; }
+  .ask .replies{ display:flex; gap:8px; justify-content:flex-end; }
+  .ask .q{ flex:1; } .ask .q b{ font-weight:600; }
+  .ask .pill{ height:34px; font-size:12.5px; padding:0 12px 0 14px; background:var(--carnelian); flex:0 0 auto; }
+  .ask .ghost.later{ height:34px; padding:0 12px; font-size:12.5px; flex:0 0 auto; }
+  .me{ display:flex; align-items:center; gap:6px; color:var(--moss-deep); font-weight:500; font-size:13px; animation:pop .3s var(--expo) both; }
+  @keyframes pop{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+  .acts{ display:flex; gap:6px; margin-top:12px; }
+  .acts .ghost{ flex:1; padding:0; }
+  .flag{ margin-top:10px; font-size:12.5px; line-height:1.45; color:var(--ink-2); padding:8px 12px; background:var(--tint); border-radius:10px; }
+  .flag b{ font-weight:600; color:var(--ink); }
+
+  /* you */
+  .days{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .day{ height:58px; border-radius:12px; border:1px solid var(--hair); background:var(--paper-0); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; transition:background .15s var(--ease); padding:0; }
+  .day .d{ font-size:9.5px; font-weight:600; color:var(--ink-3); letter-spacing:.04em; text-transform:uppercase; }
+  .day .num{ font-family:var(--serif); font-size:18px; font-weight:500; }
+  .day .src{ font-size:9px; font-weight:500; color:var(--ink-3); height:10px; }
+  .day.free{ background:var(--ink); color:var(--paper-0); border-color:var(--ink); }
+  .day.free .d,.day.free .src{ color:var(--ink-4); }
+  .day.busy{ background:var(--tint); color:var(--ink-3); border-color:transparent; }
+  .day.busy .num{ text-decoration:line-through; }
+  .days.compact .day{ height:46px; border-radius:10px; }
+  .days.compact .day .num{ font-size:15px; }
+  .group{ border-radius:14px; overflow:hidden; background:var(--paper-0); border:1px solid var(--hair); }
+  .toggle{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid var(--hair); font-size:14px; font-weight:500; }
+  .toggle:first-child{ border-top:0; }
+  .toggle small{ display:block; color:var(--ink-3); font-size:12px; font-weight:400; margin-top:2px; }
+  .sw{ width:44px; height:26px; border-radius:999px; background:var(--paper-2); border:1px solid var(--line); position:relative; flex-shrink:0; transition:background .2s var(--ease); padding:0; }
+  .sw i{ position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:var(--ink); transition:left .2s var(--ease), background .2s; }
+  .sw.on{ background:var(--moss-deep); border-color:var(--moss-deep); } .sw.on i{ left:20px; background:var(--paper-0); }
+
+  /* forms */
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px; }
+  .field input, .field textarea{ width:100%; border:1px solid var(--line); background:var(--paper-0); border-radius:12px; padding:11px 14px; font-size:14px; outline:none; }
+  .field input:focus, .field textarea:focus{ border-color:var(--ink); }
+  .field .hint{ margin-top:5px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .morebtn{ width:100%; border:0; background:none; text-align:left; padding:4px 0 12px; font-size:13px; font-weight:600; color:var(--carnelian-deep); display:flex; justify-content:space-between; }
+  .morebtn span{ color:var(--ink-3); font-weight:400; }
+  .picker{ display:flex; gap:8px; flex-wrap:wrap; }
+  .picker button{ padding:0; border:0; background:var(--tint); border-radius:10px; width:40px; height:40px; display:grid; place-items:center; color:var(--ink-2); }
+  .picker button svg{ width:22px; height:22px; }
+  .picker button.sel{ box-shadow:inset 0 0 0 1px var(--ring), 0 1px 1.5px rgba(60,30,20,.14), 0 5px 10px -5px rgba(60,30,20,.35); }
+
+  /* sheet */
+  .sheet{ position:absolute; inset:0; background:rgba(31,26,23,.42); display:none; align-items:flex-end; z-index:5; }
+  .sheet.open{ display:flex; }
+  .sheet .panel{ background:var(--paper-1); width:100%; border-radius:28px 28px 44px 44px; padding:10px 18px 22px; max-height:93%; overflow:auto; scrollbar-width:none; }
+  .panel::-webkit-scrollbar{ display:none; }
+  .handle{ width:36px; height:4px; border-radius:2px; background:var(--ink-4); margin:0 auto 14px; }
+  .phead{ display:flex; gap:12px; align-items:flex-start; }
+  .phead > div{ flex:1; min-width:0; }
+  .phead .chip{ flex:0 0 auto; margin-top:4px; }
+  .ptitle{ font-family:var(--serif); font-size:26px; font-weight:500; letter-spacing:-.02em; line-height:1.1; }
+  .pmeta{ font-size:12.5px; color:var(--ink-3); margin-top:5px; line-height:1.5; }
+  .pmeta b{ color:var(--moss-deep); font-weight:600; }
+  .pbody{ font-size:14px; color:var(--ink-2); margin:10px 0 0; line-height:1.5; }
+  .sheet .sect{ padding-left:0; padding-right:0; }
+  .details{ border-radius:14px; overflow:hidden; background:var(--paper-0); border:1px solid var(--hair); }
+  .drow{ display:flex; gap:10px; align-items:baseline; padding:10px 14px; border-top:1px solid var(--hair); font-size:13.5px; line-height:1.45; flex-wrap:wrap; }
+  .drow:first-child{ border-top:0; }
+  .drow .k{ font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); width:50px; flex-shrink:0; line-height:1.9; }
+  .drow > span:not(.k):not(.by){ flex:1; min-width:0; }
+  .drow .by{ font-size:11px; color:var(--ink-3); white-space:nowrap; margin-left:auto; flex:0 0 auto; }
+  .chipl{ display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; line-height:24px; height:26px; padding:0 10px; border-radius:999px; border:0; background:var(--tint); font-size:12px; font-weight:500; color:var(--carnelian-deep); text-decoration:none; white-space:nowrap; }
+  .addrow{ display:flex; gap:6px; padding:8px 10px; border-top:1px solid var(--hair); background:var(--paper-1); }
+  .addrow input{ flex:1; height:34px; border:1px solid var(--line); background:var(--paper-0); border-radius:999px; padding:0 12px; font-size:13px; outline:none; }
+  .unfurl{ border-radius:14px; overflow:hidden; display:flex; background:var(--paper-0); border:1px solid var(--hair); }
+  .unfurl .og{ width:110px; color:var(--paper-0); display:flex; flex-direction:column; justify-content:center; padding:10px 12px; flex-shrink:0; }
+  .unfurl .og b{ font-family:var(--serif); font-size:17px; font-weight:500; letter-spacing:-.01em; line-height:1.1; }
+  .unfurl .og span{ font-size:9.5px; font-weight:500; opacity:.85; margin-top:4px; line-height:1.3; }
+  .unfurl .txt{ padding:10px 12px; font-size:12.5px; line-height:1.4; color:var(--ink-2); }
+  .unfurl .txt b{ display:block; font-weight:600; color:var(--ink); }
+  .unfurl .txt span{ color:var(--ink-3); font-size:11px; }
+  .person{ display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14px; }
+  .person .av{ margin:0; width:30px; height:30px; border-color:transparent; flex-basis:30px; }
+  .person .s{ margin-left:auto; font-size:12px; color:var(--ink-3); }
+  .person.me{ font-weight:600; }
+  .toast{ position:absolute; left:18px; right:18px; bottom:92px; background:var(--ink); color:var(--paper-0); border-radius:14px; padding:11px 14px; font-size:13px; line-height:1.45; z-index:9; opacity:0; transform:translateY(6px); transition:opacity .2s var(--ease), transform .2s var(--ease); pointer-events:none; }
+  .toast.show{ opacity:1; transform:none; }
+  .toast b{ font-weight:600; color:#ffd36b; }
+  .sms{ background:var(--paper-0); border:1px solid var(--hair); border-radius:14px 14px 14px 4px; padding:10px 12px; font-size:13px; line-height:1.5; color:var(--ink); }
+  .sms u{ text-decoration:none; font-weight:600; color:var(--carnelian-deep); }
+  .sheet .acts{ margin-top:14px; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
+
+  /* vendor mockup additions */
+  .wrap{ max-width:1660px; }
+  .intro{ max-width:760px; margin:0 auto 36px; text-align:center; }
+  .intro h1{ font-family:var(--serif); font-size:34px; font-weight:500; letter-spacing:-.02em; line-height:1.12; margin:14px 0 12px; }
+  .intro h1 em{ font-style:italic; color:var(--carnelian-deep); }
+  .intro p{ color:var(--ink-2); font-size:14.5px; line-height:1.55; margin:0 auto 10px; max-width:62ch; }
+  .intro .note{ font-size:11.5px; line-height:1.55; color:var(--ink-3); margin-top:14px; }
+  body{ padding-left:16px; padding-right:16px; }
+  .rail{ gap:24px; }
+  .frame{ width:390px; }
+  .cap{ display:flex; align-items:baseline; gap:10px; padding:0 8px 12px; }
+  .cap b{ font-family:var(--serif); font-size:22px; font-weight:500; color:var(--carnelian-deep); }
+  .cap span{ font-size:13px; color:var(--ink-2); }
+  .cap small{ margin-left:auto; font-size:11px; color:var(--ink-3); white-space:nowrap; }
+  .plate.mono{ background:#56595b; color:var(--paper-0); --ring:rgba(74,74,74,.55); font-family:var(--serif); font-size:15px; font-weight:500; }
+  .offer{ margin-top:10px; display:grid; grid-template-columns:26px 1fr; align-items:center; gap:8px 10px; padding:9px 10px; border-radius:12px; background:var(--paper-0); border:1px solid var(--hair); font-size:12.5px; line-height:1.35; color:var(--ink-2); }
+  .offer .plate{ width:26px; height:26px; border-radius:7px; font-size:12px; }
+  .offer > span{ min-width:0; }
+  .offer b{ color:var(--ink); font-weight:600; }
+  .vmark{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--ink-3); white-space:nowrap; }
+  .vmark svg{ width:12px; height:12px; stroke:var(--moss-deep); fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+  .mast h2 .vmark{ font-size:12px; vertical-align:middle; margin-left:6px; }
+  .drow.offerrow{ background:var(--moss-tint); }
+  .drow.offerrow .k{ color:var(--moss-deep); }
+  .rec{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .rec div{ background:var(--paper-0); border:1px solid var(--hair); border-radius:14px; padding:10px 12px; }
+  .rec b{ display:block; font-family:var(--serif); font-size:24px; font-weight:500; letter-spacing:-.02em; line-height:1.05; }
+  .rec span{ display:block; font-size:11px; color:var(--ink-3); margin-top:3px; line-height:1.3; }
+  .step{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; font-size:14px; font-weight:500; }
+  .step small{ display:block; color:var(--ink-3); font-size:12px; font-weight:400; margin-top:2px; }
+  .step .ctl{ display:inline-flex; align-items:center; gap:4px; flex-shrink:0; }
+  .step .ctl button{ width:30px; height:30px; border-radius:999px; border:0; background:var(--tint); font-size:16px; line-height:1; padding:0; }
+  .step .ctl b{ font-family:var(--serif); font-size:20px; font-weight:500; min-width:52px; text-align:center; font-variant-numeric:tabular-nums; }
+  .vcard{ cursor:default; }
+  .vcard .facts .grp{ color:var(--ink-3); }
+  .hero.v{ --f0:#f4f6f2; --f1:#e4ebe2; --f2:#d2ddd0; --dot:#3d8a5f; box-shadow:inset 0 0 0 1px rgba(47,110,74,.18); }
+  .hero.v .k{ color:#3f6a4e; } .hero.v .k small{ color:#5c7a65; } .hero.v p{ color:#5c7a65; }
+  .json{ margin:0; background:var(--ink); color:var(--paper-1); border-radius:14px 14px 14px 4px; padding:12px 14px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:11px; line-height:1.55; white-space:pre; overflow:auto; }
+  .json .key{ color:#ffd36b; } .json .num{ color:#d6f55e; } .json .str{ color:#96dfd3; }
+  .agentline{ font-size:12.5px; line-height:1.5; color:var(--ink-2); padding:10px 14px; border-top:1px solid var(--hair); }
+  .agentline:first-child{ border-top:0; }
+  .agentline b{ font-weight:600; color:var(--ink); }
+  .dim{ opacity:.45; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="intro">
+  <div class="eyebrow">Quorum · vendor side · throwaway mockup</div>
+  <h1>Someone adds the shop to an intent. The shop sees how many are considering it, and offers a <em>discount</em>.</h1>
+  <p>Four screens, left to right. The group's intent with the shop's discount on it. The page the shop gets told about and claims. What the shop sees once it is in: the people considering it, one button to offer a discount, and a record built from what groups actually did. And the same page as an agent reads it.</p>
+  <div class="note">Try: on <b>2</b>, tap Claim this page. On <b>3</b>, step the discount and tap Post: it appears on <b>1</b> and in the record on <b>4</b>. Nobody is texted; the shop sees counts and days, never names. Static click-through, state resets on reload.</div>
+</div>
+
+<div class="rail">
+  <div class="frame">
+    <div class="cap"><b>1</b><span>The group's intent</span><small>with the shop's discount</small></div>
+    <div class="phone" id="pA">
+      <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+      <div class="head"><span class="wordmark">Quorum</span><span class="meta">EMBA '27 · Feb 14–20</span></div>
+      <div class="screen"></div>
+      <div class="tabbar"><button class="on">Board</button><button>Post</button><button>You</button></div>
+      <div class="sheet"><div class="panel"></div></div>
+      <div class="toast"></div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="cap"><b>2</b><span>The shop is told</span><small>unclaimed page</small></div>
+    <div class="phone" id="pC">
+      <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+      <div class="head"><span class="wordmark">Quorum</span><span class="meta">for shops</span></div>
+      <div class="screen"></div>
+      <div class="toast"></div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="cap"><b>3</b><span>What the shop sees</span><small>claimed · Yaly Couture</small></div>
+    <div class="phone" id="pD">
+      <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+      <div class="head"><span class="wordmark">Quorum</span><span class="meta">Yaly Couture · claimed</span></div>
+      <div class="screen"></div>
+      <div class="toast"></div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="cap"><b>4</b><span>What an agent sees</span><small>quorum.app/v/yaly · json</small></div>
+    <div class="phone" id="pE">
+      <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+      <div class="head"><span class="wordmark">Quorum</span><span class="meta">agent profile · read-only</span></div>
+      <div class="screen"></div>
+      <div class="toast"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ---------- shared atoms (same as quorum.html) ----------
+const ICONS = {
+  coatHanger:'M241.57,171.2,141.33,96l23.46-17.6A8,8,0,0,0,168,72a40,40,0,1,0-80,0,8,8,0,0,0,16,0,24,24,0,0,1,47.69-3.78L14.43,171.2A16,16,0,0,0,24,200H232a16,16,0,0,0,9.6-28.8ZM32.73,184C53.6,170.59,89.49,152,128,152s74.4,18.59,95.27,32Z',
+  bowlFood:'M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM148.12,104a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Z',
+};
+const DELTA = { coatHanger:['#ff837d','#fff','#ba6561'], bowlFood:['#f9de81','#56595b','#c39a54'] };
+const ico = (k)=>`<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${ICONS[k]}"/></svg>`;
+const plateStyle = (k)=>`background:color-mix(in oklch, ${DELTA[k][0]} 86%, ${DELTA[k][2]});color:${DELTA[k][1]};--ring:color-mix(in oklch, ${DELTA[k][2]} 55%, transparent)`;
+const plate = (k, cls='')=>`<span class="plate ${cls}" style="${plateStyle(k)}">${ico(k)}</span>`;
+const mono = ()=>`<span class="plate mono">Y</span>`;
+const ARROW = `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+const CHECK = `<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>`;
+const VMARK = `<span class="vmark"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>claimed</span>`;
+const VTICK = `<span class="vmark" title="claimed"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>`;
+const DAYS = [['Sun',14],['Mon',15],['Tue',16],['Wed',17],['Thu',18],['Fri',19],['Sat',20]];
+const $ = (s, r=document)=>r.querySelector(s);
+const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const toastT = new WeakMap();
+function toast(phone, h){ const t=$('.toast', phone); t.innerHTML=h; t.classList.add('show'); clearTimeout(toastT.get(phone)); toastT.set(phone, setTimeout(()=>t.classList.remove('show'),3600)); }
+const av = (n)=>`<span class="av">${n.slice(0,1)}</span>`;
+
+// ---------- data ----------
+const SHOP = { name:'Yaly Couture', addr:'47 Nguyen Thai Hoc, Hoi An', claimed:true };
+const OFFER = { pct:10, posted:true };
+const SUITS = { title:'Suits in Hoi An', by:'Priya', cost:'~$250', time:'3:00pm', heat:[0,3,6,3,2,2,0], bestDay:2, people:['Priya','Marcus','Dana','Josh','Maya','Elena','Tom','Ravi'] };
+const CRAWL = { title:'Street-food crawl', cost:'$20', heat:[0,0,0,3,3,1,0], bestDay:3 };
+
+// ---------- pieces ----------
+function mini(h, best){
+  return `<div class="mini">${h.map((v,i)=>`<div class="${i===best?'best':''}">${v||''}</div>`).join('')}</div><div class="minil">${DAYS.map((d,i)=>`<div class="${i===best?'best':''}">${d[0]}</div>`).join('')}</div>`;
+}
+function sect(lab, n, plain){ return `<div class="sect"><span class="lab">${lab}</span>${plain?`<span class="plain">${plain}</span>`:`<span class="n">${n}</span>`}</div>`; }
+function pile(names, max=4){ const shown=names.slice(0,max), rest=names.length-shown.length; return `<span class="pile">${shown.map(av).join('')}${rest?`<span class="av more">+${rest}</span>`:''}</span>`; }
+function offerBand(){ return OFFER.posted ? `<div class="offer">${mono()}<span><b>${OFFER.pct}% off</b> from ${SHOP.name} ${SHOP.claimed?VTICK:''}</span></div>` : ''; }
+function boardMast(){ return `<div class="mast"><div class="hero"><canvas aria-hidden="true"></canvas><p class="k"><i></i>§ 01 · Trip week<small>· 5 open · 1 on</small></p><h2>What we <em>could</em> do</h2><p>Tap in and your free days ride along; when enough of us overlap, Quorum asks.</p><div class="pills"><button class="pill">Post an intent ${ARROW}</button><button class="pill quiet">Your week</button></div></div></div>`; }
+
+// ---------- 1: the group's intent ----------
+function renderA(){
+  const ph=$('#pA'); const sc=$('.screen', ph); sc.innerHTML=''; sc.insertAdjacentHTML('beforeend', boardMast()); field($('.hero', sc));
+  sc.insertAdjacentHTML('beforeend', sect('Open', 5));
+  const c=el(`<div class="card"><div class="date ready"><small>Feb</small><b>16</b><i>Tue</i></div><div class="t">
+    <div class="titlerow">${plate('coatHanger')}<div class="title">${SUITS.title}</div></div>
+    <div class="facts"><span class="chip">Ready</span><b>6 of 8</b><span>can do Tue · ${SUITS.cost} · ${SUITS.time}</span></div>
+    ${mini(SUITS.heat, SUITS.bestDay)}
+    <div class="ask"><span class="q">6 of 8 can do <b>Tuesday 16</b>. Lock it in? Texts go to the 8.</span><div class="replies"><button class="ghost later">Not yet</button><button class="pill go">Lock it in ${ARROW}</button></div></div>
+    ${offerBand()}
+    <div class="facts who">${pile(SUITS.people)}<span>8 in · 1 maybe</span></div>
+    <div class="acts"><button class="ghost in">I'm in</button><button class="ghost maybe">Maybe</button><button class="ghost out">Out</button></div>
+  </div></div>`);
+  c.querySelector('.go').onclick=(e)=>{ e.stopPropagation(); toast(ph, `<b>Locked · Tue 16.</b> Texts to the 8, invite attached.`); };
+  c.querySelector('.later').onclick=(e)=>{ e.stopPropagation(); toast(ph, `Okay. Quorum asks again when someone new taps in.`); };
+  c.querySelectorAll('.acts button').forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); toast(ph, `Answers are live in quorum.html.`); });
+  c.onclick=()=>openDetail(ph);
+  sc.append(c);
+  sc.append(el(`<div class="card"><div class="date"><small>Feb</small><b>17</b><i>Wed</i></div><div class="t">
+    <div class="titlerow">${plate('bowlFood')}<div class="title">${CRAWL.title}</div></div>
+    <div class="facts"><b>3 of 4</b><span>on Wed · ${CRAWL.cost}</span></div>
+    ${mini(CRAWL.heat, CRAWL.bestDay)}
+    <div class="facts who">${pile(['Ravi','Sofia','Ken','Amara'])}<span>4 in · 1 maybe</span></div>
+    <div class="acts"><button class="ghost in on">${CHECK} In</button><button class="ghost maybe">Maybe</button><button class="ghost out">Out</button></div>
+  </div></div>`));
+}
+function openDetail(ph){
+  const sh=$('.sheet', ph), pn=$('.panel', ph); pn.innerHTML='';
+  pn.insertAdjacentHTML('beforeend', `<div class="handle"></div>
+    <div class="phead">${plate('coatHanger','lg')}<div><div class="ptitle">${SUITS.title}</div><div class="pmeta">${SUITS.cost} · quorum 4 · started by ${SUITS.by}</div></div><span class="chip">Ready</span></div>
+    <p class="pbody">Tailor near the Japanese bridge, 24h turnaround.</p>
+    ${sect('Who can do which day', 0, '6 on Tue')}${mini(SUITS.heat, SUITS.bestDay).replace('class="mini"','class="mini" style="margin-top:0"')}
+    ${sect('Details', 0, 'Anyone in can add · title is fixed')}
+    <div class="details">
+      ${OFFER.posted?`<div class="drow offerrow"><span class="k">Offer</span><span>${OFFER.pct}% off for this group</span><span class="by">${SHOP.name} ${SHOP.claimed?VTICK:''}</span></div>`:''}
+      <div class="drow"><span class="k">Time</span><span>3:00pm</span><span class="by">Priya</span></div>
+      <div class="drow"><span class="k">Where</span><span><a class="chipl" href="#">${SHOP.name}, 47 Nguyen Thai Hoc ↗</a></span><span class="by">Priya</span></div>
+      <div class="drow"><span class="k">Link</span><span><a class="chipl" href="#">yalycouture.com ↗</a></span><span class="by">Priya</span></div>
+      <div class="drow"><span class="k">Note</span><span>Bring a photo of a suit you like. Two fittings, 24h apart.</span><span class="by">Priya</span></div>
+      <div class="addrow"><input placeholder="Add a link, a place, a note" /><button class="ghost">Add</button></div>
+    </div>
+    ${sect('In', 8, '8 in · 1 maybe')}
+    <div class="people">${SUITS.people.map(n=>`<div class="person"><span class="av" style="margin:0;width:30px;height:30px;border-color:transparent;flex-basis:30px">${n[0]}</span><span>${n}</span></div>`).join('')}</div>
+    <button class="solid quiet">Close</button>`);
+  pn.querySelector('.solid').onclick=()=>sh.classList.remove('open');
+  pn.querySelector('.addrow button').onclick=()=>toast(ph, `Added, attributed to <b>you</b>. Nobody is texted about details.`);
+  sh.onclick=(e)=>{ if(e.target===sh) sh.classList.remove('open'); };
+  sh.classList.add('open');
+}
+
+// ---------- 2: the shop is told ----------
+let claimState = 'unclaimed';
+function renderC(){
+  const ph=$('#pC'); const sc=$('.screen', ph); sc.innerHTML='';
+  const claimed = claimState==='claimed';
+  sc.insertAdjacentHTML('beforeend', `<div class="mast"><div class="hero ${claimed?'v':''}"><canvas aria-hidden="true"></canvas>
+    <p class="k"><i></i>${claimed?'§ 01 · Claimed':'§ 01 · Your page'}<small>· ${SHOP.name}</small></p>
+    <h2>${claimed?`This page is <em>yours</em>`:`8 people are <em>considering</em> you`}</h2>
+    <p>${claimed?'See who is considering you and offer them a discount.':'Visiting Hoi An Feb 14–20, for suits. Added to their plan by one of them.'}</p>
+    <div class="pills">${claimed?`<button class="pill" data-go>See them ${ARROW}</button>`:`<button class="pill" data-claim>${claimState==='verifying'?'Verifying…':'Claim this page '+ARROW}</button><button class="pill quiet" data-not>Not my shop</button>`}</div>
+  </div></div>`);
+  field($('.hero', sc));
+  sc.insertAdjacentHTML('beforeend', `${sect('Already on your page', 0, 'counts and days · never names')}
+    <div class="details">
+      <div class="drow"><span class="k">On</span><span>${SUITS.title} · 8 in</span><span class="by">added by a member</span></div>
+      <div class="drow"><span class="k">Days</span><span>6 can do Tue 16 · 3 Mon · 3 Wed</span></div>
+      <div class="drow"><span class="k">Expect</span><span>${SUITS.cost} each · two fittings</span><span class="by">their note</span></div>
+      <div class="drow"><span class="k">Taps</span><span>14 on your website link this week</span></div>
+    </div>
+    ${sect('Claiming', 0, 'one code')}
+    <div class="group"><div class="toggle"><div>Code to the number on your Google listing<small>+84 ••• 412 · or a code texted to the shop phone</small></div></div></div>
+    ${sect('The text that brought you here', 0, 'today 09:12')}
+    <div class="sms">${SHOP.name}: 8 people visiting Hoi An Feb 14–20 are considering you for suits. See what they need and claim your page: <u>quorum.app/v/yaly</u></div>`);
+  const c=$('[data-claim]', sc); if(c) c.onclick=()=>{ if(claimState==='verifying') return; claimState='verifying'; renderC(); toast(ph, `Code sent to <b>+84 ••• 412</b>, the number on your Google listing.`); setTimeout(()=>{ claimState='claimed'; SHOP.claimed=true; renderC(); renderA(); renderE(); toast(ph, `<b>Claimed.</b>`); }, RM?0:1200); };
+  const n=$('[data-not]', sc); if(n) n.onclick=()=>toast(ph, `Thanks. The page stays unclaimed; the group's plan is unaffected.`);
+  const g=$('[data-go]', sc); if(g) g.onclick=()=>{ $('#pD').scrollIntoView({behavior:RM?'auto':'smooth', block:'center', inline:'center'}); toast($('#pD'), `Counts, days, expected cost. Names stay with their group.`); };
+}
+
+// ---------- 3: what the shop sees ----------
+let draft = OFFER.pct;
+function renderD(){
+  const ph=$('#pD'); const sc=$('.screen', ph); sc.innerHTML='';
+  sc.insertAdjacentHTML('beforeend', `<div class="mast"><div class="hero v"><canvas aria-hidden="true"></canvas>
+    <p class="k"><i></i>§ 02 · Considering you<small>· 11 people · 2 intents</small></p>
+    <h2>Suits, the week of <em>Feb 15</em></h2>
+    <p>Groups with you on their plan. Counts, days and expected cost; names stay with their groups.</p>
+    <div class="pills"><button class="pill" data-offer>Offer a discount ${ARROW}</button></div>
+  </div></div>`);
+  field($('.hero', sc));
+  sc.insertAdjacentHTML('beforeend', sect('Considering you', 2, 'nearest to locking first'));
+  sc.insertAdjacentHTML('beforeend', `<div class="card vcard"><div class="date ready"><small>Feb</small><b>16</b><i>Tue</i></div><div class="t">
+      <div class="titlerow">${plate('coatHanger')}<div class="title">${SUITS.title}</div></div>
+      <div class="facts"><span class="chip">Ready</span><b>6 of 8</b><span>can do Tue · expect ${SUITS.cost}</span></div>
+      ${mini(SUITS.heat, SUITS.bestDay)}
+      ${OFFER.posted?`<div class="offer">${mono()}<span>Your offer: <b>${OFFER.pct}% off</b> · on their page</span></div>`:''}
+    </div></div>
+    <div class="card vcard"><div class="date none"><small>Mar</small><b>No days yet</b></div><div class="t">
+      <div class="titlerow">${plate('coatHanger')}<div class="title">Suits before the wedding</div></div>
+      <div class="facts"><b>3 of 4</b><span>in · expect $200–300</span><span class="grp">· Mar 2–8</span></div>
+    </div></div>`);
+  sc.insertAdjacentHTML('beforeend', `<div id="offer-anchor"></div>${sect('Offer a discount', 0, 'shows on their page with your name')}
+    <div class="group"><div class="step"><div>Discount<small>Off the expected price, for this group</small></div><div class="ctl"><button data-d="-5">−</button><b>${draft}%</b><button data-d="5">+</button></div></div></div>
+    <button class="solid red" data-post>Post to ${SUITS.title} ${ARROW}</button>
+    <p class="hint pad" style="margin:8px 0 0">Nobody is texted. You can withdraw it any time.</p>`);
+  sc.insertAdjacentHTML('beforeend', `${sect('Your record', 0, 'what groups did · since Oct')}
+    <div class="rec"><div><b>3</b><span>groups chose you</span></div><div><b>2</b><span>locked</span></div><div><b>14</b><span>showed up</span></div></div>
+    <div class="details" style="margin-top:8px">
+      <div class="drow"><span class="k">Back</span><span>1 group came back on its next trip</span></div>
+      <div class="drow"><span class="k">Expect</span><span>$230–280 is what people wrote before coming</span></div>
+      <div class="drow"><span class="k">Missed</span><span>0 locked groups that didn't show</span></div>
+    </div>
+    ${sect('Agents', 0, 'free')}
+    <div class="group"><div class="toggle"><div>Agents can read this page<small>Price band, lead time, how to book, and the record above.</small></div><button class="sw on" data-sw="read"><i></i></button></div></div>`);
+  sc.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ draft=Math.min(30, Math.max(5, draft+ +b.dataset.d)); renderD(); keepScroll(sc,'#offer-anchor'); });
+  $('[data-post]', sc).onclick=()=>{ OFFER.pct=draft; OFFER.posted=true; SHOP.claimed=true; if(claimState!=='claimed'){ claimState='claimed'; renderC(); } renderA(); renderE(); renderD(); keepScroll(sc,'#offer-anchor'); toast(ph, `<b>Posted.</b> ${OFFER.pct}% off is on ${SUITS.title}, with your name. Nobody is texted.`); toast($('#pA'), `${SHOP.name} posted <b>${OFFER.pct}% off</b> for this group. On the page; no text.`); };
+  $('[data-offer]', sc).onclick=()=>keepScroll(sc,'#offer-anchor');
+  $('[data-sw]', sc).onclick=(e)=>{ e.currentTarget.classList.toggle('on'); toast(ph, e.currentTarget.classList.contains('on')?'Agents can read the facts and the record. Never names.':'Hidden from agents. The page still exists for the groups.'); };
+}
+function keepScroll(sc, sel){ const a=$(sel, sc); if(a) sc.scrollTo({ top:a.offsetTop-8, behavior:RM?'auto':'smooth' }); }
+
+// ---------- 4: what an agent sees ----------
+function renderE(){
+  const ph=$('#pE'); const sc=$('.screen', ph); sc.innerHTML='';
+  const j=(o)=>JSON.stringify(o,null,2).replace(/"([^"]+)":/g,'<span class="key">"$1"</span>:').replace(/: "([^"]*)"/g,': <span class="str">"$1"</span>').replace(/: (\d+)/g,': <span class="num">$1</span>');
+  const rec={ place:'yaly-couture.hoian', claimed:SHOP.claimed, category:'tailor', price_band_usd:[230,280], lead_time_h:24, fittings:2, hours:SHOP.claimed?'09:00-21:00':null, book:SHOP.claimed?'walk-in | whatsapp':null,
+    record:{ chosen_by_groups:3, locked:2, attended:14, returned:1, missed:0 },
+    considering:{ people:11, intents:2, window:'2027-02-14/2027-02-20' },
+    offers: OFFER.posted ? [{ pct:OFFER.pct, intent:'suits-in-hoi-an' }] : [] };
+  sc.insertAdjacentHTML('beforeend', `<div class="mast" style="padding-top:14px"><h2>${SHOP.name}${SHOP.claimed?VMARK:' <span class="vmark">unclaimed</span>'}</h2><p>One record per place, grown from what groups did here. Read by agents planning the next group's trip.</p></div>
+    ${sect('Facts', 0, SHOP.claimed?'set by the shop':'observed · not yet claimed')}
+    <div class="details">
+      <div class="drow"><span class="k">Where</span><span>${SHOP.addr}</span></div>
+      <div class="drow"><span class="k">Price</span><span>$230–280 a suit</span><span class="by">${SHOP.claimed?'shop':'observed'}</span></div>
+      <div class="drow"><span class="k">Lead</span><span>24h · two fittings</span><span class="by">${SHOP.claimed?'shop':'observed'}</span></div>
+      <div class="drow ${SHOP.claimed?'':'dim'}"><span class="k">Book</span><span>${SHOP.claimed?'Walk in, or WhatsApp the shop':'unknown until claimed'}</span></div>
+    </div>
+    ${sect('Record', 0, 'what groups did, not reviews')}
+    <div class="details">
+      <div class="agentline"><b>3 groups</b> chose this shop since October. <b>2</b> locked; <b>14 people</b> showed up; <b>1 group</b> came back. <b>0</b> locked groups missed.</div>
+    </div>
+    ${sect('Considering it now', 0, 'counts only')}
+    <div class="details">
+      <div class="drow"><span class="k">Now</span><span>11 people · 2 intents · week of Feb 15</span></div>
+      <div class="drow"><span class="k">Offer</span><span>${OFFER.posted?`${OFFER.pct}% off for Suits in Hoi An`:'none'}</span><span class="by">${OFFER.posted?SHOP.name:''}</span></div>
+    </div>
+    ${sect('GET /v/yaly.json', 0, 'what the agent actually reads')}
+    <pre class="json">${j(rec)}</pre>
+    <p class="hint pad" style="margin:10px 0 0">No names, no phone numbers, no quotes. The same page a person sees, minus the people.</p>`);
+}
+
+// ---------- the field: orbit rings in the corner (twist) + a sparse mesh ----------
+const INK=[31,26,23], CARN=[179,27,27], GRAPH=[86,89,91], CORAL=[255,123,84];
+const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const smooth=(a,b,v)=>{ const t=Math.max(0,Math.min(1,(v-a)/(b-a))); return t*t*(3-2*t); };
+function grainLayer(W,H,dpr){
+  const c=document.createElement('canvas'); c.width=W*dpr; c.height=H*dpr; const g=c.getContext('2d');
+  const img=g.createImageData(c.width,c.height); const d=img.data; let s=11; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
+  for(let i=0;i<d.length;i+=4){ const v=rnd()*255; d[i]=d[i+1]=d[i+2]=v; d[i+3]=22; }
+  g.putImageData(img,0,0); return c;
+}
+function field(hero){
+  const cv=hero.querySelector('canvas'); const W=hero.clientWidth, H=hero.clientHeight; if(!W||!H) return;
+  const dpr=Math.min(2, devicePixelRatio||1); cv.width=W*dpr; cv.height=H*dpr; const g=cv.getContext('2d');
+  const grain=grainLayer(W,H,dpr);
+  let s=42; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
+  const ox=W+6, oy=-6, maxR=Math.hypot(W,H)*0.66;
+  const falloff=(x,y)=>1-smooth(0.22,0.95,Math.hypot(x-ox,y-oy)/maxR);
+  const rings=[];
+  for(let i=0,rad=8;rad<maxR;i++,rad+=9){
+    const n=Math.max(6,Math.round(rad*2*Math.PI/8)); const ring={ rad, dir:(i%2?-1:1), base:0.05+rnd()*0.2, dots:[] };
+    for(let k=0;k<n;k++) ring.dots.push({ a:k/n*2*Math.PI+rnd()*0.2, r:0.6+rnd()*0.9, c:rnd()<0.05?CARN:INK });
+    rings.push(ring);
+  }
+  const turn=(ring,i,t)=> ring.dir*0.5*Math.sin(0.45*t - i*0.42) + 0.12*ring.dir*ring.base*t;
+  const P=[]; const REACH=60, LA=0.2, LW=0.6;
+  for(let i=0;i<34;i++) P.push({x:rnd()*W, y:rnd()*H, vx:(rnd()-0.5)*0.12, vy:(rnd()-0.5)*0.12, r:0.9+rnd()*1.1, c:rnd()<0.12?CARN:GRAPH});
+  const t0=performance.now(); let last=0, visible=true;
+  const io=new IntersectionObserver(es=>{ visible=es[0].isIntersecting; if(visible){ RM ? frame(t0+1600) : requestAnimationFrame(frame); } }); io.observe(hero);
+  function frame(now){
+    if(!visible || !hero.isConnected){ io.disconnect(); return; }
+    if(now-last<33){ requestAnimationFrame(frame); return; } last=now;
+    const t=(now-t0)/1000; g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+    const rg=g.createRadialGradient(W*0.88,H*0.05,0,W*0.88,H*0.05,W*0.62); rg.addColorStop(0,rgba(CORAL,.55)); rg.addColorStop(0.45,rgba(CORAL,.18)); rg.addColorStop(1,rgba(CORAL,0)); g.fillStyle=rg; g.fillRect(0,0,W,H);
+    rings.forEach((ring,i)=>{ const off=turn(ring,i,t);
+      for(const d of ring.dots){ const a=d.a+off; const x=ox+Math.cos(a)*ring.rad, y=oy+Math.sin(a)*ring.rad; if(x<-4||y<-4||x>W+4||y>H+4) continue; const wt=falloff(x,y); if(wt<=0.02) continue; g.globalAlpha=(d.c===CARN?0.9:0.42)*wt; g.fillStyle=rgba(d.c,1); g.beginPath(); g.arc(x,y,d.r,0,Math.PI*2); g.fill(); } });
+    g.globalAlpha=1;
+    for(const p of P){ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1; }
+    const N=P.length, B=6, buckets=Array.from({length:B},()=>[]); g.lineWidth=LW;
+    for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){ const a=P[i], b=P[j]; const dx=a.x-b.x, dy=a.y-b.y; if(Math.abs(dx)>REACH||Math.abs(dy)>REACH) continue; const d=Math.hypot(dx,dy); if(d<REACH){ buckets[Math.min(B-1,Math.floor((1-d/REACH)*B))].push(a.x,a.y,b.x,b.y); } }
+    buckets.forEach((q,k)=>{ if(!q.length) return; g.strokeStyle=rgba(GRAPH,((k+0.5)/B)*LA); g.beginPath(); for(let i=0;i<q.length;i+=4){ g.moveTo(q[i],q[i+1]); g.lineTo(q[i+2],q[i+3]); } g.stroke(); });
+    for(const p of P){ g.fillStyle=rgba(p.c,p.c===CARN?0.8:0.6); g.beginPath(); g.arc(p.x,p.y,p.r,0,Math.PI*2); g.fill(); }
+    g.globalAlpha=0.9; g.setTransform(1,0,0,1,0,0); g.drawImage(grain,0,0); g.globalAlpha=1;
+    if(!RM) requestAnimationFrame(frame);
+  }
+}
+
+
+
+renderA(); renderC(); renderD(); renderE();
+</script>
+</body>
+</html>
