@@ -50,5 +50,5 @@ Order: 1 → 2 → 3 → {4, 5, 6} → 7 → 8. The look is `quorum.html` v5 thr
 
 ## 8. Ship
 
-- [ ] 8.1 Apply `0005_boards.sql` to `supabase-loop` via the Supabase MCP, record the version, re-run the security advisors; verify `emba27` is unchanged and the publishable key still reads nothing
-- [ ] 8.2 Push `main`; verify on the live site: `/b/emba27` unchanged, `/robots.txt` serves, start a board from `/`, then remove the test board and its rows
+- [x] 8.1 Apply `0005_boards.sql` to `supabase-loop` via the Supabase MCP, record the version, re-run the security advisors; verify `emba27` is unchanged and the publishable key still reads nothing (2026-10-24: run by the founder in the SQL editor, so not in the migrations list; verified: window_kind, board_window, nullable event.board_id, board_created, new lock_proposal with search_path=public; emba27 fixed Feb 14–20, 5 proposals, 5 events; anon cannot read board or execute lock_proposal; advisors show only the expected INFO rls_enabled_no_policy)
+- [x] 8.2 Push `main`; verify on the live site: `/b/emba27` unchanged, `/robots.txt` serves, start a board from `/`, then remove the test board and its rows (2026-10-24: 98dbc56 pushed and deployed; /robots.txt disallows /b/ and /p/; /b/emba27 200, noindex, Feb 14–20; / shows Start a board; rolling render checked with a board inserted by SQL and then deleted. The phone-code path was not run in prod: codes go to the log notifier)
