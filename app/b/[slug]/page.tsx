@@ -9,7 +9,8 @@ import { viewer } from "@/lib/viewer";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const board = await boardBySlug(db(), (await params).slug);
-  return board ? { title: `${board.name} · Quorum`, openGraph: { title: board.name } } : {};
+  const robots = { index: false, follow: false };
+  return board ? { title: `${board.name} · Quorum`, openGraph: { title: board.name }, robots } : { robots };
 }
 
 export default async function BoardPage({ params }: { params: Promise<{ slug: string }> }) {

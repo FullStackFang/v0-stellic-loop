@@ -3,11 +3,16 @@ import type { Q } from "./db";
 import { conflictsFor, type Conflicts } from "./quorum";
 import type { Board, Detail, Person, Proposal, Response } from "./types";
 
-const BOARD_COLS = "id, slug, name, tz, window_start, window_end";
+const BOARD_COLS = "id, slug, name, tz, window_kind, window_start, window_end";
 
 export async function boardBySlug(q: Q, slug: string): Promise<Board | null> {
   const { rows } = await q.query<Board>(`select ${BOARD_COLS} from board where slug = $1`, [slug]);
   return rows[0] ?? null;
+}
+
+export async function allBoards(q: Q): Promise<Board[]> {
+  const { rows } = await q.query<Board>(`select ${BOARD_COLS} from board`);
+  return rows;
 }
 
 export async function boardById(q: Q, id: string): Promise<Board | null> {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { dow, shortLabel, windowDays } from "@/lib/days";
+import { dayNames, shortLabel, stripLabel, todayIn, windowDaysOf } from "@/lib/days";
 import type { Board } from "@/lib/types";
 import type { CardModel } from "@/lib/view";
 import { Chip, DateBlock, Plate, Sect } from "./atoms";
@@ -7,7 +7,7 @@ import { DayStrip } from "./DayStrip";
 import { ShowNameSwitch } from "./ShowNameSwitch";
 
 /** Your free days for the window, the name switch, and what you're in. */
-export function YouView({ board, me, free, mine }: { board: Board; me: { show_name: boolean } | null; free: string[]; mine: CardModel[] }) {
+export function YouView({ board, me, free, mine, today = todayIn(board.tz) }: { board: Board; me: { show_name: boolean } | null; free: string[]; mine: CardModel[]; today?: string }) {
   if (!me) {
     return (
       <div className="mast" style={{ paddingTop: 14 }}>
@@ -23,8 +23,8 @@ export function YouView({ board, me, free, mine }: { board: Board; me: { show_na
         <h2>Your <em>week</em></h2>
         <p>Free days for the window. They ride along with anything you tap in on; others see counts per day, never who.</p>
       </div>
-      <Sect lab="Free" n={free.length} />
-      <DayStrip days={windowDays(board.window_start, board.window_end)} selected={free} boardId={board.id} />
+      <Sect lab="Free" plain={stripLabel(board, today)} />
+      <DayStrip days={windowDaysOf(board, today)} selected={free} today={today} boardId={board.id} />
       <p className="hint pad" style={{ margin: "10px 0 16px" }}>Tap a day to toggle.</p>
       <div className="group"><ShowNameSwitch show={me.show_name} /></div>
       <Sect lab="You're in" n={mine.length} />
@@ -38,7 +38,7 @@ export function YouView({ board, me, free, mine }: { board: Board; me: { show_na
               {c.state === "on" ? (
                 <><Chip kind="on" /><span>{[c.onDay && shortLabel(c.onDay), c.time].filter(Boolean).join(" · ")}</span></>
               ) : c.needsDay ? (
-                <span>Your days: {c.myDays.map(dow).join(" · ") || "none yet"}</span>
+                <span>Your days: {dayNames(c.myDays).join(" · ") || "none yet"}</span>
               ) : (
                 <span>No day needed</span>
               )}

@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { shortLabel, dow, windowDays } from "@/lib/days";
+import { shortLabel, dow, stripLabel, todayIn, windowDaysOf } from "@/lib/days";
 import type { Board } from "@/lib/types";
 import { longLabel } from "@/lib/days";
 import type { CardModel, PersonRow } from "@/lib/view";
 import { Acts } from "./Acts";
 import { Ask, LockedLine } from "./Ask";
 import { Chip, MiniHeat, Plate, Sect } from "./atoms";
+import { CopyNames } from "./CopyNames";
 import { DayStrip } from "./DayStrip";
 import { DetailsBox, type DetailRow } from "./DetailsBox";
 import { PosterControls } from "./PosterControls";
@@ -18,10 +19,13 @@ export type ProposalPageModel = {
   people: { in: PersonRow[]; maybe: PersonRow[] };
   signedIn: boolean;
   isPoster: boolean;
+  /** the viewer's real name, for their own row in a copied roster */
+  viewerName?: string | null;
+  today?: string;
 };
 
 /** The card expanded: heat, your days, the ask, details, who's in, share. */
-export function ProposalView({ board, c, details, people, signedIn, isPoster }: ProposalPageModel) {
+export function ProposalView({ board, c, details, people, signedIn, isPoster, viewerName = null, today = todayIn(board.tz) }: ProposalPageModel) {
   const live = c.state === "open" || c.state === "ready" || c.state === "on";
   const isOn = c.state === "on" || (c.state === "past" && !!c.lockedByName);
   const chip =
@@ -54,12 +58,12 @@ export function ProposalView({ board, c, details, people, signedIn, isPoster }: 
 
       {c.needsDay && c.heat ? (
         <>
-          <Sect lab={isOn ? "Locked day" : "Who can do which day"} plain={isOn && c.onDay ? shortLabel(c.onDay) : c.bestDay ? `${c.bestCount} on ${dow(c.bestDay)}` : "no days yet"} />
-          <MiniHeat heat={c.heat} style={{ marginTop: 0 }} />
+          <Sect lab={isOn ? "Locked day" : "Who can do which day"} plain={isOn && c.onDay ? shortLabel(c.onDay) : [stripLabel(board, today), c.bestDay ? `${c.bestCount} on ${dow(c.bestDay)}` : "no days yet"].join(" · ")} />
+          {weeks(c.heat).map((w, i) => <MiniHeat key={w[0].day} heat={w} style={i ? undefined : { marginTop: 0 }} />)}
           {c.me === "in" && (c.state === "open" || c.state === "ready") ? (
             <>
               <p className="hint" style={{ margin: "12px 0 8px" }}>Your days for this one (the dot). Tap to adjust.</p>
-              <DayStrip days={windowDays(board.window_start, board.window_end)} selected={c.myDays} proposalId={c.id} compact />
+              <DayStrip days={windowDaysOf(board, today)} selected={c.myDays} today={today} proposalId={c.id} compact />
             </>
           ) : c.state === "open" || c.state === "ready" ? (
             <p className="hint" style={{ margin: "10px 0 0" }}>Tap in and your free days land here.</p>
@@ -86,14 +90,18 @@ export function ProposalView({ board, c, details, people, signedIn, isPoster }: 
       <div className="acts">
         <ShareButton proposalId={c.id} />
         <Link className="ghost" href={`/b/${board.slug}/new?from=${c.id}`}>Post a version</Link>
+        {people.in.length ? <CopyNames title={c.title} people={people} viewerName={viewerName} /> : null}
       </div>
       {isPoster ? (
-        <PosterControls proposalId={c.id} detail={c.detail} time={c.time} idled={c.state === "idled"} closed={c.state === "closed"} min={c.min} />
+        <PosterControls proposalId={c.id} detail={c.detail} time={c.time} idled={c.state === "idled"} closed={c.state === "closed"} min={c.min} rolling={board.window_kind === "rolling"} />
       ) : null}
       <Link className="solid quiet" href={`/b/${board.slug}`}>Back to the board</Link>
     </div>
   );
 }
+
+/** The window in rows of seven. */
+const weeks = <T,>(xs: T[]): T[][] => Array.from({ length: Math.ceil(xs.length / 7) }, (_, i) => xs.slice(i * 7, i * 7 + 7));
 
 function PersonLine({ p, maybe }: { p: PersonRow; maybe?: boolean }) {
   const initial = p.me ? "Y" : p.name.startsWith("+1") ? "+" : p.name.slice(0, 1).toUpperCase();

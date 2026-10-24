@@ -3,12 +3,13 @@
 import "server-only";
 import { headers } from "next/headers";
 
-type Bucket = "identify" | "verify" | "share";
+type Bucket = "identify" | "verify" | "share" | "board";
 
 export const LIMITS: Record<Bucket, { perIp: number; perPhone: number; windowMs: number }> = {
   identify: { perIp: 30, perPhone: 10, windowMs: 60_000 },
   verify: { perIp: 20, perPhone: 10, windowMs: 60_000 },
   share: { perIp: 20, perPhone: 20, windowMs: 60_000 },
+  board: { perIp: 5, perPhone: 5, windowMs: 3_600_000 },
 };
 
 const hits = new Map<string, { n: number; reset: number }>();

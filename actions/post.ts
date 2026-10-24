@@ -2,7 +2,7 @@
 import { db } from "@/lib/db";
 import { attribution, setSession, withIdentity } from "@/lib/identity";
 import { boardBySlug } from "@/lib/load";
-import { parsePost, postAs, type PostInput } from "@/lib/ops";
+import { parsePost, postAs, postRefusal, type PostInput } from "@/lib/ops";
 import { limited } from "@/lib/ratelimit";
 import { fail, fromWho, type Fail, type NeedsCode } from "./results";
 
@@ -16,6 +16,8 @@ export async function post(input: PostInput & { slug: string; name?: string; pho
   const out = await db().tx(async (q) => {
     const board = await boardBySlug(q, input.slug);
     if (!board) return fail("not_found");
+    const refused = postRefusal(board, v.needsDay);
+    if (refused) return fail(refused);
     const fields: PostInput = {
       title: input.title, icon: input.icon, needsDay: input.needsDay, detail: input.detail,
       cost: input.cost, time: input.time, min: input.min, links: input.links, versionOf: input.versionOf,

@@ -63,7 +63,7 @@ export function PostForm({ slug, signedIn, from }: { slug: string; signedIn: boo
     start(async () => {
       const r = await verifyCode({ phone: ident.phone, code: ident.code });
       if (r.status === "error") return setError(r.message);
-      if (r.proposalId) router.push(`/p/${r.proposalId}`);
+      if (r.path) router.push(r.path);
     });
   }
 

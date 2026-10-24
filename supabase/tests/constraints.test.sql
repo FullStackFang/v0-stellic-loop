@@ -71,3 +71,36 @@ do $$ begin
   values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000c1', 'response', 'group_link'),
          ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000c1', 'response', 'group_link');
 end $$;
+
+-- window kinds: a fixed window is 1 to 14 days; a rolling board stores no dates
+insert into board (slug, name, window_start, window_end) values ('t-fixed-14', 'Fourteen', '2027-03-01', '2027-03-14');
+insert into board (slug, name, window_kind) values ('t-rolling', 'Rolling', 'rolling');
+do $$
+declare k text;
+begin
+  select window_kind into k from board where slug = 't-board';
+  if k <> 'fixed' then raise exception 'FAIL: default window_kind is %', k; end if;
+  begin
+    insert into board (slug, name, window_start, window_end) values ('t-fixed-15', 'Fifteen', '2027-03-01', '2027-03-15');
+    raise exception 'FAIL: a 15-day fixed window accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into board (slug, name, window_start, window_end) values ('t-backwards', 'Backwards', '2027-03-02', '2027-03-01');
+    raise exception 'FAIL: a window ending before it starts accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into board (slug, name, window_kind, window_start, window_end) values ('t-rolling-dates', 'Rolling dates', 'rolling', '2027-03-01', '2027-03-07');
+    raise exception 'FAIL: a rolling board with dates accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into board (slug, name) values ('t-fixed-none', 'No dates');
+    raise exception 'FAIL: a fixed board without dates accepted';
+  exception when check_violation then null;
+  end;
+end $$;
+
+-- a code can be logged before its board exists
+insert into event (type, source, data) values ('text_sent', 'direct', '{"kind":"code"}');

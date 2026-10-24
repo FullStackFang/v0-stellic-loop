@@ -18,7 +18,8 @@ export type OnReached = Base & {
 export type OneMore = Base & { to: string[]; count: number; min: number; day: string | null };
 export type MaybeNudge = Base & { to: string[]; count: number };
 export type Dropped = Base & { to: string; who: string; count: number };
-export type Code = { boardId: string; personId: string; phone: string; code: string };
+/** `boardId` is null for a code asked for while starting a board. */
+export type Code = { boardId: string | null; personId: string; phone: string; code: string };
 export type MagicLink = { boardId: string; personId: string; url: string };
 
 export interface Notifier {
@@ -37,7 +38,7 @@ export class LogNotifier implements Notifier {
     private log: (line: string) => void = (l) => console.log(l),
   ) {}
 
-  private async send(kind: keyof Notifier, boardId: string, proposalId: string | null, to: string[], data: Record<string, unknown>) {
+  private async send(kind: keyof Notifier, boardId: string | null, proposalId: string | null, to: string[], data: Record<string, unknown>) {
     this.log(JSON.stringify({ notify: kind, to, ...data }));
     // The code itself is never written to the event log.
     const { code: _code, ...safe } = data;

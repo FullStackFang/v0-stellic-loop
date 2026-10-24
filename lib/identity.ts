@@ -18,7 +18,8 @@ export type IdentityInput = { name?: string | null; phone?: string | null };
 /** What to do once a known number proves itself. */
 export type Pending =
   | { kind: "respond"; proposalId: string; answer: "in" | "out" | "maybe" }
-  | { kind: "post"; boardId: string; post: Record<string, unknown> };
+  | { kind: "post"; boardId: string; post: Record<string, unknown> }
+  | { kind: "board"; name: string; tz: string };
 
 export type Who =
   | { kind: "session"; personId: string }
@@ -55,7 +56,7 @@ export async function attribution(q: Q): Promise<Attribution> {
  * stores a hashed code with `pending`, hands the code to the notifier, and
  * returns `needs_code` — the caller must commit and record nothing else.
  */
-export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: string; pending: Pending }): Promise<Who> {
+export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: string | null; pending: Pending }): Promise<Who> {
   const sid = await sessionPersonId();
   if (sid) {
     const { rows } = await q.query("select 1 from person where id = $1", [sid]);
@@ -80,7 +81,7 @@ export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: s
   return { kind: "new", personId: made[0].id };
 }
 
-async function issueCode(q: Q, phone: string, personId: string, boardId: string, pending: Pending) {
+async function issueCode(q: Q, phone: string, personId: string, boardId: string | null, pending: Pending) {
   const code = sixDigitCode();
   await q.query(
     `insert into otp_code (phone, code_hash, expires_at, attempts, pending)

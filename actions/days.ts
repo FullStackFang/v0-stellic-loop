@@ -1,11 +1,15 @@
 "use server";
 import { db } from "@/lib/db";
-import { isValidDay } from "@/lib/days";
+import { countedDays, todayIn } from "@/lib/days";
+import type { Board } from "@/lib/types";
 import { attribution, joinBoard, sessionPersonId, setSession } from "@/lib/identity";
 import { boardById, personConflicts, proposalById } from "@/lib/load";
 import { fail, type Fail } from "./results";
 
 export type DaysResult = { status: "ok" } | Fail;
+
+/** A day can be marked only if it counts: in the current window, today or later. */
+const markable = (board: Board, day: unknown) => typeof day === "string" && countedDays(board, todayIn(board.tz)).includes(day);
 
 /**
  * Mark or unmark a free day for the board's window. The change follows the
@@ -17,7 +21,7 @@ export async function setFreeDay(input: { boardId: string; day: string; free: bo
   const out = await db().tx(async (q) => {
     const board = await boardById(q, input.boardId);
     if (!board) return fail("not_found");
-    if (!isValidDay(input.day) || input.day < board.window_start || input.day > board.window_end) return fail("bad_day");
+    if (!markable(board, input.day)) return fail("bad_day");
     if (input.free) {
       await q.query("insert into free_day (board_id, person_id, day) values ($1, $2, $3) on conflict do nothing", [board.id, me, input.day]);
       const conflict = (await personConflicts(q, board.id, me)).get(input.day);
@@ -54,7 +58,7 @@ export async function setProposalDay(input: { proposalId: string; day: string; o
     const p = await proposalById(q, input.proposalId, true);
     if (!p) return fail("not_found");
     const board = (await boardById(q, p.board_id))!;
-    if (!isValidDay(input.day) || input.day < board.window_start || input.day > board.window_end) return fail("bad_day");
+    if (!markable(board, input.day)) return fail("bad_day");
     if (p.status !== "open" || !p.needs_day) return fail("not_ready");
     const sql = input.on
       ? `update response set days = array(select unnest(days || $3::date) order by 1), updated_at = now()

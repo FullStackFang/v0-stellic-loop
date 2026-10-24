@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { longLabel } from "@/lib/days";
+import { cardRow } from "@/lib/quorum";
 import type { CardModel } from "@/lib/view";
 import { Acts } from "./Acts";
 import { Ask, LockedLine } from "./Ask";
@@ -30,7 +31,7 @@ export function Card({ c, signedIn }: { c: CardModel; signedIn: boolean }) {
           {c.facts.strong ? <b>{c.facts.strong}</b> : null}
           {c.facts.text ? <span>{c.facts.text}</span> : null}
         </div>
-        {c.heat && (c.state === "open" || c.state === "ready") ? <MiniHeat heat={c.heat} /> : null}
+        {c.heat && (c.state === "open" || c.state === "ready") ? <MiniHeat heat={cardRow(c.heat, c.onDay ?? c.bestDay)} /> : null}
         {c.ask ? <Ask proposalId={c.id} ask={c.ask} /> : null}
         {c.state === "on" ? <LockedLine proposalId={c.id} dayLong={c.onDay ? longLabel(c.onDay) : null} count={c.inCount} /> : null}
         <div className="facts who">

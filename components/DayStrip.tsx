@@ -6,10 +6,11 @@ import { dayNum, dow } from "@/lib/days";
 import { useToast } from "./Toast";
 
 /**
- * Seven day buttons. `boardId` toggles your free days for the window;
- * `proposalId` adjusts your days on that proposal alone.
+ * The window's days, seven to a row. `boardId` toggles your free days;
+ * `proposalId` adjusts your days on that proposal alone. Days before `today`
+ * are struck through and do nothing.
  */
-export function DayStrip({ days, selected, boardId, proposalId, compact }: { days: string[]; selected: string[]; boardId?: string; proposalId?: string; compact?: boolean }) {
+export function DayStrip({ days, selected, today, boardId, proposalId, compact }: { days: string[]; selected: string[]; today: string; boardId?: string; proposalId?: string; compact?: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [, start] = useTransition();
@@ -28,6 +29,15 @@ export function DayStrip({ days, selected, boardId, proposalId, compact }: { day
   return (
     <div className={`days${compact ? " compact" : ""}`} role="group" aria-label={proposalId ? "Your days for this one" : "Your free days"}>
       {days.map((d) => {
+        if (d < today) {
+          return (
+            <button key={d} className="day busy" aria-disabled="true">
+              <span className="d">{dow(d)}</span>
+              <span className="num">{dayNum(d)}</span>
+              {compact ? null : <span className="src" />}
+            </button>
+          );
+        }
         const on = sel.includes(d);
         return (
           <button key={d} className={`day${on ? " free" : ""}`} aria-pressed={on} onClick={() => toggle(d)}>

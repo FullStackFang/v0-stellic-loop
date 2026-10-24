@@ -1,16 +1,17 @@
 // What a card and the proposal page show, computed once from rows. Pure, so
 // pages stay thin and the copy is unit-tested. Mirrors quorum.html v5's
 // factsFor / dateFor / pileFor / ask.
-import { dayNum, dow, longLabel, mon, shortLabel } from "./days";
+import { countedDays, dayNames, dayNum, dow, longLabel, mon, shortLabel, todayIn, windowOf } from "./days";
 import type { BoardData } from "./load";
 import { best, conflictFor, effectiveDays, heat, ins, maybes, minOf, stateOf, type State } from "./quorum";
-import type { Answer, Person, Proposal, Response } from "./types";
+import type { Answer, Board, Person, Proposal, Response } from "./types";
 
 export type DateBlock = { cls: "" | "ready" | "on" | "none"; small: string; big: string; sub: string };
 export type HeatView = { day: string; letter: string; count: number; best: boolean; on: boolean; you: boolean }[];
 export type Face = { initial: string; cls: "" | "me" | "more" };
 export type AskView = { count: number; of: number; dayLong: string | null; cta: string };
-export type PersonRow = { name: string; me: boolean; days: string };
+/** `anon`: their name switch is off, so the row never names them. */
+export type PersonRow = { name: string; me: boolean; anon: boolean; days: string };
 
 export type CardModel = {
   id: string;
@@ -60,14 +61,15 @@ const join = (...xs: (string | null | undefined | false)[]) => xs.filter(Boolean
 export function cardModel(p: Proposal, data: BoardData, viewer: Viewer, now: Date = new Date()): CardModel {
   const rs = data.responses.filter((r) => r.proposal_id === p.id);
   const state = stateOf(p, data.board, rs, data.conflicts, now);
-  const cells = heat(data.board, rs, data.conflicts);
+  const cells = heat(data.board, rs, data.conflicts, now);
+  const counted = new Set(countedDays(data.board, todayIn(data.board.tz, now)));
   const b = best(cells);
   const inRs = ins(rs);
   const n = inRs.length;
   const m = maybes(rs).length;
   const min = minOf(p);
   const mine = viewer ? rs.find((r) => r.person_id === viewer.id) ?? null : null;
-  const myDays = mine?.answer === "in" ? effectiveDays(mine, data.conflicts) : [];
+  const myDays = mine?.answer === "in" ? effectiveDays(mine, data.conflicts).filter((d) => counted.has(d)) : [];
   const lockedByName = nameOf(data.people, p.locked_by, viewer);
   const isOn = state === "on" || (state === "past" && p.status === "on");
 
@@ -75,7 +77,7 @@ export function cardModel(p: Proposal, data: BoardData, viewer: Viewer, now: Dat
   let date: DateBlock;
   if (isOn) date = p.on_day ? { cls: "on", small: mon(p.on_day), big: String(dayNum(p.on_day)), sub: dow(p.on_day) } : { cls: "on", small: "Any", big: "On", sub: "" };
   else if (!p.needs_day) date = { cls: "none", small: "Any", big: "No day", sub: "" };
-  else if (!b) date = { cls: "none", small: mon(data.board.window_start), big: "No days yet", sub: "" };
+  else if (!b) date = { cls: "none", small: mon(windowOf(data.board, todayIn(data.board.tz, now)).start), big: "No days yet", sub: "" };
   else date = { cls: state === "ready" ? "ready" : "", small: mon(b.day), big: String(dayNum(b.day)), sub: dow(b.day) };
 
   const chip = state === "on" ? "on" : state === "ready" ? "ready" : null;
@@ -124,7 +126,7 @@ export function cardModel(p: Proposal, data: BoardData, viewer: Viewer, now: Dat
 
   let conflict: string | null = null;
   if (viewer && mine?.answer === "in" && p.needs_day && state !== "on") {
-    const c = conflictFor(viewer.id, [...new Set([...mine.days, ...(viewer.free ?? [])])], data.conflicts, p.id);
+    const c = conflictFor(viewer.id, [...new Set([...mine.days, ...(viewer.free ?? [])])].filter((d) => counted.has(d)), data.conflicts, p.id);
     if (c) conflict = `${c.proposal.title} ${shortLabel(c.day)}`;
   }
 
@@ -136,20 +138,41 @@ export function cardModel(p: Proposal, data: BoardData, viewer: Viewer, now: Dat
   };
 }
 
-/** In and Maybe lists for the proposal page, honouring each person's name switch. */
-export function peopleLists(p: Proposal, rs: Response[], people: BoardData["people"], viewer: Viewer, conflicts: BoardData["conflicts"]) {
+/** In and Maybe lists for the proposal page, honouring each person's name switch; days listed are counted days only. */
+export function peopleLists(p: Proposal, rs: Response[], people: BoardData["people"], viewer: Viewer, conflicts: BoardData["conflicts"], board: Board, now: Date = new Date()) {
+  const counted = new Set(countedDays(board, todayIn(board.tz, now)));
   const row = (r: Response): PersonRow => {
     const me = !!viewer && r.person_id === viewer.id;
     const person = people.get(r.person_id) as Pick<Person, "name" | "show_name"> | undefined;
+    const anon = me ? !viewer!.show_name : !person?.show_name;
     const name = me ? (viewer!.show_name ? "You" : "You (+1 anonymous)") : person?.show_name ? person.name : "+1 anonymous";
-    const days = r.answer === "in" && p.needs_day && p.status === "open" ? effectiveDays(r, conflicts).map((d) => dow(d)).join(" ") : "";
-    return { name, me, days };
+    const days = r.answer === "in" && p.needs_day && p.status === "open"
+      ? dayNames(effectiveDays(r, conflicts).filter((d) => counted.has(d))).join(" ")
+      : "";
+    return { name, me, anon, days };
   };
   const mine = (r: Response) => (viewer && r.person_id === viewer.id ? 0 : 1);
   return {
     in: ins(rs).filter((r) => r.proposal_id === p.id).sort((a, b) => mine(a) - mine(b)).map(row),
     maybe: maybes(rs).filter((r) => r.proposal_id === p.id).sort((a, b) => mine(a) - mine(b)).map(row),
   };
+}
+
+/**
+ * The copyable roster: "Ski trip · 5 in" and "Priya, Marcus, Dana and 2 more ·
+ * Maybe: Hana". The viewer is copied under their own name; anyone with their
+ * name switch off is only counted. Never a number.
+ */
+export function rosterText(title: string, lists: { in: PersonRow[]; maybe: PersonRow[] }, viewerName: string | null): string {
+  const names = (rows: PersonRow[]) => {
+    const named = rows.filter((r) => !r.anon).map((r) => (r.me ? viewerName ?? "Me" : r.name));
+    const more = rows.length - named.length;
+    if (!more) return named.join(", ");
+    return named.length ? `${named.join(", ")} and ${more} more` : `${more} more`;
+  };
+  const line = lists.maybe.length ? `${names(lists.in)} · Maybe: ${names(lists.maybe)}` : names(lists.in);
+  return `${title} · ${lists.in.length} in
+${line}`;
 }
 
 /** "6 of 8 in · Suits in Hoi An · Tue 16" for og:title and the OG image. */

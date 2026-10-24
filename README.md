@@ -33,7 +33,7 @@ node scripts/local-db.mjs --demo   # prints a /m/local-demo-token link that sign
 # .env.local: DATABASE_URL=postgres://postgres@127.0.0.1:54329/postgres
 ```
 
-`--demo` loads the made-up people and answers from `quorum.html`; drop it for the bare seed. Data is gone when the process exits.
+`--demo` loads the made-up people and answers from `quorum.html`, plus two rolling example boards, `/b/example-team` (12 open, 3 ON) and `/b/example-club` (interest intents); drop it for the bare seed. Data is gone when the process exits.
 
 ## Database
 
@@ -58,7 +58,7 @@ npm run test:db        # same integration suites against board-test
 npm run build
 ```
 
-Last run (2026-10-22): lint clean · `npm test` 11 files / 115 tests green · build green · `test:db` **not yet run**: it needs `board-test` (task 1.1).
+Last run (2026-10-24, quorum-boards): lint clean · `npm test` 17 files / 174 tests green · build green · `app/globals.css` unchanged since 7a26f1d · `test:db` **not yet run**: it needs `board-test` (task 1.1).
 
 The static demos live in `public/demo/` and serve without `.html`: `/demo/stellic` (the Loop campus demo), `/demo/quorum` (the v5 mockup), `/demo/mockups-…`. `next.config.ts` redirects the old static-site URLs (`/quorum.html`, `/index.html`, …) there.
 

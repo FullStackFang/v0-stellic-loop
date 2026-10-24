@@ -25,15 +25,18 @@ export type EventType =
   | "person_added"
   | "share_minted"
   | "fork_created"
-  | "text_sent";
+  | "text_sent"
+  | "board_created";
 
 export type Board = {
   id: string;
   slug: string;
   name: string;
   tz: string;
-  window_start: string;
-  window_end: string;
+  /** fixed: the stored dates; rolling: no dates, today and the next 13 days (lib/days.ts) */
+  window_kind: "fixed" | "rolling";
+  window_start: string | null;
+  window_end: string | null;
 };
 
 export type Person = {

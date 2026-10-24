@@ -2,19 +2,22 @@
 // person first (lib/identity.ts); verifyCode replays the same ops.
 import "server-only";
 import type { Q } from "./db";
-import { isValidDay } from "./days";
+import { countedDays, isValidDay, isWindowOver, todayIn, windowOf } from "./days";
 import type { Attribution } from "./events";
 import { writeEvent } from "./events";
 import { DEFAULT_ICON, isIcon } from "./icons";
 import { joinBoard } from "./identity";
 import { boardById, freeDays, isUuid, personConflicts, proposalById } from "./load";
-import type { Answer, DetailKind, Proposal } from "./types";
+import { allocateBoard, slugify } from "./slug";
+import type { Answer, Board, DetailKind, Proposal } from "./types";
 
 export type OpError = { status: "error"; error: string };
 
-/** Free days for the board minus days the person is ON for elsewhere. */
+/** Free days for the board's counted days (today or later in its window) minus days the person is ON for elsewhere. */
 export async function attachableDays(q: Q, boardId: string, personId: string, proposalId: string | null) {
-  const [free, conflicts] = await Promise.all([freeDays(q, boardId, personId), personConflicts(q, boardId, personId)]);
+  const [board, all, conflicts] = await Promise.all([boardById(q, boardId), freeDays(q, boardId, personId), personConflicts(q, boardId, personId)]);
+  const counted = new Set(board ? countedDays(board, todayIn(board.tz)) : []);
+  const free = all.filter((d) => counted.has(d));
   const days = free.filter((d) => {
     const p = conflicts.get(d);
     return !p || p.id === proposalId;
@@ -138,21 +141,31 @@ export function parsePost(input: PostInput) {
 
 export type PostOk = { status: "ok"; proposalId: string };
 
+/** Why a board takes no needs-a-day post today, if it doesn't: a fixed window that is over. */
+export function postRefusal(board: Board, needsDay: boolean, today: string = todayIn(board.tz)): "dates_over" | null {
+  return needsDay && isWindowOver(board, today) ? "dates_over" : null;
+}
+
 /** Create a proposal with the poster in (their free days attached) and links as details. */
 export async function postAs(q: Q, personId: string, boardId: string, input: PostInput, attr: Attribution): Promise<PostOk | OpError> {
   const v = parsePost(input);
   if ("error" in v) return { status: "error", error: v.error! };
   const board = await boardById(q, boardId);
   if (!board) return { status: "error", error: "not_found" };
+  const today = todayIn(board.tz);
+  const refused = postRefusal(board, v.needsDay, today);
+  if (refused) return { status: "error", error: refused };
+  // A rolling board has no window end, so a needs-a-day post idles at the end of the window it was posted into.
+  const deadline = v.needsDay && board.window_kind === "rolling" ? windowOf(board, today).end : null;
   let versionOf: string | null = null;
   if (v.versionOf) {
     const orig = await proposalById(q, v.versionOf);
     if (orig && orig.board_id === boardId) versionOf = orig.id;
   }
   const { rows } = await q.query<{ id: string }>(
-    `insert into proposal (board_id, poster_id, title, icon, detail, cost_text, time_text, needs_day, min_count, version_of)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
-    [boardId, personId, v.title, v.icon, v.detail, v.cost, v.time, v.needsDay, v.min, versionOf],
+    `insert into proposal (board_id, poster_id, title, icon, detail, cost_text, time_text, needs_day, min_count, version_of, deadline)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
+    [boardId, personId, v.title, v.icon, v.detail, v.cost, v.time, v.needsDay, v.min, versionOf, deadline],
   );
   const id = rows[0].id;
   const days = v.needsDay ? (await attachableDays(q, boardId, personId, id)).days : [];
@@ -167,6 +180,44 @@ export async function postAs(q: Q, personId: string, boardId: string, input: Pos
   });
   await joinBoard(q, boardId, personId, id, attr);
   return { status: "ok", proposalId: id };
+}
+
+export const BOARDS_PER_HOUR = 3;
+export const DEFAULT_TZ = "America/New_York";
+
+/** The visitor's IANA timezone, canonicalised, or New York when it isn't one. */
+export function boardTz(raw: unknown): string {
+  if (typeof raw !== "string" || !raw) return DEFAULT_TZ;
+  try {
+    const tz = new Intl.DateTimeFormat("en-US", { timeZone: raw }).resolvedOptions().timeZone;
+    return Intl.supportedValuesOf("timeZone").includes(tz) ? tz : DEFAULT_TZ;
+  } catch {
+    return DEFAULT_TZ;
+  }
+}
+
+export const boardName = (v: unknown) => text(v, 60);
+
+export type BoardOk = { status: "ok"; slug: string };
+
+/**
+ * Start a rolling board as this person: they join it, one `board_created`
+ * event (source `direct`, never the entry attribution). At most
+ * BOARDS_PER_HOUR per person, counted from the events so it holds across instances.
+ */
+export async function createBoardAs(q: Q, personId: string, rawName: unknown, rawTz: unknown): Promise<BoardOk | OpError> {
+  const name = boardName(rawName);
+  if (!name) return { status: "error", error: "need_board_name" };
+  const { rows: [recent] } = await q.query<{ n: number }>(
+    "select count(*)::int n from event where type = 'board_created' and person_id = $1 and at > now() - interval '1 hour'",
+    [personId],
+  );
+  if (recent.n >= BOARDS_PER_HOUR) return { status: "error", error: "too_many_boards" };
+  const board = await allocateBoard(q, slugify(name), { name, tz: boardTz(rawTz) });
+  const direct: Attribution = { source: "direct", shareId: null };
+  await joinBoard(q, board.id, personId, null, direct);
+  await writeEvent(q, { boardId: board.id, personId, type: "board_created", ...direct, data: { window: "rolling" } });
+  return { status: "ok", slug: board.slug };
 }
 
 export const validDays = (days: unknown): days is string[] => Array.isArray(days) && days.every(isValidDay);

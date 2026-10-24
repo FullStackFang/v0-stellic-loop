@@ -1,7 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { isIdled } from "@/lib/quorum";
-import type { Board, Proposal } from "@/lib/types";
+import { allBoards } from "@/lib/load";
+import type { Proposal } from "@/lib/types";
 
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -18,7 +19,7 @@ function authorized(req: Request): boolean {
 export async function GET(req: Request) {
   if (!authorized(req)) return new Response("Unauthorized", { status: 401 });
   const q = db();
-  const { rows: boards } = await q.query<Board>("select id, slug, name, tz, window_start, window_end from board");
+  const boards = await allBoards(q);
   let idled = 0;
   for (const board of boards) {
     const { rows } = await q.query<Proposal>("select * from proposal where board_id = $1 and status = 'open'", [board.id]);

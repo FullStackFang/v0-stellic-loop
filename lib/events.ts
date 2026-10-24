@@ -34,7 +34,8 @@ export async function resolveSource(q: Q, entry: string | undefined | null): Pro
 }
 
 export type EventInput = {
-  boardId: string;
+  /** null only for a code sent before its board exists */
+  boardId: string | null;
   proposalId?: string | null;
   personId?: string | null;
   type: EventType;

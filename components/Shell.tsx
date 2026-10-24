@@ -11,7 +11,7 @@ export function Shell({ board, tab, children }: { board: Board; tab: "board" | "
       <div className="app">
         <header className="head">
           <Link className="wordmark" href={`/b/${board.slug}`}>Quorum</Link>
-          <span className="meta">{board.name} · {windowLabel(board.window_start, board.window_end)}</span>
+          <span className="meta">{board.name} · {windowLabel(board)}</span>
         </header>
         <main className="screen">{children}</main>
         <nav className="tabbar" aria-label="Board">

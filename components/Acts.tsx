@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { respond } from "@/actions/respond";
 import { verifyCode } from "@/actions/verifyCode";
-import { shortLabel, dow } from "@/lib/days";
+import { dayNames, shortLabel } from "@/lib/days";
 import type { Answer } from "@/lib/types";
 import { Check } from "./atoms";
 import { IdentityFields, type Ident } from "./IdentityFields";
@@ -58,7 +58,7 @@ export function Acts({
       if (r.next === "in" && needsDay && !on) {
         toast(
           <>
-            You&apos;re in. Your free days attached: <b>{r.days.map(dow).join(", ") || "none yet"}</b>.
+            You&apos;re in. Your free days attached: <b>{dayNames(r.days).join(", ") || "none yet"}</b>.
             {r.conflict ? <> {shortLabel(r.conflict.day)} is taken by {r.conflict.title}.</> : " Adjust them on the intent's page."}
           </>,
         );

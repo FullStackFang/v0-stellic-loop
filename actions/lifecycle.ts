@@ -1,6 +1,6 @@
 "use server";
 import { db } from "@/lib/db";
-import { isPastEndOf } from "@/lib/days";
+import { isWindowOver, todayIn, windowOf } from "@/lib/days";
 import { attribution, sessionPersonId, setSession } from "@/lib/identity";
 import { writeEvent } from "@/lib/events";
 import { boardById, proposalById } from "@/lib/load";
@@ -25,8 +25,10 @@ export async function closeProposal(input: { proposalId: string }): Promise<{ st
 }
 
 /**
- * The poster reopens an idled proposal at a lower number: new minimum, deadline
- * to the window end, answers kept, `proposal_reopened` written, nothing sent.
+ * The poster reopens an idled proposal: new minimum (lower on a fixed board;
+ * the same or lower on a rolling one, since two new weeks are a fresh chance),
+ * deadline to the end of the current window, answers kept,
+ * `proposal_reopened` written, nothing sent.
  */
 export async function reopenProposal(input: { proposalId: string; min: number }): Promise<{ status: "ok" } | Fail> {
   const me = await sessionPersonId();
@@ -38,12 +40,15 @@ export async function reopenProposal(input: { proposalId: string; min: number })
     const board = (await boardById(q, p.board_id))!;
     if (!isIdled(p, board)) return fail("not_idled");
     const min = Number(input.min);
-    if (!Number.isInteger(min) || min < 1 || min >= minOf(p)) return fail("not_lower");
-    if (isPastEndOf(board.window_end, board.tz)) return fail("window_over");
-    await q.query("update proposal set min_count = $2, deadline = $3 where id = $1", [p.id, min, board.window_end]);
+    const rolling = board.window_kind === "rolling";
+    if (!Number.isInteger(min) || min < 1 || min > minOf(p) || (!rolling && min === minOf(p))) return fail(rolling ? "not_higher" : "not_lower");
+    const today = todayIn(board.tz);
+    if (isWindowOver(board, today)) return fail("window_over");
+    const deadline = windowOf(board, today).end;
+    await q.query("update proposal set min_count = $2, deadline = $3 where id = $1", [p.id, min, deadline]);
     await writeEvent(q, {
       boardId: p.board_id, proposalId: p.id, personId: me, type: "proposal_reopened", ...(await attribution(q)),
-      data: { from_min: minOf(p), to_min: min, deadline: board.window_end },
+      data: { from_min: minOf(p), to_min: min, deadline },
     });
     return { status: "ok" as const };
   });

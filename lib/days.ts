@@ -1,6 +1,13 @@
 // Calendar days as 'YYYY-MM-DD' strings. Window arithmetic is done on UTC
 // midnights, so DST never shifts a day; "today" is resolved in the board's
-// timezone with Intl.
+// timezone with Intl. A board's window comes only from here: nothing else
+// reads its stored dates.
+import type { Board } from "./types";
+
+/** A rolling board's window length. 0005_boards.sql repeats it as `today + 13`. */
+export const ROLLING_DAYS = 14;
+
+export type WindowBoard = Pick<Board, "window_kind" | "window_start" | "window_end">;
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DOW_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -73,14 +80,61 @@ export function shortLabel(day: string): string {
   return `${dow(day)} ${dayNum(day)}`;
 }
 
+/** "Mon Tue", or "Mon 26 Mon 2" when a weekday repeats (a two-week window). */
+export function dayNames(days: string[]): string[] {
+  const names = days.map(dow);
+  return new Set(names).size < names.length ? days.map(shortLabel) : names;
+}
+
 /** "Tuesday 16" */
 export function longLabel(day: string): string {
   return `${dowLong(day)} ${dayNum(day)}`;
 }
 
 /** "Feb 14–20" (or "Feb 28–Mar 3") */
-export function windowLabel(start: string, end: string): string {
+export function rangeLabel(start: string, end: string): string {
   return mon(start) === mon(end)
     ? `${mon(start)} ${dayNum(start)}–${dayNum(end)}`
     : `${mon(start)} ${dayNum(start)}–${mon(end)} ${dayNum(end)}`;
+}
+
+/** The board's window on `today` (in the board's timezone): its dates, or today plus 13 days. */
+export function windowOf(board: WindowBoard, today: string): { start: string; end: string } {
+  if (board.window_kind === "rolling") return { start: today, end: addDays(today, ROLLING_DAYS - 1) };
+  return { start: board.window_start!, end: board.window_end! };
+}
+
+/** Every window day, past ones included (strips show them struck through). */
+export function windowDaysOf(board: WindowBoard, today: string): string[] {
+  const w = windowOf(board, today);
+  return windowDays(w.start, w.end);
+}
+
+/** The window days that count: today or later. */
+export function countedDays(board: WindowBoard, today: string): string[] {
+  return windowDaysOf(board, today).filter((d) => d >= today);
+}
+
+/** The last day of a fixed window; a rolling board has none. */
+export function fixedEnd(board: WindowBoard): string | null {
+  return board.window_kind === "fixed" ? board.window_end : null;
+}
+
+/** True once a fixed board's dates are all past. A rolling window is never over. */
+export function isWindowOver(board: WindowBoard, today: string): boolean {
+  const end = fixedEnd(board);
+  return end !== null && today > end;
+}
+
+/** The window's name in the header and hero: "Feb 14–20", or "Next two weeks". */
+export function windowLabel(board: WindowBoard): string {
+  return board.window_kind === "rolling" ? "Next two weeks" : rangeLabel(board.window_start!, board.window_end!);
+}
+
+/** The dates over a strip, so a row crossing a month reads right: "Nov 23 – Dec 6". */
+export function stripLabel(board: WindowBoard, today: string): string {
+  const { start, end } = windowOf(board, today);
+  return mon(start) === mon(end)
+    ? `${mon(start)} ${dayNum(start)} – ${dayNum(end)}`
+    : `${mon(start)} ${dayNum(start)} – ${mon(end)} ${dayNum(end)}`;
 }

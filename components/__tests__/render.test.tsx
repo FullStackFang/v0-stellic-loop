@@ -167,7 +167,7 @@ describe("proposal page", () => {
     const c = cardModel(S, d, null, NOW);
     render(
       <ToastProvider>
-        <ProposalView board={BOARD} c={c} details={[{ k: "link", text: "yalycouture.com", url: "https://yalycouture.com", by: "Priya" }]} people={peopleLists(S, rs, ppl, null, d.conflicts)} signedIn={false} isPoster={false} />
+        <ProposalView board={BOARD} c={c} details={[{ k: "link", text: "yalycouture.com", url: "https://yalycouture.com", by: "Priya" }]} people={peopleLists(S, rs, ppl, null, d.conflicts, BOARD, NOW)} signedIn={false} isPoster={false} />
       </ToastProvider>,
     );
     const names = [...document.querySelectorAll(".person")].map((el) => el.textContent);
@@ -187,7 +187,7 @@ describe("proposal page", () => {
     const d = data([S], rs, ppl);
     const me = { id: "priya", show_name: true };
     const c = cardModel(S, d, me, NOW);
-    render(<ToastProvider><ProposalView board={BOARD} c={c} details={[]} people={peopleLists(S, rs, ppl, me, d.conflicts)} signedIn isPoster /></ToastProvider>);
+    render(<ToastProvider><ProposalView board={BOARD} c={c} details={[]} people={peopleLists(S, rs, ppl, me, d.conflicts, BOARD, NOW)} signedIn isPoster /></ToastProvider>);
     expect(screen.getByLabelText("One line")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Close it" })).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Add a link, a place, a note")).toBeInTheDocument();

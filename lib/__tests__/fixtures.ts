@@ -5,6 +5,7 @@ export const BOARD: Board = {
   slug: "emba27",
   name: "EMBA '27",
   tz: "America/New_York",
+  window_kind: "fixed",
   window_start: "2027-02-14",
   window_end: "2027-02-20",
 };

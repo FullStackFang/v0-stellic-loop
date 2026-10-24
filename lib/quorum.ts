@@ -1,5 +1,5 @@
-// Quorum, implemented once. The SQL in 0002_lock.sql mirrors `readiness`.
-import { isPastEndOf, windowDays } from "./days";
+// Quorum, implemented once. lock_proposal() (0005_boards.sql) mirrors `readiness`.
+import { countedDays, fixedEnd, isPastEndOf, todayIn, windowDaysOf, type WindowBoard } from "./days";
 import type { Board, Proposal, Response } from "./types";
 
 export const DEFAULT_MIN = 4;
@@ -32,16 +32,20 @@ export function effectiveDays(r: Response, conflicts?: Conflicts): string[] {
   });
 }
 
-/** Count of `in` people per window day. Counts only, never who. */
-export function heat(board: Pick<Board, "window_start" | "window_end">, rs: Response[], conflicts?: Conflicts): HeatCell[] {
-  const days = windowDays(board.window_start, board.window_end);
-  const counts = new Map(days.map((d) => [d, 0]));
+/**
+ * Count of `in` people per window day. Counts only, never who. Every window
+ * day is a cell; a day before today stays at 0, so it is never best.
+ */
+export function heat(board: WindowBoard & Pick<Board, "tz">, rs: Response[], conflicts?: Conflicts, now: Date = new Date()): HeatCell[] {
+  const today = todayIn(board.tz, now);
+  const days = windowDaysOf(board, today);
+  const counts = new Map(countedDays(board, today).map((d) => [d, 0]));
   for (const r of ins(rs)) {
     for (const d of new Set(effectiveDays(r, conflicts))) {
       if (counts.has(d)) counts.set(d, counts.get(d)! + 1);
     }
   }
-  return days.map((d) => ({ day: d, count: counts.get(d)! }));
+  return days.map((d) => ({ day: d, count: counts.get(d) ?? 0 }));
 }
 
 /** Highest heat, earliest day on ties; null when nobody has a day. */
@@ -52,14 +56,17 @@ export function best(cells: HeatCell[]): HeatCell | null {
 }
 
 /** How many more are needed before the ask (0 when ready). */
-export function remaining(p: Proposal, board: Board, rs: Response[], conflicts?: Conflicts): number {
-  const have = p.needs_day ? (best(heat(board, rs, conflicts))?.count ?? 0) : ins(rs).length;
+export function remaining(p: Proposal, board: Board, rs: Response[], conflicts?: Conflicts, now: Date = new Date()): number {
+  const have = p.needs_day ? (best(heat(board, rs, conflicts, now))?.count ?? 0) : ins(rs).length;
   return Math.max(0, minOf(p) - have);
 }
 
-/** The day an open proposal idles after: its deadline, else window end for needs-a-day, else never. */
-export function idledAt(p: Pick<Proposal, "deadline" | "needs_day">, board: Pick<Board, "window_end">): string | null {
-  return p.deadline ?? (p.needs_day ? board.window_end : null);
+/**
+ * The day an open proposal idles after: its deadline, else a fixed window's end
+ * for needs-a-day, else never. Rolling boards set the deadline when posted.
+ */
+export function idledAt(p: Pick<Proposal, "deadline" | "needs_day">, board: WindowBoard): string | null {
+  return p.deadline ?? (p.needs_day ? fixedEnd(board) : null);
 }
 
 export function isIdled(p: Proposal, board: Board, now: Date = new Date()): boolean {
@@ -73,7 +80,7 @@ export function stateOf(p: Proposal, board: Board, rs: Response[], conflicts?: C
   if (p.status === "closed") return "closed";
   if (p.status === "on") return p.on_day && isPastEndOf(p.on_day, board.tz, now) ? "past" : "on";
   if (isIdled(p, board, now)) return "idled";
-  return remaining(p, board, rs, conflicts) === 0 ? "ready" : "open";
+  return remaining(p, board, rs, conflicts, now) === 0 ? "ready" : "open";
 }
 
 /**
@@ -120,7 +127,7 @@ export function sortBoard(items: BoardItem[], board: Board, conflicts?: Conflict
     const st = stateOf(it.proposal, board, it.responses, conflicts, now);
     if (st === "open" || st === "ready") {
       open.push(it);
-      rem.set(it.proposal.id, remaining(it.proposal, board, it.responses, conflicts));
+      rem.set(it.proposal.id, remaining(it.proposal, board, it.responses, conflicts, now));
     }
     else if (st === "on") on.push(it);
     else past.push(it);
@@ -134,4 +141,14 @@ export function sortBoard(items: BoardItem[], board: Board, conflicts?: Conflict
   const ended = (it: BoardItem) => it.proposal.closed_at ?? it.proposal.on_day ?? it.proposal.deadline ?? it.proposal.created_at;
   past.sort((a, b) => (ended(a) < ended(b) ? 1 : ended(a) > ended(b) ? -1 : 0));
   return { open, on, past };
+}
+
+/**
+ * The card's one row of seven: the first week of the window, or the second
+ * when `focus` (the best or locked day) falls there.
+ */
+export function cardRow<T extends { day: string }>(cells: T[], focus: string | null): T[] {
+  const i = focus ? cells.findIndex((c) => c.day === focus) : -1;
+  const start = i >= 7 ? Math.floor(i / 7) * 7 : 0;
+  return cells.slice(start, start + 7);
 }

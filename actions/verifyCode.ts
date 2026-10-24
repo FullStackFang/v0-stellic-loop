@@ -2,7 +2,7 @@
 import { db } from "@/lib/db";
 import { notifyDropped } from "@/lib/after";
 import { attribution, CODE_ATTEMPTS, setSession, type Pending } from "@/lib/identity";
-import { postAs, respondAs } from "@/lib/ops";
+import { createBoardAs, postAs, respondAs } from "@/lib/ops";
 import { normalizePhone } from "@/lib/phone";
 import { limited } from "@/lib/ratelimit";
 import { sessionSecret } from "@/lib/session";
@@ -10,7 +10,8 @@ import { hashCode } from "@/lib/tokens";
 import { timingSafeEqual } from "node:crypto";
 import { fail, type Fail } from "./results";
 
-export type VerifyResult = { status: "ok"; proposalId: string | null } | Fail;
+/** `path`: where the replayed action lands (the proposal or the new board), or null. */
+export type VerifyResult = { status: "ok"; path: string | null } | Fail;
 
 /** Checks the code for a known number, then records what they were trying to do. */
 export async function verifyCode(input: { phone: string; code: string }): Promise<VerifyResult> {
@@ -45,17 +46,20 @@ export async function verifyCode(input: { phone: string; code: string }): Promis
     const pending = row.pending;
     if (pending?.kind === "respond") {
       const r = await respondAs(q, personId, pending.proposalId, pending.answer, attr, "set");
-      if (r.status === "error") return { status: "ok" as const, personId, proposalId: pending.proposalId, dropped: null };
-      return { status: "ok" as const, personId, proposalId: pending.proposalId, dropped: r.dropped };
+      return { status: "ok" as const, personId, path: `/p/${pending.proposalId}`, dropped: r.status === "ok" ? r.dropped : null };
     }
     if (pending?.kind === "post") {
       const r = await postAs(q, personId, pending.boardId, pending.post, attr);
-      return { status: "ok" as const, personId, proposalId: r.status === "ok" ? r.proposalId : null, dropped: null };
+      return { status: "ok" as const, personId, path: r.status === "ok" ? `/p/${r.proposalId}` : null, dropped: null };
     }
-    return { status: "ok" as const, personId, proposalId: null, dropped: null };
+    if (pending?.kind === "board") {
+      const r = await createBoardAs(q, personId, pending.name, pending.tz);
+      return { status: "ok" as const, personId, path: r.status === "ok" ? `/b/${r.slug}` : null, dropped: null };
+    }
+    return { status: "ok" as const, personId, path: null, dropped: null };
   });
   if (out.status !== "ok") return out;
   await setSession(out.personId);
   if (out.dropped) await notifyDropped(out.dropped.proposal, out.personId, out.dropped.count);
-  return { status: "ok", proposalId: out.proposalId };
+  return { status: "ok", path: out.path };
 }
