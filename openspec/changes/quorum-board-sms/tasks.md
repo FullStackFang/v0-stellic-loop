@@ -45,6 +45,6 @@ Order: 1 → 2 → 3 → {4, 5, 6} → 7 → 8. Group 1 is the founder's and can
 
 ## 8. Production (founder go-ahead)
 
-- [ ] 8.1 Founder runs `0006_sms.sql`, then `0007_sms_once.sql` as a separate run, on `supabase-loop`; verify the new enum value, the index and the `magic_token` columns, that `emba27` is unchanged, and that the advisors show only the known INFO lint
+- [x] 8.1 Founder runs `0006_sms.sql`, then `0007_sms_once.sql` as a separate run, on `supabase-loop`; verify the new enum value, the index and the `magic_token` columns, that `emba27` is unchanged, and that the advisors show only the known INFO lint
 - [ ] 8.2 Push `main` and verify the live site still logs (no Twilio vars yet): `/b/emba27` loads, posting works
 - [ ] 8.3 After 1.3, from a second device with a verified number: ask for a code, receive it, sign in; lock a test intent and receive the ON text; tap its link and land signed in. Then delete the test rows.
