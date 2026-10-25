@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useId } from "react";
 
 export type Ident = { name: string; phone: string; code: string };
@@ -50,6 +51,11 @@ export function IdentityFields({
             <label htmlFor={`${id}-p`}>Your number</label>
             <input id={`${id}-p`} name="phone" type="tel" autoComplete="tel" inputMode="tel" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} required />
             <div className="hint">This is how the group knows it&apos;s you. US numbers only for now.</div>
+            <div className="hint">
+              By entering your number you agree to texts from Quorum: sign-in codes and updates on plans you&apos;re in. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help.{" "}
+              <Link href="/terms" target="_blank" style={{ textDecoration: "underline" }}>Terms</Link> ·{" "}
+              <Link href="/privacy" target="_blank" style={{ textDecoration: "underline" }}>Privacy</Link>
+            </div>
           </div>
         </>
       ) : (
