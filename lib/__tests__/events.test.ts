@@ -44,7 +44,7 @@ describe("writeEvent + resolveSource", () => {
 });
 
 describe("LogNotifier", () => {
-  it("writes one log line and one text_sent event per call, never the code", async () => {
+  it("one log line with the body and one text_sent event (channel log) per recipient, never the code in an event", async () => {
     const b = await makeBoard(t.db);
     const p = await makePerson(t.db, "Priya");
     const { rows: [prop] } = await t.db.query<{ id: string }>(
@@ -54,18 +54,20 @@ describe("LogNotifier", () => {
     const base = { boardId: b.id, proposalId: prop.id, title: "Suits", url: "https://x/p/1" };
 
     await n.onReached({ ...base, onDay: "2099-02-16", timeText: null, lockedBy: p.id, yeses: [p.id], cantMakeIt: [], maybes: [] });
-    await n.oneMore({ ...base, to: [p.id], count: 3, min: 4, day: null });
+    await n.oneMore({ ...base, to: [{ personId: p.id, url: "https://x/p/1?s=AbCdEf1234" }], count: 3, min: 4 });
     await n.maybeNudge({ ...base, to: [p.id], count: 4 });
     await n.dropped({ ...base, to: p.id, who: p.id, count: 3 });
-    await n.code({ boardId: b.id, personId: p.id, phone: p.phone, code: "123456" });
-    await n.magicLink({ boardId: b.id, personId: p.id, url: "https://x/m/t" });
+    expect(await n.code({ boardId: b.id, personId: p.id, phone: p.phone, code: "123456" })).toEqual({ sent: true });
 
-    expect(lines).toHaveLength(6);
+    expect(lines).toHaveLength(5);
+    expect(JSON.parse(lines[0])).toMatchObject({ notify: "onReached", to: p.phone });
+    expect(JSON.parse(lines[0]).body).toMatch(/^Suits is on: Mon 16\. 1 in\. https:\/\/board\.test\/m\/\S+ Got an idea/);
     expect(lines[4]).toContain("123456");
-    const { rows } = await t.db.query<{ data: Record<string, unknown> }>(
-      "select data from event where type = 'text_sent' order by at");
-    expect(rows).toHaveLength(6);
-    expect(rows.every((r) => r.data.channel === "log")).toBe(true);
+    const { rows } = await t.db.query<{ person_id: string; data: Record<string, unknown> }>(
+      "select person_id, data from event where type = 'text_sent' order by at, id");
+    expect(rows.map((r) => r.data.kind)).toEqual(["onReached", "oneMore", "maybeNudge", "dropped", "code"]);
+    expect(rows.every((r) => r.data.channel === "log" && r.data.status === "sent" && r.person_id === p.id)).toBe(true);
     expect(JSON.stringify(rows)).not.toContain("123456");
+    expect(JSON.stringify(rows)).not.toContain("/m/");
   });
 });

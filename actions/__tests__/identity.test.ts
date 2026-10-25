@@ -1,4 +1,5 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { setNotifier, TwilioNotifier } from "@/lib/notify";
 import { respond } from "../respond";
 import { verifyCode } from "../verifyCode";
 import { resetLimits } from "@/lib/ratelimit";
@@ -129,5 +130,33 @@ describe("known number on a cookieless device", () => {
     const { code } = await setup();
     await t.db.query("update otp_code set expires_at = now() - interval '1 minute'");
     expect(await verifyCode({ phone: "+16075550123", code })).toMatchObject({ error: "expired" });
+  });
+});
+
+describe("US numbers, codes by text", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("a non-US number is refused and nothing is recorded", async () => {
+    const b = await makeBoard(t.db);
+    const pid = await proposal(b.id, (await makePerson(t.db)).id);
+    expect(await respond({ proposalId: pid, answer: "in", name: "Ana", phone: "+44 7700 900123" }))
+      .toMatchObject({ status: "error", error: "not_us", message: "US numbers only for now." });
+    const { rows } = await t.db.query("select 1 from person where phone = '+447700900123'");
+    expect(rows).toHaveLength(0);
+  });
+
+  it("a code Twilio refuses is discarded and the form says so", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ code: 30003 }), { status: 400 })));
+    setNotifier((q) => new TwilioNotifier(q, { accountSid: "AC1", authToken: "tok", messagingServiceSid: "MG1" }));
+    const b = await makeBoard(t.db);
+    const priya = await makePerson(t.db, "Priya", { phone: "+16075550123" });
+    const pid = await proposal(b.id, priya.id);
+    newDevice();
+    expect(await respond({ proposalId: pid, answer: "in", name: "Priya", phone: "607 555 0123" }))
+      .toMatchObject({ status: "error", error: "code_not_sent", message: "We couldn't text that number. Try again." });
+    expect((await t.db.query("select 1 from otp_code")).rows).toHaveLength(0);
+    expect(await answerOf(pid, priya.id)).toBeNull();
+    const { rows: [ev] } = await t.db.query<{ data: Record<string, unknown> }>("select data from event where type = 'text_sent'");
+    expect(ev.data).toMatchObject({ channel: "sms", kind: "code", status: "failed", error: "30003" });
   });
 });

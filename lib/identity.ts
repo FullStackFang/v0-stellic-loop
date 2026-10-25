@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import type { Q } from "./db";
 import { ENTRY_COOKIE, resolveSource, writeEvent, type Attribution } from "./events";
 import { notifier } from "./notify";
-import { normalizePhone } from "./phone";
+import { isForeignNumber, isUsNumber, normalizePhone } from "./phone";
 import { SESSION_COOKIE, SESSION_MAX_AGE_S, sessionSecret, signSession, verifySession } from "./session";
 import { hashCode, sixDigitCode } from "./tokens";
 
@@ -25,7 +25,7 @@ export type Who =
   | { kind: "session"; personId: string }
   | { kind: "new"; personId: string }
   | { kind: "needs_code"; phone: string }
-  | { kind: "error"; error: "need_identity" | "bad_phone" | "need_name" };
+  | { kind: "error"; error: "need_identity" | "bad_phone" | "not_us" | "need_name" | "code_not_sent" };
 
 /** The signed-in person id, or null. Does not touch the database. */
 export async function sessionPersonId(): Promise<string | null> {
@@ -55,6 +55,7 @@ export async function attribution(q: Q): Promise<Attribution> {
  * Resolve the actor inside a transaction. Known number without a cookie:
  * stores a hashed code with `pending`, hands the code to the notifier, and
  * returns `needs_code` — the caller must commit and record nothing else.
+ * A code that cannot be texted is discarded and returns `code_not_sent`.
  */
 export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: string | null; pending: Pending }): Promise<Who> {
   const sid = await sessionPersonId();
@@ -66,11 +67,12 @@ export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: s
   const raw = input.phone?.trim();
   if (!raw && !name) return { kind: "error", error: "need_identity" };
   const phone = raw ? normalizePhone(raw) : null;
-  if (!phone) return { kind: "error", error: "bad_phone" };
+  if (raw && isForeignNumber(raw)) return { kind: "error", error: "not_us" };
+  if (!phone || !isUsNumber(phone)) return { kind: "error", error: "bad_phone" };
 
   const { rows: found } = await q.query<{ id: string }>("select id from person where phone = $1", [phone]);
   if (found[0]) {
-    await issueCode(q, phone, found[0].id, ctx.boardId, ctx.pending);
+    if (!(await issueCode(q, phone, found[0].id, ctx.boardId, ctx.pending))) return { kind: "error", error: "code_not_sent" };
     return { kind: "needs_code", phone };
   }
   if (!name) return { kind: "error", error: "need_name" };
@@ -81,7 +83,8 @@ export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: s
   return { kind: "new", personId: made[0].id };
 }
 
-async function issueCode(q: Q, phone: string, personId: string, boardId: string | null, pending: Pending) {
+/** False when the text did not go; the stored code is gone again. */
+async function issueCode(q: Q, phone: string, personId: string, boardId: string | null, pending: Pending): Promise<boolean> {
   const code = sixDigitCode();
   await q.query(
     `insert into otp_code (phone, code_hash, expires_at, attempts, pending)
@@ -90,7 +93,9 @@ async function issueCode(q: Q, phone: string, personId: string, boardId: string 
        attempts = 0, pending = excluded.pending, created_at = now()`,
     [phone, hashCode(phone, code, sessionSecret()), new Date(Date.now() + CODE_TTL_MS).toISOString(), JSON.stringify(pending)],
   );
-  await notifier(q).code({ boardId, personId, phone, code });
+  const { sent } = await notifier(q).code({ boardId, personId, phone, code });
+  if (!sent) await q.query("delete from otp_code where phone = $1", [phone]);
+  return sent;
 }
 
 /**
@@ -110,6 +115,8 @@ export async function joinBoard(q: Q, boardId: string, personId: string, proposa
 
 export const IDENTITY_ERRORS: Record<Extract<Who, { kind: "error" }>["error"], string> = {
   need_identity: "Add your name and number to answer.",
-  bad_phone: "That number doesn't look right. Outside the US, start with +country code.",
+  bad_phone: "That number doesn't look right.",
+  not_us: "US numbers only for now.",
   need_name: "Add your name too.",
+  code_not_sent: "We couldn't text that number. Try again.",
 };

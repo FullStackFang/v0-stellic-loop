@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { setFreeDay, setProposalDay } from "../days";
 import { addDetail, editProposal } from "../details";
 import { closeProposal, reopenProposal } from "../lifecycle";
@@ -7,6 +7,8 @@ import { post } from "../post";
 import { respond } from "../respond";
 import { share } from "../share";
 import { ENTRY_COOKIE } from "@/lib/events";
+import { setNotifier, TwilioNotifier, type Notifier } from "@/lib/notify";
+import { respondAs } from "@/lib/ops";
 import { boardById, boardData } from "@/lib/load";
 import { heat } from "@/lib/quorum";
 import { LIMITS, resetLimits } from "@/lib/ratelimit";
@@ -307,7 +309,8 @@ describe("lock", () => {
     expect(reached[0].msg).toMatchObject({ onDay: D.tue, maybes: [hana.id], cantMakeIt: [people[3].id] });
     expect((reached[0].msg.yeses as string[]).sort()).toEqual(people.map((p) => p.id).sort());
     expect(await events(t.db, "threshold_reached", pid)).toHaveLength(1);
-    expect(await events(t.db, "text_sent")).toHaveLength(1);
+    // one text per recipient: 4 yeses and the maybe
+    expect(await events(t.db, "text_sent")).toHaveLength(5);
   });
 
   it("a maybe is refused and nothing changes", async () => {
@@ -410,5 +413,113 @@ describe("share", () => {
     const pid = await w.proposal((await w.person()).id);
     for (let i = 0; i < LIMITS.share.perIp; i++) expect((await share({ proposalId: pid })).status).toBe("ok");
     expect(await share({ proposalId: pid })).toMatchObject({ error: "rate_limited" });
+  });
+});
+
+describe("one more", () => {
+  /** An open no-day intent with `ins` yeses already (the poster first). */
+  async function close(min: number | null, ins: number) {
+    const w = await world(t.db);
+    const poster = await w.person("Poster");
+    const pid = await w.proposal(poster.id, { needs_day: false, min_count: min });
+    const yes = [poster];
+    if (ins > 0) await w.answer(pid, poster.id, "in");
+    for (let i = 1; i < ins; i++) {
+      const p = await w.person();
+      await w.answer(pid, p.id, "in");
+      yes.push(p);
+    }
+    return { w, poster, pid, yes };
+  }
+  const oneMores = () => calls.filter((c) => c.kind === "oneMore");
+
+  it("the sixth of eight fires once, to the poster and every yes, each with a share of their own; the seventh sends nothing", async () => {
+    const { w, pid, yes } = await close(8, 5);
+    const sixth = await w.person("Sixth");
+    signedIn(sixth.id);
+    expect((await respond({ proposalId: pid, answer: "in" })).status).toBe("ok");
+    expect(await events(t.db, "one_more_sent", pid)).toHaveLength(1);
+    expect(oneMores()).toHaveLength(1);
+    const msg = oneMores()[0].msg as { count: number; min: number; to: { personId: string; url: string }[] };
+    expect(msg).toMatchObject({ count: 6, min: 8 });
+    expect(msg.to.map((r) => r.personId).sort()).toEqual([...yes, sixth].map((p) => p.id).sort());
+    for (const r of msg.to) expect(r.url).toMatch(new RegExp(`^https://board\\.test/p/${pid}\\?s=[0-9A-Za-z]{10}$`));
+    const shares = await events(t.db, "share_minted", pid);
+    expect(shares.map((e) => e.person_id).sort()).toEqual(msg.to.map((r) => r.personId).sort());
+
+    const seventh = await w.person("Seventh");
+    signedIn(seventh.id);
+    await respond({ proposalId: pid, answer: "in" });
+    expect(oneMores()).toHaveLength(1);
+    expect(await events(t.db, "one_more_sent", pid)).toHaveLength(1);
+  });
+
+  it("the poster alone on a default-4 intent sends nothing; the second in does", async () => {
+    const { w, poster, pid } = await close(null, 0);
+    signedIn(poster.id);
+    await respond({ proposalId: pid, answer: "in" });
+    expect(oneMores()).toHaveLength(0);
+    signedIn((await w.person()).id);
+    await respond({ proposalId: pid, answer: "in" });
+    expect(oneMores()).toHaveLength(1);
+    expect(oneMores()[0].msg).toMatchObject({ count: 2, min: 4 });
+  });
+
+  it("two yeses that both qualify at once fire it once", async () => {
+    const { w, pid } = await close(8, 5);
+    const [a, b] = [await w.person(), await w.person()];
+    const direct = { source: "direct" as const, shareId: null };
+    const got = await Promise.all([a, b].map((p) => t.db.tx((q) => respondAs(q, p.id, pid, "in", direct))));
+    expect(got.filter((r) => r.status === "ok" && r.oneMore)).toHaveLength(1);
+    expect(await events(t.db, "one_more_sent", pid)).toHaveLength(1);
+  });
+
+  it("maybe and out never fire it", async () => {
+    const { w, pid } = await close(8, 5);
+    signedIn((await w.person()).id);
+    await respond({ proposalId: pid, answer: "maybe" });
+    signedIn((await w.person()).id);
+    await respond({ proposalId: pid, answer: "out" });
+    expect(oneMores()).toHaveLength(0);
+    expect(await events(t.db, "one_more_sent", pid)).toHaveLength(0);
+  });
+});
+
+describe("follow-up texts never block the action", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  async function ready() {
+    const w = await world(t.db);
+    const people = [await w.person("A"), await w.person("B"), await w.person("C")];
+    const pid = await w.proposal(people[0].id, { min_count: 3 });
+    for (const p of people) await w.answer(pid, p.id, "in", [D.tue]);
+    await w.answer(pid, (await w.person("Hana")).id, "maybe");
+    return { people, pid };
+  }
+  const status = async (pid: string) =>
+    (await t.db.query<{ status: string }>("select status from proposal where id = $1", [pid])).rows[0].status;
+
+  it("Twilio down during a lock: locked, ON, one failed event per recipient", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
+    setNotifier((q) => new TwilioNotifier(q, { accountSid: "AC1", authToken: "tok", messagingServiceSid: "MG1" }));
+    const { people, pid } = await ready();
+    signedIn(people[0].id);
+    expect(await lock({ proposalId: pid })).toEqual({ status: "locked" });
+    expect(await status(pid)).toBe("on");
+    const texts = await events(t.db, "text_sent", pid);
+    expect(texts).toHaveLength(4);
+    expect(texts.every((e) => e.data.status === "failed" && e.data.error === "network")).toBe(true);
+  });
+
+  it("a notifier that throws is swallowed", async () => {
+    const boom = async () => { throw new Error("boom"); };
+    setNotifier(() => ({ onReached: boom, oneMore: boom, maybeNudge: boom, dropped: boom, code: boom }) as unknown as Notifier);
+    const { people, pid } = await ready();
+    signedIn(people[0].id);
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(await lock({ proposalId: pid })).toEqual({ status: "locked" });
+    expect(err).toHaveBeenCalledOnce();
+    err.mockRestore();
+    expect(await status(pid)).toBe("on");
   });
 });

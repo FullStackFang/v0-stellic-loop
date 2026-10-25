@@ -8,7 +8,9 @@ import { writeEvent } from "./events";
 import { DEFAULT_ICON, isIcon } from "./icons";
 import { joinBoard } from "./identity";
 import { boardById, freeDays, isUuid, personConflicts, proposalById } from "./load";
+import { minOf } from "./quorum";
 import { allocateBoard, slugify } from "./slug";
+import { shareToken } from "./tokens";
 import type { Answer, Board, DetailKind, Proposal } from "./types";
 
 export type OpError = { status: "error"; error: string };
@@ -34,6 +36,8 @@ export type RespondOk = {
   conflict: { day: string; title: string } | null;
   /** set when an `in` left an ON proposal: the poster is told, nobody else */
   dropped: { proposal: Proposal; count: number } | null;
+  /** set the one time this `in` brought an open proposal within two of its minimum */
+  oneMore: { proposal: Proposal; count: number } | null;
 };
 
 /**
@@ -78,7 +82,32 @@ export async function respondAs(q: Q, personId: string, proposalId: string, answ
       "select count(*)::int n from response where proposal_id = $1 and answer = 'in'", [p.id]);
     dropped = { proposal: p, count: rows[0].n };
   }
-  return { status: "ok", prev, next, days, conflict, dropped };
+
+  // Two short, at least the poster plus one, once per proposal (event_one_more_once).
+  let oneMore: RespondOk["oneMore"] = null;
+  if (p.status === "open" && next === "in") {
+    const { rows: [{ n }] } = await q.query<{ n: number }>(
+      "select count(*)::int n from response where proposal_id = $1 and answer = 'in'", [p.id]);
+    const min = minOf(p);
+    if (n >= Math.max(2, min - 2) && n < min) {
+      const { rows } = await q.query(
+        `insert into event (board_id, proposal_id, person_id, type, source, share_id, data)
+         values ($1, $2, $3, 'one_more_sent', $4, $5, $6) on conflict do nothing returning id`,
+        [p.board_id, p.id, personId, attr.source, attr.shareId, JSON.stringify({ count: n, min })],
+      );
+      if (rows.length) oneMore = { proposal: p, count: n };
+    }
+  }
+  return { status: "ok", prev, next, days, conflict, dropped, oneMore };
+}
+
+/** A fresh share link for one sharer (null when signed out), with its `share_minted` event. */
+export async function mintShare(q: Q, p: Proposal, sharerId: string | null): Promise<string> {
+  const token = shareToken();
+  const { rows } = await q.query<{ id: string }>(
+    "insert into share (proposal_id, token, sharer_id) values ($1, $2, $3) returning id", [p.id, token, sharerId]);
+  await writeEvent(q, { boardId: p.board_id, proposalId: p.id, personId: sharerId, type: "share_minted", source: "direct", shareId: rows[0].id });
+  return `/p/${p.id}?s=${token}`;
 }
 
 export type PostInput = {

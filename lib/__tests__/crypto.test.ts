@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizePhone } from "../phone";
+import { isForeignNumber, isUsNumber, normalizePhone } from "../phone";
 import { SESSION_MAX_AGE_S, signSession, verifySession } from "../session";
 import { hashCode, hashToken, isShareToken, magicToken, shareToken, sixDigitCode } from "../tokens";
 
@@ -16,6 +16,18 @@ describe("phone", () => {
   it("rejects invalid numbers", () => {
     expect(normalizePhone("123")).toBeNull();
     expect(normalizePhone("")).toBeNull();
+  });
+  it("tells US numbers from other +1 and non-+1 numbers", () => {
+    expect(isUsNumber("+16075550123")).toBe(true);
+    expect(isUsNumber("+447700900123")).toBe(false);
+    expect(isUsNumber("+14169671111")).toBe(false); // Toronto: +1, not US
+    expect(isUsNumber("+12425550123")).toBe(false); // Bahamas
+  });
+  it("calls a typed number foreign only when it is clearly outside the US", () => {
+    expect(isForeignNumber("+44 7700 900123")).toBe(true);
+    expect(isForeignNumber("+1 416 967 1111")).toBe(true);
+    expect(isForeignNumber("(607) 555-0123")).toBe(false);
+    expect(isForeignNumber("123")).toBe(false);
   });
 });
 

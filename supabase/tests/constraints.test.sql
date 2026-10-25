@@ -49,7 +49,7 @@ do $$ begin
   end;
 end $$;
 
--- threshold_reached and proposal_idled at most once per proposal
+-- threshold_reached, proposal_idled and one_more_sent at most once per proposal
 insert into event (board_id, proposal_id, type, source)
 values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000c1', 'threshold_reached', 'direct'),
        ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000c1', 'proposal_idled', 'direct');
@@ -64,6 +64,14 @@ do $$ begin
     insert into event (board_id, proposal_id, type, source)
     values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000c1', 'proposal_idled', 'direct');
     raise exception 'FAIL: second proposal_idled accepted';
+  exception when unique_violation then null;
+  end;
+  insert into event (board_id, proposal_id, type, source)
+  values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000c1', 'one_more_sent', 'direct');
+  begin
+    insert into event (board_id, proposal_id, type, source)
+    values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000c1', 'one_more_sent', 'direct');
+    raise exception 'FAIL: second one_more_sent accepted';
   exception when unique_violation then null;
   end;
   -- other event types repeat freely

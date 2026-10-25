@@ -1,6 +1,6 @@
 "use server";
 import { db } from "@/lib/db";
-import { notifyDropped } from "@/lib/after";
+import { notifyDropped, notifyOneMore } from "@/lib/after";
 import { attribution, CODE_ATTEMPTS, setSession, type Pending } from "@/lib/identity";
 import { createBoardAs, postAs, respondAs } from "@/lib/ops";
 import { normalizePhone } from "@/lib/phone";
@@ -46,20 +46,22 @@ export async function verifyCode(input: { phone: string; code: string }): Promis
     const pending = row.pending;
     if (pending?.kind === "respond") {
       const r = await respondAs(q, personId, pending.proposalId, pending.answer, attr, "set");
-      return { status: "ok" as const, personId, path: `/p/${pending.proposalId}`, dropped: r.status === "ok" ? r.dropped : null };
+      const ok = r.status === "ok" ? r : null;
+      return { status: "ok" as const, personId, path: `/p/${pending.proposalId}`, dropped: ok?.dropped ?? null, oneMore: ok?.oneMore ?? null };
     }
     if (pending?.kind === "post") {
       const r = await postAs(q, personId, pending.boardId, pending.post, attr);
-      return { status: "ok" as const, personId, path: r.status === "ok" ? `/p/${r.proposalId}` : null, dropped: null };
+      return { status: "ok" as const, personId, path: r.status === "ok" ? `/p/${r.proposalId}` : null, dropped: null, oneMore: null };
     }
     if (pending?.kind === "board") {
       const r = await createBoardAs(q, personId, pending.name, pending.tz);
-      return { status: "ok" as const, personId, path: r.status === "ok" ? `/b/${r.slug}` : null, dropped: null };
+      return { status: "ok" as const, personId, path: r.status === "ok" ? `/b/${r.slug}` : null, dropped: null, oneMore: null };
     }
-    return { status: "ok" as const, personId, path: null, dropped: null };
+    return { status: "ok" as const, personId, path: null, dropped: null, oneMore: null };
   });
   if (out.status !== "ok") return out;
   await setSession(out.personId);
   if (out.dropped) await notifyDropped(out.dropped.proposal, out.personId, out.dropped.count);
+  if (out.oneMore) await notifyOneMore(out.oneMore.proposal, out.oneMore.count);
   return { status: "ok", path: out.path };
 }

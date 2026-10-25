@@ -49,7 +49,7 @@ export function IdentityFields({
           <div className="field">
             <label htmlFor={`${id}-p`}>Your number</label>
             <input id={`${id}-p`} name="phone" type="tel" autoComplete="tel" inputMode="tel" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} required />
-            <div className="hint">This is how the group knows it&apos;s you. Outside the US, start with +country code.</div>
+            <div className="hint">This is how the group knows it&apos;s you. US numbers only for now.</div>
           </div>
         </>
       ) : (

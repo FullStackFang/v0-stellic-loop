@@ -10,7 +10,7 @@ export function spyNotifier(): Call[] {
     const wrap = <K extends keyof Notifier>(kind: K) =>
       (async (msg: Record<string, unknown>) => {
         calls.push({ kind, msg });
-        await (real[kind] as (m: unknown) => Promise<void>)(msg);
+        return (real[kind] as (m: unknown) => Promise<unknown>)(msg);
       }) as Notifier[K];
     return {
       onReached: wrap("onReached"),
@@ -18,7 +18,6 @@ export function spyNotifier(): Call[] {
       maybeNudge: wrap("maybeNudge"),
       dropped: wrap("dropped"),
       code: wrap("code"),
-      magicLink: wrap("magicLink"),
     };
   });
   return calls;

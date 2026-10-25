@@ -26,7 +26,8 @@ export type EventType =
   | "share_minted"
   | "fork_created"
   | "text_sent"
-  | "board_created";
+  | "board_created"
+  | "one_more_sent";
 
 export type Board = {
   id: string;

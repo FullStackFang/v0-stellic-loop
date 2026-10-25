@@ -4,7 +4,7 @@ import { GET as cron } from "../api/cron/daily/route";
 import { GET as magic } from "../m/[token]/route";
 import { GET as invite } from "../p/[id]/invite.ics/route";
 import { SESSION_COOKIE, sessionSecret, verifySession } from "@/lib/session";
-import { hashToken, magicToken } from "@/lib/tokens";
+import { hashToken, issueMagicLink, magicToken } from "@/lib/tokens";
 import { openTestDb, type TestDb } from "@/test/db";
 import { D, events, world } from "@/test/world";
 
@@ -51,6 +51,41 @@ describe("/m/<token>", () => {
     const res = await open(token, "to=/b/emba27");
     expect(res.headers.get("location")).toBe("https://board.test/b/emba27");
     expect(res.cookies.get(SESSION_COOKIE)).toBeUndefined();
+  });
+
+  describe("a short link from issueMagicLink", () => {
+    const tokenOf = (link: string) => link.split("/m/")[1];
+
+    it("lands on the stored destination with the stored source", async () => {
+      const w = await world(t.db);
+      const priya = await w.person("Priya");
+      const link = await issueMagicLink(t.db, priya.id, "/p/abc", "on_text");
+      expect(link).toMatch(/^https:\/\/board\.test\/m\/[A-Za-z0-9_-]{22}$/);
+      const res = await open(tokenOf(link), "");
+      expect(res.headers.get("location")).toBe("https://board.test/p/abc");
+      expect(verifySession(res.cookies.get(SESSION_COOKIE)?.value, sessionSecret())?.person_id).toBe(priya.id);
+      expect(res.cookies.get("qe")?.value).toBe("on_text");
+      const { rows: [row] } = await t.db.query<{ expires_at: string }>("select expires_at from magic_token");
+      expect(new Date(row.expires_at).getTime() - Date.now()).toBeGreaterThan(23.9 * 3600_000);
+    });
+
+    it("used: lands on the stored destination, signed out", async () => {
+      const w = await world(t.db);
+      const token = tokenOf(await issueMagicLink(t.db, (await w.person()).id, "/p/abc", "maybe_nudge"));
+      await open(token, "");
+      const res = await open(token, "");
+      expect(res.headers.get("location")).toBe("https://board.test/p/abc");
+      expect(res.cookies.get(SESSION_COOKIE)).toBeUndefined();
+    });
+
+    it("expired: lands on the stored destination, signed out", async () => {
+      const w = await world(t.db);
+      const token = tokenOf(await issueMagicLink(t.db, (await w.person()).id, "/p/abc", "on_text"));
+      await t.db.query("update magic_token set expires_at = now() - interval '1 minute'");
+      const res = await open(token, "");
+      expect(res.headers.get("location")).toBe("https://board.test/p/abc");
+      expect(res.cookies.get(SESSION_COOKIE)).toBeUndefined();
+    });
   });
 
   it("an off-origin `to` goes home instead", async () => {
