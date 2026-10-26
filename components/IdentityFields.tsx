@@ -6,8 +6,7 @@ export type Ident = { name: string; phone: string; code: string };
 
 /**
  * Name and number, inline under the action, for a device with no session;
- * then the code field when the number is already known. Nothing at all when
- * signed in.
+ * then the code field for the code we text. Nothing at all when signed in.
  */
 export function IdentityFields({
   signedIn,
@@ -52,7 +51,7 @@ export function IdentityFields({
             <input id={`${id}-p`} name="phone" type="tel" autoComplete="tel" inputMode="tel" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} required />
             <div className="hint">This is how the group knows it&apos;s you. US numbers only for now.</div>
             <div className="hint">
-              By entering your number you agree to texts from Quorum: sign-in codes and updates on plans you&apos;re in. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help.{" "}
+              We&apos;ll text you a code to confirm it&apos;s your number. Msg &amp; data rates may apply.{" "}
               <Link href="/terms" target="_blank" style={{ textDecoration: "underline" }}>Terms</Link> ·{" "}
               <Link href="/privacy" target="_blank" style={{ textDecoration: "underline" }}>Privacy</Link>
             </div>
@@ -62,7 +61,7 @@ export function IdentityFields({
         <div className="field">
           <label htmlFor={`${id}-c`}>Code</label>
           <input id={`${id}-c`} name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={value.code} onChange={(e) => onChange({ ...value, code: e.target.value })} required autoFocus />
-          <div className="hint">We know this number from another device. Enter the six-digit code we sent it.</div>
+          <div className="hint">Enter the six-digit code we texted you.</div>
         </div>
       )}
       {error ? <div className="err" role="alert">{error}</div> : null}

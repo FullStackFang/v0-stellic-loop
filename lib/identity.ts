@@ -1,6 +1,6 @@
 // Who is acting. A valid `qb` cookie is the whole session; without one, a name
-// and a number: an unknown number becomes a person on the spot, a known number
-// gets a one-time code and the action waits for it (the `pending` replay).
+// and a number, which gets a one-time code; the action waits for it (the
+// `pending` replay). An unknown number becomes a person only once its code checks.
 import "server-only";
 import { cookies } from "next/headers";
 import type { Q } from "./db";
@@ -15,15 +15,15 @@ export const CODE_ATTEMPTS = 5;
 
 export type IdentityInput = { name?: string | null; phone?: string | null };
 
-/** What to do once a known number proves itself. */
-export type Pending =
+/** What to do once a number proves itself; `person` is the name to create it with when it is new. */
+export type Pending = (
   | { kind: "respond"; proposalId: string; answer: "in" | "out" | "maybe" }
   | { kind: "post"; boardId: string; post: Record<string, unknown> }
-  | { kind: "board"; name: string; tz: string };
+  | { kind: "board"; name: string; tz: string }
+) & { person?: string };
 
 export type Who =
   | { kind: "session"; personId: string }
-  | { kind: "new"; personId: string }
   | { kind: "needs_code"; phone: string }
   | { kind: "error"; error: "need_identity" | "bad_phone" | "not_us" | "need_name" | "code_not_sent" };
 
@@ -52,7 +52,7 @@ export async function attribution(q: Q): Promise<Attribution> {
 }
 
 /**
- * Resolve the actor inside a transaction. Known number without a cookie:
+ * Resolve the actor inside a transaction. A number without a cookie:
  * stores a hashed code with `pending`, hands the code to the notifier, and
  * returns `needs_code` — the caller must commit and record nothing else.
  * A code that cannot be texted is discarded and returns `code_not_sent`.
@@ -71,20 +71,14 @@ export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: s
   if (!phone || !isUsNumber(phone)) return { kind: "error", error: "bad_phone" };
 
   const { rows: found } = await q.query<{ id: string }>("select id from person where phone = $1", [phone]);
-  if (found[0]) {
-    if (!(await issueCode(q, phone, found[0].id, ctx.boardId, ctx.pending))) return { kind: "error", error: "code_not_sent" };
-    return { kind: "needs_code", phone };
-  }
-  if (!name) return { kind: "error", error: "need_name" };
-  const { rows: made } = await q.query<{ id: string }>(
-    "insert into person (phone, name) values ($1, $2) returning id",
-    [phone, name.slice(0, 80)],
-  );
-  return { kind: "new", personId: made[0].id };
+  if (!found[0] && !name) return { kind: "error", error: "need_name" };
+  const pending = found[0] ? ctx.pending : { ...ctx.pending, person: name!.slice(0, 80) };
+  if (!(await issueCode(q, phone, found[0]?.id ?? null, ctx.boardId, pending))) return { kind: "error", error: "code_not_sent" };
+  return { kind: "needs_code", phone };
 }
 
 /** False when the text did not go; the stored code is gone again. */
-async function issueCode(q: Q, phone: string, personId: string, boardId: string | null, pending: Pending): Promise<boolean> {
+async function issueCode(q: Q, phone: string, personId: string | null, boardId: string | null, pending: Pending): Promise<boolean> {
   const code = sixDigitCode();
   await q.query(
     `insert into otp_code (phone, code_hash, expires_at, attempts, pending)

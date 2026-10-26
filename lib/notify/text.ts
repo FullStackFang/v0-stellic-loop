@@ -16,7 +16,8 @@ export type Transport = { channel: "log" | "sms"; send(to: string, body: string,
 /** Twilio's error when the recipient has replied STOP. */
 export const OPTED_OUT = "21610";
 
-type Recipient = Pick<Person, "id" | "phone" | "name" | "show_name" | "sms_opt_out">;
+/** `id` is null only for a code to a number that is not a person yet. */
+type Recipient = Pick<Person, "phone" | "name" | "show_name" | "sms_opt_out"> & { id: string | null };
 type Outcome = Sent | { status: "skipped"; reason: "not_us" | "opted_out" };
 
 export class TextNotifier implements Notifier {
@@ -27,7 +28,7 @@ export class TextNotifier implements Notifier {
 
   private async people(ids: string[]): Promise<Map<string, Recipient>> {
     if (!ids.length) return new Map();
-    const { rows } = await this.q.query<Recipient>(
+    const { rows } = await this.q.query<Recipient & { id: string }>(
       "select id, phone, name, show_name, sms_opt_out from person where id = any($1)", [ids]);
     return new Map(rows.map((r) => [r.id, r]));
   }
@@ -42,9 +43,9 @@ export class TextNotifier implements Notifier {
     if (!p) return false;
     const skip = !isUsNumber(p.phone) ? "not_us" : p.sms_opt_out && kind !== "code" ? "opted_out" : null;
     const out: Outcome = skip ? { status: "skipped", reason: skip } : await this.transport.send(p.phone, await body(), kind);
-    if (out.status === "failed" && out.error === OPTED_OUT) {
+    if (p.id && out.status === "failed" && out.error === OPTED_OUT) {
       await this.q.query("update person set sms_opt_out = true where id = $1", [p.id]);
-    } else if (out.status === "sent" && kind === "code" && p.sms_opt_out) {
+    } else if (p.id && out.status === "sent" && kind === "code" && p.sms_opt_out) {
       // They texted START since; a code that went through proves it.
       await this.q.query("update person set sms_opt_out = false where id = $1", [p.id]);
     }
@@ -91,8 +92,9 @@ export class TextNotifier implements Notifier {
   }
 
   async code(m: Code) {
-    const ps = await this.people([m.personId]);
-    return { sent: await this.deliver("code", m.boardId, null, ps.get(m.personId), () => copy.codeText(m.code)) };
+    const p = m.personId ? (await this.people([m.personId])).get(m.personId)
+      : { id: null, phone: m.phone, name: "", show_name: false, sms_opt_out: false };
+    return { sent: await this.deliver("code", m.boardId, null, p, () => copy.codeText(m.code)) };
   }
 }
 

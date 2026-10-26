@@ -13,7 +13,7 @@ import { boardById, boardData } from "@/lib/load";
 import { heat } from "@/lib/quorum";
 import { LIMITS, resetLimits } from "@/lib/ratelimit";
 import { jar, newDevice, signedIn } from "@/test/jar";
-import { spyNotifier, type Call } from "@/test/notify";
+import { enterCode, spyNotifier, type Call } from "@/test/notify";
 import { openTestDb, type TestDb } from "@/test/db";
 import { D, events, responseOf, world } from "@/test/world";
 
@@ -80,8 +80,10 @@ describe("posting", () => {
     const w = await world(t.db);
     expect(await post({ slug: w.board.slug, title: "Night market" })).toMatchObject({ error: "need_identity" });
     expect((await t.db.query("select 1 from proposal")).rows).toHaveLength(0);
-    const r = await post({ slug: w.board.slug, title: "Night market", name: "Hana", phone: "607-555-0144" });
-    expect(r.status).toBe("ok");
+    expect(await post({ slug: w.board.slug, title: "Night market", name: "Hana", phone: "607-555-0144" }))
+      .toEqual({ status: "needs_code", phone: "+16075550144" });
+    expect((await t.db.query("select 1 from proposal")).rows).toHaveLength(0);
+    expect((await enterCode(calls, "+16075550144")).status).toBe("ok");
     const { rows } = await t.db.query<{ name: string }>("select pe.name from proposal p join person pe on pe.id = p.poster_id");
     expect(rows).toEqual([{ name: "Hana" }]);
   });
@@ -394,6 +396,7 @@ describe("share", () => {
     newDevice();
     jar.cookies.set(ENTRY_COOKIE, `proposal_link:${token}`);
     await respond({ proposalId: pid, answer: "in", name: "Omar", phone: "607-555-0188" });
+    await enterCode(calls, "+16075550188");
     const resp = (await events(t.db, "response", pid)).at(-1)!;
     const added = (await events(t.db, "person_added", pid)).at(-1)!;
     expect(resp).toMatchObject({ source: "proposal_link", share_id: s.id });
@@ -405,6 +408,7 @@ describe("share", () => {
     const pid = await w.proposal((await w.person()).id);
     jar.cookies.set(ENTRY_COOKIE, "group_link");
     await respond({ proposalId: pid, answer: "in", name: "Omar", phone: "607-555-0188" });
+    await enterCode(calls, "+16075550188");
     expect((await events(t.db, "response", pid))[0]).toMatchObject({ source: "group_link", share_id: null });
   });
 

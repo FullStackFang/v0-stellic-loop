@@ -4,9 +4,11 @@ Order: 1 → 2 → 3 → {4, 5, 6} → 7 → 8. Group 1 is the founder's and can
 
 ## 1. Founder setup (parallel, has lead time)
 
-- [ ] 1.1 Create a Twilio account and a Messaging Service with one US long code; keep its default opt-out handling (STOP/START/HELP) on
-- [ ] 1.2 Submit US A2P 10DLC brand and campaign registration (use case: notifications for a private group board). Until it is approved, verify your own test numbers on the trial account.
-- [ ] 1.3 Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_MESSAGING_SERVICE_SID` in Vercel Production only (not Preview)
+Revised 2026-10-26: codes only, through Twilio Verify (no number, no 10DLC, no toll-free verification).
+
+- [ ] 1.1 In the existing Twilio account, create a Verify Service named "Quorum" (SMS channel, 6-digit code)
+- [x] 1.2 ~~10DLC registration~~ not needed: Verify sends from Twilio's registered senders
+- [ ] 1.3 Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_VERIFY_SERVICE_SID` in Vercel Production only (not Preview), then redeploy
 
 ## 2. Database
 
@@ -47,4 +49,11 @@ Order: 1 → 2 → 3 → {4, 5, 6} → 7 → 8. Group 1 is the founder's and can
 
 - [x] 8.1 Founder runs `0006_sms.sql`, then `0007_sms_once.sql` as a separate run, on `supabase-loop`; verify the new enum value, the index and the `magic_token` columns, that `emba27` is unchanged, and that the advisors show only the known INFO lint
 - [ ] 8.2 Push `main` and verify the live site still logs (no Twilio vars yet): `/b/emba27` loads, posting works
-- [ ] 8.3 After 1.3, from a second device with a verified number: ask for a code, receive it, sign in; lock a test intent and receive the ON text; tap its link and land signed in. Then delete the test rows.
+- [ ] 8.3 After 1.3, from a second device: start as a new number, receive the Verify code, sign in; then from a third browser as the same number, receive a code again and land signed in. Then delete the test rows.
+
+## 9. Codes only, through Verify (revision 2026-10-26)
+
+- [x] 9.1 `lib/notify/verify.ts`: `verifyConfig`, a transport that starts an SMS verification, `checkVerification` (approved / wrong / expired on 404 / failed), and `VerifyNotifier` (codes through Verify, everything else logged); `notifier()` prefers it over the Messaging Service
+- [x] 9.2 `withIdentity`: an unknown number gets a code too, with its name carried in `pending.person`; `verifyCode` checks with Verify when configured, creates the person on success, and returns `code_check_failed` (keeping the code) when Verify can't be reached
+- [x] 9.3 Copy: the consent line, the code hint, `/privacy` and `/terms` say codes are the only texts
+- [x] 9.4 Tests: Verify request shape, unknown-number codes, plan texts logged only, check outcomes, and end-to-end respond → verify for approved, wrong and unreachable; existing flows updated to enter the code

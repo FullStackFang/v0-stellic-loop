@@ -1,3 +1,12 @@
+## Revision (2026-10-26): codes only, through Twilio Verify
+
+The founder chose to text **sign-in codes only**, for now, and to have **every** number confirm one. Plan updates (ON, drop, one more, maybe) stay in the app and are only logged.
+
+- **Codes go through Twilio Verify.** Verify makes the code and sends it from Twilio's own registered senders, so Quorum needs no number, no 10DLC campaign and no toll-free verification. Three Vercel variables: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`. When they are set, Verify wins over the Messaging Service.
+- **Every new number confirms a code.** An unknown number no longer becomes a person on the spot: the action waits for the code, like a known number on a new device, and the person is created (with the name typed) only when the code checks.
+- **Kept, not switched on:** the Messaging Service notifier, the ON/drop/one-more copy, the one-more trigger and the short `/m/` links all stay in the code and tests, ready for when plan texts are wanted.
+- The consent line, `/privacy` and `/terms` say codes are the only texts.
+
 ## Why
 
 The live board writes every text it would send to a log. A stranger can still tap in (a new number needs no code), but anyone coming back on a second device gets a code that never arrives, and nobody hears that an intent is ON unless they open the board. ON is the moment the board pays off, and today nobody is told. Real texts make the lock mean something and let people come back from any phone.

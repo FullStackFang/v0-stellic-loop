@@ -17,6 +17,17 @@ The system SHALL send texts through Twilio's Messages API, using a Messaging Ser
 - **WHEN** all three Twilio variables are set and a lock happens
 - **THEN** each yes is sent one message through the Messaging Service
 
+### Requirement: Sign-in codes go through Twilio Verify when it is configured
+When `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_VERIFY_SERVICE_SID` are all set, the system SHALL send sign-in codes by starting a Twilio Verify SMS verification and SHALL check entered codes with Verify; every other message SHALL only be logged. This SHALL take precedence over the Messaging Service. If Verify cannot be reached while checking, the form SHALL say "We couldn't check that code. Try again." and the pending action SHALL be kept.
+
+#### Scenario: Verify configured
+- **WHEN** a stranger asks for a code
+- **THEN** one Verify verification is started for their number, and a lock that follows sends no text
+
+#### Scenario: Verify approves
+- **WHEN** the code entered is approved by Verify
+- **THEN** the pending action is recorded as for a correct code
+
 ### Requirement: Every text attempt writes one event
 For every recipient of every message, the system SHALL write one `text_sent` event with channel `sms`, the message kind, the person, and a status of `sent` (with the Twilio message sid), `failed` (with Twilio's error code) or `skipped` (with the reason). A sign-in code SHALL never appear in an event or a log line.
 

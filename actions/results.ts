@@ -28,6 +28,7 @@ const MESSAGES: Record<string, string> = {
   rate_limited: "Too many tries. Wait a minute.",
   expired: "That code expired. Tap again for a new one.",
   wrong_code: "That code isn't right.",
+  code_check_failed: "We couldn't check that code. Try again.",
   too_many: "Too many wrong codes. Tap again for a new one.",
   bad_text: "Add some text.",
 };

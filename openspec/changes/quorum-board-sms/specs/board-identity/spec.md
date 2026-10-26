@@ -21,8 +21,12 @@ The system SHALL identify a person by a phone number normalised to E.164 and a d
 - **WHEN** a visitor enters "+44 7700 900123"
 - **THEN** nothing is recorded and the form says "US numbers only for now."
 
-### Requirement: Known numbers on a cookieless device verify once
-When a response arrives from a number already known and the request carries no valid cookie, the system SHALL NOT record the answer. It SHALL issue a six-digit code through the notifier, store only its hash with a ten-minute expiry, and accept at most five attempts before requiring a new code. A correct code SHALL record the pending answer and set the cookie. When texts are configured the code SHALL be sent by text reading "Quorum code: {code}. It expires in 10 minutes." If the send fails, the stored code SHALL be discarded and the form SHALL say "We couldn't text that number. Try again." instead of asking for a code.
+### Requirement: Every number on a cookieless device verifies once
+When a response, post or new board arrives with a number and the request carries no valid cookie, the system SHALL NOT record it. A number not yet known SHALL also need its name, and SHALL become a person, with that name, only when its code is confirmed. It SHALL issue a six-digit code through the notifier, store only its hash with a ten-minute expiry, and accept at most five attempts before requiring a new code. A correct code SHALL record the pending answer and set the cookie. When texts are configured the code SHALL be sent by text reading "Quorum code: {code}. It expires in 10 minutes." If the send fails, the stored code SHALL be discarded and the form SHALL say "We couldn't text that number. Try again." instead of asking for a code.
+
+#### Scenario: New number
+- **WHEN** a stranger enters "Priya" and "(607) 555-0123" and taps "I'm in"
+- **THEN** no person and no answer exist until she enters the code; then both do and the cookie is set
 
 #### Scenario: Known number, new phone
 - **WHEN** Priya, already on the roster, taps "I'm in" from a device with no cookie

@@ -1,11 +1,11 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { setNotifier, TwilioNotifier } from "@/lib/notify";
+import { setNotifier, TwilioNotifier, VerifyNotifier } from "@/lib/notify";
 import { respond } from "../respond";
 import { verifyCode } from "../verifyCode";
 import { resetLimits } from "@/lib/ratelimit";
 import { SESSION_COOKIE } from "@/lib/session";
 import { jar, newDevice, signedIn } from "@/test/jar";
-import { spyNotifier, type Call } from "@/test/notify";
+import { enterCode, spyNotifier, type Call } from "@/test/notify";
 import { makeBoard, makePerson, openTestDb, type TestDb } from "@/test/db";
 
 let t: TestDb;
@@ -27,14 +27,19 @@ async function proposal(boardId: string, posterId: string, title = "Suits in Hoi
 const answerOf = async (proposalId: string, personId: string) =>
   (await t.db.query<{ answer: string }>("select answer from response where proposal_id = $1 and person_id = $2", [proposalId, personId])).rows[0]?.answer ?? null;
 
-describe("unknown number answers with no round trip", () => {
-  it("creates the person, records the answer, sets the cookie, writes person_added", async () => {
+describe("an unknown number confirms a texted code first", () => {
+  it("records nothing until the code; then creates the person, records the answer, sets the cookie, writes person_added", async () => {
     const b = await makeBoard(t.db);
     const poster = await makePerson(t.db, "Poster");
     const pid = await proposal(b.id, poster.id);
 
     const r = await respond({ proposalId: pid, answer: "in", name: "Priya", phone: "(607) 555-0123" });
-    expect(r.status).toBe("ok");
+    expect(r).toEqual({ status: "needs_code", phone: "+16075550123" });
+    expect((await t.db.query("select 1 from person where phone = '+16075550123'")).rows).toHaveLength(0);
+    expect(calls.find((c) => c.kind === "code")?.msg).toMatchObject({ personId: null, phone: "+16075550123" });
+    expect(jar.cookies.get(SESSION_COOKIE)).toBeUndefined();
+
+    expect(await enterCode(calls, "+16075550123")).toEqual({ status: "ok", path: `/p/${pid}` });
 
     const { rows: [p] } = await t.db.query<{ id: string }>("select id from person where phone = '+16075550123'");
     expect(await answerOf(pid, p.id)).toBe("in");
@@ -81,6 +86,7 @@ describe("the session", () => {
     const p1 = await proposal(b1.id, poster.id);
     const p2 = await proposal(b2.id, poster.id);
     await respond({ proposalId: p1, answer: "in", name: "Priya", phone: "+16075550123" });
+    await enterCode(calls, "+16075550123");
     expect((await respond({ proposalId: p2, answer: "in" })).status).toBe("ok");
     const { rows } = await t.db.query<{ n: number }>("select count(*)::int n from person where phone = '+16075550123'");
     expect(rows[0].n).toBe(1);
@@ -130,6 +136,61 @@ describe("known number on a cookieless device", () => {
     const { code } = await setup();
     await t.db.query("update otp_code set expires_at = now() - interval '1 minute'");
     expect(await verifyCode({ phone: "+16075550123", code })).toMatchObject({ error: "expired" });
+  });
+});
+
+describe("codes through Twilio Verify", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  /** Verify on; `check` is the status VerificationCheck answers with. */
+  function verifyOn(check: { status: number; json: Record<string, unknown> }) {
+    vi.stubEnv("TWILIO_ACCOUNT_SID", "AC1");
+    vi.stubEnv("TWILIO_AUTH_TOKEN", "tok");
+    vi.stubEnv("TWILIO_VERIFY_SERVICE_SID", "VA1");
+    setNotifier((q) => new VerifyNotifier(q, { accountSid: "AC1", authToken: "tok", serviceSid: "VA1" }, () => {}));
+    const fetchMock = vi.fn(async (url: string) => url.endsWith("/Verifications")
+      ? new Response(JSON.stringify({ sid: "VE1", status: "pending" }), { status: 201 })
+      : new Response(JSON.stringify(check.json), { status: check.status }));
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  async function askNew() {
+    const b = await makeBoard(t.db);
+    const pid = await proposal(b.id, (await makePerson(t.db)).id);
+    expect(await respond({ proposalId: pid, answer: "in", name: "Priya", phone: "607 555 0123" })).toEqual({ status: "needs_code", phone: "+16075550123" });
+    return pid;
+  }
+
+  it("the code Verify approves creates the person and records the answer", async () => {
+    const f = verifyOn({ status: 200, json: { status: "approved" } });
+    const pid = await askNew();
+    expect(await verifyCode({ phone: "+16075550123", code: "424242" })).toEqual({ status: "ok", path: `/p/${pid}` });
+    expect(f.mock.calls.map((c) => c[0])).toEqual([
+      "https://verify.twilio.com/v2/Services/VA1/Verifications",
+      "https://verify.twilio.com/v2/Services/VA1/VerificationCheck",
+    ]);
+    const { rows: [p] } = await t.db.query<{ id: string; name: string }>("select id, name from person where phone = '+16075550123'");
+    expect(p.name).toBe("Priya");
+    expect(await answerOf(pid, p.id)).toBe("in");
+  });
+
+  it("a code Verify rejects counts as wrong and creates nobody", async () => {
+    verifyOn({ status: 200, json: { status: "pending" } });
+    await askNew();
+    expect(await verifyCode({ phone: "+16075550123", code: "000000" })).toMatchObject({ error: "wrong_code" });
+    expect((await t.db.query("select 1 from person where phone = '+16075550123'")).rows).toHaveLength(0);
+  });
+
+  it("Verify unreachable keeps the code alive to retry", async () => {
+    verifyOn({ status: 503, json: {} });
+    await askNew();
+    expect(await verifyCode({ phone: "+16075550123", code: "424242" }))
+      .toMatchObject({ error: "code_check_failed", message: "We couldn't check that code. Try again." });
+    expect((await t.db.query("select 1 from otp_code")).rows).toHaveLength(1);
   });
 });
 

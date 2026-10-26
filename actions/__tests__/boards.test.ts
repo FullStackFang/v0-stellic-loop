@@ -12,7 +12,7 @@ import { allocateBoard } from "@/lib/slug";
 import { resetLimits } from "@/lib/ratelimit";
 import { SESSION_COOKIE } from "@/lib/session";
 import { jar, newDevice, signedIn } from "@/test/jar";
-import { spyNotifier, type Call } from "@/test/notify";
+import { enterCode, spyNotifier, type Call } from "@/test/notify";
 import { makeBoard, makePerson, openTestDb, type TestDb } from "@/test/db";
 import { events, responseOf } from "@/test/world";
 
@@ -169,7 +169,9 @@ describe("starting a board", () => {
 
   it("a new number: rolling board in their timezone, signed in, on the roster, one board_created", async () => {
     const r = await startBoard({ board: "Strategy team", tz: "America/Chicago", name: "Priya", phone: "(607) 555-0123" });
-    expect(r).toEqual({ status: "ok", slug: "strategy-team" });
+    expect(r).toEqual({ status: "needs_code", phone: "+16075550123" });
+    expect(await boards()).toHaveLength(0);
+    expect(await enterCode(calls, "+16075550123")).toEqual({ status: "ok", path: "/b/strategy-team" });
     const [b] = await boards();
     expect(b).toMatchObject({ slug: "strategy-team", name: "Strategy team", tz: "America/Chicago", window_kind: "rolling", window_start: null });
     const { rows: [priya] } = await t.db.query<{ id: string }>("select id from person where phone = '+16075550123'");
@@ -181,12 +183,14 @@ describe("starting a board", () => {
   it("is attributed direct even when the visit came by a group link", async () => {
     jar.cookies.set("qe", "group_link");
     await startBoard({ board: "Ski Club '26!", tz: "America/New_York", name: "Dana", phone: "+16075550124" });
+    await enterCode(calls, "+16075550124");
     expect((await boards())[0].slug).toBe("ski-club-26");
     expect((await events(t.db, "board_created"))[0].source).toBe("direct");
   });
 
   it("a bad timezone falls back to New York", async () => {
     await startBoard({ board: "Mars base", tz: "Mars/Olympus", name: "Elon", phone: "+16075550125" });
+    await enterCode(calls, "+16075550125");
     expect((await boards())[0].tz).toBe("America/New_York");
   });
 
