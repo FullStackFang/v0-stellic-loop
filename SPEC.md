@@ -2,7 +2,7 @@
 
 *A fictional, self-contained webapp demo. Purpose: prove the use case and utility on camera. We rebuild the real app **from** this demo later.*
 
-**Status:** demo / throwaway (rebuild-from)
+**Status:** demo / design reference. The product now lives in `web/` (see `web/README.md`); this file and `index.html` are the click-through demo it was rebuilt from.
 **Target:** working link + 2-min video by Aug 21
 **One file:** `index.html`
 

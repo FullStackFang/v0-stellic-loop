@@ -1,0 +1,18 @@
+# Supabase CLI config for Loop — hosted projects only; nothing here starts a local stack.
+# Used by `supabase db push` / `db reset --db-url` against loop-dev and loop-test.
+# The auth hook below only documents the hosted dashboard setting (see 0003_auth.sql); do not push it
+# with `supabase config push`, which would overwrite the dashboard's SMTP, redirect URLs and email
+# template with CLI defaults.
+
+project_id = "loop"
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/auth_hook_before_user_created"

@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+/* ===== Loop design tokens — ported from the root demo (index.html) ===== */
+/* Daylight (default) */
+:root {
+  /* primitives */
+  --paper-0: #fffdf8; --paper-1: #f9f4ec; --paper-2: #f0e8da; --paper-3: #e3d8c6;
+  --ink-0: #1f1a17; --ink-1: #352d28; --ink-2: #6a5e56; --ink-3: #98897e; --ink-4: #c5b8aa;
+  --carnelian-100: #f8e6e3; --carnelian-200: #f0c5c0; --carnelian-300: #e08d84; --carnelian-400: #cf5347;
+  --carnelian-500: #b31b1b; --carnelian-600: #8a1414; --carnelian-700: #680f0f;
+  --moss-500: #3d8a5f; --amber-500: #b6862b; --amber-600: #8a641f; --rose-500: #a04f6a; --slate-500: #59657a;
+
+  /* semantic */
+  --bg-page: var(--paper-1); --bg-surface: var(--paper-0); --bg-raised: #fffefb; --bg-sunken: var(--paper-2);
+  --bg-blush: var(--carnelian-100); --bg-inverse: var(--ink-0); --bg-scrim: rgba(31, 26, 23, .44);
+  --text-primary: var(--ink-0); --text-secondary: var(--ink-2); --text-tertiary: var(--ink-3);
+  --text-inverse: var(--paper-0); --text-link: var(--carnelian-600);
+  --border-hairline: var(--paper-3); --border-strong: var(--ink-0); --border-quiet: rgba(31, 26, 23, .08);
+  --accent: var(--carnelian-500); --accent-strong: var(--carnelian-600); --accent-quiet: var(--carnelian-100); --accent-ink: var(--paper-0);
+  --status-live: var(--moss-500); --status-forming: var(--amber-500); --status-full: var(--carnelian-500);
+  --unit-dorm: var(--rose-500); --unit-class: var(--slate-500); --unit-major: var(--amber-600);
+  --focus-ring: var(--carnelian-500);
+
+  /* type (families come from next/font in app/layout.tsx) */
+  --font-display: var(--font-gabarito), system-ui, sans-serif;
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* radii */
+  --radius-md: 14px; --radius-lg: 22px; --radius-xl: 28px; --radius-2xl: 34px; --radius-pill: 999px;
+
+  /* shadows (warm) */
+  --shadow-card: 0 1px 2px rgba(80, 40, 30, .05), 0 4px 14px -10px rgba(80, 40, 30, .14);
+  --shadow-raised: 0 8px 26px -12px rgba(80, 40, 30, .2);
+  --shadow-pop: 0 28px 60px -24px rgba(80, 40, 30, .3);
+  --shadow-lift: 0 2px 5px rgba(80, 40, 30, .07), 0 18px 34px -16px rgba(80, 40, 30, .38);
+  --edge-lift: inset 0 1px 0 rgba(255, 253, 248, .9);
+  --glow-accent: 0 6px 18px -10px var(--carnelian-500);
+
+  /* motion */
+  --dur-1: 120ms; --dur-2: 180ms; --dur-3: 260ms; --dur-4: 420ms;
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-settle: cubic-bezier(.16, 1, .3, 1);
+  --ease-pop: cubic-bezier(.34, 1.56, .64, 1);
+
+  color-scheme: light;
+}
+
+/* Big Red Night — system preference, unless the page opts into light */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: #181310; --bg-surface: #211a16; --bg-raised: #2a221d; --bg-sunken: #12100c; --bg-blush: #2c1815;
+    --text-primary: #f8f1e8; --text-secondary: #bcafa2; --text-tertiary: #8d8074;
+    --border-hairline: #342a24; --border-strong: #4e4139; --border-quiet: rgba(248, 241, 232, .1);
+    --accent: var(--carnelian-400); --accent-strong: var(--carnelian-300); --accent-quiet: rgba(207, 83, 71, .16); --accent-ink: #1a0d0b;
+    --focus-ring: var(--carnelian-300);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow-raised: 0 8px 26px -12px rgba(0, 0, 0, .7);
+    --shadow-pop: 0 28px 60px -24px rgba(0, 0, 0, .8);
+    --shadow-lift: 0 2px 5px rgba(0, 0, 0, .5), 0 18px 34px -16px rgba(0, 0, 0, .8);
+    --edge-lift: inset 0 1px 0 rgba(248, 241, 232, .07);
+    color-scheme: dark;
+  }
+}
+
+/* Big Red Night — explicit opt-in */
+:root[data-theme="dark"] {
+  --bg-page: #181310; --bg-surface: #211a16; --bg-raised: #2a221d; --bg-sunken: #12100c; --bg-blush: #2c1815;
+  --text-primary: #f8f1e8; --text-secondary: #bcafa2; --text-tertiary: #8d8074;
+  --border-hairline: #342a24; --border-strong: #4e4139; --border-quiet: rgba(248, 241, 232, .1);
+  --accent: var(--carnelian-400); --accent-strong: var(--carnelian-300); --accent-quiet: rgba(207, 83, 71, .16); --accent-ink: #1a0d0b;
+  --focus-ring: var(--carnelian-300);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-raised: 0 8px 26px -12px rgba(0, 0, 0, .7);
+  --shadow-pop: 0 28px 60px -24px rgba(0, 0, 0, .8);
+  --shadow-lift: 0 2px 5px rgba(0, 0, 0, .5), 0 18px 34px -16px rgba(0, 0, 0, .8);
+  --edge-lift: inset 0 1px 0 rgba(248, 241, 232, .07);
+  color-scheme: dark;
+}
+
+/* Expose the tokens to Tailwind utilities (bg-page, text-primary, font-display, rounded-lg, ...) */
+@theme inline {
+  --color-background: var(--bg-page);
+  --color-foreground: var(--text-primary);
+  --color-page: var(--bg-page);
+  --color-surface: var(--bg-surface);
+  --color-raised: var(--bg-raised);
+  --color-sunken: var(--bg-sunken);
+  --color-blush: var(--bg-blush);
+  --color-inverse: var(--bg-inverse);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-tertiary: var(--text-tertiary);
+  --color-link: var(--text-link);
+  --color-hairline: var(--border-hairline);
+  --color-strong: var(--border-strong);
+  --color-quiet: var(--border-quiet);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-quiet: var(--accent-quiet);
+  --color-accent-ink: var(--accent-ink);
+  --color-live: var(--status-live);
+  --color-forming: var(--status-forming);
+  --color-full: var(--status-full);
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-display: var(--font-gabarito), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-2xl: 34px;
+  --radius-pill: 999px;
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-pop: var(--shadow-pop);
+  --shadow-lift: var(--shadow-lift);
+}
+
+/* ===== base ===== */
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--dur-3) var(--ease-out);
+}
+input, select, textarea, button { font-family: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ===== type helpers ===== */
+.pls-display { font-family: var(--font-display); letter-spacing: -.02em; }
+.pls-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.pls-kicker { font-family: var(--font-sans); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 11.5px; color: var(--text-tertiary); }
+
+/* ===== raised paper =====
+   Elevation is a lighter face, a lit top edge and one warm shadow. Never an ink border
+   (an ink border means "outlined and flat"). */
+.pls-raised {
+  background: var(--bg-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--edge-lift), var(--shadow-raised);
+}
+
+/* ===== buttons =====
+   Same elevation language: no ink outlines; a control is a lit face with one warm shadow.
+   Carnelian is the ordinary primary; ghost is quiet. */
+.pls-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+  padding: 0 20px; border-radius: var(--radius-pill); font-family: var(--font-sans); font-weight: 600; font-size: 15px;
+  cursor: pointer; border: 1px solid transparent; user-select: none;
+  transition: background var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.pls-btn:disabled { opacity: .4; cursor: default; }
+.pls-btn--block { width: 100%; }
+.pls-btn--sm { min-height: 38px; font-size: 14px; padding: 0 16px; }
+.pls-btn--primary { background: var(--accent); color: var(--accent-ink); box-shadow: var(--glow-accent); }
+.pls-btn--primary:not(:disabled):active { background: var(--accent-strong); box-shadow: none; transform: translateY(1px); }
+.pls-btn--secondary { background: var(--bg-raised); color: var(--text-primary); box-shadow: var(--edge-lift), var(--glow-accent); }
+.pls-btn--secondary:not(:disabled):active { background: var(--bg-sunken); box-shadow: none; transform: translateY(1px); }
+.pls-btn--ghost { background: transparent; color: var(--text-secondary); }
+.pls-btn--ghost:not(:disabled):active { background: var(--bg-sunken); }

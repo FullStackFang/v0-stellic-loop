@@ -211,18 +211,31 @@
 
   /* vendor mockup additions */
   .wrap{ max-width:1660px; }
-  .intro{ max-width:760px; margin:0 auto 36px; text-align:center; }
-  .intro h1{ font-family:var(--serif); font-size:34px; font-weight:500; letter-spacing:-.02em; line-height:1.12; margin:14px 0 12px; }
+  .intro{ max-width:1632px; margin:0 auto 44px; }
+  .topline{ display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:14px; border-bottom:1px solid var(--line); }
+  .eyebrow.quiet{ color:var(--ink-3); }
+  .introgrid{ display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:56px; padding-top:28px; align-items:start; }
+  .intro h1{ font-family:var(--serif); font-size:44px; font-weight:500; letter-spacing:-.025em; line-height:1.06; margin:0; max-width:21ch; text-wrap:balance; }
   .intro h1 em{ font-style:italic; color:var(--carnelian-deep); }
-  .intro p{ color:var(--ink-2); font-size:14.5px; line-height:1.55; margin:0 auto 10px; max-width:62ch; }
-  .intro .note{ font-size:11.5px; line-height:1.55; color:var(--ink-3); margin-top:14px; }
+  .lede p{ color:var(--ink-2); font-size:15px; line-height:1.6; margin:0; max-width:60ch; text-wrap:pretty; }
+  .legend{ list-style:none; margin:20px 0 0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:0 28px; max-width:60ch; }
+  .legend li{ display:flex; gap:12px; align-items:baseline; padding:10px 0; border-top:1px solid var(--hair); font-size:13px; color:var(--ink); line-height:1.4; }
+  .legend b{ font-family:var(--serif); font-size:17px; font-weight:500; color:var(--carnelian-deep); min-width:12px; }
+  .lede .note{ font-size:12px; color:var(--ink-3); margin-top:16px; }
+  @media (max-width:900px){ .introgrid{ grid-template-columns:1fr; gap:20px; } .intro h1{ font-size:34px; } .legend{ grid-template-columns:1fr; } }
+  button:focus-visible, input:focus-visible, a:focus-visible{ outline:2px solid var(--carnelian); outline-offset:2px; }
+  .code{ display:flex; gap:6px; }
+  .code i{ width:30px; height:38px; border-radius:9px; border:1px solid var(--line); background:var(--paper-0); display:grid; place-items:center; font-style:normal; font-family:var(--serif); font-size:18px; color:var(--ink); }
+  .code i.on{ border-color:var(--ink); }
+  .facts.rec{ margin-top:0; gap:4px 14px; font-size:13px; padding:12px 14px; background:var(--paper-0); border:1px solid var(--hair); border-radius:14px; }
+  .facts.rec b{ font-family:var(--serif); font-size:20px; font-weight:500; color:var(--ink); margin-right:4px; }
   body{ padding-left:16px; padding-right:16px; }
   .rail{ gap:24px; }
   .frame{ width:390px; }
-  .cap{ display:flex; align-items:baseline; gap:10px; padding:0 8px 12px; }
-  .cap b{ font-family:var(--serif); font-size:22px; font-weight:500; color:var(--carnelian-deep); }
-  .cap span{ font-size:13px; color:var(--ink-2); }
-  .cap small{ margin-left:auto; font-size:11px; color:var(--ink-3); white-space:nowrap; }
+  .cap{ display:grid; grid-template-columns:auto 1fr; column-gap:10px; align-items:baseline; padding:0 10px 14px; }
+  .cap b{ grid-row:span 2; font-family:var(--serif); font-size:26px; font-weight:500; line-height:1; color:var(--carnelian-deep); }
+  .cap span{ font-size:14px; font-weight:600; color:var(--ink); letter-spacing:-.005em; }
+  .cap small{ font-size:12px; color:var(--ink-3); margin-top:2px; }
   .plate.mono{ background:#56595b; color:var(--paper-0); --ring:rgba(74,74,74,.55); font-family:var(--serif); font-size:15px; font-weight:500; }
   .offer{ margin-top:10px; display:grid; grid-template-columns:26px 1fr; align-items:center; gap:8px 10px; padding:9px 10px; border-radius:12px; background:var(--paper-0); border:1px solid var(--hair); font-size:12.5px; line-height:1.35; color:var(--ink-2); }
   .offer .plate{ width:26px; height:26px; border-radius:7px; font-size:12px; }
@@ -233,10 +246,6 @@
   .mast h2 .vmark{ font-size:12px; vertical-align:middle; margin-left:6px; }
   .drow.offerrow{ background:var(--moss-tint); }
   .drow.offerrow .k{ color:var(--moss-deep); }
-  .rec{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-  .rec div{ background:var(--paper-0); border:1px solid var(--hair); border-radius:14px; padding:10px 12px; }
-  .rec b{ display:block; font-family:var(--serif); font-size:24px; font-weight:500; letter-spacing:-.02em; line-height:1.05; }
-  .rec span{ display:block; font-size:11px; color:var(--ink-3); margin-top:3px; line-height:1.3; }
   .step{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; font-size:14px; font-weight:500; }
   .step small{ display:block; color:var(--ink-3); font-size:12px; font-weight:400; margin-top:2px; }
   .step .ctl{ display:inline-flex; align-items:center; gap:4px; flex-shrink:0; }
@@ -257,16 +266,26 @@
 <body>
 <div class="wrap">
 
-<div class="intro">
-  <div class="eyebrow">Quorum · vendor side · throwaway mockup</div>
-  <h1>Someone adds the shop to an intent. The shop sees how many are considering it, and offers a <em>discount</em>.</h1>
-  <p>Four screens, left to right. The group's intent with the shop's discount on it. The page the shop gets told about and claims. What the shop sees once it is in: the people considering it, one button to offer a discount, and a record built from what groups actually did. And the same page as an agent reads it.</p>
-  <div class="note">Try: on <b>2</b>, tap Claim this page. On <b>3</b>, step the discount and tap Post: it appears on <b>1</b> and in the record on <b>4</b>. Nobody is texted; the shop sees counts and days, never names. Static click-through, state resets on reload.</div>
-</div>
+<header class="intro">
+  <div class="topline"><span class="eyebrow">Quorum · Places</span><span class="eyebrow quiet">Concept · after the trip · not in the MVP</span></div>
+  <div class="introgrid">
+    <h1>A group names a shop. The shop sees the demand, and answers with a <em>discount</em>.</h1>
+    <div class="lede">
+      <p>Every place a group adds to an intent gets a page. The business is told once, claims it with a code, and sees how many people are considering it. Its only action is a discount for that group. Underneath, each locked intent adds to a record an agent can read.</p>
+      <ol class="legend">
+        <li><b>1</b><span>The group's intent, with the discount on it</span></li>
+        <li><b>2</b><span>The shop is told, and claims its page</span></li>
+        <li><b>3</b><span>What the shop sees, and its one action</span></li>
+        <li><b>4</b><span>The same place, as an agent reads it</span></li>
+      </ol>
+      <p class="note">Try it: claim the page on 2, then step the discount on 3 and post. Screens 1 and 4 update. Nobody is texted, and the shop sees counts and days, never names.</p>
+    </div>
+  </div>
+</header>
 
 <div class="rail">
   <div class="frame">
-    <div class="cap"><b>1</b><span>The group's intent</span><small>with the shop's discount</small></div>
+    <div class="cap"><b>1</b><span>The group's intent</span><small>Suits in Hoi An, with the shop's discount</small></div>
     <div class="phone" id="pA">
       <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
       <div class="head"><span class="wordmark">Quorum</span><span class="meta">EMBA '27 · Feb 14–20</span></div>
@@ -278,7 +297,7 @@
   </div>
 
   <div class="frame">
-    <div class="cap"><b>2</b><span>The shop is told</span><small>unclaimed page</small></div>
+    <div class="cap"><b>2</b><span>The shop is told</span><small>One message, then a code to claim</small></div>
     <div class="phone" id="pC">
       <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
       <div class="head"><span class="wordmark">Quorum</span><span class="meta">for shops</span></div>
@@ -288,7 +307,7 @@
   </div>
 
   <div class="frame">
-    <div class="cap"><b>3</b><span>What the shop sees</span><small>claimed · Yaly Couture</small></div>
+    <div class="cap"><b>3</b><span>What the shop sees</span><small>Counts and days, one action</small></div>
     <div class="phone" id="pD">
       <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
       <div class="head"><span class="wordmark">Quorum</span><span class="meta">Yaly Couture · claimed</span></div>
@@ -298,7 +317,7 @@
   </div>
 
   <div class="frame">
-    <div class="cap"><b>4</b><span>What an agent sees</span><small>quorum.app/v/yaly · json</small></div>
+    <div class="cap"><b>4</b><span>What an agent sees</span><small>A record built from use, not reviews</small></div>
     <div class="phone" id="pE">
       <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
       <div class="head"><span class="wordmark">Quorum</span><span class="meta">agent profile · read-only</span></div>
@@ -418,7 +437,7 @@ function renderC(){
       <div class="drow"><span class="k">Taps</span><span>14 on your website link this week</span></div>
     </div>
     ${sect('Claiming', 0, 'one code')}
-    <div class="group"><div class="toggle"><div>Code to the number on your Google listing<small>+84 ••• 412 · or a code texted to the shop phone</small></div></div></div>
+    <div class="group"><div class="toggle"><div>${claimed?'Verified':(claimState==='verifying'?'Enter the code we sent':'A code goes to your listed number')}<small>+84 ••• 412 · from your Google listing</small></div></div>${claimState==='verifying'?'<div class="code" style="padding:0 16px 14px"><i class="on">4</i><i class="on">1</i><i class="on">7</i><i></i><i></i><i></i></div>':''}</div>
     ${sect('The text that brought you here', 0, 'today 09:12')}
     <div class="sms">${SHOP.name}: 8 people visiting Hoi An Feb 14–20 are considering you for suits. See what they need and claim your page: <u>quorum.app/v/yaly</u></div>`);
   const c=$('[data-claim]', sc); if(c) c.onclick=()=>{ if(claimState==='verifying') return; claimState='verifying'; renderC(); toast(ph, `Code sent to <b>+84 ••• 412</b>, the number on your Google listing.`); setTimeout(()=>{ claimState='claimed'; SHOP.claimed=true; renderC(); renderA(); renderE(); toast(ph, `<b>Claimed.</b>`); }, RM?0:1200); };
@@ -453,7 +472,7 @@ function renderD(){
     <button class="solid red" data-post>Post to ${SUITS.title} ${ARROW}</button>
     <p class="hint pad" style="margin:8px 0 0">Nobody is texted. You can withdraw it any time.</p>`);
   sc.insertAdjacentHTML('beforeend', `${sect('Your record', 0, 'what groups did · since Oct')}
-    <div class="rec"><div><b>3</b><span>groups chose you</span></div><div><b>2</b><span>locked</span></div><div><b>14</b><span>showed up</span></div></div>
+    <div class="facts rec"><span><b>3</b>groups chose you</span><span><b>2</b>locked</span><span><b>14</b>went</span></div>
     <div class="details" style="margin-top:8px">
       <div class="drow"><span class="k">Back</span><span>1 group came back on its next trip</span></div>
       <div class="drow"><span class="k">Expect</span><span>$230–280 is what people wrote before coming</span></div>

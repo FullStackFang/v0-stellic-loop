@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quorum · Post as an app screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --hair:rgba(31,26,23,.09); --line:rgba(31,26,23,.14); --tint:rgba(31,26,23,.045);
+    --carnelian:#b31b1b; --carnelian-deep:#8a1414; --carnelian-tint:#f8e6e3;
+    --moss-deep:#2f6e4a; --moss-tint:#e3f0e8;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Geist',-apple-system,system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; } input,textarea{ font-family:inherit; color:inherit; }
+  body{ margin:0; background:var(--paper-2); font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; padding:36px 16px 72px; }
+  .head{ text-align:center; max-width:70ch; margin:0 auto 26px; }
+  .head h1{ font:500 30px/1.1 var(--serif); letter-spacing:-.02em; margin:0 0 8px; }
+  .head p{ margin:0; color:var(--ink-2); font-size:14px; line-height:1.5; }
+  .rail{ display:flex; gap:32px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; max-width:100%; }
+  .cap{ margin:0 4px 14px; }
+  .cap .tag{ font:700 11px/1 var(--sans); letter-spacing:.14em; text-transform:uppercase; color:var(--carnelian-deep); }
+  .cap h2{ font:500 20px/1.2 var(--serif); margin:8px 0 4px; }
+  .cap p{ margin:0; font-size:13px; color:var(--ink-2); line-height:1.45; }
+  .cap .try{ margin-top:6px; font-size:12px; color:var(--carnelian-deep); }
+
+  .phone{ width:390px; max-width:100%; height:780px; background:var(--paper-1); border:1px solid var(--hair); border-radius:40px; overflow:hidden; position:relative; display:flex; flex-direction:column;
+    box-shadow:0 28px 60px -24px rgba(80,40,30,.34), 0 2px 6px rgba(80,40,30,.05); }
+  .status{ display:flex; justify-content:space-between; padding:14px 26px 6px; font:600 13px/1 var(--sans); flex-shrink:0; }
+  .home-ind{ position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; background:var(--ink); opacity:.85; z-index:20; }
+
+  /* shared atoms */
+  .plate{ border-radius:10px; display:grid; place-items:center; flex:0 0 auto; box-shadow:inset 0 0 0 1px var(--ring), 0 1px 1.5px rgba(60,30,20,.14), 0 5px 10px -5px rgba(60,30,20,.35); }
+  .plate svg{ fill:currentColor; }
+  .tray{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding:2px 16px 4px; }
+  .tray::-webkit-scrollbar{ display:none; }
+  .tray button{ flex:0 0 auto; padding:0; border:0; background:var(--tint); border-radius:11px; width:44px; height:44px; display:grid; place-items:center; color:var(--ink-2); }
+  .tray button svg{ width:22px; height:22px; fill:currentColor; }
+  .tray button.sel{ box-shadow:inset 0 0 0 1px var(--ring), 0 1px 1.5px rgba(60,30,20,.14), 0 5px 10px -5px rgba(60,30,20,.35); }
+  .sw{ width:51px; height:31px; border-radius:999px; background:var(--paper-3); border:0; position:relative; flex-shrink:0; transition:background .2s var(--ease); padding:0; }
+  .sw i{ position:absolute; top:2px; left:2px; width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.18); transition:left .2s var(--ease); }
+  .sw.on{ background:var(--moss-deep); } .sw.on i{ left:22px; }
+  .group{ margin:0 16px; border-radius:14px; overflow:hidden; background:var(--paper-0); border:1px solid var(--hair); }
+  .row{ display:flex; align-items:center; gap:12px; min-height:50px; padding:0 16px; border-top:1px solid var(--hair); font-size:15px; }
+  .row:first-child{ border-top:0; }
+  .row .l{ flex:0 0 auto; }
+  .row .l small{ display:block; font-size:12px; color:var(--ink-3); margin-top:1px; }
+  .row input{ flex:1; min-width:0; border:0; outline:none; background:none; text-align:right; font-size:15px; color:var(--ink-2); padding:14px 0; }
+  .row input::placeholder{ color:var(--ink-4); }
+  .row .sp{ flex:1; }
+  .gl{ margin:22px 32px 7px; font-size:12px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); }
+  .foot{ margin:7px 32px 0; font-size:12.5px; line-height:1.45; color:var(--ink-3); }
+  .chev{ color:var(--ink-4); font-size:18px; }
+  .body{ flex:1; overflow-y:auto; scrollbar-width:none; }
+  .body::-webkit-scrollbar{ display:none; }
+
+  /* A · sheet */
+  .behind{ position:absolute; inset:0; padding:56px 16px 0; background:var(--paper-1); }
+  .behind .bh{ font:500 21px var(--serif); margin:0 6px 14px; }
+  .behind .ph{ height:110px; border-radius:20px 20px 20px 4px; background:var(--paper-0); border:1px solid var(--hair); margin-bottom:12px; }
+  .scrim{ position:absolute; inset:0; background:rgba(31,26,23,.32); }
+  .sheet{ position:absolute; left:0; right:0; top:52px; bottom:0; background:var(--paper-1); border-radius:14px 14px 0 0; display:flex; flex-direction:column; box-shadow:0 -10px 30px -12px rgba(31,26,23,.35); }
+  .grab{ width:36px; height:5px; border-radius:3px; background:var(--ink-4); margin:6px auto 0; }
+  .nav{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:8px 16px 10px; flex-shrink:0; }
+  .nav .t{ font-size:16px; font-weight:600; }
+  .nav .lft{ justify-self:start; border:0; background:none; font-size:16px; color:var(--ink-2); padding:6px 0; }
+  .nav .rgt{ justify-self:end; border:0; background:none; font-size:16px; font-weight:600; color:var(--carnelian); padding:6px 0; }
+  .nav .rgt:disabled{ color:var(--ink-4); cursor:default; }
+  .what{ display:flex; align-items:center; gap:12px; margin:6px 16px 0; padding:12px; border-radius:14px; background:var(--paper-0); border:1px solid var(--hair); }
+  .what .plate{ width:48px; height:48px; border:0; padding:0; }
+  .what .plate svg{ width:26px; height:26px; }
+  .what input{ flex:1; min-width:0; border:0; outline:none; background:none; font:500 21px/1.2 var(--serif); letter-spacing:-.01em; }
+  .what input::placeholder{ color:var(--ink-4); }
+  .traywrap{ overflow:hidden; max-height:0; transition:max-height .25s var(--ease), margin .25s var(--ease); }
+  .traywrap.open{ max-height:60px; margin-top:10px; }
+
+  /* B · full screen */
+  .bar{ display:grid; grid-template-columns:44px 1fr 44px; align-items:center; padding:4px 10px 8px; flex-shrink:0; }
+  .bar .x{ width:36px; height:36px; border-radius:50%; border:0; background:var(--tint); display:grid; place-items:center; font-size:15px; }
+  .bar .t{ text-align:center; font-size:16px; font-weight:600; }
+  .big{ margin:14px 20px 4px; }
+  .big textarea{ width:100%; border:0; outline:none; background:none; resize:none; font:500 30px/1.12 var(--serif); letter-spacing:-.02em; padding:0; height:72px; }
+  .big textarea::placeholder{ color:var(--ink-4); }
+  .bigsub{ margin:0 20px 16px; font-size:13px; color:var(--ink-3); }
+  .dock{ flex-shrink:0; padding:10px 16px 26px; background:linear-gradient(to top, var(--paper-1) 70%, transparent); }
+  .solid{ height:52px; width:100%; border-radius:14px; border:0; background:var(--carnelian); color:var(--paper-0); font-size:16px; font-weight:600; transition:opacity .15s; }
+  .solid:disabled{ opacity:.35; cursor:default; }
+  .morerow{ color:var(--carnelian-deep); font-weight:500; }
+
+  /* C · live card */
+  .card{ margin:8px 16px 0; background:var(--paper-0); border:1px solid var(--hair); border-radius:20px 20px 20px 4px; padding:14px; display:grid; grid-template-columns:52px 1fr; gap:12px; }
+  .date{ width:52px; border-radius:12px; border:1px dashed var(--line); text-align:center; padding:6px 0 7px; align-self:start; }
+  .date small{ display:block; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
+  .date b{ display:block; font-family:var(--sans); font-size:11.5px; line-height:1.2; padding:5px 2px; color:var(--ink-3); font-weight:500; }
+  .card > div{ min-width:0; }
+  .titlerow{ display:flex; align-items:center; gap:10px; }
+  .titlerow .plate{ width:30px; height:30px; border-radius:8px; border:0; padding:0; }
+  .titlerow .plate svg{ width:17px; height:17px; }
+  .titlerow input{ flex:1; min-width:0; border:0; outline:none; background:none; font-size:17px; font-weight:600; letter-spacing:-.01em; padding:0; }
+  .titlerow input::placeholder{ color:var(--ink-4); font-weight:500; }
+  .facts{ font-size:12.5px; color:var(--ink-3); margin-top:6px; line-height:1.4; display:flex; flex-wrap:wrap; gap:6px; }
+  .facts b{ color:var(--ink-2); font-weight:600; }
+  .facts input{ border:0; outline:none; background:var(--tint); border-radius:6px; padding:4px 8px; font-size:12.5px; flex:1 1 100%; min-width:0; }
+  .attach{ display:flex; gap:6px; flex-wrap:wrap; margin:14px 16px 0; }
+  .attach button{ height:34px; padding:0 12px; border-radius:999px; border:0; background:var(--tint); font-size:13px; font-weight:500; color:var(--ink); }
+  .attach button.on{ background:var(--ink); color:var(--paper-0); }
+  .attach button.day.on{ background:var(--moss-deep); }
+  .preview-note{ margin:10px 22px 0; font-size:12px; color:var(--ink-3); }
+  .kb{ flex-shrink:0; height:230px; background:#d9d3ca; display:grid; grid-template-rows:repeat(4,1fr); gap:9px; padding:10px 4px 30px; }
+  .kb div{ display:flex; gap:6px; justify-content:center; }
+  .kb span{ flex:0 0 31px; height:100%; border-radius:6px; background:#fbf8f3; box-shadow:0 1px 0 rgba(0,0,0,.25); }
+  .kb .wide{ flex:0 0 180px; }
+  .accessory{ flex-shrink:0; display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--paper-0); border-top:1px solid var(--hair); }
+  .accessory .tray{ padding:0; flex:1; }
+  .accessory .tray button{ width:36px; height:36px; border-radius:9px; }
+  .accessory .tray button svg{ width:19px; height:19px; }
+  .accessory .post{ height:36px; padding:0 16px; border-radius:999px; border:0; background:var(--carnelian); color:#fff; font-weight:600; font-size:14px; flex:0 0 auto; }
+  .accessory .post:disabled{ opacity:.35; cursor:default; }
+</style>
+</head>
+<body>
+<div class="head">
+  <h1>Post, as an app screen</h1>
+  <p>Same fields and flow as <b>/b/emba27/new</b> today: icon, title, needs-a-day, and the optional line · cost · time · number · links. Only the shape changes. The tab bar hides while you compose, Post sits where native apps put it, and the instruction paragraph is gone. Every frame is live: pick an icon, type a title, flip the switch.</p>
+</div>
+<div class="rail">
+
+  <!-- A -->
+  <div class="col">
+    <div class="cap"><span class="tag">A · Sheet</span><h2>Compose sheet over the board</h2>
+      <p>Slides up over the Board like a new-message sheet. Cancel and Post in the nav bar; details are settings-style rows you type into in place.</p>
+      <div class="try">Tap the icon plate to swap icons</div></div>
+    <div class="phone" data-f="A">
+      <div class="behind"><div class="bh">Quorum</div><div class="ph"></div><div class="ph"></div><div class="ph"></div></div>
+      <div class="scrim"></div>
+      <div class="status" style="position:relative;color:#fff"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="nav"><button class="lft">Cancel</button><div class="t">New intent</div><button class="rgt js-post" disabled>Post</button></div>
+        <div class="body">
+          <div class="what"><button class="plate js-plate" aria-label="Icon"></button><input class="js-title" placeholder="What's the plan?" maxlength="120"></div>
+          <div class="traywrap js-traywrap"><div class="tray js-tray"></div></div>
+          <div class="gl">When</div>
+          <div class="group"><div class="row"><div class="l">Needs a day<small>Off for things like a shirt order</small></div><div class="sp"></div><button class="sw on js-sw" aria-label="Needs a day"><i></i></button></div></div>
+          <div class="gl">Details · optional</div>
+          <div class="group">
+            <div class="row"><div class="l">One line</div><input placeholder="Where, what"></div>
+            <div class="row"><div class="l">Rough cost</div><input placeholder="~$250"></div>
+            <div class="row"><div class="l">Time</div><input placeholder="3:00pm"></div>
+            <div class="row"><div class="l">Needs</div><input placeholder="4 people" inputmode="numeric"></div>
+            <div class="row"><div class="l">Links</div><input placeholder="Paste a link"></div>
+          </div>
+          <div class="foot">You're in automatically and your free days attach. Anyone in can add details later.</div>
+          <div style="height:40px"></div>
+        </div>
+      </div>
+      <div class="home-ind"></div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="col">
+    <div class="cap"><span class="tag">B · Full screen</span><h2>Full-screen compose, Post docked</h2>
+      <p>Its own screen with a close button. A big serif title, an icon row, then the switch. Details stay folded behind one row. Post is a big thumb button pinned to the bottom.</p>
+      <div class="try">Tap "Add details" to unfold</div></div>
+    <div class="phone" data-f="B">
+      <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="bar"><button class="x" aria-label="Close">✕</button><div class="t">New intent</div><div></div></div>
+      <div class="body">
+        <div class="big"><textarea class="js-title" placeholder="What's the plan?" maxlength="120"></textarea></div>
+        <div class="bigsub">You're in automatically. Your free days attach.</div>
+        <div class="tray js-tray"></div>
+        <div class="gl">When</div>
+        <div class="group"><div class="row"><div class="l">Needs a day<small>Off for things like a shirt order</small></div><div class="sp"></div><button class="sw on js-sw" aria-label="Needs a day"><i></i></button></div></div>
+        <div class="gl">Details · optional</div>
+        <div class="group js-more">
+          <div class="row morerow js-moretoggle" style="cursor:pointer"><div class="l">Add details</div><div class="sp"></div><span class="chev">›</span></div>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+      <div class="dock"><button class="solid js-post" disabled>Post</button></div>
+      <div class="home-ind"></div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="col">
+    <div class="cap"><span class="tag">C · Live card</span><h2>Type into the card itself</h2>
+      <p>You write on the card exactly as the Board will show it. Chips add the optional facts in place. Icons and Post ride above the keyboard, like composing a message.</p>
+      <div class="try">Tap a chip and it adds that fact to the card</div></div>
+    <div class="phone" data-f="C">
+      <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="nav"><button class="lft">Cancel</button><div class="t">New intent</div><div></div></div>
+      <div class="body">
+        <div class="card">
+          <div class="date"><small>Day</small><b class="js-datetxt">Finds one</b></div>
+          <div>
+            <div class="titlerow"><span class="plate js-plate"></span><input class="js-title" placeholder="What's the plan?" maxlength="120"></div>
+            <div class="facts"><span><b>You're in</b></span><span>· needs <b class="js-need">4</b></span></div>
+            <div class="facts js-extra"></div>
+          </div>
+        </div>
+        <div class="attach">
+          <button class="day on js-day">Needs a day</button>
+          <button data-k="line">+ One line</button><button data-k="cost">+ Cost</button><button data-k="time">+ Time</button><button data-k="need">+ Needs</button><button data-k="links">+ Link</button>
+        </div>
+        <div class="preview-note">This is how it lands on the Board.</div>
+      </div>
+      <div class="accessory"><div class="tray js-tray"></div><button class="post js-post" disabled>Post</button></div>
+      <div class="kb"><div><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div><span></span><span class="wide"></span><span></span></div></div>
+      <div class="home-ind"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  coatHanger:'M241.57,171.2,141.33,96l23.46-17.6A8,8,0,0,0,168,72a40,40,0,1,0-80,0,8,8,0,0,0,16,0,24,24,0,0,1,47.69-3.78L14.43,171.2A16,16,0,0,0,24,200H232a16,16,0,0,0,9.6-28.8ZM32.73,184C53.6,170.59,89.49,152,128,152s74.4,18.59,95.27,32Z',
+  tShirt:'M247.59,61.22,195.83,33A8,8,0,0,0,192,32H160a8,8,0,0,0-8,8,24,24,0,0,1-48,0,8,8,0,0,0-8-8H64a8,8,0,0,0-3.84,1L8.41,61.22A15.76,15.76,0,0,0,1.82,82.48l19.27,36.81A16.37,16.37,0,0,0,35.67,128H56v80a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V128h20.34a16.37,16.37,0,0,0,14.58-8.71l19.27-36.81A15.76,15.76,0,0,0,247.59,61.22ZM35.67,112a.62.62,0,0,1-.41-.13L16.09,75.26,56,53.48V112Zm185.07-.14a.55.55,0,0,1-.41.14H200V53.48l39.92,21.78Z',
+  sailboat:'M160,140V72.85a4,4,0,0,1,7-2.69l55,60.46a8,8,0,0,1,.43,10.26,8.24,8.24,0,0,1-6.58,3.12H164A4,4,0,0,1,160,140Zm87.21,32.53A8,8,0,0,0,240,168H144V8a8,8,0,0,0-14.21-5l-104,128A8,8,0,0,0,32,144h96v24H16a8,8,0,0,0-6.25,13l29.6,37a15.93,15.93,0,0,0,12.49,6H204.16a15.93,15.93,0,0,0,12.49-6l29.6-37A8,8,0,0,0,247.21,172.53Z',
+  airplaneTilt:'M215.52,197.26a8,8,0,0,1-1.86,8.39l-24,24A8,8,0,0,1,184,232a7.09,7.09,0,0,1-.79,0,8,8,0,0,1-5.87-3.52l-44.07-66.12L112,183.59V208a8,8,0,0,1-2.34,5.65s-14,14.06-15.88,15.88A7.91,7.91,0,0,1,91,231.41a8,8,0,0,1-10.41-4.35l-.06-.15-14.7-36.76L29,175.42a8,8,0,0,1-2.69-13.08l16-16A8,8,0,0,1,48,144H72.4l21.27-21.27L27.56,78.65a8,8,0,0,1-1.22-12.32l24-24a8,8,0,0,1,8.39-1.86l85.94,31.25L176.2,40.19a28,28,0,0,1,39.6,39.6l-31.53,31.53Z',
+  bowlFood:'M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM148.12,104a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Z',
+  island:'M239.55,226.65A8,8,0,0,1,232,232H24a8,8,0,0,1-5-14.25c1.63-1.3,38.53-30.26,98.29-33.45A120,120,0,0,1,114,146.37c1.73-21.71,10.91-50.63,42.95-72.48a66.28,66.28,0,0,0-15-1.87l-1.67,0c-19,.62-30.94,11.71-36.5,33.92A8,8,0,0,1,96,112a7.66,7.66,0,0,1-2-.24,8,8,0,0,1-5.82-9.7c9.25-36.95,33.11-45.42,51.5-46a81.43,81.43,0,0,1,21.68,2.45c-3.82-6.33-9.42-12.93-17.21-16.25-10-4.24-22.17-2.39-36.31,5.51a8,8,0,0,1-7.8-14c18.74-10.45,35.72-12.54,50.48-6.2,12.49,5.36,20.73,15.78,25.88,25,6.17-9.64,13.87-16.17,22.38-18.94,11.86-3.87,24.64-.72,38,9.37a8,8,0,0,1-9.64,12.76c-8.91-6.73-16.77-9.06-23.34-6.93-7.3,2.35-12.87,10-16.38,16.61A70.46,70.46,0,0,1,208,73.07c14.61,8.35,32,26.05,32,62.94a8,8,0,0,1-16,0c0-23.46-8.06-40-24-49a50.49,50.49,0,0,0-5.75-2.8,55.64,55.64,0,0,1,5.06,33.06,59.41,59.41,0,0,1-8.86,23.41,8,8,0,0,1-13.09-9.2c.75-1.09,16.33-24.38-3.26-49.37-27,15.21-41.89,37.25-44.16,65.59a104.27,104.27,0,0,0,3.83,36.44c62.65,1.81,101.52,32.33,103.2,33.66A8,8,0,0,1,239.55,226.65ZM52,168a28,28,0,1,0-28-28A28,28,0,0,0,52,168Z',
+  beerStein:'M216,88H200V72a40,40,0,0,0-40-40H148.82c-11.91-10.2-28-16-44.82-16C68.71,16,40,41.12,40,72V208a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16v-8h16a24,24,0,0,0,24-24V112A24,24,0,0,0,216,88ZM104,184a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0ZM57,64c4.46-18.24,23.85-32,47-32,13.87,0,27.06,5,36.21,13.78A8,8,0,0,0,145.74,48H160a24,24,0,0,1,22.62,16ZM224,176a8,8,0,0,1-8,8H200V104h16a8,8,0,0,1,8,8Z',
+  confetti:'M111.49,52.63a15.8,15.8,0,0,0-26,5.77L33,202.78A15.83,15.83,0,0,0,47.76,224a16,16,0,0,0,5.46-1l144.37-52.5a15.8,15.8,0,0,0,5.78-26ZM65.14,161.13l19.2-52.79,63.32,63.32-52.8,19.2ZM160,72a37.8,37.8,0,0,1,3.84-15.58C169.14,45.83,179.14,40,192,40c6.7,0,11-2.29,13.65-7.21A22,22,0,0,0,208,23.94,8,8,0,0,1,224,24c0,12.86-8.52,32-32,32-6.7,0-11,2.29-13.65,7.21A22,22,0,0,0,176,72.06,8,8,0,0,1,160,72ZM136,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm101.66,82.34a8,8,0,1,1-11.32,11.31l-16-16a8,8,0,0,1,11.32-11.32Zm4.87-42.75-24,8a8,8,0,0,1-5.06-15.18l24-8a8,8,0,0,1,5.06,15.18Z',
+  tent:'M255.31,188.75l-64-144A8,8,0,0,0,184,40H72a8,8,0,0,0-7.31,4.75h0l0,.12v0L.69,188.75A8,8,0,0,0,8,200H248a8,8,0,0,0,7.31-11.25ZM64,184H20.31L64,85.7Zm16,0V85.7L123.69,184Z',
+  martini:'M237.66,45.66A8,8,0,0,0,232,32H24a8,8,0,0,0-5.66,13.66L120,147.31V208H88a8,8,0,0,0,0,16h80a8,8,0,0,0,0-16H136V147.31Zm-25,2.34-16,16H59.31l-16-16Z',
+  bus:'M248,80v24a8,8,0,0,1-16,0V80a8,8,0,0,1,16,0ZM16,72a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V80A8,8,0,0,0,16,72Zm200-8V208a16,16,0,0,1-16,16H184a16,16,0,0,1-16-16v-8H88v8a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V64A32,32,0,0,1,72,32H184A32,32,0,0,1,216,64ZM104,148a12,12,0,1,0-12,12A12,12,0,0,0,104,148Zm72,0a12,12,0,1,0-12,12A12,12,0,0,0,176,148Zm24-76H56v40H200Z',
+  mountains:'M254.88,195.92l-54.56-92.08A15.87,15.87,0,0,0,186.55,96h0a15.85,15.85,0,0,0-13.76,7.84l-15.64,26.39a4,4,0,0,0,0,4.07l26.8,45.47a8.13,8.13,0,0,1-1.89,10.55,8,8,0,0,1-11.8-2.26L101.79,71.88a16,16,0,0,0-27.58,0L1.11,195.94a8,8,0,0,0,1,9.52A8.23,8.23,0,0,0,8.23,208H247.77a8.29,8.29,0,0,0,6.09-2.55A8,8,0,0,0,254.88,195.92ZM64.43,120,88,80l23.57,40ZM140,52a24,24,0,1,1,24,24A24,24,0,0,1,140,52Z',
+  camera:'M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm-44,76a36,36,0,1,1-36-36A36,36,0,0,1,164,132Z',
+};
+const DELTA = {
+  coatHanger:['#ff837d','#fff','#ba6561'], tShirt:['#bd9aff','#fff','#8c72bd'], sailboat:['#9abeff','#fff','#728dbe'],
+  airplaneTilt:['#96dfd3','#fff','#73ada4'], bowlFood:['#f9de81','#56595b','#c39a54'], island:['#98dc9a','#fff','#71a372'],
+  beerStein:['#f8c18c','#56595b','#c39a54'], confetti:['#e85e5c','#fff','#b02a3c'], tent:['#d3b69a','#fff','#8e6f60'],
+  martini:['#8c72bd','#fff','#54688c'], bus:['#728dbe','#fff','#54688c'], mountains:['#71a372','#fff','#4f7a50'], camera:['#56595b','#fff','#4a4a4a'],
+};
+const svg = k => `<svg viewBox="0 0 256 256"><path d="${ICONS[k]}"/></svg>`;
+const plate = (el, k) => { const [p, g, s] = DELTA[k]; el.style.background = `color-mix(in oklch, ${p} 86%, ${s})`; el.style.color = g; el.style.setProperty('--ring', `color-mix(in oklch, ${s} 55%, transparent)`); };
+document.querySelectorAll('.phone').forEach(ph => {
+  let icon = 'confetti';
+  const tray = ph.querySelector('.js-tray'), pl = ph.querySelector('.js-plate'), title = ph.querySelector('.js-title'), post = ph.querySelector('.js-post');
+  function paint(){
+    tray.innerHTML = '';
+    Object.keys(ICONS).forEach(k => {
+      const b = document.createElement('button'); b.innerHTML = svg(k); b.setAttribute('aria-label', k);
+      if (k === icon) { b.className = 'sel'; plate(b, k); }
+      b.onclick = () => { icon = k; paint(); };
+      tray.appendChild(b);
+    });
+    if (pl) { pl.innerHTML = svg(icon); plate(pl, icon); }
+    const s = tray.querySelector('.sel'); tray.scrollLeft = s.offsetLeft - (tray.clientWidth - s.offsetWidth) / 2;
+  }
+  paint();
+  title.oninput = () => post.disabled = !title.value.trim();
+  post.onclick = () => { post.textContent = 'Posted ✓'; setTimeout(() => post.textContent = 'Post', 1200); };
+  ph.querySelectorAll('.js-sw').forEach(s => s.onclick = () => s.classList.toggle('on'));
+  if (ph.dataset.f === 'A') pl.onclick = () => ph.querySelector('.js-traywrap').classList.toggle('open');
+  if (ph.dataset.f === 'B') {
+    const g = ph.querySelector('.js-more');
+    ph.querySelector('.js-moretoggle').onclick = () => {
+      g.innerHTML = ['One line|Where, what', 'Rough cost|~$250', 'Time|3:00pm', 'Needs|4 people', 'Links|Paste a link'].map(r => { const [l, p] = r.split('|'); return `<div class="row"><div class="l">${l}</div><input placeholder="${p}"></div>`; }).join('');
+      g.querySelector('input').focus();
+    };
+  }
+  if (ph.dataset.f === 'C') {
+    const day = ph.querySelector('.js-day'), dt = ph.querySelector('.js-datetxt'), extra = ph.querySelector('.js-extra'), need = ph.querySelector('.js-need');
+    day.onclick = () => { day.classList.toggle('on'); dt.textContent = day.classList.contains('on') ? 'Finds one' : 'No day'; };
+    const hint = { line: 'Where, roughly what', cost: 'Rough cost, e.g. ~$250', time: 'Time, e.g. 3:00pm', need: 'Needs this many (4)', links: 'Paste a link' };
+    ph.querySelectorAll('.attach [data-k]').forEach(b => b.onclick = () => {
+      if (b.classList.contains('on')) return;
+      b.classList.add('on');
+      const i = document.createElement('input'); i.placeholder = hint[b.dataset.k];
+      if (b.dataset.k === 'need') { i.inputMode = 'numeric'; i.oninput = () => need.textContent = i.value.replace(/\D/g, '') || '4'; }
+      extra.appendChild(i); i.focus();
+    });
+  }
+});
+</script>
+</body>
+</html>

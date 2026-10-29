@@ -355,6 +355,79 @@ sends only to verified numbers. International SMS is priced and restricted
 per country, and SMS while roaming in Vietnam is unreliable where WhatsApp on
 wifi is not. See the open questions.
 
+## Three uses, and places (added 2026-10-24)
+
+The MVP is one product with three first uses. They are the same mechanic
+with a different first post, so they change little.
+
+- **The trip.** `emba27`, fixed Feb 14–20: suits in Hoi An, the boat, the
+  food crawl. The showcase.
+- **A team room after class.** A rolling board for a study or project team:
+  "Room after class Thu", "Case prep Sunday". The lock is the meeting.
+- **A club president's interest list.** A rolling board where the president
+  posts no-day intents ("ski trip", "speaker night", "jersey order") and
+  takes the names to whoever runs it. This is the distribution: the cohort
+  gives us one board, presidents give us many.
+
+**Already built** (OpenSpec `quorum-boards`, archived): start a board from the
+home page, rolling two-week windows next to the fixed trip window, and "Copy
+names" on every intent. Those cover the team and club uses as far as the board
+goes.
+
+### Still to build for the MVP
+
+1. **A place behind every location.** When someone adds a place to an intent
+   (a Maps link, a shop name, a room number), it is stored as a place with a
+   name, an address or room, a category, and the public contact taken from
+   the link, not only as a detail row. The same place on two intents is one
+   place. Nothing about a place is shown to anyone outside the board yet. The
+   point is that the record starts on the first lock, not after we launch a
+   vendor side.
+2. **Place events.** `place_added`, and the place id on `threshold_reached`,
+   so "chosen, locked, showed up, came back" can be counted per place later.
+   Showing up is not observed in v1; it is the poster's one-tap "we went"
+   after the day, or nothing.
+3. **Lock carries a booking link for a room.** When the place is a bookable
+   room, the ON text and the page carry a prefilled link to the school's own
+   booking page for the locked day and time. We do not hold the room
+   ourselves in v1.
+4. **Seed three example boards**, one per use, so the demo shows all three.
+
+### After the trip: places become pages
+
+Not in the MVP. Written down so v1 data feeds it. Mockup:
+`public/demo/mockups-vendor.html`.
+
+- **The business is told, once.** When a place has real demand (people in on
+  an intent that names it), we send one email or text to its public contact:
+  "8 people visiting Hoi An Feb 14–20 are considering you for suits." One
+  message per place per wave of demand, with an opt-out.
+- **Claiming is the account.** A code to the phone or an email on the
+  business's own domain from its public listing. No other verification.
+- **What a claimed business sees:** how many people are considering it, which
+  days, what they expect to pay. Counts only, never names or numbers.
+- **What it can do: post a discount.** That is the whole action. The discount
+  shows on the intent as one line with the business's name and a claimed
+  mark. Nobody is texted. It does not change the group's number, who can
+  lock, or anything else. (Considered and dropped: a vendor-side threshold,
+  "10% if 8 lock". Over-engineered.)
+- **The agent-readable record.** Each place has one record an agent can read:
+  the facts the business confirmed, what groups did there (chosen, locked,
+  went, came back), what is forming now, and any live discount. It is built
+  from use, not from reviews, and the business never has to write it. This is
+  the exhaust of every locked intent, kept instead of lost.
+- **Campus resources are the same thing with the owner known.** A study room,
+  a tutor's hours, a lab bench is a place the school already owns, so there is
+  no claim step. Locking an intent there books it. The new rule this needs:
+  the day heat has to respect the resource's free slots as well as people's
+  free days.
+- **Money:** claimed businesses pay for the demand view and discounts. The
+  record and agent access stay free, because they are what makes the page
+  worth claiming.
+
+What this section does not change: names stay inside the board, no money
+moves, ON still hands off to WhatsApp.
+
 ## Deliberately not
 
 - No money movement. Cost is text.
