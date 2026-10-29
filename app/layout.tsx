@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
+import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
@@ -16,7 +17,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`fonts ${geist.variable} ${serif.variable}`}>
-      <body>{children}</body>
+      <body>{children}<SiteNav /></body>
     </html>
   );
 }
