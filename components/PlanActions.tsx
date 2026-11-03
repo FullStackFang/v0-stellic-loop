@@ -3,30 +3,30 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { respond } from "@/actions/respond";
 import { verifyCode } from "@/actions/verifyCode";
-import { dayNames, shortLabel } from "@/lib/days";
+import { shortLabel } from "@/lib/days";
 import type { Answer } from "@/lib/types";
 import { Check } from "./atoms";
 import { IdentityFields, type Ident } from "./IdentityFields";
 import { useToast } from "./Toast";
 
 /**
- * In / maybe / out (in / out-or-drop once ON). Without a session the first
+ * In / out, including dropping after formation. Without a session the first
  * tap opens name + number inline; a known number then asks for its code.
  */
-export function Acts({
+export function PlanActions({
   proposalId,
   me,
   on,
-  needsDay,
+  day,
   signedIn,
-  posterName,
+
 }: {
   proposalId: string;
   me: Answer | null;
   on: boolean;
-  needsDay: boolean;
+  day: string | null;
   signedIn: boolean;
-  posterName: string | null;
+
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -55,16 +55,6 @@ export function Acts({
         return;
       }
       setStage(null);
-      if (r.next === "in" && needsDay && !on) {
-        toast(
-          <>
-            You&apos;re in. Your free days attached: <b>{dayNames(r.days).join(", ") || "none yet"}</b>.
-            {r.conflict ? <> {shortLabel(r.conflict.day)} is taken by {r.conflict.title}.</> : " Adjust them on the intent's page."}
-          </>,
-        );
-      } else if (on && me === "in" && r.next !== "in") {
-        toast(<>Dropped. Still on. <b>{posterName ?? "The poster"} is told</b>, nobody else.</>);
-      }
       router.refresh();
     });
   }
@@ -100,30 +90,11 @@ export function Acts({
     if (pending) send(pending, true);
   }
 
-  const cls = (a: Answer) => `ghost ${a}${(stage ? pending : me) === a ? " on" : ""}`;
-  return (
-    <div data-stop onClick={(e) => e.stopPropagation()}>
-      <div className="acts">
-        <button className={cls("in")} onClick={() => tap("in")} disabled={busy} aria-pressed={me === "in"}>
-          {me === "in" ? <><Check /> In</> : "I'm in"}
-        </button>
-        {!on ? (
-          <button className={cls("maybe")} onClick={() => tap("maybe")} disabled={busy} aria-pressed={me === "maybe"}>Maybe</button>
-        ) : null}
-        <button className={cls("out")} onClick={() => tap("out")} disabled={busy} aria-pressed={me === "out"}>
-          {on && me === "in" ? "Drop" : "Out"}
-        </button>
-      </div>
-      <IdentityFields
-        signedIn={signedIn}
-        stage={stage}
-        value={ident}
-        onChange={setIdent}
-        onSubmit={submit}
-        busy={busy}
-        error={error}
-        cta={pending === "in" ? "I'm in" : pending === "maybe" ? "Maybe" : "Out"}
-      />
-    </div>
-  );
+  return <div className="bar">
+    <button className="cta" onClick={() => me !== "in" && tap("in")} disabled={busy} aria-pressed={me === "in"}>
+      {me === "in" ? <><Check />You&apos;re in{on && day ? ' \u00b7 ' + shortLabel(day) : ''}</> : "I'm in"}
+    </button>
+    {on && me === "in" && day ? <><a className="alt" href={`/p/${proposalId}/invite.ics`}>Add to calendar</a><button className="alt" disabled={busy} onClick={() => tap("out")}>Can&apos;t make it</button></> : <button className="alt" disabled={busy} onClick={() => tap("out")}>Can&apos;t make it</button>}
+    <IdentityFields signedIn={signedIn} stage={stage} value={ident} onChange={setIdent} onSubmit={submit} busy={busy} error={error} cta={pending === "in" ? "I'm in" : "Can't make it"} />
+  </div>;
 }

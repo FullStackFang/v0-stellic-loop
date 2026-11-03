@@ -2,7 +2,9 @@
 import { db } from "@/lib/db";
 import { attribution, sessionPersonId, setSession } from "@/lib/identity";
 import { writeEvent } from "@/lib/events";
-import { proposalById } from "@/lib/load";
+import { boardById, proposalById } from "@/lib/load";
+import { countedDays, todayIn } from "@/lib/days";
+import { isIdled } from "@/lib/quorum";
 import { classifyDetail } from "@/lib/ops";
 import type { DetailKind } from "@/lib/types";
 import { fail, type Fail } from "./results";
@@ -32,9 +34,9 @@ export async function addDetail(input: { proposalId: string; text: string; kind?
   return out;
 }
 
-const FIXED = ["title", "min", "min_count", "cost", "cost_text", "needsDay", "needs_day"];
+const FIXED = ["title", "min", "min_count", "cost", "cost_text", "needsDay", "needs_day", "detail"];
 
-/** The poster edits the detail line and the time; nothing else, and nobody is told. */
+/** The poster edits the open slot; nobody is notified. */
 export async function editProposal(input: { proposalId: string; detail?: string | null; time?: string | null } & Record<string, unknown>): Promise<{ status: "ok" } | Fail> {
   if (FIXED.some((k) => k in input)) return fail("fixed");
   const me = await sessionPersonId();
@@ -44,11 +46,14 @@ export async function editProposal(input: { proposalId: string; detail?: string 
     const p = await proposalById(q, input.proposalId, true);
     if (!p) return fail("not_found");
     if (p.poster_id !== me) return fail("not_poster");
-    await q.query("update proposal set detail = $2, time_text = $3 where id = $1", [
-      p.id,
-      "detail" in input ? clean(input.detail, 200) : p.detail,
-      "time" in input ? clean(input.time, 40) : p.time_text,
-    ]);
+    const board = (await boardById(q, p.board_id))!;
+    if (p.status !== "open" || isIdled(p, board)) return fail("closed");
+    const day = "day" in input ? input.day || null : p.day ?? null;
+    if (day !== null && (typeof day !== "string" || !countedDays(board, todayIn(board.tz)).includes(day))) return fail("bad_day");
+    const time = "time" in input ? clean(input.time, 40) : p.time_text;
+    const place = "place" in input ? clean(input.place, 200) : p.place ?? null;
+    await q.query("update proposal set day = $2, time_text = $3, place = $4, deadline = coalesce($2::date, (created_at at time zone $5)::date + 13), needs_day = $6 where id = $1", [p.id, day, time, place, board.tz, "day" in input ? false : p.needs_day]);
+    await writeEvent(q, { boardId: p.board_id, proposalId: p.id, personId: me, type: "detail_added", ...(await attribution(q)), data: { day, time, place } });
     return { status: "ok" as const };
   });
   if (out.status === "ok") await setSession(me);

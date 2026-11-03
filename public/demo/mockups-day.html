@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · daytime · three lanes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Unbounded:wght@400..900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Young+Serif&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  @property --tint { syntax:'<color>'; inherits:true; initial-value:#ffe14a; }
+  :root{ --ink:#1a1612; --paper:#fffdf7; --expo:cubic-bezier(.16,1,.3,1); }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; border:0; }
+  body{ margin:0; background:#f2efe8; color:var(--ink); font-family:'Hanken Grotesk',system-ui,sans-serif; -webkit-font-smoothing:antialiased; padding:48px 20px 80px; }
+  .wrap{ max-width:1400px; margin:0 auto; }
+  .eyebrow{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#7a736a; font-weight:700; }
+  h1{ font-family:'Archivo',sans-serif; font-variation-settings:'wdth' 110; font-weight:800; font-size:46px; line-height:1; letter-spacing:-.03em; margin:14px 0 12px; max-width:22ch; }
+  h1 em{ font-style:normal; color:#2b3cff; }
+  .wrap > p{ color:#5b554c; font-size:15.5px; line-height:1.55; max-width:70ch; margin:0; }
+  .wrap > p b{ color:var(--ink); font-weight:700; }
+  .rail{ display:flex; gap:44px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-top:44px; }
+  .col{ width:390px; max-width:100%; }
+  .lbl{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#7a736a; font-weight:700; display:flex; justify-content:space-between; align-items:center; margin:0 0 12px 4px; min-height:30px; }
+  .lbl b{ color:var(--ink); }
+  .lbl button{ background:none; font-size:12px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:#2b3cff; padding:0; }
+  .cap{ font-size:13.5px; line-height:1.55; color:#6b655c; margin:16px 4px 0; }
+  .cap b{ color:var(--ink); font-weight:700; }
+  .cap i{ font-style:normal; font-size:12px; color:#8a837a; }
+  .dayctl{ display:flex; align-items:center; gap:10px; margin:0 0 12px 4px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#7a736a; }
+  .dayctl input{ flex:1; accent-color:#1a1612; }
+  .dayctl output{ min-width:5ch; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .dayctl button{ background:var(--ink); color:#fffdf7; border-radius:999px; padding:6px 12px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+
+  .phone{ width:390px; max-width:100%; height:844px; border-radius:46px; overflow:hidden; position:relative; isolation:isolate; display:flex; flex-direction:column; box-shadow:0 40px 80px -30px rgba(26,22,18,.45), 0 0 0 1px rgba(26,22,18,.08); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:700; position:relative; z-index:3; }
+  .status svg{ height:11px; }
+  .screen{ flex:1; overflow:auto; scrollbar-width:none; position:relative; z-index:2; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .face{ object-fit:cover; display:block; background:#999; }
+  .bar{ position:absolute; left:0; right:0; bottom:0; z-index:4; padding:14px 18px 28px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .cta{ width:100%; height:56px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:16px; font-weight:800; transition:transform .12s, background .4s, color .4s, box-shadow .4s; }
+  .cta:active{ transform:scale(.98); }
+  .cta svg{ width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+  .alt{ background:none; font-size:13px; font-weight:600; text-decoration:underline; text-underline-offset:3px; padding:0; }
+  .enter{ animation:enter .7s var(--expo) both; }
+  @keyframes enter{ from{ opacity:0; transform:translateY(10px) scale(.8); } to{ opacity:1; transform:none; } }
+
+  /* ============ A · SUN (drenched, lit by the hour) ============ */
+  .sun{ --tint:#ffe14a; --sx:0px; --sy:10px; background:var(--tint); color:var(--ink); font-family:'Archivo',sans-serif; transition:background .4s; }
+  .sun .sky{ position:absolute; inset:0; z-index:0; }
+  .sun .disc{ position:absolute; width:76px; height:76px; border-radius:50%; background:var(--paper); left:var(--dx); top:var(--dy); transform:translate(-50%,-50%); box-shadow:var(--sx) var(--sy) 0 0 var(--ink); transition:left .4s, top .4s, box-shadow .4s; }
+  .sun .head{ display:flex; justify-content:space-between; align-items:center; padding:14px 24px 0; position:relative; z-index:3; font-weight:800; }
+  .sun .wm{ font-variation-settings:'wdth' 125; font-size:22px; letter-spacing:-.02em; }
+  .sun .space{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; background:var(--ink); color:var(--tint); padding:5px 9px; border-radius:4px; transition:color .4s; }
+  .sun .screen{ padding:0 24px 160px; }
+  .sun .tag{ margin-top:82px; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; display:flex; align-items:center; gap:10px; }
+  .sun .tag i{ width:10px; height:10px; border-radius:50%; background:var(--paper); box-shadow:var(--sx) var(--sy) 0 0 var(--ink); transition:box-shadow .4s; }
+  .sun h2{ font-variation-settings:'wdth' 125; font-weight:900; font-size:52px; line-height:.92; letter-spacing:-.04em; margin:12px 0 0; text-transform:uppercase; }
+  .sun .when{ margin-top:18px; font-size:15px; line-height:1.45; font-weight:600; }
+  .sun .when b{ font-weight:800; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:4px; }
+  .sun .count{ margin-top:34px; display:flex; align-items:flex-end; gap:26px; }
+  .sun .big{ font-variation-settings:'wdth' 62; font-weight:900; font-size:170px; line-height:.8; letter-spacing:-.06em; color:var(--paper); text-shadow:var(--sx) var(--sy) 0 var(--ink); transition:text-shadow .4s; }
+  .sun .of{ font-variation-settings:'wdth' 100; font-weight:800; font-size:26px; line-height:1; padding-bottom:8px; }
+  .sun .of small{ display:block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; margin-top:6px; }
+  .sun .bars{ display:flex; gap:8px; margin-top:26px; }
+  .sun .bars b{ flex:1; height:14px; border:2.5px solid var(--ink); border-radius:999px; transition:background .5s, box-shadow .5s; }
+  .sun .bars b.f{ background:var(--paper); box-shadow:var(--sx) var(--sy) 0 0 var(--ink); }
+  .sun .lead{ margin-top:22px; font-size:15px; font-weight:800; }
+  .sun .faces{ display:flex; gap:12px; margin-top:34px; }
+  .sun .p{ display:flex; flex-direction:column; align-items:center; gap:14px; font-size:12px; font-weight:700; }
+  .sun .p .face{ width:68px; height:68px; border-radius:50%; border:3px solid var(--ink); box-shadow:var(--sx) var(--sy) 0 0 var(--ink); transition:box-shadow .4s; }
+  .sun .p.slot .face{ border:3px dashed var(--ink); box-shadow:none; background:transparent; display:grid; place-items:center; font-size:14px; font-weight:900; }
+  .sun .out{ margin-top:18px; font-size:13px; font-weight:600; opacity:.7; display:flex; align-items:center; gap:8px; }
+  .sun .out .face{ width:22px; height:22px; border-radius:50%; filter:grayscale(1); }
+  .sun .det{ margin-top:30px; border-top:2.5px solid var(--ink); }
+  .sun .det div{ display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:2.5px solid var(--ink); font-size:14px; font-weight:600; }
+  .sun .det a{ color:inherit; font-weight:800; }
+  .sun .det small{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:800; white-space:nowrap; opacity:.6; }
+  .sun .bar{ background:linear-gradient(to top, var(--tint) 60%, transparent); }
+  .sun .cta{ background:var(--paper); color:var(--ink); border-radius:999px; border:3px solid var(--ink); box-shadow:var(--sx) var(--sy) 0 0 var(--ink); font-variation-settings:'wdth' 110; font-weight:900; text-transform:uppercase; letter-spacing:.04em; }
+  .sun.formed .cta{ background:var(--ink); color:var(--tint); }
+  .sun .alt{ color:var(--ink); }
+
+  /* ============ B · TILES (full palette, split-flap) ============ */
+  .tiles{ background:#fbfaf5; color:var(--ink); font-family:'Hanken Grotesk',sans-serif; }
+  .tiles .head{ display:flex; justify-content:space-between; align-items:center; padding:14px 20px 0; position:relative; z-index:3; }
+  .tiles .wm{ font-family:'Unbounded',sans-serif; font-weight:900; font-size:20px; letter-spacing:-.03em; }
+  .tiles .space{ font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border:2px solid var(--ink); border-radius:999px; padding:4px 10px; }
+  .tiles .screen{ padding:0 14px 150px; }
+  .tiles h2{ font-family:'Unbounded',sans-serif; font-weight:800; font-size:40px; line-height:1; letter-spacing:-.04em; margin:30px 6px 0; }
+  .tiles h2 span{ color:#2b3cff; }
+  .tiles .state{ margin:14px 6px 0; font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .tiles .state i{ width:9px; height:9px; border-radius:50%; background:#ff5a3c; }
+  .tiles .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+  .tiles .tile{ border-radius:22px; padding:16px; min-height:120px; display:flex; flex-direction:column; justify-content:space-between; }
+  .tiles .tile.cobalt{ background:#2b3cff; color:#fbfaf5; grid-row:span 2; min-height:0; }
+  .tiles .tile.lime{ background:#c8f54a; grid-column:1/-1; }
+  .tiles .tile.white{ background:#fbfaf5; border:2px solid var(--ink); }
+  .tiles .tile.black{ background:var(--ink); color:#fbfaf5; }
+  .tiles .tile .k{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:800; opacity:.75; }
+  .tiles .tile .v{ font-family:'Unbounded',sans-serif; font-weight:700; font-size:20px; letter-spacing:-.03em; line-height:1.05; margin-top:8px; }
+  .tiles .tile .v small{ display:block; font-family:'Hanken Grotesk',sans-serif; font-weight:600; font-size:13px; letter-spacing:0; margin-top:6px; opacity:.8; }
+  .tiles .flap{ position:relative; width:100%; aspect-ratio:1/1.05; perspective:900px; margin:10px 0 6px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:132px; line-height:1; }
+  .tiles .half{ position:absolute; left:0; right:0; height:50%; overflow:hidden; background:#1f2ccc; border-radius:14px; display:flex; justify-content:center; backface-visibility:hidden; }
+  .tiles .half span{ display:block; height:200%; line-height:1; transform:translateY(0); }
+  .tiles .half.top{ top:0; align-items:flex-start; border-radius:14px 14px 3px 3px; }
+  .tiles .half.bottom{ bottom:0; align-items:flex-end; border-radius:3px 3px 14px 14px; }
+  .tiles .half.top span{ padding-top:10%; }
+  .tiles .half.bottom span{ padding-bottom:10%; }
+  .tiles .leaf{ position:absolute; left:0; right:0; top:0; height:50%; transform-origin:bottom center; transform-style:preserve-3d; z-index:2; }
+  .tiles .leaf .half{ height:100%; }
+  .tiles .leaf .back{ transform:rotateX(180deg); align-items:flex-end; border-radius:3px 3px 14px 14px; }
+  .tiles .leaf .back span{ padding-bottom:10%; padding-top:0; }
+  .tiles .flap::after{ content:''; position:absolute; left:0; right:0; top:50%; height:2px; background:#2b3cff; z-index:3; transform:translateY(-1px); }
+  .tiles .faces{ display:flex; gap:10px; margin-top:10px; }
+  .tiles .p{ display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:700; }
+  .tiles .p .face{ width:66px; height:66px; border-radius:16px; }
+  .tiles .p.slot .face{ border:2.5px dashed var(--ink); background:transparent; display:grid; place-items:center; font-weight:800; font-size:14px; }
+  .tiles .out{ margin:16px 6px 0; font-size:13px; font-weight:600; color:#6b655c; display:flex; align-items:center; gap:8px; }
+  .tiles .out .face{ width:22px; height:22px; border-radius:7px; filter:grayscale(1); }
+  .tiles .det{ margin:22px 6px 0; }
+  .tiles .det div{ display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-top:2px solid #e9e5dc; font-size:14px; font-weight:600; }
+  .tiles .det a{ color:#2b3cff; font-weight:800; text-decoration:none; }
+  .tiles .det small{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:800; color:#9b958b; white-space:nowrap; }
+  .tiles .bar{ background:linear-gradient(to top, #fbfaf5 60%, transparent); }
+  .tiles .cta{ background:#ff5a3c; color:#fbfaf5; border-radius:18px; }
+  .tiles.formed .cta{ background:#1f9d55; }
+  .tiles .alt{ color:#6b655c; }
+
+  /* ============ C · TICKET (object on a desk) ============ */
+  .ticket{ background:#cfe3f0; color:var(--ink); font-family:'Hanken Grotesk',sans-serif; }
+  .ticket .head{ display:flex; justify-content:space-between; align-items:center; padding:14px 24px 0; position:relative; z-index:3; }
+  .ticket .wm{ font-family:'Young Serif',serif; font-size:22px; }
+  .ticket .space{ font-family:'Courier Prime',monospace; font-weight:700; font-size:12px; letter-spacing:.1em; text-transform:uppercase; }
+  .ticket .screen{ padding:28px 22px 160px; perspective:1000px; }
+  .ticket .card{ --rx:0deg; --ry:0deg; background:#fff8ea; border-radius:14px; transform:rotateX(var(--rx)) rotateY(var(--ry)); transition:transform .25s ease-out, box-shadow .25s; box-shadow:0 30px 50px -22px rgba(26,22,18,.55), 0 2px 0 rgba(26,22,18,.08); position:relative; transform-style:preserve-3d; }
+  .ticket .main{ padding:22px 22px 18px; position:relative; overflow:hidden; border-radius:14px 14px 0 0; }
+  .ticket .main::before{ content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events:none; opacity:.6; }
+  .ticket .admit{ font-family:'Courier Prime',monospace; font-weight:700; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; display:flex; justify-content:space-between; color:#6b655c; }
+  .ticket .admit b{ color:#d12b1f; }
+  .ticket h2{ font-family:'Young Serif',serif; font-weight:400; font-size:42px; line-height:1; letter-spacing:-.01em; margin:16px 0 0; }
+  .ticket .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; margin-top:20px; font-family:'Courier Prime',monospace; }
+  .ticket .grid .k{ font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:#8a837a; font-weight:700; }
+  .ticket .grid .v{ font-size:15px; font-weight:700; margin-top:3px; }
+  .ticket .faces{ display:flex; gap:10px; margin-top:22px; }
+  .ticket .p{ display:flex; flex-direction:column; align-items:center; gap:6px; font-family:'Courier Prime',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .ticket .p .face{ width:64px; height:76px; border-radius:3px; border:3px solid #fffdf7; box-shadow:0 1px 0 rgba(26,22,18,.25), 0 6px 14px -6px rgba(26,22,18,.5); }
+  .ticket .p.slot .face{ border:2px dashed #b9b2a6; background:transparent; box-shadow:none; display:grid; place-items:center; color:#8a837a; }
+  .ticket .stamp{ position:absolute; right:14px; top:92px; font-family:'Courier Prime',monospace; font-weight:700; font-size:34px; letter-spacing:.08em; color:#d12b1f; border:4px solid #d12b1f; border-radius:8px; padding:4px 14px; transform:rotate(-14deg); opacity:0; mix-blend-mode:multiply; mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.6 -.35'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .ticket .stamp.on{ animation:stamp .55s var(--expo) both; }
+  @keyframes stamp{ from{ opacity:0; transform:rotate(-14deg) scale(2.2); } 60%{ opacity:1; transform:rotate(-14deg) scale(.96); } to{ opacity:.92; transform:rotate(-14deg) scale(1); } }
+  .ticket .card.thud{ animation:thud .35s ease-out; }
+  @keyframes thud{ 0%{ transform:translateY(0); } 40%{ transform:translateY(3px) scale(.995); } 100%{ transform:translateY(0); } }
+  .ticket .tear{ height:0; border-top:2px dashed #cfc7b8; position:relative; margin:0 10px; }
+  .ticket .tear::before, .ticket .tear::after{ content:''; position:absolute; top:-12px; width:24px; height:24px; border-radius:50%; background:#cfe3f0; box-shadow:inset 0 3px 4px -2px rgba(26,22,18,.35); }
+  .ticket .tear::before{ left:-22px; } .ticket .tear::after{ right:-22px; }
+  .ticket .stub{ padding:16px 22px 20px; display:grid; grid-template-columns:auto 1fr auto; gap:16px; align-items:center; border-radius:0 0 14px 14px; }
+  .ticket .stub .big{ font-family:'Young Serif',serif; font-size:84px; line-height:.85; }
+  .ticket .stub .big small{ font-size:22px; color:#8a837a; }
+  .ticket .stub .lead{ font-family:'Courier Prime',monospace; font-weight:700; font-size:12px; letter-spacing:.1em; text-transform:uppercase; line-height:1.5; }
+  .ticket .stub .lead b{ color:#d12b1f; }
+  .ticket.formed .stub .lead b{ color:#1f9d55; }
+  .ticket .code{ display:flex; gap:2px; height:52px; align-items:stretch; }
+  .ticket .code i{ background:var(--ink); display:block; }
+  .ticket .note{ margin-top:18px; background:#fff8ea; border-radius:10px; padding:4px 16px; box-shadow:0 14px 30px -18px rgba(26,22,18,.5); transform:rotate(-1.2deg); font-size:13.5px; }
+  .ticket .note div{ display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px dashed #d9d1c2; }
+  .ticket .note div:last-child{ border-bottom:0; }
+  .ticket .note a{ color:#d12b1f; font-weight:700; }
+  .ticket .note small{ font-family:'Courier Prime',monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#8a837a; white-space:nowrap; }
+  .ticket .out{ margin-top:14px; font-size:12.5px; color:#5b554c; display:flex; align-items:center; gap:8px; }
+  .ticket .out .face{ width:22px; height:22px; border-radius:50%; filter:grayscale(1); }
+  .ticket .bar{ background:linear-gradient(to top, #cfe3f0 60%, transparent); }
+  .ticket .cta{ background:#d12b1f; color:#fff8ea; border-radius:10px; font-family:'Courier Prime',monospace; font-weight:700; text-transform:uppercase; letter-spacing:.1em; font-size:15px; box-shadow:0 10px 20px -10px rgba(209,43,31,.7); }
+  .ticket.formed .cta{ background:#fff8ea; color:#1f9d55; box-shadow:inset 0 0 0 2px #1f9d55; }
+  .ticket .alt{ color:#5b554c; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · daytime · 2026-11-02</div>
+  <h1>In daylight. Three lanes, <em>none of them night</em>, none of them editorial.</h1>
+  <p>The scene that decides it: someone in the cohort opens the link from WhatsApp at lunch, in daylight, and decides in ten seconds. So the page is light. And the italic-serif-plus-mono-labels look is the most common thing on the web right now, so it is gone too. Three different lanes instead, each with one idea pushed hard. <b>Tap "I'm in" in any phone</b> to see it form.</p>
+
+  <div class="rail">
+    <!-- A · SUN -->
+    <div class="col">
+      <div class="lbl"><span>A · <b>Sun</b> · drenched, lit by the hour</span><button data-replay="a">Replay</button></div>
+      <div class="dayctl"><span>Time</span><input type="range" min="6" max="20" step="0.25" value="13" data-day><output data-dayout>13:00</output><button data-play>Play the day</button></div>
+      <div class="phone sun" id="a">
+        <div class="sky"><div class="disc"></div></div>
+        <div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>
+        <div class="head"><span class="wm">Loop</span><span class="space">EMBA 2027</span></div>
+        <div class="screen">
+          <div class="tag"><i></i><span data-state>Open · forms at 4</span></div>
+          <h2>Over<br>night boat</h2>
+          <div class="when"><b>Fri 20 Feb, 6:00pm</b> back Sat by 10am<br>Cat Ba pier, Halong · about $180 a person</div>
+          <div class="count"><span class="big" data-count>3</span><span class="of">of 4<small data-lead>one more</small></span></div>
+          <div class="bars" data-bars><b class="f"></b><b class="f"></b><b class="f"></b><b></b></div>
+          <div class="lead" data-lead2>One more and it forms.</div>
+          <div class="faces">
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=12" alt="">Marcus</div>
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=47" alt="">Elena</div>
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=33" alt="">Tom</div>
+            <div class="p slot" data-slot><span class="face">+1</span>one more</div>
+          </div>
+          <div class="out"><img class="face" src="https://i.pravatar.cc/64?img=59" alt="">Ravi can't make it</div>
+          <div class="det">
+            <div><span><a href="#">Operator page</a> · Bai Tho Junks</span><small>Marcus</small></div>
+            <div><span>Twin cabin per person. Whoever's in books it.</span><small>Tom</small></div>
+            <div><span><a href="#">What to pack</a> for a night on the bay</span><small>Elena</small></div>
+          </div>
+        </div>
+        <div class="bar"><button class="cta" data-cta>I'm in</button><span class="alt" data-alt>Can't make it</span></div>
+      </div>
+      <div class="cap"><b>Sun.</b> One color drenches the page and the page is lit by a real sun: drag the hour and the light moves across the sky, the tint warms from dawn apricot to noon lemon to evening coral, and every raised thing casts a hard shadow that swings and lengthens with it. Archivo at full width, nothing soft. Every intent could sit at its own hour. <i>Archivo · hard shadows · @property color</i></div>
+    </div>
+
+    <!-- B · TILES -->
+    <div class="col">
+      <div class="lbl"><span>B · <b>Tiles</b> · full palette, split-flap</span><button data-replay="b">Replay</button></div>
+      <div class="phone tiles" id="b">
+        <div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>
+        <div class="head"><span class="wm">Loop</span><span class="space">EMBA 2027</span></div>
+        <div class="screen">
+          <h2>Overnight <span>boat</span></h2>
+          <div class="state"><i></i><span data-state>Open · forms at 4 · one more</span></div>
+          <div class="grid">
+            <div class="tile cobalt">
+              <div class="k">Going</div>
+              <div class="flap" data-flap>
+                <div class="half top"><span>3</span></div>
+                <div class="half bottom"><span>3</span></div>
+              </div>
+              <div class="v" data-lead>of 4<small>forms at 4</small></div>
+            </div>
+            <div class="tile white"><div class="k">When</div><div class="v">Fri 20 Feb<small>6:00pm, back Sat 10am</small></div></div>
+            <div class="tile black"><div class="k">Where · cost</div><div class="v">Cat Ba pier<small>about $180 a person</small></div></div>
+            <div class="tile lime">
+              <div class="k">Who's in</div>
+              <div class="faces">
+                <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=12" alt="">Marcus</div>
+                <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=47" alt="">Elena</div>
+                <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=33" alt="">Tom</div>
+                <div class="p slot" data-slot><span class="face">+1</span>one more</div>
+              </div>
+            </div>
+          </div>
+          <div class="out"><img class="face" src="https://i.pravatar.cc/64?img=59" alt="">Ravi can't make it</div>
+          <div class="det">
+            <div><span><a href="#">Operator page</a> · Bai Tho Junks</span><small>Marcus</small></div>
+            <div><span>Twin cabin per person. Whoever's in books it.</span><small>Tom</small></div>
+            <div><span><a href="#">What to pack</a> for a night on the bay</span><small>Elena</small></div>
+          </div>
+        </div>
+        <div class="bar"><button class="cta" data-cta>I'm in</button><span class="alt" data-alt>Can't make it</span></div>
+      </div>
+      <div class="cap"><b>Tiles.</b> Flat, bright, four named colors doing four jobs: cobalt for the count, lime for the people, black for place and cost, coral for the one action. The count is a real split-flap board. When the fourth person joins, the 3 flips over to 4 with the clack of an airport departures board. Unbounded for everything big. <i>Unbounded · Hanken Grotesk · #2b3cff · #c8f54a · #ff5a3c</i></div>
+    </div>
+
+    <!-- C · TICKET -->
+    <div class="col">
+      <div class="lbl"><span>C · <b>Ticket</b> · an object on a desk</span><button data-replay="c">Replay</button></div>
+      <div class="phone ticket" id="c">
+        <div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>
+        <div class="head"><span class="wm">Loop</span><span class="space">EMBA 2027</span></div>
+        <div class="screen">
+          <div class="card" data-tilt>
+            <div class="main">
+              <div class="admit"><span>Admit one</span><b data-state>Open · forms at 4</b></div>
+              <h2>Overnight boat</h2>
+              <div class="grid">
+                <div><div class="k">Date</div><div class="v">Fri 20 Feb</div></div>
+                <div><div class="k">Boards</div><div class="v">6:00pm</div></div>
+                <div><div class="k">From</div><div class="v">Cat Ba pier, Halong</div></div>
+                <div><div class="k">Cost</div><div class="v">About $180 pp</div></div>
+              </div>
+              <div class="faces">
+                <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=12" alt="">Marcus</div>
+                <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=47" alt="">Elena</div>
+                <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=33" alt="">Tom</div>
+                <div class="p slot" data-slot><span class="face">+1</span>one more</div>
+              </div>
+              <div class="stamp" data-stamp>IN</div>
+            </div>
+            <div class="tear"></div>
+            <div class="stub">
+              <div class="big"><span data-count>3</span><small>/4</small></div>
+              <div class="lead" data-lead><b>One more</b><br>and it forms</div>
+              <div class="code" data-code></div>
+            </div>
+          </div>
+          <div class="out"><img class="face" src="https://i.pravatar.cc/64?img=59" alt="">Ravi can't make it</div>
+          <div class="note">
+            <div><span><a href="#">Operator page</a> · Bai Tho Junks</span><small>Marcus</small></div>
+            <div><span>Twin cabin per person. Whoever's in books it.</span><small>Tom</small></div>
+            <div><span><a href="#">What to pack</a></span><small>Elena</small></div>
+          </div>
+        </div>
+        <div class="bar"><button class="cta" data-cta>I'm in</button><span class="alt" data-alt>Can't make it</span></div>
+      </div>
+      <div class="cap"><b>Ticket.</b> The plan is a thing you can hold: a cream ticket on a pale desk, grain in the paper, passport photos, a perforated stub with the count and a barcode. It tilts under your pointer or your phone's tilt. Tapping "I'm in" stamps red ink onto it with a thud. Young Serif for the name, Courier for the data. <i>Young Serif · Courier Prime · #fff8ea · #cfe3f0 · #d12b1f</i></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
+const CHECK = `<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>`;
+const F8 = `<img class="face" src="https://i.pravatar.cc/160?img=8" alt="">`;
+
+/* ---- A: the sun ---- */
+const STOPS = [[6,'#ffb15c'],[9,'#ffcd3a'],[13,'#ffe14a'],[16.5,'#ffcf3a'],[20,'#ff8a66']];
+const hex=(h)=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>'#'+a.map((v,i)=>Math.round(v+(b[i]-v)*t).toString(16).padStart(2,'0')).join('');
+function tintAt(t){ for(let i=0;i<STOPS.length-1;i++){ const [t0,c0]=STOPS[i],[t1,c1]=STOPS[i+1]; if(t<=t1) return mix(hex(c0),hex(c1),(t-t0)/(t1-t0)); } return STOPS.at(-1)[1]; }
+function setSun(phone, t){
+  const a=(t-6)/14*Math.PI; const fx=(1-Math.cos(a))/2; const e=Math.sin(a);
+  const L=5+16*(1-e); const sx=(0.5-fx)*2*L; const sy=3+L*0.45;
+  phone.style.setProperty('--sx', sx.toFixed(1)+'px'); phone.style.setProperty('--sy', sy.toFixed(1)+'px');
+  phone.style.setProperty('--dx', (12+76*fx).toFixed(1)+'%'); phone.style.setProperty('--dy', (13.5-3*e).toFixed(1)+'%');
+  phone.style.setProperty('--tint', tintAt(t));
+}
+function wireDay(col){
+  const r=col.querySelector('[data-day]'), out=col.querySelector('[data-dayout]'), play=col.querySelector('[data-play]');
+  const apply=()=>{ const t=parseFloat(r.value); const h=Math.floor(t), m=Math.round((t-h)*60); out.textContent=`${h}:${String(m).padStart(2,'0')}`; const ph=col.querySelector('.phone'); if(ph) setSun(ph,t); };
+  r.addEventListener('input', apply); apply();
+  let raf; play.addEventListener('click', ()=>{ cancelAnimationFrame(raf); const t0=performance.now(); const from=6, to=20, ms=RM?0:9000;
+    const step=(now)=>{ const p=ms?Math.min(1,(now-t0)/ms):1; r.value=(from+(to-from)*p).toFixed(2); apply(); if(p<1) raf=requestAnimationFrame(step); }; raf=requestAnimationFrame(step); });
+  return apply;
+}
+
+/* ---- B: split flap ---- */
+function flip(flap, to){
+  const top=flap.querySelector('.half.top'), bot=flap.querySelector('.half.bottom'); const from=top.textContent;
+  if(RM){ top.textContent=to; bot.textContent=to; return; }
+  const leaf=el(`<div class="leaf"><div class="half top"><span>${from}</span></div><div class="half back"><span>${to}</span></div></div>`);
+  top.querySelector('span').textContent=to; flap.appendChild(leaf);
+  const anim=leaf.animate([{transform:'rotateX(0deg)'},{transform:'rotateX(-180deg)'}],{duration:520,easing:'cubic-bezier(.6,0,.4,1)',fill:'forwards'});
+  setTimeout(()=>{ bot.querySelector('span').textContent=to; },260);
+  anim.onfinish=()=>leaf.remove();
+}
+
+/* ---- C: tilt + stamp + barcode ---- */
+function wireTicket(ph){
+  const card=ph.querySelector('[data-tilt]'); const code=ph.querySelector('[data-code]');
+  let s=3; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
+  code.innerHTML=Array.from({length:22},()=>`<i style="width:${1+Math.floor(rnd()*3)}px;margin-right:${rnd()<.5?1:2}px"></i>`).join('');
+  if(RM) return;
+  ph.addEventListener('pointermove',(e)=>{ const b=ph.getBoundingClientRect(); const x=(e.clientX-b.left)/b.width-.5, y=(e.clientY-b.top)/b.height-.5; card.style.setProperty('--ry',(x*14).toFixed(2)+'deg'); card.style.setProperty('--rx',(-y*10).toFixed(2)+'deg'); });
+  ph.addEventListener('pointerleave',()=>{ card.style.setProperty('--ry','0deg'); card.style.setProperty('--rx','0deg'); });
+  if('DeviceOrientationEvent' in window){ addEventListener('deviceorientation',(e)=>{ if(e.gamma==null) return; card.style.setProperty('--ry',(Math.max(-14,Math.min(14,e.gamma/3))).toFixed(2)+'deg'); card.style.setProperty('--rx',(Math.max(-10,Math.min(10,(e.beta-40)/-4))).toFixed(2)+'deg'); }); }
+}
+
+/* ---- shared ---- */
+function countTo(node, to, ms=700){
+  const from=parseInt(node.textContent,10)||0; if(RM){ node.textContent=to; return; }
+  const t0=performance.now(); const step=(now)=>{ const p=Math.min(1,(now-t0)/ms); const e=1-Math.pow(1-p,4); node.textContent=Math.round(from+(to-from)*e); if(p<1) requestAnimationFrame(step); }; requestAnimationFrame(step);
+}
+function form(ph){
+  if(ph.classList.contains('formed')) return;
+  ph.classList.add('formed'); const q=(s)=>ph.querySelector(s);
+  const slot=q('[data-slot]'); const isTile=ph.classList.contains('tiles');
+  slot.replaceWith(el(`<div class="p enter">${F8}${isTile?'You':'You'}</div>`));
+  if(ph.classList.contains('sun')){
+    countTo(q('[data-count]'),4); setTimeout(()=>q('[data-bars]').children[3].classList.add('f'),350);
+    setTimeout(()=>{ q('[data-state]').textContent='Formed · 4 of 4'; q('[data-lead]').textContent='formed'; q('[data-lead2]').textContent='One message went to all 4.'; },500);
+  }
+  if(isTile){
+    flip(q('[data-flap]'),4);
+    setTimeout(()=>{ q('[data-state]').textContent='Formed · one message went to all 4'; q('[data-lead]').innerHTML='of 4<small>formed</small>'; q('.state i').style.background='#1f9d55'; },500);
+  }
+  if(ph.classList.contains('ticket')){
+    const st=q('[data-stamp]'); st.classList.add('on'); const card=q('[data-tilt]'); card.classList.add('thud'); setTimeout(()=>card.classList.remove('thud'),400);
+    countTo(q('[data-count]'),4);
+    setTimeout(()=>{ q('[data-state]').textContent='Formed · 4 of 4'; q('[data-lead]').innerHTML='<b>Formed</b><br>one message to all 4'; },500);
+  }
+  setTimeout(()=>{ q('[data-cta]').innerHTML=`${CHECK}You're in · Fri 20 Feb`; q('[data-alt]').innerHTML='<a href="#">Add to calendar</a>'; },500);
+}
+const initial={};
+function init(ph){
+  ph.querySelector('[data-cta]').addEventListener('click',()=>form(ph));
+  if(ph.classList.contains('ticket')) wireTicket(ph);
+}
+document.querySelectorAll('.phone').forEach(p=>{ initial[p.id]=p.outerHTML; init(p); });
+const applyDay = wireDay(document.getElementById('a').closest('.col'));
+document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>{ const old=document.getElementById(b.dataset.replay); const fresh=el(initial[old.id]); old.replaceWith(fresh); init(fresh); if(fresh.id==='a') applyDay(); }));
+</script>
+</body>
+</html>

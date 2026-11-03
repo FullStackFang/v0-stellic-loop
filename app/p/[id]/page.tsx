@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ProposalView } from "@/components/ProposalView";
+import { PlanView } from "@/components/PlanView";
 import { Shell } from "@/components/Shell";
 import { loadProposalPage } from "@/lib/proposalPage";
-import { countLine } from "@/lib/view";
+
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -13,12 +13,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const m = await loadProposalPage(id);
   const robots = { index: false, follow: false };
   if (!m) return { robots };
-  const title = countLine(m.c);
+  const title = `${m.c.count} of ${m.c.threshold} \u00b7 ${m.c.title}`;
   const image = `/p/${id}/og?v=${m.responseCount}`;
   return {
-    title: `${m.c.title} · Quorum`,
+    title: `${m.c.title} · Loop`,
     alternates: { canonical: `/p/${id}` },
-    openGraph: { title, description: m.c.cost ? `${m.c.cost} · tap to say you're in` : "Tap to say you're in", images: [{ url: image, width: 1200, height: 630 }], siteName: m.board.name },
+    openGraph: { title, description: "Tap to say you are in", images: [{ url: image, width: 1200, height: 630 }], siteName: m.board.name },
     twitter: { card: "summary_large_image", title, images: [image] },
     robots,
   };
@@ -28,8 +28,8 @@ export default async function ProposalPage({ params }: Props) {
   const m = await loadProposalPage((await params).id);
   if (!m) notFound();
   return (
-    <Shell board={m.board} tab={null}>
-      <ProposalView {...m} />
+    <Shell board={m.board} tab={null} plan={m.c}>
+      <PlanView {...m} />
     </Shell>
   );
 }

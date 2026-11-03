@@ -47,8 +47,8 @@ export function notifyReached(proposalId: string) {
       timeText: p.time_text,
       lockedBy: p.locked_by!,
       yeses: yeses.map((r) => r.person_id),
-      cantMakeIt: p.on_day ? yeses.filter((r) => !effectiveDays(r, conflicts).includes(p.on_day!)).map((r) => r.person_id) : [],
-      maybes: mine.filter((r) => r.answer === "maybe").map((r) => r.person_id),
+      cantMakeIt: p.needs_day && p.on_day ? yeses.filter((r) => !effectiveDays(r, conflicts).includes(p.on_day!)).map((r) => r.person_id) : [],
+      maybes: [],
     });
   });
 }

@@ -3,7 +3,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { GET as cron } from "@/app/api/cron/daily/route";
 import { startBoard } from "../board";
 import { setFreeDay, setProposalDay } from "../days";
-import { reopenProposal } from "../lifecycle";
 import { post } from "../post";
 import { respond } from "../respond";
 import { verifyCode } from "../verifyCode";
@@ -55,22 +54,22 @@ describe("posting on a rolling board", () => {
     const b = await rolling();
     signedIn((await member(b.id)).id);
     const r = await post({ slug: b.slug, title: "Club hoodies", needsDay: false }) as { proposalId: string };
-    expect((await proposalRow(r.proposalId)).deadline).toBeNull();
+    expect((await proposalRow(r.proposalId)).deadline).toBe(addDays(today(), 13));
   });
 
   it("a fixed board before its window is unchanged: no deadline", async () => {
     const b = await makeBoard(t.db);
     signedIn((await member(b.id)).id);
     const r = await post({ slug: b.slug, title: "Boat" }) as { proposalId: string };
-    expect((await proposalRow(r.proposalId)).deadline).toBeNull();
+    expect((await proposalRow(r.proposalId)).deadline).toBe(addDays(today(), 13));
   });
 
   it("a fixed board whose dates are over refuses a needs-a-day post and creates nothing", async () => {
     const b = await makeBoard(t.db, { window_start: "2020-03-01", window_end: "2020-03-07" });
     signedIn((await member(b.id)).id);
-    expect(await post({ slug: b.slug, title: "Boat" })).toMatchObject({ error: "dates_over", message: "This board's dates are over." });
+    expect(await post({ slug: b.slug, title: "Boat", day: "2020-03-02" })).toMatchObject({ error: "bad_day" });
     newDevice();
-    expect(await post({ slug: b.slug, title: "Boat", name: "Stranger", phone: "+16075550999" })).toMatchObject({ error: "dates_over" });
+    expect(await post({ slug: b.slug, title: "Boat", day: "invalid", name: "Stranger", phone: "+16075550999" })).toMatchObject({ error: "bad_day" });
     expect((await t.db.query("select 1 from proposal")).rows).toHaveLength(0);
     expect((await t.db.query("select 1 from person where phone = '+16075550999'")).rows).toHaveLength(0);
     // a no-day intent still goes up
@@ -94,6 +93,7 @@ describe("days on a rolling board", () => {
     const me = await member(b.id);
     signedIn(me.id);
     const r = await post({ slug: b.slug, title: "Case prep Sunday" }) as { proposalId: string };
+    await t.db.query("update proposal set needs_day = true where id = $1", [r.proposalId]);
     expect(await setProposalDay({ proposalId: r.proposalId, day: addDays(today(), 2), on: true })).toEqual({ status: "ok" });
     expect(await setProposalDay({ proposalId: r.proposalId, day: addDays(today(), -1), on: true })).toMatchObject({ error: "bad_day" });
     expect(await setProposalDay({ proposalId: r.proposalId, day: addDays(today(), 14), on: true })).toMatchObject({ error: "bad_day" });
@@ -108,38 +108,9 @@ describe("days on a rolling board", () => {
     signedIn(poster.id);
     const r = await post({ slug: b.slug, title: "Room after class Thu" }) as { proposalId: string };
     signedIn(priya.id);
-    expect(await respond({ proposalId: r.proposalId, answer: "in" })).toMatchObject({ status: "ok", days: [soon] });
-    expect(await responseOf(t.db, r.proposalId, priya.id)).toEqual({ answer: "in", days: [soon] });
+    expect(await respond({ proposalId: r.proposalId, answer: "in" })).toMatchObject({ status: "ok", days: [] });
+    expect(await responseOf(t.db, r.proposalId, priya.id)).toEqual({ answer: "in", days: [] });
     expect((await t.db.query("select 1 from free_day where person_id = $1", [priya.id])).rows).toHaveLength(2);
-  });
-});
-
-describe("reopen", () => {
-  it("on a rolling board: the same minimum, deadline to the end of the current window, nothing sent", async () => {
-    const b = await rolling();
-    const me = await member(b.id, "Marcus");
-    const { rows: [{ id }] } = await t.db.query<{ id: string }>(
-      "insert into proposal (board_id, poster_id, title, min_count, deadline) values ($1, $2, 'Case prep Sunday', 4, '2020-01-01') returning id", [b.id, me.id]);
-    signedIn(me.id);
-    expect(await reopenProposal({ proposalId: id, min: 5 })).toMatchObject({ error: "not_higher" });
-    expect(await reopenProposal({ proposalId: id, min: 4 })).toEqual({ status: "ok" });
-    expect(await proposalRow(id)).toEqual({ min_count: 4, deadline: addDays(today(), 13), status: "open" });
-    expect(await events(t.db, "proposal_reopened", id)).toHaveLength(1);
-    expect(calls).toHaveLength(0);
-  });
-
-  it("on a fixed board: lower only, and refused once the window is over", async () => {
-    const live = await makeBoard(t.db);
-    const me = await member(live.id);
-    const { rows: [{ id }] } = await t.db.query<{ id: string }>(
-      "insert into proposal (board_id, poster_id, title, min_count, deadline) values ($1, $2, 'Boat', 6, '2020-01-01') returning id", [live.id, me.id]);
-    signedIn(me.id);
-    expect(await reopenProposal({ proposalId: id, min: 6 })).toMatchObject({ error: "not_lower" });
-
-    const over = await makeBoard(t.db, { window_start: "2020-03-01", window_end: "2020-03-07" });
-    const { rows: [{ id: old }] } = await t.db.query<{ id: string }>(
-      "insert into proposal (board_id, poster_id, title, min_count) values ($1, $2, 'Boat', 6) returning id", [over.id, me.id]);
-    expect(await reopenProposal({ proposalId: old, min: 4 })).toMatchObject({ error: "window_over" });
   });
 });
 

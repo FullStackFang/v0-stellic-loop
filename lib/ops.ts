@@ -2,13 +2,13 @@
 // person first (lib/identity.ts); verifyCode replays the same ops.
 import "server-only";
 import type { Q } from "./db";
-import { countedDays, isValidDay, isWindowOver, todayIn, windowOf } from "./days";
+import { countedDays, isValidDay, isWindowOver, todayIn } from "./days";
 import type { Attribution } from "./events";
 import { writeEvent } from "./events";
-import { DEFAULT_ICON, isIcon } from "./icons";
+import { DEFAULT_ICON } from "./icons";
 import { joinBoard } from "./identity";
 import { boardById, freeDays, isUuid, personConflicts, proposalById } from "./load";
-import { minOf } from "./quorum";
+import { isIdled, minOf } from "./quorum";
 import { allocateBoard, slugify } from "./slug";
 import { shareToken } from "./tokens";
 import type { Answer, Board, DetailKind, Proposal } from "./types";
@@ -30,6 +30,7 @@ export async function attachableDays(q: Q, boardId: string, personId: string, pr
 
 export type RespondOk = {
   status: "ok";
+  formed: string | null;
   prev: Answer | null;
   next: Answer | null;
   days: string[];
@@ -45,10 +46,13 @@ export type RespondOk = {
  * clears: a code replay was made on a device that did not know the old answer.
  */
 export async function respondAs(q: Q, personId: string, proposalId: string, answer: Answer, attr: Attribution, mode: "toggle" | "set" = "toggle"): Promise<RespondOk | OpError> {
-  if (!["in", "out", "maybe"].includes(answer)) return { status: "error", error: "bad_answer" };
+  if (!["in", "out"].includes(answer)) return { status: "error", error: "bad_answer" };
   const p = await proposalById(q, proposalId, true);
   if (!p) return { status: "error", error: "not_found" };
   if (p.status === "closed") return { status: "error", error: "closed" };
+
+  const board = (await boardById(q, p.board_id))!;
+  if (isIdled(p, board)) return { status: "error", error: "closed" };
 
   const { rows: had } = await q.query<{ answer: Answer }>(
     "select answer from response where proposal_id = $1 and person_id = $2",
@@ -98,7 +102,12 @@ export async function respondAs(q: Q, personId: string, proposalId: string, answ
       if (rows.length) oneMore = { proposal: p, count: n };
     }
   }
-  return { status: "ok", prev, next, days, conflict, dropped, oneMore };
+  let formed: string | null = null;
+  if (p.status === "open" && next === "in") {
+    const { rows } = await q.query<{ r: string }>("select lock_proposal($1, $2) r", [p.id, personId]);
+    if (rows[0].r === "locked") formed = p.id;
+  }
+  return { status: "ok", prev, next, days, conflict, dropped, oneMore, formed };
 }
 
 /** A fresh share link for one sharer (null when signed out), with its `share_minted` event. */
@@ -112,6 +121,8 @@ export async function mintShare(q: Q, p: Proposal, sharerId: string | null): Pro
 
 export type PostInput = {
   title?: unknown;
+  day?: unknown;
+  place?: unknown;
   icon?: unknown;
   needsDay?: unknown;
   detail?: unknown;
@@ -147,25 +158,14 @@ export function linkLabel(url: string): string {
 }
 
 export function parsePost(input: PostInput) {
-  const title = text(input.title, 120);
-  if (!title) return { error: "need_title" as const };
-  const minRaw = typeof input.min === "number" ? input.min : typeof input.min === "string" && input.min.trim() ? Number(input.min) : null;
-  if (minRaw !== null && (!Number.isInteger(minRaw) || minRaw < 1 || minRaw > 999)) return { error: "bad_min" as const };
-  const links = (typeof input.links === "string" ? input.links.split(/\r?\n/) : [])
-    .map((l) => l.trim()).filter(Boolean).slice(0, 10);
-  const urls = links.map(normalizeUrl);
-  if (urls.some((u) => !u)) return { error: "bad_link" as const };
-  return {
-    title,
-    icon: isIcon(input.icon) ? input.icon : DEFAULT_ICON,
-    needsDay: input.needsDay === undefined ? true : input.needsDay === true || input.needsDay === "on" || input.needsDay === "true",
-    detail: text(input.detail, 200),
-    cost: text(input.cost, 40),
-    time: text(input.time, 40),
-    min: minRaw,
-    links: urls as string[],
-    versionOf: isUuid(input.versionOf) ? input.versionOf : null,
-  };
+  const title = text(input.title, 81);
+  if (!title || title.length > 80) return { error: "need_title" as const };
+  const day = input.day == null || input.day === "" ? null : input.day;
+  if (day !== null && !isValidDay(day)) return { error: "bad_day" as const };
+  return { title, day: day as string | null, place: text(input.place, 200),
+    icon: DEFAULT_ICON, needsDay: false, detail: null, cost: null, min: null,
+    time: text(input.time, 40), links: [] as string[],
+    versionOf: isUuid(input.versionOf) ? input.versionOf : null };
 }
 
 export type PostOk = { status: "ok"; proposalId: string };
@@ -175,7 +175,7 @@ export function postRefusal(board: Board, needsDay: boolean, today: string = tod
   return needsDay && isWindowOver(board, today) ? "dates_over" : null;
 }
 
-/** Create a proposal with the poster in (their free days attached) and links as details. */
+/** Create a slotted proposal with the poster in. */
 export async function postAs(q: Q, personId: string, boardId: string, input: PostInput, attr: Attribution): Promise<PostOk | OpError> {
   const v = parsePost(input);
   if ("error" in v) return { status: "error", error: v.error! };
@@ -184,17 +184,18 @@ export async function postAs(q: Q, personId: string, boardId: string, input: Pos
   const today = todayIn(board.tz);
   const refused = postRefusal(board, v.needsDay, today);
   if (refused) return { status: "error", error: refused };
-  // A rolling board has no window end, so a needs-a-day post idles at the end of the window it was posted into.
-  const deadline = v.needsDay && board.window_kind === "rolling" ? windowOf(board, today).end : null;
+  // A slotted plan expires on its day; an undated plan expires after 14 days.
+  if (v.day && !countedDays(board, today).includes(v.day)) return { status: "error", error: "bad_day" };
+  const deadline = v.day ?? new Date(Date.parse(`${today}T00:00:00Z`) + 13 * 86400e3).toISOString().slice(0, 10);
   let versionOf: string | null = null;
   if (v.versionOf) {
     const orig = await proposalById(q, v.versionOf);
     if (orig && orig.board_id === boardId) versionOf = orig.id;
   }
   const { rows } = await q.query<{ id: string }>(
-    `insert into proposal (board_id, poster_id, title, icon, detail, cost_text, time_text, needs_day, min_count, version_of, deadline)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
-    [boardId, personId, v.title, v.icon, v.detail, v.cost, v.time, v.needsDay, v.min, versionOf, deadline],
+    `insert into proposal (board_id, poster_id, title, icon, detail, cost_text, time_text, needs_day, min_count, version_of, deadline, day, place)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id`,
+    [boardId, personId, v.title, v.icon, v.detail, v.cost, v.time, v.needsDay, v.min, versionOf, deadline, v.day, v.place],
   );
   const id = rows[0].id;
   const days = v.needsDay ? (await attachableDays(q, boardId, personId, id)).days : [];

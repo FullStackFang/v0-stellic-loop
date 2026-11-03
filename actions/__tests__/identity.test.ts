@@ -66,8 +66,8 @@ describe("the session", () => {
     const priya = await makePerson(t.db, "Priya");
     const pid = await proposal(b.id, priya.id);
     signedIn(priya.id);
-    expect((await respond({ proposalId: pid, answer: "maybe" })).status).toBe("ok");
-    expect(await answerOf(pid, priya.id)).toBe("maybe");
+    expect((await respond({ proposalId: pid, answer: "out" })).status).toBe("ok");
+    expect(await answerOf(pid, priya.id)).toBe("out");
   });
 
   it("a tampered cookie is treated as absent", async () => {
@@ -120,8 +120,8 @@ describe("known number on a cookieless device", () => {
     const { priya, pid, code } = await setup();
     expect(await verifyCode({ phone: "(607) 555-0123", code })).toEqual({ status: "ok", path: `/p/${pid}` });
     expect(await answerOf(pid, priya.id)).toBe("in");
-    expect((await respond({ proposalId: pid, answer: "maybe" })).status).toBe("ok");
-    expect(await answerOf(pid, priya.id)).toBe("maybe");
+    expect((await respond({ proposalId: pid, answer: "out" })).status).toBe("ok");
+    expect(await answerOf(pid, priya.id)).toBe("out");
   });
 
   it("five wrong codes invalidate it; the sixth finds no code", async () => {

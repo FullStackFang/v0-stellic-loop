@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · overdrive · three looks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @property --ang { syntax:'<angle>'; inherits:false; initial-value:0deg; }
+  :root{ --sans:'Geist',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace; --expo:cubic-bezier(.16,1,.3,1); }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; border:0; }
+  body{ margin:0; background:#121110; color:#f3efe8; font-family:var(--sans); -webkit-font-smoothing:antialiased; padding:48px 20px 80px; }
+  .wrap{ max-width:1340px; margin:0 auto; }
+  .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#8a837a; }
+  h1{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144,'SOFT' 40; font-weight:500; font-size:44px; line-height:1.02; letter-spacing:-.02em; margin:14px 0 12px; max-width:22ch; }
+  h1 em{ font-style:italic; color:#d6f55e; }
+  .wrap > p{ color:#b7b0a6; font-size:15px; line-height:1.55; max-width:68ch; margin:0; }
+  .wrap > p b{ color:#f3efe8; font-weight:600; }
+  .rail{ display:flex; gap:44px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-top:44px; }
+  .col{ width:390px; max-width:100%; }
+  .lbl{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#8a837a; display:flex; justify-content:space-between; margin:0 0 12px 4px; }
+  .lbl b{ color:#f3efe8; font-weight:700; }
+  .lbl button{ background:none; font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#d6f55e; padding:0; }
+  .cap{ font-size:13px; line-height:1.55; color:#8a837a; margin:16px 4px 0; }
+  .cap b{ color:#d8d2c8; font-weight:600; }
+  .cap i{ font-style:normal; font-family:var(--mono); font-size:11px; color:#b7b0a6; }
+
+  .phone{ width:390px; max-width:100%; height:844px; border-radius:46px; overflow:hidden; position:relative; isolation:isolate; display:flex; flex-direction:column; box-shadow:0 40px 80px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.06); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; position:relative; z-index:3; }
+  .status svg{ height:11px; }
+  .screen{ flex:1; overflow:auto; scrollbar-width:none; position:relative; z-index:2; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .face{ border-radius:50%; object-fit:cover; display:block; background:#555; }
+  .bar{ position:absolute; left:0; right:0; bottom:0; z-index:4; padding:14px 18px 28px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .cta{ width:100%; height:54px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:15px; font-weight:700; transition:transform .12s, background .4s, color .4s; }
+  .cta:active{ transform:scale(.98); }
+  .cta svg{ width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+  .alt{ background:none; font-size:13px; font-weight:500; text-decoration:underline; text-underline-offset:3px; padding:0; }
+  .enter{ animation:enter .6s var(--expo) both; }
+  @keyframes enter{ from{ opacity:0; transform:translateY(12px) scale(.85); } to{ opacity:1; transform:none; } }
+
+  /* ============ A · NIGHT ============ */
+  .night{ background:#070c18; color:#f3efe8; }
+  .night .sky{ position:absolute; inset:0; z-index:0; overflow:hidden; }
+  .night .sky::before, .night .sky::after{ content:''; position:absolute; width:520px; height:520px; border-radius:50%; filter:blur(70px); opacity:.85; transition:background 1.2s ease; }
+  .night .sky::before{ background:#1b4fd6; top:-220px; right:-180px; animation:drift 14s ease-in-out infinite alternate; }
+  .night .sky::after{ background:#0f8f84; bottom:-260px; left:-220px; animation:drift 18s ease-in-out infinite alternate-reverse; }
+  @keyframes drift{ from{ transform:translate(0,0) scale(1); } to{ transform:translate(-40px,50px) scale(1.12); } }
+  .night .sky canvas{ position:absolute; inset:0; width:100%; height:100%; }
+  .night.formed .sky::before{ background:#2fbf6b; } .night.formed .sky::after{ background:#1b4fd6; }
+  .night .status{ color:#f3efe8; }
+  .night .head{ display:flex; justify-content:space-between; align-items:baseline; padding:12px 24px 0; position:relative; z-index:3; }
+  .night .wm{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144; font-size:22px; font-weight:500; }
+  .night .space{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#8fb3ff; }
+  .night .screen{ padding:0 24px 150px; }
+  .night .eyeb{ font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:#d6f55e; margin-top:34px; display:flex; gap:10px; align-items:center; }
+  .night .eyeb i{ width:7px; height:7px; border-radius:50%; background:#d6f55e; box-shadow:0 0 12px 3px rgba(214,245,94,.6); animation:breathe 2.6s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ opacity:.7; } 50%{ opacity:1; } }
+  .night h2{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144,'SOFT' 60; font-weight:400; font-size:60px; line-height:.95; letter-spacing:-.03em; margin:12px 0 0; }
+  .night h2 em{ font-style:italic; font-weight:300; color:#8fb3ff; }
+  .night .where{ font-size:14.5px; line-height:1.5; color:rgba(243,239,232,.7); margin-top:16px; }
+  .night .where b{ color:#f3efe8; font-weight:600; }
+  .night .count{ margin-top:36px; display:grid; grid-template-columns:auto 1fr; gap:0 18px; align-items:end; }
+  .night .big{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144; font-size:150px; font-weight:300; line-height:.78; letter-spacing:-.06em; color:#f3efe8; }
+  .night .of{ font-family:'Fraunces',serif; font-size:30px; font-weight:300; color:rgba(243,239,232,.55); line-height:1; padding-bottom:6px; }
+  .night .bars{ grid-column:1/-1; display:flex; gap:6px; margin-top:22px; }
+  .night .bars b{ flex:1; height:9px; border-radius:5px; background:rgba(243,239,232,.14); transition:background .5s, box-shadow .5s; }
+  .night .bars b.f{ background:#d6f55e; box-shadow:0 0 14px 2px rgba(214,245,94,.45); }
+  .night .lead{ grid-column:1/-1; font-size:15px; color:#d6f55e; margin-top:12px; font-weight:500; }
+  .night .lead span{ color:rgba(243,239,232,.6); font-weight:400; }
+  .night .faces{ display:flex; gap:14px; margin-top:34px; }
+  .night .p{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .night .p .face{ width:66px; height:66px; border:2.5px solid #d6f55e; box-shadow:0 0 0 4px rgba(214,245,94,.12), 0 10px 24px -8px rgba(0,0,0,.8); }
+  .night .p span{ font-size:12px; color:rgba(243,239,232,.7); }
+  .night .p.slot .face{ border:2px dashed rgba(243,239,232,.35); background:transparent; box-shadow:none; display:grid; place-items:center; font-family:var(--mono); font-size:11px; color:rgba(243,239,232,.5); }
+  .night .out{ margin-top:16px; font-size:12.5px; color:rgba(243,239,232,.45); display:flex; align-items:center; gap:8px; }
+  .night .out .face{ width:22px; height:22px; filter:grayscale(1); opacity:.6; }
+  .night .det{ margin-top:34px; border-top:1px solid rgba(243,239,232,.12); }
+  .night .det div{ display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid rgba(243,239,232,.12); font-size:14px; color:rgba(243,239,232,.8); }
+  .night .det a{ color:#8fb3ff; text-decoration:none; font-weight:500; }
+  .night .det small{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:rgba(243,239,232,.4); white-space:nowrap; }
+  .night .bar{ background:linear-gradient(to top, #070c18 55%, transparent); }
+  .night .cta{ background:#d6f55e; color:#0c1220; border-radius:18px; box-shadow:0 10px 30px -10px rgba(214,245,94,.5); }
+  .night.formed .cta{ background:rgba(214,245,94,.12); color:#d6f55e; box-shadow:inset 0 0 0 1.5px #d6f55e; }
+  .night .alt{ color:rgba(243,239,232,.5); }
+  .night .alt a{ color:#8fb3ff; }
+
+  /* ============ B · POSTER ============ */
+  .poster{ background:#f1ebdd; color:#111; --block:#2340ff; }
+  .poster.formed{ --block:#17b24f; }
+  .poster .block{ background:var(--block); color:#f1ebdd; padding:0 22px 20px; transition:background .6s; }
+  .poster .block .status{ padding-left:6px; padding-right:6px; }
+  .poster .meta{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+  .poster .meta b{ font-weight:700; }
+  .poster h2{ font-family:'Bricolage Grotesque',sans-serif; font-variation-settings:'opsz' 96,'wdth' 80; font-weight:800; font-size:78px; line-height:.86; letter-spacing:-.035em; text-transform:uppercase; margin:40px 0 0; }
+  .poster .nums{ display:flex; align-items:flex-end; justify-content:space-between; margin-top:34px; }
+  .poster .nums .when{ font-family:var(--mono); font-size:12px; line-height:1.6; text-transform:uppercase; letter-spacing:.06em; max-width:16ch; }
+  .poster .nums .when b{ font-weight:700; background:#111; color:#f1ebdd; padding:1px 5px; }
+  .poster .frac{ font-family:'Bricolage Grotesque',sans-serif; font-variation-settings:'opsz' 96,'wdth' 75; font-weight:800; font-size:128px; line-height:.8; letter-spacing:-.06em; color:#111; }
+  .poster .frac small{ font-size:56px; letter-spacing:-.04em; }
+  .poster .tape{ background:#111; color:#f1ebdd; overflow:hidden; white-space:nowrap; font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; padding:9px 0; }
+  .poster .tape span{ display:inline-block; padding-right:32px; animation:tape 16s linear infinite; }
+  @keyframes tape{ to{ transform:translateX(-50%); } }
+  .poster .screen{ padding-bottom:140px; }
+  .poster .facts{ display:grid; grid-template-columns:1fr 1fr; border-bottom:2px solid #111; }
+  .poster .facts div{ padding:16px 22px; border-top:2px solid #111; }
+  .poster .facts div:nth-child(odd){ border-right:2px solid #111; }
+  .poster .facts div:nth-child(-n+2){ border-top:0; }
+  .poster .facts small{ display:block; font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#6b665c; margin-bottom:6px; }
+  .poster .facts b{ display:block; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-.01em; }
+  .poster .facts a{ color:var(--block); text-decoration:none; font-weight:700; }
+  .poster .who{ padding:18px 22px 0; }
+  .poster .who .lbl2{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#6b665c; display:flex; justify-content:space-between; }
+  .poster .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:12px; }
+  .poster .p{ text-align:center; }
+  .poster .p .face{ width:100%; aspect-ratio:1; border-radius:4px; border:2px solid #111; box-shadow:4px 4px 0 #111; }
+  .poster .p span{ display:block; font-family:var(--mono); font-size:10.5px; margin-top:10px; text-transform:uppercase; letter-spacing:.06em; }
+  .poster .p.slot .face{ border:2px dashed #111; background:transparent; box-shadow:none; display:grid; place-items:center; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:26px; }
+  .poster .out{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6b665c; margin-top:14px; }
+  .poster .out s{ color:#111; }
+  .poster .det{ margin:18px 22px 0; border-top:2px solid #111; }
+  .poster .det div{ display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #111; font-size:13.5px; }
+  .poster .det a{ color:var(--block); font-weight:700; text-decoration:none; }
+  .poster .det small{ font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:#6b665c; }
+  .poster .bar{ background:linear-gradient(to top, #f1ebdd 55%, transparent); }
+  .poster .cta{ background:#111; color:#f1ebdd; border-radius:0; font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:18px; text-transform:uppercase; letter-spacing:.02em; box-shadow:5px 5px 0 var(--block); }
+  .poster.formed .cta{ background:#f1ebdd; color:#111; box-shadow:inset 0 0 0 2px #111, 5px 5px 0 var(--block); }
+  .poster .alt{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:#111; }
+  .poster .alt a{ color:var(--block); }
+
+  /* ============ C · AURORA ============ */
+  .aurora{ color:#fff; background:#5b2ee6; }
+  .aurora .glow{ position:absolute; inset:-30%; z-index:0; background:conic-gradient(from var(--ang) at 60% 40%, #5b2ee6, #c42f9c, #ff6a3d, #ffb13d, #c42f9c, #5b2ee6); filter:blur(48px) saturate(1.15); animation:spin 22s linear infinite; }
+  @keyframes spin{ to{ --ang:360deg; } }
+  .aurora.formed .glow{ background:conic-gradient(from var(--ang) at 60% 40%, #0f8f6a, #26c281, #d6f55e, #26c281, #0f8f6a); }
+  .aurora .grain{ position:absolute; inset:0; z-index:1; opacity:.18; mix-blend-mode:overlay; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .aurora .head{ display:flex; justify-content:space-between; align-items:center; padding:10px 24px 0; position:relative; z-index:3; }
+  .aurora .wm{ font-family:'Instrument Serif',serif; font-size:24px; }
+  .aurora .chip{ font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:6px 11px; border-radius:999px; background:rgba(255,255,255,.18); box-shadow:inset 0 0 0 1px rgba(255,255,255,.35); }
+  .aurora .screen{ padding:0 24px 200px; }
+  .aurora h2{ font-family:'Instrument Serif',serif; font-weight:400; font-size:72px; line-height:.9; letter-spacing:-.03em; margin:40px 0 0; text-shadow:0 2px 30px rgba(0,0,0,.18); }
+  .aurora h2 em{ font-style:italic; }
+  .aurora .when{ font-size:15px; line-height:1.5; margin-top:16px; color:rgba(255,255,255,.85); }
+  .aurora .when b{ font-weight:600; color:#fff; }
+  .aurora .ring{ position:relative; width:230px; height:230px; margin:30px auto 0; display:grid; place-items:center; }
+  .aurora .ring svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .aurora .ring circle{ fill:none; stroke-width:10; stroke-linecap:round; }
+  .aurora .ring .tr{ stroke:rgba(255,255,255,.22); }
+  .aurora .ring .pr{ stroke:#fff; stroke-dasharray:660; stroke-dashoffset:165; transition:stroke-dashoffset 1s var(--expo); filter:drop-shadow(0 0 10px rgba(255,255,255,.6)); }
+  .aurora.formed .ring .pr{ stroke-dashoffset:0; }
+  .aurora .ring .num{ text-align:center; }
+  .aurora .ring .big{ font-family:'Instrument Serif',serif; font-size:124px; line-height:.8; letter-spacing:-.05em; display:block; }
+  .aurora .ring .of{ font-size:14px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.8); display:block; margin-top:10px; }
+  .aurora .lead{ text-align:center; margin-top:18px; font-family:'Instrument Serif',serif; font-style:italic; font-size:22px; }
+  .aurora .faces{ display:flex; justify-content:center; margin-top:26px; }
+  .aurora .p .face{ width:76px; height:76px; border:3px solid #fff; box-shadow:0 12px 30px -10px rgba(0,0,0,.5); margin-left:-18px; }
+  .aurora .p:first-child .face{ margin-left:0; }
+  .aurora .p.slot .face{ border:2px dashed rgba(255,255,255,.7); background:rgba(255,255,255,.12); box-shadow:none; display:grid; place-items:center; font-size:13px; font-weight:700; }
+  .aurora .names{ text-align:center; font-size:13px; color:rgba(255,255,255,.85); margin-top:12px; }
+  .aurora .names s{ color:rgba(255,255,255,.5); text-decoration:none; }
+  .aurora .card{ margin-top:26px; background:#fff; color:#1a1420; border-radius:22px; padding:6px 18px; box-shadow:0 20px 50px -20px rgba(0,0,0,.5); }
+  .aurora .card div{ display:grid; grid-template-columns:1fr auto; gap:10px; padding:13px 0; border-top:1px solid rgba(26,20,32,.1); font-size:14.5px; font-weight:500; }
+  .aurora .card div:first-child{ border-top:0; }
+  .aurora .card small{ display:block; font-size:12px; color:#7a7184; font-weight:400; margin-top:2px; }
+  .aurora .card a{ color:#5b2ee6; font-weight:700; text-decoration:none; }
+  .aurora .card .by{ font-size:11px; color:#7a7184; align-self:center; }
+  .aurora .bar{ background:linear-gradient(to top, rgba(12,6,28,.97) 84%, transparent); padding-top:30px; }
+  .aurora .cta{ background:#fff; color:#5b2ee6; border-radius:999px; box-shadow:0 14px 40px -12px rgba(0,0,0,.6); }
+  .aurora.formed .cta{ background:rgba(255,255,255,.2); color:#fff; box-shadow:inset 0 0 0 1.5px #fff; }
+  .aurora .alt{ color:rgba(255,255,255,.8); }
+  .aurora .alt a{ color:#fff; font-weight:700; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · overdrive · take 3 · 2026-11-02</div>
+  <h1>Three looks that do <em>not</em> look the same.</h1>
+  <p>Partiful's trick is that every event page has its own personality: its own color, its own type, its own mood. Luma's is a cover that owns the page. Here the same plan, Overnight boat, 3 of 4, gets three unrelated looks. Different palette, different typeface, different layout, different motion. <b>Tap "I'm in" in any of them</b> to see the plan form in that look. Pick one, or point at the parts you want crossed.</p>
+
+  <div class="rail">
+    <!-- A NIGHT -->
+    <div class="col">
+      <div class="lbl"><span>A · <b>Night</b> · drenched dark</span><button data-replay="a">Replay</button></div>
+      <div class="phone night" id="a">
+        <div class="sky"><canvas aria-hidden="true"></canvas></div>
+        <div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>
+        <div class="head"><span class="wm">Loop</span><span class="space">EMBA 2027</span></div>
+        <div class="screen">
+          <div class="eyeb"><i></i><span data-state>Open · forms at 4</span></div>
+          <h2>Overnight <em>boat</em></h2>
+          <div class="where"><b>Fri 20 Feb, 6:00pm</b>, back Saturday by 10am<br>Cat Ba pier, Halong · about $180 a person</div>
+          <div class="count">
+            <span class="big" data-count>3</span><span class="of">of 4</span>
+            <div class="bars" data-bars><b class="f"></b><b class="f"></b><b class="f"></b><b></b></div>
+            <div class="lead" data-lead>One more <span>and it forms.</span></div>
+          </div>
+          <div class="faces">
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=12" alt=""><span>Marcus</span></div>
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=47" alt=""><span>Elena</span></div>
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=33" alt=""><span>Tom</span></div>
+            <div class="p slot" data-slot><span class="face">+1</span><span>one more</span></div>
+          </div>
+          <div class="out"><img class="face" src="https://i.pravatar.cc/64?img=59" alt="">Ravi can't make it</div>
+          <div class="det">
+            <div><span><a href="#">Operator page</a> · Bai Tho Junks</span><small>Marcus</small></div>
+            <div><span>Twin cabin per person. Whoever's in books it.</span><small>Tom</small></div>
+            <div><span><a href="#">What to pack</a> for a night on the bay</span><small>Elena</small></div>
+          </div>
+        </div>
+        <div class="bar"><button class="cta" data-cta>I'm in</button><span class="alt" data-alt>Can't make it</span></div>
+      </div>
+      <div class="cap"><b>Night.</b> Deep navy with two drifting glows, sea blue and teal, and a sparse star field. Fraunces at 150px for the count, lime for everything that is alive: the dot, the filled bars, the rings on the faces, the button. <i>Fraunces · JetBrains Mono · #070c18 · #d6f55e · #8fb3ff</i></div>
+    </div>
+
+    <!-- B POSTER -->
+    <div class="col">
+      <div class="lbl"><span>B · <b>Poster</b> · flat and loud</span><button data-replay="b">Replay</button></div>
+      <div class="phone poster" id="b">
+        <div class="block">
+          <div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>
+          <div class="meta" style="margin-top:14px"><span><b>Loop</b> / EMBA 2027</span><span data-state>Open · forms at 4</span></div>
+          <h2>Over<br>night<br>boat</h2>
+          <div class="nums">
+            <div class="when"><b>Fri 20 Feb</b><br>6:00pm<br>Cat Ba pier</div>
+            <div class="frac"><span data-count>3</span><small>/4</small></div>
+          </div>
+        </div>
+        <div class="tape"><span data-tape>One more and it forms · Fri 20 Feb · 6:00pm · Cat Ba pier, Halong · about $180 · One more and it forms · Fri 20 Feb · 6:00pm · Cat Ba pier, Halong · about $180 · </span></div>
+        <div class="screen">
+          <div class="facts">
+            <div><small>When</small><b>Fri 20 Feb, 6pm, back Sat 10am</b></div>
+            <div><small>Where</small><b>Cat Ba pier, Halong · <a href="#">Map</a></b></div>
+            <div><small>Cost</small><b>About $180 a person</b></div>
+            <div><small>Forms at</small><b data-formsat>4 · one more</b></div>
+          </div>
+          <div class="who">
+            <div class="lbl2"><span>Going · <b data-going>3</b></span><span>Needs 4</span></div>
+            <div class="grid">
+              <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=12" alt=""><span>Marcus</span></div>
+              <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=47" alt=""><span>Elena</span></div>
+              <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=33" alt=""><span>Tom</span></div>
+              <div class="p slot" data-slot><span class="face">+1</span><span>You?</span></div>
+            </div>
+            <div class="out"><s>Ravi</s> can't make it</div>
+          </div>
+          <div class="det">
+            <div><span><a href="#">Operator page</a> · Bai Tho Junks</span><small>Marcus</small></div>
+            <div><span>Twin cabin per person. Whoever's in books it.</span><small>Tom</small></div>
+          </div>
+        </div>
+        <div class="bar"><button class="cta" data-cta>I'm in →</button><span class="alt" data-alt>Can't make it</span></div>
+      </div>
+      <div class="cap"><b>Poster.</b> A gig poster, not an app screen. One flat block of cobalt, the title in Bricolage Grotesque at 78px condensed, the fraction in black, a running black tape, facts in a ruled grid, faces as stamped squares with hard shadows. Every intent gets its own block color. <i>Bricolage Grotesque · JetBrains Mono · #2340ff · #111 · #f1ebdd</i></div>
+    </div>
+
+    <!-- C AURORA -->
+    <div class="col">
+      <div class="lbl"><span>C · <b>Aurora</b> · luminous</span><button data-replay="c">Replay</button></div>
+      <div class="phone aurora" id="c">
+        <div class="glow"></div><div class="grain"></div>
+        <div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>
+        <div class="head"><span class="wm">Loop</span><span class="chip" data-state>Open · forms at 4</span></div>
+        <div class="screen">
+          <h2>Overnight <em>boat</em></h2>
+          <div class="when"><b>Fri 20 Feb, 6:00pm</b> · back Sat by 10am<br>Cat Ba pier, Halong · about $180</div>
+          <div class="ring">
+            <svg viewBox="0 0 230 230"><circle class="tr" cx="115" cy="115" r="105"/><circle class="pr" cx="115" cy="115" r="105"/></svg>
+            <div class="num"><span class="big" data-count>3</span><span class="of">of 4</span></div>
+          </div>
+          <div class="lead" data-lead>One more and it forms</div>
+          <div class="faces">
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=12" alt=""></div>
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=47" alt=""></div>
+            <div class="p"><img class="face" src="https://i.pravatar.cc/160?img=33" alt=""></div>
+            <div class="p slot" data-slot><span class="face">+1</span></div>
+          </div>
+          <div class="names" data-names>Marcus, Elena and Tom are in · <s>Ravi can't</s></div>
+          <div class="card">
+            <div><span>Cat Ba pier, Halong<small>Ha Long Bay junk, twin cabins</small></span><a href="#">Map</a></div>
+            <div><span><a href="#">Operator page</a> · Bai Tho Junks</span><span class="by">Marcus</span></div>
+            <div><span>Twin cabin per person. Whoever's in books it.</span><span class="by">Tom</span></div>
+          </div>
+        </div>
+        <div class="bar"><button class="cta" data-cta>I'm in</button><span class="alt" data-alt>Can't make it</span></div>
+      </div>
+      <div class="cap"><b>Aurora.</b> The whole phone is a slow-turning conic gradient, violet to magenta to coral, under film grain. Instrument Serif at 72 and 124. The count is a ring that closes when the plan forms, and the page turns green. Faces overlap like a crowd; the only white is the facts card and the button. <i>Instrument Serif · Geist · #5b2ee6 · #c42f9c · #ff6a3d</i></div>
+    </div>
+  </div>
+</div>
+<script>
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
+const CHECK = `<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>`;
+
+function stars(phone){
+  const cv = phone.querySelector('.sky canvas'); if(!cv) return;
+  const W = phone.clientWidth, H = phone.clientHeight, dpr = Math.min(2, devicePixelRatio||1);
+  cv.width = W*dpr; cv.height = H*dpr; const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  let s = 7; const rnd = ()=>{ s=(s*16807)%2147483647; return s/2147483647; };
+  const P = Array.from({length:140}, ()=>({ x:rnd()*W, y:rnd()*H, r:.4+rnd()*1.1, a:.15+rnd()*.6, ph:rnd()*6.28, sp:.4+rnd()*1.2 }));
+  const t0 = performance.now();
+  function draw(now){
+    const t = (now-t0)/1000; g.clearRect(0,0,W,H);
+    for(const p of P){ const a = RM ? p.a : p.a*(.6+.4*Math.sin(t*p.sp+p.ph)); g.globalAlpha=a; g.fillStyle='#eef3ff'; g.beginPath(); g.arc(p.x,p.y,p.r,0,6.283); g.fill(); }
+    g.globalAlpha=1; if(!RM && phone.isConnected) requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+function countTo(node, to, ms=800){
+  const from = parseInt(node.textContent,10)||0; if(RM){ node.textContent=to; return; }
+  const t0 = performance.now();
+  const step = (now)=>{ const p=Math.min(1,(now-t0)/ms); const e=1-Math.pow(1-p,4); node.textContent=Math.round(from+(to-from)*e); if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function form(phone){
+  if(phone.classList.contains('formed')) return;
+  phone.classList.add('formed');
+  const q = (s)=>phone.querySelector(s);
+  countTo(q('[data-count]'), 4);
+  const bars = q('[data-bars]'); if(bars) setTimeout(()=>bars.children[3].classList.add('f'), 400);
+  const slot = q('[data-slot]');
+  if(slot){ const hasName = slot.children.length>1; const you = el(`<div class="p enter"><img class="face" src="https://i.pravatar.cc/160?img=8" alt="">${hasName?'<span>You</span>':''}</div>`); slot.replaceWith(you); }
+  const going = q('[data-going]'); if(going) going.textContent='4';
+  const fa = q('[data-formsat]'); if(fa) fa.textContent='4 · formed';
+  const names = q('[data-names]'); if(names) names.innerHTML='You, Marcus, Elena and Tom are in · <s>Ravi can\'t</s>';
+  const tape = q('[data-tape]'); if(tape) tape.textContent='Formed · one message went to all 4 · Fri 20 Feb · 6:00pm · Cat Ba pier · '.repeat(2);
+  setTimeout(()=>{
+    const st = q('[data-state]'); if(st) st.textContent='Formed · 4 of 4';
+    const lead = q('[data-lead]'); if(lead) lead.innerHTML = phone.classList.contains('night') ? 'Formed. <span>One message went to all 4.</span>' : 'Formed. One message went to all 4.';
+    const cta = q('[data-cta]'); cta.innerHTML = `${CHECK}You're in · Fri 20 Feb`;
+    const alt = q('[data-alt]'); alt.innerHTML = '<a href="#">Add to calendar</a>';
+  }, 500);
+}
+const initial = {};
+function init(phone){
+  stars(phone);
+  phone.querySelector('[data-cta]').addEventListener('click', ()=>form(phone));
+}
+document.querySelectorAll('.phone').forEach(p=>{ initial[p.id]=p.outerHTML; init(p); });
+document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click', ()=>{ const old=document.getElementById(b.dataset.replay); const fresh=el(initial[old.id]); old.replaceWith(fresh); init(fresh); }));
+</script>
+</body>
+</html>

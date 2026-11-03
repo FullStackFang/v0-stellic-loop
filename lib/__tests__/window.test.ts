@@ -1,9 +1,9 @@
 // board-window and the rolling parts of quorum-and-lock, on pure rows.
 import { describe, expect, it } from "vitest";
-import { best, cardRow, conflictsFor, heat, idledAt, stateOf } from "../quorum";
+import { best, conflictsFor, heat, idledAt, stateOf } from "../quorum";
 import type { BoardData } from "../load";
 import type { Board, Proposal, Response } from "../types";
-import { cardModel, peopleLists, rosterText, type PersonRow } from "../view";
+import { planModel } from "../view";
 import { BOARD, crowd, D, prop, resp } from "./fixtures";
 
 const ROLLING: Board = { id: "r", slug: "strategy-team", name: "Strategy team", tz: "America/New_York", window_kind: "rolling", window_start: null, window_end: null };
@@ -35,17 +35,8 @@ describe("past days never count", () => {
     const rs = [resp(p.id, "priya", "in", ["2026-11-02", "2026-11-05"])];
     const now = at("2026-11-03");
     expect(heatOf(heat(ROLLING, rs, undefined, now))).toEqual({ "2026-11-05": 1 });
-    const lists = peopleLists(p, rs, new Map([["priya", { id: "priya", name: "Priya", show_name: true }]]), null, new Map(), ROLLING, now);
-    expect(lists.in[0].days).toBe("Thu");
-    const c = cardModel(p, data(ROLLING, [p], rs), { id: "priya", show_name: true }, now);
-    expect(c.myDays).toEqual(["2026-11-05"]);
-  });
-
-  it("a past cell on a fixed board's card is blank", () => {
-    const p = prop();
-    const rs = crowd(p, 3, [D.mon, D.thu]);
-    const c = cardModel(p, data(BOARD, [p], rs), null, at(D.wed));
-    expect(c.heat!.map((h) => h.count)).toEqual([0, 0, 0, 0, 3, 0, 0]);
+    const c = planModel(p, data(ROLLING, [p], rs), { id: "priya", show_name: true }, now);
+    expect(c.day).toBe("2026-11-05");
   });
 });
 
@@ -64,8 +55,8 @@ describe("rolling windows", () => {
     const rs = crowd(p, 4, ["2026-11-20"]);
     const now = at("2026-11-10");
     expect(stateOf(p, ROLLING, rs, undefined, now)).toBe("ready");
-    const c = cardModel(p, data(ROLLING, [p], rs), null, now);
-    expect(c.ask?.dayLong).toBe("Friday 20");
+    const c = planModel(p, data(ROLLING, [p], rs), null, now);
+    expect(c.day).toBe("2026-11-20");
   });
 
   it("an implied deadline idles at the end of that day: Room after class Thu, 2 of 4", () => {
@@ -80,47 +71,5 @@ describe("rolling windows", () => {
     expect(idledAt(prop(), ROLLING)).toBeNull();
     expect(idledAt(prop({ deadline: "2026-11-16" }), ROLLING)).toBe("2026-11-16");
     expect(idledAt(prop({ needs_day: false }), ROLLING)).toBeNull();
-  });
-});
-
-describe("the card's row of seven", () => {
-  const cells = Array.from({ length: 14 }, (_, i) => ({ day: `d${String(i).padStart(2, "0")}` }));
-
-  it("shows days 1–7 unless the best or locked day is in the second week", () => {
-    expect(cardRow(cells, null).map((c) => c.day)).toEqual(cells.slice(0, 7).map((c) => c.day));
-    expect(cardRow(cells, "d03")).toEqual(cells.slice(0, 7));
-    expect(cardRow(cells, "d09")).toEqual(cells.slice(7, 14));
-    expect(cardRow(cells.slice(0, 7), "d03")).toEqual(cells.slice(0, 7));
-  });
-
-  it("a rolling card with its best day 10 days out shows window days 8–14", () => {
-    const p = prop({ deadline: "2026-11-16" });
-    const rs = crowd(p, 3, ["2026-11-13"]);
-    const c = cardModel(p, data(ROLLING, [p], rs), null, at("2026-11-03"));
-    const row = cardRow(c.heat!, c.bestDay);
-    expect(row[0].day).toBe("2026-11-10");
-    expect(row.find((h) => h.best)?.day).toBe("2026-11-13");
-    expect(c.date).toMatchObject({ small: "Nov", big: "13" });
-  });
-});
-
-describe("copy names", () => {
-  const row = (name: string, o: Partial<PersonRow> = {}): PersonRow => ({ name, me: false, anon: false, days: "", ...o });
-
-  it("Ski trip: three named, two hidden, Hana maybe", () => {
-    const lists = {
-      in: [row("Priya"), row("Marcus"), row("Dana"), row("+1 anonymous", { anon: true }), row("+1 anonymous", { anon: true })],
-      maybe: [row("Hana")],
-    };
-    expect(rosterText("Ski trip", lists, null)).toBe("Ski trip · 5 in\nPriya, Marcus, Dana and 2 more · Maybe: Hana");
-  });
-
-  it("the viewer is copied under their own name, or counted when their name is off", () => {
-    expect(rosterText("Boat", { in: [row("You", { me: true }), row("Marcus")], maybe: [] }, "Priya")).toBe("Boat · 2 in\nPriya, Marcus");
-    expect(rosterText("Boat", { in: [row("You (+1 anonymous)", { me: true, anon: true }), row("Marcus")], maybe: [] }, "Priya")).toBe("Boat · 2 in\nMarcus and 1 more");
-  });
-
-  it("everyone hidden is a count", () => {
-    expect(rosterText("Shirts", { in: [row("+1 anonymous", { anon: true })], maybe: [] }, null)).toBe("Shirts · 1 in\n1 more");
   });
 });

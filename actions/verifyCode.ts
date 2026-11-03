@@ -1,6 +1,6 @@
 "use server";
 import { db, type Q } from "@/lib/db";
-import { notifyDropped, notifyOneMore } from "@/lib/after";
+import { notifyDropped, notifyOneMore, notifyReached } from "@/lib/after";
 import { attribution, CODE_ATTEMPTS, setSession, type Pending } from "@/lib/identity";
 import { createBoardAs, postAs, respondAs } from "@/lib/ops";
 import { checkVerification, verifyConfig, type CheckResult } from "@/lib/notify/verify";
@@ -12,7 +12,7 @@ import { timingSafeEqual } from "node:crypto";
 import { fail, type Fail } from "./results";
 
 /** `path`: where the replayed action lands (the proposal or the new board), or null. */
-export type VerifyResult = { status: "ok"; path: string | null } | Fail;
+export type VerifyResult = { status: "ok"; path: string | null } | (Fail & { verified?: boolean });
 
 /**
  * Checks the code (with Twilio Verify when it sent it), creates the person if
@@ -55,20 +55,28 @@ export async function verifyCode(input: { phone: string; code: string }): Promis
     if (pending?.kind === "respond") {
       const r = await respondAs(q, personId, pending.proposalId, pending.answer, attr, "set");
       const ok = r.status === "ok" ? r : null;
-      return { status: "ok" as const, personId, path: `/p/${pending.proposalId}`, dropped: ok?.dropped ?? null, oneMore: ok?.oneMore ?? null };
+      return { status: "ok" as const, personId, path: `/p/${pending.proposalId}`, dropped: ok?.dropped ?? null, oneMore: ok?.oneMore ?? null, formed: ok?.formed ?? null };
     }
     if (pending?.kind === "post") {
       const r = await postAs(q, personId, pending.boardId, pending.post, attr);
-      return { status: "ok" as const, personId, path: r.status === "ok" ? `/p/${r.proposalId}` : null, dropped: null, oneMore: null };
+      if (r.status === "error") return { ...r, personId, verified: true as const };
+      return { status: "ok" as const, personId, path: r.status === "ok" ? `/p/${r.proposalId}` : null, dropped: null, oneMore: null, formed: null };
     }
     if (pending?.kind === "board") {
       const r = await createBoardAs(q, personId, pending.name, pending.tz);
-      return { status: "ok" as const, personId, path: r.status === "ok" ? `/b/${r.slug}` : null, dropped: null, oneMore: null };
+      return { status: "ok" as const, personId, path: r.status === "ok" ? `/b/${r.slug}` : null, dropped: null, oneMore: null, formed: null };
     }
-    return { status: "ok" as const, personId, path: null, dropped: null, oneMore: null };
+    return { status: "ok" as const, personId, path: null, dropped: null, oneMore: null, formed: null };
   });
-  if (out.status !== "ok") return out;
+  if (out.status !== "ok") {
+    if ("verified" in out) {
+      await setSession(out.personId);
+      return { ...fail(out.error), verified: true };
+    }
+    return out;
+  }
   await setSession(out.personId);
+  if (out.formed) await notifyReached(out.formed);
   if (out.dropped) await notifyDropped(out.dropped.proposal, out.personId, out.dropped.count);
   if (out.oneMore) await notifyOneMore(out.oneMore.proposal, out.oneMore.count);
   return { status: "ok", path: out.path };

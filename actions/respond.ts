@@ -1,7 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
 import { attribution, setSession, withIdentity } from "@/lib/identity";
-import { notifyDropped, notifyOneMore } from "@/lib/after";
+import { notifyDropped, notifyOneMore, notifyReached } from "@/lib/after";
 import { respondAs } from "@/lib/ops";
 import { limited } from "@/lib/ratelimit";
 import type { Answer } from "@/lib/types";
@@ -13,6 +13,7 @@ export type RespondResult =
   | Fail;
 
 export async function respond(input: { proposalId: string; answer: Answer; name?: string; phone?: string }): Promise<RespondResult> {
+  if (!["in", "out"].includes(input.answer)) return fail("bad_answer");
   if (await limited("identify", input.phone)) return fail("rate_limited");
   const out = await db().tx(async (q) => {
     const { rows } = await q.query<{ board_id: string }>("select board_id from proposal where id::text = $1", [input.proposalId]);
@@ -28,6 +29,7 @@ export async function respond(input: { proposalId: string; answer: Answer; name?
   });
   if (out.status !== "ok") return out;
   await setSession(out.personId);
+  if (out.formed) await notifyReached(out.formed);
   if (out.dropped) await notifyDropped(out.dropped.proposal, out.personId, out.dropped.count);
   if (out.oneMore) await notifyOneMore(out.oneMore.proposal, out.oneMore.count);
   return { status: "ok", next: out.next, days: out.days, conflict: out.conflict };

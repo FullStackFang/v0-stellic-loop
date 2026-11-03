@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Chart · line systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --sans:'Geist',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace; --expo:cubic-bezier(.16,1,.3,1); }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; border:0; }
+  body{ margin:0; background:#121110; color:#f3efe8; font-family:var(--sans); -webkit-font-smoothing:antialiased; padding:48px 20px 80px; }
+  .wrap{ max-width:1400px; margin:0 auto; }
+  .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#8a837a; }
+  h1{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144,'SOFT' 40; font-weight:500; font-size:44px; line-height:1.02; letter-spacing:-.02em; margin:14px 0 12px; max-width:24ch; }
+  h1 em{ font-style:italic; color:#38e1ff; }
+  .wrap > p, .sect > p{ color:#b7b0a6; font-size:15px; line-height:1.55; max-width:68ch; margin:0; }
+  .wrap > p b, .sect > p b{ color:#f3efe8; font-weight:600; }
+  .sect{ margin-top:72px; }
+  .sect h3{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144; font-weight:500; font-size:28px; letter-spacing:-.01em; margin:0 0 10px; }
+  .rail{ display:flex; gap:28px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-top:36px; }
+  .col{ width:390px; max-width:100%; }
+  .rail.four .col{ width:320px; }
+  .rail.four .phone{ zoom:.82; }
+  .lbl{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#8a837a; display:flex; justify-content:space-between; margin:0 0 12px 4px; }
+  .lbl b{ color:#f3efe8; font-weight:700; }
+  .lbl button{ background:none; font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#38e1ff; padding:0; }
+  .cap{ font-size:13px; line-height:1.55; color:#8a837a; margin:16px 4px 0; }
+  .cap b{ color:#d8d2c8; font-weight:600; }
+  .cap i{ font-style:normal; font-family:var(--mono); font-size:11px; color:#b7b0a6; }
+  .chips{ display:flex; gap:10px; flex-wrap:wrap; margin-top:22px; }
+  .chip{ display:flex; align-items:center; gap:10px; background:#1b1a18; border:1px solid #2b2926; color:#d8d2c8; border-radius:999px; padding:8px 14px 8px 10px; font-size:13px; font-weight:600; }
+  .chip b{ width:11px; height:11px; border-radius:50%; display:inline-block; }
+  .chip[aria-pressed="true"]{ border-color:#38e1ff; background:#17211f; color:#f3efe8; }
+
+  /* ============ VARIANTS ============ */
+  .v-orbits { --bg:#06101a; --ink:#eef9ff; --shape:#38e1ff; --acc:#38e1ff; --acc-ink:#03151b; --link:#9fe9ff; --f:#5fe88e; --f-ink:#03150a; }
+  .v-contours{ --bg:#0d0a06; --ink:#fff7ea; --shape:#ffb02e; --acc:#ffb02e; --acc-ink:#1a1003; --link:#ffd58a; --f:#6fe08a; --f-ink:#06150a; }
+  .v-stars   { --bg:#0a0d1a; --ink:#f7f4ec; --shape:#ffe7a3; --acc:#ffd45c; --acc-ink:#1a1403; --link:#ffe7a3; --f:#7ee89a; --f-ink:#06150a; }
+  .v-radar   { --bg:#0c0609; --ink:#fbf1f3; --shape:#ff5c7a; --acc:#ff5c7a; --acc-ink:#1a0309; --link:#ffb3c2; --f:#6fe08a; --f-ink:#06150a; }
+  .night.formed{ --shape:var(--f); --acc:var(--f); --acc-ink:var(--f-ink); }
+  .night.dnf{ --shape:#5a6470; --acc:#9aa0a8; --acc-ink:#0a0d12; }
+
+  /* ============ PHONE ============ */
+  .phone{ width:390px; max-width:100%; height:844px; border-radius:46px; overflow:hidden; position:relative; isolation:isolate; display:flex; flex-direction:column; box-shadow:0 40px 80px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.06); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; position:relative; z-index:3; }
+  .status svg{ height:11px; }
+  .screen{ flex:1; overflow:auto; scrollbar-width:none; position:relative; z-index:2; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .face{ border-radius:50%; object-fit:cover; display:block; background:#555; }
+  .bar{ position:absolute; left:0; right:0; bottom:0; z-index:4; padding:14px 18px 28px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .cta{ width:100%; height:54px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:15px; font-weight:700; transition:transform .12s, background .4s, color .4s; }
+  .cta:active{ transform:scale(.98); }
+  .cta svg{ width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+  .alt{ background:none; font-size:13px; font-weight:500; text-decoration:underline; text-underline-offset:3px; padding:0; }
+  .enter{ animation:enter .6s var(--expo) both; }
+  @keyframes enter{ from{ opacity:0; transform:translateY(12px) scale(.85); } to{ opacity:1; transform:none; } }
+
+  /* ============ NIGHT BONES ============ */
+  .night{ background:var(--bg); color:var(--ink); transition:background .8s; }
+  .night .sky{ position:absolute; inset:0; z-index:0; overflow:hidden; }
+  .night .sky svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .night .head{ display:flex; justify-content:space-between; align-items:baseline; padding:12px 24px 0; position:relative; z-index:3; }
+  .night .wm{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144; font-size:22px; font-weight:500; }
+  .night .space{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--link); }
+  .night .screen{ padding:0 24px 150px; mask-image:linear-gradient(to bottom, transparent, #000 26px); }
+  .night .screen.nobar{ padding-bottom:40px; }
+  .night .eyeb{ font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--acc); margin-top:34px; display:flex; gap:10px; align-items:center; }
+  .night .eyeb i{ width:7px; height:7px; border-radius:50%; background:var(--acc); box-shadow:0 0 10px 2px color-mix(in srgb, var(--acc) 70%, transparent); animation:breathe 2.6s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ opacity:.6; } 50%{ opacity:1; } }
+  .night h2{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144,'SOFT' 60; font-weight:400; font-size:60px; line-height:.95; letter-spacing:-.03em; margin:12px 0 0; }
+  .night h2 em{ font-style:italic; font-weight:300; color:var(--link); }
+  .night .where{ font-size:14.5px; line-height:1.5; color:color-mix(in srgb, var(--ink) 70%, transparent); margin-top:16px; }
+  .night .where b{ color:var(--ink); font-weight:600; }
+  .night .count{ margin-top:36px; display:grid; grid-template-columns:auto 1fr; gap:0 18px; align-items:end; }
+  .night .big{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144; font-size:150px; font-weight:300; line-height:.78; letter-spacing:-.06em; color:var(--ink); text-shadow:0 0 40px color-mix(in srgb, var(--acc) 35%, transparent); }
+  .night .of{ font-family:'Fraunces',serif; font-size:30px; font-weight:300; color:color-mix(in srgb, var(--ink) 55%, transparent); line-height:1; padding-bottom:6px; }
+  .night .bars{ grid-column:1/-1; display:flex; gap:6px; margin-top:22px; }
+  .night .bars b{ flex:1; height:9px; border-radius:5px; background:color-mix(in srgb, var(--ink) 14%, transparent); transition:background .5s, box-shadow .5s; }
+  .night .bars b.f{ background:var(--acc); box-shadow:0 0 12px 1px color-mix(in srgb, var(--acc) 50%, transparent); }
+  .night .lead{ grid-column:1/-1; font-size:15px; color:var(--acc); margin-top:12px; font-weight:500; }
+  .night .lead span{ color:color-mix(in srgb, var(--ink) 60%, transparent); font-weight:400; }
+  .night .faces{ display:flex; gap:14px; margin-top:34px; }
+  .night .p{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .night .p .face{ width:66px; height:66px; border:2.5px solid var(--acc); box-shadow:0 0 0 4px color-mix(in srgb, var(--acc) 14%, transparent), 0 0 18px -2px color-mix(in srgb, var(--acc) 60%, transparent); }
+  .night .p span{ font-size:12px; color:color-mix(in srgb, var(--ink) 70%, transparent); }
+  .night .p.slot .face{ border:2px dashed color-mix(in srgb, var(--ink) 35%, transparent); background:transparent; box-shadow:none; display:grid; place-items:center; font-family:var(--mono); font-size:11px; color:color-mix(in srgb, var(--ink) 50%, transparent); }
+  .night .out{ margin-top:16px; font-size:12.5px; color:color-mix(in srgb, var(--ink) 45%, transparent); display:flex; align-items:center; gap:8px; }
+  .night .out .face{ width:22px; height:22px; filter:grayscale(1); opacity:.6; }
+  .night .det{ margin-top:34px; border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
+  .night .det div{ display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid color-mix(in srgb, var(--ink) 12%, transparent); font-size:14px; color:color-mix(in srgb, var(--ink) 80%, transparent); }
+  .night a{ color:var(--link); text-decoration:none; font-weight:500; }
+  .night .det small{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:color-mix(in srgb, var(--ink) 40%, transparent); white-space:nowrap; }
+  .night .bar{ background:linear-gradient(to top, var(--bg) 55%, transparent); }
+  .night .cta{ background:var(--acc); color:var(--acc-ink); border-radius:12px; box-shadow:0 0 30px -6px color-mix(in srgb, var(--acc) 70%, transparent); }
+  .night.formed .cta, .night .cta.ghost{ background:color-mix(in srgb, var(--acc) 12%, transparent); color:var(--acc); box-shadow:inset 0 0 0 1.5px var(--acc); }
+  .night .alt{ color:color-mix(in srgb, var(--ink) 50%, transparent); }
+  .night .alt a{ color:var(--link); }
+
+  /* lines in the sky */
+  .night .sky .ln{ fill:none; stroke:var(--shape); stroke-width:.9; opacity:.42; transition:stroke 1s; }
+  .night .sky .ln.dim{ opacity:.18; }
+  .night .sky .node{ fill:var(--shape); filter:drop-shadow(0 0 6px var(--shape)); transition:fill 1s, opacity 1s; }
+  .night .sky .lk{ stroke:var(--shape); stroke-width:.8; opacity:.55; transition:stroke 1s, opacity 1s; }
+  .night .sky text{ fill:var(--shape); font-family:var(--mono); font-size:9px; letter-spacing:.12em; opacity:.7; }
+  .night .sky g.rot{ transform-box:fill-box; transform-origin:center; animation:rot 160s linear infinite; }
+  .night .sky g.breathe{ transform-box:fill-box; transform-origin:center; animation:bre 18s ease-in-out infinite alternate; }
+  @keyframes rot{ to{ transform:rotate(360deg); } }
+  @keyframes bre{ from{ transform:scale(1); } to{ transform:scale(1.05); } }
+  .night .sky .pend{ stroke-dasharray:3 5; opacity:.35; }
+  .night.formed .sky .pend{ stroke-dasharray:0; opacity:.7; }
+  .night .sky .n4{ opacity:.25; filter:none; }
+  .night.formed .sky .n4{ opacity:1; filter:drop-shadow(0 0 8px var(--shape)); }
+  .night .sky .tw{ animation:tw 3s ease-in-out infinite; }
+  @keyframes tw{ 0%,100%{ opacity:.25; } 50%{ opacity:.9; } }
+  .night .sweep{ position:absolute; width:900px; height:900px; left:-150px; top:-300px; border-radius:50%; background:conic-gradient(from 0deg, transparent 0 290deg, color-mix(in srgb, var(--shape) 38%, transparent) 360deg); animation:rot 7s linear infinite; transition:background 1s; }
+  .night .sky .blip{ animation:blip 7s linear infinite; }
+  @keyframes blip{ 0%{ opacity:1; } 60%{ opacity:.15; } 100%{ opacity:.15; } }
+  .night.dnf .sky g, .night.dnf .sweep, .night.dnf .sky .tw, .night.dnf .sky .blip{ animation:none; }
+  .night.dnf .sky .node{ filter:none; opacity:.4; }
+  .night.dnf .eyeb i{ animation:none; box-shadow:none; }
+  .night.dnf .big{ text-shadow:none; color:color-mix(in srgb, var(--ink) 80%, transparent); }
+  .night.dnf .bars b.f{ box-shadow:none; }
+  .night.dnf .p .face{ box-shadow:none; filter:saturate(.7); }
+
+  /* lists */
+  .night .sec{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:color-mix(in srgb, var(--ink) 50%, transparent); margin-top:34px; padding-bottom:10px; border-bottom:1px solid color-mix(in srgb, var(--ink) 14%, transparent); display:flex; justify-content:space-between; }
+  .night .sec b{ color:var(--acc); font-weight:500; }
+  .night .row{ display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center; padding:16px 0; border-bottom:1px solid color-mix(in srgb, var(--ink) 10%, transparent); text-decoration:none; color:inherit; font-weight:400; }
+  .night .row .t{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144,'SOFT' 40; font-size:25px; letter-spacing:-.02em; line-height:1; }
+  .night .row .s{ font-size:13px; color:color-mix(in srgb, var(--ink) 62%, transparent); margin-top:7px; }
+  .night .row .s b{ color:var(--ink); font-weight:600; }
+  .night .row .st{ font-size:12.5px; margin-top:8px; color:var(--acc); font-weight:500; display:flex; align-items:center; gap:7px; }
+  .night .row .st i{ width:6px; height:6px; border-radius:50%; background:var(--acc); box-shadow:0 0 8px 2px color-mix(in srgb, var(--acc) 60%, transparent); }
+  .night .row .st.q{ color:color-mix(in srgb, var(--ink) 50%, transparent); } .night .row .st.q i{ background:color-mix(in srgb, var(--ink) 40%, transparent); box-shadow:none; }
+  .night .stack{ display:flex; margin-top:10px; }
+  .night .stack .face{ width:26px; height:26px; border:2px solid var(--bg); margin-left:-7px; }
+  .night .stack .face:first-child{ margin-left:0; }
+  .night .stack .face.slot{ background:transparent; border:1.5px dashed color-mix(in srgb, var(--ink) 35%, transparent); }
+  .night .n{ text-align:right; }
+  .night .n .num{ font-family:'Fraunces',serif; font-variation-settings:'opsz' 144; font-size:42px; font-weight:300; line-height:.9; letter-spacing:-.04em; }
+  .night .n .num small{ font-size:18px; color:color-mix(in srgb, var(--ink) 50%, transparent); }
+  .night .n .mini{ display:flex; gap:3px; margin-top:8px; justify-content:flex-end; }
+  .night .n .mini b{ width:11px; height:5px; border-radius:3px; background:color-mix(in srgb, var(--ink) 16%, transparent); }
+  .night .n .mini b.f{ background:var(--acc); box-shadow:0 0 8px 1px color-mix(in srgb, var(--acc) 45%, transparent); }
+  .night .n .tag{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:color-mix(in srgb, var(--ink) 50%, transparent); }
+  .night .n .tag.on{ color:var(--acc); }
+  .night .wrapped{ margin-top:30px; padding:14px 0; border-top:1px solid color-mix(in srgb, var(--ink) 14%, transparent); font-size:13.5px; color:color-mix(in srgb, var(--ink) 55%, transparent); cursor:pointer; }
+  .night .wrapped .wh{ display:flex; justify-content:space-between; align-items:center; }
+  .night .wrapped small{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; }
+  .night .wrapped .lines{ display:none; padding-top:6px; } .night .wrapped .lines div{ padding:8px 0 0; }
+  .night .wrapped.open .lines{ display:block; }
+  .night .optin{ margin-top:38px; padding:18px; border:1px solid color-mix(in srgb, var(--ink) 14%, transparent); border-radius:20px; display:grid; grid-template-columns:1fr auto; gap:14px; align-items:start; }
+  .night .optin p{ margin:0; font-size:13.5px; line-height:1.45; color:color-mix(in srgb, var(--ink) 75%, transparent); }
+  .night .optin p b{ color:var(--ink); font-weight:600; display:block; margin-bottom:4px; font-size:14px; }
+  .night .optin small{ display:block; margin-top:8px; font-size:12px; color:color-mix(in srgb, var(--ink) 50%, transparent); }
+  .night .tog{ width:46px; height:28px; border-radius:999px; background:color-mix(in srgb, var(--ink) 18%, transparent); position:relative; padding:0; transition:background .25s; }
+  .night .tog::after{ content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--ink); transition:transform .25s var(--expo); }
+  .night .tog[aria-checked="true"]{ background:var(--acc); } .night .tog[aria-checked="true"]::after{ transform:translateX(18px); background:var(--acc-ink); }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · Chart · 2026-11-02</div>
+  <h1>Chart, four ways to <em>draw the lines</em>. Then the rest of the app.</h1>
+  <p>Light comes from lines, never from fog. Four line systems, each with its own color so you can judge the pair: orbit rings in cyan, topographic contours in amber, a constellation in starlight gold where the four nodes are the four people, and a radar graticule in signal red with a sweep. <b>Tap "I'm in" in any phone</b> to see it form; in the constellation the fourth star lights and the shape closes.</p>
+  <div class="rail four" id="variants"></div>
+
+  <div class="sect">
+    <h3>The other two pages, and the honest state.</h3>
+    <p>Space page, my plans, and a plan that did not form. <b>Pick a line system</b> to redraw all three.</p>
+    <div class="chips" id="chips"></div>
+    <div class="rail" id="pages"></div>
+  </div>
+</div>
+
+<script>
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
+const CHECK = `<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>`;
+const STATUS = `<div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>`;
+const HEAD = `<div class="head"><span class="wm">Loop</span><span class="space">EMBA 2027</span></div>`;
+const F = (n,s=160)=>`https://i.pravatar.cc/${s}?img=${n}`;
+const face = (n,s)=>`<img class="face" src="${F(n,s)}" alt="">`;
+const seeded = (seed)=>{ let s=seed; return ()=>{ s=(s*16807)%2147483647; return s/2147483647; }; };
+
+/* ---------- line systems ---------- */
+const SKY = {
+  orbits(){
+    const cx=300, cy=140, rnd=seeded(11); let o='<g class="rot">';
+    for(let i=0;i<9;i++){ const r=48+i*52; o+=`<circle class="ln" cx="${cx}" cy="${cy}" r="${r}" ${i%3===1?'stroke-dasharray="2 7"':''}/>`; }
+    const nodes=[]; for(let i=0;i<9;i++){ const r=48+Math.floor(rnd()*8)*52, a=rnd()*6.283; nodes.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]); }
+    for(let i=0;i<nodes.length-1;i++){ if(rnd()<.6){ const [a,b]=[nodes[i],nodes[i+1]]; o+=`<line class="lk" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`; } }
+    nodes.forEach(([x,y],i)=> o+=`<circle class="node" cx="${x}" cy="${y}" r="${i%3?1.6:2.6}"/>`);
+    o+=`<text x="${cx-14}" y="${cy-190}">N</text><text x="${cx+170}" y="${cy+4}">E</text></g>`;
+    return `<svg viewBox="0 0 390 844" aria-hidden="true">${o}</svg>`;
+  },
+  contours(){
+    const ring=(cx,cy,r,k,dim)=>{ let d=''; for(let i=0;i<=72;i++){ const a=i/72*6.283; const rr=r*(1+.16*Math.sin(3*a+k*.7)+.07*Math.sin(7*a-k*1.3)+.04*Math.sin(11*a+k)); d+=(i?'L':'M')+(cx+rr*Math.cos(a)).toFixed(1)+' '+(cy+rr*Math.sin(a)).toFixed(1); } return `<path class="ln ${dim?'dim':''}" d="${d}Z"/>`; };
+    let o='<g class="breathe">';
+    for(let k=0;k<12;k++) o+=ring(310,150,36+k*34,k,false);
+    for(let k=0;k<7;k++) o+=ring(40,720,28+k*34,k+3,true);
+    o+=`<text x="258" y="84">140</text><text x="222" y="62">160</text><text x="196" y="40">180</text><circle class="node" cx="310" cy="150" r="2.4"/></g>`;
+    return `<svg viewBox="0 0 390 844" aria-hidden="true">${o}</svg>`;
+  },
+  stars(){
+    const rnd=seeded(5); let o='';
+    for(let i=0;i<70;i++){ const x=rnd()*390, y=rnd()*844, r=.5+rnd()*1.1; o+=`<circle class="node tw" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${(-rnd()*3).toFixed(2)}s;filter:none"/>`; }
+    const P=[[228,96],[318,142],[286,232],[352,74]];
+    o+=`<line class="lk" x1="${P[0]}" y1="${P[0][1]}" x2="${P[1][0]}" y2="${P[1][1]}"/>`.replace(`x1="${P[0]}"`,`x1="${P[0][0]}"`);
+    o+=`<line class="lk" x1="${P[1][0]}" y1="${P[1][1]}" x2="${P[2][0]}" y2="${P[2][1]}"/>`;
+    o+=`<line class="lk" x1="${P[2][0]}" y1="${P[2][1]}" x2="${P[0][0]}" y2="${P[0][1]}"/>`;
+    o+=`<line class="lk pend" x1="${P[1][0]}" y1="${P[1][1]}" x2="${P[3][0]}" y2="${P[3][1]}"/>`;
+    o+=`<line class="lk pend" x1="${P[0][0]}" y1="${P[0][1]}" x2="${P[3][0]}" y2="${P[3][1]}"/>`;
+    P.slice(0,3).forEach(([x,y])=> o+=`<circle class="node" cx="${x}" cy="${y}" r="3.2"/>`);
+    o+=`<circle class="node n4" cx="${P[3][0]}" cy="${P[3][1]}" r="3.2"/><circle class="ln" cx="${P[3][0]}" cy="${P[3][1]}" r="8" stroke-dasharray="2 3"/>`;
+    o+=`<line class="lk dim" x1="24" y1="700" x2="110" y2="760" style="opacity:.25"/><line class="lk dim" x1="110" y1="760" x2="70" y2="812" style="opacity:.25"/>`;
+    return `<svg viewBox="0 0 390 844" aria-hidden="true">${o}</svg>`;
+  },
+  radar(){
+    const cx=300, cy=150, rnd=seeded(23); let o='<g>';
+    for(let i=1;i<=6;i++) o+=`<circle class="ln" cx="${cx}" cy="${cy}" r="${i*66}"/>`;
+    for(let i=0;i<12;i++){ const a=i/12*6.283; o+=`<line class="ln dim" x1="${cx}" y1="${cy}" x2="${(cx+420*Math.cos(a)).toFixed(1)}" y2="${(cy+420*Math.sin(a)).toFixed(1)}"/>`; }
+    for(let i=0;i<8;i++){ const r=66*(1+Math.floor(rnd()*5)), a=rnd()*6.283; const d=((a/6.283)*7).toFixed(2); o+=`<circle class="node blip" cx="${(cx+r*Math.cos(a)).toFixed(1)}" cy="${(cy+r*Math.sin(a)).toFixed(1)}" r="2.4" style="animation-delay:${d}s"/>`; }
+    o+=`<text x="${cx+8}" y="${cy-250}">000</text><text x="${cx+260}" y="${cy+4}">090</text></g>`;
+    return `<div class="sweep"></div><svg viewBox="0 0 390 844" aria-hidden="true">${o}</svg>`;
+  }
+};
+const VARIANTS = [
+  { id:'orbits',   name:'Orbits',        sw:'#38e1ff', cap:'Concentric rings, a few lit nodes, the lines between them. Turns once every few minutes. Cyan on deep ink.', hex:'#06101a · #38e1ff' },
+  { id:'contours', name:'Contours',      sw:'#ffb02e', cap:'Topographic lines around a single peak behind the title, a second low rise bottom-left, elevation labels. Breathes very slowly. Amber on warm black.', hex:'#0d0a06 · #ffb02e' },
+  { id:'stars',    name:'Constellation', sw:'#ffe7a3', cap:'The four nodes are the four people. Three lit and joined, the fourth dim with dashed lines waiting. Forms: the fourth lights and the shape closes. Starlight gold on midnight.', hex:'#0a0d1a · #ffd45c' },
+  { id:'radar',    name:'Radar',         sw:'#ff5c7a', cap:'A graticule with twelve bearings, a sweep that passes every seven seconds, blips that fade behind it. Signal red on near-black.', hex:'#0c0609 · #ff5c7a' },
+];
+
+/* ---------- pages ---------- */
+function planPhone(id, v){
+  return `<div class="phone night v-${v}" id="${id}">
+    <div class="sky">${SKY[v]()}</div>${STATUS}${HEAD}
+    <div class="screen">
+      <div class="eyeb"><i></i><span data-state>Open · forms at 4</span></div>
+      <h2>Overnight <em>boat</em></h2>
+      <div class="where"><b>Fri 20 Feb, 6:00pm</b>, back Saturday by 10am<br>Cat Ba pier, Halong · about $180 a person</div>
+      <div class="count">
+        <span class="big" data-count>3</span><span class="of">of 4</span>
+        <div class="bars" data-bars><b class="f"></b><b class="f"></b><b class="f"></b><b></b></div>
+        <div class="lead" data-lead>One more <span>and it forms.</span></div>
+      </div>
+      <div class="faces">
+        <div class="p">${face(12)}<span>Marcus</span></div>
+        <div class="p">${face(47)}<span>Elena</span></div>
+        <div class="p">${face(33)}<span>Tom</span></div>
+        <div class="p slot" data-slot><span class="face">+1</span><span>one more</span></div>
+      </div>
+      <div class="out">${face(59,64)}Ravi can't make it</div>
+      <div class="det">
+        <div><span><a href="#">Operator page</a> · Bai Tho Junks</span><small>Marcus</small></div>
+        <div><span>Twin cabin per person. Whoever's in books it.</span><small>Tom</small></div>
+        <div><span><a href="#">What to pack</a> for a night on the bay</span><small>Elena</small></div>
+      </div>
+    </div>
+    <div class="bar"><button class="cta" data-cta>I'm in</button><span class="alt" data-alt>Can't make it</span></div>
+  </div>`;
+}
+function dnfPhone(id, v){
+  return `<div class="phone night dnf v-${v}" id="${id}">
+    <div class="sky">${SKY[v]()}</div>${STATUS}${HEAD}
+    <div class="screen">
+      <div class="eyeb"><i></i><span>Didn't form · 2 of 4</span></div>
+      <h2>Wine <em>night</em></h2>
+      <div class="where"><b>Was Thu 12 Feb, 8:00pm</b><br>Tannin, Hai Ba Trung · closed after 14 days</div>
+      <div class="count">
+        <span class="big">2</span><span class="of">of 4</span>
+        <div class="bars"><b class="f"></b><b class="f"></b><b></b><b></b></div>
+        <div class="lead">Two were in. <span>Nobody has to chase anyone.</span></div>
+      </div>
+      <div class="faces">
+        <div class="p">${face(12)}<span>Marcus</span></div>
+        <div class="p">${face(47)}<span>Elena</span></div>
+        <div class="p slot"><span class="face"></span><span>&nbsp;</span></div>
+        <div class="p slot"><span class="face"></span><span>&nbsp;</span></div>
+      </div>
+      <div class="det"><div><span>Try a different night? Posting again starts a fresh count.</span><small>Loop</small></div></div>
+    </div>
+    <div class="bar"><button class="cta ghost">Post it again</button><span class="alt"><a href="#">Back to EMBA 2027</a></span></div>
+  </div>`;
+}
+function row(t, s, n, of, faces, st, tag){
+  const bars = Array.from({length:of}, (_,i)=>`<b class="${i<n?'f':''}"></b>`).join('');
+  const stack = faces.map(f=> f==null ? `<span class="face slot"></span>` : face(f,64)).join('');
+  return `<a class="row" href="#">
+    <div><div class="t">${t}</div><div class="s">${s}</div>${st?`<div class="st ${st.q?'q':''}"><i></i>${st.text}</div>`:''}<div class="stack">${stack}</div></div>
+    <div class="n">${tag ? `<div class="num">${n}</div><div class="tag ${tag.on?'on':''}">${tag.text}</div>` : `<div class="num">${n}<small>/${of}</small></div><div class="mini">${bars}</div>`}</div>
+  </a>`;
+}
+function spacePhone(id, v){
+  return `<div class="phone night v-${v}" id="${id}">
+    <div class="sky">${SKY[v]()}</div>${STATUS}${HEAD}
+    <div class="screen">
+      <div class="eyeb"><i></i><span>Space · 4 open · 2 meeting this week</span></div>
+      <h2>EMBA <em>2027</em></h2>
+      <div class="where">38 in the space · open to the cohort</div>
+      <div class="sec"><span>Open</span><b>forms at 4</b></div>
+      ${row('Overnight boat','<b>Fri 20 Feb</b> · 6:00pm · Cat Ba pier',3,4,[12,47,33,null],{text:'One more and it forms'})}
+      ${row('Tuesday case prep','<b>Tue</b> · 7:30pm · Library 2F',2,4,[5,20,null,null])}
+      ${row('Dim sum Sunday','<b>Sun 22 Feb</b> · 11:00am · Tim Ho Wan',1,4,[8,null,null,null],{text:'You posted this · 9 days left',q:true})}
+      ${row('Padel, beginners','<b>Sat</b> · 4:00pm · Saigon Sports Club',2,4,[26,41,null,null])}
+      <div class="sec"><span>Meeting this week</span><b>every week</b></div>
+      ${row('Thursday run','<b>Thu</b> · 6:30am · the Bund',5,6,[8,14,22,31,44],{text:'4 of 5 said still on'},{text:'5 in',on:true})}
+      ${row('Poker','<b>Sat</b> · 9:00pm · at Tom\'s',6,6,[33,12,17,25,38,51],null,{text:'full'})}
+      <div class="wrapped" data-wrapped><div class="wh"><span>Wrapped up <small>· 3</small></span><small data-wlabel>show</small></div><div class="lines"></div></div>
+    </div>
+    <div class="bar"><button class="cta">Post an intent</button><span class="alt"><a href="#">Copy the space link</a></span></div>
+  </div>`;
+}
+function mePhone(id, v){
+  return `<div class="phone night v-${v}" id="${id}">
+    <div class="sky">${SKY[v]()}</div>${STATUS}${HEAD}
+    <div class="screen nobar">
+      <div class="eyeb"><i></i><span>Your week · Mon 16 Feb</span></div>
+      <h2>Your <em>week</em></h2>
+      <div class="where">2 crews · 1 forming · 1 you posted</div>
+      <div class="sec"><span>This week</span><b>still on?</b></div>
+      ${row('Thursday run','<b>Thu 6:30am</b> · the Bund · in 3 days',5,6,[8,14,22,31,44],{text:'You said yes · 4 of 5 so far'},{text:'5 in',on:true})}
+      ${row('Poker','<b>Sat 9:00pm</b> · at Tom\'s',6,6,[33,12,17,25,38,51],{text:'Reminder comes Friday',q:true},{text:'full'})}
+      <div class="sec"><span>Forming</span><b>you're in</b></div>
+      ${row('Overnight boat','<b>Fri 20 Feb</b> · 6:00pm · Cat Ba pier',3,4,[12,47,8,null],{text:'One more and it forms'})}
+      <div class="sec"><span>You posted</span></div>
+      ${row('Dim sum Sunday','<b>Sun 22 Feb</b> · 11:00am · Tim Ho Wan',1,4,[8,null,null,null],{text:'9 days left, then it closes',q:true})}
+      <div class="optin">
+        <p><b>Let the EMBA office see whether you're in a standing crew</b>They see yes or no, and how many weeks. Not which crew, not who with, not anything you post.<small>Off by default. Change it any time.</small></p>
+        <button class="tog" role="switch" aria-checked="false" aria-label="Share with steward" data-tog></button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- behaviour ---------- */
+function countTo(node, to, ms=800){
+  const from=parseInt(node.textContent,10)||0; if(RM){ node.textContent=to; return; }
+  const t0=performance.now();
+  const step=(now)=>{ const p=Math.min(1,(now-t0)/ms); const e=1-Math.pow(1-p,4); node.textContent=Math.round(from+(to-from)*e); if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function form(ph){
+  if(ph.classList.contains('formed')) return;
+  ph.classList.add('formed');
+  const q=(s)=>ph.querySelector(s);
+  countTo(q('[data-count]'),4);
+  setTimeout(()=>q('[data-bars]').children[3].classList.add('f'),400);
+  q('[data-slot]').replaceWith(el(`<div class="p enter">${face(8)}<span>You</span></div>`));
+  setTimeout(()=>{
+    q('[data-state]').textContent='Formed · 4 of 4';
+    q('[data-lead]').innerHTML='Formed. <span>One message went to all 4.</span>';
+    q('[data-cta]').innerHTML=`${CHECK}You're in · Fri 20 Feb`;
+    q('[data-alt]').innerHTML='<a href="#">Add to calendar</a>';
+  },500);
+}
+const initial={};
+function init(ph){
+  const cta=ph.querySelector('[data-cta]'); if(cta) cta.addEventListener('click',()=>form(ph));
+  const w=ph.querySelector('[data-wrapped]');
+  if(w){ w.querySelector('.lines').innerHTML=['Wine night · didn\'t form · 2 of 4','Padel, advanced · didn\'t form · 1 of 4','Book club · wrapped up after 7 weeks'].map(l=>`<div>${l}</div>`).join('');
+    w.addEventListener('click',()=>{ w.classList.toggle('open'); w.querySelector('[data-wlabel]').textContent=w.classList.contains('open')?'hide':'show'; }); }
+  const tog=ph.querySelector('[data-tog]'); if(tog) tog.addEventListener('click',()=>tog.setAttribute('aria-checked', tog.getAttribute('aria-checked')==='true'?'false':'true'));
+}
+
+const rail=document.getElementById('variants');
+VARIANTS.forEach((v,i)=>{
+  rail.appendChild(el(`<div class="col">
+    <div class="lbl"><span>${String.fromCharCode(65+i)} · <b>${v.name}</b></span><button data-replay="v-${v.id}">Replay</button></div>
+    ${planPhone('v-'+v.id, v.id)}
+    <div class="cap"><b>${v.name}.</b> ${v.cap} <i>${v.hex}</i></div>
+  </div>`));
+});
+const pages=document.getElementById('pages');
+pages.appendChild(el(`<div class="col"><div class="lbl"><span>Space page · <b>EMBA 2027</b></span></div>${spacePhone('space','orbits')}<div class="cap"><b>Space.</b> Open intents with their count and who is in, crews meeting this week with their still-on status, wrapped-up plans folded but visible. Post an intent is the one pinned action.</div></div>`));
+pages.appendChild(el(`<div class="col"><div class="lbl"><span>My plans · <b>Your week</b></span></div>${mePhone('me','orbits')}<div class="cap"><b>My plans.</b> This week's crews and your still-on answer, the plan you are waiting on, the one you posted, and the steward opt-in, off by default.</div></div>`));
+pages.appendChild(el(`<div class="col"><div class="lbl"><span>Plan page · <b>Didn't form</b></span></div>${dnfPhone('dnf','orbits')}<div class="cap"><b>Didn't form.</b> The lines go grey and stop moving, the nodes go out, the count stays honest at 2 of 4.</div></div>`));
+
+const chips=document.getElementById('chips');
+VARIANTS.forEach((v,i)=>{
+  const b=el(`<button class="chip" aria-pressed="${i===0}" data-v="${v.id}"><b style="background:${v.sw}"></b>${v.name}</button>`);
+  b.addEventListener('click',()=>{
+    chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true');
+    pages.querySelectorAll('.phone').forEach(ph=>{ ph.className=ph.className.replace(/v-\w+/,'v-'+v.id); ph.querySelector('.sky').innerHTML=SKY[v.id](); });
+  });
+  chips.appendChild(b);
+});
+document.querySelectorAll('.phone').forEach(p=>{ initial[p.id]=p.outerHTML; init(p); });
+document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>{ const old=document.getElementById(b.dataset.replay); const fresh=el(initial[old.id]); old.replaceWith(fresh); init(fresh); }));
+</script>
+</body>
+</html>
