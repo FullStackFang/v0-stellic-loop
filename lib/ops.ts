@@ -12,6 +12,7 @@ import { isIdled, minOf } from "./quorum";
 import { allocateBoard, slugify } from "./slug";
 import { shareToken } from "./tokens";
 import type { Answer, Board, DetailKind, Proposal } from "./types";
+import { validateIntent } from "./intent";
 
 export type OpError = { status: "error"; error: string };
 
@@ -120,6 +121,7 @@ export async function mintShare(q: Q, p: Proposal, sharerId: string | null): Pro
 }
 
 export type PostInput = {
+  intent?: unknown;
   title?: unknown;
   day?: unknown;
   place?: unknown;
@@ -158,11 +160,13 @@ export function linkLabel(url: string): string {
 }
 
 export function parsePost(input: PostInput) {
+  const intent = validateIntent(input.intent);
+  if (!intent) return { error: "bad_intent" as const };
   const title = text(input.title, 81);
   if (!title || title.length > 80) return { error: "need_title" as const };
   const day = input.day == null || input.day === "" ? null : input.day;
   if (day !== null && !isValidDay(day)) return { error: "bad_day" as const };
-  return { title, day: day as string | null, place: text(input.place, 200),
+  return { title, intent, day: day as string | null, place: text(input.place, 200),
     icon: DEFAULT_ICON, needsDay: false, detail: null, cost: null, min: null,
     time: text(input.time, 40), links: [] as string[],
     versionOf: isUuid(input.versionOf) ? input.versionOf : null };
@@ -193,9 +197,9 @@ export async function postAs(q: Q, personId: string, boardId: string, input: Pos
     if (orig && orig.board_id === boardId) versionOf = orig.id;
   }
   const { rows } = await q.query<{ id: string }>(
-    `insert into proposal (board_id, poster_id, title, icon, detail, cost_text, time_text, needs_day, min_count, version_of, deadline, day, place)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id`,
-    [boardId, personId, v.title, v.icon, v.detail, v.cost, v.time, v.needsDay, v.min, versionOf, deadline, v.day, v.place],
+    `insert into proposal (board_id, poster_id, title, icon, detail, cost_text, time_text, needs_day, min_count, version_of, deadline, day, place, intent)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning id`,
+    [boardId, personId, v.title, v.icon, v.detail, v.cost, v.time, v.needsDay, v.min, versionOf, deadline, v.day, v.place, JSON.stringify(v.intent)],
   );
   const id = rows[0].id;
   const days = v.needsDay ? (await attachableDays(q, boardId, personId, id)).days : [];
@@ -262,4 +266,3 @@ export function classifyDetail(raw: string): { kind: DetailKind; text: string; u
   if (url) return { kind: MAPS.test(s) ? "where" : "link", text: linkLabel(url), url };
   return { kind: "note", text: s.slice(0, 280), url: null };
 }
-

@@ -4,6 +4,7 @@ import { best, heat, ins, minOf, stateOf } from "./quorum";
 import type { Proposal, Response } from "./types";
 import { hourOf } from "./hour";
 import type { Sky } from "./solar";
+import { emptyIntent, type Intent } from "./intent";
 export type Viewer = { id: string; show_name: boolean } | null;
 export type PlanFace = { id: string; name: string; initial: string };
 export type PlanModel = {
@@ -12,6 +13,7 @@ export type PlanModel = {
   when: string; place: string | null; time: string | null; hour: number; sky: Sky;
   faces: PlanFace[]; dropped: PlanFace[]; me: "in" | "out" | null; posterId: string | null;
   deadline: string | null; temperature?: number;
+  intent: Intent;
 };
 
 export function planModel(p: Proposal, data: BoardData, viewer: Viewer, now = new Date()): PlanModel {
@@ -28,7 +30,7 @@ export function planModel(p: Proposal, data: BoardData, viewer: Viewer, now = ne
   };
   const mine = rs.find(r => r.person_id === viewer?.id)?.answer;
   return {
-    id: p.id, title: p.title, state, count, threshold, remaining,
+    id: p.id, title: p.title, state, count, threshold, remaining, intent: p.intent ?? emptyIntent(),
     lead: state === "formed" || state === "past" ? "formed" : state === "didnt_form" || state === "closed" ? "closed" : remaining === 1 ? "one more" : `${remaining} more`,
     day, when: [day ? `${dow(day)} ${dayNum(day)} ${mon(day)}` : "Any day", p.time_text].filter(Boolean).join(", "),
     place: p.place ?? null, time: p.time_text, hour: hourOf(p.time_text), sky: "clear",

@@ -6,6 +6,7 @@ import { boardById, proposalById } from "@/lib/load";
 import { countedDays, todayIn } from "@/lib/days";
 import { isIdled } from "@/lib/quorum";
 import { classifyDetail } from "@/lib/ops";
+import { validateIntent } from "@/lib/intent";
 import type { DetailKind } from "@/lib/types";
 import { fail, type Fail } from "./results";
 
@@ -42,6 +43,8 @@ export async function editProposal(input: { proposalId: string; detail?: string 
   const me = await sessionPersonId();
   if (!me) return fail("signed_out");
   const clean = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().replace(/\s+/g, " ").slice(0, max) : null);
+  const intent = "intent" in input ? validateIntent(input.intent) : undefined;
+  if (intent === null) return fail("bad_intent");
   const out = await db().tx(async (q) => {
     const p = await proposalById(q, input.proposalId, true);
     if (!p) return fail("not_found");
@@ -53,7 +56,8 @@ export async function editProposal(input: { proposalId: string; detail?: string 
     const time = "time" in input ? clean(input.time, 40) : p.time_text;
     const place = "place" in input ? clean(input.place, 200) : p.place ?? null;
     await q.query("update proposal set day = $2, time_text = $3, place = $4, deadline = coalesce($2::date, (created_at at time zone $5)::date + 13), needs_day = $6 where id = $1", [p.id, day, time, place, board.tz, "day" in input ? false : p.needs_day]);
-    await writeEvent(q, { boardId: p.board_id, proposalId: p.id, personId: me, type: "detail_added", ...(await attribution(q)), data: { day, time, place } });
+    if (intent) await q.query("update proposal set intent = $2 where id = $1", [p.id, JSON.stringify(intent)]);
+    await writeEvent(q, { boardId: p.board_id, proposalId: p.id, personId: me, type: "detail_added", ...(await attribution(q)), data: { day, time, place, ...(intent ? { intent } : {}) } });
     return { status: "ok" as const };
   });
   if (out.status === "ok") await setSession(me);

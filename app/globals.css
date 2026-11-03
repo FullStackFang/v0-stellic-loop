@@ -157,3 +157,31 @@
 .post-page .solid{width:100%;min-height:46px;margin-top:4px}
 .post-page .solid svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .post-page .cancel{display:block;width:max-content;margin:8px auto 0;padding:8px 16px;text-decoration:underline;font-size:13px;font-weight:700}
+
+/* Freeform intent: native writing surface and explicit, editable interpretation. */
+.post-page h1.ptitle{font-size:32px;line-height:1.05;text-transform:none}
+.intent-writing{background:#ffdc46;border:2px solid var(--ink);box-shadow:4px 5px 0 var(--ink);padding:13px;margin:0 5px 20px 0}
+.intent-writing label,.intent-label{display:block;font-size:11px;font-weight:800;margin-bottom:7px}
+.intent-writing textarea{display:block;width:100%;resize:vertical;border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:25px;font-weight:800;line-height:1.25;padding:0;min-height:94px;border-radius:0}
+.intent-writing textarea::placeholder{color:#62572c;opacity:1}
+.intent-writing p{font-size:11px;margin:9px 0 0;line-height:1.4}
+.intent-read{margin-bottom:14px}
+.intent-pins{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.intent-pin{display:inline-block;max-width:100%;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:6px;padding:7px 9px;font-size:13px;font-weight:650;overflow-wrap:anywhere;text-align:left;line-height:1.2;min-height:34px}
+.intent-activity{display:block;font-weight:850;font-size:19px;border:0;padding:0 0 8px;background:transparent;color:inherit;border-radius:0;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:4px;min-height:0;max-width:100%;overflow-wrap:anywhere}
+.intent-prefs-label{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:750;margin:13px 0 7px}.intent-prefs-label span{font-weight:450;font-size:10px}
+.intent-pin-pair{display:flex;max-width:100%;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;background:#ffdc46;color:var(--ink)}
+.intent-pin-pair .intent-pin{border:0;border-radius:0;background:transparent;min-width:0}
+.intent-pin-pair>button{border:0;border-left:1px solid var(--ink);background:transparent;color:var(--ink);padding:4px 9px;font-size:18px;min-width:34px}
+.intent-add{border-style:dashed;background:transparent;color:inherit;border-color:currentColor}
+.intent-hint{font-size:11px;line-height:1.4;margin:8px 0 0}
+.intent-quorum{border-top:1.5px solid var(--ink);padding-top:12px;margin:12px 0;font-size:12px;font-weight:700}
+.intent-editor{border:2px solid var(--ink);background:var(--paper);color:var(--ink);padding:12px;margin:12px 0}
+.intent-editor>label{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
+.intent-editor input{width:100%;border:1.5px solid var(--ink);border-radius:5px;padding:10px;background:var(--paper);color:var(--ink);font:inherit;font-size:16px}
+.intent-editor-actions{display:flex;align-items:center;gap:15px;margin-top:10px}.intent-editor-actions .alt{margin:0}
+.intent-composer :focus-visible{outline:3px solid #315bc4;outline-offset:3px}
+.intent-composer button:disabled,.intent-composer textarea:disabled{opacity:.65;cursor:default}
+.plan-preferences{margin-top:16px;text-shadow:none}.plan-preferences p{font-size:12px;line-height:1.4}
+.slot-edit .intent-composer{padding:12px;background:var(--paper);color:var(--ink);border-radius:10px}
+@media(max-width:360px){.post-page h1.ptitle{font-size:28px}.intent-writing textarea{font-size:22px;min-height:84px}.intent-writing{margin-bottom:16px}.intent-pin{font-size:12px;padding:6px 8px}.post-page{padding-top:12px}.post-page .pbody{font-size:13px;margin-bottom:12px}}

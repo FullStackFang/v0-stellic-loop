@@ -8,6 +8,7 @@ import { Faces } from "./Faces";
 import { ForecastChip } from "./ForecastChip";
 import { PlanActions } from "./PlanActions";
 import { DetailsBox, type DetailRow } from "./DetailsBox";
+import { RHYTHMS } from "@/lib/intent";
 
 export type PlanPageModel = { board: Board; c: PlanModel; details: DetailRow[]; signedIn: boolean; isPoster: boolean; viewerName: string | null };
 export function PlanView({ board, c, details, signedIn, isPoster }: PlanPageModel) {
@@ -17,7 +18,12 @@ export function PlanView({ board, c, details, signedIn, isPoster }: PlanPageMode
   return <>
     <div className="tag"><i /><span>{tag}</span></div><h1>{c.title}</h1>
     <div className="when">{ended ? "Was " : ""}<b>{c.when}</b>{c.place ? <><br />{c.place}</> : null}</div>
-    {isPoster && c.state === "open" ? <SlotEditor id={c.id} day={c.day} time={c.time} place={c.place} days={countedDays(board, todayIn(board.tz))} /> : null}
+    {c.intent.preferences.length || c.intent.rhythm !== "once" ? <div className="plan-preferences">
+      <div className="intent-label">Poster’s preferences</div>
+      <div className="intent-pins">{c.intent.preferences.map(pin => <span className="intent-pin" key={pin}>@{pin}</span>)}</div>
+      {c.intent.rhythm !== "once" ? <p>{RHYTHMS[c.intent.rhythm]} preferred. Each next plan needs a fresh count.</p> : null}
+    </div> : null}
+    {isPoster && c.state === "open" ? <SlotEditor key={JSON.stringify([c.day,c.time,c.place,c.intent])} id={c.id} title={c.title} intent={c.intent} day={c.day} time={c.time} place={c.place} days={countedDays(board, todayIn(board.tz))} /> : null}
     {ended ? <p>Nobody&apos;s fault.</p> : <ForecastChip sky={c.sky} temperature={c.temperature} time={c.time} />}
     <Count count={c.count} threshold={c.threshold} lead={c.lead} />
     <div className="lead">{ended ? `${c.count} were in. Nobody has to chase anyone.` : formed ? `Formed. One message went to all ${c.count}.` : `${c.remaining === 1 ? "One" : c.remaining} more and it forms.`}</div>

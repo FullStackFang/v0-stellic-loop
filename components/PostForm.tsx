@@ -4,27 +4,27 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { post } from "@/actions/post";
 import { verifyCode } from "@/actions/verifyCode";
-import { shortLabel } from "@/lib/days";
+import { emptyIntent, parseIntent, serializeIntent, type Intent } from "@/lib/intent";
+import { IntentComposer } from "./IntentComposer";
 import { Arrow } from "./atoms";
 import { IdentityFields, type Ident } from "./IdentityFields";
 
-export type PostPrefill = { versionOf: string; title: string; day: string | null; time: string | null; place: string | null };
+export type PostPrefill = { versionOf: string; title: string; day: string | null; time: string | null; place: string | null; intent?: Intent };
 export function PostForm({ slug, signedIn, from, days }: { slug: string; signedIn: boolean; from: PostPrefill | null; days: string[] }) {
   const router = useRouter();
   const [busy, start] = useTransition();
-  const [title, setTitle] = useState(from?.title ?? "");
-  const [day, setDay] = useState(from?.day && days.includes(from.day) ? from.day : "");
-  const [time, setTime] = useState(from?.time ?? "");
-  const [place, setPlace] = useState(from?.place ?? "");
+  const [raw, setRaw] = useState(() => from ? serializeIntent({ title: from.title, day: from.day && days.includes(from.day) ? from.day : "", time: from.time ?? "", place: from.place ?? "", intent: from.intent ?? emptyIntent() }) : "");
+  const { title, day, time, place, intent, errors } = parseIntent(raw, days);
   const [stage, setStage] = useState<"identity" | "code" | null>(null);
   const [ident, setIdent] = useState<Ident>({ name: "", phone: "", code: "" });
   const [error, setError] = useState<string | null>(null);
 
   function submit(withIdent: boolean) {
+    if (errors.length) return setError(errors[0]);
     setError(null);
     start(async () => {
       const r = await post({
-        slug, title, day, time, place, versionOf: from?.versionOf,
+        slug, title, day, time, place, intent, versionOf: from?.versionOf,
         ...(withIdent ? { name: ident.name, phone: ident.phone } : {}),
       });
       if (r.status === "needs_code") return setStage("code");
@@ -37,7 +37,7 @@ export function PostForm({ slug, signedIn, from, days }: { slug: string; signedI
   }
 
   function onPost() {
-    if (!title.trim()) return setError("Give it a title.");
+    if (errors.length) return setError(errors[0]);
     if (!signedIn && !stage) return setStage("identity");
     submit(stage === "identity");
   }
@@ -57,15 +57,11 @@ export function PostForm({ slug, signedIn, from, days }: { slug: string; signedI
   }
 
   return <div className="page post-page">
-    <h1 className="ptitle">{from ? "Post it again" : "Post an intent"}</h1>
-    <p className="pbody">A title is enough. You&apos;re in automatically.</p>
+    <h1 className="ptitle">{from ? "Post it again" : "What are you up for?"}</h1>
+    <p className="pbody">Say what you want. Leave the rest open.</p>
     <form onSubmit={e=>{e.preventDefault();onPost();}}>
-      <div className="field"><label htmlFor="pf-title">What</label><input id="pf-title" value={title} onChange={e=>setTitle(e.target.value)} maxLength={80} required /></div>
-      <div className="field"><label id="pf-day">Day <span className="optional">optional</span></label><div className="days" role="group" aria-labelledby="pf-day"><button type="button" aria-pressed={!day} onClick={()=>setDay("")}>Any day</button>{days.map(d=><button key={d} type="button" aria-pressed={day===d} onClick={()=>setDay(d)}>{shortLabel(d)}</button>)}</div></div>
-      <div className="slot-fields">
-        <div className="field"><label htmlFor="pf-time">Time <span className="optional">optional</span></label><input id="pf-time" placeholder="7:30pm" value={time} onChange={e=>setTime(e.target.value)} maxLength={40}/></div>
-        <div className="field"><label htmlFor="pf-place">Place <span className="optional">optional</span></label><input id="pf-place" value={place} onChange={e=>setPlace(e.target.value)} maxLength={200}/></div>
-      </div>
+      <IntentComposer value={raw} onChange={setRaw} days={days} disabled={busy || stage === "code"} />
+      <p className="intent-quorum">You’re the first yes. A plan forms at 4.</p>
       {error && !stage ? <div className="err" role="alert">{error}</div>:null}
       {!stage?<button className="solid" type="submit" disabled={busy}>Post an intent <Arrow/></button>:null}
     </form>

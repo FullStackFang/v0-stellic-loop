@@ -52,6 +52,7 @@ export type Person = {
 };
 
 export type Proposal = {
+  intent?: import("./intent").Intent;
   id: string;
   board_id: string;
   poster_id: string | null;

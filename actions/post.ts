@@ -21,7 +21,7 @@ export async function post(input: PostInput & { slug: string; name?: string; pho
     if (refused) return fail(refused);
     if (v.day && !countedDays(board, todayIn(board.tz)).includes(v.day)) return fail("bad_day");
     const fields: PostInput = {
-      title: input.title, day: input.day, time: input.time, place: input.place, versionOf: input.versionOf,
+      title: input.title, day: input.day, time: input.time, place: input.place, versionOf: input.versionOf, intent: v.intent,
     };
     const who = await withIdentity(q, input, { boardId: board.id, pending: { kind: "post", boardId: board.id, post: fields } });
     if (who.kind === "error" || who.kind === "needs_code") return fromWho(who);

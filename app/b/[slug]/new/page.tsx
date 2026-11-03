@@ -15,7 +15,7 @@ export default async function NewPage({ params, searchParams }: { params: Promis
   const [orig, me] = await Promise.all([again ? proposalById(q, again) : null, viewer(q)]);
   const prefill: PostPrefill | null =
     orig && orig.board_id === board.id && isIdled(orig, board)
-      ? { versionOf: orig.id, title: orig.title, day: orig.day ?? orig.on_day ?? null, time: orig.time_text, place: orig.place ?? null }
+      ? { versionOf: orig.id, title: orig.title, day: orig.day ?? orig.on_day ?? null, time: orig.time_text, place: orig.place ?? null, intent: orig.intent }
       : null;
   return (
     <Shell board={board} tab="new">

@@ -10,6 +10,7 @@ const MESSAGES: Record<string, string> = {
   closed: "This plan is closed to changes.",
   bad_answer: "Choose I am in or Can not make it.",
   need_title: "Give it a title.",
+  bad_intent: "Use a valid rhythm and up to 12 preferences, each 1–60 characters.",
   bad_min: "The number should be a whole number, 1 or more.",
   bad_link: "One of the links doesn't look like a web address.",
   not_in: "Tap in first.",
