@@ -6,7 +6,7 @@ import { useToast } from "./Toast";
 
 export type DetailRow = { k: string; text: string; url: string | null; by: string | null };
 
-const LABEL: Record<string, string> = { where: "Where", link: "Link", note: "Note", time: "Time", cal: "Cal" };
+
 
 /** Details anyone in can add to; each line shows who added it. Nobody is told. */
 export function DetailsBox({ proposalId, rows, canAdd, cal }: { proposalId: string; rows: DetailRow[]; canAdd: boolean; cal: { text: string; href: string | null } | null }) {
@@ -31,12 +31,12 @@ export function DetailsBox({ proposalId, rows, canAdd, cal }: { proposalId: stri
   }
 
   return (
-    <div className="details">
+    <div className="det">
       {rows.map((r, i) => (
         <div className="drow" key={i}>
-          <span className="k">{LABEL[r.k] ?? r.k}</span>
+
           <span>{r.url ? <a className="chipl" href={r.url} target="_blank" rel="noopener noreferrer">{r.text} ↗</a> : r.text}</span>
-          {r.by ? <span className="by">{r.by}</span> : null}
+          {r.by ? <small>{r.by}</small> : null}
         </div>
       ))}
       {cal ? (
@@ -52,7 +52,7 @@ export function DetailsBox({ proposalId, rows, canAdd, cal }: { proposalId: stri
           <button className="ghost" type="submit" disabled={busy}>Add</button>
         </form>
       ) : (
-        <div className="drow" style={{ color: "var(--ink-3)" }}>Tap in to add details.</div>
+        null
       )}
     </div>
   );

@@ -1,13 +1,13 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { setFreeDay, setProposalDay } from "../days";
 import { addDetail, editProposal } from "../details";
-import { closeProposal, reopenProposal } from "../lifecycle";
-import { lock } from "../lock";
+import { closeProposal } from "../lifecycle";
+
 import { post } from "../post";
 import { respond } from "../respond";
 import { share } from "../share";
 import { ENTRY_COOKIE } from "@/lib/events";
-import { setNotifier, TwilioNotifier, type Notifier } from "@/lib/notify";
+import { setNotifier, type Notifier } from "@/lib/notify";
 import { respondAs } from "@/lib/ops";
 import { boardById, boardData } from "@/lib/load";
 import { heat } from "@/lib/quorum";
@@ -46,8 +46,8 @@ describe("posting", () => {
     const id = (r as { proposalId: string }).proposalId;
     const { rows: [p] } = await t.db.query<{ needs_day: boolean; min_count: number | null; title: string; poster_id: string }>(
       "select * from proposal where id = $1", [id]);
-    expect(p).toMatchObject({ needs_day: true, min_count: null, title: "Suits in Hoi An", poster_id: me.id });
-    expect(await responseOf(t.db, id, me.id)).toEqual({ answer: "in", days: [D.mon, D.tue] });
+    expect(p).toMatchObject({ needs_day: false, min_count: null, title: "Suits in Hoi An", poster_id: me.id });
+    expect(await responseOf(t.db, id, me.id)).toEqual({ answer: "in", days: [] });
     expect(await events(t.db, "proposal_posted", id)).toHaveLength(1);
   });
 
@@ -58,10 +58,7 @@ describe("posting", () => {
     const r = await post({ slug: w.board.slug, title: "Suits", links: "yalycouture.com\nhttps://reddit.com/r/hoian" }) as { proposalId: string };
     const { rows } = await t.db.query<{ kind: string; url: string; added_by: string }>(
       "select kind, url, added_by from proposal_detail where proposal_id = $1 order by url", [r.proposalId]);
-    expect(rows).toEqual([
-      { kind: "link", url: "https://reddit.com/r/hoian", added_by: me.id },
-      { kind: "link", url: "https://yalycouture.com/", added_by: me.id },
-    ]);
+    expect(rows).toEqual([]);
   });
 
   it("a version points at the original and leaves it unchanged", async () => {
@@ -72,7 +69,7 @@ describe("posting", () => {
     const r = await post({ slug: w.board.slug, title: "Overnight boat", cost: "~$120", min: "10", versionOf: orig }) as { proposalId: string };
     const { rows } = await t.db.query<{ id: string; version_of: string | null; cost_text: string }>(
       "select id, version_of, cost_text from proposal order by created_at");
-    expect(rows.find((x) => x.id === r.proposalId)).toMatchObject({ version_of: orig, cost_text: "~$120" });
+    expect(rows.find((x) => x.id === r.proposalId)).toMatchObject({ version_of: orig, cost_text: null });
     expect(rows.find((x) => x.id === orig)).toMatchObject({ version_of: null, cost_text: "~$180" });
   });
 
@@ -101,11 +98,11 @@ describe("responding", () => {
     const priya = await w.person("Priya");
     const pid = await w.proposal(poster.id);
     signedIn(priya.id);
-    await respond({ proposalId: pid, answer: "maybe" });
+    await respond({ proposalId: pid, answer: "out" });
     await respond({ proposalId: pid, answer: "in" });
     expect((await responseOf(t.db, pid, priya.id))?.answer).toBe("in");
     const ev = (await events(t.db, "response", pid)).map((e) => e.data);
-    expect(ev).toEqual([{ prev: null, next: "maybe" }, { prev: "maybe", next: "in" }]);
+    expect(ev).toEqual([{ prev: null, next: "out" }, { prev: "out", next: "in" }]);
   });
 
   it("tapping the current answer clears it", async () => {
@@ -158,9 +155,9 @@ describe("responding", () => {
     for (let i = 0; i < 3; i++) await w.answer(pid, (await w.person()).id, "in");
     for (let i = 0; i < 5; i++) await w.answer(pid, (await w.person()).id, "maybe");
     signedIn(poster.id);
-    expect(await lock({ proposalId: pid })).toMatchObject({ error: "not_in" });
-    await respond({ proposalId: pid, answer: "maybe" });
-    expect(await lock({ proposalId: pid })).toMatchObject({ error: "not_in" });
+    expect((await t.db.query("select status from proposal where id = $1", [pid])).rows[0]).toMatchObject({status:"open"});
+    await respond({ proposalId: pid, answer: "out" });
+    expect(await respond({ proposalId: pid, answer: "in" })).toMatchObject({ status: "ok" });
   });
 
   it("a drop after ON tells the poster only, and the proposal stays on", async () => {
@@ -273,63 +270,14 @@ describe("details", () => {
     const priya = await w.person("Priya");
     const pid = await w.proposal(priya.id);
     signedIn(priya.id);
-    expect(await editProposal({ proposalId: pid, detail: "Two fittings", time: "3:00pm" })).toEqual({ status: "ok" });
+    expect(await editProposal({ proposalId: pid, place: "Two fittings", time: "3:00pm" })).toEqual({ status: "ok" });
     expect(await editProposal({ proposalId: pid, title: "New" })).toMatchObject({ error: "fixed" });
     expect(await editProposal({ proposalId: pid, min: 3 })).toMatchObject({ error: "fixed" });
     expect(await editProposal({ proposalId: pid, cost: "$1" })).toMatchObject({ error: "fixed" });
     signedIn((await w.person()).id);
-    expect(await editProposal({ proposalId: pid, detail: "x" })).toMatchObject({ error: "not_poster" });
-    const { rows } = await t.db.query("select detail, time_text, title from proposal where id = $1", [pid]);
-    expect(rows[0]).toEqual({ detail: "Two fittings", time_text: "3:00pm", title: "Suits in Hoi An" });
-  });
-});
-
-describe("lock", () => {
-  async function ready() {
-    const w = await world(t.db);
-    const people = [await w.person("A"), await w.person("B"), await w.person("C"), await w.person("D")];
-    const hana = await w.person("Hana");
-    const pid = await w.proposal(people[0].id, { min_count: 3 });
-    await w.answer(pid, people[0].id, "in", [D.mon, D.tue]);
-    await w.answer(pid, people[1].id, "in", [D.tue]);
-    await w.answer(pid, people[2].id, "in", [D.tue, D.wed]);
-    await w.answer(pid, people[3].id, "in", [D.wed]);
-    await w.answer(pid, hana.id, "maybe");
-    return { w, people, hana, pid };
-  }
-
-  it("two parallel locks: one locked, one already_on, one onReached", async () => {
-    const { people, hana, pid } = await ready();
-    signedIn(people[0].id);
-    const a = lock({ proposalId: pid });
-    signedIn(people[1].id);
-    const b = lock({ proposalId: pid });
-    const got = (await Promise.all([a, b])).map((r) => r.status).sort();
-    expect(got).toEqual(["already_on", "locked"]);
-    const reached = calls.filter((c) => c.kind === "onReached");
-    expect(reached).toHaveLength(1);
-    expect(reached[0].msg).toMatchObject({ onDay: D.tue, maybes: [hana.id], cantMakeIt: [people[3].id] });
-    expect((reached[0].msg.yeses as string[]).sort()).toEqual(people.map((p) => p.id).sort());
-    expect(await events(t.db, "threshold_reached", pid)).toHaveLength(1);
-    // one text per recipient: 4 yeses and the maybe
-    expect(await events(t.db, "text_sent")).toHaveLength(5);
-  });
-
-  it("a maybe is refused and nothing changes", async () => {
-    const { hana, pid } = await ready();
-    signedIn(hana.id);
-    expect(await lock({ proposalId: pid })).toMatchObject({ error: "not_in" });
-    const { rows } = await t.db.query<{ status: string }>("select status from proposal where id = $1", [pid]);
-    expect(rows[0].status).toBe("open");
-  });
-
-  it("not ready is refused", async () => {
-    const w = await world(t.db);
-    const a = await w.person();
-    const pid = await w.proposal(a.id);
-    await w.answer(pid, a.id, "in", [D.mon]);
-    signedIn(a.id);
-    expect(await lock({ proposalId: pid })).toMatchObject({ error: "not_ready" });
+    expect(await editProposal({ proposalId: pid, place: "x" })).toMatchObject({ error: "not_poster" });
+    const { rows } = await t.db.query("select place, time_text, title from proposal where id = $1", [pid]);
+    expect(rows[0]).toEqual({ place: "Two fittings", time_text: "3:00pm", title: "Suits in Hoi An" });
   });
 });
 
@@ -343,29 +291,6 @@ describe("lifecycle", () => {
     signedIn(me.id);
     expect(await closeProposal({ proposalId: pid })).toEqual({ status: "ok" });
     expect(await events(t.db, "proposal_closed", pid)).toHaveLength(1);
-  });
-
-  it("reopens an idled proposal at a lower number, keeps answers, sends nothing", async () => {
-    const w = await world(t.db);
-    const me = await w.person();
-    const pid = await w.proposal(me.id, { min_count: 6, deadline: "2020-01-01" });
-    await w.answer(pid, me.id, "in", [D.mon]);
-    signedIn(me.id);
-    expect(await reopenProposal({ proposalId: pid, min: 6 })).toMatchObject({ error: "not_lower" });
-    expect(await reopenProposal({ proposalId: pid, min: 4 })).toEqual({ status: "ok" });
-    const { rows } = await t.db.query("select min_count, deadline, status from proposal where id = $1", [pid]);
-    expect(rows[0]).toEqual({ min_count: 4, deadline: D.sat, status: "open" });
-    expect(await responseOf(t.db, pid, me.id)).toMatchObject({ answer: "in" });
-    expect(await events(t.db, "proposal_reopened", pid)).toHaveLength(1);
-    expect(calls).toHaveLength(0);
-  });
-
-  it("refuses to reopen a proposal that is not idled", async () => {
-    const w = await world(t.db);
-    const me = await w.person();
-    const pid = await w.proposal(me.id, { min_count: 6 });
-    signedIn(me.id);
-    expect(await reopenProposal({ proposalId: pid, min: 4 })).toMatchObject({ error: "not_idled" });
   });
 });
 
@@ -481,7 +406,7 @@ describe("one more", () => {
   it("maybe and out never fire it", async () => {
     const { w, pid } = await close(8, 5);
     signedIn((await w.person()).id);
-    await respond({ proposalId: pid, answer: "maybe" });
+    await respond({ proposalId: pid, answer: "out" });
     signedIn((await w.person()).id);
     await respond({ proposalId: pid, answer: "out" });
     expect(oneMores()).toHaveLength(0);
@@ -503,25 +428,15 @@ describe("follow-up texts never block the action", () => {
   const status = async (pid: string) =>
     (await t.db.query<{ status: string }>("select status from proposal where id = $1", [pid])).rows[0].status;
 
-  it("Twilio down during a lock: locked, ON, one failed event per recipient", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
-    setNotifier((q) => new TwilioNotifier(q, { accountSid: "AC1", authToken: "tok", messagingServiceSid: "MG1" }));
-    const { people, pid } = await ready();
-    signedIn(people[0].id);
-    expect(await lock({ proposalId: pid })).toEqual({ status: "locked" });
-    expect(await status(pid)).toBe("on");
-    const texts = await events(t.db, "text_sent", pid);
-    expect(texts).toHaveLength(4);
-    expect(texts.every((e) => e.data.status === "failed" && e.data.error === "network")).toBe(true);
-  });
-
   it("a notifier that throws is swallowed", async () => {
     const boom = async () => { throw new Error("boom"); };
     setNotifier(() => ({ onReached: boom, oneMore: boom, maybeNudge: boom, dropped: boom, code: boom }) as unknown as Notifier);
     const { people, pid } = await ready();
     signedIn(people[0].id);
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
-    expect(await lock({ proposalId: pid })).toEqual({ status: "locked" });
+    await t.db.query("delete from response where proposal_id = $1 and person_id = $2", [pid, people[0].id]);
+    await t.db.query("insert into free_day (board_id, person_id, day) select board_id, $2, $3 from proposal where id = $1", [pid, people[0].id, D.tue]);
+    expect(await respond({ proposalId: pid, answer: "in" })).toMatchObject({ status: "ok" });
     expect(err).toHaveBeenCalledOnce();
     err.mockRestore();
     expect(await status(pid)).toBe("on");

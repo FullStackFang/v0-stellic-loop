@@ -3,7 +3,7 @@ import type { Q } from "./db";
 import { conflictsFor, type Conflicts } from "./quorum";
 import type { Board, Detail, Person, Proposal, Response } from "./types";
 
-const BOARD_COLS = "id, slug, name, tz, window_kind, window_start, window_end";
+const BOARD_COLS = "id, slug, name, tz, window_kind, window_start, window_end, lat, lon, steward_label";
 
 export async function boardBySlug(q: Q, slug: string): Promise<Board | null> {
   const { rows } = await q.query<Board>(`select ${BOARD_COLS} from board where slug = $1`, [slug]);
@@ -67,11 +67,12 @@ export type BoardData = {
   responses: Response[];
   people: Map<string, Pick<Person, "id" | "name" | "show_name">>;
   conflicts: Conflicts;
+  droppedAfterFormation?: Set<string>;
 };
 
 /** Everything a board or proposal page renders from. */
 export async function boardData(q: Q, board: Board): Promise<BoardData> {
-  const [{ rows: proposals }, { rows: responses }, { rows: people }] = await Promise.all([
+  const [{ rows: proposals }, { rows: responses }, { rows: people }, { rows: dropped }] = await Promise.all([
     q.query<Proposal>("select * from proposal where board_id = $1", [board.id]),
     q.query<Response>(
       "select r.* from response r join proposal p on p.id = r.proposal_id where p.board_id = $1 order by r.updated_at",
@@ -85,8 +86,10 @@ export async function boardData(q: Q, board: Board): Promise<BoardData> {
           or pe.id in (select d.added_by from proposal_detail d join proposal p on p.id = d.proposal_id where p.board_id = $1)`,
       [board.id],
     ),
+    q.query<{proposal_id:string;person_id:string}>(
+      "select distinct e.proposal_id, e.person_id from event e join proposal p on p.id = e.proposal_id where p.board_id = $1 and e.type = 'response' and e.at >= p.on_at and e.data->>'prev' = 'in' and e.data->>'next' = 'out'", [board.id]),
   ]);
-  return { board, proposals, responses, people: new Map(people.map((p) => [p.id, p])), conflicts: conflictsFor(proposals, responses) };
+  return { droppedAfterFormation: new Set(dropped.map(r => r.proposal_id + ':' + r.person_id)), board, proposals, responses, people: new Map(people.map((p) => [p.id, p])), conflicts: conflictsFor(proposals, responses) };
 }
 
 export async function detailsFor(q: Q, proposalId: string): Promise<Detail[]> {

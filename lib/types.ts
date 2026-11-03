@@ -34,6 +34,9 @@ export type Board = {
   slug: string;
   name: string;
   tz: string;
+  steward_label?: string;
+  lat?: number | null;
+  lon?: number | null;
   /** fixed: the stored dates; rolling: no dates, today and the next 13 days (lib/days.ts) */
   window_kind: "fixed" | "rolling";
   window_start: string | null;
@@ -57,6 +60,8 @@ export type Proposal = {
   detail: string | null;
   cost_text: string | null;
   time_text: string | null;
+  day?: string | null;
+  place?: string | null;
   needs_day: boolean;
   min_count: number | null;
   deadline: string | null;

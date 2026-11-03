@@ -3,21 +3,23 @@ import { PostForm, type PostPrefill } from "@/components/PostForm";
 import { Shell } from "@/components/Shell";
 import { db } from "@/lib/db";
 import { boardBySlug, proposalById } from "@/lib/load";
+import { countedDays, todayIn } from "@/lib/days";
+import { isIdled } from "@/lib/quorum";
 import { viewer } from "@/lib/viewer";
 
-export default async function NewPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ from?: string }> }) {
+export default async function NewPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ again?: string }> }) {
   const q = db();
   const board = await boardBySlug(q, (await params).slug);
   if (!board) notFound();
-  const { from } = await searchParams;
-  const [orig, me] = await Promise.all([from ? proposalById(q, from) : null, viewer(q)]);
+  const { again } = await searchParams;
+  const [orig, me] = await Promise.all([again ? proposalById(q, again) : null, viewer(q)]);
   const prefill: PostPrefill | null =
-    orig && orig.board_id === board.id
-      ? { versionOf: orig.id, title: orig.title, icon: orig.icon, detail: orig.detail, cost: orig.cost_text, time: orig.time_text, min: orig.min_count, needsDay: orig.needs_day }
+    orig && orig.board_id === board.id && isIdled(orig, board)
+      ? { versionOf: orig.id, title: orig.title, day: orig.day ?? orig.on_day ?? null, time: orig.time_text, place: orig.place ?? null }
       : null;
   return (
     <Shell board={board} tab="new">
-      <PostForm slug={board.slug} signedIn={!!me} from={prefill} />
+      <PostForm slug={board.slug} signedIn={!!me} from={prefill} days={countedDays(board, todayIn(board.tz))} />
     </Shell>
   );
 }

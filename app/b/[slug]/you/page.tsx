@@ -1,27 +1,15 @@
 import { notFound } from "next/navigation";
 import { Shell } from "@/components/Shell";
-import { YouView } from "@/components/YouView";
+import { YourWeek } from "@/components/YourWeek";
 import { db } from "@/lib/db";
-import { boardBySlug, boardData, freeDays } from "@/lib/load";
-import { cardModel } from "@/lib/view";
+import { boardBySlug, boardData } from "@/lib/load";
+import { planModel } from "@/lib/view";
+import { forecast } from "@/lib/forecast";
 import { viewer } from "@/lib/viewer";
-
-export default async function YouPage({ params }: { params: Promise<{ slug: string }> }) {
-  const q = db();
-  const board = await boardBySlug(q, (await params).slug);
-  if (!board) notFound();
-  const me = await viewer(q);
-  if (!me) {
-    return <Shell board={board} tab="you"><YouView board={board} me={null} free={[]} mine={[]} /></Shell>;
-  }
-  const [data, free] = await Promise.all([boardData(q, board), freeDays(q, board.id, me.id)]);
-  const mine = data.proposals
-    .map((p) => cardModel(p, data, me))
-    .filter((c) => c.me === "in" && (c.state === "open" || c.state === "ready" || c.state === "on"))
-    .sort((a, b) => (a.state === "on" ? 1 : 0) - (b.state === "on" ? 1 : 0));
-  return (
-    <Shell board={board} tab="you">
-      <YouView board={board} me={me} free={free} mine={mine} />
-    </Shell>
-  );
+export default async function YouPage({ params }: { params: Promise<{slug:string}> }) {
+ const q=db(),board=await boardBySlug(q,(await params).slug);if(!board)notFound();
+ const me=await viewer(q);const data=me?await boardData(q,board):null;
+ const membership=me?(await q.query<{share_with_steward:boolean}>("select share_with_steward from board_person where board_id = $1 and person_id = $2",[board.id,me.id])).rows[0]:null;
+ const plans=data?await Promise.all(data.proposals.map(async p=>{const c=planModel(p,data,me);return {...c,...await forecast(board,c.day)};})):[];
+ return <Shell board={board} tab="you"><YourWeek board={board} me={me} plans={plans} share={membership?.share_with_steward??false}/></Shell>;
 }

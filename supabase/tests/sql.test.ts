@@ -31,6 +31,7 @@ describe.skipIf(process.env.QB_DB === "remote")("SQL tests (PGlite)", () => {
     const { rows: [trip] } = await pg.query<{ window_kind: string; window_start: string; window_end: string }>(
       "select window_kind, window_start::text, window_end::text from board where slug = 'emba27'");
     expect(trip).toEqual({ window_kind: "fixed", window_start: "2027-02-14", window_end: "2027-02-20" });
+    expect((await pg.query("select steward_label from board where slug = 'emba27'")).rows[0]).toEqual({ steward_label: "the EMBA office" });
     await pg.close();
     expect(once[TABLES.indexOf("proposal")]).toBe(5);
   });

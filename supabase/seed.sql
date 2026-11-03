@@ -1,9 +1,9 @@
 -- Dev seed: the EMBA '27 board and the trip five from DESIGN.md, no people.
 -- Idempotent: fixed ids, `on conflict do nothing`.
 
-insert into board (id, slug, name, tz, window_start, window_end)
+insert into board (id, slug, name, tz, window_start, window_end, steward_label)
 values ('00000000-0000-4000-8000-000000000027', 'emba27', 'EMBA ''27',
-        'America/New_York', '2027-02-14', '2027-02-20')
+        'America/New_York', '2027-02-14', '2027-02-20', 'the EMBA office')
 on conflict (id) do nothing;
 
 insert into proposal (id, board_id, title, icon, detail, cost_text, time_text, needs_day, min_count)

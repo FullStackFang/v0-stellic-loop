@@ -6,7 +6,7 @@ export function CopyLink({ slug }: { slug: string }) {
   const toast = useToast();
   return (
     <button
-      className="ghost"
+      className="alt"
       onClick={async () => {
         const url = `${location.origin}/b/${slug}`;
         try {
@@ -17,7 +17,7 @@ export function CopyLink({ slug }: { slug: string }) {
         }
       }}
     >
-      Copy the link
+      Copy the space link
     </button>
   );
 }

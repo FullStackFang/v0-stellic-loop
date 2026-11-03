@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · layout mockups — current vs minimal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400..600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* tokens and atoms copied from app/globals.css / quorum.html v5 — look untouched */
+  :root{
+    --paper-0:#fffdf8; --paper-1:#f9f4ec; --paper-2:#f0e8da; --paper-3:#e3d8c6;
+    --ink:#1f1a17; --ink-2:#6a5e56; --ink-3:#98897e; --ink-4:#c5b8aa;
+    --hair:rgba(31,26,23,.09); --line:rgba(31,26,23,.14); --tint:rgba(31,26,23,.045);
+    --carnelian:#b31b1b; --carnelian-deep:#8a1414; --carnelian-tint:#f8e6e3;
+    --moss:#3d8a5f; --moss-deep:#2f6e4a; --moss-tint:#e3f0e8;
+    --lime:#d6f55e;
+    --serif:'Source Serif 4',Georgia,serif; --sans:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --expo:cubic-bezier(.16,1,.3,1);
+  }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; }
+  body{ margin:0; background:#efe7da; font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased; padding:40px 16px 72px; font-feature-settings:"tnum"; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1060px; margin:0 auto; }
+  .eyebrow{ font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
+  .wrap > h1{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.12; margin:12px 0 10px; }
+  .wrap > h1 em{ font-style:italic; color:var(--carnelian-deep); }
+  .wrap > p{ color:var(--ink-2); font-size:14px; line-height:1.55; margin:0 0 8px; max-width:70ch; }
+  .wrap > p b{ font-weight:600; color:var(--ink); }
+  .pair{ margin-top:44px; }
+  .pair > h2{ font-family:var(--serif); font-size:22px; font-weight:500; letter-spacing:-.01em; margin:0 0 4px; }
+  .pair > p{ color:var(--ink-2); font-size:13.5px; line-height:1.5; margin:0 0 18px; max-width:70ch; }
+  .rail{ display:flex; gap:40px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col{ width:390px; max-width:100%; }
+  .col .lbl{ font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:0 0 10px 6px; }
+  .col .lbl b{ color:var(--ink); }
+  .col .cap{ font-size:12px; line-height:1.55; color:var(--ink-3); margin:12px 6px 0; }
+  .col .cap b{ color:var(--ink-2); font-weight:600; }
+
+  /* phone */
+  .phone{ width:390px; max-width:100%; height:844px; background:var(--paper-1); border:1px solid var(--line); border-radius:44px; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 60px -30px rgba(60,30,20,.4); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:600; }
+  .status svg{ height:11px; }
+  .head{ display:flex; align-items:center; justify-content:space-between; padding:12px 22px 6px; }
+  .wordmark{ font-family:var(--serif); font-size:21px; font-weight:500; letter-spacing:-.01em; }
+  .meta{ font-size:12.5px; color:var(--ink-3); }
+  .meta.link{ color:var(--carnelian-deep); font-weight:500; }
+  .screen{ flex:1; overflow:auto; padding:0 16px 110px; scrollbar-width:none; }
+  .screen.flat{ padding-bottom:28px; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .tabbar{ position:absolute; left:16px; right:16px; bottom:18px; display:flex; gap:4px; padding:4px; border-radius:16px; background:var(--paper-0); border:1px solid var(--hair); box-shadow:0 10px 30px -18px rgba(60,30,20,.4); }
+  .tabbar button{ flex:1; border:0; background:transparent; height:40px; border-radius:12px; font-size:13px; font-weight:500; color:var(--ink-2); }
+  .tabbar button.on{ background:var(--tint); color:var(--ink); font-weight:600; }
+
+  /* atoms */
+  .lab{ font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; }
+  .plate{ width:30px; height:30px; border-radius:8px; display:grid; place-items:center; flex:0 0 auto; box-shadow:inset 0 0 0 1px var(--ring), 0 1px 1.5px rgba(60,30,20,.14), 0 5px 10px -5px rgba(60,30,20,.35); }
+  .plate svg{ width:17px; height:17px; }
+  .plate.lg{ width:44px; height:44px; border-radius:11px; } .plate.lg svg{ width:24px; height:24px; }
+  .av{ width:24px; height:24px; border-radius:50%; border:1.5px solid var(--paper-0); display:grid; place-items:center; font-size:9.5px; font-weight:600; color:var(--ink-2); margin-left:-6px; flex:0 0 24px; background:var(--paper-2); }
+  .av:first-child{ margin-left:0; }
+  .av.me{ background:var(--ink); color:var(--paper-0); } .av.more{ font-size:9px; }
+  .pile{ display:inline-flex; align-items:center; }
+  .ghost{ height:34px; padding:0 14px; border-radius:999px; border:0; background:var(--tint); font-size:13px; font-weight:500; color:var(--ink); display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .ghost.on{ background:var(--ink); color:var(--paper-0); }
+  .ghost svg, .pill svg, .solid svg{ width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
+  .pill{ height:36px; padding:0 14px 0 16px; border-radius:999px; border:0; background:var(--ink); color:var(--paper-0); font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:8px; }
+  .pill.quiet{ background:rgba(31,26,23,.07); color:var(--ink); }
+  .solid{ height:44px; width:100%; border-radius:12px; border:0; background:var(--ink); color:var(--paper-0); font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; }
+  .solid.red{ background:var(--carnelian); }
+  .solid.quiet{ background:var(--tint); color:var(--ink); font-weight:500; }
+  .chip{ display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:999px; background:var(--lime); color:var(--ink); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .chip.green{ background:var(--moss-deep); color:var(--paper-0); } .chip.open{ background:var(--tint); color:var(--ink-2); }
+  .chip.red{ background:var(--carnelian-tint); color:var(--carnelian-deep); }
+  .sect{ display:flex; align-items:center; justify-content:space-between; padding:22px 6px 10px; }
+  .sect .n{ font-family:var(--serif); font-size:15px; color:var(--ink-2); }
+  .sect .plain{ font-size:11px; color:var(--ink-3); white-space:nowrap; }
+  .hint{ font-size:12px; line-height:1.5; color:var(--ink-3); }
+  .pad{ padding-left:6px; padding-right:6px; }
+
+  /* hero (current board only) — gradient kept, canvas omitted */
+  .mast{ padding:12px 0 0; }
+  .hero{ margin:6px 0 0; position:relative; overflow:hidden; border-radius:22px 22px 22px 4px; padding:18px 18px 16px; color:var(--ink);
+         --f0:#f6f2fb; --f1:#e9e2f4; --f2:#d9cfe9; --dot:#ff7b54;
+         background:linear-gradient(168deg, var(--f0) 0%, var(--f1) 55%, var(--f2) 100%); box-shadow:inset 0 0 0 1px rgba(109,63,138,.16); }
+  .hero .k{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; font-size:10px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:#5a3a73; margin:0; }
+  .hero .k i{ width:7px; height:7px; border-radius:50%; background:var(--dot); box-shadow:0 0 10px 2px rgba(255,123,84,.7); }
+  .hero .k small{ font-weight:500; text-transform:none; letter-spacing:.02em; color:#6c5a7d; }
+  .hero h2{ font-family:var(--serif); font-size:29px; font-weight:500; letter-spacing:-.015em; line-height:1.08; margin:8px 0 0; }
+  .hero h2 em{ font-style:italic; color:var(--carnelian-deep); }
+  .hero p{ margin:8px 0 0; font-size:13px; line-height:1.45; color:#6c5a7d; max-width:32ch; }
+  .hero .pills{ display:flex; gap:8px; margin-top:14px; }
+  .mast h2{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin:0; padding:0 6px; }
+  .mast h2 em{ font-style:italic; color:var(--carnelian-deep); }
+  .mast p{ margin:8px 0 0; padding:0 6px; font-size:13.5px; line-height:1.5; color:var(--ink-2); max-width:34ch; }
+
+  /* cards */
+  .card{ background:var(--paper-0); border:1px solid var(--hair); border-radius:20px 20px 20px 4px; padding:14px; margin-bottom:12px; display:grid; grid-template-columns:52px 1fr; gap:12px; }
+  .card.on{ background:var(--moss-tint); border-color:transparent; }
+  .date{ width:52px; border-radius:12px; border:1px solid var(--line); background:var(--paper-0); text-align:center; padding:6px 0 7px; align-self:start; }
+  .date small{ display:block; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); }
+  .date b{ display:block; font-family:var(--serif); font-size:22px; font-weight:500; line-height:1.05; color:var(--ink); }
+  .date i{ display:block; font-style:normal; font-size:9px; color:var(--ink-3); margin-top:2px; }
+  .date.none{ border-style:dashed; } .date.none b{ font-size:11.5px; line-height:1.2; padding:5px 2px; color:var(--ink-3); font-family:var(--sans); font-weight:500; }
+  .t{ min-width:0; }
+  .titlerow{ display:flex; align-items:center; gap:10px; }
+  .title{ font-size:16.5px; font-weight:600; letter-spacing:-.01em; line-height:1.2; }
+  .facts{ font-size:12.5px; color:var(--ink-3); margin-top:5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; line-height:1.4; }
+  .facts b{ color:var(--ink-2); font-weight:600; }
+  .facts.who{ margin-top:10px; }
+  .mini{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-top:10px; }
+  .mini div{ height:26px; border-radius:6px; display:grid; place-items:center; font-size:11px; font-weight:500; color:var(--ink-3); background:var(--tint); }
+  .mini div.best{ background:var(--carnelian-tint); color:var(--carnelian-deep); font-weight:600; }
+  .minil{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-top:3px; }
+  .minil div{ text-align:center; font-size:9px; font-weight:500; color:var(--ink-4); letter-spacing:.04em; }
+  .minil div.best{ color:var(--carnelian-deep); }
+  .ask{ margin-top:12px; display:flex; flex-direction:column; gap:10px; font-size:13.5px; line-height:1.35; }
+  .ask .replies{ display:flex; gap:8px; justify-content:flex-end; }
+  .ask .q b{ font-weight:600; }
+  .ask .pill{ height:34px; font-size:12.5px; padding:0 12px 0 14px; background:var(--carnelian); }
+  .ask .ghost.later{ height:34px; padding:0 12px; font-size:12.5px; }
+  .acts{ display:flex; gap:6px; margin-top:12px; }
+  .acts .ghost{ flex:1; padding:0; }
+
+  /* you (current) */
+  .days{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .day{ height:58px; border-radius:12px; border:1px solid var(--hair); background:var(--paper-0); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:0; }
+  .day .d{ font-size:9.5px; font-weight:600; color:var(--ink-3); letter-spacing:.04em; text-transform:uppercase; }
+  .day .num{ font-family:var(--serif); font-size:18px; font-weight:500; }
+  .day .src{ font-size:9px; font-weight:500; color:var(--ink-3); height:10px; }
+  .day.free{ background:var(--ink); color:var(--paper-0); border-color:var(--ink); }
+  .day.free .d,.day.free .src{ color:var(--ink-4); }
+  .group{ border-radius:14px; overflow:hidden; background:var(--paper-0); border:1px solid var(--hair); }
+  .toggle{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid var(--hair); font-size:14px; font-weight:500; }
+  .toggle:first-child{ border-top:0; }
+  .toggle small{ display:block; color:var(--ink-3); font-size:12px; font-weight:400; margin-top:2px; line-height:1.45; }
+  .sw{ width:44px; height:26px; border-radius:999px; background:var(--paper-2); border:1px solid var(--line); position:relative; flex-shrink:0; padding:0; }
+  .sw i{ position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:var(--ink); }
+  .sw.on{ background:var(--moss-deep); border-color:var(--moss-deep); } .sw.on i{ left:20px; background:var(--paper-0); }
+
+  /* proposal page (current) */
+  .page{ padding:14px 2px 0; }
+  .page .sect{ padding-left:0; padding-right:0; }
+  .page .acts{ margin-top:14px; }
+  .phead{ display:flex; gap:12px; align-items:flex-start; }
+  .phead > div{ flex:1; min-width:0; }
+  .phead .chip{ flex:0 0 auto; margin-top:4px; }
+  .ptitle{ font-family:var(--serif); font-size:26px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin:0; }
+  .pmeta{ font-size:12.5px; color:var(--ink-3); margin-top:5px; line-height:1.5; }
+  .pbody{ font-size:14px; color:var(--ink-2); margin:10px 0 0; line-height:1.5; }
+  .details{ border-radius:14px; overflow:hidden; background:var(--paper-0); border:1px solid var(--hair); }
+  .addrow{ display:flex; gap:6px; padding:8px 10px; background:var(--paper-1); }
+  .addrow span{ flex:1; height:34px; border:1px solid var(--line); background:var(--paper-0); border-radius:999px; padding:0 12px; font-size:13px; color:var(--ink-3); display:flex; align-items:center; }
+  .person{ display:flex; align-items:center; gap:10px; padding:6px 0; font-size:14px; }
+  .person .av{ margin:0; width:30px; height:30px; border-color:transparent; flex-basis:30px; }
+  .person .s{ margin-left:auto; font-size:12px; color:var(--ink-3); }
+
+  /* proposed: the few extra pieces, built from the same tokens */
+  .space{ padding:10px 6px 0; }
+  .space h2{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin:0; }
+  .space p{ margin:6px 0 0; font-size:13px; color:var(--ink-3); }
+  .phone.grow{ height:auto; min-height:844px; }
+  .row{ background:var(--paper-0); border:1px solid var(--hair); border-radius:20px 20px 20px 4px; padding:11px 12px 11px 14px; margin-bottom:8px; display:grid; grid-template-columns:52px 1fr; gap:12px; align-items:center; }
+  .row .t{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .row .top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .row .top .ghost{ height:32px; font-size:12.5px; flex:0 0 auto; }
+  .row .top .ghost.quiet{ background:transparent; color:var(--ink-3); padding:0 6px; }
+  .row .top .chip{ flex:0 0 auto; }
+  .row .l2{ font-size:12.5px; color:var(--ink-3); line-height:1.4; }
+  .row .l2 b{ color:var(--ink-2); font-weight:600; }
+  .row.dim{ background:transparent; border-color:var(--hair); }
+  .row.dim .title{ color:var(--ink-2); font-weight:500; }
+  .screen.flat .sect, details.wrap summary{ padding-top:16px; padding-bottom:8px; }
+  .prog{ display:inline-flex; align-items:center; gap:3px; margin-left:4px; vertical-align:middle; }
+  .prog i{ width:9px; height:5px; border-radius:2px; background:var(--paper-3); }
+  .prog i.f{ background:var(--ink); }
+  .ptop{ padding:22px 6px 0; }
+  .ptop h1{ font-family:var(--serif); font-size:30px; font-weight:500; letter-spacing:-.02em; line-height:1.1; margin:0; }
+  .ptop .facts{ font-size:14px; color:var(--ink-2); margin-top:10px; }
+  .ptop .chip{ margin-top:14px; }
+  .names{ display:flex; flex-wrap:wrap; gap:6px; }
+  .names span{ height:28px; padding:0 11px; border-radius:999px; background:var(--tint); font-size:13px; font-weight:500; display:inline-flex; align-items:center; }
+  .names span.more{ background:transparent; color:var(--ink-3); border:1px dashed var(--line); }
+  .big{ font-family:var(--serif); font-size:22px; font-weight:500; letter-spacing:-.01em; }
+  .big small{ font-family:var(--sans); font-size:13px; color:var(--ink-3); font-weight:400; margin-left:6px; }
+  .partof{ display:block; text-align:center; margin-top:16px; font-size:13px; color:var(--ink-2); }
+  .partof b{ color:var(--carnelian-deep); font-weight:600; }
+  details.wrap{ margin-top:4px; }
+  details.wrap summary{ list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:22px 6px 10px; }
+  details.wrap summary::-webkit-details-marker{ display:none; }
+  details.wrap summary .plain{ font-size:11px; color:var(--ink-3); }
+  details.wrap[open] summary .plain .c::before{ content:"hide"; } details.wrap summary .plain .c::before{ content:"show"; }
+  .future{ color:var(--carnelian-deep); }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · layout pass · 2026-11-02</div>
+  <h1>Current screens next to the <em>minimal</em> ones the v1 spec asks for</h1>
+  <p>Same look (v5 tokens, Source Serif 4 + Geist, hairline cards, date blocks, ghost buttons), same seeded people and intents, board <b>emba27</b>. Only the layout and what is on the page changes. Left is what the app shows today; right is spec §7 with nothing extra. Sections marked <b class="future">future</b> are not built (no crews, no weekly cycle, no steward) and are there so you can see the shape.</p>
+  <p>Viewer in every frame: <b>You</b>, a member, signed in. Current frames scroll inside the phone exactly like the app; the proposed ones were made to fit.</p>
+
+  <!-- ============================================================ 1. SPACE PAGE -->
+  <section class="pair">
+    <h2>1 · Space page — <span class="meta">/b/emba27</span></h2>
+    <p>Spec §7.2: space name · open intents (title, slot, "3 of 4", I'm in) · crews meeting this week · Post an intent · a collapsed "Wrapped up". The hero, the day heat, the ask, maybe/out, and the three-tab bar go.</p>
+    <div class="rail">
+
+      <div class="col">
+        <p class="lbl">A · <b>Current</b> — board with hero</p>
+        <div class="phone">
+          <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+          <div class="head"><span class="wordmark">Quorum</span><span class="meta">EMBA '27 · Feb 14–20</span></div>
+          <div class="screen">
+            <div class="mast"><div class="hero">
+              <p class="k"><i></i>§ 01 · Feb 14–20 <small>· 5 open · 1 on</small></p>
+              <h2>What we <em>could</em> do</h2>
+              <p>Tap in and your free days ride along; when enough of us overlap, Quorum asks.</p>
+              <div class="pills"><span class="pill">Post an intent <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="pill quiet">Your week</span></div>
+            </div></div>
+            <div class="sect"><span class="lab">Open</span><span class="n">5</span></div>
+            <article class="card">
+              <div class="date none"><small>any</small><b>No day</b></div>
+              <div class="t">
+                <div class="titlerow"><span class="plate" style="--ring:#8c72bd;background:#bd9aff;color:#fff"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M247.59,61.22,195.83,33A8,8,0,0,0,192,32H160a8,8,0,0,0-8,8,24,24,0,0,1-48,0,8,8,0,0,0-8-8H64a8,8,0,0,0-3.84,1L8.41,61.22A15.76,15.76,0,0,0,1.82,82.48l19.27,36.81A16.37,16.37,0,0,0,35.67,128H56v80a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V128h20.34a16.37,16.37,0,0,0,14.58-8.71l19.27-36.81A15.76,15.76,0,0,0,247.59,61.22ZM35.67,112a.62.62,0,0,1-.41-.13L16.09,75.26,56,53.48V112Zm185.07-.14a.55.55,0,0,1-.41.14H200V53.48l39.92,21.78Z"/></svg></span><span class="title">Cohort shirts</span></div>
+                <div class="facts"><span class="chip">Ready</span><b>9 in</b><span>$25–35</span></div>
+                <div class="ask"><span class="q">9 of you want this. <b>Make it happen?</b></span><div class="replies"><span class="ghost later">Not yet</span><span class="pill">It's on <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+                <div class="facts who"><span class="pile"><span class="av">K</span><span class="av">S</span><span class="av">A</span><span class="av">O</span><span class="av more">+5</span></span><span>9 in</span></div>
+                <div class="acts"><span class="ghost">I'm in</span><span class="ghost">Maybe</span><span class="ghost">Out</span></div>
+              </div>
+            </article>
+            <article class="card">
+              <div class="date"><small>Thu</small><b>19</b><i>7:30pm</i></div>
+              <div class="t">
+                <div class="titlerow"><span class="plate" style="--ring:#c39a54;background:#f9de81;color:#56595b"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM148.12,104a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Z"/></svg></span><span class="title">Street-food crawl</span></div>
+                <div class="facts"><span class="chip open">Open</span><b>4 in</b><span>$20 · 7:30pm</span></div>
+                <div class="mini"><div></div><div></div><div></div><div class="best">3</div><div>2</div><div></div><div></div></div>
+                <div class="minil"><div>S</div><div>M</div><div>T</div><div class="best">W</div><div>T</div><div>F</div><div>S</div></div>
+                <div class="facts who"><span class="pile"><span class="av">R</span><span class="av">S</span><span class="av">K</span><span class="av">A</span></span><span>4 in · 1 maybe</span></div>
+                <div class="acts"><span class="ghost">I'm in</span><span class="ghost">Maybe</span><span class="ghost">Out</span></div>
+              </div>
+            </article>
+            <article class="card">
+              <div class="date"><small>Fri</small><b>20</b><i></i></div>
+              <div class="t">
+                <div class="titlerow"><span class="plate" style="--ring:#728dbe;background:#9abeff;color:#fff"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M160,140V72.85a4,4,0,0,1,7-2.69l55,60.46a8,8,0,0,1,.43,10.26,8.24,8.24,0,0,1-6.58,3.12H164A4,4,0,0,1,160,140Zm87.21,32.53A8,8,0,0,0,240,168H144V8a8,8,0,0,0-14.21-5l-104,128A8,8,0,0,0,32,144h96v24H16a8,8,0,0,0-6.25,13l29.6,37a15.93,15.93,0,0,0,12.49,6H204.16a15.93,15.93,0,0,0,12.49-6l29.6-37A8,8,0,0,0,247.21,172.53Z"/></svg></span><span class="title">Overnight boat</span></div>
+                <div class="facts"><span class="chip open">Open</span><b>8 in</b><span>~$180 · needs 10</span></div>
+                <div class="mini"><div></div><div></div><div>1</div><div>3</div><div class="best">5</div><div></div><div></div></div>
+                <div class="minil"><div>S</div><div>M</div><div>T</div><div>W</div><div class="best">T</div><div>F</div><div>S</div></div>
+                <div class="facts who"><span class="pile"><span class="av">M</span><span class="av">E</span><span class="av">T</span><span class="av">L</span><span class="av more">+4</span></span><span>8 in</span></div>
+                <div class="acts"><span class="ghost">I'm in</span><span class="ghost">Maybe</span><span class="ghost">Out</span></div>
+              </div>
+            </article>
+            <div class="sect"><span class="lab">On</span><span class="plain">locked · add to calendar</span></div>
+            <article class="card on"><div class="date"><small>Wed</small><b>18</b><i>5:10am</i></div><div class="t"><div class="titlerow"><span class="title">5am flight to Da Nang</span></div><div class="facts"><span class="chip green">On</span><b>4 in</b><span>$90 · locked by Maya</span></div></div></article>
+            <div class="sect"><span class="lab">Past</span><span class="n">1</span></div>
+          </div>
+          <div class="tabbar"><button class="on">Board</button><button>Post</button><button>You</button></div>
+        </div>
+        <p class="cap">Scrolls: two more open cards, the On section and Past below. Each card: date block, icon plate, state chip, count, cost, day heat, the quorum ask, faces, three answers.</p>
+      </div>
+
+      <div class="col">
+        <p class="lbl">B · <b>Proposed minimal</b> — space page, spec §7.2</p>
+        <div class="phone grow">
+          <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+          <div class="head"><span class="wordmark">Loop</span><a class="meta link" href="#myplans">My plans</a></div>
+          <div class="screen flat">
+            <div class="space"><h2>EMBA 2027</h2></div>
+
+            <div class="sect"><span class="lab">Open intents</span><span class="n">3</span></div>
+            <div class="row">
+              <div class="date none"><small>any</small><b>No day</b></div>
+              <div class="t">
+                <div class="top"><span class="title">Cohort shirts</span><span class="ghost quiet">I'm out</span></div>
+                <span class="l2"><b>Ken, Sofia, You</b> · 3 of 4 <span class="prog"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span></span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="date"><small>Thu</small><b>19</b><i>7:30pm</i></div>
+              <div class="t">
+                <div class="top"><span class="title">Street-food crawl</span><span class="ghost on">I'm in</span></div>
+                <span class="l2"><b>Ravi, Sofia, Ken</b> · 3 of 4 <span class="prog"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span></span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="date"><small>Fri</small><b>20</b><i>6:00pm</i></div>
+              <div class="t">
+                <div class="top"><span class="title">Overnight boat</span><span class="ghost on">I'm in</span></div>
+                <span class="l2"><b>Marcus, Elena, Tom, Luis +4</b> · 8 of 10 <span class="prog"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></span></span>
+              </div>
+            </div>
+
+            <div class="sect"><span class="lab">Meeting this week</span><span class="plain future">future · crews not built yet</span></div>
+            <div class="row">
+              <div class="date"><small>Sun</small><b>10</b><i>10:00am</i></div>
+              <div class="t"><div class="top"><span class="title">Case prep Sunday</span><span class="ghost">Join</span></div><span class="l2">Sage Hall B08 · <b>4 in</b> · room for 2 more</span></div>
+            </div>
+            <div class="row">
+              <div class="date"><small>Thu</small><b>12</b><i>6:30pm</i></div>
+              <div class="t"><div class="top"><span class="title">Room after class Thu</span></div><span class="l2">Breakout 2 · <b>6 in</b> · full</span></div>
+            </div>
+
+            <span class="solid">Post an intent</span>
+
+            <details class="wrap" open>
+              <summary><span class="lab">Wrapped up</span><span class="plain">2 · <span class="c"></span></span></summary>
+              <div class="row dim">
+                <div class="date"><small>Wed</small><b>18</b><i>5:10am</i></div>
+                <div class="t"><div class="top"><span class="title">5am flight to Da Nang</span><span class="chip red">Didn't form</span></div><span class="l2"><b>2 of 4</b> · Josh, Maya · closed after 14 days</span></div>
+              </div>
+              <div class="row dim">
+                <div class="date"><small>Thu</small><b>8</b><i>8:00pm</i></div>
+                <div class="t"><div class="top"><span class="title">Group dinner</span><span class="chip open">Wrapped up</span></div><span class="l2">Met 3 weeks · 5 were in · Oct 23</span></div>
+              </div>
+            </details>
+          </div>
+        </div>
+        <p class="cap"><b>Removed:</b> hero, slogan, counts line, Your week pill, day heat, quorum ask, Maybe and Out, cost, icon plates, state chips on open rows (the header says Open), Past. <b>Added:</b> space name, "3 of 4" per row, Meeting this week (future), one Post an intent, Wrapped up with failure visible (opened here; collapsed by default). <b>Moved:</b> My plans to a header link; no tab bar. Place lives on the plan page, not the list.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 2. PLAN PAGE -->
+  <section class="pair">
+    <h2>2 · Plan page — <span class="meta">/p/&lt;token&gt;</span>, Overnight boat</h2>
+    <p>Spec §7.1: title · slot · place · state badge · members (first names, up to 6, "+2 more") · progress · one primary button per §5.2 · "Part of EMBA 2027". Viewer is not in yet, so the button is I'm in.</p>
+    <div class="rail">
+
+      <div class="col">
+        <p class="lbl">A · <b>Current</b> — proposal page</p>
+        <div class="phone">
+          <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+          <div class="head"><span class="wordmark">Quorum</span><span class="meta">EMBA '27 · Feb 14–20</span></div>
+          <div class="screen"><div class="page">
+            <div class="phead">
+              <span class="plate lg" style="--ring:#728dbe;background:#9abeff;color:#fff"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M160,140V72.85a4,4,0,0,1,7-2.69l55,60.46a8,8,0,0,1,.43,10.26,8.24,8.24,0,0,1-6.58,3.12H164A4,4,0,0,1,160,140Zm87.21,32.53A8,8,0,0,0,240,168H144V8a8,8,0,0,0-14.21-5l-104,128A8,8,0,0,0,32,144h96v24H16a8,8,0,0,0-6.25,13l29.6,37a15.93,15.93,0,0,0,12.49,6H204.16a15.93,15.93,0,0,0,12.49-6l29.6-37A8,8,0,0,0,247.21,172.53Z"/></svg></span>
+              <div><h1 class="ptitle">Overnight boat</h1><div class="pmeta">~$180 · needs 10 · started by Marcus</div></div>
+              <span class="chip open">Open</span>
+            </div>
+            <p class="pbody">Halong-style junk, cabins for two.</p>
+            <div class="sect"><span class="lab">Who can do which day</span><span class="plain">Feb 14–20 · 5 on Thu</span></div>
+            <div class="mini" style="margin-top:0"><div></div><div></div><div>1</div><div>3</div><div class="best">5</div><div>2</div><div></div></div>
+            <div class="minil"><div>S</div><div>M</div><div>T</div><div>W</div><div class="best">T</div><div>F</div><div>S</div></div>
+            <p class="hint" style="margin:10px 0 0">Tap in and your free days land here.</p>
+            <div class="acts"><span class="ghost">I'm in</span><span class="ghost">Maybe</span><span class="ghost">Out</span></div>
+            <div class="sect"><span class="lab">Details</span><span class="plain">Anyone in can add · title is fixed</span></div>
+            <div class="details"><div class="addrow"><span>Tap in to add details.</span></div></div>
+            <div class="sect"><span class="lab">In</span><span class="n">8</span></div>
+            <div class="person"><span class="av">M</span><span>Marcus</span><span class="s">Wed Thu</span></div>
+            <div class="person"><span class="av">E</span><span>Elena</span><span class="s">Thu</span></div>
+            <div class="person"><span class="av">T</span><span>Tom</span><span class="s">Tue Wed Thu</span></div>
+            <div class="person"><span class="av">L</span><span>Luis</span><span class="s">Thu Fri</span></div>
+            <div class="person"><span class="av">P</span><span>Priya</span><span class="s">Wed</span></div>
+            <div class="person"><span class="av">D</span><span>Dana</span><span class="s">Thu</span></div>
+            <div class="person"><span class="av">R</span><span>Ravi</span><span class="s">Thu Fri</span></div>
+            <div class="person"><span class="av">W</span><span>Wei</span><span class="s">Wed</span></div>
+            <div class="acts"><span class="ghost">Share</span><span class="ghost">Post a version</span><span class="ghost">Copy names</span></div>
+            <span class="solid quiet">Back to the board</span>
+          </div></div>
+          <div class="tabbar"><button>Board</button><button>Post</button><button>You</button></div>
+        </div>
+        <p class="cap">Scrolls: the In list runs to eight rows, then Share / Post a version / Copy names and Back to the board. Five tappable controls above the fold, four more below.</p>
+      </div>
+
+      <div class="col">
+        <p class="lbl">B · <b>Proposed minimal</b> — plan page, spec §7.1</p>
+        <div class="phone">
+          <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+          <div class="head"><span class="wordmark">Loop</span><span class="meta"></span></div>
+          <div class="screen flat">
+            <div class="ptop">
+              <h1>Overnight boat</h1>
+              <div class="facts"><b>Fri 20 Feb · 6:00pm</b><span>·</span><span>Cat Ba pier, Halong</span></div>
+              <span class="chip open">Open</span>
+            </div>
+            <div class="sect"><span class="lab">In so far</span><span class="big">8 <small>of 10</small></span></div>
+            <div class="names pad"><span>Marcus</span><span>Elena</span><span>Tom</span><span>Luis</span><span>Priya</span><span>Dana</span><span class="more">+2 more</span></div>
+            <p class="hint pad" style="margin:12px 0 0">Two more and it forms. Everyone in gets one message when it does.</p>
+            <span class="solid" style="margin-top:22px">I'm in</span>
+            <a class="partof" href="#space">Part of <b>EMBA 2027</b></a>
+          </div>
+        </div>
+        <p class="cap"><b>Removed:</b> icon plate, cost, "needs", "started by", one-liner, day heat and days hint, Maybe and Out, Details box, per-person day columns, Share / Post a version / Copy names, Back to the board, tab bar. <b>Added:</b> slot and place on the header line, "8 of 10" as the one number, first names capped at 6 with "+2 more", one solid button, "Part of EMBA 2027". If you were already in, the button becomes a quiet "I'm out".</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 3. MY PLANS -->
+  <section class="pair" id="myplans">
+    <h2>3 · My plans — <span class="meta">/b/emba27/you</span> today, <span class="meta">/me</span> in the spec</h2>
+    <p>Spec §7.3 and §7.5: my crews this week (slot, members, still-on) · my open intents with their count · the steward opt-in toggle with exact copy · nothing else.</p>
+    <div class="rail">
+
+      <div class="col">
+        <p class="lbl">A · <b>Current</b> — "Your week"</p>
+        <div class="phone">
+          <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+          <div class="head"><span class="wordmark">Quorum</span><span class="meta">EMBA '27 · Feb 14–20</span></div>
+          <div class="screen">
+            <div class="mast" style="padding-top:14px"><h2>Your <em>week</em></h2><p>Free days for the window. They ride along with anything you tap in on; others see counts per day, never who.</p></div>
+            <div class="sect"><span class="lab">Free</span><span class="plain">Feb 14–20</span></div>
+            <div class="days">
+              <div class="day"><span class="d">Sun</span><span class="num">14</span><span class="src"></span></div>
+              <div class="day free"><span class="d">Mon</span><span class="num">15</span><span class="src">free</span></div>
+              <div class="day free"><span class="d">Tue</span><span class="num">16</span><span class="src">free</span></div>
+              <div class="day"><span class="d">Wed</span><span class="num">17</span><span class="src"></span></div>
+              <div class="day free"><span class="d">Thu</span><span class="num">18</span><span class="src">free</span></div>
+              <div class="day"><span class="d">Fri</span><span class="num">19</span><span class="src"></span></div>
+              <div class="day"><span class="d">Sat</span><span class="num">20</span><span class="src"></span></div>
+            </div>
+            <p class="hint pad" style="margin:10px 0 16px">Tap a day to toggle.</p>
+            <div class="group"><div class="toggle"><div>Show my name when I'm in<small>Off: you still count, listed as "+1 anonymous"</small></div><span class="sw on"><i></i></span></div></div>
+            <div class="sect"><span class="lab">You're in</span><span class="n">2</span></div>
+            <article class="card">
+              <div class="date none"><small>any</small><b>No day</b></div>
+              <div class="t"><div class="titlerow"><span class="plate" style="--ring:#8c72bd;background:#bd9aff;color:#fff"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M247.59,61.22,195.83,33A8,8,0,0,0,192,32H160a8,8,0,0,0-8,8,24,24,0,0,1-48,0,8,8,0,0,0-8-8H64a8,8,0,0,0-3.84,1L8.41,61.22A15.76,15.76,0,0,0,1.82,82.48l19.27,36.81A16.37,16.37,0,0,0,35.67,128H56v80a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V128h20.34a16.37,16.37,0,0,0,14.58-8.71l19.27-36.81A15.76,15.76,0,0,0,247.59,61.22ZM35.67,112a.62.62,0,0,1-.41-.13L16.09,75.26,56,53.48V112Zm185.07-.14a.55.55,0,0,1-.41.14H200V53.48l39.92,21.78Z"/></svg></span><span class="title">Cohort shirts</span></div><div class="facts"><span>No day needed</span></div></div>
+            </article>
+            <article class="card">
+              <div class="date"><small>Thu</small><b>19</b><i>7:30pm</i></div>
+              <div class="t"><div class="titlerow"><span class="plate" style="--ring:#c39a54;background:#f9de81;color:#56595b"><svg viewBox="0 0 256 256" fill="currentColor"><path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23ZM148.12,104a71.84,71.84,0,0,1,41.27-29.57A71.45,71.45,0,0,1,199.54,104ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Z"/></svg></span><span class="title">Street-food crawl</span></div><div class="facts"><span>Your days: Mon · Tue · Thu</span></div></div>
+            </article>
+          </div>
+          <div class="tabbar"><button>Board</button><button>Post</button><button class="on">You</button></div>
+        </div>
+        <p class="cap">A profile-shaped page: headline, free-days strip for the window, the name switch, then what you are in (with your days, not the count).</p>
+      </div>
+
+      <div class="col">
+        <p class="lbl">B · <b>Proposed minimal</b> — my plans, spec §7.3 + §7.5</p>
+        <div class="phone">
+          <div class="status"><span>9:41</span><svg viewBox="0 0 60 12" fill="currentColor"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="4" width="3" height="8" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><rect x="34" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="36" y="3" width="16" height="6" rx="1.5"/><rect x="57" y="4" width="2" height="4" rx="1"/></svg></div>
+          <div class="head"><span class="wordmark">Loop</span><a class="meta link" href="#space">EMBA 2027</a></div>
+          <div class="screen flat">
+            <div class="space"><h2>My plans</h2></div>
+
+            <div class="sect"><span class="lab">My crews this week</span><span class="plain future">future · crews not built yet</span></div>
+            <div class="row">
+              <div class="date"><small>Sun</small><b>10</b><i>10:00am</i></div>
+              <div class="t"><div class="top"><span class="title">Case prep Sunday</span><span class="chip green">Still on</span></div><span class="l2"><b>Priya, Marcus, Tom, You</b> · 4 of 4 said yes</span></div>
+            </div>
+            <div class="row">
+              <div class="date"><small>Thu</small><b>12</b><i>6:30pm</i></div>
+              <div class="t"><div class="top"><span class="title">Room after class Thu</span><span class="chip open">Asks Thu 6am</span></div><span class="l2"><b>Marcus, Priya, Dana, Josh, Elena, You</b></span></div>
+            </div>
+
+            <div class="sect"><span class="lab">My open intents</span><span class="n">2</span></div>
+            <div class="row">
+              <div class="date none"><small>any</small><b>No day</b></div>
+              <div class="t"><div class="top"><span class="title">Cohort shirts</span></div><span class="l2"><b>Ken, Sofia, You</b> · 3 of 4 <span class="prog"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span></span></div>
+            </div>
+            <div class="row">
+              <div class="date"><small>Thu</small><b>19</b><i>7:30pm</i></div>
+              <div class="t"><div class="top"><span class="title">Street-food crawl</span></div><span class="l2"><b>Ravi, Sofia, You</b> · 3 of 4 <span class="prog"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span></span></div>
+            </div>
+
+            <div class="sect"><span class="lab">Sharing</span><span class="plain">off by default</span></div>
+            <div class="group"><div class="toggle"><div>Let the EMBA 2027 founding team see whether I'm in a standing crew.<small>They see one yes or no, and how many weeks. Not which crew, not who with, not your number. Nothing else is shared.</small></div><span class="sw"><i></i></span></div></div>
+          </div>
+        </div>
+        <p class="cap"><b>Removed:</b> "Your week" headline and lede, free-days strip, name switch, icon plates, tab bar. <b>Added:</b> My crews this week (future) with slot, members and still-on status; "3 of 4" on each open intent; the §7.5 opt-in with the spec copy, default off. <b>Moved:</b> the space link into the header. Every row opens its plan page.</p>
+      </div>
+    </div>
+  </section>
+
+  <p style="margin-top:44px"><b>Judgment calls to confirm:</b> (1) the three-tab bar is gone; the two member destinations link to each other from the header, and the plan page reaches the space through "Part of EMBA 2027". (2) "Post an intent" sits once, after the lists, in the spec's own order; it could move under the space name. (3) "Wrapped up" opens here so the rows show; the app ships it collapsed. (4) The plan page shows 8 of 10 (the seeded Overnight boat minimum) so the "+2 more" cap is visible; the space threshold in the spec is one number per space, default 4.</p>
+</div>
+</body>
+</html>

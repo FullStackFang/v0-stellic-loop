@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const APP = [
-  ["Board", "/b/emba27"],
+  ["Space", "/b/emba27"],
   ["Post", "/b/emba27/new"],
-  ["You", "/b/emba27/you"],
+  ["Your plans", "/b/emba27/you"],
   ["Start a board", "/"],
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],
@@ -23,6 +23,7 @@ const MOCKUPS = {
     ["Orbits", "quorum-fx"], ["Light hero fields", "quorum-hero"], ["Vendor side", "vendor"],
   ],
   Loop: [
+    ["Sun plan", "sun"], ["Sun space and plans", "sun-pages"],
     ["Home feed", "home-feed"], ["Home blend", "home-blend"], ["Home chips", "home-chips"], ["Home filters", "home-filters"], ["Home v2", "home-v2"],
     ["Intent", "intent"], ["Intent @ pins", "intent-at"], ["Intent pills", "intent-pills"],
     ["Anchor", "anchor"], ["Anchor detail", "anchor-detail"], ["Anchor minimal", "anchor-min"], ["Anchor tiles", "anchor-tile"],

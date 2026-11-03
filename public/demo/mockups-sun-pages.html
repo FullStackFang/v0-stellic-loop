@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop · Sun · the other pages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#1a1612; --paper:#fffdf7; --expo:cubic-bezier(.16,1,.3,1); }
+  *{ box-sizing:border-box; } button{ font-family:inherit; cursor:pointer; color:inherit; border:0; }
+  body{ margin:0; background:#f2efe8; color:var(--ink); font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; padding:48px 20px 80px; font-variation-settings:'wdth' 100; }
+  .wrap{ max-width:1400px; margin:0 auto; }
+  .eyebrow{ font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#7a736a; font-weight:700; }
+  h1{ font-variation-settings:'wdth' 112; font-weight:800; font-size:46px; line-height:1; letter-spacing:-.03em; margin:14px 0 12px; max-width:24ch; }
+  h1 em{ font-style:normal; color:#d9730d; }
+  .wrap > p{ color:#5b554c; font-size:15.5px; line-height:1.55; max-width:70ch; margin:0; }
+  .wrap > p b{ color:var(--ink); font-weight:700; }
+  .rail{ display:flex; gap:44px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-top:44px; }
+  .col{ width:390px; max-width:100%; }
+  .lbl{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#7a736a; font-weight:700; display:flex; justify-content:space-between; align-items:center; margin:0 0 12px 4px; min-height:24px; }
+  .lbl b{ color:var(--ink); }
+  .cap{ font-size:13.5px; line-height:1.55; color:#6b655c; margin:16px 4px 0; }
+  .cap b{ color:var(--ink); font-weight:700; }
+
+  .phone{ width:390px; max-width:100%; height:844px; border-radius:46px; overflow:hidden; position:relative; isolation:isolate; display:flex; flex-direction:column; box-shadow:0 40px 80px -30px rgba(26,22,18,.45), 0 0 0 1px rgba(26,22,18,.1); background:var(--paper); color:var(--ink); }
+  .status{ display:flex; justify-content:space-between; align-items:center; padding:16px 28px 0; font-size:13px; font-weight:700; position:relative; z-index:3; font-variant-numeric:tabular-nums; }
+  .status svg{ height:11px; }
+  .screen{ flex:1; overflow:auto; scrollbar-width:none; position:relative; z-index:2; padding:0 20px 150px; }
+  .screen.nobar{ padding-bottom:40px; }
+  .screen::-webkit-scrollbar{ display:none; }
+  .face{ object-fit:cover; display:block; background:#999; }
+  .head{ display:flex; justify-content:space-between; align-items:center; padding:14px 24px 0; position:relative; z-index:3; font-weight:800; }
+  .wm{ font-variation-settings:'wdth' 125; font-size:22px; letter-spacing:-.02em; }
+  .space{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:800; background:var(--ink); color:var(--paper); padding:6px 10px; border-radius:4px; }
+  .tag{ margin:34px 4px 0; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; display:flex; align-items:center; gap:10px; }
+  .tag i{ width:10px; height:10px; border-radius:50%; background:var(--ink); }
+  h2{ font-variation-settings:'wdth' 96; font-weight:900; font-size:56px; line-height:.9; letter-spacing:-.035em; margin:10px 4px 0; text-transform:uppercase; }
+  .sub{ margin:14px 4px 0; font-size:14.5px; font-weight:600; opacity:.8; }
+  .sec{ margin:30px 4px 0; display:flex; justify-content:space-between; align-items:baseline; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; border-bottom:3px solid var(--ink); padding-bottom:8px; }
+  .sec span:last-child{ opacity:.55; letter-spacing:.1em; }
+
+  /* a plan row, lit by its own hour and sky */
+  .row{ --tint:#ffe14a; --fg:var(--ink); --sx:4px; --sy:6px; --shade:var(--ink); color:var(--fg); display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start; background:var(--tint); border:3px solid var(--ink); border-radius:22px; padding:16px 16px 14px; margin-top:16px; box-shadow:var(--sx) var(--sy) 0 0 var(--shade); text-decoration:none; position:relative; }
+  .row:first-of-type{ margin-top:14px; }
+  .row .wx{ position:absolute; right:14px; top:12px; width:20px; height:20px; }
+  .row .t{ font-variation-settings:'wdth' 96; font-weight:900; font-size:26px; line-height:.95; letter-spacing:-.03em; text-transform:uppercase; padding-right:28px; }
+  .row .s{ margin-top:8px; font-size:13px; font-weight:600; line-height:1.4; }
+  .row .s b{ font-weight:800; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; }
+  .row .st{ margin-top:8px; font-size:12px; font-weight:800; display:flex; align-items:center; gap:7px; }
+  .row .st i{ width:8px; height:8px; border-radius:50%; background:var(--paper); border:2px solid var(--fg); }
+  .row .st.q{ opacity:.65; }
+  .row .stack{ display:flex; margin-top:12px; }
+  .row .stack .face{ width:30px; height:30px; border-radius:50%; border:2.5px solid var(--ink); margin-left:-8px; background:var(--paper); }
+  .row .stack .face:first-child{ margin-left:0; }
+  .row .stack .face.slot{ border-style:dashed; background:transparent; }
+  .row .n{ text-align:right; display:flex; flex-direction:column; align-items:flex-end; margin-top:22px; padding-right:4px; }
+  .row .n .num{ font-variation-settings:'wdth' 62; font-weight:900; font-size:64px; line-height:.8; letter-spacing:-.03em; padding-right:3px; color:var(--paper); text-shadow:var(--sx) var(--sy) 0 var(--shade); font-variant-numeric:tabular-nums; }
+  .row .n .num small{ font-size:22px; color:var(--fg); text-shadow:none; margin-left:4px; letter-spacing:0; }
+  .row .n .mini{ display:flex; gap:3px; margin-top:12px; }
+  .row .n .mini b{ width:12px; height:7px; border:2px solid var(--fg); border-radius:999px; }
+  .row .n .mini b.f{ background:var(--paper); }
+  .row .n .tagx{ margin-top:10px; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:800; }
+  .row.dead{ --tint:#dcd7cc; --shade:rgba(26,22,18,.25); --sx:2px; --sy:3px; }
+  .row.dead .t{ opacity:.7; } .row.dead .n .num{ color:var(--paper); }
+
+  .wrapped{ margin:26px 4px 0; border-top:3px solid var(--ink); padding-top:12px; font-size:13.5px; font-weight:700; cursor:pointer; }
+  .wrapped .wh{ display:flex; justify-content:space-between; align-items:center; }
+  .wrapped .wh small{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:800; opacity:.6; }
+  .wrapped .lines{ display:none; padding-top:4px; }
+  .wrapped.open .lines{ display:block; }
+  .wrapped .lines div{ padding:9px 0; border-bottom:2px dashed #d8d1c2; font-weight:600; opacity:.75; display:flex; justify-content:space-between; }
+
+  .optin{ margin:30px 4px 0; padding:16px; border:3px solid var(--ink); border-radius:20px; display:grid; grid-template-columns:1fr auto; gap:14px; align-items:start; background:var(--paper); box-shadow:5px 6px 0 0 var(--ink); }
+  .optin p{ margin:0; font-size:13.5px; line-height:1.45; font-weight:600; }
+  .optin p b{ display:block; font-weight:900; font-size:14.5px; margin-bottom:4px; font-variation-settings:'wdth' 96; }
+  .optin small{ display:block; margin-top:8px; font-size:12px; opacity:.65; }
+  .tog{ width:50px; height:30px; border-radius:999px; background:var(--paper); border:3px solid var(--ink); position:relative; padding:0; transition:background .25s; }
+  .tog::after{ content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--ink); transition:transform .25s var(--expo); }
+  .tog[aria-checked="true"]{ background:#ffe14a; } .tog[aria-checked="true"]::after{ transform:translateX(20px); }
+
+  .bar{ position:absolute; left:0; right:0; bottom:0; z-index:4; padding:14px 20px 28px; display:flex; flex-direction:column; align-items:center; gap:12px; background:linear-gradient(to top, var(--paper) 62%, transparent); }
+  .cta{ width:100%; height:58px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:16px; background:var(--ink); color:var(--paper); border-radius:999px; font-variation-settings:'wdth' 110; font-weight:900; text-transform:uppercase; letter-spacing:.05em; box-shadow:5px 6px 0 0 #b9b2a6; transition:transform .08s, box-shadow .08s; }
+  .cta:active{ transform:translate(5px,6px); box-shadow:none; }
+  .cta.ghost{ background:var(--paper); color:var(--ink); border:3px solid var(--ink); box-shadow:none; }
+  .alt{ background:none; font-size:13px; font-weight:700; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:2px; padding:0; }
+
+  /* didn't form plan page: the sky went out */
+  .dnf{ background:#dcd7cc; }
+  .dnf .bar{ background:linear-gradient(to top, #dcd7cc 62%, transparent); }
+  .dnf .tag i{ background:#8a8378; }
+  .dnf .when{ margin:20px 4px 0; font-size:15px; line-height:1.5; font-weight:600; }
+  .dnf .when b{ font-weight:800; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:5px; }
+  .dnf .wxc{ margin:14px 4px 0; display:inline-flex; align-items:center; gap:9px; font-size:13px; font-weight:800; background:var(--paper); border:2.5px solid #8a8378; color:#5b554c; border-radius:999px; padding:6px 13px 6px 9px; }
+  .dnf .wxc svg{ width:18px; height:18px; }
+  .dnf .count{ margin:30px 4px 0; display:flex; align-items:flex-end; gap:24px; }
+  .dnf .big{ font-variation-settings:'wdth' 62; font-weight:900; font-size:156px; line-height:.8; letter-spacing:-.06em; color:var(--paper); text-shadow:2px 3px 0 rgba(26,22,18,.25); }
+  .dnf .of{ font-weight:800; font-size:26px; line-height:1; padding-bottom:10px; }
+  .dnf .of small{ display:block; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; margin-top:8px; }
+  .dnf .bars{ display:flex; gap:8px; margin:22px 4px 0; }
+  .dnf .bars b{ flex:1; height:14px; border:2.5px solid #8a8378; border-radius:999px; }
+  .dnf .bars b.f{ background:var(--paper); }
+  .dnf .lead{ margin:16px 4px 0; font-size:15.5px; font-weight:800; } .dnf .lead span{ font-weight:600; opacity:.75; }
+  .dnf .faces{ display:flex; gap:12px; margin:28px 4px 0; }
+  .dnf .p{ display:flex; flex-direction:column; align-items:center; gap:14px; font-size:12px; font-weight:800; }
+  .dnf .p .face{ width:68px; height:68px; border-radius:50%; border:3px solid #8a8378; filter:saturate(.6); }
+  .dnf .p.slot .face{ border:3px dashed #8a8378; filter:none; background:transparent; }
+  .dnf .det{ margin:32px 4px 0; border-top:2.5px solid #8a8378; }
+  .dnf .det div{ display:flex; justify-content:space-between; gap:12px; padding:13px 0; border-bottom:2px solid #8a8378; font-size:14px; font-weight:600; }
+  .dnf .det small{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:800; opacity:.6; white-space:nowrap; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Loop · Sun · pages · 2026-11-03</div>
+  <h1>The space, your week, and the one that <em>didn't form.</em></h1>
+  <p>Chrome is paper and ink. Every plan row is a block in its own light: the hour and the forecast of that plan, with the same hard shadow swinging the way its sun would. The list is never one color. The didn't-form page is what happens when the sky goes out: flat grey, no sun, the count stays honest.</p>
+  <div class="rail" id="rail"></div>
+</div>
+
+<script>
+const el = (h)=>{ const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstChild; };
+const STATUS = `<div class="status"><span>9:41</span><svg viewBox="0 0 48 12"><rect x="0" y="6" width="4" height="6" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="8" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="18" y="0" width="4" height="12" rx="1" fill="currentColor"/><rect x="28" y="1" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="30" y="3" width="13" height="6" rx="1.5" fill="currentColor"/></svg></div>`;
+const HEAD = `<div class="head"><span class="wm">Loop</span><span class="space">EMBA 2027</span></div>`;
+const F = (n,s=64)=>`<img class="face" src="https://i.pravatar.cc/${s}?img=${n}" alt="">`;
+const ICON = {
+  clear:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>`,
+  cloudy:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 8.5a4.5 4.5 0 0 1 .5 9z"/></svg>`,
+  rain:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 15a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 5.5a4.5 4.5 0 0 1 .5 9" fill="currentColor" stroke="none"/><path d="M8 17l-1.5 3M12 17l-1.5 3M16 17l-1.5 3"/></svg>`,
+};
+const STOPS = [[5,'#4b3461'],[5.5,'#b0646a'],[6,'#ffb15c'],[9,'#ffcd3a'],[13,'#ffe14a'],[16,'#ffcf3a'],[18,'#ff8a66'],[18.75,'#8c4663'],[19.5,'#2d2b4e'],[21,'#1b1e38'],[24,'#141730'],[27,'#121528'],[28.5,'#1e2142'],[29,'#4b3461']];
+const hex=(h)=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>'#'+a.map((v,i)=>Math.round(v+(b[i]-v)*t).toString(16).padStart(2,'0')).join('');
+const lum=(h)=>{ const [r,g,b]=hex(h).map(v=>{ v/=255; return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4); }); return .2126*r+.7152*g+.0722*b; };
+function tintAt(tt){ for(let i=0;i<STOPS.length-1;i++){ const [t0,c0]=STOPS[i],[t1,c1]=STOPS[i+1]; if(tt<=t1) return mix(hex(c0),hex(c1),(tt-t0)/(t1-t0)); } return STOPS.at(-1)[1]; }
+/* One wheel. The sun sits at twelve o'clock at noon and the moon opposite it; the wheel turns once a day, so each dips under the page while the other is up. The wheel is wider and taller than the phone, so they leave through the edges. Whichever is higher casts the shadows. */
+const WHEEL={ cx:195, cy:488, rx:220, ry:393 };
+function solar(t, w){
+  t=((t%24)+24)%24; const tt=t<5?t+24:t;
+  const th=(t-12)/24*2*Math.PI; const sun={ s:Math.sin(th), c:Math.cos(th) }; const moon={ s:-sun.s, c:-sun.c };
+  const night=moon.c>sun.c; const lit=night?moon:sun; const e=Math.max(0,lit.c);
+  const taper=Math.min(1,e/.35);
+  let L=night?3+3*(1-e):4+8*(1-e); let alpha=night?.62:.5+.5*taper; const rgb=night?'8,9,24':'26,22,18';
+  if(w==='cloudy'){ L*=.5; alpha=night?.45:.28+.12*taper; }
+  if(w==='rain'){ L=2; alpha=night?.32:.22; }
+  const sx=-lit.s*L, sy=3+L*0.45;
+  const deep=night?Math.min(1,e*3):0;
+  let tint=tintAt(tt);
+  if(w==='cloudy') tint=mix(hex(tint),hex(mix(hex('#d8d1c2'),hex('#2a2d3d'),deep)),.5);
+  if(w==='rain') tint=mix(hex(tint),hex(mix(hex('#9fb0c2'),hex('#273243'),deep)),.72);
+  const Lm=lum(tint); const paperWins=(1.03/(Lm+.05))>((Lm+.05)/.062);
+  const pos=(b)=>({ x:WHEEL.cx+WHEEL.rx*b.s, y:WHEEL.cy-WHEEL.ry*b.c, vis:Math.max(0,Math.min(1,(b.c+.14)/.14)) });
+  return { night, e, deep, tint, sx, sy, shade:`rgba(${rgb},${alpha.toFixed(2)})`, fg:paperWins?'#fffdf7':'#1a1612', dark:paperWins, sun:pos(sun), moon:pos(moon), light:pos(lit) };
+}
+
+function lightVars(t, w){
+  const o=solar(t,w); const k=.75; /* rows sit closer to the paper than the plan page, so their shadows run shorter */
+  return `--tint:${o.tint};--fg:${o.fg};--sx:${(o.sx*k).toFixed(1)}px;--sy:${(3+(o.sy-3)*k).toFixed(1)}px;--shade:${o.shade}`;
+}
+function row(o){
+  const bars=o.of?Array.from({length:o.of},(_,i)=>`<b class="${i<o.n?'f':''}"></b>`).join(''):'';
+  const stack=o.faces.map(f=> f==null?`<span class="face slot"></span>`:F(f)).join('');
+  return `<a class="row ${o.dead?'dead':''}" href="#" style="${lightVars(o.t,o.w)}">
+    <span class="wx">${ICON[o.w]}</span>
+    <div><div class="t">${o.title}</div><div class="s"><b>${o.when}</b> · ${o.where}</div>${o.st?`<div class="st ${o.st.q?'q':''}"><i></i>${o.st.text}</div>`:''}<div class="stack">${stack}</div></div>
+    <div class="n">${o.tag?`<div class="num">${o.n}</div><div class="tagx">${o.tag}</div>`:`<div class="num">${o.n}<small>/${o.of}</small></div><div class="mini">${bars}</div>`}</div>
+  </a>`;
+}
+const SPACE = `<div class="phone" id="space">${STATUS}${HEAD}
+  <div class="screen">
+    <div class="tag"><i></i>Space · 5 open · 2 meeting this week</div>
+    <h2>EMBA 2027</h2>
+    <div class="sub">38 in the space · open to the cohort · plans form at 4</div>
+    <div class="sec"><span>Open</span><span>forms at 4</span></div>
+    ${row({t:18,w:'clear',title:'Overnight boat',when:'Fri 20 Feb, 6:00pm',where:'Cat Ba pier',n:3,of:4,faces:[12,47,33,null],st:{text:'One more and it forms'}})}
+    ${row({t:19.5,w:'cloudy',title:'Tuesday case prep',when:'Tue, 7:30pm',where:'Library 2F',n:2,of:4,faces:[5,20,null,null]})}
+    ${row({t:11,w:'rain',title:'Dim sum Sunday',when:'Sun 22 Feb, 11:00am',where:'Tim Ho Wan',n:1,of:4,faces:[8,null,null,null],st:{text:'You posted this · 9 days left',q:true}})}
+    ${row({t:16,w:'clear',title:'Padel, beginners',when:'Sat, 4:00pm',where:'Saigon Sports Club',n:2,of:4,faces:[26,41,null,null]})}
+    ${row({t:22,w:'clear',title:'Night market',when:'Fri 27 Feb, 10:00pm',where:'Temple Street',n:3,of:5,faces:[16,29,52,null,null]})}
+    <div class="sec"><span>Meeting this week</span><span>every week</span></div>
+    ${row({t:6.5,w:'clear',title:'Thursday run',when:'Thu, 6:30am',where:'the Bund',n:5,faces:[8,14,22,31,44],st:{text:'4 of 5 said still on'},tag:'in · join'})}
+    ${row({t:21,w:'clear',title:'Poker',when:'Sat, 9:00pm',where:"at Tom's",n:6,faces:[33,12,17,25,38,51],tag:'full'})}
+    <div class="wrapped" data-wrapped><div class="wh"><span>Wrapped up · 3</span><small data-wlabel>show</small></div><div class="lines"><div><span>Wine night</span><span>didn't form · 2 of 4</span></div><div><span>Padel, advanced</span><span>didn't form · 1 of 4</span></div><div><span>Book club</span><span>wrapped up after 7 weeks</span></div></div></div>
+  </div>
+  <div class="bar"><button class="cta">Post an intent</button><span class="alt">Copy the space link</span></div>
+</div>`;
+const ME = `<div class="phone" id="me">${STATUS}${HEAD}
+  <div class="screen nobar">
+    <div class="tag"><i></i>Your week · Mon 16 Feb</div>
+    <h2>Your week</h2>
+    <div class="sub">2 crews · 1 forming · 1 you posted</div>
+    <div class="sec"><span>This week</span><span>still on?</span></div>
+    ${row({t:6.5,w:'clear',title:'Thursday run',when:'Thu 6:30am',where:'the Bund · in 3 days',n:5,faces:[8,14,22,31,44],st:{text:'You said yes · 4 of 5 so far'},tag:'in'})}
+    ${row({t:21,w:'clear',title:'Poker',when:'Sat 9:00pm',where:"at Tom's",n:6,faces:[33,12,17,25,38,51],st:{text:'Reminder comes Friday',q:true},tag:'full'})}
+    <div class="sec"><span>Forming</span><span>you're in</span></div>
+    ${row({t:18,w:'clear',title:'Overnight boat',when:'Fri 20 Feb, 6:00pm',where:'Cat Ba pier',n:3,of:4,faces:[12,47,8,null],st:{text:'One more and it forms'}})}
+    <div class="sec"><span>You posted</span><span></span></div>
+    ${row({t:11,w:'rain',title:'Dim sum Sunday',when:'Sun 22 Feb, 11:00am',where:'Tim Ho Wan',n:1,of:4,faces:[8,null,null,null],st:{text:'9 days left, then it closes',q:true}})}
+    <div class="optin">
+      <p><b>Let the EMBA office see whether you're in a standing crew</b>They see yes or no, and how many weeks. Not which crew, not who with, not anything you post.<small>Off by default. Change it any time.</small></p>
+      <button class="tog" role="switch" aria-checked="false" aria-label="Share with steward" data-tog></button>
+    </div>
+  </div>
+</div>`;
+const DNF = `<div class="phone dnf" id="dnf">${STATUS}${HEAD}
+  <div class="screen">
+    <div class="tag"><i></i>Didn't form · 2 of 4</div>
+    <h2>Wine night</h2>
+    <div class="when"><b>Was Thu 12 Feb, 8:00pm</b><br>Tannin, Hai Ba Trung · closed after 14 days</div>
+    <div class="wxc">${ICON.cloudy}<span>It was 22° and overcast. Nobody's fault.</span></div>
+    <div class="count"><span class="big">2</span><span class="of">of 4<small>closed</small></span></div>
+    <div class="bars"><b class="f"></b><b class="f"></b><b></b><b></b></div>
+    <div class="lead">Two were in. <span>Nobody has to chase anyone.</span></div>
+    <div class="faces">
+      <div class="p">${F(12,160)}Marcus</div>
+      <div class="p">${F(47,160)}Elena</div>
+      <div class="p slot"><span class="face"></span>&nbsp;</div>
+      <div class="p slot"><span class="face"></span>&nbsp;</div>
+    </div>
+    <div class="det"><div><span>Try a different night? Posting again starts a fresh count.</span><small>Loop</small></div></div>
+  </div>
+  <div class="bar"><button class="cta ghost">Post it again</button><span class="alt">Back to EMBA 2027</span></div>
+</div>`;
+
+const rail=document.getElementById('rail');
+rail.appendChild(el(`<div class="col"><div class="lbl"><span>Space page · <b>EMBA 2027</b></span></div>${SPACE}<div class="cap"><b>Space.</b> Open intents first, each block lit by its own plan: the boat at six is orange, case prep at half past seven is night under cloud, dim sum in the rain is cool. Crews meeting this week below, wrapped-up plans folded but readable. One pinned action.</div></div>`));
+rail.appendChild(el(`<div class="col"><div class="lbl"><span>My plans · <b>Your week</b></span></div>${ME}<div class="cap"><b>My plans.</b> Only what is yours: this week's crews with your still-on answer, the plan you are waiting on, the one you posted. The steward opt-in sits at the bottom, off by default, with the spec's exact copy.</div></div>`));
+rail.appendChild(el(`<div class="col"><div class="lbl"><span>Plan page · <b>Didn't form</b></span></div>${DNF}<div class="cap"><b>Didn't form.</b> The sky goes out: flat grey, no sun, no shadow. The count stays honest at 2 of 4, the two who were in are still named, and the only action is to post it again.</div></div>`));
+
+document.querySelectorAll('[data-wrapped]').forEach(w=>w.addEventListener('click',()=>{ w.classList.toggle('open'); w.querySelector('[data-wlabel]').textContent=w.classList.contains('open')?'hide':'show'; }));
+document.querySelectorAll('[data-tog]').forEach(t=>t.addEventListener('click',()=>t.setAttribute('aria-checked', t.getAttribute('aria-checked')==='true'?'false':'true')));
+</script>
+</body>
+</html>
