@@ -56,18 +56,20 @@ export function PostForm({ slug, signedIn, from, days }: { slug: string; signedI
     });
   }
 
-  return <div className="page">
+  return <div className="page post-page">
     <h1 className="ptitle">{from ? "Post it again" : "Post an intent"}</h1>
-    <p className="pbody">A title is enough. You&apos;re in automatically. Day, time and place are optional.</p>
+    <p className="pbody">A title is enough. You&apos;re in automatically.</p>
     <form onSubmit={e=>{e.preventDefault();onPost();}}>
       <div className="field"><label htmlFor="pf-title">What</label><input id="pf-title" value={title} onChange={e=>setTitle(e.target.value)} maxLength={80} required /></div>
-      <div className="field"><label id="pf-day">Day</label><div className="days" role="group" aria-labelledby="pf-day"><button type="button" aria-pressed={!day} onClick={()=>setDay("")}>Any day</button>{days.map(d=><button key={d} type="button" aria-pressed={day===d} onClick={()=>setDay(d)}>{shortLabel(d)}</button>)}</div></div>
-      <div className="field"><label htmlFor="pf-time">Time</label><input id="pf-time" placeholder="7:30pm" value={time} onChange={e=>setTime(e.target.value)} maxLength={40}/></div>
-      <div className="field"><label htmlFor="pf-place">Place</label><input id="pf-place" value={place} onChange={e=>setPlace(e.target.value)} maxLength={200}/></div>
+      <div className="field"><label id="pf-day">Day <span className="optional">optional</span></label><div className="days" role="group" aria-labelledby="pf-day"><button type="button" aria-pressed={!day} onClick={()=>setDay("")}>Any day</button>{days.map(d=><button key={d} type="button" aria-pressed={day===d} onClick={()=>setDay(d)}>{shortLabel(d)}</button>)}</div></div>
+      <div className="slot-fields">
+        <div className="field"><label htmlFor="pf-time">Time <span className="optional">optional</span></label><input id="pf-time" placeholder="7:30pm" value={time} onChange={e=>setTime(e.target.value)} maxLength={40}/></div>
+        <div className="field"><label htmlFor="pf-place">Place <span className="optional">optional</span></label><input id="pf-place" value={place} onChange={e=>setPlace(e.target.value)} maxLength={200}/></div>
+      </div>
       {error && !stage ? <div className="err" role="alert">{error}</div>:null}
       {!stage?<button className="solid" type="submit" disabled={busy}>Post an intent <Arrow/></button>:null}
     </form>
     <IdentityFields signedIn={signedIn} stage={stage} value={ident} onChange={setIdent} onSubmit={onIdentity} busy={busy} error={stage?error:null} cta="Post an intent"/>
-    <Link className="solid quiet" href={'/b/'+slug}>Cancel</Link>
+    <Link className="cancel" href={'/b/'+slug}>Cancel</Link>
   </div>;
 }

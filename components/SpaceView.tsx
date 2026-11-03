@@ -9,5 +9,9 @@ export function SpaceView({ board, open, formed, wrapped, members }: { board: Bo
     {open.length ? <><div className="sec"><span>Open</span><span>forms at 4</span></div>{open.map(c => <PlanRow key={c.id} plan={c} />)}</> : null}
     {formed.length ? <><div className="sec"><span>Formed</span></div>{formed.map(c => <PlanRow key={c.id} plan={c} />)}</> : null}
     {wrapped.length ? <details className="wrapped"><summary>Wrapped up · {wrapped.length}</summary><div className="lines">{wrapped.map(c => <Link key={c.id} href={`/p/${c.id}`}>{c.title} — {c.state === "didnt_form" ? `didn't form · ${c.count} of ${c.threshold}` : c.state === "past" ? "happened" : "closed"}</Link>)}</div></details> : null}
-    <div className="bar"><Link className="cta" href={`/b/${board.slug}/new`}>Post an intent</Link><CopyLink slug={board.slug} /></div></>;
+    </>;
+}
+
+export function SpaceActions({ slug }: { slug: string }) {
+  return <footer className="bar"><Link className="cta" href={`/b/${slug}/new`}>Post an intent</Link><CopyLink slug={slug} /></footer>;
 }

@@ -135,3 +135,25 @@
 .sun .bar,.sun .p .face,.sun .slot-edit,.sun .addrow{ text-shadow:none; }
 .sun .p.slot .face{background:transparent;color:var(--fg)}
 .toast{visibility:hidden}.toast.show{visibility:visible}
+
+/* The space actions occupy their own row, below the scrolling plan list. */
+.app.with-footer{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.with-footer>.head{flex-shrink:0}
+.with-footer>.screen{flex:1;min-height:0;overflow-y:auto;padding-bottom:24px;scrollbar-width:none}
+.with-footer>.bar{position:relative!important;left:auto!important;right:auto;bottom:auto;transform:none;width:100%;flex-shrink:0;border-top:2px solid var(--ink);padding-bottom:max(28px,env(safe-area-inset-bottom))}
+@media(min-width:700px){.app.with-footer{height:min(844px,calc(100vh - 64px))}}
+
+.post-page{padding-top:18px}
+.post-page h1.ptitle{font-size:38px;line-height:1;margin:0}
+.post-page .pbody{margin:8px 0 16px;line-height:1.4}
+.post-page .field{margin:12px 0}
+.post-page .field label{margin-bottom:6px}
+.post-page .field input{min-height:44px;padding:9px 10px;font-size:16px}
+.post-page .optional{font-size:11px;font-weight:500}
+.post-page .days{gap:6px}
+.post-page .days button{min-height:36px;padding:6px 9px;font-size:13px}
+.post-page .slot-fields{display:grid;grid-template-columns:1fr 1.25fr;gap:12px}
+.post-page .slot-fields>.field{min-width:0;margin-top:0}
+.post-page .solid{width:100%;min-height:46px;margin-top:4px}
+.post-page .solid svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.post-page .cancel{display:block;width:max-content;margin:8px auto 0;padding:8px 16px;text-decoration:underline;font-size:13px;font-weight:700}

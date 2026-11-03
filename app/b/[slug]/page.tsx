@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { SpaceView } from "@/components/SpaceView";
+import { SpaceActions, SpaceView } from "@/components/SpaceView";
 import { Shell } from "@/components/Shell";
 import { db } from "@/lib/db";
 import { boardBySlug, boardData } from "@/lib/load";
@@ -28,7 +28,7 @@ export default async function BoardPage({ params }: { params: Promise<{ slug: st
   const lit = async (items: typeof sorted.open) => Promise.all(items.map(async it => { const c = model(it); return {...c,...await forecast(board,c.day)}; }));
   const [open, formed, wrapped] = await Promise.all([lit(sorted.open),lit(sorted.on),lit(sorted.past)]);
   return (
-    <Shell board={board} tab="board">
+    <Shell board={board} tab="board" footer={<SpaceActions slug={board.slug} />}>
       <SpaceView board={board} open={open} formed={formed} wrapped={wrapped} members={members} />
     </Shell>
   );
