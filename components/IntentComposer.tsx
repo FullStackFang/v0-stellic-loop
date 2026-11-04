@@ -5,11 +5,22 @@ import { shortLabel, mon } from "@/lib/days";
 
 type Field = "title" | "day" | "time" | "place" | "rhythm" | number | "preference";
 const labels = { title: "Activity", day: "Day", time: "Time", place: "Place", rhythm: "Rhythm", preference: "Preference" };
+const preferenceIdeas = {
+  food: ["after 7", "ramen", "quiet place"],
+  coffee: ["morning", "quiet place", "bring a book"],
+  general: ["after work", "nearby", "low key"],
+};
 
 export function IntentComposer({ value, onChange, days, disabled = false, fixedTitle = false }: {
   value: string; onChange: (value: string) => void; days: string[]; disabled?: boolean; fixedTitle?: boolean;
 }) {
   const draft = parseIntent(value, days);
+  const mention = value.match(/(?:^|\s)@([^\n@]*)$/);
+  const ideas = /\b(dinner|lunch|brunch|food|eat|ramen)\b/i.test(draft.title) ? preferenceIdeas.food
+    : /\b(coffee|cafe|café)\b/i.test(draft.title) ? preferenceIdeas.coffee : preferenceIdeas.general;
+  const suggestions = mention && !disabled && !fixedTitle
+    ? ideas.filter(idea => idea.includes(mention[1].trim().toLowerCase()) && !draft.intent.preferences.some(p => p.toLowerCase() === idea)).slice(0, 3)
+    : [];
   const [editing, setEditing] = useState<Field | null>(null);
   const [editValue, setEditValue] = useState("");
   const [editError, setEditError] = useState("");
@@ -27,6 +38,12 @@ export function IntentComposer({ value, onChange, days, disabled = false, fixedT
   }
   function close() { setEditing(null); setEditError(""); (fixedTitle ? opener.current?.isConnected ? opener.current : root.current?.querySelector<HTMLElement>(".intent-add") : source.current)?.focus(); }
   function commit(next: IntentDraft) { onChange(serializeIntent(next)); close(); }
+  function addSuggestion(idea: string) {
+    const next = `${value.slice(0, value.lastIndexOf("@"))}@${idea} `;
+    onChange(next);
+    source.current?.focus();
+    source.current?.setSelectionRange(next.length, next.length);
+  }
   function apply() {
     if (editing === null) return;
     const text = editValue.trim().replace(/\s+/g, " ");
@@ -49,6 +66,7 @@ export function IntentComposer({ value, onChange, days, disabled = false, fixedT
     {!fixedTitle ? <div className="intent-writing">
       <label htmlFor="intent-text">I’m up for</label>
       <textarea ref={source} id="intent-text" rows={3} maxLength={1201} value={value} disabled={disabled} onChange={e => onChange(e.target.value)} placeholder={"Dinner Thursdays\n@ramen @after 7"} aria-describedby="intent-help" />
+      {suggestions.length ? <div className="intent-suggestions" role="group" aria-label="Preference ideas"><span>Ideas</span>{suggestions.map(idea => <button key={idea} type="button" onClick={() => addSuggestion(idea)} aria-label={`Add @${idea}`}>@{idea}</button>)}</div> : null}
       <p id="intent-help">Write freely. Start each preference with @.</p>
     </div> : null}
     <div className="intent-read">

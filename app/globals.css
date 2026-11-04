@@ -164,6 +164,9 @@
 .intent-writing label,.intent-label{display:block;font-size:11px;font-weight:800;margin-bottom:7px}
 .intent-writing textarea{display:block;width:100%;resize:vertical;border:0;background:transparent;color:var(--ink);font-family:inherit;font-size:25px;font-weight:800;line-height:1.25;padding:0;min-height:94px;border-radius:0}
 .intent-writing textarea::placeholder{color:#62572c;opacity:1}
+.intent-suggestions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:10px}
+.intent-suggestions span{font-size:11px;font-weight:800;margin-right:2px}
+.intent-suggestions button{border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);padding:5px 8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .intent-writing p{font-size:11px;margin:9px 0 0;line-height:1.4}
 .intent-read{margin-bottom:14px}
 .intent-pins{display:flex;gap:6px;flex-wrap:wrap;align-items:center}

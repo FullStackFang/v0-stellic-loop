@@ -23,3 +23,22 @@ it("uses explicit day editing without submitting the form", () => {
   expect(any).toHaveFocus(); fireEvent.click(any);
   expect(screen.getByRole("button",{name:"Edit Day"})).toHaveTextContent("Any day");
 });
+it("offers immediate activity suggestions after @ and inserts one", () => {
+  render(<Composer/>);
+  const input = screen.getByRole("textbox", { name: "I’m up for" });
+  fireEvent.change(input, { target: { value: "Dinner @" } });
+  expect(screen.getByRole("button", { name: "Add @after 7" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Add @after 7" }));
+  expect(input).toHaveValue("Dinner @after 7 ");
+  expect(input).toHaveFocus();
+});
+it("filters suggestions and preserves custom @ preferences", () => {
+  render(<Composer/>);
+  const input = screen.getByRole("textbox", { name: "I’m up for" });
+  fireEvent.change(input, { target: { value: "Dinner @ram" } });
+  expect(screen.getByRole("button", { name: "Add @ramen" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Add @after 7" })).not.toBeInTheDocument();
+  fireEvent.change(input, { target: { value: "Dinner @my own idea" } });
+  expect(screen.queryByRole("group", { name: "Preference ideas" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Edit preference @my own idea" })).toBeInTheDocument();
+});
