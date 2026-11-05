@@ -20,6 +20,8 @@ export type Pending = (
   | { kind: "respond"; proposalId: string; answer: "in" | "out" | "maybe" }
   | { kind: "post"; boardId: string; post: Record<string, unknown> }
   | { kind: "board"; name: string; tz: string }
+  | { kind: "trip"; name: string; tz: string }
+  | { kind: "join_trip"; boardId: string; slug: string }
 ) & { person?: string };
 
 export type Who =

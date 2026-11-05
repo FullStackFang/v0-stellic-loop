@@ -8,7 +8,7 @@ const archivo = localFont({ src: "../public/fonts/Archivo.ttf", variable: "--fon
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "Loop",
-  description: "Post an intent. Tap in. When enough of you join, it forms.",
+  description: "Your cohort trip, in one place. Keep your travel details together and coordinate plans with the group.",
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#fffdf7" };

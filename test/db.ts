@@ -7,7 +7,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { fromPool, PARSERS, setDb, type Db, type Q } from "@/lib/db";
 
 const MIGRATIONS = join(__dirname, "..", "supabase", "migrations");
-const TABLES = "event, share, otp_code, magic_token, free_day, response, proposal_detail, board_person, proposal, person, board";
+const TABLES = "trip_workspace, event, share, otp_code, magic_token, free_day, response, proposal_detail, board_person, proposal, person, board";
 
 export type TestDb = { db: Db; reset(): Promise<void>; close(): Promise<void> };
 

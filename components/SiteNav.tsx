@@ -7,7 +7,7 @@ const APP = [
   ["Space", "/b/emba27"],
   ["Post", "/b/emba27/new"],
   ["Your plans", "/b/emba27/you"],
-  ["Start a board", "/"],
+  ["Start a trip", "/"],
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],
 ] as const;
@@ -37,6 +37,7 @@ const MOCKUPS = {
 /** Laptop-only menu beside the phone: the live app's screens, then the static demos and mockups (new tab). */
 export function SiteNav() {
   const path = usePathname();
+  if (path === "/" || path.startsWith("/trip/")) return null;
   return (
     <nav className="sitenav" aria-label="Site">
       <p className="lab">App</p>

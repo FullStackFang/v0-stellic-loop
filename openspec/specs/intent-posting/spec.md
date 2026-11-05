@@ -4,15 +4,11 @@
 TBD - created by archiving change quorum-board. Update Purpose after archive.
 ## Requirements
 ### Requirement: A title is enough to post
-The post form SHALL require only a title and a "needs a day" switch (default on). Behind a fold it SHALL offer, all optional: a one-line detail, rough cost as text, time as text, a minimum number, and links one per line. Posting SHALL create the proposal with `status=open`, record the poster as `in` with their free days attached, and write a `proposal_posted` event.
+The post form SHALL use `freeform-intent-composer` to obtain the required activity title (at most 80 characters) and optional day, time, place, rhythm and preferences. Posting SHALL create an open proposal with `needs_day=false`, store the interpreted values, record the poster as in, and write one proposal_posted event. The minimum SHALL remain the existing default.
 
 #### Scenario: Minimal post
-- **WHEN** a signed-in person posts "Suits in Hoi An" with nothing else
-- **THEN** a proposal exists with that title, needs a day, no minimum, the poster in, and one `proposal_posted` event
-
-#### Scenario: Post with links
-- **WHEN** the links field contains two lines
-- **THEN** two `link` details exist, attributed to the poster
+- **WHEN** a signed-in person posts `Suits in Hoi An`
+- **THEN** an open undated proposal exists with that title, no preferences, once rhythm and the poster in
 
 ### Requirement: Posting requires identity
 A visitor with no session SHALL be asked for name and number as part of posting, following the `board-identity` rules; the proposal SHALL NOT exist until identity is established.
@@ -22,11 +18,11 @@ A visitor with no session SHALL be asked for name and number as part of posting,
 - **THEN** they are asked for name and number, and on success the proposal is created with them as poster
 
 ### Requirement: Title, minimum and cost are fixed after posting
-After posting, the title, the minimum number, the cost and the "needs a day" switch SHALL NOT be editable. The poster SHALL be able to edit the detail line and the time at any time without any notification.
+Title, minimum and legacy cost SHALL remain fixed. The poster SHALL be able to edit day, time, place, preferences and rhythm while the proposal is open and not idled. No edit SHALL send notifications or change existing answers.
 
-#### Scenario: Edit attempt on the number
-- **WHEN** the poster opens their proposal
-- **THEN** title, number, cost and the day switch are read-only and the detail line and time are editable
+#### Scenario: Preference edit
+- **WHEN** the poster changes a preference on an open plan
+- **THEN** the change persists, the activity title and responses stay unchanged, and no notification is sent
 
 ### Requirement: Anyone in can add shared details
 A person who is `in` on a proposal SHALL be able to add a link, a place or a note. Each addition SHALL show who added it. Nobody SHALL be notified about details. A person not `in` SHALL see the details and a prompt to tap in to add.
@@ -40,9 +36,8 @@ A person who is `in` on a proposal SHALL be able to add a link, a place or a not
 - **THEN** no add row is shown and the page says "Tap in to add details"
 
 ### Requirement: Post a version
-Every proposal SHALL offer "Post a version of this", which opens the post form prefilled with the proposal's title, detail, cost, time, minimum and day switch, and records `version_of` on the new proposal.
+A didn't-form plan SHALL offer Post it again, prefilled with title, still-valid day, time, place, rhythm and preferences. The new proposal SHALL record version_of and start a fresh count.
 
-#### Scenario: Cheaper version
-- **WHEN** a person posts a version of "Overnight boat" with the cost changed
-- **THEN** a new proposal exists with `version_of` pointing at the original and the original is unchanged
-
+#### Scenario: Retry with pins
+- **WHEN** a person reposts an idled weekly dinner with a ramen preference
+- **THEN** the new draft retains weekly and ramen, clears an expired day, and posting creates a distinct proposal with only its poster initially in
