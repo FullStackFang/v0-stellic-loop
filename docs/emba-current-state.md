@@ -2,6 +2,8 @@
 
 Start here when continuing `loop-emba-intent-platform`. The OpenSpec task list is authoritative: **37/51 bounded tasks complete**. Earlier counts in implementation-status.md are historical snapshots. Main implementation checkpoint: `1fb46e3` (local commit, not pushed).
 
+Next product direction: `openspec/changes/loop-portable-group-memory/` specifies group handles and reviewed shared memory across private Claude/ChatGPT conversations, layered on this foundation. It is a specification, not implemented functionality; its tasks and live-host gates are tracked separately. Preserve the existing personal-memory and launch-policy boundaries.
+
 ## Working implementation
 
 The root Next.js app contains shared TypeScript services, PostgreSQL migrations, a member/organizer portal, HTTP/MCP adapters, scoped assistant consent and audited reads, confirmed consequential actions, private Want/Intent editing and proposal review, cited trip resources, service-attested announcements, conditional commitments, inbox updates, feedback, export and pilot deletion. Legacy public routes deny explicitly classified pilot resources.
