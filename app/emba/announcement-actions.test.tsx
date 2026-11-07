@@ -5,6 +5,7 @@ import {authenticate,type Principal} from '@/lib/emba/access';
 import {withPortalTestSession} from '@/lib/emba/portal-session';
 import {getAnnouncementSigner,withAnnouncementTestSigner} from '@/lib/emba/announcement-signer';
 import {registerAnnouncementKey,readAnnouncement} from '@/lib/emba/announcements';
+import * as announcementService from '@/lib/emba/announcements';
 import {setDb} from '@/lib/db';
 import {makePerson,openTestDb,type TestDb} from '@/test/db';
 import {publishNotice,changeAnnouncementKeyStatus} from './announcement-actions';
@@ -95,6 +96,42 @@ describe('reviewed announcement portal',()=>{
     expect(screen.queryByText('Announcement key status')).toBeNull();
     expect(screen.queryByRole('button',{name:'Publish announcement'})).toBeNull();
     if(change==='revoked')expect(screen.getByRole('alert')).toHaveTextContent('unavailable');
+  });
+  it('refreshes notice verification when a key is compromised during signer resolution',async()=>{
+    const f=await fixture();await f.run(f.form());
+    const panel=await withAnnouncementTestSigner(async()=>{
+      await t.db.query("update emba_announcement_key set status='compromised',status_at=clock_timestamp() where id=$1",[f.signer.keyId]);
+      return f.signer;
+    },()=>AnnouncementPanel({principal:f.principal,...f.scope}));
+    render(panel);
+    expect(screen.getByText(/Unverified signature/)).toBeInTheDocument();
+    expect(screen.queryByText(/Verified service attestation/)).toBeNull();
+    expect(screen.queryByRole('button',{name:'Publish announcement'})).toBeNull();
+  });
+  it.each([
+    {role:'owner',status:'compromised'},
+    {role:'member',status:'compromised'},
+    {role:'owner',status:'revoked'},
+    {role:'member',status:'revoked'},
+    {role:'owner',status:'retired'},
+    {role:'member',status:'retired'},
+  ])('refreshes verification for a $role when a key becomes $status during notice loading',async({role,status})=>{
+    const f=await fixture();await f.run(f.form());
+    if(role==='member')await t.db.query("update emba_role set role='member' where person_id=$1",[f.principal.personId]);
+    const read=announcementService.readAnnouncement;
+    const spy=vi.spyOn(announcementService,'readAnnouncement').mockImplementationOnce(async(...args)=>{
+      const notice=await read(...args);
+      await t.db.query('update emba_announcement_key set status=$2,status_at=clock_timestamp() where id=$1',[f.signer.keyId,status]);
+      return notice;
+    });
+    try {
+      render(await withAnnouncementTestSigner(async()=>f.signer,()=>AnnouncementPanel({principal:f.principal,...f.scope})));
+      if(status==='retired')expect(screen.getByText(/Verified service attestation.*Key retired/)).toBeInTheDocument();
+      else {
+        expect(screen.getByText(/Unverified signature/)).toBeInTheDocument();
+        expect(screen.queryByText(/Verified service attestation/)).toBeNull();
+      }
+    } finally {spy.mockRestore();}
   });
   it('renders injected content inertly without fetching, executing, or changing authority',async()=>{
     const f=await fixture(),fetch=vi.fn();vi.stubGlobal('fetch',fetch);

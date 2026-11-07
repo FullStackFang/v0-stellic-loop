@@ -12,7 +12,7 @@ Production portal authentication and the announcement signer default to unavaila
 
 - `npm test`: application tests; native-only and explicit production HTTP/restore checks skip by default.
 - `npm run emba:rehearsal`: disposable synthetic service/MCP acceptance fixture.
-- `npm run emba:browser`: localhost-only synthetic identities with actual components, actions and disposable database. Four browser drivers cover 18 base, 17 proposal/privacy, 17 organizer and 16 role-administration checks.
+- `npm run emba:browser`: localhost-only synthetic identities with actual components, actions and disposable database. Five browser drivers cover 18 base, 17 proposal/privacy, 17 organizer, 16 role-administration and 15 announcement checks (83 recorded checks).
 - `npm run emba:postgres-check`: isolated native PostgreSQL runner; one instance at a time. Windows native binaries are local ignored tooling, documented in emba-pilot.md.
 - Opt-in built-Next HTTP boundary tests and physical backup/restore rehearsal passed separately; see emba-pilot.md and emba-restore-rehearsal.md.
 
@@ -24,7 +24,7 @@ Real auth provider/project and Claude/ChatGPT accounts were explicitly deferred.
 
 Before enrollment: resolve owner verification, exact audit/history/backup retention, organization-publication attribution and external tombstone durability/restore traffic controls. Signed announcements retain their original author ID; publication prose and shared legacy identity remain after pilot deletion. Restored pending invitations addressed only by email need a cleanup policy. Do not claim complete account erasure.
 
-The role follow-up passed 43 focused tests, 16 browser checks, types/lint and a final production build. Remaining local browser coverage includes announcement workflows. Full authenticated Next transport, actual provider reauthentication, actual worker-outage recovery and remote OAuth/read/revoke/confirmed-write acceptance remain unverified.
+The role follow-up passed 43 focused tests, 16 browser checks, types/lint and a final production build. Announcement publication, correction history and key-status presentation now have local browser coverage. The announcement follow-up fixes stale verification after key-status changes and passed 19 announcement portal tests, 38 surrounding portal tests and 25 native PostgreSQL tests, plus 15 browser checks, types/lint and the final production build. Full authenticated Next transport, actual provider reauthentication, actual worker-outage recovery and remote OAuth/read/revoke/confirmed-write acceptance remain unverified.
 
 ## Collaboration notes
 

@@ -4,6 +4,8 @@ import { ActionForm, MemoryForm, ConnectionForm, InvitationForm } from '../../co
 import { InvitationAcceptance, InvitationRevoke } from '../../components/emba/invitation-controls';
 import { ResourceControls, ResourceForm } from '../../components/emba/resource-controls';
 import { RolesPanel } from '../../components/emba/RolesPanel';
+import { AnnouncementView } from '../../components/emba/announcement-view';
+import type { ComponentProps } from 'react';
 import { AssistantReview } from '../../components/emba/assistant-review';
 import { MemoryProposalReview } from '../../components/emba/memory-proposal-review';
 import { PrivacyControls } from '../../components/emba/privacy-controls';
@@ -17,7 +19,7 @@ import '../../components/TripView.css';
 import '../../app/emba/portal.css';
 import './font.css';
 
-type State=Awaited<ReturnType<typeof readPortalData>>&{loops:AccessibleLoop[];activity:Awaited<ReturnType<typeof readActivity>>|null;passages:KnowledgePassage[];documents:Awaited<ReturnType<typeof listDocuments>>;invitations:Awaited<ReturnType<typeof readOrganizerInvitations>>;scope:{orgId:string;loopId:string};capability:string;personId:string;rootId:string;rootRoles:ScopedRole[]|null;tripRoles:ScopedRole[]|null;organizationMembers:OrganizationMember[]|null};
+type State=Awaited<ReturnType<typeof readPortalData>>&{loops:AccessibleLoop[];activity:Awaited<ReturnType<typeof readActivity>>|null;passages:KnowledgePassage[];documents:Awaited<ReturnType<typeof listDocuments>>;invitations:Awaited<ReturnType<typeof readOrganizerInvitations>>;scope:{orgId:string;loopId:string};capability:string;announcementView:Pick<ComponentProps<typeof AnnouncementView>,"announcements"|"keys"|"manages"|"canPublish">;personId:string;rootId:string;rootRoles:ScopedRole[]|null;tripRoles:ScopedRole[]|null;organizationMembers:OrganizationMember[]|null};
 function Harness(){
   const [roleContext,setRoleContext]=useState('trip');
   const [actor,setActor]=useState('memberA'),[state,setState]=useState<State|null>(null),[message,setMessage]=useState(''),[editing,setEditing]=useState<string|null>(null),[binding,setBinding]=useState(''),[unavailable,setUnavailable]=useState(false);
@@ -42,6 +44,7 @@ function Harness(){
     <section className="lt-editor" id="resources"><h2>Resource management</h2>{state.invitations&&<div id="upload-resource"><ResourceForm action={action('uploadResource')} operationId={crypto.randomUUID()} {...state.scope}/></div>}<ul>{state.documents.map(doc=><li key={`${doc.id}:${doc.version}`} data-document-id={doc.id}><h3>{doc.title}</h3><p>Version {doc.version} - {doc.state}{doc.failedStage?` - ${doc.failedStage}`:''}</p>{state.invitations&&<ResourceControls uploadAction={action('uploadResource')} processAction={action('processResource')} deleteAction={action('removeResource')} operationId={crypto.randomUUID()} {...state.scope} document={doc}/>}</li>)}</ul></section>
     <label>Synthetic role context<select value={roleContext} onChange={e=>setRoleContext(e.target.value)}><option value="trip">Vietnam child trip</option><option value="root">Organization root</option></select></label>
     {(roleContext==='root'?state.rootRoles:state.tripRoles)?<RolesPanel key={`${actor}:${roleContext}`} orgId={state.scope.orgId} loopId={roleContext==='root'?state.rootId:state.scope.loopId} personId={state.personId} roles={(roleContext==='root'?state.rootRoles:state.tripRoles)!} organizationMembers={roleContext==='root'?state.organizationMembers:null} grantAction={action('grantScopedRole')} revokeAction={action('revokeScopedRole')} removeAction={action('removeOrgMembership')}/>:<p>Membership administration unavailable.</p>}
+    <AnnouncementView key={`announcements:${actor}`} scope={state.scope} {...state.announcementView} publishAction={action('publishNotice')} keyStatusAction={action('changeAnnouncementKeyStatus')}/>
     <PrivacyControls key={`privacy:${actor}`} exportAction={action('exportPilotData')} deleteAction={action('deletePilotData')}/>
     </main></div>;
 }

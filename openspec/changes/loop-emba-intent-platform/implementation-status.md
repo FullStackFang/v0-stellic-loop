@@ -175,3 +175,13 @@ Shared resource controls and invitation acceptance/revocation controls now serve
 Verification this continuation: **68 focused application tests passed**, **33 native PostgreSQL tests passed**, **17 organizer browser checks passed**, plus TypeScript, changed-file ESLint, whitespace check and one final production build. All browser/database verification processes stopped. These are scoped results, not a newly rerun full-suite count. An automatic approval-review usage failure briefly interrupted testing; the user requested continuation and the retry succeeded.
 
 No hosted migration, deployment, provider provisioning, commit/push or real-member enrollment occurred. Production sign-in, actual Claude/ChatGPT connections, processing/signing custody and exact retention/restore operations remain open. The local expanded rehearsal remains available through npm run emba:browser.
+
+## Announcement acceptance continuation - 2026-11-07
+
+Task completion remains 37/51. Shared announcement presentation now serves the portal and the disposable browser harness; 15 new browser checks cover reviewed publication, corrections/history, inert content, permission denials, retirement and revocation warnings. Five recorded drivers now total 83 checks; this remains synthetic component/action/service acceptance, not real authentication or full Next transport.
+
+Two reproduced loading windows could show a stale verified signature after key compromise. Signer resolution now precedes notice verification, and the final output transaction locks and refreshes all displayed notice keys for both member and organizer views. Six late-status variants preserve retired-key history and invalidate revoked/compromised keys. Locks protect the final transaction, not recall of already delivered output.
+
+Verification: 19 announcement portal tests, 38 surrounding portal tests and 25 native PostgreSQL announcement tests passed. TypeScript and changed-file lint passed. Production key custody, sign-in, actual host acceptance, processing providers and exact retention policies remain deferred. No hosted migration, deployment or enrollment occurred.
+
+One final production build passed after the harness stopped. Local browser and database verification processes are stopped; changes are committed locally without pushing.
