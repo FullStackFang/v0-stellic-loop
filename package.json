@@ -16,6 +16,7 @@
     "emba:browser": "node --import ./test/emba-browser/register.mjs --import tsx scripts/emba-browser.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "7.9.25",
     "@modelcontextprotocol/sdk": "1.32.2",
     "@supabase/supabase-js": "^2.118.0",
     "ai": "^7.0.164",

@@ -18,7 +18,7 @@ export type Transport = { channel: "log" | "sms"; send(to: string, body: string,
 export const OPTED_OUT = "21610";
 
 /** `id` is null only for a code to a number that is not a person yet. */
-type Recipient = Pick<Person, "phone" | "name" | "show_name" | "sms_opt_out"> & { id: string | null };
+type Recipient = Pick<Person, "name" | "show_name" | "sms_opt_out"> & { id: string | null; phone:string|null };
 type Outcome = Sent | { status: "skipped"; reason: "not_us" | "opted_out" };
 
 export class TextNotifier implements Notifier {
@@ -41,7 +41,7 @@ export class TextNotifier implements Notifier {
 
   /** `body` runs only when the text will go, so a skipped person gets no token. */
   private async deliver(kind: Kind, boardId: string | null, proposalId: string | null, p: Recipient | undefined, body: () => string | Promise<string>): Promise<boolean> {
-    if (!p) return false;
+    if (!p || !p.phone) return false;
     if (boardId && !await legacyBoardAllowed(this.q, boardId)) return false;
     if (proposalId && !await legacyProposalAllowed(this.q, proposalId)) return false;
     const skip = !isUsNumber(p.phone) ? "not_us" : p.sms_opt_out && kind !== "code" ? "opted_out" : null;

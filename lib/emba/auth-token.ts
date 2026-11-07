@@ -2,6 +2,7 @@ import 'server-only';
 import type { IdentityVerifier } from './access';
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 import { EmbaError } from './errors';
+import { createClerkTokenVerifier } from './clerk-token';
 export type AuthConfig = { issuer: string; audience: string; jwksUrl: string; clientIds: readonly string[] };
 export type RemoteAuth = { config: AuthConfig; verify: IdentityVerifier };
 export function authConfig(env: Record<string, string | undefined> = process.env): AuthConfig {
@@ -42,7 +43,8 @@ export function createTokenVerifier(config: AuthConfig, keys?: JWTVerifyGetKey):
 let cached: { fingerprint: string; auth: RemoteAuth } | undefined;
 export function configuredAuth(): RemoteAuth {
   const config = authConfig();
-  const fingerprint = JSON.stringify(config);
-  if (!cached || cached.fingerprint !== fingerprint) cached = { fingerprint, auth: { config, verify: createTokenVerifier(config) } };
+  const provider=process.env.LOOP_AUTH_PROVIDER;
+  const fingerprint = JSON.stringify({config,provider});
+  if (!cached || cached.fingerprint !== fingerprint) cached = { fingerprint, auth: { config, verify: provider==='clerk'?createClerkTokenVerifier(config):createTokenVerifier(config) } };
   return cached.auth;
 }

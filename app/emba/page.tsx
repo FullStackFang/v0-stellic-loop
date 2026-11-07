@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import Link from 'next/link';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { ActionForm, ConnectionForm, InvitationForm, MemoryForm } from '@/components/emba/portal-forms';
 import { readOrganizerInvitations, readPortalData } from './data';
@@ -18,12 +19,14 @@ import { PrivacyControls } from '@/components/emba/privacy-controls';
 import { InvitationAcceptance, InvitationRevoke } from '@/components/emba/invitation-controls';
 import { canAccessLoop } from '@/lib/emba/access';
 import { requireFirstParty } from '@/lib/emba/consent';
+import {clerkPortalConfigured} from '@/lib/emba/clerk-identity';
+import {GroupMemoryPanel} from './group-memory-panel';
 
 export const dynamic = 'force-dynamic';
 
 export default async function MemberPortal({ searchParams }: { searchParams: Promise<Record<string,string|string[]|undefined>> }) {
   const principal = await getPortalPrincipal();
-  if (!principal) return <section className="lt-editor"><h1>Your member space</h1><h2>Sign-in is not configured yet</h2><p>Private preferences, assistant access and invitations will be available here after secure member sign-in is connected.</p><p>No member data is loaded. If you received an invitation, keep it private and return when your organizer confirms sign-in is ready.</p></section>;
+  if (!principal) return <section className="lt-editor"><h1>Your member space</h1>{clerkPortalConfigured()?<><h2>Sign in to Loop</h2><p>Read your group’s resources, review shared notes and choose what your assistant can access.</p><Link className="lt-primary" href="/emba/sign-in">Sign in or create an account</Link><p>Joining a group requires an invitation. Signing in does not grant group access.</p></>:<><h2>Sign-in is not configured yet</h2><p>Private preferences, assistant access and invitations will be available here after secure member sign-in is connected.</p><p>No member data is loaded. If you received an invitation, keep it private and return when your organizer confirms sign-in is ready.</p></>}</section>;
   let data;
   try { data = await readPortalData(principal); }
   catch { return <section className="lt-editor"><h1>Member space unavailable</h1><p role="alert">Your session or access may have expired or been revoked, or the service may be temporarily unavailable. No private data is shown.</p><a href="/emba">Try again</a></section>; }
@@ -55,6 +58,7 @@ export default async function MemberPortal({ searchParams }: { searchParams: Pro
     <nav aria-label="Member sections"><a href="#trip">Trip context</a><a href="#memory">Private preferences</a>{selected && <a href="#context-memory">Trip preferences</a>}<a href="#memory-proposals">Proposal review</a><a href="#connections">Assistant access</a><a href="#audit">Access history</a><a href="#invitations">Invitations</a>{scopedRoles && <a href="#roles">Membership</a>}</nav>
     <section id="trip" className="lt-editor"><h2>Open a trip context</h2>{loops.length > 0 ? <form method="get"><label>Trip context<select name="scope" defaultValue={`${orgId}:${loopId}`}>{loops.map(loop => <option key={loop.loopId} value={`${loop.orgId}:${loop.loopId}`}>{loop.orgName} / {loop.path}</option>)}</select></label><button>Open trip context</button></form> : <p>You have no active trip contexts yet. Accept an invitation to join one.</p>}</section>
     {orgId && loopId && <TripPanel principal={principal} orgId={orgId} loopId={loopId} query={typeof params.query==='string'?params.query:''} documentId={typeof params.documentId==='string'?params.documentId:''} updatesCursor={typeof params.updatesCursor==='string'?params.updatesCursor:undefined} memory={[...data.memory.items,...(contextMemory?.items ?? [])]}/>}
+    {orgId && loopId && <GroupMemoryPanel principal={principal} orgId={orgId} loopId={loopId}/>}
     <MemoryEditor id="memory" title="Private preferences" description="Personal context across trips. Review-needed, archived and expired items are excluded from ordinary planning." memory={data.memory} scope={{orgId:null,loopId:null}}/>
     {selected && (contextMemory ? <MemoryEditor id="context-memory" title={`Trip preferences: ${selected.orgName} / ${selected.path}`} description="Only this trip context can use these private preferences. They stay yours and are not visible to organizers." memory={contextMemory} scope={{orgId,loopId}}/> : <section id="context-memory" className="lt-editor"><h2>Trip preferences unavailable</h2><p>Your access may have changed. Reload to check this trip context.</p></section>)}
     <section id="memory-proposals" className="lt-editor"><h2>Review a structured want proposal</h2><p>A proposed want is temporary. Loop compares it with your current version and saves it only after you accept it.</p><MemoryProposalReview reviewAction={reviewWantProposal} acceptAction={acceptWantProposal}/></section>

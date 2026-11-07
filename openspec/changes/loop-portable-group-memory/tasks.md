@@ -5,8 +5,8 @@
 
 ## 2. Addressable groups
 
-- [ ] 2.1 Add namespace/address migrations and trusted root-owner registration with unique constraints and non-reusable retirement; test normalization, concurrent claims and no institutional/role inference on native PostgreSQL.
-- [ ] 2.2 Implement bounded discovery/resolution over current membership plus exact-scoped plan leases; test ambiguity, hidden/unconsented handles, expired identity and cached-ID revocation.
+- [x] 2.1 Add namespace/address migrations and trusted root-owner registration with unique constraints and non-reusable retirement; test normalization, concurrent claims and no institutional/role inference on native PostgreSQL.
+- [x] 2.2 Implement bounded discovery/resolution over current membership plus exact-scoped plan leases; test ambiguity, hidden/unconsented handles, expired identity and cached-ID revocation.
 - [ ] 2.3 Add the minimal first-party handle display/consent picker; verify users can grant access without an existing delegated lease and cannot see unauthorized groups.
 
 ## 3. Shared canonical memory
@@ -20,7 +20,7 @@
 ## 4. Reviewed assistant capture
 
 - [ ] 4.1 Define strict personal/shared candidate schemas and prepare services with no candidate-body persistence; test unknown transcript fields, oversize input and content canaries in failures/logs/audits.
-- [ ] 4.2 Extend lease/token/confirmation action schemas and SQL constraints for group-memory writes without upgrading old grants; test exact scope/client binding and existing action regressions.
+- [x] 4.2 Extend lease/token/confirmation action schemas and SQL constraints for group-memory writes without upgrading old grants; test exact scope/client binding and existing action regressions.
 - [ ] 4.3 Build authenticated personal-versus-shared review using existing portal forms, showing exact destination, audience, text, kind, sources, changes and trusted originating client identity/current consent; test forged client labels, revoked/unknown/wrong-scope clients, copy/paste bridge, keyboard/mobile and no sensitive URL payloads.
 - [ ] 4.4 Implement first-party approval and atomic delegated execution with current role/source/version rechecks; test altered payloads, cross-client confirmation, expiry, demotion and revocation after review.
 - [ ] 4.5 Add minimal authorized operation receipts for lost-response recovery; test concurrent exact retries, changed operation payload, revoked-client retries, retries after correction/invalidation/withdrawal without old content, and no regression to existing activity replay protections.
@@ -29,7 +29,7 @@
 
 - [ ] 5.1 Implement group-only search/read/context without calling personal-memory retrieval; verify private canaries, privacy-safe activities, exact-loop filtering, evidence limits and explicit truncation/conflict states.
 - [ ] 5.2 Add final output/source-version checks and minimal audit/no-store behavior; test audit failure, source invalidation, removed membership and revoked lease during a read.
-- [ ] 5.3 Expose the seven specified group MCP tools over the shared services and required HTTP/portal paths; test strict inputs, stable IDs, scope errors and adapter authorization parity.
+- [x] 5.3 Expose the seven specified group MCP tools over the shared services and required HTTP/portal paths; test strict inputs, stable IDs, scope errors and adapter authorization parity.
 - [ ] 5.4 Label private planning separately, document portable group-reference syntax and unsupported group delivery/representation; test that audience assertions and instruction-like content never expand authority.
 
 ## 6. Lifecycle and deterministic demo
@@ -46,3 +46,17 @@
 - [ ] 7.3 Apply foundation/new migrations to an isolated demo database before deploying the authenticated demo; verify the linked project/preview, required environment and legacy boundary regression without using real-member data.
 - [ ] 7.4 Demonstrate actual Claude publication after review, ChatGPT fresh recall/correction, Claude current reread, stale denial, unauthorized-user denial and independent revocation; record clients/date/results without credentials or sensitive content.
 - [ ] 7.5 Update setup/demo/privacy runbooks and both change ledgers with exact evidence and remaining gates; do not mark raw compilation, vector retrieval, provider custody or enrollment policy complete through this narrower demo.
+
+## November 7 MVP evidence and partial tasks
+
+Four bounded tasks are checked above. Native PostgreSQL passed 25 focused tests: group addresses 6, shared notes 8, privacy 8, reviewed actions 2 and consent 1. Actual MCP SDK registration/transport and first-party review/action tests ran separately against PGlite. The final production build, TypeScript and focused lint passed; production dependency audit reported zero vulnerabilities. An additional 15 native tests passed across Clerk identity, group MCP, group panel and portal-action files. The full application suite passed: 563 tests passed and 23 skipped (78 files passed, 4 skipped). Three built-Next HTTP boundary tests also passed against disposable native PostgreSQL. Full-repository lint retains 16 existing errors confined to ignored Playwright scratch files. These results do not establish actual host acceptance.
+
+- 1.1–1.2: foundation gates preserved; narrower implementation contracts are recorded in design and `docs/emba-mvp-slice.md`. Full dependency/lock design remains open.
+- 2.3: member-visible handle selection and a seven-day exact-group assistant consent form exist; full keyboard/mobile acceptance remains open.
+- 3.1–3.5: current note identity/version/operation schema, member publication, correction and withdrawal exist. Decision kinds, source/dependency graph and transitive invalidation are not implemented; these compound tasks remain open.
+- 4.1, 4.3–4.5: strict note candidates, transient preparation, trusted configured client review, first-party confirmation and exact retry receipts exist. Broader personal/shared selection, decision/source handling, complete race matrices and browser acceptance remain open.
+- 5.1–5.2, 5.4: group-only current-note context is bounded, audited and marked incomplete; private canaries remain isolated. Documents, activity projections, dependencies and broader invalidation scenarios remain open.
+- 6.1: shared-note author/privacy integration is tested; the full dependency/receipt/restore policy is not complete.
+- 6.2: two synthetic clients resolve, prepare, review, publish, recall, correct and independently revoke; stale approval and private-memory denial are covered. The complete prescribed nonmember scenario remains open.
+- 6.3–6.4: real server actions and SDK transport are tested, and the final production build, TypeScript and focused lint passed. The full application suite passed (563 tests, 23 skipped); actual browser acceptance remains pending.
+- 7.1–7.5: Clerk's verified-session adapter and development OAuth settings/discovery are implemented. Custom scopes and explicit Claude CIMD admission await authenticated Dashboard setup; actual host acceptance, hosted migration/deployment and separate ChatGPT connection remain open. The earlier provider-selection deferral is superseded by explicit user approval. Retention/enrollment policy is still deferred.

@@ -66,7 +66,7 @@ Conversational examples use "Using Loop, what did @emba2027 decide?" or explicit
 
 Extend personal export/deletion and restore rehearsals to account for new operation receipts, author/approver references and dependent records. Private candidate bodies are not stored before acceptance; approved shared publications are organization-owned. Do not cascade-delete group decisions merely because an author leaves. Exact retained attribution/history/backup policy remains the foundation's enrollment gate. While unresolved, keep these behaviors explicitly documented and synthetic-only; do not promise complete erasure. Withdrawal denies content through current, historical, search and derived endpoints, while internal retention follows the eventual policy. Operations/audit contain minimal IDs/hashes, not raw text.
 
-New migrations must preserve unrelated public boards, existing personal memory and lease semantics. No graph database, provider SDK, new backend runtime or general chat store is needed.
+New migrations must preserve unrelated public boards, existing personal memory and lease semantics. No graph database, new backend runtime or general chat store is needed. The approved November 7 MVP uses the official Clerk SDK for managed browser sessions and OAuth.
 
 ## Risks / Trade-offs
 
@@ -88,7 +88,15 @@ New migrations must preserve unrelated public boards, existing personal memory a
 
 ## Open Questions
 
-Provider/project/accounts, production signer/worker custody and exact retention/attribution policies are existing deferred decisions. They block their dependent live integrations/enrollment, not local services or synthetic tests. No new provider is selected here. The builder may choose filenames and indexing details within these contracts. Future group-chat delivery and external representative authority need separate designs; this change returns unsupported for those requests.
+The earlier provider-selection deferral was superseded by the user's November 7 instruction to choose and implement the MVP. Clerk Hobby development/preview is provisioned after terms acceptance; Supabase remains storage. Actual host/account acceptance, production signer/worker operations and exact retention/attribution policies remain gates for their dependent operations. Future group-chat delivery and external representative authority need separate designs; this change returns unsupported for those requests.
+
+## Approved implementation slice — 2026-11-07
+
+The user prioritized sign-in, one Claude connection, and explicitly reviewed shared notes. This is narrower than the full design above: current implementation rejects decision/source/dependency inputs and returns bounded current shared-note context, not full document/activity context. The separate source graph, organizer decision promotion and transitive invalidation are still unimplemented. See `docs/emba-mvp-slice.md` for evidence and scope.
+
+Clerk server sessions map issuer/subject to an internal person without email-based legacy linking or automatic membership; revoked identities and deletion tombstones prevent reenrollment. Fresh-authentication time now derives conservatively from signed Clerk iat/fva claims using the oldest instant in the reported minute. Missing, invalid or stale evidence fails closed. Native real-adapter tests cover privacy export, deletion and denied reenrollment. First-party consent grants one configured assistant seven days of exact-group read access and separately chosen note-write access. Every assistant note requires exact-payload review and current consent again on execution. Shared notes are member submissions, never inferred organizer decisions.
+
+The development issuer now advertises CIMD, S256 and public-client token authentication; DCR is disabled and admission requires explicit approval. Custom scope creation and Claude's explicit CIMD admission remain pending Dashboard setup. No hosted migration, deployment or real user OAuth acceptance is claimed. The final production build, TypeScript and focused lint passed; production dependency audit reported zero vulnerabilities. An additional 15 native tests passed across Clerk identity, group MCP, group panel and portal-action files. The full application suite remains pending. Full-repository lint retains 16 existing errors confined to ignored Playwright scratch files. The two-client SDK/action rehearsal remains synthetic.
 
 ## Inspiration and evidence
 

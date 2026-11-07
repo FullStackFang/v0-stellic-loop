@@ -1,5 +1,9 @@
 # Autonomous continuation
 
+## Latest continuation — November 7, 2026
+
+The user-approved narrow MVP now uses Clerk server-session identity and development OAuth, plus exact-group seven-day assistant consent and reviewed shared notes. Provider selection is resolved; custom scopes and explicit Claude CIMD admission still await authenticated Dashboard setup. No actual host OAuth acceptance, hosted migration or deployment is claimed. The final production build, TypeScript and focused lint passed; production dependency audit reported zero vulnerabilities. An additional 15 native tests passed across Clerk identity, group MCP, group panel and portal-action files. The full application suite passed: 563 tests passed and 23 skipped (78 files passed, 4 skipped). Three built-Next HTTP boundary tests also passed against disposable native PostgreSQL. Full-repository lint retains 16 existing errors confined to ignored Playwright scratch files. Foundation remains 39/51; the portable ledger checks address registration/resolution, write-action extension and seven-tool registration while preserving broader source/decision/dependency and browser acceptance tasks. Native PostgreSQL passed 25 focused tests; SDK/action rehearsal remains synthetic. Current detail is in implementation-status.md and `docs/emba-mvp-slice.md`; earlier verification counts below belong to earlier continuations.
+
 Working tree: existing `fix/sun-space-footer`, preserving all prior uncommitted work. No commits, pushes, production migrations or enrollment are part of this continuation.
 
 | Work area | Produces / consumes | Contract and check |

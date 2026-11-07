@@ -72,3 +72,15 @@
 - [x] 8.4 Run required lint, type and test suites including real-Postgres-specific cases; if shipped app code changed, stop competing dev/build processes and run one final production build.
 - [x] 8.5 Write README/runbook for setup, migrations, remote connector configuration, processing failures, key rotation, retention/restore and privacy-preserving rollback.
 - [x] 8.6 Review all launch gates and acceptance scenarios; report unresolved gates honestly and do not enroll real members until satisfied.
+
+## November 7 shared-memory MVP continuation
+
+The foundation remains at the preceding **39/51** bounded-task snapshot; no compound foundation gate is closed by the narrower MVP. Earlier checked verification tasks describe their recorded historical runs. The final production build, TypeScript and focused lint passed; production dependency audit reported zero vulnerabilities. An additional 15 native tests passed across Clerk identity, group MCP, group panel and portal-action files. The full application suite remains pending. Full-repository lint retains 16 existing errors confined to ignored Playwright scratch files.
+
+- 1.3: provider choice is now authorized and implemented with Clerk; development discovery, S256, public-client support and audience settings are verified. Custom scopes, explicit Claude admission and actual intended-host acceptance remain pending.
+- 2.3, 2.5: verified Clerk browser-session adapter, stable issuer/subject mapping, sign-in surface and group consent exist. Tests cover cross-account mismatch, unverified primary email, revoked identity and deletion/relogin without automatic membership or legacy-email merging. Human sign-in, broader invitation/role controls and complete mobile/browser acceptance remain open.
+- 3.6, 8.2–8.3: seven-day exact-group assistant consent and reviewed shared-note actions exist; SDK/action rehearsals use synthetic identities and clients. No actual Claude/ChatGPT connection or hosted deployment is claimed.
+- 7.2: Fresh-authentication time now derives conservatively from signed Clerk iat/fva claims using the oldest instant in the reported minute. Missing, invalid or stale evidence fails closed. Native real-adapter tests cover privacy export, deletion and denied reenrollment.
+- 7.1, 7.3–7.5: owner verification, exact retention/attribution policy and full lifecycle/provider-boundary acceptance remain open. Unsourced shared notes do not complete raw-conversation compilation or broader sourced memory.
+
+See `docs/emba-mvp-slice.md`, `docs/emba-clerk-setup.md` and the portable-group-memory task ledger for implementation evidence and explicit remaining scope.

@@ -1,5 +1,13 @@
 # Implementation evidence
 
+## Current continuation — November 7, 2026, Clerk and shared notes
+
+The user approved choosing the sign-in/OAuth provider and prioritizing one-assistant shared memory. Clerk Hobby is provisioned for development/preview after terms acceptance. The server-session adapter verifies session/user binding and primary email, creates an issuer/subject-specific person without email-based account merging or membership, and rejects revoked/deleted identities. Scoped sign-in and account surfaces plus seven-day exact-group consent are implemented. Fresh-authentication time now derives conservatively from signed Clerk iat/fva claims using the oldest instant in the reported minute. Missing, invalid or stale evidence fails closed. Native real-adapter tests cover privacy export, deletion and denied reenrollment.
+
+Development OAuth settings and public metadata now verify audience support, S256, opaque tokens, explicit-only CIMD admission and DCR disabled. The actual Claude public client metadata was fetched successfully. Custom scopes and explicit client admission still await authenticated Dashboard setup; actual user/host OAuth acceptance and deployment are not demonstrated. The earlier provider-selection deferral is superseded, while owner/retention policy remains deferred.
+
+The portable slice implements immutable handles, current shared notes, correction/withdrawal, reviewed assistant writes and seven group tools. Native PostgreSQL passed 25 focused address/note/privacy/action/consent tests. Separate PGlite MCP tests exercise real SDK transports and portal server actions with synthetic identities. It does not yet implement sourced group documents, organizer decisions, dependency graphs or full group context. Foundation remains 39/51; portable tasks 2.1, 2.2, 4.2 and 5.3 are checked. The final production build, TypeScript and focused lint passed; production dependency audit reported zero vulnerabilities. An additional 15 native tests passed across Clerk identity, group MCP, group panel and portal-action files. The full application suite passed: 563 tests passed and 23 skipped (78 files passed, 4 skipped). Three built-Next HTTP boundary tests also passed against disposable native PostgreSQL. Full-repository lint retains 16 existing errors confined to ignored Playwright scratch files. Verification entries below belong to earlier continuations. See `docs/emba-mvp-slice.md` and both task ledgers.
+
 ## Baseline — 2026-11-06
 
 Starting commit: `575d67d8c776f78cf4a5f884ed94da3913fe17bc`.

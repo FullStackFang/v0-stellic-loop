@@ -8,6 +8,8 @@ import {issueInvitation} from '@/lib/emba/invitations';
 const late=vi.hoisted(()=>({change:null as null|(()=>Promise<void>)}));
 vi.mock('next/cache',()=>({revalidatePath:vi.fn()}));
 vi.mock('./trip-panel',()=>({TripPanel:()=>null}));
+// Async server panels have their own authorization integration tests.
+vi.mock('./group-memory-panel',()=>({GroupMemoryPanel:()=>null}));
 vi.mock('./data',async()=>{
   const actual=await vi.importActual<typeof import('./data')>('./data');
   return {...actual,readScopedMemory:async(...args:Parameters<typeof actual.readScopedMemory>)=>{

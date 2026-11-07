@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import { clerkMiddleware } from '@clerk/nextjs/server';
 import { ENTRY_COOKIE, entryFromUrl } from "@/lib/events";
 
 /**
@@ -7,7 +8,11 @@ import { ENTRY_COOKIE, entryFromUrl } from "@/lib/events";
  * a share token → proposal_link, else group_link. Navigation within the site
  * keeps it, so a share stays credited until the next outside entry.
  */
-export function proxy(req: NextRequest) {
+export function proxy(req: NextRequest,event:NextFetchEvent) {
+  if(req.nextUrl.pathname==='/emba'||req.nextUrl.pathname.startsWith('/emba/')||req.nextUrl.pathname.startsWith('/api/emba/documents/')) {
+    if(process.env.LOOP_AUTH_PROVIDER==='clerk'&&process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY&&process.env.CLERK_SECRET_KEY) return clerkMiddleware({signInUrl:'/emba/sign-in'})(req,event);
+    return NextResponse.next();
+  }
   const res = NextResponse.next();
   const site = req.headers.get("sec-fetch-site");
   const isDocument = req.headers.get("sec-fetch-dest") === "document" || req.headers.get("accept")?.includes("text/html");
@@ -20,5 +25,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/b/:path*", "/p/:path*"],
+  matcher: ["/b/:path*", "/p/:path*", "/emba/:path*", "/api/emba/documents/:path*"],
 };

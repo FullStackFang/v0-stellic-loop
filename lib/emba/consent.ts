@@ -4,14 +4,15 @@ import type { Db, Q } from '../db';
 import { canAccessLoop, canAccessPersonal, type Principal } from './access';
 import { EmbaError } from './errors';
 
-export const actionSchema = z.enum(['memory:read','memory:write','plan:read','activity:write']);
+export const actionSchema = z.enum(['memory:read','memory:write','plan:read','activity:write','group-memory:write']);
 export type Action = z.infer<typeof actionSchema>;
 export const scopeShape = { orgId: z.uuid().nullable().default(null), loopId: z.uuid().nullable().default(null) };
 export type Scope = { orgId: string | null; loopId: string | null };
 export const leaseSchema = z.strictObject({
-  clientId: z.string().trim().min(1).max(200), actions: z.array(actionSchema).min(1).max(4),
+  clientId: z.string().trim().min(1).max(200), actions: z.array(actionSchema).min(1).max(5),
   expiresAt: z.iso.datetime({ offset: true }), ...scopeShape,
-}).refine(v => (v.orgId === null) === (v.loopId === null));
+}).refine(v => (v.orgId === null) === (v.loopId === null))
+  .refine(v => !v.actions.includes('group-memory:write') || v.loopId !== null);
 
 export async function requireFirstParty(q: Q, principal: Principal) {
   if (principal.clientId !== null || !await canAccessPersonal(q,principal,principal.personId)) throw new EmbaError('forbidden');

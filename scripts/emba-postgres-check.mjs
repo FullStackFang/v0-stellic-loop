@@ -18,7 +18,7 @@ writeFileSync(passwordPath,password,{mode:0o600});
 const run=(command,args)=>new Promise((yes,no)=>{const child=spawn(command,args,{windowsHide:true,stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',chunk=>{output+=chunk;});child.stderr.on('data',chunk=>{output+=chunk;});child.once('error',no);child.once('exit',code=>code===0?yes():no(new Error(output)));});
 let started=false;
 try {
- await run(initdb,['-D',data,'-U','postgres','--pwfile='+passwordPath,'--auth=scram-sha-256','--locale=C']);
+ await run(initdb,['-D',data,'-U','postgres','--pwfile='+passwordPath,'--auth=scram-sha-256','--locale=C','--encoding=UTF8']);
  unlinkSync(passwordPath);
  await run(pg_ctl,['-D',data,'-l',join(data,'server.log'),'-o',`-h 127.0.0.1 -p ${port}`,'-w','start']);started=true;
  const client=new pg.Client({host:'127.0.0.1',port,user:'postgres',password,database:'postgres'});await client.connect();

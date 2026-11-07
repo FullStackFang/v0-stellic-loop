@@ -25,8 +25,11 @@ export async function exportPersonalData(db:Db,p:Principal) {
   const leases=await own('select id,client_id,actions,org_id,loop_id,created_at,expires_at,revoked_at from emba_lease where person_id=$1');
   const inbox=await own('select activity_id,revision,event_version,kind,created_at,acknowledged_at from emba_inbox where person_id=$1');
   const events=await own('select action,at,outcome,client_id from emba_audit where person_id=$1');
+  // Shared publications remain organization-owned. Export only this person's
+  // operation receipts: no withdrawn text, old versions or other authors' data.
+  const groupMemoryReceipts=await own('select o.operation_id,o.record_id,o.version,o.client_id,m.status from emba_group_memory_operation o join emba_group_memory m on m.id=o.record_id where o.person_id=$1');
   await audit(q,p,'privacy:export');
-  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events};
+  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events,groupMemoryReceipts};
  });
 }
 
@@ -51,7 +54,7 @@ async function purge(q:Q,personId:string) {
  await q.query('update emba_announcement_key set registered_by=null where registered_by=$1',[personId]);
  await q.query('delete from emba_dependency_consent where target_id=$1 or requester_id=$1',[personId]);
  await q.query('delete from emba_invitation where issued_by=$1 or accepted_by=$1',[personId]);
- for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_membership','emba_identity']) {
+ for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_membership','emba_identity']) {
   await q.query(`delete from ${table} where person_id=$1`,[personId]);
  }
  // No stable participant pseudonym is retained in plan history or audit output.

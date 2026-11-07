@@ -90,7 +90,7 @@ Embedding decision (2026-11-07): opt-in pgvector stores only approved canonical 
 
 These are bounded implementation gates, not missing product behavior:
 
-- Before the auth slice: select and verify account-sign-in/OAuth provider compatibility and current host requirements; use existing provisioned services where appropriate.
+- Provider selection is resolved by the user-approved November 7 MVP: Clerk supplies browser sessions and OAuth, with Supabase remaining storage. Development/preview provisioning and public discovery are verified; custom scopes, explicit Claude admission and actual intended-host sign-in/read/write/revoke acceptance remain open.
 - Before hosted announcement signing: provision the recorded service-held key configuration for verified pilot scopes and exercise operator rotation/compromise procedures.
 - Before production enrollment: identify the pilot owner-verification operator; approve exact audit, compiled-history and backup retention durations and publication-attribution rules on account deletion.
 - Before deployment: verify the selected worker runtime operationally and approve model/embedding data-processing terms and a compiler processing boundary. No raw chat can enter durable infrastructure regardless of provider.

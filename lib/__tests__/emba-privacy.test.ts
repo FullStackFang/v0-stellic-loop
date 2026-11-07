@@ -6,6 +6,7 @@ import {saveMemory} from '@/lib/emba/memory';
 import {uploadDocument,processDocument} from '@/lib/emba/knowledge';
 import {exportPersonalData,deletePersonalData,applyDeletionTombstones,expirePrivacyCapabilities} from '@/lib/emba/privacy';
 import type {Db} from '@/lib/db';
+import {publishGroupNote,readGroupNoteReceipt,withdrawGroupNote} from '@/lib/emba/group-memory';
 let t:TestDb;
 beforeAll(async()=>{t=await openTestDb();});
 beforeEach(async()=>{await t.reset();});
@@ -97,6 +98,33 @@ it('expires only semantic capabilities without deleting audit history',async()=>
  await expirePrivacyCapabilities(t.db);
  expect((await t.db.query('select 1 from emba_lease where person_id=$1',[p.personId])).rows).toHaveLength(0);
  expect((await t.db.query('select 1 from emba_audit where person_id=$1',[p.personId])).rows).toHaveLength(1);
+});
+
+it('exports only own minimal group receipts and purges restored receipt authority without erasing publications',async()=>{
+ const p=await fixture(),other=await fixture();
+ const {rows:[org]}=await t.db.query<{id:string}>("insert into emba_organization(name) values('Shared notes') returning id");
+ const {rows:[loop]}=await t.db.query<{id:string}>("insert into emba_loop(org_id,path) values($1,'shared') returning id",[org.id]);
+ const scope={orgId:org.id,loopId:loop.id};
+ for(const who of [p,other]) {
+  await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)',[org.id,who.personId]);
+  await t.db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'member')",[org.id,loop.id,who.personId]);
+ }
+ const input={...scope,operationId:randomUUID(),text:'WITHDRAWN_SHARED_TEXT'},saved=await publishGroupNote(t.db,p,input);
+ await withdrawGroupNote(t.db,p,{...scope,operationId:randomUUID(),recordId:saved.recordId,expectedVersion:1});
+ await publishGroupNote(t.db,other,{...scope,operationId:randomUUID(),text:'OTHER_PUBLICATION_TEXT'});
+ const exported=await exportPersonalData(t.db,p);
+ expect(exported).toHaveProperty('groupMemoryReceipts');
+ expect(JSON.stringify(exported)).not.toContain('WITHDRAWN_SHARED_TEXT');expect(JSON.stringify(exported)).not.toContain('OTHER_PUBLICATION_TEXT');
+ expect(JSON.stringify(exported)).not.toContain(other.personId);
+ const {rows:[receipt]}=await t.db.query<{request_hash:string}>('select request_hash from emba_group_memory_operation where person_id=$1 and operation_id=$2',[p.personId,input.operationId]);
+ await deletePersonalData(t.db,p);
+ expect((await t.db.query('select * from emba_group_memory_operation where person_id=$1',[p.personId])).rows).toEqual([]);
+ expect((await t.db.query('select author_id from emba_group_memory where id=$1',[saved.recordId])).rows).toEqual([{author_id:p.personId}]);
+ await t.db.query('insert into emba_group_memory_operation(person_id,operation_id,request_hash,record_id,version) values($1,$2,$3,$4,1)',[p.personId,input.operationId,receipt.request_hash,saved.recordId]);
+ await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('test',$1,$2,now())",[p.subject,p.personId]);
+ await expect(t.db.tx(q=>readGroupNoteReceipt(q,p,{...input,recordId:saved.recordId,expectedVersion:1,mutation:'publish'}))).rejects.toThrow('forbidden');
+ await applyDeletionTombstones(t.db,[p.personId]);
+ expect((await t.db.query('select * from emba_group_memory_operation where person_id=$1',[p.personId])).rows).toEqual([]);
 });
 
 it.skipIf(process.env.QB_DB!=='remote')('locks an activity with only a historical dependency before purging it',async()=>{

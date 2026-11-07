@@ -6,9 +6,9 @@ import { canAccessPersonal, type Principal } from './access';
 import { audit, requireFirstParty } from './consent';
 import { EmbaError } from './errors';
 
-export type ConfirmationInput = { clientId: string; action: 'commitment' | 'identity_disclosure' | 'publication'; targetId: string; expectedVersion: number; payload: unknown };
+export type ConfirmationInput = { clientId: string; action: 'commitment' | 'identity_disclosure' | 'publication' | 'group_memory_publication'; targetId: string; expectedVersion: number; payload: unknown };
 const bindingSchema = z.strictObject({
-  clientId: z.string().min(1).max(200), action: z.enum(['commitment','identity_disclosure','publication']),
+  clientId: z.string().min(1).max(200), action: z.enum(['commitment','identity_disclosure','publication','group_memory_publication']),
   targetId: z.string().min(1).max(200), expectedVersion: z.number().int().positive().max(Number.MAX_SAFE_INTEGER), payload: z.json(),
 });
 

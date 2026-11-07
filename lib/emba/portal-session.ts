@@ -1,13 +1,15 @@
 import 'server-only';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Principal } from './access';
+import {db} from '../db';
+import {clerkPortalConfigured,getClerkPortalPrincipal} from './clerk-identity';
 
 const fixture = new AsyncLocalStorage<Principal>();
 
-// Provider selection is a release gate. Never fall back to legacy cookies,
-// request-supplied identities, or assistant bearer tokens here.
+// Never fall back to legacy cookies, request identities, or assistant tokens.
 export async function getPortalPrincipal(): Promise<Principal | null> {
-  return process.env.NODE_ENV === 'test' ? fixture.getStore() ?? null : null;
+  if(process.env.NODE_ENV==='test') return fixture.getStore()??null;
+  return clerkPortalConfigured()?getClerkPortalPrincipal(db()):null;
 }
 
 export function withPortalTestSession<T>(principal: Principal, run: () => T): T {
