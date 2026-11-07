@@ -30,6 +30,8 @@ The role follow-up passed 43 focused tests, 16 browser checks, types/lint and a 
 
 ## Collaboration notes
 
+The trip-panel follow-up rechecks role authority and source versions after asynchronous activity reads, fails closed on late access loss, and independently re-authorizes selected sources from another trip. It also clarifies assistant consent scope. Verification passed 45 focused portal tests, 24 native PostgreSQL tests, types/lint and the final production build. Seven new snapshot cases cover demotion, identity/membership revocation, source correction/withdrawal and other-trip access loss. This does not establish live-host acceptance or change the 37/51 task count; see emba-portal-report.md.
+
 The user authorizes continued implementation, subagents and commits. They have not asked to push this checkpoint. Keep changes scoped and record actual results. Do not repeat deferred questions. CodeGraph has returned `Transport closed`; direct file reads are the current fallback. Native Node/PostgreSQL tests require the approved elevated execution context. No verification server should remain running at handoff.
 
 Read emba-pilot.md for setup and release boundaries; focused reports preserve evidence. Keep this checkpoint concise instead of rereading the complete historical conversation.

@@ -13,7 +13,7 @@ export default async function run(page) {
   const selectActor=async actor=>{await page.getByLabel('Synthetic actor').selectOption(actor);await page.getByRole('heading',{name:'Private preferences',exact:true}).waitFor();};
   const grant=async(scope,actions)=>{
     await page.getByLabel('Assistant client ID').fill('browser-assistant');
-    for(const [label,enabled] of [['Read private preferences',actions.includes('memory:read')],['Read personal plans',actions.includes('plan:read')],['Request activity actions (confirmation required)',actions.includes('activity:write')]])await page.getByLabel(label,{exact:true}).setChecked(enabled);
+    for(const [label,enabled] of [['Read private preferences',actions.includes('memory:read')],['Read trip knowledge and planning context',actions.includes('plan:read')],['Request activity actions (confirmation required)',actions.includes('activity:write')]])await page.getByLabel(label,{exact:true}).setChecked(enabled);
     await page.getByLabel('Expires at (UTC)',{exact:true}).fill('2098-01-01T12:00');
     await page.getByLabel('Access context').selectOption(scope);
     await page.getByRole('button',{name:'Grant selected access'}).click();

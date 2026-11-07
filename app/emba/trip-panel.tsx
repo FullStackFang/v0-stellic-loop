@@ -22,23 +22,37 @@ function Scope({orgId,loopId}:{orgId:string;loopId:string}) { return <><input na
 function Target({id,revision}:{id:string;revision:number}) { return <><input name="activityId" type="hidden" value={id}/><input name="revision" type="hidden" value={revision}/></>; }
 
 export async function TripPanel({principal,orgId,loopId,query,documentId,memory,updatesCursor}:{principal:Principal;orgId:string;loopId:string;query:string;documentId:string;memory:MemoryItem[];updatesCursor?:string}) {
-  let activities, documents, feedback, passages, selectedDocument;
+  let activities, feedback, activityDetails, context;
+  let documents:Awaited<ReturnType<typeof listDocuments>>;
+  let passages:Awaited<ReturnType<typeof searchKnowledge>>;
+  let selectedDocument:Awaited<ReturnType<typeof readDocument>>|null;
   try {
     activities=await listActivities(db(),principal,{orgId,loopId});
     documents=await listDocuments(db(),principal,{orgId,loopId});
     feedback=await listFeedback(db(),principal);
     passages=query ? await searchKnowledge(db(),principal,{orgId,loopId,query}) : [];
     selectedDocument=documentId ? await readDocument(db(),principal,documentId) : null;
-  } catch { return <section className="lt-editor"><h2>Trip context unavailable</h2><p role="alert">This scope or source is unavailable. Your access may have changed. Check the scope and reload.</p></section>; }
-  const manages=await canAccessLoop(db(),principal,orgId,loopId,'manage');
-  const posts=await canAccessLoop(db(),principal,orgId,loopId,'post');
-  const activityDetails=await Promise.all(activities.items.map(item=>readActivity(db(),principal,String(item.id))));
-  const createdIds=await db().tx(async q=>{
+    activityDetails=await Promise.all(activities.items.map(item=>readActivity(db(),principal,String(item.id))));
+    context=await db().tx(async q=>{
     await authorize(q,principal,'plan:read',{orgId,loopId});
+    if(selectedDocument)await authorize(q,principal,'plan:read',selectedDocument);
+    const manages=await canAccessLoop(q,principal,orgId,loopId,'manage');
+    const posts=await canAccessLoop(q,principal,orgId,loopId,'post');
     const {rows}=await q.query<{id:string}>('select id from emba_activity where org_id=$1 and loop_id=$2 and creator_id=$3',[orgId,loopId,principal.personId]);
+    // Later activity reads can outlive a source version or withdrawal. Validate
+    // the composed snapshot once, holding source locks through the final check.
+    const sources=[...documents,...(selectedDocument?[selectedDocument]:[])];
+    const ids=[...new Set([...sources.map(source=>source.id),...passages.map(passage=>passage.documentId)])];
+    const {rows:currentSources}=await q.query<{id:string;version:number;state:string;failedStage:string|null}>(
+      'select d.id,d.current_version as version,v.state,v.failed_stage as "failedStage" from emba_document d join emba_document_version v on v.document_id=d.id and v.version=d.current_version where d.id=any($1::uuid[]) and d.deleted_at is null order by d.id for share of d,v',[ids]);
+    const current=new Map(currentSources.map(source=>[source.id,source]));
+    if(sources.some(source=>{const latest=current.get(source.id);return !latest||latest.version!==source.version||latest.state!==source.state||latest.failedStage!==source.failedStage;})||
+      passages.some(passage=>{const latest=current.get(passage.documentId);return !latest||latest.version!==passage.version||latest.state!=='ready';}))throw new Error('Source changed');
     await audit(q,principal,'activity:read',loopId);
-    return new Set(rows.map(row=>row.id));
-  });
+    return {manages,posts,createdIds:new Set(rows.map(row=>row.id))};
+    });
+  } catch { return <section className="lt-editor"><h2>Trip context unavailable</h2><p role="alert">This scope or source is unavailable. Your access may have changed. Check the scope and reload.</p></section>; }
+  const {manages,posts,createdIds}=context;
   return <>
     <MemberUpdates principal={principal} context={{orgId,loopId,query,documentId}} cursor={updatesCursor}/>
     <section className="lt-editor"><h2>Plan with your preferences</h2><p>Bring together your active preferences, cited evidence and published activities. This creates no booking or commitment.</p><PlanningForm action={planTrip} orgId={orgId} loopId={loopId}/></section>

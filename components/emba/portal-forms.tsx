@@ -40,10 +40,10 @@ export function MemoryForm({ action, operationId, item, kind = 'want', scope = {
 export function ConnectionForm({ action, loops = [] }: { action: PortalAction; loops?: AccessibleLoop[] }) {
   return <ActionForm action={action} label="Grant selected access">
     <label>Assistant client ID<input name="clientId" required maxLength={200} /></label>
-    <fieldset><legend>Allowed actions</legend>{['memory:read','plan:read','activity:write'].map(action => <label key={action} className="lt-check"><input type="checkbox" name="actions" value={action} />{action === 'memory:read' ? 'Read private preferences' : action === 'plan:read' ? 'Read personal plans' : 'Request activity actions (confirmation required)'}</label>)}</fieldset>
+    <fieldset><legend>Allowed actions</legend>{['memory:read','plan:read','activity:write'].map(action => <label key={action} className="lt-check"><input type="checkbox" name="actions" value={action} />{action === 'memory:read' ? 'Read private preferences' : action === 'plan:read' ? 'Read trip knowledge and planning context' : 'Request activity actions (confirmation required)'}</label>)}</fieldset>
     <label>Expires at (UTC)<input name="expiresAt" type="datetime-local" required /></label>
     <label>Access context<select name="scope"><option value="personal">Personal context</option>{loops.map(loop => <option key={loop.loopId} value={`${loop.orgId}:${loop.loopId}`}>{loop.orgName} / {loop.path}</option>)}</select></label>
-    <p>Select personal context or one authorized trip. Each assistant must also authenticate. You can revoke access at any time.</p>
+    <p>Select personal context or one authorized trip. Grants apply only to the selected context. Personalized planning also requires access to private preferences. Each assistant must authenticate. You can revoke access at any time.</p>
   </ActionForm>;
 }
 
