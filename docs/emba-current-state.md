@@ -1,6 +1,6 @@
-# EMBA implementation checkpoint
+﻿# EMBA implementation checkpoint
 
-Start here when continuing `loop-emba-intent-platform`. The OpenSpec task list is authoritative: **37/51 bounded tasks complete**. Earlier counts in implementation-status.md are historical snapshots.
+Start here when continuing `loop-emba-intent-platform`. The OpenSpec task list is authoritative: **37/51 bounded tasks complete**. Earlier counts in implementation-status.md are historical snapshots. Main implementation checkpoint: `1fb46e3` (local commit, not pushed).
 
 ## Working implementation
 
@@ -12,7 +12,7 @@ Production portal authentication and the announcement signer default to unavaila
 
 - `npm test`: application tests; native-only and explicit production HTTP/restore checks skip by default.
 - `npm run emba:rehearsal`: disposable synthetic service/MCP acceptance fixture.
-- `npm run emba:browser`: localhost-only synthetic identities with actual components, actions and disposable database. Three browser drivers cover 18 base, 17 proposal/privacy and 17 organizer checks.
+- `npm run emba:browser`: localhost-only synthetic identities with actual components, actions and disposable database. Four browser drivers cover 18 base, 17 proposal/privacy, 17 organizer and 16 role-administration checks.
 - `npm run emba:postgres-check`: isolated native PostgreSQL runner; one instance at a time. Windows native binaries are local ignored tooling, documented in emba-pilot.md.
 - Opt-in built-Next HTTP boundary tests and physical backup/restore rehearsal passed separately; see emba-pilot.md and emba-restore-rehearsal.md.
 
@@ -24,7 +24,7 @@ Real auth provider/project and Claude/ChatGPT accounts were explicitly deferred.
 
 Before enrollment: resolve owner verification, exact audit/history/backup retention, organization-publication attribution and external tombstone durability/restore traffic controls. Signed announcements retain their original author ID; publication prose and shared legacy identity remain after pilot deletion. Restored pending invitations addressed only by email need a cleanup policy. Do not claim complete account erasure.
 
-Remaining local browser coverage includes organizer role editing and announcement workflows. Full authenticated Next transport, actual provider reauthentication, actual worker-outage recovery and remote OAuth/read/revoke/confirmed-write acceptance remain unverified.
+The role follow-up passed 43 focused tests, 16 browser checks, types/lint and a final production build. Remaining local browser coverage includes announcement workflows. Full authenticated Next transport, actual provider reauthentication, actual worker-outage recovery and remote OAuth/read/revoke/confirmed-write acceptance remain unverified.
 
 ## Collaboration notes
 

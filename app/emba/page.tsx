@@ -9,6 +9,7 @@ import { TripPanel } from './trip-panel';
 import { listMyLoops, listOrganizationMembers, listScopedRoles } from '@/lib/emba/roles';
 import { db } from '@/lib/db';
 import { RolesPanel } from '@/components/emba/RolesPanel';
+import { grantScopedRole, removeOrgMembership, revokeScopedRole } from './role-actions';
 import type { MemoryItem } from '@/lib/emba/memory';
 import { readScopedMemory } from './data';
 import { MemoryProposalReview } from '@/components/emba/memory-proposal-review';
@@ -70,7 +71,7 @@ export default async function MemberPortal({ searchParams }: { searchParams: Pro
       {orgId && loopId && invitations === null && <p role="alert">This organizer scope is unavailable or your access has been revoked.</p>}
       {invitations && <><InvitationForm action={createInvitation} orgId={orgId} loopId={loopId} /><ul>{invitations.map(invite => <li key={invite.id}>{invite.recipient_email} — {invite.role} — {invite.accepted_at ? 'Accepted' : invite.revoked_at ? 'Revoked' : Date.parse(invite.expires_at) <= data.loadedAt ? 'Expired' : 'Pending'}{!invite.accepted_at && !invite.revoked_at && <InvitationRevoke action={cancelInvitation} id={invite.id}/>}</li>)}</ul></>}
     </section>
-    {scopedRoles && selected && <RolesPanel orgId={orgId} loopId={loopId} personId={principal.personId} roles={scopedRoles} organizationMembers={organizationMembers}/>}
+    {scopedRoles && selected && <RolesPanel orgId={orgId} loopId={loopId} personId={principal.personId} roles={scopedRoles} organizationMembers={organizationMembers} grantAction={grantScopedRole} revokeAction={revokeScopedRole} removeAction={removeOrgMembership}/>}
     <PrivacyControls exportAction={exportPilotData} deleteAction={deletePilotData}/>
   </>;
 }

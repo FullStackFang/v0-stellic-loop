@@ -11,8 +11,9 @@ import { withPortalTestSession } from '../lib/emba/portal-session';
 import * as actions from '../app/emba/actions';
 import * as lifecycle from '../app/emba/lifecycle-actions';
 import * as memoryReview from '../app/emba/memory-review-actions';
+import * as roleActions from '../app/emba/role-actions';
 import { readOrganizerInvitations, readPortalData } from '../app/emba/data';
-import { listMyLoops } from '../lib/emba/roles';
+import { listMyLoops, listOrganizationMembers, listScopedRoles } from '../lib/emba/roles';
 import { readActivity, reviseActivity } from '../lib/emba/activities';
 import { prepareAgentAction, executeAgentAction } from '../lib/emba/agent-actions';
 import { authenticate } from '../lib/emba/access';
@@ -23,10 +24,12 @@ import type { PortalAction } from '../components/emba/portal-types';
 async function main() {
   if(process.env.NODE_ENV!=='test'||process.env.QB_DB==='remote'||process.env.DATABASE_URL||process.env.POSTGRES_URL||process.env.SUPABASE_TEST_DB_URL)throw new Error('Browser rehearsal requires explicit test mode and no configured database URLs');
   const t=await openTestDb(),f=await seedEmbaFixture(t.db);
-  const actors={memberA:f.memberA,memberB:f.memberB,organizer:f.organizer,nonmember:f.nonmember};
+  const actors={memberA:f.memberA,memberB:f.memberB,organizer:f.organizer,nonmember:f.nonmember,owner:f.members[7]};
+  await t.db.query("update emba_role set role='owner' where org_id=$1 and loop_id=$2 and person_id=$3",[f.orgId,f.rootId,actors.owner.personId]);
   const calls:Record<string,PortalAction>={savePreference:actions.savePreference,grantConnection:actions.grantConnection,revokeConnection:actions.revokeConnection,reviewAssistantAction:actions.reviewAssistantAction,approveAssistantAction:actions.approveAssistantAction,commitToActivity:actions.commitToActivity,withdrawFromActivity:actions.withdrawFromActivity,revisePublishedActivity:lifecycle.revisePublishedActivity,reviewWantProposal:memoryReview.reviewWantProposal,acceptWantProposal:memoryReview.acceptWantProposal,exportPilotData:actions.exportPilotData,deletePilotData:actions.deletePilotData};
   for(const name of Object.keys(actors) as (keyof typeof actors)[]){const person=actors[name];const verified=await authenticate(t.db,'synthetic',async()=>({issuer:person.issuer,subject:person.subject,expiresAt:person.expiresAt,verifiedEmail:`${name.toLowerCase()}@example.test`}));if(!verified)throw new Error('Synthetic identity unavailable');actors[name]=verified;}
   Object.assign(calls,{createInvitation:actions.createInvitation,cancelInvitation:actions.cancelInvitation,redeemInvitation:actions.redeemInvitation,uploadResource:actions.uploadResource,processResource:actions.processResource,removeResource:actions.removeResource});
+  Object.assign(calls,roleActions);
   const port=4319,origin=`http://127.0.0.1:${port}`,capability=randomBytes(32).toString('hex');
   const delegate=async(actor:keyof typeof actors)=>authenticate(t.db,'synthetic',async()=>({issuer:actors[actor].issuer,subject:actors[actor].subject,expiresAt:actors[actor].expiresAt,clientId:'browser-assistant',scopes:['memory:read','plan:read','activity:write']}));
   const handler=async(req:IncomingMessage,res:ServerResponse)=>{
@@ -42,7 +45,8 @@ async function main() {
         const passages=await searchKnowledge(t.db,person,{...f.vietnam,query:'Hanoi bus'}).catch(()=>[]);
         const invitations=await readOrganizerInvitations(person,f.orgId,f.vietnam.loopId).catch(()=>null);
         const documents=await listDocuments(t.db,person,f.vietnam).catch(()=>[]);
-        json(200,{...data,loops,activity,passages,documents,invitations,scope:f.vietnam,capability});return;
+        const rootRoles=await listScopedRoles(t.db,person,f.orgId,f.rootId).catch(()=>null),tripRoles=await listScopedRoles(t.db,person,f.orgId,f.vietnam.loopId).catch(()=>null),organizationMembers=await listOrganizationMembers(t.db,person,f.orgId,f.rootId).catch(()=>null);
+        json(200,{...data,loops,activity,passages,documents,invitations,rootRoles,tripRoles,organizationMembers,personId:person.personId,rootId:f.rootId,scope:f.vietnam,capability});return;
       }
       if(req.method!=='POST'||req.headers.origin!==origin||req.headers['content-type']!=='application/json'||req.headers['x-rehearsal-capability']!==capability){json(403,{error:'Invalid rehearsal request'});return;}
       let raw='';for await(const chunk of req){raw+=chunk.toString();if(Buffer.byteLength(raw)>65536){json(413,{error:'Request too large'});return;}}
