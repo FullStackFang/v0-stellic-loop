@@ -1,3 +1,4 @@
+import { legacyWorkspaceAllowed } from "@/lib/emba/legacy";
 import { db } from '@/lib/db';
 import { hashEditToken, workspace, saveWorkspace } from '@/lib/trip-workspace-store';
 import { emptyTripDraft, type TripDraft } from '@/lib/trip-draft';
@@ -27,6 +28,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params, q = db(), token = tokenOf(request);
   if (!await workspace(q, id, token)) return bad();
   const out = await q.tx(async tx => {
+    if (!await legacyWorkspaceAllowed(tx, id)) return null;
     const { rows: [w] } = await tx.query<{ board_id: string | null; draft: TripDraft }>(
       'select board_id,draft from trip_workspace where id=$1 and edit_secret_hash=$2 for update', [id, hashEditToken(token)]);
     if (!w) return null;

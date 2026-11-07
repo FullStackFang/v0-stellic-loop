@@ -1,3 +1,4 @@
+import { legacyWorkspaceAllowed } from "./emba/legacy";
 import 'server-only';
 import { createHash, randomBytes } from 'node:crypto';
 import type { Db, Q } from './db';
@@ -6,7 +7,7 @@ import { emptyTripDraft, type TripDraft, type TripWorkspace } from './trip-draft
 export const hashEditToken = (token: string) => createHash('sha256').update(token).digest('hex');
 export const newEditToken = () => randomBytes(32).toString('base64url');
 export async function workspace(q: Q, id: string, token?: string): Promise<TripWorkspace | null> {
-  if (!/^[0-9a-f-]{36}$/i.test(id) || !token) return null;
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !token || !await legacyWorkspaceAllowed(q, id)) return null;
   const { rows } = await q.query<TripWorkspace>(`select w.id, b.slug, w.writer, w.draft, w.pins, w.revision
     from trip_workspace w left join board b on b.id=w.board_id
     where w.id=$1 and w.edit_secret_hash=$2`, [id, hashEditToken(token)]);
@@ -19,6 +20,7 @@ export async function createWorkspace(q: Q) {
 }
 export async function saveWorkspace(q: Db, id: string, token: string, writer: string, draft: TripDraft, pins: Record<string, string>, revision: number) {
   return q.tx(async tx => {
+    if (!await legacyWorkspaceAllowed(tx, id)) return false;
     const { rows } = await tx.query<{ revision: number }>(`update trip_workspace set writer=$3,draft=$4,pins=$5,revision=$6,updated_at=now()
       where id=$1 and edit_secret_hash=$2 and revision < $6 returning revision`,
       [id, hashEditToken(token), writer.slice(0, 40000), JSON.stringify(draft), JSON.stringify(pins), revision]);

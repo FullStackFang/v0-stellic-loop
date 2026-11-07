@@ -1,3 +1,4 @@
+import { legacyBoardAllowed, legacyProposalAllowed } from "../emba/legacy";
 // One text per recipient, one `text_sent` event per text. Only US numbers are
 // texted; an opted-out person gets only a code they asked for. Bodies, codes
 // and links never reach an event.
@@ -41,6 +42,8 @@ export class TextNotifier implements Notifier {
   /** `body` runs only when the text will go, so a skipped person gets no token. */
   private async deliver(kind: Kind, boardId: string | null, proposalId: string | null, p: Recipient | undefined, body: () => string | Promise<string>): Promise<boolean> {
     if (!p) return false;
+    if (boardId && !await legacyBoardAllowed(this.q, boardId)) return false;
+    if (proposalId && !await legacyProposalAllowed(this.q, proposalId)) return false;
     const skip = !isUsNumber(p.phone) ? "not_us" : p.sms_opt_out && kind !== "code" ? "opted_out" : null;
     const out: Outcome = skip ? { status: "skipped", reason: skip } : await this.transport.send(p.phone, await body(), kind);
     if (p.id && out.status === "failed" && out.error === OPTED_OUT) {

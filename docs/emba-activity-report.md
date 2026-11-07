@@ -1,0 +1,21 @@
+# Activity coordination implementation
+
+Implemented in `lib/emba/activities.ts`, `delivery.ts`, `disclosure.ts` and migration `20261107003000_emba_activities.sql`. The knowledge migration extends the shared audit constraint with these service actions.
+
+Published terms are immutable through the service: material changes append a fresh revision and require fresh opt-ins. Signup uses the database clock, rejects late changes, enforces eligible current roles, validates monotone constraints, and requires each named target's activity/revision-specific consent. Retried operation IDs are deduplicated and payload changes conflict. Consent revocation suspends dependent authorization rather than dropping its constraint.
+
+All signup, finalization, withdrawal, consent and lifecycle changes lock the logical activity row. Finalization snapshots current identity/membership/ancestor roles and consent, stores one resolution plus original individual outcomes, and atomically inserts private inbox and outbox records. Finalized means a social plan; completion is not attendance. Withdrawal suspends newly infeasible participants and marks degradation without rewriting original outcomes. Reopening produces a new revision with no inherited commitments or disclosure.
+
+`saveCommitmentInTransaction`, `setNameDisclosureInTransaction` and `createActivityInTransaction` are trusted transaction helpers for root-owned confirmation callbacks. Publication accepts `{activityId, operationId, terms}` and requires a confirmation bound to that target and expectedVersion 1. Public wrappers require first-party identity. Delegated helpers recheck current leases, roles and revision. They are not standalone HTTP endpoints.
+
+`revokeActivityEligibility(q, personId)` is a trusted lifecycle hook. Invoke after revoking membership/roles/identity in the same transaction, including account deletion. It catches both the person's own commitments and dependencies on a person who never opted in. The hook is not automatically attached to arbitrary SQL updates. Deletion must also redact `requires` arrays and pending data as part of the account-deletion workflow; this module does not claim complete account erasure.
+
+Reads expose public terms, coarse lifecycle state, and only the caller's own commitment. Organizers have no roster access. Names require affirmative revision-specific disclosure and are returned only to currently eligible satisfied participants, after checking target eligibility. Consent cannot recall previously delivered information.
+
+Frozen reports are created once when the logical activity closes. Both resolved and non-resolved cells are suppressed if either is below five, including zero. No complementary total, arbitrary filter, revision-specific release, or later delta is exposed. This is inference reduction, not formal anonymity.
+
+Inbox polling does not acknowledge messages. Only a first-party action acknowledges the owner's current item. Opaque database-backed cursors expire after one hour and bind person and delegated client. Polls, acknowledgement and workers suppress obsolete revisions/events and recheck current eligibility. Outbox delivery uses stable inbox IDs as transport idempotency keys. A worker crash after external delivery can retry the same key; the external transport must deduplicate that key. No external provider or scheduled worker is configured here.
+
+Validation: focused PGlite integration tests cover explicit opt-in/follower denial, replay, deadline closure, finalization deduplication, atomic rollback on delivery failure, consent revocation, finalized dependency withdrawal, fresh revision, own-only inbox acknowledgement, private name release/revocation, eligibility loss for an uncommitted target, outbox retry, zero-cell suppression, and the eight-interested/six-resolved complement. Focused ESLint passes. PGlite serializes transactions; real PostgreSQL multi-connection race testing remains required before enrollment. No production migration, build or deployment was run by this task.
+
+Remaining boundaries: draft editing/publishing UI, trusted scheduled finalization/delivery runners, transport configuration, retention approval and restore-tombstone operational validation are outside this backend slice. Database superuser writes can still mutate published revision rows; application services never update them.

@@ -1,3 +1,4 @@
+import { legacyBoardAllowed, requireLegacyBoard } from "./emba/legacy";
 import 'server-only';
 import type { Q } from './db';
 import type { Trip, TripItem } from './trip';
@@ -11,10 +12,12 @@ export async function createTripAs(q: Q, personId: string, name: string, tz: str
   return result;
 }
 export async function getTrip(q: Q, boardId: string) {
+  if (!await legacyBoardAllowed(q, boardId)) return null;
   const { rows } = await q.query<Trip>('select * from trip where board_id = $1', [boardId]);
   return rows[0] ?? null;
 }
 export async function tripItems(q: Q, boardId: string, personId: string | null) {
+  await requireLegacyBoard(q, boardId);
   const { rows } = await q.query<TripItem>(`select i.id, i.owner_id, i.kind, i.title, i.day, i.time, i.location, i.notes, i.shared, i.filename,
     case when p.show_name or p.id = $2 then p.name else 'Cohort member' end as owner,
     (select count(*)::int from trip_rsvp r where r.item_id = i.id) as count,

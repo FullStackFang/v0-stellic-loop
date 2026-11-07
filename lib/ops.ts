@@ -1,3 +1,4 @@
+import { requireLegacyProposal } from "./emba/legacy";
 // Writes that run as a known person inside a transaction. Actions resolve the
 // person first (lib/identity.ts); verifyCode replays the same ops.
 import "server-only";
@@ -113,6 +114,7 @@ export async function respondAs(q: Q, personId: string, proposalId: string, answ
 
 /** A fresh share link for one sharer (null when signed out), with its `share_minted` event. */
 export async function mintShare(q: Q, p: Proposal, sharerId: string | null): Promise<string> {
+  await requireLegacyProposal(q, p.id);
   const token = shareToken();
   const { rows } = await q.query<{ id: string }>(
     "insert into share (proposal_id, token, sharer_id) values ($1, $2, $3) returning id", [p.id, token, sharerId]);

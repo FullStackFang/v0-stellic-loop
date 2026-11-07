@@ -1,4 +1,5 @@
 "use server";
+import { legacyBoardAllowed, legacyProposalAllowed } from "@/lib/emba/legacy";
 import { createTripAs } from "@/lib/trip-store";
 
 import { db, type Q } from "@/lib/db";
@@ -51,6 +52,8 @@ export async function verifyCode(input: { phone: string; code: string }): Promis
     }
     await q.query("delete from otp_code where phone = $1", [phone]);
     const pending = row.pending;
+    if (pending?.kind === "respond" && !await legacyProposalAllowed(q, pending.proposalId)) return fail("not_found");
+    if ((pending?.kind === "post" || pending?.kind === "join_trip") && !await legacyBoardAllowed(q, pending.boardId)) return fail("not_found");
     const personId = await personFor(q, phone, pending?.person);
     if (!personId) return fail("expired");
     const attr = await attribution(q);

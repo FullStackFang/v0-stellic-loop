@@ -1,3 +1,4 @@
+import { legacyBoardAllowed, legacyProposalAllowed, requireLegacyBoard, requireLegacyProposal } from "./emba/legacy";
 // Reads shared by pages and actions.
 import type { Q } from "./db";
 import { conflictsFor, type Conflicts } from "./quorum";
@@ -7,29 +8,30 @@ const BOARD_COLS = "id, slug, name, tz, window_kind, window_start, window_end, l
 
 export async function boardBySlug(q: Q, slug: string): Promise<Board | null> {
   const { rows } = await q.query<Board>(`select ${BOARD_COLS} from board where slug = $1`, [slug]);
-  return rows[0] ?? null;
+  return rows[0] && await legacyBoardAllowed(q, rows[0].id) ? rows[0] : null;
 }
 
 export async function allBoards(q: Q): Promise<Board[]> {
   const { rows } = await q.query<Board>(`select ${BOARD_COLS} from board`);
-  return rows;
+  return (await Promise.all(rows.map(async b => await legacyBoardAllowed(q, b.id) ? b : null))).filter((b): b is Board => b !== null);
 }
 
 export async function boardById(q: Q, id: string): Promise<Board | null> {
   const { rows } = await q.query<Board>(`select ${BOARD_COLS} from board where id = $1`, [id]);
-  return rows[0] ?? null;
+  return rows[0] && await legacyBoardAllowed(q, rows[0].id) ? rows[0] : null;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isUuid = (s: unknown): s is string => typeof s === "string" && UUID.test(s);
 
 export async function proposalById(q: Q, id: string, forUpdate = false): Promise<Proposal | null> {
-  if (!isUuid(id)) return null;
+  if (!isUuid(id) || !await legacyProposalAllowed(q, id)) return null;
   const { rows } = await q.query<Proposal>(`select * from proposal where id = $1${forUpdate ? " for update" : ""}`, [id]);
   return rows[0] ?? null;
 }
 
 export async function responsesFor(q: Q, proposalId: string): Promise<Response[]> {
+  await requireLegacyProposal(q, proposalId);
   const { rows } = await q.query<Response>("select * from response where proposal_id = $1 order by updated_at", [proposalId]);
   return rows;
 }
@@ -41,6 +43,7 @@ export async function personById(q: Q, id: string): Promise<Person | null> {
 }
 
 export async function freeDays(q: Q, boardId: string, personId: string): Promise<string[]> {
+  await requireLegacyBoard(q, boardId);
   const { rows } = await q.query<{ day: string }>(
     "select day from free_day where board_id = $1 and person_id = $2 order by day",
     [boardId, personId],
@@ -50,6 +53,7 @@ export async function freeDays(q: Q, boardId: string, personId: string): Promise
 
 /** Days this person is ON for on the board, keyed day → ON proposal. */
 export async function personConflicts(q: Q, boardId: string, personId: string): Promise<Map<string, Proposal>> {
+  await requireLegacyBoard(q, boardId);
   const { rows } = await q.query<Proposal>(
     `select p.* from proposal p join response r on r.proposal_id = p.id
      where p.board_id = $1 and r.person_id = $2 and r.answer = 'in' and p.status = 'on' and p.on_day is not null
@@ -72,6 +76,7 @@ export type BoardData = {
 
 /** Everything a board or proposal page renders from. */
 export async function boardData(q: Q, board: Board): Promise<BoardData> {
+  await requireLegacyBoard(q, board.id);
   const [{ rows: proposals }, { rows: responses }, { rows: people }, { rows: dropped }] = await Promise.all([
     q.query<Proposal>("select * from proposal where board_id = $1", [board.id]),
     q.query<Response>(
@@ -93,6 +98,7 @@ export async function boardData(q: Q, board: Board): Promise<BoardData> {
 }
 
 export async function detailsFor(q: Q, proposalId: string): Promise<Detail[]> {
+  await requireLegacyProposal(q, proposalId);
   const { rows } = await q.query<Detail>("select * from proposal_detail where proposal_id = $1 order by added_at, id", [proposalId]);
   return rows;
 }

@@ -1,0 +1,47 @@
+# EMBA trip knowledge implementation report
+
+## Implemented service boundary
+
+`lib/emba/knowledge.ts` provides versioned organizer uploads, status listing, original-source reads, removal, processing/retry, and cited keyword retrieval. All operations use existing current verified identity and inherited loop authority. Writes require a first-party organizer/owner. Reads require `plan:read`; delegated reads additionally require the exact organization/loop lease and OAuth scope. Every read persists an audit event before output. Titles, passages and original sources remain untrusted data.
+
+Initial supported formats are UTF-8 `text/plain` and a strict JSON itinerary object, with 262,144-byte sources, at most 200 extracted passages, and 4,000 characters per passage. PDF, Word, HTML, arbitrary JSON, URL imports, external model extraction and automatic URL fetching are unsupported. JSON shape:
+
+```json
+{"itineraryVersion":"draft-2","timezone":"Asia/Ho_Chi_Minh","passages":[{"text":"Hotel bus departure","claimKey":"bus-departure","claimValue":"09:00"}]}
+```
+
+Text extraction retains line/offset locations; JSON retains JSON-pointer locations, itinerary version and validated IANA timezone. Explicit claim keys/values enable conflict detection. Free-text semantic contradictions are not inferred. Search expands matched explicit claims to include conflicting sources and marks disputed results; it never represents a similarity score as correctness. Search returns at most 200 passages after conflict expansion. The source URL is `/api/emba/documents/[id]?version=N`; the portal integration supplies this guarded route.
+
+Full-text retrieval uses Postgres `tsvector`, `plainto_tsquery` and a GIN index. The authorized exact loop context is materialized before ranking; no inaccessible document can affect scores/counts/titles. Loop inheritance applies to the caller's role, not automatic expansion of query scope. Permissions, leases, source version and ready state are rechecked before output. Historical explicit-version downloads remain available while the document is active; deletion revokes all versions and deletes derived passages. Source version rows remain tombstoned in storage; physical source/backup retention is a separate production policy, not implemented deletion erasure.
+
+## Durable processing and limitations
+
+The stable job identity is `(document_id, version)`. Accepted, extracting, indexing, ready and failed states, failure stage, attempt count, and canonical extraction are durable. Stage transactions let indexing retry reuse canonical extraction and atomically replace that version's passages. Upload operation IDs are caller-scoped, hash-bound and serialized. Version changes immediately invalidate the prior index. Stage and publication guards reject changed/deleted documents and the original uploader's revoked current authority.
+
+The current worker entry point requires the uploader's current principal and runs locally/in process. A durable external scheduler, worker credential renewal, bounded automatic retry/backoff and operations monitoring remain deployment work. There are no model-generated summaries; consequently there is no cross-source summary cache to invalidate. Optional derived summaries and vector retrieval are not implemented. Task 4.3 cannot be marked complete: no real-Postgres/pgvector execution or embedding provider has been selected or proven.
+
+## Bounded announcement custody decision
+
+For the local implementation, signatures are **service-attested authorship**, not possession of a member's private key. `lib/emba/announcements.ts` takes a server-only injected signing interface. No production private key is created, persisted, loaded from an environment variable or exposed through a public request. Tests use ephemeral in-memory Ed25519 keys. Production secret custody, operational rotation/compromise response and provisioning remain a release gate.
+
+Canonical UTF-8 JSON arrays bind schema, attestation label, org, loop, announcement ID, version, author, timestamp, key ID and SHA-256 text digest. Publishing verifies current first-party organizer authority before signing and immediately before persistence, verifies the returned signature against the registered Ed25519 public key, and creates immutable version rows. Corrections require the current expected version and append another version.
+
+Public key records track registration, active/retired/revoked/compromised lifecycle and transition time. Rotation means registering a new key and retiring the old key. Retirement disables new signing while retaining valid historical verification before retirement. Revocation and compromise mark all historical signatures unverified; compromise cannot be downgraded to a less severe state. The public key and history remain available to the guarded verification service. Cryptographic verification never promotes body text to instructions. Announcement portal/key-management adapters are not included in this service-layer slice.
+
+## Verification
+
+Tests were introduced before their service modules; initial runs failed on the absent service imports. The final focused PGlite run passes 11 tests across `emba-knowledge.test.ts` and `emba-knowledge-announcements.test.ts`. These exercise actual migrations/full-text SQL, tenant isolation, lease revocation, source version/removal, injected indexing failure and retry, late-worker rejection, permission change before output, explicit conflict citations/timezones, bounds/formats, signed content/destination/version tampering, immutable correction history, key retirement/compromise, wrong-key rejection and revoked author denial. Database wrapper injections only inject a boundary failure/change; storage and queries remain real PGlite.
+
+Focused ESLint and repository `tsc --noEmit` passed. No production build, deployment, external provider call or real-Postgres vector test was performed in this delegated slice. The parent workflow owns integrated tests/build and task-ledger status. Migrations enable RLS and revoke all public/anon/authenticated Data API access to new tables; service-layer permission checks remain mandatory.
+
+### Integration review follow-up
+
+Current source reads now compare the final authorized version with the initially fetched version and fail closed on replacement. Source reads, each ranked citation, and document-list metadata acquire shared locks on the source identity and version for their final check, retaining them through transaction completion. This prevents an already-validated source from changing while later citations are checked. Historical explicitly requested versions retain their existing semantics. List output refreshes mutable processing state from its locked final read.
+
+Three additional PGlite boundary-race tests cover replacement between source lookup and output, metadata deletion before output, and ranked-source deletion before citation validation. The first two reproduced stale output before the fix. Final focused verification is **14 passing tests**, clean focused ESLint, and clean `tsc --noEmit`. These injections exercise real SQL and guard behavior; PGlite serializes transactions, so they do not constitute proof of multi-connection Postgres lock scheduling. Production concurrency verification remains required. Locks protect until commit, not recall of a response already delivered.
+
+Read-only review of `agent-actions.ts`, `mcp.ts`, their confirmation callbacks, and token verification found no direct public confirmation/token bypass. Consequential MCP tools always reconstruct a strict typed binding and consume the single-use approval against subject, delegated client, action, target, revision and canonical payload hash. Consumption and callback writes share one transaction. Callbacks reauthorize current lease/scope/role and revision; no MCP tool grants first-party confirmations. The remote bearer verifier binds signature, issuer, exact audience, expiry and allowed client ID; request arguments cannot create a trusted principal. Existing MCP action tests cover changed payload, replay, revoked lease/role, publication and action-specific disclosure approvals. This was code-path review, not a new remote OAuth/provider acceptance test. No parent-owned MCP or activity files were edited.
+
+### Organizer continuation - 2026-11-06
+
+Two additional reproduced service defects were fixed. A worker that loses authority between stages can no longer write a failure marker: the best-effort status transaction rechecks current authority, uploader and source version. Document reads now return processing state from the final locked row, rather than the earlier snapshot. Both new regressions failed before the changes. The integrated organizer checks passed against PGlite and native PostgreSQL; this is local service evidence, not provider/vector acceptance.

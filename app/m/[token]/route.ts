@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { ENTRY_COOKIE, entryFromUrl } from "@/lib/events";
 import { SESSION_COOKIE, SESSION_MAX_AGE_S, sessionSecret, signSession } from "@/lib/session";
 import { hashToken } from "@/lib/tokens";
+import { legacyPathAllowed } from "@/lib/emba/legacy";
 
 /** Only same-origin paths; anything else lands on the home page. */
 function safePath(to: string | null): string {
@@ -32,11 +33,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
 
   const search = new URLSearchParams(req.nextUrl.searchParams);
   if (row?.source) search.set("src", row.source);
-  const dest = new URL(safePath(row?.to_path ?? search.get("to")), req.nextUrl.origin);
+  const path = safePath(row?.to_path ?? search.get("to"));
+  const allowed = await legacyPathAllowed(q, path);
+  const dest = new URL(allowed ? path : '/', req.nextUrl.origin);
   const res = NextResponse.redirect(dest, 303);
   res.headers.set("Cache-Control", "no-store");
   res.cookies.set(ENTRY_COOKIE, entryFromUrl(search), { httpOnly: true, sameSite: "lax", path: "/" });
-  if (row?.person_id) {
+  if (allowed && row?.person_id) {
     res.cookies.set(SESSION_COOKIE, signSession(row.person_id, sessionSecret()), {
       httpOnly: true,
       sameSite: "lax",
