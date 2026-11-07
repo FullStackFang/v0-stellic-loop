@@ -60,6 +60,12 @@ Persist all resolution notifications atomically, with one logical inbox event pe
 
 Signed announcements use canonical envelopes, immutable versions and explicit author/key history. Key custody must be resolved before implementing signing; service-held keys must be described as service-attested authorship. Signatures never promote text to instructions. Document bodies, titles, summaries and compiled text remain untrusted. The server does not execute embedded commands or fetch embedded URLs.
 
+Implementation decision (2026-11-07): the pilot uses service-held Ed25519 keys supplied through per-environment Vercel Secret configuration, scoped to exact organization/loop public-key registrations. This is application-process custody, not non-exportable KMS custody. The existing Vercel KMS algorithm list does not include Ed25519; preserve the specified envelope algorithm. Registration, deployment, retirement and compromise procedures are recorded in `docs/emba-signing-custody.md`. Production secrets remain unprovisioned until real pilot scopes and verified operators exist.
+
+Worker decision (2026-11-07): reuse the linked Vercel Node runtime and existing secret-authenticated cron mechanism. A five-minute document schedule claims at most ten versions per invocation, with durable five-minute claims, attempt fencing, exponential backoff and a five-attempt automatic cap. Current uploader authority is rechecked through existing processing services. Polling remains member notification delivery; no external messaging provider is introduced. Local process-loss recovery is tested separately from hosted cron acceptance; see `docs/emba-worker-recovery.md`.
+
+Embedding decision (2026-11-07): opt-in pgvector stores only approved canonical document passages. AI SDK 7 routes `openai/text-embedding-3-small` with 1536 dimensions through Gateway, requires ZDR routing, disables SDK telemetry and bounds batches/deadlines/retries. An authorized metadata-only transmission audit commits before external processing; vector persistence and retrieval recheck current authority and sources. Manual processing, durable indexing and explicit semantic MCP retrieval share this adapter. The portal keyword form remains local. Gateway safety-retention qualifications do not satisfy the raw-conversation compiler's unconditional boundary. A synthetic live request returned a credit-related HTTP 403, so semantic quality and actual live provider acceptance remain open. See `docs/emba-embeddings.md`.
+
 ## Risks / Trade-offs
 
 - Existing public routes can bypass new gates → classify pilot resources in storage and test all old paths, including files and metadata, before migration.
@@ -85,8 +91,8 @@ Signed announcements use canonical envelopes, immutable versions and explicit au
 These are bounded implementation gates, not missing product behavior:
 
 - Before the auth slice: select and verify account-sign-in/OAuth provider compatibility and current host requirements; use existing provisioned services where appropriate.
-- Before announcement signing: record service-held versus member-held key custody, storage/rotation and historical compromise presentation.
+- Before hosted announcement signing: provision the recorded service-held key configuration for verified pilot scopes and exercise operator rotation/compromise procedures.
 - Before production enrollment: identify the pilot owner-verification operator; approve exact audit, compiled-history and backup retention durations and publication-attribution rules on account deletion.
-- Before deployment: record worker hosting, model/embedding data-processing terms and selected compiler version. No raw chat can enter durable infrastructure regardless of provider.
+- Before deployment: verify the selected worker runtime operationally and approve model/embedding data-processing terms and a compiler processing boundary. No raw chat can enter durable infrastructure regardless of provider.
 
 The implementation can begin with baseline/schema/access work while these are resolved. Production enrollment cannot begin while its gates remain open.

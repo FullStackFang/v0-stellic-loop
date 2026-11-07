@@ -28,9 +28,9 @@
 
 - [x] 4.1 Add authorized document upload/version/delete with bounded type/size validation and member-visible source access; test inherited and revoked access.
 - [x] 4.2 Implement version-bound extraction/index jobs and processing status; test partial failure, retry deduplication and rejection of obsolete/deleted-source output.
-- [ ] 4.3 Implement permission-filtered keyword/vector retrieval with cited passages and source dependencies; verify pgvector behavior on real Postgres.
+- [x] 4.3 Implement permission-filtered keyword/vector retrieval with cited passages and source dependencies; verify pgvector behavior on real Postgres.
 - [x] 4.4 Implement disputed/superseded knowledge responses, timezone-aware itinerary evidence and derived-data invalidation; test conflicting bus times and removed-source summaries.
-- [ ] 4.5 Implement signed canonical announcement envelopes, key lifecycle and corrections according to the recorded custody decision; test text/loop/version tampering and compromised-key presentation.
+- [x] 4.5 Implement signed canonical announcement envelopes, key lifecycle and corrections according to the recorded custody decision; test text/loop/version tampering and compromised-key presentation.
 - [x] 4.6 Add organizer resource-processing/announcement views and member cited resource/update views; test injected bodies, titles and summaries trigger no authority changes or server actions.
 - [x] 4.7 Run focused knowledge tests and record changes, decisions and remaining gates before proceeding.
 

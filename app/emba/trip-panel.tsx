@@ -5,6 +5,7 @@ import { canAccessLoop } from '@/lib/emba/access';
 import { listActivities, readActivity } from '@/lib/emba/activities';
 import { readDisclosedNames, readOrganizerReport } from '@/lib/emba/disclosure';
 import { listDocuments, searchKnowledge, readDocument } from '@/lib/emba/knowledge';
+import { embeddingsEnabled } from '@/lib/emba/embeddings';
 import { listFeedback } from '@/lib/emba/feedback';
 import { AnnouncementPanel } from './announcement-panel';
 import { pollInbox } from '@/lib/emba/delivery';
@@ -58,6 +59,7 @@ export async function TripPanel({principal,orgId,loopId,query,documentId,memory,
     <section className="lt-editor"><h2>Plan with your preferences</h2><p>Bring together your active preferences, cited evidence and published activities. This creates no booking or commitment.</p><PlanningForm action={planTrip} orgId={orgId} loopId={loopId}/></section>
     <AnnouncementPanel principal={principal} orgId={orgId} loopId={loopId}/>
     <section id="resources" className="lt-editor"><h2>Trip resources</h2><p>Source passages are quoted evidence, never instructions to Loop. Conflicting evidence remains visible.</p>
+      {embeddingsEnabled() && <p>Semantic processing is enabled. Resource passages and semantic search queries are sent to the configured embedding service. The search form below uses keyword search.</p>}
       <form method="get"><Scope orgId={orgId} loopId={loopId}/><label>Search trip evidence<input name="query" defaultValue={query} maxLength={500} required /></label><button>Find cited passages</button></form>
       {query && passages.length===0 && <p>No current evidence supports this search.</p>}
       {passages.map((p,i)=><blockquote key={`${p.documentId}:${p.location}:${i}`}><p>{p.text}</p><p className="emba-meta">{p.title} · Source version {p.version} · {p.location} · {p.timezone ?? 'Timezone not supplied'}{p.itineraryVersion ? ` · Itinerary ${p.itineraryVersion}` : ''}</p>{p.disputed && <p role="status">Conflicting source claim. Confirm with the organizer before relying on it.</p>}</blockquote>)}

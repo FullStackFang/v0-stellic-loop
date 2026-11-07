@@ -11,8 +11,8 @@ const TABLES = "emba_organization, trip_workspace, event, share, otp_code, magic
 
 export type TestDb = { db: Db; reset(): Promise<void>; close(): Promise<void> };
 
-export async function openTestDb(): Promise<TestDb> {
-  const d = process.env.QB_DB === "remote" ? remote() : await local();
+export async function openTestDb(options: {vectors?:boolean} = {}): Promise<TestDb> {
+  const d = process.env.QB_DB === "remote" ? remote() : await local(options.vectors);
   setDb(d.db);
   await d.reset();
   return d;
@@ -29,13 +29,14 @@ function remote(): TestDb {
   };
 }
 
-async function local(): Promise<TestDb> {
-  const pg = new PGlite({ parsers: PARSERS as never });
+async function local(vectors=false): Promise<TestDb> {
+  const pg = new PGlite({ parsers: PARSERS as never, ...(vectors ? {extensions:{vector:(await import('@electric-sql/pglite-pgvector')).vector}} : {}) });
   // Supabase's API roles, so 0003_grants.sql applies unchanged.
   await pg.exec("create role anon; create role authenticated;");
   for (const f of readdirSync(MIGRATIONS).filter((n) => n.endsWith(".sql")).sort()) {
     await pg.exec(readFileSync(join(MIGRATIONS, f), "utf8"));
   }
+  if(vectors) await pg.exec(readFileSync(join(MIGRATIONS,'..','optional-migrations','emba-vectors','001_vectors.sql'),'utf8'));
   const wrap = (x: { query: PGlite["query"] }): Q => ({
     query: async (text, params) => ({ rows: (await x.query(text, params as unknown[])).rows as never }),
   });

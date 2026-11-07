@@ -14,6 +14,7 @@ import { createActivity, saveCommitment, withdrawCommitment, setDependencyConsen
 import { setNameDisclosure } from '@/lib/emba/disclosure';
 import { saveFeedback, deleteFeedback } from '@/lib/emba/feedback';
 import { uploadDocument, processDocument, deleteDocument } from '@/lib/emba/knowledge';
+import { embeddingsEnabled, indexDocumentEmbeddings } from '@/lib/emba/embeddings';
 import { approveConfirmation } from '@/lib/emba/confirmation';
 import { parseReview } from './review';
 import { planForMe } from '@/lib/emba/planning';
@@ -131,7 +132,11 @@ export async function uploadResource(_previous: PortalResult, data: FormData) {
   });
 }
 export async function processResource(_previous: PortalResult, data: FormData) {
-  return mutate(principal => processDocument(db(),principal,value(data,'documentId'),Number(value(data,'version'))));
+  return mutate(async principal => {
+    const documentId=value(data,'documentId'),version=Number(value(data,'version'));
+    await processDocument(db(),principal,documentId,version);
+    if(embeddingsEnabled())await indexDocumentEmbeddings(db(),principal,{documentId,version});
+  });
 }
 export async function removeResource(_previous: PortalResult, data: FormData) {
   return mutate(principal => deleteDocument(db(),principal,value(data,'documentId'),Number(value(data,'version'))));

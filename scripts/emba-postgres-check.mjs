@@ -27,7 +27,10 @@ try {
   for(const file of readdirSync(join(root,'supabase/migrations')).filter(f=>f.endsWith('.sql')).sort())await client.query(readFileSync(join(root,'supabase/migrations',file),'utf8'));
   console.log('Native PostgreSQL migrations applied to disposable localhost database.');
  }finally{await client.end();}
- const files=process.argv.slice(2).length?process.argv.slice(2):readdirSync(join(root,'lib/__tests__')).filter(f=>f.startsWith('emba-')&&f.endsWith('.test.ts')).map(f=>'lib/__tests__/'+f);
+ // Optional pgvector schema has its own Docker runner; this PG18 distribution
+ // does not ship the extension. Explicit test arguments are never filtered.
+ const vectorTests=new Set(['emba-knowledge-vector.test.ts','emba-embeddings.test.ts','emba-worker-embeddings.test.ts','emba-semantic-mcp.test.ts','emba-semantic-actions.test.ts']);
+ const files=process.argv.slice(2).length?process.argv.slice(2):readdirSync(join(root,'lib/__tests__')).filter(f=>f.startsWith('emba-')&&f.endsWith('.test.ts')&&!vectorTests.has(f)).map(f=>'lib/__tests__/'+f);
  const exitCode=await new Promise((resolveExit,reject)=>{
   const child=spawn(process.execPath,['node_modules/vitest/vitest.mjs','run',...files,'--maxWorkers=1','--no-file-parallelism'],{
    cwd:root,stdio:'inherit',windowsHide:true,

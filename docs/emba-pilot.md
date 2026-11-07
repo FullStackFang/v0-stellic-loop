@@ -44,6 +44,10 @@ HTTP surfaces include `/api/mcp`, `/api/emba/memory`, `/api/emba/documents/[id]`
 
 These routes do not implement an OAuth authorization server or browser sign-in. The portal consent UI cannot be used by real members until its trusted browser provider is configured. Missing auth configuration fails closed. Provider discovery, PKCE, audience and verified client identity must be tested with the actual intended hosts before connecting real accounts. Never create identity mappings based on an unverified email or legacy magic link.
 
+The scoped configured announcement signer uses server-only `LOOP_ANNOUNCEMENT_KEYS`; see [key custody](emba-signing-custody.md). No live key has been provisioned. The existing `CRON_SECRET` also authenticates the durable document worker, scheduled every five minutes in `vercel.json`; see [claims, retries and recovery](emba-worker-recovery.md). These engineering choices use the linked Vercel project and do not require selecting a new runtime.
+
+Optional semantic retrieval uses the separate `supabase/optional-migrations/emba-vectors/001_vectors.sql` schema and Vercel AI Gateway's `openai/text-embedding-3-small` model. Apply that schema and resolve processing/funding gates before enabling `LOOP_EMBEDDINGS_ENABLED=true`. Scheduled/manual source processing and the explicit semantic MCP tool use the adapter; default keyword search stays local. Portal disclosure describes passage/query transmission. A live synthetic Gateway request returned HTTP 403 for the credit/billing gate, so successful live embeddings and retrieval quality remain unverified. See [knowledge processing](emba-knowledge-report.md) and [remaining inputs](emba-remaining-inputs.md).
+
 ## Migration and deployment
 
 Apply the new `supabase/migrations/20261106*_emba_*.sql` and `20261107*_emba_*.sql` migrations in filename order through the normal migration workflow, after validating against a separate PostgreSQL database. Do not copy individual SQL fragments or mark migrations applied without executing them.
@@ -59,7 +63,7 @@ tar -xzf .playwright-mcp/emba-postgres/embedded-postgres-windows-x64-18.6.0-beta
 npm run emba:postgres-check
 ```
 
-Run from the repository root; selected `lib/__tests__/emba-*.test.ts` paths can also be passed to `node scripts/emba-postgres-check.mjs`. The runner creates a temporary localhost cluster under `.playwright-mcp/emba-postgres`, listens on `127.0.0.1:55439`, applies every migration, and runs Vitest with generated `SUPABASE_TEST_DB_URL` and `QB_DB=remote`. It does not use application database URLs. PostgreSQL stops in `finally`; temporary data directories remain for inspection. Run one instance at a time. The native EMBA checks passed: 141 tests across 18 suites, plus four portal lifecycle tests and four disclosure/timezone tests in separate runs (149 total). Seven tests exercise independent PostgreSQL connections and lock ordering. PGlite alone does not prove multi-connection behavior, and pgvector acceptance remains unimplemented.
+Run from the repository root; selected `lib/__tests__/emba-*.test.ts` paths can also be passed to `node scripts/emba-postgres-check.mjs`. The runner creates a temporary localhost cluster under `.playwright-mcp/emba-postgres`, listens on `127.0.0.1:55439`, applies the ordinary migrations, and runs Vitest with generated `SUPABASE_TEST_DB_URL` and `QB_DB=remote`. It does not use application database URLs. PostgreSQL stops in `finally`; temporary data directories remain for inspection. Run one instance at a time. This runner does not install the optional pgvector schema. Five vector-core checks previously passed on a separate real PostgreSQL/pgvector instance; the expanded optional integration suite's native rerun remains pending because the user requested no Docker startup. PGlite alone does not prove native multi-connection behavior. See [latest verification](emba-integration-verification.md) for current evidence.
 
 Run `npm test`, `npx tsc --noEmit`, changed-file ESLint and one production build before release. PGlite tests exercise SQL constraints and transactions but do not satisfy the separate real-PostgreSQL concurrency/pgvector acceptance gate.
 
@@ -67,7 +71,7 @@ Vercel CLI can be invoked through `npx vercel`; installing it with `npm i -g ver
 
 ## Remaining before a live pilot
 
-Latest local verification (2026-11-06): 462 application tests, 157 native PostgreSQL tests and three additional built-Next HTTP boundary tests passed. TypeScript, pilot lint and the final production build passed. These counts supersede earlier run snapshots above.
+Latest test, type, lint and build results are recorded in [emba-integration-verification.md](emba-integration-verification.md). Earlier focused reports preserve historical results and limits; their totals should not be treated as verification of subsequent changes.
 
 Run `npm run emba:browser` for the disposable component/action/database browser rehearsal. See [browser evidence and limits](emba-browser-rehearsal.md): 18 interaction checks passed, followed by styled keyboard and 320/390/1440 px viewport checks. This uses synthetic identities and does not exercise provider login or Next Server Action transport.
 
@@ -85,10 +89,10 @@ The [physical backup/restore rehearsal](emba-restore-rehearsal.md) also passed l
 
 - Provision provider login and test Claude/ChatGPT OAuth, private read and revocation on real intended accounts.
 - Connect verified browser sign-in; test portal keyboard/mobile, stale review and Tallinn/Hanoi timezone flows with distinct real member, organizer and nonmember accounts. Invitations, memory review/editing, connections and audit screens exist locally but are not yet reachable by real members.
-- Provision production signing-key custody and operator rotation/compromise handling. Current tests inject ephemeral keys and label output service-attested. Configure durable document processing, inbox delivery and scheduled workers; test failures and retries operationally.
+- Provision scoped signing secrets/public registrations using the implemented custody adapter and perform the hosted rotation/compromise drill. Deploy the durable document worker after its migration and verify cron operation/recovery. Portal/MCP polling provides inbox updates; external push/email is optional.
 - Resolve owner verification and exact audit/history/backup retention and publication-attribution policy. Pilot export/delete and tombstones exist, but restore requires an external current tombstone ledger and an isolated traffic barrier that the app does not operate.
 - Complete browser/legacy-route and actual Claude/ChatGPT acceptance. The local SDK rehearsal is limited to its explicit service and MCP paths.
 
-No raw conversations are accepted by the structured-memory service. Bounded text/itinerary JSON extraction and service-attested announcement signing exist, but there is no private-conversation compiler, embedding/vector search, production signer or provider processing decision. Do not imply those gates are satisfied. Operational failures should log sanitized categories, never tokens, private payloads or SQL parameters.
+No raw conversations are accepted by the structured-memory service, and no private-conversation compiler exists. Bounded text/itinerary extraction, configured service-attested signing, durable scheduling and opt-in embedding/vector retrieval are implemented. Real identity setup, signing-secret provisioning, funded Gateway access, live retrieval-quality checks and owner processing/policy approval remain deployment gates; see [remaining inputs](emba-remaining-inputs.md). Operational failures should log sanitized categories, never tokens, private payloads or SQL parameters.
 
 For rollback, disable pilot ingress and preserve private classification. Do not roll back to an older application that treats classified records as public, or drop classification columns to restore legacy access. Revoke affected leases and credentials through the provider if needed; consent revocation cannot erase data already returned to an external client.

@@ -18,6 +18,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
     "@supabase/supabase-js": "^2.118.0",
+    "ai": "^7.0.164",
     "jose": "6.2.15",
     "libphonenumber-js": "^1.13.15",
     "next": "16.4.2",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.11",
+    "@electric-sql/pglite-pgvector": "0.0.12",
     "@electric-sql/pglite-socket": "^0.2.14",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/dom": "^10.4.2",
