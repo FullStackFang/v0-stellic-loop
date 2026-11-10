@@ -41,7 +41,8 @@ async function fixture() {
   const ana = await join('ana@example.test', 'ana'), ben = await join('ben@example.test', 'ben'), outsider = await person('outsider@example.test');
   return { owner, ana, ben, outsider, scope, ids: { orgId: scope.orgId, loopId: scope.loopId } };
 }
-const view = async (principal: Principal) => render(await withPortalTestSession(principal, () => TeamPage({ params: Promise.resolve({ namespace: 'study-team' }) })));
+// The record shows one section at a time, chosen by ?tab=.
+const view = async (principal: Principal, tab?: string) => render(await withPortalTestSession(principal, () => TeamPage({ params: Promise.resolve({ namespace: 'study-team' }), searchParams: Promise.resolve(tab ? { tab } : {}) })));
 const act = (principal: Principal, run: () => Promise<{ status: string; message: string }>) => withPortalTestSession(principal, run);
 
 it('shows a member the team as their assistant would see it, with only the controls they may use', async () => {
@@ -54,25 +55,41 @@ it('shows a member the team as their assistant would see it, with only the contr
   await claim(t.db, f.ana, { ...f.scope, what: 'Slides 4 to 8', owner: 'ben', tags: ['ben'] });
   await claim(t.db, f.ben, { ...f.scope, what: 'Slides 1 to 3' });
 
-  const ben = await view(f.ben);
+  // The team's name, its announcements and where it stands are beside every tab; decisions open first.
+  let ben = await view(f.ben);
   expect(screen.getByRole('heading', { name: 'Study team' })).toBeInTheDocument();
-  expect(screen.getByText('Ten slides.')).toBeInTheDocument();
-  expect(screen.getByText('2026-11-20')).toBeInTheDocument();
   expect(screen.getByText(/Deck due Friday\./)).toBeInTheDocument();
   expect(screen.getByText(/Google Slides\./)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /2 open claims/ })).toHaveAttribute('href', '/groups/study-team/team?tab=claims');
+  expect(screen.getByRole('link', { name: /1 output.*1 flagged/ })).toHaveAttribute('href', '/groups/study-team/team?tab=outputs');
+  // The decision an output conflicts with links to that output.
+  expect(screen.getByRole('link', { name: /Output #3 is marked as conflicting with this decision/ })).toHaveAttribute('href', '/groups/study-team/team?tab=outputs#r3');
+  expect(screen.queryByRole('button', { name: 'Post announcement' })).not.toBeInTheDocument();
+  ben.unmount();
+  ben = await view(f.ben, 'brief');
+  expect(screen.getByText('Ten slides.')).toBeInTheDocument();
+  expect(screen.getByText('2026-11-20')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save brief' })).not.toBeInTheDocument();
+  ben.unmount();
+  ben = await view(f.ben, 'outputs');
   const link = screen.getByRole('link', { name: 'Deck draft' });
   expect(link).toHaveAttribute('href', 'https://files.example.org/deck.pdf');
   expect(link).toHaveAttribute('rel', 'noopener noreferrer nofollow');
   expect(screen.getByText(/unrecognised host/)).toBeInTheDocument();
-  expect(screen.getAllByText(/conflicting with decision #2/).length).toBeGreaterThan(0);
+  expect(screen.getByRole('link', { name: /conflicting with decision #2/ })).toHaveAttribute('href', '/groups/study-team/team?tab=decisions#r2');
+  ben.unmount();
+  ben = await view(f.ben, 'claims');
   // Ben can answer the claim proposed for him, finish his own, and remove the tag on himself; nothing more.
   expect(screen.getByRole('button', { name: 'Confirm: I will do this' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Decline' })).toBeInTheDocument();
   expect(screen.getAllByRole('button', { name: 'Mark done' })).toHaveLength(1);
   expect(screen.getByRole('button', { name: 'Remove my tag' })).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Save brief' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Post announcement' })).not.toBeInTheDocument();
+  ben.unmount();
+  ben = await view(f.ben, 'events');
+  expect(screen.getByText('@study-team/final-deck')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Create event' })).not.toBeInTheDocument();
+  ben.unmount();
+  ben = await view(f.ben, 'mine');
   // His recent saves: his own claim only, saved on the site.
   const mine = within(document.getElementById('mine')!);
   expect(mine.getByText(/Slides 1 to 3/)).toBeInTheDocument();
@@ -81,10 +98,15 @@ it('shows a member the team as their assistant would see it, with only the contr
   ben.unmount();
 
   // An owner sees the curation controls and can withdraw anything.
-  const owner = await view(f.owner);
-  for (const name of ['Save brief', 'Post announcement', 'Create event', 'Rename', 'Archive']) expect(screen.getByRole('button', { name })).toBeInTheDocument();
-  expect(screen.getAllByRole('button', { name: 'Withdraw' }).length).toBeGreaterThanOrEqual(5);
-  owner.unmount();
+  let withdrawable = 0;
+  for (const [tab, names] of Object.entries({ decisions: ['Post announcement'], claims: [], outputs: [], brief: ['Save brief'], events: ['Create event', 'Rename', 'Archive'] })) {
+    const owner = await view(f.owner, tab);
+    for (const name of names) expect(screen.getByRole('button', { name }), name).toBeInTheDocument();
+    // The announcement's own Withdraw sits beside every tab; count it once.
+    withdrawable += screen.getAllByRole('button', { name: 'Withdraw' }).length - (tab === 'decisions' ? 0 : 1);
+    owner.unmount();
+  }
+  expect(withdrawable).toBe(5);
 
   // A signed-in person who is not a member sees nothing about the team.
   await view(f.outsider);
