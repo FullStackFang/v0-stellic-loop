@@ -4,6 +4,8 @@ The user approved this narrower execution order on 2026-11-07: sign in, connect 
 
 ## Decisions
 
+November 9 administration decision: retain Vercel Marketplace for consistent provisioning, billing and production scaling; reuse the existing Clerk integration and shared Supabase project. This supersedes the November 8 direct-ownership recommendation. The unused FullstackFang Direct organization was removed without transferring projects. Document who owns each setting. The current Clerk adapter remains the technical choice; Supabase's OAuth custom-scope limitations prevent treating it as a drop-in replacement. See [provider ownership review](emba-provider-ownership-review.md) and [cleanup evidence](marketplace-exit.md).
+
 - Clerk supplies browser sign-in and managed assistant OAuth; Supabase remains the application database. Clerk's free Hobby development instance is provisioned for development/preview only, after the user accepted marketplace terms. No paid add-ons or production configuration were selected.
 - Claude is the first intended assistant. Its actual OAuth/PKCE/read/revoke acceptance remains an observed integration test, not a substitute for implementing the login adapter. The user's instruction to choose the implementation removes the earlier provider-selection deferral; no custom authorization server will be built.
 - Group handles resolve existing group IDs and membership. An alias is not proof of affiliation or permission. No native host autocomplete is promised.

@@ -5,6 +5,7 @@ import type {Principal} from './access';
 import {audit,requireFirstParty} from './consent';
 import {revokeActivityEligibility} from './activities';
 import {EmbaError} from './errors';
+import {releaseOnDeparture} from './team-records';
 
 // Authentication time is a trusted provider claim, never a browser form value.
 async function reauthenticated(q:Q,p:Principal) {
@@ -28,8 +29,12 @@ export async function exportPersonalData(db:Db,p:Principal) {
   // Shared publications remain organization-owned. Export only this person's
   // operation receipts: no withdrawn text, old versions or other authors' data.
   const groupMemoryReceipts=await own('select o.operation_id,o.record_id,o.version,o.client_id,m.status from emba_group_memory_operation o join emba_group_memory m on m.id=o.record_id where o.person_id=$1');
+  // Team records: receipts, the claims this person holds or recorded, and their handle. No record text.
+  const teamReceipts=await own('select o.operation_id,o.org_id,o.loop_id,r.number,r.kind,o.client_id,o.at from emba_team_operation o join emba_team_record r on r.id=o.record_id where o.person_id=$1 order by o.at');
+  const teamClaims=await own(`select r.org_id,r.loop_id,r.number,r.claim_status,to_char(r.due_on,'YYYY-MM-DD') as due_on,r.owner_id=$1 as owner,coalesce(r.author_id=$1,false) as recorder,r.created_at from emba_team_record r where r.kind='claim' and (r.owner_id=$1 or r.author_id=$1) order by r.org_id,r.loop_id,r.number`);
+  const handles=await own('select org_id,handle from emba_member_handle where person_id=$1 order by org_id');
   await audit(q,p,'privacy:export');
-  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events,groupMemoryReceipts};
+  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events,groupMemoryReceipts,teamReceipts,teamClaims,handles};
  });
 }
 
@@ -52,9 +57,20 @@ async function purge(q:Q,personId:string) {
  // Sources belong to the organization. Attribution is erased; source text is retained.
  await q.query('update emba_document_version set uploaded_by=null where uploaded_by=$1',[personId]);
  await q.query('update emba_announcement_key set registered_by=null where registered_by=$1',[personId]);
+ await q.query('update emba_team_event set created_by=null where created_by=$1',[personId]);
+ // Team records stay with the team and keep their author link (shown as a former teammate). What the
+ // person was holding is let go, and every other trace of them in the team's history is unlinked.
+ await releaseOnDeparture(q,personId,{actorId:null});
+ await q.query("update emba_team_record set owner_id=null where owner_id=$1 and kind='claim' and claim_status in ('done','released','declined')",[personId]);
+ await q.query('update emba_team_record_version set edited_by=null where edited_by=$1',[personId]);
+ await q.query('update emba_team_conflict set flagged_by=null where flagged_by=$1',[personId]);
+ await q.query('update emba_team_brief set edited_by=null where edited_by=$1',[personId]);
+ await q.query('update emba_team_change set actor_id=null where actor_id=$1',[personId]);
+ await q.query('update emba_team_change set subject_id=null where subject_id=$1',[personId]);
+ await q.query('update emba_team_conflict_report set person_id=null,client_id=null where person_id=$1',[personId]);
  await q.query('delete from emba_dependency_consent where target_id=$1 or requester_id=$1',[personId]);
  await q.query('delete from emba_invitation where issued_by=$1 or accepted_by=$1',[personId]);
- for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_membership','emba_identity']) {
+ for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_team_operation','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_member_handle','emba_membership','emba_identity']) {
   await q.query(`delete from ${table} where person_id=$1`,[personId]);
  }
  // No stable participant pseudonym is retained in plan history or audit output.

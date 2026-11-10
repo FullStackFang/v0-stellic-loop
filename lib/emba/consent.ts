@@ -60,6 +60,24 @@ export async function revokeLease(db: Db, principal: Principal, id: string): Pro
     await audit(q,principal,'lease:revoke',id);
   });
 }
+export async function renewGroupReadLease(db: Db, principal: Principal, id: string): Promise<void> {
+  z.uuid().parse(id);
+  await db.tx(async q => {
+    await requireFirstParty(q, principal);
+    const { rows: [lease] } = await q.query<{ clientId: string; orgId: string | null; loopId: string | null; actions: string[]; revokedAt: string | null }>(
+      'select client_id as "clientId",org_id as "orgId",loop_id as "loopId",actions,revoked_at as "revokedAt" from emba_lease where id=$1 and person_id=$2 for update', [id, principal.personId]);
+    // A team grant is read, or read and write (design D15). Renewal keeps exactly the actions it had.
+    const renewable = ['plan:read', 'group-memory:write plan:read'].includes([...(lease?.actions ?? [])].sort().join(' '));
+    if (!lease || lease.revokedAt || !lease.orgId || !lease.loopId || !renewable) throw new EmbaError('forbidden');
+    await authorize(q, principal, 'plan:read', { orgId: lease.orgId, loopId: lease.loopId });
+    await q.query('update emba_lease set revoked_at=clock_timestamp() where id=$1', [id]);
+    const { rows: [replacement] } = await q.query<{ id: string }>(
+      "insert into emba_lease(person_id,client_id,actions,org_id,loop_id,expires_at) values($1,$2,$3,$4,$5,clock_timestamp()+interval '30 days') returning id",
+      [principal.personId, lease.clientId, lease.actions, lease.orgId, lease.loopId]);
+    await audit(q, principal, 'lease:revoke', id);
+    await audit(q, principal, 'lease:grant', replacement.id);
+  });
+}
 
 export async function listLeases(db: Db, principal: Principal) {
   return db.tx(async q => {

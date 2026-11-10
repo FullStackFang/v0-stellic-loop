@@ -10,11 +10,11 @@ const scopeSchema = z.object({orgId:z.uuid(),loopId:z.uuid()});
 const passageSchema = z.strictObject({text:z.string().trim().min(1).max(4000),claimKey:z.string().trim().min(1).max(120).optional(),claimValue:z.string().trim().min(1).max(500).optional()})
   .refine(p => Boolean(p.claimKey) === Boolean(p.claimValue));
 const itinerarySchema = z.strictObject({itineraryVersion:z.string().min(1).max(120),timezone:z.string().min(1).max(100).refine(value=>{try {new Intl.DateTimeFormat('en',{timeZone:value});return true;} catch{return false;}}),passages:z.array(passageSchema).min(1).max(200)});
-const uploadSchema = z.strictObject({operationId:z.uuid(),orgId:z.uuid(),loopId:z.uuid(),documentId:z.uuid().optional(),expectedVersion:z.number().int().positive().optional(),title:z.string().trim().min(1).max(200),mediaType:z.enum(['text/plain','application/json']),body:z.string().min(1).max(262144).refine(s=>Buffer.byteLength(s,'utf8')<=262144 && !s.includes('\0'))})
+const uploadSchema = z.strictObject({operationId:z.uuid(),orgId:z.uuid(),loopId:z.uuid(),documentId:z.uuid().optional(),expectedVersion:z.number().int().positive().optional(),title:z.string().trim().min(1).max(200),mediaType:z.enum(['text/plain','text/markdown','application/pdf','application/json']),body:z.string().min(1).max(262144).refine(s=>Buffer.byteLength(s,'utf8')<=262144 && !s.includes('\0'))})
   .refine(s=>Boolean(s.documentId)===Boolean(s.expectedVersion));
 type Scope = z.infer<typeof scopeSchema>;
 type Extracted = {text:string;location:string;timezone:string|null;itineraryVersion:string|null;claimKey:string|null;claimValue:string|null};
-type DocumentRow = {id:string;orgId:string;loopId:string;version:number;title:string;mediaType:'text/plain'|'application/json';body:string;state:'accepted'|'extracting'|'indexing'|'ready'|'failed';failedStage:string|null;uploadedBy:string|null;extracted:Extracted[]|null};
+type DocumentRow = {id:string;orgId:string;loopId:string;version:number;title:string;mediaType:'text/plain'|'text/markdown'|'application/pdf'|'application/json';body:string;state:'accepted'|'extracting'|'indexing'|'ready'|'failed';failedStage:string|null;uploadedBy:string|null;extracted:Extracted[]|null};
 export type KnowledgePassage = Extracted & {documentId:string;version:number;title:string;sourceUrl:string;untrusted:true;disputed:boolean};
 const columns = `d.id,d.org_id as "orgId",d.loop_id as "loopId",v.version,v.title,v.media_type as "mediaType",v.body,v.state,v.failed_stage as "failedStage",v.uploaded_by as "uploadedBy",v.extracted`;
 
@@ -24,12 +24,14 @@ function extract(mediaType:string,body:string): Extracted[] {
     const data=itinerarySchema.parse(JSON.parse(body));
     return data.passages.map((p,i)=>({text:p.text,location:`/passages/${i}`,timezone:data.timezone,itineraryVersion:data.itineraryVersion,claimKey:p.claimKey??null,claimValue:p.claimValue??null}));
   }
-  const lines=body.split(/\r?\n/);
+  const pages=mediaType==='application/pdf'?body.split('\f'):[body];
   const passages:Extracted[]=[];
-  for (const [i,line] of lines.entries()) {
-    for (let offset=0;offset<line.length;offset+=4000) {
-      const text=line.slice(offset,offset+4000).trim();
-      if(text) passages.push({text,location:`line:${i+1}${offset ? `:offset:${offset}` : ''}`,timezone:null,itineraryVersion:null,claimKey:null,claimValue:null});
+  for (const [page,content] of pages.entries()) {
+    for (const [i,line] of content.split(/\r?\n/).entries()) {
+      for (let offset=0;offset<line.length;offset+=4000) {
+        const text=line.slice(offset,offset+4000).trim();
+        if(text) passages.push({text,location:`${mediaType==='application/pdf'?`page:${page+1}:`:''}line:${i+1}${offset ? `:offset:${offset}` : ''}`,timezone:null,itineraryVersion:null,claimKey:null,claimValue:null});
+      }
     }
   }
   z.array(z.unknown()).min(1).max(200).parse(passages);
@@ -53,6 +55,11 @@ export async function uploadDocument(db:Db,p:Principal,input:unknown):Promise<{i
     await q.query('select pg_advisory_xact_lock(hashtextextended($1,0))',[`${p.personId}:${data.operationId}`]);
     const {rows:[prior]}=await q.query<{id:string;version:number;hash:string}>('select document_id as id,version,request_hash as hash from emba_document_operation where person_id=$1 and operation_id=$2',[p.personId,data.operationId]);
     if(prior) {if(prior.hash!==hash) throw new EmbaError('conflict'); const row=await current(q,prior.id); await manage(q,p,row); return {id:prior.id,version:prior.version};}
+    if(!data.documentId) {
+      await q.query('select pg_advisory_xact_lock(hashtextextended($1,0))',[`resource-limit:${data.orgId}:${data.loopId}`]);
+      const {rows:[count]}=await q.query<{total:number}>(`select count(*)::integer as total from emba_document where org_id=$1 and loop_id=$2 and deleted_at is null`,[data.orgId,data.loopId]);
+      if(count.total>=100) throw new EmbaError('conflict');
+    }
     let id=data.documentId,version=1;
     if(id) {
       const row=await current(q,id,undefined,'update');
@@ -119,13 +126,14 @@ export async function processDocument(db:Db,p:Principal,id:string,version:number
 export async function readDocument(db:Db,p:Principal,id:string,version?:number) {
   z.uuid().parse(id); if(version!==undefined) z.number().int().positive().parse(version);
   return db.tx(async q=>{
-    const row=await current(q,id,version);
+    const row=await current(q,id);
     const lease=await authorize(q,p,'plan:read',row);
+    if(version!==undefined && version!==row.version) throw new EmbaError('conflict');
     await audit(q,p,'plan:read',id,lease);
     await authorize(q,p,'plan:read',row);
     // Hold both source identity and version through transaction completion:
     // changes after this check cannot race another citation's output check.
-    const latest=await current(q,id,version,'share');
+    const latest=await current(q,id,undefined,'share');
     if(latest.version!==row.version) throw new EmbaError('conflict');
     return {id:latest.id,orgId:latest.orgId,loopId:latest.loopId,version:latest.version,title:latest.title,mediaType:latest.mediaType,body:latest.body,state:latest.state,failedStage:latest.failedStage,untrusted:true as const};
   });
@@ -186,6 +194,7 @@ export async function searchKnowledge(db:Db,p:Principal,input:unknown):Promise<K
       if(latest.version!==row.version || latest.state!=='ready') throw new EmbaError('conflict');
       await authorize(q,p,'plan:read',latest);
     }
-    return rows.map(row=>({...row,sourceUrl:`/api/emba/documents/${row.documentId}?version=${row.version}`,untrusted:true}));
+    const {rows:[address]}=await q.query<{namespace:string}>(`select namespace from emba_group_address where org_id=$1 and loop_id=$2 and retired_at is null`,[data.orgId,data.loopId]);
+    return rows.map(row=>({...row,sourceUrl:address?`/groups/${address.namespace}/resources/${row.documentId}?version=${row.version}`:`/api/emba/documents/${row.documentId}?version=${row.version}`,untrusted:true}));
   });
 }

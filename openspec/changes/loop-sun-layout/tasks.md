@@ -42,3 +42,10 @@
 - [x] 5.3 Fetch each page with JavaScript disabled and confirm the tint, shadow and sun position are in the server HTML
 - [x] 5.4 Lighthouse or axe pass on the plan page: contrast at noon and at night, button names, no emoji, reduced-motion check
 - [ ] 5.5 Founder applies `0008_loop_sun.sql` on the hosted project, sets lat and lon on the cohort board, and the branch is merged and deployed; confirm the live plan link unfurls with the Sun image
+
+## Parked (2026-11-09)
+
+Parked when Loop narrowed to the team layer (`loop-team-layer`). The layout is built. Nothing here blocks the team layer. Only founder steps remain:
+
+- 5.1 Run `npm run test:db` against the hosted project.
+- 5.5 Apply `0008_loop_sun.sql` on the hosted project, set lat and lon on the cohort board, merge and deploy, then confirm the plan link unfurls with the Sun image.

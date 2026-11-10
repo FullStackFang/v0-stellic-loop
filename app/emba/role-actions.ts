@@ -14,6 +14,7 @@ async function mutate(run: (principal: NonNullable<Awaited<ReturnType<typeof get
   try {
     await run(principal);
     revalidatePath('/emba');
+    revalidatePath('/groups');
     return { status: 'success', message: 'Saved.' };
   } catch {
     return { status: 'error', message: 'This membership change is unavailable. Reload and check your access.' };

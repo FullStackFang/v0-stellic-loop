@@ -5,6 +5,7 @@ import { canAccessPersonal, type Principal } from './access';
 import { revokeActivityEligibility } from './activities';
 import { audit } from './consent';
 import { EmbaError } from './errors';
+import { releaseAfterAccessChange } from './team-records';
 
 const roleSchema = z.enum(['owner', 'organizer', 'member', 'follower']);
 const scopeSchema = z.strictObject({ orgId: z.uuid(), loopId: z.uuid(), personId: z.uuid() });
@@ -173,6 +174,8 @@ export async function grantRole(db: Db, principal: Principal | null, input: unkn
     if (prior?.revoked_at === null && prior.role !== scope.role) await invalidate(q, scope);
     await audit(q, actor, 'activity:write', scope.loopId);
   });
+  // A change to follower takes away write access: what the person held in that team is let go.
+  await releaseAfterAccessChange(db, scope.personId, scope.orgId, principal!.personId);
 }
 
 export async function revokeRole(db: Db, principal: Principal | null, input: unknown): Promise<void> {
@@ -194,6 +197,8 @@ export async function revokeRole(db: Db, principal: Principal | null, input: unk
     await invalidate(q, scope);
     await audit(q, actor, 'activity:write', scope.loopId);
   });
+  // If the change took away write access to a team, what the person held there is let go.
+  await releaseAfterAccessChange(db, scope.personId, scope.orgId, principal!.personId);
 }
 
 export async function revokeMembership(db: Db, principal: Principal | null, input: unknown): Promise<void> {
@@ -225,7 +230,11 @@ export async function revokeMembership(db: Db, principal: Principal | null, inpu
       await protectLastRootOwner(q, rootScope, rootRole?.role ?? null);
     }
     await q.query('update emba_membership set revoked_at=clock_timestamp() where org_id=$1 and person_id=$2', [orgId, personId]);
+    // A person who left can no longer be tagged, and their name becomes available.
+    await q.query('delete from emba_member_handle where org_id=$1 and person_id=$2', [orgId, personId]);
     await invalidate(q, scope);
     await audit(q, actor, 'activity:write', orgId);
   });
+  // Their open claims are released, proposals for them declined, and tags on them removed.
+  await releaseAfterAccessChange(db, personId, orgId, principal!.personId);
 }

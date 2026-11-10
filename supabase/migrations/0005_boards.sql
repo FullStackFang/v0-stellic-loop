@@ -6,7 +6,7 @@ alter table board
   add column window_kind text not null default 'fixed' check (window_kind in ('fixed', 'rolling')),
   alter column window_start drop not null,
   alter column window_end drop not null,
-  drop constraint board_check;
+  drop constraint if exists board_check;
 alter table board add constraint board_window check (
   (window_kind = 'fixed' and window_start is not null and window_end is not null
      and window_end - window_start between 0 and 13)

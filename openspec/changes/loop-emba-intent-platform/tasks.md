@@ -2,8 +2,7 @@
 
 - [x] 1.1 Read root instructions and relevant installed framework guides; run actual baseline tests and record results without assuming the Python baseline.
 - [x] 1.2 Inventory identity, trip/board routes, actions, files, share previews, event feeds and caches; classify every path capable of reaching pilot data.
-- [ ] 1.3 Record auth/delegation provider decision and prove discovery, resource audience, PKCE and client identity with intended Claude/ChatGPT hosts before building custom integration behavior.
-- [ ] 1.4 Record signing-key custody, compiler/embedding processing boundary and worker runtime decisions; verify no proposed provider requires durable raw conversation storage.
+- [ ] 1.3 Record auth/delegation provider decision, verify operator access to the exact workspace/application/environment and document dashboard/billing/settings/environment ownership; prove discovery, resource audience, PKCE and client identity with intended Claude/ChatGPT hosts before building custom integration behavior.
 
 ## 2. Private cohort foundation
 
@@ -50,7 +49,6 @@
 
 - [x] 6.1 Implement participant projections with default-private names and no organizer privilege expansion; test member/organizer dual-role behavior across all adapters.
 - [x] 6.2 Implement fixed frozen analytics and complete released-output suppression checks; test eight/six complementary leakage, zero/small cells and repeated/filter query attempts.
-- [ ] 6.3 Implement transient compilation, review-before-activation and typed correction lifecycle; test crisis exclusions and raw-text canaries in failure paths, logs and storage.
 - [x] 6.4 Implement optimistic-version corrections, context-specific preference handling and review-needed conflicts; test explicit corrections win over stale inference and reads do not increase strength.
 - [x] 6.5 Implement bounded `plan_for_me` bundles with current active wants, authorized evidence/activities, truncation and incomplete-evidence flags; test lease/audit enforcement and no automatic enrollment.
 - [x] 6.6 Implement one current assessment per person/logical activity and member memory editing; test different-operation duplicate feedback, correction/deletion of prior contributions and that nonattendance/nonresponse never imply dislike.
@@ -58,11 +56,7 @@
 
 ## 7. Export, deletion and launch policy
 
-- [ ] 7.1 Obtain and document pilot owner-verification evidence and exact audit/history/backup retention and publication-attribution policy before real-member enrollment.
 - [x] 7.2 Implement reauthenticated first-party export excluding others' private data; verify delegated clients cannot invoke the flow directly.
-- [ ] 7.3 Implement deletion across personal records, leases, evidence, vectors, source-dependent summaries, caches and jobs, including commitment withdrawal and history de-identification.
-- [ ] 7.4 Implement expiry/retention jobs and restore tombstones; test deleted data cannot reappear through backup restoration or stale worker output.
-- [ ] 7.5 Review user-facing data-boundary statements, provider processing terms, revocation limitations and consent text against actual behavior.
 
 ## 8. Rehearsal and release verification
 
@@ -72,6 +66,21 @@
 - [x] 8.4 Run required lint, type and test suites including real-Postgres-specific cases; if shipped app code changed, stop competing dev/build processes and run one final production build.
 - [x] 8.5 Write README/runbook for setup, migrations, remote connector configuration, processing failures, key rotation, retention/restore and privacy-preserving rollback.
 - [x] 8.6 Review all launch gates and acceptance scenarios; report unresolved gates honestly and do not enroll real members until satisfied.
+
+## 9. Deferred to the cohort tier (frozen 2026-11-09)
+
+The founder froze the trip platform in place on November 9 when Loop narrowed to the team layer (`loop-team-layer`). These tasks keep their original numbers. They are not prerequisites for the team layer and are picked up only when the 80-person cohort tier starts.
+
+- [ ] 1.4 Record signing-key custody, compiler/embedding processing boundary and worker runtime decisions; verify no proposed provider requires durable raw conversation storage.
+- [ ] 6.3 Implement transient compilation, review-before-activation and typed correction lifecycle; test crisis exclusions and raw-text canaries in failure paths, logs and storage.
+- [ ] 7.1 Obtain and document pilot owner-verification evidence and exact audit/history/backup retention and publication-attribution policy before real-member enrollment.
+- [ ] 7.3 Implement deletion across personal records, leases, evidence, vectors, source-dependent summaries, caches and jobs, including commitment withdrawal and history de-identification.
+- [ ] 7.4 Implement expiry/retention jobs and restore tombstones; test deleted data cannot reappear through backup restoration or stale worker output.
+- [ ] 7.5 Review user-facing data-boundary statements, provider processing terms, revocation limitations and consent text against actual behavior.
+
+## Hosted gate (still required)
+
+The six tasks left unchecked above (1.3, 2.3, 2.5, 3.6, 8.2, 8.3) are one gate shared with `loop-resource-workspaces` 5.1 to 5.3 and `loop-team-layer` 5.4 to 5.5: Clerk Dashboard scopes, hosted migrations, a deployed HTTPS endpoint, and one real assistant connection.
 
 ## November 7 shared-memory MVP continuation
 

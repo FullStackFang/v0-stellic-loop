@@ -1,6 +1,8 @@
 # Development Clerk OAuth setup
 
-The `loop-mvp-auth` development instance is configured for a Claude connection. No production instance or user grant was changed. OAuth application scopes and explicit Claude admission still require the supported Dashboard steps below.
+The `loop-mvp-auth` development instance was provisioned as a Vercel-managed Clerk resource and is configured for a Claude connection. No production instance or user grant was changed. OAuth application scopes and explicit Claude admission still require the supported Dashboard steps below.
+
+Open the [existing Vercel Clerk resource](https://vercel.com/d/dashboard/integrations/clerk/icfg_9YMmVNSqh9OWOqYcII7d7e0I/resources/ir_zTYlcU6Yj4wAKRSS) under the `stephen-fangs-projects` team, then select **Open in Clerk**. This opens or links the Vercel-managed Clerk organization for your Vercel account. Do not create a second Clerk application from the standalone Clerk Dashboard. If the resource link does not open, use Vercel Dashboard → **Integrations** → installed **Clerk** (Billed via Vercel) → `loop-mvp-auth` → **Open in Clerk**. [Clerk's Vercel Marketplace guide](https://clerk.com/docs/guides/development/integrations/platforms/vercel-marketplace) documents this access path.
 
 Inspect without mutation:
 
@@ -28,7 +30,7 @@ Verified on November 7, 2026:
 - Public discovery advertises CIMD, S256, and token endpoint method `none`; it has no registration endpoint. Discovery briefly lagged the settings update, then reflected it on the next inspection.
 - Default scopes and dynamic-client scope ceiling remain unchanged (`null`); custom scopes are not yet advertised.
 
-Finish in the [Clerk Dashboard OAuth applications page](https://dashboard.clerk.com/last-active?path=oauth-applications), selecting **loop-mvp-auth → Development** first:
+After **Open in Clerk** from the Vercel resource, select **loop-mvp-auth → Development → OAuth applications**:
 
 1. In **Scopes**, create and advertise `plan:read` (read permitted EMBA shared memory) and `group-memory:write` (contribute shared memory to groups the person belongs to). Custom scope definitions are managed in the Dashboard; see [Clerk OAuth scopes](https://clerk.com/docs/guides/configure/auth-strategies/oauth/how-clerk-implements-oauth).
 2. In **Applications → Add application → Pre-register CIMD client**, enter `https://claude.ai/oauth/mcp-oauth-client-metadata`, select only those two application permissions, and choose **Allow client**. Verify **Explicitly allowed** and successful metadata fetch. Clerk always adds `offline_access` for refresh; this is not an additional application-data permission. See [Clerk CIMD management](https://clerk.com/docs/guides/configure/auth-strategies/oauth/client-id-metadata-documents).

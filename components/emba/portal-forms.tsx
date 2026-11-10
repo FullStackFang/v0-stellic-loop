@@ -12,7 +12,8 @@ export function ActionForm({ action, children, label }: { action: PortalAction; 
   return <form action={submit} className="emba-form">
     <fieldset disabled={pending}>{children}<button className="lt-primary" type="submit">{pending ? 'Saving…' : label}</button></fieldset>
     {state.message && <p role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}
-    {state.invitationToken && <label>Invitation token (share privately with the recipient)<textarea readOnly value={state.invitationToken} /></label>}
+    {state.invitationToken && <label>Invitation link (share privately with the recipient)<input readOnly value={`/groups#invite=${state.invitationToken}`} /><button type="button" onClick={() => navigator.clipboard.writeText(new URL(`/groups#invite=${state.invitationToken}`, window.location.origin).href)}>Copy link</button></label>}
+    {state.accessRequestToken && <label>Request-access link (share only with people you intend to invite)<input readOnly value={`/groups/request#token=${state.accessRequestToken}`} /><button type="button" onClick={() => navigator.clipboard.writeText(new URL(`/groups/request#token=${state.accessRequestToken}`, window.location.origin).href)}>Copy link</button></label>}
     {state.confirmationId && <label>Confirmation ID<input readOnly value={state.confirmationId} /></label>}
     {state.exportJson && <button type="button" onClick={()=>{
       const url=URL.createObjectURL(new Blob([state.exportJson!],{type:'application/json'}));

@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Restored Turbopack build caches have reused stale CSS across deployments.
-  experimental: { turbopackFileSystemCacheForBuild: false },
+  experimental: { turbopackFileSystemCacheForBuild: false, serverActions: { bodySizeLimit: '4mb' } },
   // Every page is per-viewer and live (counts, your answer); nothing is prerendered or cached.
   // The static demos live in public/demo/ and serve without .html: /demo/stellic, /demo/quorum, /demo/mockups-….
   // Links to the old static site (/index.html, /quorum.html, …) follow them there.

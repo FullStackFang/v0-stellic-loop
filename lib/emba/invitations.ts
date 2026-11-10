@@ -7,6 +7,7 @@ import { audit } from './consent';
 
 export type InvitationInput = { orgId: string; loopId: string; recipientEmail: string; role: 'owner' | 'organizer' | 'member' | 'follower'; expiresAt: string };
 type Invitation = { id: string; org_id: string; loop_id: string; issued_by: string; recipient_email: string; role: InvitationInput['role']; expires_at: string; revoked_at: string | null; accepted_at: string | null };
+export type ReceivedInvitation = { id: string; orgId: string; loopId: string; groupName: string; role: InvitationInput['role']; expiresAt: string };
 const roles = ['follower', 'member', 'organizer', 'owner'];
 const columns = 'id,org_id,loop_id,issued_by,recipient_email,role,expires_at,revoked_at,accepted_at';
 
@@ -87,6 +88,26 @@ export async function listInvitations(db: Db, principal: Principal | null, orgId
     return rows;
   });
 }
+export async function listReceivedInvitations(db: Db, principal: Principal | null): Promise<ReceivedInvitation[]> {
+  return db.tx(async q => {
+    const actor = await firstParty(q, principal);
+    if (!actor.verifiedEmail) denied();
+    const { rows } = await q.query<ReceivedInvitation>(
+      `select i.id,i.org_id as "orgId",i.loop_id as "loopId",o.name as "groupName",i.role,i.expires_at as "expiresAt"
+       from emba_invitation i join emba_organization o on o.id=i.org_id
+       where i.recipient_email=$1 and i.revoked_at is null and i.accepted_at is null and i.expires_at>clock_timestamp()
+       and exists(with recursive ancestors as (
+         select id,parent_id from emba_loop where org_id=i.org_id and id=i.loop_id
+         union all select l.id,l.parent_id from emba_loop l join ancestors a on l.id=a.parent_id where l.org_id=i.org_id)
+         select 1 from ancestors a join emba_role r on r.org_id=i.org_id and r.loop_id=a.id
+         join emba_membership m on m.org_id=r.org_id and m.person_id=r.person_id
+         where r.person_id=i.issued_by and r.revoked_at is null and m.revoked_at is null and r.role in ('owner','organizer'))
+       order by i.created_at desc limit 100 for share of i,o`, [actor.verifiedEmail]);
+    await audit(q, actor, 'plan:read');
+    if (!await canAccessPersonal(q, actor, actor.personId)) denied();
+    return rows;
+  });
+}
 export async function revokeInvitation(db: Db, principal: Principal | null, id: string): Promise<void> {
   if (!isUuid(id)) denied();
   await db.tx(async q => {
@@ -105,19 +126,26 @@ export async function revokeInvitation(db: Db, principal: Principal | null, id: 
 /** Explicit first-party acceptance; a token or a legacy identity never enrolls a member on its own. */
 export async function acceptInvitation(db: Db, principal: Principal | null, token: string): Promise<void> {
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{22}$/.test(token)) denied();
+  return acceptTarget(db, principal, 'token_hash', hashToken(token));
+}
+export async function acceptInvitationById(db: Db, principal: Principal | null, id: string): Promise<void> {
+  if (!isUuid(id)) denied();
+  return acceptTarget(db, principal, 'id', id);
+}
+async function acceptTarget(db: Db, principal: Principal | null, field: 'id' | 'token_hash', value: string): Promise<void> {
   await db.tx(async q => {
     // Isolation must be selected before the discovery query. Any concurrent
     // change that invalidates this snapshot aborts the whole operation.
     await q.query('set transaction isolation level serializable');
-    const {rows:[scope]}=await q.query<Invitation>(`select ${columns} from emba_invitation where token_hash=$1`,[hashToken(token)]);
+    const {rows:[scope]}=await q.query<Invitation>(`select ${columns} from emba_invitation where ${field}=$1`,[value]);
     if(!scope)denied();
     await lockParties(q,principal,scope.issued_by);
     const actor = await firstParty(q, principal);
     if (!actor.verifiedEmail) denied();
     await authority(q, scope.issued_by, scope.org_id, scope.loop_id, scope.role);
     const { rows: [row] } = await q.query<Invitation>(
-      `select ${columns} from emba_invitation where token_hash=$1 and revoked_at is null and accepted_at is null and expires_at>clock_timestamp() for update`,
-      [hashToken(token)],
+      `select ${columns} from emba_invitation where ${field}=$1 and revoked_at is null and accepted_at is null and expires_at>clock_timestamp() for update`,
+      [value],
     );
     if (!row || row.recipient_email !== actor.verifiedEmail.trim().toLowerCase() || row.issued_by!==scope.issued_by || row.org_id!==scope.org_id || row.loop_id!==scope.loop_id || row.role!==scope.role) denied();
     await q.query('insert into emba_membership (org_id,person_id) values ($1,$2) on conflict do nothing', [row.org_id, actor.personId]);
@@ -140,5 +168,17 @@ export async function acceptInvitation(db: Db, principal: Principal | null, toke
        where id=$1 and accepted_at is null and revoked_at is null and expires_at>clock_timestamp() returning id`, [row.id, actor.personId],
     );
     if (!accepted.rows.length) denied();
+  });
+}
+export async function declineInvitation(db: Db, principal: Principal | null, id: string): Promise<void> {
+  if (!isUuid(id)) denied();
+  await db.tx(async q => {
+    await q.query('set transaction isolation level serializable');
+    const actor = await firstParty(q, principal);
+    if (!actor.verifiedEmail) denied();
+    const { rows: [row] } = await q.query<Invitation>(`select ${columns} from emba_invitation where id=$1 and revoked_at is null and accepted_at is null and expires_at>clock_timestamp() for update`, [id]);
+    if (!row || row.recipient_email !== actor.verifiedEmail) denied();
+    await q.query('update emba_invitation set revoked_at=clock_timestamp() where id=$1', [id]);
+    await audit(q, actor, 'activity:write', row.loop_id);
   });
 }

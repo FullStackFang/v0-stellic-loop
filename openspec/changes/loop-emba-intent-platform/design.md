@@ -12,6 +12,16 @@ This design operationalizes `docs/loop-emba-mvp-hardening.md`, including the Liv
 
 ## Decisions
 
+### Provider administration and bounded demo (reviewed 2026-11-08)
+
+Provider choice and Marketplace provisioning are separate decisions. On November 9 the user chose to retain Vercel Marketplace for consistent provisioning, billing and production scaling, superseding the November 8 direct-ownership recommendation. Reuse the existing Clerk integration and shared Supabase project; do not initiate ownership transfers. The unused FullstackFang Direct organization has been removed. See `docs/emba-provider-ownership-review.md` for the comparison and `docs/marketplace-exit.md` for the cancelled transfer plan and cleanup evidence.
+
+Keep Clerk as the current identity/OAuth adapter because its custom scopes and public-client controls fit the delegated-access contract. Loop retains group roles and consent in its own services; Clerk Organizations are not required. Supabase OAuth is a candidate only after proving equivalent permissions and project-wide isolation: current documentation does not support custom application scopes. A shared database schema does not isolate the project's Auth settings or user pool. Changing shared Auth configuration requires reviewing other app consumers.
+
+Operator acceptance must identify the actual workspace/application/environment, dashboard entry point, billing owner, settings authority and environment-variable source. Provisioning success alone does not establish usable operator access. Record these within task 1.3, alongside actual host compatibility evidence.
+
+The bounded shared-memory demo uses email verification or Google login, explicit invitation membership, one assistant connection, exact-group consent, reviewed notes, retrieval and revocation. Members never configure provider scopes or developer accounts. Raw-chat compilation and embeddings remain outside this demo; the broader foundation tasks and real-member launch gates retain their existing requirements. This review changes documentation, not provider resources or deployed settings.
+
 ### One root TypeScript service layer
 
 Use application services shared by server-rendered portal/actions, HTTP routes and MCP adapters. Portal calls may be in-process; internal HTTP is not required. Separate modules for access, personal memory, knowledge, coordination, disclosure and delivery. One Postgres database with explicit ownership and tenant constraints. Reuse existing primitives after review; never infer authorization from the current global-person or public-sharing models.

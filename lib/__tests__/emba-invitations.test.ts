@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import type {Db} from '@/lib/db';
-import { acceptInvitation, issueInvitation, listInvitations, revokeInvitation } from '@/lib/emba/invitations';
+import { acceptInvitation, acceptInvitationById, declineInvitation, issueInvitation, listInvitations, listReceivedInvitations, revokeInvitation } from '@/lib/emba/invitations';
 
 describe('EMBA first-party invitations', () => {
   let t: TestDb;
@@ -38,6 +38,23 @@ describe('EMBA first-party invitations', () => {
     await acceptInvitation(t.db, f.recipient, invitation.token);
     expect((await t.db.query('select role from emba_role where person_id=$1', [f.recipient.personId])).rows).toEqual([{ role: 'member' }]);
     await expect(acceptInvitation(t.db, f.recipient, invitation.token)).rejects.toThrow();
+  });
+
+  it('shows only the verified recipient a pending inbox and supports accept or decline without a token', async () => {
+    const f = await fixture();
+    const first = await issueInvitation(t.db, f.owner, f.input);
+    const second = await issueInvitation(t.db, f.owner, f.input);
+    const other = await person('other@example.test');
+    expect(await listReceivedInvitations(t.db, other)).toEqual([]);
+    expect(await listReceivedInvitations(t.db, f.recipient)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: first.id, groupName: 'Test', role: 'member' }),
+    ]));
+    await expect(acceptInvitationById(t.db, other, first.id)).rejects.toThrow();
+    await expect(declineInvitation(t.db, other, second.id)).rejects.toThrow();
+    await declineInvitation(t.db, f.recipient, second.id);
+    await acceptInvitationById(t.db, f.recipient, first.id);
+    expect(await listReceivedInvitations(t.db, f.recipient)).toEqual([]);
+    expect((await t.db.query('select role from emba_role where person_id=$1', [f.recipient.personId])).rows).toEqual([{ role: 'member' }]);
   });
 
   it('audits invitation metadata reads and fails closed when the audit cannot persist',async()=>{

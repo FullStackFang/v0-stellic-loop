@@ -57,3 +57,12 @@ Revised 2026-10-26: codes only, through Twilio Verify (no number, no 10DLC, no t
 - [x] 9.2 `withIdentity`: an unknown number gets a code too, with its name carried in `pending.person`; `verifyCode` checks with Verify when configured, creates the person on success, and returns `code_check_failed` (keeping the code) when Verify can't be reached
 - [x] 9.3 Copy: the consent line, the code hint, `/privacy` and `/terms` say codes are the only texts
 - [x] 9.4 Tests: Verify request shape, unknown-number codes, plan texts logged only, check outcomes, and end-to-end respond → verify for approved, wrong and unreachable; existing flows updated to enter the code
+
+## Parked (2026-11-09)
+
+Parked when Loop narrowed to the team layer (`loop-team-layer`). The code is written and ships safely without the Twilio variables. Nothing here blocks the team layer. Only founder steps remain:
+
+- 1.1 Create the Twilio Verify Service.
+- 1.3 Set the three Twilio variables in Vercel Production and redeploy.
+- 8.2 Push `main` and check the live board still works.
+- 8.3 Verify a real code from a second device, then delete the test rows.
