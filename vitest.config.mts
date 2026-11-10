@@ -11,7 +11,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
-    exclude: ["node_modules/**", ".next/**", "web/**"],
+    exclude: ["node_modules/**", ".next/**", "web/**", ".playwright-mcp/**"],
     // Integration suites boot a PGlite database (or reach board-test); give them room.
     testTimeout: 60000,
     hookTimeout: 60000,

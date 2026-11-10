@@ -1,4 +1,5 @@
 "use server";
+import { legacyBoardAllowed } from "@/lib/emba/legacy";
 import { db } from "@/lib/db";
 import { sessionPersonId, setSession } from "@/lib/identity";
 import { fail, type Fail } from "./results";
@@ -15,6 +16,7 @@ export async function setShowName(input: { show: boolean }): Promise<{ status: "
 export async function setShareWithSteward(boardId: string, share: boolean): Promise<{ status: "ok" } | Fail> {
   const me = await sessionPersonId();
   if (!me) return fail("signed_out");
+  if (!await legacyBoardAllowed(db(), boardId)) return fail("not_found");
   if (typeof share !== "boolean") return fail("bad_value");
   const { rows } = await db().query("update board_person set share_with_steward = $3 where board_id::text = $1 and person_id = $2 returning person_id", [boardId, me, share]);
   if (!rows.length) return fail("not_found");

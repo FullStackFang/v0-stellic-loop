@@ -5,9 +5,12 @@ import { boardImage, OG_SIZE } from "@/lib/og";
 export const alt = "Loop board";
 export const size = OG_SIZE;
 export const contentType = "image/png";
+export const dynamic = "force-dynamic";
 
-/** The board's preview: its name, no counts, so a stale cache is harmless. */
+/** Recheck classification on each preview request. */
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const board = await boardBySlug(db(), (await params).slug);
-  return boardImage(board?.name ?? "Loop");
+  const image = await boardImage(board?.name ?? "Loop");
+  image.headers.set('Cache-Control', 'private, no-store');
+  return image;
 }

@@ -1,3 +1,4 @@
+import { legacyBoardAllowed, legacyProposalAllowed } from "./emba/legacy";
 // Notifier hand-offs that run after the transaction commits. Each swallows its
 // own errors: the action has already succeeded, and a text is never retried.
 import "server-only";
@@ -19,7 +20,7 @@ async function quietly(what: string, fn: () => Promise<void>) {
 
 /** An `in` left an ON proposal: the poster is told, nobody else. */
 export async function notifyDropped(p: Proposal, who: string, count: number) {
-  if (!p.poster_id || p.poster_id === who) return;
+  if (!p.poster_id || p.poster_id === who || !await legacyBoardAllowed(db(), p.board_id)) return;
   const to = p.poster_id;
   await quietly("dropped", () => notifier(db()).dropped({
     boardId: p.board_id, proposalId: p.id, title: p.title, url: appUrl(`/p/${p.id}`),
@@ -31,6 +32,7 @@ export async function notifyDropped(p: Proposal, who: string, count: number) {
 export function notifyReached(proposalId: string) {
   return quietly("reached", async () => {
     const q = db();
+    if (!await legacyProposalAllowed(q, proposalId)) return;
     const { rows: [p] } = await q.query<Proposal>("select * from proposal where id = $1", [proposalId]);
     const { rows: rs } = await q.query<Response>(
       "select r.* from response r join proposal p on p.id = r.proposal_id where p.board_id = $1", [p.board_id]);
@@ -56,6 +58,7 @@ export function notifyReached(proposalId: string) {
 /** Two short: the poster and every yes get a share link of their own to send on. */
 export function notifyOneMore(p: Proposal, count: number) {
   return quietly("one_more", async () => {
+    if (!await legacyBoardAllowed(db(), p.board_id)) return;
     const to = await db().tx(async (q) => {
       const { rows } = await q.query<{ person_id: string }>(
         "select person_id from response where proposal_id = $1 and answer = 'in'", [p.id]);

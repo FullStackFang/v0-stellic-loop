@@ -1,3 +1,4 @@
+import { legacyBoardAllowed, requireLegacyBoard } from "./emba/legacy";
 // Who is acting. A valid `qb` cookie is the whole session; without one, a name
 // and a number, which gets a one-time code; the action waits for it (the
 // `pending` replay). An unknown number becomes a person only once its code checks.
@@ -20,12 +21,14 @@ export type Pending = (
   | { kind: "respond"; proposalId: string; answer: "in" | "out" | "maybe" }
   | { kind: "post"; boardId: string; post: Record<string, unknown> }
   | { kind: "board"; name: string; tz: string }
+  | { kind: "trip"; name: string; tz: string }
+  | { kind: "join_trip"; boardId: string; slug: string }
 ) & { person?: string };
 
 export type Who =
   | { kind: "session"; personId: string }
   | { kind: "needs_code"; phone: string }
-  | { kind: "error"; error: "need_identity" | "bad_phone" | "not_us" | "need_name" | "code_not_sent" };
+  | { kind: "error"; error: "need_identity" | "bad_phone" | "not_us" | "need_name" | "code_not_sent" | "not_found" };
 
 /** The signed-in person id, or null. Does not touch the database. */
 export async function sessionPersonId(): Promise<string | null> {
@@ -58,6 +61,7 @@ export async function attribution(q: Q): Promise<Attribution> {
  * A code that cannot be texted is discarded and returns `code_not_sent`.
  */
 export async function withIdentity(q: Q, input: IdentityInput, ctx: { boardId: string | null; pending: Pending }): Promise<Who> {
+  if (ctx.boardId && !await legacyBoardAllowed(q, ctx.boardId)) return { kind: "error", error: "not_found" };
   const sid = await sessionPersonId();
   if (sid) {
     const { rows } = await q.query("select 1 from person where id = $1", [sid]);
@@ -97,6 +101,7 @@ async function issueCode(q: Q, phone: string, personId: string | null, boardId: 
  * `person_added` with the proposal that brought them.
  */
 export async function joinBoard(q: Q, boardId: string, personId: string, proposalId: string | null, attr: Attribution): Promise<void> {
+  await requireLegacyBoard(q, boardId);
   const { rows } = await q.query(
     `insert into board_person (board_id, person_id, joined_via, via_proposal_id)
      values ($1, $2, $3, $4) on conflict do nothing returning person_id`,
@@ -108,6 +113,7 @@ export async function joinBoard(q: Q, boardId: string, personId: string, proposa
 }
 
 export const IDENTITY_ERRORS: Record<Extract<Who, { kind: "error" }>["error"], string> = {
+  not_found: "This item could not be found.",
   need_identity: "Add your name and number to answer.",
   bad_phone: "That number doesn't look right.",
   not_us: "US numbers only for now.",

@@ -1,0 +1,35 @@
+# Usable group-memory MVP
+
+The user approved this narrower execution order on 2026-11-07: sign in, connect one assistant, and explicitly save/retrieve shared EMBA2027 notes. This is an implementation slice across the existing foundation and portable-group-memory changes, not a declaration that either complete specification is finished.
+
+## Decisions
+
+November 9 administration decision: retain Vercel Marketplace for consistent provisioning, billing and production scaling; reuse the existing Clerk integration and shared Supabase project. This supersedes the November 8 direct-ownership recommendation. The unused FullstackFang Direct organization was removed without transferring projects. Document who owns each setting. The current Clerk adapter remains the technical choice; Supabase's OAuth custom-scope limitations prevent treating it as a drop-in replacement. See [provider ownership review](emba-provider-ownership-review.md) and [cleanup evidence](marketplace-exit.md).
+
+- Clerk supplies browser sign-in and managed assistant OAuth; Supabase remains the application database. Clerk's free Hobby development instance is provisioned for development/preview only, after the user accepted marketplace terms. No paid add-ons or production configuration were selected.
+- Claude is the first intended assistant. Its actual OAuth/PKCE/read/revoke acceptance remains an observed integration test, not a substitute for implementing the login adapter. The user's instruction to choose the implementation removes the earlier provider-selection deferral; no custom authorization server will be built.
+- Group handles resolve existing group IDs and membership. An alias is not proof of affiliation or permission. No native host autocomplete is promised.
+- The first write slice supports explicitly reviewed, unsourced **notes**, corrections and withdrawal. Notes are member submissions, not verified facts or organizer decisions. Unsupported source/dependency/decision fields are rejected. The broader specification's decision promotion and dependency graph remain future tasks, not silently weakened implementations.
+- Existing keyword document retrieval is sufficient. Embedding credit availability is not a blocker for this MVP. Automatic transcript extraction, messaging/broadcasts and new coordination features are outside this slice.
+- Assistant-originated notes require current exact group consent and first-party review of the exact payload. A separate group write action is added without upgrading existing grants. Personal memory stays separate.
+
+## Execution and verification
+
+1. Provision supported sign-in and map verified identities without email-based account merging or automatic membership → verify revoked/deleted identities and invitation checks.
+2. Implement group addresses and bounded shared-note services → verify tenant isolation, role checks, immutable corrections, withdrawal and retry semantics on disposable databases.
+3. Connect first-party review, consent and MCP tools → verify one canonical record across independently authorized synthetic clients, then exercise a real assistant when the hosted endpoint is ready.
+4. Run integrated tests, type/lint checks and one final build → record actual hosted/account limitations. No Docker startup.
+
+The original release policy remains in force before real-member enrollment. An isolated synthetic demo may proceed without inventing approved real-member retention periods. Foundation and portable task lists must retain unchecked compound tasks whose broader behavior is not implemented.
+
+## Implemented slice and remaining acceptance — 2026-11-07
+
+The browser adapter now uses verified Clerk server sessions and verified primary email, with an issuer/subject-bound internal identity. It does not merge legacy accounts by email, assign membership, or recreate revoked/deleted identities. The scoped sign-in surface and account menu are implemented. Fresh-authentication time now derives conservatively from signed Clerk iat/fva claims using the oldest instant in the reported minute. Missing, invalid or stale evidence fails closed. Native real-adapter tests cover privacy export, deletion and denied reenrollment. SDK-boundary tests use actual disposable databases; they are not a completed human sign-in rehearsal.
+
+The portal supports a simple seven-day consent grant for one selected group and configured assistant. Read consent and optional shared-note write consent are explicit, exact scoped grants; existing grants are not upgraded. First-party group selection requires membership, not a prior assistant lease. The review bridge presents the exact group, originating configured client, note and correction before a single-use confirmation. Approval grants neither membership nor organizer authority.
+
+The implemented shared store supports unsourced member notes, immutable correction versions, withdrawal and minimal retry receipts. All seven group MCP tools are registered. Current group context is a bounded **shared-note context**, marked incomplete; it does not yet combine documents, organizer decisions, activities or dependency graphs. Strict schemas reject unsupported provenance and authority fields rather than implying those broader features exist. Separate private planning remains separate.
+
+Focused evidence lives in the emba-clerk-identity, emba-groups, emba-group-memory, emba-group-consent, emba-group-actions and emba-group-mcp test files. Native PostgreSQL passed 25 focused tests: addresses 6, shared notes 8, privacy 8, reviewed actions 2 and consent 1. MCP transport tests ran separately against PGlite. The two-client rehearsal uses actual MCP SDK transports and first-party server actions against one disposable database, with synthetic identities and consent. It proves canonical cross-client recall/correction, current versions, stale approval denial, private-memory isolation and independent client revocation. It does not prove an actual Claude or ChatGPT connection; the full prescribed nonmember demo scenario remains open.
+
+Clerk development OAuth hardening and public discovery are verified: audience claims, S256, explicit-only CIMD admission, opaque tokens and DCR disabled. See [provider setup](emba-clerk-setup.md). The two custom scopes and explicit Claude CIMD admission remain pending authenticated Dashboard setup; browser access was unavailable and the user has been asked to complete those steps. A hosted HTTPS MCP URL, actual sign-in/consent/read/write/revoke acceptance, isolated hosted migrations and deployment remain outstanding. The final production build, TypeScript and focused lint passed; production dependency audit reported zero vulnerabilities. An additional 15 native tests passed across Clerk identity, group MCP, group panel and portal-action files. The full application suite passed: 563 tests passed and 23 skipped (78 files passed, 4 skipped). Three built-Next HTTP boundary tests also passed against disposable native PostgreSQL. Full-repository lint retains 16 existing errors confined to ignored Playwright scratch files. Earlier foundation verification counts remain historical.

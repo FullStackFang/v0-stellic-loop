@@ -1,0 +1,3 @@
+/* next/font/local normally installs this same bundled font in the root layout. */
+@font-face{font-family:RehearsalArchivo;src:url('/fonts/Archivo.ttf') format('truetype');font-weight:100 900;font-stretch:62% 125%}
+:root{--font-archivo:RehearsalArchivo}

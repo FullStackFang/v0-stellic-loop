@@ -1,3 +1,4 @@
+import { requireLegacyBoard, requireLegacyProposal } from "./emba/legacy";
 // Every state change writes one event, inside the same transaction.
 import type { Q } from "./db";
 import { isShareToken } from "./tokens";
@@ -45,6 +46,8 @@ export type EventInput = {
 };
 
 export async function writeEvent(q: Q, e: EventInput): Promise<void> {
+  if (e.boardId) await requireLegacyBoard(q, e.boardId);
+  if (e.proposalId) await requireLegacyProposal(q, e.proposalId);
   await q.query(
     `insert into event (board_id, proposal_id, person_id, type, source, share_id, data)
      values ($1, $2, $3, $4, $5, $6, $7)`,

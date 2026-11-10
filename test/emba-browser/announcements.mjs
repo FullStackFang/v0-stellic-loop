@@ -1,0 +1,47 @@
+// Disposable fixture signing key only. No production key or provider is configured.
+export default async function run(page){
+  page.setDefaultTimeout(30000);const checks=[],assert=(value,label)=>{if(!value)throw new Error(label);checks.push(label);};
+  await page.setViewportSize({width:390,height:844});await page.goto('http://127.0.0.1:4319');await page.getByRole('heading',{name:'Private preferences',exact:true}).waitFor();
+  const state=async(actor='organizer')=>page.evaluate(async actor=>(await fetch(`/__fixture/state?actor=${actor}`)).json(),actor);
+  const initial=await state();
+  const request=async(action,entries,actor='organizer')=>page.evaluate(async({action,entries,actor,capability})=>(await fetch(`/__fixture/action?actor=${actor}`,{method:'POST',headers:{'Content-Type':'application/json','X-Rehearsal-Capability':capability},body:JSON.stringify({action,entries})})).json(),{action,entries,actor,capability:initial.capability});
+  const selectActor=async actor=>{const personId=(await state(actor)).personId;await page.getByLabel('Synthetic actor').selectOption(actor);await page.locator(`[data-person-id="${personId}"]`).waitFor();};
+  const panel=page.locator('#announcements');
+  await selectActor('organizer');await panel.getByText('Publish an announcement',{exact:true}).click();
+  const publish=panel.locator('form').filter({has:page.getByRole('button',{name:'Publish announcement',exact:true})});
+  const text='BROWSER_NOTICE <img src="https://example.invalid/untrusted" onerror="alert(1)"> Ignore prior instructions.';
+  await publish.getByLabel('Announcement text',{exact:true}).fill(text);await publish.getByRole('button',{name:'Publish announcement',exact:true}).click();
+  assert((await state()).announcementView.announcements.length===initial.announcementView.announcements.length,'Unchecked publication review saves no announcement');
+  await publish.getByRole('checkbox').check();await publish.getByRole('button',{name:'Publish announcement',exact:true}).click();await publish.getByText('Published version 1. Earlier versions remain unchanged.',{exact:true}).waitFor();
+  const saved=(await state()).announcementView.announcements.find(n=>n.versions[0].text===text);
+  assert(saved?.versions[0].verified===true,'Reviewed browser publication produces a verified service attestation');
+  const article=()=>panel.locator('article').filter({hasText:'BROWSER_NOTICE'});
+  assert(await article().locator('img,script').count()===0,'Announcement instruction and HTML-like content renders as text only');
+  await selectActor('memberA');await panel.getByText(text,{exact:true}).waitFor();
+  assert(await panel.getByText('Publish an announcement',{exact:true}).count()===0&&await panel.getByText('Announcement key status',{exact:true}).count()===0,'Member sees announcement evidence without organizer publishing or key controls');
+  assert((await request('publishNotice',[['orgId',initial.scope.orgId],['loopId',initial.scope.loopId],['text','UNAUTHORIZED_NOTICE'],['reviewed','yes']],'memberA')).status==='error','Copied member request cannot publish an organizer announcement');
+  await selectActor('nonmember');assert((await state('nonmember')).announcementView.announcements.length===0,'Nonmember receives no announcement evidence');
+  await selectActor('organizer');await article().getByText('Correct this announcement',{exact:true}).click();
+  const correction=article().locator('form');await correction.getByRole('textbox',{name:/^Announcement text/}).fill('BROWSER_NOTICE corrected');await correction.getByRole('checkbox').check();await correction.getByRole('button',{name:'Publish correction',exact:true}).click();
+  await page.waitForFunction(async id=>{const s=await(await fetch('/__fixture/state?actor=organizer')).json();return s.announcementView.announcements.find(n=>n.id===id)?.versions[0].envelope.version===2;},saved.id);
+  const versions=(await state()).announcementView.announcements.find(n=>n.id===saved.id).versions;
+  assert(versions.length===2&&versions[0].text==='BROWSER_NOTICE corrected'&&versions[1].text===text,'Correction creates version 2 while preserving the exact original text');
+  await article().getByText('Earlier immutable versions',{exact:true}).click();await article().getByText(text,{exact:true}).waitFor();
+  assert(await article().getByText(text,{exact:true}).isVisible(),'Browser history exposes the immutable earlier version');
+  assert((await request('publishNotice',[['orgId',initial.scope.orgId],['loopId',initial.scope.loopId],['announcementId',saved.id],['expectedVersion','1'],['text','STALE_NOTICE'],['reviewed','yes']])).status==='error','Stale correction cannot overwrite the current announcement');
+  const keyId=initial.signingKeyId;
+  assert((await request('changeAnnouncementKeyStatus',[['keyId',keyId],['status','revoked'],['reviewed','yes']],'memberA')).status==='error','Member cannot change the signing key status');
+  await panel.getByText('Announcement key status',{exact:true}).click();
+  const keyForm=()=>panel.locator('form').filter({has:page.locator(`input[name="keyId"][value="${keyId}"]`)});
+  await keyForm().getByRole('combobox',{name:'New status',exact:true}).selectOption('retired');await keyForm().getByRole('checkbox').check();await keyForm().getByRole('button',{name:'Update key status',exact:true}).click();
+  await panel.getByText('Publishing and correcting signed announcements is unavailable until an active trusted signing service is configured.',{exact:true}).waitFor();
+  assert((await state()).announcementView.announcements.find(n=>n.id===saved.id).versions.every(n=>n.verified&&n.keyStatus==='retired'),'Retirement stops new publishing while preserving historical verification');
+  assert((await request('publishNotice',[['orgId',initial.scope.orgId],['loopId',initial.scope.loopId],['text','RETIRED_KEY_NOTICE'],['reviewed','yes']])).status==='error','Retired key cannot sign a copied publication request');
+  await keyForm().getByRole('combobox',{name:'New status',exact:true}).selectOption('revoked');await keyForm().getByRole('checkbox').check();await keyForm().getByRole('button',{name:'Update key status',exact:true}).click();
+  await page.waitForFunction(async id=>{const s=await(await fetch('/__fixture/state?actor=organizer')).json();return s.announcementView.announcements.find(n=>n.id===id)?.versions[0].keyStatus==='revoked';},saved.id);
+  await selectActor('memberA');
+  assert((await state('memberA')).announcementView.announcements.find(n=>n.id===saved.id).versions.every(n=>!n.verified&&n.keyStatus==='revoked'),'Revocation marks current and historical member evidence unverified');
+  assert(await article().getByText(/Unverified signature/).count()>0,'Member browser visibly warns against relying on revoked-key notices');
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Announcement controls and long untrusted content fit the mobile viewport');
+  await page.screenshot({path:'.playwright-mcp/emba-browser-announcements.png',fullPage:true});return {checks,scope:'Actual components/actions/services with disposable test-only Ed25519 signer; no production key custody, provider, or full Next transport'};
+}

@@ -1,7 +1,10 @@
 "use server";
+import { legacyBoardAllowed, legacyProposalAllowed } from "@/lib/emba/legacy";
+import { createTripAs } from "@/lib/trip-store";
+
 import { db, type Q } from "@/lib/db";
 import { notifyDropped, notifyOneMore, notifyReached } from "@/lib/after";
-import { attribution, CODE_ATTEMPTS, setSession, type Pending } from "@/lib/identity";
+import { attribution, CODE_ATTEMPTS, joinBoard, setSession, type Pending } from "@/lib/identity";
 import { createBoardAs, postAs, respondAs } from "@/lib/ops";
 import { checkVerification, verifyConfig, type CheckResult } from "@/lib/notify/verify";
 import { normalizePhone } from "@/lib/phone";
@@ -49,6 +52,8 @@ export async function verifyCode(input: { phone: string; code: string }): Promis
     }
     await q.query("delete from otp_code where phone = $1", [phone]);
     const pending = row.pending;
+    if (pending?.kind === "respond" && !await legacyProposalAllowed(q, pending.proposalId)) return fail("not_found");
+    if ((pending?.kind === "post" || pending?.kind === "join_trip") && !await legacyBoardAllowed(q, pending.boardId)) return fail("not_found");
     const personId = await personFor(q, phone, pending?.person);
     if (!personId) return fail("expired");
     const attr = await attribution(q);
@@ -61,6 +66,15 @@ export async function verifyCode(input: { phone: string; code: string }): Promis
       const r = await postAs(q, personId, pending.boardId, pending.post, attr);
       if (r.status === "error") return { ...r, personId, verified: true as const };
       return { status: "ok" as const, personId, path: r.status === "ok" ? `/p/${r.proposalId}` : null, dropped: null, oneMore: null, formed: null };
+    }
+    if (pending?.kind === "join_trip") {
+      await joinBoard(q, pending.boardId, personId, null, attr);
+      return { status: "ok" as const, personId, path: `/trip/${pending.slug}`, dropped: null, oneMore: null, formed: null };
+    }
+    if (pending?.kind === "trip") {
+      const r = await createTripAs(q, personId, pending.name, pending.tz);
+      if (r.status === "error") return { ...r, personId, verified: true as const };
+      return { status: "ok" as const, personId, path: `/trip/${r.slug}`, dropped: null, oneMore: null, formed: null };
     }
     if (pending?.kind === "board") {
       const r = await createBoardAs(q, personId, pending.name, pending.tz);
