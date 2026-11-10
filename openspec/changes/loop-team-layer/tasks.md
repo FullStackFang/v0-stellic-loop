@@ -52,7 +52,7 @@ Build rules are in design.md, "How this is built": most capable model for every 
 - [ ] 5.2 Browser pass over the site flows in section 4.
 - [x] 5.3 Types, lint on changed files, full suite, and one production build at the end.
 - [x] 5.3a Final independent review of the whole diff before the hosted gate; no open blocker or major.
-- [ ] 5.4 Founder: confirm the `plan:read` and `group-memory:write` scopes exist in the Clerk Dashboard and are advertised by the resource metadata.
+- [x] 5.4 Founder: confirm the `plan:read` and `group-memory:write` scopes exist in the Clerk Dashboard and are advertised by the resource metadata.
 - [ ] 5.5 After the hosted gate: connect two different real assistants to one team; record for each whether the model receives the text form, the structured form or both.
 - [ ] 5.6 Run the founder's team deliverable; record the four done-when measures and the number of reported conflicts.
 
@@ -62,4 +62,4 @@ Build rules are in design.md, "How this is built": most capable model for every 
 - [x] 6.2 Archive `loop-portable-group-memory` as superseded by this change, with a note listing what was kept.
 - [x] 6.3 In `loop-emba-intent-platform`, move tasks 1.4, 6.3, 7.1, 7.3, 7.4, 7.5 to a "deferred to cohort" section; leave 1.3, 2.3, 2.5, 3.6, 8.2, 8.3 as the hosted gate.
 - [x] 6.4 Add a parked note to `quorum-board-sms` and `loop-sun-layout` listing only the founder's hosted steps.
-- [ ] 6.5 Move `period-offline-finance-workbench`, `work/calculator-mockup` and its design doc out of this repository.
+- [x] 6.5 Dropped: `period-offline-finance-workbench` and `work/calculator-mockup` are an unrelated, uncommitted project; they are left untouched and are not part of this change.
