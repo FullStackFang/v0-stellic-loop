@@ -1,11 +1,22 @@
-import Link from 'next/link';
 import { ClerkProvider, UserButton } from '@clerk/nextjs';
+import { db } from '@/lib/db';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
-import '@/components/TripView.css';
-import '../emba/portal.css';
+import { listPortalGroups } from '@/lib/emba/groups';
+import { getPortalPrincipal } from '@/lib/emba/portal-session';
+import { Rail } from './rail';
+import './groups.css';
 
-export default function GroupsLayout({ children }: { children: React.ReactNode }) {
+// The rail lists the signed-in person's teams. A failure here must not take the page down: each page reports its own access.
+async function railGroups() {
+  try {
+    const principal = await getPortalPrincipal();
+    if (!principal) return [];
+    return (await listPortalGroups(db(), principal)).filter(group => group.slug === 'workspace').map(group => ({ namespace: group.namespace, name: group.orgName }));
+  } catch { return []; }
+}
+
+export default async function GroupsLayout({ children }: { children: React.ReactNode }) {
   const configured = clerkPortalConfigured();
-  const content = <div className="lt-trip emba-portal"><header className="lt-header"><Link href="/groups" className="lt-logo">Loop</Link><nav aria-label="Workspace"><Link href="/groups">Groups</Link> · <Link href="/groups/connections">Connections</Link></nav>{configured && <UserButton />}</header><main className="lt-main">{children}</main></div>;
+  const content = <div className="lp"><Rail groups={await railGroups()} account={configured ? <UserButton /> : null} /><main className="lp-main"><div className="lp-wrap">{children}</div></main></div>;
   return configured ? <ClerkProvider signInUrl="/emba/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;
 }
