@@ -37,7 +37,8 @@ const MOCKUPS = {
 /** Laptop-only menu beside the phone: the live app's screens, then the static demos and mockups (new tab). */
 export function SiteNav() {
   const path = usePathname();
-  if (path === "/" || path.startsWith("/trip/")) return null;
+  // The team product (/groups and its /emba sign-in) is a real app, not a demo: no demo menu there.
+  if (path === "/" || path.startsWith("/trip/") || path.startsWith("/groups") || path.startsWith("/emba")) return null;
   return (
     <nav className="sitenav" aria-label="Site">
       <p className="lab">App</p>
