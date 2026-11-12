@@ -7,11 +7,24 @@ import { listReceivedInvitations } from '@/lib/emba/invitations';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { acceptInvite, createGroup, declineInvite } from './actions';
 import { InvitationLink } from './invitation-link';
+import { Arrow, Rings } from '@/components/LoopGlyphs';
 
 export const dynamic = 'force-dynamic';
 export default async function GroupsPage() {
   const principal = await getPortalPrincipal();
-  if (!principal) return <section className="lt-editor"><h1>Private groups</h1><p>Sign in to see your groups and invitations.</p>{clerkPortalConfigured() ? <Link className="lt-primary" href="/emba/sign-in">Sign in</Link> : <p role="status">Sign-in is not configured for this deployment.</p>}</section>;
+  if (!principal) return <section className="lp-signin" aria-labelledby="signin-title">
+    <div>
+      <p className="lp-signin-kick">Private groups</p>
+      <h1 id="signin-title">Three steps <em>into the loop.</em></h1>
+      <ol>
+        <li><span>1</span><div><b>Sign in</b><p>With the email your invitation went to.</p></div></li>
+        <li><span>2</span><div><b>Accept your invitation</b><p>Your team appears in the menu.</p></div></li>
+        <li><span>3</span><div><b>Connect your assistant</b><p>Ask Claude what’s yours, where the file is, when it’s due.</p></div></li>
+      </ol>
+      {clerkPortalConfigured() ? <Link className="lp-signin-go" href="/emba/sign-in">Sign in<Arrow /></Link> : <p role="status">Sign-in is not configured for this deployment.</p>}
+    </div>
+    <div className="lp-signin-art"><Rings inline /></div>
+  </section>;
   let groups, invitations;
   try {
     [groups, invitations] = await Promise.all([listPortalGroups(db(), principal), listReceivedInvitations(db(), principal)]);

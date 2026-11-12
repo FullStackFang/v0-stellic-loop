@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
+import "./loop.css";
 
 const archivo = localFont({ src: "../public/fonts/Archivo.ttf", variable: "--font-archivo", weight: "100 900", declarations: [{ prop: "font-stretch", value: "62% 125%" }] });
 

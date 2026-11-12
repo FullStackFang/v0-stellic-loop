@@ -11,7 +11,8 @@ import { EmbaError } from '@/lib/emba/errors';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { BriefForm } from '@/components/emba/brief-form';
 import { addTeamEvent, amendTeamRecord, announceToTeam, changeTeamEvent, retireTeamEvent, saveTeamBrief } from '../../team-actions';
-import { Alert, Arrow, Rings, Via } from '../../glyphs';
+import { Arrow, Rings } from '@/components/LoopGlyphs';
+import { Alert, Via } from '../../glyphs';
 
 export const dynamic = 'force-dynamic';
 type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
@@ -89,7 +90,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     <p className="lp-crumbs"><Link href="/groups">Groups</Link><span aria-hidden="true">›</span><Link href={`/groups/${namespace}`}>{group.handle}</Link><span aria-hidden="true">›</span><b>Team</b><span className="lp-today">Today is {state.today} ({state.timezone})</span></p>
 
     <header className="lp-plate">
-      <Rings className="lp-mark" />
+      <Rings className="lp-mark" inline />
       <div><p className="lp-handle">@{group.namespace}</p><h1>{group.orgName}</h1><p>{purpose ?? 'No brief has been written yet.'}</p></div>
       {deadline && daysLeft !== null && <div className="lp-dateblock"><time dateTime={deadline}><span>{mon(deadline)}</span><b>{dayNum(deadline)}</b><span>{deadline.slice(0, 4)}</span></time><div><span>Deadline</span><b>{daysLeft > 0 ? `${plural(daysLeft, 'day')} left` : daysLeft === 0 ? 'Due today' : `${plural(-daysLeft, 'day')} past`}</b></div></div>}
     </header>

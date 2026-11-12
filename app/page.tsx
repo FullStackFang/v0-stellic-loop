@@ -1,15 +1,14 @@
 import Link from 'next/link';
-import { Arrow, Rings } from './groups/glyphs';
-import './groups/groups.css';
+import { Arrow, Rings } from '@/components/LoopGlyphs';
 import './home.css';
 
-// The landing page, in the team product's look (groups.css tokens). It describes what is built: the team version.
+// The landing page, on the Loop system (app/loop.css). It describes what is built: the team version.
 export default function Home() {
   return <div className="lp lp-home">
-    <header className="lp-home-bar"><Link href='/' className="lp-home-mark"><Rings /><span>Loop</span></Link><span>Your groups, in the AI you already use</span></header>
+    <header className="lp-top"><Link href='/' className="lp-top-mark"><Rings /><span>Loop</span></Link><span>Your groups, in the AI you already use</span></header>
     <main className="lp-home-main">
       <section className="lp-plate lp-home-hero">
-        <Rings className="lp-mark" />
+        <Rings className="lp-mark" inline />
         <div><p className="lp-handle">For the groups you’re already in</p><h1>Stay in the loop.<br />Without chasing it.</h1><p>Loop connects the AI you already use to your team, so everyone can ask it what the plan is.</p></div>
         <div className="lp-dateblock lp-home-ticket"><b>Tell the plan once.</b><p>Who has what, where the files are, when it’s due. Everyone’s own AI answers from it.</p></div>
       </section>

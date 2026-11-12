@@ -4,7 +4,6 @@ import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { listPortalGroups } from '@/lib/emba/groups';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { Rail } from './rail';
-import './groups.css';
 
 // The rail lists the signed-in person's teams. A failure here must not take the page down: each page reports its own access.
 async function railGroups() {

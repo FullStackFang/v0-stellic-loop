@@ -1,4 +1,5 @@
-/* The team product (/groups). Look: Stanford HAI's system on an app shell.
+/* The Loop system, the look for the whole app (see DESIGN.md): Stanford HAI's system on an app shell.
+   A page opts in by wrapping itself in .lp; pages that don't are untouched.
    Navy rail, cool canvas, teal plate with aqua type, lime only on small chips, panels with one tight corner, pill controls.
    Everything is scoped under .lp, and class names carry the lp- prefix because globals.css owns short names such as .row and .num. */
 
@@ -15,6 +16,7 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
   --float:0 14px 32px -14px oklch(35.4% 0.095 252 / .28),0 2px 6px oklch(35.4% 0.095 252 / .08);
   --r-lg:24px 24px 24px 6px; --r-md:16px 16px 16px 4px; --pill:56px; --ease:cubic-bezier(.22,1,.36,1);
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --lp-ring-bg:var(--canvas);
   min-height:100dvh;background:var(--canvas);color:var(--navy);
   font-family:var(--font-archivo),system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
 }
@@ -25,7 +27,7 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
 .lp svg{flex:none}
 
 /* ---------- rail ---------- */
-.lp-rail{position:fixed;inset:0 auto 0 0;width:248px;background:var(--navy);color:var(--on-dark-78);display:flex;flex-direction:column;padding:18px 12px 12px;z-index:20;overflow-y:auto}
+.lp-rail{--lp-ring-bg:var(--navy);position:fixed;inset:0 auto 0 0;width:248px;background:var(--navy);color:var(--on-dark-78);display:flex;flex-direction:column;padding:18px 12px 12px;z-index:20;overflow-y:auto}
 .lp-rail :focus-visible{outline-color:var(--aqua)}
 .lp-wordmark{display:flex;align-items:center;gap:9px;padding:2px 10px 16px;font-weight:500;font-size:18px;letter-spacing:-.035em;color:var(--on-dark)}
 .lp-wordmark svg{width:22px;height:22px;color:var(--aqua)}
@@ -34,7 +36,7 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
 .lp-switch summary::-webkit-details-marker{display:none}
 .lp-switch summary::after{content:'';width:7px;height:7px;margin:0 4px 3px auto;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg);flex:none}
 .lp-switch summary:hover{background:oklch(99.4% 0.003 230 / .13)}
-.lp-switch-mark{width:28px;height:28px;border-radius:9px 9px 9px 3px;background:var(--teal);display:grid;place-items:center;flex:none}
+.lp-switch-mark{--lp-ring-bg:var(--teal);width:28px;height:28px;border-radius:9px 9px 9px 3px;background:var(--teal);display:grid;place-items:center;flex:none}
 .lp-switch-mark svg{width:16px;height:16px;color:var(--aqua)}
 .lp-switch-name{min-width:0;font-weight:500;color:var(--on-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lp-switch ul{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);color:var(--navy);border-radius:var(--r-md);box-shadow:var(--float);padding:6px;z-index:30}
@@ -75,7 +77,7 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
 .lp .lt-editor > p + p{margin-top:8px}
 .lp .lt-editor > ul > li{padding:10px 0;border-top:1px solid var(--line)}
 .lp .lt-editor > ul > li:first-child{border-top:0}
-.lp .lt-editor a:not(.lp-btn,.lp-ref),.lp-wrap > p:not(.lp-crumbs) a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+.lp .lt-editor a:not(.lp-btn,.lp-ref,.lt-primary),.lp-wrap > p:not(.lp-crumbs) a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
 .lp .lt-editor code{font:12.5px var(--mono);letter-spacing:0}
 .lp .emba-meta{font-size:12.5px;color:var(--muted)}
 .lp [role=alert]{color:var(--plum);font-weight:500}
@@ -114,7 +116,7 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
 .lp .emba-form > p{margin:8px 0 0}
 
 /* ---------- team plate ---------- */
-.lp-plate{background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg);min-height:132px;padding:18px 22px 18px 20px;display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:24px;align-items:center}
+.lp-plate{--lp-ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg);min-height:132px;padding:18px 22px 18px 20px;display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:24px;align-items:center}
 .lp-mark{width:88px;height:88px;color:var(--aqua)}
 .lp-handle{font-size:13px}
 .lp-plate h1{font-size:28px;line-height:1.1;margin:4px 0 6px;color:var(--aqua);overflow-wrap:anywhere}
@@ -195,10 +197,56 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
 .lp-aside .lp-plain li > * + *{margin-top:6px}
 .lp-aside .lp-btn{margin-top:12px}
 
+/* ---------- top bar for pages without the rail (landing, privacy, terms) ---------- */
+.lp-top{max-width:1180px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;gap:14px;color:var(--muted);font-size:13.5px}
+.lp-top-mark{display:flex;align-items:center;gap:9px;font-weight:500;font-size:18px;letter-spacing:-.035em;color:var(--navy)}
+.lp-top-mark svg{width:22px;height:22px;color:var(--teal)}
+
+/* ---------- legal pages: one readable column on a panel ---------- */
+.lp-legal{max-width:760px;margin:0 auto;padding:8px 32px 64px}
+.lp-legal h1{font-size:40px;line-height:1.02;letter-spacing:-.055em;font-weight:520;margin:16px 0 6px}
+.lp-legal-updated{color:var(--muted);font-size:13.5px}
+.lp-legal-body{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 32px;font-size:15px;line-height:1.6;color:var(--ink-2);max-width:68ch}
+.lp-legal-body p + p{margin-top:14px}
+.lp-legal-body strong{color:var(--navy);font-weight:550}
+.lp-legal-body a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+.lp-legal-foot{display:flex;gap:16px;margin-top:20px;font-size:13.5px;color:var(--muted)}
+.lp-legal-foot a{color:var(--blue)}
+.lp-legal-foot a[aria-current]{color:var(--navy);font-weight:500}
+
+/* ---------- signed out: the plate fills the page, the mark is the three steps ---------- */
+.lp-main:has(.lp-signin){padding-bottom:16px}
+.lp-signin{--lp-ring-bg:var(--teal);margin-top:8px;min-height:calc(100dvh - 32px);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:clamp(28px,5vw,64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center;overflow:hidden}
+.lp-signin-kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua)}
+.lp-signin-kick::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
+.lp .lp-signin h1{font-size:clamp(44px,5.6vw,84px);line-height:.95;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin:16px 0 0;max-width:10ch}
+.lp-signin h1 em{font-style:normal;color:var(--lime)}
+.lp-signin ol{list-style:none;margin:28px 0 30px;padding:0;max-width:460px}
+.lp-signin li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid oklch(99.4% 0.003 230 / .14);align-items:start}
+.lp-signin li:first-child{border-top:0}
+.lp-signin li > span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:600;color:var(--aqua);box-shadow:inset 0 0 0 1.5px oklch(90.4% 0.1 194 / .5)}
+.lp-signin li:first-child > span{background:var(--lime);color:var(--navy);box-shadow:0 0 0 5px oklch(96.4% 0.19 117 / .18)}
+.lp-signin li b{display:block;color:var(--on-dark);font-weight:550;font-size:16.5px}
+.lp-signin li p{font-size:14px;line-height:1.45}
+.lp-signin-go{display:inline-flex;align-items:center;gap:10px;height:54px;padding:0 26px;border-radius:var(--pill);font-size:17px;font-weight:600;white-space:nowrap;background:var(--lime);color:var(--navy);transition:background-color .15s var(--ease),transform .1s var(--ease)}
+.lp-signin-go:hover{background:oklch(90% 0.2 120)}
+.lp-signin-go:active{transform:translateY(1px)}
+.lp-signin-go svg{width:15px;height:15px;transition:transform .15s var(--ease)}
+.lp-signin-go:hover svg{transform:translateX(3px)}
+.lp-signin :focus-visible{outline-color:var(--lime)}
+.lp-signin [role=status]{color:var(--on-dark-78)}
+.lp-signin-art{width:100%;max-width:480px;justify-self:center;color:var(--aqua)}
+/* The mark opens once, then turns very slowly. */
+.lp-signin-art svg{display:block;width:100%;height:auto;animation:lp-open 1.6s var(--ease) both,lp-turn 90s linear 1.8s infinite}
+@keyframes lp-open{from{clip-path:circle(0% at 50% 50%)}to{clip-path:circle(75% at 50% 50%)}}
+@keyframes lp-turn{to{rotate:360deg}}
+
 @media (prefers-reduced-motion:reduce){.lp *,.lp *::before,.lp *::after{transition:none!important;animation:none!important}}
 
 @media (max-width:1160px){.lp-record{grid-template-columns:minmax(0,1fr)}.lp-aside{display:grid;grid-template-columns:1fr 1fr}}
 @media (max-width:820px){
+  .lp-top{padding:14px 16px;flex-wrap:wrap;gap:4px 12px}
+  .lp-legal{padding:4px 16px 48px}.lp-legal h1{font-size:32px}.lp-legal-body{padding:20px 18px;font-size:14.5px}
   .lp-rail{position:sticky;inset:auto;top:0;width:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 12px;overflow:visible;flex-wrap:wrap}
   .lp-wordmark{padding:0 4px 0 0}.lp-wordmark span{display:none}
   .lp-switch{margin:0}.lp-switch summary{padding:5px 8px}.lp-switch-name{max-width:96px;font-size:13px}
@@ -220,4 +268,9 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
   .lp-date{text-align:left}
   .lp-event{grid-template-columns:minmax(0,1fr);gap:4px;padding:12px 14px}
   .lp-wrap > h1{font-size:24px}
+  .lp-signin{grid-template-columns:minmax(0,1fr);min-height:0;margin-top:12px;padding:22px 22px 28px;gap:6px;border-radius:26px 26px 26px 6px;align-items:start}
+  .lp-signin-art{order:-1;max-width:230px}
+  .lp .lp-signin h1{font-size:44px}
+  .lp-signin ol{margin:20px 0 24px}
+  .lp-signin-go{display:flex;justify-content:center}
 }
