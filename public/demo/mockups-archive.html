@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop · Archive mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;480;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:oklch(96.2% 0.004 230); --surface:oklch(99.3% 0.003 230); --sunk:oklch(97.7% 0.006 240);
+  --line:oklch(90.6% 0.008 240); --line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252); --muted:oklch(46.5% 0.012 245);
+  --blue:oklch(47.6% 0.13 250); --lime:oklch(96.4% 0.19 117); --teal:oklch(37.3% 0.052 206); --aqua:oklch(90.4% 0.1 194);
+  --plum:oklch(42.6% 0.13 322); --pale-blue:oklch(95.3% 0.017 245); --pale-plum:oklch(94.4% 0.011 320);
+  --on-dark:oklch(99.4% 0.003 230); --on-dark-78:oklch(99.4% 0.003 230 / .78); --on-dark-66:oklch(99.4% 0.003 230 / .66);
+  --float:0 14px 32px -14px oklch(35.4% 0.095 252 / .28),0 2px 6px oklch(35.4% 0.095 252 / .08);
+  --r-lg:24px 24px 24px 6px; --r-md:16px 16px 16px 4px; --pill:56px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#e9ecef;color:var(--navy);font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+h1,h2,h3,p,ul{margin:0;padding:0}ul{list-style:none}a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;letter-spacing:inherit;cursor:pointer}
+
+/* Outside the product: the picker and the notes */
+.pick{max-width:1240px;margin:0 auto;padding:22px 20px 10px}
+.pick h1{font-size:19px;font-weight:500;letter-spacing:-.03em}
+.pick > p{color:#4a5560;margin-top:4px;max-width:70ch}
+.tabs{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.tabs button{border:1px solid #c5ccd3;background:#fff;border-radius:999px;padding:8px 16px;font-weight:500}
+.tabs button[aria-selected=true]{background:#1d2b3a;border-color:#1d2b3a;color:#fff}
+.note{max-width:1240px;margin:0 auto;padding:0 20px 12px;color:#4a5560;font-size:13px}
+.note b{color:#1d2b3a;font-weight:600}
+.stage{max-width:1240px;margin:0 auto 40px;padding:0 20px}
+.dir{display:none}.dir.on{display:block}
+
+/* The product frame */
+.app{display:grid;grid-template-columns:228px minmax(0,1fr);min-height:860px;background:var(--canvas);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -30px rgba(20,30,50,.5),0 0 0 1px rgba(20,30,50,.08)}
+.rail{background:var(--navy);color:var(--on-dark-78);padding:18px 12px;display:flex;flex-direction:column;gap:18px}
+.mark{display:flex;align-items:center;gap:9px;color:var(--on-dark);font-size:18px;font-weight:500;letter-spacing:-.035em;padding:2px 8px}
+.mark svg{width:22px;height:22px;color:var(--aqua)}
+.rail p.lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--on-dark-66);padding:0 8px 6px}
+.rail li a{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;font-size:13.5px}
+.rail li a.on{background:oklch(99.4% 0.003 230 / .12);color:var(--on-dark)}
+.rail li a i{width:16px;height:16px;border-radius:5px;border:1.5px solid currentColor;opacity:.7;flex:none}
+.rail .count{margin-left:auto;font-size:11.5px;color:var(--on-dark-66)}
+.rail .foot{margin-top:auto;font-size:12px;color:var(--on-dark-66);padding:0 8px}
+.main{padding:26px 30px 40px;min-width:0}
+.crumb{color:var(--muted);font-size:12.5px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:4px 0 18px;flex-wrap:wrap}
+.head h2{font-size:30px;font-weight:480;letter-spacing:-.035em}
+.head p{color:var(--muted);max-width:56ch}
+.safe{display:flex;align-items:center;gap:8px;background:var(--pale-blue);border:1px solid var(--line);border-radius:var(--pill);padding:7px 14px;font-size:12.5px;white-space:nowrap}
+.safe svg{width:14px;height:14px}
+.chip{display:inline-flex;align-items:center;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:500;background:var(--sunk);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.live{background:var(--lime);border-color:transparent;color:oklch(30% 0.08 130)}
+.chip.picked{background:var(--pale-plum);border-color:transparent;color:var(--plum)}
+.chip.ended{background:transparent}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);border-radius:var(--pill);padding:8px 15px;font-weight:500;font-size:13px}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--on-dark)}
+.date{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;color:var(--muted);letter-spacing:0;white-space:nowrap}
+
+/* Live miniature of a real demo file */
+.thumb{display:block;position:relative;overflow:hidden;background:var(--sunk);border:1px solid var(--line);border-radius:12px 12px 12px 4px;aspect-ratio:16/10}
+.thumb iframe{position:absolute;top:0;left:0;width:1280px;height:800px;border:0;transform-origin:0 0;pointer-events:none}
+.thumb.phone{aspect-ratio:10/13}
+.thumb.phone iframe{width:420px;height:546px}
+
+/* A · Shelf by era */
+.era{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px;margin-bottom:14px}
+.era-top{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+.era h3{font-size:20px;font-weight:480;letter-spacing:-.03em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.era .when{color:var(--muted);font-size:12.5px;margin-bottom:4px}
+.era .why{margin-top:8px;max-width:62ch}
+.era .why b{font-weight:500}
+.era .acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.files{margin-top:16px;border-top:1px solid var(--line);padding-top:6px;columns:2;column-gap:28px}
+.files li{break-inside:avoid;display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.files li a{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.files li a:hover{color:var(--blue)}
+details.more summary{cursor:pointer;color:var(--blue);font-weight:500;margin-top:12px;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+
+/* B · Timeline */
+.tl{position:relative;padding-left:34px}
+.tl::before{content:"";position:absolute;left:11px;top:8px;bottom:8px;width:2px;background:var(--line-2)}
+.stop{position:relative;margin-bottom:22px}
+.stop::before{content:"";position:absolute;left:-29px;top:7px;width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--teal)}
+.stop.now::before{background:var(--lime);border-color:var(--navy)}
+.stop .when{font-size:12.5px;color:var(--muted)}
+.stop h3{font-size:22px;font-weight:480;letter-spacing:-.03em;margin:2px 0 4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.stop .turn{display:inline-block;margin:10px 0 0;background:var(--teal);color:var(--aqua);border-radius:var(--r-md);padding:10px 14px;max-width:64ch;font-size:13.5px}
+.stop .turn b{color:var(--on-dark);font-weight:500}
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
+.strip figure{margin:0}
+.strip figcaption{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:12.5px}
+.strip figcaption span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop .rest{margin-top:8px;color:var(--muted);font-size:12.5px}
+.stop .rest a{color:var(--blue);font-weight:500}
+
+/* C · Drawer on the home page */
+.home{padding:22px 30px}
+.plate{background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg);padding:28px;display:flex;gap:26px;align-items:center}
+.plate svg{width:92px;height:92px;color:var(--aqua);flex:none}
+.plate h2{color:var(--aqua);font-size:38px;line-height:1.02;font-weight:480;letter-spacing:-.035em}
+.plate p{margin-top:8px;font-size:15px}
+.homefoot{display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--muted);font-size:13px}
+.drawer{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--float);padding:18px 20px}
+.drawer-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.drawer input{flex:1;min-width:220px;font:inherit;letter-spacing:inherit;color:inherit;border:1px solid var(--line-2);border-radius:var(--pill);padding:9px 16px;background:var(--sunk)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.filters button{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:12.5px}
+.filters button[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:var(--on-dark)}
+.rows li{display:grid;grid-template-columns:minmax(0,1fr) 150px 96px 70px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.rows li a:first-child{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rows li a:first-child:hover{color:var(--blue)}
+.rows .era-name{color:var(--muted);font-size:12.5px}
+.rows .open{color:var(--blue);font-weight:500;font-size:12.5px;text-align:right}
+.empty{padding:18px 0;color:var(--muted)}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}.rail{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 14px}.rail .foot,.rail p.lab{display:none}.rail ul{display:flex;gap:4px;flex-wrap:wrap}
+  .main,.home{padding:18px 16px}.era-top{grid-template-columns:1fr}.files{columns:1}.strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rows li{grid-template-columns:minmax(0,1fr) 70px}.rows .era-name,.rows .date{display:none}.plate{flex-direction:column;align-items:flex-start}.plate h2{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<div class="pick">
+  <h1>Where the older demos live</h1>
+  <p>Three ways to keep every earlier version of Loop reachable after sign-in, without it showing on the public home page. Every link opens the real file. Pick one, or mix.</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-dir="a">A · Shelf by era</button>
+    <button role="tab" aria-selected="false" data-dir="b">B · The story so far</button>
+    <button role="tab" aria-selected="false" data-dir="c">C · Drawer on the home page</button>
+  </div>
+</div>
+
+<!-- ============ A ============ -->
+<section class="dir on" id="dir-a">
+  <p class="note"><b>A.</b> A page in the signed-in side menu. One card per era: what it was, why it ended, the main demo, then every mockup from that era. Best when you want to find a specific file.</p>
+  <div class="stage"><div class="app">
+    <aside class="rail">
+      <a class="mark" href="#"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6"><circle cx="50" cy="34" r="22"/><circle cx="34" cy="62" r="22"/><circle cx="66" cy="62" r="22"/></svg>Loop</a>
+      <nav><p class="lab">You</p><ul>
+        <li><a href="#"><i></i>Your groups</a></li>
+        <li><a href="#"><i></i>Connections</a></li>
+        <li><a href="#" class="on"><i></i>Archive<span class="count">58</span></a></li>
+      </ul></nav>
+      <p class="foot">Signed in as Stephen</p>
+    </aside>
+    <div class="main">
+      <p class="crumb">You / Archive</p>
+      <div class="head">
+        <div><h2>Archive</h2><p>Every earlier version of Loop, kept as it was. Nothing here is linked from the public site.</p></div>
+        <span class="safe"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only you and people you invite · frozen copies</span>
+      </div>
+
+      <article class="era">
+        <div class="era-top">
+          <div>
+            <p class="when">November 9 to now</p>
+            <h3>Team layer <span class="chip live">Live</span></h3>
+            <p class="why">Loop as a layer between each member's own AI and a group. <b>This is the current product.</b> The mockups below are how its structure and look were chosen.</p>
+            <div class="acts"><a class="btn primary" href="/groups" target="_blank">Open the live app</a><a class="btn" href="mockups-layer-a3.html" target="_blank">The look that was picked</a></div>
+          </div>
+          <a class="thumb" href="mockups-layer-a3.html" target="_blank" aria-label="Open the picked look"><iframe loading="lazy" src="mockups-layer-a3.html" tabindex="-1" aria-hidden="true"></iframe></a>
+        </div>
+        <ul class="files">
+          <li><a href="mockups-layer-a3.html" target="_blank">Look A3, HAI</a><span class="chip picked">Picked</span><span class="date">Nov 10</span></li>
+          <li><a href="mockups-layer-a.html" target="_blank">Structure A, app shell</a><span class="chip picked">Picked</span><span class="date">Nov 10</span></li>
+          <li><a href="mockups-layer-a1.html" target="_blank">Look A1, Daylight</a><span class="date">Nov 10</span></li>
+          <li><a href="mockups-layer-a2.html" target="_blank">Look A2, Paper</a><span class="date">Nov 10</span></li>
+          <li><a href="mockups-layer-b.html" target="_blank">Structure B</a><span class="date">Nov 10</span></li>
+          <li><a href="mockups-layer-c.html" target="_blank">Structure C</a><span class="date">Nov 10</span></li>
+          <li><a href="mockups-groups-signin.html" target="_blank">Sign-in page</a><span class="date">Nov 12</span></li>
+          <li><a href="mockups-loop-mark-polish.html" target="_blank">Loop mark, polish</a><span class="date">Nov 12</span></li>
+        </ul>
+      </article>
+
+      <article class="era">
+        <div class="era-top">
+          <div>
+            <p class="when">November 2 to 3</p>
+            <h3>Loop v1, the Sun look <span class="chip ended">Parked</span></h3>
+            <p class="why">A daytime layout where each plan is lit by its own hour and weather. <b>Approved as a look, never built:</b> the direction changed on November 9.</p>
+            <div class="acts"><a class="btn" href="mockups-sun.html" target="_blank">Open the Sun plan</a><a class="btn" href="mockups-sun-pages.html" target="_blank">Space and plans</a></div>
+          </div>
+          <a class="thumb" href="mockups-sun.html" target="_blank" aria-label="Open the Sun plan"><iframe loading="lazy" src="mockups-sun.html" tabindex="-1" aria-hidden="true"></iframe></a>
+        </div>
+        <ul class="files">
+          <li><a href="mockups-sun.html" target="_blank">Sun plan with the 24-hour wheel</a><span class="chip picked">Picked</span><span class="date">Nov 3</span></li>
+          <li><a href="mockups-sun-pages.html" target="_blank">Sun space, my plans, didn't form</a><span class="date">Nov 3</span></li>
+          <li><a href="mockups-day.html" target="_blank">Daytime directions</a><span class="date">Nov 2</span></li>
+          <li><a href="mockups-night.html" target="_blank">Night palettes</a><span class="date">Nov 2</span></li>
+          <li><a href="mockups-night-fields.html" target="_blank">Night fields</a><span class="date">Nov 2</span></li>
+          <li><a href="mockups-chart.html" target="_blank">Chart line systems</a><span class="date">Nov 2</span></li>
+          <li><a href="mockups-layout-overdrive.html" target="_blank">Layout overdrive</a><span class="date">Nov 2</span></li>
+          <li><a href="mockups-layout-loop.html" target="_blank">Layout, Loop v1 spec</a><span class="date">Nov 2</span></li>
+        </ul>
+      </article>
+
+      <article class="era">
+        <div class="era-top">
+          <div>
+            <p class="when">October 21 to 26</p>
+            <h3>Quorum, the proposal board <span class="chip live">Still running</span></h3>
+            <p class="why">Post a plan; it locks when enough people are in. Built for the EMBA cohort trip. <b>Still in use by the cohort</b>, and the idea returns in the trip version.</p>
+            <div class="acts"><a class="btn primary" href="/b/emba27" target="_blank">Open the trip board</a><a class="btn" href="quorum.html" target="_blank">Prototype v5</a></div>
+          </div>
+          <a class="thumb" href="quorum.html" target="_blank" aria-label="Open the Quorum prototype"><iframe loading="lazy" src="quorum.html" tabindex="-1" aria-hidden="true"></iframe></a>
+        </div>
+        <ul class="files">
+          <li><a href="quorum.html" target="_blank">Quorum prototype v5</a><span class="chip picked">Picked</span><span class="date">Oct 21</span></li>
+          <li><a href="mockups-quorum-calm.html" target="_blank">Luma, aigma, HAI, Delta</a><span class="date">Oct 21</span></li>
+          <li><a href="mockups-quorum-delta.html" target="_blank">Delta mixes</a><span class="date">Oct 21</span></li>
+          <li><a href="mockups-quorum-fun.html" target="_blank">Fun directions</a><span class="date">Oct 21</span></li>
+          <li><a href="mockups-quorum-fx.html" target="_blank">Orbits</a><span class="date">Oct 21</span></li>
+          <li><a href="mockups-quorum-hero.html" target="_blank">Light hero fields</a><span class="date">Oct 21</span></li>
+          <li><a href="mockups-post.html" target="_blank">Posting a plan</a><span class="date">Oct 26</span></li>
+          <li><a href="mockups-vendor.html" target="_blank">Vendor side</a><span class="date">Oct 26</span></li>
+        </ul>
+      </article>
+
+      <article class="era">
+        <div class="era-top">
+          <div>
+            <p class="when">August 17 to September 3</p>
+            <h3>Campus Loop, the student app <span class="chip ended">Ended</span></h3>
+            <p class="why">A phone app for first-years to find people to go with, sold to universities. <b>Ended because no university could buy:</b> 0 of 6 had a budget or a way to purchase.</p>
+            <div class="acts"><a class="btn" href="stellic.html" target="_blank">Open the full demo</a></div>
+          </div>
+          <a class="thumb" href="stellic.html" target="_blank" aria-label="Open the Campus Loop demo"><iframe loading="lazy" src="stellic.html" tabindex="-1" aria-hidden="true"></iframe></a>
+        </div>
+        <ul class="files">
+          <li><a href="stellic.html" target="_blank">Loop demo, all screens</a><span class="date">Sep 3</span></li>
+          <li><a href="mockups-loop-card-v5.html" target="_blank">Loop card v5</a><span class="chip picked">Picked</span><span class="date">Sep 3</span></li>
+          <li><a href="mockups-home-v2.html" target="_blank">Home v2</a><span class="chip picked">Picked</span><span class="date">Sep 2</span></li>
+          <li><a href="mockups-advisor-tabs.html" target="_blank">Advisor, tabs</a><span class="chip picked">Picked</span><span class="date">Sep 3</span></li>
+          <li><a href="mockups-anchor.html" target="_blank">Anchor</a><span class="date">Sep 2</span></li>
+          <li><a href="mockups-intent.html" target="_blank">Intent</a><span class="date">Aug 17</span></li>
+        </ul>
+        <details class="more"><summary>Show 24 more from this era</summary>
+          <ul class="files">
+            <li><a href="mockups-home-feed.html" target="_blank">Home feed</a><span class="date">Aug 17</span></li>
+            <li><a href="mockups-home-blend.html" target="_blank">Home blend</a><span class="date">Aug 17</span></li>
+            <li><a href="mockups-home-chips.html" target="_blank">Home chips</a><span class="date">Sep 2</span></li>
+            <li><a href="mockups-home-filters.html" target="_blank">Home filters</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-intent-at.html" target="_blank">Intent @ pins</a><span class="date">Aug 17</span></li>
+            <li><a href="mockups-intent-pills.html" target="_blank">Intent pills</a><span class="date">Aug 17</span></li>
+            <li><a href="mockups-anchor-detail.html" target="_blank">Anchor detail</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-anchor-min.html" target="_blank">Anchor minimal</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-anchor-tile.html" target="_blank">Anchor tiles</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-loop-card.html" target="_blank">Loop card</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-loop-card-v2.html" target="_blank">Loop card v2</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-loop-card-v3.html" target="_blank">Loop card v3</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-loop-card-v4.html" target="_blank">Loop card v4</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-advisor.html" target="_blank">Advisor</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-advisor-b.html" target="_blank">Advisor v3</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-advisor-dial.html" target="_blank">Advisor v4, dial</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-staff-personas.html" target="_blank">Staff personas</a><span class="date">Aug 18</span></li>
+            <li><a href="mockups-you-hub.html" target="_blank">You hub</a><span class="date">Aug 18</span></li>
+            <li><a href="mockups-onboarding.html" target="_blank">Onboarding</a><span class="date">Aug 18</span></li>
+            <li><a href="mockups-header.html" target="_blank">Header</a><span class="date">Aug 17</span></li>
+            <li><a href="mockups-buttons.html" target="_blank">Buttons</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-ranking-personalization.html" target="_blank">Ranking</a><span class="date">Sep 3</span></li>
+            <li><a href="mockups-redundancy.html" target="_blank">Redundancy cuts</a><span class="date">Sep 3</span></li>
+            <li><a href="stellic-welcome-prototype/index.html" target="_blank">Welcome prototype</a><span class="date">Nov 8</span></li>
+          </ul>
+        </details>
+      </article>
+    </div>
+  </div></div>
+</section>
+
+<!-- ============ B ============ -->
+<section class="dir" id="dir-b">
+  <p class="note"><b>B.</b> The same files, told as the story of the pivots, newest first. Each stop says what turned you away from it. Best when you show someone how Loop got here, such as the class or an investor.</p>
+  <div class="stage"><div class="app">
+    <aside class="rail">
+      <a class="mark" href="#"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6"><circle cx="50" cy="34" r="22"/><circle cx="34" cy="62" r="22"/><circle cx="66" cy="62" r="22"/></svg>Loop</a>
+      <nav><p class="lab">You</p><ul>
+        <li><a href="#"><i></i>Your groups</a></li>
+        <li><a href="#"><i></i>Connections</a></li>
+        <li><a href="#" class="on"><i></i>How we got here</a></li>
+      </ul></nav>
+      <p class="foot">Signed in as Stephen</p>
+    </aside>
+    <div class="main">
+      <p class="crumb">You / How we got here</p>
+      <div class="head">
+        <div><h2>How we got here</h2><p>Four versions of Loop in three months. Each one is kept as it was on the day it stopped.</p></div>
+        <span class="safe"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Only you and people you invite · frozen copies</span>
+      </div>
+
+      <div class="tl">
+        <div class="stop now">
+          <p class="when">November 9 to now · current</p>
+          <h3>A layer between your AI and your groups <span class="chip live">Live</span></h3>
+          <p>Tell a group something, ask it something, say you're interested. Team first, then club, then trip.</p>
+          <div class="strip">
+            <figure><a class="thumb" href="mockups-layer-a3.html" target="_blank"><iframe loading="lazy" src="mockups-layer-a3.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Look A3, HAI</span><span class="chip picked">Picked</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-layer-a1.html" target="_blank"><iframe loading="lazy" src="mockups-layer-a1.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Look A1, Daylight</span><span class="date">Nov 10</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-layer-b.html" target="_blank"><iframe loading="lazy" src="mockups-layer-b.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Structure B</span><span class="date">Nov 10</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-groups-signin.html" target="_blank"><iframe loading="lazy" src="mockups-groups-signin.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Sign-in page</span><span class="date">Nov 12</span></figcaption></figure>
+          </div>
+          <p class="rest">4 more from this stop · <a href="#" data-go="a">see all files</a></p>
+        </div>
+
+        <div class="stop">
+          <p class="when">November 2 to 3</p>
+          <h3>Loop v1, the Sun look <span class="chip ended">Parked</span></h3>
+          <p>A daytime layout where each plan is lit by its own hour and weather.</p>
+          <p class="turn"><b>What turned us:</b> the look was approved, but the product under it changed six days later. The layout was never built.</p>
+          <div class="strip">
+            <figure><a class="thumb" href="mockups-sun.html" target="_blank"><iframe loading="lazy" src="mockups-sun.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Sun plan</span><span class="chip picked">Picked</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-sun-pages.html" target="_blank"><iframe loading="lazy" src="mockups-sun-pages.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Space and plans</span><span class="date">Nov 3</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-night.html" target="_blank"><iframe loading="lazy" src="mockups-night.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Night palettes</span><span class="date">Nov 2</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-day.html" target="_blank"><iframe loading="lazy" src="mockups-day.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Daytime directions</span><span class="date">Nov 2</span></figcaption></figure>
+          </div>
+          <p class="rest">4 more from this stop · <a href="#" data-go="a">see all files</a></p>
+        </div>
+
+        <div class="stop">
+          <p class="when">October 21 to 26</p>
+          <h3>Quorum, the proposal board <span class="chip live">Still running</span></h3>
+          <p>Post a plan; it locks when enough people are in. Built for the EMBA cohort trip.</p>
+          <p class="turn"><b>What turned us:</b> it worked for one trip, but it was its own app. The next version had to live inside the AI people already use.</p>
+          <div class="strip">
+            <figure><a class="thumb" href="quorum.html" target="_blank"><iframe loading="lazy" src="quorum.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Prototype v5</span><span class="chip picked">Picked</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-quorum-calm.html" target="_blank"><iframe loading="lazy" src="mockups-quorum-calm.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Luma, aigma, HAI, Delta</span><span class="date">Oct 21</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-quorum-hero.html" target="_blank"><iframe loading="lazy" src="mockups-quorum-hero.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Light hero fields</span><span class="date">Oct 21</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-vendor.html" target="_blank"><iframe loading="lazy" src="mockups-vendor.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Vendor side</span><span class="date">Oct 26</span></figcaption></figure>
+          </div>
+          <p class="rest">4 more from this stop · <a href="/b/emba27" target="_blank">open the live trip board</a></p>
+        </div>
+
+        <div class="stop">
+          <p class="when">August 17 to September 3</p>
+          <h3>Campus Loop, the student app <span class="chip ended">Ended</span></h3>
+          <p>A phone app for first-years to find people to go with, sold to universities.</p>
+          <p class="turn"><b>What turned us:</b> 0 of 6 institutions had a budget or a way to buy. Students also distrusted anything the school could see.</p>
+          <div class="strip">
+            <figure><a class="thumb" href="stellic.html" target="_blank"><iframe loading="lazy" src="stellic.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Full demo</span><span class="date">Sep 3</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-loop-card-v5.html" target="_blank"><iframe loading="lazy" src="mockups-loop-card-v5.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Loop card v5</span><span class="chip picked">Picked</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-home-v2.html" target="_blank"><iframe loading="lazy" src="mockups-home-v2.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Home v2</span><span class="chip picked">Picked</span></figcaption></figure>
+            <figure><a class="thumb" href="mockups-advisor-tabs.html" target="_blank"><iframe loading="lazy" src="mockups-advisor-tabs.html" tabindex="-1" aria-hidden="true"></iframe></a><figcaption><span>Advisor, tabs</span><span class="chip picked">Picked</span></figcaption></figure>
+          </div>
+          <p class="rest">26 more from this stop · <a href="#" data-go="a">see all files</a></p>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ============ C ============ -->
+<section class="dir" id="dir-c">
+  <p class="note"><b>C.</b> No new page. After sign-in, the home page gains one quiet line that opens a searchable list of everything. Shown here already open. Best when the archive should stay out of the way. Try the search and the filters.</p>
+  <div class="stage"><div class="app" style="grid-template-columns:1fr">
+    <div class="home">
+      <div style="display:flex;align-items:center;gap:14px;color:var(--muted);font-size:13.5px;margin-bottom:14px">
+        <a class="mark" style="color:var(--navy);padding:0" href="#"><svg style="color:var(--teal)" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6"><circle cx="50" cy="34" r="22"/><circle cx="34" cy="62" r="22"/><circle cx="66" cy="62" r="22"/></svg>Loop</a>
+        <span>Your groups, in the AI you already use</span>
+        <span style="margin-left:auto">Signed in as Stephen</span>
+      </div>
+      <div class="plate">
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6"><circle cx="50" cy="34" r="22"/><circle cx="34" cy="62" r="22"/><circle cx="66" cy="62" r="22"/></svg>
+        <div><h2>Stay in the loop.<br>Without chasing it.</h2><p>Loop connects the AI you already use to your team, so everyone can ask it what the plan is.</p></div>
+      </div>
+      <p class="homefoot"><span class="safe"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Shown only to you</span>Earlier versions of Loop · 58 files · <a href="#" style="color:var(--blue);font-weight:500">Hide</a></p>
+
+      <div class="drawer">
+        <div class="drawer-top">
+          <input id="q" type="search" placeholder="Search earlier versions, such as “advisor” or “sun”" aria-label="Search earlier versions">
+          <a class="btn" href="/b/emba27" target="_blank">Open the trip board</a>
+        </div>
+        <div class="filters" id="filters">
+          <button aria-pressed="true" data-era="">All</button>
+          <button aria-pressed="false" data-era="Team layer">Team layer</button>
+          <button aria-pressed="false" data-era="Sun look">Sun look</button>
+          <button aria-pressed="false" data-era="Quorum">Quorum</button>
+          <button aria-pressed="false" data-era="Campus Loop">Campus Loop</button>
+          <button aria-pressed="false" data-era="picked">Picked only</button>
+        </div>
+        <ul class="rows" id="rows"></ul>
+        <p class="empty" id="empty" hidden>Nothing matches. Try a shorter word.</p>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<script>
+// Tabs
+const tabs=[...document.querySelectorAll('.tabs button')];
+function show(dir){tabs.forEach(t=>t.setAttribute('aria-selected',String(t.dataset.dir===dir)));document.querySelectorAll('.dir').forEach(s=>s.classList.toggle('on',s.id==='dir-'+dir));fit();}
+tabs.forEach(t=>t.addEventListener('click',()=>{show(t.dataset.dir);history.replaceState(null,'','#'+t.dataset.dir);}));
+// A direct link such as mockups-archive.html#b opens that direction.
+addEventListener('DOMContentLoaded',()=>{const d=location.hash.slice(1);if(['a','b','c'].includes(d))show(d);});
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);scrollTo({top:0})}));
+
+// Scale each live miniature to its box
+function fit(){document.querySelectorAll('.thumb').forEach(box=>{const f=box.querySelector('iframe');if(!f||!box.clientWidth)return;f.style.transform='scale('+(box.clientWidth/f.offsetWidth)+')';});}
+addEventListener('resize',fit);addEventListener('load',fit);fit();
+
+// C: every file, searchable
+const FILES=[
+['Look A3, HAI','mockups-layer-a3.html','Team layer','Nov 10',1],['Structure A, app shell','mockups-layer-a.html','Team layer','Nov 10',1],['Look A1, Daylight','mockups-layer-a1.html','Team layer','Nov 10',0],['Look A2, Paper','mockups-layer-a2.html','Team layer','Nov 10',0],['Structure B','mockups-layer-b.html','Team layer','Nov 10',0],['Structure C','mockups-layer-c.html','Team layer','Nov 10',0],['Sign-in page','mockups-groups-signin.html','Team layer','Nov 12',0],['Loop mark, round 1','mockups-loop-mark.html','Team layer','Nov 12',0],['Loop mark, round 2','mockups-loop-mark-2.html','Team layer','Nov 12',0],['Loop mark, round 3','mockups-loop-mark-3.html','Team layer','Nov 12',0],['Loop mark, polish','mockups-loop-mark-polish.html','Team layer','Nov 12',0],['Welcome prototype','loop-welcome-prototype/index.html','Team layer','Nov 8',0],
+['Sun plan with the 24-hour wheel','mockups-sun.html','Sun look','Nov 3',1],['Sun space, my plans, didn’t form','mockups-sun-pages.html','Sun look','Nov 3',0],['Intent rhythm','intent-rhythm.html','Sun look','Nov 3',0],['Daytime directions','mockups-day.html','Sun look','Nov 2',0],['Night palettes','mockups-night.html','Sun look','Nov 2',0],['Night fields','mockups-night-fields.html','Sun look','Nov 2',0],['Chart line systems','mockups-chart.html','Sun look','Nov 2',0],['Layout overdrive','mockups-layout-overdrive.html','Sun look','Nov 2',0],['Layout, Loop v1 spec','mockups-layout-loop.html','Sun look','Nov 2',0],
+['Quorum prototype v5','quorum.html','Quorum','Oct 21',1],['Luma, aigma, HAI, Delta','mockups-quorum-calm.html','Quorum','Oct 21',0],['Delta mixes','mockups-quorum-delta.html','Quorum','Oct 21',0],['Fun directions','mockups-quorum-fun.html','Quorum','Oct 21',0],['Orbits','mockups-quorum-fx.html','Quorum','Oct 21',0],['Light hero fields','mockups-quorum-hero.html','Quorum','Oct 21',0],['Posting a plan','mockups-post.html','Quorum','Oct 26',0],['Vendor side','mockups-vendor.html','Quorum','Oct 26',0],
+['Loop demo, all screens','stellic.html','Campus Loop','Sep 3',0],['Loop card v5','mockups-loop-card-v5.html','Campus Loop','Sep 3',1],['Home v2','mockups-home-v2.html','Campus Loop','Sep 2',1],['Advisor, tabs','mockups-advisor-tabs.html','Campus Loop','Sep 3',1],['Loop card','mockups-loop-card.html','Campus Loop','Sep 3',0],['Loop card v2','mockups-loop-card-v2.html','Campus Loop','Sep 3',0],['Loop card v3','mockups-loop-card-v3.html','Campus Loop','Sep 3',0],['Loop card v4','mockups-loop-card-v4.html','Campus Loop','Sep 3',0],['Advisor','mockups-advisor.html','Campus Loop','Sep 3',0],['Advisor v3','mockups-advisor-b.html','Campus Loop','Sep 3',0],['Advisor v4, dial','mockups-advisor-dial.html','Campus Loop','Sep 3',0],['Anchor','mockups-anchor.html','Campus Loop','Sep 2',0],['Anchor detail','mockups-anchor-detail.html','Campus Loop','Sep 3',0],['Anchor minimal','mockups-anchor-min.html','Campus Loop','Sep 3',0],['Anchor tiles','mockups-anchor-tile.html','Campus Loop','Sep 3',0],['Home feed','mockups-home-feed.html','Campus Loop','Aug 17',0],['Home blend','mockups-home-blend.html','Campus Loop','Aug 17',0],['Home chips','mockups-home-chips.html','Campus Loop','Sep 2',0],['Home filters','mockups-home-filters.html','Campus Loop','Sep 3',0],['Intent','mockups-intent.html','Campus Loop','Aug 17',0],['Intent @ pins','mockups-intent-at.html','Campus Loop','Aug 17',0],['Intent pills','mockups-intent-pills.html','Campus Loop','Aug 17',0],['Staff personas','mockups-staff-personas.html','Campus Loop','Aug 18',0],['You hub','mockups-you-hub.html','Campus Loop','Aug 18',0],['Onboarding','mockups-onboarding.html','Campus Loop','Aug 18',0],['Header','mockups-header.html','Campus Loop','Aug 17',0],['Buttons','mockups-buttons.html','Campus Loop','Sep 3',0],['Ranking','mockups-ranking-personalization.html','Campus Loop','Sep 3',0],['Redundancy cuts','mockups-redundancy.html','Campus Loop','Sep 3',0],
+];
+const rows=document.getElementById('rows'),q=document.getElementById('q'),empty=document.getElementById('empty');let era='';
+function draw(){
+  const term=q.value.trim().toLowerCase();
+  const list=FILES.filter(f=>(era===''||(era==='picked'?f[4]:f[2]===era))&&(!term||(f[0]+' '+f[2]).toLowerCase().includes(term)));
+  rows.replaceChildren(...list.map(f=>{
+    const li=document.createElement('li');
+    const a=document.createElement('a');a.href=f[1];a.target='_blank';a.textContent=f[0];
+    if(f[4]){const c=document.createElement('span');c.className='chip picked';c.textContent='Picked';c.style.marginLeft='8px';a.append(c);}
+    const e=document.createElement('span');e.className='era-name';e.textContent=f[2];
+    const d=document.createElement('span');d.className='date';d.textContent=f[3];
+    const o=document.createElement('a');o.className='open';o.href=f[1];o.target='_blank';o.textContent='Open';
+    li.append(a,e,d,o);return li;
+  }));
+  empty.hidden=list.length>0;
+}
+q.addEventListener('input',draw);
+document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;era=b.dataset.era;[...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed',String(x===b)));draw();});
+draw();
+</script>
+</body>
+</html>

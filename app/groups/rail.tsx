@@ -12,6 +12,7 @@ const icons = {
   members: <svg {...icon}><circle cx="6" cy="6" r="2.3" /><path d="M2 13c.4-2.2 2-3.4 4-3.4s3.6 1.2 4 3.4M10.5 4a2.2 2.2 0 0 1 0 4.2M12 9.9c1.1.5 1.8 1.5 2 3.1" /></svg>,
   groups: <svg {...icon}><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="9" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="2.5" y="9" width="4.5" height="4.5" rx="1" /><rect x="9" y="9" width="4.5" height="4.5" rx="1" /></svg>,
   assistants: <svg {...icon}><circle cx="5.5" cy="8" r="3" /><circle cx="10.5" cy="8" r="3" /></svg>,
+  archive: <svg {...icon}><path d="M4 2.5v11M4 4.5h5.5M4 8h8M4 11.5h4" /><circle cx="11.5" cy="4.5" r="1.3" /></svg>,
 };
 
 /** The left rail of the team product: which team, where in it, and the signed-in account. */
@@ -35,6 +36,7 @@ export function Rail({ groups, account }: { groups: { namespace: string; name: s
     <nav aria-label="You"><p className="lp-nav-label">You</p><ul>
       {item('/groups', 'Groups', icons.groups, path === '/groups')}
       {item('/groups/connections', 'Assistants', icons.assistants, path === '/groups/connections')}
+      {item('/groups/archive', 'How we got here', icons.archive, path === '/groups/archive')}
     </ul></nav>
     {account && <div className="lp-account">{account}</div>}
   </aside>;
