@@ -272,3 +272,18 @@ it('takes identity from the verified token on the team route, never from a heade
  expect(saved.result.structuredContent).toMatchObject({saved:true,record:{owner:{handle:'@cohort/ana',isYou:true},assistant:'claude'}});
  expect((await t.db.query('select author_id from emba_team_record')).rows).toEqual([{author_id:f.memberA.personId}]);
 });
+
+it('sends a person who opens the connector address in a browser to the setup page, and leaves assistants alone',async()=>{
+ const environment={LOOP_AUTH_ISSUER:'https://issuer.example',LOOP_AUTH_AUDIENCE:'https://loop.example/api/mcp',LOOP_AUTH_JWKS_URL:'https://issuer.example/jwks',LOOP_AUTH_CLIENT_IDS:'claude'};
+ const config=authConfig(environment),auth={config,verify:async()=>null};
+ const get=(headers:Record<string,string>)=>handleTeamMcpRequest(new Request('https://loop.example/api/mcp/team',{headers}),{auth});
+ const browser=await get({accept:'text/html,application/xhtml+xml,*/*;q=0.8'});
+ expect(browser.status).toBe(303);
+ expect(browser.headers.get('location')).toBe('https://loop.example/groups/connections');
+ expect(browser.headers.get('cache-control')).toBe('no-store');
+ // An assistant asking for a stream, or anything carrying a token, still gets the sign-in challenge.
+ const assistant=await get({accept:'text/event-stream'});
+ expect(assistant.status).toBe(401);
+ expect(assistant.headers.get('www-authenticate')).toContain('resource_metadata=');
+ expect((await get({accept:'text/html',authorization:'Bearer nope'})).status).toBe(401);
+});

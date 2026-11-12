@@ -1,0 +1,484 @@
+<!doctype html>
+<!-- Design mockup B "Ledger": static, clickable, illustrative data only. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loop · B Ledger</title>
+<style>
+@font-face{font-family:Season;src:url(/demo/loop-welcome-prototype/season.woff2) format("woff2");font-weight:450;font-display:swap}
+@font-face{font-family:Funnel;src:url(/demo/loop-welcome-prototype/funnel.woff2) format("woff2");font-weight:300 800;font-display:swap}
+:root{--paper:#f5f4ed;--ink:#151b26;--accent:#c1441a;--line:#cbc6bd;--soft:#e2ddd2;--muted:#5f5e5c;--white:#fffdf8;--serif:Season,Georgia,"Times New Roman",serif;--sans:Funnel,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+html{scroll-padding-top:120px}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);padding-top:32px}
+button,a,input,select{font:inherit;color:inherit}
+a{text-underline-offset:4px;text-decoration-thickness:1px}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+img{display:block}
+
+/* mockup strip: not part of the design */
+.mockstrip{position:fixed;top:0;left:0;right:0;height:32px;z-index:50;background:#2a2a2a;color:#e9e6dd;font:11px/32px ui-monospace,SFMono-Regular,Consolas,monospace;padding:0 16px;display:flex;gap:14px;white-space:nowrap;overflow:hidden}
+.mockstrip a{color:#e9e6dd}.mockstrip b{color:#fff}.mockstrip .bet{color:#b9b4a8;overflow:hidden;text-overflow:ellipsis}
+.mockstrip :focus-visible{outline:2px solid #ffb38f;outline-offset:2px}
+
+/* top bar */
+.bar{position:sticky;top:32px;z-index:20;background:var(--paper);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1328px;margin:auto;padding:14px 44px;display:flex;align-items:center;gap:28px}
+.brand{font:500 30px/1 var(--sans);letter-spacing:-1.6px}.brand span{color:var(--accent)}
+.switch{position:relative}
+.switch summary{list-style:none;cursor:pointer;font-size:14px;padding:6px 2px;border-bottom:1px solid transparent}
+.switch summary::-webkit-details-marker{display:none}
+.switch summary:hover{border-bottom-color:var(--line)}
+.switch summary .car{color:var(--muted);font-size:11px;margin-left:6px}
+.switch[open] summary{border-bottom-color:var(--ink)}
+.menu{position:absolute;top:calc(100% + 10px);left:0;width:300px;background:var(--white);border:1px solid var(--line);box-shadow:0 12px 30px -16px rgba(21,27,38,.35);padding:8px 0;margin:0;list-style:none;font-size:13px}
+.menu li{padding:9px 16px;display:flex;justify-content:space-between;gap:12px}
+.menu li+li{border-top:1px solid var(--soft)}
+.menu .h{color:var(--muted)}
+.menu .cur{font-weight:600}
+.dest{display:flex;gap:24px;margin-left:auto}
+.dest button{background:none;border:0;padding:6px 0;font-size:14px;color:var(--muted);border-bottom:2px solid transparent}
+.dest button:hover{color:var(--ink)}
+.dest button[aria-current=page]{color:var(--ink);border-bottom-color:var(--ink)}
+.me{width:32px;height:32px;border-radius:50%}
+
+/* page grid */
+.page{max-width:1328px;margin:auto;padding:0 44px 80px}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr) 220px;column-gap:48px}
+.lm{grid-column:1}.mc{grid-column:2;min-width:0}.rm{grid-column:3}
+.cap{font-variant:all-small-caps;letter-spacing:.07em;font-size:14px;color:var(--muted);font-weight:500}
+.serif{font-family:var(--serif);font-weight:450}
+
+/* brief */
+.brief{padding:48px 0 34px}
+.brief .lm .cap{display:block}
+.handle{font-size:13px;color:var(--muted);margin-top:4px}
+.stand{font:450 38px/1.16 var(--serif);letter-spacing:-.6px;margin:0 0 14px;max-width:780px}
+.due{font:450 22px/1.3 var(--serif);margin:0}
+.due b{font-weight:450;border-bottom:1px solid var(--ink)}
+.labels{font-size:13px;color:var(--muted);margin:18px 0 0}
+.labels code{font:12px ui-monospace,Consolas,monospace;color:var(--ink)}
+.team{list-style:none;margin:0;padding:0;font-size:13px}
+.team li{display:flex;align-items:center;gap:9px;padding:4px 0}
+.team img{width:24px;height:24px;border-radius:50%}
+.team .via{color:var(--muted);margin-left:auto;font-size:12px}
+.team .none{font-style:italic}
+.tnote{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.5}
+
+.announce{border-top:1px solid var(--ink);border-bottom:1px solid var(--line);padding:13px 0;align-items:center}
+.announce p{margin:0;font-size:17px}
+.announce .lm{font-size:13px;color:var(--muted)}
+.facts{padding:26px 0 8px}
+.facts p{margin:0;font:450 23px/1.45 var(--serif);max-width:820px}
+.facts a{font-family:var(--sans);font-weight:700;text-decoration:none;border-bottom:1.5px solid currentColor;padding:0 1px}
+.facts a:hover{color:var(--accent)}
+.facts a.warn{color:var(--accent)}
+
+/* filter */
+.ledhead{padding:44px 0 12px;align-items:end}
+.ledhead h2{font:450 30px/1.1 var(--serif);margin:0;letter-spacing:-.4px}
+.filters{display:flex;gap:22px;margin-top:14px;flex-wrap:wrap}
+.filters button{background:none;border:0;padding:2px 0;font-size:14px;color:var(--muted);border-bottom:1.5px solid transparent}
+.filters button:hover{color:var(--ink)}
+.filters button[aria-pressed=true]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.count{font-size:13px;color:var(--muted)}
+
+/* entries */
+.entry{position:relative;isolation:isolate;border-top:1px solid var(--line);padding:24px 0 28px}
+.entry::before{content:"";position:absolute;inset:0 -22px;background:#f1dccf;opacity:0;transition:opacity .9s ease;z-index:-1}
+.entry.hit::before{opacity:1;transition:opacity .2s ease}
+.entry[hidden]{display:none}
+.entry:focus{outline:none}
+.entry.flag{border-top:1.5px solid var(--accent)}
+.num{font:450 46px/.95 var(--serif);letter-spacing:-1.5px}
+.when{font-size:12px;color:var(--muted);margin-top:8px}
+.kind{display:block;margin-bottom:6px}
+.kind i{font-style:normal;color:var(--ink)}
+.stmt{font:450 23px/1.32 var(--serif);margin:0;max-width:720px}
+.ctitle{font-size:19px;font-weight:600;margin:0 0 8px;line-height:1.35}
+.cmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:14px;margin:0}
+.cmeta .own{display:flex;align-items:center;gap:7px}
+.cmeta img{width:22px;height:22px;border-radius:50%}
+.cmeta .sep{color:var(--line)}
+.status{color:var(--muted)}
+.late{color:var(--accent);font-variant:all-small-caps;letter-spacing:.07em;font-size:15px}
+.otitle{font-size:19px;font-weight:600;margin:0;line-height:1.35}
+.otitle a{text-decoration-color:var(--line)}
+.otitle a:hover{text-decoration-color:var(--ink)}
+.host{font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
+.osum{margin:4px 0 0;font-size:15px;color:#3b3f47}
+.olabel{margin:8px 0 0;font:12px ui-monospace,Consolas,monospace;color:var(--muted)}
+.flagtxt{margin:10px 0 0;font-size:14px;color:var(--accent)}
+.mnote{display:block;margin-top:14px;background:none;border:0;padding:0;text-align:left;color:var(--accent);font-size:13px;line-height:1.35}
+.mnote span{border-bottom:1px solid currentColor}
+.mnote:hover span{border-bottom-width:2px}
+.prov{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.35;padding-top:3px}
+.prov img{width:32px;height:32px;border-radius:50%;flex:none}
+.prov .who{font-weight:600}
+.prov .via{color:var(--muted);display:block}
+.prov .via b{font-weight:600;color:var(--ink)}
+.ledfoot{border-top:1px solid var(--ink);padding:14px 0;font-size:13px;color:var(--muted)}
+
+/* intent screen */
+.ihead{padding:48px 0 30px}
+.ihead h1{font:450 46px/1.08 var(--serif);letter-spacing:-1.2px;margin:0 0 12px}
+.ihead p{margin:0;font-size:17px;color:#3b3f47;max-width:640px}
+.sec{padding:46px 0 14px;align-items:end}
+.sec h2{font:450 30px/1.1 var(--serif);margin:0;letter-spacing:-.4px}
+.sec p{margin:8px 0 0;font-size:14px;color:var(--muted);max-width:620px}
+.quote{border-top:1px solid var(--line);padding:24px 0 26px}
+.quote blockquote{margin:0;font:450 31px/1.25 var(--serif);letter-spacing:-.4px;max-width:760px;text-indent:-.42em}
+.box{background:var(--white);border:1px solid var(--line);border-radius:6px}
+table.perm{width:100%;border-collapse:collapse;font-size:14px}
+.perm th{text-align:left;font-variant:all-small-caps;letter-spacing:.07em;font-weight:500;color:var(--muted);font-size:14px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.perm td{padding:16px 18px;border-bottom:1px solid var(--soft);vertical-align:top}
+.perm tr:last-child td{border-bottom:0}
+.perm .asst{font-weight:600}
+.perm .state{color:#305a42}
+.perm tr.off .state{color:var(--accent)}
+.perm tr.off td:not(:last-child):not(.statecell){color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.perm button{background:transparent;border:1px solid var(--line);border-radius:4px;padding:6px 14px;font-size:13px;min-width:84px}
+.perm button:hover{border-color:var(--ink)}
+.log{border-top:1px solid var(--line);padding:13px 0}
+.log p{margin:0;font-size:16px}
+.log .lm{font-size:13px;color:var(--muted)}
+.prompt{overflow:hidden}
+.prompt-top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.prompt-top .cap{font-size:14px}
+.copy{background:var(--ink);color:var(--paper);border:0;border-radius:4px;padding:7px 16px;font-size:13px;min-width:82px}
+.copy:hover{background:#2b3446}
+.copy.done{background:#305a42}
+.prompt pre{margin:0;padding:18px 20px 20px;font:14px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+.conn{font-size:13px;line-height:1.5}
+.conn div{padding:3px 0}
+.conn span{color:var(--muted)}
+
+[data-view][hidden]{display:none}
+
+@media(max-width:1180px){.row{grid-template-columns:110px minmax(0,1fr) 190px;column-gap:32px}.num{font-size:38px}.bar-in,.page{padding-left:28px;padding-right:28px}.stand{font-size:33px}}
+@media(max-width:760px){
+  html{scroll-padding-top:150px}
+  .mockstrip .bet{display:none}
+  .bar-in{flex-wrap:wrap;gap:8px 16px;padding:10px 16px}
+  .brand{font-size:26px}
+  .switch summary{font-size:13px}
+  .dest{order:3;width:100%;margin-left:0;gap:20px}
+  .me{margin-left:auto;width:28px;height:28px}
+  .menu{width:min(300px,calc(100vw - 32px))}
+  .page{padding:0 16px 60px}
+  .row{grid-template-columns:minmax(0,1fr);column-gap:0}
+  .lm,.mc,.rm{grid-column:1}
+  .mc{grid-row:1}
+  .lm{grid-row:2;margin-top:14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .rm{grid-row:3;margin-top:8px}
+  .lm .mnote{margin-top:0;flex-basis:100%}
+  .num{font-size:22px;letter-spacing:-.4px}
+  .when{margin-top:0}
+  .brief{padding:30px 0 22px}
+  .brief .lm{grid-row:1;margin:0 0 10px}.brief .mc{grid-row:2}.brief .rm{margin-top:20px}
+  .stand{font-size:28px}.due{font-size:19px}
+  .facts p{font-size:20px}
+  .announce .lm,.log .lm{margin-top:4px}
+  .ledhead,.sec{padding-top:34px}
+  .ledhead .lm,.sec .lm{grid-row:1;margin:0 0 6px}.ledhead .mc,.sec .mc{grid-row:2}
+  .stmt{font-size:21px}.quote blockquote{font-size:25px}
+  .ihead{padding:30px 0 20px}.ihead h1{font-size:36px}
+  .entry::before{inset:0 -10px}
+  .perm thead{display:none}
+  .perm tr{display:block;padding:12px 16px;border-bottom:1px solid var(--soft)}
+  .perm tr:last-child{border-bottom:0}
+  .perm td{display:block;padding:2px 0;border:0}
+  .perm td[data-l]::before{content:attr(data-l) " ";color:var(--muted);font-variant:all-small-caps;letter-spacing:.07em}
+  .perm td:last-child{padding-top:10px}
+}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style></head>
+<body>
+
+<div class="mockstrip" role="navigation" aria-label="Mockup directions">
+  <a href="mockups-layer-a.html">A · Workspace</a><span>|</span><b aria-current="page">B · Ledger</b><span>|</span><a href="mockups-layer-c.html">C · Seam</a>
+  <span class="bet">Bet: the team's record reads as one numbered ledger, like minutes; who saved what, and through which assistant, lives in the margin.</span>
+</div>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand" aria-label="Loop">loop<span>.</span></div>
+    <details class="switch">
+      <summary aria-label="Current team: EMBA Cohort 12, Team 4. Show your teams">EMBA Cohort 12 · Team 4<span class="car" aria-hidden="true">&#9662;</span></summary>
+      <ul class="menu">
+        <li class="h">Your teams</li>
+        <li class="cur"><span>EMBA Cohort 12 · Team 4</span><span>@team4</span></li>
+        <li><span>EMBA Cohort 12 · whole cohort</span><span class="h">@cohort12</span></li>
+        <li><span>Hanoi residency week</span><span class="h">@hanoi-wk</span></li>
+      </ul>
+    </details>
+    <nav class="dest" aria-label="Destinations">
+      <button type="button" data-go="record" aria-current="page">Record</button>
+      <button type="button" data-go="intent">Your intent layer</button>
+    </nav>
+    <img class="me" src="https://i.pravatar.cc/80?img=12" alt="Stephen Fang (you)" width="32" height="32">
+  </div>
+</header>
+
+<main class="page">
+
+<!-- ============ RECORD ============ -->
+<section data-view="record" aria-label="Team 4 record">
+
+  <div class="row brief">
+    <div class="lm"><span class="cap">Brief</span><div class="handle">@team4</div></div>
+    <div class="mc">
+      <p class="stand">Capstone: market-entry plan for a Vietnamese cold-chain startup.</p>
+      <p class="due">Due <b>Dec 5</b> · 25 days.</p>
+      <p class="labels">Labels in use: <code>@team4/final-deck</code> Final deck · <code>@team4/midpoint-review</code> Midpoint review, Nov 19</p>
+    </div>
+    <div class="rm">
+      <span class="cap">Five members</span>
+      <ul class="team" id="team"></ul>
+      <p class="tnote">Tomás hasn't connected an assistant, so his work reaches the team only when he files it by hand.</p>
+    </div>
+  </div>
+
+  <div class="row announce" role="note" aria-label="Current announcement">
+    <div class="lm">Nov 9</div>
+    <div class="mc"><span class="cap">Announcement</span> &nbsp;<p style="display:inline">Midpoint review moved to Nov 19, 6pm ET.</p></div>
+    <div class="rm" id="annprov"></div>
+  </div>
+
+  <div class="row facts">
+    <div class="lm"><span class="cap">As of Nov 10</span></div>
+    <div class="mc"><p>
+      <a href="#ledger" data-filter="decision">6</a> decisions stand.
+      <a href="#ledger" data-filter="claim">3</a> claims are open,
+      <a href="#e13" class="warn" data-filter="claim" data-focus="e13">1</a> past its date.
+      <a href="#e14" class="warn" data-filter="output" data-focus="e14">1</a> output conflicts with a decision.
+    </p></div>
+  </div>
+
+  <div class="row ledhead" id="ledger">
+    <div class="lm"><span class="count" id="count" aria-live="polite">14 entries</span></div>
+    <div class="mc">
+      <h2>The record</h2>
+      <div class="filters" role="group" aria-label="Filter the record">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="decision" aria-pressed="false">Decisions</button>
+        <button type="button" data-f="claim" aria-pressed="false">Claims</button>
+        <button type="button" data-f="output" aria-pressed="false">Outputs</button>
+      </div>
+    </div>
+    <div class="rm"><span class="cap">Saved by</span></div>
+  </div>
+
+  <div id="entries"></div>
+
+  <div class="row ledfoot">
+    <div class="lm">Oct 26</div>
+    <div class="mc">Record opened. Numbers are shared by every kind of entry, so announcements and labels account for the gaps.</div>
+  </div>
+</section>
+
+<!-- ============ INTENT LAYER ============ -->
+<section data-view="intent" hidden aria-label="Your intent layer">
+
+  <div class="row ihead">
+    <div class="lm"><span class="cap">Private to you</span></div>
+    <div class="mc">
+      <h1>Your intent layer</h1>
+      <p>What you chose to save about yourself. Your connected assistants read it with the permissions below; Team 4 does not see it.</p>
+    </div>
+  </div>
+
+  <div class="row sec">
+    <div class="lm"><span class="cap">Saved</span></div>
+    <div class="mc"><h2>Wants and preferences</h2></div>
+    <div class="rm"><span class="cap">Saved by</span></div>
+  </div>
+  <div id="intents"></div>
+
+  <div class="row sec">
+    <div class="lm"><span class="cap">Access</span></div>
+    <div class="mc"><h2>Who can read this</h2><p>Revoking stops future reads. It does not erase what an assistant has already read.</p></div>
+  </div>
+  <div class="row">
+    <div class="mc">
+      <div class="box">
+        <table class="perm">
+          <thead><tr><th scope="col">Assistant</th><th scope="col">Can read</th><th scope="col">Until</th><th scope="col">Status</th><th scope="col"><span class="sr" style="position:absolute;left:-9999px">Action</span></th></tr></thead>
+          <tbody>
+            <tr data-perm>
+              <td class="asst" data-l="Assistant">Claude</td>
+              <td data-l="Can read">Preferences + Team 4 record</td>
+              <td data-l="Until">Dec 5</td>
+              <td class="statecell" data-l="Status"><span class="state" role="status">Active · last read today 9:14</span></td>
+              <td><button type="button" aria-label="Revoke Claude's access">Revoke</button></td>
+            </tr>
+            <tr data-perm>
+              <td class="asst" data-l="Assistant">ChatGPT</td>
+              <td data-l="Can read">Wants only</td>
+              <td data-l="Until">Nov 30</td>
+              <td class="statecell" data-l="Status"><span class="state" role="status">Active · last read Nov 9</span></td>
+              <td><button type="button" aria-label="Revoke ChatGPT's access">Revoke</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row sec">
+    <div class="lm"><span class="cap">Reads</span></div>
+    <div class="mc"><h2>Read log</h2></div>
+  </div>
+  <div class="row log"><div class="lm">Today 9:14</div><div class="mc"><p>Claude read 2 preferences</p></div></div>
+  <div class="row log"><div class="lm">Nov 9</div><div class="mc"><p>ChatGPT read 1 want</p></div></div>
+  <div class="row log" style="border-bottom:1px solid var(--line)"><div class="lm">Nov 8</div><div class="mc"><p>Claude read Team 4 decisions</p></div></div>
+
+  <div class="row sec">
+    <div class="lm"><span class="cap">Connect</span></div>
+    <div class="mc"><h2>Connect an assistant</h2><p>Paste this into the assistant you want to connect. It will ask you to sign in, then read Team 4's record.</p></div>
+  </div>
+  <div class="row">
+    <div class="mc">
+      <div class="box prompt">
+        <div class="prompt-top"><span class="cap">Prompt</span><button type="button" class="copy" id="copy">Copy</button></div>
+<pre id="prompttext">Connect me to Loop so you can read my team's record and save what we decide.
+1. Add this remote MCP server: https://loop.example/mcp
+2. Sign in when it asks.
+3. Call team_state for @team4 and tell me what is open.
+4. From now on, check the team's decisions before you draft anything for it.</pre>
+      </div>
+    </div>
+    <div class="rm conn">
+      <span class="cap">Connected now</span>
+      <div>Claude <span>· since Oct 26</span></div>
+      <div>ChatGPT <span>· since Oct 29</span></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+const P={
+  sf:{n:'Stephen Fang',img:12,you:true,a:'Claude'},
+  pr:{n:'Priya Raman',img:47,a:'ChatGPT'},
+  mo:{n:'Marcus Oyelaran',img:59,a:'Claude'},
+  lh:{n:'Lena Hoffmann',img:44,a:'Cursor'},
+  ti:{n:'Tomás Ibarra',img:53,a:null}
+};
+const face=(k,s)=>`<img src="https://i.pravatar.cc/80?img=${P[k].img}" alt="" width="${s}" height="${s}" loading="lazy">`;
+const name=k=>P[k].n+(P[k].you?' (you)':'');
+const prov=(k,via,label)=>`<div class="prov">${face(k,32)}<div><span class="who">${label||name(k)}</span><span class="via">${via?'via <b>'+via+'</b>':'saved on the site'}</span></div></div>`;
+
+document.getElementById('team').innerHTML=Object.keys(P).map(k=>`<li>${face(k,24)}<span>${P[k].n.split(' ')[0]}${P[k].you?' (you)':''}</span><span class="via${P[k].a?'':' none'}">${P[k].a||'no assistant'}</span></li>`).join('');
+document.getElementById('annprov').innerHTML=prov('pr','ChatGPT');
+
+const E=[
+ {n:20,k:'output',d:'Nov 10',by:'lh',via:'Cursor',t:'Deck skeleton',h:'figma.com',s:'Slide order and placeholders.'},
+ {n:19,k:'output',d:'Nov 9',by:'ti',via:null,t:'Interview guide',h:'dropbox.com',s:'Questions for operators.'},
+ {n:18,k:'decision',d:'Nov 9',by:'pr',via:'ChatGPT',topic:'Presenter',s:'Priya opens, Marcus closes.'},
+ {n:17,k:'output',d:'Nov 8',by:'pr',via:'ChatGPT',t:'Competitor teardown',h:'notion.so',s:'Five incumbents, strengths and gaps.'},
+ {n:16,k:'claim',d:'Nov 8',by:'pr',via:'ChatGPT',t:'Draft slides 1–6',own:'lh',due:'Nov 17',st:'Proposed, waiting for its owner',lbl:'Proposed by'},
+ {n:15,k:'decision',d:'Nov 8',by:'sf',via:'Claude',topic:'Financial horizon',s:'Five-year model, monthly for year one.'},
+ {n:14,k:'output',d:'Nov 7',by:'sf',via:'Claude',t:'Pricing model sheet',h:'docs.google.com',s:'Unit economics by route.',flag:7},
+ {n:13,k:'claim',d:'Nov 6',by:'ti',via:null,t:'Interview two cold-chain operators',own:'ti',due:'Nov 8',st:'Open',late:true},
+ {n:12,k:'decision',d:'Nov 6',by:'lh',via:null,topic:'Partner',s:'Approach ABA Cooltrans before Lineage.'},
+ {n:11,k:'output',d:'Nov 4',by:'mo',via:'Claude',t:'Market sizing v2',h:'docs.google.com',s:'TAM/SAM for HCMC cold storage; bottom-up from pallet positions.',lab:'@team4/final-deck'},
+ {n:10,k:'claim',d:'Nov 3',by:'sf',via:'Claude',t:'Build the five-year financial model',own:'sf',due:'Nov 14',st:'Open',soon:'in 4 days'},
+ {n:9,k:'decision',d:'Nov 3',by:'mo',via:'Claude',topic:'Deck length',s:'15 slides, appendix unlimited.'},
+ {n:7,k:'decision',d:'Nov 1',by:'sf',via:'Claude',topic:'Pricing',s:'Per-pallet subscription, not per-kilometre.',conflictedBy:14},
+ {n:3,k:'decision',d:'Oct 28',by:'pr',via:'ChatGPT',topic:'Market',s:'Enter Ho Chi Minh City first; Hanoi in year two.'}
+];
+const KIND={decision:'Decision',claim:'Claim',output:'Output'};
+function body(e){
+  if(e.k==='decision')return `<span class="cap kind">Decision · <i>${e.topic}</i></span><p class="stmt">${e.s}</p>`;
+  if(e.k==='claim')return `<span class="cap kind">Claim</span><p class="ctitle">${e.t}</p>
+    <p class="cmeta"><span class="own">${face(e.own,22)}${name(e.own)}</span><span class="sep">/</span>
+    <span>Due ${e.due}${e.soon?' · '+e.soon:''}${e.late?' · <span class="late">date passed</span>':''}</span><span class="sep">/</span>
+    <span class="status">${e.st}</span></p>`;
+  return `<span class="cap kind">Output</span><p class="otitle"><a href="https://${e.h}" target="_blank" rel="noopener">${e.t}</a><span class="host">${e.h}</span></p>
+    <p class="osum">${e.s}</p>${e.lab?`<p class="olabel">${e.lab}</p>`:''}
+    ${e.flag?`<p class="flagtxt">Marked as conflicting with decision #${e.flag} (Pricing). The sheet still prices per kilometre.</p>`:''}`;
+}
+function margin(e){
+  let note='';
+  if(e.flag)note=`<button type="button" class="mnote" data-jump="e${e.flag}"><span>Conflicts with #${e.flag} Pricing</span> &uarr;</button>`;
+  if(e.conflictedBy)note=`<button type="button" class="mnote" data-jump="e${e.conflictedBy}"><span>#${e.conflictedBy} conflicts with this</span> &darr;</button>`;
+  return `<div class="num" aria-label="Record ${e.n}">#${e.n}</div><div class="when">${e.d}</div>${note}`;
+}
+document.getElementById('entries').innerHTML=E.map(e=>
+  `<article class="row entry${e.flag?' flag':''}" id="e${e.n}" data-kind="${e.k}" tabindex="-1" aria-label="#${e.n} ${KIND[e.k]}">
+    <div class="lm">${margin(e)}</div>
+    <div class="mc">${body(e)}</div>
+    <div class="rm">${e.lbl?`<span class="cap" style="display:block;margin-bottom:4px">${e.lbl}</span>`:''}${prov(e.by,e.via)}</div>
+  </article>`).join('');
+
+/* filter */
+let current='all';
+function setFilter(f){
+  current=f;
+  document.querySelectorAll('[data-f]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===f)));
+  let n=0;
+  document.querySelectorAll('.entry').forEach(el=>{const show=f==='all'||el.dataset.kind===f;el.hidden=!show;if(show)n++;});
+  document.getElementById('count').textContent=f==='all'?`${n} entries`:`${n} of ${E.length} entries`;
+}
+document.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.f)));
+
+function highlight(id){
+  const el=document.getElementById(id);
+  if(el.hidden)setFilter('all');
+  el.scrollIntoView({block:'center'});
+  el.focus({preventScroll:true});
+  el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('hit'),2400);
+}
+document.querySelectorAll('.facts a').forEach(a=>a.addEventListener('click',ev=>{
+  ev.preventDefault();setFilter(a.dataset.filter);
+  if(a.dataset.focus)highlight(a.dataset.focus);
+  else document.getElementById('ledger').scrollIntoView({block:'start'});
+}));
+document.getElementById('entries').addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-jump]');if(b)highlight(b.dataset.jump);
+});
+
+/* views */
+function go(v){
+  document.querySelectorAll('[data-view]').forEach(s=>s.hidden=s.dataset.view!==v);
+  document.querySelectorAll('[data-go]').forEach(b=>b.dataset.go===v?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+
+/* intents */
+const I=[
+ {q:'I like learning by doing, with a small group.',k:'Preference',d:'Nov 2',via:'Claude'},
+ {q:'I’d rather take the modelling work than the slides.',k:'Preference',d:'Oct 30',via:'Claude'},
+ {q:'Free for team work Tue and Thu evenings.',k:'Availability',d:'Nov 5',via:null},
+ {q:'I’m in for a Hanoi food walk if three others are.',k:'Want',d:'Nov 7',via:'ChatGPT'}
+];
+document.getElementById('intents').innerHTML=I.map(i=>
+  `<div class="row quote"><div class="lm"><span class="cap">${i.k}</span><div class="when">${i.d}</div></div>
+   <div class="mc"><blockquote>“${i.q}”</blockquote></div>
+   <div class="rm">${prov('sf',i.via,'You')}</div></div>`).join('')
+  +'<div style="border-top:1px solid var(--line)"></div>';
+
+/* permissions */
+document.querySelectorAll('[data-perm]').forEach(tr=>{
+  const btn=tr.querySelector('button'),st=tr.querySelector('.state'),orig=st.textContent,who=tr.querySelector('.asst').textContent;
+  btn.addEventListener('click',()=>{
+    const off=!tr.classList.contains('off');
+    tr.classList.toggle('off',off);
+    st.textContent=off?'Revoked today · future reads blocked':orig;
+    btn.textContent=off?'Restore':'Revoke';
+    btn.setAttribute('aria-label',(off?'Restore ':'Revoke ')+who+'’s access');
+  });
+});
+
+/* copy */
+const copyBtn=document.getElementById('copy');
+copyBtn.addEventListener('click',()=>{
+  const text=document.getElementById('prompttext').textContent;
+  const done=()=>{copyBtn.textContent='Copied';copyBtn.classList.add('done');clearTimeout(copyBtn._t);copyBtn._t=setTimeout(()=>{copyBtn.textContent='Copy';copyBtn.classList.remove('done')},2500);};
+  const fallback=()=>{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove();done();};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(done,fallback);else fallback();
+});
+</script>
+</body></html>

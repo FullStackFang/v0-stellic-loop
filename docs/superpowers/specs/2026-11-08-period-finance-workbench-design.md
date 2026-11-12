@@ -1,0 +1,7 @@
+# Period financial workbench specification
+
+The canonical design is [OpenSpec design](../../../openspec/changes/period-offline-finance-workbench/design.md).
+
+Read the [proposal](../../../openspec/changes/period-offline-finance-workbench/proposal.md), [DCF requirements](../../../openspec/changes/period-offline-finance-workbench/specs/dcf-valuation/spec.md), [calculator requirements](../../../openspec/changes/period-offline-finance-workbench/specs/calculator-parity/spec.md), [artifact requirements](../../../openspec/changes/period-offline-finance-workbench/specs/artifact-workspace/spec.md), [desktop requirements](../../../openspec/changes/period-offline-finance-workbench/specs/offline-desktop/spec.md), [sources](../../../openspec/changes/period-offline-finance-workbench/sources.md) and [implementation tasks](../../../openspec/changes/period-offline-finance-workbench/tasks.md).
+
+Status: draft for review, 2026-11-08. The scope is a complete offline BA II–style calculator plus FCFF DCF valuation, persistent interactive artifacts, Claude Code/Codex-connected chat, a financial-tool MCP bridge, and Windows-first Tauri packaging. Durable chat archives are not required. Read the [LLM Wiki review](../../../openspec/changes/period-offline-finance-workbench/llm-wiki-review.md) for the integration rationale. The prototype is a design reference, not the production implementation. No implementation or deployment is performed by this specification change.

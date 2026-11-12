@@ -134,6 +134,10 @@ export async function handleKnowledgeRequest(request: Request, options: Options 
 export async function handleMcpRequest(request: Request, options: Options = {}, create: (database: Db, principal: Principal) => McpServer = createMemoryMcpServer): Promise<Response> {
   let server: McpServer | undefined;
   try {
+    // A person who opens the connector address in a browser gets the setup page, not a JSON error.
+    // Assistants never ask for HTML without a token, so their sign-in challenge is unchanged.
+    if (request.method === 'GET' && !request.headers.has('authorization') && request.headers.get('accept')?.includes('text/html'))
+      return new Response(null, { status: 303, headers: { ...privateHeaders, Location: new URL('/groups/connections', request.url).href } });
     const auth = options.auth ?? configuredAuth();
     const database = options.database ?? db();
     const principal = await remotePrincipal(request, database, auth);
