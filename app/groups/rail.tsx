@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
+import { ROOT_SLUG, groupPath } from '@/lib/emba/group-path';
 
 const icon = { viewBox: '0 0 16 16', 'aria-hidden': true, fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 const icons = {
@@ -15,18 +16,20 @@ const icons = {
   archive: <svg {...icon}><path d="M4 2.5v11M4 4.5h5.5M4 8h8M4 11.5h4" /><circle cx="11.5" cy="4.5" r="1.3" /></svg>,
 };
 
+/** A group in the rail, in tree order: `depth` is how many groups it sits inside that the person can open. */
+export type RailGroup = { namespace: string; slug: string; name: string; handle: string; depth: number };
 /** The left rail of the team product: which team, where in it, and the signed-in account. */
-export function Rail({ groups, account }: { groups: { namespace: string; name: string }[]; account: ReactNode }) {
+export function Rail({ groups, account }: { groups: RailGroup[]; account: ReactNode }) {
   const path = usePathname();
-  const { namespace } = useParams<{ namespace?: string }>();
-  const current = groups.find(group => group.namespace === namespace);
+  const { namespace, slug = ROOT_SLUG } = useParams<{ namespace?: string; slug?: string }>();
+  const current = groups.find(group => group.namespace === namespace && group.slug === slug);
   const item = (href: string, label: string, glyph: ReactNode, on: boolean) => <li><Link href={href} aria-current={on ? 'page' : undefined}>{glyph}{label}</Link></li>;
-  const base = `/groups/${namespace}`;
+  const base = namespace ? groupPath(namespace, slug) : '';
   return <aside className="lp-rail">
     <Link href="/groups" className="lp-wordmark"><Rings /><span>Loop</span></Link>
     {groups.length > 0 && <details className="lp-switch" key={path}>
       <summary><span className="lp-switch-mark"><Rings /></span><span className="lp-switch-name">{current?.name ?? 'Choose a team'}</span></summary>
-      <ul>{groups.map(group => <li key={group.namespace}><Link href={`/groups/${group.namespace}/team`} aria-current={group.namespace === namespace ? 'true' : undefined}>{group.name}<span>@{group.namespace}</span></Link></li>)}</ul>
+      <ul className="lp-tree">{groups.map(group => <li key={group.handle}><Link href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'true' : undefined} style={group.depth ? { paddingLeft: 10 + group.depth * 14 } : undefined}>{group.name}<span>{group.handle}</span></Link></li>)}</ul>
     </details>}
     {namespace && <nav aria-label="Team"><p className="lp-nav-label">Team</p><ul>
       {item(`${base}/team`, 'Record', icons.record, path === `${base}/team`)}

@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { ZodError } from 'zod';
 import { db } from '@/lib/db';
 import { EmbaError } from '@/lib/emba/errors';
+import { groupPath } from '@/lib/emba/group-path';
 import { canAccessLoop } from '@/lib/emba/access';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
@@ -46,7 +47,7 @@ export default async function SharedAskPage({ params }: { params: Promise<{ toke
   if (!share) notFound();
   const { outside } = share;
   if (share.view === 'member') {
-    const { scope, detail, namespace } = share, ask = detail.ask;
+    const { scope, detail, namespace, groupSlug } = share, ask = detail.ask;
     const canPost = await db().tx(q => canAccessLoop(q, principal, scope.orgId, scope.loopId, 'post'));
     const left = ask.expected - ask.answered, reminder = askReminder(ask), message = askShareMessage(ask);
     return <div className="lp"><main className="lp-main lt-share"><div className="lp-wrap">
@@ -74,7 +75,7 @@ export default async function SharedAskPage({ params }: { params: Promise<{ toke
       </section>}
       <section className="lt-editor"><h2>Share this ask</h2><p style={{ whiteSpace: 'pre-line' }}>{message}</p><div className="lp-acts"><a className="lp-btn" href={whatsapp(message)} target="_blank" rel="noopener noreferrer">Send to WhatsApp</a><CopyLink url={ask.shareUrl} /></div></section>
       {ask.canClose && <section className="lt-editor"><ActionForm action={closeTeamAsk} label="Close this ask now"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="loopId" value={scope.loopId} /><input type="hidden" name="number" value={ask.number} /><p>No more answers will be taken. It cannot be reopened.</p></ActionForm></section>}
-      <p><Link href={`/groups/${namespace}/team?tab=asks`}>Open the team page</Link></p>
+      <p><Link href={`${groupPath(namespace, groupSlug)}/team?tab=asks`}>Open the team page</Link></p>
     </div></main></div>;
   }
   const { join, signedIn } = share;

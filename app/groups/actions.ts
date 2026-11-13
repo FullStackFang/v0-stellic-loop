@@ -1,10 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
-import { createWorkspace } from '@/lib/emba/workspaces';
 import { setMemberHandle } from '@/lib/emba/tags';
 import { acceptInvitation, acceptInvitationById, declineInvitation, issueInvitation, revokeInvitation } from '@/lib/emba/invitations';
 import type { PortalResult } from '@/components/emba/portal-types';
@@ -24,15 +22,6 @@ async function mutate(run: (principal: NonNullable<Awaited<ReturnType<typeof get
 export async function saveTagHandle(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   const handle = value(data, 'handle').trim().toLowerCase().replace(/^@/, '');
   return mutate(principal => setMemberHandle(db(), principal, { orgId: value(data, 'orgId'), handle: handle || null }));
-}
-export async function createGroup(_previous: PortalResult, data: FormData): Promise<PortalResult> {
-  let namespace: string | null = null;
-  const result = await mutate(async principal => {
-    const group = await createWorkspace(db(), principal, { name: value(data, 'name'), description: value(data, 'description'), namespace: value(data, 'namespace') });
-    namespace = group.namespace;
-  });
-  if (namespace) redirect(`/groups/${namespace}`);
-  return result;
 }
 export async function inviteMember(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(async principal => {

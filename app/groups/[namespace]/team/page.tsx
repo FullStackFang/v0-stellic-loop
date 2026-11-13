@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { db } from '@/lib/db';
+import { groupHandle, groupPath, placeGroup, type GroupRoute } from '@/lib/emba/group-path';
+import { Crumbs, Inside } from '@/app/groups/group-nav';
 import { dayNum, mon } from '@/lib/days';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
-import { listPortalGroups } from '@/lib/emba/groups';
+import { listGroupTree } from '@/lib/emba/group-tree';
 import { canAccessLoop } from '@/lib/emba/access';
 import { listTeamEvents } from '@/lib/emba/team-events';
 import { upcomingEvents } from '@/lib/emba/team-interest';
@@ -21,8 +23,8 @@ import { Alert, Via } from '../../glyphs';
 
 export const dynamic = 'force-dynamic';
 type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
-async function load(principal: Signed, namespace: string) {
-  const group = (await listPortalGroups(db(), principal)).find(item => item.namespace === namespace && item.slug === 'workspace');
+async function load(principal: Signed, route: GroupRoute) {
+  const group = placeGroup(await listGroupTree(db(), principal), route);
   if (!group) return null;
   const scope = { orgId: group.orgId, loopId: group.loopId };
   const [state, brief, events, mine] = await Promise.all([teamState(db(), principal, scope), teamBrief(db(), principal, scope), listTeamEvents(db(), principal, scope), myRecentRecords(db(), principal, scope)]);
@@ -50,17 +52,17 @@ function Person({ person, clientId }: { person: PersonView; clientId: string | n
   return <div className="lp-who"><span className="lp-face" aria-hidden="true">{name.replace(/^an? /, '').split('/').pop()!.slice(0, 1).toUpperCase()}</span><div><span className="lp-name">{name === 'you' ? 'You' : name}</span>{clientId !== undefined && <Via clientId={clientId} />}</div></div>;
 }
 
-export default async function TeamPage({ params, searchParams }: { params: Promise<{ namespace: string }>; searchParams?: Promise<{ tab?: string | string[] }> }) {
+export default async function TeamPage({ params, searchParams }: { params: Promise<GroupRoute>; searchParams?: Promise<{ tab?: string | string[] }> }) {
   const principal = await getPortalPrincipal();
-  if (!principal) return <section className="lt-editor"><h1>Group unavailable</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`/groups/${(await params).namespace}/team`)}`}>Sign in</Link></section>;
-  const { namespace } = await params;
-  const data = await load(principal, namespace).catch(() => null);
+  if (!principal) return <section className="lt-editor"><h1>Group unavailable</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`${groupPath((await params).namespace, (await params).slug)}/team`)}`}>Sign in</Link></section>;
+  const route = await params, base = groupPath(route.namespace, route.slug);
+  const data = await load(principal, route).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
   const { group, scope, state, brief, events, mine, history, upcoming, canPost, archived, asks } = data;
   const manager = history !== null;
   const requested = (await searchParams)?.tab;
   const tab: Tab = TABS.find(([key]) => key === requested)?.[0] ?? 'decisions';
-  const href = (to: Tab, record?: number) => `/groups/${namespace}/team?tab=${to}${record ? `#r${record}` : ''}`;
+  const href = (to: Tab, record?: number) => `${base}/team?tab=${to}${record ? `#r${record}` : ''}`;
 
   const Act = ({ record, action, label }: { record: RecordView; action: string; label: string }) => <ActionForm action={amendTeamRecord} label={label}>
     <input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="loopId" value={scope.loopId} /><input type="hidden" name="number" value={record.number} /><input type="hidden" name="action" value={action} />
@@ -100,13 +102,15 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   const scopeFields = <><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="loopId" value={scope.loopId} /></>;
 
   return <>
-    <p className="lp-crumbs"><Link href="/groups">Groups</Link><span aria-hidden="true">›</span><Link href={`/groups/${namespace}`}>{group.handle}</Link><span aria-hidden="true">›</span><b>Team</b><span className="lp-today">Today is {state.today} ({state.timezone})</span></p>
+    <Crumbs trail={group.trail}><span className="lp-today">Today is {state.today} ({state.timezone})</span></Crumbs>
 
     <header className="lp-plate">
       <Rings className="lp-mark" inline />
-      <div><p className="lp-handle">@{group.namespace}</p><h1>{group.orgName}</h1><p>{purpose ?? 'No brief has been written yet.'}</p></div>
+      <div><p className="lp-handle">{groupHandle(group)}</p><h1>{group.orgName}</h1><p>{purpose ?? 'No brief has been written yet.'}</p></div>
       {deadline && daysLeft !== null && <div className="lp-dateblock"><time dateTime={deadline}><span>{mon(deadline)}</span><b>{dayNum(deadline)}</b><span>{deadline.slice(0, 4)}</span></time><div><span>Deadline</span><b>{daysLeft > 0 ? `${plural(daysLeft, 'day')} left` : daysLeft === 0 ? 'Due today' : `${plural(-daysLeft, 'day')} past`}</b></div></div>}
     </header>
+
+    <Inside group={group} />
 
     <nav className="lp-facts" aria-label="Where the team stands">
       <Link href={href('decisions')} scroll={false}><b>{plural(counts.decisions, 'decision')}</b><span>{latest ? `Latest ${shortDay(latest.createdAt)} · ${latest.topic}` : 'None recorded yet'}</span></Link>

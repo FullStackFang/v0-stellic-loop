@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Start a group · two directions</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+:root{
+  --canvas:oklch(96.2% 0.004 230);--surface:oklch(99.3% 0.003 230);--sunk:oklch(97.7% 0.006 240);
+  --line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252);--ink-2:oklch(35.4% 0.095 252 / .85);--muted:oklch(46.5% 0.012 245);
+  --blue:oklch(47.6% 0.13 250);--lime:oklch(96.4% 0.19 117);--teal:oklch(37.3% 0.052 206);--aqua:oklch(90.4% 0.1 194);
+  --plum:oklch(42.6% 0.13 322);--pale-blue:oklch(95.3% 0.017 245);--pale-plum:oklch(94.4% 0.011 320);
+  --on-dark:oklch(99.4% 0.003 230);--on-dark-78:oklch(99.4% 0.003 230 / .78);--on-dark-66:oklch(99.4% 0.003 230 / .66);
+  --r-lg:24px 24px 24px 6px;--r-md:16px 16px 16px 4px;--pill:56px;--ease:cubic-bezier(.22,1,.36,1);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--ring-bg:var(--canvas);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--navy);font:14px/1.45 Archivo,system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+h1,h2,h3,p,ul{margin:0;padding:0}ul{list-style:none}
+h1,h2,h3{font-weight:480;letter-spacing:-.035em}
+button,input,textarea{font:inherit;letter-spacing:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.mono{font-family:var(--mono);letter-spacing:0;font-size:12.5px}
+.muted{color:var(--muted)}
+
+/* chrome around the mockup: not part of the design */
+.bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 20px;background:var(--navy);color:var(--on-dark-78)}
+.bar b{color:var(--on-dark);font-weight:520}
+.pick{display:flex;gap:4px;margin-left:auto}
+.pick button{height:32px;padding:0 14px;border:0;border-radius:var(--pill);background:oklch(99.4% 0.003 230 / .1);color:var(--on-dark-78)}
+.pick button[aria-pressed=true]{background:var(--aqua);color:var(--navy);font-weight:550}
+.why{max-width:1180px;margin:18px auto 0;padding:0 32px;color:var(--muted);font-size:13.5px;max-width:1180px}
+.why b{color:var(--navy);font-weight:550}
+.dir{display:none}.dir.on{display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 32px 80px}
+
+.pill{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border:0;border-radius:var(--pill);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--navy);transition:background-color .15s var(--ease)}
+.pill:hover{background:var(--pale-blue)}
+.go{height:50px;padding:0 26px;font-size:16px;font-weight:600;background:var(--lime);box-shadow:none}
+.go:hover{background:oklch(90% 0.2 120)}
+.go:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+.x{width:24px;height:24px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center;flex:none}
+.x:hover{background:var(--pale-plum);color:var(--plum)}
+.x svg{width:10px;height:10px}
+.tile{width:32px;height:32px;border-radius:10px 10px 10px 3px;background:var(--pale-blue);color:var(--blue);display:grid;place-items:center;flex:none}
+.tile svg{width:16px;height:16px}
+.item{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);min-width:0}
+.item:first-child{border-top:0}
+.item div{min-width:0;flex:1}
+.item b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .tile{display:grid}
+.item div span{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item,.chip,.pv-row{transition:opacity .35s var(--ease),transform .35s var(--ease)}
+@starting-style{.item,.chip,.pv-row{opacity:0;transform:translateY(8px)}}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 12px;border-radius:var(--pill);background:var(--pale-blue);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* ---------- A: the group builds beside the form ---------- */
+.a-grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:40px;align-items:start}
+.a-name{display:block;width:100%;border:0;border-bottom:2px solid var(--line-2);background:transparent;padding:6px 0 10px;font-size:clamp(30px,4vw,46px);font-weight:500;letter-spacing:-.05em;line-height:1;color:var(--navy);border-radius:0}
+.a-name::placeholder{color:var(--line-2)}
+.a-name:focus{outline:0;border-bottom-color:var(--blue)}
+.a-handle{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--muted);flex-wrap:wrap}
+.a-handle input{border:0;background:transparent;padding:2px 4px;border-radius:6px;width:22ch;color:var(--navy)}
+.a-handle input:hover,.a-handle input:focus{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);outline:0}
+.free{display:inline-flex;align-items:center;gap:6px;font-size:12.5px}
+.free::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.free.taken{color:var(--plum)}.free.taken::before{background:var(--plum)}
+.sec{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px 28px;padding:26px 0;border-top:1px solid var(--line)}
+.sec:first-of-type{border-top:0;margin-top:18px}
+.sec > header h2{font-size:16px}
+.sec > header p{color:var(--muted);font-size:12.5px;margin-top:3px}
+.field{display:block;width:100%;padding:11px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);resize:vertical}
+.field:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px oklch(47.6% 0.13 250 / .14)}
+.src{padding:14px 0;border-top:1px solid var(--line)}
+.src:first-child{padding-top:0;border-top:0}
+.src h3{font-size:14px;font-weight:550;display:flex;align-items:baseline;gap:8px}
+.src h3 small{font-weight:400;color:var(--muted);font-size:12.5px}
+.drop{margin-top:8px;display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px dashed var(--line-2);border-radius:var(--r-md);background:var(--surface);color:var(--muted);cursor:pointer;transition:border-color .15s,background-color .15s}
+.drop:hover,.drop.over{border-color:var(--blue);background:var(--pale-blue);color:var(--navy)}
+.drop input{position:absolute;opacity:0;pointer-events:none}
+.row{display:flex;gap:8px;margin-top:8px}
+.row .field{flex:1;min-width:0}
+.list{margin-top:8px}
+.drive{margin-top:8px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
+.drive > button{display:flex;width:100%;align-items:center;gap:12px;padding:12px 14px;border:0;background:transparent;text-align:left}
+.drive > button:hover{background:var(--sunk)}
+.folders{border-top:1px solid var(--line);display:none}
+.drive.open .folders{display:block}
+.folders button{display:flex;width:100%;align-items:center;gap:10px;padding:9px 14px 9px 22px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left}
+.folders button:first-of-type{border-top:0}
+.folders button:hover{background:var(--pale-blue)}
+.folders p{padding:10px 14px;font-size:12.5px;color:var(--muted);background:var(--sunk)}
+.only{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.only svg{width:14px;height:14px;margin-top:2px;color:var(--blue)}
+.seg{display:inline-flex;padding:3px;border-radius:var(--pill);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);margin-top:10px}
+.seg button{height:32px;padding:0 14px;border:0;border-radius:var(--pill);background:transparent;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--blue);color:var(--on-dark);font-weight:550}
+.foot{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-top:26px;border-top:1px solid var(--line)}
+
+.pv{position:sticky;top:76px}
+.pv-cap{font-size:12.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.pv-cap::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 1px var(--teal)}
+.plate{--ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg);padding:22px;view-transition-name:plate}
+.plate svg.mark{width:56px;height:56px;color:var(--aqua);display:block}
+.plate .mono{color:var(--aqua);margin-top:16px;display:block;overflow-wrap:anywhere}
+.plate h3{font-size:30px;line-height:.98;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin-top:6px;overflow-wrap:anywhere}
+.plate h3.empty{color:oklch(90.4% 0.1 194 / .4)}
+.plate p{margin-top:10px;font-size:13.5px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.facts div{padding:10px 12px;border-left:1px solid var(--line)}
+.facts div:first-child{border-left:0}
+.facts b{display:block;font-size:20px;font-weight:520;letter-spacing:-.04em;transition:color .3s}
+.facts div.zero b{color:var(--line-2)}
+.facts span{font-size:12px;color:var(--muted)}
+.pv-box{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:4px 14px}
+.pv-box:empty{display:none}
+.pv-row{display:flex;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);min-width:0}
+.pv-row:first-child{border-top:0}
+.pv-row span{color:var(--muted);font-size:12.5px;flex:none;width:86px}
+.pv-row b{font-weight:500;min-width:0;overflow-wrap:anywhere}
+.pv-ask{margin-top:10px;padding:12px 14px;border-radius:var(--r-md);background:var(--pale-blue);font-size:13px}
+.pv-ask b{font-weight:550}
+.done{display:none}
+.made .a-grid,.made .b-body{display:none}
+.made .done{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:start}
+.done .plate{padding:clamp(24px,3.4vw,40px);border-radius:32px 32px 32px 8px}
+.done .plate svg.mark{width:88px;height:88px}
+.done .plate h3{font-size:clamp(36px,4.4vw,56px)}
+.next li{display:flex;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.next li:first-child{border-top:0}
+.next i{font-style:normal;width:26px;height:26px;border-radius:50%;background:var(--navy);color:var(--on-dark);display:grid;place-items:center;font-size:12.5px;flex:none}
+.next li:first-child i{background:var(--lime);color:var(--navy);font-weight:600}
+.next b{font-weight:550;display:block}
+.next p{color:var(--muted);font-size:13px;margin-top:2px}
+.next .row{max-width:420px}
+
+/* ---------- B: one box ---------- */
+.b-plate{--ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:clamp(22px,3vw,36px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;view-transition-name:plate}
+.b-plate .kick{display:flex;align-items:center;gap:8px;color:var(--aqua);font-size:13.5px}
+.b-plate .kick::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--lime)}
+.b-plate input.nm{display:block;width:100%;margin-top:10px;border:0;border-bottom:2px solid oklch(99.4% 0.003 230 / .25);background:transparent;padding:4px 0 10px;font-size:clamp(34px,5vw,60px);font-weight:520;letter-spacing:-.055em;line-height:.95;color:var(--aqua);border-radius:0}
+.b-plate input.nm::placeholder{color:oklch(90.4% 0.1 194 / .35)}
+.b-plate input.nm:focus{outline:0;border-bottom-color:var(--lime)}
+.b-plate .mono{color:var(--on-dark-66);margin-top:10px;display:block}
+.b-plate svg.mark{width:96px;height:96px;color:var(--aqua)}
+.box{margin-top:14px;background:var(--surface);border:1.5px dashed var(--line-2);border-radius:var(--r-lg);padding:18px 20px;transition:border-color .15s,background-color .15s}
+.box.over{border-color:var(--blue);background:var(--pale-blue)}
+.box textarea{display:block;width:100%;min-height:74px;border:0;background:transparent;resize:none;font-size:17px;letter-spacing:-.03em;line-height:1.4}
+.box textarea:focus{outline:0}
+.box textarea::placeholder{color:var(--muted)}
+.box-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12.5px}
+.box-foot .sp{margin-left:auto}
+.lanes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.lane{padding:16px 18px 18px;border-left:1px solid var(--line);min-height:190px;min-width:0}
+.lane:first-child{border-left:0}
+.lane h3{font-size:14px;font-weight:550;display:flex;align-items:baseline;gap:8px}
+.lane h3 em{font-style:normal;margin-left:auto;font-size:20px;font-weight:520;letter-spacing:-.04em}
+.lane.zero h3 em{color:var(--line-2)}
+.lane > p{color:var(--muted);font-size:12.5px;margin-top:2px}
+.lane .list{margin-top:10px}
+.say{margin-top:14px;display:none;background:var(--pale-blue);border-radius:var(--r-md);padding:14px 18px}
+.say.on{display:block}
+.say h3{font-size:13px;color:var(--muted);font-weight:400}
+.say p{margin-top:4px;font-size:16px;letter-spacing:-.03em}
+.b-foot{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:20px}
+/* B's header is one compact row: mark, name, and a line with the handle and where it lives. */
+.b-plate{display:flex;align-items:center;gap:16px;padding:14px 20px;border-radius:var(--r-lg)}
+.b-plate > div{flex:1;min-width:0}
+.b-mark{width:48px;height:48px;border-radius:14px 14px 14px 4px;background:oklch(99.4% 0.003 230 / .08);display:grid;place-items:center;flex:none}
+.b-plate .b-mark svg.mark{width:30px;height:30px}
+.b-plate input.nm{margin-top:0;padding:0 0 5px;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.045em;line-height:1.1;border-bottom-width:1.5px}
+.b-sub{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin-top:7px;font-size:12.5px}
+.b-plate .b-sub .mono{margin-top:0;display:inline;color:var(--aqua)}
+.b-where{position:relative}
+.b-where > summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--on-dark-78);padding:2px 6px;margin:-2px -6px;border-radius:8px}
+.b-where > summary::-webkit-details-marker{display:none}
+.b-where > summary:hover{background:oklch(99.4% 0.003 230 / .1)}
+.b-where > summary b{font-weight:550;color:var(--on-dark)}
+.b-where > summary u{text-decoration:underline;text-underline-offset:3px;color:var(--aqua)}
+.b-where .tree{position:absolute;top:calc(100% + 8px);left:-6px;z-index:5;width:min(440px,calc(100vw - 64px));background:var(--surface);color:var(--navy);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 14px 32px -14px oklch(35.4% 0.095 252 / .28),0 2px 6px oklch(35.4% 0.095 252 / .08)}
+.b-where .tree p{padding:8px 10px 6px;font-size:12.5px;color:var(--muted)}
+
+/* B: where it lives is one field; behind it, a column per level. */
+.b-plate{position:relative}
+.field2{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px 0 6px;border:0;border-radius:var(--pill);background:oklch(99.4% 0.003 230 / .1);box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .26);color:var(--on-dark-78);max-width:100%}
+.field2:hover,.field2[aria-expanded=true]{background:oklch(99.4% 0.003 230 / .18)}
+.field2[aria-expanded=true]{box-shadow:inset 0 0 0 1.5px var(--aqua)}
+.field2 .lab{height:22px;padding:0 9px;border-radius:var(--pill);background:var(--aqua);color:var(--navy);font-weight:550;font-size:12px;display:grid;place-items:center}
+.field2 b{color:var(--on-dark);font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{width:10px;height:10px;flex:none}
+.pop{position:absolute;top:calc(100% + 8px);left:20px;right:20px;z-index:5;background:var(--surface);color:var(--navy);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;box-shadow:0 14px 32px -14px oklch(35.4% 0.095 252 / .28),0 2px 6px oklch(35.4% 0.095 252 / .08);transition:opacity .2s var(--ease),transform .2s var(--ease)}
+@starting-style{.pop{opacity:0;transform:translateY(-6px)}}
+.pop[hidden]{display:none}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:236px}
+.col{padding:6px;border-left:1px solid var(--line);min-width:0}
+.col:first-child{border-left:0}
+.col h3{font-size:12.5px;font-weight:400;color:var(--muted);padding:6px 10px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col .empty{padding:10px;color:var(--muted);font-size:12.5px}
+.opt{display:flex;width:100%;align-items:center;gap:10px;padding:7px 10px;border:0;border-radius:10px;background:transparent;text-align:left}
+.opt:hover{background:var(--pale-blue)}
+.opt > div{min-width:0;flex:1}
+.opt b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opt small{display:block;color:var(--muted);font-size:12px}
+.opt .chev{color:var(--muted)}
+.opt .g{--ring-bg:var(--teal);width:28px;height:28px;border-radius:9px 9px 9px 3px;background:var(--teal);display:grid;place-items:center;flex:none}
+.opt .g svg{width:16px;height:16px;color:var(--aqua)}
+.opt .g.top{background:var(--pale-blue)}
+.opt .g.top svg{color:var(--blue);width:14px;height:14px}
+.opt.via{background:var(--pale-blue)}
+.opt.on{background:var(--blue);color:var(--on-dark)}
+.opt.on small{color:var(--on-dark-78)}
+.opt.on .chev{color:var(--on-dark)}
+.opt.on .g{background:oklch(99.4% 0.003 230 / .16)}
+.c-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:var(--sunk);font-size:12.5px;color:var(--muted)}
+.c-foot b{color:var(--navy);font-weight:550}
+.c-foot button{margin-left:auto;height:32px;padding:0 16px;border:0;border-radius:var(--pill);background:var(--blue);color:var(--on-dark);font-weight:550}
+.c-foot button:disabled{opacity:.5;cursor:default}
+
+/* ---------- where a group lives ---------- */
+.where{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
+.where > summary{list-style:none;display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer}
+.where > summary::-webkit-details-marker{display:none}
+.where > summary:hover{background:var(--sunk)}
+.where > summary u{margin-left:auto;color:var(--blue);text-decoration:none;font-size:13px}
+.path{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+.path b{font-weight:550}
+.path i{font-style:normal;color:var(--line-2)}
+.tree{border-top:1px solid var(--line);padding:6px}
+.tree button{display:flex;width:100%;align-items:center;gap:10px;height:36px;padding:0 10px;border:0;border-radius:10px;background:transparent;text-align:left}
+.tree button:hover{background:var(--pale-blue)}
+.tree button[aria-pressed=true]{background:var(--blue);color:var(--on-dark)}
+.tree button[aria-pressed=true] .mono{color:var(--on-dark-78)}
+.tree button .mono,.b-plate .tree button .mono{margin-left:auto;color:var(--muted);flex:none;max-width:48%;display:block;margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b-plate .tree button[aria-pressed=true] .mono{color:var(--on-dark-78)}
+.tree button span:nth-child(2){min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tree .dot{width:8px;height:8px;border-radius:3px 3px 3px 1px;background:currentColor;opacity:.5;flex:none}
+.pv-path{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--on-dark-66);margin-top:14px}
+.pv-path:empty{display:none}
+.pv-path + .mono{margin-top:4px}
+
+/* ---------- C: finding your way ---------- */
+.c-shell{display:grid;grid-template-columns:264px minmax(0,1fr);background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;min-height:640px}
+.c-rail{--ring-bg:var(--navy);background:var(--navy);color:var(--on-dark-78);padding:18px 10px}
+.c-word{display:flex;align-items:center;gap:9px;padding:2px 10px 16px;font-weight:500;font-size:18px;letter-spacing:-.035em;color:var(--on-dark)}
+.c-word svg{width:22px;height:22px;color:var(--aqua)}
+.c-rail p{padding:10px 10px 4px;font-size:12.5px;color:var(--on-dark-66)}
+.c-rail button{display:flex;width:100%;align-items:center;gap:8px;height:34px;border:0;border-radius:10px;background:transparent;color:var(--on-dark-78);text-align:left;padding-right:10px}
+.c-rail button:hover{background:oklch(99.4% 0.003 230 / .08)}
+.c-rail button[aria-current=true]{background:oklch(99.4% 0.003 230 / .14);color:var(--on-dark);font-weight:550}
+.c-rail button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-rail button em{font-style:normal;margin-left:auto;font-size:12px;color:var(--on-dark-66)}
+.c-rail button.new span::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lime);margin-left:8px}
+.c-rail .tw{width:14px;height:14px;display:grid;place-items:center;flex:none;transition:transform .2s var(--ease)}
+.c-rail .tw.open{transform:rotate(90deg)}
+.c-rail .tw svg{width:8px;height:8px}
+.c-main{padding:18px 28px 32px;min-width:0}
+.crumbs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:13.5px}
+.crumbs button{border:0;background:transparent;padding:2px 4px;border-radius:6px;color:var(--blue)}
+.crumbs button:hover{background:var(--pale-blue)}
+.crumbs b{color:var(--navy);font-weight:550;padding:2px 4px}
+.c-main .plate{margin-top:12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:center}
+.c-main .plate{padding:16px 20px}.c-main .plate svg.mark{width:48px;height:48px}.c-main .plate h3{font-size:24px;margin-top:2px}.c-main .plate p{margin-top:4px}
+.c-main .plate .mono{margin-top:0}
+.c-head{display:flex;align-items:baseline;gap:10px;margin:26px 0 8px}
+.c-head h2{font-size:17px}
+.c-head span{color:var(--muted)}
+.c-head .pill{margin-left:auto;height:34px}
+.kids{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.kids button{display:flex;width:100%;align-items:center;gap:14px;padding:13px 16px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left;transition:background-color .15s var(--ease)}
+.kids li:first-child button{border-top:0}
+.kids button:hover{background:var(--sunk)}
+.kids .gt{--ring-bg:var(--teal);width:36px;height:36px;border-radius:11px 11px 11px 3px;background:var(--teal);display:grid;place-items:center;flex:none}
+.kids .gt svg{width:20px;height:20px;color:var(--aqua)}
+.kids div{min-width:0;flex:1}
+.kids b{display:block;font-weight:550}
+.kids .meta{color:var(--muted);font-size:12.5px;text-align:right;flex:none}
+.kids .arrow{width:12px;height:12px;color:var(--muted)}
+.c-none{padding:18px 16px;color:var(--muted);background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--r-md)}
+.rule{margin-top:14px;display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--muted);max-width:70ch}
+.rule svg{width:14px;height:14px;margin-top:2px;color:var(--blue)}
+::view-transition-group(plate){animation-duration:.55s;animation-timing-function:cubic-bezier(.22,1,.36,1)}
+@media (prefers-reduced-motion:reduce){*,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){transition:none!important;animation:none!important}}
+@media (max-width:920px){
+  .wrap,.why{padding-left:16px;padding-right:16px}
+  .a-grid,.made .done{grid-template-columns:minmax(0,1fr);gap:24px}
+  .pv{position:static}
+  .sec{grid-template-columns:minmax(0,1fr)}
+  .lanes{grid-template-columns:1fr 1fr}.lane:nth-child(3){border-left:0}.lane:nth-child(n+3){border-top:1px solid var(--line)}
+  .b-plate{grid-template-columns:minmax(0,1fr)}.b-plate svg.mark{display:none}
+  .cols{grid-template-columns:minmax(0,1fr)}.col{border-left:0;border-top:1px solid var(--line)}.col:first-child{border-top:0}.pop{left:8px;right:8px}
+  .c-shell{grid-template-columns:minmax(0,1fr)}.c-main{padding:16px}.kids .meta{display:none}
+}
+@media (max-width:520px){.lanes{grid-template-columns:1fr}.lane{border-left:0;border-top:1px solid var(--line);min-height:0}.lane:first-child{border-top:0}.facts{grid-template-columns:1fr 1fr}.facts div:nth-child(3){border-left:0}.facts div:nth-child(n+3){border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="bar"><b>Start a group</b><span>Two forms and the tree they live in. All clickable: type, add, drop files, Create, then walk the tree.</span>
+  <div class="pick"><button data-dir="b" aria-pressed="true">B · One box (picked)</button><button data-dir="a" aria-pressed="false">A · Builds beside you</button><button data-dir="c" aria-pressed="false">Groups inside groups</button></div>
+</div>
+
+<p class="why" id="why"></p>
+
+<!-- ======================= A ======================= -->
+<section class="dir" id="dir-a"><div class="wrap">
+  <div class="a-grid">
+    <form id="a-form" autocomplete="off" onsubmit="return false">
+      <input class="a-name" id="a-name" placeholder="Name your group" aria-label="Group name" maxlength="80">
+      <div class="a-handle"><span>Handle</span><span class="mono">@<span id="a-prefix"></span><input class="mono" id="a-handle" aria-label="Handle" maxlength="48"></span><span class="free" id="a-free">Free</span><span>This is what people and assistants call it. It cannot change later.</span></div>
+
+      <div class="sec"><header><h2>Where it lives</h2><p>On its own, or inside a group you run.</p></header>
+        <div><details class="where" id="a-where"><summary><span class="tile" data-i="folder"></span><span class="path" id="a-path"></span><u>Change</u></summary><div class="tree" id="a-tree"></div></details>
+          <p class="rule"><span data-i="lock"></span><span id="a-rule"></span></p></div></div>
+
+      <div class="sec"><header><h2>What it is for</h2><p>One or two lines. Shown at the top of the group.</p></header>
+        <div><textarea class="field" id="a-purpose" rows="2" maxlength="300" placeholder="Our team for the venture course: one idea, eight weekends, a pitch on December 12."></textarea></div></div>
+
+      <div class="sec"><header><h2>What it knows</h2><p>Members' assistants answer from these. Nothing here is required.</p></header>
+        <div>
+          <div class="src"><h3>Files <small>PDF, Word, slides, text. Loop keeps a copy.</small></h3>
+            <label class="drop" id="a-drop"><span class="tile" data-i="file"></span><span><b style="color:var(--navy);font-weight:550">Drop files here</b> or choose them</span><input type="file" multiple id="a-file"></label>
+            <ul class="list" id="a-files"></ul></div>
+          <div class="src"><h3>Links <small>Loop keeps the address and a title, not a copy.</small></h3>
+            <div class="row"><input class="field" id="a-link" placeholder="Paste a link: a doc, a sheet, Canvas, a site" aria-label="Link"><button type="button" class="pill" id="a-link-add">Add link</button></div>
+            <ul class="list" id="a-links"></ul></div>
+          <div class="src"><h3>Google Drive <small>One folder, not your Drive.</small></h3>
+            <div class="drive" id="a-drive">
+              <button type="button" id="a-drive-btn"><span class="tile" data-i="folder"></span><span><b style="font-weight:550" id="a-drive-title">Connect one folder</b><br><span class="muted" style="font-size:12.5px" id="a-drive-sub">You pick it in Google's own window. Loop never sees the rest.</span></span></button>
+              <div class="folders"><p>Signed in to Google as you. Choose the folder this group may read.</p>
+                <button type="button" data-folder="NBAE 6830 · Team 4" data-n="23"><span class="tile" data-i="folder"></span><span><b style="font-weight:520">NBAE 6830 · Team 4</b><br><span class="muted" style="font-size:12.5px">23 files · changed yesterday</span></span></button>
+                <button type="button" data-folder="Customer interviews" data-n="9"><span class="tile" data-i="folder"></span><span><b style="font-weight:520">Customer interviews</b><br><span class="muted" style="font-size:12.5px">9 files · changed Nov 9</span></span></button>
+                <button type="button" data-folder="Pitch deck drafts" data-n="6"><span class="tile" data-i="folder"></span><span><b style="font-weight:520">Pitch deck drafts</b><br><span class="muted" style="font-size:12.5px">6 files · changed Nov 2</span></span></button>
+              </div>
+            </div>
+            <p class="only"><span data-i="lock"></span><span>Read only. Loop can open files inside this folder and nothing else. New files added to it show up here without another step. Disconnect it any time.</span></p></div>
+        </div></div>
+
+      <div class="sec"><header><h2>First announcement</h2><p>What everyone reads when they arrive.</p></header>
+        <div><textarea class="field" id="a-say" rows="2" maxlength="600" placeholder="Welcome. Dry run for the pitch is the week of December 1. Pick a night in the ask."></textarea></div></div>
+
+      <div class="sec"><header><h2>People</h2><p>Invite by email, or hand out one link.</p></header>
+        <div>
+          <div class="row" style="margin-top:0"><input class="field" id="a-mail" placeholder="Emails, separated by commas or spaces" aria-label="Emails to invite"><button type="button" class="pill" id="a-mail-add">Invite</button></div>
+          <div class="chips" id="a-people" style="margin-top:10px"></div>
+          <div><div class="seg" id="a-join" role="group" aria-label="Join link"><button type="button" data-v="off" aria-pressed="false">No link</button><button type="button" data-v="ask" aria-pressed="true">Link asks first</button><button type="button" data-v="admit" aria-pressed="false">Link lets people in</button></div></div>
+          <p class="muted" id="a-join-note" style="font-size:12.5px;margin-top:8px"></p>
+        </div></div>
+
+      <div class="foot"><button type="button" class="pill go" id="a-go" disabled>Create group</button><span class="muted">Only the name is needed. Everything else can be added later from the group.</span></div>
+    </form>
+
+    <aside class="pv" aria-label="Preview">
+      <p class="pv-cap">What members will see</p>
+      <div class="plate"><svg class="mark" data-rings></svg><div class="pv-path" id="pv-path"></div><span class="mono" id="pv-handle">@your-group</span><h3 id="pv-name" class="empty">Your group</h3><p id="pv-purpose"></p></div>
+      <div class="facts"><div id="f-files" class="zero"><b>0</b><span>Files</span></div><div id="f-links" class="zero"><b>0</b><span>Links</span></div><div id="f-drive" class="zero"><b>0</b><span>In Drive</span></div><div id="f-people"><b>1</b><span>People</span></div></div>
+      <div class="pv-ask" id="pv-say" hidden></div>
+      <div class="pv-box" id="pv-list"></div>
+    </aside>
+  </div>
+  <div class="done" id="a-done"></div>
+</div></section>
+
+<!-- ======================= B ======================= -->
+<section class="dir" id="dir-b"><div class="wrap">
+  <div class="b-body">
+    <div class="b-plate"><span class="b-mark"><svg class="mark" data-rings></svg></span><div><input class="nm" id="b-name" placeholder="Name your group" aria-label="Group name" maxlength="80">
+      <div class="b-sub"><span class="mono" id="b-handle">@your-group</span><button type="button" class="field2" id="b-field" aria-expanded="false"><span class="lab">Inside</span><b id="b-path"></b><svg class="chev" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.500l3 3 3-3"/></svg></button></div></div>
+      <div class="pop" id="b-pop" hidden><div class="cols" id="b-cols"></div><div class="c-foot"><span id="b-goes"></span><button type="button" id="b-put">Put it here</button></div></div></div>
+    <div class="box" id="b-box">
+      <textarea id="b-in" aria-label="Add anything" placeholder="Drop files here, or paste anything: links, a Drive folder, emails, a note to the group. Loop sorts it."></textarea>
+      <div class="box-foot"><label class="pill" style="cursor:pointer">Choose files<input type="file" multiple id="b-file" hidden></label><button type="button" class="pill" id="b-sample">Paste an example</button><span class="sp">Enter sorts what you typed. Shift and Enter makes a new line.</span></div>
+    </div>
+    <div class="lanes">
+      <div class="lane zero" id="l-files"><h3>Files <em>0</em></h3><p>Loop keeps a copy.</p><ul class="list"></ul></div>
+      <div class="lane zero" id="l-links"><h3>Links <em>0</em></h3><p>Address and title only.</p><ul class="list"></ul></div>
+      <div class="lane zero" id="l-drive"><h3>Drive folder <em>0</em></h3><p>One folder, read only. Not your Drive.</p><ul class="list"></ul></div>
+      <div class="lane zero" id="l-people"><h3>People <em>0</em></h3><p>Invited by email when you create.</p><ul class="list"></ul></div>
+    </div>
+    <div class="say" id="b-say"><h3>First announcement</h3><p></p></div>
+    <div class="b-foot"><button type="button" class="pill go" id="b-go" disabled>Create group</button><span class="muted">Only the name is needed. A link that does not open for Loop is kept as a link and marked.</span></div>
+  </div>
+  <div class="done" id="b-done"></div>
+</div></section>
+
+<!-- ======================= C ======================= -->
+<section class="dir" id="dir-c"><div class="wrap"><div class="c-shell"><nav class="c-rail" aria-label="Groups"><div class="c-word"><svg data-rings></svg>Loop</div><p>Your groups</p><div id="c-tree"></div></nav><div class="c-main" id="c-main"></div></div></div></section>
+
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RINGS='<path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime)" stroke-width="9"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/><g><path d="M33.76 48.32A21 21 0 0 1 29.51 30.41" stroke="var(--ring-bg)" stroke-width="15.3"/><path d="M34.73 49.42A21 21 0 0 1 29.88 28.99" stroke="var(--lime)" stroke-width="9"/></g><g><path d="M64.16 50.51A21 21 0 0 1 46.5 55.71" stroke="var(--ring-bg)" stroke-width="15.3"/><path d="M65.21 49.48A21 21 0 0 1 45.06 55.41" stroke="var(--lime)" stroke-width="9"/></g><g><path d="M55.19 67.3A21 21 0 0 1 41.87 80.01" stroke="var(--ring-bg)" stroke-width="15.3"/><path d="M55.65 65.91A21 21 0 0 1 40.46 80.41" stroke="currentColor" stroke-width="9"/></g><g><path d="M41.87 39.99A21 21 0 0 1 55.19 52.7" stroke="var(--ring-bg)" stroke-width="15.3"/><path d="M40.46 39.59A21 21 0 0 1 55.65 54.09" stroke="currentColor" stroke-width="9"/></g><g><path d="M61 39.29A21 21 0 0 1 78.66 44.49" stroke="var(--ring-bg)" stroke-width="15.3"/><path d="M59.56 39.59A21 21 0 0 1 79.71 45.52" stroke="currentColor" stroke-width="9"/></g><g><path d="M44.01 64.59A21 21 0 0 1 48.26 46.68" stroke="var(--ring-bg)" stroke-width="15.3"/><path d="M44.38 66.01A21 21 0 0 1 49.23 45.58" stroke="currentColor" stroke-width="9"/></g>';
+const rings=()=>`<svg class="mark" viewBox="0 0 100 100" fill="none" aria-hidden="true">${RINGS}</svg>`;
+const ICON={file:'<path d="M4 1.5h5l3 3v10H4z"/><path d="M9 1.5v3h3"/>',link:'<path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8"/><path d="M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/>',folder:'<path d="M1.5 4h4.5l1.5 2h7v7.5h-13z"/>',person:'<circle cx="8" cy="5.5" r="2.5"/><path d="M3 14c.5-3 2.5-4.5 5-4.5s4.500 1.500 5 4.500"/>',lock:'<rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.500 7V5a2.500 2.500 0 0 1 5 0v2"/>',x:'<path d="M2 2l6 6M8 2l-6 6"/>'};
+const icon=(name,box=16)=>`<svg viewBox="0 0 ${box} ${box}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name]}</svg>`;
+document.querySelectorAll('[data-i]').forEach(el=>el.innerHTML=icon(el.dataset.i));
+document.querySelectorAll('svg[data-rings]').forEach(el=>{el.setAttribute('viewBox','0 0 100 100');el.setAttribute('fill','none');el.innerHTML=RINGS;});
+const slug=s=>s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48);
+const size=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+const host=u=>{try{return new URL(u).hostname.replace(/^www\./,'');}catch{return '';}};
+const kind=u=>/docs\.google\.com\/document/.test(u)?'Google Doc':/docs\.google\.com\/spreadsheets/.test(u)?'Google Sheet':/docs\.google\.com\/presentation/.test(u)?'Google Slides':/canvas\./.test(u)?'Canvas':host(u);
+const isUrl=s=>/^https?:\/\/\S+\.\S+/i.test(s),isMail=s=>/^[^\s@,;]+@[^\s@,;]+\.[a-z]{2,}$/i.test(s),isFolder=s=>/drive\.google\.com\/drive\/(u\/\d+\/)?folders\//.test(s);
+// The sample tree. A group may sit inside any group; depth is not fixed.
+const TREE=[
+ {id:'emba',parent:null,seg:'emba-2027',name:'EMBA 2027',purpose:'The whole cohort: residencies, program dates, things everyone needs.',people:68,events:6,asks:2,files:14},
+ {id:'t1',parent:'emba',seg:'team-1',name:'Team 1',purpose:'Our learning team for the year.',people:6,events:2,asks:1,files:5},
+ {id:'t1-6830',parent:'t1',seg:'nbae-6830',name:'NBAE 6830 Innovation and New Venture Creation',purpose:'One idea, eight weekends, a pitch to investors on December 12.',people:6,events:7,asks:3,files:9},
+ {id:'t1-6561',parent:'t1',seg:'nbae-6561',name:'NBAE 6561 Investment Banking',purpose:'IPO, LBO and M&A cases. Three of them as a group.',people:6,events:3,asks:2,files:4},
+ {id:'t4',parent:'emba',seg:'team-4',name:'Team 4',purpose:'Learning team 4.',people:5,events:1,asks:0,files:2},
+ {id:'vn',parent:'emba',seg:'vietnam-trek',name:'Vietnam trek',purpose:'Optional trek in March. Flights, rooms, who is in.',people:23,events:4,asks:3,files:6},
+ {id:'hike',parent:null,seg:'hiking-club',name:'Hiking club',purpose:'Weekend hikes near the city.',people:19,events:3,asks:1,files:0},
+];
+const node=id=>TREE.find(n=>n.id===id)||null,kids=id=>TREE.filter(n=>n.parent===id);
+const chain=id=>{const out=[];for(let n=node(id);n;n=node(n.parent))out.unshift(n);return out;};
+const handleOf=id=>chain(id).map(n=>n.seg).join('/');
+const depth=id=>chain(id).length;
+const TAKEN=['nbae-6830','nbae-6561','hiking-club'];
+const WHY={c:'<b>Groups inside groups.</b> Any group can hold groups, to any depth: the cohort holds learning teams, a team holds its courses. The rail is the tree, the crumbs walk back up, and a new group starts wherever you are standing. Handles read like a path, so an assistant can be told exactly which one.',a:'<b>A · Builds beside you.</b> A form in five plain parts on the left; on the right, the group itself, drawn as members will see it, filling in as you type. Nothing to imagine: the preview is the confirmation. On Create the preview becomes the page.',
+ b:'<b>B · One box.</b> One slim row for the name, its handle and where it lives; then throw everything at one box: files, links, a Drive folder link, emails, a note. Loop sorts each thing into its lane and says what it will do with it. Fastest for someone arriving with a pile of stuff from a group chat.'};
+function show(dir){document.querySelectorAll('.dir').forEach(el=>el.classList.toggle('on',el.id==='dir-'+dir));document.querySelectorAll('.pick button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.dir===dir));$('why').innerHTML=WHY[dir];history.replaceState(null,'','#'+dir);}
+document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>show(b.dataset.dir));
+const morph=fn=>document.startViewTransition&&!matchMedia('(prefers-reduced-motion:reduce)').matches?document.startViewTransition(fn):fn();
+const row=(ic,title,sub,onRemove)=>{const li=document.createElement('li');li.className='item';li.innerHTML=`<span class="tile">${icon(ic)}</span><div><b>${esc(title)}</b><span>${esc(sub)}</span></div><button type="button" class="x" aria-label="Remove ${esc(title)}">${icon('x',10)}</button>`;li.querySelector('.x').onclick=onRemove;return li;};
+function add(state){const id='new'+TREE.length;TREE.push({id,parent:state.parent||null,seg:state.handle,name:state.name,purpose:state.purpose||'A private group. You are its owner.',people:state.people.length+1,events:0,asks:0,files:state.files.length+state.links.length+(state.drive?state.drive.n:0),fresh:true});return id;}
+function finished(target,state,made){
+  const base=location.origin+'/groups/'+state.handle,n=state.people.length;
+  target.innerHTML=`<div><div class="plate">${rings()}<span class="mono">@${esc(state.handle)}</span><h3>${esc(state.name)}</h3><p>${esc(state.purpose||'A private group. You are its owner.')}</p></div>
+   <div class="facts"><div class="${state.files.length?'':'zero'}"><b>${state.files.length}</b><span>Files</span></div><div class="${state.links.length?'':'zero'}"><b>${state.links.length}</b><span>Links</span></div><div class="${state.drive?'':'zero'}"><b>${state.drive?state.drive.n:0}</b><span>In Drive</span></div><div><b>${n+1}</b><span>People</span></div></div></div>
+   <div><h2 style="font-size:22px">The group is ready.</h2><ul class="next" style="margin-top:8px">
+    <li><i>1</i><div><b>${state.join==='off'?'Invite people':'Send the join link'}</b><p>${state.join==='off'?(n?n+' invitation'+(n>1?'s':'')+' sent by email. No join link is on.':'Nobody is invited yet. Add emails from the Members page.'):(state.join==='admit'?'Anyone who signs in with this link is in.':'People who open it ask to join; you approve each one.')+(n?' '+n+' invitation'+(n>1?'s were':' was')+' also sent by email.':'')}</p>${state.join==='off'?'':`<div class="row"><input class="field mono" readonly value="${esc(base)}/join" aria-label="Join link"><button type="button" class="pill">Copy</button></div>`}</div></li>
+    <li><i>2</i><div><b>Connect your assistant</b><p>Claude or ChatGPT can then answer from this group's ${state.files.length+state.links.length+(state.drive?1:0)?'files and links':'record'}, for you and for every member who connects theirs.</p></div></li>
+    <li><i>3</i><div><b>${state.say?'Your announcement is posted':'Add a date or ask a question'}</b><p>${state.say?esc(state.say):'An event people can mark interest in, or an ask with a deadline.'}</p></div></li></ul>
+    <p style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pill" data-open>Open it in the tree</button><button type="button" class="pill" data-again>Start over</button></p></div>`;
+  target.querySelector('[data-open]').onclick=()=>{go(made);show('c');};
+  target.querySelector('[data-again]').onclick=()=>location.reload();
+}
+
+/* ---------- A ---------- */
+const A={parent:null,name:'',handle:'',edited:false,purpose:'',files:[],links:[],drive:null,say:'',people:[],join:'ask'};
+function drawA(){
+  $('pv-name').textContent=A.name||'Your group';$('pv-name').classList.toggle('empty',!A.name);
+  const up=chain(A.parent),prefix=A.parent?handleOf(A.parent)+'/':'';
+  $('a-prefix').textContent=prefix;$('pv-handle').textContent='@'+prefix+(A.handle||'your-group');$('pv-purpose').textContent=A.purpose;
+  $('pv-path').innerHTML=up.map(n=>esc(n.name)).join(' <span>›</span> ')+(up.length?' <span>›</span>':'');
+  $('a-path').innerHTML=up.length?'Inside '+up.map(n=>'<b>'+esc(n.name)+'</b>').join(' <i>›</i> '):'<b>Top level</b>, on its own';
+  $('a-rule').textContent=A.parent?'Everyone in '+node(A.parent).name+' can open this group. It keeps its own files, dates, asks and announcements, and you can add people who are in this one only.':'Only people you invite can open it. Groups can be added inside it later, and it can be moved under another group you run.';
+  $('a-tree').replaceChildren(...[{id:null,name:'Top level, on its own'},...TREE].map(n=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',n.id===A.parent);b.style.paddingLeft=(10+(n.id?depth(n.id)*18:0))+'px';
+    b.innerHTML='<span class="dot"></span><span>'+esc(n.name)+'</span>'+(n.id?'<span class="mono">@'+esc(handleOf(n.id))+'</span>':'');b.onclick=()=>{A.parent=n.id;$('a-where').open=false;drawA();};return b;}));
+  const taken=A.parent?kids(A.parent).some(n=>n.seg===A.handle):TREE.some(n=>!n.parent&&n.seg===A.handle)||TAKEN.includes(A.handle);$('a-free').textContent=!A.handle?'':taken?'Taken. Try another.':'Free';$('a-free').classList.toggle('taken',taken);$('a-free').hidden=!A.handle;
+  const fact=(id,n)=>{const el=$(id);el.firstChild.textContent=n;el.classList.toggle('zero',!n);};
+  fact('f-files',A.files.length);fact('f-links',A.links.length);fact('f-drive',A.drive?A.drive.n:0);$('f-people').firstChild.textContent=A.people.length+1;
+  $('pv-say').hidden=!A.say;$('pv-say').innerHTML=A.say?`<b>Announcement</b><br>${esc(A.say)}`:'';
+  const rows=[...A.files.map(f=>['File',f.name]),...A.links.map(l=>[kind(l),l.replace(/^https?:\/\//,'')]),...(A.drive?[['Drive folder',A.drive.name]]:[])];
+  const box=$('pv-list'),have=box.children.length;
+  if(rows.length<have)box.innerHTML='';
+  rows.slice(box.children.length).forEach(([a,b])=>{const d=document.createElement('div');d.className='pv-row';d.innerHTML=`<span>${esc(a)}</span><b>${esc(b)}</b>`;box.append(d);});
+  $('a-files').replaceChildren(...A.files.map((f,i)=>row('file',f.name,size(f.size)+' · kept by Loop',()=>{A.files.splice(i,1);drawA();})));
+  $('a-links').replaceChildren(...A.links.map((l,i)=>row('link',l.replace(/^https?:\/\//,''),kind(l)+' · link only',()=>{A.links.splice(i,1);drawA();})));
+  $('a-people').replaceChildren(...A.people.map((m,i)=>{const c=document.createElement('span');c.className='chip';c.innerHTML=`${esc(m)}<button type="button" class="x" aria-label="Remove ${esc(m)}">${icon('x',10)}</button>`;c.querySelector('.x').onclick=()=>{A.people.splice(i,1);drawA();};return c;}));
+  $('a-drive-title').textContent=A.drive?A.drive.name:'Connect one folder';$('a-drive-sub').textContent=A.drive?`${A.drive.n} files · read only · choose again to change`:"You pick it in Google's own window. Loop never sees the rest.";
+  document.querySelectorAll('#a-join button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===A.join));
+  $('a-join-note').textContent={off:'Only people you invite by email can join.',ask:'Anyone with the link can ask to join. You approve each one.',admit:'Anyone who signs in with the link is in straight away, as a member. Good for a class or a club.'}[A.join];
+  $('a-go').disabled=!A.name.trim()||!A.handle||taken;
+}
+$('a-name').oninput=e=>{A.name=e.target.value;if(!A.edited){A.handle=slug(A.name);$('a-handle').value=A.handle;}drawA();};
+$('a-handle').oninput=e=>{A.edited=true;A.handle=slug(e.target.value);drawA();};
+$('a-handle').onblur=e=>{e.target.value=A.handle;};
+$('a-purpose').oninput=e=>{A.purpose=e.target.value;drawA();};
+$('a-say').oninput=e=>{A.say=e.target.value;drawA();};
+const addFiles=(state,list,draw)=>{for(const f of list)state.files.push({name:f.name,size:f.size});draw();};
+$('a-file').onchange=e=>{addFiles(A,e.target.files,drawA);e.target.value='';};
+const dropzone=(el,onFiles)=>{['dragenter','dragover'].forEach(n=>el.addEventListener(n,e=>{e.preventDefault();el.classList.add('over');}));['dragleave','drop'].forEach(n=>el.addEventListener(n,e=>{e.preventDefault();el.classList.remove('over');}));el.addEventListener('drop',e=>onFiles(e.dataTransfer.files));};
+dropzone($('a-drop'),files=>addFiles(A,files,drawA));
+const addLink=()=>{let v=$('a-link').value.trim();if(!v)return;if(!/^https?:\/\//i.test(v))v='https://'+v;if(isFolder(v)){A.drive={name:'Shared folder',n:12};}else if(isUrl(v)&&!A.links.includes(v))A.links.push(v);$('a-link').value='';drawA();};
+$('a-link-add').onclick=addLink;$('a-link').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addLink();}};
+$('a-drive-btn').onclick=()=>$('a-drive').classList.toggle('open');
+document.querySelectorAll('#a-drive .folders button').forEach(b=>b.onclick=()=>{A.drive={name:b.dataset.folder,n:+b.dataset.n};$('a-drive').classList.remove('open');drawA();});
+const addMail=()=>{for(const part of $('a-mail').value.split(/[\s,;]+/))if(isMail(part)&&!A.people.includes(part))A.people.push(part);$('a-mail').value='';drawA();};
+$('a-mail-add').onclick=addMail;$('a-mail').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addMail();}};
+document.querySelectorAll('#a-join button').forEach(b=>b.onclick=()=>{A.join=b.dataset.v;drawA();});
+$('a-go').onclick=()=>morph(()=>{const made=add(A);finished($('a-done'),{...A,handle:handleOf(made)},made);$('dir-a').classList.add('made');scrollTo(0,0);});
+// Opens part filled, so the preview has something to show.
+Object.assign(A,{parent:'t4',name:'NBAE 6830 Innovation and New Venture Creation',handle:'nbae-6830',purpose:'Our team for the venture course: one idea, eight weekends, a pitch to investors on December 12.',
+ files:[{name:'Syllabus NBAE 6830 (2026FA).pdf',size:412000},{name:'Business model canvas v3.pptx',size:2310000}],links:['https://docs.google.com/document/d/1x/interview-notes','https://canvas.cornell.edu/courses/91931'],people:['priya@example.edu','marcus@example.edu']});
+$('a-name').value=A.name;$('a-handle').value=A.handle;$('a-purpose').value=A.purpose;drawA();
+
+/* ---------- B ---------- */
+const B={parent:null,name:'',handle:'',purpose:'',files:[],links:[],drive:null,say:'',people:[],join:'ask'};
+// Where it lives: a column per level. Clicking a group shows what is inside it; "Put it here" chooses the last one clicked.
+let bLook=null;
+const ringsSm='<svg viewBox="0 0 100 100" fill="none" aria-hidden="true">'+RINGS+'</svg>';
+const chevR='<svg class="chev" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.500 2l3 3-3 3"/></svg>';
+const topIcon='<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h10M7 9.500v-7M4 5l3-3 3 3"/></svg>';
+function drawCols(){
+  const path=chain(bLook),cols=$('b-cols');cols.replaceChildren();
+  const levels=[null,...path.map(n=>n.id)].slice(-3);
+  levels.forEach(parent=>{
+    const col=document.createElement('div');col.className='col';
+    const items=[...(parent===null?[{id:null,name:'Top level, on its own'}]:[]),...kids(parent).filter(n=>!n.fresh)];
+    col.innerHTML='<h3>'+(parent?'Inside '+esc(node(parent).name):'Your groups')+'</h3>'+(items.length?items.map(o=>{const on=(o.id||null)===bLook,via=o.id&&!on&&path.some(n=>n.id===o.id);
+      return '<button type="button" class="opt'+(on?' on':via?' via':'')+'" data-id="'+(o.id||'')+'"><span class="g'+(o.id?'':' top')+'">'+(o.id?ringsSm:topIcon)+'</span><div><b>'+esc(o.name)+'</b><small>'+(o.id?o.people+' people':'Only people you invite')+'</small></div>'+(o.id&&kids(o.id).length?chevR:'')+'</button>';}).join(''):'<p class="empty">Nothing inside yet. The new group would be the first.</p>');
+    col.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{bLook=b.dataset.id||null;drawCols();});
+    cols.append(col);
+  });
+  for(let i=levels.length;i<3;i++){const col=document.createElement('div');col.className='col';cols.append(col);}
+  $('b-goes').innerHTML=bLook?'Goes inside <b>'+esc(path.map(n=>n.name).join(' › '))+'</b>. Everyone in '+esc(node(bLook).name)+' can open it. It keeps its own files, dates and asks.':'Goes at the <b>top level</b>. Only people you invite can open it.';
+  $('b-put').disabled=bLook===B.parent;$('b-put').textContent=bLook===B.parent?'Chosen':'Put it here';
+}
+const popB=open=>{$('b-pop').hidden=!open;$('b-field').setAttribute('aria-expanded',open);if(open){bLook=B.parent;drawCols();}};
+function lane(id,items){const el=$(id);el.classList.toggle('zero',!items.length);el.querySelector('em').textContent=items.length;el.querySelector('.list').replaceChildren(...items);}
+function drawB(){
+  const up=chain(B.parent);
+  $('b-handle').textContent='@'+(B.parent?handleOf(B.parent)+'/':'')+(B.handle||'your-group');
+  $('b-path').textContent=up.length?up.map(n=>n.name).join(' › '):'Top level, on its own';
+  drawCols();
+  lane('l-files',B.files.map((f,i)=>row('file',f.name,size(f.size),()=>{B.files.splice(i,1);drawB();})));
+  lane('l-links',B.links.map((l,i)=>row('link',l.replace(/^https?:\/\//,''),kind(l),()=>{B.links.splice(i,1);drawB();})));
+  lane('l-drive',B.drive?[row('folder',B.drive.name,B.drive.n+' files · read only',()=>{B.drive=null;drawB();})]:[]);
+  lane('l-people',B.people.map((m,i)=>row('person',m,'Invitation by email',()=>{B.people.splice(i,1);drawB();})));
+  $('b-say').classList.toggle('on',!!B.say);$('b-say').querySelector('p').textContent=B.say;
+  $('b-go').disabled=!B.name.trim();
+}
+function sort(text){
+  const notes=[];
+  for(const line of text.split(/\n+/)){
+    const left=[];
+    for(const word of line.trim().split(/\s+/).filter(Boolean)){
+      const clean=word.replace(/[,;]+$/,'');
+      if(isMail(clean)){if(!B.people.includes(clean))B.people.push(clean);}
+      else if(isUrl(clean)){if(isFolder(clean))B.drive={name:'Team 4 shared folder',n:23};else if(!B.links.includes(clean))B.links.push(clean);}
+      else left.push(word);
+    }
+    if(left.join(' ').replace(/[,;.\s]/g,'').length>3)notes.push(left.join(' '));
+  }
+  if(notes.length)B.say=notes.join(' ');
+  drawB();
+}
+$('b-field').onclick=()=>popB($('b-pop').hidden);
+$('b-put').onclick=()=>{B.parent=bLook;popB(false);drawB();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')popB(false);});
+document.addEventListener('click',e=>{if(!$('b-pop').hidden&&!e.target.closest('#b-pop,#b-field'))popB(false);});
+$('b-name').oninput=e=>{B.name=e.target.value;B.handle=slug(B.name);drawB();};
+$('b-in').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sort(e.target.value);e.target.value='';}};
+$('b-in').onpaste=e=>{const text=e.clipboardData.getData('text');if(/https?:\/\/|@/.test(text)){e.preventDefault();sort(text);}};
+$('b-file').onchange=e=>{addFiles(B,e.target.files,drawB);e.target.value='';};
+dropzone($('b-box'),files=>addFiles(B,files,drawB));
+$('b-sample').onclick=()=>{if(!B.name){B.parent='t4';B.name='NBAE 6830 Venture Creation';B.handle='nbae-6830';$('b-name').value=B.name;}
+  B.files.push({name:'Syllabus NBAE 6830 (2026FA).pdf',size:412000});
+  sort('https://docs.google.com/document/d/1x/interview-notes\nhttps://canvas.cornell.edu/courses/91931\nhttps://drive.google.com/drive/folders/1AbCdEf\npriya@example.edu, marcus@example.edu elena@example.edu\nWelcome. Dry run for the pitch is the week of December 1.');};
+$('b-go').onclick=()=>morph(()=>{const made=add(B);finished($('b-done'),{...B,handle:handleOf(made)},made);$('dir-b').classList.add('made');scrollTo(0,0);});
+// Opens sorted, so the lanes have something to show.
+$('b-sample').click();
+/* ---------- C ---------- */
+let here='t1';const shut=new Set();
+const tw='<svg viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.500 1l3 3-3 3"/></svg>';
+const arrow='<svg class="arrow" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M6.500 2.500 10 6l-3.500 3.500"/></svg>';
+function go(id){here=id;for(const n of chain(id))shut.delete(n.id);drawC();}
+function startHere(){Object.assign(B,{parent:here,name:'',handle:'',files:[],links:[],drive:null,say:'',people:[]});$('b-name').value='';$('dir-b').classList.remove('made');drawB();show('b');$('b-name').focus();}
+function drawC(){
+  const rail=$('c-tree');rail.replaceChildren();
+  const walk=(parent,level)=>{for(const n of kids(parent)){
+    const has=kids(n.id).length>0,b=document.createElement('button');b.type='button';b.style.paddingLeft=(8+level*16)+'px';b.setAttribute('aria-current',n.id===here);if(n.fresh)b.className='new';
+    b.innerHTML='<i class="tw'+(has&&!shut.has(n.id)?' open':'')+'">'+(has?tw:'')+'</i><span>'+esc(n.name)+'</span>';
+    b.onclick=e=>{if(e.target.closest('.tw')&&has){shut.has(n.id)?shut.delete(n.id):shut.add(n.id);drawC();}else go(n.id);};
+    rail.append(b);if(has&&!shut.has(n.id))walk(n.id,level+1);}};
+  walk(null,0);
+  const main=$('c-main'),n=node(here),inside=kids(here),up=chain(here);
+  const list=inside.length?'<ul class="kids">'+inside.map(k=>'<li><button type="button" data-go="'+k.id+'"><span class="gt">'+rings()+'</span><div><b>'+esc(k.name)+'</b><span class="mono muted">@'+esc(handleOf(k.id))+'</span></div><span class="meta">'+k.people+' people'+(kids(k.id).length?' · '+kids(k.id).length+' groups inside':'')+'</span>'+arrow+'</button></li>').join('')+'</ul>':'<p class="c-none">No groups inside this one yet.</p>';
+  main.innerHTML=n?'<div class="crumbs"><button type="button" data-go="">Groups</button>'+up.slice(0,-1).map(a=>'<span>›</span><button type="button" data-go="'+a.id+'">'+esc(a.name)+'</button>').join('')+'<span>›</span><b>'+esc(n.name)+'</b></div>'
+    +'<div class="plate">'+rings()+'<div><span class="mono">@'+esc(handleOf(n.id))+'</span><h3>'+esc(n.name)+'</h3><p>'+esc(n.purpose)+'</p></div></div>'
+    +'<div class="facts"><div><b>'+n.people+'</b><span>People</span></div><div class="'+(n.events?'':'zero')+'"><b>'+n.events+'</b><span>Dates</span></div><div class="'+(n.asks?'':'zero')+'"><b>'+n.asks+'</b><span>Open asks</span></div><div class="'+(n.files?'':'zero')+'"><b>'+n.files+'</b><span>Files and links</span></div></div>'
+    +'<div class="c-head"><h2>Inside this group</h2><span>'+inside.length+'</span><button type="button" class="pill" data-new>Start a group here</button></div>'+list
+    +'<p class="rule">'+icon('lock')+'<span>'+(up.length>1?'Everyone in '+esc(up[up.length-2].name)+' can open this group. ':'')+'People added to this group only do not see the groups above it. Files, dates and asks saved here stay here.</span></p>'
+   :'<div class="crumbs"><b>Groups</b></div><div class="c-head" style="margin-top:14px"><h2>Your groups</h2><span>'+inside.length+'</span><button type="button" class="pill" data-new>Start a group</button></div>'+list;
+  main.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go||null));
+  main.querySelector('[data-new]').onclick=startHere;
+}
+drawC();
+show(['a','b','c'].includes(location.hash.slice(1))?location.hash.slice(1):'b');
+</script>
+</body>
+</html>

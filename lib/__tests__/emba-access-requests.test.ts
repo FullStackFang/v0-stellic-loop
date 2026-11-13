@@ -65,14 +65,14 @@ it('asks first by default, and admits on sign-in as a member and nothing more on
   const { owner, scope, token } = await club();
   const first = await person('first@example.test'), second = await person('second@example.test');
   expect(await accessRequestPreview(t.db, token)).toMatchObject({ joinMode: 'ask_first' });
-  expect(await requestMembership(t.db, first, token)).toEqual({ outcome: 'requested', namespace: 'wine-club' });
+  expect(await requestMembership(t.db, first, token)).toEqual({ outcome: 'requested', namespace: 'wine-club', slug: 'workspace' });
   expect(await standing(first.personId)).toEqual({ roles: [], member: false, leases: 0, requests: ['pending'] });
   await setJoinMode(t.db, owner, { ...scope, mode: 'admit' });
   expect(await accessRequestPreview(t.db, token)).toMatchObject({ joinMode: 'admit' });
   // A new person, and one whose request was still waiting, both come in as members: no elevated role, no assistant grant.
-  expect(await requestMembership(t.db, second, token)).toEqual({ outcome: 'joined', namespace: 'wine-club' });
+  expect(await requestMembership(t.db, second, token)).toEqual({ outcome: 'joined', namespace: 'wine-club', slug: 'workspace' });
   expect(await standing(second.personId)).toEqual({ roles: ['member'], member: true, leases: 0, requests: [] });
-  expect(await requestMembership(t.db, first, token)).toEqual({ outcome: 'joined', namespace: 'wine-club' });
+  expect(await requestMembership(t.db, first, token)).toEqual({ outcome: 'joined', namespace: 'wine-club', slug: 'workspace' });
   expect(await standing(first.personId)).toEqual({ roles: ['member'], member: true, leases: 0, requests: ['approved'] });
   expect(await listMembershipRequests(t.db, owner, scope)).toEqual([]);
   await expect(requestMembership(t.db, second, token)).rejects.toThrow('conflict');
@@ -89,7 +89,7 @@ it('asks first by default, and admits on sign-in as a member and nothing more on
   await setJoinMode(t.db, second, { ...scope, mode: 'ask_first' });
   // Closing the door applies to the next person; people already admitted stay.
   const third = await person('third@example.test');
-  expect(await requestMembership(t.db, third, token)).toEqual({ outcome: 'requested', namespace: 'wine-club' });
+  expect(await requestMembership(t.db, third, token)).toEqual({ outcome: 'requested', namespace: 'wine-club', slug: 'workspace' });
   expect(await standing(third.personId)).toMatchObject({ roles: [], member: false });
   expect(await standing(first.personId)).toMatchObject({ roles: ['member'], member: true });
 });
@@ -99,7 +99,7 @@ it('does not re-admit a person who was removed, and a replaced link admits nobod
   const removed = await person('removed@example.test'), late = await person('late@example.test');
   await requestMembership(t.db, removed, token);
   await revokeMembership(t.db, owner, { orgId: scope.orgId, personId: removed.personId });
-  expect(await requestMembership(t.db, removed, token)).toEqual({ outcome: 'contact_organizer', namespace: 'wine-club' });
+  expect(await requestMembership(t.db, removed, token)).toEqual({ outcome: 'contact_organizer', namespace: 'wine-club', slug: 'workspace' });
   // Removal ends the membership (the old role row stays, and counts for nothing without it); the link does not bring it back.
   expect(await standing(removed.personId)).toMatchObject({ member: false, leases: 0, requests: [] });
   await expect(setInterest(t.db, removed, { ...scope, event: 'none' })).rejects.toThrow('forbidden');
@@ -111,7 +111,7 @@ it('does not re-admit a person who was removed, and a replaced link admits nobod
   await expect(requestMembership(t.db, late, token)).rejects.toThrow('not_found');
   expect(await standing(late.personId)).toEqual({ roles: [], member: false, leases: 0, requests: [] });
   expect(await accessRequestPreview(t.db, next)).toMatchObject({ groupName: 'Wine club', joinMode: 'admit' });
-  expect(await requestMembership(t.db, late, next)).toEqual({ outcome: 'joined', namespace: 'wine-club' });
+  expect(await requestMembership(t.db, late, next)).toEqual({ outcome: 'joined', namespace: 'wine-club', slug: 'workspace' });
   // A link that was turned off comes back asking first, and there is nothing to replace or set while it is off.
   await disableAccessRequests(t.db, owner, scope);
   await expect(replaceJoinLink(t.db, owner, scope)).rejects.toThrow('not_found');
@@ -126,10 +126,10 @@ it('offers the join step of the group from an event share link, by its mode', as
   const share = added.event.shareUrl!.split('/').at(-1)!;
   const visitor = await person('visitor@example.test'), other = await person('other@example.test');
   expect(await eventShare(t.db, visitor, share)).toMatchObject({ view: 'outside', signedIn: true, join: { mode: 'ask_first', requested: false } });
-  expect(await joinFromShare(t.db, visitor, { kind: 'event', token: share })).toEqual({ outcome: 'requested', namespace: 'wine-club' });
+  expect(await joinFromShare(t.db, visitor, { kind: 'event', token: share })).toEqual({ outcome: 'requested', namespace: 'wine-club', slug: 'workspace' });
   expect(await eventShare(t.db, visitor, share)).toMatchObject({ view: 'outside', join: { mode: 'ask_first', requested: true } });
   await setJoinMode(t.db, owner, { ...scope, mode: 'admit' });
-  expect(await joinFromShare(t.db, other, { kind: 'event', token: share })).toEqual({ outcome: 'joined', namespace: 'wine-club' });
+  expect(await joinFromShare(t.db, other, { kind: 'event', token: share })).toEqual({ outcome: 'joined', namespace: 'wine-club', slug: 'workspace' });
   // Back on the event they opened, they are a member and can mark interest.
   expect(await eventShare(t.db, other, share)).toMatchObject({ view: 'member', detail: { event: { slug: 'tasting' } } });
   expect(await setInterest(t.db, other, { ...scope, event: 'tasting' })).toMatchObject({ saved: true, interested: true });
@@ -139,7 +139,7 @@ it('offers the join step of the group from an event share link, by its mode', as
   if (!asked.saved) throw new Error('not saved');
   const askToken = asked.ask.shareUrl.split('/').at(-1)!, third = await person('third@example.test');
   expect(await askShare(t.db, third, askToken)).toMatchObject({ view: 'outside', join: { mode: 'admit' } });
-  expect(await joinFromShare(t.db, third, { kind: 'ask', token: askToken })).toEqual({ outcome: 'joined', namespace: 'wine-club' });
+  expect(await joinFromShare(t.db, third, { kind: 'ask', token: askToken })).toEqual({ outcome: 'joined', namespace: 'wine-club', slug: 'workspace' });
   expect(await askShare(t.db, third, askToken)).toMatchObject({ view: 'member', detail: { ask: { number: asked.ask.number, open: true } } });
   expect(await standing(third.personId)).toEqual({ roles: ['member'], member: true, leases: 0, requests: [] });
   // A share link is not a way in when the join link is off, and an unknown one is nothing.

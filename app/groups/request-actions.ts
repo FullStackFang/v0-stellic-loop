@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { redirect } from 'next/navigation';
 import { accessRequestPreview, disableAccessRequests, enableAccessRequests, joinFromShare, replaceJoinLink, requestMembership, reviewMembershipRequest, setJoinMode, type JoinOutcome } from '@/lib/emba/access-requests';
+import { groupHref } from '@/lib/emba/group-path';
 import type { PortalResult } from '@/components/emba/portal-types';
 
 const value = (data: FormData, key: string) => String(data.get(key) ?? '');
@@ -31,18 +32,18 @@ export async function disableRequestLink(_previous: PortalResult, data: FormData
 }
 const joined: Record<Exclude<JoinOutcome['outcome'], 'joined'>, string> = { requested: 'Request sent to the group organizers.', contact_organizer: 'This link cannot add you to the group again. Contact an organizer of the group.' };
 /** Takes the join step, then sends a person who was admitted on to `next`; anyone else is told what happened. */
-async function takeJoinStep(run: (principal: Parameters<typeof requestMembership>[1]) => Promise<JoinOutcome>, next: (namespace: string) => string): Promise<PortalResult> {
+async function takeJoinStep(run: (principal: Parameters<typeof requestMembership>[1]) => Promise<JoinOutcome>, next: (group: { namespace: string; slug: string }) => string): Promise<PortalResult> {
   let to: string | null = null;
   const result = await mutate(async principal => {
-    const { outcome, namespace } = await run(principal);
-    if (outcome === 'joined') { to = next(namespace); return; }
+    const { outcome, ...group } = await run(principal);
+    if (outcome === 'joined') { to = next(group); return; }
     return { status: outcome === 'requested' ? 'success' : 'error', message: joined[outcome] };
   });
   if (to) redirect(to);
   return result;
 }
 export async function submitMembershipRequest(_previous: PortalResult, data: FormData): Promise<PortalResult> {
-  return takeJoinStep(principal => requestMembership(db(), principal, value(data, 'token')), namespace => `/groups/${namespace}`);
+  return takeJoinStep(principal => requestMembership(db(), principal, value(data, 'token')), groupHref);
 }
 /** The join step from an event's or an ask's share page: a person who is admitted returns to the item they opened. */
 export async function joinFromShareLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {

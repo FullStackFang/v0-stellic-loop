@@ -75,7 +75,7 @@ export type EventOutside={group:string;name:string;startsAt:string;endsAt:string
 /** How a group lets a signed-in person in from a share link: null when its join link is off. */
 export type JoinStep={mode:'ask_first'|'admit';requested:boolean}|null;
 export type EventShare=
- |{view:'member';namespace:string;scope:Scope;detail:EventDetail;outside:EventOutside}
+ |{view:'member';namespace:string;groupSlug:string;scope:Scope;detail:EventDetail;outside:EventOutside}
  |{view:'outside';outside:EventOutside;signedIn:boolean;join:JoinStep};
 const token=z.string().regex(/^[0-9a-f]{32}$/);
 /**
@@ -86,7 +86,7 @@ const token=z.string().regex(/^[0-9a-f]{32}$/);
  */
 export async function eventShare(db:Db,p:Principal|null,input:string):Promise<EventShare> {
  const shareToken=token.parse(input);
- const {rows:[found]}=await db.query<EventOutside&Scope&{slug:string;namespace:string;count:number;mode:'ask_first'|'admit'|null;requested:boolean}>(`select e.org_id as "orgId",e.loop_id as "loopId",e.slug,a.namespace,o.name as "group",e.name,
+ const {rows:[found]}=await db.query<EventOutside&Scope&{slug:string;namespace:string;groupSlug:string;count:number;mode:'ask_first'|'admit'|null;requested:boolean}>(`select e.org_id as "orgId",e.loop_id as "loopId",e.slug,a.namespace,a.slug as "groupSlug",coalesce((select g.name from emba_loop g where g.org_id=e.org_id and g.id=e.loop_id),o.name) as "group",e.name,
    e.starts_at as "startsAt",e.ends_at as "endsAt",${local('e.starts_at',"coalesce(s.timezone,'UTC')")} as starts,${local('e.ends_at',"coalesce(s.timezone,'UTC')")} as ends,coalesce(s.timezone,'UTC') as timezone,e.place,
    (select count(*) from emba_event_interest i where i.event_id=e.id and ${posts('i.person_id','e.org_id','e.loop_id')})::int as count,
    (select l.join_mode from emba_group_request_link l where l.org_id=e.org_id and l.loop_id=e.loop_id and l.disabled_at is null) as mode,
@@ -95,11 +95,11 @@ export async function eventShare(db:Db,p:Principal|null,input:string):Promise<Ev
    left join emba_team_state s on s.org_id=e.org_id and s.loop_id=e.loop_id
   where e.share_token=$1 and e.archived_at is null and e.starts_at is not null`,[shareToken,p?.personId??null]);
  if(!found)throw new EmbaError('not_found');
- const {orgId,loopId,slug,namespace,count,mode,requested,...facts}=found;
+ const {orgId,loopId,slug,namespace,groupSlug,count,mode,requested,...facts}=found;
  const outside:EventOutside={...facts,interested:count>=EVENTS.floor?count:null};
  // Only a person on the site is ever shown the member view; an assistant has its own tools.
  if(p&&p.clientId===null){
-  try{return {view:'member',namespace,scope:{orgId,loopId},detail:await eventDetail(db,p,{orgId,loopId,event:slug}),outside};}
+  try{return {view:'member',namespace,groupSlug,scope:{orgId,loopId},detail:await eventDetail(db,p,{orgId,loopId,event:slug}),outside};}
   catch(error){if(!(error instanceof EmbaError)||(error.code!=='forbidden'&&error.code!=='not_found'))throw error;}
  }
  return {view:'outside',outside,signedIn:Boolean(p),join:mode?{mode,requested}:null};

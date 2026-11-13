@@ -351,3 +351,127 @@ a.lp-grouprow:hover .lp-go{background:var(--blue);color:var(--on-dark);box-shado
   .lp-paste > div{flex-wrap:wrap}.lp-paste button{flex:1;justify-content:center}
   .lp-help > div{border-left:0;border-top:1px solid var(--line)}.lp-help > div:first-child{border-top:0}
 }
+
+/* ---------- Groups inside groups (loop-group-tree-and-start-form) ---------- */
+/* Crumbs walk down from the highest group the person can open; each step keeps its arrow when the row wraps. */
+.lp-crumb{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.lp-crumb a,.lp-crumb b{overflow-wrap:anywhere}
+/* The rail's switcher lists groups as a tree: a group sits indented under the group it is inside. */
+.lp-switch ul.lp-tree{max-height:min(60vh,420px);overflow-y:auto}
+/* The groups directly inside this one: one quiet row of tiles under the plate, with the way to start another. */
+.lp-inside{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin-top:12px}
+.lp-inside h2{font-size:13px;font-weight:400;color:var(--muted);margin:0}
+.lp-inside ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0;min-width:0}
+.lp-inside li a{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;background:var(--surface);border:1px solid var(--line);border-radius:12px 12px 12px 4px;font-size:13.5px;max-width:100%}
+.lp-inside li a:hover{border-color:var(--blue)}
+.lp-inside li a b{display:block;font-weight:520;color:var(--navy);overflow-wrap:anywhere}
+.lp-inside li a small{display:block;font-size:12px;color:var(--muted)}
+.lp-inside-mark{--lp-ring-bg:var(--teal);width:28px;height:28px;border-radius:9px 9px 9px 3px;background:var(--teal);color:var(--aqua);display:grid;place-items:center;flex:none;font-size:17px;line-height:1}
+.lp-inside-mark svg{width:16px;height:16px}
+.lp-inside li a.lp-inside-new{border-style:dashed;background:transparent}
+.lp-inside-new .lp-inside-mark{background:var(--pale-blue);color:var(--blue)}
+
+/* ---------- Start a group (loop-group-tree-and-start-form) ---------- */
+/* One slim teal row: mark, name, then a line with the handle and where the group lives. One dashed box under it sorts whatever is put in. */
+.lp-ng{max-width:980px}
+.lp-ng-plate{--lp-ring-bg:var(--teal);position:relative;display:flex;align-items:center;gap:16px;padding:14px 20px;background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg)}
+.lp-ng-plate > div:not(.lp-ng-pop){flex:1;min-width:0}
+.lp-ng-mark{width:48px;height:48px;border-radius:14px 14px 14px 4px;background:oklch(99.4% 0.003 230 / .08);color:var(--aqua);display:grid;place-items:center;flex:none}
+.lp-ng-mark svg{width:30px;height:30px}
+.lp .lp-ng-name{display:block;width:100%;margin:0;border:0;border-bottom:1.5px solid oklch(99.4% 0.003 230 / .25);border-radius:0;background:transparent;padding:0 0 5px;font-size:clamp(22px,2.6vw,30px);font-weight:520;letter-spacing:-.045em;line-height:1.1;color:var(--aqua);box-shadow:none}
+.lp .lp-ng-name::placeholder{color:oklch(90.4% 0.1 194 / .4)}
+.lp .lp-ng-name:focus{outline:0;border-bottom-color:var(--lime)}
+.lp-ng-sub{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:7px 0 0;font-size:12.5px}
+.lp-ng-handle{display:inline-flex;align-items:baseline;margin:0;font-family:var(--mono);font-size:12.5px;color:var(--aqua);width:auto}
+.lp .lp-ng-handle input{width:auto;min-width:0;margin:0;padding:1px 2px;border:0;border-bottom:1px dashed oklch(99.4% 0.003 230 / .3);border-radius:0;background:transparent;font:inherit;color:inherit;box-shadow:none}
+.lp .lp-ng-handle input:focus{outline:0;border-bottom:1px solid var(--lime)}
+.lp-ng-field{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px 0 6px;border:0;border-radius:var(--pill);background:oklch(99.4% 0.003 230 / .1);box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .26);color:var(--on-dark-78);max-width:100%;font-size:13px;cursor:pointer}
+.lp-ng-field:hover,.lp-ng-field[aria-expanded=true]{background:oklch(99.4% 0.003 230 / .18)}
+.lp-ng-field[aria-expanded=true]{box-shadow:inset 0 0 0 1.5px var(--aqua)}
+.lp-ng-field > span{height:22px;padding:0 9px;border-radius:var(--pill);background:var(--aqua);color:var(--navy);font-weight:550;font-size:12px;display:grid;place-items:center}
+.lp-ng-field b{color:var(--on-dark);font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-ng-chev{width:10px;height:10px;flex:none}
+/* Where it lives: a column per level. */
+.lp-ng-pop{position:absolute;top:calc(100% + 8px);left:20px;right:20px;z-index:20;background:var(--surface);color:var(--navy);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--float)}
+.lp-ng-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:236px}
+.lp-ng-col{padding:6px;border-left:1px solid var(--line);min-width:0}
+.lp-ng-col:first-child{border-left:0}
+.lp-ng-col h3{font-size:12.5px;font-weight:400;color:var(--muted);margin:0;padding:6px 10px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-ng-empty{padding:10px;margin:0;color:var(--muted);font-size:12.5px}
+.lp-ng-opt{display:flex;width:100%;align-items:center;gap:10px;padding:7px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-align:left;font-size:13.5px;cursor:pointer}
+.lp-ng-opt:hover{background:var(--pale-blue)}
+.lp-ng-opt > span:nth-child(2){min-width:0;flex:1}
+.lp-ng-opt b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-ng-opt small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-ng-opt .lp-ng-chev{color:var(--muted)}
+.lp-ng-g{--lp-ring-bg:var(--teal);width:28px;height:28px;border-radius:9px 9px 9px 3px;background:var(--teal);color:var(--aqua);display:grid;place-items:center;flex:none}
+.lp-ng-g svg{width:16px;height:16px}
+.lp-ng-g.lp-ng-top{background:var(--pale-blue);color:var(--blue)}
+.lp-ng-g.lp-ng-top svg{width:14px;height:14px}
+.lp-ng-opt.lp-ng-via{background:var(--pale-blue)}
+.lp-ng-opt.lp-ng-on{background:var(--blue);color:var(--on-dark)}
+.lp-ng-opt.lp-ng-on small{color:var(--on-dark-78)}
+.lp-ng-opt.lp-ng-on .lp-ng-chev{color:var(--on-dark)}
+.lp-ng-opt.lp-ng-on .lp-ng-g{background:oklch(99.4% 0.003 230 / .16)}
+.lp-ng-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:var(--sunk);font-size:12.5px;color:var(--muted)}
+.lp-ng-foot b{color:var(--navy);font-weight:550}
+.lp-ng-foot button{margin-left:auto;height:32px;padding:0 16px;border:0;border-radius:var(--pill);background:var(--blue);color:var(--on-dark);font-weight:550;font-size:13px;cursor:pointer}
+.lp-ng-foot button:disabled{opacity:.5;cursor:default}
+/* The one box. */
+.lp-ng-box{margin-top:14px;background:var(--surface);border:1.5px dashed var(--line-2);border-radius:var(--r-lg);padding:18px 20px;transition:border-color .15s,background-color .15s}
+.lp-ng-box.lp-ng-over{border-color:var(--blue);background:var(--pale-blue)}
+.lp .lp-ng-box textarea{display:block;width:100%;min-height:74px;margin:0;padding:0;border:0;background:transparent;resize:none;font-size:17px;letter-spacing:-.03em;line-height:1.4;box-shadow:none}
+.lp .lp-ng-box textarea:focus{outline:0}
+.lp-ng-box textarea::placeholder{color:var(--muted)}
+.lp-ng-boxfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12.5px}
+.lp-ng-boxfoot > span{margin-left:auto}
+.lp-ng-pill{display:inline-flex;align-items:center;width:auto;height:38px;margin:0;padding:0 16px;border-radius:var(--pill);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--navy);font-size:14px;cursor:pointer}
+.lp-ng-pill:hover{background:var(--pale-blue)}
+.lp-ng-notice{margin:10px 0 0;font-size:13px;color:var(--plum)}
+/* Lanes: what the box has sorted so far. */
+.lp-ng-lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.lp-ng-lane{padding:16px 18px 18px;border-left:1px solid var(--line);min-height:150px;min-width:0}
+.lp-ng-lane:first-child{border-left:0}
+.lp-ng-lane h3{font-size:14px;font-weight:550;margin:0;display:flex;align-items:baseline;gap:8px}
+.lp-ng-lane h3 em{font-style:normal;margin-left:auto;font-size:20px;font-weight:520;letter-spacing:-.04em}
+.lp-ng-zero h3 em{color:var(--line-2)}
+.lp-ng-lane > p{color:var(--muted);font-size:12.5px;margin:2px 0 0}
+.lp-ng-lane ul{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px}
+.lp-ng-lane li{display:flex;align-items:flex-start;gap:6px;padding:6px 4px 6px 10px;background:var(--pale-blue);border-radius:10px;font-size:13px;min-width:0}
+.lp-ng-lane li > span{flex:1;min-width:0}
+.lp-ng-lane li b{display:block;font-weight:500;overflow-wrap:anywhere}
+.lp-ng-lane li small{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.lp-ng-x{width:24px;height:24px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center;flex:none;cursor:pointer}
+.lp-ng-x:hover{background:var(--pale-plum);color:var(--plum)}
+.lp-ng-x svg{width:10px;height:10px}
+.lp-ng-say{margin-top:14px;background:var(--pale-blue);border-radius:var(--r-md);padding:14px 18px}
+.lp-ng-say h3{font-size:13px;color:var(--muted);font-weight:400;margin:0}
+.lp .lp-ng-say textarea{display:block;width:100%;margin:4px 0 0;padding:0;border:0;background:transparent;resize:vertical;font-size:16px;letter-spacing:-.03em;line-height:1.4;box-shadow:none}
+.lp .lp-ng-say textarea:focus{outline:0}
+.lp-ng-go{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:20px}
+.lp-ng-go p{margin:0;color:var(--muted);font-size:13.5px}
+.lp-ng-go p[role=alert]{color:var(--plum)}
+.lp-ng-create{display:inline-flex;align-items:center;height:50px;padding:0 26px;border:0;border-radius:var(--pill);background:var(--lime);color:var(--navy);font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap}
+.lp-ng-create:hover{background:oklch(90% 0.2 120)}
+.lp-ng-create:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+/* The group is ready. */
+.lp-ng-kick{margin:0;color:var(--aqua);font-size:13px}
+.lp-ng-made h1{margin:2px 0 0;font-size:clamp(22px,2.6vw,30px);line-height:1.1;letter-spacing:-.045em;color:var(--aqua);overflow-wrap:anywhere}
+.lp-ng-facts{margin:14px 0 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.lp-ng-facts > div{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:14px 20px;border-top:1px solid var(--line)}
+.lp-ng-facts > div:first-child{border-top:0}
+.lp-ng-facts dt{color:var(--muted);font-size:13px}
+.lp-ng-facts dd{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:14.5px;overflow-wrap:anywhere;min-width:0}
+.lp-ng-facts dd small{flex-basis:100%;color:var(--muted);font-size:12.5px}
+.lp-ng-facts dd a:not(.lp-btn){color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+.lp .lp-ng-facts dd input{flex:1;min-width:0;width:auto;margin:0;font-family:var(--mono);font-size:12.5px}
+.lp-ng-failed{margin-top:14px;padding:14px 20px;background:var(--pale-plum);border-radius:var(--r-md);font-size:13.5px}
+.lp-ng-failed h2{margin:0;font-size:13px;font-weight:550;color:var(--plum)}
+.lp-ng-failed ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+.lp-ng-failed b{font-weight:550;overflow-wrap:anywhere}
+@media (max-width:760px){
+  .lp-ng-cols{grid-template-columns:minmax(0,1fr);min-height:0}.lp-ng-col{border-left:0;border-top:1px solid var(--line)}.lp-ng-col:first-child{border-top:0}.lp-ng-col:empty{display:none}.lp-ng-pop{left:8px;right:8px}
+  .lp-ng-lanes{grid-template-columns:minmax(0,1fr)}.lp-ng-lane{border-left:0;border-top:1px solid var(--line);min-height:0}.lp-ng-lane:first-child{border-top:0}
+  .lp-ng-boxfoot > span{margin-left:0}
+  .lp-ng-made{flex-wrap:wrap}.lp-ng-facts > div{grid-template-columns:minmax(0,1fr);gap:4px}
+}

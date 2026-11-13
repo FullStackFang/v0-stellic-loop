@@ -318,7 +318,7 @@ export const asksById=(q:Q,p:Principal,team:Scope,timezone:string,ids:string[]):
 /** What someone outside the team may see of an ask: the question, the group's name and the closing time it was given. Nothing about answers, and nothing about whether it was closed early. */
 export type AskOutside={group:string;question:string;closesAt:string;closes:string;timezone:string};
 export type AskShare=
- |{view:'member';namespace:string;scope:Scope;detail:AskDetail;outside:AskOutside}
+ |{view:'member';namespace:string;groupSlug:string;scope:Scope;detail:AskDetail;outside:AskOutside}
  |{view:'outside';outside:AskOutside;signedIn:boolean;join:JoinStep};
 /**
  * The page behind an ask's share link. The token names the ask and grants
@@ -328,7 +328,7 @@ export type AskShare=
  */
 export async function askShare(db:Db,p:Principal|null,input:string):Promise<AskShare> {
  const shareToken=z.string().regex(/^[0-9a-f]{32}$/).parse(input);
- const {rows:[found]}=await db.query<AskOutside&Scope&{number:number;namespace:string;mode:'ask_first'|'admit'|null;requested:boolean}>(`select k.org_id as "orgId",k.loop_id as "loopId",k.number,a.namespace,o.name as "group",k.question,
+ const {rows:[found]}=await db.query<AskOutside&Scope&{number:number;namespace:string;groupSlug:string;mode:'ask_first'|'admit'|null;requested:boolean}>(`select k.org_id as "orgId",k.loop_id as "loopId",k.number,a.namespace,a.slug as "groupSlug",coalesce((select g.name from emba_loop g where g.org_id=k.org_id and g.id=k.loop_id),o.name) as "group",k.question,
    k.closes_at as "closesAt",${local('k.closes_at',"coalesce(s.timezone,'UTC')")} as closes,coalesce(s.timezone,'UTC') as timezone,
    (select l.join_mode from emba_group_request_link l where l.org_id=k.org_id and l.loop_id=k.loop_id and l.disabled_at is null) as mode,
    exists(select 1 from emba_group_membership_request r where r.org_id=k.org_id and r.loop_id=k.loop_id and r.person_id=$2::uuid and r.state='pending') as requested
@@ -336,11 +336,11 @@ export async function askShare(db:Db,p:Principal|null,input:string):Promise<AskS
    left join emba_team_state s on s.org_id=k.org_id and s.loop_id=k.loop_id
   where k.share_token=$1`,[shareToken,p?.personId??null]);
  if(!found)throw new EmbaError('not_found');
- const {orgId,loopId,number,namespace,mode,requested,...facts}=found;
+ const {orgId,loopId,number,namespace,groupSlug,mode,requested,...facts}=found;
  const outside:AskOutside={...facts,closesAt:new Date(facts.closesAt).toISOString()};
  // Only a person on the site is ever shown the member view; an assistant has its own tools.
  if(p&&p.clientId===null){
-  try{return {view:'member',namespace,scope:{orgId,loopId},detail:await askResults(db,p,{orgId,loopId,number}),outside};}
+  try{return {view:'member',namespace,groupSlug,scope:{orgId,loopId},detail:await askResults(db,p,{orgId,loopId,number}),outside};}
   catch(error){if(!(error instanceof EmbaError)||(error.code!=='forbidden'&&error.code!=='not_found'))throw error;}
  }
  return {view:'outside',outside,signedIn:Boolean(p),join:mode?{mode,requested}:null};

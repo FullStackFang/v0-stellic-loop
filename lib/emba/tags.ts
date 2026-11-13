@@ -79,7 +79,7 @@ export async function resolveTag(db:Db,p:Principal,input:unknown):Promise<TagRes
   return await db.tx(async q=>{
    if(!await canAccessPersonal(q,p,p.personId))throw new EmbaError('forbidden');
    const {rows}=await q.query<Candidate>(`with teams as (
-     select a.org_id,a.loop_id,a.namespace,a.slug,l.parent_id is null as root,o.name as org_name
+     select a.org_id,a.loop_id,a.namespace,a.slug,l.parent_id is null as root,coalesce(l.name,o.name) as org_name
      from emba_group_address a join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
      where a.retired_at is null and exists(select 1 from emba_membership m where m.org_id=a.org_id and m.person_id=$1 and m.revoked_at is null))
     select * from (

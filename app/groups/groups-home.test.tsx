@@ -68,10 +68,10 @@ it('an invitation is the plate, and accepting it puts the group in the list', as
   preview('invited-with-group');
   cleanup();
 
-  // The owner sees their groups under a plain plate, with Start a private group beside the list.
+  // The owner sees their groups under a plain plate, with Start a group beside the list.
   await view(owner);
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Your groups');
   expect(screen.getAllByRole('link', { name: /@study-team-4|Study team 4/ }).length).toBeGreaterThan(0);
-  expect(screen.getByText('Start a private group')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Start a group' })).toHaveAttribute('href', '/groups/new');
   preview('groups');
 });

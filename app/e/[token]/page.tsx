@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { ZodError } from 'zod';
 import { db } from '@/lib/db';
 import { EmbaError } from '@/lib/emba/errors';
+import { groupPath } from '@/lib/emba/group-path';
 import { canAccessLoop } from '@/lib/emba/access';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
@@ -35,12 +36,12 @@ export default async function SharedEventPage({ params }: { params: Promise<{ to
   const { outside } = share;
   const head = <><p className="lp-handle">{outside.group}</p><h1>{outside.name}</h1></>;
   if (share.view === 'member') {
-    const { scope, detail, namespace } = share;
+    const { scope, detail, namespace, groupSlug } = share;
     const canPost = await db().tx(q => canAccessLoop(q, principal, scope.orgId, scope.loopId, 'post'));
     return <div className="lp"><main className="lp-main lt-share"><div className="lp-wrap">
       <section className="lt-editor"><p className="lp-handle">{outside.group}</p><p className="emba-meta">Times are in {detail.timezone}.</p>
         <EventCard as="div" event={detail.event} scope={scope} route="share_link" canPost={canPost} />
-        <p><Link href={`/groups/${namespace}/team?tab=events`}>Open the team page</Link></p></section>
+        <p><Link href={`${groupPath(namespace, groupSlug)}/team?tab=events`}>Open the team page</Link></p></section>
     </div></main></div>;
   }
   const { join, signedIn } = share;

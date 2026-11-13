@@ -2,15 +2,16 @@ import { ClerkProvider, UserButton } from '@clerk/nextjs';
 import type { Principal } from '@/lib/emba/access';
 import { db } from '@/lib/db';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
-import { listPortalGroups } from '@/lib/emba/groups';
+import { groupHandle, treeOrder } from '@/lib/emba/group-path';
+import { listGroupTree } from '@/lib/emba/group-tree';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
-import { Rail } from './rail';
+import { Rail, type RailGroup } from './rail';
 import { SessionRefresh } from './session-refresh';
 
-// The rail lists the signed-in person's teams. A failure here must not take the page down: each page reports its own access.
-async function railGroups(principal: Principal) {
+// The rail lists the groups the signed-in person can open, as a tree. A failure here must not take the page down: each page reports its own access.
+async function railGroups(principal: Principal): Promise<RailGroup[]> {
   try {
-    return (await listPortalGroups(db(), principal)).filter(group => group.slug === 'workspace').map(group => ({ namespace: group.namespace, name: group.orgName }));
+    return treeOrder(await listGroupTree(db(), principal)).map(group => ({ namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
   } catch { return []; }
 }
 

@@ -11,7 +11,7 @@ const registration=scope.extend({namespace:name,slug:name});
 const unavailable={status:'unavailable' as const,connectionsPath:'/emba' as const};
 export type GroupAddress={orgId:string;loopId:string;namespace:string;slug:string;handle:string;orgName:string;loopPath:string};
 export type GroupResolution={status:'resolved';group:GroupAddress}|{status:'ambiguous';groups:GroupAddress[]}|typeof unavailable;
-const columns=`a.org_id as "orgId",a.loop_id as "loopId",a.namespace,a.slug,'@'||a.namespace||'/'||a.slug as handle,o.name as "orgName",l.path as "loopPath"`;
+const columns=`a.org_id as "orgId",a.loop_id as "loopId",a.namespace,a.slug,'@'||a.namespace||'/'||a.slug as handle,coalesce(l.name,o.name) as "orgName",l.path as "loopPath"`;
 
 async function rootOwner(q:Q,p:Principal,data:{orgId:string;loopId:string}) {
  await requireFirstParty(q,p);
@@ -87,9 +87,9 @@ export async function listGroups(db:Db,p:Principal,input:unknown={}):Promise<Gro
  const {limit}=z.strictObject({limit:z.number().int().min(1).max(50).default(20)}).parse(input);
  return discover(db,p,limit);
 }
-export async function listPortalGroups(db:Db,p:Principal):Promise<GroupAddress[]> {
+export async function listPortalGroups(db:Db,p:Principal,limit=50):Promise<GroupAddress[]> {
  // The authenticated portal may select a group before granting a client lease.
- await db.tx(q=>requireFirstParty(q,p));return discover(db,p,50);
+ await db.tx(q=>requireFirstParty(q,p));return discover(db,p,limit);
 }
 export async function resolveGroup(db:Db,p:Principal,input:unknown):Promise<GroupResolution> {
  const {handle}=z.strictObject({handle:z.string().regex(/^@[a-z0-9][a-z0-9-]{1,47}(\/[a-z0-9][a-z0-9-]{1,47})?$/)}).parse(input);

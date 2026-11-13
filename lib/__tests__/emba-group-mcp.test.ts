@@ -38,6 +38,8 @@ it('runs all seven group tools across two clients through actual first-party rev
   const tools=(await a.client.listTools()).tools.map(tool=>tool.name);
   for(const name of ['list_groups','resolve_group','get_group_context','search_group_memory','read_group_memory','prepare_group_memory','execute_group_memory'])expect(tools).toContain(name);
   expect((await a.client.callTool({name:'list_groups',arguments:{}})).structuredContent).toMatchObject({groups:[{handle:'@cohort-a/emba2027'}]});
+  // An assistant is given a group's handle, never the path that spells the groups it is inside.
+  for(const call of [{name:'list_groups',arguments:{}},{name:'resolve_group',arguments:{handle:'@emba2027'}}])expect(JSON.stringify(await a.client.callTool(call))).not.toContain('loopPath');
   expect((await a.client.callTool({name:'resolve_group',arguments:{handle:'@emba2027'}})).structuredContent).toMatchObject({status:'resolved',group:f.vietnam});
   const prepared=await a.client.callTool({name:'prepare_group_memory',arguments:f.payload});expect(prepared.isError).not.toBe(true);
   const review=(prepared.structuredContent as {review:unknown}).review;

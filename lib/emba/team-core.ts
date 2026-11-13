@@ -44,7 +44,7 @@ export async function reading<T>(db:Db,p:Principal,team:Scope,work:(base:Base)=>
  return db.tx(async q=>{
   await q.query('set transaction isolation level repeatable read');
   const lease=await authorize(q,p,'plan:read',team);
-  const {rows:[head]}=await q.query<{namespace:string;slug:string;root:boolean;name:string}>(`select a.namespace,a.slug,l.parent_id is null as root,o.name
+  const {rows:[head]}=await q.query<{namespace:string;slug:string;root:boolean;name:string}>(`select a.namespace,a.slug,l.parent_id is null as root,coalesce(l.name,o.name) as name
    from emba_group_address a join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
    where a.org_id=$1 and a.loop_id=$2 and a.retired_at is null`,[team.orgId,team.loopId]);
   if(!head)throw new EmbaError('forbidden');

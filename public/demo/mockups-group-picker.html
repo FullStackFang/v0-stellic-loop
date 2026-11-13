@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Where a group lives · three pickers</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+:root{
+  --canvas:oklch(96.2% 0.004 230);--surface:oklch(99.3% 0.003 230);--sunk:oklch(97.7% 0.006 240);
+  --line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252);--muted:oklch(46.5% 0.012 245);
+  --blue:oklch(47.6% 0.13 250);--lime:oklch(96.4% 0.19 117);--teal:oklch(37.3% 0.052 206);--aqua:oklch(90.4% 0.1 194);
+  --pale-blue:oklch(95.3% 0.017 245);
+  --on-dark:oklch(99.4% 0.003 230);--on-dark-78:oklch(99.4% 0.003 230 / .78);--on-dark-66:oklch(99.4% 0.003 230 / .66);--on-dark-line:oklch(99.4% 0.003 230 / .26);
+  --float:0 14px 32px -14px oklch(35.4% 0.095 252 / .28),0 2px 6px oklch(35.4% 0.095 252 / .08);
+  --r-lg:24px 24px 24px 6px;--r-md:16px 16px 16px 4px;--pill:56px;--ease:cubic-bezier(.22,1,.36,1);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--ring-bg:var(--teal);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--navy);font:14px/1.45 Archivo,system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+h1,h2,h3,p,ul{margin:0;padding:0}ul{list-style:none}
+h1,h2,h3{font-weight:480;letter-spacing:-.035em}
+button,input{font:inherit;letter-spacing:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.mono{font-family:var(--mono);letter-spacing:0;font-size:12.5px}
+.muted{color:var(--muted)}
+.bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 20px;background:var(--navy);color:var(--on-dark-78)}
+.bar b{color:var(--on-dark);font-weight:520}
+.bar a{margin-left:auto;color:var(--aqua)}
+.wrap{max-width:1040px;margin:0 auto;padding:8px 32px 90px}
+.frame{margin-top:38px}
+.frame > h2{font-size:19px}
+.frame > h2 span{color:var(--muted)}
+.frame > p{color:var(--muted);margin:4px 0 14px;max-width:78ch}
+.stage{min-height:var(--h,430px)}
+
+/* the locked header row from the picked form */
+.plate{background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg);display:flex;align-items:center;gap:16px;padding:14px 20px;position:relative}
+.plate > div{flex:1;min-width:0}
+.mark-tile{width:48px;height:48px;border-radius:14px 14px 14px 4px;background:oklch(99.4% 0.003 230 / .08);display:grid;place-items:center;flex:none}
+.mark-tile svg{width:30px;height:30px;color:var(--aqua)}
+.nm{font-size:clamp(22px,2.6vw,30px);letter-spacing:-.045em;line-height:1.1;font-weight:520;color:var(--aqua);padding-bottom:5px;border-bottom:1.5px solid var(--on-dark-line)}
+.sub{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin-top:8px;font-size:12.5px}
+.sub .mono{color:var(--aqua)}
+.pop{position:absolute;top:calc(100% + 8px);z-index:5;background:var(--surface);color:var(--navy);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--float);transition:opacity .2s var(--ease),transform .2s var(--ease)}
+@starting-style{.pop{opacity:0;transform:translateY(-6px)}}
+.pop[hidden]{display:none}
+.gt{width:28px;height:28px;border-radius:9px 9px 9px 3px;background:var(--teal);display:grid;place-items:center;flex:none}
+.gt svg{width:16px;height:16px;color:var(--aqua)}
+.gt.top{background:var(--pale-blue);color:var(--blue)}
+.gt.top svg{color:var(--blue);width:14px;height:14px}
+.chev{width:10px;height:10px;flex:none}
+.note{padding:10px 14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);background:var(--sunk)}
+.note b{color:var(--navy);font-weight:550}
+
+/* 1 · path bar */
+.pathbar{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.pathbar > span{color:var(--on-dark-66)}
+.seg{position:relative}
+.seg > button{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px 0 11px;border:0;border-radius:var(--pill);background:oklch(99.4% 0.003 230 / .1);color:var(--on-dark);font-weight:520;box-shadow:inset 0 0 0 1px var(--on-dark-line);transition:background-color .15s var(--ease)}
+.seg > button:hover,.seg > button[aria-expanded=true]{background:oklch(99.4% 0.003 230 / .2)}
+.seg > button[aria-expanded=true]{box-shadow:inset 0 0 0 1.5px var(--aqua)}
+.seg.deeper > button{background:transparent;font-weight:400;color:var(--on-dark-78);box-shadow:inset 0 0 0 1px var(--on-dark-line);border-style:dashed}
+.seg .pop{left:0;width:300px;padding:6px}
+.menu-h{padding:6px 10px 4px;font-size:12.5px;color:var(--muted)}
+.opt{display:flex;width:100%;align-items:center;gap:10px;padding:7px 10px;border:0;border-radius:10px;background:transparent;text-align:left}
+.opt:hover{background:var(--pale-blue)}
+.opt > div{min-width:0;flex:1}
+.opt b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opt small{display:block;color:var(--muted);font-size:12px}
+.opt[aria-pressed=true]{background:var(--pale-blue)}
+.opt .tick{width:14px;height:14px;color:var(--blue);flex:none;visibility:hidden}
+.opt[aria-pressed=true] .tick{visibility:visible}
+
+/* 2 · field and tree */
+.field2{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px 0 6px;border:0;border-radius:var(--pill);background:oklch(99.4% 0.003 230 / .1);box-shadow:inset 0 0 0 1px var(--on-dark-line);color:var(--on-dark-78);max-width:100%}
+.field2:hover,.field2[aria-expanded=true]{background:oklch(99.4% 0.003 230 / .18)}
+.field2[aria-expanded=true]{box-shadow:inset 0 0 0 1.5px var(--aqua)}
+.field2 .lab{height:22px;padding:0 9px;border-radius:var(--pill);background:var(--aqua);color:var(--navy);font-weight:550;font-size:12px;display:grid;place-items:center}
+.field2 b{color:var(--on-dark);font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-pop{left:20px;width:min(520px,calc(100% - 40px))}
+.find{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.find svg{width:14px;height:14px;color:var(--muted)}
+.find input{border:0;background:transparent;flex:1;min-width:0}
+.find input:focus{outline:0}
+.t-list{padding:6px;max-height:430px;overflow:auto}
+.t-row{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px 7px 6px;border:0;border-radius:10px;background:transparent;text-align:left;position:relative}
+.t-row:hover{background:var(--sunk)}
+.t-row[aria-pressed=true]{background:var(--pale-blue)}
+.t-row .tw{width:18px;height:18px;display:grid;place-items:center;border-radius:6px;color:var(--muted);flex:none}
+.t-row .tw:hover{background:var(--line)}
+.t-row .tw svg{width:8px;height:8px;transition:transform .2s var(--ease)}
+.t-row .tw.open svg{transform:rotate(90deg)}
+.t-row > div{min-width:0;flex:1}
+.t-row b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-row .mono{display:block;color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-row .ppl{color:var(--muted);font-size:12.5px;flex:none}
+.t-row .here{height:22px;padding:0 9px;border-radius:var(--pill);background:var(--blue);color:var(--on-dark);font-size:12px;font-weight:550;display:none;align-items:center;flex:none}
+.t-row[aria-pressed=true] .here{display:inline-flex}
+.t-row[aria-pressed=true] .ppl{display:none}
+.t-kids{margin-left:20px;padding-left:8px;border-left:1px solid var(--line)}
+.t-none{padding:14px;color:var(--muted)}
+mark{background:var(--lime);color:var(--navy);border-radius:3px;padding:0 1px}
+
+/* 3 · columns */
+.c-pop{left:20px;right:20px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:236px}
+.col{padding:6px;border-left:1px solid var(--line);min-width:0}
+.col:first-child{border-left:0}
+.col h3{font-size:12.5px;font-weight:400;color:var(--muted);padding:6px 10px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col .opt .chev{color:var(--muted)}
+.col .opt.on{background:var(--blue);color:var(--on-dark)}
+.col .opt.on small{color:var(--on-dark-78)}
+.col .opt.on .chev{color:var(--on-dark)}
+.col .opt.on .gt{background:oklch(99.4% 0.003 230 / .16)}
+.col .opt.via{background:var(--pale-blue)}
+.col .empty{padding:10px;color:var(--muted);font-size:12.5px}
+.c-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:var(--sunk);font-size:12.5px;color:var(--muted)}
+.c-foot b{color:var(--navy);font-weight:550}
+.c-foot button{margin-left:auto;height:32px;padding:0 16px;border:0;border-radius:var(--pill);background:var(--blue);color:var(--on-dark);font-weight:550}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:760px){.wrap{padding:8px 16px 60px}.cols{grid-template-columns:minmax(0,1fr)}.col{border-left:0;border-top:1px solid var(--line)}.col:first-child{border-top:0}.c-pop,.t-pop{left:8px;right:8px;width:auto}.seg .pop{width:min(300px,calc(100vw - 48px))}.stage{--h:560px}}
+</style>
+</head>
+<body>
+<div class="bar"><b>Where a group lives</b><span>Three ways to make the choice obvious. Each opens in its open state and is clickable.</span><a href="/demo/mockups-new-group-locked.html#b">The approved form</a></div>
+<div class="wrap">
+
+<section class="frame"><h2>1 · Path bar <span>each step is a button</span></h2>
+  <p>The place reads as a path of pills. Click any step to swap it for a group beside it; the dashed pill at the end goes one level deeper. Nothing to learn: every part you can change looks like a button.</p>
+  <div class="stage" style="--h:330px"><div class="plate"><span class="mark-tile" data-rings></span><div><div class="nm">NBAE 6830 Venture Creation</div><div class="sub"><span class="mono" id="h1"></span><div class="pathbar" id="p1"></div></div></div></div></div>
+</section>
+
+<section class="frame"><h2>2 · Field and tree <span>one control, a proper list behind it</span></h2>
+  <p>A single field with a label, the place and a chevron, so it reads as a control. Behind it the whole tree: each group with its mark, handle and size, folders that open and close, a search box, and a clear tag on the row the new group goes into.</p>
+  <div class="stage" style="--h:640px"><div class="plate"><span class="mark-tile" data-rings></span><div><div class="nm">NBAE 6830 Venture Creation</div><div class="sub"><span class="mono" id="h2"></span><button type="button" class="field2" id="f2" aria-expanded="true"><span class="lab">Inside</span><b id="f2v"></b><svg class="chev" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.500l3 3 3-3"/></svg></button></div></div>
+    <div class="pop t-pop" id="t-pop"><label class="find"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="6" r="4"/><path d="M9.500 9.500l3 3"/></svg><input id="t-find" placeholder="Find a group" aria-label="Find a group"></label><div class="t-list" id="t-list"></div><p class="note" id="t-note"></p></div>
+  </div></div>
+</section>
+
+<section class="frame"><h2>3 · Columns <span>walk down a level at a time</span></h2>
+  <p>One column per level, like a file browser. Click a group to see what is inside it; the last one you clicked is where the new group goes. Best when the tree gets deep or wide.</p>
+  <div class="stage" style="--h:440px"><div class="plate"><span class="mark-tile" data-rings></span><div><div class="nm">NBAE 6830 Venture Creation</div><div class="sub"><span class="mono" id="h3"></span><button type="button" class="field2" id="f3" aria-expanded="true"><span class="lab">Inside</span><b id="f3v"></b><svg class="chev" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.500l3 3 3-3"/></svg></button></div></div>
+    <div class="pop c-pop" id="c-pop"><div class="cols" id="cols"></div><div class="c-foot"><span id="c-say"></span><button type="button" id="c-done">Put it here</button></div></div>
+  </div></div>
+</section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RINGS='<path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime)" stroke-width="9"/><path d="M14.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/><path d="M43.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/>';
+const rings='<svg viewBox="0 0 100 100" fill="none" aria-hidden="true">'+RINGS+'</svg>';
+const chevD='<svg class="chev" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.500l3 3 3-3"/></svg>';
+const chevR='<svg class="chev" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.500 2l3 3-3 3"/></svg>';
+const tick='<svg class="tick" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.500 7.500l3 3 6-7"/></svg>';
+const topIcon='<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h10M7 9.500v-7M4 5l3-3 3 3"/></svg>';
+document.querySelectorAll('[data-rings]').forEach(el=>el.innerHTML=rings);
+const TREE=[
+ {id:'emba',parent:null,seg:'emba-2027',name:'EMBA 2027',people:68},
+ {id:'t1',parent:'emba',seg:'team-1',name:'Team 1',people:6},
+ {id:'t1-6830',parent:'t1',seg:'nbae-6830',name:'NBAE 6830 Innovation and New Venture Creation',people:6},
+ {id:'t1-6561',parent:'t1',seg:'nbae-6561',name:'NBAE 6561 Investment Banking',people:6},
+ {id:'t4',parent:'emba',seg:'team-4',name:'Team 4',people:5},
+ {id:'t4-6561',parent:'t4',seg:'nbae-6561',name:'NBAE 6561 Investment Banking',people:5},
+ {id:'vn',parent:'emba',seg:'vietnam-trek',name:'Vietnam trek',people:23},
+ {id:'hike',parent:null,seg:'hiking-club',name:'Hiking club',people:19},
+ {id:'h-cat',parent:'hike',seg:'catskills',name:'Catskills weekend',people:8},
+];
+const node=id=>TREE.find(n=>n.id===id)||null,kids=id=>TREE.filter(n=>n.parent===id);
+const chain=id=>{const out=[];for(let n=node(id);n;n=node(n.parent))out.unshift(n);return out;};
+const handleOf=id=>chain(id).map(n=>n.seg).join('/');
+const full=id=>'@'+(id?handleOf(id)+'/':'')+'nbae-6830';
+const words=id=>id?chain(id).map(n=>n.name).join(' › '):'Top level, on its own';
+const access=id=>id?'<b>Everyone in '+esc(node(id).name)+'</b> can open the new group. It keeps its own files, dates and asks.':'<b>Only people you invite</b> can open the new group.';
+const meta=n=>n.people+' people'+(kids(n.id).length?' · '+kids(n.id).length+' inside':'');
+
+/* 1 · path bar */
+let p1='t4',open1=1;
+function draw1(){
+  $('h1').textContent=full(p1);
+  const up=chain(p1),bar=$('p1');bar.replaceChildren();
+  const seg=(index,label,options,current,cls)=>{
+    const wrap=document.createElement('div');wrap.className='seg'+(cls?' '+cls:'');
+    wrap.innerHTML='<button type="button" aria-expanded="'+(open1===index)+'">'+esc(label)+chevD+'</button><div class="pop"'+(open1===index?'':' hidden')+'><p class="menu-h">'+(index===0?'Start from':index>up.length?'Go inside':'Beside '+esc(label))+'</p>'
+      +options.map(o=>'<button type="button" class="opt" data-id="'+(o.id||'')+'" aria-pressed="'+(o.id===current)+'"><span class="gt'+(o.id?'':' top')+'">'+(o.id?rings:topIcon)+'</span><div><b>'+esc(o.name)+'</b><small>'+(o.id?meta(o):'Only people you invite')+'</small></div>'+tick+'</button>').join('')+'</div>';
+    wrap.querySelector('button').onclick=()=>{open1=open1===index?-1:index;draw1();};
+    wrap.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{p1=b.dataset.id||null;open1=-1;draw1();});
+    return wrap;
+  };
+  const sep=()=>{const s=document.createElement('span');s.textContent='›';return s;};
+  if(!up.length)bar.append(seg(0,'Top level, on its own',[{id:null,name:'Top level, on its own'},...kids(null)],null));
+  up.forEach((n,i)=>{if(i)bar.append(sep());bar.append(seg(i,n.name,i===0?[{id:null,name:'Top level, on its own'},...kids(null)]:kids(n.parent),n.id));});
+  if(p1&&kids(p1).length){bar.append(sep(),seg(up.length+1,'Go deeper',kids(p1),null,'deeper'));}
+}
+draw1();
+
+/* 2 · field and tree */
+let p2='t4',q2='';const shut2=new Set(['hike']);
+function hit(text){if(!q2)return esc(text);const at=text.toLowerCase().indexOf(q2);return at<0?esc(text):esc(text.slice(0,at))+'<mark>'+esc(text.slice(at,at+q2.length))+'</mark>'+esc(text.slice(at+q2.length));}
+function draw2(){
+  $('h2').textContent=full(p2);$('f2v').textContent=words(p2);$('t-note').innerHTML=access(p2);
+  const list=$('t-list');list.replaceChildren();
+  const rowOf=n=>{const has=n.id&&kids(n.id).length>0,b=document.createElement('div');b.className='t-row';b.setAttribute('role','button');b.tabIndex=0;b.setAttribute('aria-pressed',(n.id||null)===p2);
+    b.innerHTML='<span class="tw'+(has&&!shut2.has(n.id)?' open':'')+'">'+(has?chevR:'')+'</span><span class="gt'+(n.id?'':' top')+'">'+(n.id?rings:topIcon)+'</span><div><b>'+hit(n.name)+'</b>'+(n.id?'<span class="mono">@'+esc(handleOf(n.id))+'</span>':'<span class="mono" style="font-family:inherit;letter-spacing:inherit;font-size:12px">Only people you invite</span>')+'</div>'+(n.id?'<span class="ppl">'+n.people+' people</span>':'')+'<span class="here">New group goes here</span>';
+    b.onclick=e=>{if(has&&e.target.closest('.tw')){shut2.has(n.id)?shut2.delete(n.id):shut2.add(n.id);}else p2=n.id||null;draw2();};
+    b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();p2=n.id||null;draw2();}};return b;};
+  if(q2){const found=TREE.filter(n=>n.name.toLowerCase().includes(q2));if(!found.length){list.innerHTML='<p class="t-none">No group of yours matches that.</p>';return;}found.forEach(n=>list.append(rowOf(n)));return;}
+  list.append(rowOf({id:null,name:'Top level, on its own'}));
+  const walk=(parent,into)=>{for(const n of kids(parent)){into.append(rowOf(n));if(kids(n.id).length&&!shut2.has(n.id)){const box=document.createElement('div');box.className='t-kids';into.append(box);walk(n.id,box);}}};
+  walk(null,list);
+}
+$('t-find').oninput=e=>{q2=e.target.value.trim().toLowerCase();draw2();};
+$('f2').onclick=()=>{const pop=$('t-pop');pop.hidden=!pop.hidden;$('f2').setAttribute('aria-expanded',!pop.hidden);};
+draw2();
+
+/* 3 · columns */
+let p3='t4',look='t4';
+function draw3(){
+  $('h3').textContent=full(p3);$('f3v').textContent=words(p3);
+  const path=chain(look),cols=$('cols');cols.replaceChildren();
+  const levels=[null,...path.map(n=>n.id)].slice(-3);
+  levels.forEach(parent=>{
+    const col=document.createElement('div');col.className='col';
+    const items=[...(parent===null?[{id:null,name:'Top level, on its own'}]:[]),...kids(parent)];
+    col.innerHTML='<h3>'+(parent?'Inside '+esc(node(parent).name):'Your groups')+'</h3>'+(items.length?items.map(o=>{const on=(o.id||null)===look&&(o.id||look===null),via=o.id&&!on&&path.some(n=>n.id===o.id);
+      return '<button type="button" class="opt'+(on?' on':via?' via':'')+'" data-id="'+(o.id||'')+'"><span class="gt'+(o.id?'':' top')+'">'+(o.id?rings:topIcon)+'</span><div><b>'+esc(o.name)+'</b><small>'+(o.id?o.people+' people':'Only people you invite')+'</small></div>'+(o.id&&kids(o.id).length?chevR:'')+'</button>';}).join(''):'<p class="empty">Nothing inside yet. The new group would be the first.</p>');
+    col.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{look=b.dataset.id||null;draw3();});
+    cols.append(col);
+  });
+  for(let i=levels.length;i<3;i++){const col=document.createElement('div');col.className='col';cols.append(col);}
+  $('c-say').innerHTML=(look?'Goes inside <b>'+esc(words(look))+'</b>. ':'Goes at the <b>top level</b>. ')+access(look).replace(/<\/?b>/g,'');
+  $('c-done').textContent=look===p3?'Chosen':'Put it here';$('c-done').disabled=look===p3;$('c-done').style.opacity=look===p3?.5:1;
+}
+$('c-done').onclick=()=>{p3=look;draw3();};
+$('f3').onclick=()=>{const pop=$('c-pop');pop.hidden=!pop.hidden;$('f3').setAttribute('aria-expanded',!pop.hidden);};
+draw3();
+</script>
+</body>
+</html>

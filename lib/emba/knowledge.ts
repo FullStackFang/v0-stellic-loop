@@ -5,6 +5,7 @@ import type { Db, Q } from '../db';
 import { canAccessLoop, type Principal } from './access';
 import { audit, authorize, requireFirstParty } from './consent';
 import { EmbaError } from './errors';
+import { groupPath } from './group-path';
 
 const scopeSchema = z.object({orgId:z.uuid(),loopId:z.uuid()});
 const passageSchema = z.strictObject({text:z.string().trim().min(1).max(4000),claimKey:z.string().trim().min(1).max(120).optional(),claimValue:z.string().trim().min(1).max(500).optional()})
@@ -194,7 +195,7 @@ export async function searchKnowledge(db:Db,p:Principal,input:unknown):Promise<K
       if(latest.version!==row.version || latest.state!=='ready') throw new EmbaError('conflict');
       await authorize(q,p,'plan:read',latest);
     }
-    const {rows:[address]}=await q.query<{namespace:string}>(`select namespace from emba_group_address where org_id=$1 and loop_id=$2 and retired_at is null`,[data.orgId,data.loopId]);
-    return rows.map(row=>({...row,sourceUrl:address?`/groups/${address.namespace}/resources/${row.documentId}?version=${row.version}`:`/api/emba/documents/${row.documentId}?version=${row.version}`,untrusted:true}));
+    const {rows:[address]}=await q.query<{namespace:string;slug:string}>(`select namespace,slug from emba_group_address where org_id=$1 and loop_id=$2 and retired_at is null`,[data.orgId,data.loopId]);
+    return rows.map(row=>({...row,sourceUrl:address?`${groupPath(address.namespace,address.slug)}/resources/${row.documentId}?version=${row.version}`:`/api/emba/documents/${row.documentId}?version=${row.version}`,untrusted:true}));
   });
 }
