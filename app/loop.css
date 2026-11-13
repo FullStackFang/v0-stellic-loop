@@ -3,7 +3,7 @@
    Navy rail, cool canvas, teal plate with aqua type, lime only on small chips, panels with one tight corner, pill controls.
    Everything is scoped under .lp, and class names carry the lp- prefix because globals.css owns short names such as .row and .num. */
 
-body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
+body:has(.lp){display:block;place-items:normal;padding:0;background:oklch(96.2% 0.004 230)}
 
 .lp{
   --canvas:oklch(96.2% 0.004 230); --surface:oklch(99.3% 0.003 230); --sunk:oklch(97.7% 0.006 240);
@@ -214,32 +214,19 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
 .lp-legal-foot a{color:var(--blue)}
 .lp-legal-foot a[aria-current]{color:var(--navy);font-weight:500}
 
-/* ---------- signed out: the plate fills the page, the mark is the three steps ---------- */
+/* ---------- signed out: no rail; the plate carries the pitch on the left and the sign-in form on the right ---------- */
+.lp-main-out{margin-left:0}
+/* the woven mark, large enough for its three-line weave to read */
+.lp-signin-mark{width:clamp(96px,11vw,148px);margin:0 0 28px -6px;color:var(--aqua)}
+.lp-signin-mark svg{display:block;width:100%;height:auto}
 .lp-main:has(.lp-signin){padding-bottom:16px}
 .lp-signin{--lp-ring-bg:var(--teal);margin-top:8px;min-height:calc(100dvh - 32px);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:clamp(28px,5vw,64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center;overflow:hidden}
 .lp-signin-kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua)}
 .lp-signin-kick::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
 .lp .lp-signin h1{font-size:clamp(44px,5.6vw,84px);line-height:.95;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin:16px 0 0;max-width:10ch}
 .lp-signin h1 em{font-style:normal;color:var(--lime)}
-.lp-signin ol{list-style:none;margin:28px 0 30px;padding:0;max-width:460px}
-.lp-signin li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid oklch(99.4% 0.003 230 / .14);align-items:start}
-.lp-signin li:first-child{border-top:0}
-.lp-signin li > span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:600;color:var(--aqua);box-shadow:inset 0 0 0 1.5px oklch(90.4% 0.1 194 / .5)}
-.lp-signin li:first-child > span{background:var(--lime);color:var(--navy);box-shadow:0 0 0 5px oklch(96.4% 0.19 117 / .18)}
-.lp-signin li b{display:block;color:var(--on-dark);font-weight:550;font-size:16.5px}
-.lp-signin li p{font-size:14px;line-height:1.45}
-.lp-signin-go{display:inline-flex;align-items:center;gap:10px;height:54px;padding:0 26px;border-radius:var(--pill);font-size:17px;font-weight:600;white-space:nowrap;background:var(--lime);color:var(--navy);transition:background-color .15s var(--ease),transform .1s var(--ease)}
-.lp-signin-go:hover{background:oklch(90% 0.2 120)}
-.lp-signin-go:active{transform:translateY(1px)}
-.lp-signin-go svg{width:15px;height:15px;transition:transform .15s var(--ease)}
-.lp-signin-go:hover svg{transform:translateX(3px)}
 .lp-signin :focus-visible{outline-color:var(--lime)}
 .lp-signin [role=status]{color:var(--on-dark-78)}
-.lp-signin-art{width:100%;max-width:480px;justify-self:center;color:var(--aqua)}
-/* The mark opens once, then turns very slowly. */
-.lp-signin-art svg{display:block;width:100%;height:auto;animation:lp-open 1.6s var(--ease) both,lp-turn 90s linear 1.8s infinite}
-@keyframes lp-open{from{clip-path:circle(0% at 50% 50%)}to{clip-path:circle(75% at 50% 50%)}}
-@keyframes lp-turn{to{rotate:360deg}}
 
 @media (prefers-reduced-motion:reduce){.lp *,.lp *::before,.lp *::after{transition:none!important;animation:none!important}}
 
@@ -269,8 +256,84 @@ body:has(.lp){display:block;padding:0;background:oklch(96.2% 0.004 230)}
   .lp-event{grid-template-columns:minmax(0,1fr);gap:4px;padding:12px 14px}
   .lp-wrap > h1{font-size:24px}
   .lp-signin{grid-template-columns:minmax(0,1fr);min-height:0;margin-top:12px;padding:22px 22px 28px;gap:6px;border-radius:26px 26px 26px 6px;align-items:start}
-  .lp-signin-art{order:-1;max-width:230px}
   .lp .lp-signin h1{font-size:44px}
-  .lp-signin ol{margin:20px 0 24px}
-  .lp-signin-go{display:flex;justify-content:center}
+}
+.lp-signin > div:first-child > p:not(.lp-signin-kick){margin-top:18px;max-width:36ch;font-size:16px}
+.lp .lp-signin-aside{margin-top:28px;font-size:14px}
+.lp-signin > div:first-child a{color:var(--aqua);text-decoration:underline;text-underline-offset:3px;font-size:14px}
+.lp-signin > div:last-child{display:grid;justify-items:center}
+@media (max-width:860px){.lp-signin{row-gap:24px}}
+/* standalone share page: no rail, one centred column */
+.lp-main.lt-share{margin-left:0;max-width:760px;margin-inline:auto}
+
+/* ---------- /groups home: the invitation is the plate; accepting morphs it into its row ---------- */
+.lp-arrival{--lp-ring-bg:var(--teal);margin-top:4px;background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:clamp(24px,3.4vw,40px);display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,260px);gap:clamp(20px,3vw,40px);align-items:center;overflow:hidden}
+.lp .lp-arrival h1{font-size:clamp(36px,4.4vw,56px);line-height:.95;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin:14px 0 0;max-width:14ch;overflow-wrap:anywhere}
+.lp-arrival h1 em{font-style:normal;color:var(--lime)}
+.lp-arrival-meta{margin-top:16px!important;font-size:15px;max-width:54ch}
+.lp-arrival-art{color:var(--aqua);width:100%;justify-self:end}
+.lp-arrival-art svg{display:block;width:100%;height:auto}
+.lp-arrival :focus-visible{outline-color:var(--lime)}
+.lp-arrival [role=status]{color:var(--on-dark-78)}
+.lp-arrival [role=alert]{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:var(--pill);background:var(--pale-plum);color:var(--plum)}
+/* Accept is the page's one lime action; Decline is a ghost on the plate. */
+.lp-arrival-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;align-items:flex-start}
+.lp .lp-arrival .lp-arrival-acts .emba-form button{height:50px;padding:0 24px;font-size:16px;background:transparent;color:var(--on-dark);box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .3)}
+.lp .lp-arrival .lp-arrival-acts .emba-form button:hover{background:oklch(99.4% 0.003 230 / .08)}
+.lp .lp-arrival .lp-arrival-acts .emba-form:first-child button{background:var(--lime);color:var(--navy);font-weight:600;box-shadow:none}
+.lp .lp-arrival .lp-arrival-acts .emba-form:first-child button:hover{background:oklch(90% 0.2 120)}
+.lp-paste{margin-top:20px;max-width:540px}
+.lp-paste > div{display:flex;gap:8px}
+.lp-paste input:not([type=hidden]){flex:1;min-width:0;height:50px;padding:0 18px;border-radius:var(--pill);border:1px solid oklch(99.4% 0.003 230 / .22);background:oklch(99.4% 0.003 230 / .08);color:var(--on-dark);font:inherit;font-size:15px;letter-spacing:inherit}
+.lp-paste input::placeholder{color:var(--on-dark-66)}
+.lp-paste button{display:inline-flex;align-items:center;gap:10px;height:50px;padding:0 22px;border:0;border-radius:var(--pill);font:inherit;font-size:15px;font-weight:600;letter-spacing:inherit;cursor:pointer;background:var(--lime);color:var(--navy);transition:background-color .15s var(--ease)}
+.lp-paste button:hover:not(:disabled){background:oklch(90% 0.2 120)}
+.lp-paste button:disabled{background:oklch(99.4% 0.003 230 / .12);color:var(--on-dark-66);cursor:not-allowed}
+.lp-paste button svg{width:13px;height:13px}
+.lp-paste p{margin-top:10px!important}
+/* the plate when there is nothing to accept */
+.lp-wrap > .lp-plate{grid-template-columns:88px minmax(0,1fr);margin-top:4px}
+.lp-wrap > .lp-plate > svg{width:88px;height:88px;color:var(--aqua)}
+.lp-section{margin-top:26px}
+.lp-sechead{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.lp .lp-sechead h2{font-size:19px;font-weight:500;letter-spacing:-.03em}
+.lp-sechead h2 span{font-size:13px;font-weight:400;color:var(--muted);margin-left:4px}
+.lp .lp-create{margin:0 0 0 auto}
+.lp .lp-create > summary{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:var(--pill);background:var(--surface);color:var(--navy);box-shadow:inset 0 0 0 1px var(--line-2);list-style:none}
+.lp-create > summary::-webkit-details-marker{display:none}
+.lp-create > summary:hover{background:var(--pale-blue)}
+.lp-create > summary svg{width:12px;height:12px}
+.lp .lp-create[open]{flex-basis:100%;margin:0}
+.lp .lp-create > .lt-editor{margin:10px 0 0;max-width:640px}
+.lp-grouprow{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 20px;border-top:1px solid var(--line);background:var(--surface);transition:background-color .15s var(--ease)}
+.lp-list > li:first-child > .lp-grouprow,.lp-list > li.lp-grouprow:first-child{border-top:0}
+a.lp-grouprow:hover{background:var(--sunk)}
+.lp-grouptile{--lp-ring-bg:var(--teal);width:60px;height:60px;border-radius:18px 18px 18px 5px;background:var(--teal);color:var(--aqua);display:grid;place-items:center}
+.lp-grouptile svg{width:34px;height:34px}
+.lp-grouprow b{display:block;font-size:19px;font-weight:520;letter-spacing:-.035em;overflow-wrap:anywhere}
+.lp-handle{font:12.5px var(--mono);letter-spacing:0;color:var(--muted)}
+.lp-go{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;box-shadow:inset 0 0 0 1px var(--line-2);transition:background-color .15s var(--ease),color .15s var(--ease)}
+.lp-go svg{width:13px;height:13px}
+a.lp-grouprow:hover .lp-go{background:var(--blue);color:var(--on-dark);box-shadow:none}
+.lp-grouprow .lp-arrival-acts{margin:0}
+.lp-section > .emba-form{margin-top:14px}
+.lp-help{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.lp-help > div{padding:14px 18px;border-left:1px solid var(--line)}
+.lp-help > div:first-child{border-left:0}
+.lp-help b{display:block;font-weight:550}
+.lp-help p{color:var(--muted);font-size:13px;margin-top:2px}
+.lp-help a{display:inline-block;margin-top:6px;color:var(--blue);font-weight:500;font-size:13px}
+.lp-help .lp-create{margin:6px 0 0}
+.lp-help > .emba-form{grid-column:1 / -1;padding:14px 18px;border-top:1px solid var(--line)}
+::view-transition-group(.lp-morph){animation-duration:.6s;animation-timing-function:cubic-bezier(.22,1,.36,1)}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+@media (max-width:820px){
+  .lp-arrival{grid-template-columns:1fr;padding:24px 20px}
+  .lp-arrival-art{max-width:120px;justify-self:start;order:-1}
+  .lp-wrap > .lp-plate{grid-template-columns:56px minmax(0,1fr)}.lp-wrap > .lp-plate > svg{width:56px;height:56px}
+  .lp-grouprow{grid-template-columns:48px minmax(0,1fr) auto;gap:12px;padding:14px}
+  .lp-grouptile{width:48px;height:48px}.lp-grouptile svg{width:28px;height:28px}
+  .lp-grouprow .lp-arrival-acts{grid-column:1 / -1}
+  .lp-paste > div{flex-wrap:wrap}.lp-paste button{flex:1;justify-content:center}
+  .lp-help > div{border-left:0;border-top:1px solid var(--line)}.lp-help > div:first-child{border-top:0}
 }

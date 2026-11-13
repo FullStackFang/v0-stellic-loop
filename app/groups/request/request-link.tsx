@@ -16,5 +16,5 @@ export function AccessRequestLink({ signedIn, signInAvailable }: { signedIn: boo
     return () => { current = false; };
   }, [token]);
   if (!token || !preview) return <p role="status">This link is unavailable or has been disabled.</p>;
-  return <><h2>{preview.groupName}</h2><p>{preview.description}</p><p>{preview.publicLabel}</p>{signedIn ? <ActionForm action={submitMembershipRequest} label="Request membership"><input type="hidden" name="token" value={token}/></ActionForm> : signInAvailable ? <p>Sign in to submit a request. <Link href="/emba/sign-in">Sign in</Link>, then return to this link.</p> : <p>Sign-in is not configured for this deployment.</p>}</>;
+  return <><h2>{preview.groupName}</h2><p>{preview.description}</p><p>{preview.publicLabel}</p>{signedIn ? <ActionForm action={submitMembershipRequest} label={preview.joinMode === 'admit' ? 'Join group' : 'Request membership'}><input type="hidden" name="token" value={token}/></ActionForm> : signInAvailable ? <p>Sign in to submit a request. <Link href="/groups/sign-in">Sign in</Link>, then return to this link.</p> : <p>Sign-in is not configured for this deployment.</p>}</>;
 }

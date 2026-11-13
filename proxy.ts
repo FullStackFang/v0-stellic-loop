@@ -9,8 +9,8 @@ import { ENTRY_COOKIE, entryFromUrl } from "@/lib/events";
  * keeps it, so a share stays credited until the next outside entry.
  */
 export function proxy(req: NextRequest,event:NextFetchEvent) {
-  if(req.nextUrl.pathname==='/emba'||req.nextUrl.pathname.startsWith('/emba/')||req.nextUrl.pathname==='/groups'||req.nextUrl.pathname.startsWith('/groups/')||req.nextUrl.pathname.startsWith('/api/emba/documents/')) {
-    if(process.env.LOOP_AUTH_PROVIDER==='clerk'&&process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY&&process.env.CLERK_SECRET_KEY) return clerkMiddleware({signInUrl:'/emba/sign-in'})(req,event);
+  if(req.nextUrl.pathname==='/emba'||req.nextUrl.pathname.startsWith('/emba/')||req.nextUrl.pathname==='/groups'||req.nextUrl.pathname.startsWith('/groups/')||req.nextUrl.pathname.startsWith('/e/')||req.nextUrl.pathname.startsWith('/a/')||req.nextUrl.pathname.startsWith('/api/emba/documents/')) {
+    if(process.env.LOOP_AUTH_PROVIDER==='clerk'&&process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY&&process.env.CLERK_SECRET_KEY) return clerkMiddleware({signInUrl:'/groups/sign-in'})(req,event);
     return NextResponse.next();
   }
   const res = NextResponse.next();
@@ -25,5 +25,5 @@ export function proxy(req: NextRequest,event:NextFetchEvent) {
 }
 
 export const config = {
-  matcher: ["/b/:path*", "/p/:path*", "/emba/:path*", "/groups/:path*", "/api/emba/documents/:path*"],
+  matcher: ["/b/:path*", "/p/:path*", "/emba/:path*", "/groups/:path*", "/e/:path*", "/a/:path*","/api/emba/documents/:path*"],
 };

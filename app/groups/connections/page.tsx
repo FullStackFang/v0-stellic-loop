@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 const claudeId = 'https://claude.ai/oauth/mcp-oauth-client-metadata';
 export default async function ConnectionsPage() {
   const principal = await getPortalPrincipal();
-  if (!principal) return <section className="lt-editor"><h1>Assistant connections</h1><p>Sign in to manage your own group grants.</p><Link href="/emba/sign-in">Sign in</Link></section>;
+  if (!principal) return <section className="lt-editor"><h1>Assistant connections</h1><p>Sign in to manage your own group grants.</p><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/connections')}`}>Sign in</Link></section>;
   let config: ReturnType<typeof authConfig> | null = null;
   try { config = authConfig(); } catch { /* Explain missing configuration below. */ }
   const ready = clerkPortalConfigured() && !!config && new URL(config.audience).pathname === '/api/mcp';

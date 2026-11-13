@@ -45,7 +45,7 @@ const open = { target: '_blank', rel: 'noopener' } as const;
 const tail = ([, , date, picked]: Kept) => picked ? <span className="lp-chip">Picked</span> : <span className="lp-date">{date}</span>;
 
 export default async function ArchivePage() {
-  if (!await getPortalPrincipal()) return <section className="lt-editor"><h1>How we got here</h1><p>Sign in to see the earlier versions of Loop.</p><Link href="/emba/sign-in">Sign in</Link></section>;
+  if (!await getPortalPrincipal()) return <section className="lt-editor"><h1>How we got here</h1><p>Sign in to see the earlier versions of Loop.</p><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/archive')}`}>Sign in</Link></section>;
   return <>
     <h1>How we got here</h1>
     <p>{STOPS.length} versions of Loop in three months, newest first. Each one is kept as it was on the day it stopped. This page needs sign-in; the files it opens are plain links.</p>

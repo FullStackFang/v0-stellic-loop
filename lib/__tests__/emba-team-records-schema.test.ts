@@ -276,11 +276,11 @@ it('keeps text to one visible line and links to plain https pointers',async()=>{
 });
 it('keeps every team-record table out of the Data API under Supabase default privileges',async()=>{
  await fixture();
- const tables=['emba_team_state','emba_team_record','emba_team_record_version','emba_team_conflict','emba_team_overlap','emba_team_record_tag','emba_team_change','emba_team_operation','emba_team_conflict_report','emba_team_event','emba_team_name','emba_team_brief'].sort();
- const {rows}=await t.db.query<{name:string}>("select tablename as name from pg_tables where schemaname='public' and tablename like 'emba_team_%' order by 1");
- // Every emba_team_ table is covered, including the two from the addressing migration.
+ const tables=['emba_team_state','emba_team_record','emba_team_record_version','emba_team_conflict','emba_team_overlap','emba_team_record_tag','emba_team_change','emba_team_operation','emba_team_conflict_report','emba_team_event','emba_team_name','emba_team_brief','emba_team_write','emba_event_interest','emba_ask','emba_ask_option','emba_ask_answer'].sort();
+ const {rows}=await t.db.query<{name:string}>("select tablename as name from pg_tables where schemaname='public' and tablename ~ '^emba_(team_|ask|event_interest)' order by 1");
+ // Every team table is covered, including the two from the addressing migration and the club tables for events and asks.
  expect(rows.map(row=>row.name)).toEqual(tables);
- expect((await t.db.query("select tablename from pg_tables where schemaname='public' and tablename like 'emba_team_%' and not rowsecurity")).rows).toEqual([]);
+ expect((await t.db.query("select tablename from pg_tables where schemaname='public' and tablename ~ '^emba_(team_|ask|event_interest)' and not rowsecurity")).rows).toEqual([]);
  // The shared test database grants nothing to the API roles by default, which would hide a missing
  // revoke. Build one that grants everything by default, as hosted Supabase does, and apply the migrations.
  const pg=new PGlite(),migrations=join(__dirname,'..','..','supabase','migrations');
@@ -296,11 +296,11 @@ it('keeps every team-record table out of the Data API under Supabase default pri
   expect(open.rows).toEqual([{granted:true}]);
   const granted=await pg.query<{role:string;name:string;privilege:string}>(`select r.role,c.relname as name,p.privilege from pg_class c join pg_namespace n on n.oid=c.relnamespace
    cross join (values('anon'),('authenticated'),('public')) r(role) cross join (values('select'),('insert'),('update'),('delete'),('truncate'),('references'),('trigger')) p(privilege)
-   where n.nspname='public' and c.relkind='r' and c.relname like 'emba_team_%'
+   where n.nspname='public' and c.relkind='r' and c.relname ~ '^emba_(team_|ask|event_interest)'
    and case when r.role='public' then exists(select 1 from aclexplode(c.relacl) a where a.grantee=0 and lower(a.privilege_type)=p.privilege) else has_table_privilege(r.role,c.oid,p.privilege) end`);
   expect(granted.rows).toEqual([]);
   const callable=await pg.query<{name:string}>(`select p.proname as name from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-   where n.nspname='public' and p.proname like 'emba_team_%' and (has_function_privilege('anon',p.oid,'execute') or has_function_privilege('authenticated',p.oid,'execute'))`);
+   where n.nspname='public' and p.proname ~ '^emba_(team_|ask)' and (has_function_privilege('anon',p.oid,'execute') or has_function_privilege('authenticated',p.oid,'execute'))`);
   expect(callable.rows).toEqual([]);
   const functions=await pg.query<{count:number}>("select count(*)::int as count from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'emba_team_%'");
   expect(functions.rows[0].count).toBe(10);

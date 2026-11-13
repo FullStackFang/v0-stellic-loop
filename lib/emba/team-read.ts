@@ -3,8 +3,11 @@ import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import type {Db,Q} from '../db';
 import {canAccessLoop,canAccessPersonal,type Principal} from './access';
-import {audit,authorize,requireFirstParty} from './consent';
+import {audit,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
+import {asksById,asksDue,closeDueAsks,openAsks,type AskView,type Unanswered} from './team-asks';
+import {reading,type Listed,type Scope,type TeamHead} from './team-core';
+import {bare,viewEvents,type EventView} from './team-events';
 import {rowColumns,rowFrom,viewPeople,viewRecords,type PersonView,type RecordView,type Row} from './team-records';
 import {nameSchema,singleLine} from './team-text';
 
@@ -12,38 +15,24 @@ import {nameSchema,singleLine} from './team-text';
 // a write that commits while it runs is either wholly in the answer or not at all.
 
 export const READ={list:30,announcements:5,briefLength:4000,windowDays:7,warnDays:5} as const;
-type Scope={orgId:string;loopId:string};
 const scope={orgId:z.uuid(),loopId:z.uuid()};
 const day=z.string().regex(/^2[01]\d{2}-\d{2}-\d{2}$/).refine(value=>{const d=new Date(`${value}T00:00:00Z`);return !Number.isNaN(d.getTime())&&d.toISOString().startsWith(value);});
 
-export type TeamHead={handle:string;name:string};
-export type Listed<T>={items:T[];more:number};
+export type {Listed,TeamHead};
 export type Brief={version:number;body:string;deadline:string|null;editedAt:string};
 export type TeamBrief={team:TeamHead;timezone:string;today:string;brief:Brief|null;announcements:RecordView[];resources:Listed<string>;
- counts:{openClaims:number;currentOutputs:number;currentDecisions:number};grantExpiresOn:string|null;untrusted:true};
+ counts:{openClaims:number;currentOutputs:number;currentDecisions:number};
+ /** How many asks are open, and how many of them the caller may answer and has not. */
+ asks:{open:number;unanswered:number};grantExpiresOn:string|null;untrusted:true};
 export type ConflictFlag={output:number;decision:number;topic:string|null;state:'flagged'|'recheck'};
 export type TeamState={team:TeamHead;event:string|null;timezone:string;today:string;deadline:string|null;decisionsVersion:number;
  claims:Listed<RecordView&{pastDue:boolean}>;outputs:Listed<RecordView>;decisions:Listed<RecordView>;conflicts:Listed<ConflictFlag>;untrusted:true};
-export type Change={cursor:string;action:string;at:string;record:RecordView;by:PersonView;assistant:string|null;other:number|null;about:PersonView|null;mentionsYou:boolean};
-export type WhatsNew={team:TeamHead;window:'cursor'|'since'|'last_7_days';changes:Change[];cursor:string;more:boolean;untrusted:true};
+/** One entry of the change sequence. It concerns exactly one of: a record, an event, an ask. */
+export type Change={cursor:string;action:string;at:string;record?:RecordView;event?:EventView;ask?:AskView;by:PersonView;assistant:string|null;other:number|null;about:PersonView|null;mentionsYou:boolean};
+export type WhatsNew={team:TeamHead;window:'cursor'|'since'|'last_7_days';changes:Change[];cursor:string;more:boolean;
+ /** The open asks the caller has yet to answer, soonest to close first. Not part of the change sequence: it is the same on every call until they answer. */
+ unanswered:Listed<Unanswered>;untrusted:true};
 
-type Base={q:Q;lease:string|null;team:TeamHead;timezone:string;today:string;decisionSeq:number;changeSeq:number};
-async function reading<T>(db:Db,p:Principal,team:Scope,work:(base:Base)=>Promise<T>):Promise<T> {
- return db.tx(async q=>{
-  await q.query('set transaction isolation level repeatable read');
-  const lease=await authorize(q,p,'plan:read',team);
-  const {rows:[head]}=await q.query<{namespace:string;slug:string;root:boolean;name:string}>(`select a.namespace,a.slug,l.parent_id is null as root,o.name
-   from emba_group_address a join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
-   where a.org_id=$1 and a.loop_id=$2 and a.retired_at is null`,[team.orgId,team.loopId]);
-  if(!head)throw new EmbaError('forbidden');
-  const {rows:[state]}=await q.query<{timezone:string;decisionSeq:number;changeSeq:number}>('select timezone,decision_seq as "decisionSeq",change_seq::int as "changeSeq" from emba_team_state where org_id=$1 and loop_id=$2',[team.orgId,team.loopId]);
-  const timezone=state?.timezone??'UTC';
-  const {rows:[now]}=await q.query<{today:string}>("select to_char((clock_timestamp() at time zone $1)::date,'YYYY-MM-DD') as today",[timezone]);
-  const value=await work({q,lease,team:{handle:head.root?`@${head.namespace}`:`@${head.namespace}/${head.slug}`,name:head.name},timezone,today:now.today,decisionSeq:state?.decisionSeq??0,changeSeq:state?.changeSeq??0});
-  await audit(q,p,'plan:read',team.loopId,lease);
-  return value;
- });
-}
 async function latestBrief(q:Q,team:Scope):Promise<Brief|null> {
  const {rows:[row]}=await q.query<Brief>(`select version,body,to_char(deadline,'YYYY-MM-DD') as deadline,at as "editedAt" from emba_team_brief where org_id=$1 and loop_id=$2 order by version desc limit 1`,[team.orgId,team.loopId]);
  return row?{...row,editedAt:new Date(row.editedAt).toISOString()}:null;
@@ -105,7 +94,8 @@ export async function teamBrief(db:Db,p:Principal,input:unknown):Promise<TeamBri
    from emba_team_record r where r.org_id=$1 and r.loop_id=$2 and r.state='current'`,[team.orgId,team.loopId]);
   // Only the calling assistant's own grant, and only when it is about to end.
   const {rows:[grant]}=lease?await q.query<{on:string}>(`select to_char(expires_at at time zone 'UTC','YYYY-MM-DD') as on from emba_lease where id=$1 and expires_at<clock_timestamp()+make_interval(days=>${READ.warnDays})`,[lease]):{rows:[]};
-  return {team:base.team,timezone:base.timezone,today:base.today,brief:await latestBrief(q,team),announcements:announcements.items,
+  const asks=await openAsks(q,p,team,base.timezone);
+  return {team:base.team,timezone:base.timezone,today:base.today,brief:await latestBrief(q,team),announcements:announcements.items,asks:{open:asks.open,unanswered:asks.unanswered.items.length+asks.unanswered.more},
    resources:{items:documents.map(row=>singleLine(row.title)),more:Math.max(0,(documents[0]?.total??0)-documents.length)},counts,grantExpiresOn:grant?.on??null,untrusted:true as const};
  });
 }
@@ -134,30 +124,47 @@ export async function teamState(db:Db,p:Principal,input:unknown):Promise<TeamSta
 // mark of the team so a cursor from one team is refused on another.
 const mark=(team:Scope)=>createHash('sha256').update(`${team.orgId}/${team.loopId}`).digest('hex').slice(0,6);
 const cursorOf=(team:Scope,seq:number)=>`n${mark(team)}-${seq.toString(36)}`;
+class Due extends Error {}
 const newsSchema=z.strictObject({...scope,cursor:z.string().regex(/^n[0-9a-f]{6}-[0-9a-z]{1,11}$/).optional(),since:day.optional()});
 export async function whatsNew(db:Db,p:Principal,input:unknown):Promise<WhatsNew> {
  const {cursor,since,...team}=newsSchema.parse(input);
  if(cursor&&cursor.slice(1,7)!==mark(team))throw new EmbaError('not_found');
- return reading(db,p,team,async({q,...base})=>{
+ // An ask that passed its closing time is entered in the sequence as closed before the sequence is read. The caller's access is checked first.
+ const read=(swept:boolean)=>reading(db,p,team,async({q,...base})=>{
+  if(!swept&&await asksDue(q,team))throw new Due();
   // The sequence is assigned under the team's lock, so its order is the order of commit: nothing can appear behind a cursor.
   const after=cursor?parseInt(cursor.slice(8),36):0;
   const from=cursor?null:since?`$4::date::timestamp at time zone $5`:`clock_timestamp()-make_interval(days=>${READ.windowDays})`;
-  const {rows}=await q.query<{seq:number;action:string;at:string;actorId:string|null;clientId:string|null;subjectId:string|null;otherId:string|null;recordId:string}>(`select c.seq::int as seq,c.action,c.at,c.actor_id as "actorId",c.client_id as "clientId",c.subject_id as "subjectId",c.other_id as "otherId",c.record_id as "recordId"
+  const {rows}=await q.query<{seq:number;action:string;at:string;actorId:string|null;clientId:string|null;subjectId:string|null;otherId:string|null;recordId:string|null;eventId:string|null;askId:string|null}>(`select c.seq::int as seq,c.action,c.at,c.actor_id as "actorId",c.client_id as "clientId",c.subject_id as "subjectId",c.other_id as "otherId",c.record_id as "recordId",c.event_id as "eventId",c.ask_id as "askId"
    from emba_team_change c where c.org_id=$1 and c.loop_id=$2 and c.seq>$3${from?` and c.at>=${from}`:''} order by c.seq limit ${READ.list+1}`,[team.orgId,team.loopId,after,...(!cursor&&since?[since,base.timezone]:[])]);
   const page=rows.slice(0,READ.list);
   const {rows:records}=await q.query<Row>(`select ${rowColumns} from ${rowFrom} where r.id=any($1::uuid[])`,[[...new Set(page.flatMap(row=>[row.recordId,row.otherId]).filter(Boolean))]]);
   const views=await viewRecords(q,p,team,records),person=await viewPeople(q,p,team,page.flatMap(row=>[row.actorId,row.subjectId]));
   const view=(id:string|null)=>{const index=records.findIndex(row=>row.id===id);return index<0?null:views[index];};
-  const changes=page.flatMap(row=>{
+  // An event is shown as it stands now: its present date and place are what a reader needs.
+  const events=await viewEvents(q,p,base.timezone,[...new Set(page.flatMap(row=>row.eventId??[]))]);
+  const asks=await asksById(q,p,team,base.timezone,[...new Set(page.flatMap(row=>row.askId??[]))]);
+  const changes=page.flatMap((row):Change[]=>{
+   const entry={cursor:cursorOf(team,row.seq),action:row.action,at:new Date(row.at).toISOString(),by:person(row.actorId),assistant:row.clientId,other:null,about:null,mentionsYou:false};
+   const event=events.find(item=>item.id===row.eventId);
+   if(event)return [{...entry,event:bare(event)}];
+   const asked=asks.find(item=>item.id===row.askId);
+   if(asked){const {id:_id,...ask}=asked;void _id;return [{...entry,ask}];}
    const record=view(row.recordId);
    if(!record)return [];
-   return [{cursor:cursorOf(team,row.seq),action:row.action,at:new Date(row.at).toISOString(),record,by:person(row.actorId),assistant:row.clientId,other:view(row.otherId)?.number??null,about:row.subjectId?person(row.subjectId):null,
-    mentionsYou:row.subjectId===p.personId||record.tags.some(tag=>tag.isYou)}];
+   return [{...entry,record,other:view(row.otherId)?.number??null,about:row.subjectId?person(row.subjectId):null,mentionsYou:row.subjectId===p.personId||record.tags.some(tag=>tag.isYou)}];
   });
   // With nothing to return, a first call starts the caller at the present.
   const last=page.at(-1)?.seq??(cursor?after:base.changeSeq);
-  return {team:base.team,window:cursor?'cursor' as const:since?'since' as const:'last_7_days' as const,changes,cursor:cursorOf(team,last),more:rows.length>page.length,untrusted:true as const};
+  return {team:base.team,window:cursor?'cursor' as const:since?'since' as const:'last_7_days' as const,changes,cursor:cursorOf(team,last),more:rows.length>page.length,
+   unanswered:(await openAsks(q,p,team,base.timezone)).unanswered,untrusted:true as const};
  });
+ try{return await read(false);}
+ catch(error){
+  if(!(error instanceof Due))throw error;
+  await closeDueAsks(db,team);
+  return read(true);
+ }
 }
 
 /** The number of the current decision on a topic, so a decision can be named by its topic key. */

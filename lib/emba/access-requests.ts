@@ -29,7 +29,8 @@ export async function enableAccessRequests(db: Db, principal: Principal, input: 
     await owner(q, principal, scope);
     await q.query(`insert into emba_group_request_link(org_id,loop_id,token_hash,public_label) values($1,$2,$3,$4)
       on conflict(org_id,loop_id) do update set token_hash=excluded.token_hash,public_label=excluded.public_label,
-      enabled_at=clock_timestamp(),disabled_at=null`, [scope.orgId, scope.loopId, hashToken(token), publicLabel]);
+      enabled_at=clock_timestamp(),disabled_at=null,
+      join_mode=case when emba_group_request_link.disabled_at is null then emba_group_request_link.join_mode else 'ask_first' end`, [scope.orgId, scope.loopId, hashToken(token), publicLabel]);
     await audit(q, principal, 'activity:write', scope.loopId);
   });
   return token;
@@ -44,32 +45,98 @@ export async function disableAccessRequests(db: Db, principal: Principal, input:
 }
 export async function accessRequestPreview(db: Db, token: string) {
   tokenSchema.parse(token);
-  const { rows: [row] } = await db.query<{ groupName: string; description: string; publicLabel: string }>(
-    `select o.name as "groupName",o.description,l.public_label as "publicLabel"
+  const { rows: [row] } = await db.query<{ groupName: string; description: string; publicLabel: string; joinMode: JoinMode }>(
+    `select o.name as "groupName",o.description,l.public_label as "publicLabel",l.join_mode as "joinMode"
      from emba_group_request_link l join emba_organization o on o.id=l.org_id
      join emba_group_address a on a.org_id=l.org_id and a.loop_id=l.loop_id
      where l.token_hash=$1 and l.disabled_at is null and a.retired_at is null`, [hashToken(token)]);
   if (!row) throw new EmbaError('not_found');
   return row;
 }
-export async function requestMembership(db: Db, principal: Principal, token: string): Promise<void> {
-  tokenSchema.parse(token);
+/** Ask first: an organizer approves each request. Admit: a signed-in person who confirms becomes a member at once. */
+export async function setJoinMode(db: Db, principal: Principal, input: unknown): Promise<void> {
+  const { mode, ...scope } = scopeSchema.extend({ mode: z.enum(['ask_first', 'admit']) }).parse(input);
   await db.tx(async q => {
+    await manager(q, principal, scope);
+    const { rows } = await q.query('update emba_group_request_link set join_mode=$3 where org_id=$1 and loop_id=$2 and disabled_at is null returning 1', [scope.orgId, scope.loopId, mode]);
+    if (!rows.length) throw new EmbaError('not_found');
+    await audit(q, principal, 'activity:write', scope.loopId);
+  });
+}
+/** For the group's owners and organizers: the mode of the join link, or null while the link is off. */
+export async function joinLinkMode(db: Db, principal: Principal, input: unknown): Promise<JoinMode | null> {
+  const scope = scopeSchema.parse(input);
+  return db.tx(async q => {
+    await manager(q, principal, scope);
+    const { rows: [link] } = await q.query<{ mode: JoinMode }>('select join_mode as mode from emba_group_request_link where org_id=$1 and loop_id=$2 and disabled_at is null', [scope.orgId, scope.loopId]);
+    return link?.mode ?? null;
+  });
+}
+/** A new join link in place of the current one, which stops working at once. The mode and label stay. */
+export async function replaceJoinLink(db: Db, principal: Principal, input: unknown): Promise<string> {
+  const scope = scopeSchema.parse(input);
+  const token = magicToken();
+  await db.tx(async q => {
+    await manager(q, principal, scope);
+    const { rows } = await q.query('update emba_group_request_link set token_hash=$3,enabled_at=clock_timestamp() where org_id=$1 and loop_id=$2 and disabled_at is null returning 1', [scope.orgId, scope.loopId, hashToken(token)]);
+    if (!rows.length) throw new EmbaError('not_found');
+    await audit(q, principal, 'activity:write', scope.loopId);
+  });
+  return token;
+}
+
+type JoinMode = 'ask_first' | 'admit';
+/** What happened when a signed-in person took a group's join step. */
+export type JoinOutcome = { outcome: 'joined' | 'requested' | 'contact_organizer'; namespace: string };
+// Each names the group's current join link from one parameter: the link's own token hash, or the share token of an event or ask of that group.
+const links = {
+  join: 'l.token_hash=$1',
+  event: 'exists(select 1 from emba_team_event e where e.org_id=l.org_id and e.loop_id=l.loop_id and e.share_token=$1 and e.archived_at is null and e.starts_at is not null)',
+  ask: 'exists(select 1 from emba_ask k where k.org_id=l.org_id and k.loop_id=l.loop_id and k.share_token=$1)',
+} as const;
+/**
+ * The join step, by the group's mode. Admission makes a member and nothing
+ * more: never an owner or organizer, and no assistant grant. A person who
+ * was in the group before is not admitted again; an organizer can add them.
+ */
+async function join(db: Db, principal: Principal, by: keyof typeof links, value: string): Promise<JoinOutcome> {
+  return db.tx(async q => {
     await q.query('set transaction isolation level serializable');
+    await q.query('select id from person where id=$1 for update', [principal.personId]);
     await requireFirstParty(q, principal);
-    const { rows: [link] } = await q.query<Scope>(`select l.org_id as "orgId",l.loop_id as "loopId" from emba_group_request_link l
+    const { rows: [link] } = await q.query<Scope & { mode: JoinMode; namespace: string }>(`select l.org_id as "orgId",l.loop_id as "loopId",l.join_mode as mode,a.namespace from emba_group_request_link l
       join emba_group_address a on a.org_id=l.org_id and a.loop_id=l.loop_id
-      where l.token_hash=$1 and l.disabled_at is null and a.retired_at is null for share of l,a`, [hashToken(token)]);
+      where ${links[by]} and l.disabled_at is null and a.retired_at is null for share of l,a`, [value]);
     if (!link) throw new EmbaError('not_found');
-    const { rows: members } = await q.query('select 1 from emba_membership where org_id=$1 and person_id=$2 and revoked_at is null', [link.orgId, principal.personId]);
-    if (members.length) throw new EmbaError('conflict');
+    if (link.mode === 'admit') await q.query('select id from emba_organization where id=$1 for update', [link.orgId]);
+    const { rows: [membership] } = await q.query<{ revoked: boolean }>('select revoked_at is not null as revoked from emba_membership where org_id=$1 and person_id=$2', [link.orgId, principal.personId]);
+    if (membership && !membership.revoked) throw new EmbaError('conflict');
+    if (link.mode === 'admit') {
+      if (membership) return { outcome: 'contact_organizer' as const, namespace: link.namespace };
+      const { rows: identities } = await q.query('select 1 from emba_identity where person_id=$1 and revoked_at is null', [principal.personId]);
+      if (!identities.length) throw new EmbaError('forbidden');
+      await q.query('insert into emba_membership(org_id,person_id) values($1,$2)', [link.orgId, principal.personId]);
+      await q.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'member') on conflict(org_id,loop_id,person_id) do update set role='member',revoked_at=null", [link.orgId, link.loopId, principal.personId]);
+      await q.query("update emba_group_membership_request set state='approved',reviewed_at=clock_timestamp() where org_id=$1 and loop_id=$2 and person_id=$3 and state='pending'", [link.orgId, link.loopId, principal.personId]);
+      await audit(q, principal, 'activity:write', link.loopId);
+      return { outcome: 'joined' as const, namespace: link.namespace };
+    }
     await q.query(`insert into emba_group_membership_request(org_id,loop_id,person_id,state) values($1,$2,$3,'pending')
       on conflict(org_id,loop_id,person_id) do update set state='pending',requested_at=clock_timestamp(),reviewed_at=null,reviewed_by=null
       where emba_group_membership_request.state='declined'`, [link.orgId, link.loopId, principal.personId]);
     const { rows: [request] } = await q.query<{ state: string }>('select state from emba_group_membership_request where org_id=$1 and loop_id=$2 and person_id=$3', [link.orgId, link.loopId, principal.personId]);
     if (request?.state !== 'pending') throw new EmbaError('conflict');
     await audit(q, principal, 'activity:write', link.loopId);
+    return { outcome: 'requested' as const, namespace: link.namespace };
   });
+}
+export async function requestMembership(db: Db, principal: Principal, token: string): Promise<JoinOutcome> {
+  return join(db, principal, 'join', hashToken(tokenSchema.parse(token)));
+}
+/** The same join step, reached from an event's or an ask's share link. The share token names the group; it admits nobody where the group's join link is off. */
+export async function joinFromShare(db: Db, principal: Principal, input: unknown): Promise<JoinOutcome> {
+  const { kind, token } = z.strictObject({ kind: z.enum(['event', 'ask']), token: z.string().regex(/^[0-9a-f]{32}$/) }).parse(input);
+  return join(db, principal, kind, token);
 }
 export async function listMembershipRequests(db: Db, principal: Principal, input: unknown) {
   const scope = scopeSchema.parse(input);

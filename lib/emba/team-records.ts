@@ -147,7 +147,8 @@ async function write(db:Db,p:Principal,team:Scope,tool:string,input:{operationId
     return {saved:true as const,replayed:true,record:await viewOne(ctx,prior.recordId),decisionsVersion:state.decisionSeq,also:[]};
    }
    const {rows:[recent]}=await q.query<{count:number}>(`select ((select count(*) from emba_team_operation where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
-    +(select count(*) from emba_team_conflict_report where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,team.loopId,p.personId,p.clientId]);
+    +(select count(*) from emba_team_conflict_report where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
+    +(select count(*) from emba_team_write where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,team.loopId,p.personId,p.clientId]);
    if(recent.count>=LIMITS.writesPerHour)return declined({saved:false,reason:'cap',cap:'writes_per_hour'});
    // A declined write undoes everything the work had already done.
    let result:Work;
@@ -434,20 +435,27 @@ export async function postAnnouncement(db:Db,p:Principal,input:unknown):Promise<
  },{siteOnly:true,manage:true});
 }
 
+/** SQL: person $1 is still a member of the team who may post. */
+const canPost=(org:string,loop:string)=>`(exists(select 1 from emba_membership m where m.org_id=${org} and m.person_id=$1 and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=$1)
+    and exists(with recursive up as (select id,parent_id from emba_loop where org_id=${org} and id=${loop} union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=${org})
+     select 1 from up join emba_role r on r.org_id=${org} and r.loop_id=up.id and r.person_id=$1 and r.revoked_at is null and r.role in ('owner','organizer','member')))`;
 /**
  * In every team the person can no longer write to (role or membership
  * removed, or account deleted): their open claims are released, claims
- * proposed for them are declined, and tags on them are removed (design D13).
+ * proposed for them are declined, tags on them are removed (design D13), their
+ * answers to open asks are removed and their own open asks are closed.
  * The caller already holds the person's lock; team locks follow in a fixed order.
  */
 export async function releaseOnDeparture(q:Q,personId:string,options:{orgId?:string;actorId:string|null}) {
+ // Interest follows membership: a person who can no longer post to a team is not listed as interested in its events.
+ await q.query(`delete from emba_event_interest i where i.person_id=$1 and ($2::uuid is null or i.org_id=$2) and not ${canPost('i.org_id','i.loop_id')}`,[personId,options.orgId??null]);
  const {rows:teams}=await q.query<Scope>(`select s.org_id as "orgId",s.loop_id as "loopId" from emba_team_state s where ($2::uuid is null or s.org_id=$2)
-   and not (exists(select 1 from emba_membership m where m.org_id=s.org_id and m.person_id=$1 and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=$1)
-    and exists(with recursive up as (select id,parent_id from emba_loop where org_id=s.org_id and id=s.loop_id union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=s.org_id)
-     select 1 from up join emba_role r on r.org_id=s.org_id and r.loop_id=up.id and r.person_id=$1 and r.revoked_at is null and r.role in ('owner','organizer','member')))
+   and not ${canPost('s.org_id','s.loop_id')}
    and (
    exists(select 1 from emba_team_record r where r.org_id=s.org_id and r.loop_id=s.loop_id and r.owner_id=$1 and r.state='current' and r.claim_status in ('open','proposed'))
-   or exists(select 1 from emba_team_record_tag t join emba_team_record r on r.id=t.record_id where t.person_id=$1 and r.org_id=s.org_id and r.loop_id=s.loop_id))
+   or exists(select 1 from emba_team_record_tag t join emba_team_record r on r.id=t.record_id where t.person_id=$1 and r.org_id=s.org_id and r.loop_id=s.loop_id)
+   or exists(select 1 from emba_ask k where k.org_id=s.org_id and k.loop_id=s.loop_id and k.closed_at is null and k.closes_at>clock_timestamp()
+    and (k.asker_id=$1 or exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$1))))
   order by s.org_id,s.loop_id for update of s`,[personId,options.orgId??null]);
  for(const team of teams){
   const log=async(recordId:string,action:string,subjectId:string|null)=>{
@@ -459,6 +467,13 @@ export async function releaseOnDeparture(q:Q,personId:string,options:{orgId?:str
   for(const item of claims)await log(item.id,item.status,personId);
   const {rows:tagged}=await q.query<{id:string}>('delete from emba_team_record_tag t using emba_team_record r where r.id=t.record_id and r.org_id=$1 and r.loop_id=$2 and t.person_id=$3 returning r.id',[team.orgId,team.loopId,personId]);
   for(const item of tagged)await log(item.id,'untagged',personId);
+  // Asks follow membership: an answer to an open ask no longer counts, and the person's own open asks are closed. Answers to closed asks stay, shown as a former member's.
+  await q.query('delete from emba_ask_answer a using emba_ask k where k.id=a.ask_id and k.org_id=$1 and k.loop_id=$2 and a.person_id=$3 and k.closed_at is null and k.closes_at>clock_timestamp()',[team.orgId,team.loopId,personId]);
+  const {rows:asks}=await q.query<{id:string}>('update emba_ask set closed_at=clock_timestamp() where org_id=$1 and loop_id=$2 and asker_id=$3 and closed_at is null and closes_at>clock_timestamp() returning id',[team.orgId,team.loopId,personId]);
+  for(const item of asks){
+   const {rows:[row]}=await q.query<{n:number}>('update emba_team_state set change_seq=change_seq+1 where org_id=$1 and loop_id=$2 returning change_seq::int as n',[team.orgId,team.loopId]);
+   await q.query("insert into emba_team_change(org_id,loop_id,seq,ask_id,action,actor_id) values($1,$2,$3,$4,'ask_closed',$5)",[team.orgId,team.loopId,row.n,item.id,options.actorId]);
+  }
  }
 }
 

@@ -20,7 +20,7 @@ async function loadResources(principal: NonNullable<Awaited<ReturnType<typeof ge
 
 export default async function ResourcesPage({ params }: { params: Promise<{ namespace: string }> }) {
   const principal = await getPortalPrincipal();
-  if (!principal) return <section className="lt-editor"><h1>Resources unavailable</h1><Link href="/emba/sign-in">Sign in</Link></section>;
+  if (!principal) return <section className="lt-editor"><h1>Resources unavailable</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`/groups/${(await params).namespace}/resources`)}`}>Sign in</Link></section>;
   const { namespace } = await params;
   const data = await loadResources(principal, namespace).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Resources unavailable</h1><p role="alert">This group is unavailable or your membership changed.</p></section>;

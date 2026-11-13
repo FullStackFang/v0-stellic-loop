@@ -4,13 +4,18 @@ import { db } from '@/lib/db';
 import { dayNum, mon } from '@/lib/days';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { listPortalGroups } from '@/lib/emba/groups';
+import { canAccessLoop } from '@/lib/emba/access';
 import { listTeamEvents } from '@/lib/emba/team-events';
+import { upcomingEvents } from '@/lib/emba/team-interest';
+import { listAsks } from '@/lib/emba/team-asks';
 import { briefHistory, myRecentRecords, teamBrief, teamState } from '@/lib/emba/team-read';
 import type { PersonView, RecordView } from '@/lib/emba/team-records';
 import { EmbaError } from '@/lib/emba/errors';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { BriefForm } from '@/components/emba/brief-form';
-import { addTeamEvent, amendTeamRecord, announceToTeam, changeTeamEvent, retireTeamEvent, saveTeamBrief } from '../../team-actions';
+import { EventCard, type EventWithWho } from '@/components/emba/event-card';
+import { AskForm, AskRow } from '@/components/emba/ask-parts';
+import { addTeamEvent, amendTeamRecord, announceToTeam, changeTeamEvent, restoreTeamEvent, retireTeamEvent, saveTeamBrief } from '../../team-actions';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
 import { Alert, Via } from '../../glyphs';
 
@@ -24,11 +29,13 @@ async function load(principal: Signed, namespace: string) {
   // Only an owner or organizer can read the brief's history; that is also what decides who sees the editing controls.
   // Any other failure is a failure of the page, not a reason to show an organizer the member view.
   const history = await briefHistory(db(), principal, scope).catch(error => { if (error instanceof EmbaError && error.code === 'forbidden') return null; throw error; });
-  return { group, scope, state, brief, events, mine, history };
+  // Followers read the upcoming list but cannot mark interest; archived events are listed for owners and organizers only.
+  const [upcoming, canPost, archived, asks] = await Promise.all([upcomingEvents(db(), principal, { ...scope, people: true }), db().tx(q => canAccessLoop(q, principal, scope.orgId, scope.loopId, 'post')), history === null ? [] : listTeamEvents(db(), principal, { ...scope, archived: true }), listAsks(db(), principal, scope)]);
+  return { group, scope, state, brief, events, mine, history, upcoming, canPost, archived, asks };
 }
 
 // The record is one section at a time, chosen by ?tab=. Every tab is a link, so a view can be shared and nothing depends on script.
-const TABS = [['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['events', 'Events'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
+const TABS = [['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['events', 'Events'], ['asks', 'Asks'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
 type Tab = typeof TABS[number][0];
 
 const who = (person: PersonView) => person.isYou ? 'you' : person.handle ?? (person.former ? 'a former teammate' : 'a teammate');
@@ -45,11 +52,11 @@ function Person({ person, clientId }: { person: PersonView; clientId: string | n
 
 export default async function TeamPage({ params, searchParams }: { params: Promise<{ namespace: string }>; searchParams?: Promise<{ tab?: string | string[] }> }) {
   const principal = await getPortalPrincipal();
-  if (!principal) return <section className="lt-editor"><h1>Group unavailable</h1><Link href="/emba/sign-in">Sign in</Link></section>;
+  if (!principal) return <section className="lt-editor"><h1>Group unavailable</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`/groups/${(await params).namespace}/team`)}`}>Sign in</Link></section>;
   const { namespace } = await params;
   const data = await load(principal, namespace).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, state, brief, events, mine, history } = data;
+  const { group, scope, state, brief, events, mine, history, upcoming, canPost, archived, asks } = data;
   const manager = history !== null;
   const requested = (await searchParams)?.tab;
   const tab: Tab = TABS.find(([key]) => key === requested)?.[0] ?? 'decisions';
@@ -77,13 +84,19 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     </li>;
   };
 
-  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, events: events.length };
+  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, events: events.length, asks: asks.open.items.length + asks.open.more };
   const pastDue = state.claims.items.filter(item => item.pastDue).length, waiting = state.claims.items.filter(item => item.claimStatus === 'proposed').length;
   const flagged = state.conflicts.items.length + state.conflicts.more;
   const latest = state.decisions.items.reduce<RecordView | null>((best, item) => !best || item.createdAt > best.createdAt ? item : best, null);
   const deadline = brief.brief?.deadline ?? null;
   const daysLeft = deadline ? Math.round((Date.parse(deadline) - Date.parse(state.today)) / 86_400_000) : null;
   const purpose = brief.brief?.body.split('\n').find(line => line.trim());
+  // A start or end in the team's timezone, as a datetime-local field reads it.
+  const asLocal = (instant: string | null) => instant ? new Date(instant).toLocaleString('sv-SE', { timeZone: state.timezone }).slice(0, 16).replace(' ', 'T') : '';
+  const eventFields = (event?: { startsAt: string | null; endsAt: string | null; place: string | null; url: string | null; note: string | null }) => <>
+    <label>Starts ({state.timezone})<input name="startsAt" type="datetime-local" defaultValue={asLocal(event?.startsAt ?? null)} /></label><label>Ends ({state.timezone})<input name="endsAt" type="datetime-local" defaultValue={asLocal(event?.endsAt ?? null)} /></label>
+    <label>Place<input name="place" maxLength={120} defaultValue={event?.place ?? ''} /></label><label>Link (https)<input name="url" type="url" maxLength={8000} defaultValue={event?.url ?? ''} /></label><label>Note<textarea name="note" maxLength={600} defaultValue={event?.note ?? ''} /></label>
+    {event && <p className="emba-meta">Clearing a box removes that fact from the event.</p>}</>;
   const scopeFields = <><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="loopId" value={scope.loopId} /></>;
 
   return <>
@@ -135,10 +148,22 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
         </section>}
 
         {tab === 'events' && <section id="events" aria-label="Events"><p className="emba-meta">An event is a label under the team, such as a deliverable. Outputs and claims can be filed to it as <strong>@{group.namespace}/event</strong>.</p>
+          <h3>Upcoming events</h3><p className="emba-meta">Times are in {state.timezone}.</p>
+          {upcoming.events.items.length ? <ul className="lp-list">{upcoming.events.items.map(event => <EventCard key={event.slug} event={event as EventWithWho} scope={scope} route="site" canPost={canPost} />)}</ul> : <p className="lp-empty">No upcoming events.</p>}{more(upcoming.events.more)}
+          <h3>Event tags</h3>
           {events.length ? <ul className="lp-list">{events.map(event => <li key={event.id} className="lp-event"><span className="lp-topic">@{group.namespace}/{event.slug}</span><div className="lp-what"><p className="lp-stmt">{event.name}</p>
-            {manager && <details><summary>Rename or archive</summary><ActionForm action={changeTeamEvent} label="Rename"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><label>Tag<input name="slug" required defaultValue={event.slug} maxLength={48} pattern="[a-z0-9][a-z0-9-]{1,47}" /></label><label>Name<input name="name" required defaultValue={event.name} maxLength={80} /></label></ActionForm>
+            {manager && <details><summary>Rename or archive</summary><ActionForm action={changeTeamEvent} label="Rename"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><label>Tag<input name="slug" required defaultValue={event.slug} maxLength={48} pattern="[a-z0-9][a-z0-9-]{1,47}" /></label><label>Name<input name="name" required defaultValue={event.name} maxLength={80} /></label>{eventFields(event)}</ActionForm>
               <ActionForm action={retireTeamEvent} label="Archive"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><p>An archived event takes no new records. Its existing records stay in the team&apos;s history.</p></ActionForm></details>}</div></li>)}</ul> : <p className="lp-empty">No events yet.</p>}
-          {manager && <div className="lt-editor"><h3>New event</h3><ActionForm action={addTeamEvent} label="Create event">{scopeFields}<label>Tag<input name="slug" required maxLength={48} pattern="[a-z0-9][a-z0-9-]{1,47}" placeholder="final-deck" /></label><label>Name<input name="name" required maxLength={80} placeholder="Final deck" /></label></ActionForm></div>}
+          {manager && <div className="lt-editor"><h3>New event</h3><ActionForm action={addTeamEvent} label="Create event">{scopeFields}<label>Tag<input name="slug" required maxLength={48} pattern="[a-z0-9][a-z0-9-]{1,47}" placeholder="final-deck" /></label><label>Name<input name="name" required maxLength={80} placeholder="Final deck" /></label>{eventFields()}</ActionForm></div>}
+          {manager && archived.length > 0 && <div className="lt-editor"><h3>Archived events</h3><ul className="lp-plain">{archived.map(event => <li key={event.id}>@{group.namespace}/{event.slug} · {event.name}<ActionForm action={restoreTeamEvent} label="Restore"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /></ActionForm></li>)}</ul></div>}
+        </section>}
+
+        {tab === 'asks' && <section id="asks" aria-label="Asks"><p className="emba-meta">An ask is one question to the group with a closing time. Each member answers once. Times are in {state.timezone}.</p>
+          <h3>Open asks</h3>
+          {asks.open.items.length ? <ul className="lp-list">{asks.open.items.map(ask => <AskRow key={ask.number} ask={ask} />)}</ul> : <p className="lp-empty">No open asks.</p>}{more(asks.open.more)}
+          <h3>Closed in the last 7 days</h3>
+          {asks.closed.items.length ? <ul className="lp-list">{asks.closed.items.map(ask => <AskRow key={ask.number} ask={ask} />)}</ul> : <p className="lp-empty">Nothing closed recently.</p>}{more(asks.closed.more)}
+          {canPost ? <div className="lt-editor"><h3>New ask</h3><AskForm scope={scope} timezone={state.timezone} /></div> : <p className="emba-meta">You follow this group and can read it. Only members can ask.</p>}
         </section>}
 
         {tab === 'brief' && <section id="brief" aria-label="Brief" className="lt-editor lp-brief">

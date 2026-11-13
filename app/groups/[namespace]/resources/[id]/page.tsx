@@ -14,7 +14,7 @@ async function loadSource(principal: NonNullable<Awaited<ReturnType<typeof getPo
 
 export default async function SourcePage({ params, searchParams }: { params: Promise<{ namespace: string; id: string }>; searchParams: Promise<{ version?: string }> }) {
   const principal = await getPortalPrincipal();
-  if (!principal) return <section className="lt-editor"><h1>Source unavailable</h1><Link href="/emba/sign-in">Sign in</Link></section>;
+  if (!principal) return <section className="lt-editor"><h1>Source unavailable</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`/groups/${(await params).namespace}/resources/${(await params).id}`)}`}>Sign in</Link></section>;
   const { namespace, id } = await params;
   const { version } = await searchParams;
   const data = await loadSource(principal, namespace, id, version).catch(() => null);

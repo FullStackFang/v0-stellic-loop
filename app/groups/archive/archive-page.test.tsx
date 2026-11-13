@@ -11,7 +11,7 @@ const someone = { personId: 'p1' } as unknown as Principal;
 
 it('shows a signed-out visitor only the way to sign in', async () => {
   render(await ArchivePage());
-  expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/emba/sign-in');
+  expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/groups/sign-in?redirect_url=%2Fgroups%2Farchive');
   expect(document.querySelector('a[href^="/demo/"]')).toBeNull();
   expect(screen.queryByText(/What turned us/)).toBeNull();
 });

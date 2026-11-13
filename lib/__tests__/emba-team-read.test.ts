@@ -117,7 +117,7 @@ it('returns changes in commit order behind an opaque cursor, and never misses on
  ok(await fileOutput(t.db,f.memberA,out(f)));
  const first=await whatsNew(t.db,f.memberB,f.root);
  expect(first.window).toBe('last_7_days');
- expect(first.changes.map(item=>[item.action,item.record.number,item.by.handle,item.about?.isYou??null,item.mentionsYou])).toEqual([
+ expect(first.changes.map(item=>[item.action,item.record!.number,item.by.handle,item.about?.isYou??null,item.mentionsYou])).toEqual([
   ['claimed',1,'@cohort/ana',null,true],['tagged',1,'@cohort/ana',true,true],['proposed',2,'@cohort/ana',true,true],['filed',3,'@cohort/ana',null,false]]);
  expect(first.cursor).toMatch(/^n[0-9a-f]{6}-[0-9a-z]+$/);
  // Ana is not mentioned by her own writes.
@@ -127,7 +127,7 @@ it('returns changes in commit order behind an opaque cursor, and never misses on
  ok(await amendRecord(t.db,f.memberB,{...f.root,number:2,action:'confirm'}));
  ok(await amendRecord(t.db,f.memberA,{...f.root,number:3,action:'withdraw'}));
  const next=await whatsNew(t.db,f.memberB,{...f.root,cursor:first.cursor});
- expect(next.changes.map(item=>[item.action,item.record.number])).toEqual([['confirmed',2],['withdrawn',3]]);
+ expect(next.changes.map(item=>[item.action,item.record!.number])).toEqual([['confirmed',2],['withdrawn',3]]);
  // A withdrawn record is still listed as a change, with none of its text.
  expect(next.changes[1].record).not.toHaveProperty('title');expect(JSON.stringify(next)).not.toContain('Market sizing');
  expect((await whatsNew(t.db,f.memberB,{...f.root,cursor:empty.cursor})).changes).toHaveLength(6);
@@ -141,14 +141,14 @@ it('pages thirty changes at a time, and without a cursor looks back seven days o
  const f=await fixture();
  for(let i=0;i<33;i++)ok(await claim(t.db,f.members[i%2],{...f.root,what:`Task ${i}`}));
  const page=await whatsNew(t.db,f.memberA,f.root);
- expect([page.changes.length,page.more,page.changes[0].record.number,page.changes[29].record.number]).toEqual([30,true,1,30]);
+ expect([page.changes.length,page.more,page.changes[0].record!.number,page.changes[29].record!.number]).toEqual([30,true,1,30]);
  const rest=await whatsNew(t.db,f.memberA,{...f.root,cursor:page.cursor});
- expect([rest.changes.map(item=>item.record.number),rest.more]).toEqual([[31,32,33],false]);
+ expect([rest.changes.map(item=>item.record!.number),rest.more]).toEqual([[31,32,33],false]);
  // The change log is not editable; the test moves time by lifting its guard for one statement.
  await t.db.query('alter table emba_team_change disable trigger emba_team_change_fixed');
  await t.db.query("update emba_team_change set at=at-interval '10 days' where seq<=31");
  await t.db.query('alter table emba_team_change enable trigger emba_team_change_fixed');
- expect((await whatsNew(t.db,f.memberA,f.root)).changes.map(item=>item.record.number)).toEqual([32,33]);
+ expect((await whatsNew(t.db,f.memberA,f.root)).changes.map(item=>item.record!.number)).toEqual([32,33]);
  const since=new Date(Date.now()-12*86400000).toISOString().slice(0,10);
  expect(await whatsNew(t.db,f.memberA,{...f.root,since})).toMatchObject({window:'since',more:true});
  // The cursor is authoritative: with one, the date is not a second filter.
