@@ -15,7 +15,6 @@ tight corner; pill buttons) on an app shell. Earlier looks (Sun, Night, Quorum
 | Tokens, shell, every component class | `app/loop.css` (imported once in `app/layout.tsx`) |
 | The mark and the arrow | `components/LoopGlyphs.tsx` (`Rings`, `Arrow`) |
 | /groups-only marks (assistant shapes, alert) | `app/groups/glyphs.tsx` |
-| Landing-page layout | `app/home.css` |
 | Claude Design System (private, mirrors this file) | https://claude.ai/artifact/9Y1uJQY3wddzmv2sZUMDW8 |
 | Approved mockups | `public/demo/mockups-layer-a3.html` (app), `public/demo/mockups-loop-mark-polish.html` (mark, option 3) |
 
@@ -85,9 +84,9 @@ other two. `Rings` in `components/LoopGlyphs.tsx`.
 - `<Rings />` solid, for 16 to 28px (rail, switcher, favicon, top bars).
 - `<Rings inline />` uses HAI's inline stroke (three parallel lines) for 48px and up
   (team plate, home plate, signed-out page).
-- The gaps where a ring passes under are painted with `--lp-ring-bg`. Whatever the mark
-  sits on must set it: `.lp` sets canvas, `.lp-rail` navy, `.lp-plate`, `.lp-signin`
-  and `.lp-switch-mark` teal. A new surface sets its own.
+- Where a ring passes under, it is masked by a slightly wider copy of the ring above it,
+  so the mark sits on any background without setting a colour (`--lp-ring-bg` is no
+  longer read). `<Rings inline tight />` narrows those gaps for very large sizes.
 - Ring colour comes from `currentColor`: aqua on navy and teal, navy on light.
 - On light backgrounds at small sizes the lime ring is faint. Prefer putting the mark
   on a navy or teal tile there.
@@ -112,8 +111,12 @@ other two. `Rings` in `components/LoopGlyphs.tsx`.
 - **Panels** `.lt-editor` inside `.lp`: surface, hairline, one tight corner.
 - **Forms** `.emba-form` inside `.lp`: 10px-radius inputs, the filled button last.
 - **Empty state** `.lp-empty`: one sentence of what will appear and how it gets there.
-- **Signed-out page** `.lp-signin`: the teal plate fills the page; three numbered steps
-  (step 1 lime), the lime Sign in pill, the large inline mark.
+- **Signed-out page** `.lp-signin` (`/groups/sign-in`, where `/` and `/groups` lead when signed out):
+  the teal plate fills the page, with no rail or header. Left: the inline mark at 72px, kicker,
+  headline, one line of pitch. Right: the sign-in form with no card, its fields straight on the plate
+  (white email field, lime Continue, and a see-through Google button with a soft shadow: the one raised
+  thing on the plate, asked for by the founder). Faint outlines hold its place, then it
+  fades in. Nothing else moves. It is only a sign-in; keep it plain (founder, 2026-11-13).
 
 ## Motion
 

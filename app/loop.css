@@ -214,17 +214,35 @@ body:has(.lp){display:block;place-items:normal;padding:0;background:oklch(96.2% 
 .lp-legal-foot a{color:var(--blue)}
 .lp-legal-foot a[aria-current]{color:var(--navy);font-weight:500}
 
-/* ---------- signed out: no rail; the plate carries the pitch on the left and the sign-in form on the right ---------- */
+/* ---------- signed out: no rail. One plain plate: the mark, kicker, headline and pitch on the left, the sign-in form on the right. Nothing moves. ---------- */
 .lp-main-out{margin-left:0}
-/* the woven mark, large enough for its three-line weave to read */
-.lp-signin-mark{width:clamp(96px,11vw,148px);margin:0 0 28px -6px;color:var(--aqua)}
-.lp-signin-mark svg{display:block;width:100%;height:auto}
 .lp-main:has(.lp-signin){padding-bottom:16px}
-.lp-signin{--lp-ring-bg:var(--teal);margin-top:8px;min-height:calc(100dvh - 32px);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:clamp(28px,5vw,64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center;overflow:hidden}
+.lp-signin{margin-top:8px;min-height:calc(100dvh - 32px);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:clamp(28px,5vw,72px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);column-gap:clamp(32px,6vw,96px);align-items:center;justify-content:center}
+.lp-signin-words{max-width:520px}
+.lp-signin-mark{display:block;width:72px;height:72px;margin:0 0 28px -4px;color:var(--aqua)}
 .lp-signin-kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua)}
 .lp-signin-kick::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
-.lp .lp-signin h1{font-size:clamp(44px,5.6vw,84px);line-height:.95;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin:16px 0 0;max-width:10ch}
+.lp .lp-signin h1{font-size:clamp(40px,4.6vw,64px);line-height:1;letter-spacing:-.05em;font-weight:520;color:var(--aqua);margin:14px 0 18px -.04em}
 .lp-signin h1 em{font-style:normal;color:var(--lime)}
+.lp .lp-signin-words h1 + p{max-width:38ch;font-size:16px}
+/* The form's place is held before it arrives, so nothing jumps. */
+.lp-signin-side{display:grid;justify-items:center;align-content:start;min-height:368px}
+.lp-signin-hold{width:100%;max-width:400px}
+.lp-signin-hold i{display:block;border-radius:var(--pill);box-shadow:inset 0 0 0 1.5px oklch(99.4% 0.003 230 / .14)}
+.lp-signin-hold i:nth-child(1){height:46px}
+.lp-signin-hold i:nth-child(2){height:1px;margin:32px 0 36px;border-radius:0;background:oklch(99.4% 0.003 230 / .14);box-shadow:none}
+.lp-signin-hold i:nth-child(3){height:12px;width:84px;margin-bottom:10px;background:oklch(99.4% 0.003 230 / .14);box-shadow:none}
+.lp-signin-hold i:nth-child(4){height:46px;border-radius:12px}
+.lp-signin-hold i:nth-child(5){height:46px;margin-top:32px}
+.lp-signin-side .cl-rootBox{animation:lp-arrive .3s var(--ease) both}
+/* The Google button: a lightly raised, see-through pill. The founder asked for the lift here (2026-11-13). */
+.lp-signin .cl-socialButtonsBlockButton{position:relative;overflow:visible;border:0!important;background:oklch(99.4% 0.003 230 / .09)!important;box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .16),inset 0 1px 0 oklch(99.4% 0.003 230 / .2),0 1px 2px oklch(20% 0.04 206 / .3),0 10px 22px -10px oklch(20% 0.04 206 / .6)!important;transition:background .15s var(--ease)}
+.lp-signin .cl-socialButtonsBlockButton:hover{background:oklch(99.4% 0.003 230 / .15)!important}
+.lp-signin .cl-lastAuthenticationStrategyBadge{position:absolute!important;top:0!important;right:18px!important;left:auto!important;bottom:auto!important;transform:translateY(-50%)!important;margin:0!important;padding:2px 9px!important;border:0!important;border-radius:56px!important;background:var(--aqua)!important;color:var(--navy)!important;font-size:11px!important;font-weight:600!important;line-height:1.45!important;box-shadow:none!important}
+.lp-signin .cl-socialButtonsBlockButton:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.lp-signin .cl-formButtonPrimary{border:0!important;box-shadow:none!important}
+.lp-signin .cl-formButtonPrimary::after,.lp-signin .cl-socialButtonsBlockButton::after{display:none}
+@keyframes lp-arrive{from{opacity:0}}
 .lp-signin :focus-visible{outline-color:var(--lime)}
 .lp-signin [role=status]{color:var(--on-dark-78)}
 
@@ -255,14 +273,10 @@ body:has(.lp){display:block;place-items:normal;padding:0;background:oklch(96.2% 
   .lp-date{text-align:left}
   .lp-event{grid-template-columns:minmax(0,1fr);gap:4px;padding:12px 14px}
   .lp-wrap > h1{font-size:24px}
-  .lp-signin{grid-template-columns:minmax(0,1fr);min-height:0;margin-top:12px;padding:22px 22px 28px;gap:6px;border-radius:26px 26px 26px 6px;align-items:start}
-  .lp .lp-signin h1{font-size:44px}
+  .lp-signin{grid-template-columns:minmax(0,1fr);min-height:0;margin-top:12px;padding:24px 20px 26px;row-gap:26px;border-radius:26px 26px 26px 6px}
+  .lp .lp-signin h1{font-size:40px}
+  .lp-signin-mark{width:56px;height:56px;margin-bottom:20px}
 }
-.lp-signin > div:first-child > p:not(.lp-signin-kick){margin-top:18px;max-width:36ch;font-size:16px}
-.lp .lp-signin-aside{margin-top:28px;font-size:14px}
-.lp-signin > div:first-child a{color:var(--aqua);text-decoration:underline;text-underline-offset:3px;font-size:14px}
-.lp-signin > div:last-child{display:grid;justify-items:center}
-@media (max-width:860px){.lp-signin{row-gap:24px}}
 /* standalone share page: no rail, one centred column */
 .lp-main.lt-share{margin-left:0;max-width:760px;margin-inline:auto}
 

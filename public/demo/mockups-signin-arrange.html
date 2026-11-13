@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign-in screen: three arrangements</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
+:root{
+  --canvas:oklch(96.2% 0.004 230);--surface:oklch(99.3% 0.003 230);--line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252);--muted:oklch(46.5% 0.012 245);--blue:oklch(47.6% 0.13 250);
+  --lime:oklch(96.4% 0.19 117);--teal:oklch(37.3% 0.052 206);--aqua:oklch(90.4% 0.1 194);
+  --on-dark:oklch(99.4% 0.003 230);--on-dark-78:oklch(99.4% 0.003 230 / .78);
+  --ease:cubic-bezier(.22,1,.36,1);--ring-bg:var(--teal);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--canvas);color:var(--navy);font-family:Archivo,system-ui,sans-serif;font-size:14px;line-height:1.45;letter-spacing:-.02em;-webkit-font-smoothing:antialiased}
+p,h1,h2{margin:0}
+button,input{font:inherit;letter-spacing:inherit}
+
+/* picker */
+.pick{display:flex;align-items:center;gap:6px;padding:10px 16px;flex-wrap:wrap}
+.pick b{font-weight:500;margin-right:8px}
+.pick a{height:34px;padding:0 14px;border-radius:56px;display:inline-flex;align-items:center;color:var(--navy);text-decoration:none;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.pick a[aria-current]{background:var(--blue);color:var(--on-dark);box-shadow:none}
+.pick span{color:var(--muted);font-size:13px;margin-left:8px}
+.view{display:none;padding:0 16px 16px;scroll-margin-top:60px}
+.view:target,.view.on{display:block}
+
+/* shared */
+.plate{position:relative;overflow:hidden;background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;min-height:calc(100dvh - 70px)}
+.kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua)}
+.kick::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
+h1{font-weight:520;letter-spacing:-.055em;line-height:.95;color:var(--aqua)}
+h1 em{font-style:normal;color:var(--lime)}
+.pitch{font-size:16px;max-width:36ch}
+.mark{color:var(--aqua)}
+.mark svg{display:block;width:100%;height:auto}
+
+/* the drawn form (the real one is Clerk's) */
+.form{width:100%;max-width:400px;background:var(--surface);color:var(--navy);border-radius:24px 24px 24px 6px;padding:30px 32px 0;overflow:hidden}
+.form button{width:100%;height:44px;border-radius:56px;border:0;cursor:pointer}
+.g{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--navy);display:flex;align-items:center;justify-content:center;gap:10px}
+.g i{width:16px;height:16px;border-radius:50%;background:conic-gradient(#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0)}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;margin:20px 0}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.form label{display:block;font-weight:500;font-size:13.5px;margin-bottom:8px}
+.form input{width:100%;height:42px;border-radius:12px;border:1px solid var(--line-2);padding:0 12px;background:var(--surface);color:var(--navy)}
+.go{margin-top:22px;background:var(--lime);color:var(--navy);font-weight:600;font-size:15px}
+.go:hover{background:oklch(90% 0.2 120)}
+.sec{margin:28px -32px 0;padding:14px;text-align:center;font-size:12.5px;color:var(--muted);background:oklch(97.2% 0.004 230)}
+
+@keyframes open{from{clip-path:circle(0% at 50% 50%)}to{clip-path:circle(75% at 50% 50%)}}
+@keyframes turn{to{rotate:360deg}}
+@keyframes rise{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
+.rise > *{animation:rise .7s var(--ease) both}
+.rise > :nth-child(2){animation-delay:.07s}.rise > :nth-child(3){animation-delay:.14s}.rise > :nth-child(4){animation-delay:.21s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+/* ---------- A: the mark is the backdrop of the form ---------- */
+.a{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);padding:clamp(28px,4.4vw,64px);gap:32px}
+.a .words{display:flex;flex-direction:column;justify-content:space-between;gap:40px;position:relative;z-index:1}
+.a h1{font-size:clamp(48px,6.4vw,96px);max-width:9.5ch}
+.a .pitch{margin-top:22px}
+.a .side{position:relative;display:grid;place-items:center}
+.a .mark{position:absolute;width:min(860px,66vw);top:50%;left:50%;translate:-44% -50%;opacity:.3}
+.a .mark svg{animation:open 1.8s var(--ease) both,turn 120s linear 2s infinite}
+.a .form{position:relative;z-index:1;animation:rise .8s var(--ease) .25s both}
+
+/* ---------- B: one centred column ---------- */
+.b{display:grid;place-items:center;padding:clamp(24px,3vw,44px) 22px}
+.b .col{display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:560px}
+.b .mark{width:88px;margin-bottom:18px}
+.b .mark svg{animation:open 1.4s var(--ease) both}
+.b h1{font-size:clamp(40px,4.6vw,62px);margin:14px 0 16px}
+.b .pitch{max-width:40ch;margin-bottom:26px}
+
+/* ---------- C: words on the plate, the form on its own panel ---------- */
+.c{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(380px,.9fr)}
+.c .words{padding:clamp(28px,4.4vw,64px);display:flex;flex-direction:column;justify-content:space-between;gap:40px}
+.c .mark{width:clamp(104px,11vw,156px);margin-left:-6px}
+.c .mark svg{animation:open 1.4s var(--ease) both,turn 120s linear 1.6s infinite}
+.c h1{font-size:clamp(48px,6vw,92px);max-width:9.5ch;margin:16px 0 22px}
+.c .panel{margin:12px;background:var(--surface);color:var(--navy);border-radius:22px 22px 22px 6px;display:grid;place-items:center;padding:32px;animation:rise .8s var(--ease) .15s both}
+.c .panel > div{width:100%;max-width:360px}
+.c h2{font-size:28px;font-weight:500;letter-spacing:-.04em;line-height:1.1}
+.c h2 + p{color:var(--muted);margin:8px 0 26px;font-size:14.5px}
+.c .form{max-width:none;padding:0;border-radius:0;background:none;overflow:visible}
+.c .sec{margin:26px 0 0;background:none;padding:14px 0 0;border-top:1px solid var(--line)}
+
+@media (max-width:860px){
+  .pick span{display:none}
+  .plate{min-height:0;border-radius:26px 26px 26px 6px}
+  .a{grid-template-columns:minmax(0,1fr);padding:24px 20px 26px;gap:26px}
+  .a .words{gap:22px}.a h1{font-size:46px}
+  .a .mark{width:560px;top:60%}
+  .b h1{font-size:40px}
+  .c{grid-template-columns:minmax(0,1fr)}
+  .c .words{padding:24px 22px 22px;gap:22px}.c .mark{width:84px}.c h1{font-size:46px}
+  .c .panel{margin:0 8px 8px;padding:26px 22px}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="rings" viewBox="0 0 100 100" fill="none"><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime)" stroke-width="8.5"/><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime)" stroke-width="1.7"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="8.5"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="1.7"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="8.5"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="1.7"/><g><path d="M33.76 48.32A21 21 0 0 1 29.51 30.41" stroke="var(--ring-bg)" stroke-width="14.45"/><path d="M34.73 49.42A21 21 0 0 1 29.88 28.99" stroke="var(--lime)" stroke-width="8.5"/><path d="M34.73 49.42A21 21 0 0 1 29.88 28.99" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M34.73 49.42A21 21 0 0 1 29.88 28.99" stroke="var(--lime)" stroke-width="1.7"/></g><g><path d="M64.16 50.51A21 21 0 0 1 46.5 55.71" stroke="var(--ring-bg)" stroke-width="14.45"/><path d="M65.21 49.48A21 21 0 0 1 45.06 55.41" stroke="var(--lime)" stroke-width="8.5"/><path d="M65.21 49.48A21 21 0 0 1 45.06 55.41" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M65.21 49.48A21 21 0 0 1 45.06 55.41" stroke="var(--lime)" stroke-width="1.7"/></g><g><path d="M55.19 67.3A21 21 0 0 1 41.87 80.01" stroke="var(--ring-bg)" stroke-width="14.45"/><path d="M55.65 65.91A21 21 0 0 1 40.46 80.41" stroke="currentColor" stroke-width="8.5"/><path d="M55.65 65.91A21 21 0 0 1 40.46 80.41" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M55.65 65.91A21 21 0 0 1 40.46 80.41" stroke="currentColor" stroke-width="1.7"/></g><g><path d="M41.87 39.99A21 21 0 0 1 55.19 52.7" stroke="var(--ring-bg)" stroke-width="14.45"/><path d="M40.46 39.59A21 21 0 0 1 55.65 54.09" stroke="currentColor" stroke-width="8.5"/><path d="M40.46 39.59A21 21 0 0 1 55.65 54.09" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M40.46 39.59A21 21 0 0 1 55.65 54.09" stroke="currentColor" stroke-width="1.7"/></g><g><path d="M61 39.29A21 21 0 0 1 78.66 44.49" stroke="var(--ring-bg)" stroke-width="14.45"/><path d="M59.56 39.59A21 21 0 0 1 79.71 45.52" stroke="currentColor" stroke-width="8.5"/><path d="M59.56 39.59A21 21 0 0 1 79.71 45.52" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M59.56 39.59A21 21 0 0 1 79.71 45.52" stroke="currentColor" stroke-width="1.7"/></g><g><path d="M44.01 64.59A21 21 0 0 1 48.26 46.68" stroke="var(--ring-bg)" stroke-width="14.45"/><path d="M44.38 66.01A21 21 0 0 1 49.23 45.58" stroke="currentColor" stroke-width="8.5"/><path d="M44.38 66.01A21 21 0 0 1 49.23 45.58" stroke="var(--ring-bg)" stroke-width="5.27"/><path d="M44.38 66.01A21 21 0 0 1 49.23 45.58" stroke="currentColor" stroke-width="1.7"/></g></symbol></svg>
+
+<nav class="pick" aria-label="Arrangements">
+  <b>Sign-in screen</b>
+  <a href="#a">A · Mark behind the form</a>
+  <a href="#b">B · One centred column</a>
+  <a href="#c">C · Words and a panel</a>
+  <span>Same words, mark and form in each. The form is a drawing.</span>
+</nav>
+
+<section class="view" id="a"><div class="plate a">
+  <div class="words rise">
+    <p><span class="kick">For the groups you’re already in</span></p>
+    <div><h1>Stay in the loop. <em>Without chasing it.</em></h1><p class="pitch">Loop connects the AI you already use to your team, club or trip, so anyone can ask it what the plan is.</p></div>
+  </div>
+  <div class="side"><div class="mark"><svg viewBox="0 0 100 100"><use href="#rings"/></svg></div><div class="form" data-form></div></div>
+</div></section>
+
+<section class="view" id="b"><div class="plate b"><div class="col rise">
+  <div class="mark"><svg viewBox="0 0 100 100"><use href="#rings"/></svg></div>
+  <p><span class="kick">For the groups you’re already in</span></p>
+  <h1>Stay in the loop.<br><em>Without chasing it.</em></h1>
+  <p class="pitch">Loop connects the AI you already use to your team, club or trip, so anyone can ask it what the plan is.</p>
+  <div class="form" data-form style="text-align:left"></div>
+</div></div></section>
+
+<section class="view" id="c"><div class="plate c">
+  <div class="words rise">
+    <div class="mark"><svg viewBox="0 0 100 100"><use href="#rings"/></svg></div>
+    <div><p><span class="kick">For the groups you’re already in</span></p><h1>Stay in the loop. <em>Without chasing it.</em></h1><p class="pitch">Loop connects the AI you already use to your team, club or trip, so anyone can ask it what the plan is.</p></div>
+  </div>
+  <div class="panel"><div><h2>Sign in or join</h2><p>Use the email your invitation went to.</p><div class="form" data-form></div></div></div>
+</div></section>
+
+<script>
+const form = '<button class="g" type="button"><i></i>Continue with Google</button><div class="or">or</div><label>Email address</label><input placeholder="Enter your email address"><button class="go" type="button">Continue</button><p class="sec">Secured by Clerk</p>';
+document.querySelectorAll('[data-form]').forEach(el => { el.innerHTML = form; });
+function show() {
+  const id = (location.hash || '#a').slice(1);
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id));
+  document.querySelectorAll('.pick a').forEach(a => a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+}
+addEventListener('hashchange', show); show();
+</script>
+</body>
+</html>

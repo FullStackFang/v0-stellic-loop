@@ -15,9 +15,9 @@ it('a signed-out visitor to the groups page is sent to the one sign-in screen', 
   await expect(GroupsPage()).rejects.toEqual(sentTo('/groups/sign-in'));
 });
 
-it('the sign-in screen says what Loop is and keeps the way to the trip board', () => {
+it('the sign-in screen says what Loop is, with no steps page and no trip-board link', () => {
   render(SignInPage());
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Stay in the loop. Without chasing it.');
-  expect(screen.getByRole('link', { name: 'Open the trip board' })).toHaveAttribute('href', '/b/emba27');
+  expect(screen.queryByRole('link', { name: /trip board/ })).toBeNull();
   expect(screen.queryByText(/Step 1 of 3|three steps/i)).toBeNull();
 });
