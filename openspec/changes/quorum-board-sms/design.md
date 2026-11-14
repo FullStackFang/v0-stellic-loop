@@ -8,7 +8,7 @@ Every message the product sends is already named once in `lib/notify/index.ts`: 
 
 The `/m/<token>` route exists and sets the session from an unused, unexpired `magic_token`, but nothing issues tokens outside the local seed. `person.sms_opt_out` exists and nothing sets it.
 
-DESIGN.md fixes the product rules this change must keep:
+docs/proposal-board-design.md fixes the product rules this change must keep:
 - verification only where impersonation is possible (new numbers need no code);
 - the "one more" text fires at two short, once per intent;
 - the ON text ends with a post-your-own line (M3);
@@ -56,7 +56,7 @@ The code is never written to an event or a log line. A failed or skipped message
 - The token row stores its destination and source (two new nullable columns, `to_path` and `source`), so the link is just `<app>/m/<token>`. The route uses the stored values when present and still accepts `?to=&src=` (the existing spec). This keeps a text with a link under two SMS segments.
 - The token shrinks from 32 to 16 random bytes (22 base64url characters). That is still 128 bits, and only its hash is stored.
 - The one-more text says "Send it to someone", so it will be forwarded. It must never carry a sign-in token. It carries a share link minted for the recipient (`/p/<id>?s=<token>`, a `share_minted` event with that person as sharer), so the forwards are attributed to them.
-- *Alternative:* no magic links at all, and a code on every new device. Rejected: DESIGN.md wants tapping a text to never ask for a code. *Alternative:* a magic link in the one-more text too. Rejected: whoever taps a forwarded link first would be signed in as the sender.
+- *Alternative:* no magic links at all, and a code on every new device. Rejected: docs/proposal-board-design.md wants tapping a text to never ask for a code. *Alternative:* a magic link in the one-more text too. Rejected: whoever taps a forwarded link first would be signed in as the sender.
 
 **What each recipient gets on ON.** `onReached` already carries yeses, can't-make-it (a subset of yeses) and maybes, all as person ids. Copy, with `{day}` from `shortLabel` and `{time}` only when set:
 - **in, day works:** "{title} is on: {day}, {time}. {n} in. {link} Got an idea? Post it on the board."

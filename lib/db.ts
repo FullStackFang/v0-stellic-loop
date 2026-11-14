@@ -53,7 +53,10 @@ export function fromPool(url: string | undefined): Db {
   if (!url) throw new Error("DATABASE_URL (or POSTGRES_URL) is not set");
   const pool = new pg.Pool({
     ...poolConfig(url),
-    max: 5,
+    // A page starts its reads together (a team page starts up to eight), so the pool must hold one page's worth.
+    max: 10,
+    // With every connection in use, a read waits this long for one and then fails; without it, it would wait without limit.
+    connectionTimeoutMillis: 10_000,
     types: {
       getTypeParser: ((oid: number, format?: string) =>
         PARSERS[oid] ?? pg.types.getTypeParser(oid, format as "text")) as typeof pg.types.getTypeParser,

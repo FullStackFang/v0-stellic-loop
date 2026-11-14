@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop · A2 · Paper</title>
+<style>
+@font-face{font-family:Season;src:url(/demo/loop-welcome-prototype/season.woff2) format("woff2");font-weight:450;font-display:swap}
+@font-face{font-family:Funnel;src:url(/demo/loop-welcome-prototype/funnel.woff2) format("woff2");font-weight:300 800;font-display:swap}
+:root{
+  /* paper + ink, tinted warm; carnelian is the only accent */
+  --canvas:oklch(96.6% 0.011 95);      /* ~#f5f4ed */
+  --sheet:oklch(98.4% 0.008 95);       /* raised face */
+  --sheet-hi:oklch(99.1% 0.006 95);    /* letterhead, the most raised */
+  --sheet-top:oklch(99.6% 0.004 95);   /* lit top edge */
+  --hover:oklch(94.2% 0.012 92);
+  --press:oklch(92% 0.013 90);
+  --well:oklch(94.4% 0.012 90);
+  --ink:oklch(21.5% 0.026 262);        /* ~#151b26 */
+  --ink-2:oklch(35% 0.02 262);
+  --muted:oklch(48% 0.012 75);
+  --faint:oklch(64% 0.012 78);         /* glyphs only, never body text */
+  --line:oklch(83.5% 0.013 80);        /* ~#cbc6bd */
+  --line-soft:oklch(89.5% 0.011 85);
+  --accent:oklch(55.5% 0.163 38);      /* ~#c1441a */
+  --accent-hover:oklch(49.5% 0.15 37);
+  --accent-press:oklch(45% 0.135 36);
+  --accent-wash:oklch(93.5% 0.035 50);
+  --on-accent:oklch(98.8% 0.006 95);
+  --shade:oklch(32% 0.04 60);
+  --raise:inset 0 1px 0 var(--sheet-top),0 0 0 1px oklch(40% 0.02 70 / .05),0 1px 2px oklch(32% 0.04 60 / .08),0 6px 16px -8px oklch(32% 0.04 60 / .18);
+  --raise-hi:inset 0 1px 0 var(--sheet-top),0 0 0 1px oklch(40% 0.02 70 / .05),0 1px 2px oklch(32% 0.04 60 / .07),0 3px 8px -3px oklch(32% 0.04 60 / .10),0 22px 44px -24px oklch(32% 0.05 60 / .30);
+  --serif:Season,Georgia,"Times New Roman",serif;
+  --sans:Funnel,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --r:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--canvas);color:var(--ink);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+img.face{border-radius:50%;object-fit:cover;display:block;background:var(--line-soft)}
+h1,h2,h3{margin:0;font-weight:600}
+.serif{font-family:var(--serif);font-weight:450}
+.ic{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- comparison strip (not part of design) ---------- */
+.cmp{position:fixed;inset:0 0 auto 0;height:32px;z-index:50;background:oklch(91% 0.012 88);border-bottom:1px dashed oklch(70% 0.015 80);
+  font:11px/32px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:oklch(30% 0.015 80);padding:0 14px;display:flex;gap:12px;white-space:nowrap;overflow-x:auto}
+.cmp b{font-weight:700}.cmp a{color:oklch(38% 0.12 262)}
+
+/* ---------- shell ---------- */
+.rail{position:fixed;top:32px;bottom:0;left:0;width:248px;background:var(--canvas);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:18px 14px 12px;z-index:20}
+.wordmark{padding:0 10px 18px;font:700 22px/1 var(--sans);letter-spacing:-.04em;color:var(--ink)}
+.wordmark span{color:var(--accent)}
+.switcher{position:relative;margin-bottom:20px}
+.switch-btn{width:100%;display:flex;align-items:center;gap:10px;padding:7px 9px;border:0;background:transparent;border-radius:var(--r);text-align:left;transition:background-color .2s var(--ease)}
+.switch-btn:hover{background:var(--hover)}
+.switch-btn:active{background:var(--press)}
+.switch-btn[aria-expanded="true"]{background:var(--sheet);box-shadow:var(--raise)}
+.switch-btn .mini{width:28px;height:28px;border-radius:5px;background:var(--sheet-hi);box-shadow:var(--raise);display:grid;place-items:center;flex:none;color:var(--ink)}
+.switch-btn .t{flex:1;min-width:0}
+.switch-btn .t b{display:block;font-weight:650;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.switch-btn .t span{font-size:12px;color:var(--muted)}
+.switch-btn .chev{width:14px;height:14px;color:var(--muted)}
+.menu{position:absolute;top:calc(100% + 6px);left:0;width:100%;min-width:240px;background:var(--sheet);border-radius:var(--r);box-shadow:var(--raise-hi);padding:6px;display:none;z-index:30}
+.menu.open{display:block}
+.menu .mrow{display:flex;align-items:center;gap:8px;padding:8px;border-radius:4px;font-size:13px;background:var(--hover)}
+.menu .hint{font-size:12px;color:var(--muted);padding:8px 8px 4px}
+.nav-label{font-size:11px;font-weight:600;color:var(--muted);padding:12px 10px 6px;letter-spacing:.07em;text-transform:uppercase}
+.nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.nav button{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:7px 10px;border-radius:var(--r);text-align:left;color:var(--ink-2);font-size:13.5px;font-weight:500;transition:background-color .2s var(--ease),box-shadow .2s var(--ease)}
+.nav button:hover{background:var(--hover);color:var(--ink)}
+.nav button:active{background:var(--press)}
+.nav button[aria-current="page"]{background:var(--sheet);box-shadow:var(--raise);color:var(--ink);font-weight:650}
+.nav svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.5;opacity:.75}
+.nav .count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
+.rail .spacer{flex:1}
+.account{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);margin:0 -14px -12px;padding:12px 22px}
+.account b{display:block;font-size:13px;font-weight:600}.account span{font-size:12px;color:var(--muted)}
+
+.main{margin-left:248px;padding:50px 32px 72px;min-height:100vh}
+.wrap{max-width:1140px;margin:0 auto}
+.crumbs{display:flex;align-items:center;gap:8px;height:28px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.crumbs b{color:var(--ink);font-weight:600}
+.crumbs .today{margin-left:auto;font-size:12.5px}
+.view{display:none}.view.on{display:block}
+.label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+
+/* ---------- surfaces & common ---------- */
+.sheet{background:var(--sheet);border-radius:var(--r);box-shadow:var(--raise)}
+.btn{border:0;border-radius:5px;padding:7px 12px;font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap;
+  transition:background-color .2s var(--ease),box-shadow .2s var(--ease),color .2s var(--ease)}
+.btn-primary{background:var(--accent);color:var(--on-accent);box-shadow:inset 0 1px 0 oklch(70% 0.12 45 / .55),0 1px 2px oklch(35% 0.08 40 / .25)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:active{background:var(--accent-press);box-shadow:inset 0 1px 2px oklch(25% 0.08 35 / .35)}
+.btn-quiet{background:var(--sheet);box-shadow:var(--raise);color:var(--ink)}
+.btn-quiet:hover{background:var(--sheet-hi);box-shadow:inset 0 1px 0 var(--sheet-top),0 0 0 1px oklch(40% 0.02 70 / .07),0 2px 4px oklch(32% 0.04 60 / .1),0 8px 18px -8px oklch(32% 0.04 60 / .22)}
+.btn-quiet:active{background:var(--press);box-shadow:inset 0 1px 2px oklch(32% 0.04 60 / .14)}
+.btn-quiet[aria-pressed="true"]{background:var(--well);box-shadow:inset 0 1px 2px oklch(32% 0.04 60 / .12);color:var(--muted)}
+.btn-quiet[aria-pressed="true"]:hover{color:var(--ink)}
+.btn:disabled,.btn:disabled:hover{background:var(--well);color:var(--muted);box-shadow:none;cursor:default}
+.via{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+.via i{width:7px;height:7px;border-radius:50%;border:1.3px solid currentColor;display:inline-block}
+.via.site i{border-radius:1.5px}
+.num{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:500}
+.tag{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 7px;border-radius:4px;font-size:11.5px;font-weight:600;background:var(--well);color:var(--ink-2);white-space:nowrap}
+.tag.alert{background:var(--accent-wash);color:var(--accent-press)}
+.tag.prop{background:transparent;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.tag.open::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.tag.done{background:transparent;box-shadow:inset 0 0 0 1px var(--line-soft);color:var(--muted)}
+.handle{font-size:12px;color:var(--muted);font-weight:500}
+
+/* ---------- team plate: letterhead ---------- */
+.plate{background:var(--sheet-hi);border-radius:var(--r);box-shadow:var(--raise-hi);min-height:166px;
+  display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:30px;align-items:center;padding:22px 28px 22px 24px}
+.mark{width:118px;height:118px;color:var(--ink);overflow:visible}
+.mark .ring{transition:opacity .2s var(--ease)}
+.mark .ring circle{transition:stroke-width .2s var(--ease)}
+.mark.focus .ring:not(.on){opacity:.18}
+.mark .ring.on circle{stroke-width:1.5}
+.plate .head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.plate h1{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.plate .purpose{font:450 25px/1.25 var(--serif);letter-spacing:-.012em;margin:8px 0 0;max-width:600px;color:var(--ink);text-wrap:balance}
+.plate .side{display:flex;flex-direction:column;align-items:flex-end;gap:14px}
+.dateblock{display:grid;gap:5px;min-width:148px}
+.dateblock .d{border-top:1px solid var(--ink);border-bottom:1px solid var(--line);padding:6px 0 7px;font-size:21px;font-weight:650;letter-spacing:-.015em;line-height:1.1}
+.dateblock .d small{font-size:13px;font-weight:500;color:var(--muted);margin-left:5px;letter-spacing:0}
+.dateblock .left{font-size:12.5px;color:var(--muted)}
+.stack{display:flex}
+.stack img{width:28px;height:28px;box-shadow:0 0 0 2px var(--sheet-hi);margin-left:-6px}
+.stack img:first-child{margin-left:0}
+.stack img.off{filter:grayscale(1);opacity:.55}
+
+/* ---------- facts strip: filters ---------- */
+.facts{display:grid;grid-template-columns:repeat(4,1fr);margin-top:16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px 0}
+.fact{position:relative;appearance:none;border:0;background:transparent;text-align:left;padding:10px 14px 11px 16px;border-radius:var(--r);
+  display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;align-items:center;
+  transition:background-color .2s var(--ease),box-shadow .2s var(--ease)}
+.fact+.fact::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:1px;background:var(--line-soft);transition:opacity .2s var(--ease)}
+.fact b{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.fact .s{display:block;font-size:12px;color:var(--muted);margin-top:1px;grid-column:1}
+.fact .warn{display:inline-flex;align-items:center;gap:4px;color:var(--accent-press);font-weight:650}
+.fact .warn .ic{width:12px;height:12px}
+.fact .go{grid-column:2;grid-row:1/span 2;width:14px;height:14px;color:var(--faint);transition:color .2s var(--ease),transform .2s var(--ease)}
+.fact:hover{background:var(--sheet);box-shadow:var(--raise);z-index:1}
+.fact:hover::before,.fact:hover+.fact::before,.fact:focus-visible::before,.fact:focus-visible+.fact::before{opacity:0}
+.fact:hover .go,.fact:focus-visible .go{color:var(--ink);transform:translateX(2px)}
+.fact:active{background:var(--press);box-shadow:inset 0 1px 2px oklch(32% 0.04 60 / .12)}
+.fact:focus-visible{outline-offset:-2px;border-radius:var(--r)}
+
+/* ---------- record ---------- */
+.record{display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:40px;margin-top:22px;align-items:start}
+.tabbar{display:flex;align-items:flex-end;gap:12px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:24px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.tabs button{position:relative;border:0;background:transparent;padding:6px 1px 11px;font-size:13.5px;font-weight:550;color:var(--muted);display:flex;gap:6px;align-items:baseline;white-space:nowrap;transition:color .2s var(--ease)}
+.tabs button span{font-size:12px;font-weight:500;color:var(--muted)}
+.tabs button::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:1px;background:transparent;transition:background-color .2s var(--ease)}
+.tabs button:hover{color:var(--ink)}
+.tabs button:hover::after{background:var(--line)}
+.tabs button:active{color:var(--ink-2)}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:650}
+.tabs button[aria-selected="true"]::after{background:var(--accent)}
+.tabs button:focus-visible{outline-offset:-1px}
+.tabbar .note{margin-left:auto;font-size:12.5px;color:var(--muted);padding-bottom:11px;white-space:nowrap}
+.list{margin:0 -12px}
+.row{position:relative;isolation:isolate;display:grid;grid-template-columns:40px minmax(0,1fr) 196px 56px;gap:16px;align-items:start;padding:17px 12px 18px;border-top:1px solid var(--line-soft);transition:opacity .2s var(--ease)}
+.list .row:first-child{border-top:0}
+.row::before{content:"";position:absolute;inset:3px 0;border-radius:var(--r);background:var(--accent-wash);opacity:0;z-index:-1;transition:opacity .9s var(--ease)}
+.row.hit::before{opacity:1;transition:opacity .2s var(--ease)}
+.row:focus{outline:none}
+.row:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.row.dim{opacity:.3}
+.row .num{padding-top:2px}
+.row .what .kicker{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.row .what .stmt{display:block;font:450 20px/1.3 var(--serif);letter-spacing:-.008em;color:var(--ink);text-wrap:pretty}
+.row .what .title{display:block;font-size:15px;font-weight:600;letter-spacing:-.005em}
+.row .what p{margin:4px 0 0;color:var(--ink-2);font-size:13.5px}
+.row .what .sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12.5px;color:var(--muted);margin-top:7px}
+.who{display:flex;align-items:center;gap:9px;min-width:0;padding-top:1px}
+.who img{width:24px;height:24px;flex:none}
+.who b{display:block;font-size:13px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.date{font-size:12.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums;padding-top:2px}
+.claimrow{grid-template-columns:40px minmax(0,1fr) 196px 140px}
+.claimrow .act{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.claimrow .act .date{white-space:nowrap}
+.linkt{font-size:15px;font-weight:600;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;text-decoration-thickness:1px;border-radius:2px;transition:text-decoration-color .2s var(--ease)}
+.linkt:hover{text-decoration-color:var(--ink)}
+.linkt:active{color:var(--ink-2)}
+.domain{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+.flagnote{margin-top:10px;display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2)}
+/* cross-references between #7 and #14 */
+.xref{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:3px 7px;margin:-3px -7px;border-radius:4px;font-size:12.5px;font-weight:600;color:var(--accent-press);view-transition-name:conflict-ref;transition:background-color .2s var(--ease)}
+.xref .arw{width:12px;height:12px;transition:transform .2s var(--ease)}
+.xref:hover{background:var(--accent-wash)}
+.xref:hover .arw{transform:translateX(2px)}
+.xref:active{background:oklch(90% 0.05 48)}
+.xref.tag{margin:0;padding:0 8px;height:23px;background:var(--accent-wash)}
+.xref.tag:hover{background:oklch(90.5% 0.05 48)}
+.xref.ok{color:var(--muted);font-weight:550}
+.xref.ok:hover{background:var(--hover)}
+.xref.tag.ok{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.event{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:18px 12px;border-top:1px solid var(--line-soft);align-items:start}
+.list .event:first-child{border-top:0}
+.event .h{font-size:12px;color:var(--muted)}
+.event b{display:block;font-size:16px;font-weight:650;letter-spacing:-.01em;margin-top:2px}
+.event p{margin:4px 0 0;color:var(--ink-2);font-size:13.5px}
+.event .when{text-align:right;font-size:12.5px;color:var(--muted)}
+.event .when b{font-size:15px;color:var(--ink);margin:0}
+
+/* aside */
+.aside{display:flex;flex-direction:column;gap:26px;padding-top:4px}
+.sechead{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.sechead .n{margin-left:auto;font-size:12px;color:var(--muted)}
+.ann{padding:15px 18px 16px}
+.ann p{margin:0 0 12px;font:450 18px/1.38 var(--serif);color:var(--ink)}
+.ann .who img{width:22px;height:22px}
+.ann .who b{font-size:12.5px}
+.people-panel{border-top:1px solid var(--line);padding-top:14px}
+.members{display:flex;flex-direction:column;gap:1px;margin:0 -8px}
+.member{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;text-align:left;padding:6px 8px;border-radius:var(--r);transition:background-color .2s var(--ease),box-shadow .2s var(--ease)}
+.member:hover{background:var(--hover)}
+.member:active{background:var(--press)}
+.member[aria-pressed="true"]{background:var(--sheet);box-shadow:var(--raise)}
+.member img{width:28px;height:28px;flex:none}
+.member .t{flex:1;min-width:0}
+.member b{font-size:13px;font-weight:550;display:block}
+.member .ai{font-size:12px;color:var(--muted)}
+.member.off img{filter:grayscale(1);opacity:.6}
+.member.off .ai{display:inline-flex;align-items:center;gap:5px}
+.member.off .ai i{width:8px;height:8px;border-radius:50%;border:1.3px dashed currentColor}
+.nudge{margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.nudge .btn{margin-top:10px}
+
+/* ---------- other views ---------- */
+.pagehead{margin:6px 0 22px}
+.pagehead h1{font-size:26px;font-weight:700;letter-spacing:-.025em}
+.pagehead p{margin:6px 0 0;color:var(--muted);max-width:640px;font-size:14px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:36px;align-items:start}
+.stack-col{display:flex;flex-direction:column;gap:28px}
+.intent{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.icard{padding:15px 17px 14px;display:flex;flex-direction:column;gap:10px;min-height:150px}
+.icard q{quotes:none;font:450 19px/1.33 var(--serif);letter-spacing:-.008em;flex:1;color:var(--ink)}
+.icard .foot{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.icard .foot .rd{margin-left:auto}
+.flat{border-top:1px solid var(--line);padding-top:14px}
+.perm{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line-soft)}
+.perm:first-of-type{border-top:0;padding-top:2px}
+.perm .logo{width:32px;height:32px;border-radius:5px;display:grid;place-items:center;font-weight:700;font-size:12px;background:var(--sheet);box-shadow:var(--raise);color:var(--ink-2)}
+.perm b{font-size:13.5px;font-weight:650;display:block}
+.perm .scope{font-size:12.5px;color:var(--ink-2)}
+.perm .until{font-size:12px;color:var(--muted)}
+.perm.revoked .scope,.perm.revoked b{color:var(--muted);text-decoration:line-through}
+.perm.revoked .logo{box-shadow:none;background:var(--well);color:var(--muted)}
+.perm.revoked .until{color:var(--ink-2);font-weight:600}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft);font-size:13px;color:var(--ink-2)}
+.log li:first-child{border-top:0}
+.log li span{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.connect{padding:18px 18px 18px}
+.connect h3{font-size:15px;font-weight:650;margin-bottom:4px}
+.connect .lede{margin:0 0 14px;color:var(--muted);font-size:13px}
+.prompt{position:relative;background:var(--well);border-radius:5px;box-shadow:inset 0 1px 2px oklch(32% 0.04 60 / .1);padding:14px 14px 54px}
+.prompt pre{margin:0;white-space:pre-wrap;word-break:break-word;font:13px/1.6 var(--sans);color:var(--ink)}
+.prompt .btn{position:absolute;right:10px;bottom:10px}
+.prompt .tgt{position:absolute;left:14px;bottom:17px;font-size:12px;color:var(--muted)}
+.brief{padding:30px 34px 28px;max-width:760px}
+.brief h2{font:450 28px/1.2 var(--serif);letter-spacing:-.015em;margin:8px 0 14px;text-wrap:balance}
+.brief p{margin:0 0 14px;color:var(--ink);font:450 17px/1.6 var(--serif)}
+.brief ul{margin:0 0 18px;padding-left:20px;color:var(--ink);font:450 16.5px/1.75 var(--serif)}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.pcard{padding:16px 17px;display:flex;flex-direction:column;gap:10px}
+.pcard .top{display:flex;gap:12px;align-items:center}
+.pcard img{width:44px;height:44px}
+.pcard b{font-size:14px;font-weight:650;display:block}
+.pcard .meta{font-size:12.5px;color:var(--muted)}
+.pcard .holds{font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--line-soft);padding-top:10px}
+.pcard.off{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.pcard.off img{filter:grayscale(1);opacity:.7}
+.calls .row{grid-template-columns:110px minmax(0,1fr) 110px 56px;align-items:center}
+.calls code{font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink);word-break:break-word}
+.calls .what .sub{margin-top:3px}
+
+/* ---------- transitions ---------- */
+::view-transition-old(root),::view-transition-new(root){animation-duration:200ms;animation-timing-function:var(--ease)}
+::view-transition-group(conflict-ref){animation-duration:200ms;animation-timing-function:var(--ease)}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+  .fact:hover .go,.fact:focus-visible .go,.xref:hover .arw{transform:none}
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){.record,.two{grid-template-columns:1fr}.aside{display:grid;grid-template-columns:1fr 1fr;gap:24px}}
+@media (max-width:820px){
+  body{padding-top:32px}
+  .rail{position:sticky;top:32px;width:auto;height:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line)}
+  .wordmark{padding:0 6px 0 2px;font-size:19px;flex:none}
+  .switcher{margin:0;flex:none}.switch-btn{padding:4px 6px;gap:7px}.switch-btn .t span,.switch-btn .chev{display:none}.switch-btn .t b{max-width:70px}
+  .switch-btn .mini{width:24px;height:24px}
+  .menu{width:250px}
+  .navs{display:flex;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .nav-label,.rail .spacer,.account,.nav .count{display:none}
+  .nav{flex-direction:row}.nav button{padding:6px 9px;white-space:nowrap;font-size:13px}.nav svg{display:none}
+  .main{margin-left:0;padding:14px 16px 56px}
+  .plate{min-height:0;grid-template-columns:58px minmax(0,1fr);padding:16px;gap:14px 16px}
+  .mark{width:58px;height:58px}
+  .plate h1{font-size:18px}.plate .purpose{font-size:19px;margin-top:6px}
+  .plate .side{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:flex-end}
+  .dateblock{min-width:0}.dateblock .d{font-size:18px}
+  .facts{grid-template-columns:1fr 1fr}
+  .fact:nth-child(3)::before{display:none}
+  .fact:nth-child(n+3){border-top:1px solid var(--line-soft);border-radius:0}
+  .fact:nth-child(n+3):hover{border-radius:var(--r)}
+  .fact{padding:10px 10px 11px 12px}
+  .record{gap:28px}
+  .aside{grid-template-columns:1fr}
+  .list{margin:0 -8px}
+  .row,.claimrow,.calls .row{grid-template-columns:34px minmax(0,1fr);gap:8px 10px;padding:14px 8px}
+  .row .who,.row .date,.claimrow .act,.calls .row>.date{grid-column:2}
+  .row .date,.claimrow .act{text-align:left;align-items:flex-start}
+  .claimrow .act{flex-direction:row;align-items:center;gap:10px}
+  .row .what .stmt{font-size:18px}
+  .intent{grid-template-columns:1fr}
+  .tabbar .note{display:none}
+  .tabs{gap:18px}
+  .brief{padding:20px 18px}
+  .brief h2{font-size:23px}
+}
+</style>
+</head>
+<body>
+
+<div class="cmp" role="navigation" aria-label="Compare looks">
+  <a href="mockups-layer-a1.html">A1 · Daylight</a> | <b aria-current="page">A2 · Paper</b> | <a href="mockups-layer-a3.html">A3 · HAI</a> | <a href="mockups-layer-a.html">A · before</a>
+</div>
+
+<!-- shared symbols -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 1.8l6.6 11.6H1.4z"/><path d="M8 6.3v3.3M8 11.6v.1"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h9.5M9 4.5L12.5 8 9 11.5"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 16 16"><path d="M6 3.5L10.5 8 6 12.5"/></symbol>
+    <g id="rings-mini" fill="none" stroke="currentColor" stroke-width="6">
+      <circle cx="60" cy="33" r="22"/><circle cx="85.7" cy="51.7" r="22"/><circle cx="75.9" cy="81.8" r="22"/><circle cx="44.1" cy="81.8" r="22"/>
+      <circle cx="34.3" cy="51.7" r="22" stroke-dasharray="5 6" opacity=".5"/>
+    </g>
+    <pattern id="hatch" width="2.3" height="2.3" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+      <line x1="0" y1="0" x2="0" y2="2.3" stroke="currentColor" stroke-width=".5"/>
+    </pattern>
+  </defs>
+</svg>
+
+<aside class="rail" aria-label="Main">
+  <div class="wordmark">loop<span>.</span></div>
+
+  <div class="switcher">
+    <button class="switch-btn" id="switchBtn" aria-haspopup="true" aria-expanded="false" aria-controls="teamMenu">
+      <span class="mini" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 120 120"><use href="#rings-mini"/></svg></span>
+      <span class="t"><b>Team 4</b><span>EMBA Cohort 12</span></span>
+      <svg class="chev ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6L8 3.5 11.5 6M4.5 10L8 12.5 11.5 10"/></svg>
+    </button>
+    <div class="menu" id="teamMenu" role="menu">
+      <div class="mrow" role="menuitem"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8l3.5 3.5L13 5"/></svg>EMBA Cohort 12 · Team 4 <span class="handle" style="margin-left:auto">@team4</span></div>
+      <div class="hint">You belong to one team. New teams arrive as invite links.</div>
+    </div>
+  </div>
+
+  <div class="navs">
+    <div class="nav-label">Team</div>
+    <ul class="nav">
+      <li><button data-view="record" aria-current="page"><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3zM3 6.5h10M6.5 6.5V13"/></svg>Record<span class="count">20</span></button></li>
+      <li><button data-view="brief"><svg viewBox="0 0 16 16"><path d="M4 2.5h6l2.5 2.5v8.5H4zM6 7h5M6 9.5h5"/></svg>Brief</button></li>
+      <li><button data-view="people"><svg viewBox="0 0 16 16"><circle cx="6" cy="6" r="2.5"/><path d="M2 13c.5-2.5 2-3.5 4-3.5s3.5 1 4 3.5M10.5 4a2.2 2.2 0 010 4.2M12 9.8c1.2.5 1.8 1.6 2 3.2"/></svg>People<span class="count">5</span></button></li>
+    </ul>
+    <div class="nav-label">You</div>
+    <ul class="nav">
+      <li><button data-view="intent"><svg viewBox="0 0 16 16"><path d="M8 2.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6L8 10.7l-3.2 1.7.6-3.6L2.8 6.3l3.6-.5z"/></svg>Intent layer<span class="count">4</span></button></li>
+      <li><button data-view="assistants"><svg viewBox="0 0 16 16"><circle cx="5.5" cy="8" r="3"/><circle cx="10.5" cy="8" r="3"/></svg>Assistants<span class="count">2</span></button></li>
+    </ul>
+  </div>
+  <div class="spacer"></div>
+  <div class="account">
+    <img class="face" src="https://i.pravatar.cc/80?img=12" width="32" height="32" alt="">
+    <div><b>Stephen Fang</b><span>Claude connected</span></div>
+  </div>
+</aside>
+
+<main class="main">
+<div class="wrap">
+
+<!-- =============== RECORD =============== -->
+<section class="view on" id="v-record" aria-labelledby="h-record">
+  <div class="crumbs"><span>Team 4</span><span aria-hidden="true">›</span><b id="h-record">Record</b><span class="today">Tue, Nov 10, 2026</span></div>
+
+  <div class="plate">
+    <!-- five rings engraved in ink; the open, dashed one is the member without an assistant -->
+    <svg class="mark" id="mark" viewBox="0 0 120 120" role="img" aria-label="Team 4 mark: five linked rings, one open">
+      <g class="ring" data-m="sf"><path fill="url(#hatch)" fill-rule="evenodd" d="M37,33a23,23 0 1,0 46,0a23,23 0 1,0 -46,0ZM40.5,33a19.5,19.5 0 1,0 39,0a19.5,19.5 0 1,0 -39,0Z"/><circle cx="60" cy="33" r="23" fill="none" stroke="currentColor" stroke-width=".9"/><circle cx="60" cy="33" r="19.5" fill="none" stroke="currentColor" stroke-width=".6"/></g>
+      <g class="ring" data-m="pr"><path fill="url(#hatch)" fill-rule="evenodd" d="M62.7,51.7a23,23 0 1,0 46,0a23,23 0 1,0 -46,0ZM66.2,51.7a19.5,19.5 0 1,0 39,0a19.5,19.5 0 1,0 -39,0Z"/><circle cx="85.7" cy="51.7" r="23" fill="none" stroke="currentColor" stroke-width=".9"/><circle cx="85.7" cy="51.7" r="19.5" fill="none" stroke="currentColor" stroke-width=".6"/></g>
+      <g class="ring" data-m="mo"><path fill="url(#hatch)" fill-rule="evenodd" d="M52.9,81.8a23,23 0 1,0 46,0a23,23 0 1,0 -46,0ZM56.4,81.8a19.5,19.5 0 1,0 39,0a19.5,19.5 0 1,0 -39,0Z"/><circle cx="75.9" cy="81.8" r="23" fill="none" stroke="currentColor" stroke-width=".9"/><circle cx="75.9" cy="81.8" r="19.5" fill="none" stroke="currentColor" stroke-width=".6"/></g>
+      <g class="ring" data-m="lh"><path fill="url(#hatch)" fill-rule="evenodd" d="M21.1,81.8a23,23 0 1,0 46,0a23,23 0 1,0 -46,0ZM24.6,81.8a19.5,19.5 0 1,0 39,0a19.5,19.5 0 1,0 -39,0Z"/><circle cx="44.1" cy="81.8" r="23" fill="none" stroke="currentColor" stroke-width=".9"/><circle cx="44.1" cy="81.8" r="19.5" fill="none" stroke="currentColor" stroke-width=".6"/></g>
+      <g class="ring" data-m="ti"><circle cx="34.3" cy="51.7" r="23" fill="none" stroke="currentColor" stroke-width=".9" stroke-dasharray="3 3"/><circle cx="34.3" cy="51.7" r="19.5" fill="none" stroke="currentColor" stroke-width=".6" stroke-dasharray="3 3"/></g>
+    </svg>
+    <div>
+      <div class="head"><h1>Team 4</h1><span class="handle">@team4 · EMBA Cohort 12</span></div>
+      <p class="purpose">Capstone: market-entry plan for a Vietnamese cold-chain startup.</p>
+    </div>
+    <div class="side">
+      <div class="dateblock">
+        <span class="label">Deliverable due</span>
+        <span class="d">Dec 5<small>2026</small></span>
+        <span class="left">25 days left</span>
+      </div>
+      <div class="stack" aria-label="5 members">
+        <img class="face" src="https://i.pravatar.cc/80?img=12" alt="Stephen Fang">
+        <img class="face" src="https://i.pravatar.cc/80?img=47" alt="Priya Raman">
+        <img class="face" src="https://i.pravatar.cc/80?img=33" alt="Marcus Oyelaran">
+        <img class="face" src="https://i.pravatar.cc/80?img=5" alt="Lena Hoffmann">
+        <img class="face off" src="https://i.pravatar.cc/80?img=53" alt="Tomás Ibarra (no assistant)">
+      </div>
+    </div>
+  </div>
+
+  <div class="facts" role="group" aria-label="Team facts">
+    <button class="fact" data-go="dec"><b>6 decisions</b><span class="s">Latest Nov 9 · Presenter</span><svg class="go ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+    <button class="fact" data-go="cla" data-hit="c13"><b>3 open claims</b><span class="s"><span class="warn"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>1 past due</span> · 1 waiting on owner</span><svg class="go ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+    <button class="fact" data-go="out" data-hit="o14"><b>5 outputs</b><span class="s"><span class="warn"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>1 flagged</span> against a decision</span><svg class="go ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+    <button class="fact" data-goview="people"><b>4 of 5 assistants</b><span class="s">connected · Tomás files by hand</span><svg class="go ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+  </div>
+
+  <div class="record">
+    <div>
+      <div class="tabbar">
+        <div class="tabs" role="tablist" aria-label="Record">
+          <button role="tab" id="t-dec" aria-controls="p-dec" aria-selected="true">Decisions <span>6</span></button>
+          <button role="tab" id="t-cla" aria-controls="p-cla" aria-selected="false" tabindex="-1">Claims <span>3</span></button>
+          <button role="tab" id="t-out" aria-controls="p-out" aria-selected="false" tabindex="-1">Outputs <span>5</span></button>
+          <button role="tab" id="t-evt" aria-controls="p-evt" aria-selected="false" tabindex="-1">Events <span>2</span></button>
+        </div>
+        <div class="note" id="tabnote">Newest first</div>
+      </div>
+
+      <!-- Decisions -->
+      <div class="list" role="tabpanel" id="p-dec" aria-labelledby="t-dec">
+        <div class="row" data-by="pr"><span class="num">#18</span><div class="what"><div class="kicker">Presenter</div><span class="stmt">Priya opens, Marcus closes.</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt=""><div><b>Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div><span class="date">Nov 9</span></div>
+        <div class="row" data-by="sf"><span class="num">#15</span><div class="what"><div class="kicker">Financial horizon</div><span class="stmt">Five-year model, monthly for year one.</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 8</span></div>
+        <div class="row" data-by="lh"><span class="num">#12</span><div class="what"><div class="kicker">Partner</div><span class="stmt">Approach ABA Cooltrans before Lineage.</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=5" alt=""><div><b>Lena Hoffmann</b><span class="via site"><i></i>saved on the site</span></div></div><span class="date">Nov 6</span></div>
+        <div class="row" data-by="mo"><span class="num">#9</span><div class="what"><div class="kicker">Deck length</div><span class="stmt">15 slides, appendix unlimited.</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=33" alt=""><div><b>Marcus Oyelaran</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 3</span></div>
+        <div class="row" data-by="sf" id="d7" tabindex="-1"><span class="num">#7</span><div class="what"><div class="kicker">Pricing</div><span class="stmt">Per-pallet subscription, not per-kilometre.</span>
+            <div class="sub"><button class="xref" id="xref7" data-go="out" data-hit="o14"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span id="xref7Text">Output #14 conflicts with this decision.</span><svg class="ic arw" aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 1</span></div>
+        <div class="row" data-by="pr"><span class="num">#3</span><div class="what"><div class="kicker">Market</div><span class="stmt">Enter Ho Chi Minh City first; Hanoi in year two.</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt=""><div><b>Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div><span class="date">Oct 28</span></div>
+      </div>
+
+      <!-- Claims -->
+      <div class="list" role="tabpanel" id="p-cla" aria-labelledby="t-cla" hidden>
+        <div class="row claimrow" data-by="ti" id="c13" tabindex="-1"><span class="num">#13</span><div class="what"><span class="title">Interview two cold-chain operators</span><div class="sub"><span class="tag alert"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>Past due · 2 days</span><span>Nothing filed against it yet.</span></div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=53" alt=""><div><b>Tomás Ibarra</b><span class="via site"><i></i>saved on the site</span></div></div>
+          <div class="act"><span class="date">Due Nov 8</span><button class="btn btn-quiet" data-toggle="Nudged Tomás|Nudge Tomás" aria-pressed="false">Nudge Tomás</button></div></div>
+        <div class="row claimrow" data-by="sf"><span class="num">#10</span><div class="what"><span class="title">Build the five-year financial model</span><div class="sub"><span class="tag open" data-status>Open</span><span>Follows decision #15.</span></div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div>
+          <div class="act"><span class="date">Due Nov 14</span><button class="btn btn-primary" id="doneBtn">Mark done</button></div></div>
+        <div class="row claimrow" data-by="lh"><span class="num">#16</span><div class="what"><span class="title">Draft slides 1–6</span><div class="sub"><span class="tag prop">Proposed</span><span>Priya proposed it; waiting for Lena to accept.</span></div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=5" alt=""><div><b>Lena Hoffmann</b><span class="via"><i></i>proposed via ChatGPT</span></div></div>
+          <div class="act"><span class="date">Due Nov 17</span></div></div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="list" role="tabpanel" id="p-out" aria-labelledby="t-out" hidden>
+        <div class="row" data-by="lh"><span class="num">#20</span><div class="what"><a class="linkt" href="https://figma.com/" target="_blank" rel="noopener">Deck skeleton</a><span class="domain">figma.com</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=5" alt=""><div><b>Lena Hoffmann</b><span class="via"><i></i>via Cursor</span></div></div><span class="date">Nov 10</span></div>
+        <div class="row" data-by="ti"><span class="num">#19</span><div class="what"><a class="linkt" href="https://dropbox.com/" target="_blank" rel="noopener">Interview guide</a><span class="domain">dropbox.com</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=53" alt=""><div><b>Tomás Ibarra</b><span class="via site"><i></i>saved on the site</span></div></div><span class="date">Nov 9</span></div>
+        <div class="row" data-by="pr"><span class="num">#17</span><div class="what"><a class="linkt" href="https://notion.so/" target="_blank" rel="noopener">Competitor teardown</a><span class="domain">notion.so</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt=""><div><b>Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div><span class="date">Nov 8</span></div>
+        <div class="row flagged" data-by="sf" id="o14" tabindex="-1"><span class="num">#14</span><div class="what"><a class="linkt" href="https://docs.google.com/" target="_blank" rel="noopener">Pricing model sheet</a><span class="domain">docs.google.com</span>
+            <div class="flagnote"><button class="xref tag" id="flagTag" data-go="dec" data-hit="d7"><svg class="ic" id="flagIcon" aria-hidden="true"><use href="#i-alert"/></svg><span id="flagTagText">Conflicts with #7 Pricing</span><svg class="ic arw" aria-hidden="true"><use href="#i-arrow"/></svg></button><span id="flagText">Still prices per kilometre; the team chose per-pallet subscription.</span><button class="btn btn-primary" id="resolveBtn">Mark resolved</button></div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 7</span></div>
+        <div class="row" data-by="mo"><span class="num">#11</span><div class="what"><a class="linkt" href="https://docs.google.com/" target="_blank" rel="noopener">Market sizing v2</a><span class="domain">docs.google.com</span>
+            <p>TAM/SAM for HCMC cold storage; bottom-up from pallet positions.</p><div class="sub">@team4/final-deck</div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=33" alt=""><div><b>Marcus Oyelaran</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 4</span></div>
+      </div>
+
+      <!-- Events -->
+      <div class="list" role="tabpanel" id="p-evt" aria-labelledby="t-evt" hidden>
+        <div class="event"><div><div class="h">@team4/midpoint-review</div><b>Midpoint review</b><p>Moved to Nov 19, 6pm ET (Priya, Nov 9). Nothing tagged to it yet.</p></div>
+          <div class="when"><b>Nov 19</b>in 9 days</div></div>
+        <div class="event"><div><div class="h">@team4/final-deck</div><b>Final deck</b><p>1 output tagged: #11 Market sizing v2.</p></div>
+          <div class="when"><b>Dec 5</b>course deadline</div></div>
+      </div>
+    </div>
+
+    <div class="aside">
+      <div class="sheet ann">
+        <div class="sechead"><h3 class="label">Announcement</h3><span class="n">Nov 9</span></div>
+        <p>Midpoint review moved to Nov 19, 6pm ET.</p>
+        <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt=""><div><b>Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div>
+      </div>
+      <div class="people-panel">
+        <div class="sechead"><h3 class="label">People</h3><span class="n">4 of 5 connected</span></div>
+        <div class="members" id="memberList"></div>
+        <div class="nudge" id="tomasNote">Tomás hasn't connected an assistant, so his work reaches the team only when he files it by hand.
+          <div><button class="btn btn-quiet" id="inviteBtn">Send Tomás the connect prompt</button></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== BRIEF =============== -->
+<section class="view" id="v-brief" aria-labelledby="h-brief">
+  <div class="crumbs"><span>Team 4</span><span aria-hidden="true">›</span><b id="h-brief">Brief</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="sheet brief">
+    <div class="handle">@team4 · brief</div>
+    <h2>Market-entry plan for a Vietnamese cold-chain startup</h2>
+    <p>Capstone for EMBA Cohort 12. We recommend where and how the startup enters, what it charges, and who it partners with, in a 15-slide deck delivered Dec 5, 2026.</p>
+    <ul>
+      <li>Where: Ho Chi Minh City first, Hanoi in year two (#3).</li>
+      <li>How it charges: per-pallet subscription (#7).</li>
+      <li>Partner order: ABA Cooltrans, then Lineage (#12).</li>
+      <li>Numbers: five-year model, monthly for year one (#15).</li>
+    </ul>
+    <span class="via"><i></i>Written by Priya via ChatGPT · Oct 20 · decisions linked live</span>
+  </div>
+</section>
+
+<!-- =============== PEOPLE =============== -->
+<section class="view" id="v-people" aria-labelledby="h-people">
+  <div class="crumbs"><span>Team 4</span><span aria-hidden="true">›</span><b id="h-people">People</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="people" id="peopleGrid"></div>
+</section>
+
+<!-- =============== INTENT LAYER =============== -->
+<section class="view" id="v-intent" aria-labelledby="h-intent">
+  <div class="crumbs"><span>You</span><span aria-hidden="true">›</span><b>Intent layer</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="pagehead"><h1 id="h-intent">Intent layer</h1><p>What you chose to save about yourself. Only the assistants listed under "Who can read this" see it, and only until the date shown.</p></div>
+  <div class="two">
+    <div class="stack-col">
+      <div class="intent" id="intentGrid">
+        <article class="sheet icard"><div><span class="tag">Preference</span></div><q>I like learning by doing, with a small group.</q>
+          <div class="foot"><span class="via"><i></i>saved via Claude · Nov 2</span><span class="rd">Claude can read</span></div></article>
+        <article class="sheet icard"><div><span class="tag">Preference</span></div><q>I'd rather take the modelling work than the slides.</q>
+          <div class="foot"><span class="via"><i></i>saved via Claude · Oct 30</span><span class="rd">Claude can read</span></div></article>
+        <article class="sheet icard"><div><span class="tag">Availability</span></div><q>Free for team work Tue and Thu evenings.</q>
+          <div class="foot"><span class="via site"><i></i>saved on the site · Nov 5</span><span class="rd">No assistant can read</span></div></article>
+        <article class="sheet icard"><div><span class="tag">Want</span></div><q>I'm in for a Hanoi food walk if three others are.</q>
+          <div class="foot"><span class="via"><i></i>saved via ChatGPT · Nov 7</span><span class="rd" data-chatgpt>ChatGPT can read</span></div></article>
+      </div>
+      <div class="flat">
+        <div class="sechead"><h3 class="label">Read log</h3><span class="n">last 7 days</span></div>
+        <ul class="log">
+          <li>Claude read 2 preferences<span>today 9:14</span></li>
+          <li>ChatGPT read 1 want<span>Nov 9</span></li>
+          <li>Claude read Team 4 decisions<span>Nov 8</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack-col">
+      <div class="flat">
+        <div class="sechead"><h3 class="label">Who can read this</h3><span class="n">2 assistants</span></div>
+        <div class="perm" id="perm-claude"><span class="logo">Cl</span><div><b>Claude</b><div class="scope">Preferences + Team 4 record</div><div class="until">Until Dec 5</div></div>
+          <button class="btn btn-quiet" data-revoke="perm-claude" aria-pressed="false">Revoke</button></div>
+        <div class="perm" id="perm-chatgpt"><span class="logo">GP</span><div><b>ChatGPT</b><div class="scope">Wants only</div><div class="until">Until Nov 30</div></div>
+          <button class="btn btn-quiet" data-revoke="perm-chatgpt" aria-pressed="false">Revoke</button></div>
+      </div>
+      <div class="sheet connect">
+        <h3>Connect an assistant</h3>
+        <p class="lede">Paste this into Claude, ChatGPT or Cursor. It sets up the connection and reads your team's record.</p>
+        <div class="prompt">
+<pre id="promptText">Connect me to Loop so you can read my team's record and save what we decide.
+1. Add this remote MCP server: https://loop.example/mcp
+2. Sign in when it asks.
+3. Call team_state for @team4 and tell me what is open.
+4. From now on, check the team's decisions before you draft anything for it.</pre>
+          <span class="tgt">For @team4</span>
+          <button class="btn btn-primary" id="copyBtn">Copy prompt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== ASSISTANTS =============== -->
+<section class="view" id="v-assistants" aria-labelledby="h-assist">
+  <div class="crumbs"><span>You</span><span aria-hidden="true">›</span><b>Assistants</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="pagehead"><h1 id="h-assist">Assistants</h1><p>What your connected assistants did in Team 4 on your behalf.</p></div>
+  <div class="list calls">
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>team_state @team4</code><div class="sub">Read 6 decisions, 3 claims</div></div><span class="date" style="text-align:left">Read</span><span class="date">today</span></div>
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>record_decision</code><div class="sub">#15 Five-year model, monthly for year one.</div></div><span class="date" style="text-align:left">Wrote</span><span class="date">Nov 8</span></div>
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>add_output</code><div class="sub">#14 Pricing model sheet</div></div><span class="date" style="text-align:left">Wrote</span><span class="date">Nov 7</span></div>
+    <div class="row"><span class="via"><i></i>ChatGPT</span><div class="what"><code>read_intent wants</code><div class="sub">1 want</div></div><span class="date" style="text-align:left">Read</span><span class="date">Nov 9</span></div>
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>record_decision</code><div class="sub">#7 Per-pallet subscription, not per-kilometre.</div></div><span class="date" style="text-align:left">Wrote</span><span class="date">Nov 1</span></div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+(function(){
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
+  // view transition when available and motion is allowed; instant swap otherwise
+  function swap(fn){
+    if(document.startViewTransition&&!reduce.matches){
+      var vt=document.startViewTransition(fn);
+      return vt.finished.catch(function(){});
+    }
+    fn();return Promise.resolve();
+  }
+
+  var members=[
+    {k:'sf',n:'Stephen Fang',me:true,img:12,ai:'Claude',holds:'Claim #10 · 2 decisions · 1 output'},
+    {k:'pr',n:'Priya Raman',img:47,ai:'ChatGPT',holds:'2 decisions · 1 output · proposed #16'},
+    {k:'mo',n:'Marcus Oyelaran',img:33,ai:'Claude',holds:'1 decision · 1 output'},
+    {k:'lh',n:'Lena Hoffmann',img:5,ai:'Cursor',holds:'1 decision · 1 output · #16 waiting on her'},
+    {k:'ti',n:'Tomás Ibarra',img:53,ai:null,holds:'Claim #13 past due · 1 output filed by hand'}
+  ];
+  var ml=document.getElementById('memberList'),pg=document.getElementById('peopleGrid');
+  members.forEach(function(m){
+    var src='https://i.pravatar.cc/80?img='+m.img,you=m.me?' <span class="handle">(you)</span>':'';
+    ml.insertAdjacentHTML('beforeend','<button class="member'+(m.ai?'':' off')+'" data-m="'+m.k+'" aria-pressed="false"><img class="face" src="'+src+'" alt=""><span class="t"><b>'+m.n+you+'</b><span class="ai">'+(m.ai?'via '+m.ai:'<i></i>No assistant connected')+'</span></span></button>');
+    pg.insertAdjacentHTML('beforeend','<article class="'+(m.ai?'sheet ':'')+'pcard'+(m.ai?'':' off')+'"><div class="top"><img class="face" src="'+src+'" alt=""><div><b>'+m.n+you+'</b><span class="meta">'+(m.ai?'Connected via '+m.ai:'No assistant connected')+'</span></div></div><div class="holds">'+m.holds+'</div>'+(m.ai?'':'<div class="meta">His work reaches the team only when he files it by hand.</div>')+'</article>');
+  });
+
+  // live team mark: a member's ring comes forward, other people's rows recede
+  var mark=document.getElementById('mark'),rings=[].slice.call(mark.querySelectorAll('.ring')),
+      byRows=[].slice.call(document.querySelectorAll('#v-record [data-by]')),pinned=null;
+  function focusMember(k){
+    mark.classList.toggle('focus',!!k);
+    rings.forEach(function(r){r.classList.toggle('on',r.dataset.m===k)});
+    byRows.forEach(function(r){r.classList.toggle('dim',!!k&&r.dataset.by!==k)});
+  }
+  [].slice.call(ml.querySelectorAll('.member')).forEach(function(b){
+    var k=b.dataset.m;
+    b.addEventListener('mouseenter',function(){focusMember(k)});
+    b.addEventListener('focus',function(){focusMember(k)});
+    b.addEventListener('mouseleave',function(){focusMember(pinned)});
+    b.addEventListener('blur',function(){focusMember(pinned)});
+    b.addEventListener('click',function(){
+      pinned=pinned===k?null:k;
+      ml.querySelectorAll('.member').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.m===pinned)});
+      focusMember(pinned||k);
+    });
+  });
+
+  // rail navigation
+  var navBtns=[].slice.call(document.querySelectorAll('.nav button'));
+  function showView(name){
+    navBtns.forEach(function(x){if(x.dataset.view===name)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});
+    document.querySelectorAll('.view').forEach(function(v){v.classList.toggle('on',v.id==='v-'+name)});
+    window.scrollTo(0,0);
+  }
+  navBtns.forEach(function(b){b.addEventListener('click',function(){
+    if(b.getAttribute('aria-current')==='page')return;
+    swap(function(){showView(b.dataset.view)});
+  })});
+
+  // team switcher
+  var sb=document.getElementById('switchBtn'),menu=document.getElementById('teamMenu');
+  sb.addEventListener('click',function(e){e.stopPropagation();var o=menu.classList.toggle('open');sb.setAttribute('aria-expanded',o)});
+  document.addEventListener('click',function(e){if(!menu.contains(e.target)){menu.classList.remove('open');sb.setAttribute('aria-expanded','false')}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&menu.classList.contains('open')){menu.classList.remove('open');sb.setAttribute('aria-expanded','false');sb.focus()}});
+
+  // tabs
+  var tabs=[].slice.call(document.querySelectorAll('[role=tab]'));
+  var notes={'t-dec':'Newest first','t-cla':'Past due first','t-out':'Newest first · links only','t-evt':'Soonest first'};
+  function sel(t){tabs.forEach(function(x){var on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;document.getElementById(x.getAttribute('aria-controls')).hidden=!on});document.getElementById('tabnote').textContent=notes[t.id]}
+  function selAnimated(t){if(t.getAttribute('aria-selected')==='true')return Promise.resolve();return swap(function(){sel(t)})}
+  tabs.forEach(function(t,i){
+    t.addEventListener('click',function(){selAnimated(t)});
+    t.addEventListener('keydown',function(e){var d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(d){e.preventDefault();var n=tabs[(i+d+tabs.length)%tabs.length];selAnimated(n);n.focus()}});
+  });
+
+  // highlight a record row briefly
+  var hitTimer;
+  function hit(id){
+    var el=document.getElementById(id);if(!el)return;
+    clearTimeout(hitTimer);
+    document.querySelectorAll('.row.hit').forEach(function(r){r.classList.remove('hit')});
+    void el.offsetWidth;el.classList.add('hit');
+    el.scrollIntoView({block:'nearest',behavior:reduce.matches?'auto':'smooth'});
+    el.focus({preventScroll:true});
+    hitTimer=setTimeout(function(){el.classList.remove('hit')},1600);
+  }
+
+  // facts strip + cross-references: open a tab (and a row) or a screen
+  document.querySelectorAll('[data-go],[data-goview]').forEach(function(b){b.addEventListener('click',function(){
+    if(b.dataset.goview){swap(function(){showView(b.dataset.goview)});return}
+    var t=document.getElementById('t-'+b.dataset.go),onRecord=document.getElementById('v-record').classList.contains('on'),
+        same=onRecord&&t.getAttribute('aria-selected')==='true';
+    var p=same?Promise.resolve():swap(function(){if(!onRecord)showView('record');sel(t)});
+    if(b.dataset.hit)p.then(function(){hit(b.dataset.hit)});
+  })});
+
+  // toggles
+  document.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var p=b.getAttribute('aria-pressed')!=='true',l=b.dataset.toggle.split('|');b.setAttribute('aria-pressed',p);b.textContent=p?l[0]:l[1]})});
+  document.getElementById('doneBtn').addEventListener('click',function(){var s=this.closest('.row').querySelector('[data-status]');var d=s.classList.toggle('done');s.classList.toggle('open',!d);s.textContent=d?'Done today':'Open';this.textContent=d?'Reopen':'Mark done';this.className='btn '+(d?'btn-quiet':'btn-primary')});
+  document.getElementById('resolveBtn').addEventListener('click',function(){
+    var r=document.getElementById('o14');var res=r.classList.toggle('flagged');
+    document.getElementById('flagTag').classList.toggle('ok',!res);
+    document.getElementById('flagIcon').style.display=res?'':'none';
+    document.getElementById('flagTagText').textContent=res?'Conflicts with #7 Pricing':'Resolved today';
+    document.getElementById('flagText').textContent=res?'Still prices per kilometre; the team chose per-pallet subscription.':'Now matches decision #7.';
+    var x7=document.getElementById('xref7');x7.classList.toggle('ok',!res);x7.querySelector('.ic').style.display=res?'':'none';
+    document.getElementById('xref7Text').textContent=res?'Output #14 conflicts with this decision.':'Output #14 now matches this decision.';
+    this.textContent=res?'Mark resolved':'Undo';this.className='btn '+(res?'btn-primary':'btn-quiet')});
+  document.getElementById('inviteBtn').addEventListener('click',function(){this.textContent='Sent to Tomás · today';this.disabled=true});
+
+  // revoke
+  document.querySelectorAll('[data-revoke]').forEach(function(b){b.addEventListener('click',function(){var row=document.getElementById(b.dataset.revoke),r=row.classList.toggle('revoked'),u=row.querySelector('.until');
+    if(!u.dataset.orig)u.dataset.orig=u.textContent;u.textContent=r?'Revoked today · can no longer read':u.dataset.orig;b.textContent=r?'Restore':'Revoke';b.setAttribute('aria-pressed',r);
+    var who=b.dataset.revoke==='perm-claude'?'Claude':'ChatGPT';document.querySelectorAll('#intentGrid .rd').forEach(function(s){if(s.textContent.indexOf(who)===0||s.dataset.was===who){if(r){s.dataset.was=who;s.textContent='No assistant can read'}else if(s.dataset.was===who){s.textContent=who+' can read';delete s.dataset.was}}})})});
+
+  // copy
+  var cb=document.getElementById('copyBtn');
+  cb.addEventListener('click',function(){var txt=document.getElementById('promptText').textContent;
+    function done(){cb.textContent='Copied';setTimeout(function(){cb.textContent='Copy prompt'},1800)}
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
+    function fallback(){var t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove();done()}});
+})();
+</script>
+</body>
+</html>

@@ -70,25 +70,29 @@ const summary=({number,topic,statement}:DecisionSummary):DecisionSummary=>({numb
 /** Builds the assistant-safe view of records: numbers and handles, never an internal id. */
 export async function viewRecords(q:Q,p:Principal,team:Scope,rows:Row[]):Promise<RecordView[]> {
  if(!rows.length)return [];
- const ids=rows.map(row=>row.id);
- const {rows:tagRows}=await q.query<{recordId:string;personId:string}>('select record_id as "recordId",person_id as "personId" from emba_team_record_tag where record_id=any($1::uuid[]) order by person_id',[ids]);
- const {rows:flags}=await q.query<{outputId:string;decision:number;topic:string|null;state:'flagged'|'recheck'}>(`select c.output_id as "outputId",d.number as decision,case when d.state='withdrawn' then null else d.topic end as topic,c.state from emba_team_conflict c join emba_team_record d on d.id=c.decision_id where c.output_id=any($1::uuid[]) order by d.number`,[ids]);
- const {rows:links}=await q.query<{id:string;supersededBy:number|null;replacedBy:number|null}>(`select r.id,s.number as "supersededBy",n.number as "replacedBy" from emba_team_record r left join emba_team_record s on s.id=r.superseded_by left join emba_team_record n on n.id=r.replaced_by where r.id=any($1::uuid[])`,[ids]);
+ // Everything a record's view needs beyond its own row, in one statement: a list of thirty costs what a list of one does.
  // An overlap mark is live while both claims are still open or proposed.
- const {rows:overlaps}=await q.query<{id:string;other:number}>(`select x.id,o.number as other from (select claim_a as id,claim_b as other_id from emba_team_overlap where claim_a=any($1::uuid[]) union all select claim_b,claim_a from emba_team_overlap where claim_b=any($1::uuid[])) x
-  join emba_team_record o on o.id=x.other_id and o.state='current' and o.claim_status in ('open','proposed') order by o.number`,[ids]);
- const {rows:events}=await q.query<{id:string;slug:string}>('select id,slug from emba_team_event where id=any($1::uuid[])',[rows.map(row=>row.eventId).filter(Boolean)]);
- const person=await viewPeople(q,p,team,[...rows.flatMap(row=>[row.authorId,row.ownerId]),...tagRows.map(tag=>tag.personId)]);
+ const {rows:extras}=await q.query<{id:string;tags:string[];conflicts:NonNullable<RecordView['conflicts']>;supersededBy:number|null;replacedBy:number|null;overlaps:number[];event:string|null}>(`select r.id,
+   coalesce((select json_agg(t.person_id order by t.person_id) from emba_team_record_tag t where t.record_id=r.id),'[]') as tags,
+   coalesce((select json_agg(json_build_object('decision',d.number,'topic',case when d.state='withdrawn' then null else d.topic end,'state',c.state) order by d.number)
+    from emba_team_conflict c join emba_team_record d on d.id=c.decision_id where c.output_id=r.id),'[]') as conflicts,
+   s.number as "supersededBy",n.number as "replacedBy",
+   coalesce((select json_agg(o.number order by o.number) from (select claim_b as other_id from emba_team_overlap where claim_a=r.id union all select claim_a from emba_team_overlap where claim_b=r.id) x
+    join emba_team_record o on o.id=x.other_id and o.state='current' and o.claim_status in ('open','proposed')),'[]') as overlaps,
+   (select e.slug from emba_team_event e where e.id=r.event_id) as event
+  from emba_team_record r left join emba_team_record s on s.id=r.superseded_by left join emba_team_record n on n.id=r.replaced_by where r.id=any($1::uuid[])`,[rows.map(row=>row.id)]);
+ const extra=new Map(extras.map(item=>[item.id,item]));
+ const person=await viewPeople(q,p,team,[...rows.flatMap(row=>[row.authorId,row.ownerId]),...extras.flatMap(item=>item.tags)]);
  return rows.map(row=>{
-  const link=links.find(item=>item.id===row.id);
-  const base={number:row.number,kind:row.kind,state:row.state,version:row.version,event:events.find(event=>event.id===row.eventId)?.slug??null,by:person(row.authorId),assistant:row.clientId,
-   createdAt:new Date(row.createdAt).toISOString(),tags:tagRows.filter(tag=>tag.recordId===row.id).map(tag=>person(tag.personId))};
+  const more=extra.get(row.id);
+  const base={number:row.number,kind:row.kind,state:row.state,version:row.version,event:more?.event??null,by:person(row.authorId),assistant:row.clientId,
+   createdAt:new Date(row.createdAt).toISOString(),tags:(more?.tags??[]).map(person)};
   // A withdrawn record has no text left to show.
   if(row.state==='withdrawn'||row.body===null)return base;
-  if(row.kind==='output'){const host=hostOf(row.url!);return {...base,title:row.title!,summary:row.body,url:row.url!,host,recognisedHost:recognisedHost(host),...(link?.replacedBy?{replacedBy:link.replacedBy}:{}),
-   conflicts:flags.filter(flag=>flag.outputId===row.id).map(({decision,topic,state})=>({decision,topic,state}))};}
-  if(row.kind==='decision')return {...base,topic:row.topic!,statement:row.body,...(link?.supersededBy?{supersededBy:link.supersededBy}:{})};
-  if(row.kind==='claim')return {...base,what:row.body,owner:person(row.ownerId),dueOn:row.dueOn,claimStatus:row.claimStatus!,overlaps:overlaps.filter(item=>item.id===row.id).map(item=>item.other)};
+  if(row.kind==='output'){const host=hostOf(row.url!);return {...base,title:row.title!,summary:row.body,url:row.url!,host,recognisedHost:recognisedHost(host),...(more?.replacedBy?{replacedBy:more.replacedBy}:{}),
+   conflicts:more?.conflicts??[]};}
+  if(row.kind==='decision')return {...base,topic:row.topic!,statement:row.body,...(more?.supersededBy?{supersededBy:more.supersededBy}:{})};
+  if(row.kind==='claim')return {...base,what:row.body,owner:person(row.ownerId),dueOn:row.dueOn,claimStatus:row.claimStatus!,overlaps:more?.overlaps??[]};
   return {...base,text:row.body};
  });
 }
@@ -147,7 +151,8 @@ async function write(db:Db,p:Principal,team:Scope,tool:string,input:{operationId
     return {saved:true as const,replayed:true,record:await viewOne(ctx,prior.recordId),decisionsVersion:state.decisionSeq,also:[]};
    }
    const {rows:[recent]}=await q.query<{count:number}>(`select ((select count(*) from emba_team_operation where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
-    +(select count(*) from emba_team_conflict_report where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,team.loopId,p.personId,p.clientId]);
+    +(select count(*) from emba_team_conflict_report where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
+    +(select count(*) from emba_team_write where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,team.loopId,p.personId,p.clientId]);
    if(recent.count>=LIMITS.writesPerHour)return declined({saved:false,reason:'cap',cap:'writes_per_hour'});
    // A declined write undoes everything the work had already done.
    let result:Work;
@@ -434,20 +439,27 @@ export async function postAnnouncement(db:Db,p:Principal,input:unknown):Promise<
  },{siteOnly:true,manage:true});
 }
 
+/** SQL: person $1 is still a member of the team who may post. */
+const canPost=(org:string,loop:string)=>`(exists(select 1 from emba_membership m where m.org_id=${org} and m.person_id=$1 and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=$1)
+    and exists(with recursive up as (select id,parent_id from emba_loop where org_id=${org} and id=${loop} union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=${org})
+     select 1 from up join emba_role r on r.org_id=${org} and r.loop_id=up.id and r.person_id=$1 and r.revoked_at is null and r.role in ('owner','organizer','member')))`;
 /**
  * In every team the person can no longer write to (role or membership
  * removed, or account deleted): their open claims are released, claims
- * proposed for them are declined, and tags on them are removed (design D13).
+ * proposed for them are declined, tags on them are removed (design D13), their
+ * answers to open asks are removed and their own open asks are closed.
  * The caller already holds the person's lock; team locks follow in a fixed order.
  */
 export async function releaseOnDeparture(q:Q,personId:string,options:{orgId?:string;actorId:string|null}) {
+ // Interest follows membership: a person who can no longer post to a team is not listed as interested in its events.
+ await q.query(`delete from emba_event_interest i where i.person_id=$1 and ($2::uuid is null or i.org_id=$2) and not ${canPost('i.org_id','i.loop_id')}`,[personId,options.orgId??null]);
  const {rows:teams}=await q.query<Scope>(`select s.org_id as "orgId",s.loop_id as "loopId" from emba_team_state s where ($2::uuid is null or s.org_id=$2)
-   and not (exists(select 1 from emba_membership m where m.org_id=s.org_id and m.person_id=$1 and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=$1)
-    and exists(with recursive up as (select id,parent_id from emba_loop where org_id=s.org_id and id=s.loop_id union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=s.org_id)
-     select 1 from up join emba_role r on r.org_id=s.org_id and r.loop_id=up.id and r.person_id=$1 and r.revoked_at is null and r.role in ('owner','organizer','member')))
+   and not ${canPost('s.org_id','s.loop_id')}
    and (
    exists(select 1 from emba_team_record r where r.org_id=s.org_id and r.loop_id=s.loop_id and r.owner_id=$1 and r.state='current' and r.claim_status in ('open','proposed'))
-   or exists(select 1 from emba_team_record_tag t join emba_team_record r on r.id=t.record_id where t.person_id=$1 and r.org_id=s.org_id and r.loop_id=s.loop_id))
+   or exists(select 1 from emba_team_record_tag t join emba_team_record r on r.id=t.record_id where t.person_id=$1 and r.org_id=s.org_id and r.loop_id=s.loop_id)
+   or exists(select 1 from emba_ask k where k.org_id=s.org_id and k.loop_id=s.loop_id and k.closed_at is null and k.closes_at>clock_timestamp()
+    and (k.asker_id=$1 or exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$1))))
   order by s.org_id,s.loop_id for update of s`,[personId,options.orgId??null]);
  for(const team of teams){
   const log=async(recordId:string,action:string,subjectId:string|null)=>{
@@ -459,21 +471,39 @@ export async function releaseOnDeparture(q:Q,personId:string,options:{orgId?:str
   for(const item of claims)await log(item.id,item.status,personId);
   const {rows:tagged}=await q.query<{id:string}>('delete from emba_team_record_tag t using emba_team_record r where r.id=t.record_id and r.org_id=$1 and r.loop_id=$2 and t.person_id=$3 returning r.id',[team.orgId,team.loopId,personId]);
   for(const item of tagged)await log(item.id,'untagged',personId);
+  // Asks follow membership: an answer to an open ask no longer counts, and the person's own open asks are closed. Answers to closed asks stay, shown as a former member's.
+  await q.query('delete from emba_ask_answer a using emba_ask k where k.id=a.ask_id and k.org_id=$1 and k.loop_id=$2 and a.person_id=$3 and k.closed_at is null and k.closes_at>clock_timestamp()',[team.orgId,team.loopId,personId]);
+  const {rows:asks}=await q.query<{id:string}>('update emba_ask set closed_at=clock_timestamp() where org_id=$1 and loop_id=$2 and asker_id=$3 and closed_at is null and closes_at>clock_timestamp() returning id',[team.orgId,team.loopId,personId]);
+  for(const item of asks){
+   const {rows:[row]}=await q.query<{n:number}>('update emba_team_state set change_seq=change_seq+1 where org_id=$1 and loop_id=$2 returning change_seq::int as n',[team.orgId,team.loopId]);
+   await q.query("insert into emba_team_change(org_id,loop_id,seq,ask_id,action,actor_id) values($1,$2,$3,$4,'ask_closed',$5)",[team.orgId,team.loopId,row.n,item.id,options.actorId]);
+  }
  }
 }
 
 /** How people are shown to an assistant: by handle, never by id. A person who is no longer on this team, or deleted their account, has no handle. */
 export async function viewPeople(q:Q,p:Principal,team:Scope,ids:(string|null)[]):Promise<(id:string|null)=>PersonView> {
+ return (await knownPeople(q,p,team,ids)).view;
+}
+/**
+ * The people named by id, in one statement: how each is shown, and for the site their name.
+ * A name is selected only when the caller is a person on the site, so no row read for an assistant holds one.
+ */
+export async function knownPeople(q:Q,p:Principal,team:Scope,ids:(string|null)[]):Promise<{view:(id:string|null)=>PersonView;name:(id:string|null)=>string|null}> {
  const wanted=[...new Set(ids.filter((id):id is string=>Boolean(id)))];
- const {rows:known}=wanted.length?await q.query<{personId:string;handle:string|null;live:boolean}>(`select p.id as "personId",h.handle,
+ const {rows}=wanted.length?await q.query<{personId:string;handle:string|null;live:boolean;namespace:string|null;name:string|null}>(`select p.id as "personId",h.handle,
   (exists(select 1 from emba_membership m where m.org_id=$2 and m.person_id=p.id and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=p.id)
    and exists(with recursive up as (select id,parent_id from emba_loop where org_id=$2 and id=$3 union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=$2)
-    select 1 from up join emba_role r on r.org_id=$2 and r.loop_id=up.id and r.person_id=p.id and r.revoked_at is null)) as live
-  from person p left join emba_member_handle h on h.org_id=$2 and h.person_id=p.id where p.id=any($1::uuid[])`,[wanted,team.orgId,team.loopId]):{rows:[]};
- const {rows:[address]}=await q.query<{namespace:string}>('select namespace from emba_group_namespace where org_id=$1',[team.orgId]);
- return id=>{
-  const found=known.find(item=>item.personId===id);
-  return {handle:found?.live&&found.handle&&address?`@${address.namespace}/${found.handle}`:null,isYou:id!==null&&id===p.personId,former:!found?.live};
+    select 1 from up join emba_role r on r.org_id=$2 and r.loop_id=up.id and r.person_id=p.id and r.revoked_at is null)) as live,
+  (select n.namespace from emba_group_namespace n where n.org_id=$2) as namespace,case when $4::boolean then p.name end as name
+  from person p left join emba_member_handle h on h.org_id=$2 and h.person_id=p.id where p.id=any($1::uuid[]) order by p.id`,[wanted,team.orgId,team.loopId,p.clientId===null]):{rows:[]};
+ const known=new Map(rows.map(row=>[row.personId,row]));
+ return {
+  view:id=>{
+   const found=id===null?undefined:known.get(id);
+   return {handle:found?.live&&found.handle&&found.namespace?`@${found.namespace}/${found.handle}`:null,isYou:id!==null&&id===p.personId,former:!found?.live};
+  },
+  name:id=>(id===null?undefined:known.get(id))?.name??null,
  };
 }
 

@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop · C Seam</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
+:root{
+  --sand:#EFE6D5;        /* private side */
+  --sand-line:#DACDB5;
+  --paper:#FCFBF8;       /* shared side */
+  --paper-line:#E7E2D8;
+  --seam:#26231F;        /* the band */
+  --stitch:#6E665A;
+  --ink:#1D1B18;
+  --muted:#5F584E;
+  --accent:#2347C9;      /* cobalt: seam markers + primary actions */
+  --accent-tint:#E4E9FA;
+  --warn:#B93A0B;        /* conflict / past due */
+  --warn-tint:#FBE5DA;
+  --half:36px;           /* each column owns half of the seam */
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+img.face{border-radius:50%;object-fit:cover;display:block;background:#ccc}
+
+/* ---------- comparison strip (not part of the design) ---------- */
+.mockstrip{position:fixed;top:0;left:0;right:0;height:32px;z-index:50;background:#111;color:#cfcfcf;font:11px/32px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mockstrip a{color:#9db4ff}
+.mockstrip b{color:#fff}
+.mockstrip .note{color:#8d8d8d;margin-left:14px}
+
+/* ---------- app frame ---------- */
+.app{position:fixed;inset:32px 0 0 0;display:flex;flex-direction:column}
+.topbar{height:52px;flex:none;display:flex;align-items:center;gap:18px;padding:0 20px 0 24px;background:var(--paper);border-bottom:1px solid var(--paper-line)}
+.wordmark{font-weight:800;font-stretch:118%;font-size:20px;letter-spacing:-.02em}
+.switch{position:relative}
+.switch>button{display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--paper-line);border-radius:7px;padding:6px 10px;cursor:pointer;font-weight:550;font-size:13px}
+.switch>button:hover{border-color:#cfc8ba}
+.switch svg{width:10px;height:10px}
+.menu{position:absolute;top:calc(100% + 6px);left:0;min-width:260px;background:#fff;border:1px solid var(--paper-line);border-radius:9px;box-shadow:0 8px 24px rgba(40,30,15,.12);padding:6px;z-index:20}
+.menu[hidden]{display:none}
+.menu .mi{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:6px;background:var(--accent-tint)}
+.menu .mi small{color:var(--muted);font-stretch:75%}
+.menu p{margin:6px 10px 4px;color:var(--muted);font-size:12px}
+.topbar .spacer{flex:1}
+.me{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+
+/* ---------- the two sides + seam ---------- */
+.shell{flex:1;min-height:0;display:grid;grid-template-columns:38% 1fr;position:relative;background:var(--seam)}
+.shell::before{content:"";position:absolute;top:0;bottom:0;left:38%;border-left:1px dashed var(--stitch);pointer-events:none}
+.side{display:flex;flex-direction:column;min-height:0;position:relative;z-index:1}
+.side-label{flex:none;height:34px;display:flex;align-items:center;gap:8px;font-size:11px;font-stretch:80%;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+.side-label b{color:var(--ink);font-weight:750;font-stretch:100%;font-size:12px;letter-spacing:0}
+.side-label svg{width:11px;height:11px;flex:none}
+.yours .side-label{padding:0 calc(var(--half) + 20px) 0 28px;background:linear-gradient(to left,transparent var(--half),#E7DCC8 var(--half));border-bottom:1px solid var(--sand-line)}
+.team .side-label{padding:0 40px 0 calc(var(--half) + 16px);background:linear-gradient(to right,transparent var(--half),#F4F1EB var(--half));border-bottom:1px solid var(--paper-line)}
+.scroll{flex:1;min-height:0;overflow-y:auto}
+/* left column: scrollbar on the outer (left) edge so it never sits in the seam */
+.yours .scroll{direction:rtl;padding-right:var(--half);background:linear-gradient(to left,transparent var(--half),var(--sand) var(--half))}
+.yours .col-in{direction:ltr;padding:20px 0 56px 28px}
+.team .scroll{padding-left:var(--half);background:linear-gradient(to right,transparent var(--half),var(--paper) var(--half));scrollbar-width:thin}
+.team .col-in{padding:22px 40px 56px 0}
+.seam-top{position:absolute;top:0;left:38%;width:72px;margin-left:-36px;height:34px;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none;color:#B9B0A1;font-size:9px;font-stretch:62%;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:var(--seam)}
+
+/* ---------- shared bits ---------- */
+.via{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-stretch:72%;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.via::before{content:"";width:6px;height:6px;border-radius:1.5px;background:currentColor;opacity:.55}
+.via.site::before{background:none;border:1px solid currentColor;opacity:.7}
+.num{font-weight:700;font-stretch:75%;color:var(--muted);font-variant-numeric:tabular-nums}
+.date{color:var(--muted);font-size:12px;font-stretch:85%;white-space:nowrap}
+h2.sec{display:flex;align-items:baseline;gap:8px;margin:0;font-size:12px;font-weight:750;font-stretch:88%;letter-spacing:.06em;text-transform:uppercase}
+h2.sec .ct{color:var(--muted);font-weight:600}
+
+/* ---------- seam markers ---------- */
+.row{position:relative}
+.mk{position:absolute;top:8px;width:34px;padding:5px 0 6px;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-size:9.5px;line-height:1.05;font-weight:700;font-stretch:62%;letter-spacing:.01em;z-index:3}
+.yours .mk{right:calc(-1 * var(--half));border-radius:6px 0 0 6px}
+.team .mk{left:calc(-1 * var(--half));border-radius:0 6px 6px 0}
+.mk svg{width:12px;height:12px;margin-bottom:1px}
+.mk.save{background:var(--accent);color:#fff}
+.mk.read{background:#F6F3ED;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.mk.warn{background:var(--warn);color:#fff}
+.mk .m-full{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.mk:hover,.mk:focus-visible,.mk.on{transform:translateX(0);filter:brightness(1.08)}
+.yours .mk.on{box-shadow:4px 0 0 0 #fff}
+.team .mk.on{box-shadow:-4px 0 0 0 #fff}
+.mk.read.on{box-shadow:inset 0 0 0 1.5px var(--accent),0 0 0 2px #fff}
+.mk:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.seamcap{position:fixed;z-index:30;max-width:240px;background:#fff;color:var(--ink);border-radius:7px;padding:7px 10px;font-size:12px;line-height:1.3;box-shadow:0 6px 18px rgba(20,15,5,.25);pointer-events:none;border-top:3px solid var(--accent)}
+.seamcap.w{border-top-color:var(--warn)}
+.seamcap small{display:block;color:var(--muted);font-size:10.5px;font-stretch:80%;margin-top:2px}
+.seamcap[hidden]{display:none}
+/* highlight of the two ends */
+.lit{background:var(--accent-tint)!important}
+.yours .lit{box-shadow:inset -3px 0 0 var(--accent)}
+.team .lit{box-shadow:inset 3px 0 0 var(--accent)}
+.lit.wl{background:var(--warn-tint)!important}
+.yours .lit.wl{box-shadow:inset -3px 0 0 var(--warn)}
+.team .lit.wl{box-shadow:inset 3px 0 0 var(--warn)}
+.row,.decisions{transition:background .15s}
+
+/* ---------- YOURS ---------- */
+.yours .block{margin-bottom:26px}
+.yours h2.sec{padding:0 20px 8px 0;border-bottom:1px solid var(--sand-line)}
+.y-row{padding:11px 20px 11px 0;border-bottom:1px solid var(--sand-line)}
+.y-row .t{font-size:14.5px;font-weight:500}
+.y-row .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:4px}
+.kind{font-size:10px;font-weight:700;font-stretch:72%;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);opacity:.75}
+.conflict{background:var(--warn-tint);margin:8px 0 2px;padding:12px 20px 12px 14px;border-left:3px solid var(--warn);border-bottom:0}
+.conflict .t{font-weight:700;color:var(--warn);font-stretch:95%}
+.conflict p{margin:4px 0 0;font-size:13px;color:#4a3328}
+.y-row .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.due{font-weight:650;font-size:12px;font-stretch:85%}
+.asst{display:grid;grid-template-columns:28px 1fr auto;gap:2px 12px;align-items:center}
+.asst .logo{grid-row:span 2;width:28px;height:28px;border-radius:7px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:800;font-stretch:80%;font-size:13px}
+.asst .name{font-weight:700}
+.asst .scope{font-size:12.5px;color:var(--muted);grid-column:2}
+.asst .scope b{color:var(--ink);font-weight:600}
+.asst button{grid-row:1 / span 2;grid-column:3}
+.asst.revoked .logo{background:#A79E8F}
+.asst.revoked .name{color:var(--muted)}
+.asst.revoked .scope{text-decoration:line-through;text-decoration-color:rgba(0,0,0,.35)}
+.asst .state{grid-column:2;font-size:12px;color:var(--warn);font-weight:600}
+.btn2{background:transparent;border:1px solid #BFB29B;border-radius:7px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
+.btn2:hover{background:rgba(255,255,255,.45)}
+.btn1{background:var(--accent);color:#fff;border:0;border-radius:7px;padding:9px 14px;font-size:13px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn1:hover{background:#1B3BAE}
+.btn1 svg{width:11px;height:11px;transition:transform .15s}
+.btn1[aria-expanded="true"] svg{transform:rotate(45deg)}
+.connect{padding:14px 20px 4px 0}
+.prompt{margin-top:12px;background:#F8F4EC;border:1px solid var(--sand-line);border-radius:9px;overflow:hidden}
+.prompt[hidden]{display:none}
+.prompt-h{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 8px 12px;border-bottom:1px solid var(--sand-line);font-size:12px;color:var(--muted)}
+.prompt pre{margin:0;padding:12px;white-space:pre-wrap;font:12.5px/1.5 Archivo,system-ui,sans-serif;font-stretch:92%}
+.prompt .btn2.done{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ---------- TEAM ---------- */
+.brief{padding:0 0 18px 18px;border-bottom:1px solid var(--paper-line)}
+.brief .handle{font-size:12px;color:var(--muted);font-stretch:85%;font-weight:600}
+.brief h1{margin:4px 0 10px;font-size:25px;line-height:1.18;font-weight:650;font-stretch:96%;letter-spacing:-.012em;max-width:30ch}
+.brief .line{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12.5px}
+.deadline{font-weight:700}
+.deadline span{font-weight:500;color:var(--muted)}
+.ev{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--paper-line);border-radius:5px;padding:2px 7px;font-size:11.5px;background:#fff}
+.ev code{font:600 11px/1 Archivo,sans-serif;font-stretch:78%;color:var(--accent)}
+.members{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:14px}
+.mem{display:flex;align-items:center;gap:7px}
+.mem .n{font-size:13px;font-weight:600;line-height:1.1}
+.mem .via{display:flex}
+.mem.none .via{color:var(--warn)}
+.tomas{margin:10px 0 0;font-size:12.5px;color:var(--muted)}
+.announce{display:flex;gap:12px;align-items:baseline;padding:10px 0 10px 18px;border-bottom:1px solid var(--paper-line);font-size:13.5px}
+.announce .kind{color:var(--accent);opacity:1}
+.announce .date{margin-left:auto}
+.tsec{margin-top:22px}
+.tsec h2.sec{padding:0 0 7px 18px;border-bottom:1px solid var(--ink)}
+.rec{display:grid;align-items:center;gap:12px;padding:8px 0 8px 18px;border-bottom:1px solid var(--paper-line);min-height:38px}
+.dec{grid-template-columns:30px 108px 1fr auto}
+.dec .topic{font-weight:700;font-stretch:85%}
+.who{display:flex;align-items:center;gap:7px;justify-content:flex-end;white-space:nowrap}
+.who .nm{font-size:12.5px;font-weight:600}
+.cl{grid-template-columns:30px 1fr 150px 118px auto}
+.cl .title{font-weight:600}
+.cl .sub{font-size:12px;color:var(--muted);margin-top:1px}
+.pill{font-size:11px;font-weight:700;font-stretch:80%;letter-spacing:.03em;border-radius:4px;padding:2px 7px;white-space:nowrap;text-transform:uppercase;justify-self:start}
+.pill.open{background:#EAE6DE;color:#3d382f}
+.pill.prop{background:var(--accent-tint);color:var(--accent)}
+.late{color:var(--warn);font-weight:700}
+.out{grid-template-columns:30px 1fr auto;align-items:start}
+.out .title{font-weight:650}
+.out .dom{font-size:11.5px;color:var(--accent);font-stretch:85%;font-weight:600;margin-left:6px}
+.out .desc{font-size:12.5px;color:var(--muted);margin-top:1px}
+.out .num{padding-top:1px}
+.flagged{background:#FFF6F1}
+.flag{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:12.5px;font-weight:650;color:var(--warn)}
+.flag svg{width:12px;height:12px;flex:none}
+.dec.hasconf .text::after{content:"conflicts with #14";margin-left:8px;font-size:11px;font-weight:700;font-stretch:80%;color:var(--warn);text-transform:uppercase;letter-spacing:.03em}
+
+/* ---------- mobile: two tabs ---------- */
+.tabs{display:none}
+@media (max-width:760px){
+  .mockstrip .note{display:none}
+  .topbar{padding:0 14px;gap:10px}
+  .switch>button{font-size:12px;padding:5px 8px}
+  .me span{display:none}
+  .tabs{display:flex;flex:none;background:var(--paper);border-bottom:1px solid var(--paper-line)}
+  .tabs button{flex:1;background:none;border:0;padding:11px 0;font-weight:650;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .shell{display:block;background:none;overflow:hidden}
+  .shell::before,.seam-top{display:none}
+  .side{height:100%}
+  .app[data-tab="yours"] .team,.app[data-tab="team"] .yours{display:none}
+  .yours .side-label,.team .side-label{padding:0 16px;background:#E7DCC8}
+  .team .side-label{background:#F4F1EB}
+  .yours .scroll{direction:ltr;padding:0;background:var(--sand)}
+  .team .scroll{padding:0;background:var(--paper)}
+  .yours .col-in{padding:16px 16px 48px}
+  .team .col-in{padding:16px 16px 48px}
+  .y-row,.yours h2.sec{padding-right:0}
+  .brief,.announce,.tsec h2.sec,.rec{padding-left:0}
+  .conflict{padding-left:12px}
+  .mk{position:static;width:auto;flex-direction:row;gap:6px;padding:0;margin-top:6px;background:none!important;box-shadow:none!important;border-radius:0!important;font-size:11.5px;font-stretch:85%;font-weight:600;color:var(--accent)!important;text-align:left;grid-column:1 / -1}
+  .mk.warn{color:var(--warn)!important}
+  .mk .m-short{display:none}
+  .mk .m-full{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+  .mk svg{margin:0}
+  .dec,.cl{grid-template-columns:28px 1fr}
+  .dec .topic{grid-column:2}
+  .dec .text,.dec .who,.cl>*:nth-child(n+3){grid-column:2;justify-content:flex-start;justify-self:start}
+  .out{grid-template-columns:28px 1fr}
+  .out .who{grid-column:2;justify-content:flex-start}
+  .rec{gap:4px 10px}
+  .brief h1{font-size:21px}
+  .announce{flex-wrap:wrap}
+  .announce .date{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<div class="mockstrip" role="navigation" aria-label="Mockup directions">
+  <a href="mockups-layer-a.html">A · Workspace</a> &nbsp;|&nbsp; <a href="mockups-layer-b.html">B · Ledger</a> &nbsp;|&nbsp; <b>C · Seam</b>
+  <span class="note">Bet: the layout is the product. Private left, shared right, and every crossing between them drawn in the seam.</span>
+</div>
+
+<div class="app" id="app" data-tab="yours">
+  <header class="topbar">
+    <span class="wordmark">Loop</span>
+    <div class="switch">
+      <button type="button" id="teamBtn" aria-haspopup="true" aria-expanded="false">EMBA Cohort 12 · Team 4
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <div class="menu" id="teamMenu" hidden>
+        <div class="mi"><span>EMBA Cohort 12 · Team 4</span><small>@team4</small></div>
+        <p>You're in one team.</p>
+      </div>
+    </div>
+    <span class="spacer"></span>
+    <span class="me"><span>Stephen Fang</span><img class="face" src="https://i.pravatar.cc/80?img=12" width="30" height="30" alt="Stephen Fang"></span>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-tab="yours">Yours</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="team">Team 4</button>
+  </div>
+
+  <main class="shell">
+    <div class="seam-top" aria-hidden="true">Seam</div>
+
+    <!-- ===================== YOURS ===================== -->
+    <section class="side yours" aria-label="Yours">
+      <div class="side-label">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5.5" width="8" height="5.5" rx="1" fill="currentColor"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        <b>Yours</b> Only you and your assistants
+      </div>
+      <div class="scroll">
+        <div class="col-in">
+
+          <div class="block">
+            <h2 class="sec">Your open work <span class="ct">3</span></h2>
+            <div class="row y-row conflict" data-x="x2">
+              <div class="t">Your pricing sheet conflicts with decision #7</div>
+              <p>Output #14 still prices per kilometre. Decision #7 settled on a per-pallet subscription.</p>
+              <button class="mk warn" type="button" data-for="x2" data-kind="w">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.2v3.4" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="8.6" r=".85" fill="currentColor"/></svg>
+                <span class="m-short">#14<br>#7</span>
+                <span class="m-full">Your output #14 conflicts with decision #7 (Pricing)</span>
+              </button>
+            </div>
+            <div class="row y-row" data-x="x1">
+              <div class="t"><span class="num">#10</span> Build the five-year financial model</div>
+              <div class="meta"><span class="kind">Your claim · open</span><span class="due">Due Nov 14 · in 4 days</span></div>
+            </div>
+            <div class="row y-row">
+              <div class="t"><span class="num">#16</span> Draft slides 1–6</div>
+              <div class="sub">Proposed to Lena by Priya. Waiting for Lena to take it.</div>
+            </div>
+          </div>
+
+          <div class="block">
+            <h2 class="sec">Saved to your layer <span class="ct">4</span></h2>
+            <div class="row y-row" data-x="x4">
+              <div class="t">I'm in for a Hanoi food walk if three others are.</div>
+              <div class="meta"><span class="kind">Want</span><span class="via">via ChatGPT</span><span class="date">Nov 7</span></div>
+              <button class="mk read" type="button" data-for="x4">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M11 6H2M5.5 2.5 2 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="m-short">GPT<br>Nov 9</span>
+                <span class="m-full">ChatGPT read 1 want · Nov 9</span>
+              </button>
+            </div>
+            <div class="row y-row">
+              <div class="t">Free for team work Tue and Thu evenings.</div>
+              <div class="meta"><span class="kind">Availability</span><span class="via site">on the site</span><span class="date">Nov 5</span></div>
+            </div>
+            <div class="row y-row" data-x="x3">
+              <div class="t">I like learning by doing, with a small group.</div>
+              <div class="meta"><span class="kind">Preference</span><span class="via">via Claude</span><span class="date">Nov 2</span></div>
+              <button class="mk read" type="button" data-for="x3">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M11 6H2M5.5 2.5 2 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="m-short">Claude<br>9:14</span>
+                <span class="m-full">Claude read 2 preferences · today 9:14</span>
+              </button>
+            </div>
+            <div class="row y-row" data-x="x1 x3">
+              <div class="t">I'd rather take the modelling work than the slides.</div>
+              <div class="meta"><span class="kind">Preference</span><span class="via">via Claude</span><span class="date">Oct 30</span></div>
+              <button class="mk save" type="button" data-for="x1">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h9M6.5 2.5 10 6l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="m-short">Claude<br>#10</span>
+                <span class="m-full">Saved via Claude · became your claim #10</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="block">
+            <h2 class="sec">Your assistants <span class="ct">2</span></h2>
+            <div class="row y-row asst" data-x="x3 x5" id="a-claude">
+              <span class="logo" aria-hidden="true">C</span>
+              <span class="name">Claude</span>
+              <span class="scope">Can read <b>preferences + Team 4 record</b> · until Dec 5</span>
+              <button class="btn2" type="button" data-revoke="Claude" data-until="Dec 5">Revoke</button>
+            </div>
+            <div class="row y-row asst" data-x="x4" id="a-gpt">
+              <span class="logo" aria-hidden="true">G</span>
+              <span class="name">ChatGPT</span>
+              <span class="scope">Can read <b>wants only</b> · until Nov 30</span>
+              <button class="btn2" type="button" data-revoke="ChatGPT" data-until="Nov 30">Revoke</button>
+            </div>
+            <div class="connect">
+              <button class="btn1" type="button" id="connectBtn" aria-expanded="false" aria-controls="promptBox">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8"/></svg>
+                Connect an assistant
+              </button>
+              <div class="prompt" id="promptBox" hidden>
+                <div class="prompt-h"><span>Paste this into Claude, ChatGPT or Cursor</span><button class="btn2" type="button" id="copyBtn">Copy</button></div>
+<pre id="promptText">Connect me to Loop so you can read my team's record and save what we decide.
+1. Add this remote MCP server: https://loop.example/mcp
+2. Sign in when it asks.
+3. Call team_state for @team4 and tell me what is open.
+4. From now on, check the team's decisions before you draft anything for it.</pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TEAM 4 ===================== -->
+    <section class="side team" aria-label="Team 4">
+      <div class="side-label">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="4" cy="4.2" r="2" fill="currentColor"/><circle cx="8.5" cy="4.6" r="1.7" fill="currentColor"/><path d="M0.8 11c.3-2.3 1.6-3.6 3.2-3.6S6.9 8.7 7.2 11zM7.6 11c-.1-1-.4-1.9-.9-2.6.5-.5 1.1-.8 1.8-.8 1.4 0 2.4 1.2 2.7 3.4z" fill="currentColor"/></svg>
+        <b>Team 4</b> Everyone in Team 4 and their assistants
+      </div>
+      <div class="scroll">
+        <div class="col-in">
+
+          <div class="brief">
+            <div class="handle">EMBA Cohort 12 · Team 4 · @team4</div>
+            <h1>Capstone: market-entry plan for a Vietnamese cold-chain startup.</h1>
+            <div class="line">
+              <span class="deadline">Due Dec 5, 2026 <span>· 25 days left</span></span>
+              <span class="ev"><code>@team4/final-deck</code>Final deck</span>
+              <span class="ev"><code>@team4/midpoint-review</code>Midpoint review · Nov 19</span>
+            </div>
+            <div class="members">
+              <div class="mem"><img class="face" src="https://i.pravatar.cc/80?img=12" width="28" height="28" alt=""><div><div class="n">Stephen (you)</div><span class="via">Claude</span></div></div>
+              <div class="mem"><img class="face" src="https://i.pravatar.cc/80?img=47" width="28" height="28" alt=""><div><div class="n">Priya Raman</div><span class="via">ChatGPT</span></div></div>
+              <div class="mem"><img class="face" src="https://i.pravatar.cc/80?img=52" width="28" height="28" alt=""><div><div class="n">Marcus Oyelaran</div><span class="via">Claude</span></div></div>
+              <div class="mem"><img class="face" src="https://i.pravatar.cc/80?img=44" width="28" height="28" alt=""><div><div class="n">Lena Hoffmann</div><span class="via">Cursor</span></div></div>
+              <div class="mem none"><img class="face" src="https://i.pravatar.cc/80?img=59" width="28" height="28" alt=""><div><div class="n">Tomás Ibarra</div><span class="via site">No assistant</span></div></div>
+            </div>
+            <p class="tomas">Tomás hasn't connected an assistant, so his work reaches the team only when he files it by hand.</p>
+          </div>
+
+          <div class="announce">
+            <span class="kind">Announcement</span>
+            <span>Midpoint review moved to Nov 19, 6pm ET.</span>
+            <span class="date">Priya · Nov 9</span>
+          </div>
+
+          <div class="tsec decisions row" data-x="x5">
+            <h2 class="sec">Decisions <span class="ct">6</span></h2>
+            <button class="mk read" type="button" data-for="x5" style="top:-4px">
+              <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M11 6H2M5.5 2.5 2 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span class="m-short">Claude<br>Nov 8</span>
+              <span class="m-full">Claude read Team 4 decisions · Nov 8</span>
+            </button>
+            <div class="rec dec"><span class="num">#3</span><span class="topic">Market</span><span class="text">Enter Ho Chi Minh City first; Hanoi in year two.</span>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" width="20" height="20" alt=""><span class="nm">Priya</span><span class="via">via ChatGPT</span><span class="date">Oct 28</span></span></div>
+            <div class="rec dec row hasconf" data-x="x2"><span class="num">#7</span><span class="topic">Pricing</span><span class="text">Per-pallet subscription, not per-kilometre.</span>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" width="20" height="20" alt=""><span class="nm">You</span><span class="via">via Claude</span><span class="date">Nov 1</span></span>
+              <button class="mk warn" type="button" data-for="x2" data-kind="w">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.2v3.4" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="8.6" r=".85" fill="currentColor"/></svg>
+                <span class="m-short">#14</span>
+                <span class="m-full">Output #14 conflicts with this decision</span>
+              </button></div>
+            <div class="rec dec"><span class="num">#9</span><span class="topic">Deck length</span><span class="text">15 slides, appendix unlimited.</span>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=52" width="20" height="20" alt=""><span class="nm">Marcus</span><span class="via">via Claude</span><span class="date">Nov 3</span></span></div>
+            <div class="rec dec"><span class="num">#12</span><span class="topic">Partner</span><span class="text">Approach ABA Cooltrans before Lineage.</span>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=44" width="20" height="20" alt=""><span class="nm">Lena</span><span class="via site">on the site</span><span class="date">Nov 6</span></span></div>
+            <div class="rec dec"><span class="num">#15</span><span class="topic">Financial horizon</span><span class="text">Five-year model, monthly for year one.</span>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" width="20" height="20" alt=""><span class="nm">You</span><span class="via">via Claude</span><span class="date">Nov 8</span></span></div>
+            <div class="rec dec"><span class="num">#18</span><span class="topic">Presenter</span><span class="text">Priya opens, Marcus closes.</span>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" width="20" height="20" alt=""><span class="nm">Priya</span><span class="via">via ChatGPT</span><span class="date">Nov 9</span></span></div>
+          </div>
+
+          <div class="tsec">
+            <h2 class="sec">Claims <span class="ct">3</span></h2>
+            <div class="rec cl row" data-x="x1"><span class="num">#10</span>
+              <div><div class="title">Build the five-year financial model</div><div class="sub"><span class="via">via Claude</span></div></div>
+              <span class="who" style="justify-content:flex-start"><img class="face" src="https://i.pravatar.cc/80?img=12" width="20" height="20" alt=""><span class="nm">You</span></span>
+              <span class="date">Due Nov 14</span>
+              <span class="pill open">Open</span>
+              <button class="mk save" type="button" data-for="x1">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h9M6.5 2.5 10 6l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="m-short">Claude<br>Oct 30</span>
+                <span class="m-full">From your layer via Claude · your modelling preference</span>
+              </button>
+            </div>
+            <div class="rec cl"><span class="num">#13</span>
+              <div><div class="title">Interview two cold-chain operators</div><div class="sub"><span class="via site">on the site</span></div></div>
+              <span class="who" style="justify-content:flex-start"><img class="face" src="https://i.pravatar.cc/80?img=59" width="20" height="20" alt=""><span class="nm">Tomás</span></span>
+              <span class="date late">Due Nov 8 · 2 days past</span>
+              <span class="pill open">Open</span>
+            </div>
+            <div class="rec cl"><span class="num">#16</span>
+              <div><div class="title">Draft slides 1–6</div><div class="sub">Proposed by Priya <span class="via">via ChatGPT</span></div></div>
+              <span class="who" style="justify-content:flex-start"><img class="face" src="https://i.pravatar.cc/80?img=44" width="20" height="20" alt=""><span class="nm">Lena</span></span>
+              <span class="date">Due Nov 17</span>
+              <span class="pill prop">Waiting for Lena</span>
+            </div>
+          </div>
+
+          <div class="tsec">
+            <h2 class="sec">Outputs <span class="ct">5</span></h2>
+            <div class="rec out"><span class="num">#11</span>
+              <div><div><span class="title">Market sizing v2</span><span class="dom">docs.google.com</span></div><div class="desc">TAM/SAM for HCMC cold storage; bottom-up from pallet positions.</div>
+                <div style="margin-top:5px"><span class="ev"><code>@team4/final-deck</code>Final deck</span></div></div>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=52" width="20" height="20" alt=""><span class="nm">Marcus</span><span class="via">via Claude</span><span class="date">Nov 4</span></span></div>
+            <div class="rec out row flagged" data-x="x2"><span class="num">#14</span>
+              <div><div><span class="title">Pricing model sheet</span><span class="dom">docs.google.com</span></div><div class="desc">Unit economics by route.</div>
+                <div class="flag"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 11V1.5M2 2h7.5L8 4.5 9.5 7H2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Marked as conflicting with decision #7 (Pricing). Still prices per kilometre.</div></div>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" width="20" height="20" alt=""><span class="nm">You</span><span class="via">via Claude</span><span class="date">Nov 7</span></span>
+              <button class="mk warn" type="button" data-for="x2" data-kind="w">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6 3.2v3.4" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="8.6" r=".85" fill="currentColor"/></svg>
+                <span class="m-short">#7</span>
+                <span class="m-full">Conflicts with decision #7 (Pricing)</span>
+              </button></div>
+            <div class="rec out"><span class="num">#17</span>
+              <div><div><span class="title">Competitor teardown</span><span class="dom">notion.so</span></div><div class="desc">Five incumbents, strengths and gaps.</div></div>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" width="20" height="20" alt=""><span class="nm">Priya</span><span class="via">via ChatGPT</span><span class="date">Nov 8</span></span></div>
+            <div class="rec out"><span class="num">#19</span>
+              <div><div><span class="title">Interview guide</span><span class="dom">dropbox.com</span></div><div class="desc">Questions for operators.</div></div>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=59" width="20" height="20" alt=""><span class="nm">Tomás</span><span class="via site">on the site</span><span class="date">Nov 9</span></span></div>
+            <div class="rec out"><span class="num">#20</span>
+              <div><div><span class="title">Deck skeleton</span><span class="dom">figma.com</span></div><div class="desc">Slide order and placeholders.</div></div>
+              <span class="who"><img class="face" src="https://i.pravatar.cc/80?img=44" width="20" height="20" alt=""><span class="nm">Lena</span><span class="via">via Cursor</span><span class="date">Nov 10</span></span></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="seamcap" id="seamcap" role="status" hidden></div>
+
+<script>
+(function(){
+  var app=document.getElementById('app');
+  var cap=document.getElementById('seamcap');
+  var lit=[];
+  function clear(){lit.forEach(function(el){el.classList.remove('lit','wl','on')});lit=[];cap.hidden=true}
+  function light(mk){
+    clear();
+    var id=mk.getAttribute('data-for'), warn=mk.getAttribute('data-kind')==='w';
+    document.querySelectorAll('[data-x~="'+id+'"]').forEach(function(el){el.classList.add('lit');if(warn)el.classList.add('wl');lit.push(el)});
+    document.querySelectorAll('.mk[data-for="'+id+'"]').forEach(function(m){m.classList.add('on');lit.push(m)});
+    if(window.matchMedia('(max-width:760px)').matches)return;
+    var full=mk.querySelector('.m-full').textContent;
+    var other=mk.closest('.yours')?'.team':'.yours';
+    var hidden=Array.prototype.some.call(document.querySelectorAll(other+' [data-x~="'+id+'"]'),function(el){
+      var r=el.getBoundingClientRect(),s=el.closest('.scroll').getBoundingClientRect();return r.bottom<s.top||r.top>s.bottom});
+    cap.innerHTML='';cap.appendChild(document.createTextNode(full));
+    var sm=document.createElement('small');sm.textContent=hidden?'Click to bring the other end into view':'Both ends highlighted';cap.appendChild(sm);
+    cap.className='seamcap'+(warn?' w':'');cap.hidden=false;
+    var r=mk.getBoundingClientRect(),cx=document.querySelector('.team').getBoundingClientRect().left;
+    var w=cap.offsetWidth;cap.style.left=Math.max(8,Math.min(window.innerWidth-w-8,cx-w/2))+'px';cap.style.top=(r.bottom+6)+'px';
+  }
+  document.querySelectorAll('.mk').forEach(function(mk){
+    mk.addEventListener('mouseenter',function(){light(mk)});
+    mk.addEventListener('focus',function(){light(mk)});
+    mk.addEventListener('mouseleave',clear);
+    mk.addEventListener('blur',clear);
+    mk.addEventListener('click',function(){
+      var id=mk.getAttribute('data-for');
+      var mine=mk.closest('.side');
+      if(window.matchMedia('(max-width:760px)').matches){
+        setTab(mine.classList.contains('yours')?'team':'yours');
+      }
+      var targets=Array.prototype.filter.call(document.querySelectorAll('[data-x~="'+id+'"]'),function(el){return el.closest('.side')!==mine});
+      if(targets[0])targets[0].scrollIntoView({block:'center',behavior:'smooth'});
+      setTimeout(function(){light(mk)},350);
+    });
+  });
+  document.querySelectorAll('.scroll').forEach(function(s){s.addEventListener('scroll',function(){cap.hidden=true},{passive:true})});
+
+  /* revoke / restore */
+  document.querySelectorAll('[data-revoke]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var row=b.closest('.asst'),on=row.classList.toggle('revoked');
+      var st=row.querySelector('.state');
+      if(on){st=document.createElement('span');st.className='state';st.textContent='Revoked just now · can read nothing';row.appendChild(st);b.textContent='Restore'}
+      else{if(st)st.remove();b.textContent='Revoke'}
+      b.setAttribute('aria-label',(on?'Restore ':'Revoke ')+b.getAttribute('data-revoke'));
+    });
+  });
+
+  /* connect + copy */
+  var cb=document.getElementById('connectBtn'),box=document.getElementById('promptBox');
+  cb.addEventListener('click',function(){var o=box.hidden;box.hidden=!o;cb.setAttribute('aria-expanded',String(o))});
+  var copy=document.getElementById('copyBtn'),t;
+  copy.addEventListener('click',function(){
+    var txt=document.getElementById('promptText').textContent;
+    function done(){copy.textContent='Copied';copy.classList.add('done');clearTimeout(t);t=setTimeout(function(){copy.textContent='Copy';copy.classList.remove('done')},2200)}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
+    function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove();done()}
+  });
+
+  /* team switcher */
+  var tb=document.getElementById('teamBtn'),tm=document.getElementById('teamMenu');
+  tb.addEventListener('click',function(e){e.stopPropagation();var o=tm.hidden;tm.hidden=!o;tb.setAttribute('aria-expanded',String(o))});
+  document.addEventListener('click',function(e){if(!tm.hidden&&!tm.contains(e.target)){tm.hidden=true;tb.setAttribute('aria-expanded','false')}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){tm.hidden=true;tb.setAttribute('aria-expanded','false');clear()}});
+
+  /* mobile tabs */
+  function setTab(k){app.setAttribute('data-tab',k);document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-tab')===k))})}
+  document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){setTab(b.getAttribute('data-tab'))})});
+})();
+</script>
+</body>
+</html>

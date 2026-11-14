@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign-in form: rendering and load-in</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
+:root{
+  --canvas:oklch(96.2% 0.004 230);--surface:oklch(99.3% 0.003 230);--line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252);--muted:oklch(46.5% 0.012 245);--blue:oklch(47.6% 0.13 250);
+  --lime:oklch(96.4% 0.19 117);--teal:oklch(37.3% 0.052 206);--aqua:oklch(90.4% 0.1 194);
+  --on-dark:oklch(99.4% 0.003 230);--on-dark-78:oklch(99.4% 0.003 230 / .78);--on-dark-14:oklch(99.4% 0.003 230 / .14);
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--canvas);color:var(--navy);font-family:Archivo,system-ui,sans-serif;font-size:14px;line-height:1.45;letter-spacing:-.02em;-webkit-font-smoothing:antialiased}
+p,h1{margin:0}
+button,input{font:inherit;letter-spacing:inherit}
+
+.pick{display:flex;align-items:center;gap:6px;padding:10px 16px;flex-wrap:wrap}
+.pick b{font-weight:500;margin-right:8px}
+.pick a,.pick button{height:34px;padding:0 14px;border-radius:56px;display:inline-flex;align-items:center;color:var(--navy);text-decoration:none;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);border:0;cursor:pointer}
+.pick a[aria-current]{background:var(--blue);color:var(--on-dark);box-shadow:none}
+.pick .sp{flex:1}
+.view{display:none;padding:0 16px 16px}
+.view.on{display:block}
+
+/* the page as built today */
+.plate{background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;min-height:calc(100dvh - 70px);padding:clamp(28px,5vw,72px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);column-gap:clamp(32px,6vw,96px);align-items:center;justify-content:center}
+.words{max-width:520px}
+.mark{display:block;width:72px;height:72px;margin:0 0 28px -4px;color:var(--aqua)}
+.kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua)}
+.kick::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
+h1{font-size:clamp(40px,4.6vw,64px);line-height:1;letter-spacing:-.05em;font-weight:520;color:var(--aqua);margin:14px 0 18px -.04em}
+h1 em{font-style:normal;color:var(--lime)}
+.words h1 + p{max-width:38ch;font-size:16px}
+
+/* shared form pieces */
+.form{position:relative;width:100%}
+.form > div{transition:opacity .3s var(--ease)}
+.form .sk{position:absolute;inset:0;opacity:0;pointer-events:none}
+.wait .form .real{opacity:0}.wait .form .sk{opacity:1}
+.form button{height:46px;border-radius:56px;border:0;cursor:pointer;width:100%}
+.form label{display:block;font-weight:500;font-size:13.5px;margin-bottom:8px}
+.form input{width:100%;height:46px;border-radius:12px;padding:0 14px}
+.g i{width:16px;height:16px;border-radius:50%;background:conic-gradient(#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0)}
+.g{display:flex;align-items:center;justify-content:center;gap:10px}
+.go{background:var(--lime);color:var(--navy);font-weight:600;font-size:15px}
+.or{display:flex;align-items:center;gap:12px;font-size:13px;margin:18px 0}
+.or::before,.or::after{content:'';flex:1;height:1px}
+.sk i{display:block;border-radius:56px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- 1 · The card, tidied: one white surface, no grey band ---------- */
+.f1{background:var(--surface);color:var(--navy);border-radius:24px 24px 24px 6px;height:356px}
+.f1 > div{padding:32px}
+.f1 .g{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--navy)}
+.f1 .or{color:var(--muted)}.f1 .or::before,.f1 .or::after{background:var(--line)}
+.f1 input{border:1px solid var(--line-2);background:var(--surface);color:var(--navy)}
+.f1 .go{margin-top:18px}
+.f1 .sec{margin-top:20px;text-align:center;font-size:12.5px;color:var(--muted)}
+.f1 .sk i{background:oklch(95% 0.006 240)}
+.f1 .sk i:nth-child(1){height:46px}.f1 .sk i:nth-child(2){height:1px;margin:27px 0;border-radius:0}.f1 .sk i:nth-child(3){height:12px;width:96px;margin-bottom:12px}.f1 .sk i:nth-child(4){height:46px;border-radius:12px}.f1 .sk i:nth-child(5){height:46px;margin-top:18px}
+
+/* ---------- 2 · No card: the fields sit on the plate ---------- */
+.f2{height:300px}
+.f2 label{color:var(--on-dark)}
+.f2 .g{background:transparent;box-shadow:inset 0 0 0 1.5px oklch(90.4% 0.1 194 / .55);color:var(--on-dark)}
+.f2 .or{color:var(--on-dark-78)}.f2 .or::before,.f2 .or::after{background:var(--on-dark-14)}
+.f2 input{border:0;background:var(--surface);color:var(--navy)}
+.f2 .go{margin-top:18px}
+.f2 .sec{margin-top:20px;font-size:12.5px;color:var(--on-dark-78)}
+.f2 .sk i{box-shadow:inset 0 0 0 1.5px var(--on-dark-14)}
+.f2 .sk i:nth-child(1){height:46px}.f2 .sk i:nth-child(2){height:1px;margin:27px 0;border-radius:0;background:var(--on-dark-14);box-shadow:none}.f2 .sk i:nth-child(3){height:12px;width:96px;margin-bottom:12px;background:var(--on-dark-14);box-shadow:none}.f2 .sk i:nth-child(4){height:46px;border-radius:12px}.f2 .sk i:nth-child(5){height:46px;margin-top:18px}
+
+/* ---------- 3 · One line: email and Continue together, Google as the quiet second choice ---------- */
+.f3{height:190px}
+.f3 label{color:var(--on-dark)}
+.f3 .row{display:flex;gap:6px;background:var(--surface);border-radius:56px;padding:5px}
+.f3 input{flex:1;min-width:0;border:0;background:transparent;color:var(--navy);border-radius:56px;height:46px;padding:0 16px}
+.f3 .go{width:auto;padding:0 24px;flex:none}
+.f3 .g{margin-top:14px;background:transparent;box-shadow:inset 0 0 0 1.5px oklch(90.4% 0.1 194 / .55);color:var(--on-dark)}
+.f3 .sec{margin-top:18px;font-size:12.5px;color:var(--on-dark-78)}
+.f3 .sk i{box-shadow:inset 0 0 0 1.5px var(--on-dark-14)}
+.f3 .sk i:nth-child(1){height:12px;width:96px;margin-bottom:12px;background:var(--on-dark-14);box-shadow:none}.f3 .sk i:nth-child(2){height:56px}.f3 .sk i:nth-child(3){height:46px;margin-top:14px}
+
+.note{margin-top:14px;font-size:12.5px;color:var(--on-dark-78);max-width:400px}
+
+@media (max-width:860px){
+  .pick .sp{display:none}
+  .plate{grid-template-columns:minmax(0,1fr);min-height:0;padding:24px 20px 26px;row-gap:26px;border-radius:26px 26px 26px 6px}
+  h1{font-size:40px}.mark{width:56px;height:56px;margin-bottom:20px}
+}
+</style>
+</head>
+<body>
+
+<nav class="pick" aria-label="Form renderings">
+  <b>Sign-in form</b>
+  <a href="#1">1 · Card, tidied</a><a href="#2">2 · No card</a><a href="#3">3 · One line</a>
+  <span class="sp"></span>
+  <button type="button" data-replay="900">Replay loading</button>
+  <button type="button" data-replay="3200">Replay, slow form</button>
+</nav>
+
+<template id="words"><div class="words">
+  <span data-mark></span>
+  <p><span class="kick">For the groups you’re already in</span></p>
+  <h1>Stay in the loop.<br><em>Without chasing it.</em></h1>
+  <p>Loop connects the AI you already use to your team, club or trip, so anyone can ask it what the plan is.</p>
+</div></template>
+
+<section class="view" id="v1"><div class="plate"><div data-words></div><div>
+  <div class="form f1">
+    <div class="sk" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="real"><button class="g" type="button"><i></i>Continue with Google</button><div class="or">or</div><label>Email address</label><input placeholder="you@example.com"><button class="go" type="button">Continue</button><p class="sec">Secured by Clerk</p></div>
+  </div>
+</div></div></section>
+
+<section class="view" id="v2"><div class="plate"><div data-words></div><div>
+  <div class="form f2">
+    <div class="sk" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="real"><button class="g" type="button"><i></i>Continue with Google</button><div class="or">or</div><label>Email address</label><input placeholder="you@example.com"><button class="go" type="button">Continue</button><p class="sec">Secured by Clerk</p></div>
+  </div>
+</div></div></section>
+
+<section class="view" id="v3"><div class="plate"><div data-words></div><div>
+  <div class="form f3">
+    <div class="sk" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="real"><label>Email address</label><div class="row"><input placeholder="you@example.com"><button class="go" type="button">Continue</button></div><button class="g" type="button"><i></i>Continue with Google</button><p class="sec">We email you a code. Secured by Clerk.</p></div>
+  </div>
+</div></div></section>
+
+<script>
+const C = [[50, 35], [35.5, 60], [64.5, 60]], R = 21, W = 8.5, line = 1.62, off = 3.44;
+const ring = (i, r) => `M${C[i][0] - r} ${C[i][1]}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+let n = 0;
+function mark() {
+  const id = 'm' + (n++);
+  const masks = [0, 1, 2].map(i => `<mask id="${id}${i}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="${ring((i + 2) % 3, R)}" stroke="black" stroke-width="${W * 1.7}"/></mask>`).join('');
+  const rings = [0, 1, 2].map(i => `<g mask="url(#${id}${i})">${[-off, 0, off].map(d => `<path d="${ring(i, R + d)}" stroke="${i ? 'currentColor' : 'var(--lime)'}" stroke-width="${line}"/>`).join('')}</g>`).join('');
+  return `<svg class="mark" viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs>${masks}</defs>${rings}</svg>`;
+}
+document.querySelectorAll('[data-words]').forEach(el => { el.replaceWith(document.getElementById('words').content.cloneNode(true)); });
+document.querySelectorAll('[data-mark]').forEach(el => { el.outerHTML = mark(); });
+let timer;
+function load(ms) {
+  document.body.classList.add('wait');
+  clearTimeout(timer); timer = setTimeout(() => document.body.classList.remove('wait'), ms);
+}
+function show() {
+  const id = (location.hash || '#1').slice(1);
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v' + id));
+  document.querySelectorAll('.pick a').forEach(a => a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  load(900);
+}
+document.querySelectorAll('[data-replay]').forEach(b => b.addEventListener('click', () => load(+b.dataset.replay)));
+addEventListener('hashchange', show); show();
+</script>
+</body>
+</html>

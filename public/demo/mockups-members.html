@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Members page · three directions</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+:root{
+  --canvas:oklch(96.2% 0.004 230);--surface:oklch(99.3% 0.003 230);--sunk:oklch(97.7% 0.006 240);
+  --line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252);--muted:oklch(46.5% 0.012 245);
+  --blue:oklch(47.6% 0.13 250);--lime:oklch(96.4% 0.19 117);--teal:oklch(37.3% 0.052 206);--aqua:oklch(90.4% 0.1 194);
+  --plum:oklch(42.6% 0.13 322);--pale-blue:oklch(95.3% 0.017 245);--pale-plum:oklch(94.4% 0.011 320);--pale-lime:oklch(96.5% 0.07 117);
+  --on-dark:oklch(99.4% 0.003 230);--on-dark-78:oklch(99.4% 0.003 230 / .78);--on-dark-50:oklch(99.4% 0.003 230 / .5);
+  --r-lg:24px 24px 24px 6px;--r-md:16px 16px 16px 4px;--pill:56px;--ease:cubic-bezier(.22,1,.36,1);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--navy);font:14px/1.45 Archivo,system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+h1,h2,h3,p,ul{margin:0;padding:0}ul{list-style:none}
+h1,h2,h3{font-weight:500;letter-spacing:-.035em}
+button,input,select{font:inherit;letter-spacing:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.mono{font-family:var(--mono);letter-spacing:0;font-size:12.5px}
+.muted{color:var(--muted)}
+
+/* chrome around the mockup: not part of the design */
+.bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 20px;background:oklch(24% 0.06 252);color:var(--on-dark-78)}
+.bar b{color:var(--on-dark);font-weight:520}
+.pick{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.pick button{height:32px;padding:0 14px;border:0;border-radius:var(--pill);background:oklch(99.4% 0.003 230 / .1);color:var(--on-dark-78)}
+.pick button[aria-pressed=true]{background:var(--aqua);color:var(--navy);font-weight:550}
+.why{padding:12px 20px;color:var(--muted);font-size:13.5px;background:var(--surface);border-bottom:1px solid var(--line)}
+.why b{color:var(--navy);font-weight:550}
+
+/* the app shell */
+.shell{display:grid;grid-template-columns:208px minmax(0,1fr);min-height:calc(100vh - 100px)}
+.rail{background:var(--navy);color:var(--on-dark-78);padding:16px 10px}
+.rail .word{display:flex;align-items:center;gap:8px;color:var(--on-dark);font-size:17px;font-weight:560;padding:0 8px 14px}
+.rail .word svg{width:22px;height:22px;color:var(--aqua)}
+.rail p{font-size:12.5px;color:var(--on-dark-50);padding:6px 8px}
+.rail a{display:block;padding:7px 8px;border-radius:10px;color:inherit;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail a[aria-current]{background:oklch(99.4% 0.003 230 / .12);color:var(--on-dark)}
+.main{padding:16px 32px 60px;max-width:1120px;width:100%}
+.crumbs{font-size:13px;color:var(--muted);display:flex;gap:6px}
+.crumbs b{color:var(--navy);font-weight:520}
+
+/* header: one row */
+.head{display:flex;align-items:center;gap:12px;margin:10px 0 14px;flex-wrap:wrap}
+.head .tile{width:36px;height:36px;border-radius:12px 12px 12px 4px;background:var(--teal);color:var(--aqua);display:grid;place-items:center;flex:none}
+.head .tile svg{width:22px;height:22px}
+.head h1{font-size:22px;line-height:1.1}
+.head .count{color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:2px;margin-left:auto}
+.tabs a{height:32px;padding:0 14px;border-radius:var(--pill);display:grid;place-items:center;color:var(--navy);text-decoration:none;font-size:13.5px}
+.tabs a:hover{background:var(--pale-blue)}
+.tabs a[aria-current]{background:var(--blue);color:var(--on-dark);font-weight:540}
+
+/* shared controls */
+.btn{height:32px;padding:0 14px;border:0;border-radius:var(--pill);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);font-size:13.5px;white-space:nowrap;transition:background-color .15s var(--ease)}
+.btn:hover{background:var(--pale-blue)}
+.btn:disabled{color:var(--line-2);cursor:not-allowed;background:transparent}
+.btn.fill{background:var(--blue);color:var(--on-dark);box-shadow:none;font-weight:540}
+.btn.fill:hover{background:oklch(42% 0.13 250)}
+.btn.quiet{box-shadow:none;background:transparent;color:var(--muted)}
+.btn.quiet:hover{background:var(--pale-plum);color:var(--plum)}
+.field{height:36px;border:0;border-radius:12px 12px 12px 4px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);padding:0 12px;min-width:0}
+.field:focus{outline:0;box-shadow:inset 0 0 0 2px var(--blue)}
+.role{height:30px;border:0;border-radius:var(--pill);background:transparent;padding:0 26px 0 12px;font-size:13.5px;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none' stroke='%23556' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:9px}
+.role:hover{background-color:var(--pale-blue)}
+.role[data-is=owner]{font-weight:560}
+.seg{display:inline-flex;padding:3px;border-radius:var(--pill);background:var(--sunk);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{height:28px;padding:0 12px;border:0;border-radius:var(--pill);background:transparent;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--navy);color:var(--on-dark);font-weight:540}
+.seg button[aria-pressed=true][data-mode=open]{background:var(--lime);color:var(--navy)}
+.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:600;letter-spacing:0;flex:none;background:oklch(92% 0.045 var(--h));color:oklch(36% 0.09 var(--h))}
+.av.mail{background:var(--pale-blue);color:var(--blue)}.av.mail svg{width:14px;height:14px}
+.you{font-size:11.5px;padding:1px 7px;border-radius:var(--pill);background:var(--pale-lime);margin-left:6px;font-weight:540}
+.label{font-size:12.5px;color:var(--muted);padding:10px 16px 4px;display:flex;gap:6px}
+.label b{color:var(--navy);font-weight:560}
+.note{font-size:12.5px;color:var(--muted);min-height:18px}
+.note.warn{color:var(--plum)}
+
+/* the door: add people + the join link */
+.door{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:12px}
+.door > div{padding:12px 16px;min-width:0}
+.door > div + div{border-left:1px solid var(--line)}
+.door h2{font-size:13.5px;font-weight:560;margin-bottom:8px}
+.invite{display:flex;gap:6px;align-items:center}
+.invite .field{flex:1}
+.invite .role{box-shadow:inset 0 0 0 1px var(--line-2);height:36px}
+.link-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.door .note{margin-top:6px}
+
+/* the roster */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding-bottom:6px}
+.row{display:grid;grid-template-columns:30px minmax(0,1.3fr) minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:7px 16px;border-top:1px solid var(--line)}
+.label + .row{border-top:0}
+.row:hover{background:var(--sunk)}
+.row .who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:520}
+.row .meta{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .acts{display:flex;gap:4px;justify-content:flex-end}
+.row.wait{background:var(--pale-blue)}
+.row.wait:hover{background:var(--pale-blue)}
+.tag{display:inline-flex;align-items:center;color:var(--muted)}
+.tag input{width:11ch;height:26px;border:0;border-radius:8px;background:transparent;padding:0 4px;font:inherit;color:var(--navy)}
+.tag input:hover,.tag input:focus{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);outline:0}
+.row,.card{transition:opacity .3s var(--ease),transform .3s var(--ease)}
+@starting-style{.row,.card{opacity:0;transform:translateY(6px)}}
+
+/* B: roster beside the door */
+.b-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.side{position:sticky;top:64px;display:grid;gap:10px}
+.side section{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+.side h2{font-size:13.5px;font-weight:560;margin-bottom:8px;display:flex;gap:6px}
+.side h2 span{color:var(--muted);font-weight:400}
+.side .invite{flex-wrap:wrap}.side .invite .field{flex:1 1 100%}
+.side .invite .btn{margin-left:auto}
+.mini{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.mini:first-of-type{border-top:0}
+.mini div{flex:1;min-width:0}
+.mini b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini div span{display:block;font-size:12.5px;color:var(--muted)}
+.mini .btn{height:28px;padding:0 10px;font-size:13px}
+.b-grid .row{grid-template-columns:30px minmax(0,1.3fr) minmax(0,1fr) auto auto}
+
+/* C: one column per role */
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:4px 8px 8px;min-height:150px;transition:background-color .15s var(--ease),box-shadow .15s var(--ease)}
+.col.over{background:var(--pale-blue);box-shadow:inset 0 0 0 2px var(--blue)}
+.col .label{padding:8px 6px 6px}
+.col .hint{font-size:12.5px;color:var(--muted);padding:2px 6px 8px}
+.card{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:12px 12px 12px 4px;background:var(--sunk);margin-top:6px}
+.card[draggable=true]{cursor:grab}
+.card.drag{opacity:.4}
+.card div{flex:1;min-width:0}
+.card b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .sub{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.card .sub > :first-child{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+.card .sub .btn{height:22px;padding:0 7px;font-size:12px}
+.card .tag input{width:9ch;height:22px}
+.card .btn{height:26px;padding:0 9px;font-size:12.5px}
+.card.wait{background:var(--pale-blue);flex-wrap:wrap}
+.card.wait .acts{flex:1 1 100%;display:flex;gap:4px;padding-left:38px}
+.col .role{width:28px;height:28px;padding:0;color:transparent;background-position:center;flex:none}
+.col .role option{color:var(--navy)}
+
+/* a lot of people: find, filter, and lists that scroll inside themselves */
+.pick i{width:1px;background:oklch(99.4% 0.003 230 / .2);margin:4px 6px}
+.tools{position:sticky;top:52px;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 12px;margin-bottom:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+.tools .field{flex:1 1 200px;height:32px}
+.tools .seg button span{color:inherit;opacity:.65;margin-left:4px}
+.more{display:block;width:100%;height:32px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--blue);font-size:13px;text-align:left;padding:0 16px}
+.more:hover{background:var(--sunk)}
+.col .more{border-top:0;padding:0 6px;margin-top:4px}
+.empty{padding:14px 16px;color:var(--muted)}
+.side .waitbox{max-height:300px;overflow:auto}
+.board.long .col{max-height:calc(100vh - 330px);overflow:auto}
+.board.long .col .label{position:sticky;top:-4px;background:var(--surface);z-index:1}
+/* B: the roster scrolls inside its own frame, with the app's own scrollbar and a count of where you are */
+.rows{max-height:max(280px,calc(100vh - 452px));overflow-y:auto;overscroll-behavior:contain;border-top:1px solid var(--line)}
+.rows .row:first-child{border-top:0}
+.foot{display:flex;justify-content:space-between;gap:12px;padding:8px 16px 4px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.foot b{color:var(--navy);font-weight:560}
+.rows,.waitbox{scrollbar-gutter:stable}
+.rows::-webkit-scrollbar,.waitbox::-webkit-scrollbar{width:14px}
+.rows::-webkit-scrollbar-track,.waitbox::-webkit-scrollbar-track{background:linear-gradient(var(--line),var(--line)) center/2px 100% no-repeat;margin:8px 0}
+.rows::-webkit-scrollbar-thumb,.waitbox::-webkit-scrollbar-thumb{background:var(--navy);border:4px solid transparent;background-clip:padding-box;border-radius:var(--pill);min-height:44px}
+.rows::-webkit-scrollbar-thumb:hover,.waitbox::-webkit-scrollbar-thumb:hover{background-color:var(--blue);border-width:3px}
+.rows::-webkit-scrollbar-thumb:active,.waitbox::-webkit-scrollbar-thumb:active{background-color:var(--blue);border-width:2px}
+@supports not selector(::-webkit-scrollbar){.rows,.waitbox{scrollbar-width:thin;scrollbar-color:var(--navy) transparent}}
+.dir{display:none}.dir.on{display:block}
+@media (max-width:900px){.shell{grid-template-columns:1fr}.rail{display:none}.main{padding:14px 16px 40px}.door,.b-grid{grid-template-columns:1fr}.door > div + div{border-left:0;border-top:1px solid var(--line)}
+  .board{grid-template-columns:repeat(2,minmax(0,1fr))}.row{grid-template-columns:30px minmax(0,1fr) auto}.row .meta{display:none}.side{position:static}.tabs{margin-left:0;width:100%;overflow-x:auto}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}::view-transition-group(*){animation:none!important}}
+::view-transition-group(*){animation-duration:.32s;animation-timing-function:cubic-bezier(.22,1,.36,1)}
+</style>
+</head>
+<body>
+<div class="bar"><b>Members page</b><span>Same data and the same actions in all three. Everything is clickable.</span>
+  <div class="pick"><button data-dir="a" aria-pressed="true">A · One list</button><button data-dir="b" aria-pressed="false">B · List and a side panel (picked)</button><button data-dir="c" aria-pressed="false">C · A column per role</button><i></i><button data-size="6" aria-pressed="true">Team of 6</button><button data-size="68" aria-pressed="false">Cohort of 68</button><button data-size="400" aria-pressed="false">Club of 400</button></div></div>
+<p class="why" id="why"></p>
+<div class="shell">
+  <nav class="rail" aria-label="Groups"><div class="word"><svg data-rings></svg>Loop</div><p>Your groups</p>
+    <a href="#" aria-current="page">NBAE 6561 Investment Banking</a><a href="#">NBAE 6830 Venture Creation</a></nav>
+  <div class="main">
+    <p class="crumbs"><span>Groups</span><span>›</span><b>NBAE 6561 Investment Banking</b></p>
+    <div class="head"><span class="tile"><svg data-rings></svg></span><div><h1>NBAE 6561 Investment Banking</h1><span class="mono muted">@nbae-6561</span> <span class="count" id="count"></span></div>
+      <nav class="tabs" aria-label="Group sections"><a href="#">Team</a><a href="#" aria-current="page">Members</a><a href="#">Resources</a><a href="#">Connections</a></nav></div>
+    <section class="dir on" id="dir-a"></section>
+    <section class="dir" id="dir-b"></section>
+    <section class="dir" id="dir-c"></section>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RINGS='<path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime)" stroke-width="9"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/>';
+document.querySelectorAll('svg[data-rings]').forEach(el=>{el.setAttribute('viewBox','0 0 100 100');el.setAttribute('fill','none');el.innerHTML=RINGS;});
+const MAIL='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h12v8.5H2z"/><path d="M2 4.5l6 4.5 6-4.5"/></svg>';
+const ROLES=['owner','organizer','member','follower'],NAME={owner:'Owner',organizer:'Organizer',member:'Member',follower:'Follower'};
+
+// One world, drawn three ways.
+const FIRST=['Aisha','Ben','Carla','Diego','Emi','Farid','Grace','Hugo','Ines','Jamal','Keiko','Liam','Mona','Nikhil','Olga','Pablo'],LAST=['Adeyemi','Brooks','Chen','Dubois','Eriksen','Farouk','Garcia','Haddad','Ito','Jensen','Kowalski','Lopez','Mbeki','Novak','Ortiz','Park'];
+const SIX=[
+  {id:'you',name:'Stephen Fang',tag:'',role:'owner',you:true,h:117},
+  {id:'dev',name:'Dev Malhotra',tag:'dev',role:'member',h:250},
+  {id:'elena',name:'Elena Costa',tag:'elena',role:'organizer',h:20},
+  {id:'hannah',name:'Hannah Okafor',tag:'',role:'member',h:322},
+  {id:'marcus',name:'Marcus Bell',tag:'marcus',role:'member',h:160},
+  {id:'priya',name:'Priya Raman',tag:'priya',role:'member',h:70}];
+function world(size){
+  const people=SIX.map(p=>({...p})),waiting=[{id:'w1',kind:'request',name:'Sofia Reyes',meta:'Asked 2 hours ago',h:290},{id:'w2',kind:'invite',name:'jordan.lee@example.edu',meta:'Invited as member · until Nov 27'}];
+  for(let i=0;people.length<size;i++){const first=FIRST[i%16],last=LAST[(i*7+Math.floor(i/16)*5)%16];
+    people.push({id:'p'+i,name:first+' '+(i>255?'ABCDEFGH'[Math.floor(i/256)]+'. ':'')+last,tag:i%10<7?(first+(i>15?'-'+last[0]:'')).toLowerCase():'',role:i===4?'owner':i%13===2?'organizer':i%23===9?'follower':'member',h:(i*47+30)%360});}
+  if(size>6){['Tomas Vega','Yuki Sato','Noor Rahimi','Leo Marchetti'].forEach((name,i)=>waiting.push({id:'r'+i,kind:'request',name,meta:`Asked ${i+1} day${i?'s':''} ago`,h:i*80+40}));
+    ['a.wright','c.okoye','m.lindqvist'].forEach((who,i)=>waiting.push({id:'i'+i,kind:'invite',name:who+'@example.edu',meta:'Invited as member · until Nov '+(24+i)}));}
+  return {people,waiting};
+}
+const S={dir:'a',size:6,link:'open',note:'',warn:false,q:'',filter:'all',allWaiting:false,cap:50,...world(6)};
+const LINK={off:'No link. People join by invitation only.',ask:'Anyone with the link can ask to join. You approve each one.',open:'Anyone with the link who signs in becomes a member at once.'};
+const WHY={
+ a:'<b>A · One list.</b> The page is the roster. Adding people and the join link share one strip above it. People who are waiting sit at the top of the same list with their one decision. A role changes where you read it; your own row holds your tag and Leave. Nothing scrolls for a group this size.',
+ b:'<b>B · List and a side panel.</b> The roster keeps the whole left side and never moves. Everything about getting in (the link, invitations, who is waiting) lives in one panel on the right. The roster scrolls inside its own frame, so the page itself never grows: the scrollbar is drawn in the look of the app (a navy pill on a hairline) and the line under the list says where you are, as in 41 to 49 of 400.',
+ c:'<b>C · A column per role.</b> You see who holds what at a glance and drag a person to change it (the arrow on each card does the same, for keyboard and touch). Strong when roles matter, as in a club with several organizers; weaker for a long plain member list, which becomes one tall column.'};
+
+const initials=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const av=p=>`<span class="av" style="--h:${p.h}">${initials(p.name)}</span>`;
+const roleSel=p=>`<select class="role" data-is="${p.role}" data-role="${p.id}" aria-label="Role of ${esc(p.name)}">${ROLES.map(r=>`<option value="${r}"${r===p.role?' selected':''}>${NAME[r]}</option>`).join('')}</select>`;
+// Past a hundred people a moving row is noise, and naming every row costs: only small groups animate person by person.
+const vt=id=>S.people.length>100?'':`style="view-transition-name:p-${S.dir}-${id}"`;
+const invite=()=>`<form class="invite" data-invite><input class="field" type="email" required placeholder="name@school.edu" aria-label="Email to invite"><select class="role" name="as" aria-label="Invite as"><option value="member">Member</option><option value="follower">Follower</option><option value="organizer">Organizer</option></select><button class="btn fill">Invite</button></form>`;
+const link=()=>`<div class="link-row"><span class="seg" role="group" aria-label="Join link">${[['off','Off'],['ask','Ask first'],['open','Admit on sign-in']].map(([m,t])=>`<button data-mode="${m}" aria-pressed="${S.link===m}">${t}</button>`).join('')}</span>
+  <button class="btn" data-copy ${S.link==='off'?'disabled':''}>Copy link</button><button class="btn quiet" data-replace ${S.link==='off'?'disabled':''}>Replace</button></div>`;
+const note=()=>`<p class="note${S.warn?' warn':''}" role="status">${esc(S.note||LINK[S.link])}</p>`;
+const waitActs=w=>w.kind==='request'?`<button class="btn fill" data-approve="${w.id}">Approve</button><button class="btn quiet" data-drop="${w.id}">Decline</button>`:`<button class="btn quiet" data-drop="${w.id}">Revoke</button>`;
+const tagCell=p=>p.you?`<label class="tag mono">@nbae-6561/<input data-tag value="${esc(p.tag)}" placeholder="your-tag" maxlength="48" aria-label="Your tag"></label>`:p.tag?`<span class="mono muted">@nbae-6561/${esc(p.tag)}</span>`:`<span class="muted" style="font-size:13px">No tag yet</span>`;
+const personRow=p=>`<div class="row" ${vt(p.id)}>${av(p)}<span class="who">${esc(p.name)}${p.you?'<span class="you">You</span>':''}</span><span class="meta">${tagCell(p)}</span>${roleSel(p)}<span class="acts">${p.you?'<button class="btn quiet" data-leave>Leave</button>':`<button class="btn quiet" data-remove="${p.id}">Remove</button>`}</span></div>`;
+const waitRow=w=>`<div class="row wait" ${vt(w.id)}>${w.kind==='request'?av(w):`<span class="av mail">${MAIL}</span>`}<span class="who">${esc(w.name)}</span><span class="meta">${esc(w.meta)}</span><span></span><span class="acts">${waitActs(w)}</span></div>`;
+const door=()=>`<div class="door"><div><h2>Add people</h2>${invite()}<p class="note">They see the invitation when they sign in with that address. Loop sends no email.</p></div><div><h2>Join link</h2>${link()}${note()}</div></div>`;
+
+const big=()=>S.people.length>12;
+const seen=()=>S.people.filter(p=>(S.filter==='all'||p.role===S.filter)&&(!S.q||(p.name+' '+p.tag).toLowerCase().includes(S.q.toLowerCase())));
+const shownWaiting=()=>S.allWaiting||S.waiting.length<=3?S.waiting:S.waiting.slice(0,3);
+const moreWaiting=()=>S.waiting.length>3?`<button class="more" data-morewait>${S.allWaiting?'Show fewer':`Show ${S.waiting.length-3} more`}</button>`:'';
+const tools=(roles=true)=>big()?`<div class="tools"><input class="field" type="search" data-q value="${esc(S.q)}" placeholder="Find a person or a tag" aria-label="Find a person">${roles?`<span class="seg" role="group" aria-label="Show">${[['all','Everyone'],...ROLES.map(r=>[r,NAME[r]+'s'])].map(([r,t])=>`<button data-filter="${r}" aria-pressed="${S.filter===r}">${t}<span>${r==='all'?S.people.length:S.people.filter(x=>x.role===r).length}</span></button>`).join('')}</span>`:''}</div>`:'';
+const rosterLabel=list=>`<p class="label"><b>In the group</b>${list.length===S.people.length?list.length:`${list.length} of ${S.people.length}`}</p>`;
+const moreRows=n=>n>S.cap?`<button class="more" data-morerows>Show ${Math.min(50,n-S.cap)} more of ${n-S.cap}</button>`:'';
+const roster=()=>{const list=seen();return rosterLabel(list)+(list.slice(0,S.cap).map(personRow).join('')||'<p class="empty">Nobody matches. Clear the search to see everyone.</p>')+moreRows(list.length);};
+function drawA(){return door()+tools()+`<div class="list">${S.waiting.length?`<p class="label"><b>Waiting</b>${S.waiting.length}</p>${shownWaiting().map(waitRow).join('')}${moreWaiting()}`:''}${roster()}</div>`;}
+function drawB(){const list=seen();return `<div class="b-grid"><div>${tools()}<div class="list">${rosterLabel(list)}<div class="rows" tabindex="0" aria-label="People in the group">${list.map(personRow).join('')||'<p class="empty">Nobody matches. Clear the search to see everyone.</p>'}</div>${list.length?'<p class="foot"><span id="where"></span><span id="letter"></span></p>':''}</div></div>
+  <aside class="side"><section><h2>Join link</h2>${link()}${note()}</section>
+  <section><h2>Invite by email</h2>${invite()}<p class="note" style="margin-top:6px">They see it when they sign in. Loop sends no email.</p></section>
+  <section><h2>Waiting <span>${S.waiting.length}</span></h2><div class="waitbox">${S.waiting.length?S.waiting.map(w=>`<div class="mini" ${vt(w.id)}>${w.kind==='request'?av(w):`<span class="av mail">${MAIL}</span>`}<div><b>${esc(w.name)}</b><span>${esc(w.meta)}</span></div>${waitActs(w)}</div>`).join(''):'<p class="note">Nobody is waiting.</p>'}</div></section></aside></div>`;}
+function drawC(){
+  const card=p=>`<div class="card" draggable="true" data-card="${p.id}" ${vt(p.id)}>${av(p)}<div><b>${esc(p.name)}${p.you?'<span class="you">You</span>':''}</b><span class="sub">${p.you?`<label class="tag mono">@<input data-tag value="${esc(p.tag)}" placeholder="your-tag" maxlength="48" aria-label="Your tag"></label>`:`<span class="mono">${p.tag?'@'+esc(p.tag):'No tag yet'}</span>`}${p.you?'<button class="btn quiet" data-leave>Leave</button>':`<button class="btn quiet" data-remove="${p.id}">Remove</button>`}</span></div>${roleSel(p)}</div>`;
+  const list=seen(),cols=['member','organizer','owner',...(S.people.some(x=>x.role==='follower')?['follower']:[])];
+  const hint={member:'Drag someone here to make them a member.',organizer:'Organizers invite people and run events and asks.',owner:'Owners can do everything, including the join link.',follower:'Followers read along and are not asked.'};
+  const col=role=>{const inside=list.filter(x=>x.role===role),all=S.people.filter(x=>x.role===role).length;return `<div class="col" data-col="${role}"><p class="label"><b>${NAME[role]}s</b>${inside.length===all?all:`${inside.length} of ${all}`}</p>${inside.slice(0,S.cap).map(card).join('')+moreRows(inside.length)||`<p class="hint">${all?'Nobody here matches.':hint[role]}</p>`}</div>`;};
+  return door()+tools(false)+`<div class="board${big()?' long':''}" style="grid-template-columns:repeat(${cols.length+1},minmax(0,1fr))"><div class="col"><p class="label"><b>Waiting</b>${S.waiting.length}</p>${shownWaiting().map(w=>`<div class="card wait" ${vt(w.id)}>${w.kind==='request'?av(w):`<span class="av mail">${MAIL}</span>`}<div><b>${esc(w.name)}</b><span class="sub"><span>${esc(w.meta)}</span></span></div><span class="acts">${waitActs(w)}</span></div>`).join('')||'<p class="hint">Nobody is waiting.</p>'}${moreWaiting()}</div>${cols.map(col).join('')}</div>`;}
+const DRAW={a:drawA,b:drawB,c:drawC};
+let keepScroll=true;
+function where(){const box=document.querySelector('.rows'),out=$('where');if(!box||!out)return;const rows=[...box.querySelectorAll('.row')];if(!rows.length)return;
+  const top=box.scrollTop,first=rows.findIndex(r=>r.offsetTop-box.offsetTop+r.offsetHeight>top+4),last=rows.findLastIndex(r=>r.offsetTop-box.offsetTop<top+box.clientHeight-4);
+  out.innerHTML=rows.length>last-first+1?`<b>${first+1} to ${last+1}</b> of ${rows.length}`:`All <b>${rows.length}</b> shown`;}
+function paint(){const was=keepScroll?document.querySelector('.rows')?.scrollTop??0:0;keepScroll=true;const typing=document.activeElement&&'q' in document.activeElement.dataset,at=typing?document.activeElement.selectionStart:0;$('dir-'+S.dir).innerHTML=DRAW[S.dir]();$('count').textContent=`${S.people.length} people`;
+  if(typing){const box=document.querySelector('[data-q]');if(box){box.focus();box.setSelectionRange(at,at);}}
+  const rows=document.querySelector('.rows');if(rows){rows.scrollTop=was;rows.addEventListener('scroll',where,{passive:true});where();}}
+// A change is drawn as one move: the person slides from where they were to where they now are.
+function change(fn){const run=()=>{fn();paint();};if(document.startViewTransition&&!matchMedia('(prefers-reduced-motion:reduce)').matches)document.startViewTransition(run);else run();}
+const say=(text,warn=false)=>{S.note=text;S.warn=warn;};
+function setRole(id,role){const p=S.people.find(x=>x.id===id);if(!p||p.role===role)return paint();
+  if(p.role==='owner'&&S.people.filter(x=>x.role==='owner').length===1){say('A group keeps at least one owner. Make someone else an owner first.',true);return paint();}
+  change(()=>{p.role=role;say(`${p.name} is now ${role==='owner'||role==='organizer'?'an':'a'} ${NAME[role].toLowerCase()}.`);});}
+function show(dir){S.dir=dir;document.querySelectorAll('.dir').forEach(el=>{el.classList.toggle('on',el.id==='dir-'+dir);if(el.id!=='dir-'+dir)el.innerHTML='';});
+  document.querySelectorAll('.pick button[data-dir]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.dir===dir));$('why').innerHTML=WHY[dir];history.replaceState(null,'','#'+dir);paint();}
+
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+  if(d.dir)return show(d.dir);
+  if(d.size){Object.assign(S,world(+d.size),{size:+d.size,q:'',filter:'all',allWaiting:false,note:'',cap:50});document.querySelectorAll('[data-size]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.size===d.size));return paint();}
+  if(d.filter){keepScroll=false;return change(()=>{S.filter=d.filter;});}
+  if('morerows' in d){S.cap+=50;return paint();}
+  if('morewait' in d)return change(()=>{S.allWaiting=!S.allWaiting;});
+  if(d.mode)return change(()=>{S.link=d.mode;say('');});
+  if('copy' in d)return change(()=>say('Link copied.'));
+  if('replace' in d)return change(()=>say('New link made. The old one stopped working.'));
+  if(d.approve)return change(()=>{const w=S.waiting.find(x=>x.id===d.approve);S.waiting=S.waiting.filter(x=>x!==w);S.people.push({id:w.id,name:w.name,tag:'',role:'member',h:w.h});say(`${w.name} is in, as a member.`);});
+  if(d.drop)return change(()=>{const w=S.waiting.find(x=>x.id===d.drop);S.waiting=S.waiting.filter(x=>x!==w);say(w.kind==='request'?`Declined ${w.name}.`:`Invitation to ${w.name} revoked.`);});
+  if(d.remove)return change(()=>{const p=S.people.find(x=>x.id===d.remove);S.people=S.people.filter(x=>x!==p);say(`${p.name} was removed from the group.`);});
+  if('leave' in d)return change(()=>say('You are the only owner. Make someone else an owner before you leave.',true));});
+document.addEventListener('change',e=>{const id=e.target.dataset.role;if(id)setRole(id,e.target.value);if('tag' in e.target.dataset)change(()=>{const me=S.people.find(x=>x.you);me.tag=e.target.value.replace(/^@/,'').toLowerCase().replace(/[^a-z0-9-]/g,'');say(me.tag?`Teammates can tag you as @nbae-6561/${me.tag}.`:'Your tag was removed.');});});
+document.addEventListener('submit',e=>{if(!('invite' in e.target.dataset))return;e.preventDefault();const mail=e.target.querySelector('input').value.trim(),as=e.target.querySelector('select').value;
+  change(()=>{S.waiting.push({id:'w'+Date.now(),kind:'invite',name:mail,meta:`Invited as ${as} · until Nov 27`});say(`Invitation made for ${mail}.`);});});
+document.addEventListener('input',e=>{if('q' in e.target.dataset){S.q=e.target.value;S.cap=50;keepScroll=false;paint();}});
+// C: drag a card to another role.
+let dragging=null;
+document.addEventListener('dragstart',e=>{const c=e.target.closest('[data-card]');if(!c)return;dragging=c.dataset.card;c.classList.add('drag');e.dataTransfer.effectAllowed='move';});
+document.addEventListener('dragend',()=>{dragging=null;document.querySelectorAll('.drag,.over').forEach(el=>el.classList.remove('drag','over'));});
+document.addEventListener('dragover',e=>{const c=e.target.closest('[data-col]');if(!c||!dragging)return;e.preventDefault();document.querySelectorAll('.over').forEach(el=>el!==c&&el.classList.remove('over'));c.classList.add('over');});
+document.addEventListener('drop',e=>{const c=e.target.closest('[data-col]');if(!c||!dragging)return;e.preventDefault();const id=dragging;dragging=null;setRole(id,c.dataset.col);});
+const fromHash=()=>show(['a','b','c'].includes(location.hash.slice(1))?location.hash.slice(1):'b');
+addEventListener('resize',where);
+addEventListener('hashchange',()=>{if(location.hash.slice(1)!==S.dir)fromHash();});
+fromHash();
+</script>
+</body>
+</html>

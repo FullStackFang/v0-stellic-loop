@@ -42,10 +42,10 @@ it('reports every addressed group as a team: the root by namespace, a nested gro
  expect(await resolveTag(t.db,f.memberA,{handle:'@nothing'})).toEqual(unavailable);
  await expect(resolveTag(t.db,f.memberA,{handle:'cohort'})).rejects.toThrow();
 });
-it('lets an owner or organizer create, rename and archive events on the site only',async()=>{
+it('lets an owner or organizer create, rename and archive events, and no assistant without a read-and-write grant',async()=>{
  const f=await fixture();
  const event=await createTeamEvent(t.db,f.organizer,{...f.root,slug:'final-deck',name:'Final deck'});
- expect(await listTeamEvents(t.db,f.memberA,f.root)).toEqual([{id:event.id,slug:'final-deck',name:'Final deck',archived:false}]);
+ expect(await listTeamEvents(t.db,f.memberA,f.root)).toMatchObject([{id:event.id,slug:'final-deck',name:'Final deck',archived:false,startsAt:null,interested:0,shareUrl:null}]);
  expect(await resolveTag(t.db,f.memberA,{handle:'@cohort/final-deck'})).toEqual({status:'resolved',matches:[{kind:'event',handle:'@cohort/final-deck',name:'Final deck',team:'Synthetic EMBA',teamHandle:'@cohort'}]});
  expect(await resolveTag(t.db,f.memberA,{handle:'@final-deck'})).toMatchObject({status:'resolved',matches:[{kind:'event'}]});
  // A plain member, a non-member and any assistant are denied.

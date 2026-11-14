@@ -1,4 +1,5 @@
 {
+  "regions": ["pdx1"],
   "crons": [
     { "path": "/api/cron/daily", "schedule": "0 6 * * *" },
     { "path": "/api/cron/emba-documents", "schedule": "*/5 * * * *" }

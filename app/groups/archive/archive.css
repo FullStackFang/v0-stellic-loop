@@ -1,0 +1,34 @@
+/* How we got here: the earlier versions of Loop as a timeline. Tokens come from app/loop.css. */
+.lp .lp-tl{list-style:none;position:relative;margin:26px 0 0;padding:0 0 0 34px}
+.lp-tl::before{content:'';position:absolute;left:11px;top:8px;bottom:8px;width:2px;background:var(--line-2)}
+.lp-tl > li{position:relative;margin-bottom:34px}
+.lp-tl > li::before{content:'';position:absolute;left:-29px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--teal);box-sizing:border-box}
+.lp-tl > li.lp-tl-now::before{background:var(--lime);border-color:var(--navy)}
+.lp-tl-when{font-size:12.5px;color:var(--muted)}
+.lp-tl h2{font-size:22px;line-height:1.2;margin:2px 0 4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.lp-tl > li > p:not([class]){color:var(--ink-2);max-width:68ch}
+.lp-tl-over{background:var(--sunk);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.lp-tl-turn{display:inline-block;margin-top:10px;background:var(--teal);color:var(--aqua);border-radius:var(--r-md);padding:10px 14px;max-width:64ch;font-size:13.5px}
+.lp-tl-turn b{color:var(--on-dark);font-weight:500}
+
+.lp .lp-tl-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+.lp-tl-strip p{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12.5px}
+.lp-tl-strip p span:first-child{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* A live miniature of the real file: a 1280px page scaled to the tile's own width. */
+.lp-tl-thumb{display:block;position:relative;overflow:hidden;aspect-ratio:16/10;container-type:inline-size;background:var(--sunk);border-radius:12px 12px 12px 4px;box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .15s var(--ease)}
+.lp-tl-thumb:hover{box-shadow:inset 0 0 0 1px var(--line),var(--float)}
+.lp-tl-thumb iframe{position:absolute;top:0;left:0;width:1280px;height:800px;border:0;transform-origin:0 0;transform:scale(tan(atan2(100cqw,1280px)));pointer-events:none}
+
+.lp .lp-tl-rest{margin-top:10px}
+.lp .lp-tl-rest > summary{display:inline-block;width:auto;margin:0;list-style:none;cursor:pointer;color:var(--blue);font-size:13px;font-weight:500}
+.lp-tl-rest > summary::-webkit-details-marker{display:none}
+.lp .lp-tl-rest ul{columns:2;column-gap:28px;margin-top:6px;max-width:860px}
+.lp-tl-rest li{break-inside:avoid;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.lp-tl-rest li a{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-tl-rest li a:hover{color:var(--blue)}
+.lp-tl .lp-btn{margin-top:14px}
+
+@media (max-width:900px){
+  .lp .lp-tl-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lp .lp-tl-rest ul{columns:1}
+}

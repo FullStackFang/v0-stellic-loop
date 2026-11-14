@@ -33,8 +33,13 @@ export async function exportPersonalData(db:Db,p:Principal) {
   const teamReceipts=await own('select o.operation_id,o.org_id,o.loop_id,r.number,r.kind,o.client_id,o.at from emba_team_operation o join emba_team_record r on r.id=o.record_id where o.person_id=$1 order by o.at');
   const teamClaims=await own(`select r.org_id,r.loop_id,r.number,r.claim_status,to_char(r.due_on,'YYYY-MM-DD') as due_on,r.owner_id=$1 as owner,coalesce(r.author_id=$1,false) as recorder,r.created_at from emba_team_record r where r.kind='claim' and (r.owner_id=$1 or r.author_id=$1) order by r.org_id,r.loop_id,r.number`);
   const handles=await own('select org_id,handle from emba_member_handle where person_id=$1 order by org_id');
+  // Club events: the events this person marked interest in, and how each mark arrived.
+  const eventInterests=await own('select i.org_id,i.loop_id,e.slug,e.name,i.route,i.client_id,i.at from emba_event_interest i join emba_team_event e on e.id=i.event_id where i.person_id=$1 order by i.at');
+  // Asks: the questions this person asked, and their own answers. Nobody else's answers.
+  const asks=await own("select k.org_id,k.loop_id,k.number,k.question,k.kind,k.reveal,k.client_id,k.created_at,k.closes_at,k.closed_at,(select array_agg(o.label order by o.position) from emba_ask_option o where o.ask_id=k.id) as options from emba_ask k where k.asker_id=$1 order by k.created_at");
+  const askAnswers=await own("select k.org_id,k.loop_id,k.number,k.question,(select array_agg(o.label order by o.position) from emba_ask_option o where o.ask_id=k.id and o.position=any(a.choices)) as chose,a.body,a.route,a.client_id,a.at from emba_ask_answer a join emba_ask k on k.id=a.ask_id where a.person_id=$1 order by a.at");
   await audit(q,p,'privacy:export');
-  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events,groupMemoryReceipts,teamReceipts,teamClaims,handles};
+  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events,groupMemoryReceipts,teamReceipts,teamClaims,handles,eventInterests,asks,askAnswers};
  });
 }
 
@@ -65,12 +70,15 @@ async function purge(q:Q,personId:string) {
  await q.query('update emba_team_record_version set edited_by=null where edited_by=$1',[personId]);
  await q.query('update emba_team_conflict set flagged_by=null where flagged_by=$1',[personId]);
  await q.query('update emba_team_brief set edited_by=null where edited_by=$1',[personId]);
+ // Asks and the answers kept on closed asks stay with the team and lose their link to the person.
+ await q.query('update emba_ask set asker_id=null where asker_id=$1',[personId]);
+ await q.query('update emba_ask_answer set person_id=null where person_id=$1',[personId]);
  await q.query('update emba_team_change set actor_id=null where actor_id=$1',[personId]);
  await q.query('update emba_team_change set subject_id=null where subject_id=$1',[personId]);
  await q.query('update emba_team_conflict_report set person_id=null,client_id=null where person_id=$1',[personId]);
  await q.query('delete from emba_dependency_consent where target_id=$1 or requester_id=$1',[personId]);
  await q.query('delete from emba_invitation where issued_by=$1 or accepted_by=$1',[personId]);
- for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_team_operation','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_member_handle','emba_membership','emba_identity']) {
+ for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_team_operation','emba_team_write','emba_event_interest','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_member_handle','emba_membership','emba_identity']) {
   await q.query(`delete from ${table} where person_id=$1`,[personId]);
  }
  // No stable participant pseudonym is retained in plan history or audit output.

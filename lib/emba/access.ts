@@ -67,3 +67,35 @@ export async function canAccessLoop(q: Q, principal: Principal | null, orgId: st
   );
   return rows.length > 0;
 }
+
+/**
+ * canAccessLoop for many groups in a fixed number of statements: true only when the person holds the action in every one.
+ * The order of locks is the same: the person and sign-in, each group's hierarchy, then the roles that grant the access.
+ * It holds more of them: every role that grants the access, where the single check holds one.
+ */
+export async function canAccessLoops(q: Q, principal: Principal | null, scopes: readonly { orgId: string; loopId: string }[], action: LoopAction): Promise<boolean> {
+  if (!valid(principal) || !Object.hasOwn(allowedRoles, action) || !scopes.every(scope => isUuid(scope.orgId) && isUuid(scope.loopId))) return false;
+  if (!await canAccessPersonal(q,principal,principal.personId)) return false;
+  if (!scopes.length) return true;
+  const orgs = scopes.map(scope => scope.orgId), loops = scopes.map(scope => scope.loopId);
+  await q.query(`with recursive ancestors as (
+    select l.id,l.parent_id,l.org_id from emba_loop l join unnest($1::uuid[],$2::uuid[]) as s(org_id,loop_id) on l.org_id=s.org_id and l.id=s.loop_id union
+    select l.id,l.parent_id,l.org_id from emba_loop l join ancestors a on l.id=a.parent_id and l.org_id=a.org_id)
+    select l.id from emba_loop l join ancestors a on a.id=l.id order by l.id for share of l`,[orgs,loops]);
+  const { rows } = await q.query<{ orgId: string; loopId: string }>(
+    `with recursive ancestors as (
+       select l.org_id as start_org, l.id as start, l.id, l.parent_id, l.org_id from emba_loop l join unnest($1::uuid[],$2::uuid[]) as s(org_id,loop_id) on l.org_id=s.org_id and l.id=s.loop_id
+       union
+       select a.start_org, a.start, l.id, l.parent_id, l.org_id from emba_loop l join ancestors a on l.id=a.parent_id and l.org_id=a.org_id
+     )
+     select a.start_org as "orgId", a.start as "loopId" from ancestors a
+     join emba_role r on r.org_id=a.org_id and r.loop_id=a.id and r.person_id=$3 and r.revoked_at is null
+     join emba_membership m on m.org_id=r.org_id and m.person_id=r.person_id and m.revoked_at is null
+     join emba_identity i on i.person_id=m.person_id and i.issuer=$4 and i.subject=$5 and i.revoked_at is null
+     where r.role = any($6::text[]) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=i.person_id) for share of m,r,i`,
+    [orgs, loops, principal.personId, principal.issuer, principal.subject, allowedRoles[action]],
+  );
+  // A group is named by its organization and its id together: the same id under another organization is not held.
+  const held = new Set(rows.map(row => `${row.orgId}/${row.loopId}`));
+  return scopes.every(scope => held.has(`${scope.orgId}/${scope.loopId}`));
+}

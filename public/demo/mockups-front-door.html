@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loop · the front door</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
+:root{
+  --canvas:oklch(96.2% 0.004 230);--surface:oklch(99.3% 0.003 230);--sunk:oklch(97.7% 0.006 240);
+  --line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252);--ink-2:oklch(35.4% 0.095 252 / .85);--muted:oklch(46.5% 0.012 245);
+  --blue:oklch(47.6% 0.13 250);--lime:oklch(96.4% 0.19 117);--teal:oklch(37.3% 0.052 206);--aqua:oklch(90.4% 0.1 194);
+  --pale-blue:oklch(95.3% 0.017 245);--on-dark:oklch(99.4% 0.003 230);--on-dark-78:oklch(99.4% 0.003 230 / .78);
+  --float:0 14px 32px -14px oklch(35.4% 0.095 252 / .28),0 2px 6px oklch(35.4% 0.095 252 / .08);
+  --r-lg:24px 24px 24px 6px;--r-md:16px 16px 16px 4px;--pill:56px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:oklch(93% 0.006 240);color:var(--navy);font-family:Archivo,system-ui,sans-serif;font-size:14px;line-height:1.45;letter-spacing:-.02em}
+h1,h2,h3,p{margin:0}h1,h2,h3{font-weight:480;letter-spacing:-.035em}
+a{color:inherit;text-decoration:none}button{font:inherit;letter-spacing:inherit;color:inherit;cursor:pointer}
+ul{list-style:none;margin:0;padding:0}
+
+.pick{max-width:1240px;margin:0 auto;padding:26px 24px 8px}
+.pick h1{font-size:28px}
+.pick > p{color:var(--muted);max-width:76ch;margin-top:6px;font-size:14.5px}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.path{background:var(--surface);border-radius:var(--r-md);padding:14px 16px;box-shadow:inset 0 0 0 1px var(--line)}
+.path b{font-weight:500;display:block;margin-bottom:8px}
+.path ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.path li{background:var(--sunk);border-radius:var(--pill);padding:5px 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.path li + li::before{content:'›';margin:0 8px 0 -14px;color:var(--muted);position:relative;left:-6px}
+.path.new li{background:var(--lime);box-shadow:none}
+.path.old li{color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);border-radius:var(--pill);padding:9px 16px;font-weight:500}
+.tabs button[aria-selected=true]{background:var(--navy);color:var(--on-dark);box-shadow:none}
+.note{max-width:1240px;margin:0 auto;padding:12px 24px 0;color:var(--ink-2);font-size:14px}
+.note b{font-weight:550}
+
+/* browser frame */
+.stage{max-width:1240px;margin:12px auto 48px;padding:0 24px}
+.win{background:var(--canvas);border-radius:14px;box-shadow:var(--float),0 0 0 1px var(--line-2);overflow:hidden}
+.bar{display:flex;align-items:center;gap:10px;background:var(--surface);border-bottom:1px solid var(--line);padding:9px 14px}
+.bar i{width:10px;height:10px;border-radius:50%;background:var(--line-2)}
+.bar span{flex:1;margin-left:8px;background:var(--sunk);border-radius:var(--pill);padding:5px 14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:0;color:var(--muted)}
+.bar span b{color:var(--navy);font-weight:500}
+.view{display:none}.view.on{display:block}
+svg.rings{--lp-ring-bg:var(--canvas);flex:none}
+
+/* 1 · signed out */
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 28px}
+.mark{display:flex;align-items:center;gap:9px;font-weight:500;font-size:18px;letter-spacing:-.035em}
+.mark svg{width:24px;height:24px;color:var(--teal)}
+.ghost{border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);border-radius:var(--pill);height:36px;padding:0 16px;font-weight:500}
+.plate{--lp-ring-bg:var(--teal);margin:0 16px 0;background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:56px 60px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,400px);gap:56px;align-items:center;position:relative;overflow:hidden}
+.plate .big{position:absolute;right:-70px;bottom:-110px;width:420px;height:420px;color:var(--aqua);opacity:.16}
+.kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua)}
+.kick::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
+.plate h1{font-size:68px;line-height:.95;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin-top:16px}
+.plate h1 em{font-style:normal;color:var(--lime)}
+.plate h1 + p{font-size:17px;max-width:40ch;margin-top:20px}
+.says{margin-top:26px;display:grid;gap:8px;max-width:440px}
+.says li{background:oklch(99.4% 0.003 230 / .08);border-radius:14px 14px 14px 4px;padding:10px 14px;font-size:14px;color:var(--on-dark)}
+.says li span{display:block;font-size:12.5px;color:var(--aqua)}
+.card{position:relative;background:var(--surface);color:var(--navy);border-radius:var(--r-lg);padding:26px 26px 22px}
+.card h2{font-size:20px}
+.card > p{color:var(--muted);font-size:13.5px;margin-top:4px}
+.card .g{width:100%;height:44px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);border-radius:var(--pill);margin-top:16px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px}
+.card .g svg{width:18px;height:18px}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;margin:14px 0}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.card label{display:block;font-weight:500;font-size:13px}
+.card input{display:block;width:100%;height:42px;margin-top:6px;border:0;box-shadow:inset 0 0 0 1px var(--line-2);border-radius:12px;background:var(--surface);padding:0 12px;font:inherit;letter-spacing:inherit;color:inherit}
+.go{width:100%;height:46px;border:0;border-radius:var(--pill);background:var(--lime);color:var(--navy);font-weight:600;font-size:15px;margin-top:14px}
+.go:hover{background:oklch(90% 0.2 120)}
+.fine{font-size:12.5px;color:var(--muted);margin-top:12px;text-align:center}
+.foot{padding:16px 30px 22px;color:var(--muted);font-size:13.5px}
+.foot a{color:var(--navy);text-decoration:underline;text-underline-offset:3px}
+
+/* 2 · signed in */
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:640px}
+.rail{--lp-ring-bg:var(--navy);background:var(--navy);color:var(--on-dark-78);padding:18px 12px 12px;display:flex;flex-direction:column}
+.rail .mark{color:var(--on-dark);padding:2px 10px 16px}.rail .mark svg{color:var(--aqua);width:22px;height:22px}
+.rail p{font-size:12.5px;padding:12px 12px 6px;opacity:.85}
+.rail li a{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--pill)}
+.rail li a.on{background:oklch(99.4% 0.003 230 / .14);color:var(--on-dark);font-weight:500}
+.rail li a i{width:14px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 1.6px currentColor;flex:none}
+.who{margin-top:auto;border-top:1px solid oklch(99.4% 0.003 230 / .14);padding:14px 12px 4px;display:flex;align-items:center;gap:10px;color:var(--on-dark)}
+.who i{width:28px;height:28px;border-radius:50%;background:var(--aqua);color:var(--navy);display:grid;place-items:center;font-style:normal;font-weight:600;font-size:12px}
+.main{padding:26px 32px 40px}
+.main h1{font-size:30px}.main h1 + p{color:var(--muted);margin-top:6px;font-size:14.5px}
+.invite{--lp-ring-bg:var(--teal);margin-top:20px;background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg);padding:20px 22px;display:flex;align-items:center;gap:18px}
+.invite svg{width:52px;height:52px;color:var(--aqua)}
+.invite div{flex:1}.invite b{display:block;color:var(--on-dark);font-weight:500;font-size:17px}
+.invite button{border:0;height:42px;padding:0 20px;border-radius:var(--pill);background:var(--lime);color:var(--navy);font-weight:600}
+.invite button.no{background:transparent;color:var(--on-dark-78);box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .3);font-weight:500}
+.groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}
+.grp{background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;box-shadow:inset 0 0 0 1px var(--line)}
+.grp h3{font-size:19px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.grp .at{color:var(--muted);font-size:12.5px}
+.grp ul{margin-top:12px}
+.grp li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.grp li span{color:var(--muted);white-space:nowrap}
+.chip{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:var(--pill);font-size:12px;font-weight:500;background:var(--pale-blue);letter-spacing:-.01em}
+.chip.hot{background:var(--lime)}
+
+/* 3 · shared link */
+.share{max-width:760px;margin:0 auto;padding:10px 24px 40px}
+.ev{--lp-ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:34px 36px;display:grid;grid-template-columns:96px minmax(0,1fr);gap:26px;align-items:start}
+.day{background:var(--lime);color:var(--navy);border-radius:18px 18px 18px 5px;text-align:center;padding:12px 0}
+.day span{display:block;font-size:13px;font-weight:500}.day b{display:block;font-size:40px;line-height:1;font-weight:560;letter-spacing:-.05em}
+.ev h1{font-size:40px;line-height:1;color:var(--aqua);font-weight:520;letter-spacing:-.045em;margin-top:8px}
+.ev dl{margin:16px 0 0;display:grid;grid-template-columns:70px 1fr;gap:6px 12px;font-size:14.5px}
+.ev dt{color:var(--aqua)}.ev dd{margin:0;color:var(--on-dark)}
+.act{margin-top:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.act button{border:0;height:50px;padding:0 24px;border-radius:var(--pill);background:var(--lime);color:var(--navy);font-weight:600;font-size:16px}
+.act button.done{background:transparent;color:var(--lime);box-shadow:inset 0 0 0 1.5px var(--lime)}
+.sheet{margin-top:14px;background:var(--surface);color:var(--navy);border-radius:var(--r-lg);padding:22px 24px;display:none;box-shadow:var(--float)}
+.sheet.on{display:block}
+.sheet h2{font-size:19px}.sheet > p{color:var(--muted);font-size:13.5px;margin-top:4px}
+.sheet .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.sheet input{flex:1;min-width:200px;height:44px;border:0;box-shadow:inset 0 0 0 1px var(--line-2);border-radius:12px;padding:0 12px;font:inherit;letter-spacing:inherit;color:inherit;background:var(--surface)}
+.sheet button{border:0;height:44px;padding:0 22px;border-radius:var(--pill);background:var(--navy);color:var(--on-dark);font-weight:600}
+.faces{display:none;margin-top:14px;background:var(--surface);border-radius:var(--r-lg);padding:18px 22px;box-shadow:inset 0 0 0 1px var(--line)}
+.faces.on{display:block}
+.faces b{font-weight:500}.faces ul{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.faces li{background:var(--pale-blue);border-radius:var(--pill);padding:4px 11px;font-size:13px}
+.faces li.me{background:var(--lime);font-weight:500}
+.under{color:var(--muted);font-size:13px;margin-top:14px;text-align:center}
+
+@media (max-width:900px){
+  .paths{grid-template-columns:1fr}.plate{grid-template-columns:1fr;padding:28px 22px;gap:26px}.plate h1{font-size:44px}
+  .app{grid-template-columns:1fr}.rail{flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px}.rail p,.who{display:none}.rail ul{display:flex}.rail .mark{padding:2px 10px}
+  .groups{grid-template-columns:1fr}.invite{flex-wrap:wrap}.ev{grid-template-columns:1fr;padding:24px 22px}.day{width:96px}.ev h1{font-size:32px}.main{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="pick">
+  <h1>The front door</h1>
+  <p>One screen when you are signed out, your groups when you are signed in, and a shared link that shows the thing before it asks who you are. Everything below is clickable.</p>
+  <div class="paths">
+    <div class="path old"><b>Today: four screens before you are in</b><ol><li>Landing page</li><li>Open your groups</li><li>Three steps page</li><li>Sign-in form</li><li>Your groups</li></ol></div>
+    <div class="path new"><b>Proposed: sign in on the first screen</b><ol><li>Front door with the form</li><li>Your groups</li></ol></div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-v="out">1 · Signed out</button>
+    <button role="tab" aria-selected="false" data-v="in">2 · Signed in</button>
+    <button role="tab" aria-selected="false" data-v="link">3 · From a shared link</button>
+  </div>
+</div>
+<p class="note" id="note"></p>
+
+<div class="stage"><div class="win">
+  <div class="bar"><i></i><i></i><i></i><span id="url"></span></div>
+
+  <!-- 1 · signed out -->
+  <section class="view on" id="v-out">
+    <div class="top"><a class="mark" href="#out"><svg class="rings" data-rings></svg>Loop</a><button class="ghost" data-focus>Sign in</button></div>
+    <div class="plate">
+      <svg class="rings big" data-rings="inline"></svg>
+      <div>
+        <p class="kick">For the groups you’re already in</p>
+        <h1>Stay in the loop. <em>Without chasing it.</em></h1>
+        <p>Loop connects the AI you already use to your team, so everyone can ask it what the plan is.</p>
+        <ul class="says">
+          <li><span>You ask your AI</span>What’s mine this week, and where’s the latest deck?</li>
+          <li><span>It answers from your team’s plan</span>The market sizing slide, due Thursday. Here is the link.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Sign in or join</h2>
+        <p>Use the email your invitation went to.</p>
+        <button class="g" data-go="in"><svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.6 9.2c0-.6-.1-1.2-.2-1.8H9v3.4h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.700-1.600 2.700-3.900 2.700-6.500z"/><path fill="#34A853" d="M9 18c2.400 0 4.500-.8 6-2.200l-2.900-2.200c-.8.500-1.800.9-3.100.9-2.400 0-4.400-1.600-5.100-3.800H.9v2.300A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.900 10.700a5.400 5.400 0 0 1 0-3.400V5H.9a9 9 0 0 0 0 8z"/><path fill="#EA4335" d="M9 3.600c1.300 0 2.500.5 3.400 1.300L15 2.300A9 9 0 0 0 .9 5l3 2.300C4.600 5.200 6.600 3.600 9 3.600z"/></svg>Continue with Google</button>
+        <p class="or">or</p>
+        <label>Email address<input id="email" type="email" placeholder="you@school.edu"></label>
+        <button class="go" data-go="in">Continue</button>
+        <p class="fine">We email you a code. No password.</p>
+      </div>
+    </div>
+    <p class="foot">Here for the cohort trip? <a href="/b/emba27">Open the trip board</a></p>
+  </section>
+
+  <!-- 2 · signed in -->
+  <section class="view" id="v-in">
+    <div class="app">
+      <aside class="rail">
+        <a class="mark" href="#in"><svg class="rings" data-rings></svg>Loop</a>
+        <p>You</p>
+        <ul><li><a class="on" href="#in"><i></i>Groups</a></li><li><a href="#in"><i></i>Assistants</a></li></ul>
+        <div class="who"><i>SF</i>Stephen<button class="ghost" data-go="out" style="margin-left:auto;height:30px;padding:0 12px;background:transparent;color:inherit;box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .3)">Sign out</button></div>
+      </aside>
+      <div class="main">
+        <h1>Your groups</h1>
+        <p>Open one to see its plan, or ask your assistant about any of them.</p>
+        <div class="invite" id="invite">
+          <svg class="rings" data-rings="inline"></svg>
+          <div><b>You’re invited to Cornell Ski Club</b>From Grace, an organizer. 42 members.</div>
+          <button class="no" data-invite="no">Not now</button><button data-invite="yes">Join</button>
+        </div>
+        <div class="groups" id="groups">
+          <a class="grp" href="#in"><h3>NBAE 6830 · Team 1 <span class="chip hot">2 for you</span></h3><p class="at">@team-1 · 5 members</p>
+            <ul><li>Market sizing slide is yours<span>due Thu</span></li><li>Deck v4 was filed<span>2h ago</span></li><li>Decision: pitch the club organizer<span>Tue</span></li></ul></a>
+          <a class="grp" href="#in"><h3>EMBA 27 cohort <span class="chip">Up to date</span></h3><p class="at">@emba27 · 61 members</p>
+            <ul><li>Vietnam trip: suits in Hoi An is on<span>Jan 9</span></li><li>Flights: 38 of 61 booked<span>Mon</span></li><li>Trip board is open<span>live</span></li></ul></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · shared link -->
+  <section class="view" id="v-link">
+    <div class="top"><a class="mark" href="#link"><svg class="rings" data-rings></svg>Loop</a><button class="ghost" data-go="out">Sign in</button></div>
+    <div class="share">
+      <div class="ev">
+        <div class="day"><span>Thu</span><b>19</b><span>Nov</span></div>
+        <div>
+          <p class="kick">Cornell Ski Club</p>
+          <h1>Vermont trip info night</h1>
+          <dl><dt>When</dt><dd>Thursday, 7:00 to 8:00pm</dd><dt>Where</dt><dd>Sage Hall, room 141</dd><dt>About</dd><dd>Dates, cost and carpools for the February weekend.</dd></dl>
+          <div class="act"><button id="int">I’m interested</button><span id="count">12 interested</span></div>
+        </div>
+      </div>
+      <div class="sheet" id="sheet">
+        <h2>One step: who are you?</h2>
+        <p>We email you a code, then mark you as interested and bring you back here.</p>
+        <div class="row"><input type="email" placeholder="you@school.edu"><button id="confirm">Continue</button></div>
+      </div>
+      <div class="faces" id="faces"><b>13 interested, including you</b><ul><li class="me">You</li><li>Grace</li><li>Wei</li><li>Nina</li><li>Jules</li><li>Omar</li><li>and 7 more</li></ul></div>
+      <p class="under" id="under">Shared in the club’s WhatsApp group. You see the event first; names appear once you’re a member.</p>
+    </div>
+  </section>
+</div></div>
+
+<script>
+// The Loop mark, as in components/LoopGlyphs.tsx: three woven rings, the top one lime.
+const C=[[50,35],[35.5,60],[64.5,60]],R=21,r2=n=>Math.round(n*100)/100;
+const ring=i=>`M${C[i][0]-R} ${C[i][1]}a${R} ${R} 0 1 0 ${2*R} 0a${R} ${R} 0 1 0 ${-2*R} 0`;
+function cross(a,b){const[x1,y1]=C[a],[x2,y2]=C[b],dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy),h=Math.sqrt(R*R-d*d/4);return[[x1+dx/2-dy/d*h,y1+dy/2+dx/d*h],[x1+dx/2+dy/d*h,y1+dy/2-dx/d*h]];}
+function arc(i,[px,py],deg){const[cx,cy]=C[i],at=Math.atan2(py-cy,px-cx),s=deg*Math.PI/180,p=a=>`${r2(cx+R*Math.cos(a))} ${r2(cy+R*Math.sin(a))}`;return`M${p(at-s)}A${R} ${R} 0 0 1 ${p(at+s)}`;}
+function stroke(d,w,inline,you){const c=you?'var(--lime)':'currentColor';return`<path d="${d}" stroke="${c}" stroke-width="${w}"/>`+(inline?`<path d="${d}" stroke="var(--lp-ring-bg)" stroke-width="${r2(w*.62)}"/><path d="${d}" stroke="${c}" stroke-width="${r2(w*.2)}"/>`:'');}
+document.querySelectorAll('[data-rings]').forEach(svg=>{
+  const inline=svg.dataset.rings==='inline',w=inline?8.5:9;
+  svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('fill','none');
+  let h=[0,1,2].map(i=>stroke(ring(i),w,inline,i===0)).join('');
+  [[0,1],[1,2],[2,0]].forEach(([o,u])=>cross(o,u).forEach(p=>{h+=`<path d="${arc(o,p,26)}" stroke="var(--lp-ring-bg)" stroke-width="${r2(w*1.7)}"/>`+stroke(arc(o,p,30),w,inline,o===0);}));
+  svg.innerHTML=h;
+});
+
+const NOTES={
+  out:['loop.app<b>/</b>','<b>Signed out.</b> The pitch and the sign-in form share one screen. The "Three steps" page and the separate sign-in page are gone. Press Continue to see what happens next.'],
+  in:['loop.app<b>/groups</b>','<b>Signed in.</b> Opening the site lands here, never on the pitch. A waiting invitation sits on top with one button. Sign out is at the foot of the menu.'],
+  link:['loop.app<b>/e/k3f9…</b>','<b>From a shared link.</b> The event shows first, with no sign-in wall. Press "I’m interested" to see sign-in appear only at the moment you act.'],
+};
+function show(v){
+  if(!NOTES[v])v='out';
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
+  document.getElementById('url').innerHTML=NOTES[v][0];document.getElementById('note').innerHTML=NOTES[v][1];
+  history.replaceState(null,'','#'+v);
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
+document.querySelector('[data-focus]').onclick=()=>document.getElementById('email').focus();
+document.querySelectorAll('[data-invite]').forEach(b=>b.onclick=()=>{
+  document.getElementById('invite').remove();
+  if(b.dataset.invite==='yes')document.getElementById('groups').insertAdjacentHTML('afterbegin','<a class="grp" href="#in"><h3>Cornell Ski Club <span class="chip hot">New</span></h3><p class="at">@ski-club · 43 members</p><ul><li>Vermont trip info night<span>Thu 7pm</span></li><li>Ask: which weekend works?<span>closes Fri</span></li><li>Season pass group discount<span>8 of 10</span></li></ul></a>');
+});
+const int=document.getElementById('int');
+int.onclick=()=>{if(!int.classList.contains('done'))document.getElementById('sheet').classList.add('on');};
+document.getElementById('confirm').onclick=()=>{
+  document.getElementById('sheet').classList.remove('on');int.classList.add('done');int.textContent='You’re interested';
+  document.getElementById('count').textContent='13 interested';document.getElementById('faces').classList.add('on');
+  document.getElementById('under').textContent='You are signed in and a member now. Next time this link opens straight to this view.';
+};
+show(location.hash.slice(1));
+window.onhashchange=()=>show(location.hash.slice(1));
+</script>
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop · A · Workspace</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900}
+:root{
+  --canvas:#f8f8f7; --card:#fff; --ink:#1b1b19; --ink-2:#3d3c39; --muted:#6a6964; --faint:#8e8d88;
+  --line:rgba(38,38,38,.08); --line-2:rgba(38,38,38,.12); --pill:#efefed; --hover:#f4f4f2;
+  --accent:#0f766e; --accent-hover:#0b5f58; --accent-soft:#e7f3f1; --accent-ink:#fff;
+  --late:#9a4a06; --late-soft:#fdf3e7; --flag:#a61b1b; --flag-soft:#fcefee;
+  --ring:0 0 0 1px rgba(38,38,38,.06),0 1px 1px rgba(10,10,10,.05),0 3px 3px -1.5px rgba(10,10,10,.05);
+  --r:12px; --font:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+img.face{border-radius:50%;object-fit:cover;display:block;background:#ddd}
+h1,h2,h3{font-weight:600;letter-spacing:-.015em;margin:0}
+
+/* ---------- comparison strip (not part of design) ---------- */
+.cmp{position:fixed;inset:0 0 auto 0;height:32px;z-index:50;background:#e9e9e6;border-bottom:1px dashed #b9b8b2;
+  font:11px/32px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#333;padding:0 14px;display:flex;gap:14px;white-space:nowrap;overflow-x:auto}
+.cmp b{font-weight:700}.cmp a{color:#1a4fb5}.cmp .note{color:#666}
+
+/* ---------- shell ---------- */
+.rail{position:fixed;top:32px;bottom:0;left:0;width:256px;background:#fff;border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:16px 12px 12px;z-index:20}
+.wordmark{display:flex;align-items:center;gap:8px;padding:2px 8px 14px;font-weight:650;font-size:17px;letter-spacing:-.02em}
+.wordmark svg{flex:none}
+.switcher{position:relative;margin-bottom:18px}
+.switch-btn{width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;border:0;background:#fff;border-radius:10px;
+  box-shadow:var(--ring);text-align:left}
+.switch-btn:hover{background:var(--hover)}
+.switch-btn .mini{width:26px;height:26px;border-radius:7px;background:#17181a;display:grid;place-items:center;flex:none}
+.switch-btn .t{flex:1;min-width:0}
+.switch-btn .t b{display:block;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.switch-btn .t span{font-size:12px;color:var(--muted)}
+.menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border-radius:10px;box-shadow:var(--ring),0 12px 24px -8px rgba(10,10,10,.14);padding:6px;display:none}
+.menu.open{display:block}
+.menu .row{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;font-size:13px}
+.menu .row.cur{background:var(--pill)}
+.menu .hint{font-size:12px;color:var(--muted);padding:6px 8px 4px}
+.nav-label{font-size:11.5px;font-weight:600;color:var(--faint);padding:10px 10px 6px;letter-spacing:.01em}
+.nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.nav button{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:7px 10px;border-radius:10px;text-align:left;color:var(--ink-2);font-size:13.5px}
+.nav button:hover{background:var(--hover)}
+.nav button[aria-current="page"]{background:var(--pill);color:var(--ink);font-weight:600}
+.nav svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;opacity:.8}
+.nav .count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
+.rail .spacer{flex:1}
+.account{display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--line);margin:0 -12px -12px;padding:12px 20px}
+.account b{display:block;font-size:13px;font-weight:600}.account span{font-size:12px;color:var(--muted)}
+
+.main{margin-left:256px;padding:52px 28px 64px;min-height:100vh}
+.wrap{max-width:1140px;margin:0 auto}
+.crumbs{display:flex;align-items:center;gap:8px;height:28px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.crumbs b{color:var(--ink);font-weight:600}
+.crumbs .today{margin-left:auto;font-size:12.5px}
+.view{display:none}.view.on{display:block}
+
+/* ---------- cards & common ---------- */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--ring)}
+.btn{border:0;border-radius:9px;padding:7px 12px;font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-quiet{background:#fff;box-shadow:var(--ring);color:var(--ink-2);font-weight:500}
+.btn-quiet:hover{background:var(--hover)}
+.btn[aria-pressed="true"].btn-quiet{background:var(--pill);color:var(--muted)}
+.via{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+.via i{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;display:inline-block;opacity:.75}
+.via.site i{border-radius:2px}
+.num{font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;font-size:11.5px;font-weight:600;background:var(--pill);color:var(--ink-2)}
+.tag.late{background:var(--late-soft);color:var(--late)}
+.tag.flag{background:var(--flag-soft);color:var(--flag)}
+.tag.prop{background:#fff;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--muted)}
+.tag.open{background:var(--accent-soft);color:var(--accent)}
+.tag.done{background:var(--pill);color:var(--muted)}
+.handle{font-size:12px;color:var(--muted)}
+
+/* ---------- team plate ---------- */
+.plate{position:relative;overflow:hidden;border-radius:14px;background:#151617;color:#f2f2ef;height:150px;
+  display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;padding:0 24px 0 18px;
+  background-image:radial-gradient(520px 200px at 0% 0%,rgba(15,118,110,.28),transparent 70%),radial-gradient(400px 160px at 100% 120%,rgba(255,255,255,.06),transparent 70%)}
+.plate .mark{width:118px;height:118px}
+.plate .handle{color:#a9aaa5}
+.plate h1{font-size:24px;line-height:1.15;margin:3px 0 6px;letter-spacing:-.02em}
+.plate p{margin:0;color:#c9cac5;font-size:14px;max-width:560px}
+.plate .side{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.plate .due{font-size:12px;color:#a9aaa5}
+.plate .due b{display:block;color:#fff;font-size:16px;font-weight:600;letter-spacing:-.01em}
+.stack{display:flex}
+.stack img{width:30px;height:30px;border:2px solid #151617;margin-left:-8px}
+.stack img:first-child{margin-left:0}
+.stack img.off{filter:grayscale(1);opacity:.55}
+
+/* ---------- facts strip ---------- */
+.facts{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px;background:#fff;border-radius:var(--r);box-shadow:var(--ring)}
+.fact{padding:12px 16px;border-left:1px solid var(--line)}
+.fact:first-child{border-left:0}
+.fact b{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.fact span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.fact .warn{color:var(--late);font-weight:600}
+.fact .bad{color:var(--flag);font-weight:600}
+
+/* ---------- record layout ---------- */
+.record{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:16px;align-items:start}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:11px;background:#efefec;width:max-content;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);display:flex;gap:6px;align-items:center}
+.tabs button span{font-size:12px;color:var(--faint)}
+.tabs button[aria-selected="true"]{background:#fff;color:var(--ink);font-weight:600;box-shadow:var(--ring)}
+.tabbar{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.tabbar .note{margin-left:auto;font-size:12.5px;color:var(--muted)}
+.list{padding:4px 0}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) 190px 64px;gap:14px;align-items:center;padding:13px 18px;border-top:1px solid var(--line)}
+.list .row:first-child{border-top:0}
+.row .what b{font-weight:600;letter-spacing:-.005em}
+.row .what .kicker{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.02em;text-transform:uppercase;margin-bottom:1px}
+.row .what p{margin:2px 0 0;color:var(--ink-2)}
+.row .what .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.who{display:flex;align-items:center;gap:9px;min-width:0}
+.who img{width:26px;height:26px;flex:none}
+.who b{display:block;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.date{font-size:12.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.row.flagged{background:linear-gradient(90deg,var(--flag-soft),#fff 60%)}
+.row.flagged .flagnote{margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--flag)}
+.row.late{background:linear-gradient(90deg,var(--late-soft),#fff 60%)}
+.claimrow{grid-template-columns:44px minmax(0,1fr) 190px 150px}
+.claimrow .act{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.claimrow .act .date{white-space:nowrap}
+.linkt{text-decoration:none;font-weight:600}
+.linkt:hover{text-decoration:underline}
+.domain{font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+.event{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:16px 18px;border-top:1px solid var(--line);align-items:center}
+.list .event:first-child{border-top:0}
+.event .h{font-size:12px;color:var(--muted)}
+.event b{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.event p{margin:4px 0 0;color:var(--ink-2);font-size:13px}
+.event .when{text-align:right;font-size:12.5px;color:var(--muted)}
+.event .when b{display:block;font-size:14px;color:var(--ink)}
+
+/* aside */
+.aside{display:flex;flex-direction:column;gap:14px}
+.aside .card{padding:14px 16px}
+.aside h3,.panel h3{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.aside h3 .n,.panel h3 .n{margin-left:auto;font-weight:500;color:var(--muted);font-size:12px}
+.ann p{margin:0 0 8px;font-size:14px;font-weight:500;letter-spacing:-.005em}
+.member{display:flex;align-items:center;gap:10px;padding:7px 0}
+.member img{width:30px;height:30px;flex:none}
+.member .t{flex:1;min-width:0}
+.member b{font-size:13px;font-weight:500;display:block}
+.member .ai{font-size:12px;color:var(--muted)}
+.member.off img{filter:grayscale(1);opacity:.6}
+.member.off .ai{color:var(--late)}
+.nudge{margin-top:6px;padding:10px 12px;border-radius:10px;background:var(--late-soft);font-size:12.5px;color:#5c3a10}
+.nudge .btn{margin-top:8px}
+
+/* ---------- other views ---------- */
+.pagehead{display:flex;align-items:flex-end;gap:16px;margin-bottom:16px}
+.pagehead h1{font-size:24px}
+.pagehead p{margin:4px 0 0;color:var(--muted);max-width:640px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+.panel{padding:16px 18px}
+.intent{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.icard{padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-height:132px}
+.icard .k{display:flex;align-items:center;gap:8px}
+.icard q{quotes:none;font-size:15.5px;font-weight:550;letter-spacing:-.012em;line-height:1.35;flex:1}
+.icard .foot{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.icard .foot .rd{margin-left:auto}
+.perm{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.perm:first-of-type{border-top:0;padding-top:2px}
+.perm .logo{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:12px;background:var(--pill);color:var(--ink-2)}
+.perm b{font-size:13.5px;font-weight:600;display:block}
+.perm .scope{font-size:12.5px;color:var(--ink-2)}
+.perm .until{font-size:12px;color:var(--muted)}
+.perm.revoked .scope,.perm.revoked b{color:var(--faint);text-decoration:line-through}
+.perm.revoked .until{color:var(--flag)}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+.log li:first-child{border-top:0}
+.log li span{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.connect{padding:18px}
+.connect h3{font-size:15px;margin-bottom:4px}
+.connect .lede{margin:0 0 12px;color:var(--muted);font-size:13px}
+.prompt{position:relative;background:#f6f6f4;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);padding:14px 14px 52px}
+.prompt pre{margin:0;white-space:pre-wrap;word-break:break-word;font:13px/1.55 var(--font);color:var(--ink)}
+.prompt .btn{position:absolute;right:10px;bottom:10px}
+.prompt .tgt{position:absolute;left:14px;bottom:16px;font-size:12px;color:var(--muted)}
+.stack-col{display:flex;flex-direction:column;gap:14px}
+.brief{padding:22px 24px;max-width:760px}
+.brief h2{font-size:18px;margin-bottom:8px}
+.brief p{margin:0 0 12px;color:var(--ink-2);font-size:14.5px;line-height:1.6}
+.brief ul{margin:0 0 12px;padding-left:18px;color:var(--ink-2);line-height:1.7}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.pcard{padding:16px;display:flex;flex-direction:column;gap:10px}
+.pcard .top{display:flex;gap:12px;align-items:center}
+.pcard img{width:44px;height:44px}
+.pcard b{font-size:14px;font-weight:600;display:block}
+.pcard .meta{font-size:12.5px;color:var(--muted)}
+.pcard .holds{font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:10px}
+.pcard.off{background:linear-gradient(180deg,var(--late-soft),#fff 70%)}
+.calls .row{grid-template-columns:120px minmax(0,1fr) 120px 64px}
+.calls code{font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink-2)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){.record,.two{grid-template-columns:1fr}.aside{display:grid;grid-template-columns:1fr 1fr}}
+@media (max-width:820px){
+  .rail{position:sticky;top:32px;width:auto;height:auto;flex-direction:row;align-items:center;gap:8px;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto}
+  .wordmark{padding:0 4px 0 0}.wordmark span{display:none}
+  .switcher{margin:0;flex:none}.switch-btn{padding:5px 8px}.switch-btn .t span{display:none}.switch-btn .t b{max-width:90px}
+  .nav-label,.rail .spacer,.account,.nav .count{display:none}
+  .nav{flex-direction:row}.nav button{padding:6px 10px;white-space:nowrap}.nav svg{display:none}
+  .menu{right:auto;width:240px}
+  body{padding-top:32px}
+  .main{margin-left:0;padding:14px 16px 48px}
+  .plate{height:auto;grid-template-columns:auto 1fr;padding:16px;gap:14px;max-height:none}
+  .plate .mark{width:64px;height:64px}
+  .plate h1{font-size:19px}.plate p{font-size:13px}
+  .plate .side{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;text-align:left}
+  .facts{grid-template-columns:1fr 1fr}.fact:nth-child(3){border-left:0}.fact:nth-child(n+3){border-top:1px solid var(--line)}
+  .aside{grid-template-columns:1fr}
+  .row,.claimrow,.calls .row{grid-template-columns:36px minmax(0,1fr);gap:6px 10px;padding:12px 14px}
+  .row .who,.row .date,.claimrow .act{grid-column:2}
+  .row .date,.claimrow .act{text-align:left;align-items:flex-start}
+  .claimrow .act{flex-direction:row;align-items:center;gap:10px}
+  .intent{grid-template-columns:1fr}
+  .tabbar .note{display:none}
+  .pagehead{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<div class="cmp" role="navigation" aria-label="Compare directions">
+  <b>A · Workspace</b> | <a href="mockups-layer-b.html">B · Ledger</a> | <a href="mockups-layer-c.html">C · Seam</a>
+  <span class="note">Bet: a familiar app shell with a team face; the record lives in tabs one click from anything.</span>
+</div>
+
+<aside class="rail" aria-label="Main">
+  <div class="wordmark">
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="12" r="6" fill="none" stroke="#1b1b19" stroke-width="2.2"/><circle cx="15" cy="12" r="6" fill="none" stroke="#0f766e" stroke-width="2.2"/></svg>
+    <span>Loop</span>
+  </div>
+
+  <div class="switcher">
+    <button class="switch-btn" id="switchBtn" aria-haspopup="true" aria-expanded="false" aria-controls="teamMenu">
+      <span class="mini" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 120 120"><use href="#rings"/></svg></span>
+      <span class="t"><b>Team 4</b><span>EMBA Cohort 12</span></span>
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="#6a6964" stroke-width="1.6"><path d="M4 6l4-3 4 3M4 10l4 3 4-3"/></svg>
+    </button>
+    <div class="menu" id="teamMenu" role="menu">
+      <div class="row cur" role="menuitem"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#0f766e" stroke-width="2" aria-hidden="true"><path d="M3 8l3.5 3.5L13 5"/></svg>EMBA Cohort 12 · Team 4 <span class="handle" style="margin-left:auto">@team4</span></div>
+      <div class="hint">You belong to one team. New teams arrive as invite links.</div>
+    </div>
+  </div>
+
+  <div class="nav-label">Team</div>
+  <ul class="nav">
+    <li><button data-view="record" aria-current="page"><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3zM3 6.5h10M6.5 6.5V13"/></svg>Record<span class="count">20</span></button></li>
+    <li><button data-view="brief"><svg viewBox="0 0 16 16"><path d="M4 2.5h6l2.5 2.5v8.5H4zM6 7h5M6 9.5h5"/></svg>Brief</button></li>
+    <li><button data-view="people"><svg viewBox="0 0 16 16"><circle cx="6" cy="6" r="2.5"/><path d="M2 13c.5-2.5 2-3.5 4-3.5s3.5 1 4 3.5M10.5 4a2.2 2.2 0 010 4.2M12 9.8c1.2.5 1.8 1.6 2 3.2"/></svg>People<span class="count">5</span></button></li>
+  </ul>
+  <div class="nav-label">You</div>
+  <ul class="nav">
+    <li><button data-view="intent"><svg viewBox="0 0 16 16"><path d="M8 2.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6L8 10.7l-3.2 1.7.6-3.6L2.8 6.3l3.6-.5z"/></svg>Intent layer<span class="count">4</span></button></li>
+    <li><button data-view="assistants"><svg viewBox="0 0 16 16"><circle cx="5.5" cy="8" r="3"/><circle cx="10.5" cy="8" r="3"/></svg>Assistants<span class="count">2</span></button></li>
+  </ul>
+  <div class="spacer"></div>
+  <div class="account">
+    <img class="face" src="https://i.pravatar.cc/80?img=12" width="32" height="32" alt="">
+    <div><b>Stephen Fang</b><span>Claude connected</span></div>
+  </div>
+</aside>
+
+<!-- reusable team mark: five interlocking rings, the open one is the member without an assistant -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="rings" fill="none" stroke-width="7">
+      <circle cx="60" cy="33" r="22" stroke="#5fc4b6"/>
+      <circle cx="85.7" cy="51.7" r="22" stroke="#e8e8e4"/>
+      <circle cx="75.9" cy="81.8" r="22" stroke="#5fc4b6"/>
+      <circle cx="44.1" cy="81.8" r="22" stroke="#e8e8e4"/>
+      <circle cx="34.3" cy="51.7" r="22" stroke="#e8e8e4" stroke-dasharray="6 7" opacity=".55"/>
+    </g>
+  </defs>
+</svg>
+
+<main class="main">
+<div class="wrap">
+
+<!-- =============== RECORD =============== -->
+<section class="view on" id="v-record" aria-labelledby="h-record">
+  <div class="crumbs"><span>Team 4</span><span aria-hidden="true">›</span><b id="h-record">Record</b><span class="today">Tue, Nov 10, 2026</span></div>
+
+  <div class="plate">
+    <svg class="mark" viewBox="0 0 120 120" role="img" aria-label="Team 4 mark: five linked rings, one open"><use href="#rings"/></svg>
+    <div>
+      <div class="handle">@team4 · EMBA Cohort 12</div>
+      <h1>Team 4</h1>
+      <p>Capstone: market-entry plan for a Vietnamese cold-chain startup.</p>
+    </div>
+    <div class="side">
+      <div class="due">Deliverable due<b>Dec 5, 2026</b>25 days left</div>
+      <div class="stack" aria-label="5 members">
+        <img class="face" src="https://i.pravatar.cc/80?img=12" alt="Stephen Fang">
+        <img class="face" src="https://i.pravatar.cc/80?img=47" alt="Priya Raman">
+        <img class="face" src="https://i.pravatar.cc/80?img=33" alt="Marcus Oyelaran">
+        <img class="face" src="https://i.pravatar.cc/80?img=5" alt="Lena Hoffmann">
+        <img class="face off" src="https://i.pravatar.cc/80?img=15" alt="Tomás Ibarra (no assistant)">
+      </div>
+    </div>
+  </div>
+
+  <div class="facts" aria-label="Team facts">
+    <div class="fact"><b>6 decisions</b><span>Latest Nov 9 · Presenter</span></div>
+    <div class="fact"><b>3 open claims</b><span><span class="warn">1 past due</span> · 1 waiting on owner</span></div>
+    <div class="fact"><b>5 outputs</b><span><span class="bad">1 flagged</span> against a decision</span></div>
+    <div class="fact"><b>4 of 5 assistants</b><span>connected · Tomás files by hand</span></div>
+  </div>
+
+  <div class="record">
+    <div>
+      <div class="tabbar">
+        <div class="tabs" role="tablist" aria-label="Record">
+          <button role="tab" id="t-dec" aria-controls="p-dec" aria-selected="true">Decisions <span>6</span></button>
+          <button role="tab" id="t-cla" aria-controls="p-cla" aria-selected="false" tabindex="-1">Claims <span>3</span></button>
+          <button role="tab" id="t-out" aria-controls="p-out" aria-selected="false" tabindex="-1">Outputs <span>5</span></button>
+          <button role="tab" id="t-evt" aria-controls="p-evt" aria-selected="false" tabindex="-1">Events <span>2</span></button>
+        </div>
+        <div class="note" id="tabnote">Newest first</div>
+      </div>
+
+      <!-- Decisions -->
+      <div class="card list" role="tabpanel" id="p-dec" aria-labelledby="t-dec">
+        <div class="row"><span class="num">#18</span><div class="what"><div class="kicker">Presenter</div><b>Priya opens, Marcus closes.</b></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt=""><div><b>Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div><span class="date">Nov 9</span></div>
+        <div class="row"><span class="num">#15</span><div class="what"><div class="kicker">Financial horizon</div><b>Five-year model, monthly for year one.</b></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 8</span></div>
+        <div class="row"><span class="num">#12</span><div class="what"><div class="kicker">Partner</div><b>Approach ABA Cooltrans before Lineage.</b></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=5" alt=""><div><b>Lena Hoffmann</b><span class="via site"><i></i>saved on the site</span></div></div><span class="date">Nov 6</span></div>
+        <div class="row"><span class="num">#9</span><div class="what"><div class="kicker">Deck length</div><b>15 slides, appendix unlimited.</b></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=33" alt=""><div><b>Marcus Oyelaran</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 3</span></div>
+        <div class="row"><span class="num">#7</span><div class="what"><div class="kicker">Pricing</div><b>Per-pallet subscription, not per-kilometre.</b><div class="sub">Output #14 conflicts with this decision.</div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 1</span></div>
+        <div class="row"><span class="num">#3</span><div class="what"><div class="kicker">Market</div><b>Enter Ho Chi Minh City first; Hanoi in year two.</b></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt=""><div><b>Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div><span class="date">Oct 28</span></div>
+      </div>
+
+      <!-- Claims -->
+      <div class="card list" role="tabpanel" id="p-cla" aria-labelledby="t-cla" hidden>
+        <div class="row claimrow late"><span class="num">#13</span><div class="what"><b>Interview two cold-chain operators</b><div class="sub"><span class="tag late">Past due · 2 days</span>&nbsp; Nothing filed against it yet.</div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=15" alt=""><div><b>Tomás Ibarra</b><span class="via site"><i></i>saved on the site</span></div></div>
+          <div class="act"><span class="date">Due Nov 8</span><button class="btn btn-quiet" data-toggle="Nudged Tomás|Nudge Tomás" aria-pressed="false">Nudge Tomás</button></div></div>
+        <div class="row claimrow"><span class="num">#10</span><div class="what"><b>Build the five-year financial model</b><div class="sub"><span class="tag open" data-status>Open</span>&nbsp; Follows decision #15.</div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div>
+          <div class="act"><span class="date">Due Nov 14</span><button class="btn btn-primary" id="doneBtn">Mark done</button></div></div>
+        <div class="row claimrow"><span class="num">#16</span><div class="what"><b>Draft slides 1–6</b><div class="sub"><span class="tag prop">Proposed</span>&nbsp; Priya proposed it; waiting for Lena to accept.</div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=5" alt=""><div><b>Lena Hoffmann</b><span class="via"><i></i>proposed via ChatGPT</span></div></div>
+          <div class="act"><span class="date">Due Nov 17</span></div></div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="card list" role="tabpanel" id="p-out" aria-labelledby="t-out" hidden>
+        <div class="row"><span class="num">#20</span><div class="what"><a class="linkt" href="https://figma.com/" target="_blank" rel="noopener">Deck skeleton</a><span class="domain">figma.com</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=5" alt=""><div><b>Lena Hoffmann</b><span class="via"><i></i>via Cursor</span></div></div><span class="date">Nov 10</span></div>
+        <div class="row"><span class="num">#19</span><div class="what"><a class="linkt" href="https://dropbox.com/" target="_blank" rel="noopener">Interview guide</a><span class="domain">dropbox.com</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=15" alt=""><div><b>Tomás Ibarra</b><span class="via site"><i></i>saved on the site</span></div></div><span class="date">Nov 9</span></div>
+        <div class="row"><span class="num">#17</span><div class="what"><a class="linkt" href="https://notion.so/" target="_blank" rel="noopener">Competitor teardown</a><span class="domain">notion.so</span></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt=""><div><b>Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div><span class="date">Nov 8</span></div>
+        <div class="row flagged" id="flagRow"><span class="num">#14</span><div class="what"><a class="linkt" href="https://docs.google.com/" target="_blank" rel="noopener">Pricing model sheet</a><span class="domain">docs.google.com</span>
+            <div class="flagnote"><span class="tag flag" id="flagTag">Conflicts with #7 Pricing</span><span id="flagText">Still prices per kilometre; the team chose per-pallet subscription.</span><button class="btn btn-primary" id="resolveBtn">Mark resolved</button></div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=12" alt=""><div><b>You</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 7</span></div>
+        <div class="row"><span class="num">#11</span><div class="what"><a class="linkt" href="https://docs.google.com/" target="_blank" rel="noopener">Market sizing v2</a><span class="domain">docs.google.com</span>
+            <p>TAM/SAM for HCMC cold storage; bottom-up from pallet positions.</p><div class="sub">@team4/final-deck</div></div>
+          <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=33" alt=""><div><b>Marcus Oyelaran</b><span class="via"><i></i>via Claude</span></div></div><span class="date">Nov 4</span></div>
+      </div>
+
+      <!-- Events -->
+      <div class="card list" role="tabpanel" id="p-evt" aria-labelledby="t-evt" hidden>
+        <div class="event"><div><div class="h">@team4/midpoint-review</div><b>Midpoint review</b><p>Moved to Nov 19, 6pm ET (Priya, Nov 9). Nothing tagged to it yet.</p></div>
+          <div class="when"><b>Nov 19</b>in 9 days</div></div>
+        <div class="event"><div><div class="h">@team4/final-deck</div><b>Final deck</b><p>1 output tagged: #11 Market sizing v2.</p></div>
+          <div class="when"><b>Dec 5</b>course deadline</div></div>
+      </div>
+    </div>
+
+    <div class="aside">
+      <div class="card ann">
+        <h3>Announcement <span class="n">Nov 9</span></h3>
+        <p>Midpoint review moved to Nov 19, 6pm ET.</p>
+        <div class="who"><img class="face" src="https://i.pravatar.cc/80?img=47" alt="" style="width:22px;height:22px"><div><b style="font-size:12.5px">Priya Raman</b><span class="via"><i></i>via ChatGPT</span></div></div>
+      </div>
+      <div class="card">
+        <h3>People <span class="n">4 of 5 connected</span></h3>
+        <div id="memberList"></div>
+        <div class="nudge" id="tomasNote">Tomás hasn't connected an assistant, so his work reaches the team only when he files it by hand.
+          <div><button class="btn btn-primary" id="inviteBtn">Send Tomás the connect prompt</button></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== BRIEF =============== -->
+<section class="view" id="v-brief" aria-labelledby="h-brief">
+  <div class="crumbs"><span>Team 4</span><span aria-hidden="true">›</span><b id="h-brief">Brief</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="card brief">
+    <div class="handle">@team4 · brief</div>
+    <h2>Market-entry plan for a Vietnamese cold-chain startup</h2>
+    <p>Capstone for EMBA Cohort 12. We recommend where and how the startup enters, what it charges, and who it partners with, in a 15-slide deck delivered Dec 5, 2026.</p>
+    <ul>
+      <li>Where: Ho Chi Minh City first, Hanoi in year two (#3).</li>
+      <li>How it charges: per-pallet subscription (#7).</li>
+      <li>Partner order: ABA Cooltrans, then Lineage (#12).</li>
+      <li>Numbers: five-year model, monthly for year one (#15).</li>
+    </ul>
+    <span class="via"><i></i>Written by Priya via ChatGPT · Oct 20 · decisions linked live</span>
+  </div>
+</section>
+
+<!-- =============== PEOPLE =============== -->
+<section class="view" id="v-people" aria-labelledby="h-people">
+  <div class="crumbs"><span>Team 4</span><span aria-hidden="true">›</span><b id="h-people">People</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="people" id="peopleGrid"></div>
+</section>
+
+<!-- =============== INTENT LAYER =============== -->
+<section class="view" id="v-intent" aria-labelledby="h-intent">
+  <div class="crumbs"><span>You</span><span aria-hidden="true">›</span><b>Intent layer</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="pagehead"><div><h1 id="h-intent">Intent layer</h1><p>What you chose to save about yourself. Only the assistants listed under "Who can read this" see it, and only until the date shown.</p></div></div>
+  <div class="two">
+    <div class="stack-col">
+      <div class="intent" id="intentGrid">
+        <article class="card icard"><div class="k"><span class="tag">Preference</span></div><q>I like learning by doing, with a small group.</q>
+          <div class="foot"><span class="via"><i></i>saved via Claude · Nov 2</span><span class="rd">Claude can read</span></div></article>
+        <article class="card icard"><div class="k"><span class="tag">Preference</span></div><q>I'd rather take the modelling work than the slides.</q>
+          <div class="foot"><span class="via"><i></i>saved via Claude · Oct 30</span><span class="rd">Claude can read</span></div></article>
+        <article class="card icard"><div class="k"><span class="tag">Availability</span></div><q>Free for team work Tue and Thu evenings.</q>
+          <div class="foot"><span class="via site"><i></i>saved on the site · Nov 5</span><span class="rd">No assistant can read</span></div></article>
+        <article class="card icard"><div class="k"><span class="tag">Want</span></div><q>I'm in for a Hanoi food walk if three others are.</q>
+          <div class="foot"><span class="via"><i></i>saved via ChatGPT · Nov 7</span><span class="rd" data-chatgpt>ChatGPT can read</span></div></article>
+      </div>
+      <div class="card panel">
+        <h3>Read log <span class="n">last 7 days</span></h3>
+        <ul class="log">
+          <li>Claude read 2 preferences<span>today 9:14</span></li>
+          <li>ChatGPT read 1 want<span>Nov 9</span></li>
+          <li>Claude read Team 4 decisions<span>Nov 8</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack-col">
+      <div class="card panel">
+        <h3>Who can read this <span class="n">2 assistants</span></h3>
+        <div class="perm" id="perm-claude"><span class="logo">Cl</span><div><b>Claude</b><div class="scope">Preferences + Team 4 record</div><div class="until">Until Dec 5</div></div>
+          <button class="btn btn-quiet" data-revoke="perm-claude" aria-pressed="false">Revoke</button></div>
+        <div class="perm" id="perm-chatgpt"><span class="logo">GP</span><div><b>ChatGPT</b><div class="scope">Wants only</div><div class="until">Until Nov 30</div></div>
+          <button class="btn btn-quiet" data-revoke="perm-chatgpt" aria-pressed="false">Revoke</button></div>
+      </div>
+      <div class="card connect">
+        <h3>Connect an assistant</h3>
+        <p class="lede">Paste this into Claude, ChatGPT or Cursor. It sets up the connection and reads your team's record.</p>
+        <div class="prompt">
+<pre id="promptText">Connect me to Loop so you can read my team's record and save what we decide.
+1. Add this remote MCP server: https://loop.example/mcp
+2. Sign in when it asks.
+3. Call team_state for @team4 and tell me what is open.
+4. From now on, check the team's decisions before you draft anything for it.</pre>
+          <span class="tgt">For @team4</span>
+          <button class="btn btn-primary" id="copyBtn">Copy prompt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== ASSISTANTS =============== -->
+<section class="view" id="v-assistants" aria-labelledby="h-assist">
+  <div class="crumbs"><span>You</span><span aria-hidden="true">›</span><b>Assistants</b><span class="today">Tue, Nov 10, 2026</span></div>
+  <div class="pagehead"><div><h1 id="h-assist">Assistants</h1><p>What your connected assistants did in Team 4 on your behalf.</p></div></div>
+  <div class="card list calls">
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>team_state @team4</code><div class="sub">Read 6 decisions, 3 claims</div></div><span class="date" style="text-align:left">Read</span><span class="date">today</span></div>
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>record_decision</code><div class="sub">#15 Five-year model, monthly for year one.</div></div><span class="date" style="text-align:left">Wrote</span><span class="date">Nov 8</span></div>
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>add_output</code><div class="sub">#14 Pricing model sheet</div></div><span class="date" style="text-align:left">Wrote</span><span class="date">Nov 7</span></div>
+    <div class="row"><span class="via"><i></i>ChatGPT</span><div class="what"><code>read_intent wants</code><div class="sub">1 want</div></div><span class="date" style="text-align:left">Read</span><span class="date">Nov 9</span></div>
+    <div class="row"><span class="via"><i></i>Claude</span><div class="what"><code>record_decision</code><div class="sub">#7 Per-pallet subscription, not per-kilometre.</div></div><span class="date" style="text-align:left">Wrote</span><span class="date">Nov 1</span></div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+(function(){
+  var members=[
+    {n:'Stephen Fang',me:true,img:12,ai:'Claude',holds:'Claim #10 · 2 decisions · 1 output'},
+    {n:'Priya Raman',img:47,ai:'ChatGPT',holds:'2 decisions · 1 output · proposed #16'},
+    {n:'Marcus Oyelaran',img:33,ai:'Claude',holds:'1 decision · 1 output'},
+    {n:'Lena Hoffmann',img:5,ai:'Cursor',holds:'1 decision · 1 output · #16 waiting on her'},
+    {n:'Tomás Ibarra',img:15,ai:null,holds:'Claim #13 past due · 1 output filed by hand'}
+  ];
+  var ml=document.getElementById('memberList'),pg=document.getElementById('peopleGrid');
+  members.forEach(function(m){
+    var src='https://i.pravatar.cc/80?img='+m.img;
+    ml.insertAdjacentHTML('beforeend','<div class="member'+(m.ai?'':' off')+'"><img class="face" src="'+src+'" alt=""><div class="t"><b>'+m.n+(m.me?' <span class="handle">(you)</span>':'')+'</b><span class="ai">'+(m.ai?'via '+m.ai:'No assistant connected')+'</span></div></div>');
+    pg.insertAdjacentHTML('beforeend','<article class="card pcard'+(m.ai?'':' off')+'"><div class="top"><img class="face" src="'+src+'" alt=""><div><b>'+m.n+(m.me?' <span class="handle">(you)</span>':'')+'</b><span class="meta">'+(m.ai?'Connected via '+m.ai:'No assistant connected')+'</span></div></div><div class="holds">'+m.holds+'</div>'+(m.ai?'':'<div class="meta">His work reaches the team only when he files it by hand.</div>')+'</article>');
+  });
+
+  // rail navigation
+  var navBtns=document.querySelectorAll('.nav button');
+  navBtns.forEach(function(b){b.addEventListener('click',function(){
+    navBtns.forEach(function(x){x.removeAttribute('aria-current')});
+    b.setAttribute('aria-current','page');
+    document.querySelectorAll('.view').forEach(function(v){v.classList.toggle('on',v.id==='v-'+b.dataset.view)});
+    window.scrollTo(0,0);
+  })});
+
+  // team switcher
+  var sb=document.getElementById('switchBtn'),menu=document.getElementById('teamMenu');
+  sb.addEventListener('click',function(e){e.stopPropagation();var o=menu.classList.toggle('open');sb.setAttribute('aria-expanded',o)});
+  document.addEventListener('click',function(e){if(!menu.contains(e.target)){menu.classList.remove('open');sb.setAttribute('aria-expanded','false')}});
+
+  // tabs
+  var tabs=[].slice.call(document.querySelectorAll('[role=tab]'));
+  var notes={'t-dec':'Newest first','t-cla':'Past due first','t-out':'Newest first · links only','t-evt':'Soonest first'};
+  function sel(t){tabs.forEach(function(x){var on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;document.getElementById(x.getAttribute('aria-controls')).hidden=!on});document.getElementById('tabnote').textContent=notes[t.id]}
+  tabs.forEach(function(t,i){t.addEventListener('click',function(){sel(t)});t.addEventListener('keydown',function(e){var d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(d){var n=tabs[(i+d+tabs.length)%tabs.length];sel(n);n.focus()}})});
+
+  // toggles
+  document.querySelectorAll('[data-toggle]').forEach(function(b){b.addEventListener('click',function(){var p=b.getAttribute('aria-pressed')!=='true',l=b.dataset.toggle.split('|');b.setAttribute('aria-pressed',p);b.textContent=p?l[0]:l[1]})});
+  document.getElementById('doneBtn').addEventListener('click',function(){var s=this.closest('.row').querySelector('[data-status]');var d=s.classList.toggle('done');s.classList.toggle('open',!d);s.textContent=d?'Done today':'Open';this.textContent=d?'Reopen':'Mark done';this.className='btn '+(d?'btn-quiet':'btn-primary')});
+  document.getElementById('resolveBtn').addEventListener('click',function(){var r=document.getElementById('flagRow');var res=r.classList.toggle('flagged');var t=document.getElementById('flagTag');t.className='tag '+(res?'flag':'done');t.textContent=res?'Conflicts with #7 Pricing':'Resolved today';document.getElementById('flagText').textContent=res?'Still prices per kilometre; the team chose per-pallet subscription.':'Now matches decision #7.';this.textContent=res?'Mark resolved':'Undo';this.className='btn '+(res?'btn-primary':'btn-quiet')});
+  document.getElementById('inviteBtn').addEventListener('click',function(){this.textContent='Sent to Tomás · today';this.className='btn btn-quiet';this.disabled=true});
+
+  // revoke
+  document.querySelectorAll('[data-revoke]').forEach(function(b){b.addEventListener('click',function(){var row=document.getElementById(b.dataset.revoke),r=row.classList.toggle('revoked'),u=row.querySelector('.until');
+    if(!u.dataset.orig)u.dataset.orig=u.textContent;u.textContent=r?'Revoked today · can no longer read':u.dataset.orig;b.textContent=r?'Restore':'Revoke';b.setAttribute('aria-pressed',r);
+    var who=b.dataset.revoke==='perm-claude'?'Claude':'ChatGPT';document.querySelectorAll('#intentGrid .rd').forEach(function(s){if(s.textContent.indexOf(who)===0||s.dataset.was===who){if(r){s.dataset.was=who;s.textContent='No assistant can read'}else if(s.dataset.was===who){s.textContent=who+' can read';delete s.dataset.was}}})})});
+
+  // copy
+  var cb=document.getElementById('copyBtn');
+  cb.addEventListener('click',function(){var txt=document.getElementById('promptText').textContent;
+    function done(){cb.textContent='Copied';setTimeout(function(){cb.textContent='Copy prompt'},1800)}
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
+    function fallback(){var t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove();done()}});
+})();
+</script>
+</body>
+</html>

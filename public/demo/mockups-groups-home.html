@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop · Your groups mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;480;500;520;550;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:oklch(96.2% 0.004 230); --surface:oklch(99.3% 0.003 230); --sunk:oklch(97.7% 0.006 240);
+  --line:oklch(90.6% 0.008 240); --line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252); --ink-2:oklch(35.4% 0.095 252 / .85); --muted:oklch(46.5% 0.012 245);
+  --blue:oklch(47.6% 0.13 250); --lime:oklch(96.4% 0.19 117); --teal:oklch(37.3% 0.052 206); --aqua:oklch(90.4% 0.1 194);
+  --plum:oklch(42.6% 0.13 322); --pale-blue:oklch(95.3% 0.017 245); --pale-plum:oklch(94.4% 0.011 320);
+  --on-dark:oklch(99.4% 0.003 230); --on-dark-78:oklch(99.4% 0.003 230 / .78); --on-dark-66:oklch(99.4% 0.003 230 / .66);
+  --float:0 14px 32px -14px oklch(35.4% 0.095 252 / .28),0 2px 6px oklch(35.4% 0.095 252 / .08);
+  --r-lg:24px 24px 24px 6px; --r-md:16px 16px 16px 4px; --pill:56px; --ease:cubic-bezier(.22,1,.36,1);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --lp-ring-bg:var(--canvas);
+}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:oklch(91.5% 0.006 240);color:var(--navy);font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+h1,h2,h3,p,ul,ol{margin:0;padding:0}ul,ol{list-style:none}a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit;letter-spacing:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* ---------- outside the product: picker + notes ---------- */
+.pick{max-width:1320px;margin:0 auto;padding:22px 20px 8px}
+.pick h1{font-size:19px;font-weight:500;letter-spacing:-.03em}
+.pick > p{color:oklch(42% 0.015 245);margin-top:4px;max-width:78ch}
+.tabs{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.tabs button{border:1px solid oklch(80% 0.01 245);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:500}
+.tabs button[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:var(--on-dark)}
+.dir{display:none}.dir.on{display:block}
+.note{max-width:1320px;margin:0 auto;padding:6px 20px 14px;color:oklch(42% 0.015 245);font-size:13.5px;max-width:1320px}
+.note b{color:var(--navy);font-weight:600}
+.note ul{margin-top:6px;display:grid;gap:3px}
+.note li::before{content:'· ';color:var(--muted)}
+.stage{max-width:1320px;margin:0 auto 28px;padding:0 20px}
+.stage-label{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:13px;font-weight:550;color:var(--navy)}
+.stage-label span{font-weight:400;color:var(--muted)}
+
+/* ---------- the shell (same as app/loop.css) ---------- */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:780px;background:var(--canvas);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -30px oklch(25% 0.05 250 / .5),0 0 0 1px oklch(25% 0.05 250 / .08)}
+.rail{--lp-ring-bg:var(--navy);background:var(--navy);color:var(--on-dark-78);display:flex;flex-direction:column;padding:18px 12px 12px}
+.wordmark{display:flex;align-items:center;gap:9px;padding:2px 10px 16px;font-weight:500;font-size:18px;letter-spacing:-.035em;color:var(--on-dark)}
+.wordmark svg{width:22px;height:22px;color:var(--aqua)}
+.switch{display:flex;align-items:center;gap:10px;padding:8px 10px;background:oklch(99.4% 0.003 230 / .08);border-radius:var(--r-md);margin-bottom:14px;color:var(--on-dark);font-weight:500}
+.switch::after{content:'';width:7px;height:7px;margin:0 4px 3px auto;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg)}
+.tile{--lp-ring-bg:var(--teal);width:28px;height:28px;border-radius:9px 9px 9px 3px;background:var(--teal);display:grid;place-items:center;flex:none;color:var(--aqua)}
+.tile svg{width:16px;height:16px}
+.navlab{font-size:12.5px;color:var(--on-dark-66);padding:12px 12px 6px}
+.rail nav ul{display:flex;flex-direction:column;gap:2px}
+.rail nav a{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--pill)}
+.rail nav a.on{background:oklch(99.4% 0.003 230 / .14);color:var(--on-dark);font-weight:500}
+.rail nav svg{width:16px;height:16px;flex:none}
+.rail .badge{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--lime);color:var(--navy);font-size:11.5px;font-weight:600;display:grid;place-items:center}
+.account{margin-top:auto;padding:14px 12px 4px;border-top:1px solid oklch(99.4% 0.003 230 / .14);display:flex;align-items:center;gap:10px;font-size:13px}
+.account img{width:30px;height:30px;border-radius:50%}
+.main{padding:8px 32px 48px;min-width:0}
+.crumbs{display:flex;align-items:center;gap:8px;min-height:52px;font-size:13.5px;color:var(--muted)}
+.crumbs b{color:var(--navy);font-weight:500}.crumbs .today{margin-left:auto}
+
+/* ---------- shared pieces ---------- */
+.pill{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:var(--pill);font-weight:500;font-size:13.5px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);white-space:nowrap;transition:background-color .15s var(--ease)}
+.pill svg{width:12px;height:12px;transition:transform .15s var(--ease)}
+.pill:hover svg{transform:translateX(2px)}
+.pill:hover{background:var(--pale-blue)}
+.pill.blue{background:var(--blue);color:var(--on-dark);box-shadow:none}.pill.blue:hover{background:var(--navy)}
+.pill.lime{background:var(--lime);color:var(--navy);box-shadow:none;font-weight:600}.pill.lime:hover{background:oklch(90% 0.2 120)}
+.pill.ghost-dark{background:transparent;color:var(--on-dark);box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .3)}
+.pill.ghost-dark:hover{background:oklch(99.4% 0.003 230 / .08)}
+.pill.sm{height:30px;padding:0 12px;font-size:12.5px}
+.handle{font:12.5px var(--mono);letter-spacing:0;color:var(--muted)}
+.faces{display:flex}
+.faces img{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);margin-left:-7px;object-fit:cover;background:var(--line)}
+.faces img:first-child{margin-left:0}
+.faces .more{margin-left:-7px;height:26px;min-width:26px;padding:0 6px;border-radius:99px;border:2px solid var(--surface);background:var(--pale-blue);font-size:11px;font-weight:600;display:grid;place-items:center}
+.dateblock{display:grid;place-items:center;width:52px;height:56px;border-radius:12px 12px 12px 3px;background:var(--pale-blue);line-height:1}
+.dateblock small{font-size:11px;color:var(--muted)}
+.dateblock b{font-size:21px;font-weight:520;letter-spacing:-.04em;margin-top:2px}
+.dateblock.dark{background:oklch(99.4% 0.003 230 / .1);color:var(--on-dark)}.dateblock.dark small{color:var(--aqua)}
+.via{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted)}
+.via i{width:9px;height:9px;border-radius:2px;background:var(--teal);display:inline-block}
+.via i.circ{border-radius:50%;background:var(--blue)}
+.via i.tri{width:0;height:0;border-radius:0;background:none;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid var(--plum)}
+.new{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:99px;background:var(--pale-blue);color:var(--blue);font-size:11.5px;font-weight:600}
+.kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua)}
+.kick::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
+.field{display:flex;gap:8px;align-items:center}
+.field input{flex:1;min-width:0;height:44px;padding:0 16px;border-radius:var(--pill);border:1px solid var(--line-2);background:var(--surface);font-size:14px}
+.field input::placeholder{color:var(--muted)}
+.check{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:oklch(99.4% 0.003 230 / .12);color:var(--aqua)}
+.check svg{width:15px;height:15px}
+
+/* ---------- NOW: the page as it is ---------- */
+.now h1{font-size:30px;font-weight:480;letter-spacing:-.035em;margin:22px 0 8px}
+.now > p{color:var(--muted);max-width:68ch;font-size:14.5px}
+.now section{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;margin:16px 0;max-width:860px}
+.now section h2{font-size:17px;font-weight:480;margin-bottom:8px}
+.now section p{color:var(--ink-2)}
+.ruler{position:relative;max-width:1180px;margin-top:-6px;height:22px}
+.ruler::before{content:'';position:absolute;left:860px;right:0;top:10px;border-top:1.5px dashed var(--plum)}
+.ruler span{position:absolute;left:870px;top:-8px;font-size:12px;color:var(--plum);background:var(--canvas);padding:0 6px}
+
+/* ---------- A · Roster ---------- */
+.a-plate{--lp-ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);border-radius:var(--r-lg);padding:22px 24px;display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:24px;align-items:center}
+.a-plate > svg{width:88px;height:88px;color:var(--aqua)}
+.a-plate h1{font-size:30px;font-weight:500;letter-spacing:-.045em;color:var(--aqua);line-height:1.05}
+.a-plate h1 em{font-style:normal;color:var(--lime)}
+.a-plate p{margin-top:6px;font-size:15px;max-width:58ch}
+.a-plate .stats{display:flex;gap:26px;padding-right:6px}
+.a-plate .stats div{text-align:left}
+.a-plate .stats b{display:block;color:var(--on-dark);font-size:22px;font-weight:500;letter-spacing:-.04em}
+.a-plate .stats span{font-size:12.5px}
+.a-invite{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px 12px 12px}
+.a-invite .tile{width:44px;height:44px;border-radius:14px 14px 14px 4px}.a-invite .tile svg{width:24px;height:24px}
+.a-invite b{font-weight:550}
+.a-invite p{color:var(--muted);font-size:13px}
+.a-invite .acts{display:flex;gap:8px;align-items:center}
+.a-invite .acts a{color:var(--muted);font-size:13px;padding:0 6px}
+.sechead{display:flex;align-items:baseline;gap:10px;margin:26px 0 10px}
+.sechead h2{font-size:19px;font-weight:500;letter-spacing:-.03em}
+.sechead span{color:var(--muted);font-size:13px}
+.sechead .right{margin-left:auto}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.a-row{display:grid;grid-template-columns:44px minmax(0,1.2fr) minmax(0,1.6fr) 120px 52px 20px;gap:18px;align-items:center;padding:14px 20px;border-top:1px solid var(--line);transition:background-color .15s var(--ease)}
+.a-row:first-child{border-top:0}
+.a-row:hover{background:var(--sunk)}
+.a-row .tile{width:44px;height:44px;border-radius:14px 14px 14px 4px}.a-row .tile svg{width:24px;height:24px}
+.a-row .name b{display:block;font-size:15.5px;font-weight:550;letter-spacing:-.025em}
+.a-row .last{min-width:0}
+.a-row .last p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.a-row .last .via{margin-top:2px}
+.a-row .chev{width:9px;height:9px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg)}
+.a-create{display:flex;align-items:center;gap:14px;padding:14px 20px;border-top:1px dashed var(--line-2);color:var(--blue);font-weight:500}
+.a-create .plus{width:44px;height:44px;border-radius:14px 14px 14px 4px;border:1.5px dashed var(--line-2);display:grid;place-items:center;font-size:20px;font-weight:400}
+.a-create span{color:var(--muted);font-weight:400;font-size:13px}
+/* A empty: the plate is the next steps */
+.a-steps{--lp-ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:40px 44px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px;align-items:center;min-height:600px;margin-top:8px}
+.a-steps h1{font-size:60px;line-height:.95;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin:16px 0 0;max-width:11ch}
+.a-steps h1 em{font-style:normal;color:var(--lime)}
+.a-steps ol{margin:28px 0 0;max-width:520px}
+.a-steps li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;padding:14px 0;border-top:1px solid oklch(99.4% 0.003 230 / .14)}
+.a-steps li:first-child{border-top:0}
+.a-steps li > span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:600;color:var(--aqua);box-shadow:inset 0 0 0 1.5px oklch(90.4% 0.1 194 / .5)}
+.a-steps li.cur > span{background:var(--lime);color:var(--navy);box-shadow:0 0 0 5px oklch(96.4% 0.19 117 / .18)}
+.a-steps li.done b{text-decoration:line-through;text-decoration-color:oklch(90.4% 0.1 194 / .5);color:var(--on-dark-66)}
+.a-steps li b{display:block;color:var(--on-dark);font-weight:550;font-size:16.5px}
+.a-steps li p{font-size:14px}
+.a-steps .field{margin-top:12px}
+.a-steps .field input{background:oklch(99.4% 0.003 230 / .08);border-color:oklch(99.4% 0.003 230 / .22);color:var(--on-dark)}
+.a-steps .field input::placeholder{color:var(--on-dark-66)}
+.a-steps .art{color:var(--aqua);justify-self:center;width:100%;max-width:400px}
+.a-steps .art svg{width:100%;height:auto;display:block;animation:turn 90s linear infinite}
+.a-steps .mail{display:inline-flex;margin-top:8px;font:12.5px var(--mono);letter-spacing:0;color:var(--aqua);background:oklch(99.4% 0.003 230 / .08);padding:3px 9px;border-radius:99px}
+@keyframes turn{to{rotate:360deg}}
+
+/* ---------- B · Desk ---------- */
+.b-head{display:flex;align-items:flex-end;gap:16px;margin:14px 0 18px}
+.b-head h1{font-size:34px;font-weight:500;letter-spacing:-.045em;line-height:1}
+.b-head p{color:var(--muted);margin-top:6px}
+.b-head .right{margin-left:auto;display:flex;gap:8px}
+.b-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.b-team{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px}
+.b-team-top{--lp-ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px}
+.b-team-top > svg{width:48px;height:48px;color:var(--aqua)}
+.b-team-top h2{color:var(--aqua);font-size:21px;font-weight:500;letter-spacing:-.035em}
+.b-team-top .handle{color:var(--on-dark-66)}
+.b-team-top .faces img{border-color:var(--teal)}.b-team-top .faces .more{border-color:var(--teal);background:oklch(99.4% 0.003 230 / .14);color:var(--on-dark)}
+.b-team ul li{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:11px 18px;border-top:1px solid var(--line)}
+.b-team ul li:first-child{border-top:0}
+.b-team ul li:hover{background:var(--sunk)}
+.b-team .num{font:12px var(--mono);color:var(--muted);letter-spacing:0}
+.b-team li p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b-team li.due{background:oklch(97.6% 0.006 320)}
+.b-team li.due .when{color:var(--plum);font-weight:500}
+.b-team .when{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.b-team-foot{display:flex;align-items:center;gap:10px;padding:10px 18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.b-team-foot a{margin-left:auto;color:var(--blue);font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.b-team-foot svg{width:11px;height:11px}
+.b-small{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.b-small .b-team-top{grid-template-columns:36px minmax(0,1fr)}
+.b-small .b-team-top > svg{width:36px;height:36px}
+.b-small .b-team-top h2{font-size:17px}
+.b-small .b-team-foot a{margin-left:0}
+.b-small .b-team-foot{justify-content:space-between}
+.side{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px}
+.panel h3{font-size:15px;font-weight:550;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.panel h3 .count{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--lime);font-size:11.5px;font-weight:600;display:grid;place-items:center}
+.panel > p{color:var(--muted);font-size:13px;margin-top:4px}
+.inv{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;margin-top:12px;align-items:center}
+.inv b{font-weight:550;font-size:15px}
+.inv p{color:var(--muted);font-size:12.5px}
+.inv-acts{display:flex;gap:8px;margin-top:12px}
+.asst{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px 12px 12px 3px;background:var(--sunk)}
+.asst .shape{width:28px;height:28px;border-radius:50%;background:var(--blue);flex:none;display:grid;place-items:center;color:var(--on-dark);font-size:12px;font-weight:600}
+.asst b{font-weight:550;font-size:13.5px;display:block}
+.asst span{font-size:12.5px;color:var(--muted)}
+.asst .ok{margin-left:auto;font-size:12px;color:oklch(42% 0.09 160);font-weight:550;display:flex;align-items:center;gap:5px}
+.asst .ok::before{content:'';width:7px;height:7px;border-radius:50%;background:oklch(62% 0.14 160)}
+.asst .off{margin-left:auto;font-size:12px;color:var(--plum);font-weight:550}
+.panel.quiet{background:transparent;border-style:dashed}
+.panel.quiet a{color:var(--blue);font-weight:500;display:inline-block;margin-top:8px}
+/* B empty */
+.b-well{--lp-ring-bg:var(--surface);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);min-height:560px;display:grid;place-items:center;text-align:center;padding:40px;position:relative;overflow:hidden}
+.b-well .ghosts{position:absolute;inset:24px 24px auto;display:grid;gap:12px;pointer-events:none}
+.b-well .ghost{height:58px;border-radius:var(--r-md);background:var(--pale-blue);border:1.5px dashed oklch(80% 0.03 245)}
+.b-well .ghost:nth-child(2){width:84%}.b-well .ghost:nth-child(3){width:66%}
+.b-well .mid{position:relative;max-width:440px;background:var(--surface);padding:18px 22px;border-radius:var(--r-lg);margin-top:120px}
+.b-well svg.big{width:96px;height:96px;color:var(--teal);margin:0 auto 14px;display:block}
+.b-well h2{font-size:24px;font-weight:500;letter-spacing:-.035em}
+.b-well p{color:var(--muted);margin-top:6px}
+.b-well .field{margin-top:16px}
+
+/* ---------- C · Arrival ---------- */
+.c-plate{--lp-ring-bg:var(--teal);background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:30px 34px;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:center;margin-top:8px;position:relative;overflow:hidden}
+#c-plate{view-transition-name:c-hero}
+.c-plate h1{font-size:52px;line-height:.95;letter-spacing:-.055em;font-weight:520;color:var(--aqua);margin:14px 0 0;max-width:14ch}
+.c-plate h1 em{font-style:normal;color:var(--lime)}
+.c-plate .meta{display:flex;gap:18px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.c-plate .meta span{font-size:14px}
+.c-plate .meta .faces img{border-color:var(--teal)}
+.c-plate .acts{display:flex;gap:10px;margin-top:22px;align-items:center}
+.c-plate .acts .pill{height:50px;padding:0 24px;font-size:16px}
+.c-plate .acts .pill svg{width:14px;height:14px}
+.c-plate .art{color:var(--aqua);position:relative}
+.c-plate .art svg{width:100%;height:auto;display:block}
+.c-plate .art .lime-ring{animation:breathe 4s var(--ease) infinite alternate}
+@keyframes breathe{from{opacity:.75}to{opacity:1}}
+.c-plate .expires{position:absolute;top:22px;right:26px;font-size:12.5px;color:var(--on-dark-66)}
+.c-plate.joined{grid-template-columns:72px minmax(0,1fr) auto;padding:18px 22px;border-radius:var(--r-lg)}
+.c-plate.joined h1{font-size:26px;margin:0}
+.c-plate.joined .art{order:-1}
+.c-strip{display:flex;gap:10px;align-items:center;margin-top:12px;color:var(--muted);font-size:13px}
+.c-strip .pill{margin-left:auto}
+.c-list{margin-top:22px}
+.c-row{display:grid;grid-template-columns:60px minmax(0,1fr) minmax(0,1.3fr) 56px;gap:18px;align-items:center;padding:16px 20px;border-top:1px solid var(--line);background:var(--surface)}
+.c-row:first-child{border-top:0}
+.c-row:hover{background:var(--sunk)}
+.c-row .tile{width:60px;height:60px;border-radius:18px 18px 18px 5px}.c-row .tile svg{width:34px;height:34px}
+.c-row h3{font-size:19px;font-weight:520;letter-spacing:-.035em}
+.c-row .next{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;min-width:0}
+.c-row .next .dateblock{width:46px;height:50px}.c-row .next .dateblock b{font-size:18px}
+.c-row .next p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-row .next small{display:block;color:var(--muted);font-size:12.5px}
+.c-row .go{width:40px;height:40px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line-2);display:grid;place-items:center;justify-self:end;transition:background-color .15s var(--ease)}
+.c-row:hover .go{background:var(--blue);color:var(--on-dark);box-shadow:none}
+.c-row .go svg{width:13px;height:13px}
+.c-row.fresh{background:oklch(98.6% 0.03 117)}
+.c-row.fresh h3::after{content:'Just joined';margin-left:10px;vertical-align:3px;font-size:11.5px;font-weight:600;letter-spacing:-.01em;background:var(--lime);color:var(--navy);padding:2px 8px;border-radius:99px}
+.c-plate .field input{height:50px;background:oklch(99.4% 0.003 230 / .08);border-color:oklch(99.4% 0.003 230 / .22);color:var(--on-dark);font-size:15px}
+.c-plate .field input::placeholder{color:var(--on-dark-66)}
+.c-plate .field .pill{height:50px;padding:0 22px;font-size:15px}
+.c-plate .field .pill[disabled]{background:oklch(99.4% 0.003 230 / .12);color:var(--on-dark-66);cursor:not-allowed}
+.c-help{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.c-help div{padding:14px 18px;border-left:1px solid var(--line)}
+.c-help div:first-child{border-left:0}
+.c-help b{display:block;font-weight:550}
+.c-help p{color:var(--muted);font-size:13px;margin-top:2px}
+.c-help a{color:var(--blue);font-weight:500;font-size:13px;display:inline-block;margin-top:6px}
+.reset{color:var(--blue);font-weight:500;font-size:13px;background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px}
+::view-transition-group(c-hero),::view-transition-group(c-new){animation-duration:.6s;animation-timing-function:cubic-bezier(.22,1,.36,1)}
+::view-transition-old(c-hero),::view-transition-new(c-hero){height:100%;object-fit:cover}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}.rail{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 12px}.wordmark{padding:0}.wordmark span,.navlab,.rail nav svg,.switch{display:none}.rail nav ul{flex-direction:row}.account{margin:0 0 0 auto;border:0;padding:0}.account span{display:none}
+  .main{padding:4px 16px 32px}
+  .a-plate{grid-template-columns:56px minmax(0,1fr)}.a-plate > svg{width:56px;height:56px}.a-plate .stats{grid-column:1 / -1}.a-plate h1{font-size:24px}
+  .a-invite{grid-template-columns:44px minmax(0,1fr)}.a-invite .acts{grid-column:1 / -1}
+  .a-row{grid-template-columns:44px minmax(0,1fr) 20px}.a-row .last,.a-row .faces,.a-row .dateblock{display:none}
+  .a-steps,.c-plate{grid-template-columns:1fr;padding:26px 22px}.a-steps h1,.c-plate h1{font-size:40px}.a-steps .art,.c-plate .art{max-width:160px;justify-self:start;order:-1}
+  .b-grid,.b-small{grid-template-columns:1fr}.b-head{flex-wrap:wrap}
+  .c-row{grid-template-columns:48px minmax(0,1fr) 40px}.c-row .tile{width:48px;height:48px}.c-row .next{grid-column:2}.c-row .go{grid-row:1;grid-column:3}
+  .c-help{grid-template-columns:1fr}.c-help div{border-left:0;border-top:1px solid var(--line)}.c-help div:first-child{border-top:0}
+  .ruler{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- The mark: same paths as components/LoopGlyphs.tsx Rings (solid). Ring colour = currentColor, top ring lime, gaps = --lp-ring-bg. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="rings" viewBox="0 0 100 100" fill="none">
+    <path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime)" stroke-width="9"/>
+    <path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/>
+    <path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/>
+    <path d="M33.76 48.32A21 21 0 0 1 29.51 30.41" stroke="var(--lp-ring-bg)" stroke-width="15.3"/><path d="M34.73 49.42A21 21 0 0 1 29.88 28.99" stroke="var(--lime)" stroke-width="9"/>
+    <path d="M64.16 50.51A21 21 0 0 1 46.5 55.71" stroke="var(--lp-ring-bg)" stroke-width="15.3"/><path d="M65.21 49.48A21 21 0 0 1 45.06 55.41" stroke="var(--lime)" stroke-width="9"/>
+    <path d="M55.19 67.3A21 21 0 0 1 41.87 80.01" stroke="var(--lp-ring-bg)" stroke-width="15.3"/><path d="M55.65 65.91A21 21 0 0 1 40.46 80.41" stroke="currentColor" stroke-width="9"/>
+    <path d="M41.87 39.99A21 21 0 0 1 55.19 52.7" stroke="var(--lp-ring-bg)" stroke-width="15.3"/><path d="M40.46 39.59A21 21 0 0 1 55.65 54.09" stroke="currentColor" stroke-width="9"/>
+    <path d="M61 39.29A21 21 0 0 1 78.66 44.49" stroke="var(--lp-ring-bg)" stroke-width="15.3"/><path d="M59.56 39.59A21 21 0 0 1 79.71 45.52" stroke="currentColor" stroke-width="9"/>
+    <path d="M44.01 64.59A21 21 0 0 1 48.26 46.68" stroke="var(--lp-ring-bg)" stroke-width="15.3"/><path d="M44.38 66.01A21 21 0 0 1 49.23 45.58" stroke="currentColor" stroke-width="9"/>
+  </symbol>
+  <symbol id="arrow" viewBox="0 0 12 12" fill="none"><path d="M1.5 6h9M6.5 2l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="tick" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-groups" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/></symbol>
+  <symbol id="i-asst" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5.5" cy="8" r="3"/><circle cx="10.5" cy="8" r="3"/></symbol>
+  <symbol id="i-arch" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 2.5v11M4 4.5h5.5M4 8h8M4 11.5h4"/><circle cx="11.5" cy="4.5" r="1.3"/></symbol>
+</svg>
+
+<template id="rail-tpl">
+  <aside class="rail">
+    <a class="wordmark" href="#"><svg><use href="#rings"/></svg><span>Loop</span></a>
+    <div class="switch" data-switch><span class="tile"><svg><use href="#rings"/></svg></span><span>Study team 4</span></div>
+    <nav><p class="navlab">You</p><ul>
+      <li><a class="on" href="#"><svg><use href="#i-groups"/></svg>Groups<span class="badge" data-badge>1</span></a></li>
+      <li><a href="#"><svg><use href="#i-asst"/></svg>Assistants</a></li>
+      <li><a href="#"><svg><use href="#i-arch"/></svg>How we got here</a></li>
+    </ul></nav>
+    <div class="account"><img src="https://i.pravatar.cc/80?img=12" alt=""><span>Stephen Fang</span></div>
+  </aside>
+</template>
+
+<div class="pick">
+  <h1>Your groups, redrawn</h1>
+  <p>Today the page is a heading and two 860px boxes on a 1180px column, each saying "nothing yet". Three ways to make it use the width and look like the rest of Loop. Each direction shows two states: with groups and an invitation, and the empty state you see right now.</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="false" data-dir="now">Now</button>
+    <button role="tab" aria-selected="true" data-dir="a">A · Roster</button>
+    <button role="tab" aria-selected="false" data-dir="b">B · Desk</button>
+    <button role="tab" aria-selected="false" data-dir="c">C · Arrival</button>
+  </div>
+</div>
+
+<!-- ================= NOW ================= -->
+<section class="dir" id="dir-now">
+  <div class="note"><b>What's wrong.</b><ul>
+    <li>Two panels stop at 860px inside a 1180px column, so a third of the page is an empty strip on the right (dashed line).</li>
+    <li>Three headings ("Your groups", "Workspaces", "Invitations") for two empty sentences. No plate, no mark, no lime: nothing from the Loop look except the rail.</li>
+    <li>The empty state doesn't say what to do. The invitation link only works if you arrive with <code>#invite=</code> in the URL.</li>
+  </ul></div>
+  <div class="stage"><div class="app" data-rail data-nogroups>
+    <main class="main now">
+      <h1>Your groups</h1>
+      <p>Share resources with the people you invite. Each assistant needs its own group access grant.</p>
+      <section><h2>Workspaces</h2><p>You have no groups yet.</p></section>
+      <div class="ruler"><span>340px unused</span></div>
+      <section><h2>Invitations</h2><p>No pending invitations for your verified email.</p></section>
+    </main>
+  </div></div>
+</section>
+
+<!-- ================= A ================= -->
+<section class="dir on" id="dir-a">
+  <div class="note"><b>A · Roster.</b> A slim teal plate on top like the team page, the invitation as one strip with the lime Accept, then every group as a full-width row: its mark, handle, who's in it, the latest record and the next thing due. Start a group is the last row, not a box. Empty: the plate becomes the page and tells you the one next step, the same three-step plate as signed-out, with step 1 ticked.
+  <ul><li>Needs per group: member faces, latest record, next due. The team page already loads these.</li><li>Least new code; the closest to what's live.</li></ul></div>
+
+  <div class="stage"><p class="stage-label">With groups <span>3 groups, 1 invitation</span></p><div class="app" data-rail>
+    <main class="main">
+      <div class="crumbs"><b>Groups</b><span class="today">Wednesday, November 12</span></div>
+      <div class="a-plate">
+        <svg><use href="#rings"/></svg>
+        <div><h1>Your groups, <em>in one loop.</em></h1><p>Ask your assistant about any of them. It answers from what each team has saved.</p></div>
+        <div class="stats"><div><b>3</b><span>groups</span></div><div><b>27</b><span>people</span></div><div><b>Fri</b><span>next due</span></div></div>
+      </div>
+      <div class="a-invite">
+        <span class="tile"><svg><use href="#rings"/></svg></span>
+        <div><b>You're invited to Product Club</b><p>As a member · Expires Nov 19 · Sent to your verified email</p></div>
+        <div class="acts"><a href="#">Decline</a><button class="pill lime">Accept<svg><use href="#arrow"/></svg></button></div>
+      </div>
+      <div class="sechead"><h2>Groups</h2><span>3</span><button class="pill sm right">Connect an assistant<svg><use href="#arrow"/></svg></button></div>
+      <ul class="list">
+        <li class="a-row"><span class="tile"><svg><use href="#rings"/></svg></span>
+          <div class="name"><b>Study team 4</b><span class="handle">@emba-c2/team-4</span></div>
+          <div class="last"><p>Deck v3 is in the shared drive, final numbers on slide 9</p><span class="via"><i class="circ"></i>Maya via Claude · 2h ago</span></div>
+          <div class="faces"><img src="https://i.pravatar.cc/80?img=47" alt=""><img src="https://i.pravatar.cc/80?img=33" alt=""><img src="https://i.pravatar.cc/80?img=5" alt=""><span class="more">+3</span></div>
+          <div class="dateblock"><small>Nov</small><b>14</b></div><span class="chev"></span></li>
+        <li class="a-row"><span class="tile"><svg><use href="#rings"/></svg></span>
+          <div class="name"><b>Lisbon, spring break</b><span class="handle">@lisbon-spring</span></div>
+          <div class="last"><p>Flights: everyone books TAP 1342 out of JFK, Mar 13</p><span class="via"><i></i>Jon via ChatGPT · yesterday</span></div>
+          <div class="faces"><img src="https://i.pravatar.cc/80?img=15" alt=""><img src="https://i.pravatar.cc/80?img=26" alt=""><img src="https://i.pravatar.cc/80?img=68" alt=""><span class="more">+6</span></div>
+          <div class="dateblock"><small>Nov</small><b>20</b></div><span class="chev"></span></li>
+        <li class="a-row"><span class="tile"><svg><use href="#rings"/></svg></span>
+          <div class="name"><b>Tuesday run club</b><span class="handle">@tuesday-run</span></div>
+          <div class="last"><p>Route moves to the river loop while the bridge is closed</p><span class="via"><i class="tri"></i>Priya via Gemini · Nov 9</span></div>
+          <div class="faces"><img src="https://i.pravatar.cc/80?img=9" alt=""><img src="https://i.pravatar.cc/80?img=53" alt=""><img src="https://i.pravatar.cc/80?img=31" alt=""><span class="more">+9</span></div>
+          <div class="dateblock"><small>Nov</small><b>18</b></div><span class="chev"></span></li>
+        <li><a class="a-create" href="#"><span class="plus">+</span><div>Start a private group<br><span>You'll own it and invite people by email.</span></div></a></li>
+      </ul>
+    </main>
+  </div></div>
+
+  <div class="stage"><p class="stage-label">Today <span>signed in, no groups, no invitation</span></p><div class="app" data-rail data-nogroups>
+    <main class="main">
+      <div class="a-steps">
+        <div>
+          <p class="kick">Signed in</p>
+          <h1>One step <em>to your group.</em></h1>
+          <ol>
+            <li class="done"><span><svg width="15" height="15"><use href="#tick"/></svg></span><div><b>Sign in</b><p>Done, as <span class="mail">stephen@…</span></p></div></li>
+            <li class="cur"><span>2</span><div><b>Accept your invitation</b><p>Nothing has arrived for this email yet. Open the link from the email, or paste it here.</p>
+              <div class="field"><input placeholder="Paste your invitation link"><button class="pill lime">Accept<svg><use href="#arrow"/></svg></button></div></div></li>
+            <li><span>3</span><div><b>Connect your assistant</b><p>Ask Claude what's yours, where the file is, when it's due.</p></div></li>
+          </ol>
+        </div>
+        <div class="art"><svg viewBox="0 0 100 100"><use href="#rings"/></svg></div>
+      </div>
+    </main>
+  </div></div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="dir" id="dir-b">
+  <div class="note"><b>B · Desk.</b> Two columns that fill the width. Left: each group is a block with its teal header and the three records most worth knowing (due soonest first, past due tinted plum). Smaller groups sit two across. Right: what's waiting on you: the invitation, your assistant's connection, and starting a group. Empty: the left becomes one empty well that shows where groups will land, the right keeps the invitation box ready.
+  <ul><li>Most useful page of the three: you could stop opening each team.</li><li>Needs the record query per group; heaviest page.</li></ul></div>
+
+  <div class="stage"><p class="stage-label">With groups <span>3 groups, 1 invitation</span></p><div class="app" data-rail>
+    <main class="main">
+      <div class="crumbs"><b>Groups</b><span class="today">Wednesday, November 12</span></div>
+      <div class="b-head"><div><h1>Your groups</h1><p>What's due across every group you're in.</p></div></div>
+      <div class="b-grid">
+        <div>
+          <article class="b-team">
+            <header class="b-team-top"><svg><use href="#rings"/></svg><div><h2>Study team 4</h2><span class="handle">@emba-c2/team-4</span></div>
+              <div class="faces"><img src="https://i.pravatar.cc/80?img=47" alt=""><img src="https://i.pravatar.cc/80?img=33" alt=""><img src="https://i.pravatar.cc/80?img=5" alt=""><img src="https://i.pravatar.cc/80?img=12" alt=""><span class="more">+2</span></div></header>
+            <ul>
+              <li class="due"><span class="num">#41</span><div><p>Strategy memo draft, your section (pricing)</p><span class="via"><i class="circ"></i>Assigned to you by Maya via Claude</span></div><span class="when">Due yesterday</span></li>
+              <li><span class="num">#44</span><div><p>Deck v3 is in the shared drive, final numbers on slide 9</p><span class="via"><i class="circ"></i>Maya via Claude</span></div><span class="when">Fri, Nov 14</span></li>
+              <li><span class="num">#45</span><div><p>Practice run in Room 210 before class</p><span class="via"><i></i>Dev via ChatGPT</span></div><span class="when">Mon, Nov 17</span></li>
+            </ul>
+            <footer class="b-team-foot"><span class="new">2 new</span>since you last looked<a href="#">Open record<svg><use href="#arrow"/></svg></a></footer>
+          </article>
+          <div class="b-small">
+            <article class="b-team">
+              <header class="b-team-top"><svg><use href="#rings"/></svg><div><h2>Lisbon, spring break</h2><span class="handle">@lisbon-spring</span></div></header>
+              <ul><li><span class="num">#12</span><div><p>Book TAP 1342 out of JFK</p><span class="via"><i></i>Jon via ChatGPT</span></div><span class="when">Nov 20</span></li>
+                  <li><span class="num">#13</span><div><p>Airbnb deposit, $180 each</p><span class="via"><i class="tri"></i>Ana via Gemini</span></div><span class="when">Dec 1</span></li></ul>
+              <footer class="b-team-foot"><div class="faces"><img src="https://i.pravatar.cc/80?img=15" alt=""><img src="https://i.pravatar.cc/80?img=26" alt=""><img src="https://i.pravatar.cc/80?img=68" alt=""><span class="more">+6</span></div><a href="#">Open<svg><use href="#arrow"/></svg></a></footer>
+            </article>
+            <article class="b-team">
+              <header class="b-team-top"><svg><use href="#rings"/></svg><div><h2>Tuesday run club</h2><span class="handle">@tuesday-run</span></div></header>
+              <ul><li><span class="num">#7</span><div><p>River loop while the bridge is closed</p><span class="via"><i class="tri"></i>Priya via Gemini</span></div><span class="when">Nov 18</span></li>
+                  <li><span class="num">#8</span><div><p>Bring a headlamp, 6:15 start</p><span class="via"><i class="tri"></i>Priya via Gemini</span></div><span class="when">Nov 18</span></li></ul>
+              <footer class="b-team-foot"><div class="faces"><img src="https://i.pravatar.cc/80?img=9" alt=""><img src="https://i.pravatar.cc/80?img=53" alt=""><img src="https://i.pravatar.cc/80?img=31" alt=""><span class="more">+9</span></div><a href="#">Open<svg><use href="#arrow"/></svg></a></footer>
+            </article>
+          </div>
+        </div>
+        <aside class="side">
+          <section class="panel"><h3>Waiting on you <span class="count">1</span></h3>
+            <div class="inv"><div class="dateblock"><small>until</small><b>19</b></div><div><b>Product Club</b><p>Invited as a member. Expires Wed, Nov 19.</p></div></div>
+            <div class="inv-acts"><button class="pill lime">Accept<svg><use href="#arrow"/></svg></button><button class="pill">Decline</button></div>
+          </section>
+          <section class="panel"><h3>Your assistants</h3><p>Each one needs its own grant per group.</p>
+            <div class="asst"><span class="shape">C</span><div><b>Claude</b><span>3 of 3 groups</span></div><span class="ok">Connected</span></div>
+            <div class="asst"><span class="shape" style="background:var(--teal);border-radius:7px">G</span><div><b>ChatGPT</b><span>0 of 3 groups</span></div><span class="off">Not granted</span></div>
+          </section>
+          <section class="panel quiet"><h3>Start a private group</h3><p>You'll own it and invite people by email. The handle doesn't claim a school or company.</p><a href="#">Create a group →</a></section>
+        </aside>
+      </div>
+    </main>
+  </div></div>
+
+  <div class="stage"><p class="stage-label">Today <span>signed in, no groups, no invitation</span></p><div class="app" data-rail data-nogroups>
+    <main class="main">
+      <div class="crumbs"><b>Groups</b><span class="today">Wednesday, November 12</span></div>
+      <div class="b-head"><div><h1>Your groups</h1><p>What's due across every group you're in.</p></div></div>
+      <div class="b-grid">
+        <div class="b-well">
+          <div class="ghosts"><div class="ghost"></div><div class="ghost"></div><div class="ghost"></div></div>
+          <div class="mid"><svg class="big"><use href="#rings"/></svg><h2>Your groups land here</h2><p>When you accept an invitation, the group's record shows up here with what's due first.</p></div>
+        </div>
+        <aside class="side">
+          <section class="panel"><h3>Waiting on you</h3><p>No invitation for this email yet. Paste the link from the email.</p>
+            <div class="field" style="margin-top:12px"><input placeholder="Invitation link"><button class="pill lime">Accept</button></div>
+          </section>
+          <section class="panel"><h3>Your assistants</h3><p>Connect one now; it gets access to each group once you join.</p>
+            <div class="asst"><span class="shape">C</span><div><b>Claude</b><span>No groups yet</span></div><span class="ok">Connected</span></div>
+          </section>
+          <section class="panel quiet"><h3>Start a private group</h3><p>You'll own it and invite people by email.</p><a href="#">Create a group →</a></section>
+        </aside>
+      </div>
+    </main>
+  </div></div>
+</section>
+
+<!-- ================= C ================= -->
+<section class="dir" id="dir-c">
+  <div class="note"><b>C · Arrival</b> (the overdrive one). The invitation <i>is</i> the plate: big aqua headline, who's already in, the lime Accept. Press Accept and the plate morphs into the new first row of your list (View Transitions API, 0.6s, ease-out), the switcher in the rail picks up the group, and the row is lit lime once as "Just joined". With no invitation the plate holds the paste field, and three plain facts sit under it. Groups are bigger rows: mark, name, and the next thing due on a date block.
+  <ul><li><b>Try it:</b> press Accept in the top frame. <button class="reset" data-reset>Reset</button></li><li>Falls back to an instant swap in browsers without View Transitions; nothing moves with reduced motion.</li><li>Needs per group: next due record. Inviter's name isn't in the invitation data yet (shown as faces only).</li></ul></div>
+
+  <div class="stage"><p class="stage-label">With groups <span>2 groups, 1 invitation</span></p><div class="app" data-rail id="c-app">
+    <main class="main">
+      <div class="crumbs"><b>Groups</b><span class="today">Wednesday, November 12</span></div>
+      <div class="c-plate" id="c-plate">
+        <span class="expires">Expires Wed, Nov 19</span>
+        <div class="c-body">
+          <p class="kick">An invitation for you</p>
+          <h1>Join <em>Product Club.</em></h1>
+          <div class="meta"><div class="faces"><img src="https://i.pravatar.cc/80?img=44" alt=""><img src="https://i.pravatar.cc/80?img=60" alt=""><img src="https://i.pravatar.cc/80?img=21" alt=""><img src="https://i.pravatar.cc/80?img=37" alt=""><span class="more" style="border-color:var(--teal);background:oklch(99.4% 0.003 230 / .14);color:var(--on-dark)">+8</span></div><span>12 people · as a member · @product-club</span></div>
+          <div class="acts"><button class="pill lime" id="c-accept">Accept<svg><use href="#arrow"/></svg></button><button class="pill ghost-dark">Decline</button></div>
+        </div>
+        <div class="art"><svg viewBox="0 0 100 100"><use href="#rings"/></svg></div>
+      </div>
+      <div class="c-strip"><span id="c-only">Only the person at the invited, verified email can accept.</span><button class="pill sm">Start a private group<svg><use href="#arrow"/></svg></button></div>
+      <div class="sechead"><h2>Your groups</h2><span id="c-count">2</span></div>
+      <ul class="list c-list" id="c-list">
+        <li class="c-row"><span class="tile"><svg><use href="#rings"/></svg></span><div><h3>Study team 4</h3><span class="handle">@emba-c2/team-4</span></div>
+          <div class="next"><div class="dateblock"><small>Fri</small><b>14</b></div><div><p>Deck v3 due, final numbers on slide 9</p><small>Maya via Claude · 6 people</small></div></div><span class="go"><svg><use href="#arrow"/></svg></span></li>
+        <li class="c-row"><span class="tile"><svg><use href="#rings"/></svg></span><div><h3>Lisbon, spring break</h3><span class="handle">@lisbon-spring</span></div>
+          <div class="next"><div class="dateblock"><small>Thu</small><b>20</b></div><div><p>Book TAP 1342 out of JFK</p><small>Jon via ChatGPT · 9 people</small></div></div><span class="go"><svg><use href="#arrow"/></svg></span></li>
+      </ul>
+    </main>
+  </div></div>
+
+  <div class="stage"><p class="stage-label">Today <span>signed in, no groups, no invitation</span></p><div class="app" data-rail data-nogroups>
+    <main class="main">
+      <div class="crumbs"><b>Groups</b><span class="today">Wednesday, November 12</span></div>
+      <div class="c-plate">
+        <div>
+          <p class="kick">Signed in</p>
+          <h1>Waiting for <em>your invitation.</em></h1>
+          <p style="margin-top:14px;font-size:15px;max-width:52ch">Groups are invite-only. When someone invites your email, it shows up right here. Got the link already? Paste it.</p>
+          <div class="field" style="margin-top:20px;max-width:520px"><input placeholder="Paste your invitation link" id="c-paste"><button class="pill lime" id="c-paste-go" disabled>Accept<svg><use href="#arrow"/></svg></button></div>
+        </div>
+        <div class="art"><svg viewBox="0 0 100 100"><use href="#rings"/></svg></div>
+      </div>
+      <div class="c-help">
+        <div><b>Invited at another email?</b><p>Sign in with that one. Invitations only open for the address they went to.</p><a href="#">Switch account</a></div>
+        <div><b>Connect your assistant now</b><p>It gets each group the moment you join, once you grant it.</p><a href="#">Assistants</a></div>
+        <div><b>Running a group?</b><p>Start a private one and invite people by email.</p><a href="#">Start a group</a></div>
+      </div>
+    </main>
+  </div></div>
+</section>
+
+<script>
+// Rail in every frame; frames without groups drop the switcher and the badge.
+document.querySelectorAll('[data-rail]').forEach(app=>{
+  const rail=document.getElementById('rail-tpl').content.firstElementChild.cloneNode(true);
+  if(app.hasAttribute('data-nogroups')){rail.querySelector('[data-switch]').remove();rail.querySelector('[data-badge]').remove();}
+  if(app.id==='c-app'){rail.querySelector('[data-switch] span:last-child').textContent='Study team 4';}
+  app.prepend(rail);
+});
+
+// Tabs
+const tabs=[...document.querySelectorAll('.tabs button')];
+function show(dir){tabs.forEach(t=>t.setAttribute('aria-selected',String(t.dataset.dir===dir)));document.querySelectorAll('.dir').forEach(s=>s.classList.toggle('on',s.id==='dir-'+dir));}
+tabs.forEach(t=>t.addEventListener('click',()=>{show(t.dataset.dir);history.replaceState(null,'','#'+t.dataset.dir);}));
+const start=location.hash.slice(1);if(['now','a','b','c'].includes(start))show(start);
+
+// C: Accept morphs the plate into the first row of the list.
+const plate=document.getElementById('c-plate'),list=document.getElementById('c-list'),cApp=document.getElementById('c-app');
+const plateHTML=plate.innerHTML;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function accept(){
+  const row=document.createElement('li');
+  row.className='c-row fresh';
+  row.innerHTML='<span class="tile"><svg><use href="#rings"/></svg></span><div><h3>Product Club</h3><span class="handle">@product-club</span></div><div class="next"><div class="dateblock"><small>Tue</small><b>18</b></div><div><p>Speaker night, RSVP in the record</p><small>Lee via Claude · 13 people</small></div></div><span class="go"><svg><use href="#arrow"/></svg></span>';
+  const swap=()=>{
+    plate.style.viewTransitionName='none';plate.hidden=true;document.getElementById("c-only").hidden=true;
+    row.style.viewTransitionName='c-hero';
+    list.prepend(row);
+    document.getElementById('c-count').textContent='3';
+    cApp.querySelector('[data-switch] span:last-child').textContent='Product Club';
+    cApp.querySelector('[data-badge]')?.remove();
+  };
+  if(document.startViewTransition&&!reduce){document.startViewTransition(swap).finished.then(()=>{row.style.viewTransitionName='';});}
+  else swap();
+}
+document.getElementById('c-accept').addEventListener('click',accept);
+document.querySelector('[data-reset]').addEventListener('click',()=>{
+  list.querySelector('.fresh')?.remove();plate.hidden=false;document.getElementById("c-only").hidden=false;plate.style.viewTransitionName='';plate.innerHTML=plateHTML;
+  document.getElementById('c-accept').addEventListener('click',accept);
+  document.getElementById('c-count').textContent='2';
+  cApp.querySelector('[data-switch] span:last-child').textContent='Study team 4';
+  if(!cApp.querySelector('[data-badge]')){const b=document.createElement('span');b.className='badge';b.dataset.badge='';b.textContent='1';cApp.querySelector('.rail nav a.on').append(b);}
+  show('c');scrollTo({top:0,behavior:'smooth'});
+});
+// C empty: the lime Accept wakes up only once a link is pasted.
+const paste=document.getElementById('c-paste'),go=document.getElementById('c-paste-go');
+paste.addEventListener('input',()=>{go.disabled=!/invite=|\/groups/.test(paste.value);});
+</script>
+</body>
+</html>

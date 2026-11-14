@@ -6,6 +6,10 @@ import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { createWorkspace } from '@/lib/emba/workspaces';
 import { setMemberHandle } from '@/lib/emba/tags';
 import { claim, fileOutput, logDecision } from '@/lib/emba/team-records';
+import { createAsk, listAsks } from '@/lib/emba/team-asks';
+import { listTeamEvents } from '@/lib/emba/team-events';
+import { upcomingEvents } from '@/lib/emba/team-interest';
+import { briefHistory, myRecentRecords } from '@/lib/emba/team-read';
 import TeamPage from './[namespace]/team/page';
 import { addTeamEvent, amendTeamRecord, announceToTeam, saveTeamBrief } from './team-actions';
 import { grantGroupRead, renewGroupRead } from './connection-actions';
@@ -13,6 +17,11 @@ import { BriefForm } from '@/components/emba/brief-form';
 import ConnectionsPage from './connections/page';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// The page's reads run as they are; each is wrapped only so a test can see which of them a tab made.
+vi.mock('@/lib/emba/team-asks', async importOriginal => { const real = await importOriginal<typeof import('@/lib/emba/team-asks')>(); return { ...real, listAsks: vi.fn(real.listAsks) }; });
+vi.mock('@/lib/emba/team-events', async importOriginal => { const real = await importOriginal<typeof import('@/lib/emba/team-events')>(); return { ...real, listTeamEvents: vi.fn(real.listTeamEvents) }; });
+vi.mock('@/lib/emba/team-interest', async importOriginal => { const real = await importOriginal<typeof import('@/lib/emba/team-interest')>(); return { ...real, upcomingEvents: vi.fn(real.upcomingEvents) }; });
+vi.mock('@/lib/emba/team-read', async importOriginal => { const real = await importOriginal<typeof import('@/lib/emba/team-read')>(); return { ...real, briefHistory: vi.fn(real.briefHistory), myRecentRecords: vi.fn(real.myRecentRecords) }; });
 
 let t: TestDb;
 beforeAll(async () => { t = await openTestDb(); });
@@ -112,6 +121,46 @@ it('shows a member the team as their assistant would see it, with only the contr
   await view(f.outsider);
   expect(screen.getByRole('heading', { name: 'Group unavailable' })).toBeInTheDocument();
   expect(screen.queryByText(/Google Slides|Deck draft|Slides 1 to 3|Ten slides/)).not.toBeInTheDocument();
+});
+it('reads the header and the shown tab only, records no read it did not make, and keeps the tab bar counts', async () => {
+  const f = await fixture();
+  expect((await createAsk(t.db, f.ana, { ...f.scope, question: 'Red or white?', kind: 'one', options: ['Red', 'White'], closesAt: new Date(Date.now() + 86_400_000).toISOString().slice(0, 19) + 'Z' })).saved).toBe(true);
+  const reads = { listAsks: vi.mocked(listAsks), briefHistory: vi.mocked(briefHistory), myRecentRecords: vi.mocked(myRecentRecords), upcomingEvents: vi.mocked(upcomingEvents), listTeamEvents: vi.mocked(listTeamEvents) };
+  const made = () => Object.entries(reads).flatMap(([name, read]) => read.mock.calls.map(call => name === 'listTeamEvents' && (call[2] as { archived?: boolean }).archived ? 'archivedEvents' : name)).sort();
+  const recorded = async () => (await t.db.query<{ n: number }>("select count(*)::int as n from emba_audit where person_id=$1 and action='plan:read'", [f.owner.personId])).rows[0].n;
+  const open = async (tab?: string) => { for (const read of Object.values(reads)) read.mockClear(); const before = await recorded(); const page = await view(f.owner, tab); const out = { made: made(), recorded: await recorded() - before }; return { page, ...out }; };
+  // Decisions, claims and outputs come from the header's reads: the list of groups, the team's state and its brief are the three reads recorded.
+  for (const tab of [undefined, 'claims', 'outputs']) {
+    const shown = await open(tab);
+    expect([shown.made, shown.recorded], tab).toEqual([['listTeamEvents'], 3]);
+    // The count of open asks is in the tab bar on every tab, without the asks being listed.
+    expect(screen.getByRole('link', { name: 'Asks1' })).toHaveAttribute('href', '/groups/study-team/team?tab=asks');
+    shown.page.unmount();
+  }
+  for (const [tab, extra, records] of [['asks', ['listAsks'], 4], ['brief', ['briefHistory'], 3], ['mine', ['myRecentRecords'], 4], ['events', ['archivedEvents', 'upcomingEvents'], 4]] as const) {
+    const shown = await open(tab);
+    expect([shown.made, shown.recorded], tab).toEqual([[...extra, 'listTeamEvents'].sort(), records]);
+    if (tab === 'asks') expect(screen.getByText('Red or white?')).toBeInTheDocument();
+    shown.page.unmount();
+  }
+});
+it('shows the editing controls to an owner or organizer only, and the asking form to those who may post', async () => {
+  const f = await fixture();
+  const join = async (email: string, role: string) => { const p = await person(email); await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.scope.orgId, p.personId]); await t.db.query('insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,$4)', [f.scope.orgId, f.scope.loopId, p.personId, role]); return p; };
+  const organizer = await join('organizer@example.test', 'organizer'), follower = await join('follower@example.test', 'follower');
+  expect((await act(f.owner, () => addTeamEvent(idle, form({ ...f.ids, slug: 'final-deck', name: 'Final deck' })))).status).toBe('success');
+  const controls = { decisions: 'Post announcement', brief: 'Save brief', events: 'Create event' };
+  for (const [who, manages, posts] of [[organizer, true, true], [f.ana, false, true], [follower, false, false]] as const) {
+    for (const [tab, name] of Object.entries(controls)) {
+      const page = await view(who, tab);
+      expect(screen.queryAllByRole('button', { name }).length > 0, `${tab} for ${who.verifiedEmail}`).toBe(manages);
+      page.unmount();
+    }
+    const page = await view(who, 'asks');
+    expect(screen.queryByRole('heading', { name: 'New ask' }) !== null, who.verifiedEmail!).toBe(posts);
+    expect(screen.queryByText(/You follow this group and can read it/) !== null, who.verifiedEmail!).toBe(!posts);
+    page.unmount();
+  }
 });
 it('checks the role on every action, whatever the page showed', async () => {
   const f = await fixture();

@@ -1,17 +1,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Rings } from "@/components/LoopGlyphs";
 
-/** Wordmark header and one column of plain text, for /privacy and /terms. */
+const PAGES = [["Privacy", "/privacy"], ["Terms", "/terms"]] as const;
+
+/** The Loop top bar and one readable column on a panel, for /privacy and /terms (app/loop.css). */
 export function Legal({ title, updated, children }: { title: string; updated: string; children: ReactNode }) {
   return (
-    <div className="app">
-      <header className="head"><Link className="wordmark" href="/">Quorum</Link></header>
-      <main className="screen">
-        <div className="mast" style={{ paddingTop: 14 }}>
-          <h2>{title}</h2>
-          <p>Last updated {updated}.</p>
-        </div>
-        <div style={{ padding: "8px 6px 0", fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)" }}>{children}</div>
+    <div className="lp">
+      <header className="lp-top"><Link href="/" className="lp-top-mark"><Rings /><span>Loop</span></Link></header>
+      <main className="lp-legal">
+        <h1>{title}</h1>
+        <p className="lp-legal-updated">Last updated {updated}.</p>
+        <div className="lp-legal-body">{children}</div>
+        <nav className="lp-legal-foot" aria-label="Legal">
+          {PAGES.map(([label, href]) => <Link key={href} href={href} aria-current={label === title ? "page" : undefined}>{label}</Link>)}
+        </nav>
       </main>
     </div>
   );

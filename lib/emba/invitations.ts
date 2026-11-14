@@ -93,7 +93,7 @@ export async function listReceivedInvitations(db: Db, principal: Principal | nul
     const actor = await firstParty(q, principal);
     if (!actor.verifiedEmail) denied();
     const { rows } = await q.query<ReceivedInvitation>(
-      `select i.id,i.org_id as "orgId",i.loop_id as "loopId",o.name as "groupName",i.role,i.expires_at as "expiresAt"
+      `select i.id,i.org_id as "orgId",i.loop_id as "loopId",coalesce((select g.name from emba_loop g where g.org_id=i.org_id and g.id=i.loop_id),o.name) as "groupName",i.role,i.expires_at as "expiresAt"
        from emba_invitation i join emba_organization o on o.id=i.org_id
        where i.recipient_email=$1 and i.revoked_at is null and i.accepted_at is null and i.expires_at>clock_timestamp()
        and exists(with recursive ancestors as (

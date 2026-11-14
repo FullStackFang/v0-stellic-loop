@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The default corner (bottom-left) covers the account button at the foot of the side menu.
+  devIndicators: { position: 'bottom-right' },
   // Restored Turbopack build caches have reused stale CSS across deployments.
   experimental: { turbopackFileSystemCacheForBuild: false, serverActions: { bodySizeLimit: '4mb' } },
   // Every page is per-viewer and live (counts, your answer); nothing is prerendered or cached.

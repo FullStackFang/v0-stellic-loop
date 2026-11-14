@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Groups sign-in · three directions</title>
+<style>
+@font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
+:root{
+  --canvas:oklch(96.2% 0.004 230);--surface:oklch(99.3% 0.003 230);--line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);
+  --navy:oklch(35.4% 0.095 252);--navy-deep:oklch(29% 0.085 254);--ink-2:oklch(35.4% 0.095 252 / .85);--muted:oklch(46.5% 0.012 245);
+  --blue:oklch(47.6% 0.13 250);--lime:oklch(96.4% 0.19 117);--lime-press:oklch(90% 0.2 120);--teal:oklch(37.3% 0.052 206);--teal-deep:oklch(31% 0.05 210);--aqua:oklch(90.4% 0.1 194);
+  --plum:oklch(42.6% 0.13 322);--pale-blue:oklch(95.3% 0.017 245);
+  --on-dark:oklch(99.4% 0.003 230);--on-dark-78:oklch(99.4% 0.003 230 / .78);--on-dark-66:oklch(99.4% 0.003 230 / .66);
+  --r-lg:24px 24px 24px 6px;--r-md:16px 16px 16px 4px;--pill:56px;--ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:oklch(91% 0.01 240);color:var(--navy);font-family:Archivo,system-ui,sans-serif;letter-spacing:-.02em;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+p,h1,h2,h3{margin:0}
+ul{list-style:none;margin:0;padding:0}
+
+/* ---------- the board around the mockups ---------- */
+.intro{max-width:1400px;margin:0 auto;padding:40px 32px 8px}
+.intro h1{font-size:34px;font-weight:480;letter-spacing:-.035em}
+.intro p{color:var(--muted);margin-top:8px;max-width:72ch;line-height:1.5}
+.intro .bug{margin-top:14px;display:inline-flex;gap:8px;align-items:center;background:var(--surface);border-radius:var(--r-md);padding:10px 14px;font-size:14px;box-shadow:inset 0 0 0 1px var(--line)}
+.intro .bug b{color:var(--plum);font-weight:600}
+.dir{max-width:1400px;margin:0 auto;padding:36px 32px}
+.dir-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.dir-head .letter{width:40px;height:40px;border-radius:12px 12px 12px 3px;background:var(--navy);color:var(--lime);display:grid;place-items:center;font-size:20px;font-weight:600;align-self:center}
+.dir-head h2{font-size:24px;font-weight:500;letter-spacing:-.03em}
+.dir-head p{color:var(--muted);flex-basis:100%;max-width:80ch;line-height:1.5;padding-left:54px}
+.pair{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.frame{border-radius:14px;overflow:hidden;box-shadow:0 30px 60px -30px oklch(30% 0.08 252 / .45),0 0 0 1px oklch(30% 0.08 252 / .12);background:var(--canvas)}
+.frame-label{font-size:12.5px;color:var(--muted);margin:0 0 8px 2px}
+.desk-scale{width:calc(1280px * .7);height:calc(780px * .7)}
+.desk{width:1280px;height:780px;transform:scale(.7);transform-origin:0 0;container-type:inline-size}
+.phone{width:390px;height:780px;container-type:inline-size;border-radius:36px;box-shadow:0 0 0 9px var(--navy-deep),0 30px 60px -30px oklch(30% 0.08 252 / .45)}
+.scroll{height:100%;overflow-y:auto;scrollbar-width:none}
+
+/* ---------- shared app shell (rail on desktop, bar on phone) ---------- */
+.app{display:flex;min-height:100%;height:100%}
+.rail{width:248px;flex:none;background:var(--navy);color:var(--on-dark-78);padding:18px 12px;display:flex;flex-direction:column;font-size:14px}
+.wm{display:flex;align-items:center;gap:9px;padding:2px 10px 16px;font-weight:500;font-size:18px;color:var(--on-dark)}
+.wm svg{width:22px;height:22px;color:var(--aqua)}
+.navl{font-size:12.5px;color:var(--on-dark-66);padding:12px 12px 6px}
+.rail a.nv{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:var(--pill)}
+.rail a.nv[aria-current]{background:oklch(99.4% 0.003 230 / .14);color:var(--on-dark);font-weight:500}
+.rail a.nv svg{width:16px;height:16px}
+.main{flex:1;min-width:0;overflow:hidden;position:relative}
+@container (max-width:600px){
+  .app{flex-direction:column}
+  .rail{width:auto;flex-direction:row;align-items:center;gap:6px;padding:10px 14px}
+  .wm{padding:0 6px 0 0}.wm span{display:none}
+  .navl,.rail a.nv svg{display:none}
+  .rail nav ul{display:flex}
+  .rail a.nv{padding:6px 11px;font-size:13.5px}
+}
+
+/* rings mark */
+.rings circle{fill:none;stroke:currentColor}
+
+/* pills */
+.btn{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 24px;border-radius:var(--pill);font-size:17px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;transition:transform .15s var(--ease),background-color .15s var(--ease),box-shadow .2s var(--ease)}
+.btn svg{width:15px;height:15px;transition:transform .2s var(--ease)}
+.btn:hover svg{transform:translateX(3px)}
+.btn:active{transform:translateY(1px)}
+.btn-lime{background:var(--lime);color:var(--navy);box-shadow:0 0 0 0 oklch(96.4% 0.19 117 / .5),0 10px 24px -10px oklch(20% 0.05 210 / .6)}
+.btn-lime:hover{background:var(--lime-press);box-shadow:0 0 0 6px oklch(96.4% 0.19 117 / .18),0 10px 24px -10px oklch(20% 0.05 210 / .6)}
+.btn-ghost{color:var(--on-dark);box-shadow:inset 0 0 0 1.5px oklch(99.4% 0.003 230 / .35)}
+.btn-ghost:hover{box-shadow:inset 0 0 0 1.5px var(--aqua);color:var(--aqua)}
+
+/* ====================================================== A · THE PLATE ====================================================== */
+.a-wrap{height:100%;padding:16px;display:flex;flex-direction:column;gap:14px}
+.a-plate{flex:1;position:relative;overflow:hidden;background:var(--teal);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:clamp(28px,5cqi,72px);display:flex;flex-direction:column;justify-content:flex-end;isolation:isolate}
+.a-plate::before{content:'';position:absolute;inset:0;background:radial-gradient(120% 90% at 85% 10%,oklch(45% 0.07 200 / .9),transparent 60%);z-index:-1}
+.a-rings{position:absolute;right:3cqi;top:50%;translate:0 -50%;width:min(36cqi,460px);aspect-ratio:1;color:var(--aqua);z-index:-1}
+.a-rings circle{fill:none;stroke:currentColor;stroke-width:3.2;stroke-dasharray:140;stroke-dashoffset:140;animation:draw 1.6s var(--ease) forwards}
+.a-rings circle:nth-child(2){animation-delay:.18s}.a-rings circle:nth-child(3){animation-delay:.36s;stroke:var(--lime)}
+.a-rings g{transform-origin:50% 52%;animation:spin 60s linear infinite}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.a-kick{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--aqua);margin-bottom:18px}
+.a-kick i{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px oklch(96.4% 0.19 117 / .2)}
+.a-plate h1{font-size:clamp(44px,7cqi,96px);line-height:.94;letter-spacing:-.055em;font-weight:520;color:var(--aqua);max-width:10ch}
+.a-plate h1 em{font-style:normal;color:var(--lime)}
+.a-plate .lede{font-size:clamp(16px,1.6cqi,20px);line-height:1.5;margin:22px 0 30px;max-width:44ch}
+.a-acts{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.a-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.a-strip li{background:var(--surface);border-radius:var(--r-md);padding:16px 18px;box-shadow:inset 0 0 0 1px var(--line);display:flex;gap:14px;align-items:flex-start}
+.a-strip b{display:block;font-size:15.5px;font-weight:550}
+.a-strip span{display:block;color:var(--muted);font-size:13.5px;margin-top:2px;line-height:1.4}
+.a-strip .n{flex:none;width:30px;height:30px;border-radius:9px 9px 9px 3px;background:var(--pale-blue);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--blue)}
+@container (max-width:600px){
+  .a-wrap{padding:12px;gap:10px;height:auto;min-height:100%}
+  .a-plate{min-height:560px;padding:28px 22px;border-radius:26px 26px 26px 6px}
+  .a-rings{width:62cqi;right:-10cqi;top:-6cqi;translate:none}
+  .a-plate h1{font-size:46px}
+  .a-acts .btn{width:100%;justify-content:center}
+  .a-strip{grid-template-columns:1fr;gap:8px}
+}
+
+/* ====================================================== B · THE PREVIEW ====================================================== */
+.b-wrap{height:100%;position:relative;padding:8px 32px 0;overflow:hidden}
+.b-ghost{max-width:1180px;margin:0 auto;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 55%,transparent 96%);mask-image:linear-gradient(to bottom,#000 0%,#000 55%,transparent 96%)}
+.b-crumb{min-height:52px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px}
+.b-crumb .tag{background:var(--lime);color:var(--navy);font-weight:600;font-size:12px;padding:3px 9px;border-radius:var(--pill)}
+.g-plate{background:var(--teal);border-radius:var(--r-lg);padding:20px 22px;display:grid;grid-template-columns:72px 1fr auto;gap:22px;align-items:center;color:var(--on-dark-78)}
+.g-plate svg{width:72px;height:72px;color:var(--aqua)}
+.g-plate svg circle{stroke-width:6}
+.g-plate h3{font-size:26px;font-weight:480;color:var(--aqua);margin:2px 0 4px;letter-spacing:-.035em}
+.g-date{padding:10px 16px;border-radius:var(--r-md);box-shadow:inset 0 0 0 1px oklch(90.4% 0.1 194 / .3);display:flex;gap:12px;align-items:center}
+.g-date b{font-size:34px;font-weight:450;color:var(--aqua)}
+.g-facts{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+.g-facts div{padding:12px 18px;border-left:1px solid var(--line)}.g-facts div:first-child{border:0}
+.g-facts b{display:block;font-size:15px;font-weight:500}.g-facts span{font-size:13px;color:var(--muted)}
+.g-list{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
+.g-row{display:grid;grid-template-columns:44px 1fr 150px 60px;gap:16px;align-items:center;padding:14px 20px;border-top:1px solid var(--line);font-size:14px}
+.g-row:first-child{border:0}
+.g-row .num{font:12.5px ui-monospace,Menlo,monospace;color:var(--muted)}
+.g-row .st{font-size:15px;font-weight:500}
+.g-row .who{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+.g-row .who i{width:24px;height:24px;border-radius:50%;background:var(--pale-blue)}
+.g-row .chip{justify-self:start;background:var(--lime);font-size:12px;font-weight:500;padding:3px 9px;border-radius:var(--pill)}
+.b-card{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);width:min(820px,calc(100% - 64px));background:var(--navy);color:var(--on-dark-78);border-radius:32px 32px 32px 8px;padding:40px 44px;display:grid;grid-template-columns:1fr auto;gap:10px 28px;align-items:center;box-shadow:0 40px 80px -30px oklch(25% 0.09 252 / .7);animation:rise .9s var(--ease) both .2s}
+@keyframes rise{from{opacity:0;transform:translate(-50%,24px)}}
+.b-card h1{font-size:48px;font-weight:500;letter-spacing:-.045em;line-height:1.02;color:var(--on-dark)}
+.b-card h1 em{font-style:normal;color:var(--lime)}
+.b-card p{font-size:15px;line-height:1.5;grid-column:1}
+.b-card .btn{grid-row:1 / span 2;grid-column:2}
+@container (max-width:600px){
+  .b-wrap{padding:4px 12px 0;height:auto;min-height:100%;display:flex;flex-direction:column}
+  .b-ghost{-webkit-mask-image:linear-gradient(to bottom,#000 30%,transparent 92%);mask-image:linear-gradient(to bottom,#000 30%,transparent 92%);height:390px;overflow:hidden}
+  .g-plate{grid-template-columns:48px 1fr;gap:12px;padding:16px}.g-plate svg{width:48px;height:48px}.g-plate h3{font-size:20px}.g-date{grid-column:1 / -1;justify-self:start}
+  .g-facts{grid-template-columns:1fr 1fr}.g-facts div:nth-child(3){border-left:0}.g-facts div:nth-child(n+3){border-top:1px solid var(--line)}
+  .g-row{grid-template-columns:34px 1fr}.g-row .who,.g-row .d{display:none}
+  .b-card{position:relative;left:auto;bottom:auto;transform:none;width:auto;margin:-40px 0 16px;grid-template-columns:1fr;padding:26px 22px;animation-name:rise-m}
+  .b-card h1{font-size:30px}
+  .b-card .btn{grid-row:auto;grid-column:1;justify-content:center;margin-top:10px}
+}
+@keyframes rise-m{from{opacity:0;transform:translateY(24px)}}
+
+/* ====================================================== C · THREE RINGS, THREE STEPS ====================================================== */
+.c-wrap{height:100%;background:var(--navy);color:var(--on-dark-78);display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:center;gap:clamp(24px,4cqi,64px);padding:clamp(24px,4cqi,64px);position:relative;overflow:hidden}
+.c-wrap::before{content:'';position:absolute;inset:0;background:radial-gradient(70% 80% at 22% 50%,oklch(42% 0.1 250 / .7),transparent 70%)}
+.c-art{position:relative;width:100%;max-width:560px;aspect-ratio:1;justify-self:center}
+.c-art svg{width:100%;height:100%;overflow:visible}
+.c-art circle{fill:none;stroke-width:2.4}
+.c-art .r1{stroke:var(--lime);stroke-width:3.4;filter:drop-shadow(0 0 10px oklch(96.4% 0.19 117 / .55))}
+.c-art .r2,.c-art .r3{stroke:var(--aqua);stroke-opacity:.45;stroke-dasharray:2 7;stroke-linecap:round}
+.c-art .r1{stroke-dasharray:140;stroke-dashoffset:140;animation:draw 1.4s var(--ease) forwards .2s}
+.c-art .lbl{font:600 5.2px Archivo,sans-serif;letter-spacing:-.02em}
+.c-art .lbl1{fill:var(--lime)}.c-art .lbl2,.c-art .lbl3{fill:var(--on-dark-66)}
+.c-art .pulse{fill:var(--lime);animation:pulse 2.4s var(--ease) infinite 1.6s;transform-origin:50px 12px;transform-box:view-box}
+@keyframes pulse{0%{opacity:.9;r:1.6}70%{opacity:0;r:6}100%{opacity:0}}
+.c-copy{position:relative;max-width:520px}
+.c-copy .k{font-size:14px;color:var(--aqua)}
+.c-copy h1{font-size:clamp(40px,5.4cqi,72px);line-height:.98;letter-spacing:-.05em;font-weight:520;color:var(--on-dark);margin:12px 0 18px}
+.c-copy h1 em{font-style:normal;color:var(--lime)}
+.c-steps{margin:26px 0 30px;display:flex;flex-direction:column;gap:2px}
+.c-steps li{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:12px 0;border-top:1px solid oklch(99.4% 0.003 230 / .12);align-items:start}
+.c-steps li:first-child{border:0}
+.c-steps .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:600;box-shadow:inset 0 0 0 1.5px oklch(90.4% 0.1 194 / .45);color:var(--aqua)}
+.c-steps li.on .n{background:var(--lime);color:var(--navy);box-shadow:none}
+.c-steps b{display:block;color:var(--on-dark);font-weight:550;font-size:16px}
+.c-steps span{font-size:14px;line-height:1.45}
+@container (max-width:600px){
+  .c-wrap{grid-template-columns:1fr;align-content:start;padding:20px 22px 28px;gap:4px;height:auto;min-height:100%}
+  .c-art{max-width:250px;margin:4px auto -6px}
+  .c-copy h1{font-size:40px}
+  .c-steps{margin:18px 0 22px}
+  .c-copy .btn{width:100%;justify-content:center}
+}
+
+/* the navy main in C merges with the rail on desktop: a hairline keeps them apart */
+.c-main{border-left:1px solid oklch(99.4% 0.003 230 / .1)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.a-rings circle,.c-art .r1{stroke-dashoffset:0}}
+@media (max-width:1340px){.desk-scale{width:calc(1280px * .55);height:calc(780px * .55)}.desk{transform:scale(.55)}}
+@media (max-width:1000px){.desk-scale{width:calc(1280px * .3);height:calc(780px * .3)}.desk{transform:scale(.3)}.dir-head p{padding-left:0}}
+</style>
+</head>
+<body>
+
+<template id="rings"><svg class="rings" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="34" r="22" stroke-width="6"/><circle cx="34" cy="62" r="22" stroke-width="6"/><circle cx="66" cy="62" r="22" stroke-width="6"/></svg></template>
+<template id="rail"><aside class="rail"><a class="wm" href="#"><svg class="rings" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="34" r="22" stroke-width="6"/><circle cx="34" cy="62" r="22" stroke-width="6"/><circle cx="66" cy="62" r="22" stroke-width="6"/></svg><span>Loop</span></a><nav><p class="navl">You</p><ul><li><a class="nv" href="#" aria-current="page"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/></svg>Groups</a></li><li><a class="nv" href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5.5" cy="8" r="3"/><circle cx="10.5" cy="8" r="3"/></svg>Assistants</a></li></ul></nav></aside></template>
+<template id="arrow"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg></template>
+
+<!-- ============ screen bodies (cloned into a desktop and a phone frame) ============ -->
+<template id="screen-a">
+  <div class="a-wrap">
+    <section class="a-plate">
+      <svg class="a-rings" viewBox="0 0 100 100" aria-hidden="true"><g><circle cx="50" cy="34" r="22"/><circle cx="34" cy="62" r="22"/><circle cx="66" cy="62" r="22"/></g></svg>
+      <p class="a-kick"><i></i>Private groups</p>
+      <h1>Your team’s plan, <em>one sign-in away.</em></h1>
+      <p class="lede">Sign in to see your groups, the invitations waiting for you, and the assistants you’ve connected.</p>
+      <div class="a-acts"><a class="btn btn-lime" href="#">Sign in<slot-arrow></slot-arrow></a></div>
+    </section>
+    <ul class="a-strip">
+      <li><span class="n">1</span><div><b>Your groups</b><span>Every team you’re in, with its record and files.</span></div></li>
+      <li><span class="n">2</span><div><b>Invitations</b><span>Accept with the email you were invited at.</span></div></li>
+      <li><span class="n">3</span><div><b>Assistants</b><span>Let Claude answer “what’s mine?” for you.</span></div></li>
+    </ul>
+  </div>
+</template>
+
+<template id="screen-b">
+  <div class="b-wrap">
+    <div class="b-ghost" aria-hidden="true">
+      <p class="b-crumb"><span class="tag">Example</span>What a team looks like once you’re in</p>
+      <div class="g-plate"><svg class="rings" viewBox="0 0 100 100"><circle cx="50" cy="34" r="22"/><circle cx="34" cy="62" r="22"/><circle cx="66" cy="62" r="22"/></svg><div><p style="font-size:13px">@capstone-7</p><h3>Capstone team 7</h3><p>Market-entry plan for the client, final deck to the board.</p></div><div class="g-date"><b>20</b><div><span style="font-size:12.5px;display:block">Deadline</span><b style="font-size:14px;color:var(--on-dark);font-weight:500">8 days left</b></div></div></div>
+      <div class="g-facts"><div><b>6 decisions</b><span>Latest Nov 11 · pricing</span></div><div><b>4 open claims</b><span>1 waiting on owner</span></div><div><b>3 outputs</b><span>No conflicts flagged</span></div><div><b>2 events</b><span>Board deck · Dry run</span></div></div>
+      <ul class="g-list">
+        <li class="g-row"><span class="num">#14</span><span class="st">Price the pilot at cost for the first two sites</span><span class="who"><i></i>Ana · via Claude</span><span class="d" style="color:var(--muted);font-size:13px">Nov 11</span></li>
+        <li class="g-row"><span class="num">#12</span><span class="st">Ravi drafts the competitor slide <span class="chip">open</span></span><span class="who"><i></i>Ravi · via Claude</span><span class="d" style="color:var(--muted);font-size:13px">Nov 10</span></li>
+        <li class="g-row"><span class="num">#9</span><span class="st">Final deck lives in the shared drive, v3</span><span class="who"><i></i>Mei · on the site</span><span class="d" style="color:var(--muted);font-size:13px">Nov 8</span></li>
+        <li class="g-row"><span class="num">#7</span><span class="st">Interviews close Friday</span><span class="who"><i></i>Jon · via Claude</span><span class="d" style="color:var(--muted);font-size:13px">Nov 6</span></li>
+      </ul>
+    </div>
+    <section class="b-card">
+      <h1>See <em>your</em> teams.</h1>
+      <p>Sign in to open your groups and the invitations waiting for you.</p>
+      <a class="btn btn-lime" href="#">Sign in<slot-arrow></slot-arrow></a>
+    </section>
+  </div>
+</template>
+
+<template id="screen-c">
+  <div class="c-wrap">
+    <div class="c-art" aria-hidden="true">
+      <svg viewBox="0 0 100 100">
+        <circle class="r2" cx="34" cy="62" r="22"/><circle class="r3" cx="66" cy="62" r="22"/><circle class="r1" cx="50" cy="34" r="22"/>
+        <circle class="pulse" cx="50" cy="12" r="1.6"/><circle cx="50" cy="12" r="1.6" fill="oklch(96.4% 0.19 117)" stroke="none"/>
+        <text class="lbl lbl1" x="50" y="35.5" text-anchor="middle">Sign in</text>
+        <text class="lbl lbl2" x="28" y="66" text-anchor="middle">Accept</text>
+        <text class="lbl lbl3" x="72" y="66" text-anchor="middle">Connect</text>
+      </svg>
+    </div>
+    <div class="c-copy">
+      <p class="k">Private groups</p>
+      <h1>Three steps <em>into the loop.</em></h1>
+      <ol class="c-steps" style="padding:0;margin-left:0;list-style:none">
+        <li class="on"><span class="n">1</span><div><b>Sign in</b><span>With the email your invitation went to.</span></div></li>
+        <li><span class="n">2</span><div><b>Accept your invitation</b><span>Your team appears in the rail.</span></div></li>
+        <li><span class="n">3</span><div><b>Connect your assistant</b><span>Ask Claude what’s yours, where the file is, when it’s due.</span></div></li>
+      </ol>
+      <a class="btn btn-lime" href="#">Sign in<slot-arrow></slot-arrow></a>
+    </div>
+  </div>
+</template>
+
+<header class="intro">
+  <h1>/groups, signed out · three directions</h1>
+  <p>Each direction is shown at desktop width (scaled) and at phone width (real size). All three use the /groups colors and Archivo. The one new color move is the lime pill, the brightest thing on every screen. Words are drafts; pick a direction and I’ll tune them.</p>
+  <p class="bug"><b>Bug in the live page:</b> the Sign in pill renders blue text on blue. Every direction fixes it.</p>
+</header>
+
+<section class="dir" data-screen="a" data-main="">
+  <div class="dir-head"><span class="letter">A</span><h2>The plate</h2><p>The teal team plate takes the whole page. Giant rings draw themselves in and turn slowly, bleeding off the corner; one ring is lime. An aqua headline, then the lime Sign in pill. A row of three underneath says what you’re signing in to. Most poster-like; the most pop.</p></div>
+</section>
+<section class="dir" data-screen="b" data-main="">
+  <div class="dir-head"><span class="letter">B</span><h2>The preview</h2><p>Behind the sign-in, an example team page (plate, facts, record rows) fades into the canvas, so the empty space becomes a picture of what you get. A navy card rises over it with the lime pill. Most explanatory; it reuses the real team-page pieces, so it stays honest as the design changes.</p></div>
+</section>
+<section class="dir" data-screen="c" data-main="c-main">
+  <div class="dir-head"><span class="letter">C</span><h2>Three rings, three steps</h2><p>The page goes navy and the logo becomes the route: each ring is one step (sign in, accept, connect). The first ring is lit lime with a pulse; the other two wait, dotted. Calmest of the three, but it teaches the whole onboarding at a glance.</p></div>
+</section>
+
+<script>
+const arrow=document.getElementById('arrow').innerHTML;
+const rail=document.getElementById('rail').innerHTML;
+document.querySelectorAll('.dir').forEach(dir=>{
+  const body=document.getElementById('screen-'+dir.dataset.screen).innerHTML.replaceAll('<slot-arrow></slot-arrow>',arrow);
+  const screen=`<div class="app">${rail}<main class="main ${dir.dataset.main}"><div class="scroll">${body}</div></main></div>`;
+  const pair=document.createElement('div');pair.className='pair';
+  pair.innerHTML=`<div><p class="frame-label">Desktop · 1280 × 780</p><div class="frame desk-scale"><div class="desk">${screen}</div></div></div><div><p class="frame-label">Phone · 390</p><div class="frame phone"><div class="scroll">${screen}</div></div></div>`;
+  dir.appendChild(pair);
+});
+</script>
+</body>
+</html>

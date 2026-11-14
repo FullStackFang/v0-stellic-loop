@@ -1,7 +1,7 @@
 import 'server-only';
 import {z} from 'zod';
 import type {Db} from '../db';
-import {canAccessPersonal,type Principal} from './access';
+import {canAccessLoop,canAccessPersonal,type Principal} from './access';
 import {audit,authorize,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
 import {listGroups,type GroupAddress} from './groups';
@@ -79,7 +79,7 @@ export async function resolveTag(db:Db,p:Principal,input:unknown):Promise<TagRes
   return await db.tx(async q=>{
    if(!await canAccessPersonal(q,p,p.personId))throw new EmbaError('forbidden');
    const {rows}=await q.query<Candidate>(`with teams as (
-     select a.org_id,a.loop_id,a.namespace,a.slug,l.parent_id is null as root,o.name as org_name
+     select a.org_id,a.loop_id,a.namespace,a.slug,l.parent_id is null as root,coalesce(l.name,o.name) as org_name
      from emba_group_address a join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
      where a.retired_at is null and exists(select 1 from emba_membership m where m.org_id=a.org_id and m.person_id=$1 and m.revoked_at is null))
     select * from (
@@ -129,6 +129,17 @@ export async function setMemberHandle(db:Db,p:Principal,input:unknown):Promise<v
    await audit(q,p,'activity:write',data.orgId);
   });
  }catch(error){if(typeof error==='object'&&error!==null&&'code' in error&&error.code==='23505')throw new EmbaError('conflict');throw error;}
+}
+/** The tag of each current member, by person, for the site's roster. An owner or organizer of the group only, and never an assistant. */
+export async function listMemberHandles(db:Db,p:Principal,orgId:string,loopId:string):Promise<Record<string,string>> {
+ z.uuid().parse(orgId);z.uuid().parse(loopId);
+ return db.tx(async q=>{
+  await requireFirstParty(q,p);
+  if(!await canAccessLoop(q,p,orgId,loopId,'manage'))throw new EmbaError('forbidden');
+  const {rows}=await q.query<{personId:string;handle:string}>(`select h.person_id as "personId",h.handle from emba_member_handle h
+   join emba_membership m on m.org_id=h.org_id and m.person_id=h.person_id and m.revoked_at is null where h.org_id=$1`,[orgId]);
+  return Object.fromEntries(rows.map(row=>[row.personId,row.handle]));
+ });
 }
 export async function getMemberHandle(db:Db,p:Principal,orgId:string):Promise<string|null> {
  z.uuid().parse(orgId);

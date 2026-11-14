@@ -96,7 +96,7 @@ export async function listMyLoops(db: Db, principal: Principal | null): Promise<
         join emba_membership m on m.org_id=r.org_id and m.person_id=r.person_id
         where r.person_id=$1 and r.revoked_at is null and m.revoked_at is null
         union select child.id,child.org_id from emba_loop child join accessible a on child.org_id=a.org_id and child.parent_id=a.id
-      ) select o.id as "orgId",l.id as "loopId",o.name as "orgName",l.path
+      ) select o.id as "orgId",l.id as "loopId",coalesce(l.name,o.name) as "orgName",l.path
         from accessible a join emba_loop l on l.id=a.id and l.org_id=a.org_id
         join emba_organization o on o.id=l.org_id order by o.name,l.path`,
       [actor.personId],
