@@ -5,7 +5,7 @@ import type {Db,Q} from '../db';
 import {canAccessLoop,canAccessPersonal,type Principal} from './access';
 import {audit,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
-import {asksById,asksDue,closeDueAsks,openAsks,type AskView,type Unanswered} from './team-asks';
+import {asksById,asksDue,closeDueAsks,openAskCounts,openAsks,type AskView,type Unanswered} from './team-asks';
 import {reading,type Listed,type Scope,type TeamHead} from './team-core';
 import {bare,viewEvents,type EventView} from './team-events';
 import {rowColumns,rowFrom,viewPeople,viewRecords,type PersonView,type RecordView,type Row} from './team-records';
@@ -94,8 +94,7 @@ export async function teamBrief(db:Db,p:Principal,input:unknown):Promise<TeamBri
    from emba_team_record r where r.org_id=$1 and r.loop_id=$2 and r.state='current'`,[team.orgId,team.loopId]);
   // Only the calling assistant's own grant, and only when it is about to end.
   const {rows:[grant]}=lease?await q.query<{on:string}>(`select to_char(expires_at at time zone 'UTC','YYYY-MM-DD') as on from emba_lease where id=$1 and expires_at<clock_timestamp()+make_interval(days=>${READ.warnDays})`,[lease]):{rows:[]};
-  const asks=await openAsks(q,p,team,base.timezone);
-  return {team:base.team,timezone:base.timezone,today:base.today,brief:await latestBrief(q,team),announcements:announcements.items,asks:{open:asks.open,unanswered:asks.unanswered.items.length+asks.unanswered.more},
+  return {team:base.team,timezone:base.timezone,today:base.today,brief:await latestBrief(q,team),announcements:announcements.items,asks:await openAskCounts(q,p,team),
    resources:{items:documents.map(row=>singleLine(row.title)),more:Math.max(0,(documents[0]?.total??0)-documents.length)},counts,grantExpiresOn:grant?.on??null,untrusted:true as const};
  });
 }

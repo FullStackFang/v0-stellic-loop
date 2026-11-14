@@ -4,7 +4,7 @@ import type {Db,Q} from '../db';
 import {canAccessLoop,type Principal} from './access';
 import {audit,authorize,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
-import {LIMITS,viewPeople,type PersonView} from './team-records';
+import {knownPeople,LIMITS,type PersonView} from './team-records';
 
 // What team reads and the club writes (events, interest, asks) share: the one
 // snapshot a read runs in, the one path a write takes, and how people are shown.
@@ -44,14 +44,15 @@ export async function reading<T>(db:Db,p:Principal,team:Scope,work:(base:Base)=>
  return db.tx(async q=>{
   await q.query('set transaction isolation level repeatable read');
   const lease=await authorize(q,p,'plan:read',team);
-  const {rows:[head]}=await q.query<{namespace:string;slug:string;root:boolean;name:string}>(`select a.namespace,a.slug,l.parent_id is null as root,coalesce(l.name,o.name) as name
+  // The team's name, its state and today's date in its timezone, in one statement of the snapshot.
+  const {rows:[head]}=await q.query<{namespace:string;slug:string;root:boolean;name:string;timezone:string;decisionSeq:number;changeSeq:number;today:string}>(`select a.namespace,a.slug,l.parent_id is null as root,coalesce(l.name,o.name) as name,
+    coalesce(s.timezone,'UTC') as timezone,coalesce(s.decision_seq,0) as "decisionSeq",coalesce(s.change_seq,0)::int as "changeSeq",
+    to_char((clock_timestamp() at time zone coalesce(s.timezone,'UTC'))::date,'YYYY-MM-DD') as today
    from emba_group_address a join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
+   left join emba_team_state s on s.org_id=a.org_id and s.loop_id=a.loop_id
    where a.org_id=$1 and a.loop_id=$2 and a.retired_at is null`,[team.orgId,team.loopId]);
   if(!head)throw new EmbaError('forbidden');
-  const {rows:[state]}=await q.query<{timezone:string;decisionSeq:number;changeSeq:number}>('select timezone,decision_seq as "decisionSeq",change_seq::int as "changeSeq" from emba_team_state where org_id=$1 and loop_id=$2',[team.orgId,team.loopId]);
-  const timezone=state?.timezone??'UTC';
-  const {rows:[now]}=await q.query<{today:string}>("select to_char((clock_timestamp() at time zone $1)::date,'YYYY-MM-DD') as today",[timezone]);
-  const value=await work({q,lease,team:{handle:head.root?`@${head.namespace}`:`@${head.namespace}/${head.slug}`,name:head.name},timezone,today:now.today,decisionSeq:state?.decisionSeq??0,changeSeq:state?.changeSeq??0});
+  const value=await work({q,lease,team:{handle:head.root?`@${head.namespace}`:`@${head.namespace}/${head.slug}`,name:head.name},timezone:head.timezone,today:head.today,decisionSeq:head.decisionSeq,changeSeq:head.changeSeq});
   await audit(q,p,'plan:read',team.loopId,lease);
   return value;
  });
@@ -60,11 +61,9 @@ export async function reading<T>(db:Db,p:Principal,team:Scope,work:(base:Base)=>
 /** A person as shown inside a team. The site (never an assistant) also gets the name of a current member. */
 export type Member=PersonView&{name?:string};
 export async function viewMembers(q:Q,p:Principal,team:Scope,ids:(string|null)[]):Promise<(id:string|null)=>Member> {
- const person=await viewPeople(q,p,team,ids);
- const wanted=[...new Set(ids.filter((id):id is string=>Boolean(id)))];
- const {rows:names}=p.clientId===null&&wanted.length?await q.query<{id:string;name:string}>('select id,name from person where id=any($1::uuid[])',[wanted]):{rows:[]};
+ const people=await knownPeople(q,p,team,ids);
  return id=>{
-  const view=person(id),name=view.former?undefined:names.find(row=>row.id===id)?.name;
+  const view=people.view(id),name=view.former?null:people.name(id);
   return name?{...view,name}:view;
  };
 }

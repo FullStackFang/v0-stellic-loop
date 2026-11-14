@@ -2,9 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ViewTransition } from 'react';
 import { db } from '@/lib/db';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
+import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
 import { groupHandle, groupHref, treeOrder } from '@/lib/emba/group-path';
-import { listGroupTree } from '@/lib/emba/group-tree';
 import { listReceivedInvitations, type ReceivedInvitation } from '@/lib/emba/invitations';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { acceptInvite, declineInvite } from './actions';
@@ -30,7 +29,7 @@ export default async function GroupsPage() {
   if (!principal) redirect('/groups/sign-in');
   let groups, invitations;
   try {
-    [groups, invitations] = await Promise.all([listGroupTree(db(), principal).then(treeOrder), listReceivedInvitations(db(), principal)]);
+    [groups, invitations] = await Promise.all([portalGroupTree(principal).then(treeOrder), listReceivedInvitations(db(), principal)]);
   } catch {
     return <section className="lt-editor"><h1>Groups unavailable</h1><p role="alert">Your access may have changed. Reload to try again.</p></section>;
   }

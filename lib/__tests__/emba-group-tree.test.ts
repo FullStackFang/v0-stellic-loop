@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
-import { authenticate, canAccessLoop, type Principal } from '@/lib/emba/access';
+import { authenticate, canAccessLoop, canAccessLoops, type Principal } from '@/lib/emba/access';
 import { createWorkspace } from '@/lib/emba/workspaces';
 import { createInnerGroup, listGroupTree } from '@/lib/emba/group-tree';
 import { listPortalGroups, resolveGroup, type GroupAddress } from '@/lib/emba/groups';
@@ -206,4 +206,33 @@ it('offers a person in an inner group only no people or groups from above when t
   expect(tags.people).toEqual([]);
   for (const handle of ['@emba-2027/sib', '@sib', '@emba-2027/the-owner', '@emba-2027', '@emba-2027/team-2']) expect(await resolveTag(t.db, inner, { handle }), handle).toEqual({ status: 'unavailable', matches: [] });
   expect(await resolveTag(t.db, owner, { handle: '@emba-2027/sib' })).toMatchObject({ status: 'resolved' });
+});
+
+it('refuses several groups at once when one is named under an organization it does not belong to', async () => {
+  const { owner, cohort, team1, team2 } = await tree();
+  const other = await createWorkspace(t.db, owner, { name: 'Other', description: '', namespace: 'other' });
+  const all = (scopes: { orgId: string; loopId: string }[]) => t.db.tx(q => canAccessLoops(q, owner, scopes, 'read'));
+  const scope = (g: GroupAddress) => ({ orgId: g.orgId, loopId: g.loopId });
+  expect(await all([scope(cohort), scope(team1), scope(other)])).toBe(true);
+  // The owner holds both groups, and neither id belongs to the organization it is named with.
+  expect(await all([{ orgId: other.orgId, loopId: team1.loopId }])).toBe(false);
+  expect(await all([scope(team1), { orgId: cohort.orgId, loopId: other.loopId }, scope(team2)])).toBe(false);
+});
+
+it('lists groups in the same number of statements for four groups as for one, and still records a read of each', async () => {
+  const { owner, team2 } = await tree();
+  const member = await person('Member');
+  await join(team2, member, 'member');
+  const counted = async (p: Principal) => {
+    let statements = 0;
+    const count = (q: Pick<TestDb['db'], 'query'>): Pick<TestDb['db'], 'query'> => ({ query: (text, params) => { statements++; return q.query(text, params); } });
+    const groups = await listGroupTree({ ...count(t.db), tx: fn => t.db.tx(q => fn(count(q))) }, p);
+    return { statements, groups: groups.length };
+  };
+  const reads = async (p: Principal) => (await t.db.query("select resource_id from emba_audit where person_id=$1 and action='plan:read' and resource_id is not null", [p.personId])).rows.length;
+  const before = await reads(owner);
+  const one = await counted(member), four = await counted(owner);
+  expect([one.groups, four.groups]).toEqual([1, 4]);
+  expect(four.statements).toBe(one.statements);
+  expect(await reads(owner) - before).toBe(4);
 });

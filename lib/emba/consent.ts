@@ -19,9 +19,14 @@ export async function requireFirstParty(q: Q, principal: Principal) {
 }
 
 export async function authorize(q: Q, principal: Principal, action: Action, scope: Scope): Promise<string | null> {
-  if (!await canAccessPersonal(q,principal,principal.personId)) throw new EmbaError('forbidden');
   if ((scope.orgId === null) !== (scope.loopId === null)) throw new EmbaError('forbidden');
-  if (scope.orgId && scope.loopId && !await canAccessLoop(q,principal,scope.orgId,scope.loopId,'read')) throw new EmbaError('forbidden');
+  // The group check begins with the personal check, so the personal check runs on its own only when no group is named.
+  if (scope.orgId && scope.loopId ? !await canAccessLoop(q,principal,scope.orgId,scope.loopId,'read') : !await canAccessPersonal(q,principal,principal.personId)) throw new EmbaError('forbidden');
+  return leaseFor(q,principal,action,scope);
+}
+
+/** The consent half of authorize, for a caller that has already checked access: the site needs no lease, an assistant needs a live one for exactly this scope. */
+export async function leaseFor(q: Q, principal: Principal, action: Action, scope: Scope): Promise<string | null> {
   if (principal.clientId === null) return null;
   if (!principal.scopes.includes(action)) throw new EmbaError('forbidden');
   const { rows: [lease] } = await q.query<{id:string}>(

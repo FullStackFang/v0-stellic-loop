@@ -41,7 +41,7 @@ const PEOPLE=100;
 /** Who is interested, per event: current members only, by handle to an assistant and also by name on the site. No order of arrival. */
 async function interested(q:Q,p:Principal,team:Scope,eventIds:string[]):Promise<(eventId:string)=>{people:Member[];morePeople:number}> {
  const {rows}=eventIds.length?await q.query<{eventId:string;personId:string}>(`select i.event_id as "eventId",i.person_id as "personId" from emba_event_interest i
-  where i.event_id=any($3::uuid[]) and ${posts('i.person_id')}`,[team.orgId,team.loopId,eventIds]):{rows:[]};
+  where i.event_id=any($3::uuid[]) and ${posts('i.person_id')} order by i.event_id,i.person_id`,[team.orgId,team.loopId,eventIds]):{rows:[]};
  const person=await viewMembers(q,p,team,rows.map(row=>row.personId));
  return eventId=>{
   const people=rows.filter(row=>row.eventId===eventId).map(row=>person(row.personId)).sort(byName);

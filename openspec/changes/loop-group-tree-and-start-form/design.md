@@ -17,7 +17,7 @@ The founder picked the form (B, one box), the columns picker and the tree naviga
 
 - Inner groups to any depth that a person can start, open and walk through on the site, with every existing team feature working inside them.
 - The picked form and picker, built for real, creating a group and everything dropped into the box in one submit.
-- One read-only Drive folder per group, limited to that folder by Google and not by Loop's own care.
+- Google Drive works alongside Loop, not inside it: a group keeps Drive links, and each member's own assistant opens them with that member's own Google connection.
 - No path by which a person in an inner group learns about groups above it or the people who are only there.
 
 **Non-Goals:**
@@ -25,8 +25,8 @@ The founder picked the form (B, one box), the columns picker and the tree naviga
 - Moving, renaming, merging or deleting groups. Handles and paths stay immutable.
 - Putting an existing top-level group under another. Top-level groups are separate organizations.
 - Members with a role on an inner group only by default: the access rule is not changed, only stated and tested.
-- Reading the contents of Drive files, write access, several folders per group.
-- Changes to the connector's tools beyond what falls out of the handle rules (D2). Assistants do not get the Drive file list yet.
+- Loop holding any Google access of its own: no service account, no Google sign-in for Drive, no list of a folder's files on the site.
+- Changes to the connector's tools beyond what falls out of the handle rules (D2) and two sentences of guidance about links (D9).
 - Email. Inviting a person records an invitation they see when they sign in with that address; sending mail belongs to `loop-club-reach`.
 
 ## Decisions
@@ -88,7 +88,6 @@ One server action, `startGroup`, does this in order and reports each part:
 1. create the group (`createWorkspace` or `createInnerGroup`). If this fails, nothing else runs and the form shows why.
 2. files through `uploadDocument` then `processDocument`, as `publishResource` does now;
 3. links through `fileOutput` (title = the link's host and path; `normaliseLink` validates, so https only; at most 10 links, because each is a team write and those are limited to 30 an hour);
-4. the Drive folder through `connectDriveFolder` (D9);
 5. people through `issueInvitation` (member role, the existing expiry);
 6. the announcement through `postAnnouncement`;
 7. the join link through `enableAccessRequests`.
@@ -97,15 +96,15 @@ Steps 2 to 7 are separate transactions on purpose: a bad PDF must not undo the g
 
 The old inline form on `/groups` and the `createGroup` action are removed; "Start your group" and every "Start a group here" link to `/groups/new`.
 
-### D9. Drive: share one folder with Loop's service account
+### D9. Drive works alongside Loop, through each member's own assistant
 
-The owner shares one folder with a Google service account address that Loop shows in the form ("Viewer"), then pastes the folder's link. Loop stores the folder id and the folder's name in `emba_drive_folder` (one row per group) after checking it can list the folder. The Resources page lists the folder's files (name, type, modified time, link to Drive) by calling the Drive API `files.list` with `'<id>' in parents`, read-only scope, kept in memory for two minutes per folder. The list is on the site only in this change; giving it to assistants is a later step. Loop stores no file content and no user token, and asks Google for the `drive.metadata.readonly` scope, which cannot download a file.
+Loop holds links and nothing else. A Drive file or folder pasted into the start form, or filed later, is a link like any other (address and title). Loop has no Google credentials, calls no Google API and has no Drive table.
 
-Why this and not Google sign-in with the Picker: the service account can read only what has been shared with it, so "one folder, not the whole Drive" is enforced by Google's sharing, there is no per-user refresh token to store and protect, and no OAuth consent screen to get verified. The `drive.file` Picker route is the nicer click but, as far as I know, picking a folder there does not grant its children; that needs checking against current Google docs before anyone relies on it.
+Reading and writing Drive happens in the member's assistant, which already has its own Google Drive connection: the assistant reads the group through Loop, finds a link, and opens it with the member's own Drive permissions. When the assistant makes a document for the group it saves it to the member's Drive through that same connection, then files the link with `file_output`. Two sentences in the descriptions of `team_state` and `file_output` say this, and say to tell the user when they have no access to a link rather than guess.
 
-The token is a service-account JWT signed with `jose`. Config: `LOOP_DRIVE_CLIENT_EMAIL`, `LOOP_DRIVE_PRIVATE_KEY`. When either is missing the Drive lane, the service address and the Resources section do not render, and a pasted Drive folder address is an ordinary link.
+Why this and not Loop reading Drive itself (first built with a service account, then removed on 2026-11-13 at the founder's direction): it needs no setup by the founder and no token in Loop; Google's sharing stays the one rule for who can open a file; and it matches the team layer's rule that Loop keeps links, not files. Loop cannot run Google's connector for a member (the two meet only inside the member's assistant), so "embedded" is not possible; "alongside" is.
 
-Connect and disconnect need `manage` on the group and the site (no assistant). Loop's account can read every folder that anyone has shared with it, so being readable is not enough to connect: the person connecting must be the one who shared the folder with Loop, or its owner. Loop asks Google for the folder's `sharingUser` and `owners` and compares their email with the email the person signed in to Loop with. Without this, an organizer who learned another group's folder address could list its file names in a group of their own. Two costs: the person must share from the Google account that has their Loop email, and a folder inside a shared folder (which names no sharer) does not connect on its own. This check is written from Google's field reference and tested against a stub only; task 6.6 is its first real run. Everyone in the group sees the list. A file's link opens in Drive under the reader's own Google account, so Drive's sharing still decides who can open the file itself.
+What is given up: the site cannot list the files inside a linked folder. It shows the link, which opens in Drive.
 
 ### D10. Tests carry the access claims
 
@@ -115,9 +114,9 @@ Each claim in D4 to D6 gets a PGlite test with three people: one in the outer gr
 
 - [Everyone above counts as a member below, so an ask in Team 1 lists the whole cohort under "who has not answered", and the cohort can read Team 1's files] → It is the approved rule and the picker footer says it before the group is made. If the founder wants private inner groups, that is a new flag on the loop and a change to `posts`; see Open Questions.
 - [The pages read `emba_loop.name` and break on a database without the migration, including the founder's running dev site] → The migration is task 1 and the founder is asked to apply it before the page work is merged or run locally.
-- [A university Google Workspace may block sharing a folder with an outside service account] → The form says to try a personal Drive folder if sharing is refused; the Picker route stays open as a later change.
-- [Drive file names are shown to everyone in the group even if the file itself is not shared with them] → Stated in the form next to the Drive lane: "Everyone in this group sees the names of the files in the folder."
-- [The Drive ownership check depends on Google returning `sharingUser` for a folder shared with a service account, which no test here proves] → If Google leaves it out, connecting is refused for everyone (it fails closed) and the founder sees it at task 6.6.
+- [A member's assistant has no Google Drive connection, or the member uses the site only] → They still see the link and open it by hand. Nothing in Loop depends on the connection.
+- [A linked file is not shared in Drive with the rest of the group] → Members see the link but Drive refuses them; the connector tells the assistant to say so. Sharing is the file owner's to set in Drive.
+- [The guidance is two sentences in tool descriptions, which an assistant may not follow every time] → It is advice to the assistant, not a rule Loop can enforce; the worst case is a link the assistant does not open.
 - [A person in an inner group only sees the outer group's members in three places: who has not answered an ask, the roles list on the Members page, and the confirmation when tagging] → This follows from D4 (everyone above is a member below). Hiding them needs the private-inner-group flag; see Open Questions.
 - [Handles, event names and member tags share one namespace per top-level group, so "that name is taken" tells an inner-only person that something by that name exists above] → Accepted for now; it reveals a name, never content.
 - [An organizer who starts a group inside becomes its owner, and can turn on its admit link] → The link admits to that inner group and below only, as a member.
@@ -126,7 +125,7 @@ Each claim in D4 to D6 gets a PGlite test with three people: one in the outer gr
 
 ## Migration Plan
 
-One additive migration: `emba_loop.name`, `emba_loop.description`, `emba_drive_folder`. The founder runs it on `supabase-loop` by hand. Rollback: drop the table and the two columns; no existing row is changed. Deploy after the migration. The Drive lane turns on when the founder adds the two environment variables.
+One additive migration: `emba_loop.name` and `emba_loop.description`. The founder runs it on `supabase-loop` by hand. Rollback: drop the two columns; no existing row is changed. Deploy after the migration.
 
 ## Open Questions
 

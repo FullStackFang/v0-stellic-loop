@@ -2,13 +2,12 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { groupPath, placeGroup, type GroupRoute } from '@/lib/emba/group-path';
 import { Crumbs } from '@/app/groups/group-nav';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
-import { listGroupTree } from '@/lib/emba/group-tree';
+import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
 import { readDocument } from '@/lib/emba/knowledge';
 
 export const dynamic = 'force-dynamic';
 async function loadSource(principal: NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>, route: GroupRoute, id: string, version?: string) {
-  const group = placeGroup(await listGroupTree(db(), principal), route);
+  const group = placeGroup(await portalGroupTree(principal), route);
   if (!group) return null;
   const source = await readDocument(db(), principal, id, version === undefined ? undefined : Number(version));
   return source.orgId === group.orgId && source.loopId === group.loopId ? { group, source } : null;

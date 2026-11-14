@@ -26,7 +26,8 @@
 - [x] 4.1 Group page: an upcoming-events section with date, place, who is interested and an "I'm interested" control, in the existing look.
 - [x] 4.2 Organizer controls on the site for the new event fields.
 - [x] 4.3 `/e/[token]` share page with member, non-member and signed-out views, a link preview limited to the non-member view, and "Send to WhatsApp" and copy-link controls.
-- [ ] 4.4 Browser pass at phone and desktop widths. Founder demo 1 on the live site: add an event, mark interest from the site and from Claude.
+- [x] 4.4 Browser pass at phone and desktop widths, on the local run-through (`npm run groups:browser`, made-up people, disposable database): the Events tab and `/e/[token]` as a member, a non-member and signed out; interest marked from the share page. Fixed: the group handle was unreadable on the dark header; the tabs row showed the default grey scrollbar on a phone.
+- [ ] 4.5 Founder demo 1 on the live site: add an event, mark interest from the site and from Claude.
 
 ## 5. Open join
 
@@ -49,11 +50,11 @@
 - [x] 7.1 Ask form on the group page; list of open and recently closed asks.
 - [x] 7.2 `/a/[token]` page: answer in one tap for a signed-in member; question, group and closing time only for anyone else; link preview limited to that.
 - [x] 7.3 Asker and organizer view: answered count, who has not answered, and the reminder control whose text names nobody; "Send to WhatsApp" and copy controls.
-- [ ] 7.4 Browser pass at phone and desktop widths.
+- [x] 7.4 Browser pass at phone and desktop widths, on the local run-through: the Asks tab and `/a/[token]` as the asker, a member, a non-member and signed out; an answer sent from the share page. Fixed: radio buttons were styled as full-width text boxes, which pushed the option labels aside; the not-answered names are now a compact list that scrolls inside itself.
 
 ## 8. Verification
 
-- [ ] 8.1 Types, lint on changed files, the full suite, and one production build at the end.
+- [x] 8.1 Types, lint on changed files, the full suite, and one production build at the end.
 - [x] 8.2 Independent review of the whole diff against the three specs; no open blocker or major.
 - [ ] 8.3 Founder demo 2 on the live site: ask from the site and from Claude, send the link to a WhatsApp chat, answer from a second account, see who is missing, send the reminder.
 - [ ] 8.4 Pilot comparison with one real group: the same kind of question as a Loop ask and as a WhatsApp poll; record answers within 48 hours for each.

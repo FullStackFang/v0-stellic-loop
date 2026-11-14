@@ -1,10 +1,12 @@
 import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { writeFileSync } from 'node:fs';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { createWorkspace } from '@/lib/emba/workspaces';
+import { issueInvitation } from '@/lib/emba/invitations';
+import { setMemberHandle } from '@/lib/emba/tags';
 import { createInnerGroup, listGroupTree } from '@/lib/emba/group-tree';
 import { groupHandle, treeOrder } from '@/lib/emba/group-path';
 import type { GroupAddress } from '@/lib/emba/groups';
@@ -110,6 +112,58 @@ it('offers to leave on the top-level group only, where leaving ends the whole me
   await members('team-1');
   expect(screen.queryByRole('button', { name: 'Leave group' })).toBeNull();
   expect(screen.getByText(/ask one of its owners or organizers to remove you/)).toBeInTheDocument();
+});
+
+it('shows an owner the roster beside the join link, the invitation form and who is waiting', async () => {
+  const f = await tree();
+  const add = async (name: string, role: string) => { const row = await makePerson(t.db, name); await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]); await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.cohort.orgId, row.id]); await t.db.query('insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,$4)', [f.cohort.orgId, f.cohort.loopId, row.id, role]); };
+  await add('Elena Costa', 'organizer'); await add('Dev Malhotra', 'member');
+  await setMemberHandle(t.db, f.outer, { orgId: f.cohort.orgId, handle: 'outer-tag' });
+  await issueInvitation(t.db, f.owner, { orgId: f.cohort.orgId, loopId: f.cohort.loopId, recipientEmail: 'jordan.lee@example.test', role: 'member', expiresAt: '2099-01-01T00:00:00.000Z' });
+  const members = async (p: Principal) => render(await withPortalTestSession(p, () => MembersPage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
+  await members(f.owner);
+  preview('members-owner');
+  const roster = within(screen.getByRole('region', { name: /In the group/ }));
+  // The owner, the outer member and the two added: the person in an inner group only is not on this list.
+  expect(roster.getAllByRole('combobox', { name: /^Role of/ }).map(select => (select as HTMLSelectElement).value).sort()).toEqual(['member', 'member', 'organizer', 'owner']);
+  expect(roster.getByText('@emba-2027/outer-tag')).toBeInTheDocument();
+  expect(roster.getByLabelText('Your tag')).toHaveValue('');
+  expect(roster.getAllByRole('button', { name: 'Remove' })).toHaveLength(3);
+  expect(screen.getByText('4 people')).toBeInTheDocument();
+  for (const name of ['Join link', 'Invite by email', /^Waiting/]) expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByText('jordan.lee@example.test')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Revoke' })).toBeInTheDocument();
+  // One meaning per page: resources live on the Resources page.
+  expect(screen.queryByRole('heading', { name: 'Resources' })).toBeNull();
+  // Removing asks once more in place.
+  fireEvent.click(roster.getAllByRole('button', { name: 'Remove' })[0]);
+  expect(roster.getByRole('button', { name: 'Confirm: remove' })).toBeInTheDocument();
+  cleanup();
+  // A member sees their own row and none of the panel.
+  await members(f.outer);
+  expect(screen.getAllByLabelText('Your tag')).toHaveLength(1);
+  expect(screen.queryByRole('combobox')).toBeNull();
+  for (const name of ['Join link', 'Invite by email']) expect(screen.queryByRole('heading', { name })).toBeNull();
+  expect(screen.queryByText('Elena Costa')).toBeNull();
+});
+
+it('gives a long roster a find box and a filter by role, inside one frame', async () => {
+  const f = await tree();
+  const first = ['Aisha', 'Ben', 'Carla', 'Diego', 'Emi', 'Farid', 'Grace', 'Hugo'], last = ['Adeyemi', 'Brooks', 'Chen', 'Dubois', 'Eriksen'];
+  for (let n = 0; n < 40; n++) { const row = await makePerson(t.db, `${first[n % 8]} ${last[Math.floor(n / 8)]}`); await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]); await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.cohort.orgId, row.id]); await t.db.query('insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,$4)', [f.cohort.orgId, f.cohort.loopId, row.id, n % 9 === 0 ? 'organizer' : 'member']); }
+  render(await withPortalTestSession(f.owner, () => MembersPage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
+  preview('members-many');
+  const rows = () => within(screen.getByLabelText('People in the group')).queryAllByRole('combobox');
+  expect(rows()).toHaveLength(42);
+  expect(screen.getByRole('button', { name: /^Organizers/ })).toHaveTextContent('Organizers5');
+  fireEvent.click(screen.getByRole('button', { name: /^Organizers/ }));
+  expect(rows()).toHaveLength(5);
+  fireEvent.click(screen.getByRole('button', { name: /^Everyone/ }));
+  fireEvent.change(screen.getByLabelText('Find a person'), { target: { value: 'aisha' } });
+  expect(rows()).toHaveLength(5);
+  fireEvent.change(screen.getByLabelText('Find a person'), { target: { value: 'nobody-here' } });
+  expect(screen.getByText(/Nobody matches/)).toBeInTheDocument();
 });
 
 it('draws the rail as the tree a person can open', async () => {

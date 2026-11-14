@@ -69,6 +69,8 @@ it('serves exactly the team tools, and leaves the existing server as it was',asy
   // Every tool that saves says it does so at once, and only on the user's request.
   for(const name of WRITES)expect(tools.find(tool=>tool.name===name)!.description,name).toMatch(/Call this only when the user asked .* It saves at once under the user's name/);
   for(const name of ['amend_record','claim','file_output','log_decision'])expect(tools.find(tool=>tool.name===name)!.description).toContain('only when the user asked to share');
+  // Loop holds links only: the assistant opens them, and saves what it makes, through the user's own connection (Google Drive, for example).
+  for(const name of ['team_state','file_output'])expect(tools.find(tool=>tool.name===name)!.description).toContain("the user's own connection");
   for(const name of ['list_memory','plan_for_me','execute_group_memory','list_activities','execute_commitment','execute_disclosure','search_group_memory'])
    expect((await s.client.callTool({name,arguments:{}})).isError,name).toBe(true);
  }finally{await s.close();}

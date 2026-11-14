@@ -54,7 +54,11 @@ const openSql=(k='k')=>`(${k}.closed_at is null and ${k}.closes_at>clock_timesta
 /** SQL: when the ask stops, or stopped, taking answers. */
 const endSql=(k='k')=>`coalesce(${k}.closed_at,${k}.closes_at)`;
 
-type Row={id:string;number:number;question:string;kind:AskKind;reveal:Reveal;askerId:string|null;clientId:string|null;event:string|null;createdAt:string;closesAt:string;closes:string;open:boolean;recent:boolean;token:string};
+type Given={personId:string|null;choices:number[];body:string|null};
+type Row={id:string;number:number;question:string;kind:AskKind;reveal:Reveal;askerId:string|null;clientId:string|null;event:string|null;createdAt:string;closesAt:string;closes:string;open:boolean;recent:boolean;token:string;
+ options:AskOption[];answers:Given[];
+ /** How many current members who may post have not answered, and with `detail` who they are. */
+ waiting:number;missing:string[]|null};
 type Viewer={p:Principal;team:Scope;timezone:string;
  /** The caller is an owner or organizer of the team. */
  manager:boolean};
@@ -63,32 +67,36 @@ async function viewAsks(q:Q,viewer:Viewer,ids:string[],detail:false):Promise<Ask
 async function viewAsks(q:Q,viewer:Viewer,ids:string[],detail:true):Promise<AskResult[]>;
 async function viewAsks(q:Q,{p,team,timezone,manager}:Viewer,ids:string[],detail:boolean):Promise<(AskView|AskResult)[]> {
  if(!ids.length)return [];
- const {rows}=await q.query<Row>(`select k.id,k.number,k.question,k.kind,k.reveal,k.asker_id as "askerId",k.client_id as "clientId",
+ // One statement, whatever the number of asks: each ask with its options and answers beside it. The current members who may
+ // post are the people an open ask is waiting for; they are the same for every ask of the team, so they are read once.
+ // Where people are otherwise equal on screen, their order ends in an id, so it is the same on every run.
+ const {rows}=await q.query<Row>(`with posting as materialized (select m.person_id as id from emba_membership m where m.org_id=$1 and m.revoked_at is null and ${posts('m.person_id')})
+  select k.id,k.number,k.question,k.kind,k.reveal,k.asker_id as "askerId",k.client_id as "clientId",
    (select e.slug from emba_team_event e where e.id=k.event_id and e.archived_at is null) as event,
    k.created_at as "createdAt",${endSql()} as "closesAt",${local(endSql(),'$4::text')} as closes,${openSql()} as open,
-   ${endSql()}>clock_timestamp()-interval '${ASKS.missingDays} days' as recent,k.share_token as token
-  from emba_ask k where k.org_id=$1 and k.loop_id=$2 and k.id=any($3::uuid[])`,[team.orgId,team.loopId,ids,timezone]);
- const {rows:options}=await q.query<{askId:string;number:number;label:string}>('select ask_id as "askId",position::int as number,label from emba_ask_option where ask_id=any($1::uuid[]) order by position',[ids]);
- const {rows:answers}=await q.query<{askId:string;personId:string|null;choices:number[];body:string|null}>('select ask_id as "askId",person_id as "personId",choices::int[] as choices,body from emba_ask_answer where ask_id=any($1::uuid[])',[ids]);
- // The current members who may post: the people an open ask is waiting for.
- const {rows:posting}=await q.query<{id:string}>(`select m.person_id as id from emba_membership m where m.org_id=$1 and m.revoked_at is null and ${posts('m.person_id')}`,[team.orgId,team.loopId]);
- const person=await viewMembers(q,p,team,[...rows.map(row=>row.askerId),...(detail?[...answers.map(answer=>answer.personId),...posting.map(row=>row.id)]:[])]);
- return ids.flatMap(id=>rows.filter(row=>row.id===id)).map(({id,askerId,clientId,recent,token,...row})=>{
-  const choices=options.filter(option=>option.askId===id).map(({number,label})=>({number,label})),given=answers.filter(answer=>answer.askId===id);
-  const shaped=(answer:{choices:number[];body:string|null}):Answer=>({choices:choices.filter(option=>answer.choices.map(Number).includes(option.number)),text:answer.body});
-  const yours=given.find(answer=>answer.personId===p.personId),waiting=posting.filter(member=>!given.some(answer=>answer.personId===member.id));
+   ${endSql()}>clock_timestamp()-interval '${ASKS.missingDays} days' as recent,k.share_token as token,
+   coalesce((select json_agg(json_build_object('number',o.position::int,'label',o.label) order by o.position) from emba_ask_option o where o.ask_id=k.id),'[]') as options,
+   coalesce((select json_agg(json_build_object('personId',a.person_id,'choices',a.choices::int[],'body',a.body) order by a.person_id nulls last,a.id) from emba_ask_answer a where a.ask_id=k.id),'[]') as answers,
+   (select count(*)::int from posting m where not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=m.id)) as waiting,
+   case when $5::boolean then coalesce((select json_agg(m.id order by m.id) from posting m where not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=m.id)),'[]') end as missing
+  from emba_ask k where k.org_id=$1 and k.loop_id=$2 and k.id=any($3::uuid[])`,[team.orgId,team.loopId,ids,timezone,detail]);
+ const person=await viewMembers(q,p,team,rows.flatMap(row=>[row.askerId,...(detail?[...row.answers.map(answer=>answer.personId),...(row.missing??[])]:[])]));
+ return ids.flatMap(id=>rows.filter(row=>row.id===id)).map(({id:_id,askerId,clientId,recent,token,options,answers:given,waiting,missing,...row})=>{
+  void _id;
+  const shaped=(answer:Given):Answer=>({choices:options.filter(option=>answer.choices.includes(option.number)),text:answer.body});
+  const yours=given.find(answer=>answer.personId===p.personId);
   const view:AskView={...row,createdAt:new Date(row.createdAt).toISOString(),closesAt:new Date(row.closesAt).toISOString(),timezone,by:person(askerId),assistant:clientId,youAsked:askerId===p.personId,
-   options:choices,yourAnswer:yours?shaped(yours):null,answered:given.length,expected:given.length+waiting.length,shareUrl:appUrl(`/a/${token}`)};
+   options,yourAnswer:yours?shaped(yours):null,answered:given.length,expected:given.length+waiting,shareUrl:appUrl(`/a/${token}`)};
   if(!detail)return view;
   const named=row.reveal==='named',mayManage=askerId===p.personId||manager;
-  const results:OptionResult[]=choices.map(option=>{
-   const chose=given.filter(answer=>answer.choices.map(Number).includes(option.number));
+  const results:OptionResult[]=options.map(option=>{
+   const chose=given.filter(answer=>answer.choices.includes(option.number));
    return {...option,count:chose.length,...(named?{people:chose.map(answer=>person(answer.personId)).sort(byName)}:{})};
   });
   // Written answers of a counts ask carry no name and no order of arrival.
   const texts=given.filter(answer=>answer.body!==null);
   const written:Written[]=named?texts.map(answer=>({text:answer.body!,by:person(answer.personId)})).sort((a,b)=>byName(a.by!,b.by!)):texts.map(answer=>({text:answer.body!})).sort((a,b)=>a.text.localeCompare(b.text));
-  return {...view,results,written,...(mayManage&&recent?{missing:waiting.map(member=>person(member.id)).sort(byName)}:{}),canClose:mayManage&&row.open};
+  return {...view,results,written,...(mayManage&&recent?{missing:(missing??[]).map(person).sort(byName)}:{}),canClose:mayManage&&row.open};
  });
 }
 
@@ -310,6 +318,13 @@ export async function openAsks(q:Q,p:Principal,team:Scope,timezone:string):Promi
   where k.org_id=$1 and k.loop_id=$2 and ${openSql()} and not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$3) order by k.closes_at,k.number limit ${ASKS.list}`,[team.orgId,team.loopId,p.personId]);
  const views=await viewAsks(q,{p,team,timezone,manager:false},rows.map(row=>row.id),false);
  return {open:count.n,unanswered:{items:views.map((view,index)=>({...view,closingSoon:rows[index].soon})),more:Math.max(0,(rows[0]?.total??0)-rows.length)}};
+}
+/** For the brief, inside its snapshot: how many asks are open, and how many of them the caller may answer and has not. Counts only: no ask is built to be counted. */
+export async function openAskCounts(q:Q,p:Principal,team:Scope):Promise<{open:number;unanswered:number}> {
+ const {rows:[count]}=await q.query<{open:number;unanswered:number}>(`select count(*)::int as open,count(*) filter(where not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$3))::int as unanswered
+  from emba_ask k where k.org_id=$1 and k.loop_id=$2 and ${openSql()}`,[team.orgId,team.loopId,p.personId]);
+ // A follower reads asks and cannot answer them, so none is waiting for a follower.
+ return {open:count.open,unanswered:count.unanswered&&await canAccessLoop(q,p,team.orgId,team.loopId,'post')?count.unanswered:0};
 }
 /** Asks by id as members see them, for entries of the change sequence. */
 export const asksById=(q:Q,p:Principal,team:Scope,timezone:string,ids:string[]):Promise<(AskView&{id:string})[]>=>

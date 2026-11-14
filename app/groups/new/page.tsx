@@ -1,8 +1,6 @@
 import Link from 'next/link';
-import { db } from '@/lib/db';
 import { groupHandle, treeOrder } from '@/lib/emba/group-path';
-import { listGroupTree } from '@/lib/emba/group-tree';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
+import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
 import { Crumbs } from '../group-nav';
 import { StartForm } from './start-form';
 
@@ -11,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function NewGroupPage({ searchParams }: { searchParams?: Promise<{ in?: string | string[] }> }) {
   const principal = await getPortalPrincipal();
   if (!principal) return <section className="lt-editor"><h1>Start a group</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/new')}`}>Sign in</Link></section>;
-  const tree = await listGroupTree(db(), principal).catch(() => null);
+  const tree = await portalGroupTree(principal).catch(() => null);
   if (!tree) return <section className="lt-editor"><h1>Start a group</h1><p role="alert">Your access may have changed. Reload to try again.</p></section>;
   // The same rule createWorkspace applies: a top-level group is for pilot owners with a verified email.
   const canTop = !!principal.verifiedEmail && (process.env.LOOP_PILOT_OWNER_SUBJECTS ?? '').split(',').some(subject => subject.trim() === principal.subject);

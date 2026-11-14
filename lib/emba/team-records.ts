@@ -70,25 +70,29 @@ const summary=({number,topic,statement}:DecisionSummary):DecisionSummary=>({numb
 /** Builds the assistant-safe view of records: numbers and handles, never an internal id. */
 export async function viewRecords(q:Q,p:Principal,team:Scope,rows:Row[]):Promise<RecordView[]> {
  if(!rows.length)return [];
- const ids=rows.map(row=>row.id);
- const {rows:tagRows}=await q.query<{recordId:string;personId:string}>('select record_id as "recordId",person_id as "personId" from emba_team_record_tag where record_id=any($1::uuid[]) order by person_id',[ids]);
- const {rows:flags}=await q.query<{outputId:string;decision:number;topic:string|null;state:'flagged'|'recheck'}>(`select c.output_id as "outputId",d.number as decision,case when d.state='withdrawn' then null else d.topic end as topic,c.state from emba_team_conflict c join emba_team_record d on d.id=c.decision_id where c.output_id=any($1::uuid[]) order by d.number`,[ids]);
- const {rows:links}=await q.query<{id:string;supersededBy:number|null;replacedBy:number|null}>(`select r.id,s.number as "supersededBy",n.number as "replacedBy" from emba_team_record r left join emba_team_record s on s.id=r.superseded_by left join emba_team_record n on n.id=r.replaced_by where r.id=any($1::uuid[])`,[ids]);
+ // Everything a record's view needs beyond its own row, in one statement: a list of thirty costs what a list of one does.
  // An overlap mark is live while both claims are still open or proposed.
- const {rows:overlaps}=await q.query<{id:string;other:number}>(`select x.id,o.number as other from (select claim_a as id,claim_b as other_id from emba_team_overlap where claim_a=any($1::uuid[]) union all select claim_b,claim_a from emba_team_overlap where claim_b=any($1::uuid[])) x
-  join emba_team_record o on o.id=x.other_id and o.state='current' and o.claim_status in ('open','proposed') order by o.number`,[ids]);
- const {rows:events}=await q.query<{id:string;slug:string}>('select id,slug from emba_team_event where id=any($1::uuid[])',[rows.map(row=>row.eventId).filter(Boolean)]);
- const person=await viewPeople(q,p,team,[...rows.flatMap(row=>[row.authorId,row.ownerId]),...tagRows.map(tag=>tag.personId)]);
+ const {rows:extras}=await q.query<{id:string;tags:string[];conflicts:NonNullable<RecordView['conflicts']>;supersededBy:number|null;replacedBy:number|null;overlaps:number[];event:string|null}>(`select r.id,
+   coalesce((select json_agg(t.person_id order by t.person_id) from emba_team_record_tag t where t.record_id=r.id),'[]') as tags,
+   coalesce((select json_agg(json_build_object('decision',d.number,'topic',case when d.state='withdrawn' then null else d.topic end,'state',c.state) order by d.number)
+    from emba_team_conflict c join emba_team_record d on d.id=c.decision_id where c.output_id=r.id),'[]') as conflicts,
+   s.number as "supersededBy",n.number as "replacedBy",
+   coalesce((select json_agg(o.number order by o.number) from (select claim_b as other_id from emba_team_overlap where claim_a=r.id union all select claim_a from emba_team_overlap where claim_b=r.id) x
+    join emba_team_record o on o.id=x.other_id and o.state='current' and o.claim_status in ('open','proposed')),'[]') as overlaps,
+   (select e.slug from emba_team_event e where e.id=r.event_id) as event
+  from emba_team_record r left join emba_team_record s on s.id=r.superseded_by left join emba_team_record n on n.id=r.replaced_by where r.id=any($1::uuid[])`,[rows.map(row=>row.id)]);
+ const extra=new Map(extras.map(item=>[item.id,item]));
+ const person=await viewPeople(q,p,team,[...rows.flatMap(row=>[row.authorId,row.ownerId]),...extras.flatMap(item=>item.tags)]);
  return rows.map(row=>{
-  const link=links.find(item=>item.id===row.id);
-  const base={number:row.number,kind:row.kind,state:row.state,version:row.version,event:events.find(event=>event.id===row.eventId)?.slug??null,by:person(row.authorId),assistant:row.clientId,
-   createdAt:new Date(row.createdAt).toISOString(),tags:tagRows.filter(tag=>tag.recordId===row.id).map(tag=>person(tag.personId))};
+  const more=extra.get(row.id);
+  const base={number:row.number,kind:row.kind,state:row.state,version:row.version,event:more?.event??null,by:person(row.authorId),assistant:row.clientId,
+   createdAt:new Date(row.createdAt).toISOString(),tags:(more?.tags??[]).map(person)};
   // A withdrawn record has no text left to show.
   if(row.state==='withdrawn'||row.body===null)return base;
-  if(row.kind==='output'){const host=hostOf(row.url!);return {...base,title:row.title!,summary:row.body,url:row.url!,host,recognisedHost:recognisedHost(host),...(link?.replacedBy?{replacedBy:link.replacedBy}:{}),
-   conflicts:flags.filter(flag=>flag.outputId===row.id).map(({decision,topic,state})=>({decision,topic,state}))};}
-  if(row.kind==='decision')return {...base,topic:row.topic!,statement:row.body,...(link?.supersededBy?{supersededBy:link.supersededBy}:{})};
-  if(row.kind==='claim')return {...base,what:row.body,owner:person(row.ownerId),dueOn:row.dueOn,claimStatus:row.claimStatus!,overlaps:overlaps.filter(item=>item.id===row.id).map(item=>item.other)};
+  if(row.kind==='output'){const host=hostOf(row.url!);return {...base,title:row.title!,summary:row.body,url:row.url!,host,recognisedHost:recognisedHost(host),...(more?.replacedBy?{replacedBy:more.replacedBy}:{}),
+   conflicts:more?.conflicts??[]};}
+  if(row.kind==='decision')return {...base,topic:row.topic!,statement:row.body,...(more?.supersededBy?{supersededBy:more.supersededBy}:{})};
+  if(row.kind==='claim')return {...base,what:row.body,owner:person(row.ownerId),dueOn:row.dueOn,claimStatus:row.claimStatus!,overlaps:more?.overlaps??[]};
   return {...base,text:row.body};
  });
 }
@@ -479,16 +483,27 @@ export async function releaseOnDeparture(q:Q,personId:string,options:{orgId?:str
 
 /** How people are shown to an assistant: by handle, never by id. A person who is no longer on this team, or deleted their account, has no handle. */
 export async function viewPeople(q:Q,p:Principal,team:Scope,ids:(string|null)[]):Promise<(id:string|null)=>PersonView> {
+ return (await knownPeople(q,p,team,ids)).view;
+}
+/**
+ * The people named by id, in one statement: how each is shown, and for the site their name.
+ * A name is selected only when the caller is a person on the site, so no row read for an assistant holds one.
+ */
+export async function knownPeople(q:Q,p:Principal,team:Scope,ids:(string|null)[]):Promise<{view:(id:string|null)=>PersonView;name:(id:string|null)=>string|null}> {
  const wanted=[...new Set(ids.filter((id):id is string=>Boolean(id)))];
- const {rows:known}=wanted.length?await q.query<{personId:string;handle:string|null;live:boolean}>(`select p.id as "personId",h.handle,
+ const {rows}=wanted.length?await q.query<{personId:string;handle:string|null;live:boolean;namespace:string|null;name:string|null}>(`select p.id as "personId",h.handle,
   (exists(select 1 from emba_membership m where m.org_id=$2 and m.person_id=p.id and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=p.id)
    and exists(with recursive up as (select id,parent_id from emba_loop where org_id=$2 and id=$3 union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=$2)
-    select 1 from up join emba_role r on r.org_id=$2 and r.loop_id=up.id and r.person_id=p.id and r.revoked_at is null)) as live
-  from person p left join emba_member_handle h on h.org_id=$2 and h.person_id=p.id where p.id=any($1::uuid[])`,[wanted,team.orgId,team.loopId]):{rows:[]};
- const {rows:[address]}=await q.query<{namespace:string}>('select namespace from emba_group_namespace where org_id=$1',[team.orgId]);
- return id=>{
-  const found=known.find(item=>item.personId===id);
-  return {handle:found?.live&&found.handle&&address?`@${address.namespace}/${found.handle}`:null,isYou:id!==null&&id===p.personId,former:!found?.live};
+    select 1 from up join emba_role r on r.org_id=$2 and r.loop_id=up.id and r.person_id=p.id and r.revoked_at is null)) as live,
+  (select n.namespace from emba_group_namespace n where n.org_id=$2) as namespace,case when $4::boolean then p.name end as name
+  from person p left join emba_member_handle h on h.org_id=$2 and h.person_id=p.id where p.id=any($1::uuid[]) order by p.id`,[wanted,team.orgId,team.loopId,p.clientId===null]):{rows:[]};
+ const known=new Map(rows.map(row=>[row.personId,row]));
+ return {
+  view:id=>{
+   const found=id===null?undefined:known.get(id);
+   return {handle:found?.live&&found.handle&&found.namespace?`@${found.namespace}/${found.handle}`:null,isYou:id!==null&&id===p.personId,former:!found?.live};
+  },
+  name:id=>(id===null?undefined:known.get(id))?.name??null,
  };
 }
 

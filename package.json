@@ -14,7 +14,8 @@
     "emba:seed": "node --conditions=react-server --import tsx scripts/emba-seed.ts",
     "emba:rehearsal": "node --conditions=react-server --import tsx scripts/emba-rehearsal.ts",
     "emba:postgres-check": "node scripts/emba-postgres-check.mjs",
-    "emba:browser": "node --import ./test/emba-browser/register.mjs --import tsx scripts/emba-browser.ts"
+    "emba:browser": "node --import ./test/emba-browser/register.mjs --import tsx scripts/emba-browser.ts",
+    "groups:browser": "node --import ./test/emba-browser/register.mjs --import tsx scripts/groups-browser.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "7.9.25",

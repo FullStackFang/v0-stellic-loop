@@ -1,22 +1,19 @@
 import { randomUUID } from 'node:crypto';
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { groupPath, placeGroup, type GroupRoute } from '@/lib/emba/group-path';
+import { groupPath, type GroupRoute } from '@/lib/emba/group-path';
 import { Crumbs } from '@/app/groups/group-nav';
 import { canAccessLoop } from '@/lib/emba/access';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
-import { listGroupTree } from '@/lib/emba/group-tree';
+import { getPortalPrincipal, openGroup } from '@/lib/emba/portal-session';
 import { listDocuments } from '@/lib/emba/knowledge';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { publishResource, removeResource, retryResource } from '@/app/groups/resource-actions';
 
 export const dynamic = 'force-dynamic';
 async function loadResources(principal: NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>, route: GroupRoute) {
-  const group = placeGroup(await listGroupTree(db(), principal), route);
-  if (!group) return null;
-  const scope = { orgId: group.orgId, loopId: group.loopId };
-  const documents = await listDocuments(db(), principal, scope);
-  const manages = await db().tx(q => canAccessLoop(q, principal, scope.orgId, scope.loopId, 'manage'));
+  const opened = await openGroup(principal, route, scope => Promise.all([listDocuments(db(), principal, scope), db().tx(q => canAccessLoop(q, principal, scope.orgId, scope.loopId, 'manage'))]));
+  if (!opened) return null;
+  const { group, data: [documents, manages] } = opened;
   return { group, documents, manages };
 }
 

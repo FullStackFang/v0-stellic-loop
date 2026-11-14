@@ -70,7 +70,7 @@ export default async function SharedAskPage({ params }: { params: Promise<{ toke
         {ask.results.length === 0 && ask.written.length === 0 && <p className="emba-meta">No answers yet.</p>}
       </section>
       {ask.missing && <section className="lt-editor"><h2>Who has not answered</h2><p>{ask.answered} of {ask.expected} answered.</p>
-        {ask.missing.length ? <ul className="lp-plain">{ask.missing.map((person, index) => <li key={index}>{nameOf(person)}</li>)}</ul> : <p className="emba-meta">Everyone who can answer has answered.</p>}
+        {ask.missing.length ? <ul className="lp-plain lp-names" tabIndex={0} aria-label="People who have not answered">{ask.missing.map((person, index) => <li key={index}>{nameOf(person)}</li>)}</ul> : <p className="emba-meta">Everyone who can answer has answered.</p>}
         {ask.open && left > 0 && <><h3>Reminder</h3><p style={{ whiteSpace: 'pre-line' }}>{reminder}</p><div className="lp-acts"><a className="lp-btn" href={whatsapp(reminder)} target="_blank" rel="noopener noreferrer">Send to WhatsApp</a><CopyText text={reminder} /></div></>}
       </section>}
       <section className="lt-editor"><h2>Share this ask</h2><p style={{ whiteSpace: 'pre-line' }}>{message}</p><div className="lp-acts"><a className="lp-btn" href={whatsapp(message)} target="_blank" rel="noopener noreferrer">Send to WhatsApp</a><CopyLink url={ask.shareUrl} /></div></section>

@@ -26,11 +26,12 @@ export async function saveTagHandle(_previous: PortalResult, data: FormData): Pr
 export async function inviteMember(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(async principal => {
     const expiresAt = value(data, 'expiresAt');
+    const until = expiresAt ? new Date(`${expiresAt}Z`) : new Date(Date.now() + 14 * 86_400_000);
     const invite = await issueInvitation(db(), principal, {
       orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), recipientEmail: value(data, 'recipientEmail'),
-      role: value(data, 'role') as 'member', expiresAt: new Date(`${expiresAt}Z`).toISOString(),
+      role: value(data, 'role') as 'member', expiresAt: until.toISOString(),
     });
-    return { message: 'Invitation created. Copy the link and share it privately.', invitationToken: invite.token };
+    return { message: 'Invitation made.', invitationToken: invite.token };
   });
 }
 export async function cancelInvite(_previous: PortalResult, data: FormData): Promise<PortalResult> {

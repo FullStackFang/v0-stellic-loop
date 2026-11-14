@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { redirect } from 'next/navigation';
-import { accessRequestPreview, disableAccessRequests, enableAccessRequests, joinFromShare, replaceJoinLink, requestMembership, reviewMembershipRequest, setJoinMode, type JoinOutcome } from '@/lib/emba/access-requests';
+import { accessRequestPreview, disableAccessRequests, enableAccessRequests, joinFromShare, joinLinkMode, replaceJoinLink, requestMembership, reviewMembershipRequest, setJoinMode, type JoinOutcome } from '@/lib/emba/access-requests';
 import { groupHref } from '@/lib/emba/group-path';
 import type { PortalResult } from '@/components/emba/portal-types';
 
@@ -52,6 +52,18 @@ export async function joinFromShareLink(_previous: PortalResult, data: FormData)
 }
 export async function setRequestLinkMode(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(principal => setJoinMode(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), mode: value(data, 'mode') }));
+}
+/** Sets the join link to off, ask first or admit on sign-in. Turning it on makes a link, which is returned to be shown once. */
+export async function setJoinLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutate(async principal => {
+    const scope = { orgId: value(data, 'orgId'), loopId: value(data, 'loopId') }, mode = value(data, 'mode');
+    if (mode === 'off') { await disableAccessRequests(db(), principal, scope); return { message: 'The join link is off.' }; }
+    if (mode !== 'ask_first' && mode !== 'admit') throw new Error('unknown mode');
+    // Making the link again would stop the one already handed out, so a link that is on only changes its mode.
+    const token = await joinLinkMode(db(), principal, scope) === null ? await enableAccessRequests(db(), principal, { ...scope, publicLabel: '' }) : undefined;
+    await setJoinMode(db(), principal, { ...scope, mode });
+    return token ? { accessRequestToken: token, message: 'Link made.' } : { message: 'Saved.' };
+  });
 }
 export async function replaceRequestLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(async principal => ({ accessRequestToken: await replaceJoinLink(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId') }), message: 'Link replaced. The old link no longer works. Copy the new one now; Loop stores only its hash.' }));

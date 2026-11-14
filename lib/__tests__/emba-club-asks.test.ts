@@ -234,7 +234,7 @@ it('shows who has not answered to the asker, owners and organizers only, for one
   expect((views[0] as Awaited<ReturnType<typeof listAsks>>).open.items.map(item=>[item.number,item.answered,item.expected])).toEqual([[2,0,total-1],[1,3,total-1]]);
  }
  // The service has no function that reads across asks: these are all its reads.
- expect(Object.keys(asksModule).filter(name=>typeof (asksModule as Record<string,unknown>)[name]==='function').sort()).toEqual(['answerAsk','askReminder','askResults','askShare','askShareMessage','asksById','asksDue','closeAsk','closeDueAsks','createAsk','listAsks','openAsks','setAskReveal']);
+ expect(Object.keys(asksModule).filter(name=>typeof (asksModule as Record<string,unknown>)[name]==='function').sort()).toEqual(['answerAsk','askReminder','askResults','askShare','askShareMessage','asksById','asksDue','closeAsk','closeDueAsks','createAsk','listAsks','openAskCounts','openAsks','setAskReveal']);
  // Six days after closing the list is still there; eight days after it is gone.
  await elapse(1,'6 days');
  expect((await askResults(t.db,f.memberA,{...f.root,number:1})).ask).toMatchObject({open:false,answered:3});

@@ -1,8 +1,8 @@
 import 'server-only';
 import {z} from 'zod';
 import type {Db,Q} from '../db';
-import {canAccessLoop,canAccessPersonal,type Principal} from './access';
-import {audit,authorize,requireFirstParty} from './consent';
+import {canAccessLoop,canAccessLoops,canAccessPersonal,type Principal} from './access';
+import {audit,leaseFor,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
 
 const name=z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/);
@@ -33,6 +33,14 @@ async function currentAddress(q:Q,data:{orgId:string;loopId:string}):Promise<Gro
  const {rows:[row]}=await q.query<GroupAddress>(`select ${columns} from emba_group_address a join emba_organization o on o.id=a.org_id
   join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id where a.org_id=$1 and a.loop_id=$2 and a.retired_at is null for share of a,o,l`,[data.orgId,data.loopId]);
  if(!row)throw new EmbaError('forbidden');return row;
+}
+/** currentAddress for many groups in one statement, in the order asked. */
+async function currentAddresses(q:Q,rows:{orgId:string;loopId:string}[]):Promise<GroupAddress[]> {
+ const {rows:found}=await q.query<GroupAddress>(`select ${columns} from emba_group_address a join emba_organization o on o.id=a.org_id
+  join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join unnest($1::uuid[],$2::uuid[]) as s(org_id,loop_id) on s.org_id=a.org_id and s.loop_id=a.loop_id
+  where a.retired_at is null for share of a,o,l`,[rows.map(row=>row.orgId),rows.map(row=>row.loopId)]);
+ const byLoop=new Map(found.map(address=>[address.loopId,address]));
+ return rows.map(row=>{const address=byLoop.get(row.loopId);if(!address)throw new EmbaError('forbidden');return address;});
 }
 export async function registerGroupAddress(db:Db,p:Principal,input:unknown):Promise<GroupAddress> {
  const data=registration.parse(input);
@@ -75,13 +83,36 @@ async function discover(db:Db,p:Principal,limit:number,namespace:string|null=nul
    and ($2::text is null or ($5::boolean and exists(select 1 from emba_lease e where e.person_id=$1 and e.client_id=$2
     and e.org_id=g.org_id and e.loop_id=g.loop_id and 'plan:read'=any(e.actions) and e.revoked_at is null and e.expires_at>clock_timestamp())))
    order by g.namespace,g.slug limit $6`,[p.personId,p.clientId,namespace,slug,p.scopes.includes('plan:read'),limit]);
-  for(const row of rows){const lease=await authorize(q,p,'plan:read',row);await audit(q,p,'plan:read',row.loopId,lease);}
-  if(!rows.length)await audit(q,p,'plan:read');
-  const groups:GroupAddress[]=[];
-  for(const row of rows){await authorize(q,p,'plan:read',row);groups.push(await currentAddress(q,row));}
+  if(!rows.length){
+   await audit(q,p,'plan:read');
+   if(!await canAccessPersonal(q,p,p.personId))throw new EmbaError('forbidden');
+   return [];
+  }
+  // What authorize checks for one group, for every listed group in a fixed number of statements: a person with many groups waits no longer than a person with one.
+  const allowed=async():Promise<(string|null)[]>=>{
+   if(!await canAccessLoops(q,p,rows,'read'))throw new EmbaError('forbidden');
+   const leases:(string|null)[]=[];
+   for(const row of rows)leases.push(await leaseFor(q,p,'plan:read',row));
+   return leases;
+  };
+  const leases=await allowed();
+  await q.query(`insert into emba_audit (person_id,client_id,action,resource_id,lease_id) select $1,$2,'plan:read',t.resource,t.lease
+   from unnest($3::uuid[],$4::uuid[]) with ordinality as t(resource,lease,n) order by t.n`,[p.personId,p.clientId,rows.map(row=>row.loopId),leases]);
+  // Authority is checked again before anything is returned.
+  await allowed();
+  const groups=await currentAddresses(q,rows);
   if(!await canAccessPersonal(q,p,p.personId))throw new EmbaError('forbidden');
   return groups;
  });
+}
+/**
+ * The group a site address names, or null when no live group (or more than one) has it. It checks nobody's access and
+ * shows nothing: it only says where a page's reads should look, and each of those reads checks access itself.
+ */
+export async function addressedScope(db:Db,namespace:string,slug:string):Promise<{orgId:string;loopId:string}|null> {
+ if(!name.safeParse(namespace).success||!name.safeParse(slug).success)return null;
+ const {rows}=await db.query<{orgId:string;loopId:string}>('select org_id as "orgId",loop_id as "loopId" from emba_group_address where namespace=$1 and slug=$2 and retired_at is null limit 2',[namespace,slug]);
+ return rows.length===1?rows[0]:null;
 }
 export async function listGroups(db:Db,p:Principal,input:unknown={}):Promise<GroupAddress[]> {
  const {limit}=z.strictObject({limit:z.number().int().min(1).max(50).default(20)}).parse(input);
@@ -89,7 +120,9 @@ export async function listGroups(db:Db,p:Principal,input:unknown={}):Promise<Gro
 }
 export async function listPortalGroups(db:Db,p:Principal,limit=50):Promise<GroupAddress[]> {
  // The authenticated portal may select a group before granting a client lease.
- await db.tx(q=>requireFirstParty(q,p));return discover(db,p,limit);
+ // Site only. discover begins with the personal check, which is the rest of what requireFirstParty asks.
+ if(p.clientId!==null)throw new EmbaError('forbidden');
+ return discover(db,p,limit);
 }
 export async function resolveGroup(db:Db,p:Principal,input:unknown):Promise<GroupResolution> {
  const {handle}=z.strictObject({handle:z.string().regex(/^@[a-z0-9][a-z0-9-]{1,47}(\/[a-z0-9][a-z0-9-]{1,47})?$/)}).parse(input);
