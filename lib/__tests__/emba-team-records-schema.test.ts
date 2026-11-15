@@ -303,7 +303,7 @@ it('keeps every team-record table out of the Data API under Supabase default pri
    where n.nspname='public' and p.proname ~ '^emba_(team_|ask)' and (has_function_privilege('anon',p.oid,'execute') or has_function_privilege('authenticated',p.oid,'execute'))`);
   expect(callable.rows).toEqual([]);
   const functions=await pg.query<{count:number}>("select count(*)::int as count from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'emba_team_%'");
-  expect(functions.rows[0].count).toBe(10);
+  expect(functions.rows[0].count).toBe(11);
  }finally{await pg.close();}
 },60000);
 it('keeps team records invisible and unchangeable through the shared-note tools',async()=>{

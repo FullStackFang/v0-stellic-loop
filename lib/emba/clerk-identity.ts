@@ -38,6 +38,20 @@ function personId(issuer:string,subject:string):string {
  const hex=hash.subarray(0,16).toString('hex');
  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
 }
+/**
+ * A member's verified primary email address, read from the sign-in provider when a message is about to be sent.
+ * Loop keeps no copy of it. Null when the account is gone, banned or locked, or has no verified address.
+ * It throws when the provider could not be asked, so the caller tries again later instead of giving up.
+ */
+export async function clerkEmailOf(database:Db,personId:string):Promise<string|null> {
+ const issuer=clerkIssuer();
+ if(!issuer||!clerkPortalConfigured())return null;
+ const {rows:[identity]}=await database.query<{subject:string}>('select subject from emba_identity i where person_id=$1 and issuer=$2 and revoked_at is null and not exists(select 1 from emba_deletion_tombstone t where t.person_id=i.person_id)',[personId,issuer]);
+ if(!identity)return null;
+ const user=await (await clerkClient()).users.getUser(identity.subject).catch((error:unknown)=>{if((error as {status?:number})?.status===404)return null;throw error;});
+ if(!user||user.banned||user.locked)return null;
+ return user.emailAddresses.find(email=>email.id===user.primaryEmailAddressId&&email.verification?.status==='verified')?.emailAddress.trim().toLowerCase()??null;
+}
 export async function getClerkPortalPrincipal(database:Db):Promise<Principal|null> {
  if(!clerkPortalConfigured()||(await headers()).has('authorization')) return null;
  const issuer=clerkIssuer()!;

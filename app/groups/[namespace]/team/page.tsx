@@ -7,7 +7,9 @@ import { dayNum, mon } from '@/lib/days';
 import { getPortalPrincipal, openGroup } from '@/lib/emba/portal-session';
 import { canAccessLoop } from '@/lib/emba/access';
 import { listTeamEvents } from '@/lib/emba/team-events';
-import { upcomingEvents } from '@/lib/emba/team-interest';
+import { upcomingEvents, whatsOn } from '@/lib/emba/team-interest';
+import { feedAddress } from '@/lib/emba/team-calendar';
+import { arrivals } from '@/lib/emba/team-travel';
 import { listAsks } from '@/lib/emba/team-asks';
 import { briefHistory, myRecentRecords, teamBrief, teamState } from '@/lib/emba/team-read';
 import type { PersonView, RecordView } from '@/lib/emba/team-records';
@@ -16,14 +18,17 @@ import { ActionForm } from '@/components/emba/portal-forms';
 import { BriefForm } from '@/components/emba/brief-form';
 import { EventCard, type EventWithWho } from '@/components/emba/event-card';
 import { AskForm, AskRow } from '@/components/emba/ask-parts';
+import { sendingOn } from '@/lib/emba/reach-send';
 import { addTeamEvent, amendTeamRecord, announceToTeam, changeTeamEvent, restoreTeamEvent, retireTeamEvent, saveTeamBrief } from '../../team-actions';
+import { cancelTeamIdea, changeTeamIdea, newCalendarAddress, proposeTeamIdea, removeMyTravel, saveMyTravel, sendTeamEventInvites } from '../../trip-actions';
+import { CopyLink } from '@/components/emba/copy-link';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
 import { Alert, Via } from '../../glyphs';
 
 export const dynamic = 'force-dynamic';
 type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
 // The record is one section at a time, chosen by ?tab=. Every tab is a link, so a view can be shared and nothing depends on script.
-const TABS = [['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['events', 'Events'], ['asks', 'Asks'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
+const TABS = [['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['events', 'Events'], ['ideas', 'Ideas'], ['travel', 'Travel'], ['asks', 'Asks'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
 type Tab = typeof TABS[number][0];
 
 async function load(principal: Signed, route: GroupRoute, tab: Tab) {
@@ -39,12 +44,13 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
     teamState(db(), principal, scope), teamBrief(db(), principal, scope), listTeamEvents(db(), principal, scope), can('manage'),
     // The shown tab. Followers read the upcoming list and the asks but cannot mark interest or ask.
     shown(['events'], () => upcomingEvents(db(), principal, { ...scope, people: true })), shown(['events'], () => managersOnly(listTeamEvents(db(), principal, { ...scope, archived: true }))),
-    shown(['asks'], () => listAsks(db(), principal, scope)), shown(['events', 'asks'], () => can('post')),
+    shown(['asks'], () => listAsks(db(), principal, scope)), shown(['events', 'asks', 'ideas', 'travel'], () => can('post')),
+    shown(['ideas'], () => whatsOn(db(), principal, scope)), shown(['ideas'], () => feedAddress(db(), principal, scope)), shown(['travel'], () => arrivals(db(), principal, scope)),
     shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope))]);
   });
   if (!opened) return null;
-  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, history, mine] } = opened;
-  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, history: history ?? [], mine: mine ?? [] };
+  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine] } = opened;
+  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [] };
 }
 
 const who = (person: PersonView) => person.isYou ? 'you' : person.handle ?? (person.former ? 'a former teammate' : 'a teammate');
@@ -67,7 +73,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   const tab: Tab = TABS.find(([key]) => key === requested)?.[0] ?? 'decisions';
   const data = await load(principal, route, tab).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks } = data;
+  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel } = data;
   const href = (to: Tab, record?: number) => `${base}/team?tab=${to}${record ? `#r${record}` : ''}`;
 
   const Act = ({ record, action, label }: { record: RecordView; action: string; label: string }) => <ActionForm action={amendTeamRecord} label={label}>
@@ -106,6 +112,13 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     <label>Place<input name="place" maxLength={120} defaultValue={event?.place ?? ''} /></label><label>Link (https)<input name="url" type="url" maxLength={8000} defaultValue={event?.url ?? ''} /></label><label>Note<textarea name="note" maxLength={600} defaultValue={event?.note ?? ''} /></label>
     {event && <p className="emba-meta">Clearing a box removes that fact from the event.</p>}</>;
   const scopeFields = <><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="loopId" value={scope.loopId} /></>;
+
+  const IdeaItem = ({ event }: { event: EventWithWho }) => <EventCard event={event} scope={scope} route="site" canPost={canPost}>
+    {canPost && event.idea && (event.idea.youProposed || manager) && <details><summary>Change or cancel</summary>
+      <ActionForm action={changeTeamIdea} label="Save changes">{scopeFields}<input type="hidden" name="event" value={event.slug} /><label>What<input name="name" required maxLength={120} defaultValue={event.name} /></label>{eventFields(event)}
+        {!event.startsAt && <><label>Days on offer (YYYY-MM-DD, separated by commas)<input name="offeredDays" maxLength={120} defaultValue={event.idea.offeredDays.join(', ')} /></label><label>The day, if those who are in could not settle it<input name="day" type="date" defaultValue={event.idea.day ?? ''} /></label></>}</ActionForm>
+      <ActionForm action={cancelTeamIdea} label="Cancel it">{scopeFields}<input type="hidden" name="event" value={event.slug} /><p>A cancelled idea or plan does not come back.{event.idea.state === 'planned' ? ' Everyone who had its calendar invite gets a cancellation.' : ''}</p></ActionForm></details>}
+  </EventCard>;
 
   return <>
     <Crumbs trail={group.trail}><span className="lp-today">Today is {state.today} ({state.timezone})</span></Crumbs>
@@ -163,9 +176,34 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
           <h3>Event tags</h3>
           {events.length ? <ul className="lp-list">{events.map(event => <li key={event.id} className="lp-event"><span className="lp-topic">@{group.namespace}/{event.slug}</span><div className="lp-what"><p className="lp-stmt">{event.name}</p>
             {manager && <details><summary>Rename or archive</summary><ActionForm action={changeTeamEvent} label="Rename"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><label>Tag<input name="slug" required defaultValue={event.slug} maxLength={48} pattern="[a-z0-9][a-z0-9\-]{1,47}" /></label><label>Name<input name="name" required defaultValue={event.name} maxLength={80} /></label>{eventFields(event)}</ActionForm>
-              <ActionForm action={retireTeamEvent} label="Archive"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><p>An archived event takes no new records. Its existing records stay in the team&apos;s history.</p></ActionForm></details>}</div></li>)}</ul> : <p className="lp-empty">No events yet.</p>}
+              <ActionForm action={retireTeamEvent} label="Archive"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><p>An archived event takes no new records. Its existing records stay in the team&apos;s history.</p></ActionForm>
+              {event.startsAt && <ActionForm action={sendTeamEventInvites} label="Send as a calendar invite">{scopeFields}<input type="hidden" name="event" value={event.slug} /><p>Goes by email to the members who marked interest and allow email from this group. It names no other member. Later changes to the time or place update the same calendar entry.</p></ActionForm>}</details>}</div></li>)}</ul> : <p className="lp-empty">No events yet.</p>}
           {manager && <div className="lt-editor"><h3>New event</h3><ActionForm action={addTeamEvent} label="Create event">{scopeFields}<label>Tag<input name="slug" required maxLength={48} pattern="[a-z0-9][a-z0-9\-]{1,47}" placeholder="final-deck" /></label><label>Name<input name="name" required maxLength={80} placeholder="Final deck" /></label>{eventFields()}</ActionForm></div>}
           {manager && archived.length > 0 && <div className="lt-editor"><h3>Archived events</h3><ul className="lp-plain">{archived.map(event => <li key={event.id}>@{group.namespace}/{event.slug} · {event.name}<ActionForm action={restoreTeamEvent} label="Restore"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /></ActionForm></li>)}</ul></div>}
+        </section>}
+
+        {tab === 'ideas' && on && <section id="ideas" aria-label="Ideas and plans"><p className="emba-meta">An idea is something a member proposes, with the number of people it needs. Once it has them, a start time and a place, it is a plan and goes to the calendars of those who are in. Times are in {state.timezone}.</p>
+          <h3>Plans</h3>
+          {on.plans.length ? <ul className="lp-list">{on.plans.map(event => <IdeaItem key={event.slug} event={event} />)}</ul> : <p className="lp-empty">No plans yet.</p>}
+          <h3>Ideas</h3><p className="emba-meta">Those closest to the number they need come first.</p>
+          {on.ideas.items.length ? <ul className="lp-list">{on.ideas.items.map(event => <IdeaItem key={event.slug} event={event} />)}</ul> : <p className="lp-empty">No open ideas. Propose one below, or ask your assistant to.</p>}{more(on.ideas.more)}
+          {canPost ? <div className="lt-editor"><h3>Propose an idea</h3><ActionForm action={proposeTeamIdea} label="Propose">{scopeFields}<label>What<input name="name" required maxLength={120} placeholder="Buy suits" /></label><label>People it needs, you included<input name="needed" type="number" min={2} max={20} defaultValue={3} required /></label>{eventFields()}
+            <label>Days you could do it, if there is no start yet (YYYY-MM-DD, separated by commas)<input name="offeredDays" maxLength={120} /></label><p>You are counted as in. Leave the start empty and Loop asks those who are in to choose a day once there are enough of them.</p></ActionForm></div> : <p className="emba-meta">You follow this group and can read it. Only members can propose.</p>}
+          <div className="lt-editor"><h3>In your calendar</h3><p className="emba-meta">A private address for this group&apos;s fixed events and plans. Add it to Google, Apple or Outlook calendar as a subscription. It shows names, times and places of events, and nobody&apos;s name. Anyone who has the address can read it, so keep it to yourself.</p>
+            {feed && <p><input readOnly value={feed} aria-label="Your calendar address" /> <CopyLink url={feed} /></p>}
+            <ActionForm action={newCalendarAddress} label={feed ? 'Replace the address' : 'Make my calendar address'}>{scopeFields}{feed && <p>The address above stops working at once.</p>}</ActionForm></div>
+        </section>}
+
+        {tab === 'travel' && travel && <section id="travel" aria-label="Travel"><p className="emba-meta">When and where each member said they arrive and leave. It is what members stated; Loop checks no flight. Times are in {state.timezone}.</p>
+          {travel.entries.items.length ? <ul className="lp-list">{travel.entries.items.map((entry, index) => <li key={index} className="lp-event"><span className="lp-topic">{entry.arrival?.when ?? 'No arrival stated'}</span><div className="lp-what">
+            <p className="lp-stmt">{entry.who.isYou ? 'You' : entry.who.name ?? entry.who.handle ?? 'A teammate'}{(entry.nearYourArrival || entry.nearYourDeparture) && <span className="lp-chip lp-chip-open">{entry.nearYourArrival ? 'Arrives near you' : 'Leaves near you'}</span>}</p>
+            <p className="lp-sub">{entry.arrival && <span>Arrives{entry.arrival.place ? ` ${entry.arrival.place}` : ''}{entry.arrival.flight ? ` · ${entry.arrival.flight}` : ''}</span>}{entry.departure && <span>Leaves {entry.departure.when}{entry.departure.place ? ` · ${entry.departure.place}` : ''}{entry.departure.flight ? ` · ${entry.departure.flight}` : ''}</span>}{entry.stay && <span>Staying: {entry.stay}</span>}<span>changed {entry.changedOn}</span></p>
+          </div></li>)}</ul> : <p className="lp-empty">Nobody has stated their travel yet.</p>}{more(travel.entries.more)}
+          {canPost ? <div className="lt-editor"><h3>Your travel</h3><ActionForm action={saveMyTravel} label="Save my travel">{scopeFields}
+            <label>Arrive ({state.timezone})<input name="arrivesAt" type={travel.yours?.arrival && !travel.yours.arrival.timed ? 'date' : 'datetime-local'} defaultValue={travel.yours?.arrival ? (travel.yours.arrival.timed ? asLocal(travel.yours.arrival.at) : asLocal(travel.yours.arrival.at).slice(0, 10)) : ''} /></label><label>Arrive where<input name="arrivesPlace" maxLength={120} defaultValue={travel.yours?.arrival?.place ?? ''} /></label><label>Flight<input name="arrivesFlight" maxLength={12} defaultValue={travel.yours?.arrival?.flight ?? ''} /></label>
+            <label>Leave ({state.timezone})<input name="departsAt" type={travel.yours?.departure && !travel.yours.departure.timed ? 'date' : 'datetime-local'} defaultValue={travel.yours?.departure ? (travel.yours.departure.timed ? asLocal(travel.yours.departure.at) : asLocal(travel.yours.departure.at).slice(0, 10)) : ''} /></label><label>Leave from<input name="departsPlace" maxLength={120} defaultValue={travel.yours?.departure?.place ?? ''} /></label><label>Flight<input name="departsFlight" maxLength={12} defaultValue={travel.yours?.departure?.flight ?? ''} /></label>
+            <label>Staying at<input name="stay" maxLength={120} defaultValue={travel.yours?.stay ?? ''} /></label><p>Members and followers of this group can see it. Nobody else can.</p></ActionForm>
+            {travel.yours && <ActionForm action={removeMyTravel} label="Remove my travel">{scopeFields}</ActionForm>}</div> : <p className="emba-meta">You follow this group and can read it. Only members state travel.</p>}
         </section>}
 
         {tab === 'asks' && asks && <section id="asks" aria-label="Asks"><p className="emba-meta">An ask is one question to the group with a closing time. Each member answers once. Times are in {state.timezone}.</p>
@@ -192,8 +230,9 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
       <aside className="lp-aside">
         <section className="lt-editor"><h2>Announcements</h2>
           {brief.announcements.length ? <ul className="lp-plain">{brief.announcements.map(item => <li key={item.number}><p className="lp-stmt">{item.text}</p><Person person={item.by} clientId={item.assistant} /><p className="emba-meta">#{item.number} · {shortDay(item.createdAt)}</p>{manager && <Act record={item} action="withdraw" label="Withdraw" />}</li>)}</ul> : <p className="emba-meta">No announcements.</p>}
-          {manager && <details><summary>Post an announcement</summary><ActionForm action={announceToTeam} label="Post announcement">{scopeFields}<label>Announcement (at most 600 characters)<textarea name="text" required maxLength={600} /></label><p>It appears in the brief and in what is new. No message is sent to anyone.</p></ActionForm></details>}
+          {manager && <details><summary>Post an announcement</summary><ActionForm action={announceToTeam} label="Post announcement">{scopeFields}<label>Announcement (at most 600 characters)<textarea name="text" required maxLength={600} /></label>{sendingOn() ? <><label className="lt-check"><input type="checkbox" name="send" value="true" />Send to members</label><p>It appears in the brief and in what is new. Ticked, it also goes to each member the way they chose, and to nobody who chose not to be messaged.</p></> : <p>It appears in the brief and in what is new. No message is sent to anyone.</p>}</ActionForm></details>}
         </section>
+        {manager && <section className="lt-editor"><h2>Organize</h2><p className="emba-meta">Interest in each event by day, and how each open ask is filling.</p><Link className="lp-btn" href={`${groupPath(group.namespace, group.slug)}/organize`}>Open the organizer view<Arrow /></Link></section>}
         <section className="lt-editor"><h2>Your assistant</h2><p className="emba-meta">Connect Claude or another assistant once, and it reads this record before it drafts anything for the team.</p><Link className="lp-btn" href="/groups/connections">Connect an assistant<Arrow /></Link></section>
       </aside>
     </div>

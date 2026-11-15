@@ -14,7 +14,7 @@ import {setMemberHandle} from '@/lib/emba/tags';
 import {createTeamEvent} from '@/lib/emba/team-events';
 import type {AskResult} from '@/lib/emba/team-asks';
 import {formatAnswer,formatAskChange,formatAskDetail,formatAskWrite,LINE,QUOTE,quote,TOTAL} from '@/lib/emba/team-format';
-import {createTeamMcpServer,handleTeamMcpRequest} from '@/lib/emba/team-mcp';
+import {createTeamMcpServer,handleTeamMcpRequest,TEAM_TOOLS} from '@/lib/emba/team-mcp';
 import {saveBrief} from '@/lib/emba/team-read';
 import {claim,LIMITS,logDecision,postAnnouncement} from '@/lib/emba/team-records';
 
@@ -58,13 +58,15 @@ async function connect(server:ReturnType<typeof createTeamMcpServer>) {
 const session=(p:Principal)=>connect(createTeamMcpServer(t.db,p));
 const link={url:'https://docs.google.com/document/d/abc',title:'Market sizing',summary:'TAM is 4.2bn.'};
 
-const TOOLS=['add_event','amend_record','answer','ask','ask_results','claim','events','file_output','interested','list_tags','log_decision','read_document','resolve_tag','search_knowledge','team_brief','team_state','whats_new'];
-const WRITES=['add_event','amend_record','answer','ask','claim','file_output','interested','log_decision'];
+const TOOLS=['add_event','amend_record','answer','arrivals','ask','ask_results','claim','events','file_output','interested','list_tags','log_decision','my_travel','propose_idea','read_document','resolve_tag','search_knowledge','team_brief','team_state','waiting','whats_new','whats_on'];
+const WRITES=['add_event','amend_record','answer','ask','claim','file_output','interested','log_decision','my_travel','propose_idea'];
 it('serves exactly the team tools, and leaves the existing server as it was',async()=>{
  const f=await fixture(),s=await session(f.agent);
  try{
   const tools=(await s.client.listTools()).tools;
   expect(tools.map(tool=>tool.name).sort()).toEqual(TOOLS);
+  // The request log's list of tools is the list of tools.
+  expect([...TEAM_TOOLS].sort()).toEqual(TOOLS);
   for(const tool of tools)expect(tool.annotations?.readOnlyHint,tool.name).toBe(!WRITES.includes(tool.name));
   // Every tool that saves says it does so at once, and only on the user's request.
   for(const name of WRITES)expect(tools.find(tool=>tool.name===name)!.description,name).toMatch(/Call this only when the user asked .* It saves at once under the user's name/);
@@ -425,3 +427,43 @@ it('sends a person who opens the connector address in a browser to the setup pag
  expect(assistant.headers.get('www-authenticate')).toContain('resource_metadata=');
  expect((await get({accept:'text/html',authorization:'Bearer nope'})).status).toBe(401);
 });
+
+// Specs: openspec/changes/loop-trip (trip-travel, group-ideas).
+it('runs a trip through its tools: travel stated and read, an idea proposed, joined, made a plan and listed for its day',async()=>{
+ const f=await fixture(),day=new Date(Date.now()+3*86400000).toISOString().slice(0,10);
+ await grantLease(t.db,f.memberB,{...f.root,clientId:'claude',actions:['plan:read','group-memory:write'],expiresAt:forever});
+ const other=(await authenticate(t.db,'test',async()=>({issuer:f.memberB.issuer,subject:f.memberB.subject,clientId:'claude',scopes:['plan:read','group-memory:write'],expiresAt:Date.parse(forever)})))!;
+ const a=await session(f.agent),b=await session(other);
+ // Travel: each states their own, and asks who lands near them.
+ const mine=await a.call('my_travel',{team:'@cohort',arrivesAt:`${day}T14:20`,arrivesPlace:'Hanoi',arrivesFlight:'vn 54'});
+ expect(mine.text).toMatch(/^Saved\. The team's members and followers can see it\./);expect(mine.text).toContain('flight VN 54');expect(mine.data).toMatchObject({saved:true,entry:{arrival:{place:'Hanoi'}}});
+ await b.call('my_travel',{team:'@cohort',arrivesAt:`${day}T15:30`,arrivesPlace:'hanoi'});
+ const near=await a.call('arrivals',{team:'@cohort'});
+ expect(near.text).toContain("Arriving at the user's place within two hours of the user: @cohort/ben.");expect(near.text).toContain('Loop does not check flights.');
+ expect((await b.call('my_travel',{team:'@cohort',stay:'Hotel Metropole',arrivesFlight:''})).text).toContain('> Staying: Hotel Metropole');
+ expect((await a.call('my_travel',{team:'@cohort',remove:true,stay:'x'})).isError).toBe(true);
+ expect((await b.call('my_travel',{team:'@cohort',remove:true})).text).toBe("Saved. The user's travel for this team was removed.");
+ // An idea, proposed in one call.
+ const proposed=await a.call('propose_idea',{team:'@cohort',name:'Buy suits',needed:2,startsAt:`${day}T15:00`,place:'Tailor on Hang Gai'});
+ expect(proposed.text).toMatch(/^Saved\.\nIdea @cohort\/buy-suits: /);expect(proposed.text).toContain('1 in, including you, needs 1 more of 2. The user proposed it.');
+ expect(proposed.text).toMatch(/^https:\/\/\S+\/e\/[0-9a-f]{32}$/m);expect(proposed.data).toMatchObject({saved:true,event:{slug:'buy-suits',idea:{state:'idea',needs:1}}});
+ // The other member asks what is on that day: the idea, who is in, and how many more it needs.
+ const on=await b.call('whats_on',{team:'@cohort',day});
+ expect(on.text).toContain(`What is on ${day}:`);expect(on.text).toContain('Idea @cohort/buy-suits');expect(on.text).toContain('needs 1 more of 2');expect(on.text).toContain('In: @cohort/ana.');
+ expect((await b.call('waiting')).text).toContain('Idea @cohort/buy-suits in @cohort (Synthetic EMBA) needs one more person');
+ // They say they are in, and it is a plan.
+ const joined=await b.call('interested',{team:'@cohort/buy-suits'});
+ expect(joined.text).toMatch(/^Saved\. The user is in\.\nPlan @cohort\/buy-suits: /);expect(joined.text).toContain('It is a plan: a calendar invite goes to the user by email');
+ expect((await b.call('whats_new',{team:'@cohort'})).text).toMatch(/idea @cohort\/buy-suits has the people it needs and is now a plan/);
+ expect((await b.call('events',{team:'@cohort'})).text).toContain('Plan @cohort/buy-suits');
+ // Only its proposer or an organizer changes or cancels it; the reply to each says why.
+ expect((await b.call('propose_idea',{team:'@cohort/buy-suits',action:'cancel'})).text).toBe('Not saved. Only the person who proposed it, or an owner or organizer of the team, can change or cancel it.');
+ expect((await a.call('propose_idea',{team:'@cohort/buy-suits',action:'change',place:''})).text).toMatch(/^Not saved\. A plan keeps a start time and a place\./);
+ expect((await a.call('propose_idea',{team:'@cohort/buy-suits',action:'change',startsAt:`${day}T16:00`})).text).toMatch(/^Saved\.\nPlan /);
+ expect((await a.call('propose_idea',{team:'@cohort/buy-suits',action:'cancel'})).text).toMatch(/^Saved\. It is cancelled and will not come back\./);
+ expect((await a.call('propose_idea',{team:'@cohort/buy-suits',name:'x'})).isError).toBe(true);
+ expect((await b.call('whats_on',{team:'@cohort',day})).text).toContain('Nothing is on that day yet.');
+ // No result carries an id, a feed address or anyone's email.
+ for(const seen of [...a.seen,...b.seen]){expect(seen).not.toMatch(uuid);expect(seen).not.toMatch(/api\/calendar|loop\.ics/);}
+ await a.close();await b.close();
+},120000);

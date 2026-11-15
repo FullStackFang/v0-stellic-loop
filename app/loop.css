@@ -57,6 +57,17 @@ body:has(.lp){display:block;place-items:normal;padding:0;background:oklch(96.2% 
 .lp-wrap{max-width:1180px;margin:0 auto}
 .lp-crumbs{display:flex;align-items:center;gap:8px;min-height:52px;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
 .lp-crumbs a:hover{color:var(--blue)}
+/* The loading screen: held back a moment so a fast page never flashes it. */
+.lp-loading{animation:lp-arrive .2s .15s both}
+.lp-loading p{display:flex;align-items:center;min-height:52px;margin:0;font-size:13.5px;color:var(--muted)}
+.lp-loading i{display:block;height:96px;margin-top:16px;border-radius:var(--r-lg);background:var(--line);animation:lp-wait .9s ease-in-out infinite alternate}
+.lp-loading i:first-of-type{height:34px;width:min(360px,60%);margin-top:6px;border-radius:8px}
+.lp-loading i:nth-of-type(3){animation-delay:.15s}
+.lp-loading i:nth-of-type(4){animation-delay:.3s}
+@keyframes lp-wait{to{opacity:.4}}
+/* The clicked menu link, until its page answers. */
+.lp-wait{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--lime);opacity:0}
+.lp-wait[data-on]{opacity:1;animation:lp-wait .5s ease-in-out infinite alternate}
 .lp-crumbs b{color:var(--navy);font-weight:500}
 .lp-today{margin-left:auto;font-size:13px}
 

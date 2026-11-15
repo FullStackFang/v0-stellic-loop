@@ -5,6 +5,7 @@ import type {Db,Q} from '../db';
 import {canAccessLoop,type Principal} from './access';
 import {audit,authorize,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
+import {queueAnnouncement} from './reach-send';
 import {hostOf,normaliseLink,recognisedHost,type LinkProblem} from './team-link';
 import {lineSchema,nameSchema} from './team-text';
 
@@ -428,21 +429,27 @@ export async function amendRecord(db:Db,p:Principal,input:unknown):Promise<Write
  },{record:data.number});
 }
 
-const announcementSchema=z.strictObject({...scope,operationId,text:lineSchema(LIMITS.announcement)});
+const announcementSchema=z.strictObject({...scope,operationId,text:lineSchema(LIMITS.announcement),
+ /** The organizer chose "send to members": it also goes out by the way each member chose. */
+ send:z.boolean().default(false)});
 /** Site only: an owner or organizer posts an announcement. It is withdrawn with amendRecord. */
 export async function postAnnouncement(db:Db,p:Principal,input:unknown):Promise<WriteResult> {
  const data=announcementSchema.parse(input);
  return write(db,p,data,'announce',data,async ctx=>{
   const id=await insert(ctx,{kind:'announcement'},{body:data.text});
   await change(ctx,id,'announced');
+  if(data.send)await queueAnnouncement(ctx.q,ctx.scope,id,p.personId);
   return {recordId:id};
  },{siteOnly:true,manage:true});
 }
 
 /** SQL: person $1 is still a member of the team who may post. */
-const canPost=(org:string,loop:string)=>`(exists(select 1 from emba_membership m where m.org_id=${org} and m.person_id=$1 and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=$1)
+const holds=(org:string,loop:string,roles:string)=>`(exists(select 1 from emba_membership m where m.org_id=${org} and m.person_id=$1 and m.revoked_at is null) and not exists(select 1 from emba_deletion_tombstone t where t.person_id=$1)
     and exists(with recursive up as (select id,parent_id from emba_loop where org_id=${org} and id=${loop} union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=${org})
-     select 1 from up join emba_role r on r.org_id=${org} and r.loop_id=up.id and r.person_id=$1 and r.revoked_at is null and r.role in ('owner','organizer','member')))`;
+     select 1 from up join emba_role r on r.org_id=${org} and r.loop_id=up.id and r.person_id=$1 and r.revoked_at is null and r.role in (${roles})))`;
+const canPost=(org:string,loop:string)=>holds(org,loop,"'owner','organizer','member'");
+/** SQL: person $1 still belongs to the team in any role, a follower's included. */
+const belongs=(org:string,loop:string)=>holds(org,loop,"'owner','organizer','member','follower'");
 /**
  * In every team the person can no longer write to (role or membership
  * removed, or account deleted): their open claims are released, claims
@@ -453,11 +460,20 @@ const canPost=(org:string,loop:string)=>`(exists(select 1 from emba_membership m
 export async function releaseOnDeparture(q:Q,personId:string,options:{orgId?:string;actorId:string|null}) {
  // Interest follows membership: a person who can no longer post to a team is not listed as interested in its events.
  await q.query(`delete from emba_event_interest i where i.person_id=$1 and ($2::uuid is null or i.org_id=$2) and not ${canPost('i.org_id','i.loop_id')}`,[personId,options.orgId??null]);
+ await q.query(`delete from emba_event_decline d where d.person_id=$1 and ($2::uuid is null or d.org_id=$2) and not ${canPost('d.org_id','d.loop_id')}`,[personId,options.orgId??null]);
+ // How a team reaches a person follows membership too (loop-club-reach): the choice goes, and a message not yet sent is never sent.
+ await q.query(`delete from emba_reach_choice c where c.person_id=$1 and ($2::uuid is null or c.org_id=$2) and not ${belongs('c.org_id','c.loop_id')}
+  and not exists(select 1 from emba_group_membership_request w where w.org_id=c.org_id and w.loop_id=c.loop_id and w.person_id=c.person_id and w.state='pending')`,[personId,options.orgId??null]);
+ await q.query(`update emba_reach_message g set state='skipped' where g.person_id=$1 and g.state='queued' and ($2::uuid is null or g.org_id=$2) and not ${belongs('g.org_id','g.loop_id')}`,[personId,options.orgId??null]);
+ // Travel and the calendar feed follow membership (loop-trip): the entry is deleted and the feed address stops working.
+ await q.query(`delete from emba_travel t where t.person_id=$1 and ($2::uuid is null or t.org_id=$2) and not ${canPost('t.org_id','t.loop_id')}`,[personId,options.orgId??null]);
+ await q.query(`delete from emba_calendar_feed f where f.person_id=$1 and ($2::uuid is null or f.org_id=$2) and not ${belongs('f.org_id','f.loop_id')}`,[personId,options.orgId??null]);
  const {rows:teams}=await q.query<Scope>(`select s.org_id as "orgId",s.loop_id as "loopId" from emba_team_state s where ($2::uuid is null or s.org_id=$2)
    and not ${canPost('s.org_id','s.loop_id')}
    and (
    exists(select 1 from emba_team_record r where r.org_id=s.org_id and r.loop_id=s.loop_id and r.owner_id=$1 and r.state='current' and r.claim_status in ('open','proposed'))
    or exists(select 1 from emba_team_record_tag t join emba_team_record r on r.id=t.record_id where t.person_id=$1 and r.org_id=s.org_id and r.loop_id=s.loop_id)
+   or exists(select 1 from emba_team_event e where e.org_id=s.org_id and e.loop_id=s.loop_id and e.proposer_id=$1 and e.state in ('idea','planned'))
    or exists(select 1 from emba_ask k where k.org_id=s.org_id and k.loop_id=s.loop_id and k.closed_at is null and k.closes_at>clock_timestamp()
     and (k.asker_id=$1 or exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$1))))
   order by s.org_id,s.loop_id for update of s`,[personId,options.orgId??null]);
@@ -478,6 +494,13 @@ export async function releaseOnDeparture(q:Q,personId:string,options:{orgId?:str
    const {rows:[row]}=await q.query<{n:number}>('update emba_team_state set change_seq=change_seq+1 where org_id=$1 and loop_id=$2 returning change_seq::int as n',[team.orgId,team.loopId]);
    await q.query("insert into emba_team_change(org_id,loop_id,seq,ask_id,action,actor_id) values($1,$2,$3,$4,'ask_closed',$5)",[team.orgId,team.loopId,row.n,item.id,options.actorId]);
   }
+  // Ideas follow membership (loop-trip): the person's open ideas lapse, and the plans they proposed pass to the team's owners and organizers.
+  const {rows:ideas}=await q.query<{id:string}>("update emba_team_event set state='lapsed',archived_at=clock_timestamp() where org_id=$1 and loop_id=$2 and proposer_id=$3 and state='idea' returning id",[team.orgId,team.loopId,personId]);
+  for(const item of ideas){
+   const {rows:[row]}=await q.query<{n:number}>('update emba_team_state set change_seq=change_seq+1 where org_id=$1 and loop_id=$2 returning change_seq::int as n',[team.orgId,team.loopId]);
+   await q.query("insert into emba_team_change(org_id,loop_id,seq,event_id,action,actor_id) values($1,$2,$3,$4,'event_lapsed',$5)",[team.orgId,team.loopId,row.n,item.id,options.actorId]);
+  }
+  await q.query("update emba_team_event set proposer_id=null where org_id=$1 and loop_id=$2 and proposer_id=$3 and state='planned'",[team.orgId,team.loopId,personId]);
  }
 }
 

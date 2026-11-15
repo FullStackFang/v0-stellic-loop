@@ -98,7 +98,7 @@ export async function retireTeamEvent(_previous: PortalResult, data: FormData): 
   return mutate(principal => archiveTeamEvent(db(), principal, { orgId: value(data, 'orgId'), eventId: value(data, 'eventId') }));
 }
 export async function announceToTeam(_previous: PortalResult, data: FormData): Promise<PortalResult> {
-  return mutate(principal => postAnnouncement(db(), principal, { ...team(data), text: value(data, 'text') }));
+  return mutate(principal => postAnnouncement(db(), principal, { ...team(data), text: value(data, 'text'), send: value(data, 'send') === 'true' }));
 }
 /** Withdraw, confirm, decline, done, release or untag: the same action an assistant has, used from the page. */
 export async function amendTeamRecord(_previous: PortalResult, data: FormData): Promise<PortalResult> {

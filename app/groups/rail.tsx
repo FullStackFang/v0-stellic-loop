@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link, { useLinkStatus } from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
@@ -13,8 +13,14 @@ const icons = {
   members: <svg {...icon}><circle cx="6" cy="6" r="2.3" /><path d="M2 13c.4-2.2 2-3.4 4-3.4s3.6 1.2 4 3.4M10.5 4a2.2 2.2 0 0 1 0 4.2M12 9.9c1.1.5 1.8 1.5 2 3.1" /></svg>,
   groups: <svg {...icon}><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="9" y="2.5" width="4.5" height="4.5" rx="1" /><rect x="2.5" y="9" width="4.5" height="4.5" rx="1" /><rect x="9" y="9" width="4.5" height="4.5" rx="1" /></svg>,
   assistants: <svg {...icon}><circle cx="5.5" cy="8" r="3" /><circle cx="10.5" cy="8" r="3" /></svg>,
+  reach: <svg {...icon}><rect x="2" y="3.5" width="12" height="9" rx="1.5" /><path d="M2.5 4.5 8 9l5.5-4.5" /></svg>,
   archive: <svg {...icon}><path d="M4 2.5v11M4 4.5h5.5M4 8h8M4 11.5h4" /><circle cx="11.5" cy="4.5" r="1.3" /></svg>,
 };
+
+/** A dot on the menu link that was clicked, until its page answers. Always drawn, so nothing shifts. */
+function Wait() {
+  return <span className="lp-wait" aria-hidden="true" data-on={useLinkStatus().pending || undefined} />;
+}
 
 /** A group in the rail, in tree order: `depth` is how many groups it sits inside that the person can open. */
 export type RailGroup = { namespace: string; slug: string; name: string; handle: string; depth: number };
@@ -23,7 +29,7 @@ export function Rail({ groups, account }: { groups: RailGroup[]; account: ReactN
   const path = usePathname();
   const { namespace, slug = ROOT_SLUG } = useParams<{ namespace?: string; slug?: string }>();
   const current = groups.find(group => group.namespace === namespace && group.slug === slug);
-  const item = (href: string, label: string, glyph: ReactNode, on: boolean) => <li><Link href={href} aria-current={on ? 'page' : undefined}>{glyph}{label}</Link></li>;
+  const item = (href: string, label: string, glyph: ReactNode, on: boolean) => <li><Link href={href} aria-current={on ? 'page' : undefined}>{glyph}{label}<Wait /></Link></li>;
   const base = namespace ? groupPath(namespace, slug) : '';
   return <aside className="lp-rail">
     <Link href="/groups" className="lp-wordmark"><Rings /><span>Loop</span></Link>
@@ -39,6 +45,7 @@ export function Rail({ groups, account }: { groups: RailGroup[]; account: ReactN
     <nav aria-label="You"><p className="lp-nav-label">You</p><ul>
       {item('/groups', 'Groups', icons.groups, path === '/groups')}
       {item('/groups/connections', 'Assistants', icons.assistants, path === '/groups/connections')}
+      {item('/groups/reach', 'Reach', icons.reach, path === '/groups/reach')}
       {item('/groups/archive', 'How we got here', icons.archive, path === '/groups/archive')}
     </ul></nav>
     {account && <div className="lp-account">{account}</div>}

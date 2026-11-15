@@ -5,6 +5,7 @@ import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { authConfig } from '@/lib/emba/auth-token';
 import { listLeases } from '@/lib/emba/consent';
 import { assistantName } from '@/lib/emba/team-text';
+import { noteConnectView } from '@/lib/emba/pilot-metrics';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { grantGroupRead, renewGroupRead, revokeGroupRead } from '../connection-actions';
 
@@ -13,6 +14,8 @@ const claudeId = 'https://claude.ai/oauth/mcp-oauth-client-metadata';
 export default async function ConnectionsPage() {
   const principal = await getPortalPrincipal();
   if (!principal) return <section className="lt-editor"><h1>Assistant connections</h1><p>Sign in to manage your own group grants.</p><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/connections')}`}>Sign in</Link></section>;
+  // Counted once per member, for the operator's connecting funnel.
+  await noteConnectView(db(), principal);
   let config: ReturnType<typeof authConfig> | null = null;
   try { config = authConfig(); } catch { /* Explain missing configuration below. */ }
   const ready = clerkPortalConfigured() && !!config && new URL(config.audience).pathname === '/api/mcp';

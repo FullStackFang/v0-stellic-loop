@@ -133,7 +133,8 @@ export async function handleKnowledgeRequest(request: Request, options: Options 
     return Response.json({ passages: await searchKnowledge(database, principal, input) }, { headers: privateHeaders });
   } catch (error) { return failure(error); }
 }
-export async function handleMcpRequest(request: Request, options: Options = {}, create: (database: Db, principal: Principal) => McpServer = createMemoryMcpServer): Promise<Response> {
+/** `observe` notes the request in a log and may return a session identifier to send back; it never decides anything. */
+export async function handleMcpRequest(request: Request, options: Options = {}, create: (database: Db, principal: Principal) => McpServer = createMemoryMcpServer, observe?: (database: Db, principal: Principal, request: Request) => Promise<string | null>): Promise<Response> {
   let server: McpServer | undefined;
   try {
     // A person who opens the connector address in a browser gets the setup page, not a JSON error.
@@ -145,11 +146,13 @@ export async function handleMcpRequest(request: Request, options: Options = {}, 
     const principal = await remotePrincipal(request, database, auth);
     if (principal instanceof Response) return principal;
     if (request.method !== 'POST') return new Response(null, { status: 405, headers: { ...privateHeaders, Allow: 'POST' } });
+    const session = observe ? await observe(database, principal, request) : null;
     server = create(database, principal);
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true, maxRequestBodySize: 16384 });
     await server.connect(transport);
     const response = await transport.handleRequest(request);
     response.headers.set('Cache-Control', 'no-store');
+    if (session) response.headers.set('Mcp-Session-Id', session);
     return response;
   } catch (error) { return failure(error); }
   finally { await server?.close(); }

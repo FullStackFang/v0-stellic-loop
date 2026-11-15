@@ -1,0 +1,135 @@
+// @vitest-environment node
+import {afterAll,beforeAll,beforeEach,expect,it} from 'vitest';
+import {openTestDb,type TestDb} from '@/test/db';
+import {seedEmbaFixture} from '@/test/emba-fixture';
+import {authenticate,type Principal} from '@/lib/emba/access';
+import {grantLease} from '@/lib/emba/consent';
+import {registerGroupAddress} from '@/lib/emba/groups';
+import {setMemberHandle} from '@/lib/emba/tags';
+import {answerAsk,closeAsk,createAsk} from '@/lib/emba/team-asks';
+import {addEvent} from '@/lib/emba/team-events';
+import {setInterest,upcomingEvents} from '@/lib/emba/team-interest';
+import {saveBrief} from '@/lib/emba/team-read';
+import {amendRecord,claim,postAnnouncement} from '@/lib/emba/team-records';
+import {waiting,WAITING,type Waiting} from '@/lib/emba/team-waiting';
+
+// Specs: openspec/changes/loop-club-reach/specs/waiting.
+let t:TestDb;
+beforeAll(async()=>{t=await openTestDb();});afterAll(async()=>{await t?.close();});beforeEach(async()=>{await t.reset();await t.db.query('delete from emba_deletion_tombstone');});
+const forever='2099-01-01T00:00:00Z';
+async function fixture(){
+ const f=await seedEmbaFixture(t.db);await t.db.query("update emba_role set role='owner' where person_id=$1",[f.organizer.personId]);
+ const root={orgId:f.orgId,loopId:f.rootId};
+ await registerGroupAddress(t.db,f.organizer,{...root,namespace:'club',slug:'workspace'});
+ await registerGroupAddress(t.db,f.organizer,{...f.vietnam,namespace:'club',slug:'vietnam'});
+ await setMemberHandle(t.db,f.memberA,{orgId:f.orgId,handle:'ana'});
+ await setMemberHandle(t.db,f.memberB,{orgId:f.orgId,handle:'ben'});
+ await saveBrief(t.db,f.organizer,{...root,body:'Wine club.',timezone:'America/New_York',expectedVersion:0});
+ return {...f,root};
+}
+type F=Awaited<ReturnType<typeof fixture>>;
+type Team={orgId:string;loopId:string};
+async function assistant(f:F,who:Principal,teams:Team[]=[f.root],client='claude') {
+ for(const team of teams)await grantLease(t.db,who,{...team,clientId:client,actions:['plan:read','group-memory:write'],expiresAt:forever});
+ return (await authenticate(t.db,'test',async()=>({issuer:who.issuer,subject:who.subject,clientId:client,scopes:['plan:read','group-memory:write'],expiresAt:Date.parse(forever)})))!;
+}
+const inDays=(days:number)=>new Date(Date.now()+days*86400000).toISOString().slice(0,19)+'Z';
+const ask=(f:F,who:Principal,question:string,days=5,team:Team=f.root)=>createAsk(t.db,who,{...team,question,kind:'one',options:['Yes','No'],closesAt:inDays(days)});
+const event=(f:F,slug:string,days:number,team:Team=f.root)=>addEvent(t.db,f.organizer,{...team,slug,name:slug,startsAt:inDays(days)});
+const kinds=(result:Waiting)=>result.items.map(item=>item.kind==='ask'?`ask ${item.ask.number}`:item.kind==='event'||item.kind==='idea'?`${item.kind} ${item.event.slug}`:`${item.kind} ${item.record.number}`);
+const uuids=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
+
+it('returns unanswered asks, unacted events, mentions and announcements across teams, asks closing soonest first',async()=>{
+ const f=await fixture();
+ expect(await waiting(t.db,f.memberB)).toEqual({count:0,items:[],more:[],untrusted:true});
+ await ask(f,f.memberA,'Later?',9);await ask(f,f.memberA,'Sooner?',2,f.vietnam);
+ await event(f,'tasting',6);await event(f,'mixer',3);
+ // An event with no date is a label: it never ends, so it never waits.
+ expect((await addEvent(t.db,f.organizer,{...f.root,slug:'label',name:'Label'})).saved).toBe(true);
+ expect((await claim(t.db,f.memberA,{...f.root,what:'Book the room',tags:['ben']})).saved).toBe(true);
+ expect((await postAnnouncement(t.db,f.organizer,{...f.root,text:'Dues are due Friday.'})).saved).toBe(true);
+ const result=await waiting(t.db,f.memberB);
+ expect(kinds(result)).toEqual(['ask 1','ask 1','event mixer','event tasting','mention 2','announcement 3']);
+ expect(result).toMatchObject({count:6,more:[],items:[{team:{handle:'@club/vietnam'},ask:{question:'Sooner?',yourAnswer:null}},{team:{handle:'@club'},ask:{question:'Later?'}},
+  {team:{handle:'@club'},event:{slug:'mixer',youAreInterested:false}},{},{record:{kind:'claim',what:'Book the room',tags:[{handle:'@club/ben',isYou:true}]}},{record:{kind:'announcement',text:'Dues are due Friday.'}}]});
+ // Nothing names a person or a thing by an internal id.
+ expect(JSON.stringify(result)).not.toMatch(uuids);
+ // The person who asked still has their own ask to answer; the organizer's own event and announcement do not wait for the organizer.
+ expect(kinds(await waiting(t.db,f.memberA))).toEqual(['ask 1','ask 1','event mixer','event tasting','announcement 3']);
+ expect(kinds(await waiting(t.db,f.organizer))).toEqual(['ask 1','ask 1']);
+ // A follower reads the team and cannot answer or mark interest: only what they are shown waits for them.
+ await t.db.query("update emba_role set role='follower' where person_id=$1",[f.members[3].personId]);
+ expect(kinds(await waiting(t.db,f.members[3]))).toEqual(['announcement 3']);
+ // Someone in no team has nothing waiting, and is told nothing.
+ expect(await waiting(t.db,f.nonmember)).toEqual({count:0,items:[],more:[],untrusted:true});
+ await expect(waiting(t.db,f.memberB,{personId:f.memberA.personId})).rejects.toThrow();
+},120000);
+
+it('keeps an item waiting until the member acts on it, for that member only',async()=>{
+ const f=await fixture();
+ await ask(f,f.memberA,'Red or white?');await ask(f,f.memberA,'Closing early?');
+ await event(f,'mixer',3);await event(f,'tasting',6);await event(f,'hike',9);
+ await postAnnouncement(t.db,f.organizer,{...f.root,text:'Dues are due Friday.'});
+ await claim(t.db,f.memberA,{...f.root,what:'Bring glasses',owner:'ben'});
+ const first=await waiting(t.db,f.memberB);
+ expect(kinds(first)).toEqual(['ask 1','ask 2','event mixer','event tasting','event hike','mention 4','announcement 3']);
+ // Asked again without acting: asks and events are still there; the mention and the announcement were shown once.
+ expect(kinds(await waiting(t.db,f.memberB))).toEqual(['ask 1','ask 2','event mixer','event tasting','event hike']);
+ // Answering, an ask closing, interest and a decline each clear their own item.
+ expect((await answerAsk(t.db,f.memberB,{...f.root,number:1,choices:['Yes']})).saved).toBe(true);
+ expect((await closeAsk(t.db,f.memberA,{...f.root,number:2})).saved).toBe(true);
+ expect(await setInterest(t.db,f.memberB,{...f.root,event:'mixer'})).toMatchObject({saved:true,interested:true,declined:false,changed:true});
+ expect(await setInterest(t.db,f.memberB,{...f.root,event:'tasting',interested:false,decline:true})).toMatchObject({saved:true,interested:false,declined:true,changed:true,event:{interested:0,youAreInterested:false}});
+ expect(await setInterest(t.db,f.memberB,{...f.root,event:'tasting',interested:false,decline:true})).toMatchObject({saved:true,changed:false});
+ expect(kinds(await waiting(t.db,f.memberB))).toEqual(['event hike']);
+ // Taking an answer back makes the ask wait again; taking interest back without declining makes the event wait again.
+ await answerAsk(t.db,f.memberB,{...f.root,number:1,remove:true});await setInterest(t.db,f.memberB,{...f.root,event:'mixer',interested:false});
+ expect(kinds(await waiting(t.db,f.memberB))).toEqual(['ask 1','event mixer','event hike']);
+ // A decline removes interest, is seen by nobody else, and is undone by marking interest.
+ await setInterest(t.db,f.memberB,{...f.root,event:'hike'});
+ expect(await setInterest(t.db,f.memberB,{...f.root,event:'hike',interested:false,decline:true})).toMatchObject({saved:true,changed:true,event:{interested:0}});
+ expect(JSON.stringify(await upcomingEvents(t.db,f.memberA,{...f.root,people:true}))).not.toMatch(/declin/i);
+ expect(await setInterest(t.db,f.memberB,{...f.root,event:'hike'})).toMatchObject({saved:true,interested:true,declined:false,event:{interested:1,youAreInterested:true}});
+ expect((await t.db.query('select count(*)::int as n from emba_event_decline where person_id=$1',[f.memberB.personId])).rows).toEqual([{n:1}]);
+ await expect(setInterest(t.db,f.memberB,{...f.root,event:'hike',interested:true,decline:true})).rejects.toThrow();
+ // None of that changed what waits for another member.
+ expect(kinds(await waiting(t.db,f.members[2]))).toEqual(['ask 1','event mixer','event tasting','event hike','announcement 3']);
+ // An event that ended, an archived one and a withdrawn announcement do not wait.
+ await t.db.query("update emba_team_event set starts_at=clock_timestamp()-interval '3 hours',ends_at=clock_timestamp()-interval '1 hour' where slug='mixer'");
+ await postAnnouncement(t.db,f.organizer,{...f.root,text:'Never mind.'});
+ expect((await amendRecord(t.db,f.organizer,{...f.root,number:5,action:'withdraw'})).saved).toBe(true);
+ expect(kinds(await waiting(t.db,f.members[4]))).toEqual(['ask 1','event tasting','event hike','announcement 3']);
+},120000);
+
+it('returns nothing from a team the assistant holds no grant for, and never names it',async()=>{
+ const f=await fixture();
+ await ask(f,f.memberA,'In the club?');await ask(f,f.memberA,'In Vietnam?',2,f.vietnam);
+ await postAnnouncement(t.db,f.organizer,{...f.vietnam,text:'Vietnam only.'});
+ const agent=await assistant(f,f.memberB);
+ const result=await waiting(t.db,agent);
+ expect(kinds(result)).toEqual(['ask 1']);
+ expect(result).toMatchObject({count:1,more:[],items:[{team:{handle:'@club'}}]});
+ expect(JSON.stringify(result)).not.toMatch(/vietnam/i);
+ // The ungranted team's announcement was not shown, so it still waits where the member can see it.
+ expect(kinds(await waiting(t.db,f.memberB))).toEqual(['ask 1','ask 1','announcement 2']);
+ // An assistant with no grant at all, and one whose grant ended, get nothing.
+ const none=(await authenticate(t.db,'test',async()=>({issuer:f.memberB.issuer,subject:f.memberB.subject,clientId:'other',scopes:['plan:read'],expiresAt:Date.parse(forever)})))!;
+ expect(await waiting(t.db,none)).toEqual({count:0,items:[],more:[],untrusted:true});
+ await t.db.query("update emba_lease set revoked_at=clock_timestamp() where client_id='claude'");
+ expect(await waiting(t.db,agent)).toEqual({count:0,items:[],more:[],untrusted:true});
+},120000);
+
+it('returns at most 10 items and says how many more wait in which team',async()=>{
+ const f=await fixture();
+ for(let n=1;n<=4;n++)await ask(f,f.members[n+1],`Club question ${n}?`,n);
+ for(let n=1;n<=4;n++)await ask(f,f.members[n+1],`Vietnam question ${n}?`,n+10,f.vietnam);
+ for(let n=1;n<=5;n++)await event(f,`night-${n}`,n);
+ await postAnnouncement(t.db,f.organizer,{...f.root,text:'One.'});await postAnnouncement(t.db,f.organizer,{...f.vietnam,text:'Two.'});
+ const result=await waiting(t.db,f.memberB);
+ expect(result.items).toHaveLength(WAITING.items);
+ expect(kinds(result)).toEqual(['ask 1','ask 2','ask 3','ask 4','ask 1','ask 2','ask 3','ask 4','event night-1','event night-2']);
+ expect(result.count).toBe(15);
+ expect(result.more).toEqual([{team:{handle:'@club/vietnam',name:'Synthetic EMBA'},count:1},{team:{handle:'@club',name:'Synthetic EMBA'},count:4}]);
+ // What was not returned was not shown: the announcements still wait.
+ expect((await t.db.query('select count(*)::int as n from emba_waiting_shown')).rows).toEqual([{n:0}]);
+},120000);

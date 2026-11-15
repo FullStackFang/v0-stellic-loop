@@ -102,3 +102,25 @@ One additive migration: travel entries, the idea state, proposer and number need
 - Should a plan need a minimum notice before its start time (for example two hours) before invites are sent?
 - Should invites name who else is in? This design says no, to keep names out of email.
 - Is a default of three people right for a group of twenty?
+
+## Settled with the founder before building (2026-11-14)
+
+- The missing-day ask: most answers wins, the proposer breaks a tie.
+- No minimum notice: a plan sends invites the moment it is one.
+- Invites name no other member.
+- Calendar files are generated in-house (`lib/ics.ts`); no library is added.
+- The default number needed stays 3. The cohort board's future stays open; nothing here touches it.
+- Task 1.1 asked for a re-read against the club pilot. The pilot has not run, so that part is not done.
+
+## Found while building
+
+- **An idea is lapsed by the clock.** Reads treat an idea past its time as lapsed whether or not anything has noted it; the note (state, archive, change-sequence entry) is written by the next write under the team's lock, or by the next `whats_new`, `whats_on` or `waiting`. The same sweep closes an ask for a day that has run out its 48 hours and sets the day.
+- **Which day an idea with no start belongs to:** the day those who are in chose; else each day its proposer offered; else every day.
+- **The day ask.** Options are the offered days that have not passed; with none, tomorrow to the day of the last fixed event (at most 10 days); with no dated fixed event, the next seven days. One possible day sets the day with no ask. The ask goes to everyone who is in, the proposer included, does not count against the proposer's 5 open asks, and refuses an answer from a member who is not in. A member who drops out takes their answer with them. Only answers from members still in are counted. The ask also closes when the last member it was waiting for drops out. A winning day that has already passed sets nothing: the proposer chooses, as on a tie. Loop's asks for a day do not count toward the team's limit of open asks either.
+- **How the proposer is told** an idea needs a place, a time, or a tie-break: it appears in their `waiting` list (and on the site) until they act. Loop sends no message for it.
+- **Invites.** Every invite, change and cancellation takes the event's next sequence number, also while sending is off, so the first version that is ever sent is newer than anything before it. A queued version is dropped when a later one exists for the same member. A cancellation goes only to a member who was sent the invite. Invites are not held by the daily message limit (quiet hours still apply): an entry that arrives a day late can arrive after the plan. A member who leaves the group gets no cancellation email; their feed address stops working.
+- **Invite sender.** The calendar file names `LOOP_INVITE_FROM` (default `invites@<site host>`) as organizer. The email provider adapter, when the founder picks one, must send invites from that address with the file as a `text/calendar` part.
+- **Feed.** Fixed dated events and plans from 30 days back, 300 at most. The address is made and shown on the site only; no connector tool returns it.
+- **An event sent as an invite that loses its date** sends cancellations. Restoring an archived one sends the invite again. Nothing is sent for an event that is already over.
+- **Site.** Ideas and Travel are two new tabs on the group page, built from the existing row and form components. Their layout was not mocked or picked by the founder.
+- **Left as it is after review.** A past plan keeps its tag, so a new idea of the same name gets `-2`. A member who joins an idea while its ask for a day is open gets no message about the ask; it is in their `waiting` list. Invites, changes and cancellations are queued in the outbox but nothing leaves until an email provider is added (`emailSender()` returns none today).
