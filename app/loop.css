@@ -585,6 +585,9 @@ a.lp-grouprow:hover .lp-go{background:var(--blue);color:var(--on-dark);box-shado
 .lp .lp-grants-head h2{font-size:17px;margin:0}
 .lp-grants-head p{margin:3px 0 0;color:var(--muted);font-size:13.5px;max-width:68ch}
 .lp-grants > ul{margin:0;padding:0;list-style:none}
+.lp-grants-ended{margin:0 20px 12px;padding:10px 14px;border-radius:var(--r-md);background:var(--pale-plum);color:var(--plum);font-size:13.5px}
+.lp-grants-ended p{margin:0}
+.lp-grants-ended p + p{margin-top:4px}
 .lp-grants-none{margin:0;padding:12px 20px 18px;color:var(--ink-2);font-size:14px}
 .lp-grant{display:grid;grid-template-columns:minmax(0,1fr) 108px 122px 128px 224px;column-gap:16px;align-items:center;min-height:58px;padding:10px 20px;border-top:1px solid var(--line)}
 .lp-grant:hover{background:var(--sunk)}
@@ -602,7 +605,6 @@ a.lp-grouprow:hover .lp-go{background:var(--blue);color:var(--on-dark);box-shado
 .lp-acts{display:flex;gap:4px;justify-content:flex-end}
 .lp .lp-acts .emba-form:last-child button{background:transparent;box-shadow:none;color:var(--muted)}
 .lp .lp-acts .emba-form:last-child button:hover{background:var(--pale-plum);color:var(--plum)}
-.lp-grant-gone .lp-grant-team b,.lp-grant-gone .lp-via{color:var(--muted);font-weight:400}
 .lp-give{padding:18px 20px;border-top:1px solid var(--line);background:var(--sunk)}
 .lp .lp-give h3{font-size:15px;margin:0 0 12px}
 .lp .lp-give .emba-form fieldset{display:grid;grid-template-columns:150px minmax(0,1fr) auto auto;gap:12px;align-items:end}

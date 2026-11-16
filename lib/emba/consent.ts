@@ -93,6 +93,25 @@ export async function listLeases(db: Db, principal: Principal) {
   });
 }
 
+export type RemovedGroupGrants = { group: string; removedAt: string | Date; clientIds: string[] };
+/**
+ * The person's own grants that ended because their group was removed, one entry per group, newest removal first.
+ * A grant the person ended before the removal is left out, and so is one that would have run out by now anyway,
+ * so each entry stops being reported on its own.
+ */
+export async function listRemovedGroupGrants(db: Db, principal: Principal): Promise<RemovedGroupGrants[]> {
+  return db.tx(async q => {
+    await requireFirstParty(q,principal);
+    const { rows } = await q.query<RemovedGroupGrants>(
+      `select coalesce(l.name,o.name) as "group",a.retired_at as "removedAt",array_agg(distinct e.client_id order by e.client_id) as "clientIds"
+       from emba_lease e join emba_group_address a on a.org_id=e.org_id and a.loop_id=e.loop_id
+       join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
+       where e.person_id=$1 and a.retired_at is not null and (e.revoked_at is null or e.revoked_at>=a.retired_at) and e.expires_at>clock_timestamp()
+       group by a.org_id,a.loop_id,l.name,o.name,a.retired_at order by a.retired_at desc,a.loop_id limit 20`,[principal.personId]);
+    return rows;
+  });
+}
+
 export async function readAudit(db: Db, principal: Principal) {
   return db.tx(async q => {
     await requireFirstParty(q,principal);

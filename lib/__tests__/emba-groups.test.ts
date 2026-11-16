@@ -3,7 +3,7 @@ import {afterAll,beforeAll,beforeEach,expect,it} from 'vitest';
 import {openTestDb,type TestDb} from '@/test/db';
 import {seedEmbaFixture} from '@/test/emba-fixture';
 import {authenticate} from '@/lib/emba/access';
-import {grantLease,revokeLease} from '@/lib/emba/consent';
+import {grantLease,listRemovedGroupGrants,revokeLease} from '@/lib/emba/consent';
 import {listGroups,listPortalGroups,registerGroupAddress,resolveGroup,retireGroupAddress} from '@/lib/emba/groups';
 import type {Db} from '@/lib/db';
 
@@ -38,6 +38,23 @@ it('registers only for a current first-party root owner and never renames/reuses
  await expect(registerGroupAddress(t.db,f.organizer,{...data,...f.estonia})).rejects.toThrow('conflict');
  await expect(t.db.query("update emba_group_address set retired_at=null")).rejects.toThrow();
  await expect(t.db.query("update emba_group_namespace set namespace='renamed'")).rejects.toThrow();
+});
+it('revokes every grant on a group when it is removed, tells each person about their own, and touches no other group',async()=>{
+ const f=await fixture(),ends={clientId:'claude',actions:['plan:read'],expiresAt:'2099-01-01T00:00:00Z'};
+ await registerGroupAddress(t.db,f.organizer,{...f.vietnam,namespace:'cohort',slug:'vietnam'});
+ await registerGroupAddress(t.db,f.organizer,{...f.estonia,namespace:'cohort',slug:'estonia'});
+ // One grant the member ended themselves before the removal: the removal is not why it ended.
+ await revokeLease(t.db,f.memberA,(await grantLease(t.db,f.memberA,{...f.vietnam,...ends,clientId:'earlier'})).id);
+ const gone=await grantLease(t.db,f.memberA,{...f.vietnam,...ends}),owners=await grantLease(t.db,f.organizer,{...f.vietnam,...ends}),kept=await grantLease(t.db,f.memberA,{...f.estonia,...ends});
+ expect(await listRemovedGroupGrants(t.db,f.memberA)).toEqual([]);
+ await retireGroupAddress(t.db,f.organizer,f.vietnam);
+ const {rows}=await t.db.query<{id:string;revoked:boolean}>('select id,revoked_at is not null as revoked from emba_lease where id=any($1::uuid[])',[[gone.id,owners.id,kept.id]]);
+ expect(Object.fromEntries(rows.map(row=>[row.id,row.revoked]))).toEqual({[gone.id]:true,[owners.id]:true,[kept.id]:false});
+ expect(await listRemovedGroupGrants(t.db,f.memberA)).toEqual([{group:expect.any(String),removedAt:expect.anything(),clientIds:['claude']}]);
+ await expect(listRemovedGroupGrants(t.db,await delegate(f))).rejects.toThrow('forbidden');
+ // Once the grant would have run out anyway, there is nothing left to tell.
+ await t.db.query("update emba_lease set created_at=clock_timestamp()-interval '2 hours',expires_at=clock_timestamp()-interval '1 second' where id=$1",[gone.id]);
+ expect(await listRemovedGroupGrants(t.db,f.memberA)).toEqual([]);
 });
 it('discovers only exact consented groups and reports ambiguity only among permitted matches',async()=>{
  const f=await fixture(),other=await secondGroup(f),p=await delegate(f);

@@ -4,6 +4,7 @@ import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { createWorkspace } from '@/lib/emba/workspaces';
+import { retireGroupAddress } from '@/lib/emba/groups';
 import { setMemberHandle } from '@/lib/emba/tags';
 import { claim, fileOutput, logDecision } from '@/lib/emba/team-records';
 import { createAsk, listAsks } from '@/lib/emba/team-asks';
@@ -225,6 +226,28 @@ it('offers read, or read and write, per assistant and team, and says what write 
   expect((await act(f.ben, () => renewGroupRead(idle, form({ id: active.rows[0].id })))).message).toMatch(/^Renewed until [A-Z][a-z]{2} \d{1,2}\.$/);
   const renewed = await t.db.query<{ id: string }>('select id from emba_lease where person_id=$1 and revoked_at is null', [f.ben.personId]);
   expect((await act(f.ben, () => revokeGroupRead(idle, form({ id: renewed.rows[0].id })))).status).toBe('success');
+});
+it('stops listing a grant once its group is gone, and names the assistant the provider registered', async () => {
+  const f = await fixture();
+  for (const [name, value] of Object.entries({ LOOP_AUTH_CLIENT_IDS: 'oJLiBHFWfm5De8eq', LOOP_AUTH_AUDIENCE: 'https://loop.example/api/mcp', LOOP_AUTH_JWKS_URL: 'https://issuer.example/jwks', LOOP_AUTH_PROVIDER: 'clerk', CLERK_SECRET_KEY: 'sk_test_x', NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_bG9vcC5leGFtcGxlLmNvbSQ=', LOOP_AUTH_ISSUER: 'https://loop.example.com' })) vi.stubEnv(name, value);
+  expect((await act(f.ben, () => grantGroupRead(idle, form({ clientId: 'oJLiBHFWfm5De8eq', scope: `${f.scope.orgId}:${f.scope.loopId}`, access: 'write' })))).message).toMatch(/^Saved\. Muse can read and write /);
+  render(await withPortalTestSession(f.ben, () => ConnectionsPage()));
+  expect(within(document.querySelector('.lp-grant') as HTMLElement).getByText('Muse')).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Muse' })).toHaveValue('oJLiBHFWfm5De8eq');
+  expect(document.body.textContent).not.toContain('oJLiBHFWfm5De8eq');
+  cleanup();
+  await retireGroupAddress(t.db, f.owner, f.scope);
+  render(await withPortalTestSession(f.ben, () => ConnectionsPage()));
+  expect(document.querySelector('.lp-grant')).toBeNull();
+  expect(screen.queryByText('Group no longer available')).not.toBeInTheDocument();
+  expect(screen.getByText(/No assistant can reach your teams yet/)).toBeInTheDocument();
+  // The person is told once, in plain words, which grant ended and why.
+  const ended = document.querySelector('.lp-grants-ended') as HTMLElement;
+  expect(ended).toHaveAttribute('role', 'status');
+  expect(ended.textContent).toMatch(/^Study team was removed on [A-Z][a-z]{2} \d{1,2}\. Muse can no longer reach it\.$/);
+  cleanup();
+  render(await withPortalTestSession(f.ana, () => ConnectionsPage()));
+  expect(document.querySelector('.lp-grants-ended')).toBeNull();
 });
 it('tells an organizer why a brief was not saved, and keeps what they typed', async () => {
   const f = await fixture();

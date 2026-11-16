@@ -63,6 +63,9 @@ export async function retireGroupAddress(db:Db,p:Principal,input:unknown):Promis
   await rootOwner(q,p,data);
   const {rows}=await q.query('update emba_group_address set retired_at=coalesce(retired_at,clock_timestamp()) where org_id=$1 and loop_id=$2 returning loop_id',[data.orgId,data.loopId]);
   if(!rows.length)throw new EmbaError('not_found');
+  // A removed group can be reached by nobody, so every assistant grant on it ends with it, for every person. Set after
+  // retired_at, so listRemovedGroupGrants can tell these from a grant its person ended earlier.
+  await q.query('update emba_lease set revoked_at=clock_timestamp() where org_id=$1 and loop_id=$2 and revoked_at is null',[data.orgId,data.loopId]);
   await audit(q,p,'plan:read',data.loopId);
   await rootOwner(q,p,data);
  });
