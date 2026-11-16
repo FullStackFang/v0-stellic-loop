@@ -7,15 +7,19 @@ import type { PortalAction, PortalResult } from '@/components/emba/portal-types'
 export type RoleName = 'owner' | 'organizer' | 'member' | 'follower';
 export type RosterPerson = {
   personId: string; name: string; role: RoleName; handle: string | null; isYou: boolean;
+  /** Their sign-in address, for the owners and organizers to tell people apart. Null when it is not known or not theirs to see. */
+  email: string | null;
   /** Whether the viewer may change this person's role here. */
   canSetRole: boolean;
   /** `group`: out of the whole top-level group. `role`: out of this group only. null: nothing the viewer may do. */
   remove: 'group' | 'role' | null;
 };
-export type Waiting = { key: string; kind: 'request'; personId: string; name: string; at: string } | { key: string; kind: 'invite'; id: string; email: string; name: string | null; role: string; until: string };
+/** Someone invited by email who has not joined yet. They are listed with the people in the group, so the whole team is in one place. */
+export type Invited = { id: string; email: string; name: string | null; role: RoleName; until: string };
+export type Waiting = { key: string; personId: string; name: string; at: string };
 export type JoinMode = 'off' | 'ask_first' | 'admit';
 type Scope = { orgId: string; loopId: string };
-type Actions = { grant: PortalAction; revokeRole: PortalAction; removeFromGroup: PortalAction; saveTag: PortalAction; invite: PortalAction; cancelInvite: PortalAction; review: PortalAction; setLink: PortalAction; replaceLink: PortalAction };
+type Actions = { grant: PortalAction; revokeRole: PortalAction; removeFromGroup: PortalAction; saveTag: PortalAction; add: PortalAction; cancelInvite: PortalAction; review: PortalAction; setLink: PortalAction; replaceLink: PortalAction };
 
 const ROLES: RoleName[] = ['owner', 'organizer', 'member', 'follower'];
 const NAME: Record<RoleName, string> = { owner: 'Owner', organizer: 'Organizer', member: 'Member', follower: 'Follower' };
@@ -51,13 +55,14 @@ function Twice({ label, confirm, disabled, onGo }: { label: string; confirm: str
  * The people in a group. The list scrolls inside its own frame, and the line under it says which part is on screen.
  * Past a dozen people a find box and a filter by role appear.
  */
-export function Roster({ scope, namespace, people, isOwner, canLeave, actions }: { scope: Scope; namespace: string; people: RosterPerson[]; isOwner: boolean; canLeave: boolean; actions: Pick<Actions, 'grant' | 'revokeRole' | 'removeFromGroup' | 'saveTag'> }) {
+export function Roster({ scope, namespace, people, invited, isOwner, canLeave, actions }: { scope: Scope; namespace: string; people: RosterPerson[]; invited: Invited[]; isOwner: boolean; canLeave: boolean; actions: Pick<Actions, 'grant' | 'revokeRole' | 'removeFromGroup' | 'saveTag' | 'cancelInvite'> }) {
   const { result, pending, run } = useRun();
   const [find, setFind] = useState(''), [show, setShow] = useState<RoleName | 'all'>('all');
   const [span, setSpan] = useState<[number, number] | null>(null);
   const frame = useRef<HTMLDivElement>(null);
-  const seen = people.filter(person => (show === 'all' || person.role === show) && (!find.trim() || `${person.name} ${person.handle ?? ''}`.toLowerCase().includes(find.trim().toLowerCase())));
-  const count = seen.length;
+  const seen = people.filter(person => (show === 'all' || person.role === show) && (!find.trim() || `${person.name} ${person.handle ?? ''} ${person.email ?? ''}`.toLowerCase().includes(find.trim().toLowerCase())));
+  const seenInvited = invited.filter(item => (show === 'all' || item.role === show) && (!find.trim() || `${item.name ?? ''} ${item.email}`.toLowerCase().includes(find.trim().toLowerCase())));
+  const count = seen.length + seenInvited.length, all = people.length + invited.length;
   useEffect(() => {
     const box = frame.current;
     if (!box) return;
@@ -78,16 +83,16 @@ export function Roster({ scope, namespace, people, isOwner, canLeave, actions }:
   useEffect(() => { if (frame.current) frame.current.scrollTop = 0; }, [find, show]);
   const roleChoices = (person: RosterPerson) => ROLES.filter(role => isOwner || role === 'member' || role === 'follower' || role === person.role);
   return <div>
-    {people.length > 12 && <div className="lp-mb-tools">
-      <input className="lp-mb-field" type="search" value={find} onChange={event => setFind(event.target.value)} placeholder="Find a person or a tag" aria-label="Find a person" />
-      <span className="lp-mb-seg" role="group" aria-label="Show">{(['all', ...ROLES] as const).map(role => <button key={role} type="button" aria-pressed={show === role} onClick={() => setShow(role)}>{role === 'all' ? 'Everyone' : `${NAME[role]}s`}<span>{role === 'all' ? people.length : people.filter(person => person.role === role).length}</span></button>)}</span>
+    {all > 12 && <div className="lp-mb-tools">
+      <input className="lp-mb-field" type="search" value={find} onChange={event => setFind(event.target.value)} placeholder="Find a person, an email or a tag" aria-label="Find a person" />
+      <span className="lp-mb-seg" role="group" aria-label="Show">{(['all', ...ROLES] as const).map(role => <button key={role} type="button" aria-pressed={show === role} onClick={() => setShow(role)}>{role === 'all' ? 'Everyone' : `${NAME[role]}s`}<span>{role === 'all' ? all : people.filter(person => person.role === role).length + invited.filter(item => item.role === role).length}</span></button>)}</span>
     </div>}
     <section className="lp-mb-list" id="roles" aria-labelledby="roster-title">
-      <h2 className="lp-mb-label" id="roster-title"><b>In the group</b>{count === people.length ? count : `${count} of ${people.length}`}</h2>
+      <h2 className="lp-mb-label" id="roster-title"><b>In the group</b>{seen.length === people.length ? people.length : `${seen.length} of ${people.length}`}{invited.length > 0 && <span>· {invited.length} invited</span>}</h2>
       <div className="lp-mb-rows" ref={frame} tabIndex={0} aria-label="People in the group">
         {seen.map(person => <div className="lp-mb-row" data-row key={person.personId} id={person.isYou ? 'tag' : undefined}>
           <Face id={person.personId} name={person.name} />
-          <span className="lp-mb-who">{person.name}{person.isYou && person.name !== 'You' && <span className="lp-mb-you">You</span>}</span>
+          <span className="lp-mb-who">{person.name}{person.isYou && person.name !== 'You' && <span className="lp-mb-you">You</span>}{person.email && <small>{person.email}</small>}</span>
           <span className="lp-mb-meta">{person.isYou
             ? <label className="lp-mb-tag">@{namespace}/<input key={person.handle ?? ''} defaultValue={person.handle ?? ''} placeholder="your-tag" maxLength={48} pattern="@?[A-Za-z0-9][A-Za-z0-9\-]{1,47}" aria-label="Your tag" disabled={pending}
                 onKeyDown={event => { if (event.key === 'Enter') event.currentTarget.blur(); }}
@@ -101,6 +106,13 @@ export function Roster({ scope, namespace, people, isOwner, canLeave, actions }:
             {!person.isYou && person.remove === 'group' && <Twice label="Remove" confirm="Confirm: remove" disabled={pending} onGo={() => run(actions.removeFromGroup, { orgId: scope.orgId, personId: person.personId }, `${person.name} was removed from the group.`)} />}
             {!person.isYou && person.remove === 'role' && <Twice label="Remove" confirm="Confirm: remove" disabled={pending} onGo={() => run(actions.revokeRole, { ...scope, personId: person.personId }, `${person.name} was removed from this group.`)} />}
           </span>
+        </div>)}
+        {seenInvited.map(item => <div className="lp-mb-row" data-row data-invited key={item.id}>
+          <Mail />
+          <span className="lp-mb-who">{item.name ?? item.email}{item.name && <small>{item.email}</small>}</span>
+          <span className="lp-mb-meta">Invited, not joined yet · until {day(item.until)}</span>
+          <span className="lp-mb-role lp-mb-fixed">{NAME[item.role]}</span>
+          <span className="lp-mb-acts"><Twice label="Revoke" confirm="Confirm: revoke" disabled={pending} onGo={() => run(actions.cancelInvite, { id: item.id }, `Invitation to ${item.name ?? item.email} revoked.`)} /></span>
         </div>)}
         {!count && <p className="lp-mb-empty">Nobody matches. Clear the search to see everyone.</p>}
       </div>
@@ -130,34 +142,30 @@ export function JoinLink({ scope, mode, actions }: { scope: Scope; mode: JoinMod
   </section>;
 }
 
-/** Invites one person by email. Loop sends no email: they see the invitation when they sign in with that address. */
-export function Invite({ scope, actions }: { scope: Scope; actions: Pick<Actions, 'invite'> }) {
+/** Adds one person by email. They are in the group at once, with nothing to accept, and Loop sends them nothing. */
+export function AddPerson({ scope, isOwner, actions }: { scope: Scope; isOwner: boolean; actions: Pick<Actions, 'add'> }) {
   const { result, pending, run } = useRun();
   const form = useRef<HTMLFormElement>(null);
-  const link = result.invitationToken ? `${typeof window === 'undefined' ? '' : window.location.origin}/groups#invite=${result.invitationToken}` : null;
-  return <section className="lp-mb-card" id="invitations" aria-labelledby="invite-title"><h2 id="invite-title">Invite by email</h2>
-    <form ref={form} className="lp-mb-invite" onSubmit={event => { event.preventDefault(); const data = new FormData(event.currentTarget); run(actions.invite, { ...scope, recipientEmail: String(data.get('recipientEmail')), recipientName: String(data.get('recipientName') ?? ''), role: String(data.get('role')) }); form.current?.reset(); }}>
-      <input className="lp-mb-field" name="recipientEmail" type="email" required placeholder="name@school.edu" aria-label="Email to invite" disabled={pending} />
-      <input className="lp-mb-field" name="recipientName" maxLength={80} placeholder="Their name" aria-label="Name of the person" autoComplete="off" disabled={pending} />
-      <select className="lp-mb-role lp-mb-boxed" name="role" aria-label="Invite as" disabled={pending}><option value="member">Member</option><option value="follower">Follower</option><option value="organizer">Organizer</option></select>
-      <button className="lp-mb-go" disabled={pending}>{pending ? 'Inviting' : 'Invite'}</button>
+  return <section className="lp-mb-card" aria-labelledby="add-title"><h2 id="add-title">Add a person</h2>
+    <form ref={form} className="lp-mb-invite" onSubmit={event => { event.preventDefault(); const data = new FormData(event.currentTarget), name = String(data.get('name') ?? '').trim(), email = String(data.get('email')); run(actions.add, { ...scope, email, name, role: String(data.get('role')) }, `${name || email} is in the group.`); form.current?.reset(); }}>
+      <input className="lp-mb-field" name="name" required maxLength={80} placeholder="Their name" aria-label="Name of the person" autoComplete="off" disabled={pending} />
+      <input className="lp-mb-field" name="email" type="email" required placeholder="name@school.edu" aria-label="Email of the person" autoComplete="off" disabled={pending} />
+      <select className="lp-mb-role lp-mb-boxed" name="role" aria-label="Add as" disabled={pending}><option value="member">Member</option><option value="follower">Follower</option>{isOwner && <option value="organizer">Organizer</option>}</select>
+      <button className="lp-mb-go" disabled={pending}>{pending ? 'Adding' : 'Add'}</button>
     </form>
-    {link && <div className="lp-mb-line"><input className="lp-mb-field" readOnly value={link} aria-label="Invitation link to copy" onFocus={event => event.target.select()} /><CopyLink url={link} /></div>}
-    <p className="lp-mb-note" role={result.status === 'error' ? 'alert' : undefined} data-warn={result.status === 'error' || undefined}>{result.status === 'error' ? result.message : link ? 'Invitation made. You can also send them this link; it is shown once.' : 'They see it when they sign in with that address. Loop sends no email. It lasts 14 days. The name becomes their tag, so teammates can mention them.'}</p>
+    <p className="lp-mb-note" role={result.status === 'error' ? 'alert' : 'status'} data-warn={result.status === 'error' || undefined}>{result.message || 'They are in the group at once and open it when they sign in with that address. Loop sends them no email. The name becomes their tag, so teammates can mention them.'}</p>
   </section>;
 }
 
-/** People who asked to join and invitations not yet taken up, each with its one decision. */
-export function WaitingList({ scope, waiting, actions }: { scope: Scope; waiting: Waiting[]; actions: Pick<Actions, 'review' | 'cancelInvite'> }) {
+/** People who asked to join through the link, each with its one decision. Invited people are in the roster. */
+export function WaitingList({ scope, waiting, actions }: { scope: Scope; waiting: Waiting[]; actions: Pick<Actions, 'review'> }) {
   const { result, pending, run } = useRun();
-  const row = (item: Waiting): ReactNode => item.kind === 'request'
-    ? <div className="lp-mb-mini" key={item.key}><Face id={item.personId} name={item.name} /><div><b>{item.name}</b><span>Asked {day(item.at)}</span></div>
+  const row = (item: Waiting): ReactNode =>
+      <div className="lp-mb-mini" key={item.key}><Face id={item.personId} name={item.name} /><div><b>{item.name}</b><span>Asked {day(item.at)}</span></div>
         <button type="button" className="lp-mb-go" disabled={pending} onClick={() => run(actions.review, { ...scope, personId: item.personId, decision: 'approve' }, `${item.name} is in, as a member.`)}>Approve</button>
-        <button type="button" className="lp-mb-quiet" disabled={pending} onClick={() => run(actions.review, { ...scope, personId: item.personId, decision: 'decline' }, `Declined ${item.name}.`)}>Decline</button></div>
-    : <div className="lp-mb-mini" key={item.key}><Mail /><div><b>{item.name ?? item.email}</b><span>{item.name && <>{item.email} · </>}Invited as {item.role} · until {day(item.until)}</span></div>
-        <button type="button" className="lp-mb-quiet" disabled={pending} onClick={() => run(actions.cancelInvite, { id: item.id }, `Invitation to ${item.email} revoked.`)}>Revoke</button></div>;
-  return <section className="lp-mb-card" aria-labelledby="waiting-title"><h2 id="waiting-title">Waiting <span>{waiting.length}</span></h2>
-    {waiting.length ? <div className="lp-mb-waitbox" tabIndex={0} aria-label="People waiting">{waiting.map(row)}</div> : <p className="lp-mb-note">Nobody is waiting.</p>}
+        <button type="button" className="lp-mb-quiet" disabled={pending} onClick={() => run(actions.review, { ...scope, personId: item.personId, decision: 'decline' }, `Declined ${item.name}.`)}>Decline</button></div>;
+  return <section className="lp-mb-card" aria-labelledby="waiting-title"><h2 id="waiting-title">Asking to join <span>{waiting.length}</span></h2>
+    {waiting.length ? <div className="lp-mb-waitbox" tabIndex={0} aria-label="People asking to join">{waiting.map(row)}</div> : <p className="lp-mb-note">Nobody is asking to join.</p>}
     <Said result={result} />
   </section>;
 }

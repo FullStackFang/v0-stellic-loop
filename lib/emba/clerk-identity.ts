@@ -2,7 +2,7 @@ import 'server-only';
 import {createHash} from 'node:crypto';
 import {auth,clerkClient,currentUser} from '@clerk/nextjs/server';
 import {headers} from 'next/headers';
-import type {Db} from '../db';
+import type {Db,Q} from '../db';
 import {authenticate,type Principal} from './access';
 import {cleanName,giveDefaultHandle,nameIfUnnamed,UNNAMED} from './member-name';
 
@@ -53,6 +53,26 @@ export async function clerkEmailOf(database:Db,personId:string):Promise<string|n
  if(!user||user.banned||user.locked)return null;
  return user.emailAddresses.find(email=>email.id===user.primaryEmailAddressId&&email.verification?.status==='verified')?.emailAddress.trim().toLowerCase()??null;
 }
+/**
+ * The verified primary address of each person who has one, by person, read from the sign-in provider in batches.
+ * For the roster an owner or organizer sees; Loop keeps no copy. A person the provider does not know is left out.
+ */
+export async function clerkEmailsOf(database:Db,personIds:string[]):Promise<Record<string,string>> {
+ const issuer=clerkIssuer();
+ if(!issuer||!clerkPortalConfigured()||!personIds.length)return {};
+ const {rows}=await database.query<{personId:string;subject:string}>('select person_id as "personId",subject from emba_identity i where person_id=any($1::uuid[]) and issuer=$2 and revoked_at is null and not exists(select 1 from emba_deletion_tombstone t where t.person_id=i.person_id)',[personIds,issuer]);
+ const client=await clerkClient(),found:Record<string,string>={};
+ for(let at=0;at<rows.length;at+=100) {
+  const part=rows.slice(at,at+100);
+  const {data}=await client.users.getUserList({userId:part.map(row=>row.subject),limit:100});
+  for(const user of data) {
+   const email=user.emailAddresses.find(email=>email.id===user.primaryEmailAddressId&&email.verification?.status==='verified')?.emailAddress.trim().toLowerCase();
+   const row=part.find(row=>row.subject===user.id);
+   if(email&&row)found[row.personId]=email;
+  }
+ }
+ return found;
+}
 export async function getClerkPortalPrincipal(database:Db):Promise<Principal|null> {
  if(!clerkPortalConfigured()||(await headers()).has('authorization')) return null;
  const issuer=clerkIssuer()!;
@@ -67,22 +87,45 @@ export async function getClerkPortalPrincipal(database:Db):Promise<Principal|nul
  if(!email) return null;
  const name=cleanName([user.firstName,user.lastName].filter(Boolean).join(' '));
  return database.tx(async q=>{
-  await q.query('select pg_advisory_xact_lock(hashtextextended($1,0))',[JSON.stringify([issuer,user.id])]);
-  const {rows:[existing]}=await q.query<{personId:string;revokedAt:string|null}>('select person_id as "personId",revoked_at as "revokedAt" from emba_identity where issuer=$1 and subject=$2',[issuer,user.id]);
-  if(existing?.revokedAt) return null;
-  const id=existing?.personId??personId(issuer,user.id);
-  await q.query('select id from person where id=$1 for update',[id]);
-  if((await q.query('select 1 from emba_deletion_tombstone where person_id=$1',[id])).rows.length) return null;
-  if(!existing) {
-   // Never associate by email/phone, enroll a group, or create a legacy session.
-   const {rows}=await q.query('insert into person(id,phone,name,show_name,sms_opt_out) values($1,null,$2,false,true) on conflict do nothing returning id',[id,name??UNNAMED]);
-   if(!rows.length) return null;
-   await q.query('insert into emba_identity(issuer,subject,person_id,verified_at) values($1,$2,$3,now())',[issuer,user.id,id]);
-  }else if(await nameIfUnnamed(q,id,name)) {
-   // Someone who joined before their name was known gets the tag they would have been given on joining.
-   const {rows:orgs}=await q.query<{orgId:string}>('select org_id as "orgId" from emba_membership where person_id=$1 and revoked_at is null order by org_id',[id]);
-   for(const {orgId} of orgs)await giveDefaultHandle(q,orgId,id);
-  }
+  if(!await enrolClerkAccount(q,issuer,user.id,name)) return null;
   return authenticate(q,'verified-clerk-session',async()=>({issuer,subject:user.id,expiresAt:Math.min(claims.exp*1000,active.expireAt),authenticatedAt:verifiedAt(claims),verifiedEmail:email}));
  });
+}
+/**
+ * The person for a sign-in account, made the first time the account is seen: at their first sign-in, or when an
+ * organizer adds them to a group before it. Null when the account may not be used: its sign-in was revoked, or the
+ * person deleted their data.
+ */
+export async function enrolClerkAccount(q:Q,issuer:string,subject:string,name:string|null):Promise<string|null> {
+ await q.query('select pg_advisory_xact_lock(hashtextextended($1,0))',[JSON.stringify([issuer,subject])]);
+ const {rows:[existing]}=await q.query<{personId:string;revokedAt:string|null}>('select person_id as "personId",revoked_at as "revokedAt" from emba_identity where issuer=$1 and subject=$2',[issuer,subject]);
+ if(existing?.revokedAt) return null;
+ const id=existing?.personId??personId(issuer,subject);
+ await q.query('select id from person where id=$1 for update',[id]);
+ if((await q.query('select 1 from emba_deletion_tombstone where person_id=$1',[id])).rows.length) return null;
+ if(!existing) {
+  // Never associate by email/phone, enroll a group, or create a legacy session.
+  const {rows}=await q.query('insert into person(id,phone,name,show_name,sms_opt_out) values($1,null,$2,false,true) on conflict do nothing returning id',[id,name??UNNAMED]);
+  if(!rows.length) return null;
+  await q.query('insert into emba_identity(issuer,subject,person_id,verified_at) values($1,$2,$3,now())',[issuer,subject,id]);
+ }else if(await nameIfUnnamed(q,id,name)) {
+  // Someone who joined before their name was known gets the tag they would have been given on joining.
+  const {rows:orgs}=await q.query<{orgId:string}>('select org_id as "orgId" from emba_membership where person_id=$1 and revoked_at is null order by org_id',[id]);
+  for(const {orgId} of orgs)await giveDefaultHandle(q,orgId,id);
+ }
+ return id;
+}
+/**
+ * The sign-in account for an address, made if the provider has none, so a person can be in a group before they
+ * first sign in. The provider sends them nothing. An address held unverified by some account is refused: whoever
+ * typed it there has not shown it is theirs.
+ */
+export async function clerkAccountFor(email:string,name:string|null):Promise<string> {
+ const client=await clerkClient();
+ const {data}=await client.users.getUserList({emailAddress:[email],limit:10});
+ const owner=data.find(user=>user.emailAddresses.some(address=>address.id===user.primaryEmailAddressId&&address.emailAddress.trim().toLowerCase()===email&&address.verification?.status==='verified'));
+ if(owner)return owner.id;
+ if(data.length)throw new Error('That address is on an account that has not verified it.');
+ const [firstName,...rest]=(name??'').split(' ');
+ return (await client.users.createUser({emailAddress:[email],firstName:firstName||undefined,lastName:rest.join(' ')||undefined,skipPasswordRequirement:true})).id;
 }

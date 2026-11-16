@@ -24,15 +24,15 @@ import MembersPage from '../app/groups/[namespace]/page';
 import TeamPage from '../app/groups/[namespace]/team/page';
 import SharedEventPage from '../app/e/[token]/page';
 import SharedAskPage from '../app/a/[token]/page';
-import { Invite, JoinLink, Roster, WaitingList } from '../app/groups/[namespace]/members-panel';
+import { AddPerson, JoinLink, Roster, WaitingList } from '../app/groups/[namespace]/members-panel';
 import { ActionForm } from '../components/emba/portal-forms';
 import { grantScopedRole, removeOrgMembership, revokeScopedRole } from '../app/emba/role-actions';
-import { cancelInvite, inviteMember, saveTagHandle } from '../app/groups/actions';
+import { addMember, cancelInvite, saveTagHandle } from '../app/groups/actions';
 import { replaceRequestLink, reviewRequest, setJoinLink } from '../app/groups/request-actions';
 import type { PortalAction } from '../components/emba/portal-types';
 
-const PANELS = new Map<unknown, string>([[Roster, 'roster'], [JoinLink, 'joinLink'], [Invite, 'invite'], [WaitingList, 'waiting']]);
-const calls: Record<string, PortalAction> = { grant: grantScopedRole, revokeRole: revokeScopedRole, removeFromGroup: removeOrgMembership, saveTag: saveTagHandle, setLink: setJoinLink, replaceLink: replaceRequestLink, invite: inviteMember, review: reviewRequest, cancelInvite };
+const PANELS = new Map<unknown, string>([[Roster, 'roster'], [JoinLink, 'joinLink'], [AddPerson, 'invite'], [WaitingList, 'waiting']]);
+const calls: Record<string, PortalAction> = { grant: grantScopedRole, revokeRole: revokeScopedRole, removeFromGroup: removeOrgMembership, saveTag: saveTagHandle, setLink: setJoinLink, replaceLink: replaceRequestLink, add: addMember, review: reviewRequest, cancelInvite };
 type Lifted = { props: Record<string, unknown>; forms: { label: string; html: string }[]; actions: PortalAction[] };
 
 /**

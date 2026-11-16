@@ -12,6 +12,7 @@ import { groupHandle, treeOrder } from '@/lib/emba/group-path';
 import type { GroupAddress } from '@/lib/emba/groups';
 import TeamPage from './[namespace]/team/page';
 import MembersPage from './[namespace]/page';
+import AddPeoplePage from './[namespace]/add/page';
 import InnerMembersPage from './[namespace]/in/[slug]/page';
 import InnerTeamPage from './[namespace]/in/[slug]/team/page';
 import ResourcesPage from './[namespace]/resources/page';
@@ -119,7 +120,7 @@ it('shows an owner the roster beside the join link, the invitation form and who 
   const add = async (name: string, role: string) => { const row = await makePerson(t.db, name); await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]); await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.cohort.orgId, row.id]); await t.db.query('insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,$4)', [f.cohort.orgId, f.cohort.loopId, row.id, role]); };
   await add('Elena Costa', 'organizer'); await add('Dev Malhotra', 'member');
   await setMemberHandle(t.db, f.outer, { orgId: f.cohort.orgId, handle: 'outer-tag' });
-  await issueInvitation(t.db, f.owner, { orgId: f.cohort.orgId, loopId: f.cohort.loopId, recipientEmail: 'jordan.lee@example.test', role: 'member', expiresAt: '2099-01-01T00:00:00.000Z' });
+  await issueInvitation(t.db, f.owner, { orgId: f.cohort.orgId, loopId: f.cohort.loopId, recipientEmail: 'jordan.lee@example.test', recipientName: 'Jordan Lee', role: 'member', expiresAt: '2099-01-01T00:00:00.000Z' });
   const members = async (p: Principal) => render(await withPortalTestSession(p, () => MembersPage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
   await members(f.owner);
   preview('members-owner');
@@ -130,10 +131,15 @@ it('shows an owner the roster beside the join link, the invitation form and who 
   expect(roster.getByLabelText('Your tag')).toHaveValue('');
   expect(roster.getAllByRole('button', { name: 'Remove' })).toHaveLength(3);
   expect(screen.getByText('4 people')).toBeInTheDocument();
-  for (const name of ['Join link', 'Invite by email', /^Waiting/]) expect(screen.getByRole('heading', { name })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByText('jordan.lee@example.test')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Revoke' })).toBeInTheDocument();
+  // The list is the whole page: adding people, the join link and who is asking to join are on their own tab.
+  for (const name of ['Join link', 'Add a person', /^Asking to join/]) expect(screen.queryByRole('heading', { name })).toBeNull();
+  expect(screen.getByRole('link', { name: 'Add people' })).toHaveAttribute('href', '/groups/emba-2027/add');
+  // An invited person is listed with the group, by name with the address under it, until they join.
+  expect(roster.getByText('Jordan Lee')).toBeInTheDocument();
+  expect(roster.getByText('jordan.lee@example.test')).toBeInTheDocument();
+  expect(roster.getByText(/Invited, not joined yet/)).toBeInTheDocument();
+  expect(roster.getByRole('button', { name: 'Revoke' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /In the group/ })).toHaveTextContent('1 invited');
   // One meaning per page: resources live on the Resources page.
   expect(screen.queryByRole('heading', { name: 'Resources' })).toBeNull();
   // Removing asks once more in place.
@@ -144,8 +150,20 @@ it('shows an owner the roster beside the join link, the invitation form and who 
   await members(f.outer);
   expect(screen.getAllByLabelText('Your tag')).toHaveLength(1);
   expect(screen.queryByRole('combobox')).toBeNull();
-  for (const name of ['Join link', 'Invite by email']) expect(screen.queryByRole('heading', { name })).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Add people' })).toBeNull();
   expect(screen.queryByText('Elena Costa')).toBeNull();
+  cleanup();
+  // The Add people tab: for the owner, the form, the join link and who is asking. For a member, nothing.
+  const addPage = async (p: Principal) => render(await withPortalTestSession(p, () => AddPeoplePage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
+  await addPage(f.owner);
+  preview('members-add');
+  for (const name of ['Add a person', 'Join link', /^Asking to join/]) expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('link', { name: 'Add people' })).toHaveAttribute('aria-current', 'page');
+  cleanup();
+  await addPage(f.outer);
+  expect(screen.getByRole('alert')).toHaveTextContent('owners and organizers');
+  expect(screen.queryByRole('heading', { name: 'Add a person' })).toBeNull();
 });
 
 it('gives a long roster a find box and a filter by role, inside one frame', async () => {
