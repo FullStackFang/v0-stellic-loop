@@ -12,7 +12,7 @@ import { upcomingEvents } from '@/lib/emba/team-interest';
 import { briefHistory, myRecentRecords } from '@/lib/emba/team-read';
 import TeamPage from './[namespace]/team/page';
 import { addTeamEvent, amendTeamRecord, announceToTeam, saveTeamBrief } from './team-actions';
-import { grantGroupRead, renewGroupRead } from './connection-actions';
+import { grantGroupRead, renewGroupRead, revokeGroupRead } from './connection-actions';
 import { BriefForm } from '@/components/emba/brief-form';
 import ConnectionsPage from './connections/page';
 
@@ -186,15 +186,28 @@ it('offers read, or read and write, per assistant and team, and says what write 
   const f = await fixture();
   for (const [name, value] of Object.entries({ LOOP_AUTH_CLIENT_IDS: 'claude-test', LOOP_AUTH_ISSUER: 'https://issuer.example', LOOP_AUTH_AUDIENCE: 'https://loop.example/api/mcp', LOOP_AUTH_JWKS_URL: 'https://issuer.example/jwks' })) vi.stubEnv(name, value);
   const scopeValue = `${f.scope.orgId}:${f.scope.loopId}`;
-  expect((await act(f.ana, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue })))).status).toBe('success');
-  expect((await act(f.ben, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue, access: 'write' })))).status).toBe('success');
+  expect((await act(f.ana, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue })))).message).toMatch(/^Saved\. claude-test can read .+ until [A-Z][a-z]{2} \d{1,2}\.$/);
+  expect((await act(f.ben, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue, access: 'write' })))).message).toMatch(/^Saved\. claude-test can read and write .+ until [A-Z][a-z]{2} \d{1,2}\.$/);
   expect((await act(f.outsider, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue, access: 'write' })))).status).toBe('error');
   expect((await act(f.ben, () => grantGroupRead(idle, form({ clientId: 'unknown-client', scope: scopeValue, access: 'write' })))).status).toBe('error');
   const { rows } = await t.db.query<{ person_id: string; actions: string[] }>('select person_id,actions from emba_lease order by created_at');
   expect(rows.map(row => [row.person_id, [...row.actions].sort()])).toEqual([[f.ana.personId, ['plan:read']], [f.ben.personId, ['group-memory:write', 'plan:read']]]);
+  // The assistant form shows only where sign-in is configured.
+  for (const [name, value] of Object.entries({ LOOP_AUTH_PROVIDER: 'clerk', CLERK_SECRET_KEY: 'sk_test_x', NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_bG9vcC5leGFtcGxlLmNvbSQ=', LOOP_AUTH_ISSUER: 'https://loop.example.com' })) vi.stubEnv(name, value);
   render(await withPortalTestSession(f.ben, () => ConnectionsPage()));
-  expect(screen.getByText(/save decisions, outputs and claims under your name when you ask it to, with no further approval step/)).toBeInTheDocument();
-  expect(screen.getByText(/Read and write · Active/)).toBeInTheDocument();
+  expect(screen.getByText(/It writes only when you ask, with no further approval step/)).toBeInTheDocument();
+  expect(screen.getByText('It can also save, correct and withdraw records under your name when you ask.')).toBeInTheDocument();
+  const row = within(document.querySelector('.lp-grant') as HTMLElement);
+  expect(row.getByText('Read and write')).toBeInTheDocument();
+  expect(row.getByText(/^Ends [A-Z][a-z]{2} \d{1,2}$/)).toBeInTheDocument();
+  expect(row.getByText(/^\d+ days? left$/)).toBeInTheDocument();
+  expect(row.getByText('claude-test')).toBeInTheDocument();
+  expect(row.getByText(/^@/)).toBeInTheDocument();
+  expect(document.querySelector('.lp-grants')!.textContent).not.toMatch(/\d{4}-\d{2}-\d{2}|T\d{2}:\d{2}/);
+  const radios = screen.getAllByRole('radio', { name: /^Read/ });
+  expect(radios.map(radio => [(radio as HTMLInputElement).value, (radio as HTMLInputElement).checked])).toEqual([['read', true], ['write', false]]);
+  expect(screen.getByRole('radiogroup', { name: 'Access' })).toBeInTheDocument();
+  expect(screen.getByText('What each level allows')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Renew for 30 days' })).toBeInTheDocument();
   cleanup();
   // Review gate 4.6. Choosing Read again replaces the write grant instead of sitting beside it.
@@ -205,9 +218,13 @@ it('offers read, or read and write, per assistant and team, and says what write 
   vi.stubEnv('LOOP_AUTH_CLIENT_IDS', 'another-client');
   expect((await act(f.ben, () => renewGroupRead(idle, form({ id: active.rows[0].id })))).status).toBe('error');
   render(await withPortalTestSession(f.ben, () => ConnectionsPage()));
-  expect(screen.getByText(/Read · Active/)).toBeInTheDocument();
+  expect(within(document.querySelector('.lp-grant') as HTMLElement).getByText('Read')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Renew for 30 days' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Revoke' })).toBeInTheDocument();
+  vi.stubEnv('LOOP_AUTH_CLIENT_IDS', 'claude-test');
+  expect((await act(f.ben, () => renewGroupRead(idle, form({ id: active.rows[0].id })))).message).toMatch(/^Renewed until [A-Z][a-z]{2} \d{1,2}\.$/);
+  const renewed = await t.db.query<{ id: string }>('select id from emba_lease where person_id=$1 and revoked_at is null', [f.ben.personId]);
+  expect((await act(f.ben, () => revokeGroupRead(idle, form({ id: renewed.rows[0].id })))).status).toBe('success');
 });
 it('tells an organizer why a brief was not saved, and keeps what they typed', async () => {
   const f = await fixture();

@@ -19,8 +19,8 @@ function kindOf(name: string): keyof typeof shapes {
 }
 
 /** Which assistant saved something, or that it was saved on the site. `clientId` is the stored client id, or null for the site. */
-export function Via({ clientId, verb = 'via' }: { clientId: string | null; verb?: 'via' | 'saved by' }) {
+export function Via({ clientId, verb = 'via' }: { clientId: string | null; verb?: 'via' | 'saved by' | '' }) {
   const name = clientId ? assistantName(clientId) : null;
   const kind = name ? kindOf(name) : 'site';
-  return <span className={`lp-via lp-via-${kind}`}><svg viewBox="0 0 12 12" aria-hidden="true">{shapes[kind]}</svg>{name ? `${verb} ${name}` : 'saved on this site'}</span>;
+  return <span className={`lp-via lp-via-${kind}`}><svg viewBox="0 0 12 12" aria-hidden="true">{shapes[kind]}</svg>{name ? `${verb ? `${verb} ` : ''}${name}` : 'saved on this site'}</span>;
 }

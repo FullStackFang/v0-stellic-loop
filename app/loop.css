@@ -578,3 +578,63 @@ a.lp-grouprow:hover .lp-go{background:var(--blue);color:var(--on-dark);box-shado
   .lp-mb-row{grid-template-columns:30px minmax(0,1fr) auto;gap:0 12px}.lp-mb-row .lp-mb-av{grid-row:1 / span 2}.lp-mb-meta{grid-column:2;grid-row:2}.lp-mb-acts{grid-column:3;grid-row:2}
   .lp-mb-rows{max-height:60dvh}
 }
+
+/* ---------- Connections: team grants (ledger) ---------- */
+.lp .lp-grants{container-type:inline-size;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin:16px 0;overflow:hidden}
+.lp-grants-head{padding:18px 20px 14px}
+.lp .lp-grants-head h2{font-size:17px;margin:0}
+.lp-grants-head p{margin:3px 0 0;color:var(--muted);font-size:13.5px;max-width:68ch}
+.lp-grants > ul{margin:0;padding:0;list-style:none}
+.lp-grants-none{margin:0;padding:12px 20px 18px;color:var(--ink-2);font-size:14px}
+.lp-grant{display:grid;grid-template-columns:minmax(0,1fr) 108px 122px 128px 224px;column-gap:16px;align-items:center;min-height:58px;padding:10px 20px;border-top:1px solid var(--line)}
+.lp-grant:hover{background:var(--sunk)}
+.lp-grant-team{min-width:0}
+.lp-grant-team b{display:block;font-weight:520;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-grant-team span{display:block;font:12.5px var(--mono);letter-spacing:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.lp-grant .lp-via{gap:6px;font-size:14px;color:var(--navy)}
+.lp-grant .lp-via svg{width:12px;height:12px}
+.lp-grant .lp-chip{justify-self:start;white-space:nowrap}
+.lp-chip-bad{background:var(--pale-plum);color:var(--plum)}
+.lp-chip-off{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--muted)}
+.lp-when{display:flex;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.3;white-space:nowrap}
+.lp-when small{font-size:12.5px;color:var(--muted)}
+.lp-when .lp-soon{color:var(--navy);font-weight:520}
+.lp-acts{display:flex;gap:4px;justify-content:flex-end}
+.lp .lp-acts .emba-form:last-child button{background:transparent;box-shadow:none;color:var(--muted)}
+.lp .lp-acts .emba-form:last-child button:hover{background:var(--pale-plum);color:var(--plum)}
+.lp-grant-gone .lp-grant-team b,.lp-grant-gone .lp-via{color:var(--muted);font-weight:400}
+.lp-give{padding:18px 20px;border-top:1px solid var(--line);background:var(--sunk)}
+.lp .lp-give h3{font-size:15px;margin:0 0 12px}
+.lp .lp-give .emba-form fieldset{display:grid;grid-template-columns:150px minmax(0,1fr) auto auto;gap:12px;align-items:end}
+.lp .lp-give .emba-form label{display:flex;flex-direction:column;gap:6px;margin:0;max-width:none;min-width:0}
+.lp .lp-give .emba-form select{height:38px;margin:0;padding:0 12px}
+.lp .lp-give .emba-form .lt-primary{grid-column:4;grid-row:1;height:38px;justify-content:center}
+.lp-seg{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink-2)}
+.lp-seg > div{display:flex;height:38px;padding:3px;border-radius:var(--pill);background:var(--canvas);box-shadow:inset 0 0 0 1px var(--line)}
+.lp .lp-give .emba-form .lp-seg label{position:relative;flex:1 0 auto;min-width:max-content;display:grid;place-items:center;padding:0 14px;border-radius:var(--pill);font-size:13.5px;white-space:nowrap;cursor:pointer;transition:background-color .15s var(--ease)}
+.lp-seg input{position:absolute;opacity:0;pointer-events:none}
+.lp-seg label:has(:checked){background:var(--surface);color:var(--navy);font-weight:520;box-shadow:inset 0 0 0 1px var(--blue)}
+.lp-seg label:has(:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+.lp .lp-give .emba-form .lp-give-hint{grid-column:1 / -1;grid-row:2;margin:0;max-width:70ch;font-size:12.5px;color:var(--muted)}
+.lp-give-hint span:last-child,.lp-give fieldset:has([value=write]:checked) .lp-give-hint span:first-child{display:none}
+.lp-give fieldset:has([value=write]:checked) .lp-give-hint span:last-child{display:inline}
+.lp-grants-more{padding:2px 20px 18px;border-top:1px solid var(--line)}
+.lp-allow{display:grid;grid-template-columns:1fr 1fr;gap:20px 32px}
+.lp .lp-allow h3{font-size:14px;font-weight:520;margin:0 0 6px}
+.lp-allow h3 small{font-size:12.5px;font-weight:400;color:var(--muted)}
+.lp-allow ul{margin:0;padding:0;list-style:none}
+.lp .lp-allow li{position:relative;padding:3px 0 3px 14px;color:var(--ink-2);font-size:13.5px;line-height:1.45}
+.lp-allow li::before{content:'';position:absolute;left:1px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--line-2)}
+.lp-allow > p{grid-column:1 / -1;margin:0;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;max-width:78ch;line-height:1.55}
+.lp-grants-more details{margin-top:14px}
+@container (max-width:860px){
+  .lp-grant{grid-template-columns:auto auto minmax(0,1fr);row-gap:8px}
+  .lp-grant-team,.lp-grant .lp-when,.lp-acts{grid-column:1 / -1}
+  .lp-acts{justify-content:flex-start}
+  .lp-grant .lp-when{flex-direction:row;gap:6px;align-items:baseline}
+  .lp .lp-give .emba-form fieldset{grid-template-columns:1fr 1fr}
+  .lp-give .lp-seg,.lp .lp-give .emba-form .lt-primary{grid-column:1 / -1}
+  .lp .lp-give .emba-form .lt-primary{grid-row:auto;order:1}
+  .lp .lp-give .emba-form .lp-give-hint{grid-row:auto;order:2}
+}
+@container (max-width:520px){.lp-allow{grid-template-columns:1fr}.lp .lp-give .emba-form fieldset{grid-template-columns:minmax(0,1fr)}}
