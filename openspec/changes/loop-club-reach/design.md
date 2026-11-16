@@ -222,7 +222,7 @@ Left for the founder, not changed:
 
 The founder was shown the choice in task 1.3 with the hand-written bridge recommended, and answered "continue". That is taken as a yes to the hand-written bridge. No package was added. If the 1.x package is wanted instead, only the script inside `lib/emba/team-card.ts` changes.
 
-- **Where the card is.** One page, `lib/emba/team-card.ts`, served as the resource `ui://loop/card-v1.html`. The address is a cache key: change the version in it when the page changes in a way an old copy would break.
+- **Where the card is.** One page, `lib/emba/team-card.ts`, served as the resource `ui://loop/card-v2.html`. The address is a cache key: change the version in it when the page changes in a way an old copy would break.
 - **What it is declared on.** `waiting`, `events`, `ask` and `ask_results` carry `_meta.ui.resourceUri`. `answer` and `interested` carry nothing, so the model and the card call the same two tools (D2). OpenAI advises attaching a card to one "render" tool only, to avoid redrawing; the design's four tools are kept, and this is something to watch in ChatGPT.
 - **The `ask` tool's structured result now names the team.** The card needs the team to send an answer back. The text form already named it.
 - **The card draws at most 5 items** and counts the rest ("3 more: ask your assistant to list them"). Claude's guidance is 4 to 5 data points with no scrolling inside the card, and its mobile app cuts off a tall card. The text form still lists up to 10.

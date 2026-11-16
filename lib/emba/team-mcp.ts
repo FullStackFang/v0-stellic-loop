@@ -88,7 +88,7 @@ export function createTeamMcpServer(db:Db,p:Principal):McpServer {
  // and uses the text. answer and interested carry no restriction, so the model and the card call the same two tools.
  const card={ui:{resourceUri:CARD_URI}};
  server.registerResource('loop-card',CARD_URI,{title:'Loop card',description:'The in-chat card for what is waiting, events and asks.',mimeType:CARD_MIME},
-  async()=>({contents:[{uri:CARD_URI,mimeType:CARD_MIME,text:CARD_HTML,_meta:{ui:{prefersBorder:true}}}]}));
+  async()=>({contents:[{uri:CARD_URI,mimeType:CARD_MIME,text:CARD_HTML,_meta:{ui:{prefersBorder:false}}}]}));
 
  // Reads use a default team when the assistant has exactly one; writes also need the person to have exactly one.
  const within=async(input:{team?:string},write:boolean,work:(target:Target)=>Promise<Reply>):Promise<Reply>=>{

@@ -1,7 +1,9 @@
 // The in-chat card (waiting spec of loop-club-reach, design D2 and D2a).
 //
 // One self-contained page that an assistant with support for in-chat
-// interfaces shows beside a tool result. It uses only the standard keys and
+// interfaces shows beside a tool result. It wears Loop's own panel (app/loop.css:
+// tight corner, teal plate, pill buttons) in a light and a dark form, on a
+// transparent page. It uses only the standard keys and
 // the standard bridge of the MCP Apps extension (notes.md, "The bridge"): no
 // package, nothing loaded from outside, and no object that only one assistant
 // provides. It draws from the structured form of the result it is given and
@@ -15,7 +17,7 @@
 // The address is a cache key: assistants may keep the page. Change the
 // version in it whenever the page changes in a way an old copy would break.
 
-export const CARD_URI='ui://loop/card-v1.html';
+export const CARD_URI='ui://loop/card-v2.html';
 export const CARD_MIME='text/html;profile=mcp-app';
 
 // No backtick and no dollar-brace inside: the page is one raw string.
@@ -27,25 +29,42 @@ export const CARD_HTML=String.raw`<!doctype html>
 <meta name="color-scheme" content="light dark">
 <title>Loop</title>
 <style>
-:root{color-scheme:light dark}
+:root{color-scheme:light dark;
+ --teal:oklch(37.3% 0.052 206);--lime:oklch(96.4% 0.19 117);--aqua:oklch(90.4% 0.1 194);--on:oklch(99.4% 0.003 230);
+ --surface:light-dark(oklch(99.3% 0.003 230),oklch(24% 0.045 252));--ink:light-dark(oklch(35.4% 0.095 252),oklch(99.4% 0.003 230));
+ --muted:light-dark(oklch(46.5% 0.012 245),oklch(99.4% 0.003 230 / .66));--line:light-dark(oklch(90.6% 0.008 240),oklch(99.4% 0.003 230 / .13));
+ --line-2:light-dark(oklch(85.5% 0.011 240),oklch(99.4% 0.003 230 / .3));--hover:light-dark(oklch(95.3% 0.017 245),oklch(99.4% 0.003 230 / .09));
+ --go:light-dark(oklch(47.6% 0.13 250),oklch(90.4% 0.1 194));--on-go:light-dark(oklch(99.4% 0.003 230),oklch(35.4% 0.095 252));--say:light-dark(oklch(37.3% 0.052 206),oklch(90.4% 0.1 194))}
 html,body{margin:0;background:transparent}
-body{padding:12px 14px;font-family:var(--font-sans,system-ui,-apple-system,"Segoe UI",sans-serif);font-size:var(--font-text-sm-size,14px);line-height:var(--font-text-sm-line-height,1.45);font-weight:var(--font-weight-normal,400);color:var(--color-text-primary,light-dark(#1f1f1f,#f3f3f3));overflow-wrap:anywhere}
+body{font-family:Archivo,var(--font-sans,system-ui,-apple-system,"Segoe UI",sans-serif);font-size:14px;line-height:1.45;letter-spacing:-.01em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 p,ul{margin:0}
-.head{font-weight:var(--font-weight-semibold,600)}
-.item{padding:10px 0 0;margin:10px 0 0;border-top:var(--border-width-regular,1px) solid var(--color-border-secondary,light-dark(#dedede,#454545))}
-.meta,.quiet{color:var(--color-text-secondary,light-dark(#5c5c5c,#b5b5b5));font-size:var(--font-text-xs-size,12px);line-height:var(--font-text-xs-line-height,1.4)}
-.words{margin:2px 0;white-space:pre-wrap}
-.note{margin-top:6px;font-weight:var(--font-weight-medium,500)}
-.row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.card{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:24px 24px 24px 6px;overflow:hidden}
+.brand{display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--teal);color:var(--on);font-size:15px;font-weight:500;letter-spacing:-.03em}
+.brand svg{width:20px;height:20px;flex:none;stroke:var(--aqua);stroke-width:9}
+.brand .gap{stroke:var(--teal);stroke-width:15.3}
+.brand .you{stroke:var(--lime)}
+#loop{padding:13px 16px 15px}
+.head{font-weight:500}
+.item{padding:12px 0 0;margin:12px 0 0;border-top:1px solid var(--line)}
+#loop>.item:first-child{padding-top:0;margin-top:0;border-top:0}
+.meta{color:var(--muted);font:12px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:0}
+.quiet{color:var(--muted);font-size:12.5px}
+.words{margin:3px 0 2px;font-size:15px;font-weight:500;letter-spacing:-.025em;white-space:pre-wrap}
+.note{margin-top:6px;font-size:12.5px;font-weight:500;color:var(--say)}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
 .tally{padding:0;list-style:none}
-button{min-height:32px;padding:5px 11px;font:inherit;color:inherit;cursor:pointer;background:var(--color-background-secondary,light-dark(#f4f4f4,#2b2b2b));border:var(--border-width-regular,1px) solid var(--color-border-primary,light-dark(#c4c4c4,#5e5e5e));border-radius:var(--border-radius-md,8px)}
-button[aria-pressed="true"]{color:var(--color-text-inverse,light-dark(#ffffff,#1f1f1f));background:var(--color-background-inverse,light-dark(#1f1f1f,#f3f3f3));border-color:transparent}
-button:focus-visible{outline:2px solid var(--color-ring-primary,light-dark(#1f1f1f,#f3f3f3));outline-offset:2px}
+button{min-height:32px;padding:5px 13px;border:0;border-radius:56px;font:inherit;font-size:13px;font-weight:500;color:inherit;cursor:pointer;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2)}
+button:hover:enabled{background:var(--hover)}
+button[aria-pressed="true"],button.go,button.go:hover:enabled{color:var(--on-go);background:var(--go);box-shadow:none}
+button:focus-visible{outline:2px solid var(--go);outline-offset:2px}
 button:disabled{opacity:.55;cursor:default}
 </style>
 </head>
 <body>
+<div class="card">
+<div class="brand"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="you" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.26 40.49A21 21 0 0 1 54.64 51.36M54.64 68.64A21 21 0 0 1 43.26 79.51"/><path d="M42.58 40.23A21 21 0 0 1 54.93 52.03M54.93 67.97A21 21 0 0 1 42.58 79.77"/></svg><span>Loop</span></div>
 <main id="loop" aria-live="polite"></main>
+</div>
 <script>
 (function(){
 'use strict';
@@ -250,7 +269,7 @@ function drawEvent(entry){
   // Taking a mark back can cancel a calendar entry, so it is its own plainly named button, never a second tap on "I'm in".
   if(event.youAreInterested)add(row,button('Take it back',null,entry.busy||!canCall,function(){interest(entry,{interested:false});}));
   else{
-   add(row,button("I'm in",null,entry.busy||!canCall,function(){interest(entry,{interested:true});}));
+   add(row,button("I'm in",null,entry.busy||!canCall,function(){interest(entry,{interested:true});})).lastChild.className='go';
    if(!entry.declined)add(row,button('Not for me',null,entry.busy||!canCall,function(){interest(entry,{notForMe:true});}));
   }
   add(box,row);

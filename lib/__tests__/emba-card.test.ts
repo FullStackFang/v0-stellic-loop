@@ -101,13 +101,13 @@ it('declares one card on the four tools, with standard keys only, and serves it 
   for(const name of ['answer','interested'])expect(tools.find(tool=>tool.name===name)!._meta).toBeUndefined();
   expect(CARD_URI).toMatch(/^ui:\/\//);
   const read=await s.client.readResource({uri:CARD_URI});
-  expect(read.contents).toEqual([{uri:CARD_URI,mimeType:CARD_MIME,text:CARD_HTML,_meta:{ui:{prefersBorder:true}}}]);
+  expect(read.contents).toEqual([{uri:CARD_URI,mimeType:CARD_MIME,text:CARD_HTML,_meta:{ui:{prefersBorder:false}}}]);
   expect(CARD_MIME).toBe('text/html;profile=mcp-app');
   // Nothing is loaded from anywhere, and nothing only one assistant provides is used.
   expect(CARD_HTML).not.toMatch(/https?:|\/\/[a-z]|\bsrc=|\bhref=|@import|url\(|fetch\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|openai|claude/i);
   // Data never becomes markup.
   expect(CARD_HTML).not.toMatch(/innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function/);
-  // Every colour is the host's, or a pair for light and dark.
+  // Every colour is Loop's own, with a pair wherever light and dark differ; the page behind the panel is the host's.
   expect(CARD_HTML).toContain('<meta name="color-scheme" content="light dark">');
   const style=/<style>([\s\S]*?)<\/style>/.exec(CARD_HTML)![1];
   expect(style.replace(/light-dark\([^)]*\)/g,'')).not.toMatch(/#[0-9a-f]{3,8}\b|rgb|hsl|:\s*(white|black)\b/i);

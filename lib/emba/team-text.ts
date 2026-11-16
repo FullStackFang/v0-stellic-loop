@@ -27,5 +27,6 @@ export const nameSchema=z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/).refine(val
 /** The name shown for an assistant. A client id can be a web address, which must not be printed as one. */
 export function assistantName(clientId:string):string {
  if(clientId==='https://claude.ai/oauth/mcp-oauth-client-metadata')return 'Claude';
+ if(clientId==='https://claude.ai/oauth/claude-code-client-metadata')return 'Claude Code';
  try{return new URL(clientId).hostname||clientId;}catch{return clientId;}
 }
