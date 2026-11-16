@@ -220,9 +220,11 @@ export function formatResolution(result:TagResolution):string {
  for(const tag of result.matches)page.item(tagLines(tag));
  return page.end();
 }
-export function formatTags(list:TagList):string {
+/** Where to grant is given as a full address when the site knows its own. Otherwise the site is only named. */
+const noAccess=(grantAt?:string)=>`This assistant has no team access yet. The user can grant it ${grantAt?`at this address:\n${grantAt}`:'on the Loop site.'}`;
+export function formatTags(list:TagList,grantAt?:string):string {
  const all=[...list.teams,...list.events,...list.people];
- if(!all.length)return 'This assistant has no team access yet. The user can grant it on the Loop site.';
+ if(!all.length)return noAccess(grantAt);
  const page=new Page().line('What can be tagged:');
  for(const tag of all)page.item(tagLines(tag));
  return page.line(...(list.partial?['The list is cut short. resolve_tag still finds any exact tag.']:[])).end('resolve_tag still finds any exact tag.');
@@ -301,8 +303,8 @@ export function formatInterest(result:InterestWrite,team:TeamHead):string {
  return new Page().line(said).raw(eventLines(team,result.event)).line(result.interested?'To take it back, call interested again with interested set to false.':'To mark interest again, call interested with this tag.',NOTE).end();
 }
 /** No team was named and Loop will not guess. */
-export function formatChoice(handles:string[],write:boolean):string {
- if(!handles.length)return `${write?'Not saved. ':''}This assistant has no team access yet. The user can grant it on the Loop site.`;
+export function formatChoice(handles:string[],write:boolean,grantAt?:string):string {
+ if(!handles.length)return `${write?'Not saved. ':''}${noAccess(grantAt)}`;
  return new Page().line(write?'Not saved. The user belongs to more than one team, so the team must be named. Ask the user which team, then call again with team set to one of:':'Which team? Call again with team set to one of:',...handles.map(handle=>handle)).end();
 }
 export const failures={forbidden:'Access denied. The user may need to grant this assistant access to the team on the Loop site, or the grant may have ended.',invalid:'Invalid request. Check the field names, types and length limits.',
