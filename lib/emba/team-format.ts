@@ -384,6 +384,7 @@ export function formatAskWrite(result:AskWrite,team:TeamHead):string {
  }
 }
 const shapeWords={needs_text:'This ask takes a short written answer: send text, and no choices.',needs_choice:'This ask takes a choice: send choices with an option\'s number or its exact words, and no text.',one_only:'This ask takes exactly one option.'} as const;
+const dayWords={not_dates:'Days are added only to a dates ask.',not_a_date:'Each added day is one day, written as YYYY-MM-DD.',past:'A day that has passed cannot be added.',too_many:'This ask has as many days as it can take.'} as const;
 /** The result of answering: exactly what is recorded now, and how to change it. */
 export function formatAnswer(result:AnswerWrite,team:TeamHead):string {
  const shown=(first:string,ask:AskResult,last:string[]=[])=>put(new Page().line(first),askParts(team,ask,ask)).line(...last,NOTE).end('The structured result has every option and answer.');
@@ -395,6 +396,7 @@ export function formatAnswer(result:AnswerWrite,team:TeamHead):string {
   case 'closed':return shown('Not saved. This ask is closed and takes no more answers. It ended as:',result.ask);
   case 'unknown_option':return shown(`Not saved. The ask has no option ${short(result.value,60)}. Its options are listed below; answer with an option's number or its exact words.`,result.ask);
   case 'answer_shape':return shown(`Not saved. ${shapeWords[result.problem]}`,result.ask);
+  case 'add_days':return shown(`Not saved. ${dayWords[result.problem]}`,result.ask);
   case 'not_in':return shown('Not saved. This ask is for the members who are in on the idea, and the user is not. To join, call interested with the idea\'s tag.',result.ask);
   default:return general(result);
  }
@@ -438,8 +440,8 @@ export function waitingText(result:Waiting):{text:string;stated:number} {
  for(const item of result.items){
   const team=`${item.team.handle} (${short(item.team.name,60)})`;
   if(item.kind==='ask')page.item([...own(`Ask #${item.ask.number} in ${team}, closes ${item.ask.closes} (${item.ask.timezone})${item.ask.closingSoon?', which is within 48 hours':''}:`),...quote(item.ask.question).slice(0,2),
-   ...own(`${kindWords[item.ask.kind]}. ${item.ask.answered} of ${item.ask.expected} answered.`),...item.ask.options.flatMap(option=>quote(`${option.number}. ${option.label}`)),
-   ...own(`To answer, call answer with team ${item.team.handle} and number ${item.ask.number}.`)]);
+   ...own(`${kindWords[item.ask.kind]}. ${item.ask.answered} of ${item.ask.expected} answered.`),...item.ask.options.flatMap(option=>[...quote(`${option.number}. ${option.label}`),...own(`Option ${option.number}: chosen by ${item.ask.results.find(tally=>tally.number===option.number)?.count??0}.`)]),
+   ...own(`To answer, call answer with team ${item.team.handle} and number ${item.ask.number}.${item.ask.kind==='dates'?' To propose a day that is not listed, send it in addDays.':''}`)]);
   else if(item.kind==='event'){
    const tag=eventTag(item.team,item.event.slug);
    page.item([...own(`Event ${tag} in ${team}: ${timeOf(item.event)}. ${interestOf(item.event)}.`),...quote(item.event.name),...(item.event.place?quote(`Place: ${item.event.place}`):[]),

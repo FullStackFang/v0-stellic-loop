@@ -10,7 +10,7 @@ import {seedEmbaFixture} from '@/test/emba-fixture';
 import {authenticate,type Principal} from '@/lib/emba/access';
 import {grantLease} from '@/lib/emba/consent';
 import {registerGroupAddress} from '@/lib/emba/groups';
-import {closeAsk,createAsk} from '@/lib/emba/team-asks';
+import {answerAsk,closeAsk,createAsk} from '@/lib/emba/team-asks';
 import {CARD_HTML,CARD_MIME,CARD_URI} from '@/lib/emba/team-card';
 import {addEvent} from '@/lib/emba/team-events';
 import {waitingHeadline} from '@/lib/emba/team-format';
@@ -112,7 +112,7 @@ it('declares one card on the four tools, with standard keys only, and serves it 
   const style=/<style>([\s\S]*?)<\/style>/.exec(CARD_HTML)![1];
   expect(style.replace(/light-dark\([^)]*\)/g,'')).not.toMatch(/#[0-9a-f]{3,8}\b|rgb|hsl|:\s*(white|black)\b/i);
   expect(style).toMatch(/background:transparent/);
-  expect(CARD_HTML.length).toBeLessThan(20000);
+  expect(CARD_HTML.length).toBeLessThan(32000);
  }finally{await s.close();}
 },120000);
 
@@ -136,12 +136,13 @@ it('shows what is waiting, records a tap through the same tool the model calls, 
   expect(card.text()).toBe('Loading from Loop');
 
   const result=await card.give('waiting');
-  expect(card.text()).toContain(waitingHeadline(2));
+  // How many are waiting is said once, in the header.
+  expect(card.page.getElementById('chip')!.textContent).toBe('2 waiting');
   // Member text is shown as the characters it is.
   expect(card.text()).toContain('Red or <b>white</b>? <img src=x onerror=alert(1)>');
   expect(card.text()).toContain('Spring <script>mixer</script>');
   expect(card.page.querySelectorAll('b,i,img,main script').length).toBe(0);
-  expect(card.buttons().map(item=>item.textContent)).toEqual(['Red','<i>White</i>',"I'm in",'Not for me']);
+  expect(card.buttons().map(item=>item.textContent)).toEqual(['Red (0)','<i>White</i> (0)',"I'm in",'Not for me']);
   // The card shows nothing the text form does not state: each item's own words are in the text too.
   const stated=(result.content as {text:string}[])[0].text;
   for(const words of ['Red or <b>white</b>?','1. Red','2. <i>White</i>','answered.','Spring <script>mixer</script>','The cellar','@club/spring-mixer','0 interested'])expect(stated).toContain(words);
@@ -150,16 +151,18 @@ it('shows what is waiting, records a tap through the same tool the model calls, 
   await card.tap("I'm in");
   expect(card.calls()).toEqual([{name:'interested',arguments:{interested:true,team:'@club/spring-mixer',via:'card'}}]);
   expect(card.text()).toContain('1 interested, including you.');
-  expect(card.buttons().map(item=>[item.textContent,item.getAttribute('aria-pressed')])).toEqual([['Red','false'],['<i>White</i>','false'],['Take it back',null]]);
+  expect(card.buttons().map(item=>[item.textContent,item.getAttribute('aria-pressed')])).toEqual([['Red (0)','false'],['<i>White</i> (0)','false'],['Take it back',null]]);
   expect((await t.db.query('select route,client_id from emba_event_interest')).rows).toEqual([{route:'assistant_card',client_id:'claude'}]);
   // The model saying the same in text finds the same state.
   expect((await s.client.callTool({name:'interested',arguments:{team:'@club/spring-mixer'}})).structuredContent).toMatchObject({saved:true,interested:true,changed:false,event:{interested:1,youAreInterested:true}});
 
   // An answer by tap.
-  await card.tap('<i>White</i>');
+  await card.tap('<i>White</i> (0)');
   expect(card.calls()[1]).toEqual({name:'answer',arguments:{team:'@club',number:1,choices:[2],via:'card'}});
-  expect(card.text()).toContain('You answered: <i>White</i>.');
-  expect(card.text()).toMatch(/1 of \d+ answered\./);
+  // The filled option is the answer: no line repeats it.
+  expect(card.text()).toContain('✓ Saved');
+  expect(card.text()).not.toContain('You answered');
+  expect(card.text()).toMatch(/1 of \d+ answered/);
   expect(card.buttons().slice(0,2).map(item=>[item.textContent,item.getAttribute('aria-pressed')])).toEqual([['Red (0)','false'],['<i>White</i> (1)','true']]);
   expect(await answers()).toEqual([{route:'assistant_card'}]);
   // Taking it back is its own button. A teardown request is answered.
@@ -178,10 +181,10 @@ it('saves nothing from a stale card when the ask has closed, and says so',async(
  try{
   await card.settle();await card.give('waiting');
   expect(card.page.documentElement.style.colorScheme).toBe('light');
-  expect(card.buttons().map(item=>item.textContent)).toEqual(['Red','White']);
+  expect(card.buttons().map(item=>item.textContent)).toEqual(['Red (0)','White (0)']);
   // The ask closes after the card was drawn.
   expect(await closeAsk(t.db,f.memberA,{...f.root,number:1})).toMatchObject({saved:true,changed:true});
-  await card.tap('Red');
+  await card.tap('Red (0)');
   expect(await answers()).toEqual([]);
   expect(card.text()).toContain('This ask has closed.');
   expect(card.text()).toContain('Nothing was saved.');
@@ -195,21 +198,21 @@ it('says it could not reach Loop and changes nothing, then works on the next tap
  const card=mount(s.client);
  try{
   await card.settle();await card.give('ask_results',{team:'@club',number:1});
-  // Pick-any: the options are switches and one button sends them.
-  expect(card.buttons().map(item=>[item.textContent,item.disabled])).toEqual([['Mon (0)',false],['Tue (0)',false],['Wed (0)',false],['Save',true]]);
+  // Pick-any: the options are switches, and a check and a cross join their row only once something differs from what is saved.
+  expect(card.buttons().map(item=>[item.textContent,item.disabled])).toEqual([['Mon (0)',false],['Tue (0)',false],['Wed (0)',false]]);
   await card.tap('Wed (0)');await card.tap('Mon (0)');
   expect(card.calls()).toEqual([]);
   card.host.offline=true;
-  await card.tap('Save');
+  await card.tap('✓');
   expect(card.text()).toContain("Couldn't reach Loop. Try again");
   expect(await answers()).toEqual([]);
   // The choice is still there to send again.
-  expect(card.buttons().map(item=>[item.textContent,item.getAttribute('aria-pressed'),item.disabled])).toEqual([['Mon (0)','true',false],['Tue (0)','false',false],['Wed (0)','true',false],['Save',null,false]]);
+  expect(card.buttons().map(item=>[item.textContent,item.getAttribute('aria-pressed'),item.disabled])).toEqual([['Mon (1)','true',false],['Tue (0)','false',false],['Wed (1)','true',false],['✓',null,false],['✕',null,false]]);
   card.host.offline=false;
-  await card.tap('Save');
+  await card.tap('✓');
   expect(card.calls().at(-1)).toEqual({name:'answer',arguments:{team:'@club',number:1,choices:[1,3],via:'card'}});
   expect(card.text()).not.toContain("Couldn't reach Loop");
-  expect(card.text()).toContain('You answered: Mon, Wed.');
+  expect(card.buttons().map(item=>[item.textContent,item.getAttribute('aria-pressed')])).toEqual([['Mon (1)','true'],['Tue (0)','false'],['Wed (1)','true']]);
   expect(await answers()).toEqual([{route:'assistant_card'}]);
 
   // A result that is an error offers the read again, and the read can then succeed.
@@ -245,7 +248,7 @@ it('draws the events, ask and results tools, a written-answer ask without a text
   expect(card.page.querySelectorAll('input,textarea,select,a,form').length).toBe(0);
   await card.give('ask',{team:'@club',question:'Red or white?',options:['Red','White'],closesAt:inDays(3)});
   await card.tap(/^Red/);
-  expect(card.text()).toContain('You answered: Red.');
+  expect(card.buttons().find(item=>/^Red/.test(item.textContent??''))!.getAttribute('aria-pressed')).toBe('true');
   await card.give('ask_results',{team:'@club'});
   expect(card.text()).toMatch(/^Open asks in @club/);
   expect(card.text()).toContain('Any allergies?');
@@ -254,6 +257,49 @@ it('draws the events, ask and results tools, a written-answer ask without a text
   expect(card.text()).toBe('Not saved. The closing time must be in the future.');
   await card.give('ask_results',{team:'@club',number:99});
   expect(card.text()).toBe('Nothing in this team matches that reference.');
+ }finally{card.close();await s.close();}
+},120000);
+
+it('draws a dates ask as day tiles with counts, adds a day from its calendar, and lets an added day go when nobody chooses it',async()=>{
+ const f=await fixture(),s=await connect(f.agent);
+ const dayIn=(days:number)=>new Date(Date.now()+days*86400000).toISOString().slice(0,10),[first,second,extra]=[dayIn(3),dayIn(4),dayIn(6)];
+ await createAsk(t.db,f.memberA,{...f.root,question:'Which day?',kind:'dates',options:[first,second],closesAt:inDays(2)});
+ await answerAsk(t.db,f.memberA,{...f.root,number:1,choices:[first]});
+ const card=mount(s.client);
+ const tiles=()=>[...card.page.querySelectorAll('button.day')].map(item=>[/, (\d+) picked$/.exec(item.getAttribute('aria-label')!)?.[1]??'0',item.getAttribute('aria-pressed')]);
+ const tile=async(index:number)=>{(card.page.querySelectorAll('button.day')[index] as HTMLButtonElement).click();await card.settle();};
+ const options=async()=>(await t.db.query<{label:string;added:boolean}>('select label,added_by is not null as added from emba_ask_option order by label')).rows;
+ try{
+  await card.settle();await card.give('waiting');
+  // What the group has picked so far shows before the user answers; nothing is filled, because none of it is theirs.
+  expect(tiles()).toEqual([['1','false'],['0','false']]);
+  expect(card.buttons().map(item=>item.textContent)).toEqual([expect.any(String),expect.any(String),'+']);
+  // The calendar opens under the days and stays open; a day picked there joins the line, and nothing is sent yet.
+  await card.tap('+');
+  if(extra.slice(0,7)!==first.slice(0,7))await card.tap('›');
+  (card.page.querySelectorAll('button.cell')[Number(extra.slice(8))-1] as HTMLButtonElement).click();await card.settle();
+  expect(card.page.querySelector('.cal')).not.toBeNull();
+  expect(tiles()).toEqual([['1','false'],['0','false'],['1','true']]);
+  expect(card.calls()).toEqual([]);
+  expect(card.page.querySelectorAll('input,textarea,select,a,form').length).toBe(0);
+  await card.tap('✓');
+  expect(card.calls()[0]).toEqual({name:'answer',arguments:{team:'@club',number:1,addDays:[extra],via:'card'}});
+  expect(await options()).toEqual([{label:first,added:false},{label:second,added:false},{label:extra,added:true}]);
+  expect(tiles()).toEqual([['1','false'],['0','false'],['1','true']]);
+  expect(card.page.querySelector('.cal')).toBeNull();
+  // Someone else picks the added day: the user dropping it takes their own pick away and leaves the day.
+  await answerAsk(t.db,f.memberA,{...f.root,number:1,choices:[first,extra]});
+  await tile(2);await tile(1);await card.tap('✓');
+  expect(card.calls()[1]).toEqual({name:'answer',arguments:{team:'@club',number:1,choices:[2],via:'card'}});
+  expect(tiles()).toEqual([['1','false'],['1','true'],['1','false']]);
+  expect((await options()).length).toBe(3);
+  // Once nobody picks it, it is gone.
+  await answerAsk(t.db,f.memberA,{...f.root,number:1,choices:[first]});
+  expect(await options()).toEqual([{label:first,added:false},{label:second,added:false}]);
+  // A day that has passed is refused, and so is a day on an ask that is not about days.
+  expect(await answerAsk(t.db,f.memberB,{...f.root,number:1,addDays:['2020-01-01']})).toMatchObject({saved:false,reason:'add_days',problem:'past'});
+  await createAsk(t.db,f.memberA,{...f.root,question:'Red or white?',kind:'one',options:['Red','White'],closesAt:inDays(2)});
+  expect(await answerAsk(t.db,f.memberB,{...f.root,number:2,choices:[1],addDays:[extra]})).toMatchObject({saved:false,reason:'add_days',problem:'not_dates'});
  }finally{card.close();await s.close();}
 },120000);
 
@@ -287,7 +333,7 @@ it('still shows what is waiting in an assistant that sends no theme, no styles a
   await card.give('waiting');
   expect(card.text()).toContain('Red or white?');
   expect(card.text()).toContain('To answer, tell your assistant.');
-  expect(card.buttons().map(item=>[item.textContent,item.disabled])).toEqual([['Red',true],['White',true]]);
+  expect(card.buttons().map(item=>[item.textContent,item.disabled])).toEqual([['Red (0)',true],['White (0)',true]]);
   // A result that carries its text alone is shown by its first line; one that carries nothing asks for another try.
   card.deliver({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{content:[{type:'text',text:'1 thing from your groups.\nAsk #1'}]}});
   expect(card.text()).toBe('1 thing from your groups.');

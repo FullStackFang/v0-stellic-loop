@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop card · answering an ask</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;background:#e9e8e3;color:#1f1e1d;padding:20px 16px 48px;color-scheme:light}
+body[data-theme=dark]{background:#141413;color:#eeece6;color-scheme:dark}
+.top{max-width:1560px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.top h1{font-size:18px;font-weight:600;margin:0}
+.top p{margin:0;opacity:.7;flex:1 1 320px}
+.seg{display:inline-flex;border-radius:999px;padding:3px;background:rgba(127,127,127,.18)}
+.seg button{font:inherit;border:0;background:none;color:inherit;padding:5px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:#1f1e1d;color:#fff}
+body[data-theme=dark] .seg button[aria-pressed=true]{background:#eeece6;color:#141413}
+.grid{max-width:1560px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(470px,1fr));gap:16px;align-items:start}
+.col h2{font-size:13px;font-weight:600;margin:0 0 2px}
+.col .why{font-size:12.5px;opacity:.7;margin:0 0 10px;min-height:54px}
+.col .tall{font-size:12px;opacity:.6;margin:8px 2px 0}
+.chat{background:light-dark(#faf9f5,#262624);border:1px solid light-dark(#dedcd3,#3d3c38);border-radius:14px;padding:14px}
+.composer{margin-top:12px;border:1px solid light-dark(#dedcd3,#3d3c38);border-radius:12px;padding:10px 12px;font-size:13.5px;color:light-dark(#6b6a65,#a8a69f);min-height:42px;background:light-dark(#fff,#30302e)}
+.composer b{font-weight:400;color:light-dark(#1f1e1d,#eeece6)}
+
+/* The live card's own rules (lib/emba/team-card.ts), unchanged. */
+.card{--teal:oklch(37.3% 0.052 206);--lime:oklch(96.4% 0.19 117);--aqua:oklch(90.4% 0.1 194);--on:oklch(99.4% 0.003 230);
+ --surface:light-dark(oklch(99.3% 0.003 230),oklch(24% 0.045 252));--ink:light-dark(oklch(35.4% 0.095 252),oklch(99.4% 0.003 230));
+ --muted:light-dark(oklch(46.5% 0.012 245),oklch(99.4% 0.003 230 / .66));--line:light-dark(oklch(90.6% 0.008 240),oklch(99.4% 0.003 230 / .13));
+ --line-2:light-dark(oklch(85.5% 0.011 240),oklch(99.4% 0.003 230 / .3));--hover:light-dark(oklch(95.3% 0.017 245),oklch(99.4% 0.003 230 / .09));
+ --go:light-dark(oklch(47.6% 0.13 250),oklch(90.4% 0.1 194));--on-go:light-dark(oklch(99.4% 0.003 230),oklch(35.4% 0.095 252));--say:light-dark(oklch(37.3% 0.052 206),oklch(90.4% 0.1 194));
+ font-size:14px;line-height:1.45;letter-spacing:-.01em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;
+ background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:24px 24px 24px 6px;overflow:hidden}
+.card p{margin:0}
+.brand{display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--teal);color:var(--on);font-size:15px;font-weight:500;letter-spacing:-.03em}
+.brand svg{width:20px;height:20px;flex:none;stroke:var(--aqua);stroke-width:9}
+.brand .gap{stroke:var(--teal);stroke-width:15.3}.brand .you{stroke:var(--lime)}
+.body{padding:13px 16px 15px}
+.head{font-weight:500}
+.item{padding:12px 0 0;margin:12px 0 0;border-top:1px solid var(--line)}
+.meta{color:var(--muted);font:12px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:0}
+.quiet{color:var(--muted);font-size:12.5px}
+.words{margin:3px 0 2px;font-size:15px;font-weight:500;letter-spacing:-.025em}
+.note{margin-top:6px;font-size:12.5px;font-weight:500;color:var(--say)}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.card button{min-height:32px;padding:5px 13px;border:0;border-radius:56px;font:inherit;font-size:13px;font-weight:500;color:inherit;cursor:pointer;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2)}
+.card button:hover{background:var(--hover)}
+.card button[aria-pressed=true],.card button.go,.card button.go:hover{color:var(--on-go);background:var(--go);box-shadow:none}
+
+/* What the new directions add. */
+.tight .brand{padding:9px 16px}
+.tight .body{padding:11px 16px 13px}
+.tight .item{padding-top:10px;margin-top:10px}
+.tight .body>.item:first-child{padding-top:0;margin-top:0;border-top:0}
+.tight .row{margin:8px 0 0}
+.count{margin-left:auto;font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;background:var(--lime);color:oklch(35.4% 0.095 252);letter-spacing:-.01em}
+.metarow{display:flex;gap:10px;align-items:baseline}
+.metarow .meta{flex:1;min-width:0}
+.tick{flex:none;font-size:12px;font-weight:500;color:var(--say);white-space:nowrap}
+.card button.icon{width:32px;padding:0;display:inline-grid;place-items:center}
+.card button.icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.row.split{flex-wrap:nowrap;align-items:flex-start}.picks{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}.acts{display:flex;gap:6px;flex:none}
+.card button.day{min-height:0;width:58px;padding:5px 0 6px;border-radius:12px 12px 12px 4px;display:grid;justify-items:center;line-height:1.15}.day i{font:10.5px/1.2 ui-monospace,Menlo,Consolas,monospace;font-style:normal;text-transform:uppercase;opacity:.75}.day b{font-size:17px;font-weight:500;letter-spacing:-.03em}
+.plus{position:relative;width:58px;min-height:54px;border:1px dashed var(--line-2);border-radius:12px 12px 12px 4px;display:grid;place-items:center;color:var(--muted);font-size:22px;font-weight:300}.plus:hover{background:var(--hover)}.plus input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}.plus input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;cursor:pointer}
+.day.mine{position:relative}.day.mine::after{content:"";position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 1px oklch(35.4% 0.095 252 / .35)}
+.sw{flex:1;min-width:0}.sw+.acts{align-items:center;height:54px}
+.strip{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth}.strip::-webkit-scrollbar{display:none}.strip>*{flex:none}
+.strip.more{-webkit-mask:linear-gradient(90deg,#000 calc(100% - 32px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 32px),transparent)}
+.strip.less{-webkit-mask:linear-gradient(90deg,transparent,#000 32px);mask:linear-gradient(90deg,transparent,#000 32px)}
+.strip.less.more{-webkit-mask:linear-gradient(90deg,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask:linear-gradient(90deg,transparent,#000 32px,#000 calc(100% - 32px),transparent)}
+.rail{display:none;position:relative;height:3px;margin:7px 0 0;border-radius:3px;background:var(--line)}.rail.on{display:block}.rail i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--go);transition:left .08s linear}
+.card button.plus{width:58px;min-height:54px;padding:0;border-radius:12px 12px 12px 4px;box-shadow:none;border:1px dashed var(--line-2);background:transparent;color:var(--muted);font-size:22px;font-weight:300}
+.card button.plus[aria-pressed=true]{background:var(--go);color:var(--on-go);border-color:transparent}
+.cal{margin:9px 0 0;padding:8px 10px 10px;border-radius:16px 16px 16px 4px;background:var(--hover)}
+.calhead{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:2px}
+.card .calhead button.icon{width:26px;min-height:26px;box-shadow:none;background:transparent}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;justify-items:center}
+.dow{font:10.5px ui-monospace,Menlo,Consolas,monospace;color:var(--muted);padding:2px 0}
+.card button.cell{width:32px;min-height:27px;padding:0;border-radius:9px 9px 9px 3px;box-shadow:none;background:transparent;font-size:12.5px}
+.card button.cell.offered{box-shadow:inset 0 0 0 1px var(--line-2);background:var(--surface)}
+.card button.cell[aria-pressed=true]{background:var(--go);color:var(--on-go);box-shadow:none}
+.card button.cell:disabled{opacity:.35;cursor:default}
+.day,.cell{position:relative}.day.mine::after{display:none}.card s{position:absolute;text-decoration:none;background:var(--lime);color:oklch(35.4% 0.095 252);font:600 10px/15px system-ui,sans-serif;letter-spacing:0;text-align:center}.day s{top:3px;right:3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px}.cell s{top:-4px;right:-3px;min-width:13px;height:13px;padding:0 2px;border-radius:7px;font-size:9px;line-height:13px}
+.says{margin:0 2px 12px;font-size:14px}
+.card button.other{box-shadow:none;background:transparent;border:1px dashed var(--line-2);color:var(--muted)}
+</style>
+</head>
+<body data-theme="light">
+<div class="top">
+  <h1>Answering an ask on the card</h1>
+  <p>Your two real asks. Each column opens with a date picked but not yet saved on the first ask. Tap things: they work.</p>
+  <div class="seg" role="group" aria-label="Chat theme"><button aria-pressed="true" data-t="light">Light chat</button><button aria-pressed="false" data-t="dark">Dark chat</button></div>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+(function(){
+var cols=[
+ {k:'now',title:'Now · live today',why:'Save sits on its own row. "You answered" and "Saved." each take a row too. Dates print as typed.'},
+ {k:'a',title:'A · Check and cross',why:'A check and a cross join the row only while your picks differ from what is saved. Check saves, cross puts them back. The pressed pill is the answer, so the "You answered" row goes.'},
+ {k:'b',title:'B · Saves as you tap',why:'No save control at all: every tap saves. Shortest, but each tap is its own write, and Claude may ask you to approve each one.'},
+ {k:'c',title:'C · A, plus "Other"',why:'Same as A, with one quiet "Other" pill that does not open a box on the card: it starts your answer in the chat, where your assistant can word it.'}
+,
+ {k:'d',title:'D · A, with day tiles for date asks',why:'The ask already says it is a date ask, so the card draws the offered days as calendar tiles: weekday, day, month. Only the days on offer, not a whole month. Other asks keep pills.'},
+ {k:'e',title:'E · D, plus add days freely',why:'Each day you pick joins the row as an option everyone can choose, marked as yours. The + opens a small calendar that stays open while you tap as many days as you like, and closes when you save. The lime number on a day is how many people have picked it, you included; a day others picked shows even when you have not picked it, like a poll. Days stay in date order on one line that scrolls sideways under a thin Loop-coloured bar. The line above the card is your assistant reading your calendar, if you connected one.'}
+];
+var mark='<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="you" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.26 40.49A21 21 0 0 1 54.64 51.36M54.64 68.64A21 21 0 0 1 43.26 79.51"/><path d="M42.58 40.23A21 21 0 0 1 54.93 52.03M54.93 67.97A21 21 0 0 1 42.58 79.77"/></svg>';
+var CHECK='<svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>',CROSS='<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function btn(label,pressed,tap,cls){var b=el('button',cls||'',label);b.type='button';if(pressed!==null)b.setAttribute('aria-pressed',pressed?'true':'false');b.onclick=tap;return b;}
+function icon(svg,label,tap,cls){var b=el('button','icon '+(cls||''));b.type='button';b.innerHTML=svg;b.setAttribute('aria-label',label);b.title=label;b.onclick=tap;return b;}
+function same(a,b){return a.slice().sort().join()===b.slice().sort().join();}
+function build(col){
+ var now=col.k==='now',auto=col.k==='b',other=col.k==='c',tiles=col.k==='d'||col.k==='e',plus=col.k==='e';
+ var asks=[
+  {n:1,many:true,q:'When should we meet to split up the M&A case?',closes:now?'Tue 17 Nov 2026, 12:00 (America/New_York)':'Tue 17 Nov, 12:00',done:4,of:6,
+   opts:now?['2026-11-18','2026-11-19','2026-11-22']:['Wed 18 Nov','Thu 19 Nov','Sun 22 Nov'],counts:null,saved:[],picked:[2],note:'',iso:['2026-11-18','2026-11-19','2026-11-22'],mines:[],others:[2,1,3],cal:{open:false,y:2026,m:10}},
+  {n:2,many:false,q:'Who can take the accretion and dilution model?',closes:now?'Sat 21 Nov 2026, 18:00 (America/New_York)':'Sat 21 Nov, 18:00',done:3,of:6,
+   opts:['I can','I can help','Not this time'],counts:[1,1,0],saved:[1],picked:[1],note:now?'Saved.':''}
+ ];
+ if(plus){var q=asks[0];q.iso.splice(2,0,'2026-11-21');q.opts.splice(2,0,'Sat 21 Nov');q.others.splice(2,0,2);q.picked=[3];}
+ var wrap=el('div','chat'),card=el('div','card'+(now?'':' tight')),composer=other?el('div','composer','Reply to Claude…'):null;
+ function shift(list,at,by){return list.map(function(i){return i>=at?i+by:i;});}
+ function drop(a,i){a.opts.splice(i,1);a.iso.splice(i,1);a.others.splice(i,1);a.mines=shift(a.mines.filter(function(m){return m!==i;}),i+1,-1);a.picked=shift(a.picked.filter(function(m){return m!==i;}),i+1,-1);a.saved=shift(a.saved,i+1,-1);}
+ function addDay(a,value){
+  var had=a.iso.indexOf(value);
+  if(had>=0){if(a.picked.indexOf(had)<0)a.picked.push(had);a.show=had;draw();return;}
+  var at=a.iso.filter(function(d){return d<value;}).length;
+  var label=new Date(value+'T12:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).replace(/,/g,'');
+  a.picked=shift(a.picked,at,1);a.saved=shift(a.saved,at,1);a.mines=shift(a.mines,at,1);
+  a.iso.splice(at,0,value);a.others.splice(at,0,0);a.opts.splice(at,0,label);a.mines.push(at);a.picked.push(at);a.show=at;a.note='';draw();
+ }
+ var kept={};
+ function edge(s){var max=s.scrollWidth-s.clientWidth,rail=s.nextSibling,w=s.clientWidth/s.scrollWidth*100;s.classList.toggle('more',s.scrollLeft<max-2);s.classList.toggle('less',s.scrollLeft>2);rail.classList.toggle('on',max>2);rail.firstChild.style.width=w+'%';rail.firstChild.style.left=(max>0?s.scrollLeft/max*(100-w):0)+'%';}
+ var TODAY='2026-11-16',PREV='<svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></svg>',NEXT='<svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5"/></svg>';
+ function calendar(a){
+  var c=a.cal,box=el('div','cal'),head=el('div','calhead'),first=new Date(c.y,c.m,1),days=new Date(c.y,c.m+1,0).getDate(),lead=(first.getDay()+6)%7,grid=el('div','calgrid');
+  head.appendChild(icon(PREV,'Earlier month',function(){c.m--;if(c.m<0){c.m=11;c.y--;}draw();}));
+  head.appendChild(el('span','',first.toLocaleDateString('en-GB',{month:'long',year:'numeric'})));
+  head.appendChild(icon(NEXT,'Later month',function(){c.m++;if(c.m>11){c.m=0;c.y++;}draw();}));
+  box.appendChild(head);
+  ['M','T','W','T','F','S','S'].forEach(function(d){grid.appendChild(el('span','dow',d));});
+  for(var i=0;i<lead;i++)grid.appendChild(el('span'));
+  for(var n=1;n<=days;n++)(function(n){
+   var iso=c.y+'-'+String(c.m+1).padStart(2,'0')+'-'+String(n).padStart(2,'0'),at=a.iso.indexOf(iso),on=at>=0&&a.picked.indexOf(at)>=0;
+   var b=btn(String(n),on,function(){
+    if(at<0){addDay(a,iso);return;}
+    if(on)a.picked=a.picked.filter(function(i){return i!==at;});
+    else{a.picked.push(at);a.show=at;}
+    a.note='';draw();
+   },'cell'+(at>=0?' offered':''));
+   if(at>=0){var votes=a.others[at]+(on?1:0);if(votes)b.appendChild(el('s','',votes));}
+   if(iso<TODAY)b.disabled=true;
+   grid.appendChild(b);
+  })(n);
+  box.appendChild(grid);return box;
+ }
+ function draw(){
+  card.querySelectorAll('.strip').forEach(function(s){kept[s.dataset.n]=s.scrollLeft;});
+  card.textContent='';
+  var brand=el('div','brand');brand.innerHTML=mark+'<span>Loop</span>'+(now?'':'<span class="count">2 waiting</span>');card.appendChild(brand);
+  var body=el('div','body');card.appendChild(body);
+  if(now)body.appendChild(el('p','head','2 things from your groups.'));
+  asks.forEach(function(a){
+   var box=el('section','item'),changed=!same(a.saved,a.picked),answered=a.done+(a.saved.length&&a.n===1?1:0);
+   if(now)box.appendChild(el('p','meta','Ask #'+a.n+' in @nbae-6561, closes '+a.closes+'. '+answered+' of '+a.of+' answered.'));
+   else{
+    var mr=el('div','metarow');mr.appendChild(el('p','meta','@nbae-6561 · closes '+a.closes+' · '+answered+' of '+a.of));
+    if(a.note)mr.appendChild(el('span','tick','✓ '+a.note));
+    box.appendChild(mr);
+   }
+   box.appendChild(el('p','words',a.q));
+   var row=el('div','row split'),picks=el('div','picks'),acts=el('div','acts');row.appendChild(picks);row.appendChild(acts);
+   a.opts.forEach(function(label,i){
+    var on=a.picked.indexOf(i)>=0,count=a.counts?' ('+(a.counts[i]+(a.saved.indexOf(i)>=0?1:0))+')':'';
+    var pill=btn(label+count,on,function(){
+     a.note='';
+     if(!a.many){a.picked=[i];a.saved=[i];a.note=now?'Saved.':'Saved';}
+     else{var at=a.picked.indexOf(i);if(at>=0)a.picked.splice(at,1);else a.picked.push(i);if(auto){a.saved=a.picked.slice();a.note='Saved';}}
+     draw();
+    });
+    if(tiles&&a.many){var part=label.split(' ');pill.className='day';pill.textContent='';pill.setAttribute('aria-label',label);pill.appendChild(el('i','',part[0]));pill.appendChild(el('b','',part[1]));pill.appendChild(el('i','',part[2]));var votes=a.others[i]+(on?1:0);if(votes){pill.appendChild(el('s','',votes));pill.setAttribute('aria-label',label+', '+votes+' picked');}if(a.mines&&a.mines.indexOf(i)>=0){pill.className='day mine';pill.title='Added by you';}}
+    picks.appendChild(pill);
+   });
+   if(plus&&a.many){
+    picks.className='picks strip';picks.dataset.n=a.n;
+    var sw=el('div','sw'),rail=el('div','rail');rail.appendChild(el('i'));row.replaceChild(sw,picks);sw.appendChild(picks);sw.appendChild(rail);
+    var add=btn(a.cal.open?'×':'+',a.cal.open,function(){a.cal.open=!a.cal.open;draw();},'plus');add.setAttribute('aria-label','Add days');acts.appendChild(add);
+   }
+   if(!now&&!auto&&a.many&&changed){
+    acts.appendChild(icon(CHECK,'Save',function(){(a.mines||[]).filter(function(i){return a.picked.indexOf(i)<0&&!a.others[i];}).sort(function(x,y){return y-x;}).forEach(function(i){drop(a,i);});a.saved=a.picked.slice();a.note='Saved';if(a.cal)a.cal.open=false;draw();},'go'));
+    acts.appendChild(icon(CROSS,'Put back',function(){if(a.cal)a.cal.open=false;a.picked=a.saved.slice();(a.mines||[]).filter(function(i){return a.saved.indexOf(i)<0;}).sort(function(x,y){return y-x;}).forEach(function(i){drop(a,i);});draw();}));
+   }
+   if(other)picks.appendChild(btn('Other…',null,function(){composer.innerHTML='<b>For ask #'+a.n+' in @nbae-6561, tell them: </b>';},'other'));
+   box.appendChild(row);
+   if(plus&&a.many&&a.cal.open)box.appendChild(calendar(a));
+   if(now){
+    if(a.many)box.appendChild(btn('Save',null,function(){a.saved=a.picked.slice();a.note='Saved.';draw();}));
+    if(a.saved.length)box.appendChild(el('p','quiet','You answered: '+a.saved.map(function(i){return a.opts[i];}).join(', ')+'.'));
+    if(a.note)box.appendChild(el('p','note',a.note));
+   }
+   body.appendChild(box);
+  });
+  card.querySelectorAll('.strip').forEach(function(s){
+   var a=asks.filter(function(x){return String(x.n)===s.dataset.n;})[0];
+   s.style.scrollBehavior='auto';s.scrollLeft=kept[s.dataset.n]||0;s.style.scrollBehavior='';
+   if(a.show!=null){var tile=s.children[a.show];s.scrollLeft=tile.offsetLeft-s.offsetLeft-(s.clientWidth-tile.offsetWidth)/2;a.show=null;}
+   edge(s);s.onscroll=function(){edge(s);};
+  });
+  tall.textContent='Card height: '+Math.round(card.getBoundingClientRect().height)+'px';
+ }
+ var c=el('div','col'),tall=el('p','tall');
+ c.appendChild(el('h2','',col.title));c.appendChild(el('p','why',col.why));
+ if(plus)wrap.appendChild(el('p','says','You are free Wed 18 and Sun 22. Thu 19 clashes with Corporate Finance, 6 to 9 PM.'));wrap.appendChild(card);if(composer)wrap.appendChild(composer);c.appendChild(wrap);c.appendChild(tall);
+ document.getElementById('grid').appendChild(c);
+ draw();
+ if(plus&&location.hash==='#added'){asks[0].cal.open=true;['2026-11-20','2026-11-21','2026-11-24','2026-11-25','2026-11-30','2026-12-01'].forEach(function(d){addDay(asks[0],d);});}
+}
+cols.forEach(build);
+document.querySelectorAll('.seg button').forEach(function(b){b.onclick=function(){
+ document.body.dataset.theme=b.dataset.t;
+ document.querySelectorAll('.seg button').forEach(function(o){o.setAttribute('aria-pressed',o===b?'true':'false');});
+};});
+})();
+</script>
+</body>
+</html>

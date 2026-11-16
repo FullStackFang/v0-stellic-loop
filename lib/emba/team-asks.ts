@@ -17,7 +17,7 @@ import {lineSchema,nameSchema} from './team-text';
 // time, to the person who asked and the team's owners and organizers only:
 // nothing here, and no caller of it, computes a view across asks.
 
-export const ASKS={question:200,option:80,answer:400,minOptions:2,maxOptions:10,openPerTeam:20,openPerMember:5,maxDays:60,missingDays:7,soonHours:48,list:30,closed:10} as const;
+export const ASKS={question:200,option:80,answer:400,minOptions:2,maxOptions:10,days:400,openPerTeam:20,openPerMember:5,maxDays:60,missingDays:7,soonHours:48,list:30,closed:10} as const;
 const kinds=['one','many','dates','text'] as const;
 export type AskKind=typeof kinds[number];
 export type Reveal='named'|'counts';
@@ -203,7 +203,9 @@ export type AnswerWrite=
  // The ask is for an idea's day, and the caller is not in on the idea.
  |{saved:false;reason:'not_in';ask:AskResult}
  |{saved:false;reason:'unknown_option';value:string;ask:AskResult}
- |{saved:false;reason:'answer_shape';problem:'needs_text'|'needs_choice'|'one_only';ask:AskResult};
+ |{saved:false;reason:'answer_shape';problem:'needs_text'|'needs_choice'|'one_only';ask:AskResult}
+ // Days are added only to a dates ask, as real days that have not passed in the team's timezone.
+ |{saved:false;reason:'add_days';problem:'not_dates'|'not_a_date'|'past'|'too_many';ask:AskResult};
 type AnswerDeclined=Exclude<AnswerWrite,{saved:true}|Refused>;
 type Held={id:string;kind:AskKind;reveal:Reveal;askerId:string|null;open:boolean;onlyIn:boolean;eventId:string|null};
 /** The ask by its number in the team, with a lock on its row: `share` for an answer, `update` to close it or change its setting. */
@@ -211,27 +213,32 @@ async function held(ctx:WriteCtx,number:number,lock:'share'|'update'):Promise<He
  const {rows:[row]}=await ctx.q.query<Held>(`select k.id,k.kind,k.reveal,k.asker_id as "askerId",${openSql()} as open,k.only_in as "onlyIn",k.event_id as "eventId" from emba_ask k where k.org_id=$1 and k.loop_id=$2 and k.number=$3 for ${lock}`,[ctx.team.orgId,ctx.team.loopId,number]);
  return row;
 }
-const answerSchema=z.strictObject({...scope,number:askNumber,choices:z.array(z.union([z.number().int(),z.string().max(ASKS.option*8)])).max(20).optional(),text:z.string().max(ASKS.answer*8).optional(),remove:z.boolean().default(false),route,card});
+const answerSchema=z.strictObject({...scope,number:askNumber,choices:z.array(z.union([z.number().int(),z.string().max(ASKS.option*8)])).max(20).optional(),text:z.string().max(ASKS.answer*8).optional(),remove:z.boolean().default(false),addDays:z.array(z.string().max(20)).max(60).optional(),route,card});
 /**
  * Answers an ask, replaces the caller's earlier answer, or with `remove` takes
  * it back. Only ever the caller's own answer. A choice is named by its number
- * or its label.
+ * or its label. In a dates ask the caller may also add days: each becomes an
+ * option for everyone and is one of the caller's choices. An added day that
+ * nobody chooses any longer is taken away.
  */
 export async function answerAsk(db:Db,p:Principal,input:unknown,
  /** Set by Loop's own code, never from a request: the answer came through the member's personal link or a WhatsApp button. */
  via?:'personal_link'|'whatsapp'):Promise<AnswerWrite> {
  const data=answerSchema.parse(input);
  // The last answer to an ask for an idea's day closes it and sets the day: that is decided under the team's lock. The flag never changes.
- const {rows:[ahead]}=await db.query<{onlyIn:boolean}>('select only_in as "onlyIn" from emba_ask where org_id=$1 and loop_id=$2 and number=$3',[data.orgId,data.loopId,data.number]);
+ const {rows:[ahead]}=await db.query<{onlyIn:boolean;kind:AskKind}>('select only_in as "onlyIn",kind from emba_ask where org_id=$1 and loop_id=$2 and number=$3',[data.orgId,data.loopId,data.number]);
  return teamWrite<Exclude<AnswerWrite,Refused>>(db,p,data,{need:'post',count:true,lock:Boolean(ahead?.onlyIn)},async ctx=>{
   const no=(declined:AnswerDeclined)=>stop<AnswerDeclined>(declined);
-  const ask=await held(ctx,data.number,'share');
+  // Days come and go with the answers to a dates ask, so those answers take turns.
+  const ask=await held(ctx,data.number,ahead?.kind==='dates'?'update':'share');
   if(!ask)return no({saved:false,reason:'unknown_ask',value:data.number});
   if(!ask.open)no({saved:false,reason:'closed',ask:await result(ctx,ask.id)});
   if(ask.onlyIn&&!(await ctx.q.query('select 1 from emba_event_interest where event_id=$1 and person_id=$2',[ask.eventId,p.personId])).rows.length)no({saved:false,reason:'not_in',ask:await result(ctx,ask.id)});
   const {rows:[before]}=await ctx.q.query<{choices:number[];body:string|null}>('select choices::int[] as choices,body from emba_ask_answer where ask_id=$1 and person_id=$2 for update',[ask.id,p.personId]);
+  const prune=async()=>{if(ask.kind==='dates')await ctx.q.query('delete from emba_ask_option o where o.ask_id=$1 and o.added_by is not null and not exists(select 1 from emba_ask_answer a where a.ask_id=o.ask_id and o.position=any(a.choices))',[ask.id]);};
   if(data.remove){
    if(before)await ctx.q.query('delete from emba_ask_answer where ask_id=$1 and person_id=$2',[ask.id,p.personId]);
+   await prune();
    return {saved:true,changed:Boolean(before),ask:await result(ctx,ask.id)};
   }
   const shape=async(problem:'needs_text'|'needs_choice'|'one_only')=>no({saved:false,reason:'answer_shape',problem,ask:await result(ctx,ask.id)});
@@ -240,11 +247,25 @@ export async function answerAsk(db:Db,p:Principal,input:unknown,
    body=data.text?.trim()?lineSchema(ASKS.answer).parse(data.text):'';
    if(!body||data.choices?.length)await shape('needs_text');
   }else{
-   if(data.text!==undefined||!data.choices?.length)await shape('needs_choice');
+   const adding=[...new Set(data.addDays??[])];
+   const days=async(problem:'not_dates'|'not_a_date'|'past'|'too_many')=>no({saved:false,reason:'add_days',problem,ask:await result(ctx,ask.id)});
+   if(adding.length&&ask.kind!=='dates')await days('not_dates');
+   if(data.text!==undefined||(!data.choices?.length&&!adding.length))await shape('needs_choice');
    const {rows:options}=await ctx.q.query<AskOption>('select position::int as number,label from emba_ask_option where ask_id=$1 order by position',[ask.id]);
-   for(const named of data.choices!){
+   if(adding.length){
+    if(!adding.every(day))await days('not_a_date');
+    const {rows:[now]}=await ctx.q.query<{today:string}>("select to_char(clock_timestamp() at time zone $1,'YYYY-MM-DD') as today",[ctx.timezone]);
+    if(adding.some(value=>value<now.today))await days('past');
+    let next=Math.max(0,...options.map(option=>option.number));
+    for(const label of adding.filter(value=>!options.some(option=>option.label===value))){
+     if(++next>ASKS.days)await days('too_many');
+     await ctx.q.query('insert into emba_ask_option(ask_id,position,label,added_by) values($1,$2,$3,$4)',[ask.id,next,label,p.personId]);
+     options.push({number:next,label});
+    }
+   }
+   for(const named of [...(data.choices??[]),...adding]){
     const text=String(named).trim().toLowerCase();
-    const found=options.find(option=>option.label.toLowerCase()===text)??(/^\d{1,2}$/.test(text)?options.find(option=>option.number===Number(text)):undefined);
+    const found=options.find(option=>option.label.toLowerCase()===text)??(/^\d{1,3}$/.test(text)?options.find(option=>option.number===Number(text)):undefined);
     if(!found)return no({saved:false,reason:'unknown_option',value:String(named).slice(0,ASKS.option),ask:await result(ctx,ask.id)});
     if(!choices.includes(found.number))choices.push(found.number);
    }
@@ -255,6 +276,7 @@ export async function answerAsk(db:Db,p:Principal,input:unknown,
   const how=via&&p.clientId===null?{route:via,clientId:null}:arrival(p,data.route,data.card);
   await ctx.q.query(`insert into emba_ask_answer(ask_id,person_id,choices,body,route,client_id) values($1,$2,$3::smallint[],$4,$5,$6)
    on conflict(ask_id,person_id) where person_id is not null do update set choices=excluded.choices,body=excluded.body,route=excluded.route,client_id=excluded.client_id,at=clock_timestamp()`,[ask.id,p.personId,choices,body,how.route,how.clientId]);
+  await prune();
   // Everyone who is in has answered: there is nothing to wait for.
   if(ask.onlyIn&&ask.eventId)await closeDayAskIfAnswered(ctx.q,ctx.team,ask.id,ask.eventId);
   return {saved:true,changed:true,ask:await result(ctx,ask.id)};
@@ -328,7 +350,9 @@ export async function listAsks(db:Db,p:Principal,input:unknown):Promise<AskList>
 /** An open ask the caller has yet to answer. */
 export type Unanswered=AskView&{
  /** It closes within 48 hours. */
- closingSoon:boolean};
+ closingSoon:boolean;
+ /** How many chose each option so far. Totals only, whatever the ask's reveal setting. */
+ results:(AskOption&{count:number})[]};
 /** For what is new and the brief, inside their snapshot: how many asks are open, and the open asks this caller may answer and has not. */
 export async function openAsks(q:Q,p:Principal,team:Scope,timezone:string):Promise<{open:number;unanswered:Listed<Unanswered>}> {
  const {rows:[count]}=await q.query<{n:number}>(`select count(*)::int as n from emba_ask k where k.org_id=$1 and k.loop_id=$2 and ${openSql()}`,[team.orgId,team.loopId]);
@@ -336,8 +360,8 @@ export async function openAsks(q:Q,p:Principal,team:Scope,timezone:string):Promi
  if(!count.n||!await canAccessLoop(q,p,team.orgId,team.loopId,'post'))return {open:count.n,unanswered:{items:[],more:0}};
  const {rows}=await q.query<{id:string;soon:boolean;total:number}>(`select k.id,k.closes_at<=clock_timestamp()+interval '${ASKS.soonHours} hours' as soon,count(*) over()::int as total from emba_ask k
   where k.org_id=$1 and k.loop_id=$2 and ${openSql()} and ${putTo('$3')} and not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$3) order by k.closes_at,k.number limit ${ASKS.list}`,[team.orgId,team.loopId,p.personId]);
- const views=await viewAsks(q,{p,team,timezone,manager:false},rows.map(row=>row.id),false);
- return {open:count.n,unanswered:{items:views.map((view,index)=>({...view,closingSoon:rows[index].soon})),more:Math.max(0,(rows[0]?.total??0)-rows.length)}};
+ const views=await viewAsks(q,{p,team,timezone,manager:false},rows.map(row=>row.id),true);
+ return {open:count.n,unanswered:{items:views.map(({results,written,missing,canClose,...view},index)=>{void written;void missing;void canClose;return {...view,results:results.map(({number,label,count})=>({number,label,count})),closingSoon:rows[index].soon};}),more:Math.max(0,(rows[0]?.total??0)-rows.length)}};
 }
 /** For the brief, inside its snapshot: how many asks are open, and how many of them the caller may answer and has not. Counts only: no ask is built to be counted. */
 export async function openAskCounts(q:Q,p:Principal,team:Scope):Promise<{open:number;unanswered:number}> {
