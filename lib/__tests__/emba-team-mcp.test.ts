@@ -188,8 +188,8 @@ it('states what happened and the next step for every refusal and error',async()=
   const stranger=(await authenticate(t.db,'test',async()=>({issuer:f.memberB.issuer,subject:f.memberB.subject,clientId:'other',scopes:['plan:read','group-memory:write'],expiresAt:Date.parse(forever)})))!;
   const other=await session(stranger);
   try{
-   expect((await other.call('team_brief')).text).toBe('This assistant has no team access yet. The user can grant it on the Loop site.');
-   expect((await other.call('claim',{what:'Work'})).text).toBe('Not saved. This assistant has no team access yet. The user can grant it on the Loop site.');
+   expect((await other.call('team_brief')).text).toBe('This assistant has no team access yet. The user can grant it at this address:\nhttps://board.test/groups/connections?assistant=other');
+   expect((await other.call('claim',{what:'Work'})).text).toBe('Not saved. This assistant has no team access yet. The user can grant it at this address:\nhttps://board.test/groups/connections?assistant=other');
    expect((await other.call('claim',{team:'@cohort',what:'Work'})).isError).toBe(true);
   }finally{await other.close();}
   expect((await t.db.query("select 1 from emba_team_record where kind='claim'")).rows).toHaveLength(0);
