@@ -32,11 +32,13 @@ export const local=(column:string,zone:string,year=true)=>`to_char(${column} at 
  * inside carry a prefix so that an expression such as `i.person_id` from the
  * caller's query keeps meaning the caller's table.
  */
-export const posts=(person:string,org='$1',loop='$2')=>`(exists(select 1 from emba_membership posts_m where posts_m.org_id=${org} and posts_m.person_id=${person} and posts_m.revoked_at is null)
+export const posts=(person:string,org='$1',loop='$2',roles="'owner','organizer','member'")=>`(exists(select 1 from emba_membership posts_m where posts_m.org_id=${org} and posts_m.person_id=${person} and posts_m.revoked_at is null)
  and not exists(select 1 from emba_deletion_tombstone posts_t where posts_t.person_id=${person})
  and exists(select 1 from emba_identity posts_i where posts_i.person_id=${person} and posts_i.revoked_at is null)
  and exists(with recursive posts_up as (select id,parent_id from emba_loop where org_id=${org} and id=${loop} union all select posts_l.id,posts_l.parent_id from emba_loop posts_l join posts_up on posts_l.id=posts_up.parent_id where posts_l.org_id=${org})
-  select 1 from posts_up join emba_role posts_r on posts_r.org_id=${org} and posts_r.loop_id=posts_up.id and posts_r.person_id=${person} and posts_r.revoked_at is null and posts_r.role in ('owner','organizer','member')))`;
+  select 1 from posts_up join emba_role posts_r on posts_r.org_id=${org} and posts_r.loop_id=posts_up.id and posts_r.person_id=${person} and posts_r.revoked_at is null and posts_r.role in (${roles})))`;
+/** The same test with followers counted: everyone who belongs to the team. */
+export const belongsTo=(person:string,org='$1',loop='$2')=>posts(person,org,loop,"'owner','organizer','member','follower'");
 
 export type Base={q:Q;lease:string|null;team:TeamHead;timezone:string;today:string;decisionSeq:number;changeSeq:number};
 /** Every team read is one snapshot: a write that commits while it runs is either wholly in the answer or not at all. */

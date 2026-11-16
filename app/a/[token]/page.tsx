@@ -10,6 +10,7 @@ import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { askReminder, askShare, askShareMessage, type AskOutside, type AskResult } from '@/lib/emba/team-asks';
 import { ActionForm } from '@/components/emba/portal-forms';
+import { ReachAtJoin } from '@/components/emba/reach-control';
 import { CopyLink, CopyText } from '@/components/emba/copy-link';
 import { nameOf, yourAnswerText } from '@/components/emba/ask-parts';
 import { joinFromShareLink } from '@/app/groups/request-actions';
@@ -85,7 +86,7 @@ export default async function SharedAskPage({ params }: { params: Promise<{ toke
       ? <>{clerkPortalConfigured() ? <p>Sign in to join this group. <Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`/a/${token}`)}`}>Sign in</Link></p> : <p role="status">Sign-in is not configured for this deployment.</p>}</>
       : join === null ? <p>This group is not taking join requests from this link. Ask an organizer to add you.</p>
         : join.requested ? <p role="status">Request sent</p>
-          : <ActionForm action={joinFromShareLink} label={join.mode === 'admit' ? 'Join group' : 'Request to join'}><input type="hidden" name="kind" value="ask" /><input type="hidden" name="token" value={token} /></ActionForm>}
+          : <ActionForm action={joinFromShareLink} label={join.mode === 'admit' ? 'Join group' : 'Request to join'}><input type="hidden" name="kind" value="ask" /><input type="hidden" name="token" value={token} /><ReachAtJoin email={principal?.verifiedEmail ?? null} /></ActionForm>}
     </section>
   </div></main></div>;
 }

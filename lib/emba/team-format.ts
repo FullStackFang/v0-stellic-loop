@@ -1,10 +1,13 @@
 import type {AnswerWrite,AskChange,AskDetail,AskList,AskResult,AskView,AskWrite} from './team-asks';
 import type {Member,TeamHead} from './team-core';
 import type {EventView,EventWrite} from './team-events';
-import type {EventDetail,InterestWrite,Upcoming} from './team-interest';
+import type {IdeaWrite} from './team-ideas';
+import type {DayList,EventDetail,InterestWrite,Upcoming} from './team-interest';
+import type {Arrivals,TravelEntry,TravelLeg,TravelRemoval,TravelWrite} from './team-travel';
 import type {Brief,Change,TeamBrief,TeamState,WhatsNew} from './team-read';
 import type {DecisionSummary,PersonView,RecordView,WriteResult} from './team-records';
 import type {Tag,TagList,TagResolution} from './tags';
+import type {Waiting} from './team-waiting';
 import {assistantName,singleLine} from './team-text';
 
 // The text form of every team tool result (design D10). Some assistants show
@@ -170,6 +173,11 @@ const kinds={output:'output',decision:'decision',claim:'claim',announcement:'ann
 const eventTag=(team:TeamHead,slug:string)=>`${team.handle.split('/')[0]}/${slug}`;
 const eventActions:Record<string,string>={event_added:'added',event_changed:'changed the time or place of',event_archived:'archived',event_restored:'restored'};
 function changeLine(change:Change,team:TeamHead):string {
+ // Loop itself makes an idea a plan and notes one that ran out of time; a member proposes or cancels one.
+ if(change.event&&change.action==='event_planned')return `${change.at.slice(0,10)}: idea ${eventTag(team,change.event.slug)} has the people it needs and is now a plan${change.event.starts?`, ${change.event.starts}`:''}.`;
+ if(change.event&&change.action==='event_lapsed')return `${change.at.slice(0,10)}: idea ${eventTag(team,change.event.slug)} lapsed without becoming a plan.`;
+ if(change.event&&(change.action==='event_proposed'||change.action==='event_cancelled'))return `${change.at.slice(0,10)}: ${who(change.by)}${via(change.assistant)} ${change.action==='event_proposed'?'proposed idea':'cancelled'} ${eventTag(team,change.event.slug)}${change.action==='event_proposed'&&change.event.starts?`, ${change.event.starts}`:''}.`;
+ if(change.ask?.forThoseIn&&change.action==='asked')return `${change.at.slice(0,10)}: Loop asked the members who are in on ${change.ask.event?`idea ${eventTag(team,change.ask.event)}`:'an idea'} to choose its day (ask #${change.ask.number}).`;
  if(change.event)return `${change.at.slice(0,10)}: ${who(change.by)}${via(change.assistant)} ${eventActions[change.action]??'changed'} event ${eventTag(team,change.event.slug)}${change.event.starts&&change.action!=='event_archived'?`, now ${change.event.starts}`:''}.`;
  if(change.ask)return `${change.at.slice(0,10)}: ${change.action==='asked'?`${who(change.by)}${via(change.assistant)} asked the team (ask #${change.ask.number})`:`ask #${change.ask.number} closed`}.`;
  if(!change.record)return `${change.at.slice(0,10)}: something changed.`;
@@ -188,6 +196,11 @@ export function formatNews(news:WhatsNew):string {
   for(const ask of waiting)page.line(`Ask #${ask.number}, closes ${ask.closes} (${ask.timezone})${ask.closingSoon?', which is within 48 hours':''}:`).raw(quote(ask.question).slice(0,2));
   page.line(`${rest>0?`${rest} more are waiting. `:''}To answer one, call answer with its number; ask_results shows its options.`,'');
  }
+ if(news.oneShort?.length){
+  page.line('Ideas that need one more person, which the user is not in on:');
+  for(const idea of news.oneShort)page.line(`Idea ${eventTag(news.team,idea.slug)}: ${ideaTime(idea)}.`).raw(quote(idea.name).slice(0,1));
+  page.line('To say the user is in, call interested with the idea\'s tag.','');
+ }
  page.line(news.window==='last_7_days'?'Changes in the last 7 days, oldest first:':news.window==='since'?'Changes since that date, oldest first:':'Changes since your cursor, oldest first:');
  if(!news.changes.length)page.line('Nothing new.');
  for(const change of news.changes){
@@ -196,7 +209,7 @@ export function formatNews(news:WhatsNew):string {
  }
  // The cursor in the text stops at the last change the text shows, so a client that reads only the text misses nothing.
  const cut=page.shown<news.changes.length,cursor=cut&&page.shown?news.changes[page.shown-1].cursor:news.cursor;
- return page.line(`Next cursor: ${cursor}`,news.more||cut?'There are more changes. Call whats_new again with this cursor.':'Call whats_new with this cursor later to see only what is new.',...(news.changes.length||waiting.length?[NOTE]:[])).end('Call whats_new again with the cursor above to see them.');
+ return page.line(`Next cursor: ${cursor}`,news.more||cut?'There are more changes. Call whats_new again with this cursor.':'Call whats_new with this cursor later to see only what is new.',...(news.changes.length||waiting.length||news.oneShort?.length?[NOTE]:[])).end('Call whats_new again with the cursor above to see them.');
 }
 
 // An event's name is an organizer's words and its line can be long, so the name goes on a quoted line of its own.
@@ -216,8 +229,27 @@ export function formatTags(list:TagList):string {
 }
 const timeOf=(event:EventView)=>event.starts?`${event.starts}${event.ends?` to ${event.ends}`:''} (${event.timezone})`:'no date set';
 const interestOf=(event:EventView)=>`${event.interested} interested${event.youAreInterested?', including you':''}`;
+const ideaTime=(event:EventView)=>event.starts?timeOf(event):event.idea?.day?`on ${event.idea.day}, no time yet (${event.timezone})`:'no day yet';
+/** What an idea that has its people still lacks before it is a plan. */
+function ideaLacks(event:EventView):string[] {
+ const idea=event.idea!;
+ if(idea.state!=='idea'||idea.needs>0)return [];
+ if(!event.starts&&!idea.day)return [idea.dayAsk?.open?`It has the people it needs. Ask #${idea.dayAsk.number} is open to those who are in, to choose the day.`
+  :idea.dayAsk?`It has the people it needs. Ask #${idea.dayAsk.number} for its day ended with no clear answer: the person who proposed it chooses the day.`:'It has the people it needs and no day yet.'];
+ if(!event.starts)return [`It has the people it needs and a day. It needs a start time${event.place?'':' and a place'} from the person who proposed it.`];
+ return event.place?[]:['It has the people it needs and a time. It needs a place from the person who proposed it; Loop does not poll for one.'];
+}
+function ideaLines(team:TeamHead,event:EventView):string[] {
+ const idea=event.idea!,label={idea:'Idea',planned:'Plan',cancelled:'Cancelled',lapsed:'Lapsed idea'}[idea.state];
+ const count=`${event.interested} in${event.youAreInterested?', including you':''}`,need=idea.state!=='idea'?'':idea.needs?`, needs ${idea.needs} more of ${idea.needed}`:`, the ${idea.needed} it needs`;
+ return [...own(`${label} ${eventTag(team,event.slug)}: ${ideaTime(event)}. ${count}${need}.${idea.youProposed?' The user proposed it.':''}`),...quote(event.name),
+  ...(event.place?quote(`Place: ${event.place}`):[]),...(event.note?quote(`Note: ${event.note}`):[]),
+  ...(idea.state==='idea'&&!event.starts&&!idea.day&&idea.offeredDays.length?own(`Days on offer: ${idea.offeredDays.join(', ')}.`):[]),...ideaLacks(event).flatMap(own),
+  ...(event.url?['Its link:',event.url]:[]),...(event.shareUrl?['Share link (people outside the team see its name, time and place, and no names):',event.shareUrl]:[])];
+}
 /** One event as lines: Loop's facts, then the organizer's words as quoted data, then its links, each alone on a line. */
 export function eventLines(team:TeamHead,event:EventView):string[] {
+ if(event.idea)return ideaLines(team,event);
  return [...own(`Event ${eventTag(team,event.slug)}${event.archived?' (archived)':''}: ${timeOf(event)}. ${interestOf(event)}.`),...quote(event.name),
   ...(event.place?quote(`Place: ${event.place}`):[]),...(event.note?quote(`Note: ${event.note}`):[]),
   ...(event.url?['Its link:',event.url]:[]),...(event.shareUrl?['Share link (shows the event to anyone who opens it, and lets members mark interest):',event.shareUrl]:[])];
@@ -257,7 +289,15 @@ export function formatEventWrite(result:EventWrite,team:TeamHead):string {
 /** The result of marking interest or taking it back. */
 export function formatInterest(result:InterestWrite,team:TeamHead):string {
  if(!result.saved)return result.reason==='cap'?`Not saved. Limit reached: ${clubCaps[result.cap]}`:result.reason==='unknown_event'?noEvent(result.value):`Not saved. ${refusals[result.reason]}`;
- const said=result.interested?(result.changed?'Saved. The user is now marked as interested.':'The user was already marked as interested. Nothing changed.'):(result.changed?'Saved. The user is no longer marked as interested.':'The user was not marked as interested. Nothing changed.');
+ const idea=result.event.idea;
+ if(idea)return new Page().line(result.interested?(result.changed?'Saved. The user is in.':'The user was already in. Nothing changed.')
+   :result.declined?(result.changed?'Saved. The user is not in, and this idea will not be offered to them again.':'The user had already said this is not for them. Nothing changed.')
+   :(result.changed?'Saved. The user is no longer in.':'The user was not in. Nothing changed.')).raw(eventLines(team,result.event))
+  .line(...(idea.state==='planned'&&result.changed?[result.interested?'It is a plan: a calendar invite goes to the user by email if they allow email from this team.':'It stays a plan for the others. If the user had its calendar invite, a cancellation goes to them alone.']:[]),
+   result.interested?'To take it back, call interested again with interested set to false.':'To join again, call interested with this tag.',NOTE).end();
+ const said=result.interested?(result.changed?'Saved. The user is now marked as interested.':'The user was already marked as interested. Nothing changed.')
+  :result.declined?(result.changed?'Saved. The user is not marked as interested, and this event will not be offered to them again.':'The user had already said this event is not for them. Nothing changed.')
+  :(result.changed?'Saved. The user is no longer marked as interested.':'The user was not marked as interested. Nothing changed.');
  return new Page().line(said).raw(eventLines(team,result.event)).line(result.interested?'To take it back, call interested again with interested set to false.':'To mark interest again, call interested with this tag.',NOTE).end();
 }
 /** No team was named and Loop will not guess. */
@@ -355,6 +395,7 @@ export function formatAnswer(result:AnswerWrite,team:TeamHead):string {
   case 'closed':return shown('Not saved. This ask is closed and takes no more answers. It ended as:',result.ask);
   case 'unknown_option':return shown(`Not saved. The ask has no option ${short(result.value,60)}. Its options are listed below; answer with an option's number or its exact words.`,result.ask);
   case 'answer_shape':return shown(`Not saved. ${shapeWords[result.problem]}`,result.ask);
+  case 'not_in':return shown('Not saved. This ask is for the members who are in on the idea, and the user is not. To join, call interested with the idea\'s tag.',result.ask);
   default:return general(result);
  }
 }
@@ -384,4 +425,96 @@ export function formatAsks(list:AskList):string {
  for(const ask of list.closed.items)page.item(askLines(list.team,ask));
  page.more(list.closed.more);
  return page.line(...(list.open.items.length||list.closed.items.length?['To see the answers of one, call ask_results with its number. To answer one for the user, call answer.',NOTE]:[])).end('Call ask_results with the number of one ask to see it.');
+}
+
+/** The line both the text form and the in-chat card open with. */
+export const waitingHeadline=(count:number)=>count===0?'Nothing waiting from your groups.':`${count} ${count===1?'thing':'things'} from your groups.`;
+/** What is waiting for the user across their teams: each item with its team, its time, and how to act on it. */
+export const formatWaiting=(result:Waiting):string=>waitingText(result).text;
+/** The same text, and how many of the items, from the first, it states: the rest did not fit and are counted. */
+export function waitingText(result:Waiting):{text:string;stated:number} {
+ if(!result.count)return {text:waitingHeadline(0),stated:0};
+ const page=new Page().line(waitingHeadline(result.count));
+ for(const item of result.items){
+  const team=`${item.team.handle} (${short(item.team.name,60)})`;
+  if(item.kind==='ask')page.item([...own(`Ask #${item.ask.number} in ${team}, closes ${item.ask.closes} (${item.ask.timezone})${item.ask.closingSoon?', which is within 48 hours':''}:`),...quote(item.ask.question).slice(0,2),
+   ...own(`${kindWords[item.ask.kind]}. ${item.ask.answered} of ${item.ask.expected} answered.`),...item.ask.options.flatMap(option=>quote(`${option.number}. ${option.label}`)),
+   ...own(`To answer, call answer with team ${item.team.handle} and number ${item.ask.number}.`)]);
+  else if(item.kind==='event'){
+   const tag=eventTag(item.team,item.event.slug);
+   page.item([...own(`Event ${tag} in ${team}: ${timeOf(item.event)}. ${interestOf(item.event)}.`),...quote(item.event.name),...(item.event.place?quote(`Place: ${item.event.place}`):[]),
+    ...own(`To mark the user interested, call interested with team ${tag}. If it is not for them, call it with notForMe set to true.`)]);
+  }
+  else if(item.kind==='idea'){
+   const tag=eventTag(item.team,item.event.slug),change=`call propose_idea with action set to change and team ${tag}`;
+   const lead={one_short:`Idea ${tag} in ${team} needs one more person: ${ideaTime(item.event)}. ${item.event.interested} in.`,needs_place:`The user's idea ${tag} in ${team} has the people it needs and no place: ${ideaTime(item.event)}. ${item.event.interested} in.`,
+    needs_time:`The user's idea ${tag} in ${team} has the people it needs and a day, ${item.event.idea?.day??''}, and no start time. ${item.event.interested} in.`,choose_day:`The ask for the day of the user's idea ${tag} in ${team} ended with no clear answer. ${item.event.interested} in.`}[item.why];
+   const act={one_short:`To say the user is in, call interested with team ${tag}. If it is not for them, call it with notForMe set to true.`,needs_place:`To set the place, ${change}.`,needs_time:`To set the start time, ${change}.`,
+    choose_day:`The user chooses the day: ${change} and day${item.event.idea?.dayAsk?`; ask_results with number ${item.event.idea.dayAsk.number} shows the answers`:''}.`}[item.why];
+   page.item([...own(lead),...quote(item.event.name),...(item.event.place?quote(`Place: ${item.event.place}`):[]),...own(act)]);
+  }
+  else page.item([...own(item.kind==='mention'?`Mentions the user, in ${team}:`:`Announcement in ${team}:`),...recordLines(item.record)]);
+ }
+ for(const rest of result.more)page.line(`${rest.count} more waiting in ${rest.team.handle}. Call whats_new or events with that team to see them.`);
+ const stated=page.shown;
+ return {text:page.line('Asks and events stay here until the user acts on them. Mentions and announcements are shown once.',NOTE).end('Call whats_new with a team to see them.'),stated};
+}
+
+// Trip (loop-trip): ideas and plans, the day read, and travel.
+const ideaCaps={writes_per_hour:caps.writes_per_hour,own_open_ideas:'5 open ideas of the user\'s own in this team. Cancel one, or wait for one to become a plan.',open_ideas:'100 open ideas in one team.'} as const;
+const ideaWords={not_yours:'Only the person who proposed it, or an owner or organizer of the team, can change or cancel it.',in_the_past:'The start time must be in the future.',offered_day_past:'A day on offer, or the day chosen, must be today or later.',
+ plan_needs_time_and_place:'A plan keeps a start time and a place. They can be changed, not cleared. To call it off, cancel it.',end_before_start:refusals.end_before_start,end_needs_start:refusals.end_needs_start} as const;
+const noIdea=(value:string)=>`Not saved. No open idea or plan in this team has the tag ${short(value,60)}. Call whats_on to see what exists.`;
+/** The result of proposing, changing or cancelling an idea. */
+export function formatIdeaWrite(result:IdeaWrite,team:TeamHead):string {
+ if(result.saved){
+  const state=result.event.idea?.state;
+  const next=state==='planned'?'It is a plan. A calendar invite goes by email to each member who is in and allows email from this team; the others see it here and in the calendar feed.'
+   :state==='idea'?`Others join with interested and the tag ${eventTag(team,result.event.slug)}. It becomes a plan once it has the people it needs, a start time and a place.`:'';
+  return new Page().line(!result.changed?'Nothing changed. It stands as:':state==='cancelled'?'Saved. It is cancelled and will not come back.':'Saved.').raw(eventLines(team,result.event)).line(...(next?[next]:[]),NOTE).end();
+ }
+ switch(result.reason){
+  case 'cap':return `Not saved. Limit reached: ${ideaCaps[result.cap]}`;
+  case 'link_refused':return `Not saved. The link was refused: ${links[result.problem]}.`;
+  case 'unknown_event':return noIdea(result.value);
+  case 'busy':case 'organizers_only':case 'members_only':return `Not saved. ${refusals[result.reason]}`;
+  default:return `Not saved. ${ideaWords[result.reason]}`;
+ }
+}
+/** What is on a day, or everything that has not ended: fixed events, plans, then ideas with those closest to their number first. A list, with no recommendation. */
+export function formatDay(list:DayList):string {
+ const page=new Page().line(head(list.team,list.today,list.timezone),list.day?`What is on ${list.day}:`:'Everything that has not ended:');
+ const people=(event:DayList['events'][number])=>event.people.length?own(`${event.idea?'In':'Interested'}: ${names(event.people,event.morePeople,FEW)}.`):[];
+ const section=(title:string,items:DayList['events'])=>{
+  if(!items.length)return;
+  page.line('',title);
+  for(const event of items)page.item([...eventLines(list.team,event),...people(event)]);
+ };
+ section('Fixed events:',list.events);section('Plans:',list.plans);section('Ideas, those closest to the number they need first:',list.ideas.items);
+ page.more(list.ideas.more);
+ if(!list.events.length&&!list.plans.length&&!list.ideas.items.length)return page.line(list.day?'Nothing is on that day yet. To propose something, call propose_idea.':'Nothing is coming up. To propose something, call propose_idea.').end();
+ return page.line('To say the user is in on one, call interested with its tag. To propose something else, call propose_idea.',NOTE).end('Call whats_on with one day to see fewer.');
+}
+
+const legWords=(label:string,leg:TravelLeg|null)=>leg?quote(`${label}: ${leg.when}${leg.timed?'':' (day only)'}${leg.place?`, ${leg.place}`:''}${leg.flight?`, flight ${leg.flight}`:''}`):[];
+const travelLines=(entry:TravelEntry)=>[...own(`${who(entry.who)}${via(entry.assistant)}, last changed ${entry.changedOn}:${entry.nearYourArrival?' arrives at the user\'s place within two hours of the user.':''}${entry.nearYourDeparture?' leaves from the user\'s place within two hours of the user.':''}`),
+ ...legWords('Arrives',entry.arrival),...legWords('Leaves',entry.departure),...(entry.stay?quote(`Staying: ${entry.stay}`):[])];
+const travelNote='Travel is what each member stated. Loop does not check flights.';
+/** Everyone's stated travel in order of arrival, with the members who land near the user named first. */
+export function formatArrivals(list:Arrivals):string {
+ const page=new Page().line(head(list.team,list.today,list.timezone));
+ const near=list.entries.items.filter(entry=>entry.nearYourArrival).map(entry=>entry.who);
+ page.line(list.yours?(near.length?`Arriving at the user's place within two hours of the user: ${names(near,0,FEW)}.`:list.yours.arrival?'Nobody else has stated an arrival at the user\'s place within two hours of the user\'s.':'The user has stated no arrival.'):'The user has not stated their travel. To save it, call my_travel.');
+ if(!list.entries.items.length)return page.line('Nobody has stated their travel yet.').end();
+ page.line('','Stated travel, in order of arrival:');
+ for(const entry of list.entries.items)page.item(travelLines(entry));
+ page.more(list.entries.more);
+ return page.line(travelNote,NOTE).end('The structured result lists them all.');
+}
+const travelWords={no_day:'Travel needs an arrival day or a departure day.',arrival_needs_day:'An arrival place or flight needs the arrival day.',departure_needs_day:'A departure place or flight needs the departure day.'} as const;
+/** The result of saving or removing the user's own travel. */
+export function formatTravelWrite(result:TravelWrite|TravelRemoval):string {
+ if(!result.saved)return result.reason==='incomplete'?`Not saved. ${travelWords[result.problem]}`:result.reason==='cap'?`Not saved. Limit reached: ${caps[result.cap]}`:`Not saved. ${refusals[result.reason]}`;
+ if('removed' in result)return result.removed?'Saved. The user\'s travel for this team was removed.':'The user had no travel saved for this team. Nothing changed.';
+ return new Page().line(result.changed?'Saved. The team\'s members and followers can see it. It now stands as:':'Nothing changed. The user\'s travel stands as:').raw(travelLines(result.entry)).line('To see who arrives near the user, call arrivals.',travelNote,NOTE).end();
 }

@@ -31,6 +31,7 @@ const askWords = (result: Declined): string => {
     case 'closed': return 'Not saved. This ask has closed and takes no more answers.';
     case 'unknown_option': return 'Not saved. That option is not one of this ask\'s options. Reload the page.';
     case 'answer_shape': return `Not saved. ${shape[result.problem]}`;
+    case 'not_in': return 'Not saved. This ask is for the members who are in on the idea. Say you are in first.';
     case 'not_yours': return 'Not saved. Only the person who asked, or an owner or organizer, can do this.';
     case 'reveal_fixed': return 'Not saved. Who sees which answer cannot change once someone has answered.';
     default: return denied;

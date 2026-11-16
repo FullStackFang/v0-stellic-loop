@@ -11,7 +11,7 @@
 - [x] 1.9 After review: `canAccessLoops` names a group by organization and id together; its comment says it holds more locks than the single check
 - [x] 1.10 Test: `canAccessLoops` refuses a group id named under another organization (`emba-group-tree.test.ts`)
 - [ ] 1.11 Founder, in the browser, signed in: a team page looks and behaves as before; one sign-in check per page view (1.2 has no automated test, because tests call pages outside a render); what a hover over the side menu's links prefetches
-- [ ] 1.12 Founder: deploy, then confirm in Vercel that functions run in `pdx1`
+- [x] 1.12 Founder: deploy, then confirm in Vercel that functions run in `pdx1` (deployed 2026-11-14 from merge `5a8442a`; the production deployment reports regions `pdx1`)
 
 ## 2. Fewer statements per list (D1)
 

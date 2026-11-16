@@ -38,8 +38,16 @@ export async function exportPersonalData(db:Db,p:Principal) {
   // Asks: the questions this person asked, and their own answers. Nobody else's answers.
   const asks=await own("select k.org_id,k.loop_id,k.number,k.question,k.kind,k.reveal,k.client_id,k.created_at,k.closes_at,k.closed_at,(select array_agg(o.label order by o.position) from emba_ask_option o where o.ask_id=k.id) as options from emba_ask k where k.asker_id=$1 order by k.created_at");
   const askAnswers=await own("select k.org_id,k.loop_id,k.number,k.question,(select array_agg(o.label order by o.position) from emba_ask_option o where o.ask_id=k.id and o.position=any(a.choices)) as chose,a.body,a.route,a.client_id,a.at from emba_ask_answer a join emba_ask k on k.id=a.ask_id where a.person_id=$1 order by a.at");
+  // Reach: how each team may reach this person, a linked WhatsApp number, and the messages Loop sent them. No message text is stored.
+  const reachChoices=await own('select org_id,loop_id,way,at from emba_reach_choice where person_id=$1 order by org_id,loop_id');
+  const whatsappNumber=await own('select phone,linked_at,stopped_at from emba_whatsapp_number where person_id=$1');
+  const messages=await own('select org_id,loop_id,kind,state,way,created_at,sent_at from emba_reach_message where person_id=$1 order by created_at');
+  // Trip: this person's stated travel, the ideas they proposed (those they are in on are among eventInterests), and whether they hold a calendar feed address. The address itself is a secret and is not exported.
+  const travel=await own('select org_id,loop_id,arrives_at,arrives_timed,arrives_place,arrives_flight,departs_at,departs_timed,departs_place,departs_flight,stay,client_id,changed_at from emba_travel where person_id=$1 order by org_id,loop_id');
+  const ideas=await own('select org_id,loop_id,slug,name,state,needed,starts_at,place,created_at from emba_team_event where proposer_id=$1 order by created_at');
+  const calendarFeeds=await own('select org_id,loop_id,created_at from emba_calendar_feed where person_id=$1 order by org_id,loop_id');
   await audit(q,p,'privacy:export');
-  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events,groupMemoryReceipts,teamReceipts,teamClaims,handles,eventInterests,asks,askAnswers};
+  return {scope:'emba-pilot' as const,profile,memory,feedback,commitments,leases,inbox,audit:events,groupMemoryReceipts,teamReceipts,teamClaims,handles,eventInterests,asks,askAnswers,reachChoices,whatsappNumber,messages,travel,ideas,calendarFeeds};
  });
 }
 
@@ -66,6 +74,8 @@ async function purge(q:Q,personId:string) {
  // Team records stay with the team and keep their author link (shown as a former teammate). What the
  // person was holding is let go, and every other trace of them in the team's history is unlinked.
  await releaseOnDeparture(q,personId,{actorId:null});
+ // Their open ideas have lapsed and their plans passed to organizers; what is left of them on ended ideas is unlinked.
+ await q.query('update emba_team_event set proposer_id=null where proposer_id=$1',[personId]);
  await q.query("update emba_team_record set owner_id=null where owner_id=$1 and kind='claim' and claim_status in ('done','released','declined')",[personId]);
  await q.query('update emba_team_record_version set edited_by=null where edited_by=$1',[personId]);
  await q.query('update emba_team_conflict set flagged_by=null where flagged_by=$1',[personId]);
@@ -78,7 +88,7 @@ async function purge(q:Q,personId:string) {
  await q.query('update emba_team_conflict_report set person_id=null,client_id=null where person_id=$1',[personId]);
  await q.query('delete from emba_dependency_consent where target_id=$1 or requester_id=$1',[personId]);
  await q.query('delete from emba_invitation where issued_by=$1 or accepted_by=$1',[personId]);
- for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_team_operation','emba_team_write','emba_event_interest','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_member_handle','emba_membership','emba_identity']) {
+ for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_team_operation','emba_team_write','emba_event_interest','emba_event_decline','emba_waiting_shown','emba_reach_choice','emba_reach_message','emba_travel','emba_calendar_feed','emba_whatsapp_optin','emba_whatsapp_number','emba_connector_call','emba_connector_session','emba_connect_view','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_member_handle','emba_membership','emba_identity']) {
   await q.query(`delete from ${table} where person_id=$1`,[personId]);
  }
  // No stable participant pseudonym is retained in plan history or audit output.

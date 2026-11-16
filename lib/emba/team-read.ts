@@ -7,7 +7,7 @@ import {audit,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
 import {asksById,asksDue,closeDueAsks,openAskCounts,openAsks,type AskView,type Unanswered} from './team-asks';
 import {reading,type Listed,type Scope,type TeamHead} from './team-core';
-import {bare,viewEvents,type EventView} from './team-events';
+import {bare,ideasDue,oneShortFor,viewEvents,type EventView} from './team-events';
 import {rowColumns,rowFrom,viewPeople,viewRecords,type PersonView,type RecordView,type Row} from './team-records';
 import {nameSchema,singleLine} from './team-text';
 
@@ -31,7 +31,9 @@ export type TeamState={team:TeamHead;event:string|null;timezone:string;today:str
 export type Change={cursor:string;action:string;at:string;record?:RecordView;event?:EventView;ask?:AskView;by:PersonView;assistant:string|null;other:number|null;about:PersonView|null;mentionsYou:boolean};
 export type WhatsNew={team:TeamHead;window:'cursor'|'since'|'last_7_days';changes:Change[];cursor:string;more:boolean;
  /** The open asks the caller has yet to answer, soonest to close first. Not part of the change sequence: it is the same on every call until they answer. */
- unanswered:Listed<Unanswered>;untrusted:true};
+ unanswered:Listed<Unanswered>;
+ /** Present only when there are any: the ideas that need one more person and that the caller is not in on. Like `unanswered`, the same on every call until they act. */
+ oneShort?:EventView[];untrusted:true};
 
 async function latestBrief(q:Q,team:Scope):Promise<Brief|null> {
  const {rows:[row]}=await q.query<Brief>(`select version,body,to_char(deadline,'YYYY-MM-DD') as deadline,at as "editedAt" from emba_team_brief where org_id=$1 and loop_id=$2 order by version desc limit 1`,[team.orgId,team.loopId]);
@@ -130,7 +132,7 @@ export async function whatsNew(db:Db,p:Principal,input:unknown):Promise<WhatsNew
  if(cursor&&cursor.slice(1,7)!==mark(team))throw new EmbaError('not_found');
  // An ask that passed its closing time is entered in the sequence as closed before the sequence is read. The caller's access is checked first.
  const read=(swept:boolean)=>reading(db,p,team,async({q,...base})=>{
-  if(!swept&&await asksDue(q,team))throw new Due();
+  if(!swept&&(await asksDue(q,team)||await ideasDue(q,team)))throw new Due();
   // The sequence is assigned under the team's lock, so its order is the order of commit: nothing can appear behind a cursor.
   const after=cursor?parseInt(cursor.slice(8),36):0;
   const from=cursor?null:since?`$4::date::timestamp at time zone $5`:`clock_timestamp()-make_interval(days=>${READ.windowDays})`;
@@ -155,8 +157,10 @@ export async function whatsNew(db:Db,p:Principal,input:unknown):Promise<WhatsNew
   });
   // With nothing to return, a first call starts the caller at the present.
   const last=page.at(-1)?.seq??(cursor?after:base.changeSeq);
+  // Interest belongs to members who may post, so no idea waits for a follower.
+  const short=await canAccessLoop(q,p,team.orgId,team.loopId,'post')?(await viewEvents(q,p,base.timezone,await oneShortFor(q,team,p.personId))).map(bare):[];
   return {team:base.team,window:cursor?'cursor' as const:since?'since' as const:'last_7_days' as const,changes,cursor:cursorOf(team,last),more:rows.length>page.length,
-   unanswered:(await openAsks(q,p,team,base.timezone)).unanswered,untrusted:true as const};
+   unanswered:(await openAsks(q,p,team,base.timezone)).unanswered,...(short.length?{oneShort:short}:{}),untrusted:true as const};
  });
  try{return await read(false);}
  catch(error){

@@ -6,6 +6,8 @@ import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { redirect } from 'next/navigation';
 import { accessRequestPreview, disableAccessRequests, enableAccessRequests, joinFromShare, joinLinkMode, replaceJoinLink, requestMembership, reviewMembershipRequest, setJoinMode, type JoinOutcome } from '@/lib/emba/access-requests';
 import { groupHref } from '@/lib/emba/group-path';
+import { addressedScope } from '@/lib/emba/groups';
+import { WAYS, setReachChoice, type Way } from '@/lib/emba/reach';
 import type { PortalResult } from '@/components/emba/portal-types';
 
 const value = (data: FormData, key: string) => String(data.get(key) ?? '');
@@ -32,10 +34,16 @@ export async function disableRequestLink(_previous: PortalResult, data: FormData
 }
 const joined: Record<Exclude<JoinOutcome['outcome'], 'joined'>, string> = { requested: 'Request sent to the group organizers.', contact_organizer: 'This link cannot add you to the group again. Contact an organizer of the group.' };
 /** Takes the join step, then sends a person who was admitted on to `next`; anyone else is told what happened. */
-async function takeJoinStep(run: (principal: Parameters<typeof requestMembership>[1]) => Promise<JoinOutcome>, next: (group: { namespace: string; slug: string }) => string): Promise<PortalResult> {
+async function takeJoinStep(reach: string, run: (principal: Parameters<typeof requestMembership>[1]) => Promise<JoinOutcome>, next: (group: { namespace: string; slug: string }) => string): Promise<PortalResult> {
   let to: string | null = null;
   const result = await mutate(async principal => {
     const { outcome, ...group } = await run(principal);
+    // The choice made on the join form is saved as it stands, email included, so it replaces whatever was there before.
+    if (outcome !== 'contact_organizer' && (WAYS as readonly string[]).includes(reach)) {
+      const scope = await addressedScope(db(), group.namespace, group.slug);
+      const saved = scope && await setReachChoice(db(), principal, { ...scope, way: reach as Way }).catch(() => null);
+      if (!saved?.saved) return { status: 'error', message: `${outcome === 'joined' ? 'You joined the group' : 'Your request was sent'}, but your choice of how the group reaches you was not saved. Set it on the Reach page.` };
+    }
     if (outcome === 'joined') { to = next(group); return; }
     return { status: outcome === 'requested' ? 'success' : 'error', message: joined[outcome] };
   });
@@ -43,12 +51,12 @@ async function takeJoinStep(run: (principal: Parameters<typeof requestMembership
   return result;
 }
 export async function submitMembershipRequest(_previous: PortalResult, data: FormData): Promise<PortalResult> {
-  return takeJoinStep(principal => requestMembership(db(), principal, value(data, 'token')), groupHref);
+  return takeJoinStep(value(data, 'reach'), principal => requestMembership(db(), principal, value(data, 'token')), groupHref);
 }
 /** The join step from an event's or an ask's share page: a person who is admitted returns to the item they opened. */
 export async function joinFromShareLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   const kind = value(data, 'kind') === 'ask' ? 'ask' : 'event', token = value(data, 'token');
-  return takeJoinStep(principal => joinFromShare(db(), principal, { kind, token }), () => `/${kind === 'ask' ? 'a' : 'e'}/${encodeURIComponent(token)}`);
+  return takeJoinStep(value(data, 'reach'), principal => joinFromShare(db(), principal, { kind, token }), () => `/${kind === 'ask' ? 'a' : 'e'}/${encodeURIComponent(token)}`);
 }
 export async function setRequestLinkMode(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(principal => setJoinMode(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), mode: value(data, 'mode') }));

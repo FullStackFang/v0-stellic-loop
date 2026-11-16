@@ -4,7 +4,9 @@ import type {Db,Q} from '../db';
 import type {Principal} from './access';
 import {EmbaError} from './errors';
 import {byName,local,posts,reading,scope,stop,teamWrite,viewMembers,type Listed,type Member,type Refused,type Scope,type TeamHead} from './team-core';
-import {bare,EVENTS,upcoming,viewEvents,type EventView} from './team-events';
+import {cancelOne,inviteOne} from './team-calendar';
+import {bare,closeDayAskIfAnswered,EVENTS,IDEAS,lapseDue,openIdea,settled,upcoming,viewEvents,type EventView} from './team-events';
+import {settle} from './team-ideas';
 import {nameSchema} from './team-text';
 
 // Interest in an event (design D2): one switch per member per event. Members
@@ -13,25 +15,62 @@ import {nameSchema} from './team-text';
 
 /** How a mark or an answer arrived. An assistant's route is set from its sign-in, never from input. */
 export const route=z.enum(['site','share_link']).default('site');
-export const arrival=(p:Principal,stated:'site'|'share_link')=>p.clientId===null?{route:stated,clientId:null}:{route:'assistant' as const,clientId:p.clientId};
+/**
+ * Set by the connector, never by the model: the call came from a control on
+ * the in-chat card. It changes only the route that is stored.
+ */
+export const card=z.boolean().default(false);
+export const arrival=(p:Principal,stated:'site'|'share_link',fromCard=false)=>p.clientId===null?{route:stated,clientId:null}:{route:fromCard?'assistant_card' as const:'assistant' as const,clientId:p.clientId};
 
 export type InterestWrite=
- |{saved:true;interested:boolean;changed:boolean;event:EventView}
+ |{saved:true;interested:boolean;
+  /** The user said the event is not for them: it no longer waits for them. */
+  declined:boolean;changed:boolean;event:EventView}
  |Refused
  |{saved:false;reason:'unknown_event';value:string};
 type Declined=Exclude<InterestWrite,{saved:true}|Refused>;
-const interestSchema=z.strictObject({...scope,event:nameSchema,interested:z.boolean().default(true),route});
-/** Marks the caller interested in an event, or takes the mark back. Only ever the caller's own. */
+const interestSchema=z.strictObject({...scope,event:nameSchema,interested:z.boolean().default(true),decline:z.boolean().default(false),route,card}).refine(data=>!(data.interested&&data.decline));
+/**
+ * Marks the caller interested in an event, or takes the mark back. With
+ * `decline` the caller says the event is not for them: any mark is removed and
+ * the event stops waiting for them (design D8b of loop-club-reach). Marking
+ * interest later undoes a decline. Only ever the caller's own.
+ */
 export async function setInterest(db:Db,p:Principal,input:unknown):Promise<InterestWrite> {
  const data=interestSchema.parse(input);
- return teamWrite<Exclude<InterestWrite,Refused>>(db,p,data,{need:'post',count:true},async ctx=>{
-  const {rows:[event]}=await ctx.q.query<{id:string}>('select id from emba_team_event where org_id=$1 and loop_id=$2 and slug=$3 and archived_at is null for share',[data.orgId,data.loopId,data.event]);
+ // A mark on an idea, a plan or an event that was sent as an invite can make a plan or reach a calendar. Those are decided one at a
+ // time, under the team's lock. Whether this is such an event is looked up first, because the lock is taken before the event's row.
+ const tracked="(state<>'fixed' or invites_at is not null)";
+ const {rows:[ahead]}=await db.query<{tracked:boolean}>(`select ${tracked} as tracked from emba_team_event where org_id=$1 and loop_id=$2 and slug=$3 and archived_at is null`,[data.orgId,data.loopId,data.event]);
+ const locked=Boolean(ahead?.tracked);
+ return teamWrite<Exclude<InterestWrite,Refused>|Extract<Refused,{reason:'busy'}>>(db,p,data,{need:'post',count:true,lock:locked},async ctx=>{
+  if(locked)await lapseDue(ctx.q,ctx.team);
+  const {rows:[event]}=await ctx.q.query<{id:string;state:string;invited:boolean;askId:string|null;tracked:boolean}>(`select id,state,invites_at is not null as invited,day_ask_id as "askId",${tracked} as tracked from emba_team_event where org_id=$1 and loop_id=$2 and slug=$3 and archived_at is null for share`,[data.orgId,data.loopId,data.event]);
   if(!event)return stop<Declined>({saved:false,reason:'unknown_event',value:data.event});
-  const how=arrival(p,data.route);
-  const {rows}=data.interested
+  // It became one of those a moment ago: nothing is saved, and the next try takes the lock.
+  if(event.tracked&&!locked)stop<Refused>({saved:false,reason:'busy'});
+  const how=arrival(p,data.route,data.card);
+  const {rows:marked}=data.interested
    ?await ctx.q.query('insert into emba_event_interest(event_id,org_id,loop_id,person_id,route,client_id) values($1,$2,$3,$4,$5,$6) on conflict do nothing returning person_id',[event.id,data.orgId,data.loopId,p.personId,how.route,how.clientId])
    :await ctx.q.query('delete from emba_event_interest where event_id=$1 and person_id=$2 returning person_id',[event.id,p.personId]);
-  return {saved:true,interested:data.interested,changed:rows.length>0,event:bare((await viewEvents(ctx.q,ctx.p,ctx.timezone,[event.id]))[0])};
+  // Nobody else learns of a decline: it is the caller's own note that the event need not be offered to them again.
+  const {rows:noted}=data.decline
+   ?await ctx.q.query('insert into emba_event_decline(event_id,org_id,loop_id,person_id) values($1,$2,$3,$4) on conflict do nothing returning person_id',[event.id,data.orgId,data.loopId,p.personId])
+   :data.interested?await ctx.q.query('delete from emba_event_decline where event_id=$1 and person_id=$2 returning person_id',[event.id,p.personId]):{rows:[]};
+  if(marked.length){
+   if(event.state==='idea'){
+    // One more person can be the last the idea needed. One fewer takes their answer about the day with them.
+    if(data.interested)await settle(ctx,event.id);
+    else if(event.askId){
+     await ctx.q.query('delete from emba_ask_answer a using emba_ask k where k.id=a.ask_id and a.ask_id=$1 and a.person_id=$2 and k.closed_at is null and k.closes_at>clock_timestamp()',[event.askId,p.personId]);
+     // They may have been the last one the ask was waiting for.
+     await closeDayAskIfAnswered(ctx.q,ctx.team,event.askId,event.id);
+    }
+   }
+   // The invites have gone out: this member's calendar gets the entry, or loses it. Nobody else's changes.
+   else if(event.invited)await (data.interested?inviteOne:cancelOne)(ctx.q,ctx.team,event.id,p.personId);
+  }
+  return {saved:true,interested:data.interested,declined:data.decline,changed:marked.length+noted.length>0,event:bare((await viewEvents(ctx.q,ctx.p,ctx.timezone,[event.id]))[0])};
  });
 }
 
@@ -103,4 +142,38 @@ export async function eventShare(db:Db,p:Principal|null,input:string):Promise<Ev
   catch(error){if(!(error instanceof EmbaError)||(error.code!=='forbidden'&&error.code!=='not_found'))throw error;}
  }
  return {view:'outside',outside,signedIn:Boolean(p),join:mode?{mode,requested}:null};
+}
+
+/** What is on: fixed events, plans, and the ideas members can still say they are in on, each with who is interested or in. */
+export type DayList={team:TeamHead;timezone:string;today:string;
+ /** The day asked about, or null for everything that has not ended. */
+ day:string|null;
+ events:EventWithPeople[];plans:EventWithPeople[];
+ /** Those closest to the number they need come first. */
+ ideas:Listed<EventWithPeople>;untrusted:true};
+const dayOf=z.string().regex(/^20\d{2}-\d{2}-\d{2}$/).refine(value=>{const date=new Date(`${value}T00:00:00Z`);return !Number.isNaN(date.getTime())&&date.toISOString().startsWith(value);});
+/**
+ * One day in the team's timezone, or with no day everything that has not
+ * ended. An idea with no start time belongs to the day those who are in
+ * chose, else to each day its proposer offered, else to every day. This is a
+ * list: it ranks nothing and recommends nothing.
+ */
+export async function whatsOn(db:Db,p:Principal,input:unknown):Promise<DayList> {
+ const {day,...team}=z.strictObject({...scope,day:dayOf.optional()}).parse(input);
+ return settled(db,team,check=>reading(db,p,team,async({q,...base})=>{
+  await check(q);
+  const on="(e.starts_at at time zone $3)::date=$4::date";
+  // Two lists with a limit each, so a long programme never pushes an idea out. A team holds at most 100 open ideas.
+  const {rows}=await q.query<{id:string;total:number}>(`(select e.id,0 as total,e.starts_at,e.slug from emba_team_event e where e.org_id=$1 and e.loop_id=$2 and e.state in ('fixed','planned') and e.archived_at is null and ${day?on:upcoming}
+    order by e.starts_at asc nulls last,e.slug limit ${EVENTS.list*2})
+   union all (select e.id,count(*) over()::int as total,e.starts_at,e.slug from emba_team_event e where e.org_id=$1 and e.loop_id=$2 and ${openIdea()}
+     and ($4::date is null or case when e.starts_at is not null then ${on} when e.day is not null then e.day=$4::date else cardinality(e.offered_days)=0 or $4::date=any(e.offered_days) end)
+    order by e.starts_at asc nulls last,e.slug limit ${IDEAS.openPerTeam})
+   order by starts_at asc nulls last,slug`,[team.orgId,team.loopId,base.timezone,day??null]);
+  const views=await viewEvents(q,p,base.timezone,rows.map(row=>row.id)),who=await interested(q,p,team,views.map(view=>view.id));
+  const full=views.map(view=>({...bare(view),...who(view.id)}));
+  const ideas=full.filter(view=>view.idea?.state==='idea').sort((a,b)=>a.idea!.needs-b.idea!.needs);
+  return {team:base.team,timezone:base.timezone,today:base.today,day:day??null,events:full.filter(view=>!view.idea),plans:full.filter(view=>view.idea?.state==='planned'),
+   ideas:{items:ideas,more:Math.max(0,Math.max(0,...rows.map(row=>row.total))-ideas.length)},untrusted:true as const};
+ }));
 }

@@ -5,5 +5,5 @@ import { AccessRequestLink } from './request-link';
 export const dynamic = 'force-dynamic';
 export default async function RequestPage() {
   const principal = await getPortalPrincipal();
-  return <section className="lt-editor"><h1>Request group access</h1><AccessRequestLink signedIn={!!principal} signInAvailable={clerkPortalConfigured()} /></section>;
+  return <section className="lt-editor"><h1>Request group access</h1><AccessRequestLink signedIn={!!principal} email={principal?.verifiedEmail ?? null} signInAvailable={clerkPortalConfigured()} /></section>;
 }
