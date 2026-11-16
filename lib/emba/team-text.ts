@@ -28,5 +28,7 @@ export const nameSchema=z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/).refine(val
 export function assistantName(clientId:string):string {
  if(clientId==='https://claude.ai/oauth/mcp-oauth-client-metadata')return 'Claude';
  if(clientId==='https://claude.ai/oauth/claude-code-client-metadata')return 'Claude Code';
+ // Meta's assistant has no published identity, so Loop's sign-in provider registered this one for it.
+ if(clientId==='oJLiBHFWfm5De8eq')return 'Muse';
  try{return new URL(clientId).hostname||clientId;}catch{return clientId;}
 }
