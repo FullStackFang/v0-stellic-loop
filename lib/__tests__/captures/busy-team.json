@@ -1763,6 +1763,18 @@
       "answered": 2,
       "expected": 6,
       "shareUrl": "<shareUrl>",
+      "results": [
+       {
+        "number": 1,
+        "label": "Red",
+        "count": 1
+       },
+       {
+        "number": 2,
+        "label": "White",
+        "count": 1
+       }
+      ],
       "closingSoon": true
      }
     ],
@@ -4268,6 +4280,18 @@
       "answered": 2,
       "expected": 6,
       "shareUrl": "<shareUrl>",
+      "results": [
+       {
+        "number": 1,
+        "label": "Red",
+        "count": 1
+       },
+       {
+        "number": 2,
+        "label": "White",
+        "count": 1
+       }
+      ],
       "closingSoon": true
      }
     ],
@@ -9075,6 +9099,23 @@
       "answered": 4,
       "expected": 6,
       "shareUrl": "<shareUrl>",
+      "results": [
+       {
+        "number": 1,
+        "label": "2099-03-14",
+        "count": 2
+       },
+       {
+        "number": 2,
+        "label": "2099-03-21",
+        "count": 2
+       },
+       {
+        "number": 3,
+        "label": "2099-03-28",
+        "count": 1
+       }
+      ],
       "closingSoon": false
      }
     ],
