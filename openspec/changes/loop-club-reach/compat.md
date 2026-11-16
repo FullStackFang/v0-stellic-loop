@@ -1,6 +1,6 @@
 # Compatibility: the in-chat card in each assistant
 
-Task 3.4. Started 2026-11-14. The card is `lib/emba/team-card.ts`, served by the team connector at `ui://loop/card-v1.html`.
+Task 3.4. Started 2026-11-14. The card is `lib/emba/team-card.ts`, served by the team connector at `ui://loop/card-v2.html`.
 
 ## What has been tested
 
@@ -24,7 +24,7 @@ Nothing below has been tried in a real assistant. Each row says what the documen
 | - | - | - | - |
 | Bridge | Documents show the SDK only | Documents show a hand-written bridge | Hand-written bridge with the standard messages. To confirm in Claude. |
 | Size | Height fits the content when the card reports it | Sizing is documented only through `window.openai.notifyIntrinsicHeight` | Sends the standard `ui/notifications/size-changed`. The ChatGPT-only call is not used, because its documents do not say it is required. If the card is cut off in ChatGPT, add it behind a check that it exists. |
-| Border | None on the web, one on mobile, unless told | A hint | The page asks for a border (`prefersBorder: true`) and has a transparent background. |
+| Border | None on the web, one on mobile, unless told | A hint | The page draws its own panel, asks for no border (`prefersBorder: false`) and has a transparent background. |
 | Style values | Supplies the standard variables | Which variables it supplies is not documented | Every variable has a fallback that is a light and dark pair. |
 | A tap that writes | The user approves tool calls; "Always allow" exists | Tools that write need confirmation by default | Not known whether a tap asks for confirmation in either. The card waits up to 250 seconds, then says it could not reach Loop. |
 | Declaring the card | The extension's helper writes the nested key and an older flat key | Nested key documented | Only the nested key, `_meta.ui.resourceUri`. If Claude shows no card, add the flat key first. |
