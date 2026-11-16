@@ -57,6 +57,28 @@ describe('EMBA first-party invitations', () => {
     expect((await t.db.query('select role from emba_role where person_id=$1', [f.recipient.personId])).rows).toEqual([{ role: 'member' }]);
   });
 
+  it('names a person from the invitation and tags them by first name, keeping a name and a tag they already have', async () => {
+    const f = await fixture();
+    const tagOf = async (who: Principal) => (await t.db.query<{ handle: string }>('select handle from emba_member_handle where org_id=$1 and person_id=$2', [f.org, who.personId])).rows[0]?.handle ?? null;
+    const nameOf = async (who: Principal) => (await t.db.query<{ name: string }>('select name from person where id=$1', [who.personId])).rows[0].name;
+    const join = async (email: string, invited: string | undefined, known: string) => {
+      const who = await person(email);
+      await t.db.query('update person set name=$2 where id=$1', [who.personId, known]);
+      const made = await issueInvitation(t.db, f.owner, { ...f.input, recipientEmail: email, recipientName: invited });
+      await acceptInvitationById(t.db, who, made.id);
+      return who;
+    };
+    const first = await join('jn@example.test', '  Jayashree   Nagarajachar ', 'Member');
+    expect([await nameOf(first), await tagOf(first)]).toEqual(['Jayashree Nagarajachar', 'jayashree']);
+    const second = await join('jr@example.test', 'Jayashree Rao', 'Member');
+    expect(await tagOf(second)).toBe('jayashree-r');
+    const named = await join('pat@example.test', 'Someone Else', 'Pat Lee');
+    expect([await nameOf(named), await tagOf(named)]).toEqual(['Pat Lee', 'pat']);
+    const unnamed = await join('quiet@example.test', undefined, 'Member');
+    expect([await nameOf(unnamed), await tagOf(unnamed)]).toEqual(['Member', null]);
+    await expect(issueInvitation(t.db, f.owner, { ...f.input, recipientName: 7 as never })).rejects.toThrow();
+  });
+
   it('audits invitation metadata reads and fails closed when the audit cannot persist',async()=>{
     const f=await fixture();await issueInvitation(t.db,f.owner,f.input);
     await listInvitations(t.db,f.owner,f.org,f.loop);

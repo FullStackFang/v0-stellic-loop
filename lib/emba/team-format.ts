@@ -1,5 +1,5 @@
 import type {AnswerWrite,AskChange,AskDetail,AskList,AskResult,AskView,AskWrite} from './team-asks';
-import type {Member,TeamHead} from './team-core';
+import type {Member,OrganizeReason,TeamHead} from './team-core';
 import type {EventView,EventWrite} from './team-events';
 import type {IdeaWrite} from './team-ideas';
 import type {DayList,EventDetail,InterestWrite,Upcoming} from './team-interest';
@@ -517,4 +517,49 @@ export function formatTravelWrite(result:TravelWrite|TravelRemoval):string {
  if(!result.saved)return result.reason==='incomplete'?`Not saved. ${travelWords[result.problem]}`:result.reason==='cap'?`Not saved. Limit reached: ${caps[result.cap]}`:`Not saved. ${refusals[result.reason]}`;
  if('removed' in result)return result.removed?'Saved. The user\'s travel for this team was removed.':'The user had no travel saved for this team. Nothing changed.';
  return new Page().line(result.changed?'Saved. The team\'s members and followers can see it. It now stands as:':'Nothing changed. The user\'s travel stands as:').raw(travelLines(result.entry)).line('To see who arrives near the user, call arrivals.',travelNote,NOTE).end();
+}
+
+// Organizer tools (loop-organize-and-fix): groups and invitations.
+export type OrganizeWord=OrganizeReason|'name_taken'|'archived'|'member_only'|'no_address';
+export type GroupChangeResult=
+ |{saved:true;action:'start';group:TeamHead;inside:string}
+ |{saved:true;action:'rename';group:TeamHead}
+ |{saved:true;action:'archive';group:TeamHead;alsoHidden:number}
+ |{saved:false;reason:OrganizeWord};
+export type NotInvited={address:string;reason:'not_an_email'};
+export type InviteResult=
+ |{saved:true;team:TeamHead;invited:string[];notInvited:NotInvited[];acceptBy:string;site:string}
+ |{saved:false;reason:OrganizeWord;notInvited?:NotInvited[]};
+const organizeWords:Record<OrganizeWord,string>={
+ needs_write:'This assistant has read access only. Organizing needs read-and-write access, which the user can give on the Assistants page of the Loop site.',
+ organizers_only:'Only owners and organizers of the group can do this.',
+ site_only:'A top-level group is renamed or archived on the Loop site, not through an assistant.',
+ cap:`Limit reached: ${caps.writes_per_hour}`,name_taken:refusals.name_taken,
+ archived:'That group is archived. An owner or organizer can restore it on the Groups page of the Loop site.',
+ member_only:'People are invited here as members. Other roles are given on the Members page of the Loop site.',
+ no_address:'None of these is an email address.'};
+/** The result of starting, renaming or archiving a group. */
+export function formatGroupChange(result:GroupChangeResult):string {
+ if(!result.saved)return `Not saved. ${organizeWords[result.reason]}`;
+ if(result.action==='archive'){
+  const more=result.alsoHidden;
+  return new Page().line(`Archived. ${result.group.handle} is hidden from everyone${more?`, with the ${more} ${more===1?'group':'groups'} inside it`:''}, and assistant access given on ${more?'them':'it'} has ended. Nothing was deleted.`,
+   'An owner or organizer can restore it on the Groups page of the Loop site.').end();
+ }
+ const page=new Page();
+ if(result.action==='start')page.line(`Started. The new group is ${result.group.handle}, inside ${result.inside}. The user is its owner. Its name:`).raw(quote(result.group.name))
+  .line(`The access this assistant has to ${result.inside} covers the new group. To invite people to it, call invite_people.`);
+ else page.line(`Renamed. ${result.group.handle} keeps its tag, and every link to it still works. Its name is now:`).raw(quote(result.group.name));
+ return page.line(NOTE).end();
+}
+/** The result of inviting people: every address invited, every one that was not and why, and how the invited get in. */
+export function formatInvites(result:InviteResult):string {
+ const page=new Page(),refusedLines=(list:NotInvited[])=>{if(list.length){page.line('Not invited, because it is not an email address:');for(const item of list)page.item(quote(item.address));}};
+ if(!result.saved){page.line(`Not saved. Nobody was invited. ${organizeWords[result.reason]}`);if(result.reason!=='no_address')refusedLines(result.notInvited??[]);return page.end();}
+ page.keep(400).line(`Invited to ${result.team.handle} as ${result.invited.length===1?'a member':'members'}. An invitation can be accepted until ${result.acceptBy}.`);
+ // The addresses are shown exactly as invited: only letters, digits and . _ % + - @ are accepted in one.
+ for(const address of result.invited)page.item([QUOTE+address]);
+ refusedLines(result.notInvited);
+ return page.line('Loop sent no email. Each person sees the invitation after signing in to Loop with that address, at:').raw([result.site])
+  .line('Tell the user which addresses were invited. An invitation that was accepted cannot be taken back. One that was not can be cancelled on the Members page of the Loop site.').end('The structured result has every address.');
 }

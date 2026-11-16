@@ -36,7 +36,13 @@ it('registers only for a current first-party root owner and never renames/reuses
  await retireGroupAddress(t.db,f.organizer,f.vietnam);
  expect(await resolveGroup(t.db,f.memberA,{handle:'@cohort-a/emba2027'})).toEqual({status:'unavailable',connectionsPath:'/emba'});
  await expect(registerGroupAddress(t.db,f.organizer,{...data,...f.estonia})).rejects.toThrow('conflict');
- await expect(t.db.query("update emba_group_address set retired_at=null")).rejects.toThrow();
+ // A retired address can be brought back as it was (loop-organize-and-fix, design D5), and nothing else about it can change.
+ await expect(t.db.query("update emba_group_address set retired_at=retired_at+interval '1 hour'")).rejects.toThrow();
+ await expect(t.db.query("update emba_group_address set slug='renamed'")).rejects.toThrow();
+ await expect(t.db.query("update emba_group_address set retired_at=null,loop_id=$1",[f.estonia.loopId])).rejects.toThrow();
+ await t.db.query("update emba_group_address set retired_at=null");
+ expect(await resolveGroup(t.db,f.memberA,{handle:'@cohort-a/emba2027'})).toMatchObject({status:'resolved',group:{...f.vietnam}});
+ await expect(registerGroupAddress(t.db,f.organizer,{...data,...f.estonia})).rejects.toThrow('conflict');
  await expect(t.db.query("update emba_group_namespace set namespace='renamed'")).rejects.toThrow();
 });
 it('revokes every grant on a group when it is removed, tells each person about their own, and touches no other group',async()=>{
@@ -89,16 +95,18 @@ it('rejects malformed addresses, cross-org bindings and Data API access',async()
  await expect(t.db.query('delete from emba_group_address')).rejects.toThrow();
  for(const role of ['anon','authenticated']) await expect(t.db.tx(async q=>{await q.query(`set local role ${role}`);await q.query('select * from emba_group_address');})).rejects.toThrow();
 });
-it('does not inherit a parent lease, accept expired consent or let hidden matches consume a list slot',async()=>{
+it('does not reach a group beside the leased one, accept expired consent or let hidden matches consume a list slot',async()=>{
  const f=await fixture(),p=await delegate(f);
  await registerGroupAddress(t.db,f.organizer,{...f.vietnam,namespace:'cohort',slug:'aa-hidden'});
  await registerGroupAddress(t.db,f.organizer,{...f.estonia,namespace:'cohort',slug:'zz-visible'});
- await grantLease(t.db,f.memberA,{orgId:f.orgId,loopId:f.rootId,clientId:'claude',actions:['plan:read'],expiresAt:'2099-01-01T00:00:00Z'});
  expect(await listGroups(t.db,p,{})).toEqual([]);
  const lease=await grantLease(t.db,f.memberA,{...f.estonia,clientId:'claude',actions:['plan:read'],expiresAt:'2099-01-01T00:00:00Z'});
  expect(await listGroups(t.db,p,{limit:1})).toEqual([expect.objectContaining({loopId:f.estonia.loopId})]);
  await t.db.query("update emba_lease set expires_at=clock_timestamp()-interval '1 second',created_at=clock_timestamp()-interval '2 seconds' where id=$1",[lease.id]);
  expect(await resolveGroup(t.db,p,{handle:'@cohort/zz-visible'})).toEqual({status:'unavailable',connectionsPath:'/emba'});
+ // A lease on the group above covers the groups inside it (loop-organize-and-fix, design D6).
+ await grantLease(t.db,f.memberA,{orgId:f.orgId,loopId:f.rootId,clientId:'claude',actions:['plan:read'],expiresAt:'2099-01-01T00:00:00Z'});
+ expect((await listGroups(t.db,p,{})).map(group=>group.slug)).toEqual(['aa-hidden','zz-visible']);
 });
 it('fails closed when audit or authority fails before output and masks expired-principal resolution',async()=>{
  const f=await fixture();await registerGroupAddress(t.db,f.organizer,{...f.vietnam,namespace:'cohort',slug:'trip'});

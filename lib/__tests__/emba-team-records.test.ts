@@ -198,8 +198,7 @@ it('lets an assistant write only under a current write grant, and names the assi
  const filed=saved(await fileOutput(t.db,writer.p,out(f)));
  expect(filed.record).toMatchObject({by:ana,assistant:'claude'});
  expect((await t.db.query("select client_id,lease_id is not null as leased from emba_audit where action='memory:write' and client_id is not null")).rows).toEqual([{client_id:'claude',leased:true}]);
- // The grant is for one team; another team, a non-member and a revoked grant are all refused.
- await expect(fileOutput(t.db,writer.p,out(f,{...f.vietnam}))).rejects.toThrow('forbidden');
+ // A non-member and a revoked grant are refused. What a grant on a team reaches is covered in emba-team-grants.
  await expect(fileOutput(t.db,f.nonmember,out(f))).rejects.toThrow('forbidden');
  await expect(postAnnouncement(t.db,writer.p,{...f.root,text:'From an assistant'})).rejects.toThrow('forbidden');
  await expect(postAnnouncement(t.db,f.memberA,{...f.root,text:'From a member'})).rejects.toThrow('forbidden');

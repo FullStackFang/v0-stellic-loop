@@ -106,12 +106,40 @@ export async function logChange(q:Q,team:Scope,action:string,target:{eventId:str
   [team.orgId,team.loopId,row.n,'eventId' in target?target.eventId:null,'askId' in target?target.askId:null,action,actorId,clientId]);
 }
 
-/** How many writes this person, through this assistant (or the site), made to the team in the last hour. */
+/**
+ * How many writes this person, through this assistant (or the site), made in the last hour to the team's top-level
+ * group and every group inside it. The limit is one allowance for the whole tree, so a group started this hour
+ * brings none of its own (loop-organize-and-fix, design D9).
+ */
 export async function writesThisHour(q:Q,team:Scope,p:Principal):Promise<number> {
- const {rows:[row]}=await q.query<{count:number}>(`select ((select count(*) from emba_team_operation where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
-  +(select count(*) from emba_team_conflict_report where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
-  +(select count(*) from emba_team_write where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,team.loopId,p.personId,p.clientId]);
+ const {rows:[row]}=await q.query<{count:number}>(`select ((select count(*) from emba_team_operation where org_id=$1 and person_id=$2 and client_id is not distinct from $3 and at>clock_timestamp()-interval '1 hour')
+  +(select count(*) from emba_team_conflict_report where org_id=$1 and person_id=$2 and client_id is not distinct from $3 and at>clock_timestamp()-interval '1 hour')
+  +(select count(*) from emba_team_write where org_id=$1 and person_id=$2 and client_id is not distinct from $3 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,p.personId,p.clientId]);
  return row.count;
+}
+
+/** Why organizing was refused, for the site and the connector to put into words. Every one of them is a refusal of access. */
+export type OrganizeReason='needs_write'|'organizers_only'|'site_only'|'cap';
+export class OrganizeRefused extends EmbaError {constructor(readonly reason:OrganizeReason){super('forbidden');}}
+/**
+ * Lets a service that runs its own transaction accept an organizer's assistant (loop-organize-and-fix, design D9).
+ * It does for consent what teamWrite does: the site passes; an assistant needs a grant that covers the group for
+ * reading and for writing, and the call counts once toward the writes of the hour, on the top-level group. It
+ * returns the lease for the audit record. The caller still checks that the person runs the group.
+ */
+export async function organizerVia(q:Q,p:Principal,team:Scope):Promise<string|null> {
+ if(p.clientId===null){await requireFirstParty(q,p);return null;}
+ if(!/^[ -~]{1,200}$/.test(p.clientId))throw new EmbaError('forbidden');
+ // No read grant is not told apart from a group that does not exist. A read grant alone is, so the person can be told what to change.
+ await authorize(q,p,'plan:read',team);
+ let lease:string|null;
+ try{lease=await authorize(q,p,'group-memory:write',team);}
+ catch(error){if(error instanceof EmbaError&&error.code==='forbidden')throw new OrganizeRefused('needs_write');throw error;}
+ if(await writesThisHour(q,team,p)>=LIMITS.writesPerHour)throw new OrganizeRefused('cap');
+ await q.query(`with recursive up as (select id,parent_id from emba_loop where org_id=$1 and id=$2
+   union all select l.id,l.parent_id from emba_loop l join up on l.id=up.parent_id where l.org_id=$1)
+  insert into emba_team_write(org_id,loop_id,person_id,client_id) select $1,up.id,$3,$4 from up where up.parent_id is null`,[team.orgId,team.loopId,p.personId,p.clientId]);
+ return lease;
 }
 
 /**

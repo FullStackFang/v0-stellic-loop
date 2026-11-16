@@ -64,7 +64,7 @@ it('refuses a handle already used by a group, an event or a person, a reserved w
   const { owner, cohort, team1 } = await tree();
   const start = (slug: string, parent = team1) => createInnerGroup(t.db, owner, { orgId: cohort.orgId, parentLoopId: parent.loopId, name: 'Any', description: '', slug });
   await t.db.query("insert into emba_team_event(org_id,loop_id,slug,name) values($1,$2,'kickoff','Kickoff')", [cohort.orgId, cohort.loopId]);
-  await t.db.query("insert into emba_member_handle(org_id,person_id,handle) values($1,$2,'priya')", [cohort.orgId, owner.personId]);
+  await t.db.query("insert into emba_member_handle(org_id,person_id,handle) values($1,$2,'priya') on conflict(org_id,person_id) do update set handle=excluded.handle", [cohort.orgId, owner.personId]);
   for (const slug of ['team-2', 'kickoff', 'priya', 'emba-2027', 'workspace', 'team', 'resources', 'in', 'new']) await expect(start(slug), slug).rejects.toThrow('conflict');
   for (const slug of ['a', 'Bad', 'a--b', 'a-', 'x'.repeat(49)]) await expect(start(slug), slug).rejects.toThrow();
   const other = await createWorkspace(t.db, owner, { name: 'Other', description: '', namespace: 'other' });

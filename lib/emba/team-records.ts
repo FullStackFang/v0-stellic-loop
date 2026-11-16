@@ -151,9 +151,10 @@ async function write(db:Db,p:Principal,team:Scope,tool:string,input:{operationId
     await audit(q,p,'memory:write',prior.recordId,lease);
     return {saved:true as const,replayed:true,record:await viewOne(ctx,prior.recordId),decisionsVersion:state.decisionSeq,also:[]};
    }
-   const {rows:[recent]}=await q.query<{count:number}>(`select ((select count(*) from emba_team_operation where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
-    +(select count(*) from emba_team_conflict_report where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour')
-    +(select count(*) from emba_team_write where org_id=$1 and loop_id=$2 and person_id=$3 and client_id is not distinct from $4 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,team.loopId,p.personId,p.clientId]);
+   // One allowance for the top-level group and every group inside it, as in writesThisHour of team-core.
+   const {rows:[recent]}=await q.query<{count:number}>(`select ((select count(*) from emba_team_operation where org_id=$1 and person_id=$2 and client_id is not distinct from $3 and at>clock_timestamp()-interval '1 hour')
+    +(select count(*) from emba_team_conflict_report where org_id=$1 and person_id=$2 and client_id is not distinct from $3 and at>clock_timestamp()-interval '1 hour')
+    +(select count(*) from emba_team_write where org_id=$1 and person_id=$2 and client_id is not distinct from $3 and at>clock_timestamp()-interval '1 hour'))::int as count`,[team.orgId,p.personId,p.clientId]);
    if(recent.count>=LIMITS.writesPerHour)return declined({saved:false,reason:'cap',cap:'writes_per_hour'});
    // A declined write undoes everything the work had already done.
    let result:Work;

@@ -69,8 +69,8 @@ it('returns the five newest announcements, resource titles, counts, and a warnin
  expect((await teamBrief(t.db,ending,f.root)).grantExpiresOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
  expect((await teamBrief(t.db,await assistant(f,f.root,20,'fresh'),f.root)).grantExpiresOn).toBeNull();
  idFree(brief,f);expect(JSON.stringify(brief)).not.toMatch(uuids);
- // No grant for this team, or no membership: nothing.
- await expect(teamBrief(t.db,ending,f.vietnam)).rejects.toThrow('forbidden');
+ // A grant on a team inside reaches nothing above it, and no membership means nothing.
+ await expect(teamBrief(t.db,await assistant(f,f.vietnam,20,'inside'),f.root)).rejects.toThrow('forbidden');
  await expect(teamBrief(t.db,f.nonmember,f.root)).rejects.toThrow('forbidden');
 });
 it('answers where the team is: claims with due dates, current outputs, decisions and conflict flags',async()=>{

@@ -2,7 +2,7 @@ import 'server-only';
 import {z} from 'zod';
 import type {Db,Q} from '../db';
 import {canAccessLoop,canAccessLoops,canAccessPersonal,type Principal} from './access';
-import {audit,leaseFor,requireFirstParty} from './consent';
+import {audit,leaseCovers,leaseFor,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
 
 const name=z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/);
@@ -74,7 +74,7 @@ export async function retireGroupAddress(db:Db,p:Principal,input:unknown):Promis
 async function discover(db:Db,p:Principal,limit:number,namespace:string|null=null,slug:string|null=null):Promise<GroupAddress[]> {
  return db.tx(async q=>{
   if(!await canAccessPersonal(q,p,p.personId))throw new EmbaError('forbidden');
-  // Filter membership, inherited roles and exact client consent BEFORE limiting.
+  // Filter membership, inherited roles and client consent (on the group or a group above it) BEFORE limiting.
   // Hidden groups therefore neither consume result slots nor create ambiguity.
   const {rows}=await q.query<{orgId:string;loopId:string}>(`with recursive accessible as (
    select l.id,l.org_id from emba_loop l join emba_role r on r.org_id=l.org_id and r.loop_id=l.id
@@ -84,7 +84,7 @@ async function discover(db:Db,p:Principal,limit:number,namespace:string|null=nul
   ) select g.org_id as "orgId",g.loop_id as "loopId" from emba_group_address g join accessible a on a.org_id=g.org_id and a.id=g.loop_id
    where g.retired_at is null and ($3::text is null or g.namespace=$3) and ($4::text is null or g.slug=$4)
    and ($2::text is null or ($5::boolean and exists(select 1 from emba_lease e where e.person_id=$1 and e.client_id=$2
-    and e.org_id=g.org_id and e.loop_id=g.loop_id and 'plan:read'=any(e.actions) and e.revoked_at is null and e.expires_at>clock_timestamp())))
+    and ${leaseCovers('e','g.org_id','g.loop_id')} and 'plan:read'=any(e.actions) and e.revoked_at is null and e.expires_at>clock_timestamp())))
    order by g.namespace,g.slug limit $6`,[p.personId,p.clientId,namespace,slug,p.scopes.includes('plan:read'),limit]);
   if(!rows.length){
    await audit(q,p,'plan:read');

@@ -28,7 +28,7 @@ export async function inviteMember(_previous: PortalResult, data: FormData): Pro
     const expiresAt = value(data, 'expiresAt');
     const until = expiresAt ? new Date(`${expiresAt}Z`) : new Date(Date.now() + 14 * 86_400_000);
     const invite = await issueInvitation(db(), principal, {
-      orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), recipientEmail: value(data, 'recipientEmail'),
+      orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), recipientEmail: value(data, 'recipientEmail'), recipientName: value(data, 'recipientName'),
       role: value(data, 'role') as 'member', expiresAt: until.toISOString(),
     });
     return { message: 'Invitation made.', invitationToken: invite.token };

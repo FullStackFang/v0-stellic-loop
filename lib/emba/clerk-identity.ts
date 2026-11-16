@@ -4,6 +4,7 @@ import {auth,clerkClient,currentUser} from '@clerk/nextjs/server';
 import {headers} from 'next/headers';
 import type {Db} from '../db';
 import {authenticate,type Principal} from './access';
+import {cleanName,giveDefaultHandle,nameIfUnnamed,UNNAMED} from './member-name';
 
 /** Public issuer comes from the configured publishable key, never a request. */
 export function clerkIssuer():string|null {
@@ -64,6 +65,7 @@ export async function getClerkPortalPrincipal(database:Db):Promise<Principal|nul
  if(!user||user.id!==session.userId||user.banned||user.locked||active.id!==session.sessionId||active.userId!==user.id||active.status!=='active'||active.actor||active.expireAt<=Date.now()) return null;
  const email=user.emailAddresses.find(email=>email.id===user.primaryEmailAddressId&&email.verification?.status==='verified')?.emailAddress.trim().toLowerCase();
  if(!email) return null;
+ const name=cleanName([user.firstName,user.lastName].filter(Boolean).join(' '));
  return database.tx(async q=>{
   await q.query('select pg_advisory_xact_lock(hashtextextended($1,0))',[JSON.stringify([issuer,user.id])]);
   const {rows:[existing]}=await q.query<{personId:string;revokedAt:string|null}>('select person_id as "personId",revoked_at as "revokedAt" from emba_identity where issuer=$1 and subject=$2',[issuer,user.id]);
@@ -73,9 +75,13 @@ export async function getClerkPortalPrincipal(database:Db):Promise<Principal|nul
   if((await q.query('select 1 from emba_deletion_tombstone where person_id=$1',[id])).rows.length) return null;
   if(!existing) {
    // Never associate by email/phone, enroll a group, or create a legacy session.
-   const {rows}=await q.query('insert into person(id,phone,name,show_name,sms_opt_out) values($1,null,$2,false,true) on conflict do nothing returning id',[id,'Member']);
+   const {rows}=await q.query('insert into person(id,phone,name,show_name,sms_opt_out) values($1,null,$2,false,true) on conflict do nothing returning id',[id,name??UNNAMED]);
    if(!rows.length) return null;
    await q.query('insert into emba_identity(issuer,subject,person_id,verified_at) values($1,$2,$3,now())',[issuer,user.id,id]);
+  }else if(await nameIfUnnamed(q,id,name)) {
+   // Someone who joined before their name was known gets the tag they would have been given on joining.
+   const {rows:orgs}=await q.query<{orgId:string}>('select org_id as "orgId" from emba_membership where person_id=$1 and revoked_at is null order by org_id',[id]);
+   for(const {orgId} of orgs)await giveDefaultHandle(q,orgId,id);
   }
   return authenticate(q,'verified-clerk-session',async()=>({issuer,subject:user.id,expiresAt:Math.min(claims.exp*1000,active.expireAt),authenticatedAt:verifiedAt(claims),verifiedEmail:email}));
  });

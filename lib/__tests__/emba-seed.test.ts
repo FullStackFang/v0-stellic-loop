@@ -2,7 +2,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate } from '@/lib/emba/access';
-import { listPortalGroups } from '@/lib/emba/groups';
+import { listGroups, listPortalGroups } from '@/lib/emba/groups';
 import { listAsks, askResults } from '@/lib/emba/team-asks';
 import { upcomingEvents } from '@/lib/emba/team-interest';
 import { grantLease } from '@/lib/emba/consent';
@@ -71,11 +71,14 @@ it('seeds Team 1 once with the classes inside it, and picks no assistant for an 
   } finally { vi.useRealTimers(); }
 });
 
-it('opens Team 1 and each class in it to an assistant the owner already granted elsewhere', async () => {
+it('opens Team 1 and each class in it, with one grant on Team 1, to an assistant the owner already granted elsewhere', async () => {
   const owner = await pilotOwner();
   const other = await createWorkspace(t.db, owner, { name: 'Other', description: '', namespace: 'other' });
   await grantLease(t.db, owner, { clientId: 'https://assistant.test/client', actions: ['plan:read'], orgId: other.orgId, loopId: other.loopId, expiresAt: '2099-01-01T00:00:00Z' });
   expect((await seedTeam(t.db, owner)).assistants).toEqual(['https://assistant.test/client']);
-  const { rows } = await t.db.query<{ actions: string[] }>("select actions from emba_lease where client_id='https://assistant.test/client' and org_id<>$1", [other.orgId]);
-  expect(rows.map(lease => [...lease.actions].sort())).toEqual(Array(3).fill(['group-memory:write', 'plan:read']));
+  const { rows } = await t.db.query<{ actions: string[]; root: boolean }>(`select e.actions,l.parent_id is null as root from emba_lease e join emba_loop l on l.id=e.loop_id
+    where e.client_id='https://assistant.test/client' and e.org_id<>$1`, [other.orgId]);
+  expect(rows.map(lease => [[...lease.actions].sort(), lease.root])).toEqual([[['group-memory:write', 'plan:read'], true]]);
+  const assistant = (await authenticate(t.db, 'test', async () => ({ issuer: owner.issuer, subject: owner.subject, clientId: 'https://assistant.test/client', scopes: ['plan:read', 'group-memory:write'], expiresAt: Date.parse('2099-01-01') })))!;
+  expect((await listGroups(t.db, assistant, {})).map(group => group.handle)).toEqual(['@other/workspace', '@team-1/nbae-6561', '@team-1/nbae-6830', '@team-1/workspace']);
 });

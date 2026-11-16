@@ -640,3 +640,44 @@ a.lp-grouprow:hover .lp-go{background:var(--blue);color:var(--on-dark);box-shado
   .lp .lp-give .emba-form .lp-give-hint{grid-row:auto;order:2}
 }
 @container (max-width:520px){.lp-allow{grid-template-columns:1fr}.lp .lp-give .emba-form fieldset{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Organizing groups (loop-organize-and-fix) ---------- */
+/* A row of the Groups list: a fold toggle, the group, and for the people who run it a Manage menu that opens under the row. */
+.lp-groupitem{--row:92px;position:relative;border-top:1px solid var(--line);background:var(--surface)}
+/* Inner rows hold their place unseen until the browser's copy of what is folded shut has been read. */
+.lp-groupitem[data-wait]{visibility:hidden}
+.lp-groupline{display:flex;align-items:center}
+.lp-groupline .lp-grouprow{flex:1;min-width:0;border-top:0;padding-left:6px}
+.lp-grouprow[data-menu] .lp-go{margin-left:92px}
+.lp-fold{width:28px;height:28px;margin-left:8px;flex:none;display:grid;place-items:center;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer;padding:0}
+button.lp-fold:hover{background:var(--pale-blue);color:var(--navy)}
+.lp-fold svg{width:14px;height:14px;transition:transform .15s var(--ease)}
+.lp-fold[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.lp-rowmenu > summary{position:absolute;top:calc((var(--row) - 34px) / 2);right:74px;display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:var(--pill);font-size:13.5px;font-weight:500;color:var(--navy);box-shadow:inset 0 0 0 1px var(--line-2);background:var(--surface);cursor:pointer;list-style:none}
+.lp-rowmenu > summary::-webkit-details-marker,.lp-rowmenu-archive > summary::-webkit-details-marker{display:none}
+.lp-rowmenu > summary:hover,.lp-rowmenu[open] > summary{background:var(--pale-blue)}
+.lp-rowmenu-body{display:grid;gap:14px;max-width:560px;padding:2px 20px 18px 42px}
+.lp-rowmenu-body p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.lp-rowmenu-body label{display:grid;gap:6px;font-size:13px;color:var(--muted);margin-bottom:8px}
+.lp-rowmenu-body .emba-form fieldset{border:0;margin:0;padding:0;min-width:0;display:grid;gap:8px;justify-items:start}
+.lp-rowmenu-body .emba-form fieldset label,.lp-rowmenu-body .emba-form fieldset input:not([type=hidden]){width:100%}
+.lp-rowmenu-archive{border-top:1px solid var(--line);padding-top:12px}
+.lp-rowmenu-archive > summary{list-style:none;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--plum)}
+.lp-rowmenu-archive[open] > summary{margin-bottom:8px}
+.lp-rowmenu-archive > p{margin-bottom:10px}
+.lp-archived{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid var(--line)}
+.lp-archived > div{flex:1;min-width:200px}
+.lp-archived b{display:block;font-weight:520}
+.lp-archived .emba-meta{display:block}
+/* The side menu's tree folds with the same state. */
+.lp-switch li{display:flex;align-items:center}
+.lp-switch li a{flex:1;min-width:0}
+.lp-switch .lp-fold{margin:0 2px}
+.lp-grant-team small{display:block;font-size:12.5px;color:var(--muted);white-space:normal}
+.lp .lp-give .emba-form .lp-give-note{grid-column:1 / -1;margin:0;font-size:13.5px;color:var(--ink-2)}
+@media (max-width:820px){
+  .lp-groupitem{--row:76px}
+  .lp-grouprow[data-menu] .lp-go{display:none}
+  .lp-rowmenu > summary{right:14px}
+  .lp-rowmenu-body{padding-left:14px;padding-right:14px}
+}

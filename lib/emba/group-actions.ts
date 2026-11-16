@@ -3,7 +3,7 @@ import {z} from 'zod';
 import type {Db,Q} from '../db';
 import type {Principal} from './access';
 import {authConfig} from './auth-token';
-import {requireFirstParty} from './consent';
+import {leaseCovers,requireFirstParty} from './consent';
 import {approveConfirmation,consumeConfirmation} from './confirmation';
 import {EmbaError} from './errors';
 import {groupNoteSchema,validateGroupNote,applyConfirmedGroupNote,readGroupNoteReceipt} from './group-memory';
@@ -27,8 +27,8 @@ export async function reviewGroupMemory(db:Db,p:Principal,input:unknown){
   await q.query('select id from person where id=$1 for update',[p.personId]);
   await requireFirstParty(q,p);
   if(!authConfig().clientIds.includes(review.clientId))throw new EmbaError('forbidden');
-  const {rows}=await q.query(`select id from emba_lease where person_id=$1 and client_id=$2 and org_id=$3 and loop_id=$4
-   and 'group-memory:write'=any(actions) and revoked_at is null and expires_at>clock_timestamp() for share`,[p.personId,review.clientId,review.payload.orgId,review.payload.loopId]);
+  const {rows}=await q.query(`select e.id from emba_lease e where e.person_id=$1 and e.client_id=$2 and ${leaseCovers('e','$3::uuid','$4::uuid')}
+   and 'group-memory:write'=any(e.actions) and e.revoked_at is null and e.expires_at>clock_timestamp() for share`,[p.personId,review.clientId,review.payload.orgId,review.payload.loopId]);
   if(!rows.length)throw new EmbaError('forbidden');
   await validateGroupNote(q,p,review.payload);
   return review;

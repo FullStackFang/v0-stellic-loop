@@ -199,10 +199,10 @@ it('keeps the tables out of the Data API and returns no person id over MCP',asyn
   const resolved=await client.callTool({name:'resolve_tag',arguments:{handle:'@maya'}});
   expect(resolved.structuredContent).toEqual({status:'resolved',matches:[{kind:'person',handle:'@cohort/maya',team:'Synthetic EMBA',isYou:false}]});
   const listed=await client.callTool({name:'list_tags',arguments:{}});
-  expect(listed.structuredContent).toMatchObject({teams:[{handle:'@cohort'}],events:[{handle:'@cohort/final-deck'}],people:[{handle:'@cohort/maya'}],partial:false});
-  // The only ids an assistant receives are the team's own org and loop.
+  expect(listed.structuredContent).toMatchObject({teams:[{handle:'@cohort/vietnam'},{handle:'@cohort'}],events:[{handle:'@cohort/final-deck'}],people:[{handle:'@cohort/maya'}],partial:false});
+  // The only ids an assistant receives are the org and loop of the teams its grant reaches.
   const ids=new Set(JSON.stringify([resolved,listed]).match(uuids));
-  expect([...ids].sort()).toEqual([f.orgId,f.rootId].sort());
+  expect([...ids].sort()).toEqual([f.orgId,f.rootId,f.vietnam.loopId].sort());
   expect((await client.callTool({name:'resolve_tag',arguments:{handle:'no-at-sign'}})).isError).toBe(true);
  }finally{await client.close();await server.close();}
 });
@@ -250,14 +250,14 @@ it('removes the handle and the creator link on account deletion, and keeps the e
  expect(await resolveTag(t.db,f.memberA,{handle:'@cohort/final-deck'})).toMatchObject({status:'resolved'});
  await setMemberHandle(t.db,f.memberA,{orgId:f.orgId,handle:'maya'});
 });
-it('does not let consent for the team reach a nested team, and stops at revocation or expiry',async()=>{
+it('lets consent for the team reach the teams inside it, and stops at revocation or expiry',async()=>{
  const f=await fixture(),p=await assistant(f);
  await createTeamEvent(t.db,f.organizer,{...f.vietnam,slug:'hanoi-day',name:'Hanoi day'});
  const granted=await lease(f,f.root);
  expect(await resolveTag(t.db,p,{handle:'@cohort'})).toMatchObject({status:'resolved'});
- expect(await resolveTag(t.db,p,{handle:'@cohort/vietnam'})).toEqual(unavailable);
- expect(await resolveTag(t.db,p,{handle:'@cohort/hanoi-day'})).toEqual(unavailable);
- expect((await listTags(t.db,p,{})).events).toEqual([]);
+ expect(await resolveTag(t.db,p,{handle:'@cohort/vietnam'})).toMatchObject({status:'resolved'});
+ expect(await resolveTag(t.db,p,{handle:'@cohort/hanoi-day'})).toMatchObject({status:'resolved'});
+ expect((await listTags(t.db,p,{})).events.map(event=>event.handle)).toEqual(['@cohort/hanoi-day']);
  await t.db.query("update emba_lease set created_at=clock_timestamp()-interval '2 hours',expires_at=clock_timestamp()-interval '1 second' where id=$1",[granted.id]);
  expect(await resolveTag(t.db,p,{handle:'@cohort'})).toEqual(unavailable);
  expect(await listTags(t.db,p,{})).toEqual({teams:[],events:[],people:[],partial:false});

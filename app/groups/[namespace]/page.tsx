@@ -52,7 +52,7 @@ export default async function GroupPage({ params }: { params: Promise<GroupRoute
   const waiting: Waiting[] = [
     ...(requests ?? []).map(request => ({ key: `r-${request.personId}`, kind: 'request' as const, personId: request.personId, name: request.name, at: new Date(request.requestedAt).toISOString() })),
     ...(invitations ?? []).filter(invite => !invite.accepted_at && !invite.revoked_at && new Date(invite.expires_at) > new Date())
-      .map(invite => ({ key: `i-${invite.id}`, kind: 'invite' as const, id: invite.id, email: invite.recipient_email, role: invite.role, until: new Date(invite.expires_at).toISOString() }))];
+      .map(invite => ({ key: `i-${invite.id}`, kind: 'invite' as const, id: invite.id, email: invite.recipient_email, name: invite.recipient_name, role: invite.role, until: new Date(invite.expires_at).toISOString() }))];
   return <>
       <Crumbs trail={group.trail} here="Members" />
       <header className="lp-mb-head"><span className="lp-mb-tile"><Rings /></span>

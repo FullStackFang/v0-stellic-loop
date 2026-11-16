@@ -5,6 +5,7 @@ import { hashToken, magicToken } from '../tokens';
 import { canAccessLoop, type Principal } from './access';
 import { audit, requireFirstParty } from './consent';
 import { EmbaError } from './errors';
+import { giveDefaultHandle } from './member-name';
 
 const scopeSchema = z.strictObject({ orgId: z.uuid(), loopId: z.uuid() });
 const tokenSchema = z.string().regex(/^[A-Za-z0-9_-]{22}$/);
@@ -135,6 +136,7 @@ async function join(db: Db, principal: Principal, by: keyof typeof links, value:
       if (!identities.length) throw new EmbaError('forbidden');
       if (!at.membership) await q.query('insert into emba_membership(org_id,person_id) values($1,$2)', [link.orgId, principal.personId]);
       await q.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'member')", [link.orgId, link.loopId, principal.personId]);
+      await giveDefaultHandle(q, link.orgId, principal.personId);
       await q.query("update emba_group_membership_request set state='approved',reviewed_at=clock_timestamp() where org_id=$1 and loop_id=$2 and person_id=$3 and state='pending'", [link.orgId, link.loopId, principal.personId]);
       await audit(q, principal, 'activity:write', link.loopId);
       return { outcome: 'joined' as const, namespace: link.namespace, slug: link.slug };
@@ -190,6 +192,7 @@ export async function reviewMembershipRequest(db: Db, principal: Principal, inpu
         await q.query('update emba_role set revoked_at=coalesce(revoked_at,clock_timestamp()) where org_id=$1 and person_id=$2', [data.orgId, data.personId]);
       }
       await q.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'member') on conflict(org_id,loop_id,person_id) do update set role='member',revoked_at=null", [data.orgId, data.loopId, data.personId]);
+      await giveDefaultHandle(q, data.orgId, data.personId);
     }
     await q.query('update emba_group_membership_request set state=$4,reviewed_at=clock_timestamp(),reviewed_by=$5 where org_id=$1 and loop_id=$2 and person_id=$3', [data.orgId, data.loopId, data.personId, data.decision === 'approve' ? 'approved' : 'declined', principal.personId]);
     await audit(q, principal, 'activity:write', data.loopId);

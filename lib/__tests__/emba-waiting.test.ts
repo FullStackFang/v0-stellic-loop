@@ -105,13 +105,14 @@ it('returns nothing from a team the assistant holds no grant for, and never name
  const f=await fixture();
  await ask(f,f.memberA,'In the club?');await ask(f,f.memberA,'In Vietnam?',2,f.vietnam);
  await postAnnouncement(t.db,f.organizer,{...f.vietnam,text:'Vietnam only.'});
- const agent=await assistant(f,f.memberB);
+ // The grant is on the group inside the club: it reaches that group and nothing above it.
+ const agent=await assistant(f,f.memberB,[f.vietnam]);
  const result=await waiting(t.db,agent);
- expect(kinds(result)).toEqual(['ask 1']);
- expect(result).toMatchObject({count:1,more:[],items:[{team:{handle:'@club'}}]});
- expect(JSON.stringify(result)).not.toMatch(/vietnam/i);
- // The ungranted team's announcement was not shown, so it still waits where the member can see it.
- expect(kinds(await waiting(t.db,f.memberB))).toEqual(['ask 1','ask 1','announcement 2']);
+ expect(kinds(result)).toEqual(['ask 1','announcement 2']);
+ expect(result).toMatchObject({count:2,more:[],items:[{team:{handle:'@club/vietnam'}},{team:{handle:'@club/vietnam'}}]});
+ expect(JSON.stringify(result)).not.toMatch(/In the club/);
+ // The club's ask was not shown to the assistant, so it still waits where the member can see it.
+ expect(kinds(await waiting(t.db,f.memberB)).filter(kind=>kind.startsWith('ask'))).toEqual(['ask 1','ask 1']);
  // An assistant with no grant at all, and one whose grant ended, get nothing.
  const none=(await authenticate(t.db,'test',async()=>({issuer:f.memberB.issuer,subject:f.memberB.subject,clientId:'other',scopes:['plan:read'],expiresAt:Date.parse(forever)})))!;
  expect(await waiting(t.db,none)).toEqual({count:0,items:[],more:[],untrusted:true});

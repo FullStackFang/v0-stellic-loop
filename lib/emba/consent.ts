@@ -25,14 +25,27 @@ export async function authorize(q: Q, principal: Principal, action: Action, scop
   return leaseFor(q,principal,action,scope);
 }
 
-/** The consent half of authorize, for a caller that has already checked access: the site needs no lease, an assistant needs a live one for exactly this scope. */
+/**
+ * SQL that is true when the lease aliased `lease` was given on the group `loop` of organization `org`, or on a group
+ * above it: a grant covers the group and every group built inside it. `org` and `loop` are SQL expressions.
+ */
+export const leaseCovers = (lease: string, org: string, loop: string) => `(${lease}.org_id=${org} and ${lease}.loop_id in (
+  with recursive covers_up as (select id,parent_id from emba_loop where org_id=${org} and id=${loop}
+   union all select covers_l.id,covers_l.parent_id from emba_loop covers_l join covers_up on covers_l.id=covers_up.parent_id where covers_l.org_id=${org})
+  select id from covers_up))`;
+
+/**
+ * The consent half of authorize, for a caller that has already checked access: the site needs no lease, an assistant
+ * needs a live one that carries the action, given on this group or on a group above it. With no group named it needs
+ * one given for no group. Any covering lease that allows the action allows it: there is no order between them.
+ */
 export async function leaseFor(q: Q, principal: Principal, action: Action, scope: Scope): Promise<string | null> {
   if (principal.clientId === null) return null;
   if (!principal.scopes.includes(action)) throw new EmbaError('forbidden');
   const { rows: [lease] } = await q.query<{id:string}>(
-    `select id from emba_lease where person_id=$1 and client_id=$2 and $3=any(actions)
-     and org_id is not distinct from $4::uuid and loop_id is not distinct from $5::uuid
-     and revoked_at is null and expires_at > clock_timestamp() order by expires_at desc limit 1 for share`,
+    `select e.id from emba_lease e where e.person_id=$1 and e.client_id=$2 and $3=any(e.actions)
+     and case when $5::uuid is null then e.org_id is null and e.loop_id is null and $4::uuid is null else ${leaseCovers('e','$4::uuid','$5::uuid')} end
+     and e.revoked_at is null and e.expires_at > clock_timestamp() order by e.expires_at desc limit 1 for share`,
     [principal.personId,principal.clientId,action,scope.orgId,scope.loopId]);
   if (!lease) throw new EmbaError('forbidden');
   return lease.id;

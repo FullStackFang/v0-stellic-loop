@@ -151,8 +151,9 @@ export type SeededTeam = { state: 'created' | 'exists'; groups: string[]; assist
 
 /**
  * Creates Team 1 with the sample classes inside it, unless the owner already has it. Every assistant the owner
- * has a live grant for, on any group, is given read and write on Team 1 and on each class for 30 days, so the
- * tree can be used from an assistant at once. An owner with no live grant gets none: the script picks no assistant.
+ * has a live grant for, on any group, is given read and write on Team 1 for 30 days. That one grant covers each
+ * class inside it, so the tree can be used from an assistant at once. An owner with no live grant gets none: the
+ * script picks no assistant.
  */
 export async function seedTeam(db: Db, owner: Principal, now = Date.now()): Promise<SeededTeam> {
   const { rows: taken } = await db.query('select 1 from emba_group_namespace where namespace=$1', [TEAM.namespace]);
@@ -170,7 +171,7 @@ export async function seedTeam(db: Db, owner: Principal, now = Date.now()): Prom
   }
   const { rows: clients } = await db.query<{ id: string }>('select distinct client_id as id from emba_lease where person_id=$1 and revoked_at is null and expires_at>clock_timestamp() order by 1', [owner.personId]);
   const expiresAt = new Date(now + 30 * 86_400_000).toISOString();
-  for (const { scope } of made) for (const { id } of clients) await grantLease(db, owner, { clientId: id, actions: ['plan:read', 'group-memory:write'], ...scope, expiresAt });
+  for (const { id } of clients) await grantLease(db, owner, { clientId: id, actions: ['plan:read', 'group-memory:write'], ...top, expiresAt });
   return { state: 'created', groups: made.map(item => item.handle), assistants: clients.map(client => client.id), joinLink: await joinLink(db, owner, top, TEAM.name) };
 }
 

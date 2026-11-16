@@ -4,14 +4,29 @@ import { isUuid } from '../load';
 import { hashToken, magicToken } from '../tokens';
 import { canAccessPersonal, type Principal } from './access';
 import { audit } from './consent';
+import { cleanName, giveDefaultHandle, nameIfUnnamed } from './member-name';
+import { organizerVia, OrganizeRefused } from './team-core';
 
-export type InvitationInput = { orgId: string; loopId: string; recipientEmail: string; role: 'owner' | 'organizer' | 'member' | 'follower'; expiresAt: string };
-type Invitation = { id: string; org_id: string; loop_id: string; issued_by: string; recipient_email: string; role: InvitationInput['role']; expires_at: string; revoked_at: string | null; accepted_at: string | null };
+export type InvitationInput = { orgId: string; loopId: string; recipientEmail: string; /** What the inviter calls the person. It names them on joining if they have no name yet. */ recipientName?: string | null; role: 'owner' | 'organizer' | 'member' | 'follower'; expiresAt: string };
+type Invitation = { id: string; org_id: string; loop_id: string; issued_by: string; recipient_email: string; recipient_name: string | null; role: InvitationInput['role']; expires_at: string; revoked_at: string | null; accepted_at: string | null };
 export type ReceivedInvitation = { id: string; orgId: string; loopId: string; groupName: string; role: InvitationInput['role']; expiresAt: string };
 const roles = ['follower', 'member', 'organizer', 'owner'];
-const columns = 'id,org_id,loop_id,issued_by,recipient_email,role,expires_at,revoked_at,accepted_at';
+const columns = 'id,org_id,loop_id,issued_by,recipient_email,recipient_name,role,expires_at,revoked_at,accepted_at';
 
-function denied(): never { throw new Error('Invitation unavailable'); }
+/**
+ * Why an invitation was refused. `not_allowed` covers everything a caller must not be able to tell apart (no such
+ * invitation, not the recipient, no authority); the message stays the one callers have always seen.
+ */
+export class InvitationRefused extends Error {
+  constructor(readonly reason: 'invalid' | 'not_allowed' | 'group_closed') { super('Invitation unavailable'); }
+}
+function denied(reason: InvitationRefused['reason'] = 'not_allowed'): never { throw new InvitationRefused(reason); }
+
+/** An archived group takes no one in: no new invitation, and no acceptance of one made before. */
+async function open(q: Q, orgId: string, loopId: string): Promise<void> {
+  const { rows } = await q.query('select 1 from emba_group_address where org_id=$1 and loop_id=$2 and retired_at is not null for share', [orgId, loopId]);
+  if (rows.length) denied('group_closed');
+}
 
 async function firstParty(q: Q, principal: Principal | null): Promise<Principal> {
   if (!principal || principal.clientId !== null) denied();
@@ -61,21 +76,46 @@ async function authority(q: Q, personId: string, orgId: string, loopId: string, 
 }
 
 export async function issueInvitation(db: Db, principal: Principal | null, input: InvitationInput): Promise<{ id: string; token: string }> {
-  if (!input || typeof input.recipientEmail !== 'string' || !roles.includes(input.role) ||
-      typeof input.expiresAt !== 'string' || !Number.isFinite(Date.parse(input.expiresAt)) || Date.parse(input.expiresAt) <= Date.now()) denied();
-  const email = input.recipientEmail.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+$/.test(email)) denied();
+  if (!input || typeof input.recipientEmail !== 'string') denied('invalid');
+  const [made] = await issueInvitations(db, principal, { orgId: input.orgId, loopId: input.loopId, emails: [input.recipientEmail], names: [input.recipientName], role: input.role, expiresAt: input.expiresAt });
+  return { id: made.id, token: made.token };
+}
+export type IssuedInvitation = { email: string; id: string; token: string };
+/**
+ * Invites each address to the group in one transaction, and records each invitation with who made it. On the site
+ * as before; or through the assistant of an owner or organizer, with a read-and-write grant that covers the group,
+ * as members only, the whole call counting once toward the writes of the hour (loop-organize-and-fix, design D8, D9).
+ */
+export async function issueInvitations(db: Db, principal: Principal | null, input: Omit<InvitationInput, 'recipientEmail' | 'recipientName'> & { emails: string[]; /** The name for each address, in the same order. */ names?: (string | null | undefined)[] }): Promise<IssuedInvitation[]> {
+  if (!input || !Array.isArray(input.emails) || !input.emails.length || input.emails.some(email => typeof email !== 'string') || !roles.includes(input.role) ||
+      typeof input.expiresAt !== 'string' || !Number.isFinite(Date.parse(input.expiresAt)) || Date.parse(input.expiresAt) <= Date.now()) denied('invalid');
+  const emails = input.emails.map(email => email.trim().toLowerCase());
+  if (emails.some(email => !/^[^\s@]+@[^\s@]+$/.test(email))) denied('invalid');
+  if (input.names !== undefined && (!Array.isArray(input.names) || input.names.some(name => name != null && typeof name !== 'string'))) denied('invalid');
+  const names = emails.map((_, at) => { const name = input.names?.[at]; return name ? cleanName(name) : null; });
+  // An assistant gives no role but member: who runs a group is decided on the site.
+  if (principal && principal.clientId !== null && input.role !== 'member') throw new OrganizeRefused('site_only');
   return db.tx(async q => {
     await q.query('set transaction isolation level serializable');
-    const actor = await firstParty(q, principal);
-    await authority(q, actor.personId, input.orgId, input.loopId, input.role);
-    const token = magicToken();
-    const { rows: [row] } = await q.query<{ id: string }>(
-      `insert into emba_invitation (org_id,loop_id,issued_by,recipient_email,role,token_hash,expires_at)
-       values ($1,$2,$3,$4,$5,$6,$7) returning id`,
-      [input.orgId, input.loopId, actor.personId, email, input.role, hashToken(token), input.expiresAt],
-    );
-    return { id: row.id, token };
+    if (!principal) denied();
+    const lease = principal.clientId === null ? null : await organizerVia(q, principal, { orgId: input.orgId, loopId: input.loopId });
+    const actor = principal.clientId === null ? await firstParty(q, principal) : principal;
+    try { await authority(q, actor.personId, input.orgId, input.loopId, input.role); }
+    catch (error) { if (lease !== null && error instanceof InvitationRefused) throw new OrganizeRefused('organizers_only'); throw error; }
+    await open(q, input.orgId, input.loopId);
+    const made: IssuedInvitation[] = [];
+    for (const [at, email] of emails.entries()) {
+      const token = magicToken();
+      const { rows: [row] } = await q.query<{ id: string }>(
+        `insert into emba_invitation (org_id,loop_id,issued_by,recipient_email,role,token_hash,expires_at,recipient_name)
+         values ($1,$2,$3,$4,$5,$6,$7,$8) returning id`,
+        [input.orgId, input.loopId, actor.personId, email, input.role, hashToken(token), input.expiresAt, names[at]],
+      );
+      // An accepted invitation cannot be taken back, so each one is on record with the person, and the assistant if one made it.
+      await audit(q, actor, 'activity:write', row.id, lease);
+      made.push({ email, id: row.id, token });
+    }
+    return made;
   });
 }
 export async function listInvitations(db: Db, principal: Principal | null, orgId: string, loopId: string): Promise<Invitation[]> {
@@ -148,6 +188,8 @@ async function acceptTarget(db: Db, principal: Principal | null, field: 'id' | '
       [value],
     );
     if (!row || row.recipient_email !== actor.verifiedEmail.trim().toLowerCase() || row.issued_by!==scope.issued_by || row.org_id!==scope.org_id || row.loop_id!==scope.loop_id || row.role!==scope.role) denied();
+    // Only the person the invitation is for is told that its group is archived.
+    await open(q, row.org_id, row.loop_id);
     await q.query('insert into emba_membership (org_id,person_id) values ($1,$2) on conflict do nothing', [row.org_id, actor.personId]);
     const { rows: [membership] } = await q.query<{ revoked_at: string | null }>(
       'select revoked_at from emba_membership where org_id=$1 and person_id=$2 for update', [row.org_id, actor.personId],
@@ -168,6 +210,8 @@ async function acceptTarget(db: Db, principal: Principal | null, field: 'id' | '
        where id=$1 and accepted_at is null and revoked_at is null and expires_at>clock_timestamp() returning id`, [row.id, actor.personId],
     );
     if (!accepted.rows.length) denied();
+    await nameIfUnnamed(q, actor.personId, row.recipient_name);
+    await giveDefaultHandle(q, row.org_id, actor.personId);
   });
 }
 export async function declineInvitation(db: Db, principal: Principal | null, id: string): Promise<void> {

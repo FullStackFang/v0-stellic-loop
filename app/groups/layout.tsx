@@ -9,7 +9,7 @@ import { SessionRefresh } from './session-refresh';
 // The rail lists the groups the signed-in person can open, as a tree. A failure here must not take the page down: each page reports its own access.
 async function railGroups(principal: Principal): Promise<RailGroup[]> {
   try {
-    return treeOrder(await portalGroupTree(principal)).map(group => ({ namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
+    return treeOrder(await portalGroupTree(principal)).map(group => ({ id: group.loopId, parent: group.parentLoopId, namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
   } catch { return []; }
 }
 

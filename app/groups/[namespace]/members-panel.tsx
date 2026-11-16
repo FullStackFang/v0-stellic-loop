@@ -12,7 +12,7 @@ export type RosterPerson = {
   /** `group`: out of the whole top-level group. `role`: out of this group only. null: nothing the viewer may do. */
   remove: 'group' | 'role' | null;
 };
-export type Waiting = { key: string; kind: 'request'; personId: string; name: string; at: string } | { key: string; kind: 'invite'; id: string; email: string; role: string; until: string };
+export type Waiting = { key: string; kind: 'request'; personId: string; name: string; at: string } | { key: string; kind: 'invite'; id: string; email: string; name: string | null; role: string; until: string };
 export type JoinMode = 'off' | 'ask_first' | 'admit';
 type Scope = { orgId: string; loopId: string };
 type Actions = { grant: PortalAction; revokeRole: PortalAction; removeFromGroup: PortalAction; saveTag: PortalAction; invite: PortalAction; cancelInvite: PortalAction; review: PortalAction; setLink: PortalAction; replaceLink: PortalAction };
@@ -136,13 +136,14 @@ export function Invite({ scope, actions }: { scope: Scope; actions: Pick<Actions
   const form = useRef<HTMLFormElement>(null);
   const link = result.invitationToken ? `${typeof window === 'undefined' ? '' : window.location.origin}/groups#invite=${result.invitationToken}` : null;
   return <section className="lp-mb-card" id="invitations" aria-labelledby="invite-title"><h2 id="invite-title">Invite by email</h2>
-    <form ref={form} className="lp-mb-invite" onSubmit={event => { event.preventDefault(); const data = new FormData(event.currentTarget); run(actions.invite, { ...scope, recipientEmail: String(data.get('recipientEmail')), role: String(data.get('role')) }); form.current?.reset(); }}>
+    <form ref={form} className="lp-mb-invite" onSubmit={event => { event.preventDefault(); const data = new FormData(event.currentTarget); run(actions.invite, { ...scope, recipientEmail: String(data.get('recipientEmail')), recipientName: String(data.get('recipientName') ?? ''), role: String(data.get('role')) }); form.current?.reset(); }}>
       <input className="lp-mb-field" name="recipientEmail" type="email" required placeholder="name@school.edu" aria-label="Email to invite" disabled={pending} />
+      <input className="lp-mb-field" name="recipientName" maxLength={80} placeholder="Their name" aria-label="Name of the person" autoComplete="off" disabled={pending} />
       <select className="lp-mb-role lp-mb-boxed" name="role" aria-label="Invite as" disabled={pending}><option value="member">Member</option><option value="follower">Follower</option><option value="organizer">Organizer</option></select>
       <button className="lp-mb-go" disabled={pending}>{pending ? 'Inviting' : 'Invite'}</button>
     </form>
     {link && <div className="lp-mb-line"><input className="lp-mb-field" readOnly value={link} aria-label="Invitation link to copy" onFocus={event => event.target.select()} /><CopyLink url={link} /></div>}
-    <p className="lp-mb-note" role={result.status === 'error' ? 'alert' : undefined} data-warn={result.status === 'error' || undefined}>{result.status === 'error' ? result.message : link ? 'Invitation made. You can also send them this link; it is shown once.' : 'They see it when they sign in with that address. Loop sends no email. It lasts 14 days.'}</p>
+    <p className="lp-mb-note" role={result.status === 'error' ? 'alert' : undefined} data-warn={result.status === 'error' || undefined}>{result.status === 'error' ? result.message : link ? 'Invitation made. You can also send them this link; it is shown once.' : 'They see it when they sign in with that address. Loop sends no email. It lasts 14 days. The name becomes their tag, so teammates can mention them.'}</p>
   </section>;
 }
 
@@ -153,7 +154,7 @@ export function WaitingList({ scope, waiting, actions }: { scope: Scope; waiting
     ? <div className="lp-mb-mini" key={item.key}><Face id={item.personId} name={item.name} /><div><b>{item.name}</b><span>Asked {day(item.at)}</span></div>
         <button type="button" className="lp-mb-go" disabled={pending} onClick={() => run(actions.review, { ...scope, personId: item.personId, decision: 'approve' }, `${item.name} is in, as a member.`)}>Approve</button>
         <button type="button" className="lp-mb-quiet" disabled={pending} onClick={() => run(actions.review, { ...scope, personId: item.personId, decision: 'decline' }, `Declined ${item.name}.`)}>Decline</button></div>
-    : <div className="lp-mb-mini" key={item.key}><Mail /><div><b>{item.email}</b><span>Invited as {item.role} · until {day(item.until)}</span></div>
+    : <div className="lp-mb-mini" key={item.key}><Mail /><div><b>{item.name ?? item.email}</b><span>{item.name && <>{item.email} · </>}Invited as {item.role} · until {day(item.until)}</span></div>
         <button type="button" className="lp-mb-quiet" disabled={pending} onClick={() => run(actions.cancelInvite, { id: item.id }, `Invitation to ${item.email} revoked.`)}>Revoke</button></div>;
   return <section className="lp-mb-card" aria-labelledby="waiting-title"><h2 id="waiting-title">Waiting <span>{waiting.length}</span></h2>
     {waiting.length ? <div className="lp-mb-waitbox" tabIndex={0} aria-label="People waiting">{waiting.map(row)}</div> : <p className="lp-mb-note">Nobody is waiting.</p>}

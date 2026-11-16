@@ -35,6 +35,21 @@ it('creates one private phone-free identity without legacy linking or membership
  await n.code({boardId:null,personId:a!.personId,phone:'+16075551234',code:'123456'});
  expect(send).not.toHaveBeenCalled();
 });
+it('takes the name from the sign-in account, and tags a member whose name arrives after they joined',async()=>{
+ const named=(extra:object)=>vi.mocked(currentUser).mockResolvedValue({id:'user_a',primaryEmailAddressId:'email',emailAddresses:[{id:'email',emailAddress:'member@example.test',verification:{status:'verified'}}],...extra} as never);
+ const p=(await getClerkPortalPrincipal(t.db))!;
+ const {rows:[org]}=await t.db.query<{id:string}>("insert into emba_organization(name) values('Test') returning id");
+ await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)',[org.id,p.personId]);
+ named({firstName:'Danny',lastName:'Lau'});await getClerkPortalPrincipal(t.db);
+ expect((await t.db.query('select name from person where id=$1',[p.personId])).rows).toEqual([{name:'Danny Lau'}]);
+ expect((await t.db.query('select handle from emba_member_handle where person_id=$1',[p.personId])).rows).toEqual([{handle:'danny'}]);
+ // A name once known is not replaced by a later change at the sign-in provider.
+ named({firstName:'Dan',lastName:null});await getClerkPortalPrincipal(t.db);
+ expect((await t.db.query('select name from person where id=$1',[p.personId])).rows).toEqual([{name:'Danny Lau'}]);
+ session('user_b');vi.mocked(currentUser).mockResolvedValue({id:'user_b',firstName:'Mary',lastName:'Cha',primaryEmailAddressId:'email',emailAddresses:[{id:'email',emailAddress:'mary@example.test',verification:{status:'verified'}}]} as never);
+ const b=(await getClerkPortalPrincipal(t.db))!;
+ expect((await t.db.query('select name from person where id=$1',[b.personId])).rows).toEqual([{name:'Mary Cha'}]);
+});
 it('never reenrolls revoked or deleted identities',async()=>{
  const p=(await getClerkPortalPrincipal(t.db))!;
  await t.db.query('update emba_identity set revoked_at=now() where person_id=$1',[p.personId]);

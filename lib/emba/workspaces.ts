@@ -5,6 +5,7 @@ import { canAccessPersonal, type Principal } from './access';
 import { audit } from './consent';
 import { EmbaError } from './errors';
 import type { GroupAddress } from './groups';
+import { giveDefaultHandle } from './member-name';
 
 const slug = z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/);
 const createSchema = z.strictObject({
@@ -29,6 +30,7 @@ export async function createWorkspace(db: Db, principal: Principal, input: unkno
       await q.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'owner')", [org.id, loop.id, principal.personId]);
       await q.query('insert into emba_group_namespace(org_id,namespace) values($1,$2)', [org.id, data.namespace]);
       await q.query("insert into emba_group_address(org_id,loop_id,namespace,slug) values($1,$2,$3,'workspace')", [org.id, loop.id, data.namespace]);
+      await giveDefaultHandle(q, org.id, principal.personId);
       await audit(q, principal, 'activity:write', loop.id);
       return { orgId: org.id, loopId: loop.id, namespace: data.namespace, slug: 'workspace', handle: `@${data.namespace}/workspace`, orgName: data.name, loopPath: data.namespace };
     });

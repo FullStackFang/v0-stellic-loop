@@ -5,6 +5,7 @@ import { useParams, usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { ROOT_SLUG, groupPath } from '@/lib/emba/group-path';
+import { folded, toggleGroup, useClosedGroups } from './collapse';
 
 const icon = { viewBox: '0 0 16 16', 'aria-hidden': true, fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 const icons = {
@@ -23,19 +24,27 @@ function Wait() {
 }
 
 /** A group in the rail, in tree order: `depth` is how many groups it sits inside that the person can open. */
-export type RailGroup = { namespace: string; slug: string; name: string; handle: string; depth: number };
+export type RailGroup = { id: string; parent: string | null; namespace: string; slug: string; name: string; handle: string; depth: number };
 /** The left rail of the team product: which team, where in it, and the signed-in account. */
 export function Rail({ groups, account }: { groups: RailGroup[]; account: ReactNode }) {
   const path = usePathname();
   const { namespace, slug = ROOT_SLUG } = useParams<{ namespace?: string; slug?: string }>();
   const current = groups.find(group => group.namespace === namespace && group.slug === slug);
+  // What the person folded shut on the Groups page is folded here too, except the groups on the way down to the one they are in.
+  const closed = useClosedGroups(), above = new Set<string>();
+  for (let at = groups.find(group => group.id === current?.parent); at; at = groups.find(group => group.id === at!.parent)) above.add(at.id);
+  const fold = (group: RailGroup) => {
+    if (above.has(group.id) || !groups.some(item => item.parent === group.id)) return null;
+    const shut = !!closed?.has(group.id);
+    return <button type="button" className="lp-fold" aria-expanded={!shut} aria-label={`${shut ? 'Show' : 'Hide'} the groups inside ${group.name}`} onClick={() => toggleGroup(group.id)}><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6l4 4 4-4" /></svg></button>;
+  };
   const item = (href: string, label: string, glyph: ReactNode, on: boolean) => <li><Link href={href} aria-current={on ? 'page' : undefined}>{glyph}{label}<Wait /></Link></li>;
   const base = namespace ? groupPath(namespace, slug) : '';
   return <aside className="lp-rail">
     <Link href="/groups" className="lp-wordmark"><Rings /><span>Loop</span></Link>
     {groups.length > 0 && <details className="lp-switch" key={path}>
       <summary><span className="lp-switch-mark"><Rings /></span><span className="lp-switch-name">{current?.name ?? 'Choose a team'}</span></summary>
-      <ul className="lp-tree">{groups.map(group => <li key={group.handle}><Link href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'true' : undefined} style={group.depth ? { paddingLeft: 10 + group.depth * 14 } : undefined}>{group.name}<span>{group.handle}</span></Link></li>)}</ul>
+      <ul className="lp-tree">{groups.filter(group => !folded(groups, closed, group, above)).map(group => <li key={group.handle}><Link href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'true' : undefined} style={group.depth ? { paddingLeft: 10 + group.depth * 14 } : undefined}>{group.name}<span>{group.handle}</span></Link>{fold(group)}</li>)}</ul>
     </details>}
     {namespace && <nav aria-label="Team"><p className="lp-nav-label">Team</p><ul>
       {item(`${base}/team`, 'Record', icons.record, path === `${base}/team`)}

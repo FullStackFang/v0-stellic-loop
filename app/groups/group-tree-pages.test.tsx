@@ -168,7 +168,7 @@ it('gives a long roster a find box and a filter by role, inside one frame', asyn
 
 it('draws the rail as the tree a person can open', async () => {
   const f = await tree();
-  const rail = async (p: Principal) => treeOrder(await listGroupTree(t.db, p)).map(group => ({ namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
+  const rail = async (p: Principal) => treeOrder(await listGroupTree(t.db, p)).map(group => ({ id: group.loopId, parent: group.parentLoopId, namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
   expect((await rail(f.outer)).map(group => `${group.depth} ${group.name}`)).toEqual(['0 EMBA 2027', '1 Team 1', '2 NBAE 6830', '1 Team 2']);
   const mine = await rail(f.inner);
   expect(mine.map(group => `${group.depth} ${group.name} ${group.handle}`)).toEqual(['0 Team 1 @emba-2027/team-1', '1 NBAE 6830 @emba-2027/nbae-6830']);

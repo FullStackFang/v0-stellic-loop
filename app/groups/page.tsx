@@ -4,9 +4,12 @@ import { ViewTransition } from 'react';
 import { db } from '@/lib/db';
 import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
 import { groupHandle, groupHref, treeOrder } from '@/lib/emba/group-path';
+import { listArchivedGroups, type ArchivedGroup } from '@/lib/emba/group-tree';
 import { listReceivedInvitations, type ReceivedInvitation } from '@/lib/emba/invitations';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { acceptInvite, declineInvite } from './actions';
+import { GroupList } from './group-list';
+import { restoreGroupAction } from './organize-actions';
 import { InvitationLink } from './invitation-link';
 import { InvitationPaste } from './invitation-paste';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
@@ -35,6 +38,8 @@ export default async function GroupsPage() {
   }
   const ownerAllowed = !!principal.verifiedEmail && (process.env.LOOP_PILOT_OWNER_SUBJECTS ?? '').split(',').some(subject => subject.trim() === principal.subject);
   const [invite, ...moreInvites] = invitations;
+  // The archived groups this person may restore. Read only for someone who runs a group; a failure leaves the page without the list.
+  const archived: ArchivedGroup[] = ownerAllowed || groups.some(group => group.canStart) ? await listArchivedGroups(db(), principal).catch(() => []) : [];
   // One way to start a group, for a pilot owner or an owner or organizer of any group: the start page.
   const create = (ownerAllowed || groups.some(group => group.canStart)) && <Link className="lp-btn lp-create" href="/groups/new">Start a group<Arrow /></Link>;
   // Someone who may start a group and has none yet: starting one is the page, not a link at the bottom of it.
@@ -80,15 +85,7 @@ export default async function GroupsPage() {
 
     {groups.length > 0 ? <section className="lp-section" aria-labelledby="list-title">
       <div className="lp-sechead"><h2 id="list-title">{invite ? 'Your groups' : 'Groups'} <span>{groups.length}</span></h2>{create}</div>
-      <ul className="lp-list">{groups.map(group => <li key={group.loopId}>
-        <ViewTransition name={morph(group.loopId)} share="lp-morph" default="none">
-          <Link className="lp-grouprow" href={groupHref(group)} style={group.depth ? { marginLeft: Math.min(group.depth, 4) * 28 } : undefined}>
-            <span className="lp-grouptile"><Rings /></span>
-            <div><b>{group.orgName}</b><span className="lp-handle">{groupHandle(group)}</span></div>
-            <span className="lp-go"><Arrow /></span>
-          </Link>
-        </ViewTransition>
-      </li>)}</ul>
+      <GroupList groups={groups.map(group => ({ id: group.loopId, parent: group.parentLoopId, orgId: group.orgId, depth: group.depth, name: group.orgName, handle: groupHandle(group), href: groupHref(group), canRename: group.canStart, canArchive: group.canArchive }))} />
       <InvitationLink />
     </section>
     : <section className="lp-help" aria-label="If your invitation hasn't arrived">
@@ -97,6 +94,14 @@ export default async function GroupsPage() {
       {ownerAllowed && !first ? <div><b>Running a group?</b><p>Start one, drop in what it needs and invite people.</p>{create}</div>
         : <div><b>Who sends invitations?</b><p>The person who runs your group, from the group’s Members page.</p></div>}
       {invite && <InvitationLink />}
+    </section>}
+
+    {archived.length > 0 && <section className="lp-section" aria-labelledby="archived-title">
+      <div className="lp-sechead"><h2 id="archived-title">Archived <span>{archived.length}</span></h2></div>
+      <ul className="lp-list">{archived.map(group => <li key={group.loopId} className="lp-archived">
+        <div><b>{group.name}</b><span className="lp-handle">{group.handle}</span><span className="emba-meta">Archived {day(new Date(group.archivedAt).toISOString())}{group.inside > 0 && ` · with ${group.inside} ${group.inside === 1 ? 'group' : 'groups'} inside`}</span></div>
+        <ActionForm action={restoreGroupAction} label="Restore"><input type="hidden" name="orgId" value={group.orgId} /><input type="hidden" name="loopId" value={group.loopId} /></ActionForm>
+      </li>)}</ul>
     </section>}
   </>;
 }
