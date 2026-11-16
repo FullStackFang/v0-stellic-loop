@@ -13,7 +13,7 @@ import { upcomingEvents } from '@/lib/emba/team-interest';
 import { briefHistory, myRecentRecords } from '@/lib/emba/team-read';
 import TeamPage from './[namespace]/team/page';
 import { addTeamEvent, amendTeamRecord, announceToTeam, saveTeamBrief } from './team-actions';
-import { grantGroupRead, renewGroupRead, revokeGroupRead } from './connection-actions';
+import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead } from './connection-actions';
 import { BriefForm } from '@/components/emba/brief-form';
 import ConnectionsPage from './connections/page';
 
@@ -226,6 +226,10 @@ it('offers read, or read and write, per assistant and team, and says what write 
   expect((await act(f.ben, () => renewGroupRead(idle, form({ id: active.rows[0].id })))).message).toMatch(/^Renewed until [A-Z][a-z]{2} \d{1,2}\.$/);
   const renewed = await t.db.query<{ id: string }>('select id from emba_lease where person_id=$1 and revoked_at is null', [f.ben.personId]);
   expect((await act(f.ben, () => revokeGroupRead(idle, form({ id: renewed.rows[0].id })))).status).toBe('success');
+  // Disconnecting ends every team grant the person gave that assistant, and says where its sign-in is cleared.
+  expect((await act(f.ben, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue })))).status).toBe('success');
+  expect((await act(f.ben, () => disconnectAssistant(idle, form({ clientId: 'claude-test' })))).message).toBe('claude-test can no longer reach your teams. To clear its sign-in too, remove the Loop connector in claude-test.');
+  expect((await t.db.query('select 1 from emba_lease where person_id=$1 and revoked_at is null', [f.ben.personId])).rows).toEqual([]);
 });
 it('stops listing a grant once its group is gone, and names the assistant the provider registered', async () => {
   const f = await fixture();
@@ -235,6 +239,17 @@ it('stops listing a grant once its group is gone, and names the assistant the pr
   expect(within(document.querySelector('.lp-grant') as HTMLElement).getByText('Muse')).toBeInTheDocument();
   expect(screen.getByRole('option', { name: 'Muse' })).toHaveValue('oJLiBHFWfm5De8eq');
   expect(document.body.textContent).not.toContain('oJLiBHFWfm5De8eq');
+  // One line carries everything Muse needs, and a granted Muse can be disconnected in one press.
+  expect(screen.getByLabelText('Line to paste into Muse')).toHaveValue('Connect to Loop at https://loop.example/api/mcp/team with client ID oJLiBHFWfm5De8eq');
+  expect(screen.getByRole('button', { name: 'Disconnect Muse' })).toBeInTheDocument();
+  cleanup();
+  // A link that names an admitted assistant opens the form with it chosen; any other name is ignored.
+  vi.stubEnv('LOOP_AUTH_CLIENT_IDS', 'claude-test,oJLiBHFWfm5De8eq');
+  render(await withPortalTestSession(f.ben, () => ConnectionsPage({ searchParams: Promise.resolve({ assistant: 'oJLiBHFWfm5De8eq' }) })));
+  expect(screen.getByRole('combobox', { name: 'Assistant' })).toHaveValue('oJLiBHFWfm5De8eq');
+  cleanup();
+  render(await withPortalTestSession(f.ben, () => ConnectionsPage({ searchParams: Promise.resolve({ assistant: 'unknown-client' }) })));
+  expect(screen.getByRole('combobox', { name: 'Assistant' })).toHaveValue('claude-test');
   cleanup();
   await retireGroupAddress(t.db, f.owner, f.scope);
   render(await withPortalTestSession(f.ben, () => ConnectionsPage()));

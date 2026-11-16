@@ -58,3 +58,13 @@ export async function renewGroupRead(_previous: PortalResult, data: FormData): P
 export async function revokeGroupRead(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(principal => revokeLease(db(), principal, value(data, 'id')));
 }
+// Ends every team grant this person gave one assistant. The assistant's own sign-in is held by the assistant, so the message says where to clear that.
+export async function disconnectAssistant(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutate(async principal => {
+    const clientId = value(data, 'clientId');
+    const open = (await listLeases(db(), principal)).filter(lease => lease.client_id === clientId && !lease.revoked_at && teamGrant(lease.actions as string[]));
+    for (const lease of open) await revokeLease(db(), principal, String(lease.id));
+    const name = assistantName(clientId);
+    return `${name} can no longer reach your teams. To clear its sign-in too, remove the Loop connector in ${name}.`;
+  });
+}
