@@ -5,7 +5,10 @@ import { authenticate } from '@/lib/emba/access';
 import { listPortalGroups } from '@/lib/emba/groups';
 import { listAsks, askResults } from '@/lib/emba/team-asks';
 import { upcomingEvents } from '@/lib/emba/team-interest';
-import { GROUPS, SAMPLE_ISSUER, seedClasses } from '@/scripts/emba-seed';
+import { grantLease } from '@/lib/emba/consent';
+import { listGroupTree } from '@/lib/emba/group-tree';
+import { createWorkspace } from '@/lib/emba/workspaces';
+import { GROUPS, SAMPLE_ISSUER, seedClasses, seedTeam } from '@/scripts/emba-seed';
 
 let t: TestDb;
 beforeAll(async () => { t = await openTestDb(); });
@@ -43,4 +46,36 @@ it('seeds the sample class groups once, with events, interest and asks the owner
     expect((await seedClasses(t.db, owner, now)).map(item => item.state)).toEqual(['exists', 'exists']);
     expect((await t.db.query<{ n: number }>('select count(*)::int as n from person')).rows[0].n).toBe(6);
   } finally { vi.useRealTimers(); }
+});
+
+async function pilotOwner() {
+  const row = await makePerson(t.db, 'Owner');
+  await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]);
+  const owner = (await authenticate(t.db, 'test', async () => ({ issuer: 'https://issuer.test', subject: row.id, expiresAt: Date.parse('2099-01-01'), verifiedEmail: 'owner@example.test' })))!;
+  vi.stubEnv('LOOP_PILOT_OWNER_SUBJECTS', owner.subject);
+  return owner;
+}
+const before = Date.parse('2026-11-01T00:00:00Z');
+
+it('seeds Team 1 once with the classes inside it, and picks no assistant for an owner who granted none', async () => {
+  const owner = await pilotOwner();
+  vi.useFakeTimers({ now: before, toFake: ['Date'] });
+  try {
+    expect(await seedTeam(t.db, owner, before)).toMatchObject({ state: 'created', groups: ['@team-1', '@team-1/nbae-6830', '@team-1/nbae-6561'], assistants: [], joinLink: expect.stringMatching(/^\/groups\/request#token=/) });
+    expect((await t.db.query<{ n: number }>('select count(*)::int as n from emba_lease')).rows[0].n).toBe(0);
+    const tree = await listGroupTree(t.db, owner), root = tree.find(group => group.handle === '@team-1/workspace')!;
+    expect(tree.filter(group => group.parentLoopId === root.loopId).map(group => group.slug).sort()).toEqual(['nbae-6561', 'nbae-6830']);
+    const venture = tree.find(group => group.slug === 'nbae-6830')!;
+    expect((await upcomingEvents(t.db, owner, { orgId: venture.orgId, loopId: venture.loopId })).events.items).toHaveLength(GROUPS[0].events.length);
+    expect(await seedTeam(t.db, owner, before)).toMatchObject({ state: 'exists' });
+  } finally { vi.useRealTimers(); }
+});
+
+it('opens Team 1 and each class in it to an assistant the owner already granted elsewhere', async () => {
+  const owner = await pilotOwner();
+  const other = await createWorkspace(t.db, owner, { name: 'Other', description: '', namespace: 'other' });
+  await grantLease(t.db, owner, { clientId: 'https://assistant.test/client', actions: ['plan:read'], orgId: other.orgId, loopId: other.loopId, expiresAt: '2099-01-01T00:00:00Z' });
+  expect((await seedTeam(t.db, owner)).assistants).toEqual(['https://assistant.test/client']);
+  const { rows } = await t.db.query<{ actions: string[] }>("select actions from emba_lease where client_id='https://assistant.test/client' and org_id<>$1", [other.orgId]);
+  expect(rows.map(lease => [...lease.actions].sort())).toEqual(Array(3).fill(['group-memory:write', 'plan:read']));
 });

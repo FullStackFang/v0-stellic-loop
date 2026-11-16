@@ -3,12 +3,15 @@
 //
 //   npm run emba:seed            shows what it would do and which database it would write to
 //   npm run emba:seed -- --yes   writes it
+//   npm run emba:seed -- --team  the same two classes inside one group, Team 1, open to the assistants the owner already uses
 //
 // It writes to the database in .env.local. A group whose handle already exists is left alone, so it is safe to run twice.
 import { pathToFileURL } from 'node:url';
 import type { Db } from '../lib/db';
 import { authenticate, type Principal } from '../lib/emba/access';
 import { enableAccessRequests, setJoinMode } from '../lib/emba/access-requests';
+import { grantLease } from '../lib/emba/consent';
+import { createInnerGroup } from '../lib/emba/group-tree';
 import { setMemberHandle } from '../lib/emba/tags';
 import { answerAsk, createAsk } from '../lib/emba/team-asks';
 import { addEvent } from '../lib/emba/team-events';
@@ -98,33 +101,77 @@ export async function seedClasses(db: Db, owner: Principal, now = Date.now()): P
     if (taken.length) { report.push({ namespace: group.namespace, state: 'exists', events: 0, asks: 0 }); continue; }
     const made = await createWorkspace(db, owner, { name: group.name, description: group.description, namespace: group.namespace });
     const scope = { orgId: made.orgId, loopId: made.loopId };
-    await saveBrief(db, owner, { ...scope, body: group.brief, timezone: ZONE, expectedVersion: 0 });
-    for (const [key] of CLASSMATES) {
-      await db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [scope.orgId, people[key].personId]);
-      await db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'member')", [scope.orgId, scope.loopId, people[key].personId]);
-      await setMemberHandle(db, people[key], { orgId: scope.orgId, handle: key });
-    }
-    let events = 0, asks = 0;
-    const live = new Set<string>();
-    for (const { interested, ...event } of group.events) {
-      if (instantOf(event.startsAt) <= now) continue;
-      saved(await addEvent(db, owner, { ...scope, ...event }), event.slug);
-      for (const key of interested) saved(await setInterest(db, people[key], { ...scope, event: event.slug }), `${event.slug} interest`);
-      live.add(event.slug); events++;
-    }
-    for (const { by, answers, event, ...ask } of group.asks) {
-      if (instantOf(ask.closesAt) <= now) continue;
-      const result = saved(await createAsk(db, by ? people[by] : owner, { ...scope, ...ask, ...(event && live.has(event) ? { event } : {}) }), ask.question);
-      if (!result.saved) continue;
-      for (const [key, value] of answers) saved(await answerAsk(db, people[key], { ...scope, number: result.ask.number, ...(typeof value === 'string' ? { text: value } : { choices: value }) }), `${ask.question} answer`);
-      asks++;
-    }
-    // Real classmates come in through the join link, without waiting for approval. The owner can switch that on the group page.
-    const token = await enableAccessRequests(db, owner, { ...scope, publicLabel: group.name });
-    await setJoinMode(db, owner, { ...scope, mode: 'admit' });
-    report.push({ namespace: group.namespace, state: 'created', events, asks, joinLink: `/groups/request#token=${token}` });
+    await enrol(db, people, scope);
+    const { events, asks } = await fill(db, owner, people, scope, group, now);
+    report.push({ namespace: group.namespace, state: 'created', events, asks, joinLink: await joinLink(db, owner, scope, group.name) });
   }
   return report;
+}
+
+type Scope = { orgId: string; loopId: string };
+/** Makes the sample classmates members of a top-level group, each under their own handle. */
+async function enrol(db: Db, people: Record<Who, Principal>, scope: Scope) {
+  for (const [key] of CLASSMATES) {
+    await db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [scope.orgId, people[key].personId]);
+    await db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'member')", [scope.orgId, scope.loopId, people[key].personId]);
+    await setMemberHandle(db, people[key], { orgId: scope.orgId, handle: key });
+  }
+}
+/** A class's brief, and the events and asks that are still ahead. */
+async function fill(db: Db, owner: Principal, people: Record<Who, Principal>, scope: Scope, group: SeedGroup, now: number) {
+  await saveBrief(db, owner, { ...scope, body: group.brief, timezone: ZONE, expectedVersion: 0 });
+  let events = 0, asks = 0;
+  const live = new Set<string>();
+  for (const { interested, ...event } of group.events) {
+    if (instantOf(event.startsAt) <= now) continue;
+    saved(await addEvent(db, owner, { ...scope, ...event }), event.slug);
+    for (const key of interested) saved(await setInterest(db, people[key], { ...scope, event: event.slug }), `${event.slug} interest`);
+    live.add(event.slug); events++;
+  }
+  for (const { by, answers, event, ...ask } of group.asks) {
+    if (instantOf(ask.closesAt) <= now) continue;
+    const result = saved(await createAsk(db, by ? people[by] : owner, { ...scope, ...ask, ...(event && live.has(event) ? { event } : {}) }), ask.question);
+    if (!result.saved) continue;
+    for (const [key, value] of answers) saved(await answerAsk(db, people[key], { ...scope, number: result.ask.number, ...(typeof value === 'string' ? { text: value } : { choices: value }) }), `${ask.question} answer`);
+    asks++;
+  }
+  return { events, asks };
+}
+// Real classmates come in through the join link, without waiting for approval. The owner can switch that on the group page.
+async function joinLink(db: Db, owner: Principal, scope: Scope, label: string) {
+  const token = await enableAccessRequests(db, owner, { ...scope, publicLabel: label });
+  await setJoinMode(db, owner, { ...scope, mode: 'admit' });
+  return `/groups/request#token=${token}`;
+}
+
+export const TEAM = { namespace: 'team-1', name: 'Team 1',
+  description: 'Sample study team for the Fall 2026 term. Each class is a group inside this one.',
+  brief: 'Team 1: study team for the Fall 2026 term. Each class has its own group inside this one, with its dates, asks and files.' };
+export type SeededTeam = { state: 'created' | 'exists'; groups: string[]; assistants: string[]; joinLink?: string };
+
+/**
+ * Creates Team 1 with the sample classes inside it, unless the owner already has it. Every assistant the owner
+ * has a live grant for, on any group, is given read and write on Team 1 and on each class for 30 days, so the
+ * tree can be used from an assistant at once. An owner with no live grant gets none: the script picks no assistant.
+ */
+export async function seedTeam(db: Db, owner: Principal, now = Date.now()): Promise<SeededTeam> {
+  const { rows: taken } = await db.query('select 1 from emba_group_namespace where namespace=$1', [TEAM.namespace]);
+  if (taken.length) return { state: 'exists', groups: [], assistants: [] };
+  const people = await classmates(db);
+  const root = await createWorkspace(db, owner, { name: TEAM.name, description: TEAM.description, namespace: TEAM.namespace });
+  const top = { orgId: root.orgId, loopId: root.loopId }, made = [{ handle: `@${TEAM.namespace}`, scope: top }];
+  await saveBrief(db, owner, { ...top, body: TEAM.brief, timezone: ZONE, expectedVersion: 0 });
+  await enrol(db, people, top);
+  for (const group of GROUPS) {
+    const inner = await createInnerGroup(db, owner, { orgId: top.orgId, parentLoopId: top.loopId, name: group.name, description: group.description, slug: group.namespace });
+    const scope = { orgId: inner.orgId, loopId: inner.loopId };
+    await fill(db, owner, people, scope, group, now);
+    made.push({ handle: inner.handle, scope });
+  }
+  const { rows: clients } = await db.query<{ id: string }>('select distinct client_id as id from emba_lease where person_id=$1 and revoked_at is null and expires_at>clock_timestamp() order by 1', [owner.personId]);
+  const expiresAt = new Date(now + 30 * 86_400_000).toISOString();
+  for (const { scope } of made) for (const { id } of clients) await grantLease(db, owner, { clientId: id, actions: ['plan:read', 'group-memory:write'], ...scope, expiresAt });
+  return { state: 'created', groups: made.map(item => item.handle), assistants: clients.map(client => client.id), joinLink: await joinLink(db, owner, top, TEAM.name) };
 }
 
 async function main() {
@@ -134,13 +181,19 @@ async function main() {
   if (!subject || !email) throw new Error('Set LOOP_PILOT_OWNER_SUBJECTS and LOOP_PILOT_OWNER_EMAIL in .env.local first.');
   const host = new URL(databaseUrl(process.env) ?? 'postgres://unset').hostname;
   console.log(`Database: ${host}`);
-  console.log(`Groups: ${GROUPS.map(group => `${group.name} (@${group.namespace})`).join('; ')}`);
+  const team = process.argv.includes('--team');
+  console.log(team ? `Groups: ${TEAM.name} (@${TEAM.namespace}), with inside it: ${GROUPS.map(group => group.name).join('; ')}` : `Groups: ${GROUPS.map(group => `${group.name} (@${group.namespace})`).join('; ')}`);
   console.log(`Sample classmates: ${CLASSMATES.map(([, name]) => name).join(', ')}`);
   if (!process.argv.includes('--yes')) { console.log('Nothing written. Run again with -- --yes to write it.'); return; }
   const { rows: [identity] } = await db().query<{ issuer: string }>('select issuer from emba_identity where subject=$1 and revoked_at is null', [subject]);
   if (!identity) throw new Error('No account for the first id in LOOP_PILOT_OWNER_SUBJECTS yet. Sign in to the site once, then run this again.');
   const owner = await authenticate(db(), 'seed', async () => ({ issuer: identity.issuer, subject, expiresAt: Date.now() + 3_600_000, verifiedEmail: email }));
   if (!owner) throw new Error('That account cannot be used.');
+  if (team) {
+    const made = await seedTeam(db(), owner);
+    console.log(made.state === 'exists' ? `@${TEAM.namespace}: already there, left alone.` : `Created ${made.groups.join(', ')}. Assistants given read and write for 30 days: ${made.assistants.join(', ') || 'none (the owner has no live grant to copy)'}. Join link: ${process.env.NEXT_PUBLIC_APP_URL ?? ''}${made.joinLink}`);
+    return;
+  }
   for (const row of await seedClasses(db(), owner)) {
     console.log(row.state === 'exists' ? `@${row.namespace}: already there, left alone.` : `@${row.namespace}: created with ${row.events} events and ${row.asks} asks. Join link: ${process.env.NEXT_PUBLIC_APP_URL ?? ''}${row.joinLink}`);
   }
