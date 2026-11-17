@@ -4,6 +4,10 @@
 redraw uses it. The product reasoning that used to live in this file is now
 `docs/proposal-board-design.md`.*
 
+**Next look: Loop Campus** (picked 2026-11-17, mockup only). This file still describes what the
+app looks like today, known as the HAI look. The look that will replace it is in
+`docs/loop-campus-design.md`. Until that is applied, build new pages to this file.
+
 Lineage: Stanford HAI's system (navy, teal, aqua, a little lime; panels with one
 tight corner; pill buttons) on an app shell. Earlier looks (Sun, Night, Quorum
 `quorum.html` v5, the trip look in `TripView.css`) are retired. Don't bring them back.
