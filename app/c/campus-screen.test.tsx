@@ -180,14 +180,14 @@ describe('who sees whom', () => {
       expect((await t.db.query('select email,makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ email: 'ana@cornell.edu', makes: 0 }]);
       // Subscribing puts the Premium tag by their name; the pane itself is the Loop Premium plate.
       expect(card.getAllByText('Premium')).toHaveLength(1);
-      expect(card.getByText('Your own animal.')).toBeInTheDocument();
+      expect(card.getByText('Bring your own pet.')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
       expect(card.getByRole('alert')).toHaveTextContent('Choose a photo of an animal first.');
       expect(models.asked).toHaveLength(0);
       fireEvent.change(card.getByLabelText('Photo of an animal'), { target: { files: [photo] } });
       fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
       // While it is drawn, and after: thanks, no payment, a free picture.
-      expect(await card.findByRole('status')).toHaveTextContent('Drawing your animal.');
+      expect(await card.findByRole('status')).toHaveTextContent('Drawing your pet.');
       const made = await card.findByRole('img', { name: 'Your own animal' }, { timeout: 5000 });
       expect(card.getByText(/Thanks for subscribing/)).toBeInTheDocument();
       expect(card.getByText('It is your picture now.')).toBeInTheDocument();
