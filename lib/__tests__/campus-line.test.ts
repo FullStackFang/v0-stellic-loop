@@ -1,6 +1,6 @@
 // @vitest-environment node
 import {expect,it} from 'vitest';
-import {readLine,typingTag} from '@/lib/campus/line';
+import {readLine,typingTag,whenIdeas} from '@/lib/campus/line';
 
 // Spec: openspec/changes/loop-group-event-links/specs/campus-one-line.
 const TZ='America/New_York',NOW=new Date('2026-11-18T20:00:00Z');   // Wednesday, 3pm in New York
@@ -45,4 +45,20 @@ it('keeps only a well-formed @place, and knows when one is being typed',()=>{
  expect(typingTag('dumplings tonight 7 @')).toBe('');
  expect(typingTag('dumplings @collegetown ')).toBeNull();
  expect(typingTag('me@cornell')).toBeNull();
+});
+it('reads a part of the day as a time, and a time said with an @ as a time, not a place',()=>{
+ expect(read('@central-park go for a run @evening')).toEqual({title:'Go for a run',starts:'2026-11-18T19:00',tag:'central-park',link:null});
+ expect(read('coffee tomorrow morning')).toMatchObject({title:'Coffee',starts:'2026-11-19T09:00'});
+ expect(read('frisbee this afternoon')).toMatchObject({title:'Frisbee',starts:'2026-11-19T15:00'});   // 3pm has just passed
+ expect(read('frisbee in the afternoon sat')).toMatchObject({title:'Frisbee',starts:'2026-11-21T15:00'});
+ expect(read('dumplings @tonight @collegetown')).toMatchObject({title:'Dumplings',starts:'2026-11-18T19:00',tag:'collegetown'});
+ expect(read('dumplings @7pm @sat')).toMatchObject({title:'Dumplings',starts:'2026-11-21T19:00',tag:null});
+ expect(read('good morning yoga 7am')).toMatchObject({title:'Good morning yoga',starts:'2026-11-19T07:00'});
+});
+it('offers times to add when the line has none: all ahead, none twice, on the day the line names',()=>{
+ expect(whenIdeas('go for a run',TZ,NOW)).toEqual([{add:'tonight',starts:'2026-11-18T19:00'},{add:'9am',starts:'2026-11-19T09:00'},{add:'noon',starts:'2026-11-19T12:00'},{add:'tomorrow 7pm',starts:'2026-11-19T19:00'}]);
+ expect(whenIdeas('movie sat',TZ,NOW)).toEqual([{add:'9am',starts:'2026-11-21T09:00'},{add:'noon',starts:'2026-11-21T12:00'},{add:'7pm',starts:'2026-11-21T19:00'}]);
+ // Late at night, "tonight" has passed and is not offered.
+ expect(whenIdeas('go for a run',TZ,new Date('2026-11-19T02:30:00Z')).map(idea=>idea.add)).toEqual(['9am','noon','7pm','sat 10am']);
+ expect(whenIdeas('go for a run 6pm',TZ,NOW)).toEqual([]);
 });

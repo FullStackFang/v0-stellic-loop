@@ -97,8 +97,8 @@ export async function postLineAction(slug: string, text: string, from: LineFrom 
     if (!campus || !mayUse(viewer, campus)) throw new CampusError(OTHER_SCHOOL);
     const read = readLine(String(text).slice(0, 400), campus.tz, new Date()), page = from && typeof from === 'object' ? from : null;
     const title = read.title || String(page?.title ?? ''), starts = read.starts ?? (page?.starts ? String(page.starts) : null);
-    if (!title.trim()) throw new CampusError('Say what it is: dumplings, a run, a study group.');
-    if (!starts) throw new CampusError('Say when: tonight, tomorrow 7pm, sat 10am.');
+    if (!title.trim()) throw new CampusError('What is it? Say dumplings, a run, a study group.');
+    if (!starts) throw new CampusError('When is it? Say tonight, tomorrow 7pm, sat 10am.');
     // The page's end only goes with the page's start.
     await postPlan(db(), viewer.personId, campus, { title, starts, ends: read.starts ? null : page?.ends ? String(page.ends) : null, place: page?.place ? String(page.place) : null,
       about: page?.about ? String(page.about) : null, link: page?.link ? String(page.link) : read.link, tag: read.tag });

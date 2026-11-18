@@ -357,6 +357,8 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-chip.when { background: var(--cs-field); } .cs-chip.place { background: var(--cs-ink); color: var(--cs-on-ink); }
 .cs-chip button { font-size: 12.5px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
 .cs-chip-hint { font-size: 13px; color: var(--cs-mute); }
+/* a time offered to tap when the line has none: dashed until it is taken */
+.cs .cs-chip.idea { box-shadow: none; border: 1.5px dashed var(--cs-ink); cursor: pointer; transition: background-color .15s; } .cs .cs-chip.idea:hover { background: var(--cs-field); border-style: solid; }
 /* each place has a bar behind its name, as long as the place is busy next to the busiest one */
 .cs-sug { display: grid; gap: 4px; } .cs-sug button { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; border-radius: 12px 12px 12px 4px; }
 .cs-sug button[style]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: max(10px, calc(var(--fill) * 100%)); border-radius: inherit; background: color-mix(in oklch, var(--cs-action) 14%, transparent); transform-origin: left; animation: cs-grow .6s var(--cs-expo) backwards; transition: width .4s var(--cs-expo), background-color .15s; }

@@ -23,6 +23,9 @@ const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const DAY = '(tonight|today|tomorrow|tmrw|(?:sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)(?:day|nesday|sday|urday)?)';
 const CLOCK = '(\\d{1,2})(?::([0-5]\\d))?\\s*(am|pm)?';
 const LINK = /(?:^|\s)((?:https?:\/\/|(?:lu\.ma|luma\.com|posh\.vip|www\.eventbrite\.com)\/)\S+)/i;
+/** Words that are a time by themselves. Said after an @ they are still a time, never a place. */
+export const TIME_WORDS = ['tonight', 'morning', 'afternoon', 'evening', 'noon'];
+const PART: Record<string, [number, string]> = { morning: [9, 'am'], afternoon: [3, 'pm'], evening: [7, 'pm'] };
 const two = (n: number) => String(n).padStart(2, '0');
 const plusDays = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
 
@@ -31,6 +34,8 @@ export function readLine(text: string, tz: string, now: Date): LineRead {
   let rest = ` ${text.replace(/\s+/g, ' ').trim()} `;
   const take = (pattern: RegExp) => { const found = pattern.exec(rest); if (found) rest = `${rest.slice(0, found.index)} ${rest.slice(found.index + found[0].length)}`; return found; };
   const link = take(LINK)?.[1] ?? null;
+  // People reach for @ for the time too ("@evening", "@7pm", "@sat"): that is a time, not a place.
+  rest = rest.replace(new RegExp(` @(?=(?:${DAY}|morning|afternoon|evening|noon|\\d{1,2}(?::[0-5]\\d)?\\s*(?:am|pm)|\\d{1,2}:[0-5]\\d) )`, 'gi'), ' ');
   const tagged = take(/ @([a-z0-9][a-z0-9-]{0,29})(?= )/i)?.[1].toLowerCase().replace(/-+$/, '') ?? null, tag = tagged && TAG.test(tagged) ? tagged : null;
   take(/ @ /);
 
@@ -48,6 +53,8 @@ export function readLine(text: string, tz: string, now: Date): LineRead {
       else clock(take(/ (?:at )?(\d{1,2})(?::([0-5]\d))?\s*(am|pm)(?= )/i) ?? take(/ (?:at )?(\d{1,2}):([0-5]\d)()(?= )/i) ?? take(/ at (\d{1,2})()()(?= )/i), 1);
     }
   }
+  // A part of the day stands for an hour when no hour was said: "this evening", "tomorrow morning".
+  if (hour === null) { const part = take(/ (?:(?:this|in the) )?(morning|afternoon|evening)(?= )/i); if (part) [hour, meridiem] = PART[part[1].toLowerCase()]; }
   day = day?.toLowerCase() ?? null;
   const today = localParts(tz, now), nowMinutes = today.hour * 60 + today.minute;
   let starts: string | null = null;
@@ -66,4 +73,19 @@ export function readLine(text: string, tz: string, now: Date): LineRead {
   }
   const title = rest.replace(/\s+/g, ' ').trim().replace(/^[\s,.;:-]+|[\s,;:-]+$/g, '');
   return { title: title ? title[0].toUpperCase() + title.slice(1) : '', starts, tag, link };
+}
+
+/**
+ * Times to offer when a line has none, each as the words to add and the start they would give. Only times still
+ * ahead, each start once, and on the day the line names when it names one ("movie sat" is offered Saturday's hours).
+ */
+export function whenIdeas(text: string, tz: string, now: Date): { add: string; starts: string }[] {
+  if (readLine(text, tz, now).starts) return [];
+  const today = localParts(tz, now), nowAt = `${today.date}T${two(today.hour)}:${two(today.minute)}`, ideas: { add: string; starts: string }[] = [];
+  const named = new RegExp(`(?:^|[\\s@])${DAY}(?=\\s|$)`, 'i').test(text);
+  for (const add of named ? ['9am', 'noon', '7pm'] : ['tonight', '9am', 'noon', '7pm', 'tomorrow 7pm', 'sat 10am']) {
+    const starts = readLine(`${text} ${add}`, tz, now).starts;
+    if (starts && starts > nowAt && !ideas.some(idea => idea.starts === starts)) ideas.push({ add, starts });
+  }
+  return ideas.slice(0, 4);
 }

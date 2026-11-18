@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition } from 'react';
 import { imInAction, postLineAction, readPlanLinkAction, type LineFrom } from '@/app/c/actions';
-import { readLine, typingTag } from '@/lib/campus/line';
+import { readLine, TIME_WORDS, typingTag, whenIdeas } from '@/lib/campus/line';
 import type { NearTag } from '@/lib/campus/tags';
 import { dayLabel, timeLabel, zoned } from '@/lib/campus/time';
 import type { Face } from '@/lib/campus/view';
@@ -34,7 +34,13 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
   // The busiest place fills its row; the others are drawn against it.
   const most = Math.max(1, ...tags.map(tag => tag.people));
   const here = read.tag && typing === null ? soon.filter(plan => plan.tag === read.tag) : [];
-  const when = starts ? (() => { try { const at = zoned(campus.tz, starts); return `${dayLabel(campus.tz, at, now)} ${timeLabel(campus.tz, at)}`; } catch { return null; } })() : null;
+  const say = (at: string) => { try { const then = zoned(campus.tz, at); return `${dayLabel(campus.tz, then, now)} ${timeLabel(campus.tz, then)}`; } catch { return null; } };
+  const when = starts ? say(starts) : null;
+  // A line with no time is helped along, not refused: times to tap, and a time typed after an @ is offered as a time.
+  const ideas = when ? [] : whenIdeas(text, campus.tz, now);
+  const times = typing && typing.length >= 2 ? TIME_WORDS.filter(word => word.startsWith(typing)) : [];
+  const add = (words: string) => { setText(now => `${now.trimEnd()} ${words} `.trimStart()); setSaid(null); box.current?.focus(); };
+  const asTime = (word: string) => { setText(now => `${now.replace(/@[a-z0-9-]*$/i, word)} `); setSaid(null); box.current?.focus(); };
 
   // A link in the line is read once, as soon as it is there: its page becomes what the line says.
   const typed = (value: string) => {
@@ -56,10 +62,10 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
     setText(now => `${/@[a-z0-9-]*$/i.test(now) ? now.replace(/@[a-z0-9-]*$/i, `@${slug}`) : read.tag ? now.replace(new RegExp(`@${read.tag}(?![a-z0-9-])`, 'i'), `@${slug}`) : `${now.trimEnd()} @${slug}`.trimStart()} `.replace(/ +$/, ' '));
     box.current?.focus();
   };
-  const post = () => start(async () => {
+  const post = () => (title && !when ? setSaid({ text: 'When is it? Tap a time above, or type one.', bad: false }) : start(async () => {
     const got = await postLineAction(campus.slug, text, from).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
     if (got.ok) { router.refresh(); onDone(); } else setSaid({ text: got.message, bad: true });
-  });
+  }));
   const join = (id: string) => start(async () => { const got = await imInAction(id); if (got.ok) router.refresh(); else setSaid({ text: got.message, bad: true }); });
 
   return <div className="cs-post-cols">
@@ -70,7 +76,8 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
           onChange={event => typed(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (!busy) post(); } }} />
         <div className="cs-read" aria-live="polite">
           {title && <span className="cs-chip">{title}</span>}
-          {when ? <span className="cs-chip when">{when}</span> : <span className="cs-chip-hint">{title || from ? 'No time yet: say tonight, tomorrow 7pm, sat 10am' : 'Say it the way you would text it, or paste an event link'}</span>}
+          {when ? <span className="cs-chip when">{when}</span> : title || from ? <><span className="cs-chip-hint">When?</span>{ideas.map(idea => <button key={idea.add} type="button" className="cs-chip idea" onClick={() => add(idea.add)}>{say(idea.starts)}</button>)}</>
+            : <span className="cs-chip-hint">Say it the way you would text it, or paste an event link</span>}
           {read.tag && typing === null && <span className={`cs-chip ${place ? 'place' : ''}`}>@{read.tag} · {place ? people(place) : 'a new place, yours to name'}</span>}
           {from && <span className="cs-chip">{site(from.link)}<button type="button" onClick={() => { setFrom(null); setSaid(null); }}>Remove link</button></span>}
         </div>
@@ -86,8 +93,9 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
       <div className="cs-line-card">
         <h2>{typing ? <>Places near you that start with <b>@{typing}</b></> : 'Places people near you use'}</h2>
         <div className="cs-sug">
+          {times.map(word => <button key={word} type="button" onClick={() => asTime(word)}><span><b className="new">{word}</b><small>A time, not a place{say(readLine(word, campus.tz, now).starts ?? '') ? `: ${say(readLine(word, campus.tz, now).starts ?? '')}` : ''}</small></span></button>)}
           {offered.map(tag => <button key={tag.slug} type="button" style={{ '--fill': tag.people / most } as React.CSSProperties} onClick={() => pick(tag.slug)}><span><b>@{tag.slug}</b><small>{people(tag)}</small></span></button>)}
-          {typing !== null && typing.length >= 2 && !tags.some(tag => tag.slug === typing) && <button type="button" onClick={() => pick(typing)}><span><b className="new">Make @{typing}</b><small>A new place. People nearby see it when they type @</small></span></button>}
+          {typing !== null && typing.length >= 2 && !tags.some(tag => tag.slug === typing) && !TIME_WORDS.includes(typing) && <button type="button" onClick={() => pick(typing)}><span><b className="new">Make @{typing}</b><small>A new place. People nearby see it when they type @</small></span></button>}
           {!offered.length && (typing ?? '').length < 2 && <p className="cs-note">{tags.length ? 'Keep typing to name a new place.' : 'Nobody has named a place here yet. Type @ and a name: it is yours to make.'}</p>}
         </div>
       </div>
