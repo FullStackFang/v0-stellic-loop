@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import type { Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
@@ -32,7 +32,7 @@ describe('the door', () => {
     render(await drawn(FrontDoor()));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Go together. Get more for it.');
     expect(screen.getByText('Blitz night')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'School' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByRole('status')).toHaveTextContent('Sign-in is not configured');
   });
   it('signed in, goes on to the person\'s own school; anyone from no school to the default campus', async () => {
@@ -45,21 +45,34 @@ describe('the door', () => {
   });
   it('/sign-in is the same door', async () => {
     render(await DoorPage({ routing: 'path' }));
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/^Sign in at /);
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/^Sign in$/);
   });
 });
 
-describe('the school menu on the sign-in card', () => {
+describe('the sign-in card', () => {
+  afterEach(() => { delete document.documentElement.dataset.kit; localStorage.clear(); });
   const schools = [{ slug: 'cornell', name: 'Cornell', domains: ['cornell.edu'] }, { slug: 'nyu', name: 'NYU', domains: ['nyu.edu'] }];
   const type = (value: string) => fireEvent.input(screen.getByRole('textbox', { name: 'Email' }), { target: { value } });
-  it('follows the typed email, subdomains included, and says so', () => {
+  it('has no school menu: it spots the school in the typed email, subdomains included, says so and puts on its colours', () => {
     render(<DoorSignIn schools={schools} routing="hash" configured />);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Sign in at Cornell');
+    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/^Sign in$/);
     type('name@stern.nyu.edu');
-    expect(screen.getByRole('combobox', { name: 'School' })).toHaveValue('nyu');
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Sign in at NYU');
-    expect(screen.getByText('stern.nyu.edu is NYU. Switched for you.')).toBeInTheDocument();
-    expect(screen.getByText(/With your NYU email \(@nyu.edu\) you see NYU/)).toBeInTheDocument();
+    expect(screen.getByText('stern.nyu.edu is NYU.')).toBeInTheDocument();
+    expect(screen.getByText('With your NYU email you see NYU.')).toBeInTheDocument();
+    expect(document.documentElement.dataset.kit).toBe('nyu');
+    type('name@cornell.edu');
+    expect(document.documentElement.dataset.kit).toBe('cornell');
+  });
+  it('spots an email the browser filled in without a keystroke', () => {
+    vi.useFakeTimers();
+    try {
+      render(<DoorSignIn schools={schools} routing="hash" configured />);
+      (screen.getByRole('textbox', { name: 'Email' }) as HTMLInputElement).value = 'name@cornell.edu';
+      act(() => { vi.advanceTimersByTime(600); });
+      expect(document.documentElement.dataset.kit).toBe('cornell');
+    } finally { vi.useRealTimers(); }
   });
   it('says an address is from no school and that it still signs in, and stays quiet until there is an address', () => {
     render(<DoorSignIn schools={schools} routing="hash" configured />);
@@ -67,12 +80,15 @@ describe('the school menu on the sign-in card', () => {
     expect(screen.queryByText(/Not an email at/)).toBeNull();
     type('someone@gmail.com');
     expect(screen.getByText('Not an email at Cornell or NYU. You can still sign in with it.')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'School' })).toHaveValue('cornell');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/^Sign in$/);
   });
-  it('can be set by hand', () => {
-    render(<DoorSignIn schools={schools} routing="path" configured />);
-    fireEvent.change(screen.getByRole('combobox', { name: 'School' }), { target: { value: 'nyu' } });
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Sign in at NYU');
+  it('goes back to the picked colours, or Loop\'s own, when the email is at no school', () => {
+    render(<DoorSignIn schools={schools} routing="hash" configured />);
+    type('name@nyu.edu'); type('name@gmail.com');
+    expect(document.documentElement.dataset.kit).toBe('loop');
+    localStorage.setItem('loop-kit', 'columbia');
+    type('name@nyu.edu'); type('name@gmail.co');
+    expect(document.documentElement.dataset.kit).toBe('columbia');
   });
 });
 

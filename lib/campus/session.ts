@@ -9,7 +9,8 @@ import { findCampus, type Campus } from './listings';
 import { campusOf } from './people';
 import { DEFAULT_CAMPUS, frontIsCampus } from './schools';
 
-export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null };
+/** `kit` is whose colours they see unless they pick others: their school's, or Loop's own for an email at no school. */
+export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null; kit: string };
 
 /**
  * Who is looking at the campus screen: the signed-in person, whether they are the admin, and the campus they belong
@@ -20,7 +21,8 @@ export type CampusViewer = { principal: Principal; personId: string; admin: bool
 export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
   const principal = await getSignedInPrincipal().catch(() => null);
   if (!principal) return null;
-  return { principal, personId: principal.personId, admin: isAdmin(principal), campus: await campusOf(db(), principal) ?? await findCampus(db(), DEFAULT_CAMPUS) };
+  const school = await campusOf(db(), principal);
+  return { principal, personId: principal.personId, admin: isAdmin(principal), campus: school ?? await findCampus(db(), DEFAULT_CAMPUS), kit: school?.slug ?? 'loop' };
 });
 
 /** Whether this viewer may use a campus's screen: it is their own school's, or they are the admin, who may open any. */

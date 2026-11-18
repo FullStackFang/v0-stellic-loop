@@ -1,33 +1,38 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SignIn } from '@clerk/nextjs';
 import { schoolOfEmail } from '@/lib/campus/schools';
+import { KITS, pickedKit, showKit } from './kit';
 
 export type School = { slug: string; name: string; domains: string[] };
 
-// Clerk derives shades from these, so they are hex copies of the campus tokens: ink (navy), paper, mute.
-const ink = '#0d2747', paper = '#fdfefb', mute = '#5d6570';
+// Clerk derives shades from these, so they are hex copies of the campus tokens: paper, mute, and each kit's ink.
+const paper = '#fdfefb', mute = '#5d6570';
 
 /**
- * The one sign-in card (design D21): the sign-in the groups site uses (Google, or, email, Continue), drawn small, with
- * a school menu on top. The menu follows the email as it is typed and can be set by hand, but it decides nothing:
+ * The one sign-in card (design D21): the sign-in the groups site uses (Google, or, email, Continue), drawn small. As
+ * an email is typed the card spots its school and the page takes on that school's colours. That decides nothing:
  * a person's school is the one their verified email ends in, worked out after sign-in.
  */
 export function DoorSignIn({ schools, routing, configured }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean }) {
-  const [slug, setSlug] = useState(schools[0]?.slug ?? ''), [seen, setSeen] = useState('');
-  const school = schools.find(each => each.slug === slug) ?? schools[0];
+  const [slug, setSlug] = useState(''), [seen, setSeen] = useState(''), card = useRef<HTMLDivElement>(null), last = useRef('');
+  const school = schools.find(each => each.slug === slug);
   const names = schools.map(each => each.name).join(', ').replace(/, ([^,]*)$/, ' or $1');
-  // The email field belongs to the sign-in form; what is typed in it reaches this card as it bubbles up.
-  const typed = (event: FormEvent<HTMLDivElement>) => {
-    const field = event.target as HTMLInputElement;
-    if (field.tagName !== 'INPUT' || (field.name !== 'identifier' && field.type !== 'email')) return;
-    const domain = (field.value.split('@')[1] ?? '').trim().toLowerCase(), hit = schoolOfEmail(schools, field.value);
-    if (hit) { setSlug(hit.slug); setSeen(`${domain} is ${hit.name}.${hit.slug === slug ? '' : ' Switched for you.'}`); }
-    else setSeen(domain.includes('.') ? `Not an email at ${names}. You can still sign in with it.` : '');
+  // The email field belongs to the sign-in form. It is read as it is typed in, and looked at again now and then,
+  // because a browser or the form itself can fill it in without a keystroke.
+  const read = () => {
+    const field = card.current?.querySelector<HTMLInputElement>('input[name=identifier], input[type=email]'), email = field?.value ?? '';
+    if (email === last.current) return;
+    last.current = email;
+    const domain = (email.split('@')[1] ?? '').trim().toLowerCase(), hit = schoolOfEmail(schools, email);
+    setSlug(hit?.slug ?? '');
+    setSeen(hit ? `${domain} is ${hit.name}.` : domain.includes('.') ? `Not an email at ${names}. You can still sign in with it.` : '');
+    showKit(hit?.slug ?? pickedKit() ?? 'loop');
   };
-  if (!school) return null;
-  const label = { fontSize: 0, '&::before': { content: `"${school.name} email"`, fontSize: '13px', fontWeight: 600 } };
+  useEffect(() => { const again = setInterval(read, 500); return () => clearInterval(again); });
+  const ink = (KITS.find(kit => kit.slug === slug) ?? KITS[0]).ink;
+  const label = { fontSize: 0, '&::before': { content: `"${school ? `${school.name} email` : 'Email'}"`, fontSize: '13px', fontWeight: 600 } };
   const shared = {
     fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', fallback: <p className="cs-note" aria-hidden="true">Loading sign-in…</p>,
     appearance: {
@@ -40,13 +45,11 @@ export function DoorSignIn({ schools, routing, configured }: { schools: School[]
       },
     },
   };
-  return <div className="cs-door-in" onInput={typed}>
-    <h2>Sign in at {school.name}</h2>
-    <div><label htmlFor="cs-school">School</label>
-      <select id="cs-school" value={school.slug} onChange={event => { setSlug(event.target.value); setSeen(''); }}>{schools.map(each => <option key={each.slug} value={each.slug}>{each.name}</option>)}</select></div>
+  return <div className="cs-door-in" ref={card} onInput={read}>
+    <h2>{school ? `Sign in at ${school.name}` : 'Sign in'}</h2>
     {configured ? (routing === 'path' ? <SignIn routing="path" path="/sign-in" {...shared} /> : <SignIn routing="hash" {...shared} />)
       : <p role="status">Sign-in is not configured for this deployment.</p>}
     <p className="seen" aria-live="polite">{seen}</p>
-    <p className="fine">With your {school.name} email ({school.domains.map(domain => `@${domain}`).join(', ')}) you see {school.name}. Your school is the one your email belongs to; any other email signs in too.</p>
+    <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>
   </div>;
 }
