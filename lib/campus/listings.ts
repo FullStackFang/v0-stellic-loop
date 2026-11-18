@@ -13,6 +13,8 @@ export type Listing = {
   startsAt: string; endsAt: string | null; words: string[]; postedBy: string | null;
   /** The event page a posted plan was filled from; null for everything else. */
   link: string | null;
+  /** The @place a posted plan was given, without the @. */
+  tag: string | null;
   /** How many people are in, over all its outings. */
   going: number;
 };
@@ -28,9 +30,9 @@ export async function listCampuses(q: Q): Promise<Campus[]> {
 
 type Row = Omit<Listing, 'place'> & { placeName: string | null; lat: number | null; lon: number | null };
 const LISTING = `l.id,l.origin,f.source,l.title,l.about,l.host_name as host,l.place_text as "placeText",p.name as "placeName",p.lat,p.lon,
-  l.starts_at as "startsAt",l.ends_at as "endsAt",l.words,l.posted_by as "postedBy",l.link,
+  l.starts_at as "startsAt",l.ends_at as "endsAt",l.words,l.posted_by as "postedBy",l.link,g.slug as tag,
   (select count(*)::int from campus_outing_member m where m.listing_id=l.id) as going
-  from campus_listing l left join campus_feed f on f.id=l.feed_id left join campus_place p on p.id=l.place_id`;
+  from campus_listing l left join campus_feed f on f.id=l.feed_id left join campus_place p on p.id=l.place_id left join campus_tag g on g.id=l.tag_id`;
 const shape = ({ placeName, lat, lon, ...row }: Row): Listing => ({ ...row, place: placeName !== null && lat !== null && lon !== null ? { name: placeName, lat, lon } : null });
 
 /**

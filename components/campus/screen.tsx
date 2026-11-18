@@ -8,6 +8,7 @@ import { ANIMALS, animal, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
 import { pick, type Findable } from '@/lib/campus/search';
+import { Composer, type Soon } from './composer';
 import type { Coupon, Face, Screen, Seat, Ticket } from '@/lib/campus/view';
 
 // The campus screen, "This week" (design D16): one line of top bar, the search line, the count line, a sideways row of
@@ -50,7 +51,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'all'>('best');
   const [open, setOpen] = useState<{ id: string; pane: Pane; fresh: boolean } | null>(openId ? { id: openId, pane: 'more', fresh: false } : null);
   const [entering, setEntering] = useState(false), [message, setMessage] = useState(''), [copied, setCopied] = useState(false), [showing, setShowing] = useState<string | null>(null);
-  const [busy, start] = useTransition();
+  const [busy, start] = useTransition(), [posting, setPosting] = useState(false);
   const rail = useRef<HTMLDivElement>(null), [ends, setEnds] = useState({ left: true, right: true });
 
   const picked = useMemo(() => pick(tickets.map((ticket): Findable => ({ id: ticket.id, title: ticket.title, host: ticket.by, place: ticket.place, source: ticket.source, words: ticket.words, pull: ticket.pull })), typed, view, campus.listSource), [tickets, typed, view, campus.listSource]);
@@ -65,7 +66,13 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
     if (row && card) row.scrollTo?.({ left: row.scrollLeft + card.getBoundingClientRect().left - row.getBoundingClientRect().left - 6, behavior: 'smooth' });
   }, [open]);
 
-  const show = (id: string, pane: Pane) => { setCopied(false); setOpen(now => now?.id === id && now.pane === pane ? null : { id, pane, fresh: true }); };
+  // Plans already on at an @place, for the posting panel: a person naming that place can join one instead.
+  const soon = useMemo(() => tickets.filter(ticket => ticket.tag).map((ticket): Soon => ({ id: ticket.id, tag: ticket.tag!, title: ticket.title, day: ticket.day, time: ticket.time, mine: !!ticket.mine, faces: ticket.known,
+    who: ticket.known.length ? `${ticket.known[0].first}${ticket.going > 1 ? ` and ${ticket.going - 1} ${ticket.going === 2 ? 'other' : 'others'}` : ''}` : `${ticket.going} going` })), [tickets]);
+  /** The "+" opens the posting panel at the start of the row, and closes it. */
+  const togglePost = () => { setOpen(null); setMessage(''); setPosting(now => !now); rail.current?.scrollTo?.({ left: 0, behavior: 'smooth' }); };
+
+  const show = (id: string, pane: Pane) => { setCopied(false); setPosting(false); setOpen(now => now?.id === id && now.pane === pane ? null : { id, pane, fresh: true }); };
   const search = (next: string) => { setTyped(next); setOpen(null); setEntering(true); rail.current?.scrollTo?.({ left: 0 }); };
   /** Runs an action; a signed-out caller is sent to sign in and back. */
   const run = (action: () => Promise<ActResult>, after?: () => void) => start(async () => {
@@ -99,7 +106,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
     return <article key={ticket.id} className={`cs-ev ${isOpen ? 'open' : ''}`} style={{ '--i': at } as React.CSSProperties}
       onClick={event => { if (!(event.target as HTMLElement).closest('button, a, input')) show(ticket.id, 'more'); }}>
       <div className="cs-top"><Tile top={ticket.day} big={ticket.time} met={ticket.stub.kind === 'group' && ticket.stub.state === 'met'} />
-        <div className="cs-body"><h3>{ticket.title}</h3><p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{[ticket.by, ticket.place].filter(Boolean).join(' · ')}</p></div>
+        <div className="cs-body"><h3>{ticket.title}</h3><p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{ticket.tag && <b className="cs-at">@{ticket.tag}</b>}{[ticket.by, ticket.place].filter(Boolean).join(' · ')}</p></div>
         <button className="cs-more" aria-expanded={details} onClick={() => show(ticket.id, 'more')}>{details ? 'Close' : 'Details'}<Chevron /></button></div>
       {stub(ticket)}
     </article>;
@@ -139,6 +146,12 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   const sheet = opened && <div key="sheet" className={`cs-sheet ${open!.fresh ? 'fresh' : ''}`}>
     <div className="cs-sheet-top"><h3>{opened.title}</h3><button className="cs-more" aria-expanded="true" onClick={() => setOpen(null)}>Close<Chevron /></button></div>
     {open!.pane === 'invite' && opened.mine ? invite(opened) : more(opened)}</div>;
+  const postSheet = posting && viewer && <div key="post" className="cs-sheet cs-post fresh">
+    <div className="cs-sheet-top"><h3>Start something</h3><button className="cs-more" aria-expanded="true" onClick={() => setPosting(false)}>Close<Chevron /></button></div>
+    <Composer campus={campus} tags={screen.places} soon={soon} onDone={() => setPosting(false)} /></div>;
+  const nothing = <div className="cs-nothing"><div className="cs-nothing-top"><Tile top="This week" big="Open" /><div><h3>{typed.trim() ? 'Nothing matches' : 'Nothing here yet'}</h3><p>{typed.trim() ? 'Try another word, or post a plan of your own.' : 'Post a plan of your own and it shows here at once.'}</p></div></div>
+    <div className="cs-nothing-stub"><small>Yours could be the first this week.</small></div></div>;
+  const plus = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" /></svg>;
   const row = (id: string, at: number) => { const ticket = byId.get(id)!; return [card(ticket, at), opened?.id === id ? sheet : null]; };
   const [count, ...words] = (picked.marker ?? '').split(' ');
 
@@ -150,18 +163,22 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
       <div className="cs-nav-end">
         {live && (live.usedAt ? <div className="cs-live used"><small>{live.giver}</small><b>{byId.get(live.listingId)?.status ?? 'Used'}</b></div>
           : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
-        {viewer ? <><Link className="cs-btn sm go" href={`/c/${campus.slug}/post`}>Post a plan</Link><Account screen={screen} signOut={signOut} /></> : <><Link className="cs-btn sm" href={`/c/${campus.slug}/post`}>Post a plan</Link><Link className="cs-btn sm go" href={signInHref}>Sign in</Link></>}
+        {viewer ? <Account screen={screen} signOut={signOut} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}
       </div>
     </header>
     <main className="cs-main"><section className="cs-fill">
       <div className="cs-ask"><input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />
         <div className="cs-tabs">{([['best', 'Best for you'], ['all', `All of ${campus.listSource}`]] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
-      <div className="cs-count"><h2 aria-live="polite">{picked.line}</h2><div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
+      {/* The count sits in a pill, and posting starts from the "+" at its left end: above the row, so it is there wherever the row is scrolled to (design D13). */}
+      <div className="cs-count"><div className="cs-tally">
+        {viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>}
+        <h2 aria-live="polite">{picked.line}</h2></div>
+        <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
-        {picked.nothing ? <div className="cs-nothing"><div className="cs-nothing-top"><Tile top="This week" big="Open" /><div><h3>{typed.trim() ? 'Nothing matches' : 'Nothing here yet'}</h3><p>{typed.trim() ? 'Try another word, or post a plan of your own.' : 'Post a plan of your own and it shows here at once.'}</p></div></div>
-            <div className="cs-nothing-stub"><small>Yours could be the first this week.</small></div></div>
+        {picked.nothing ? postSheet ? <div className="cs-railwrap"><div className="cs-rail">{nothing}{postSheet}</div></div> : nothing
           : <div className="cs-railwrap"><div className="cs-rail" ref={rail} onScroll={measure}>
+              {postSheet}
               {picked.best.map(row)}
               {picked.rest.length > 0 && <div className="cs-then" style={{ '--i': picked.best.length } as React.CSSProperties}><b>{count}</b><span>{words.join(' ')}</span></div>}
               {picked.rest.map((id, at) => row(id, picked.best.length + 1 + at))}</div>

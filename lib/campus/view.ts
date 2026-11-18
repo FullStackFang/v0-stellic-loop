@@ -1,6 +1,8 @@
 // What the campus screen is drawn from. Built on the server for one viewer (lib/campus/screen.ts) and handed to the
 // screen's client parts, so it holds only what that viewer may see: a stranger's name is never in it.
 
+import type { NearTag } from './tags';
+
 export type Face = { first: string; photo: string | null; here?: boolean; me?: boolean };
 /** One seat of a group reward. A seat taken by someone the viewer does not know has no face. */
 export type Seat = { taken: boolean; face: Face | null; here: boolean; yours: boolean };
@@ -17,6 +19,8 @@ export type Ticket = {
   source: string | null; by: string | null; place: string | null; about: string | null;
   /** The event page a posted plan was filled from. */
   link: string | null;
+  /** The @place of a posted plan, without the @. */
+  tag: string | null;
   map: { name: string; lat: number; lon: number } | null;
   /** For search: "good for" words plus what the day and hour add. */
   words: string[]; pull: number; going: number;
@@ -39,4 +43,6 @@ export type Viewer = { first: string; name: string; photo: string | null; face: 
 export type Screen = {
   campus: { slug: string; name: string; tz: string; listSource: string };
   viewer: Viewer | null; tickets: Ticket[]; earning: Coupon[]; live: Live | null;
+  /** The @places people on this campus are using, the busiest first: what posting is guided by. Empty for a signed-out visitor. */
+  places: NearTag[];
 };

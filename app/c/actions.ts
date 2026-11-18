@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { CampusError } from '@/lib/campus/errors';
+import { readLine } from '@/lib/campus/line';
 import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
 import { pickFace } from '@/lib/campus/people';
@@ -86,6 +87,22 @@ export async function readPlanLinkAction(slug: string, url: string): Promise<Lin
   const campus = await findCampus(db(), String(slug));
   if (!campus || !mayUse(viewer, campus)) return { ok: false, message: OTHER_SCHOOL };
   return readPlanLink(campus, String(url).slice(0, 2000));
+}
+/** What a read link added to a line: the link, and what its page said. The line's own words win over these. */
+export type LineFrom = { link: string; title?: string; starts?: string; ends?: string; place?: string; about?: string };
+/** Posts what was typed in one line (design D12). The line is read here; what the browser showed is not trusted. */
+export async function postLineAction(slug: string, text: string, from: LineFrom | null): Promise<ActResult> {
+  const campus = await findCampus(db(), String(slug));
+  return act(async viewer => {
+    if (!campus || !mayUse(viewer, campus)) throw new CampusError(OTHER_SCHOOL);
+    const read = readLine(String(text).slice(0, 400), campus.tz, new Date()), page = from && typeof from === 'object' ? from : null;
+    const title = read.title || String(page?.title ?? ''), starts = read.starts ?? (page?.starts ? String(page.starts) : null);
+    if (!title.trim()) throw new CampusError('Say what it is: dumplings, a run, a study group.');
+    if (!starts) throw new CampusError('Say when: tonight, tomorrow 7pm, sat 10am.');
+    // The page's end only goes with the page's start.
+    await postPlan(db(), viewer.personId, campus, { title, starts, ends: read.starts ? null : page?.ends ? String(page.ends) : null, place: page?.place ? String(page.place) : null,
+      about: page?.about ? String(page.about) : null, link: page?.link ? String(page.link) : read.link, tag: read.tag });
+  });
 }
 /** Posts a plan from the post form, then returns to the screen. A link the list already has counts the person in on that plan. */
 export async function postPlanAction(_previous: PlanState, data: FormData): Promise<PlanState> {

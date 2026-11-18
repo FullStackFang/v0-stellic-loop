@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Posting on the campus · three directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --ink-2: oklch(35.4% 0.095 252);
+  --action: oklch(47.6% 0.13 250); --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240);
+  --mute: oklch(46.5% 0.012 245); --stub: color-mix(in oklch, var(--field) 32%, var(--paper));
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.45; letter-spacing: -0.012em; color: var(--ink); background: oklch(93% 0.006 240); }
+button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+.top { max-width: 1320px; margin: 0 auto; padding: 28px 24px 8px; }
+.top h1 { margin: 0 0 6px; font-stretch: 108%; font-weight: 720; font-size: 30px; letter-spacing: -0.04em; line-height: 1.05; }
+.top p { margin: 0; max-width: 78ch; color: var(--ink-2); }
+.row { max-width: 1320px; margin: 0 auto; padding: 20px 24px 56px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; align-items: start; }
+@media (max-width: 1100px) { .row { grid-template-columns: minmax(0, 420px); justify-content: center; } }
+.dir h2 { margin: 0; font-size: 19px; font-weight: 720; letter-spacing: -0.03em; } .dir h2 b { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-right: 8px; border-radius: 8px 8px 8px 2px; background: var(--ink); color: var(--field); font-size: 15px; }
+.dir > p { margin: 6px 0 14px; font-size: 13.5px; color: var(--ink-2); min-height: 58px; }
+.phone { border-radius: 30px; background: var(--page); box-shadow: 0 0 0 2px var(--ink), 7px 7px 0 var(--ink); overflow: hidden; height: 760px; display: flex; flex-direction: column; }
+.bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.bar b { font-weight: 720; font-stretch: 112%; font-size: 21px; letter-spacing: -0.045em; } .bar span { margin-left: auto; font-size: 12.5px; font-weight: 600; }
+.body { flex: 1; overflow: auto; padding: 14px 14px 18px; display: grid; gap: 12px; align-content: start; }
+.card { border-radius: 16px; background: var(--paper); box-shadow: 4px 4px 0 var(--field-shadow); padding: 14px; }
+.h { font-size: 12px; font-weight: 640; text-transform: uppercase; letter-spacing: .06em; color: var(--mute); }
+.tag { font-weight: 680; color: var(--action); }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 99px; font-size: 13.5px; font-weight: 600; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); white-space: nowrap; }
+.pill[aria-pressed=true], .pill.on { background: var(--ink); color: var(--paper); }
+.pill.field { background: var(--field); }
+.pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.go { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 22px; border-radius: 99px; font-weight: 640; background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.go:active { transform: translate(2px, 2px); box-shadow: inset 0 0 0 1.5px var(--ink), 1px 1px 0 var(--ink); }
+.go.sm { height: 36px; padding: 0 16px; font-size: 13.5px; } .quiet { font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; color: var(--ink-2); }
+.faces { display: inline-flex; } .faces img { width: 26px; height: 26px; border-radius: 50%; background: var(--stub); box-shadow: 0 0 0 2px var(--paper); margin-left: -7px; object-fit: cover; } .faces img:first-child { margin-left: 0; }
+.sub { font-size: 12.5px; color: var(--mute); }
+.done { display: none; padding: 12px 14px; border-radius: 14px; background: var(--ink); color: var(--paper); font-weight: 600; font-size: 14px; } .done.show { display: block; }
+
+/* A: one line */
+.say { width: 100%; min-height: 84px; border: 0; resize: none; background: none; font-size: 21px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; outline: none; }
+.say::placeholder { color: color-mix(in oklch, var(--ink) 35%, transparent); }
+.read { display: flex; flex-wrap: wrap; gap: 7px; padding-top: 10px; border-top: 1px dashed var(--line); min-height: 43px; }
+.sug { display: grid; } .sug button { display: flex; align-items: center; gap: 10px; padding: 9px 4px; text-align: left; border-top: 1px solid var(--line); } .sug button:first-child { border-top: 0; }
+.sug button span { flex: 1; min-width: 0; } .sug button small { display: block; font-size: 12.5px; color: var(--mute); font-weight: 440; }
+.mini { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); } .mini:first-of-type { border-top: 0; }
+.mini time { flex: none; width: 54px; padding: 5px 0; border-radius: 9px 9px 9px 2px; background: var(--field); text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.15; }
+.mini div { flex: 1; min-width: 0; } .mini b { display: block; font-weight: 640; }
+
+/* B: the spot first */
+.spots { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.spot { text-align: left; padding: 11px 12px; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); display: grid; gap: 5px; }
+.spot[aria-pressed=true] { background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.spot b { font-size: 15.5px; font-weight: 700; letter-spacing: -0.02em; } .spot .faces img { box-shadow: 0 0 0 2px var(--paper); width: 22px; height: 22px; }
+.line { font-size: 21px; font-weight: 640; letter-spacing: -0.025em; line-height: 1.25; } .line i { font-style: normal; color: color-mix(in oklch, var(--ink) 35%, transparent); }
+
+/* C: answer the area */
+.want { display: grid; gap: 9px; } .want p { margin: 0; font-size: 16.5px; font-weight: 620; letter-spacing: -0.02em; line-height: 1.3; }
+.want .foot { display: flex; align-items: center; gap: 10px; } .want .foot .sub { flex: 1; }
+.want.mine { background: var(--field); box-shadow: 4px 4px 0 var(--ink), inset 0 0 0 1.5px var(--ink); }
+.want .when { display: none; } .want.mine .when { display: flex; } .want.mine .start { display: none; }
+.src { display: inline-block; padding: 1px 7px; border-radius: 6px; background: var(--stub); font-size: 12px; font-weight: 640; }
+.ask { display: flex; gap: 8px; padding: 10px 12px; background: var(--paper); border-top: 2px solid var(--ink); } .ask input { flex: 1; min-width: 0; height: 42px; padding: 0 14px; border: 0; border-radius: 99px; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--line); outline: none; }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Posting on the campus: three directions</h1>
+  <p>None of these is a form. Each uses <span class="tag">@places</span> that people define themselves, and each shows what others close by are doing while you post. A pasted Luma or Posh link works in all three: it turns into the same thing a typed line does. Everything below is clickable. Pick one, or name the parts to mix.</p>
+</div>
+<div class="row">
+
+<!-- A -->
+<section class="dir">
+  <h2><b>A</b>One line</h2>
+  <p>You type it the way you would text it. Loop reads the time and the @place out of the sentence and shows what it understood. Typing @ lists the places people near you already use.</p>
+  <div class="phone">
+    <div class="bar"><b>Loop</b><span>Cornell · Wed 18 Nov</span></div>
+    <div class="body">
+      <div class="card">
+        <textarea class="say" id="a-say" placeholder="What are you up to? Try: dumplings tonight 7 @collegetown" spellcheck="false">dumplings tonight 7 @coll</textarea>
+        <div class="read" id="a-read"></div>
+      </div>
+      <div class="card" id="a-sugbox">
+        <div class="h">Places near you that start with <span id="a-typed">@coll</span></div>
+        <div class="sug" id="a-sug"></div>
+      </div>
+      <div class="card" id="a-also">
+        <div class="h">Already on tonight in <span class="tag" id="a-where">@collegetown</span></div>
+        <div class="mini"><time>Tonight<br>6:30</time><div><b>Hot pot, split the bill</b><span class="sub">Maya and 3 others</span></div><span class="faces"><img src="/animals/04.png" alt=""><img src="/animals/11.png" alt=""><img src="/animals/23.png" alt=""></span><button class="pill">Join</button></div>
+        <div class="mini"><time>Tonight<br>8:00</time><div><b>CS 2110 problem set</b><span class="sub">Josh and 1 other</span></div><span class="faces"><img src="/animals/17.png" alt=""><img src="/animals/30.png" alt=""></span><button class="pill">Join</button></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px"><button class="go" id="a-post">Post it</button><span class="sub">Shows at Cornell at once. You are counted in.</span></div>
+      <div class="done" id="a-done"></div>
+    </div>
+  </div>
+</section>
+
+<!-- B -->
+<section class="dir">
+  <h2><b>B</b>The spot first</h2>
+  <p>You start from where. Each @place shows who is around it this week. Picking one offers what people there usually post, so most plans are three taps and no typing.</p>
+  <div class="phone">
+    <div class="bar"><b>Loop</b><span>Cornell · Wed 18 Nov</span></div>
+    <div class="body">
+      <div class="h">Where</div>
+      <div class="spots" id="b-spots"></div>
+      <div class="card" style="display:grid;gap:12px">
+        <div class="line" id="b-line"></div>
+        <div><div class="h" style="margin-bottom:7px">People in <span class="tag" id="b-tag"></span> post</div><div class="pills" id="b-what"></div></div>
+        <div><div class="h" style="margin-bottom:7px">When</div><div class="pills" id="b-when"></div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px"><button class="go" id="b-post">Post it</button><button class="quiet">Paste a link instead</button></div>
+      <div class="done" id="b-done"></div>
+    </div>
+  </div>
+</section>
+
+<!-- C -->
+<section class="dir">
+  <h2><b>C</b>Answer the area</h2>
+  <p>You do not start from nothing. People say what they want in an @place; when enough do, anyone can turn it into a plan with one tap. Posting is mostly agreeing, and sometimes going first.</p>
+  <div class="phone">
+    <div class="bar"><b>Loop</b><span>Cornell · Wed 18 Nov</span></div>
+    <div class="body" id="c-body">
+      <div class="h">Wanted near you</div>
+      <div class="card want">
+        <p>A study group for CS 2110 tonight <span class="tag">@north-campus</span></p>
+        <div class="foot"><span class="faces"><img src="/animals/02.png" alt=""><img src="/animals/09.png" alt=""><img src="/animals/14.png" alt=""><img src="/animals/21.png" alt=""></span><span class="sub"><b data-n>5</b> want this · no plan yet</span></div>
+        <div class="foot start"><button class="go sm" data-start>Start it</button><button class="pill" data-me>Me too</button></div>
+        <div class="foot when"><span class="pills"><button class="pill on">Tonight 8</button><button class="pill">Tonight 9</button><button class="pill">Tomorrow</button></span></div>
+        <div class="foot when"><button class="go sm" data-post>Post it to 5 people</button></div>
+      </div>
+      <div class="card want">
+        <p>Someone to split dumplings with <span class="tag">@collegetown</span></p>
+        <div class="foot"><span class="faces"><img src="/animals/06.png" alt=""><img src="/animals/27.png" alt=""></span><span class="sub"><b data-n>3</b> want this · no plan yet</span></div>
+        <div class="foot start"><button class="go sm" data-start>Start it</button><button class="pill" data-me>Me too</button></div>
+        <div class="foot when"><span class="pills"><button class="pill on">Tonight 7</button><button class="pill">Tomorrow 7</button><button class="pill">Fri 7</button></span></div>
+        <div class="foot when"><button class="go sm" data-post>Post it to 3 people</button></div>
+      </div>
+      <div class="card want">
+        <p>Harvard vs Yale day party <span class="src">posh.vip</span> <span class="tag">@boston-trip</span></p>
+        <div class="foot"><span class="faces"><img src="/animals/33.png" alt=""><img src="/animals/19.png" alt=""></span><span class="sub"><b data-n>2</b> want to go · Sat 2pm, from the link Ana pasted</span></div>
+        <div class="foot start"><button class="go sm" data-start>Go as a group</button><button class="pill" data-me>Me too</button></div>
+        <div class="foot when"><span class="sub">The time and place come from the page.</span></div>
+        <div class="foot when"><button class="go sm" data-post>Post it to 2 people</button></div>
+      </div>
+      <div class="done" id="c-done"></div>
+    </div>
+    <div class="ask"><input id="c-say" placeholder="Want something else? Say it with an @place"><button class="go sm" id="c-add">Say it</button></div>
+  </div>
+</section>
+</div>
+
+<script>
+const face = n => `<img src="/animals/${String(n).padStart(2, '0')}.png" alt="">`;
+const PLACES = [
+  { tag: 'collegetown', who: '14 people this week', faces: [4, 11, 23], what: ['Dinner', 'Coffee', 'Study', 'Drinks'] },
+  { tag: 'college-ave-courts', who: '4 people this week', faces: [8, 15], what: ['Pickup basketball', 'Tennis'] },
+  { tag: 'north-campus', who: '9 people this week', faces: [2, 9, 14], what: ['Study group', 'Run', 'Board games'] },
+  { tag: 'donlon-2f', who: 'Your floor · 6 people', faces: [17, 30], what: ['Movie', 'Late snack', 'Study'] },
+  { tag: 'arts-quad', who: '7 people this week', faces: [6, 27, 33], what: ['Run', 'Frisbee', 'Lunch outside'] },
+  { tag: 'sage-hall', who: 'EMBA · 11 people', faces: [19, 21, 12], what: ['Case prep', 'Coffee', 'Dinner after class'] },
+];
+
+/* A: read the line as it is typed */
+const say = document.getElementById('a-say'), readOut = document.getElementById('a-read');
+function readLine(text) {
+  const day = /\b(tonight|today|tomorrow|mon|tue|wed|thu|fri|sat|sun)[a-z]*\b/i.exec(text), hour = /\b(?:at\s*)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i.exec(text.replace(/@\S*/g, ''));
+  const tag = /@([a-z0-9-]*)/i.exec(text);
+  let when = null;
+  if (day || hour) {
+    const d = day ? day[1][0].toUpperCase() + day[1].slice(1).toLowerCase() : 'Today';
+    const h = hour ? `${hour[1]}${hour[2] ? ':' + hour[2] : ''}${hour[3] ? hour[3].toLowerCase() : Number(hour[1]) < 8 || /tonight/i.test(text) ? 'pm' : 'am'}` : '';
+    when = [d, h].filter(Boolean).join(' ');
+  }
+  const what = text.replace(/@\S*/g, '').replace(/\b(tonight|today|tomorrow|at)\b/gi, '').replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)?\b/gi, '').replace(/\s+/g, ' ').trim();
+  return { when, tag: tag ? tag[1].toLowerCase() : null, what };
+}
+function drawA() {
+  const got = readLine(say.value), typing = /@([a-z0-9-]*)$/i.exec(say.value), known = got.tag && PLACES.find(place => place.tag === got.tag);
+  readOut.innerHTML = [
+    got.what ? `<span class="pill">${got.what[0].toUpperCase() + got.what.slice(1)}</span>` : '',
+    got.when ? `<span class="pill field">${got.when}</span>` : '<span class="sub" style="align-self:center">No time yet: say tonight, tomorrow, 7pm</span>',
+    known ? `<span class="pill on">@${known.tag} · ${known.who}</span>` : got.tag && !typing ? `<span class="pill">@${got.tag} · new place, yours to name</span>` : '',
+  ].join('');
+  const box = document.getElementById('a-sugbox'), also = document.getElementById('a-also');
+  box.style.display = typing ? '' : 'none'; also.style.display = known && !typing ? '' : 'none';
+  if (known) document.getElementById('a-where').textContent = '@' + known.tag;
+  if (typing) {
+    const start = typing[1].toLowerCase(), list = PLACES.filter(place => place.tag.startsWith(start));
+    document.getElementById('a-typed').textContent = '@' + start;
+    document.getElementById('a-sug').innerHTML = list.map(place => `<button data-tag="${place.tag}"><span><b class="tag">@${place.tag}</b><small>${place.who}</small></span><span class="faces" style="flex:none">${place.faces.map(face).join('')}</span></button>`).join('')
+      + (start && !list.some(place => place.tag === start) ? `<button data-tag="${start}"><span><b>Make @${start}</b><small>A new place. People nearby will see it when they type @</small></span></button>` : '');
+  }
+}
+say.addEventListener('input', drawA);
+document.getElementById('a-sug').addEventListener('click', event => { const pick = event.target.closest('button'); if (!pick) return; say.value = say.value.replace(/@[a-z0-9-]*$/i, '@' + pick.dataset.tag + ' '); drawA(); say.focus(); });
+document.getElementById('a-post').addEventListener('click', () => { const got = readLine(say.value), done = document.getElementById('a-done'); done.textContent = got.what ? `Posted: ${got.what}${got.when ? ', ' + got.when : ''}${got.tag ? ' @' + got.tag : ''}. You are in.` : 'Say what it is first.'; done.classList.add('show'); });
+drawA();
+
+/* B: the spot, then what and when */
+const b = { place: PLACES[0], what: 'Dinner', when: 'Tonight 7' }, WHEN = ['Now', 'Tonight 7', 'Tonight 9', 'Tomorrow', 'Sat'];
+function drawB() {
+  document.getElementById('b-spots').innerHTML = [PLACES[0], PLACES[2], PLACES[3], PLACES[4]].map(place => `<button class="spot" aria-pressed="${place === b.place}" data-tag="${place.tag}"><b>@${place.tag}</b><span class="faces">${place.faces.map(face).join('')}</span><span class="sub">${place.who}</span></button>`).join('')
+    + '<button class="spot" style="grid-column:1/-1;display:block"><b>Somewhere else</b> <span class="sub">Type an @place, or make one</span></button>';
+  document.getElementById('b-tag').textContent = '@' + b.place.tag;
+  document.getElementById('b-what').innerHTML = b.place.what.map(what => `<button class="pill" aria-pressed="${what === b.what}" data-what="${what}">${what}</button>`).join('') + '<button class="pill" style="box-shadow:inset 0 0 0 1.5px var(--line)">Something else</button>';
+  document.getElementById('b-when').innerHTML = WHEN.map(when => `<button class="pill" aria-pressed="${when === b.when}" data-when="${when}">${when}</button>`).join('');
+  document.getElementById('b-line').innerHTML = `${b.what || '<i>What</i>'} · ${b.when ? b.when.toLowerCase() : '<i>when</i>'} <span class="tag">@${b.place.tag}</span>`;
+}
+document.getElementById('b-spots').addEventListener('click', event => { const pick = event.target.closest('[data-tag]'); if (!pick) return; b.place = PLACES.find(place => place.tag === pick.dataset.tag); b.what = b.place.what[0]; drawB(); });
+document.getElementById('b-what').addEventListener('click', event => { const pick = event.target.closest('[data-what]'); if (pick) { b.what = pick.dataset.what; drawB(); } });
+document.getElementById('b-when').addEventListener('click', event => { const pick = event.target.closest('[data-when]'); if (pick) { b.when = pick.dataset.when; drawB(); } });
+document.getElementById('b-post').addEventListener('click', () => { const done = document.getElementById('b-done'); done.textContent = `Posted: ${b.what}, ${b.when.toLowerCase()} @${b.place.tag}. ${b.place.who.replace(/^.*· /, '')} will see it first.`; done.classList.add('show'); });
+drawB();
+
+/* C: agree, or go first */
+document.getElementById('c-body').addEventListener('click', event => {
+  const card = event.target.closest('.want'); if (!card) return;
+  const count = card.querySelector('[data-n]');
+  if (event.target.closest('[data-me]')) { const me = event.target.closest('[data-me]'), on = me.classList.toggle('on'); me.textContent = on ? 'You want this' : 'Me too'; count.textContent = Number(count.textContent) + (on ? 1 : -1); }
+  if (event.target.closest('[data-start]')) card.classList.add('mine');
+  if (event.target.closest('.when .pill')) { card.querySelectorAll('.when .pill').forEach(pill => pill.classList.remove('on')); event.target.closest('.pill').classList.add('on'); }
+  if (event.target.closest('[data-post]')) { const done = document.getElementById('c-done'); done.textContent = `Posted. The ${count.textContent} people who wanted it are told, and you are in.`; done.classList.add('show'); done.scrollIntoView({ block: 'nearest' }); }
+});
+document.getElementById('c-add').addEventListener('click', () => {
+  const input = document.getElementById('c-say'), text = input.value.trim(); if (!text) return;
+  const html = text.replace(/[<>&]/g, '').replace(/@([a-z0-9-]+)/gi, '<span class="tag">@$1</span>');
+  document.querySelector('#c-body .h').insertAdjacentHTML('afterend', `<div class="card want"><p>${html}</p><div class="foot"><span class="sub"><b data-n>1</b> wants this · you</span></div><div class="foot start"><button class="go sm" data-start>Start it</button></div><div class="foot when"><span class="pills"><button class="pill on">Tonight</button><button class="pill">Tomorrow</button></span></div><div class="foot when"><button class="go sm" data-post>Post it</button></div></div>`);
+  input.value = '';
+});
+// Open in the state that shows the difference: the first want already started.
+document.querySelector('#c-body .want [data-start]').click();
+</script>
+</body>
+</html>

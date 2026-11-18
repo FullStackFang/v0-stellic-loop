@@ -3,6 +3,9 @@
    Every class starts with cs- and every rule sits under .cs, so nothing here reaches the groups site and app/loop.css is untouched. */
 @keyframes cs-pop { from { transform: scale(.2); opacity: 0; } }
 @keyframes cs-ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.55); opacity: 0; } }
+@keyframes cs-grow { from { transform: scaleX(0); } }
+@keyframes cs-beckon { from { transform: scale(1); opacity: .9; } 40%, to { transform: scale(1.75); opacity: 0; } }
+@keyframes cs-turn { from { transform: rotate(0); } 30%, to { transform: rotate(180deg); } }
 @keyframes cs-in { from { opacity: 0; transform: translateY(14px); } }
 @keyframes cs-side { from { clip-path: inset(0 100% 0 0); transform: translateX(-18px); } to { clip-path: inset(0 -12px -12px 0); } }
 @keyframes cs-card { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
@@ -342,6 +345,44 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-form .from .row { display: flex; gap: 8px; } .cs-form .from .row input { flex: 1; min-width: 0; } .cs-form .from .row .cs-btn { height: 38px; }
 .cs-form .kept { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13px; } .cs-form .kept span { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
 .cs-form .kept button { font-size: 13px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
+/* posting in one line (design D12) */
+.cs-line { display: grid; gap: 12px; }
+.cs-line-card { display: grid; gap: 8px; padding: 16px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
+.cs-line-card h2, .cs-line-label { font-size: 12px; font-weight: 640; text-transform: uppercase; letter-spacing: .06em; color: var(--cs-mute); } .cs-line-card h2 b { color: var(--cs-action); text-transform: none; letter-spacing: 0; font-size: 13.5px; }
+.cs-say { width: 100%; border: 0; padding: 0; resize: none; background: none; font: inherit; font-size: 22px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; color: var(--cs-ink); outline: none; }
+.cs-say::placeholder { color: color-mix(in oklch, var(--cs-ink) 32%, transparent); }
+.cs-line-card:focus-within { box-shadow: 5px 5px 0 var(--cs-field-shadow), 0 0 0 1.5px var(--cs-ink) inset; }
+.cs-read { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 44px; padding-top: 10px; border-top: 1px dashed var(--cs-line); }
+.cs-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 32px; padding: 4px 12px; border-radius: 16px; font-size: 13.5px; font-weight: 600; line-height: 1.2; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); overflow-wrap: anywhere; }
+.cs-chip.when { background: var(--cs-field); } .cs-chip.place { background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs-chip button { font-size: 12.5px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
+.cs-chip-hint { font-size: 13px; color: var(--cs-mute); }
+/* each place has a bar behind its name, as long as the place is busy next to the busiest one */
+.cs-sug { display: grid; gap: 4px; } .cs-sug button { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; border-radius: 12px 12px 12px 4px; }
+.cs-sug button[style]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: max(10px, calc(var(--fill) * 100%)); border-radius: inherit; background: color-mix(in oklch, var(--cs-action) 14%, transparent); transform-origin: left; animation: cs-grow .6s var(--cs-expo) backwards; transition: width .4s var(--cs-expo), background-color .15s; }
+.cs-sug button[style]:hover::before { background: color-mix(in oklch, var(--cs-action) 24%, transparent); } .cs-sug button > span { position: relative; }
+/* on a bar the words are ink, not the paler blue and grey */
+.cs-sug button[style] b { color: var(--cs-ink); font-weight: 720; } .cs-sug button[style] small { color: color-mix(in oklch, var(--cs-ink) 78%, transparent); font-weight: 540; }
+.cs-sug button:hover b { text-decoration: underline; text-underline-offset: 3px; } .cs-sug b { font-weight: 680; color: var(--cs-action); } .cs-sug b.new { color: var(--cs-ink); } .cs-sug small { display: block; font-size: 12.5px; color: var(--cs-mute); }
+.cs-mini { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); } .cs-line-card h2 + .cs-mini { border-top: 0; }
+.cs-mini time { flex: none; width: 58px; padding: 6px 0; border-radius: 10px 10px 10px 3px; background: var(--cs-field); text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.15; }
+.cs-mini div { flex: 1; min-width: 0; } .cs-mini div b { display: block; font-weight: 640; } .cs-mini div span { font-size: 12.5px; color: var(--cs-mute); }
+.cs-line-end { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .cs-line-end .cs-note { flex: 1; min-width: 160px; }
+.cs-line-bad { font-size: 14px; font-weight: 580; color: var(--cs-action); }
+.cs-at { margin-right: 7px; font-weight: 660; color: var(--cs-action); }
+/* the "+" that starts a plan sits in the line above the row; its panel opens in the row, the line beside what others are doing */
+.cs-tally { display: inline-flex; align-items: center; gap: 11px; min-width: 0; padding: 5px 20px 5px 5px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-tally h2 { font-size: 17px; }
+.cs .cs-plus { position: relative; flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-action); color: var(--cs-paper); transition: transform .2s var(--cs-ease), background-color .15s; }
+/* it asks to be pressed: a ring leaves it and the cross turns, then it rests; still once the panel is open */
+.cs-plus::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--cs-action); opacity: 0; animation: cs-beckon 3.2s var(--cs-expo) 1s infinite; }
+.cs-plus svg { animation: cs-turn 3.2s var(--cs-expo) 1s infinite; } .cs-plus[aria-expanded=true]::after, .cs-plus[aria-expanded=true] svg { animation: none; }
+.cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
+.cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
+.cs-sheet.cs-post { flex-basis: min(780px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
+.cs-post-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 10px; }
+.cs-post .cs-line { align-content: start; } .cs-post .cs-line-card, .cs-post .cs-line-card:focus-within { padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.cs-post-side { display: grid; gap: 16px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
 .cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
 .cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
 .cs-schools { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -368,6 +409,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-plain { padding: 24px 16px 48px; } .cs-adm { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 48px; } .cs-adm .cs-form .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); }
   .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
   .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
+  .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }
   .cs-ev { flex-basis: 260px; } .cs-lvl { position: fixed; right: 14px; top: 64px; }
 }
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }

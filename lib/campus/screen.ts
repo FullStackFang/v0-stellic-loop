@@ -7,6 +7,7 @@ import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
 import { animal, animalOf, PHOTO } from './animals';
 import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
 import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Reward } from './rewards';
+import { nearTags } from './tags';
 import { checkInOpen, dayLabel, endOf, localParts, timeLabel } from './time';
 import type { Coupon, Face, Live, Screen, Seat, Stub, Ticket } from './view';
 
@@ -160,8 +161,8 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
       ends: listing.endsAt ? `until ${timeLabel(tz, listing.endsAt)}` : null, source: listing.source,
       // Who posted a plan is for signed-in people only.
       by: listing.origin === 'member' ? (me && listing.postedBy ? `Posted by ${names.get(listing.postedBy)?.first ?? 'Someone'}` : null) : listing.host,
-      place: listing.placeText ?? listing.place?.name ?? null, about: listing.about, link: listing.link, map: listing.place,
-      words: [...listing.words, ...timeWords(tz, listing.startsAt, now)],
+      place: listing.placeText ?? listing.place?.name ?? null, about: listing.about, link: listing.link, tag: listing.tag, map: listing.place,
+      words: [...listing.words, ...timeWords(tz, listing.startsAt, now), ...(listing.tag ? [listing.tag] : [])],
       pull: (mine || picked.outing && invited.has(picked.outing.id) ? 4 : 0) + Math.min(knownGoing.length, 2) + (stub.kind === 'none' ? 0 : 2) + (short ? 2 : 0) + (today ? 1 : 0),
       going: listing.going, stub, how,
       known: knownGoing.map(member => ({ ...face(member.personId, { here: member.here }), why: known.get(member.personId)! })),
@@ -187,6 +188,6 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   return {
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
     viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
-    tickets, earning, live,
+    tickets, earning, live, places: me ? await nearTags(db, campus.id, known, now) : [],
   };
 }

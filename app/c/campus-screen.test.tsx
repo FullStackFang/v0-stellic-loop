@@ -20,6 +20,8 @@ import OutingLinkPage from '../o/[token]/page';
 
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-screen, outings ("Who sees whom"), member-levels, campus-search.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// The posting panel refreshes the list with the router, which a test render does not mount.
+vi.mock('next/navigation', async original => ({ ...(await original<typeof import('next/navigation')>()), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 let t: TestDb, cornell: Campus;
 beforeAll(async () => { t = await openTestDb(); });
@@ -63,8 +65,8 @@ describe('signed out', () => {
     expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
     expect(screen.getByText('Skip the door')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Sign in' })[0]).toHaveAttribute('href', '/sign-in?redirect_url=%2Fc%2Fcornell');
-    // Posting needs sign-in: the link leads to the form, which sends a signed-out visitor to sign in and back.
-    expect(screen.getByRole('link', { name: 'Post a plan' })).toHaveAttribute('href', '/c/cornell/post');
+    // Posting needs sign-in: for a signed-out visitor the "+" leads to sign-in and back.
+    expect(screen.getByRole('link', { name: 'Post a plan' })).toHaveAttribute('href', '/sign-in?redirect_url=%2Fc%2Fcornell');
     // Nobody is named: not the people going, not who posted a plan.
     for (const name of ['Ben', 'Okafor', 'Zebediah', 'Ana', 'Posted by']) expect(container.innerHTML).not.toContain(name);
     expect(container.innerHTML).not.toContain(ana.personId);
@@ -305,13 +307,13 @@ describe('the pages', () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('cornell')));
     expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Post a plan' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
     // Another school's address sends them back to the default one.
     await expect(withPortalTestSession(outsider, () => page('columbia'))).rejects.toEqual(sentTo('/c/cornell'));
     cleanup();
     vi.stubEnv('LOOP_ADMIN', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('columbia')));
-    expect(screen.getByRole('link', { name: 'Post a plan' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
   });
   it('an unknown share link is not found, and a real one opens its event', async () => {
     const { zebs } = await world();
@@ -319,17 +321,16 @@ describe('the pages', () => {
     render(await linked(zebs.token));
     expect(screen.getAllByRole('link', { name: 'Join' })[0]).toHaveAttribute('href', `/sign-in?redirect_url=${encodeURIComponent(`/o/${zebs.token}`)}`);
   });
-  it('the post form needs sign-in, and lets only the poster change a plan', async () => {
+  it('the post page is only for changing a plan: it needs sign-in, and only the poster may', async () => {
     const { ana, ben } = await world(), post = (plan?: string) => PostPlanPage({ params: Promise.resolve({ campus: 'cornell' }), searchParams: Promise.resolve(plan ? { plan } : {}) });
-    await expect(post()).rejects.toEqual(sentTo('/sign-in?redirect_url=%2Fc%2Fcornell%2Fpost'));
-    render(await withPortalTestSession(ana, () => post()));
-    expect(screen.getByRole('heading', { level: 1, name: 'Post a plan' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Post it' })).toBeInTheDocument();
-    cleanup();
+    // Posting a new plan is the "+" on This week, so the bare address leads there.
+    await expect(post()).rejects.toEqual(sentTo('/c/cornell'));
+    await expect(withPortalTestSession(ana, () => post())).rejects.toEqual(sentTo('/c/cornell'));
     const plan = await postPlan(t.db, ana.personId, cornell, { title: 'Sunset run', starts: new Date(Date.now() + 26 * 3600000).toISOString().slice(0, 16) });
     render(await withPortalTestSession(ana, () => post(plan.id)));
     expect(screen.getByRole('textbox', { name: 'What is the plan?' })).toHaveValue('Sunset run');
     expect(screen.getByRole('button', { name: 'Cancel this plan' })).toBeInTheDocument();
+    await expect(post(plan.id)).rejects.toEqual(sentTo(`/sign-in?redirect_url=${encodeURIComponent(`/c/cornell/post?plan=${plan.id}`)}`));
     await expect(withPortalTestSession(ben, () => post(plan.id))).rejects.toMatchObject({ digest: expect.stringContaining('404') });
   });
   it('the admin page is for the admin alone', async () => {

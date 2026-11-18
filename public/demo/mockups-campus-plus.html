@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where posting lives on This week · three directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<!-- The app's own stylesheet (app/c/campus.css), copied in when this mockup was made, so the screens below are the real look. -->
+<style>/* The campus screen ("This week"), ported from screen 1 of public/demo/mockups-campus-usecases.html.
+   Its own stylesheet and its own tokens, named by role (design D18), so the colours are set in one place once they are picked.
+   Every class starts with cs- and every rule sits under .cs, so nothing here reaches the groups site and app/loop.css is untouched. */
+@keyframes cs-pop { from { transform: scale(.2); opacity: 0; } }
+@keyframes cs-ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.55); opacity: 0; } }
+@keyframes cs-grow { from { transform: scaleX(0); } }
+@keyframes cs-beckon { from { transform: scale(1); opacity: .9; } 40%, to { transform: scale(1.75); opacity: 0; } }
+@keyframes cs-turn { from { transform: rotate(0); } 30%, to { transform: rotate(180deg); } }
+@keyframes cs-in { from { opacity: 0; transform: translateY(14px); } }
+@keyframes cs-side { from { clip-path: inset(0 100% 0 0); transform: translateX(-18px); } to { clip-path: inset(0 -12px -12px 0); } }
+@keyframes cs-card { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
+@keyframes cs-fill { from { clip-path: inset(0 100% 0 0 round 99px); } }
+
+/* globals.css frames the body as a phone on wide windows. The campus screen takes the whole window. */
+body:has(.cs) { display: block; place-items: normal; padding: 0; background: oklch(96.2% 0.004 230); }
+
+.cs {
+  /* Roles. The values are the mockup's "Lime 1" option until the founder picks (tasks 1.2). */
+  --cs-field: oklch(96.4% 0.19 117);          /* top bar, time tiles, the stub of a ticket with a reward */
+  --cs-field-shadow: oklch(80% 0.17 121);     /* the hard shadow under tickets and coupons */
+  --cs-ink: oklch(25% 0.07 252);              /* type, outlines, the selected pill, the ready coupon */
+  --cs-ink-2: oklch(35.4% 0.095 252);
+  --cs-action: oklch(47.6% 0.13 250);         /* the one main button on a ticket, "Post a plan" */
+  --cs-action-hover: oklch(54% 0.14 250);
+  --cs-action-deep: oklch(35.4% 0.095 252);
+  --cs-paper: oklch(99.3% 0.004 117);         /* ticket face */
+  --cs-page: oklch(96.2% 0.004 230);          /* page background */
+  --cs-line: oklch(90.6% 0.008 240);
+  --cs-mute: oklch(46.5% 0.012 245);
+  --cs-on-ink: oklch(99.4% 0.003 230);
+  --cs-on-ink-mute: oklch(82% 0.02 245);
+  --cs-on-field-2: color-mix(in oklch, var(--cs-ink) 74%, var(--cs-field));
+  --cs-stub: color-mix(in oklch, var(--cs-field) 32%, var(--cs-paper));
+  --cs-r: 22px 22px 22px 6px; --cs-ease: cubic-bezier(.22, 1, .36, 1); --cs-expo: cubic-bezier(.16, 1, .3, 1);
+  display: flex; flex-direction: column; min-height: 100dvh; overflow-x: clip;
+  font-family: var(--font-archivo), Archivo, system-ui, sans-serif; font-variation-settings: normal; font-size: 15px; line-height: 1.45; letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--cs-page); color: var(--cs-ink);
+}
+/* Resets carry no weight of their own (:where), so any cs- class can set these again. */
+.cs *, .cs *::before, .cs *::after { box-sizing: border-box; }
+:where(.cs) button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; border: 0; background: none; padding: 0; opacity: 1; }
+:where(.cs) :is(h1, h2, h3, h4, p, ul, ol, figure) { margin: 0; padding: 0; } :where(.cs) :is(ul, ol) { list-style: none; }
+:where(.cs) a { color: inherit; text-decoration: none; }
+.cs :focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+.cs [hidden] { display: none !important; }
+.cs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* top bar: one line */
+.cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); border-bottom: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding: 0 20px 0 0; --lime: var(--cs-action); }
+.cs-wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
+.cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
+.cs-links { display: flex; gap: 2px; min-width: 0; }
+.cs-links a { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 99px; font-size: 14.5px; font-weight: 500; white-space: nowrap; }
+.cs-links a:hover { background: color-mix(in oklch, var(--cs-ink) 8%, transparent); }
+.cs-links a[aria-current] { background: var(--cs-ink); color: var(--cs-field); font-weight: 600; }
+.cs-links a:has(i) { padding: 6px 12px 6px 6px; }
+.cs-links i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; flex: none; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--cs-paper); background: linear-gradient(135deg, var(--cs-action), var(--cs-action-hover) 60%, var(--cs-action-deep)); }
+.cs-nav-end { margin-left: auto; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.cs-live { display: flex; align-items: baseline; gap: 10px; padding: 6px 8px 6px 14px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); }
+.cs-live small { font-size: 12.5px; font-weight: 560; } .cs-live b { font-size: 16px; font-weight: 720; letter-spacing: -0.03em; } .cs-live time { font-size: 13px; font-weight: 600; }
+.cs-live button { align-self: center; height: 28px; padding: 0 12px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-size: 13px; font-weight: 620; }
+.cs-live.used { padding-right: 14px; background: var(--cs-ink); box-shadow: none; }
+
+/* faces: a photo, or initials on a quiet disc */
+.cs-face { border-radius: 50%; object-fit: cover; background: color-mix(in oklch, var(--cs-ink) 14%, var(--cs-paper)); width: 32px; height: 32px; flex: none; display: grid; place-items: center; font-size: 12.5px; font-weight: 680; font-style: normal; color: var(--cs-ink); line-height: 1; overflow: hidden; }
+.cs-stack { display: flex; --ring: var(--cs-paper); }
+.cs-stack .cs-face { width: 26px; height: 26px; font-size: 11px; margin-left: -7px; box-shadow: 0 0 0 2px var(--ring); }
+.cs-stack .cs-face:first-child { margin-left: 0; }
+
+.cs-tile { display: grid; justify-items: center; align-content: center; flex: none; line-height: 1; min-width: 48px; min-height: 48px; padding: 6px 6px 7px; border-radius: 12px 12px 12px 3px; background: var(--cs-field); color: var(--cs-ink); }
+.cs-tile small { font-size: 11px; font-weight: 600; } .cs-tile b { font-weight: 640; font-size: 18px; margin-top: 2px; display: block; white-space: nowrap; }
+.cs-tile.met { background: var(--cs-action); color: var(--cs-paper); }
+.cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; font-weight: 580; white-space: nowrap; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink) inset; transition: background-color .15s, transform .15s var(--cs-ease); }
+.cs .cs-btn:hover { background: color-mix(in oklch, var(--cs-ink) 6%, var(--cs-paper)); }
+.cs .cs-btn.go { background: var(--cs-action); color: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 3px 3px 0 var(--cs-ink); }
+.cs .cs-btn.go:hover { background: var(--cs-action-hover); }
+.cs .cs-btn.go:active { transform: translate(2px, 2px); }
+.cs .cs-btn:disabled { opacity: .6; cursor: default; }
+.cs-btn.sm { height: 36px; }
+.cs-pill { font-size: 12.5px; font-weight: 560; padding: 3px 10px; border-radius: 99px; background: var(--cs-page); color: var(--cs-mute); white-space: nowrap; }
+.cs-pill.hot { background: var(--cs-field); color: var(--cs-ink); } .cs-pill.yes { background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs-pill.src { display: inline-block; margin-right: 7px; padding: 1px 8px 2px; font-size: 11.5px; font-weight: 620; color: var(--cs-ink); background: transparent; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-gauge { width: 54px; height: 54px; flex: none; transform: rotate(-90deg); }
+.cs-gauge circle { fill: none; stroke-width: 5; stroke: var(--cs-line); } .cs-gauge circle.lit { stroke: var(--cs-ink); }
+.cs-note { font-size: 13px; color: var(--cs-mute); }
+.cs-alert { margin: 0 0 10px; padding: 9px 16px; border-radius: 12px 12px 12px 4px; background: var(--cs-ink); color: var(--cs-on-ink); font-size: 14px; font-weight: 540; }
+
+/* the page under the bar takes the height the window has left */
+.cs-main { flex: 1; display: flex; flex-direction: column; width: 100%; padding: 14px 32px 24px; }
+.cs-fill { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.cs-ask { display: flex; align-items: center; gap: 12px 18px; flex-wrap: wrap; margin-bottom: 14px; }
+.cs-ask input { flex: 1 1 320px; min-width: 0; height: 52px; padding: 0 24px; border: 0; border-radius: 99px; font: inherit; font-size: 18px; font-weight: 520; letter-spacing: -0.02em; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-ask input::placeholder { color: var(--cs-mute); } .cs-ask input:focus-visible { outline: 3px solid var(--cs-action); outline-offset: 2px; }
+.cs-tabs { display: flex; gap: 4px; flex: none; }
+.cs-tabs button { padding: 6px 14px; border-radius: 99px; font-weight: 540; color: var(--cs-mute); }
+.cs-tabs button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); }
+.cs-count { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 10px; flex-wrap: wrap; }
+:where(.cs) h2 { font-size: 20px; font-weight: 660; letter-spacing: -0.03em; line-height: 1.2; font-variation-settings: normal; text-transform: none; }
+.cs-says { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .cs-says small { font-size: 13px; color: var(--cs-mute); margin-right: 4px; }
+.cs-opt { height: 36px; padding: 0 14px; border-radius: 99px; background: var(--cs-field); font-weight: 560; font-size: 14px; white-space: nowrap; }
+.cs-says .cs-opt { height: 30px; padding: 0 12px; font-size: 13.5px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs-says .cs-opt:hover, .cs-says .cs-opt[aria-pressed=true] { background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+
+/* the row of tickets */
+.cs-evs { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 330px; }
+.cs-railwrap { position: relative; display: flex; margin: -6px -16px -6px -6px; }
+.cs-rail { flex: 1; min-width: 0; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-left: 6px; padding: 6px 16px 16px 6px; scrollbar-width: none; } .cs-rail::-webkit-scrollbar { display: none; }
+.cs-rgo { position: absolute; top: calc(50% - 26px); width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-ink); color: var(--cs-field); box-shadow: 3px 3px 0 var(--cs-action); transition: transform .2s var(--cs-ease); }
+.cs .cs-rgo { background: var(--cs-ink); color: var(--cs-field); } .cs-rgo:hover { transform: scale(1.08); }
+.cs-rgo svg { width: 18px; height: 18px; } .cs-rgo.l { left: -26px; } .cs-rgo.l svg { transform: rotate(90deg); } .cs-rgo.r { right: -6px; } .cs-rgo.r svg { transform: rotate(-90deg); }
+.cs-then { flex: 0 0 58px; display: grid; align-content: center; justify-items: center; gap: 10px; border-radius: 99px; border: 1.5px dashed color-mix(in oklch, var(--cs-ink) 45%, transparent); color: var(--cs-on-field-2); }
+.cs-then b { font-stretch: 108%; font-size: 24px; font-weight: 720; letter-spacing: -0.04em; color: var(--cs-ink); } .cs-then span { writing-mode: vertical-rl; font-size: 13.5px; font-weight: 580; white-space: nowrap; }
+.cs-nothing { align-self: start; width: min(480px, 100%); overflow: hidden; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); animation: cs-in .4s var(--cs-expo); }
+.cs-nothing-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; padding: 20px 22px; }
+.cs-nothing-top .cs-tile { min-width: 64px; min-height: 60px; padding: 6px 10px 7px; }
+.cs-nothing h3 { font-size: 22px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.1; } .cs-nothing p { margin-top: 3px; font-size: 14px; color: var(--cs-mute); }
+.cs-nothing-stub { padding: 12px 22px 14px; background: var(--cs-stub); border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-nothing-stub small { display: block; font-size: 13.5px; font-weight: 580; color: var(--cs-on-field-2); }
+
+.cs-ev { --cut: 10px; --lift: 5px; flex: 0 0 286px; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--cs-r); filter: drop-shadow(var(--lift) var(--lift) 0 var(--cast, var(--cs-field-shadow))); transition: transform .22s var(--cs-ease), filter .22s var(--cs-ease); }
+.cs-evs.in .cs-ev, .cs-evs.in .cs-then { animation: cs-in .45s var(--cs-expo) backwards; animation-delay: calc(var(--i) * 45ms); }
+.cs-ev.open { --cast: var(--cs-ink); transform: translate(-2px, -2px); --lift: 7px; }
+.cs-ev:has(.cs-mech.near, .cs-mech.met) { --cast: var(--cs-ink); }
+.cs-ev:not(.open):hover { --lift: 8px; transform: translate(-3px, -3px); }
+.cs-top { flex: none; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 16px; background: var(--cs-paper); cursor: pointer; }
+.cs-top:has(+ .cs-mech:not(.none)) { -webkit-mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-top .cs-body { grid-column: 1 / -1; grid-row: 2; min-height: 66px; min-width: 0; } .cs-top .cs-more { grid-column: 2; grid-row: 1; justify-self: end; }
+.cs-top > .cs-tile { min-width: 58px; min-height: 58px; }
+.cs-more { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 11px 0 15px; border-radius: 99px; font-size: 14px; font-weight: 580; box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: background-color .15s, color .15s; }
+.cs .cs-top:hover .cs-more, .cs .cs-more[aria-expanded=true] { background: var(--cs-ink); color: var(--cs-field); }
+.cs-more svg { width: 15px; height: 15px; transition: transform .35s var(--cs-expo); } .cs-more[aria-expanded=true] svg { transform: rotate(180deg); }
+.cs-ev h3 { font-size: 20px; font-weight: 660; letter-spacing: -0.032em; line-height: 1.15; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cs-body > p { font-size: 13.5px; color: var(--cs-mute); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cs-mech { position: relative; flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 15px 16px 16px; background: var(--cs-stub); cursor: pointer; }
+.cs-mech:not(.none) { -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-mech:not(.none)::before { content: ''; position: absolute; top: -1px; left: 18px; right: 18px; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-what { order: -1; min-width: 0; } .cs-what small { display: block; font-size: 12px; font-weight: 620; color: var(--cs-on-field-2); margin-bottom: 2px; } .cs-what b { display: block; font-size: 18px; font-weight: 680; letter-spacing: -0.03em; line-height: 1.18; overflow-wrap: anywhere; } .cs-what span { display: block; margin-top: 3px; font-size: 13.5px; font-weight: 540; color: var(--cs-on-field-2); }
+.cs-act { display: flex; align-items: center; gap: 8px; margin-top: auto; } .cs-act .cs-btn { flex: 1; } .cs-act .cs-pill { flex: 1; text-align: center; padding: 9px 10px; }
+.cs-mech > .cs-stack { align-self: flex-start; } .cs-mech .cs-stack { --ring: var(--cs-stub); }
+.cs-mech.near { background: var(--cs-field); } .cs-mech.near .cs-what span { color: var(--cs-ink); font-weight: 640; }
+.cs-mech.met { background: var(--cs-action); color: var(--cs-paper); } .cs-mech.met .cs-what span, .cs-mech.met .cs-what small { color: var(--cs-paper); } .cs .cs-mech.met .cs-btn.go { background: var(--cs-paper); color: var(--cs-ink); }
+.cs-mech.none { background: var(--cs-paper); box-shadow: inset 0 1px 0 var(--cs-line); } .cs-mech.none .cs-what { order: 0; } .cs-mech.none .cs-what span { color: var(--cs-mute); font-weight: 480; margin: 0; } .cs-mech.none .cs-stack { --ring: var(--cs-paper); }
+.cs-seats { display: flex; gap: 5px; flex: none; flex-wrap: wrap; } .cs-seats .cs-face, .cs-seat { width: 34px; height: 34px; }
+.cs-seats .cs-face.here { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+.cs-seat { position: relative; display: block; border-radius: 50%; border: 1.5px dashed var(--cs-ink); opacity: .55; } .cs-seat.next { opacity: 1; }
+/* a seat taken by someone the viewer does not know: filled, with no face */
+.cs-seat.taken { border-style: solid; opacity: 1; background: color-mix(in oklch, var(--cs-ink) 22%, transparent); } .cs-seat.taken.here { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+.cs-mech.near .cs-seat.next::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--cs-action); animation: cs-ping 1.6s var(--cs-expo) infinite; }
+.cs-pips { display: flex; gap: 4px; flex: none; flex-wrap: wrap; } .cs-pips i { width: 14px; height: 30px; border-radius: 5px 5px 5px 2px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); opacity: .4; } .cs-pips i.lit { background: var(--cs-ink); opacity: 1; } .cs-pips i.next { opacity: 1; background: repeating-linear-gradient(135deg, transparent 0 3px, var(--cs-action) 3px 5px); }
+
+/* the panel: unfolds to the right of its ticket, inside the row */
+.cs-sheet { flex: 0 0 min(660px, calc(100vw - 32px)); display: flex; flex-direction: column; overflow-y: auto; padding: 14px 20px 16px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-ink); cursor: default; }
+.cs-sheet.fresh { animation: cs-side .5s var(--cs-expo); }
+.cs-sheet-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; } .cs-sheet-top h3 { font-size: 20px; font-weight: 660; letter-spacing: -0.032em; }
+.cs-regp { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); grid-template-rows: 1fr auto; gap: 12px 24px; align-items: stretch; padding-top: 8px; }
+.cs-regp.wide { grid-template-columns: minmax(0, 1fr); }
+.cs-regd { align-self: start; min-width: 0; } .cs-regd > p { font-size: 15.5px; max-width: 52ch; margin-bottom: 6px; white-space: pre-line; overflow-wrap: anywhere; }
+.cs-regd > p.how { font-size: 13.5px; color: var(--cs-mute); margin: 0; max-width: 64ch; } .cs-regd > p.how b { color: var(--cs-action); font-weight: 640; margin-right: 6px; }
+.cs-facts { display: flex; flex-wrap: wrap; gap: 10px 26px; margin: 12px 0 0; font-size: 13px; line-height: 1.3; color: var(--cs-mute); } .cs-facts li.who { display: flex; align-items: center; gap: 8px; } .cs-facts li.who .cs-face { width: 30px; height: 30px; }
+.cs-facts li b { display: block; font-size: 14px; font-weight: 600; color: var(--cs-ink); }
+.cs-map { overflow: hidden; display: grid; grid-template-rows: minmax(104px, 1fr) auto; border-radius: 16px 16px 16px 5px; box-shadow: 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); background: var(--cs-paper); margin: 0 4px 4px 0; }
+.cs-map iframe { display: block; width: 100%; height: 100%; border: 0; }
+.cs-map figcaption { padding: 6px 12px 7px; font-size: 13px; color: var(--cs-mute); border-top: 1.5px solid var(--cs-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cs-map figcaption b { font-size: 14px; font-weight: 600; color: var(--cs-ink); margin-right: 6px; }
+.cs-regact { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; padding: 0 4px 4px 0; } .cs-regact small { flex: 1 1 260px; font-size: 13px; color: var(--cs-mute); } .cs-regact:empty { display: none; }
+.cs-regact .quiet { font-size: 13.5px; font-weight: 580; text-decoration: underline; text-underline-offset: 3px; }
+.cs-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; }
+.cs-opts small { flex-basis: 100%; font-size: 12.5px; color: var(--cs-mute); }
+.cs-field { height: 36px; padding: 0 14px; display: inline-flex; align-items: center; min-width: 190px; max-width: 100%; overflow: hidden; white-space: nowrap; border-radius: 12px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); color: var(--cs-mute); font-size: 14px; }
+.cs-who2 { height: 46px; display: inline-flex; align-items: center; gap: 9px; padding: 0 14px 0 6px; border-radius: 99px; text-align: left; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); transition: background-color .15s, color .15s; }
+.cs-who2:hover { box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-who2 .cs-face { width: 34px; height: 34px; }
+.cs-who2 span { font-size: 12px; font-weight: 440; color: var(--cs-mute); line-height: 1.25; } .cs-who2 span b { display: block; font-size: 14px; font-weight: 600; color: var(--cs-ink); }
+.cs-who2 em { font-style: normal; font-size: 13px; font-weight: 640; color: var(--cs-action); margin-left: 6px; }
+.cs .cs-who2[aria-pressed=true] { background: var(--cs-ink); box-shadow: none; } .cs-who2[aria-pressed=true] span, .cs-who2[aria-pressed=true] em { color: var(--cs-field); } .cs-who2[aria-pressed=true] span b { color: var(--cs-paper); }
+
+/* under the row: rewards you are earning */
+.cs-shelf { display: flex; flex-direction: column; margin-top: 12px; } .cs-shelf h2 { margin-bottom: 10px; }
+.cs-coupons { padding: 0 5px 5px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.cs-coupons li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 14px 20px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 4px 4px 0 var(--cs-field-shadow); line-height: 1.25; }
+.cs-coupons small { display: block; font-size: 12.5px; font-weight: 560; color: var(--cs-mute); }
+.cs-coupons b { display: block; font-stretch: 108%; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; margin: 2px 0; overflow-wrap: anywhere; } .cs-coupons span { font-size: 13.5px; color: var(--cs-mute); }
+.cs-coupons .ready { background: var(--cs-ink); color: var(--cs-paper); box-shadow: 4px 4px 0 var(--cs-action); } .cs-coupons .ready small, .cs-coupons .ready span { color: var(--cs-on-ink-mute); } .cs-coupons .ready .cs-gauge circle.lit { stroke: var(--cs-field); } .cs-coupons .ready .cs-gauge circle { stroke: color-mix(in oklch, var(--cs-on-ink) 22%, transparent); }
+.cs .cs-coupons .ready button { font-size: 13px; font-weight: 640; padding: 6px 13px; border-radius: 99px; background: var(--cs-field); color: var(--cs-ink); }
+.cs-coupons .show { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid color-mix(in oklch, var(--cs-on-ink) 22%, transparent); } .cs-coupons .show time { font-weight: 640; }
+
+/* level: a badge on the avatar, and the card under it */
+.cs-acct { position: relative; display: flex; align-items: center; }
+.cs-ava { position: relative; flex: none; display: block; }
+.cs-ava .cs-face { width: 38px; height: 38px; }
+.cs-lvb { position: absolute; right: -5px; bottom: -4px; min-width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; font-size: 11.5px; font-weight: 740; line-height: 1; color: var(--cs-paper); background: var(--cs-action); box-shadow: 0 0 0 2px var(--cs-field); transition: transform .2s var(--cs-ease); }
+.cs-acct > button:hover .cs-lvb { transform: scale(1.14); }
+.cs-ava.big .cs-face { width: 68px; height: 68px; font-size: 24px; }
+.cs-ava.big .cs-lvb { min-width: 26px; height: 26px; font-size: 15px; right: -4px; bottom: -2px; box-shadow: 0 0 0 3px var(--cs-field); }
+.cs-lvl { position: absolute; right: 0; top: calc(100% + 14px); z-index: 30; width: 344px; max-width: calc(100vw - 28px); border-radius: var(--cs-r); overflow: hidden; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 92% 0; animation: cs-card .3s var(--cs-expo); }
+.cs-lvl-top { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; align-items: center; padding: 20px 22px 16px 20px; background: var(--cs-field); }
+.cs-lvl-top strong { display: block; font-stretch: 108%; font-weight: 720; font-size: 22px; letter-spacing: -0.035em; line-height: 1.05; overflow-wrap: anywhere; }
+.cs-lvl-top div > span { font-size: 14px; font-weight: 540; color: var(--cs-on-field-2); }
+.cs-lvbar { grid-column: 1 / -1; position: relative; height: 8px; margin: 8px 7px 0 0; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 16%, transparent); }
+.cs-lvbar i { position: absolute; inset: 0; border-radius: 99px; background: var(--cs-ink); clip-path: inset(0 calc((1 - var(--to)) * 100%) 0 0 round 99px); animation: cs-fill .9s .16s var(--cs-ease) backwards; }
+.cs-lvbar em { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--cs-field); box-shadow: 0 0 0 2px var(--cs-ink) inset; }
+.cs-lvbar em.hit { background: var(--cs-ink); }
+.cs-lvl-top p { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+.cs-lvl-top p b { font-size: 18px; font-weight: 720; } .cs-lvl-top p span + span { font-weight: 600; }
+.cs-lvl-body { padding: 14px 20px 16px; } .cs-lvl-body > p { font-size: 13.5px; color: var(--cs-mute); }
+.cs-lvl-body ul { margin: 10px -10px 0; display: grid; gap: 2px; }
+.cs-lvl-body li { display: grid; grid-template-columns: 24px 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 12px; }
+.cs-lvl-body li.now { background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); }
+.cs-lvl-body li > b { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 740; background: color-mix(in oklch, var(--cs-ink) 10%, transparent); }
+.cs-lvl-body li.now > b { background: var(--cs-action); color: var(--cs-paper); }
+.cs-lvl-body li strong { display: block; font-weight: 620; font-size: 14.5px; } .cs-lvl-body li span { display: block; font-size: 13px; line-height: 1.35; color: var(--cs-mute); }
+.cs-lvl-body li small { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.cs-lvl-more { display: grid; gap: 2px; margin: 12px -10px 0; padding-top: 10px; border-top: 1px solid var(--cs-line); }
+.cs-lvl-more h4 { margin: 0; padding: 0 10px 2px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
+.cs-lvl-more a, .cs-lvl-more button { display: block; width: 100%; text-align: left; padding: 7px 10px; border-radius: 12px; font-size: 14.5px; font-weight: 580; }
+.cs-lvl-more a:hover, .cs-lvl-more button:hover { background: color-mix(in oklch, var(--cs-ink) 7%, transparent); }
+
+/* Kits: one school's colours. Set on the page by <html data-kit>, and on anything inside it by its own data-kit (a swatch of the avatar card, the front door and the tickets stacked on it).
+   No kit, or "loop", is the look above. Each is a light bright field with dark type, and the school's colour as the action. */
+.cs [data-kit="loop"] { --cs-field: oklch(96.4% 0.19 117); --cs-action: oklch(47.6% 0.13 250); --cs-ink: oklch(25% 0.07 252); }
+:root[data-kit="cornell"] .cs, .cs [data-kit="cornell"] { --cs-field: oklch(82% 0.12 38); --cs-field-shadow: oklch(67% 0.13 36); --cs-ink: oklch(24% 0.035 30); --cs-ink-2: oklch(34% 0.05 30); --cs-action: oklch(48.5% 0.185 27); --cs-action-hover: oklch(54% 0.19 27); --cs-action-deep: oklch(38% 0.15 27); }
+:root[data-kit="columbia"] .cs, .cs [data-kit="columbia"] { --cs-field: oklch(87% 0.075 235); --cs-field-shadow: oklch(71% 0.09 240); --cs-ink: oklch(25% 0.06 255); --cs-ink-2: oklch(35% 0.08 255); --cs-action: oklch(46% 0.14 255); --cs-action-hover: oklch(52% 0.15 255); --cs-action-deep: oklch(36% 0.11 255); }
+:root[data-kit="cuny"] .cs, .cs [data-kit="cuny"] { --cs-field: oklch(88% 0.13 88); --cs-field-shadow: oklch(74% 0.14 80); --cs-ink: oklch(24% 0.08 265); --cs-ink-2: oklch(34% 0.1 265); --cs-action: oklch(38% 0.18 264); --cs-action-hover: oklch(45% 0.19 264); --cs-action-deep: oklch(30% 0.14 264); }
+:root[data-kit="nyu"] .cs, .cs [data-kit="nyu"] { --cs-field: oklch(85% 0.09 305); --cs-field-shadow: oklch(69% 0.12 305); --cs-ink: oklch(24% 0.08 305); --cs-ink-2: oklch(34% 0.1 305); --cs-action: oklch(40% 0.2 305); --cs-action-hover: oklch(46% 0.21 305); --cs-action-deep: oklch(30% 0.16 305); }
+/* Mixed in oklab: in oklch a mix with the near-white paper swings through other hues (a violet field gave a peach stub). */
+:root[data-kit]:not([data-kit="loop"]) .cs, .cs [data-kit]:not([data-kit="loop"]) { --cs-stub: color-mix(in oklab, var(--cs-field) 34%, var(--cs-paper)); --cs-on-field-2: color-mix(in oklab, var(--cs-ink) 74%, var(--cs-field)); }
+/* Your picture: one of the front door's animals, or your own photo. */
+.cs-face.pet { object-fit: contain; }
+/* The big picture in the card is the button that opens the picker; the card's body is the picker while it is open. */
+.cs .cs-ava-pick { position: relative; display: block; border-radius: 50%; }
+.cs-ava-pick > i { position: absolute; left: -6px; top: -6px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); transition: transform .15s var(--cs-ease); }
+.cs-ava-pick > i svg { width: 15px; height: 15px; } .cs-ava-pick:hover > i { transform: scale(1.12) rotate(-8deg); }
+.cs-ava .cs-face.new { animation: cs-pop .4s var(--cs-expo); }
+.cs-pets-top { display: flex; align-items: center; gap: 8px; } .cs-pets-top h4 { margin: 0 auto 0 0; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.cs-pets-top .cs-btn svg { width: 15px; height: 15px; }
+.cs-pets-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 14px; }
+.cs .cs-pet { aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 10%, var(--cs-paper)); transition: transform .15s var(--cs-ease); }
+.cs-pet img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .cs-pet.photo img { object-fit: cover; }
+.cs .cs-pet:hover { transform: scale(1.14); }
+.cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+.cs-pets small { display: block; margin-top: 12px; font-size: 11.5px; color: var(--cs-mute); } .cs-pets small a { text-decoration: underline; }
+.cs-kits { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
+.cs-kits h4 { margin: 0 0 6px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
+.cs-kits > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs .cs-kit { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 7px; border-radius: 99px; font-size: 13.5px; font-weight: 580; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs .cs-kit:hover, .cs .cs-kit[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--cs-ink); }
+.cs-kit i { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(var(--cs-action) 36%, var(--cs-field) 40%); box-shadow: 0 0 0 1px color-mix(in oklch, var(--cs-ink) 25%, transparent); }
+
+/* The door: the pitch with a ticket to try, and the sign-in card. .cs-doorway wears the school whose ticket is on top. */
+@keyframes cs-deal { from { opacity: 0; transform: translate(70px, 14px) rotate(5deg) scale(.96); } }
+@keyframes cs-slam { from { opacity: 0; transform: rotate(-22deg) scale(2.2); } }
+@keyframes cs-roll-in { from { transform: translateY(100%); } }
+@keyframes cs-roll-out { to { transform: translateY(-100%); } }
+@keyframes cs-wipe { from { clip-path: circle(0 at var(--cs-vx, 50%) var(--cs-vy, 50%)); } to { clip-path: circle(150vmax at var(--cs-vx, 50%) var(--cs-vy, 50%)); } }
+html.cs-wiping::view-transition-old(root) { animation: none; }
+html.cs-wiping::view-transition-new(root) { animation: cs-wipe .8s cubic-bezier(.16, 1, .3, 1); }
+.cs-doorway { flex: 1; display: flex; flex-direction: column; color: var(--cs-ink); transition: background-color .3s; } .cs-doorway.won { background: var(--cs-field); }
+/* on the door's top bar: one dot per school */
+.cs-dots { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.cs .cs-dots button { position: relative; flex: none; min-width: 16px; height: 16px; border-radius: 99px; background: var(--cs-action); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: transform .2s var(--cs-ease); }
+.cs-dots button::after { content: ''; position: absolute; inset: -9px -5px; }
+.cs .cs-dots button:not([aria-pressed=true]):hover { transform: scale(1.3); }
+.cs .cs-dots button[aria-pressed=true] { height: 34px; padding: 0 15px; background: var(--cs-ink); color: var(--cs-field); box-shadow: 3px 3px 0 var(--cs-action); font-size: 14.5px; font-weight: 640; animation: cs-in .4s var(--cs-expo); }
+.cs-door { flex: 1; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 380px); gap: 32px 48px; align-items: center; padding: 28px 32px 40px; max-width: 1220px; width: 100%; margin: 0 auto; }
+.cs-door h1 { font-stretch: 112%; font-weight: 720; font-size: clamp(44px, 5.4vw, 80px); line-height: .92; letter-spacing: -0.05em; margin-bottom: 14px; } .cs-door h1 > span { display: block; white-space: nowrap; }
+.cs-roll { display: inline-grid; height: 1em; overflow: hidden; vertical-align: bottom; }
+.cs-roll em { grid-area: 1 / 1; height: 1em; line-height: 1; font-style: normal; color: var(--cs-action); animation: cs-roll-in .9s var(--cs-expo); } .cs-roll em.out { animation: cs-roll-out .9s var(--cs-expo) forwards; }
+.cs-door-say > p { font-size: 18px; max-width: 46ch; color: var(--cs-ink-2); margin-bottom: 22px; }
+.cs-door-say > p.cs-tip { max-width: none; margin: 52px 0 0; font-size: 13.5px; font-weight: 560; color: var(--cs-on-field-2); }
+.cs-door-say > p.cs-credit { max-width: none; margin: 4px 0 0; font-size: 12px; color: var(--cs-mute); } .cs-credit a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* the stack: this school's ticket on top, the others behind it, each in its own colours */
+.cs-deck { position: relative; isolation: isolate; width: min(400px, 100%); margin-right: 150px; }
+.cs-dtab { position: absolute; inset: 0; display: grid; justify-items: end; align-content: start; padding: 20px 12px; border-radius: var(--cs-r); background: var(--cs-field); color: var(--cs-ink); box-shadow: 4px 4px 0 var(--cs-field-shadow); z-index: calc(0 - var(--k)); transition: transform .3s var(--cs-ease);
+  transform: translate(calc(var(--k) * (46px + var(--px, 0) * 14px)), calc(var(--k) * (9px + var(--py, 0) * 6px))) rotate(calc(var(--k) * (1.6deg + var(--px, 0) * 1.2deg))); }
+.cs .cs-dtab { background: var(--cs-field); color: var(--cs-ink); }
+.cs-dtab span { writing-mode: vertical-rl; font-weight: 700; font-stretch: 112%; font-size: 17px; letter-spacing: -0.02em; }
+.cs-dtab:hover { transform: translate(calc(var(--k) * 46px + 22px), calc(var(--k) * 9px - 8px)) rotate(calc(var(--k) * 1.6deg + 2.5deg)); }
+.cs-dtk { --cut: 13px; position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--cs-r); cursor: grab; user-select: none; touch-action: pan-y; animation: cs-deal .6s var(--cs-expo) backwards;
+  transform: translate(calc(var(--px, 0) * -9px), calc(var(--py, 0) * -6px)) rotate(calc(var(--px, 0) * -1.6deg)); filter: drop-shadow(calc(7px + var(--px, 0) * 5px) calc(7px + var(--py, 0) * 4px) 0 var(--cs-ink)); transition: transform .3s var(--cs-ease), filter .3s var(--cs-ease); }
+.cs-dtk.drag { cursor: grabbing; animation: none; transition: none; }
+.cs-dtk-top { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; padding: 22px 22px 26px; background: var(--cs-paper); }
+.cs-dtk-top { -webkit-mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-dtk-top .cs-tile { min-width: 76px; min-height: 76px; } .cs-dtk-top .cs-tile b { font-size: 22px; } .cs-dtk-top .cs-tile small { font-size: 13px; }
+.cs-dtk-top h3 { font-size: 28px; font-weight: 680; letter-spacing: -0.04em; line-height: 1.05; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .cs-dtk-top p { font-size: 14px; color: var(--cs-mute); margin-top: 4px; }
+.cs-dtk-stub { position: relative; display: grid; gap: 14px; padding: 22px; background: var(--cs-stub); transition: background-color .3s; -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-dtk-stub::before { content: ''; position: absolute; top: -1px; left: 22px; right: 22px; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-dtk-stub small { display: block; font-size: 13px; font-weight: 620; color: var(--cs-on-field-2); } .cs-dtk-stub strong { display: block; font-size: 25px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.1; overflow-wrap: anywhere; } .cs-dtk-stub em { display: block; font-style: normal; margin-top: 4px; font-weight: 580; color: var(--cs-on-field-2); }
+.cs-dtk-stub.near { background: var(--cs-field); } .cs-dtk-stub.near em { color: var(--cs-ink); }
+.cs-dtk-stub.met { background: var(--cs-action); color: var(--cs-paper); } .cs-dtk-stub.met small, .cs-dtk-stub.met em { color: var(--cs-paper); }
+.cs .cs-dtk-stub .cs-btn { height: 46px; font-size: 16px; font-weight: 620; } .cs .cs-dtk-stub.met .cs-btn.go { background: var(--cs-paper); color: var(--cs-ink); }
+
+/* seats on the ticket: an animal for a seat that is taken, a socket with a plus for one that is free */
+.cs-dseats { display: flex; align-items: center; gap: 8px; }
+.cs-dseat { position: relative; flex: none; width: 44px; height: 44px; border-radius: 50%; }
+.cs-dseat.pet { overflow: hidden; background: color-mix(in oklab, var(--cs-ink) 16%, transparent); } .cs-dseat.new { animation: cs-pop .45s var(--cs-expo); }
+.cs-dseat img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.cs button.cs-dseat { display: grid; place-items: center; color: color-mix(in oklab, var(--cs-ink) 55%, transparent); background: color-mix(in oklab, var(--cs-ink) 9%, transparent); box-shadow: inset 0 2.5px 0 color-mix(in oklab, var(--cs-ink) 20%, transparent), inset 0 0 0 1.5px color-mix(in oklab, var(--cs-ink) 30%, transparent); transition: transform .15s var(--cs-ease), background-color .15s, color .15s; }
+button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; background: linear-gradient(currentColor 0 0) center / 100% 2.5px no-repeat, linear-gradient(currentColor 0 0) center / 2.5px 100% no-repeat; transition: transform .3s var(--cs-expo); }
+.cs button.cs-dseat.next { color: var(--cs-action); background: var(--cs-paper); box-shadow: inset 0 0 0 2px var(--cs-ink), 2px 2px 0 var(--cs-ink); }
+.cs-dseat.next::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--cs-action); animation: cs-ping 1.6s var(--cs-expo) infinite; }
+.cs button.cs-dseat:not(.you):hover { transform: scale(1.1); color: var(--cs-action); background: var(--cs-paper); } button.cs-dseat:not(.you):hover::before { transform: rotate(90deg); }
+.cs button.cs-dseat.you { margin: 0 5px; transform: scale(1.16); background: var(--cs-paper); box-shadow: 0 0 0 2.5px var(--cs-field), 0 0 0 5px var(--cs-action); animation: cs-pop .45s var(--cs-expo); }
+.cs-dseat.you b { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); padding: 1px 7px 2px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); font-size: 10.5px; font-weight: 720; line-height: 1.2; }
+.cs-dseat.you::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2.5px solid var(--cs-action); animation: cs-ping 1s var(--cs-expo) 2 both; }
+.cs .met button.cs-dseat.you { box-shadow: 0 0 0 2.5px var(--cs-action), 0 0 0 5px var(--cs-paper); } .met .cs-dseat.you b { background: var(--cs-paper); color: var(--cs-action); } .met .cs-dseat.you::after { display: none; }
+.met .cs-dseat.pet { background: color-mix(in oklab, var(--cs-paper) 28%, transparent); }
+.cs-stamp { margin-left: auto; padding: 3px 12px 4px; border: 2.5px solid var(--cs-paper); border-radius: 8px 8px 8px 2px; font-size: 15px; font-weight: 760; font-stretch: 112%; transform: rotate(-9deg); animation: cs-slam .5s var(--cs-expo) backwards .1s; }
+
+/* the sign-in card: a stub in the school's colour over a paper body */
+.cs-door-in { position: relative; overflow: hidden; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 7px 7px 0 var(--cs-action); transition: transform .25s var(--cs-ease), box-shadow .25s var(--cs-ease); }
+.cs-door-in:focus-within { transform: translate(-2px, -2px); box-shadow: 0 0 0 1.5px var(--cs-ink), 10px 10px 0 var(--cs-action); }
+.cs-door-in-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 14px; align-items: center; padding: 18px 20px 16px 24px; background: var(--cs-field); border-bottom: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-door-in h2 { margin: 0; font-size: 25px; font-weight: 720; font-variation-settings: normal; font-stretch: 110%; letter-spacing: -0.04em; line-height: 1.05; text-transform: none; }
+.cs-door-in-top p { grid-column: 1; font-size: 13.5px; font-weight: 540; color: var(--cs-on-field-2); }
+.cs-door-in-top svg { grid-column: 2; grid-row: 1 / 3; width: 46px; height: 46px; padding: 7px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); --lime: var(--cs-action); }
+.cs-door-in-body { display: grid; gap: 12px; padding: 20px 24px 18px; }
+.cs-door-in label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 600; }
+/* The form inside is Clerk's. Its parts carry cl- class names, and its own styles are strong, so these are forced. */
+.cs-door-in .cl-formFieldInput { height: 44px !important; padding: 0 18px !important; border: 0 !important; border-radius: 99px !important; font-size: 15px !important; background: var(--cs-paper) !important; box-shadow: inset 0 0 0 1.5px var(--cs-ink) !important; }
+.cs-door-in .cl-formFieldInput:focus { background: var(--cs-stub) !important; box-shadow: inset 0 0 0 2.5px var(--cs-action) !important; }
+.cs-door-in .cl-socialButtonsBlockButton, .cs-door-in .cl-formButtonPrimary { height: 44px !important; border: 0 !important; border-radius: 99px !important; font-size: 15px !important; transition: transform .15s var(--cs-ease), background-color .15s !important; }
+.cs-door-in .cl-socialButtonsBlockButton { color: var(--cs-ink) !important; background: var(--cs-paper) !important; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow) !important; } .cs-door-in .cl-socialButtonsBlockButton * { font-size: 15px !important; font-weight: 600 !important; color: var(--cs-ink) !important; }
+.cs-door-in .cl-socialButtonsBlockButton:hover { background: var(--cs-stub) !important; }
+.cs-door-in .cl-formButtonPrimary { font-weight: 640 !important; color: var(--cs-paper) !important; background: var(--cs-action) !important; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink) !important; } .cs-door-in .cl-formButtonPrimary::after { display: none !important; }
+.cs-door-in .cl-formButtonPrimary:hover { background: var(--cs-action-hover) !important; }
+.cs-door-in .cl-socialButtonsBlockButton:active, .cs-door-in .cl-formButtonPrimary:active { transform: translate(2px, 2px); }
+.cs-door-in .two { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; }
+.cs-door-in input, .cs-door-in select, .cs-form input, .cs-form textarea, .cs-form select { width: 100%; height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); }
+.cs-form textarea { height: auto; min-height: 74px; padding: 9px 12px; resize: vertical; }
+.cs-door-in select, .cs-form select { appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--cs-ink) 50%), linear-gradient(135deg, var(--cs-ink) 50%, transparent 50%); background-position: calc(100% - 17px) 16px, calc(100% - 12px) 16px; background-size: 5px 5px; background-repeat: no-repeat; }
+.cs-door-in .seen { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin: -2px 0; padding: 4px 13px 4px 8px; border-radius: 99px; background: var(--cs-field); font-size: 13px; font-weight: 640; animation: cs-in .4s var(--cs-expo); }
+.cs-door-in .seen::before { content: ''; flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--cs-action); box-shadow: 0 0 0 1.5px var(--cs-ink); } .cs-door-in .seen:empty { display: none; }
+.cs-door-in .fine { font-size: 12.5px; color: var(--cs-mute); text-align: center; }
+.cs .cs-cont { display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 8px; font-size: 14px; font-weight: 600; background: var(--cs-ink); color: var(--cs-paper); } .cs .cs-cont:hover { background: var(--cs-ink-2); }
+.cs-or { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--cs-mute); } .cs-or::before, .cs-or::after { content: ''; flex: 1; height: 1px; background: var(--cs-line); }
+.cs-plain { width: 100%; max-width: 620px; margin: 0 auto; padding: 32px 32px 64px; display: grid; gap: 16px; align-content: start; }
+.cs-plain h1 { font-stretch: 108%; font-weight: 720; font-size: 34px; line-height: 1; letter-spacing: -0.04em; }
+.cs-plain > p { color: var(--cs-ink-2); max-width: 52ch; }
+.cs-form { display: grid; gap: 14px; padding: 20px 22px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
+.cs-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; } .cs-form label small { font-weight: 440; color: var(--cs-mute); }
+.cs-form .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.cs-form .end { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cs-form .from { display: grid; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid color-mix(in oklch, var(--cs-ink) 14%, transparent); }
+.cs-form .from .row { display: flex; gap: 8px; } .cs-form .from .row input { flex: 1; min-width: 0; } .cs-form .from .row .cs-btn { height: 38px; }
+.cs-form .kept { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13px; } .cs-form .kept span { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.cs-form .kept button { font-size: 13px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
+/* posting in one line (design D12) */
+.cs-line { display: grid; gap: 12px; }
+.cs-line-card { display: grid; gap: 8px; padding: 16px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
+.cs-line-card h2, .cs-line-label { font-size: 12px; font-weight: 640; text-transform: uppercase; letter-spacing: .06em; color: var(--cs-mute); } .cs-line-card h2 b { color: var(--cs-action); text-transform: none; letter-spacing: 0; font-size: 13.5px; }
+.cs-say { width: 100%; border: 0; padding: 0; resize: none; background: none; font: inherit; font-size: 22px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; color: var(--cs-ink); outline: none; }
+.cs-say::placeholder { color: color-mix(in oklch, var(--cs-ink) 32%, transparent); }
+.cs-line-card:focus-within { box-shadow: 5px 5px 0 var(--cs-field-shadow), 0 0 0 1.5px var(--cs-ink) inset; }
+.cs-read { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 44px; padding-top: 10px; border-top: 1px dashed var(--cs-line); }
+.cs-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 32px; padding: 4px 12px; border-radius: 16px; font-size: 13.5px; font-weight: 600; line-height: 1.2; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); overflow-wrap: anywhere; }
+.cs-chip.when { background: var(--cs-field); } .cs-chip.place { background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs-chip button { font-size: 12.5px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
+.cs-chip-hint { font-size: 13px; color: var(--cs-mute); }
+/* each place has a bar behind its name, as long as the place is busy next to the busiest one */
+.cs-sug { display: grid; gap: 4px; } .cs-sug button { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; border-radius: 12px 12px 12px 4px; }
+.cs-sug button[style]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: max(10px, calc(var(--fill) * 100%)); border-radius: inherit; background: color-mix(in oklch, var(--cs-action) 14%, transparent); transform-origin: left; animation: cs-grow .6s var(--cs-expo) backwards; transition: width .4s var(--cs-expo), background-color .15s; }
+.cs-sug button[style]:hover::before { background: color-mix(in oklch, var(--cs-action) 24%, transparent); } .cs-sug button > span { position: relative; }
+/* on a bar the words are ink, not the paler blue and grey */
+.cs-sug button[style] b { color: var(--cs-ink); font-weight: 720; } .cs-sug button[style] small { color: color-mix(in oklch, var(--cs-ink) 78%, transparent); font-weight: 540; }
+.cs-sug button:hover b { text-decoration: underline; text-underline-offset: 3px; } .cs-sug b { font-weight: 680; color: var(--cs-action); } .cs-sug b.new { color: var(--cs-ink); } .cs-sug small { display: block; font-size: 12.5px; color: var(--cs-mute); }
+.cs-mini { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); } .cs-line-card h2 + .cs-mini { border-top: 0; }
+.cs-mini time { flex: none; width: 58px; padding: 6px 0; border-radius: 10px 10px 10px 3px; background: var(--cs-field); text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.15; }
+.cs-mini div { flex: 1; min-width: 0; } .cs-mini div b { display: block; font-weight: 640; } .cs-mini div span { font-size: 12.5px; color: var(--cs-mute); }
+.cs-line-end { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .cs-line-end .cs-note { flex: 1; min-width: 160px; }
+.cs-line-bad { font-size: 14px; font-weight: 580; color: var(--cs-action); }
+.cs-at { margin-right: 7px; font-weight: 660; color: var(--cs-action); }
+/* the "+" that starts a plan sits in the line above the row; its panel opens in the row, the line beside what others are doing */
+.cs-tally { display: inline-flex; align-items: center; gap: 11px; min-width: 0; padding: 5px 20px 5px 5px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-tally h2 { font-size: 17px; }
+.cs .cs-plus { position: relative; flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-action); color: var(--cs-paper); transition: transform .2s var(--cs-ease), background-color .15s; }
+/* it asks to be pressed: a ring leaves it and the cross turns, then it rests; still once the panel is open */
+.cs-plus::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--cs-action); opacity: 0; animation: cs-beckon 3.2s var(--cs-expo) 1s infinite; }
+.cs-plus svg { animation: cs-turn 3.2s var(--cs-expo) 1s infinite; } .cs-plus[aria-expanded=true]::after, .cs-plus[aria-expanded=true] svg { animation: none; }
+.cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
+.cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
+.cs-sheet.cs-post { flex-basis: min(780px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
+.cs-post-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 10px; }
+.cs-post .cs-line { align-content: start; } .cs-post .cs-line-card, .cs-post .cs-line-card:focus-within { padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.cs-post-side { display: grid; gap: 16px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
+.cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
+.cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
+.cs-schools { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* admin */
+.cs-adm { width: 100%; padding: 24px 32px 64px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; align-items: start; }
+.cs-adm > header { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; } .cs-adm > header h1 { font-size: 30px; font-weight: 660; letter-spacing: -0.03em; } .cs-adm > header p, .cs-adm section > p { color: var(--cs-mute); }
+.cs-adm section { min-width: 0; display: grid; gap: 10px; align-content: start; } .cs-adm section.wide { grid-column: 1 / -1; }
+.cs-adm h2 { font-size: 18px; font-weight: 680; } .cs-adm section > p { font-size: 14px; max-width: 64ch; }
+.cs-adm-list { display: grid; gap: 8px; } .cs-adm-list > li { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; padding: 11px 12px 11px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-field-shadow); }
+.cs-adm-list > li > div { min-width: 0; flex: 1 1 240px; } .cs-adm-list b { display: block; font-weight: 660; letter-spacing: -0.02em; overflow-wrap: anywhere; } .cs-adm-list span { font-size: 13.5px; color: var(--cs-mute); overflow-wrap: anywhere; }
+.cs-adm-list li.off { box-shadow: inset 0 0 0 1.5px var(--cs-line); background: none; }
+.cs-adm-list form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .cs-adm-list form.words { flex: 1 1 100%; } .cs-adm-list form.words input { flex: 1 1 260px; }
+.cs-adm details { border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); } .cs-adm details[open] { box-shadow: 3px 3px 0 var(--cs-field-shadow); }
+.cs-adm summary { cursor: pointer; padding: 11px 18px; font-weight: 620; } .cs-adm details .cs-form { box-shadow: none; padding-top: 4px; }
+.cs-adm input, .cs-adm select { height: 36px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); min-width: 0; }
+.cs-adm .cs-form .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+@media (max-width: 860px) {
+  .cs-nav { padding: 10px 16px 11px; } .cs-wm { gap: 10px; padding-right: 10px; font-size: 21px; } .cs-wm svg { width: 38px; height: 38px; padding: 5px; } .cs-main { padding: 12px 16px 24px; } .cs-links a:not([aria-current]) { display: none; }
+  .cs-door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; }
+  .cs-deck { margin-right: 0; width: calc(100% - 120px); } .cs-dtab { transform: translate(calc(var(--k) * 38px), calc(var(--k) * 8px)) rotate(calc(var(--k) * 1.6deg)); }
+  .cs-dtk-top h3 { font-size: 22px; } .cs-dtk-top .cs-tile { min-width: 60px; min-height: 60px; } .cs-dtk-stub strong { font-size: 21px; }
+  .cs-plain { padding: 24px 16px 48px; } .cs-adm { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 48px; } .cs-adm .cs-form .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); }
+  .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
+  .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
+  .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }
+  .cs-ev { flex-basis: 260px; } .cs-lvl { position: fixed; right: 14px; top: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
+</style>
+<style>
+body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Archivo, system-ui, sans-serif; color: oklch(25% 0.07 252); }
+.mk-top { max-width: 1280px; margin: 0 auto; padding: 26px 24px 4px; }
+.mk-top h1 { margin: 0 0 6px; font-stretch: 108%; font-weight: 720; font-size: 30px; letter-spacing: -0.04em; line-height: 1.05; }
+.mk-top p { margin: 0; max-width: 84ch; font-size: 15px; line-height: 1.45; color: oklch(35.4% 0.095 252); }
+.mk-switch { display: inline-flex; gap: 4px; margin-top: 14px; padding: 4px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 1.5px oklch(25% 0.07 252); }
+.mk-switch button { border: 0; background: none; font: inherit; font-weight: 600; font-size: 14px; padding: 7px 16px; border-radius: 99px; cursor: pointer; color: inherit; }
+.mk-switch button[aria-pressed=true] { background: oklch(25% 0.07 252); color: #fff; }
+.mk-dir { max-width: 1280px; margin: 0 auto; padding: 26px 24px 0; }
+.mk-dir:last-of-type { padding-bottom: 64px; }
+.mk-dir > h2 { margin: 0; font-size: 20px; font-weight: 720; letter-spacing: -0.03em; }
+.mk-dir > h2 b { display: inline-grid; place-items: center; min-width: 28px; padding: 0 6px; height: 28px; margin-right: 8px; border-radius: 8px 8px 8px 2px; background: oklch(25% 0.07 252); color: oklch(96.4% 0.19 117); font-size: 15px; }
+.mk-dir > p { margin: 6px 0 14px; max-width: 86ch; font-size: 14px; line-height: 1.45; color: oklch(35.4% 0.095 252); }
+.mk-frame { position: relative; height: 730px; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 2px oklch(25% 0.07 252), 7px 7px 0 oklch(25% 0.07 252); }
+.mk-frame .cs { min-height: 0; height: 100%; }
+.mk-frame .cs-nav { position: static; }
+.mk-frame .cs-evs { min-height: 0; }
+.mk-frame .cs-rail { align-items: flex-start; }
+.mk-frame .cs-ev { min-height: 232px; }
+.mk-frame .cs-nothing { flex: 0 0 440px; width: auto; animation: none; }
+
+/* the "+" ticket */
+.cs-ev.plus { cursor: pointer; }
+.cs-ev.plus .cs-tile b { font-size: 34px; font-weight: 500; margin: -4px 0 0; }
+.cs-ev.plus .cs-top { background: var(--cs-field); } .cs-ev.plus .cs-tile { background: var(--cs-ink); color: var(--cs-field); }
+.cs-ev.plus .cs-body > p { color: var(--cs-on-field-2); }
+.cs-ev.plus .cs-mech { background: var(--cs-paper); }
+.cs-ev.plus.pressed { transform: translate(3px, 3px); filter: none; box-shadow: inset 0 0 0 2px var(--cs-ink); }
+/* A: the ticket itself opens */
+.cs-ev.plus.open { flex-basis: 470px; cursor: default; background: var(--cs-paper); overflow: visible; }
+.cs-ev.plus.open .cs-line { padding: 14px; } .cs-ev.plus.open .cs-line-card { box-shadow: none; padding: 0; } .cs-ev.plus.open .cs-line-card + .cs-line-card { padding-top: 10px; border-top: 1px solid var(--cs-line); border-radius: 0; }
+.mk-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--cs-field); border-radius: 22px 22px 0 0; } .mk-head b { flex: 1; font-weight: 700; font-size: 16px; letter-spacing: -0.02em; }
+/* B: a sheet beside the ticket */
+.cs-sheet.mk-two { flex-basis: 760px; } .mk-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 8px; }
+.mk-cols .cs-line-card { box-shadow: none; padding: 0; } .mk-cols .side { display: grid; gap: 14px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
+/* C: a button that stays put */
+.mk-fab { position: absolute; right: 26px; bottom: 26px; z-index: 5; width: 64px; height: 64px; border-radius: 22px 22px 22px 6px; background: var(--cs-action); color: var(--cs-paper); font-size: 38px; font-weight: 400; line-height: 1; box-shadow: inset 0 0 0 2px var(--cs-ink), 5px 5px 0 var(--cs-ink); display: grid; place-items: center; transition: transform .15s; }
+.mk-fab:hover { transform: translate(-2px, -2px); } .mk-fab[aria-expanded=true] { background: var(--cs-ink); } .mk-fab[aria-expanded=true] span { transform: rotate(45deg); display: block; }
+.mk-pop { position: absolute; right: 26px; bottom: 104px; z-index: 5; width: 460px; max-height: 470px; overflow: auto; border-radius: 22px 22px 6px 22px; background: var(--cs-paper); box-shadow: 0 0 0 2px var(--cs-ink), 6px 6px 0 var(--cs-ink); }
+.mk-pop .cs-line { padding: 14px 16px; } .mk-pop .cs-line-card { box-shadow: none; padding: 0; } .mk-pop .cs-line-card + .cs-line-card { padding-top: 10px; border-top: 1px solid var(--cs-line); border-radius: 0; }
+.mk-hint { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13.5px; font-weight: 600; color: var(--cs-on-field-2); }
+.mk-new { animation: cs-in .5s var(--cs-expo); }
+</style>
+</head>
+<body>
+<div class="mk-top">
+  <h1>Where posting lives on This week</h1>
+  <p>You asked for a small "+" in the line above the row that opens B's panel: it is first below, and it is what is built into This week. Posting stays the one line you picked. What changes is where it sits: it is no longer a separate page behind a button in the top bar. In all three, a "+" is always on This week, next to the tickets, and next to "Nothing here yet" when the week is empty. Everything is clickable: type in the box, pick an @place, post, close and reopen. Use the switch to see each one on an empty week.</p>
+  <div class="mk-switch" id="week"><button aria-pressed="true" data-week="busy">A week with plans</button><button aria-pressed="false" data-week="empty">An empty week</button></div>
+</div>
+
+<section class="mk-dir">
+  <h2><b>Built</b>The count in a pill with the "+" at its left end, opening the wide panel of B</h2>
+  <p>Closed, posting is only the "+" at the left end of the count pill, in the line above the tickets, so it stays put however far the row is scrolled. Every few seconds a ring leaves the "+" and the cross turns, until it is pressed. Pressed, the wide panel opens at the start of the row: your line on the left, the places people use and what is already on, on the right. The tickets slide over and nothing is covered. On an empty week the panel opens beside "Nothing here yet". This one is drawn with the same styles as the built screen. It opens closed: press the "+".</p>
+  <div class="mk-frame" data-dir="D"></div>
+</section>
+<section class="mk-dir">
+  <h2 style="margin-top:18px">The three you chose from</h2>
+</section>
+<section class="mk-dir">
+  <h2><b>A</b>The first ticket is yours</h2>
+  <p>The row always starts with a "+" ticket. Tap it and that same ticket opens into the line. What you post becomes the ticket next to it. Nothing covers the list.</p>
+  <div class="mk-frame" data-dir="A"></div>
+</section>
+<section class="mk-dir">
+  <h2><b>B</b>The "+" ticket opens a panel beside it</h2>
+  <p>Same "+" ticket at the start of the row, but it opens the wide panel the tickets already use for Details. There is room to show the @places people use and what is already on, side by side with your line.</p>
+  <div class="mk-frame" data-dir="B"></div>
+</section>
+<section class="mk-dir">
+  <h2><b>C</b>A "+" that stays in the corner</h2>
+  <p>A "+" button sits in the bottom corner and stays there however far the row is scrolled. It opens the line above it, over the list. The row itself is only tickets.</p>
+  <div class="mk-frame" data-dir="C"></div>
+</section>
+
+<script>
+const face = n => `<img class="cs-face pet" src="/animals/${String(n).padStart(2, '0')}.png" alt="">`;
+const PLACES = [{ tag: 'collegetown', who: '14 people this week · Maya' }, { tag: 'college-ave-courts', who: '4 people this week' }, { tag: 'north-campus', who: '9 people this week' }, { tag: 'donlon-2f', who: '6 people this week · Josh' }, { tag: 'arts-quad', who: '7 people this week' }];
+const WEEK = [
+  { day: 'Today', time: '6:30pm', title: 'Hot pot, split the bill', tag: 'collegetown', sub: 'Posted by Maya', faces: [4, 11, 23], say: '4 going', btn: "I'm in" },
+  { day: 'Today', time: '8pm', title: 'Blitz night', src: 'CampusGroups', sub: 'Chess Club · Willard Straight Hall', faces: [17, 30], say: 'Group of 3 unlocks a board held for you', btn: 'Register' },
+  { day: 'Thu', time: '7am', title: 'Running, easy 5K', tag: 'arts-quad', sub: 'Posted by Josh', faces: [6, 27], say: '2 going', btn: "I'm in" },
+  { day: 'Sat', time: '2pm', title: 'Harvard vs Yale day party', tag: 'boston-trip', sub: 'Posted by Ana', faces: [33, 19], say: '2 going', btn: "I'm in" },
+];
+const state = { week: /empty/.test(location.hash) ? 'empty' : 'busy', A: { open: true, posted: [], text: 'dumplings tonight 7 @coll' }, B: { open: true, posted: [], text: 'dumplings tonight 7 @collegetown ' }, C: { open: true, posted: [], text: 'dumplings tonight 7 @collegetown ' }, D: { open: /open|empty/.test(location.hash), posted: [], text: 'dumplings tonight 7 @collegetown ' } };
+
+function read(text) {
+  const tag = /(?:^|\s)@([a-z0-9-]+)/i.exec(text), typing = /(?:^|\s)@([a-z0-9-]*)$/i.exec(text), bare = text.replace(/@\S*/g, ' ');
+  const day = /\b(tonight|today|tomorrow|mon|tue|wed|thu|fri|sat|sun)[a-z]*\b/i.exec(bare), hour = /\b(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i.exec(bare) || (day && /\b(?:tonight|today|tomorrow|mon|tue|wed|thu|fri|sat|sun)[a-z]*\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?()\b/i.exec(bare));
+  let when = null;
+  if (day || hour) {
+    const d = day ? ({ tonight: 'Today', today: 'Today', tomorrow: 'Tomorrow' }[day[1].toLowerCase()] || day[1][0].toUpperCase() + day[1].slice(1, 3).toLowerCase()) : 'Today';
+    const h = hour ? `${hour[1]}${hour[2] ? ':' + hour[2] : ''}${hour[3] ? hour[3].toLowerCase() : Number(hour[1]) < 8 || /tonight/i.test(bare) ? 'pm' : 'am'}` : /tonight/i.test(bare) ? '7pm' : '';
+    when = h ? { day: d, time: h } : null;
+  }
+  const what = bare.replace(/\b(tonight|today|tomorrow|at)\b/gi, ' ').replace(/\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b/gi, ' ').replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/gi, ' ').replace(day ? /\b\d{1,2}\b/ : /$^/, ' ').replace(/\s+/g, ' ').trim();
+  return { what: what ? what[0].toUpperCase() + what.slice(1) : '', when, tag: tag ? tag[1].toLowerCase() : null, typing: typing ? typing[1].toLowerCase() : null };
+}
+const ticket = (t, fresh) => `<article class="cs-ev ${fresh ? 'mk-new' : ''}"><div class="cs-top"><span class="cs-tile"><small>${t.day}</small><b>${t.time}</b></span>
+  <div class="cs-body"><h3>${t.title}</h3><p>${t.src ? `<span class="cs-pill src">${t.src}</span>` : ''}${t.tag ? `<b class="cs-at">@${t.tag}</b>` : ''}${t.sub}</p></div><button class="cs-more">Details</button></div>
+  <div class="cs-mech none"><span class="cs-stack">${t.faces.map(face).join('')}</span><div class="cs-what"><span>${t.say}</span></div><span class="cs-act">${t.mine ? '<button class="cs-btn sm">Invite</button><span class="cs-pill hot">You\'re in</span>' : `<button class="cs-btn sm go">${t.btn}</button>`}</span></div></article>`;
+const plus = (dir, pressed) => `<article class="cs-ev plus ${pressed ? 'pressed' : ''}" data-open="${dir}"><div class="cs-top"><span class="cs-tile"><small>Yours</small><b>+</b></span>
+  <div class="cs-body"><h3>Start something</h3><p>Say it in one line: dumplings tonight 7 @collegetown</p></div></div>
+  <div class="cs-mech none"><div class="cs-what"><span>It shows here at once, and you are counted in.</span></div><span class="cs-act"><button class="cs-btn sm go">${pressed ? 'Close' : 'Post a plan'}</button></span></div></article>`;
+const nothing = `<div class="cs-nothing"><div class="cs-nothing-top"><span class="cs-tile"><small>This week</small><b>Open</b></span><div><h3>Nothing here yet</h3><p>Post a plan of your own and it shows here at once.</p></div></div><div class="cs-nothing-stub"><small>Yours could be the first this week.</small></div></div>`;
+const sayBox = dir => `<div class="cs-line-card"><label class="cs-line-label">What are you up to?</label><textarea class="cs-say" rows="2" data-say="${dir}" placeholder="dumplings tonight 7 @collegetown" spellcheck="false">${state[dir].text}</textarea><div class="cs-read" data-read="${dir}"></div></div>`;
+const end = dir => `<div class="cs-line-end"><button class="cs-btn go" data-post="${dir}">Post it</button><span class="cs-note" data-said="${dir}">Shows at Cornell at once. You are counted in.</span></div>`;
+
+function draw(dir) {
+  const frame = document.querySelector(`[data-dir=${dir}]`), s = state[dir], empty = state.week === 'empty';
+  const mine = s.posted.map((t, at) => ticket(t, at === 0 && s.fresh)).join(''), rest = empty ? (s.posted.length ? '' : nothing) : WEEK.map(t => ticket(t)).join('');
+  let first = '', over = '';
+  if (dir === 'A') first = s.open ? `<article class="cs-ev plus open"><div class="mk-head"><b>Start something</b><button class="cs-more" data-close="A">Close</button></div><div class="cs-line">${sayBox('A')}<div class="cs-line-card" data-side="A"></div>${end('A')}</div></article>` : plus('A');
+  if (dir === 'B') first = plus('B', s.open) + (s.open ? `<div class="cs-sheet mk-two"><div class="cs-sheet-top"><h3>Start something</h3><button class="cs-more" data-close="B">Close</button></div><div class="mk-cols"><div class="cs-line">${sayBox('B')}${end('B')}</div><div class="side" data-side="B"></div></div></div>` : '');
+  const plusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></svg>';
+  let last = '', inRow = '';
+  if (dir === 'D') {
+    inRow = `<button class="cs-plus" data-toggle="D" aria-expanded="${s.open}" aria-label="Post a plan">${plusIcon}</button>`;
+    const sheet = s.open ? `<div class="cs-sheet cs-post fresh"><div class="cs-sheet-top"><h3>Start something</h3><button class="cs-more" aria-expanded="true" data-close="D">Close</button></div><div class="cs-post-cols"><div class="cs-line">${sayBox('D')}${end('D')}</div><div class="cs-post-side" data-side="D"></div></div></div>` : '';
+    if (empty && !s.posted.length) last = sheet; else first = sheet;
+  }
+  if (dir === 'C') over = `<button class="mk-fab" data-toggle="C" aria-expanded="${s.open}" aria-label="Post a plan"><span>+</span></button>` + (s.open ? `<div class="mk-pop"><div class="cs-line">${sayBox('C')}<div class="cs-line-card" data-side="C"></div>${end('C')}</div></div>` : '');
+  frame.innerHTML = `<div class="cs"><header class="cs-nav"><a class="cs-wm">Loop</a><nav class="cs-links"><a aria-current="page">This week</a></nav><div class="cs-nav-end"><span class="cs-ava">${face(12).replace('cs-face pet', 'cs-face pet')}</span></div></header>
+    <main class="cs-main"><section class="cs-fill"><div class="cs-ask"><input type="search" placeholder="What do you feel like doing?"><div class="cs-tabs"><button aria-pressed="true">Best for you</button><button>All of CampusGroups</button></div></div>
+    <div class="cs-count">${inRow ? `<div class="cs-tally">${inRow}` : ''}<h2>${empty && !s.posted.length ? 'Nothing on this week yet' : `${(empty ? 0 : WEEK.length) + s.posted.length} things on this week`}</h2>${inRow ? '</div>' : ''}</div>
+    <div class="cs-evs"><div class="cs-railwrap"><div class="cs-rail">${first}${mine}${rest}${last}</div></div></div>
+    ${dir === 'C' && empty && !s.posted.length && !s.open ? '<span class="mk-hint">The + in the corner starts one</span>' : ''}</section></main>${over}</div>`;
+  s.fresh = false;
+  understood(dir);
+}
+function understood(dir) {
+  const s = state[dir], out = document.querySelector(`[data-read=${dir}]`), side = document.querySelector(`[data-side=${dir}]`); if (!out) return;
+  const got = read(s.text), place = got.tag && got.typing === null && PLACES.find(p => p.tag === got.tag);
+  out.innerHTML = (got.what ? `<span class="cs-chip">${got.what}</span>` : '') + (got.when ? `<span class="cs-chip when">${got.when.day} ${got.when.time}</span>` : `<span class="cs-chip-hint">${got.what ? 'No time yet: say tonight, tomorrow 7pm, sat 10am' : 'Say it the way you would text it, or paste an event link'}</span>`)
+    + (got.tag && got.typing === null ? `<span class="cs-chip ${place ? 'place' : ''}">@${got.tag} · ${place ? place.who : 'a new place, yours to name'}</span>` : '');
+  if (!side) return;
+  const list = got.typing !== null ? PLACES.filter(p => p.tag.startsWith(got.typing)).slice(0, 4) : (dir === 'B' || dir === 'D') ? PLACES.slice(0, 3) : [];
+  const places = list.length || got.typing ? `<div class="${(dir === 'B' || dir === 'D') ? 'cs-line-card' : ''}"><h2 class="cs-line-label">${got.typing ? `Places near you that start with <b>@${got.typing}</b>` : 'Places people near you use'}</h2><div class="cs-sug">${list.map(p => `<button data-tag="${p.tag}" data-for="${dir}" style="--fill:${parseInt(p.who) / 14}"><span><b>@${p.tag}</b><small>${p.who}</small></span></button>`).join('')}${got.typing && got.typing.length > 1 && !PLACES.some(p => p.tag === got.typing) ? `<button data-tag="${got.typing}" data-for="${dir}"><span><b class="new">Make @${got.typing}</b><small>A new place. People nearby see it when they type @</small></span></button>` : ''}</div></div>` : '';
+  const on = place && state.week === 'busy' && got.tag === 'collegetown' ? `<div class="${(dir === 'B' || dir === 'D') ? 'cs-line-card' : ''}"><h2 class="cs-line-label">Already on in <b>@collegetown</b></h2><div class="cs-mini"><time>Today<br>6:30pm</time><div><b>Hot pot, split the bill</b><span>Maya and 3 others</span></div><button class="cs-btn sm">Join</button></div></div>` : '';
+  side.innerHTML = places + (got.typing === null || (dir === 'B' || dir === 'D') ? on : '');
+  side.style.display = side.innerHTML ? '' : 'none';
+}
+document.addEventListener('input', event => { const dir = event.target.dataset.say; if (dir) { state[dir].text = event.target.value; understood(dir); } });
+document.addEventListener('click', event => {
+  const at = name => event.target.closest(`[data-${name}]`);
+  let hit;
+  if ((hit = at('week'))) { state.week = hit.dataset.week; document.querySelectorAll('#week button').forEach(b => b.setAttribute('aria-pressed', b === hit)); 'DABC'.split('').forEach(draw); }
+  else if ((hit = at('tag'))) { const dir = hit.dataset.for, s = state[dir]; s.text = (/(?:^|\s)@[a-z0-9-]*$/i.test(s.text) ? s.text.replace(/@[a-z0-9-]*$/i, '@' + hit.dataset.tag) : s.text.trimEnd() + ' @' + hit.dataset.tag) + ' '; const box = document.querySelector(`[data-say=${dir}]`); box.value = s.text; box.focus(); understood(dir); }
+  else if ((hit = at('post'))) { const dir = hit.dataset.post, s = state[dir], got = read(s.text);
+    if (!got.what || !got.when) { document.querySelector(`[data-said=${dir}]`).innerHTML = `<b style="color:var(--cs-action)">${got.what ? 'Say when: tonight, tomorrow 7pm, sat 10am.' : 'Say what it is: dumplings, a run, a study group.'}</b>`; return; }
+    s.posted.unshift({ day: got.when.day, time: got.when.time, title: got.what, tag: got.tag, sub: 'Posted by you', faces: [12], say: 'You are in. Invite people.', mine: true }); s.text = ''; s.open = false; s.fresh = true; draw(dir); }
+  else if ((hit = at('close'))) { state[hit.dataset.close].open = false; draw(hit.dataset.close); }
+  else if ((hit = at('toggle'))) { const s = state[hit.dataset.toggle]; s.open = !s.open; draw(hit.dataset.toggle); }
+  else if ((hit = at('open'))) { const s = state[hit.dataset.open]; s.open = !s.open; draw(hit.dataset.open); const box = document.querySelector(`[data-say=${hit.dataset.open}]`); if (box) box.focus(); }
+});
+'DABC'.split('').forEach(draw);
+</script>
+</body>
+</html>
