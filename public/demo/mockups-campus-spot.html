@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From an area to a spot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.css">
+<!-- The app's own stylesheet (app/c/campus.css), copied in when this mockup was made. -->
+<style>/* The campus screen ("This week"), ported from screen 1 of public/demo/mockups-campus-usecases.html.
+   Its own stylesheet and its own tokens, named by role (design D18), so the colours are set in one place once they are picked.
+   Every class starts with cs- and every rule sits under .cs, so nothing here reaches the groups site and app/loop.css is untouched. */
+@keyframes cs-pop { from { transform: scale(.2); opacity: 0; } }
+@keyframes cs-ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.55); opacity: 0; } }
+@keyframes cs-grow { from { transform: scaleX(0); } }
+@keyframes cs-beckon { from { transform: scale(1); opacity: .9; } 40%, to { transform: scale(1.75); opacity: 0; } }
+@keyframes cs-turn { from { transform: rotate(0); } 30%, to { transform: rotate(180deg); } }
+@keyframes cs-in { from { opacity: 0; transform: translateY(14px); } }
+@keyframes cs-side { from { clip-path: inset(0 100% 0 0); transform: translateX(-18px); } to { clip-path: inset(0 -12px -12px 0); } }
+@keyframes cs-card { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
+@keyframes cs-fill { from { clip-path: inset(0 100% 0 0 round 99px); } }
+
+/* globals.css frames the body as a phone on wide windows. The campus screen takes the whole window. */
+body:has(.cs) { display: block; place-items: normal; padding: 0; background: oklch(96.2% 0.004 230); }
+
+.cs {
+  /* Roles. The values are the mockup's "Lime 1" option until the founder picks (tasks 1.2). */
+  --cs-field: oklch(96.4% 0.19 117);          /* top bar, time tiles, the stub of a ticket with a reward */
+  --cs-field-shadow: oklch(80% 0.17 121);     /* the hard shadow under tickets and coupons */
+  --cs-ink: oklch(25% 0.07 252);              /* type, outlines, the selected pill, the ready coupon */
+  --cs-ink-2: oklch(35.4% 0.095 252);
+  --cs-action: oklch(47.6% 0.13 250);         /* the one main button on a ticket, "Post a plan" */
+  --cs-action-hover: oklch(54% 0.14 250);
+  --cs-action-deep: oklch(35.4% 0.095 252);
+  --cs-paper: oklch(99.3% 0.004 117);         /* ticket face */
+  --cs-page: oklch(96.2% 0.004 230);          /* page background */
+  --cs-line: oklch(90.6% 0.008 240);
+  --cs-mute: oklch(46.5% 0.012 245);
+  --cs-on-ink: oklch(99.4% 0.003 230);
+  --cs-on-ink-mute: oklch(82% 0.02 245);
+  --cs-on-field-2: color-mix(in oklch, var(--cs-ink) 74%, var(--cs-field));
+  --cs-stub: color-mix(in oklch, var(--cs-field) 32%, var(--cs-paper));
+  --cs-r: 22px 22px 22px 6px; --cs-ease: cubic-bezier(.22, 1, .36, 1); --cs-expo: cubic-bezier(.16, 1, .3, 1);
+  display: flex; flex-direction: column; min-height: 100dvh; overflow-x: clip;
+  font-family: var(--font-archivo), Archivo, system-ui, sans-serif; font-variation-settings: normal; font-size: 15px; line-height: 1.45; letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--cs-page); color: var(--cs-ink);
+}
+/* Resets carry no weight of their own (:where), so any cs- class can set these again. */
+.cs *, .cs *::before, .cs *::after { box-sizing: border-box; }
+:where(.cs) button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; border: 0; background: none; padding: 0; opacity: 1; }
+:where(.cs) :is(h1, h2, h3, h4, p, ul, ol, figure) { margin: 0; padding: 0; } :where(.cs) :is(ul, ol) { list-style: none; }
+:where(.cs) a { color: inherit; text-decoration: none; }
+.cs :focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+.cs [hidden] { display: none !important; }
+.cs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* top bar: one line */
+.cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); border-bottom: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding: 0 20px 0 0; --lime: var(--cs-action); }
+.cs-wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
+.cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
+.cs-links { display: flex; gap: 2px; min-width: 0; }
+.cs-links a { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 99px; font-size: 14.5px; font-weight: 500; white-space: nowrap; }
+.cs-links a:hover { background: color-mix(in oklch, var(--cs-ink) 8%, transparent); }
+.cs-links a[aria-current] { background: var(--cs-ink); color: var(--cs-field); font-weight: 600; }
+.cs-links a:has(i) { padding: 6px 12px 6px 6px; }
+.cs-links i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; flex: none; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--cs-paper); background: linear-gradient(135deg, var(--cs-action), var(--cs-action-hover) 60%, var(--cs-action-deep)); }
+.cs-nav-end { margin-left: auto; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.cs-live { display: flex; align-items: baseline; gap: 10px; padding: 6px 8px 6px 14px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); }
+.cs-live small { font-size: 12.5px; font-weight: 560; } .cs-live b { font-size: 16px; font-weight: 720; letter-spacing: -0.03em; } .cs-live time { font-size: 13px; font-weight: 600; }
+.cs-live button { align-self: center; height: 28px; padding: 0 12px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-size: 13px; font-weight: 620; }
+.cs-live.used { padding-right: 14px; background: var(--cs-ink); box-shadow: none; }
+
+/* faces: a photo, or initials on a quiet disc */
+.cs-face { border-radius: 50%; object-fit: cover; background: color-mix(in oklch, var(--cs-ink) 14%, var(--cs-paper)); width: 32px; height: 32px; flex: none; display: grid; place-items: center; font-size: 12.5px; font-weight: 680; font-style: normal; color: var(--cs-ink); line-height: 1; overflow: hidden; }
+.cs-stack { display: flex; --ring: var(--cs-paper); }
+.cs-stack .cs-face { width: 26px; height: 26px; font-size: 11px; margin-left: -7px; box-shadow: 0 0 0 2px var(--ring); }
+.cs-stack .cs-face:first-child { margin-left: 0; }
+
+.cs-tile { display: grid; justify-items: center; align-content: center; flex: none; line-height: 1; min-width: 48px; min-height: 48px; padding: 6px 6px 7px; border-radius: 12px 12px 12px 3px; background: var(--cs-field); color: var(--cs-ink); }
+.cs-tile small { font-size: 11px; font-weight: 600; } .cs-tile b { font-weight: 640; font-size: 18px; margin-top: 2px; display: block; white-space: nowrap; }
+.cs-tile.met { background: var(--cs-action); color: var(--cs-paper); }
+.cs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; font-weight: 580; white-space: nowrap; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink) inset; transition: background-color .15s, transform .15s var(--cs-ease); }
+.cs .cs-btn:hover { background: color-mix(in oklch, var(--cs-ink) 6%, var(--cs-paper)); }
+.cs .cs-btn.go { background: var(--cs-action); color: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 3px 3px 0 var(--cs-ink); }
+.cs .cs-btn.go:hover { background: var(--cs-action-hover); }
+.cs .cs-btn.go:active { transform: translate(2px, 2px); }
+.cs .cs-btn:disabled { opacity: .6; cursor: default; }
+.cs-btn.sm { height: 36px; }
+.cs-pill { font-size: 12.5px; font-weight: 560; padding: 3px 10px; border-radius: 99px; background: var(--cs-page); color: var(--cs-mute); white-space: nowrap; }
+.cs-pill.hot { background: var(--cs-field); color: var(--cs-ink); } .cs-pill.yes { background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs-pill.src { display: inline-block; margin-right: 7px; padding: 1px 8px 2px; font-size: 11.5px; font-weight: 620; color: var(--cs-ink); background: transparent; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-gauge { width: 54px; height: 54px; flex: none; transform: rotate(-90deg); }
+.cs-gauge circle { fill: none; stroke-width: 5; stroke: var(--cs-line); } .cs-gauge circle.lit { stroke: var(--cs-ink); }
+.cs-note { font-size: 13px; color: var(--cs-mute); }
+.cs-alert { margin: 0 0 10px; padding: 9px 16px; border-radius: 12px 12px 12px 4px; background: var(--cs-ink); color: var(--cs-on-ink); font-size: 14px; font-weight: 540; }
+
+/* the page under the bar takes the height the window has left */
+.cs-main { flex: 1; display: flex; flex-direction: column; width: 100%; padding: 14px 32px 24px; }
+.cs-fill { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.cs-ask { display: flex; align-items: center; gap: 12px 18px; flex-wrap: wrap; margin-bottom: 14px; }
+.cs-ask input { flex: 1 1 320px; min-width: 0; height: 52px; padding: 0 24px; border: 0; border-radius: 99px; font: inherit; font-size: 18px; font-weight: 520; letter-spacing: -0.02em; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-ask input::placeholder { color: var(--cs-mute); } .cs-ask input:focus-visible { outline: 3px solid var(--cs-action); outline-offset: 2px; }
+.cs-tabs { display: flex; gap: 4px; flex: none; }
+.cs-tabs button { padding: 6px 14px; border-radius: 99px; font-weight: 540; color: var(--cs-mute); }
+.cs-tabs button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); }
+.cs-count { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 10px; flex-wrap: wrap; }
+:where(.cs) h2 { font-size: 20px; font-weight: 660; letter-spacing: -0.03em; line-height: 1.2; font-variation-settings: normal; text-transform: none; }
+.cs-says { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .cs-says small { font-size: 13px; color: var(--cs-mute); margin-right: 4px; }
+.cs-opt { height: 36px; padding: 0 14px; border-radius: 99px; background: var(--cs-field); font-weight: 560; font-size: 14px; white-space: nowrap; }
+.cs-says .cs-opt { height: 30px; padding: 0 12px; font-size: 13.5px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs-says .cs-opt:hover, .cs-says .cs-opt[aria-pressed=true] { background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+
+/* the row of tickets */
+.cs-evs { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 330px; }
+.cs-railwrap { position: relative; display: flex; margin: -6px -16px -6px -6px; }
+.cs-rail { flex: 1; min-width: 0; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-left: 6px; padding: 6px 16px 16px 6px; scrollbar-width: none; } .cs-rail::-webkit-scrollbar { display: none; }
+.cs-rgo { position: absolute; top: calc(50% - 26px); width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-ink); color: var(--cs-field); box-shadow: 3px 3px 0 var(--cs-action); transition: transform .2s var(--cs-ease); }
+.cs .cs-rgo { background: var(--cs-ink); color: var(--cs-field); } .cs-rgo:hover { transform: scale(1.08); }
+.cs-rgo svg { width: 18px; height: 18px; } .cs-rgo.l { left: -26px; } .cs-rgo.l svg { transform: rotate(90deg); } .cs-rgo.r { right: -6px; } .cs-rgo.r svg { transform: rotate(-90deg); }
+.cs-then { flex: 0 0 58px; display: grid; align-content: center; justify-items: center; gap: 10px; border-radius: 99px; border: 1.5px dashed color-mix(in oklch, var(--cs-ink) 45%, transparent); color: var(--cs-on-field-2); }
+.cs-then b { font-stretch: 108%; font-size: 24px; font-weight: 720; letter-spacing: -0.04em; color: var(--cs-ink); } .cs-then span { writing-mode: vertical-rl; font-size: 13.5px; font-weight: 580; white-space: nowrap; }
+.cs-nothing { align-self: start; width: min(480px, 100%); overflow: hidden; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); animation: cs-in .4s var(--cs-expo); }
+.cs-nothing-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; padding: 20px 22px; }
+.cs-nothing-top .cs-tile { min-width: 64px; min-height: 60px; padding: 6px 10px 7px; }
+.cs-nothing h3 { font-size: 22px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.1; } .cs-nothing p { margin-top: 3px; font-size: 14px; color: var(--cs-mute); }
+.cs-nothing-stub { padding: 12px 22px 14px; background: var(--cs-stub); border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-nothing-stub small { display: block; font-size: 13.5px; font-weight: 580; color: var(--cs-on-field-2); }
+
+.cs-ev { --cut: 10px; --lift: 5px; flex: 0 0 286px; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--cs-r); filter: drop-shadow(var(--lift) var(--lift) 0 var(--cast, var(--cs-field-shadow))); transition: transform .22s var(--cs-ease), filter .22s var(--cs-ease); }
+.cs-evs.in .cs-ev, .cs-evs.in .cs-then { animation: cs-in .45s var(--cs-expo) backwards; animation-delay: calc(var(--i) * 45ms); }
+.cs-ev.open { --cast: var(--cs-ink); transform: translate(-2px, -2px); --lift: 7px; }
+.cs-ev:has(.cs-mech.near, .cs-mech.met) { --cast: var(--cs-ink); }
+.cs-ev:not(.open):hover { --lift: 8px; transform: translate(-3px, -3px); }
+.cs-top { flex: none; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 16px; background: var(--cs-paper); cursor: pointer; }
+.cs-top:has(+ .cs-mech:not(.none)) { -webkit-mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-top .cs-body { grid-column: 1 / -1; grid-row: 2; min-height: 66px; min-width: 0; } .cs-top .cs-more { grid-column: 2; grid-row: 1; justify-self: end; }
+.cs-top > .cs-tile { min-width: 58px; min-height: 58px; }
+.cs-more { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 11px 0 15px; border-radius: 99px; font-size: 14px; font-weight: 580; box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: background-color .15s, color .15s; }
+.cs .cs-top:hover .cs-more, .cs .cs-more[aria-expanded=true] { background: var(--cs-ink); color: var(--cs-field); }
+.cs-more svg { width: 15px; height: 15px; transition: transform .35s var(--cs-expo); } .cs-more[aria-expanded=true] svg { transform: rotate(180deg); }
+.cs-ev h3 { font-size: 20px; font-weight: 660; letter-spacing: -0.032em; line-height: 1.15; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cs-body > p { font-size: 13.5px; color: var(--cs-mute); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cs-mech { position: relative; flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 15px 16px 16px; background: var(--cs-stub); cursor: pointer; }
+.cs-mech:not(.none) { -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-mech:not(.none)::before { content: ''; position: absolute; top: -1px; left: 18px; right: 18px; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-what { order: -1; min-width: 0; } .cs-what small { display: block; font-size: 12px; font-weight: 620; color: var(--cs-on-field-2); margin-bottom: 2px; } .cs-what b { display: block; font-size: 18px; font-weight: 680; letter-spacing: -0.03em; line-height: 1.18; overflow-wrap: anywhere; } .cs-what span { display: block; margin-top: 3px; font-size: 13.5px; font-weight: 540; color: var(--cs-on-field-2); }
+.cs-act { display: flex; align-items: center; gap: 8px; margin-top: auto; } .cs-act .cs-btn { flex: 1; } .cs-act .cs-pill { flex: 1; text-align: center; padding: 9px 10px; }
+.cs-mech > .cs-stack { align-self: flex-start; } .cs-mech .cs-stack { --ring: var(--cs-stub); }
+.cs-mech.near { background: var(--cs-field); } .cs-mech.near .cs-what span { color: var(--cs-ink); font-weight: 640; }
+.cs-mech.met { background: var(--cs-action); color: var(--cs-paper); } .cs-mech.met .cs-what span, .cs-mech.met .cs-what small { color: var(--cs-paper); } .cs .cs-mech.met .cs-btn.go { background: var(--cs-paper); color: var(--cs-ink); }
+.cs-mech.none { background: var(--cs-paper); box-shadow: inset 0 1px 0 var(--cs-line); } .cs-mech.none .cs-what { order: 0; } .cs-mech.none .cs-what span { color: var(--cs-mute); font-weight: 480; margin: 0; } .cs-mech.none .cs-stack { --ring: var(--cs-paper); }
+.cs-seats { display: flex; gap: 5px; flex: none; flex-wrap: wrap; } .cs-seats .cs-face, .cs-seat { width: 34px; height: 34px; }
+.cs-seats .cs-face.here { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+.cs-seat { position: relative; display: block; border-radius: 50%; border: 1.5px dashed var(--cs-ink); opacity: .55; } .cs-seat.next { opacity: 1; }
+/* a seat taken by someone the viewer does not know: filled, with no face */
+.cs-seat.taken { border-style: solid; opacity: 1; background: color-mix(in oklch, var(--cs-ink) 22%, transparent); } .cs-seat.taken.here { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+.cs-mech.near .cs-seat.next::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--cs-action); animation: cs-ping 1.6s var(--cs-expo) infinite; }
+.cs-pips { display: flex; gap: 4px; flex: none; flex-wrap: wrap; } .cs-pips i { width: 14px; height: 30px; border-radius: 5px 5px 5px 2px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); opacity: .4; } .cs-pips i.lit { background: var(--cs-ink); opacity: 1; } .cs-pips i.next { opacity: 1; background: repeating-linear-gradient(135deg, transparent 0 3px, var(--cs-action) 3px 5px); }
+
+/* the panel: unfolds to the right of its ticket, inside the row */
+.cs-sheet { flex: 0 0 min(660px, calc(100vw - 32px)); display: flex; flex-direction: column; overflow-y: auto; padding: 14px 20px 16px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-ink); cursor: default; }
+.cs-sheet.fresh { animation: cs-side .5s var(--cs-expo); }
+.cs-sheet-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; } .cs-sheet-top h3 { font-size: 20px; font-weight: 660; letter-spacing: -0.032em; }
+.cs-regp { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); grid-template-rows: 1fr auto; gap: 12px 24px; align-items: stretch; padding-top: 8px; }
+.cs-regp.wide { grid-template-columns: minmax(0, 1fr); }
+.cs-regd { align-self: start; min-width: 0; } .cs-regd > p { font-size: 15.5px; max-width: 52ch; margin-bottom: 6px; white-space: pre-line; overflow-wrap: anywhere; }
+.cs-regd > p.how { font-size: 13.5px; color: var(--cs-mute); margin: 0; max-width: 64ch; } .cs-regd > p.how b { color: var(--cs-action); font-weight: 640; margin-right: 6px; }
+.cs-facts { display: flex; flex-wrap: wrap; gap: 10px 26px; margin: 12px 0 0; font-size: 13px; line-height: 1.3; color: var(--cs-mute); } .cs-facts li.who { display: flex; align-items: center; gap: 8px; } .cs-facts li.who .cs-face { width: 30px; height: 30px; }
+.cs-facts li b { display: block; font-size: 14px; font-weight: 600; color: var(--cs-ink); }
+.cs-map { overflow: hidden; display: grid; grid-template-rows: minmax(104px, 1fr) auto; border-radius: 16px 16px 16px 5px; box-shadow: 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); background: var(--cs-paper); margin: 0 4px 4px 0; }
+.cs-map iframe { display: block; width: 100%; height: 100%; border: 0; }
+.cs-map figcaption { padding: 6px 12px 7px; font-size: 13px; color: var(--cs-mute); border-top: 1.5px solid var(--cs-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cs-map figcaption b { font-size: 14px; font-weight: 600; color: var(--cs-ink); margin-right: 6px; }
+.cs-regact { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; padding: 0 4px 4px 0; } .cs-regact small { flex: 1 1 260px; font-size: 13px; color: var(--cs-mute); } .cs-regact:empty { display: none; }
+.cs-regact .quiet { font-size: 13.5px; font-weight: 580; text-decoration: underline; text-underline-offset: 3px; }
+.cs-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; }
+.cs-opts small { flex-basis: 100%; font-size: 12.5px; color: var(--cs-mute); }
+.cs-field { height: 36px; padding: 0 14px; display: inline-flex; align-items: center; min-width: 190px; max-width: 100%; overflow: hidden; white-space: nowrap; border-radius: 12px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); color: var(--cs-mute); font-size: 14px; }
+.cs-who2 { height: 46px; display: inline-flex; align-items: center; gap: 9px; padding: 0 14px 0 6px; border-radius: 99px; text-align: left; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); transition: background-color .15s, color .15s; }
+.cs-who2:hover { box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-who2 .cs-face { width: 34px; height: 34px; }
+.cs-who2 span { font-size: 12px; font-weight: 440; color: var(--cs-mute); line-height: 1.25; } .cs-who2 span b { display: block; font-size: 14px; font-weight: 600; color: var(--cs-ink); }
+.cs-who2 em { font-style: normal; font-size: 13px; font-weight: 640; color: var(--cs-action); margin-left: 6px; }
+.cs .cs-who2[aria-pressed=true] { background: var(--cs-ink); box-shadow: none; } .cs-who2[aria-pressed=true] span, .cs-who2[aria-pressed=true] em { color: var(--cs-field); } .cs-who2[aria-pressed=true] span b { color: var(--cs-paper); }
+
+/* under the row: rewards you are earning */
+.cs-shelf { display: flex; flex-direction: column; margin-top: 12px; } .cs-shelf h2 { margin-bottom: 10px; }
+.cs-coupons { padding: 0 5px 5px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.cs-coupons li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 14px 20px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 4px 4px 0 var(--cs-field-shadow); line-height: 1.25; }
+.cs-coupons small { display: block; font-size: 12.5px; font-weight: 560; color: var(--cs-mute); }
+.cs-coupons b { display: block; font-stretch: 108%; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; margin: 2px 0; overflow-wrap: anywhere; } .cs-coupons span { font-size: 13.5px; color: var(--cs-mute); }
+.cs-coupons .ready { background: var(--cs-ink); color: var(--cs-paper); box-shadow: 4px 4px 0 var(--cs-action); } .cs-coupons .ready small, .cs-coupons .ready span { color: var(--cs-on-ink-mute); } .cs-coupons .ready .cs-gauge circle.lit { stroke: var(--cs-field); } .cs-coupons .ready .cs-gauge circle { stroke: color-mix(in oklch, var(--cs-on-ink) 22%, transparent); }
+.cs .cs-coupons .ready button { font-size: 13px; font-weight: 640; padding: 6px 13px; border-radius: 99px; background: var(--cs-field); color: var(--cs-ink); }
+.cs-coupons .show { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid color-mix(in oklch, var(--cs-on-ink) 22%, transparent); } .cs-coupons .show time { font-weight: 640; }
+
+/* level: a badge on the avatar, and the card under it */
+.cs-acct { position: relative; display: flex; align-items: center; }
+.cs-ava { position: relative; flex: none; display: block; }
+.cs-ava .cs-face { width: 38px; height: 38px; }
+.cs-lvb { position: absolute; right: -5px; bottom: -4px; min-width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; font-size: 11.5px; font-weight: 740; line-height: 1; color: var(--cs-paper); background: var(--cs-action); box-shadow: 0 0 0 2px var(--cs-field); transition: transform .2s var(--cs-ease); }
+.cs-acct > button:hover .cs-lvb { transform: scale(1.14); }
+.cs-ava.big .cs-face { width: 68px; height: 68px; font-size: 24px; }
+.cs-ava.big .cs-lvb { min-width: 26px; height: 26px; font-size: 15px; right: -4px; bottom: -2px; box-shadow: 0 0 0 3px var(--cs-field); }
+.cs-lvl { position: absolute; right: 0; top: calc(100% + 14px); z-index: 30; width: 344px; max-width: calc(100vw - 28px); border-radius: var(--cs-r); overflow: hidden; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 92% 0; animation: cs-card .3s var(--cs-expo); }
+.cs-lvl-top { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; align-items: center; padding: 20px 22px 16px 20px; background: var(--cs-field); }
+.cs-lvl-top strong { display: block; font-stretch: 108%; font-weight: 720; font-size: 22px; letter-spacing: -0.035em; line-height: 1.05; overflow-wrap: anywhere; }
+.cs-lvl-top div > span { font-size: 14px; font-weight: 540; color: var(--cs-on-field-2); }
+.cs-lvbar { grid-column: 1 / -1; position: relative; height: 8px; margin: 8px 7px 0 0; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 16%, transparent); }
+.cs-lvbar i { position: absolute; inset: 0; border-radius: 99px; background: var(--cs-ink); clip-path: inset(0 calc((1 - var(--to)) * 100%) 0 0 round 99px); animation: cs-fill .9s .16s var(--cs-ease) backwards; }
+.cs-lvbar em { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--cs-field); box-shadow: 0 0 0 2px var(--cs-ink) inset; }
+.cs-lvbar em.hit { background: var(--cs-ink); }
+.cs-lvl-top p { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+.cs-lvl-top p b { font-size: 18px; font-weight: 720; } .cs-lvl-top p span + span { font-weight: 600; }
+.cs-lvl-body { padding: 14px 20px 16px; } .cs-lvl-body > p { font-size: 13.5px; color: var(--cs-mute); }
+.cs-lvl-body ul { margin: 10px -10px 0; display: grid; gap: 2px; }
+.cs-lvl-body li { display: grid; grid-template-columns: 24px 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 12px; }
+.cs-lvl-body li.now { background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); }
+.cs-lvl-body li > b { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 740; background: color-mix(in oklch, var(--cs-ink) 10%, transparent); }
+.cs-lvl-body li.now > b { background: var(--cs-action); color: var(--cs-paper); }
+.cs-lvl-body li strong { display: block; font-weight: 620; font-size: 14.5px; } .cs-lvl-body li span { display: block; font-size: 13px; line-height: 1.35; color: var(--cs-mute); }
+.cs-lvl-body li small { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.cs-lvl-more { display: grid; gap: 2px; margin: 12px -10px 0; padding-top: 10px; border-top: 1px solid var(--cs-line); }
+.cs-lvl-more h4 { margin: 0; padding: 0 10px 2px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
+.cs-lvl-more a, .cs-lvl-more button { display: block; width: 100%; text-align: left; padding: 7px 10px; border-radius: 12px; font-size: 14.5px; font-weight: 580; }
+.cs-lvl-more a:hover, .cs-lvl-more button:hover { background: color-mix(in oklch, var(--cs-ink) 7%, transparent); }
+
+/* Kits: one school's colours. Set on the page by <html data-kit>, and on anything inside it by its own data-kit (a swatch of the avatar card, the front door and the tickets stacked on it).
+   No kit, or "loop", is the look above. Each is a light bright field with dark type, and the school's colour as the action. */
+.cs [data-kit="loop"] { --cs-field: oklch(96.4% 0.19 117); --cs-action: oklch(47.6% 0.13 250); --cs-ink: oklch(25% 0.07 252); }
+:root[data-kit="cornell"] .cs, .cs [data-kit="cornell"] { --cs-field: oklch(82% 0.12 38); --cs-field-shadow: oklch(67% 0.13 36); --cs-ink: oklch(24% 0.035 30); --cs-ink-2: oklch(34% 0.05 30); --cs-action: oklch(48.5% 0.185 27); --cs-action-hover: oklch(54% 0.19 27); --cs-action-deep: oklch(38% 0.15 27); }
+:root[data-kit="columbia"] .cs, .cs [data-kit="columbia"] { --cs-field: oklch(87% 0.075 235); --cs-field-shadow: oklch(71% 0.09 240); --cs-ink: oklch(25% 0.06 255); --cs-ink-2: oklch(35% 0.08 255); --cs-action: oklch(46% 0.14 255); --cs-action-hover: oklch(52% 0.15 255); --cs-action-deep: oklch(36% 0.11 255); }
+:root[data-kit="cuny"] .cs, .cs [data-kit="cuny"] { --cs-field: oklch(88% 0.13 88); --cs-field-shadow: oklch(74% 0.14 80); --cs-ink: oklch(24% 0.08 265); --cs-ink-2: oklch(34% 0.1 265); --cs-action: oklch(38% 0.18 264); --cs-action-hover: oklch(45% 0.19 264); --cs-action-deep: oklch(30% 0.14 264); }
+:root[data-kit="nyu"] .cs, .cs [data-kit="nyu"] { --cs-field: oklch(85% 0.09 305); --cs-field-shadow: oklch(69% 0.12 305); --cs-ink: oklch(24% 0.08 305); --cs-ink-2: oklch(34% 0.1 305); --cs-action: oklch(40% 0.2 305); --cs-action-hover: oklch(46% 0.21 305); --cs-action-deep: oklch(30% 0.16 305); }
+/* Mixed in oklab: in oklch a mix with the near-white paper swings through other hues (a violet field gave a peach stub). */
+:root[data-kit]:not([data-kit="loop"]) .cs, .cs [data-kit]:not([data-kit="loop"]) { --cs-stub: color-mix(in oklab, var(--cs-field) 34%, var(--cs-paper)); --cs-on-field-2: color-mix(in oklab, var(--cs-ink) 74%, var(--cs-field)); }
+/* Your picture: one of the front door's animals, or your own photo. */
+.cs-face.pet { object-fit: contain; }
+/* The big picture in the card is the button that opens the picker; the card's body is the picker while it is open. */
+.cs .cs-ava-pick { position: relative; display: block; border-radius: 50%; }
+.cs-ava-pick > i { position: absolute; left: -6px; top: -6px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); transition: transform .15s var(--cs-ease); }
+.cs-ava-pick > i svg { width: 15px; height: 15px; } .cs-ava-pick:hover > i { transform: scale(1.12) rotate(-8deg); }
+.cs-ava .cs-face.new { animation: cs-pop .4s var(--cs-expo); }
+.cs-pets-top { display: flex; align-items: center; gap: 8px; } .cs-pets-top h4 { margin: 0 auto 0 0; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.cs-pets-top .cs-btn svg { width: 15px; height: 15px; }
+.cs-pets-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 14px; }
+.cs-pets h5 { margin: 16px 0 0; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); } .cs-pets h5 + .cs-pets-grid { margin-top: 8px; }
+/* "Create your own": the tile that opens it, and its pane in the card (components/campus/own-face.tsx). */
+.cs .cs-pet.add { display: grid; place-items: center; background: none; color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-pet.add svg { width: 45%; height: 45%; }
+.cs-lvl-top .cs-own-tag { margin-left: 8px; } .cs-own .cs-pets-top h4 { margin-right: 0; } .cs-own-tag { margin-right: auto; padding: 2px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 700; color: var(--cs-paper); background: var(--cs-action); }
+.cs-own-form { display: grid; gap: 12px; margin-top: 12px; } .cs-own p { margin: 0; font-size: 13.5px; color: var(--cs-mute); } .cs-own .cs-btn { justify-self: start; }
+.cs .cs-own-photo { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 76px; padding: 8px 14px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 40%, transparent); }
+.cs-own-photo img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
+.cs-own-plan { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 14px; border-radius: 14px; background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); }
+.cs-own-plan span { font-weight: 700; } .cs-own-plan small { grid-column: 1 / -1; margin: 0; }
+.cs-own-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+.cs-own-form input[type=email] { width: 100%; height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); }
+.cs-own [role=alert] { font-weight: 580; color: var(--cs-action); }
+.cs-own .cs-prem { position: relative; margin: -14px -20px -16px; padding: 18px 20px 0; overflow: hidden; background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs .cs-prem-back { position: absolute; right: 16px; top: 14px; z-index: 1; height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; color: var(--cs-on-ink); box-shadow: inset 0 0 0 1.5px var(--cs-on-ink-mute); }
+.cs-own .cs-prem-kick { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 620; color: var(--cs-field); } .cs-prem-kick::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--cs-field); }
+.cs-own .cs-prem-big { margin-top: 12px; font-size: 46px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.055em; line-height: .92; color: var(--cs-on-ink); } .cs-prem-big small { font-size: 17px; font-weight: 560; letter-spacing: -0.02em; color: var(--cs-on-ink-mute); }
+.cs-prem-perks { position: relative; display: grid; gap: 7px; margin-top: 16px; font-size: 14px; line-height: 1.25; color: var(--cs-on-ink-mute); } .cs-prem-perks span { display: grid; grid-template-columns: 7px 1fr; gap: 10px; align-items: baseline; }
+.cs-prem-perks span::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--cs-field); transform: translateY(-1px); } .cs-prem-perks span:first-child { font-weight: 620; color: var(--cs-on-ink); } .cs-prem-perks small { margin: 0 0 0 17px; font-size: 12.5px; color: var(--cs-on-ink-mute); }
+.cs-prem-figs { position: absolute; right: -16px; top: 44px; display: flex; pointer-events: none; } .cs-prem-figs img { width: 86px; height: 86px; margin-left: -32px; } .cs-prem-figs img:first-child { transform: rotate(-9deg) translateY(10px) scale(.84); } .cs-prem-figs img + img { transform: rotate(5deg); }
+.cs-prem-stub { position: relative; display: grid; gap: 8px; margin: 18px -20px 0; padding: 14px 16px 16px; background: var(--cs-field); border-top: 2px dashed var(--cs-ink); }
+.cs-prem-stub::before, .cs-prem-stub::after { content: ""; position: absolute; top: -10px; width: 18px; height: 18px; border-radius: 50%; background: var(--cs-paper); } .cs-prem-stub::before { left: -10px; } .cs-prem-stub::after { right: -10px; }
+.cs .cs-prem-stub > .cs-btn { justify-self: stretch; height: 46px; font-size: 15.5px; }
+.cs-prem-join { display: flex; align-items: center; height: 46px; padding: 4px 5px 4px 16px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); animation: cs-in .32s var(--cs-expo); }
+.cs-prem-join input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; font: inherit; font-size: 15px; color: var(--cs-ink); } .cs .cs-prem-join .cs-btn { height: 36px; padding: 0 16px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); margin-right: 3px; }
+.cs-prem-join:focus-within { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 0 0 0 3px color-mix(in oklch, var(--cs-ink) 25%, transparent); } .cs-own .cs-prem-stub [role=alert] { color: var(--cs-ink); font-weight: 620; }
+@media (prefers-reduced-motion: reduce) { .cs-prem-join { animation: none; } }
+.cs-own-made { display: grid; justify-items: center; gap: 12px; margin-top: 14px; text-align: center; } .cs-own-made img { width: 132px; height: 132px; object-fit: contain; }
+.cs-own-made img.busy { border-radius: 16px; object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } @keyframes cs-own-wait { to { opacity: .45; transform: scale(.96); } }
+.cs-own .cs-own-thanks { padding: 10px 14px; border-radius: 14px; font-weight: 580; color: var(--cs-ink); background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); }
+@media (prefers-reduced-motion: reduce) { .cs-own-made img.busy { animation: none; } }
+.cs .cs-pet { aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 10%, var(--cs-paper)); transition: transform .15s var(--cs-ease); }
+.cs-pet img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .cs-pet.photo img { object-fit: cover; }
+.cs .cs-pet:hover { transform: scale(1.14); }
+.cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+.cs-pets small { display: block; margin-top: 12px; font-size: 11.5px; color: var(--cs-mute); } .cs-pets small a { text-decoration: underline; }
+.cs-kits { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
+.cs-kits h4 { margin: 0 0 6px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
+.cs-kits > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs .cs-kit { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 7px; border-radius: 99px; font-size: 13.5px; font-weight: 580; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs .cs-kit:hover, .cs .cs-kit[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--cs-ink); }
+.cs-kit i { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(var(--cs-action) 36%, var(--cs-field) 40%); box-shadow: 0 0 0 1px color-mix(in oklch, var(--cs-ink) 25%, transparent); }
+
+/* The door: the pitch with a ticket to try, and the sign-in card. .cs-doorway wears the school whose ticket is on top. */
+@keyframes cs-deal { from { opacity: 0; transform: translate(70px, 14px) rotate(5deg) scale(.96); } }
+@keyframes cs-slam { from { opacity: 0; transform: rotate(-22deg) scale(2.2); } }
+@keyframes cs-roll-in { from { transform: translateY(100%); } }
+@keyframes cs-roll-out { to { transform: translateY(-100%); } }
+@keyframes cs-wipe { from { clip-path: circle(0 at var(--cs-vx, 50%) var(--cs-vy, 50%)); } to { clip-path: circle(150vmax at var(--cs-vx, 50%) var(--cs-vy, 50%)); } }
+html.cs-wiping::view-transition-old(root) { animation: none; }
+html.cs-wiping::view-transition-new(root) { animation: cs-wipe .8s cubic-bezier(.16, 1, .3, 1); }
+.cs-doorway { flex: 1; display: flex; flex-direction: column; color: var(--cs-ink); transition: background-color .3s; } .cs-doorway.won { background: var(--cs-field); }
+/* on the door's top bar: one dot per school */
+.cs-dots { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.cs .cs-dots button { position: relative; flex: none; min-width: 16px; height: 16px; border-radius: 99px; background: var(--cs-action); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: transform .2s var(--cs-ease); }
+.cs-dots button::after { content: ''; position: absolute; inset: -9px -5px; }
+.cs .cs-dots button:not([aria-pressed=true]):hover { transform: scale(1.3); }
+.cs .cs-dots button[aria-pressed=true] { height: 34px; padding: 0 15px; background: var(--cs-ink); color: var(--cs-field); box-shadow: 3px 3px 0 var(--cs-action); font-size: 14.5px; font-weight: 640; animation: cs-in .4s var(--cs-expo); }
+.cs-door { flex: 1; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 380px); gap: 32px 48px; align-items: center; padding: 28px 32px 40px; max-width: 1220px; width: 100%; margin: 0 auto; }
+.cs-door h1 { font-stretch: 112%; font-weight: 720; font-size: clamp(44px, 5.4vw, 80px); line-height: .92; letter-spacing: -0.05em; margin-bottom: 14px; } .cs-door h1 > span { display: block; white-space: nowrap; }
+.cs-roll { display: inline-grid; height: 1em; overflow: hidden; vertical-align: bottom; }
+.cs-roll em { grid-area: 1 / 1; height: 1em; line-height: 1; font-style: normal; color: var(--cs-action); animation: cs-roll-in .9s var(--cs-expo); } .cs-roll em.out { animation: cs-roll-out .9s var(--cs-expo) forwards; }
+.cs-door-say > p { font-size: 18px; max-width: 46ch; color: var(--cs-ink-2); margin-bottom: 22px; }
+.cs-door-say > p.cs-tip { max-width: none; margin: 52px 0 0; font-size: 13.5px; font-weight: 560; color: var(--cs-on-field-2); }
+.cs-door-say > p.cs-credit { max-width: none; margin: 4px 0 0; font-size: 12px; color: var(--cs-mute); } .cs-credit a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* the stack: this school's ticket on top, the others behind it, each in its own colours */
+.cs-deck { position: relative; isolation: isolate; width: min(400px, 100%); margin-right: 150px; }
+.cs-dtab { position: absolute; inset: 0; display: grid; justify-items: end; align-content: start; padding: 20px 12px; border-radius: var(--cs-r); background: var(--cs-field); color: var(--cs-ink); box-shadow: 4px 4px 0 var(--cs-field-shadow); z-index: calc(0 - var(--k)); transition: transform .3s var(--cs-ease);
+  transform: translate(calc(var(--k) * (46px + var(--px, 0) * 14px)), calc(var(--k) * (9px + var(--py, 0) * 6px))) rotate(calc(var(--k) * (1.6deg + var(--px, 0) * 1.2deg))); }
+.cs .cs-dtab { background: var(--cs-field); color: var(--cs-ink); }
+.cs-dtab span { writing-mode: vertical-rl; font-weight: 700; font-stretch: 112%; font-size: 17px; letter-spacing: -0.02em; }
+.cs-dtab:hover { transform: translate(calc(var(--k) * 46px + 22px), calc(var(--k) * 9px - 8px)) rotate(calc(var(--k) * 1.6deg + 2.5deg)); }
+.cs-dtk { --cut: 13px; position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--cs-r); cursor: grab; user-select: none; touch-action: pan-y; animation: cs-deal .6s var(--cs-expo) backwards;
+  transform: translate(calc(var(--px, 0) * -9px), calc(var(--py, 0) * -6px)) rotate(calc(var(--px, 0) * -1.6deg)); filter: drop-shadow(calc(7px + var(--px, 0) * 5px) calc(7px + var(--py, 0) * 4px) 0 var(--cs-ink)); transition: transform .3s var(--cs-ease), filter .3s var(--cs-ease); }
+.cs-dtk.drag { cursor: grabbing; animation: none; transition: none; }
+.cs-dtk-top { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; padding: 22px 22px 26px; background: var(--cs-paper); }
+.cs-dtk-top { -webkit-mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-dtk-top .cs-tile { min-width: 76px; min-height: 76px; } .cs-dtk-top .cs-tile b { font-size: 22px; } .cs-dtk-top .cs-tile small { font-size: 13px; }
+.cs-dtk-top h3 { font-size: 28px; font-weight: 680; letter-spacing: -0.04em; line-height: 1.05; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .cs-dtk-top p { font-size: 14px; color: var(--cs-mute); margin-top: 4px; }
+.cs-dtk-stub { position: relative; display: grid; gap: 14px; padding: 22px; background: var(--cs-stub); transition: background-color .3s; -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-dtk-stub::before { content: ''; position: absolute; top: -1px; left: 22px; right: 22px; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-dtk-stub small { display: block; font-size: 13px; font-weight: 620; color: var(--cs-on-field-2); } .cs-dtk-stub strong { display: block; font-size: 25px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.1; overflow-wrap: anywhere; } .cs-dtk-stub em { display: block; font-style: normal; margin-top: 4px; font-weight: 580; color: var(--cs-on-field-2); }
+.cs-dtk-stub.near { background: var(--cs-field); } .cs-dtk-stub.near em { color: var(--cs-ink); }
+.cs-dtk-stub.met { background: var(--cs-action); color: var(--cs-paper); } .cs-dtk-stub.met small, .cs-dtk-stub.met em { color: var(--cs-paper); }
+.cs .cs-dtk-stub .cs-btn { height: 46px; font-size: 16px; font-weight: 620; } .cs .cs-dtk-stub.met .cs-btn.go { background: var(--cs-paper); color: var(--cs-ink); }
+
+/* seats on the ticket: an animal for a seat that is taken, a socket with a plus for one that is free */
+.cs-dseats { display: flex; align-items: center; gap: 8px; }
+.cs-dseat { position: relative; flex: none; width: 44px; height: 44px; border-radius: 50%; }
+.cs-dseat.pet { overflow: hidden; background: color-mix(in oklab, var(--cs-ink) 16%, transparent); } .cs-dseat.new { animation: cs-pop .45s var(--cs-expo); }
+.cs-dseat img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.cs button.cs-dseat { display: grid; place-items: center; color: color-mix(in oklab, var(--cs-ink) 55%, transparent); background: color-mix(in oklab, var(--cs-ink) 9%, transparent); box-shadow: inset 0 2.5px 0 color-mix(in oklab, var(--cs-ink) 20%, transparent), inset 0 0 0 1.5px color-mix(in oklab, var(--cs-ink) 30%, transparent); transition: transform .15s var(--cs-ease), background-color .15s, color .15s; }
+button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; background: linear-gradient(currentColor 0 0) center / 100% 2.5px no-repeat, linear-gradient(currentColor 0 0) center / 2.5px 100% no-repeat; transition: transform .3s var(--cs-expo); }
+.cs button.cs-dseat.next { color: var(--cs-action); background: var(--cs-paper); box-shadow: inset 0 0 0 2px var(--cs-ink), 2px 2px 0 var(--cs-ink); }
+.cs-dseat.next::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--cs-action); animation: cs-ping 1.6s var(--cs-expo) infinite; }
+.cs button.cs-dseat:not(.you):hover { transform: scale(1.1); color: var(--cs-action); background: var(--cs-paper); } button.cs-dseat:not(.you):hover::before { transform: rotate(90deg); }
+.cs button.cs-dseat.you { margin: 0 5px; transform: scale(1.16); background: var(--cs-paper); box-shadow: 0 0 0 2.5px var(--cs-field), 0 0 0 5px var(--cs-action); animation: cs-pop .45s var(--cs-expo); }
+.cs-dseat.you b { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); padding: 1px 7px 2px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); font-size: 10.5px; font-weight: 720; line-height: 1.2; }
+.cs-dseat.you::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2.5px solid var(--cs-action); animation: cs-ping 1s var(--cs-expo) 2 both; }
+.cs .met button.cs-dseat.you { box-shadow: 0 0 0 2.5px var(--cs-action), 0 0 0 5px var(--cs-paper); } .met .cs-dseat.you b { background: var(--cs-paper); color: var(--cs-action); } .met .cs-dseat.you::after { display: none; }
+.met .cs-dseat.pet { background: color-mix(in oklab, var(--cs-paper) 28%, transparent); }
+.cs-stamp { margin-left: auto; padding: 3px 12px 4px; border: 2.5px solid var(--cs-paper); border-radius: 8px 8px 8px 2px; font-size: 15px; font-weight: 760; font-stretch: 112%; transform: rotate(-9deg); animation: cs-slam .5s var(--cs-expo) backwards .1s; }
+
+/* the sign-in card: a stub in the school's colour over a paper body */
+.cs-door-in { position: relative; overflow: hidden; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 7px 7px 0 var(--cs-action); transition: transform .25s var(--cs-ease), box-shadow .25s var(--cs-ease); }
+.cs-door-in:focus-within { transform: translate(-2px, -2px); box-shadow: 0 0 0 1.5px var(--cs-ink), 10px 10px 0 var(--cs-action); }
+.cs-door-in-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 14px; align-items: center; padding: 18px 20px 16px 24px; background: var(--cs-field); border-bottom: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-door-in h2 { margin: 0; font-size: 25px; font-weight: 720; font-variation-settings: normal; font-stretch: 110%; letter-spacing: -0.04em; line-height: 1.05; text-transform: none; }
+.cs-door-in-top p { grid-column: 1; font-size: 13.5px; font-weight: 540; color: var(--cs-on-field-2); }
+.cs-door-in-top svg { grid-column: 2; grid-row: 1 / 3; width: 46px; height: 46px; padding: 7px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); --lime: var(--cs-action); }
+.cs-door-in-body { display: grid; gap: 12px; padding: 20px 24px 18px; }
+.cs-door-in label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 600; }
+/* The form inside is Clerk's. Its parts carry cl- class names, and its own styles are strong, so these are forced. */
+.cs-door-in .cl-formFieldInput { height: 44px !important; padding: 0 18px !important; border: 0 !important; border-radius: 99px !important; font-size: 15px !important; background: var(--cs-paper) !important; box-shadow: inset 0 0 0 1.5px var(--cs-ink) !important; }
+.cs-door-in .cl-formFieldInput:focus { background: var(--cs-stub) !important; box-shadow: inset 0 0 0 2.5px var(--cs-action) !important; }
+.cs-door-in .cl-socialButtonsBlockButton, .cs-door-in .cl-formButtonPrimary { height: 44px !important; border: 0 !important; border-radius: 99px !important; font-size: 15px !important; transition: transform .15s var(--cs-ease), background-color .15s !important; }
+.cs-door-in .cl-socialButtonsBlockButton { color: var(--cs-ink) !important; background: var(--cs-paper) !important; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow) !important; } .cs-door-in .cl-socialButtonsBlockButton * { font-size: 15px !important; font-weight: 600 !important; color: var(--cs-ink) !important; }
+.cs-door-in .cl-socialButtonsBlockButton:hover { background: var(--cs-stub) !important; }
+.cs-door-in .cl-formButtonPrimary { font-weight: 640 !important; color: var(--cs-paper) !important; background: var(--cs-action) !important; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink) !important; } .cs-door-in .cl-formButtonPrimary::after { display: none !important; }
+.cs-door-in .cl-formButtonPrimary:hover { background: var(--cs-action-hover) !important; }
+.cs-door-in .cl-socialButtonsBlockButton:active, .cs-door-in .cl-formButtonPrimary:active { transform: translate(2px, 2px); }
+.cs-door-in .two { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; }
+.cs-door-in input, .cs-door-in select, .cs-form input, .cs-form textarea, .cs-form select { width: 100%; height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); }
+.cs-form textarea { height: auto; min-height: 74px; padding: 9px 12px; resize: vertical; }
+.cs-door-in select, .cs-form select { appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--cs-ink) 50%), linear-gradient(135deg, var(--cs-ink) 50%, transparent 50%); background-position: calc(100% - 17px) 16px, calc(100% - 12px) 16px; background-size: 5px 5px; background-repeat: no-repeat; }
+.cs-door-in .seen { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin: -2px 0; padding: 4px 13px 4px 8px; border-radius: 99px; background: var(--cs-field); font-size: 13px; font-weight: 640; animation: cs-in .4s var(--cs-expo); }
+.cs-door-in .seen::before { content: ''; flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--cs-action); box-shadow: 0 0 0 1.5px var(--cs-ink); } .cs-door-in .seen:empty { display: none; }
+.cs-door-in .fine { font-size: 12.5px; color: var(--cs-mute); text-align: center; }
+.cs .cs-cont { display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 8px; font-size: 14px; font-weight: 600; background: var(--cs-ink); color: var(--cs-paper); } .cs .cs-cont:hover { background: var(--cs-ink-2); }
+.cs-or { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--cs-mute); } .cs-or::before, .cs-or::after { content: ''; flex: 1; height: 1px; background: var(--cs-line); }
+.cs-plain { width: 100%; max-width: 620px; margin: 0 auto; padding: 32px 32px 64px; display: grid; gap: 16px; align-content: start; }
+.cs-plain h1 { font-stretch: 108%; font-weight: 720; font-size: 34px; line-height: 1; letter-spacing: -0.04em; }
+.cs-plain > p { color: var(--cs-ink-2); max-width: 52ch; }
+.cs-form { display: grid; gap: 14px; padding: 20px 22px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
+.cs-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; } .cs-form label small { font-weight: 440; color: var(--cs-mute); }
+.cs-form .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.cs-form .end { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cs-form .from { display: grid; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid color-mix(in oklch, var(--cs-ink) 14%, transparent); }
+.cs-form .from .row { display: flex; gap: 8px; } .cs-form .from .row input { flex: 1; min-width: 0; } .cs-form .from .row .cs-btn { height: 38px; }
+.cs-form .kept { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13px; } .cs-form .kept span { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.cs-form .kept button { font-size: 13px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
+/* posting in one line (design D12) */
+.cs-line { display: grid; gap: 12px; }
+.cs-line-card { display: grid; gap: 8px; padding: 16px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
+.cs-line-card h2, .cs-line-label { font-size: 12px; font-weight: 640; text-transform: uppercase; letter-spacing: .06em; color: var(--cs-mute); } .cs-line-card h2 b { color: var(--cs-action); text-transform: none; letter-spacing: 0; font-size: 13.5px; }
+.cs-say { width: 100%; border: 0; padding: 0; resize: none; background: none; font: inherit; font-size: 22px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; color: var(--cs-ink); outline: none; }
+.cs-say::placeholder { color: color-mix(in oklch, var(--cs-ink) 32%, transparent); }
+.cs-line-card:focus-within { box-shadow: 5px 5px 0 var(--cs-field-shadow), 0 0 0 1.5px var(--cs-ink) inset; }
+.cs-read { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 44px; padding-top: 10px; border-top: 1px dashed var(--cs-line); }
+.cs-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 32px; padding: 4px 12px; border-radius: 16px; font-size: 13.5px; font-weight: 600; line-height: 1.2; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); overflow-wrap: anywhere; }
+.cs-chip.when { background: var(--cs-field); } .cs-chip.place { background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs-chip button { font-size: 12.5px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
+.cs-chip-hint { font-size: 13px; color: var(--cs-mute); }
+/* a time offered to tap when the line has none: dashed until it is taken */
+.cs .cs-chip.idea { box-shadow: none; border: 1.5px dashed var(--cs-ink); cursor: pointer; transition: background-color .15s; } .cs .cs-chip.idea:hover { background: var(--cs-field); border-style: solid; }
+/* each place has a bar behind its name, as long as the place is busy next to the busiest one */
+.cs-sug { display: grid; gap: 4px; } .cs-sug button { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; border-radius: 12px 12px 12px 4px; }
+.cs-sug button[style]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: max(10px, calc(var(--fill) * 100%)); border-radius: inherit; background: color-mix(in oklch, var(--cs-action) 14%, transparent); transform-origin: left; animation: cs-grow .6s var(--cs-expo) backwards; transition: width .4s var(--cs-expo), background-color .15s; }
+.cs-sug button[style]:hover::before { background: color-mix(in oklch, var(--cs-action) 24%, transparent); } .cs-sug button > span { position: relative; }
+/* on a bar the words are ink, not the paler blue and grey */
+.cs-sug button[style] b { color: var(--cs-ink); font-weight: 720; } .cs-sug button[style] small { color: color-mix(in oklch, var(--cs-ink) 78%, transparent); font-weight: 540; }
+.cs-sug button:hover b { text-decoration: underline; text-underline-offset: 3px; } .cs-sug b { font-weight: 680; color: var(--cs-action); } .cs-sug b.new { color: var(--cs-ink); } .cs-sug small { display: block; font-size: 12.5px; color: var(--cs-mute); }
+.cs-mini { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); } .cs-line-card h2 + .cs-mini { border-top: 0; }
+.cs-mini time { flex: none; width: 58px; padding: 6px 0; border-radius: 10px 10px 10px 3px; background: var(--cs-field); text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.15; }
+.cs-mini div { flex: 1; min-width: 0; } .cs-mini div b { display: block; font-weight: 640; } .cs-mini div span { font-size: 12.5px; color: var(--cs-mute); }
+.cs-line-end { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .cs-line-end .cs-note { flex: 1; min-width: 160px; }
+.cs-line-bad { font-size: 14px; font-weight: 580; color: var(--cs-action); }
+.cs-at { margin-right: 7px; font-weight: 660; color: var(--cs-action); }
+/* the "+" that starts a plan sits in the line above the row; its panel opens in the row, the line beside what others are doing */
+.cs-tally { display: inline-flex; align-items: center; gap: 11px; min-width: 0; padding: 5px 20px 5px 5px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-tally h2 { font-size: 17px; }
+.cs .cs-plus { position: relative; flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-action); color: var(--cs-paper); transition: transform .2s var(--cs-ease), background-color .15s; }
+/* it asks to be pressed: a ring leaves it and the cross turns, then it rests; still once the panel is open */
+.cs-plus::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--cs-action); opacity: 0; animation: cs-beckon 3.2s var(--cs-expo) 1s infinite; }
+.cs-plus svg { animation: cs-turn 3.2s var(--cs-expo) 1s infinite; } .cs-plus[aria-expanded=true]::after, .cs-plus[aria-expanded=true] svg { animation: none; }
+.cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
+.cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
+.cs-sheet.cs-post { flex-basis: min(780px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
+.cs-post-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 10px; }
+.cs-post .cs-line { align-content: start; } .cs-post .cs-line-card, .cs-post .cs-line-card:focus-within { padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.cs-post-side { display: grid; gap: 16px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
+.cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
+.cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
+.cs-schools { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* admin */
+.cs-adm { width: 100%; padding: 24px 32px 64px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; align-items: start; }
+.cs-adm > header { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; } .cs-adm > header h1 { font-size: 30px; font-weight: 660; letter-spacing: -0.03em; } .cs-adm > header p, .cs-adm section > p { color: var(--cs-mute); }
+.cs-adm section { min-width: 0; display: grid; gap: 10px; align-content: start; } .cs-adm section.wide { grid-column: 1 / -1; }
+.cs-adm h2 { font-size: 18px; font-weight: 680; } .cs-adm section > p { font-size: 14px; max-width: 64ch; }
+.cs-adm-asks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; } .cs-adm-asks li { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); min-width: 0; }
+.cs-adm-asks span { display: flex; gap: 6px; min-height: 64px; } .cs-adm-asks img { width: 64px; height: 64px; object-fit: contain; } .cs-adm-asks b { font-size: 14px; font-weight: 620; overflow-wrap: anywhere; } .cs-adm-asks small { font-size: 12.5px; color: var(--cs-mute); }
+.cs-adm-list { display: grid; gap: 8px; } .cs-adm-list > li { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; padding: 11px 12px 11px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-field-shadow); }
+.cs-adm-list > li > div { min-width: 0; flex: 1 1 240px; } .cs-adm-list b { display: block; font-weight: 660; letter-spacing: -0.02em; overflow-wrap: anywhere; } .cs-adm-list span { font-size: 13.5px; color: var(--cs-mute); overflow-wrap: anywhere; }
+.cs-adm-list li.off { box-shadow: inset 0 0 0 1.5px var(--cs-line); background: none; }
+.cs-adm-list form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .cs-adm-list form.words { flex: 1 1 100%; } .cs-adm-list form.words input { flex: 1 1 260px; }
+.cs-adm details { border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); } .cs-adm details[open] { box-shadow: 3px 3px 0 var(--cs-field-shadow); }
+.cs-adm summary { cursor: pointer; padding: 11px 18px; font-weight: 620; } .cs-adm details .cs-form { box-shadow: none; padding-top: 4px; }
+.cs-adm input, .cs-adm select { height: 36px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); min-width: 0; }
+.cs-adm .cs-form .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+/* "Near you": the week on a map, one section of town at a time (components/campus/near.tsx). The map is the list:
+   stamps for plans, a dial of times under it, and the plan that is on hands you its ticket. The look is a two-ink
+   print on paper (public/demo/mockups-map-print.html): the ink colour, the school's colour a little off register,
+   and one hot ink kept for plans alone. */
+@keyframes cs-cell { from { opacity: 0; translate: 0 10px; rotate: -6deg; } }
+@keyframes cs-way-in { from { opacity: 0; scale: .9; } }
+@keyframes cs-nudge { from { translate: -4px 0; } to { translate: 5px 0; } }
+@keyframes cs-nope { 0%, 100% { translate: 0 0; } 20% { translate: -7px 0; } 45% { translate: 6px 0; } 70% { translate: -4px 0; } 88% { translate: 2px 0; } }
+@keyframes cs-spin { to { rotate: 360deg; } }
+@keyframes cs-show { from { opacity: 0; } }
+@keyframes cs-thunk { from { opacity: 0; translate: 6px -14px; rotate: -30deg; } 60% { opacity: .9; } }
+.cs-near { --pp: #f0e8d4; --card: #fbf7ec; --hot: #ff5a43; --second: color-mix(in oklab, var(--cs-field) 60%, var(--cs-field-shadow)); --soft: color-mix(in oklab, var(--cs-ink) 22%, transparent);
+  position: relative; isolation: isolate; flex: 1; min-height: min(600px, calc(100dvh - 32px)); margin: 0 6px 6px 0; overflow: hidden; border-radius: var(--cs-r); color: var(--cs-ink); background: var(--pp); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); }
+/* where the school's colour is already warm, plans take a hot ink that still stands apart from it */
+:root[data-kit="cornell"] .cs-near { --hot: oklch(90% 0.17 98); }
+/* the map library sets its own position on this element; this has to win */
+.cs-near .cs-near-map { position: absolute; inset: 0; z-index: 0; }
+.cs-near-defs { position: absolute; }
+/* a slight wobble in every drawn line, as if cut by hand. Kept to devices with a mouse until it is tried on phones. */
+@media (pointer: fine) { .cs-near-map canvas { filter: url(#cs-rough); } }
+.cs-near-tooth, .cs-near-age { position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: multiply; }
+.cs-near-tooth { opacity: .16; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .28  0 0 0 0 .24  0 0 0 -1.25 1.1'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.cs-near-age { background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgb(150 120 70 / .16)); }
+.cs-near-post { margin-bottom: 10px; }
+.cs-near-band { position: absolute; inset: 0 0 auto; z-index: 4; padding: 15px 22px 13px; background: var(--pp); box-shadow: 0 1.5px 0 var(--cs-ink), 0 4.5px 0 var(--pp), 0 5.5px 0 var(--cs-ink); }
+.cs-near-band p { margin-bottom: 3px; padding-right: 150px; font-stretch: 88%; font-size: 11.5px; font-weight: 640; letter-spacing: .1em; text-transform: uppercase; } .cs-near-band p b { font-weight: inherit; } .cs-near-band p i { font-style: normal; opacity: .6; }
+.cs-near-band h2 { font-stretch: 118%; font-weight: 820; font-size: 31px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; }
+.cs-near-band small { position: absolute; right: 14px; top: 15px; font-size: 10px; opacity: .6; }
+/* a plan is a postage stamp: perforated, in the hot ink, with a drawn picture, its hour, and who is going */
+.cs-pin { display: flex; align-items: flex-end; text-align: left; transition: opacity .3s; }
+.cs-stamp { position: relative; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); scale: var(--stamp, 1); transform-origin: 30% 100%; transition: rotate .35s var(--cs-ease), scale .35s var(--cs-ease); }
+.cs-stamp > span { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
+  mask: linear-gradient(#000 0 0) center / calc(100% - 6px) calc(100% - 6px) no-repeat, radial-gradient(circle 2.1px at 50% 50%, #0000 94%, #000) -3px -3px / 6px 6px; }
+.cs-stamp > span::before { content: ''; position: absolute; inset: 5.5px; box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
+.cs-stamp > span svg { width: 23px; height: 23px; fill: none; stroke: var(--cs-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cs-stamp b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; } .cs-stamp small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.cs-pin:hover .cs-stamp { --lean: 0deg; }
+.cs-pin.sel .cs-stamp { --lean: 2deg; scale: calc(1.3 * var(--stamp, 1)); filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 3.5px 0 var(--cs-ink)); }
+.cs-pin.dim { opacity: .25; } .cs-near .maplibregl-marker:has(.cs-pin.sel) { z-index: 5; }
+.cs-pin.now .cs-stamp::after { content: ''; position: absolute; inset: 2px; box-shadow: 0 0 0 2.5px var(--cs-ink); pointer-events: none; animation: cs-ping 2.4s var(--cs-expo) infinite; }
+/* the plan that is on: a burst of the second ink behind it, and a postmark over its corner */
+.cs-burst { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 110px; height: 110px; z-index: -1; pointer-events: none; animation: cs-spin 26s linear infinite, cs-show .5s var(--cs-ease) both; }
+.cs-burst path { fill: var(--second); stroke: var(--cs-ink); stroke-width: 1.3; stroke-linejoin: round; }
+.cs-mark { position: absolute; left: 30px; top: -38px; width: 62px; height: 62px; pointer-events: none; rotate: -14deg; scale: var(--stamp, 1); transform-origin: 0 100%; opacity: .82; animation: cs-thunk .34s var(--cs-ease) both; }
+.cs-mark circle { fill: none; stroke: var(--cs-ink); stroke-width: 1.5; } .cs-mark text { fill: var(--cs-ink); font-size: 7.4px; font-weight: 760; letter-spacing: .14em; } .cs-mark .day { font-size: 10px; letter-spacing: .02em; }
+.cs-pin > .cs-stack { position: relative; z-index: 1; margin: 0 0 -3px -10px; scale: var(--stamp, 1); transform-origin: 0 100%; }
+.cs-pin > .cs-stack .cs-face { width: 29px; height: 29px; margin-left: -9px; font-size: 11px; background: var(--card); box-shadow: 0 0 0 1.5px var(--cs-ink), 1.5px 2px 0 1px var(--soft); } .cs-pin > .cs-stack .cs-face:first-child { margin-left: 0; }
+/* near the right edge a stamp faces inward, so it is never cut off */
+.far > .cs-pin { translate: -100% 0; flex-direction: row-reverse; } .far > .cs-pin > .cs-stack { margin: 0 -10px -3px 0; transform-origin: 100% 100%; } .far > .cs-pin .cs-stamp { transform-origin: 70% 100%; } .far > .cs-pin .cs-mark { left: auto; right: 30px; }
+.cs-you { display: grid; justify-items: center; gap: 3px; pointer-events: none; } .cs-you > * { scale: var(--stamp, 1); }
+.cs-you .cs-face, .cs-you > i { display: grid; width: 34px; height: 34px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3.5px var(--cs-ink); } .cs-you > i { background: var(--second); }
+.cs-you > b { padding: 2px 5px 1px; font-stretch: 86%; font-size: 8.5px; font-weight: 760; letter-spacing: .12em; line-height: 1.2; color: var(--card); background: var(--cs-ink); border-radius: 2px; transform-origin: 50% -40%; }
+/* the plan that is on hands you its ticket; the map picks the corner (data-seat). Pull back and it shrinks with the sheet;
+   wander off to look at other plans (--away) and it lets go. */
+.cs-bub { position: absolute; left: -6px; bottom: calc(100% + 24px); width: 226px; display: grid; grid-template-columns: 1fr auto; font-size: 12.5px; font-weight: 440; line-height: 1.3; color: var(--cs-ink); pointer-events: none;
+  filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 4px 0 var(--soft)); rotate: -1.2deg; scale: calc(var(--ticket, 1) * (1 - .35 * var(--away, 0))); opacity: calc(1 - var(--away, 0)); transform-origin: 12% calc(100% + 24px); animation: cs-cell .5s var(--cs-ease) both; }
+.cs-bub[data-seat~=r] { left: auto; right: -6px; rotate: 1.2deg; transform-origin: 88% calc(100% + 24px); }
+.cs-bub[data-seat~=low] { bottom: auto; top: calc(100% + 14px); transform-origin: 12% -14px; } .cs-bub[data-seat="low r"] { transform-origin: 88% -14px; }
+.cs-bub > span { background: var(--card); }
+.cs-bub .main { display: grid; gap: 3px; padding: 11px 13px 12px; border-radius: 4px; }
+.cs-bub .main:not(:last-child) { border-radius: 4px 0 0 4px; mask: radial-gradient(circle 5px at 100% 0, #0000 96%, #000), radial-gradient(circle 5px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.cs-bub .main > b { font-stretch: 92%; font-size: 17px; font-weight: 820; letter-spacing: -0.01em; text-transform: uppercase; line-height: 1.05; overflow-wrap: anywhere; }
+.cs-bub em { font-style: normal; font-weight: 660; } .cs-bub .in { margin-top: 2px; font-size: 12px; font-weight: 660; line-height: 1.25; }
+.cs-bub .stub { display: grid; align-content: center; justify-items: center; gap: 2px; min-width: 58px; padding: 8px 9px; background: var(--hot); border-left: 1.5px dashed var(--cs-ink); border-radius: 0 4px 4px 0; line-height: 1;
+  mask: radial-gradient(circle 5px at 0 0, #0000 96%, #000), radial-gradient(circle 5px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.cs-bub .stub b { font-size: 21px; font-weight: 820; letter-spacing: -0.04em; } .cs-bub .stub small { font-stretch: 86%; font-size: 8.5px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; text-align: center; }
+/* push against the wall and the way on appears at that edge; a way that is not open yet is the same ticket greyed, and it shakes once */
+.cs-way { position: absolute; left: 0; top: 0; z-index: 6; display: flex; align-items: center; gap: 12px; padding: 10px 14px 11px 16px; text-align: left; border-radius: 4px; color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-ink); animation: cs-way-in .3s var(--cs-expo); transition: translate .15s var(--cs-ease); }
+.cs .cs-way { background: var(--card); } button.cs-way:hover { translate: -1px -2px; }
+.cs-way > span { display: grid; font-size: 12.5px; line-height: 1.3; } .cs-way b { font-stretch: 108%; font-size: 18px; font-weight: 820; letter-spacing: -0.04em; line-height: 1.1; white-space: nowrap; }
+.cs-way .go { flex: none; display: grid; place-items: center; width: 50px; height: 50px; margin: -2px -4px -2px 0; border-radius: 50%; background: var(--cs-ink); box-shadow: 0 0 0 3px var(--soft); rotate: var(--a, 0rad); }
+.cs-way .go svg { width: 30px; height: 30px; fill: none; stroke: var(--second); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; animation: cs-nudge .7s cubic-bezier(.45, 0, .55, 1) infinite alternate; }
+.cs .cs-way.none { background: color-mix(in oklab, var(--pp) 86%, var(--cs-ink)); color: color-mix(in oklab, var(--cs-ink) 62%, var(--pp)); box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--cs-ink) 45%, var(--pp)); animation: cs-nope .45s cubic-bezier(.3, 0, .3, 1); }
+.cs-way.none .go { background: color-mix(in oklab, var(--cs-ink) 38%, var(--pp)); box-shadow: none; } .cs-way.none .go svg { stroke: var(--pp); animation: none; }
+/* the compass is the one button on the map: back to where you are. The bar measures in minutes of walking. */
+.cs .cs-rose { position: absolute; z-index: 3; right: 14px; top: 98px; width: 50px; height: 50px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: rotate .6s var(--cs-ease), scale .2s var(--cs-ease); }
+.cs-rose:hover { rotate: 20deg; } .cs-rose:active { scale: .92; } .cs-rose svg { display: block; width: 100%; height: 100%; }
+.cs-rose .ring { fill: none; stroke: var(--cs-ink); stroke-width: 1; stroke-dasharray: 1 3.45; } .cs-rose .north { fill: var(--hot); stroke: var(--cs-ink); stroke-width: 1.2; stroke-linejoin: round; } .cs-rose .south { fill: var(--card); stroke: var(--cs-ink); stroke-width: 1.2; stroke-linejoin: round; }
+.cs-rose .arms { fill: none; stroke: var(--cs-ink); stroke-width: 1.2; stroke-linecap: round; } .cs-rose .hub { fill: var(--cs-ink); }
+.cs-scale { position: absolute; z-index: 3; left: 18px; display: grid; gap: 4px; font-stretch: 88%; font-size: 10.5px; font-weight: 680; letter-spacing: .12em; text-transform: uppercase; pointer-events: none; }
+.cs-scale::after { content: attr(data-mins); }
+.cs-scale i { display: block; width: var(--w, 80px); height: 7px; border: 1.5px solid var(--cs-ink); border-top: 0; background: linear-gradient(90deg, var(--cs-ink) 50%, transparent 0) 0 100% / 100% 3px no-repeat; transition: width .3s var(--cs-ease); }
+/* under the map: the dial of times, or the open ticket with its panel beside it */
+.cs-near-sheet { position: absolute; inset: auto 0 0; z-index: 4; background: var(--pp); box-shadow: 0 -1.5px 0 var(--cs-ink), 0 -4.5px 0 var(--pp), 0 -5.5px 0 var(--cs-ink); }
+.cs-near-sheet.dial { height: 110px; padding-top: 16px; }
+.cs-near-sheet.open { background: none; box-shadow: none; } .cs-near-sheet.open .cs-rail { padding: 6px 16px 16px 14px; max-height: 420px; }
+.cs-near-none { display: grid; gap: 4px; padding: 16px 22px 18px; font-size: 13.5px; color: color-mix(in oklab, var(--cs-ink) 70%, var(--pp)); } .cs-near-none b { font-stretch: 108%; font-size: 17px; font-weight: 760; letter-spacing: -0.02em; color: var(--cs-ink); }
+.cs-dial { position: relative; height: 78px; margin: 0 14px; overflow: auto hidden; scrollbar-width: none; touch-action: none; cursor: grab; user-select: none; } .cs-dial::-webkit-scrollbar { display: none; } .cs-dial:active { cursor: grabbing; }
+.cs-dial > div { position: relative; height: 100%; } .cs-dial > div::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px dashed var(--cs-ink); opacity: .55; }
+.cs-tick { position: absolute; top: 50%; translate: -50% -50%; display: grid; justify-items: center; line-height: 1; min-width: 52px; padding: 8px 8px 9px; border-radius: 3px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); white-space: nowrap; transition: scale .3s var(--cs-ease), rotate .3s var(--cs-ease), background-color .2s; }
+.cs-tick small { font-stretch: 88%; font-size: 10.5px; font-weight: 640; letter-spacing: .08em; text-transform: uppercase; } .cs-tick b { margin-top: 3px; font-size: 16.5px; font-weight: 760; letter-spacing: -0.02em; }
+.cs-tick.on { z-index: 1; scale: 1.16; rotate: -3deg; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+
+@media (max-width: 860px) {
+  .cs-near { margin: 0 -16px -24px; border-radius: 0; box-shadow: none; min-height: min(600px, calc(100dvh - 60px)); } .cs-near-band { padding: 12px 16px 12px; } .cs-near-band h2 { font-size: 27px; } .cs-near-band p { padding-right: 0; } .cs-near-band small { top: auto; bottom: 6px; right: 10px; font-size: 9px; }
+  .cs-nav { padding: 10px 16px 11px; } .cs-wm { gap: 10px; padding-right: 10px; font-size: 21px; } .cs-wm svg { width: 38px; height: 38px; padding: 5px; } .cs-main { padding: 12px 16px 24px; } .cs-links a:not([aria-current]) { display: none; }
+  .cs-door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; }
+  .cs-deck { margin-right: 0; width: calc(100% - 120px); } .cs-dtab { transform: translate(calc(var(--k) * 38px), calc(var(--k) * 8px)) rotate(calc(var(--k) * 1.6deg)); }
+  .cs-dtk-top h3 { font-size: 22px; } .cs-dtk-top .cs-tile { min-width: 60px; min-height: 60px; } .cs-dtk-stub strong { font-size: 21px; }
+  .cs-plain { padding: 24px 16px 48px; } .cs-adm { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 48px; } .cs-adm .cs-form .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); }
+  .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
+  .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
+  .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }
+  .cs-ev { flex-basis: 260px; } .cs-lvl { position: fixed; right: 14px; top: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
+</style>
+<style>
+body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Archivo, system-ui, sans-serif; color: oklch(25% 0.07 252); }
+.mk-top { max-width: 1240px; margin: 0 auto; padding: 26px 24px 16px; }
+.mk-top h1 { margin: 0 0 6px; font-stretch: 108%; font-weight: 720; font-size: 30px; letter-spacing: -0.04em; line-height: 1.05; }
+.mk-top p { margin: 0 0 8px; max-width: 88ch; font-size: 15px; line-height: 1.45; color: oklch(35.4% 0.095 252); }
+.mk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; font-weight: 600; }
+.mk-bar button { border: 0; font: inherit; padding: 6px 13px; border-radius: 99px; background: #fff; color: inherit; cursor: pointer; box-shadow: inset 0 0 0 1.5px oklch(25% 0.07 252 / .4); }
+.mk-bar button[aria-pressed=true] { background: oklch(25% 0.07 252); color: #fff; }
+.mk-wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px 64px; }
+.mk-frame { border-radius: 18px; padding: 22px; box-shadow: 0 0 0 2px oklch(25% 0.07 252), 7px 7px 0 oklch(25% 0.07 252); }
+.mk-frame.cs { min-height: 0; display: block; }
+.mk-row { display: flex; gap: 16px; align-items: flex-start; }
+.mk-row .cs-ev { flex: 0 0 286px; } .mk-row .cs-sheet { flex: 1 1 0; min-width: 0; overflow: visible; }
+
+/* the spot line on the ticket and in the panel */
+.mk-lean { font-weight: 640; color: var(--cs-ink); }
+.mk-spots { display: flex; gap: 10px; align-items: stretch; margin-top: 10px; }
+.mk-spot { flex: 1 1 0; min-width: 0; display: grid; grid-template-columns: 26px minmax(0, 1fr); border-radius: 14px 14px 14px 4px; overflow: hidden; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); filter: drop-shadow(3px 3px 0 var(--cs-field-shadow)); animation: mk-deal .5s var(--cs-expo) backwards; }
+.mk-spot em { display: grid; place-items: center; writing-mode: vertical-rl; transform: rotate(180deg); font-style: normal; font-size: 9.5px; font-weight: 760; text-transform: uppercase; letter-spacing: .07em; background: var(--cs-stub); border-left: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.mk-spot.lead em { background: var(--cs-field); } .mk-spot.set em { background: var(--cs-ink); color: var(--cs-on-ink); border-left-color: var(--cs-paper); }
+.mk-spot > div { display: grid; gap: 6px; padding: 9px 12px 10px; min-width: 0; }
+.mk-spot b { font-weight: 700; font-size: 15.5px; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mk-spot small { font-size: 12.5px; color: color-mix(in oklch, var(--cs-ink) 70%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk-spot .foot { display: flex; align-items: center; gap: 8px; } .mk-spot .foot span { font-size: 12.5px; font-weight: 600; margin-right: auto; white-space: nowrap; }
+.mk-spot .cs-face { width: 24px; height: 24px; } .mk-spot .cs-stack { --ring: var(--cs-paper); }
+.mk-add { flex: 1 1 0; min-width: 0; display: grid; gap: 6px; align-content: center; padding: 9px 12px; border-radius: 14px 14px 14px 4px; border: 1.5px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.mk-add input { width: 100%; border: 0; padding: 8px 11px; border-radius: 10px 10px 10px 3px; font: inherit; font-size: 14.5px; font-weight: 600; color: var(--cs-ink); background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); caret-color: var(--cs-action); }
+.mk-add input:focus { outline: none; background: var(--cs-paper); box-shadow: inset 0 0 0 2px var(--cs-action); }
+.mk-add small { font-size: 12px; color: var(--cs-mute); } .mk-add .cs-chip { min-height: 26px; padding: 2px 9px; font-size: 12.5px; }
+.mk-spots .mk-spot { min-width: 230px; } .mk-spots .mk-add { min-width: 300px; flex-grow: 1.4; } .mk-spots { flex-wrap: wrap; }
+.mk-set { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; align-items: stretch; margin-top: 10px; }
+.mk-spot.big { grid-template-columns: 30px minmax(0, 1fr); } .mk-spot.big > div { gap: 8px; padding: 16px 18px; align-content: center; } .mk-spot.big b { font-size: 24px; letter-spacing: -0.035em; } .mk-spot.big small { font-size: 14px; }
+.mk-spot.big .foot { margin-top: 6px; gap: 10px; } .mk-spot.big .foot span { font-size: 13.5px; } .mk-spot.big .cs-face { width: 30px; height: 30px; }
+.mk-set .cs-map { margin: 0 4px 4px 0; } .mk-set .mk-fake-map { min-height: 128px; }
+.mk-others { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--cs-line); }
+.mk-others > small { font-size: 12px; font-weight: 680; text-transform: uppercase; letter-spacing: .06em; color: var(--cs-mute); margin-right: 2px; }
+.mk-others .cs-chip { min-height: 30px; padding: 3px 11px; font-size: 13px; } .mk-others .cs-chip i { font-style: normal; font-weight: 640; opacity: .6; margin-left: 2px; }
+.mk-push { margin-left: auto; }
+.mk-name { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; color: var(--cs-action); text-decoration: none; } .mk-name span { min-width: 0; overflow: hidden; text-overflow: ellipsis; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.mk-name svg { flex: none; width: .95em; height: .95em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; transition: translate .25s var(--cs-expo); } .mk-name:hover svg { translate: 0 -2px; } .mk-name:hover span { text-decoration-thickness: 2.5px; }
+.mk-go { flex: none; display: inline-flex; align-items: center; gap: 2px; margin-left: 4px; padding: 2px 6px 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 760; letter-spacing: .04em; text-transform: uppercase; color: var(--cs-on-action, #fff); background: var(--cs-action); transition: translate .25s var(--cs-expo), box-shadow .25s var(--cs-expo); }
+.mk-name .mk-go svg { width: 11px; height: 11px; stroke-width: 3; stroke-linecap: round; translate: none; } .mk-name:hover .mk-go { translate: -1px -1px; box-shadow: 2px 2px 0 var(--cs-ink); } .mk-name:hover .mk-go svg { translate: 1px -1px; }
+.mk-spot b:has(.mk-name) { overflow: visible; padding-right: 26px; } .mk-spot.big .mk-go { font-size: 12px; }
+.cs .cs-btn.mk-in { background: var(--cs-field); color: var(--cs-ink); }
+.mk-map { position: relative; min-height: 290px; background: #f0e8d4; } .mk-mapel { position: absolute; inset: 0; font-family: Archivo, system-ui, sans-serif; } .mk-tag, .mk-x.mk-back { z-index: 2; }
+.mk-stamp { border: 0; padding: 0; background: none; font: inherit; cursor: pointer; display: grid; justify-items: center; gap: 4px; color: #16294d; filter: drop-shadow(2px 2.5px 0 rgb(22 41 77 / .25)); }
+.mk-stamp > span { display: grid; justify-items: center; align-content: center; gap: 2px; width: 44px; height: 54px; line-height: 1; background: #fbf7ec; box-shadow: inset 0 0 0 1.5px #16294d, inset 0 0 0 4.500px #fbf7ec, inset 0 0 0 5.500px #16294d; rotate: -3deg; transform-origin: 50% 100%; transition: scale .3s var(--cs-expo), rotate .3s var(--cs-expo); }
+.mk-stamp svg { width: 21px; height: 21px; fill: none; stroke: #16294d; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; } .mk-stamp b { font-size: 10px; font-weight: 800; letter-spacing: -0.01em; }
+.mk-stamp i { font-style: normal; font-stretch: 88%; font-size: 10px; font-weight: 760; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px 1px; border-radius: 2px; background: #f0e8d4; box-shadow: inset 0 0 0 1.2px #16294d; white-space: nowrap; }
+.mk-stamp.sel { filter: drop-shadow(3px 3.5px 0 #16294d); } .mk-stamp.sel > span { background: #ff5a43; box-shadow: inset 0 0 0 1.5px #16294d, inset 0 0 0 4.500px #ff5a43, inset 0 0 0 5.500px #16294d; scale: 1.3; rotate: 2deg; } .mk-stamp.sel i { background: #16294d; color: #fbf7ec; }
+.mk-stamp:not(.sel):hover > span { rotate: 0deg; scale: 1.08; } .maplibregl-ctrl-attrib { font-size: 9.5px; }
+.mk-name { border: 0; padding: 0; background: none; font: inherit; letter-spacing: inherit; cursor: pointer; } .mk-name:focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; border-radius: 4px; }
+.mk-row .cs-sheet.mk-look { position: relative; padding: 0; overflow: hidden; display: grid; grid-template-rows: 1fr auto; align-self: stretch; }
+.mk-fake-map.big { min-height: 250px; } .mk-fake-map.big::before { height: 14px; } .mk-fake-map.big::after { width: 26px; height: 26px; }
+.mk-tag { position: absolute; left: 14px; top: 12px; padding: 3px 10px; border-radius: 99px; font-size: 12.5px; font-weight: 700; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.mk-x.mk-back { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; font-size: 24px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); }
+.mk-look-bar { display: flex; align-items: center; gap: 12px; padding: 11px 16px 12px; border-top: 1.5px solid var(--cs-ink); background: var(--cs-paper); font-size: 13.5px; font-weight: 600; }
+.mk-look-bar > div { margin-right: auto; min-width: 0; } .mk-look-bar b { display: block; font-size: 20px; font-weight: 720; letter-spacing: -0.03em; } .mk-look-bar small { font-size: 13px; font-weight: 400; color: var(--cs-mute); } .mk-look-bar .cs-face { width: 28px; height: 28px; } .mk-look-bar .cs-stack { --ring: var(--cs-paper); } .mk-spot > div { position: relative; } .mk-spot b { padding-right: 22px; }
+.mk-x { border: 0; padding: 0; width: 22px; height: 22px; border-radius: 50%; font: inherit; font-size: 16px; line-height: 1; color: var(--cs-ink); background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 45%, transparent); cursor: pointer; } .mk-x:hover { background: var(--cs-ink); color: var(--cs-on-ink); }
+.mk-spot .mk-x { position: absolute; top: 7px; right: 8px; } .mk-others .mk-x { margin-left: -4px; }
+.mk-spot .foot .cs-btn { white-space: nowrap; } .mk-spots .mk-spot { min-width: 262px; } .mk-others .cs-chip.on { background: var(--cs-field); border-style: solid; } .mk-others small.try, .mk-add small { font-size: 12px; font-weight: 680; text-transform: uppercase; letter-spacing: .06em; color: var(--cs-mute); }
+.mk-others input { flex: 0 1 200px; border: 0; padding: 7px 12px; border-radius: 10px 10px 10px 3px; font: inherit; font-size: 14px; font-weight: 600; color: var(--cs-ink); background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); caret-color: var(--cs-action); }
+.mk-others input:focus { outline: none; background: var(--cs-paper); box-shadow: inset 0 0 0 2px var(--cs-action); }
+.mk-fake-map { position: relative; min-height: 104px; background: repeating-linear-gradient(35deg, oklch(93% 0.02 150) 0 22px, oklch(95% 0.015 150) 22px 44px), oklch(94% 0.02 150); }
+.mk-fake-map::before { content: ''; position: absolute; left: 0; right: 0; top: 54%; height: 9px; background: #fff; transform: rotate(-7deg); } .mk-fake-map::after { content: ''; position: absolute; left: 50%; top: 38%; width: 16px; height: 16px; border-radius: 50% 50% 50% 0; background: var(--cs-action); transform: rotate(-45deg); box-shadow: 0 0 0 2px #fff; }
+.mk-note { margin-top: 10px; font-size: 13px; color: var(--cs-mute); }
+@keyframes mk-deal { from { opacity: 0; transform: translate(40px, 8px) rotate(3deg); } }
+</style>
+</head>
+<body>
+<div class="mk-top">
+  <h1>From an area to a spot</h1>
+  <p>A plan can start loose: "dumplings tonight after class @downtown". The @place is the area. The exact spot is a second, optional thing that the people going settle between them, on the plan itself. Nobody has to fill it in to post, and nobody has to approve it.</p>
+  <p>You are one of four people going. Open the plan and you see the spots people have suggested in @downtown, side by side. Tap "I'm for this" on every spot you would be happy with (the button then reads "You're for this"; tap it again to take it back. The suggestion stays, at 0, for others to back. If you suggested it and nobody is for it, an x removes it), or suggest another: the box always offers two or three places in the area that nobody has suggested yet, so one tap is enough and it is clear what to type. The one with the most people is what the ticket shows. Once more than half of those going back the same spot, it is the spot, and the map appears. A spot's name is a link, with a pin in front and a blue "Map" tab after it: tap it and the map takes the whole panel, in the Print look, with every suggested spot as a stamp (the one you opened is the coral one; tap another stamp to move to it). The x in the corner, or Esc, goes back to the spots. Try it: back Dumpling House.</p>
+  <div class="mk-bar">See it as <button data-see="none" aria-pressed="false">Just posted, no suggestions</button><button data-see="some" aria-pressed="true">Two suggestions</button><button data-see="set" aria-pressed="false">Settled</button></div>
+</div>
+<div class="mk-wrap"><div class="cs mk-frame" id="frame"></div></div>
+
+<script src="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.js"></script>
+<script>
+const face = n => `<img class="cs-face pet" src="/animals/${String(n).padStart(2, '0')}.png" alt="">`;
+const GOING = [{ name: 'You', pet: 12 }, { name: 'Maya', pet: 4 }, { name: 'Josh', pet: 27 }, { name: 'Ana', pet: 33 }];
+const KNOWN = [['Dumpling House', 'The Commons · 11 min walk', [-76.4972, 42.4397]], ['Taste of Thai', 'The Commons · 12 min walk', [-76.4962, 42.4394]], ['Asia Cuisine', 'State St · 14 min walk', [-76.4990, 42.4395]], ['Gola Osteria', 'Quarry Arms · 15 min walk', [-76.4925, 42.4412]], ['Saigon Kitchen', 'State St · 13 min walk', [-76.5003, 42.4394]], ['Viva Taqueria', 'The Commons · 12 min walk', [-76.4957, 42.4397]], ['Ithaca Ale House', 'Aurora St · 12 min walk', [-76.4953, 42.4402]]];
+const at = name => (KNOWN.find(k => k[0] === name) || [])[2];
+const PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5c4.6-4.9 7-8.500 7-11.500a7 7 0 0 0-14 0c0 3 2.400 6.600 7 11.500z"/><circle cx="12" cy="10" r="2.600"/></svg>';
+// a name Loop can place is a link to its map; one it cannot place is plain text
+const nameOf = n => at(n) ? `<button class="mk-name" data-look="${n}" title="See it on the map">${PIN}<span>${n}</span><strong class="mk-go">Map<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></strong></button>` : n;
+const START = { mine: [{ name: 'Dumpling House', for: ['Maya', 'You'] }, { name: 'Taste of Thai', for: ['Ana'] }, { name: 'Asia Cuisine', for: [], by: 'You' }], none: [], some: [{ name: 'Dumpling House', for: ['Maya', 'Josh'] }, { name: 'Taste of Thai', for: ['Ana'] }], set: [{ name: 'Dumpling House', for: ['Maya', 'Josh', 'You'] }, { name: 'Taste of Thai', for: ['Ana'] }] };
+let spots = structuredClone(START[location.hash.slice(1)] || START.some), typed = '', fresh = null, look = new URLSearchParams(location.search).get('look');
+const near = name => (KNOWN.find(k => k[0] === name) || [name, 'In @downtown'])[1];
+const ranked = () => [...spots].sort((a, b) => b.for.length - a.for.length);
+const settled = () => { const [top, next] = ranked(); return top && top.for.length > GOING.length / 2 && (!next || next.for.length < top.for.length) ? top : null; };
+const mine = () => spots.find(s => s.for.includes('You'));
+function back(name) { let s = spots.find(x => x.name.toLowerCase() === name.toLowerCase()); if (!s) { s = { name, for: [], by: 'You' }; spots.push(s); fresh = name; } s.for = s.for.includes('You') ? s.for.filter(n => n !== 'You') : [...s.for, 'You']; draw(); }
+
+function draw() {
+  const top = ranked()[0], done = settled(), where = done ? `<b class="cs-at">@downtown</b><span class="mk-lean">${done.name}</span>` : top ? `<b class="cs-at">@downtown</b>leaning ${top.name} · ${top.for.length} of ${GOING.length}` : `<b class="cs-at">@downtown</b>spot not picked`;
+  const ticket = `<article class="cs-ev open"><div class="cs-top"><span class="cs-tile"><small>Today</small><b>7pm</b></span><div class="cs-body"><h3>Dumplings after class</h3><p>${where}</p></div><button class="cs-more" aria-expanded="true">Close</button></div>
+    <div class="cs-mech none"><span class="cs-stack">${GOING.map(g => face(g.pet)).join('')}</span><div class="cs-what"><span>4 going</span></div><span class="cs-act"><button class="cs-btn sm">Invite</button><span class="cs-pill hot">You're in</span></span></div></article>`;
+  const drop = x => !x.for.length && x.by === 'You' ? `<button class="mk-x" data-drop="${x.name}" aria-label="Remove ${x.name}" title="Remove your suggestion">&times;</button>` : '';
+  const tries = n => KNOWN.filter(k => !spots.some(x => x.name === k[0])).slice(0, n).map(k => `<button class="cs-chip idea" data-back="${k[0]}" title="${k[1]}">${k[0]}</button>`).join('');
+  const opts = typed.length > 1 ? KNOWN.filter(k => k[0].toLowerCase().includes(typed.toLowerCase()) && !spots.some(s => s.name === k[0])).slice(0, 2) : [];
+  const cards = ranked().map((s, at) => { const you = s.for.includes('You'), state = done === s ? 'set' : at === 0 && s.for.length > 1 ? 'lead' : '';
+    return `<div class="mk-spot ${state}" ${fresh === s.name ? '' : 'style="animation:none"'}><em>${done === s ? 'The spot' : state === 'lead' ? 'Leading' : 'Spot'}</em><div>${drop(s)}<b>${nameOf(s.name)}</b><small>${near(s.name)}</small>
+      <div class="foot"><span class="cs-stack">${s.for.map(n => face(GOING.find(g => g.name === n).pet)).join('')}</span><span>${s.for.length} of ${GOING.length}</span><button class="cs-btn sm ${you ? 'mk-in' : 'go'}" aria-pressed="${you}" data-back="${s.name}">${you ? "You're for this" : "I'm for this"}</button></div></div></div>`; }).join('');
+  const add = `<div class="mk-add"><input data-typed placeholder="Suggest a spot in @downtown" value="${typed}"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${opts.length ? opts.map(k => `<button class="cs-chip idea" data-back="${k[0]}">${k[0]}</button>`).join('') : typed.length > 1 ? `<button class="cs-chip idea" data-back="${typed}">Suggest "${typed}"</button>` : `<small>Try</small>${tries(3)}`}</div></div>`;
+  const hints = opts.length ? opts.map(k => `<button class="cs-chip idea" data-back="${k[0]}">${k[0]}</button>`).join('') : typed.length > 1 ? `<button class="cs-chip idea" data-back="${typed}">Suggest "${typed}"</button>` : `<small class="try">Try</small>${tries(2)}`;
+  const body = done
+    ? `<div class="mk-set"><div class="mk-spot set big" style="animation:none"><em>The spot</em><div><b>${nameOf(done.name)}</b><small>${near(done.name)}</small>
+        <div class="foot"><span class="cs-stack">${done.for.map(n => face(GOING.find(g => g.name === n).pet)).join('')}</span><span>${done.for.length} of ${GOING.length} are for it</span>${done.for.includes('You') ? `<button class="cs-btn sm mk-in" aria-pressed="true" data-back="${done.name}">You're for this</button>` : `<button class="cs-btn sm go" data-back="${done.name}">I'm for this</button>`}</div></div></div>
+        <figure class="cs-map"><div class="mk-fake-map"></div><figcaption><b>${done.name}</b> ${near(done.name)}</figcaption></figure></div>
+      <div class="mk-others"><small>${ranked().length > 1 ? 'Also suggested' : 'Or'}</small>${ranked().filter(x => x !== done).map(x => `<button class="cs-chip idea${x.for.includes('You') ? ' on' : ''}" data-back="${x.name}" title="${x.for.includes('You') ? 'You are for this too. Tap to take it back' : 'Back this too'}">${x.name}<i>${x.for.length}</i></button>${drop(x)}`).join('')}<span class="mk-push"></span>${hints}<input data-typed placeholder="or type a spot" value="${typed}"></div>`
+    : `<div class="mk-spots">${cards}${add}</div><p class="mk-note">${spots.length ? 'Back every spot you would be happy with. The one with the most people shows on the ticket; more than half, and ahead of the rest, makes it the spot.' : 'Anyone going can suggest one. It can stay loose: the plan still happens in @downtown.'}</p>`;
+  const seen = spots.find(x => x.name === look && at(x.name));
+  if (seen) {
+    const you = seen.for.includes('You');
+    document.getElementById('frame').innerHTML = `<div class="mk-row">${ticket}<div class="cs-sheet mk-look"><div class="mk-map" id="lookmap"></div><span class="mk-tag">@downtown</span>
+      <button class="mk-x mk-back" data-unlook aria-label="Back to the spots" title="Back to the spots">&times;</button>
+      <div class="mk-look-bar"><div><b>${seen.name}</b><small>${near(seen.name)}</small></div><span class="cs-stack">${seen.for.map(n => face(GOING.find(g => g.name === n).pet)).join('')}</span><span>${seen.for.length} of ${GOING.length}</span><button class="cs-btn sm ${you ? 'mk-in' : 'go'}" aria-pressed="${you}" data-back="${seen.name}">${you ? "You're for this" : "I'm for this"}</button></div></div></div>`;
+    showMap(seen.name); fresh = null; return;
+  }
+  document.getElementById('frame').innerHTML = `<div class="mk-row">${ticket}<div class="cs-sheet"><div class="cs-sheet-top"><h3>${done ? 'Where: settled' : spots.length ? 'Where in @downtown?' : 'Where in @downtown? Nobody has suggested a spot yet'}</h3><button class="cs-more" aria-expanded="true">Close</button></div>${body}</div></div>`;
+  fresh = null;
+  const input = document.querySelector('[data-typed]'); if (typed) { input.focus(); input.setSelectionRange(typed.length, typed.length); }
+}
+document.addEventListener('input', event => { if (event.target.matches('[data-typed]')) { typed = event.target.value; draw(); } });
+document.addEventListener('keydown', event => { if (event.target.matches('[data-typed]') && event.key === 'Enter' && typed.trim().length > 1) { const name = typed.trim(); typed = ''; back((KNOWN.find(k => k[0].toLowerCase().startsWith(name.toLowerCase())) || [name])[0]); } });
+document.addEventListener('click', event => {
+  const b = event.target.closest('[data-back]'), see = event.target.closest('[data-see]');
+  const peek = event.target.closest('[data-look]');
+  if (peek) { look = peek.dataset.look; draw(); return; }
+  if (event.target.closest('[data-unlook]')) { look = null; draw(); return; }
+  const x = event.target.closest('[data-drop]');
+  if (x) { spots = spots.filter(s => s.name !== x.dataset.drop); draw(); return; }
+  if (b) { typed = ''; back(b.dataset.back); }
+  if (see) { look = null; spots = structuredClone(START[see.dataset.see]); typed = ''; document.querySelectorAll('[data-see]').forEach(x => x.setAttribute('aria-pressed', x === see)); draw(); }
+});
+// The Print map from mockups-map-print.html: two inks on paper, dotted greens, lime-shadowed roofs.
+const C = { ink: '#16294d', paper: '#f0e8d4', road: '#fbf7ec', lime: '#d9f04c', blue: '#3f86de', hot: '#ff5a43' };
+const MINOR = ['minor'], MAJOR = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'], PATH = ['path', 'track'];
+const wide = px => ['interpolate', ['exponential', 2], ['zoom'], 13, px / 8, 16, px, 19, px * 8];
+const wide2 = (minor, major) => ['interpolate', ['exponential', 2], ['zoom'], 13, ['match', ['get', 'class'], MINOR, minor / 8, major / 8], 16, ['match', ['get', 'class'], MINOR, minor, major], 19, ['match', ['get', 'class'], MINOR, minor * 8, major * 8]];
+const omt = (id, type, layer, paint, more = {}) => ({ id, type, source: 'omt', 'source-layer': layer, paint, ...more });
+const road = (id, classes, paint, more = {}) => omt(id, 'line', 'transportation', paint, { filter: ['all', ['==', ['geometry-type'], 'LineString'], ['match', ['get', 'class'], classes, true, false]], layout: { 'line-cap': 'round', 'line-join': 'round' }, ...more });
+const type = (size, space, more = {}) => ({ 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': size, 'text-transform': 'uppercase', 'text-letter-spacing': space, ...more });
+const inked = { 'text-color': C.ink, 'text-halo-color': C.paper, 'text-halo-width': 1.6 };
+const style = { version: 8, glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf', sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' } },
+  layers: [{ id: 'ground', type: 'background', paint: { 'background-color': C.paper } },
+    omt('green', 'fill', 'landcover', { 'fill-pattern': 'dots' }), omt('park', 'fill', 'park', { 'fill-pattern': 'dots' }), omt('park-edge', 'line', 'park', { 'line-color': C.ink, 'line-width': .8, 'line-dasharray': [1, 3], 'line-opacity': .6 }),
+    omt('water', 'fill', 'water', { 'fill-pattern': 'waves' }), omt('water-edge', 'line', 'water', { 'line-color': C.blue, 'line-width': 1.5 }), omt('stream', 'line', 'waterway', { 'line-color': C.blue, 'line-width': wide(4) }),
+    road('path', PATH, { 'line-color': C.ink, 'line-width': .9, 'line-dasharray': [2, 3], 'line-opacity': .7 }, { minzoom: 16 }),
+    road('edge', [...MINOR, ...MAJOR], { 'line-color': C.ink, 'line-width': ['match', ['get', 'class'], MINOR, .9, 1.4], 'line-opacity': .75, 'line-gap-width': wide2(8, 14) }),
+    road('minor', MINOR, { 'line-color': C.road, 'line-width': wide(8) }), road('major', MAJOR, { 'line-color': C.road, 'line-width': wide(14) }),
+    road('centre', MAJOR, { 'line-color': C.ink, 'line-width': .8, 'line-dasharray': [5, 5], 'line-opacity': .35 }, { minzoom: 16.5 }),
+    omt('off', 'fill', 'building', { 'fill-color': C.lime, 'fill-opacity': .75, 'fill-translate': [2.5, 2.5], 'fill-translate-anchor': 'viewport' }),
+    omt('roofs', 'fill', 'building', { 'fill-color': '#f5eedc' }), omt('roof-line', 'line', 'building', { 'line-color': C.ink, 'line-width': 1, 'line-opacity': .6 }, { layout: { 'line-join': 'miter' } }),
+    omt('streets', 'symbol', 'transportation_name', inked, { minzoom: 15, filter: ['match', ['get', 'class'], ['path', 'track', 'service'], false, true], layout: type(10, .14, { 'symbol-placement': 'line', 'symbol-spacing': 340 }) })] };
+function swatch(size, paint) { const k = 3, cv = document.createElement('canvas'); cv.width = cv.height = size * k; const x = cv.getContext('2d'); x.scale(k, k); paint(x);
+  const d = x.getImageData(0, 0, size * k, size * k); return [{ width: d.width, height: d.height, data: d.data }, { pixelRatio: k }]; }
+const IMAGES = { dots: swatch(8, x => { x.fillStyle = C.lime; for (const [cx, cy] of [[2, 2], [6, 6]]) { x.beginPath(); x.arc(cx, cy, 1.55, 0, 7); x.fill(); } }),
+  waves: swatch(12, x => { x.strokeStyle = C.blue; x.lineWidth = 1.2; for (const y of [3, 9]) { x.beginPath(); x.moveTo(-1, y); x.bezierCurveTo(2, y - 2.2, 4, y - 2.2, 6, y); x.bezierCurveTo(8, y + 2.2, 10, y + 2.2, 13, y); x.stroke(); } }) };
+const BOWL = '<path d="M2.500 15.500a9.500 7 0 0 1 19 0z"/><path d="m7.600 10.500.9 2.400M12 9.200v2.900M16.400 10.500l-.9 2.400M2.500 15.500c.6 2.800 2.400 4.500 4.800 4.500h9.400c2.400 0 4.200-1.700 4.800-4.500M9 3c1 1-.8 1.800.2 3M14 3c1 1-.8 1.800.2 3"/>';
+let map = null, pins = [];
+const mapEl = Object.assign(document.createElement('div'), { className: 'mk-mapel' });
+/** The map lives in one element that is moved into the panel each time, so it is not rebuilt on every tap. Every suggested spot is a stamp; the one being looked at is the coral one. */
+function showMap(name) {
+  const slot = document.getElementById('lookmap');
+  if (!window.maplibregl) { slot.classList.add('mk-fake-map', 'big'); return; }
+  slot.append(mapEl);
+  if (!map) {
+    map = new maplibregl.Map({ container: mapEl, style, center: at(name), zoom: 16.7, maxZoom: 18.5, minZoom: 14.5, canvasContextAttributes: { antialias: true }, attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false });
+    map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Map © OpenStreetMap, OpenFreeMap' }), 'bottom-right');
+    map.on('styleimagemissing', e => IMAGES[e.id] && !map.hasImage(e.id) && map.addImage(e.id, ...IMAGES[e.id]));
+  }
+  map.resize();
+  pins.forEach(pin => pin.remove());
+  pins = spots.filter(x => at(x.name)).map(x => { const el = document.createElement('div'); if (x.name === name) el.style.zIndex = 3;
+    el.innerHTML = `<button class="mk-stamp${x.name === name ? ' sel' : ''}" data-look="${x.name}" title="${x.name}"><span><svg viewBox="0 0 24 24">${BOWL}</svg><b>${x.for.length} of ${GOING.length}</b></span><i>${x.name}</i></button>`;
+    return new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat(at(x.name)).addTo(map); });
+  map.easeTo({ center: at(name), duration: 500 });
+}
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && look) { look = null; draw(); } });
+draw();
+</script>
+</body>
+</html>
