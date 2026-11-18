@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { createPortal } from 'react-dom';
 import type { GeoJSONSource, Map as GlMap, MapLibreEvent, MapMouseEvent, Marker, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { bounds, held, hops, inside, middle, sectionAt, walkMinutes, wayOn, type Point, type Section, type Way } from '@/lib/campus/sections';
+import { bounds, held, hops, inside, middle, sectionAt, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Way } from '@/lib/campus/sections';
 import type { Face, Ticket } from '@/lib/campus/view';
 import { FaceDot } from './screen';
 
@@ -239,7 +239,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
     el.style.setProperty('--ticket', by(.8, .62)); el.style.setProperty('--stamp', by(.45, .68));
     const from = home.current, to = from && s.lit ? map.project(s.lit.at) : null;
     el.style.setProperty('--away', (from && to ? Math.max(0, Math.min(1, Math.max((from.zoom - zoom) / .7, (Math.hypot(to.x - from.x, to.y - from.y) - 30) / 150))) : 0).toFixed(3));
-    const bar = rule.current, mpp = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (512 * 2 ** zoom), two = 156 / mpp, mins = two > 170 ? 1 : two < 45 ? 5 : 2;
+    const bar = rule.current, mpp = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (512 * 2 ** zoom), two = 2 * WALK_PER_MINUTE / mpp, mins = two > 170 ? 1 : two < 45 ? 5 : 2;
     if (bar) { bar.style.setProperty('--w', `${Math.round(two * mins / 2)}px`); bar.dataset.mins = `${mins} min walk`; }
   }, []);
 

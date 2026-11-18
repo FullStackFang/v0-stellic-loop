@@ -41,8 +41,10 @@ export const inside = (point: Point, ring: readonly Point[]) => ring.reduce((hit
 export const sectionAt = (land: readonly Section[], point: Point) => land.find(each => inside(point, each.ring)) ?? null;
 export const middle = (ring: readonly Point[]): Point => [ring.reduce((sum, p) => sum + p[0], 0) / ring.length, ring.reduce((sum, p) => sum + p[1], 0) / ring.length];
 export const metres = (a: Point, b: Point) => Math.hypot((a[0] - b[0]) * 111320 * Math.cos(a[1] * Math.PI / 180), (a[1] - b[1]) * 110540);
-/** Minutes on foot, at an easy pace. Never under one. */
-export const walkMinutes = (a: Point, b: Point) => Math.max(1, Math.round(metres(a, b) / 78));
+/** Metres of straight line covered in a minute on foot: an easy 78 m a minute, with the paths taken as 1.5 times the straight line, the top of the usual range, so the time runs long rather than short. */
+export const WALK_PER_MINUTE = 78 / 1.5;
+/** Rough minutes on foot. Never under one. */
+export const walkMinutes = (a: Point, b: Point) => Math.max(1, Math.round(metres(a, b) / WALK_PER_MINUTE));
 
 const byId = (land: readonly Section[], id: string) => land.find(each => each.id === id);
 /** You can open the section you stand in and the ones touching it. */
