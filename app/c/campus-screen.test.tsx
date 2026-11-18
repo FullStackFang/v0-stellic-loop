@@ -161,21 +161,31 @@ describe('who sees whom', () => {
       expect(screen.getByRole('dialog', { name: 'Your level' })).toBeInTheDocument();
       shown.container.removeEventListener('click', redraw);
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
-      expect(card.getByText('Premium')).toBeInTheDocument();
-      expect(card.getByText('$3 a month')).toBeInTheDocument();
-      // No photo, then no email: each is asked for, and nothing is drawn.
-      fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
-      expect(card.getByRole('alert')).toHaveTextContent('Choose a photo of an animal first.');
-      fireEvent.change(card.getByLabelText('Photo of an animal'), { target: { files: [photo] } });
+      // It opens on the plan: Loop Premium, its price, and more than this one thing.
+      expect(card.getByText('Loop Premium')).toBeInTheDocument();
+      expect(card.getByText('a month')).toBeInTheDocument();
+      expect(card.getByText('New rewards a week early')).toBeInTheDocument();
+      expect(card.queryByLabelText('Photo of an animal')).toBeNull();
+      // Subscribe asks for an email in its own place. Without one nothing is kept.
+      fireEvent.click(card.getByRole('button', { name: 'Subscribe to Loop Premium' }));
       fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
       expect(card.getByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
-      expect(models.asked).toHaveLength(0);
+      expect((await t.db.query('select 1 from campus_custom_face')).rows).toEqual([]);
       fireEvent.change(card.getByLabelText('Email'), { target: { value: 'Ana@Cornell.edu' } });
       fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
+      // Subscribed: told there is no payment yet, the account says Premium, and only now is a photo asked for.
+      expect(await card.findByText('Thanks for subscribing to Loop Premium. Payment is not set up yet, so this one is free. Enjoy your avatar.')).toBeInTheDocument();
+      expect((await t.db.query('select email,makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ email: 'ana@cornell.edu', makes: 0 }]);
+      expect(card.getAllByText('Premium')).toHaveLength(2);
+      fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
+      expect(card.getByRole('alert')).toHaveTextContent('Choose a photo of an animal first.');
+      expect(models.asked).toHaveLength(0);
+      fireEvent.change(card.getByLabelText('Photo of an animal'), { target: { files: [photo] } });
+      fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
       // While it is drawn, and after: thanks, no payment, a free picture.
-      expect(await card.findByRole('status')).toHaveTextContent('Thanks for your interest. Payment is not set up yet, so this one is free. Enjoy your avatar.');
+      expect(await card.findByRole('status')).toHaveTextContent('Drawing your animal.');
       const made = await card.findByRole('img', { name: 'Your own animal' }, { timeout: 5000 });
-      expect(card.getByText(/Thanks for your interest/)).toBeInTheDocument();
+      expect(card.getByText(/Thanks for subscribing/)).toBeInTheDocument();
       expect(card.getByText('It is your picture now.')).toBeInTheDocument();
       // The ask and its email are kept, the picture is theirs, and it was drawn from one of the set and the photo.
       const { rows: [row] } = await t.db.query<{ email: string; makes: number; token: string }>('select email,makes,token from campus_custom_face where person_id=$1', [ana.personId]);

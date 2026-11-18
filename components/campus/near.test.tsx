@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { CampusScreen } from './screen';
+import { pictureOf } from './near';
 import type { Screen, Ticket } from '@/lib/campus/view';
 
 // "Near you": the week on a map. The map library draws with WebGL, which a test has not got, so a stand-in keeps the
@@ -14,7 +15,7 @@ class FakeMap {
   on(type: string, handler: Handler) { (this.handlers[type] ??= []).push(handler); return this; }
   once(_type: string, handler: Handler) { handler({}); return this; }
   fire(type: string, event: { originalEvent?: unknown } = {}) { for (const handler of this.handlers[type] ?? []) handler(event); }
-  getSource() { return { setData() {} }; }
+  getSource() { return { setData() {} }; } hasImage() { return false; } addImage() {}
   setPaintProperty() {}
   getCenter() { return this.center; } setCenter([lng, lat]: [number, number]) { this.center = { lng, lat }; }
   getZoom() { return this.zoom; } getMinZoom() { return this.min; } setMinZoom(to: number) { this.min = to; } getMaxZoom() { return 18; }
@@ -55,8 +56,12 @@ async function near(tickets = week, slug = 'cornell') {
   await waitFor(() => expect(maps).toHaveLength(1));
   return maps[0];
 }
-/** Zooms out with the button until the whole section is in view. */
-const wholeSection = () => { const out = screen.getByRole<HTMLButtonElement>('button', { name: 'Zoom out' }); for (let n = 0; n < 12 && !out.disabled; n++) fireEvent.click(out); expect(out.disabled).toBe(true); };
+/** A person pinches out until the whole section is in view: as far out as the map lets them go. */
+async function wholeSection() {
+  const map = maps[0];
+  await waitFor(() => expect(map.getMinZoom()).toBeGreaterThan(0));   // the view has been framed
+  act(() => { map.zoom = map.getMinZoom(); map.fire('move', { originalEvent: {} }); map.fire('moveend'); });
+}
 const place = () => screen.getByRole('heading', { level: 2, name: /Collegetown|Central Campus|North Campus|Downtown|West Campus|Ag Quad/ }).textContent;
 const pins = () => screen.queryAllByRole('button', { name: /, Today / }).map(pin => pin.getAttribute('aria-label'));
 
@@ -90,15 +95,15 @@ describe('Near you', () => {
     expect(screen.getByText('You are away from campus')).toBeTruthy();
   });
 
-  it('the dial turns through the section in order of time, and the event that is on speaks from its pin', async () => {
+  it('the dial turns through the section in order of time, and the plan that is on hands over its ticket', async () => {
     locate(null);
     await near();
     const dial = await screen.findByRole('slider', { name: 'What is on, in order of time' });
     expect(dial.getAttribute('aria-valuetext')).toBe('Study group, Today 3pm');
-    await waitFor(() => expect(document.querySelector('.cs-bub b')?.textContent).toBe('Study group'));
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Study group'));
     fireEvent.keyDown(dial, { key: 'ArrowRight' });
     expect(dial.getAttribute('aria-valuetext')).toBe('Dumpling night, Today 8pm');
-    expect(document.querySelector('.cs-bub b')?.textContent).toBe('Dumpling night');
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Dumpling night');
   });
 
   it('opens the ticket of the time that is on, and lets go of it', async () => {
@@ -116,7 +121,7 @@ describe('Near you', () => {
   it('the wall holds the view inside the section, and a push against it shows the way on', async () => {
     locate(null);
     const map = await near();
-    wholeSection();   // the whole section in view: it cannot move at all
+    await wholeSection();   // the whole section in view: it cannot move at all
     const before = map.getCenter();
     act(() => map.drag(0, .01));
     expect(map.getCenter()).toEqual(before);
@@ -129,7 +134,7 @@ describe('Near you', () => {
   it('a way that is not open yet goes nowhere: too far from where you stand, nothing on, or nothing that way', async () => {
     locate(null);
     const map = await near();
-    wholeSection();
+    await wholeSection();
     act(() => map.drag(.01, 0));
     expect(within(await screen.findByRole('status')).getByText('Nothing this way yet')).toBeTruthy();
     act(() => map.drag(-.01, 0));
@@ -137,7 +142,7 @@ describe('Near you', () => {
     expect(screen.queryByRole('button', { name: /^Go to/ })).toBeNull();
     act(() => map.drag(0, .01));
     fireEvent.click(await screen.findByRole('button', { name: 'Go to Central Campus' }));
-    wholeSection();
+    await wholeSection();
     act(() => map.drag(.004, .01));
     const shut = await screen.findByRole('status');
     expect(within(shut).getByText('North Campus')).toBeTruthy();
@@ -145,6 +150,32 @@ describe('Near you', () => {
     expect(place()).toBe('Central Campus');
   });
 
+  it('a stamp carries a picture guessed from the plan, and the ticket says how far the walk is once the browser says where you are', async () => {
+    expect(pictureOf({ title: 'Dumpling night', words: [] })).toBe('bowl');
+    expect(pictureOf({ title: 'Prelim review', words: ['study'] })).toBe('study');
+    expect(pictureOf({ title: 'Something else', words: [] })).toBe('spark');
+    locate(null);
+    await near();
+    await waitFor(() => expect(document.querySelector('.cs-bub')).toBeTruthy());
+    expect(document.querySelector('.cs-bub .stub')).toBeNull();
+    cleanup(); maps.length = 0;
+    locate([-76.4870, 42.4390]);
+    await near();
+    await waitFor(() => expect(document.querySelector('.cs-bub .stub')?.textContent).toMatch(/^[0-9]+minwalk$/));
+    expect(document.querySelector('.cs-you')?.textContent).toContain('YOU');
+  });
+
+  it('the compass is the one button on the map, and it brings you back to where you stand', async () => {
+    locate(null);
+    const map = await near();
+    await wholeSection();
+    act(() => map.drag(0, .01));
+    fireEvent.click(await screen.findByRole('button', { name: 'Go to Central Campus' }));
+    expect(place()).toBe('Central Campus');
+    expect(screen.queryByRole('button', { name: /Zoom/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to where you are' }));
+    expect(place()).toBe('Collegetown');
+  });
   it('searches the map with the page\'s own search line', async () => {
     locate(null);
     await near();

@@ -95,6 +95,13 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
   });
 }
 
+/** "Subscribe" to Loop Premium. Nothing is charged: that they asked, and the email they gave, is kept. Asking twice changes nothing. */
+export async function subscribe(q: Q, personId: string, email: string): Promise<void> {
+  const given = email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(given)) throw new CampusError('Enter the email to subscribe with.');
+  await q.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
+}
+
 export type PremiumAsk = { email: string; asked: string; pictures: string[] };
 /** For the admin: everyone who asked to subscribe, newest first, each with the tokens of the animals they had made. */
 export async function premiumAsks(q: Q): Promise<PremiumAsk[]> {

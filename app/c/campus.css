@@ -246,6 +246,20 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-own-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
 .cs-own-form input[type=email] { width: 100%; height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); }
 .cs-own [role=alert] { font-weight: 580; color: var(--cs-action); }
+.cs-own .cs-prem { position: relative; margin: -14px -20px -16px; padding: 18px 20px 0; overflow: hidden; background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs .cs-prem-back { position: absolute; right: 16px; top: 14px; z-index: 1; height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; color: var(--cs-on-ink); box-shadow: inset 0 0 0 1.5px var(--cs-on-ink-mute); }
+.cs-own .cs-prem-kick { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 620; color: var(--cs-field); } .cs-prem-kick::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--cs-field); }
+.cs-own .cs-prem-big { margin-top: 12px; font-size: 46px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.055em; line-height: .92; color: var(--cs-on-ink); } .cs-own .cs-prem-big small { display: inline; margin: 0; font-size: 17px; font-weight: 560; letter-spacing: -0.02em; color: var(--cs-on-ink-mute); }
+.cs-prem-perks { position: relative; display: grid; gap: 7px; margin-top: 26px; font-size: 14px; line-height: 1.25; color: var(--cs-on-ink-mute); } .cs-prem-perks span { display: grid; grid-template-columns: 7px 1fr; gap: 10px; align-items: baseline; }
+.cs-prem-perks span::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--cs-field); transform: translateY(-1px); } .cs-prem-perks span:first-child { font-weight: 620; color: var(--cs-on-ink); } .cs-own .cs-prem-perks small { margin: 0 0 0 17px; font-size: 12.5px; color: var(--cs-on-ink-mute); }
+.cs-prem-figs { position: absolute; right: -16px; top: 44px; display: flex; pointer-events: none; } .cs-prem-figs img { width: 80px; height: 80px; margin-left: -32px; } .cs-prem-figs img:first-child { transform: rotate(-9deg) translateY(10px) scale(.84); } .cs-prem-figs img + img { transform: rotate(5deg); }
+.cs-prem-stub { position: relative; display: grid; gap: 8px; margin: 18px -20px 0; padding: 14px 16px 16px; background: var(--cs-field); border-top: 2px dashed var(--cs-ink); }
+.cs-prem-stub::before, .cs-prem-stub::after { content: ""; position: absolute; top: -10px; width: 18px; height: 18px; border-radius: 50%; background: var(--cs-paper); } .cs-prem-stub::before { left: -10px; } .cs-prem-stub::after { right: -10px; }
+.cs .cs-prem-stub > .cs-btn { justify-self: stretch; height: 46px; font-size: 15.5px; }
+.cs-prem-join { display: flex; align-items: center; height: 46px; padding: 4px 5px 4px 16px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); animation: cs-in .32s var(--cs-expo); }
+.cs-prem-join input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; font: inherit; font-size: 15px; color: var(--cs-ink); } .cs .cs-prem-join .cs-btn { height: 36px; padding: 0 16px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); margin-right: 3px; }
+.cs-prem-join:focus-within { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 0 0 0 3px color-mix(in oklch, var(--cs-ink) 25%, transparent); } .cs-own .cs-prem-stub [role=alert] { color: var(--cs-ink); font-weight: 620; }
+@media (prefers-reduced-motion: reduce) { .cs-prem-join { animation: none; } }
 .cs-own-made { display: grid; justify-items: center; gap: 12px; margin-top: 14px; text-align: center; } .cs-own-made img { width: 132px; height: 132px; object-fit: contain; }
 .cs-own-made img.busy { border-radius: 16px; object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } @keyframes cs-own-wait { to { opacity: .45; transform: scale(.96); } }
 .cs-own .cs-own-thanks { padding: 10px 14px; border-radius: 14px; font-weight: 580; color: var(--cs-ink); background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); }
@@ -451,16 +465,16 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-near-band small { position: absolute; right: 14px; top: 15px; font-size: 10px; opacity: .6; }
 /* a plan is a postage stamp: perforated, in the hot ink, with a drawn picture, its hour, and who is going */
 .cs-pin { display: flex; align-items: flex-end; text-align: left; transition: opacity .3s; }
-.cs-stamp { position: relative; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); scale: var(--stamp, 1); transform-origin: 30% 100%; transition: rotate .35s var(--cs-ease), scale .35s var(--cs-ease); }
-.cs-stamp > span { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
+.cs-postage { position: relative; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); scale: var(--stamp, 1); transform-origin: 30% 100%; transition: rotate .35s var(--cs-ease), scale .35s var(--cs-ease); }
+.cs-postage > span { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
   mask: linear-gradient(#000 0 0) center / calc(100% - 6px) calc(100% - 6px) no-repeat, radial-gradient(circle 2.1px at 50% 50%, #0000 94%, #000) -3px -3px / 6px 6px; }
-.cs-stamp > span::before { content: ''; position: absolute; inset: 5.5px; box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
-.cs-stamp > span svg { width: 23px; height: 23px; fill: none; stroke: var(--cs-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.cs-stamp b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; } .cs-stamp small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
-.cs-pin:hover .cs-stamp { --lean: 0deg; }
-.cs-pin.sel .cs-stamp { --lean: 2deg; scale: calc(1.3 * var(--stamp, 1)); filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 3.5px 0 var(--cs-ink)); }
+.cs-postage > span::before { content: ''; position: absolute; inset: 5.5px; box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
+.cs-postage > span svg { width: 23px; height: 23px; fill: none; stroke: var(--cs-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cs-postage b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; } .cs-postage small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.cs-pin:hover .cs-postage { --lean: 0deg; }
+.cs-pin.sel .cs-postage { --lean: 2deg; scale: calc(1.3 * var(--stamp, 1)); filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 3.5px 0 var(--cs-ink)); }
 .cs-pin.dim { opacity: .25; } .cs-near .maplibregl-marker:has(.cs-pin.sel) { z-index: 5; }
-.cs-pin.now .cs-stamp::after { content: ''; position: absolute; inset: 2px; box-shadow: 0 0 0 2.5px var(--cs-ink); pointer-events: none; animation: cs-ping 2.4s var(--cs-expo) infinite; }
+.cs-pin.now .cs-postage::after { content: ''; position: absolute; inset: 2px; box-shadow: 0 0 0 2.5px var(--cs-ink); pointer-events: none; animation: cs-ping 2.4s var(--cs-expo) infinite; }
 /* the plan that is on: a burst of the second ink behind it, and a postmark over its corner */
 .cs-burst { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 110px; height: 110px; z-index: -1; pointer-events: none; animation: cs-spin 26s linear infinite, cs-show .5s var(--cs-ease) both; }
 .cs-burst path { fill: var(--second); stroke: var(--cs-ink); stroke-width: 1.3; stroke-linejoin: round; }
@@ -469,7 +483,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-pin > .cs-stack { position: relative; z-index: 1; margin: 0 0 -3px -10px; scale: var(--stamp, 1); transform-origin: 0 100%; }
 .cs-pin > .cs-stack .cs-face { width: 29px; height: 29px; margin-left: -9px; font-size: 11px; background: var(--card); box-shadow: 0 0 0 1.5px var(--cs-ink), 1.5px 2px 0 1px var(--soft); } .cs-pin > .cs-stack .cs-face:first-child { margin-left: 0; }
 /* near the right edge a stamp faces inward, so it is never cut off */
-.far > .cs-pin { translate: -100% 0; flex-direction: row-reverse; } .far > .cs-pin > .cs-stack { margin: 0 -10px -3px 0; transform-origin: 100% 100%; } .far > .cs-pin .cs-stamp { transform-origin: 70% 100%; } .far > .cs-pin .cs-mark { left: auto; right: 30px; }
+.far > .cs-pin { translate: -100% 0; flex-direction: row-reverse; } .far > .cs-pin > .cs-stack { margin: 0 -10px -3px 0; transform-origin: 100% 100%; } .far > .cs-pin .cs-postage { transform-origin: 70% 100%; } .far > .cs-pin .cs-mark { left: auto; right: 30px; }
 .cs-you { display: grid; justify-items: center; gap: 3px; pointer-events: none; } .cs-you > * { scale: var(--stamp, 1); }
 .cs-you .cs-face, .cs-you > i { display: grid; width: 34px; height: 34px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3.5px var(--cs-ink); } .cs-you > i { background: var(--second); }
 .cs-you > b { padding: 2px 5px 1px; font-stretch: 86%; font-size: 8.5px; font-weight: 760; letter-spacing: .12em; line-height: 1.2; color: var(--card); background: var(--cs-ink); border-radius: 2px; transform-origin: 50% -40%; }
