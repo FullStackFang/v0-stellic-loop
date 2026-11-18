@@ -8,7 +8,7 @@ import { readLine } from '@/lib/campus/line';
 import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
 import { customFace } from '@/lib/campus/animals';
-import { makeCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
+import { freeCode, makeCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
 import { pickFace } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
@@ -88,6 +88,11 @@ export async function subscribeAction(email: string): Promise<ActResult> {
   return act(async viewer => { await subscribe(db(), viewer.personId, String(email)); });
 }
 
+/** "Use code" once the free animal is made: says whether the code lets them make another. */
+export async function codeAction(code: string): Promise<ActResult> {
+  return act(async () => { if (!freeCode(code)) throw new CampusError('That code does not work.'); });
+}
+
 export type MadeFace = { ok: true; own: string; left: number } | { ok: false; message: string; signIn?: boolean };
 /**
  * "Subscribe" on a person's own animal, and "Make it" after that: the photo is drawn as one of the set and becomes their
@@ -99,7 +104,7 @@ export async function makeFaceAction(data: FormData): Promise<MadeFace> {
   const photo = data.get('photo'), email = data.get('email');
   if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
   try {
-    const made = await makeCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), typeof email === 'string' ? email : null, undefined, viewer.admin);
+    const made = await makeCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), typeof email === 'string' ? email : null, undefined, viewer.admin || freeCode(data.get('code')));
     revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
     return { ok: true, own: customFace(made.token), left: made.left };
   } catch (error) {

@@ -212,8 +212,19 @@ describe('who sees whom', () => {
       expect(card.getAllByText('Premium')).toHaveLength(2);
       // The "+" is always there. With the free animal used, it says so before a photo is asked for.
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
-      expect(card.getByText('You have made your free animal. Making more is not set up yet.')).toBeInTheDocument();
+      expect(card.getByText('Your free animal is made.')).toBeInTheDocument();
       expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
+      // A code gets past it. The server checks the code, here and again when the animal is made.
+      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
+      fireEvent.click(card.getByRole('button', { name: 'Use code' }));
+      expect(await card.findByRole('alert')).toHaveTextContent('That code does not work.');
+      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'cheapskates' } });
+      fireEvent.click(card.getByRole('button', { name: 'Use code' }));
+      expect(await card.findByRole('button', { name: 'Draw it' })).toBeInTheDocument();
+      const again = new FormData(); again.set('photo', photo);
+      await withPortalTestSession(ana, async () => expect(await makeFaceAction(again)).toEqual({ ok: false, message: 'You have made your free animal. Making more is not set up yet.' }));
+      again.set('code', 'CHEAPSKATES');
+      await withPortalTestSession(ana, async () => { expect(await makeFaceAction(again)).toMatchObject({ ok: true }); expect(await ownFaceAction(own)).toEqual({ ok: true }); });
       fireEvent.click(card.getByRole('button', { name: 'Back' }));
     });
     cleanup();

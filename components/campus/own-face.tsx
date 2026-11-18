@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { makeFaceAction, subscribeAction } from '@/app/c/actions';
+import { codeAction, makeFaceAction, subscribeAction } from '@/app/c/actions';
 import { animal } from '@/lib/campus/animals';
 
 /** Shrinks a photo in the browser, on white, so it uploads quickly. A file the browser cannot draw is sent as it is. */
@@ -29,6 +29,14 @@ export function OwnFace({ asked, left, onAsked, onMade, onBack }: { asked: boole
   // `asking` is the email field in the button's place. `first` is whether they subscribed on this visit: the thanks are shown for it until the pane is left.
   const [state, setState] = useState<'plan' | 'photo' | 'busy' | 'done'>(asked ? 'photo' : 'plan'), [asking, setAsking] = useState(false), [first, setFirst] = useState(false);
   const [wait, setWait] = useState(false), [said, setSaid] = useState(''), [own, setOwn] = useState('');
+  // With the free animal made, a code lets them make another: `typed` is the field, `code` the one the server took.
+  const [typed, setTyped] = useState(''), [code, setCode] = useState('');
+  const redeem = async () => {
+    setSaid(''); setWait(true);
+    const got = await codeAction(typed).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
+    setWait(false);
+    if (got.ok) setCode(typed); else setSaid(got.message);
+  };
   const input = useRef<HTMLInputElement>(null);
   const choose = (next?: File) => { if (!next) return; if (shown) URL.revokeObjectURL(shown); setFile(next); setShown(URL.createObjectURL(next)); setSaid(''); };
   const subscribe = async () => {
@@ -44,6 +52,7 @@ export function OwnFace({ asked, left, onAsked, onMade, onBack }: { asked: boole
     setSaid(''); setState('busy');
     const data = new FormData();
     data.set('photo', await small(file), 'photo.jpg');
+    if (code) data.set('code', code);
     const got = await makeFaceAction(data).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
     if (got.ok) { setOwn(got.own); setState('done'); onMade(got.own, got.left); } else { setSaid(got.message); setState('photo'); }
   };
@@ -61,11 +70,20 @@ export function OwnFace({ asked, left, onAsked, onMade, onBack }: { asked: boole
       {said && <p role="alert">{said}</p>}
     </form>
   </div></div>;
+  // The free animal is made: the same plate says so, before a photo is asked for, and takes a code.
+  if (state === 'photo' && left <= 0 && !code) return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
+    <button className="cs-prem-back" onClick={onBack}>Back</button>
+    <p className="cs-prem-kick">Loop Premium</p>
+    <p className="cs-prem-big said">Your free animal is made.</p>
+    <div className="cs-prem-perks"><span>More come with Premium, once payment is set up.</span></div>
+    <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void redeem(); }}>
+      <div className="cs-prem-join"><input value={typed} onChange={event => setTyped(event.target.value)} aria-label="Code" placeholder="Have a code?" autoCapitalize="characters" autoComplete="off" spellCheck={false} /><button className="cs-btn go" disabled={wait || !typed.trim()}>Use code</button></div>
+      {said && <p role="alert">{said}</p>}
+    </form>
+  </div></div>;
   return <div className="cs-lvl-body cs-pets cs-own">
     <div className="cs-pets-top"><h4>Your own animal</h4><b className="cs-own-tag">Premium</b>{state !== 'busy' && <button className={`cs-btn sm ${state === 'done' ? 'go' : ''}`} onClick={onBack}>{state === 'done' ? 'Done' : 'Back'}</button>}</div>
     {state === 'done' ? <div className="cs-own-made"><img src={own} alt="Your own animal" />{thanks}<p>It is your picture now.</p></div>
-    // The free animal is used: say so here, before a photo is chosen, not after.
-    : left <= 0 && state === 'photo' ? <div className="cs-own-made"><p>You have made your free animal. Making more is not set up yet.</p></div>
     : state === 'busy' ? <div className="cs-own-made" role="status">{shown && <img className="busy" src={shown} alt="" />}{thanks}<p>Drawing your animal. This takes about half a minute.</p></div>
     : <form className="cs-own-form" onSubmit={event => { event.preventDefault(); void make(); }}>
       {thanks}

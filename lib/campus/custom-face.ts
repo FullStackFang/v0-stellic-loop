@@ -120,6 +120,9 @@ export async function deletePicture(q: Q, token: string): Promise<void> {
   if (!z.uuid().safeParse(token).success || !(await q.query('delete from campus_custom_picture where token=$1 returning 1', [token])).rows.length) throw new Error('No such picture');
 }
 
+/** The founder's code for making another animal once the free one is used. Checked here, on the server, and nowhere in the page. */
+export const freeCode = (code: unknown) => typeof code === 'string' && code.trim().toUpperCase() === 'CHEAPSKATES';
+
 /** A person picks a made animal as their face: one of their own, a core one, or a premium one when they subscribed (`premium` is also true for the admin). */
 export async function useCustomFace(q: Q, personId: string, token: string, premium = false): Promise<void> {
   const { rows: [row] } = z.uuid().safeParse(token).success ? await q.query<{ mine: boolean; tier: string | null }>('select person_id=$1 as mine,tier from campus_custom_picture where token=$2', [personId, token]) : { rows: [] };
