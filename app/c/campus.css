@@ -403,7 +403,62 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm input, .cs-adm select { height: 36px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); min-width: 0; }
 .cs-adm .cs-form .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 
+/* "Near you": the week on a map, one section of town at a time (components/campus/near.tsx). The map is the list:
+   pins for events, a dial of times under it, and the event that is on speaks from its pin. */
+@keyframes cs-cell { from { opacity: 0; transform: translateY(14px) scale(.94); } }
+@keyframes cs-way-in { from { opacity: 0; scale: .9; } }
+@keyframes cs-nudge { from { translate: -4px 0; } to { translate: 5px 0; } }
+@keyframes cs-nope { 0%, 100% { translate: 0 0; } 20% { translate: -7px 0; } 45% { translate: 6px 0; } 70% { translate: -4px 0; } 88% { translate: 2px 0; } }
+.cs-near { position: relative; isolation: isolate; flex: 1; min-height: min(600px, calc(100dvh - 32px)); margin: 0 6px 6px 0; overflow: hidden; border-radius: var(--cs-r); background: var(--cs-ink); box-shadow: 6px 6px 0 var(--cs-field-shadow); }
+/* the map library sets its own position on this element; this has to win */
+.cs-near .cs-near-map { position: absolute; inset: 0; z-index: 0; }
+.cs-near-post { margin-bottom: 10px; }
+.cs-near-band { position: absolute; inset: 0 0 auto; z-index: 3; padding: 11px 16px 13px 20px; background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs-near-band p { margin-bottom: 4px; font-size: 13.5px; color: var(--cs-on-ink-mute); } .cs-near-band p b { font-weight: 600; color: var(--cs-on-ink); }
+.cs-near-band h2 { font-stretch: 112%; font-weight: 720; font-size: 30px; line-height: 1; letter-spacing: -0.05em; color: var(--cs-field); white-space: nowrap; }
+.cs-near-band small { position: absolute; right: 14px; top: 12px; font-size: 11px; color: var(--cs-on-ink-mute); }
+/* a pin: a time tile whose tight corner points at the spot, with who is going */
+.cs-pin { position: relative; display: flex; align-items: flex-end; text-align: left; transition: opacity .2s; }
+.cs-pin .cs-tile { position: relative; min-width: 44px; min-height: 44px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); transition: translate .15s var(--cs-ease), background-color .2s, color .2s; }
+.cs-pin .cs-tile b { font-size: 16.5px; } .cs-pin:hover .cs-tile { translate: -1px -2px; }
+.cs-pin > .cs-stack { position: relative; z-index: 1; margin: 0 0 -6px -9px; --ring: var(--cs-ink); } .cs-pin > .cs-stack .cs-face { width: 21px; height: 21px; font-size: 10px; }
+.cs-pin.sel .cs-tile { background: var(--cs-action); color: var(--cs-paper); } .cs-pin.dim { opacity: .25; } .cs-near .maplibregl-marker:has(.cs-pin.sel) { z-index: 5; }
+.cs-pin.now .cs-tile::before { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 2.5px var(--cs-action); pointer-events: none; animation: cs-ping 2.4s var(--cs-expo) infinite; }
+/* near the right edge a pin faces inward, so it is never cut off */
+.far > .cs-pin { translate: -100% 0; flex-direction: row-reverse; } .far > .cs-pin > .cs-stack { margin: 0 -9px -6px 0; } .far > .cs-pin .cs-tile { border-radius: 12px 12px 3px 12px; }
+.cs-you { position: relative; display: block; } .cs-you .cs-face, .cs-you > i { display: grid; width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 0 0 2.5px var(--cs-paper), 0 0 0 4.5px var(--cs-ink); } .cs-you > i { background: var(--cs-action); }
+.cs-you::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; box-shadow: 0 0 0 3px var(--cs-action); animation: cs-ping 2.4s var(--cs-expo) infinite; }
+/* the event that is on speaks from its pin; the map picks the corner (data-seat) */
+.cs-bub { position: absolute; left: 0; bottom: calc(100% + 9px); width: 224px; display: grid; gap: 3px; padding: 11px 14px 12px; font-size: 13px; font-weight: 440; line-height: 1.3; color: var(--cs-on-ink); background: var(--cs-ink); border-radius: 16px 16px 16px 4px; box-shadow: 4px 4px 0 var(--cs-field-shadow); animation: cs-cell .3s var(--cs-expo); }
+.cs-bub[data-seat~=r] { left: auto; right: 0; border-radius: 16px 16px 4px 16px; } .cs-bub[data-seat~=low] { bottom: auto; top: calc(100% + 9px); border-radius: 4px 16px 16px 16px; } .cs-bub[data-seat="low r"] { border-radius: 16px 4px 16px 16px; }
+.cs-bub > b { font-stretch: 106%; font-size: 17px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; color: var(--cs-field); overflow-wrap: anywhere; }
+.cs-bub em { font-style: normal; font-weight: 600; color: var(--cs-field); } .cs-bub .in { margin-top: 5px; font-weight: 600; }
+/* push against the wall and the way on appears at that edge; a way that is not open yet is the same ticket greyed, and it shakes once */
+.cs-way { position: absolute; left: 0; top: 0; z-index: 6; display: flex; align-items: center; gap: 12px; padding: 10px 14px 11px 16px; text-align: left; border-radius: var(--cs-r); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-ink); animation: cs-way-in .3s var(--cs-expo); transition: translate .15s var(--cs-ease); }
+.cs .cs-way { background: var(--cs-field); } button.cs-way:hover { translate: -1px -2px; }
+.cs-way > span { display: grid; font-size: 13px; line-height: 1.3; } .cs-way b { font-stretch: 108%; font-size: 18px; font-weight: 720; letter-spacing: -0.04em; line-height: 1.1; white-space: nowrap; }
+.cs-way .go { flex: none; display: grid; place-items: center; width: 50px; height: 50px; margin: -2px -4px -2px 0; border-radius: 50%; background: var(--cs-ink); box-shadow: 0 0 0 3px color-mix(in oklch, var(--cs-ink) 22%, transparent); rotate: var(--a, 0rad); }
+.cs-way .go svg { width: 30px; height: 30px; fill: none; stroke: var(--cs-field); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; animation: cs-nudge .7s cubic-bezier(.45, 0, .55, 1) infinite alternate; }
+.cs .cs-way.none { background: color-mix(in oklch, var(--cs-paper) 78%, var(--cs-ink)); color: color-mix(in oklch, var(--cs-ink) 62%, var(--cs-paper)); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 45%, var(--cs-paper)); animation: cs-nope .45s cubic-bezier(.3, 0, .3, 1); }
+.cs-way.none .go { background: color-mix(in oklch, var(--cs-ink) 38%, var(--cs-paper)); box-shadow: none; } .cs-way.none .go svg { stroke: color-mix(in oklch, var(--cs-paper) 80%, var(--cs-ink)); animation: none; }
+/* recenter, out, in */
+.cs-near-zoom { position: absolute; right: 14px; z-index: 3; display: flex; gap: 8px; }
+.cs .cs-near-zoom button { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow); font-size: 24px; font-weight: 560; line-height: 1; transition: translate .15s var(--cs-ease); }
+.cs-near-zoom button:hover:not(:disabled) { translate: -1px -1px; } .cs-near-zoom button:active:not(:disabled) { translate: 1px 1px; } .cs-near-zoom svg { width: 20px; height: 20px; }
+.cs .cs-near-zoom button:disabled { cursor: default; color: color-mix(in oklch, var(--cs-ink) 30%, var(--cs-paper)); background: color-mix(in oklch, var(--cs-paper) 86%, var(--cs-ink)); }
+/* under the map: the dial of times, or the open ticket with its panel beside it */
+.cs-near-sheet { position: absolute; inset: auto 0 0; z-index: 4; background: var(--cs-paper); border-radius: 22px 22px 0 0; box-shadow: 0 -5px 0 var(--cs-field-shadow); }
+.cs-near-sheet.dial { height: 110px; padding-top: 16px; }
+.cs-near-sheet.open { background: none; border-radius: 0; box-shadow: none; } .cs-near-sheet.open .cs-rail { padding: 6px 16px 16px 14px; max-height: 420px; }
+.cs-near-none { display: grid; gap: 4px; padding: 16px 20px 18px; font-size: 13.5px; color: var(--cs-mute); } .cs-near-none b { font-size: 16px; font-weight: 600; color: var(--cs-ink); }
+.cs-dial { position: relative; height: 78px; margin: 0 14px; overflow: auto hidden; scrollbar-width: none; touch-action: none; cursor: grab; user-select: none; } .cs-dial::-webkit-scrollbar { display: none; } .cs-dial:active { cursor: grabbing; }
+.cs-dial > div { position: relative; height: 100%; } .cs-dial > div::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px; background: var(--cs-line); }
+.cs-tick { position: absolute; top: 50%; translate: -50% -50%; display: grid; justify-items: center; line-height: 1; min-width: 46px; padding: 6px 8px 7px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); white-space: nowrap; transition: scale .2s var(--cs-ease), background-color .2s, color .2s; }
+.cs-tick small { font-size: 11px; font-weight: 600; } .cs-tick b { font-size: 16px; font-weight: 640; margin-top: 2px; }
+.cs-tick.on { z-index: 1; scale: 1.2; background: var(--cs-action); color: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+
 @media (max-width: 860px) {
+  .cs-near { margin: 0 -16px -24px; border-radius: 0; box-shadow: none; min-height: min(600px, calc(100dvh - 60px)); } .cs-near-band h2 { font-size: 27px; }
   .cs-nav { padding: 10px 16px 11px; } .cs-wm { gap: 10px; padding-right: 10px; font-size: 21px; } .cs-wm svg { width: 38px; height: 38px; padding: 5px; } .cs-main { padding: 12px 16px 24px; } .cs-links a:not([aria-current]) { display: none; }
   .cs-door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; }
   .cs-deck { margin-right: 0; width: calc(100% - 120px); } .cs-dtab { transform: translate(calc(var(--k) * 38px), calc(var(--k) * 8px)) rotate(calc(var(--k) * 1.6deg)); }

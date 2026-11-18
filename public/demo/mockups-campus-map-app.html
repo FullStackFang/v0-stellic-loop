@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Map In App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+/* A map view in the Loop Campus look (docs/loop-campus-design.md). The map is the list: it shows one section of town,
+   in the shape of that section, with real streets (OpenStreetMap data, drawn by MapLibre GL, the open twin of Mapbox GL).
+   Everything else is veiled. The sections next door show as signposts, and you step into them one at a time.
+   The bar on top and the notes beside the phone are outside the design. */
+@keyframes ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.7); opacity: 0; } }
+@keyframes pop { from { transform: scale(.2); opacity: 0; } }
+@keyframes cell { from { opacity: 0; transform: translateY(14px) scale(.94); } }
+@keyframes flip { from { transform: rotateX(-80deg) scale(.9); } }
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  --F: oklch(96.4% 0.19 117); --A: oklch(47.6% 0.13 250); --A2: oklch(54% 0.14 250); --A4: oklch(35.4% 0.095 252); --P: oklch(96.4% 0.19 117); --H: oklch(80% 0.17 121);
+  --ink: oklch(25% 0.07 252); --bg: oklch(96.2% 0.004 230); --paper: oklch(99.3% 0.004 117);
+  --mute: oklch(46.5% 0.012 245); --line: oklch(90.6% 0.008 240); --on-night: oklch(99.4% 0.003 230); --night-mute: oklch(82% 0.02 245);
+  --r: 22px 22px 22px 6px; --ease: cubic-bezier(.22, 1, .36, 1); --bar: 45px;
+  margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.45; letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--ink); min-height: 100vh;
+}
+button, input { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+h1, h2, h3, p, ul, ol { margin: 0; padding: 0; } ul, ol { list-style: none; }
+:focus-visible { outline: 2px solid var(--A); outline-offset: 2px; }
+
+/* compare bar (outside the design) */
+.cmp { position: sticky; top: 0; z-index: 10; min-height: var(--bar); display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 6px 14px; background: var(--ink); color: var(--on-night); font-size: 13.5px; }
+.cmp-set { display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: color-mix(in oklch, var(--on-night) 10%, transparent); }
+.cmp button { padding: 4px 12px; border-radius: 99px; font-weight: 520; white-space: nowrap; }
+.cmp-set button[aria-pressed=true] { background: var(--paper); color: var(--ink); font-weight: 620; }
+.cmp > span { color: var(--night-mute); }
+
+.stage { display: grid; grid-template-columns: auto minmax(0, 340px); gap: 44px; justify-content: center; align-items: start; padding: 30px 20px 64px; }
+.phone { position: relative; isolation: isolate; overflow: hidden; width: 430px; height: clamp(720px, calc(100vh - var(--bar) - 70px), 860px); border-radius: 46px; background: var(--ink); box-shadow: 0 0 0 10px var(--ink), 10px 12px 0 10px var(--H); }
+#map { position: absolute; inset: 0; background: var(--ink); }
+
+/* top: the section on screen, and the way back to where you stand */
+.top { position: absolute; inset: 0 0 auto; z-index: 3; padding: 16px 16px 14px 20px; background: var(--ink); color: var(--on-night); }
+.top .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; }
+.top p { font-size: 13.5px; color: var(--night-mute); } .top p b { color: var(--on-night); font-weight: 600; }
+h1 { font-stretch: 112%; font-weight: 720; font-size: 36px; line-height: 1; letter-spacing: -0.05em; color: var(--P); white-space: nowrap; }
+.home { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 99px; font-size: 13px; font-weight: 580; white-space: nowrap; background: color-mix(in oklch, var(--on-night) 12%, transparent); }
+.home:hover { background: color-mix(in oklch, var(--on-night) 20%, transparent); } .home .face { width: 28px; height: 28px; }
+
+/* signposts: the sections next door, pinned to the edge they lie beyond */
+#signs { position: absolute; inset: 0; z-index: 2; pointer-events: none; transition: opacity .25s; } #signs.off { opacity: 0; }
+.sign { position: absolute; left: 0; top: 0; pointer-events: auto; display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px 0 11px; border-radius: 99px; font-size: 13px; font-weight: 620; white-space: nowrap; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+#signs.off .sign { pointer-events: none; }
+.sign:not(:disabled):hover { background: var(--F); }
+.sign.shut { cursor: default; background: var(--ink); color: var(--night-mute); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--on-night) 30%, transparent); } .sign.shut small { color: inherit; opacity: .8; } .sign small { font-size: 12px; font-weight: 520; color: var(--mute); }
+.sign .who { display: flex; } .sign .who .face { width: 18px; height: 18px; margin-left: -5px; box-shadow: 0 0 0 1.5px var(--paper); } .sign .who .face:first-child { margin-left: 0; }
+
+/* pins: a time tile whose tight corner points at the spot */
+.face { border-radius: 50%; object-fit: cover; background: oklch(85% 0.01 60); width: 26px; height: 26px; flex: none; display: block; }
+.stack { display: flex; --ring: var(--paper); } .stack .face { margin-left: -7px; box-shadow: 0 0 0 2px var(--ring); } .stack .face:first-child { margin-left: 0; }
+.face.new { animation: pop .5s var(--ease); }
+.tile { position: relative; display: grid; justify-items: center; align-content: center; flex: none; line-height: 1; min-width: 48px; min-height: 48px; padding: 6px 6px 7px; border-radius: 12px 12px 12px 3px; background: var(--ink); color: var(--P); }
+.tile small { font-size: 11px; font-weight: 600; } .tile b { font-weight: 640; font-size: 18px; margin-top: 2px; display: block; }
+.tile.met { background: var(--A); color: var(--paper); }
+.pin { position: relative; display: flex; align-items: flex-end; cursor: pointer; transition: opacity .2s; }
+.pin .tile { min-width: 44px; min-height: 44px; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); transition: translate .15s var(--ease), background-color .2s, color .2s; }
+.pin .tile b { font-size: 16.5px; }
+.pin:hover .tile { translate: -1px -2px; }
+.pin .stack { margin: 0 0 -6px -9px; z-index: 1; } .pin .stack .face { width: 21px; height: 21px; box-shadow: 0 0 0 2px var(--ink); }
+.pin.sel { z-index: 5; } .pin.sel .tile { background: var(--A); color: var(--paper); }
+.pin.now .tile::before { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 2.5px var(--A); pointer-events: none; animation: ping 2.4s cubic-bezier(.16, 1, .3, 1) infinite; }
+.pin.dim { opacity: .25; } .pin[style*=reverse] .stack { margin: 0 -9px -6px 0; } .pin[style*=reverse] .tile { border-radius: 12px 12px 3px 12px; }
+.you { position: relative; display: block; } .you .face { width: 30px; height: 30px; box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 4.5px var(--ink); }
+.you::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; box-shadow: 0 0 0 3px var(--A); animation: ping 2.4s cubic-bezier(.16, 1, .3, 1) infinite; }
+
+/* sheet: search this section, and the one event on top. The pins are the list. */
+.sheet { position: absolute; inset: auto 0 0; z-index: 3; height: 214px; overflow: hidden; background: var(--paper); border-radius: 22px 22px 0 0; box-shadow: 0 -5px 0 var(--H); transition: height .5s var(--ease); }
+.sheet.mid { height: 266px; } .sheet.tall { height: 396px; }
+.find { display: flex; align-items: center; gap: 8px; padding: 14px 14px 12px; }
+.find input { flex: 1 1 0; min-width: 0; height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.find input::placeholder { color: var(--mute); } .find input:focus-visible { outline: 3px solid var(--A); outline-offset: 2px; }
+.top1 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; min-height: 96px; padding: 12px 14px; text-align: left; background: var(--F); border-radius: var(--r); box-shadow: 4px 4px 0 var(--ink); animation: cell .4s cubic-bezier(.16, 1, .3, 1); transition: translate .15s var(--ease); }
+.top1:hover { translate: -1px -1px; } .top1:active { translate: 2px 2px; }
+.top1 .t b { display: block; font-stretch: 106%; font-size: 18px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; }
+.top1 .t span { display: block; font-size: 13px; margin-top: 3px; } .top1 .t em { display: block; font-style: normal; font-size: 12.5px; font-weight: 620; color: var(--A4); margin-top: 2px; }
+.top1 .e { display: grid; justify-items: end; gap: 4px; font-size: 12.5px; font-weight: 600; } .top1 .stack { --ring: var(--F); }
+.pg { display: flex; align-items: center; justify-content: center; gap: 4px; padding-top: 6px; font-size: 13px; color: var(--mute); }
+.pg button { width: 34px; height: 30px; border-radius: 99px; font-size: 19px; line-height: 1; color: var(--ink); } .pg button:hover { background: var(--F); }
+.none { min-height: 96px; display: grid; gap: 8px; align-content: start; font-size: 13.5px; color: var(--mute); } .none > b { font-size: 16px; font-weight: 600; color: var(--ink); }
+.hop { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 8px 8px 8px 14px; border-radius: 99px; text-align: left; color: var(--ink); background: color-mix(in oklch, var(--F) 22%, var(--paper)); }
+.hop:hover { background: var(--F); } .hop b { font-weight: 600; }
+.pill { font-size: 12.5px; font-weight: 560; padding: 3px 10px; border-radius: 99px; background: var(--bg); color: var(--mute); white-space: nowrap; }
+.pill.hot { background: var(--F); color: var(--ink); }
+.pill.src { display: inline-block; margin-right: 6px; padding: 1px 8px 2px; font-size: 11.5px; font-weight: 620; color: var(--ink); background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; font-weight: 580; white-space: nowrap; border-radius: 99px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink) inset; transition: background-color .15s, transform .15s var(--ease); }
+.btn.go { background: var(--A); color: var(--paper); box-shadow: 0 0 0 1.5px var(--ink) inset, 3px 3px 0 var(--ink); }
+.btn.go:hover { background: var(--A2); } .btn.go:active { transform: translate(2px, 2px); }
+.btn.go:disabled { background: var(--line); color: var(--mute); box-shadow: none; cursor: default; }
+.post { padding: 16px 14px 14px; display: grid; gap: 12px; align-content: start; }
+.post h3 { font-size: 16px; font-weight: 600; } .post h3 span { display: block; font-size: 13px; font-weight: 400; color: var(--mute); }
+.post .find { padding: 0; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { height: 36px; padding: 0 14px; border-radius: 99px; background: var(--bg); font-weight: 560; font-size: 14px; }
+.opt[aria-pressed=true] { background: var(--ink); color: var(--P); }
+.act { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+/* ticket: what the sheet becomes when an event is picked. The map walks to the pin while it opens. */
+.band { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px 18px; background: var(--F); }
+.band .k { display: block; font-size: 12.5px; font-weight: 560; }
+.band h2 { font-stretch: 108%; font-weight: 720; font-size: 25px; line-height: 1.02; letter-spacing: -0.04em; margin: 5px 0 9px; }
+.when { display: flex; align-items: center; gap: 10px; font-size: 13px; } .when b { display: block; font-size: 14.5px; font-weight: 600; }
+.flip { animation: flip .55s cubic-bezier(.16, 1, .3, 1); }
+.cover { display: grid; align-content: center; justify-items: center; gap: 2px; width: 98px; aspect-ratio: 1; padding: 8px; text-align: center; color: var(--paper); border-radius: 16px 16px 16px 5px; box-shadow: 4px 4px 0 var(--ink);
+  background: radial-gradient(60% 60% at 78% 24%, var(--A2), transparent 72%), radial-gradient(52% 52% at 26% 88%, var(--A4), transparent 70%), var(--A); }
+.cover small { font-size: 11.5px; font-weight: 560; line-height: 1.15; }
+.cover strong { font-stretch: 108%; font-weight: 740; font-size: 40px; line-height: .9; letter-spacing: -0.045em; } .cover.on strong { font-size: 25px; line-height: 1; }
+.blocks { display: flex; gap: 3px; margin-top: 5px; } .blocks i { width: 11px; height: 6px; border-radius: 2px; background: oklch(99% 0.004 60 / .3); } .blocks i.on { background: var(--paper); }
+.tkb { display: grid; grid-template-columns: minmax(0, 1fr); gap: 11px; padding: 13px 16px 14px; }
+.whoin { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--mute); } .whoin b { display: block; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.whoin .stack .face { width: 32px; height: 32px; } .whoin .gauge { margin-left: auto; }
+.gauge { width: 30px; height: 30px; flex: none; transform: rotate(-90deg); }
+.gauge circle { fill: none; stroke-width: 5; stroke: var(--line); transition: stroke .35s var(--ease); } .gauge circle.lit { stroke: var(--ink); }
+.perk { padding: 8px 14px; border-radius: 12px 12px 12px 3px; font-size: 13.5px; font-weight: 560; color: var(--A); background: color-mix(in oklch, var(--F) 22%, var(--paper)); transition: background-color .3s, color .3s; }
+.perk.on { background: var(--A); color: var(--paper); }
+.lbl { display: block; font-size: 12.5px; color: var(--mute); margin-bottom: 6px; }
+.ask { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 2px; }
+.who2 { flex: none; height: 46px; display: inline-flex; align-items: center; gap: 9px; padding: 0 14px 0 6px; border-radius: 99px; text-align: left; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); transition: background-color .15s; }
+.who2:hover { box-shadow: inset 0 0 0 1.5px var(--ink); } .who2 .face { width: 34px; height: 34px; }
+.who2 span { font-size: 12px; color: var(--mute); line-height: 1.25; } .who2 span b { display: block; font-size: 14px; font-weight: 600; color: var(--ink); }
+.who2 em { font-style: normal; font-size: 13px; font-weight: 640; color: var(--A); margin-left: 4px; }
+.who2.sent, .who2.sent:hover { background: var(--ink); box-shadow: none; } .who2.sent span, .who2.sent em { color: var(--P); } .who2.sent span b { color: var(--paper); }
+.tk.in .band > *, .tk.in .tkb > * { animation: cell .5s cubic-bezier(.16, 1, .3, 1) backwards; animation-delay: calc(var(--i, 0) * 55ms + 120ms); }
+
+/* Search floats over the map, so the sheet holds the dial and nothing else. */
+.float { position: absolute; left: 14px; right: 14px; z-index: 3; display: flex; gap: 10px; transition: bottom .5s var(--ease); } .float:empty { display: none; }
+.float input { flex: 1 1 0; min-width: 0; height: 44px; padding: 0 18px; border: 0; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.float input::placeholder { color: var(--mute); } .float input:focus-visible { outline: 3px solid var(--A); outline-offset: 2px; }
+.float .btn { height: 44px; padding: 0 20px; }
+#card { padding: 16px 0 0; }
+/* The dial: turn through the times; the event speaks from its pin */
+.dial { position: relative; height: 78px; margin: 0 14px; touch-action: none; cursor: grab; } .dial:active { cursor: grabbing; }
+.dial::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px; background: var(--line); }
+.tick { position: absolute; top: 50%; translate: -50% -50%; display: grid; justify-items: center; line-height: 1; min-width: 46px; padding: 6px 8px 7px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: scale .2s var(--ease), background-color .2s, color .2s; }
+.tick small { font-size: 11px; font-weight: 600; } .tick b { font-size: 16px; font-weight: 640; margin-top: 2px; }
+.tick.on { z-index: 1; scale: 1.2; background: var(--A); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.bub { position: absolute; left: 0; bottom: calc(100% + 9px); width: 224px; display: grid; gap: 3px; padding: 11px 14px 12px; text-align: left; font-size: 13px; line-height: 1.3; color: var(--on-night); background: var(--ink); border-radius: 16px 16px 16px 4px; box-shadow: 4px 4px 0 var(--H); view-transition-name: bub; animation: cell .3s cubic-bezier(.16, 1, .3, 1); }
+.bub.r { left: auto; right: 0; border-radius: 16px 16px 4px 16px; } .bub.low { bottom: auto; top: calc(100% + 9px); border-radius: 4px 16px 16px 16px; } .bub.low.r { border-radius: 16px 4px 16px 16px; }
+.bub > b { font-stretch: 106%; font-size: 17px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; color: var(--P); }
+.bub em { font-style: normal; font-weight: 600; color: var(--P); } .bub .in { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-weight: 600; } .bub .stack { --ring: var(--ink); } .bub .stack .face { width: 22px; height: 22px; }
+:root { view-transition-name: none; }
+::view-transition-group(bub) { animation-duration: .32s; animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
+
+/* The live campus page's top (app/c/campus.css): the bar, the search line and the views. "Near you" is the one new view. */
+.top { padding: 0; background: var(--bg); color: var(--ink); }
+.nav { display: flex; align-items: center; gap: 8px; padding: 10px 14px 11px; background: var(--F); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.wm { display: flex; align-items: center; gap: 10px; margin-right: 2px; font-weight: 720; font-stretch: 112%; font-size: 22px; letter-spacing: -0.045em; }
+.wm svg { display: block; width: 38px; height: 38px; padding: 5px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.nav .cur { padding: 6px 12px; border-radius: 99px; background: var(--ink); color: var(--F); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.nav .end { margin-left: auto; display: flex; align-items: center; gap: 9px; } .nav .btn { height: 36px; padding: 0 14px; } .nav .face { width: 34px; height: 34px; box-shadow: 0 0 0 2px var(--ink); }
+.ask1 { padding: 12px 14px 0; }
+.ask1 input { width: 100%; height: 46px; padding: 0 20px; border: 0; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--H); font-weight: 520; }
+.ask1 input::placeholder { color: var(--mute); }
+.tabs { display: flex; gap: 4px; padding: 10px 14px; }
+.tabs button { padding: 6px 13px; border-radius: 99px; font-weight: 540; color: var(--mute); white-space: nowrap; } .tabs button[aria-pressed=true] { background: var(--ink); color: var(--F); }
+.where { padding: 10px 16px 13px 20px; background: var(--ink); color: var(--on-night); } .where h1 { font-size: 30px; } .where .row { min-height: 0; margin-bottom: 4px; }
+.phone[data-view=list] :is(#signs, .sheet, .float, .maplibregl-marker) { display: none; }
+/* the two lists the app has today */
+#list { position: absolute; inset: 0; z-index: 2; overflow-y: auto; scrollbar-width: none; padding: 0 14px 24px; background: var(--bg); }
+.lcount { margin: 4px 2px 8px; font-size: 19px; font-weight: 660; letter-spacing: -0.03em; }
+.says { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; } .says small { font-size: 13px; color: var(--mute); margin-right: 2px; }
+.says button { height: 30px; padding: 0 12px; border-radius: 99px; font-size: 13.5px; font-weight: 560; box-shadow: inset 0 0 0 1.5px var(--line); } .says button[aria-pressed=true] { background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.lrow { margin: 0 4px 16px 0; overflow: hidden; border: 1.5px solid var(--ink); border-radius: var(--r); background: var(--paper); box-shadow: 4px 4px 0 var(--H); }
+.ltop { display: flex; gap: 12px; align-items: center; padding: 14px 16px; } .ltop .tile { min-width: 54px; min-height: 54px; }
+.ltop h3 { font-size: 19px; font-weight: 680; font-stretch: 106%; letter-spacing: -0.035em; line-height: 1.15; margin-bottom: 3px; }
+.ltop p { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13.5px; color: var(--mute); }
+.lstub { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px 13px 16px; border-top: 2px dashed color-mix(in oklch, var(--ink) 45%, transparent); background: color-mix(in oklch, var(--F) 32%, var(--paper)); font-size: 13.5px; }
+.lstub.plain { background: var(--paper); } .lstub b { display: block; margin-bottom: 5px; font-weight: 620; line-height: 1.3; }
+.lstub span { display: flex; align-items: center; gap: 8px; color: var(--mute); } .lstub .stack { --ring: var(--paper); } .lstub .btn { flex: none; height: 38px; }
+.lnone { padding: 28px 8px; color: var(--mute); } .lnone b { display: block; font-size: 19px; color: var(--ink); }
+
+/* map controls: recenter, out, in. They sit in the strip above the sheet that signposts keep clear. */
+.float { justify-content: flex-end; gap: 8px; pointer-events: none; }
+.zc { pointer-events: auto; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--H); font-size: 24px; font-weight: 560; line-height: 1; transition: translate .15s var(--ease), background-color .15s; }
+.zc:hover:not(:disabled) { translate: -1px -1px; } .zc:active:not(:disabled) { translate: 1px 1px; } .zc:disabled { cursor: default; color: color-mix(in oklch, var(--ink) 30%, var(--paper)); background: color-mix(in oklch, var(--paper) 86%, var(--ink)); }
+.zc svg { width: 20px; height: 20px; } .zc + .zc + .zc { margin-left: -2px; }
+
+.phone #signs { z-index: 6; } #signs.off .way { pointer-events: none; }
+/* Past the edge: push against the wall and the way on appears at that edge: an arrow to the place in that direction, or a plain note when there is none */
+.way { position: absolute; left: 0; top: 0; pointer-events: auto; display: flex; align-items: center; gap: 12px; padding: 10px 14px 11px 16px; text-align: left; border-radius: var(--r); background: var(--P); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--ink); animation: cell .3s cubic-bezier(.16, 1, .3, 1); transition: translate .15s var(--ease); }
+button.way:hover { translate: -1px -2px; }
+.way span { display: grid; font-size: 13px; line-height: 1.3; } .way b { font-stretch: 108%; font-size: 18px; font-weight: 720; letter-spacing: -0.04em; line-height: 1.1; white-space: nowrap; }
+@keyframes nudge { from { translate: -4px 0; } to { translate: 5px 0; } }
+.way .go { flex: none; display: grid; place-items: center; width: 50px; height: 50px; margin: -2px -4px -2px 0; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ink) 22%, transparent); rotate: var(--a, 0rad); }
+.way .go svg { width: 30px; height: 30px; fill: none; stroke: var(--P); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; animation: nudge .7s cubic-bezier(.45, 0, .55, 1) infinite alternate; }
+@keyframes nope { 0%, 100% { translate: 0 0; } 20% { translate: -7px 0; } 45% { translate: 6px 0; } 70% { translate: -4px 0; } 88% { translate: 2px 0; } }
+.way.none { background: color-mix(in oklch, var(--paper) 78%, var(--ink)); color: color-mix(in oklch, var(--ink) 62%, var(--paper)); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--ink) 45%, var(--paper)); animation: nope .45s cubic-bezier(.3, 0, .3, 1); cursor: default; }
+.way.none .go { background: color-mix(in oklch, var(--ink) 38%, var(--paper)); box-shadow: none; } .way.none .go svg { stroke: color-mix(in oklch, var(--paper) 80%, var(--ink)); animation: none; }
+
+/* notes beside the phone (outside the design) */
+.side { display: grid; gap: 20px; padding-top: 6px; }
+.side h2 { font-size: 20px; font-weight: 660; letter-spacing: -0.03em; }
+.card { background: var(--paper); border-radius: var(--r); box-shadow: 5px 5px 0 var(--H); padding: 18px 20px; }
+.card h3 { font-size: 13.5px; font-weight: 560; color: var(--mute); margin-bottom: 12px; }
+.steps { counter-reset: s; display: grid; gap: 12px; font-size: 14px; }
+.steps li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; counter-increment: s; }
+.steps li::before { content: counter(s); width: 24px; height: 24px; border-radius: 8px 8px 8px 2px; background: var(--F); display: grid; place-items: center; font-weight: 640; font-size: 12.5px; }
+.steps b { display: block; font-weight: 620; }
+.side small { font-size: 12.5px; color: var(--mute); }
+@media (max-width: 900px) { .stage { grid-template-columns: minmax(0, 430px); } }
+@media (max-width: 520px) { .stage { padding: 0 0 40px; } .phone { width: 100vw; height: calc(100dvh - var(--bar)); border-radius: 0; box-shadow: none; } .side { padding: 20px 16px 0; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="cmp" role="navigation" aria-label="Map looks and demo controls">
+  <span>You are standing in</span><div class="cmp-set" id="stand"></div>
+</div>
+
+<div class="stage">
+  <div class="phone">
+    <div id="map"></div>
+    <div id="signs"></div>
+    <div class="float" id="float"></div>
+    <div id="list" hidden></div>
+    <header class="top" id="top">
+      <div class="nav"><span class="wm"><svg viewBox="0 0 100 100" aria-hidden="true" fill="none"><defs><mask id="rm0" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask><mask id="rm1" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask><mask id="rm2" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask></defs><g mask="url(#rm0)"><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--A)" stroke-width="9"/></g><g mask="url(#rm1)"><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/></g><g mask="url(#rm2)"><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/></g></svg>Loop</span><span class="cur">This week</span><div class="end"><button class="btn" id="postplan">Post a plan</button><img class="face" src="https://i.pravatar.cc/120?img=12" alt="You"></div></div>
+      <div class="ask1"><input id="q" type="search" placeholder="What do you feel like doing?" aria-label="What do you feel like doing?"></div>
+      <div class="tabs" role="group" aria-label="Views"><button data-tab="best">Best for you</button><button data-tab="all">All of CampusGroups</button><button data-tab="map">Near you</button></div>
+      <div class="where" id="where"></div>
+    </header>
+    <section class="sheet" id="sheet"></section>
+  </div>
+  <aside class="side">
+    <h2>The map inside the campus page</h2>
+    <div class="card"><h3>What changes, and what does not</h3><ol class="steps">
+      <li><div><b>The top is the live page's.</b>The bar, the search line and the two lists are what /c/cornell has today, in its lime and navy. The map takes the page's colours, so a school's own colours would recolour it too.</div></li>
+      <li><div><b>Near you starts close.</b>It opens tight on you and the event that is on, and travels to the next one as you turn the dial. With nothing on it goes as close as the map goes. Pinch out to see the whole section, no further.</div></li>
+      <li><div><b>The map has a wall.</b>You can never drag or pinch past the whole-section view, so there is no empty ground to get lost in. The rim flashes when you hit it. Three buttons above the dial: recenter, zoom out, zoom in.</div></li>
+      <li><div><b>Push the wall to go on.</b>Drag until the map stops and the way on appears at that edge: the place in that direction, with an arrow. Tap it to go. A way that is not open yet is the same ticket greyed out: it shakes once and goes nowhere, and the map stays where you left it. Move back off the wall and it is gone.</div></li>
+            <li><div><b>One new view: Near you.</b>A third choice beside "Best for you" and "All of CampusGroups". It is the map with the dial, one section at a time.</div></li>
+      <li><div><b>One search line for all three.</b>In Near you it searches the section on screen and says what is next door.</div></li>
+      <li><div><b>Post a plan stays in the bar.</b>From here it pins the plan to where you stand.</div></li>
+      <li><div><b>The lists are not fenced.</b>They still show the whole campus week. Only Near you keeps to one step from where you stand.</div></li>
+      <li><div><b>Made up for the mockup.</b>The events, people and section edges. The live Cornell page has no events this week.</div></li></ol></div>
+    <small>Streets and buildings: © OpenStreetMap contributors, tiles by OpenFreeMap. Section edges are drawn by hand and the events are made up.</small>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const P = { you: ['You', 12], maya: ['Maya', 47], dev: ['Dev', 59], june: ['June', 32], priya: ['Priya', 44], marcus: ['Marcus', 33], lena: ['Lena', 5], tomas: ['Tomás', 53], kai: ['Kai', 15] };
+const face = (k, cls = '') => `<img class="face ${cls}" src="https://i.pravatar.cc/120?img=${P[k][1]}" alt="${P[k][0]}">`;
+const stack = ks => `<span class="stack">${ks.map(k => face(k, k === fresh ? 'new' : '')).join('')}</span>`;
+const tile = (top, big, cls = '') => `<span class="tile ${cls}"><small>${top}</small><b>${big}</b></span>`;
+
+/* Sections of town. Each is a few blocks with its own outline, sharing corners with the sections next to it,
+   roughly along the creeks and main streets. `me` is where you are when you stand in it; `next` is what it touches. */
+const PT = { a: [-76.5005, 42.4378], b: [-76.4908, 42.4370], c: [-76.4915, 42.4410], d: [-76.4910, 42.4437], e: [-76.5008, 42.4432], f: [-76.4856, 42.4443], g: [-76.4802, 42.4436], h: [-76.4806, 42.4380], i: [-76.4852, 42.4362],
+  j: [-76.4962, 42.4462], k: [-76.4952, 42.4510], l: [-76.4898, 42.4518], m: [-76.4893, 42.4472], o: [-76.4845, 42.4528], p: [-76.4796, 42.4516], q: [-76.4792, 42.4472], r: [-76.4722, 42.4530], s: [-76.4728, 42.4585], t: [-76.4800, 42.4600], u: [-76.4850, 42.4570], v: [-76.4708, 42.4482], w: [-76.4725, 42.4428] };
+const SECS = {
+  downtown: { name: 'Downtown', ring: 'abcde', me: [-76.4968, 42.4418], next: ['ctown', 'west'] },
+  ctown: { name: 'Collegetown', ring: 'bihgfdc', me: [-76.4862, 42.4424], next: ['downtown', 'central'] },
+  west: { name: 'West Campus', ring: 'djklm', me: [-76.4930, 42.4500], next: ['downtown', 'central'] },
+  central: { name: 'Central Campus', ring: 'dfgqpolm', me: [-76.4868, 42.4502], next: ['ctown', 'west', 'north', 'ag'] },
+  north: { name: 'North Campus', ring: 'oprstu', me: [-76.4790, 42.4548], next: ['central', 'ag'] },
+  ag: { name: 'Ag Quad', ring: 'gwvrpq', me: [-76.4758, 42.4500], next: ['central', 'north'] } };
+const ring = id => [...SECS[id].ring].map(k => PT[k]);
+const mid = id => { const r = ring(id); return [r.reduce((n, p) => n + p[0], 0) / r.length, r.reduce((n, p) => n + p[1], 0) / r.length]; };
+const inside = (pt, r) => r.reduce((hit, a, n) => { const b = r[(n + 1) % r.length]; return (a[1] > pt[1]) !== (b[1] > pt[1]) && pt[0] < (b[0] - a[0]) * (pt[1] - a[1]) / (b[1] - a[1]) + a[0] ? !hit : hit; }, false);
+// Where the signpost for a section next door goes: just past the edge you would cross to get there.
+const gate = (from, to) => { const a = mid(from), b = mid(to), r = ring(from); let t = 0; while (t < 1 && inside([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], r)) t += .02; t += .05; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; };
+// How many steps from one section to another.
+const hops = (a, b) => { const seen = new Set([a]); let edge = [a], n = 0; while (edge.length && !edge.includes(b)) { edge = edge.flatMap(x => SECS[x].next).filter(x => !seen.has(x) && seen.add(x)); n++; } return n; };
+const metres = (a, b) => Math.hypot((a[0] - b[0]) * 111320 * Math.cos(a[1] * Math.PI / 180), (a[1] - b[1]) * 110540);
+const makeEvents = () => [
+  { id: 'cs', sec: 'ctown', title: 'CS 2110 study group', by: 'Maya', tag: 'Study', day: 'Today', time: '3pm', place: 'Northside Coffee', at: [-76.4876, 42.4393], n: 3, get: '3 or more: a drink and a pastry, $4.00 each', inn: ['maya', 'dev'], now: true },
+  { id: 'bao', sec: 'ctown', title: 'Dumpling night', by: 'Priya', tag: 'Food', day: 'Today', time: '8pm', place: 'Bao House', at: [-76.4852, 42.4406], n: 4, get: '4 or more: starters on the house', inn: ['priya', 'tomas'] },
+  { id: 'hike', sec: 'ctown', title: 'Sunrise hike', src: 'CampusGroups', by: 'Outing Club', tag: 'Outdoors', day: 'Sat', time: '7am', place: 'Cascadilla Gorge', at: [-76.4882, 42.4433], n: 4, get: '4 or more: gear rental waived', inn: ['june', 'marcus'] },
+  { id: 'demo', sec: 'ctown', title: 'Demo night', src: 'Luma', by: 'Ithaca builders', tag: 'Talks', day: 'Fri', time: '6pm', place: 'College Ave', at: [-76.4824, 42.4431], inn: ['dev'] },
+  { id: 'chess', sec: 'central', title: 'Blitz night', src: 'CampusGroups', by: 'Chess Club', tag: 'Games', day: 'Today', time: '7pm', place: 'Willard Straight Hall', at: [-76.4857, 42.4466], n: 3, get: '3 or more: skip the $5 door', inn: ['kai'] },
+  { id: 'run', sec: 'central', title: 'Sunset run, easy 5K', by: 'Kai', tag: 'Running', day: 'Today', time: '5pm', place: 'Arts Quad', at: [-76.4847, 42.4491], get: 'Counts toward 20% off Brooks running shoes', inn: ['kai', 'june'] },
+  { id: 'talk', sec: 'central', title: "Founders' fireside", src: 'CampusGroups', by: 'Entrepreneurship at Cornell', tag: 'Talks', day: 'Thu', time: '5pm', place: 'Sage Hall', at: [-76.4822, 42.4456], inn: ['marcus'] },
+  { id: 'volley', sec: 'north', title: 'Pickup volleyball', by: 'Tomás', tag: 'Games', day: 'Today', time: '6pm', place: 'Helen Newman Hall', at: [-76.4772, 42.4531], inn: ['tomas', 'kai', 'lena'] },
+  { id: 'long', sec: 'north', title: 'Saturday long run', by: 'Lena', tag: 'Running', day: 'Sat', time: '9am', place: 'Beebe Lake', at: [-76.4818, 42.4572], get: 'Counts toward 20% off Brooks running shoes', inn: ['lena'] },
+  { id: 'board', sec: 'north', title: 'Board game night', src: 'CampusGroups', by: 'Board Game Club', tag: 'Games', day: 'Thu', time: '8pm', place: 'Robert Purcell', at: [-76.4764, 42.4566], inn: ['june'] },
+  { id: 'trivia', sec: 'downtown', title: 'Trivia night', by: 'Marcus', tag: 'Games', day: 'Wed', time: '8pm', place: 'The Commons', at: [-76.4985, 42.4400], n: 4, get: '4 or more: the first round of snacks is free', inn: ['marcus', 'priya'] },
+  { id: 'tav', sec: 'downtown', title: 'Supper Club at Tavola', by: 'Priya', tag: 'Food', day: 'Fri', time: '7pm', place: 'Tavola', at: [-76.4948, 42.4391], n: 6, get: 'A table of 6: a bottle on the house', inn: ['priya', 'maya', 'tomas'] },
+  { id: 'slope', sec: 'west', title: 'Sunset on the Slope', by: 'June', tag: 'Outdoors', day: 'Today', time: '6pm', place: 'Libe Slope', at: [-76.4922, 42.4482], inn: ['june', 'maya'] },
+  { id: 'dairy', sec: 'ag', title: 'Ice cream run', by: 'Dev', tag: 'Food', day: 'Thu', time: '3pm', place: 'Dairy Bar', at: [-76.4738, 42.4470], n: 3, get: '3 or more: a free topping each', inn: ['dev', 'marcus'] } ];
+let EVENTS = makeEvents();
+
+const hs = location.hash.slice(1).split('/'), h1 = hs.pop();
+let look = 'a', at = SECS[h1] ? h1 : 'ctown', view = at, fresh = null, marks = [], topId = null, map;
+const S = { q: '', i: 0, sel: null, post: false, when: 0, asked: {}, opened: false, flip: false };
+const WHEN = [['Now', 'Today', 'Now'], ['Tonight', 'Today', '8pm'], ['Tomorrow', 'Thu', '12pm']];
+// Why each person is suggested: how you already know them.
+const WHY = { lena: 'Ran with you twice', kai: 'Ran with you last week', june: 'Studied with you', maya: 'In Team 4', dev: 'In Team 4', marcus: 'In Team 4', priya: 'In Supper Club', tomas: 'In Supper Club' };
+const names = ks => ks.map(k => P[k][0]).join(', ').replace(/, ([^,]*)$/, ' and $1');
+// One wedge per person needed; a wedge lights for each person in.
+const gauge = (have, need) => { const c = 2 * Math.PI * 12, seg = c / need;
+  return `<svg class="gauge" viewBox="0 0 30 30" aria-hidden="true">${Array.from({ length: need }, (_, i) => `<circle class="${i < have ? 'lit' : ''}" cx="15" cy="15" r="12" stroke-dasharray="${seg - 2.2} ${c - seg + 2.2}" stroke-dashoffset="${-i * seg}"/>`).join('')}</svg>`; };
+const CLOSE = 17.2;   // as close as Near you goes
+const SHORT = 110, TALL = 396;   // the sheet with one event on top, and as a ticket
+const you = () => SECS[at].me;
+const walk = p => Math.max(1, Math.round(metres(you(), p) / 78));
+const WORDS = { Running: 'exercise', Outdoors: 'exercise', Food: 'eat with people', Study: 'study', Talks: 'startups' };   // the page's "Try" words
+const hay = d => `${d.title} ${d.by} ${d.place} ${d.tag} ${d.src || ''} ${WORDS[d.tag] || ''} ${d.day === 'Today' && hour(d) >= 17 ? 'tonight' : ''}`.toLowerCase();
+// You can open the section you stand in and the ones touching it. Nothing further.
+const reach = id => id === at || SECS[at].next.includes(id);
+const here = () => EVENTS.filter(d => d.sec === view);
+const who = d => d.src ? `<span class="pill src">${d.src}</span>${d.by}` : `Posted by ${d.by}`;
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Someone joins. If that is the person the event was waiting for, the ticket flips to "It's on".
+const add = (d, k) => { const was = d.n && d.inn.length >= d.n; d.inn.push(k); fresh = k; S.flip = !!d.n && !was && d.inn.length >= d.n; };
+const pick = id => { S.sel = id; S.opened = !!id; draw(); focus(); };
+
+/* ───────── the map: three looks over the same OpenStreetMap tiles ─────────
+   MapLibre does not read OKLCH, so each colour is painted to a canvas once and read back as RGB. */
+const cx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+const rgb = c => { cx.fillStyle = c; cx.fillRect(0, 0, 1, 1); const d = cx.getImageData(0, 0, 1, 1).data; return `rgb(${d[0]},${d[1]},${d[2]})`; };
+const INK = rgb('oklch(25% 0.07 252)'), PAPER = rgb('oklch(99.3% 0.004 117)'), CORAL = rgb('oklch(96.4% 0.19 117)');
+const LOOKS = {
+  a: { name: 'A · Cutout', walk: 'oklch(25% 0.07 252)', ground: 'oklch(90% 0.19 119)', park: 'oklch(84% 0.19 132)', water: 'oklch(62% 0.13 245)', path: 'oklch(99.3% 0.004 117)', minor: 'oklch(95% 0.12 117)', major: 'oklch(99.3% 0.004 117)', wMinor: 9, wMajor: 15, build: 'oklch(99.3% 0.004 117)', shadow: 'oklch(66% 0.16 126)', pitch: 36, bearing: -14 } };
+const poly = (id, holes = []) => ({ type: 'Feature', properties: { id }, geometry: { type: 'Polygon', coordinates: [[...ring(id), ring(id)[0]], ...holes] } });
+// The plate is the section on screen. The veil is everything else: a wide square with the section cut out. Near is the sections next door.
+const plate = () => poly(view);
+const veil = () => ({ type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-76.9, 42.1], [-76.1, 42.1], [-76.1, 42.8], [-76.9, 42.8], [-76.9, 42.1]], plate().geometry.coordinates[0]] } });
+const near = () => ({ type: 'FeatureCollection', features: SECS[view].next.map(id => poly(id)) });
+const fenced = () => { map.getSource('veil')?.setData(veil()); map.getSource('plate')?.setData(plate()); map.getSource('near')?.setData(near()); };
+// The dotted walk from you to the picked event, drawn as far as p (0 to 1). A straight line: it shows which way and how far, not the route.
+const walkData = p => { const d = EVENTS.find(e => e.id === S.sel), a = you();
+  return { type: 'FeatureCollection', features: d && d.by !== 'you' ? [{ type: 'Feature', geometry: { type: 'LineString', coordinates: [a, [a[0] + (d.at[0] - a[0]) * p, a[1] + (d.at[1] - a[1]) * p]] } }] : [] }; };
+let walkRun = 0;
+function walkLine(animate) { const run = ++walkRun, t0 = performance.now();
+  (function step(t) { if (run !== walkRun) return; const p = animate && !still ? Math.min(1, (t - t0) / 700) : 1; map.getSource('walk')?.setData(walkData(1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); })(t0); }
+const W = px => ['interpolate', ['exponential', 2], ['zoom'], 13, px / 8, 16, px, 19, px * 8];
+function style(k) {
+  const L = LOOKS[k], omt = (id, type, layer, paint, more = {}) => ({ id, type, source: 'omt', 'source-layer': layer, paint, ...more });
+  const road = (id, classes, color, w, extra = {}) => omt(id, 'line', 'transportation', { 'line-color': rgb(color), 'line-width': W(w), ...extra },
+    { filter: ['all', ['==', ['geometry-type'], 'LineString'], ['match', ['get', 'class'], classes, true, false]], layout: { 'line-cap': 'round', 'line-join': 'round' } });
+  const build = !L.build ? [] : L.tall ? [omt('blocks', 'fill-extrusion', 'building', { 'fill-extrusion-color': rgb(L.build), 'fill-extrusion-height': ['*', 1.7, ['coalesce', ['get', 'render_height'], 8]], 'fill-extrusion-vertical-gradient': false })]
+    : [omt('shade', 'fill', 'building', { 'fill-color': rgb(L.shadow), 'fill-translate': [3, 3], 'fill-translate-anchor': 'viewport' }), omt('roofs', 'fill', 'building', { 'fill-color': rgb(L.build) })];
+  const geo = data => ({ type: 'geojson', data });
+  return { version: 8, light: { anchor: 'viewport', intensity: .3, position: [1.3, 215, 35] },
+    sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' }, veil: geo(veil()), plate: geo(plate()), near: geo(near()), walk: geo(walkData(1)) },
+    layers: [{ id: 'ground', type: 'background', paint: { 'background-color': rgb(L.ground) } },
+      omt('green', 'fill', 'landcover', { 'fill-color': rgb(L.park) }), omt('park', 'fill', 'park', { 'fill-color': rgb(L.park) }),
+      omt('water', 'fill', 'water', { 'fill-color': rgb(L.water) }), omt('stream', 'line', 'waterway', { 'line-color': rgb(L.water), 'line-width': W(5) }),
+      road('path', ['path', 'track'], L.path, 2.4, { 'line-dasharray': [.1, 2.2] }), road('minor', ['minor', 'service'], L.minor, L.wMinor), road('major', ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'], L.major, L.wMajor),
+      ...build,
+      { id: 'walk', type: 'line', source: 'walk', layout: { 'line-cap': 'round' }, paint: { 'line-color': rgb(L.walk), 'line-width': 5, 'line-dasharray': [.1, 1.9] } },
+      // the veil lets a ghost of the streets through, a little more over the sections you can step into
+      { id: 'veil', type: 'fill', source: 'veil', paint: { 'fill-color': INK, 'fill-opacity': .93 } },
+      { id: 'near', type: 'fill', source: 'near', paint: { 'fill-color': CORAL, 'fill-opacity': 0 } },
+      { id: 'edges', type: 'line', source: 'near', paint: { 'line-color': CORAL, 'line-width': 1.5, 'line-dasharray': [2, 2.5], 'line-opacity': 0 } },
+      { id: 'rim', type: 'line', source: 'plate', layout: { 'line-join': 'round' }, paint: { 'line-color': PAPER, 'line-width': 3.5 } }] };
+}
+// The section fills the space between the header and the sheet, with room left at its edges for the signposts.
+function cam() {
+  const box = $('map').getBoundingClientRect(), top = $('top').offsetHeight, r = ring(view), xs = r.map(p => p[0]), ys = r.map(p => p[1]), L = LOOKS[look];
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), c = [(x0 + x1) / 2, (y0 + y1) / 2], k = Math.cos(c[1] * Math.PI / 180);
+  const mpp = Math.max((x1 - x0) * 111320 * k / (box.width - 36), (y1 - y0) * 110540 / (box.height - top - SHORT - 150));
+  // floor: the whole section in view, which is as far out as you can pinch.
+  const floor = Math.log2(40075016.686 * k / (512 * mpp)) - (L.pitch ? .22 : 0), on = LIST[S.i] && LIST[S.i].sec === view ? LIST[S.i] : null;
+  // It starts as close as it can: you and the event that is on just fit, and the map travels as the dial turns.
+  // Next door it sits on the event alone. With nothing on, it goes as close as the map goes on where you stand.
+  const held = (p, z) => { const s = Math.max(0, 1 - 2 ** (floor - z)), hx = (x1 - x0) / 2 * s, hy = (y1 - y0) / 2 * s; return [Math.min(Math.max(p[0], c[0] - hx), c[0] + hx), Math.min(Math.max(p[1], c[1] - hy), c[1] + hy)]; };
+  let center = on ? on.at : view === at ? you() : c, zoom = CLOSE - (on ? .7 : 0);
+  if (on && view === at) { const a = you(), b = on.at, m = Math.max(Math.abs(a[0] - b[0]) * 111320 * k / (box.width - 150), Math.abs(a[1] - b[1]) * 110540 / (box.height - top - SHORT - 190), 1e-9);
+    center = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; zoom = Math.max(floor, Math.min(CLOSE - .4, Math.log2(40075016.686 * k / (512 * m)) - (L.pitch ? .3 : 0))); }
+  // pins hang up and to the right of their spot, so the view leaves them room there
+  if (!S.sel) center = held(center, zoom);
+  return { center, zoom, floor, held, pitch: L.pitch || 0, bearing: L.bearing || 0, padding: { top: top + (S.sel ? 0 : 40), bottom: S.sel ? TALL : SHORT, left: 0, right: S.sel ? 0 : 60 } };
+}
+function frame(ms = 0) { map.setMinZoom(0); map[ms && !still ? 'easeTo' : 'jumpTo']({ ...cam(), duration: ms }); if (!ms || still) map.setMinZoom(cam().floor); }
+// Picking an event walks the map to its pin and leans in. Letting go of it steps back to the whole section.
+function focus(ms = 650) { const d = EVENTS.find(e => e.id === S.sel), c = cam(); map.setMinZoom(0);
+  map.easeTo({ ...c, ...(d ? { center: d.at, zoom: Math.min(CLOSE + .4, c.zoom + .5) } : {}), duration: still ? 0 : ms }); }
+// One step: the section next door becomes the section on screen, and the map walks over to it.
+function step(id) { if (!SECS[view].next.includes(id) || !reach(id)) return; view = id; Object.assign(S, { q: '', i: 0, sel: null, post: false }); fenced(); draw(); frame(750); }
+
+const pinClass = d => { const q = S.q.trim().toLowerCase(); return `pin ${d.id === (S.sel || topId) ? 'sel' : ''} ${S.sel && S.sel !== d.id || q && !hay(d).includes(q) ? 'dim' : ''} ${d.now ? 'now' : ''}`; };
+function pins() {
+  marks.forEach(m => m[1].remove()); marks = [];
+  for (const d of here()) { const el = document.createElement('button');
+    el.className = pinClass(d); el.setAttribute('aria-label', `${d.title}, ${d.day} ${d.time}, ${d.inn.length} in`);
+    el.innerHTML = tile(d.day, d.time) + stack(d.inn.slice(-3)); el.onclick = e => { e.stopPropagation(); pick(S.sel === d.id ? null : d.id); };
+    const wrap = document.createElement('div'); wrap.append(el); wrap.style.zIndex = d.id === S.sel ? 5 : '';   // MapLibre positions the wrapper, so restyling the pin never touches the map's own classes
+    marks.push([d, new maplibregl.Marker({ element: wrap, anchor: 'bottom-left' }).setLngLat(d.at).addTo(map), el]); }
+  if (view === at) { const el = document.createElement('div'); el.innerHTML = `<span class="you">${face('you')}</span>`; marks.push([null, new maplibregl.Marker({ element: el }).setLngLat(you()).addTo(map)]); }
+}
+// Signposts sit just past the edge they point across, and are kept on screen between the header and the sheet.
+// Where you last pushed against the wall: which way, and what lies that way. Cleared once you move off it.
+let wall = null;
+function hit(dx, dy, at0) { const k = Math.cos(at0[1] * Math.PI / 180), n = Math.hypot(dx * k, dy); if (n < 1e-7) return;
+  const u = [dx * k / n, dy / n], m = mid(view);
+  const best = SECS[view].next.map(id => { const q = mid(id), vx = (q[0] - m[0]) * k, vy = q[1] - m[1], l = Math.hypot(vx, vy) || 1; return [id, (vx * u[0] + vy * u[1]) / l]; }).sort((a, b) => b[1] - a[1])[0];
+  const id = best && best[1] > .45 ? best[0] : null, kind = !id ? 'none' : !reach(id) ? 'far' : EVENTS.some(d => d.sec === id) ? 'go' : 'empty';
+  const fresh1 = !wall || wall.id !== id || wall.kind !== kind; wall = { id, kind, u, at: at0, view }; fresh1 ? signs() : place(); }
+function signs() {
+  const el = $('signs'); el.className = S.sel || S.post ? 'off' : '';
+  if (wall && wall.view !== view) wall = null;
+  el.innerHTML = (!wall ? '' : wall.kind === 'go' ? `<button class="way" data-step="${wall.id}" aria-label="Go to ${SECS[wall.id].name}"><span><b>${SECS[wall.id].name}</b>${wall.id === at ? 'Where you stand' : `${walk(mid(wall.id))} min walk`} · ${EVENTS.filter(d => d.sec === wall.id).length} on</span><i class="go"><svg viewBox="-8 -8 16 16" aria-hidden="true"><path d="M-6 0H6M1 -5l5 5-5 5"/></svg></i></button>`
+      : `<div class="way none" role="status"><span><b>${wall.id ? SECS[wall.id].name : 'Coming soon'}</b>${wall.kind === 'far' ? 'Not open from here yet' : wall.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>${wall.id ? '<i class="go"><svg viewBox="-8 -8 16 16" aria-hidden="true"><path d="M-6 0H6M1 -5l5 5-5 5"/></svg></i>' : ''}</div>`);
+  el.querySelectorAll('[data-step]').forEach(b => { b.onclick = () => { wall = null; step(b.dataset.step); }; b.at = gate(view, b.dataset.step); });
+  place();
+}
+function place() { const box = $('map').getBoundingClientRect(), top = $('top').offsetHeight, low = box.height - SHORT, put = [];
+  // a pin at the right edge turns to face inward, so it is never cut off
+  for (const [e, , el] of marks) if (e) { const far = map.project(e.at).x > box.width - 84; el.style.translate = far ? '-100% 0' : ''; el.style.flexDirection = far ? 'row-reverse' : ''; el.classList.toggle('far', far); }
+  const mx = box.width / 2, my = (top + low - 60) / 2;
+  // the way on sits where your push leaves the phone, and its arrow points along it
+  document.querySelectorAll('.way').forEach(b => { if (!wall) return; const c0 = map.getCenter(), p0 = map.project(c0), p1 = map.project([c0.lng + wall.u[0] * .002 / Math.cos(c0.lat * Math.PI / 180), c0.lat + wall.u[1] * .002]);
+    const dx = p1.x - p0.x, dy = p1.y - p0.y, w = b.offsetWidth, h = b.offsetHeight, t = Math.min((mx - 12 - w / 2) / (Math.abs(dx) || 1e-6), ((low - 60 - top) / 2 - 12 - h / 2) / (Math.abs(dy) || 1e-6));
+    b.style.setProperty('--a', Math.atan2(dy, dx) + 'rad'); b.style.flexDirection = dx < -Math.abs(dy) ? 'row-reverse' : '';   // pointing left, the arrow leads
+    b.style.transform = `translate(${Math.round(mx + dx * t - w / 2)}px, ${Math.round(my + dy * t - h / 2)}px)`; });
+}
+
+/* ───────── the dial under the map ─────────
+   One event is "on" at a time and its pin is the lit one. A tap on the time that is on opens the ticket. */
+const DAYS = ['Today', 'Wed', 'Thu', 'Fri', 'Sat'];
+const hour = d => d.time === 'Now' ? 0 : parseInt(d.time) % 12 + (d.time.endsWith('pm') ? 12 : 0);
+const byTime = (a, b) => DAYS.indexOf(a.day) - DAYS.indexOf(b.day) || hour(a) - hour(b);
+let LIST = [];
+const lit = () => { marks.forEach(([e, m, el]) => { if (e) { el.className = pinClass(e); m.getElement().style.zIndex = el.classList.contains('sel') ? 5 : ''; } }); };
+// The sheet is only a rail of times. Drag along it and the event speaks from its pin, hopping from pin to pin.
+function say() { document.querySelectorAll('.bub').forEach(b => b.remove()); const d = LIST[S.i], mark = marks.find(m => m[0] === d); if (!mark) return;
+  const box = $('map').getBoundingClientRect(), b = document.createElement('div');
+  b.className = 'bub';
+  b.innerHTML = `<b>${esc(d.title)}</b><span>${d.by === 'you' ? 'Posted by you, right where you are' : `${d.place} · ${walk(d.at)} min walk`}</span>${d.get ? `<em>${d.get}</em>` : ''}<span class="in">${stack(d.inn.slice(-4))}${d.n ? `${d.inn.length} of ${d.n} in` : `${d.inn.length} in`}</span>`;
+  mark[2].append(b); seat(); }
+// The bubble takes whichever corner of its pin covers the fewest other pins and signposts, and stays on the map.
+function seat() { const b = document.querySelector('.bub'), mark = b && marks.find(m => m[2] === b.parentNode); if (!mark) return; const box = $('map').getBoundingClientRect();
+  const rect = el => { const r = el.getBoundingClientRect(); return [r.left - box.left, r.top - box.top, r.right - box.left, r.bottom - box.top]; };
+  const pin = rect(mark[2]), w = b.offsetWidth, h = b.offsetHeight, top = $('top').offsetHeight, low = box.height - SHORT;
+  const others = [...marks.filter(m => m !== mark).map(m => rect(m[2] || m[1].getElement())), ...[...document.querySelectorAll('.way')].map(rect)];
+  const hits = (x, y) => others.filter(o => x < o[2] && o[0] < x + w && y < o[3] && o[1] < y + h).length + (x < 4 || x + w > box.width - 4 || y < top + 4 || y + h > low - 4 ? 100 : 0);
+  const best = [['', pin[0], pin[1] - 9 - h], ['r', pin[2] - w, pin[1] - 9 - h], ['low', pin[0], pin[3] + 9], ['low r', pin[2] - w, pin[3] + 9]].map(c => [c[0], hits(c[1], c[2])]).sort((a, b) => a[1] - b[1])[0];
+  b.className = 'bub ' + best[0]; }
+function dial() { const n = LIST.length, pos = k => n < 2 ? 50 : 8 + k * 84 / (n - 1);
+  $('card').innerHTML = `<div class="dial" role="slider" tabindex="0" aria-label="What is on, in order of time" aria-valuemin="1" aria-valuemax="${n}" aria-valuenow="${S.i + 1}" aria-valuetext="${esc(LIST[S.i].title)}">${LIST.map((d, k) => `<span class="tick ${k === S.i ? 'on' : ''}" style="left:${pos(k)}%"><small>${d.day}</small><b>${d.time}</b></span>`).join('')}</div>`;
+  const el = $('card').firstChild, ticks = [...el.children]; let down = false, moved = false;
+  const set = k => { if (k === S.i) return; const go = () => { S.i = k; topId = LIST[k].id; ticks.forEach((t, j) => t.classList.toggle('on', j === k)); el.setAttribute('aria-valuenow', k + 1); el.setAttribute('aria-valuetext', LIST[k].title); lit(); say(); };
+    go(); frame(450); };
+  const at = e => { const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 100; set(ticks.reduce((b, _, k) => Math.abs(pos(k) - x) < Math.abs(pos(b) - x) ? k : b, 0)); };
+  el.onpointerdown = e => { down = true; moved = false; el.setPointerCapture(e.pointerId); const was = S.i; at(e); moved = was !== S.i; };
+  el.onpointermove = e => { if (down) { moved = true; at(e); } };
+  el.onpointerup = el.onpointercancel = () => { down = false; };
+  el.onclick = () => { if (!moved) pick(LIST[S.i].id); };   // a tap on the time that is already on opens its ticket
+  el.onkeydown = e => { if (e.key === 'ArrowRight') set(Math.min(n - 1, S.i + 1)); else if (e.key === 'ArrowLeft') set(Math.max(0, S.i - 1)); else if (e.key === 'Enter') pick(LIST[S.i].id); else return; e.preventDefault(); };
+  say();
+}
+function browse() {
+  const q = S.q.trim().toLowerCase(), name = SECS[view].name; LIST = here().filter(d => !q || hay(d).includes(q)); LIST.sort(byTime); if (S.i >= LIST.length) S.i = 0;
+  const d = LIST[S.i]; topId = d ? d.id : null; document.querySelectorAll('.bub').forEach(b => b.remove());
+  $('sheet').style.height = d ? SHORT + 'px' : '168px'; $('float').style.bottom = (d ? SHORT : 168) + 16 + 'px';   // the "nothing here" note needs more room than the dial
+  if (d) { dial(); lit(); return; }
+  const far = EVENTS.filter(e => e.sec !== view && hay(e).includes(q)), next = far.filter(e => SECS[view].next.includes(e.sec) && reach(e.sec)), out = far.length - next.length;
+  $('card').innerHTML = `<div class="none" style="margin:0 16px"><b>Nothing in ${name} for "${esc(S.q.trim())}"</b>${next.slice(0, 1).map(e => `<button class="hop" data-step="${e.sec}"><span><b>${esc(e.title)}</b> · ${SECS[e.sec].name}, next door</span><span class="pill hot">Step over</span></button>`).join('')}
+    ${out ? `<span>${out} more further out. Walk closer to find ${out > 1 ? 'them' : 'it'}.</span>` : far.length ? '' : '<span>Try another word, or post it yourself.</span>'}</div>`;
+  document.querySelectorAll('#card [data-step]').forEach(b => b.onclick = () => step(b.dataset.step)); lit();
+}
+
+// The two lists the page has today, over the whole campus week. Nothing here is fenced.
+let tab = 'map';
+const SAY = ['exercise', 'eat with people', 'study', 'startups', 'tonight'];
+function rows() {
+  const q = S.q.trim().toLowerCase(), all = EVENTS.filter(d => !q || hay(d).includes(q));
+  const pull = d => (d.inn.includes('you') ? 4 : 0) + Math.min(d.inn.length, 2) + (d.get ? 2 : 0) + (d.n && d.n - d.inn.length === 1 ? 2 : 0) + (d.day === 'Today' ? 1 : 0);
+  const list = tab === 'best' ? [...all].sort((a, b) => pull(b) - pull(a) || byTime(a, b)) : all.filter(d => d.src === 'CampusGroups').sort(byTime);
+  $('list').style.paddingTop = $('top').offsetHeight + 'px';
+  $('list').innerHTML = `<h2 class="lcount">${list.length ? `${list.length} on this week` : 'Nothing matches'}</h2><div class="says"><small>Try</small>${SAY.map(w => `<button data-say="${w}" aria-pressed="${q === w}">${w}</button>`).join('')}</div>`
+    + (list.length ? list.map(d => { const mine = d.inn.includes('you'), left = d.n ? Math.max(0, d.n - d.inn.length) : 0, inn = [...d.inn].sort((a, b) => (b === 'you') - (a === 'you'));
+      return `<article class="lrow"><div class="ltop">${tile(d.day, d.time)}<div><h3>${esc(d.title)}</h3><p>${d.place} · ${who(d)}</p></div></div>
+        <div class="lstub ${d.get ? '' : 'plain'}"><div>${d.get ? `<b>${d.get}</b>` : ''}<span>${stack(inn.slice(0, 4))}${!d.n ? `${names(inn)} ${inn.length === 1 && inn[0] !== 'you' ? 'is' : 'are'} in` : left === 1 ? (mine ? 'One more unlocks it' : 'You would unlock it') : left ? `${left} more to unlock` : 'Enough are in'}</span></div>
+          ${mine ? `<span class="pill hot">${d.src ? 'Registered' : "You're in"}</span>` : `<button class="btn go" data-in="${d.id}">${d.src ? 'Register' : "I'm in"}</button>`}</div></article>`; }).join('') : '<p class="lnone"><b>Nothing matches</b>Try another word, or post a plan of your own.</p>');
+  fresh = null;
+  document.querySelectorAll('[data-in]').forEach(b => b.onclick = () => { add(EVENTS.find(d => d.id === b.dataset.in), 'you'); S.flip = false; rows(); });
+  document.querySelectorAll('[data-say]').forEach(b => b.onclick = () => { S.q = $('q').value = q === b.dataset.say ? '' : b.dataset.say; rows(); });
+}
+
+// The zoom buttons go quiet at the ends: as close as the map goes, and the whole section.
+function zstate() { if (!$('zin') || !map) return; $('zin').disabled = map.getZoom() >= map.getMaxZoom() - .01; $('zout').disabled = map.getZoom() <= map.getMinZoom() + .01; }
+
+function draw() {
+  history.replaceState(null, '', `#${at}`);
+  $('stand').innerHTML = Object.entries(SECS).map(([id, s]) => `<button aria-pressed="${id === at}" data-at="${id}">${s.name}</button>`).join('');
+  const home = id => { at = view = id; Object.assign(S, { q: '', i: 0, sel: null, post: false }); fenced(); draw(); frame(); };
+  document.querySelectorAll('[data-at]').forEach(b => b.onclick = () => home(b.dataset.at));
+
+  const list = here(), name = SECS[view].name, away = hops(at, view);
+  $('where').innerHTML = `<div class="row"><p><b>${away ? `${away} ${away === 1 ? 'step' : 'steps'} from you` : 'You are here'}</b> · ${away ? `${walk(mid(view))} min walk · ` : ''}${list.length} on</p></div><h1>${name}</h1>`;
+
+  // The ticket: the event as a coral band with its count on a cover tile, who is in, what it unlocks, and people to bring.
+  const picked = !S.post && list.find(d => d.id === S.sel);
+  const ticket = d => { const mine = d.inn.includes('you'), on = d.n && d.inn.length >= d.n, left = d.n ? Math.max(0, d.n - d.inn.length) : 0, inn = [...d.inn].sort((a, b) => (b === 'you') - (a === 'you')), asked = S.asked[d.id] || [];
+    const sug = Object.keys(WHY).filter(k => !d.inn.includes(k)).slice(0, 4), f = S.flip ? 'flip' : '';
+    return `<article class="tk ${S.opened ? 'in' : ''}"><header class="band"><div><span class="k">${who(d)}</span><h2>${esc(d.title)}</h2>
+        <div class="when">${tile(d.day, d.time, `${on ? 'met' : ''} ${f}`)}<div><b>${d.by === 'you' ? 'Right where you are' : d.place}</b>${d.by === 'you' ? name : `${walk(d.at)} min walk from you`}</div></div></div>
+      <div class="cover ${on ? 'on' : ''} ${f}" style="--i:1">${on ? `<small>${inn.length} of you</small><strong>It's on</strong>` : `<small>In so far</small><strong>${inn.length}</strong>${d.n ? `<small>of ${d.n} needed</small><div class="blocks">${Array.from({ length: d.n }, (_, i) => `<i class="${i < inn.length ? 'on' : ''}"></i>`).join('')}</div>` : `<small>${inn.length === 1 ? 'person' : 'people'}</small>`}`}</div></header>
+      <div class="tkb"><div class="whoin" style="--i:2">${stack(inn)}<div><b>${names(inn)} ${inn.length === 1 && inn[0] !== 'you' ? 'is' : 'are'} in</b>${!d.n ? 'No number needed. Just show up.' : left ? `${left} more and the reward unlocks` : 'Enough of you. Check in together to use it.'}</div>${d.n ? gauge(inn.length, d.n) : ''}</div>
+        ${d.get ? `<p class="perk ${on ? 'on' : ''}" style="--i:3">${d.get}</p>` : ''}
+        <div style="--i:4"><small class="lbl">Bring people you know</small><div class="ask">${sug.map(k => `<button class="who2 ${asked.includes(k) ? 'sent' : ''}" data-ask="${k}" aria-pressed="${asked.includes(k)}">${face(k)}<span><b>${P[k][0]}</b>${WHY[k]}</span><em>${asked.includes(k) ? 'Invited' : 'Invite'}</em></button>`).join('')}</div></div>
+        <div class="act" style="--i:5"><button class="btn" id="back">Back to the map</button>${mine ? `<span class="pill hot">${d.src ? 'Registered' : "You're in"}</span>` : `<button class="btn go" id="in">${d.src ? 'Register' : "I'm in"}</button>`}</div></div></article>`; };
+  $('sheet').className = `sheet ${picked ? 'tall' : S.post ? 'mid' : ''}`; $('sheet').style.height = picked || S.post ? '' : SHORT + 'px';
+  $('float').style.bottom = SHORT + 16 + 'px';
+  $('float').innerHTML = picked || S.post ? '' : `<button class="zc" id="zme" aria-label="Recenter the map"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="5.2"/><circle cx="10" cy="10" r="1.6" fill="currentColor" stroke="none"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3"/></svg></button><button class="zc" id="zout" aria-label="Zoom out">−</button><button class="zc" id="zin" aria-label="Zoom in">+</button>`;
+  if ($('zin')) { const zoomBy = d => map.easeTo({ zoom: Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), map.getZoom() + d)), duration: still ? 0 : 280 });
+    $('zin').onclick = () => zoomBy(.8); $('zout').onclick = () => zoomBy(-.8); $('zme').onclick = () => view !== at ? home(at) : frame(450); zstate(); }
+  document.querySelector('.phone').dataset.view = tab === 'map' ? 'map' : 'list'; $('list').hidden = tab === 'map'; $('where').hidden = tab !== 'map' || !!picked || S.post;
+  document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === tab)); if (tab !== 'map') rows();
+  $('sheet').innerHTML = picked ? ticket(picked) : S.post ? `<div class="post"><h3>Post from where you stand<span>It is pinned to ${name}. People here and next door can find it.</span></h3>
+      <div class="find"><input id="what" placeholder="What is happening?" aria-label="What is happening" maxlength="40"></div>
+      <div class="opts">${WHEN.map((w, i) => `<button class="opt" aria-pressed="${i === S.when}" data-when="${i}">${w[0]}</button>`).join('')}</div>
+      <div class="act"><button class="btn" id="cancel">Cancel</button><button class="btn go" id="send" disabled>Post to ${name}</button></div></div>`
+    : `<div id="card"></div>`;
+  pins(); signs(); walkLine(S.opened);
+  if (picked) { const d = picked; fresh = null; S.opened = S.flip = false;
+    $('back').onclick = () => pick(null);
+    if ($('in')) $('in').onclick = () => { add(d, 'you'); draw(); };
+    // In the demo, someone you invite says yes a moment later, so you can watch the count move.
+    document.querySelectorAll('[data-ask]').forEach(b => b.onclick = () => { const k = b.dataset.ask, a = S.asked[d.id] ||= []; if (a.includes(k)) return; a.push(k); draw();
+      setTimeout(() => { if (!EVENTS.includes(d) || d.inn.includes(k)) return; add(d, k); draw(); }, 1300); });
+    return;
+  }
+  if (S.post) {
+    const what = $('what'); what.focus(); what.oninput = () => { $('send').disabled = !what.value.trim(); };
+    document.querySelectorAll('[data-when]').forEach(b => b.onclick = () => { S.when = +b.dataset.when; document.querySelectorAll('[data-when]').forEach(o => o.setAttribute('aria-pressed', o === b)); });
+    $('cancel').onclick = () => { S.post = false; draw(); };
+    const send = () => { const title = what.value.trim(); if (!title) return; const id = 'p' + EVENTS.length, w = WHEN[S.when];
+      EVENTS.unshift({ id, sec: at, title, by: 'you', tag: '', day: w[1], time: w[2], place: 'where you are', at: you(), inn: ['you'], now: S.when === 0 }); S.post = false; S.i = 0; fresh = 'you'; pick(id); };
+    $('send').onclick = send; what.onkeydown = e => { if (e.key === 'Enter') send(); };
+    return;
+  }
+  browse(); fresh = null; S.opened = S.flip = false;
+
+}
+
+// The header and sheet have to be on the page before the map is framed, so the map starts on a rough guess and is framed again below.
+map = new maplibregl.Map({ container: 'map', style: style(look), center: mid(view), zoom: 14.5, maxZoom: 18, attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false });
+map.touchZoomRotate.disableRotation();
+map.on('move', place);
+// A drag, a fling or a pinch can never carry the section off the screen: the middle of the view stays inside the section's box.
+let holding = false;
+let bumped = 0;
+const bump = () => { if (bumped || still) return; map.setPaintProperty('rim', 'line-width', 9); bumped = setTimeout(() => { map.setPaintProperty('rim', 'line-width', 3.5); bumped = 0; }, 240); };
+map.on('move', e => { if (!e.originalEvent || holding || S.sel) return; const c = map.getCenter(), [x, y] = cam().held([c.lng, c.lat], map.getZoom());
+  if (Math.abs(x - c.lng) > 1e-7 || Math.abs(y - c.lat) > 1e-7) { holding = true; map.setCenter([x, y]); holding = false; bump(); hit(c.lng - x, c.lat - y, [x, y]); }
+  else if (wall) { const a = map.project(wall.at), b = map.project(c); if (Math.hypot(a.x - b.x, a.y - b.y) > 46) { wall = null; signs(); } } });
+map.on('zoom', zstate); map.on('moveend', zstate);
+// The map can be nudged and zoomed, but it springs back to the section: the only way out is a step.
+map.on('moveend', () => { seat(); if (S.sel) return; map.setMinZoom(cam().floor); });
+// A tap on the veiled ground of a section next door steps into it. A tap anywhere else lets go of the ticket.
+map.on('click', () => { if (S.sel) pick(null); });
+draw();
+frame();
+// The page's own top drives all three views.
+$('q').oninput = e => { S.q = e.target.value; S.i = 0; if (tab !== 'map') rows(); else if (S.sel || S.post) { S.sel = null; S.post = false; draw(); frame(); } else browse(); };
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; Object.assign(S, { sel: null, post: false }); draw(); if (tab === 'map') frame(); });
+$('postplan').onclick = () => { tab = 'map'; view = at; Object.assign(S, { sel: null, post: true }); fenced(); draw(); frame(); };
+map.on('resize', () => S.sel ? focus(0) : frame());
+</script>
+</body>
+</html>

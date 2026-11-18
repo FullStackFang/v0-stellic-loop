@@ -7,8 +7,10 @@ import { Rings } from '@/components/LoopGlyphs';
 import { ANIMALS, animal, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
-import { pick, type Findable } from '@/lib/campus/search';
+import { meant, pick, type Findable } from '@/lib/campus/search';
+import { landOf } from '@/lib/campus/sections';
 import { Composer, type Soon } from './composer';
+import { Near } from './near';
 import type { Coupon, Face, Screen, Seat, Ticket } from '@/lib/campus/view';
 
 // The campus screen, "This week" (design D16): one line of top bar, the search line, the count line, a sideways row of
@@ -48,15 +50,18 @@ export type ScreenProps = { screen: Screen; signInHref: string; openId?: string 
 
 export function CampusScreen({ screen, signInHref, openId = null, signOut = null }: ScreenProps) {
   const { campus, viewer, tickets, earning, live } = screen;
-  const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'all'>('best');
+  const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'all' | 'near'>('best');
   const [open, setOpen] = useState<{ id: string; pane: Pane; fresh: boolean } | null>(openId ? { id: openId, pane: 'more', fresh: false } : null);
   const [entering, setEntering] = useState(false), [message, setMessage] = useState(''), [copied, setCopied] = useState(false), [showing, setShowing] = useState<string | null>(null);
   const [busy, start] = useTransition(), [posting, setPosting] = useState(false);
   const rail = useRef<HTMLDivElement>(null), [ends, setEnds] = useState({ left: true, right: true });
 
-  const picked = useMemo(() => pick(tickets.map((ticket): Findable => ({ id: ticket.id, title: ticket.title, host: ticket.by, place: ticket.place, source: ticket.source, words: ticket.words, pull: ticket.pull })), typed, view, campus.listSource), [tickets, typed, view, campus.listSource]);
+  // "Near you" is the week on a map (components/campus/near.tsx), for a campus whose sections are drawn. It searches as "Best for you" does.
+  const land = useMemo(() => landOf(campus.slug), [campus.slug]), near = view === 'near' && !!land;
+  const picked = useMemo(() => pick(tickets.map((ticket): Findable => ({ id: ticket.id, title: ticket.title, host: ticket.by, place: ticket.place, source: ticket.source, words: ticket.words, pull: ticket.pull })), typed, view === 'all' ? 'all' : 'best', campus.listSource), [tickets, typed, view, campus.listSource]);
   const byId = useMemo(() => new Map(tickets.map(ticket => [ticket.id, ticket])), [tickets]);
   const shown = [...picked.best, ...picked.rest], opened = open && shown.includes(open.id) ? byId.get(open.id) ?? null : null;
+  const onMap = useMemo(() => { const left = new Set([...picked.best, ...picked.rest]); return tickets.filter(ticket => ticket.map && left.has(ticket.id)); }, [tickets, picked]);
 
   const measure = () => { const row = rail.current; if (row) setEnds({ left: row.scrollLeft < 8, right: row.scrollLeft > row.scrollWidth - row.clientWidth - 8 }); };
   useEffect(() => { measure(); addEventListener('resize', measure); return () => removeEventListener('resize', measure); }, [shown.length, opened?.id]);
@@ -113,7 +118,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   };
 
   const more = (ticket: Ticket) => {
-    const { map } = ticket, box = map && [map.lon - .0062, map.lat - .0026, map.lon + .0062, map.lat + .0026].map(n => n.toFixed(4)).join('%2C');
+    const map = near ? null : ticket.map, box = map && [map.lon - .0062, map.lat - .0026, map.lon + .0062, map.lat + .0026].map(n => n.toFixed(4)).join('%2C');
     const people = ticket.mine ? ticket.mine.members.filter(face => !face.me).map(face => ({ ...face, why: face.here ? 'Checked in' : 'In your group' })) : ticket.known;
     return <div className={`cs-regp ${map ? '' : 'wide'}`}><div className="cs-regd">
       {ticket.about && <p>{ticket.about}</p>}
@@ -154,6 +159,8 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   const plus = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" /></svg>;
   const row = (id: string, at: number) => { const ticket = byId.get(id)!; return [card(ticket, at), opened?.id === id ? sheet : null]; };
   const [count, ...words] = (picked.marker ?? '').split(' ');
+  // Only an event at a place Loop knows has a spot on the map, and the line says how many do.
+  const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
   return <div className="cs">
     <header className="cs-nav">
@@ -168,14 +175,17 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
     </header>
     <main className="cs-main"><section className="cs-fill">
       <div className="cs-ask"><input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />
-        <div className="cs-tabs">{([['best', 'Best for you'], ['all', `All of ${campus.listSource}`]] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
+        <div className="cs-tabs">{([['best', 'Best for you'], ['all', `All of ${campus.listSource}`], ...(land ? [['near', 'Near you'] as const] : [])] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
       {/* The count sits in a pill, and posting starts from the "+" at its left end: above the row, so it is there wherever the row is scrolled to (design D13). */}
       <div className="cs-count"><div className="cs-tally">
         {viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>}
-        <h2 aria-live="polite">{picked.line}</h2></div>
+        <h2 aria-live="polite">{near ? nearLine : picked.line}</h2></div>
         <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
-      <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
+      {near ? <>{postSheet && <div className="cs-railwrap cs-near-post"><div className="cs-rail">{postSheet}</div></div>}
+        <Near land={land} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo }} asked={meant(typed).length ? typed.trim() : ''} picked={opened?.id ?? null} onPick={id => { setCopied(false); setPosting(false); setOpen(id ? { id, pane: 'more', fresh: true } : null); }}>
+          {opened && <div className="cs-rail" ref={rail}>{card(opened, 0)}{sheet}</div>}</Near></>
+      : <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
         {picked.nothing ? postSheet ? <div className="cs-railwrap"><div className="cs-rail">{nothing}{postSheet}</div></div> : nothing
           : <div className="cs-railwrap"><div className="cs-rail" ref={rail} onScroll={measure}>
               {postSheet}
@@ -184,7 +194,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
               {picked.rest.map((id, at) => row(id, picked.best.length + 1 + at))}</div>
             <button className="cs-rgo l" hidden={ends.left} aria-label="Earlier events" onClick={() => rail.current?.scrollBy({ left: -604, behavior: 'smooth' })}><Chevron /></button>
             <button className="cs-rgo r" hidden={ends.right} aria-label="More events" onClick={() => rail.current?.scrollBy({ left: 604, behavior: 'smooth' })}><Chevron /></button></div>}
-      </div>
+      </div>}
       {earning.length > 0 && <div className="cs-shelf"><h2>Rewards you are earning</h2><ul className="cs-coupons">{earning.map(coupon => <CouponRow key={coupon.id} coupon={coupon} showing={showing === coupon.id} busy={busy}
         onShow={() => setShowing(now => now === coupon.id ? null : coupon.id)} onUse={() => run(() => markCouponUsed(coupon.id), () => setShowing(null))} />)}</ul></div>}
     </section></main>
