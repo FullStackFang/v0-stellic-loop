@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop · Campus entry point</title>
+<style>
+/* Mockup for openspec change loop-campus-rewards. Three ways the campus page could open (A, B, C), then the screens they all lead to.
+   Colours borrow the Cream kit from mockups-school-colors.html (cream holds big areas, carnelian is the action). The look is being
+   picked in that file; this one is about what is on each screen and in what order. */
+@font-face { font-family: Archivo; src: url(../fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  --F: oklch(95% 0.045 88); --F2: oklch(91% 0.06 86); --A: oklch(48.5% 0.185 27); --A2: oklch(57% 0.2 30); --A4: oklch(34% 0.13 24);
+  --ink: oklch(21% 0.016 30); --ink-2: oklch(33% 0.02 30); --paper: oklch(99.2% 0.004 60); --bg: oklch(96.8% 0.01 70);
+  --mute: oklch(47% 0.016 40); --line: oklch(88% 0.012 50); --ok: oklch(52% 0.13 150); --ok-bg: oklch(94% 0.06 150);
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.45; letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--ink);
+}
+button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+h1, h2, h3, p { margin: 0; }
+.top { max-width: 1320px; margin: 0 auto; padding: 36px 24px 8px; }
+.top h1 { font-size: 30px; font-weight: 620; letter-spacing: -0.035em; line-height: 1.1; }
+.top p { color: var(--mute); max-width: 70ch; margin-top: 8px; }
+.sec { max-width: 1320px; margin: 0 auto; padding: 28px 24px 8px; }
+.sec > h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.03em; }
+.sec > p { color: var(--mute); max-width: 72ch; margin-top: 4px; }
+.row { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 20px; align-items: flex-start; }
+.col { width: 336px; }
+.cap { margin-top: 14px; }
+.cap b { display: block; font-weight: 600; font-size: 16px; letter-spacing: -0.025em; }
+.cap span { color: var(--mute); font-size: 14px; }
+.replay { margin-top: 8px; font-size: 13px; color: var(--A); text-decoration: underline; text-underline-offset: 3px; }
+
+/* phone */
+.ph { width: 336px; height: 690px; border-radius: 40px; background: var(--ink); padding: 9px; box-shadow: 0 26px 50px -24px oklch(21% 0.016 30 / .5); }
+.scr { position: relative; height: 100%; border-radius: 32px; background: var(--paper); overflow: hidden; display: flex; flex-direction: column; }
+.body { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 86px; }
+.body::-webkit-scrollbar { display: none; }
+.bar { display: flex; align-items: center; gap: 8px; padding: 16px 16px 10px; }
+.wm { display: flex; align-items: center; gap: 7px; font-weight: 640; font-size: 18px; letter-spacing: -0.04em; }
+.wm svg { width: 22px; height: 22px; }
+.campus { margin-left: 4px; font-size: 12.5px; padding: 3px 9px; border-radius: 40px; background: var(--F); font-weight: 520; }
+.face { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; }
+.bar .face { margin-left: auto; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 16px 12px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; height: 32px; padding: 0 13px; border-radius: 40px; box-shadow: inset 0 0 0 1px var(--line); font-size: 13.5px; white-space: nowrap; transition: background-color .15s var(--ease); }
+.chip[aria-pressed=true] { background: var(--ink); color: var(--paper); box-shadow: none; }
+.day { padding: 10px 16px 6px; font-size: 12.5px; font-weight: 600; color: var(--mute); letter-spacing: 0; }
+.it { display: flex; gap: 12px; padding: 11px 16px; border-top: 1px solid var(--line); }
+.it:first-of-type { border-top: 0; }
+.tm { width: 46px; flex: none; font-size: 13px; font-weight: 600; line-height: 1.25; padding-top: 1px; }
+.tm small { display: block; font-weight: 440; color: var(--mute); font-size: 11.5px; }
+.it h3 { font-size: 15px; font-weight: 560; letter-spacing: -0.025em; line-height: 1.25; }
+.it p { font-size: 12.5px; color: var(--mute); margin-top: 2px; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; align-items: center; }
+.tag { font-size: 11.5px; padding: 2px 8px; border-radius: 40px; background: var(--bg); color: var(--ink-2); white-space: nowrap; }
+.tag.rw { background: var(--A); color: var(--paper); font-weight: 540; }
+.tag.in { background: var(--F); font-weight: 540; }
+.stack { display: inline-flex; }
+.stack .face { width: 20px; height: 20px; margin-left: -6px; box-shadow: 0 0 0 2px var(--paper); }
+.stack .face:first-child { margin-left: 0; }
+.fab { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 52px; border-radius: 52px; background: var(--A); color: var(--paper); font-weight: 580; font-size: 16px; box-shadow: 0 12px 24px -12px var(--A4); transition: background-color .15s var(--ease), transform .15s var(--ease); }
+.fab { z-index: 1; }
+.scr:has(.fab)::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: linear-gradient(transparent, var(--paper) 42%); pointer-events: none; }
+.fab:hover { background: var(--A2); }
+.fab:active { transform: scale(.98); }
+.fab.dark { background: var(--ink); box-shadow: none; }
+.fab[disabled] { background: var(--line); color: var(--mute); box-shadow: none; cursor: default; }
+
+/* B: rewards first */
+.hero { margin: 0 12px; padding: 18px 16px 16px; border-radius: 24px 24px 24px 6px; background: var(--F); }
+.hero h2 { font-size: 26px; font-weight: 660; letter-spacing: -0.045em; line-height: 1.02; }
+.hero p { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+.offers { display: flex; gap: 10px; overflow-x: auto; padding: 14px 16px 6px; scrollbar-width: none; }
+.offers::-webkit-scrollbar { display: none; }
+.of { flex: none; width: 204px; padding: 13px; border-radius: 18px 18px 18px 5px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); text-align: left; }
+.of .k { font-size: 11.5px; font-weight: 600; color: var(--A); }
+.of h3 { font-size: 15.5px; font-weight: 600; letter-spacing: -0.03em; margin-top: 2px; }
+.of .slot { font-size: 12.5px; color: var(--mute); }
+.tiers { margin-top: 9px; display: grid; gap: 4px; }
+.tier { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.tier i { font-style: normal; width: 26px; height: 22px; border-radius: 7px; background: var(--ink); color: var(--paper); display: grid; place-items: center; font-size: 12px; font-weight: 600; flex: none; }
+.tier.hit i { background: var(--A); }
+.tier.hit { font-weight: 580; }
+.lbl { padding: 14px 16px 2px; font-size: 13px; font-weight: 600; }
+
+/* C: start with what you want */
+.ask { margin: 4px 12px 0; padding: 16px; border-radius: 24px 24px 24px 6px; background: var(--ink); color: var(--paper); }
+.ask h2 { font-size: 22px; font-weight: 640; letter-spacing: -0.04em; line-height: 1.05; }
+.box { margin-top: 12px; padding: 12px 13px; border-radius: 14px; background: oklch(99% 0.004 60 / .1); font-size: 15px; box-shadow: inset 0 0 0 1px oklch(99% 0.004 60 / .22); }
+.box em { font-style: normal; border-right: 2px solid var(--F); padding-right: 1px; }
+.ask .chips { padding: 10px 0 0; }
+.ask .chip { box-shadow: inset 0 0 0 1px oklch(99% 0.004 60 / .3); font-size: 12.5px; height: 28px; padding: 0 10px; }
+.ask .chip[aria-pressed=true] { background: var(--F); color: var(--ink); }
+.mini { margin: 8px 12px 0; padding: 12px 13px; border-radius: 16px 16px 16px 5px; box-shadow: inset 0 0 0 1px var(--line); display: flex; gap: 10px; align-items: center; }
+.mini h3 { font-size: 14.5px; font-weight: 560; letter-spacing: -0.025em; }
+.mini p { font-size: 12.5px; color: var(--mute); }
+.mini .go { margin-left: auto; flex: none; height: 30px; padding: 0 13px; border-radius: 40px; background: var(--F); font-size: 13px; font-weight: 560; }
+.mini .go.red { background: var(--A); color: var(--paper); }
+
+/* detail screens */
+.cover { height: 132px; margin: 0 12px; border-radius: 24px 24px 24px 6px; background: radial-gradient(120% 100% at 15% 10%, var(--F) 0 30%, transparent 62%), radial-gradient(90% 90% at 90% 20%, var(--A2), transparent 60%), radial-gradient(100% 100% at 60% 100%, oklch(88% 0.08 36), var(--A)); display: flex; align-items: flex-end; padding: 12px; }
+.cover span { font-size: 11.5px; padding: 3px 9px; border-radius: 40px; background: var(--paper); font-weight: 540; }
+.pad { padding: 14px 16px 0; }
+.pad h2 { font-size: 23px; font-weight: 640; letter-spacing: -0.04em; line-height: 1.08; }
+.facts { margin-top: 10px; display: grid; gap: 5px; font-size: 13.5px; color: var(--ink-2); }
+.facts b { font-weight: 560; color: var(--ink); }
+.panel { margin: 14px 12px 0; padding: 14px; border-radius: 18px 18px 18px 5px; background: var(--F); }
+.panel h3 { font-size: 13px; font-weight: 600; }
+.panel .tier i { background: var(--ink); }
+.share { margin: 14px 12px 0; padding: 14px; border-radius: 18px 18px 18px 5px; background: var(--ink); color: var(--paper); display: none; }
+.share h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.03em; }
+.share p { font-size: 13px; opacity: .78; margin-top: 2px; }
+.link { margin-top: 10px; display: flex; gap: 8px; align-items: center; padding: 6px 6px 6px 12px; border-radius: 40px; background: oklch(99% 0.004 60 / .12); font-size: 13px; }
+.link button { margin-left: auto; height: 30px; padding: 0 14px; border-radius: 40px; background: var(--F); color: var(--ink); font-weight: 580; font-size: 13px; }
+[data-in=yes] .share { display: block; }
+.who { margin-top: 4px; }
+.who li { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 14.5px; }
+.who ul, ul.who { list-style: none; margin: 0; padding: 0; }
+.who .st { margin-left: auto; font-size: 12px; padding: 2px 9px; border-radius: 40px; background: var(--bg); color: var(--mute); }
+.who .st.yes { background: var(--ok-bg); color: var(--ok); font-weight: 560; }
+.reward { margin: 12px 12px 0; padding: 18px 16px; border-radius: 24px 24px 24px 6px; background: var(--A); color: var(--paper); text-align: center; }
+.reward .k { font-size: 12px; font-weight: 560; opacity: .85; }
+.reward h3 { font-size: 30px; font-weight: 680; letter-spacing: -0.045em; line-height: 1; margin: 6px 0 8px; }
+.reward .clock { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.reward .n { font-size: 13px; opacity: .85; }
+.reward button { margin-top: 12px; height: 38px; padding: 0 18px; border-radius: 40px; background: var(--paper); color: var(--ink); font-weight: 580; font-size: 14px; }
+.locked { margin: 12px 12px 0; padding: 16px; border-radius: 24px 24px 24px 6px; background: var(--F); text-align: center; font-size: 14px; }
+.locked b { display: block; font-size: 19px; letter-spacing: -0.03em; }
+.used { margin: 12px 12px 0; padding: 16px; border-radius: 24px 24px 24px 6px; background: var(--ok-bg); color: var(--ok); text-align: center; font-weight: 580; }
+
+/* post form */
+.fld { padding: 12px 16px 0; }
+.fld label { display: block; font-size: 12.5px; font-weight: 600; color: var(--mute); margin-bottom: 6px; }
+.inp { padding: 11px 13px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); font-size: 15px; font-weight: 520; }
+.fld .chips { padding: 0; flex-wrap: wrap; overflow: visible; }
+.step { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 40px; box-shadow: inset 0 0 0 1px var(--line); }
+.step button { width: 30px; height: 30px; border-radius: 50%; background: var(--bg); font-weight: 600; }
+.step b { width: 30px; text-align: center; }
+.ven { margin-top: 6px; display: grid; gap: 7px; }
+.v { text-align: left; padding: 11px 12px; border-radius: 16px 16px 16px 5px; box-shadow: inset 0 0 0 1px var(--line); display: flex; gap: 10px; align-items: center; width: 100%; transition: box-shadow .15s var(--ease), background-color .15s var(--ease); }
+.v[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--A); background: oklch(97% 0.02 40); }
+.v h3 { font-size: 14.5px; font-weight: 580; letter-spacing: -0.025em; }
+.v p { font-size: 12.5px; color: var(--mute); }
+.v .earn { margin-left: auto; flex: none; font-size: 12px; font-weight: 580; padding: 3px 9px; border-radius: 40px; background: var(--A); color: var(--paper); max-width: 104px; text-align: center; line-height: 1.2; }
+.none { font-size: 13px; color: var(--mute); padding: 10px 2px; }
+
+/* host */
+.grid4 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 12px 0; }
+.stat { padding: 12px 13px; border-radius: 16px 16px 16px 5px; background: var(--F); }
+.stat b { display: block; font-size: 28px; font-weight: 680; letter-spacing: -0.045em; line-height: 1; }
+.stat span { font-size: 12.5px; color: var(--ink-2); }
+.stat.red { background: var(--A); color: var(--paper); }
+.stat.red span { color: inherit; opacity: .85; }
+.bars { padding: 4px 16px 0; display: grid; gap: 7px; }
+.barrow { display: grid; grid-template-columns: 74px 1fr 18px; gap: 8px; align-items: center; font-size: 12.5px; }
+.barrow i { height: 14px; border-radius: 4px; background: var(--ink); display: block; }
+.barrow i u { display: block; height: 100%; border-radius: 4px; background: var(--A); }
+.sw { margin-left: auto; width: 38px; height: 22px; border-radius: 22px; background: var(--ok); position: relative; flex: none; }
+.sw::after { content: ''; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); }
+.sw.off { background: var(--line); }
+.sw.off::after { right: auto; left: 3px; }
+.note { padding: 12px 16px; font-size: 12.5px; color: var(--mute); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>The campus page, and what it opens into</h1>
+  <p>Three ways the first screen could work. Pick one, or parts of each. The four screens underneath are the same whichever you pick.</p>
+</div>
+
+<section class="sec">
+  <h2>1. The first screen</h2>
+  <p>The same campus, the same Tuesday, the same data. What differs is what a student meets first.</p>
+  <div class="row">
+    <div class="col"><div class="ph"><div class="scr" id="A"></div></div>
+      <div class="cap"><b>A · This week</b><span>A dated list of everything, like Luma. Feeds, posted plans and offers share one list. Rewards are a tag on the row. Tap an interest to filter.</span></div></div>
+    <div class="col"><div class="ph"><div class="scr" id="B"></div></div>
+      <div class="cap"><b>B · Go together</b><span>Rewards lead. The offers open right now are the first thing seen, with what each group size earns. The list of things to do sits under them.</span></div></div>
+    <div class="col"><div class="ph"><div class="scr" id="C"></div></div>
+      <div class="cap"><b>C · What do you want to do?</b><span>Posting leads. You say what you want; Loop shows who is already planning it and which places reward it. The list is one tap away.</span></div></div>
+  </div>
+</section>
+
+<section class="sec" style="padding-bottom:72px">
+  <h2>2. What it opens into</h2>
+  <p>These work: tap the buttons.</p>
+  <div class="row">
+    <div class="col"><div class="ph"><div class="scr" id="E" data-in="yes"></div></div>
+      <div class="cap"><b>An event from a feed</b><span>Pulled from CampusGroups. "I'm in" gives you a link for your chat. The organizer's reward is theirs to set.</span>
+        <button class="replay" id="Er">Show it before "I'm in"</button></div></div>
+    <div class="col"><div class="ph"><div class="scr" id="O"></div></div>
+      <div class="cap"><b>Your outing</b><span>What friends land on from the link. Everyone checks in with one button; the reward shows when enough have.</span>
+        <button class="replay" id="Or">Start again from before check-in</button></div></div>
+    <div class="col"><div class="ph"><div class="scr" id="P"></div></div>
+      <div class="cap"><b>Post a plan</b><span>Change the interest, time or size and the places that reward it change with them. Picking one is optional.</span></div></div>
+    <div class="col"><div class="ph"><div class="scr" id="H"></div></div>
+      <div class="cap"><b>A venue's view</b><span>Counts by week and by time slot. Offers switch on and off. No student names anywhere.</span></div></div>
+  </div>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+const face = (n, cls = 'face') => `<img class="${cls}" src="https://i.pravatar.cc/80?img=${n}" alt="">`;
+const stack = ns => `<span class="stack">${ns.map(n => face(n)).join('')}</span>`;
+const mark = `<svg viewBox="0 0 100 100" fill="none" stroke-width="9"><circle cx="35.5" cy="60" r="21" stroke="currentColor"/><circle cx="64.5" cy="60" r="21" stroke="currentColor"/><circle cx="50" cy="35" r="21" stroke="var(--A)"/></svg>`;
+const bar = `<div class="bar"><span class="wm">${mark}Loop</span><span class="campus">Cornell</span>${face(12)}</div>`;
+const INTERESTS = ['Study', 'Food and coffee', 'Sports and fitness', 'Music and arts', 'Games', 'Outdoors', 'Career', 'Social'];
+
+// One campus, one Tuesday. kind: event (from a feed), plan (posted by a student), offer (a venue).
+const ITEMS = [
+  { day: 'Today · Tue Nov 17', t: '2:00', ap: 'pm', title: 'Northside Coffee', sub: 'Study groups, until 5pm · 4 min walk', int: 'Study', kind: 'offer', rw: '2+ free pastry', inn: '5 groups in' },
+  { day: 'Today · Tue Nov 17', t: '3:00', ap: 'pm', title: 'CS 2110 study group', sub: 'Posted by Maya · Northside Coffee', int: 'Study', kind: 'plan', rw: '2+ free pastry', inn: '3 in', faces: [47, 59, 32] },
+  { day: 'Today · Tue Nov 17', t: '5:00', ap: 'pm', title: 'Running, 5pm', sub: 'Posted by Dev · meet at the Arts Quad', int: 'Sports and fitness', kind: 'plan', inn: '4 in', faces: [59, 33, 5, 26] },
+  { day: 'Today · Tue Nov 17', t: '6:30', ap: 'pm', title: 'Product Club: founder fireside', sub: 'Luma · Sage Hall 141', int: 'Career', kind: 'event', inn: '7 groups in' },
+  { day: 'Today · Tue Nov 17', t: '7:00', ap: 'pm', title: 'Chess Club blitz night', sub: 'CampusGroups · Willard Straight Hall', int: 'Games', kind: 'event', rw: '3+ skip the $5 door', inn: '4 groups in' },
+  { day: 'Today · Tue Nov 17', t: '8:00', ap: 'pm', title: 'Bao House', sub: 'Dinner for groups, until 10pm · 9 min walk', int: 'Food and coffee', kind: 'offer', rw: '4+ free starter', inn: '2 groups in' },
+  { day: 'Wed Nov 18', t: '12:15', ap: 'pm', title: 'Lunch concert: jazz combo', sub: 'CampusGroups · Lincoln Hall', int: 'Music and arts', kind: 'event', inn: '2 groups in' },
+  { day: 'Wed Nov 18', t: '4:30', ap: 'pm', title: 'Bouldering, beginners welcome', sub: 'Posted by Lena · The Climbing Room', int: 'Sports and fitness', kind: 'plan', rw: '3+ free shoe rental', inn: '2 in', faces: [5, 44] },
+  { day: 'Wed Nov 18', t: '9:00', ap: 'pm', title: 'Warehouse night', sub: 'Posted by Omar · link to posh.vip', int: 'Social', kind: 'plan', inn: '6 in', faces: [68, 26, 32, 53] },
+  { day: 'Thu Nov 19', t: '7:00', ap: 'am', title: 'Sunrise hike, Cascadilla Gorge', sub: 'CampusGroups · Outing Club', int: 'Outdoors', kind: 'event', inn: '3 groups in' },
+];
+const item = x => `<div class="it"><div class="tm">${x.t}<small>${x.ap}</small></div><div><h3>${x.title}</h3><p>${x.sub}</p>
+  <div class="tags">${x.faces ? stack(x.faces) : ''}<span class="tag in">${x.inn}</span>${x.rw ? `<span class="tag rw">${x.rw}</span>` : ''}</div></div></div>`;
+function list(filter) {
+  let day = '', out = '';
+  ITEMS.filter(x => !filter || x.int === filter).forEach(x => { if (x.day !== day) { day = x.day; out += `<div class="day">${day}</div>`; } out += item(x); });
+  return out || `<p class="none" style="padding:16px">Nothing under ${filter} this week yet. Post the first one.</p>`;
+}
+const chipRow = (sel, withAll = true) => `<div class="chips">${(withAll ? ['All'] : []).concat(INTERESTS).map(i => `<button class="chip" aria-pressed="${i === sel}">${i}</button>`).join('')}</div>`;
+
+// A: this week
+let fa = 'All';
+function drawA() {
+  $('A').innerHTML = `${bar}${chipRow(fa)}<div class="body">${list(fa === 'All' ? null : fa)}</div><button class="fab">Post a plan</button>`;
+  $('A').querySelectorAll('.chip').forEach(b => b.onclick = () => { fa = b.textContent; drawA(); });
+}
+drawA();
+
+// B: go together
+const OFFERS = [
+  { v: 'Northside Coffee', int: 'Study', slot: 'Open now, until 5pm', days: ['Tue', 'Wed', 'Thu'], from: 14, to: 17, tiers: [[2, 'Free pastry each'], [4, '20% off the table']], walk: '4 min walk' },
+  { v: 'The Climbing Room', int: 'Sports and fitness', slot: 'Today 4 to 7pm', days: ['Tue', 'Wed', 'Sat'], from: 16, to: 19, tiers: [[3, 'Free shoe rental'], [5, 'One climbs free']], walk: '12 min walk' },
+  { v: 'Bao House', int: 'Food and coffee', slot: 'Tonight 8 to 10pm', days: ['Mon', 'Tue', 'Wed', 'Thu'], from: 20, to: 22, tiers: [[4, 'Free starter'], [6, 'Free dessert too']], walk: '9 min walk' },
+  { v: 'Olin Café', int: 'Study', slot: 'Evenings 7 to 10pm', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Sun'], from: 19, to: 22, tiers: [[3, 'Free drip coffee each']], walk: 'On campus' },
+  { v: 'Board & Brew', int: 'Games', slot: 'Thu 6 to 10pm', days: ['Thu', 'Fri'], from: 18, to: 22, tiers: [[4, 'No table fee']], walk: '7 min walk' },
+];
+const tiers = (ts, n) => { const hit = n ? [...ts].reverse().find(t => t[0] <= n) : null;
+  return `<div class="tiers">${ts.map(t => `<div class="tier ${t === hit ? 'hit' : ''}"><i>${t[0]}+</i>${t[1]}</div>`).join('')}</div>`; };
+$('B').innerHTML = `${bar}<div class="body"><div class="hero"><h2>Go together,<br>get more.</h2><p>Places near campus that reward you for showing up with your people.</p></div>
+  <div class="offers">${OFFERS.slice(0, 3).map(o => `<button class="of"><span class="k">${o.int}</span><h3>${o.v}</h3><span class="slot">${o.slot} · ${o.walk}</span>${tiers(o.tiers)}</button>`).join('')}</div>
+  <div class="lbl">Happening today</div>${ITEMS.filter(x => x.day.startsWith('Today') && x.kind !== 'offer').map(item).join('')}</div><button class="fab">Post a plan</button>`;
+
+// C: what do you want to do?
+$('C').innerHTML = `${bar}<div class="body"><div class="ask"><h2>What do you want to do?</h2><div class="box">Study for CS 2110<em></em></div>
+  <div class="chips"><button class="chip" aria-pressed="true">Study</button><button class="chip" aria-pressed="true">Today 3pm</button><button class="chip" aria-pressed="true">3 of us</button></div></div>
+  <div class="lbl">Already planned</div>
+  <div class="mini">${stack([47, 59, 32])}<div><h3>CS 2110 study group</h3><p>Maya and 2 others · 3pm</p></div><button class="go">Join</button></div>
+  <div class="lbl">Places that reward 3 studying at 3pm</div>
+  <div class="mini"><div><h3>Northside Coffee</h3><p>4 min walk · until 5pm</p></div><button class="go red">Free pastry each</button></div>
+  <div class="mini"><div><h3>Mann Library Café</h3><p>On campus · until 4pm</p></div><button class="go red">10% off</button></div>
+  <div class="lbl">Or see everything this week</div>${ITEMS.slice(2, 4).map(item).join('')}</div><button class="fab">Post it</button>`;
+
+// Event from a feed
+function drawE() {
+  const inn = $('E').dataset.in === 'yes';
+  $('E').innerHTML = `${bar}<div class="body"><div class="cover"><span>From CampusGroups · Games</span></div>
+    <div class="pad"><h2>Chess Club blitz night</h2><div class="facts"><span><b>Tonight, 7:00 to 9:30pm</b></span><span>Willard Straight Hall, Memorial Room</span><span><b>${inn ? 5 : 4} groups in</b> · open to everyone</span></div></div>
+    <div class="panel"><h3>Come together</h3>${tiers([[3, 'Skip the $5 door'], [6, 'A board reserved for you']])}</div>
+    <div class="share"><h3>You're in. Bring your people.</h3><p>Anyone who opens this joins your group for tonight.</p><div class="link">loop.app/o/k7Qm2x<button id="Ec">Copy</button></div></div>
+    <p class="note">Check-in opens at 6:30pm.</p></div>
+    <button class="fab ${inn ? 'dark' : ''}" id="Eb">${inn ? 'Share the link' : "I'm in"}</button>`;
+  $('Eb').onclick = () => { $('E').dataset.in = 'yes'; drawE(); };
+  $('Ec').onclick = e => { e.target.textContent = 'Copied'; };
+}
+drawE();
+$('Er').onclick = () => { const on = $('E').dataset.in === 'yes'; $('E').dataset.in = on ? 'no' : 'yes'; $('Er').textContent = on ? 'Show it after "I\'m in"' : 'Show it before "I\'m in"'; drawE(); };
+
+// Outing: check in, unlock, mark used
+const CREW = [['Maya', 47, true], ['Dev', 59, true], ['You', 12, true], ['June', 32, false]];
+let used = null, tick;
+const now = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+function drawO() {
+  clearInterval(tick);
+  const n = CREW.filter(c => c[2]).length, me = CREW[2][2], T = [[2, 'Free pastry each'], [4, '20% off the table']];
+  const hit = [...T].reverse().find(t => t[0] <= n);
+  const top = used ? `<div class="used">Used at ${used}</div>`
+    : hit && me ? `<div class="reward"><div class="k">Northside Coffee · show this at the counter</div><h3>${hit[1]}</h3><div class="clock" id="Oc">${now()}</div><div class="n">${n} checked in${n < 4 ? ' · one more for 20% off' : ''}</div><button id="Ou">Mark as used</button></div>`
+    : `<div class="locked"><b>${hit ? 'Unlocked' : `${2 - n} more to unlock`}</b>${hit ? 'Check in to see it.' : 'Free pastry each, once 2 of you check in.'}</div>`;
+  $('O').innerHTML = `${bar}<div class="body"><div class="pad"><h2>CS 2110 study group</h2><div class="facts"><span><b>Today, 3:00pm</b> · Northside Coffee</span><span>Posted by Maya · Study</span></div></div>${top}
+    <div class="lbl">Who's here</div><ul class="who">${CREW.map((c, i) => `<li>${face(c[1])}${c[0]}<span class="st ${c[2] ? 'yes' : ''}">${c[2] ? 'Checked in' : 'In, not here yet'}</span></li>`).join('')}</ul>
+    <div class="panel"><h3>What your group gets</h3>${tiers(T, n)}</div></div>
+    ${used ? '' : me ? (n < 4 ? `<button class="fab dark" id="Oj">June arrives and checks in</button>` : '') : `<button class="fab" id="Ob">Check in</button>`}`;
+  if ($('Oc')) tick = setInterval(() => { if ($('Oc')) $('Oc').textContent = now(); }, 1000);
+  if ($('Ou')) $('Ou').onclick = () => { used = now().replace(/:\d\d /, ' '); drawO(); };
+  if ($('Ob')) $('Ob').onclick = () => { CREW[2][2] = true; drawO(); };
+  if ($('Oj')) $('Oj').onclick = () => { CREW[3][2] = true; drawO(); };
+}
+drawO();
+$('Or').onclick = () => { CREW[1][2] = false; CREW[2][2] = false; CREW[3][2] = false; used = null; drawO(); };
+
+// Post a plan, with the venue finder
+const WHEN = [['Today 3pm', 'Tue', 15], ['Wed 3pm', 'Wed', 15], ['Thu 7pm', 'Thu', 19], ['Sat 11am', 'Sat', 11]];
+const S = { int: 'Study', when: 1, n: 3, pick: 'Northside Coffee' };
+function drawP() {
+  const [, d, h] = WHEN[S.when];
+  const fit = OFFERS.filter(o => o.int === S.int && o.days.includes(d) && h >= o.from && h < o.to && o.tiers[0][0] <= S.n);
+  if (!fit.some(o => o.v === S.pick)) S.pick = null;
+  const earn = o => [...o.tiers].reverse().find(t => t[0] <= S.n)[1];
+  $('P').innerHTML = `${bar}<div class="body"><div class="fld"><label>What</label><div class="inp">${S.int === 'Study' ? 'CS 2110 study group' : S.int === 'Sports and fitness' ? 'Bouldering, beginners welcome' : S.int === 'Games' ? 'Catan night' : S.int === 'Food and coffee' ? 'Dinner, who is hungry' : 'Something to do'}</div></div>
+    <div class="fld"><label>Interest</label><div class="chips">${INTERESTS.slice(0, 5).map(i => `<button class="chip" data-i="${i}" aria-pressed="${i === S.int}">${i}</button>`).join('')}</div></div>
+    <div class="fld"><label>When</label><div class="chips">${WHEN.map((w, i) => `<button class="chip" data-w="${i}" aria-pressed="${i === S.when}">${w[0]}</button>`).join('')}</div></div>
+    <div class="fld"><label>How many of you</label><span class="step"><button data-n="-1">−</button><b>${S.n}</b><button data-n="1">+</button></span></div>
+    <div class="fld"><label>Places that reward this</label><div class="ven">${fit.length ? fit.map(o => `<button class="v" data-v="${o.v}" aria-pressed="${o.v === S.pick}"><div><h3>${o.v}</h3><p>${o.walk} · ${o.from > 12 ? o.from - 12 : o.from} to ${o.to - 12}pm</p></div><span class="earn">${earn(o)}</span></button>`).join('')
+      : `<p class="none">No place rewards ${S.n} people for ${S.int.toLowerCase()} at that time. You can still post it, with your own place.</p>`}</div></div></div>
+    <button class="fab">${S.pick ? `Post at ${S.pick}` : 'Post it'}</button>`;
+  const P = $('P');
+  P.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { S.int = b.dataset.i; drawP(); });
+  P.querySelectorAll('[data-w]').forEach(b => b.onclick = () => { S.when = +b.dataset.w; drawP(); });
+  P.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { S.n = Math.max(2, Math.min(8, S.n + +b.dataset.n)); drawP(); });
+  P.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { S.pick = S.pick === b.dataset.v ? null : b.dataset.v; drawP(); });
+}
+drawP();
+
+// Venue host view
+const SLOTS = [['Tue 2 to 5', 5, 2], ['Wed 2 to 5', 3, 1], ['Thu 2 to 5', 4, 1], ['Sun 6 to 9', 2, 0]];
+$('H').innerHTML = `<div class="bar"><span class="wm">${mark}Loop</span><span class="campus">Northside Coffee</span>${face(15)}</div><div class="body">
+  <div class="pad"><h2>This week</h2><div class="facts"><span>Nov 16 to 22 · counts only, no names</span></div></div>
+  <div class="grid4"><div class="stat"><b>14</b><span>groups in</span></div><div class="stat"><b>11</b><span>groups checked in</span></div><div class="stat red"><b>4</b><span>groups came back</span></div><div class="stat"><b>9</b><span>rewards used</span></div></div>
+  <div class="lbl">By time slot <span style="font-weight:440;color:var(--mute)">· red came back</span></div>
+  <div class="bars">${SLOTS.map(s => `<div class="barrow"><span>${s[0]}</span><i style="width:${s[1] * 20}%"><u style="width:${s[2] / s[1] * 100}%"></u></i><b>${s[1]}</b></div>`).join('')}</div>
+  <div class="lbl">Group sizes</div><div class="note" style="padding-top:2px">Six of 2 · four of 3 · three of 4 · one of 6</div>
+  <div class="lbl">Your offers</div>
+  <div class="mini"><div><h3>Study · Tue to Thu, 2 to 5pm</h3><p>2+ free pastry · 4+ 20% off · 3 weeks running: free drink</p></div><span class="sw"></span></div>
+  <div class="mini"><div><h3>Food and coffee · Sun, 6 to 9pm</h3><p>4+ free dessert to share</p></div><span class="sw"></span></div>
+  <div class="mini"><div><h3>Study · Fri, 2 to 5pm</h3><p>2+ free pastry</p></div><span class="sw off"></span></div>
+  </div><button class="fab dark">Add an offer</button>`;
+</script>
+</body>
+</html>

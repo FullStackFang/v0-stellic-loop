@@ -28,7 +28,8 @@ function pdf(text: string, pages = 1) {
 
 it('accepts UTF-8 text and Markdown and rejects unsupported or invalid files', async () => {
   expect(await parseResourceFile(file('notes.md', '# Course notes'))).toEqual({ title: 'notes.md', mediaType: 'text/markdown', body: '# Course notes' });
-  await expect(parseResourceFile(file('bad.docx', 'hello'))).rejects.toThrow('.txt, .md, or text-based .pdf');
+  await expect(parseResourceFile(file('bad.rtf', 'hello'))).rejects.toThrow('.txt, .md, .docx, or text-based .pdf');
+  await expect(parseResourceFile(file('bad.docx', 'hello'))).rejects.toThrow('not a readable Word document');
   await expect(parseResourceFile(file('empty.txt', '  '))).rejects.toThrow('no searchable text');
   await expect(parseResourceFile(file('bad.txt', new Uint8Array([0xff])))).rejects.toThrow('UTF-8');
   await expect(parseResourceFile(file('large.txt', 'x'.repeat(256 * 1024 + 1)))).rejects.toThrow('256 KiB');

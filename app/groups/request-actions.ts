@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
+import { getPortalPrincipal, closedToCaller } from '@/lib/emba/portal-session';
 import { redirect } from 'next/navigation';
 import { accessRequestPreview, disableAccessRequests, enableAccessRequests, joinFromShare, joinLinkMode, replaceJoinLink, requestMembership, reviewMembershipRequest, setJoinMode, type JoinOutcome } from '@/lib/emba/access-requests';
 import { groupHref } from '@/lib/emba/group-path';
@@ -23,7 +23,7 @@ async function mutate(run: (principal: NonNullable<Awaited<ReturnType<typeof get
   }
 }
 export async function previewAccessRequest(token: string) {
-  try { return await accessRequestPreview(db(), token); }
+  try { return await closedToCaller() ? null : await accessRequestPreview(db(), token); }
   catch { return null; }
 }
 export async function enableRequestLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {

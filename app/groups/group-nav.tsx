@@ -28,7 +28,7 @@ export function GroupHead({ group, base, here, people, canAdd, asking }: { group
     <div><h1>{group.orgName}</h1><p><span className="lp-handle">{groupHandle(group)}</span>{people !== null && <span>{people} {people === 1 ? 'person' : 'people'}</span>}</p></div>
     <nav className="lp-tabs" aria-label="Group sections"><Link href={`${base}/team`}>Team</Link><Link href={base} aria-current={here === 'members' ? 'page' : undefined}>Members</Link>
       {canAdd && <Link href={`${base}/add`} aria-current={here === 'add' ? 'page' : undefined}>Add people{asking > 0 && <span>{asking}</span>}</Link>}
-      <Link href={`${base}/resources`}>Resources</Link><Link href="/groups/connections">Connections</Link></nav>
+      <Link href={`${base}/team?tab=resources`}>Resources</Link><Link href="/groups/connections">Connections</Link></nav>
   </header>;
 }
 

@@ -61,9 +61,9 @@ it('returns the five newest announcements, resource titles, counts, and a warnin
  const brief=await teamBrief(t.db,f.memberB,f.root);
  expect(brief.announcements.map(item=>item.text)).toEqual(['Note 5','Note 4','Note 3','Note 2','Note 1']);
  expect(brief.counts).toEqual({openClaims:2,currentOutputs:1,currentDecisions:0});
- expect(brief.resources).toEqual({items:[],more:0});
+ expect(brief.resources).toEqual({links:{items:[],more:0},texts:{items:[],more:0}});
  // Uploaded sources of the team are listed by title only.
- expect((await teamBrief(t.db,f.memberA,f.vietnam)).resources).toEqual({items:['Hanoi itinerary v1'],more:0});
+ expect((await teamBrief(t.db,f.memberA,f.vietnam)).resources.texts.items.map(text=>text.name)).toEqual(['Hanoi itinerary v1']);
  expect((await teamBrief(t.db,f.memberA,f.vietnam)).team).toEqual({handle:'@cohort/vietnam',name:'Synthetic EMBA'});
  const ending=await assistant(f,f.root,3,'ending');
  expect((await teamBrief(t.db,ending,f.root)).grantExpiresOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);

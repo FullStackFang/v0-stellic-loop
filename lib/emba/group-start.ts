@@ -11,9 +11,10 @@ import type { GroupAddress } from './groups';
 import { issueInvitation } from './invitations';
 import { processDocument, uploadDocument } from './knowledge';
 import { parseResourceFile, ResourceInputError } from './resource-input';
-import { emailOf, linkTitle, START_LIMITS } from './start-sort';
+import { emailOf, START_LIMITS } from './start-sort';
 import { normaliseLink } from './team-link';
-import { postAnnouncement, fileOutput } from './team-records';
+import { postAnnouncement } from './team-records';
+import { addLink } from './team-resources';
 import { singleLine } from './team-text';
 import { createWorkspace } from './workspaces';
 
@@ -59,18 +60,18 @@ export async function startGroup(db: Db, p: Principal, input: StartInput): Promi
     try { await run(); } catch (error) { report.failed.push({ what, why: error instanceof ResourceInputError ? error.message : why }); }
   };
 
-  for (const file of files) await attempt(file.name, 'Loop could not read this file. Add it on the Resources page.', async () => {
+  for (const file of files) await attempt(file.name, 'Loop could not read this file. Add it on the Resources tab.', async () => {
     const document = await uploadDocument(db, p, { ...scope, operationId: randomUUID(), ...await parseResourceFile(file) });
     report.added.files.push(file.name);
-    // Reading the text can be retried from the Resources page; the file is already kept.
+    // Reading the text can be retried from the Resources tab; the file is already kept.
     await processDocument(db, p, document.id, document.version).catch(() => undefined);
   });
 
-  // A group made a moment ago has no decisions yet, so a link is filed against none.
+  // A link dropped into the box is kept as one of the group's links (the Resources tab), not filed as an output.
   for (const raw of data.links) await attempt(raw.slice(0, 80), 'Loop only keeps plain https links.', async () => {
     const link = normaliseLink(raw);
     if ('problem' in link) throw new Error(link.problem);
-    const result = await fileOutput(db, p, { ...scope, operationId: randomUUID(), url: link.url, title: linkTitle(link.url), summary: 'Added when the group was started.', decisionsVersion: 0 });
+    const result = await addLink(db, p, { ...scope, url: link.url });
     if (!result.saved) throw new Error(result.reason);
     report.added.links.push(link.url);
   });

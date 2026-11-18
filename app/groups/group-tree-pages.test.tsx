@@ -20,7 +20,7 @@ import { Rail } from './rail';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const at = vi.hoisted(() => ({ params: {} as Record<string, string>, path: '/groups' }));
-vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path }));
+vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path, useSearchParams: () => new URLSearchParams() }));
 
 // PREVIEW_DIR=… writes each state as a static page for screenshots.
 const preview = (name: string) => process.env.PREVIEW_DIR && writeFileSync(`${process.env.PREVIEW_DIR}/${name}.html`, `<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..600&display=swap" rel="stylesheet"><link rel="stylesheet" href="loop.css"><style>.lp{--font-archivo:Archivo}</style></head><body><div class="lp"><aside class="lp-rail"></aside><main class="lp-main"><div class="lp-wrap">${document.body.firstElementChild!.innerHTML}</div></main></div></body></html>`);
@@ -80,8 +80,8 @@ it('stops the crumbs at the highest group a person can open and never names the 
     expect(document.body.textContent).not.toMatch(/EMBA 2027|Team 2/);
     cleanup();
   }
-  render(await withPortalTestSession(f.inner, () => ResourcesPage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
-  expect(document.body.textContent).not.toMatch(/EMBA 2027/);
+  // The old Resources address only points at the tab of the team page, which is the page checked above.
+  await expect(withPortalTestSession(f.inner, () => ResourcesPage({ params: Promise.resolve({ namespace: 'emba-2027' }) }))).rejects.toMatchObject({ digest: expect.stringContaining('/groups/emba-2027/team?tab=resources') });
 });
 
 it('lists the groups inside a group, and offers to start one only to a person who may', async () => {
@@ -195,6 +195,6 @@ it('draws the rail as the tree a person can open', async () => {
   expect(document.querySelector('.lp-switch-name')).toHaveTextContent('NBAE 6830');
   expect(screen.getByRole('link', { name: 'Record' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/team');
   expect(screen.getByRole('link', { name: 'Record' })).toHaveAttribute('aria-current', 'page');
-  expect(screen.getByRole('link', { name: 'Resources' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/resources');
+  expect(screen.getByRole('link', { name: 'Resources' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/team?tab=resources');
   expect(screen.getByRole('link', { name: /Team 1/ })).toHaveAttribute('href', '/groups/emba-2027/in/team-1/team');
 });

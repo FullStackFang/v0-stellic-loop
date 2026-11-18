@@ -1,0 +1,100 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { db } from '@/lib/db';
+import { readFeeds } from '@/lib/campus/import';
+import { findCampus, type Campus } from '@/lib/campus/listings';
+import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
+import { savePlace } from '@/lib/campus/places';
+import { saveReward, setRewardHidden } from '@/lib/campus/rewards';
+import { campusViewer } from '@/lib/campus/session';
+import { zoned } from '@/lib/campus/time';
+
+// Everything the admin does on /c/admin. Each action asks afresh whether the caller is the admin and refuses anyone
+// else, so calling one without going through the page gets nothing. Each ends back on the page, saying what happened.
+
+const text = (data: FormData, key: string) => String(data.get(key) ?? '').trim();
+const list = (typed: string) => typed.split(/[,\n]+/).map(part => part.trim()).filter(Boolean);
+const uuid = (value: string) => /^[0-9a-f-]{36}$/i.test(value) ? value : '';
+const number = (typed: string) => typed === '' ? NaN : Number(typed);
+
+/** Runs one admin step on the campus the form names, then returns to the page with a line about it. */
+async function admin(data: FormData, run: (campus: Campus) => Promise<string>): Promise<never> {
+  const viewer = await campusViewer();
+  if (!viewer?.admin) redirect('/');
+  const slug = text(data, 'campus'), campus = await findCampus(db(), slug);
+  let said: string;
+  try {
+    if (!campus) throw new Error('No such campus');
+    said = await run(campus);
+  } catch (error) {
+    // The admin is shown what went wrong as it is: these are their own typing mistakes and the database's refusals.
+    said = `Not saved. ${error instanceof Error ? error.message.slice(0, 240) : 'Try again.'}`;
+  }
+  revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
+  redirect(`/c/admin?campus=${encodeURIComponent(campus?.slug ?? slug)}&said=${encodeURIComponent(said)}`);
+}
+
+export async function addCampusAction(data: FormData): Promise<void> {
+  const viewer = await campusViewer();
+  if (!viewer?.admin) redirect('/');
+  const slug = text(data, 'slug').toLowerCase();
+  let said = `Added ${text(data, 'name')}.`, to = slug;
+  try {
+    await addCampus(db(), { slug, name: text(data, 'name'), tz: text(data, 'tz'), domains: list(text(data, 'domains')), listSource: text(data, 'listSource') });
+  } catch (error) { said = `Not saved. ${error instanceof Error ? error.message.slice(0, 240) : 'Try again.'}`; to = text(data, 'campus'); }
+  revalidatePath('/c', 'layout');
+  redirect(`/c/admin?campus=${encodeURIComponent(to)}&said=${encodeURIComponent(said)}`);
+}
+export async function setCampusAction(data: FormData): Promise<void> {
+  await admin(data, async campus => { await setCampus(db(), campus.id, { domains: list(text(data, 'domains')), listSource: text(data, 'listSource') }); return 'Saved.'; });
+}
+
+export async function addFeedAction(data: FormData): Promise<void> {
+  await admin(data, async campus => { await addFeed(db(), { campusId: campus.id, source: text(data, 'source'), url: text(data, 'url') }); return 'Feed added. Press "Read now" to bring its events in.'; });
+}
+export async function setFeedOnAction(data: FormData): Promise<void> {
+  await admin(data, async () => { const on = text(data, 'on') === 'true'; await setFeedOn(db(), uuid(text(data, 'feed')), on); return on ? 'Feed on.' : 'Feed off. Its events stay as they are.'; });
+}
+export async function readFeedAction(data: FormData): Promise<void> {
+  await admin(data, async () => { const { failed } = await readFeeds(db(), { feedId: uuid(text(data, 'feed')) }); return failed ? 'The feed could not be read. Its events are as they were.' : 'Feed read.'; });
+}
+
+export async function savePlaceAction(data: FormData): Promise<void> {
+  await admin(data, async campus => {
+    await savePlace(db(), { campusId: campus.id, id: uuid(text(data, 'place')) || undefined, name: text(data, 'name'), otherNames: list(text(data, 'otherNames')), lat: number(text(data, 'lat')), lon: number(text(data, 'lon')) });
+    return 'Place saved. Events were matched again.';
+  });
+}
+
+export async function addEventAction(data: FormData): Promise<void> {
+  await admin(data, async campus => {
+    const title = text(data, 'title'), ends = text(data, 'ends');
+    if (!title) throw new Error('Give the event a title');
+    await addHandListing(db(), { campusId: campus.id, title, startsAt: zoned(campus.tz, text(data, 'starts')).toISOString(), endsAt: ends ? zoned(campus.tz, ends).toISOString() : null, place: text(data, 'place'), host: text(data, 'host'), about: text(data, 'about') });
+    return `Added "${title}".`;
+  });
+}
+export async function setWordsAction(data: FormData): Promise<void> {
+  await admin(data, async () => { const words = await setWords(db(), uuid(text(data, 'listing')), text(data, 'words')); return `Words saved: ${words.join(' ') || 'none'}.`; });
+}
+export async function setHiddenAction(data: FormData): Promise<void> {
+  await admin(data, async () => { const hidden = text(data, 'hidden') === 'true'; await setHidden(db(), uuid(text(data, 'listing')), hidden); return hidden ? 'Hidden. People who were in keep their outings.' : 'Showing again.'; });
+}
+
+export async function saveRewardAction(data: FormData): Promise<void> {
+  await admin(data, async campus => {
+    const kind = text(data, 'kind') === 'building' ? 'building' : 'group', on = text(data, 'on');
+    await saveReward(db(), {
+      campusId: campus.id, id: uuid(text(data, 'reward')) || undefined, giver: text(data, 'giver'), kind, texts: [text(data, 'member'), text(data, 'regular'), text(data, 'insider')],
+      // A group reward rides on one event (picked from the list) or on every event of a host (typed).
+      listingId: kind === 'group' && uuid(on) ? on : null, hostName: kind === 'group' && !uuid(on) ? text(data, 'hostName') : null, headCount: number(text(data, 'headCount')),
+      rule: text(data, 'rule'), ruleCount: number(text(data, 'ruleCount')), ruleWord: text(data, 'ruleWord'),
+    });
+    return 'Reward saved.';
+  });
+}
+export async function setRewardHiddenAction(data: FormData): Promise<void> {
+  await admin(data, async () => { const hidden = text(data, 'hidden') === 'true'; await setRewardHidden(db(), uuid(text(data, 'reward')), hidden); return hidden ? 'Reward hidden. What was already used stays used.' : 'Reward showing again.'; });
+}

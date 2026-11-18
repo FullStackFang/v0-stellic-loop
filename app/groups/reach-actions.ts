@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
+import { closedToCaller, getPortalPrincipal } from '@/lib/emba/portal-session';
 import { setReachChoice, stopFromLink } from '@/lib/emba/reach';
 import { answerFromLink } from '@/lib/emba/reach-link';
 import type { PortalResult } from '@/components/emba/portal-types';
@@ -37,6 +37,7 @@ const refused = { gone: 'This link no longer works.', busy: 'Not saved. Other ch
 /** The personal answer link's form. It needs no sign-in and opens none: the link names the member and the ask. */
 export async function answerFromPersonalLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   try {
+    if (await closedToCaller()) return { status: 'error', message: refused.gone };
     const result = await answerFromLink(db(), value(data, 'token'), { choices: data.getAll('choice').map(String), text: data.has('text') ? value(data, 'text') : undefined });
     if (!result.saved) return { status: 'error', message: refused[result.reason] };
     revalidatePath('/groups/reach/answer/[token]', 'page');

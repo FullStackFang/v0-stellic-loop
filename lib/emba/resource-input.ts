@@ -1,4 +1,5 @@
 import 'server-only';
+import mammoth from 'mammoth';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 const MAX_PDF_BYTES = 3 * 1024 * 1024;
@@ -57,15 +58,24 @@ async function extractPdf(bytes: Uint8Array): Promise<string> {
   }
 }
 
+/** The words of a Word document, read in memory. Nothing in it is run and the file is not kept. */
+async function extractDocx(bytes: Uint8Array): Promise<string> {
+  // A .docx is a zip that starts with PK.
+  if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new ResourceInputError('This is not a readable Word document.');
+  try { return checkedText((await mammoth.extractRawText({ buffer: Buffer.from(bytes) })).value); }
+  catch (error) { if (error instanceof ResourceInputError) throw error; throw new ResourceInputError('This Word document is damaged or has no readable text.'); }
+}
+
 export async function parseResourceFile(file: File): Promise<{ title: string; mediaType: 'text/plain' | 'text/markdown' | 'application/pdf'; body: string }> {
   const title = file.name.trim();
   if (!title || title.length > 200 || /[\x00-\x1f]/.test(title)) throw new ResourceInputError('Choose a file with a shorter, plain filename.');
   const extension = title.split('.').at(-1)?.toLowerCase();
-  if (!['txt', 'md', 'pdf'].includes(extension ?? '')) throw new ResourceInputError('Upload a .txt, .md, or text-based .pdf file.');
+  if (!['txt', 'md', 'pdf', 'docx'].includes(extension ?? '')) throw new ResourceInputError('Upload a .txt, .md, .docx, or text-based .pdf file.');
   if (file.size === 0) throw new ResourceInputError('This file is empty.');
-  if (file.size > (extension === 'pdf' ? MAX_PDF_BYTES : MAX_TEXT_BYTES)) throw new ResourceInputError(extension === 'pdf' ? 'PDF files must be 3 MiB or smaller.' : 'Text files must be 256 KiB or smaller.');
+  if (file.size > (extension === 'pdf' || extension === 'docx' ? MAX_PDF_BYTES : MAX_TEXT_BYTES)) throw new ResourceInputError(extension === 'pdf' || extension === 'docx' ? 'PDF and Word files must be 3 MiB or smaller.' : 'Text files must be 256 KiB or smaller.');
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (extension === 'pdf') return { title, mediaType: 'application/pdf', body: await extractPdf(bytes) };
+  if (extension === 'docx') return { title, mediaType: 'text/plain', body: await extractDocx(bytes) };
   let body: string;
   try { body = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
   catch { throw new ResourceInputError('Text files must use UTF-8 encoding.'); }

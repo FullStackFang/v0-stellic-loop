@@ -1,0 +1,110 @@
+// @vitest-environment node
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest, type NextFetchEvent } from 'next/server';
+import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server.js';
+import { makePerson, openTestDb, type TestDb } from '@/test/db';
+import type { Principal } from '@/lib/emba/access';
+import { closedToCaller, getPortalPrincipal, getSignedInPrincipal, withPortalTestSession } from '@/lib/emba/portal-session';
+import { listCampuses } from '@/lib/campus/listings';
+import { campusOf } from '@/lib/campus/people';
+import { frontIsCampus, schoolOfEmail } from '@/lib/campus/schools';
+import { campusViewer, mayUse, openableGroups } from '@/lib/campus/session';
+import { config, leadsIntoGroups, proxy } from '@/proxy';
+
+// Specs: openspec/changes/loop-campus-rewards/specs/admin-gate and campus-sign-in.
+let t: TestDb;
+beforeAll(async () => { t = await openTestDb(); });
+afterAll(async () => { await t?.close(); });
+beforeEach(async () => { await t.reset(); });
+afterEach(() => vi.unstubAllEnvs());
+
+const who = (over: Partial<Principal> = {}) => ({ personId: 'p1', issuer: 'https://issuer.test', subject: 'user_student', verifiedEmail: 'sam@cornell.edu', ...over }) as Principal;
+const GROUPS = ['/groups', '/groups/team-1', '/groups/team-1/in/sub/team', '/groups/archive', '/groups/connections', '/groups/new', '/groups/reach', '/groups/reach/answer/abc', '/groups/metrics/export', '/emba', '/e/sometoken', '/a/sometoken'];
+const OPEN = ['/', '/c/cornell', '/c/admin', '/o/sometoken', '/sign-in', '/groups/sign-in', '/groups/sign-in/sso-callback', '/emba/sign-in', '/groups/reach/stop/abc', '/api/emba/documents/1'];
+
+describe('which pages lead into groups', () => {
+  it.each(GROUPS)('%s does', path => expect(leadsIntoGroups(path)).toBe(true));
+  it.each([...OPEN, '/privacy', '/terms', '/demo/quorum', '/api/mcp/team', '/api/cron/reach', '/api/reach/stop/abc', '/.well-known/oauth-protected-resource', '/groupsomething', '/each'])('%s does not', path => expect(leadsIntoGroups(path)).toBe(false));
+});
+
+describe('the proxy', () => {
+  const visit = (path: string) => proxy(new NextRequest(`https://loop.test${path}`), { waitUntil() {} } as unknown as NextFetchEvent) as Response;
+  it.each(['/', '/c/cornell', '/c/cornell/post', '/o/abc', '/sign-in', '/sign-in/sso-callback', '/groups', '/groups/x/team', '/emba', '/e/t', '/a/t'])('runs for %s', url => {
+    expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(true);
+  });
+  it.each(['/privacy', '/terms', '/demo/quorum', '/api/mcp/team', '/api/cron/campus-feeds', '/api/reach/stop/abc'])('never runs for %s, so it is never gated', url => {
+    expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(false);
+  });
+  it('with the flag unset lets every page through as today', () => {
+    for (const path of [...GROUPS, ...OPEN]) { const response = visit(path); expect(response.headers.get('location')).toBeNull(); expect(response.status).toBe(200); }
+  });
+  it('with the flag on and nobody who could be the admin, sends every groups page to the front door', () => {
+    vi.stubEnv('LOOP_FRONT', 'campus');
+    for (const path of GROUPS) { const response = visit(path); expect(response.status).toBe(307); expect(response.headers.get('location')).toBe('https://loop.test/'); }
+  });
+  it('with the flag on keeps the campus, sign-in and the stop link open', () => {
+    vi.stubEnv('LOOP_FRONT', 'campus');
+    for (const path of OPEN) expect(visit(path).headers.get('location')).toBeNull();
+  });
+});
+
+describe('the groups site asks who is signed in', () => {
+  it('with the flag unset, a member is who they are', async () => {
+    expect(frontIsCampus()).toBe(false);
+    expect(await withPortalTestSession(who(), () => getPortalPrincipal())).toMatchObject({ subject: 'user_student' });
+    expect(await withPortalTestSession(who(), () => closedToCaller())).toBe(false);
+  });
+  it('with the flag on, anyone but the admin is no one to it, and still someone to the campus screen', async () => {
+    vi.stubEnv('LOOP_FRONT', 'campus'); vi.stubEnv('LOOP_ADMIN', 'founder@cornell.edu');
+    expect(await withPortalTestSession(who(), () => getPortalPrincipal())).toBeNull();
+    expect(await withPortalTestSession(who(), () => getSignedInPrincipal())).toMatchObject({ subject: 'user_student' });
+    expect(await withPortalTestSession(who(), () => closedToCaller())).toBe(true);
+    expect(await closedToCaller()).toBe(true);   // signed out
+    const founder = who({ subject: 'user_founder', verifiedEmail: 'founder@cornell.edu' });
+    expect(await withPortalTestSession(founder, () => getPortalPrincipal())).toMatchObject({ subject: 'user_founder' });
+    expect(await withPortalTestSession(founder, () => closedToCaller())).toBe(false);
+  });
+  it('with the flag on and LOOP_ADMIN empty, nobody opens it', async () => {
+    vi.stubEnv('LOOP_FRONT', 'campus'); vi.stubEnv('LOOP_ADMIN', '');
+    expect(await withPortalTestSession(who({ subject: 'user_founder', verifiedEmail: 'founder@cornell.edu' }), () => getPortalPrincipal())).toBeNull();
+  });
+});
+
+describe('a person belongs to the school of their email', () => {
+  it('counts subdomains, and an address at no school has none', async () => {
+    const schools = await listCampuses(t.db), school = (email: string | null) => schoolOfEmail(schools, email)?.slug ?? null;
+    expect(school('netid@cornell.edu')).toBe('cornell');
+    expect(school('Name@Stern.NYU.edu')).toBe('nyu');
+    expect(school('you@baruch.cuny.edu')).toBe('cuny');
+    expect(school('uni@alumni.columbia.edu')).toBe('columbia');
+    for (const none of ['someone@gmail.com', 'x@notcornell.edu', 'x@cornell.edu.evil.com', 'cornell.edu', '', null]) expect(school(none)).toBeNull();
+  });
+  it('places a person once, at the school of their verified email, whatever they pick later', async () => {
+    const { id } = await makePerson(t.db, 'Noor');
+    expect((await campusOf(t.db, { personId: id, verifiedEmail: 'noor@stern.nyu.edu' }))?.slug).toBe('nyu');
+    // Placed once: a different address on a later visit does not move them.
+    expect((await campusOf(t.db, { personId: id, verifiedEmail: 'noor@cornell.edu' }))?.slug).toBe('nyu');
+    expect((await t.db.query('select 1 from campus_person where person_id=$1', [id])).rows).toHaveLength(1);
+  });
+  it('does not place a person whose email is at no school; the admin still opens any campus', async () => {
+    const { id } = await makePerson(t.db, 'Omar'), omar = who({ personId: id, subject: 'user_omar', verifiedEmail: 'omar@gmail.com' });
+    const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
+    const viewer = (await withPortalTestSession(omar, () => campusViewer()))!;
+    expect(viewer).toMatchObject({ admin: false, campus: null });
+    expect(mayUse(viewer, cornell)).toBe(false);
+    expect((await t.db.query('select 1 from campus_person')).rows).toHaveLength(0);
+    vi.stubEnv('LOOP_ADMIN', 'user_omar');
+    const admin = (await withPortalTestSession(omar, () => campusViewer()))!;
+    expect(admin.admin).toBe(true);
+    expect(mayUse(admin, cornell)).toBe(true);
+  });
+  it('shows group names in the top bar only to someone who can open them', async () => {
+    const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });
+    vi.stubEnv('LOOP_FRONT', 'campus');
+    const viewer = (await withPortalTestSession(sam, () => campusViewer()))!;
+    expect(await openableGroups(viewer)).toEqual([]);
+  });
+  it('signed out, there is no viewer', async () => {
+    expect(await campusViewer()).toBeNull();
+  });
+});

@@ -97,7 +97,7 @@ it('sorts what is put in the one box into lanes, and lets each thing be taken ou
   fireEvent.change(input, { target: { files: [new File(['Week 1'], 'reading.txt'), new File(['x'], 'photo.png'), new File([new Uint8Array(4 * 1024 * 1024)], 'huge.pdf')] } });
   expect(lane('Files').getAllByRole('listitem')).toHaveLength(1);
   expect(screen.getByRole('status')).toHaveTextContent('photo.png: Loop reads .txt, .md and text PDFs.');
-  expect(screen.getByRole('status')).toHaveTextContent('huge.pdf is too much to send with this form. Add it on the group’s Resources page'.replace('’', "'"));
+  expect(screen.getByRole('status')).toHaveTextContent('huge.pdf is too much to send with this form. Add it on the group’s Resources tab'.replace('’', "'"));
   preview('start-lanes');
   fireEvent.click(screen.getByRole('button', { name: 'Remove priya@example.edu' }));
   expect(lane('People').queryByRole('listitem')).toBeNull();

@@ -1,8 +1,11 @@
 import 'server-only';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { cache } from 'react';
+import { redirect } from 'next/navigation';
 import type { Principal } from './access';
 import {db} from '../db';
+import {isAdmin} from '../campus/admin';
+import {frontIsCampus} from '../campus/schools';
 import {clerkPortalConfigured,getClerkPortalPrincipal} from './clerk-identity';
 import {ROOT_SLUG,placeGroup,type GroupRoute} from './group-path';
 import {listGroupTree} from './group-tree';
@@ -13,9 +16,19 @@ const fixture = new AsyncLocalStorage<Principal>();
 // Never fall back to legacy cookies, request identities, or assistant tokens.
 // One page view asks who is signed in from its layout and its page: within a render the session is checked once.
 // An action is not a render, so every action checks afresh.
-export const getPortalPrincipal = cache(async (): Promise<Principal | null> => {
+export const getSignedInPrincipal = cache(async (): Promise<Principal | null> => {
   if(process.env.NODE_ENV==='test') return fixture.getStore()??null;
   return clerkPortalConfigured()?getClerkPortalPrincipal(db()):null;
+});
+
+/**
+ * Who is signed in, for the groups site: its pages, its layout and every one of its actions ask here. With
+ * LOOP_FRONT=campus the groups site is open to the admin alone, so anyone else is no one to it, whatever page or
+ * action they reached and however they reached it. The campus screen asks getSignedInPrincipal instead.
+ */
+export const getPortalPrincipal = cache(async (): Promise<Principal | null> => {
+  const principal = await getSignedInPrincipal();
+  return principal && frontIsCampus() && !isAdmin(principal) ? null : principal;
 });
 
 /** The signed-in person's groups, read once per page view however many of its parts (the side menu, the page) ask. */
@@ -45,3 +58,14 @@ export function withPortalTestSession<T>(principal: Principal, run: () => T): T 
   if (process.env.NODE_ENV !== 'test') throw new Error('Test sessions are disabled');
   return fixture.run(principal, run);
 }
+
+/**
+ * For a groups page that shows something before sign-in (a share link, an emailed answer link). With LOOP_FRONT=campus
+ * those are closed with the rest of the groups site: anyone but the admin is sent to the front door. The proxy does
+ * this first; this is the same check where the page is rendered.
+ */
+export async function closedUnlessAdmin(): Promise<void> {
+  if (await closedToCaller()) redirect('/');
+}
+/** The same question for an action that needs no sign-in (a link's own form): is the groups site closed to whoever is calling? */
+export const closedToCaller = async (): Promise<boolean> => frontIsCampus() && !await getPortalPrincipal();

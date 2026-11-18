@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { db } from '@/lib/db';
+import { closedUnlessAdmin } from '@/lib/emba/portal-session';
 import { personalAsk } from '@/lib/emba/reach-link';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { answerFromPersonalLink } from '../../../reach-actions';
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: 'Answer · Loop', robots: { index: fa
 // changes nothing; the answer is saved only when the form is sent. The link
 // signs nobody in: it shows this one ask and takes this one answer.
 export default async function PersonalAnswerPage({ params }: { params: Promise<{ token: string }> }) {
+  await closedUnlessAdmin();
   const { token } = await params;
   const ask = await personalAsk(db(), token);
   if (!ask) return <section className="lt-editor"><h1>This link no longer works</h1><p>Sign in to see what your groups are asking.</p></section>;

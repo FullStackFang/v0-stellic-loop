@@ -429,8 +429,14 @@
     "unanswered": 1
    },
    "resources": {
-    "items": [],
-    "more": 0
+    "links": {
+     "items": [],
+     "more": 0
+    },
+    "texts": {
+     "items": [],
+     "more": 0
+    }
    },
    "counts": {
     "openClaims": 3,
@@ -2940,8 +2946,14 @@
     "unanswered": 1
    },
    "resources": {
-    "items": [],
-    "more": 0
+    "links": {
+     "items": [],
+     "more": 0
+    },
+    "texts": {
+     "items": [],
+     "more": 0
+    }
    },
    "counts": {
     "openClaims": 3,
@@ -5397,8 +5409,14 @@
     "unanswered": 0
    },
    "resources": {
-    "items": [],
-    "more": 0
+    "links": {
+     "items": [],
+     "more": 0
+    },
+    "texts": {
+     "items": [],
+     "more": 0
+    }
    },
    "counts": {
     "openClaims": 3,
@@ -7744,8 +7762,14 @@
     "unanswered": 1
    },
    "resources": {
-    "items": [],
-    "more": 0
+    "links": {
+     "items": [],
+     "more": 0
+    },
+    "texts": {
+     "items": [],
+     "more": 0
+    }
    },
    "counts": {
     "openClaims": 3,

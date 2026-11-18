@@ -6,7 +6,7 @@ import { accessRequestPreview } from '@/lib/emba/access-requests';
 import { startGroup, type StartInput } from '@/lib/emba/group-start';
 import { listInvitations } from '@/lib/emba/invitations';
 import { listDocuments } from '@/lib/emba/knowledge';
-import { teamState } from '@/lib/emba/team-read';
+import { teamBrief } from '@/lib/emba/team-read';
 
 let t: TestDb;
 beforeAll(async () => { t = await openTestDb(); });
@@ -48,9 +48,9 @@ it('applies every lane, and reports what could not be added without undoing the 
   const group = scope(report.group);
   expect((await listDocuments(t.db, owner, group)).map(doc => doc.title)).toEqual(['reading-list.txt']);
   expect((await listInvitations(t.db, owner, group.orgId, group.loopId)).map(invite => [invite.recipient_email, invite.role])).toEqual([['priya@example.edu', 'member']]);
-  const state = JSON.stringify(await teamState(t.db, owner, group));
+  const brief = await teamBrief(t.db, owner, group);
   expect((await t.db.query("select v.body from emba_team_record r join emba_team_record_version v on v.record_id=r.id where r.kind='announcement'")).rows).toEqual([{ body: 'Kickoff is Thursday at 6. Bring a laptop.' }]);
-  expect(state).toContain('https://example.edu/syllabus');
+  expect(brief.resources.links.items.map(link => link.url)).toEqual(['https://example.edu/syllabus']);
 });
 
 it('starts a group inside a group only where the person may, and makes nothing when the group cannot be made', async () => {

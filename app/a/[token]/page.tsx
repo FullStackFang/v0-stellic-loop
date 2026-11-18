@@ -7,7 +7,7 @@ import { EmbaError } from '@/lib/emba/errors';
 import { groupPath } from '@/lib/emba/group-path';
 import { canAccessLoop } from '@/lib/emba/access';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
+import { closedToCaller, closedUnlessAdmin, getPortalPrincipal } from '@/lib/emba/portal-session';
 import { askReminder, askShare, askShareMessage, type AskOutside, type AskResult } from '@/lib/emba/team-asks';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { ReachAtJoin } from '@/components/emba/reach-control';
@@ -24,7 +24,7 @@ const whatsapp = (text: string) => `https://wa.me/?text=${encodeURIComponent(tex
 
 // The preview is built from the outside view alone: a null principal can never be shown the member view.
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
-  const share = await load(null, (await params).token);
+  const share = await closedToCaller() ? null : await load(null, (await params).token);
   if (!share) return { robots };
   const { outside } = share, title = `${outside.question} · ${outside.group}`, description = closing(outside);
   return { title, description, robots, openGraph: { title, description }, twitter: { card: 'summary', title, description } };
@@ -42,6 +42,7 @@ function AnswerForm({ ask, scope }: { ask: AskResult; scope: { orgId: string; lo
 }
 
 export default async function SharedAskPage({ params }: { params: Promise<{ token: string }> }) {
+  await closedUnlessAdmin();
   const { token } = await params;
   const principal = await getPortalPrincipal();
   const share = await load(principal, token);

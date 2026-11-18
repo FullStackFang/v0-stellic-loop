@@ -1,0 +1,111 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:CAMPUSGROUPS
+X-WR-CALNAME:Cornell University
+X-PUBLISHED-TTL:PT1H
+BEGIN:VEVENT
+DTSTAMP:20261117T042230Z
+LAST-MODIFIED:20260825T175942Z
+CREATED:20260825T175937Z
+SEQUENCE:1
+ORGANIZER;CN="CEMS Club USA":mailto:noreply@cornell.campusgroups.com
+CONTACT:https://cornell.campusgroups.com/CCUSA/rsvp_boot?id=2309570#event_host
+CATEGORIES;X-CG-CATEGORY=club_acronym:CCUSA
+CATEGORIES;X-CG-CATEGORY=event_type:Private Meeting
+DTSTART:20261118T003000Z
+DTEND:20261118T013000Z
+UID:e4a63b8698b91d8b01ceb0434456d3558252026_1:59:37_PM@campusgroups.com
+SUMMARY;ENCODING=QUOTED-PRINTABLE:CEMS Board Meeting
+LOCATION: Sign in to download the location
+URL:https://cornell.campusgroups.com/rsvp?id=2309570
+DESCRIPTION:Weekly CEMS Club USA Board Meeting\n---\nEvent Details: https://cornell.campusgroups.com/rsvp?id=2309570
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20261117T042230Z
+LAST-MODIFIED:20261016T160251Z
+CREATED:20261016T160021Z
+SEQUENCE:8
+ORGANIZER;CN="Cornell Department of Music":mailto:noreply@cornell.campusgroups.com
+CONTACT:https://cornell.campusgroups.com/musicatcornell/rsvp_boot?id=2315154#event_host
+CATEGORIES;X-CG-CATEGORY=club_acronym:MUSICATCORNELL
+CATEGORIES;X-CG-CATEGORY=event_type:Open Event
+CATEGORIES;X-CG-CATEGORY=event_tags:Free,Fun,Music,Performance
+DTSTART:20261118T003000Z
+DTEND:20261118T013000Z
+UID:5ead2768fd04b59d86891943710fac5810162026_12:00:21_PM@campusgroups.com
+SUMMARY;ENCODING=QUOTED-PRINTABLE:Distinguished Guest Artist Series: Renée Anne Louprette (CU Music)
+LOCATION: Sign in to download the location
+URL:https://cornell.campusgroups.com/rsvp?id=2315154
+DESCRIPTION:The virtuoso organist Renée Anne Louprette displays the versatility of the Cornell Baroque Organ with music from the 17th to 21st centuries by Buxtehude, Weckmann, Frescobaldi, Ligeti, and Régis Campo.\n\nphoto credit: Geoffrey Silver / Acis Productions\n---\nEvent Details: https://cornell.campusgroups.com/rsvp?id=2315154
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20261117T042230Z
+LAST-MODIFIED:20261113T200853Z
+CREATED:20261113T200339Z
+SEQUENCE:2
+ORGANIZER;CN="Cascadilla/Sheldon Court":mailto:noreply@cornell.campusgroups.com
+CONTACT:https://cornell.campusgroups.com/CascSheldon/rsvp_boot?id=2316950#event_host
+CATEGORIES;X-CG-CATEGORY=club_acronym:CASCSHELDON
+CATEGORIES;X-CG-CATEGORY=event_type:Open Event
+CATEGORIES;X-CG-CATEGORY=event_tags:Comedy,Dialogue/ Discussion,Diversity,Food/Drink
+DTSTART:20261118T003000Z
+DTEND:20261118T023000Z
+UID:6a30f6e79dcf39d7acd13b3a4e119c4011132026_3:03:39_PM@campusgroups.com
+SUMMARY;ENCODING=QUOTED-PRINTABLE:Trivia and Treats 
+LOCATION:Cascadilla Third Floor Lounge, 115 Cascadilla Place, Ithaca, NY 14853, United States
+URL:https://cornell.campusgroups.com/rsvp?id=2316950
+DESCRIPTION:Come bond with other residents in your hall and learn new facts about Cornell University with your RAs. Free snacks will be provided, including as an opportunity to win a prize for those who answer the most trivia questions. \n---\nEvent Details: https://cornell.campusgroups.com/rsvp?id=2316950
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20261117T042230Z
+LAST-MODIFIED:20261116T015136Z
+CREATED:20261116T015046Z
+SEQUENCE:1
+ORGANIZER;CN="Big Red Marching Band":mailto:noreply@cornell.campusgroups.com
+CONTACT:https://cornell.campusgroups.com/BRMB/rsvp_boot?id=2317048#event_host
+CATEGORIES;X-CG-CATEGORY=club_acronym:BRMB
+CATEGORIES;X-CG-CATEGORY=event_type:Private Meeting
+DTSTART:20261118T010000Z
+DTEND:20261118T020000Z
+UID:5c111ebdb773368b469e94157d1ae45a11152026_8:50:46_PM@campusgroups.com
+SUMMARY;ENCODING=QUOTED-PRINTABLE:Bandstaph Meeting
+LOCATION: Sign in to download the location
+URL:https://cornell.campusgroups.com/rsvp?id=2317048
+DESCRIPTION:Weekly leadership meeting\n---\nEvent Details: https://cornell.campusgroups.com/rsvp?id=2317048
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20261117T042254Z
+LAST-MODIFIED:20260912T001313Z
+CREATED:20260912T001249Z
+SEQUENCE:1
+ORGANIZER;CN="Sikh Students Association":mailto:noreply@cornell.campusgroups.com
+CONTACT:https://cornell.campusgroups.com/SikhAssoc/rsvp_boot?id=2311673#event_host
+CATEGORIES;X-CG-CATEGORY=club_acronym:SIKHASSOC
+CATEGORIES;X-CG-CATEGORY=event_type:Open Meeting
+DTSTART:20270101T220000Z
+DTEND:20270101T233000Z
+UID:8c30d9b08334455c41451a1b9d5929c89112026_8:12:49_PM@campusgroups.com
+SUMMARY;ENCODING=QUOTED-PRINTABLE:Sikh Students Association G-Body
+LOCATION: Sign in to download the location
+URL:https://cornell.campusgroups.com/rsvp?id=2311673
+DESCRIPTION:Weekly G-Body for the Sikh Students Association\n---\nEvent Details: https://cornell.campusgroups.com/rsvp?id=2311673
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20261117T042010Z
+LAST-MODIFIED:20260810T145701Z
+CREATED:20260810T145656Z
+SEQUENCE:1
+ORGANIZER;CN="Cornell Physical Education and Recreation":mailto:noreply@cornell.campusgroups.com
+CONTACT:https://cornell.campusgroups.com/CFC/rsvp_boot?id=2308243#event_host
+CATEGORIES;X-CG-CATEGORY=club_acronym:CFC
+CATEGORIES;X-CG-CATEGORY=event_type:Open Event
+CATEGORIES;X-CG-CATEGORY=event_tags:1 - Weeks of Welcome,Fitness,Health and Wellness,Self-Care,Social,Student Life
+DTSTART:20260819T100000Z
+DTEND:20260820T030000Z
+UID:a30b4f6a9ca6210bf86ff6d982098a5b8102026_10:56:56_AM@campusgroups.com
+SUMMARY;ENCODING=QUOTED-PRINTABLE:Free Access - Cornell Fitness Centers
+LOCATION: Sign in to download the location
+URL:https://cornell.campusgroups.com/rsvp?id=2308243
+DESCRIPTION:Preview all 5 Cornell Fitness locations and select Group Fitness Classes for free August 17-23, 2026.  Must have valid Cornel ID or FUSIONGo app for fitness center and class access.  \n---\nEvent Details: https://cornell.campusgroups.com/rsvp?id=2308243
+END:VEVENT
+END:VCALENDAR

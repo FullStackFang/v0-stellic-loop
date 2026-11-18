@@ -91,6 +91,14 @@ async function purge(q:Q,personId:string) {
  for(const table of ['emba_feedback','emba_feedback_operation','emba_memory','emba_document_operation','emba_group_memory_operation','emba_team_operation','emba_team_write','emba_event_interest','emba_event_decline','emba_waiting_shown','emba_reach_choice','emba_reach_message','emba_travel','emba_calendar_feed','emba_whatsapp_optin','emba_whatsapp_number','emba_connector_call','emba_connector_session','emba_connect_view','emba_commitment','emba_activity_operation','emba_confirmation','emba_inbox','emba_inbox_cursor','emba_lease','emba_member_handle','emba_membership','emba_identity']) {
   await q.query(`delete from ${table} where person_id=$1`,[personId]);
  }
+ // The campus screen: where they were placed, what they were in for and checked in on, their invites. Plans they posted that are still to come are cancelled.
+ await q.query("update campus_listing set cancelled_at=coalesce(cancelled_at,clock_timestamp()) where posted_by=$1 and origin='member' and starts_at>clock_timestamp()",[personId]);
+ await q.query('update campus_listing set posted_by=null where posted_by=$1',[personId]);
+ await q.query('update campus_outing set started_by=null where started_by=$1',[personId]);
+ await q.query('update campus_reward_use set person_id=null where person_id=$1 and outing_id is not null',[personId]);
+ await q.query('delete from campus_reward_use where person_id=$1',[personId]);
+ await q.query('delete from campus_invite where inviter_id=$1 or invitee_id=$1',[personId]);
+ for(const table of ['campus_outing_member','campus_person']) await q.query(`delete from ${table} where person_id=$1`,[personId]);
  // No stable participant pseudonym is retained in plan history or audit output.
  await q.query('update emba_audit set person_id=null,client_id=null,resource_id=null,lease_id=null where person_id=$1',[personId]);
 }

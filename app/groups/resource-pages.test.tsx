@@ -7,6 +7,7 @@ import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { createWorkspace } from '@/lib/emba/workspaces';
 import { processDocument, uploadDocument } from '@/lib/emba/knowledge';
 import ResourcesPage from './[namespace]/resources/page';
+import TeamPage from './[namespace]/team/page';
 import SourcePage from './[namespace]/resources/[id]/page';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -22,7 +23,7 @@ async function person(email: string) {
   return (await authenticate(t.db, 'test', async () => ({ issuer: 'https://issuer.test', subject: row.id, expiresAt: Date.parse('2099-01-01'), verifiedEmail: email })))!;
 }
 
-it('shows upload controls only to managers and hides a source after membership removal', async () => {
+it('lists resources on the team page tab for every member and hides a source after membership removal', async () => {
   const owner = await person('owner@example.test');
   vi.stubEnv('LOOP_PILOT_OWNER_SUBJECTS', owner.subject);
   const member = await person('member@example.test');
@@ -32,15 +33,16 @@ it('shows upload controls only to managers and hides a source after membership r
   const doc = await uploadDocument(t.db, owner, { orgId: group.orgId, loopId: group.loopId, operationId: randomUUID(), title: 'Course notes', mediaType: 'text/plain', body: 'Private course source.' });
   await processDocument(t.db, owner, doc.id, 1);
   const params = Promise.resolve({ namespace: 'study-team' });
-  const ownerPage = await withPortalTestSession(owner, () => ResourcesPage({ params }));
-  const ownerView = render(ownerPage);
-  expect(screen.getByRole('heading', { name: 'Add a resource' })).toBeInTheDocument();
-  ownerView.unmount();
-  const memberPage = await withPortalTestSession(member, () => ResourcesPage({ params }));
-  const memberView = render(memberPage);
-  expect(screen.getByText('Course notes')).toBeInTheDocument();
-  expect(screen.queryByRole('heading', { name: 'Add a resource' })).not.toBeInTheDocument();
-  memberView.unmount();
+  // Resources are a tab of the team page; the old address leads there.
+  await expect(withPortalTestSession(owner, () => ResourcesPage({ params }))).rejects.toMatchObject({ digest: expect.stringContaining('/groups/study-team/team?tab=resources') });
+  const tab = (who: typeof owner) => withPortalTestSession(who, () => TeamPage({ params, searchParams: Promise.resolve({ tab: 'resources' }) }));
+  // Any member adds, from the one box at the top.
+  for (const who of [owner, member]) {
+    const view = render(await tab(who));
+    expect(screen.getByRole('textbox', { name: 'Add to resources' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Course notes' })).toHaveAttribute('href', `/groups/study-team/resources/${doc.id}?version=1`);
+    view.unmount();
+  }
   const source = await withPortalTestSession(member, () => SourcePage({ params: Promise.resolve({ namespace: 'study-team', id: doc.id }), searchParams: Promise.resolve({ version: '1' }) }));
   const sourceView = render(source);
   expect(screen.getByText('Private course source.')).toBeInTheDocument();
