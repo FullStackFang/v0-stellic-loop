@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } f
 import { checkInAction, imInAction, inviteAction, joinAction, leaveAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import { Rings } from '@/components/LoopGlyphs';
 import { LEVELS } from '@/lib/campus/levels';
+import { KITS, kitNow, pickKit } from './kit';
 import { pick, type Findable } from '@/lib/campus/search';
 import type { Coupon, Face, Screen, Seat, Ticket } from '@/lib/campus/view';
 
@@ -179,7 +180,7 @@ function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; s
 
 /** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". */
 function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
-  const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null);
+  const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [kit, setKit] = useState('');
   const me: Face = { first: viewer.first, photo: viewer.photo }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   useEffect(() => {
     if (!open) return;
@@ -189,13 +190,14 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
   }, [open]);
   const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot face={me} /><b className="cs-lvb">{level + 1}</b></span>;
   return <div className="cs-acct" ref={box}>
-    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => setOpen(!open)}>{avatar()}</button>
+    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setKit(kitNow()); setOpen(!open); }}>{avatar()}</button>
     {open && <div className="cs-lvl" role="dialog" aria-label="Your level">
       <div className="cs-lvl-top">{avatar(true)}<div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
         <ul>{LEVELS.map((each, at) => <li key={each.name} className={at === level ? 'now' : ''}><b>{at + 1}</b><div><strong>{each.name}</strong><span>{each.gets}</span></div><small>{at === level ? 'You' : at < level ? 'Passed' : `${each.from - viewer.outings} to go`}</small></li>)}</ul>
+        <div className="cs-kits" role="group" aria-label="Colours"><h4>Colours</h4><div>{KITS.map(each => <button key={each.slug} className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }}><i />{each.name}</button>)}</div></div>
         {viewer.admin && <nav className="cs-lvl-more" aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}
         {signOut && <div className="cs-lvl-more">{signOut}</div>}</div></div>}
   </div>;

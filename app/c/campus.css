@@ -207,6 +207,22 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-lvl-more a, .cs-lvl-more button { display: block; width: 100%; text-align: left; padding: 7px 10px; border-radius: 12px; font-size: 14.5px; font-weight: 580; }
 .cs-lvl-more a:hover, .cs-lvl-more button:hover { background: color-mix(in oklch, var(--cs-ink) 7%, transparent); }
 
+/* Kits: one school's colours. Set on the page by <html data-kit>, and on a swatch of the avatar card by its own data-kit.
+   No kit, or "loop", is the look above. Each is a light bright field with dark type, and the school's colour as the action. */
+.cs .cs-kit[data-kit="loop"] { --cs-field: oklch(96.4% 0.19 117); --cs-action: oklch(47.6% 0.13 250); --cs-ink: oklch(25% 0.07 252); }
+:root[data-kit="cornell"] .cs, .cs .cs-kit[data-kit="cornell"] { --cs-field: oklch(82% 0.12 38); --cs-field-shadow: oklch(67% 0.13 36); --cs-ink: oklch(24% 0.035 30); --cs-ink-2: oklch(34% 0.05 30); --cs-action: oklch(48.5% 0.185 27); --cs-action-hover: oklch(54% 0.19 27); --cs-action-deep: oklch(38% 0.15 27); }
+:root[data-kit="columbia"] .cs, .cs .cs-kit[data-kit="columbia"] { --cs-field: oklch(87% 0.075 235); --cs-field-shadow: oklch(71% 0.09 240); --cs-ink: oklch(25% 0.06 255); --cs-ink-2: oklch(35% 0.08 255); --cs-action: oklch(46% 0.14 255); --cs-action-hover: oklch(52% 0.15 255); --cs-action-deep: oklch(36% 0.11 255); }
+:root[data-kit="cuny"] .cs, .cs .cs-kit[data-kit="cuny"] { --cs-field: oklch(88% 0.13 88); --cs-field-shadow: oklch(74% 0.14 80); --cs-ink: oklch(24% 0.08 265); --cs-ink-2: oklch(34% 0.1 265); --cs-action: oklch(38% 0.18 264); --cs-action-hover: oklch(45% 0.19 264); --cs-action-deep: oklch(30% 0.14 264); }
+:root[data-kit="nyu"] .cs, .cs .cs-kit[data-kit="nyu"] { --cs-field: oklch(85% 0.09 305); --cs-field-shadow: oklch(69% 0.12 305); --cs-ink: oklch(24% 0.08 305); --cs-ink-2: oklch(34% 0.1 305); --cs-action: oklch(40% 0.2 305); --cs-action-hover: oklch(46% 0.21 305); --cs-action-deep: oklch(30% 0.16 305); }
+/* Mixed in oklab: in oklch a mix with the near-white paper swings through other hues (a violet field gave a peach stub). */
+:root[data-kit]:not([data-kit="loop"]) .cs { --cs-stub: color-mix(in oklab, var(--cs-field) 34%, var(--cs-paper)); --cs-on-field-2: color-mix(in oklab, var(--cs-ink) 74%, var(--cs-field)); }
+.cs-kits { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
+.cs-kits h4 { margin: 0 0 6px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
+.cs-kits > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs .cs-kit { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 7px; border-radius: 99px; font-size: 13.5px; font-weight: 580; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs .cs-kit:hover, .cs .cs-kit[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--cs-ink); }
+.cs-kit i { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(var(--cs-action) 36%, var(--cs-field) 40%); box-shadow: 0 0 0 1px color-mix(in oklch, var(--cs-ink) 25%, transparent); }
+
 /* the door, and plain pages (post a plan, no school, admin) */
 .cs-door { flex: 1; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 400px); gap: 32px 48px; align-items: center; padding: 40px 32px 48px; max-width: 1180px; width: 100%; margin: 0 auto; }
 .cs-door h1 { font-stretch: 112%; font-weight: 720; font-size: 56px; line-height: .96; letter-spacing: -0.05em; max-width: 12ch; margin-bottom: 12px; }

@@ -118,6 +118,14 @@ describe('levels on the screen', () => {
     expect(card).toHaveTextContent('5 more to Regular');
     expect(within(card).queryByText('Admin')).toBeNull();
     expect(within(card).queryByRole('link', { name: 'The groups site' })).toBeNull();
+    // The card also lets anyone pick whose colours the screen wears, and the pick is kept on this browser.
+    const colours = within(within(card).getByRole('group', { name: 'Colours' }));
+    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loop', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
+    fireEvent.click(colours.getByRole('button', { name: 'Columbia' }));
+    expect(colours.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
+    expect(document.documentElement.dataset.kit).toBe('columbia');
+    expect(localStorage.getItem('loop-kit')).toBe('columbia');
+    delete document.documentElement.dataset.kit; localStorage.clear();
     cleanup();
     await show(as(ana, true));
     fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));

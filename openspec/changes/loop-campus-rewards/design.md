@@ -383,3 +383,10 @@ Known and left, for the founder to weigh:
 - With the flag on, should the trip board (`/b`, `/p`, `/trip`, `/trips`) stay open? It does not lead into groups, so it was left as it is.
 - CUNY has no open events feed and Columbia's covers the Business School only: start those two with posted plans and hand-entered events, or look for other sources first?
 - Phone or email sign-in for students: a Clerk dashboard choice for the founder.
+
+### School colours (founder, November 18)
+
+- The sign-in card has no school menu. It is the email field alone. As an email is typed (or filled in by the browser) the card spots its school and the page takes on that school's colours. An email at no school keeps Loop's own colours and still signs in.
+- Signed in, a person sees their school's colours. An email at no school sees Loop's own (the lime look). The avatar card has a "Colours" row to pick any of them; the pick is kept on that browser and wins over the school.
+- The colours are one block per school in `app/c/campus.css` under `:root[data-kit]`, listed in `components/campus/kit.tsx`. Cornell is the Coral kit the founder picked for Loop Campus. My calls, not yet confirmed: the Columbia (light blue), CUNY (gold with blue) and NYU (violet) values.
+- Colours change nothing else: the events shown are still those of the person's own school.
