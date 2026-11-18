@@ -271,7 +271,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 @media (prefers-reduced-motion: reduce) { .cs-own-made img.busy { animation: none; } }
 .cs .cs-pet { aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 10%, var(--cs-paper)); transition: transform .15s var(--cs-ease); }
 .cs-pet img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .cs-pet.photo img { object-fit: cover; }
-.cs .cs-pet:hover { transform: scale(1.14); }
+.cs .cs-pet:hover { transform: scale(1.14); } .cs-pet.locked img { opacity: .5; filter: grayscale(.6); }
 .cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
 .cs-pets small { display: block; margin-top: 12px; font-size: 11.5px; color: var(--cs-mute); } .cs-pets small a { text-decoration: underline; }
 .cs-kits { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
@@ -429,9 +429,13 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm > header { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; } .cs-adm > header h1 { font-size: 30px; font-weight: 660; letter-spacing: -0.03em; } .cs-adm > header p, .cs-adm section > p { color: var(--cs-mute); }
 .cs-adm section { min-width: 0; display: grid; gap: 10px; align-content: start; } .cs-adm section.wide { grid-column: 1 / -1; }
 .cs-adm h2 { font-size: 18px; font-weight: 680; } .cs-adm section > p { font-size: 14px; max-width: 64ch; }
-.cs-adm-asks { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; } .cs-adm-asks li { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); min-width: 0; }
-.cs-adm-asks span { display: flex; flex-wrap: wrap; gap: 12px; min-height: 64px; margin-bottom: 6px; } .cs-adm-asks figure { margin: 0; display: grid; gap: 6px; justify-items: start; } .cs-adm-asks img { width: 72px; height: 72px; object-fit: contain; }
-.cs-adm .cs-adm-asks details { border-radius: 99px; background: none; box-shadow: none; } .cs-adm .cs-adm-asks details[open] { box-shadow: none; } .cs-adm .cs-adm-asks summary { padding: 0 2px; font-size: 13px; font-weight: 580; color: var(--cs-mute); } .cs-adm-asks details form { margin-top: 6px; } .cs-adm-asks b { font-size: 14px; font-weight: 620; overflow-wrap: anywhere; } .cs-adm-asks small { font-size: 12.5px; color: var(--cs-mute); }
+.cs-adm-asks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; } .cs-adm-asks li { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); min-width: 0; }
+.cs-adm-asks span { display: flex; flex-wrap: wrap; gap: 6px; min-height: 64px; } .cs-adm-asks img { width: 64px; height: 64px; object-fit: contain; }
+.cs-adm-pets { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; } .cs-adm-pets li { display: grid; grid-template-columns: 56px 1fr; gap: 4px 12px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); min-width: 0; }
+.cs-adm-pets img { grid-row: span 2; width: 56px; height: 56px; object-fit: contain; } .cs-adm-pets b { font-size: 13.5px; font-weight: 620; overflow-wrap: anywhere; }
+.cs-adm-pets form { display: flex; flex-wrap: wrap; gap: 4px; } .cs .cs-adm-pets form button[name=tier] { height: 26px; padding: 0 9px; border-radius: 99px; font-size: 12.5px; font-weight: 580; color: var(--cs-mute); box-shadow: inset 0 0 0 1px var(--cs-line); }
+.cs .cs-adm-pets form button[aria-pressed=true] { color: var(--cs-paper); background: var(--cs-ink); box-shadow: none; }
+.cs-adm .cs-adm-pets details { grid-column: 1 / -1; background: none; box-shadow: none; } .cs-adm .cs-adm-pets details[open] { box-shadow: none; } .cs-adm .cs-adm-pets summary { padding: 0; font-size: 12.5px; font-weight: 580; color: var(--cs-mute); } .cs-adm-pets details form { margin-top: 6px; } .cs-adm-asks b { font-size: 14px; font-weight: 620; overflow-wrap: anywhere; } .cs-adm-asks small { font-size: 12.5px; color: var(--cs-mute); }
 .cs-adm-list { display: grid; gap: 8px; } .cs-adm-list > li { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; padding: 11px 12px 11px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-field-shadow); }
 .cs-adm-list > li > div { min-width: 0; flex: 1 1 240px; } .cs-adm-list b { display: block; font-weight: 660; letter-spacing: -0.02em; overflow-wrap: anywhere; } .cs-adm-list span { font-size: 13.5px; color: var(--cs-mute); overflow-wrap: anywhere; }
 .cs-adm-list li.off { box-shadow: inset 0 0 0 1.5px var(--cs-line); background: none; }

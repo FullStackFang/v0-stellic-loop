@@ -75,12 +75,12 @@ export async function useCouponAction(rewardId: string): Promise<ActResult> {
 }
 /** A person picks their face in the account card: one of the animals, or their own photo. */
 export async function faceAction(face: number): Promise<ActResult> {
-  return act(async viewer => { await pickFace(db(), viewer.personId, Number(face)); });
+  return act(async viewer => { await pickFace(db(), viewer.personId, Number(face), viewer.admin); });
 }
 
 /** A person picks one of the animals they had made, by its address. */
 export async function ownFaceAction(own: string): Promise<ActResult> {
-  return act(async viewer => { await useCustomFace(db(), viewer.personId, String(own).split('/').pop() ?? ''); });
+  return act(async viewer => { await useCustomFace(db(), viewer.personId, String(own).split('/').pop() ?? '', viewer.admin); });
 }
 
 /** "Subscribe" to Loop Premium in the account card. Nothing is charged; the ask and its email are kept. */

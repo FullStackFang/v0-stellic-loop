@@ -35,13 +35,15 @@ export type Ticket = {
   joinToken: string | null;
 };
 
+/** One animal in the picker. `face` is its number, or null for an animal a person had made, which is picked by its address (`src`). */
+export type Tile = { face: number | null; src: string; name: string };
 export type Coupon = { id: string; giver: string; text: string; done: number; need: number; earned: boolean; usedAt: string | null; progress: string };
 export type Live = { listingId: string; giver: string; text: string; usedAt: string | null };
 /**
  * `face` is the animal's number, PHOTO or CUSTOM; `ownPhoto` is the sign-in account's photo, offered as a pick when there is one.
- * `own` is the animal they had made from a photo and are using, `owns` every one they made, `shared` the made animals the admin offers to everyone, `asked` whether they have asked to subscribe, `makesLeft` how many more they may make.
+ * `own` is the animal they had made from a photo and are using, `owns` every one they made, `picks` what the picker offers (the admin decides which animals are core and which premium), `asked` whether they have asked to subscribe, `makesLeft` how many more they may make.
  */
-export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; shared: string[]; asked: boolean; makesLeft: number; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
+export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[] }; asked: boolean; makesLeft: number; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
 
 export type Screen = {
   campus: { slug: string; name: string; tz: string; listSource: string };

@@ -4,6 +4,7 @@ import type { Db, Q } from '../db';
 import { clerkIssuer, clerkPortalConfigured } from '../emba/clerk-identity';
 import { UNNAMED } from '../emba/member-name';
 import { ANIMALS, CUSTOM, PREMIUM } from './animals';
+import { builtTiers, NEEDS_PREMIUM, subscribed } from './animal-tiers';
 import { CampusError } from './errors';
 import { listCampuses, type Campus } from './listings';
 import { schoolOfEmail } from './schools';
@@ -39,8 +40,12 @@ export async function pickedFaces(q: Q, personIds: readonly string[]): Promise<M
   return new Map(rows.map(row => [row.id, row.face]));
 }
 /** A person picks their face: one of the animals, a premium one, PHOTO for the photo of their sign-in account, or CUSTOM for the animal they had made. */
-export async function pickFace(q: Q, personId: string, face: number): Promise<void> {
+export async function pickFace(q: Q, personId: string, face: number, premium = false): Promise<void> {
   if (!Number.isInteger(face) || face < CUSTOM || face >= ANIMALS + PREMIUM.length) throw new CampusError('Pick one of the animals.');
+  // A premium animal is for someone who subscribed (`premium` is also true for the admin); one that is off is for nobody.
+  const tier = face >= 0 ? (await builtTiers(q))[face] : 'core';
+  if (tier === 'off') throw new CampusError('Pick one of the animals.');
+  if (tier === 'premium' && !premium && !(await subscribed(q, personId))) throw new CampusError(NEEDS_PREMIUM);
   if (face === CUSTOM && !(await q.query('select 1 from campus_custom_picture p where p.token=(select coalesce(c.picture,f.token) from (select $1::uuid as id) i left join campus_face c on c.person_id=i.id left join campus_custom_face f on f.person_id=i.id)', [personId])).rows.length) throw new CampusError('Pick one of the animals.');
   await q.query('insert into campus_face(person_id,face) values($1,$2) on conflict(person_id) do update set face=excluded.face,picked_at=now()', [personId, face]);
 }

@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { CUSTOM, NAMES } from './animals';
+import { NEEDS_PREMIUM, subscribed } from './animal-tiers';
 import { CampusError } from './errors';
 
 // A person's own animal: a photo of an animal, drawn as a figure of the set in public/animals. Premium, with no payment
@@ -107,31 +108,23 @@ export async function subscribe(q: Q, personId: string, email: string): Promise<
   await q.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
 }
 
-export type PremiumAsk = { email: string; asked: string; pictures: { token: string; shared: boolean }[] };
-/** For the admin: everyone who asked to subscribe, newest first, each with the animals they had made and whether each is offered to everyone. */
+export type PremiumAsk = { email: string; asked: string; pictures: string[] };
+/** For the admin: everyone who asked to subscribe, newest first, each with the tokens of the animals they had made. */
 export async function premiumAsks(q: Q): Promise<PremiumAsk[]> {
   return (await q.query<PremiumAsk>(`select f.email,to_char(f.asked_at,'YYYY-MM-DD') as asked,
-    coalesce((select json_agg(json_build_object('token',p.token,'shared',p.shared_at is not null) order by p.made_at) from campus_custom_picture p where p.person_id=f.person_id),'[]'::json) as pictures
+    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=f.person_id),'{}'::text[]) as pictures
     from campus_custom_face f order by f.asked_at desc limit 500`)).rows;
-}
-
-/** The made animals the admin offers to everyone, in the order they were offered: shown in every picker with the standard ones. */
-export async function sharedFaces(q: Q): Promise<string[]> {
-  return (await q.query<{ token: string }>('select token::text as token from campus_custom_picture where shared_at is not null order by shared_at,token')).rows.map(row => row.token);
-}
-/** The admin offers a made animal to everyone, or stops. Whoever already uses it keeps it. */
-export async function sharePicture(q: Q, token: string, on: boolean): Promise<void> {
-  if (!z.uuid().safeParse(token).success || !(await q.query('update campus_custom_picture set shared_at=case when $2 then coalesce(shared_at,now()) end where token=$1 returning 1', [token, on])).rows.length) throw new Error('No such picture');
 }
 /** The admin deletes a made animal for good. Everyone who used it is shown their own animal again; its maker does not get another free one. */
 export async function deletePicture(q: Q, token: string): Promise<void> {
   if (!z.uuid().safeParse(token).success || !(await q.query('delete from campus_custom_picture where token=$1 returning 1', [token])).rows.length) throw new Error('No such picture');
 }
 
-/** A person picks a made animal as their face: one of their own, or one the admin offers to everyone. */
-export async function useCustomFace(q: Q, personId: string, token: string): Promise<void> {
-  const theirs = z.uuid().safeParse(token).success && (await q.query('select 1 from campus_custom_picture where token=$2 and (person_id=$1 or shared_at is not null)', [personId, token])).rows.length;
-  if (!theirs) throw new CampusError('Pick one of the animals.');
+/** A person picks a made animal as their face: one of their own, a core one, or a premium one when they subscribed (`premium` is also true for the admin). */
+export async function useCustomFace(q: Q, personId: string, token: string, premium = false): Promise<void> {
+  const { rows: [row] } = z.uuid().safeParse(token).success ? await q.query<{ mine: boolean; tier: string | null }>('select person_id=$1 as mine,tier from campus_custom_picture where token=$2', [personId, token]) : { rows: [] };
+  if (!row || !(row.mine || row.tier)) throw new CampusError('Pick one of the animals.');
+  if (!row.mine && row.tier === 'premium' && !premium && !(await subscribed(q, personId))) throw new CampusError(NEEDS_PREMIUM);
   await q.query(USE, [personId, CUSTOM, token]);
 }
 

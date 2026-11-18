@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { deletePicture, sharePicture } from '@/lib/campus/custom-face';
+import { setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
+import { deletePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
@@ -84,9 +85,14 @@ export async function setHiddenAction(data: FormData): Promise<void> {
   await admin(data, async () => { const hidden = text(data, 'hidden') === 'true'; await setHidden(db(), uuid(text(data, 'listing')), hidden); return hidden ? 'Hidden. People who were in keep their outings.' : 'Showing again.'; });
 }
 
-/** "Offer to everyone" and "Stop offering" on an animal a person had made. */
-export async function sharePictureAction(data: FormData): Promise<void> {
-  await admin(data, async () => { const on = text(data, 'on') === 'true'; await sharePicture(db(), text(data, 'picture'), on); return on ? 'Offered. It is in everyone’s picker with the standard animals.' : 'No longer offered. Whoever uses it keeps it.'; });
+const MOVED: Record<string, string> = { core: 'Core now: it is in everyone’s picker.', premium: 'Premium now: people who subscribed can pick it.', off: 'Off: it is in nobody’s picker. Whoever has it keeps it.', own: 'Its maker’s alone again. Whoever else uses it keeps it.' };
+/** Core, Premium, Off (or "Only its maker") on any animal: one shipped with the app, by number, or one a person had made. */
+export async function setTierAction(data: FormData): Promise<void> {
+  await admin(data, async () => {
+    const tier = text(data, 'tier'), picture = text(data, 'picture');
+    if (picture) await setPictureTier(db(), picture, tier); else await setBuiltTier(db(), number(text(data, 'face')), tier);
+    return MOVED[tier] ?? 'Saved.';
+  });
 }
 /** "Delete for good" on an animal a person had made. */
 export async function deletePictureAction(data: FormData): Promise<void> {

@@ -6,7 +6,8 @@ import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { CampusScreen } from '@/components/campus/screen';
 import { animal, animalOf, CUSTOM, PHOTO } from '@/lib/campus/animals';
-import { customFaceImage, deletePicture, makeCustomFace, MAKES, premiumAsks, sharePicture } from '@/lib/campus/custom-face';
+import { catalogue, setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
+import { customFaceImage, deletePicture, makeCustomFace, MAKES, premiumAsks, subscribe } from '@/lib/campus/custom-face';
 import { GET as customFaceRoute } from '@/app/animals/custom/[token]/route';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { pickFace } from '@/lib/campus/people';
@@ -122,10 +123,11 @@ describe('who sees whom', () => {
       expect(card.getByRole('button', { name: 'Animal 12' })).toHaveAttribute('aria-pressed', 'true');
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
       expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', animal(11));
-      // A premium animal is picked like any other, and is the first number after the set.
+      // A premium animal is for people who subscribed: for anyone else it opens the plan, and nothing is picked.
       fireEvent.click(card.getByRole('button', { name: 'Dachshund' }));
-      await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 36 }]));
-      expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', '/animals/37.png');
+      expect(card.getByText('Loop Premium')).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Back' }));
+      expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]);
       fireEvent.click(card.getByRole('button', { name: 'Animal 12' }));
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
       // Shuffle gives another animal, never the one you have, and keeps it.
@@ -241,24 +243,48 @@ describe('who sees whom', () => {
       const { rows: [second] } = await t.db.query<{ token: string }>('insert into campus_custom_picture(person_id,image) select person_id,image from campus_custom_picture where token=$1 returning token', [first.token]);
       expect(await ownFaceAction(`/animals/custom/${second.token}`)).toEqual({ ok: true });
       expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer).toMatchObject({ own: `/animals/custom/${second.token}`, owns: [first.token, second.token].map(token => `/animals/custom/${token}`), asked: true, makesLeft: 0 });
-      expect(await premiumAsks(t.db)).toEqual([{ email: 'ana@cornell.edu', asked: expect.stringMatching(/^[0-9-]{10}$/), pictures: [{ token: first.token, shared: false }, { token: second.token, shared: false }] }]);
+      expect(await premiumAsks(t.db)).toEqual([{ email: 'ana@cornell.edu', asked: expect.stringMatching(/^[0-9-]{10}$/), pictures: [first.token, second.token] }]);
       await withPortalTestSession(ben, async () => expect(await ownFaceAction(`/animals/custom/${first.token}`)).toEqual({ ok: false, message: 'Pick one of the animals.' }));
       // The admin offers one to everyone: it is in every picker, and Ben, who never subscribed, may use it.
       const seenBy = async (who: typeof ana) => (await campusScreen(t.db, cornell, as(who), { photos: noPhotos }))!.viewer!;
       const address = (token: string) => `/animals/custom/${token}`;
-      await sharePicture(t.db, first.token, true);
-      expect((await premiumAsks(t.db))[0].pictures[0]).toEqual({ token: first.token, shared: true });
-      expect(await seenBy(ben)).toMatchObject({ shared: [address(first.token)], own: null, owns: [], asked: false });
+      const core = async (who: typeof ana) => (await seenBy(who)).picks.core.map(tile => tile.src), premium = async (who: typeof ana) => (await seenBy(who)).picks.premium.map(tile => tile.src);
+      expect([(await core(ben)).length, await premium(ben)]).toEqual([36, ['/animals/37.png']]);
+      await setPictureTier(t.db, first.token, 'core');
+      expect((await catalogue(t.db)).made).toEqual([{ token: first.token, src: address(first.token), tier: 'core', email: 'ana@cornell.edu' }, { token: second.token, src: address(second.token), tier: null, email: 'ana@cornell.edu' }]);
+      expect((await core(ben)).at(-1)).toBe(address(first.token));
+      expect(await seenBy(ben)).toMatchObject({ own: null, owns: [], asked: false });
       await withPortalTestSession(ben, async () => {
         expect(await ownFaceAction(address(first.token))).toEqual({ ok: true });
         expect(await ownFaceAction(address(second.token))).toEqual({ ok: false, message: 'Pick one of the animals.' });
       });
       expect(await seenBy(ben)).toMatchObject({ face: CUSTOM, photo: address(first.token), own: address(first.token), asked: false });
       // No longer offered: it leaves the picker, and Ben keeps it. Deleted: it is gone for everyone, and Ben has his own animal again.
-      await sharePicture(t.db, first.token, false);
-      expect(await seenBy(ben)).toMatchObject({ shared: [], own: address(first.token) });
+      await setPictureTier(t.db, first.token, 'own');
+      expect(await core(ben)).toHaveLength(36);
+      expect(await seenBy(ben)).toMatchObject({ own: address(first.token) });
+      // Premium is for people who subscribed: a made animal, and one shipped with the app, both ways.
+      await setPictureTier(t.db, second.token, 'premium');
+      expect(await premium(ben)).toEqual(['/animals/37.png', address(second.token)]);
+      await withPortalTestSession(ben, async () => expect(await ownFaceAction(address(second.token))).toEqual({ ok: false, message: 'That one comes with Loop Premium.' }));
+      await expect(pickFace(t.db, ben.personId, 36)).rejects.toThrow('That one comes with Loop Premium.');
+      await pickFace(t.db, ben.personId, 36, true);
+      await setBuiltTier(t.db, 36, 'core'); await setBuiltTier(t.db, 4, 'premium'); await setBuiltTier(t.db, 5, 'off');
+      expect([(await core(ben)).includes('/animals/37.png'), (await core(ben)).includes('/animals/05.png'), (await core(ben)).includes('/animals/06.png'), await premium(ben)]).toEqual([true, false, false, ['/animals/05.png', address(second.token)]]);
+      await pickFace(t.db, ben.personId, 36);
+      await expect(pickFace(t.db, ben.personId, 4)).rejects.toThrow('That one comes with Loop Premium.');
+      await expect(pickFace(t.db, ben.personId, 5)).rejects.toThrow('Pick one of the animals.');
+      await subscribe(t.db, ben.personId, 'ben@cornell.edu');
+      await pickFace(t.db, ben.personId, 4);
+      await withPortalTestSession(ben, async () => expect(await ownFaceAction(address(first.token))).toEqual({ ok: false, message: 'Pick one of the animals.' }));
+      await withPortalTestSession(ben, async () => expect(await ownFaceAction(address(second.token))).toEqual({ ok: true }));
+      await setBuiltTier(t.db, 36, 'premium'); await setBuiltTier(t.db, 4, 'core'); await setBuiltTier(t.db, 5, 'core');
+      await expect(setBuiltTier(t.db, 99, 'core')).rejects.toThrow('No such animal');
+      await setPictureTier(t.db, second.token, 'own');
+      await t.db.query('delete from campus_custom_face where person_id=$1', [ben.personId]);
+      await withPortalTestSession(ben, async () => { await setPictureTier(t.db, first.token, 'core'); expect(await ownFaceAction(address(first.token))).toEqual({ ok: true }); await setPictureTier(t.db, first.token, 'own'); });
       await deletePicture(t.db, first.token);
-      expect(await seenBy(ben)).toMatchObject({ face: animalOf(ben.personId), own: null, shared: [] });
+      expect(await seenBy(ben)).toMatchObject({ face: animalOf(ben.personId), own: null });
       expect(await seenBy(ana)).toMatchObject({ owns: [address(second.token)], own: address(second.token) });
       expect(await customFaceImage(t.db, first.token)).toBeNull();
       await expect(deletePicture(t.db, first.token)).rejects.toThrow('No such picture');

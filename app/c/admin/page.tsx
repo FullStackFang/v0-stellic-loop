@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Rings } from '@/components/LoopGlyphs';
 import { db } from '@/lib/db';
 import { customFace } from '@/lib/campus/animals';
+import { catalogue } from '@/lib/campus/animal-tiers';
 import { premiumAsks } from '@/lib/campus/custom-face';
 import { LEVELS } from '@/lib/campus/levels';
 import { listCampuses } from '@/lib/campus/listings';
@@ -12,7 +13,7 @@ import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, addFeedAction, deletePictureAction, sharePictureAction, readFeedAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setWordsAction } from './actions';
+import { addCampusAction, addEventAction, addFeedAction, deletePictureAction, setTierAction, readFeedAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setWordsAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,10 +27,15 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const { campus: slug, said, q = '' } = await searchParams, campuses = await listCampuses(db());
   const campus = campuses.find(each => each.slug === slug) ?? campuses[0];
   if (!campus) notFound();
-  const now = new Date(), tz = campus.tz, asks = await premiumAsks(db());
+  const now = new Date(), tz = campus.tz, asks = await premiumAsks(db()), animals = await catalogue(db());
   const [feeds, places, events, rewards] = await Promise.all([campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), adminListings(db(), campus.id, q), campusRewards(db(), campus.id, true)]);
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const Campus = () => <input type="hidden" name="campus" value={campus.slug} />;
+  const TIER = { core: 'Core', premium: 'Premium', off: 'Off', own: 'Only its maker' } as const;
+  /** Where an animal stands, as a row of buttons with the current one pressed. */
+  const tiers = (which: { face: number } | { picture: string }, now: keyof typeof TIER, among: (keyof typeof TIER)[]) => <form action={setTierAction}><input type="hidden" name="campus" value={campus.slug} />
+    {'face' in which ? <input type="hidden" name="face" value={which.face} /> : <input type="hidden" name="picture" value={which.picture} />}
+    {among.map(tier => <button key={tier} name="tier" value={tier} aria-pressed={tier === now}>{TIER[tier]}</button>)}</form>;
   const texts = (reward?: Reward) => <div className="three">{LEVELS.map((level, at) => <label key={level.name}>{level.name} gets{at > 0 && <small>blank: the same as the level below</small>}<input name={level.name.toLowerCase()} maxLength={200} defaultValue={reward?.texts[at] ?? ''} required={at === 0 && !reward} /></label>)}</div>;
   const rides = (reward: Reward) => reward.kind === 'group'
     ? `Group of ${reward.headCount} · on ${reward.listingId ? `“${events.rows.find(event => event.id === reward.listingId)?.title ?? 'one event'}”` : `every event of ${reward.hostName}`}`
@@ -56,11 +62,18 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       {said && <p className="cs-alert wide" role="status" style={{ gridColumn: '1 / -1', margin: 0 }}>{said}</p>}
 
       <section className="wide"><h2>Premium</h2>
-        <p>{asks.length ? `${asks.length} ${asks.length === 1 ? 'person has' : 'people have'} asked to subscribe, across every campus. Nobody is charged. Each got one animal free, and every one made is kept here. Offer one to everyone and it joins the standard animals in every picker.` : 'Nobody has asked to subscribe yet.'}</p>
+        <p>{asks.length ? `${asks.length} ${asks.length === 1 ? 'person has' : 'people have'} asked to subscribe, across every campus. Nobody is charged. Each got one animal free. Their animals are managed under Animals, below.` : 'Nobody has asked to subscribe yet.'}</p>
         {/* eslint-disable-next-line @next/next/no-img-element -- pictures Loop made, served from the database at their own address */}
-        {asks.length > 0 && <ul className="cs-adm-asks">{asks.map(ask => <li key={ask.email + ask.asked}><span>{ask.pictures.map(({ token, shared }) => <figure key={token}><img src={customFace(token)} alt="" />
-          <form action={sharePictureAction}><Campus /><input type="hidden" name="picture" value={token} /><input type="hidden" name="on" value={String(!shared)} /><button className="cs-btn sm">{shared ? 'Stop offering' : 'Offer to everyone'}</button></form>
-          <details><summary>Delete</summary><form action={deletePictureAction}><Campus /><input type="hidden" name="picture" value={token} /><button className="cs-btn sm">Delete for good</button></form></details></figure>)}</span><b>{ask.email}</b><small>{ask.asked}</small></li>)}</ul>}</section>
+        {asks.length > 0 && <ul className="cs-adm-asks">{asks.map(ask => <li key={ask.email + ask.asked}><span>{ask.pictures.map(token => <img key={token} src={customFace(token)} alt="" />)}</span><b>{ask.email}</b><small>{ask.asked}</small></li>)}</ul>}</section>
+
+      <section className="wide"><h2>Animals</h2>
+        <p>Every picture a person can have. Core is in everyone’s picker. Premium is for people who subscribed. Off is in nobody’s picker. Moving one changes what can be picked from now on: whoever already has it keeps it.</p>
+        {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and pictures Loop made, served from the database */}
+        <ul className="cs-adm-pets">
+          {animals.built.map(one => <li key={one.face}><img src={one.src} alt="" /><b>{one.name}</b>{tiers({ face: one.face }, one.tier, ['core', 'premium', 'off'])}</li>)}
+          {animals.made.map(one => <li key={one.token}><img src={one.src} alt="" /><b>{one.email ? `Made by ${one.email}` : 'Made'}</b>{tiers({ picture: one.token }, one.tier ?? 'own', ['core', 'premium', 'own'])}
+            <details><summary>Delete</summary><form action={deletePictureAction}><Campus /><input type="hidden" name="picture" value={one.token} /><button className="cs-btn sm">Delete for good</button></form></details></li>)}</ul>
+        {/* eslint-enable @next/next/no-img-element */}</section>
 
       <section className="wide"><h2>Campus</h2>
         <nav className="cs-schools">{campuses.map(each => <Link key={each.id} className="cs-btn sm" style={each.id === campus.id ? { background: 'var(--cs-ink)', color: 'var(--cs-field)' } : undefined} href={`/c/admin?campus=${each.slug}`} aria-current={each.id === campus.id ? 'true' : undefined}>{each.name}</Link>)}</nav>
