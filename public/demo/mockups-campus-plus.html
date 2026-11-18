@@ -13,6 +13,7 @@
    Every class starts with cs- and every rule sits under .cs, so nothing here reaches the groups site and app/loop.css is untouched. */
 @keyframes cs-pop { from { transform: scale(.2); opacity: 0; } }
 @keyframes cs-ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.55); opacity: 0; } }
+@keyframes cs-grow { from { transform: scaleX(0); } }
 @keyframes cs-beckon { from { transform: scale(1); opacity: .9; } 40%, to { transform: scale(1.75); opacity: 0; } }
 @keyframes cs-turn { from { transform: rotate(0); } 30%, to { transform: rotate(180deg); } }
 @keyframes cs-in { from { opacity: 0; transform: translateY(14px); } }
@@ -366,7 +367,10 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-chip.when { background: var(--cs-field); } .cs-chip.place { background: var(--cs-ink); color: var(--cs-on-ink); }
 .cs-chip button { font-size: 12.5px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
 .cs-chip-hint { font-size: 13px; color: var(--cs-mute); }
-.cs-sug { display: grid; } .cs-sug button { display: flex; align-items: center; gap: 10px; padding: 10px 2px; text-align: left; border-top: 1px solid var(--cs-line); } .cs-sug button:first-child { border-top: 0; }
+/* each place has a bar behind its name, as long as the place is busy next to the busiest one */
+.cs-sug { display: grid; gap: 4px; } .cs-sug button { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; border-radius: 12px 12px 12px 4px; }
+.cs-sug button[style]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: max(10px, calc(var(--fill) * 100%)); border-radius: inherit; background: color-mix(in oklch, var(--cs-action) 14%, transparent); transform-origin: left; animation: cs-grow .6s var(--cs-expo) backwards; transition: width .4s var(--cs-expo), background-color .15s; }
+.cs-sug button[style]:hover::before { background: color-mix(in oklch, var(--cs-action) 24%, transparent); } .cs-sug button > span { position: relative; }
 .cs-sug button:hover b { text-decoration: underline; text-underline-offset: 3px; } .cs-sug b { font-weight: 680; color: var(--cs-action); } .cs-sug b.new { color: var(--cs-ink); } .cs-sug small { display: block; font-size: 12.5px; color: var(--cs-mute); }
 .cs-mini { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); } .cs-line-card h2 + .cs-mini { border-top: 0; }
 .cs-mini time { flex: none; width: 58px; padding: 6px 0; border-radius: 10px 10px 10px 3px; background: var(--cs-field); text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.15; }
@@ -555,7 +559,7 @@ function understood(dir) {
     + (got.tag && got.typing === null ? `<span class="cs-chip ${place ? 'place' : ''}">@${got.tag} · ${place ? place.who : 'a new place, yours to name'}</span>` : '');
   if (!side) return;
   const list = got.typing !== null ? PLACES.filter(p => p.tag.startsWith(got.typing)).slice(0, 4) : (dir === 'B' || dir === 'D') ? PLACES.slice(0, 3) : [];
-  const places = list.length || got.typing ? `<div class="${(dir === 'B' || dir === 'D') ? 'cs-line-card' : ''}"><h2 class="cs-line-label">${got.typing ? `Places near you that start with <b>@${got.typing}</b>` : 'Places people near you use'}</h2><div class="cs-sug">${list.map(p => `<button data-tag="${p.tag}" data-for="${dir}"><span><b>@${p.tag}</b><small>${p.who}</small></span></button>`).join('')}${got.typing && got.typing.length > 1 && !PLACES.some(p => p.tag === got.typing) ? `<button data-tag="${got.typing}" data-for="${dir}"><span><b class="new">Make @${got.typing}</b><small>A new place. People nearby see it when they type @</small></span></button>` : ''}</div></div>` : '';
+  const places = list.length || got.typing ? `<div class="${(dir === 'B' || dir === 'D') ? 'cs-line-card' : ''}"><h2 class="cs-line-label">${got.typing ? `Places near you that start with <b>@${got.typing}</b>` : 'Places people near you use'}</h2><div class="cs-sug">${list.map(p => `<button data-tag="${p.tag}" data-for="${dir}" style="--fill:${parseInt(p.who) / 14}"><span><b>@${p.tag}</b><small>${p.who}</small></span></button>`).join('')}${got.typing && got.typing.length > 1 && !PLACES.some(p => p.tag === got.typing) ? `<button data-tag="${got.typing}" data-for="${dir}"><span><b class="new">Make @${got.typing}</b><small>A new place. People nearby see it when they type @</small></span></button>` : ''}</div></div>` : '';
   const on = place && state.week === 'busy' && got.tag === 'collegetown' ? `<div class="${(dir === 'B' || dir === 'D') ? 'cs-line-card' : ''}"><h2 class="cs-line-label">Already on in <b>@collegetown</b></h2><div class="cs-mini"><time>Today<br>6:30pm</time><div><b>Hot pot, split the bill</b><span>Maya and 3 others</span></div><button class="cs-btn sm">Join</button></div></div>` : '';
   side.innerHTML = places + (got.typing === null || (dir === 'B' || dir === 'D') ? on : '');
   side.style.display = side.innerHTML ? '' : 'none';

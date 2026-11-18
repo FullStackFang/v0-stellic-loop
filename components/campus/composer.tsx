@@ -31,6 +31,8 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
   const title = read.title || from?.title || '', starts = read.starts ?? from?.starts ?? null;
   const place = read.tag ? tags.find(tag => tag.slug === read.tag) : undefined;
   const offered = (typing === null ? tags : tags.filter(tag => tag.slug.startsWith(typing))).slice(0, 5);
+  // The busiest place fills its row; the others are drawn against it.
+  const most = Math.max(1, ...tags.map(tag => tag.people));
   const here = read.tag && typing === null ? soon.filter(plan => plan.tag === read.tag) : [];
   const when = starts ? (() => { try { const at = zoned(campus.tz, starts); return `${dayLabel(campus.tz, at, now)} ${timeLabel(campus.tz, at)}`; } catch { return null; } })() : null;
 
@@ -84,7 +86,7 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
       <div className="cs-line-card">
         <h2>{typing ? <>Places near you that start with <b>@{typing}</b></> : 'Places people near you use'}</h2>
         <div className="cs-sug">
-          {offered.map(tag => <button key={tag.slug} type="button" onClick={() => pick(tag.slug)}><span><b>@{tag.slug}</b><small>{people(tag)}</small></span></button>)}
+          {offered.map(tag => <button key={tag.slug} type="button" style={{ '--fill': tag.people / most } as React.CSSProperties} onClick={() => pick(tag.slug)}><span><b>@{tag.slug}</b><small>{people(tag)}</small></span></button>)}
           {typing !== null && typing.length >= 2 && !tags.some(tag => tag.slug === typing) && <button type="button" onClick={() => pick(typing)}><span><b className="new">Make @{typing}</b><small>A new place. People nearby see it when they type @</small></span></button>}
           {!offered.length && (typing ?? '').length < 2 && <p className="cs-note">{tags.length ? 'Keep typing to name a new place.' : 'Nobody has named a place here yet. Type @ and a name: it is yours to make.'}</p>}
         </div>
