@@ -104,12 +104,15 @@ describe('who sees whom', () => {
       await show(as(ana), { photos: { [ana.personId]: 'https://img.test/ana.png' } });
       fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
       const card = within(screen.getByRole('dialog', { name: 'Your level' }));
-      fireEvent.click(card.getByRole('button', { name: 'Change' }));
+      fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
       expect(card.getByRole('button', { name: `Animal ${animalOf(ana.personId) + 1}` })).toHaveAttribute('aria-pressed', 'true');
       fireEvent.click(card.getByRole('button', { name: 'Animal 12' }));
       expect(card.getByRole('button', { name: 'Animal 12' })).toHaveAttribute('aria-pressed', 'true');
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
       expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', animal(11));
+      // Shuffle gives another animal, never the one you have, and keeps it.
+      fireEvent.click(card.getByRole('button', { name: 'Shuffle' }));
+      await vi.waitFor(async () => { const { rows: [row] } = await t.db.query<{ face: number }>('select face from campus_face where person_id=$1', [ana.personId]); expect(row.face).not.toBe(11); expect(row.face).toBeGreaterThanOrEqual(0); });
       fireEvent.click(card.getByRole('button', { name: 'Your photo' }));
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: PHOTO }]));
       expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', 'https://img.test/ana.png');

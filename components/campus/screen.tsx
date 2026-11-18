@@ -185,8 +185,8 @@ function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; s
 function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
   const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [kit, setKit] = useState('');
   // The pick shows at once, and goes back if it could not be kept.
-  const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [, save] = useTransition();
-  const choose = (next: number) => { const before = face; setFace(next); save(async () => { if (!(await faceAction(next)).ok) setFace(before); }); };
+  const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [, save] = useTransition();
+  const choose = (next: number) => { const before = face; setFace(next); setMoved(true); save(async () => { if (!(await faceAction(next)).ok) setFace(before); }); };
   const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : animal(face) }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   useEffect(() => {
     if (!open) return;
@@ -194,24 +194,28 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
     document.addEventListener('click', away); document.addEventListener('keydown', key);
     return () => { document.removeEventListener('click', away); document.removeEventListener('keydown', key); };
   }, [open]);
-  const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot face={me} /><b className="cs-lvb">{level + 1}</b></span>;
+  /** Another animal, never the one you have: the front door's seat, kept. */
+  const shuffle = () => { let next = face; while (next === face) next = Math.floor(Math.random() * ANIMALS); choose(next); };
+  const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot key={big ? face : 0} face={me} className={big && moved ? 'new' : ''} /><b className="cs-lvb">{level + 1}</b></span>;
   return <div className="cs-acct" ref={box}>
-    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setKit(kitNow()); setOpen(!open); }}>{avatar()}</button>
+    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setKit(kitNow()); setPicking(false); setMoved(false); setOpen(!open); }}>{avatar()}</button>
     {open && <div className="cs-lvl" role="dialog" aria-label="Your level">
-      <div className="cs-lvl-top">{avatar(true)}<div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
+      <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => setPicking(!picking)}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
-      <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
+      {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
+      {picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><h4>Pick your picture</h4>
+          <button className="cs-btn sm" onClick={shuffle}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.6c1.3 0 2.4.7 3 1.8l1.8 3.4c.6 1.1 1.7 1.8 3 1.8h2.6M12.5 9.5l2 2-2 2M1.5 11.5h2.6c.8 0 1.6-.3 2.1-.8M9.8 5.3c.5-.5 1.3-.8 2.1-.8h2.6M12.5 2.5l2 2-2 2" /></svg>Shuffle</button>
+          <button className="cs-btn sm go" onClick={() => setPicking(false)}>Done</button></div>
+        <div className="cs-pets-grid" role="group" aria-label="Pick your picture">
+          {viewer.ownPhoto && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
+          {Array.from({ length: ANIMALS }, (_, at) => <button key={at} className="cs-pet" aria-pressed={face === at} aria-label={`Animal ${at + 1}`} onClick={() => choose(at)}><img src={animal(at)} alt="" /></button>)}</div>
+        <small>Animal icons by <a href="https://www.figma.com/community/file/1514963172455082116" target="_blank" rel="noreferrer">Tran Mau Tri Tam</a>, CC BY 4.0.</small></div>
+      /* eslint-enable @next/next/no-img-element */
+      : <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
         <ul>{LEVELS.map((each, at) => <li key={each.name} className={at === level ? 'now' : ''}><b>{at + 1}</b><div><strong>{each.name}</strong><span>{each.gets}</span></div><small>{at === level ? 'You' : at < level ? 'Passed' : `${each.from - viewer.outings} to go`}</small></li>)}</ul>
-        <div className="cs-pets"><h4>Your picture<button aria-expanded={picking} onClick={() => setPicking(!picking)}>{picking ? 'Done' : 'Change'}</button></h4>
-          {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
-          {picking && <><div role="group" aria-label="Pick your picture">
-            {viewer.ownPhoto && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
-            {Array.from({ length: ANIMALS }, (_, at) => <button key={at} className="cs-pet" aria-pressed={face === at} aria-label={`Animal ${at + 1}`} onClick={() => choose(at)}><img src={animal(at)} alt="" /></button>)}</div>
-            <small>Animal icons by <a href="https://www.figma.com/community/file/1514963172455082116" target="_blank" rel="noreferrer">Tran Mau Tri Tam</a>, CC BY 4.0.</small></>}
-          {/* eslint-enable @next/next/no-img-element */}</div>
         <div className="cs-kits" role="group" aria-label="Colours"><h4>Colours</h4><div>{KITS.map(each => <button key={each.slug} className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }}><i />{each.name}</button>)}</div></div>
         {viewer.admin && <nav className="cs-lvl-more" aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}
-        {signOut && <div className="cs-lvl-more">{signOut}</div>}</div></div>}
+        {signOut && <div className="cs-lvl-more">{signOut}</div>}</div>}</div>}
   </div>;
 }
