@@ -157,7 +157,8 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
       <div className="cs-count"><h2 aria-live="polite">{picked.line}</h2><div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
-        {picked.nothing ? <div className="cs-nothing"><h3>{typed.trim() ? 'Nothing matches' : 'Nothing here yet'}</h3><p>{typed.trim() ? 'Try another word, or post a plan of your own.' : 'Post a plan of your own and it shows here at once.'}</p></div>
+        {picked.nothing ? <div className="cs-nothing"><div className="cs-nothing-top"><Tile top="This week" big="Open" /><div><h3>{typed.trim() ? 'Nothing matches' : 'Nothing here yet'}</h3><p>{typed.trim() ? 'Try another word, or post a plan of your own.' : 'Post a plan of your own and it shows here at once.'}</p></div></div>
+            <div className="cs-nothing-stub"><small>Yours could be the first this week.</small></div></div>
           : <div className="cs-railwrap"><div className="cs-rail" ref={rail} onScroll={measure}>
               {picked.best.map(row)}
               {picked.rest.length > 0 && <div className="cs-then" style={{ '--i': picked.best.length } as React.CSSProperties}><b>{count}</b><span>{words.join(' ')}</span></div>}

@@ -43,9 +43,10 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* top bar: one line */
-.cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 9px 32px; background: var(--cs-field); color: var(--cs-ink); }
-.cs-wm { display: flex; align-items: center; gap: 9px; font-weight: 640; font-size: 19px; letter-spacing: -0.03em; padding: 0 18px 0 0; --lime: var(--cs-action); }
-.cs-wm svg { display: block; width: 26px; height: 26px; }
+.cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); border-bottom: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding: 0 20px 0 0; --lime: var(--cs-action); }
+.cs-wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
+.cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
 .cs-links { display: flex; gap: 2px; min-width: 0; }
 .cs-links a { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 99px; font-size: 14.5px; font-weight: 500; white-space: nowrap; }
 .cs-links a:hover { background: color-mix(in oklch, var(--cs-ink) 8%, transparent); }
@@ -92,7 +93,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-tabs button { padding: 6px 14px; border-radius: 99px; font-weight: 540; color: var(--cs-mute); }
 .cs-tabs button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); }
 .cs-count { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 10px; flex-wrap: wrap; }
-:where(.cs) h2 { font-size: 20px; font-weight: 660; letter-spacing: -0.03em; }
+:where(.cs) h2 { font-size: 20px; font-weight: 660; letter-spacing: -0.03em; line-height: 1.2; font-variation-settings: normal; text-transform: none; }
 .cs-says { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .cs-says small { font-size: 13px; color: var(--cs-mute); margin-right: 4px; }
 .cs-opt { height: 36px; padding: 0 14px; border-radius: 99px; background: var(--cs-field); font-weight: 560; font-size: 14px; white-space: nowrap; }
 .cs-says .cs-opt { height: 30px; padding: 0 12px; font-size: 13.5px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
@@ -107,8 +108,12 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-rgo svg { width: 18px; height: 18px; } .cs-rgo.l { left: -26px; } .cs-rgo.l svg { transform: rotate(90deg); } .cs-rgo.r { right: -6px; } .cs-rgo.r svg { transform: rotate(-90deg); }
 .cs-then { flex: 0 0 58px; display: grid; align-content: center; justify-items: center; gap: 10px; border-radius: 99px; border: 1.5px dashed color-mix(in oklch, var(--cs-ink) 45%, transparent); color: var(--cs-on-field-2); }
 .cs-then b { font-stretch: 108%; font-size: 24px; font-weight: 720; letter-spacing: -0.04em; color: var(--cs-ink); } .cs-then span { writing-mode: vertical-rl; font-size: 13.5px; font-weight: 580; white-space: nowrap; }
-.cs-nothing { align-self: start; padding: 18px 20px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
-.cs-nothing h3 { font-size: 16.5px; font-weight: 600; letter-spacing: -0.025em; } .cs-nothing p { font-size: 13.5px; color: var(--cs-mute); }
+.cs-nothing { align-self: start; width: min(480px, 100%); overflow: hidden; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); animation: cs-in .4s var(--cs-expo); }
+.cs-nothing-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; padding: 20px 22px; }
+.cs-nothing-top .cs-tile { min-width: 64px; min-height: 60px; padding: 6px 10px 7px; }
+.cs-nothing h3 { font-size: 22px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.1; } .cs-nothing p { margin-top: 3px; font-size: 14px; color: var(--cs-mute); }
+.cs-nothing-stub { padding: 12px 22px 14px; background: var(--cs-stub); border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-nothing-stub small { display: block; font-size: 13.5px; font-weight: 580; color: var(--cs-on-field-2); }
 
 .cs-ev { --cut: 10px; --lift: 5px; flex: 0 0 286px; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--cs-r); filter: drop-shadow(var(--lift) var(--lift) 0 var(--cast, var(--cs-field-shadow))); transition: transform .22s var(--cs-ease), filter .22s var(--cs-ease); }
 .cs-evs.in .cs-ev, .cs-evs.in .cs-then { animation: cs-in .45s var(--cs-expo) backwards; animation-delay: calc(var(--i) * 45ms); }
@@ -232,11 +237,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 html.cs-wiping::view-transition-old(root) { animation: none; }
 html.cs-wiping::view-transition-new(root) { animation: cs-wipe .8s cubic-bezier(.16, 1, .3, 1); }
 .cs-doorway { flex: 1; display: flex; flex-direction: column; color: var(--cs-ink); transition: background-color .3s; } .cs-doorway.won { background: var(--cs-field); }
-/* the door's top bar: the mark on a paper tile, a perforated edge like the stubs below, and one dot per school */
-.cs-door-nav { padding: 11px 32px 12px; border-bottom: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
-.cs-door-nav .cs-wm { gap: 13px; padding: 0; font-size: 25px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.045em; }
-.cs-door-nav .cs-wm svg { width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
-.cs-door-nav .cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
+/* on the door's top bar: one dot per school */
 .cs-dots { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .cs .cs-dots button { position: relative; flex: none; min-width: 16px; height: 16px; border-radius: 99px; background: var(--cs-action); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: transform .2s var(--cs-ease); }
 .cs-dots button::after { content: ''; position: absolute; inset: -9px -5px; }
@@ -340,8 +341,8 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm .cs-form .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 
 @media (max-width: 860px) {
-  .cs-nav { padding: 9px 16px; } .cs-main { padding: 12px 16px 24px; } .cs-links a:not([aria-current]) { display: none; }
-  .cs-door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; } .cs-door-nav { padding: 10px 16px 11px; }
+  .cs-nav { padding: 10px 16px 11px; } .cs-wm { gap: 10px; padding-right: 10px; font-size: 21px; } .cs-wm svg { width: 38px; height: 38px; padding: 5px; } .cs-main { padding: 12px 16px 24px; } .cs-links a:not([aria-current]) { display: none; }
+  .cs-door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; }
   .cs-deck { margin-right: 0; width: calc(100% - 120px); } .cs-dtab { transform: translate(calc(var(--k) * 38px), calc(var(--k) * 8px)) rotate(calc(var(--k) * 1.6deg)); }
   .cs-dtk-top h3 { font-size: 22px; } .cs-dtk-top .cs-tile { min-width: 60px; min-height: 60px; } .cs-dtk-stub strong { font-size: 21px; }
   .cs-plain { padding: 24px 16px 48px; } .cs-adm { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 48px; } .cs-adm .cs-form .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); }
