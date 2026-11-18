@@ -7,6 +7,8 @@ import { CampusError } from '@/lib/campus/errors';
 import { readLine } from '@/lib/campus/line';
 import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
+import { customFace } from '@/lib/campus/animals';
+import { makeCustomFace } from '@/lib/campus/custom-face';
 import { pickFace } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
@@ -74,6 +76,25 @@ export async function useCouponAction(rewardId: string): Promise<ActResult> {
 /** A person picks their face in the account card: one of the animals, or their own photo. */
 export async function faceAction(face: number): Promise<ActResult> {
   return act(async viewer => { await pickFace(db(), viewer.personId, Number(face)); });
+}
+
+export type MadeFace = { ok: true; own: string; left: number } | { ok: false; message: string; signIn?: boolean };
+/**
+ * "Subscribe" on a person's own animal, and "Make it" after that: the photo is drawn as one of the set and becomes their
+ * face. Nothing is charged; the first ask is kept with its email. Takes about 20 seconds.
+ */
+export async function makeFaceAction(data: FormData): Promise<MadeFace> {
+  const viewer = await campusViewer();
+  if (!viewer) return { ok: false, signIn: true, message: 'Sign in to continue.' };
+  const photo = data.get('photo'), email = data.get('email');
+  if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
+  try {
+    const made = await makeCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), typeof email === 'string' ? email : null);
+    revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
+    return { ok: true, own: customFace(made.token), left: made.left };
+  } catch (error) {
+    return { ok: false, message: error instanceof CampusError ? error.message : 'That did not go through. Try again.' };
+  }
 }
 
 export type PlanState ={ message: string };

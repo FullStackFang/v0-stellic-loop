@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   devIndicators: { position: 'bottom-right' },
   // Restored Turbopack build caches have reused stale CSS across deployments.
   experimental: { turbopackFileSystemCacheForBuild: false, serverActions: { bodySizeLimit: '4mb' } },
+  // A person's own animal is drawn after one of the set's, read from disk by the campus screen's action (lib/campus/custom-face.ts).
+  outputFileTracingIncludes: { '/c/**': ['./public/animals/*.png'] },
   // Every page is per-viewer and live (counts, your answer); nothing is prerendered or cached.
   // The static demos live in public/demo/ and serve without .html: /demo/stellic, /demo/quorum, /demo/mockups-….
   // Links to the old static site (/index.html, /quorum.html, …) follow them there.

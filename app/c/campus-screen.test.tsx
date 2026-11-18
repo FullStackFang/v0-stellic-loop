@@ -4,7 +4,9 @@ import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { CampusScreen } from '@/components/campus/screen';
-import { animal, animalOf, PHOTO } from '@/lib/campus/animals';
+import { animal, animalOf, CUSTOM, PHOTO } from '@/lib/campus/animals';
+import { customFaceImage, MAKES } from '@/lib/campus/custom-face';
+import { GET as customFaceRoute } from '@/app/animals/custom/[token]/route';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { pickFace } from '@/lib/campus/people';
 import { addHandListing } from '@/lib/campus/manage';
@@ -12,11 +14,17 @@ import { checkIn, imIn, joinByToken, outingByToken } from '@/lib/campus/outings'
 import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
-import { checkInAction, imInAction, joinAction, useRewardAction as markUsed } from './actions';
+import { checkInAction, imInAction, joinAction, makeFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
 import PostPlanPage from './[campus]/post/page';
 import CampusAdminPage from './admin/page';
 import OutingLinkPage from '../o/[token]/page';
+
+// The two models behind a person's own animal: one reads the photo, one draws it. Both are stood in for here.
+const models = vi.hoisted(() => ({ look: '', drawn: null as Uint8Array | null, asked: [] as { text: string; images: number }[] }));
+vi.mock('ai', async original => ({ ...(await original<typeof import('ai')>()),
+  generateText: vi.fn(async () => ({ text: models.look })),
+  generateImage: vi.fn(async ({ prompt }: { prompt: { text: string; images: unknown[] } }) => { models.asked.push({ text: prompt.text, images: prompt.images.length }); return { image: { uint8Array: models.drawn! } }; }) }));
 
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-screen, outings ("Who sees whom"), member-levels, campus-search.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -98,7 +106,8 @@ describe('who sees whom', () => {
     // A person who picked their photo and has none is back to their animal.
     await show(as(ana));
     expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('src', animal(animalOf(ben.personId)));
-    await expect(pickFace(t.db, ben.personId, 36)).rejects.toThrow('Pick one of the animals.');
+    // 36 is the one premium animal; the number after it has no picture.
+    await expect(pickFace(t.db, ben.personId, 37)).rejects.toThrow('Pick one of the animals.');
   });
   it('lets the viewer pick their picture in the account card: an animal, or their own photo', async () => {
     const { ana } = await world();
@@ -112,12 +121,102 @@ describe('who sees whom', () => {
       expect(card.getByRole('button', { name: 'Animal 12' })).toHaveAttribute('aria-pressed', 'true');
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
       expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', animal(11));
+      // A premium animal is picked like any other, and is the first number after the set.
+      fireEvent.click(card.getByRole('button', { name: 'Dachshund' }));
+      await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 36 }]));
+      expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', '/animals/37.png');
+      fireEvent.click(card.getByRole('button', { name: 'Animal 12' }));
+      await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
       // Shuffle gives another animal, never the one you have, and keeps it.
       fireEvent.click(card.getByRole('button', { name: 'Shuffle' }));
       await vi.waitFor(async () => { const { rows: [row] } = await t.db.query<{ face: number }>('select face from campus_face where person_id=$1', [ana.personId]); expect(row.face).not.toBe(11); expect(row.face).toBeGreaterThanOrEqual(0); });
       fireEvent.click(card.getByRole('button', { name: 'Your photo' }));
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: PHOTO }]));
       expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', 'https://img.test/ana.png');
+    });
+  });
+  it('draws a person their own animal from a photo: asked to subscribe, told it is free, and given it', async () => {
+    const { ana, ben, blitz } = await world(), sharp = (await import('sharp')).default;
+    // What the drawing model hands back: a small figure on a large transparent ground.
+    models.look = '{"animal": true, "nearest": 23}'; models.asked = [];
+    models.drawn = await sharp({ create: { width: 400, height: 400, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .composite([{ input: await sharp({ create: { width: 100, height: 60, channels: 4, background: '#b5651d' } }).png().toBuffer(), left: 20, top: 30 }]).png().toBuffer();
+    const photo = new File([await sharp({ create: { width: 64, height: 48, channels: 3, background: '#996644' } }).jpeg().toBuffer()], 'lili.jpg', { type: 'image/jpeg' });
+    URL.createObjectURL = vi.fn(() => 'blob:lili'); URL.revokeObjectURL = vi.fn();
+    let own = '';
+    await withPortalTestSession(ana, async () => {
+      await show(as(ana));
+      fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
+      const card = within(screen.getByRole('dialog', { name: 'Your level' }));
+      fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
+      expect(card.queryByRole('button', { name: 'Your own animal' })).toBeNull();
+      fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
+      expect(card.getByText('Premium')).toBeInTheDocument();
+      expect(card.getByText('$3 a month')).toBeInTheDocument();
+      // No photo, then no email: each is asked for, and nothing is drawn.
+      fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
+      expect(card.getByRole('alert')).toHaveTextContent('Choose a photo of an animal first.');
+      fireEvent.change(card.getByLabelText('Photo of an animal'), { target: { files: [photo] } });
+      fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
+      expect(card.getByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
+      expect(models.asked).toHaveLength(0);
+      fireEvent.change(card.getByLabelText('Email'), { target: { value: 'Ana@Cornell.edu' } });
+      fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
+      // While it is drawn, and after: thanks, no payment, a free picture.
+      expect(await card.findByRole('status')).toHaveTextContent('Thanks for your interest. Payment is not set up yet, so this one is free. Enjoy your avatar.');
+      const made = await card.findByRole('img', { name: 'Your own animal' }, { timeout: 5000 });
+      expect(card.getByText(/Thanks for your interest/)).toBeInTheDocument();
+      expect(card.getByText(`It is your picture now. You can make ${MAKES - 1} more.`)).toBeInTheDocument();
+      // The ask and its email are kept, the picture is theirs, and it was drawn from one of the set and the photo.
+      const { rows: [row] } = await t.db.query<{ email: string; makes: number; token: string }>('select email,makes,token from campus_custom_face where person_id=$1', [ana.personId]);
+      expect(row).toMatchObject({ email: 'ana@cornell.edu', makes: 1 });
+      own = `/animals/custom/${row.token}`;
+      expect(made).toHaveAttribute('src', own);
+      expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: CUSTOM }]);
+      expect(models.asked).toEqual([{ text: expect.stringContaining('in exactly the style of the first picture'), images: 2 }]);
+      expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', own);
+      // It is served as a 192px picture with the figure filling the frame.
+      const served = await customFaceRoute(new Request('http://loop.test/'), { params: Promise.resolve({ token: row.token }) });
+      expect(served.headers.get('content-type')).toBe('image/png');
+      const meta = await sharp(Buffer.from(await served.arrayBuffer())).metadata(), figure = await sharp(Buffer.from((await customFaceImage(t.db, row.token))!)).trim().toBuffer({ resolveWithObject: true });
+      expect([meta.width, meta.height, figure.info.width]).toEqual([192, 192, 168]);
+      // From then on it is a pick like any other, and the next one needs no email.
+      fireEvent.click(card.getByRole('button', { name: 'Done' }));
+      expect(card.getByRole('button', { name: 'Your own animal' })).toHaveAttribute('aria-pressed', 'true');
+      fireEvent.click(card.getByRole('button', { name: 'Animal 12' }));
+      await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
+      fireEvent.click(card.getByRole('button', { name: 'Your own animal' }));
+      await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: CUSTOM }]));
+      fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
+      expect(card.queryByRole('button', { name: 'Subscribe' })).toBeNull();
+      expect(card.getByText(`You can make ${MAKES - 1} more.`)).toBeInTheDocument();
+    });
+    cleanup();
+    // Ben knows Ana and is in her outing: he sees the animal she had made.
+    await imIn(t.db, ana.personId, blitz);
+    await show(as(ben));
+    expect(screen.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', own);
+  });
+  it('refuses a photo with no animal, a made animal nobody made, and more than a few', async () => {
+    const { ana, ben } = await world(), sharp = (await import('sharp')).default;
+    const jpeg = await sharp({ create: { width: 64, height: 48, channels: 3, background: '#996644' } }).jpeg().toBuffer();
+    const send = (email?: string) => { const data = new FormData(); data.set('photo', new File([jpeg], 'p.jpg', { type: 'image/jpeg' })); if (email) data.set('email', email); return data; };
+    models.drawn = await sharp({ create: { width: 64, height: 64, channels: 4, background: '#b5651d' } }).png().toBuffer();
+    await expect(pickFace(t.db, ben.personId, CUSTOM)).rejects.toThrow('Pick one of the animals.');
+    expect((await customFaceRoute(new Request('http://loop.test/'), { params: Promise.resolve({ token: 'nope' }) })).status).toBe(404);
+    expect(await makeFaceAction(send('ana@cornell.edu'))).toMatchObject({ ok: false, signIn: true });
+    await withPortalTestSession(ana, async () => {
+      expect(await makeFaceAction(send())).toEqual({ ok: false, message: 'Enter the email to subscribe with.' });
+      // A person, an object: the ask is still kept, nothing is drawn, and their face stays.
+      models.look = '{"animal": false, "nearest": 1}';
+      expect(await makeFaceAction(send('ana@cornell.edu'))).toEqual({ ok: false, message: 'That does not look like an animal. Try a clear photo of one animal.' });
+      expect((await t.db.query('select makes,image from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ makes: 0, image: null }]);
+      expect((await t.db.query('select 1 from campus_face where person_id=$1', [ana.personId])).rows).toEqual([]);
+      const bad = new FormData(); bad.set('photo', new File(['not a picture'], 'p.jpg'));
+      expect(await makeFaceAction(bad)).toEqual({ ok: false, message: 'That file is not a photo Loop can read. Try a JPEG or a PNG.' });
+      models.look = '{"animal": true, "nearest": 23}';
+      for (let made = 1; made <= MAKES; made++) expect(await makeFaceAction(send())).toMatchObject({ ok: true, left: MAKES - made });
+      expect(await makeFaceAction(send())).toEqual({ ok: false, message: `You have made ${MAKES} animals, which is all for now.` });
     });
   });
   it('a stranger in the same outing is shown, by first name only', async () => {

@@ -4,7 +4,8 @@ import { knownTo } from './knows';
 import { LEVELS, levelOf, textFor } from './levels';
 import { findListing, weekListings, type Campus, type Listing } from './listings';
 import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
-import { animal, animalOf, PHOTO } from './animals';
+import { animal, animalOf, CUSTOM, customFace, PHOTO } from './animals';
+import { customFaces, MAKES } from './custom-face';
 import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
 import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Reward } from './rewards';
 import { nearTags } from './tags';
@@ -85,8 +86,10 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   // who picked theirs, and for the viewer, who is offered it in the account card.
   const wanted = [...shown].filter(id => id === me || picks.get(id) === PHOTO);
   const photos = wanted.length ? await (options.photos ?? accountPhotos)(db, wanted) : {};
-  const faceOf = (id: string) => { const pick = picks.get(id); return pick === PHOTO && photos[id] ? PHOTO : pick === undefined || pick === PHOTO ? animalOf(id) : pick; };
-  const picture = (id: string) => { const pick = faceOf(id); return pick === PHOTO ? photos[id] : animal(pick); };
+  // The animal a person had made is read for those who picked it, and for the viewer, who is offered theirs in the account card.
+  const made = await customFaces(db, [...shown].filter(id => id === me || picks.get(id) === CUSTOM));
+  const faceOf = (id: string) => { const pick = picks.get(id); return pick === PHOTO && photos[id] ? PHOTO : pick === CUSTOM && made.get(id)?.token ? CUSTOM : pick === undefined || pick < 0 ? animalOf(id) : pick; };
+  const picture = (id: string) => { const pick = faceOf(id); return pick === PHOTO ? photos[id] : pick === CUSTOM ? customFace(made.get(id)!.token!) : animal(pick); };
   const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: picture(id), ...more });
 
   let live: Live | null = null;
@@ -187,7 +190,8 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   const self = me ? names.get(me) : undefined;
   return {
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
-    viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
+    viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null,
+      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, asked: made.has(viewer.personId), makesLeft: made.get(viewer.personId)?.left ?? MAKES, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
     tickets, earning, live, places: me ? await nearTags(db, campus.id, known, now) : [],
   };
 }

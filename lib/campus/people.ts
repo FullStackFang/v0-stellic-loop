@@ -3,7 +3,7 @@ import { clerkClient } from '@clerk/nextjs/server';
 import type { Db, Q } from '../db';
 import { clerkIssuer, clerkPortalConfigured } from '../emba/clerk-identity';
 import { UNNAMED } from '../emba/member-name';
-import { ANIMALS, PHOTO } from './animals';
+import { ANIMALS, CUSTOM, PREMIUM } from './animals';
 import { CampusError } from './errors';
 import { listCampuses, type Campus } from './listings';
 import { schoolOfEmail } from './schools';
@@ -38,9 +38,10 @@ export async function pickedFaces(q: Q, personIds: readonly string[]): Promise<M
   const { rows } = await q.query<{ id: string; face: number }>('select person_id as id,face from campus_face where person_id=any($1::uuid[])', [personIds]);
   return new Map(rows.map(row => [row.id, row.face]));
 }
-/** A person picks their face: one of the animals, or PHOTO for the photo of their sign-in account. */
+/** A person picks their face: one of the animals, a premium one, PHOTO for the photo of their sign-in account, or CUSTOM for the animal they had made. */
 export async function pickFace(q: Q, personId: string, face: number): Promise<void> {
-  if (!Number.isInteger(face) || face < PHOTO || face >= ANIMALS) throw new CampusError('Pick one of the animals.');
+  if (!Number.isInteger(face) || face < CUSTOM || face >= ANIMALS + PREMIUM.length) throw new CampusError('Pick one of the animals.');
+  if (face === CUSTOM && !(await q.query('select 1 from campus_custom_face where person_id=$1 and image is not null', [personId])).rows.length) throw new CampusError('Pick one of the animals.');
   await q.query('insert into campus_face(person_id,face) values($1,$2) on conflict(person_id) do update set face=excluded.face,picked_at=now()', [personId, face]);
 }
 

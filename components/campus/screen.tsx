@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
 import { checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import { Rings } from '@/components/LoopGlyphs';
-import { ANIMALS, animal, PHOTO } from '@/lib/campus/animals';
+import { ANIMALS, animal, CUSTOM, PHOTO, PREMIUM } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
 import { landOf } from '@/lib/campus/sections';
 import { Composer, type Soon } from './composer';
 import { Near } from './near';
+import { OwnFace } from './own-face';
 import type { Coupon, Face, Screen, Seat, Ticket } from '@/lib/campus/view';
 
 // The campus screen, "This week" (design D16): one line of top bar, the search line, the count line, a sideways row of
@@ -214,7 +215,9 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
   // The pick shows at once, and goes back if it could not be kept.
   const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [, save] = useTransition();
   const choose = (next: number) => { const before = face; setFace(next); setMoved(true); save(async () => { if (!(await faceAction(next)).ok) setFace(before); }); };
-  const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : animal(face) }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
+  // The animal they had made from a photo, how many more they may make, and whether the pane that makes one is open.
+  const [own, setOwn] = useState(viewer.own), [left, setLeft] = useState(viewer.makesLeft), [asked, setAsked] = useState(viewer.asked), [making, setMaking] = useState(false);
+  const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : face === CUSTOM ? own : animal(face) }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   useEffect(() => {
     if (!open) return;
     const away = (event: MouseEvent) => { if (!box.current?.contains(event.target as Node)) setOpen(false); }, key = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
@@ -227,16 +230,22 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
   return <div className="cs-acct" ref={box}>
     <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setKit(kitNow()); setPicking(false); setMoved(false); setOpen(!open); }}>{avatar()}</button>
     {open && <div className="cs-lvl" role="dialog" aria-label="Your level">
-      <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => setPicking(!picking)}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
+      <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => { setPicking(!picking); setMaking(false); }}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
-      {picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><h4>Pick your picture</h4>
+      {picking && making ? <OwnFace asked={asked} left={left} onBack={() => setMaking(false)} onMade={(made, more) => { setOwn(made); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
+      : picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><h4>Pick your picture</h4>
           <button className="cs-btn sm" onClick={shuffle}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.6c1.3 0 2.4.7 3 1.8l1.8 3.4c.6 1.1 1.7 1.8 3 1.8h2.6M12.5 9.5l2 2-2 2M1.5 11.5h2.6c.8 0 1.6-.3 2.1-.8M9.8 5.3c.5-.5 1.3-.8 2.1-.8h2.6M12.5 2.5l2 2-2 2" /></svg>Shuffle</button>
           <button className="cs-btn sm go" onClick={() => setPicking(false)}>Done</button></div>
         <div className="cs-pets-grid" role="group" aria-label="Pick your picture">
           {viewer.ownPhoto && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
           {Array.from({ length: ANIMALS }, (_, at) => <button key={at} className="cs-pet" aria-pressed={face === at} aria-label={`Animal ${at + 1}`} onClick={() => choose(at)}><img src={animal(at)} alt="" /></button>)}</div>
+        <h5>Premium</h5>
+        <div className="cs-pets-grid" role="group" aria-label="Premium pictures">
+          {PREMIUM.map((name, at) => <button key={name} className="cs-pet" aria-pressed={face === ANIMALS + at} aria-label={name} onClick={() => choose(ANIMALS + at)}><img src={animal(ANIMALS + at)} alt="" /></button>)}
+          {own && <button className="cs-pet" aria-pressed={face === CUSTOM} aria-label="Your own animal" onClick={() => choose(CUSTOM)}><img src={own} alt="" /></button>}
+          <button className="cs-pet add" aria-label="Create your own" onClick={() => setMaking(true)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button></div>
         <small>Animal icons by <a href="https://www.figma.com/community/file/1514963172455082116" target="_blank" rel="noreferrer">Tran Mau Tri Tam</a>, CC BY 4.0.</small></div>
       /* eslint-enable @next/next/no-img-element */
       : <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
