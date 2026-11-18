@@ -275,7 +275,11 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
 /* The account card is one width whether or not a picture is being picked. The animals are 192px files, so nothing here is drawn
    over 96px: that keeps them sharp on a screen with two device pixels to one. */
-.cs-ava.big .cs-face { width: 88px; height: 88px; } .cs-pets-grid { gap: 12px; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body { max-height: min(60vh, 560px); overflow-y: auto; scrollbar-width: thin; }
+.cs-ava.big .cs-face { width: 88px; height: 88px; } .cs-pets-grid { gap: 12px; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body { max-height: min(60vh, 560px); overflow-y: auto; scrollbar-gutter: stable; }
+/* Its scrollbar: a slim ink pill that floats clear of the edge, darker under the pointer. No track, no arrows. */
+.cs-lvl-body::-webkit-scrollbar { width: 14px; } .cs-lvl-body::-webkit-scrollbar-track { background: none; margin: 10px 0; } .cs-lvl-body::-webkit-scrollbar-button { display: none; }
+.cs-lvl-body::-webkit-scrollbar-thumb { min-height: 44px; border: 4px solid transparent; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 26%, transparent) padding-box; } .cs-lvl-body::-webkit-scrollbar-thumb:hover, .cs-lvl-body::-webkit-scrollbar-thumb:active { background: var(--cs-ink) padding-box; }
+@supports not selector(::-webkit-scrollbar) { .cs-lvl-body { scrollbar-width: thin; scrollbar-color: color-mix(in oklch, var(--cs-ink) 30%, transparent) transparent; } }
 .cs .cs-pet:hover { transform: scale(1.1); }
 @media (max-width: 520px) { .cs-pets-grid { grid-template-columns: repeat(5, 1fr); gap: 10px; } .cs-ava.big .cs-face { width: 76px; height: 76px; } }
 .cs-pets small { display: block; margin-top: 12px; font-size: 11.5px; color: var(--cs-mute); } .cs-pets small a { text-decoration: underline; }
