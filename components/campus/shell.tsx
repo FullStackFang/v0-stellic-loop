@@ -2,7 +2,12 @@ import type { ReactNode } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { campusViewer } from '@/lib/campus/session';
-import { Kit, kitScript } from './kit';
+import { Kit } from './kit';
+import '@/app/c/campus.css';
+
+// Runs before the page is painted, so a picked or school kit never flashes in after the default. It is written here and
+// not in kit.tsx because a server component cannot call a function of a client file. The key is the one kit.tsx uses.
+const kitScript = (own: string) => `try{document.documentElement.dataset.kit=localStorage.getItem('loop-kit')||${JSON.stringify(own).replace(/</g, '\u003c')}}catch(e){}`;
 import '@/app/c/campus.css';
 
 /**

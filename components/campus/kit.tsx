@@ -22,9 +22,6 @@ export function showKit(slug: string) { document.documentElement.dataset.kit = s
 /** Pick a kit: show it and keep it on this browser. */
 export function pickKit(slug: string) { try { localStorage.setItem(KEY, slug); } catch { /* shown, not kept */ } showKit(slug); }
 
-/** Runs before the page is painted, so a picked or school kit never flashes in after the default. */
-export const kitScript = (own: string) => `try{document.documentElement.dataset.kit=localStorage.getItem(${JSON.stringify(KEY)})||${JSON.stringify(own).replace(/</g, '\\u003c')}}catch(e){}`;
-
 /** Keeps the kit right when a campus page is reached without a page load: the person's pick, or else `own`. */
 export function Kit({ own }: { own: string }) {
   useEffect(() => { showKit(pickedKit() ?? own); }, [own]);
