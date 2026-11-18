@@ -16,7 +16,7 @@ import AddPeoplePage from './[namespace]/add/page';
 import InnerMembersPage from './[namespace]/in/[slug]/page';
 import InnerTeamPage from './[namespace]/in/[slug]/team/page';
 import ResourcesPage from './[namespace]/resources/page';
-import { Rail } from './rail';
+import { Bar } from './bar';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const at = vi.hoisted(() => ({ params: {} as Record<string, string>, path: '/groups' }));
@@ -184,17 +184,20 @@ it('gives a long roster a find box and a filter by role, inside one frame', asyn
   expect(screen.getByText(/Nobody matches/)).toBeInTheDocument();
 });
 
-it('draws the rail as the tree a person can open', async () => {
+it('names in the bar the top groups a person can open, and the one they are in', async () => {
   const f = await tree();
   const rail = async (p: Principal) => treeOrder(await listGroupTree(t.db, p)).map(group => ({ id: group.loopId, parent: group.parentLoopId, namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
   expect((await rail(f.outer)).map(group => `${group.depth} ${group.name}`)).toEqual(['0 EMBA 2027', '1 Team 1', '2 NBAE 6830', '1 Team 2']);
   const mine = await rail(f.inner);
   expect(mine.map(group => `${group.depth} ${group.name} ${group.handle}`)).toEqual(['0 Team 1 @emba-2027/team-1', '1 NBAE 6830 @emba-2027/nbae-6830']);
   at.params = { namespace: 'emba-2027', slug: 'nbae-6830' }; at.path = '/groups/emba-2027/in/nbae-6830/team';
-  render(<Rail groups={mine} account={null} />);
-  expect(document.querySelector('.lp-switch-name')).toHaveTextContent('NBAE 6830');
-  expect(screen.getByRole('link', { name: 'Record' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/team');
-  expect(screen.getByRole('link', { name: 'Record' })).toHaveAttribute('aria-current', 'page');
-  expect(screen.getByRole('link', { name: 'Resources' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/team?tab=resources');
+  render(<Bar groups={mine} face={null} account={null} />);
+  // Team 1 is the highest group this person can open; NBAE 6830 is inside it and is named because they are in it.
   expect(screen.getByRole('link', { name: /Team 1/ })).toHaveAttribute('href', '/groups/emba-2027/in/team-1/team');
+  expect(screen.getByRole('link', { name: /NBAE 6830/ })).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByRole('link', { name: 'All groups' })).toHaveAttribute('href', '/groups');
+  cleanup(); at.params = {}; at.path = '/groups';
+  render(<Bar groups={mine} face={null} account={null} />);
+  expect(screen.queryByRole('link', { name: /NBAE 6830/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'All groups' })).toHaveAttribute('aria-current', 'page');
 });

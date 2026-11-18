@@ -67,13 +67,15 @@ it('shows a member the team as their assistant would see it, with only the contr
   await claim(t.db, f.ana, { ...f.scope, what: 'Slides 4 to 8', owner: 'ben', tags: ['ben'] });
   await claim(t.db, f.ben, { ...f.scope, what: 'Slides 1 to 3' });
 
-  // The team's name, its announcements and where it stands are beside every tab; decisions open first.
+  // The team's name, its announcements and where it stands are beside every tab.
   let ben = await view(f.ben);
   expect(screen.getByRole('heading', { name: 'Study team' })).toBeInTheDocument();
   expect(screen.getByText(/Deck due Friday\./)).toBeInTheDocument();
   expect(screen.getByText(/Google Slides\./)).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /2 open claims/ })).toHaveAttribute('href', '/groups/study-team/team?tab=claims');
   expect(screen.getByRole('link', { name: /1 output.*1 flagged/ })).toHaveAttribute('href', '/groups/study-team/team?tab=outputs');
+  ben.unmount();
+  ben = await view(f.ben, 'decisions');
   // The decision an output conflicts with links to that output.
   expect(screen.getByRole('link', { name: /Output #3 is marked as conflicting with this decision/ })).toHaveAttribute('href', '/groups/study-team/team?tab=outputs#r3');
   expect(screen.queryByRole('button', { name: 'Post announcement' })).not.toBeInTheDocument();
@@ -133,19 +135,48 @@ it('reads the header and the shown tab only, records no read it did not make, an
   const recorded = async () => (await t.db.query<{ n: number }>("select count(*)::int as n from emba_audit where person_id=$1 and action='plan:read'", [f.owner.personId])).rows[0].n;
   const open = async (tab?: string) => { for (const read of Object.values(reads)) read.mockClear(); const before = await recorded(); const page = await view(f.owner, tab); const out = { made: made(), recorded: await recorded() - before }; return { page, ...out }; };
   // Decisions, claims and outputs come from the header's reads: the list of groups, the team's state and its brief are the three reads recorded.
-  for (const tab of [undefined, 'claims', 'outputs']) {
+  for (const tab of ['decisions', 'claims', 'outputs']) {
     const shown = await open(tab);
     expect([shown.made, shown.recorded], tab).toEqual([['listTeamEvents'], 3]);
     // The count of open asks is in the tab bar on every tab, without the asks being listed.
     expect(screen.getByRole('link', { name: 'Asks1' })).toHaveAttribute('href', '/groups/study-team/team?tab=asks');
     shown.page.unmount();
   }
+  // The first tab, All, lays out what is coming up, so it also reads the asks, the upcoming events, the ideas and the travel.
+  const all = await open();
+  expect([all.made, all.recorded]).toEqual([['listAsks', 'listTeamEvents', 'upcomingEvents'], 7]);
+  all.page.unmount();
   for (const [tab, extra, records] of [['asks', ['listAsks'], 4], ['brief', ['briefHistory'], 3], ['mine', ['myRecentRecords'], 4], ['events', ['archivedEvents', 'upcomingEvents'], 6]] as const) {
     const shown = await open(tab);
     expect([shown.made, shown.recorded], tab).toEqual([[...extra, 'listTeamEvents'].sort(), records]);
     if (tab === 'asks') expect(screen.getByText('Red or white?')).toBeInTheDocument();
     shown.page.unmount();
   }
+});
+it('opens on what is coming up, a column a day, and marks what waits on the reader', async () => {
+  const f = await fixture();
+  const day = (plus: number) => new Date(Date.now() + plus * 86_400_000).toLocaleDateString('sv-SE', { timeZone: 'America/New_York' });
+  expect((await act(f.owner, () => saveTeamBrief(idle, form({ ...f.ids, body: 'Final deck.', deadline: day(20), timezone: 'America/New_York', expectedVersion: '0' })))).status).toBe('success');
+  await logDecision(t.db, f.ana, { ...f.scope, topic: 'deck-tool', statement: 'Google Slides.', newTopic: true });
+  await claim(t.db, f.ana, { ...f.scope, what: 'Slides 4 to 8', owner: 'ben' });
+  await claim(t.db, f.ben, { ...f.scope, what: 'Slides 1 to 3', dueOn: day(1) });
+  expect((await createAsk(t.db, f.ana, { ...f.scope, question: 'Red or white?', kind: 'one', options: ['Red', 'White'], closesAt: new Date(Date.now() + 86_400_000).toISOString().slice(0, 19) + 'Z' })).saved).toBe(true);
+  await view(f.ben);
+  const column = (name: string) => within(screen.getByRole('region', { name }));
+  // Asked of him today: he can take it or pass from the card. His own claim and the open ask fall on tomorrow.
+  expect(column('Today').getByText('Take it or pass')).toBeInTheDocument();
+  expect(column('Today').getByRole('button', { name: 'Confirm: I will do this' })).toBeInTheDocument();
+  expect(column('Today').getByText(/1 thing/)).toHaveTextContent('1 needs you');
+  expect(column('Tomorrow').getByText(/^Yours, due/)).toBeInTheDocument();
+  expect(column('Tomorrow').getByText('Needs your answer')).toBeInTheDocument();
+  expect(column('Tomorrow').getByRole('link', { name: 'Red or white?' })).toBeInTheDocument();
+  // What is settled is one line each, and opens where it is kept.
+  expect(screen.getByRole('link', { name: 'Google Slides.' })).toHaveAttribute('href', '/groups/study-team/team?tab=decisions#r1');
+  cleanup();
+  // Ana asked and has answered nothing either, but nothing was asked of her as a claim.
+  await view(f.ana);
+  expect(screen.queryByText('Take it or pass')).not.toBeInTheDocument();
+  expect(within(screen.getByRole('region', { name: 'Tomorrow' })).getByText('Needs your answer')).toBeInTheDocument();
 });
 it('shows the editing controls to an owner or organizer only, and the asking form to those who may post', async () => {
   const f = await fixture();
