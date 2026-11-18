@@ -190,6 +190,11 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-ava .cs-face { width: 38px; height: 38px; }
 .cs-lvb { position: absolute; right: -5px; bottom: -4px; min-width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; font-size: 11.5px; font-weight: 740; line-height: 1; color: var(--cs-paper); background: var(--cs-action); box-shadow: 0 0 0 2px var(--cs-field); transition: transform .2s var(--cs-ease); }
 .cs-acct > button:hover .cs-lvb { transform: scale(1.14); }
+/* The admin's crown, on their own picture only: it drops on, then sways. */
+.cs-crown { position: absolute; right: -7px; top: -11px; width: 20px; height: 17px; transform-origin: 50% 100%; transform: rotate(20deg); animation: cs-crown-on .6s var(--cs-expo) backwards, cs-crown-sway 2.6s ease-in-out .6s infinite alternate; }
+.cs-crown svg { display: block; width: 100%; height: 100%; overflow: visible; fill: oklch(87% 0.17 92); stroke: var(--cs-ink); stroke-width: 1.6; stroke-linejoin: round; } .cs-ava.big .cs-crown { right: -6px; top: -18px; width: 34px; height: 28px; }
+@keyframes cs-crown-on { from { opacity: 0; transform: translateY(-16px) rotate(-10deg) scale(.6); } } @keyframes cs-crown-sway { to { transform: rotate(11deg) translateY(-1px); } }
+@media (prefers-reduced-motion: reduce) { .cs-crown { animation: none; } }
 .cs-ava.big .cs-face { width: 68px; height: 68px; font-size: 24px; }
 .cs-ava.big .cs-lvb { min-width: 26px; height: 26px; font-size: 15px; right: -4px; bottom: -2px; box-shadow: 0 0 0 3px var(--cs-field); }
 .cs-lvl { position: absolute; right: 0; top: calc(100% + 14px); z-index: 30; width: 344px; max-width: calc(100vw - 28px); border-radius: var(--cs-r); overflow: hidden; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 92% 0; animation: cs-card .3s var(--cs-expo); }
