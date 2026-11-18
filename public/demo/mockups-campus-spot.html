@@ -260,10 +260,10 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-own .cs-prem { position: relative; margin: -14px -20px -16px; padding: 18px 20px 0; overflow: hidden; background: var(--cs-ink); color: var(--cs-on-ink); }
 .cs .cs-prem-back { position: absolute; right: 16px; top: 14px; z-index: 1; height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; color: var(--cs-on-ink); box-shadow: inset 0 0 0 1.5px var(--cs-on-ink-mute); }
 .cs-own .cs-prem-kick { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 620; color: var(--cs-field); } .cs-prem-kick::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--cs-field); }
-.cs-own .cs-prem-big { margin-top: 12px; font-size: 46px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.055em; line-height: .92; color: var(--cs-on-ink); } .cs-prem-big small { font-size: 17px; font-weight: 560; letter-spacing: -0.02em; color: var(--cs-on-ink-mute); }
-.cs-prem-perks { position: relative; display: grid; gap: 7px; margin-top: 16px; font-size: 14px; line-height: 1.25; color: var(--cs-on-ink-mute); } .cs-prem-perks span { display: grid; grid-template-columns: 7px 1fr; gap: 10px; align-items: baseline; }
-.cs-prem-perks span::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--cs-field); transform: translateY(-1px); } .cs-prem-perks span:first-child { font-weight: 620; color: var(--cs-on-ink); } .cs-prem-perks small { margin: 0 0 0 17px; font-size: 12.5px; color: var(--cs-on-ink-mute); }
-.cs-prem-figs { position: absolute; right: -16px; top: 44px; display: flex; pointer-events: none; } .cs-prem-figs img { width: 86px; height: 86px; margin-left: -32px; } .cs-prem-figs img:first-child { transform: rotate(-9deg) translateY(10px) scale(.84); } .cs-prem-figs img + img { transform: rotate(5deg); }
+.cs-own .cs-prem-big { margin-top: 12px; font-size: 46px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.055em; line-height: .92; color: var(--cs-on-ink); } .cs-own .cs-prem-big small { display: inline; margin: 0; font-size: 17px; font-weight: 560; letter-spacing: -0.02em; color: var(--cs-on-ink-mute); }
+.cs-prem-perks { position: relative; display: grid; gap: 7px; margin-top: 26px; font-size: 14px; line-height: 1.25; color: var(--cs-on-ink-mute); } .cs-prem-perks span { display: grid; grid-template-columns: 7px 1fr; gap: 10px; align-items: baseline; }
+.cs-prem-perks span::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--cs-field); transform: translateY(-1px); } .cs-prem-perks span:first-child { font-weight: 620; color: var(--cs-on-ink); } .cs-own .cs-prem-perks small { margin: 0 0 0 17px; font-size: 12.5px; color: var(--cs-on-ink-mute); }
+.cs-prem-figs { position: absolute; right: -16px; top: 44px; display: flex; pointer-events: none; } .cs-prem-figs img { width: 80px; height: 80px; margin-left: -32px; } .cs-prem-figs img:first-child { transform: rotate(-9deg) translateY(10px) scale(.84); } .cs-prem-figs img + img { transform: rotate(5deg); }
 .cs-prem-stub { position: relative; display: grid; gap: 8px; margin: 18px -20px 0; padding: 14px 16px 16px; background: var(--cs-field); border-top: 2px dashed var(--cs-ink); }
 .cs-prem-stub::before, .cs-prem-stub::after { content: ""; position: absolute; top: -10px; width: 18px; height: 18px; border-radius: 50%; background: var(--cs-paper); } .cs-prem-stub::before { left: -10px; } .cs-prem-stub::after { right: -10px; }
 .cs .cs-prem-stub > .cs-btn { justify-self: stretch; height: 46px; font-size: 15.5px; }
@@ -476,16 +476,16 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-near-band small { position: absolute; right: 14px; top: 15px; font-size: 10px; opacity: .6; }
 /* a plan is a postage stamp: perforated, in the hot ink, with a drawn picture, its hour, and who is going */
 .cs-pin { display: flex; align-items: flex-end; text-align: left; transition: opacity .3s; }
-.cs-stamp { position: relative; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); scale: var(--stamp, 1); transform-origin: 30% 100%; transition: rotate .35s var(--cs-ease), scale .35s var(--cs-ease); }
-.cs-stamp > span { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
+.cs-postage { position: relative; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); scale: var(--stamp, 1); transform-origin: 30% 100%; transition: rotate .35s var(--cs-ease), scale .35s var(--cs-ease); }
+.cs-postage > span { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
   mask: linear-gradient(#000 0 0) center / calc(100% - 6px) calc(100% - 6px) no-repeat, radial-gradient(circle 2.1px at 50% 50%, #0000 94%, #000) -3px -3px / 6px 6px; }
-.cs-stamp > span::before { content: ''; position: absolute; inset: 5.5px; box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
-.cs-stamp > span svg { width: 23px; height: 23px; fill: none; stroke: var(--cs-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.cs-stamp b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; } .cs-stamp small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
-.cs-pin:hover .cs-stamp { --lean: 0deg; }
-.cs-pin.sel .cs-stamp { --lean: 2deg; scale: calc(1.3 * var(--stamp, 1)); filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 3.5px 0 var(--cs-ink)); }
+.cs-postage > span::before { content: ''; position: absolute; inset: 5.5px; box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
+.cs-postage > span svg { width: 23px; height: 23px; fill: none; stroke: var(--cs-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cs-postage b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; } .cs-postage small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.cs-pin:hover .cs-postage { --lean: 0deg; }
+.cs-pin.sel .cs-postage { --lean: 2deg; scale: calc(1.3 * var(--stamp, 1)); filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 3.5px 0 var(--cs-ink)); }
 .cs-pin.dim { opacity: .25; } .cs-near .maplibregl-marker:has(.cs-pin.sel) { z-index: 5; }
-.cs-pin.now .cs-stamp::after { content: ''; position: absolute; inset: 2px; box-shadow: 0 0 0 2.5px var(--cs-ink); pointer-events: none; animation: cs-ping 2.4s var(--cs-expo) infinite; }
+.cs-pin.now .cs-postage::after { content: ''; position: absolute; inset: 2px; box-shadow: 0 0 0 2.5px var(--cs-ink); pointer-events: none; animation: cs-ping 2.4s var(--cs-expo) infinite; }
 /* the plan that is on: a burst of the second ink behind it, and a postmark over its corner */
 .cs-burst { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 110px; height: 110px; z-index: -1; pointer-events: none; animation: cs-spin 26s linear infinite, cs-show .5s var(--cs-ease) both; }
 .cs-burst path { fill: var(--second); stroke: var(--cs-ink); stroke-width: 1.3; stroke-linejoin: round; }
@@ -494,7 +494,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-pin > .cs-stack { position: relative; z-index: 1; margin: 0 0 -3px -10px; scale: var(--stamp, 1); transform-origin: 0 100%; }
 .cs-pin > .cs-stack .cs-face { width: 29px; height: 29px; margin-left: -9px; font-size: 11px; background: var(--card); box-shadow: 0 0 0 1.5px var(--cs-ink), 1.5px 2px 0 1px var(--soft); } .cs-pin > .cs-stack .cs-face:first-child { margin-left: 0; }
 /* near the right edge a stamp faces inward, so it is never cut off */
-.far > .cs-pin { translate: -100% 0; flex-direction: row-reverse; } .far > .cs-pin > .cs-stack { margin: 0 -10px -3px 0; transform-origin: 100% 100%; } .far > .cs-pin .cs-stamp { transform-origin: 70% 100%; } .far > .cs-pin .cs-mark { left: auto; right: 30px; }
+.far > .cs-pin { translate: -100% 0; flex-direction: row-reverse; } .far > .cs-pin > .cs-stack { margin: 0 -10px -3px 0; transform-origin: 100% 100%; } .far > .cs-pin .cs-postage { transform-origin: 70% 100%; } .far > .cs-pin .cs-mark { left: auto; right: 30px; }
 .cs-you { display: grid; justify-items: center; gap: 3px; pointer-events: none; } .cs-you > * { scale: var(--stamp, 1); }
 .cs-you .cs-face, .cs-you > i { display: grid; width: 34px; height: 34px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3.5px var(--cs-ink); } .cs-you > i { background: var(--second); }
 .cs-you > b { padding: 2px 5px 1px; font-stretch: 86%; font-size: 8.5px; font-weight: 760; letter-spacing: .12em; line-height: 1.2; color: var(--card); background: var(--cs-ink); border-radius: 2px; transform-origin: 50% -40%; }
@@ -595,6 +595,9 @@ body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Arch
 .mk-go { flex: none; display: inline-flex; align-items: center; gap: 2px; margin-left: 4px; padding: 2px 6px 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 760; letter-spacing: .04em; text-transform: uppercase; color: var(--cs-on-action, #fff); background: var(--cs-action); transition: translate .25s var(--cs-expo), box-shadow .25s var(--cs-expo); }
 .mk-name .mk-go svg { width: 11px; height: 11px; stroke-width: 3; stroke-linecap: round; translate: none; } .mk-name:hover .mk-go { translate: -1px -1px; box-shadow: 2px 2px 0 var(--cs-ink); } .mk-name:hover .mk-go svg { translate: 1px -1px; }
 .mk-spot b:has(.mk-name) { overflow: visible; padding-right: 26px; } .mk-spot.big .mk-go { font-size: 12px; }
+.mk-thumb { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; border: 0; padding: 0; border-radius: 8px 8px 8px 3px; cursor: pointer; background: linear-gradient(115deg, transparent 44%, #fbf7ec 44% 58%, transparent 58%), linear-gradient(20deg, transparent 62%, #fbf7ec 62% 72%, transparent 72%), #f0e8d4; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); transition: translate .25s var(--cs-expo), box-shadow .25s var(--cs-expo); }
+.mk-thumb i { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -10px 0 0 -6px; border-radius: 50% 50% 50% 0; rotate: -45deg; background: #ff5a43; box-shadow: 0 0 0 1.5px #16294d; } .mk-thumb:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-ink); }
+.mk-spot > div:has(.mk-thumb) > b, .mk-spot > div:has(.mk-thumb) > small { padding-right: 52px; } .mk-spot > div:has(.mk-thumb) .mk-x { right: 60px; }
 .cs .cs-btn.mk-in { background: var(--cs-field); color: var(--cs-ink); }
 .mk-map { position: relative; min-height: 290px; background: #f0e8d4; } .mk-mapel { position: absolute; inset: 0; font-family: Archivo, system-ui, sans-serif; } .mk-tag, .mk-x.mk-back { z-index: 2; }
 .mk-stamp { border: 0; padding: 0; background: none; font: inherit; cursor: pointer; display: grid; justify-items: center; gap: 4px; color: #16294d; filter: drop-shadow(2px 2.5px 0 rgb(22 41 77 / .25)); }
@@ -625,7 +628,7 @@ body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Arch
 <div class="mk-top">
   <h1>From an area to a spot</h1>
   <p>A plan can start loose: "dumplings tonight after class @downtown". The @place is the area. The exact spot is a second, optional thing that the people going settle between them, on the plan itself. Nobody has to fill it in to post, and nobody has to approve it.</p>
-  <p>You are one of four people going. Open the plan and you see the spots people have suggested in @downtown, side by side. Tap "I'm for this" on every spot you would be happy with (the button then reads "You're for this"; tap it again to take it back. The suggestion stays, at 0, for others to back. If you suggested it and nobody is for it, an x removes it), or suggest another: the box always offers two or three places in the area that nobody has suggested yet, so one tap is enough and it is clear what to type. The one with the most people is what the ticket shows. Once more than half of those going back the same spot, it is the spot, and the map appears. A spot's name is a link, with a pin in front and a blue "Map" tab after it: tap it and the map takes the whole panel, in the Print look, with every suggested spot as a stamp (the one you opened is the coral one; tap another stamp to move to it). The x in the corner, or Esc, goes back to the spots. Try it: back Dumpling House.</p>
+  <p>You are one of four people going. Open the plan and you see the spots people have suggested in @downtown, side by side. Tap "I'm for this" on every spot you would be happy with (the button then reads "You're for this"; tap it again to take it back. The suggestion stays, at 0, for others to back. If you suggested it and nobody is for it, an x removes it), or suggest another: the box always offers two or three places in the area that nobody has suggested yet, so one tap is enough and it is clear what to type. The one with the most people is what the ticket shows. Once more than half of those going back the same spot, it is the spot, and the map appears. Each spot Loop can place has a small map tile in its corner. Tap the tile and the map takes the whole panel, in the Print look, with every suggested spot as a stamp (the one you opened is the coral one; tap another stamp to move to it). The x in the corner, or Esc, goes back to the spots. Try it: back Dumpling House.</p>
   <div class="mk-bar">See it as <button data-see="none" aria-pressed="false">Just posted, no suggestions</button><button data-see="some" aria-pressed="true">Two suggestions</button><button data-see="set" aria-pressed="false">Settled</button></div>
 </div>
 <div class="mk-wrap"><div class="cs mk-frame" id="frame"></div></div>
@@ -647,6 +650,12 @@ const settled = () => { const [top, next] = ranked(); return top && top.for.leng
 const mine = () => spots.find(s => s.for.includes('You'));
 function back(name) { let s = spots.find(x => x.name.toLowerCase() === name.toLowerCase()); if (!s) { s = { name, for: [], by: 'You' }; spots.push(s); fresh = name; } s.for = s.for.includes('You') ? s.for.filter(n => n !== 'You') : [...s.for, 'You']; draw(); }
 
+/** The name and address of a spot, with the way to its map. A name Loop cannot place is plain text in every style. */
+function head(n) {
+  const plain = `<b>${n}</b><small>${near(n)}</small>`, tip = 'title="See it on the map"';
+  if (!at(n)) return plain;
+  return `${plain}<button class="mk-thumb" data-look="${n}" aria-label="See ${n} on the map" ${tip}><i></i></button>`;
+}
 function draw() {
   const top = ranked()[0], done = settled(), where = done ? `<b class="cs-at">@downtown</b><span class="mk-lean">${done.name}</span>` : top ? `<b class="cs-at">@downtown</b>leaning ${top.name} · ${top.for.length} of ${GOING.length}` : `<b class="cs-at">@downtown</b>spot not picked`;
   const ticket = `<article class="cs-ev open"><div class="cs-top"><span class="cs-tile"><small>Today</small><b>7pm</b></span><div class="cs-body"><h3>Dumplings after class</h3><p>${where}</p></div><button class="cs-more" aria-expanded="true">Close</button></div>
@@ -655,12 +664,12 @@ function draw() {
   const tries = n => KNOWN.filter(k => !spots.some(x => x.name === k[0])).slice(0, n).map(k => `<button class="cs-chip idea" data-back="${k[0]}" title="${k[1]}">${k[0]}</button>`).join('');
   const opts = typed.length > 1 ? KNOWN.filter(k => k[0].toLowerCase().includes(typed.toLowerCase()) && !spots.some(s => s.name === k[0])).slice(0, 2) : [];
   const cards = ranked().map((s, at) => { const you = s.for.includes('You'), state = done === s ? 'set' : at === 0 && s.for.length > 1 ? 'lead' : '';
-    return `<div class="mk-spot ${state}" ${fresh === s.name ? '' : 'style="animation:none"'}><em>${done === s ? 'The spot' : state === 'lead' ? 'Leading' : 'Spot'}</em><div>${drop(s)}<b>${nameOf(s.name)}</b><small>${near(s.name)}</small>
+    return `<div class="mk-spot ${state}" ${fresh === s.name ? '' : 'style="animation:none"'}><em>${done === s ? 'The spot' : state === 'lead' ? 'Leading' : 'Spot'}</em><div>${drop(s)}${head(s.name)}
       <div class="foot"><span class="cs-stack">${s.for.map(n => face(GOING.find(g => g.name === n).pet)).join('')}</span><span>${s.for.length} of ${GOING.length}</span><button class="cs-btn sm ${you ? 'mk-in' : 'go'}" aria-pressed="${you}" data-back="${s.name}">${you ? "You're for this" : "I'm for this"}</button></div></div></div>`; }).join('');
   const add = `<div class="mk-add"><input data-typed placeholder="Suggest a spot in @downtown" value="${typed}"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${opts.length ? opts.map(k => `<button class="cs-chip idea" data-back="${k[0]}">${k[0]}</button>`).join('') : typed.length > 1 ? `<button class="cs-chip idea" data-back="${typed}">Suggest "${typed}"</button>` : `<small>Try</small>${tries(3)}`}</div></div>`;
   const hints = opts.length ? opts.map(k => `<button class="cs-chip idea" data-back="${k[0]}">${k[0]}</button>`).join('') : typed.length > 1 ? `<button class="cs-chip idea" data-back="${typed}">Suggest "${typed}"</button>` : `<small class="try">Try</small>${tries(2)}`;
   const body = done
-    ? `<div class="mk-set"><div class="mk-spot set big" style="animation:none"><em>The spot</em><div><b>${nameOf(done.name)}</b><small>${near(done.name)}</small>
+    ? `<div class="mk-set"><div class="mk-spot set big" style="animation:none"><em>The spot</em><div>${head(done.name)}
         <div class="foot"><span class="cs-stack">${done.for.map(n => face(GOING.find(g => g.name === n).pet)).join('')}</span><span>${done.for.length} of ${GOING.length} are for it</span>${done.for.includes('You') ? `<button class="cs-btn sm mk-in" aria-pressed="true" data-back="${done.name}">You're for this</button>` : `<button class="cs-btn sm go" data-back="${done.name}">I'm for this</button>`}</div></div></div>
         <figure class="cs-map"><div class="mk-fake-map"></div><figcaption><b>${done.name}</b> ${near(done.name)}</figcaption></figure></div>
       <div class="mk-others"><small>${ranked().length > 1 ? 'Also suggested' : 'Or'}</small>${ranked().filter(x => x !== done).map(x => `<button class="cs-chip idea${x.for.includes('You') ? ' on' : ''}" data-back="${x.name}" title="${x.for.includes('You') ? 'You are for this too. Tap to take it back' : 'Back this too'}">${x.name}<i>${x.for.length}</i></button>${drop(x)}`).join('')}<span class="mk-push"></span>${hints}<input data-typed placeholder="or type a spot" value="${typed}"></div>`
