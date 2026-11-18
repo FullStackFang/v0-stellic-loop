@@ -80,7 +80,7 @@
 - [ ] 10.10 Drive the real page in a browser against a database that has the migrations; its look has only been checked as the mockup
 - [ ] 10.11 Founder: apply `20261118300000_campus_tag.sql` by hand before running or deploying this code: This week reads the new column
 
-## 11. Campus: posting lives on This week behind a "+" (added 2026-11-18, design D13; founder picked C with the panel of B)
+## 11. Campus: posting lives on This week behind a "+" in the line above the row (added 2026-11-18, design D13; founder asked for a small "+" opening the panel of B)
 
 - [x] 11.1 Mockup `public/demo/mockups-campus-plus.html` with three directions, then the picked combination drawn with the built styles
 - [x] 11.2 `Screen.places` in the screen model, read for a signed-in viewer

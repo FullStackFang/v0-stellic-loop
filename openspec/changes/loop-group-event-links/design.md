@@ -112,16 +112,16 @@ The founder rejected D11's form the same day: posting "doesn't need to be this f
 - The old form stays for changing or cancelling a plan, which is a correction and not a post.
 - My calls, not confirmed: "tonight" with no hour is 7pm; a bare hour of 1 to 7 is the afternoon; one @place per plan; the suggestions show counts and known first names but no faces; the composer lives on the "Post a plan" page and not on This week itself.
 
-### D13. Posting lives on "This week", behind a "+" in the corner (added 2026-11-18)
+### D13. Posting lives on "This week", behind a "+" in the line above the row (added 2026-11-18)
 
-The founder did not want posting hosted on a page of its own behind a top-bar button: it should sit next to the tickets and the "Nothing here yet" card, always there, as a "+". From `public/demo/mockups-campus-plus.html` (A the first ticket is yours, B a "+" ticket opening a wide panel, C a "+" in the corner opening a popover) the founder asked for C's footprint with B's panel.
+The founder did not want posting hosted on a page of its own behind a top-bar button: it should sit next to the tickets and the "Nothing here yet" card, always there, as a "+". From `public/demo/mockups-campus-plus.html` (A the first ticket is yours, B a "+" ticket opening a wide panel, C a "+" in the corner opening a popover) the founder asked for C's footprint with B's panel. I first read that as a "+" fixed in the bottom corner and built it; the founder corrected it: the "+" goes in the line above the row.
 
-- **Closed, posting is one button.** A "+" fixed in the bottom corner of "This week" (`.cs-fab`), there however far the row is scrolled. The "Post a plan" button leaves the top bar: one control, one meaning. Signed out, the "+" is a link to sign-in.
+- **Closed, posting is one button.** A small "+" beside the count in the line above the tickets (`.cs-plus`), which does not move when the row is scrolled sideways. The "Post a plan" button leaves the top bar: one control, one meaning. Signed out, the "+" is a link to sign-in.
 - **Open, it is the wide panel in the row.** The same panel tickets use for Details (`.cs-sheet`), at the start of the row, with the line on the left and the @places people use and "Already on in @place" on the right. The tickets move over; nothing is covered. On an empty week it opens beside the "Nothing here yet" card.
 - **The post page is only for changing a plan.** `/c/<campus>/post` without `?plan=` leads to "This week".
 - **The screen model carries the places** (`Screen.places`), read with the rest of the week for a signed-in viewer, so opening the panel asks the server for nothing.
 
-Calls of mine the founder has not confirmed: the panel opens at the start of the row (not over it); opening it closes an open ticket's details, and the other way round; the places list shows the five busiest when nothing is being typed; picking a place when the line already has one replaces it; the "+" may sit over the end of the "Rewards you are earning" shelf on a short window.
+Calls of mine the founder has not confirmed: the panel opens at the start of the row (not over it); opening it closes an open ticket's details, and the other way round; the places list shows the five busiest when nothing is being typed; picking a place when the line already has one replaces it; the "+" sits beside the count ("4 things on this week"), not in the search line.
 
 ## Risks / Trade-offs
 

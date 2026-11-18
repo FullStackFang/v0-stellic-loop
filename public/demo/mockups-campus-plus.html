@@ -372,10 +372,10 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-line-end { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .cs-line-end .cs-note { flex: 1; min-width: 160px; }
 .cs-line-bad { font-size: 14px; font-weight: 580; color: var(--cs-action); }
 .cs-at { margin-right: 7px; font-weight: 660; color: var(--cs-action); }
-/* the "+" that starts a plan stays in the corner; its panel opens in the row, the line beside what others are doing */
-.cs .cs-fab { position: fixed; right: 24px; bottom: 24px; z-index: 6; width: 60px; height: 60px; display: grid; place-items: center; border-radius: var(--cs-r); background: var(--cs-action); color: var(--cs-paper); box-shadow: inset 0 0 0 2px var(--cs-ink), 5px 5px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), background-color .15s; }
-.cs .cs-fab:hover { transform: translate(-2px, -2px); } .cs .cs-fab[aria-expanded=true] { background: var(--cs-ink); }
-.cs-fab svg { width: 26px; height: 26px; transition: transform .35s var(--cs-expo); } .cs-fab[aria-expanded=true] svg { transform: rotate(45deg); }
+/* the "+" that starts a plan sits in the line above the row; its panel opens in the row, the line beside what others are doing */
+.cs .cs-plus { flex: none; margin-right: auto; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px 12px 12px 4px; background: var(--cs-action); color: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), background-color .15s; }
+.cs .cs-plus:hover { transform: translate(-1px, -1px); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
+.cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
 .cs-sheet.cs-post { flex-basis: min(780px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
 .cs-post-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 10px; }
 .cs-post .cs-line { align-content: start; } .cs-post .cs-line-card, .cs-post .cs-line-card:focus-within { padding: 0; border-radius: 0; background: none; box-shadow: none; }
@@ -406,7 +406,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-plain { padding: 24px 16px 48px; } .cs-adm { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 48px; } .cs-adm .cs-form .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); }
   .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
   .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
-  .cs .cs-fab { right: 16px; bottom: 16px; } .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }
+  .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }
   .cs-ev { flex-basis: 260px; } .cs-lvl { position: fixed; right: 14px; top: 64px; }
 }
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
@@ -422,7 +422,6 @@ body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Arch
 .mk-dir { max-width: 1280px; margin: 0 auto; padding: 26px 24px 0; }
 .mk-dir:last-of-type { padding-bottom: 64px; }
 .mk-dir > h2 { margin: 0; font-size: 20px; font-weight: 720; letter-spacing: -0.03em; }
-.mk-frame .cs-fab { position: absolute; }
 .mk-dir > h2 b { display: inline-grid; place-items: center; min-width: 28px; padding: 0 6px; height: 28px; margin-right: 8px; border-radius: 8px 8px 8px 2px; background: oklch(25% 0.07 252); color: oklch(96.4% 0.19 117); font-size: 15px; }
 .mk-dir > p { margin: 6px 0 14px; max-width: 86ch; font-size: 14px; line-height: 1.45; color: oklch(35.4% 0.095 252); }
 .mk-frame { position: relative; height: 730px; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 2px oklch(25% 0.07 252), 7px 7px 0 oklch(25% 0.07 252); }
@@ -459,13 +458,13 @@ body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Arch
 <body>
 <div class="mk-top">
   <h1>Where posting lives on This week</h1>
-  <p>You picked C's footprint with B's panel: it is first below, and it is what I built into This week. Posting stays the one line you picked. What changes is where it sits: it is no longer a separate page behind a button in the top bar. In all three, a "+" is always on This week, next to the tickets, and next to "Nothing here yet" when the week is empty. Everything is clickable: type in the box, pick an @place, post, close and reopen. Use the switch to see each one on an empty week.</p>
+  <p>You asked for a small "+" in the line above the row that opens B's panel: it is first below, and it is what is built into This week. Posting stays the one line you picked. What changes is where it sits: it is no longer a separate page behind a button in the top bar. In all three, a "+" is always on This week, next to the tickets, and next to "Nothing here yet" when the week is empty. Everything is clickable: type in the box, pick an @place, post, close and reopen. Use the switch to see each one on an empty week.</p>
   <div class="mk-switch" id="week"><button aria-pressed="true" data-week="busy">A week with plans</button><button aria-pressed="false" data-week="empty">An empty week</button></div>
 </div>
 
 <section class="mk-dir">
-  <h2><b>C+B</b>Your pick: the "+" in the corner, opening the wide panel in the row</h2>
-  <p>Closed, posting is only the "+" in the corner, and it stays there however far the row is scrolled. Pressed, the wide panel opens at the start of the row: your line on the left, the places people use and what is already on, on the right. The tickets slide over and nothing is covered. On an empty week the panel opens beside "Nothing here yet". This one is drawn with the same styles as the built screen. It opens closed: press the "+".</p>
+  <h2><b>Built</b>A small "+" in the line above the row, opening the wide panel of B</h2>
+  <p>Closed, posting is only a small "+" beside the count, in the line above the tickets, so it stays put however far the row is scrolled. Pressed, the wide panel opens at the start of the row: your line on the left, the places people use and what is already on, on the right. The tickets slide over and nothing is covered. On an empty week the panel opens beside "Nothing here yet". This one is drawn with the same styles as the built screen. It opens closed: press the "+".</p>
   <div class="mk-frame" data-dir="D"></div>
 </section>
 <section class="mk-dir">
@@ -527,16 +526,16 @@ function draw(dir) {
   if (dir === 'A') first = s.open ? `<article class="cs-ev plus open"><div class="mk-head"><b>Start something</b><button class="cs-more" data-close="A">Close</button></div><div class="cs-line">${sayBox('A')}<div class="cs-line-card" data-side="A"></div>${end('A')}</div></article>` : plus('A');
   if (dir === 'B') first = plus('B', s.open) + (s.open ? `<div class="cs-sheet mk-two"><div class="cs-sheet-top"><h3>Start something</h3><button class="cs-more" data-close="B">Close</button></div><div class="mk-cols"><div class="cs-line">${sayBox('B')}${end('B')}</div><div class="side" data-side="B"></div></div></div>` : '');
   const plusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></svg>';
-  let last = '';
+  let last = '', inRow = '';
   if (dir === 'D') {
-    over = `<button class="cs-fab" data-toggle="D" aria-expanded="${s.open}" aria-label="Post a plan">${plusIcon}</button>`;
+    inRow = `<button class="cs-plus" data-toggle="D" aria-expanded="${s.open}" aria-label="Post a plan">${plusIcon}</button>`;
     const sheet = s.open ? `<div class="cs-sheet cs-post fresh"><div class="cs-sheet-top"><h3>Start something</h3><button class="cs-more" aria-expanded="true" data-close="D">Close</button></div><div class="cs-post-cols"><div class="cs-line">${sayBox('D')}${end('D')}</div><div class="cs-post-side" data-side="D"></div></div></div>` : '';
     if (empty && !s.posted.length) last = sheet; else first = sheet;
   }
   if (dir === 'C') over = `<button class="mk-fab" data-toggle="C" aria-expanded="${s.open}" aria-label="Post a plan"><span>+</span></button>` + (s.open ? `<div class="mk-pop"><div class="cs-line">${sayBox('C')}<div class="cs-line-card" data-side="C"></div>${end('C')}</div></div>` : '');
   frame.innerHTML = `<div class="cs"><header class="cs-nav"><a class="cs-wm">Loop</a><nav class="cs-links"><a aria-current="page">This week</a></nav><div class="cs-nav-end"><span class="cs-ava">${face(12).replace('cs-face pet', 'cs-face pet')}</span></div></header>
     <main class="cs-main"><section class="cs-fill"><div class="cs-ask"><input type="search" placeholder="What do you feel like doing?"><div class="cs-tabs"><button aria-pressed="true">Best for you</button><button>All of CampusGroups</button></div></div>
-    <div class="cs-count"><h2>${empty && !s.posted.length ? 'Nothing on this week yet' : `${(empty ? 0 : WEEK.length) + s.posted.length} things on this week`}</h2></div>
+    <div class="cs-count"><h2>${empty && !s.posted.length ? 'Nothing on this week yet' : `${(empty ? 0 : WEEK.length) + s.posted.length} things on this week`}</h2>${inRow}</div>
     <div class="cs-evs"><div class="cs-railwrap"><div class="cs-rail">${first}${mine}${rest}${last}</div></div></div>
     ${dir === 'C' && empty && !s.posted.length && !s.open ? '<span class="mk-hint">The + in the corner starts one</span>' : ''}</section></main>${over}</div>`;
   s.fresh = false;

@@ -169,7 +169,10 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
     <main className="cs-main"><section className="cs-fill">
       <div className="cs-ask"><input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />
         <div className="cs-tabs">{([['best', 'Best for you'], ['all', `All of ${campus.listSource}`]] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
-      <div className="cs-count"><h2 aria-live="polite">{picked.line}</h2><div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
+      <div className="cs-count"><h2 aria-live="polite">{picked.line}</h2>
+        {/* Posting starts here, in the line above the row, so it is there wherever the row is scrolled to (design D13). */}
+        {viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>}
+        <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
         {picked.nothing ? postSheet ? <div className="cs-railwrap"><div className="cs-rail">{nothing}{postSheet}</div></div> : nothing
@@ -184,8 +187,6 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
       {earning.length > 0 && <div className="cs-shelf"><h2>Rewards you are earning</h2><ul className="cs-coupons">{earning.map(coupon => <CouponRow key={coupon.id} coupon={coupon} showing={showing === coupon.id} busy={busy}
         onShow={() => setShowing(now => now === coupon.id ? null : coupon.id)} onUse={() => run(() => markCouponUsed(coupon.id), () => setShowing(null))} />)}</ul></div>}
     </section></main>
-    {/* Posting starts here, wherever the row is scrolled to (design D13). */}
-    {viewer ? <button className="cs-fab" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-fab" aria-label="Post a plan" href={signInHref}>{plus}</Link>}
   </div>;
 }
 
