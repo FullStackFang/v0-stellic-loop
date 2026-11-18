@@ -197,7 +197,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 @media (prefers-reduced-motion: reduce) { .cs-crown { animation: none; } }
 .cs-ava.big .cs-face { width: 68px; height: 68px; font-size: 24px; }
 .cs-ava.big .cs-lvb { min-width: 26px; height: 26px; font-size: 15px; right: -4px; bottom: -2px; box-shadow: 0 0 0 3px var(--cs-field); }
-.cs-lvl { position: absolute; right: 0; top: calc(100% + 14px); z-index: 30; width: 344px; max-width: calc(100vw - 28px); border-radius: var(--cs-r); overflow: hidden; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 92% 0; animation: cs-card .3s var(--cs-expo); }
+.cs-lvl { position: absolute; right: 0; top: calc(100% + 14px); z-index: 30; width: 468px; max-width: calc(100vw - 28px); border-radius: var(--cs-r); overflow: hidden; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 92% 0; animation: cs-card .3s var(--cs-expo); }
 .cs-lvl-top { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; align-items: center; padding: 20px 22px 16px 20px; background: var(--cs-field); }
 .cs-lvl-top strong { display: block; font-stretch: 108%; font-weight: 720; font-size: 22px; letter-spacing: -0.035em; line-height: 1.05; overflow-wrap: anywhere; }
 .cs-lvl-top div > span { font-size: 14px; font-weight: 540; color: var(--cs-on-field-2); }
@@ -273,10 +273,11 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-pet img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .cs-pet.photo img { object-fit: cover; }
 .cs .cs-pet:hover { transform: scale(1.14); } .cs-pet.locked img { opacity: .5; filter: grayscale(.6); }
 .cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
-/* While a picture is being picked the card is wide, so each animal is big enough to see; the one in use is shown larger at the top. */
-.cs-lvl:has(.cs-pets-grid) { width: 600px; } .cs-lvl:has(.cs-pets-grid) .cs-ava.big .cs-face { width: 112px; height: 112px; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-top strong { font-size: 26px; }
-.cs-lvl:has(.cs-pets-grid) .cs-pets-grid { gap: 14px; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body { padding: 18px 24px 22px; max-height: min(64vh, 640px); overflow-y: auto; scrollbar-width: thin; }
-@media (max-width: 640px) { .cs-pets-grid { grid-template-columns: repeat(4, 1fr); } .cs-lvl:has(.cs-pets-grid) .cs-ava.big .cs-face { width: 88px; height: 88px; } }
+/* The account card is one width whether or not a picture is being picked. The animals are 192px files, so nothing here is drawn
+   over 96px: that keeps them sharp on a screen with two device pixels to one. */
+.cs-ava.big .cs-face { width: 88px; height: 88px; } .cs-pets-grid { gap: 12px; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body { max-height: min(60vh, 560px); overflow-y: auto; scrollbar-width: thin; }
+.cs .cs-pet:hover { transform: scale(1.1); }
+@media (max-width: 520px) { .cs-pets-grid { grid-template-columns: repeat(5, 1fr); gap: 10px; } .cs-ava.big .cs-face { width: 76px; height: 76px; } }
 .cs-pets small { display: block; margin-top: 12px; font-size: 11.5px; color: var(--cs-mute); } .cs-pets small a { text-decoration: underline; }
 .cs-kits { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
 .cs-kits h4 { margin: 0 0 6px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
@@ -600,7 +601,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-col { min-height: 0; display: flex; flex-direction: column; }
 /* the count runs the width of the tickets under it */
 .cs-wide .cs-tally { flex: none; display: flex; height: var(--h); margin: 0 6px 12px 0; padding: 0 22px 0 5px; }
-.cs-wide .cs-tally h2 { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; white-space: nowrap; overflow: hidden; } .cs-wide .cs-tally h2 span { font-weight: 520; color: var(--cs-mute); }
+.cs-wide .cs-tally h2 { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; white-space: nowrap; } .cs-wide .cs-tally h2 b { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: inherit; } .cs-wide .cs-tally h2 span { flex: none; font-weight: 520; color: var(--cs-mute); }
 .cs-scroll { flex: 1; min-height: 0; overflow-y: auto; margin: -6px -8px -6px -6px; padding: 6px 14px 14px 6px; scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--cs-ink) 35%, transparent) transparent; }
 .cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); grid-auto-flow: dense; gap: 16px; }
 .cs-grid .cs-ev { container-type: inline-size; cursor: pointer; }
