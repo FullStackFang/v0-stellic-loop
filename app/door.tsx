@@ -1,36 +1,34 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Rings } from '@/components/LoopGlyphs';
-import { DoorSignIn } from '@/components/campus/door-sign-in';
-import { Tile } from '@/components/campus/screen';
+import { Door, type DoorSchool } from '@/components/campus/door';
 import { CampusShell } from '@/components/campus/shell';
 import { db } from '@/lib/db';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { listCampuses, weekListings, type Campus } from '@/lib/campus/listings';
+import { campusRewards, groupRewardFor } from '@/lib/campus/rewards';
 import { campusViewer } from '@/lib/campus/session';
 import { dayLabel, timeLabel } from '@/lib/campus/time';
 import { NoSchool } from './c/week';
 
-/** A few of this week's events, for the pitch: from the first school that has any. Titles and times only, never people. */
-async function samples(campuses: Campus[], now: Date) {
-  for (const campus of campuses) {
-    const week = await weekListings(db(), campus, now);
-    if (week.length) return week.slice(0, 3).map(event => ({ id: event.id, title: event.title, day: dayLabel(campus.tz, event.startsAt, now), time: timeLabel(campus.tz, event.startsAt), line: [event.host ?? (event.origin === 'member' ? 'A plan someone posted' : null), campus.name].filter(Boolean).join(' · ') }));
-  }
-  return [];
+/**
+ * One school's ticket for the pitch: an event of this week, the first that has a group reward if any has, with that
+ * reward as a Member sees it. Titles and times only, never people.
+ */
+async function ticket(campus: Campus, now: Date): Promise<DoorSchool> {
+  const [week, rewards] = await Promise.all([weekListings(db(), campus, now), campusRewards(db(), campus.id)]);
+  const rewarded = week.map(event => ({ event, found: groupRewardFor(rewards, event, 0) })).find(each => each.found);
+  const event = rewarded?.event ?? week[0], found = rewarded?.found;
+  return {
+    slug: campus.slug, name: campus.name, domains: campus.domains,
+    event: event ? { title: event.title, day: dayLabel(campus.tz, event.startsAt, now), time: timeLabel(campus.tz, event.startsAt), line: [event.host ?? (event.origin === 'member' ? 'A plan someone posted' : null), campus.name].filter(Boolean).join(' · ') } : null,
+    reward: found ? { need: Math.min(6, Math.max(2, found.reward.headCount ?? 3)), text: found.text } : null,
+  };
 }
 
-/** The pitch, a few sample events and the sign-in card. `routing` says whether the card owns the address (/sign-in) or sits on another page (/). */
+/** The pitch, a ticket to try for each school, and the sign-in card. `routing` says whether the card owns the address (/sign-in) or sits on another page (/). */
 export async function DoorPage({ routing }: { routing: 'hash' | 'path' }) {
-  const campuses = await listCampuses(db()), peek = await samples(campuses, new Date());
-  return <div className="cs">
-    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link></header>
-    <main className="cs-door">
-      <div className="cs-door-say"><h1>Go together. Get more for it.</h1><p>Events from your campus and plans posted by people near you. Show up as a group and the reward unlocks.</p>
-        {peek.length > 0 && <ul className="cs-mine" aria-label="On this week">{peek.map(event => <li key={event.id}><Tile top={event.day} big={event.time} /><div><b>{event.title}</b><span>{event.line}</span></div></li>)}</ul>}</div>
-      <DoorSignIn routing={routing} configured={clerkPortalConfigured()} schools={campuses.map(({ slug, name, domains }) => ({ slug, name, domains }))} />
-    </main>
-  </div>;
+  const now = new Date(), schools = await Promise.all((await listCampuses(db())).map(campus => ticket(campus, now)));
+  // Open on a school that has something on this week.
+  return <div className="cs"><Door schools={schools} start={Math.max(0, schools.findIndex(school => school.event))} routing={routing} configured={clerkPortalConfigured()} /></div>;
 }
 
 /**

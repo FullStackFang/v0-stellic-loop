@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { SignIn } from '@clerk/nextjs';
+import { Rings } from '@/components/LoopGlyphs';
 import { schoolOfEmail } from '@/lib/campus/schools';
 import { KITS, pickedKit, showKit } from './kit';
 
@@ -14,8 +15,10 @@ const paper = '#fdfefb', mute = '#5d6570';
  * The one sign-in card (design D21): the sign-in the groups site uses (Google, or, email, Continue), drawn small. As
  * an email is typed the card spots its school and the page takes on that school's colours. That decides nothing:
  * a person's school is the one their verified email ends in, worked out after sign-in.
+ * On the front door the page's colours belong to the ticket: there `kit` is the school showing, and `onSpot` is told
+ * which school the email is at (or none) in place of the card setting the colours itself.
  */
-export function DoorSignIn({ schools, routing, configured }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean }) {
+export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean; kit?: string; onSpot?: (slug: string | null) => void }) {
   const [slug, setSlug] = useState(''), [seen, setSeen] = useState(''), card = useRef<HTMLDivElement>(null), last = useRef('');
   const school = schools.find(each => each.slug === slug);
   const names = schools.map(each => each.name).join(', ').replace(/, ([^,]*)$/, ' or $1');
@@ -28,10 +31,10 @@ export function DoorSignIn({ schools, routing, configured }: { schools: School[]
     const domain = (email.split('@')[1] ?? '').trim().toLowerCase(), hit = schoolOfEmail(schools, email);
     setSlug(hit?.slug ?? '');
     setSeen(hit ? `${domain} is ${hit.name}.` : domain.includes('.') ? `Not an email at ${names}. You can still sign in with it.` : '');
-    showKit(hit?.slug ?? pickedKit() ?? 'loop');
+    if (onSpot) onSpot(hit?.slug ?? null); else showKit(hit?.slug ?? pickedKit() ?? 'loop');
   };
   useEffect(() => { const again = setInterval(read, 500); return () => clearInterval(again); });
-  const ink = (KITS.find(kit => kit.slug === slug) ?? KITS[0]).ink;
+  const ink = (KITS.find(each => each.slug === (kit ?? slug)) ?? KITS[0]).ink;
   const label = { fontSize: 0, '&::before': { content: `"${school ? `${school.name} email` : 'Email'}"`, fontSize: '13px', fontWeight: 600 } };
   const shared = {
     fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', fallback: <p className="cs-note" aria-hidden="true">Loading sign-in…</p>,
@@ -46,10 +49,12 @@ export function DoorSignIn({ schools, routing, configured }: { schools: School[]
     },
   };
   return <div className="cs-door-in" ref={card} onInput={read}>
-    <h2>{school ? `Sign in at ${school.name}` : 'Sign in'}</h2>
-    {configured ? (routing === 'path' ? <SignIn routing="path" path="/sign-in" {...shared} /> : <SignIn routing="hash" {...shared} />)
-      : <p role="status">Sign-in is not configured for this deployment.</p>}
-    <p className="seen" aria-live="polite">{seen}</p>
-    <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>
+    <div className="cs-door-in-top"><h2>{school ? `Sign in at ${school.name}` : 'Sign in'}</h2><p>Your school email opens your campus.</p><Rings /></div>
+    <div className="cs-door-in-body">
+      {configured ? (routing === 'path' ? <SignIn routing="path" path="/sign-in" {...shared} /> : <SignIn routing="hash" {...shared} />)
+        : <p role="status">Sign-in is not configured for this deployment.</p>}
+      <p className="seen" aria-live="polite">{seen}</p>
+      <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>
+    </div>
   </div>;
 }

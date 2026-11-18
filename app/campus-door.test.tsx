@@ -30,10 +30,29 @@ describe('the door', () => {
     const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
     await addHandListing(t.db, { campusId: cornell.id, title: 'Blitz night', host: 'Chess Club', startsAt: new Date(Date.now() + 3 * 3600000).toISOString() });
     render(await drawn(FrontDoor()));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Go together. Get more for it.');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Go together at Cornell.');
     expect(screen.getByText('Blitz night')).toBeInTheDocument();
     expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByRole('status')).toHaveTextContent('Sign-in is not configured');
+  });
+  it('the ticket can be tried: two presses fill the seats and unlock the reward, and a seat can be given up', async () => {
+    const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
+    await addHandListing(t.db, { campusId: cornell.id, title: 'Blitz night', host: 'Chess Club', startsAt: new Date(Date.now() + 3 * 3600000).toISOString() });
+    render(await drawn(FrontDoor()));
+    // No reward was entered for this event, so the one shown says it is an example.
+    expect(screen.getByText('For example, a group of 3 gets')).toBeInTheDocument();
+    expect(screen.getByText('2 more and it unlocks')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'I’m in' }));
+    expect(screen.getByText('1 more and it unlocks')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Bring one more' }));
+    expect(screen.getByText('Unlocked')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Your seat. Give it up' }));
+    expect(screen.getByText('2 more and it unlocks')).toBeInTheDocument();
+  });
+  it('a school with nothing on this week shows a ticket that says it is an example', async () => {
+    render(await drawn(FrontDoor()));
+    expect(screen.getByText('Example')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'I’m in' })).toBeInTheDocument();
   });
   it('signed in, goes on to the person\'s own school; anyone from no school to the default campus', async () => {
     await expect(withPortalTestSession(await signedIn('Noor', 'noor@stern.nyu.edu'), () => FrontDoor())).rejects.toEqual(sentTo('/c/nyu'));
