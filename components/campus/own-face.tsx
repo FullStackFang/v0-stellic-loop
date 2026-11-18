@@ -74,8 +74,8 @@ export function OwnFace({ asked, left, onAsked, onMade, onBack }: { asked: boole
   if (state === 'photo' && left <= 0 && !code) return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     <button className="cs-prem-back" onClick={onBack}>Back</button>
     <p className="cs-prem-kick">Loop Premium</p>
-    <p className="cs-prem-big said">You’ve made your free pet.</p>
-    <div className="cs-prem-perks"><span>More pets come with Premium, once payment is set up.</span></div>
+    <p className="cs-prem-big said">You’re already subscribed and got your free avatar!</p>
+    <div className="cs-prem-perks"><span>More pets and more perks will come with Premium once it officially launches. Stay tuned!</span></div>
     <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void redeem(); }}>
       <div className="cs-prem-join"><input value={typed} onChange={event => setTyped(event.target.value)} aria-label="Code" placeholder="Have a code?" autoCapitalize="characters" autoComplete="off" spellCheck={false} /><button className="cs-btn go" disabled={wait || !typed.trim()}>Use code</button></div>
       {said && <p role="alert">{said}</p>}

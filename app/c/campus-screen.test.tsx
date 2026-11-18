@@ -214,7 +214,7 @@ describe('who sees whom', () => {
       expect(card.getAllByText('Premium')).toHaveLength(2);
       // The "+" is always there. With the free animal used, it says so before a photo is asked for.
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
-      expect(card.getByText('You’ve made your free pet.')).toBeInTheDocument();
+      expect(card.getByText('You’re already subscribed and got your free avatar!')).toBeInTheDocument();
       expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
       // A code gets past it. The server checks the code, here and again when the animal is made.
       fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
