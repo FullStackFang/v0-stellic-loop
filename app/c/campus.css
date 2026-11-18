@@ -269,7 +269,14 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 @media (prefers-reduced-motion: reduce) { .cs-prem-join { animation: none; } }
 .cs-own-made { display: grid; justify-items: center; gap: 12px; margin-top: 14px; text-align: center; } .cs-own-made img { width: 132px; height: 132px; object-fit: contain; }
 .cs-own-made img.busy { border-radius: 16px; object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } @keyframes cs-own-wait { to { opacity: .45; transform: scale(.96); } }
-.cs-own .cs-own-thanks { padding: 10px 14px; border-radius: 14px; font-weight: 580; color: var(--cs-ink); background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); }
+.cs-own .cs-own-thanks { max-width: 40ch; margin-top: 12px; font-size: 14px; line-height: 1.4; font-weight: 540; color: var(--cs-field); }
+/* The made animal, and the photo while it is drawn, on the plate. 96px: the picture is a 192px file. */
+.cs-prem-made { display: grid; justify-items: center; gap: 12px; padding: 22px 0 26px; text-align: center; } .cs-prem-made img { width: 96px; height: 96px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--cs-on-ink) 12%, transparent); box-shadow: 0 0 0 3px var(--cs-field); }
+.cs-prem-made img.busy { object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } .cs-own .cs-prem-made p { color: var(--cs-on-ink-mute); } @media (prefers-reduced-motion: reduce) { .cs-prem-made img.busy { animation: none; } }
+/* The photo box waits for a photo: a dashed edge and an upload mark. With one in, the edge is solid and the photo shows. */
+.cs .cs-prem-stub .cs-own-photo { justify-content: flex-start; gap: 14px; min-height: 84px; padding: 12px 16px; text-align: left; color: var(--cs-ink); background: var(--cs-paper); box-shadow: none; border: 2px dashed var(--cs-ink); transition: background .15s; } .cs .cs-prem-stub .cs-own-photo:hover { background: color-mix(in oklch, var(--cs-field) 30%, var(--cs-paper)); }
+.cs .cs-prem-stub .cs-own-photo.has { border-style: solid; } .cs-own-photo i { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--cs-ink); color: var(--cs-field); } .cs-own-photo i svg { width: 22px; height: 22px; }
+.cs-own-photo b { display: block; font-size: 15px; font-weight: 680; letter-spacing: -0.015em; } .cs-own .cs-own-photo small { display: block; margin: 1px 0 0; font-size: 13px; font-weight: 500; color: var(--cs-mute); }
 @media (prefers-reduced-motion: reduce) { .cs-own-made img.busy { animation: none; } }
 .cs .cs-pet { aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 10%, var(--cs-paper)); transition: transform .15s var(--cs-ease); }
 .cs-pet img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .cs-pet.photo img { object-fit: cover; }

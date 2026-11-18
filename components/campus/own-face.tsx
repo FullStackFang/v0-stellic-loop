@@ -81,17 +81,22 @@ export function OwnFace({ asked, left, onAsked, onMade, onBack }: { asked: boole
       {said && <p role="alert">{said}</p>}
     </form>
   </div></div>;
-  return <div className="cs-lvl-body cs-pets cs-own">
-    <div className="cs-pets-top"><h4>Your own animal</h4><b className="cs-own-tag">Premium</b>{state !== 'busy' && <button className={`cs-btn sm ${state === 'done' ? 'go' : ''}`} onClick={onBack}>{state === 'done' ? 'Done' : 'Back'}</button>}</div>
-    {state === 'done' ? <div className="cs-own-made"><img src={own} alt="Your own animal" />{thanks}<p>It is your picture now.</p></div>
-    : state === 'busy' ? <div className="cs-own-made" role="status">{shown && <img className="busy" src={shown} alt="" />}{thanks}<p>Drawing your animal. This takes about half a minute.</p></div>
-    : <form className="cs-own-form" onSubmit={event => { event.preventDefault(); void make(); }}>
-      {thanks}
-      <input ref={input} type="file" accept="image/*" hidden aria-label="Photo of an animal" onChange={event => choose(event.target.files?.[0])} />
-      <button type="button" className="cs-own-photo" onClick={() => input.current?.click()}>{shown ? <><img src={shown} alt="" /><span>Change photo</span></> : <span>Choose a photo of an animal</span>}</button>
-      <button className="cs-btn go">Draw it</button>
-      {said && <p role="alert">{said}</p>}
-    </form>}
-  </div>;
+  // The photo, the wait and the made animal are the same plate as the plan: one headline each, and the stub holds what to press.
+  const head = state === 'done' ? 'It is your picture now.' : state === 'busy' ? 'Drawing your animal.' : 'Your own animal.';
+  return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
+    {state !== 'busy' && <button className="cs-prem-back" onClick={onBack}>{state === 'done' ? 'Done' : 'Back'}</button>}
+    <p className="cs-prem-kick">Loop Premium</p>
+    <p className="cs-prem-big said" role={state === 'busy' ? 'status' : undefined}>{head}</p>
+    {thanks}
+    {state === 'done' ? <div className="cs-prem-made"><img src={own} alt="Your own animal" /></div>
+    : state === 'busy' ? <div className="cs-prem-made">{shown && <img className="busy" src={shown} alt="" />}<p>This takes about half a minute.</p></div>
+    : <><div className="cs-prem-perks"><span>Give a clear photo of one animal. It is drawn as one of the set.</span></div>
+      <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void make(); }}>
+        <input ref={input} type="file" accept="image/*" hidden aria-label="Photo of an animal" onChange={event => choose(event.target.files?.[0])} />
+        <button type="button" className={`cs-own-photo ${shown ? 'has' : ''}`} onClick={() => input.current?.click()}>{shown ? <><img src={shown} alt="" /><span><b>Photo added</b><small>Tap to change it</small></span></> : <><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg></i><span><b>Upload a photo of an animal</b><small>Tap here to choose one</small></span></>}</button>
+        <button className="cs-btn go">Draw it</button>
+        {said && <p role="alert">{said}</p>}
+      </form></>}
+  </div></div>;
   /* eslint-enable @next/next/no-img-element */
 }

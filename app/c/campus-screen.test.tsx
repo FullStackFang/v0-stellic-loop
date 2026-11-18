@@ -178,7 +178,9 @@ describe('who sees whom', () => {
       // Subscribed: told there is no payment yet, the account says Premium, and only now is a photo asked for.
       expect(await card.findByText('Thanks for subscribing to Loop Premium. Payment is not set up yet, so this one is free. Enjoy your avatar.')).toBeInTheDocument();
       expect((await t.db.query('select email,makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ email: 'ana@cornell.edu', makes: 0 }]);
-      expect(card.getAllByText('Premium')).toHaveLength(2);
+      // Subscribing puts the Premium tag by their name; the pane itself is the Loop Premium plate.
+      expect(card.getAllByText('Premium')).toHaveLength(1);
+      expect(card.getByText('Your own animal.')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
       expect(card.getByRole('alert')).toHaveTextContent('Choose a photo of an animal first.');
       expect(models.asked).toHaveLength(0);
