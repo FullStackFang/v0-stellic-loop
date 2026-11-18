@@ -191,7 +191,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   return {
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
     viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null,
-      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, asked: made.has(viewer.personId), makesLeft: made.get(viewer.personId)?.left ?? MAKES, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
+      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, owns: (made.get(viewer.personId)?.all ?? []).map(customFace), asked: made.has(viewer.personId), makesLeft: viewer.admin ? MAKES : made.get(viewer.personId)?.left ?? MAKES, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
     tickets, earning, live, places: me ? await nearTags(db, campus.id, known, now) : [],
   };
 }

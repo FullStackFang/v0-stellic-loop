@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { Rings } from '@/components/LoopGlyphs';
 import { db } from '@/lib/db';
+import { customFace } from '@/lib/campus/animals';
+import { premiumAsks } from '@/lib/campus/custom-face';
 import { LEVELS } from '@/lib/campus/levels';
 import { listCampuses } from '@/lib/campus/listings';
 import { adminListings, campusFeeds } from '@/lib/campus/manage';
@@ -24,7 +26,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const { campus: slug, said, q = '' } = await searchParams, campuses = await listCampuses(db());
   const campus = campuses.find(each => each.slug === slug) ?? campuses[0];
   if (!campus) notFound();
-  const now = new Date(), tz = campus.tz;
+  const now = new Date(), tz = campus.tz, asks = await premiumAsks(db());
   const [feeds, places, events, rewards] = await Promise.all([campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), adminListings(db(), campus.id, q), campusRewards(db(), campus.id, true)]);
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const Campus = () => <input type="hidden" name="campus" value={campus.slug} />;
@@ -52,6 +54,11 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     <main className="cs-adm">
       <header><h1>Admin</h1><p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is open to its members again: LOOP_FRONT is set to groups.'}</p></header>
       {said && <p className="cs-alert wide" role="status" style={{ gridColumn: '1 / -1', margin: 0 }}>{said}</p>}
+
+      <section className="wide"><h2>Premium</h2>
+        <p>{asks.length ? `${asks.length} ${asks.length === 1 ? 'person has' : 'people have'} asked to subscribe, across every campus. Nobody is charged. Each got one animal free, and every one made is kept here.` : 'Nobody has asked to subscribe yet.'}</p>
+        {/* eslint-disable-next-line @next/next/no-img-element -- pictures Loop made, served from the database at their own address */}
+        {asks.length > 0 && <ul className="cs-adm-asks">{asks.map(ask => <li key={ask.email + ask.asked}><span>{ask.pictures.map(token => <img key={token} src={customFace(token)} alt="" />)}</span><b>{ask.email}</b><small>{ask.asked}</small></li>)}</ul>}</section>
 
       <section className="wide"><h2>Campus</h2>
         <nav className="cs-schools">{campuses.map(each => <Link key={each.id} className="cs-btn sm" style={each.id === campus.id ? { background: 'var(--cs-ink)', color: 'var(--cs-field)' } : undefined} href={`/c/admin?campus=${each.slug}`} aria-current={each.id === campus.id ? 'true' : undefined}>{each.name}</Link>)}</nav>
