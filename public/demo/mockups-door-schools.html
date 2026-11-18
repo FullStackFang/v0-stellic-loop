@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop · the front door, school by school</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
+@keyframes in { from { opacity: 0; transform: translateY(14px); } }
+@keyframes pop { from { transform: scale(.2); opacity: 0; } }
+@keyframes ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.55); opacity: 0; } }
+@keyframes deal { from { opacity: 0; transform: translate(70px, 14px) rotate(5deg) scale(.96); } }
+@keyframes wipe { from { clip-path: circle(0 at var(--vx, 50%) var(--vy, 50%)); } to { clip-path: circle(150vmax at var(--vx, 50%) var(--vy, 50%)); } }
+@keyframes slam { from { opacity: 0; transform: rotate(-22deg) scale(2.2); } }
+@keyframes run { from { transform: scaleX(0); } }
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: wipe .8s cubic-bezier(.16, 1, .3, 1); }
+
+/* One school's colours. Any element can wear a kit, so a banner or a card in a stack shows its own school. */
+[data-kit] {
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --on-field-2: color-mix(in oklab, var(--ink) 74%, var(--field));
+}
+[data-kit=cornell] { --field: oklch(82% 0.12 38); --shade: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --ink-2: oklch(34% 0.05 30); --action: oklch(48.5% 0.185 27); --action-2: oklch(54% 0.19 27); }
+[data-kit=columbia] { --field: oklch(87% 0.075 235); --shade: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --ink-2: oklch(35% 0.08 255); --action: oklch(46% 0.14 255); --action-2: oklch(52% 0.15 255); }
+[data-kit=nyu] { --field: oklch(85% 0.09 305); --shade: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --ink-2: oklch(34% 0.1 305); --action: oklch(40% 0.2 305); --action-2: oklch(46% 0.21 305); }
+[data-kit=cuny] { --field: oklch(88% 0.13 88); --shade: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --ink-2: oklch(34% 0.1 265); --action: oklch(38% 0.18 264); --action-2: oklch(45% 0.19 264); }
+
+* { box-sizing: border-box; } h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
+button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+html { --ease: cubic-bezier(.22, 1, .36, 1); --expo: cubic-bezier(.16, 1, .3, 1); --r: 22px 22px 22px 6px; }
+body { margin: 0; font: 15px/1.45 Archivo, system-ui, sans-serif; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+/* the picker: outside the design */
+.pick { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; min-height: 44px; padding: 6px 16px; background: oklch(21% 0.016 250); color: oklch(96% 0.005 250); font-size: 13.5px; }
+.pick b { font-weight: 640; margin-right: 6px; } .pick p { color: oklch(78% 0.012 250); flex: 1 1 320px; }
+.pick button { padding: 5px 13px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px oklch(60% 0.01 250); }
+.pick button[aria-pressed=true] { background: oklch(96% 0.005 250); color: oklch(21% 0.016 250); box-shadow: none; }
+
+.frame { display: none; flex-direction: column; min-height: calc(100dvh - 44px); position: relative; overflow: hidden; }
+.frame.on { display: flex; }
+.nav { display: flex; align-items: center; padding: 9px 32px; background: var(--field); position: relative; z-index: 3; }
+.wm { display: flex; align-items: center; gap: 9px; font-weight: 640; font-size: 19px; letter-spacing: -0.03em; } .wm svg { width: 26px; height: 26px; }
+.door { flex: 1; position: relative; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 380px); gap: 32px 48px; align-items: center; width: 100%; max-width: 1220px; margin: 0 auto; padding: 32px 32px 44px; }
+.say > p { font-size: 18px; max-width: 46ch; color: var(--ink-2); }
+h1 { font-stretch: 112%; font-weight: 720; font-size: 56px; line-height: .96; letter-spacing: -0.05em; }
+
+.tile { display: grid; justify-items: center; align-content: center; flex: none; line-height: 1; min-width: 56px; min-height: 56px; padding: 6px 7px 7px; border-radius: 12px 12px 12px 3px; background: var(--field); color: var(--ink); }
+.tile small { font-size: 11px; font-weight: 600; } .tile b { font-weight: 640; font-size: 17px; margin-top: 2px; white-space: nowrap; }
+.tile.met { background: var(--action); color: var(--paper); }
+.rows { display: grid; gap: 10px; max-width: 520px; padding: 0 5px 5px 0; }
+.rows li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; padding: 9px 16px 9px 9px; border-radius: var(--r); background: var(--paper); box-shadow: 4px 4px 0 var(--ink); animation: in .5s var(--expo) backwards; animation-delay: calc(var(--i) * 60ms + 120ms); }
+.rows b { display: block; font-size: 16px; font-weight: 660; letter-spacing: -0.025em; } .rows span { font-size: 13px; color: var(--mute); }
+
+/* the sign-in card, the same in all three: a stub in the school's colour over a paper body */
+.in { position: relative; z-index: 2; overflow: hidden; border-radius: var(--r); background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--action); transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.in:focus-within { transform: translate(-2px, -2px); box-shadow: 0 0 0 1.5px var(--ink), 10px 10px 0 var(--action); }
+.in-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 14px; align-items: center; padding: 18px 20px 16px 24px; background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.in-top h2 { font-size: 25px; font-weight: 720; font-stretch: 110%; letter-spacing: -0.04em; line-height: 1.05; }
+.in-top p { grid-column: 1; font-size: 13.5px; font-weight: 540; color: var(--on-field-2); }
+.in-top svg { grid-column: 2; grid-row: 1 / 3; width: 46px; height: 46px; padding: 7px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.in-body { display: grid; gap: 12px; padding: 20px 24px 18px; }
+.in label { font-size: 13px; font-weight: 620; margin-bottom: -7px; }
+.in input, .in .g, .in .go { height: 44px; border-radius: 99px; font: inherit; font-size: 15px; }
+.in input { width: 100%; padding: 0 18px; border: 0; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); transition: box-shadow .15s, background-color .15s; }
+.in input::placeholder { color: var(--mute); }
+.in input:focus-visible { outline: 0; background: color-mix(in oklab, var(--field) 24%, var(--paper)); box-shadow: inset 0 0 0 2.5px var(--action); }
+.in .g, .in .go { display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform .15s var(--ease), background-color .15s; }
+.in .g { font-weight: 600; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--shade); } .in .g svg { width: 18px; height: 18px; }
+.in .g:hover { background: color-mix(in oklab, var(--field) 24%, var(--paper)); }
+.in .go { font-weight: 640; background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.in .go:hover { background: var(--action-2); } .in .go svg { width: 13px; height: 13px; transition: transform .2s var(--ease); } .in .go:hover svg { transform: translateX(4px); }
+.in .g:active, .in .go:active { transform: translate(2px, 2px); }
+.in .or { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--mute); } .in .or::before, .in .or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.in .seen { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin: -3px 0; padding: 4px 13px 4px 8px; border-radius: 99px; background: var(--field); font-size: 13px; font-weight: 640; animation: in .4s var(--expo); }
+.in .seen::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--action); box-shadow: 0 0 0 1.5px var(--ink); } .in .seen:empty { display: none; }
+.in .fine { font-size: 12.5px; color: var(--mute); text-align: center; }
+
+/* banners: each wears its own school */
+.banners { display: flex; flex-wrap: wrap; gap: 10px 8px; }
+.banner { position: relative; isolation: isolate; height: 42px; padding: 0 30px 0 16px; font-weight: 660; font-size: 15px; white-space: nowrap; color: var(--paper); transition: transform .25s var(--ease); }
+.banner::before, .banner::after { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--action); clip-path: polygon(0 0, 100% 0, calc(100% - 15px) 50%, 100% 100%, 0 100%); border-radius: 6px 0 0 2px; }
+.banner::after { z-index: -2; background: var(--page-ink); opacity: 0; transform: translate(4px, 4px); transition: opacity .2s; }
+.banner:hover { transform: translateY(-2px); }
+.banner[aria-pressed=true] { transform: translate(-2px, -3px); } .banner[aria-pressed=true]::after { opacity: 1; }
+.banner i { position: absolute; left: 0; right: 15px; bottom: -12px; height: 3px; border-radius: 3px; background: var(--page-ink); transform-origin: 0 50%; display: none; }
+.auto .banner[aria-pressed=true] i { display: block; animation: run 4.2s linear; }
+
+/* A · Roll call: the page is the school's colour */
+#a { background: var(--field); --page-ink: var(--ink); }
+#a .nav { background: none; }
+#a .door { padding-top: 12px; }
+#a h1 { font-size: clamp(46px, 6.9vw, 104px); line-height: .9; letter-spacing: -0.058em; margin-bottom: 20px; }
+h1 small { display: block; font: inherit; white-space: nowrap; }
+.slot { display: inline-block; height: 1em; overflow: hidden; vertical-align: bottom; }
+.slot > span { display: block; transform: translateY(calc(var(--at) * -1em)); transition: transform .9s var(--expo); }
+.slot em { display: block; height: 1em; line-height: 1; font-style: normal; color: var(--action); }
+.slot em:nth-child(1) { font-stretch: 125%; font-weight: 800; } .slot em:nth-child(2) { font-stretch: 78%; font-weight: 600; }
+.slot em:nth-child(3) { font-stretch: 62%; font-weight: 900; letter-spacing: -0.02em; } .slot em:nth-child(4) { font-stretch: 100%; font-weight: 360; }
+#a .say > p { margin-bottom: 22px; } #a .banners { margin-bottom: 26px; }
+#a .rows { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: none; }
+#a .rows li { grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; padding: 10px 14px 12px 10px; } #a .rows .tile { justify-self: start; }
+
+
+/* B · The ticket: the hero is the product */
+#b { transition: background-color .3s; } .won #b { background: var(--field); }
+#b .say h1 { font-size: clamp(44px, 5.4vw, 80px); line-height: .92; margin-bottom: 14px; } #b .say > p { margin-bottom: 22px; }
+#b .say > p.tip { max-width: none; margin: 52px 0 0; font-size: 13.5px; font-weight: 560; color: var(--on-field-2); }
+.deck { position: relative; isolation: isolate; width: min(400px, 100%); margin-right: 150px; touch-action: pan-y; }
+.tab { position: absolute; inset: 0; border-radius: var(--r); background: var(--field); color: var(--ink); box-shadow: 4px 4px 0 var(--shade); transform: translate(calc(var(--k) * (46px + var(--px, 0) * 14px)), calc(var(--k) * (9px + var(--py, 0) * 6px))) rotate(calc(var(--k) * (1.6deg + var(--px, 0) * 1.2deg))); z-index: calc(0 - var(--k)); transition: transform .3s var(--ease); display: grid; justify-items: end; align-content: start; padding: 20px 12px; }
+.tab span { writing-mode: vertical-rl; font-weight: 700; font-stretch: 112%; font-size: 17px; letter-spacing: -0.02em; }
+.tab:hover { transform: translate(calc(var(--k) * 46px + 22px), calc(var(--k) * 9px - 8px)) rotate(calc(var(--k) * 1.6deg + 2.5deg)); }
+.tk { --cut: 13px; position: relative; display: flex; flex-direction: column; border-radius: var(--r); overflow: hidden; transform: translate(calc(var(--px, 0) * -9px), calc(var(--py, 0) * -6px)) rotate(calc(var(--px, 0) * -1.6deg)); filter: drop-shadow(calc(7px + var(--px, 0) * 5px) calc(7px + var(--py, 0) * 4px) 0 var(--ink)); transition: transform .3s var(--ease), filter .3s var(--ease); animation: deal .6s var(--expo) backwards; cursor: grab; user-select: none; touch-action: pan-y; }
+.tk.drag { cursor: grabbing; animation: none; transition: none; }
+.stamp { margin-left: auto; align-self: center; padding: 3px 12px 4px; border: 2.5px solid var(--paper); border-radius: 8px 8px 8px 2px; font-size: 15px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.01em; transform: rotate(-9deg); animation: slam .5s var(--expo) backwards .1s; }
+.seat.pet { border: 0; overflow: hidden; } .seat.pet img { display: block; width: 100%; height: 100%; object-fit: contain; }
+button.seat { cursor: pointer; transition: transform .15s var(--ease); } button.seat:hover { transform: scale(1.1); opacity: 1; }
+.tk-top { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; padding: 22px 22px 26px; background: var(--paper); -webkit-mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.tk-top .tile { min-width: 76px; min-height: 76px; } .tk-top .tile b { font-size: 22px; } .tk-top .tile small { font-size: 13px; }
+.tk-top h3 { font-size: 28px; font-weight: 680; letter-spacing: -0.04em; line-height: 1.05; } .tk-top p { font-size: 14px; color: var(--mute); margin-top: 4px; }
+.tk-stub { position: relative; display: grid; gap: 14px; padding: 22px; background: var(--stub); transition: background-color .3s; -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.tk-stub::before { content: ''; position: absolute; top: -1px; left: 22px; right: 22px; border-top: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.tk-stub small { display: block; font-size: 13px; font-weight: 620; color: var(--on-field-2); } .tk-stub strong { display: block; font-size: 25px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.1; } .tk-stub em { display: block; font-style: normal; margin-top: 4px; font-weight: 580; color: var(--on-field-2); }
+.tk-stub.near { background: var(--field); } .tk-stub.near em { color: var(--ink); }
+.tk-stub.met { background: var(--action); color: var(--paper); } .tk-stub.met small, .tk-stub.met em { color: var(--paper); }
+.seats { display: flex; gap: 8px; } .seat { position: relative; width: 44px; height: 44px; border-radius: 50%; border: 1.5px dashed var(--ink); opacity: .5; }
+.seat.taken { border-style: solid; opacity: 1; background: color-mix(in oklch, var(--ink) 22%, transparent); } .seat.new { animation: pop .45s var(--expo); }
+.seat.you { margin: 0 5px; border: 0; background: var(--paper); box-shadow: 0 0 0 2.5px var(--field), 0 0 0 5px var(--action); transition: box-shadow .3s; }
+button.seat.you, button.seat.you:hover { transform: scale(1.16); }
+.seat.you img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.seat.you b { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); padding: 1px 7px 2px; border-radius: 99px; background: var(--action); color: var(--paper); font-size: 10.5px; font-weight: 720; line-height: 1.2; }
+.seat.you.new::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2.5px solid var(--action); animation: ping 1s var(--expo) 2; }
+.seat.next { opacity: 1; } .seat.next::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--action); animation: ping 1.6s var(--expo) infinite; }
+.met .seat { border-color: var(--paper); } .met .seat.taken { background: color-mix(in oklch, var(--paper) 30%, transparent); } .met .seat.you { background: var(--paper); box-shadow: 0 0 0 2.5px var(--action), 0 0 0 5px var(--paper); } .met .seat.you b { background: var(--paper); color: var(--action); }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 46px; padding: 0 22px; border-radius: 99px; font-weight: 620; font-size: 16px; background: var(--action); color: var(--paper); box-shadow: 0 0 0 1.5px var(--ink) inset, 3px 3px 0 var(--ink); transition: transform .15s var(--ease), background-color .15s; }
+.btn:hover { background: var(--action-2); } .btn:active { transform: translate(2px, 2px); }
+.met .btn { background: var(--paper); color: var(--ink); }
+
+/* C · The wheel: schools ride one ring */
+#c .door { align-items: start; } #c .say h1 { margin-bottom: 10px; max-width: 13ch; } #c .in { align-self: center; margin-top: 70px; }
+.wheel { --R: 620px; position: absolute; left: 34%; top: 318px; width: calc(var(--R) * 2); height: calc(var(--R) * 2); margin-left: calc(0px - var(--R)); border-radius: 50%; background: var(--field); touch-action: none; cursor: grab; }
+.wheel.drag { cursor: grabbing; }
+.rim { position: absolute; inset: 0; border-radius: 50%; transform: rotate(var(--rot, 0deg)); transition: transform 1s var(--expo); }
+.wheel.drag .rim { transition: none; }
+.rim::before { content: ''; position: absolute; inset: 10px; border-radius: 50%; background: repeating-conic-gradient(var(--ink) 0 .35deg, transparent .35deg 5deg); -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 11px)); mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 11px)); opacity: .55; }
+.stop { position: absolute; left: 50%; top: 50%; height: 44px; padding: 0 20px; border-radius: 99px; white-space: nowrap; font-weight: 680; font-size: 17px; letter-spacing: -0.02em; background: var(--action); color: var(--paper); box-shadow: 0 0 0 1.5px var(--ink) inset, 4px 4px 0 var(--ink); transform: translate(-50%, -50%) rotate(calc(var(--j) * 30deg)) translateY(calc(0px - var(--R))) scale(var(--s, 1)); transition: transform .5s var(--expo); }
+.stop.top { --s: 1.28; }
+.at { position: absolute; left: 34%; top: 384px; width: min(480px, calc(100% - 32px)); transform: translateX(-50%); display: grid; gap: 12px; pointer-events: none; }
+.at h2 { font-size: 26px; font-weight: 700; font-stretch: 110%; letter-spacing: -0.04em; text-align: center; animation: in .5s var(--expo) backwards; }
+.at .rows { max-width: none; }
+.hint { position: absolute; left: 34%; top: 262px; transform: translateX(-50%); font-size: 13px; font-weight: 580; color: var(--mute); white-space: nowrap; }
+
+@media (max-width: 860px) {
+  .nav { padding: 9px 16px; } .door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; } h1 { font-size: 44px; }
+  #a .rows { grid-template-columns: minmax(0, 1fr); } #a .rows li { grid-template-columns: auto minmax(0, 1fr); align-items: center; } #a .in, #c .in { margin-top: 0; }
+  .deck { margin-right: 0; width: calc(100% - 120px); } .tab { transform: translate(calc(var(--k) * 38px), calc(var(--k) * 8px)) rotate(calc(var(--k) * 1.6deg)); }
+  .tk-top h3 { font-size: 22px; } .tk-top .tile { min-width: 60px; min-height: 60px; } .tk-stub strong { font-size: 21px; }
+  .wheel { --R: 420px; left: 50%; top: 290px; } .stop { font-size: 15px; height: 38px; padding: 0 15px; } .at { left: 50%; top: 344px; } .hint { left: 50%; top: 240px; }
+  #c .say { min-height: 640px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body data-kit="cornell" class="auto">
+
+<div class="pick">
+  <b>Front door</b>
+  <button data-dir="a">A · Roll call</button><button data-dir="b">B · The ticket</button><button data-dir="c">C · The wheel</button>
+  <p id="note"></p>
+</div>
+
+<section class="frame" id="a">
+  <header class="nav"><span class="wm"></span></header>
+  <main class="door">
+    <div class="say">
+      <h1><small>Go together</small><small>at <span class="slot"><span><em>Cornell.</em><em>Columbia.</em><em>NYU.</em><em>CUNY.</em></span></span></small></h1>
+      <p>Events from your campus and plans posted by people near you. Show up as a group and the reward unlocks.</p>
+      <div class="banners"></div>
+      <ul class="rows" aria-label="On this week"></ul>
+    </div>
+    <div class="in"></div>
+  </main>
+</section>
+
+<section class="frame" id="b">
+  <header class="nav"><span class="wm"></span></header>
+  <main class="door">
+    <div class="say">
+      <h1><small>Go together</small><small>at <span class="slot"><span><em>Cornell.</em><em>Columbia.</em><em>NYU.</em><em>CUNY.</em></span></span></small></h1>
+      <p>Events from your campus and plans posted by people near you. Show up as a group and the reward unlocks.</p>
+      <div class="deck"></div>
+      <p class="tip">Take a seat to see it unlock. Flick the ticket, or tap a school behind it, for the next one.</p>
+    </div>
+    <div class="in"></div>
+  </main>
+</section>
+
+<section class="frame" id="c">
+  <header class="nav"><span class="wm"></span></header>
+  <main class="door">
+    <div class="wheel"><div class="rim"></div></div>
+    <p class="hint">Turn the wheel to your school</p>
+    <div class="at"></div>
+    <div class="say">
+      <h1>Go together.<br>Get more for it.</h1>
+      <p>Show up as a group and the reward unlocks.</p>
+    </div>
+    <div class="in"></div>
+  </main>
+</section>
+
+<script>
+const SCHOOLS = [
+  { slug: 'cornell', name: 'Cornell', domain: 'cornell.edu', need: 4, reward: 'Free bubble tea for the table', events: [['Thu', '7:00 PM', 'Blitz night', 'Chess Club'], ['Fri', '5:30 PM', 'Slope sunset run', 'A plan someone posted'], ['Sat', '11:00 AM', 'Farmers market walk', 'Outing Club']] },
+  { slug: 'columbia', name: 'Columbia', domain: 'columbia.edu', need: 3, reward: 'Two slices for the price of one', events: [['Wed', '6:00 PM', 'Film night on the steps', 'Film Society'], ['Fri', '8:00 AM', 'Riverside run', 'A plan someone posted'], ['Sun', '2:00 PM', 'Museum walk', 'Art History Society']] },
+  { slug: 'nyu', name: 'NYU', domain: 'nyu.edu', need: 4, reward: 'Dumplings for the whole group', events: [['Thu', '8:00 PM', 'Open mic', 'Program Board'], ['Sat', '10:00 AM', 'Chess in the square', 'A plan someone posted'], ['Sun', '6:00 PM', 'Dumpling crawl', 'Food Club']] },
+  { slug: 'cuny', name: 'CUNY', domain: 'cuny.edu', need: 3, reward: 'Coffee on the house', events: [['Tue', '6:30 PM', 'Startup night', 'Entrepreneurship Club'], ['Thu', '12:30 PM', 'Lunch on the plaza', 'A plan someone posted'], ['Sat', '3:00 PM', 'Bridge walk', 'Outdoors Club']] },
+];
+// Animal faces for seats taken by people the visitor does not know: file names in /demo/animals/. Empty: plain filled seats.
+const ANIMALS = Array.from({ length: 36 }, (_, n) => String(n + 1).padStart(2, '0') + '.png');
+const pet = n => ANIMALS.length ? `<img src="/animals/${ANIMALS[n % ANIMALS.length]}" alt="">` : '';
+const NOTES = {
+  a: 'The whole page wears the school. The name in the headline rolls; a banner picks a school; typing a school email does too.',
+  b: 'The hero is the product. The ticket leans with the pointer; tap the seats and the reward unlocks and the page lights up; throw the ticket, tap a card behind or use the arrow keys for the next school.',
+  c: 'Schools ride one big ring that runs off the page. Drag it or tap a school and the page turns with it.',
+};
+const $ = (sel, root = document) => root.querySelector(sel), $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const mod = (n, m) => ((n % m) + m) % m, calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let mine = null, at = 0, step = 0, dir = 'a', have = 0, hold = 0, dragging = false;
+
+// the mark: three woven rings, the top one in the action colour
+const ring = i => { const [x, y] = [[50, 35], [35.5, 60], [64.5, 60]][i]; return `M${x - 21} ${y}a21 21 0 1 0 42 0a21 21 0 1 0 -42 0`; };
+$$('.wm').forEach((el, n) => { el.innerHTML = `<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs>${[0, 1, 2].map(i => `<mask id="m${n}${i}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="${ring((i + 2) % 3)}" stroke="black" stroke-width="15.3"/></mask>`).join('')}</defs>${[0, 1, 2].map(i => `<g mask="url(#m${n}${i})"><path d="${ring(i)}" stroke="${i ? 'currentColor' : 'var(--action)'}" stroke-width="9"/></g>`).join('')}</svg>Loop`; });
+$$('.in').forEach((el, n) => { el.innerHTML = `<div class="in-top"><h2>Sign in</h2><p>Your school email opens your campus.</p>${$('.wm svg').outerHTML.replace(/m0(\d)/g, `k${n}$1`)}</div><div class="in-body"><button class="g"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>Continue with Google</button><div class="or">or</div><label>Email</label><input type="email" placeholder="you@school.edu" autocomplete="off"><p class="seen" aria-live="polite"></p><button class="go">Continue<svg viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg></button><p class="fine">Type your school email and Loop takes on your school’s colours. Any other email signs in too.</p></div>`; });
+$$('.banners').forEach(el => { el.innerHTML = SCHOOLS.map((s, i) => `<button class="banner" data-kit="${s.slug}" data-go="${i}">${s.name}<i></i></button>`).join(''); });
+$('.rim').innerHTML = Array.from({ length: 12 }, (_, j) => `<button class="stop" data-kit="${SCHOOLS[j % 4].slug}" data-stop="${j}" style="--j:${j}">${SCHOOLS[j % 4].name}</button>`).join('');
+
+const rows = s => s.events.map(([day, time, title, by], i) => `<li style="--i:${i}"><span class="tile"><small>${day}</small><b>${time}</b></span><div><b>${title}</b><span>${by} · ${s.name}</span></div></li>`).join('');
+function ticket(fresh) {
+  // your animal: any one that is not already sitting on this ticket
+  if (mine === null) { const sat = [0, 1, 2, 3].map(i => (at * 7 + i * 5 + 3) % 36); do mine = Math.floor(Math.random() * 36); while (sat.includes(mine)); }
+  const s = SCHOOLS[at], [day, time, title, by] = s.events[0], left = s.need - have, state = left === 0 ? 'met' : have > s.need - 2 ? 'near' : '';
+  const seats = Array.from({ length: s.need }, (_, i) => i < s.need - 2 ? `<i class="seat taken ${ANIMALS.length ? 'pet' : ''}">${pet(at * 7 + i * 5 + 3)}</i>` : i < have ? (i === s.need - 2 ? `<button class="seat taken you ${i === have - 1 ? 'new' : ''}" data-leave aria-label="Your seat. Give it up">${ANIMALS.length ? `<img src="/animals/${ANIMALS[mine]}" alt="">` : ''}<b>You</b></button>` : `<i class="seat taken ${ANIMALS.length ? 'pet' : ''} ${i === have - 1 ? 'new' : ''}">${pet(at * 7 + i * 5 + 3)}</i>`) : `<button class="seat ${i === have ? 'next' : ''}" data-seat aria-label="Take a seat"></button>`).join('');
+  const others = [1, 2, 3].map(k => { const o = SCHOOLS[mod(at + k, 4)]; return `<button class="tab" data-kit="${o.slug}" data-go="${mod(at + k, 4)}" style="--k:${k}" aria-label="${o.name}"><span>${o.name}</span></button>`; }).join('');
+  $('.deck').innerHTML = `${others}<article class="tk" ${fresh ? '' : 'style="animation:none"'}><div class="tk-top"><span class="tile ${state === 'met' ? 'met' : ''}"><small>${day}</small><b>${time}</b></span><div><h3>${title}</h3><p>${by} · ${s.name}</p></div></div>
+    <div class="tk-stub ${state}"><div><small>A group of ${s.need} gets</small><strong>${s.reward}</strong><em>${left === 0 ? 'Show this at the counter, together.' : `${left} more and it unlocks`}</em></div><div class="seats">${seats}${left === 0 ? '<b class="stamp">Unlocked</b>' : ''}</div>
+    <button class="btn" data-seat>${left === 0 ? `Next: ${SCHOOLS[mod(at + 1, 4)].name}` : left === 2 ? 'I’m in' : 'Bring one more'}</button></div></article>`;
+}
+function render(fresh = true) {
+  const s = SCHOOLS[at];
+  document.body.dataset.kit = s.slug;
+  $$('.slot > span').forEach(el => el.style.setProperty('--at', at));
+  $$('[data-go].banner').forEach(el => el.setAttribute('aria-pressed', el.dataset.go == at));
+  if (fresh) { mine = null; document.body.classList.remove('won'); $('#a .rows').innerHTML = rows(s); $('.at').innerHTML = `<h2>This week at ${s.name}</h2><ul class="rows">${rows(s)}</ul>`; have = s.need - 2; }
+  ticket(fresh);
+  $('.rim').style.setProperty('--rot', `${-step * 30}deg`);
+  $$('.stop').forEach(el => el.classList.toggle('top', el.dataset.stop == mod(step, 12)));
+}
+/** Put a school on. The new colours wipe in from wherever it was picked. */
+function go(to, from, wheel) {
+  to = mod(to, 4); if (to === at && !wheel) return;
+  if (!wheel) step += mod(to - step, 4);
+  at = to;
+  wipe(from, () => render());
+}
+/** Make a change, and let it spread from the thing that caused it. */
+function wipe(from, change) {
+  if (calm || !document.startViewTransition || !from) return change();
+  const box = from.getBoundingClientRect(), root = document.documentElement.style;
+  root.setProperty('--vx', `${box.left + box.width / 2}px`); root.setProperty('--vy', `${box.top + box.height / 2}px`);
+  document.startViewTransition(change);
+}
+const origin = () => dir === 'a' ? $(`#a .banner[data-go="${mod(at + 1, 4)}"]`) : dir === 'b' ? $('.tab') : $('.hint');
+const rest = (ms = 12000) => { hold = Date.now() + ms; document.body.classList.remove('auto'); };
+
+document.addEventListener('click', event => {
+  const pick = event.target.closest('[data-dir]'), to = event.target.closest('[data-go]'), stop = event.target.closest('[data-stop]'), seat = event.target.closest('[data-seat]');
+  if (pick) { location.hash = pick.dataset.dir; return; }
+  if (to) { rest(); go(+to.dataset.go, to); }
+  if (stop && !dragging) { rest(); let turn = mod(+stop.dataset.stop - step, 12); if (turn > 6) turn -= 12; step += turn; go(mod(step, 4), stop, true); }
+  if (seat) { rest(); if (have >= SCHOOLS[at].need) go(at + 1, seat); else if (++have === SCHOOLS[at].need) wipe(seat, () => { document.body.classList.add('won'); ticket(false); }); else ticket(false); }
+  if (event.target.closest('[data-leave]')) { rest(); have = SCHOOLS[at].need - 2; mine = null; document.body.classList.remove('won'); ticket(false); }
+});
+document.addEventListener('input', event => {
+  if (!event.target.matches('.in input')) return;
+  const domain = (event.target.value.split('@')[1] || '').trim().toLowerCase(), hit = SCHOOLS.findIndex(s => domain === s.domain || domain.endsWith('.' + s.domain));
+  $('.seen', event.target.parentNode).textContent = hit >= 0 ? `${domain} is ${SCHOOLS[hit].name}.` : domain.includes('.') ? 'Not a school Loop knows yet. You can still sign in with it.' : '';
+  event.target.closest('.in').querySelector('h2').textContent = hit >= 0 ? `Sign in at ${SCHOOLS[hit].name}` : 'Sign in';
+  rest(600000); if (hit >= 0) go(hit, event.target);
+});
+document.addEventListener('focusin', event => { if (event.target.matches('.in input')) rest(600000); });
+
+// B: the ticket leans away from the pointer, can be thrown in any direction, and the arrow keys change school
+{ const deck = $('.deck'); let x0 = null, y0 = 0, tk;
+  if (!calm) $('#b').addEventListener('pointermove', event => { const box = deck.getBoundingClientRect(), lean = (v, mid) => Math.max(-1, Math.min(1, (v - mid) / 420)); deck.style.setProperty('--px', lean(event.clientX, box.left + box.width / 2).toFixed(3)); deck.style.setProperty('--py', lean(event.clientY, box.top + box.height / 2).toFixed(3)); });
+  deck.addEventListener('pointermove', () => { if (hold < Date.now() + 5000) rest(5000); });
+  deck.addEventListener('pointerdown', event => { tk = event.target.closest('.tk'); if (!tk || event.target.closest('button')) return; x0 = event.clientX; y0 = event.clientY; dragging = true; tk.classList.add('drag'); tk.setPointerCapture(event.pointerId); });
+  deck.addEventListener('pointermove', event => { if (x0 === null) return; const dx = event.clientX - x0, dy = event.clientY - y0; tk.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 28}deg)`; });
+  const end = event => { if (x0 === null) return; const dx = event.clientX - x0, dy = event.clientY - y0, far = Math.hypot(dx, dy) > 90; x0 = null; dragging = false; rest();
+    if (!far) { tk.classList.remove('drag'); tk.style.transform = ''; return; }
+    const next = () => go(at + (dx < 0 ? 1 : -1), tk);
+    if (calm) return next();
+    tk.animate([{ transform: tk.style.transform }, { transform: `translate(${dx * 4}px, ${dy * 4}px) rotate(${dx / 7}deg)`, opacity: 0 }], { duration: 240, easing: 'ease-in', fill: 'forwards' }).finished.then(next); };
+  deck.addEventListener('pointerup', end); deck.addEventListener('pointercancel', end);
+  addEventListener('keydown', event => { if (dir !== 'b' || event.target.matches('input') || !event.key.startsWith('Arrow')) return; const way = { ArrowRight: 1, ArrowLeft: -1 }[event.key]; if (way) { rest(); go(at + way, $('.tk')); } }); }
+
+// C: turn the wheel
+{ const wheel = $('.wheel'), rim = $('.rim'); let a0 = null, base = 0, now = 0;
+  const angle = event => { const box = wheel.getBoundingClientRect(); return Math.atan2(event.clientY - box.top - box.height / 2, event.clientX - box.left - box.width / 2) * 180 / Math.PI; };
+  wheel.addEventListener('pointerdown', event => { a0 = angle(event); base = now = -step * 30; dragging = false; });
+  wheel.addEventListener('pointermove', event => { if (a0 === null) return; now = base + angle(event) - a0; if (Math.abs(now - base) > 1.5 && !dragging) { dragging = true; wheel.classList.add('drag'); wheel.setPointerCapture(event.pointerId); } if (dragging) rim.style.setProperty('--rot', `${now}deg`); });
+  const end = () => { if (a0 === null) return; a0 = null; wheel.classList.remove('drag'); if (!dragging) return; rest(); step = Math.round(-now / 30); go(mod(step, 4), $('.hint'), true); setTimeout(() => { dragging = false; }); };
+  wheel.addEventListener('pointerup', end); wheel.addEventListener('pointercancel', end); }
+
+function show() {
+  dir = 'abc'.includes(location.hash.slice(1)) && location.hash.length === 2 ? location.hash.slice(1) : 'a';
+  $$('.frame').forEach(el => el.classList.toggle('on', el.id === dir));
+  $$('[data-dir]').forEach(el => el.setAttribute('aria-pressed', el.dataset.dir === dir));
+  $('#note').textContent = NOTES[dir];
+}
+addEventListener('hashchange', show); show(); render();
+if (calm) document.body.classList.remove('auto');
+else setInterval(() => { if (Date.now() < hold || document.hidden || dragging) return; document.body.classList.add('auto'); go(at + 1, origin()); }, 4200);
+</script>
+</body>
+</html>
