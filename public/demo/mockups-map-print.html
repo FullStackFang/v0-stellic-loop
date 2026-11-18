@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Near you map: Print, refined</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.css">
+<style>
+:root { --ink: #16294d; --paper: #f0e8d4; --card: #fbf7ec; --lime: #d9f04c; --hot: #ff5a43; --blue: #3f86de; --bg: oklch(96.2% 0.004 230); --ease: cubic-bezier(.16, 1, .3, 1); }
+* { box-sizing: border-box; margin: 0; }
+body { font-family: Archivo, system-ui, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding: 28px 24px 48px; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
+.page { display: flex; gap: 44px; align-items: flex-start; flex-wrap: wrap; max-width: 1040px; margin: 0 auto; }
+.notes { flex: 1 1 320px; max-width: 460px; padding-top: 6px; }
+.notes h1 { font-stretch: 112%; font-weight: 800; font-size: 30px; letter-spacing: -0.035em; line-height: 1.08; }
+.notes > p { margin-top: 8px; font-size: 15px; line-height: 1.5; color: oklch(42% 0.04 252); }
+.notes ol { margin: 22px 0 0; padding: 0; list-style: none; counter-reset: n; display: grid; gap: 15px; }
+.notes li { counter-increment: n; display: grid; grid-template-columns: 30px 1fr; gap: 0 10px; font-size: 14.5px; line-height: 1.45; color: oklch(42% 0.04 252); }
+.notes li::before { content: counter(n); grid-row: span 2; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 3px; font-weight: 760; font-size: 13px; color: var(--ink); background: var(--lime); box-shadow: inset 0 0 0 1.5px var(--ink); rotate: -3deg; }
+.notes li b { color: var(--ink); font-weight: 700; }
+
+.phone { position: relative; flex: none; width: 392px; height: 800px; overflow: hidden; border-radius: 36px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 0 30px 60px -26px rgb(22 41 77 / .55); isolation: isolate; }
+.map { position: absolute; inset: 0; }
+.map canvas { filter: url(#rough); }
+/* paper: fine tooth, and a little darker toward the edges the way a sheet ages */
+.tooth { position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: multiply; opacity: .16; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .28  0 0 0 0 .24  0 0 0 -1.25 1.1'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.age { position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: multiply; background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgb(150 120 70 / .16)); }
+
+.band { position: absolute; inset: 0 0 auto; z-index: 4; padding: 17px 22px 13px; background: var(--paper); box-shadow: 0 1.5px 0 var(--ink), 0 4.5px 0 var(--paper), 0 5.5px 0 var(--ink); }
+.band small { display: block; font-stretch: 88%; font-size: 11.5px; font-weight: 640; letter-spacing: .1em; text-transform: uppercase; }
+.band small i { font-style: normal; opacity: .6; }
+.band b { display: block; margin-top: 2px; font-stretch: 118%; font-size: 31px; font-weight: 820; letter-spacing: -0.045em; line-height: 1; }
+
+/* the rose doubles as "back to where you are" */
+.rose { position: absolute; z-index: 3; right: 14px; top: 98px; width: 50px; height: 50px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink); transition: rotate .6s var(--ease), scale .2s var(--ease); }
+.rose:hover { rotate: 20deg; } .rose:active { scale: .92; }
+.rose svg { display: block; width: 100%; height: 100%; }
+.scale { position: absolute; z-index: 3; left: 18px; bottom: 126px; display: grid; gap: 4px; font-stretch: 88%; font-size: 10.5px; font-weight: 680; letter-spacing: .12em; text-transform: uppercase; pointer-events: none; }
+.scale i { display: block; height: 7px; border: 1.5px solid var(--ink); border-top: 0; background: linear-gradient(90deg, var(--ink) 50%, transparent 0) 0 100% / 100% 3px no-repeat; transition: width .3s var(--ease); }
+
+.sheet { position: absolute; inset: auto 0 0; z-index: 4; height: 110px; padding: 0 24px; background: var(--paper); box-shadow: 0 -1.5px 0 var(--ink), 0 -4.5px 0 var(--paper), 0 -5.5px 0 var(--ink); }
+.dial { position: relative; height: 100%; display: flex; align-items: center; justify-content: space-between; }
+.dial::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px dashed var(--ink); opacity: .55; }
+.tick { position: relative; display: grid; justify-items: center; line-height: 1; min-width: 52px; padding: 8px 8px 9px; border-radius: 3px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink); transition: scale .3s var(--ease), rotate .3s var(--ease), background-color .2s; }
+.tick small { font-stretch: 88%; font-size: 10.5px; font-weight: 640; letter-spacing: .08em; text-transform: uppercase; } .tick b { margin-top: 3px; font-size: 16.5px; font-weight: 760; letter-spacing: -0.02em; }
+.tick[aria-pressed=true] { scale: 1.16; rotate: -3deg; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+
+/* a plan is a postage stamp: perforated edge, an engraved picture of what it is, its hour */
+.pin { display: flex; align-items: flex-end; transition: opacity .3s; }
+.stamp { filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(2px 2.5px 0 rgb(22 41 77 / .22)); rotate: var(--lean, -3deg); scale: var(--ks, 1); transform-origin: 30% 100%; transition: rotate .35s var(--ease), scale .35s var(--ease); }
+.stamp > span { display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
+  mask: linear-gradient(#000 0 0) center / calc(100% - 6px) calc(100% - 6px) no-repeat, radial-gradient(circle 2.1px at 50% 50%, #0000 94%, #000) -3px -3px / 6px 6px; }
+.stamp > span::before { content: ''; position: absolute; inset: 5.5px; box-shadow: inset 0 0 0 1.2px var(--ink); transition: background-color .25s; z-index: -1; }
+.stamp svg { width: 23px; height: 23px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.stamp b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; } .stamp small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.pin.sel .stamp { --lean: 2deg; scale: calc(1.3 * var(--ks, 1)); filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(3px 3.5px 0 var(--ink)); }
+.stamp { position: relative; }
+.pin .burst { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 110px; height: 110px; z-index: -2; pointer-events: none; animation: turn 26s linear infinite, pop .5s var(--ease) both; }
+.pin .burst path { fill: var(--lime); stroke: var(--ink); stroke-width: 1.3; stroke-linejoin: round; }
+@keyframes turn { to { rotate: 360deg; } } @keyframes pop { from { opacity: 0; } }
+.pin:hover .stamp { --lean: 0deg; }
+/* friends, printed in the two inks */
+.faces { display: flex; margin: 0 0 -3px -10px; z-index: 1; scale: var(--ks, 1); transform-origin: 0 100%; }
+.faces span { width: 29px; height: 29px; margin-left: -9px; border-radius: 50%; overflow: hidden; background: var(--card); box-shadow: 0 0 0 1.5px var(--ink), 1.5px 2px 0 1px rgb(22 41 77 / .22); }
+.faces span:first-child { margin-left: 0; }
+.faces img { display: block; width: 100%; height: 100%; object-fit: cover; scale: 1.08; }
+/* the postmark that lands on the stamp you pick */
+.mark { scale: var(--ks, 1); transform-origin: 0 100%; position: absolute; left: 30px; top: -38px; width: 62px; height: 62px; pointer-events: none; rotate: -14deg; opacity: .82; animation: thunk .34s var(--ease) both; }
+.mark circle, .mark path { fill: none; stroke: var(--ink); stroke-width: 1.5; } .mark text { fill: var(--ink); font: 760 7.4px Archivo, sans-serif; letter-spacing: .14em; } .mark .day { font-size: 10px; letter-spacing: .02em; }
+@keyframes thunk { from { opacity: 0; translate: 6px -14px; rotate: -30deg; } 60% { opacity: .9; } }
+/* the ticket the lit plan hands you */
+.tix { position: absolute; left: -6px; bottom: calc(100% + 24px); width: 226px; display: grid; grid-template-columns: 1fr auto; text-align: left; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(3px 4px 0 rgb(22 41 77 / .2)); rotate: -1.2deg; scale: calc(var(--k, 1) * (1 - .35 * var(--away, 0))); opacity: calc(1 - var(--away, 0)); transform-origin: 12% calc(100% + 24px); pointer-events: none; animation: deal .5s var(--ease) both; }
+.far .tix { left: auto; right: -6px; rotate: 1.2deg; transform-origin: 88% calc(100% + 24px); }
+.tix > span { background: var(--card); padding: 11px 13px 12px; }
+.tix .main { display: grid; gap: 3px; border-radius: 4px 0 0 4px; mask: radial-gradient(circle 5px at 100% 0, #0000 96%, #000), radial-gradient(circle 5px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.tix .stub { display: grid; align-content: center; justify-items: center; gap: 2px; min-width: 58px; padding: 8px 9px; background: var(--hot); border-left: 1.5px dashed var(--ink); border-radius: 0 4px 4px 0; mask: radial-gradient(circle 5px at 0 0, #0000 96%, #000), radial-gradient(circle 5px at 0 100%, #0000 96%, #000); mask-composite: intersect; line-height: 1; }
+.tix .stub b { font-size: 21px; font-weight: 820; letter-spacing: -0.04em; } .tix .stub small { font-stretch: 86%; font-size: 8.5px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; text-align: center; }
+.tix .main b { font-stretch: 92%; font-size: 17px; font-weight: 820; text-transform: uppercase; line-height: 1.05; }
+.tix .main span { font-size: 12.5px; } .tix .main em { justify-self: start; margin-top: 2px; font-style: normal; font-size: 12px; font-weight: 660; line-height: 1.25; }
+@keyframes deal { from { opacity: 0; translate: 0 10px; rotate: -6deg; } }
+.you { display: grid; justify-items: center; gap: 2px; pointer-events: none; } .you > * { scale: var(--ks, 1); } .you b { transform-origin: 50% -40%; }
+.you span { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; background: var(--card); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3.5px var(--ink); }
+.you img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.you b { padding: 2px 5px 1px; font-stretch: 86%; font-size: 8.5px; font-weight: 760; letter-spacing: .12em; color: var(--card); background: var(--ink); border-radius: 2px; }
+.maplibregl-marker:has(.sel) { z-index: 3; }
+.maplibregl-ctrl-attrib { font-size: 9.5px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="phone">
+    <div class="map"></div><div class="tooth"></div><div class="age"></div>
+    <div class="band"><small>You are here · 5 on · <i>sheet 2 of 6</i></small><b>Collegetown</b></div>
+    <button class="rose" aria-label="Back to where you are"><svg viewBox="-25 -25 50 50"><circle r="17" fill="none" stroke="#16294d" stroke-width="1" stroke-dasharray="1.5 3"/><path d="M0-21 4.5 0 0 21-4.5 0z" fill="#fbf7ec" stroke="#16294d" stroke-width="1.3" stroke-linejoin="round"/><path d="M0-21 4.5 0h-9z" fill="#16294d" stroke="#16294d" stroke-width="1.3" stroke-linejoin="round"/><path d="M-13 0h-5M13 0h5" stroke="#16294d" stroke-width="1.3" stroke-linecap="round"/><circle r="1.6" fill="#16294d"/></svg></button>
+    <div class="scale"><i></i><span>2 min walk</span></div>
+    <div class="sheet"><div class="dial"></div></div>
+  </div>
+  <div class="notes">
+    <h1>Print, made finer</h1>
+    <p>Navy and lime draw the sheet and stay quiet. One hot ink is kept for plans and nothing else, so a plan is the loudest thing on the page. Tap the times, tap a stamp, drag the map.</p>
+    <ol>
+      <li><b>Every plan is a stamp.</b><span>Perforated edge, an engraved picture of what it is, and the hour. Friends ride along beside it.</span></li>
+      <li><b>Picking one postmarks it.</b><span>It grows, a lime burst opens behind it, a postmark lands, and the lime ink slides into register across the whole sheet.</span></li>
+      <li><b>A ticket, with a stub.</b><span>The plan hands you a ticket. The stub is the walk in minutes.</span></li>
+      <li><b>Your walk is drawn on.</b><span>A dotted line runs from you to the plan each time you turn the dial.</span></li>
+      <li><b>The margins name next door.</b><span>Like a real map sheet, the edge says where the next sheet goes. A scale bar measures in minutes of walking.</span></li>
+      <li><b>Look around and the ticket lets go.</b><span>Zoom out or drag away to see other plans and the ticket shrinks and fades. Tap any stamp or time to deal it again.</span></li>
+      <li><b>The compass takes you home.</b><span>It is the one button on the map: back to where you are.</span></li>
+    </ol>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter></svg>
+
+<script src="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.js"></script>
+<script>
+const P = { b: [-76.4908, 42.4370], i: [-76.4852, 42.4362], h: [-76.4806, 42.4380], g: [-76.4802, 42.4436], f: [-76.4856, 42.4443], d: [-76.4910, 42.4437], c: [-76.4915, 42.4410] };
+const RING = [P.b, P.i, P.h, P.g, P.f, P.d, P.c], YOU = [-76.4862, 42.4411];
+const ICON = {
+  hike: '<path d="M2.5 20 9 9l3.6 5.6L15 11l6.5 9z"/><path d="m7 12.4 2 1.6 1.6-1.4"/><circle cx="18" cy="5.5" r="2.3"/>',
+  bagel: '<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="2.8"/><path d="m6.8 8.6 1 .8M16 6.6l.6 1.1M17.4 13.6l1.2.3M8 16.4l.9-.9M13 17.6l.2 1.2"/>',
+  study: '<path d="M3.5 5.6c3-1.1 5.8-.8 8.5 1 2.7-1.8 5.5-2.1 8.5-1v12.6c-3-1.1-5.800-.8-8.5 1-2.7-1.800-5.500-2.100-8.500-1z"/><path d="M12 6.600v12.600M6.300 9.200c1.200-.2 2.300 0 3.300.5M6.300 12.400c1.200-.2 2.300 0 3.300.5"/>',
+  disc: '<ellipse cx="12.500" cy="14" rx="9" ry="4.300"/><ellipse cx="12.500" cy="13.300" rx="4.800" ry="1.900"/><path d="M3 6.500h5.500M5.500 3.500H12M2.500 9.500h3"/>',
+  dumpling: '<path d="M2.500 15.500a9.500 7 0 0 1 19 0z"/><path d="m7.600 10.500.9 2.400M12 9.200v2.900M16.400 10.500l-.9 2.400M2.500 15.500c.6 2.800 2.400 4.500 4.800 4.500h9.400c2.400 0 4.200-1.700 4.800-4.500M9 3c1 1-.8 1.800.2 3M14 3c1 1-.8 1.800.2 3"/>' };
+const PLANS = [
+  { day: 'Sat', time: '7am', icon: 'hike', title: 'Sunrise hike', place: 'Cascadilla Gorge', say: 'Maya and Dev are going', at: [-76.4872, 42.4431], faces: [3, 7] },
+  { day: 'Today', time: 'noon', icon: 'bagel', title: 'Bagels on the steps', place: 'College Ave', say: '4 going', at: [-76.4853, 42.4420], faces: [1, 5, 8] },
+  { day: 'Today', time: '3pm', icon: 'study', title: 'CS 2110 study group', place: 'Northside Coffee', say: 'A drink and a pastry, $4 each', at: [-76.4879, 42.4394], faces: [2, 6] },
+  { day: 'Today', time: '4pm', icon: 'disc', title: 'Pickup frisbee', place: 'Eddy Street field', say: '6 going, needs 8', at: [-76.4836, 42.4409], faces: [4, 1, 3] },
+  { day: 'Today', time: '8pm', icon: 'dumpling', title: 'Dumpling night', place: 'Eddy Street', say: 'Group of 5 unlocks the big table', at: [-76.4849, 42.4388], faces: [5, 2] }];
+let lit = 2, ready = false, marks = [];
+
+const C = { ink: '#16294d', paper: '#f0e8d4', road: '#fbf7ec', lime: '#d9f04c', blue: '#3f86de', hot: '#ff5a43' };
+const shape = [...RING, RING[0]], geo = data => ({ type: 'geojson', data });
+const veil = { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[-76.9, 42.1], [-76.1, 42.1], [-76.1, 42.8], [-76.9, 42.8], [-76.9, 42.1]], shape] } };
+const line = (coordinates, properties = {}) => ({ type: 'Feature', properties, geometry: { type: 'LineString', coordinates } });
+const margins = { type: 'FeatureCollection', features: [line([P.d, P.f, P.g], { name: 'Central Campus this way' }), line([P.b, P.c, P.d], { name: 'Downtown this way' })] };
+const MINOR = ['minor'], MAJOR = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'], PATH = ['path', 'track'];
+const wide = px => ['interpolate', ['exponential', 2], ['zoom'], 13, px / 8, 16, px, 19, px * 8];
+const wide2 = (minor, major) => ['interpolate', ['exponential', 2], ['zoom'], 13, ['match', ['get', 'class'], MINOR, minor / 8, major / 8], 16, ['match', ['get', 'class'], MINOR, minor, major], 19, ['match', ['get', 'class'], MINOR, minor * 8, major * 8]];
+const omt = (id, type, layer, paint, more = {}) => ({ id, type, source: 'omt', 'source-layer': layer, paint, ...more });
+const road = (id, classes, paint, more = {}) => omt(id, 'line', 'transportation', paint, { filter: ['all', ['==', ['geometry-type'], 'LineString'], ['match', ['get', 'class'], classes, true, false]], layout: { 'line-cap': 'round', 'line-join': 'round' }, ...more });
+const type = (size, space, more = {}) => ({ 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': size, 'text-transform': 'uppercase', 'text-letter-spacing': space, ...more });
+const inked = { 'text-color': C.ink, 'text-halo-color': C.paper, 'text-halo-width': 1.6 };
+const style = { version: 8, glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+  sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' }, veil: geo(veil), plate: geo(line(shape)), margins: geo(margins), walk: geo(line([YOU, YOU])), mid: geo({ type: 'FeatureCollection', features: [] }) },
+  layers: [{ id: 'ground', type: 'background', paint: { 'background-color': C.paper } },
+    omt('green', 'fill', 'landcover', { 'fill-pattern': 'dots' }), omt('park', 'fill', 'park', { 'fill-pattern': 'dots' }), omt('park-edge', 'line', 'park', { 'line-color': C.ink, 'line-width': .8, 'line-dasharray': [1, 3], 'line-opacity': .6 }),
+    omt('water', 'fill', 'water', { 'fill-pattern': 'waves' }), omt('water-edge', 'line', 'water', { 'line-color': C.blue, 'line-width': 1.5 }), omt('stream', 'line', 'waterway', { 'line-color': C.blue, 'line-width': wide(4) }),
+    road('path', PATH, { 'line-color': C.ink, 'line-width': .9, 'line-dasharray': [2, 3], 'line-opacity': .7 }, { minzoom: 16 }),
+    road('edge', [...MINOR, ...MAJOR], { 'line-color': C.ink, 'line-width': ['match', ['get', 'class'], MINOR, .9, 1.4], 'line-opacity': .75, 'line-gap-width': wide2(8, 14) }),
+    road('minor', MINOR, { 'line-color': C.road, 'line-width': wide(8) }), road('major', MAJOR, { 'line-color': C.road, 'line-width': wide(14) }),
+    road('centre', MAJOR, { 'line-color': C.ink, 'line-width': .8, 'line-dasharray': [5, 5], 'line-opacity': .35 }, { minzoom: 16.5 }),
+    omt('off', 'fill', 'building', { 'fill-color': C.lime, 'fill-opacity': .75, 'fill-translate': [2.5, 2.5], 'fill-translate-anchor': 'viewport' }),
+    omt('roofs', 'fill', 'building', { 'fill-color': '#f5eedc' }), omt('roof-line', 'line', 'building', { 'line-color': C.ink, 'line-width': 1, 'line-opacity': .6 }, { layout: { 'line-join': 'miter' } }),
+    omt('streets', 'symbol', 'transportation_name', inked, { minzoom: 15, filter: ['match', ['get', 'class'], ['path', 'track', 'service'], false, true], layout: type(10, .14, { 'symbol-placement': 'line', 'symbol-spacing': 340 }) }),
+    omt('places', 'symbol', 'poi', inked, { minzoom: 16, filter: ['all', ['<=', ['get', 'rank'], 4], ['match', ['get', 'class'], ['bus', 'railway'], false, true]], layout: type(9.5, .1, { 'text-max-width': 7, 'text-padding': 18 }) }),
+    { id: 'walk', type: 'line', source: 'walk', layout: { 'line-cap': 'round' }, paint: { 'line-color': C.ink, 'line-width': 3.6, 'line-dasharray': [.01, 2.1] } },
+    { id: 'veil', type: 'fill', source: 'veil', paint: { 'fill-color': C.paper, 'fill-opacity': .84 } },
+    { id: 'rim-lime', type: 'line', source: 'plate', paint: { 'line-color': C.lime, 'line-width': 6, 'line-offset': 5 } },
+    { id: 'rim', type: 'line', source: 'plate', layout: { 'line-join': 'miter' }, paint: { 'line-color': C.ink, 'line-width': 2.2 } },
+    { id: 'rim-fine', type: 'line', source: 'plate', layout: { 'line-join': 'miter' }, paint: { 'line-color': C.ink, 'line-width': .8, 'line-offset': -4.5 } },
+    { id: 'margins', type: 'symbol', source: 'margins', paint: { 'text-color': C.ink, 'text-halo-color': C.paper, 'text-halo-width': 2 }, layout: type(9.5, .22, { 'symbol-placement': 'line-center', 'text-offset': [0, -1.5], 'text-allow-overlap': true }) },
+    { id: 'mins', type: 'symbol', source: 'mid', paint: { 'text-color': C.ink, 'text-halo-color': C.paper, 'text-halo-width': 2.2 }, layout: type(10.5, .1, { 'text-allow-overlap': true, 'text-offset': [0, -1] }) }] };
+function swatch(size, draw) { const k = 3, cv = document.createElement('canvas'); cv.width = cv.height = size * k; const x = cv.getContext('2d'); x.scale(k, k); draw(x);
+  const d = x.getImageData(0, 0, size * k, size * k); return [{ width: d.width, height: d.height, data: d.data }, { pixelRatio: k }]; }
+const IMAGES = { dots: swatch(8, x => { x.fillStyle = C.lime; for (const [cx, cy] of [[2, 2], [6, 6]]) { x.beginPath(); x.arc(cx, cy, 1.55, 0, 7); x.fill(); } }),
+  waves: swatch(12, x => { x.strokeStyle = C.blue; x.lineWidth = 1.2; for (const y of [3, 9]) { x.beginPath(); x.moveTo(-1, y); x.bezierCurveTo(2, y - 2.2, 4, y - 2.2, 6, y); x.bezierCurveTo(8, y + 2.2, 10, y + 2.2, 13, y); x.stroke(); } }) };
+
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches, root = document.querySelector('.phone');
+const map = new maplibregl.Map({ container: root.querySelector('.map'), style, center: [-76.4860, 42.4404], zoom: 15.7, maxZoom: 18.5, minZoom: 14.8, canvasContextAttributes: { antialias: true }, attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false });
+map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Map © OpenStreetMap, OpenFreeMap' }), 'bottom-right');
+map.touchZoomRotate.disableRotation();
+map.on('styleimagemissing', e => IMAGES[e.id] && !map.hasImage(e.id) && map.addImage(e.id, ...IMAGES[e.id]));
+
+const metres = (a, b) => Math.hypot((a[0] - b[0]) * 111320 * Math.cos(42.44 * Math.PI / 180), (a[1] - b[1]) * 110540);
+const minutes = p => Math.max(1, Math.round(metres(YOU, p.at) * 1.3 / 80));
+const tween = (ms, step) => { if (calm) return step(1); const t0 = performance.now(); const tick = now => { const t = Math.min(1, (now - t0) / ms); step(1 - Math.pow(1 - t, 4)); if (t < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); };
+const postmark = p => `<svg class="mark" viewBox="-31 -31 62 62"><defs><path id="arc" d="M-21 0a21 21 0 0 1 42 0"/><path id="arc2" d="M-22 0a22 22 0 0 0 44 0"/></defs><circle r="29"/><circle r="16.500"/><text><textPath href="#arc" startOffset="50%" text-anchor="middle">COLLEGETOWN</textPath></text><text><textPath href="#arc2" startOffset="50%" text-anchor="middle" dominant-baseline="hanging">LOOP · N.Y.</textPath></text><text class="day" text-anchor="middle" y="-1">${p.time.toUpperCase()}</text><text text-anchor="middle" y="8">${p.day.toUpperCase()}</text></svg>`;
+
+const BURST = '<svg class="burst" viewBox="-55 -55 110 110"><path d="' + Array.from({ length: 28 }, (_, i) => { const a = i * Math.PI / 14, r = i % 2 ? 36 : 52; return (i ? 'L' : 'M') + (Math.cos(a) * r).toFixed(1) + ' ' + (Math.sin(a) * r).toFixed(1); }).join('') + 'z"/></svg>';
+let offAt = [0, 0], rest = [2.5, 2.5];
+const register = () => map.setPaintProperty('off', 'fill-translate', [rest[0] + offAt[0], rest[1] + offAt[1]]);
+function paint(move = true) {
+  const p = PLANS[lit], mins = minutes(p);
+  root.querySelectorAll('.tick').forEach((t, i) => t.setAttribute('aria-pressed', i === lit));
+  marks.forEach(([el, marker], i) => { el.classList.toggle('sel', i === lit); el.querySelectorAll('.tix, .mark, .burst').forEach(x => x.remove());
+    if (i !== lit) return;
+    el.insertAdjacentHTML('beforeend', `<span class="tix"><span class="main"><b>${p.title}</b><span>${p.place}</span><em>${p.say}</em></span><span class="stub"><b>${mins}</b><small>min<br>walk</small></span></span>`);
+    el.querySelector('.stamp').insertAdjacentHTML('afterend', postmark(p)); el.querySelector('.stamp').insertAdjacentHTML('afterbegin', BURST); });
+  // the lime plate slides into register, and the walk is drawn on from you to the plan
+  tween(620, t => { rest = [2.5 + (1 - t) * 9, 2.5 + (1 - t) * 7]; register(); });
+  tween(700, t => map.getSource('walk').setData(line([YOU, [YOU[0] + (p.at[0] - YOU[0]) * t, YOU[1] + (p.at[1] - YOU[1]) * t]])));
+  map.getSource('mid').setData({ type: 'Feature', properties: { name: `${mins} min` }, geometry: { type: 'Point', coordinates: [(YOU[0] + p.at[0]) / 2, (YOU[1] + p.at[1]) / 2] } });
+  // you and the plan both in view, with room above the plan for its ticket
+  if (move) { const k = Math.cos(42.44 * Math.PI / 180), pad = { top: 330, bottom: 230, left: 100, right: 120 };
+    const mpp = Math.max(Math.abs(YOU[0] - p.at[0]) * 111320 * k / (392 - pad.left - pad.right), Math.abs(YOU[1] - p.at[1]) * 110540 / (800 - pad.top - pad.bottom), .01);
+    map.easeTo({ center: [(YOU[0] + p.at[0]) / 2, (YOU[1] + p.at[1]) / 2], zoom: Math.min(16.5, Math.log2(40075016.686 * k / (512 * mpp))), padding: pad, duration: calm ? 0 : 1100 }); home = null; map.once('moveend', () => { home = { zoom: map.getZoom(), at: map.project(p.at) }; }); }
+}
+const side = () => { const mark = marks[lit]; if (mark) mark[0].parentElement.classList.toggle('far', map.project(PLANS[lit].at).x > 196); };
+const ruler = () => { const mpp = 40075016.686 * Math.cos(42.44 * Math.PI / 180) / (512 * 2 ** map.getZoom()); const two = 160 / 1.3 / mpp, mins = two > 170 ? 1 : two < 45 ? 5 : 2;
+  root.querySelector('.scale i').style.width = Math.round(two * mins / 2) + 'px'; root.querySelector('.scale span').textContent = mins + ' min walk';
+  // stamps and the ticket belong to the sheet: pull back and they shrink with it, though less than the ground does
+  const by = (rate, least) => Math.max(least, Math.min(1, 2 ** ((map.getZoom() - 16.2) * rate))).toFixed(3);
+  root.style.setProperty('--k', by(.8, .62)); root.style.setProperty('--ks', by(.45, .68)); };
+function choose(i) { lit = i; if (ready) paint(); }
+
+root.querySelector('.dial').innerHTML = PLANS.map(p => `<button class="tick" aria-pressed="false"><small>${p.day}</small><b>${p.time}</b></button>`).join('');
+root.querySelectorAll('.tick').forEach((t, i) => t.onclick = () => choose(i));
+root.querySelector('.rose').onclick = () => map.easeTo({ center: YOU, zoom: 16.6, duration: calm ? 0 : 900 });
+// Wander off to look at other plans and the ticket lets go: it shrinks and fades the further you zoom or drag from where it was dealt.
+let home = null;
+const drift = () => { if (!home) return 0; const at = map.project(PLANS[lit].at); return Math.max(0, Math.min(1, Math.max((home.zoom - map.getZoom()) / .7, (Math.hypot(at.x - home.at.x, at.y - home.at.y) - 30) / 150))); };
+map.on('move', () => { side(); ruler(); root.style.setProperty('--away', drift().toFixed(3)); });
+// the lime plate shifts a hair with your hand, the way a print catches the light
+map.on('mousemove', e => { const box = map.getContainer().getBoundingClientRect(); offAt = [(e.point.x / box.width - .5) * 3, (e.point.y / box.height - .5) * 3]; register(); });
+map.on('load', () => {
+  for (const name in IMAGES) if (!map.hasImage(name)) map.addImage(name, ...IMAGES[name]);
+  marks = PLANS.map((p, i) => { const el = document.createElement('button'); el.className = 'pin'; el.style.setProperty('--lean', `${[-4, 3, -2, 4, -3][i]}deg`); el.setAttribute('aria-label', `${p.title}, ${p.day} ${p.time}`);
+    el.innerHTML = `<span class="stamp"><span><svg viewBox="0 0 24 24">${ICON[p.icon]}</svg><b>${p.time}</b><small>${p.day}</small></span></span><span class="faces">${p.faces.map(n => `<span><img src="../animals/0${n}.png" alt=""></span>`).join('')}</span>`;
+    el.onclick = () => choose(i);
+    return [el, new maplibregl.Marker({ element: el, anchor: 'bottom-left', offset: [-24, 6] }).setLngLat(p.at).addTo(map)]; });
+  const you = document.createElement('div'); you.className = 'you'; you.innerHTML = '<span><img src="../animals/04.png" alt=""></span><b>YOU</b>';
+  new maplibregl.Marker({ element: you, anchor: 'center' }).setLngLat(YOU).addTo(map);
+  ready = true; ruler(); paint();
+});
+</script>
+</body>
+</html>

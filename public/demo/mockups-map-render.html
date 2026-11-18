@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8"><title>Near you map: before and after</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.css">
+<style>html,body{margin:0;height:100%;font:600 14px system-ui,sans-serif;background:#06223f;color:#fdfdfa}.row{display:flex;gap:16px;padding:16px;height:calc(100% - 32px);box-sizing:border-box}.col{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}.map{flex:1;border-radius:18px;overflow:hidden}p{margin:0}button{font:inherit;padding:6px 12px;border-radius:99px;border:0;margin-right:6px;cursor:pointer}@media(max-width:700px){.row{flex-direction:column}}</style>
+<div class="row"><div class="col"><p>Before (live now)</p><div class="map" id="a"></div></div><div class="col"><p>After (not live yet) <button data-at="-76.4862,42.4424">Collegetown</button><button data-at="-76.4985,42.4396">Downtown</button><button data-at="-76.4840,42.4470">Central Campus</button></p><div class="map" id="b"></div></div></div>
+<script src="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.js"></script>
+<script>
+const q = new URLSearchParams(location.search), old = q.has('old');
+const c = { ink: 'rgb(6,34,63)', paper: 'rgb(253,253,250)', ground: 'rgb(214,238,82)', park: 'rgb(186,218,64)', minor: 'rgb(240,252,178)', shade: 'rgb(128,152,58)', water: 'rgb(59,143,214)' };
+const wide = px => ['interpolate', ['exponential', 2], ['zoom'], 13, px / 8, 16, px, 19, px * 8];
+const omt = (id, type, layer, paint, more = {}) => ({ id, type, source: 'omt', 'source-layer': layer, paint, ...more });
+const road = (id, classes, color, px, extra = {}) => omt(id, 'line', 'transportation', { 'line-color': color, 'line-width': wide(px), ...extra },
+  { filter: ['all', ['==', ['geometry-type'], 'LineString'], ['match', ['get', 'class'], classes, true, false]], layout: { 'line-cap': 'round', 'line-join': 'round' } });
+const name = (id, layer, size, layout, filter, minzoom = 15) => omt(id, 'symbol', layer, { 'text-color': c.ink, 'text-halo-color': c.paper, 'text-halo-width': 1.6 },
+  { minzoom, filter, layout: { 'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']], 'text-font': ['Noto Sans Bold'], 'text-size': size, 'text-letter-spacing': .03, ...layout } });
+const base = [{ id: 'ground', type: 'background', paint: { 'background-color': c.ground } },
+  omt('green', 'fill', 'landcover', { 'fill-color': c.park }), omt('park', 'fill', 'park', { 'fill-color': c.park }),
+  omt('water', 'fill', 'water', { 'fill-color': c.water }), omt('stream', 'line', 'waterway', { 'line-color': c.water, 'line-width': wide(5) })];
+const was = [...base, road('path', ['path', 'track'], c.paper, 2.4, { 'line-dasharray': [.1, 2.2] }), road('minor', ['minor', 'service'], c.minor, 9), road('major', ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'], c.paper, 15),
+  omt('shade', 'fill', 'building', { 'fill-color': c.shade, 'fill-translate': [3, 3], 'fill-translate-anchor': 'viewport' }), omt('roofs', 'fill', 'building', { 'fill-color': c.paper })];
+const now = [...base, road('path', ['path', 'track'], c.minor, 1.6, { 'line-dasharray': [.1, 2.4] }), road('service', ['service'], c.minor, 4), road('minor', ['minor'], c.minor, 9), road('major', ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'], c.paper, 15),
+  omt('shade', 'fill', 'building', { 'fill-color': c.shade, 'fill-translate': ['interpolate', ['linear'], ['zoom'], 14, ['literal', [1, 1]], 17, ['literal', [3, 3]], 18, ['literal', [4, 4]]], 'fill-translate-anchor': 'viewport' }), omt('roofs', 'fill', 'building', { 'fill-color': c.paper }),
+  name('streets', 'transportation_name', 12, { 'symbol-placement': 'line', 'symbol-spacing': 340 }, ['match', ['get', 'class'], ['path', 'track', 'service'], false, true]),
+  name('places', 'poi', 11, { 'text-max-width': 7, 'text-padding': 18 }, ['all', ['<=', ['get', 'rank'], 4], ['match', ['get', 'class'], ['bus', 'railway'], false, true]], 16)];
+const make = (id, layers, antialias) => new maplibregl.Map({ container: id, style: { version: 8, glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf', sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' } }, layers }, center: [-76.4862, 42.4424], zoom: 16.4, pitch: 36, bearing: -14, canvasContextAttributes: { antialias }, attributionControl: { compact: true, customAttribution: 'Map © OpenStreetMap, OpenFreeMap' } });
+const a = make('a', was, false), b = make('b', now, true);
+let busy = false;
+const tie = (from, to) => from.on('move', () => { if (busy) return; busy = true; to.jumpTo({ center: from.getCenter(), zoom: from.getZoom() }); busy = false; });
+tie(a, b); tie(b, a);
+for (const button of document.querySelectorAll('button')) button.onclick = () => b.easeTo({ center: button.dataset.at.split(',').map(Number), zoom: 16.4 });
+</script>

@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On you · mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* The campus screen's own tokens, in the Cornell kit (app/c/campus.css). */
+:root {
+  --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --ink-2: oklch(34% 0.05 30);
+  --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27); --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230);
+  --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245); --on-ink: oklch(99.4% 0.003 230);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --on-field-2: color-mix(in oklab, var(--ink) 74%, var(--field));
+  --r: 22px 22px 22px 6px; --ease: cubic-bezier(.22, 1, .36, 1); --expo: cubic-bezier(.16, 1, .3, 1);
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.45; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; color: var(--ink); background: oklch(93% 0.006 240); }
+button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* the page around the mockups */
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+.top { padding-top: 28px; padding-bottom: 6px; }
+.top h1 { font-stretch: 108%; font-weight: 720; font-size: 30px; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 6px; }
+.top p { max-width: 80ch; color: var(--ink-2); }
+.sw { display: inline-flex; gap: 4px; padding: 4px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.sw button { height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.sw button[aria-pressed=true] { background: var(--ink); color: var(--field); }
+.part { padding-top: 34px; padding-bottom: 6px; }
+.part > h2 { font-size: 22px; font-weight: 720; letter-spacing: -0.035em; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.part > h2 b { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 8px; border-radius: 9px 9px 9px 2px; background: var(--ink); color: var(--field); font-size: 15px; }
+.part > h2 .sw { margin-left: auto; }
+.part > p { margin: 6px 0 16px; max-width: 86ch; font-size: 14px; color: var(--ink-2); }
+.dir { margin-bottom: 30px; }
+.dir > h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.03em; } .dir > h3 b { display: inline-grid; place-items: center; width: 26px; height: 26px; margin-right: 8px; border-radius: 8px 8px 8px 2px; background: var(--action); color: var(--paper); font-size: 14px; }
+.dir > p { margin: 4px 0 12px; max-width: 86ch; font-size: 13.5px; color: var(--ink-2); }
+.scroll { overflow-x: auto; padding: 0 10px 12px 0; }
+
+/* one campus screen, as a window */
+.win { position: relative; width: 1262px; height: 600px; display: flex; flex-direction: column; overflow: hidden; border-radius: 18px; background: var(--page); box-shadow: 0 0 0 2px var(--ink), 7px 7px 0 var(--ink); }
+.nav { position: relative; z-index: 6; flex: none; display: flex; align-items: center; gap: 6px; padding: 10px 26px 11px; background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.wm { display: flex; align-items: center; gap: 12px; font-weight: 720; font-stretch: 112%; font-size: 24px; letter-spacing: -0.045em; padding-right: 18px; }
+.wm svg { width: 40px; height: 40px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.nav a { padding: 6px 12px; border-radius: 99px; font-size: 14.5px; font-weight: 600; background: var(--ink); color: var(--field); text-decoration: none; }
+.nav-end { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.ava { position: relative; display: block; } .ava img { display: block; width: 38px; height: 38px; border-radius: 50%; background: var(--stub); object-fit: contain; }
+.ava b { position: absolute; right: -5px; bottom: -4px; min-width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; font-size: 11.5px; font-weight: 740; color: var(--paper); background: var(--action); box-shadow: 0 0 0 2px var(--field); }
+.main { flex: 1; min-height: 0; display: flex; gap: 22px; padding: 14px 26px 20px; }
+.week { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ask { display: flex; align-items: center; gap: 12px 18px; margin-bottom: 12px; }
+.ask .in { flex: 1; min-width: 0; height: 50px; display: flex; align-items: center; padding: 0 24px; border-radius: 99px; font-size: 18px; font-weight: 520; letter-spacing: -0.02em; color: var(--mute); background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--field-shadow); white-space: nowrap; overflow: hidden; }
+.tabs { display: flex; gap: 4px; flex: none; } .tabs span { padding: 6px 14px; border-radius: 99px; font-weight: 540; color: var(--mute); white-space: nowrap; } .tabs span.on { background: var(--ink); color: var(--field); }
+.count { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.tally { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 16px 0 4px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.plus { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--action); color: var(--paper); } .plus svg { width: 17px; height: 17px; }
+.tally h4 { margin: 0; font-size: 17px; font-weight: 660; letter-spacing: -0.03em; }
+.rail { flex: 1; min-height: 0; display: flex; gap: 16px; overflow: hidden; padding: 4px 8px 10px 4px; }
+.ev { flex: 0 0 268px; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--r); filter: drop-shadow(5px 5px 0 var(--field-shadow)); }
+.ev-top { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; padding: 15px 16px 14px; background: var(--paper); }
+.tile { display: grid; justify-items: center; align-content: center; min-width: 56px; min-height: 56px; padding: 6px 6px 7px; border-radius: 12px 12px 12px 3px; background: var(--field); line-height: 1; } .tile small { font-size: 11px; font-weight: 600; } .tile b { font-weight: 640; font-size: 17px; margin-top: 3px; white-space: nowrap; }
+.src { align-self: start; justify-self: end; padding: 1px 8px 2px; border-radius: 99px; font-size: 11.5px; font-weight: 620; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.ev-top h5 { grid-column: 1 / -1; margin: 4px 0 0; font-size: 19px; font-weight: 660; letter-spacing: -0.032em; line-height: 1.15; }
+.ev-top p { grid-column: 1 / -1; font-size: 13.5px; color: var(--mute); }
+.ev-stub { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 16px; background: var(--stub); border-top: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.ev-stub small { display: block; font-size: 12px; font-weight: 620; color: var(--on-field-2); } .ev-stub b { display: block; font-size: 16.5px; font-weight: 680; letter-spacing: -0.03em; line-height: 1.2; }
+.ev-stub .foot { margin-top: auto; display: flex; align-items: center; gap: 10px; }
+.faces { display: inline-flex; } .faces img { width: 26px; height: 26px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 2px var(--stub); margin-left: -7px; object-fit: contain; } .faces img:first-child { margin-left: 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 99px; font-size: 14px; font-weight: 600; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .15s, transform .15s var(--ease); }
+.btn:hover { background: color-mix(in oklch, var(--ink) 6%, var(--paper)); }
+.btn.go { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .btn.go:hover { background: var(--action-hover); } .btn.go:active { transform: translate(2px, 2px); }
+.btn.sm { height: 30px; padding: 0 12px; font-size: 13px; } .ev-stub .btn { margin-left: auto; }
+.quiet { font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; color: var(--ink-2); }
+
+/* On you: the list. One row is the same in every placement. */
+.oy-head { display: flex; align-items: center; gap: 10px; }
+.oy-head h4 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; }
+.oy-n { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 99px; background: var(--action); color: var(--paper); font-size: 14px; font-weight: 720; }
+.oy-n.bump { animation: bump .45s var(--expo); }
+.oy-head .btn { margin-left: auto; }
+.oy-list { display: grid; gap: 8px; align-content: start; }
+.oy-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 11px 13px 12px; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); transition: opacity .28s var(--ease), transform .28s var(--ease); }
+.oy-row.soon { box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--field-shadow); }
+.oy-k { justify-self: start; min-width: 62px; text-align: center; padding: 2px 9px 3px; border-radius: 99px; font-size: 12px; font-weight: 680; white-space: nowrap; }
+.k-vote .oy-k { background: var(--ink); color: var(--on-ink); } .k-do .oy-k { background: var(--action); color: var(--paper); } .k-show .oy-k { background: var(--field); }
+.k-missed .oy-k { box-shadow: inset 0 0 0 1.5px var(--mute); color: var(--mute); }
+.oy-what { grid-column: 1 / -1; min-width: 0; margin-top: 6px; font-size: 15.5px; font-weight: 640; letter-spacing: -0.02em; line-height: 1.25; }
+.oy-when { justify-self: end; font-size: 12.5px; font-weight: 600; color: var(--mute); white-space: nowrap; } .soon .oy-when { color: var(--action); font-weight: 700; }
+.oy-grp { grid-column: 1 / -1; font-size: 13px; color: var(--mute); }
+.oy-act { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 8px; }
+.k-missed { background: transparent; } .k-missed .oy-what { color: var(--mute); font-weight: 560; text-decoration: line-through; text-decoration-thickness: 1px; }
+.oy-row.done { background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); } .oy-row.done .oy-what { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.oy-said { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 640; } .oy-said svg { width: 18px; height: 18px; padding: 3px; border-radius: 50%; background: var(--ink); color: var(--field); }
+.oy-row.out { opacity: 0; transform: translateX(26px); }
+.oy-more { font-size: 13px; color: var(--mute); padding: 2px 4px; }
+.oy-none { padding: 14px 16px; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); font-size: 14px; color: var(--mute); }
+@keyframes bump { 40% { transform: scale(1.3); } }
+
+/* A: a column beside the week */
+.side { flex: 0 0 372px; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 12px; border-radius: var(--r); background: var(--stub); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--field-shadow); }
+.side .oy-list { flex: 1; min-height: 0; overflow-y: auto; margin-right: -8px; padding: 0 8px 4px 0; scrollbar-width: thin; scrollbar-color: var(--ink) transparent; }
+/* B: a strip above the week, scrolling sideways like the tickets */
+.strip { display: flex; gap: 12px; align-items: stretch; margin-bottom: 12px; padding: 10px 12px; border-radius: var(--r); background: var(--stub); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--field-shadow); }
+.strip .oy-head { flex: none; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; padding: 0 6px; } .strip .oy-head .btn { margin: 0; }
+.strip .oy-list { flex: 1; min-width: 0; display: flex; gap: 8px; overflow-x: auto; padding: 2px 4px 6px 2px; scrollbar-width: thin; scrollbar-color: var(--ink) transparent; }
+.strip .oy-row { flex: 0 0 270px; align-content: start; } .strip .oy-more { flex: none; align-self: center; }
+/* C: behind a counter in the top bar */
+.oy-pill { display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 6px 0 15px; border-radius: 99px; background: var(--paper); font-weight: 660; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.oy-pill[aria-expanded=true] { background: var(--ink); color: var(--field); box-shadow: none; }
+.drop { position: absolute; right: 22px; top: 70px; z-index: 5; width: 430px; max-height: 500px; display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 12px; border-radius: var(--r); background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); transform-origin: 88% 0; animation: card .3s var(--expo); }
+.drop .oy-list { flex: 1; min-height: 0; overflow-y: auto; margin-right: -8px; padding: 0 8px 4px 0; scrollbar-width: thin; scrollbar-color: var(--ink) transparent; }
+@keyframes card { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
+
+/* "This is yours": an alert handed to you */
+.stage { position: relative; height: 330px; overflow: hidden; border-radius: 18px; background: var(--page); box-shadow: 0 0 0 2px var(--ink), 7px 7px 0 var(--ink); }
+.stage .nav { position: absolute; inset: 0 0 auto 0; }
+.stage .ghost { position: absolute; inset: 84px 26px 0; display: flex; gap: 16px; opacity: .5; pointer-events: none; }
+.stage .ghost .ev { height: 300px; }
+.hand { position: absolute; right: 26px; top: 84px; width: 392px; padding: 16px 18px 16px; border-radius: var(--r); background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--ink); }
+.hand.in { animation: hand .7s var(--expo) backwards; }
+.hand.yes { animation: stamp .5s var(--expo) forwards; } .hand.no { animation: back .45s var(--ease) forwards; }
+.hand-who { display: flex; align-items: center; gap: 11px; font-size: 13.5px; color: var(--ink-2); }
+.hand-who span { position: relative; flex: none; } .hand-who img { display: block; width: 40px; height: 40px; border-radius: 50%; background: var(--stub); object-fit: contain; }
+.hand.in .hand-who span::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--action); animation: ping 1.5s .5s var(--expo) 2 backwards; opacity: 0; }
+.hand-who b { color: var(--ink); font-weight: 680; }
+.hand h4 { margin: 12px 0 2px; font-size: 22px; font-weight: 700; font-stretch: 106%; letter-spacing: -0.035em; line-height: 1.12; }
+.hand p { font-size: 13.5px; color: var(--mute); }
+.hand-act { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.told { position: absolute; right: 26px; top: 84px; padding: 10px 16px; border-radius: 12px 12px 12px 4px; background: var(--ink); color: var(--on-ink); font-size: 14px; font-weight: 560; animation: card .3s var(--expo); }
+@keyframes hand { from { opacity: 0; transform: translate(40px, -70px) rotate(7deg) scale(.7); } 60% { opacity: 1; transform: translate(-3px, 3px) rotate(-1.2deg) scale(1.02); } }
+@keyframes ping { from { transform: scale(1); opacity: .95; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes stamp { 35% { transform: scale(1.04) rotate(-1deg); } to { transform: translate(40px, -60px) scale(.5); opacity: 0; } }
+@keyframes back { to { transform: translateX(60px) rotate(4deg); opacity: 0; } }
+
+/* the organizer's page for one to-do */
+.page { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 22px; padding: 22px 26px 24px; border-radius: 18px; background: var(--page); box-shadow: 0 0 0 2px var(--ink), 7px 7px 0 var(--ink); }
+.pg-head { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 24px; align-items: end; }
+.pg-head small { font-size: 13px; font-weight: 640; color: var(--action); } .pg-head h3 { font-size: 30px; font-weight: 720; font-stretch: 106%; letter-spacing: -0.04em; line-height: 1.08; } .pg-head p { font-size: 14px; color: var(--mute); }
+.pg-state { display: inline-block; margin-right: 8px; padding: 2px 10px 3px; border-radius: 99px; font-size: 12.5px; font-weight: 680; background: var(--field); color: var(--ink); } .passed .pg-state { background: var(--ink); color: var(--on-ink); }
+.pg-num { text-align: right; line-height: 1; } .pg-num b { font-size: 46px; font-weight: 740; font-stretch: 108%; letter-spacing: -0.05em; } .pg-num span { margin-left: 6px; font-size: 16px; font-weight: 600; color: var(--ink-2); }
+.pg-bar { grid-column: 1 / -1; height: 12px; border-radius: 99px; background: color-mix(in oklch, var(--ink) 14%, transparent); overflow: hidden; } .pg-bar i { display: block; height: 100%; border-radius: 99px; background: var(--action); transition: width .5s var(--ease); }
+.panel { min-width: 0; padding: 16px 18px; border-radius: var(--r); background: var(--paper); box-shadow: 4px 4px 0 var(--field-shadow); }
+.panel h4 { margin: 0 0 10px; font-size: 17px; font-weight: 700; letter-spacing: -0.03em; display: flex; align-items: center; gap: 8px; }
+.names { max-height: 286px; overflow-y: auto; margin-right: -8px; padding-right: 8px; scrollbar-width: thin; scrollbar-color: var(--ink) var(--line); display: grid; grid-template-columns: 1fr 1fr; column-gap: 22px; align-content: start; }
+.names li { min-width: 0; display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.names img { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--stub); object-fit: contain; }
+.names b { display: block; font-size: 14.5px; font-weight: 620; line-height: 1.2; } .names span { display: block; font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .names div { min-width: 0; }
+.rem { margin-top: 14px; padding: 12px 14px; border-radius: 12px 12px 12px 4px; background: var(--stub); font-size: 14px; white-space: pre-line; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.aside { display: grid; gap: 16px; align-content: start; }
+.ext { display: grid; gap: 10px; } .ext p { font-size: 13.5px; color: var(--mute); }
+.pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.pill { height: 32px; padding: 0 13px; border-radius: 99px; font-size: 13.5px; font-weight: 600; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); white-space: nowrap; } .pill[aria-pressed=true] { background: var(--ink); color: var(--on-ink); }
+.note { padding: 10px 14px; border-radius: 12px 12px 12px 4px; background: var(--ink); color: var(--on-ink); font-size: 14px; font-weight: 560; }
+.donefaces { display: flex; flex-wrap: wrap; gap: 5px; } .donefaces img { width: 30px; height: 30px; border-radius: 50%; background: var(--stub); object-fit: contain; } .donefaces span { align-self: center; margin-left: 4px; font-size: 13px; font-weight: 600; color: var(--mute); }
+
+/* asking a group, in one line */
+.askbox { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 22px; padding: 22px 26px 24px; border-radius: 18px; background: var(--page); box-shadow: 0 0 0 2px var(--ink), 7px 7px 0 var(--ink); }
+.say { width: 100%; min-height: 76px; border: 0; resize: none; background: none; font-size: 23px; font-weight: 620; letter-spacing: -0.03em; line-height: 1.22; outline: none; }
+.read { display: flex; flex-wrap: wrap; gap: 7px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.read span { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 99px; font-size: 13.5px; font-weight: 640; background: var(--field); } .read span.kind { background: var(--action); color: var(--paper); } .read span.miss { background: transparent; box-shadow: inset 0 0 0 1.5px var(--mute); color: var(--mute); font-weight: 560; }
+.lab { font-size: 12.5px; font-weight: 640; color: var(--mute); margin-bottom: 7px; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap top">
+  <h1>On you: what your groups need from you</h1>
+  <p>One list across the groups you belong to, soonest first. Each row says the kind (Vote, Show up, Do), what it is, which group, and when, and most are answered right in the row. Everything below is clickable. Pick where the list sits, then say what you think of the alert, the organizer's page and how a group is asked.</p>
+</div>
+
+<!-- 1 -->
+<div class="wrap part">
+  <h2><b>1</b>Where the list sits on the campus screen
+    <span class="sw" id="fill"><button aria-pressed="true" data-fill="full">Things on you</button><button aria-pressed="false" data-fill="none">Nothing on you</button></span></h2>
+  <p>The campus screen is one full-height view, so the list has to take its room from somewhere. The rows are identical in all three; only the place differs. Try Done, a vote and I'm in: the row leaves and the count drops. Use the switch to see each screen with nothing waiting.</p>
+
+  <div class="dir"><h3><b>A</b>A column beside the week</h3>
+    <p>Always in view, on the right. The week keeps its row of tickets and gives up about a third of its width. With nothing on you the column is gone and the week has the whole screen.</p>
+    <div class="scroll"><div class="win" id="win-a"></div></div></div>
+
+  <div class="dir"><h3><b>B</b>A strip above the week</h3>
+    <p>Always in view, across the top, scrolling sideways the way the tickets do. It keeps the week full width and costs it height. With nothing on you the strip is gone.</p>
+    <div class="scroll"><div class="win" id="win-b" style="height:770px"></div></div></div>
+
+  <div class="dir"><h3><b>C</b>Behind a counter in the top bar</h3>
+    <p>The week is untouched. A counter in the bar says how many things are on you and opens the list over the screen (shown open here). With nothing on you the counter is gone. The cost: you only see what is waiting if you look.</p>
+    <div class="scroll"><div class="win" id="win-c"></div></div></div>
+</div>
+
+<!-- 2 -->
+<div class="wrap part">
+  <h2><b>2</b>"This is yours": work someone put on you <span class="sw"><button aria-pressed="false" id="replay">Play it again</button></span></h2>
+  <p>When a teammate proposes a piece of work for you, it is not a row. It is handed to you: a card drops in from the top corner, the person's picture pulses twice, and it waits for one of two answers. It stays until you answer and is back on your next visit if you ignore it. One at a time, oldest first.</p>
+  <div class="stage" id="stage">
+    <div class="nav"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke-width="3.2"><circle cx="12" cy="18" r="8" stroke="var(--ink)"/><circle cx="20" cy="13" r="8" stroke="var(--action)"/></svg>Loop</span><a>Cornell</a><span class="nav-end"><span class="ava"><img src="/animals/07.png" alt=""><b>2</b></span></span></div>
+    <div class="ghost" id="ghost"></div>
+  </div>
+</div>
+
+<!-- 3 -->
+<div class="wrap part">
+  <h2><b>3</b>The organizer's page for one to-do
+    <span class="sw" id="size"><button aria-pressed="true" data-size="20">20 members</button><button aria-pressed="false" data-size="300">300 members</button></span>
+    <span class="sw" id="state" style="margin-left:0"><button aria-pressed="true" data-state="open">Still open</button><button aria-pressed="false" data-state="passed">Past its date</button></span></h2>
+  <p>What the person who posted it, and the group's owners and organizers, see. Nobody needs to be the site admin. Who has not done it is a list with a name and an email, in a frame that scrolls. The reminder names nobody. Moving the date works before or after it has passed, and the people already done stay done. The same page serves a poll.</p>
+  <div class="page" id="page"></div>
+</div>
+
+<!-- 4 -->
+<div class="wrap part" style="padding-bottom:70px">
+  <h2><b>4</b>Asking a group, from the campus screen</h2>
+  <p>Opened by "Ask a group" at the top of the list, which only people who may post in a group see. It is one line, like posting a plan: Loop reads the group, the kind and the date out of the sentence and shows what it understood. Edit the line and watch the reading change. The "+" on the week still means one thing: post a plan.</p>
+  <div class="askbox">
+    <div class="panel">
+      <textarea class="say" id="say" spellcheck="false">upload your W8/W9 to Nav by friday @emba-council</textarea>
+      <div class="read" id="read"></div>
+      <div style="margin-top:16px"><div class="lab">Kind</div><div class="pills" id="kinds"></div></div>
+      <div id="optbox" style="margin-top:14px" hidden><div class="lab">Options, separated by commas</div><input id="opts" value="Mar 6 to 8, Mar 13 to 15, Mar 20 to 22" style="width:100%;height:40px;padding:0 14px;border:0;border-radius:12px;background:var(--page);box-shadow:inset 0 0 0 1.5px var(--line);outline:none"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:18px"><button class="btn go" id="post" style="height:44px;padding:0 24px;font-size:15px">Ask the group</button><span id="reach" style="font-size:13px;color:var(--mute)"></span></div>
+      <div class="note" id="posted" style="margin-top:14px" hidden></div>
+    </div>
+    <div class="aside">
+      <div class="panel"><h4>Your groups</h4><div class="pills" id="groups"></div><p style="margin-top:10px;font-size:13px;color:var(--mute)">Typing @ lists the groups you may ask. Tapping one puts it in the line.</p></div>
+      <div class="panel"><h4>What each person gets</h4><ul class="oy-list" id="preview"></ul><p style="margin-top:10px;font-size:13px;color:var(--mute)">This row, on their list, until they answer or the date passes.</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (sel, root = document) => root.querySelector(sel), $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const tick = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const face = n => `/animals/${String(n).padStart(2, '0')}.png`;
+
+// Wednesday 18 November. Eight things across three groups, soonest first, and one missed.
+const ITEMS = [
+  { k: 'vote', what: 'Spring retreat: which weekend?', grp: 'Consulting Club', when: 'Closes today 6:00pm', soon: true, opts: ['Mar 6 to 8', 'Mar 13 to 15', 'Mar 20 to 22'] },
+  { k: 'show', what: 'Alumni mixer at the Statler', grp: 'Cohort 27', when: 'Thu 7:00pm', soon: true },
+  { k: 'do', what: 'Send your headshot for the directory', grp: 'Consulting Club', when: 'Due Thu 9:00pm', done: true },
+  { k: 'do', what: 'Upload your W8/W9 to Nav', grp: 'EMBA Council', when: 'Due Fri 5:00pm' },
+  { k: 'vote', what: 'Which days work for the case workshop?', grp: 'Consulting Club', when: 'Closes Fri 9:00pm', link: 'Pick dates' },
+  { k: 'show', what: 'Board meeting', grp: 'EMBA Council', when: 'Mon 5:30pm' },
+  { k: 'vote', what: 'Anything you cannot eat?', grp: 'Cohort 27', when: 'Closes Tue', link: 'Write an answer' },
+  { k: 'missed', what: 'Sign the travel waiver', grp: 'Cohort 27', when: 'Passed Mon' },
+];
+const LABEL = { vote: 'Vote', do: 'Do', show: 'Show up', missed: 'Missed' };
+const said = text => `<span class="oy-said">${tick}${text}</span>`;
+function row(item, at) {
+  const act = item.done ? said('Done. Leaving your list') + '<button class="quiet" data-undo>Undo</button>'
+    : item.k === 'do' ? '<button class="btn go sm" data-say="Done">Done</button>'
+    : item.k === 'show' ? '<button class="btn go sm" data-say="You are in">I\'m in</button><button class="btn sm" data-say="Not for you">Not for me</button>'
+    : item.opts ? item.opts.map(opt => `<button class="btn sm" data-say="You voted ${opt}">${opt}</button>`).join('')
+    : item.link ? `<button class="btn sm" data-open>${item.link}</button>` : '';
+  return `<li class="oy-row k-${item.k}${item.soon ? ' soon' : ''}${item.done ? ' done' : ''}" data-at="${at}"><span class="oy-k">${LABEL[item.k]}</span><time class="oy-when">${item.when}</time><span class="oy-what">${item.what}</span><span class="oy-grp">${item.grp}</span>${act ? `<div class="oy-act">${act}</div>` : ''}</li>`;
+}
+const waiting = items => items.filter(item => item.k !== 'missed' && !item.done).length;
+const head = (items, extra = '') => `<div class="oy-head"><h4>On you</h4><span class="oy-n">${waiting(items)}</span>${extra}<button class="btn sm" data-askgroup>Ask a group</button></div>`;
+
+const TICKETS = [
+  ['Tonight', '7:00pm', 'Dumplings in Collegetown', 'Maya · @collegetown', null, '4 are going', [4, 11, 23]],
+  ['Thu 19', '8:00pm', 'Guest Artist Series: Renée Anne Louprette', 'Cornell Department of Music', 'CampusGroups', 'Go as 3, get a free coffee', [17, 30]],
+  ['Fri 20', '6:30am', 'Sunrise run around Beebe Lake', 'Josh · @beebe', null, '2 are going', [9, 14]],
+  ['Fri 20', '6:00pm', 'AI Club build night', 'AI Club · Gates Hall', 'CampusGroups', 'Go as 4, get pizza', [2, 19, 26]],
+  ['Sat 21', '10:00am', 'Farmers market walk', 'Dana · @commons', null, '5 are going', [5, 12, 21]],
+];
+const ticket = t => `<div class="ev"><div class="ev-top"><span class="tile"><small>${t[0]}</small><b>${t[1]}</b></span>${t[4] ? `<span class="src">${t[4]}</span>` : '<span></span>'}<h5>${t[2]}</h5><p>${t[3]}</p></div><div class="ev-stub"><div><small>${t[4] ? 'Together' : 'So far'}</small><b>${t[5]}</b></div><div class="foot"><span class="faces">${t[6].map(n => `<img src="${face(n)}" alt="">`).join('')}</span><button class="btn go sm">I'm in</button></div></div></div>`;
+const rings = '<svg viewBox="0 0 32 32" fill="none" stroke-width="3.2"><circle cx="12" cy="18" r="8" stroke="var(--ink)"/><circle cx="20" cy="13" r="8" stroke="var(--action)"/></svg>';
+const nav = extra => `<div class="nav"><span class="wm">${rings}Loop</span><a>Cornell</a><span class="nav-end">${extra}<span class="ava"><img src="${face(7)}" alt=""><b>2</b></span></span></div>`;
+const week = () => `<div class="ask"><span class="in">What do you feel like doing?</span></div><div class="count"><span class="tally"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></svg></span><h4>12 this week</h4></span><span class="tabs"><span class="on">Best for you</span><span>CampusGroups</span><span>Near you</span></span></div><div class="rail">${TICKETS.map(ticket).join('')}</div>`;
+
+const wins = { a: structuredClone(ITEMS), b: structuredClone(ITEMS), c: structuredClone(ITEMS) };
+let fill = 'full', dropOpen = true;
+function draw(id) {
+  const items = fill === 'none' ? [] : wins[id], rows = `<ul class="oy-list">${items.map(row).join('')}</ul>`, any = items.length > 0;
+  const el = $(`#win-${id}`);
+  if (id === 'a') el.innerHTML = nav('') + `<div class="main"><div class="week">${week()}</div>${any ? `<aside class="side">${head(items)}${rows}</aside>` : ''}</div>`;
+  if (id === 'b') el.innerHTML = nav('') + `<div class="main"><div class="week">${any ? `<div class="strip">${head(items)}${rows}</div>` : ''}${week()}</div></div>`;
+  if (id === 'c') el.innerHTML = nav(any ? `<button class="oy-pill" aria-expanded="${dropOpen}" data-drop>On you<span class="oy-n">${waiting(items)}</span></button>` : '') + `<div class="main"><div class="week">${week()}</div></div>${any && dropOpen ? `<div class="drop">${head(items)}${rows}</div>` : ''}`;
+}
+const drawAll = () => ['a', 'b', 'c'].forEach(draw);
+drawAll();
+
+for (const id of ['a', 'b', 'c']) $(`#win-${id}`).addEventListener('click', event => {
+  const hit = event.target.closest('button'); if (!hit) return;
+  if (hit.matches('[data-drop]')) { dropOpen = !dropOpen; return draw(id); }
+  if (hit.matches('[data-askgroup]')) return $('#say').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const li = hit.closest('.oy-row'); if (!li) return;
+  const items = wins[id], item = items[+li.dataset.at];
+  if (hit.matches('[data-undo]')) { item.done = false; return draw(id); }
+  if (hit.matches('[data-open]')) { $('.oy-act', li).innerHTML = '<span class="oy-when">Opens this ask on its own page</span>'; return; }
+  // The write is saved, the row says what was recorded, then it leaves and the count drops.
+  li.classList.add('done'); $('.oy-act', li).innerHTML = said(hit.dataset.say);
+  setTimeout(() => li.classList.add('out'), 700);
+  setTimeout(() => { items.splice(items.indexOf(item), 1); draw(id); $(`#win-${id} .oy-n`)?.classList.add('bump'); }, 1000);
+});
+$('#fill').addEventListener('click', event => { const hit = event.target.closest('button'); if (!hit) return; fill = hit.dataset.fill; $$('#fill button').forEach(each => each.setAttribute('aria-pressed', each === hit)); drawAll(); });
+
+// 2: the alert
+function hand() {
+  $('#stage .hand')?.remove(); $('#stage .told')?.remove();
+  $('#stage').insertAdjacentHTML('beforeend', `<div class="hand in"><div class="hand-who"><span><img src="${face(16)}" alt=""></span><div><b>Priya</b> put this on you<br>EMBA Council</div></div><h4>Book the room for Thursday's speaker</h4><p>Due Thu 19 Nov · she is doing the catering</p><div class="hand-act"><button class="btn go" data-ans="yes">It's mine</button><button class="btn" data-ans="no">Not mine</button></div></div>`);
+}
+$('#ghost').innerHTML = TICKETS.slice(0, 3).map(ticket).join('');
+hand();
+$('#replay').addEventListener('click', hand);
+$('#stage').addEventListener('click', event => {
+  const hit = event.target.closest('[data-ans]'); if (!hit) return;
+  const card = $('#stage .hand'), yes = hit.dataset.ans === 'yes'; card.classList.remove('in'); card.classList.add(yes ? 'yes' : 'no');
+  setTimeout(() => { card.remove(); $('#stage').insertAdjacentHTML('beforeend', `<div class="told">${yes ? 'Yours. Priya and the group can see you have it.' : 'Passed back. Priya is told it is not yours.'}</div>`); }, 480);
+});
+
+// 3: the organizer's page
+const FIRST = ['Amara', 'Ben', 'Chen', 'Dana', 'Elena', 'Farid', 'Grace', 'Hana', 'Ibrahim', 'Josh', 'Kavya', 'Liam', 'Maya', 'Noor', 'Omar', 'Priya', 'Quinn', 'Ravi', 'Sofia', 'Theo', 'Uma', 'Victor', 'Wei', 'Ximena', 'Yusuf', 'Zoe'];
+const LAST = ['Adeyemi', 'Brooks', 'Castillo', 'Dubois', 'Eriksen', 'Fong', 'Gupta', 'Haddad', 'Ito', 'Jensen', 'Kim', 'Lopez', 'Mbeki', 'Nair', 'Okafor', 'Park', 'Qureshi', 'Rossi', 'Sato', 'Tran'];
+const people = count => Array.from({ length: count }, (_, at) => { const first = FIRST[(at * 7 + 3) % FIRST.length], last = LAST[(at * 11 + 5) % LAST.length]; return { name: `${first} ${last}`, email: `${first[0]}${last}${at > 25 ? at : ''}@cornell.edu`.toLowerCase(), face: at % 30 + 1 }; });
+let size = 20, state = 'open', moved = '';
+function page() {
+  const all = people(size), left = size === 20 ? 6 : 88, done = size - left, missing = all.slice(0, left), did = all.slice(left), passed = state === 'passed' && !moved;
+  const due = moved || 'Fri 20 Nov, 5:00pm';
+  const reminder = `${left} still to do it by ${due}.\nloop.example/a/9f2c41`;
+  $('#page').className = `page${passed ? ' passed' : ''}`;
+  $('#page').innerHTML = `<div class="pg-head"><div><small>EMBA Council</small><h3>Upload your W8/W9 to Nav</h3><p><span class="pg-state">${passed ? 'Passed' : moved ? 'Open again' : 'Open'}</span>${passed ? `Was due ${due}. ${left} missed it.` : `Due ${due}.`} Posted by you.</p></div><div class="pg-num"><b>${done}</b><span> of ${size} done</span></div></div>
+    <div class="pg-bar"><i style="width:${done / size * 100}%"></i></div>
+    <div class="panel"><h4>${passed ? 'Did not do it' : 'Has not done it'}<span class="oy-n">${left}</span></h4>
+      <ul class="names">${missing.map(person => `<li><img src="${face(person.face)}" alt=""><div><b>${person.name}</b><span>${person.email}</span></div></li>`).join('')}</ul>
+      ${passed ? '<p style="margin-top:12px;font-size:13.5px;color:var(--mute)">It no longer takes answers. Give it a new date to open it again; the reminder comes back with it.</p>'
+        : `<div class="rem">${reminder}</div><div class="acts"><button class="btn go">Send to WhatsApp</button><button class="btn">Copy</button><span style="align-self:center;font-size:13px;color:var(--mute)">It names nobody. Loop also reminds each of them the day before.</span></div>`}</div>
+    <div class="aside">
+      <div class="panel ext"><h4>${passed ? 'Open it again' : 'Move the date'}</h4><p>${passed ? 'Pick a new date. Everyone already done stays done.' : 'Not enough in yet? Give people longer. Everyone already done stays done.'}</p>
+        <div class="pills">${['Two more days', 'One more week', 'Pick a date'].map(label => `<button class="pill" data-move="${label}">${label}</button>`).join('')}</div>
+        ${moved ? `<div class="note">Now due ${moved}. It is back on ${left} lists.</div>` : ''}</div>
+      <div class="panel"><h4>Done<span class="oy-n" style="background:var(--ink)">${done}</span></h4><div class="donefaces">${did.slice(0, 20).map(person => `<img src="${face(person.face)}" alt="${person.name}" title="${person.name}">`).join('')}${did.length > 20 ? `<span>and ${did.length - 20} more</span>` : ''}</div></div>
+      ${passed ? '' : '<div><button class="quiet">Close it now</button></div>'}
+    </div>`;
+}
+page();
+$('#size').addEventListener('click', event => { const hit = event.target.closest('button'); if (!hit) return; size = +hit.dataset.size; $$('#size button').forEach(each => each.setAttribute('aria-pressed', each === hit)); page(); });
+$('#state').addEventListener('click', event => { const hit = event.target.closest('button'); if (!hit) return; state = hit.dataset.state; moved = ''; $$('#state button').forEach(each => each.setAttribute('aria-pressed', each === hit)); page(); });
+$('#page').addEventListener('click', event => { const hit = event.target.closest('[data-move]'); if (!hit) return; moved = hit.dataset.move === 'Two more days' ? 'Sun 22 Nov, 5:00pm' : hit.dataset.move === 'One more week' ? 'Fri 27 Nov, 5:00pm' : 'Mon 30 Nov, 5:00pm'; page(); });
+
+// 4: asking a group in one line
+const GROUPS = { 'emba-council': ['EMBA Council', 20], 'consulting-club': ['Consulting Club', 46], 'cohort-27': ['Cohort 27', 64] };
+const KINDS = [['do', 'Something to do'], ['one', 'Pick one'], ['dates', 'Pick dates'], ['text', 'Written answer']];
+const DAYS = { today: 'today 11:59pm', tonight: 'today 11:59pm', tomorrow: 'Thu 19 Nov', monday: 'Mon 23 Nov', tuesday: 'Tue 24 Nov', wednesday: 'Wed 25 Nov', thursday: 'Thu 19 Nov', friday: 'Fri 20 Nov', saturday: 'Sat 21 Nov', sunday: 'Sun 22 Nov' };
+let kind = null;
+function read() {
+  const text = $('#say').value, handle = (text.match(/@([a-z0-9-]+)/i) ?? [])[1]?.toLowerCase(), group = handle && GROUPS[handle];
+  const day = Object.keys(DAYS).find(word => new RegExp(`\\b${word}\\b`, 'i').test(text));
+  const guess = /\?\s*(@|$)/.test(text.trim()) || /\bwhich\b|\bvote\b/i.test(text) ? (/\bdays?\b|\bdates?\b|\bwhen\b/i.test(text) ? 'dates' : 'one') : 'do', now = kind ?? guess;
+  const what = text.replace(/@[a-z0-9-]*/gi, '').replace(new RegExp(`\\b(by|on|before)?\\s*(${Object.keys(DAYS).join('|')})\\b`, 'i'), '').replace(/\s+/g, ' ').trim();
+  const label = KINDS.find(each => each[0] === now)[1], when = `${now === 'do' ? 'Due' : 'Closes'} ${day ? DAYS[day] : ''}`;
+  $('#read').innerHTML = `<span class="kind">${label}</span>${group ? `<span>${group[0]}</span>` : '<span class="miss">Which group? Type @</span>'}${day ? `<span>${when}</span>` : '<span class="miss">By when?</span>'}`;
+  $('#kinds').innerHTML = KINDS.map(each => `<button class="pill" aria-pressed="${each[0] === now}" data-kind="${each[0]}">${each[1]}</button>`).join('');
+  $('#groups').innerHTML = Object.entries(GROUPS).map(([key, value]) => `<button class="pill" aria-pressed="${key === handle}" data-group="${key}">@${key}</button>`).join('');
+  $('#optbox').hidden = now !== 'one';
+  const ready = group && day && what;
+  $('#post').disabled = !ready; $('#post').style.opacity = ready ? 1 : .5;
+  $('#reach').textContent = group ? `Goes to the ${group[1]} people in ${group[0]}.` : '';
+  const sentence = what ? what[0].toUpperCase() + what.slice(1) : 'Your question';
+  $('#preview').innerHTML = row({ k: now === 'do' ? 'do' : 'vote', what: sentence, grp: group ? group[0] : 'A group', when: day ? when : 'No date yet', opts: now === 'one' ? $('#opts').value.split(',').map(part => part.trim()).filter(Boolean).slice(0, 4) : null, link: now === 'dates' ? 'Pick dates' : now === 'text' ? 'Write an answer' : null }, 0);
+  return { group, sentence };
+}
+read();
+$('#say').addEventListener('input', () => { $('#posted').hidden = true; read(); });
+$('#opts').addEventListener('input', read);
+$('#kinds').addEventListener('click', event => { const hit = event.target.closest('[data-kind]'); if (hit) { kind = hit.dataset.kind; read(); } });
+$('#groups').addEventListener('click', event => { const hit = event.target.closest('[data-group]'); if (!hit) return; const box = $('#say'); box.value = `${box.value.replace(/\s*@[a-z0-9-]*/gi, '').trim()} @${hit.dataset.group}`; read(); });
+$('#post').addEventListener('click', () => { const { group, sentence } = read(); if (!group) return; const note = $('#posted'); note.hidden = false; note.textContent = `Asked. "${sentence}" is on ${group[1]} lists in ${group[0]}, and its page shows you who has answered.`; });
+</script>
+</body>
+</html>
