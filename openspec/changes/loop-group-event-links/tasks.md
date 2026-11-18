@@ -65,3 +65,27 @@
 - [x] 9.6 Page tests in `app/c/plan-link.test.tsx`; `tsc --noEmit` and the full suite green
 - [ ] 9.7 Drive the real form in a browser against a database that has the migration (only its look was checked, on a static copy with the real stylesheet)
 - [ ] 9.8 Founder: apply `20261118100000_campus_listing_link.sql` by hand before running or deploying this code: This week reads the new column
+
+## 10. Campus: posting in one line with @places (added 2026-11-18, design D12; founder picked direction A)
+
+- [x] 10.1 Mockup `public/demo/mockups-campus-post.html` with three directions; founder picked A
+- [x] 10.2 `lib/campus/line.ts`: read what, when and the @place out of a typed line; tests first in `lib/__tests__/campus-line.test.ts`
+- [x] 10.3 Migration `20261118300000_campus_tag.sql`: `campus_tag` and `campus_listing.tag_id`
+- [x] 10.4 `lib/campus/tags.ts` (places in use, busiest first, known first names only) and `postPlan` with a tag; tests in `lib/__tests__/campus-tags.test.ts`
+- [x] 10.5 `postLineAction` in `app/c/actions.ts`: the server reads the line itself
+- [x] 10.6 `components/campus/composer.tsx` on the post page; the form stays for changing a plan; styles in `app/c/campus.css`
+- [x] 10.7 This week shows a plan's @place and finds it by the place's name
+- [x] 10.8 Page tests in `app/c/plan-link.test.tsx`; `tsc --noEmit` clean
+- [x] 10.9 Full suite green after this section
+- [ ] 10.10 Drive the real page in a browser against a database that has the migrations; its look has only been checked as the mockup
+- [ ] 10.11 Founder: apply `20261118300000_campus_tag.sql` by hand before running or deploying this code: This week reads the new column
+
+## 11. Campus: posting lives on This week behind a "+" (added 2026-11-18, design D13; founder picked C with the panel of B)
+
+- [x] 11.1 Mockup `public/demo/mockups-campus-plus.html` with three directions, then the picked combination drawn with the built styles
+- [x] 11.2 `Screen.places` in the screen model, read for a signed-in viewer
+- [x] 11.3 The "+" and the posting panel in `components/campus/screen.tsx`; the composer in two columns; "Post a plan" leaves the top bar
+- [x] 11.4 `/c/<campus>/post` without a plan leads to This week; with `?plan=` it is still the form to change one
+- [x] 11.5 Tests in `app/c/plan-link.test.tsx` and `app/c/campus-screen.test.tsx`; `tsc --noEmit` clean
+- [x] 11.6 Full suite green after this section (1237 passed, 31 skipped)
+- [ ] 11.7 Drive the real screen in a browser against a database that has the migrations (same blocker as 10.10)

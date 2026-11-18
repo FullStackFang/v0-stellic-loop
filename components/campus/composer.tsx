@@ -1,0 +1,104 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useRef, useState, useTransition } from 'react';
+import { imInAction, postLineAction, readPlanLinkAction, type LineFrom } from '@/app/c/actions';
+import { readLine, typingTag } from '@/lib/campus/line';
+import type { NearTag } from '@/lib/campus/tags';
+import { dayLabel, timeLabel, zoned } from '@/lib/campus/time';
+import type { Face } from '@/lib/campus/view';
+import { FaceDot } from './screen';
+
+/** A plan already on the list at an @place, shown while a person posts there, so they can join it instead. */
+export type Soon = { id: string; tag: string; title: string; day: string; time: string; who: string; faces: Face[]; mine: boolean };
+
+const people = (tag: NearTag) => `${tag.people} ${tag.people === 1 ? 'person' : 'people'} this week${tag.known.length ? ` · ${tag.known.join(', ')}` : ''}`;
+const site = (link: string) => link.replace(/^https?:\/\//, '').split('/')[0];
+
+/**
+ * Posting in one line (design D12): the person types it the way they would text it, and sees what Loop understood as
+ * they type: what, when, and the @place. Typing @ lists the places people nearby use. A pasted event link is read into
+ * the line. The server reads the line again when it is posted, so what is shown here is never what is trusted.
+ * It fills the panel the "+" on This week opens (design D13): the line on the left, what other people are doing on the right.
+ */
+export function Composer({ campus, tags, soon, onDone }: { campus: { slug: string; name: string; tz: string }; tags: NearTag[]; soon: Soon[]; onDone: () => void }) {
+  const router = useRouter(), box = useRef<HTMLTextAreaElement>(null);
+  const [text, setText] = useState(''), [from, setFrom] = useState<LineFrom | null>(null), [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
+  const [now] = useState(() => new Date()), [tried, setTried] = useState('');
+  const [busy, start] = useTransition();
+
+  const read = readLine(text, campus.tz, now), typing = typingTag(text);
+  const title = read.title || from?.title || '', starts = read.starts ?? from?.starts ?? null;
+  const place = read.tag ? tags.find(tag => tag.slug === read.tag) : undefined;
+  const offered = (typing === null ? tags : tags.filter(tag => tag.slug.startsWith(typing))).slice(0, 5);
+  const here = read.tag && typing === null ? soon.filter(plan => plan.tag === read.tag) : [];
+  const when = starts ? (() => { try { const at = zoned(campus.tz, starts); return `${dayLabel(campus.tz, at, now)} ${timeLabel(campus.tz, at)}`; } catch { return null; } })() : null;
+
+  // A link in the line is read once, as soon as it is there: its page becomes what the line says.
+  const typed = (value: string) => {
+    setText(value); setSaid(null);
+    const link = readLine(value, campus.tz, now).link;
+    if (!link || link === tried || !/\s$|^\S+$/.test(value)) return;
+    setTried(link);
+    start(async () => {
+      const got = await readPlanLinkAction(campus.slug, link).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
+      if (!got.ok) { setSaid({ text: got.message, bad: true }); return; }
+      setFrom({ link: got.link, ...(got.filled ?? {}) });
+      setText(now => now.replace(link, '').replace(/\s+/g, ' ').trimStart());
+      setSaid({ text: got.filled ? `Read from ${site(got.link)}. Add an @place if you like, then post it.` : got.note.replace('fill in the rest', 'say what it is and when'), bad: false });
+      box.current?.focus();
+    });
+  };
+  // A picked place finishes the @ being typed, or takes the place of the one the line has, or is added to the line.
+  const pick = (slug: string) => {
+    setText(now => `${/@[a-z0-9-]*$/i.test(now) ? now.replace(/@[a-z0-9-]*$/i, `@${slug}`) : read.tag ? now.replace(new RegExp(`@${read.tag}(?![a-z0-9-])`, 'i'), `@${slug}`) : `${now.trimEnd()} @${slug}`.trimStart()} `.replace(/ +$/, ' '));
+    box.current?.focus();
+  };
+  const post = () => start(async () => {
+    const got = await postLineAction(campus.slug, text, from).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
+    if (got.ok) { router.refresh(); onDone(); } else setSaid({ text: got.message, bad: true });
+  });
+  const join = (id: string) => start(async () => { const got = await imInAction(id); if (got.ok) router.refresh(); else setSaid({ text: got.message, bad: true }); });
+
+  return <div className="cs-post-cols">
+    <div className="cs-line">
+      <div className="cs-line-card">
+        <label className="cs-line-label" htmlFor="cs-say">What are you up to?</label>
+        <textarea id="cs-say" ref={box} className="cs-say" rows={3} maxLength={400} autoFocus spellCheck={false} placeholder="dumplings tonight 7 @collegetown" value={text}
+          onChange={event => typed(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (!busy) post(); } }} />
+        <div className="cs-read" aria-live="polite">
+          {title && <span className="cs-chip">{title}</span>}
+          {when ? <span className="cs-chip when">{when}</span> : <span className="cs-chip-hint">{title || from ? 'No time yet: say tonight, tomorrow 7pm, sat 10am' : 'Say it the way you would text it, or paste an event link'}</span>}
+          {read.tag && typing === null && <span className={`cs-chip ${place ? 'place' : ''}`}>@{read.tag} · {place ? people(place) : 'a new place, yours to name'}</span>}
+          {from && <span className="cs-chip">{site(from.link)}<button type="button" onClick={() => { setFrom(null); setSaid(null); }}>Remove link</button></span>}
+        </div>
+      </div>
+      {said && <p role={said.bad ? 'alert' : 'status'} className={said.bad ? 'cs-line-bad' : 'cs-note'}>{said.text}</p>}
+      <div className="cs-line-end">
+        <button type="button" className="cs-btn go" disabled={busy} onClick={post}>{busy ? 'One moment…' : 'Post it'}</button>
+        <span className="cs-note">Shows at {campus.name} at once. You are counted in.</span>
+      </div>
+    </div>
+
+    <div className="cs-post-side">
+      <div className="cs-line-card">
+        <h2>{typing ? <>Places near you that start with <b>@{typing}</b></> : 'Places people near you use'}</h2>
+        <div className="cs-sug">
+          {offered.map(tag => <button key={tag.slug} type="button" onClick={() => pick(tag.slug)}><span><b>@{tag.slug}</b><small>{people(tag)}</small></span></button>)}
+          {typing !== null && typing.length >= 2 && !tags.some(tag => tag.slug === typing) && <button type="button" onClick={() => pick(typing)}><span><b className="new">Make @{typing}</b><small>A new place. People nearby see it when they type @</small></span></button>}
+          {!offered.length && (typing ?? '').length < 2 && <p className="cs-note">{tags.length ? 'Keep typing to name a new place.' : 'Nobody has named a place here yet. Type @ and a name: it is yours to make.'}</p>}
+        </div>
+      </div>
+
+      {here.length > 0 && <div className="cs-line-card">
+        <h2>Already on in <b>@{read.tag}</b></h2>
+        {here.map(plan => <div className="cs-mini" key={plan.id}>
+          <time>{plan.day}<br />{plan.time}</time>
+          <div><b>{plan.title}</b><span>{plan.who}</span></div>
+          {plan.faces.length > 0 && <span className="cs-stack">{plan.faces.slice(0, 3).map((face, at) => <FaceDot key={at} face={face} />)}</span>}
+          {plan.mine ? <span className="cs-pill yes">You&rsquo;re in</span> : <button type="button" className="cs-btn sm" disabled={busy} onClick={() => join(plan.id)}>Join</button>}
+        </div>)}
+      </div>}
+    </div>
+  </div>;
+}
