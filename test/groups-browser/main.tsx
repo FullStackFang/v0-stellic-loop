@@ -4,13 +4,14 @@ import { createElement, type ComponentType } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { AddPerson, JoinLink, Roster, WaitingList } from '../../app/groups/[namespace]/members-panel';
 import { ActionForm } from '../../components/emba/portal-forms';
+import { LinkBox } from '../../components/emba/link-box';
 import type { PortalAction, PortalResult } from '../../components/emba/portal-types';
 import '../../app/globals.css';
 import '../../app/loop.css';
 import '../emba-browser/font.css';
 
 const PANELS: Record<string, ComponentType<never>> = { roster: Roster, joinLink: JoinLink, invite: AddPerson, waiting: WaitingList };
-type Page = { html?: string; error?: string; shell: boolean; props: Record<string, { actionNames: string[] } & Record<string, unknown>>; forms: { label: string; html: string }[]; capability: string };
+type Page = { html?: string; error?: string; shell: boolean; props: Record<string, { actionNames: string[] } & Record<string, unknown>>; forms: { label: string; html: string; linkBox?: Record<string, unknown> }[]; capability: string };
 const query = new URLSearchParams(location.search), panels = new Map<string, Root>();
 let roots: Root[] = [];
 const read = async (): Promise<Page> => (await fetch(`/__fixture/page?${query}`)).json();
@@ -29,6 +30,8 @@ function draw(page: Page, said?: PortalResult) {
   for (const slot of Object.keys(page.props ?? {})) { const root = createRoot(document.querySelector(`[data-slot=${slot}]`)!); panels.set(slot, root); roots.push(root); }
   for (const [index, form] of (page.forms ?? []).entries()) {
     const root = createRoot(document.querySelector(`[data-form="${index}"]`)!); roots.push(root);
+    // The paste box stays mounted when it has to ask for a name and a start, so what was typed is kept.
+    if (form.linkBox) { root.render(createElement(LinkBox, { ...form.linkBox, action: async (_previous: PortalResult, data: FormData) => { const answer = await send(page, { form: index }, data); if (answer.status === 'success') draw(await read(), answer); return answer; } } as never)); continue; }
     const action: PortalAction = async (_previous, data) => { const answer = await send(page, { form: index }, data); draw(await read(), answer); return answer; };
     root.render(createElement(ActionForm, { action, label: form.label } as never, createElement('div', { style: { display: 'contents' }, dangerouslySetInnerHTML: { __html: form.html } })));
   }

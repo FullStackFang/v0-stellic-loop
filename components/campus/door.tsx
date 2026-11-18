@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { flushSync } from 'react-dom';
 import { Rings } from '@/components/LoopGlyphs';
+import { ANIMALS, animal } from '@/lib/campus/animals';
 import { DoorSignIn } from './door-sign-in';
 import { Tile } from './screen';
 
@@ -23,8 +24,6 @@ export type DoorSchool = {
 const EXAMPLE = { need: 3, text: 'Coffee for the table' };
 /** Shown, and said to be an example, for a school with nothing on this week, so there is still a ticket to try. */
 const SAMPLES = [['Thu', '7:00 PM', 'Board game night'], ['Fri', '5:30 PM', 'Sunset run'], ['Sat', '11:00 AM', 'Farmers market walk'], ['Wed', '6:00 PM', 'Film night']] as const;
-/** public/animals: 36 icons by Tran Mau Tri Tam, CC BY 4.0. */
-const ANIMALS = 36, animal = (n: number) => `/animals/${String(n % ANIMALS + 1).padStart(2, '0')}.png`;
 /** Each school's name is set in its own cut of Archivo: [width, weight]. */
 const CUTS = [[125, 800], [78, 600], [62, 900], [100, 360]] as const;
 const cut = (at: number): CSSProperties => ({ fontStretch: `${CUTS[at % CUTS.length][0]}%`, fontWeight: CUTS[at % CUTS.length][1] });

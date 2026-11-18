@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
-import { checkInAction, imInAction, inviteAction, joinAction, leaveAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
+import { checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import { Rings } from '@/components/LoopGlyphs';
+import { ANIMALS, animal, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
 import { pick, type Findable } from '@/lib/campus/search';
@@ -17,8 +18,8 @@ const SAY = ['exercise', 'eat with people', 'study', 'startups', 'tonight'];
 const Chevron = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg>;
 
 export function FaceDot({ face, className = '' }: { face: Face; className?: string }) {
-  const cls = `cs-face ${face.here ? 'here' : ''} ${className}`.trim(), name = face.me ? 'You' : face.first;
-  // eslint-disable-next-line @next/next/no-img-element -- the sign-in account's photo, at its own address
+  const cls = `cs-face ${face.photo?.startsWith('/animals/') ? 'pet' : ''} ${face.here ? 'here' : ''} ${className}`.replace(/\s+/g, ' ').trim(), name = face.me ? 'You' : face.first;
+  // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals, or the sign-in account's photo at its own address
   return face.photo ? <img className={cls} src={face.photo} alt={name} title={name} /> : <i className={cls} role="img" aria-label={name} title={name}>{name.slice(0, 1).toUpperCase()}</i>;
 }
 const Stack = ({ faces }: { faces: Face[] }) => faces.length ? <span className="cs-stack">{faces.slice(0, 6).map((face, at) => <FaceDot key={at} face={face} />)}</span> : null;
@@ -113,6 +114,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
       <ul className="cs-facts"><li><b>{ticket.day}, {ticket.time}</b>{ticket.ends ?? 'No end time given'}</li>
         {ticket.by && <li><b>{ticket.by}</b>{ticket.source ? `Listed on ${ticket.source}` : ticket.going ? `${ticket.going} going` : 'Nobody is in yet'}</li>}
         {!map && ticket.place && <li><b>{ticket.place}</b>Where</li>}
+        {ticket.link && <li><b><a href={ticket.link} target="_blank" rel="noopener noreferrer nofollow">{ticket.link.slice('https://'.length).split('/')[0]}</a></b>Event page</li>}
         {people.map((face, at) => <li className="who" key={at}><FaceDot face={face} /><span><b>{face.first}</b>{face.why}</span></li>)}</ul></div>
       {map && <figure className="cs-map"><iframe title={`Map of ${map.name}`} loading="lazy" src={`https://www.openstreetmap.org/export/embed.html?bbox=${box}&layer=mapnik&marker=${map.lat}%2C${map.lon}`} /><figcaption><b>{map.name}</b>{ticket.place !== map.name ? ticket.place : ''}</figcaption></figure>}
       <div className="cs-regact">{ticket.mine ? <>
@@ -182,7 +184,10 @@ function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; s
 /** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". */
 function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
   const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [kit, setKit] = useState('');
-  const me: Face = { first: viewer.first, photo: viewer.photo }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
+  // The pick shows at once, and goes back if it could not be kept.
+  const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [, save] = useTransition();
+  const choose = (next: number) => { const before = face; setFace(next); save(async () => { if (!(await faceAction(next)).ok) setFace(before); }); };
+  const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : animal(face) }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   useEffect(() => {
     if (!open) return;
     const away = (event: MouseEvent) => { if (!box.current?.contains(event.target as Node)) setOpen(false); }, key = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
@@ -198,6 +203,13 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
         <ul>{LEVELS.map((each, at) => <li key={each.name} className={at === level ? 'now' : ''}><b>{at + 1}</b><div><strong>{each.name}</strong><span>{each.gets}</span></div><small>{at === level ? 'You' : at < level ? 'Passed' : `${each.from - viewer.outings} to go`}</small></li>)}</ul>
+        <div className="cs-pets"><h4>Your picture<button aria-expanded={picking} onClick={() => setPicking(!picking)}>{picking ? 'Done' : 'Change'}</button></h4>
+          {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
+          {picking && <><div role="group" aria-label="Pick your picture">
+            {viewer.ownPhoto && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
+            {Array.from({ length: ANIMALS }, (_, at) => <button key={at} className="cs-pet" aria-pressed={face === at} aria-label={`Animal ${at + 1}`} onClick={() => choose(at)}><img src={animal(at)} alt="" /></button>)}</div>
+            <small>Animal icons by <a href="https://www.figma.com/community/file/1514963172455082116" target="_blank" rel="noreferrer">Tran Mau Tri Tam</a>, CC BY 4.0.</small></>}
+          {/* eslint-enable @next/next/no-img-element */}</div>
         <div className="cs-kits" role="group" aria-label="Colours"><h4>Colours</h4><div>{KITS.map(each => <button key={each.slug} className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }}><i />{each.name}</button>)}</div></div>
         {viewer.admin && <nav className="cs-lvl-more" aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}
         {signOut && <div className="cs-lvl-more">{signOut}</div>}</div></div>}

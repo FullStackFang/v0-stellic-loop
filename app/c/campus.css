@@ -221,6 +221,17 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 :root[data-kit="nyu"] .cs, .cs [data-kit="nyu"] { --cs-field: oklch(85% 0.09 305); --cs-field-shadow: oklch(69% 0.12 305); --cs-ink: oklch(24% 0.08 305); --cs-ink-2: oklch(34% 0.1 305); --cs-action: oklch(40% 0.2 305); --cs-action-hover: oklch(46% 0.21 305); --cs-action-deep: oklch(30% 0.16 305); }
 /* Mixed in oklab: in oklch a mix with the near-white paper swings through other hues (a violet field gave a peach stub). */
 :root[data-kit]:not([data-kit="loop"]) .cs, .cs [data-kit]:not([data-kit="loop"]) { --cs-stub: color-mix(in oklab, var(--cs-field) 34%, var(--cs-paper)); --cs-on-field-2: color-mix(in oklab, var(--cs-ink) 74%, var(--cs-field)); }
+/* Your picture: one of the front door's animals, or your own photo. */
+.cs-face.pet { object-fit: contain; }
+.cs-pets { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
+.cs-pets h4 { display: flex; justify-content: space-between; align-items: baseline; margin: 0; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
+.cs-pets h4 button { font-size: 13.5px; font-weight: 620; color: var(--cs-action); } .cs-pets h4 button:hover { text-decoration: underline; }
+.cs-pets > div { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; margin-top: 10px; }
+.cs .cs-pet { aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 10%, var(--cs-paper)); transition: transform .15s var(--cs-ease); }
+.cs-pet img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .cs-pet.photo img { object-fit: cover; }
+.cs .cs-pet:hover { transform: scale(1.14); }
+.cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+.cs-pets small { display: block; margin-top: 10px; font-size: 11.5px; color: var(--cs-mute); } .cs-pets small a { text-decoration: underline; }
 .cs-kits { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
 .cs-kits h4 { margin: 0 0 6px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
 .cs-kits > div { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -321,8 +332,13 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-plain > p { color: var(--cs-ink-2); max-width: 52ch; }
 .cs-form { display: grid; gap: 14px; padding: 20px 22px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
 .cs-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; } .cs-form label small { font-weight: 440; color: var(--cs-mute); }
-.cs-form .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cs-form .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: end; }
 .cs-form .end { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cs-form .from { display: grid; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid color-mix(in oklch, var(--cs-ink) 14%, transparent); }
+.cs-form .from .row { display: flex; gap: 8px; } .cs-form .from .row input { flex: 1; min-width: 0; } .cs-form .from .row .cs-btn { height: 38px; }
+.cs-form .kept { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13px; } .cs-form .kept span { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.cs-form .kept button { font-size: 13px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
+.cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
 .cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
 .cs-schools { display: flex; flex-wrap: wrap; gap: 8px; }
 

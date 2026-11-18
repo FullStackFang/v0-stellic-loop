@@ -26,6 +26,7 @@ import SharedEventPage from '../app/e/[token]/page';
 import SharedAskPage from '../app/a/[token]/page';
 import { AddPerson, JoinLink, Roster, WaitingList } from '../app/groups/[namespace]/members-panel';
 import { ActionForm } from '../components/emba/portal-forms';
+import { LinkBox } from '../components/emba/link-box';
 import { grantScopedRole, removeOrgMembership, revokeScopedRole } from '../app/emba/role-actions';
 import { addMember, cancelInvite, saveTagHandle } from '../app/groups/actions';
 import { replaceRequestLink, reviewRequest, setJoinLink } from '../app/groups/request-actions';
@@ -33,7 +34,7 @@ import type { PortalAction } from '../components/emba/portal-types';
 
 const PANELS = new Map<unknown, string>([[Roster, 'roster'], [JoinLink, 'joinLink'], [AddPerson, 'invite'], [WaitingList, 'waiting']]);
 const calls: Record<string, PortalAction> = { grant: grantScopedRole, revokeRole: revokeScopedRole, removeFromGroup: removeOrgMembership, saveTag: saveTagHandle, setLink: setJoinLink, replaceLink: replaceRequestLink, add: addMember, review: reviewRequest, cancelInvite };
-type Lifted = { props: Record<string, unknown>; forms: { label: string; html: string }[]; actions: PortalAction[] };
+type Lifted = { props: Record<string, unknown>; forms: { label: string; html: string; linkBox?: Record<string, unknown> }[]; actions: PortalAction[] };
 
 /**
  * Makes a page's tree sendable. Each Members panel becomes an empty slot with its props; each ActionForm becomes a slot
@@ -44,6 +45,12 @@ function lift(node: ReactNode, out: Lifted): ReactNode {
   if (!isValidElement<{ children?: ReactNode; actions?: unknown; action?: PortalAction; label?: string }>(node)) return node;
   const panel = PANELS.get(node.type);
   if (panel) { const { actions, ...rest } = node.props; out.props[panel] = { ...rest, actionNames: Object.keys(actions ?? {}) }; return createElement('div', { 'data-slot': panel }); }
+  // The paste box keeps its own state, so the browser mounts the real one with its props.
+  if (node.type === LinkBox) {
+    const { action, ...rest } = node.props as { action: PortalAction };
+    out.actions.push(action); out.forms.push({ label: 'Add event', html: '', linkBox: rest });
+    return createElement('div', { 'data-form': out.forms.length - 1 });
+  }
   if (node.type === ActionForm) {
     out.actions.push(node.props.action!); out.forms.push({ label: node.props.label!, html: renderToStaticMarkup(node.props.children) });
     return createElement('div', { 'data-form': out.forms.length - 1 });

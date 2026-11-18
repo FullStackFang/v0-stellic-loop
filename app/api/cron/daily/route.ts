@@ -3,6 +3,10 @@ import { db } from "@/lib/db";
 import { isIdled } from "@/lib/quorum";
 import { allBoards } from "@/lib/load";
 import type { Proposal } from "@/lib/types";
+import { rereadLinkedEvents } from "@/lib/emba/team-event-links";
+
+// The re-read of linked events fetches one page per event.
+export const maxDuration = 300;
 
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -34,5 +38,9 @@ export async function GET(req: Request) {
       idled += r.rows.length;
     }
   }
+  // Linked events are read again once a day (loop-group-event-links, design D6). The work above is done and is reported whatever happens here.
+  try {
+    await rereadLinkedEvents(q);
+  } catch {}
   return Response.json({ idled });
 }

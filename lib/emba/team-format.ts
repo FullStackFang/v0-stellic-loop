@@ -1,6 +1,8 @@
 import type {AnswerWrite,AskChange,AskDetail,AskList,AskResult,AskView,AskWrite} from './team-asks';
 import type {Member,OrganizeReason,TeamHead} from './team-core';
 import type {EventView,EventWrite} from './team-events';
+import type {LinkWrite as EventLinkWrite} from './team-event-links';
+import type {Nearby} from './team-nearby';
 import type {IdeaWrite} from './team-ideas';
 import type {DayList,EventDetail,InterestWrite,Upcoming} from './team-interest';
 import type {Arrivals,TravelEntry,TravelLeg,TravelRemoval,TravelWrite} from './team-travel';
@@ -294,7 +296,7 @@ function ideaLines(team:TeamHead,event:EventView):string[] {
 /** One event as lines: Loop's facts, then the organizer's words as quoted data, then its links, each alone on a line. */
 export function eventLines(team:TeamHead,event:EventView):string[] {
  if(event.idea)return ideaLines(team,event);
- return [...own(`Event ${eventTag(team,event.slug)}${event.archived?' (archived)':''}: ${timeOf(event)}. ${interestOf(event)}.`),...quote(event.name),
+ return [...own(`Event ${eventTag(team,event.slug)}${event.archived?' (archived)':''}: ${timeOf(event)}. ${interestOf(event)}.${event.sourceGone?' No longer listed at the source.':''}`),...quote(event.name),
   ...(event.place?quote(`Place: ${event.place}`):[]),...(event.note?quote(`Note: ${event.note}`):[]),
   ...(event.url?['Its link:',event.url]:[]),...(event.shareUrl?['Share link (shows the event to anyone who opens it, and lets members mark interest):',event.shareUrl]:[])];
 }
@@ -329,6 +331,28 @@ export function formatEventWrite(result:EventWrite,team:TeamHead):string {
   case 'unknown_event':return noEvent(result.value);
   default:return `Not saved. ${refusals[result.reason]}`;
  }
+}
+/** The result of adding an event by link or from the nearby list. What a page said is quoted like a member's words. */
+export function formatLink(result:EventLinkWrite,team:TeamHead):string {
+ if(result.saved)return new Page().line(!result.existing?'Saved. The event was added to the team and the user is marked as interested.'
+   :result.changed?'The team already has this event. Nothing was added, and the user is now marked as interested.':'The team already has this event and the user was already marked as interested. Nothing changed.')
+  .raw(eventLines(team,result.event)).line(NOTE).end();
+ switch(result.reason){
+  case 'cap':return `Not saved. Limit reached: ${result.cap==='linked_events'?'10 upcoming events added by one member in one team.':clubCaps[result.cap]}`;
+  case 'link_refused':return `Not saved. The link was refused: ${links[result.problem]}.`;
+  case 'needs_facts':return `Not saved. ${result.listed?'Loop could not read that page.':'Loop does not read that site.'} Ask the user for the event's name and start time, then call link_event again with the same link and with name and startsAt.`;
+  case 'unknown_nearby':return `Not saved. No nearby item has the code ${short(result.value,20)}. Call whats_on to see the nearby list.`;
+  case 'unknown_event':return noEvent(result.value);
+  default:return `Not saved. ${refusals[result.reason]}`;
+ }
+}
+/** The nearby list, as a section that follows what is on. Empty when there is nothing nearby. */
+export function formatNearby(list:Nearby):string {
+ if(!list.items.length)return '';
+ const page=new Page().line('','Nearby, from calendar feeds this team follows. These are not the team\'s events:');
+ for(const item of list.items)page.item([...own(`Nearby ${item.code}: ${item.starts}${item.ends?` to ${item.ends}`:''} (${list.timezone}).`),...quote(item.title),
+  ...(item.place?quote(`Place: ${item.place}`):[]),...(item.host?quote(`Host: ${item.host}`):[]),...quote(`Feed: ${item.feed}`)]);
+ return page.line('To make one the team\'s event with the user marked as interested, call link_event with its code as nearby.',NOTE).end('Call whats_on with one day to see fewer.');
 }
 /** The result of marking interest or taking it back. */
 export function formatInterest(result:InterestWrite,team:TeamHead):string {

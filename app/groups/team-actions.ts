@@ -7,6 +7,8 @@ import { EmbaError } from '@/lib/emba/errors';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { addEvent, archiveTeamEvent, changeEvent, restoreEvent, type EventWrite } from '@/lib/emba/team-events';
 import { setInterest } from '@/lib/emba/team-interest';
+import { linkEvent, unlinkEvent, type LinkWrite, type UnlinkWrite } from '@/lib/emba/team-event-links';
+import { addFeed, readFeedNow, removeFeed, setFeedOn, type FeedWrite } from '@/lib/emba/team-nearby';
 import { formatWrite } from '@/lib/emba/team-format';
 import { saveBrief } from '@/lib/emba/team-read';
 import { amendRecord, postAnnouncement, type WriteResult } from '@/lib/emba/team-records';
@@ -93,6 +95,70 @@ export async function restoreTeamEvent(_previous: PortalResult, data: FormData):
 /** Marks the signed-in person interested in an event, or takes it back. The person comes from the session, never the form. */
 export async function setTeamInterest(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutateEvent(principal => setInterest(db(), principal, { ...team(data), event: value(data, 'event'), interested: value(data, 'interested') === 'true', route: value(data, 'route') === 'share_link' ? 'share_link' : 'site' }), ['/e/[token]']);
+}
+/** Runs a write that answers in its own words. `say` turns the service's answer, saved or not, into the page's answer. */
+async function mutateWith<R extends { saved: boolean }>(run: (principal: Signed) => Promise<R>, say: (result: R) => PortalResult): Promise<PortalResult> {
+  const principal = await getPortalPrincipal();
+  if (!principal) return { status: 'error', message: 'Sign in to continue.' };
+  try {
+    const result = await run(principal);
+    revalidatePath('/groups');
+    revalidatePath('/e/[token]', 'page');
+    return say(result);
+  } catch (error) {
+    if (error instanceof ZodError) return { status: 'error', message: 'Not saved. One of the values is not valid. Check the lengths, dates and names.' };
+    return { status: 'error', message: denied };
+  }
+}
+type LinkDeclined = Exclude<LinkWrite | UnlinkWrite | FeedWrite, { saved: true }>;
+/** The refusals every link, take-back and feed write shares; the ones an event write already words are worded there. */
+const linkWords = (result: LinkDeclined): string => {
+  switch (result.reason) {
+    case 'cap': return result.cap === 'linked_events' ? 'Not saved. You have reached the number of events you can add (10 upcoming). Take one back, or wait until one has passed.'
+      : result.cap === 'feeds' ? 'Not saved. A team can have 10 feeds. Remove one first.' : eventWords(result as Declined);
+    case 'organizers_only': return 'Only owners and organizers can do this.';
+    case 'unknown_nearby': return 'Not saved. That event is no longer listed under Nearby. Reload the page.';
+    case 'unknown_feed': return 'Not saved. That feed is no longer in this team. Reload the page.';
+    case 'feed_exists': return 'Not saved. This team already has that feed.';
+    case 'not_yours': return 'Not saved. Only the member who added this event can take it back.';
+    case 'others_interested': return 'Not saved. Other members are interested in it now, so only an owner or organizer can archive it.';
+    case 'needs_facts': return result.listed ? 'Not saved. Loop could not read that page. Give the event a name and a start time.' : 'Not saved. Loop does not read that site. Give the event a name and a start time.';
+    default: return eventWords(result as Declined);
+  }
+};
+const marked = (result: Extract<LinkWrite, { saved: true }>) => result.existing ? 'Already in this team. You are marked interested.' : 'Saved. You are marked interested.';
+/** Adds an event from a pasted link. Name, start, end and place count only when Loop cannot read the page; the answer says when to ask for them. */
+export async function linkTeamEvent(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  const given = { name: fact(data, 'name'), startsAt: fact(data, 'startsAt'), endsAt: fact(data, 'endsAt'), place: fact(data, 'place') };
+  const supplied = Object.fromEntries(Object.entries(given).filter(([, entry]) => entry !== null));
+  return mutateWith(principal => linkEvent(db(), principal, { ...team(data), url: value(data, 'url').trim(), ...supplied }), result =>
+    result.saved ? { status: 'success', message: marked(result) } : { status: 'error', message: linkWords(result), ...(result.reason === 'needs_facts' ? { needsFacts: true as const } : {}) });
+}
+/** Marks the signed-in person interested in an item under Nearby, which makes it the team's event. */
+export async function joinNearbyEvent(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutateWith(principal => linkEvent(db(), principal, { ...team(data), nearby: value(data, 'nearby'), route: 'site' }), result =>
+    result.saved ? { status: 'success', message: marked(result) } : { status: 'error', message: linkWords(result) });
+}
+/** The member who added an event by link or from Nearby takes it back. */
+export async function takeBackTeamEvent(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutateWith(principal => unlinkEvent(db(), principal, { ...team(data), event: value(data, 'event') }), result =>
+    result.saved ? { status: 'success', message: 'Removed.' } : { status: 'error', message: linkWords(result) });
+}
+// A feed write answers with the feed's last result when it read the feed.
+const feedSaid = (result: FeedWrite): PortalResult => !result.saved ? { status: 'error', message: linkWords(result) }
+  : result.feed?.lastResult ? { status: result.feed.lastOk ? 'success' : 'error', message: result.feed.lastResult } : { status: 'success', message: 'Saved.' };
+const feedTarget = (data: FormData) => ({ ...team(data), feedId: value(data, 'feedId') });
+export async function addTeamFeed(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutateWith(principal => addFeed(db(), principal, { ...team(data), name: value(data, 'name').trim(), url: value(data, 'url') }), feedSaid);
+}
+export async function setTeamFeedOn(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutateWith(principal => setFeedOn(db(), principal, { ...feedTarget(data), on: value(data, 'on') === 'true' }), result => result.saved ? { status: 'success', message: 'Saved.' } : feedSaid(result));
+}
+export async function readTeamFeedNow(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutateWith(principal => readFeedNow(db(), principal, feedTarget(data)), feedSaid);
+}
+export async function removeTeamFeed(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutateWith(principal => removeFeed(db(), principal, feedTarget(data)), result => result.saved ? { status: 'success', message: 'Saved.' } : feedSaid(result));
 }
 export async function retireTeamEvent(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(principal => archiveTeamEvent(db(), principal, { orgId: value(data, 'orgId'), eventId: value(data, 'eventId') }));

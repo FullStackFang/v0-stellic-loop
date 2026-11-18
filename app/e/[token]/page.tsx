@@ -48,7 +48,7 @@ export default async function SharedEventPage({ params }: { params: Promise<{ to
   }
   const { join, signedIn } = share;
   return <div className="lp"><main className="lp-main lt-share"><div className="lp-wrap">
-    <section className="lt-editor">{head}<p>{when(outside)}</p>{outside.place && <p>{outside.place}</p>}{outside.interested !== null && <p>{outside.interested} members are interested.</p>}</section>
+    <section className="lt-editor">{head}<p>{when(outside)}</p>{outside.place && <p>{outside.place}</p>}{outside.sourceGone && <p className="emba-meta">No longer listed at the source</p>}{outside.interested !== null && <p>{outside.interested} members are interested.</p>}</section>
     <section className="lt-editor">{!signedIn
       ? <>{clerkPortalConfigured() ? <p>Sign in to join this group. <Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`/e/${token}`)}`}>Sign in</Link></p> : <p role="status">Sign-in is not configured for this deployment.</p>}</>
       : join === null ? <p>This group is not taking join requests from this link. Ask an organizer to add you.</p>

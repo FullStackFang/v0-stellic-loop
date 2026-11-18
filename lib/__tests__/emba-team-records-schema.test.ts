@@ -276,7 +276,7 @@ it('keeps text to one visible line and links to plain https pointers',async()=>{
 });
 it('keeps every team-record table out of the Data API under Supabase default privileges',async()=>{
  await fixture();
- const tables=['emba_team_state','emba_team_record','emba_team_record_version','emba_team_conflict','emba_team_overlap','emba_team_record_tag','emba_team_change','emba_team_operation','emba_team_conflict_report','emba_team_event','emba_team_name','emba_team_brief','emba_team_link','emba_team_write','emba_event_interest','emba_ask','emba_ask_option','emba_ask_answer'].sort();
+ const tables=['emba_team_state','emba_team_record','emba_team_record_version','emba_team_conflict','emba_team_overlap','emba_team_record_tag','emba_team_change','emba_team_operation','emba_team_conflict_report','emba_team_event','emba_team_feed','emba_team_nearby','emba_team_name','emba_team_brief','emba_team_link','emba_team_write','emba_event_interest','emba_ask','emba_ask_option','emba_ask_answer'].sort();
  const {rows}=await t.db.query<{name:string}>("select tablename as name from pg_tables where schemaname='public' and tablename ~ '^emba_(team_|ask|event_interest)' order by 1");
  // Every team table is covered, including the two from the addressing migration and the club tables for events and asks.
  expect(rows.map(row=>row.name)).toEqual(tables);

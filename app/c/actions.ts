@@ -6,7 +6,8 @@ import { db } from '@/lib/db';
 import { CampusError } from '@/lib/campus/errors';
 import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
-import { cancelPlan, changePlan, postPlan, type PlanInput } from '@/lib/campus/plans';
+import { pickFace } from '@/lib/campus/people';
+import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
 import { campusViewer, mayUse, type CampusViewer } from '@/lib/campus/session';
 
@@ -69,12 +70,24 @@ export async function useCouponAction(rewardId: string): Promise<ActResult> {
     await markBuildingUsed(db(), viewer.personId, String(rewardId), viewer.campus);
   });
 }
+/** A person picks their face in the account card: one of the animals, or their own photo. */
+export async function faceAction(face: number): Promise<ActResult> {
+  return act(async viewer => { await pickFace(db(), viewer.personId, Number(face)); });
+}
 
-export type PlanState = { message: string };
+export type PlanState ={ message: string };
 const field = (data: FormData, key: string) => String(data.get(key) ?? '');
-const planOf = (data: FormData): PlanInput => ({ title: field(data, 'title'), starts: field(data, 'starts'), ends: field(data, 'ends') || null, place: field(data, 'place'), about: field(data, 'about') });
+const planOf = (data: FormData): PlanInput => ({ title: field(data, 'title'), starts: field(data, 'starts'), ends: field(data, 'ends') || null, place: field(data, 'place'), about: field(data, 'about'), link: field(data, 'link') || null });
 
-/** Posts a plan from the post form, then returns to the screen. */
+/** "Fill in" on the post form: reads an event page into what the form should hold. Nothing is saved. */
+export async function readPlanLinkAction(slug: string, url: string): Promise<LinkFill> {
+  const viewer = await campusViewer();
+  if (!viewer) return { ok: false, message: 'Sign in to continue.' };
+  const campus = await findCampus(db(), String(slug));
+  if (!campus || !mayUse(viewer, campus)) return { ok: false, message: OTHER_SCHOOL };
+  return readPlanLink(campus, String(url).slice(0, 2000));
+}
+/** Posts a plan from the post form, then returns to the screen. A link the list already has counts the person in on that plan. */
 export async function postPlanAction(_previous: PlanState, data: FormData): Promise<PlanState> {
   const slug = field(data, 'campus'), campus = await findCampus(db(), slug);
   const result = await act(async viewer => {

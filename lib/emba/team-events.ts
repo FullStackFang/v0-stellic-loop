@@ -130,7 +130,11 @@ export type EventView={slug:string;name:string;
  /** Only a dated event has a share link. It names the event and grants nothing. */
  shareUrl:string|null;
  /** Present on an idea or a plan only. */
- idea?:IdeaFacts};
+ idea?:IdeaFacts;
+ /** Present, and true, when the event came from a link or a feed that no longer lists it. Loop keeps the event. */
+ sourceGone?:true;
+ /** Present, and true, when the caller added this event by link or from the nearby list. */
+ youLinked?:true};
 /** The site's form of an event, with the id its manage controls need. */
 export type TeamEvent=EventView&{id:string};
 export type EventWrite=
@@ -151,15 +155,16 @@ export const upcoming=`e.archived_at is null and e.state in ('fixed','planned') 
 /** Events by id, in the order asked for. Interest counts current members only. */
 export async function viewEvents(q:Q,p:Principal,timezone:string,ids:string[]):Promise<TeamEvent[]> {
  if(!ids.length)return [];
- type Extra={token:string;state:'fixed'|IdeaFacts['state'];needed:number|null;youProposed:boolean;offeredDays:string[];day:string|null;askNumber:number|null;askOpen:boolean|null};
+ type Extra={gone:boolean;mine:boolean;token:string;state:'fixed'|IdeaFacts['state'];needed:number|null;youProposed:boolean;offeredDays:string[];day:string|null;askNumber:number|null;askOpen:boolean|null};
  const {rows}=await q.query<Omit<TeamEvent,'shareUrl'|'timezone'|'idea'>&Extra>(`select e.id,e.slug,e.name,e.starts_at as "startsAt",e.ends_at as "endsAt",${local('e.starts_at','$3::text')} as starts,${local('e.ends_at','$3::text')} as ends,
-   e.place,e.url,e.note,e.archived_at is not null as archived,e.share_token as token,
+   e.place,e.url,e.note,e.archived_at is not null as archived,e.share_token as token,e.source_gone_at is not null as gone,(e.source is not null and coalesce(e.created_by=$2,false)) as mine,
    case when ${lapsedSql()} then 'lapsed' else e.state end as state,e.needed::int as needed,coalesce(e.proposer_id=$2,false) as "youProposed",to_char(e.day,'YYYY-MM-DD') as day,
    array(select to_char(d,'YYYY-MM-DD') from unnest(e.offered_days) d order by d) as "offeredDays",k.number as "askNumber",(k.closed_at is null and k.closes_at>clock_timestamp()) as "askOpen",
    (select count(*) from emba_event_interest i where i.event_id=e.id and ${posts('i.person_id','e.org_id','e.loop_id')})::int as interested,
    exists(select 1 from emba_event_interest i where i.event_id=e.id and i.person_id=$2 and ${posts('i.person_id','e.org_id','e.loop_id')}) as "youAreInterested"
   from emba_team_event e left join emba_ask k on k.id=e.day_ask_id where e.id=any($1::uuid[])`,[ids,p.personId,timezone]);
- return ids.flatMap(id=>rows.filter(row=>row.id===id)).map(({token,state,needed,youProposed,offeredDays,day,askNumber,askOpen,...row})=>({...row,timezone,shareUrl:row.startsAt&&!row.archived?appUrl(`/e/${token}`):null,
+ return ids.flatMap(id=>rows.filter(row=>row.id===id)).map(({gone,mine,token,state,needed,youProposed,offeredDays,day,askNumber,askOpen,...row})=>({...row,timezone,shareUrl:row.startsAt&&!row.archived?appUrl(`/e/${token}`):null,
+  ...(gone?{sourceGone:true as const}:{}),...(mine?{youLinked:true as const}:{}),
   ...(state==='fixed'||needed===null?{}:{idea:{state,needed,needs:Math.max(0,needed-row.interested),youProposed,offeredDays,day,dayAsk:askNumber===null?null:{number:askNumber,open:Boolean(askOpen)}}})}));
 }
 /** The assistant-safe form: the same event without its id. */
@@ -185,7 +190,7 @@ const nameFree=async(ctx:WriteCtx,slug:string)=>{
 };
 
 /** Refuses when the team already has 50 upcoming events. */
-const room=async(ctx:WriteCtx)=>{
+export const room=async(ctx:WriteCtx)=>{
  const {rows:[live]}=await ctx.q.query<{n:number}>(`select count(*)::int as n from emba_team_event e where e.org_id=$1 and e.loop_id=$2 and ${upcoming}`,[ctx.team.orgId,ctx.team.loopId]);
  if(live.n>=EVENTS.upcoming)stop<Declined>({saved:false,reason:'cap',cap:'upcoming_events'});
 };
@@ -203,10 +208,10 @@ async function locate(db:Db,p:Principal,data:Named):Promise<Target> {
  if(data.loopId===undefined||data.event===undefined)throw new ZodError([]);
  return {team:{orgId:data.orgId,loopId:data.loopId},slug:data.event};
 }
-type Held={id:string;slug:string;name:string;startsAt:string|null;endsAt:string|null;place:string|null;url:string|null;note:string|null;archived:boolean;invites:boolean};
+type Held={id:string;slug:string;name:string;startsAt:string|null;endsAt:string|null;place:string|null;url:string|null;note:string|null;archived:boolean;invites:boolean;sourced:boolean};
 /** Locks the event inside the team. A tag names only an event that is not archived. An idea or a plan is not managed here: its proposer changes it as an idea. */
 async function held(ctx:WriteCtx,target:Target):Promise<Held> {
- const {rows:[row]}=await ctx.q.query<Held>(`select id,slug,name,starts_at as "startsAt",ends_at as "endsAt",place,url,note,archived_at is not null as archived,invites_at is not null as invites from emba_team_event
+ const {rows:[row]}=await ctx.q.query<Held>(`select id,slug,name,starts_at as "startsAt",ends_at as "endsAt",place,url,note,archived_at is not null as archived,invites_at is not null as invites,source is not null as sourced from emba_team_event
   where org_id=$1 and loop_id=$2 and state='fixed' and (id=$3::uuid or ($3::uuid is null and slug=$4 and archived_at is null)) for update`,[ctx.team.orgId,ctx.team.loopId,target.id??null,target.slug??null]);
  if(!row){
   if(target.id)throw new EmbaError('forbidden');
@@ -245,7 +250,9 @@ async function change(db:Db,p:Principal,input:unknown):Promise<Done|Declined|Ref
   const same=(key:keyof typeof next)=>key==='startsAt'||key==='endsAt'?(next[key]===null?row[key]===null:row[key]!==null&&Date.parse(next[key]!)===Date.parse(row[key]!)):next[key]===row[key];
   const changed=(Object.keys(next) as (keyof typeof next)[]).filter(key=>!same(key));
   if(!changed.length)return done(ctx,row.id,false);
-  await ctx.q.query('update emba_team_event set slug=$2,name=$3,starts_at=$4,ends_at=$5,place=$6,url=$7,note=$8 where id=$1',[row.id,next.slug,next.name,next.startsAt,next.endsAt,next.place,next.url,next.note]);
+  // An event that came from a link or a feed stays as an owner or organizer set it: Loop stops following its source.
+  const byHand=row.sourced&&changed.some(key=>key==='name'||key==='startsAt'||key==='endsAt'||key==='place');
+  await ctx.q.query('update emba_team_event set slug=$2,name=$3,starts_at=$4,ends_at=$5,place=$6,url=$7,note=$8,source_follow=source_follow and not $9::boolean where id=$1',[row.id,next.slug,next.name,next.startsAt,next.endsAt,next.place,next.url,next.note,byHand]);
   // What is new reports a change of time or place. A new name or note is seen on the event itself.
   if(changed.some(key=>key==='startsAt'||key==='endsAt'||key==='place')){
    await ctx.log('event_changed',{eventId:row.id});
@@ -266,6 +273,34 @@ async function archive(db:Db,p:Principal,input:unknown):Promise<Done|Declined|Re
   if(row.invites)await cancelAll(ctx.q,ctx.team,row.id);
   return done(ctx,row.id,true);
  });
+}
+
+/**
+ * Loop's own change to an event that follows its source (design D6 of
+ * loop-group-event-links): what the source shows now, or that it no longer
+ * lists the event. A changed start, end or place enters the change sequence
+ * with no actor and moves invites already sent. A source that is gone labels
+ * the event and archives nothing. An event changed by hand is left alone.
+ * The caller holds the team's lock. Returns true when the event's facts changed.
+ */
+export async function followSource(q:Q,team:Scope,eventId:string,seen:{startsAt:string;endsAt:string|null;place:string|null}|'gone'):Promise<boolean> {
+ const {rows:[row]}=await q.query<{startsAt:string|null;endsAt:string|null;place:string|null;invites:boolean;timezone:string}>(`select e.starts_at as "startsAt",e.ends_at as "endsAt",e.place,e.invites_at is not null as invites,
+   coalesce((select s.timezone from emba_team_state s where s.org_id=e.org_id and s.loop_id=e.loop_id),'UTC') as timezone
+  from emba_team_event e where e.org_id=$1 and e.loop_id=$2 and e.id=$3 and e.source is not null and e.source_follow and e.archived_at is null and e.state='fixed' for update`,[team.orgId,team.loopId,eventId]);
+ if(!row)return false;
+ if(seen==='gone'){
+  await q.query('update emba_team_event set source_read_at=clock_timestamp(),source_gone_at=coalesce(source_gone_at,clock_timestamp()) where id=$1',[eventId]);
+  return false;
+ }
+ const {rows:[at]}=await q.query<{s:string;e:string|null}>(`select ${instant(1,3)} as s,${instant(2,3)} as e`,[seen.startsAt,seen.endsAt,row.timezone]);
+ const end=at.e&&Date.parse(at.e)>=Date.parse(at.s)?at.e:null;
+ const sameTime=(a:string|null,b:string|null)=>a===null?b===null:b!==null&&Date.parse(a)===Date.parse(b);
+ const changed=!sameTime(at.s,row.startsAt)||!sameTime(end,row.endsAt)||seen.place!==row.place;
+ await q.query('update emba_team_event set starts_at=$2,ends_at=$3,place=$4,source_read_at=clock_timestamp(),source_gone_at=null where id=$1',[eventId,at.s,end,seen.place]);
+ if(!changed)return false;
+ await logChange(q,team,'event_changed',{eventId},null,null);
+ if(row.invites)await inviteAll(q,team,eventId);
+ return true;
 }
 
 /** Adds an event. Owners and organizers, on the site or through an assistant with a read-and-write grant. */
