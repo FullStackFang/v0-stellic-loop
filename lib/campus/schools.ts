@@ -7,5 +7,11 @@ export function schoolOfEmail<T extends { domains: readonly string[] }>(schools:
   return schools.find(school => school.domains.some(own => domain === own || domain.endsWith(`.${own}`))) ?? null;
 }
 
-/** With LOOP_FRONT=campus the campus screen is the front door and the groups site opens for the admin only (design D17). */
-export const frontIsCampus = () => process.env.LOOP_FRONT === 'campus';
+/**
+ * The campus screen is the front door and the groups site opens for the admin only (design D17). That is how the site
+ * runs unless LOOP_FRONT=groups is set, which puts the groups site back in front for everyone.
+ */
+export const frontIsCampus = () => process.env.LOOP_FRONT !== 'groups';
+
+/** The campus shown to a signed-in person whose email is at none of the schools. */
+export const DEFAULT_CAMPUS = 'cornell';

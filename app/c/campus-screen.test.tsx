@@ -260,12 +260,14 @@ describe('the pages', () => {
     expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
     expect(await withPortalTestSession(nyu, async () => imInAction((await world()).blitz))).toMatchObject({ ok: false, message: expect.stringContaining("another school's list") });
   });
-  it('a person at no school is told which schools Loop is at, and the admin opens any campus', async () => {
+  it('a person at no school is shown the default campus, and the admin opens any campus', async () => {
     await world();
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is at CUNY, Columbia, Cornell and NYU for now.');
-    expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Post a plan' })).toBeInTheDocument();
+    // Another school's address sends them back to the default one.
+    await expect(withPortalTestSession(outsider, () => page('columbia'))).rejects.toEqual(sentTo('/c/cornell'));
     cleanup();
     vi.stubEnv('LOOP_ADMIN', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('columbia')));

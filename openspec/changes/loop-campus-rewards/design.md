@@ -80,7 +80,7 @@ A person's level and their progress on building rewards are not stored. They are
 | `/c/[campus]/post` | Post a plan | Needed |
 | `/o/[token]` | The share link: This week with that event's panel open and "Join" | Needed to join |
 | `/c/admin` | Founder: campuses, feeds, places, listings, rewards | Admin (D17) |
-| `/` | When `LOOP_FRONT=campus`: the sign-in door for a signed-out visitor, This week at their own school for a signed-in person (D21) | Not needed to see the door |
+| `/` | By default (founder, November 17: on by default; `LOOP_FRONT=groups` turns it off): the sign-in door for a signed-out visitor, This week at their own school for a signed-in person (D21) | Not needed to see the door |
 
 `proxy.ts` runs Clerk on `/c` and `/o`. Pages render for signed-out visitors; every action requires a signed-in person.
 
@@ -206,7 +206,9 @@ Who sees what in the top bar when the groups site is admin only is an open quest
 
 ### D17. The current site is tabled behind the admin (**Founder:** admin only, fully; only the founder is admin)
 
-When `LOOP_FRONT=campus`:
+**Changed by the founder on November 17: this is on by default.** It was first built behind `LOOP_FRONT=campus`. Now it applies unless `LOOP_FRONT=groups` is set, which is the way back.
+
+By default:
 
 - `/` shows the campus screen.
 - The groups site opens only for the admin: `/groups` and everything under it, including the "How we got here" archive, plus the other pages of the current site that lead into groups (`/emba`, `/e/`, `/a/`, and any others found when the task is done; the task lists them before gating).
@@ -240,7 +242,7 @@ Not gated, in both states:
 
 Not gated and not decided: `/b`, `/p`, `/trip`, `/trips` and `/api/trip` (the cohort trip board). They do not lead into groups, so they were left alone. See Open Questions.
 
-When `LOOP_FRONT` is not set, everything behaves as it does today and the campus screen is reachable at `/c/[campus]` only. That is both how the work is built without disturbing anyone and how the switch is undone.
+When `LOOP_FRONT=groups` is set, everything behaves as it did before this change and the campus screen is reachable at `/c/[campus]` only. That is both how the work is built without disturbing anyone and how the switch is undone.
 
 What this costs: every current member, including the founder's Team 1 teammates, loses their group pages on the site the moment the flag is turned on. Share links to team events and asks stop opening for them. Their assistants' connection to Loop keeps working by default (Open Questions).
 
@@ -364,9 +366,8 @@ Known and left, for the founder to weigh:
 ## Migration Plan
 
 1. One additive migration with new tables only. The founder applies it by hand on the hosted database.
-2. Build and demo at `/c/[campus]` with `LOOP_FRONT` unset. Nothing changes for current users.
-3. When the founder is ready: set `LOOP_ADMIN` and `LOOP_FRONT=campus` in the hosting dashboard and redeploy.
-4. To go back: unset `LOOP_FRONT` and redeploy. The tables can stay.
+2. The campus screen is the front door as soon as this is deployed (founder, November 17). So before deploying: apply the migration, and set `LOOP_ADMIN` in the hosting dashboard, or nobody can open the groups site.
+3. To go back: set `LOOP_FRONT=groups` and redeploy. The tables can stay.
 
 ## Open Questions
 
@@ -375,7 +376,7 @@ Known and left, for the founder to weigh:
 - Are the level names and numbers right (Member 0, Regular 5, Insider 15)?
 - Which exact colours: the pick from the mockup options, including the action colour.
 - For each of the four schools: is its events feed readable without a login, and which Luma calendars belong on it? Not every school uses CampusGroups (NYU and Columbia may use another system); to be checked per school, and the "All of CampusGroups" label would then carry that school's source name.
-- Should a person with no school email be let in at all (a visitor, a local business owner)?
+- A person with no school email is let in (founder, November 17) and shown a default campus. My call: that campus is Cornell, and they can use it like anyone there. Is Cornell the right default?
 - Walk times on tickets: leave out, or ask for the student's location?
 - Should an invite also send an email?
 - Should the demo pages under `/demo` stay public?

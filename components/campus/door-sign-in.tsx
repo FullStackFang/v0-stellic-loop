@@ -17,14 +17,14 @@ const ink = '#0d2747', paper = '#fdfefb', mute = '#5d6570';
 export function DoorSignIn({ schools, routing, configured }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean }) {
   const [slug, setSlug] = useState(schools[0]?.slug ?? ''), [seen, setSeen] = useState('');
   const school = schools.find(each => each.slug === slug) ?? schools[0];
-  const names = schools.map(each => each.name).join(', ');
+  const names = schools.map(each => each.name).join(', ').replace(/, ([^,]*)$/, ' or $1');
   // The email field belongs to the sign-in form; what is typed in it reaches this card as it bubbles up.
   const typed = (event: FormEvent<HTMLDivElement>) => {
     const field = event.target as HTMLInputElement;
     if (field.tagName !== 'INPUT' || (field.name !== 'identifier' && field.type !== 'email')) return;
     const domain = (field.value.split('@')[1] ?? '').trim().toLowerCase(), hit = schoolOfEmail(schools, field.value);
     if (hit) { setSlug(hit.slug); setSeen(`${domain} is ${hit.name}.${hit.slug === slug ? '' : ' Switched for you.'}`); }
-    else setSeen(domain.includes('.') ? `Loop is at ${names} for now. Use your school email.` : '');
+    else setSeen(domain.includes('.') ? `Not an email at ${names}. You can still sign in with it.` : '');
   };
   if (!school) return null;
   const label = { fontSize: 0, '&::before': { content: `"${school.name} email"`, fontSize: '13px', fontWeight: 600 } };
@@ -47,6 +47,6 @@ export function DoorSignIn({ schools, routing, configured }: { schools: School[]
     {configured ? (routing === 'path' ? <SignIn routing="path" path="/sign-in" {...shared} /> : <SignIn routing="hash" {...shared} />)
       : <p role="status">Sign-in is not configured for this deployment.</p>}
     <p className="seen" aria-live="polite">{seen}</p>
-    <p className="fine">Use your {school.name} email ({school.domains.map(domain => `@${domain}`).join(', ')}). Your school is the one your email belongs to.</p>
+    <p className="fine">With your {school.name} email ({school.domains.map(domain => `@${domain}`).join(', ')}) you see {school.name}. Your school is the one your email belongs to; any other email signs in too.</p>
   </div>;
 }

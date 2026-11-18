@@ -81,8 +81,8 @@ Everything through section 6 is built with `LOOP_FRONT` unset, at `/c/[campus]`,
 
 - [x] 8.1 Update the privacy page: what a check-in records, that people who share a group or have been out together see each other's first name and photo on events, and that "Register me" is kept in Loop only.
 - [x] 8.2 Check the screen at 1440 by 900, 1400 by 760 and phone width, closed and opened. Check type on the field colour for contrast.
-- [ ] 8.3 Full suite green (`--maxWorkers=3`), `tsc --noEmit`, then one production build with no dev server running.
+- [x] 8.3 Full suite green (`--maxWorkers=3`), `tsc --noEmit`, then one production build with no dev server running.
 - [ ] 8.4 Founder: choose phone or email sign-in for students in the Clerk dashboard.
-- [ ] 8.5 Founder: tell Team 1 that their group pages on the site are going away, then set `LOOP_ADMIN` and `LOOP_FRONT=campus` in the hosting dashboard and redeploy. To undo: remove `LOOP_FRONT` and redeploy.
+- [ ] 8.5 Founder: tell Team 1 that their group pages on the site are going away, then set `LOOP_ADMIN` in the hosting dashboard and deploy (the campus front door is on by default). To undo: set `LOOP_FRONT=groups` and redeploy.
 - [ ] 8.6 Walk the whole flow on the deployed site: signed out to reward used, posting a plan, search, and the admin's way in.
 - [ ] 8.7 Founder: enter the first three real rewards and send the link to the first three groups.

@@ -49,13 +49,20 @@ describe('the proxy', () => {
 });
 
 describe('the groups site asks who is signed in', () => {
-  it('with the flag unset, a member is who they are', async () => {
+  it('the campus is in front unless LOOP_FRONT=groups says otherwise', () => {
+    expect(frontIsCampus()).toBe(false);   // the tests of the groups site run with LOOP_FRONT=groups (vitest.setup.ts)
+    vi.stubEnv('LOOP_FRONT', undefined);
+    expect(frontIsCampus()).toBe(true);
+    vi.stubEnv('LOOP_FRONT', 'campus');
+    expect(frontIsCampus()).toBe(true);
+  });
+  it('with the groups site in front, a member is who they are', async () => {
     expect(frontIsCampus()).toBe(false);
     expect(await withPortalTestSession(who(), () => getPortalPrincipal())).toMatchObject({ subject: 'user_student' });
     expect(await withPortalTestSession(who(), () => closedToCaller())).toBe(false);
   });
-  it('with the flag on, anyone but the admin is no one to it, and still someone to the campus screen', async () => {
-    vi.stubEnv('LOOP_FRONT', 'campus'); vi.stubEnv('LOOP_ADMIN', 'founder@cornell.edu');
+  it('by default, anyone but the admin is no one to it, and still someone to the campus screen', async () => {
+    vi.stubEnv('LOOP_FRONT', undefined); vi.stubEnv('LOOP_ADMIN', 'founder@cornell.edu');
     expect(await withPortalTestSession(who(), () => getPortalPrincipal())).toBeNull();
     expect(await withPortalTestSession(who(), () => getSignedInPrincipal())).toMatchObject({ subject: 'user_student' });
     expect(await withPortalTestSession(who(), () => closedToCaller())).toBe(true);
@@ -86,17 +93,19 @@ describe('a person belongs to the school of their email', () => {
     expect((await campusOf(t.db, { personId: id, verifiedEmail: 'noor@cornell.edu' }))?.slug).toBe('nyu');
     expect((await t.db.query('select 1 from campus_person where person_id=$1', [id])).rows).toHaveLength(1);
   });
-  it('does not place a person whose email is at no school; the admin still opens any campus', async () => {
+  it('does not place a person whose email is at no school, and shows them the default campus; the admin opens any', async () => {
     const { id } = await makePerson(t.db, 'Omar'), omar = who({ personId: id, subject: 'user_omar', verifiedEmail: 'omar@gmail.com' });
     const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
     const viewer = (await withPortalTestSession(omar, () => campusViewer()))!;
-    expect(viewer).toMatchObject({ admin: false, campus: null });
-    expect(mayUse(viewer, cornell)).toBe(false);
+    expect(viewer).toMatchObject({ admin: false, campus: { slug: 'cornell' } });
+    expect(mayUse(viewer, cornell)).toBe(true);
+    expect(mayUse(viewer, (await listCampuses(t.db)).find(campus => campus.slug === 'nyu')!)).toBe(false);
     expect((await t.db.query('select 1 from campus_person')).rows).toHaveLength(0);
     vi.stubEnv('LOOP_ADMIN', 'user_omar');
     const admin = (await withPortalTestSession(omar, () => campusViewer()))!;
     expect(admin.admin).toBe(true);
     expect(mayUse(admin, cornell)).toBe(true);
+    expect(mayUse(admin, (await listCampuses(t.db)).find(campus => campus.slug === 'nyu')!)).toBe(true);
   });
   it('shows group names in the top bar only to someone who can open them', async () => {
     const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });

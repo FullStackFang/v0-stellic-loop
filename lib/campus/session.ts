@@ -5,21 +5,22 @@ import type { Principal } from '../emba/access';
 import { groupHref, treeOrder } from '../emba/group-path';
 import { getSignedInPrincipal, portalGroupTree } from '../emba/portal-session';
 import { isAdmin } from './admin';
-import type { Campus } from './listings';
+import { findCampus, type Campus } from './listings';
 import { campusOf } from './people';
-import { frontIsCampus } from './schools';
+import { DEFAULT_CAMPUS, frontIsCampus } from './schools';
 
 export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null };
 
 /**
  * Who is looking at the campus screen: the signed-in person, whether they are the admin, and the campus they belong
- * to (placed at their school the first time they are seen). Null when signed out. Checked once per page view; an
+ * to (placed at their school the first time they are seen; someone whose email is at no school is not placed and is
+ * shown the default campus). Null when signed out. Checked once per page view; an
  * action is not a page view and checks afresh.
  */
 export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
   const principal = await getSignedInPrincipal().catch(() => null);
   if (!principal) return null;
-  return { principal, personId: principal.personId, admin: isAdmin(principal), campus: await campusOf(db(), principal) };
+  return { principal, personId: principal.personId, admin: isAdmin(principal), campus: await campusOf(db(), principal) ?? await findCampus(db(), DEFAULT_CAMPUS) };
 });
 
 /** Whether this viewer may use a campus's screen: it is their own school's, or they are the admin, who may open any. */

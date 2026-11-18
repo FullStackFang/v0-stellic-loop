@@ -50,7 +50,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       <nav className="cs-links"><Link href={`/c/${campus.slug}`}>This week</Link><Link href="/c/admin" aria-current="page">Admin</Link></nav>
       <div className="cs-nav-end"><Link className="cs-btn sm" href="/groups">The groups site</Link><Link className="cs-btn sm" href="/groups/archive">How we got here</Link></div></header>
     <main className="cs-adm">
-      <header><h1>Admin</h1><p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is still open to its members: LOOP_FRONT is not set.'}</p></header>
+      <header><h1>Admin</h1><p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is open to its members again: LOOP_FRONT is set to groups.'}</p></header>
       {said && <p className="cs-alert wide" role="status" style={{ gridColumn: '1 / -1', margin: 0 }}>{said}</p>}
 
       <section className="wide"><h2>Campus</h2>

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: The campus screen is the front door
-When the environment flag `LOOP_FRONT` is set to `campus`, the system SHALL make the campus app the front door at `/`: a signed-out visitor sees the sign-in door, and a signed-in person is sent to the campus screen of their own school. When the flag is not set, `/` SHALL behave as it does today.
+Unless the environment flag `LOOP_FRONT` is set to `groups` (the way back), the system SHALL make the campus app the front door at `/`: a signed-out visitor sees the sign-in door, and a signed-in person is sent to the campus screen of their own school. When the flag is not set, `/` SHALL behave as it does today.
 
 #### Scenario: Flag on
 - **WHEN** the flag is on and a signed-in person opens `/`

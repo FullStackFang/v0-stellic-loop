@@ -35,16 +35,13 @@ describe('the door', () => {
     expect(screen.getByRole('combobox', { name: 'School' })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Sign-in is not configured');
   });
-  it('signed in, goes on to the person\'s own school; the admin from no school to the first campus', async () => {
+  it('signed in, goes on to the person\'s own school; anyone from no school to the default campus', async () => {
     await expect(withPortalTestSession(await signedIn('Noor', 'noor@stern.nyu.edu'), () => FrontDoor())).rejects.toEqual(sentTo('/c/nyu'));
     vi.stubEnv('LOOP_ADMIN', 'user_fay');
-    await expect(withPortalTestSession(await signedIn('Fay', 'fay@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cuny'));
+    await expect(withPortalTestSession(await signedIn('Fay', 'fay@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell'));
   });
-  it('signed in from no school, is told which schools Loop is at', async () => {
-    const omar = await signedIn('Omar', 'omar@gmail.com');
-    render(await withPortalTestSession(omar, async () => drawn(FrontDoor())));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is at CUNY, Columbia, Cornell and NYU for now.');
-    expect(screen.queryByRole('combobox', { name: 'School' })).toBeNull();
+  it('signed in from no school, goes on to the default campus', async () => {
+    await expect(withPortalTestSession(await signedIn('Omar', 'omar@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell'));
   });
   it('/sign-in is the same door', async () => {
     render(await DoorPage({ routing: 'path' }));
@@ -62,14 +59,14 @@ describe('the school menu on the sign-in card', () => {
     expect(screen.getByRole('combobox', { name: 'School' })).toHaveValue('nyu');
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Sign in at NYU');
     expect(screen.getByText('stern.nyu.edu is NYU. Switched for you.')).toBeInTheDocument();
-    expect(screen.getByText(/Use your NYU email \(@nyu.edu\)/)).toBeInTheDocument();
+    expect(screen.getByText(/With your NYU email \(@nyu.edu\) you see NYU/)).toBeInTheDocument();
   });
-  it('says where Loop is for an address from no school, and stays quiet until there is an address', () => {
+  it('says an address is from no school and that it still signs in, and stays quiet until there is an address', () => {
     render(<DoorSignIn schools={schools} routing="hash" configured />);
     type('some');
-    expect(screen.queryByText(/for now/)).toBeNull();
+    expect(screen.queryByText(/Not an email at/)).toBeNull();
     type('someone@gmail.com');
-    expect(screen.getByText('Loop is at Cornell, NYU for now. Use your school email.')).toBeInTheDocument();
+    expect(screen.getByText('Not an email at Cornell or NYU. You can still sign in with it.')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'School' })).toHaveValue('cornell');
   });
   it('can be set by hand', () => {
