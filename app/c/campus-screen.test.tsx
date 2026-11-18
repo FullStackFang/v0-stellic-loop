@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { flushSync } from 'react-dom';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
@@ -145,11 +146,20 @@ describe('who sees whom', () => {
     URL.createObjectURL = vi.fn(() => 'blob:lili'); URL.revokeObjectURL = vi.fn();
     let own = '';
     await withPortalTestSession(ana, async () => {
-      await show(as(ana));
+      const shown = await show(as(ana));
       fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
       const card = within(screen.getByRole('dialog', { name: 'Your level' }));
       fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
       expect(card.queryByRole('button', { name: 'Your own animal' })).toBeNull();
+      // In a browser the card is redrawn between its own handling of a click and the page's, so the "+" is gone from
+      // the card by the time the click reaches the page. The card must not take that for a click outside it.
+      const redraw = () => flushSync(() => {});
+      shown.container.addEventListener('click', redraw);
+      card.getByRole('button', { name: 'Create your own' }).click();
+      expect(screen.getByRole('dialog', { name: 'Your level' })).toBeInTheDocument();
+      card.getByRole('button', { name: 'Back' }).click();
+      expect(screen.getByRole('dialog', { name: 'Your level' })).toBeInTheDocument();
+      shown.container.removeEventListener('click', redraw);
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
       expect(card.getByText('Premium')).toBeInTheDocument();
       expect(card.getByText('$3 a month')).toBeInTheDocument();

@@ -220,7 +220,8 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
   const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : face === CUSTOM ? own : animal(face) }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   useEffect(() => {
     if (!open) return;
-    const away = (event: MouseEvent) => { if (!box.current?.contains(event.target as Node)) setOpen(false); }, key = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
+    // By the path the click took, not by where its target is now: a button that swaps the card's contents is gone from the card by then.
+    const away = (event: MouseEvent) => { if (box.current && !event.composedPath().includes(box.current)) setOpen(false); }, key = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
     document.addEventListener('click', away); document.addEventListener('keydown', key);
     return () => { document.removeEventListener('click', away); document.removeEventListener('keydown', key); };
   }, [open]);
