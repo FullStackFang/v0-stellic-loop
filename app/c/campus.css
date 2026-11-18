@@ -422,28 +422,40 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-post-side { display: grid; gap: 16px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
 .cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
 .cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
-.cs-schools { display: flex; flex-wrap: wrap; gap: 8px; }
+/* The admin page: one column, one section at a time, rows on hairlines. Quiet on purpose: it is a tool for one person. */
+.cs-adm { width: 100%; max-width: 860px; margin: 0 auto; padding: 36px 24px 96px; }
+.cs-adm > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; } .cs-adm h1 { font-size: 34px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; }
+.cs-adm > header nav, .cs-adm-tabs { display: flex; gap: 6px; flex-wrap: wrap; } .cs-adm > header nav a, .cs-adm-tabs a { display: inline-flex; align-items: center; border-radius: 99px; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 22%, transparent); color: var(--cs-ink); white-space: nowrap; transition: background .15s, color .15s; height: 28px; padding: 0 12px; font-size: 13.5px; font-weight: 560; }
+.cs-adm > header nav a:hover, .cs-adm-tabs a:hover { background: color-mix(in oklch, var(--cs-ink) 8%, transparent); } .cs-adm > header nav a[aria-current], .cs-adm-tabs a[aria-current] { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; font-weight: 640; }
+.cs-adm-tabs { margin-top: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--cs-line); }
+.cs-adm-tabs a { height: 36px; padding: 0 16px; font-size: 15px; }
+.cs-adm-said { margin-top: 20px; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 580; background: color-mix(in oklch, var(--cs-field) 30%, var(--cs-paper)); animation: cs-in .35s var(--cs-expo); }
+.cs-adm section { margin-top: 26px; } .cs-adm h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.cs-adm-lede, .cs-adm-foot { max-width: 64ch; font-size: 14px; line-height: 1.5; color: var(--cs-mute); } .cs-adm-foot { margin-top: 56px; font-size: 13px; }
+.cs-adm button:not(.cs-btn), .cs-adm summary > i, .cs-adm section > details > summary { display: inline-flex; align-items: center; border-radius: 99px; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 22%, transparent); color: var(--cs-ink); white-space: nowrap; transition: background .15s, color .15s; height: 28px; padding: 0 12px; font-size: 13px; font-weight: 600; font-style: normal; } .cs-adm button:not(.cs-btn):hover, .cs-adm summary:hover > i, .cs-adm section > details > summary:hover { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
+.cs-adm-rows { margin-top: 18px; } .cs-adm-rows > li { display: flex; align-items: baseline; gap: 6px 22px; padding: 15px 0; border-top: 1px solid var(--cs-line); } .cs-adm-rows > li:last-child { border-bottom: 1px solid var(--cs-line); }
+.cs-adm-rows > li > div, .cs-adm-rows > li > details { flex: 1; min-width: 0; } .cs-adm-rows b { display: block; font-size: 15.5px; font-weight: 640; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.cs-adm-rows span { display: block; font-size: 13.5px; line-height: 1.45; color: var(--cs-mute); overflow-wrap: anywhere; } .cs-adm-rows li.off b { color: var(--cs-mute); font-weight: 540; }
+.cs-adm-rows .words { display: flex; align-items: baseline; gap: 14px; margin-top: 4px; } .cs-adm .cs-adm-rows .words input { flex: 1; height: 28px; padding: 0; border-radius: 0; font-size: 13.5px; background: none; box-shadow: inset 0 -1px 0 var(--cs-line); } .cs-adm .cs-adm-rows .words input:focus { outline: 0; box-shadow: inset 0 -1.5px 0 var(--cs-ink); }
+.cs-adm-rows .words button { opacity: 0; transition: opacity .15s; } .cs-adm-rows .words:focus-within button, .cs-adm-rows li:hover .words button { opacity: 1; }
+.cs-adm-rows .made { display: flex; gap: 6px; flex: none; } .cs-adm-rows .made img { width: 44px; height: 44px; object-fit: contain; }
+.cs-adm details > summary { cursor: pointer; list-style: none; } .cs-adm details > summary::-webkit-details-marker { display: none; }
+.cs-adm section > details { margin-top: 18px; } .cs-adm section > details + details { margin-top: 10px; } .cs-adm section > details > summary { gap: 8px; height: 34px; padding: 0 16px 0 13px; font-size: 14px; }
+.cs-adm-rows summary { display: flex; align-items: baseline; gap: 6px 22px; } .cs-adm-rows summary > div { flex: 1; min-width: 0; } .cs-adm-rows details[open] > summary > i { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
+.cs-adm section > details > summary::before { content: ""; width: 11px; height: 11px; background: linear-gradient(currentColor, currentColor) center / 100% 1.6px no-repeat, linear-gradient(currentColor, currentColor) center / 1.6px 100% no-repeat; transition: transform .25s var(--cs-expo); } .cs-adm section > details[open] > summary::before { transform: rotate(45deg); }
+.cs-adm-form { display: grid; gap: 14px; justify-items: start; max-width: 720px; margin-top: 16px; padding-bottom: 6px; animation: cs-in .3s var(--cs-expo); } .cs-adm-form > *, .cs-adm-form .three > * { width: 100%; } .cs-adm-form > .cs-btn { width: auto; }
+.cs-adm-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; } .cs-adm-form label small { font-weight: 480; color: var(--cs-mute); } .cs-adm .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.cs-adm input, .cs-adm select { height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px var(--cs-line); min-width: 0; } .cs-adm input:focus-visible, .cs-adm select:focus-visible { outline: 0; box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-adm input[readonly] { color: var(--cs-mute); background: none; }
+.cs-adm-find { display: flex; align-items: center; gap: 16px; } .cs-adm .cs-adm-find input { flex: 1; height: 44px; padding: 0 16px; border-radius: 99px; font-size: 15px; } .cs-adm-find + .cs-adm-lede { margin-top: 14px; }
+.cs-adm-shelf { margin-top: 30px; } .cs-adm-shelf h3 { display: flex; align-items: baseline; gap: 12px; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; } .cs-adm-shelf h3 small { font-size: 13.5px; font-weight: 480; letter-spacing: 0; color: var(--cs-mute); }
+.cs-adm-pets { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 20px 6px; margin-top: 14px; } .cs-adm-pets li { display: grid; justify-items: center; align-content: start; gap: 6px; min-width: 0; }
+.cs-adm-pets img { width: 68px; height: 68px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 7%, var(--cs-paper)); transition: transform .2s var(--cs-ease); } .cs-adm-pets li:hover img { transform: scale(1.1); }
+.cs-adm-pets form { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; } .cs-adm .cs-adm-pets button, .cs-adm .cs-adm-pets summary { display: inline-flex; align-items: center; border-radius: 99px; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 22%, transparent); color: var(--cs-ink); white-space: nowrap; transition: background .15s, color .15s; height: 22px; padding: 0 8px; font-size: 11.5px; font-weight: 580; color: var(--cs-mute); }
+.cs-adm .cs-adm-pets button:hover, .cs-adm .cs-adm-pets summary:hover { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
+.cs-adm-pets details { display: grid; justify-items: center; gap: 4px; } .cs-adm .cs-adm-pets details button { color: var(--cs-action); box-shadow: inset 0 0 0 1px var(--cs-action); }
+@media (prefers-reduced-motion: reduce) { .cs-adm-said, .cs-adm-form { animation: none; } }
 
 /* admin */
-.cs-adm { width: 100%; padding: 24px 32px 64px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; align-items: start; }
-.cs-adm > header { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; } .cs-adm > header h1 { font-size: 30px; font-weight: 660; letter-spacing: -0.03em; } .cs-adm > header p, .cs-adm section > p { color: var(--cs-mute); }
-.cs-adm section { min-width: 0; display: grid; gap: 10px; align-content: start; } .cs-adm section.wide { grid-column: 1 / -1; }
-.cs-adm h2 { font-size: 18px; font-weight: 680; } .cs-adm section > p { font-size: 14px; max-width: 64ch; }
-.cs-adm-asks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; } .cs-adm-asks li { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); min-width: 0; }
-.cs-adm-asks span { display: flex; flex-wrap: wrap; gap: 6px; min-height: 64px; } .cs-adm-asks img { width: 64px; height: 64px; object-fit: contain; }
-.cs-adm-pets { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; } .cs-adm-pets li { display: grid; grid-template-columns: 56px 1fr; gap: 4px 12px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); min-width: 0; }
-.cs-adm-pets img { grid-row: span 2; width: 56px; height: 56px; object-fit: contain; } .cs-adm-pets b { font-size: 13.5px; font-weight: 620; overflow-wrap: anywhere; }
-.cs-adm-pets form { display: flex; flex-wrap: wrap; gap: 4px; } .cs .cs-adm-pets form button[name=tier] { height: 26px; padding: 0 9px; border-radius: 99px; font-size: 12.5px; font-weight: 580; color: var(--cs-mute); box-shadow: inset 0 0 0 1px var(--cs-line); }
-.cs .cs-adm-pets form button[aria-pressed=true] { color: var(--cs-paper); background: var(--cs-ink); box-shadow: none; }
-.cs-adm .cs-adm-pets details { grid-column: 1 / -1; background: none; box-shadow: none; } .cs-adm .cs-adm-pets details[open] { box-shadow: none; } .cs-adm .cs-adm-pets summary { padding: 0; font-size: 12.5px; font-weight: 580; color: var(--cs-mute); } .cs-adm-pets details form { margin-top: 6px; } .cs-adm-asks b { font-size: 14px; font-weight: 620; overflow-wrap: anywhere; } .cs-adm-asks small { font-size: 12.5px; color: var(--cs-mute); }
-.cs-adm-list { display: grid; gap: 8px; } .cs-adm-list > li { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; padding: 11px 12px 11px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-field-shadow); }
-.cs-adm-list > li > div { min-width: 0; flex: 1 1 240px; } .cs-adm-list b { display: block; font-weight: 660; letter-spacing: -0.02em; overflow-wrap: anywhere; } .cs-adm-list span { font-size: 13.5px; color: var(--cs-mute); overflow-wrap: anywhere; }
-.cs-adm-list li.off { box-shadow: inset 0 0 0 1.5px var(--cs-line); background: none; }
-.cs-adm-list form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .cs-adm-list form.words { flex: 1 1 100%; } .cs-adm-list form.words input { flex: 1 1 260px; }
-.cs-adm details { border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); } .cs-adm details[open] { box-shadow: 3px 3px 0 var(--cs-field-shadow); }
-.cs-adm summary { cursor: pointer; padding: 11px 18px; font-weight: 620; } .cs-adm details .cs-form { box-shadow: none; padding-top: 4px; }
-.cs-adm input, .cs-adm select { height: 36px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); min-width: 0; }
-.cs-adm .cs-form .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 
 /* "Near you": the week on a map, one section of town at a time (components/campus/near.tsx). The map is the list:
    stamps for plans, a dial of times under it, and the plan that is on hands you its ticket. The look is a two-ink
@@ -544,7 +556,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; }
   .cs-deck { margin-right: 0; width: calc(100% - 120px); } .cs-dtab { transform: translate(calc(var(--k) * 38px), calc(var(--k) * 8px)) rotate(calc(var(--k) * 1.6deg)); }
   .cs-dtk-top h3 { font-size: 22px; } .cs-dtk-top .cs-tile { min-width: 60px; min-height: 60px; } .cs-dtk-stub strong { font-size: 21px; }
-  .cs-plain { padding: 24px 16px 48px; } .cs-adm { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 48px; } .cs-adm .cs-form .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); }
+  .cs-plain { padding: 24px 16px 48px; } .cs-adm { padding: 24px 16px 64px; } .cs-adm .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); } .cs-adm-rows > li { flex-wrap: wrap; }
   .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
   .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
   .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }

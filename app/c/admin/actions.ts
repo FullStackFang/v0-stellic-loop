@@ -35,7 +35,9 @@ async function admin(data: FormData, run: (campus: Campus) => Promise<string>): 
     said = `Not saved. ${error instanceof Error ? error.message.slice(0, 240) : 'Try again.'}`;
   }
   revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
-  redirect(`/c/admin?campus=${encodeURIComponent(campus?.slug ?? slug)}&said=${encodeURIComponent(said)}`);
+  // Back to the section the form was on.
+  const tab = text(data, 'tab');
+  redirect(`/c/admin?campus=${encodeURIComponent(campus?.slug ?? slug)}${/^[a-z]+$/.test(tab) ? `&tab=${tab}` : ''}&said=${encodeURIComponent(said)}`);
 }
 
 export async function addCampusAction(data: FormData): Promise<void> {

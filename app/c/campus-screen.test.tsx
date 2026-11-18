@@ -507,15 +507,25 @@ describe('the pages', () => {
     await expect(withPortalTestSession(ben, () => post(plan.id))).rejects.toMatchObject({ digest: expect.stringContaining('404') });
   });
   it('the admin page is for the admin alone', async () => {
-    const { ana } = await world(), admin = () => CampusAdminPage({ searchParams: Promise.resolve({ campus: 'cornell' }) });
+    const { ana } = await world(), admin = (tab?: string) => CampusAdminPage({ searchParams: Promise.resolve({ campus: 'cornell', tab }) });
     await expect(admin()).rejects.toEqual(sentTo('/sign-in?redirect_url=%2Fc%2Fadmin'));
-    await expect(withPortalTestSession(ana, admin)).rejects.toMatchObject({ digest: expect.stringContaining('404') });
+    await expect(withPortalTestSession(ana, () => admin())).rejects.toMatchObject({ digest: expect.stringContaining('404') });
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
-    render(await withPortalTestSession(ana, admin));
+    render(await withPortalTestSession(ana, () => admin()));
     expect(screen.getByRole('heading', { level: 1, name: 'Admin' })).toBeInTheDocument();
-    for (const section of ['Campus', 'Feeds', 'Places', 'Rewards', 'Events']) expect(screen.getByRole('heading', { level: 2, name: section })).toBeInTheDocument();
-    expect(screen.getByText(/Chess Club: Skip the door/)).toBeInTheDocument();
+    // One section at a time, events first; every form comes back to the section it is on.
+    expect(screen.getByRole('heading', { level: 2, name: 'Events' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Rewards' })).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Good-for words of Blitz night' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Animals' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
+    for (const [tab, section] of Object.entries({ rewards: 'Rewards', feeds: 'Feeds', places: 'Places', animals: 'Animals', premium: 'Premium', campus: 'Campus' })) {
+      cleanup(); render(await withPortalTestSession(ana, () => admin(tab)));
+      expect(screen.getByRole('heading', { level: 2, name: section })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: section })).toHaveAttribute('aria-current', 'page');
+      for (const field of document.querySelectorAll('input[name=tab]')) expect(field).toHaveValue(tab);
+      if (tab === 'rewards') expect(screen.getByText(/Chess Club: Skip the door/)).toBeInTheDocument();
+      if (tab === 'animals') { expect(screen.getByRole('heading', { level: 3, name: /^Core 36/ })).toBeInTheDocument(); expect(screen.getByRole('button', { name: 'Dachshund: move to Core' })).toBeInTheDocument(); }
+    }
   });
 });
 
@@ -549,5 +559,9 @@ it.skipIf(!process.env.PREVIEW_DIR)('previews', async () => {
   save('in-open', await campusScreen(t.db, cornell, as(ana), { photos }), cs);
   save('in-open-nomap', await campusScreen(t.db, cornell, as(ana), { photos }), blitz);
   save('in-initials', await campusScreen(t.db, cornell, as(ana, true), { photos: noPhotos }), run.id);
+  // The admin's page, one file for each of its sections.
+  vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
+  for (const tab of ['events', 'rewards', 'feeds', 'places', 'animals', 'premium', 'campus']) writeFileSync(`${process.env.PREVIEW_DIR}/admin-${tab}.html`,
+    `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>@font-face{font-family:Archivo;src:url(${font});font-weight:100 900;font-stretch:62% 125%}:root{--font-archivo:Archivo}body{margin:0}${css}</style></head><body>${renderToStaticMarkup(await withPortalTestSession(ana, () => CampusAdminPage({ searchParams: Promise.resolve({ campus: 'cornell', tab, said: tab === 'animals' ? 'Premium now: people who subscribed can pick it.' : undefined }) })))}</body></html>`);
   expect(zeb.personId).toBeTruthy();
 });
