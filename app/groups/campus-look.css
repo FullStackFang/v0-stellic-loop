@@ -1,0 +1,198 @@
+/* The groups pages in the campus look (public/demo/mockups-groups-bar.html, picked 2026-11-18).
+   Signed in, a groups page sits in .cs.gb under the campus bar, so the school's colours (app/c/campus.css, [data-kit]) reach it.
+   Part 1 points the old groups tokens (app/loop.css) at those colours, so every groups page follows the school.
+   Part 2 draws the team page (gt-): one wide ticket for the team, word tabs, each kind of record as the object it is, and days across. */
+
+/* ---------- 1. every groups page ---------- */
+.gb > .lp {
+  --canvas: var(--cs-page); --surface: var(--cs-paper); --sunk: color-mix(in oklab, var(--cs-field) 8%, var(--cs-paper));
+  --navy: var(--cs-ink); --ink-2: var(--cs-ink-2); --muted: var(--cs-mute);
+  --blue: var(--cs-action); --blue-press: var(--cs-action-deep); --plum: var(--cs-action);
+  --lime: var(--cs-field); --teal: var(--cs-ink); --aqua: var(--cs-field);
+  --pale-blue: color-mix(in oklab, var(--cs-field) 22%, var(--cs-paper)); --pale-plum: color-mix(in oklab, var(--cs-action) 10%, var(--cs-paper));
+  flex: 1; min-height: 0;
+}
+.gb .lp-main { margin-left: 0; padding-top: 14px; }
+.gb .lp-wrap:has(.gt) { max-width: none; }
+.gb .cs-nav .cs-face:not(.pet) { font-size: 11px; }
+/* On a phone the campus bar keeps only the open link. Here the way to every group stays too. */
+.gb .cs-links a:last-child { display: flex; }
+.gb-kits { margin-top: 0; padding-top: 0; border-top: 0; }
+.gb-account { padding: 10px 10px 0; }
+
+/* ---------- 2. the team page ---------- */
+.gt {
+  --field: var(--cs-field); --field-shadow: var(--cs-field-shadow); --ink: var(--cs-ink); --ink-2: var(--cs-ink-2); --action: var(--cs-action); --action-hover: var(--cs-action-hover);
+  --paper: var(--cs-paper); --page: var(--cs-page); --line: var(--cs-line); --mute: var(--cs-mute); --stub: var(--cs-stub); --on-field-2: var(--cs-on-field-2);
+  --wash: color-mix(in oklab, var(--field) 14%, var(--paper)); --dash: color-mix(in oklch, var(--ink) 55%, transparent);
+  --r: 22px 22px 22px 6px; --ease: cubic-bezier(.22, 1, .36, 1);
+  padding-top: 8px; font-size: 15px; letter-spacing: -0.012em; color: var(--ink);
+}
+.gt a { color: inherit; text-decoration: none; }
+.gt .lp-crumbs { margin-bottom: 10px; }
+
+/* A ticket: two parts with a tear line between them, a bite out of the edge at each end of the line, and a hard shadow.
+   --x is where the line is. The outer box carries the shadow, because the bites are cut with a mask. */
+.gt-tk { --cut: 9px; filter: drop-shadow(4px 4px 0 var(--cast, var(--field-shadow))); }
+.gt-tk > div { position: relative; display: grid; height: 100%; border-radius: var(--r); overflow: hidden; background: var(--paper);
+  -webkit-mask: radial-gradient(circle var(--cut) at var(--x) 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at var(--x) 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in;
+  mask: radial-gradient(circle var(--cut) at var(--x) 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at var(--x) 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.gt-tk > div::after { content: ''; position: absolute; left: calc(var(--x) - 1px); top: calc(var(--cut) + 5px); bottom: calc(var(--cut) + 5px); border-left: 2px dashed var(--dash); }
+
+/* the team: one wide ticket. The team on paper; where it stands on the stub, each part opening its section. */
+.gt-head { --x: calc(100% - var(--stubw)); --stubw: clamp(560px, 54%, 900px); --cut: 11px; filter: drop-shadow(5px 5px 0 var(--ink)); }
+.gt-head > div { grid-template-columns: minmax(0, 1fr) var(--stubw); }
+.gt-plate { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; padding: 16px 28px 16px 20px; }
+.gt-tile { display: grid; justify-items: center; align-content: center; line-height: 1; width: 68px; height: 68px; border-radius: 14px 14px 14px 4px; background: var(--field); --lime: var(--action); }
+.gt-tile small { font-size: 12.5px; font-weight: 620; } .gt-tile b { font-size: 28px; font-weight: 700; letter-spacing: -0.04em; margin-top: 2px; } .gt-tile svg { width: 44px; height: 44px; }
+.gt .gt-plate h1 { font-size: 30px; font-weight: 720; font-stretch: 110%; letter-spacing: -0.045em; line-height: 1; overflow-wrap: anywhere; }
+.gt-handle { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin: 5px 0 4px; font-size: 13.5px; font-weight: 600; color: var(--mute); }
+.gt-handle em { font-style: normal; font-size: 12.5px; font-weight: 640; padding: 2px 10px; border-radius: 99px; background: var(--field); color: var(--ink); }
+.gt-plate p:last-child { font-size: 14.5px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gt-facts { display: grid; grid-template-columns: repeat(4, 1fr); align-items: stretch; background: var(--stub); padding: 6px 8px 6px 14px; }
+.gt-facts a { display: grid; align-content: center; min-width: 0; padding: 8px 12px; border-radius: 12px; } .gt-facts a:hover { background: color-mix(in oklab, var(--ink) 7%, transparent); }
+.gt-facts b { display: block; font-size: 26px; font-weight: 720; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; } .gt-facts b small { font-size: 13.5px; font-weight: 660; font-stretch: 100%; letter-spacing: -0.015em; }
+.gt-facts a > span { display: block; margin-top: 4px; font-size: 12.5px; font-weight: 540; line-height: 1.3; color: var(--on-field-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gt-facts .lp-warn { display: inline; font-weight: 700; color: var(--action); } .gt-facts .lp-warn svg { display: none; }
+.gt .lp-inside { margin-top: 16px; }
+
+/* One row of sections. Words only: the first label sits on the page's left edge, and the open one is underlined. */
+.gt-tabs { position: relative; display: flex; align-items: flex-end; flex-wrap: wrap; gap: 0 30px; margin-top: 18px; border-bottom: 2px dashed var(--dash); }
+.gt-tabs > a, .gt-more > summary { display: flex; align-items: baseline; gap: 6px; height: 42px; padding: 9px 0 0; font-size: 15.5px; font-weight: 620; color: var(--mute); white-space: nowrap; margin-bottom: -2px; border-bottom: 3px solid transparent; }
+.gt-tabs a span { font-size: 12.5px; font-weight: 620; }
+.gt-tabs > a:hover, .gt-more > summary:hover { color: var(--ink); }
+.gt-tabs > a[aria-current], .gt-more[data-on] > summary { color: var(--ink); border-bottom-color: var(--ink); }
+.gt .gt-more { position: relative; margin: 0; } .gt .gt-more > summary { list-style: none; cursor: pointer; margin: 0 0 -2px; width: auto; } .gt-more > summary::-webkit-details-marker { display: none; }
+.gt-more > summary svg { width: 12px; height: 12px; align-self: center; }
+.gt-more > div { position: absolute; z-index: 30; left: -14px; top: calc(100% + 10px); min-width: 170px; padding: 6px; background: var(--paper); border-radius: var(--r); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); }
+.gt-more > div a { display: block; padding: 8px 12px; border-radius: 12px; font-size: 14.5px; font-weight: 560; } .gt-more > div a:hover, .gt-more > div a[aria-current] { background: var(--wash); }
+.gt-tabs time { margin-left: auto; padding-bottom: 11px; font-size: 13px; color: var(--mute); white-space: nowrap; }
+
+/* The notice is pinned as one line above the record, with the standing links beside it. */
+.gt-strip { display: flex; align-items: flex-start; gap: 12px; margin: 22px 0; }
+.gt-pins { flex: 1; min-width: 0; display: grid; gap: 14px; }
+.gt-pin { position: relative; display: flex; align-items: center; gap: 6px 16px; flex-wrap: wrap; padding: 11px 20px 11px 22px; border-radius: 4px 14px 14px 14px; background: var(--ink); color: var(--paper); transform: rotate(-.35deg); box-shadow: 4px 4px 0 var(--action); transition: transform .25s var(--ease); } .gt-pin:hover { transform: none; }
+.gt-pin::before { content: ''; position: absolute; top: -8px; left: 26px; width: 18px; height: 18px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink), 2px 2px 0 #0005; }
+.gt .gt-pin h2 { font-size: 12.5px; font-weight: 680; letter-spacing: -0.012em; color: var(--field); } .gt-pin .lp-stmt { flex: 1; min-width: 12ch; color: var(--paper); font-size: 16.5px; font-weight: 640; }
+.gt-pin .lp-name, .gt-pin .lp-via, .gt-pin .gt-date { color: var(--paper); } .gt-pin .gt-date { font-size: 13px; opacity: .8; }
+.gt .gt-pin .emba-form button { background: transparent; color: var(--paper); box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--paper) 50%, transparent); }
+.gt-btn, .gt .gt-post > summary { flex: none; display: inline-flex; align-items: center; width: auto; height: 40px; margin: 0; padding: 0 17px; border-radius: 99px; font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--ink); background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); cursor: pointer; list-style: none; }
+.gt-btn:hover, .gt-post > summary:hover { background: var(--wash); } .gt-post > summary::-webkit-details-marker { display: none; }
+.gt .gt-post { position: relative; margin: 0; flex: none; } .gt-post > div { position: absolute; z-index: 30; right: 0; top: calc(100% + 10px); width: min(420px, 86vw); padding: 6px 18px 16px; background: var(--paper); border-radius: var(--r); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); }
+
+/* The record. Each kind of thing a team keeps is drawn as the object it is, so a page of them reads at a glance.
+   What they share: the label line on top, the statement, and the line of who and what you can do. Columns fill the width. */
+.gt-grid, .gt .lp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 22px 18px; align-items: start; padding-top: 6px; background: none; border: 0; border-radius: 0; overflow: visible; }
+.gt-it { position: relative; min-width: 0; filter: drop-shadow(4px 4px 0 var(--cast, var(--field-shadow))); transition: transform .2s var(--ease), filter .2s var(--ease); }
+.gt-it:hover { transform: translate(-2px, -2px); filter: drop-shadow(6px 6px 0 var(--cast, var(--field-shadow))); }
+.gt-it > div { position: relative; padding: 13px 16px; background: var(--paper); border-radius: var(--r); overflow-wrap: anywhere; }
+.gt-it:target > div { outline: 3px solid var(--action); outline-offset: 2px; }
+.gt-kind { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; font-weight: 680; color: var(--action); } .gt-kind i { font-style: normal; font-weight: 600; color: var(--mute); white-space: nowrap; }
+.gt-stmt, .gt-it .lp-stmt { font-size: 16.5px; font-weight: 640; letter-spacing: -0.028em; line-height: 1.25; margin: 2px 0 8px; color: var(--ink); }
+.gt-stmt a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.gt-note { font-size: 13px; color: var(--mute); margin: -4px 0 9px; }
+.gt-it .lp-sub { margin: 0 0 8px; } .gt-it .lp-ref { margin: 0 0 8px; background: none; padding: 0; color: var(--action); font-weight: 680; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.gt-foot { display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; font-size: 13px; line-height: 22px; color: var(--mute); } .gt-foot > .lp-who, .gt-foot > span:first-child { margin-right: auto; }
+.gt-it .lp-face { background: var(--stub); color: var(--ink); font-weight: 680; } .gt-it .lp-name { font-weight: 560; color: var(--ink); }
+.gt-it .lp-acts { justify-content: flex-start; margin-top: 8px; }
+.gt .gt-it .emba-form:not(:has(label)) button { height: 30px; padding: 0 13px; font-size: 13px; font-weight: 640; color: var(--ink); background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.gt .gt-it .emba-form:not(:has(label)) button:hover { background: var(--wash); }
+.gt .gt-it.you .emba-form:first-child button, .gt a.gt-go { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.gt-go { display: inline-flex; align-items: center; height: 30px; padding: 0 13px; border-radius: 99px; font-size: 13px; font-weight: 640; }
+.gt .lp-empty { border: 0; border-radius: var(--r); background: var(--paper); box-shadow: 4px 4px 0 var(--field-shadow); }
+.gt section > h3 { margin: 26px 0 10px; font-size: 14px; font-weight: 720; letter-spacing: -0.02em; } .gt section > .emba-meta { margin: 4px 0 10px; }
+.gt section > .lt-editor, .gt section > div.lt-editor { margin-top: 26px; border-radius: var(--r); max-width: 860px; }
+
+/* DECISION: settled, so it is inked and stamped. */
+.gt-decision { --cast: var(--ink); padding-top: 8px; } .gt-decision > div { box-shadow: inset 0 0 0 1.5px var(--ink); } .gt-decision .gt-kind { padding-right: 124px; }
+.gt-stamp { position: absolute; top: -12px; right: 14px; background: var(--paper); padding: 2px 9px 3px; border: 2.5px solid var(--action); border-radius: 8px 8px 8px 2px; color: var(--action); font-size: 12.5px; font-weight: 760; font-stretch: 112%; line-height: 1.2; transform: rotate(-7deg); white-space: nowrap; }
+.gt-decision:hover .gt-stamp { animation: gt-slam .4s var(--ease); } @keyframes gt-slam { from { transform: rotate(-20deg) scale(1.7); opacity: 0; } }
+
+/* CLAIM: a name tag tied to a job. Round end, punched hole; lit when its date has passed, an outline while it is only asked. */
+.gt-claim > div { padding: 12px 16px 12px 58px; border-radius: 40px 16px 16px 40px; background: var(--stub);
+  -webkit-mask: radial-gradient(circle 8px at 29px 36px, #0000 7.5px, #000 8px); mask: radial-gradient(circle 8px at 29px 36px, #0000 7.5px, #000 8px); }
+.gt-claim > div::before { content: ''; position: absolute; left: 16px; top: 23px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--dash); }
+.gt-claim.late { --cast: var(--ink); } .gt-claim.late > div { background: var(--action); color: var(--paper); }
+.gt-claim.late :is(.gt-kind, .gt-kind i, .gt-foot, .lp-stmt, .gt-stmt, .lp-sub, .lp-sub strong, .lp-name, .lp-via, .lp-warn) { color: var(--paper); } .gt-claim.late > div::before { border-color: var(--paper); }
+.gt-claim.asked > div { background: var(--paper); box-shadow: inset 0 0 0 2px var(--line); }
+
+/* OUTPUT: a sheet of finished work, corner folded. */
+.gt-output > div { padding-right: 34px; border-radius: 3px 0 3px 3px; clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 0 100%); }
+.gt-output > div::after { content: ''; position: absolute; top: 0; right: 0; width: 26px; height: 26px; background: linear-gradient(225deg, #0000 50%, var(--field) 50%); border-radius: 0 0 0 6px; }
+.gt-output > div::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--field); }
+.gt-output .lp-stmt a { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.gt-output.clash { --cast: var(--ink); } .gt-output.clash > div::before { background: var(--action); } .gt-output.clash > div::after { background: linear-gradient(225deg, #0000 50%, var(--action) 50%); }
+
+/* EVENT: the ticket, as on the campus screen. Day on the stub, a tear line, bites out of the edge. */
+.gt-event { --cut: 9px; --x: 78px; } .gt-event > div { display: grid; grid-template-columns: 78px minmax(0, 1fr); padding: 0; overflow: hidden;
+  -webkit-mask: radial-gradient(circle var(--cut) at var(--x) 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at var(--x) 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in;
+  mask: radial-gradient(circle var(--cut) at var(--x) 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at var(--x) 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.gt-event > div::after { content: ''; position: absolute; left: calc(var(--x) - 1px); top: 14px; bottom: 14px; border-left: 2px dashed var(--dash); }
+.gt-day { display: grid; align-content: center; justify-items: center; gap: 2px; background: var(--field); line-height: 1; } .gt-day small { font-size: 12px; font-weight: 640; } .gt-day b { font-size: 26px; font-weight: 720; letter-spacing: -0.04em; }
+.gt-in { min-width: 0; padding: 12px 16px 12px 18px; }
+
+/* ASK: a ballot. A slot on top, and how far it has filled. */
+.gt-ask > div { padding-top: 22px; border-radius: 16px 16px 16px 4px; }
+.gt-ask > div::before { content: ''; position: absolute; top: 8px; left: calc(50% - 32px); width: 64px; height: 6px; border-radius: 99px; background: var(--ink); }
+.gt-meter { height: 10px; margin: 0 0 10px; border-radius: 99px; box-shadow: inset 0 0 0 1.5px var(--ink); overflow: hidden; } .gt-meter i { display: block; height: 100%; width: calc(var(--p) * 100%); background: var(--field); border-right: 1.5px solid var(--ink); }
+
+/* IDEA: not real yet, so it is only an outline. Seats fill as people say they are in; full, it becomes a ticket. */
+.gt-idea, .gt-idea:hover { filter: none; } .gt-idea > div { background: color-mix(in oklab, var(--paper) 55%, transparent); border: 2px dashed var(--dash); padding: 12px 15px; }
+.gt-seats { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; } .gt-seats i { width: 28px; height: 28px; border-radius: 50%; border: 1.5px dashed var(--ink); opacity: .5; }
+.gt-seats i.in { opacity: 1; border-style: solid; background: var(--field); }
+.gt-seats i.next { position: relative; opacity: 1; } .gt-seats i.next::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--action); animation: gt-ping 1.6s var(--ease) infinite; } @keyframes gt-ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.5); opacity: 0; } }
+.gt-seats small { margin-left: 6px; font-size: 13px; font-weight: 620; color: var(--on-field-2); }
+.gt-idea.near > div { background: var(--stub); border-color: var(--ink); }
+
+/* TRAVEL: a boarding strip. In on the left, out on the right. */
+.gt-travel > div { border-radius: 14px; }
+.gt-legs { display: grid; grid-template-columns: auto minmax(24px, 1fr) auto; gap: 10px; align-items: center; margin: 6px 0 10px; } .gt-legs span:last-child { text-align: right; }
+.gt-legs b { display: block; font-size: 15px; font-weight: 720; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.1; } .gt-legs small { font-size: 12.5px; color: var(--mute); }
+.gt-legs > i { position: relative; height: 0; border-top: 2px dashed var(--dash); } .gt-legs > i::before, .gt-legs > i::after { content: ''; position: absolute; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); } .gt-legs > i::before { left: -2px; } .gt-legs > i::after { right: -2px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); }
+
+/* The lists other parts of the site also draw (an event, an ask, a resource, a save): each row a card of its section's kind. */
+.gt .lp-list > li { display: block; min-width: 0; padding: 13px 16px; border: 0; border-radius: var(--r); background: var(--paper); box-shadow: 4px 4px 0 var(--field-shadow); overflow-wrap: anywhere; }
+.gt .lp-list > li .lp-topic, .gt .lp-list > li > .lp-num { display: block; font: inherit; font-size: 12.5px; font-weight: 680; letter-spacing: -0.012em; color: var(--action); padding: 0; }
+.gt .lp-list > li .lp-stmt { font-size: 16.5px; font-weight: 640; letter-spacing: -0.028em; line-height: 1.25; margin: 2px 0 6px; color: var(--ink); }
+.gt .lp-list > li .lp-who, .gt .lp-list > li > .lp-date { margin-top: 8px; font-size: 13px; color: var(--mute); }
+.gt #events .lp-list > li { border-left: 12px solid var(--field); border-radius: 6px 22px 22px 6px; }
+.gt #asks .lp-list > li { position: relative; padding-top: 22px; border-radius: 16px 16px 16px 4px; }
+.gt #asks .lp-list > li::before { content: ''; position: absolute; top: 8px; left: calc(50% - 32px); width: 64px; height: 6px; border-radius: 99px; background: var(--ink); }
+.gt #ideas .lp-list > li { background: color-mix(in oklab, var(--paper) 55%, transparent); border: 2px dashed var(--dash); box-shadow: none; }
+.gt #travel .lp-list > li { border-radius: 14px; }
+.gt #resources .lp-list > li { border-top: 3px solid var(--field); border-radius: 0 16px 16px 6px; }
+.gt .lp-lrow > .lp-tile { display: none; } .gt .lp-lacts { margin-top: 8px; }
+
+/* ALL: what is next, in order. Something waiting on you wears a flag with a beating dot, casts a dark shadow, and nudges now and then. */
+.gt-yours { position: absolute; z-index: 2; top: -12px; left: 16px; display: inline-flex; align-items: center; gap: 7px; padding: 2px 11px 3px 8px; border-radius: 99px; background: var(--action); color: var(--paper); font-size: 12px; font-weight: 680; white-space: nowrap; box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.gt-claim .gt-yours { left: 38px; }
+.gt-yours::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--field); animation: gt-beat 1.4s ease-out infinite; }
+@keyframes gt-beat { from { box-shadow: 0 0 0 0 var(--field); } to { box-shadow: 0 0 0 9px #0000; } }
+.gt-it.you { --cast: var(--ink); animation: gt-nudge 5s var(--ease) infinite; animation-delay: calc(var(--i, 0) * .7s); } .gt-it.you:hover, .gt-it.you:focus-within { animation: none; }
+@keyframes gt-nudge { 0%, 86%, 100% { transform: none; } 90% { transform: rotate(-1.3deg) translateY(-3px); } 95% { transform: rotate(1deg); } }
+.gt .gt-dl { display: flex; flex-direction: column; gap: 1px; margin: 0; font-size: 14px; font-weight: 720; letter-spacing: -0.02em; white-space: nowrap; } .gt-dl span { font-size: 12.5px; font-weight: 600; color: var(--mute); } .gt-dl em { font-style: normal; font-weight: 700; color: var(--action); }
+.gt .gt-dl.row { flex-direction: row; align-items: baseline; gap: 9px; margin: 8px 0 12px; }
+.gt-dtile { flex: none; display: grid; justify-items: center; align-content: center; width: 60px; height: 60px; line-height: 1; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); } .gt-dtile small { font-size: 11.5px; font-weight: 640; } .gt-dtile b { font-size: 23px; font-weight: 720; letter-spacing: -0.04em; margin-top: 2px; }
+.gt-dtile.today { background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .gt-dtile.over { background: var(--action); color: var(--paper); } .gt-dtile.later { box-shadow: inset 0 0 0 1.5px var(--dash); color: var(--on-field-2); }
+/* Days across. Whole days only: the columns share the width exactly (as many as fit at about 300px or more), and the row snaps to a day's left edge, so nothing is ever cut off. */
+#gt-all { container-type: inline-size; }
+.gt-dayswrap { position: relative; }
+.gt-days { --n: 1; display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 4px 6px 16px 0; scroll-padding: 0 6px 0 0; margin-bottom: 14px; scrollbar-width: none; } .gt-days::-webkit-scrollbar { display: none; }
+@container (min-width: 640px) { .gt-days { --n: 2; } } @container (min-width: 960px) { .gt-days { --n: 3; } } @container (min-width: 1280px) { .gt-days { --n: 4; } } @container (min-width: 1620px) { .gt-days { --n: 5; } }
+.gt-col { flex: 0 0 calc((100% - (var(--n) - 1) * 18px) / var(--n)); min-width: 0; scroll-snap-align: start; }
+.gt-col > header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.gt-col > header::after { content: ''; flex: 1; margin-right: -18px; border-top: 2px dashed var(--dash); } .gt-col:last-child > header::after { margin-right: 0; }
+.gt-col > ul { display: grid; gap: 22px; align-content: start; }
+.gt-free { font-size: 13.5px; color: var(--mute); padding: 4px 2px; }
+.gt-step { position: absolute; z-index: 3; top: 21px; width: 26px; height: 26px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--ink); color: var(--field); box-shadow: 2px 2px 0 var(--action); cursor: pointer; transition: transform .2s var(--ease); } .gt-step:hover { transform: scale(1.08); } .gt-step[hidden] { display: none; }
+.gt-step svg { width: 13px; height: 13px; } .gt-step.l { left: -29px; } .gt-step.l svg { transform: rotate(90deg); } .gt-step.r { right: -29px; } .gt-step.r svg { transform: rotate(-90deg); }
+/* what is settled is kept small: one line each, with a mark for its kind */
+.gt .gt-minis { background: var(--paper); border-radius: var(--r); box-shadow: 4px 4px 0 var(--field-shadow); padding: 6px 18px 8px; columns: 290px 3; column-gap: 30px; }
+.gt-mini { break-inside: avoid; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; line-height: 1.3; }
+.gt-mini b { display: block; font-weight: 620; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .gt-mini b a:hover { text-decoration: underline; text-underline-offset: 3px; } .gt-mini small { font-size: 12px; color: var(--mute); } .gt-mini time { font-size: 12.5px; color: var(--mute); white-space: nowrap; }
+.gt-g { width: 14px; height: 14px; } .gt-g.decision { border: 2px solid var(--action); border-radius: 4px 4px 4px 1px; transform: rotate(-10deg); } .gt-g.output { background: var(--field-shadow); clip-path: polygon(0 0, 58% 0, 100% 42%, 100% 100%, 0 100%); } .gt-g.ask { height: 5px; border-radius: 99px; background: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) { .gt-days { scroll-behavior: auto; } }
+@media (max-width: 1100px) { .gt-head { --x: -40px; } .gt-head > div { grid-template-columns: minmax(0, 1fr); } .gt-facts { grid-template-columns: repeat(2, 1fr); border-top: 2px dashed var(--dash); padding: 8px; } }
+@media (max-width: 900px) { .gt-strip { flex-wrap: wrap; } .gt-pins { flex-basis: 100%; } .gt-tabs { gap: 0 20px; } .gt-tabs time { display: none; } .gt-step { display: none; } }
+@media (max-width: 820px) { .gb .cs-nav { padding-inline: 16px; } }

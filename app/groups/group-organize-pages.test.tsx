@@ -8,13 +8,11 @@ import { authenticate, type Principal } from '@/lib/emba/access';
 import { grantLease } from '@/lib/emba/consent';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { createWorkspace } from '@/lib/emba/workspaces';
-import { createInnerGroup, listGroupTree } from '@/lib/emba/group-tree';
-import { groupHandle, treeOrder } from '@/lib/emba/group-path';
+import { createInnerGroup } from '@/lib/emba/group-tree';
 import type { GroupAddress } from '@/lib/emba/groups';
 import GroupsPage from './page';
 import ConnectionsPage from './connections/page';
 import { archiveGroupAction, renameGroupAction, restoreGroupAction } from './organize-actions';
-import { Rail } from './rail';
 
 // Specs: openspec/changes/loop-organize-and-fix/specs/group-organizing and team-wide-grants.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -111,20 +109,6 @@ it('folds a group shut, keeps it shut on the next visit, and shows nothing open 
   const { renderToString } = await import('react-dom/server');
   const html = renderToString(await withPortalTestSession(f.member, () => GroupsPage()));
   expect(html.match(/<li class="lp-groupitem"[^>]*>/g)!.map(tag => tag.includes('data-wait'))).toEqual([false, true, true, true]);
-});
-
-it('folds the side menu with the same state, and always shows the way to the group a person is in', async () => {
-  const f = await tree();
-  const groups = treeOrder(await listGroupTree(t.db, f.member)).map(group => ({ id: group.loopId, parent: group.parentLoopId, namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
-  const tree1 = () => [...document.querySelectorAll('.lp-tree a')].map(node => node.firstChild!.textContent);
-  localStorage.setItem('loop.groups.closed', `${f.cohort.loopId} ${f.team1.loopId}`);
-  at.params = {}; at.path = '/groups';
-  render(<Rail groups={groups} account={null} />);
-  expect(tree1()).toEqual(['EMBA 2027']);
-  cleanup();
-  at.params = { namespace: 'emba-2027', slug: 'nbae-6830' }; at.path = '/groups/emba-2027/in/nbae-6830/team';
-  render(<Rail groups={groups} account={null} />);
-  expect(tree1()).toEqual(['EMBA 2027', 'Team 1', 'NBAE 6830', 'Team 2']);
 });
 
 it('renames, archives and restores from the page, and refuses in plain words', async () => {
