@@ -390,3 +390,16 @@ Known and left, for the founder to weigh:
 - Signed in, a person sees their school's colours. An email at no school sees Loop's own (the lime look). The avatar card has a "Colours" row to pick any of them; the pick is kept on that browser and wins over the school.
 - The colours are one block per school in `app/c/campus.css` under `:root[data-kit]`, listed in `components/campus/kit.tsx`. Cornell is the Coral kit the founder picked for Loop Campus. My calls, not yet confirmed: the Columbia (light blue), CUNY (gold with blue) and NYU (violet) values.
 - Colours change nothing else: the events shown are still those of the person's own school.
+
+### Scope decisions (founder, November 18)
+
+- Colours: settled. The kits on the sign-in card are the colours for Loop, Columbia, Cornell, CUNY and NYU.
+- Sourcing and loading events (school feeds, Luma calendars) is not done in this change. The feed reader, its admin fields and its hourly job stay as built, with no feeds entered. Until events are sourced elsewhere, the week holds posted plans and events entered by hand.
+- Members' assistants: tabled. Nothing about their connection changes here.
+- Sign-in: email to start. Linking a phone afterwards is wanted and not built.
+- Telling Team 1 about their group pages: tabled.
+- Real rewards: later, either sourced by the founder or entered by organizers or vendors through a way that does not exist yet. That would be its own change.
+- The founder demos and the walk-through on the deployed site: held. They are to be redesigned and done as another set.
+- The admin sign-in mockup: tabled.
+- Levels: the names and numbers stand (Member 0, Regular 5, Insider 15).
+- "Your groups": stays as built, shown to the admin only. Direction talked through and not built: "your groups" would list only groups a person belongs to (private or club, one list, organizer as a mark on the row), and past outings would sit on the avatar card with an offer to make a repeated crew a group. That is its own change.

@@ -3,12 +3,12 @@ Everything through section 6 is built with `LOOP_FRONT` unset, at `/c/[campus]`,
 ## 1. Before building
 
 - [x] 1.1 Clickable mockup of "This week" in `public/demo/mockups-campus-usecases.html`, screen 1, with the founder's go-ahead (November 18).
-- [ ] 1.2 Founder: pick the colours from the mockup options (field, ink, action). Record the values in design.md, D18.
-- [ ] 1.3 For each of Cornell, Columbia, NYU and CUNY: find the school's public events feed (CampusGroups `/ics_helper` where the school uses it, otherwise whatever calendar feed it publishes) and check it opens without a login. Founder: pick the Luma calendars that belong on each.
-- [ ] 1.4 Founder: answer the open questions in design.md that change what is built: whether members' assistants keep their connection, what "your groups" in the top bar means for students, and the level names and numbers.
+- [x] 1.2 Founder: pick the colours from the mockup options (field, ink, action). Record the values in design.md, D18. Done November 18: the kits on the sign-in card (Loop, Columbia, Cornell, CUNY, NYU) are the colours.
+- ~~For each of Cornell, Columbia, NYU and CUNY: find the school's public events feed (CampusGroups `/ics_helper` where the school uses it, otherwise whatever calendar feed it publishes) and check it opens without a login. Founder: pick the Luma calendars that belong on each.~~ Out of this change (founder, November 18): sourcing and loading events is not done in this change. The feed reader stays built; no feeds are entered.
+- [x] 1.4 Answered November 18: the level names and numbers stand (Member 0, Regular 5, Insider 15). "Your groups" stays as built: students see no group links in the top bar. The assistants' connection is tabled.
 - [x] 1.5 Read the Next.js guides in `node_modules/next/dist/docs/` that cover routes, server actions, caching and the proxy file before writing any page.
 - [x] 1.6 Write the single migration: `campus` (seeded with the four schools and their email domains), `campus_person`, `campus_feed`, `campus_place`, `campus_listing`, `campus_reward`, `campus_outing`, `campus_outing_member`, `campus_invite`, `campus_reward_use`. Run it on PGlite with the full suite (`--maxWorkers=3`, stderr to a file).
-- [ ] 1.7 Founder: apply the migration by hand on the hosted database.
+- [x] 1.7 Founder: apply the migration by hand on the hosted database.
 
 ## 2. The list and the feeds (demo 1)
 
@@ -22,8 +22,8 @@ Everything through section 6 is built with `LOOP_FRONT` unset, at `/c/[campus]`,
 - [x] 2.8 The campus stylesheet with tokens by role (D18), ported from the mockup's screen 1 styles. `app/loop.css` untouched.
 - [x] 2.9 Port the mockup's screen 1 to `/c/[campus]`: top bar, search line, count line, the sideways row of tickets with arrows, the height that fills the window. Signed out: counts, no names, "Sign in" in the bar. Extend `proxy.ts` so Clerk runs on `/c` and `/o`; check the existing routes still behave.
 - [x] 2.10 The details panel: unfolds sideways in the row, one open at a time, about, when, the map from the matched place, no map when unmatched.
-- [ ] 2.11 Run the importer once against each school's real feeds and check ten events by eye against their sources.
-- [ ] 2.12 Founder demo 1: add the campus, its feeds and five places on the admin page; open `/c/[campus]` signed out and see this week's real events as tickets on one screen.
+- ~~Run the importer once against each school's real feeds and check ten events by eye against their sources.~~ Out of this change (founder, November 18): sourcing and loading events is not done in this change.
+- ~~Founder demo 1: add the campus, its feeds and five places on the admin page; open `/c/[campus]` signed out and see this week's real events as tickets on one screen.~~ Out of this change (founder, November 18): the demos are to be redesigned and done as another set.
 
 ## 3. In, invite, check in (demo 2)
 
@@ -34,7 +34,7 @@ Everything through section 6 is built with `LOOP_FRONT` unset, at `/c/[campus]`,
 - [x] 3.5 Share link `/o/[token]`: the screen with that event's panel open and "Join"; joining a second outing moves the person; unknown token is not found. Leave before checking in.
 - [x] 3.6 Tests first, then check-in inside the window in the campus timezone: 30 minutes before start to end, two hours after start with no end; refuse outside the window and for non-members; a second press keeps the first time.
 - [x] 3.7 Who sees whom on tickets and in the panel: first names and photos of known people, counts for the rest, initials with no photo, nothing for signed-out visitors. Test that a stranger's name never appears in the page.
-- [ ] 3.8 Founder demo 2: say "I'm in" on a real event on one account, join from a second through the copied link, check in on both.
+- ~~Founder demo 2: say "I'm in" on a real event on one account, join from a second through the copied link, check in on both.~~ Out of this change (founder, November 18): the demos are to be redesigned and done as another set.
 
 ## 4. Rewards and levels (demo 3)
 
@@ -47,7 +47,7 @@ Everything through section 6 is built with `LOOP_FRONT` unset, at `/c/[campus]`,
 - [x] 4.7 "Rewards you are earning" shelf under the row; not shown with none.
 - [x] 4.8 Level badge on the avatar and the level card; no level content anywhere else. Test that no higher-level text reaches a lower-level page.
 - [x] 4.9 Independent review with a fresh context of sections 2 to 4 against `campus-listings`, `outings`, `group-rewards`, `member-levels` and `campus-screen`.
-- [ ] 4.10 Founder demo 3: add a café reward for a group of three on a study plan; check in from three accounts, see it unlock, mark it used; open the avatar and read the level card.
+- ~~Founder demo 3: add a café reward for a group of three on a study plan; check in from three accounts, see it unlock, mark it used; open the avatar and read the level card.~~ Out of this change (founder, November 18): the demos are to be redesigned and done as another set.
 
 ## 5. Posting a plan (demo 4)
 
@@ -55,18 +55,18 @@ Everything through section 6 is built with `LOOP_FRONT` unset, at `/c/[campus]`,
 - [x] 5.2 The plan's one open outing: anyone signed in joins from the screen; "Posted by" first name for signed-in visitors only.
 - [x] 5.3 Change and cancel by the poster until it starts; nobody else but the admin; cancelled plans leave the list.
 - [x] 5.4 Post form at `/c/[campus]/post`, reached from "Post a plan" in the top bar.
-- [ ] 5.5 Founder demo 4: post "Running, 5pm" on one account, join it from a second, check in on both.
+- ~~Founder demo 4: post "Running, 5pm" on one account, join it from a second, check in on both.~~ Out of this change (founder, November 18): the demos are to be redesigned and done as another set.
 
 ## 6. Search (demo 5)
 
 - [x] 6.1 Tests first, then `lib/campus/search.ts`: score by title, host, place and "good for" words; filler words dropped; pull for the viewer; best five with nothing typed; at most four best matches within 60% of the top; looser matches after; the complete CampusGroups view.
 - [x] 6.2 The search box, "Best for you" and "All of CampusGroups", the count line, the words to try, the marker in the row, and "Nothing matches". Results update as the person types without leaving the screen.
 - [x] 6.3 Test that no reason or score for a ranking appears in the page.
-- [ ] 6.4 Founder demo 5: type "exercise", "eat with people" and "tonight" against the real week and judge whether the best matches are the right ones; edit words on the admin page where they are not.
+- ~~Founder demo 5: type "exercise", "eat with people" and "tonight" against the real week and judge whether the best matches are the right ones; edit words on the admin page where they are not.~~ Out of this change (founder, November 18): the demos are to be redesigned and done as another set.
 
 ## 7. Front door and the admin gate (demo 6)
 
-- [ ] 7.1 Mockup in `public/demo/` of signing in as the admin: the sign-in, the avatar card with "Admin", and where each of its three links lands. Get the founder's go-ahead.
+- ~~Mockup in `public/demo/` of signing in as the admin: the sign-in, the avatar card with "Admin", and where each of its three links lands. Get the founder's go-ahead.~~ Out of this change (founder, November 18): the admin sign-in mockup is tabled.
 - [x] 7.2 List every page and action of the current site that leads into groups (`/groups`, `/emba`, `/e/`, `/a/` and any others found), and every route that scheduled jobs and members' assistants use. Put both lists in design.md, D17.
 - [x] 7.3 Tests first, then the gate in `proxy.ts`: with `LOOP_FRONT=campus`, the listed pages open for the admin and send everyone else to `/`; with the flag unset, everything behaves as today. The routes for jobs and assistants are untouched in both cases.
 - [x] 7.4 The same check on the server in the groups layout and in the groups actions, with a test that walks every page of the current site as a signed-in non-admin and as a signed-out visitor.
@@ -75,14 +75,14 @@ Everything through section 6 is built with `LOOP_FRONT` unset, at `/c/[campus]`,
 - [x] 7.5b `/sign-in` for the campus screen; `/groups/sign-in` keeps working and returns each person to the right place.
 - [x] 7.6 "Admin" on the avatar card for the admin only, with links to `/c/admin`, the groups site and "How we got here". Group names in the top bar for a person who can open them.
 - [x] 7.7 Independent review with a fresh context of sections 5 to 7 against `member-plans`, `campus-search` and `admin-gate`.
-- [ ] 7.8 Founder demo 6, on a preview deployment with the flag on: open a group page as a second, non-admin account and land on the campus screen; sign in as the admin and reach the groups site and "How we got here".
+- ~~Founder demo 6, on a preview deployment with the flag on: open a group page as a second, non-admin account and land on the campus screen; sign in as the admin and reach the groups site and "How we got here".~~ Out of this change (founder, November 18): the demos are to be redesigned and done as another set.
 
 ## 8. Before the pilot
 
 - [x] 8.1 Update the privacy page: what a check-in records, that people who share a group or have been out together see each other's first name and photo on events, and that "Register me" is kept in Loop only.
 - [x] 8.2 Check the screen at 1440 by 900, 1400 by 760 and phone width, closed and opened. Check type on the field colour for contrast.
 - [x] 8.3 Full suite green (`--maxWorkers=3`), `tsc --noEmit`, then one production build with no dev server running.
-- [ ] 8.4 Founder: choose phone or email sign-in for students in the Clerk dashboard.
-- [ ] 8.5 Founder: tell Team 1 that their group pages on the site are going away, then set `LOOP_ADMIN` in the hosting dashboard and deploy (the campus front door is on by default). To undo: set `LOOP_FRONT=groups` and redeploy.
-- [ ] 8.6 Walk the whole flow on the deployed site: signed out to reward used, posting a plan, search, and the admin's way in.
-- [ ] 8.7 Founder: enter the first three real rewards and send the link to the first three groups.
+- [x] 8.4 Decided November 18: email to start, a phone can be linked later (not built). The live sign-in card already asks for an email, so nothing was changed in the Clerk dashboard.
+- [x] 8.5 `LOOP_ADMIN` is set and the site is deployed with the campus front door on. Telling Team 1 is tabled (founder, November 18). To undo: set `LOOP_FRONT=groups` and redeploy.
+- ~~Walk the whole flow on the deployed site: signed out to reward used, posting a plan, search, and the admin's way in.~~ Out of this change (founder, November 18): the demos are to be redesigned and done as another set.
+- ~~Founder: enter the first three real rewards and send the link to the first three groups.~~ Out of this change (founder, November 18): real rewards come later, or through a way for organizers or vendors to enter them, which is its own change.
