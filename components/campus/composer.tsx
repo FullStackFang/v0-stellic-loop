@@ -5,7 +5,7 @@ import { useRef, useState, useTransition } from 'react';
 import { imInAction, postLineAction, readPlanLinkAction, type LineFrom } from '@/app/c/actions';
 import { readLine, TIME_WORDS, typingTag, whenIdeas } from '@/lib/campus/line';
 import type { NearTag } from '@/lib/campus/tags';
-import { dayLabel, timeLabel, zoned } from '@/lib/campus/time';
+import { dayLabel, localParts, timeLabel, zoned } from '@/lib/campus/time';
 import type { Face } from '@/lib/campus/view';
 import { FaceDot } from './screen';
 
@@ -13,6 +13,7 @@ import { FaceDot } from './screen';
 export type Soon = { id: string; tag: string; title: string; day: string; time: string; who: string; faces: Face[]; mine: boolean };
 
 const people = (tag: NearTag) => `${tag.people} ${tag.people === 1 ? 'person' : 'people'} this week${tag.known.length ? ` · ${tag.known.join(', ')}` : ''}`;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const site = (link: string) => link.replace(/^https?:\/\//, '').split('/')[0];
 
 /**
@@ -34,7 +35,13 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
   // The busiest place fills its row; the others are drawn against it.
   const most = Math.max(1, ...tags.map(tag => tag.people));
   const here = read.tag && typing === null ? soon.filter(plan => plan.tag === read.tag) : [];
-  const say = (at: string) => { try { const then = zoned(campus.tz, at); return `${dayLabel(campus.tz, then, now)} ${timeLabel(campus.tz, then)}`; } catch { return null; } };
+  const say = (at: string) => {
+    try {
+      const then = zoned(campus.tz, at), far = then.getTime() - now.getTime() > 6 * 86400000, on = localParts(campus.tz, then).date;
+      // A weekday alone is the coming one; further off, the date is said too.
+      return `${dayLabel(campus.tz, then, now)} ${far ? `${MONTHS[Number(on.slice(5, 7)) - 1]} ${Number(on.slice(8))} ` : ''}${timeLabel(campus.tz, then)}`;
+    } catch { return null; }
+  };
   const when = starts ? say(starts) : null;
   // A line with no time is helped along, not refused: times to tap, and a time typed after an @ is offered as a time.
   const ideas = when ? [] : whenIdeas(text, campus.tz, now);

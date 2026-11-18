@@ -62,3 +62,20 @@ it('offers times to add when the line has none: all ahead, none twice, on the da
  expect(whenIdeas('go for a run',TZ,new Date('2026-11-19T02:30:00Z')).map(idea=>idea.add)).toEqual(['9am','noon','7pm','sat 10am']);
  expect(whenIdeas('go for a run 6pm',TZ,NOW)).toEqual([]);
 });
+it('reads a calendar date, and drops the small words around a date, a day and a place',()=>{
+ expect(read('hot pot on 12/12 after class at 6pm')).toEqual({title:'Hot pot after class',starts:'2026-12-12T18:00',tag:null,link:null});
+ expect(read('ski trip dec 5 8am')).toMatchObject({title:'Ski trip',starts:'2026-12-05T08:00'});
+ expect(read('brunch on the 22nd of november 11am')).toMatchObject({title:'Brunch',starts:'2026-11-22T11:00'});
+ expect(read('Dinner December 3rd, evening')).toMatchObject({title:'Dinner',starts:'2026-12-03T19:00'});
+ // A date that has passed this year is next year's; a year can be said.
+ expect(read('reunion 1/9 7pm').starts).toBe('2027-01-09T19:00');
+ expect(read('party 11/21/26 9pm').starts).toBe('2026-11-21T21:00');
+ // Not a date: left in the title.
+ expect(read('room 13/45 study 5pm')).toMatchObject({title:'Room 13/45 study',starts:'2026-11-18T17:00'});
+ expect(read('may the best team win 5pm').title).toBe('May the best team win');
+ // A date with no hour is not a time yet, and the hours offered are on that date.
+ expect(read('hot pot 12/12')).toMatchObject({title:'Hot pot',starts:null});
+ expect(whenIdeas('hot pot 12/12',TZ,NOW)).toEqual([{add:'9am',starts:'2026-12-12T09:00'},{add:'noon',starts:'2026-12-12T12:00'},{add:'7pm',starts:'2026-12-12T19:00'}]);
+ expect(read('hot pot in @collegetown tonight')).toMatchObject({title:'Hot pot',tag:'collegetown'});
+ expect(read('movie on sat at 8pm')).toMatchObject({title:'Movie',starts:'2026-11-21T20:00'});
+});
