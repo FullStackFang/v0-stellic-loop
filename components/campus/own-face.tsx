@@ -24,7 +24,7 @@ const PERKS = ['Your own animal, drawn from your photo', 'Every premium animal',
  * (lib/campus/custom-face.ts), the person is told so, and then gives a photo of an animal, which is drawn as one of
  * the set, free.
  */
-export function OwnFace({ asked, onAsked, onMade, onBack }: { asked: boolean; onAsked: () => void; onMade: (own: string, left: number) => void; onBack: () => void }) {
+export function OwnFace({ asked, left, onAsked, onMade, onBack }: { asked: boolean; left: number; onAsked: () => void; onMade: (own: string, left: number) => void; onBack: () => void }) {
   const [file, setFile] = useState<File | null>(null), [shown, setShown] = useState(''), [email, setEmail] = useState('');
   // `asking` is the email field in the button's place. `first` is whether they subscribed on this visit: the thanks are shown for it until the pane is left.
   const [state, setState] = useState<'plan' | 'photo' | 'busy' | 'done'>(asked ? 'photo' : 'plan'), [asking, setAsking] = useState(false), [first, setFirst] = useState(false);
@@ -64,6 +64,8 @@ export function OwnFace({ asked, onAsked, onMade, onBack }: { asked: boolean; on
   return <div className="cs-lvl-body cs-pets cs-own">
     <div className="cs-pets-top"><h4>Your own animal</h4><b className="cs-own-tag">Premium</b>{state !== 'busy' && <button className={`cs-btn sm ${state === 'done' ? 'go' : ''}`} onClick={onBack}>{state === 'done' ? 'Done' : 'Back'}</button>}</div>
     {state === 'done' ? <div className="cs-own-made"><img src={own} alt="Your own animal" />{thanks}<p>It is your picture now.</p></div>
+    // The free animal is used: say so here, before a photo is chosen, not after.
+    : left <= 0 && state === 'photo' ? <div className="cs-own-made"><p>You have made your free animal. Making more is not set up yet.</p></div>
     : state === 'busy' ? <div className="cs-own-made" role="status">{shown && <img className="busy" src={shown} alt="" />}{thanks}<p>Drawing your animal. This takes about half a minute.</p></div>
     : <form className="cs-own-form" onSubmit={event => { event.preventDefault(); void make(); }}>
       {thanks}

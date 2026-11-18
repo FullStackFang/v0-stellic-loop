@@ -209,8 +209,12 @@ describe('who sees whom', () => {
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
       fireEvent.click(card.getByRole('button', { name: 'Your own animal' }));
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: CUSTOM }]));
-      expect(card.queryByRole('button', { name: 'Create your own' })).toBeNull();
       expect(card.getAllByText('Premium')).toHaveLength(2);
+      // The "+" is always there. With the free animal used, it says so before a photo is asked for.
+      fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
+      expect(card.getByText('You have made your free animal. Making more is not set up yet.')).toBeInTheDocument();
+      expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
+      fireEvent.click(card.getByRole('button', { name: 'Back' }));
     });
     cleanup();
     // Ben knows Ana and is in her outing: he sees the animal she had made.
