@@ -273,6 +273,10 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-pet img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 50%; } .cs-pet.photo img { object-fit: cover; }
 .cs .cs-pet:hover { transform: scale(1.14); } .cs-pet.locked img { opacity: .5; filter: grayscale(.6); }
 .cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
+/* While a picture is being picked the card is wide, so each animal is big enough to see; the one in use is shown larger at the top. */
+.cs-lvl:has(.cs-pets-grid) { width: 600px; } .cs-lvl:has(.cs-pets-grid) .cs-ava.big .cs-face { width: 112px; height: 112px; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-top strong { font-size: 26px; }
+.cs-lvl:has(.cs-pets-grid) .cs-pets-grid { gap: 14px; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body { padding: 18px 24px 22px; max-height: min(64vh, 640px); overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 640px) { .cs-pets-grid { grid-template-columns: repeat(4, 1fr); } .cs-lvl:has(.cs-pets-grid) .cs-ava.big .cs-face { width: 88px; height: 88px; } }
 .cs-pets small { display: block; margin-top: 12px; font-size: 11.5px; color: var(--cs-mute); } .cs-pets small a { text-decoration: underline; }
 .cs-kits { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cs-line); }
 .cs-kits h4 { margin: 0 0 6px; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); }
