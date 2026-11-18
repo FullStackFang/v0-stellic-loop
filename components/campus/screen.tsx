@@ -1,14 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import { Rings } from '@/components/LoopGlyphs';
 import { animal, CUSTOM, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
-import { landOf } from '@/lib/campus/sections';
+import { landOf, walkMinutes, type Point } from '@/lib/campus/sections';
 import { Composer, type Soon } from './composer';
 import { Near } from './near';
 import { OwnFace } from './own-face';
@@ -19,6 +20,18 @@ import type { Coupon, Face, Screen, Seat, Ticket, Tile as Pet } from '@/lib/camp
 // public/demo/mockups-campus-usecases.html. Everything it shows of other people was decided on the server (lib/campus/screen.ts).
 
 const SAY = ['exercise', 'eat with people', 'study', 'startups', 'tonight'];
+/** Places plans will also be listed from. Named beside the sources that work, and not pressable. */
+const SOON = ['Luma', 'Posh'];
+// A window this wide has room for the map beside the week (public/demo/mockups-campus-desktop.html). Narrower, the map is the "Near you" view.
+const WIDE = '(min-width: 1100px)';
+const wideNow = () => typeof matchMedia === 'function' && matchMedia(WIDE).matches;
+const onWide = (changed: () => void) => { if (typeof matchMedia !== 'function') return () => {}; const query = matchMedia(WIDE); query.addEventListener('change', changed); return () => query.removeEventListener('change', changed); };
+/** Runs a change as one move, where the browser can: each ticket travels to where it lands instead of the list being redrawn. */
+function glide(change: () => void) {
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (still || typeof document.startViewTransition !== 'function') change(); else document.startViewTransition(() => flushSync(change));
+}
+const Pin = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 14s4.5-4.2 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 9.800 8 14 8 14z" /><circle cx={8} cy={6.5} r={1.5} /></svg>;
 const Chevron = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg>;
 
 export function FaceDot({ face, className = '' }: { face: Face; className?: string }) {
@@ -58,19 +71,35 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   const rail = useRef<HTMLDivElement>(null), [ends, setEnds] = useState({ left: true, right: true });
 
   // "Near you" is the week on a map (components/campus/near.tsx), for a campus whose sections are drawn. It searches as "Best for you" does.
-  const land = useMemo(() => landOf(campus.slug), [campus.slug]), near = view === 'near' && !!land;
+  const land = useMemo(() => landOf(campus.slug), [campus.slug]);
+  // On a wide window the map is always there, beside the week, so "Near you" is not a view of its own.
+  const wide = useSyncExternalStore(onWide, wideNow, () => false) && !!land, near = !wide && view === 'near' && !!land;
+  // Wide: the ticket that is on, on the map and in the list. Not chosen yet, or no longer in the list, it is the first one with a spot; `null` is "none", by choice.
+  const [sel, setSel] = useState<string | null | undefined>(undefined), [hot, setHot] = useState<string | null>(null), [you, setYou] = useState<Point | null>(null);
+  const srcs = useRef<HTMLDivElement>(null);
   const picked = useMemo(() => pick(tickets.map((ticket): Findable => ({ id: ticket.id, title: ticket.title, host: ticket.by, place: ticket.place, source: ticket.source, words: ticket.words, pull: ticket.pull })), typed, view === 'all' ? 'all' : 'best', campus.listSource), [tickets, typed, view, campus.listSource]);
   const byId = useMemo(() => new Map(tickets.map(ticket => [ticket.id, ticket])), [tickets]);
   const shown = [...picked.best, ...picked.rest], opened = open && shown.includes(open.id) ? byId.get(open.id) ?? null : null;
   const onMap = useMemo(() => { const left = new Set([...picked.best, ...picked.rest]); return tickets.filter(ticket => ticket.map && left.has(ticket.id)); }, [tickets, picked]);
+  const lit = !wide || sel === null ? null : sel && shown.includes(sel) ? sel : shown.find(id => byId.get(id)?.map) ?? null;
+  // The ink thumb of the sources sits under the one that is on.
+  useLayoutEffect(() => {
+    const bar = srcs.current;
+    if (!bar) return;
+    const put = () => { const on = bar.querySelector<HTMLElement>('[aria-pressed=true]'); if (on) { bar.style.setProperty('--x', `${on.offsetLeft}px`); bar.style.setProperty('--w', `${on.offsetWidth}px`); } };
+    put(); addEventListener('resize', put); document.fonts?.ready.then(put);
+    return () => removeEventListener('resize', put);
+  }, [wide, view]);
 
   const measure = () => { const row = rail.current; if (row) setEnds({ left: row.scrollLeft < 8, right: row.scrollLeft > row.scrollWidth - row.clientWidth - 8 }); };
   useEffect(() => { measure(); addEventListener('resize', measure); return () => removeEventListener('resize', measure); }, [shown.length, opened?.id]);
   // A ticket that was just opened is brought to the left edge, so its panel has the room.
   useEffect(() => {
     const row = rail.current, card = open?.fresh ? row?.querySelector<HTMLElement>('.cs-ev.open') : null;
-    if (row && card) row.scrollTo?.({ left: row.scrollLeft + card.getBoundingClientRect().left - row.getBoundingClientRect().left - 6, behavior: 'smooth' });
-  }, [open]);
+    // Wide: the list runs down, and the panel opens under its ticket.
+    if (row && card && wide) (row.querySelector('.cs-sheet') ?? card).scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    else if (row && card) row.scrollTo?.({ left: row.scrollLeft + card.getBoundingClientRect().left - row.getBoundingClientRect().left - 6, behavior: 'smooth' });
+  }, [open, wide]);
 
   // Plans already on at an @place, for the posting panel: a person naming that place can join one instead.
   const soon = useMemo(() => tickets.filter(ticket => ticket.tag).map((ticket): Soon => ({ id: ticket.id, tag: ticket.tag!, title: ticket.title, day: ticket.day, time: ticket.time, mine: !!ticket.mine, faces: ticket.known,
@@ -79,7 +108,9 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   const togglePost = () => { setOpen(null); setMessage(''); setPosting(now => !now); rail.current?.scrollTo?.({ left: 0, behavior: 'smooth' }); };
 
   const show = (id: string, pane: Pane) => { setCopied(false); setPosting(false); setOpen(now => now?.id === id && now.pane === pane ? null : { id, pane, fresh: true }); };
-  const search = (next: string) => { setTyped(next); setOpen(null); setEntering(true); rail.current?.scrollTo?.({ left: 0 }); };
+  const search = (next: string) => { setTyped(next); setOpen(null); setEntering(true); rail.current?.scrollTo?.({ left: 0, top: 0 }); };
+  /** Wide: a stamp pressed on the map picks its ticket, and the list brings that ticket into view. */
+  const pickOnMap = (id: string | null) => { setSel(id); if (id) requestAnimationFrame(() => rail.current?.querySelector(`[data-id="${CSS.escape(id)}"]`)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })); };
   /** Runs an action; a signed-out caller is sent to sign in and back. */
   const run = (action: () => Promise<ActResult>, after?: () => void) => start(async () => {
     setMessage('');
@@ -109,17 +140,20 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
 
   const card = (ticket: Ticket, at: number) => {
     const isOpen = opened?.id === ticket.id, details = isOpen && open!.pane === 'more';
-    return <article key={ticket.id} className={`cs-ev ${isOpen ? 'open' : ''}`} style={{ '--i': at } as React.CSSProperties}
-      onClick={event => { if (!(event.target as HTMLElement).closest('button, a, input')) show(ticket.id, 'more'); }}>
+    const spot: Point | null = wide && ticket.map ? [ticket.map.lon, ticket.map.lat] : null;
+    return <article key={ticket.id} data-id={ticket.id} className={`cs-ev ${isOpen ? 'open' : ''} ${lit === ticket.id ? 'sel' : ''} ${wide && hot === ticket.id ? 'hov' : ''}`} style={{ '--i': at, ...(wide && { viewTransitionName: `ev-${ticket.id.replace(/[^a-zA-Z0-9_-]/g, '')}` }) } as React.CSSProperties}
+      onMouseEnter={wide ? () => setHot(ticket.id) : undefined} onMouseLeave={wide ? () => setHot(null) : undefined}
+      onClick={event => { if ((event.target as HTMLElement).closest('button, a, input')) return; if (wide) setSel(ticket.id); else show(ticket.id, 'more'); }}>
       <div className="cs-top"><Tile top={ticket.day} big={ticket.time} met={ticket.stub.kind === 'group' && ticket.stub.state === 'met'} />
         <div className="cs-body"><h3>{ticket.title}</h3><p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{ticket.tag && <b className="cs-at">@{ticket.tag}</b>}{[ticket.by, ticket.place].filter(Boolean).join(' · ')}</p></div>
-        <button className="cs-more" aria-expanded={details} onClick={() => show(ticket.id, 'more')}>{details ? 'Close' : 'Details'}<Chevron /></button></div>
+        {spot && <span className="cs-walk"><Pin />{you ? `${walkMinutes(you, spot)} min walk` : 'On the map'}</span>}
+        <button className="cs-more" aria-expanded={details} aria-label={details ? 'Close' : 'Details'} onClick={() => { if (wide) setSel(ticket.id); show(ticket.id, 'more'); }}><span>{details ? 'Close' : 'Details'}</span><Chevron /></button></div>
       {stub(ticket)}
     </article>;
   };
 
   const more = (ticket: Ticket) => {
-    const map = near ? null : ticket.map, box = map && [map.lon - .0062, map.lat - .0026, map.lon + .0062, map.lat + .0026].map(n => n.toFixed(4)).join('%2C');
+    const map = near || wide ? null : ticket.map, box = map && [map.lon - .0062, map.lat - .0026, map.lon + .0062, map.lat + .0026].map(n => n.toFixed(4)).join('%2C');
     const people = ticket.mine ? ticket.mine.members.filter(face => !face.me).map(face => ({ ...face, why: face.here ? 'Checked in' : 'In your group' })) : ticket.known;
     return <div className={`cs-regp ${map ? '' : 'wide'}`}><div className="cs-regd">
       {ticket.about && <p>{ticket.about}</p>}
@@ -163,8 +197,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   // Only an event at a place Loop knows has a spot on the map, and the line says how many do.
   const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
-  return <div className="cs">
-    <header className="cs-nav">
+  const bar = <header className="cs-nav">
       <Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
       <nav className="cs-links" aria-label={campus.name}><Link href={`/c/${campus.slug}`} aria-current="page">This week</Link>
         {viewer?.groups.map(group => <Link key={group.href} href={group.href}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}</nav>
@@ -173,13 +206,49 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
           : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
         {viewer ? <Account screen={screen} signOut={signOut} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}
       </div>
-    </header>
+    </header>;
+  const ask = <input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />;
+  const post = viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>;
+  const shelf = earning.length > 0 && <div className="cs-shelf"><h2>Rewards you are earning</h2><ul className="cs-coupons">{earning.map(coupon => <CouponRow key={coupon.id} coupon={coupon} showing={showing === coupon.id} busy={busy}
+    onShow={() => setShowing(now => now === coupon.id ? null : coupon.id)} onUse={() => run(() => markCouponUsed(coupon.id), () => setShowing(null))} />)}</ul></div>;
+
+  // Wide: search and sources on one line across the page, then the week in a column of its own with the map beside it.
+  // The words to try open under the search line, and the list is what turns the map.
+  if (wide) return <div className="cs cs-wide">{bar}
+    <main className="cs-main"><section className="cs-fill">
+      <div className="cs-strip">
+        <div className="cs-find">{ask}
+          <div className="cs-try" role="group" aria-label="Words to try" onMouseDown={event => event.preventDefault()}><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word}
+            onClick={event => { glide(() => search(typed === word ? '' : word)); event.currentTarget.blur(); (document.activeElement as HTMLElement | null)?.blur?.(); }}>{word}</button>)}</div></div>
+        <div className="cs-srcs" ref={srcs} role="group" aria-label="Where plans are listed from">
+          {([['best', 'Best for you'], ['all', campus.listSource]] as const).map(([key, label]) => <button key={key} aria-pressed={(view === 'all' ? 'all' : 'best') === key} onClick={() => glide(() => { setView(key); setOpen(null); rail.current?.scrollTo?.({ top: 0 }); })}>{label}</button>)}
+          {SOON.filter(name => name !== campus.listSource).map(name => <span key={name}>{name}<i>soon</i></span>)}</div>
+      </div>
+      {message && <p className="cs-alert" role="alert">{message}</p>}
+      {postSheet && <div className="cs-wide-post">{postSheet}</div>}
+      <div className="cs-split">
+        <div className="cs-col">
+          <div className="cs-tally">{post}<h2 aria-live="polite"><b>{picked.line}</b>{shown.length > 0 && <span>{onMap.length === shown.length ? 'All' : onMap.length} on the map</span>}</h2></div>
+          <div className="cs-scroll" ref={rail}>
+            <div className="cs-grid">{picked.nothing ? nothing : <>
+              {picked.best.map(row)}
+              {picked.rest.length > 0 && <div className="cs-then"><b>{count}</b><span>{words.join(' ')}</span></div>}
+              {picked.rest.map((id, at) => row(id, picked.best.length + 1 + at))}</>}</div>
+            {shelf}
+          </div>
+        </div>
+        <Near beside land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} />
+      </div>
+    </section></main>
+  </div>;
+
+  return <div className="cs">{bar}
     <main className="cs-main"><section className="cs-fill">
       <div className="cs-ask"><input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />
-        <div className="cs-tabs">{([['best', 'Best for you'], ['all', `All of ${campus.listSource}`], ...(land ? [['near', 'Near you'] as const] : [])] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
+        <div className="cs-tabs">{([['best', 'Best for you'], ['all', campus.listSource], ...(land ? [['near', 'Near you'] as const] : [])] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
       {/* The count sits in a pill, and posting starts from the "+" at its left end: above the row, so it is there wherever the row is scrolled to (design D13). */}
       <div className="cs-count"><div className="cs-tally">
-        {viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>}
+        {post}
         <h2 aria-live="polite">{near ? nearLine : picked.line}</h2></div>
         <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
@@ -196,8 +265,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
             <button className="cs-rgo l" hidden={ends.left} aria-label="Earlier events" onClick={() => rail.current?.scrollBy({ left: -604, behavior: 'smooth' })}><Chevron /></button>
             <button className="cs-rgo r" hidden={ends.right} aria-label="More events" onClick={() => rail.current?.scrollBy({ left: 604, behavior: 'smooth' })}><Chevron /></button></div>}
       </div>}
-      {earning.length > 0 && <div className="cs-shelf"><h2>Rewards you are earning</h2><ul className="cs-coupons">{earning.map(coupon => <CouponRow key={coupon.id} coupon={coupon} showing={showing === coupon.id} busy={busy}
-        onShow={() => setShowing(now => now === coupon.id ? null : coupon.id)} onUse={() => run(() => markCouponUsed(coupon.id), () => setShowing(null))} />)}</ul></div>}
+      {shelf}
     </section></main>
   </div>;
 }

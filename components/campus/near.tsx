@@ -163,9 +163,16 @@ export type NearProps = {
   picked: string | null; onPick: (id: string | null) => void;
   /** The open ticket. It takes the place of the dial. */
   children?: ReactNode;
+  /** On a wide screen the map sits beside the list of tickets. The list is then the control: there is no dial and no ticket
+   *  opens over the map. `picked` is the plan that is on, and it hands over its ticket on the map as the dial's plan does. */
+  beside?: boolean;
+  /** The plan the pointer is over in the list, and the way to say which stamp the pointer is over. */
+  hot?: string | null; onHover?: (id: string | null) => void;
+  /** Told where the person stands once the browser says, so the list can say how far each plan is. */
+  onYou?: (at: Point | null) => void;
 };
 
-export function Near({ land, tickets, me, asked, picked, onPick, children }: NearProps) {
+export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou }: NearProps) {
   const spots = useMemo(() => tickets.flatMap((ticket): Spot[] => {
     if (!ticket.map) return [];
     const at: Point = [ticket.map.lon, ticket.map.lat], sec = sectionAt(land, at);
@@ -181,8 +188,12 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
   const [wall, setWall] = useState<Pick<Wall, 'id' | 'kind' | 'view'> | null>(null);
 
   const here = land.find(each => each.id === view)!, list = useMemo(() => spots.filter(spot => spot.sec === view), [spots, view]);
-  const at = Math.max(0, list.findIndex(spot => spot.ticket.id === litId)), lit = list[at] ?? null;
-  const open = picked ? spots.find(spot => spot.ticket.id === picked) ?? null : null;
+  // Beside the list, the plan that is on is the one the list picked, and no ticket is ever open over the map (`up`).
+  const at = Math.max(0, list.findIndex(spot => spot.ticket.id === litId)), lit = beside ? list.find(spot => spot.ticket.id === picked) ?? null : list[at] ?? null;
+  const up = beside ? null : picked, open = up ? spots.find(spot => spot.ticket.id === up) ?? null : null;
+  // A plan picked in the list that is in another section brings the map to that section.
+  const [seen, setSeen] = useState(picked);
+  if (picked !== seen) { setSeen(picked); const to = beside && picked ? spots.find(spot => spot.ticket.id === picked)?.sec : null; if (to && to !== view) setView(to); }
   // What the map hangs each stamp on. The map places these; the page draws the stamps inside them.
   const pins = useMemo(() => typeof document === 'undefined' ? [] : list.map(spot => ({ id: spot.ticket.id, at: spot.at, el: document.createElement('div') })), [list]);
   const youEl = useMemo(() => you && view === standing && typeof document !== 'undefined' ? document.createElement('div') : null, [you, view, standing]);
@@ -192,22 +203,22 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
   // Where the view was when the ticket was dealt, and how far off register the second ink is right now.
   const home = useRef<{ zoom: number; x: number; y: number } | null>(null), ink = useRef({ rest: REST, hand: [0, 0] as Point });
   // What the map's own handlers read: they are set up once and must see the screen as it is now.
-  const now = { land, here, standing, you, lit, open, on, picked, onPick };
+  const now = { land, here, standing, you, lit, open, on, picked, onPick, low: beside ? 0 : DIAL };
   const live = useRef(now);
   useLayoutEffect(() => { live.current = now; });
 
   /** Where the view should be. `floor` is the whole section in view: as far out as it goes. */
   const cam = useCallback(() => {
     const s = live.current, box = bounds(s.here.ring), k = Math.cos(box.centre[1] * Math.PI / 180);
-    const w = host.current?.clientWidth ?? 400, h = host.current?.clientHeight ?? 600, top = band.current?.offsetHeight ?? 0, low = sheet.current?.offsetHeight ?? DIAL;
+    const w = host.current?.clientWidth ?? 400, h = host.current?.clientHeight ?? 600, top = band.current?.offsetHeight ?? 0, low = sheet.current?.offsetHeight ?? s.low;
     const zoomFor = (mpp: number) => Math.log2(40075016.686 * k / (512 * mpp));
-    const floor = zoomFor(Math.max((box.east - box.west) * 111320 * k / Math.max(160, w - 36), (box.north - box.south) * 110540 / Math.max(160, h - top - DIAL - 110))) - .1;
+    const floor = zoomFor(Math.max((box.east - box.west) * 111320 * k / Math.max(160, w - 36), (box.north - box.south) * 110540 / Math.max(160, h - top - s.low - 110))) - .1;
     // It starts as close as it can: you and the plan that is on just fit, and the map travels as the dial turns.
     // Next door, or with no spot of your own, it sits on the plan alone. With nothing on it shows the whole section.
     const home = s.here.id === s.standing;
     let center: Point = s.lit ? s.lit.at : home ? s.you ?? s.here.rest : box.centre, zoom = s.lit ? CLOSE - .7 : -Infinity;   // nothing on: the whole section, there is nothing to stand close to
     if (s.lit && home && s.you) {
-      const a = s.you, b = s.lit.at, mpp = Math.max(Math.abs(a[0] - b[0]) * 111320 * k / Math.max(160, w - 190), Math.abs(a[1] - b[1]) * 110540 / Math.max(160, h - top - DIAL - 230), 1e-9);
+      const a = s.you, b = s.lit.at, mpp = Math.max(Math.abs(a[0] - b[0]) * 111320 * k / Math.max(160, w - 190), Math.abs(a[1] - b[1]) * 110540 / Math.max(160, h - top - s.low - 230), 1e-9);
       center = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; zoom = Math.min(CLOSE - .7, zoomFor(mpp));
     }
     zoom = Math.max(floor, zoom);
@@ -217,7 +228,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
 
   /** Stamps near the right edge turn to face inward, and the way on sits where the push leaves the view. */
   const place = useCallback((map: GlMap) => {
-    const w = host.current?.clientWidth ?? 0, h = host.current?.clientHeight ?? 0, top = band.current?.offsetHeight ?? 0, low = h - (sheet.current?.offsetHeight ?? DIAL);
+    const w = host.current?.clientWidth ?? 0, h = host.current?.clientHeight ?? 0, top = band.current?.offsetHeight ?? 0, low = h - (sheet.current?.offsetHeight ?? live.current.low);
     for (const mark of marks.current) mark.el.classList.toggle('far', map.project(mark.at).x > w - 96);
     const el = way.current, pushed = wallAt.current;
     if (!el || !pushed) return;
@@ -248,7 +259,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
     const bub = host.current?.querySelector<HTMLElement>('.cs-bub'), frame = host.current?.getBoundingClientRect();
     if (!bub || !frame) return;
     const rect = (el: Element) => { const r = el.getBoundingClientRect(); return [r.left - frame.left, r.top - frame.top, r.right - frame.left, r.bottom - frame.top]; };
-    const pin = rect(bub.parentElement!), w = bub.offsetWidth, h = bub.offsetHeight, top = band.current?.offsetHeight ?? 0, low = frame.height - (sheet.current?.offsetHeight ?? DIAL);
+    const pin = rect(bub.parentElement!), w = bub.offsetWidth, h = bub.offsetHeight, top = band.current?.offsetHeight ?? 0, low = frame.height - (sheet.current?.offsetHeight ?? live.current.low);
     const others = [...host.current!.querySelectorAll('.cs-pin, .cs-you, .cs-way, .cs-rose, .cs-scale')].filter(el => el !== bub.parentElement).map(rect);
     const hits = (x: number, y: number) => others.filter(o => x < o[2] && o[0] < x + w && y < o[3] && o[1] < y + h).length + (x < 4 || x + w > frame.width - 4 || y < top + 4 || y + h > low - 4 ? 100 : 0);
     const corners: [string, number, number][] = [['', pin[0], pin[1] - 24 - h], ['r', pin[2] - w, pin[1] - 24 - h], ['low', pin[0], pin[3] + 14], ['low r', pin[2] - w, pin[3] + 14]];
@@ -309,6 +320,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
       setYou(spot); setStanding(sec.id); setView(sec.id); setLitId(null); setWhere('here');
     }, () => setWhere('off'), { maximumAge: 60000, timeout: 8000 });
   }, [land]);
+  useEffect(() => { onYou?.(you); }, [you, onYou]);
 
   // The section on screen is cut out of the veil, and its margins name the sections next door.
   useEffect(() => {
@@ -373,13 +385,13 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
   const away = hops(land, standing, view), walk = (to: Point) => you ? walkMinutes(you, to) : null;
   const kicker = away ? [`${away} ${away === 1 ? 'step' : 'steps'} from ${you ? 'you' : 'the start'}`, you ? `${walk(middle(here.ring))} min walk` : null].filter(Boolean).join(' · ')
     : where === 'here' ? 'You are here' : where === 'away' ? 'You are away from campus' : where === 'off' ? 'Your location is off' : 'Finding you';
-  const shown = wall && !picked && wall.view === view ? wall : null, there = shown?.id ? land.find(each => each.id === shown.id) : undefined;
+  const shown = wall && !up && wall.view === view ? wall : null, there = shown?.id ? land.find(each => each.id === shown.id) : undefined;
 
   const pin = (spot: Spot, nth: number) => {
-    const { ticket } = spot, isLit = !picked && lit?.ticket.id === ticket.id, faces = ticket.mine ? ticket.mine.members : ticket.known;
+    const { ticket } = spot, isLit = !up && lit?.ticket.id === ticket.id, faces = ticket.mine ? ticket.mine.members : ticket.known;
     const reward = ticket.stub.kind === 'none' ? null : ticket.stub.text, mins = view === standing ? walk(spot.at) : null;
-    return <button className={`cs-pin ${isLit || picked === ticket.id ? 'sel' : ''} ${picked && picked !== ticket.id ? 'dim' : ''} ${ticket.action === 'checkin' ? 'now' : ''}`} style={{ '--lean': `${[-4, 3, -2, 4, -3][nth % 5]}deg` } as CSSProperties}
-      aria-label={`${ticket.title}, ${ticket.day} ${ticket.time}`} aria-expanded={picked === ticket.id} onClick={() => { setLitId(ticket.id); onPick(picked === ticket.id ? null : ticket.id); }}>
+    return <button className={`cs-pin ${isLit || up === ticket.id ? 'sel' : ''} ${up && up !== ticket.id ? 'dim' : ''} ${hot === ticket.id ? 'hov' : ''} ${ticket.action === 'checkin' ? 'now' : ''}`} style={{ '--lean': `${[-4, 3, -2, 4, -3][nth % 5]}deg` } as CSSProperties}
+      aria-label={`${ticket.title}, ${ticket.day} ${ticket.time}`} {...(beside ? { 'aria-pressed': isLit } : { 'aria-expanded': up === ticket.id })} onMouseEnter={() => onHover?.(ticket.id)} onMouseLeave={() => onHover?.(null)} onClick={() => { setLitId(ticket.id); onPick(picked === ticket.id ? null : ticket.id); }}>
       <span className="cs-postage">{isLit && <svg className="cs-burst" viewBox="-55 -55 110 110" aria-hidden="true"><path d={BURST} /></svg>}
         <span><svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[pictureOf(ticket)]}</svg><b>{ticket.time}</b><small>{ticket.day}</small></span></span>
       {isLit && <Postmark town={here.name} time={ticket.time} day={ticket.day} />}
@@ -389,7 +401,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
     </button>;
   };
 
-  return <div className={`cs-near ${picked ? 'picked' : ''}`} ref={host}>
+  return <div className={`cs-near ${up ? 'picked' : ''}`} ref={host}>
     <svg className="cs-near-defs" width={0} height={0} aria-hidden="true"><defs><path id="cs-arc-over" d="M-21 0a21 21 0 0 1 42 0" /><path id="cs-arc-under" d="M-22 0a22 22 0 0 0 44 0" /></defs>
       <filter id="cs-rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves={2} seed={7} /><feDisplacementMap in="SourceGraphic" scale={2.4} /></filter></svg>
     <div className="cs-near-map" ref={canvas} /><i className="cs-near-tooth" /><i className="cs-near-age" />
@@ -399,13 +411,13 @@ export function Near({ land, tickets, me, asked, picked, onPick, children }: Nea
           <span><b>{there.name}</b>{[there.id === standing ? (you ? 'Where you stand' : 'Where you started') : you ? `${walk(middle(there.ring))} min walk` : null, `${on[there.id]} on`].filter(Boolean).join(' · ')}</span><Arrow /></button>
       : <div className="cs-way none" role="status" key={`${shown.id}|${shown.kind}`} ref={el => { way.current = el; if (el && map) place(map); }}>
           <span><b>{there?.name ?? 'Coming soon'}</b>{shown.kind === 'far' ? 'Not open from here yet' : shown.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>{there && <Arrow />}</div>)}
-    {!picked && <>
+    {!up && <>
       {/* The compass is the one button on the map. */}
       <button className="cs-rose" aria-label="Back to where you are" onClick={recenter}><svg viewBox="-25 -25 50 50" aria-hidden="true"><circle className="ring" r={17} /><path className="south" d="M0-21 4.5 0 0 21-4.5 0z" /><path className="north" d="M0-21 4.5 0h-9z" /><path className="arms" d="M-13 0h-5M13 0h5" /><circle className="hub" r={1.6} /></svg></button>
-      <div className="cs-scale" ref={rule} style={{ bottom: (lit ? DIAL : 84) + 16 }} aria-hidden="true"><i /></div></>}
-    <div className={`cs-near-sheet ${picked ? 'open' : lit ? 'dial' : ''}`} ref={sheet}>
-      {picked ? children : lit ? <Dial list={list} at={at} onTurn={to => setLitId(list[to].ticket.id)} onOpen={() => onPick(lit.ticket.id)} />
-        : <p className="cs-near-none"><b>{asked ? `Nothing in ${here.name} for “${asked}”` : `Nothing on in ${here.name} yet`}</b>{asked ? 'Try another word, or push the edge of the map to look next door.' : 'Push the edge of the map to look next door.'}</p>}</div>
+      <div className="cs-scale" ref={rule} style={{ bottom: beside ? (list.length ? 16 : 100) : (lit ? DIAL : 84) + 16 }} aria-hidden="true"><i /></div></>}
+    {(!beside || !list.length) && <div className={`cs-near-sheet ${up ? 'open' : lit ? 'dial' : ''}`} ref={sheet}>
+      {up ? children : lit ? <Dial list={list} at={at} onTurn={to => setLitId(list[to].ticket.id)} onOpen={() => onPick(lit.ticket.id)} />
+        : <p className="cs-near-none"><b>{asked ? `Nothing in ${here.name} for “${asked}”` : `Nothing on in ${here.name} yet`}</b>{asked ? 'Try another word, or push the edge of the map to look next door.' : 'Push the edge of the map to look next door.'}</p>}</div>}
     {pins.map((each, nth) => { const spot = list.find(one => one.ticket.id === each.id); return spot ? createPortal(pin(spot, nth), each.el, each.id) : null; })}
     {youEl && createPortal(<span className="cs-you">{me ? <FaceDot face={{ ...me, me: true }} /> : <i />}<b>YOU</b></span>, youEl)}
   </div>;

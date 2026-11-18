@@ -186,3 +186,80 @@ describe('Near you', () => {
     expect(await screen.findByText('Nothing in Collegetown for “opera”')).toBeTruthy();
   });
 });
+
+// A wide window: the map sits beside the week, and the list is what turns it.
+describe('The map beside the week, on a wide window', () => {
+  async function wide(tickets = week) {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-width'), addEventListener() {}, removeEventListener() {} }));
+    locate(null);
+    render(<CampusScreen screen={model('cornell', tickets)} signInHref="/sign-in" />);
+    await waitFor(() => expect(maps).toHaveLength(1));
+    return maps[0];
+  }
+  const card = (title: string) => screen.getByRole('heading', { level: 3, name: title }).closest('article')!;
+  const stamp = (title: string) => screen.getByRole('button', { name: `${title}, Today ${week.find(each => each.title === title)!.time}` });
+
+  it('shows the map without a "Near you" view, names the sources still to come, and has no dial', async () => {
+    await wide();
+    expect(screen.queryByRole('button', { name: 'Near you' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'CampusGroups' })).toHaveAttribute('aria-pressed', 'false');
+    const sources = screen.getByRole('group', { name: 'Where plans are listed from' });
+    expect(within(sources).getByText('Luma')).toBeTruthy();
+    expect(within(sources).getByText('Posh')).toBeTruthy();
+    expect(within(sources).queryByRole('button', { name: /Luma|Posh/ })).toBeNull();
+    expect(screen.queryByRole('slider')).toBeNull();
+    expect(screen.getByRole('heading', { level: 2, name: /4 on the map/ })).toBeTruthy();
+  });
+
+  it('starts on the first plan with a spot, and a ticket pressed in the list becomes the plan that is on', async () => {
+    await wide();
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Study group'));
+    expect(card('Study group').className).toContain('sel');
+    fireEvent.click(card('Dumpling night'));
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Dumpling night');
+    expect(card('Dumpling night').className).toContain('sel');
+    expect(stamp('Dumpling night')).toHaveAttribute('aria-pressed', 'true');
+    // The ticket did not open: picking is not Details.
+    expect(within(card('Dumpling night')).getByRole('button', { name: 'Details' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('a stamp pressed on the map picks its ticket in the list, and pressed again lets go', async () => {
+    await wide();
+    await waitFor(() => expect(pins()).toContain('Dumpling night, Today 8pm'));
+    fireEvent.click(stamp('Dumpling night'));
+    expect(card('Dumpling night').className).toContain('sel');
+    expect(card('Study group').className).not.toContain('sel');
+    fireEvent.click(stamp('Dumpling night'));
+    expect(card('Dumpling night').className).not.toContain('sel');
+    expect(document.querySelector('.cs-bub')).toBeNull();
+  });
+
+  it('a ticket in another part of town brings the map there, and one with no spot leaves the map alone', async () => {
+    await wide();
+    expect(place()).toBe('Collegetown');
+    fireEvent.click(card('Blitz night'));
+    expect(place()).toBe('Central Campus');
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Blitz night'));
+    fireEvent.click(card('Somewhere'));
+    expect(place()).toBe('Central Campus');
+    expect(document.querySelector('.cs-bub')).toBeNull();
+  });
+
+  it('the words to try sit with the search line, and searching narrows the list and the map together', async () => {
+    await wide();
+    fireEvent.click(within(screen.getByRole('group', { name: 'Words to try' })).getByRole('button', { name: 'study' }));
+    expect(screen.getByLabelText('Say what you feel like doing')).toHaveValue('study');
+    await waitFor(() => expect(pins()).toEqual(['Study group, Today 3pm']));
+    expect(screen.queryByRole('heading', { level: 3, name: 'Dumpling night' })).toBeNull();
+  });
+
+  it('Details opens the ticket under itself in the list, not over the map', async () => {
+    await wide();
+    const ticket = card('Dumpling night');   // found before it opens: the open panel repeats the title
+    fireEvent.click(within(ticket).getByRole('button', { name: 'Details' }));
+    expect(within(ticket).getByRole('button', { name: 'Close' })).toHaveAttribute('aria-expanded', 'true');
+    expect(document.querySelector('.cs-grid .cs-sheet')).toBeTruthy();
+    expect(document.querySelector('.cs-near-sheet.open')).toBeNull();
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Dumpling night');
+  });
+});
