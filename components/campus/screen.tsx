@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalS
 import { flushSync } from 'react-dom';
 import { checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import { Rings } from '@/components/LoopGlyphs';
-import { animal, CUSTOM, PHOTO } from '@/lib/campus/animals';
+import { animal, CUSTOM, NAMES, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
@@ -298,7 +298,11 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
   /** Another animal, never the one you have: the front door's seat, kept. */
   const shuffle = () => { const pool = viewer.picks.core.flatMap(tile => tile.face === null || tile.face === face ? [] : [tile.face]); if (pool.length) choose(pool[Math.floor(Math.random() * pool.length)]); };
   /** One animal of the picker. A premium one opens the plan for someone who has not subscribed. */
-  const tile = (one: Pet, locked = false) => <button key={one.src} className={`cs-pet ${locked ? 'locked' : ''}`} aria-pressed={one.face === null ? face === CUSTOM && own === one.src : face === one.face} aria-label={one.name}
+  // The picker is one grid. `find` narrows it by name, `gold` to the premium ones, which wear a gold ring wherever they are.
+  const [find, setFind] = useState(''), [gold, setGold] = useState(false);
+  const hit = (words: string, premium: boolean) => (!gold || premium) && words.toLowerCase().includes(find.trim().toLowerCase());
+  const called = (one: Pet) => `${one.name} ${one.face === null ? 'made' : NAMES[one.face] ?? ''}`;
+  const tile = (one: Pet, premium = false, locked = false) => <button key={one.src} className={`cs-pet ${premium ? 'gold' : ''}`} title={one.face === null ? undefined : NAMES[one.face]} aria-pressed={one.face === null ? face === CUSTOM && own === one.src : face === one.face} aria-label={one.name}
     onClick={() => locked ? setMaking(true) : one.face === null ? chooseOwn(one.src) : choose(one.face)}><img src={one.src} alt="" /></button>;
   const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot key={big ? face : 0} face={me} className={big && moved ? 'new' : ''} /><b className="cs-lvb">{level + 1}</b>{viewer.admin && <i className="cs-crown" title="Admin"><svg viewBox="0 0 24 20" aria-hidden="true"><path d="M3 16.5 1.5 5.5l5.6 4.2L12 2l4.9 7.7 5.6-4.2L21 16.5z" /><circle cx="1.8" cy="4.6" r="1.6" /><circle cx="12" cy="2" r="1.7" /><circle cx="22.2" cy="4.6" r="1.6" /></svg></i>}</span>;
   return <div className="cs-acct" ref={box}>
@@ -309,17 +313,17 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
       {picking && making ? <OwnFace asked={asked} left={left} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
-      : picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><h4>Pick your picture</h4>
+      : picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Search animals" placeholder="Search" />
+          <button className="cs-btn sm gold" aria-pressed={gold} onClick={() => setGold(!gold)}>Premium</button>
           <button className="cs-btn sm" onClick={shuffle}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.6c1.3 0 2.4.7 3 1.8l1.8 3.4c.6 1.1 1.7 1.8 3 1.8h2.6M12.5 9.5l2 2-2 2M1.5 11.5h2.6c.8 0 1.6-.3 2.1-.8M9.8 5.3c.5-.5 1.3-.8 2.1-.8h2.6M12.5 2.5l2 2-2 2" /></svg>Shuffle</button>
           <button className="cs-btn sm go" onClick={() => setPicking(false)}>Done</button></div>
         <div className="cs-pets-grid" role="group" aria-label="Pick your picture">
-          {viewer.ownPhoto && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
-          {viewer.picks.core.map(one => tile(one))}</div>
-        <h5>Premium</h5>
-        <div className="cs-pets-grid" role="group" aria-label="Premium pictures">
-          {viewer.picks.premium.map(one => tile(one, !asked && !viewer.admin))}
-          {owns.filter(one => ![...viewer.picks.core, ...viewer.picks.premium].some(each => each.src === one)).map((one, at) => <button key={one} className="cs-pet" aria-pressed={face === CUSTOM && own === one} aria-label={`Your own animal${owns.length > 1 ? ` ${at + 1}` : ''}`} onClick={() => chooseOwn(one)}><img src={one} alt="" /></button>)}
-          <button className="cs-pet add" aria-label="Create your own" onClick={() => setMaking(true)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button></div>
+          {/* Making one is always first. Then the person's own, the premium ones, and the rest. */}
+          <button className="cs-pet add gold" aria-label="Create your own" onClick={() => setMaking(true)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button>
+          {viewer.ownPhoto && hit('your photo', false) && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
+          {hit('your own animal made', true) && owns.filter(one => ![...viewer.picks.core, ...viewer.picks.premium].some(each => each.src === one)).map((one, at) => <button key={one} className="cs-pet gold" aria-pressed={face === CUSTOM && own === one} aria-label={`Your own animal${owns.length > 1 ? ` ${at + 1}` : ''}`} onClick={() => chooseOwn(one)}><img src={one} alt="" /></button>)}
+          {viewer.picks.premium.filter(one => hit(called(one), true)).map(one => tile(one, true, !asked && !viewer.admin))}
+          {viewer.picks.core.filter(one => hit(called(one), false)).map(one => tile(one))}</div>
         <small>Animal icons by <a href="https://www.figma.com/community/file/1514963172455082116" target="_blank" rel="noreferrer">Tran Mau Tri Tam</a>, CC BY 4.0.</small></div>
       /* eslint-enable @next/next/no-img-element */
       : <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
