@@ -13,6 +13,8 @@
    Every class starts with cs- and every rule sits under .cs, so nothing here reaches the groups site and app/loop.css is untouched. */
 @keyframes cs-pop { from { transform: scale(.2); opacity: 0; } }
 @keyframes cs-ping { from { transform: scale(1); opacity: .95; } 75%, to { transform: scale(1.55); opacity: 0; } }
+@keyframes cs-beckon { from { transform: scale(1); opacity: .9; } 40%, to { transform: scale(1.75); opacity: 0; } }
+@keyframes cs-turn { from { transform: rotate(0); } 30%, to { transform: rotate(180deg); } }
 @keyframes cs-in { from { opacity: 0; transform: translateY(14px); } }
 @keyframes cs-side { from { clip-path: inset(0 100% 0 0); transform: translateX(-18px); } to { clip-path: inset(0 -12px -12px 0); } }
 @keyframes cs-card { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
@@ -373,8 +375,13 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-line-bad { font-size: 14px; font-weight: 580; color: var(--cs-action); }
 .cs-at { margin-right: 7px; font-weight: 660; color: var(--cs-action); }
 /* the "+" that starts a plan sits in the line above the row; its panel opens in the row, the line beside what others are doing */
-.cs .cs-plus { flex: none; margin-right: auto; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px 12px 12px 4px; background: var(--cs-action); color: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), background-color .15s; }
-.cs .cs-plus:hover { transform: translate(-1px, -1px); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
+.cs-tally { display: inline-flex; align-items: center; gap: 11px; min-width: 0; padding: 5px 20px 5px 5px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-tally h2 { font-size: 17px; }
+.cs .cs-plus { position: relative; flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-action); color: var(--cs-paper); transition: transform .2s var(--cs-ease), background-color .15s; }
+/* it asks to be pressed: a ring leaves it and the cross turns, then it rests; still once the panel is open */
+.cs-plus::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--cs-action); opacity: 0; animation: cs-beckon 3.2s var(--cs-expo) 1s infinite; }
+.cs-plus svg { animation: cs-turn 3.2s var(--cs-expo) 1s infinite; } .cs-plus[aria-expanded=true]::after, .cs-plus[aria-expanded=true] svg { animation: none; }
+.cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
 .cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
 .cs-sheet.cs-post { flex-basis: min(780px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
 .cs-post-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 10px; }
@@ -463,8 +470,8 @@ body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Arch
 </div>
 
 <section class="mk-dir">
-  <h2><b>Built</b>A small "+" in the line above the row, opening the wide panel of B</h2>
-  <p>Closed, posting is only a small "+" beside the count, in the line above the tickets, so it stays put however far the row is scrolled. Pressed, the wide panel opens at the start of the row: your line on the left, the places people use and what is already on, on the right. The tickets slide over and nothing is covered. On an empty week the panel opens beside "Nothing here yet". This one is drawn with the same styles as the built screen. It opens closed: press the "+".</p>
+  <h2><b>Built</b>The count in a pill with the "+" at its left end, opening the wide panel of B</h2>
+  <p>Closed, posting is only the "+" at the left end of the count pill, in the line above the tickets, so it stays put however far the row is scrolled. Every few seconds a ring leaves the "+" and the cross turns, until it is pressed. Pressed, the wide panel opens at the start of the row: your line on the left, the places people use and what is already on, on the right. The tickets slide over and nothing is covered. On an empty week the panel opens beside "Nothing here yet". This one is drawn with the same styles as the built screen. It opens closed: press the "+".</p>
   <div class="mk-frame" data-dir="D"></div>
 </section>
 <section class="mk-dir">
@@ -535,7 +542,7 @@ function draw(dir) {
   if (dir === 'C') over = `<button class="mk-fab" data-toggle="C" aria-expanded="${s.open}" aria-label="Post a plan"><span>+</span></button>` + (s.open ? `<div class="mk-pop"><div class="cs-line">${sayBox('C')}<div class="cs-line-card" data-side="C"></div>${end('C')}</div></div>` : '');
   frame.innerHTML = `<div class="cs"><header class="cs-nav"><a class="cs-wm">Loop</a><nav class="cs-links"><a aria-current="page">This week</a></nav><div class="cs-nav-end"><span class="cs-ava">${face(12).replace('cs-face pet', 'cs-face pet')}</span></div></header>
     <main class="cs-main"><section class="cs-fill"><div class="cs-ask"><input type="search" placeholder="What do you feel like doing?"><div class="cs-tabs"><button aria-pressed="true">Best for you</button><button>All of CampusGroups</button></div></div>
-    <div class="cs-count"><h2>${empty && !s.posted.length ? 'Nothing on this week yet' : `${(empty ? 0 : WEEK.length) + s.posted.length} things on this week`}</h2>${inRow}</div>
+    <div class="cs-count">${inRow ? `<div class="cs-tally">${inRow}` : ''}<h2>${empty && !s.posted.length ? 'Nothing on this week yet' : `${(empty ? 0 : WEEK.length) + s.posted.length} things on this week`}</h2>${inRow ? '</div>' : ''}</div>
     <div class="cs-evs"><div class="cs-railwrap"><div class="cs-rail">${first}${mine}${rest}${last}</div></div></div>
     ${dir === 'C' && empty && !s.posted.length && !s.open ? '<span class="mk-hint">The + in the corner starts one</span>' : ''}</section></main>${over}</div>`;
   s.fresh = false;

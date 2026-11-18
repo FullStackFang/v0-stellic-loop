@@ -169,9 +169,10 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
     <main className="cs-main"><section className="cs-fill">
       <div className="cs-ask"><input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />
         <div className="cs-tabs">{([['best', 'Best for you'], ['all', `All of ${campus.listSource}`]] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
-      <div className="cs-count"><h2 aria-live="polite">{picked.line}</h2>
-        {/* Posting starts here, in the line above the row, so it is there wherever the row is scrolled to (design D13). */}
+      {/* The count sits in a pill, and posting starts from the "+" at its left end: above the row, so it is there wherever the row is scrolled to (design D13). */}
+      <div className="cs-count"><div className="cs-tally">
         {viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>}
+        <h2 aria-live="polite">{picked.line}</h2></div>
         <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
