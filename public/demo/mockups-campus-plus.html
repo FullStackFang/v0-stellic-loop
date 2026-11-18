@@ -371,6 +371,8 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-sug { display: grid; gap: 4px; } .cs-sug button { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; border-radius: 12px 12px 12px 4px; }
 .cs-sug button[style]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: max(10px, calc(var(--fill) * 100%)); border-radius: inherit; background: color-mix(in oklch, var(--cs-action) 14%, transparent); transform-origin: left; animation: cs-grow .6s var(--cs-expo) backwards; transition: width .4s var(--cs-expo), background-color .15s; }
 .cs-sug button[style]:hover::before { background: color-mix(in oklch, var(--cs-action) 24%, transparent); } .cs-sug button > span { position: relative; }
+/* on a bar the words are ink, not the paler blue and grey */
+.cs-sug button[style] b { color: var(--cs-ink); font-weight: 720; } .cs-sug button[style] small { color: color-mix(in oklch, var(--cs-ink) 78%, transparent); font-weight: 540; }
 .cs-sug button:hover b { text-decoration: underline; text-underline-offset: 3px; } .cs-sug b { font-weight: 680; color: var(--cs-action); } .cs-sug b.new { color: var(--cs-ink); } .cs-sug small { display: block; font-size: 12.5px; color: var(--cs-mute); }
 .cs-mini { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); } .cs-line-card h2 + .cs-mini { border-top: 0; }
 .cs-mini time { flex: none; width: 58px; padding: 6px 0; border-radius: 10px 10px 10px 3px; background: var(--cs-field); text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.15; }
