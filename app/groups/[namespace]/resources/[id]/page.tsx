@@ -19,7 +19,7 @@ export default async function SourcePage({ params, searchParams }: { params: Pro
   const { id, ...route } = await params, base = groupPath(route.namespace, route.slug);
   const { version } = await searchParams;
   const data = await loadSource(principal, route, id, version).catch(() => null);
-  if (!data) return <section className="lt-editor"><h1>Source unavailable</h1><p role="alert">The source changed, was removed, or your access ended. Return to the current resource library.</p><Link href={`${base}/resources`}>Resource library</Link></section>;
+  if (!data) return <section className="lt-editor"><h1>Source unavailable</h1><p role="alert">The source changed, was removed, or your access ended. Return to Resources.</p><Link href={`${base}/team?tab=resources`}>Resources</Link></section>;
   const { group, source } = data;
-  return <><Crumbs trail={group.trail} here={source.title}><Link className="lp-today" href={`${base}/resources`}>All resources</Link></Crumbs><h1>{source.title}</h1><p>Extracted searchable text · Version {source.version} · {source.state}</p><p>This source is untrusted author-provided content. The original file is not stored for download.</p><pre className="lt-editor" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{source.body.replaceAll('\f', '\n\n[Next PDF page]\n\n')}</pre></>;
+  return <><Crumbs trail={group.trail} here={source.title}><Link className="lp-today" href={`${base}/team?tab=resources`}>All resources</Link></Crumbs><h1>{source.title}</h1><p>Extracted searchable text · Version {source.version} · {source.state}</p><p>This source is untrusted author-provided content. The original file is not stored for download.</p><pre className="lt-editor" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{source.body.replaceAll('\f', '\n\n[Next PDF page]\n\n')}</pre></>;
 }

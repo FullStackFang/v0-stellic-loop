@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { setMemberHandle } from '@/lib/emba/tags';
-import { acceptInvitation, acceptInvitationById, declineInvitation, issueInvitation, revokeInvitation } from '@/lib/emba/invitations';
+import { acceptInvitation, acceptInvitationById, declineInvitation, revokeInvitation } from '@/lib/emba/invitations';
+import { addMemberNow } from '@/lib/emba/add-member';
 import type { PortalResult } from '@/components/emba/portal-types';
 
 const value = (data: FormData, key: string) => String(data.get(key) ?? '');
@@ -23,15 +24,11 @@ export async function saveTagHandle(_previous: PortalResult, data: FormData): Pr
   const handle = value(data, 'handle').trim().toLowerCase().replace(/^@/, '');
   return mutate(principal => setMemberHandle(db(), principal, { orgId: value(data, 'orgId'), handle: handle || null }));
 }
-export async function inviteMember(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+/** Adds a person to the group at once. They have nothing to accept and are sent nothing. */
+export async function addMember(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(async principal => {
-    const expiresAt = value(data, 'expiresAt');
-    const until = expiresAt ? new Date(`${expiresAt}Z`) : new Date(Date.now() + 14 * 86_400_000);
-    const invite = await issueInvitation(db(), principal, {
-      orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), recipientEmail: value(data, 'recipientEmail'), recipientName: value(data, 'recipientName'),
-      role: value(data, 'role') as 'member', expiresAt: until.toISOString(),
-    });
-    return { message: 'Invitation made.', invitationToken: invite.token };
+    await addMemberNow(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), email: value(data, 'email'), name: value(data, 'name'), role: value(data, 'role') as 'member' });
+    return { message: 'Added.' };
   });
 }
 export async function cancelInvite(_previous: PortalResult, data: FormData): Promise<PortalResult> {

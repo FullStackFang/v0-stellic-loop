@@ -8,6 +8,7 @@ import {EmbaError} from './errors';
 import {asksById,asksDue,closeDueAsks,openAskCounts,openAsks,type AskView,type Unanswered} from './team-asks';
 import {reading,type Listed,type Scope,type TeamHead} from './team-core';
 import {bare,ideasDue,oneShortFor,viewEvents,type EventView} from './team-events';
+import {resourceLines,type ResourceLines} from './team-resources';
 import {rowColumns,rowFrom,viewPeople,viewRecords,type PersonView,type RecordView,type Row} from './team-records';
 import {nameSchema,singleLine} from './team-text';
 
@@ -20,7 +21,7 @@ const day=z.string().regex(/^2[01]\d{2}-\d{2}-\d{2}$/).refine(value=>{const d=ne
 
 export type {Listed,TeamHead};
 export type Brief={version:number;body:string;deadline:string|null;editedAt:string};
-export type TeamBrief={team:TeamHead;timezone:string;today:string;brief:Brief|null;announcements:RecordView[];resources:Listed<string>;
+export type TeamBrief={team:TeamHead;timezone:string;today:string;brief:Brief|null;announcements:RecordView[];resources:ResourceLines;
  counts:{openClaims:number;currentOutputs:number;currentDecisions:number};
  /** How many asks are open, and how many of them the caller may answer and has not. */
  asks:{open:number;unanswered:number};grantExpiresOn:string|null;untrusted:true};
@@ -90,14 +91,12 @@ export async function teamBrief(db:Db,p:Principal,input:unknown):Promise<TeamBri
  const team=z.strictObject(scope).parse(input);
  return reading(db,p,team,async({q,lease,...base})=>{
   const announcements=await list(q,p,team,"r.kind='announcement'",'r.number desc',[],READ.announcements);
-  const {rows:documents}=await q.query<{title:string;total:number}>(`select v.title,count(*) over()::int as total from emba_document d join emba_document_version v on v.document_id=d.id and v.version=d.current_version
-   where d.org_id=$1 and d.loop_id=$2 and d.deleted_at is null order by v.created_at desc,d.id limit $3`,[team.orgId,team.loopId,READ.list]);
   const {rows:[counts]}=await q.query<TeamBrief['counts']>(`select count(*) filter(where ${openClaim})::int as "openClaims",count(*) filter(where r.kind='output')::int as "currentOutputs",count(*) filter(where r.kind='decision')::int as "currentDecisions"
    from emba_team_record r where r.org_id=$1 and r.loop_id=$2 and r.state='current'`,[team.orgId,team.loopId]);
   // Only the calling assistant's own grant, and only when it is about to end.
   const {rows:[grant]}=lease?await q.query<{on:string}>(`select to_char(expires_at at time zone 'UTC','YYYY-MM-DD') as on from emba_lease where id=$1 and expires_at<clock_timestamp()+make_interval(days=>${READ.warnDays})`,[lease]):{rows:[]};
   return {team:base.team,timezone:base.timezone,today:base.today,brief:await latestBrief(q,team),announcements:announcements.items,asks:await openAskCounts(q,p,team),
-   resources:{items:documents.map(row=>singleLine(row.title)),more:Math.max(0,(documents[0]?.total??0)-documents.length)},counts,grantExpiresOn:grant?.on??null,untrusted:true as const};
+   resources:await resourceLines(q,team),counts,grantExpiresOn:grant?.on??null,untrusted:true as const};
  });
 }
 

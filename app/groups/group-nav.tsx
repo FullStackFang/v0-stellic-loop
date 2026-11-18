@@ -19,6 +19,19 @@ export function Crumbs({ trail, here, children }: { trail: Placed[]; here?: stri
   </p>;
 }
 
+/**
+ * The head of a group's people pages: its name, how many are in it, and the sections. "Add people" is offered to
+ * the owners and organizers only, so the Members page is the list and nothing else.
+ */
+export function GroupHead({ group, base, here, people, canAdd, asking }: { group: Placed; base: string; here: 'members' | 'add'; people: number | null; canAdd: boolean; /** How many people are asking to join: shown on the tab, so a request is not missed from the list. */ asking: number }) {
+  return <header className="lp-mb-head"><span className="lp-mb-tile"><Rings /></span>
+    <div><h1>{group.orgName}</h1><p><span className="lp-handle">{groupHandle(group)}</span>{people !== null && <span>{people} {people === 1 ? 'person' : 'people'}</span>}</p></div>
+    <nav className="lp-tabs" aria-label="Group sections"><Link href={`${base}/team`}>Team</Link><Link href={base} aria-current={here === 'members' ? 'page' : undefined}>Members</Link>
+      {canAdd && <Link href={`${base}/add`} aria-current={here === 'add' ? 'page' : undefined}>Add people{asking > 0 && <span>{asking}</span>}</Link>}
+      <Link href={`${base}/team?tab=resources`}>Resources</Link><Link href="/groups/connections">Connections</Link></nav>
+  </header>;
+}
+
 /** The groups directly inside this one, and the way to start another for a person who may. */
 export function Inside({ group }: { group: Placed & { inside: Placed[]; canStart: boolean } }) {
   if (!group.inside.length && !group.canStart) return null;

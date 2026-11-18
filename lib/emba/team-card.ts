@@ -18,7 +18,7 @@
 // The address is a cache key: assistants may keep the page. Change the
 // version in it whenever the page changes in a way an old copy would break.
 
-export const CARD_URI='ui://loop/card-v3.html';
+export const CARD_URI='ui://loop/card-v4.html';
 export const CARD_MIME='text/html;profile=mcp-app';
 
 // No backtick and no dollar-brace inside: the page is one raw string.
@@ -84,6 +84,7 @@ button.plus[aria-pressed="true"]{color:var(--on-go);background:var(--go);border-
 button.cell{width:32px;min-height:27px;padding:0;border-radius:9px 9px 9px 3px;box-shadow:none;background:transparent;font-size:12.5px}
 button.cell.offered{box-shadow:inset 0 0 0 1px var(--line-2);background:var(--surface)}
 button.cell[aria-pressed="true"]{color:var(--on-go);background:var(--go);box-shadow:none}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 16px;margin:8px 0 0;font-size:13.5px}.facts dt{color:var(--muted)}.facts dd{margin:0}
 .cell s{top:-4px;right:-3px;min-width:13px;height:13px;padding:0 2px;border-radius:7px;font-size:9px;line-height:13px}
 </style>
 </head>
@@ -188,7 +189,9 @@ function read(result){
  if(!data||typeof data!=='object')return {text:text.split('\n')[0]};
  if(result.isError)return data.error==='unavailable'?{failed:UNREACHABLE,retry:true}:{failed:data.error==='forbidden'?DENIED:text.split('\n')[0]||UNREACHABLE,retry:false};
  var entries=[],head='',empty='',more=[],count='';
- if(Array.isArray(data.items)&&typeof data.count==='number'){
+ if(data.reason==='team_needed'&&data.resource&&Array.isArray(data.choices))entries.push({kind:'pick',choices:data.choices,resource:data.resource,note:'',busy:false});
+ else if(data.saved===true&&data.resource&&data.team)entries.push({kind:'saved',team:data.team,resource:data.resource});
+ else if(Array.isArray(data.items)&&typeof data.count==='number'){
   count=data.count+' waiting';
   empty='Nothing waiting from your groups.';
   data.items.forEach(function(item){
@@ -401,6 +404,48 @@ function drawRecord(entry){
  if(words)add(box,el('p','words',words));
  return box;
 }
+// A saved link or text, and the question asked when a save did not know the group. Tags are words an assistant wrote: text nodes only.
+function tagList(resource){
+ var tags=resource.tags||{},rows=[['Kind',tags.kind],['About',tags.about],['For',tags.audience],['Date in it',tags.foundOn]].filter(function(row){return row[1];});
+ if(resource.kind==='link'&&resource.host)rows.push(['Link on',resource.host]);
+ var list=el('dl','facts');
+ rows.forEach(function(row){add(list,el('dt','',row[0]),el('dd','',row[1]));});
+ return rows.length?list:null;
+}
+function drawSaved(entry){
+ var resource=entry.resource,box=el('section','item');
+ add(box,el('p','meta',(resource.existed?'Already in ':'Saved to ')+entry.team.name+' · '+entry.team.handle));
+ add(box,el('p','words',resource.name));
+ if(resource.tags&&resource.tags.summary)add(box,el('p','quiet',resource.tags.summary));
+ add(box,tagList(resource)||el('p','quiet',resource.described?'':'Not described yet'));
+ return box;
+}
+function drawPick(entry){
+ var resource=entry.resource,box=el('section','item'),can=canCall&&Boolean(toolArgs),row=el('div','row');
+ add(box,el('p','meta','Not saved yet'),el('p','words','Which group is this for?'),el('p','quiet',resource.name));
+ entry.choices.forEach(function(choice){add(row,button(choice.team,null,entry.busy||!can,function(){pickTeam(entry,choice);}));});
+ add(box,row);
+ if(!can)add(box,el('p','quiet','To choose, tell your assistant which group.'));
+ var tags=tagList(resource);
+ if(tags)add(box,el('p','quiet item','Already worked out'),tags);
+ if(entry.note)add(box,el('p','note',entry.note));
+ return box;
+}
+// The same save the model made, with the group the person chose. Nothing else is sent.
+function pickTeam(entry,choice){
+ if(entry.busy||!canCall||!toolArgs)return;
+ var args={};
+ Object.keys(toolArgs).forEach(function(key){args[key]=toolArgs[key];});
+ args.team=choice.handle;
+ entry.busy=true;entry.note='';draw();
+ request('tools/call',{name:'save_resource',arguments:args},250000).then(function(result){
+  var data=result&&result.structuredContent;
+  if(data&&data.saved===true&&data.resource){show(result);return;}
+  entry.busy=false;
+  entry.note=!data||typeof data!=='object'||data.error==='unavailable'?UNREACHABLE:data.error==='forbidden'?DENIED:'Not saved.';
+  draw();
+ },function(){entry.busy=false;entry.note=UNREACHABLE;draw();});
+}
 function retry(){
  model={loading:true};draw();
  request('tools/call',{name:toolName,arguments:toolArgs||{}},250000).then(show,function(){model={failed:UNREACHABLE,retry:true};draw();});
@@ -417,7 +462,7 @@ function draw(){
  else{
   if(!model.entries.length)add(root,el('p','head',model.empty||model.head));
   else if(model.head)add(root,el('p','head',model.head));
-  model.entries.slice(0,SHOWN).forEach(function(entry){add(root,entry.kind==='ask'?drawAsk(entry):entry.kind==='event'?drawEvent(entry):drawRecord(entry));});
+  model.entries.slice(0,SHOWN).forEach(function(entry){add(root,entry.kind==='ask'?drawAsk(entry):entry.kind==='event'?drawEvent(entry):entry.kind==='saved'?drawSaved(entry):entry.kind==='pick'?drawPick(entry):drawRecord(entry));});
   if(model.entries.length>SHOWN)add(root,el('p','quiet item',(model.entries.length-SHOWN)+' more: ask your assistant to list them.'));
   model.more.forEach(function(line){add(root,el('p','quiet',line));});
  }

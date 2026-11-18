@@ -1,0 +1,82 @@
+BEGIN:VCALENDAR
+PRODID:-//github.com/rianjs/ical.net//NONSGML ical.net 4.0//EN
+VERSION:2.0
+BEGIN:VEVENT
+CATEGORIES:Fundraising
+DESCRIPTION:The NYDM directors meet to discuss what is happening on each o
+ f their teams and how the co directors/ other directors can support them.
+ \n\nHosted by: New York Dance Marathon\n\nAdditional Information can be f
+ ound at: https://engage.nyu.edu/event/12685250
+DTEND:20261118T180000Z
+DTSTAMP:20261118T033551Z
+DTSTART:20261118T170000Z
+LOCATION:GCASL
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:NYDM Directors Meetings
+UID:https://engage.nyu.edu/event/12685250
+URL:https://engage.nyu.edu/event/12685250
+X-HOSTS:New York Dance Marathon
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Social
+CATEGORIES:Community
+DESCRIPTION:Outreach committee meeting every Wednesday at 6:30 in the Prog
+ ram Board lounge (Kimmel 211)!!!\n\nHosted by: NYU Program Board\n\nAddit
+ ional Information can be found at: https://engage.nyu.edu/event/12954685
+DTEND:20261118T180000Z
+DTSTAMP:20261118T033551Z
+DTSTART:20261118T170000Z
+GEO:40.729940;-73.997910
+LOCATION:PB Lounge (Kimmel 211)
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:Outreach Committee Meeting
+UID:https://engage.nyu.edu/event/12954685
+URL:https://engage.nyu.edu/event/12954685
+X-HOSTS:NYU Program Board
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Social
+DESCRIPTION:Join the Transfer Student Coordinators and Commuter Assistants
+  to pack care kits and enjoy food! All of the care kits will be sent to n
+ on-profit organizations and help make a difference in our local community
+ ! This will be a great opportunity to give back\, make new friends\, and 
+ have a great time. All supplies will be provided\, so all you need to bri
+ ng is you and your friends. We can't wait to see everyone there\, it will
+  be so much fun!\n\nHosted by: Commuter Assistants\, Transfer Life\n\nAdd
+ itional Information can be found at: https://engage.nyu.edu/event/1296361
+ 9
+DTEND:20261118T183000Z
+DTSTAMP:20261118T033551Z
+DTSTART:20261118T170000Z
+GEO:40.729940;-73.997910
+LOCATION:Kimmel 703
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:Giving Thanks\, Giving Back
+UID:https://engage.nyu.edu/event/12963619
+URL:https://engage.nyu.edu/event/12963619
+X-HOSTS:Transfer Life
+END:VEVENT
+BEGIN:VEVENT
+CATEGORIES:Social
+CATEGORIES:Professional & Career Development
+CATEGORIES:Politics\, Government & Law
+CATEGORIES:Professional Networking
+DESCRIPTION:Come chat and grab coffee with a member of the BLS E-Board!\n\
+ nHosted by: BIPOC Legal Society - All-University\n\nAdditional Informatio
+ n can be found at: https://engage.nyu.edu/event/12864901
+DTEND:20261125T220000Z
+DTSTAMP:20261118T033551Z
+DTSTART:20261013T130000Z
+GEO:40.729630;-73.997070
+LOCATION:NYU Bobst Library
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:BIPOC Legal Society E-Board Coffee Chats
+UID:https://engage.nyu.edu/event/12864901
+URL:https://engage.nyu.edu/event/12864901
+X-HOSTS:BIPOC Legal Society - All-University
+END:VEVENT
+END:VCALENDAR

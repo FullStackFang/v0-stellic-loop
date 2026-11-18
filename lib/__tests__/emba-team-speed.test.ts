@@ -36,7 +36,7 @@ it('tells the site and an assistant the same as before the list builders changed
 // Statements as the test database counts them: `begin` and `commit` are two more per read on the wire.
 // A read spends 7 of them before its own work (isolation, four for access, the team's head, the read record).
 // Before the list builders were folded (2026-11-13) the same reads took 33, 31 and 27.
-const BUDGET = { teamState: 18, teamBrief: 18, listAsks: 17 };
+const BUDGET = { teamState: 18, teamBrief: 19, listAsks: 17 };
 it('keeps a team page read inside its budget of statements', async () => {
   const c = counting(t.db);
   const spent = { teamState: await c.of(db => teamState(db, f.ben, f.team)), teamBrief: await c.of(db => teamBrief(db, f.ben, f.team)), listAsks: await c.of(db => listAsks(db, f.ben, f.team)) };

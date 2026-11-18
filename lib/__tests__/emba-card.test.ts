@@ -90,11 +90,11 @@ function mount(client:Client,theme:'light'|'dark'='dark',bare=false) {
 }
 const answers=async()=>(await t.db.query<{route:string}>('select route from emba_ask_answer')).rows;
 
-it('declares one card on the four tools, with standard keys only, and serves it as one self-contained page',async()=>{
+it('declares one card on the five tools, with standard keys only, and serves it as one self-contained page',async()=>{
  const f=await fixture(),s=await connect(f.agent);
  try{
   const tools=(await s.client.listTools()).tools,withCard=tools.filter(tool=>tool._meta!==undefined).map(tool=>tool.name).sort();
-  expect(withCard).toEqual(['ask','ask_results','events','waiting']);
+  expect(withCard).toEqual(['ask','ask_results','events','save_resource','waiting']);
   for(const tool of tools.filter(item=>withCard.includes(item.name)))expect(tool._meta).toEqual({ui:{resourceUri:CARD_URI}});
   // The two tools a button calls are the model's own: no card-only copy, and nothing that hides them from either side.
   expect(tools.filter(tool=>/card/i.test(tool.name))).toEqual([]);

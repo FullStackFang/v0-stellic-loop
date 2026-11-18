@@ -24,11 +24,15 @@ import { cancelTeamIdea, changeTeamIdea, newCalendarAddress, proposeTeamIdea, re
 import { CopyLink } from '@/components/emba/copy-link';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
 import { Alert, Via } from '../../glyphs';
+import { listResources } from '@/lib/emba/team-resources';
+import type { Described, LinkView, TextView } from '@/lib/emba/team-resources';
+import { ResourceBox } from '@/components/emba/resource-box';
+import { addResource, removeResource, removeTeamLink, retryResource } from '../../resource-actions';
 
 export const dynamic = 'force-dynamic';
 type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
 // The record is one section at a time, chosen by ?tab=. Every tab is a link, so a view can be shared and nothing depends on script.
-const TABS = [['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['events', 'Events'], ['ideas', 'Ideas'], ['travel', 'Travel'], ['asks', 'Asks'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
+const TABS = [['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['resources', 'Resources'], ['events', 'Events'], ['ideas', 'Ideas'], ['travel', 'Travel'], ['asks', 'Asks'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
 type Tab = typeof TABS[number][0];
 
 async function load(principal: Signed, route: GroupRoute, tab: Tab) {
@@ -44,13 +48,13 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
     teamState(db(), principal, scope), teamBrief(db(), principal, scope), listTeamEvents(db(), principal, scope), can('manage'),
     // The shown tab. Followers read the upcoming list and the asks but cannot mark interest or ask.
     shown(['events'], () => upcomingEvents(db(), principal, { ...scope, people: true })), shown(['events'], () => managersOnly(listTeamEvents(db(), principal, { ...scope, archived: true }))),
-    shown(['asks'], () => listAsks(db(), principal, scope)), shown(['events', 'asks', 'ideas', 'travel'], () => can('post')),
+    shown(['asks'], () => listAsks(db(), principal, scope)), shown(['events', 'asks', 'ideas', 'travel', 'resources'], () => can('post')),
     shown(['ideas'], () => whatsOn(db(), principal, scope)), shown(['ideas'], () => feedAddress(db(), principal, scope)), shown(['travel'], () => arrivals(db(), principal, scope)),
-    shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope))]);
+    shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope)), shown(['resources'], () => listResources(db(), principal, scope))]);
   });
   if (!opened) return null;
-  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine] } = opened;
-  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [] };
+  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources] } = opened;
+  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources };
 }
 
 const who = (person: PersonView) => person.isYou ? 'you' : person.handle ?? (person.former ? 'a former teammate' : 'a teammate');
@@ -65,6 +69,16 @@ function Person({ person, clientId }: { person: PersonView; clientId: string | n
   return <div className="lp-who"><span className="lp-face" aria-hidden="true">{name.replace(/^an? /, '').split('/').pop()!.slice(0, 1).toUpperCase()}</span><div><span className="lp-name">{name === 'you' ? 'You' : name}</span>{clientId !== undefined && <Via clientId={clientId} />}</div></div>;
 }
 
+/** What an assistant worked out about a link or a text, or the plain statement that nothing has been. Words are the assistant's: React escapes them. */
+function Tags({ item }: { item: Described }) {
+  if (!item.described) return <p className="lp-tags"><span className="lp-chip lp-chip-off">Not described yet</span><span>An assistant fills this in when it first reads it</span></p>;
+  const { kind, about, audience, foundOn } = item.tags;
+  const rest = [about, audience && `For ${audience}`, foundOn && `Date in it: ${shortDay(foundOn)}`].filter(Boolean);
+  return <>{item.tags.summary && <p className="lp-lsum">{item.tags.summary}</p>}{(kind || rest.length > 0) && <p className="lp-tags">{kind && <span className="lp-chip">{kind}</span>}{rest.map(part => <span key={part}>{part}</span>)}</p>}</>;
+}
+const Tile = ({ text }: { text?: boolean }) => <span className={`lp-tile${text ? ' lp-tile-text' : ''}`} aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">{text ? <path d="M3 4.5h10M3 8h10M3 11.5h6" /> : <path d="M6.5 9.5 9.5 6.5M7 4.5l1-1a3 3 0 0 1 4.5 4.5l-1 1M9 11.5l-1 1A3 3 0 0 1 3.5 8l1-1" />}</svg></span>;
+const textState = { accepted: 'Reading', extracting: 'Reading', indexing: 'Reading', ready: 'Ready', failed: 'Not read' } as const;
+
 export default async function TeamPage({ params, searchParams }: { params: Promise<GroupRoute>; searchParams?: Promise<{ tab?: string | string[] }> }) {
   const principal = await getPortalPrincipal();
   if (!principal) return <section className="lt-editor"><h1>Group unavailable</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`${groupPath((await params).namespace, (await params).slug)}/team`)}`}>Sign in</Link></section>;
@@ -73,7 +87,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   const tab: Tab = TABS.find(([key]) => key === requested)?.[0] ?? 'decisions';
   const data = await load(principal, route, tab).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel } = data;
+  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel, resources } = data;
   const href = (to: Tab, record?: number) => `${base}/team?tab=${to}${record ? `#r${record}` : ''}`;
 
   const Act = ({ record, action, label }: { record: RecordView; action: string; label: string }) => <ActionForm action={amendTeamRecord} label={label}>
@@ -98,7 +112,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     </li>;
   };
 
-  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, events: events.length, asks: brief.asks.open };
+  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, resources: brief.resources.links.items.length + brief.resources.links.more + brief.resources.texts.items.length + brief.resources.texts.more, events: events.length, asks: brief.asks.open };
   const pastDue = state.claims.items.filter(item => item.pastDue).length, waiting = state.claims.items.filter(item => item.claimStatus === 'proposed').length;
   const flagged = state.conflicts.items.length + state.conflicts.more;
   const latest = state.decisions.items.reduce<RecordView | null>((best, item) => !best || item.createdAt > best.createdAt ? item : best, null);
@@ -168,6 +182,25 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
             <p>{item.summary}</p>
             {item.conflicts?.map(flag => <Link key={flag.decision} className="lp-ref" href={href('decisions', flag.decision)}><Alert />{flag.state === 'flagged' ? 'Marked as conflicting with' : 'Needs a re-check against'} decision #{flag.decision}{flag.topic ? ` (${flag.topic})` : ' (withdrawn)'}<Arrow /></Link>)}
           </Row>)}</ul> : <p className="lp-empty">No outputs filed yet. An output is a link to finished work, filed so every assistant can find it.</p>}{more(state.outputs.more)}
+        </section>}
+
+        {tab === 'resources' && resources && <section id="resources" aria-label="Resources" className="lp-resources">
+          {canPost ? <ResourceBox action={addResource} orgId={scope.orgId} loopId={scope.loopId} /> : <p className="emba-meta">You follow this group and can read it. Only members can add to Resources.</p>}
+          <p className="emba-meta">The tags under each one are worked out by an assistant from what it read: what it is, what it is for, who it is for, and any date in it. Nobody types them.</p>
+          <div className="lp-lhead"><h3>Links</h3><span>{plural(resources.links.items.length + resources.links.more, 'link')}. Loop keeps the address, not what it points at. Open a link only if you trust where it points.</span></div>
+          {resources.links.items.length ? <ul className="lp-list">{resources.links.items.map((link: LinkView) => <li key={link.id} className="lp-lrow"><Tile />
+            <div className="lp-lwhat"><a href={link.url} rel="noopener noreferrer nofollow" target="_blank">{link.name}</a><span className="lp-host">{link.host}{link.recognisedHost ? '' : ' · unrecognised host'}</span><Tags item={link} /></div>
+            <Person person={link.by} clientId={link.assistant} /><span className="lp-date">{shortDay(link.at)}</span>
+            <div className="lp-lacts">{link.mayRemove && canPost && <ActionForm action={removeTeamLink} label="Remove">{scopeFields}<input type="hidden" name="id" value={link.id} /></ActionForm>}</div></li>)}</ul>
+            : <p className="lp-empty">No links yet. Add the team&apos;s shared folder, the syllabus, or any page your assistants should know about.</p>}{more(resources.links.more)}
+          <div className="lp-lhead"><h3>Texts</h3><span>Pasted or read from a file. The file itself is not kept.</span></div>
+          {resources.texts.items.length ? <ul className="lp-list">{resources.texts.items.map((text: TextView) => <li key={text.id} className="lp-lrow"><Tile text />
+            <div className="lp-lwhat"><Link href={`${base}/resources/${text.id}?version=${text.version}`}>{text.name}</Link><span className="lp-host">Version {text.version}</span><Tags item={text} /></div>
+            <Person person={text.by} clientId={text.assistant} /><span className="lp-date">{shortDay(text.at)}</span>
+            <div className="lp-lacts"><span className={`lp-chip${text.state === 'ready' ? '' : ' lp-chip-off'}`}>{textState[text.state]}{text.failedStage ? ` (${text.failedStage} failed)` : ''}</span>
+              {text.state !== 'ready' && text.by.isYou && canPost && <ActionForm action={retryResource} label="Retry">{scopeFields}<input type="hidden" name="documentId" value={text.id} /><input type="hidden" name="version" value={text.version} /></ActionForm>}
+              {text.mayRemove && canPost && <ActionForm action={removeResource} label="Remove"><input type="hidden" name="documentId" value={text.id} /><input type="hidden" name="version" value={text.version} /></ActionForm>}</div></li>)}</ul>
+            : <p className="lp-empty">No texts yet.</p>}{more(resources.texts.more)}
         </section>}
 
         {tab === 'events' && upcoming && <section id="events" aria-label="Events"><p className="emba-meta">An event is a label under the team, such as a deliverable. Outputs and claims can be filed to it as <strong>@{group.namespace}/event</strong>.</p>

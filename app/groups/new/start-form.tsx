@@ -69,7 +69,7 @@ export function StartForm({ tree, canTop, initialParent }: { tree: StartNode[]; 
     for (const file of list) {
       if (kept.some(item => item.name === file.name && item.size === file.size)) continue;
       if (!readable(file)) refused.push(`${file.name}: Loop reads .txt, .md and text PDFs. Share anything else as a link.`);
-      else if (tooBig(file) || kept.length >= START_LIMITS.files || kept.reduce((sum, item) => sum + item.size, file.size) > START_LIMITS.bytes) refused.push(`${file.name} is too much to send with this form. Add it on the group's Resources page after the group is made.`);
+      else if (tooBig(file) || kept.length >= START_LIMITS.files || kept.reduce((sum, item) => sum + item.size, file.size) > START_LIMITS.bytes) refused.push(`${file.name} is too much to send with this form. Add it on the group's Resources tab after the group is made.`);
       else kept.push(file);
     }
     setFiles(kept); setNotice(refused.join(' '));

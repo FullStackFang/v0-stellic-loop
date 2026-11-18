@@ -38,7 +38,7 @@ const MOCKUPS = {
 export function SiteNav() {
   const path = usePathname();
   // The team product (/groups, its /emba sign-in, and the legal pages) is a real app, not a demo: no demo menu there.
-  if (path === "/" || path.startsWith("/trip/") || path.startsWith("/groups") || path.startsWith("/emba") || path === "/privacy" || path === "/terms") return null;
+  if (path === "/" || path.startsWith("/trip/") || path.startsWith("/groups") || path.startsWith("/emba") || path === "/privacy" || path === "/terms" || path.startsWith("/c/") || path.startsWith("/o/") || path.startsWith("/sign-in")) return null;
   return (
     <nav className="sitenav" aria-label="Site">
       <p className="lab">App</p>

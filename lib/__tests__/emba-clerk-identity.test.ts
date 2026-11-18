@@ -2,7 +2,9 @@ import {afterAll,afterEach,beforeAll,beforeEach,expect,it,vi} from 'vitest';
 import {auth,currentUser,clerkClient} from '@clerk/nextjs/server';
 import {headers} from 'next/headers';
 import {openTestDb,type TestDb} from '@/test/db';
-import {clerkIssuer,getClerkPortalPrincipal} from '@/lib/emba/clerk-identity';
+import {clerkEmailsOf,clerkIssuer,getClerkPortalPrincipal} from '@/lib/emba/clerk-identity';
+import {addMemberNow} from '@/lib/emba/add-member';
+import {issueInvitation} from '@/lib/emba/invitations';
 import {deletePersonalData,exportPersonalData} from '@/lib/emba/privacy';
 import {authenticate} from '@/lib/emba/access';
 import {TextNotifier} from '@/lib/notify/text';
@@ -49,6 +51,38 @@ it('takes the name from the sign-in account, and tags a member whose name arrive
  session('user_b');vi.mocked(currentUser).mockResolvedValue({id:'user_b',firstName:'Mary',lastName:'Cha',primaryEmailAddressId:'email',emailAddresses:[{id:'email',emailAddress:'mary@example.test',verification:{status:'verified'}}]} as never);
  const b=(await getClerkPortalPrincipal(t.db))!;
  expect((await t.db.query('select name from person where id=$1',[b.personId])).rows).toEqual([{name:'Mary Cha'}]);
+});
+it('reads the verified address of each person in one request, leaving out anyone the provider does not return',async()=>{
+ const a=(await getClerkPortalPrincipal(t.db))!;session('user_b');const b=(await getClerkPortalPrincipal(t.db))!;
+ const getUserList=vi.fn(async()=>({data:[{id:'user_a',primaryEmailAddressId:'e',emailAddresses:[{id:'e',emailAddress:' A@Example.Test',verification:{status:'verified'}}]},
+  {id:'user_b',primaryEmailAddressId:'e',emailAddresses:[{id:'e',emailAddress:'b@example.test',verification:{status:'unverified'}}]}]}));
+ vi.mocked(clerkClient).mockResolvedValue({users:{getUserList}} as never);
+ expect(await clerkEmailsOf(t.db,[a.personId,b.personId])).toEqual({[a.personId]:'a@example.test'});
+ expect(getUserList).toHaveBeenCalledWith({userId:['user_a','user_b'],limit:100});
+ expect(await clerkEmailsOf(t.db,[])).toEqual({});
+});
+it('adds a person to a group at once by address, named and tagged, and lets only an owner or organizer do it',async()=>{
+ const owner=(await getClerkPortalPrincipal(t.db))!;
+ const {rows:[org]}=await t.db.query<{id:string}>("insert into emba_organization(name) values('Test') returning id");
+ const {rows:[loop]}=await t.db.query<{id:string}>("insert into emba_loop(org_id,path) values($1,'root') returning id",[org.id]);
+ await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)',[org.id,owner.personId]);
+ await t.db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'owner')",[org.id,loop.id,owner.personId]);
+ const accountFor=vi.fn(async()=>'user_new'),input={orgId:org.id,loopId:loop.id,email:' Jn586@Example.Test ',name:'Jayashree Nagarajachar',role:'member' as const};
+ // An earlier invitation to the same address is answered by adding them.
+ await issueInvitation(t.db,owner,{orgId:org.id,loopId:loop.id,recipientEmail:'jn586@example.test',role:'member',expiresAt:new Date(Date.now()+3600000).toISOString()});
+ await addMemberNow(t.db,owner,input,accountFor);
+ expect(accountFor).toHaveBeenCalledWith('jn586@example.test','Jayashree Nagarajachar');
+ expect((await t.db.query(`select p.name,r.role,h.handle from person p join emba_identity i on i.person_id=p.id and i.subject='user_new'
+  join emba_role r on r.person_id=p.id and r.revoked_at is null join emba_membership m on m.person_id=p.id and m.revoked_at is null join emba_member_handle h on h.person_id=p.id`)).rows)
+  .toEqual([{name:'Jayashree Nagarajachar',role:'member',handle:'jayashree'}]);
+ expect((await t.db.query('select 1 from emba_invitation where accepted_at is null and revoked_at is null')).rows).toEqual([]);
+ // The person added signs in later and is that same member; they may not add anyone.
+ session('user_new','jn586@example.test');const added=(await getClerkPortalPrincipal(t.db))!;
+ await expect(addMemberNow(t.db,added,{...input,email:'other@example.test'},accountFor)).rejects.toThrow();
+ expect(accountFor).toHaveBeenCalledTimes(1);
+ // A failure at the sign-in provider leaves no invitation behind.
+ await expect(addMemberNow(t.db,owner,{...input,email:'third@example.test'},async()=>{throw new Error('down');})).rejects.toThrow('down');
+ expect((await t.db.query('select 1 from emba_invitation where accepted_at is null and revoked_at is null')).rows).toEqual([]);
 });
 it('never reenrolls revoked or deleted identities',async()=>{
  const p=(await getClerkPortalPrincipal(t.db))!;

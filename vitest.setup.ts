@@ -14,6 +14,9 @@ vi.mock("next/headers", async () => {
   return { cookies: async () => cookiesMock(), headers: async () => headersMock() };
 });
 
+// The campus screen is the front door by default, which closes the groups site to everyone but the admin. The tests of
+// the groups site run with it in front; the campus tests put the campus back with vi.stubEnv('LOOP_FRONT', 'campus').
+process.env.LOOP_FRONT ??= "groups";
 process.env.SESSION_SECRET ??= "test-secret-test-secret-test-secret-00";
 process.env.CRON_SECRET ??= "test-cron";
 process.env.NEXT_PUBLIC_APP_URL ??= "https://board.test";

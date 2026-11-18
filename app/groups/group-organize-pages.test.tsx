@@ -19,7 +19,7 @@ import { Rail } from './rail';
 // Specs: openspec/changes/loop-organize-and-fix/specs/group-organizing and team-wide-grants.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const at = vi.hoisted(() => ({ params: {} as Record<string, string>, path: '/groups' }));
-vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path }));
+vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path, useSearchParams: () => new URLSearchParams() }));
 
 // PREVIEW_DIR=… writes each state as a static page for screenshots.
 const preview = (name: string) => process.env.PREVIEW_DIR && writeFileSync(`${process.env.PREVIEW_DIR}/${name}.html`, `<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..600&display=swap" rel="stylesheet"><link rel="stylesheet" href="loop.css"><style>.lp{--font-archivo:Archivo}</style></head><body><div class="lp"><aside class="lp-rail"></aside><main class="lp-main"><div class="lp-wrap">${document.body.firstElementChild!.innerHTML}</div></main></div></body></html>`);

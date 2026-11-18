@@ -7,7 +7,7 @@ import { EmbaError } from '@/lib/emba/errors';
 import { groupPath } from '@/lib/emba/group-path';
 import { canAccessLoop } from '@/lib/emba/access';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
-import { getPortalPrincipal } from '@/lib/emba/portal-session';
+import { closedToCaller, closedUnlessAdmin, getPortalPrincipal } from '@/lib/emba/portal-session';
 import { eventShare, type EventOutside } from '@/lib/emba/team-interest';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { ReachAtJoin } from '@/components/emba/reach-control';
@@ -23,13 +23,14 @@ const load = (principal: Awaited<ReturnType<typeof getPortalPrincipal>>, token: 
 
 // The preview is built from the outside view alone: a null principal can never be shown the member view.
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
-  const share = await load(null, (await params).token);
+  const share = await closedToCaller() ? null : await load(null, (await params).token);
   if (!share) return { robots };
   const { outside } = share, title = `${outside.name} · ${outside.group}`, description = outsideLine(outside);
   return { title, description, robots, openGraph: { title, description }, twitter: { card: 'summary', title, description } };
 }
 
 export default async function SharedEventPage({ params }: { params: Promise<{ token: string }> }) {
+  await closedUnlessAdmin();
   const { token } = await params;
   const principal = await getPortalPrincipal();
   const share = await load(principal, token);

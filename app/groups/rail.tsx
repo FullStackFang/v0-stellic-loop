@@ -1,7 +1,7 @@
 'use client';
 
 import Link, { useLinkStatus } from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { ROOT_SLUG, groupPath } from '@/lib/emba/group-path';
@@ -27,7 +27,7 @@ function Wait() {
 export type RailGroup = { id: string; parent: string | null; namespace: string; slug: string; name: string; handle: string; depth: number };
 /** The left rail of the team product: which team, where in it, and the signed-in account. */
 export function Rail({ groups, account }: { groups: RailGroup[]; account: ReactNode }) {
-  const path = usePathname();
+  const path = usePathname(), tab = useSearchParams().get('tab');
   const { namespace, slug = ROOT_SLUG } = useParams<{ namespace?: string; slug?: string }>();
   const current = groups.find(group => group.namespace === namespace && group.slug === slug);
   // What the person folded shut on the Groups page is folded here too, except the groups on the way down to the one they are in.
@@ -47,8 +47,8 @@ export function Rail({ groups, account }: { groups: RailGroup[]; account: ReactN
       <ul className="lp-tree">{groups.filter(group => !folded(groups, closed, group, above)).map(group => <li key={group.handle}><Link href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'true' : undefined} style={group.depth ? { paddingLeft: 10 + group.depth * 14 } : undefined}>{group.name}<span>{group.handle}</span></Link>{fold(group)}</li>)}</ul>
     </details>}
     {namespace && <nav aria-label="Team"><p className="lp-nav-label">Team</p><ul>
-      {item(`${base}/team`, 'Record', icons.record, path === `${base}/team`)}
-      {item(`${base}/resources`, 'Resources', icons.resources, path.startsWith(`${base}/resources`))}
+      {item(`${base}/team`, 'Record', icons.record, path === `${base}/team` && tab !== 'resources')}
+      {item(`${base}/team?tab=resources`, 'Resources', icons.resources, (path === `${base}/team` && tab === 'resources') || path.startsWith(`${base}/resources`))}
       {item(base, 'Members', icons.members, path === base)}
     </ul></nav>}
     <nav aria-label="You"><p className="lp-nav-label">You</p><ul>

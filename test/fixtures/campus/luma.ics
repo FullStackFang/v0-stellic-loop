@@ -1,0 +1,70 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Luma//New York Yoga Club//EN
+X-WR-CALNAME:New York Yoga Club
+X-WR-CALDESC:Luma Calendar
+REFRESH-INTERVAL;VALUE=DURATION:PT12H
+X-PUBLISHED-TTL:PT12H
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+DTSTART:20261118T233000Z
+DTEND:20261119T010000Z
+DTSTAMP:20261118T033607Z
+ORGANIZER;CN="NY Yoga Club":MAILTO:calendar-invite@lu.ma
+UID:evt-V86BQfwudpPwdVQ@events.lu.ma
+SUMMARY:Karma Police: Radiohead Vinyasa (Park Slope)
+DESCRIPTION:Get up-to-date information at: https://luma.com/nx7lae9t\n\nAd
+ dress:\nShapeShifter Lab\nBrooklyn, NY\nUnited States\n\nHosted by NY Yoga
+  Club
+LOCATION:ShapeShifter Lab, 837 Union St, Brooklyn, NY 11215, USA
+GEO:40.674966999999995;-73.9760077
+SEQUENCE:217136167
+STATUS:TENTATIVE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261120T234500Z
+DTEND:20261121T011500Z
+DTSTAMP:20261118T033607Z
+ORGANIZER;CN="NY Yoga Club":MAILTO:calendar-invite@lu.ma
+UID:evt-gc4NKnnsbAn7aQv@events.lu.ma
+SUMMARY:Meditation, Journaling, and Yoga w/ Etai Atula (West Village)
+DESCRIPTION:Get up-to-date information at: https://luma.com/3bn1r56p\n\nAd
+ dress:\nJoffrey Ballet School\nNew York, NY\nUnited States\n\nHosted by NY
+  Yoga Club
+LOCATION:Joffrey Ballet School, 434 6th Ave, New York, NY 10011, USA
+GEO:40.7345839;-73.99862949999999
+SEQUENCE:217136167
+STATUS:TENTATIVE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261125T004500Z
+DTEND:20261125T020000Z
+DTSTAMP:20261118T033607Z
+ORGANIZER;CN="NY Yoga Club":MAILTO:calendar-invite@lu.ma
+UID:evt-NJufxE7wTTtlA7V@events.lu.ma
+SUMMARY:Flow & Restore (FiDi)
+DESCRIPTION:Get up-to-date information at: https://luma.com/kkhzm8g1\n\nAd
+ dress:\nSWEAT440 Fitness FiDi\nNew York, NY\nUnited States\n\nHosted by NY
+  Yoga Club
+LOCATION:SWEAT440 Fitness FiDi, 80 John St, New York, NY 10038, USA
+GEO:40.708317799999996;-74.0068091
+SEQUENCE:217136167
+STATUS:TENTATIVE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20251001T223000Z
+DTEND:20251002T003000Z
+DTSTAMP:20261118T033607Z
+ORGANIZER;CN="NY Yoga Club":MAILTO:calendar-invite@lu.ma
+UID:evt-AvgYLMuSykVrONM@events.lu.ma
+SUMMARY:New York Yoga Club Launch At Third Door Brooklyn
+DESCRIPTION:Get up-to-date information at: https://luma.com/lm2hzopw\n\nAd
+ dress:\n195 Plymouth St studio 604\nKings County, New York\nUnited States
+ \n\nHosted by NY Yoga Club & Dan Sohval
+LOCATION:195 Plymouth St studio 604, Brooklyn, NY 11201, USA
+GEO:40.7039032;-73.9854486
+SEQUENCE:217136167
+STATUS:TENTATIVE
+END:VEVENT
+END:VCALENDAR

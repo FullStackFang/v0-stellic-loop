@@ -58,8 +58,8 @@ async function connect(server:ReturnType<typeof createTeamMcpServer>) {
 const session=(p:Principal)=>connect(createTeamMcpServer(t.db,p));
 const link={url:'https://docs.google.com/document/d/abc',title:'Market sizing',summary:'TAM is 4.2bn.'};
 
-const TOOLS=['add_event','amend_record','answer','arrivals','ask','ask_results','claim','events','file_output','interested','invite_people','list_tags','log_decision','manage_group','my_travel','propose_idea','read_document','resolve_tag','search_knowledge','team_brief','team_state','waiting','whats_new','whats_on'];
-const WRITES=['add_event','amend_record','answer','ask','claim','file_output','interested','invite_people','log_decision','manage_group','my_travel','propose_idea'];
+const TOOLS=['add_event','amend_record','answer','arrivals','ask','ask_results','claim','describe_resource','events','file_output','interested','invite_people','list_tags','log_decision','manage_group','my_travel','propose_idea','read_document','resolve_tag','save_resource','search_knowledge','team_brief','team_state','waiting','whats_new','whats_on'];
+const WRITES=['add_event','amend_record','answer','ask','claim','describe_resource','file_output','interested','invite_people','log_decision','manage_group','my_travel','propose_idea','save_resource'];
 it('serves exactly the team tools, and leaves the existing server as it was',async()=>{
  const f=await fixture(),s=await session(f.agent);
  try{

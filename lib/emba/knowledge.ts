@@ -6,12 +6,13 @@ import { canAccessLoop, type Principal } from './access';
 import { audit, authorize, requireFirstParty } from './consent';
 import { EmbaError } from './errors';
 import { groupPath } from './group-path';
+import { anyTag, resourceTags } from './resource-tags';
 
 const scopeSchema = z.object({orgId:z.uuid(),loopId:z.uuid()});
 const passageSchema = z.strictObject({text:z.string().trim().min(1).max(4000),claimKey:z.string().trim().min(1).max(120).optional(),claimValue:z.string().trim().min(1).max(500).optional()})
   .refine(p => Boolean(p.claimKey) === Boolean(p.claimValue));
 const itinerarySchema = z.strictObject({itineraryVersion:z.string().min(1).max(120),timezone:z.string().min(1).max(100).refine(value=>{try {new Intl.DateTimeFormat('en',{timeZone:value});return true;} catch{return false;}}),passages:z.array(passageSchema).min(1).max(200)});
-const uploadSchema = z.strictObject({operationId:z.uuid(),orgId:z.uuid(),loopId:z.uuid(),documentId:z.uuid().optional(),expectedVersion:z.number().int().positive().optional(),title:z.string().trim().min(1).max(200),mediaType:z.enum(['text/plain','text/markdown','application/pdf','application/json']),body:z.string().min(1).max(262144).refine(s=>Buffer.byteLength(s,'utf8')<=262144 && !s.includes('\0'))})
+const uploadSchema = z.strictObject({operationId:z.uuid(),orgId:z.uuid(),loopId:z.uuid(),documentId:z.uuid().optional(),expectedVersion:z.number().int().positive().optional(),title:z.string().trim().min(1).max(200),mediaType:z.enum(['text/plain','text/markdown','application/pdf','application/json']),body:z.string().min(1).max(262144).refine(s=>Buffer.byteLength(s,'utf8')<=262144 && !s.includes('\0')),tags:resourceTags.optional()})
   .refine(s=>Boolean(s.documentId)===Boolean(s.expectedVersion));
 type Scope = z.infer<typeof scopeSchema>;
 type Extracted = {text:string;location:string;timezone:string|null;itineraryVersion:string|null;claimKey:string|null;claimValue:string|null};
@@ -38,9 +39,17 @@ function extract(mediaType:string,body:string): Extracted[] {
   z.array(z.unknown()).min(1).max(200).parse(passages);
   return passages;
 }
+// A member who can post may add a text (loop-resources-tab). An assistant also needs a grant that reads and writes the group.
 async function manage(q:Q,p:Principal,scope:Scope) {
+  if (p.clientId===null) await requireFirstParty(q,p);
+  else {await authorize(q,p,'group-memory:write',scope);await authorize(q,p,'plan:read',scope);}
+  if (!await canAccessLoop(q,p,scope.orgId,scope.loopId,'post')) throw new EmbaError('forbidden');
+}
+// Only the site removes a text: the person who added it, or an organizer.
+async function removable(q:Q,p:Principal,row:DocumentRow) {
   await requireFirstParty(q,p);
-  if (!await canAccessLoop(q,p,scope.orgId,scope.loopId,'manage')) throw new EmbaError('forbidden');
+  if (!await canAccessLoop(q,p,row.orgId,row.loopId,'post')) throw new EmbaError('forbidden');
+  if (row.uploadedBy!==p.personId && !await canAccessLoop(q,p,row.orgId,row.loopId,'manage')) throw new EmbaError('forbidden');
 }
 async function current(q:Q,id:string,version?:number,lock:false|'share'|'update'=false):Promise<DocumentRow> {
   const {rows:[row]}=await q.query<DocumentRow>(`select ${columns} from emba_document d join emba_document_version v on v.document_id=d.id and v.version=coalesce($2::integer,d.current_version) where d.id=$1 and d.deleted_at is null ${lock?`for ${lock} of d,v`:''}`,[id,version??null]);
@@ -65,15 +74,17 @@ export async function uploadDocument(db:Db,p:Principal,input:unknown):Promise<{i
     if(id) {
       const row=await current(q,id,undefined,'update');
       if(row.orgId!==data.orgId || row.loopId!==data.loopId) throw new EmbaError('forbidden');
+      await removable(q,p,row); // A text is replaced by the person who added it, or by an organizer.
       if(row.version!==data.expectedVersion) throw new EmbaError('conflict');
       version=row.version+1;
       await q.query('update emba_document set current_version=$2 where id=$1',[id,version]);
       await q.query('delete from emba_document_passage where document_id=$1',[id]);
     } else {
-      const {rows:[doc]}=await q.query<{id:string}>('insert into emba_document(org_id,loop_id,current_version) values ($1,$2,1) returning id',[data.orgId,data.loopId]);
+      const {rows:[doc]}=await q.query<{id:string}>('insert into emba_document(org_id,loop_id,current_version,kind,about,audience,found_on,summary,described_at,described_by,described_via) values ($1,$2,1,$3,$4,$5,$6,$7,case when $8::boolean then now() end,case when $8::boolean then $9::uuid end,case when $8::boolean then $10::text end) returning id',
+        [data.orgId,data.loopId,data.tags?.kind??null,data.tags?.about??null,data.tags?.audience??null,data.tags?.foundOn??null,data.tags?.summary??null,anyTag(data.tags),p.personId,p.clientId]);
       id=doc.id;
     }
-    await q.query('insert into emba_document_version(document_id,version,title,media_type,body,uploaded_by) values ($1,$2,$3,$4,$5,$6)',[id,version,data.title,data.mediaType,data.body,p.personId]);
+    await q.query('insert into emba_document_version(document_id,version,title,media_type,body,uploaded_by,client_id) values ($1,$2,$3,$4,$5,$6,$7)',[id,version,data.title,data.mediaType,data.body,p.personId,p.clientId]);
     await q.query('insert into emba_document_operation(person_id,operation_id,request_hash,document_id,version) values ($1,$2,$3,$4,$5)',[p.personId,data.operationId,hash,id,version]);
     await audit(q,p,'knowledge:write',id);
     return {id,version};
@@ -158,8 +169,8 @@ export async function listDocuments(db:Db,p:Principal,input:unknown) {
 export async function deleteDocument(db:Db,p:Principal,id:string,expectedVersion:number) {
   z.uuid().parse(id); z.number().int().positive().parse(expectedVersion);
   await db.tx(async q=>{
-    await manage(q,p,await current(q,id));
     const row=await current(q,id,undefined,'update');
+    await removable(q,p,row);
     if(row.version!==expectedVersion) throw new EmbaError('conflict');
     await q.query('update emba_document set deleted_at=now() where id=$1',[id]);
     await q.query('delete from emba_document_passage where document_id=$1',[id]);

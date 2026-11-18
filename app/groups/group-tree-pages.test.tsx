@@ -12,6 +12,7 @@ import { groupHandle, treeOrder } from '@/lib/emba/group-path';
 import type { GroupAddress } from '@/lib/emba/groups';
 import TeamPage from './[namespace]/team/page';
 import MembersPage from './[namespace]/page';
+import AddPeoplePage from './[namespace]/add/page';
 import InnerMembersPage from './[namespace]/in/[slug]/page';
 import InnerTeamPage from './[namespace]/in/[slug]/team/page';
 import ResourcesPage from './[namespace]/resources/page';
@@ -19,7 +20,7 @@ import { Rail } from './rail';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const at = vi.hoisted(() => ({ params: {} as Record<string, string>, path: '/groups' }));
-vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path }));
+vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path, useSearchParams: () => new URLSearchParams() }));
 
 // PREVIEW_DIR=… writes each state as a static page for screenshots.
 const preview = (name: string) => process.env.PREVIEW_DIR && writeFileSync(`${process.env.PREVIEW_DIR}/${name}.html`, `<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..600&display=swap" rel="stylesheet"><link rel="stylesheet" href="loop.css"><style>.lp{--font-archivo:Archivo}</style></head><body><div class="lp"><aside class="lp-rail"></aside><main class="lp-main"><div class="lp-wrap">${document.body.firstElementChild!.innerHTML}</div></main></div></body></html>`);
@@ -79,8 +80,8 @@ it('stops the crumbs at the highest group a person can open and never names the 
     expect(document.body.textContent).not.toMatch(/EMBA 2027|Team 2/);
     cleanup();
   }
-  render(await withPortalTestSession(f.inner, () => ResourcesPage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
-  expect(document.body.textContent).not.toMatch(/EMBA 2027/);
+  // The old Resources address only points at the tab of the team page, which is the page checked above.
+  await expect(withPortalTestSession(f.inner, () => ResourcesPage({ params: Promise.resolve({ namespace: 'emba-2027' }) }))).rejects.toMatchObject({ digest: expect.stringContaining('/groups/emba-2027/team?tab=resources') });
 });
 
 it('lists the groups inside a group, and offers to start one only to a person who may', async () => {
@@ -119,7 +120,7 @@ it('shows an owner the roster beside the join link, the invitation form and who 
   const add = async (name: string, role: string) => { const row = await makePerson(t.db, name); await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]); await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.cohort.orgId, row.id]); await t.db.query('insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,$4)', [f.cohort.orgId, f.cohort.loopId, row.id, role]); };
   await add('Elena Costa', 'organizer'); await add('Dev Malhotra', 'member');
   await setMemberHandle(t.db, f.outer, { orgId: f.cohort.orgId, handle: 'outer-tag' });
-  await issueInvitation(t.db, f.owner, { orgId: f.cohort.orgId, loopId: f.cohort.loopId, recipientEmail: 'jordan.lee@example.test', role: 'member', expiresAt: '2099-01-01T00:00:00.000Z' });
+  await issueInvitation(t.db, f.owner, { orgId: f.cohort.orgId, loopId: f.cohort.loopId, recipientEmail: 'jordan.lee@example.test', recipientName: 'Jordan Lee', role: 'member', expiresAt: '2099-01-01T00:00:00.000Z' });
   const members = async (p: Principal) => render(await withPortalTestSession(p, () => MembersPage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
   await members(f.owner);
   preview('members-owner');
@@ -130,10 +131,15 @@ it('shows an owner the roster beside the join link, the invitation form and who 
   expect(roster.getByLabelText('Your tag')).toHaveValue('');
   expect(roster.getAllByRole('button', { name: 'Remove' })).toHaveLength(3);
   expect(screen.getByText('4 people')).toBeInTheDocument();
-  for (const name of ['Join link', 'Invite by email', /^Waiting/]) expect(screen.getByRole('heading', { name })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByText('jordan.lee@example.test')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Revoke' })).toBeInTheDocument();
+  // The list is the whole page: adding people, the join link and who is asking to join are on their own tab.
+  for (const name of ['Join link', 'Add a person', /^Asking to join/]) expect(screen.queryByRole('heading', { name })).toBeNull();
+  expect(screen.getByRole('link', { name: 'Add people' })).toHaveAttribute('href', '/groups/emba-2027/add');
+  // An invited person is listed with the group, by name with the address under it, until they join.
+  expect(roster.getByText('Jordan Lee')).toBeInTheDocument();
+  expect(roster.getByText('jordan.lee@example.test')).toBeInTheDocument();
+  expect(roster.getByText(/Invited, not joined yet/)).toBeInTheDocument();
+  expect(roster.getByRole('button', { name: 'Revoke' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /In the group/ })).toHaveTextContent('1 invited');
   // One meaning per page: resources live on the Resources page.
   expect(screen.queryByRole('heading', { name: 'Resources' })).toBeNull();
   // Removing asks once more in place.
@@ -144,8 +150,20 @@ it('shows an owner the roster beside the join link, the invitation form and who 
   await members(f.outer);
   expect(screen.getAllByLabelText('Your tag')).toHaveLength(1);
   expect(screen.queryByRole('combobox')).toBeNull();
-  for (const name of ['Join link', 'Invite by email']) expect(screen.queryByRole('heading', { name })).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Add people' })).toBeNull();
   expect(screen.queryByText('Elena Costa')).toBeNull();
+  cleanup();
+  // The Add people tab: for the owner, the form, the join link and who is asking. For a member, nothing.
+  const addPage = async (p: Principal) => render(await withPortalTestSession(p, () => AddPeoplePage({ params: Promise.resolve({ namespace: 'emba-2027' }) })));
+  await addPage(f.owner);
+  preview('members-add');
+  for (const name of ['Add a person', 'Join link', /^Asking to join/]) expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('link', { name: 'Add people' })).toHaveAttribute('aria-current', 'page');
+  cleanup();
+  await addPage(f.outer);
+  expect(screen.getByRole('alert')).toHaveTextContent('owners and organizers');
+  expect(screen.queryByRole('heading', { name: 'Add a person' })).toBeNull();
 });
 
 it('gives a long roster a find box and a filter by role, inside one frame', async () => {
@@ -177,6 +195,6 @@ it('draws the rail as the tree a person can open', async () => {
   expect(document.querySelector('.lp-switch-name')).toHaveTextContent('NBAE 6830');
   expect(screen.getByRole('link', { name: 'Record' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/team');
   expect(screen.getByRole('link', { name: 'Record' })).toHaveAttribute('aria-current', 'page');
-  expect(screen.getByRole('link', { name: 'Resources' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/resources');
+  expect(screen.getByRole('link', { name: 'Resources' })).toHaveAttribute('href', '/groups/emba-2027/in/nbae-6830/team?tab=resources');
   expect(screen.getByRole('link', { name: /Team 1/ })).toHaveAttribute('href', '/groups/emba-2027/in/team-1/team');
 });

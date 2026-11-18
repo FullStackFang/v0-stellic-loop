@@ -2,14 +2,14 @@
 // ?actor=owner|organizer|outer|inner|stranger|none  &page=members|team|event|ask  &slug=team-1  &tab=…  &ask=1|2|3
 import { createElement, type ComponentType } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { Invite, JoinLink, Roster, WaitingList } from '../../app/groups/[namespace]/members-panel';
+import { AddPerson, JoinLink, Roster, WaitingList } from '../../app/groups/[namespace]/members-panel';
 import { ActionForm } from '../../components/emba/portal-forms';
 import type { PortalAction, PortalResult } from '../../components/emba/portal-types';
 import '../../app/globals.css';
 import '../../app/loop.css';
 import '../emba-browser/font.css';
 
-const PANELS: Record<string, ComponentType<never>> = { roster: Roster, joinLink: JoinLink, invite: Invite, waiting: WaitingList };
+const PANELS: Record<string, ComponentType<never>> = { roster: Roster, joinLink: JoinLink, invite: AddPerson, waiting: WaitingList };
 type Page = { html?: string; error?: string; shell: boolean; props: Record<string, { actionNames: string[] } & Record<string, unknown>>; forms: { label: string; html: string }[]; capability: string };
 const query = new URLSearchParams(location.search), panels = new Map<string, Root>();
 let roots: Root[] = [];
