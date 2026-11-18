@@ -401,8 +401,8 @@ describe('search on the screen', () => {
     expect(screen.getByRole('heading', { name: 'Nothing matches' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'eat with people' }));
     expect(screen.getByRole('heading', { name: 'Dumpling night' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'All of CampusGroups' }));
-    expect(screen.getByRole('button', { name: 'All of CampusGroups' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'CampusGroups' }));
+    expect(screen.getByRole('button', { name: 'CampusGroups' })).toHaveAttribute('aria-pressed', 'true');
   });
   it('shows no reason and no score for the ranking', async () => {
     const { container, model } = await week();
@@ -512,19 +512,19 @@ describe('the pages', () => {
     await expect(withPortalTestSession(ana, () => admin())).rejects.toMatchObject({ digest: expect.stringContaining('404') });
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
     render(await withPortalTestSession(ana, () => admin()));
-    expect(screen.getByRole('heading', { level: 1, name: 'Admin' })).toBeInTheDocument();
     // One section at a time, events first; every form comes back to the section it is on.
-    expect(screen.getByRole('heading', { level: 2, name: 'Events' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 2, name: 'Rewards' })).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: 'Events' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Blitz night is shown' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('textbox', { name: 'Good-for words of Blitz night' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Animals' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
+    expect(screen.getByRole('link', { name: /^Animals ?37$/ })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
     for (const [tab, section] of Object.entries({ rewards: 'Rewards', feeds: 'Feeds', places: 'Places', animals: 'Animals', premium: 'Premium', campus: 'Campus' })) {
       cleanup(); render(await withPortalTestSession(ana, () => admin(tab)));
-      expect(screen.getByRole('heading', { level: 2, name: section })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: section })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('heading', { level: 1, name: section })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: new RegExp(`^${section} ?[0-9]+$`) })).toHaveAttribute('aria-current', 'page');
       for (const field of document.querySelectorAll('input[name=tab]')) expect(field).toHaveValue(tab);
       if (tab === 'rewards') expect(screen.getByText(/Chess Club: Skip the door/)).toBeInTheDocument();
-      if (tab === 'animals') { expect(screen.getByRole('heading', { level: 3, name: /^Core 36/ })).toBeInTheDocument(); expect(screen.getByRole('button', { name: 'Dachshund: move to Core' })).toBeInTheDocument(); }
+      // Animals are picked, any number of them, and moved together.
+      if (tab === 'animals') { expect(screen.getAllByRole('checkbox')).toHaveLength(37); expect(screen.getByRole('checkbox', { name: 'Dachshund' })).toHaveAttribute('name', 'face'); expect(screen.getByRole('link', { name: 'Premium 1' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=premium'); expect(screen.getByRole('button', { name: 'Core' })).toHaveAttribute('value', 'core'); }
     }
   });
 });

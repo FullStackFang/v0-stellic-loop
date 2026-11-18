@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop admin · mockups</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
+:root {
+  --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245);
+  --warn: oklch(52% 0.17 28); --expo: cubic-bezier(.16, 1, .3, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.45; letter-spacing: -0.012em; color: var(--ink); background: oklch(22% 0.03 252); }
+button, input, select { font: inherit; color: inherit; letter-spacing: inherit; } button { background: none; border: 0; cursor: pointer; } ul { list-style: none; }
+img { display: block; }
+
+/* The chooser: outside the design. */
+.pick { position: sticky; top: 0; z-index: 9; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 16px; background: oklch(22% 0.03 252); color: oklch(92% 0.01 240); font-size: 13.5px; }
+.pick b { margin-right: 6px; font-weight: 640; } .pick button { height: 32px; padding: 0 14px; border-radius: 99px; box-shadow: inset 0 0 0 1px oklch(50% 0.03 250); font-weight: 580; }
+.pick button[aria-pressed=true] { background: var(--field); color: var(--ink); box-shadow: none; } .pick span { margin-left: auto; color: oklch(72% 0.02 245); }
+.frame { margin: 0 12px 12px; border-radius: 14px; overflow: hidden; background: var(--page); min-height: calc(100vh - 64px); }
+
+/* Shared: the campus bar and small parts. */
+.bar { display: flex; align-items: center; gap: 14px; padding: 12px 28px; background: var(--field); border-bottom: 2px dashed var(--ink); }
+.bar .wm { font-size: 24px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.04em; margin-right: 8px; } .bar a { font-weight: 560; font-size: 14.5px; color: inherit; text-decoration: none; }
+.bar a.on { height: 34px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 99px; background: var(--ink); color: var(--field); font-weight: 680; }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 99px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 22%, transparent); transition: background .15s, color .15s; }
+.pill:hover, .pill.on { background: var(--ink); color: var(--paper); box-shadow: none; } .pill.go { background: var(--action); color: var(--paper); box-shadow: none; }
+.mute { color: var(--mute); } .warn { color: var(--warn); font-weight: 600; }
+.pet { width: 64px; height: 64px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--ink) 7%, var(--paper)); }
+.note { margin: 0 auto; max-width: 1100px; padding: 14px 28px 0; font-size: 13.5px; color: var(--mute); }
+.note b { color: var(--ink); }
+
+/* NOW: what is live. Everything at once, two columns of cards. */
+.now { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 32px; padding: 24px 32px 64px; } .now .wide { grid-column: 1 / -1; } .now h1 { font-size: 30px; grid-column: 1 / -1; }
+.now h2 { font-size: 18px; margin-bottom: 8px; } .now p { font-size: 14px; color: var(--mute); margin-bottom: 8px; }
+.now .card { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 11px 12px 11px 18px; margin-bottom: 8px; border-radius: 22px 22px 22px 6px; background: var(--paper); box-shadow: 3px 3px 0 var(--field-shadow); }
+.now .card > div { flex: 1 1 240px; } .now .card b { display: block; } .now .card span { font-size: 13.5px; color: var(--mute); } .now .card input { flex: 1 1 100%; height: 36px; padding: 0 12px; border: 0; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line); }
+.now .btn { height: 34px; padding: 0 14px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 600; font-size: 14px; }
+.now .pets { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; } .now .pets li { display: grid; grid-template-columns: 56px 1fr; gap: 4px 12px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); }
+.now .pets img { grid-row: span 2; width: 56px; height: 56px; } .now .pets b { font-size: 13.5px; } .now .pets span { display: flex; gap: 4px; } .now .pets i { font-style: normal; height: 26px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 99px; font-size: 12.5px; box-shadow: inset 0 0 0 1px var(--line); color: var(--mute); } .now .pets i.on { background: var(--ink); color: var(--paper); }
+
+/* A: Column. One narrow column, sections as pills, rows on hairlines. */
+.a { max-width: 860px; margin: 0 auto; padding: 36px 24px 96px; } .a header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .a h1 { font-size: 34px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; }
+.a nav { display: flex; gap: 6px; flex-wrap: wrap; } .a .tabs { margin-top: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--line); } .a .tabs .pill { height: 36px; padding: 0 16px; font-size: 15px; }
+.a .lede { margin-top: 22px; max-width: 64ch; font-size: 14px; color: var(--mute); } .rows { margin-top: 18px; } .rows > li { display: flex; align-items: baseline; gap: 6px 14px; padding: 15px 0; border-top: 1px solid var(--line); } .rows > li:last-child { border-bottom: 1px solid var(--line); }
+.rows > li > div { flex: 1; min-width: 0; } .rows b { display: block; font-size: 15.5px; font-weight: 640; letter-spacing: -0.02em; } .rows span { display: block; font-size: 13.5px; color: var(--mute); } .rows .words { margin-top: 3px; color: var(--ink); box-shadow: inset 0 -1px 0 var(--line); padding-bottom: 4px; max-width: 520px; }
+.rows li.off b { color: var(--mute); font-weight: 540; } .a .add { margin-top: 18px; height: 34px; }
+.shelf { margin-top: 30px; } .shelf h3 { display: flex; align-items: baseline; gap: 12px; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; } .shelf h3 small { font-size: 13.5px; font-weight: 480; letter-spacing: 0; color: var(--mute); }
+.shelf ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 20px 6px; margin-top: 14px; } .shelf li { display: grid; justify-items: center; gap: 6px; } .shelf li div { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; } .shelf .pill { height: 22px; padding: 0 8px; font-size: 11.5px; color: var(--mute); }
+
+/* B: Rail. Sections down the left with counts; tight tables on the right; animals are picked, then moved together. */
+.b { display: grid; grid-template-columns: 216px minmax(0, 1fr); min-height: 80vh; } .b aside { padding: 26px 14px 26px 22px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.b aside select { height: 38px; margin-bottom: 16px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); font-weight: 640; }
+.b aside button { display: flex; justify-content: space-between; align-items: center; height: 38px; padding: 0 12px; border-radius: 10px; font-weight: 560; text-align: left; box-shadow: inset 0 0 0 1px transparent; } .b aside button:hover { box-shadow: inset 0 0 0 1px var(--line); }
+.b aside button.on { background: var(--ink); color: var(--paper); font-weight: 660; } .b aside button small { font-size: 12.5px; font-variant-numeric: tabular-nums; opacity: .7; } .b aside button small.warn { opacity: 1; color: var(--warn); } .b aside button.on small.warn { color: var(--field); }
+.b aside p { margin-top: auto; padding: 0 12px; font-size: 12.5px; color: var(--mute); }
+.b main { padding: 26px 32px 120px; min-width: 0; } .b .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; } .b .top h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.035em; margin-right: auto; }
+.b .top input { width: 260px; height: 36px; padding: 0 14px; border: 0; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }
+.b table { width: 100%; border-collapse: collapse; font-size: 14px; } .b th { text-align: left; padding: 0 12px 8px 0; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); }
+.b td { padding: 11px 12px 11px 0; border-top: 1px solid var(--line); vertical-align: baseline; } .b td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--mute); width: 1%; padding-right: 20px; } .b td b { font-weight: 640; } .b td small { display: block; font-size: 13px; color: var(--mute); }
+.b td:last-child { width: 1%; padding-right: 0; text-align: right; } .b tr.off td b { color: var(--mute); font-weight: 500; text-decoration: line-through; }
+.b .w { display: block; width: 100%; height: 28px; padding: 0 8px; margin: -4px 0 -4px -8px; border: 0; border-radius: 6px; background: none; font-size: 13.5px; } .b .w:hover { box-shadow: inset 0 0 0 1px var(--line); } .b .w:focus { outline: 0; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.sw { position: relative; width: 38px; height: 22px; border-radius: 99px; background: color-mix(in oklch, var(--ink) 20%, transparent); transition: background .2s; } .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); transition: transform .25s var(--expo); } .sw.on { background: var(--ink); } .sw.on::after { transform: translateX(16px); }
+.b .seg { display: inline-flex; padding: 3px; border-radius: 99px; background: color-mix(in oklch, var(--ink) 8%, transparent); } .b .seg button { height: 30px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; } .b .seg button.on { background: var(--paper); box-shadow: 0 1px 2px color-mix(in oklch, var(--ink) 18%, transparent); font-weight: 660; }
+.b .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px 4px; margin-top: 20px; } .b .grid button { position: relative; display: grid; justify-items: center; gap: 4px; padding: 8px 0 6px; border-radius: 16px; font-size: 11.5px; font-weight: 600; color: var(--mute); }
+.b .grid button:hover { background: color-mix(in oklch, var(--ink) 5%, transparent); } .b .grid button.sel { background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); } .b .grid .premium { color: var(--action); } .b .grid .off img { opacity: .35; filter: grayscale(1); }
+.b .tray { position: sticky; bottom: 16px; display: flex; align-items: center; gap: 8px; width: fit-content; margin: 24px auto 0; padding: 8px 8px 8px 18px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px color-mix(in oklch, var(--ink) 30%, transparent); animation: up .3s var(--expo); }
+.b .tray button { height: 32px; padding: 0 14px; border-radius: 99px; background: var(--field); color: var(--ink); font-weight: 660; font-size: 13.5px; } .b .tray button.x { background: none; color: var(--paper); box-shadow: inset 0 0 0 1px oklch(60% 0.03 250); }
+@keyframes up { from { opacity: 0; transform: translateY(12px); } }
+
+/* C: Desk. No navigation. Seven lines; each says its state and opens in place. Animals are three lanes. */
+.c { max-width: 980px; margin: 0 auto; padding: 44px 24px 96px; } .c header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 26px; } .c h1 { font-size: 44px; font-weight: 760; font-stretch: 110%; letter-spacing: -0.05em; line-height: 1; } .c header select { height: 34px; padding: 0 12px; border: 0; border-radius: 99px; background: none; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 22%, transparent); font-weight: 620; }
+.c .line { border-top: 1px solid var(--line); } .c .line:last-of-type { border-bottom: 1px solid var(--line); } .c .head { display: grid; grid-template-columns: 56px 160px 1fr auto; align-items: baseline; gap: 12px; width: 100%; padding: 18px 0; text-align: left; }
+.c .head em { font-style: normal; font-size: 26px; font-weight: 720; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; } .c .head b { font-size: 19px; font-weight: 680; letter-spacing: -0.03em; } .c .head span { font-size: 14px; color: var(--mute); } .c .head span.warn { color: var(--warn); }
+.c .line.open .head .pill { background: var(--ink); color: var(--paper); box-shadow: none; } .c .body { padding: 0 0 26px 68px; animation: up .3s var(--expo); }
+.c .body .rows { margin-top: 0; } .c .body .rows > li:first-child { border-top: 0; padding-top: 4px; } .c .body .rows > li:last-child { border-bottom: 0; }
+.c .lanes { display: grid; grid-template-columns: 3fr 1.3fr 1.3fr; gap: 12px; } .c .lane { padding: 14px 12px 16px; border-radius: 18px; background: color-mix(in oklch, var(--ink) 4%, transparent); min-height: 180px; transition: background .15s, box-shadow .15s; }
+.c .lane.over, .c .lanes.carry .lane:hover { background: color-mix(in oklch, var(--field) 40%, var(--paper)); box-shadow: inset 0 0 0 2px var(--ink); cursor: copy; } .c .lane h3 { font-size: 15px; font-weight: 680; margin: 0 4px 10px; } .c .lane h3 small { font-weight: 480; color: var(--mute); margin-left: 6px; }
+.c .lane ul { display: flex; flex-wrap: wrap; gap: 6px; } .c .lane img { width: 52px; height: 52px; cursor: grab; background: var(--paper); transition: transform .15s; } .c .lane img:hover { transform: scale(1.12); } .c .lane img.sel { box-shadow: 0 0 0 3px var(--ink); } .c .lane.offl img { opacity: .45; filter: grayscale(1); }
+.c .hint { margin-top: 12px; font-size: 13px; color: var(--mute); }
+@media (max-width: 760px) { .now, .b { grid-template-columns: 1fr; } .b aside { border-right: 0; border-bottom: 1px solid var(--line); } .c .head { grid-template-columns: 44px 1fr auto; } .c .head span { grid-column: 2 / -1; grid-row: 2; } .c .body { padding-left: 0; } .c .lanes { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="pick"><b>Admin page</b><button data-dir="now">Now (live)</button><button data-dir="a">A · Column</button><button data-dir="b">B · Rail</button><button data-dir="c">C · Desk</button><span id="say"></span></div>
+<div class="frame"><div class="bar"><span class="wm">Loop</span><a>This week</a><a class="on">Admin</a></div><div id="root"></div></div>
+<script>
+const SAY = { now: 'What is live today: every section at once, in cards.', a: 'One narrow column. Sections are pills. Rows on hairlines. This is what I built without asking.', b: 'Sections down the left with counts. Tables. Pick several animals, move them together.', c: 'No navigation. Seven lines that each say their state and open in place. Animals are three lanes.' };
+const EVENTS = [['Today', '6:03pm', 'Morning run', 'Entered by hand', 'run exercise workout cardio outside', 1], ['Today', '6:09pm', 'CS 2110 study group', 'Northside Coffee · on the map', 'study homework focus quiet coffee', 1], ['Today', '8:57pm', 'Blitz night', 'Chess Club · Willard Straight Hall', 'game games play indoor chill', 1], ['Thu', '12:57am', 'Dumpling night', 'Bao House', 'food eat hungry social', 1], ['Thu', '3:57am', 'Sunset run, easy 5K', 'Posted plan · Arts Quad · on the map', 'run exercise cardio outside', 1], ['Thu', '7:57pm', 'Resume drop-in', 'Career Services', 'career job internship network', 0], ['Thu', '11:57pm', 'Ballroom open floor', 'Ballroom Dance Club', 'dance exercise music social', 1], ['Fri', '9:57pm', 'Demo night', 'Ithaca builders', 'startup founders build network', 1], ['Sat', '3:57pm', 'Sunrise hike', 'Outing Club', 'exercise outside nature walk', 1]];
+const REWARDS = [['Bao House: Starters on the house', 'Group of 4 · on “Dumpling night”', 1], ['Collegetown Bagels: $5 off any order', 'After 1 · any outings', 1], ['Finger Lakes Running Co.: 20% off Brooks running shoes', 'After 5 · outings with the word run', 1], ['Northside Coffee: A drink and a pastry, $4.50 each', 'Group of 3 · on “CS 2110 study group”', 1], ['Chess Club: Skip the door', 'Group of 3 · on every event of Chess Club', 0]];
+const FEEDS = [['CampusGroups', 'cornell.campusgroups.com/ical', '212 events · read 14 minutes ago', 1], ['Luma', 'lu.ma/ithaca-builders', '6 events · read 14 minutes ago', 1], ['Athletics', 'cornellbigred.com/calendar.ics', 'Failed: 404 · an hour ago', 0]];
+const PLACES = [['Willard Straight Hall', '42.4466, -76.4857 · also The Straight, WSH'], ['Northside Coffee', '42.4534, -76.4780'], ['Arts Quad', '42.4488, -76.4845'], ['Duffield Hall', '42.4447, -76.4826 · also Duffield']];
+const ASKS = [['xwf2@cornell.edu', '2026-11-18', 2], ['maya.chen@cornell.edu', '2026-11-18', 1], ['dp88@columbia.edu', '2026-11-17', 1]];
+const src = n => `/animals/${String(n + 1).padStart(2, '0')}.png`;
+const tier = Array.from({ length: 37 }, (_, n) => n === 36 || n === 21 || n === 30 || n === 34 ? 'premium' : n === 7 || n === 17 ? 'off' : 'core');
+const TIER = { core: 'Core', premium: 'Premium', off: 'Off' }, HOLDS = { core: 'In everyone’s picker.', premium: 'For people who subscribed.', off: 'In nobody’s picker.' };
+const of = t => tier.flatMap((each, n) => each === t ? [n] : []);
+const state = { dir: location.hash.slice(1) || 'now', sec: 'events', open: 'animals', filter: 'all', sel: new Set() };
+const SECS = { events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', animals: 'Animals', premium: 'Premium', campus: 'Campus' };
+const COUNT = { events: () => EVENTS.length, rewards: () => REWARDS.length, feeds: () => FEEDS.length, places: () => PLACES.length, animals: () => 37, premium: () => ASKS.length, campus: () => 4 };
+const STATE = { events: () => `${EVENTS.filter(e => !e[5]).length} hidden · next is ${EVENTS[0][2]}, ${EVENTS[0][1]}`, rewards: () => `${REWARDS.filter(r => !r[2]).length} hidden`, feeds: () => 'Athletics failed an hour ago', places: () => 'All matched to events', animals: () => `${of('core').length} core · ${of('premium').length} premium · ${of('off').length} off`, premium: () => 'asked to subscribe · nobody is charged', campus: () => 'Cornell · cornell.edu' };
+
+const rowsOf = sec => sec === 'events' ? EVENTS.map((e, i) => `<li class="${e[5] ? '' : 'off'}"><div><b>${e[2]}${e[5] ? '' : ' · hidden'}</b><span>${e[0]} ${e[1]} · ${e[3]}</span><span class="words">${e[4]}</span></div><button class="pill" data-hide="${i}">${e[5] ? 'Hide' : 'Show'}</button></li>`).join('')
+  : sec === 'rewards' ? REWARDS.map(r => `<li class="${r[2] ? '' : 'off'}"><div><b>${r[0]}${r[2] ? '' : ' · hidden'}</b><span>${r[1]}</span></div><button class="pill">Edit</button><button class="pill">${r[2] ? 'Hide' : 'Show'}</button></li>`).join('')
+  : sec === 'feeds' ? FEEDS.map(f => `<li><div><b>${f[0]}</b><span>${f[1]}</span><span class="${f[3] ? '' : 'warn'}">${f[2]}</span></div><button class="pill">Read now</button><button class="pill">Turn off</button></li>`).join('')
+  : sec === 'places' ? PLACES.map(p => `<li><div><b>${p[0]}</b><span>${p[1]}</span></div><button class="pill">Edit</button></li>`).join('')
+  : sec === 'premium' ? ASKS.map(a => `<li><div><b>${a[0]}</b><span>${a[1]} · made ${a[2]}</span></div></li>`).join('')
+  : `<li><div><b>Email domains</b><span>cornell.edu · a subdomain counts</span></div><button class="pill">Edit</button></li><li><div><b>The complete list is called</b><span>CampusGroups</span></div><button class="pill">Edit</button></li><li><div><b>Timezone</b><span>America/New_York</span></div></li>`;
+const ADD = { events: 'Add an event by hand', rewards: 'Add a reward', feeds: 'Add a feed', places: 'Add a place', campus: 'Add a campus' };
+
+const now = () => `<div class="now"><h1>Admin</h1>
+  <section class="wide"><h2>Premium</h2><p>3 people have asked to subscribe, across every campus. Nobody is charged.</p>${ASKS.map(a => `<div class="card"><div><b>${a[0]}</b><span>${a[1]}</span></div></div>`).join('')}</section>
+  <section class="wide"><h2>Animals</h2><p>Every picture a person can have. Core is in everyone’s picker. Premium is for people who subscribed. Off is in nobody’s picker.</p><ul class="pets">${tier.map((t, n) => `<li><img src="${src(n)}" alt=""><b>${n === 36 ? 'Dachshund' : `Animal ${n + 1}`}</b><span>${['core', 'premium', 'off'].map(x => `<i class="${x === t ? 'on' : ''}">${TIER[x]}</i>`).join('')}</span></li>`).join('')}</ul></section>
+  <section><h2>Feeds</h2><p>Calendar feeds are read every hour.</p>${FEEDS.map(f => `<div class="card"><div><b>${f[0]}</b><span>${f[1]}<br>${f[2]}</span></div><button class="btn">Read now</button><button class="btn">Turn off</button></div>`).join('')}</section>
+  <section><h2>Places</h2><p>An event whose place text names one of these gets a map.</p>${PLACES.map(p => `<div class="card"><div><b>${p[0]}</b><span>${p[1]}</span></div></div>`).join('')}</section>
+  <section class="wide"><h2>Rewards</h2><p>Entered by hand.</p>${REWARDS.map(r => `<div class="card"><div><b>${r[0]}</b><span>${r[1]}</span></div><button class="btn">Hide</button></div>`).join('')}</section>
+  <section class="wide"><h2>Events</h2><p>Everything that has not ended, hidden ones included.</p>${EVENTS.map(e => `<div class="card"><div><b>${e[2]}</b><span>${e[0]} ${e[1]} · ${e[3]}</span></div><button class="btn">Hide</button><input value="${e[4]}"><button class="btn">Save words</button></div>`).join('')}</section></div>`;
+
+const a = () => `<div class="a"><header><h1>Admin</h1><nav>${['CUNY', 'Columbia', 'Cornell', 'NYU'].map(c => `<button class="pill ${c === 'Cornell' ? 'on' : ''}">${c}</button>`).join('')}</nav></header>
+  <nav class="tabs">${Object.keys(SECS).map(s => `<button class="pill ${s === state.sec ? 'on' : ''}" data-sec="${s}">${SECS[s]}</button>`).join('')}</nav>
+  ${state.sec === 'animals' ? `<p class="lede">Press a name under an animal to move it there. Whoever already has it keeps it.</p>${['core', 'premium', 'off'].map(t => `<div class="shelf"><h3>${TIER[t]} <small>${of(t).length} · ${HOLDS[t]}</small></h3><ul>${of(t).map(n => `<li><img class="pet" src="${src(n)}" alt=""><div>${['core', 'premium', 'off'].filter(x => x !== t).map(x => `<button class="pill" data-move="${n}:${x}">${TIER[x]}</button>`).join('')}</div></li>`).join('')}</ul></div>`).join('')}`
+    : `<ul class="rows">${rowsOf(state.sec)}</ul>${ADD[state.sec] ? `<button class="pill add">+ ${ADD[state.sec]}</button>` : ''}`}</div>`;
+
+const b = () => { const shown = tier.flatMap((t, n) => state.filter === 'all' || state.filter === t ? [n] : []); return `<div class="b"><aside><select><option>Cornell</option><option>Columbia</option><option>CUNY</option><option>NYU</option></select>
+  ${Object.keys(SECS).map(s => `<button class="${s === state.sec ? 'on' : ''}" data-sec="${s}">${SECS[s]}<small class="${s === 'feeds' ? 'warn' : ''}">${s === 'feeds' ? '1 failed' : COUNT[s]()}</small></button>`).join('')}<p>Only you see this page.</p></aside>
+  <main><div class="top"><h1>${SECS[state.sec]}</h1>${state.sec === 'events' ? '<input placeholder="Find by title or host">' : ''}${ADD[state.sec] ? `<button class="pill go">+ ${ADD[state.sec].replace(' by hand', '')}</button>` : ''}</div>
+  ${state.sec === 'events' ? `<table><tr><th>When</th><th>Event</th><th>Words a search finds</th><th>Shown</th></tr>${EVENTS.map((e, i) => `<tr class="${e[5] ? '' : 'off'}"><td>${e[0]} ${e[1]}</td><td><b>${e[2]}</b><small>${e[3]}</small></td><td><input class="w" value="${e[4]}"></td><td><button class="sw ${e[5] ? 'on' : ''}" data-hide="${i}" aria-label="Shown"></button></td></tr>`).join('')}</table>`
+    : state.sec === 'animals' ? `<div class="seg">${['all', 'core', 'premium', 'off'].map(f => `<button class="${f === state.filter ? 'on' : ''}" data-filter="${f}">${f === 'all' ? 'All 37' : `${TIER[f]} ${of(f).length}`}</button>`).join('')}</div>
+      <div class="grid">${shown.map(n => `<button class="${tier[n]} ${state.sel.has(n) ? 'sel' : ''}" data-sel="${n}"><img class="pet" src="${src(n)}" alt="">${TIER[tier[n]]}</button>`).join('')}</div>
+      ${state.sel.size ? `<div class="tray">${state.sel.size} picked · move to ${['core', 'premium', 'off'].map(t => `<button data-all="${t}">${TIER[t]}</button>`).join('')}<button class="x" data-all="">Clear</button></div>` : '<p class="mute" style="margin-top:20px;font-size:13.5px">Tap animals to pick them, then move them together.</p>'}`
+    : `<ul class="rows" style="margin-top:0">${rowsOf(state.sec)}</ul>`}</main></div>`; };
+
+const c = () => `<div class="c"><header><h1>Admin</h1><select><option>Cornell</option><option>Columbia</option><option>CUNY</option><option>NYU</option></select></header>
+  ${Object.keys(SECS).map(s => `<div class="line ${state.open === s ? 'open' : ''}"><button class="head" data-open="${s}"><em>${COUNT[s]()}</em><b>${SECS[s]}</b><span class="${s === 'feeds' ? 'warn' : ''}">${STATE[s]()}</span><i class="pill" style="font-style:normal">${state.open === s ? 'Close' : 'Open'}</i></button>
+    ${state.open !== s ? '' : `<div class="body">${s === 'animals' ? `<div class="lanes ${state.sel.size ? 'carry' : ''}">${['core', 'premium', 'off'].map(t => `<div class="lane ${t === 'off' ? 'offl' : ''}" data-lane="${t}"><h3>${TIER[t]}<small>${of(t).length} · ${HOLDS[t]}</small></h3><ul>${of(t).map(n => `<li><img class="pet ${state.sel.has(n) ? 'sel' : ''}" draggable="true" data-sel="${n}" src="${src(n)}" alt=""></li>`).join('')}</ul></div>`).join('')}</div><p class="hint">Drag an animal to another lane. Or tap one or more, then tap the lane they go to.</p>`
+      : `<ul class="rows">${rowsOf(s)}</ul>${ADD[s] ? `<button class="pill" style="margin-top:8px;height:34px">+ ${ADD[s]}</button>` : ''}`}</div>`}</div>`).join('')}</div>`;
+
+const root = document.getElementById('root');
+function draw() {
+  root.innerHTML = { now, a, b, c }[state.dir]();
+  document.querySelectorAll('.pick button').forEach(each => each.setAttribute('aria-pressed', each.dataset.dir === state.dir));
+  document.getElementById('say').textContent = SAY[state.dir]; history.replaceState(null, '', '#' + state.dir);
+}
+document.querySelector('.pick').addEventListener('click', e => { const dir = e.target.dataset?.dir; if (dir) { state.dir = dir; state.sel.clear(); state.sec = dir === 'now' ? 'events' : 'animals'; draw(); scrollTo(0, 0); } });
+root.addEventListener('click', e => {
+  const at = e.target.closest('[data-sec],[data-move],[data-hide],[data-filter],[data-sel],[data-all],[data-open],[data-lane]'); if (!at) return; const d = at.dataset;
+  if (d.sec) { state.sec = d.sec; state.sel.clear(); }
+  else if (d.move) { const [n, t] = d.move.split(':'); tier[n] = t; }
+  else if (d.hide) EVENTS[d.hide][5] = EVENTS[d.hide][5] ? 0 : 1;
+  else if (d.filter) state.filter = d.filter;
+  else if (d.sel) { const n = Number(d.sel); if (state.sel.has(n)) state.sel.delete(n); else state.sel.add(n); }
+  else if (d.all !== undefined) { if (d.all) state.sel.forEach(n => tier[n] = d.all); state.sel.clear(); }
+  else if (d.lane) { if (!state.sel.size) return; state.sel.forEach(n => tier[n] = d.lane); state.sel.clear(); }
+  else if (d.open) { state.open = state.open === d.open ? '' : d.open; state.sel.clear(); }
+  draw();
+});
+let carried = null;
+root.addEventListener('dragstart', e => { if (e.target.dataset?.sel) { carried = Number(e.target.dataset.sel); e.dataTransfer.effectAllowed = 'move'; } });
+root.addEventListener('dragover', e => { const lane = e.target.closest('[data-lane]'); if (lane && carried !== null) { e.preventDefault(); root.querySelectorAll('.lane').forEach(each => each.classList.toggle('over', each === lane)); } });
+root.addEventListener('drop', e => { const lane = e.target.closest('[data-lane]'); if (lane && carried !== null) { e.preventDefault(); tier[carried] = lane.dataset.lane; carried = null; draw(); } });
+if (!SAY[state.dir]) state.dir = 'now';
+if (state.dir !== 'now') state.sec = 'animals';
+draw();
+</script>
+</body>
+</html>

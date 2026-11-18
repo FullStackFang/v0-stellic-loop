@@ -422,38 +422,53 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-post-side { display: grid; gap: 16px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
 .cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
 .cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
-/* The admin page: one column, one section at a time, rows on hairlines. Quiet on purpose: it is a tool for one person. */
-.cs-adm { width: 100%; max-width: 860px; margin: 0 auto; padding: 36px 24px 96px; }
-.cs-adm > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; } .cs-adm h1 { font-size: 34px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; }
-.cs-adm > header nav, .cs-adm-tabs { display: flex; gap: 6px; flex-wrap: wrap; } .cs-adm > header nav a, .cs-adm-tabs a { display: inline-flex; align-items: center; border-radius: 99px; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 22%, transparent); color: var(--cs-ink); white-space: nowrap; transition: background .15s, color .15s; height: 28px; padding: 0 12px; font-size: 13.5px; font-weight: 560; }
-.cs-adm > header nav a:hover, .cs-adm-tabs a:hover { background: color-mix(in oklch, var(--cs-ink) 8%, transparent); } .cs-adm > header nav a[aria-current], .cs-adm-tabs a[aria-current] { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; font-weight: 640; }
-.cs-adm-tabs { margin-top: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--cs-line); }
-.cs-adm-tabs a { height: 36px; padding: 0 16px; font-size: 15px; }
-.cs-adm-said { margin-top: 20px; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 580; background: color-mix(in oklch, var(--cs-field) 30%, var(--cs-paper)); animation: cs-in .35s var(--cs-expo); }
-.cs-adm section { margin-top: 26px; } .cs-adm h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.cs-adm-lede, .cs-adm-foot { max-width: 64ch; font-size: 14px; line-height: 1.5; color: var(--cs-mute); } .cs-adm-foot { margin-top: 56px; font-size: 13px; }
-.cs-adm button:not(.cs-btn), .cs-adm summary > i, .cs-adm section > details > summary { display: inline-flex; align-items: center; border-radius: 99px; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 22%, transparent); color: var(--cs-ink); white-space: nowrap; transition: background .15s, color .15s; height: 28px; padding: 0 12px; font-size: 13px; font-weight: 600; font-style: normal; } .cs-adm button:not(.cs-btn):hover, .cs-adm summary:hover > i, .cs-adm section > details > summary:hover { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
-.cs-adm-rows { margin-top: 18px; } .cs-adm-rows > li { display: flex; align-items: baseline; gap: 6px 22px; padding: 15px 0; border-top: 1px solid var(--cs-line); } .cs-adm-rows > li:last-child { border-bottom: 1px solid var(--cs-line); }
-.cs-adm-rows > li > div, .cs-adm-rows > li > details { flex: 1; min-width: 0; } .cs-adm-rows b { display: block; font-size: 15.5px; font-weight: 640; letter-spacing: -0.02em; overflow-wrap: anywhere; }
-.cs-adm-rows span { display: block; font-size: 13.5px; line-height: 1.45; color: var(--cs-mute); overflow-wrap: anywhere; } .cs-adm-rows li.off b { color: var(--cs-mute); font-weight: 540; }
-.cs-adm-rows .words { display: flex; align-items: baseline; gap: 14px; margin-top: 4px; } .cs-adm .cs-adm-rows .words input { flex: 1; height: 28px; padding: 0; border-radius: 0; font-size: 13.5px; background: none; box-shadow: inset 0 -1px 0 var(--cs-line); } .cs-adm .cs-adm-rows .words input:focus { outline: 0; box-shadow: inset 0 -1.5px 0 var(--cs-ink); }
-.cs-adm-rows .words button { opacity: 0; transition: opacity .15s; } .cs-adm-rows .words:focus-within button, .cs-adm-rows li:hover .words button { opacity: 1; }
+/* The admin page: sections down the left with counts, one section at a time on the right. A tool for one person, so it is quiet:
+   hairlines and tables, no cards. Picked from public/demo/mockups-admin.html (B, "Rail"). */
+.cs-adm { --adm-warn: oklch(52% 0.17 28); flex: 1; width: 100%; display: grid; grid-template-columns: 216px minmax(0, 1fr); }
+.cs-adm-rail { display: flex; flex-direction: column; gap: 4px; padding: 26px 14px 26px 22px; border-right: 1px solid var(--cs-line); }
+.cs-adm summary { cursor: pointer; list-style: none; } .cs-adm summary::-webkit-details-marker { display: none; }
+.cs-adm-rail .school { position: relative; margin-bottom: 14px; } .cs-adm-rail .school summary { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 14px 0 12px; border-radius: 10px; font-weight: 640; background: var(--cs-paper); box-shadow: inset 0 0 0 1px var(--cs-line); }
+.cs-adm-rail .school summary::after { content: ""; width: 6px; height: 6px; margin-top: -3px; border-right: 1.6px solid; border-bottom: 1.6px solid; transform: rotate(45deg); }
+.cs-adm-rail .school nav { position: absolute; z-index: 3; top: 42px; left: 0; right: 0; display: grid; padding: 4px; border-radius: 10px; background: var(--cs-paper); box-shadow: inset 0 0 0 1px var(--cs-line), 0 10px 30px color-mix(in oklch, var(--cs-ink) 16%, transparent); animation: cs-in .25s var(--cs-expo); }
+.cs-adm-rail .school nav a { display: flex; align-items: center; height: 34px; padding: 0 10px; border-radius: 7px; font-weight: 560; } .cs-adm-rail .school nav a:hover { background: color-mix(in oklch, var(--cs-ink) 7%, transparent); }
+.cs-adm-rail > nav { display: grid; gap: 4px; } .cs-adm-rail > nav a { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 12px; border-radius: 10px; font-weight: 560; transition: box-shadow .15s; } .cs-adm-rail > nav a:hover { box-shadow: inset 0 0 0 1px var(--cs-line); }
+.cs-adm-rail > nav a[aria-current] { background: var(--cs-ink); color: var(--cs-paper); font-weight: 660; box-shadow: none; } .cs-adm-rail small { font-size: 12.5px; font-variant-numeric: tabular-nums; opacity: .7; } .cs-adm-rail small.warn { opacity: 1; font-weight: 600; color: var(--adm-warn); } .cs-adm-rail a[aria-current] small.warn { color: var(--cs-field); }
+.cs-adm-rail > p { margin-top: auto; padding: 24px 12px 0; font-size: 12.5px; line-height: 1.45; color: var(--cs-mute); }
+.cs-adm-main { min-width: 0; padding: 26px 32px 120px; }
+.cs-adm-said { margin-bottom: 18px; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 580; background: color-mix(in oklch, var(--cs-field) 30%, var(--cs-paper)); animation: cs-in .35s var(--cs-expo); }
+.cs-adm-top { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin-bottom: 18px; } .cs-adm-top h1 { margin-right: auto; font-size: 26px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.2; }
+.cs-adm .cs-adm-top .find input { width: 260px; height: 36px; padding: 0 14px; border-radius: 99px; }
+.cs-adm-top details > summary { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 15px 0 12px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--cs-action); color: var(--cs-paper); transition: background .15s; } .cs-adm-top details > summary:hover { background: var(--cs-action-hover); }
+.cs-adm-top details > summary::before { content: ""; width: 10px; height: 10px; background: linear-gradient(currentColor, currentColor) center / 100% 1.6px no-repeat, linear-gradient(currentColor, currentColor) center / 1.6px 100% no-repeat; transition: transform .25s var(--cs-expo); }
+.cs-adm-top details[open] { order: 9; flex: 1 1 100%; } .cs-adm-top details[open] > summary { background: var(--cs-ink); } .cs-adm-top details[open] > summary::before { transform: rotate(45deg); }
+.cs-adm-lede { max-width: 64ch; font-size: 13.5px; line-height: 1.5; color: var(--cs-mute); } section > .cs-adm-lede { margin-bottom: 14px; }
+.cs-adm .b { display: inline-flex; align-items: center; border-radius: 99px; white-space: nowrap; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 22%, transparent); transition: background .15s, color .15s; height: 28px; padding: 0 12px; font-size: 13px; font-weight: 600; font-style: normal; } .cs-adm .b:hover, .cs-adm summary:hover > .b, .cs-adm details[open] > summary > .b { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
+.cs-adm-sw { position: relative; display: block; width: 38px; height: 22px; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 20%, transparent); transition: background .2s; } .cs-adm-sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--cs-paper); transition: transform .25s var(--cs-expo); }
+.cs-adm-sw.on { background: var(--cs-ink); } .cs-adm-sw.on::after { transform: translateX(16px); }
+.cs-adm-table { width: 100%; border-collapse: collapse; font-size: 14px; } .cs-adm-table th { padding: 0 12px 8px 0; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--cs-mute); }
+.cs-adm-table td { padding: 11px 12px 11px 0; border-top: 1px solid var(--cs-line); vertical-align: baseline; } .cs-adm-table td:first-child { width: 1%; padding-right: 20px; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--cs-mute); }
+.cs-adm-table td b { font-weight: 640; letter-spacing: -0.02em; } .cs-adm-table td small { display: block; font-size: 13px; color: var(--cs-mute); overflow-wrap: anywhere; } .cs-adm-table td:last-child, .cs-adm-table th:last-child { width: 1%; padding-right: 0; } .cs-adm-table td:last-child { vertical-align: middle; }
+.cs-adm-table tr.off td b { font-weight: 500; color: var(--cs-mute); text-decoration: line-through; }
+.cs-adm-table .words { display: flex; align-items: center; gap: 8px; margin: -4px 0 -4px -8px; } .cs-adm .cs-adm-table .words input { flex: 1; height: 28px; padding: 0 8px; border-radius: 6px; font-size: 13.5px; background: none; box-shadow: none; } .cs-adm .cs-adm-table .words input:hover { box-shadow: inset 0 0 0 1px var(--cs-line); }
+.cs-adm .cs-adm-table .words input:focus { outline: 0; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-adm-table .words .b { display: none; } .cs-adm-table .words:focus-within .b { display: inline-flex; } .cs-adm-table th:nth-child(3) { width: 34%; }
+.cs-adm-rows > li { display: flex; align-items: center; gap: 6px 14px; padding: 13px 0; border-top: 1px solid var(--cs-line); } .cs-adm-rows > li:last-child { border-bottom: 1px solid var(--cs-line); } .cs-adm-rows > li > div, .cs-adm-rows > li > details { flex: 1; min-width: 0; }
+.cs-adm-rows summary { display: flex; align-items: center; gap: 14px; } .cs-adm-rows summary > div { flex: 1; min-width: 0; } .cs-adm-rows b { display: block; font-size: 15px; font-weight: 640; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.cs-adm-rows span { display: block; font-size: 13.5px; line-height: 1.45; color: var(--cs-mute); overflow-wrap: anywhere; } .cs-adm-rows span.warn { font-weight: 600; color: var(--adm-warn); } .cs-adm-rows li.off b { font-weight: 500; color: var(--cs-mute); }
 .cs-adm-rows .made { display: flex; gap: 6px; flex: none; } .cs-adm-rows .made img { width: 44px; height: 44px; object-fit: contain; }
-.cs-adm details > summary { cursor: pointer; list-style: none; } .cs-adm details > summary::-webkit-details-marker { display: none; }
-.cs-adm section > details { margin-top: 18px; } .cs-adm section > details + details { margin-top: 10px; } .cs-adm section > details > summary { gap: 8px; height: 34px; padding: 0 16px 0 13px; font-size: 14px; }
-.cs-adm-rows summary { display: flex; align-items: baseline; gap: 6px 22px; } .cs-adm-rows summary > div { flex: 1; min-width: 0; } .cs-adm-rows details[open] > summary > i { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
-.cs-adm section > details > summary::before { content: ""; width: 11px; height: 11px; background: linear-gradient(currentColor, currentColor) center / 100% 1.6px no-repeat, linear-gradient(currentColor, currentColor) center / 1.6px 100% no-repeat; transition: transform .25s var(--cs-expo); } .cs-adm section > details[open] > summary::before { transform: rotate(45deg); }
 .cs-adm-form { display: grid; gap: 14px; justify-items: start; max-width: 720px; margin-top: 16px; padding-bottom: 6px; animation: cs-in .3s var(--cs-expo); } .cs-adm-form > *, .cs-adm-form .three > * { width: 100%; } .cs-adm-form > .cs-btn { width: auto; }
 .cs-adm-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; } .cs-adm-form label small { font-weight: 480; color: var(--cs-mute); } .cs-adm .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
-.cs-adm input, .cs-adm select { height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px var(--cs-line); min-width: 0; } .cs-adm input:focus-visible, .cs-adm select:focus-visible { outline: 0; box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-adm input[readonly] { color: var(--cs-mute); background: none; }
-.cs-adm-find { display: flex; align-items: center; gap: 16px; } .cs-adm .cs-adm-find input { flex: 1; height: 44px; padding: 0 16px; border-radius: 99px; font-size: 15px; } .cs-adm-find + .cs-adm-lede { margin-top: 14px; }
-.cs-adm-shelf { margin-top: 30px; } .cs-adm-shelf h3 { display: flex; align-items: baseline; gap: 12px; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; } .cs-adm-shelf h3 small { font-size: 13.5px; font-weight: 480; letter-spacing: 0; color: var(--cs-mute); }
-.cs-adm-pets { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 20px 6px; margin-top: 14px; } .cs-adm-pets li { display: grid; justify-items: center; align-content: start; gap: 6px; min-width: 0; }
-.cs-adm-pets img { width: 68px; height: 68px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 7%, var(--cs-paper)); transition: transform .2s var(--cs-ease); } .cs-adm-pets li:hover img { transform: scale(1.1); }
-.cs-adm-pets form { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; } .cs-adm .cs-adm-pets button, .cs-adm .cs-adm-pets summary { display: inline-flex; align-items: center; border-radius: 99px; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 22%, transparent); color: var(--cs-ink); white-space: nowrap; transition: background .15s, color .15s; height: 22px; padding: 0 8px; font-size: 11.5px; font-weight: 580; color: var(--cs-mute); }
-.cs-adm .cs-adm-pets button:hover, .cs-adm .cs-adm-pets summary:hover { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
-.cs-adm-pets details { display: grid; justify-items: center; gap: 4px; } .cs-adm .cs-adm-pets details button { color: var(--cs-action); box-shadow: inset 0 0 0 1px var(--cs-action); }
-@media (prefers-reduced-motion: reduce) { .cs-adm-said, .cs-adm-form { animation: none; } }
+.cs-adm input:not([type=checkbox]), .cs-adm select { height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px var(--cs-line); min-width: 0; } .cs-adm input:focus-visible, .cs-adm select:focus-visible { outline: 0; box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-adm input[readonly] { color: var(--cs-mute); background: none; }
+.cs-adm-seg { display: inline-flex; padding: 3px; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 8%, transparent); } .cs-adm-seg a { display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; }
+.cs-adm-seg a[aria-current] { font-weight: 660; background: var(--cs-paper); box-shadow: 0 1px 2px color-mix(in oklch, var(--cs-ink) 18%, transparent); }
+.cs-adm-pick { counter-reset: picked; } .cs-adm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px 4px; margin: 20px 0; }
+.cs-adm-grid label { position: relative; display: grid; justify-items: center; gap: 4px; padding: 8px 0 6px; border-radius: 16px; font-size: 11.5px; font-weight: 600; color: var(--cs-mute); cursor: pointer; transition: background .15s; } .cs-adm-grid label:hover { background: color-mix(in oklch, var(--cs-ink) 5%, transparent); }
+.cs-adm-grid input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; } .cs-adm-grid input:checked { counter-increment: picked; } .cs-adm-grid label:has(:checked) { background: var(--cs-paper); box-shadow: inset 0 0 0 2px var(--cs-ink); color: var(--cs-ink); } .cs-adm-grid label:has(:focus-visible) { box-shadow: inset 0 0 0 2px var(--cs-action); }
+.cs-adm-grid img { width: 64px; height: 64px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--cs-ink) 7%, var(--cs-paper)); } .cs-adm-grid .premium { color: var(--cs-action); } .cs-adm-grid .off img, .cs-adm-grid .own img { opacity: .4; filter: grayscale(1); } .cs-adm-grid .own img { filter: none; opacity: .6; }
+.cs-adm-tray { position: sticky; bottom: 16px; display: none; align-items: center; gap: 8px; width: fit-content; max-width: 100%; flex-wrap: wrap; margin: 24px auto 0; padding: 8px 8px 8px 18px; border-radius: 28px; background: var(--cs-ink); color: var(--cs-paper); font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px color-mix(in oklch, var(--cs-ink) 30%, transparent); animation: cs-in .3s var(--cs-expo); }
+.cs-adm-pick:has(.cs-adm-grid :checked) .cs-adm-tray { display: flex; } .cs-adm-pick:has(.cs-adm-grid :checked) > .cs-adm-lede { display: none; } .cs-adm-tray > span::before { content: counter(picked) " "; font-variant-numeric: tabular-nums; }
+.cs-adm-tray button, .cs-adm-tray summary { display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 660; background: var(--cs-field); color: var(--cs-ink); } .cs-adm-tray .x, .cs-adm-tray summary { font-weight: 600; background: none; color: var(--cs-paper); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-paper) 40%, transparent); }
+.cs-adm-tray details { display: none; align-items: center; gap: 8px; } .cs-adm-pick:has(input[name=picture]:checked) .cs-adm-tray details { display: flex; } .cs-adm-tray details[open] summary { display: none; } .cs-adm-tray details button { background: var(--adm-warn); color: var(--cs-paper); }
+@media (prefers-reduced-motion: reduce) { .cs-adm-said, .cs-adm-form, .cs-adm-tray, .cs-adm-rail .school nav { animation: none; } }
 
 /* admin */
 
@@ -550,13 +565,67 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-tick small { font-stretch: 88%; font-size: 10.5px; font-weight: 640; letter-spacing: .08em; text-transform: uppercase; } .cs-tick b { margin-top: 3px; font-size: 16.5px; font-weight: 760; letter-spacing: -0.02em; }
 .cs-tick.on { z-index: 1; scale: 1.16; rotate: -3deg; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
 
+/* A wide window (components/campus/screen.tsx, "wide"; public/demo/mockups-campus-desktop.html): the search line and the
+   sources share one line across the page, the week is a column of tickets that scrolls by itself, and the map stays put
+   beside it at two thirds of the page. The three controls at the top are one height. */
+.cs-wide { --h: 48px; --hot: #ff5a43; height: 100dvh; }
+:root[data-kit="cornell"] .cs-wide { --hot: oklch(90% 0.17 98); }
+.cs-wide .cs-main { min-height: 0; padding-bottom: 20px; }
+.cs-strip { flex: none; display: flex; align-items: center; gap: 12px 16px; margin: 0 6px 14px 0; }
+.cs-find { position: relative; z-index: 5; flex: 1; min-width: 0; display: flex; }
+.cs-find input { width: 100%; min-width: 0; height: var(--h); padding: 0 24px; border: 0; border-radius: 99px; font: inherit; font-size: 18px; font-weight: 520; letter-spacing: -0.02em; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-find input::placeholder { color: var(--cs-mute); } .cs-find input:focus-visible { outline: 3px solid var(--cs-action); outline-offset: 2px; }
+/* the words to try are the search line's own suggestions: they open under it when it is clicked into */
+.cs-try { position: absolute; left: 0; top: calc(100% + 9px); display: flex; align-items: center; gap: 6px; padding: 8px 12px 8px 16px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-ink);
+  opacity: 0; visibility: hidden; translate: 0 -6px; transition: opacity .18s, translate .3s var(--cs-expo), visibility 0s .18s; }
+.cs-find:focus-within .cs-try { opacity: 1; visibility: visible; translate: 0 0; transition-delay: 0s; }
+.cs-try small { margin-right: 4px; font-size: 13px; color: var(--cs-mute); }
+.cs-try .cs-opt { height: 30px; padding: 0 12px; font-size: 13.5px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs-try .cs-opt:hover, .cs-try .cs-opt[aria-pressed=true] { background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+/* the sources are one control: an ink thumb slides to the one that is on. A source still to come is named and plainly not pressable. */
+.cs-srcs { position: relative; isolation: isolate; flex: none; display: inline-flex; gap: 2px; height: var(--h); padding: 4px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-srcs::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--cs-ink); clip-path: inset(4px calc(100% - var(--x, 4px) - var(--w, 0px)) 4px var(--x, 4px) round 99px); transition: clip-path .5s var(--cs-expo); }
+.cs-srcs > * { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 100%; padding: 0 13px; border-radius: 99px; font-weight: 560; font-size: 14.5px; white-space: nowrap; transition: color .25s, background-color .15s; }
+.cs-srcs button[aria-pressed=true] { color: var(--cs-field); } .cs-srcs button[aria-pressed=false]:hover { background: color-mix(in oklab, var(--cs-ink) 8%, transparent); }
+.cs-srcs span { color: var(--cs-mute); cursor: default; }
+.cs-srcs span i { padding: 1px 6px 2px; border-radius: 99px; font-style: normal; font-size: 10.5px; font-weight: 680; color: var(--cs-ink); background: var(--cs-field); }
+/* the posting panel opens across the whole page, above the week and the map */
+.cs-wide-post { flex: none; display: flex; margin: 0 6px 14px 0; } .cs-wide-post .cs-sheet { flex: 1; max-height: 46dvh; }
+.cs-split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 22px; }
+.cs-split > .cs-near { min-height: 0; }
+.cs-col { min-height: 0; display: flex; flex-direction: column; }
+/* the count runs the width of the tickets under it */
+.cs-wide .cs-tally { flex: none; display: flex; height: var(--h); margin: 0 6px 12px 0; padding: 0 22px 0 5px; }
+.cs-wide .cs-tally h2 { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; white-space: nowrap; overflow: hidden; } .cs-wide .cs-tally h2 span { font-weight: 520; color: var(--cs-mute); }
+.cs-scroll { flex: 1; min-height: 0; overflow-y: auto; margin: -6px -8px -6px -6px; padding: 6px 14px 14px 6px; scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--cs-ink) 35%, transparent) transparent; }
+.cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); grid-auto-flow: dense; gap: 16px; }
+.cs-grid .cs-ev { container-type: inline-size; cursor: pointer; }
+.cs-ev.sel { --cast: var(--cs-ink); --lift: 7px; transform: translate(-2px, -2px); } .cs-ev.hov:not(.sel, .open) { --lift: 8px; transform: translate(-3px, -3px); }
+.cs-grid .cs-top { grid-template-columns: auto 1fr auto; column-gap: 8px; } .cs-grid .cs-top .cs-more { grid-column: 3; }
+/* how far it is, which is also what says "this one is on the map" */
+.cs-walk { grid-column: 2; grid-row: 1; justify-self: end; display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 11px 0 9px; border-radius: 99px; font-size: 13px; font-weight: 640; white-space: nowrap; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-walk svg { width: 14px; height: 14px; }
+/* a narrow ticket keeps the walk and drops the word: Details becomes its arrow alone */
+@container (max-width: 290px) { .cs-grid .cs-more { gap: 0; padding: 0 10px; } .cs-grid .cs-more span { display: none; } }
+/* an open ticket's panel takes the whole row under it */
+.cs-grid .cs-sheet { grid-column: 1 / -1; }
+.cs-grid .cs-then { grid-column: 1 / -1; grid-auto-flow: column; justify-content: center; align-items: baseline; padding: 8px 16px; } .cs-grid .cs-then span { writing-mode: horizontal-tb; }
+.cs-grid .cs-nothing { grid-column: 1 / -1; width: 100%; }
+.cs-wide .cs-shelf { margin-top: 22px; }
+.cs-pin.hov .cs-postage { --lean: 0deg; scale: calc(1.16 * var(--stamp, 1)); }
+/* a change of source or word moves each ticket to its new place instead of redrawing the list */
+::view-transition-group(*) { animation-duration: .55s; animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+
 @media (max-width: 860px) {
   .cs-near { margin: 0 -16px -24px; border-radius: 0; box-shadow: none; min-height: min(600px, calc(100dvh - 60px)); } .cs-near-band { padding: 12px 16px 12px; } .cs-near-band h2 { font-size: 27px; } .cs-near-band p { padding-right: 0; } .cs-near-band small { top: auto; bottom: 6px; right: 10px; font-size: 9px; }
   .cs-nav { padding: 10px 16px 11px; } .cs-wm { gap: 10px; padding-right: 10px; font-size: 21px; } .cs-wm svg { width: 38px; height: 38px; padding: 5px; } .cs-main { padding: 12px 16px 24px; } .cs-links a:not([aria-current]) { display: none; }
   .cs-door { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 40px; }
   .cs-deck { margin-right: 0; width: calc(100% - 120px); } .cs-dtab { transform: translate(calc(var(--k) * 38px), calc(var(--k) * 8px)) rotate(calc(var(--k) * 1.6deg)); }
   .cs-dtk-top h3 { font-size: 22px; } .cs-dtk-top .cs-tile { min-width: 60px; min-height: 60px; } .cs-dtk-stub strong { font-size: 21px; }
-  .cs-plain { padding: 24px 16px 48px; } .cs-adm { padding: 24px 16px 64px; } .cs-adm .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); } .cs-adm-rows > li { flex-wrap: wrap; }
+  .cs-plain { padding: 24px 16px 48px; } .cs-adm { grid-template-columns: minmax(0, 1fr); } .cs-adm-rail { padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--cs-line); } .cs-adm-rail > nav { display: flex; overflow-x: auto; scrollbar-width: none; } .cs-adm-rail > nav a { flex: none; gap: 8px; } .cs-adm-rail > p { display: none; } .cs-adm-rail .school { margin-bottom: 8px; }
+  .cs-adm-main { padding: 20px 16px 96px; } .cs-adm .cs-adm-top .find, .cs-adm .cs-adm-top .find input { width: 100%; } .cs-adm .three, .cs-form .two { grid-template-columns: minmax(0, 1fr); } .cs-adm-rows > li { flex-wrap: wrap; }
+  .cs-adm-table thead { display: none; } .cs-adm-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 0; border-top: 1px solid var(--cs-line); } .cs-adm-table td, .cs-adm-table td:first-child, .cs-adm-table td:last-child { width: auto; padding: 0; border: 0; } .cs-adm-table td:nth-child(1), .cs-adm-table td:nth-child(2), .cs-adm-table td:nth-child(3) { grid-column: 1; } .cs-adm-table td:last-child { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
   .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
   .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
   .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }

@@ -36,8 +36,8 @@ async function admin(data: FormData, run: (campus: Campus) => Promise<string>): 
   }
   revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
   // Back to the section the form was on.
-  const tab = text(data, 'tab');
-  redirect(`/c/admin?campus=${encodeURIComponent(campus?.slug ?? slug)}${/^[a-z]+$/.test(tab) ? `&tab=${tab}` : ''}&said=${encodeURIComponent(said)}`);
+  const back = ['tab', 'show'].map(key => /^[a-z]+$/.test(text(data, key)) ? `&${key}=${text(data, key)}` : '').join('');
+  redirect(`/c/admin?campus=${encodeURIComponent(campus?.slug ?? slug)}${back}&said=${encodeURIComponent(said)}`);
 }
 
 export async function addCampusAction(data: FormData): Promise<void> {
@@ -88,17 +88,20 @@ export async function setHiddenAction(data: FormData): Promise<void> {
 }
 
 const MOVED: Record<string, string> = { core: 'Core now: it is in everyone’s picker.', premium: 'Premium now: people who subscribed can pick it.', off: 'Off: it is in nobody’s picker. Whoever has it keeps it.', own: 'Its maker’s alone again. Whoever else uses it keeps it.' };
-/** Core, Premium, Off (or "Only its maker") on any animal: one shipped with the app, by number, or one a person had made. */
+/** Core, Premium or Off on the animals that were picked: ones shipped with the app, by number, and ones people had made. Off, for a made one, is its maker's alone. */
 export async function setTierAction(data: FormData): Promise<void> {
   await admin(data, async () => {
-    const tier = text(data, 'tier'), picture = text(data, 'picture');
-    if (picture) await setPictureTier(db(), picture, tier); else await setBuiltTier(db(), number(text(data, 'face')), tier);
-    return MOVED[tier] ?? 'Saved.';
+    const tier = text(data, 'tier'), faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String);
+    if (!faces.length && !pictures.length) throw new Error('Pick an animal first');
+    for (const face of faces) await setBuiltTier(db(), number(face), tier);
+    for (const picture of pictures) await setPictureTier(db(), picture, tier === 'off' ? 'own' : tier);
+    const many = faces.length + pictures.length;
+    return many === 1 ? MOVED[tier] ?? 'Saved.' : `${many} animals moved to ${tier}. Whoever has one keeps it.`;
   });
 }
-/** "Delete for good" on an animal a person had made. */
+/** "Delete for good" on the picked animals that people had made. The ones shipped with the app cannot be deleted, only turned off. */
 export async function deletePictureAction(data: FormData): Promise<void> {
-  await admin(data, async () => { await deletePicture(db(), text(data, 'picture')); return 'Deleted. Anyone who used it is shown their own animal again.'; });
+  await admin(data, async () => { const pictures = data.getAll('picture').map(String); for (const picture of pictures) await deletePicture(db(), picture); return `Deleted ${pictures.length}. Anyone who used one is shown their own animal again.`; });
 }
 
 export async function saveRewardAction(data: FormData): Promise<void> {
