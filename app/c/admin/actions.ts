@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
+import { deletePicture, sharePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
@@ -81,6 +82,15 @@ export async function setWordsAction(data: FormData): Promise<void> {
 }
 export async function setHiddenAction(data: FormData): Promise<void> {
   await admin(data, async () => { const hidden = text(data, 'hidden') === 'true'; await setHidden(db(), uuid(text(data, 'listing')), hidden); return hidden ? 'Hidden. People who were in keep their outings.' : 'Showing again.'; });
+}
+
+/** "Offer to everyone" and "Stop offering" on an animal a person had made. */
+export async function sharePictureAction(data: FormData): Promise<void> {
+  await admin(data, async () => { const on = text(data, 'on') === 'true'; await sharePicture(db(), text(data, 'picture'), on); return on ? 'Offered. It is in everyone’s picker with the standard animals.' : 'No longer offered. Whoever uses it keeps it.'; });
+}
+/** "Delete for good" on an animal a person had made. */
+export async function deletePictureAction(data: FormData): Promise<void> {
+  await admin(data, async () => { await deletePicture(db(), text(data, 'picture')); return 'Deleted. Anyone who used it is shown their own animal again.'; });
 }
 
 export async function saveRewardAction(data: FormData): Promise<void> {

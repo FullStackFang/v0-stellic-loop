@@ -243,7 +243,8 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
           <button className="cs-btn sm go" onClick={() => setPicking(false)}>Done</button></div>
         <div className="cs-pets-grid" role="group" aria-label="Pick your picture">
           {viewer.ownPhoto && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
-          {Array.from({ length: ANIMALS }, (_, at) => <button key={at} className="cs-pet" aria-pressed={face === at} aria-label={`Animal ${at + 1}`} onClick={() => choose(at)}><img src={animal(at)} alt="" /></button>)}</div>
+          {Array.from({ length: ANIMALS }, (_, at) => <button key={at} className="cs-pet" aria-pressed={face === at} aria-label={`Animal ${at + 1}`} onClick={() => choose(at)}><img src={animal(at)} alt="" /></button>)}
+          {viewer.shared.map((one, at) => <button key={one} className="cs-pet" aria-pressed={face === CUSTOM && own === one} aria-label={`Animal ${ANIMALS + at + 1}`} onClick={() => chooseOwn(one)}><img src={one} alt="" /></button>)}</div>
         <h5>Premium</h5>
         <div className="cs-pets-grid" role="group" aria-label="Premium pictures">
           {PREMIUM.map((name, at) => <button key={name} className="cs-pet" aria-pressed={face === ANIMALS + at} aria-label={name} onClick={() => choose(ANIMALS + at)}><img src={animal(ANIMALS + at)} alt="" /></button>)}

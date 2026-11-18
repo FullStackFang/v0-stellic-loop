@@ -13,6 +13,8 @@ import { CampusError } from './errors';
 /** How many pictures one person may have made: the one that is free while there is no payment. Each costs a few cents. */
 export const MAKES = 1;
 const ALL = 'You have made your free animal. Making more is not set up yet.';
+/** Makes a made picture the person's face. Which one is kept on the face itself, so it may be one they did not make. */
+const USE = 'insert into campus_face(person_id,face,picture) values($1,$2,$3) on conflict(person_id) do update set face=excluded.face,picture=excluded.picture,picked_at=now()';
 const NOT_NOW = 'That could not be drawn just now. Try again in a minute.';
 
 /** Draws the figure from an uploaded photo: a 192px PNG on a transparent ground. Refuses a photo with no animal in it. */
@@ -62,14 +64,17 @@ export const drawFace: Draw = async upload => {
   }
 };
 
-export type CustomFace = { token: string | null; all: string[]; left: number };
-/** Each person's made animals, where they asked for one: the token of the one in use, of every one they made (oldest first), and how many more they may make. */
+export type CustomFace = { token: string | null; all: string[]; left: number; asked: boolean };
+/**
+ * For each person: the token of the made animal they use (their own, or one the admin offers to everyone), of every one
+ * they made (oldest first), how many more they may make, and whether they asked to subscribe.
+ */
 export async function customFaces(q: Q, personIds: readonly string[]): Promise<Map<string, CustomFace>> {
   if (!personIds.length) return new Map();
-  const { rows } = await q.query<{ id: string; token: string | null; every: string[]; makes: number }>(`select f.person_id as id,(select p.token from campus_custom_picture p where p.token=f.token) as token,
-    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=f.person_id),'{}'::text[]) as every,f.makes
-    from campus_custom_face f where f.person_id=any($1::uuid[])`, [personIds]);
-  return new Map(rows.map(row => [row.id, { token: row.token, all: row.every, left: Math.max(0, MAKES - row.makes) }]));
+  const { rows } = await q.query<{ id: string; token: string | null; every: string[]; makes: number | null }>(`select i.id,(select p.token::text from campus_custom_picture p where p.token=coalesce(c.picture,f.token)) as token,
+    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=i.id),'{}'::text[]) as every,f.makes
+    from unnest($1::uuid[]) as i(id) left join campus_custom_face f on f.person_id=i.id left join campus_face c on c.person_id=i.id`, [personIds]);
+  return new Map(rows.map(row => [row.id, { token: row.token, all: row.every, left: Math.max(0, MAKES - (row.makes ?? 0)), asked: row.makes !== null }]));
 }
 
 /**
@@ -90,7 +95,7 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
     const { rows: [row] } = await q.query<{ token: string; makes: number }>('update campus_custom_face set token=gen_random_uuid(),makes=makes+1,made_at=now() where person_id=$1 and (makes<$2 or $3) returning token,makes', [personId, MAKES, unlimited]);
     if (!row) throw new CampusError(ALL);
     await q.query("insert into campus_custom_picture(token,person_id,image) values($1,$2,decode($3,'base64'))", [row.token, personId, Buffer.from(image).toString('base64')]);
-    await q.query('insert into campus_face(person_id,face) values($1,$2) on conflict(person_id) do update set face=excluded.face,picked_at=now()', [personId, CUSTOM]);
+    await q.query(USE, [personId, CUSTOM, row.token]);
     return { token: row.token, left: unlimited ? MAKES : Math.max(0, MAKES - row.makes) };
   });
 }
@@ -102,19 +107,32 @@ export async function subscribe(q: Q, personId: string, email: string): Promise<
   await q.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
 }
 
-export type PremiumAsk = { email: string; asked: string; pictures: string[] };
-/** For the admin: everyone who asked to subscribe, newest first, each with the tokens of the animals they had made. */
+export type PremiumAsk = { email: string; asked: string; pictures: { token: string; shared: boolean }[] };
+/** For the admin: everyone who asked to subscribe, newest first, each with the animals they had made and whether each is offered to everyone. */
 export async function premiumAsks(q: Q): Promise<PremiumAsk[]> {
   return (await q.query<PremiumAsk>(`select f.email,to_char(f.asked_at,'YYYY-MM-DD') as asked,
-    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=f.person_id),'{}'::text[]) as pictures
+    coalesce((select json_agg(json_build_object('token',p.token,'shared',p.shared_at is not null) order by p.made_at) from campus_custom_picture p where p.person_id=f.person_id),'[]'::json) as pictures
     from campus_custom_face f order by f.asked_at desc limit 500`)).rows;
 }
 
-/** A person picks one of the animals they had made as their face. */
+/** The made animals the admin offers to everyone, in the order they were offered: shown in every picker with the standard ones. */
+export async function sharedFaces(q: Q): Promise<string[]> {
+  return (await q.query<{ token: string }>('select token::text as token from campus_custom_picture where shared_at is not null order by shared_at,token')).rows.map(row => row.token);
+}
+/** The admin offers a made animal to everyone, or stops. Whoever already uses it keeps it. */
+export async function sharePicture(q: Q, token: string, on: boolean): Promise<void> {
+  if (!z.uuid().safeParse(token).success || !(await q.query('update campus_custom_picture set shared_at=case when $2 then coalesce(shared_at,now()) end where token=$1 returning 1', [token, on])).rows.length) throw new Error('No such picture');
+}
+/** The admin deletes a made animal for good. Everyone who used it is shown their own animal again; its maker does not get another free one. */
+export async function deletePicture(q: Q, token: string): Promise<void> {
+  if (!z.uuid().safeParse(token).success || !(await q.query('delete from campus_custom_picture where token=$1 returning 1', [token])).rows.length) throw new Error('No such picture');
+}
+
+/** A person picks a made animal as their face: one of their own, or one the admin offers to everyone. */
 export async function useCustomFace(q: Q, personId: string, token: string): Promise<void> {
-  const mine = z.uuid().safeParse(token).success && (await q.query('update campus_custom_face set token=$2 where person_id=$1 and exists(select 1 from campus_custom_picture where token=$2 and person_id=$1) returning 1', [personId, token])).rows.length;
-  if (!mine) throw new CampusError('Pick one of the animals.');
-  await q.query('insert into campus_face(person_id,face) values($1,$2) on conflict(person_id) do update set face=excluded.face,picked_at=now()', [personId, CUSTOM]);
+  const theirs = z.uuid().safeParse(token).success && (await q.query('select 1 from campus_custom_picture where token=$2 and (person_id=$1 or shared_at is not null)', [personId, token])).rows.length;
+  if (!theirs) throw new CampusError('Pick one of the animals.');
+  await q.query(USE, [personId, CUSTOM, token]);
 }
 
 /** The picture behind a token, for /animals/custom/<token>. */

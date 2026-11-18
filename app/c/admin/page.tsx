@@ -12,7 +12,7 @@ import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, addFeedAction, readFeedAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setWordsAction } from './actions';
+import { addCampusAction, addEventAction, addFeedAction, deletePictureAction, sharePictureAction, readFeedAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setWordsAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,9 +56,11 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       {said && <p className="cs-alert wide" role="status" style={{ gridColumn: '1 / -1', margin: 0 }}>{said}</p>}
 
       <section className="wide"><h2>Premium</h2>
-        <p>{asks.length ? `${asks.length} ${asks.length === 1 ? 'person has' : 'people have'} asked to subscribe, across every campus. Nobody is charged. Each got one animal free, and every one made is kept here.` : 'Nobody has asked to subscribe yet.'}</p>
+        <p>{asks.length ? `${asks.length} ${asks.length === 1 ? 'person has' : 'people have'} asked to subscribe, across every campus. Nobody is charged. Each got one animal free, and every one made is kept here. Offer one to everyone and it joins the standard animals in every picker.` : 'Nobody has asked to subscribe yet.'}</p>
         {/* eslint-disable-next-line @next/next/no-img-element -- pictures Loop made, served from the database at their own address */}
-        {asks.length > 0 && <ul className="cs-adm-asks">{asks.map(ask => <li key={ask.email + ask.asked}><span>{ask.pictures.map(token => <img key={token} src={customFace(token)} alt="" />)}</span><b>{ask.email}</b><small>{ask.asked}</small></li>)}</ul>}</section>
+        {asks.length > 0 && <ul className="cs-adm-asks">{asks.map(ask => <li key={ask.email + ask.asked}><span>{ask.pictures.map(({ token, shared }) => <figure key={token}><img src={customFace(token)} alt="" />
+          <form action={sharePictureAction}><Campus /><input type="hidden" name="picture" value={token} /><input type="hidden" name="on" value={String(!shared)} /><button className="cs-btn sm">{shared ? 'Stop offering' : 'Offer to everyone'}</button></form>
+          <details><summary>Delete</summary><form action={deletePictureAction}><Campus /><input type="hidden" name="picture" value={token} /><button className="cs-btn sm">Delete for good</button></form></details></figure>)}</span><b>{ask.email}</b><small>{ask.asked}</small></li>)}</ul>}</section>
 
       <section className="wide"><h2>Campus</h2>
         <nav className="cs-schools">{campuses.map(each => <Link key={each.id} className="cs-btn sm" style={each.id === campus.id ? { background: 'var(--cs-ink)', color: 'var(--cs-field)' } : undefined} href={`/c/admin?campus=${each.slug}`} aria-current={each.id === campus.id ? 'true' : undefined}>{each.name}</Link>)}</nav>

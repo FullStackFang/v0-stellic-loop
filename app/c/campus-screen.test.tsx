@@ -6,7 +6,7 @@ import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { CampusScreen } from '@/components/campus/screen';
 import { animal, animalOf, CUSTOM, PHOTO } from '@/lib/campus/animals';
-import { customFaceImage, makeCustomFace, MAKES, premiumAsks } from '@/lib/campus/custom-face';
+import { customFaceImage, deletePicture, makeCustomFace, MAKES, premiumAsks, sharePicture } from '@/lib/campus/custom-face';
 import { GET as customFaceRoute } from '@/app/animals/custom/[token]/route';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { pickFace } from '@/lib/campus/people';
@@ -241,11 +241,30 @@ describe('who sees whom', () => {
       const { rows: [second] } = await t.db.query<{ token: string }>('insert into campus_custom_picture(person_id,image) select person_id,image from campus_custom_picture where token=$1 returning token', [first.token]);
       expect(await ownFaceAction(`/animals/custom/${second.token}`)).toEqual({ ok: true });
       expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer).toMatchObject({ own: `/animals/custom/${second.token}`, owns: [first.token, second.token].map(token => `/animals/custom/${token}`), asked: true, makesLeft: 0 });
-      expect(await premiumAsks(t.db)).toEqual([{ email: 'ana@cornell.edu', asked: expect.stringMatching(/^[0-9-]{10}$/), pictures: [first.token, second.token] }]);
+      expect(await premiumAsks(t.db)).toEqual([{ email: 'ana@cornell.edu', asked: expect.stringMatching(/^[0-9-]{10}$/), pictures: [{ token: first.token, shared: false }, { token: second.token, shared: false }] }]);
       await withPortalTestSession(ben, async () => expect(await ownFaceAction(`/animals/custom/${first.token}`)).toEqual({ ok: false, message: 'Pick one of the animals.' }));
+      // The admin offers one to everyone: it is in every picker, and Ben, who never subscribed, may use it.
+      const seenBy = async (who: typeof ana) => (await campusScreen(t.db, cornell, as(who), { photos: noPhotos }))!.viewer!;
+      const address = (token: string) => `/animals/custom/${token}`;
+      await sharePicture(t.db, first.token, true);
+      expect((await premiumAsks(t.db))[0].pictures[0]).toEqual({ token: first.token, shared: true });
+      expect(await seenBy(ben)).toMatchObject({ shared: [address(first.token)], own: null, owns: [], asked: false });
+      await withPortalTestSession(ben, async () => {
+        expect(await ownFaceAction(address(first.token))).toEqual({ ok: true });
+        expect(await ownFaceAction(address(second.token))).toEqual({ ok: false, message: 'Pick one of the animals.' });
+      });
+      expect(await seenBy(ben)).toMatchObject({ face: CUSTOM, photo: address(first.token), own: address(first.token), asked: false });
+      // No longer offered: it leaves the picker, and Ben keeps it. Deleted: it is gone for everyone, and Ben has his own animal again.
+      await sharePicture(t.db, first.token, false);
+      expect(await seenBy(ben)).toMatchObject({ shared: [], own: address(first.token) });
+      await deletePicture(t.db, first.token);
+      expect(await seenBy(ben)).toMatchObject({ face: animalOf(ben.personId), own: null, shared: [] });
+      expect(await seenBy(ana)).toMatchObject({ owns: [address(second.token)], own: address(second.token) });
+      expect(await customFaceImage(t.db, first.token)).toBeNull();
+      await expect(deletePicture(t.db, first.token)).rejects.toThrow('No such picture');
       // The admin tests this, and is never stopped at the free one.
       expect(await makeCustomFace(t.db, ana.personId, jpeg, null, undefined, true)).toMatchObject({ left: MAKES });
-      expect((await campusScreen(t.db, cornell, as(ana, true), { photos: noPhotos }))!.viewer).toMatchObject({ owns: { length: 3 }, makesLeft: MAKES });
+      expect((await campusScreen(t.db, cornell, as(ana, true), { photos: noPhotos }))!.viewer).toMatchObject({ owns: { length: 2 }, makesLeft: MAKES });
     });
   });
   it('a stranger in the same outing is shown, by first name only', async () => {

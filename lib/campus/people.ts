@@ -41,7 +41,7 @@ export async function pickedFaces(q: Q, personIds: readonly string[]): Promise<M
 /** A person picks their face: one of the animals, a premium one, PHOTO for the photo of their sign-in account, or CUSTOM for the animal they had made. */
 export async function pickFace(q: Q, personId: string, face: number): Promise<void> {
   if (!Number.isInteger(face) || face < CUSTOM || face >= ANIMALS + PREMIUM.length) throw new CampusError('Pick one of the animals.');
-  if (face === CUSTOM && !(await q.query('select 1 from campus_custom_face f join campus_custom_picture p on p.token=f.token where f.person_id=$1', [personId])).rows.length) throw new CampusError('Pick one of the animals.');
+  if (face === CUSTOM && !(await q.query('select 1 from campus_custom_picture p where p.token=(select coalesce(c.picture,f.token) from (select $1::uuid as id) i left join campus_face c on c.person_id=i.id left join campus_custom_face f on f.person_id=i.id)', [personId])).rows.length) throw new CampusError('Pick one of the animals.');
   await q.query('insert into campus_face(person_id,face) values($1,$2) on conflict(person_id) do update set face=excluded.face,picked_at=now()', [personId, face]);
 }
 
