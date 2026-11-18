@@ -190,7 +190,7 @@ describe('who sees whom', () => {
       expect(await card.findByRole('status')).toHaveTextContent('Drawing your pet.');
       const made = await card.findByRole('img', { name: 'Your own animal' }, { timeout: 5000 });
       expect(card.getByText(/Thanks for subscribing/)).toBeInTheDocument();
-      expect(card.getByText('It is your picture now.')).toBeInTheDocument();
+      expect(card.getByText('Say hi to your new picture.')).toBeInTheDocument();
       // The ask and its email are kept, the picture is theirs, and it was drawn from one of the set and the photo.
       const { rows: [row] } = await t.db.query<{ email: string; makes: number; token: string }>('select email,makes,token from campus_custom_face where person_id=$1', [ana.personId]);
       expect(row).toMatchObject({ email: 'ana@cornell.edu', makes: 1 });
@@ -214,7 +214,7 @@ describe('who sees whom', () => {
       expect(card.getAllByText('Premium')).toHaveLength(2);
       // The "+" is always there. With the free animal used, it says so before a photo is asked for.
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
-      expect(card.getByText('Your free animal is made.')).toBeInTheDocument();
+      expect(card.getByText('You’ve made your free pet.')).toBeInTheDocument();
       expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
       // A code gets past it. The server checks the code, here and again when the animal is made.
       fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });

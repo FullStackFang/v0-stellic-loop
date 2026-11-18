@@ -16,7 +16,7 @@ async function small(file: File): Promise<Blob> {
 }
 
 /** What Loop Premium is said to come with. Only the first exists; the rest are what the ask is testing. */
-const PERKS = ['Your own animal, drawn from your photo', 'Every premium animal', 'Your plans lifted to the top for a day', 'New rewards a week early'];
+const PERKS = ['Your own pet, drawn from your photo', 'Every premium animal', 'Your plans lifted to the top for a day', 'New rewards a week early'];
 
 /**
  * "Create your own" in the account card. It is part of Loop Premium, so it opens on the plan: what Premium is, its
@@ -74,15 +74,15 @@ export function OwnFace({ asked, left, onAsked, onMade, onBack }: { asked: boole
   if (state === 'photo' && left <= 0 && !code) return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     <button className="cs-prem-back" onClick={onBack}>Back</button>
     <p className="cs-prem-kick">Loop Premium</p>
-    <p className="cs-prem-big said">Your free animal is made.</p>
-    <div className="cs-prem-perks"><span>More come with Premium, once payment is set up.</span></div>
+    <p className="cs-prem-big said">You’ve made your free pet.</p>
+    <div className="cs-prem-perks"><span>More pets come with Premium, once payment is set up.</span></div>
     <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void redeem(); }}>
       <div className="cs-prem-join"><input value={typed} onChange={event => setTyped(event.target.value)} aria-label="Code" placeholder="Have a code?" autoCapitalize="characters" autoComplete="off" spellCheck={false} /><button className="cs-btn go" disabled={wait || !typed.trim()}>Use code</button></div>
       {said && <p role="alert">{said}</p>}
     </form>
   </div></div>;
   // The photo, the wait and the made animal are the same plate as the plan: one headline each, and the stub holds what to press.
-  const head = state === 'done' ? 'It is your picture now.' : state === 'busy' ? 'Drawing your pet.' : 'Bring your own pet.';
+  const head = state === 'done' ? 'Say hi to your new picture.' : state === 'busy' ? 'Drawing your pet.' : 'Bring your own pet.';
   return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     {state !== 'busy' && <button className="cs-prem-back" onClick={onBack}>{state === 'done' ? 'Done' : 'Back'}</button>}
     <p className="cs-prem-kick">Loop Premium</p>
