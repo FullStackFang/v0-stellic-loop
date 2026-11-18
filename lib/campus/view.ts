@@ -15,6 +15,8 @@ export type Choice = { personId: string; first: string; photo: string | null; wh
 export type Ticket = {
   id: string; title: string; day: string; time: string; ends: string | null; when: string;
   source: string | null; by: string | null; place: string | null; about: string | null;
+  /** The event page a posted plan was filled from. */
+  link: string | null;
   map: { name: string; lat: number; lon: number } | null;
   /** For search: "good for" words plus what the day and hour add. */
   words: string[]; pull: number; going: number;
@@ -31,7 +33,8 @@ export type Ticket = {
 
 export type Coupon = { id: string; giver: string; text: string; done: number; need: number; earned: boolean; usedAt: string | null; progress: string };
 export type Live = { listingId: string; giver: string; text: string; usedAt: string | null };
-export type Viewer = { first: string; name: string; photo: string | null; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
+/** `face` is the animal's number, or PHOTO; `ownPhoto` is the sign-in account's photo, offered as a pick when there is one. */
+export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
 
 export type Screen = {
   campus: { slug: string; name: string; tz: string; listSource: string };

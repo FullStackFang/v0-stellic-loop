@@ -98,7 +98,7 @@ async function purge(q:Q,personId:string) {
  await q.query('update campus_reward_use set person_id=null where person_id=$1 and outing_id is not null',[personId]);
  await q.query('delete from campus_reward_use where person_id=$1',[personId]);
  await q.query('delete from campus_invite where inviter_id=$1 or invitee_id=$1',[personId]);
- for(const table of ['campus_outing_member','campus_person']) await q.query(`delete from ${table} where person_id=$1`,[personId]);
+ for(const table of ['campus_outing_member','campus_person','campus_face']) await q.query(`delete from ${table} where person_id=$1`,[personId]);
  // No stable participant pseudonym is retained in plan history or audit output.
  await q.query('update emba_audit set person_id=null,client_id=null,resource_id=null,lease_id=null where person_id=$1',[personId]);
 }

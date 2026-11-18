@@ -10,9 +10,11 @@ import { claim, fileOutput, logDecision } from '@/lib/emba/team-records';
 import { createAsk, listAsks } from '@/lib/emba/team-asks';
 import { listTeamEvents } from '@/lib/emba/team-events';
 import { upcomingEvents } from '@/lib/emba/team-interest';
+import { linkEvent } from '@/lib/emba/team-event-links';
+import { addFeed } from '@/lib/emba/team-nearby';
 import { briefHistory, myRecentRecords } from '@/lib/emba/team-read';
 import TeamPage from './[namespace]/team/page';
-import { addTeamEvent, amendTeamRecord, announceToTeam, saveTeamBrief } from './team-actions';
+import { addTeamEvent, amendTeamRecord, announceToTeam, saveTeamBrief, takeBackTeamEvent } from './team-actions';
 import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead } from './connection-actions';
 import { BriefForm } from '@/components/emba/brief-form';
 import ConnectionsPage from './connections/page';
@@ -138,7 +140,7 @@ it('reads the header and the shown tab only, records no read it did not make, an
     expect(screen.getByRole('link', { name: 'Asks1' })).toHaveAttribute('href', '/groups/study-team/team?tab=asks');
     shown.page.unmount();
   }
-  for (const [tab, extra, records] of [['asks', ['listAsks'], 4], ['brief', ['briefHistory'], 3], ['mine', ['myRecentRecords'], 4], ['events', ['archivedEvents', 'upcomingEvents'], 4]] as const) {
+  for (const [tab, extra, records] of [['asks', ['listAsks'], 4], ['brief', ['briefHistory'], 3], ['mine', ['myRecentRecords'], 4], ['events', ['archivedEvents', 'upcomingEvents'], 6]] as const) {
     const shown = await open(tab);
     expect([shown.made, shown.recorded], tab).toEqual([[...extra, 'listTeamEvents'].sort(), records]);
     if (tab === 'asks') expect(screen.getByText('Red or white?')).toBeInTheDocument();
@@ -284,4 +286,64 @@ it('tells an organizer why a brief was not saved, and keeps what they typed', as
   expect(await screen.findByRole('alert')).toHaveTextContent('Not saved.');
   expect(refuse).toHaveBeenCalledOnce();
   expect(box).toHaveValue('Twelve slides, and an appendix.');
+});
+
+// Events from a link and from nearby (loop-group-event-links): who sees which control. Nothing here reaches the network.
+const inTwoDays = new Date(Math.floor(Date.now() / 3600000) * 3600000 + 2 * 86400000), ics = (at: Date) => at.toISOString().replace(/[-:]|\.\d{3}/g, '');
+const feedText = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', 'UID:a', 'SUMMARY:Pitch night', `DTSTART:${ics(inTwoDays)}`, `DTEND:${ics(new Date(+inTwoDays + 7200000))}`, 'LOCATION:Sage Hall', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+const club = { fetch: (async () => new Response(feedText, { headers: { 'content-type': 'text/calendar' } })) as unknown as typeof globalThis.fetch, lookup: async () => ['93.184.216.34'] };
+const dinner = async () => ({ ok: true as const, facts: { name: 'Founders dinner', startsAt: '2099-01-15T23:00:00.000Z', endsAt: null, place: '40 E 1st St', host: null } });
+async function joinAs(f: Awaited<ReturnType<typeof fixture>>, email: string, role: string) { const p = await person(email); await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.scope.orgId, p.personId]); await t.db.query('insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,$4)', [f.scope.orgId, f.scope.loopId, p.personId, role]); return p; }
+it('shows the paste box to members who can post and not to followers', async () => {
+  const f = await fixture(), follower = await joinAs(f, 'follower@example.test', 'follower');
+  for (const [who, sees] of [[f.ana, true], [f.owner, true], [follower, false]] as const) {
+    const page = await view(who, 'events');
+    expect(screen.queryByLabelText('Add an event from a link') !== null, who.verifiedEmail!).toBe(sees);
+    expect(screen.queryByRole('button', { name: 'Add event' }) !== null, who.verifiedEmail!).toBe(sees);
+    page.unmount();
+  }
+});
+it('lists Nearby only when a feed has items, with one control for members who can post', async () => {
+  const f = await fixture(), follower = await joinAs(f, 'follower@example.test', 'follower');
+  let page = await view(f.ana, 'events');
+  expect(screen.queryByRole('heading', { name: 'Nearby' })).not.toBeInTheDocument();
+  page.unmount();
+  expect(await addFeed(t.db, f.owner, { ...f.ids, name: 'Entrepreneurship Club', url: 'https://club.example.org/feed.ics' }, club)).toMatchObject({ saved: true });
+  page = await view(f.ana, 'events');
+  expect(screen.getByRole('heading', { name: 'Nearby' })).toBeInTheDocument();
+  expect(screen.getByText('Pitch night')).toBeInTheDocument();
+  expect(screen.getByText('Sage Hall')).toBeInTheDocument();
+  expect(screen.getByText('Entrepreneurship Club')).toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: "I'm interested" })).toHaveLength(1);
+  page.unmount();
+  page = await view(follower, 'events');
+  expect(screen.getByText('Pitch night')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: "I'm interested" })).not.toBeInTheDocument();
+});
+it('shows the Feeds block to owners and organizers only', async () => {
+  const f = await fixture(), organizer = await joinAs(f, 'organizer@example.test', 'organizer'), follower = await joinAs(f, 'follower@example.test', 'follower');
+  expect(await addFeed(t.db, f.owner, { ...f.ids, name: 'Entrepreneurship Club', url: 'https://club.example.org/feed.ics' }, club)).toMatchObject({ saved: true });
+  for (const [who, sees] of [[f.owner, true], [organizer, true], [f.ana, false], [follower, false]] as const) {
+    const page = await view(who, 'events');
+    expect(screen.queryByRole('heading', { name: 'Feeds' }) !== null, who.verifiedEmail!).toBe(sees);
+    expect(screen.queryByRole('button', { name: 'Read now' }) !== null, who.verifiedEmail!).toBe(sees);
+    expect(screen.queryByText('https://club.example.org/feed.ics') !== null, who.verifiedEmail!).toBe(sees);
+    page.unmount();
+  }
+});
+it('lets the member who linked an event take it back, and only that member', async () => {
+  const f = await fixture();
+  expect(await linkEvent(t.db, f.ana, { ...f.ids, url: 'https://lu.ma/dinner' }, dinner)).toMatchObject({ saved: true, existing: false });
+  let page = await view(f.ben, 'events');
+  expect(screen.getAllByText('Founders dinner').length).toBeGreaterThan(0);
+  expect(screen.queryByRole('button', { name: 'Remove this event' })).not.toBeInTheDocument();
+  page.unmount();
+  page = await view(f.ana, 'events');
+  expect(screen.getAllByRole('button', { name: 'Remove this event' })).toHaveLength(1);
+  page.unmount();
+  expect(await act(f.ben, () => takeBackTeamEvent(idle, form({ ...f.ids, event: 'founders-dinner' })))).toEqual({ status: 'error', message: 'Not saved. Only the member who added this event can take it back.' });
+  expect(await act(f.ana, () => takeBackTeamEvent(idle, form({ ...f.ids, event: 'founders-dinner' })))).toEqual({ status: 'success', message: 'Removed.' });
+  page = await view(f.ana, 'events');
+  expect(screen.queryByText('Founders dinner')).not.toBeInTheDocument();
+  expect(screen.getByText('No upcoming events.')).toBeInTheDocument();
 });

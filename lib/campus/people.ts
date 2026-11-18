@@ -3,6 +3,8 @@ import { clerkClient } from '@clerk/nextjs/server';
 import type { Db, Q } from '../db';
 import { clerkIssuer, clerkPortalConfigured } from '../emba/clerk-identity';
 import { UNNAMED } from '../emba/member-name';
+import { ANIMALS, PHOTO } from './animals';
+import { CampusError } from './errors';
 import { listCampuses, type Campus } from './listings';
 import { schoolOfEmail } from './schools';
 
@@ -30,9 +32,21 @@ export async function firstNames(q: Q, personIds: readonly string[]): Promise<Ma
   return new Map(rows.map(row => { const name = row.name === UNNAMED ? 'Someone' : row.name.trim(); return [row.id, { first: name.split(/\s+/)[0], name }]; }));
 }
 
-export type Photos = (db: Db, personIds: string[]) => Promise<Record<string, string>>;
+/** The face each person picked: an animal's number, or PHOTO. A person who has not picked is left out. */
+export async function pickedFaces(q: Q, personIds: readonly string[]): Promise<Map<string, number>> {
+  if (!personIds.length) return new Map();
+  const { rows } = await q.query<{ id: string; face: number }>('select person_id as id,face from campus_face where person_id=any($1::uuid[])', [personIds]);
+  return new Map(rows.map(row => [row.id, row.face]));
+}
+/** A person picks their face: one of the animals, or PHOTO for the photo of their sign-in account. */
+export async function pickFace(q: Q, personId: string, face: number): Promise<void> {
+  if (!Number.isInteger(face) || face < PHOTO || face >= ANIMALS) throw new CampusError('Pick one of the animals.');
+  await q.query('insert into campus_face(person_id,face) values($1,$2) on conflict(person_id) do update set face=excluded.face,picked_at=now()', [personId, face]);
+}
 
-/** Photos come from the sign-in account (design D19), read when a page needs them. Loop keeps no copy. A person with none is left out. */
+export type Photos =(db: Db, personIds: string[]) => Promise<Record<string, string>>;
+
+/** Photos come from the sign-in account (design D19), read when a page needs them, for people who picked theirs as their face. Loop keeps no copy. A person with none is left out. */
 export const accountPhotos: Photos = async (db, personIds) => {
   const issuer = clerkIssuer();
   if (!issuer || !clerkPortalConfigured() || !personIds.length) return {};

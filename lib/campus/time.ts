@@ -31,6 +31,12 @@ export function zoned(tz: string, local: string): Date {
   return new Date(wall - offset(tz, first));
 }
 
+/** An instant as a form's local time on the campus's clock: 'YYYY-MM-DDTHH:mm'. */
+export function localInput(tz: string, at: Date): string {
+  const parts = localParts(tz, at);
+  return `${parts.date}T${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`;
+}
+
 export function validTimezone(tz: string): boolean {
   try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); return true; } catch { return false; }
 }

@@ -4,7 +4,8 @@ import { knownTo } from './knows';
 import { LEVELS, levelOf, textFor } from './levels';
 import { findListing, weekListings, type Campus, type Listing } from './listings';
 import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
-import { accountPhotos, firstNames, type Photos } from './people';
+import { animal, animalOf, PHOTO } from './animals';
+import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
 import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Reward } from './rewards';
 import { checkInOpen, dayLabel, endOf, localParts, timeLabel } from './time';
 import type { Coupon, Face, Live, Screen, Seat, Stub, Ticket } from './view';
@@ -78,8 +79,14 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     for (const listing of listings) if (listing.origin === 'member' && listing.postedBy) shown.add(listing.postedBy);
     for (const some of choices.values()) for (const choice of some) shown.add(choice.personId);
   }
-  const names = await firstNames(db, [...shown]), photos = shown.size ? await (options.photos ?? accountPhotos)(db, [...shown]) : {};
-  const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: photos[id] ?? null, ...more });
+  const names = await firstNames(db, [...shown]), picks = await pickedFaces(db, [...shown]);
+  // Everyone has an animal: the one they picked, else the one their id works out to. A photo is read only for a person
+  // who picked theirs, and for the viewer, who is offered it in the account card.
+  const wanted = [...shown].filter(id => id === me || picks.get(id) === PHOTO);
+  const photos = wanted.length ? await (options.photos ?? accountPhotos)(db, wanted) : {};
+  const faceOf = (id: string) => { const pick = picks.get(id); return pick === PHOTO && photos[id] ? PHOTO : pick === undefined || pick === PHOTO ? animalOf(id) : pick; };
+  const picture = (id: string) => { const pick = faceOf(id); return pick === PHOTO ? photos[id] : animal(pick); };
+  const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: picture(id), ...more });
 
   let live: Live | null = null;
   const tickets = listings.map((listing): Ticket => {
@@ -153,7 +160,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
       ends: listing.endsAt ? `until ${timeLabel(tz, listing.endsAt)}` : null, source: listing.source,
       // Who posted a plan is for signed-in people only.
       by: listing.origin === 'member' ? (me && listing.postedBy ? `Posted by ${names.get(listing.postedBy)?.first ?? 'Someone'}` : null) : listing.host,
-      place: listing.placeText ?? listing.place?.name ?? null, about: listing.about, map: listing.place,
+      place: listing.placeText ?? listing.place?.name ?? null, about: listing.about, link: listing.link, map: listing.place,
       words: [...listing.words, ...timeWords(tz, listing.startsAt, now)],
       pull: (mine || picked.outing && invited.has(picked.outing.id) ? 4 : 0) + Math.min(knownGoing.length, 2) + (stub.kind === 'none' ? 0 : 2) + (short ? 2 : 0) + (today ? 1 : 0),
       going: listing.going, stub, how,
@@ -162,7 +169,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
         token: mine.token, registered: self.registered, here: iAmHere, canLeave: !iAmHere,
         canEdit: listing.origin === 'member' && listing.postedBy === me && Date.parse(listing.startsAt) > now.getTime(),
         members: mine.members.map(member => face(member.personId, { here: member.here, me: member.personId === me })),
-        choices: (choices.get(mine.id) ?? []).map(choice => ({ ...choice, first: names.get(choice.personId)?.first ?? 'Someone', photo: photos[choice.personId] ?? null })),
+        choices: (choices.get(mine.id) ?? []).map(choice => ({ ...choice, first: names.get(choice.personId)?.first ?? 'Someone', photo: picture(choice.personId) })),
       } : null,
       action, status, joinToken,
     };
@@ -179,7 +186,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   const self = me ? names.get(me) : undefined;
   return {
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
-    viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: photos[viewer.personId] ?? null, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
+    viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
     tickets, earning, live,
   };
 }

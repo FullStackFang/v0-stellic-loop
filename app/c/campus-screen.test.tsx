@@ -4,7 +4,9 @@ import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { CampusScreen } from '@/components/campus/screen';
+import { animal, animalOf, PHOTO } from '@/lib/campus/animals';
 import { findCampus, type Campus } from '@/lib/campus/listings';
+import { pickFace } from '@/lib/campus/people';
 import { addHandListing } from '@/lib/campus/manage';
 import { checkIn, imIn, joinByToken, outingByToken } from '@/lib/campus/outings';
 import { postPlan } from '@/lib/campus/plans';
@@ -74,17 +76,44 @@ describe('signed out', () => {
 
 describe('who sees whom', () => {
   it('shows the first name of someone the viewer knows, and never a stranger', async () => {
-    const { ana, zeb } = await world();
+    const { ana, ben, zeb } = await world();
     const { container } = await show(as(ana));
-    // Ben is in a seat, by first name, as an initial because he has no photo. Zebediah is a count and a filled seat.
-    expect(screen.getByRole('img', { name: 'Ben' })).toHaveTextContent('B');
+    // Ben is in a seat, by first name, as the animal his id works out to. Zebediah is a count and a filled seat.
+    expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('src', animal(animalOf(ben.personId)));
     for (const hidden of ['Zebediah', 'Quill', 'Okafor', zeb.personId]) expect(container.innerHTML).not.toContain(hidden);
     expect(screen.getByText(/Group of 3/)).toBeInTheDocument();
   });
-  it('shows a photo where the sign-in account has one', async () => {
-    const { ana, ben } = await world();
-    await show(as(ana), { photos: { [ben.personId]: 'https://img.test/ben.png' } });
+  it('shows the animal a person picked, and their photo only when they picked that', async () => {
+    const { ana, ben } = await world(), photos = { [ben.personId]: 'https://img.test/ben.png' };
+    await pickFace(t.db, ben.personId, 7);
+    await show(as(ana), { photos });
+    expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('src', animal(7));
+    cleanup();
+    await pickFace(t.db, ben.personId, PHOTO);
+    await show(as(ana), { photos });
     expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('src', 'https://img.test/ben.png');
+    cleanup();
+    // A person who picked their photo and has none is back to their animal.
+    await show(as(ana));
+    expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('src', animal(animalOf(ben.personId)));
+    await expect(pickFace(t.db, ben.personId, 36)).rejects.toThrow('Pick one of the animals.');
+  });
+  it('lets the viewer pick their picture in the account card: an animal, or their own photo', async () => {
+    const { ana } = await world();
+    await withPortalTestSession(ana, async () => {
+      await show(as(ana), { photos: { [ana.personId]: 'https://img.test/ana.png' } });
+      fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
+      const card = within(screen.getByRole('dialog', { name: 'Your level' }));
+      fireEvent.click(card.getByRole('button', { name: 'Change' }));
+      expect(card.getByRole('button', { name: `Animal ${animalOf(ana.personId) + 1}` })).toHaveAttribute('aria-pressed', 'true');
+      fireEvent.click(card.getByRole('button', { name: 'Animal 12' }));
+      expect(card.getByRole('button', { name: 'Animal 12' })).toHaveAttribute('aria-pressed', 'true');
+      await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]));
+      expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', animal(11));
+      fireEvent.click(card.getByRole('button', { name: 'Your photo' }));
+      await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: PHOTO }]));
+      expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', 'https://img.test/ana.png');
+    });
   });
   it('a stranger in the same outing is shown, by first name only', async () => {
     const { ana, zebs } = await world();

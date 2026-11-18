@@ -16,8 +16,11 @@ import {CARD_HTML,CARD_MIME,CARD_URI} from './team-card';
 import {answerAsk,askResults,closeAsk,createAsk,listAsks} from './team-asks';
 import {OrganizeRefused,type TeamHead} from './team-core';
 import {addEvent,archiveEvent,changeEvent,type EventWrite} from './team-events';
-import {documentParts,failures,formatAnswer,formatArrivals,formatAskChange,formatAskDetail,formatAsks,formatAskWrite,formatBrief,formatChoice,formatDay,formatDescribe,formatDocument,formatResourceWrite,formatEventDetail,formatEvents,formatEventWrite,formatGroupChange,formatIdeaWrite,formatInterest,formatInvites,formatNews,formatPassages,formatResolution,formatState,formatTags,formatTravelWrite,formatWrite,waitingText,type GroupChangeResult,type InviteResult,type NotInvited,type OrganizeWord} from './team-format';
+import {documentParts,failures,formatAnswer,formatArrivals,formatAskChange,formatAskDetail,formatAsks,formatAskWrite,formatBrief,formatChoice,formatDay,formatDescribe,formatDocument,formatResourceWrite,formatEventDetail,formatEvents,formatEventWrite,formatGroupChange,formatIdeaWrite,formatInterest,formatInvites,formatLink,formatNearby,formatNews,formatPassages,formatResolution,formatState,formatTags,formatTravelWrite,formatWrite,waitingText,type GroupChangeResult,type InviteResult,type NotInvited,type OrganizeWord} from './team-format';
+import {readEventPage,type PageReader} from './event-link';
+import {linkEvent,nearbyCode} from './team-event-links';
 import {cancelIdea,changeIdea,proposeIdea} from './team-ideas';
+import {nearby} from './team-nearby';
 import {eventDetail,setInterest,upcomingEvents,whatsOn} from './team-interest';
 import {currentDecisionNumber,memberTeamCount,teamBrief,teamState,whatsNew} from './team-read';
 import {amendRecord,claim,correctOutput,fileOutput,logDecision,type WriteResult} from './team-records';
@@ -78,7 +81,7 @@ class NotFound extends EmbaError {constructor(){super('not_found');}}
 export const CHECK_ONCE='At the start of a new conversation, before answering, call waiting once. If something is waiting, tell the user in a line or two, then carry on with what they asked. If nothing is waiting, do not mention it. Do not call waiting again in the same conversation unless the user asks.';
 
 /** Reused by the remote route and by tests. */
-export function createTeamMcpServer(db:Db,p:Principal):McpServer {
+export function createTeamMcpServer(db:Db,p:Principal,readPage:PageReader=readEventPage):McpServer {
  const server=new McpServer({name:'loop-team',version:'1.0.0'},{maxToolInputElements:150,instructions:`Loop connects the user to the groups they are in. ${CHECK_ONCE}`});
  const reads={readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false};
  const writes={readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:false};
@@ -199,7 +202,19 @@ export function createTeamMcpServer(db:Db,p:Principal):McpServer {
  // Trip tools: ideas, the day read, and travel.
  server.registerTool('whats_on',{description:`Read what is on in a team for one day, or with no day everything that has not ended: fixed events, plans, and ideas members can still join, each with who is interested or in and how many more an idea needs. Use it when the user asks what is on a day or what they could do. Ideas closest to the number they need come first. It is a list: Loop recommends nothing. ${data}`,
   inputSchema:z.object({team,day:z.string().optional().describe('A day, YYYY-MM-DD, in the team\'s timezone. Leave out for everything that has not ended.')}),annotations:reads},
-  input=>reply(()=>within(input,false,async target=>{const result=await whatsOn(db,p,{...scopeOf(target),day:input.day});return {text:formatDay(result),data:result};})));
+  input=>reply(()=>within(input,false,async target=>{
+   const result=await whatsOn(db,p,{...scopeOf(target),day:input.day}),near=await nearby(db,p,{...scopeOf(target),day:input.day});
+   return {text:[formatDay(result),formatNearby(near)].filter(Boolean).join('\n'),data:{...result,nearby:near.items}};
+  })));
+ server.registerTool('link_event',{description:`Add an event to a team from a link, or from the team's nearby list, and mark the user as interested in it. ${asked} Any member can; nobody approves it. Use it when the user pastes or names an event link (Luma, Posh, Eventbrite or any other site) and wants their team to see it, or says they are interested in a nearby item listed by whats_on. Give either url or nearby, never both. Loop reads the page itself on the sites it knows and takes the name, time and place from it. When Loop cannot read the page it says so: ask the user for the name and start time and call again with them. If the team already has the event, nothing is added and the user is marked as interested in it. Changing or archiving an event stays with owners and organizers. ${data}`,
+  inputSchema:z.object({team,url:z.string().optional().describe('The event\'s https link, as the user gave it.'),nearby:z.string().optional().describe('The code of a nearby item, as whats_on lists it.'),
+   name:z.string().optional().describe('Only when Loop could not read the page: the event\'s name, at most 80 characters.'),startsAt:z.string().optional().describe(`Only when Loop could not read the page. ${when}`),
+   endsAt:z.string().optional().describe(when),place:z.string().optional().describe('At most 120 characters.')}),annotations:{...writes,openWorldHint:true}},
+  input=>reply(()=>within(input,true,async target=>{
+   if(target.event!==undefined)throw new ZodError([]);
+   const result=await linkEvent(db,p,{...scopeOf(target),url:input.url,nearby:input.nearby===undefined?undefined:nearbyCode.parse(input.nearby.trim().toLowerCase()),name:input.name,startsAt:input.startsAt,endsAt:input.endsAt,place:input.place},readPage);
+   return {text:formatLink(result,target.head),data:result};
+  })));
  server.registerTool('propose_idea',{description:`Propose something the team could do, or change or cancel an idea or plan the user proposed. ${asked} An idea has a name and the number of people it needs, the user counted (2 to 20, default 3). A start time, end, place, link, note and days on offer are optional. The user is in from the start; others join with interested. It becomes a plan once it has the people it needs, a start time and a place, and Loop then sends calendar invites by email to those who are in. If it gets its people with no start time, Loop asks those who are in to choose a day. To change or cancel, set action and name the idea by its tag; send only the fields that change, and an empty text to clear one. The number it needs is not changed. Owners and organizers can change or cancel any idea or plan.`,
   inputSchema:z.object({team:z.string().optional().describe('To propose: the team, such as @trip (may be left out when only one team is possible). To change or cancel: the idea\'s tag, such as @trip/buy-suits.'),
    action:z.string().optional().describe('One of: propose (the default), change, cancel.'),name:z.string().optional().describe('At most 120 characters. Required to propose.'),needed:z.number().optional().describe('How many people it needs, the user counted: 2 to 20. Default 3. Only when proposing.'),
@@ -359,5 +374,5 @@ export function createTeamMcpServer(db:Db,p:Principal):McpServer {
 
 /** The team route: same sign-in, origin and size rules as the existing MCP route, with the team toolset. */
 /** The tools this connector has. The request log records a call only when it names one of them. */
-export const TEAM_TOOLS:ReadonlySet<string>=new Set(['add_event','amend_record','answer','arrivals','ask','ask_results','claim','describe_resource','events','file_output','interested','invite_people','list_tags','log_decision','manage_group','my_travel','propose_idea','read_document','resolve_tag','save_resource','search_knowledge','team_brief','team_state','waiting','whats_new','whats_on']);
+export const TEAM_TOOLS:ReadonlySet<string>=new Set(['add_event','amend_record','answer','arrivals','ask','ask_results','claim','describe_resource','events','file_output','interested','invite_people','link_event','list_tags','log_decision','manage_group','my_travel','propose_idea','read_document','resolve_tag','save_resource','search_knowledge','team_brief','team_state','waiting','whats_new','whats_on']);
 export const handleTeamMcpRequest=(request:Request,options:Parameters<typeof handleMcpRequest>[1]={})=>handleMcpRequest(request,options,createTeamMcpServer,(database,principal,incoming)=>observeConnector(database,principal,incoming,TEAM_TOOLS));

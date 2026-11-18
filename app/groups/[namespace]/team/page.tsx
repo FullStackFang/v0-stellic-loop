@@ -9,6 +9,8 @@ import { canAccessLoop } from '@/lib/emba/access';
 import { listTeamEvents } from '@/lib/emba/team-events';
 import { upcomingEvents, whatsOn } from '@/lib/emba/team-interest';
 import { feedAddress } from '@/lib/emba/team-calendar';
+import { nearby, teamFeeds } from '@/lib/emba/team-nearby';
+import { LinkBox } from '@/components/emba/link-box';
 import { arrivals } from '@/lib/emba/team-travel';
 import { listAsks } from '@/lib/emba/team-asks';
 import { briefHistory, myRecentRecords, teamBrief, teamState } from '@/lib/emba/team-read';
@@ -19,7 +21,7 @@ import { BriefForm } from '@/components/emba/brief-form';
 import { EventCard, type EventWithWho } from '@/components/emba/event-card';
 import { AskForm, AskRow } from '@/components/emba/ask-parts';
 import { sendingOn } from '@/lib/emba/reach-send';
-import { addTeamEvent, amendTeamRecord, announceToTeam, changeTeamEvent, restoreTeamEvent, retireTeamEvent, saveTeamBrief } from '../../team-actions';
+import { addTeamEvent, addTeamFeed, amendTeamRecord, announceToTeam, changeTeamEvent, joinNearbyEvent, linkTeamEvent, readTeamFeedNow, removeTeamFeed, restoreTeamEvent, retireTeamEvent, saveTeamBrief, setTeamFeedOn } from '../../team-actions';
 import { cancelTeamIdea, changeTeamIdea, newCalendarAddress, proposeTeamIdea, removeMyTravel, saveMyTravel, sendTeamEventInvites } from '../../trip-actions';
 import { CopyLink } from '@/components/emba/copy-link';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
@@ -50,11 +52,13 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
     shown(['events'], () => upcomingEvents(db(), principal, { ...scope, people: true })), shown(['events'], () => managersOnly(listTeamEvents(db(), principal, { ...scope, archived: true }))),
     shown(['asks'], () => listAsks(db(), principal, scope)), shown(['events', 'asks', 'ideas', 'travel', 'resources'], () => can('post')),
     shown(['ideas'], () => whatsOn(db(), principal, scope)), shown(['ideas'], () => feedAddress(db(), principal, scope)), shown(['travel'], () => arrivals(db(), principal, scope)),
-    shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope)), shown(['resources'], () => listResources(db(), principal, scope))]);
+    shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope)), shown(['resources'], () => listResources(db(), principal, scope)),
+    // Nearby is listed to everyone in the group; the feeds, with their last results, only to owners and organizers.
+    shown(['events'], () => nearby(db(), principal, scope)), shown(['events'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : [])]);
   });
   if (!opened) return null;
-  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources] } = opened;
-  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources };
+  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds] } = opened;
+  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources, near, feeds: feeds ?? [] };
 }
 
 const who = (person: PersonView) => person.isYou ? 'you' : person.handle ?? (person.former ? 'a former teammate' : 'a teammate');
@@ -87,7 +91,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   const tab: Tab = TABS.find(([key]) => key === requested)?.[0] ?? 'decisions';
   const data = await load(principal, route, tab).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel, resources } = data;
+  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel, resources, near, feeds } = data;
   const href = (to: Tab, record?: number) => `${base}/team?tab=${to}${record ? `#r${record}` : ''}`;
 
   const Act = ({ record, action, label }: { record: RecordView; action: string; label: string }) => <ActionForm action={amendTeamRecord} label={label}>
@@ -205,13 +209,23 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
 
         {tab === 'events' && upcoming && <section id="events" aria-label="Events"><p className="emba-meta">An event is a label under the team, such as a deliverable. Outputs and claims can be filed to it as <strong>@{group.namespace}/event</strong>.</p>
           <h3>Upcoming events</h3><p className="emba-meta">Times are in {state.timezone}.</p>
+          {canPost && <div className="lt-editor"><LinkBox action={linkTeamEvent} orgId={scope.orgId} loopId={scope.loopId} timezone={state.timezone} /></div>}
           {upcoming.events.items.length ? <ul className="lp-list">{upcoming.events.items.map(event => <EventCard key={event.slug} event={event as EventWithWho} scope={scope} route="site" canPost={canPost} />)}</ul> : <p className="lp-empty">No upcoming events.</p>}{more(upcoming.events.more)}
+          {near && near.items.length > 0 && <><h3>Nearby</h3><ul className="lp-list">{near.items.map(item => <li key={item.code} className="lp-event"><span className="lp-topic">{item.starts}</span>
+            <div className="lp-what"><p className="lp-stmt">{item.title}</p><p className="lp-sub">{item.place && <span>{item.place}</span>}{item.host && <span>{item.host}</span>}{item.feed !== item.host && <span>{item.feed}</span>}</p>
+              {canPost && <ActionForm action={joinNearbyEvent} label="I'm interested">{scopeFields}<input type="hidden" name="nearby" value={item.code} /></ActionForm>}</div></li>)}</ul></>}
           <h3>Event tags</h3>
           {events.length ? <ul className="lp-list">{events.map(event => <li key={event.id} className="lp-event"><span className="lp-topic">@{group.namespace}/{event.slug}</span><div className="lp-what"><p className="lp-stmt">{event.name}</p>
             {manager && <details><summary>Rename or archive</summary><ActionForm action={changeTeamEvent} label="Rename"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><label>Tag<input name="slug" required defaultValue={event.slug} maxLength={48} pattern="[a-z0-9][a-z0-9\-]{1,47}" /></label><label>Name<input name="name" required defaultValue={event.name} maxLength={80} /></label>{eventFields(event)}</ActionForm>
               <ActionForm action={retireTeamEvent} label="Archive"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /><p>An archived event takes no new records. Its existing records stay in the team&apos;s history.</p></ActionForm>
               {event.startsAt && <ActionForm action={sendTeamEventInvites} label="Send as a calendar invite">{scopeFields}<input type="hidden" name="event" value={event.slug} /><p>Goes by email to the members who marked interest and allow email from this group. It names no other member. Later changes to the time or place update the same calendar entry.</p></ActionForm>}</details>}</div></li>)}</ul> : <p className="lp-empty">No events yet.</p>}
           {manager && <div className="lt-editor"><h3>New event</h3><ActionForm action={addTeamEvent} label="Create event">{scopeFields}<label>Tag<input name="slug" required maxLength={48} pattern="[a-z0-9][a-z0-9\-]{1,47}" placeholder="final-deck" /></label><label>Name<input name="name" required maxLength={80} placeholder="Final deck" /></label>{eventFields()}</ActionForm></div>}
+          {manager && <div className="lt-editor"><h3>Feeds</h3><p className="emba-meta">Calendar feeds, such as a club&apos;s. What starts in the next 14 days is listed under Nearby. Loop reads each feed that is on every hour.</p>
+            {feeds.length > 0 && <ul className="lp-plain">{feeds.map(feed => <li key={feed.id}><p className="lp-stmt">{feed.name}</p><p className="emba-meta">{feed.url}</p>{feed.lastResult && <p className={feed.lastOk === false ? 'lp-err' : 'emba-meta'}>{feed.lastResult}</p>}
+              <div className="lp-acts"><ActionForm action={setTeamFeedOn} label={feed.on ? 'Turn off' : 'Turn on'}>{scopeFields}<input type="hidden" name="feedId" value={feed.id} /><input type="hidden" name="on" value={feed.on ? 'false' : 'true'} /></ActionForm>
+                <ActionForm action={readTeamFeedNow} label="Read now">{scopeFields}<input type="hidden" name="feedId" value={feed.id} /></ActionForm>
+                <ActionForm action={removeTeamFeed} label="Remove">{scopeFields}<input type="hidden" name="feedId" value={feed.id} /></ActionForm></div></li>)}</ul>}
+            <ActionForm action={addTeamFeed} label="Add feed">{scopeFields}<label>Name<input name="name" required maxLength={80} placeholder="Entrepreneurship Club" /></label><label>Address (https)<input name="url" type="url" required maxLength={8000} /></label></ActionForm></div>}
           {manager && archived.length > 0 && <div className="lt-editor"><h3>Archived events</h3><ul className="lp-plain">{archived.map(event => <li key={event.id}>@{group.namespace}/{event.slug} · {event.name}<ActionForm action={restoreTeamEvent} label="Restore"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /></ActionForm></li>)}</ul></div>}
         </section>}
 
