@@ -3,7 +3,6 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { getPortalPrincipal, withPortalTestSession } from '@/lib/emba/portal-session';
-import { campusViewer, openableGroups } from '@/lib/campus/session';
 import { createWorkspace } from '@/lib/emba/workspaces';
 import { setMemberHandle } from '@/lib/emba/tags';
 import { createAsk, type AskResult } from '@/lib/emba/team-asks';
@@ -206,16 +205,14 @@ it('shows something to do as done or not done, and lets the person who posted it
 it('with the campus in front, opens the groups site to a member of a group, who sees their own groups, and to nobody outside one', async () => {
   const f = await fixture();
   vi.stubEnv('LOOP_FRONT', 'campus'); vi.stubEnv('LOOP_ADMIN', 'founder@cornell.edu');
-  // Ben is in Hiking club and is not the admin: the site knows him, the campus bar names his group, and the group's page opens.
+  // Ben is in Hiking club and is not the admin: the site knows him, and the group's page opens.
   expect(await as(f.ben, () => getPortalPrincipal())).toMatchObject({ personId: f.ben.personId });
-  expect(await as(f.ben, async () => openableGroups((await campusViewer())!))).toEqual([{ name: 'Hiking club', href: '/groups/hiking-club' }]);
   await f.ask(f.ana, 'named');
   render(await as(f.ben, () => TeamPage({ params: Promise.resolve({ namespace: 'hiking-club' }), searchParams: Promise.resolve({ tab: 'asks' }) })));
   expect(screen.getByRole('link', { name: 'Which weekend works?' })).toBeInTheDocument();
   cleanup();
-  // Someone in no group is no one to the groups site, and the bar names no group.
+  // Someone in no group is no one to the groups site.
   expect(await as(f.outsider, () => getPortalPrincipal())).toBeNull();
-  expect(await as(f.outsider, async () => openableGroups((await campusViewer())!))).toEqual([]);
   // A member whose role ended is outside again.
   await t.db.query('update emba_role set revoked_at=now() where person_id=$1', [f.ben.personId]);
   expect(await as(f.ben, () => getPortalPrincipal())).toBeNull();

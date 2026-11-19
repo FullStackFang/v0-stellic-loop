@@ -3,8 +3,7 @@ import { cache } from 'react';
 import { headers } from 'next/headers';
 import { db } from '../db';
 import type { Principal } from '../emba/access';
-import { groupHref, treeOrder } from '../emba/group-path';
-import { getPortalPrincipal, getSignedInPrincipal, portalGroupTree } from '../emba/portal-session';
+import { getSignedInPrincipal } from '../emba/portal-session';
 import { isAdmin } from './admin';
 import { findCampus, listCampuses, type Campus } from './listings';
 import { campusOf } from './people';
@@ -53,17 +52,6 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
 
 /** Whether this viewer may use a campus's screen: it is their own, or another campus of their school, or they are the admin, who may open any. */
 export const mayUse = (viewer: CampusViewer, campus: { id: string }) => viewer.admin || viewer.campus?.id === campus.id || viewer.visits.includes(campus.id);
-
-/**
- * The person's top-level groups by name, for the top bar: only for someone who can open them (the admin, or a member
- * of a group).
- */
-export async function openableGroups(viewer: CampusViewer): Promise<{ name: string; href: string }[]> {
-  if (!await getPortalPrincipal().catch(() => null)) return [];
-  try {
-    return treeOrder(await portalGroupTree(viewer.principal)).filter(group => group.depth === 0).map(group => ({ name: group.orgName, href: groupHref(group) }));
-  } catch { return []; }
-}
 
 /** Where a signed-out visitor is sent to sign in, to come back to `back` afterwards. */
 export const signInHref = (back: string) => `/sign-in?redirect_url=${encodeURIComponent(back)}`;

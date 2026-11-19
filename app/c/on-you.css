@@ -53,9 +53,20 @@
 
 @media (prefers-reduced-motion: reduce) { .cs-oy-n, .cs-oy-drop, .cs-oy-hand, .cs-oy-said { animation: none; } .cs-oy-row, .cs-oy-card { transition: none; } }
 
-/* Where the person belongs: their groups, and what they are going to. Each name is a pill that opens its page. */
-.cs-oy-yours { flex: none; display: grid; gap: 8px; padding-top: 10px; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 35%, transparent); }
-.cs-oy-yours div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.cs-oy-yours b { padding: 3px 10px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-on-ink); font-size: 12px; font-weight: 680; }
-.cs-oy-yours a { display: inline-flex; align-items: baseline; gap: 6px; padding: 5px 12px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-size: 13.5px; font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
-.cs-oy-yours a:hover { background: var(--cs-stub); } .cs-oy-yours small { font-size: 12px; font-weight: 540; color: var(--cs-mute); }
+/* "Groups" beside "On you": every group the person is in and what they are going to, each a row that opens its page. */
+.cs-oy-pair { display: flex; align-items: center; gap: 10px; }
+.cs-oy-n.q { background: var(--cs-ink); color: var(--cs-field); animation: none; } .cs-oy-pill[aria-expanded=true] .cs-oy-n.q { background: var(--cs-field); color: var(--cs-ink); }
+.cs-gr-list { gap: 8px; }
+.cs-gr-sec { justify-self: start; margin: 4px 0 -2px; padding: 3px 11px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-on-ink); font-size: 12px; font-weight: 680; }
+.cs-gr-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 1px 12px; align-items: center; padding: 10px 12px; border-radius: 14px 14px 14px 4px; background: var(--cs-stub); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); scroll-snap-align: start; transition: translate .15s var(--cs-ease), box-shadow .15s var(--cs-ease); }
+.cs-gr-row:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-gr-row.in { margin-left: 26px; background: var(--cs-paper); }
+.cs-gr-mk { grid-row: span 2; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px 8px 8px 2px; background: var(--cs-action); color: var(--cs-paper); font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 14px; }
+.cs-gr-row.in .cs-gr-mk { background: var(--cs-ink); color: var(--cs-field); } .cs-gr-row.out .cs-gr-mk { background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-gr-name { min-width: 0; display: flex; align-items: center; gap: 8px; } .cs-gr-name b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 680; letter-spacing: -0.025em; line-height: 1.2; }
+.cs-gr-name em { flex: none; padding: 0 8px 1px; border-radius: 99px; font-style: normal; font-size: 11.5px; font-weight: 620; white-space: nowrap; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-gr-end { grid-row: span 2; display: flex; align-items: center; } .cs-gr-end img { width: 24px; height: 24px; margin-left: -7px; border-radius: 50%; background: var(--cs-paper); box-shadow: 0 0 0 2px var(--cs-stub); object-fit: contain; } .cs-gr-end img:first-child { margin-left: 0; }
+.cs-gr-end small { margin-left: 6px; font-size: 12.5px; font-weight: 620; color: var(--cs-on-field-2, var(--cs-mute)); } .cs-gr-end .cs-oy-n { margin-left: 8px; min-width: 22px; height: 22px; font-size: 12.5px; animation: none; }
+.cs-gr-line { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--cs-ink-2, var(--cs-mute)); }
+.cs-gr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 560px) { .cs-oy-pair { gap: 6px; } .cs-oy-pill { padding: 0 11px; } }

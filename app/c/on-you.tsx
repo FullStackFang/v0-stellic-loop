@@ -3,8 +3,8 @@ import { onYouView } from '@/lib/campus/on-you';
 import { campusViewer } from '@/lib/campus/session';
 
 /**
- * The "On you" counter for the top bar (openspec loop-on-you). Drawn for a signed-in person who is in a group or is going
- * to something this week (`going`); for anyone else there is nothing. It is read beside the week, never before it: the campus screen does not wait for it, and if it
+ * The "Groups" and "On you" counters for the top bar (openspec loop-on-you). Groups is drawn for a signed-in person who is in a
+ * group or is going to something this week (`going`), On you for one who is in a group; for anyone else there is nothing. It is read beside the week, never before it: the campus screen does not wait for it, and if it
  * cannot be read the screen is drawn without it.
  */
 export async function OnYou({ going = [] }: { going?: Going[] } = {}) {

@@ -77,8 +77,6 @@ it('draws nothing for a signed-out visitor or a person in no group, and for a me
   for (const row of rows) expect(row.querySelector('.cs-oy-grp')!.textContent).toBe('Hiking club');
   expect(rows[0].querySelector('time')!.textContent).toMatch(/^Closes \w{3} \d/);
   expect(rows[2].querySelector('time')!.textContent).toMatch(/^Due \w{3} \d/);
-  // The person's groups are named, each a link to its page.
-  expect(within(within(panel).getByRole('navigation', { name: 'Your groups' })).getByRole('link', { name: 'Hiking club' })).toHaveAttribute('href', '/groups/hiking-club');
   // A short pick-one ask is answered where it is; a written answer opens on the ask's own page.
   expect(within(rows[0]).getAllByRole('button').map(button => button.textContent)).toEqual(['Gorge', 'Ridge']);
   expect(within(rows[3]).getByRole('link', { name: 'Write an answer' }).getAttribute('href')).toMatch(/^\/a\/[\w-]+$/);
@@ -186,8 +184,38 @@ it('shows a person in no group what they are going to this week, and nothing to 
   const f = await fixture();
   session.who = f.outsider;
   expect(await withPortalTestSession(f.outsider, () => OnYou({ going: [] }))).toBeNull();
-  render((await withPortalTestSession(f.outsider, () => OnYou({ going: [{ id: 'l1', title: 'Sunrise run', when: 'Fri 6:30am', href: '/o/abc' }] })))!);
+  render((await withPortalTestSession(f.outsider, () => OnYou({ going: [run] })))!);
+  // In no group there is nothing that can be on them, and no group to start one beside.
+  expect(screen.queryByRole('button', { name: /^On you/ })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Groups1' }));
+  const outing = screen.getByRole('link', { name: /Sunrise run/ });
+  expect(outing).toHaveAttribute('href', '/o/abc');
+  expect(outing).toHaveTextContent('Outing');
+  expect(outing).toHaveTextContent('4 people');
+  expect(outing).toHaveTextContent('Fri 6:30am, Beebe Lake');
+  expect(screen.queryByRole('link', { name: 'Start a group' })).not.toBeInTheDocument();
+});
+
+const run = { id: 'l1', title: 'Sunrise run', when: 'Fri 6:30am', href: '/o/abc', place: 'Beebe Lake', people: 4, faces: ['/animals/07.png'] };
+it('lists every group the person is in behind the Groups counter, a group inside another under it, with who is in it and what waits', async () => {
+  const f = await fixture();
+  await f.saved(createAsk(t.db, f.ana, { ...f.club, question: 'Which weekend works?', kind: 'one', options: ['Mar 6', 'Mar 13'], closesAt: inDays(3) }));
+  session.who = f.ben;
+  render((await withPortalTestSession(f.ben, () => OnYou({ going: [run] })))!);
+  const pill = screen.getByRole('button', { name: /^Groups/ });
+  fireEvent.click(pill);
+  const panel = screen.getByRole('region', { name: 'Your groups' });
+  const club = within(panel).getByRole('link', { name: /Hiking club/ });
+  expect(club).toHaveAttribute('href', '/groups/hiking-club');
+  expect(club).toHaveTextContent('@hiking-club');
+  expect(club).toHaveTextContent('Which weekend works?');
+  expect(club).toHaveTextContent('1 on you');
+  expect(club.querySelectorAll('img').length).toBeGreaterThan(0);
+  expect(within(panel).getByRole('link', { name: /Sunrise run/ })).toHaveAttribute('href', '/o/abc');
+  expect(within(panel).getByRole('link', { name: 'Start a group' })).toHaveAttribute('href', '/groups/new');
+  expect(pill).toHaveTextContent('Groups2');
+  // One panel at a time: opening On you closes Groups.
   fireEvent.click(screen.getByRole('button', { name: /^On you/ }));
-  expect(screen.getByRole('link', { name: /Sunrise run/ })).toHaveAttribute('href', '/o/abc');
-  expect(screen.queryByRole('button', { name: 'Ask a group' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: 'Your groups' })).not.toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'On you' })).toBeInTheDocument();
 });

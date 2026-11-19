@@ -8,7 +8,7 @@ import { closedToCaller, getPortalPrincipal, getSignedInPrincipal, withPortalTes
 import { listCampuses } from '@/lib/campus/listings';
 import { campusOf, placeAt } from '@/lib/campus/people';
 import { frontIsCampus, schoolOfEmail } from '@/lib/campus/schools';
-import { campusViewer, mayUse, openableGroups, whereFrom } from '@/lib/campus/session';
+import { campusViewer, mayUse, whereFrom } from '@/lib/campus/session';
 import { config, leadsIntoGroups, proxy } from '@/proxy';
 
 // Specs: openspec/changes/loop-campus-rewards/specs/admin-gate and campus-sign-in.
@@ -158,12 +158,6 @@ describe('a person belongs to the school of their email', () => {
     const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });
     expect((await campusOf(t.db, sam, [-76.15, 43.05]))?.slug).toBe('cornell');
     expect((await campusOf(t.db, sam, [-73.99, 40.73]))?.slug).toBe('cornell');
-  });
-  it('shows group names in the top bar only to someone who can open them', async () => {
-    const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });
-    vi.stubEnv('LOOP_FRONT', 'campus');
-    const viewer = (await withPortalTestSession(sam, () => campusViewer()))!;
-    expect(await openableGroups(viewer)).toEqual([]);
   });
   it('signed out, there is no viewer', async () => {
     expect(await campusViewer()).toBeNull();

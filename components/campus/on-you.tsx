@@ -7,7 +7,8 @@ import { readDue } from '@/lib/campus/line';
 import type { OnYouClaim, OnYouGroup, OnYouItem, OnYouView } from '@/lib/campus/on-you';
 import '@/app/c/on-you.css';
 
-// "On you" (openspec loop-on-you, design D4): a counter in the top bar, and behind it what the person's groups need from
+// "Groups" and "On you" (openspec loop-on-you, design D4 and D12): two counters in the top bar. Groups opens every group the
+// person is in and what they are going to, each a row that opens its page. On you is a counter, and behind it what the person's groups need from
 // them, soonest first. A row is acted on where it is. When it is done it says so, fades, and the rows under it slide up:
 // nothing jumps, and the list keeps its place.
 
@@ -15,7 +16,7 @@ const LABEL = { vote: 'Vote', do: 'Do', show: 'Show up', missed: 'Missed' } as c
 /** How a finished row leaves: it says what was recorded, fades, then the space it held closes. */
 export const LEAVE = { fade: 800, fold: 1120, gone: 1520 } as const;
 /** Something on the campus week the person is going to. */
-export type Going = { id: string; title: string; when: string; href: string };
+export type Going = { id: string; title: string; when: string; href: string; place: string | null; people: number; faces: string[] };
 type Leaving = { id: string; at: number; text: string; phase: 'said' | 'out' | 'fold'; row?: OnYouItem; claim?: OnYouClaim };
 
 const Tick = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
@@ -27,7 +28,7 @@ function withLeaving<T extends { id: string }>(listed: T[], leaving: Leaving[], 
 }
 
 export function OnYouPanel({ view, going = [] }: { view: OnYouView; going?: Going[] }) {
-  const [open, setOpen] = useState(view.claims.length > 0), [asking, setAsking] = useState(false), [busy, start] = useTransition();
+  const [open, setOpen] = useState<'oy' | 'gr' | null>(view.claims.length > 0 ? 'oy' : null), [asking, setAsking] = useState(false), [busy, start] = useTransition();
   const [leaving, setLeaving] = useState<Leaving[]>([]), [notes, setNotes] = useState<Record<string, string>>({});
   // What has left stays gone, also while the list the server sent is a moment behind.
   const [finished, setFinished] = useState<string[]>([]), listed = <T extends { id: string }>(all: T[]) => all.filter(each => !finished.includes(each.id) || leaving.some(one => one.id === each.id));
@@ -35,7 +36,7 @@ export function OnYouPanel({ view, going = [] }: { view: OnYouView; going?: Goin
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   useEffect(() => {
     if (!open) return;
-    const away = (event: MouseEvent | KeyboardEvent) => { if (event instanceof KeyboardEvent ? event.key === 'Escape' : !box.current?.contains(event.target as Node)) setOpen(false); };
+    const away = (event: MouseEvent | KeyboardEvent) => { if (event instanceof KeyboardEvent ? event.key === 'Escape' : !box.current?.contains(event.target as Node)) setOpen(null); };
     document.addEventListener('mousedown', away); document.addEventListener('keydown', away);
     return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', away); };
   }, [open]);
@@ -86,21 +87,40 @@ export function OnYouPanel({ view, going = [] }: { view: OnYouView; going?: Goin
     </>);
   };
 
-  return <div className="cs-oy" ref={box}>
-    <button className="cs-oy-pill" aria-expanded={open} aria-controls="cs-oy-panel" onClick={() => setOpen(!open)}>On you{view.count + view.claims.length > 0 && <span className="cs-oy-n" key={view.count + view.claims.length}>{view.count + view.claims.length}</span>}</button>
-    {open && <div className="cs-oy-drop" id="cs-oy-panel" role="region" aria-label="On you">
+  const member = view.mine.length > 0;
+  return <div className="cs-oy-pair" ref={box}>
+    <div className="cs-oy">
+      <button className="cs-oy-pill" aria-expanded={open === 'gr'} aria-controls="cs-gr-panel" onClick={() => setOpen(open === 'gr' ? null : 'gr')}>Groups<span className="cs-oy-n q">{view.mine.length + going.length}</span></button>
+      {open === 'gr' && <div className="cs-oy-drop" id="cs-gr-panel" role="region" aria-label="Your groups">
+        <div className="cs-oy-head"><h2>Your groups</h2>{member && <Link className="cs-btn sm go" href="/groups/new">Start a group</Link>}</div>
+        <div className="cs-oy-list cs-gr-list">
+          {member && <><span className="cs-gr-sec">You belong to</span>{view.mine.map(group => <GroupRow key={group.id} href={group.href} mark={group.name} name={group.name} tag={group.inside ? `In ${group.inside}` : group.handle} inside={!!group.inside} faces={group.faces} people={group.people} on={group.on} line={group.next ?? 'Nothing waiting'} />)}</>}
+          {going.length > 0 && <><span className="cs-gr-sec">You are going</span>{going.map(each => <GroupRow key={each.id} href={each.href} mark={each.title} name={each.title} tag="Outing" tone="out" faces={each.faces} people={each.people} line={[each.when, each.place].filter(Boolean).join(', ')} />)}</>}
+        </div>
+      </div>}
+    </div>
+    {member && <div className="cs-oy">
+    <button className="cs-oy-pill" aria-expanded={open === 'oy'} aria-controls="cs-oy-panel" onClick={() => setOpen(open === 'oy' ? null : 'oy')}>On you{view.count + view.claims.length > 0 && <span className="cs-oy-n" key={view.count + view.claims.length}>{view.count + view.claims.length}</span>}</button>
+    {open === 'oy' && <div className="cs-oy-drop" id="cs-oy-panel" role="region" aria-label="On you">
       <div className="cs-oy-head"><h2>On you</h2>{view.count > 0 && <span className="cs-oy-n">{view.count}</span>}
         {view.groups.length > 0 && <button className="cs-btn sm" aria-expanded={asking} onClick={() => setAsking(!asking)}>{asking ? 'Close' : 'Ask a group'}</button>}</div>
       {asking && <AskLine groups={view.groups} onAsked={() => setAsking(false)} />}
       {rows.length + claims.length > 0 ? <ul className="cs-oy-list">{claims.map(hand)}{rows.map(row)}</ul> : <p className="cs-oy-none">Nothing is waiting on you.</p>}
       {view.more > 0 && <p className="cs-oy-more">{view.more} more after these</p>}
-      {/* Where the person belongs: every group they are in, and what they are going to this week. Each opens its own page. */}
-      {view.mine.length + going.length > 0 && <nav className="cs-oy-yours" aria-label="Your groups">
-        {view.mine.length > 0 && <div><b>Your groups</b>{view.mine.map(group => <Link key={group.href} href={group.href}>{group.name}</Link>)}</div>}
-        {going.length > 0 && <div><b>You are going</b>{going.map(each => <Link key={each.id} href={each.href}>{each.title}<small>{each.when}</small></Link>)}</div>}
-      </nav>}
+    </div>}
     </div>}
   </div>;
+}
+
+/** One group, or one outing, in the Groups panel: the whole row opens its page. */
+function GroupRow({ href, mark, name, tag, tone = '', inside = false, faces, people, on = 0, line }: { href: string; mark: string; name: string; tag: string; tone?: string; inside?: boolean; faces: string[]; people: number; on?: number; line: string }) {
+  return <Link className={`cs-gr-row ${inside ? 'in' : ''} ${tone}`} href={href}>
+    <i className="cs-gr-mk" aria-hidden="true">{mark.trim().slice(0, 1).toUpperCase()}</i>
+    <span className="cs-gr-name"><b>{name}</b><em>{tag}</em></span>
+    <span className="cs-gr-end">{faces.map((src, at) => /* eslint-disable-next-line @next/next/no-img-element */
+      <img key={at} src={src} alt="" />)}{people > 0 && <small>{people}<span className="cs-gr-sr"> people</span></small>}{on > 0 && <span className="cs-oy-n">{on}<span className="cs-gr-sr"> on you</span></span>}</span>
+    <span className="cs-gr-line">{line}</span>
+  </Link>;
 }
 
 const KINDS = [['done', 'Something to do'], ['one', 'Pick one'], ['text', 'Written answer']] as const;

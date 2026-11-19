@@ -43,6 +43,8 @@
 
 - [x] 6.7 Scope change (founder, 2026-11-19): open the groups site to the members of a group (`inAGroup` in `getPortalPrincipal`, proxy, groups layout), name the person's groups in the campus top bar, and list "Your groups" and "You are going" in the panel; gate tests updated, member and non-member tested
 
+- [x] 6.8 Founder picked direction B of `mockups-your-groups.html`: a "Groups" counter beside "On you" with its own panel (groups with faces, what waits, nested groups under their parent, outings, Start a group); group names removed from the top bar; "On you" is only the to-do list; the Ink page carries both counters
+
 ## 7. Verify
 
 - [x] 7.1 `tsc --noEmit` and the full vitest suite with `--maxWorkers=3`, stderr captured to a file
