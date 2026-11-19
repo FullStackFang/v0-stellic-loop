@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Conga · playable mockup</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
+:root { --field: oklch(82% 0.12 38); --dot: oklch(77% 0.13 37); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27);
+  --paper: oklch(99.2% 0.004 60); --mute: oklch(45% 0.016 40); --line: oklch(88% 0.012 50); --expo: cubic-bezier(.16, 1, .3, 1); }
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--ink); color: var(--ink); font-family: Archivo, system-ui, sans-serif; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+.hud[hidden], .dash[hidden] { display: none; }
+
+.hud { position: fixed; z-index: 2; background: var(--paper); box-shadow: 3px 3px 0 var(--ink), inset 0 0 0 2px var(--ink); }
+.mine { top: max(14px, env(safe-area-inset-top)); left: 14px; display: flex; align-items: center; gap: 8px; padding: 5px 16px 5px 6px; border-radius: 99px; }
+.mine img { width: 40px; height: 40px; border-radius: 50%; background: var(--field); }
+.mine b { font-weight: 900; font-size: 26px; font-stretch: 110%; line-height: 1; font-variant-numeric: tabular-nums; }
+.mine span { font-size: 13px; font-weight: 600; color: var(--mute); }
+
+.board { top: max(14px, env(safe-area-inset-top)); right: 14px; width: 190px; padding: 6px; border-radius: 16px 16px 16px 4px; display: grid; gap: 2px; }
+.board div { display: flex; align-items: center; gap: 7px; padding: 2px 8px 2px 3px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+.board div.me { background: var(--ink); color: var(--paper); }
+.board img { width: 24px; height: 24px; }
+.board i { flex: 1; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.board b { font-weight: 900; font-variant-numeric: tabular-nums; }
+
+.map { left: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 104px; height: 104px; border-radius: 50%; padding: 6px; }
+.map canvas { width: 100%; height: 100%; display: block; }
+
+.dash { position: fixed; z-index: 2; right: 18px; bottom: max(18px, env(safe-area-inset-bottom)); width: 92px; height: 92px; border-radius: 50%; background: var(--action); color: var(--paper);
+  font-weight: 900; font-size: 18px; font-stretch: 110%; box-shadow: 4px 4px 0 var(--ink); touch-action: none; transition: transform .12s var(--expo), box-shadow .12s var(--expo); }
+.dash:active, .dash.on { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); background: var(--action-hover); }
+
+.say { position: fixed; z-index: 3; top: max(18px, env(safe-area-inset-top)); left: 50%; padding: 9px 20px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 700; font-size: 15px; white-space: nowrap;
+  transform: translate(-50%, -80px); transition: transform .45s var(--expo); pointer-events: none; }
+.say.show { transform: translate(-50%, 0); }
+
+.card { position: fixed; z-index: 4; left: 50%; top: 50%; width: min(520px, calc(100vw - 32px)); padding: 26px 26px 24px; background: var(--paper); border-radius: 26px 26px 26px 6px; box-shadow: 7px 7px 0 var(--ink), inset 0 0 0 2px var(--ink);
+  transform: translate(-50%, -50%); transition: transform .5s var(--expo), opacity .25s; display: grid; gap: 16px; }
+.card[hidden] { display: grid; opacity: 0; transform: translate(-50%, -42%) scale(.96); pointer-events: none; }
+.card h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 8vw, 44px); line-height: .98; letter-spacing: -.02em; }
+.card p { font-size: 16px; line-height: 1.4; font-weight: 500; }
+.faces { display: flex; gap: 8px; align-items: center; }
+.faces button { flex: 1; aspect-ratio: 1; min-width: 0; padding: 4px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); transition: transform .15s var(--expo); }
+.faces button img { width: 100%; display: block; }
+.faces button[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 4px var(--action), 3px 3px 0 var(--ink); transform: translateY(-4px); }
+.faces .more { aspect-ratio: auto; flex: none; padding: 10px 14px; border-radius: 99px; background: var(--paper); font-weight: 700; font-size: 14px; }
+.go { justify-self: start; padding: 14px 34px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s var(--expo), box-shadow .12s var(--expo), background .12s; }
+.go:hover { background: var(--action-hover); }
+.go:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+.score { display: flex; gap: 10px; align-items: stretch; }
+.score div { flex: 1; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: var(--field); display: grid; gap: 2px; }
+.score div + div { background: var(--ink); color: var(--paper); }
+.score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
+.score span { font-size: 13px; font-weight: 700; }
+@media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board img { width: 20px; height: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
+  .mine span { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } }
+@media (hover: hover) and (pointer: fine) { .dash { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div class="hud mine" id="mine" hidden><img id="mineFace" alt=""><b id="mineCount">1</b><span>in your line</span></div>
+<div class="hud board" id="board"></div>
+<div class="hud map"><canvas id="map" width="184" height="184"></canvas></div>
+<button class="dash" id="dash" hidden>Dash</button>
+<div class="say" id="say"></div>
+
+<section class="card" id="start">
+  <h1>Longest line wins</h1>
+  <p>Walk into a stray and it joins your line. Walk into another line and yours scatters for anyone to grab.</p>
+  <div class="faces" id="faces"></div>
+  <button class="go" id="go">Start</button>
+</section>
+
+<section class="card" id="over" hidden>
+  <h1 id="overHead">Scattered</h1>
+  <div class="score"><div><b id="overCount">1</b><span>in your line</span></div><div><b id="overBest">1</b><span>your best</span></div></div>
+  <button class="go" id="again">Again</button>
+</section>
+
+<script type="module">
+import { createWorld, addLine, place, steer, step, R, FACES } from './conga/sim.js';
+
+const $ = id => document.getElementById(id);
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: css('--paper'), action: css('--action') };
+const src = face => `/animals/${String(face).padStart(2, '0')}.png`;
+const images = Array.from({ length: FACES + 1 }, (_, face) => { if (!face) return null; const image = new Image(); image.src = src(face); return image; });
+const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
+
+// The other lines. In live play these are people; here each one is a bot with its own nerve and temper.
+const GROUPS = [['Donlon 2F', 'oklch(96.4% 0.19 117)'], ['CS 2110', 'oklch(87% 0.075 235)'], ['Team 4', 'oklch(88% 0.13 88)'], ['Risley', 'oklch(85% 0.09 305)'], ['Big Red Band', 'oklch(88% 0.1 165)'],
+  ['Club Frisbee', 'oklch(86% 0.09 0)'], ['Cornell Tech', 'oklch(99.2% 0.004 60)'], ['Glee Club', 'oklch(80% 0.11 200)'], ['West Campus', 'oklch(90% 0.12 140)'], ['Olin late shift', 'oklch(83% 0.1 60)'], ['Slope Day crew', 'oklch(84% 0.1 270)']];
+const world = createWorld();
+const colour = new Map();
+GROUPS.forEach(([name, tint], i) => {
+  colour.set(i, tint);
+  addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) });
+});
+for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
+
+window.conga = { world }; // for poking at the game from the console
+const ME = 'me';
+colour.set(ME, C.ink);
+let me = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES);
+
+// ---------- the cards ----------
+function offer() {
+  const set = new Set([picked]);
+  while (set.size < 6) set.add(1 + Math.floor(Math.random() * FACES));
+  $('faces').replaceChildren(...[...set].map(face => {
+    const button = document.createElement('button');
+    button.setAttribute('aria-pressed', face === picked);
+    button.setAttribute('aria-label', `Animal ${face}`);
+    button.innerHTML = `<img src="${src(face)}" alt="">`;
+    button.onclick = () => { picked = face; for (const other of $('faces').children) other.setAttribute('aria-pressed', other === button); };
+    return button;
+  }), Object.assign(document.createElement('button'), { className: 'more', textContent: 'Others', onclick: () => offer() }));
+}
+offer();
+
+function begin() {
+  keep.set('conga-face', picked);
+  if (me) place(world, me);
+  else me = addLine(world, { id: ME, face: picked, name: 'You' });
+  me.face = picked;
+  aim = me.a;
+  $('start').hidden = $('over').hidden = true;
+  $('mine').hidden = $('dash').hidden = false;
+  $('mineFace').src = src(picked);
+}
+$('go').onclick = $('again').onclick = begin;
+
+function finish(event) {
+  best = Math.max(best, event.size);
+  keep.set('conga-best', best);
+  const by = world.lines.find(line => line.id === event.by);
+  $('overHead').textContent = by ? `You walked into ${by.name}` : 'Scattered';
+  $('overCount').textContent = event.size;
+  $('overBest').textContent = best;
+  $('mine').hidden = $('dash').hidden = true;
+  setTimeout(() => { $('over').hidden = false; }, 900);
+}
+
+let quiet = 0;
+function say(text) { $('say').textContent = text; $('say').classList.add('show'); clearTimeout(quiet); quiet = setTimeout(() => $('say').classList.remove('show'), 2400); }
+
+// ---------- steering ----------
+const canvas = $('game'), ctx = canvas.getContext('2d');
+let aim = 0, dash = false, wide = 0, tall = 0, dpr = 1;
+const keys = new Set();
+function point(event) { if (me && !me.dead) aim = Math.atan2(event.clientY - tall / 2, event.clientX - wide / 2); }
+canvas.addEventListener('pointermove', point);
+canvas.addEventListener('pointerdown', event => { point(event); if (event.pointerType === 'mouse') dash = true; });
+addEventListener('pointerup', event => { if (event.pointerType === 'mouse') dash = false; });
+for (const [type, on] of [['pointerdown', true], ['pointerup', false], ['pointercancel', false], ['pointerleave', false]]) $('dash').addEventListener(type, event => { event.preventDefault(); dash = on; $('dash').classList.toggle('on', on); });
+addEventListener('keydown', event => { keys.add(event.code); if (event.code === 'Space') { event.preventDefault(); if (me && !me.dead) dash = true; else if (!event.repeat) begin(); } });
+addEventListener('keyup', event => { keys.delete(event.code); if (event.code === 'Space') dash = false; });
+addEventListener('contextmenu', event => event.preventDefault());
+
+function fit() {
+  dpr = Math.min(2, devicePixelRatio || 1); wide = innerWidth; tall = innerHeight;
+  canvas.width = wide * dpr; canvas.height = tall * dpr;
+}
+addEventListener('resize', fit); fit();
+
+// ---------- drawing ----------
+const cam = { x: 0, y: 0, z: 1 }, puffs = [];
+const SIZE = { stray: 40, tail: 42, head: 58 };
+
+function sprite(face, x, y, size, tilt = 0, alpha = 1) {
+  const image = images[face];
+  ctx.globalAlpha = 0.16 * alpha; ctx.fillStyle = C.ink;
+  ctx.beginPath(); ctx.ellipse(x, y + size * 0.4, size * 0.34, size * 0.11, 0, 0, 7); ctx.fill();
+  ctx.globalAlpha = alpha;
+  if (!image.complete || !image.naturalWidth) { ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(x, y, size * 0.36, 0, 7); ctx.fill(); }
+  else if (tilt) { ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(image, -size / 2, -size / 2, size, size); ctx.restore(); }
+  else ctx.drawImage(image, x - size / 2, y - size / 2, size, size);
+  ctx.globalAlpha = 1;
+}
+
+function pill(text, x, y, fill, ink) {
+  ctx.font = '700 13px Archivo, system-ui, sans-serif';
+  const width = ctx.measureText(text).width + 18;
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - 11, width, 22, 11); ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+}
+
+function draw(t) {
+  const watch = me && (!me.dead || $('start').hidden) ? me : world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
+  const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.min(wide, tall * 1.25) / 760;
+  const zoom = Math.max(0.5, fitTo / (1 + size * 0.007)), slide = watch === me ? 0.2 : 0.04;
+  cam.x += (watch.x - cam.x) * slide; cam.y += (watch.y - cam.y) * slide; cam.z += (zoom - cam.z) * 0.05;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = C.ink; ctx.fillRect(0, 0, wide, tall);
+  ctx.translate(wide / 2, tall / 2); ctx.scale(cam.z, cam.z); ctx.translate(-cam.x, -cam.y);
+  const halfW = wide / 2 / cam.z + 80, halfH = tall / 2 / cam.z + 80, seen = (x, y) => Math.abs(x - cam.x) < halfW && Math.abs(y - cam.y) < halfH;
+
+  ctx.fillStyle = C.field; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill();
+  ctx.fillStyle = C.dot; ctx.beginPath();
+  for (let x = Math.floor((cam.x - halfW) / 90) * 90; x < cam.x + halfW; x += 90) for (let y = Math.floor((cam.y - halfH) / 90) * 90; y < cam.y + halfH; y += 90)
+    if (Math.hypot(x, y) < R - 20) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); }
+  ctx.fill();
+  ctx.strokeStyle = C.paper; ctx.lineWidth = 6; ctx.setLineDash([22, 16]); ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+
+  // Where each animal is shown: a small hop as it walks, and a wave down the line while the line dances.
+  const sprites = [], heads = [];
+  for (const line of world.lines) {
+    if (line.dead) continue;
+    const dancing = line.dance > 0, shown = [{ x: line.x, y: line.y }];
+    line.tail.forEach((f, i) => {
+      const before = shown[i], dx = before.x - f.x, dy = before.y - f.y, far = Math.hypot(dx, dy) || 1, beat = Math.sin(t * 9 - i * 0.8);
+      const sway = dancing ? beat * 13 : 0, hop = Math.abs(Math.sin(t * 9 - i * 0.7)) * (dancing ? 9 : 3);
+      shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - hop, face: f.face, tilt: dancing ? beat * 0.35 : 0 });
+    });
+    if (line.tail.length) {
+      ctx.lineJoin = ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(line.x, line.y); for (let i = 1; i < shown.length; i++) ctx.lineTo(shown[i].x, shown[i].y + 12);
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 34; ctx.stroke();
+      ctx.strokeStyle = colour.get(line.id); ctx.lineWidth = line === me ? 22 : 28; ctx.stroke();
+    }
+    for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push({ ...shown[i], size: SIZE.tail });
+    const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
+    sprites.push({ x: line.x, y: line.y - Math.abs(Math.sin(t * 9)) * 3, face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 9) * 0.3 : 0, alpha: blink, front: 1 });
+    heads.push(line);
+  }
+  for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - Math.abs(Math.sin(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
+  sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
+  for (const s of sprites) sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha);
+
+  for (let i = puffs.length - 1; i >= 0; i--) {
+    const puff = puffs[i], age = (t - puff.t) / 0.6;
+    if (age > 1) { puffs.splice(i, 1); continue; }
+    ctx.strokeStyle = C.paper; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
+    ctx.beginPath(); ctx.arc(puff.x, puff.y, 30 + age * 130, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  for (const line of heads) if (seen(line.x, line.y)) pill(`${line.name} · ${line.tail.length + 1}`, line.x, line.y - 46, line === me ? C.action : C.ink, C.paper);
+}
+
+const map = $('map').getContext('2d');
+function chart() {
+  map.clearRect(0, 0, 184, 184);
+  map.fillStyle = C.field; map.beginPath(); map.arc(92, 92, 90, 0, 7); map.fill();
+  for (const line of world.lines) {
+    if (line.dead) continue;
+    map.fillStyle = line === me ? C.action : C.ink;
+    map.beginPath(); map.arc(92 + line.x / R * 86, 92 + line.y / R * 86, line === me ? 9 : 3 + Math.min(6, line.tail.length / 8), 0, 7); map.fill();
+  }
+}
+
+function board() {
+  const ranked = world.lines.filter(line => !line.dead).sort((a, b) => b.tail.length - a.tail.length), top = ranked.slice(0, 5);
+  if (me && !me.dead && !top.includes(me)) top[4] = me;
+  $('board').innerHTML = top.map(line => `<div class="${line === me ? 'me' : ''}"><img src="${src(line.face)}" alt=""><i>${ranked.indexOf(line) + 1}. ${line.name}</i><b>${line.tail.length + 1}</b></div>`).join('');
+  if (me && !me.dead) $('mineCount').textContent = me.tail.length + 1;
+}
+
+// ---------- the loop ----------
+let last = performance.now(), ticks = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000), t = now / 1000; last = now;
+  if (me && !me.dead) {
+    if (keys.has('ArrowLeft') || keys.has('KeyA')) aim = me.a - 1.2;
+    if (keys.has('ArrowRight') || keys.has('KeyD')) aim = me.a + 1.2;
+    steer(me, aim, dash);
+  }
+  for (const event of step(world, dt)) {
+    if (event.type === 'scatter') {
+      puffs.push({ x: event.x, y: event.y, t });
+      if (event.line === ME) finish(event);
+      else if (event.by === ME) say(`${world.lines.find(line => line.id === event.line).name} scattered on your line`);
+    }
+    if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
+  }
+  draw(t);
+  if (ticks++ % 12 === 0) { board(); chart(); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
