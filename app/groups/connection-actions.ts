@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
+import { CampusError } from '@/lib/campus/errors';
+import { hasAssistants, subscribeInkPlus } from '@/lib/campus/ink';
 import { authConfig } from '@/lib/emba/auth-token';
 import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
 import { grantLease, listLeases, renewGroupReadLease, revokeLease } from '@/lib/emba/consent';
@@ -22,13 +24,25 @@ async function mutate(run: (principal: Principal) => Promise<string | void>): Pr
     const message = await run(principal);
     revalidatePath('/groups/connections');
     return { status: 'success', message: message || 'Saved.' };
-  } catch {
+  } catch (error) {
+    // A CampusError is a sentence written for the person.
+    if (error instanceof CampusError) return { status: 'error', message: error.message };
     return { status: 'error', message: 'Connection access could not be changed. Check the deployment setup and your membership.' };
   }
+}
+// Connecting an assistant is part of Ink+ (the page says so too). Taking access away is open to everyone.
+const needsPlus = async (principal: Principal) => { if (!await hasAssistants(db(), principal)) throw new CampusError('Assistants come with Ink+. Subscribe on this page first.'); };
+/** "Subscribe" on the Assistants page. Nothing is charged: the ask is kept, with when and where it was made, and the page opens. */
+export async function subscribeForAssistants(_previous: PortalResult, data: FormData): Promise<PortalResult> {
+  return mutate(async principal => {
+    if (!await subscribeInkPlus(db(), principal.personId, value(data, 'email'), 'assistants')) throw new CampusError('Enter the email to subscribe with.');
+    return 'You have Ink+. Connect your assistant below.';
+  });
 }
 const teamGrant = (actions: string[]) => ['plan:read', 'group-memory:write plan:read'].includes([...actions].sort().join(' '));
 export async function grantGroupRead(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(async principal => {
+    await needsPlus(principal);
     const config = authConfig();
     const clientId = value(data, 'clientId');
     if (!config.clientIds.includes(clientId)) throw new Error('Unknown client');
@@ -46,6 +60,7 @@ export async function grantGroupRead(_previous: PortalResult, data: FormData): P
 }
 export async function renewGroupRead(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(async principal => {
+    await needsPlus(principal);
     // An assistant this deployment no longer admits cannot be granted access, so its grant cannot be renewed either.
     const lease = (await listLeases(db(), principal)).find(item => String(item.id) === value(data, 'id'));
     if (!lease || !authConfig().clientIds.includes(String(lease.client_id))) throw new Error('Unknown client');

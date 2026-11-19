@@ -1,0 +1,332 @@
+<!doctype html><html lang="en" data-kit="cornell"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Footer links · Terms and Privacy · Reach in the group</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
+/* Roles and school colours, as in app/c/campus.css. */
+:root { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --ink-2: oklch(35.4% 0.095 252); --action: oklch(47.6% 0.13 250); --action-hover: oklch(54% 0.14 250);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245); --on-ink-mute: oklch(82% 0.02 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --ease: cubic-bezier(.22, 1, .36, 1); --expo: cubic-bezier(.16, 1, .3, 1); --r: 22px 22px 22px 6px; }
+:root[data-kit="cornell"] { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --ink-2: oklch(34% 0.05 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27); }
+:root[data-kit="columbia"] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --ink-2: oklch(35% 0.08 255); --action: oklch(46% 0.14 255); --action-hover: oklch(52% 0.15 255); }
+:root[data-kit="cuny"] { --field: oklch(88% 0.13 88); --field-shadow: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --ink-2: oklch(34% 0.1 265); --action: oklch(38% 0.18 264); --action-hover: oklch(45% 0.19 264); }
+:root[data-kit="nyu"] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --ink-2: oklch(34% 0.1 305); --action: oklch(40% 0.2 305); --action-hover: oklch(46% 0.21 305); }
+[data-dot="loop"] { --dot: oklch(96.4% 0.19 117); } [data-dot="cornell"] { --dot: oklch(82% 0.12 38); } [data-dot="columbia"] { --dot: oklch(87% 0.075 235); } [data-dot="cuny"] { --dot: oklch(88% 0.13 88); } [data-dot="nyu"] { --dot: oklch(85% 0.09 305); }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; padding: 26px 28px 80px; background: oklch(93% 0.006 60); color: var(--ink); font: 15px/1.45 Archivo, system-ui, sans-serif; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; } button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+h1, h2, h3, p, ul, ol { margin: 0; padding: 0; } ul, ol { list-style: none; }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- the mockup's own chrome ---------- */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; max-width: 1480px; margin: 0 auto 26px; }
+.top h1 { font-size: 17px; font-weight: 700; padding: 9px 16px; border-radius: 14px 14px 14px 4px; background: var(--ink); color: var(--paper); }
+.pick { position: relative; display: flex; flex-wrap: wrap; gap: 5px; padding: 17px 8px 8px; border-radius: 14px 14px 14px 4px; background: var(--paper); }
+.pick > b { position: absolute; left: 10px; top: -9px; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 8px 8px 8px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.pick button { padding: 6px 13px; border-radius: 99px; font-size: 13.5px; font-weight: 580; box-shadow: inset 0 0 0 1.5px var(--ink); white-space: nowrap; }
+.pick button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
+.frame { max-width: 1480px; margin: 0 auto; }
+.page { position: relative; overflow: clip; border-radius: var(--r); background: var(--page); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--ink); }
+
+/* ---------- the one header (app/c/campus.css) ---------- */
+.nav { position: relative; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--field); border-bottom: 1.5px solid var(--ink); box-shadow: 0 5px 0 var(--field-shadow); }
+.wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding-right: 20px; }
+.wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); --lime: var(--action); }
+.links { display: flex; gap: 6px; min-width: 0; }
+.pl { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; white-space: nowrap; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); transition: translate .2s var(--ease), box-shadow .2s var(--ease), background-color .2s, color .2s; }
+.pl:not([aria-current], [aria-pressed=true]):hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.pl[aria-current], .pl[aria-pressed=true] { background: var(--ink); color: var(--field); box-shadow: none; }
+.pl:has(> i) { padding: 6px 12px 6px 6px; }
+.pl > i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--paper); background: var(--action); }
+.pl.ink { gap: 7px; margin-left: 6px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .pl svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+.pl.go { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .pl.go:hover { background: var(--action-hover); }
+.nav-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.ava img { display: block; width: 38px; height: 38px; border-radius: 50%; object-fit: contain; background: color-mix(in oklch, var(--ink) 14%, var(--paper)); }
+.note { padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: var(--ink); color: var(--paper); }
+/* A name is a tab that overlaps what it names: never a bare heading. */
+.tab { position: absolute; z-index: 3; left: 14px; top: -12px; font-size: 13px; font-weight: 700; padding: 3px 11px 4px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+
+/* ---------- Terms and Privacy: what all three share ---------- */
+.lg-head { position: relative; padding: 26px 32px 30px; background: var(--field); border-bottom: 1.5px solid var(--ink); }
+.lg-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 18px; } .lg-switch .note { margin-left: 6px; }
+.lg-head h1 { view-transition-name: lg-title; width: max-content; max-width: 100%; font-size: clamp(54px, 9vw, 128px); font-weight: 760; font-stretch: 116%; letter-spacing: -0.06em; line-height: .86; }
+.lg-gist { margin-top: 16px; font-size: clamp(19px, 2.1vw, 27px); font-weight: 620; letter-spacing: -0.03em; }
+.lg-jump { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 32px; background: var(--stub); border-bottom: 1.5px solid var(--ink); }
+.lg-jump .pl { font-size: 13.5px; padding: 6px 12px; }
+.lg-body { padding: 44px 32px 64px; }
+.fulltext { font-size: 16px; line-height: 1.55; letter-spacing: -0.008em; } .fulltext a, .mail { font-weight: 640; padding: 1px 8px 2px; border-radius: 99px; box-shadow: inset 0 0 0 1.5px var(--ink); background: var(--paper); white-space: nowrap; }
+
+/* ---------- A · the ticket book: every part is a ticket, numbered on its stub ---------- */
+.a-list { display: grid; gap: 34px; }
+.a-tk { position: relative; display: grid; grid-template-columns: 124px minmax(0, 1fr); border-radius: var(--r); background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); scroll-margin-top: 76px; transition: translate .3s var(--ease), box-shadow .3s var(--ease); }
+.a-tk.now { translate: -3px -3px; box-shadow: 0 0 0 1.5px var(--ink), 10px 10px 0 var(--ink); }
+.a-stub { display: grid; place-content: center; background: var(--field); border-radius: 22px 0 0 6px; border-right: 2px dashed var(--ink); font-size: 58px; font-weight: 780; font-stretch: 116%; letter-spacing: -0.06em; line-height: 1; }
+.a-face { padding: 30px 30px 26px; min-width: 0; }
+.a-face h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 720; font-stretch: 110%; letter-spacing: -0.045em; line-height: 1.04; margin-bottom: 14px; text-wrap: balance; }
+.a-face .fulltext.long { columns: 2 44ch; column-gap: 44px; }
+
+/* ---------- B · shown, not told: the answer in very few words, then the thing itself ---------- */
+.lg-body.b { padding: 0; }
+.b-band { position: relative; padding: 62px 32px 46px; border-bottom: 1.5px solid var(--ink); scroll-margin-top: 60px; }
+.b-band:nth-child(3n+2) { background: var(--stub); } .b-band:nth-child(3n) { background: var(--paper); }
+.b-band.dark { background: var(--ink); color: var(--paper); } .b-band.dark .tab { background: var(--field); color: var(--ink); } .b-band.dark h2 em { color: var(--field); }
+.b-band.loud { background: var(--field); }
+.b-band .tab { left: 32px; top: 22px; font-size: 14px; padding: 4px 13px 5px; }
+.b-band h2 { margin-top: 6px; font-size: clamp(36px, 6.3vw, 92px); font-weight: 760; font-stretch: 114%; letter-spacing: -0.058em; line-height: .92; text-wrap: balance; } .b-band h2 em { font-style: normal; color: var(--action); }
+.b-art { display: flex; flex-wrap: wrap; align-items: stretch; gap: 14px; margin-top: 26px; }
+.chip { display: inline-flex; align-items: center; gap: 9px; padding: 9px 17px; border-radius: 99px; font-size: 17px; font-weight: 620; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--field-shadow); }
+.b-band.dark .chip { box-shadow: 3px 3px 0 var(--action); } .chip small { font-size: 13px; font-weight: 500; color: var(--mute); }
+.see { position: relative; flex: 1 1 250px; padding: 24px 18px 16px; border-radius: 18px 18px 18px 5px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--field-shadow); }
+.see .tab { left: 14px; top: -12px; font-size: 13px; padding: 3px 11px 4px; }
+.see p { font-size: 17px; font-weight: 640; letter-spacing: -0.025em; margin-top: 10px; }
+.faces { display: flex; align-items: center; height: 54px; } .faces img { width: 54px; height: 54px; margin-right: -10px; border-radius: 50%; object-fit: contain; background: var(--stub); box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 4px var(--ink); }
+.count { display: inline-grid; place-items: center; height: 54px; padding: 0 22px; border-radius: 99px; background: var(--ink); color: var(--field); font-size: 22px; font-weight: 740; font-stretch: 110%; letter-spacing: -0.04em; }
+.pips { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; } .pips i { width: 13px; height: 34px; border-radius: 5px 5px 5px 2px; background: var(--ink); }
+.stamp { rotate: -3deg; flex: none; align-self: center; margin-right: 10px; display: inline-flex; align-items: baseline; gap: 10px; padding: 10px 18px; border-radius: 14px 14px 14px 4px; border: 2.5px solid var(--action); color: var(--action); font-size: 22px; font-weight: 760; font-stretch: 110%; letter-spacing: -0.04em; background: var(--paper); } .stamp s { font-size: 15px; font-weight: 600; text-decoration-thickness: 2px; }
+/* the exact wording is always one press away, and it opens in place */
+.fine { margin-top: 24px; } .fine summary { list-style: none; width: max-content; cursor: pointer; } .fine summary::-webkit-details-marker { display: none; }
+.fine summary .pl::after { content: '+'; font-weight: 700; font-size: 17px; line-height: 1; transition: rotate .3s var(--ease); } .fine[open] summary .pl::after { rotate: 45deg; }
+.fine[open] summary .pl { background: var(--ink); color: var(--field); box-shadow: none; }
+.fine .fulltext { margin-top: 14px; padding: 18px 22px; border-radius: 18px 18px 18px 5px; background: var(--paper); color: var(--ink); box-shadow: 0 0 0 1.5px var(--ink); } .fine .fulltext.long { columns: 2 44ch; column-gap: 44px; }
+@supports (interpolate-size: allow-keywords) { .fine { interpolate-size: allow-keywords; } .fine::details-content { block-size: 0; overflow: clip; transition: block-size .45s var(--expo), content-visibility .45s allow-discrete; } .fine[open]::details-content { block-size: auto; } }
+@supports (animation-timeline: view()) { @media (prefers-reduced-motion: no-preference) {
+  .b-band h2 { animation: b-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 70%; }
+  .b-art > * { animation: b-rise linear both; animation-timeline: view(); animation-range: entry 10% entry 90%; } } }
+@keyframes b-rise { from { opacity: 0; translate: 0 34px; } }
+
+/* ---------- C · short beside exact: one sheet, torn down the middle ---------- */
+.c-sheet { position: relative; border-radius: var(--r); background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--field-shadow); view-timeline: --sheet block; }
+.c-read { position: sticky; top: 49px; z-index: 4; height: 12px; margin: 0 22px; translate: 0 -6px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); overflow: hidden; }
+.c-read i { display: block; height: 100%; transform-origin: 0 50%; background: var(--action); transform: scaleX(0); }
+@supports (animation-timeline: view()) { .c-read i { animation: c-fill linear both; animation-timeline: --sheet; animation-range: contain 0% contain 100%; } } @keyframes c-fill { to { transform: scaleX(1); } }
+.c-row { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); scroll-margin-top: 76px; }
+.c-row + .c-row { border-top: 1.5px solid var(--ink); }
+.c-short { position: relative; padding: 42px 26px 30px 26px; background: var(--stub); border-right: 2px dashed var(--ink); transition: background-color .25s; }
+.c-row:first-of-type .c-short { border-top-left-radius: 22px; } .c-row:last-of-type .c-short { border-bottom-left-radius: 6px; }
+.c-short .tab { left: 26px; top: 14px; }
+.c-short h2 { font-size: clamp(22px, 2.5vw, 35px); font-weight: 720; font-stretch: 110%; letter-spacing: -0.045em; line-height: 1.04; text-wrap: balance; }
+.c-exact { padding: 42px 30px 30px; } .c-row:hover .c-short, .c-row.now .c-short { background: var(--field); }
+
+/* ---------- Reach, in the group ---------- */
+.g-band { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 26px 32px 24px; background: var(--field); border-bottom: 1.5px solid var(--ink); }
+.g-tile { width: 76px; height: 76px; display: grid; place-items: center; border-radius: 18px 18px 18px 5px; background: var(--action); color: var(--paper); font-size: 42px; font-weight: 800; font-stretch: 80%; box-shadow: 4px 4px 0 var(--ink); }
+.g-band h1 { font-size: clamp(34px, 5vw, 62px); font-weight: 740; font-stretch: 112%; letter-spacing: -0.055em; line-height: .95; }
+.g-band .faces { height: 44px; } .g-band .faces img { width: 44px; height: 44px; box-shadow: 0 0 0 2px var(--field), 0 0 0 3.5px var(--ink); }
+.g-end { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.g-body { padding: 36px 32px 60px; display: grid; gap: 44px; }
+.set { position: relative; padding: 26px 14px 14px; border-radius: 18px 18px 18px 5px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); }
+.set > .note { position: absolute; right: 14px; top: -13px; transition: background-color .3s; } .set > .note.ok { background: var(--action); }
+.ways { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.way { position: relative; text-align: left; padding: 15px 18px 14px; border-radius: 16px 16px 16px 5px; background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); transition: translate .2s var(--ease), box-shadow .2s var(--ease), background-color .2s, color .2s; }
+.way b { display: block; font-size: 21px; font-weight: 720; font-stretch: 108%; letter-spacing: -0.04em; } .way span { display: block; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.way:not([aria-pressed=true]):hover { translate: -2px -2px; box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--ink); }
+.way[aria-pressed=true] { background: var(--ink); color: var(--field); box-shadow: 4px 4px 0 var(--action); } .way[aria-pressed=true] span { color: var(--paper); }
+.g-rows { display: grid; } .g-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 6px; } .g-row + .g-row { border-top: 1.5px solid var(--line); }
+.g-row > i { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 11px 11px 11px 3px; background: var(--action); color: var(--paper); font-style: normal; font-weight: 800; font-stretch: 78%; font-size: 21px; }
+.g-row > b { font-size: 18px; font-weight: 680; letter-spacing: -0.03em; } .g-row > small { font-size: 13px; color: var(--mute); font-family: ui-monospace, monospace; }
+.seg { margin-left: auto; display: flex; gap: 4px; padding: 4px; border-radius: 99px; background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.seg button { padding: 5px 13px; border-radius: 99px; font-size: 13.5px; font-weight: 600; transition: background-color .2s, color .2s; } .seg button:hover { background: var(--paper); } .seg button[aria-pressed=true] { background: var(--ink); color: var(--field); }
+
+/* ---------- the footer: the crowd's ticket (unchanged), then the bar with three links ---------- */
+.carry { position: relative; z-index: 3; margin: 34px 32px 34px; }
+.stubtk { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 232px; border-radius: 26px 26px 26px 7px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--field-shadow); }
+.tear { position: relative; padding: 24px 22px 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; background: var(--field); border-radius: 0 26px 26px 0; border-left: 2px dashed var(--ink); }
+.tear::before, .tear::after { content: ''; position: absolute; left: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tear::before { top: -12px; clip-path: inset(50% 0 0 0); } .tear::after { bottom: -12px; clip-path: inset(0 0 50% 0); }
+.admit { rotate: -4deg; padding: 6px 13px; white-space: nowrap; border-radius: 12px 12px 12px 4px; background: var(--ink); color: var(--field); font-size: 18px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.035em; box-shadow: 3px 3px 0 var(--action); }
+.code { align-self: stretch; height: 46px; margin-top: auto; background: repeating-linear-gradient(90deg, var(--ink) 0 3px, #0000 3px 5px, var(--ink) 5px 6px, #0000 6px 10px, var(--ink) 10px 14px, #0000 14px 16px, var(--ink) 16px 17px, #0000 17px 21px); }
+.stage { position: relative; display: flex; justify-content: space-between; align-items: flex-end; height: 132px; margin: 32px 24px 22px; padding: 0 20px 7px; border-radius: 16px 16px 16px 5px; background: var(--stub); box-shadow: inset 0 -9px 0 color-mix(in oklab, var(--field) 62%, var(--paper)); }
+.stage img { width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; margin: 0 -8px; }
+.stage .note { position: absolute; right: 12px; top: -13px; }
+.bar { position: relative; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 13px 32px 12px; background: var(--field); border-top: 1.5px solid var(--ink); box-shadow: 0 -5px 0 var(--field-shadow); }
+.bar .wm { font-size: 21px; gap: 10px; padding-right: 14px; } .bar .wm svg { width: 36px; height: 36px; padding: 5px; box-shadow: 2px 2px 0 var(--ink); }
+.bar .end { margin-left: auto; display: flex; align-items: center; gap: 12px; } .bar .end .note { background: color-mix(in oklab, var(--ink) 12%, var(--field)); color: var(--ink); }
+.kits { display: flex; gap: 9px; padding: 5px 8px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.kit { width: 26px; height: 26px; border-radius: 50%; background: var(--dot); box-shadow: inset 0 0 0 1.5px var(--ink); transition: scale .2s var(--ease); } .kit:hover { scale: 1.12; }
+.kit[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--ink), 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+/* Assistants: the one link that is part of Ink+. Ink runs into the pill from its mark when you point at it. */
+.asst { position: relative; overflow: hidden; isolation: isolate; gap: 8px; padding-right: 7px; }
+.asst::before { content: ''; position: absolute; z-index: -1; inset: 0; background: var(--ink); clip-path: circle(0 at 22px 50%); transition: clip-path .55s var(--expo); }
+.asst:hover::before, .asst[aria-expanded=true]::before { clip-path: circle(150% at 22px 50%); } .asst:hover, .asst[aria-expanded=true] { color: var(--field); }
+.asst .plus { padding: 2px 9px 3px; border-radius: 99px; font-size: 12px; font-weight: 740; background: var(--ink); color: var(--field); transition: background-color .3s, color .3s; }
+.asst:hover .plus, .asst[aria-expanded=true] .plus { background: var(--field); color: var(--ink); }
+[data-plan="inkplus"] .asst { padding-right: 14px; } [data-plan="inkplus"] .asst .plus { display: none; }
+.ask { position: absolute; z-index: 8; bottom: calc(100% + 16px); width: min(430px, calc(100% - 32px)); padding: 26px 18px 16px; border-radius: 20px 20px 20px 6px; background: var(--ink); color: var(--paper); box-shadow: 6px 6px 0 var(--action); transform-origin: 40px 100%; transition: opacity .3s, scale .4s var(--expo), translate .4s var(--expo), display .4s allow-discrete; }
+.ask[hidden] { display: none !important; } @starting-style { .ask { opacity: 0; scale: .7; translate: 0 14px; } }
+.ask::after { content: ''; position: absolute; left: 40px; bottom: -9px; width: 18px; height: 18px; rotate: 45deg; background: var(--ink); }
+.ask .tab { background: var(--field); color: var(--ink); display: inline-flex; gap: 6px; align-items: center; } .ask .tab svg { width: 15px; height: 15px; fill: currentColor; }
+.ask h3 { font-size: 25px; font-weight: 740; font-stretch: 110%; letter-spacing: -0.045em; line-height: 1.02; } .ask p { margin: 6px 0 14px; color: var(--on-ink-mute); font-size: 15px; }
+.ask div { display: flex; gap: 8px; } .ask .pl.go { box-shadow: 3px 3px 0 var(--field); }
+
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .28s; } ::view-transition-group(lg-title) { animation-duration: .5s; animation-timing-function: var(--expo); }
+@media (max-width: 900px) { body { padding-inline: 12px; } .nav, .bar, .lg-head, .lg-jump, .b-band, .g-band { padding-inline: 16px; } .lg-body, .g-body { padding-inline: 16px; } .lg-body.b { padding: 0; } .b-band .tab { left: 16px; }
+  .links .pl:not(.ink) { display: none; } .stubtk { grid-template-columns: minmax(0, 1fr); } .tear, .stage .note { display: none; } .carry { margin-inline: 16px; } .stage img:nth-child(n+6) { display: none; }
+  .a-tk { grid-template-columns: 64px minmax(0, 1fr); } .a-stub { font-size: 30px; } .a-face { padding: 26px 18px 20px; } .c-row { grid-template-columns: minmax(0, 1fr); } .c-short { border-right: 0; border-bottom: 2px dashed var(--ink); }
+  .ways { grid-template-columns: repeat(2, minmax(0, 1fr)); } .seg { margin-left: 0; } .bar .end { margin-left: 0; flex-basis: 100%; justify-content: space-between; } .lg-jump { position: static; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+</style></head><body data-plan="free">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <mask id="m0" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask>
+  <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask>
+  <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask>
+  <symbol id="rings" viewBox="0 0 100 100" fill="none"><g mask="url(#m0)"><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime, var(--action))" stroke-width="9"/></g><g mask="url(#m1)"><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/></g><g mask="url(#m2)"><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/></g></symbol>
+  <symbol id="blot" viewBox="-68 -68 136 136"><path fill-rule="evenodd" d="M47.8 0L47.5 3.1L46.3 6.1L45.1 9L44.7 12L43.4 14.7L41.3 17.1L39.5 19.5L37.6 21.7L35.6 23.8L34.8 26.7L34.3 30.1L32.9 32.9L31.1 35.5L29.2 38L26.4 39.6L23.3 40.4L20.6 41.8L17.8 42.9L14.7 43.3L11.8 44L8.8 44.4L5.7 43.5L2.8 42.6L0 42.8L-2.8 43.5L-5.9 44.6L-9.2 46.4L-12.7 47.3L-15.9 46.7L-19.1 46.1L-22.2 45.1L-24.9 43.1L-27.5 41.2L-30.3 39.4L-32.1 36.6L-33.3 33.3L-34.4 30.1L-34.6 26.6L-34.5 23L-35.5 20.5L-37.3 18.4L-38.7 16L-40.2 13.7L-41.8 11.2L-42.2 8.4L-42.5 5.6L-43.6 2.9L-44.2 0L-44.2 -2.9L-44.5 -5.9L-43.9 -8.7L-42.1 -11.3L-40.3 -13.7L-39 -16.2L-37.7 -18.6L-37.3 -21.5L-37.8 -25.2L-37.3 -28.6L-36 -31.6L-34.8 -34.8L-33.2 -37.9L-31.1 -40.5L-29.1 -43.6L-27 -46.7L-24 -48.6L-20.7 -50L-17.4 -51.2L-13.7 -51.3L-10.1 -51L-6.9 -52.2L-3.6 -54.3L0 -56.4L3.8 -57.8L7.5 -56.8L10.5 -52.7L12.8 -47.8L15 -44L17 -41L19.1 -38.8L21.5 -37.3L23.4 -35.1L24.7 -32.2L26.3 -30L28 -28L29.4 -25.8L31.5 -24.1L34.1 -22.8L36.1 -20.9L38.2 -18.8L40.8 -16.9L42.9 -14.6L44.4 -11.9L46.5 -9.2L48 -6.3L48 -3.1ZM0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></symbol>
+</defs></svg>
+
+<div class="top"><h1>Footer links · Terms and Privacy · Reach</h1>
+  <div class="pick" id="pick-view"><b>The page above the footer</b><button data-view="a">A · Ticket book</button><button data-view="b">B · Shown, not told</button><button data-view="c">C · Short beside exact</button><button data-view="reach">Reach, in the group</button></div>
+  <div class="pick" id="pick-plan"><b>The footer, seen by someone on</b><button data-plan="free">Free</button><button data-plan="ink">Ink</button><button data-plan="inkplus">Ink+</button></div></div>
+
+<section class="frame"><div class="page">
+  <header class="nav"><a class="wm" href="#"><svg><use href="#rings"/></svg>Loop</a>
+    <nav class="links"><a class="pl" href="#">This week</a><a class="pl" href="#"><i>E</i>Extreme Cheapskates</a><a class="pl" href="#" id="nav-team"><i>T</i>Team 1</a><a class="pl" href="#">All groups</a><a class="pl ink" href="#"><svg><use href="#blot"/></svg>Ink</a></nav>
+    <div class="nav-end"><span class="ava"><img src="/animals/41.png" alt=""></span></div></header>
+
+  <main id="main"></main>
+
+  <footer>
+    <div class="carry" aria-hidden="true"><div class="stubtk">
+      <div class="stage"><span class="note">Pick one up</span><img src="/animals/10.png" alt=""><img src="/animals/26.png" alt=""><img src="/animals/03.png" alt=""><img src="/animals/37.png" alt=""><img src="/animals/16.png" alt=""><img src="/animals/20.png" alt=""><img src="/animals/32.png" alt=""><img src="/animals/01.png" alt=""><img src="/animals/28.png" alt=""><img src="/animals/13.png" alt=""></div>
+      <aside class="tear"><span class="admit">Admit everyone</span><div class="code"></div></aside>
+    </div></div>
+    <div class="bar"><a class="wm" href="#"><svg><use href="#rings"/></svg>Loop</a>
+      <a class="pl asst" href="#" id="asst" aria-expanded="false"><svg><use href="#blot"/></svg>Assistants<b class="plus">Ink+</b></a><a class="pl" href="#" data-view="terms">Terms</a><a class="pl" href="#" data-view="privacy">Privacy</a>
+      <div class="ask" id="ask" hidden><span class="tab"><svg><use href="#blot"/></svg>Ink+</span><h3>Assistants come with Ink+</h3><p>Your own AI, answering from your groups.</p><div><a class="pl go" href="#">See Ink+ · $9.99</a><button class="pl" id="ask-no">Not now</button></div></div>
+      <div class="end"><span class="note">© 2026 Loop</span><div class="kits" role="group" aria-label="Colours"><button class="kit" data-dot="loop" aria-label="Loop colours"></button><button class="kit" data-dot="cornell" aria-label="Cornell colours"></button><button class="kit" data-dot="columbia" aria-label="Columbia colours"></button><button class="kit" data-dot="nyu" aria-label="NYU colours"></button><button class="kit" data-dot="cuny" aria-label="CUNY colours"></button></div></div></div>
+  </footer>
+</div></section>
+
+<script>
+const $ = (sel, root = document) => [...root.querySelectorAll(sel)], one = (sel, root = document) => root.querySelector(sel);
+const MAIL = '<a class="mail" href="mailto:xwf2@cornell.edu">xwf2@cornell.edu</a>';
+const faces = (...ns) => `<span class="faces">${ns.map(n => `<img src="/animals/${String(n).padStart(2, '0')}.png" alt="">`).join('')}</span>`;
+const chips = (...words) => words.map(word => `<span class="chip">${word}</span>`).join('');
+
+/* The wording (`full`) is today's, word for word, from app/privacy and app/terms. `short` and `art` are new. */
+const DOCS = {
+  privacy: { title: 'Privacy', updated: 'November 17, 2026', gist: 'What we keep, and who sees it.', parts: [
+    { id: 'keep', name: 'What we keep', short: 'Your name, your email, and <em>what you save.</em>',
+      art: chips('Your name', 'Sign-in email', 'Your groups', 'What you save', 'Your assistants <small>and a log of what each did</small>', 'One cookie <small>to stay signed in</small>'),
+      full: 'Your name and the email address you sign in with. The teams you belong to. What you or your assistant save to a team: claims, decisions, asks, links, announcements and the files your team uploads. The assistants you connect, the access you grant each one, and a log of what each one did. A cookie keeps you signed in on your device.' },
+    { id: 'see', name: 'Who sees it', short: 'Your group sees it. <em>Nothing is public.</em>', tone: 'loud',
+      art: `<div class="see"><span class="tab">Your group</span>${faces(10, 26, 3, 37, 16)}<p>See what you save to it</p></div><div class="see"><span class="tab">Who runs the group</span>${faces(20)}<p>Also see your email, to invite you</p></div><div class="see"><span class="tab">Everyone else</span><span class="count">12 going</span><p>See a number, never a name</p></div>`,
+      full: 'What you save to a team is seen by the people on that team, and by the assistants they have given access to that team. Your email address is seen only by the people who manage the team, since they invite you with it. Nothing you save is public.' },
+    { id: 'assistant', name: 'Your assistant', short: 'It sees only the groups <em>you grant.</em>',
+      art: `<span class="chip"><span class="pips">${'<i></i>'.repeat(30)}</span>30 days a grant</span>${chips('Revoke any time', 'We never read your chats')}`,
+      full: 'Loop does not read your conversations with your assistant. An assistant sees only the teams you grant it, and only what it asks Loop for. A grant lasts 30 days, and you can revoke it at any time under Connections. What an assistant has already read stays with it and with its provider, under that provider’s own privacy terms.' },
+    { id: 'files', name: 'Files', short: 'Read so the right passage is found. <em>Never used to train AI.</em>',
+      full: 'When your team uploads a file, we pull out its text so assistants can find the right passage. That text is processed by an AI service run through our hosting provider. It is not used to train AI models.' },
+    { id: 'campus', name: 'Campus events', short: 'Checking in keeps the time, <em>never where you are.</em>', tone: 'loud',
+      art: `<span class="stamp">Checked in · 7:42 pm <s>location</s></span><div class="see"><span class="tab">People you have a group with</span>${faces(28, 13, 1)}<p>See your first name and face</p></div><div class="see"><span class="tab">Everyone else</span><span class="count">12 going</span><p>See only how many</p></div>`,
+      full: 'On a campus’s “This week” we keep the school your email belongs to, the events you say you are in for, the plans you post, who you invite, and the rewards you mark as used. When you press “Check in” we record that you were at that event with that group and the time you pressed it; we do not record your location. People who share a group with you, or who have checked in on an outing with you, see your first name and your sign-in photo on events you are going to, and so do the people in the same outing. Everyone else sees only how many are going. If you post a plan, signed-in people at your school see your first name on it. “Register me” on an event from a school calendar is kept in Loop only: the organizer and the calendar it came from are not told. The map in an event’s details is loaded from OpenStreetMap when you open it.' },
+    { id: 'trip', name: 'The trip board', short: 'Your number gets a sign&#8209;in code. <em>Nothing else.</em>',
+      full: 'If you use the cohort trip board, we also keep your mobile number and your answers on it. We text your number only a sign-in code, when you ask for one. Msg &amp; data rates may apply. Nobody else on the board sees your number.' },
+    { id: 'sell', name: 'No selling, no marketing', short: 'No selling. <em>No marketing.</em>', tone: 'dark',
+      art: chips('Clerk <small>sign-in</small>', 'Supabase <small>database</small>', 'Vercel <small>hosting, AI processing</small>', 'Twilio <small>trip board codes</small>'),
+      full: 'We do not sell your information or share it with anyone for marketing. Mobile numbers and text opt-in consent are never shared with third parties or affiliates for marketing or promotional purposes. We use a few service providers only to run Loop: Clerk (sign-in), Supabase (database), Vercel (hosting and AI processing) and Twilio (trip board sign-in codes).' },
+    { id: 'leave', name: 'Leaving and deleting', short: 'Leave any time. <em>Email us to delete.</em>',
+      art: `<a class="pl go" href="mailto:xwf2@cornell.edu">Ask for a copy, or for deletion</a>`,
+      full: `If you leave a team, what you saved stays in that team’s record, shown as from a former teammate, and your claims are released. To get a copy of your data or have it deleted, email ${MAIL}. Deleting it removes your membership and revokes every assistant’s access. It cannot recall what was already exported or delivered to an assistant, and removal from backups may take longer.` },
+    { id: 'ask', name: 'Questions', short: 'Ask a person. <em>A person answers.</em>', art: `<a class="pl go" href="mailto:xwf2@cornell.edu">Email xwf2@cornell.edu</a>`,
+      full: `Email ${MAIL}. See also the <a href="#" data-view="terms">Terms</a>.` } ] },
+  terms: { title: 'Terms', updated: 'November 12, 2026', gist: 'What you agree to when you use Loop.', parts: [
+    { id: 'pilot', name: 'The pilot', short: 'A pilot, <em>by invitation.</em>', art: chips('Use it with the teams you were invited to'),
+      full: 'Loop is a free pilot that connects the AI assistants your group already uses to one shared plan. It is invitation only: use it with the teams you were invited to.' },
+    { id: 'save', name: 'What you save', short: 'You answer for <em>what you save.</em>', tone: 'loud', art: chips('Only files you may share', 'Nothing unlawful', 'Nothing a person would not want shared'),
+      full: 'You are responsible for what you save to a team, whether you write it or your assistant saves it for you. Upload only files you are allowed to share with that team. Do not post anything unlawful, or anything about someone that they would not want shared with the team. The people who manage a team can remove members, and we may remove content or teams that break these terms.' },
+    { id: 'assistant', name: 'Your assistant', short: 'It acts for you, and <em>it can be wrong.</em>', art: chips('Check deadlines against the source', 'Check file versions against the source'),
+      full: 'When you connect an assistant, you let it read and save to the teams you grant it, on your behalf. Its answers come from what your team saved, and it can still get things wrong. Check anything that matters, like a deadline or a file version, against the source it links to.' },
+    { id: 'texts', name: 'Texts', short: 'One text: <em>your sign&#8209;in code.</em>', art: `<span class="stamp">Your Loop code is 418 203</span>${chips('No marketing', 'US numbers only, for now')}`,
+      full: 'On the cohort trip board, when you enter your mobile number, we text it a sign-in code to confirm it is yours. That is the only text Loop sends. No marketing. Msg &amp; data rates may apply. Carriers are not liable for delayed or undelivered messages. US numbers only for now.' },
+    { id: 'none', name: 'No guarantees', short: 'As is. <em>It may change or stop.</em>', tone: 'dark', art: chips('It keeps track of a plan', 'It does not book', 'It does not pay'),
+      full: 'Loop is provided as is, and as a pilot it may change or stop. It keeps track of a plan; it does not do the work, book, pay for, or guarantee anything.' },
+    { id: 'info', name: 'Your information', short: 'What we keep is <em>in Privacy.</em>', art: `<a class="pl go" href="#" data-view="privacy">Read Privacy</a>`,
+      full: `See <a href="#" data-view="privacy">Privacy</a>. Questions: ${MAIL}.` } ] } };
+
+const state = { view: 'b', doc: 'privacy', plan: 'free' };
+const plain = html => html.replace(/<\/?em>/g, '');
+/** The wording of a part. Only a long one is set in two columns: a short one split in two reads worse. */
+const text = part => `<p class="fulltext${part.full.length > 420 ? ' long' : ''}">${part.full}</p>`;
+const head = doc => `<div class="lg-head"><div class="lg-switch"><button class="pl" data-view="terms" aria-pressed="${state.doc === 'terms'}">Terms</button><button class="pl" data-view="privacy" aria-pressed="${state.doc === 'privacy'}">Privacy</button><span class="note">Updated ${doc.updated}</span></div><h1>${doc.title}</h1><p class="lg-gist">${doc.gist}</p></div>
+  <nav class="lg-jump" aria-label="${doc.title}, by part">${doc.parts.map(part => `<a class="pl" href="#${part.id}">${part.name}</a>`).join('')}</nav>`;
+const LOOKS = {
+  a: doc => `<div class="lg-body"><div class="a-list">${doc.parts.map((part, at) => `<article class="a-tk part" id="${part.id}"><span class="tab">${part.name}</span><div class="a-stub">${String(at + 1).padStart(2, '0')}</div><div class="a-face"><h2>${plain(part.short)}</h2>${text(part)}</div></article>`).join('')}</div></div>`,
+  b: doc => `<div class="lg-body b">${doc.parts.map(part => `<section class="b-band part ${part.tone ?? ''}" id="${part.id}"><span class="tab">${part.name}</span><h2>${part.short}</h2>${part.art ? `<div class="b-art">${part.art}</div>` : ''}<details class="fine"><summary><span class="pl">Exact wording</span></summary>${text(part)}</details></section>`).join('')}</div>`,
+  c: doc => `<div class="lg-body"><div class="c-sheet"><div class="c-read"><i></i></div>${doc.parts.map(part => `<section class="c-row part" id="${part.id}"><div class="c-short"><span class="tab">${part.name}</span><h2>${plain(part.short)}</h2></div><p class="c-exact fulltext">${part.full}</p></section>`).join('')}</div></div>` };
+
+const WAYS = [['Email', 'to xwf2@cornell.edu'], ['Assistant', 'and the site. Nothing is sent'], ['WhatsApp', 'to the number you linked'], ['Off', 'you look when you like']];
+const GROUPS = [['E', 'Extreme Cheapskates', '@emba-2027/cheapskates', 2], ['T', 'Team 1', '@emba-2027/team-1', 0], ['C', 'Capstone crew', '@emba-2027/capstone', 1], ['R', 'Run club', '@cornell/run-club', 3]];
+const reach = () => `<div class="g-band"><span class="g-tile">T</span><div><h1>Team 1</h1><span class="note">@emba-2027/team-1</span></div>${faces(10, 26, 3, 37, 16, 41)}
+    <div class="g-end"><a class="pl" href="#" aria-current="page">Record</a><a class="pl" href="#">Resources</a><a class="pl" href="#">Members</a><button class="pl" aria-pressed="true" id="reach-pill">Reaches you: <span id="reach-word">Email</span></button></div></div>
+  <div class="g-body">
+    <section class="set"><span class="tab">How Team 1 reaches you</span><span class="note" id="reach-note">For its questions and announcements</span>
+      <div class="ways" data-group="1">${WAYS.map(([word, more], at) => `<button class="way" aria-pressed="${at === 0}" data-way="${at}"><b>${word}</b><span>${more}</span></button>`).join('')}</div></section>
+    <section class="set"><span class="tab">All groups: one way each</span><span class="note">Replaces the Reach page</span>
+      <div class="g-rows">${GROUPS.map(([letter, name, handle, way], row) => `<div class="g-row"><i>${letter}</i><b>${name}</b><small>${handle}</small><div class="seg" data-group="${row}">${WAYS.map(([word], at) => `<button aria-pressed="${at === way}" data-way="${at}">${word}</button>`).join('')}</div></div>`).join('')}</div></section></div>`;
+
+const main = one('#main');
+function draw() {
+  main.innerHTML = state.view === 'reach' ? reach() : head(DOCS[state.doc]) + LOOKS[state.view](DOCS[state.doc]);
+  $('#pick-view button').forEach(button => button.setAttribute('aria-pressed', button.dataset.view === state.view));
+  $('#pick-plan button').forEach(button => button.setAttribute('aria-pressed', button.dataset.plan === state.plan));
+  one('#nav-team').toggleAttribute('aria-current', state.view === 'reach');
+  document.body.dataset.plan = state.plan;
+  history.replaceState(null, '', `#${state.view}/${state.doc}/${state.plan}`);
+  spy();
+}
+/** Changes what is shown, morphing the title where the browser can. */
+function show(change, top = false) {
+  const run = () => { change(); draw(); if (top) one('.frame').scrollIntoView({ behavior: 'instant' }); };
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(run); else run();
+}
+/* The part being read: its pill in the strip is filled, and (A, C) the part itself is lifted. */
+let watch;
+function spy() {
+  watch?.disconnect();
+  const pills = new Map($('.lg-jump a').map(link => [link.getAttribute('href').slice(1), link]));
+  if (!pills.size) return;
+  watch = new IntersectionObserver(entries => entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    $('.part.now').forEach(part => part.classList.remove('now')); entry.target.classList.add('now');
+    pills.forEach((pill, id) => pill.toggleAttribute('aria-current', id === entry.target.id));
+  }), { rootMargin: '-30% 0px -60% 0px' });
+  $('.part').forEach(part => watch.observe(part));
+}
+
+document.addEventListener('click', event => {
+  const to = event.target.closest('[data-view]'), plan = event.target.closest('#pick-plan [data-plan]'), way = event.target.closest('[data-way]'), link = event.target.closest('a[href="#"]');
+  if (link) event.preventDefault();
+  if (to) { const view = to.dataset.view; show(() => { if (view === 'terms' || view === 'privacy') { state.doc = view; if (state.view === 'reach') state.view = 'b'; } else state.view = view; }, !to.closest('.top')); }
+  else if (plan) { state.plan = plan.dataset.plan; draw(); ask(state.plan !== 'inkplus'); one('.bar').scrollIntoView({ block: 'end' }); }
+  else if (way) {
+    // One way a group: the same choice shows on the group's own strip, its pill in the band, and its row in the list.
+    $(`[data-group="${way.parentElement.dataset.group}"] [data-way]`).forEach(each => each.setAttribute('aria-pressed', each.dataset.way === way.dataset.way));
+    if (way.parentElement.dataset.group === '1') one('#reach-word').textContent = WAYS[way.dataset.way][0];
+    const note = one('#reach-note'); note.textContent = 'Saved'; note.classList.add('ok');
+  }
+});
+
+/* Assistants in the footer. On Ink+ it is a plain way in. Otherwise it says what it is part of, in a card that grows out of the pill. */
+const asst = one('#asst'), card = one('#ask');
+function ask(open) { card.hidden = !open; asst.setAttribute('aria-expanded', open); if (open) card.style.left = `${Math.max(16, asst.offsetLeft - 18)}px`; }
+asst.addEventListener('click', () => { if (state.plan !== 'inkplus') ask(card.hidden); });
+one('#ask-no').addEventListener('click', () => ask(false));
+addEventListener('keydown', event => { if (event.key === 'Escape') ask(false); });
+
+/* The crowd is as built (components/campus/foot.tsx); here it only hops at the link you point to. */
+const crowd = $('.stage img');
+$('.bar .pl, .kit').forEach(link => link.addEventListener('pointerenter', () => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const x = link.getBoundingClientRect().left + link.offsetWidth / 2, pet = crowd.reduce((best, each) => Math.abs(each.getBoundingClientRect().left + 42 - x) < Math.abs(best.getBoundingClientRect().left + 42 - x) ? each : best);
+  pet.animate([{ translate: '0 0' }, { translate: '0 -46px', offset: .4, easing: 'cubic-bezier(.3,0,.7,1)' }, { translate: '0 0' }], { duration: 520, easing: 'cubic-bezier(.2,.8,.4,1)' });
+}));
+const setKit = kit => { document.documentElement.dataset.kit = kit; $('.kit').forEach(dot => dot.setAttribute('aria-pressed', dot.dataset.dot === kit)); };
+$('.kit').forEach(dot => dot.addEventListener('click', () => setKit(dot.dataset.dot))); setKit('cornell');
+
+const [view, doc, plan] = location.hash.slice(1).split('/');
+if (LOOKS[view] || view === 'reach') state.view = view; if (DOCS[doc]) state.doc = doc; if (['free', 'ink', 'inkplus'].includes(plan)) state.plan = plan;
+draw(); ask(state.plan !== 'inkplus');
+</script>
+</body></html>

@@ -15,7 +15,7 @@ import { addFeed } from '@/lib/emba/team-nearby';
 import { briefHistory, myRecentRecords } from '@/lib/emba/team-read';
 import TeamPage from './[namespace]/team/page';
 import { addTeamEvent, amendTeamRecord, announceToTeam, saveTeamBrief, takeBackTeamEvent } from './team-actions';
-import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead } from './connection-actions';
+import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead, subscribeForAssistants } from './connection-actions';
 import { BriefForm } from '@/components/emba/brief-form';
 import ConnectionsPage from './connections/page';
 
@@ -51,6 +51,8 @@ async function fixture() {
     return member;
   };
   const ana = await join('ana@example.test', 'ana'), ben = await join('ben@example.test', 'ben'), outsider = await person('outsider@example.test');
+  // Connecting an assistant is part of Ink+: the members here have it, so the Assistants page is open to them.
+  await t.db.query('insert into campus_ink_plus(person_id,email) select unnest($1::uuid[]),$2', [[ana.personId, ben.personId], 'member@example.test']);
   return { owner, ana, ben, outsider, scope, ids: { orgId: scope.orgId, loopId: scope.loopId } };
 }
 // The record shows one section at a time, chosen by ?tab=.
@@ -377,4 +379,26 @@ it('lets the member who linked an event take it back, and only that member', asy
   page = await view(f.ana, 'events');
   expect(screen.queryByText('Founders dinner')).not.toBeInTheDocument();
   expect(screen.getByText('No upcoming events.')).toBeInTheDocument();
+});
+
+it('keeps Assistants for Ink+: the page asks, the grant is refused, and Subscribe is recorded with where it was pressed', async () => {
+  const f = await fixture();
+  for (const [name, value] of Object.entries({ LOOP_AUTH_CLIENT_IDS: 'claude-test', LOOP_AUTH_ISSUER: 'https://issuer.example', LOOP_AUTH_AUDIENCE: 'https://loop.example/api/mcp', LOOP_AUTH_JWKS_URL: 'https://issuer.example/jwks' })) vi.stubEnv(name, value);
+  await t.db.query('delete from campus_ink_plus where person_id=$1', [f.ana.personId]);
+  const scopeValue = `${f.scope.orgId}:${f.scope.loopId}`;
+  render(await withPortalTestSession(f.ana, () => ConnectionsPage()));
+  expect(screen.getByRole('heading', { name: 'Assistants come with Ink+' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Email to subscribe with')).toHaveValue('ana@example.test');
+  expect(screen.queryByText('Team grants')).not.toBeInTheDocument();
+  cleanup();
+  // The rule is the server's: posting the form directly grants nothing.
+  expect(await act(f.ana, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue })))).toEqual({ status: 'error', message: 'Assistants come with Ink+. Subscribe on this page first.' });
+  expect((await t.db.query('select 1 from emba_lease where person_id=$1', [f.ana.personId])).rows).toHaveLength(0);
+  expect(await act(f.ana, () => subscribeForAssistants(idle, form({ email: 'not an email' })))).toEqual({ status: 'error', message: 'Enter the email to subscribe with.' });
+  expect(await act(f.ana, () => subscribeForAssistants(idle, form({ email: 'Ana@Example.test' })))).toEqual({ status: 'success', message: 'You have Ink+. Connect your assistant below.' });
+  const { rows } = await t.db.query<{ email: string; plan: string; place: string; recent: boolean }>("select email,plan,place,asked_at > now() - interval '1 minute' as recent from campus_subscribe_ask where person_id=$1", [f.ana.personId]);
+  expect(rows).toEqual([{ email: 'ana@example.test', plan: 'ink_plus', place: 'assistants', recent: true }]);
+  render(await withPortalTestSession(f.ana, () => ConnectionsPage()));
+  expect(screen.getByText('Team grants')).toBeInTheDocument();
+  expect((await act(f.ana, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue })))).status).toBe('success');
 });

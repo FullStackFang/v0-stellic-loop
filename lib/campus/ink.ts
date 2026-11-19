@@ -1,4 +1,5 @@
 import type { Q } from '../db';
+import { isAdmin } from './admin';
 
 // Loop Ink, the paid plan (openspec/changes/loop-ink-placements). This file is read by the browser too (the bar links
 // to INK_PAGE), so it imports nothing that is for the server only.
@@ -15,7 +16,7 @@ export const INK_MOCKUP = '/demo/mockups-premium.html';
 export const hasInk = async (q: Q, personId: string) => (await q.query('select 1 from campus_custom_face where person_id=$1', [personId])).rows.length > 0;
 
 /** Where in the app a person can press Subscribe. */
-export type AskPlace = 'own animal' | 'group picture' | 'save picture';
+export type AskPlace = 'own animal' | 'group picture' | 'save picture' | 'assistants' | 'footer';
 /** Keeps one press of Subscribe: who, the email they gave, the plan and where they pressed it. Every press is kept, a second one too. */
 export const recordAsk = (q: Q, personId: string, email: string, plan: 'ink' | 'ink_plus', place: AskPlace) =>
   q.query('insert into campus_subscribe_ask(person_id,email,plan,place) values($1,$2,$3,$4)', [personId, email, plan, place]);
@@ -25,6 +26,8 @@ export const subscribeAsks = async (q: Q) => (await q.query<SubscribeAsk>(`selec
 
 /** Whether a person has Ink+. As with Ink, it means they asked to subscribe: nothing is charged. Asking for Ink+ does not by itself give Ink. */
 export const hasInkPlus = async (q: Q, personId: string) => (await q.query('select 1 from campus_ink_plus where person_id=$1', [personId])).rows.length > 0;
+/** Whether a person may connect an assistant to their groups: that is part of Ink+. The admin always may. */
+export const hasAssistants = async (q: Q, who: { personId: string; subject: string; verifiedEmail: string | null }) => isAdmin(who) || await hasInkPlus(q, who.personId);
 /** "Subscribe" to Ink+: that they asked, and the email they gave, is kept, and the press is recorded with where it was made. Asking twice changes what they have not at all. Returns false for an email that is not one. */
 export async function subscribeInkPlus(q: Q, personId: string, email: string, place: AskPlace = 'group picture'): Promise<boolean> {
   const given = email.trim().toLowerCase();

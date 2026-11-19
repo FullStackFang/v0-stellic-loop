@@ -145,6 +145,8 @@ it('renames, archives and restores from the page, and refuses in plain words', a
 it('says on the Assistants page that a grant covers the groups inside, and lists them on the grant', async () => {
   const f = await tree();
   for (const [name, value] of Object.entries({ LOOP_AUTH_CLIENT_IDS: 'claude-test', LOOP_AUTH_AUDIENCE: 'https://loop.example/api/mcp', LOOP_AUTH_JWKS_URL: 'https://issuer.example/jwks', LOOP_AUTH_PROVIDER: 'clerk', CLERK_SECRET_KEY: 'sk_test_x', NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_bG9vcC5leGFtcGxlLmNvbSQ=', LOOP_AUTH_ISSUER: 'https://loop.example.com' })) vi.stubEnv(name, value);
+  // Assistants are part of Ink+: both people here have it.
+  await t.db.query('insert into campus_ink_plus(person_id,email) select unnest($1::uuid[]),$2', [[f.lead.personId, f.member.personId], 'member@example.test']);
   await grantLease(t.db, f.lead, { ...scopeOf(f.team1), clientId: 'claude-test', actions: ['plan:read', 'group-memory:write'], expiresAt: '2099-01-01T00:00:00Z' });
   await grantLease(t.db, f.member, { ...scopeOf(f.team2), clientId: 'claude-test', actions: ['plan:read'], expiresAt: '2099-01-01T00:00:00Z' });
   render(await withPortalTestSession(f.lead, () => ConnectionsPage()));

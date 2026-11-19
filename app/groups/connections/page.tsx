@@ -6,11 +6,12 @@ import { authConfig } from '@/lib/emba/auth-token';
 import { listLeases, listRemovedGroupGrants } from '@/lib/emba/consent';
 import { assistantName } from '@/lib/emba/team-text';
 import { noteConnectView } from '@/lib/emba/pilot-metrics';
+import { hasAssistants } from '@/lib/campus/ink';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { CopyText } from '@/components/emba/copy-link';
 import { dayNum, mon } from '@/lib/days';
 import { Via } from '../glyphs';
-import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead } from '../connection-actions';
+import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead, subscribeForAssistants } from '../connection-actions';
 
 export const dynamic = 'force-dynamic';
 // Calendar days are UTC: no team timezone is loaded on this page.
@@ -24,6 +25,12 @@ export default async function ConnectionsPage({ searchParams }: { searchParams?:
   if (!principal) return <section className="lt-editor"><h1>Assistant connections</h1><p>Sign in to manage your own group grants.</p><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/connections')}`}>Sign in</Link></section>;
   // Counted once per member, for the operator's connecting funnel.
   await noteConnectView(db(), principal);
+  // Assistants are part of Ink+. Nothing is charged yet: pressing Subscribe is kept (when, and that it was here) and opens the page.
+  if (!await hasAssistants(db(), principal)) return <>
+    <h1>Connect your assistant</h1>
+    <section className="lt-editor"><h2>Assistants come with Ink+</h2><p>Your own AI, answering from your groups: what was decided, who has what, and what is due. Ink+ is $9.99 a month.</p>
+      <ActionForm action={subscribeForAssistants} label="Subscribe"><label>Email to subscribe with<input type="email" name="email" required autoComplete="email" defaultValue={principal.verifiedEmail ?? ''}/></label></ActionForm></section>
+  </>;
   let config: ReturnType<typeof authConfig> | null = null;
   try { config = authConfig(); } catch { /* Explain missing configuration below. */ }
   const ready = clerkPortalConfigured() && !!config && new URL(config.audience).pathname === '/api/mcp';

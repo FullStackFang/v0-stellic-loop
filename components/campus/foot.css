@@ -23,12 +23,28 @@
 .cs-ft-shade { position: absolute; left: 0; bottom: 5px; width: 84px; height: 9px; border-radius: 50%; background: color-mix(in oklab, var(--cs-ink) 20%, transparent); pointer-events: none; will-change: transform, opacity; }
 
 /* The bar: one line. The ways around, then the colours. */
-.cs-ft-bar { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 13px 32px 12px; background: var(--cs-field); color: var(--cs-ink); border-top: 1.5px solid var(--cs-ink); box-shadow: 0 -5px 0 var(--cs-field-shadow); }
+.cs-ft-bar { position: relative; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 13px 32px 12px; background: var(--cs-field); color: var(--cs-ink); border-top: 1.5px solid var(--cs-ink); box-shadow: 0 -5px 0 var(--cs-field-shadow); }
 .cs-ft-bar .cs-wm { font-size: 21px; gap: 10px; padding-right: 14px; } .cs-ft-bar .cs-wm svg { width: 36px; height: 36px; padding: 5px; box-shadow: 2px 2px 0 var(--cs-ink); }
 .cs-ft-bar .cs-wm:hover svg { box-shadow: 4px 4px 0 var(--cs-ink); }
 .cs-ft-bar > nav { display: contents; }
 .cs-ft-bar > nav a { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
 .cs-ft-bar > nav a:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+/* Assistants: the one link that is part of Ink+. Ink runs into the pill from its mark when it is pointed at or open. */
+.cs-ft-bar > nav a.cs-ft-asst { position: relative; overflow: hidden; isolation: isolate; gap: 8px; transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease), color .2s; }
+.cs-ft-asst:has(b) { padding-right: 7px; }
+.cs-ft-asst::before { content: ''; position: absolute; z-index: -1; inset: 0; background: var(--cs-ink); clip-path: circle(0 at 22px 50%); transition: clip-path .55s var(--cs-expo); }
+.cs-ft-asst:hover::before, .cs-ft-asst[data-open]::before { clip-path: circle(150% at 22px 50%); } .cs-ft-asst:hover, .cs-ft-asst[data-open] { color: var(--cs-field); }
+.cs-ft-asst b { padding: 2px 9px 3px; border-radius: 99px; font-size: 12px; font-weight: 740; background: var(--cs-ink); color: var(--cs-field); transition: background-color .3s, color .3s; }
+.cs-ft-asst:hover b, .cs-ft-asst[data-open] b { background: var(--cs-field); color: var(--cs-ink); }
+/* The card that says so. It grows out of the pill and lies over the ticket above. */
+.cs-ft-ask { position: absolute; z-index: 8; bottom: calc(100% + 16px); width: min(400px, calc(100% - 32px)); padding: 26px 18px 16px; border-radius: 20px 20px 20px 6px; background: var(--cs-ink); color: var(--cs-on-ink); box-shadow: 6px 6px 0 var(--cs-action); transform-origin: 40px 100%; animation: cs-ft-ask .4s var(--cs-expo); }
+@keyframes cs-ft-ask { from { opacity: 0; scale: .7; translate: 0 14px; } }
+.cs-ft-ask::after { content: ''; position: absolute; left: 40px; bottom: -9px; width: 18px; height: 18px; rotate: 45deg; background: var(--cs-ink); }
+.cs-ft-ask-tab { position: absolute; left: 14px; top: -12px; display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 4px; border-radius: 9px 9px 9px 3px; font-size: 13px; font-weight: 700; background: var(--cs-field); color: var(--cs-ink); }
+.cs-ft-ask h3 { font-size: 25px; font-weight: 740; font-stretch: 110%; letter-spacing: -0.045em; line-height: 1.02; } .cs-ft-ask p { margin: 6px 0 14px; color: var(--cs-on-ink-mute); }
+.cs-ft-ask > form { display: flex; flex-wrap: wrap; gap: 8px; } .cs-ft-ask input { flex: 1 1 100%; height: 40px; padding: 0 16px; border: 0; border-radius: 99px; font: inherit; color: var(--cs-ink); background: var(--cs-paper); }
+.cs-ft-ask > p[role=alert] { margin: 10px 0 0; color: var(--cs-field); font-weight: 600; } .cs .cs-ft-ask .cs-btn.go { box-shadow: 3px 3px 0 var(--cs-field); }
+@media (prefers-reduced-motion: reduce) { .cs-ft-ask { animation: none; } .cs-ft-asst::before { transition: none; } }
 .cs-ft-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 .cs-ft-end > small { padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: color-mix(in oklab, var(--cs-ink) 12%, var(--cs-field)); }
 /* Colours: a dot per school; the one in use wears the ring. */

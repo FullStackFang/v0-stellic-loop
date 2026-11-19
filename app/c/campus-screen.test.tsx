@@ -707,7 +707,7 @@ describe('the pages', () => {
     expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
     expect(within(screen.getByRole('banner')).getByRole('link', { name: 'This week' })).toHaveAttribute('aria-current', 'page');
     // The foot goes with the page (public/demo/mockups-footer.html): signed out it has the way home and the small print, not the groups pages.
-    expect(within(screen.getByRole('contentinfo')).getAllByRole('link').map(link => link.textContent)).toEqual(['Loop', 'This week', 'Terms', 'Privacy']);
+    expect(within(screen.getByRole('contentinfo')).getAllByRole('link').map(link => link.textContent)).toEqual(['Loop', 'Terms', 'Privacy']);
   });
   it("another school's address sends a person to their own, and each school has its own list", async () => {
     await world();
