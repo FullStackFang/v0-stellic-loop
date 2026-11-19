@@ -111,21 +111,25 @@ describe('who sees whom', () => {
     // A person who picked their photo and has none is back to their animal.
     await show(as(ana));
     expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('src', animal(animalOf(ben.personId)));
-    // 36 to 39 are the premium animals; the number after them has no picture.
-    await expect(pickFace(t.db, ben.personId, 40)).rejects.toThrow('Pick one of the animals.');
+    // 36 to 41 are the premium animals; the number after them has no picture.
+    await expect(pickFace(t.db, ben.personId, 42)).rejects.toThrow('Pick one of the animals.');
   });
   it("offers a school's own animal to people of that school alone", async () => {
-    const { ana } = await world(), noor = await person('Noor Haddad', 'noor@stern.nyu.edu'), guest = await person('Gus Reed', 'gus@gmail.com');
-    for (const [who, email] of [[ana, 'ana@cornell.edu'], [noor, 'noor@stern.nyu.edu'], [guest, 'gus@gmail.com']] as const) await campusOf(t.db, { personId: who.personId, verifiedEmail: email });
+    const { ana } = await world(), noor = await person('Noor Haddad', 'noor@stern.nyu.edu'), bea = await person('Bea Ortiz', 'bea@baruch.cuny.edu'), guest = await person('Gus Reed', 'gus@gmail.com');
+    for (const [who, email] of [[ana, 'ana@cornell.edu'], [noor, 'noor@stern.nyu.edu'], [bea, 'bea@baruch.cuny.edu'], [guest, 'gus@gmail.com']] as const) await campusOf(t.db, { personId: who.personId, verifiedEmail: email });
     const offered = async (viewer: ScreenViewer) => { const { picks } = (await campusScreen(t.db, cornell, viewer, { photos: noPhotos }))!.viewer!; return [picks.school.map(tile => tile.name), picks.premium.map(tile => tile.name)]; };
     expect(await offered(as(ana))).toEqual([['Cornell bear'], ['Dachshund']]);
     expect(await offered(as(noor))).toEqual([['NYU bobcat'], ['Dachshund']]);
+    // A school can have more than one: every CUNY college's animal is offered to all of CUNY.
+    expect(await offered(as(bea))).toEqual([['Baruch bearcat', 'Brooklyn bulldog'], ['Dachshund']]);
     expect(await offered(as(guest))).toEqual([[], ['Dachshund']]);
-    expect(await offered(as(guest, true))).toEqual([['Cornell bear', 'Columbia lion', 'NYU bobcat'], ['Dachshund']]);
+    expect(await offered(as(guest, true))).toEqual([['Cornell bear', 'Columbia lion', 'NYU bobcat', 'Baruch bearcat', 'Brooklyn bulldog'], ['Dachshund']]);
     // It is free to its own school's people, with no Ink; another school's person cannot pick it at all.
     await pickFace(t.db, ana.personId, 37);
     await expect(pickFace(t.db, noor.personId, 37)).rejects.toThrow('Pick one of the animals.');
     await pickFace(t.db, noor.personId, 39);
+    await pickFace(t.db, bea.personId, 41);
+    await expect(pickFace(t.db, ana.personId, 40)).rejects.toThrow('Pick one of the animals.');
     await pickFace(t.db, guest.personId, 38, true);
     // In the picker it wears the school's ring, first of the animals, and is picked with one press.
     await show(as(ana));
@@ -705,7 +709,7 @@ describe('the pages', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Events' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Blitz night is shown' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('textbox', { name: 'Good-for words of Blitz night' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /^Animals ?40$/ })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
+    expect(screen.getByRole('link', { name: /^Animals ?42$/ })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
     for (const [tab, section] of Object.entries({ rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', campus: 'Campus' })) {
       cleanup(); render(await withPortalTestSession(ana, () => admin(tab)));
       expect(screen.getByRole('heading', { level: 1, name: section })).toBeInTheDocument();
@@ -713,7 +717,7 @@ describe('the pages', () => {
       for (const field of document.querySelectorAll('input[name=tab]')) expect(field).toHaveValue(tab);
       if (tab === 'rewards') expect(screen.getByText(/Chess Club: Skip the door/)).toBeInTheDocument();
       // Animals are picked, any number of them, and moved together.
-      if (tab === 'animals') { expect(screen.getAllByRole('checkbox')).toHaveLength(40); expect(screen.getByRole('checkbox', { name: 'Dachshund' })).toHaveAttribute('name', 'face'); expect(screen.getByRole('link', { name: 'School 3' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=school'); expect(screen.getByRole('link', { name: 'Premium 1' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=premium'); expect(screen.getByRole('button', { name: 'Core' })).toHaveAttribute('value', 'core'); }
+      if (tab === 'animals') { expect(screen.getAllByRole('checkbox')).toHaveLength(42); expect(screen.getByRole('checkbox', { name: 'Dachshund' })).toHaveAttribute('name', 'face'); expect(screen.getByRole('link', { name: 'School 5' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=school'); expect(screen.getByRole('link', { name: 'Premium 1' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=premium'); expect(screen.getByRole('button', { name: 'Core' })).toHaveAttribute('value', 'core'); }
     }
   });
 });

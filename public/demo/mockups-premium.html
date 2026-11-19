@@ -73,7 +73,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 @media (prefers-reduced-motion: no-preference) {
   .hero h1 { animation: rise .9s var(--expo) both; } .hero .mark { animation: swipe .7s .38s var(--expo) both; } .hero p { animation: rise .9s .16s var(--expo) both; } .hero .acts { animation: rise .9s .26s var(--expo) both; }
   .stage { animation: settle 1.1s .1s var(--expo) both; }
-  @supports (animation-timeline: view()) { .plans .d, .band .d, .rest .d, .band .show, .tiers .tk { animation: rise linear both; animation-timeline: view(); animation-range: entry 5% entry 70%; } .tiers .tk:nth-child(2) { animation-range: entry 15% entry 80%; } .tiers .tk:nth-child(3) { animation-range: entry 25% entry 90%; } }
+  @supports (animation-timeline: view()) { .band .show, .tiers .tk { animation: rise linear both; animation-timeline: view(); animation-range: entry 5% entry 70%; } .tiers .tk:nth-child(2) { animation-range: entry 15% entry 80%; } .tiers .tk:nth-child(3) { animation-range: entry 25% entry 90%; } }
 }
 @keyframes rise { from { opacity: 0; translate: 0 .32em; } } @keyframes swipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(-.2em -.2em -.2em -.2em); } } @keyframes settle { from { opacity: 0; translate: 40px 30px; rotate: 5deg; } }
 .pet { position: absolute; width: 124px; filter: drop-shadow(4px 4px 0 var(--ink)); animation: bob 5s ease-in-out infinite alternate; }
@@ -140,7 +140,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 /* the four big ones: one band each */
 .band { padding: clamp(80px, 11vw, 150px) 0; } .band .wrap { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(36px, 6vw, 90px); align-items: center; }
 .band.flip .wrap { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); } .band.flip .say { order: 2; }
-.band h2 { font-size: clamp(56px, 8.6vw, 140px); } .band .say p { margin-top: 26px; max-width: 19em; font-size: clamp(19px, 1.75vw, 25px); font-weight: 520; }
+.band h2 { font-size: clamp(56px, 8.6vw, 140px); } .band .say p { margin-top: 26px; max-width: 19em; text-wrap: pretty; font-size: clamp(19px, 1.75vw, 25px); font-weight: 520; }
 .b-ink { background: var(--ink); color: var(--paper); } .b-ink h2 { color: var(--field); } .b-ink .say p { color: color-mix(in oklab, var(--paper) 78%, var(--ink)); }
 .b-field { background: var(--field); } .b-hot { background: var(--hot); } .b-pp { background: var(--pp); }
 .show { color: var(--ink); padding: 28px; border-radius: var(--r); background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink), 8px 8px 0 var(--ink); display: grid; gap: 20px; } .b-ink .show { box-shadow: 8px 8px 0 var(--action); }
@@ -182,12 +182,48 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 #save.bare .lk { opacity: 0; scale: .6; }
 #save .cycle { box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--ink); } #save .cycle button { height: 40px; padding: 0 18px; font-size: 15.5px; }
 
+/* Make it yours: colours, picture and splat share one band, and the tabs pick which one shows. The kits are those of app/c/campus.css. */
+.stack { display: grid; } .stack > .show { grid-area: 1 / 1; align-self: center; transition: opacity .3s, translate .45s var(--expo), visibility 0s; }
+.stack > .show[inert] { opacity: 0; visibility: hidden; translate: 0 18px; transition: opacity .2s, translate .2s, visibility 0s .2s; }
+.say .cycle { margin-top: 30px; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--action); }
+[data-kit=loop] { --field: oklch(96.4% 0.19 117); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); --action-hover: oklch(53% 0.14 250); }
+[data-kit=cornell] { --field: oklch(82% 0.12 38); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27); }
+[data-kit=columbia] { --field: oklch(87% 0.075 235); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); --action-hover: oklch(52% 0.15 255); }
+[data-kit=cuny] { --field: oklch(88% 0.13 88); --ink: oklch(24% 0.08 265); --action: oklch(38% 0.18 264); --action-hover: oklch(45% 0.19 264); }
+[data-kit=nyu] { --field: oklch(85% 0.09 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); --action-hover: oklch(46% 0.21 305); }
+.kit-view { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 30px 26px; border-radius: 16px 16px 16px 5px; background: var(--field); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .3s; } .kit-view .btn { pointer-events: none; }
+.kits { display: flex; flex-wrap: wrap; gap: 9px 8px; } .kits hr { flex-basis: 100%; height: 0; margin: 0; border: 0; }
+.kits button { display: inline-flex; align-items: center; gap: 6px; height: 42px; padding: 0 10px 0 8px; border-radius: 99px; background: var(--paper); font-size: 15.5px; font-weight: 640; box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ink) 30%, transparent); transition: translate .15s; }
+.kits button:hover { translate: 0 -2px; } .kits button[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--ink), 4px 4px 0 var(--ink); }
+.kits s { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(var(--action) 36%, var(--field) 40%); box-shadow: 0 0 0 1px color-mix(in oklab, var(--ink) 25%, transparent); }
+.kits i { font-style: normal; padding: 2px 7px 3px; border-radius: 99px; font-size: 12.5px; font-weight: 720; background: var(--hot); color: var(--ink); } .kits i.own { background: none; box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+/* Plug in your AI: the assistants a person may connect, one plugged in at a time, and its answer coming in word by word.
+   The marks are the makers' own, drawn in one colour (from simple-icons, CC0). Under reduced motion nothing cycles and the answer is simply there. */
+.ais { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+.ais button { aspect-ratio: 1; display: grid; place-items: center; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ink) 30%, transparent); transition: translate .25s var(--expo), background-color .2s, color .2s, box-shadow .2s; }
+.ais svg { width: 54%; height: 54%; fill: currentColor; } .ais button:hover { translate: 0 -3px; }
+.ais button[aria-pressed=true] { background: var(--ink); color: var(--field); box-shadow: 4px 4px 0 var(--action); translate: -2px -5px; }
+.live .ais button { animation: pop .5s var(--expo) calc(var(--n) * 45ms) both; } @keyframes pop { from { opacity: 0; scale: .5; rotate: -14deg; } }
+#ai .chat p.me { min-height: 2.9em; display: grid; align-items: center; }
+#ai .chat p.bot { max-width: 96%; min-height: 6.6em; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 13px; align-items: start; }
+.bot > i { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--field); } .bot > i svg { width: 58%; height: 58%; fill: currentColor; }
+.bot b { display: block; margin-bottom: 2px; font-size: 14px; font-weight: 700; color: var(--mute); }
+.swap .me, .swap .bot > i, .swap .bot b { animation: rise .45s var(--expo) both; } .swap .bot > i { animation-name: pop; }
+.words span { display: inline-block; } .swap .words span { animation: word .32s var(--expo) calc(.38s + var(--i) * 52ms) both; } @keyframes word { from { opacity: 0; translate: 0 .35em; } }
+.sees span { transition: background-color .3s .5s; } .sees span.on { background: var(--field); }
+@media (max-width: 900px) { .ais { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Go explore: the campuses arrive one after another, and the ones Ink opens are stamped on */
+.live .mini { animation: rise .6s var(--expo) calc(var(--n) * 90ms) both; } .live .mini .lab.p { animation: stamp .42s var(--expo) calc(.35s + var(--n) * 90ms) both; }
+@keyframes stamp { from { opacity: 0; scale: 2.3; rotate: -14deg; } }
+
 /* compare + questions */
 .rest { padding: 110px 0; } .rest h2 { font-size: clamp(48px, 7vw, 112px); margin-bottom: 44px; }
 .cmp { border-radius: var(--r); background: var(--paper); box-shadow: 7px 7px 0 var(--field-shadow); overflow: hidden; }
 .cmp table { width: 100%; border-collapse: collapse; } .cmp th, .cmp td { padding: 16px 24px; text-align: center; font-size: 17px; font-weight: 600; } .cmp td:first-child, .cmp th:first-child { text-align: left; } .cmp td:not(:first-child), .cmp th:not(:first-child) { width: 19%; }
 .cmp thead th { padding: 20px 24px; background: var(--field); font-size: 24px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.04em; border-bottom: 2px dashed color-mix(in oklab, var(--ink) 55%, transparent); }
 .cmp tbody tr + tr td { border-top: 1px solid var(--line); } .cmp td .ck { margin: 0 auto; } .cmp td:nth-child(2) { color: var(--mute); } .cmp td:nth-child(3) { background: color-mix(in oklab, var(--field) 13%, var(--paper)); } .cmp td:nth-child(4) { background: color-mix(in oklab, var(--hot) 22%, var(--paper)); }
+.cmp tr.grp th { padding: 22px 24px 9px; text-align: left; font-size: 19px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.04em; border-top: 1.5px solid var(--ink); background: var(--paper); } .cmp tr.grp + tr td { border-top: 0; }
 .faq { display: grid; gap: 14px; }
 .faq details { border-radius: 26px 26px 26px 7px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); } .faq details[open] { box-shadow: inset 0 0 0 1.5px var(--ink), 5px 5px 0 var(--field-shadow); }
 .faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px 21px 30px; font-size: clamp(20px, 2.2vw, 28px); font-weight: 740; letter-spacing: -0.035em; cursor: pointer; list-style: none; } .faq summary::-webkit-details-marker { display: none; }
@@ -200,7 +236,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   .hero .wrap, .tiers, .duo, .band .wrap, .band.flip .wrap { grid-template-columns: minmax(0, 1fr); } .band.flip .say { order: 0; } .hero .wrap { padding-bottom: 110px; } .pet { width: 92px; } .pet.b { top: -50px; right: -6px; width: 80px; } .pet.c { width: 72px; right: 24px; } .stamp-it { bottom: -84px; left: 38%; }
   .term { height: auto; } .pin { position: static; height: auto; padding: 64px 0; } .term-head { display: grid; } .date { text-align: left; }
   .mine { grid-template-columns: 130px minmax(0, 1fr); } .pick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .cmp th, .cmp td { padding: 13px 8px; font-size: 14px; } .cmp thead th { font-size: 16px; padding: 14px 8px; } .cmp td:first-child, .cmp th:first-child { padding-left: 16px; } .cmp td:not(:first-child), .cmp th:not(:first-child) { width: 21%; }
+  .cmp th, .cmp td { padding: 13px 8px; font-size: 14px; } .cmp thead th { font-size: 16px; padding: 14px 8px; } .cmp td:first-child, .cmp th:first-child { padding-left: 16px; } .cmp td:not(:first-child), .cmp th:not(:first-child) { width: 21%; } .cmp tr.grp th { padding: 18px 16px 6px; font-size: 16.5px; }
 }
 /* the splat: how a wait ends, by plan (openspec/changes/loop-loading-seats, D13; public/demo/mockups-loading-splat-2.html, row A) */
 #splat { gap: 30px; padding-top: 36px; }
@@ -219,6 +255,33 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 @keyframes sp-land { from { transform: scale(.12) rotate(-18deg); opacity: 0; } 30% { opacity: 1; } }
 @keyframes sp-fly { from { translate: var(--dx) var(--dy); scale: .2; opacity: 0; } 25% { opacity: 1; } }
 @keyframes sp-knock { 30% { translate: 2.5px 3px; rotate: .8deg; } }
+/* The loud parts (all of them stop under reduced motion, and the page is whole without them):
+   ink floods each band in as it is scrolled to, headlines are stamped on a letter at a time, a ribbon runs under the hero and runs faster while the page is scrolled,
+   a press on bare page leaves a blot that dries, the hero's book and animals lean toward the pointer, and the comparison fills in row by row. */
+.b-ink { --bg: var(--ink); } .b-field { --bg: var(--field); } .b-pp { --bg: var(--pp); }
+#yours { --prev: var(--pp); } #assistant { --prev: var(--ink); } #people { --prev: var(--field); } #explore { --prev: var(--pp); }
+@media (prefers-reduced-motion: no-preference) { @supports (animation-timeline: view()) {
+  .band[id] { position: relative; isolation: isolate; background: var(--prev); }
+  .band[id]::before, .band[id]::after { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--bg); animation: flood linear both; animation-timeline: view(); animation-range: entry 0% entry 80%; }
+  .band[id]::after { animation-name: flood-b; animation-range: entry 12% entry 100%; }
+} }
+@keyframes flood { from { clip-path: circle(0% at 20% 0%); } to { clip-path: circle(150% at 20% 0%); } }
+@keyframes flood-b { from { clip-path: circle(0% at 86% 4%); } to { clip-path: circle(150% at 86% 4%); } }
+.split .wd { display: inline-block; white-space: nowrap; } .split .ch { display: inline-block; opacity: 0; }
+.split.hit .ch { opacity: 1; animation: thud .44s var(--expo) calc(var(--c) * 32ms) both; }
+@keyframes thud { from { opacity: 0; scale: 2.2; rotate: var(--tilt); } 50% { opacity: 1; } }
+.tape { position: relative; z-index: 3; overflow: clip; margin: -38px 0; padding: 34px 0; pointer-events: none; }
+.tape-tilt { width: 108vw; margin-left: -4vw; overflow: hidden; rotate: -1.6deg; padding: 13px 0 15px; background: var(--ink); color: var(--field); box-shadow: 0 6px 0 var(--action); }
+.tape-run { display: flex; width: max-content; font-size: clamp(20px, 2.5vw, 36px); font-weight: 800; font-stretch: 118%; letter-spacing: -0.045em; white-space: nowrap; animation: tape 30s linear infinite; }
+.tape-run span { display: flex; align-items: center; gap: .65em; padding-right: .65em; } .tape-run svg { width: .62em; height: .62em; fill: var(--hot); }
+@keyframes tape { to { translate: -50% 0; } }
+body { position: relative; }
+.blot { position: absolute; z-index: 25; width: 170px; height: 170px; margin: -85px 0 0 -85px; overflow: visible; pointer-events: none; animation: blot-in .3s var(--expo) both, blot-out .9s 1.5s ease-in forwards; }
+.blot .school { fill: var(--field); stroke: var(--ink); stroke-width: 1.5; } .blot .dark { fill: var(--action); }
+@keyframes blot-in { from { opacity: 0; scale: .08; } } @keyframes blot-out { to { opacity: 0; scale: .94; } }
+.stage .book { transform: translate(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px)); transition: transform .6s var(--expo); }
+.stage .pet { transform: translate(calc(var(--px, 0) * var(--d, 20px)), calc(var(--py, 0) * var(--d, 20px))); transition: transform .7s var(--expo); } .pet.b { --d: -28px; } .pet.c { --d: 38px; }
+.cmp.live tbody tr { animation: rise .5s var(--expo) calc(var(--r) * 34ms) both; } .cmp.live .ck:not(.no) { animation: pop .45s var(--expo) calc(.12s + var(--r) * 34ms) both; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
 </style>
 </head>
@@ -248,6 +311,8 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   </div>
 </div></div>
 
+<div class="tape" aria-hidden="true"><div class="tape-tilt"><div class="tape-run"><span>Keep the year<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Make it yours<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Plug in your AI<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Bring your people<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Go explore<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg></span><span>Keep the year<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Make it yours<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Plug in your AI<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Bring your people<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Go explore<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg></span><span>Keep the year<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Make it yours<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Plug in your AI<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Bring your people<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Go explore<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg></span><span>Keep the year<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Make it yours<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Plug in your AI<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Bring your people<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>Go explore<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg></span></div></div></div>
+
 <section class="plans" id="plans"><div class="wrap">
   <div class="plans-head"><h2 class="d">Pick one.</h2>
     <div class="cycle" role="group" aria-label="Billing"><button aria-pressed="true" data-cycle="month">Monthly</button><button aria-pressed="false" data-cycle="year">Yearly<i>2 months free</i></button></div></div>
@@ -256,10 +321,10 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
       <li><span class="ck"></span>Post, join, show up</li><li><span class="ck"></span>Map, tags, rewards</li><li><span class="ck"></span>30 days of stamps</li><li><span class="ck"></span>One pet animal</li></ul></div>
       <div class="tk-stub"><span class="price"><b>$0</b><span>for good</span></span><a class="btn" href="#compare">You have it</a></div></div>
     <div class="tk prem"><div class="tk-main"><h3>Ink <i>Most picked</i></h3><ul>
-      <li><span class="ck"></span>Your book, kept for good</li><li><span class="ck"></span>Give an animal a month</li><li><span class="ck"></span>Boost a group a month</li><li><span class="ck"></span>Join at any school</li><li><span class="ck"></span>Connect your assistant</li></ul></div>
+      <li><span class="ck"></span>Your book, kept for good</li><li><span class="ck"></span>More animals, a coloured splat</li><li><span class="ck"></span>Connect your assistant</li><li><span class="ck"></span>A gift and a boost a month</li><li><span class="ck"></span>Join at any school</li></ul></div>
       <div class="tk-stub"><span class="price"><b data-month="$2.99" data-year="$29">$2.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn">Get Ink</button></div></div>
     <div class="tk super"><div class="tk-main"><h3>Ink+</h3><ul>
-      <li><span class="ck"></span>Everything in Ink</li><li><span class="ck"></span>Two friends get Ink</li><li><span class="ck"></span>Your own stamp</li><li><span class="ck"></span>4 gifts, 3 boosts a month</li><li><span class="ck"></span>The book, printed and mailed</li></ul></div>
+      <li><span class="ck"></span>Everything in Ink</li><li><span class="ck"></span>The book, printed and mailed</li><li><span class="ck"></span>Make it fully yours</li><li><span class="ck"></span>Two friends get Ink</li><li><span class="ck"></span>4 gifts, 3 boosts a month</li><li><span class="ck"></span>Your own stamp</li></ul></div>
       <div class="tk-stub"><span class="price"><b data-month="$9.99" data-year="$99">$9.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn">Get Ink+</button></div></div>
   </div>
 </div></section>
@@ -274,8 +339,50 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   </div>
 </div></div></section>
 
-<section class="band b-ink"><div class="wrap">
-  <div class="say"><h2 class="d">Give one away.</h2><p>Every school has its own animals. A gift is how a friend at Columbia wears a Cornell one.</p></div>
+<section class="band b-ink flip" id="yours"><div class="wrap">
+  <div class="say"><h2 class="d">Make it yours.</h2><p>Your colours, your picture, your splat. Ink+ opens all of it.</p>
+    <div class="cycle" role="group" aria-label="What to make yours"><button aria-pressed="true" data-show="kits">Colours</button><button aria-pressed="false" data-show="save">Picture</button><button aria-pressed="false" data-show="splat">Splat</button></div></div>
+  <div class="stack">
+  <div class="show" id="kits">
+    <div class="kit-view" data-kit="nyu"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span><span class="btn go">I'm in</span></div>
+    <div class="kits" role="group" aria-label="Colours">
+      <button aria-pressed="false" data-pick="loop"><s data-kit="loop"></s>Loop</button>
+      <button aria-pressed="false" data-pick="cornell"><s data-kit="cornell"></s>Cornell<i class="own">Yours</i></button>
+      <hr>
+      <button aria-pressed="false" data-pick="columbia" data-plus><s data-kit="columbia"></s>Columbia<i>Ink+</i></button>
+      <button aria-pressed="false" data-pick="cuny" data-plus><s data-kit="cuny"></s>CUNY<i>Ink+</i></button>
+      <button aria-pressed="true" data-pick="nyu" data-plus><s data-kit="nyu"></s>NYU<i>Ink+</i></button>
+    </div>
+    <div class="row"><span id="kit-says">Any other school's, with Ink+</span></div>
+  </div>
+  <div class="show" id="save" inert>
+    <div class="take">
+      <figure><div class="shot sq"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Profile</figcaption></figure>
+      <figure><div class="shot tall"><img src="../animals/37.png" alt=""><b>Ana Lopez</b><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Lock screen</figcaption></figure>
+      <figure><div class="shot cut"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg></span></div><figcaption class="lab">Sticker</figcaption></figure>
+    </div>
+    <div class="row"><div class="cycle" id="mark" role="group" aria-label="Loop mark"><button aria-pressed="true">With the mark</button><button aria-pressed="false" data-bare>No mark<i>Ink+</i></button></div><span id="mark-says">Free for everyone</span></div>
+  </div>
+  <div class="show" id="splat" inert>
+    <div id="splats" style="display:grid;gap:30px"></div>
+    <div class="row"><button class="btn go" id="again">Splat again</button><span>When a page is ready. Ink adds your colours, Ink+ sparks.</span></div>
+  </div>
+  </div>
+</div></section>
+
+<section class="band b-field" id="assistant"><div class="wrap">
+  <div class="say"><h2 class="d">Plug in your AI.</h2><p>Connect Claude, ChatGPT or whichever assistant you use. It knows your groups and your stamps, so its advice is about you.</p></div>
+  <div class="show" id="ai">
+    <div class="ais" role="group" aria-label="Assistants"></div>
+    <div class="chat"></div>
+    <div class="sees"><span data-k="g">Your groups</span><span data-k="s">Your stamps</span><span data-k="w">This week on campus</span><span class="x">Who else was there</span></div>
+  </div>
+</div></section>
+
+<section class="band b-pp flip" id="people"><div class="wrap">
+  <div class="say"><h2 class="d">Bring your people.</h2><p>Give an animal and boost your group, once a month. Ink+ adds more of both, your own stamp, and Ink for two friends.</p>
+    <div class="cycle" role="group" aria-label="What to do for your people"><button aria-pressed="true" data-show="gift">Gift</button><button aria-pressed="false" data-show="boost">Boost</button><button aria-pressed="false" data-show="stamp">Your stamp</button></div></div>
+  <div class="stack">
   <div class="show" id="gift">
     <div class="pick">
       <button aria-pressed="true" data-src="../animals/05.png" data-name="A Cornell animal"><img src="../animals/05.png" alt="">Cornell</button>
@@ -286,61 +393,25 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
     <div class="row"><button class="btn go" id="give">Give it to Priya</button><span id="left">1 gift left in November</span></div>
     <div class="ltag" id="arrive" hidden><i></i><img src="../animals/05.png" alt=""><span><b>A Cornell animal</b><small>From you. Priya keeps it.</small></span></div>
   </div>
-</div></section>
-
-<section class="band b-field flip"><div class="wrap">
-  <div class="say"><h2 class="d">Boost your crew.</h2><p>One boost a month. The whole group gets its reward sooner, and partner places match it.</p></div>
-  <div class="show" id="boost">
+  <div class="show" id="boost" inert>
     <div class="rw"><header>Thursday climbing crew<span id="need">3 of 5</span></header><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
     <div class="coupon"><span><b id="prize">A coffee each</b><small>Northside Coffee</small></span><em id="match" hidden>Matched</em></div>
     <div class="row"><button class="btn go" id="place">Place your boost</button><span id="bleft">1 boost left in November</span></div>
   </div>
-</div></section>
-
-<section class="band"><div class="wrap">
-  <div class="say"><h2 class="d">Go past campus.</h2><p>Your school stays free. Ink joins plans at every other one.</p></div>
-  <div class="show">
-    <div class="mini">Cornell · Ithaca<span class="lab h">Yours</span></div>
-    <div class="mini">Cornell Tech<span class="lab">Free</span></div>
-    <div class="mini">Columbia<span class="lab p">Ink</span></div>
-    <div class="mini">Home for break<span class="lab p">Ink</span></div>
-  </div>
-</div></section>
-
-<section class="band b-pp flip"><div class="wrap">
-  <div class="say"><h2 class="d">Ask your book.</h2><p>Connect your own assistant. It reads your stamps, and nobody else's.</p></div>
-  <div class="show">
-    <div class="chat"><p class="me">Something this weekend like that pottery night?</p><p>Glazing night at Risley, Saturday at 7. Three are in. Want in?</p></div>
-    <div class="sees"><span>The place</span><span>The time</span><span>The tag</span><span class="x">Who else was there</span></div>
-  </div>
-</div></section>
-
-<section class="band b-hot"><div class="wrap">
-  <div class="say"><h2 class="d">Go Ink+.</h2><p>For the one who gets everyone out. Start a plan, and everyone who shows up gets your stamp.</p>
-    <div class="perks"><span>2 friends get Ink</span><span>4 gifts a month</span><span>3 boosts a month</span><span>The book, in the mail each May</span></div></div>
-  <div class="show mine">
+  <div class="show mine" id="stamp" inert>
     <div class="slot"><div class="st rare" style="--rot:-7deg"><b id="mine-b">Stephen's plan</b><small>Nov 18</small></div></div>
     <div><label for="mine-i">Your stamp says</label><input id="mine-i" value="Stephen's plan" maxlength="20" autocomplete="off"></div>
   </div>
-</div></section>
-
-<section class="band b-ink flip" id="take"><div class="wrap">
-  <div class="say"><h2 class="d">Take it with you.</h2><p>Save your picture, sized for anywhere. Free with the Loop mark. Ink+ takes the mark off.</p></div>
-  <div class="show" id="save">
-    <div class="take">
-      <figure><div class="shot sq"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Profile</figcaption></figure>
-      <figure><div class="shot tall"><img src="../animals/37.png" alt=""><b>Ana Lopez</b><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Lock screen</figcaption></figure>
-      <figure><div class="shot cut"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg></span></div><figcaption class="lab">Sticker</figcaption></figure>
-    </div>
-    <div class="row"><div class="cycle" id="mark" role="group" aria-label="Loop mark"><button aria-pressed="true">With the mark</button><button aria-pressed="false" data-bare>No mark<i>Ink+</i></button></div><span id="mark-says">Free for everyone</span></div>
   </div>
 </div></section>
 
-<section class="band b-field"><div class="wrap">
-  <div class="say"><h2 class="d">Land with a splat.</h2><p>While a page loads, Loop saves you a seat. Ink stamps it in your school's colours. Ink+ throws sparks.</p></div>
-  <div class="show" id="splat">
-    <div id="splats" style="display:grid;gap:30px"></div>
-    <div class="row"><button class="btn go" id="again">Splat again</button><span>Every time a page is ready</span></div>
+<section class="band b-ink" id="explore"><div class="wrap">
+  <div class="say"><h2 class="d">Go explore.</h2><p>Loop is local, and your own campus stays free. Ink joins plans at every other school.</p></div>
+  <div class="show">
+    <div class="mini" style="--n:0">Cornell · Ithaca<span class="lab h">Yours</span></div>
+    <div class="mini" style="--n:1">Cornell Tech<span class="lab">Free</span></div>
+    <div class="mini" style="--n:2">Columbia<span class="lab p">Ink</span></div>
+    <div class="mini" style="--n:3">Home for break<span class="lab p">Ink</span></div>
   </div>
 </div></section>
 
@@ -354,7 +425,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   <div class="faq">
     <details open><summary>Are free stamps really deleted?</summary><p>Yes, after 30 days: the place, the time and the plan. Only the count stays, so levels and rewards still add up.</p></details>
     <details><summary>What if I stop paying?</summary><p>The book stays for 30 days. Then old stamps go, as for anyone. Animals you were given or made stay yours.</p></details>
-    <details><summary>What does my assistant see?</summary><p>Your own stamps and this week on campus. Never who else was there. Off in one tap.</p></details>
+    <details><summary>What does my assistant see?</summary><p>Your own stamps, your groups and this week on campus. Never who else was there. Off in one tap.</p></details>
     <details><summary>Is anything free today going away?</summary><p>No.</p></details>
   </div>
 </div></section>
@@ -454,6 +525,8 @@ document.querySelector('.cycle').addEventListener('click', event => {
     blot.flung = thrown(next, 0, 62, 7, 3.2);
     return blot;
   }
+  // The same blot, for the one a press on the page leaves (the loud parts, at the end).
+  window.loopBlot = seed => { const blot = inkBlot(seed); return { school: drawn(blot.school), dark: drawn(blot.dark) }; };
   const smaller = k => SPARK.replace(/-?\d+(\.\d+)?/g, n => fix(n * k));
   const drop = (spark, n) => ([x, y, r]) => { const style = `--n:${n.at++};--dx:${fix(-x * .8)}px;--dy:${fix(-y * .8)}px`; return spark ? `<path class="drop" style="${style}" d="${SPARK}" transform="translate(${x} ${y}) scale(${fix(r / 27 * 3.4)})"/>` : `<circle class="drop" style="${style}" cx="${x}" cy="${y}" r="${fix(r * 1.15)}"/>`; };
   function splat(plan, seed) {
@@ -471,10 +544,14 @@ document.querySelector('.cycle').addEventListener('click', event => {
   new IntersectionObserver((seen, watch) => { if (seen[0].isIntersecting) { play(); watch.disconnect(); } }, { threshold: .6 }).observe(box);
 })();
 
-const ROWS = [['Post, join, show up', 1, 1, 1], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With the Loop mark', 'With the Loop mark', 'No mark'], ['The splat when a page loads', 'Plain ink', 'Your school\'s colours', 'With sparks'],
-  ['Give an animal', 0, '1 a month', '4 a month'], ['Boost a group', 0, '1 a month', '3 a month'], ['Matched rewards at partner places', 0, 1, 1], ['Join plans at other schools', 0, 1, 1],
-  ['Wider map, any number of tags', 0, 1, 1], ['Connect your assistant', 0, 1, 1], ['Friends who get Ink from you', 0, 0, '2'], ['Your own stamp on plans you start', 0, 0, 1]];
-document.getElementById('rows').innerHTML = ROWS.map(([name, ...cells]) => `<tr><td>${name}</td>${cells.map(v => `<td>${v === 1 ? `<span class="ck">${CHECK}</span>` : v === 0 ? '<span class="ck no"></span>' : v}</td>`).join('')}</tr>`).join('');
+// A row of one string is the name of a group: the band above that the rows under it belong to.
+const ROWS = [['Post, join, show up', 1, 1, 1],
+  ['The book'], ['Stamps kept', '30 days', 'For good', 'For good, in print'], ['Rare stamps and a term poster', 0, 1, 1],
+  ['Make it yours'], ['Colours', 'Your school', 'Your school', 'Any school'], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With mark', 'With mark', 'No mark'], ['The splat when a page loads', 'Plain', 'Your colours', 'With sparks'],
+  ['Your AI'], ['Connect your assistant', 0, 1, 1],
+  ['Your people'], ['Give an animal', 0, '1 a month', '4 a month'], ['Boost a group', 0, '1 a month', '3 a month'], ['Matched rewards at partner places', 0, 1, 1], ['Friends who get Ink from you', 0, 0, '2'], ['Your own stamp on plans you start', 0, 0, 1],
+  ['Explore'], ['Join plans at other schools', 0, 1, 1], ['Wider map, any number of tags', 0, 1, 1]];
+document.getElementById('rows').innerHTML = ROWS.map(([name, ...cells]) => cells.length ? `<tr><td>${name}</td>${cells.map(v => `<td>${v === 1 ? `<span class="ck">${CHECK}</span>` : v === 0 ? '<span class="ck no"></span>' : v}</td>`).join('')}</tr>` : `<tr class="grp"><th colspan="4" scope="rowgroup">${name}</th></tr>`).join('');
 
 document.querySelector('.pick').addEventListener('click', event => { const hit = event.target.closest('button'); if (hit) for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit); });
 document.getElementById('give').addEventListener('click', event => {
@@ -491,7 +568,93 @@ document.getElementById('mark').addEventListener('click', event => {
   for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit);
   document.getElementById('save').classList.toggle('bare', bare); document.getElementById('mark-says').textContent = bare ? 'With Ink+' : 'Free for everyone';
 });
+// Make it yours: the tabs show one of the three, and a colour pressed is worn by the piece above it.
+for (const tabs of document.querySelectorAll('.say .cycle')) tabs.addEventListener('click', event => {
+  const hit = event.target.closest('button'); if (!hit) return;
+  for (const each of hit.parentElement.children) { each.setAttribute('aria-pressed', each === hit); document.getElementById(each.dataset.show).inert = each !== hit; }
+  if (hit.dataset.show === 'splat') document.getElementById('again').click();
+});
+document.querySelector('.kits').addEventListener('click', event => {
+  const hit = event.target.closest('button'); if (!hit) return;
+  for (const each of hit.parentElement.querySelectorAll('button')) each.setAttribute('aria-pressed', each === hit);
+  document.querySelector('.kit-view').dataset.kit = hit.dataset.pick; document.getElementById('kit-says').textContent = 'plus' in hit.dataset ? 'Any other school\'s, with Ink+' : 'Free for everyone';
+});
+// Plug in your AI. Each assistant has its mark (simple-icons, CC0), a question someone might ask it, the answer, and which of the three things it read to give it.
+(function () {
+  const AIS = [["chatgpt","ChatGPT","M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"],["claude","Claude","m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"],["gemini","Gemini","M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"],["copilot","Copilot","M23.922 16.997C23.061 18.492 18.063 22.02 12 22.02 5.937 22.02.939 18.492.078 16.997A.641.641 0 0 1 0 16.741v-2.869a.883.883 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.098 10.098 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952C7.255 2.937 9.248 1.98 11.978 1.98c2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.841.841 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256Zm-11.75-5.992h-.344a4.359 4.359 0 0 1-.355.508c-.77.947-1.918 1.492-3.508 1.492-1.725 0-2.989-.359-3.782-1.259a2.137 2.137 0 0 1-.085-.104L4 11.746v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.359 4.359 0 0 1-.355-.508Zm2.328 3.25c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm-5 0c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1-.549 0-1-.451-1-1v-2c0-.549.451-1 1-1Zm3.313-6.185c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z"],["perplexity","Perplexity","M22.3977 7.0896h-2.3106V.0676l-7.5094 6.3542V.1577h-1.1554v6.1966L4.4904 0v7.0896H1.6023v10.3976h2.8882V24l6.932-6.3591v6.2005h1.1554v-6.0469l6.9318 6.1807v-6.4879h2.8882V7.0896zm-3.4657-4.531v4.531h-5.355l5.355-4.531zm-13.2862.0676 4.8691 4.4634H5.6458V2.6262zM2.7576 16.332V8.245h7.8476l-6.1149 6.1147v1.9723H2.7576zm2.8882 5.0404v-3.8852h.0001v-2.6488l5.7763-5.7764v7.0111l-5.7764 5.2993zm12.7086.0248-5.7766-5.1509V9.0618l5.7766 5.7766v6.5588zm2.8882-5.0652h-1.733v-1.9723L13.3948 8.245h7.8478v8.087z"],["mistral","Mistral","M17.143 3.429v3.428h-3.429v3.429h-3.428V6.857H6.857V3.43H3.43v13.714H0v3.428h10.286v-3.428H6.857v-3.429h3.429v3.429h3.429v-3.429h3.428v3.429h-3.428v3.428H24v-3.428h-3.43V3.429z"],["meta","Meta AI","M6.915 4.03c-1.968 0-3.683 1.28-4.871 3.113C.704 9.208 0 11.883 0 14.449c0 .706.07 1.369.21 1.973a6.624 6.624 0 0 0 .265.86 5.297 5.297 0 0 0 .371.761c.696 1.159 1.818 1.927 3.593 1.927 1.497 0 2.633-.671 3.965-2.444.76-1.012 1.144-1.626 2.663-4.32l.756-1.339.186-.325c.061.1.121.196.183.3l2.152 3.595c.724 1.21 1.665 2.556 2.47 3.314 1.046.987 1.992 1.22 3.06 1.22 1.075 0 1.876-.355 2.455-.843a3.743 3.743 0 0 0 .81-.973c.542-.939.861-2.127.861-3.745 0-2.72-.681-5.357-2.084-7.45-1.282-1.912-2.957-2.93-4.716-2.93-1.047 0-2.088.467-3.053 1.308-.652.57-1.257 1.29-1.82 2.05-.69-.875-1.335-1.547-1.958-2.056-1.182-.966-2.315-1.303-3.454-1.303zm10.16 2.053c1.147 0 2.188.758 2.992 1.999 1.132 1.748 1.647 4.195 1.647 6.4 0 1.548-.368 2.9-1.839 2.9-.58 0-1.027-.23-1.664-1.004-.496-.601-1.343-1.878-2.832-4.358l-.617-1.028a44.908 44.908 0 0 0-1.255-1.98c.07-.109.141-.224.211-.327 1.12-1.667 2.118-2.602 3.358-2.602zm-10.201.553c1.265 0 2.058.791 2.675 1.446.307.327.737.871 1.234 1.579l-1.02 1.566c-.757 1.163-1.882 3.017-2.837 4.338-1.191 1.649-1.81 1.817-2.486 1.817-.524 0-1.038-.237-1.383-.794-.263-.426-.464-1.13-.464-2.046 0-2.221.63-4.535 1.66-6.088.454-.687.964-1.226 1.533-1.533a2.264 2.264 0 0 1 1.088-.285z"],["deepseek","DeepSeek","M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45"]];
+  const SAID = { chatgpt: ['What should my climbing crew do this week?', 'You are one outing from a coffee each. Thursday at 6 suits four of you. Want me to post it?', 'gw'],
+    claude: ['Plan my Saturday.', 'Farmers Market at 10 gets you a rare stamp. Your pottery group has glazing night at 7. Both fit.', 'gsw'],
+    gemini: ['How far am I from the next level?', 'Twelve stamps this term. Three more outings and you are a Regular.', 's'],
+    copilot: ['Something this weekend like that pottery night?', 'Glazing night at Risley, Saturday at 7. Three are in. Want in?', 'sw'],
+    perplexity: ['What is my study group waiting on from me?', 'Two things: your slides for Tuesday, and a yes or no on the Thursday room.', 'g'],
+    mistral: ['Where should I place my boost?', 'Thursday climbing crew. One boost takes it to four of five, and Northside Coffee matches it.', 'g'],
+    meta: ['What is on near me tonight?', 'Open mic at Risley at 8, five minutes away. It carries your music tag.', 'sw'],
+    deepseek: ['Sum up my term.', 'Twelve stamps, two of them rare, five weeks running. October was your best month.', 's'] };
+  const box = document.getElementById('ai'), row = box.querySelector('.ais'), chat = box.querySelector('.chat'), sees = [...box.querySelectorAll('.sees [data-k]')];
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches, mark = path => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
+  row.innerHTML = AIS.map(([id, name, path], n) => `<button aria-pressed="false" aria-label="${name}" title="${name}" data-ai="${id}" style="--n:${n}">${mark(path)}</button>`).join('');
+  let at = -1, timer = 0, own = false;
+  function plug(to) {
+    at = to; const [id, name, path] = AIS[to], [asked, answer, read] = SAID[id];
+    [...row.children].forEach((each, n) => each.setAttribute('aria-pressed', n === to));
+    chat.innerHTML = `<p class="me">${asked}</p><p class="bot"><i>${mark(path)}</i><span><b>${name}</b><span class="words">${answer.split(' ').map((word, i) => `<span style="--i:${i}">${word}</span>`).join(' ')}</span></span></p>`;
+    chat.classList.remove('swap'); void chat.offsetWidth; chat.classList.add('swap');
+    for (const each of sees) each.classList.toggle('on', read.includes(each.dataset.k));
+    // The next one is plugged in once this answer has been out for a while, unless the person has picked one themselves.
+    clearTimeout(timer); if (!own && !still) timer = setTimeout(() => { if (!box.matches(':hover, :focus-within')) plug((at + 1) % AIS.length); else timer = setTimeout(() => plug((at + 1) % AIS.length), 2600); }, 900 + answer.split(' ').length * 52 + 2600);
+  }
+  row.addEventListener('click', event => { const hit = event.target.closest('button'); if (hit) { own = true; plug([...row.children].indexOf(hit)); } });
+  plug(1);
+  // It runs only while it is on screen.
+  new IntersectionObserver(seen => { if (seen[0].isIntersecting) { box.classList.add('live'); if (!own) plug(at); } else clearTimeout(timer); }, { threshold: .25 }).observe(box);
+  const far = document.querySelector('#explore .show');
+  new IntersectionObserver((seen, watch) => { if (seen[0].isIntersecting) { far.classList.add('live'); watch.disconnect(); } }, { threshold: .15 }).observe(far);
+})();
 document.getElementById('mine-i').addEventListener('input', event => { document.getElementById('mine-b').textContent = event.target.value || 'Your plan'; });
+
+// The loud parts. None of them runs under reduced motion; the page is whole without them.
+(function () {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Headlines are stamped on a letter at a time. Each keeps its words to a screen reader in aria-label.
+  let count = 0;
+  function split(node) {
+    for (const child of [...node.childNodes]) {
+      if (child.nodeType === 1) { if (child.tagName !== 'BR') split(child); continue; }
+      if (child.nodeType !== 3) continue;
+      const made = document.createDocumentFragment();
+      for (const part of child.textContent.split(/(\s+)/)) {
+        if (!part) continue; if (/^\s+$/.test(part)) { made.append(' '); continue; }
+        const word = document.createElement('span'); word.className = 'wd'; word.setAttribute('aria-hidden', 'true');
+        for (const letter of part) { const one = document.createElement('span'); one.className = 'ch'; one.textContent = letter; one.style.setProperty('--c', count); one.style.setProperty('--tilt', (count * 37 % 23 - 11) + 'deg'); count++; word.append(one); }
+        made.append(word);
+      }
+      child.replaceWith(made);
+    }
+  }
+  const landed = new IntersectionObserver(seen => { for (const each of seen) if (each.isIntersecting) { each.target.classList.add('hit'); landed.unobserve(each.target); } }, { threshold: .35 });
+  for (const head of document.querySelectorAll('.plans h2, .term h2, .band h2, .rest h2')) { head.setAttribute('aria-label', head.innerText.replace(/\s+/g, ' ').trim()); count = 0; split(head); head.classList.add('split'); landed.observe(head); }
+
+  // The ribbon runs faster while the page is being scrolled, and eases back.
+  const run = document.querySelector('.tape-run'), going = run && run.getAnimations()[0]; let last = scrollY, rate = 1;
+  if (going) (function tick() { const moved = Math.abs(scrollY - last); last = scrollY; rate += (Math.min(9, 1 + moved * .12) - rate) * .12; going.playbackRate = rate; requestAnimationFrame(tick); })();
+
+  // A press on bare page leaves a blot, which dries and goes.
+  addEventListener('pointerdown', event => {
+    if (!window.loopBlot || event.target.closest('button, a, input, summary, label, .show, .book, .tk, .cmp, .faq, .cycle, .nav, .mock')) return;
+    const blot = window.loopBlot('press' + event.pageX + event.pageY);
+    document.body.insertAdjacentHTML('beforeend', `<svg class="blot" viewBox="-90 -90 180 180" aria-hidden="true" style="left:${event.pageX}px;top:${event.pageY}px;rotate:${Math.round(event.pageX * 7 % 360)}deg"><path class="school" d="${blot.school}"/><path class="dark" d="${blot.dark}"/></svg>`);
+    const made = document.body.lastElementChild; made.addEventListener('animationend', done => { if (done.animationName === 'blot-out') made.remove(); });
+  });
+
+  // The hero's book and animals lean toward the pointer.
+  const hero = document.querySelector('.hero'), stage = hero.querySelector('.stage');
+  hero.addEventListener('pointermove', event => { const box = hero.getBoundingClientRect(); stage.style.setProperty('--px', ((event.clientX - box.left) / box.width * 2 - 1).toFixed(3)); stage.style.setProperty('--py', ((event.clientY - box.top) / box.height * 2 - 1).toFixed(3)); });
+  hero.addEventListener('pointerleave', () => { stage.style.setProperty('--px', 0); stage.style.setProperty('--py', 0); });
+
+  // The comparison fills in row by row.
+  const table = document.querySelector('.cmp'); [...table.querySelectorAll('tbody tr')].forEach((row, at) => row.style.setProperty('--r', at));
+  new IntersectionObserver((seen, watch) => { if (seen[0].isIntersecting) { table.classList.add('live'); watch.disconnect(); } }, { threshold: .08 }).observe(table);
+})();
 </script>
 </body>
 </html>
