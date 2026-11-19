@@ -195,15 +195,15 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
 
   const here = land.find(each => each.id === view)!, inView = useMemo(() => spots.filter(spot => spot.sec === view), [spots, view]);
   // One day is on the map: the day of the plan picked in the list, else the day pressed on the band, else the first day with anything on.
-  const days = useMemo(() => [...new Set(inView.map(spot => spot.ticket.day))], [inView]);
-  const day = (beside && picked ? inView.find(spot => spot.ticket.id === picked)?.ticket.day : null) ?? (dayPick && days.includes(dayPick) ? dayPick : days[0]) ?? null;
-  const list = useMemo(() => inView.filter(spot => spot.ticket.day === day), [inView, day]);
+  const days = useMemo(() => [...new Map(inView.map(spot => [spot.ticket.mapDate, spot.ticket.mapDay]))], [inView]);
+  const day = (beside && picked ? inView.find(spot => spot.ticket.id === picked)?.ticket.mapDate : null) ?? (dayPick && days.some(([date]) => date === dayPick) ? dayPick : days[0]?.[0]) ?? null;
+  const list = useMemo(() => inView.filter(spot => spot.ticket.mapDate === day), [inView, day]);
   // Beside the list, the plan that is on is the one the list picked, and no ticket is ever open over the map (`up`).
   const at = Math.max(0, list.findIndex(spot => spot.ticket.id === litId)), lit = beside ? list.find(spot => spot.ticket.id === picked) ?? null : list[at] ?? null;
   const up = beside ? null : picked, open = up ? spots.find(spot => spot.ticket.id === up) ?? null : null;
-  // A plan picked in the list that is in another section brings the map to that section.
+  // A plan picked in the list, or opened from anywhere, that is on another day or in another section brings the map to that day and section.
   const [seen, setSeen] = useState(picked);
-  if (picked !== seen) { setSeen(picked); const found = beside && picked ? spots.find(spot => spot.ticket.id === picked) : null; if (found) { setDayPick(found.ticket.day); if (found.sec !== view) setView(found.sec); } }
+  if (picked !== seen) { setSeen(picked); const found = picked ? spots.find(spot => spot.ticket.id === picked) : null; if (found) { setDayPick(found.ticket.mapDate); if (found.sec !== view) setView(found.sec); } }
   // What the map hangs each stamp on. The map places these; the page draws the stamps inside them.
   // Plans at one address stand on one stamp, so no stamp is ever pushed off its spot.
   const pins = useMemo(() => typeof document === 'undefined' ? [] : [...new Set(list.map(spot => spot.at.join()))].map(key => { const same = list.filter(spot => spot.at.join() === key); return { id: key, at: same[0].at, same, el: document.createElement('div') }; }), [list]);
@@ -260,9 +260,12 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     const by = (rate: number, least: number) => Math.max(least, Math.min(1, 2 ** ((zoom - 16.2) * rate))).toFixed(3);
     el.style.setProperty('--ticket', by(.8, .62)); el.style.setProperty('--stamp', by(.62, .32));
     // With the whole section in view the stamps are small, and the ticket has let go: the list or the dial still says what is on.
-    el.style.setProperty('--say', Math.max(0, Math.min(1, (+by(.62, .32) - .5) / .14)).toFixed(2));
+    const say = Math.max(0, Math.min(1, (+by(.62, .32) - .5) / .14));
+    el.style.setProperty('--say', say.toFixed(2));
     const from = home.current, to = from && s.lit ? map.project(s.lit.at) : null;
-    el.style.setProperty('--away', (from && to ? Math.max(0, Math.min(1, Math.max((from.zoom - zoom) / .7, (Math.hypot(to.x - from.x, to.y - from.y) - 30) / 150))) : 0).toFixed(3));
+    const away = from && to ? Math.max(0, Math.min(1, Math.max((from.zoom - zoom) / .7, (Math.hypot(to.x - from.x, to.y - from.y) - 30) / 150))) : 0;
+    el.style.setProperty('--away', away.toFixed(3));
+    el.toggleAttribute('data-let-go', say * (1 - away) < .5);
     const bar = rule.current, mpp = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (512 * 2 ** zoom), two = 2 * WALK_PER_MINUTE / mpp, mins = two > 170 ? 1 : two < 45 ? 5 : 2;
     if (bar) { bar.style.setProperty('--w', `${Math.round(two * mins / 2)}px`); bar.dataset.mins = `${mins} min walk`; }
   }, []);
@@ -409,7 +412,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     const shown = Math.max(0, same.findIndex(each => each.ticket.id === (up ?? lit?.ticket.id))), spot = same[shown], next = same.length > 1 ? same[(shown + 1) % same.length].ticket : null;
     const { ticket } = spot, isLit = !up && lit?.ticket.id === ticket.id, faces = ticket.mine ? ticket.mine.members : ticket.known;
     const reward = ticket.stub.kind === 'none' ? null : ticket.stub.text, mins = view === standing ? walk(spot.at) : null;
-    return <button className={`cs-pin ${isLit || up === ticket.id ? 'sel' : ''} ${up && up !== ticket.id ? 'dim' : ''} ${hot === ticket.id ? 'hov' : ''} ${ticket.action === 'checkin' ? 'now' : ''}`} style={{ '--lean': `${[-4, 3, -2, 4, -3][nth % 5]}deg` } as CSSProperties}
+    return <button className={`cs-pin ${isLit || up === ticket.id ? 'sel' : ''} ${up && up !== ticket.id ? 'dim' : ''} ${same.some(each => each.ticket.id === hot) ? 'hov' : ''} ${ticket.action === 'checkin' ? 'now' : ''}`} style={{ '--lean': `${[-4, 3, -2, 4, -3][nth % 5]}deg` } as CSSProperties}
       aria-label={`${ticket.title}, ${ticket.day} ${ticket.time}${next ? `, ${same.length} here` : ''}`} {...(beside ? { 'aria-pressed': isLit } : { 'aria-expanded': up === ticket.id })} onMouseEnter={() => onHover?.(ticket.id)} onMouseLeave={() => onHover?.(null)} onClick={event => {
         // "Also here" turns the stamp to the next plan at this address. Anywhere else on it picks the plan, or lets go of it.
         if (next && (event.target as Element).closest('.also')) { setLitId(next.id); if (beside) onPick(next.id); return; }
@@ -427,8 +430,8 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     <svg className="cs-near-defs" width={0} height={0} aria-hidden="true"><defs><path id="cs-arc-over" d="M-21 0a21 21 0 0 1 42 0" /><path id="cs-arc-under" d="M-22 0a22 22 0 0 0 44 0" /></defs>
       <filter id="cs-rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves={2} seed={7} /><feDisplacementMap in="SourceGraphic" scale={2.4} /></filter></svg>
     <div className="cs-near-map" ref={canvas} /><i className="cs-near-tooth" /><i className="cs-near-age" />
-    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on{days.length > 1 ? ` ${day}` : ''} · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2>
-      {days.length > 1 && !up && <div className="cs-days" role="group" aria-label="Day on the map">{days.map(each => <button key={each} aria-pressed={each === day} onClick={() => { setDayPick(each); setLitId(null); if (beside) onPick(inView.find(spot => spot.ticket.day === each)!.ticket.id); }}>{each}<i>{inView.filter(spot => spot.ticket.day === each).length}</i></button>)}</div>}<small>Map © OpenStreetMap, OpenFreeMap</small></div>
+    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on{days.length > 1 ? ` ${days.find(([date]) => date === day)?.[1]}` : ''} ·<i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2>
+      {days.length > 1 && !up && <div className="cs-days" role="group" aria-label="Day on the map">{days.map(([each, name]) => <button key={each} aria-pressed={each === day} onClick={() => { setDayPick(each); setLitId(null); if (beside) onPick(inView.find(spot => spot.ticket.mapDate === each)!.ticket.id); }}>{name}<i>{inView.filter(spot => spot.ticket.mapDate === each).length}</i></button>)}</div>}<small>Map © OpenStreetMap, OpenFreeMap</small></div>
     <Swap campuses={swap} />
     {shown && (shown.kind === 'go' && there
       // Where the section next door is a subway stop, the way on is that stop's platform sign (public/demo/mockups-nyc-stops.html, A).

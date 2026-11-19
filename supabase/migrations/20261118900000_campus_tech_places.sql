@@ -4,7 +4,7 @@
 insert into campus_place(campus_id, name, other_names, lat, lon)
 select c.id, p.name, p.other_names, p.lat, p.lon
 from campus c, (values
-  ('Bloomberg Center', array['Emma and Georgina Bloomberg Center', 'Bloomberg', '2 West Loop Road', '2 W Loop Rd'], 40.7557895, -73.9562046),
+  ('Bloomberg Center', array['Emma and Georgina Bloomberg Center', 'Bloomberg'], 40.7557895, -73.9562046),
   ('Tata Innovation Center', array['Tata', 'The Bridge', 'The Bridge at Cornell Tech', '11 East Loop Road', '11 E Loop Rd'], 40.7552363, -73.9555091),
   ('The House', array['The House at Cornell Tech', '1 East Loop Road', '1 E Loop Rd'], 40.7557548, -73.9549158),
   ('Verizon Executive Education Center', array['Verizon Center', 'Executive Education Center', 'Verizon Executive Ed Center'], 40.7557846, -73.9556069),

@@ -17,6 +17,8 @@ export type Choice = { personId: string; first: string; photo: string | null; in
 
 export type Ticket = {
   id: string; title: string; day: string; time: string; ends: string | null; when: string;
+  /** The day the map shows it under: the local date, and its name. Something already running is under today. */
+  mapDate: string; mapDay: string;
   source: string | null; by: string | null; place: string | null; about: string | null;
   /** The event page a posted plan was filled from. */
   link: string | null;

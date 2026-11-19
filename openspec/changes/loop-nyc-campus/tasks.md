@@ -47,7 +47,7 @@
 - [x] 6.2a Cornell Tech's CampusGroups calendar added as a feed and read once (2026-11-18, at the founder's word): 39 read, 5 in the next 30 days, 3 this week, 0 on the map (no places yet)
 - [ ] 6.2b Ithaca has no feed either: add `https://cornell.campusgroups.com/ical/cornell/ical_cornell.ics` for Cornell on `/c/admin` when the founder wants it
 
-- [x] 6.2c One-time load from the Roosevelt Islander's events page (founder, 2026-11-18: "we just want to scrape it to start, just to seed cornell tech events"): `scripts/campus-seed-island.ts`, run by hand; 23 events and 8 venues written; 9 on this week, 6 on the map. It is not kept fresh: run it again or replace it with a real feed (design D9a)
+- [x] 6.2c One-time load from the Roosevelt Islander's events page (founder, 2026-11-18: "we just want to scrape it to start, just to seed cornell tech events"): `scripts/campus-seed-island.ts`, run by hand; 23 events and 8 venues written; 9 on this week, 6 on the map. It is not kept fresh: replace it with a real feed or the publisher's permission (design D9a)
 - [ ] 6.3 Find public calendars for Roosevelt Island that publish a calendar feed (design D9) and give the founder the list: name, address, what it carries, roughly how many events in the next 30 days. Check each parses with `parseFeed` before listing it
 - [ ] 6.4 Founder picks which calendars are on and adds them on `/c/admin`; read them once
 - [ ] 6.5 After the first read, list the place texts that matched no place; add the ones on the island as places (a second small migration or the admin page, whichever the founder prefers) and confirm those events now show on the map

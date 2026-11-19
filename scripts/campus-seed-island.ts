@@ -1,6 +1,8 @@
 // A first load of what is on around Cornell Tech, to seed the New York campus (openspec loop-nyc-campus, design D9a).
-// It reads the Roosevelt Islander's public events page once: the events that page serves to any visitor, about five
-// weeks' worth. It is run by hand, not on a schedule, and it is not a feed: nothing here keeps the events fresh.
+// It reads what the Roosevelt Islander's public events page (rooseveltislander.com/events/) shows, by fetching the
+// events widget's own data at portal.cityspark.com/PortalScripts/Roosevelt: the events served to any visitor, about five
+// weeks' worth. It was a one-time load (founder, 2026-11-18) and is not to be re-run without the publisher's say-so.
+// It is not a feed: nothing here keeps the events fresh.
 //
 //   node --conditions=react-server --import tsx scripts/campus-seed-island.ts            shows what it would write, and where
 //   node --conditions=react-server --import tsx scripts/campus-seed-island.ts --yes      writes it

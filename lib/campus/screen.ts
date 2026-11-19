@@ -161,8 +161,11 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
 
     const at = localParts(tz, new Date(listing.startsAt)), today = at.date === localParts(tz, now).date;
     const short = stub.kind === 'group' && stub.state === 'near';
+    const later = new Date(Math.max(Date.parse(listing.startsAt), now.getTime())), mapAt = localParts(tz, later);
+    const beyond = Date.parse(`${mapAt.date}T00:00:00Z`) - Date.parse(`${localParts(tz, now).date}T00:00:00Z`) > 6 * 86400000;
     return {
       id: listing.id, title: listing.title, day: dayLabel(tz, listing.startsAt, now), time: timeLabel(tz, listing.startsAt), when: listing.startsAt,
+      mapDate: mapAt.date, mapDay: beyond ? `${mapAt.weekday} ${Number(mapAt.date.slice(8))}` : dayLabel(tz, later, now),
       ends: listing.endsAt ? `until ${timeLabel(tz, listing.endsAt)}` : null, source: listing.source,
       // Who posted a plan is for signed-in people only.
       by: listing.origin === 'member' ? (me && listing.postedBy ? `Posted by ${names.get(listing.postedBy)?.first ?? 'Someone'}` : null) : listing.host,

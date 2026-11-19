@@ -573,6 +573,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-under { position: absolute; inset: 3px -7px 3px 7px; z-index: -1; background: var(--hot); box-shadow: 0 0 0 1.2px var(--cs-ink); rotate: 9deg; }
 .cs-n { position: absolute; right: -11px; top: -9px; z-index: 2; min-width: 22px; padding: 3px 6px 4px; border-radius: 99px; font-style: normal; font-size: 11.5px; font-weight: 800; line-height: 1; text-align: center; color: var(--second); background: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--card); }
 .cs-bub .also { justify-self: start; margin-top: 5px; padding: 4px 10px 5px; border-radius: 99px; font-size: 11.5px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--cs-ink); pointer-events: auto; cursor: pointer; transition: background-color .15s; } .cs-bub .also:hover { background: var(--second); }
+.cs-near[data-let-go] .cs-bub .also { pointer-events: none; }
 /* The days that have something on in this section. One is on the map at a time. */
 .cs-days { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
 .cs-days button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 6px 0 11px; border-radius: 99px; font-size: 12.5px; font-weight: 700; line-height: 1; color: var(--cs-ink); background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: background-color .15s; }

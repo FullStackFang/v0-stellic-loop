@@ -39,7 +39,7 @@ afterEach(() => { cleanup(); maps.length = 0; vi.unstubAllGlobals(); });
 
 const at = (hours: number) => new Date(Date.now() + hours * 3600000).toISOString();
 function ticket(title: string, time: string, hours: number, lon: number | null, lat = 0, more: Partial<Ticket> = {}): Ticket {
-  return { id: title, title, day: 'Today', time, ends: null, when: at(hours), source: null, by: null, place: `${title} hall`, about: null, link: null, tags: [], map: lon === null ? null : { name: `${title} hall`, lat, lon },
+  return { id: title, title, day: 'Today', mapDate: '2026-11-19', mapDay: 'Today', time, ends: null, when: at(hours), source: null, by: null, place: `${title} hall`, about: null, link: null, tags: [], map: lon === null ? null : { name: `${title} hall`, lat, lon },
     words: [], pull: 0, going: 0, stub: { kind: 'none', say: 'Nobody is in yet', faces: [] }, how: null, known: [], mine: null, action: 'in', status: null, joinToken: null, ...more };
 }
 // Two in Collegetown, one in Central Campus, one in North Campus (two steps from Collegetown), and one with no spot.
@@ -292,7 +292,7 @@ describe('The map beside the week, on a wide window', () => {
 
 describe('One day on the map', () => {
   // Collegetown: two plans today at one address, one more today across the street, and one on Saturday.
-  const days = [ticket('Bagels', '9am', 1, -76.4876, 42.4393), ticket('Chess', '10am', 2, -76.4876, 42.4393), ticket('Dumpling night', '8pm', 6, -76.4852, 42.4406), ticket('Market', '8am', 50, -76.4876, 42.4393, { day: 'Sat' })];
+  const days = [ticket('Bagels', '9am', 1, -76.4876, 42.4393), ticket('Chess', '10am', 2, -76.4876, 42.4393), ticket('Dumpling night', '8pm', 6, -76.4852, 42.4406), ticket('Market', '8am', 50, -76.4876, 42.4393, { day: 'Sat', mapDate: '2026-11-21', mapDay: 'Sat' })];
   const onMap = () => [...document.querySelectorAll('.cs-pin')].map(pin => pin.getAttribute('aria-label'));
 
   it('shows the first day with anything on, and a day pressed on the band puts that day on the map', async () => {
@@ -304,6 +304,47 @@ describe('One day on the map', () => {
     fireEvent.click(within(band).getByRole('button', { name: 'Sat1' }));
     await waitFor(() => expect(onMap()).toEqual(['Market, Sat 8am']));
     expect(screen.getByRole('slider').getAttribute('aria-valuemax')).toBe('1');   // the dial turns through that day only
+  });
+
+  it('something already running is under Today, apart from a plan on the same weekday later this week', async () => {
+    // An exhibition that began last Saturday and is still on, and this Saturday's market: both read "Sat" on their stamps.
+    const running = [ticket('Exhibition', '10am', -120, -76.4852, 42.4406, { day: 'Sat' }), ticket('Bagels', '9am', 1, -76.4876, 42.4393), ticket('Market', '8am', 50, -76.4876, 42.4393, { day: 'Sat', mapDate: '2026-11-21', mapDay: 'Sat' })];
+    locate(null);
+    await near(running);
+    await waitFor(() => expect(onMap()).toEqual(['Exhibition, Sat 10am', 'Bagels, Today 9am']));
+    const band = screen.getByRole('group', { name: 'Day on the map' });
+    expect(within(band).getAllByRole('button').map(pill => pill.textContent)).toEqual(['Today2', 'Sat1']);
+    expect(within(band).getByRole('button', { name: 'Today2' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(band).getByRole('button', { name: 'Sat1' }));
+    await waitFor(() => expect(onMap()).toEqual(['Market, Sat 8am']));
+  });
+
+  it('on a phone, a plan opened from another day brings its day onto the map, and the day stays when it closes', async () => {
+    // The composer offers a plan already on with the tag typed, whatever its day; "Look at" opens its ticket.
+    const viewer = { first: 'Ana', name: 'Ana', photo: null, face: 0, ownPhoto: null, own: null, owns: [], picks: { core: [], premium: [], school: [] }, asked: false, makesLeft: 0, level: 0, outings: 0, admin: false, groups: [] };
+    const tagged = days.map(each => each.title === 'Market' ? { ...each, tags: ['market'] } : each);
+    locate(null);
+    render(<CampusScreen screen={{ ...model('cornell', tagged), viewer }} signInHref="/sign-in" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Near you' }));
+    await waitFor(() => expect(onMap()).toHaveLength(2));
+    fireEvent.click(screen.getByRole('button', { name: 'Post a plan' }));
+    fireEvent.change(document.querySelector('#cs-say')!, { target: { value: 'coffee @market ' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Look at Market' }));
+    await waitFor(() => expect(onMap()).toEqual(['Market, Sat 8am']));
+    expect(document.querySelector('.cs-pin')?.className).toContain('sel');
+    fireEvent.click(within(document.querySelector<HTMLElement>('.cs-near-sheet.open')!).getAllByRole('button', { name: /Close/ })[0]);
+    await screen.findByRole('slider');
+    expect(onMap()).toEqual(['Market, Sat 8am']);
+  });
+
+  it('beside the list, pointing at either plan of a shared address lifts its one stamp', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-width'), addEventListener() {}, removeEventListener() {} }));
+    locate(null);
+    render(<CampusScreen screen={model('cornell', days)} signInHref="/sign-in" />);
+    await waitFor(() => expect(maps).toHaveLength(1));
+    await waitFor(() => expect(onMap()).toHaveLength(2));
+    fireEvent.mouseEnter(screen.getByRole('heading', { level: 3, name: 'Chess' }).closest('article')!);
+    expect(document.querySelector('.cs-pin.hov')?.getAttribute('aria-label')).toBe('Bagels, Today 9am, 2 here');
   });
 
   it('has no day pills when everything on the map is on one day', async () => {
