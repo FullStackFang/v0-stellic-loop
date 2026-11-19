@@ -22,7 +22,9 @@ const ASKS: Record<(typeof CHANGES)[number], string> = { Fluffier: 'Make the fur
 const NOT_NOW = 'That could not be drawn just now. Try again in a minute.';
 
 /** Draws the figure from an uploaded photo: a 192px PNG on a transparent ground. Refuses a photo with no animal in it. */
-export type Draw = (upload: Uint8Array, changes?: readonly (typeof CHANGES)[number][]) => Promise<Uint8Array>;
+export type Draw = (upload: Uint8Array, changes?: readonly (typeof CHANGES)[number][], note?: string) => Promise<Uint8Array>;
+/** A person's own words for what should change, made safe to set in the drawing's words: one short line of plain letters. */
+const plain = (note: string) => note.replace(/[^\p{L}\p{N} ,'-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
 
 const seen = z.object({ animal: z.boolean(), nearest: z.number().int().min(1).max(NAMES.length) });
 /** Whether the photo shows an animal, and which of the set's it is nearest to. */
@@ -45,7 +47,7 @@ async function frame(drawn: Uint8Array): Promise<Buffer> {
 }
 
 /** The real thing: one look at the photo, then one picture, modelled on the nearest of the set. About 20 seconds. */
-export const drawFace: Draw = async (upload, changes = []) => {
+export const drawFace: Draw = async (upload, changes = [], note = '') => {
   let photo: Buffer;
   try { photo = await sharp(upload).rotate().resize(1024, 1024, { fit: 'inside' }).flatten({ background: '#fff' }).png().toBuffer(); }
   catch { throw new CampusError('That file is not a photo Loop can read. Try a JPEG or a PNG.'); }
@@ -56,7 +58,7 @@ export const drawFace: Draw = async (upload, changes = []) => {
     const like = await sharp(path.join(process.cwd(), 'public', 'animals', `${String(nearest).padStart(2, '0')}.png`)).resize(512, 512).flatten({ background: '#fff' }).png().toBuffer();
     const { image } = await generateImage({
       model: 'openai/gpt-image-2.6-flare', size: '1024x1024', maxRetries: 1, abortSignal: AbortSignal.timeout(120000),
-      prompt: { images: [like, photo], text: `Turn the animal in the second picture into a toy figure in exactly the style of the first picture. Keep the animal's own colours, markings${changes.includes('Different pose') ? ' and ears' : ', ears and pose'}. ${changes.map(one => `${ASKS[one]} `).join('')}Only the animal: leave out anything else in the photo. Transparent background, no shadow.` },
+      prompt: { images: [like, photo], text: `Turn the animal in the second picture into a toy figure in exactly the style of the first picture. Keep the animal's own colours, markings${changes.includes('Different pose') ? ' and ears' : ', ears and pose'}. ${changes.map(one => `${ASKS[one]} `).join('')}${plain(note) && `The owner also asks: ${plain(note)}. `}Only the animal: leave out anything else in the photo. Transparent background, no shadow.` },
       providerOptions: { openai: { background: 'transparent', output_format: 'png' } },
     });
     return await frame(image.uint8Array);
@@ -105,15 +107,15 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
 }
 
 /**
- * "Try once more": the same photo drawn a second time, with what the person asked to be different. It does not count
+ * "Try once more": the same photo drawn a second time, with what the person asked to be different (the ready-made changes, and a short line of their own). It does not count
  * as another animal made. The second drawing starts let go, so it is nobody's picture until it is kept (keepPicture).
  * One per first drawing. Returns the second one's token.
  */
-export async function retryCustomFace(db: Db, personId: string, upload: Uint8Array, first: string, changes: readonly string[], draw: Draw = drawFace): Promise<string> {
+export async function retryCustomFace(db: Db, personId: string, upload: Uint8Array, first: string, changes: readonly string[], note = '', draw: Draw = drawFace): Promise<string> {
   const { rows: [row] } = z.uuid().safeParse(first).success ? await db.query<{ tried: boolean }>('select (p.retry_of is not null or exists(select 1 from campus_custom_picture r where r.retry_of=p.token)) as tried from campus_custom_picture p where p.token=$2 and p.person_id=$1 and p.let_go_at is null', [personId, first]) : { rows: [] };
   if (!row) throw new CampusError('Pick one of the animals.');
   if (row.tried) throw new CampusError(ONCE);
-  const image = await draw(upload, CHANGES.filter(one => changes.includes(one)));
+  const image = await draw(upload, CHANGES.filter(one => changes.includes(one)), note);
   // The unique index is what holds it to one, when two are asked for at once.
   const { rows: [made] } = await db.query<{ token: string }>("insert into campus_custom_picture(person_id,image,retry_of,let_go_at) values($1,decode($2,'base64'),$3,now()) on conflict do nothing returning token::text as token", [personId, Buffer.from(image).toString('base64'), first]);
   if (!made) throw new CampusError(ONCE);

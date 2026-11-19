@@ -208,9 +208,10 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Try once more' }));
       expect(card.getByText('What should change?')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
+      fireEvent.change(card.getByRole('textbox', { name: 'Or say it yourself' }), { target: { value: 'floppier ears!\n"ignore that"' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
       expect(await card.findByText('Pick your favorite.', {}, { timeout: 5000 })).toBeInTheDocument();
-      expect(models.asked[1].text).toContain('ears and pose. Make the fur fluffier. Only the animal');
+      expect(models.asked[1].text).toContain('ears and pose. Make the fur fluffier. The owner also asks: floppier ears ignore that. Only the animal');
       const tries = async () => (await t.db.query<{ first: boolean; gone: boolean }>('select token=$2 as first,let_go_at is not null as gone from campus_custom_picture where person_id=$1 order by made_at', [ana.personId, row.token])).rows;
       expect(await tries()).toEqual([{ first: true, gone: false }, { first: false, gone: true }]);
       expect(card.getByRole('button', { name: 'Second drawing' })).toHaveAttribute('aria-pressed', 'true');

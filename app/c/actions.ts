@@ -91,7 +91,7 @@ export async function againFaceAction(data: FormData): Promise<AgainFace> {
   const photo = data.get('photo');
   if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
   try {
-    return { ok: true, own: customFace(await retryCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), String(data.get('first')).split('/').pop() ?? '', data.getAll('change').map(String))) };
+    return { ok: true, own: customFace(await retryCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), String(data.get('first')).split('/').pop() ?? '', data.getAll('change').map(String), String(data.get('note') ?? ''))) };
   } catch (error) {
     return { ok: false, message: error instanceof CampusError ? error.message : 'That did not go through. Try again.' };
   }

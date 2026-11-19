@@ -38,13 +38,14 @@ export function OwnFace({ asked, left, onAsked, onMade, onKept, onBack }: { aske
     if (got.ok) setCode(typed); else setSaid(got.message);
   };
   // One more try at a made animal: what should change, then the two side by side. `second` is the retry, `pick` which of the two is chosen.
-  const [changes, setChanges] = useState<string[]>([]), [second, setSecond] = useState(''), [pick, setPick] = useState(1), [tried, setTried] = useState(false);
+  const [changes, setChanges] = useState<string[]>([]), [note, setNote] = useState(''), [second, setSecond] = useState(''), [pick, setPick] = useState(1), [tried, setTried] = useState(false);
   const again = async () => {
     if (!file) return;
     setSaid(''); setState('busy');
     const data = new FormData();
     data.set('photo', await small(file), 'photo.jpg'); data.set('first', own);
     for (const one of changes) data.append('change', one);
+    if (note.trim()) data.set('note', note.trim());
     const got = await againFaceAction(data).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
     if (got.ok) { setSecond(got.own); setTried(true); setPick(1); setState('pick'); } else { setSaid(got.message); setState('ask'); }
   };
@@ -113,7 +114,7 @@ export function OwnFace({ asked, left, onAsked, onMade, onKept, onBack }: { aske
     : state === 'ask' ? <><div className="cs-prem-perks"><span>We’ll draw it once more from the same photo.</span></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void again(); }}>
         <div className="cs-chips" role="group" aria-label="What should change">{CHANGES.map(one => <button key={one} type="button" aria-pressed={changes.includes(one)} onClick={() => setChanges(had => had.includes(one) ? had.filter(each => each !== one) : [...had, one])}>{one}</button>)}</div>
-        <button className="cs-btn go">Draw again</button>
+        <div className="cs-prem-join"><input value={note} onChange={event => setNote(event.target.value)} maxLength={60} aria-label="Or say it yourself" placeholder="Or say it yourself: floppier ears…" autoComplete="off" /><button className="cs-btn go">Draw again</button></div>
         {said && <p role="alert">{said}</p>}
       </form></>
     : state === 'pick' ? <><div className="cs-two" role="group" aria-label="Pick your favorite">{[own, second].map((one, at) => <button key={one} aria-pressed={pick === at} aria-label={at ? 'Second drawing' : 'First drawing'} onClick={() => setPick(at)}><img src={one} alt="" /><span>{at ? 'Second' : 'First'}</span></button>)}</div>
