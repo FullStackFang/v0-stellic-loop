@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en" data-kit="cornell">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where the app waits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* Every place the app makes someone wait, each drawn with the picked loader: "Saving seats" (direction B of mockups-loading.html).
+   Grouped by how big the wait is on screen. The tab on top of a frame names the place; the pill at its foot says what the app shows there today.
+   Kit tokens of app/c/campus.css. The dark strip, the lettered bars and the frame tabs belong to the mockup. */
+:root { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --mute: oklch(46.5% 0.012 245); --on-ink: oklch(99.4% 0.003 230); --on-ink-mute: oklch(82% 0.02 245); --line: oklch(90.6% 0.008 240);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --sunk: color-mix(in oklab, var(--ink) 10%, var(--paper));
+  --r: 22px 22px 22px 6px; --expo: cubic-bezier(.16, 1, .3, 1); }
+:root[data-kit=loop] { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); }
+:root[data-kit=cuny] { --field: oklch(88% 0.13 88); --field-shadow: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --action: oklch(38% 0.18 264); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p, ul, figure { margin: 0; padding: 0; } ul { list-style: none; }
+button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+.mock { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button { height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+
+main { display: grid; gap: 58px; max-width: 1280px; margin: 0 auto; padding: 30px 32px 90px; }
+.dir { display: grid; gap: 34px; }
+.head { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 10px 16px 10px 10px; border-radius: var(--r); background: var(--ink); color: var(--on-ink); }
+.head i { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--field); color: var(--ink); font-style: normal; font-size: 22px; font-weight: 820; }
+.head b { font-size: 21px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.04em; } .head span { color: var(--on-ink-mute); font-size: 14.5px; }
+.frames { display: flex; flex-wrap: wrap; gap: 44px 28px; align-items: start; }
+.fr { position: relative; flex: none; width: 250px; height: 420px; } .fr.wide { flex: 1 1 380px; } .fr.short { height: 236px; } .fr.tall { height: 500px; }
+.fr > figcaption { position: absolute; z-index: 5; top: -13px; left: 20px; padding: 3px 12px 4px; border-radius: 99px; background: var(--ink); color: var(--on-ink); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.fr > small { position: absolute; z-index: 5; bottom: -13px; left: 20px; max-width: calc(100% - 30px); padding: 3px 12px 4px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 12.5px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fr > small b { font-weight: 700; }
+.scr { position: absolute; inset: 0; overflow: hidden; isolation: isolate; display: grid; align-content: start; background: var(--page); border-radius: var(--r); box-shadow: 0 0 0 2px var(--ink), 6px 6px 0 2px var(--field-shadow); }
+.phone .scr { border-radius: 34px; } .scr.field { background: var(--field); } .scr.paper { background: var(--paper); } .scr.mid { align-content: center; justify-items: center; } .scr.stretch { align-content: stretch; }
+.pad { display: grid; gap: 14px; padding: 22px 20px; align-content: start; } .mid { display: grid; place-items: center; align-content: center; }
+.fill { flex: 1; min-height: 0; } .scr > .fill { height: 100%; }
+
+/* the app's own pieces */
+.nav { display: flex; align-items: center; gap: 6px; height: 60px; padding: 0 14px; background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.wm { margin-right: 6px; } .wm svg { display: block; width: 36px; height: 36px; padding: 5px; border-radius: 10px 10px 10px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 99px; font-size: 14px; font-weight: 580; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.pill[aria-current] { background: var(--ink); color: var(--field); box-shadow: none; } .pill:has(.sf) { padding-right: 9px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 40px; padding: 0 18px; border-radius: 99px; font-weight: 580; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.btn.go { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .btn.sm { height: 36px; padding: 0 14px; } .btn:has(.sf) { padding-left: 11px; }
+.tk { display: grid; grid-template-columns: 1fr auto; min-height: 78px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(4px 4px 0 var(--ink)); }
+.tk > span { display: grid; align-content: center; background: var(--paper); }
+.tk-main { gap: 3px; padding: 12px 14px 13px 16px; border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk-main small { font-size: 12px; font-weight: 620; color: var(--mute); } .tk-main b { font-size: 18px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; } .tk-main em { font-style: normal; font-size: 12.5px; color: var(--mute); white-space: nowrap; }
+.tk > .tk-stub { justify-items: center; padding: 0 12px; border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: var(--stub); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.card { display: grid; gap: 12px; padding: 16px; border-radius: var(--r); background: var(--paper); box-shadow: 5px 5px 0 var(--field-shadow); }
+.card h3 { font-size: 20px; font-weight: 720; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1.05; }
+.input { display: flex; align-items: center; height: 42px; padding: 0 14px; border-radius: 12px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 14.5px; color: var(--mute); white-space: nowrap; overflow: hidden; }
+.input b { color: var(--ink); font-weight: 560; } .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.map { position: relative; display: grid; place-items: center; overflow: hidden; background: color-mix(in oklab, var(--field) 16%, var(--paper));
+  background-image: linear-gradient(color-mix(in oklab, var(--ink) 9%, transparent) 1.5px, transparent 1.5px), linear-gradient(90deg, color-mix(in oklab, var(--ink) 9%, transparent) 1.5px, transparent 1.5px); background-size: 46px 46px; background-position: 12px 8px; }
+.map::before { content: ""; position: absolute; inset: 38% -10% auto; height: 16px; rotate: -9deg; background: var(--paper); box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--ink) 14%, transparent); }
+.map > * { position: relative; }
+.loc { position: absolute !important; right: 12px; bottom: 12px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.faces { display: grid; grid-template-columns: repeat(4, 38px); gap: 9px; } .faces span { position: relative; width: 38px; height: 38px; border-radius: 50%; background: var(--sunk); } .faces img { width: 100%; height: 100%; }
+.faces .on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--action); } .faces .on .sf { position: absolute; left: 50%; translate: -50%; bottom: -17px; z-index: 1; padding: 2px; border-radius: 99px; background: var(--ink); color: var(--on-ink); }
+.signin { width: 214px; border-radius: var(--r); overflow: hidden; background: var(--paper); box-shadow: 0 0 0 2px var(--ink), 5px 5px 0 2px var(--ink); }
+.signin > b { display: block; padding: 12px 16px 11px; background: var(--stub); border-bottom: 1.5px dashed var(--ink); font-size: 17px; font-weight: 720; letter-spacing: -0.03em; }
+.signin > div { display: grid; justify-items: center; padding: 26px 0 30px; }
+.plate { display: grid; gap: 14px; justify-items: start; padding: 20px; height: 100%; align-content: center; background: var(--ink); color: var(--on-ink); }
+.plate h3 { font-size: 25px; font-weight: 740; font-stretch: 110%; letter-spacing: -0.045em; line-height: 1; } .plate p { font-size: 13.5px; color: var(--on-ink-mute); }
+
+/* ---------- Saving seats, at its two sizes ---------- */
+/* The ticket: seats fill one by one with faces, then the stub is stamped. */
+.st { --t: 4.2s; --gap: .45s; display: grid; grid-template-columns: 1fr 54px; color: var(--ink); filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(5px 5px 0 var(--ink)); }
+.st-main { display: grid; gap: 10px; padding: 15px 13px 16px 15px; background: var(--paper); border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-main b { font-size: 17px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+.socks { display: flex; gap: 5px; }
+.socks span { width: 31px; height: 31px; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 24%, transparent); }
+.socks img { width: 100%; height: 100%; animation: seat var(--t) var(--expo) calc(var(--i) * var(--gap)) infinite backwards; }
+@keyframes seat { 0% { opacity: 0; transform: scale(.2); } 7%, 74% { opacity: 1; transform: none; } 74% { animation-timing-function: ease-in; } 80%, 100% { opacity: 0; transform: scale(.2); } }
+.st-stub { position: relative; display: grid; justify-items: center; align-content: center; gap: 4px; border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: var(--stub); color: var(--paper); --top: var(--paper); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-stub::before { content: ""; position: absolute; inset: 0; background: var(--action); animation: stamp var(--t) var(--expo) infinite; }
+.st-stub svg { position: relative; width: 30px; height: 30px; } .st-stub b { position: relative; font-size: 11.5px; font-weight: 720; white-space: nowrap; }
+.st-stub svg, .st-stub b { animation: stamped var(--t) linear infinite; }
+@keyframes stamp { 0%, 40% { clip-path: inset(100% 0 0); } 48%, 74% { clip-path: inset(0); } 80%, 100% { clip-path: inset(100% 0 0); } }
+@keyframes stamped { 0%, 41% { opacity: 0; } 47%, 74% { opacity: 1; } 79%, 100% { opacity: 0; } }
+.st.s8 { scale: .84; }
+/* A long wait (drawing a pet takes about half a minute): the same ticket, one seat at a time, and the last seat is the one being made. */
+.st.slow { --t: 13s; --gap: 2.6s; } .st.slow .socks img { animation-name: seat-slow; } .st.slow .st-stub::before { animation-name: stamp-slow; } .st.slow .st-stub :is(svg, b) { animation-name: stamped-slow; }
+.st.slow .socks span:last-child { box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 24%, transparent), 0 0 0 2px var(--paper), 0 0 0 4px var(--action); }
+@keyframes seat-slow { 0% { opacity: 0; transform: scale(.2); } 3%, 90% { opacity: 1; transform: none; } 93%, 100% { opacity: 0; transform: scale(.2); } }
+@keyframes stamp-slow { 0%, 64% { clip-path: inset(100% 0 0); } 68%, 90% { clip-path: inset(0); } 93%, 100% { clip-path: inset(100% 0 0); } }
+@keyframes stamped-slow { 0%, 65% { opacity: 0; } 68%, 90% { opacity: 1; } 92%, 100% { opacity: 0; } }
+/* The small one, for whatever was just pressed: three seats, three faces. */
+.sf { --t: 2.2s; --gap: .2s; display: inline-flex; flex: none; }
+.sf i { width: 20px; height: 20px; margin-left: -6px; border-radius: 50%; background: color-mix(in oklab, currentColor 22%, transparent); box-shadow: 0 0 0 1.5px var(--ring, var(--paper)); } .sf i:first-child { margin-left: 0; }
+.sf img { width: 100%; height: 100%; border-radius: 50%; background: var(--stub); animation: seat var(--t) var(--expo) calc(var(--i) * var(--gap)) infinite backwards; }
+.go .sf, .on.tk-stub .sf { --ring: var(--action); } [aria-current] .sf, .faces .sf { --ring: var(--ink); }
+
+:root[data-still] *, :root[data-still] *::before, :root[data-still] *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <mask id="m0" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="64.5" cy="60" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="50" cy="35" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="35.5" cy="60" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <symbol id="mark" viewBox="0 0 100 100"><g fill="none" stroke-width="9">
+    <g mask="url(#m0)"><circle cx="50" cy="35" r="21" style="stroke:var(--top, var(--action))"/></g>
+    <g mask="url(#m1)"><circle cx="35.5" cy="60" r="21" stroke="currentColor"/></g>
+    <g mask="url(#m2)"><circle cx="64.5" cy="60" r="21" stroke="currentColor"/></g></g></symbol>
+</defs></svg>
+
+<div class="mock">
+  <span><b>Where the app waits</b> · every wait, drawn with Saving seats · the pill under a frame is what the app shows there today</span>
+  <div id="kits"><small>School</small></div>
+  <div id="motion"><small>Motion</small><button aria-pressed="true" data-v="">Full</button><button aria-pressed="false" data-v="1">Reduced</button></div>
+</div>
+<main id="main"></main>
+
+<script>
+const KITS = [['cornell', 'Cornell', 38], ['columbia', 'Columbia', 39], ['nyu', 'NYU', 40], ['cuny', 'CUNY', 12], ['loop', 'Loop', 5]];
+const face = n => `/animals/${String(n).padStart(2, '0')}.png`;
+const mark = '<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#mark"/></svg>';
+const nav = (tabs, at, wait) => `<div class="nav"><span class="wm">${mark}</span>${tabs.map((tab, i) => `<span class="pill"${i === at ? ' aria-current="page"' : ''}>${tab}${i === at && wait ? sf : ''}</span>`).join('')}</div>`;
+// The ticket. Its line says what is being waited for; the last seat is the viewer's own face (here, the school's).
+const seats = (line, kind = '') => `<span class="st ${kind}" role="status"><span class="st-main"><b>${line}</b><span class="socks">${[5, 21, 12].map((n, i) => `<span><img style="--i:${i}" src="${face(n)}" alt=""></span>`).join('')}<span><img data-lead style="--i:3" src="${face(38)}" alt=""></span></span></span>
+  <span class="st-stub">${mark}<b>It's on</b></span></span>`;
+// The small one.
+const sf = `<span class="sf">${[5, 21].map((n, i) => `<i><img style="--i:${i}" src="${face(n)}" alt=""></i>`).join('')}<i><img data-lead style="--i:2" src="${face(38)}" alt=""></i></span>`;
+const ticket = (stub, on = true) => `<div class="tk"><span class="tk-main"><small>Thu 7:30 pm</small><b>Trivia night</b><em>The Regent</em></span><span class="tk-stub${on ? ' on' : ''}">${stub}</span></div>`;
+const fig = (kind, place, today, inner, screen = '') => `<figure class="fr ${kind}"><figcaption>${place}</figcaption><div class="scr ${screen}">${inner}</div><small><b>Today:</b> ${today}</small></figure>`;
+
+const ROWS = [
+  ['1', 'The whole screen', 'Nothing is on screen yet, so the ticket has it to itself.', [
+    fig('phone tall', 'Opening the app', 'a blank page', seats('Saving your seat'), 'field mid'),
+    fig('phone tall', 'After signing in', 'a blank page', seats('Finding your school'), 'field mid'),
+    fig('tall', 'The sign-in card', '"Loading sign-in…" in grey', `<div class="signin"><b>Sign in</b><div>${seats('One moment', 's8')}</div></div>`, 'field mid'),
+  ]],
+  ['2', 'Changing page', 'The bar stays. The pressed pill shows the small one at once, and the ticket takes the page.', [
+    fig('wide', 'This week, Near you, Ink, Post a plan', 'the old page stays, nothing moves', `${nav(['This week', 'Near you', 'Ink'], 1, true)}<div class="mid" style="height:360px">${seats('Opening Near you')}</div>`),
+    fig('wide', 'Moving to another campus', 'the old page stays, nothing moves', `${nav(['This week', 'Near you', 'Ink'], 0)}<div class="mid" style="height:360px">${seats('Off to Cornell Tech')}</div>`),
+    fig('wide', 'Groups pages and shared links', '"Opening…" over grey bars', `${nav(['All', 'Team 4', 'Trivia crew'], 1, true)}<div class="mid" style="height:360px">${seats('Opening Team 4')}</div>`),
+  ]],
+  ['3', 'One part of a page', 'The rest of the page is there and usable. Only the part that is late shows the ticket.', [
+    fig('wide', 'Near you: the map, and finding you', '"Finding you" as plain text', `${nav(['This week', 'Near you', 'Ink'], 1)}<div class="map" style="height:360px">${seats('Finding you')}<span class="loc">${sf}</span></div>`),
+    fig('', 'A ticket: its map', 'an empty box', `<div class="pad">${ticket("It's on")}</div><div class="map" style="height:300px">${seats('Getting the map', 's8')}</div>`, 'paper'),
+    fig('', 'Ink: drawing your pet', 'your photo and one line', `<div class="plate"><h3>Drawing your pet.</h3>${seats('Your pet is next', 'slow s8')}<p>About half a minute. The last seat is theirs.</p></div>`, 'stretch'),
+  ]],
+  ['4', 'After a press', 'The button that was pressed holds the small one until the answer is back.', [
+    fig('short', 'A ticket: I’m in, Join, Check in', 'the button greys out', `<div class="pad">${ticket(`<span class="btn sm go">${sf}</span>`, false)}${ticket(`<span class="btn sm go">Join</span>`, false).replace('Trivia night', 'Board games').replace('Thu 7:30 pm', 'Sat 8:00 pm').replace('The Regent', 'Second floor')}</div>`),
+    fig('short', 'Posting a plan in one line', '"One moment…"', `<div class="pad"><div class="card"><div class="input"><b>ramen fri 7 @ctown</b></div><div class="row"><span class="btn go">${sf}Posting</span></div></div></div>`),
+    fig('short', 'Post a plan: reading a link', '"Reading…", "Saving…"', `<div class="pad"><div class="card"><div class="input"><b>posh.vip/e/fall-formal</b></div><div class="row"><span class="btn">${sf}Reading</span><span class="btn go">Post it</span></div></div></div>`),
+    fig('short', 'Picking a face', 'nothing; it saves quietly', `<div class="pad"><div class="card"><h3>Your face</h3><div class="faces">${[38, 5, 21, 12, 8, 17, 26, 30].map((n, i) => `<span${i === 2 ? ' class="on"' : ''}><img${i ? '' : ' data-lead'} src="${face(n)}" alt="">${i === 2 ? sf : ''}</span>`).join('')}</div></div></div>`),
+    fig('short', 'Ink: Subscribe, Keep this one', 'the button greys out', `<div class="plate"><h3>Bring your own pet.</h3><div class="row"><span class="btn go">${sf}Subscribing</span></div></div>`, 'stretch'),
+    fig('short', 'Rewards: Mark as used', 'the button greys out', `<div class="pad"><div class="card"><h3>Coffee for the table</h3><div class="row"><span class="btn go">${sf}Marking</span></div></div></div>`),
+  ]],
+];
+document.getElementById('main').innerHTML = ROWS.map(([n, name, line, frames]) => `<section class="dir"><div class="head"><i>${n}</i><b>${name}</b><span>${line}</span></div><div class="frames">${frames.join('')}</div></section>`).join('');
+
+const root = document.documentElement;
+const group = (id, pick) => document.getElementById(id).addEventListener('click', event => {
+  const button = event.target.closest('button'); if (!button) return;
+  for (const each of button.parentElement.querySelectorAll('button')) each.setAttribute('aria-pressed', each === button);
+  pick(button.dataset.v);
+});
+document.getElementById('kits').insertAdjacentHTML('beforeend', KITS.map(([slug, name]) => `<button aria-pressed="${slug === 'cornell'}" data-v="${slug}">${name}</button>`).join(''));
+group('kits', slug => { root.dataset.kit = slug; const lead = face(KITS.find(kit => kit[0] === slug)[2]); for (const img of document.querySelectorAll('img[data-lead]')) img.src = lead; });
+group('motion', on => { if (on) root.dataset.still = ''; else delete root.dataset.still; });
+</script>
+</body>
+</html>
