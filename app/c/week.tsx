@@ -6,7 +6,7 @@ import { CampusScreen } from '@/components/campus/screen';
 import { SiteFoot } from '@/components/campus/foot';
 import { LookingAt } from '@/components/campus/looking-at';
 import { AddSchools } from '@/components/campus/add-schools';
-import { ConnectLinkedin, FitLines, SchoolAsk } from '@/components/campus/no-school';
+import { ConnectLinkedin, FitLines, NotHere } from '@/components/campus/no-school';
 import { SignOut } from '@/components/campus/sign-out';
 import { addedSchools } from '@/lib/campus/linkedin';
 import { linkedinAccount } from '@/lib/campus/linkedin-account';
@@ -40,17 +40,20 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
 }
 
 /**
- * For a signed-in person whose email is at none of the schools (public/demo/mockups-no-school.html): Loop is for
- * schools. First the way in that needs no school email: LinkedIn, and a check by the admin (public/demo/mockups-no-school-entry.html, C).
- * Then the schools it is at, a way back to sign-in with a school email, and a box for the school they are at.
- * Both buttons that leave sign the person out and land on the front page, where the sign-in card is.
+ * For a signed-in person whose email is at none of the schools (public/demo/mockups-one-sign-in.html, frames 2 and 3):
+ * one ticket. The way in with no school email is LinkedIn. Someone who signed in with it, or connected it here, picks
+ * their school and sends their profile for the admin's check, and then waits. Anyone else is asked to continue with
+ * LinkedIn, or to use another email (which signs them out, to the front page and its sign-in card). Where LinkedIn is
+ * not switched on at the sign-in service, the profile's address can be sent without it.
  */
 export async function NoSchool() {
   const viewer = await campusViewer(), email = viewer?.principal.verifiedEmail ?? null, signs = clerkPortalConfigured();
   const schools = (await listCampuses(db())).filter(each => schoolOf(each.slug) === each.slug);
   const asked = viewer ? await schoolAsked(db(), viewer.personId) : null, linked = viewer ? await addedSchools(db(), viewer.personId) : { profile: null, added: [], waiting: [] };
   // Whether a LinkedIn account is theirs: they signed in with it, or connected it on this page.
-  const owner = viewer ? await linkedinAccount(viewer.principal) : null;
+  const owner = viewer ? await linkedinAccount(viewer.principal) : null, waiting = linked.waiting.length > 0;
+  const form = <AddSchools box="cs-ns-box" send="Send for a check" waiting={waiting} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />;
+  const another = <SignOut className="cs-btn">Use another email</SignOut>;
   return <div className="cs cs-ns">
     <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link>
       <div className="cs-nav-end">{email && <span className="cs-ns-who">{email}</span>}{signs && <SignOut className="cs-btn" />}</div>
@@ -58,29 +61,21 @@ export async function NoSchool() {
     <main>
       <section className="cs-ns-band">
         <FitLines lines={[<>Loop is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
-        {email && <p>You signed in with <b>{email}</b>, which is not a school email.</p>}
       </section>
       <div className="cs-ns-two">
-        {/* The way in with no school email, first: LinkedIn, the school to open, and then the admin's check. */}
-        <section className="cs-ns-tk cs-ns-wide">
-          <h2 className="cs-ns-tab">{owner ? 'One step left: pick your school' : 'No school email? Use LinkedIn'}</h2>
+        {owner || waiting ? <section className="cs-ns-tk cs-ns-wide">
+          <h2 className="cs-ns-tab">{waiting ? 'We are checking' : 'Pick your school'}</h2>
           {/* eslint-disable-next-line @next/next/no-img-element -- the LinkedIn account's photo, at the sign-in service's own address */}
-          {owner ? <div className="cs-ns-me">{owner.photo && <img src={owner.photo} alt="" />}<span><b>{owner.name}</b><small>Signed in with LinkedIn</small></span><span className="cs-ns-stamp">Yours</span></div>
-            : signs && !linked.waiting.length && <ConnectLinkedin />}
-          <AddSchools box="cs-ns-box" waiting={linked.waiting.length > 0} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />
-          <p>{linked.waiting.length ? 'We look at each profile ourselves. Come back to this page: your campus opens here once you are in.'
-            : owner ? 'Pick the schools you have been at and paste the address of your profile: LinkedIn does not tell us it, and it is what we open to check your school.'
-            : 'Add your LinkedIn profile and pick the schools you have been at. We look at each profile before letting you in.'}</p>
-        </section>
-        <section className="cs-ns-tk">
-          <h2 className="cs-ns-tab">At one of these schools?</h2>
-          <ul className="cs-ns-schools">{schools.map(school => <li key={school.slug} data-kit={school.slug}><b>{school.name}</b><small>{school.domains[0]}</small></li>)}</ul>
-          {signs && <div className="cs-ns-row"><SignOut className="cs-btn go">Sign in with your school email<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" /></svg></SignOut></div>}
-        </section>
-        <section className="cs-ns-tk">
-          <h2 className="cs-ns-tab">Which school are you at?</h2>
-          <SchoolAsk asked={asked} email={email} />
-        </section>
+          {owner && <div className="cs-ns-me">{owner.photo && <img src={owner.photo} alt="" />}<span><b>{owner.name}</b><small>Signed in with LinkedIn</small></span><span className="cs-ns-stamp">Yours</span></div>}
+          {form}
+          <p>{waiting ? 'We look at each profile ourselves. Come back to this page: your campus opens here once you are in.' : 'LinkedIn does not tell us the address of your profile, so we ask for it: it is what we open to check your school.'}</p>
+          {!waiting && <NotHere asked={asked} email={email} />}
+        </section> : <section className="cs-ns-tk cs-ns-wide">
+          <h2 className="cs-ns-tab">{email ? `${email} is not a school email` : 'No school email'}</h2>
+          {signs ? <ConnectLinkedin other={another} fallback={form} /> : form}
+          <p>Loop is for schools. With LinkedIn we check your school ourselves.</p>
+          <NotHere asked={asked} email={email} />
+        </section>}
       </div>
     </main>
   </div>;
