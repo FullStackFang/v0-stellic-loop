@@ -7,10 +7,11 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { OnYou } from '@/app/c/on-you';
 import { getPortalPrincipal, getSignedInPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
-import { frontIsCampus } from '@/lib/campus/schools';
+import { frontIsCampus, schoolOf } from '@/lib/campus/schools';
 import { CUSTOM, PHOTO, animal, animalOf, customFace } from '@/lib/campus/animals';
 import { customFaces } from '@/lib/campus/custom-face';
-import { hasInk } from '@/lib/campus/ink';
+import { isAdmin } from '@/lib/campus/admin';
+import { hasInk, hasInkPlus } from '@/lib/campus/ink';
 import { campusOf, pickedFaces } from '@/lib/campus/people';
 import { Kit } from '@/components/campus/kit';
 import { Bar, type BarGroup } from './bar';
@@ -24,16 +25,17 @@ async function barGroups(principal: Principal): Promise<BarGroup[]> {
     return treeOrder(await portalGroupTree(principal)).map(group => ({ id: group.loopId, parent: group.parentLoopId, namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
   } catch { return []; }
 }
-/** Whose colours the person sees unless they pick others (their school's, or Loop's own), and the animal that is their face. */
-async function looks(principal: Principal): Promise<{ kit: string; face: string | null; ink: boolean }> {
+/** Whose colours the person sees unless they pick others (their school's, or Loop's own), whether they may pick any school's (Ink+, or the admin), and the animal that is their face. */
+async function looks(principal: Principal): Promise<{ kit: string; anyKit: boolean; face: string | null; ink: boolean }> {
   try {
-    const [school, [faces, ink, made]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await hasInk(q, principal.personId), await customFaces(q, [principal.personId])] as const)]);
+    const [school, [faces, ink, plus, made]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await hasInk(q, principal.personId), await hasInkPlus(q, principal.personId), await customFaces(q, [principal.personId])] as const)]);
     const picked = faces.get(principal.personId), own = made.get(principal.personId)?.token;
-    return { kit: school?.slug ?? 'loop', face: picked === PHOTO ? null : picked === CUSTOM && own ? customFace(own) : animal(picked === undefined || picked < 0 ? animalOf(principal.personId) : picked), ink };
-  } catch { return { kit: 'loop', face: null, ink: false }; }
+    return { kit: school ? schoolOf(school.slug) : 'loop', anyKit: plus || isAdmin(principal), face: picked === PHOTO ? null : picked === CUSTOM && own ? customFace(own) : animal(picked === undefined || picked < 0 ? animalOf(principal.personId) : picked), ink };
+  } catch { return { kit: 'loop', anyKit: false, face: null, ink: false }; }
 }
 // Runs before the page is painted, so a picked or school kit never flashes in after the default. The key is the one components/campus/kit.tsx uses.
-const kitScript = (own: string) => `try{document.documentElement.dataset.kit=localStorage.getItem('loop-kit')||${JSON.stringify(own).replace(/</g, '\\u003c')}}catch(e){}`;
+// A pick the person may not wear (another school's, without Ink+) is passed over, as kitsFor there has it.
+const kitScript = (own: string, any: boolean) => `try{var o=${JSON.stringify(own).replace(/</g, '\\u003c')},k=localStorage.getItem('loop-kit');document.documentElement.dataset.kit=k&&(${any}||k==='loop'||k===o)?k:o}catch(e){}`;
 
 export default async function GroupsLayout({ children }: { children: React.ReactNode }) {
   const configured = clerkPortalConfigured();
@@ -44,8 +46,8 @@ export default async function GroupsLayout({ children }: { children: React.React
   let content = <div className="lp">{configured && <SessionRefresh />}<main className="lp-main lp-main-out"><div className="lp-wrap">{children}</div></main></div>;
   if (principal) {
     const [groups, look] = await Promise.all([barGroups(principal), looks(principal)]);
-    content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit) }} /><Kit own={look.kit} />
-      <Bar groups={groups} face={look.face} ink={look.ink} account={configured ? <UserButton showName /> : null}><Suspense fallback={null}><OnYou /></Suspense></Bar>
+    content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit, look.anyKit) }} /><Kit own={look.kit} any={look.anyKit} />
+      <Bar groups={groups} face={look.face} ink={look.ink} kit={look.kit} anyKit={look.anyKit} account={configured ? <UserButton showName /> : null}><Suspense fallback={null}><OnYou /></Suspense></Bar>
       <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div></div>;
   }
   return configured ? <ClerkProvider signInUrl="/groups/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;

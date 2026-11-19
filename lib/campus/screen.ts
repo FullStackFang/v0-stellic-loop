@@ -7,6 +7,7 @@ import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
 import { animal, animalOf, CUSTOM, customFace, PHOTO } from './animals';
 import { picks as offered, schoolOfPerson } from './animal-tiers';
 import { customFaces, MAKES } from './custom-face';
+import { hasInkPlus } from './ink';
 import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
 import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Reward } from './rewards';
 import { nearTags } from './tags';
@@ -192,11 +193,11 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     return made.done > 0 || made.earned ? [{ id: reward.id, giver: reward.giver, text, ...made, usedAt, progress: made.earned ? 'Earned' : `${made.done} of ${made.need} ${unitOf(reward)}` }] : [];
   });
 
-  const self = me ? names.get(me) : undefined;
+  const self = me ? names.get(me) : undefined, school = viewer && await schoolOfPerson(db, viewer.personId);
   return {
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
     viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null,
-      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, owns: (made.get(viewer.personId)?.all ?? []).map(customFace), picks: await offered(db, viewer.admin ? 'all' : await schoolOfPerson(db, viewer.personId)), asked: !!made.get(viewer.personId)?.asked, makesLeft: viewer.admin ? MAKES : made.get(viewer.personId)?.left ?? MAKES, level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
+      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, owns: (made.get(viewer.personId)?.all ?? []).map(customFace), picks: await offered(db, viewer.admin ? 'all' : school), asked: !!made.get(viewer.personId)?.asked, makesLeft: viewer.admin ? MAKES : made.get(viewer.personId)?.left ?? MAKES, kit: school ?? 'loop', anyKit: viewer.admin || await hasInkPlus(db, viewer.personId), level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
     tickets, earning, live, places: me ? await nearTags(db, campus.id, known, now) : [],
   };
 }

@@ -7,7 +7,8 @@ import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { CampusScreen } from '@/components/campus/screen';
 import { animal, animalOf, CUSTOM, PHOTO } from '@/lib/campus/animals';
 import { catalogue, setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
-import { hasInk, INK_PAGE } from '@/lib/campus/ink';
+import { hasInk, INK_PAGE, subscribeInkPlus } from '@/lib/campus/ink';
+import { Kit } from '@/components/campus/kit';
 import { customFaceImage, deletePicture, makeCustomFace, MAKES, premiumAsks, subscribe } from '@/lib/campus/custom-face';
 import { GET as customFaceRoute } from '@/app/animals/custom/[token]/route';
 import { findCampus, type Campus } from '@/lib/campus/listings';
@@ -475,17 +476,36 @@ describe('levels on the screen', () => {
     expect(card).toHaveTextContent('5 more to Regular');
     expect(within(card).queryByText('Admin')).toBeNull();
     expect(within(card).queryByRole('link', { name: 'The groups site' })).toBeNull();
-    // The card also lets anyone pick whose colours the screen wears, and the pick is kept on this browser.
+    // The card also lets the person pick the colours the screen wears, Loop's own or their school's, and the pick is kept on this browser.
     const colours = within(within(card).getByRole('group', { name: 'Colours' }));
-    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loop', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
-    fireEvent.click(colours.getByRole('button', { name: 'Columbia' }));
-    expect(colours.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
-    expect(document.documentElement.dataset.kit).toBe('columbia');
-    expect(localStorage.getItem('loop-kit')).toBe('columbia');
-    delete document.documentElement.dataset.kit; localStorage.clear();
+    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loop']);
     cleanup();
-    await show(as(ana, true));
-    fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
+    await campusOf(t.db, { personId: ana.personId, verifiedEmail: 'ana@cornell.edu' });
+    const kits = async (viewer: ScreenViewer) => { cleanup(); await show(viewer); fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ })); return within(screen.getByRole('group', { name: 'Colours' })); };
+    let mine = await kits(as(ana));
+    expect(mine.getAllByRole('button').map(button => button.textContent)).toEqual(['Loop', 'Cornell']);
+    // Another school's colours are an Ink+ perk: in their place is the way to the plan.
+    expect(mine.getByRole('link', { name: 'Every school with Ink+' })).toHaveAttribute('href', '/c/ink');
+    fireEvent.click(mine.getByRole('button', { name: 'Cornell' }));
+    expect(mine.getByRole('button', { name: 'Cornell' })).toHaveAttribute('aria-pressed', 'true');
+    expect(document.documentElement.dataset.kit).toBe('cornell');
+    expect(localStorage.getItem('loop-kit')).toBe('cornell');
+    // A pick kept from before that is not theirs to wear is passed over for their school's.
+    localStorage.setItem('loop-kit', 'nyu');
+    cleanup(); render(<Kit own="cornell" any={false} />);
+    expect(document.documentElement.dataset.kit).toBe('cornell');
+    cleanup(); render(<Kit own="cornell" any />);
+    expect(document.documentElement.dataset.kit).toBe('nyu');
+    expect(await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu')).toBe(true);
+    mine = await kits(as(ana));
+    expect(mine.getAllByRole('button').map(button => button.textContent)).toEqual(['Loop', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
+    expect(mine.queryByRole('link')).toBeNull();
+    fireEvent.click(mine.getByRole('button', { name: 'Columbia' }));
+    expect(document.documentElement.dataset.kit).toBe('columbia');
+    delete document.documentElement.dataset.kit; localStorage.clear();
+    await t.db.query('delete from campus_ink_plus');
+    // The admin may wear any school's, as they may open any campus.
+    expect((await kits(as(ana, true))).getAllByRole('button')).toHaveLength(5);
     const admin = within(screen.getByRole('navigation', { name: 'Admin' }));
     expect(admin.getByRole('link', { name: 'Run the campus' })).toHaveAttribute('href', '/c/admin');
     expect(admin.getByRole('link', { name: 'The groups site' })).toHaveAttribute('href', '/groups');

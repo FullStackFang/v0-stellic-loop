@@ -46,7 +46,7 @@ export type Live = { listingId: string; giver: string; text: string; usedAt: str
  * `face` is the animal's number, PHOTO or CUSTOM; `ownPhoto` is the sign-in account's photo, offered as a pick when there is one.
  * `own` is the animal they had made from a photo and are using, `owns` every one they made, `picks` what the picker offers (the admin decides which animals are core and which premium), `asked` whether they have asked to subscribe, `makesLeft` how many more they may make.
  */
-export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[]; school: Tile[] }; asked: boolean; makesLeft: number; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
+export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[]; school: Tile[] }; asked: boolean; makesLeft: number; /** Their school's colours ("loop" at no school), and whether they may pick any school's: an Ink+ perk, and the admin's. */ kit: string; anyKit: boolean; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
 
 export type Screen = {
   campus: { slug: string; name: string; tz: string; listSource: string };

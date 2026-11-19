@@ -5,7 +5,7 @@ import { useParams, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { InkBlot, InkMark } from '@/components/campus/ink-mark';
-import { KITS, kitNow, pickKit } from '@/components/campus/kit';
+import { Kits } from '@/components/campus/kit';
 import { INK_PAGE } from '@/lib/campus/ink';
 import { ROOT_SLUG, groupPath } from '@/lib/emba/group-path';
 
@@ -18,13 +18,13 @@ const SHOWN = 5;
  * The top bar of the groups pages, the same one the campus screen has: the way back to This week, the person's
  * groups, and their account with the school colours. A group inside another is named only while the person is in it.
  */
-export function Bar({ groups, face, ink = false, account, children }: { /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** Whether the person has Loop Ink: their avatar sits on its blot. */ ink?: boolean; account: ReactNode }) {
+export function Bar({ groups, face, ink = false, kit = 'loop', anyKit = false, account, children }: { /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** Whether the person has Loop Ink: their avatar sits on its blot. */ ink?: boolean; /** Their school's colours, and whether they may wear every school's (Ink+). */ kit?: string; anyKit?: boolean; account: ReactNode }) {
   const path = usePathname();
   const { namespace, slug = ROOT_SLUG } = useParams<{ namespace?: string; slug?: string }>();
   const current = groups.find(group => group.namespace === namespace && group.slug === slug);
   const top = groups.filter(group => group.depth === 0).slice(0, SHOWN);
   const shown = current && !top.includes(current) ? [...top, current] : top;
-  const [open, setOpen] = useState(false), [kit, setKit] = useState('loop'), box = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const away = (event: MouseEvent) => { if (!box.current?.contains(event.target as Node)) setOpen(false); }, key = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
@@ -40,10 +40,10 @@ export function Bar({ groups, face, ink = false, account, children }: { /** The 
       <Link href="/groups" aria-current={path === '/groups' ? 'page' : undefined}>All groups</Link>
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink"><InkMark /><span>Ink</span></Link></nav>
     <div className="cs-nav-end">{children}<div className="cs-acct" ref={box}>
-      <button aria-expanded={open} aria-label={`Your account and colours${ink ? '. You have Ink' : ''}`} onClick={() => { setKit(kitNow()); setOpen(!open); }}>
+      <button aria-expanded={open} aria-label={`Your account and colours${ink ? '. You have Ink' : ''}`} onClick={() => setOpen(!open)}>
         <span className="cs-ava">{ink ? <span className="cs-inked"><InkBlot seed={face ?? 'You'} />{you}</span> : you}</span></button>
       {open && <div className="cs-lvl" role="dialog" aria-label="Your account"><div className="cs-lvl-body">
-        <div className="cs-kits gb-kits" role="group" aria-label="Colours"><h4>Colours</h4><div>{KITS.map(each => <button key={each.slug} className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }}><i />{each.name}</button>)}</div></div>
+        <Kits own={kit} any={anyKit} className="gb-kits" />
         <nav className="cs-lvl-more" aria-label="You"><Link href="/groups/connections">Assistants</Link><Link href="/groups/reach">Reach</Link><Link href="/groups/archive">How we got here</Link></nav>
         {account && <div className="cs-lvl-more gb-account">{account}</div>}</div></div>}
     </div></div>
