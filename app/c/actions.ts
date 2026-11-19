@@ -10,6 +10,7 @@ import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
 import { customFace } from '@/lib/campus/animals';
 import { freeCode, keepPicture, makeCustomFace, retryCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
+import { subscribeInkPlus } from '@/lib/campus/ink';
 import { pickFace, placeAt } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
@@ -241,4 +242,9 @@ export async function claimOnYouAction(scope: GroupScope, number: number, mine: 
 export async function askGroupAction(scope: GroupScope, ask: { question: string; kind: 'done' | 'one' | 'text'; options?: string[]; closesAt: string }): Promise<OnYouResult> {
   return onYouWrite(viewer => createAsk(db(), viewer.principal, { ...scopeOf(scope), question: String(ask?.question ?? ''), kind: ask?.kind, closesAt: String(ask?.closesAt ?? ''),
     ...(ask?.kind === 'one' ? { options: (ask.options ?? []).map(String) } : {}) }), askWords);
+}
+
+/** "Subscribe" on the Ink+ plate of "Save your picture": what takes the Loop mark off. Nothing is charged: the ask is kept, with where it was made. */
+export async function subscribeToSaveAction(email: string): Promise<ActResult> {
+  return act(async viewer => { if (!await subscribeInkPlus(db(), viewer.personId, String(email), 'save picture')) throw new CampusError('Enter the email to subscribe with.'); });
 }

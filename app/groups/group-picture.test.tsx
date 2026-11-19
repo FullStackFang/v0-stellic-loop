@@ -37,8 +37,9 @@ beforeAll(async () => {
   model.drawn = await sharp({ create: { width: 200, height: 200, channels: 4, background: '#c60' } }).png().toBuffer();
 });
 afterAll(async () => { await t?.close(); });
-beforeEach(async () => { await t.reset(); model.asked.length = 0; });
-afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+// The save pane asks the server for its grounds (app/c/save/route.test.ts): here nothing answers.
+beforeEach(async () => { await t.reset(); model.asked.length = 0; vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500, json: async () => [], text: async () => '' }))); });
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 async function person(email: string) {
   const row = await makePerson(t.db);
@@ -135,12 +136,24 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   await vi.waitFor(async () => expect((await groupPictures(t.db, [group.loopId])).get(group.loopId)).not.toBe(first));
   const kept = (await groupPictures(t.db, [group.loopId])).get(group.loopId)!;
   await vi.waitFor(() => expect(tileButton()!.querySelector('img')).toHaveAttribute('src', `/animals/group/${kept}`));
+  // The picture the group wears can be saved out of the app (openspec loop-save-picture): the pane is the account card's, for this group.
+  const saved = `/c/save?shape=profile&ground=school&org=${group.orgId}&group=${group.loopId}&small=1`;
+  fireEvent.click(card.getByRole('button', { name: 'Save the picture' }));
+  expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', saved);
+  fireEvent.click(card.getByRole('button', { name: 'Done' }));
+  expect(card.getByText('Group pictures')).toBeInTheDocument();
   cleanup();
 
-  // The member sees the picture, on the members page and on the team page, and still has nothing to press.
+  // The member sees the picture, on the members page and on the team page. They have nothing to draw: pressing it saves it.
   await members(member);
   expect(document.querySelector('.gt-tile img')).toHaveAttribute('src', `/animals/group/${kept}`);
-  expect(tileButton()).toBeNull();
+  expect(tileButton()).toHaveAccessibleName('Group picture of Extreme Cheapskates. Save it');
+  fireEvent.click(tileButton()!);
+  const theirs = within(screen.getByRole('dialog', { name: 'Group picture' }));
+  expect(theirs.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', saved);
+  expect(theirs.queryByText('Group pictures')).toBeNull();
+  fireEvent.click(theirs.getByRole('button', { name: 'Done' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
   cleanup();
   render(await withPortalTestSession(member, () => TeamPage({ params: Promise.resolve({ namespace: 'cheapskates' }), searchParams: Promise.resolve({}) })));
   expect(document.querySelector('.gt-tile img')).toHaveAttribute('src', `/animals/group/${kept}`);
