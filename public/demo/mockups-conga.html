@@ -33,8 +33,6 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .map { left: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 104px; height: 104px; border-radius: 50%; padding: 6px; }
 .map canvas { width: 100%; height: 100%; display: block; }
 
-.next { left: 130px; bottom: max(14px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 8px; padding: 8px 15px 8px 11px; border-radius: 99px; font-size: 15px; font-variant-numeric: tabular-nums; }
-.next i { width: 13px; height: 13px; border-radius: 50%; background: var(--action); }
 .dash { position: fixed; z-index: 2; right: 18px; bottom: max(18px, env(safe-area-inset-bottom)); width: 92px; height: 92px; border-radius: 50%; background: var(--action); color: var(--paper);
   font-weight: 900; font-size: 18px; font-stretch: 110%; box-shadow: 4px 4px 0 var(--ink); touch-action: none; transition: transform .12s var(--expo), box-shadow .12s var(--expo); }
 .dash:active, .dash.on { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); background: var(--action-hover); }
@@ -66,7 +64,7 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .score span { font-size: 13px; font-weight: 700; }
 @media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
-  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .next { left: 108px; } }
+  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } }
 </style>
 </head>
 <body>
@@ -75,7 +73,6 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 <div class="hud mine" id="mine" hidden><span class="face" id="mineFace"></span><b id="mineCount">1</b><span>in your line</span></div>
 <div class="hud board" id="board"></div>
 <div class="hud map"><canvas id="map" width="184" height="184"></canvas></div>
-<div class="hud next" id="next" hidden><i></i><b id="nextTime"></b></div>
 <button class="dash" id="dash" hidden>Dash</button>
 <div class="say" id="say"></div>
 
@@ -123,7 +120,7 @@ window.conga = { get world() { return world; } }; // for poking at the game from
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
 function open(id) {
   where = id; map = MAPS[id]; me = null;
-  world = createWorld(Math.random, map.rings, map.holes, map.drops ?? []);
+  world = createWorld(Math.random, map.rings, map.holes, map.shuttles ?? []);
   // Roosevelt Island's cherry trees: a row just in from the west shore.
   blossoms = [];
   if (map.axis != null) {
@@ -131,7 +128,6 @@ function open(id) {
     shore.forEach((from, i) => { const to = shore[(i + 1) % shore.length], far = Math.hypot(to[0] - from[0], to[1] - from[1]);
       for (let d = 40; d < far; d += 85) { const x = from[0] + (to[0] - from[0]) * d / far, y = from[1] + (to[1] - from[1]) * d / far; if ((x - mid[0]) * Math.cos(a) + (y - mid[1]) * Math.sin(a) < -60) blossoms.push([x + Math.cos(a) * 38, y + Math.sin(a) * 38]); } });
   }
-  $('next').hidden = !world.drops.length;
   GROUPS[id].forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
   for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
   land = new Path2D();
@@ -384,29 +380,17 @@ function cabs(thing, t) {
     ctx.save(); ctx.translate(thing.from[0] + dx * at - dy / far * lane, thing.from[1] + dy * at + dx / far * lane); ctx.rotate(a); box(20, 11, 3); inked(C.cab, 2); ctx.restore();
   }
 }
-// The clock on the plaza: a dial that empties as the next tram comes in.
-function clock(drop) {
-  const [x, y] = drop.at, left = Math.max(0, drop.left);
-  ring(x, y, 46); inked(C.paper, 5);
-  ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, 37, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left / drop.every); ctx.closePath(); ctx.fillStyle = C.action; ctx.fill();
-  ctx.beginPath(); for (let n = 0; n < 12; n++) { const a = n * Math.PI / 6; ctx.moveTo(x + Math.cos(a) * 37, y + Math.sin(a) * 37); ctx.lineTo(x + Math.cos(a) * 43, y + Math.sin(a) * 43); } ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
-  ring(x, y, 5); ctx.fillStyle = C.ink; ctx.fill();
-  pill(`${drop.name} in ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`, x, y + 66, C.ink, C.paper, 14);
-}
-// Where the tram car is on its cable: 0 at Manhattan, 1 at the island. It comes in over the last ten seconds, waits four, and goes back.
-function tramAt(drop) {
-  const gone = drop.every - drop.left, ease = f => f * f * (3 - 2 * f);
-  return drop.left < 10 ? ease(1 - drop.left / 10) : gone < 4 ? 1 : gone < 14 ? 1 - ease((gone - 4) / 10) : 0;
-}
 // The tram goes over everyone's heads, so it is drawn last, with its shadow on the ground under it.
-function tram(drop) {
-  const { from, to } = map.tram, dx = to[0] - from[0], dy = to[1] - from[1], far = Math.hypot(dx, dy), f = tramAt(drop), x = from[0] + dx * f, y = from[1] + dy * f;
+// Its riders look out of the windows on the way in, and it goes back with the windows empty.
+function tram(car) {
+  const { from, to, x, y } = car, dx = to[0] - from[0], dy = to[1] - from[1], far = Math.hypot(dx, dy);
   ctx.lineCap = 'butt'; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath();
   for (const side of [-7, 7]) { ctx.moveTo(from[0] - dy / far * side, from[1] + dx / far * side); ctx.lineTo(to[0] - dy / far * side, to[1] + dx / far * side); }
   ctx.stroke();
   for (const at of [0.36, 0.74]) { box(22, 22, 3, from[0] + dx * at, from[1] + dy * at); inked(C.stone, 3); } // its towers
   ctx.globalAlpha = 0.2; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 24, y + 34, 30, 14, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); box(58, 34, 9); inked(C.action, 3.5); box(44, 12, 3); ctx.fillStyle = C.paper; ctx.fill(); ctx.fillStyle = C.ink; ctx.fillRect(-3, -17, 6, 34); ctx.restore();
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); box(78, 44, 11); inked(C.action, 3.5); box(64, 26, 5); ctx.fillStyle = C.paper; ctx.fill(); ctx.restore();
+  for (let n = 0; n < Math.min(3, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + (n - 1) * 20 * dx / far, y + (n - 1) * 20 * dy / far - 3, 26);
 }
 // The lighthouse lamp turning.
 function beam(thing, t) {
@@ -468,7 +452,6 @@ function draw(t, dt) {
   ctx.restore();
   for (const thing of map.things) if (thing.kind === 'bridge') { bridge(thing); cabs(thing, t); }
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing);
-  for (const drop of world.drops) clock(drop);
   for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t);
   for (const zone of map.zones) if (seen(...zone.at)) pill(zone.name, zone.at[0], zone.at[1], C.paper, C.ink, 22);
   for (const thing of map.things) {
@@ -498,7 +481,7 @@ function draw(t, dt) {
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
   for (const s of sprites) sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha);
-  if (map.tram) tram(world.drops[0]);
+  for (const car of world.shuttles) tram(car);
 
   for (let i = puffs.length - 1; i >= 0; i--) {
     const puff = puffs[i], age = (t - puff.t) / 0.6;
@@ -516,6 +499,7 @@ function chart() {
   chartPen.setTransform(1, 0, 0, 1, 0, 0); chartPen.clearRect(0, 0, 184, 184);
   chartPen.translate(92, 92); chartPen.scale(scale, scale); chartPen.translate(-(west + east) / 2, -(north + south) / 2);
   chartPen.fillStyle = C.field; chartPen.strokeStyle = C.ink; chartPen.lineWidth = 3 / scale; chartPen.lineJoin = 'round'; chartPen.stroke(land); chartPen.fill(land);
+  for (const car of world.shuttles) { chartPen.beginPath(); chartPen.rect(car.x - 6 / scale, car.y - 6 / scale, 12 / scale, 12 / scale); chartPen.fillStyle = C.action; chartPen.fill(); chartPen.lineWidth = 2 / scale; chartPen.stroke(); }
   for (const line of world.lines) {
     if (line.dead) continue;
     chartPen.fillStyle = line === me ? C.action : C.ink;
@@ -528,8 +512,6 @@ function board() {
   if (me && !me.dead && !top.includes(me)) top[4] = me;
   $('board').innerHTML = top.map(line => `<div class="${line === me ? 'me' : ''}">${faceTag(line.face)}<i>${ranked.indexOf(line) + 1}. ${line.name}</i><b>${line.tail.length + 1}</b></div>`).join('');
   if (me && !me.dead) $('mineCount').textContent = me.tail.length + 1;
-  const drop = world.drops[0];
-  if (drop) $('nextTime').textContent = `${drop.name} ${Math.floor(drop.left / 60)}:${String(Math.floor(drop.left % 60)).padStart(2, '0')}`;
 }
 
 // ---------- the loop ----------
@@ -552,7 +534,7 @@ function frame(now) {
       if (event.line === ME) { navigator.vibrate?.(60); finish(event); }
       else if (event.by === ME) say(`${world.lines.find(line => line.id === event.line).name} scattered on your line`);
     }
-    if (event.type === 'drop' && me && !me.dead) say(`The ${event.name.toLowerCase()} is in. ${event.count} just got off`);
+    if (event.type === 'arrive') { puffs.push({ x: event.x, y: event.y, t }); if (me && !me.dead) say(`The ${event.name.toLowerCase()} let ${event.count} off at the station`); }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
   }
   draw(t, dt);

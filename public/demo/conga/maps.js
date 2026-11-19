@@ -86,8 +86,7 @@ export const MAPS = {
     ['hall', 'The Octagon', 40.7689, -73.9438, 60, 60, GRID], // placed by hand
     ['tower', 'Lighthouse', 40.77284, -73.94018]],
     at => ({ water: true, axis: GRID,
-      // The tram comes over from Second Avenue beside the bridge. Its Manhattan end is placed by hand.
-      tram: { from: at([-73.96413, 40.76127]), to: at([-73.9540884, 40.7573223]) },
-      // It lets its riders off on the plaza just past the station.
-      drops: [{ name: 'Tram', at: at([-73.95383, 40.75757]), every: 40, count: 9 }] })),
+      // The tram comes over slowly from Second Avenue beside the bridge, lets its riders off on the plaza just past the
+      // station, and goes back empty. Its Manhattan end is placed by hand.
+      shuttles: [{ name: 'Tram', from: at([-73.96413, 40.76127]), to: at([-73.9540884, 40.7573223]), off: at([-73.95383, 40.75757]), riders: 18, ride: 14, stay: 4, away: 8 }] })),
 };

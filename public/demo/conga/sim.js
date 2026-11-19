@@ -54,12 +54,13 @@ const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world
 /**
  * `rings` are the outlines of the ground, each a list of [x, y] corners. Outlines may touch or overlap.
  * `holes` are the outlines of what stands on it, buildings and water, which everyone walks around.
- * `drops` are places where animals arrive together on a clock, like a tram station: { name, at: [x, y], every, count },
- * with `every` in seconds. Each keeps `left`, the seconds until its next arrival.
+ * `shuttles` are cars that bring animals in, like a tram: { name, from: [x, y], to: [x, y], off: [x, y], riders, ride, stay, away }.
+ * A car leaves `from` full, takes `ride` seconds to reach `to`, lets its riders off at `off`, waits `stay` seconds,
+ * rides back empty and is `away` for a while. Each keeps where it is (`x`, `y`) and how many are still aboard (`load`).
  */
-export function createWorld(random = Math.random, rings = round(), holes = [], drops = []) {
+export function createWorld(random = Math.random, rings = round(), holes = [], shuttles = []) {
   const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]);
-  const world = { t: 0, lines: [], strays: [], random, rings, holes, drops: drops.map(drop => ({ ...drop, left: drop.every })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
+  const world = { t: 0, lines: [], strays: [], random, rings, holes, shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   return world;
 }
@@ -183,7 +184,7 @@ function scatter(world, line, by, events) {
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'drop', ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
@@ -258,14 +259,21 @@ export function step(world, dt) {
   }
   for (const [line, by] of hits) scatter(world, line, by, events);
 
-  for (const drop of world.drops) {
-    if ((drop.left -= dt) > 0) continue;
-    drop.left += drop.every;
-    for (let n = 0; n < drop.count; n++) {
-      const a = world.random() * Math.PI * 2, v = 60 + world.random() * 140;
-      world.strays.push({ x: drop.at[0], y: drop.at[1], face: face(world), a, vx: Math.cos(a) * v, vy: Math.sin(a) * v });
+  for (const car of world.shuttles) {
+    const there = car.ride, leaves = there + car.stay, back = leaves + car.ride, was = car.clock, ease = f => f * f * (3 - 2 * f);
+    car.clock = (car.clock + dt) % (back + car.away);
+    if (car.clock < was) car.load = car.riders; // it sets off again, full
+    const at = car.clock < there ? ease(car.clock / there) : car.clock < leaves ? 1 : car.clock < back ? 1 - ease((car.clock - leaves) / car.ride) : 0;
+    car.x = car.from[0] + (car.to[0] - car.from[0]) * at;
+    car.y = car.from[1] + (car.to[1] - car.from[1]) * at;
+    const out = (x, y, push) => { const a = world.random() * Math.PI * 2, v = push * (0.3 + world.random() * 0.7); world.strays.push({ x, y, face: face(world), a, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); car.load--; };
+    // Coming in over the ground, the keenest few jump early. The rest get off together when it stops.
+    if (car.clock < there && car.load > car.riders * 0.7 && inside(world, car.x, car.y) && (car.hop -= dt) <= 0) { car.hop = 0.45; out(car.x, car.y, 40); }
+    if (was < there && car.clock >= there && car.load > 0) {
+      const count = car.load;
+      while (car.load > 0) out(car.off[0], car.off[1], 210);
+      events.push({ type: 'arrive', name: car.name, count, x: car.off[0], y: car.off[1] });
     }
-    events.push({ type: 'drop', name: drop.name, count: drop.count });
   }
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   if (world.strays.length > STRAY_CAP) world.strays.splice(0, world.strays.length - STRAY_CAP);
