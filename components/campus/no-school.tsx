@@ -1,6 +1,7 @@
 'use client';
 
 import { useLayoutEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { useClerk, useUser } from '@clerk/nextjs';
 import { askSchoolAction } from '@/app/c/actions';
 
 /** A headline of whole lines, sized so the longest one runs from edge to edge of the room it has. */
@@ -21,6 +22,25 @@ export function FitLines({ lines }: { lines: ReactNode[] }) {
   }, []);
   // The space between the lines is for anything that reads the heading as one sentence.
   return <h1 ref={ref}>{lines.map((line, at) => [at > 0 && ' ', <span key={at}>{line}</span>])}</h1>;
+}
+
+/**
+ * "Continue with LinkedIn", for someone who signed in another way: LinkedIn is connected to the account they have, so
+ * nobody signs in twice. They go to LinkedIn and come back to this page, which then knows the LinkedIn account is
+ * theirs. Not shown where the sign-in service says LinkedIn is switched off. Rendered only where sign-in is set up.
+ */
+export function ConnectLinkedin() {
+  const clerk = useClerk(), { user } = useUser(), [message, setMessage] = useState(''), [busy, start] = useTransition();
+  const off = (clerk as unknown as { __unstable__environment?: { userSettings?: { social?: Record<string, { enabled?: boolean } | undefined> } } }).__unstable__environment?.userSettings?.social?.oauth_linkedin_oidc?.enabled === false;
+  if (off || !user) return null;
+  const connect = () => start(async () => {
+    try {
+      const account = await user.createExternalAccount({ strategy: 'oauth_linkedin_oidc', redirectUrl: window.location.href }), to = account.verification?.externalVerificationRedirectURL;
+      if (!to) throw new Error('no way to LinkedIn');
+      window.location.assign(to.href);
+    } catch { setMessage('LinkedIn did not connect. You can still paste the address of your profile below.'); }
+  });
+  return <div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy} onClick={connect}>Continue with LinkedIn</button>{message && <p role="alert">{message}</p>}</div>;
 }
 
 /** "Which school are you at?": one box and one button, and afterwards the school they named, kept. */

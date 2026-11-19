@@ -20,6 +20,10 @@
 /* what a ticket is for: a filled tab over its top edge, never a bare heading */
 .cs-ns-tab { position: absolute; top: -17px; left: 20px; height: 34px; padding: 0 14px; display: flex; align-items: center; border-radius: var(--tile); background: var(--cs-ink); color: var(--cs-field); font-size: 15.5px; font-weight: 660; letter-spacing: -0.02em; }
 .cs-ns-tk > p { color: var(--cs-ink-2); } .cs-ns-wide { grid-column: 1 / -1; }
+/* Whose LinkedIn account this is, once they signed in with it: photo, name, and the stamp that says it is proven theirs. */
+.cs-ns-me { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--tile); background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-ns-me img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1.5px var(--cs-ink); } .cs-ns-me > span:not(.cs-ns-stamp) { display: grid; margin-right: auto; line-height: 1.2; }
+.cs-ns-me b { font-size: 17px; font-weight: 720; letter-spacing: -0.03em; overflow-wrap: anywhere; } .cs-ns-me small { font-size: 13px; font-weight: 560; color: var(--cs-on-field-2); } .cs-ns-row > p[role=alert] { font-weight: 620; }
 /* each school in its own colours: data-kit on the tile sets the tokens (campus.css, "Kits") */
 .cs-ns-schools { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
 .cs-ns-schools li { display: grid; gap: 1px; padding: 10px 11px 11px; border-radius: var(--tile); background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); line-height: 1.15; }

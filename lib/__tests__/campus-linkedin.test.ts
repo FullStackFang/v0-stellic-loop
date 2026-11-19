@@ -96,8 +96,10 @@ describe('unlocking schools with a LinkedIn profile', () => {
     const [ana, omar, pia] = [await someone('Ana', 'ana@cornell.edu'), await someone('Omar', 'omar@gmail.com'), await someone('Pia', 'pia@gmail.com')];
     await campusOf(t.db, ana);
     await setSchools(t.db, ana, 'linkedin.com/in/ana-lopez', ['nyu']);
-    await setSchools(t.db, omar, 'linkedin.com/in/omar-reyes', ['columbia']);
+    // Omar signed in with LinkedIn, so the name on that account is kept for the admin; Pia only pasted an address.
+    await setSchools(t.db, omar, 'linkedin.com/in/omar-reyes', ['columbia'], '  Omar Reyes ');
     await setSchools(t.db, pia, 'linkedin.com/in/pia-novak', ['cuny']);
+    expect((await linkedinPeople(t.db)).map(each => [each.name, each.owner]).sort()).toEqual([['Ana', null], ['Omar', 'Omar Reyes'], ['Pia', null]]);
     expect((await linkedinPeople(t.db)).map(each => [each.name, each.waiting]).sort()).toEqual([['Ana', false], ['Omar', true], ['Pia', true]]);
     expect((await linkedinPeople(t.db))[2].name).toBe('Ana');
     // A person removed while waiting was never let in.

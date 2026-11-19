@@ -35,8 +35,9 @@ export async function addedSchools(q: Q, personId: string): Promise<{ profile: s
  * "Unlock": the person's profile and the schools they tick. A person placed at a school keeps it, and the others are
  * added to it at once. A person at no school has to tick one, and then waits: nothing opens for them until the admin
  * approves the profile (approveLinkedin).
+ * `owner` is the name on the LinkedIn account they signed in with or connected, if they did (lib/campus/linkedin-account.ts).
  */
-export async function setSchools(db: Db, who: { personId: string; verifiedEmail: string | null }, typed: string, ticked: readonly string[]): Promise<void> {
+export async function setSchools(db: Db, who: { personId: string; verifiedEmail: string | null }, typed: string, ticked: readonly string[], owner: string | null = null): Promise<void> {
   const profile = profileOf(typed);
   if (!profile) throw new CampusError('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
   const campuses = await listCampuses(db), known = new Set(campuses.map(each => schoolOf(each.slug)));
@@ -53,13 +54,16 @@ export async function setSchools(db: Db, who: { personId: string; verifiedEmail:
     if ((error as { code?: string }).code === '23505') throw new CampusError('That LinkedIn profile is already on another account.');
     throw error;
   }
+  // Kept apart, so that sending still works before the column is there (migration 20261119500000).
+  try { await db.query('update campus_linkedin set owner_name=$2 where person_id=$1', [who.personId, owner?.trim().slice(0, 200) || null]); } catch (error) { if (!missing(error)) throw error; }
 }
 
-export type LinkedinPerson = { personId: string; name: string; email: string | null; profile: string; schools: string[]; added: string; waiting: boolean };
+/** `owner` is the name on the LinkedIn account the person signed in with, or null when they only pasted an address. */
+export type LinkedinPerson = { personId: string; name: string; email: string | null; profile: string; schools: string[]; added: string; waiting: boolean; owner: string | null };
 /** For the admin: everyone who added a profile, the ones waiting for approval first and then the newest, with every school it got them or would. */
 export async function linkedinPeople(q: Q): Promise<LinkedinPerson[]> {
   try {
-    const { rows } = await q.query<LinkedinPerson & { placed: string | null }>(`select l.person_id as "personId",p.name,l.email,l.profile,l.schools,to_char(l.added_at,'YYYY-MM-DD') as added,l.approved_at is null as waiting,c.slug as placed
+    const { rows } = await q.query<LinkedinPerson & { placed: string | null }>(`select l.person_id as "personId",p.name,l.email,l.profile,l.schools,to_char(l.added_at,'YYYY-MM-DD') as added,l.approved_at is null as waiting,to_jsonb(l)->>'owner_name' as owner,c.slug as placed
       from campus_linkedin l join person p on p.id=l.person_id left join campus_person cp on cp.person_id=l.person_id left join campus c on c.id=cp.campus_id order by l.approved_at is not null,l.added_at desc,l.person_id`);
     return rows.map(({ placed, ...row }) => ({ ...row, schools: [...new Set([...(placed ? [schoolOf(placed)] : []), ...row.schools])] }));
   } catch (error) {
