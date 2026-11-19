@@ -430,7 +430,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     <svg className="cs-near-defs" width={0} height={0} aria-hidden="true"><defs><path id="cs-arc-over" d="M-21 0a21 21 0 0 1 42 0" /><path id="cs-arc-under" d="M-22 0a22 22 0 0 0 44 0" /></defs>
       <filter id="cs-rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves={2} seed={7} /><feDisplacementMap in="SourceGraphic" scale={2.4} /></filter></svg>
     <div className="cs-near-map" ref={canvas} /><i className="cs-near-tooth" /><i className="cs-near-age" />
-    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on{days.length > 1 ? ` ${days.find(([date]) => date === day)?.[1]}` : ''} ·<i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2>
+    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on{days.length > 1 ? ` ${days.find(([date]) => date === day)?.[1]}` : ''} · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2>
       {days.length > 1 && !up && <div className="cs-days" role="group" aria-label="Day on the map">{days.map(([each, name]) => <button key={each} aria-pressed={each === day} onClick={() => { setDayPick(each); setLitId(null); if (beside) onPick(inView.find(spot => spot.ticket.mapDate === each)!.ticket.id); }}>{name}<i>{inView.filter(spot => spot.ticket.mapDate === each).length}</i></button>)}</div>}<small>Map © OpenStreetMap, OpenFreeMap</small></div>
     <Swap campuses={swap} />
     {shown && (shown.kind === 'go' && there
