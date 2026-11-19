@@ -25,7 +25,7 @@ Cornell has people in two towns. Today everyone with a cornell.edu address lands
 
 ## Impact
 
-- Database: two small additive migrations, no schema change (the Cornell Tech row, written; its places, to write). The founder applies them by hand.
+- Database: two small additive migrations, no schema change (the Cornell Tech row and its places, both written). The founder applies them by hand.
 - `lib/campus/people.ts`, `session.ts`, `schools.ts`, `listings.ts`: placement, the viewer, the list of schools.
 - `lib/campus/sections.ts`, `components/campus/near.tsx`, `app/c/campus.css`: New York sections and the sign. Another session has uncommitted edits in `sections.ts` and `near.tsx`; work on top of them.
 - New page `app/c/choose/`, a new action, and a row in the account card (`components/campus/screen.tsx` or `own-face.tsx`).

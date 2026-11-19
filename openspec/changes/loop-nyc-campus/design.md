@@ -34,7 +34,7 @@ The founder picked, in `public/demo/mockups-nyc-stops.html`: sign A "Station sig
 
 **D2. Placement: a home campus, chosen once.** A person has one home campus (`campus_person`). It is where they land, and the one the swap calls "Your campus". `campusOf` keeps returning it. When the person is not placed: find the school by email as today, then the school's campuses. One campus: place there, as today. More than one: place nobody and report that a choice is needed. `campusViewer` carries that (`choose: Campus[]`, empty when none is needed); its `campus` falls back as it does today and `visits` stays as built. Every page that sends a signed-in person to "their" campus, and the campus pages themselves, send a viewer who has a choice to make to `/c/choose` first (one helper). The admin is not sent there. *As built today an unplaced cornell.edu person is placed at Ithaca by their address; this changes that for new people only. Everyone already placed stays where they are.*
 
-**D3. The chooser, `/c/choose`.** Signed-in only. Shows the two tickets from the mockup. A ticket is a form button; the action checks the picked campus is one of the person's school's campuses, writes `campus_person` (insert, or update when changing), and redirects to that campus. The same page serves changing the home campus: reached from a "Change campus" row in the account card, shown only when the person's school has more than one campus. A person with nothing to choose who opens the page is sent to their campus. The ticket words, the tower and tram marks and the ticket styles are the ones the swap already uses (`SWAP_TICKET` in `lib/campus/schools.ts`, `MARK` in `components/campus/swap.tsx`, `.cs-tk` in `campus.css`); nothing is drawn twice.
+**D3. The chooser, `/c/choose`.** Signed-in only. Shows the two tickets from the mockup. A ticket is a form button; the action checks the picked campus is one of the person's school's campuses, writes `campus_person` (insert, or update when changing), and redirects to that campus. Changing the home campus later does not go through this page: the account card has a row, shown only when the person's school has more than one campus, whose pill ("Change to New York") changes it there and opens that campus (`changeCampusAction`, built). A person with nothing to choose who opens the page is sent to their campus. The ticket words, the tower and tram marks and the ticket styles are the ones the swap already uses (`SWAP_TICKET` in `lib/campus/schools.ts`, `MARK` in `components/campus/swap.tsx`, `.cs-tk` in `campus.css`); nothing is drawn twice.
 
 What each ticket says is kept in code beside the school rules (`lib/campus/schools.ts`), by campus slug: title ("Ithaca", "New York"), one line ("The hill, Collegetown, downtown"; "Cornell Tech, Roosevelt Island and the stops around it"), and which engraving (tower, tram). The small line on top is the real count of events on in the next seven days ("Open · N on this week"), not a made-up number. The "Coming soon" names are kept in the same place, by school slug: Cornell → "Weill Cornell Medicine". *My call: only that one is listed; the founder has not named others.*
 
@@ -44,20 +44,20 @@ What each ticket says is kept in code beside the school rules (`lib/campus/schoo
 
 **D5. Home and looking are two different things.** Looking at the other campus is the swap on the map (D10): it moves nothing. Changing the home campus is the account card (D3): it changes where the person lands and which campus is "Your campus", and nothing else. Outings, plans and rewards stay where they were made, and both campuses stay open to the person either way. *This replaces the first version of D5, which shut the old campus after a change; the swap made that wrong.* The swap's menu keeps saying "{home} stays yours" and does not offer to change the home: one control, one meaning.
 
-**D6. A section's stop.** `Section` gains an optional `stop: { name: string; lines: string[]; area?: string }`. A line is its letter or number; its colour comes from one small table of the lines used (F and M orange). The first New York sections:
+**D6. A section's stop.** `Section` gains an optional `stop: { name: string; lines: string[] }`. A line is its letter or number; its colour comes from one small table of the lines used (`LINE` in `lib/campus/sections.ts`: F and M orange, Q yellow). The section's own name is the neighbourhood. The first New York sections:
 
 | id | name | stop | next |
 | --- | --- | --- | --- |
 | `roosevelt` | Roosevelt Island | Roosevelt Island (F, M) | `lex63`, `queensbridge` |
-| `lex63` | Lexington Av/63 St | Lexington Av/63 St (F, M, Q) | `roosevelt` |
-| `queensbridge` | 21 St–Queensbridge | 21 St–Queensbridge (F, M) | `roosevelt` |
+| `lex63` | Upper East Side | Lexington Av/63 St (F, M, Q) | `roosevelt` |
+| `queensbridge` | Long Island City | 21 St–Queensbridge (F, M) | `roosevelt` |
 
 One stop is one section, and a section is everything that stop serves (founder, 2026-11-18, after the mockup showed only the campus end of the island: "it's still one train station away"). So Roosevelt Island is one section from the southern tip to the lighthouse, about 3 km long and narrow. The whole section must be in view at the map's furthest zoom, so that zoom is lower here than in Ithaca; the map already works this out from the section's outline. A section is not sized to fit the screen. Every later section follows the same rule: named for its stop, covering what is walked to from it.
 
-Outlines are drawn by hand like Ithaca's and checked on the real map. Sections across the river do not share corners; `wayOn` works from the middles of sections, so that is fine. Which lines stop where must be checked against the MTA's current map before it ships; what is in this table is from memory.
+Outlines are drawn by hand like Ithaca's and checked on the real map. Sections across the river do not share corners; `wayOn` works from the middles of sections, so that is fine. Which lines stop where was checked in November 2026 (task 4.1).
 
 **D7. The station sign.** In `near.tsx`, when the section the way leads to has a stop, the way on is drawn as the sign instead of today's card:
-- Open: the arrow, the line bullets, the stop's name, then the neighbourhood and "N on" ("Upper East Side · 3 on"). The neighbourhood is a second optional word on the stop (`area`); without it the line is "N on" alone.
+- Open: the arrow, the line bullets, the stop's name, then the neighbourhood and "N on" ("Upper East Side · 3 on"). The neighbourhood is the section's name.
 - Greyed (nothing on, not open from here, nothing that way): the same plate in grey, with today's wording, and it is not a button.
 
 Sections with no stop (all of Ithaca) draw exactly what they draw today. The sign's look is the mockup's `.way.a`: near-black plate, white rule across the top, white type, flat hard shadow. It is the one thing on the sheet that is not in the two inks, on purpose. The line colours are fixed colours, not kit colours.
@@ -85,7 +85,7 @@ Sections with no stop (all of Ithaca) draw exactly what they draw today. The sig
 - `mayUse` lets a person open, and act on, every campus of their school (`CampusViewer.visits`). *Joining and posting while visiting are allowed; that was the building session's call and the founder has not confirmed it.*
 - The tag (`components/campus/swap.tsx`) names the campus on the page and opens one ticket per campus, each a link to `/c/<slug>`, with the real count of events this week. On a campus that is not the person's home the band says "Visiting", unless they are standing in one of its sections, when it says "You are here" as anywhere else.
 - The tag lives on the map's band, so it shows in the map view only.
-- Roosevelt Island is drawn as one section with no neighbours and no stop yet. D6's other two sections and D7's sign are still to build.
+- That slice drew Roosevelt Island as one section with no neighbours and no stop. D6's other two sections and D7's sign were built after it.
 
 **What the built slice leaves open, and the rest of this change closes.** A Cornell Tech student is placed at Ithaca by their address, lands in Ithaca every time they sign in, and is told they are "Visiting" their own campus until they stand on the island. Choosing a home once (D2, D3) is what fixes that.
 
@@ -101,11 +101,10 @@ Sections with no stop (all of Ithaca) draw exactly what they draw today. The sig
 ## Migration Plan
 
 - `20261118700000_campus_cornell_tech.sql` (written; the founder runs it): the Cornell Tech row. Until it is run `/c/cornell-tech` does not exist, no tag shows and there is nothing to choose.
-- One more additive migration, dated after the newest in `supabase/migrations/` when it is written: Cornell Tech's places (D8). Run by hand with a lock timeout, as the others are.
+- `20261118900000_campus_tech_places.sql` (written; the founder runs it): Cornell Tech's places (D8).
 - No schema change anywhere in this change. Rollback: delete the Cornell Tech row (its places and anything on it go with it); anyone whose home was Cornell Tech is unplaced and chooses again.
 
 ## Open Questions
 
 - Which other Cornell schools should be listed as "Coming soon"?
-- Does Cornell Tech have a public CampusGroups calendar? To be found in the build.
 - May a person join and post while looking at a campus that is not their home? Built as yes.
