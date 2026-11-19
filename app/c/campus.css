@@ -764,6 +764,9 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-inkrow b { font-size: 15.5px; font-weight: 720; letter-spacing: -0.02em; } .cs-inkrow small { font-size: 13px; color: var(--cs-mute); }
 /* the picker: its top line holds the way to the Ink page too, so its buttons sit closer; on a phone the search takes a line of its own */
 .cs-pets-top { gap: 6px; } .cs-pets-top .cs-btn { padding: 0 11px; gap: 6px; }
+/* its two filters wear the ring of the animals they show; shuffle and done are a picture each, in a round pill */
+.cs .cs-btn.school { box-shadow: inset 0 0 0 2px var(--cs-action); } .cs .cs-btn.school[aria-pressed=true] { background: var(--cs-action); color: var(--cs-paper); }
+.cs-pets-top .cs-btn .cs-ink { width: 15px; height: 15px; } .cs-pets-top .cs-btn.icon { flex: none; aspect-ratio: 1; padding: 0; justify-content: center; } @media (max-width: 520px) { .cs-pets-top .cs-btn.icon:not(.go) { margin-left: auto; } }
 /* the ask pane: none of the four perks is here yet, so the first is not set apart from the rest */
 .cs-prem-perks span:first-child:not(:last-of-type) { font-weight: inherit; color: inherit; }
 /* a face with Ink sits on a blot of its own (components/campus/ink-mark.tsx) in place of the plain circle. The blot reaches
