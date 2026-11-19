@@ -86,7 +86,7 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 <section class="card" id="over" hidden>
   <h1 id="overHead">Scattered</h1>
   <div class="score"><div><b id="overCount">1</b><span>in your line</span></div><div><b id="overBest">1</b><span>your best</span></div></div>
-  <button class="go" id="again">Again</button>
+  <div class="row"><button class="go" id="again">Again</button></div>
 </section>
 
 <script type="module">
@@ -177,6 +177,8 @@ function finish(event) {
   $('overCount').textContent = event.size;
   $('overBest').textContent = best;
   $('mine').hidden = $('dash').hidden = true;
+  // The same animals and grounds as the first card, moved here: another go can be as someone else, or somewhere else.
+  offer(); $('over').querySelector('.score').after($('faces')); $('again').after($('where'));
   setTimeout(() => { $('over').hidden = false; }, 900);
 }
 
