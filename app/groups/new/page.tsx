@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { groupHandle, treeOrder } from '@/lib/emba/group-path';
 import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
+import { mayStartTopLevel } from '@/lib/emba/workspaces';
 import { Crumbs } from '../group-nav';
 import { StartForm } from './start-form';
 
@@ -11,8 +12,8 @@ export default async function NewGroupPage({ searchParams }: { searchParams?: Pr
   if (!principal) return <section className="lt-editor"><h1>Start a group</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/new')}`}>Sign in</Link></section>;
   const tree = await portalGroupTree(principal).catch(() => null);
   if (!tree) return <section className="lt-editor"><h1>Start a group</h1><p role="alert">Your access may have changed. Reload to try again.</p></section>;
-  // The same rule createWorkspace applies: a top-level group is for pilot owners with a verified email.
-  const canTop = !!principal.verifiedEmail && (process.env.LOOP_PILOT_OWNER_SUBJECTS ?? '').split(',').some(subject => subject.trim() === principal.subject);
+  // The same rule createWorkspace applies: a top-level group is for anyone with a verified email.
+  const canTop = mayStartTopLevel(principal);
   if (!canTop && !tree.some(group => group.canStart)) return <>
     <Crumbs trail={[]} here="New group" />
     <section className="lt-editor"><h1>Start a group</h1><p>Groups are started by the people who run them. Ask an organizer of your group to start one inside it, or to make you an organizer.</p><Link href="/groups">Back to your groups</Link></section>

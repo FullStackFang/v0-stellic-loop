@@ -14,10 +14,12 @@ const createSchema = z.strictObject({
   namespace: slug,
 });
 
+/** Who may start a top-level group: anyone signed in themselves (not an assistant) whose email is verified. */
+export const mayStartTopLevel = (principal: Pick<Principal, 'clientId' | 'verifiedEmail'>) => principal.clientId === null && !!principal.verifiedEmail;
+
 export async function createWorkspace(db: Db, principal: Principal, input: unknown): Promise<GroupAddress> {
   const data = createSchema.parse(input);
-  const allowed = (process.env.LOOP_PILOT_OWNER_SUBJECTS ?? '').split(',').map(subject => subject.trim()).filter(Boolean);
-  if (principal.clientId !== null || !principal.verifiedEmail || !allowed.includes(principal.subject)) throw new EmbaError('forbidden');
+  if (!mayStartTopLevel(principal)) throw new EmbaError('forbidden');
   try {
     return await db.tx(async q => {
       await q.query('set transaction isolation level serializable');

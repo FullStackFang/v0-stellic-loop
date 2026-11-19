@@ -140,27 +140,27 @@ it('keeps everything the person entered when the handle is taken', async () => {
   expect((await t.db.query('select count(*)::int as n from emba_invitation')).rows).toEqual([{ n: 0 }]);
 });
 
-it('offers a member nothing to start, and never offers a place they may not use', async () => {
+it('offers anyone a group of their own at the top level, and never a place they may not use', async () => {
   const f = await tree();
   await page(f.member);
-  expect(screen.queryByRole('button', { name: 'Create group' })).toBeNull();
-  expect(screen.getByText(/Ask an organizer of your group/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Create group' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Inside/ })).toHaveTextContent('Top level, on its own');
   cleanup();
-  // An organizer of Team 1 only: no top level, and the group above is not in their picker at all.
+  // An organizer of Team 1 only: a new group starts at the top level, and the group above is not in their picker at all.
   const lead = await person('lead@example.test');
   await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.team1.orgId, lead.personId]);
   await t.db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'organizer')", [f.team1.orgId, f.team1.loopId, lead.personId]);
   await page(lead);
-  expect(screen.getByRole('button', { name: /Inside/ })).toHaveTextContent('Team 1');
+  expect(screen.getByRole('button', { name: /Inside/ })).toHaveTextContent('Top level, on its own');
   fireEvent.click(screen.getByRole('button', { name: /Inside/ }));
   const picker = within(screen.getByRole('dialog'));
-  expect(picker.queryByText('Top level, on its own')).toBeNull();
+  expect(picker.getByText('Top level, on its own')).toBeInTheDocument();
   expect(picker.queryByText('EMBA 2027')).toBeNull();
   // The server decides, whatever a form says.
   const data = new FormData(); data.set('name', 'Sneaky'); data.set('slug', 'sneaky'); data.set('parent', '@emba-2027');
   expect(await withPortalTestSession(lead, () => startGroupAction({ status: 'idle' }, data))).toMatchObject({ status: 'error', message: expect.stringContaining('cannot start a group there') });
   data.set('parent', '');
-  expect(await withPortalTestSession(lead, () => startGroupAction({ status: 'idle' }, data))).toMatchObject({ status: 'error' });
+  expect(await withPortalTestSession(lead, () => startGroupAction({ status: 'idle' }, data))).toMatchObject({ status: 'ready', handle: '@sneaky' });
 });
 
 it('shows a member of a group, in the picker, that only its organizers can start one there', () => {
