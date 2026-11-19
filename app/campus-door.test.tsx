@@ -6,6 +6,7 @@ import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { DoorSignIn } from '@/components/campus/door-sign-in';
 import { listCampuses } from '@/lib/campus/listings';
 import { addHandListing } from '@/lib/campus/manage';
+import { campusViewer, lookingAt } from '@/lib/campus/session';
 import { DoorPage, FrontDoor } from './door';
 import { addEventAction, joinTagAction, saveRewardAction, setHiddenAction, setTagKindAction, splitTagAction } from './c/admin/actions';
 import { GET as readCampusFeeds } from './api/cron/campus-feeds/route';
@@ -14,12 +15,15 @@ import { GET as readCampusFeeds } from './api/cron/campus-feeds/route';
 // The sign-in form itself is Clerk's. Here it is one email field, which is all the school menu reads from it.
 vi.mock('@clerk/nextjs', () => ({ SignIn: () => <input name="identifier" aria-label="Email" /> }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// The campus the browser was last looking at (the cookie the campus screen leaves), or none.
+const jar = vi.hoisted(() => ({ at: null as string | null }));
+vi.mock('next/headers', () => ({ headers: async () => new Headers(), cookies: async () => ({ get: (name: string) => jar.at ? { name, value: jar.at } : undefined }) }));
 
 let t: TestDb;
 beforeAll(async () => { t = await openTestDb(); });
 afterAll(async () => { await t?.close(); });
 beforeEach(async () => { await t.reset(); });
-afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); jar.at = null; });
 
 const sentTo = (path: string) => expect.objectContaining({ digest: expect.stringContaining(`;${path};`) });
 const drawn = async (node: Promise<React.ReactElement>) => { const element = await node as React.ReactElement<{ children: React.ReactElement<object, (props: object) => Promise<React.ReactElement>> }>, inner = element.props.children; return typeof inner.type === 'function' ? inner.type(inner.props) : inner; };
@@ -59,9 +63,24 @@ describe('the door', () => {
     vi.stubEnv('LOOP_ADMIN', 'user_fay');
     await expect(withPortalTestSession(await signedIn('Fay', 'fay@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell'));
   });
+  it('signed in, goes back to the campus of their school they were last looking at, and to no campus they may not open', async () => {
+    const sam = await signedIn('Sam', 'sam@cornell.edu');
+    jar.at = 'cornell-tech';
+    await expect(withPortalTestSession(sam, () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell-tech'));
+    expect((await withPortalTestSession(sam, () => lookingAt()))?.slug).toBe('cornell-tech');
+    // Looking does not move them: New York is still not their own.
+    expect((await withPortalTestSession(sam, () => campusViewer()))?.campus?.slug).toBe('cornell');
+    for (const other of ['nyu', 'nowhere', '../x']) {
+      jar.at = other;
+      await expect(withPortalTestSession(sam, () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell'));
+    }
+    // The admin, who has no school, goes back to wherever they were.
+    vi.stubEnv('LOOP_ADMIN', 'user_fay'); jar.at = 'cornell-tech';
+    await expect(withPortalTestSession(await signedIn('Fay', 'fay@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell-tech'));
+  });
   it('signed in from no school, is told where Loop is and goes no further', async () => {
     render(await drawn(withPortalTestSession(await signedIn('Omar', 'omar@gmail.com'), () => FrontDoor())));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Loop is at .* for now\.$/);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now. If that changes, we’ll let you know.');
   });
   it('/sign-in is the same door', async () => {
     render(await DoorPage({ routing: 'path' }));

@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { db } from '../db';
 import type { Principal } from '../emba/access';
 import { groupHref, treeOrder } from '../emba/group-path';
@@ -8,7 +8,7 @@ import { getSignedInPrincipal, portalGroupTree } from '../emba/portal-session';
 import { isAdmin } from './admin';
 import { findCampus, listCampuses, type Campus } from './listings';
 import { campusOf } from './people';
-import { DEFAULT_CAMPUS, frontIsCampus, schoolOf } from './schools';
+import { AT_COOKIE, DEFAULT_CAMPUS, frontIsCampus, schoolOf } from './schools';
 import type { Point } from './sections';
 
 /**
@@ -53,6 +53,19 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
 
 /** Whether this viewer may use a campus's screen: it is their own, or another campus of their school, or they are the admin, who may open any. */
 export const mayUse = (viewer: CampusViewer, campus: { id: string }) => viewer.admin || viewer.campus?.id === campus.id || viewer.visits.includes(campus.id);
+
+/**
+ * The campus this browser was last looking at (AT_COOKIE), if the person may use it: for the pages that are not a
+ * campus's own, so that "This week" leads back to where they were. A signed-out visitor may look at any. Null with no
+ * word of one, or word of a campus that is not theirs to open.
+ */
+export async function lookingAt(): Promise<Campus | null> {
+  let slug: string | undefined;
+  try { slug = (await cookies()).get(AT_COOKIE)?.value; } catch { return null; }
+  if (!slug || !/^[a-z0-9-]{1,64}$/.test(slug)) return null;
+  const [viewer, campus] = [await campusViewer(), await findCampus(db(), slug)];
+  return campus && (!viewer || mayUse(viewer, campus)) ? campus : null;
+}
 
 /**
  * The person's top-level groups by name, for the top bar: only for someone who can open them. With the campus screen
