@@ -387,11 +387,15 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     // Opening a ticket walks the view to its stamp and leans in. Letting go of it steps back.
     const { open } = live.current, to = cam(), slow = framed.current && !calm(), aim = open ? { ...to, center: open.at, zoom: Math.min(CLOSE + .4, to.zoom + .5) } : to;
     // The ticket is dealt afresh: it is whole again, and "away" is measured from where the view comes to rest.
-    const settle = () => { const on = live.current.lit, at = on ? map.project(on.at) : null; home.current = at ? { zoom: map.getZoom(), x: at.x, y: at.y } : null; tune(map); };
+    let stale = false;
+    const settle = () => { if (stale) return; const on = live.current.lit, at = on ? map.project(on.at) : null; home.current = at ? { zoom: map.getZoom(), x: at.x, y: at.y } : null; tune(map); };
     home.current = null; host.current?.style.setProperty('--away', '0');
     map.setMinZoom(0);
-    if (slow) { map.once('moveend', settle); map.easeTo({ ...aim, duration: open ? 650 : 900 }); } else { map.jumpTo(aim); if (!open) map.setMinZoom(to.floor); settle(); }
+    // Setting off ends a move still in flight, which says "moveend" there and then: this move listens only once it is under way,
+    // and a move that was cut short does not settle.
+    if (slow) { map.easeTo({ ...aim, duration: open ? 650 : 900 }); map.once('moveend', settle); } else { map.jumpTo(aim); if (!open) map.setMinZoom(to.floor); settle(); }
     framed.current = true;
+    return () => { stale = true; };
   }, [map, cam, tune, view, litKey, openAt, youAt, standing, picked]);
 
   const step = (id: string) => { wallAt.current = null; setWall(null); setView(id); setLitId(null); onPick(null); };

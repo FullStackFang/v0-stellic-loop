@@ -260,6 +260,31 @@ describe('The map beside the week, on a wide window', () => {
     expect(document.querySelector('.cs-bub')).toBeNull();
   });
 
+  it('a second ticket picked while the map is still travelling to the first is whole when the map comes to rest', async () => {
+    const map = await wide();
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Study group'));
+    // The real map takes time to travel. A new move ends the one in flight there and then, which says "moveend" (maplibre's
+    // easeTo stops the transition underway first), and a listener set with `once` hears only the next "moveend".
+    const waiting: Handler[] = [];
+    let aim: { center?: [number, number]; zoom?: number } | null = null;
+    const end = () => { map.fire('moveend'); for (const heard of waiting.splice(0)) heard({}); };
+    map.once = (type, handler) => { if (type === 'moveend') waiting.push(handler); else handler({}); return map; };
+    map.easeTo = to => {
+      if (aim) end();
+      aim = to;
+      if (to.center) map.setCenter([(map.center.lng + to.center[0]) / 2, (map.center.lat + to.center[1]) / 2]);   // half way there
+      map.fire('move');
+    };
+    const arrive = () => { if (aim?.center) map.setCenter(aim.center); if (aim?.zoom !== undefined) map.zoom = aim.zoom; aim = null; map.fire('move'); end(); };
+
+    fireEvent.click(card('Dumpling night'));
+    fireEvent.click(card('Study group'));   // before the map has arrived
+    act(arrive);
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Study group');
+    // "Away" is how far the view has left the ticket since it was dealt: none, the map has only just come to rest on it.
+    expect(document.querySelector<HTMLElement>('.cs-near')!.style.getPropertyValue('--away')).toBe('0.000');
+  });
+
   it('a ticket in another part of town brings the map there, and one with no spot leaves the map alone', async () => {
     await wide();
     expect(place()).toBe('Collegetown');
