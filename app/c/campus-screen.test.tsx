@@ -18,6 +18,7 @@ import { checkIn, imIn, joinByToken, outingByToken } from '@/lib/campus/outings'
 import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
+import { approveLinkedin } from '@/lib/campus/linkedin';
 import { schoolAsked } from '@/lib/campus/school-ask';
 import { againFaceAction, askSchoolAction, setSchoolsAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
@@ -686,7 +687,7 @@ describe('the pages', () => {
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
   });
-  it('a person at no school adds their LinkedIn profile, picks a school, and is let in there', async () => {
+  it('a person at no school adds their LinkedIn profile, picks a school, waits, and is let in there once approved', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('cornell')));
     const schools = within(screen.getByRole('group', { name: 'Your schools' }));
@@ -699,8 +700,26 @@ describe('the pages', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', []))).toEqual({ ok: false, message: 'Pick at least one school.' });
     cleanup();
-    // With a profile and a school, that school's campus is theirs, with its animal in their picker.
+    // With a profile and a school they wait: the page says so, shows what they sent, and lets them change it.
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['columbia']))).toEqual({ ok: true });
+    render(await withPortalTestSession(outsider, () => page('columbia')));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now.');
+    expect(screen.getByText('Waiting').previousElementSibling).toHaveTextContent('Columbia');
+    expect(screen.queryByRole('button', { name: 'Unlock' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Change it' }));
+    expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toHaveValue('linkedin.com/in/omar-reyes');
+    expect(screen.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
+    cleanup();
+    // The admin sees them waiting and approves. Then that school's campus is theirs, with its animal in their picker.
+    vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
+    const admin = await person('Ana Lopez');
+    render(await withPortalTestSession(admin, () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
+    expect(screen.getByText('Waiting for you: no school email')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /LinkedIn/ })).toHaveTextContent('1 waiting');
+    expect(screen.getByRole('link', { name: 'Open profile' })).toHaveAttribute('href', 'https://www.linkedin.com/in/omar-reyes');
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
+    cleanup(); vi.unstubAllEnvs();
+    await approveLinkedin(t.db, outsider.personId);
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
     const theirs = (await campusScreen(t.db, (await findCampus(t.db, 'columbia'))!, as(outsider), { photos: noPhotos })).viewer!;

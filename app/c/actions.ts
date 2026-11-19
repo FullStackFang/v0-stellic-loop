@@ -15,7 +15,7 @@ import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type Pla
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
 import { setSchools } from '@/lib/campus/linkedin';
 import { askForSchool } from '@/lib/campus/school-ask';
-import { campusViewer, mayUse, seemsAt, type CampusViewer } from '@/lib/campus/session';
+import { campusViewer, mayUse, type CampusViewer } from '@/lib/campus/session';
 import { askWords } from '@/lib/emba/ask-words';
 import { answerAsk, createAsk, type AnswerWrite } from '@/lib/emba/team-asks';
 import { setInterest } from '@/lib/emba/team-interest';
@@ -129,9 +129,9 @@ export async function askSchoolAction(school: string): Promise<ActResult> {
   return act(async viewer => { await askForSchool(db(), viewer.personId, String(school), viewer.principal.verifiedEmail); });
 }
 
-/** "Unlock": a person adds the address of their LinkedIn profile and ticks the schools they have been at. Someone with no campus is placed at the first. */
+/** "Unlock": a person adds the address of their LinkedIn profile and ticks the schools they have been at. Someone with no campus then waits for the admin to approve it. */
 export async function setSchoolsAction(profile: string, schools: string[]): Promise<ActResult> {
-  return act(async viewer => { await setSchools(db(), { personId: viewer.personId, verifiedEmail: viewer.principal.verifiedEmail }, String(profile), Array.isArray(schools) ? schools.map(String) : [], await seemsAt()); });
+  return act(async viewer => { await setSchools(db(), { personId: viewer.personId, verifiedEmail: viewer.principal.verifiedEmail }, String(profile), Array.isArray(schools) ? schools.map(String) : []); });
 }
 
 export type MadeFace = { ok: true; own: string; left: number } | { ok: false; message: string; signIn?: boolean };

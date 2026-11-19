@@ -16,7 +16,7 @@ import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, addFeedAction, deletePictureAction, joinTagAction, setTierAction, readFeedAction, removeLinkedinAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setTierAction, readFeedAction, removeLinkedinAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +44,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const at = (to: Tab, school = campus.slug) => `/c/admin?campus=${school}&tab=${to}`;
   /** What every form carries: the campus it acts on, and the section to come back to. */
   const keep = <><input type="hidden" name="campus" value={campus.slug} /><input type="hidden" name="tab" value={tab} /></>;
+  const waiting = linked.filter(each => each.waiting).length;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
   const counts: Record<Tab, number> = { events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
@@ -161,9 +162,10 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   function linkedin() {
     const named = (slug: string) => campuses.find(each => each.slug === slug)?.name ?? slug;
     return <section>{top()}
-      <p className="cs-adm-lede">{linked.length ? 'People who added a LinkedIn profile to unlock schools, across every campus. Loop reads nothing from LinkedIn: open the profile to check a school. Removing one closes what it unlocked.' : 'Nobody has added a LinkedIn profile yet.'}</p>
-      <ul className="cs-adm-rows">{linked.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span></div>
+      <p className="cs-adm-lede">{linked.length ? 'People who added a LinkedIn profile to unlock schools, across every campus. Someone with no school email waits here until you approve them. Loop reads nothing from LinkedIn: open the profile to check a school. Removing one closes what it unlocked.' : 'Nobody has added a LinkedIn profile yet.'}</p>
+      <ul className="cs-adm-rows">{linked.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span>{each.waiting && <span className="warn">Waiting for you: no school email</span>}</div>
         <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
+        {each.waiting && <form action={approveLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm go">Approve</button></form>}
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Remove</button></form></li>)}</ul>
     </section>;
   }
@@ -193,7 +195,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     <main className="cs-adm">
       <aside className="cs-adm-rail">
         <details className="school"><summary>{campus.name}</summary><nav aria-label="Campus">{campuses.filter(each => each.id !== campus.id).map(each => <Link key={each.id} href={at(tab, each.slug)}>{each.name}</Link>)}</nav></details>
-        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : <small>{counts[each]}</small>}</Link>)}</nav>
+        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'linkedin' && waiting ? <small className="warn">{waiting} waiting</small> : <small>{counts[each]}</small>}</Link>)}</nav>
         <p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is open to its members again: LOOP_FRONT is set to groups.'}</p>
       </aside>
       <div className="cs-adm-main">
