@@ -557,7 +557,7 @@ function frame(now) {
       puffs.push({ x: event.x, y: event.y, t });
       const mine = event.onto.find(each => each.line === ME), car = event.name.toLowerCase();
       if (mine) { navigator.vibrate?.(30); say(`${mine.count} got off the ${car} straight onto your line`); }
-      else if (me && !me.dead) say(event.onto.length ? `${world.lines.find(line => line.id === event.onto[0].line).name} met the ${car} and took its riders` : `The ${car} let ${event.count} let off at ${event.stop}`);
+      else if (me && !me.dead) say(event.onto.length ? `${world.lines.find(line => line.id === event.onto[0].line).name} met the ${car} and took its riders` : `The ${car} let ${event.count} off at ${event.stop}`);
     }
     if (event.type === 'lift') { puffs.push({ x: event.x, y: event.y, t }); if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
