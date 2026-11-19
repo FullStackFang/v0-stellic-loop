@@ -44,7 +44,7 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
 export async function NoSchool() {
   const viewer = await campusViewer(), email = viewer?.principal.verifiedEmail ?? null, signs = clerkPortalConfigured();
   const schools = (await listCampuses(db())).filter(each => schoolOf(each.slug) === each.slug);
-  const asked = viewer ? await schoolAsked(db(), viewer.personId) : null, linked = viewer ? await addedSchools(db(), viewer.personId) : { profile: null, added: [] };
+  const asked = viewer ? await schoolAsked(db(), viewer.personId) : null, linked = viewer ? await addedSchools(db(), viewer.personId) : { profile: null, added: [], waiting: [] };
   return <div className="cs cs-ns">
     <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link>
       <div className="cs-nav-end">{email && <span className="cs-ns-who">{email}</span>}{signs && <SignOut className="cs-btn" />}</div>
@@ -67,8 +67,8 @@ export async function NoSchool() {
         {/* The way in with no school email: the address of a LinkedIn profile, and the school to open. */}
         <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">No school email?</h2>
-          <AddSchools box="cs-ns-box" schools={{ ...linked, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />
-          <p>Add your LinkedIn profile and pick the schools you have been at. Nothing is read from LinkedIn.</p>
+          <AddSchools box="cs-ns-box" waiting={linked.waiting.length > 0} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />
+          <p>{linked.waiting.length ? 'We look at each profile ourselves. Come back to this page: your campus opens here once you are in.' : 'Add your LinkedIn profile and pick the schools you have been at. We look at each profile before letting you in.'}</p>
         </section>
       </div>
     </main>

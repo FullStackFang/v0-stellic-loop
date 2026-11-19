@@ -6,7 +6,7 @@ import sharp from 'sharp';
 import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { isAdmin } from '../campus/admin';
-import { picks as offered, schoolOfPerson } from '../campus/animal-tiers';
+import { picks as offered, schoolsOfPerson } from '../campus/animal-tiers';
 import { customFace } from '../campus/animals';
 import { CampusError } from '../campus/errors';
 import { hasInk, hasInkPlus } from '../campus/ink';
@@ -71,7 +71,7 @@ const mayUse = async (q: Q, p: Principal, admin: boolean) => new Set((await choi
 export type Choice = { pick: Pick; src: string; name: string; kind: 'own' | 'school' | 'ink' | 'core' };
 /** Every animal the person may put in a group picture, in the order their own picker has them: theirs, their school's, the Ink ones, everyone's. */
 async function choices(q: Q, p: Principal, admin: boolean): Promise<Choice[]> {
-  const list = await offered(q, admin ? 'all' : await schoolOfPerson(q, p.personId));
+  const list = await offered(q, admin ? 'all' : await schoolsOfPerson(q, p.personId));
   const tokenOf = (src: string) => src.slice(customFace('').length);
   const of = (tiles: { face: number | null; src: string; name: string }[], kind: Choice['kind']): Choice[] => tiles.map(tile => ({ pick: tile.face === null ? { token: tokenOf(tile.src) } : { face: tile.face }, src: tile.src, name: tile.name, kind }));
   const shown = [...of(list.school, 'school'), ...(admin || await hasInk(q, p.personId) ? of(list.premium, 'ink') : []), ...of(list.core, 'core')];
