@@ -368,6 +368,7 @@ function boats(t) {
 // Main Street, and the island's red bus going up and down it.
 function road(thing, t) {
   ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(...thing.from); ctx.lineTo(...thing.to); ctx.strokeStyle = C.roof; ctx.lineWidth = thing.w; ctx.stroke();
+  if (world.shuttles.some(car => car.kind === 'bus')) return;
   const f = 0.5 - 0.5 * Math.cos(t * 0.1), going = Math.sin(t * 0.1) > 0 ? 0 : Math.PI;
   ctx.save(); ctx.translate(thing.from[0] + (thing.to[0] - thing.from[0]) * f, thing.from[1] + (thing.to[1] - thing.from[1]) * f); ctx.rotate(Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]) + going);
   box(34, 15, 4); inked(C.action, 2.5); ctx.fillStyle = C.paper; ctx.fillRect(-12, -4, 20, 8); ctx.restore();
@@ -384,6 +385,7 @@ function cabs(thing, t) {
 // Its riders look out of the windows on the way in, and it goes back with the windows empty.
 function tram(car) {
   const { from, to, x, y } = car, dx = to[0] - from[0], dy = to[1] - from[1], far = Math.hypot(dx, dy);
+  if (car.kind === 'bus') return bus(car, dx / far, dy / far);
   ctx.lineCap = 'butt'; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath();
   for (const side of [-7, 7]) { ctx.moveTo(from[0] - dy / far * side, from[1] + dx / far * side); ctx.lineTo(to[0] - dy / far * side, to[1] + dx / far * side); }
   ctx.stroke();
@@ -391,6 +393,18 @@ function tram(car) {
   ctx.globalAlpha = 0.2; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 26, y + 40, 62, 30, Math.atan2(dy, dx), 0, 7); ctx.fill(); ctx.globalAlpha = 1;
   ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); box(132, 72, 16); inked(C.action, 4); box(112, 46, 8); ctx.fillStyle = C.paper; ctx.fill(); ctx.restore();
   for (let n = 0; n < Math.min(4, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + (n - 1.5) * 26 * dx / far, y + (n - 1.5) * 26 * dy / far - 2, 38);
+}
+// A bus is on the ground, so its shadow is close under it. It faces the way it is going.
+function bus(car, ux, uy) {
+  const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(uy, ux) + (back ? Math.PI : 0));
+  box(140, 66, 14, 5, 8); ctx.fillStyle = C.ink; ctx.fill();
+  box(140, 66, 14); inked(C.water, 4); box(96, 44, 8, -12, 0); ctx.fillStyle = C.paper; ctx.fill();
+  box(14, 44, 5, 54, 0); ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke(); // the windscreen
+  ctx.fillStyle = C.lamp; for (const side of [-22, 22]) { ctx.beginPath(); ctx.arc(68, side, 4, 0, 7); ctx.fill(); }
+  ctx.restore();
+  for (let n = 0; n < Math.min(3, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + ((n - 1) * 28 - 12 * (back ? -1 : 1)) * ux, y + ((n - 1) * 28 - 12 * (back ? -1 : 1)) * uy - 2, 36);
+  pill(car.name, x, y - 52, C.ink, C.paper, 14);
 }
 // The lighthouse lamp turning.
 function beam(thing, t) {
@@ -543,7 +557,7 @@ function frame(now) {
       puffs.push({ x: event.x, y: event.y, t });
       const mine = event.onto.find(each => each.line === ME), car = event.name.toLowerCase();
       if (mine) { navigator.vibrate?.(30); say(`${mine.count} got off the ${car} straight onto your line`); }
-      else if (me && !me.dead) say(event.onto.length ? `${world.lines.find(line => line.id === event.onto[0].line).name} met the ${car} and took its riders` : `The ${car} let ${event.count} off at the station`);
+      else if (me && !me.dead) say(event.onto.length ? `${world.lines.find(line => line.id === event.onto[0].line).name} met the ${car} and took its riders` : `The ${car} let ${event.count} off at ${event.stop}`);
     }
     if (event.type === 'lift') { puffs.push({ x: event.x, y: event.y, t }); if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);

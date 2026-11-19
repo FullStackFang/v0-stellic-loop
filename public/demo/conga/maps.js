@@ -40,6 +40,8 @@ export const MAPS = {
   cornell: ground('Ithaca', 1.15, [
     ithaca('Downtown', 'abcde', [-76.4968, 42.4418]), ithaca('Collegetown', 'bihgfdc', [-76.4862, 42.4424]), ithaca('West Campus', 'djklm', [-76.4930, 42.4500]),
     ithaca('Central Campus', 'dfgqpolm', [-76.4868, 42.4502]), ithaca('North Campus', 'oprstu', [-76.4790, 42.4548]), ithaca('Ag Quad', 'gwvrpq', [-76.4758, 42.4500])], [
+    // The bus up the hill from the Commons to campus. The real route 10 winds; this one is drawn straight, by hand.
+    ['road', 'Route 10', 42.43960, -76.49790, 42.44620, -76.48360, 58],
     ['green', 'Arts Quad', 42.4489, -76.4843, 150, 230], // placed by hand
     ['green', 'Libe Slope', 42.44869, -76.48661, 110, 260],
     ['green', 'Botanic Gardens', 42.44951, -76.47250, 200, 170],
@@ -62,7 +64,9 @@ export const MAPS = {
     ['hall', 'RPCC', 42.45603, -76.47750, 65, 50],
     ['hall', 'Noyes', 42.44652, -76.48803, 40, 42],
     ['hall', 'Becker House', 42.44824, -76.48947, 97, 92],
-    ['hall', 'CTB', 42.44225, -76.48547, 40, 40]]),
+    ['hall', 'CTB', 42.44225, -76.48547, 40, 40]],
+    // The bus climbs slowly from the Commons, lets its riders off by Statler, and rolls back down empty.
+    at => ({ shuttles: [{ name: 'Bus', kind: 'bus', stop: 'Statler', from: at([-76.49790, 42.43960]), to: at([-76.48400, 42.44602]), off: at([-76.48340, 42.44650]), riders: 18, ride: 36, stay: 5, away: 5 }] })),
   // One section, tip to tip, so it carries no section name.
   'cornell-tech': ground('Roosevelt Island', 2, [island('', 'abcdefgh', [-73.9552, 40.7562])], [
     // From the Manhattan end, over the island beside the tram station, and on the same line to Queens.
@@ -88,5 +92,5 @@ export const MAPS = {
     at => ({ water: true, axis: GRID,
       // The tram comes over very slowly from Second Avenue beside the bridge, lets its riders off on the plaza just past the
       // station, and goes back empty. Its Manhattan end is placed by hand.
-      shuttles: [{ name: 'Tram', from: at([-73.96413, 40.76127]), to: at([-73.9540884, 40.7573223]), off: at([-73.95383, 40.75757]), riders: 18, ride: 32, stay: 5, away: 5 }] })),
+      shuttles: [{ name: 'Tram', stop: 'the station', from: at([-73.96413, 40.76127]), to: at([-73.9540884, 40.7573223]), off: at([-73.95383, 40.75757]), riders: 18, ride: 32, stay: 5, away: 5 }] })),
 };

@@ -303,7 +303,7 @@ export function step(world, dt) {
         if (!waiting.length) { out(car.off[0], car.off[1], 210); continue; }
         join(world, waiting[n % waiting.length], face(world), car.off[0], car.off[1], events); onto[n % waiting.length].count++; car.load--;
       }
-      events.push({ type: 'arrive', name: car.name, count, onto, x: car.off[0], y: car.off[1] });
+      events.push({ type: 'arrive', name: car.name, stop: car.stop, count, onto, x: car.off[0], y: car.off[1] });
     }
   }
   while (world.strays.length < STRAYS) world.strays.push(stray(world));

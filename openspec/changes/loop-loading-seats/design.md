@@ -25,7 +25,6 @@ What the code does today, read on 2026-11-19 on `feat/campus-one-line`:
 - The ending from the first mockup (the school colour flooding in). The founder did not like it; the ending is the splat of D13.
 - Selling or granting Ink+. D13 only draws its splat.
 - An ending on a part of a page or on a button. Those waits end by showing what they were waiting for.
-- The older pages on retired looks (`/emba`, `/b`, `/p`, `/trip`, `/trips`), which may be cut.
 - Making any wait shorter. This change is about what a wait looks like.
 - Moving `CampusBar` into a layout.
 
@@ -68,7 +67,7 @@ Alternatives considered:
 Groups need none of this: their bar is in the layout. `app/groups/loading.tsx` renders the ticket in the page's place.
 
 ### D4. The pressed link shows the small one with `useLinkStatus`
-A tiny client component, `LinkWait`, placed inside each bar `<Link>` (campus and groups) and inside the campus-swap tickets, shows `SeatsSmall` while `useLinkStatus().pending` is true. Following the docs' note on layout shift, its box is always there at a fixed size and only its visibility changes.
+A tiny client component, `LinkWait`, placed inside each bar `<Link>` (campus and groups) and inside the campus-swap tickets, shows `SeatsSmall` (D14) while `useLinkStatus().pending` is true. Following the docs' note on layout shift, its box is always there at a fixed size and only its visibility changes.
 
 It covers the gap before the fallback paints, and the case where there is no fallback. It replaces the lime dot (`.lp-wait`) on the groups menu where that still exists.
 
@@ -121,7 +120,7 @@ The seed is the one the member's face blot uses, so the splat is their own blot.
 
 **Who gets which.** The plan travels with the face: groups pass it from the layout, campus pages remember it in `last-bar` (D3) beside the face (`viewer.asked` is "has Ink" today). Where the viewer is not known (cold open, shared links, sign-in) the splat is the Free one. Nothing in the app says "Ink+" yet, so the component takes `plan: 'free' | 'ink' | 'plus'` and no caller passes `'plus'` until Ink+ exists.
 
-**How it outlives the fallback.** A Suspense fallback is removed the instant the page is ready, so the ending cannot live in it. A client component, `components/loading/seats-ending.tsx`, is mounted once in `app/c/layout.tsx` and `app/groups/layout.tsx`. `SeatsTicket` at page size registers itself with a small module (`components/loading/ending.ts`) when it has been visible for 400 ms; when it unmounts it hands over its place on screen (`getBoundingClientRect`), its face and its plan. `SeatsEnding` then draws a copy of the finished ticket at that place in a fixed layer with `pointer-events: none`, plays the ending, and removes itself. The page beneath is live the whole time.
+**How it outlives the fallback.** A Suspense fallback is removed the instant the page is ready, so the ending cannot live in it. A client component, `components/loading/seats-ending.tsx`, is mounted once in the root layout, `app/layout.tsx`, so shared links and every other page have it too. `SeatsTicket` at page size registers itself with a small module (`components/loading/ending.ts`) when it has been visible for 400 ms; when it unmounts it hands over its place on screen (`getBoundingClientRect`), its face and its plan. `SeatsEnding` then draws a copy of the finished ticket at that place in a fixed layer with `pointer-events: none`, plays the ending, and removes itself. The page beneath is live the whole time.
 
 Rules that follow from this:
 - A wait that was not visible for 400 ms has no ending (a splat on a ticket nobody saw is noise).
@@ -135,6 +134,41 @@ Alternatives considered:
 - Holding the page back until the ending has played. Rejected: it makes every wait longer.
 - Row B (blue-black ink for Ink+) and row C (three splats). Not picked.
 
+### D14. The small one is "Your blot"
+Picked by the founder on 2026-11-19 from `public/demo/mockups-loading-small.html`, row C, over the three faces first specified, a single seat, and a mini ticket. It replaces the three faces everywhere the small one is used.
+
+**What it is.** One face, the viewer's own, and under it a blot that swells and settles on a 1.9 s cycle (from 0.62 of its size, turning 14 degrees, up to full size; its drops fly out as it reaches full size and fade as it settles). `SeatsSmall({ face?, plan?, seed?, line? })`. The blot is drawn 1.2 times the size it has under a face elsewhere in the app, so it shows at 16 px.
+
+**By plan**, the same rule as the ending (D13): with Ink, `inkBlot(seed)` in the school's two inks; on the free plan, and where the viewer is not known, the dark pool alone in `--cs-ink` with no drops. Ink+ is drawn as Ink until there is an Ink+. Where the face is not known it is a free animal.
+
+**Sizes.** 22 px in a button or a row, 44 px in a part of a page. On a button filled with the action colour the dark ink would vanish, so there the loader sits on a round plate of `--cs-paper`.
+
+**In a part of a page** (`line` set): the small one at 44 px with "Looping you in…" in a pill under it, in place of the ticket. This is Near you while it finds the person, and a ticket's map. The slow ticket for drawing a pet (D8) stays a ticket: it is a long wait with its own ending.
+
+**Reduced motion:** the face on its blot at full size, still.
+
+Alternatives, not picked: three faces (row 0), one seat (row A, my own pick for buttons), mini ticket (row B).
+
+### D15. The whole app: one rule, and a check
+Founder, 2026-11-19: "the scope is anything that loads, or takes time to load will use one of these". The rule:
+
+| The wait | The loader |
+|---|---|
+| A whole page (first open, or a page change) | The ticket, and the splat when it ends (D13) |
+| A part of a page that arrives after the rest | The small one with the line (D14) |
+| A button or control waiting on the server | The small one inside it, with the button's short word if it had one (D10) |
+| A long, known wait (drawing a pet) | The slow ticket (D8) |
+
+What that adds to the first draft of this change, found by listing every `useTransition`, `useFormStatus`, `useActionState`, `Suspense`, `loading.tsx` and frame in `app/` and `components/` on 2026-11-19:
+- **Groups forms.** `ActionForm` in `components/emba/portal-forms.tsx` is the button behind about 22 files; changing it covers most of them. The rest have their own button: `brief-form`, `link-box`, `resource-box`, `planning-form`, `assistant-review`, `group-note-review`, `memory-proposal-review` under `components/emba/`, and `start-form`, `invitation-paste`, `members-panel` under `app/groups/`.
+- **Campus pieces written since:** `add-schools.tsx`, `no-school.tsx`, `on-you.tsx` (its `Suspense` fallback is nothing today; it becomes the small one at 16 px where the counter will be), and the Ink page's frame.
+- **Pages with no loading file:** `/`, `/sign-in`, `/m/[token]`, `/c/admin`, `/c/[campus]/post`, `/c/save`, `/privacy`, `/terms`. One `app/loading.tsx` at the root covers any page without a nearer one, so no page can be missed; the nearer ones (`app/c`, `app/groups`, the shared links) stay because they know more (the bar, the face).
+- **The older pages.** They have no school colours, so the loaders fall back to the Loop kit's values (D1). Their buttons (`OptIn`, `PlanActions`, `PostForm`, `ShowNameSwitch`, `SlotEditor`, `StartBoard`, `TripView`, `DetailsBox`) take the small one; `app/emba/loading.tsx` takes the ticket. They are done last, and can be dropped without touching the rest if those pages are cut first.
+
+The viewer's face and plan are not known on most of these; the small one then shows a free animal on a plain blot (D14).
+
+**The check.** A test, `lib/__tests__/loading-words.test.ts`, reads every `.tsx` under `app/` and `components/` and fails on: a quoted word ending in "…" inside a file that also has a pending flag, the classes `lp-loading` and `lp-wait`, and a `Suspense` whose fallback is `null` (with a short allow-list, each entry with its reason). It is a net, not a proof: a new wait that shows nothing at all and uses none of these is still possible.
+
 ### D11. Where it is built
 Two other sessions have uncommitted work in this folder (no-collisions reported it on 2026-11-19), and `components/campus/screen.tsx` and `app/c/campus.css` are the busiest files in the repo. The work is done in a new worktree on its own branch, and merged when those sessions have landed.
 
@@ -144,7 +178,7 @@ Two other sessions have uncommitted work in this folder (no-collisions reported 
 - [`useLinkStatus` is skipped when a route was prefetched] → Then the fallback shows at once and carries the pressed link's small one itself, from the remembered label. Both paths are checked in the browser (task 8.2).
 - [Adding `loading.tsx` changes how campus pages stream] → Per the docs, once a fallback has streamed the response is already 200, so `notFound()` for an unknown campus answers 200 with the not-found page. Check what `/c/nope` returns before and after; if the status matters, keep the lookup above the boundary (task 2.5).
 - [The loader could flash on fast pages] → D6. Checked by throttling in the browser and by a test on the stylesheet's delay.
-- [Four `<img>` per ticket, three per button] → They are the same small PNGs already used across the page and are cached after first use; on a cold open they are the only images. The first seat's picture gets `fetchpriority="high"`; no preloading of the rest.
+- [Four `<img>` per ticket, one and a small inline drawing per button] → They are the same small PNGs already used across the page and are cached after first use; on a cold open they are the only images. The first seat's picture gets `fetchpriority="high"`; no preloading of the rest.
 - [The slow ticket guesses 25 s] → It rests when it runs out and ends on the real answer (D8); the page still says "about half a minute".
 - [Differences from the mockup the founder approved] → Listed so they are not a surprise: (1) every ticket reads "Looping you in…" where the mockup had a line per place (D12), so "After signing in" is the same screen as a cold open; (2) the ticket's map box shows the ticket only until the map's frame reports it has loaded, which is when the frame arrives and not when its tiles finish; (3) the ending holds the splat for 0.3 s, not the mockup's 0.75 s, and plays over the page that has already arrived (D13).
 - [The ending is drawn over a live page] → It is a small ticket-sized layer that takes no presses and is gone in under a second; it is skipped for short waits and under reduced motion (D13).
@@ -159,6 +193,8 @@ No data and no flag. It ships with a deploy and is undone by reverting the commi
 ## Open Questions
 
 1. **The ending.** Settled: D13. Still open inside it: the exact shade of the third ink per school (mine, from the mockup), and whether Free members should get a splat at all or it should be an Ink perk.
+5. **Free members and the small one.** A plain dark blot is my choice (it matches the free splat); the mockup said "no blot on Free". Either a plain blot or the face alone works.
 2. **The words on waiting buttons.** The ticket's line is settled (D12). The button words "Posting", "Reading", "Saving", "Subscribing", "Keeping", "Marking" are my wording; the founder saw three of them in the mockup and did not comment on them.
 3. **Signed-out visitors.** All four seats are stock animals. Should the last seat be an empty, ringed seat instead, as a nudge to sign in?
+6. **The older pages.** Included because the scope is everything; say if `/emba`, `/b`, `/p`, `/trip`, `/trips` are to be cut instead and task group 12 goes.
 4. **The bar into a layout.** Do it next, or leave the remembered copy (D3) in place?
