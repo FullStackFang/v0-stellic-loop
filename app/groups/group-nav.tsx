@@ -24,12 +24,16 @@ export function Crumbs({ trail, here, children }: { trail: Placed[]; here?: stri
  * the owners and organizers only, so the Members page is the list and nothing else.
  */
 export function GroupHead({ group, base, here, people, canAdd, asking }: { group: Placed; base: string; here: 'members' | 'add'; people: number | null; canAdd: boolean; /** How many people are asking to join: shown on the tab, so a request is not missed from the list. */ asking: number }) {
-  return <header className="lp-mb-head"><span className="lp-mb-tile"><Rings /></span>
-    <div><h1>{group.orgName}</h1><p><span className="lp-handle">{groupHandle(group)}</span>{people !== null && <span>{people} {people === 1 ? 'person' : 'people'}</span>}</p></div>
-    <nav className="lp-tabs" aria-label="Group sections"><Link href={`${base}/team`}>Team</Link><Link href={base} aria-current={here === 'members' ? 'page' : undefined}>Members</Link>
-      {canAdd && <Link href={`${base}/add`} aria-current={here === 'add' ? 'page' : undefined}>Add people{asking > 0 && <span>{asking}</span>}</Link>}
-      <Link href={`${base}/team?tab=resources`}>Resources</Link><Link href="/groups/connections">Connections</Link></nav>
-  </header>;
+  return <section className="gt-tk gt-head gt-ppl"><div>
+    <header className="gt-plate"><span className="gt-tile"><Rings /></span>
+      <div><h1>{group.orgName}</h1><p className="gt-handle"><span>{groupHandle(group)}</span>{people !== null && <em>{people} {people === 1 ? 'person' : 'people'}</em>}</p></div></header>
+    <nav className="gt-facts" aria-label="Group sections">
+      <Link href={`${base}/team`} aria-label="Team"><b>Team</b><span>What is coming up</span></Link>
+      <Link href={base} aria-label="Members" aria-current={here === 'members' ? 'page' : undefined}><b>Members</b><span>Who is in the group</span></Link>
+      {canAdd && <Link href={`${base}/add`} aria-label={asking > 0 ? `Add people, ${asking} asking to join` : 'Add people'} aria-current={here === 'add' ? 'page' : undefined}><b>Add people{asking > 0 && <small>{asking}</small>}</b><span>{asking > 0 ? `${asking} asking to join` : 'By email or a join link'}</span></Link>}
+      <Link href={`${base}/team?tab=resources`} aria-label="Resources"><b>Resources</b><span>Links and texts</span></Link>
+    </nav>
+  </div></section>;
 }
 
 /** The groups directly inside this one, and the way to start another for a person who may. */

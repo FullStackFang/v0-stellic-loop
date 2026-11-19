@@ -10,6 +10,8 @@ import { grantScopedRole, removeOrgMembership, revokeScopedRole } from '@/app/em
 import { cancelInvite, saveTagHandle } from '../actions';
 import { getMemberHandle, listMemberHandles } from '@/lib/emba/tags';
 import { clerkEmailsOf } from '@/lib/emba/clerk-identity';
+import { animal, animalOf } from '@/lib/campus/animals';
+import { pickedFaces } from '@/lib/campus/people';
 import { Roster, type Invited, type RoleName, type RosterPerson } from './members-panel';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +28,9 @@ async function loadGroup(principal: NonNullable<Awaited<ReturnType<typeof getPor
     listMemberHandles(db(), principal, scope.orgId, scope.loopId).catch(() => ({} as Record<string, string>)),
     // Listing the roles succeeded, so this person is an owner or organizer here: they see each person's sign-in address, to tell people apart.
     clerkEmailsOf(db(), roles.map(role => role.personId)).catch(() => ({} as Record<string, string>))]) : [null, null, null, null, null];
-  return { roles, invitations, requests, owner, members, tagHandle, handles, emails };
+  // Each person's face is the animal they picked on the campus screen, or the one their id gives them.
+  const picks = await pickedFaces(db(), (roles ?? []).map(role => role.personId).concat(principal.personId)).catch(() => new Map<string, number>());
+  return { roles, invitations, requests, owner, members, tagHandle, handles, emails, picks };
   });
   return opened && { group: opened.group, scope: opened.scope, ...opened.data };
 }
@@ -37,7 +41,8 @@ export default async function GroupPage({ params }: { params: Promise<GroupRoute
   const route = await params, base = groupPath(route.namespace, route.slug);
   const data = await loadGroup(principal, route).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, roles, invitations, requests, owner, members, tagHandle, handles, emails } = data;
+  const { group, scope, roles, invitations, requests, owner, members, tagHandle, handles, emails, picks } = data;
+  const faceOf = (id: string) => { const pick = picks.get(id); return animal(pick === undefined || pick < 0 ? animalOf(id) : pick); };
   const top = group.slug === ROOT_SLUG;
   const mayRemove = new Set(members?.map(member => member.personId));
   // A person who does not manage the group is shown their own row only: who else is in it stays with the owners and organizers.
@@ -46,15 +51,15 @@ export default async function GroupPage({ params }: { params: Promise<GroupRoute
         const shown = RANK.find(name => role.effectiveRoles.includes(name)) ?? 'member', isYou = role.personId === principal.personId;
         const high = shown === 'owner' || shown === 'organizer' || role.directRole === 'owner' || role.directRole === 'organizer';
         const canSetRole = owner || !high;
-        return { personId: role.personId, name: role.name, email: emails?.[role.personId] ?? null, role: shown, handle: isYou ? tagHandle : handles?.[role.personId] ?? null, isYou, canSetRole,
+        return { personId: role.personId, face: faceOf(role.personId), name: role.name, email: emails?.[role.personId] ?? null, role: shown, handle: isYou ? tagHandle : handles?.[role.personId] ?? null, isYou, canSetRole,
           remove: mayRemove.has(role.personId) ? 'group' as const : !top && role.directRole && canSetRole ? 'role' as const : null };
       }).sort((a, b) => Number(b.isYou) - Number(a.isYou) || a.name.localeCompare(b.name))
-    : [{ personId: principal.personId, name: 'You', email: null, role: 'member', handle: tagHandle, isYou: true, canSetRole: false, remove: null }];
+    : [{ personId: principal.personId, face: faceOf(principal.personId), name: 'You', email: null, role: 'member', handle: tagHandle, isYou: true, canSetRole: false, remove: null }];
   const invited: Invited[] = (invitations ?? []).filter(invite => !invite.accepted_at && !invite.revoked_at && new Date(invite.expires_at) > new Date())
     .map(invite => ({ id: invite.id, email: invite.recipient_email, name: invite.recipient_name, role: invite.role, until: new Date(invite.expires_at).toISOString() }))
     .sort((a, b) => (a.name ?? a.email).localeCompare(b.name ?? b.email));
-  return <>
-      <Crumbs trail={group.trail} here="Members" />
+  return <div className="gt gt-people">
+      {group.trail.length > 1 && <Crumbs trail={group.trail} here="Members" />}
       <GroupHead group={group} base={base} here="members" people={roles ? roles.length : null} canAdd={Boolean(roles)} asking={requests?.length ?? 0} />
       {/* The list is the page. Adding people, the join link and the people asking to join are on Add people. */}
       <div className="lp-mb-grid" data-solo={!roles || undefined} data-wide={Boolean(roles) || undefined}>
@@ -63,5 +68,5 @@ export default async function GroupPage({ params }: { params: Promise<GroupRoute
           {!roles && <p className="lp-mb-note">Owners and organizers manage membership. A tag lets teammates mention you in their assistant; it notifies no one and grants no access.{!top && ' To leave this group, ask one of its owners or organizers to remove you.'}</p>}
         </div>
       </div>
-  </>;
+  </div>;
 }

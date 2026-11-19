@@ -206,7 +206,7 @@ it('lists every group the person is in behind the Groups counter, a group inside
   fireEvent.click(pill);
   const panel = screen.getByRole('region', { name: 'Your groups' });
   const club = within(panel).getByRole('link', { name: /Hiking club/ });
-  expect(club).toHaveAttribute('href', '/groups/hiking-club');
+  expect(club).toHaveAttribute('href', '/groups/hiking-club/team');
   expect(club).toHaveTextContent('@hiking-club');
   expect(club).toHaveTextContent('Which weekend works?');
   expect(club).toHaveTextContent('1 on you');

@@ -6,7 +6,7 @@ import type { PortalAction, PortalResult } from '@/components/emba/portal-types'
 
 export type RoleName = 'owner' | 'organizer' | 'member' | 'follower';
 export type RosterPerson = {
-  personId: string; name: string; role: RoleName; handle: string | null; isYou: boolean;
+  personId: string; /** Their animal, as on the campus screen. */ face?: string; name: string; role: RoleName; handle: string | null; isYou: boolean;
   /** Their sign-in address, for the owners and organizers to tell people apart. Null when it is not known or not theirs to see. */
   email: string | null;
   /** Whether the viewer may change this person's role here. */
@@ -42,7 +42,8 @@ function useRun() {
   return { result, pending, run };
 }
 const Said = ({ result }: { result: PortalResult }) => result.message ? <p className="lp-mb-note" role={result.status === 'error' ? 'alert' : 'status'} data-warn={result.status === 'error' || undefined}>{result.message}</p> : null;
-const Face = ({ id, name }: { id: string; name: string }) => <span className="lp-mb-av" style={{ ['--h' as string]: hue(id) }} aria-hidden="true">{initials(name)}</span>;
+// eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals
+const Face = ({ id, name, face }: { id: string; name: string; face?: string }) => face ? <img className="lp-mb-av pet" src={face} alt="" /> : <span className="lp-mb-av" style={{ ['--h' as string]: hue(id) }} aria-hidden="true">{initials(name)}</span>;
 const Mail = () => <span className="lp-mb-av lp-mb-mail" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12v8.5H2z" /><path d="M2 4.5l6 4.5 6-4.5" /></svg></span>;
 
 /** A destructive button that asks once more in place before it acts. */
@@ -91,7 +92,7 @@ export function Roster({ scope, namespace, people, invited, isOwner, canLeave, a
       <h2 className="lp-mb-label" id="roster-title"><b>In the group</b>{seen.length === people.length ? people.length : `${seen.length} of ${people.length}`}{invited.length > 0 && <span>· {invited.length} invited</span>}</h2>
       <div className="lp-mb-rows" ref={frame} tabIndex={0} aria-label="People in the group">
         {seen.map(person => <div className="lp-mb-row" data-row key={person.personId} id={person.isYou ? 'tag' : undefined}>
-          <Face id={person.personId} name={person.name} />
+          <Face id={person.personId} name={person.name} face={person.face} />
           <span className="lp-mb-who">{person.name}{person.isYou && person.name !== 'You' && <span className="lp-mb-you">You</span>}{person.email && <small>{person.email}</small>}</span>
           <span className="lp-mb-meta">{person.isYou
             ? <label className="lp-mb-tag">@{namespace}/<input key={person.handle ?? ''} defaultValue={person.handle ?? ''} placeholder="your-tag" maxLength={48} pattern="@?[A-Za-z0-9][A-Za-z0-9\-]{1,47}" aria-label="Your tag" disabled={pending}

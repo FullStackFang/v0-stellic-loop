@@ -18,7 +18,7 @@ const SHOWN = 5;
  * The top bar of the groups pages, the same one the campus screen has: the way back to This week, the person's
  * groups, and their account with the school colours. A group inside another is named only while the person is in it.
  */
-export function Bar({ groups, face, ink = false, account }: { groups: BarGroup[]; face: string | null; /** Whether the person has Loop Ink: their avatar sits on its blot. */ ink?: boolean; account: ReactNode }) {
+export function Bar({ groups, face, ink = false, account, children }: { /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** Whether the person has Loop Ink: their avatar sits on its blot. */ ink?: boolean; account: ReactNode }) {
   const path = usePathname();
   const { namespace, slug = ROOT_SLUG } = useParams<{ namespace?: string; slug?: string }>();
   const current = groups.find(group => group.namespace === namespace && group.slug === slug);
@@ -39,7 +39,7 @@ export function Bar({ groups, face, ink = false, account }: { groups: BarGroup[]
       {shown.map(group => <Link key={group.id} href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'page' : undefined}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
       <Link href="/groups" aria-current={path === '/groups' ? 'page' : undefined}>All groups</Link>
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink"><InkMark /><span>Ink</span></Link></nav>
-    <div className="cs-nav-end"><div className="cs-acct" ref={box}>
+    <div className="cs-nav-end">{children}<div className="cs-acct" ref={box}>
       <button aria-expanded={open} aria-label={`Your account and colours${ink ? '. You have Ink' : ''}`} onClick={() => { setKit(kitNow()); setOpen(!open); }}>
         <span className="cs-ava">{ink ? <span className="cs-inked"><InkBlot seed={face ?? 'You'} />{you}</span> : you}</span></button>
       {open && <div className="cs-lvl" role="dialog" aria-label="Your account"><div className="cs-lvl-body">

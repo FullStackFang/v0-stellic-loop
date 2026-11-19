@@ -21,7 +21,7 @@ export type OnYouView = { count: number; items: OnYouItem[]; /** How many more w
 /** One of the person's groups: its page, who is in it, the next thing in it that waits on them, and how many do. */
 export type OnYouMine = { id: string; name: string; handle: string; href: string; /** The group this one is inside, by name. */ inside: string | null; people: number; faces: string[]; next: string | null; on: number };
 /** "@club" is at /groups/club; "@club/vietnam" is the group inside it. */
-const hrefOf = (handle: string) => { const [namespace, slug] = handle.slice(1).split('/'); return groupPath(namespace, slug ?? ROOT_SLUG); };
+const hrefOf = (handle: string) => { const [namespace, slug] = handle.slice(1).split('/'); return `${groupPath(namespace, slug ?? ROOT_SLUG)}/team`; };
 
 /** Buttons for a pick-one ask with a few short options; anything longer opens on the ask's own page. */
 const FEW = 4, SHORT = 60;
