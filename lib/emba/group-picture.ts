@@ -168,6 +168,11 @@ export async function groupPictures(q: Q, loopIds: readonly string[]): Promise<M
   const { rows } = await q.query<{ loopId: string; token: string }>('select distinct on (loop_id) loop_id as "loopId",token::text as token from emba_group_picture where loop_id=any($1::uuid[]) and kept_at is not null and let_go_at is null order by loop_id,kept_at desc', [loopIds]);
   return new Map(rows.map(row => [row.loopId, row.token]));
 }
+/** The kept pictures of some groups, by group, for a page that lists them. A list is never lost to its pictures: if they cannot be read, every group has its rings. */
+export async function groupPictureMap(db: Db, loopIds: readonly string[]): Promise<Record<string, string>> {
+  try { return Object.fromEntries(await groupPictures(db, loopIds)); }
+  catch (error) { console.error('group picture: list not read', error instanceof Error ? error.name : 'unknown'); return {}; }
+}
 /** What a group's tile needs: the picture the group wears, and, for a person who runs the group, what the card that draws one shows. */
 export type TileProps = { scope: Scope; picture: string | null; pane: PicturePane | null };
 /** Read for a group's page. A page is never lost to its tile: if the picture cannot be read, the tile is the rings. */

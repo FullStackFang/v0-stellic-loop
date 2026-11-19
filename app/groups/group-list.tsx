@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { ViewTransition } from 'react';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
+import { groupPictureSrc } from '@/lib/emba/group-picture-src';
 import { folded, toggleGroup, useClosedGroups } from './collapse';
 import { archiveGroupAction, renameGroupAction } from './organize-actions';
+import './group-picture.css';
 
 /** A row of the Groups page, in tree order. */
 export type ListGroup = {
@@ -14,6 +16,8 @@ export type ListGroup = {
   canRename: boolean;
   /** The person may archive it. */
   canArchive: boolean;
+  /** The picture the group wears, when one has been drawn and kept. */
+  picture?: string;
 };
 const names = new Intl.ListFormat('en', { type: 'conjunction' });
 const chevron = <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6l4 4 4-4" /></svg>;
@@ -33,7 +37,8 @@ export function GroupList({ groups }: { groups: ListGroup[] }) {
         {inside.length > 0 ? <button type="button" className="lp-fold" aria-expanded={!shut} aria-label={`${shut ? 'Show' : 'Hide'} the groups inside ${group.name}`} onClick={() => toggleGroup(group.id)}>{chevron}</button> : <span className="lp-fold" aria-hidden="true" />}
         <ViewTransition name={`lp-group-${group.id}`} share="lp-morph" default="none">
           <Link className="lp-grouprow" href={group.href} data-menu={group.canRename || undefined}>
-            <span className="lp-grouptile"><Rings /></span>
+            {/* eslint-disable-next-line @next/next/no-img-element -- a drawing served from the database at its own address */}
+            <span className={`lp-grouptile ${group.picture ? 'gp-has' : ''}`}>{group.picture ? <img src={groupPictureSrc(group.picture)} alt="" /> : <Rings />}</span>
             <div><b>{group.name}</b><span className="lp-handle">{group.handle}</span>{shut && <span className="lp-handle"> · {inside.length} inside</span>}</div>
             <span className="lp-go"><Arrow /></span>
           </Link>

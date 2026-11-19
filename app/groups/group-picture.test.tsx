@@ -8,6 +8,9 @@ import { authenticate, type Principal } from '@/lib/emba/access';
 import { groupPictures } from '@/lib/emba/group-picture';
 import { startGroup } from '@/lib/emba/group-start';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
+import { createInnerGroup } from '@/lib/emba/group-tree';
+import { askGroupPicture, keepGroupPicture } from '@/lib/emba/group-picture';
+import GroupsPage from './page';
 import MembersPage from './[namespace]/page';
 import TeamPage from './[namespace]/team/page';
 
@@ -111,6 +114,20 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   cleanup();
   render(await withPortalTestSession(member, () => TeamPage({ params: Promise.resolve({ namespace: 'cheapskates' }), searchParams: Promise.resolve({}) })));
   expect(document.querySelector('.gt-tile img')).toHaveAttribute('src', `/animals/group/${kept}`);
+}, 60000);
+
+it('shows a group its picture wherever its rings were: the groups list, and the groups inside a group', async () => {
+  const { owner, member, group } = await cheapskates();
+  vi.stubEnv('LOOP_ADMIN', 'owner@example.test');
+  const inner = await createInnerGroup(t.db, owner, { orgId: group.orgId, parentLoopId: group.loopId, name: 'Coupon Club', description: '', slug: 'coupons' });
+  const drawn = async (at: { orgId: string; loopId: string }) => { const { tokens } = await askGroupPicture(t.db, owner, at, [{ face: 1 }, { face: 2 }]); await keepGroupPicture(t.db, owner, at, tokens[0]); return tokens[0]; };
+  const outerPicture = await drawn(group), innerPicture = await drawn(inner);
+  render(await withPortalTestSession(member, () => GroupsPage()));
+  expect(screen.getByRole('link', { name: /Extreme Cheapskates/ }).querySelector('.lp-grouptile img')).toHaveAttribute('src', `/animals/group/${outerPicture}`);
+  expect(screen.getByRole('link', { name: /Coupon Club/ }).querySelector('.lp-grouptile img')).toHaveAttribute('src', `/animals/group/${innerPicture}`);
+  cleanup();
+  render(await withPortalTestSession(member, () => TeamPage({ params: Promise.resolve({ namespace: 'cheapskates' }), searchParams: Promise.resolve({}) })));
+  expect(within(screen.getByRole('navigation', { name: 'Inside this group' })).getByRole('link', { name: /Coupon Club/ }).querySelector('img')).toHaveAttribute('src', `/animals/group/${innerPicture}`);
 }, 60000);
 
 it('stops at six, and closes on Done', async () => {

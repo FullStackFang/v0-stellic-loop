@@ -7,7 +7,7 @@ import { addDays, dayNum, dow, dowLong, mon } from '@/lib/days';
 import { DaysRow } from '@/app/groups/days-row';
 import { getPortalPrincipal, openGroup } from '@/lib/emba/portal-session';
 import { canAccessLoop } from '@/lib/emba/access';
-import { groupTile } from '@/lib/emba/group-picture';
+import { groupPictureMap, groupTile } from '@/lib/emba/group-picture';
 import { GroupTile } from '@/app/groups/group-picture';
 import { listTeamEvents } from '@/lib/emba/team-events';
 import { upcomingEvents, whatsOn } from '@/lib/emba/team-interest';
@@ -70,7 +70,7 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
   });
   if (!opened) return null;
   const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds, tile] } = opened;
-  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources, near, feeds: feeds ?? [], tile };
+  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources, near, feeds: feeds ?? [], tile, inside: await groupPictureMap(db(), group.inside.map(inner => inner.loopId)) };
 }
 
 const who = (person: PersonView) => person.isYou ? 'you' : person.handle ?? (person.former ? 'a former teammate' : 'a teammate');
@@ -239,7 +239,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
       </nav>
     </div></section>
 
-    <Inside group={group} />
+    <Inside group={group} pictures={data.inside} />
 
     <nav className="gt-tabs" aria-label="Team sections">{TABS.filter(([key]) => !MORE.includes(key)).map(tabLink)}
       <details className="gt-more" data-on={MORE.includes(tab) || undefined}><summary>{MORE.includes(tab) ? TABS.find(([key]) => key === tab)![1] : 'More'}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg></summary>
