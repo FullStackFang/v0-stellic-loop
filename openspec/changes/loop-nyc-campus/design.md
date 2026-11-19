@@ -72,6 +72,14 @@ Sections with no stop (all of Ithaca) draw exactly what they draw today. The sig
 - **Nothing invented.** No made-up events, no made-up people going. A count on a ticket or a sign is always real.
 - **The two stops next door.** This round seeds the island only. Lexington Av/63 St and 21 St–Queensbridge get events when a calendar that covers them is added or a person posts there; until then their signs are greyed. *My call, from "for the island": say so if those two should be seeded too.*
 
+**D10. Looking at another campus (founder, 2026-11-18; built ahead of the rest of this change).** After the founder asked how a person looks at the other campus when visiting or planning ahead, a first slice was built that differs from D1, D2, D3 and D5. Read this before building them:
+- A person's own campus stays where their email placed them. Nobody is placed at Cornell Tech: its row has no email domains (`20261118700000_campus_cornell_tech.sql`). The chooser of D3 is not built.
+- Which school a campus is part of is kept in code by slug (`schoolOf` in `lib/campus/schools.ts`), not in a `part_of` column. *My call: it needs no schema change, so the deploy does not depend on the migration.*
+- `mayUse` lets a person open, and act on, every campus of their school (`CampusViewer.visits`). This replaces D5's "the old campus no longer opens". *My call that joining and posting are allowed while visiting; the founder has not confirmed it.*
+- The swap is a small luggage tag in the corner of the map's band (`components/campus/swap.tsx`, picked from `public/demo/mockups-campus-swap.html`): it opens one ticket per campus, each a link to `/c/<slug>`. Away from their own campus the band says "Visiting", and there is no "you" on the map and no walk times, because the person is not standing in any of its sections.
+- Roosevelt Island is drawn as one section with no neighbours and no stop yet. D6's other two sections and D7's sign are still to build.
+- The door and the "no school" page list schools only.
+
 ## Risks / Trade-offs
 
 - [A cornell.edu person at Cornell Tech was already placed at Ithaca] → They stay there until they change it. The account card's "Change campus" is how. No one is moved for them.
