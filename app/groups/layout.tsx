@@ -1,4 +1,4 @@
-import { ClerkProvider, UserButton } from '@clerk/nextjs';
+import { ClerkProvider } from '@clerk/nextjs';
 import { db } from '@/lib/db';
 import type { Principal } from '@/lib/emba/access';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
@@ -13,6 +13,12 @@ import { customFaces } from '@/lib/campus/custom-face';
 import { hasInk } from '@/lib/campus/ink';
 import { campusOf, pickedFaces } from '@/lib/campus/people';
 import { Kit } from '@/components/campus/kit';
+import { SignOut } from '@/components/campus/sign-out';
+import { findCampus } from '@/lib/campus/listings';
+import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
+import { campusScreen } from '@/lib/campus/screen';
+import { campusViewer, lookingAt } from '@/lib/campus/session';
+import type { Screen } from '@/lib/campus/view';
 import { Bar, type BarGroup } from './bar';
 import { SessionRefresh } from './session-refresh';
 import '@/app/c/campus.css';
@@ -32,6 +38,13 @@ async function looks(principal: Principal): Promise<{ kit: string; face: string 
     return { kit: school?.slug ?? 'loop', face: picked === PHOTO ? null : picked === CUSTOM && own ? customFace(own) : animal(picked === undefined || picked < 0 ? animalOf(principal.personId) : picked), ink };
   } catch { return { kit: 'loop', face: null, ink: false }; }
 }
+/** The person's campus screen, for the account card: the same one the campus pages draw theirs from (app/c/ink/page.tsx). Null if it cannot be read; the bar then has a plain card. */
+async function accountScreen(): Promise<Screen | null> {
+  try {
+    const viewer = await campusViewer(), campus = viewer && (await lookingAt() ?? viewer.campus ?? await findCampus(db(), DEFAULT_CAMPUS));
+    return viewer && campus ? await campusScreen(db(), campus, { personId: viewer.personId, admin: viewer.admin, groups: [] }) : null;
+  } catch { return null; }
+}
 // Runs before the page is painted, so a picked or school kit never flashes in after the default. The key is the one components/campus/kit.tsx uses.
 const kitScript = (own: string) => `try{document.documentElement.dataset.kit=localStorage.getItem('loop-kit')||${JSON.stringify(own).replace(/</g, '\\u003c')}}catch(e){}`;
 
@@ -43,9 +56,9 @@ export default async function GroupsLayout({ children }: { children: React.React
   // Signed out there is no bar: the page itself carries the way in, in the look it always had.
   let content = <div className="lp">{configured && <SessionRefresh />}<main className="lp-main lp-main-out"><div className="lp-wrap">{children}</div></main></div>;
   if (principal) {
-    const [groups, look] = await Promise.all([barGroups(principal), looks(principal)]);
+    const [groups, look, screen] = await Promise.all([barGroups(principal), looks(principal), accountScreen()]);
     content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit) }} /><Kit own={look.kit} />
-      <Bar groups={groups} face={look.face} ink={look.ink} account={configured ? <UserButton showName /> : null}><Suspense fallback={null}><OnYou /></Suspense></Bar>
+      <Bar groups={groups} face={look.face} ink={look.ink} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={null}><OnYou /></Suspense></Bar>
       <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div></div>;
   }
   return configured ? <ClerkProvider signInUrl="/groups/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;
