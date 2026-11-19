@@ -35,6 +35,9 @@ vi.mock('ai', async original => ({ ...(await original<typeof import('ai')>()),
 
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-screen, outings ("Who sees whom"), member-levels, campus-search.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// Whether the person signed in with LinkedIn is the sign-in service's to say. Here a test says it.
+const linkedinOf = vi.hoisted(() => ({ account: null as { name: string; photo: string | null } | null }));
+vi.mock('@/lib/campus/linkedin-account', () => ({ linkedinAccount: async () => linkedinOf.account }));
 // The posting panel refreshes the list with the router, which a test render does not mount.
 vi.mock('next/navigation', async original => ({ ...(await original<typeof import('next/navigation')>()), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }), useParams: () => ({}), usePathname: () => '/groups' }));
 
@@ -42,7 +45,7 @@ let t: TestDb, cornell: Campus;
 beforeAll(async () => { t = await openTestDb(); });
 afterAll(async () => { await t?.close(); });
 beforeEach(async () => { await t.reset(); await t.db.query('delete from campus_place'); cornell = (await findCampus(t.db, 'cornell'))!; });
-afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); linkedinOf.account = null; });
 
 const soon = (hours: number) => new Date(Date.now() + hours * 3600000).toISOString();
 async function person(name: string, email = `${name.split(' ')[0].toLowerCase()}@cornell.edu`): Promise<Principal> {
@@ -715,6 +718,7 @@ describe('the pages', () => {
     const admin = await person('Ana Lopez');
     render(await withPortalTestSession(admin, () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
     expect(screen.getByText('Waiting for you: no school email')).toBeInTheDocument();
+    expect(screen.getByText('Pasted an address only: the LinkedIn account is not proven theirs')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /LinkedIn/ })).toHaveTextContent('1 waiting');
     expect(screen.getByRole('link', { name: 'Open profile' })).toHaveAttribute('href', 'https://www.linkedin.com/in/omar-reyes');
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
@@ -750,6 +754,28 @@ describe('the pages', () => {
     expect(['Cornell bear', 'NYU bobcat'].map(name => card.getByRole('button', { name }).className)).toEqual(['cs-pet school', 'cs-pet school']);
     render(await withPortalTestSession(ana, () => page('nyu')));
     expect(screen.getAllByRole('button', { name: 'Post a plan' }).length).toBeGreaterThan(0);
+  });
+  it('a person who signed in with LinkedIn is shown the account is theirs, has one step left, and the admin sees the name', async () => {
+    const outsider = await person('Omar Reyes', 'omar@gmail.com');
+    // Without LinkedIn the ticket says how to get in; the LinkedIn ticket comes first either way.
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['No school email? Use LinkedIn', 'At one of these schools?', 'Which school are you at?']);
+    cleanup();
+    linkedinOf.account = { name: 'Omar Reyes', photo: 'https://img.test/omar.jpg' };
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('One step left: pick your school');
+    expect(screen.getByText('Signed in with LinkedIn').previousElementSibling).toHaveTextContent('Omar Reyes');
+    expect(screen.getByText('Yours')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toBeInTheDocument();
+    cleanup();
+    // Sending keeps the name on the LinkedIn account, and they still wait for the admin.
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['nyu']))).toEqual({ ok: true });
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getByText('Waiting')).toBeInTheDocument();
+    cleanup(); linkedinOf.account = null;
+    vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
+    render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
+    expect(screen.getByText('Signed in with LinkedIn as Omar Reyes')).toBeInTheDocument();
   });
   it('a person at no school names their school, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');

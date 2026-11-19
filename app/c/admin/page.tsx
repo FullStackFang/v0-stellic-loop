@@ -163,7 +163,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     const named = (slug: string) => campuses.find(each => each.slug === slug)?.name ?? slug;
     return <section>{top()}
       <p className="cs-adm-lede">{linked.length ? 'People who added a LinkedIn profile to unlock schools, across every campus. Someone with no school email waits here until you approve them. Loop reads nothing from LinkedIn: open the profile to check a school. Removing one closes what it unlocked.' : 'Nobody has added a LinkedIn profile yet.'}</p>
-      <ul className="cs-adm-rows">{linked.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span>{each.waiting && <span className="warn">Waiting for you: no school email</span>}</div>
+      <ul className="cs-adm-rows">{linked.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span><span>{each.owner ? `Signed in with LinkedIn as ${each.owner}` : 'Pasted an address only: the LinkedIn account is not proven theirs'}</span>{each.waiting && <span className="warn">Waiting for you: no school email</span>}</div>
         <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
         {each.waiting && <form action={approveLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm go">Approve</button></form>}
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Remove</button></form></li>)}</ul>
