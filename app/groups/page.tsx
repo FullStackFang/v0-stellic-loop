@@ -14,6 +14,7 @@ import { InvitationLink } from './invitation-link';
 import { InvitationPaste } from './invitation-paste';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
 import { mayStartTopLevel } from '@/lib/emba/workspaces';
+import { groupPictureMap } from '@/lib/emba/group-picture';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,7 @@ export default async function GroupsPage() {
   } catch {
     return <section className="lt-editor"><h1>Groups unavailable</h1><p role="alert">Your access may have changed. Reload to try again.</p></section>;
   }
-  const ownerAllowed = mayStartTopLevel(principal);
+  const ownerAllowed = mayStartTopLevel(principal), pictures = await groupPictureMap(db(), groups.map(group => group.loopId));
   const [invite, ...moreInvites] = invitations;
   // The archived groups this person may restore. Read only for someone who runs a group; a failure leaves the page without the list.
   const archived: ArchivedGroup[] = ownerAllowed || groups.some(group => group.canStart) ? await listArchivedGroups(db(), principal).catch(() => []) : [];
@@ -87,7 +88,7 @@ export default async function GroupsPage() {
 
     {groups.length > 0 ? <section className="lp-section" aria-labelledby="list-title">
       <div className="lp-sechead"><h2 id="list-title">{invite ? 'Your groups' : 'Groups'} <span>{groups.length}</span></h2>{create}</div>
-      <GroupList groups={groups.map(group => ({ id: group.loopId, parent: group.parentLoopId, orgId: group.orgId, depth: group.depth, name: group.orgName, handle: groupHandle(group), href: groupHref(group), canRename: group.canStart, canArchive: group.canArchive }))} />
+      <GroupList groups={groups.map(group => ({ id: group.loopId, parent: group.parentLoopId, orgId: group.orgId, depth: group.depth, name: group.orgName, handle: groupHandle(group), href: groupHref(group), canRename: group.canStart, canArchive: group.canArchive, picture: pictures[group.loopId] }))} />
       <InvitationLink />
     </section>
     : <section className="lp-help" aria-label="If your invitation hasn't arrived">

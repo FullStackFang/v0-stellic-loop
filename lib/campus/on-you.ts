@@ -2,6 +2,8 @@ import 'server-only';
 import { db } from '../db';
 import type { Principal } from '../emba/access';
 import { groupPath, ROOT_SLUG } from '../emba/group-path';
+import { groupPictureMap } from '../emba/group-picture';
+import { groupPictureSrc } from '../emba/group-picture-src';
 import { onYou, type OnYouRow } from '../emba/team-waiting';
 import { animal, animalOf } from './animals';
 import { pickedFaces } from './people';
@@ -19,7 +21,7 @@ export type OnYouGroup = { tag: string; name: string; scope: Scope; timezone: st
 export type OnYouView = { count: number; items: OnYouItem[]; /** How many more wait than are listed. */ more: number; claims: OnYouClaim[]; /** The groups the person may ask. */ groups: OnYouGroup[];
   /** Every group the person is in, a group inside another after its parent. */ mine: OnYouMine[] };
 /** One of the person's groups: its page, who is in it, the next thing in it that waits on them, and how many do. */
-export type OnYouMine = { id: string; name: string; handle: string; href: string; /** The group this one is inside, by name. */ inside: string | null; people: number; faces: string[]; next: string | null; on: number };
+export type OnYouMine = { id: string; name: string; handle: string; href: string; /** The group this one is inside, by name. */ inside: string | null; people: number; faces: string[]; /** The group's drawn picture, when it has one: shown in place of the faces. */ picture: string | null; next: string | null; on: number };
 /** "@club" is at /groups/club; "@club/vietnam" is the group inside it. */
 const hrefOf = (handle: string) => { const [namespace, slug] = handle.slice(1).split('/'); return `${groupPath(namespace, slug ?? ROOT_SLUG)}/team`; };
 
@@ -59,11 +61,12 @@ export async function onYouView(principal: Principal, now = Date.now()): Promise
   const read = await onYou(db(), principal);
   if (!read.groups.length) return null;
   const members = await membersOf(read.groups.map(group => group.scope.loopId)).catch(() => new Map<string, { people: number; faces: string[] }>());
+  const pictures = await groupPictureMap(db(), read.groups.map(group => group.scope.loopId));
   const waits = (loopId: string) => [...read.claims.filter(claim => claim.scope.loopId === loopId).map(claim => claim.record.what ?? ''), ...read.rows.filter(row => row.scope.loopId === loopId && row.kind !== 'missed').map(row => 'ask' in row ? row.ask.question : row.event.name)];
   const byHandle = [...read.groups].sort((a, b) => a.team.handle.localeCompare(b.team.handle));
   return { count: read.count, items: read.rows.map(row => item(row, now)), more: read.more.reduce((sum, rest) => sum + rest.count, 0), 
     mine: byHandle.map(group => { const on = waits(group.scope.loopId), parent = group.team.handle.includes('/') ? byHandle.find(each => each.team.handle === group.team.handle.split('/')[0]) : null;
-      return { id: group.scope.loopId, name: group.team.name, handle: group.team.handle, href: hrefOf(group.team.handle), inside: parent?.team.name ?? null, ...(members.get(group.scope.loopId) ?? { people: 0, faces: [] }), next: on[0] || null, on: on.length }; }),
+      return { id: group.scope.loopId, name: group.team.name, handle: group.team.handle, href: hrefOf(group.team.handle), inside: parent?.team.name ?? null, ...(members.get(group.scope.loopId) ?? { people: 0, faces: [] }), picture: pictures[group.scope.loopId] ? groupPictureSrc(pictures[group.scope.loopId]) : null, next: on[0] || null, on: on.length }; }),
     claims: read.claims.map(({ team, scope, record }) => ({ id: `${scope.loopId}:c:${record.number}`, scope, number: record.number, what: record.what ?? '', group: team.name, by: record.by.handle ?? 'A teammate', due: record.dueOn ?? null })),
     // "@club" is the tag "club"; "@club/vietnam" is "club-vietnam": a tag has no slash.
     groups: read.groups.filter(group => group.posts).map(group => ({ tag: group.team.handle.slice(1).replace('/', '-'), name: group.team.name, scope: group.scope, timezone: group.timezone })) };

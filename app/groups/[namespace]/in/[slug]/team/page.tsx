@@ -2,3 +2,4 @@
 export { default } from '../../../team/page';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 120;

@@ -13,9 +13,12 @@ import { clerkEmailsOf } from '@/lib/emba/clerk-identity';
 import { CUSTOM, animal, animalOf, customFace } from '@/lib/campus/animals';
 import { customFaces } from '@/lib/campus/custom-face';
 import { pickedFaces } from '@/lib/campus/people';
+import { groupTile } from '@/lib/emba/group-picture';
 import { Roster, type Invited, type RoleName, type RosterPerson } from './members-panel';
 
 export const dynamic = 'force-dynamic';
+// Drawing a group's picture, from the card on the group's tile, can take a minute.
+export const maxDuration = 120;
 const RANK: RoleName[] = ['owner', 'organizer', 'member', 'follower'];
 async function loadGroup(principal: NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>, route: GroupRoute) {
   const opened = await openGroup(principal, route, async scope => {
@@ -32,7 +35,7 @@ async function loadGroup(principal: NonNullable<Awaited<ReturnType<typeof getPor
   // Each person's face is the animal they picked on the campus screen, or the one their id gives them.
   const picks = await pickedFaces(db(), (roles ?? []).map(role => role.personId).concat(principal.personId)).catch(() => new Map<string, number>());
   const made = await customFaces(db(), [...picks].filter(([, pick]) => pick === CUSTOM).map(([id]) => id)).catch(() => new Map<string, { token: string | null }>());
-  return { roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made };
+  return { roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made, tile: await groupTile(db(), principal, scope) };
   });
   return opened && { group: opened.group, scope: opened.scope, ...opened.data };
 }
@@ -43,7 +46,7 @@ export default async function GroupPage({ params }: { params: Promise<GroupRoute
   const route = await params, base = groupPath(route.namespace, route.slug);
   const data = await loadGroup(principal, route).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made } = data;
+  const { group, scope, roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made, tile } = data;
   const faceOf = (id: string) => { const pick = picks.get(id), own = made.get(id)?.token; return pick === CUSTOM && own ? customFace(own) : animal(pick === undefined || pick < 0 ? animalOf(id) : pick); };
   const top = group.slug === ROOT_SLUG;
   const mayRemove = new Set(members?.map(member => member.personId));
@@ -62,7 +65,7 @@ export default async function GroupPage({ params }: { params: Promise<GroupRoute
     .sort((a, b) => (a.name ?? a.email).localeCompare(b.name ?? b.email));
   return <div className="gt gt-people">
       {group.trail.length > 1 && <Crumbs trail={group.trail} here="Members" />}
-      <GroupHead group={group} base={base} here="members" people={roles ? roles.length : null} canAdd={Boolean(roles)} asking={requests?.length ?? 0} />
+      <GroupHead group={group} base={base} here="members" people={roles ? roles.length : null} canAdd={Boolean(roles)} asking={requests?.length ?? 0} tile={tile} />
       {/* The list is the page. Adding people, the join link and the people asking to join are on Add people. */}
       <div className="lp-mb-grid" data-solo={!roles || undefined} data-wide={Boolean(roles) || undefined}>
         <div>

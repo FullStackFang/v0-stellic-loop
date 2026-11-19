@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { CHANGES, CUSTOM, NAMES } from './animals';
+import { recordAsk, type AskPlace } from './ink';
 import { NEEDS_PREMIUM } from './animal-tiers';
 import { hasInk } from './ink';
 import { CampusError } from './errors';
@@ -138,10 +139,12 @@ export async function keepPicture(db: Db, personId: string, keep: string): Promi
 }
 
 /** "Subscribe" to Loop Premium. Nothing is charged: that they asked, and the email they gave, is kept. Asking twice changes nothing. */
-export async function subscribe(q: Q, personId: string, email: string): Promise<void> {
+export async function subscribe(q: Q, personId: string, email: string, place: AskPlace = 'own animal'): Promise<void> {
   const given = email.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(given)) throw new CampusError('Enter the email to subscribe with.');
   await q.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
+  // Every press is kept, with where it was made (lib/campus/ink.ts).
+  await recordAsk(q, personId, given.slice(0, 320), 'ink', place);
 }
 
 export type PremiumAsk = { email: string; asked: string; pictures: string[] };

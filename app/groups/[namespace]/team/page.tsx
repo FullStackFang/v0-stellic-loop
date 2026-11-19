@@ -7,6 +7,8 @@ import { addDays, dayNum, dow, dowLong, mon } from '@/lib/days';
 import { DaysRow } from '@/app/groups/days-row';
 import { getPortalPrincipal, openGroup } from '@/lib/emba/portal-session';
 import { canAccessLoop } from '@/lib/emba/access';
+import { groupPictureMap, groupTile } from '@/lib/emba/group-picture';
+import { GroupTile } from '@/app/groups/group-picture';
 import { listTeamEvents } from '@/lib/emba/team-events';
 import { upcomingEvents, whatsOn } from '@/lib/emba/team-interest';
 import { feedAddress } from '@/lib/emba/team-calendar';
@@ -25,7 +27,7 @@ import { sendingOn } from '@/lib/emba/reach-send';
 import { addTeamEvent, addTeamFeed, amendTeamRecord, announceToTeam, changeTeamEvent, joinNearbyEvent, linkTeamEvent, readTeamFeedNow, removeTeamFeed, restoreTeamEvent, retireTeamEvent, saveTeamBrief, setTeamFeedOn, setTeamInterest } from '../../team-actions';
 import { cancelTeamIdea, changeTeamIdea, newCalendarAddress, proposeTeamIdea, removeMyTravel, saveMyTravel, sendTeamEventInvites } from '../../trip-actions';
 import { CopyLink } from '@/components/emba/copy-link';
-import { Arrow, Rings } from '@/components/LoopGlyphs';
+import { Arrow } from '@/components/LoopGlyphs';
 import { Alert, Via } from '../../glyphs';
 import { listResources } from '@/lib/emba/team-resources';
 import type { Described, LinkView, TextView } from '@/lib/emba/team-resources';
@@ -33,6 +35,8 @@ import { ResourceBox } from '@/components/emba/resource-box';
 import { addResource, removeResource, removeTeamLink, retryResource } from '../../resource-actions';
 
 export const dynamic = 'force-dynamic';
+// Drawing a group's picture, from the card on the group's tile, can take a minute.
+export const maxDuration = 120;
 type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
 // The record is one section at a time, chosen by ?tab=. Every tab is a link, so a view can be shared and nothing depends on script.
 // "All" opens first: what is coming up, a column a day, with what waits on the reader marked.
@@ -62,11 +66,11 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
     shown(['all', 'ideas'], () => whatsOn(db(), principal, scope)), shown(['ideas'], () => feedAddress(db(), principal, scope)), shown(['all', 'travel'], () => arrivals(db(), principal, scope)),
     shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope)), shown(['resources'], () => listResources(db(), principal, scope)),
     // Nearby is listed to everyone in the group; the feeds, with their last results, only to owners and organizers.
-    shown(['events'], () => nearby(db(), principal, scope)), shown(['events'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : [])]);
+    shown(['events'], () => nearby(db(), principal, scope)), shown(['events'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : []), groupTile(db(), principal, scope)]);
   });
   if (!opened) return null;
-  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds] } = opened;
-  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources, near, feeds: feeds ?? [] };
+  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds, tile] } = opened;
+  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources, near, feeds: feeds ?? [], tile, inside: await groupPictureMap(db(), group.inside.map(inner => inner.loopId)) };
 }
 
 const who = (person: PersonView) => person.isYou ? 'you' : person.handle ?? (person.former ? 'a former teammate' : 'a teammate');
@@ -222,7 +226,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
 
     <section className="gt-tk gt-head"><div>
       <header className="gt-plate">
-        {deadline ? <time className="gt-tile" dateTime={deadline}><small>{mon(deadline)}</small><b>{dayNum(deadline)}</b></time> : <span className="gt-tile"><Rings /></span>}
+        {deadline ? <time className="gt-tile" dateTime={deadline}><small>{mon(deadline)}</small><b>{dayNum(deadline)}</b></time> : <GroupTile {...data.tile} name={group.orgName} />}
         <div><h1>{group.orgName}</h1>
           <p className="gt-handle"><span>{groupHandle(group)}</span>{daysLeft !== null && <em>{daysLeft > 0 ? `${plural(daysLeft, 'day')} left` : daysLeft === 0 ? 'Due today' : `${plural(-daysLeft, 'day')} past`}</em>}</p>
           <p>{purpose ?? 'No brief has been written yet.'}</p></div>
@@ -235,7 +239,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
       </nav>
     </div></section>
 
-    <Inside group={group} />
+    <Inside group={group} pictures={data.inside} />
 
     <nav className="gt-tabs" aria-label="Team sections">{TABS.filter(([key]) => !MORE.includes(key)).map(tabLink)}
       <details className="gt-more" data-on={MORE.includes(tab) || undefined}><summary>{MORE.includes(tab) ? TABS.find(([key]) => key === tab)![1] : 'More'}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg></summary>
