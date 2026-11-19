@@ -116,8 +116,18 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   fireEvent.click(card.getAllByRole('button', { name: 'Keep this one' })[0]);
   expect(await card.findByText('Say hi to your group.')).toBeInTheDocument();
   expect(card.getByRole('button', { name: 'Kept' })).toBeDisabled();
+  // The tile wears it at once, without waiting for the page to be read again.
+  expect(tileButton()!.querySelector('img')).toHaveAttribute('src', expect.stringContaining('/animals/group/'));
+  // Every drawing of the group stays to choose from: the four made so far, and an earlier one can be worn instead.
+  fireEvent.click(card.getByRole('button', { name: 'Pick other animals' }));
+  fireEvent.click(card.getByRole('button', { name: 'Drawn 4' }));
+  expect(card.getAllByRole('img', { name: /^Drawing/ })).toHaveLength(4);
+  preview('picture-drawn');
+  const first = (await groupPictures(t.db, [group.loopId])).get(group.loopId)!;
+  fireEvent.click(card.getAllByRole('button', { name: 'Use this one' })[2]);
+  await vi.waitFor(async () => expect((await groupPictures(t.db, [group.loopId])).get(group.loopId)).not.toBe(first));
   const kept = (await groupPictures(t.db, [group.loopId])).get(group.loopId)!;
-  expect(kept).toBeTruthy();
+  await vi.waitFor(() => expect(tileButton()!.querySelector('img')).toHaveAttribute('src', `/animals/group/${kept}`));
   cleanup();
 
   // The member sees the picture, on the members page and on the team page, and still has nothing to press.

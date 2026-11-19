@@ -56,9 +56,12 @@ it('draws the picked animals twice for whoever runs the group, and the group has
   await keepGroupPicture(t.db, owner, at, tokens[1]);
   expect(await groupPictures(t.db, [at.loopId])).toEqual(new Map([[at.loopId, tokens[1]]]));
   expect(await waitingGroupPictures(t.db, owner, at)).toEqual([]);
-  // The one let go cannot be kept after all, and a member keeps nothing.
-  await expect(keepGroupPicture(t.db, owner, at, tokens[0])).rejects.toThrow('Pick one of the drawings.');
+  // A member keeps nothing. The one set aside can be worn after all, and then the other is set aside.
   await expect(keepGroupPicture(t.db, member, at, tokens[1])).rejects.toThrow('forbidden');
+  await keepGroupPicture(t.db, owner, at, tokens[0]);
+  expect(await groupPictures(t.db, [at.loopId])).toEqual(new Map([[at.loopId, tokens[0]]]));
+  expect((await picturePane(t.db, owner, at))!.drawn.sort()).toEqual([...tokens].sort());
+  await keepGroupPicture(t.db, owner, at, tokens[1]);
 
   // A newer picture takes the place of the one the group had.
   const again = await askGroupPicture(t.db, owner, at, [{ face: 1 }, { face: 2 }], draw);

@@ -14,8 +14,7 @@
 .gp-card .cs-pets-top { flex-wrap: wrap; } .gp-card .gp-done { margin-left: auto; }
 .gp-card .cs-pet { position: relative; }
 .gp-n { position: absolute; left: -4px; top: -4px; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11.5px; font-weight: 740; background: var(--cs-action); color: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-paper); }
-/* The picker scrolls; what is picked and the button stay at its foot. */
-.cs .gp-foot { position: sticky; bottom: -16px; z-index: 2; display: flex; align-items: center; gap: 12px; margin: 16px -20px -16px; font-weight: 640; }
+.cs .gp-foot { display: flex; align-items: center; gap: 12px; margin: 16px -20px -16px; font-weight: 640; }
 .gp-faces { display: flex; min-width: 0; margin-right: auto; } .gp-faces img { width: 38px; height: 38px; margin-left: -10px; border-radius: 50%; object-fit: contain; background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink); } .gp-faces img:first-child { margin-left: 0; }
 .cs .gp-foot > .gp-go { gap: 8px; padding: 0 16px; } .gp-plus { padding: 1px 8px; border-radius: 99px; font-size: 11.5px; font-style: normal; font-weight: 740; background: var(--cs-ink); color: var(--cs-gold); }
 .gp-card .gp-said { margin: 12px 0 0; padding: 8px 14px; border-radius: 12px 12px 12px 3px; font-size: 13.5px; font-weight: 600; background: var(--cs-action); color: var(--cs-paper); }
@@ -24,7 +23,9 @@
 .gp-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0 20px; }
 .gp-two figure { display: grid; justify-items: center; gap: 10px; margin: 0; padding: 12px; border-radius: 16px 16px 16px 5px; background: color-mix(in oklch, var(--cs-on-ink) 12%, transparent); }
 .gp-two img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; }
-.gp-card .cs-lvl-body { scrollbar-gutter: auto; }
+/* Nothing scrolls inside the card: it is as tall as its animals, and the page scrolls. */
+.cs .gp-card .cs-lvl-body { max-height: none; overflow: visible; }
 /* The same picture, small, wherever a group is listed. */
 .lp-grouptile.gp-has, .lp-inside-mark.gp-has { background: var(--cs-paper, #fff); box-shadow: inset 0 0 0 1.5px var(--cs-ink, currentColor); overflow: hidden; }
 .lp-grouptile.gp-has > img, .lp-inside-mark.gp-has > img { display: block; width: 92%; height: 92%; object-fit: contain; }
+.gp-two.gp-all { grid-template-columns: repeat(3, 1fr); margin-bottom: 4px; } .gp-all figure { padding: 8px; }

@@ -283,7 +283,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 @media (prefers-reduced-motion: reduce) { .cs-prem-join { animation: none; } }
 .cs-own-made { display: grid; justify-items: center; gap: 12px; margin-top: 14px; text-align: center; } .cs-own-made img { width: 132px; height: 132px; object-fit: contain; }
 .cs-own-made img.busy { border-radius: 16px; object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } @keyframes cs-own-wait { to { opacity: .45; transform: scale(.96); } }
-.cs-own .cs-own-thanks { max-width: 40ch; margin-top: 12px; font-size: 14px; line-height: 1.4; font-weight: 540; color: var(--cs-field); }
+.cs-own .cs-own-thanks { margin-top: 12px; font-size: 14px; line-height: 1.4; font-weight: 540; color: var(--cs-field); }
 /* The made animal, and the photo while it is drawn, on the plate. 96px: the picture is a 192px file. */
 .cs-prem-made { display: grid; justify-items: center; gap: 12px; padding: 22px 0 26px; text-align: center; } .cs-prem-made img { width: 96px; height: 96px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--cs-on-ink) 12%, transparent); box-shadow: 0 0 0 3px var(--cs-field); }
 .cs-prem-made img.busy { object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } .cs-own .cs-prem-made p { color: var(--cs-on-ink-mute); } @media (prefers-reduced-motion: reduce) { .cs-prem-made img.busy { animation: none; } }

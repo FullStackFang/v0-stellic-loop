@@ -82,13 +82,14 @@ async function choices(q: Q, p: Principal, admin: boolean): Promise<Choice[]> {
 }
 
 /** What the "Group picture" card needs to draw itself for a person who runs the group. Null for anyone else. */
-export type PicturePane = { choices: Choice[]; fewest: number; most: number; plus: boolean; asksLeft: number | null; waiting: string[]; kept: string | null };
+export type PicturePane = { choices: Choice[]; fewest: number; most: number; plus: boolean; asksLeft: number | null; waiting: string[]; kept: string | null; /** Every drawing made for the group, newest first: any of them can be worn. */ drawn: string[] };
 export async function picturePane(q: Q, p: Principal, scope: Scope): Promise<PicturePane | null> {
   const at = scopeSchema.parse(scope);
   if (!await runs(q, p, at)) return null;
   const admin = isAdmin(p);
   return { choices: await choices(q, p, admin), fewest: FEWEST, most: MOST, plus: admin || await hasInkPlus(q, p.personId), asksLeft: admin ? null : Math.max(0, ASKS - await asksMade(q, p.personId)),
-    waiting: await waitingGroupPictures(q, p, at), kept: (await groupPictures(q, [at.loopId])).get(at.loopId) ?? null };
+    waiting: await waitingGroupPictures(q, p, at), kept: (await groupPictures(q, [at.loopId])).get(at.loopId) ?? null,
+    drawn: (await q.query<{ token: string }>('select token::text as token from emba_group_picture where org_id=$1 and loop_id=$2 order by made_at desc,token', [at.orgId, at.loopId])).rows.map(row => row.token) };
 }
 
 /** One picked animal as the model is given it: 512px, on white. */
@@ -149,7 +150,7 @@ export async function keepGroupPicture(db: Db, p: Principal, scope: Scope, token
   if (!z.uuid().safeParse(token).success) throw new CampusError('Pick one of the drawings.');
   await db.tx(async q => {
     if (!await runs(q, p, at)) throw new EmbaError('forbidden');
-    const { rows: [kept] } = await q.query('update emba_group_picture set kept_at=now() where org_id=$1 and loop_id=$2 and token=$3 and let_go_at is null returning 1', [at.orgId, at.loopId, token]);
+    const { rows: [kept] } = await q.query('update emba_group_picture set kept_at=now(),let_go_at=null where org_id=$1 and loop_id=$2 and token=$3 returning 1', [at.orgId, at.loopId, token]);
     if (!kept) throw new CampusError('Pick one of the drawings.');
     await q.query('update emba_group_picture set let_go_at=now() where org_id=$1 and loop_id=$2 and token<>$3 and let_go_at is null', [at.orgId, at.loopId, token]);
   });

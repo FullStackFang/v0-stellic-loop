@@ -16,29 +16,30 @@ import './group-picture.css';
 const keyOf = (pick: Pick) => 'face' in pick ? `f${pick.face}` : `t${pick.token}`;
 const FAILED = { ok: false as const, message: 'That did not go through. Try again.' };
 const FILTERS: [Choice['kind'], string][] = [['own', 'Yours'], ['school', 'Schools'], ['ink', 'Ink']];
-type Step = 'pick' | 'plate' | 'sure' | 'wait' | 'two';
+type Step = 'pick' | 'plate' | 'sure' | 'wait' | 'two' | 'all';
 /** The longest line of a person's own the drawing takes (plainNote in lib/emba/group-picture.ts). */
 const NOTE = 60;
 
 /** The group's tile: its drawn picture, or the rings. For a person who runs the group it opens the card. */
 export function GroupTile({ scope, picture, pane, name }: TileProps & { name: string }) {
-  const [open, setOpen] = useState(false);
+  // The picture the tile wears: the page's, until one is kept in the card.
+  const [open, setOpen] = useState(false), [kept, setKept] = useState<string | null>(null), worn = kept ?? picture;
   /* eslint-disable-next-line @next/next/no-img-element -- a drawing served from the database at its own address */
-  const face = picture ? <img src={groupPictureSrc(picture)} alt="" /> : <Rings />;
-  if (!pane) return <span className={`gt-tile ${picture ? 'gp-has' : ''}`}>{face}</span>;
+  const face = worn ? <img src={groupPictureSrc(worn)} alt="" /> : <Rings />;
+  if (!pane) return <span className={`gt-tile ${worn ? 'gp-has' : ''}`}>{face}</span>;
   return <span className="gp">
-    <button className={`gt-tile ${picture ? 'gp-has' : ''}`} aria-expanded={open} aria-label={`Group picture of ${name}. ${picture ? 'Change it' : 'Draw one'}`} onClick={() => setOpen(!open)}>
+    <button className={`gt-tile ${worn ? 'gp-has' : ''}`} aria-expanded={open} aria-label={`Group picture of ${name}. ${worn ? 'Change it' : 'Draw one'}`} onClick={() => setOpen(!open)}>
       {face}<i className="gp-pen" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3L5 14H2v-3z" /></svg></i>
     </button>
-    {open && <PictureCard scope={scope} pane={pane} onClose={() => setOpen(false)} />}
+    {open && <PictureCard scope={scope} pane={pane} onKept={setKept} onClose={() => setOpen(false)} />}
   </span>;
 }
 
-function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane: PicturePane; onClose: () => void }) {
+function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope']; pane: PicturePane; onKept: (token: string) => void; onClose: () => void }) {
   const router = useRouter(), box = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<Step>(pane.waiting.length ? 'two' : 'pick');
   const [picked, setPicked] = useState<Choice[]>([]), [only, setOnly] = useState<Choice['kind'] | null>(null);
-  const [drawn, setDrawn] = useState(pane.waiting), [kept, setKept] = useState(pane.kept);
+  const [drawn, setDrawn] = useState(pane.waiting), [kept, setKept] = useState(pane.kept), [all, setAll] = useState(pane.drawn);
   const [plus, setPlus] = useState(pane.plus), [thanked, setThanked] = useState(false);
   const [email, setEmail] = useState(''), [note, setNote] = useState(''), [said, setSaid] = useState(''), [busy, setBusy] = useState(false);
   // Where "Back" on the asking step returns to, and how many more times this person may ask (null: no limit).
@@ -68,7 +69,7 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
     setSaid(''); setStep('wait');
     const got = await drawGroupPictureAction(scope, picked.map(one => one.pick), note).catch(() => FAILED);
     if (!got.ok) { setSaid(got.message); setStep('sure'); return; }
-    setDrawn(got.tokens ?? []); setLeft(left === null ? null : Math.max(0, left - 1)); setStep('two');
+    setDrawn(got.tokens ?? []); setAll([...(got.tokens ?? []), ...all]); setLeft(left === null ? null : Math.max(0, left - 1)); setStep('two');
   };
   const subscribe = async () => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setSaid('Enter the email to subscribe with.');
@@ -83,7 +84,7 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
     const got = await keepGroupPictureAction(scope, token).catch(() => FAILED);
     setBusy(false);
     if (!got.ok) return setSaid(got.message);
-    setKept(token); router.refresh();
+    setKept(token); onKept(token); router.refresh();
   };
 
   /* eslint-disable @next/next/no-img-element -- icons from public/animals, made animals and drawings at their own addresses */
@@ -95,6 +96,7 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
   const body = step === 'pick' ? <div className="cs-lvl-body cs-pets">
     <div className="cs-pets-top" role="group" aria-label="Show">
       {kinds.map(([kind, label]) => <button key={kind} className={`cs-btn sm ${kind === 'ink' ? 'gold' : ''}`} aria-pressed={only === kind} onClick={() => setOnly(only === kind ? null : kind)}>{kind === 'ink' ? <InkMark /> : kind === 'school' && <SchoolMark />}{label}</button>)}
+      {all.length > 0 && <button className="cs-btn sm" onClick={() => { setSaid(''); setStep('all'); }}>Drawn {all.length}</button>}
       <button className="cs-btn sm go gp-done" onClick={onClose}>Done</button>
     </div>
     <div className="cs-pets-grid" role="group" aria-label="Animals for the picture">
@@ -131,6 +133,13 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
         <p className="cs-prem-small">{note.length} of {NOTE} letters, and you can leave it empty. Nothing is drawn until you press Yes.{left !== null && ` You can do this ${left} more ${left === 1 ? 'time' : 'times'}.`}</p>
         {alert}
       </form></>
+    : step === 'all' ? <>
+      <button className="cs-prem-back" onClick={() => { setSaid(''); setStep('pick'); }}>Back</button>
+      <p className="cs-prem-kick">Loop Ink+</p>
+      <p className="cs-prem-big said">Every drawing of your group.</p>
+      <div className="gp-two gp-all">{all.map((token, at) => <figure key={token}><img src={groupPictureSrc(token, true)} alt={`Drawing ${all.length - at}`} />
+        <button className={`cs-btn sm ${kept === token ? 'go' : ''}`} aria-pressed={kept === token} disabled={busy || kept === token} onClick={() => void keep(token)}>{kept === token ? 'Worn now' : 'Use this one'}</button></figure>)}</div>
+      {alert}</>
     : step === 'wait' ? <>
       <p className="cs-prem-kick">Loop Ink+</p>
       <p className="cs-prem-big said" role="status">Drawing you together.</p>
