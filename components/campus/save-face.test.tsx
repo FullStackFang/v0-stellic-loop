@@ -14,6 +14,8 @@ const SWATCHES = [{ key: 'school', name: 'Your school', colour: 'red' }, { key: 
 /** The server: whether this person has Ink+, and whether they wear an animal. Every address asked for is kept. */
 const server = { plus: false, animal: true, asked: [] as string[] };
 const saved: { name: string; href: string }[] = [];
+/** The pictures the pane asked for ahead of a press. */
+const ahead: string[] = [];
 beforeEach(() => {
   Object.assign(server, { plus: false, animal: true, asked: [] }); saved.length = 0; act.subscribe.mockReset();
   vi.stubGlobal('fetch', vi.fn(async (href: string) => {
@@ -25,6 +27,7 @@ beforeEach(() => {
     if (href.includes('mark=0') && !server.plus) return answer(403, 'Saving without the Loop mark comes with Loop Ink+.');
     return answer(200, '');
   }));
+  ahead.length = 0; vi.spyOn(HTMLImageElement.prototype, 'src', 'set').mockImplementation(href => { ahead.push(href); });
   URL.createObjectURL = vi.fn(() => 'blob:picture'); URL.revokeObjectURL = vi.fn();
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { saved.push({ name: this.download, href: this.href }); });
 });
@@ -45,16 +48,21 @@ it('shows the picture as it will be saved, in the shape and on the ground picked
   expect(screen.getByText(/1080 × 1080/)).toBeInTheDocument();
   // The grounds are the server's: this person's school first.
   press(await screen.findByRole('button', { name: 'Cream' }).then(() => 'Cream'));
-  // The same picture stays on the page while the next one comes: it is dimmed until that has arrived.
-  const first = view();
-  fireEvent.load(first);
-  expect(first).not.toHaveClass('wait');
+  // Every shape was asked for ahead, and each ground of the shape in view.
+  expect(ahead).toEqual(expect.arrayContaining(['/c/save?shape=tall&ground=cream&small=1', '/c/save?shape=sticker&ground=cream&small=1', '/c/save?shape=profile&ground=ink&small=1']));
+  // A picture that has not arrived is not shown; its frame already has the picked shape's size, so nothing jumps.
+  fireEvent.load(view());
+  expect(view()).not.toHaveClass('wait');
   press('Lock screen');
-  expect(view()).toBe(first);
+  expect(view().parentElement).toHaveClass('cs-save-frame', 'tall');
   expect(view()).toHaveClass('wait');
   expect(view().getAttribute('src')).toBe('/c/save?shape=tall&ground=cream&small=1');
-  fireEvent.load(first);
-  expect(first).not.toHaveClass('wait');
+  fireEvent.load(view());
+  expect(view()).not.toHaveClass('wait');
+  // Going back shows the picture it already has, at once.
+  press('Profile');
+  expect(view()).not.toHaveClass('wait');
+  press('Lock screen');
   expect(screen.getByText(/1080 × 1920/)).toBeInTheDocument();
   preview('pane-tall', 'tall');
   press('Save');
