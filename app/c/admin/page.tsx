@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Rings } from '@/components/LoopGlyphs';
 import { db } from '@/lib/db';
 import { customFace } from '@/lib/campus/animals';
 import { catalogue } from '@/lib/campus/animal-tiers';
@@ -14,6 +13,7 @@ import { campusPlaces } from '@/lib/campus/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
+import { siteBar } from '../site-bar';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
 import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setTierAction, readFeedAction, removeLinkedinAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
@@ -187,11 +187,10 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     </section>;
   }
 
+  const { bar, foot } = await siteBar({ campus, viewer, back: '/c/admin' });
   const body = { events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
   return <div className="cs">
-    <header className="cs-nav"><Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
-      <nav className="cs-links"><Link href={`/c/${campus.slug}`}>This week</Link><Link href="/c/admin" aria-current="page">Admin</Link></nav>
-      <div className="cs-nav-end"><Link className="cs-btn sm" href="/groups">The groups site</Link><Link className="cs-btn sm" href="/groups/archive">How we got here</Link></div></header>
+    {bar}
     <main className="cs-adm">
       <aside className="cs-adm-rail">
         <details className="school"><summary>{campus.name}</summary><nav aria-label="Campus">{campuses.filter(each => each.id !== campus.id).map(each => <Link key={each.id} href={at(tab, each.slug)}>{each.name}</Link>)}</nav></details>
@@ -203,5 +202,6 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
         {body}
       </div>
     </main>
+    {foot}
   </div>;
 }

@@ -23,8 +23,10 @@ const ONCE = 'That one is already being drawn again. Try in a minute.';
 const ASKS: Record<(typeof CHANGES)[number], string> = { Fluffier: 'Make the fur fluffier.', 'Bigger eyes': 'Make the eyes bigger.', 'Different pose': 'Put it in a different pose.', 'Truer colors': "Match the photo's colours more closely." };
 const NOT_NOW = 'That could not be drawn just now. Try again in a minute.';
 
-/** Draws the figure from an uploaded photo: a 192px PNG on a transparent ground. Refuses a photo with no animal in it. */
-export type Draw = (upload: Uint8Array, changes?: readonly (typeof CHANGES)[number][], note?: string) => Promise<Uint8Array>;
+/** A drawn figure on a transparent ground, twice: the 192px PNG a face is, and the drawing kept large (up to 1024px) for saving it out of the app. */
+export type Made = { small: Uint8Array; large: Uint8Array };
+/** Draws the figure from an uploaded photo. Refuses a photo with no animal in it. */
+export type Draw = (upload: Uint8Array, changes?: readonly (typeof CHANGES)[number][], note?: string) => Promise<Made>;
 /** A person's own words for what should change, made safe to set in the drawing's words: one short line of plain letters. */
 const plain = (note: string) => note.replace(/[^\p{L}\p{N} ,'-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
 
@@ -42,10 +44,19 @@ Answer in JSON only, with no other words: {"animal": true or false, "nearest": n
   return seen.parse(JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)));
 }
 
-/** Sets a drawn figure in the frame the set uses: 192px, the figure in the middle with room around it. */
-async function frame(drawn: Uint8Array): Promise<Buffer> {
-  const figure = await sharp(drawn).trim().resize(168, 168, { fit: 'inside' }).png().toBuffer();
-  return sharp({ create: { width: 192, height: 192, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite([{ input: figure, gravity: 'centre' }]).png().toBuffer();
+/** Sets a drawn figure in the frame the set uses: 192px, the figure in the middle with room around it. The drawing itself is kept too, its empty edge cut away. */
+async function frame(drawn: Uint8Array): Promise<Made> {
+  const large = await sharp(drawn).trim().resize(1024, 1024, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
+  const figure = await sharp(large).resize(168, 168, { fit: 'inside' }).png().toBuffer();
+  return { large, small: await sharp({ create: { width: 192, height: 192, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite([{ input: figure, gravity: 'centre' }]).png().toBuffer() };
+}
+/**
+ * Keeps the large drawing beside a made animal. On its own, after the animal is kept, and never in its way: the column
+ * is added by a migration run by hand (20261119500000), and until it is, an animal is made as before, with no large one.
+ */
+async function keepLarge(q: Q, token: string, large: Uint8Array): Promise<void> {
+  try { await q.query("update campus_custom_picture set large=decode($2,'base64') where token=$1", [token, Buffer.from(large).toString('base64')]); }
+  catch (error) { console.error('custom face: large drawing not kept', error instanceof Error ? error.name : 'unknown'); }
 }
 
 /** The real thing: one look at the photo, then one picture, modelled on the nearest of the set. About 20 seconds. */
@@ -99,13 +110,15 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
   if (!had) await db.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
   const image = await draw(upload);
   // Every picture is kept; the new one becomes the one in use.
-  return db.tx(async q => {
+  const made = await db.tx(async q => {
     const { rows: [row] } = await q.query<{ token: string; makes: number }>('update campus_custom_face set token=gen_random_uuid(),makes=makes+1,made_at=now() where person_id=$1 and (makes<$2 or $3) returning token,makes', [personId, MAKES, unlimited]);
     if (!row) throw new CampusError(ALL);
-    await q.query("insert into campus_custom_picture(token,person_id,image) values($1,$2,decode($3,'base64'))", [row.token, personId, Buffer.from(image).toString('base64')]);
+    await q.query("insert into campus_custom_picture(token,person_id,image) values($1,$2,decode($3,'base64'))", [row.token, personId, Buffer.from(image.small).toString('base64')]);
     await q.query(USE, [personId, CUSTOM, row.token]);
     return { token: row.token, left: unlimited ? MAKES : Math.max(0, MAKES - row.makes) };
   });
+  await keepLarge(db, made.token, image.large);
+  return made;
 }
 
 /**
@@ -121,9 +134,10 @@ export async function retryCustomFace(db: Db, personId: string, upload: Uint8Arr
   // A pair is the kept one and its newest drawing: earlier pairs of this one are untied first. The unique index holds it to one when two are asked for at once.
   const made = await db.tx(async q => {
     await q.query('update campus_custom_picture set retry_of=null where person_id=$1 and (token=$2 or retry_of=$2)', [personId, first]);
-    return (await q.query<{ token: string }>("insert into campus_custom_picture(person_id,image,retry_of,let_go_at) values($1,decode($2,'base64'),$3,now()) on conflict do nothing returning token::text as token", [personId, Buffer.from(image).toString('base64'), first])).rows[0];
+    return (await q.query<{ token: string }>("insert into campus_custom_picture(person_id,image,retry_of,let_go_at) values($1,decode($2,'base64'),$3,now()) on conflict do nothing returning token::text as token", [personId, Buffer.from(image.small).toString('base64'), first])).rows[0];
   });
   if (!made) throw new CampusError(ONCE);
+  await keepLarge(db, made.token, image.large);
   return made.token;
 }
 
@@ -176,4 +190,11 @@ export async function customFaceImage(q: Q, token: string): Promise<Uint8Array |
   // As text both ways: the two database drivers (live and test) do not agree on how bytes are handed over.
   const { rows: [row] } = await q.query<{ image: string | null }>("select encode(image,'base64') as image from campus_custom_picture where token=$1", [token]);
   return row?.image ? Buffer.from(row.image, 'base64') : null;
+}
+/** A made animal as large as Loop has it, for saving it out of the app: the large drawing, or else the 192px picture. */
+export async function customFaceLarge(q: Q, token: string): Promise<Uint8Array | null> {
+  if (!z.uuid().safeParse(token).success) return null;
+  // Before the migration that adds the column is run, there is only the small one.
+  const large = await q.query<{ image: string | null }>("select encode(large,'base64') as image from campus_custom_picture where token=$1", [token]).then(({ rows }) => rows[0]?.image ?? null, () => null);
+  return large ? Buffer.from(large, 'base64') : customFaceImage(q, token);
 }

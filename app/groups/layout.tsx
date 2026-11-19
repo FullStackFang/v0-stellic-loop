@@ -1,35 +1,30 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { db } from '@/lib/db';
 import type { Principal } from '@/lib/emba/access';
+import { barGroups } from '@/lib/campus/bar-groups';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
-import { groupHandle, treeOrder } from '@/lib/emba/group-path';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { OnYou } from '@/app/c/on-you';
-import { getPortalPrincipal, getSignedInPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
+import { getPortalPrincipal, getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { CUSTOM, PHOTO, animal, animalOf, customFace } from '@/lib/campus/animals';
 import { customFaces } from '@/lib/campus/custom-face';
 import { hasInk } from '@/lib/campus/ink';
 import { campusOf, pickedFaces } from '@/lib/campus/people';
 import { Kit } from '@/components/campus/kit';
+import { SiteFoot } from '@/components/campus/foot';
 import { SignOut } from '@/components/campus/sign-out';
 import { findCampus } from '@/lib/campus/listings';
 import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
 import { campusScreen } from '@/lib/campus/screen';
 import { campusViewer, lookingAt } from '@/lib/campus/session';
 import type { Screen } from '@/lib/campus/view';
-import { Bar, type BarGroup } from './bar';
+import { Bar } from './bar';
 import { SessionRefresh } from './session-refresh';
 import '@/app/c/campus.css';
 import './campus-look.css';
 
-// The bar names the groups the signed-in person can open. A failure here must not take the page down: each page reports its own access.
-async function barGroups(principal: Principal): Promise<BarGroup[]> {
-  try {
-    return treeOrder(await portalGroupTree(principal)).map(group => ({ id: group.loopId, parent: group.parentLoopId, namespace: group.namespace, slug: group.slug, name: group.orgName, handle: groupHandle(group), depth: group.depth }));
-  } catch { return []; }
-}
 /** Whose colours the person sees unless they pick others (their school's, or Loop's own), and the animal that is their face. */
 async function looks(principal: Principal): Promise<{ kit: string; face: string | null; ink: boolean }> {
   try {
@@ -59,7 +54,7 @@ export default async function GroupsLayout({ children }: { children: React.React
     const [groups, look, screen] = await Promise.all([barGroups(principal), looks(principal), accountScreen()]);
     content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit) }} /><Kit own={look.kit} />
       <Bar groups={groups} face={look.face} ink={look.ink} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={null}><OnYou /></Suspense></Bar>
-      <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div></div>;
+      <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div><SiteFoot member /></div>;
   }
   return configured ? <ClerkProvider signInUrl="/groups/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;
 }

@@ -16,7 +16,7 @@ The approved mockup draws the saved picture in the browser from a large test dra
 
 ## Decisions
 
-**D1. The picture is made on the server.** One route, `/c/save`, takes the shape, the colour, whose picture, and whether the mark is on, and answers with the PNG. It is built with `ImageResponse` from `next/og`, which lays out the ground, the picture, the name and the mark, and embeds the Archivo font the app already ships. Alternative: draw it in the browser on a canvas, as the mockup does. Rejected: "no mark" would then be decided in the browser, where anyone can switch it.
+**D1. The picture is made on the server.** One route, `/c/save`, takes the shape, the colour, whose picture, and whether the mark is on, and answers with the PNG. It is built with `ImageResponse` from `next/og`, which lays out the ground, the picture, the name and the mark, and embeds Archivo Black, the one fixed-weight Archivo the app ships (`ImageResponse` cannot use the variable one). The pane learns from the same route which grounds to offer and whether the mark may come off, so it is told nothing by the page it sits on. Alternative: draw it in the browser on a canvas, as the mockup does. Rejected: "no mark" would then be decided in the browser, where anyone can switch it.
 
 **D2. The mark is on unless the server finds Ink+.** A request for no mark from a person without Ink+ (and who is not the admin) is refused, not answered with a quietly marked file: the pane shows the Ink+ plan instead of asking.
 
@@ -24,7 +24,7 @@ The approved mockup draws the saved picture in the browser from a large test dra
 
 **D4. Five colours, the school's first.** The person's school colour, ink, cream, lime and sky. The sticker has no ground and offers none.
 
-**D5. Only a large picture is offered.** A picture is saved from its large drawing. Made animals: a new column `large bytea` on `campus_custom_picture`, written when the animal is drawn (the drawing at up to 1024px, before `frame()` cuts it down). A made animal from before has none; its pane offers "Redraw your pet" in place of saving. Group pictures already have one.
+**D5. Saved from the largest picture there is.** Made animals: a new column `large bytea` on `campus_custom_picture`, written when the animal is drawn (the drawing at up to 1024px, before `frame()` cuts it down). Group pictures already have one. An animal with only its 192px picture (the ones shipped with the app, and a pet made before this change) is saved all the same, made larger: softer, most of all on the lock screen, but nobody is shut out of the feature on its first day. (Decided while building, 2026-11-19; first written as "only a large picture is offered".) The large drawing is written on its own, after the animal is kept, and a failure to write it is not a failure to make the animal: the code runs before and after the migration.
 
 **D6. The pane.** In the account card, a row "Save your picture" opens a pane on the dark Ink plate: three shape pills, the picture as it will be saved, the colours, "With the mark" and "No mark · Ink+", and Save. The preview is the same route at a small size, so what is shown is what is saved.
 
@@ -33,7 +33,7 @@ The approved mockup draws the saved picture in the browser from a large test dra
 ## Risks / Trade-offs
 
 - [`ImageResponse` lays out with a subset of CSS and has no blur or filters] → the three shapes use only fills, images and text; the sticker's white edge is made with sharp from the large drawing before the layout.
-- [People wearing one of the 40 shipped animals cannot save yet] → said plainly in the pane, with the way to get a picture that can be saved (make a pet); see Open Questions.
+- [The shipped animals exist only at 192px, so their saved pictures are soft] → accepted for now (D5); see Open Questions.
 - [Rendering cost on each change of colour] → the preview is small and cached by its address.
 
 ## Migration Plan
@@ -42,5 +42,5 @@ One migration adding `large bytea` to `campus_custom_picture`, applied by the fo
 
 ## Open Questions
 
-- The 40 shipped animals exist only at 192px. Either larger originals are found, or each is drawn again large with the same model (about 40 pictures, a few cents each), or saving stays for made animals and group pictures. This decides how many people can use the feature on day one.
-- Whether a made animal from before should be redrawn free once, so its owner can save it.
+- The shipped animals exist only at 192px and are saved made larger. Either larger originals are found, or each is drawn again large with the same model (about 40 pictures, a few cents each). Until then they are soft.
+- Whether a made animal from before should be redrawn free once, so its owner can save it sharp.
