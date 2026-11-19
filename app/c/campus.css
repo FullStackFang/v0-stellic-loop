@@ -764,6 +764,11 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-inkrow { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--cs-line); }
 .cs-inkrow > .cs-ink { font-size: 22px; } .cs-inkrow > span { display: grid; min-width: 0; margin-right: auto; line-height: 1.25; }
 .cs-camprow .cs-btn { flex: none; white-space: nowrap; }
+/* "Add a school" (components/campus/add-schools.tsx): the LinkedIn address, the schools to tick, one button. On one line where there is room. */
+.cs-sch { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } .cs-sch > [role=group] { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs-sch input:not([class]) { flex: 1 1 220px; min-width: 0; height: 36px; padding: 0 14px; border: 0; border-radius: 99px; font: inherit; font-size: 14.5px; color: var(--cs-ink); background: color-mix(in oklch, var(--cs-ink) 6%, var(--cs-paper)); } .cs-sch input:not([class]):focus-visible { outline: 0; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-sch > .cs-btn { flex: none; } .cs-sch > p { flex: 1 1 100%; margin: 0; font-size: 13.5px; font-weight: 620; } .cs .cs-kit:disabled { cursor: default; }
+.cs-sch-pane { display: grid; gap: 12px; } .cs-sch-open { display: flex; flex-wrap: wrap; gap: 6px; }
 .cs-inkrow b { font-size: 15.5px; font-weight: 720; letter-spacing: -0.02em; } .cs-inkrow small { font-size: 13px; color: var(--cs-mute); }
 /* the picker: its top line holds the way to the Ink page too, so its buttons sit closer; on a phone the search takes a line of its own */
 .cs-pets-top { gap: 6px; } .cs-pets-top .cs-btn { padding: 0 11px; gap: 6px; }

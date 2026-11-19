@@ -4,8 +4,10 @@ import { redirect } from 'next/navigation';
 import { Rings } from '@/components/LoopGlyphs';
 import { CampusScreen } from '@/components/campus/screen';
 import { LookingAt } from '@/components/campus/looking-at';
+import { AddSchools } from '@/components/campus/add-schools';
 import { FitLines, SchoolAsk } from '@/components/campus/no-school';
 import { SignOut } from '@/components/campus/sign-out';
+import { addedSchools } from '@/lib/campus/linkedin';
 import { schoolAsked } from '@/lib/campus/school-ask';
 import './no-school.css';
 import { db } from '@/lib/db';
@@ -42,7 +44,7 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
 export async function NoSchool() {
   const viewer = await campusViewer(), email = viewer?.principal.verifiedEmail ?? null, signs = clerkPortalConfigured();
   const schools = (await listCampuses(db())).filter(each => schoolOf(each.slug) === each.slug);
-  const asked = viewer ? await schoolAsked(db(), viewer.personId) : null;
+  const asked = viewer ? await schoolAsked(db(), viewer.personId) : null, linked = viewer ? await addedSchools(db(), viewer.personId) : { profile: null, added: [] };
   return <div className="cs cs-ns">
     <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link>
       <div className="cs-nav-end">{email && <span className="cs-ns-who">{email}</span>}{signs && <SignOut className="cs-btn" />}</div>
@@ -61,6 +63,12 @@ export async function NoSchool() {
         <section className="cs-ns-tk">
           <h2 className="cs-ns-tab">Which school are you at?</h2>
           <SchoolAsk asked={asked} email={email} />
+        </section>
+        {/* The way in with no school email: the address of a LinkedIn profile, and the school to open. */}
+        <section className="cs-ns-tk cs-ns-wide">
+          <h2 className="cs-ns-tab">No school email?</h2>
+          <AddSchools box="cs-ns-box" schools={{ ...linked, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />
+          <p>Add your LinkedIn profile and pick the schools you have been at. Nothing is read from LinkedIn.</p>
         </section>
       </div>
     </main>

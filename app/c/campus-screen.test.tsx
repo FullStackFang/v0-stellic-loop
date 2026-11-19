@@ -19,7 +19,7 @@ import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
 import { schoolAsked } from '@/lib/campus/school-ask';
-import { againFaceAction, askSchoolAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
+import { againFaceAction, askSchoolAction, setSchoolsAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
 import InkPage from './ink/page';
 import PostPlanPage from './[campus]/post/page';
@@ -685,6 +685,52 @@ describe('the pages', () => {
     vi.stubEnv('LOOP_ADMIN', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
+  });
+  it('a person at no school adds their LinkedIn profile, picks a school, and is let in there', async () => {
+    const outsider = await person('Omar Reyes', 'omar@gmail.com');
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    const schools = within(screen.getByRole('group', { name: 'Your schools' }));
+    expect(schools.getAllByRole('button').map(each => [each.textContent, each.getAttribute('aria-pressed')]).sort()).toEqual([['CUNY', 'false'], ['Columbia', 'false'], ['Cornell', 'false'], ['NYU', 'false']]);
+    // An address that is not a profile's is refused, in words, and nobody is let in.
+    fireEvent.change(screen.getByRole('textbox', { name: 'Your LinkedIn profile' }), { target: { value: 'omar reyes' } });
+    fireEvent.click(schools.getByRole('button', { name: 'Columbia' }));
+    expect(schools.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Unlock' })); await screen.findByRole('alert'); });
+    expect(screen.getByRole('alert')).toHaveTextContent('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', []))).toEqual({ ok: false, message: 'Pick at least one school.' });
+    cleanup();
+    // With a profile and a school, that school's campus is theirs, with its animal in their picker.
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['columbia']))).toEqual({ ok: true });
+    render(await withPortalTestSession(outsider, () => page('columbia')));
+    expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
+    const theirs = (await campusScreen(t.db, (await findCampus(t.db, 'columbia'))!, as(outsider), { photos: noPhotos })).viewer!;
+    expect(theirs.schools).toMatchObject({ profile: 'https://www.linkedin.com/in/omar-reyes', home: 'columbia', added: [] });
+    expect(theirs.picks.school.map(tile => tile.name)).toEqual(['Columbia lion']);
+  });
+  it('a person adds their LinkedIn profile in the account card, and the schools they tick are theirs too', async () => {
+    const { ana } = await world();
+    await campusOf(t.db, { personId: ana.personId, verifiedEmail: 'ana@cornell.edu' });
+    const open = async () => { cleanup(); await show(as(ana)); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); return within(screen.getByRole('dialog', { name: 'Your level' })); };
+    let card = await open();
+    expect(card.getByText('Your schools').nextElementSibling).toHaveTextContent('Cornell');
+    fireEvent.click(card.getByRole('button', { name: 'Add a school' }));
+    // Their own school is ticked and stays so.
+    expect(card.getByRole('button', { name: 'Cornell' })).toBeDisabled();
+    expect(card.getByRole('button', { name: 'Cornell' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.change(card.getByRole('textbox', { name: 'Your LinkedIn profile' }), { target: { value: 'https://www.linkedin.com/in/Ana-Lopez/' } });
+    fireEvent.click(card.getByRole('button', { name: 'NYU' }));
+    await withPortalTestSession(ana, async () => { fireEvent.click(card.getByRole('button', { name: 'Unlock' })); await card.findByRole('button', { name: 'Add a school' }); });
+    // Coming back: both schools, NYU's animal beside Cornell's, and a way to NYU's campus.
+    card = await open();
+    expect(card.getByText('Your schools').nextElementSibling).toHaveTextContent('Cornell, NYU');
+    fireEvent.click(card.getByRole('button', { name: 'Add a school' }));
+    expect(card.getByRole('textbox', { name: 'Your LinkedIn profile' })).toHaveValue('linkedin.com/in/ana-lopez');
+    expect(card.getByRole('button', { name: 'NYU' })).toHaveAttribute('aria-pressed', 'true');
+    expect(card.getByRole('link', { name: 'Open NYU' })).toHaveAttribute('href', '/c/nyu');
+    fireEvent.click(card.getByRole('button', { name: 'Back' })); fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
+    expect(['Cornell bear', 'NYU bobcat'].map(name => card.getByRole('button', { name }).className)).toEqual(['cs-pet school', 'cs-pet school']);
+    render(await withPortalTestSession(ana, () => page('nyu')));
+    expect(screen.getAllByRole('button', { name: 'Post a plan' }).length).toBeGreaterThan(0);
   });
   it('a person at no school names their school, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
