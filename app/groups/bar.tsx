@@ -1,33 +1,26 @@
 'use client';
 
-import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Rings } from '@/components/LoopGlyphs';
-import { InkBlot, InkMark } from '@/components/campus/ink-mark';
+import { InkBlot } from '@/components/campus/ink-mark';
 import { KITS, kitNow, pickKit } from '@/components/campus/kit';
 import { Account } from '@/components/campus/screen';
+import { ALL_GROUPS, GroupLinks, TopBar } from '@/components/campus/top-bar';
+import type { BarGroup } from '@/lib/campus/bar-groups';
 import type { Screen } from '@/lib/campus/view';
-import { INK_PAGE } from '@/lib/campus/ink';
-import { ROOT_SLUG, groupPath } from '@/lib/emba/group-path';
+import { ROOT_SLUG } from '@/lib/emba/group-path';
 
-/** A group in the bar, in tree order: `depth` is how many groups it sits inside that the person can open. */
-export type BarGroup = { id: string; parent: string | null; namespace: string; slug: string; name: string; handle: string; depth: number };
-/** How many groups the bar names before it leaves the rest to "All groups". */
-const SHOWN = 5;
+export type { BarGroup };
 
 /**
- * The top bar of the groups pages, the same one the campus screen has: the way back to This week, the person's
- * groups, and their account. A group inside another is named only while the person is in it. The account is the campus
+ * The top bar of the groups pages: the app's one bar (components/campus/top-bar.tsx) with the person's account. The account is the campus
  * screen's own card (level, picture, Ink, colours), drawn from `screen`, with the groups pages' links added. Without a
  * screen (it could not be read) there is a plain card: colours, the links, the way out.
  */
 export function Bar({ groups, face, ink = false, account, screen = null, children }: { /** The person's campus screen, for the account card. */ screen?: Screen | null; /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** Whether the person has Loop Ink: their avatar sits on its blot. */ ink?: boolean; account: ReactNode }) {
   const path = usePathname();
   const { namespace, slug = ROOT_SLUG } = useParams<{ namespace?: string; slug?: string }>();
-  const current = groups.find(group => group.namespace === namespace && group.slug === slug);
-  const top = groups.filter(group => group.depth === 0).slice(0, SHOWN);
-  const shown = current && !top.includes(current) ? [...top, current] : top;
+  const on = path === '/groups' ? ALL_GROUPS : groups.find(group => group.namespace === namespace && group.slug === slug)?.id;
   const [open, setOpen] = useState(false), [kit, setKit] = useState('loop'), box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -35,25 +28,17 @@ export function Bar({ groups, face, ink = false, account, screen = null, childre
     document.addEventListener('click', away); document.addEventListener('keydown', key);
     return () => { document.removeEventListener('click', away); document.removeEventListener('keydown', key); };
   }, [open]);
-  const links = (all: boolean) => <><Link href="/groups/connections">Assistants</Link><Link href="/groups/reach">Reach</Link>{all && <Link href="/groups/archive">How we got here</Link>}</>;
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals
   const you = face ? <img className="cs-face pet" src={face} alt="" /> : <span className="cs-face">You</span>;
-  return <header className="cs-nav">
-    <Link className="cs-wm" href="/"><Rings />Loop</Link>
-    <nav className="cs-links" aria-label="Your groups"><Link href="/">This week</Link>
-      {shown.map(group => <Link key={group.id} href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'page' : undefined}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
-      <Link href="/groups" aria-current={path === '/groups' ? 'page' : undefined}>All groups</Link>
-      <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink"><InkMark /><span>Ink</span></Link></nav>
-    <div className="cs-nav-end">{children}{screen?.viewer
+  return <TopBar groups={groups} on={on} all account={screen?.viewer
       // The admin's own list already has "How we got here".
-      ? <Account screen={screen} signOut={account} more={<nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4>{links(!screen.viewer.admin)}</nav>} />
+      ? <Account screen={screen} signOut={account} more={<nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!screen.viewer.admin} /></nav>} />
       : <div className="cs-acct" ref={box}>
       <button aria-expanded={open} aria-label={`Your account and colours${ink ? '. You have Ink' : ''}`} onClick={() => { setKit(kitNow()); setOpen(!open); }}>
         <span className="cs-ava">{ink ? <span className="cs-inked"><InkBlot seed={face ?? 'You'} />{you}</span> : you}</span></button>
       {open && <div className="cs-lvl" role="dialog" aria-label="Your account"><div className="cs-lvl-body">
         <div className="cs-kits gb-kits" role="group" aria-label="Colours"><h4>Colours</h4><div>{KITS.map(each => <button key={each.slug} className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }}><i />{each.name}</button>)}</div></div>
-        <nav className="cs-lvl-more" aria-label="You">{links(true)}</nav>
+        <nav className="cs-lvl-more" aria-label="You"><GroupLinks all /></nav>
         {account && <div className="cs-lvl-more gb-account">{account}</div>}</div></div>}
-    </div>}</div>
-  </header>;
+    </div>}>{children}</TopBar>;
 }
