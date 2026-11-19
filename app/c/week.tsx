@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Rings } from '@/components/LoopGlyphs';
 import { CampusScreen } from '@/components/campus/screen';
+import { SiteFoot } from '@/components/campus/foot';
 import { LookingAt } from '@/components/campus/looking-at';
 import { AddSchools } from '@/components/campus/add-schools';
 import { FitLines, SchoolAsk } from '@/components/campus/no-school';
@@ -16,6 +17,7 @@ import { listCampuses, weekListings, type Campus } from '@/lib/campus/listings';
 import { schoolOf, SWAP_TICKET } from '@/lib/campus/schools';
 import { campusScreen, type ShareLink } from '@/lib/campus/screen';
 import { campusViewer, mayUse, signInHref } from '@/lib/campus/session';
+import { barGroups } from '@/lib/campus/bar-groups';
 import { OnYou } from './on-you';
 
 /**
@@ -29,11 +31,11 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
     if (viewer.campus) redirect(`/c/${viewer.campus.slug}`);
     return NoSchool();
   }
-  const screen = await campusScreen(db(), campus, viewer && { personId: viewer.personId, admin: viewer.admin, groups: [] }, { link });
+  const [screen, groups] = await Promise.all([campusScreen(db(), campus, viewer && { personId: viewer.personId, admin: viewer.admin, groups: [] }, { link }), viewer ? barGroups(viewer.principal) : []]);
   // The campuses of this school, when it has more than one: what the swap on the map offers.
   const parts = (await listCampuses(db())).filter(each => schoolOf(each.slug) === schoolOf(campus.slug) && SWAP_TICKET[each.slug]);
   const swap = parts.length < 2 ? [] : await Promise.all(parts.map(async each => ({ slug: each.slug, ...SWAP_TICKET[each.slug], count: (await weekListings(db(), each)).length, home: !!viewer && !viewer.admin && viewer.campus?.id === each.id, here: each.id === campus.id })));
-  return <><LookingAt slug={campus.slug} /><CampusScreen screen={screen} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={null}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} /></>;
+  return <><LookingAt slug={campus.slug} /><CampusScreen screen={screen} groups={groups} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={null}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} /><SiteFoot home={`/c/${campus.slug}`} member={groups.length > 0} /></>;
 }
 
 /**

@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { changeCampusAction, checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
-import { Rings } from '@/components/LoopGlyphs';
+import type { BarGroup } from '@/lib/campus/bar-groups';
+import { GroupLinks, TopBar } from './top-bar';
 import { animal, CUSTOM, NAMES, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
@@ -68,9 +69,9 @@ function Seats({ seats }: { seats: Seat[] }) {
 }
 
 type Pane = 'more' | 'invite';
-export type ScreenProps = { screen: Screen; signInHref: string; openId?: string | null; signOut?: ReactNode; /** The "On you" counter (openspec loop-on-you), read on the server beside the week. */ onYou?: ReactNode; /** The campuses of this school, when it has more than one. */ swap?: SwapCampus[] };
+export type ScreenProps = { screen: Screen; /** The person's groups, for the top bar. */ groups?: BarGroup[]; signInHref: string; openId?: string | null; signOut?: ReactNode; /** The "On you" counter (openspec loop-on-you), read on the server beside the week. */ onYou?: ReactNode; /** The campuses of this school, when it has more than one. */ swap?: SwapCampus[] };
 
-export function CampusScreen({ screen, signInHref, openId = null, signOut = null, onYou = null, swap }: ScreenProps) {
+export function CampusScreen({ screen, groups, signInHref, openId = null, signOut = null, onYou = null, swap }: ScreenProps) {
   const { campus, viewer, tickets, earning, live } = screen;
   const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'all' | 'near'>('best');
   const [open, setOpen] = useState<{ id: string; pane: Pane; fresh: boolean } | null>(openId ? { id: openId, pane: 'more', fresh: false } : null);
@@ -207,7 +208,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   // Only an event at a place Loop knows has a spot on the map, and the line says how many do.
   const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
-  const bar = <CampusBar screen={screen} signInHref={signInHref} signOut={signOut} swap={swap}>
+  const bar = <CampusBar screen={screen} groups={groups} on="week" signInHref={signInHref} signOut={signOut} swap={swap}>
     {onYou}
     {live && (live.usedAt ? <div className="cs-live used"><small>{live.giver}</small><b>{byId.get(live.listingId)?.status ?? 'Used'}</b></div>
       : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
@@ -276,21 +277,15 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
 }
 
 /**
- * The top bar, one line. "This week" and the Ink page (app/c/ink) both draw this one, so it is the same on both: `on`
- * is which of the two it is on, and `children` is what a page puts before the avatar.
+ * The top bar of the campus pages: the app's one bar (./top-bar.tsx), led back to this campus, with the account card
+ * or the way in. `on` is which of the bar's own pages this is, and `children` is what a page puts before the avatar.
  */
-export function CampusBar({ screen, signInHref, signOut = null, on = 'week', swap, children }: { screen: Screen; signInHref: string; signOut?: ReactNode; on?: 'week' | 'ink'; swap?: SwapCampus[]; children?: ReactNode }) {
+export function CampusBar({ screen, groups = [], signInHref, signOut = null, on, swap, children }: { screen: Screen; /** The person's groups, named in the bar as on the groups pages. */ groups?: BarGroup[]; signInHref: string; signOut?: ReactNode; on?: 'week' | 'ink'; swap?: SwapCampus[]; children?: ReactNode }) {
   const { campus, viewer } = screen;
-  return <header className="cs-nav">
-    <Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
-    <nav className="cs-links" aria-label={campus.name}><Link href={`/c/${campus.slug}`} aria-current={on === 'week' ? 'page' : undefined}>This week</Link>
-      {viewer?.groups.map(group => <Link key={group.href} href={group.href}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
-      <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={on === 'ink' ? 'page' : undefined}><InkMark /><span>Ink</span></Link></nav>
-    <div className="cs-nav-end">
-      {children}
-      {viewer ? <Account screen={screen} signOut={signOut} swap={swap} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}
-    </div>
-  </header>;
+  // The groups pages' links are in the card for anyone who has a group, as they are on those pages. The admin's own list already has "How we got here".
+  const more = viewer && groups.length > 0 ? <nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!viewer.admin} /></nav> : null;
+  return <TopBar home={`/c/${campus.slug}`} on={on} groups={groups}
+    account={viewer ? <Account screen={screen} signOut={signOut} swap={swap} more={more} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}>{children}</TopBar>;
 }
 
 function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; showing: boolean; busy: boolean; onShow: () => void; onUse: () => void }) {

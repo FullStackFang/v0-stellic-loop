@@ -1,16 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { CampusBar } from '@/components/campus/screen';
-import { SignOut } from '@/components/campus/sign-out';
 import { db } from '@/lib/db';
-import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { INK_MOCKUP, INK_PAGE } from '@/lib/campus/ink';
 import { findCampus } from '@/lib/campus/listings';
 import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
-import { campusScreen } from '@/lib/campus/screen';
-import { Suspense } from 'react';
-import { campusViewer, lookingAt, signInHref } from '@/lib/campus/session';
-import { OnYou } from '../on-you';
+import { campusViewer, lookingAt } from '@/lib/campus/session';
+import { siteBar } from '../site-bar';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Ink · Loop' };
@@ -24,9 +19,8 @@ export const metadata: Metadata = { title: 'Ink · Loop' };
 export default async function InkPage() {
   const viewer = await campusViewer(), campus = await lookingAt() ?? viewer?.campus ?? await findCampus(db(), DEFAULT_CAMPUS);
   if (!campus) notFound();
-  const screen = await campusScreen(db(), campus, viewer && { personId: viewer.personId, admin: viewer.admin, groups: [] });
   return <div className="cs cs-inkpage">
-    <CampusBar screen={screen} on="ink" signInHref={signInHref(INK_PAGE)} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null}>{viewer && <Suspense fallback={null}><OnYou /></Suspense>}</CampusBar>
+    {(await siteBar({ campus, viewer, back: INK_PAGE, on: 'ink' })).bar}
     <iframe className="cs-inkframe" src={INK_MOCKUP} title="Loop Ink" />
   </div>;
 }
