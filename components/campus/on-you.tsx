@@ -94,7 +94,7 @@ export function OnYouPanel({ view, going = [] }: { view: OnYouView; going?: Goin
       {open === 'gr' && <div className="cs-oy-drop" id="cs-gr-panel" role="region" aria-label="Your groups">
         <div className="cs-oy-head"><h2>Your groups</h2>{member && <Link className="cs-btn sm go" href="/groups/new">Start a group</Link>}</div>
         <div className="cs-oy-list cs-gr-list">
-          {member && <><span className="cs-gr-sec">You belong to</span>{view.mine.map(group => <GroupRow key={group.id} href={group.href} mark={group.name} name={group.name} tag={group.inside ? `In ${group.inside}` : group.handle} inside={!!group.inside} faces={group.faces} people={group.people} on={group.on} line={group.next ?? 'Nothing waiting'} />)}</>}
+          {member && <><span className="cs-gr-sec">You belong to</span>{view.mine.map(group => <GroupRow key={group.id} href={group.href} mark={group.name} name={group.name} tag={group.inside ? `In ${group.inside}` : group.handle} inside={!!group.inside} faces={group.faces} picture={group.picture} people={group.people} on={group.on} line={group.next ?? 'Nothing waiting'} />)}</>}
           {going.length > 0 && <><span className="cs-gr-sec">You are going</span>{going.map(each => <GroupRow key={each.id} href={each.href} mark={each.title} name={each.title} tag="Outing" tone="out" faces={each.faces} people={each.people} line={[each.when, each.place].filter(Boolean).join(', ')} />)}</>}
         </div>
       </div>}
@@ -113,12 +113,14 @@ export function OnYouPanel({ view, going = [] }: { view: OnYouView; going?: Goin
 }
 
 /** One group, or one outing, in the Groups panel: the whole row opens its page. */
-function GroupRow({ href, mark, name, tag, tone = '', inside = false, faces, people, on = 0, line }: { href: string; mark: string; name: string; tag: string; tone?: string; inside?: boolean; faces: string[]; people: number; on?: number; line: string }) {
+function GroupRow({ href, mark, name, tag, tone = '', inside = false, faces, picture = null, people, on = 0, line }: { href: string; mark: string; name: string; tag: string; tone?: string; inside?: boolean; faces: string[]; /** A group's drawn picture: shown in place of the faces, with the count laid over it. */ picture?: string | null; people: number; on?: number; line: string }) {
   return <Link className={`cs-gr-row ${inside ? 'in' : ''} ${tone}`} href={href}>
     <i className="cs-gr-mk" aria-hidden="true">{mark.trim().slice(0, 1).toUpperCase()}</i>
     <span className="cs-gr-name"><b>{name}</b><em>{tag}</em></span>
-    <span className="cs-gr-end">{faces.map((src, at) => /* eslint-disable-next-line @next/next/no-img-element */
-      <img key={at} src={src} alt="" />)}{people > 0 && <small>{people}<span className="cs-gr-sr"> people</span></small>}{on > 0 && <span className="cs-oy-n">{on}<span className="cs-gr-sr"> on you</span></span>}</span>
+    <span className="cs-gr-end">{picture ? /* eslint-disable-next-line @next/next/no-img-element */
+      <span className="cs-gr-pic"><img src={picture} alt="" />{people > 0 && <b>{people}<span className="cs-gr-sr"> people</span></b>}</span>
+      : <>{faces.map((src, at) => /* eslint-disable-next-line @next/next/no-img-element */
+      <img key={at} src={src} alt="" />)}{people > 0 && <small>{people}<span className="cs-gr-sr"> people</span></small>}</>}{on > 0 && <span className="cs-oy-n">{on}<span className="cs-gr-sr"> on you</span></span>}</span>
     <span className="cs-gr-line">{line}</span>
   </Link>;
 }
