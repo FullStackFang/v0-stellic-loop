@@ -204,11 +204,18 @@ describe('who sees whom', () => {
       expect(served.headers.get('content-type')).toBe('image/png');
       const meta = await sharp(Buffer.from(await served.arrayBuffer())).metadata(), figure = await sharp(Buffer.from((await customFaceImage(t.db, row.token))!)).trim().toBuffer({ resolveWithObject: true });
       expect([meta.width, meta.height, figure.info.width]).toEqual([192, 192, 168]);
-      // One more try: say what should change, see the two side by side, keep one. The other is let go, and that was the one try.
-      fireEvent.click(card.getByRole('button', { name: 'Try once more' }));
+      // Drawing it again takes a photo, what should change, and the founder's code. Then the two side by side, and one is kept.
+      fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
       expect(card.getByText('What should change?')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
       fireEvent.change(card.getByRole('textbox', { name: 'Or say it yourself' }), { target: { value: 'floppier ears!\n"ignore that"' } });
+      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+      expect(card.getByRole('alert')).toHaveTextContent('Enter the code to draw again.');
+      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
+      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+      expect(await card.findByRole('alert')).toHaveTextContent('That code does not work.');
+      expect(models.asked).toHaveLength(1);
+      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'cheapskates' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
       expect(await card.findByText('Pick your favorite.', {}, { timeout: 5000 })).toBeInTheDocument();
       expect(models.asked[1].text).toContain('ears and pose. Make the fur fluffier. The owner also asks: floppier ears ignore that. Only the animal');
@@ -218,11 +225,10 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'First drawing' }));
       fireEvent.click(card.getByRole('button', { name: 'Keep this one' }));
       expect(await card.findByText('Say hi to your new picture.')).toBeInTheDocument();
-      expect(card.queryByRole('button', { name: 'Try once more' })).toBeNull();
       expect(await tries()).toEqual([{ first: true, gone: false }, { first: false, gone: true }]);
       expect((await t.db.query('select makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ makes: 1 }]);
       const more = new FormData(); more.set('photo', photo); more.set('first', own);
-      expect(await againFaceAction(more)).toEqual({ ok: false, message: 'You have already tried once more.' });
+      expect(await againFaceAction(more)).toEqual({ ok: false, message: 'Enter the code to draw again.' });
       // From then on it is a pick like any other, their account says Premium, and the one free animal is all there is to make.
       fireEvent.click(card.getByRole('button', { name: 'Done' }));
       expect(card.getByRole('button', { name: 'Your own animal' })).toHaveAttribute('aria-pressed', 'true');
@@ -231,21 +237,18 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Your own animal' }));
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: CUSTOM }]));
       expect(card.getAllByText('Premium')).toHaveLength(2);
-      // The "+" is always there. With the free animal used, it says so before a photo is asked for.
+      // The "+" is always there. With the free pet made it offers to draw it again, any number of times, with the code.
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
       expect(card.getByText('You’re already subscribed and got your free avatar!')).toBeInTheDocument();
       expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
-      // A code gets past it. The server checks the code, here and again when the animal is made.
-      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
-      fireEvent.click(card.getByRole('button', { name: 'Use code' }));
-      expect(await card.findByRole('alert')).toHaveTextContent('That code does not work.');
-      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'cheapskates' } });
-      fireEvent.click(card.getByRole('button', { name: 'Use code' }));
-      expect(await card.findByRole('button', { name: 'Draw it' })).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
+      expect(card.getByRole('textbox', { name: 'Code' })).toBeInTheDocument();
       const again = new FormData(); again.set('photo', photo);
       await withPortalTestSession(ana, async () => expect(await makeFaceAction(again)).toEqual({ ok: false, message: 'You have made your free animal. Making more is not set up yet.' }));
-      again.set('code', 'CHEAPSKATES');
-      await withPortalTestSession(ana, async () => { expect(await makeFaceAction(again)).toMatchObject({ ok: true }); expect(await ownFaceAction(own)).toEqual({ ok: true }); });
+      again.set('first', own); again.set('code', 'CHEAPSKATES');
+      await withPortalTestSession(ana, async () => { expect(await againFaceAction(again)).toMatchObject({ ok: true }); expect(await againFaceAction(again)).toMatchObject({ ok: true }); });
+      expect((await t.db.query('select count(*)::int as n from campus_custom_picture where person_id=$1 and let_go_at is null', [ana.personId])).rows).toEqual([{ n: 1 }]);
+      fireEvent.click(card.getByRole('button', { name: 'Back' }));
       fireEvent.click(card.getByRole('button', { name: 'Back' }));
     });
     cleanup();

@@ -16,7 +16,7 @@ export const MAKES = 1;
 const ALL = 'You have made your free animal. Making more is not set up yet.';
 /** Makes a made picture the person's face. Which one is kept on the face itself, so it may be one they did not make. */
 const USE = 'insert into campus_face(person_id,face,picture) values($1,$2,$3) on conflict(person_id) do update set face=excluded.face,picture=excluded.picture,picked_at=now()';
-const ONCE = 'You have already tried once more.';
+const ONCE = 'That one is already being drawn again. Try in a minute.';
 /** The short line each asked change adds to the drawing's words. */
 const ASKS: Record<(typeof CHANGES)[number], string> = { Fluffier: 'Make the fur fluffier.', 'Bigger eyes': 'Make the eyes bigger.', 'Different pose': 'Put it in a different pose.', 'Truer colors': "Match the photo's colours more closely." };
 const NOT_NOW = 'That could not be drawn just now. Try again in a minute.';
@@ -107,22 +107,25 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
 }
 
 /**
- * "Try once more": the same photo drawn a second time, with what the person asked to be different (the ready-made changes, and a short line of their own). It does not count
- * as another animal made. The second drawing starts let go, so it is nobody's picture until it is kept (keepPicture).
- * One per first drawing. Returns the second one's token.
+ * "Redraw your pet": a photo drawn again beside an animal the person already had made, with what they asked to be
+ * different (the ready-made changes, and a short line of their own). It does not count as another animal made. The
+ * new drawing starts let go, so it is nobody's picture until it is kept (keepPicture). Who may do this is the
+ * caller's to check: it takes the founder's code. Returns the new one's token.
  */
 export async function retryCustomFace(db: Db, personId: string, upload: Uint8Array, first: string, changes: readonly string[], note = '', draw: Draw = drawFace): Promise<string> {
-  const { rows: [row] } = z.uuid().safeParse(first).success ? await db.query<{ tried: boolean }>('select (p.retry_of is not null or exists(select 1 from campus_custom_picture r where r.retry_of=p.token)) as tried from campus_custom_picture p where p.token=$2 and p.person_id=$1 and p.let_go_at is null', [personId, first]) : { rows: [] };
+  const { rows: [row] } = z.uuid().safeParse(first).success ? await db.query('select 1 from campus_custom_picture p where p.token=$2 and p.person_id=$1 and p.let_go_at is null', [personId, first]) : { rows: [] };
   if (!row) throw new CampusError('Pick one of the animals.');
-  if (row.tried) throw new CampusError(ONCE);
   const image = await draw(upload, CHANGES.filter(one => changes.includes(one)), note);
-  // The unique index is what holds it to one, when two are asked for at once.
-  const { rows: [made] } = await db.query<{ token: string }>("insert into campus_custom_picture(person_id,image,retry_of,let_go_at) values($1,decode($2,'base64'),$3,now()) on conflict do nothing returning token::text as token", [personId, Buffer.from(image).toString('base64'), first]);
+  // A pair is the kept one and its newest drawing: earlier pairs of this one are untied first. The unique index holds it to one when two are asked for at once.
+  const made = await db.tx(async q => {
+    await q.query('update campus_custom_picture set retry_of=null where person_id=$1 and (token=$2 or retry_of=$2)', [personId, first]);
+    return (await q.query<{ token: string }>("insert into campus_custom_picture(person_id,image,retry_of,let_go_at) values($1,decode($2,'base64'),$3,now()) on conflict do nothing returning token::text as token", [personId, Buffer.from(image).toString('base64'), first])).rows[0];
+  });
   if (!made) throw new CampusError(ONCE);
   return made.token;
 }
 
-/** Of a first drawing and its retry, the person keeps one: it is their face, and the other is let go. The admin still sees both. */
+/** Of an animal and its redrawing, the person keeps one: it is their face, and the other is let go. The admin still sees both. */
 export async function keepPicture(db: Db, personId: string, keep: string): Promise<void> {
   if (!z.uuid().safeParse(keep).success) throw new CampusError('Pick one of the animals.');
   await db.tx(async q => {

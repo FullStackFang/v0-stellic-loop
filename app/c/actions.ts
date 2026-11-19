@@ -84,12 +84,13 @@ export async function ownFaceAction(own: string): Promise<ActResult> {
 }
 
 export type AgainFace = { ok: true; own: string } | { ok: false; message: string; signIn?: boolean };
-/** "Draw again" on a just-made animal: the same photo once more, with what should change. Takes about 20 seconds. */
+/** "Draw again": a photo drawn beside an animal the person had made, with what should change. It takes the founder's code; the admin needs none. Takes about 20 seconds. */
 export async function againFaceAction(data: FormData): Promise<AgainFace> {
   const viewer = await campusViewer();
   if (!viewer) return { ok: false, signIn: true, message: 'Sign in to continue.' };
   const photo = data.get('photo');
   if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
+  if (!viewer.admin && !freeCode(data.get('code'))) return { ok: false, message: String(data.get('code') ?? '').trim() ? 'That code does not work.' : 'Enter the code to draw again.' };
   try {
     return { ok: true, own: customFace(await retryCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), String(data.get('first')).split('/').pop() ?? '', data.getAll('change').map(String), String(data.get('note') ?? ''))) };
   } catch (error) {
@@ -105,11 +106,6 @@ export async function keepFaceAction(keep: string): Promise<ActResult> {
 /** "Subscribe" to Loop Premium in the account card. Nothing is charged; the ask and its email are kept. */
 export async function subscribeAction(email: string): Promise<ActResult> {
   return act(async viewer => { await subscribe(db(), viewer.personId, String(email)); });
-}
-
-/** "Use code" once the free animal is made: says whether the code lets them make another. */
-export async function codeAction(code: string): Promise<ActResult> {
-  return act(async () => { if (!freeCode(code)) throw new CampusError('That code does not work.'); });
 }
 
 export type MadeFace = { ok: true; own: string; left: number } | { ok: false; message: string; signIn?: boolean };
