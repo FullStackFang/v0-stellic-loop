@@ -33,8 +33,12 @@ const TABLE: [RegExp, string[]][] = [
 const SAME: string[][] = [
   'run runs running runner runners jog jogs jogging', 'hike hikes hiking', 'walk walks walking', 'bike bikes biking cycling',
   'swim swims swimming', 'climb climbs climbing bouldering', 'lift lifts lifting weights', 'dance dances dancing', 'ski skiing', 'skate skating',
-  'study studying', 'cook cooking', 'bake baking', 'code coding', 'movie movies film films',
-  'yoga', 'soccer', 'basketball', 'volleyball', 'tennis', 'frisbee', 'pickleball', 'chess', 'poker', 'trivia', 'karaoke',
+  'study studying homework pset psets', 'cook cooking', 'bake baking', 'code coding', 'movie movies film films',
+  'eat eats eating food dinner dining supper', 'lunch', 'brunch', 'breakfast', 'coffee', 'boba bubbletea', 'drinks drinking', 'party parties partying',
+  'workout workouts exercise', 'meditate meditation', 'read reading bookclub', 'paint painting', 'draw drawing', 'music jam jamming', 'concert concerts',
+  'boardgame boardgames', 'gaming videogames', 'bowl bowling', 'shop shopping', 'thrift thrifting', 'hackathon hackathons', 'volunteer volunteering',
+  'yoga', 'pilates', 'soccer futbol', 'basketball hoops bball', 'volleyball', 'tennis', 'frisbee ultimate', 'pickleball', 'badminton', 'squash', 'golf',
+  'football', 'baseball', 'softball', 'pingpong tabletennis', 'chess', 'poker', 'trivia', 'karaoke',
 ].map(row => row.split(' '));
 /** A tag without its dashes and its plural "s": "college-town" is "collegetown", and "dumplings" is "dumpling". */
 const bare = (slug: string) => slug.replace(/-/g, '').replace(/(?<=[a-z0-9]{3})(?<!s)s$/, '');

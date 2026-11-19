@@ -7,6 +7,18 @@ import {setHidden} from '@/lib/campus/manage';
 import {imIn} from '@/lib/campus/outings';
 import {cancelPlan,postPlan} from '@/lib/campus/plans';
 import {campusTags,joinTag,nearTags,setTagKind,splitTag} from '@/lib/campus/tags';
+import {tagRow} from '@/lib/campus/words';
+
+it('knows common words that mean the same, and keeps different ones apart', () => {
+  const same = (...words: string[]) => new Set(words.map(word => tagRow(word).key)).size === 1;
+  expect(same('running', 'jogging', 'jog', 'runs')).toBe(true);
+  expect(same('eating', 'dining', 'dinner', 'food')).toBe(true);
+  expect(same('basketball', 'hoops')).toBe(true);
+  expect(same('board-games', 'boardgame')).toBe(true);
+  expect(same('dinner', 'lunch')).toBe(false);
+  expect(same('soccer', 'football')).toBe(false);
+  expect(tagRow('collegetown').activity).toBe(false);
+});
 
 // Spec: openspec/changes/loop-group-event-links/specs/campus-one-line ("@places").
 let t:TestDb;
