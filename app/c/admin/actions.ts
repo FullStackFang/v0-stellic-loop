@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
+import { setAnimalName, setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
 import { MASCOT } from '@/lib/campus/animals';
 import { deletePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
@@ -121,6 +121,15 @@ export async function setTierAction(data: FormData): Promise<void> {
     for (const picture of pictures) await setPictureTier(db(), picture, tier === 'off' ? 'own' : tier);
     const many = faces.length + pictures.length;
     return many === 1 ? MOVED[tier] ?? 'Saved.' : `${many} animals moved to ${tier}. Whoever has one keeps it.`;
+  });
+}
+/** "Save" on the card of the one picked animal: its name, and the words the picker finds it by. The card's fields carry the animal's number or token in their names. */
+export async function setAnimalNameAction(data: FormData): Promise<void> {
+  await admin(data, async () => {
+    const faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String), key = faces[0] ?? pictures[0];
+    if (faces.length + pictures.length !== 1) throw new Error('Pick one animal to name');
+    const words = await setAnimalName(db(), faces.length ? { face: number(key) } : { token: key }, text(data, `name-${key}`), list(text(data, `words-${key}`)));
+    return `Saved. The picker finds it by its name${words.length ? ` and by: ${words.join(', ')}` : ' alone'}.`;
   });
 }
 /** "Delete for good" on the picked animals that people had made. The ones shipped with the app cannot be deleted, only turned off. */

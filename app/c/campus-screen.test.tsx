@@ -381,7 +381,7 @@ describe('who sees whom', () => {
       const core = async (who: typeof ana) => (await seenBy(who)).picks.core.map(tile => tile.src), premium = async (who: typeof ana) => (await seenBy(who)).picks.premium.map(tile => tile.src);
       expect([(await core(ben)).length, await premium(ben)]).toEqual([36, ['/animals/37.png']]);
       await setPictureTier(t.db, first.token, 'core');
-      expect((await catalogue(t.db)).made).toEqual([{ token: first.token, src: address(first.token), tier: 'core', email: 'ana@cornell.edu' }, { token: second.token, src: address(second.token), tier: null, email: 'ana@cornell.edu' }]);
+      expect((await catalogue(t.db)).made).toEqual([{ token: first.token, src: address(first.token), tier: 'core', email: 'ana@cornell.edu', name: null, words: ['made'] }, { token: second.token, src: address(second.token), tier: null, email: 'ana@cornell.edu', name: null, words: ['made'] }]);
       expect((await core(ben)).at(-1)).toBe(address(first.token));
       expect(await seenBy(ben)).toMatchObject({ own: null, owns: [], asked: false });
       await withPortalTestSession(ben, async () => {

@@ -1,8 +1,7 @@
 // Conga: the rules of the game. Nothing here draws or touches the browser, so the same file can later run on a room
 // server and be the referee. A caller adds lines, sets where each one wants to go, and calls step() every frame.
 
-export const R = 1500; // arena radius
-export const GAP = 26; // distance between animals in a line
+export const GAP = 33; // distance between animals in a line
 export const SPEED = 150;
 export const DASH = 270;
 export const TURN = 3.4; // radians a second
@@ -26,25 +25,46 @@ const BACK = 2.5; // seconds before a scattered bot comes back
 
 const wrap = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
 
-function spot(world, margin = 0.94) {
-  const r = R * margin * Math.sqrt(world.random()), a = world.random() * Math.PI * 2;
-  return { x: Math.cos(a) * r, y: Math.sin(a) * r };
+/** A round ground, for when no map is given. */
+export const round = (r = 1500) => [Array.from({ length: 48 }, (_, n) => [Math.cos(n * Math.PI / 24) * r, Math.sin(n * Math.PI / 24) * r])];
+
+function within(ring, x, y) {
+  let hit = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const a = ring[i], b = ring[j];
+    if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) hit = !hit;
+  }
+  return hit;
+}
+/** Whether a point is on the ground: inside any of the map's outlines. */
+export const inside = (world, x, y) => world.rings.some(ring => within(ring, x, y));
+
+// Somewhere on the ground, with `room` clear on each side when asked.
+function spot(world, room = 0) {
+  const { west, east, north, south } = world.box;
+  for (let tries = 0; tries < 400; tries++) {
+    const x = west + world.random() * (east - west), y = north + world.random() * (south - north);
+    if (inside(world, x, y) && (!room || [[room, 0], [-room, 0], [0, room], [0, -room]].every(([dx, dy]) => inside(world, x + dx, y + dy)))) return { x, y };
+  }
+  return { x: world.rings[0][0][0], y: world.rings[0][0][1] };
 }
 const face = world => 1 + Math.floor(world.random() * FACES);
 const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
 
-export function createWorld(random = Math.random) {
-  const world = { t: 0, lines: [], strays: [], random };
+/** `rings` are the outlines of the ground, each a list of [x, y] corners. Outlines may touch or overlap. */
+export function createWorld(random = Math.random, rings = round()) {
+  const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]);
+  const world = { t: 0, lines: [], strays: [], random, rings, box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   return world;
 }
 
 /** Puts a line somewhere away from the other heads, alone or with `start` animals behind it. */
 export function place(world, line, start = 0) {
-  let at = spot(world, 0.8);
+  let at = spot(world, 120);
   for (let tries = 0; tries < 30; tries++) {
     if (world.lines.every(other => other === line || other.dead || Math.hypot(other.x - at.x, other.y - at.y) > 380)) break;
-    at = spot(world, 0.8);
+    at = spot(world, 120);
   }
   const a = world.random() * Math.PI * 2;
   Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, safe: SAFE, dance: 0, drop: 0, top: 0, path: [{ ...at }] });
@@ -92,7 +112,8 @@ function think(world, line, dt) {
   const n = line.tail.length, dx = Math.cos(line.a), dy = Math.sin(line.a);
   line.dash = false;
 
-  if (Math.hypot(line.x, line.y) > R - 170) { line.want = Math.atan2(-line.y, -line.x); return; }
+  const clear = turn => inside(world, line.x + Math.cos(line.a + turn) * 150, line.y + Math.sin(line.a + turn) * 150);
+  if (!clear(0)) { line.want = line.a + (clear(1) ? 1 : clear(-1) ? -1 : 2.6); return; }
 
   const reach = 70 + bot.skill * 120;
   let near = Infinity, side = 0;
@@ -161,14 +182,15 @@ export function step(world, dt) {
     const turn = TURN * dt, dashing = line.dash && line.tail.length > 0;
     line.a = wrap(line.a + Math.max(-turn, Math.min(turn, wrap(line.want - line.a))));
     const v = (dashing ? DASH : SPEED) * dt;
-    line.x += Math.cos(line.a) * v;
-    line.y += Math.sin(line.a) * v;
-    const out = Math.hypot(line.x, line.y) / (R - 24);
-    if (out > 1) { line.x /= out; line.y /= out; }
+    // At the edge of the ground a line slides along it: it takes the nearest heading that stays on.
+    for (const turn of [0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.5, -1.5]) {
+      const x = line.x + Math.cos(line.a + turn) * v, y = line.y + Math.sin(line.a + turn) * v;
+      if (inside(world, x, y)) { line.x = x; line.y = y; break; }
+    }
     if (Math.hypot(line.x - line.path[0].x, line.y - line.path[0].y) >= STEP) line.path.unshift({ x: line.x, y: line.y });
     follow(line, dt);
     // Dashing costs animals off the back, and the back of a very long line gets bored and wanders off by itself.
-    const bored = world.random() < (line.tail.length - LONG) * BORED * dt;
+    const bored = line.tail.length > LONG && world.random() < (line.tail.length - LONG) * BORED * dt;
     if (bored || (dashing && (line.drop += dt) >= DROP)) {
       if (!bored) line.drop = 0;
       const f = line.tail.pop();
@@ -201,11 +223,9 @@ export function step(world, dt) {
     }
     s.a += (world.random() - 0.5) * 2 * dt;
     s.vx *= slow; s.vy *= slow;
-    s.x += (Math.cos(s.a) * 14 + s.vx) * dt;
-    s.y += (Math.sin(s.a) * 14 + s.vy) * dt;
-    if (head) { s.x += (head.x - s.x) / close * 70 * dt; s.y += (head.y - s.y) / close * 70 * dt; }
-    const out = Math.hypot(s.x, s.y) / (R - 24);
-    if (out > 1) { s.x /= out; s.y /= out; s.a += Math.PI; }
+    const pull = head ? 70 / close : 0;
+    const x = s.x + (Math.cos(s.a) * 14 + s.vx + (head ? head.x - s.x : 0) * pull) * dt, y = s.y + (Math.sin(s.a) * 14 + s.vy + (head ? head.y - s.y : 0) * pull) * dt;
+    if (inside(world, x, y)) { s.x = x; s.y = y; } else s.a += Math.PI;
   }
 
   // Everyone who walked into someone is found first and scattered after, so two heads meeting is fair to both.

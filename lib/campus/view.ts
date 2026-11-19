@@ -39,7 +39,8 @@ export type Ticket = {
 };
 
 /** One animal in the picker. `face` is its number, or null for an animal a person had made, which is picked by its address (`src`). */
-export type Tile = { face: number | null; src: string; name: string };
+/** `words` is what the picker's search finds it by, besides its name. */
+export type Tile = { face: number | null; src: string; name: string; words: string };
 export type Coupon = { id: string; giver: string; text: string; done: number; need: number; earned: boolean; usedAt: string | null; progress: string };
 export type Live = { listingId: string; giver: string; text: string; usedAt: string | null };
 /**

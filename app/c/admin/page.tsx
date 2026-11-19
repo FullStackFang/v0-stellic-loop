@@ -14,9 +14,10 @@ import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { siteBar } from '../site-bar';
+import { WordsField } from '@/components/campus/words-field';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setTierAction, readFeedAction, removeLinkedinAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -133,17 +134,21 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   }
 
   function animals() {
-    type Pet = { key: string; src: string; name: string; now: keyof typeof TIER; field: 'face' | 'picture'; value: string };
-    const pets: Pet[] = [...all.built.map((one): Pet => ({ key: String(one.face), src: one.src, name: one.name, now: one.tier, field: 'face', value: String(one.face) })),
-      ...all.made.map((one): Pet => ({ key: one.token, src: one.src, name: one.email ? `Made by ${one.email}` : 'Made animal', now: one.tier ?? 'own', field: 'picture', value: one.token }))];
+    type Pet = { key: string; src: string; name: string; named: string; words: string[]; now: keyof typeof TIER; field: 'face' | 'picture'; value: string };
+    const pets: Pet[] = [...all.built.map((one): Pet => ({ key: String(one.face), src: one.src, name: one.name, named: one.name, words: one.words, now: one.tier, field: 'face', value: String(one.face) })),
+      ...all.made.map((one): Pet => ({ key: one.token, src: one.src, name: one.name ?? (one.email ? `Made by ${one.email}` : 'Made animal'), named: one.name ?? '', words: one.words, now: one.tier ?? 'own', field: 'picture', value: one.token }))];
     const within = (which: Show) => pets.filter(pet => which === 'all' || pet.now === which || (which === 'off' && pet.now === 'own'));
     /* eslint-disable @next/next/no-img-element -- icons from public/animals, and pictures Loop made, served from the database */
     return <section>{top()}
       <nav className="cs-adm-seg" aria-label="Show">{SHOW.map(each => <Link key={each} href={`${at('animals')}&show=${each}`} aria-current={each === show ? 'true' : undefined}>{each === 'all' ? 'All' : TIER[each]} {within(each).length}</Link>)}</nav>
-      {/* Pick any number, then move them together. The bar counts what is picked, and shows only then. */}
+      {/* Pick any number, then move them together. The bar counts what is picked, and shows only then. With one picked, its card shows beside the grid: its name, and the words the picker finds it by. */}
       <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} />
-        <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label></li>)}</ul>
-        <p className="cs-adm-lede">Tap animals to pick them, then move them together. Whoever already has one keeps it.</p>
+        <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label>
+          <div className="cs-adm-card"><p><img src={pet.src} alt="" /><i>{TIER[pet.now]}</i></p>
+            <span className="cs-adm-fld"><b>Name</b><input name={`name-${pet.value}`} defaultValue={pet.named} placeholder="Made animal" maxLength={40} aria-label={`Name of ${pet.name}`} /></span>
+            <span className="cs-adm-fld"><b>Search words</b><WordsField name={`words-${pet.value}`} words={pet.words} /></span>
+            <button className="cs-btn go" formAction={setAnimalNameAction}>Save</button></div></li>)}</ul>
+        <p className="cs-adm-lede">Tap animals to pick them, then move them together. Whoever already has one keeps it. Tap one alone to name it and set the words it is found by.</p>
         <div className="cs-adm-tray"><span>picked · move to</span><button name="tier" value="core">Core</button><button name="tier" value="premium">Premium</button><button name="tier" value="school">School</button><button name="tier" value="off">Off</button>
           <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details><button type="reset" className="x">Clear</button></div></form>
     </section>;

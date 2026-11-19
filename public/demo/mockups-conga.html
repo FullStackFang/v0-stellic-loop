@@ -9,7 +9,7 @@
 :root { --field: oklch(82% 0.12 38); --dot: oklch(77% 0.13 37); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27);
   --paper: oklch(99.2% 0.004 60); --mute: oklch(45% 0.016 40); --line: oklch(88% 0.012 50); --expo: cubic-bezier(.16, 1, .3, 1); }
 * { box-sizing: border-box; margin: 0; }
-html, body { height: 100%; overflow: hidden; background: var(--ink); color: var(--ink); font-family: Archivo, system-ui, sans-serif; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .hud[hidden], .dash[hidden] { display: none; }
@@ -51,6 +51,10 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .go { justify-self: start; padding: 14px 34px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s var(--expo), box-shadow .12s var(--expo), background .12s; }
 .go:hover { background: var(--action-hover); }
 .go:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
+.where { display: flex; gap: 4px; padding: 4px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
+.where button { padding: 9px 14px; border-radius: 99px; background: none; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.where button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .score { display: flex; gap: 10px; align-items: stretch; }
 .score div { flex: 1; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: var(--field); display: grid; gap: 2px; }
 .score div + div { background: var(--ink); color: var(--paper); }
@@ -74,7 +78,7 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
   <h1>Longest line wins</h1>
   <p>Walk into a stray and it joins your line. Walk into another line and yours scatters for anyone to grab.</p>
   <div class="faces" id="faces"></div>
-  <button class="go" id="go">Start</button>
+  <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div></div>
 </section>
 
 <section class="card" id="over" hidden>
@@ -84,30 +88,40 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 </section>
 
 <script type="module">
-import { createWorld, addLine, place, steer, step, R, FACES } from './conga/sim.js';
+import { createWorld, addLine, place, steer, step, FACES } from './conga/sim.js';
+import { MAPS } from './conga/maps.js';
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: css('--paper'), action: css('--action') };
+// Outside the ground is the print map's paper, and its blue where there is water (components/campus/near.tsx).
+const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: css('--paper'), action: css('--action'), town: '#f0e8d4', twine: '#fbf7ec', water: '#3f86de' };
 const src = face => `/animals/${String(face).padStart(2, '0')}.png`;
 const images = Array.from({ length: FACES + 1 }, (_, face) => { if (!face) return null; const image = new Image(); image.src = src(face); return image; });
 const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
 
 // The other lines. In live play these are people; here each one is a bot with its own nerve and temper.
-const GROUPS = [['Donlon 2F', 'oklch(96.4% 0.19 117)'], ['CS 2110', 'oklch(87% 0.075 235)'], ['Team 4', 'oklch(88% 0.13 88)'], ['Risley', 'oklch(85% 0.09 305)'], ['Big Red Band', 'oklch(88% 0.1 165)'],
-  ['Club Frisbee', 'oklch(86% 0.09 0)'], ['Cornell Tech', 'oklch(99.2% 0.004 60)'], ['Glee Club', 'oklch(80% 0.11 200)'], ['West Campus', 'oklch(90% 0.12 140)'], ['Olin late shift', 'oklch(83% 0.1 60)'], ['Slope Day crew', 'oklch(84% 0.1 270)']];
-const world = createWorld();
-const colour = new Map();
-GROUPS.forEach(([name, tint], i) => {
-  colour.set(i, tint);
-  addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) });
-});
-for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
-
-window.conga = { world }; // for poking at the game from the console
+const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'Big Red Band', 'Club Frisbee', 'Glee Club', 'West Campus', 'Olin late shift', 'Slope Day crew', 'Ag Quad lab'],
+  'cornell-tech': ['Bloomberg 2F', 'Tata studio', 'The House 12', 'Studio team 4', 'Johnson MBA', 'Tram regulars', 'Jacobs', 'Health Tech', 'Connective Media', 'Urban Tech', 'Cafe line'] };
+const tint = n => `oklch(64% 0.17 ${[125, 235, 80, 305, 165, 0, 200, 140, 55, 270, 330][n]})`;
 const ME = 'me';
-colour.set(ME, C.ink);
-let me = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES);
+const colour = id => id === ME ? C.action : tint(id);
+
+let world, map, land, me = null, aim = 0;
+let best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES), where = MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
+window.conga = { get world() { return world; } }; // for poking at the game from the console
+
+/** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
+function open(id) {
+  where = id; map = MAPS[id]; me = null;
+  world = createWorld(Math.random, map.rings);
+  GROUPS[id].forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
+  for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
+  land = new Path2D();
+  for (const ring of map.rings) { ring.forEach(([x, y], i) => i ? land.lineTo(x, y) : land.moveTo(x, y)); land.closePath(); }
+  const lead = world.lines.reduce((a, b) => a.tail.length >= b.tail.length ? a : b);
+  cam.x = lead.x; cam.y = lead.y;
+  for (const button of $('where').children) button.setAttribute('aria-pressed', button.dataset.map === id);
+}
 
 // ---------- the cards ----------
 function offer() {
@@ -123,6 +137,11 @@ function offer() {
   }), Object.assign(document.createElement('button'), { className: 'more', textContent: 'Others', onclick: () => offer() }));
 }
 offer();
+$('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {
+  const button = Object.assign(document.createElement('button'), { textContent: each.name, onclick: () => { keep.set('conga-map', id); open(id); } });
+  button.dataset.map = id;
+  return button;
+}));
 
 function begin() {
   keep.set('conga-face', picked);
@@ -152,7 +171,7 @@ function say(text) { $('say').textContent = text; $('say').classList.add('show')
 
 // ---------- steering ----------
 const canvas = $('game'), ctx = canvas.getContext('2d');
-let aim = 0, dash = false, wide = 0, tall = 0, dpr = 1;
+let dash = false, wide = 0, tall = 0, dpr = 1;
 const keys = new Set();
 function point(event) { if (me && !me.dead) aim = Math.atan2(event.clientY - tall / 2, event.clientX - wide / 2); }
 canvas.addEventListener('pointermove', point);
@@ -172,6 +191,15 @@ addEventListener('resize', fit); fit();
 // ---------- drawing ----------
 const cam = { x: 0, y: 0, z: 1 }, puffs = [];
 const SIZE = { stray: 40, tail: 42, head: 58 };
+// The print map's water: blue waves on its paper.
+const waves = (() => {
+  const tile = document.createElement('canvas'), pen = tile.getContext('2d');
+  tile.width = tile.height = 48;
+  pen.fillStyle = C.town; pen.fillRect(0, 0, 48, 48);
+  pen.strokeStyle = C.water; pen.lineWidth = 4; pen.lineCap = 'round';
+  for (const y of [12, 36]) { pen.beginPath(); pen.moveTo(-4, y); pen.bezierCurveTo(8, y - 9, 16, y - 9, 24, y); pen.bezierCurveTo(32, y + 9, 40, y + 9, 52, y); pen.stroke(); }
+  return ctx.createPattern(tile, 'repeat');
+})();
 
 function sprite(face, x, y, size, tilt = 0, alpha = 1) {
   const image = images[face];
@@ -184,53 +212,64 @@ function sprite(face, x, y, size, tilt = 0, alpha = 1) {
   ctx.globalAlpha = 1;
 }
 
-function pill(text, x, y, fill, ink) {
-  ctx.font = '700 13px Archivo, system-ui, sans-serif';
-  const width = ctx.measureText(text).width + 18;
-  ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - 11, width, 22, 11); ctx.fill();
-  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+function pill(text, x, y, fill, ink, size = 13, dot = '') {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const lead = dot ? size : 0, width = ctx.measureText(text).width + size * 1.4 + lead, high = size * 1.7;
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fill();
+  if (dot) { ctx.fillStyle = dot; ctx.beginPath(); ctx.arc(x - width / 2 + size * 0.95, y, size * 0.36, 0, 7); ctx.fill(); }
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + lead / 2, y + 1);
 }
 
-function draw(t) {
+// The rope a line holds: baker's twine in the line's colour, drawn as one smooth curve through the animals.
+function rope(points, stripe) {
+  const low = 13;
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
+  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
+  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 13; ctx.stroke();
+  ctx.strokeStyle = C.twine; ctx.lineWidth = 8; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([8, 8]); ctx.strokeStyle = stripe; ctx.stroke(); ctx.setLineDash([]);
+}
+
+function draw(t, dt) {
   const watch = me && (!me.dead || $('start').hidden) ? me : world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.min(wide, tall * 1.25) / 760;
-  const zoom = Math.max(0.5, fitTo / (1 + size * 0.007)), slide = watch === me ? 0.2 : 0.04;
-  cam.x += (watch.x - cam.x) * slide; cam.y += (watch.y - cam.y) * slide; cam.z += (zoom - cam.z) * 0.05;
+  const zoom = Math.max(0.5, fitTo / (1 + size * 0.007)), slide = 1 - Math.exp(-dt * (watch === me ? 9 : 2.5));
+  cam.x += (watch.x - cam.x) * slide; cam.y += (watch.y - cam.y) * slide; cam.z += (zoom - cam.z) * (1 - Math.exp(-dt * 3));
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = C.ink; ctx.fillRect(0, 0, wide, tall);
   ctx.translate(wide / 2, tall / 2); ctx.scale(cam.z, cam.z); ctx.translate(-cam.x, -cam.y);
   const halfW = wide / 2 / cam.z + 80, halfH = tall / 2 / cam.z + 80, seen = (x, y) => Math.abs(x - cam.x) < halfW && Math.abs(y - cam.y) < halfH;
 
-  ctx.fillStyle = C.field; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill();
+  ctx.fillStyle = map.water ? waves : C.town; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2);
+  ctx.save(); ctx.translate(14, 14); ctx.fillStyle = C.ink; ctx.fill(land); ctx.restore(); // the hard shadow the ground casts
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(land);
+  ctx.fillStyle = C.field; ctx.fill(land);
+  ctx.save(); ctx.clip(land);
+  ctx.strokeStyle = C.dot; ctx.lineWidth = 5; ctx.setLineDash([4, 18]); ctx.lineCap = 'round'; if (map.rings.length > 1) ctx.stroke(land); ctx.setLineDash([]); // where one section meets the next
   ctx.fillStyle = C.dot; ctx.beginPath();
-  for (let x = Math.floor((cam.x - halfW) / 90) * 90; x < cam.x + halfW; x += 90) for (let y = Math.floor((cam.y - halfH) / 90) * 90; y < cam.y + halfH; y += 90)
-    if (Math.hypot(x, y) < R - 20) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); }
-  ctx.fill();
-  ctx.strokeStyle = C.paper; ctx.lineWidth = 6; ctx.setLineDash([22, 16]); ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+  for (let x = Math.floor((cam.x - halfW) / 90) * 90; x < cam.x + halfW; x += 90) for (let y = Math.floor((cam.y - halfH) / 90) * 90; y < cam.y + halfH; y += 90) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); }
+  ctx.fill(); ctx.restore();
+  for (const zone of map.zones) if (seen(...zone.at)) pill(zone.name, zone.at[0], zone.at[1], C.paper, C.ink, 22);
+  for (const mark of map.marks) if (seen(...mark.at)) pill(mark.name, mark.at[0], mark.at[1], C.paper, C.ink, 17, C.action);
 
-  // Where each animal is shown: a small hop as it walks, and a wave down the line while the line dances.
+  // Where each animal is shown: a soft step as it walks, and a wave down the line while the line dances.
   const sprites = [], heads = [];
   for (const line of world.lines) {
     if (line.dead) continue;
-    const dancing = line.dance > 0, shown = [{ x: line.x, y: line.y }];
+    const dancing = line.dance > 0, step = i => 0.5 - 0.5 * Math.cos((t * 7 - i * 0.7) * 2), shown = [{ x: line.x, y: line.y - step(0) * 2.5 }];
     line.tail.forEach((f, i) => {
-      const before = shown[i], dx = before.x - f.x, dy = before.y - f.y, far = Math.hypot(dx, dy) || 1, beat = Math.sin(t * 9 - i * 0.8);
-      const sway = dancing ? beat * 13 : 0, hop = Math.abs(Math.sin(t * 9 - i * 0.7)) * (dancing ? 9 : 3);
-      shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - hop, face: f.face, tilt: dancing ? beat * 0.35 : 0 });
+      const before = shown[i], dx = before.x - f.x, dy = before.y - f.y, far = Math.hypot(dx, dy) || 1, beat = Math.sin(t * 8 - i * 0.8), sway = dancing ? beat * 13 : 0;
+      shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - step(i + 1) * (dancing ? 8 : 2.5), face: f.face, tilt: dancing ? beat * 0.35 : 0 });
     });
-    if (line.tail.length) {
-      ctx.lineJoin = ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(line.x, line.y); for (let i = 1; i < shown.length; i++) ctx.lineTo(shown[i].x, shown[i].y + 12);
-      ctx.strokeStyle = C.ink; ctx.lineWidth = 34; ctx.stroke();
-      ctx.strokeStyle = colour.get(line.id); ctx.lineWidth = line === me ? 22 : 28; ctx.stroke();
-    }
+    if (line.tail.length) rope(shown, colour(line.id));
     for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push({ ...shown[i], size: SIZE.tail });
     const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
-    sprites.push({ x: line.x, y: line.y - Math.abs(Math.sin(t * 9)) * 3, face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 9) * 0.3 : 0, alpha: blink, front: 1 });
+    sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1 });
     heads.push(line);
   }
-  for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - Math.abs(Math.sin(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
+  for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
   for (const s of sprites) sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha);
 
@@ -243,14 +282,17 @@ function draw(t) {
   for (const line of heads) if (seen(line.x, line.y)) pill(`${line.name} · ${line.tail.length + 1}`, line.x, line.y - 46, line === me ? C.action : C.ink, C.paper);
 }
 
-const map = $('map').getContext('2d');
+// The small map: the whole ground in its real shape, and where every line is on it.
+const chartPen = $('map').getContext('2d');
 function chart() {
-  map.clearRect(0, 0, 184, 184);
-  map.fillStyle = C.field; map.beginPath(); map.arc(92, 92, 90, 0, 7); map.fill();
+  const { west, east, north, south } = world.box, scale = 164 / Math.max(east - west, south - north);
+  chartPen.setTransform(1, 0, 0, 1, 0, 0); chartPen.clearRect(0, 0, 184, 184);
+  chartPen.translate(92, 92); chartPen.scale(scale, scale); chartPen.translate(-(west + east) / 2, -(north + south) / 2);
+  chartPen.fillStyle = C.field; chartPen.strokeStyle = C.ink; chartPen.lineWidth = 3 / scale; chartPen.lineJoin = 'round'; chartPen.stroke(land); chartPen.fill(land);
   for (const line of world.lines) {
     if (line.dead) continue;
-    map.fillStyle = line === me ? C.action : C.ink;
-    map.beginPath(); map.arc(92 + line.x / R * 86, 92 + line.y / R * 86, line === me ? 9 : 3 + Math.min(6, line.tail.length / 8), 0, 7); map.fill();
+    chartPen.fillStyle = line === me ? C.action : C.ink;
+    chartPen.beginPath(); chartPen.arc(line.x, line.y, (line === me ? 9 : 3 + Math.min(6, line.tail.length / 8)) / scale, 0, 7); chartPen.fill();
   }
 }
 
@@ -262,9 +304,10 @@ function board() {
 }
 
 // ---------- the loop ----------
+open(where);
 let last = performance.now(), ticks = 0;
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000), t = now / 1000; last = now;
+  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)), t = now / 1000; last = now;
   if (me && !me.dead) {
     if (keys.has('ArrowLeft') || keys.has('KeyA')) aim = me.a - 1.2;
     if (keys.has('ArrowRight') || keys.has('KeyD')) aim = me.a + 1.2;
@@ -278,7 +321,7 @@ function frame(now) {
     }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
   }
-  draw(t);
+  draw(t, dt);
   if (ticks++ % 12 === 0) { board(); chart(); }
   requestAnimationFrame(frame);
 }
