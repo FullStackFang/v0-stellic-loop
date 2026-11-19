@@ -14,7 +14,7 @@ import type { SwapCampus } from './swap';
 import { Composer, type Soon } from './composer';
 import { Near } from './near';
 import { OwnFace } from './own-face';
-import { InkMark, SchoolMark } from './ink-mark';
+import { InkBlot, InkMark, SchoolMark } from './ink-mark';
 import { INK_PAGE } from '@/lib/campus/ink';
 import type { Coupon, Face, Screen, Seat, Ticket, Tile as Pet } from '@/lib/campus/view';
 
@@ -39,11 +39,11 @@ const Chevron = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"
 
 export function FaceDot({ face, className = '' }: { face: Face; className?: string }) {
   const cls = `cs-face ${face.photo?.startsWith('/animals/') ? 'pet' : ''} ${face.here ? 'here' : ''} ${className}`.replace(/\s+/g, ' ').trim(), who = face.me ? 'You' : face.first;
-  // Someone who has Ink wears its mark, and the name says so.
+  // Someone who has Ink sits on a blot of their own, not a plain circle, and the name says so.
   const name = face.ink ? `${who}, ${face.me ? 'you have' : 'has'} Ink` : who;
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals, or the sign-in account's photo at its own address
   const dot = face.photo ? <img className={cls} src={face.photo} alt={name} title={name} /> : <i className={cls} role="img" aria-label={name} title={name}>{who.slice(0, 1).toUpperCase()}</i>;
-  return face.ink ? <span className="cs-inked">{dot}<InkMark /></span> : dot;
+  return face.ink ? <span className="cs-inked"><InkBlot seed={`${face.first}${face.photo ?? ''}`} />{dot}</span> : dot;
 }
 const Stack = ({ faces }: { faces: Face[] }) => faces.length ? <span className="cs-stack">{faces.slice(0, 6).map((face, at) => <FaceDot key={at} face={face} />)}</span> : null;
 export const Tile = ({ top, big, met = false }: { top: string; big: string; met?: boolean }) => <span className={`cs-tile ${met ? 'met' : ''}`}><small>{top}</small><b>{big}</b></span>;

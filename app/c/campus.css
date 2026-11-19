@@ -741,8 +741,10 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
 
 /* Loop Ink (openspec/changes/loop-ink-placements): the mark, the tab in the bar, the row in the account card, the mark
-   in the picker and on a face. Kit tokens only, so it holds in every school's colours. Kept in this one block. */
+   in the picker, and the blot a face sits on. Kit tokens only, so it holds in every school's colours. Kept in this one block. */
 .cs-ink { flex: none; width: 1.15em; height: 1.15em; }
+/* the two inks of the mark and of a face's blot are the school's own two colours: the field colour spilled wide, the action colour dropped into it, and thinly where it seeps out between the two */
+:is(.cs-ink, .cs-blot) .school { fill: var(--cs-field); } :is(.cs-ink, .cs-blot) .dark { fill: var(--cs-action); } :is(.cs-ink, .cs-blot) .seep { fill: var(--cs-action); opacity: .42; }
 /* the tab: paper with a hard shadow, never the field colour, so it stands apart from the other links in any kit. Shown at every width. */
 .cs-links a.cs-inktab { display: flex; gap: 7px; margin-left: 6px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
 .cs-links a.cs-inktab:not([aria-current]):hover { translate: -1px -2px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 5px 0 var(--cs-ink); } .cs-links a.cs-inktab[aria-current] { box-shadow: none; }
@@ -758,10 +760,12 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-pets-top { gap: 6px; } .cs-pets-top .cs-btn { padding: 0 11px; gap: 6px; }
 /* the ask pane: none of the four perks is here yet, so the first is not set apart from the rest */
 .cs-prem-perks span:first-child:not(:last-of-type) { font-weight: inherit; color: inherit; }
-/* the mark as a small stamp on an animal of the picker and on a face: lower right; lower left on an avatar, whose lower right is the level */
-.cs-inked { display: inline-grid; flex: none; } .cs-inked > * { grid-area: 1 / 1; }
-.cs-inked > .cs-ink, .cs-pet > .cs-ink { z-index: 1; width: 12px; height: 12px; padding: 1px; border-radius: 50%; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1px var(--cs-ink); }
-.cs-inked > .cs-ink { place-self: end; translate: 2px 3px; } .cs .cs-pet > .cs-ink { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; padding: 1.5px; box-shadow: 0 0 0 1.5px var(--cs-ink); }
-.cs-ava .cs-inked > .cs-ink { place-self: end start; translate: -5px 4px; width: 17px; height: 17px; padding: 1.5px; box-shadow: 0 0 0 1.5px var(--cs-ink); } .cs-ava.big .cs-inked > .cs-ink { width: 26px; height: 26px; padding: 3px; translate: -4px 2px; }
-/* in a row of overlapping faces the overlap moves to the wrapper */
-.cs-stack > .cs-inked > .cs-face { margin-left: 0; } .cs-stack > .cs-inked:not(:first-child) { margin-left: -7px; } .cs-pin > .cs-stack > .cs-inked:not(:first-child) { margin-left: -9px; }
+/* a face with Ink sits on a blot of its own (components/campus/ink-mark.tsx) in place of the plain circle. The blot reaches
+   past the face on every side and takes no room; the picture is drawn a little smaller so it sits inside the dark ink. */
+.cs-inked { position: relative; display: inline-grid; flex: none; } .cs-inked > * { grid-area: 1 / 1; }
+.cs-blot { position: absolute; inset: -30%; width: 160%; height: 160%; overflow: visible; pointer-events: none; }
+.cs-inked > .cs-face { position: relative; background: none; scale: .84; } .cs-inked > i.cs-face { color: var(--cs-paper); }
+/* an animal of the picker that needs Ink wears the mark as a small stamp, lower right */
+.cs .cs-pet > .cs-ink { position: absolute; right: -4px; bottom: -4px; z-index: 1; width: 18px; height: 18px; padding: 1.5px; border-radius: 50%; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink); }
+/* in a row of overlapping faces the overlap moves to the wrapper, and the edge of paper that parts two faces goes round the blot */
+.cs-stack > .cs-inked > .cs-face { margin-left: 0; box-shadow: none; } .cs-stack .cs-blot .school path { stroke: var(--ring, var(--cs-paper)); stroke-width: 3px; vector-effect: non-scaling-stroke; paint-order: stroke; } .cs-stack > .cs-inked:not(:first-child) { margin-left: -7px; } .cs-pin > .cs-stack > .cs-inked:not(:first-child) { margin-left: -9px; }

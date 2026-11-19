@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ink on a face</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* How a member with Ink looks, without a badge beside the face: the face itself changes. Four ways, each with a mark for
+   the tab to go with it. Kit tokens of app/c/campus.css. The dark strip and the lettered tabs belong to the mockup. */
+:root { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --r: 22px 22px 22px 6px; --expo: cubic-bezier(.16, 1, .3, 1); }
+:root[data-kit=loop] { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); --action-hover: oklch(54% 0.14 250); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); --action-hover: oklch(52% 0.15 255); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); --action-hover: oklch(46% 0.21 305); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
+button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+.mock { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button { height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px 32px; padding: 38px 32px 20px; }
+.opt { position: relative; border-radius: var(--r); background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); }
+/* the mockup's name for an option: a filled tab that sits on the edge of what it names */
+.tag { position: absolute; left: 18px; top: -17px; z-index: 6; display: flex; align-items: center; height: 34px; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 14px; box-shadow: 3px 3px 0 var(--field-shadow); }
+.tag b { display: grid; place-items: center; align-self: stretch; padding: 0 12px 0 14px; border-radius: 99px 0 0 99px; background: var(--field); color: var(--ink); font-weight: 760; box-shadow: inset 0 0 0 1.5px var(--ink); } .tag span { padding: 0 16px 0 11px; font-weight: 560; } .tag em { font-style: normal; font-weight: 720; }
+
+/* a slice of the app: the bar, your account, a ticket, a row */
+.nav { display: flex; align-items: center; gap: 6px; padding: 30px 20px 12px; border-radius: 22px 22px 0 0; background: var(--field); border: 1.5px solid var(--ink); border-bottom: 2px dashed color-mix(in oklab, var(--ink) 55%, transparent); }
+.tab { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 15px; border-radius: 99px; font-size: 14.5px; font-weight: 580; box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ink) 45%, transparent); }
+.tab[aria-current] { background: var(--ink); color: var(--field); box-shadow: none; }
+.tab.plan { margin-left: 6px; background: var(--paper); font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.mk { flex: none; width: 1.2em; height: 1.2em; overflow: visible; }
+.nav > .f { margin-left: auto; }
+.body { display: grid; grid-template-columns: 172px minmax(0, 1fr); gap: 16px 20px; padding: 22px 22px 26px; align-items: start; }
+.acct { grid-row: span 2; display: grid; justify-items: center; gap: 8px; padding: 30px 12px 16px; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--field-shadow); --ring: var(--paper); }
+.acct b { margin-top: 10px; font-size: 19px; font-weight: 720; letter-spacing: -0.03em; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 99px; font-size: 13.5px; font-weight: 660; background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tk { display: grid; grid-template-columns: 1fr 84px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(4px 4px 0 var(--field-shadow)); }
+.tk-main { display: grid; gap: 3px; padding: 14px 14px 16px 18px; background: var(--paper); border-radius: 6px 0 0 6px; --ring: var(--paper); mask: radial-gradient(circle 7px at 100% 0, #0000 96%, #000), radial-gradient(circle 7px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk-stub { display: grid; place-content: center; text-align: center; background: var(--action); color: var(--paper); font-weight: 720; line-height: 1.1; border-left: 1.5px dashed var(--ink); border-radius: 0 6px 6px 0; mask: radial-gradient(circle 7px at 0 0, #0000 96%, #000), radial-gradient(circle 7px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk b { font-size: 18px; font-weight: 700; letter-spacing: -0.03em; } .tk small, .row small { font-size: 13.5px; color: var(--mute); }
+.seats { display: flex; gap: 7px; margin-top: 14px; }
+.row { display: flex; align-items: center; gap: 12px; padding: 11px 16px 11px 12px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); --ring: var(--paper); }
+.row > i { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--field); font-style: normal; font-size: 12px; font-weight: 700; line-height: 1; text-align: center; }
+.row > span { display: grid; margin-right: auto; min-width: 0; line-height: 1.25; } .row b { font-weight: 680; letter-spacing: -0.02em; white-space: nowrap; }
+.stack { display: flex; } .stack .f { margin-left: -7px; } .stack .f:first-child { margin-left: 0; }
+
+/* a face. --s is its width; a face with Ink is .ink, and each option draws that its own way */
+.f { position: relative; flex: none; display: block; width: var(--s); height: var(--s); --ring: transparent; }
+.f > img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--ink) 13%, var(--paper)); }
+.stack .f > img { box-shadow: 0 0 0 2px var(--paper); }
+.f svg { position: absolute; overflow: visible; pointer-events: none; }
+
+/* today: a small stamp beside the face */
+.now .f.ink > .old { right: -3px; bottom: -4px; width: max(12px, 30%); height: max(12px, 30%); padding: 1px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink); }
+.now .nav > .f.ink > .old, .now .acct .f.ink > .old { right: auto; left: -4px; }
+
+/* A · Blot: no circle. The face sits on a blot of ink, and each member's blot is drawn from their name, so no two match. */
+.A .f.ink > img { position: relative; background: none; border-radius: 0; box-shadow: none; scale: .92; transition: scale .35s var(--expo); }
+.A .f.ink > .blot { inset: -14%; width: 128%; height: 128%; fill: var(--ink); transition: scale .45s var(--expo), rotate .45s var(--expo); }
+.A .stack .f.ink > .blot path { stroke: var(--paper); stroke-width: 4px; vector-effect: non-scaling-stroke; paint-order: stroke; }
+.A .f.ink:hover > .blot { scale: 1.13; rotate: 7deg; } .A .f.ink:hover > img { scale: 1; }
+
+/* B · Out of the frame: the disc takes the school's action colour and the pet leans out over the top of it, drawn round in ink like a sticker. */
+.B .f.ink { --b: max(1.5px, var(--s) * .028); --o: max(.8px, var(--s) * .017); }
+.B .f.ink > .d { position: absolute; inset: 0; border-radius: 50%; background: var(--action); box-shadow: inset 0 0 0 var(--b) var(--ink); }
+.B .stack .f.ink > .d { box-shadow: inset 0 0 0 var(--b) var(--ink), 0 0 0 2px var(--paper); }
+.B .f.ink > .pop { position: absolute; left: -20%; right: -20%; top: -40%; bottom: 0; pointer-events: none;
+  -webkit-mask: radial-gradient(circle calc(var(--s) * .5 - var(--b)) at 50% calc(100% - var(--s) * .5), #000 97%, #0000 100%), linear-gradient(#000 0 0) top / 100% calc(100% - var(--s) * .5) no-repeat;
+  mask: radial-gradient(circle calc(var(--s) * .5 - var(--b)) at 50% calc(100% - var(--s) * .5), #000 97%, #0000 100%), linear-gradient(#000 0 0) top / 100% calc(100% - var(--s) * .5) no-repeat; }
+.B .f.ink > .pop > img { position: absolute; left: 50%; bottom: calc(var(--s) * -.13); width: calc(var(--s) * 1.32); height: calc(var(--s) * 1.32); object-fit: contain; translate: -50% 0; transition: translate .3s var(--expo);
+  filter: drop-shadow(var(--o) 0 0 var(--ink)) drop-shadow(calc(var(--o) * -1) 0 0 var(--ink)) drop-shadow(0 var(--o) 0 var(--ink)) drop-shadow(0 calc(var(--o) * -1) 0 var(--ink)); }
+.B .f.ink:hover > .pop > img { translate: -50% -7%; }
+
+/* C · Postmarked: the school's postmark, pressed over the edge of the face in the action colour. Small, it is a rough ring; large, it can be read. */
+.C .f.ink > img { background: var(--stub); }
+.C .f.ink > .pm { inset: -22%; width: 144%; height: 144%; color: var(--action); mix-blend-mode: multiply; }
+.C .f.ink:hover > .pm { animation: press .3s var(--expo); }
+@keyframes press { from { scale: 1.22; opacity: 0; } }
+
+/* D · Tile: not a circle but the app's own tile, one tight corner and a hard shadow, in the school's colour. */
+.D .f.ink > img { border-radius: calc(var(--s) * .32) calc(var(--s) * .32) calc(var(--s) * .32) calc(var(--s) * .09); background: var(--field); box-shadow: 0 0 0 1.5px var(--ink), max(2px, var(--s) * .07) max(2px, var(--s) * .07) 0 0 var(--ink); transition: translate .15s var(--expo), box-shadow .15s var(--expo); }
+.D .f.ink:hover > img { translate: -1px -2px; box-shadow: 0 0 0 1.5px var(--ink), calc(max(2px, var(--s) * .07) + 1px) calc(max(2px, var(--s) * .07) + 2px) 0 0 var(--ink); }
+.D .stack .f.ink { margin-right: 2px; }
+
+/* today, for reference, and the four marks on their own */
+.foot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 24px 32px 48px; align-items: start; }
+.marks { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 34px 20px 22px; border-radius: var(--r); background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); }
+.marks li { display: grid; justify-items: center; gap: 14px; } .marks li > .mk { width: 84px; height: 84px; padding: 16px; border-radius: 22px 22px 22px 6px; background: var(--paper); box-shadow: 4px 4px 0 var(--ink); }
+.now .body { grid-template-columns: 132px minmax(0, 1fr); } .now .acct { padding-top: 24px; }
+@media (max-width: 1040px) { .grid, .foot { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .grid, .foot { padding-inline: 16px; } .body { grid-template-columns: minmax(0, 1fr); } .acct { grid-row: auto; } .tab:not(.plan):not([aria-current]) { display: none; } .marks { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<!-- ink that has soaked in unevenly: rough edges and a few bare patches, for the postmark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough" x="-30%" y="-30%" width="160%" height="160%">
+  <feTurbulence type="fractalNoise" baseFrequency=".07" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" result="d"/>
+  <feTurbulence type="fractalNoise" baseFrequency=".42" numOctaves="1" seed="9"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -11 7.9" result="g"/><feComposite in="d" in2="g" operator="in"/></filter></svg>
+
+<div class="mock"><span><b>Ink on a face.</b> Four ways to show it without a badge beside the picture. Hover a face.</span>
+  <div id="kits"><small>School</small><button data-kit="cornell" aria-pressed="true">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button><button data-kit="loop">Loop</button></div></div>
+
+<main class="grid" id="grid"></main>
+<section class="foot"><div class="opt now" id="now"></div><ul class="marks" id="marks"></ul></section>
+
+<script>
+// A number from a name, and a run of numbers from that: the same member always gets the same blot and the same tilt.
+const hash = text => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+const run = seed => () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const fix = n => n.toFixed(1);
+
+/** A blot of ink, about 100 across: a round body with three arms that reach further, and two drops flung off the arms. */
+function blot(name) {
+  const next = run(hash(name)), count = 11, arms = new Set([0, 1, 2].map(() => Math.floor(next() * count))), at = [], drops = [];
+  for (let i = 0; i < count; i++) {
+    const turn = (i + (next() - .5) * .45) / count * Math.PI * 2, arm = arms.has(i), reach = arm ? 55 + next() * 6 : 45 + next() * 5;
+    at.push([Math.cos(turn) * reach, Math.sin(turn) * reach]);
+    if (arm && drops.length < 2) { const far = reach + 5 + next() * 3, off = turn + .16 + next() * .2; drops.push(`<circle cx="${fix(Math.cos(off) * far)}" cy="${fix(Math.sin(off) * far)}" r="${fix(2.2 + next() * 2.4)}"/>`); }
+  }
+  let d = `M${at[0].map(fix)}`;
+  for (let i = 0; i < count; i++) {
+    const [a, b, c, e] = [-1, 0, 1, 2].map(step => at[(i + step + count) % count]);
+    d += `C${fix(b[0] + (c[0] - a[0]) / 5)},${fix(b[1] + (c[1] - a[1]) / 5)} ${fix(c[0] - (e[0] - b[0]) / 5)},${fix(c[1] - (e[1] - b[1]) / 5)} ${fix(c[0])},${fix(c[1])}`;
+  }
+  return `<path d="${d}Z"/>${drops.join('')}`;
+}
+
+/** The postmark: a ring, and where there is room, the school and term round it and the wavy lines that cancel a stamp. */
+let arcs = 0;
+function postmark(name, size) {
+  const tilt = Math.round(run(hash(name))() * 44 - 22), large = size >= 60, arc = `arc${arcs++}`;
+  const waves = [-15, -5, 5, 15].map(y => `<path d="M64 ${y}q4-4 8 0t8 0 8 0"/>`).join('');
+  return `<svg class="pm" viewBox="-72 -72 144 144" style="rotate:${tilt}deg"><g filter="url(#rough)" fill="none" stroke="currentColor" stroke-linecap="round">` + (large
+    ? `<circle r="63" stroke-width="2.8"/><circle r="47" stroke-width="1.5"/><g stroke-width="2.2">${waves}</g><path id="${arc}" d="M0 51a51 51 0 110-102 51 51 0 110 102" stroke="none"/><text font-size="11.500" font-weight="800" letter-spacing="2.200" fill="currentColor" stroke="none"><textPath href="#${arc}">LOOP INK · ITHACA NY · FALL 2026 · CORNELL ·</textPath></text>`
+    : `<circle r="53" stroke-width="${size < 30 ? 9 : 7.5}"/>`) + '</g></svg>';
+}
+
+// the four marks, each in a 16 box and one colour
+const MARKS = {
+  blot: `<svg class="mk" viewBox="-68 -68 136 136" fill="currentColor" aria-hidden="true">${blot('loop ink')}</svg>`,
+  nib: '<svg class="mk" viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M5.300.8h5.400l2.500 6.700L8 15.400 2.800 7.500zM8 5.700a1.500 1.500 0 100 3 1.500 1.500 0 000-3zm-.45 3.900h.9v3.300h-.9z"/></svg>',
+  drop: '<svg class="mk" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .9c2.900 3.500 4.900 6 4.900 8.600a4.900 4.900 0 01-9.800 0C3.100 6.900 5.100 4.400 8 .9z"/></svg>',
+  tile: '<svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M5 .8h6A4.200 4.200 0 0115.200 5v6a4.200 4.200 0 01-4.200 4.200H2.300A1.500 1.500 0 01.8 13.700V5A4.200 4.200 0 015 .8z"/><path fill="var(--field)" d="M6.700 7.300h2.600v5.400H6.700zM8 2.300c.9 1.100 1.600 1.900 1.600 2.700a1.600 1.600 0 01-3.200 0c0-.8.7-1.600 1.600-2.700z"/></svg>',
+};
+const OLD = '<svg class="old" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8" cy="8" r="6" stroke-dasharray="2.3 1.8"/><circle cx="8" cy="8" r="2" fill="currentColor" stroke="none"/></svg>';
+
+const PEOPLE = { Stephen: ['37', true], Ana: ['05', false], Ben: ['14', true], Cy: ['08', false], Dee: ['21', false], Eve: ['30', true], Finn: ['16', false], Gus: ['27', true], Hana: ['03', false] };
+/** One face, drawn the way the option draws a member with Ink. */
+function face(option, name, size) {
+  const [picture, ink] = PEOPLE[name], img = `<img src="../animals/${picture}.png" alt="${name}${ink ? ', has Ink' : ''}">`, open = `<span class="f${ink ? ' ink' : ''}" style="--s:${size}px">`;
+  if (!ink) return `${open}${img}</span>`;
+  if (option === 'A') return `${open}<svg class="blot" viewBox="-64 -64 128 128">${blot(name)}</svg>${img}</span>`;
+  if (option === 'B') return `${open}<i class="d"></i><span class="pop">${img}</span></span>`;
+  if (option === 'C') return `${open}${img}${postmark(name, size)}</span>`;
+  if (option === 'now') return `${open}${img}${OLD}</span>`;
+  return `${open}${img}</span>`;
+}
+const row = (option, names, size) => names.map(name => face(option, name, size)).join('');
+/** The same slice of the app for every option: the bar, your account, a ticket with its seats, a row with a stack. */
+const slice = (option, mark, big) => `
+  <div class="nav"><span class="tab" aria-current="page">This week</span><span class="tab">Near you</span><span class="tab plan">${mark}Ink</span>${face(option, 'Stephen', 38)}</div>
+  <div class="body">
+    <div class="acct">${face(option, 'Stephen', big)}<b>Stephen</b><span class="chip">${mark}Ink</span></div>
+    <div class="tk"><div class="tk-main"><b>Trivia at the Nines</b><small>Thu 8:00 PM · Collegetown</small><div class="seats">${row(option, ['Ben', 'Ana', 'Eve', 'Cy', 'Dee', 'Gus'], 34)}</div></div><div class="tk-stub">It's<br>on</div></div>
+    <div class="row"><i>SAT<br>6:30</i><span><b>Sunrise run</b><small>Beebe Lake</small></span><div class="stack">${row(option, ['Finn', 'Eve', 'Hana', 'Ben', 'Cy', 'Gus'], 26)}</div></div>
+  </div>`;
+
+const OPTIONS = [['A', 'Blot', 'no circle, your own blot of ink', 'blot'], ['B', 'Out of the frame', 'your pet leans out of its circle', 'nib'], ['C', 'Postmarked', "the school's postmark over the face", 'drop'], ['D', 'Tile', "the app's tile instead of a circle", 'tile']];
+document.getElementById('grid').innerHTML = OPTIONS.map(([key, name, line, mark]) => `<section class="opt ${key}"><div class="tag"><b>${key}</b><span><em>${name}</em> · ${line}</span></div>${slice(key, MARKS[mark], 112)}</section>`).join('');
+document.getElementById('now').innerHTML = `<div class="tag"><b>Now</b><span><em>Today</em> · a stamp beside the face</span></div>${slice('now', OLD.replace('class="old"', 'class="mk"'), 76)}`;
+document.getElementById('marks').innerHTML = `<div class="tag"><b>Mark</b><span>the four marks on their own · any of them can go with any face</span></div>` + OPTIONS.map(([key, , , mark]) => `<li>${MARKS[mark]}<span class="tab plan">${MARKS[mark]}Ink</span></li>`).join('');
+
+document.getElementById('kits').addEventListener('click', event => {
+  const pick = event.target.closest('button'); if (!pick) return;
+  document.documentElement.dataset.kit = pick.dataset.kit;
+  for (const each of pick.parentElement.querySelectorAll('button')) each.setAttribute('aria-pressed', String(each === pick));
+});
+</script>
+</body>
+</html>
