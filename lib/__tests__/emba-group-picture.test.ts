@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { subscribe } from '@/lib/campus/custom-face';
-import { subscribeInkPlus } from '@/lib/campus/ink';
+import { subscribeAsks, subscribeInkPlus } from '@/lib/campus/ink';
 import { authenticate } from '@/lib/emba/access';
 import { askGroupPicture, ASKS, asksMade, groupPictureImage, groupPictures, keepGroupPicture, waitingGroupPictures, type DrawGroup, type Pick } from '@/lib/emba/group-picture';
 import { startGroup } from '@/lib/emba/group-start';
@@ -109,6 +109,16 @@ it('asks for Ink+ first, stops at the limit, and never asks or stops the admin',
   await t.db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'organizer')", [at.orgId, at.loopId, admin.personId]);
   // No Ink+, more than the limit, and an Ink animal with no Ink.
   for (let n = 0; n <= ASKS; n++) expect((await askGroupPicture(t.db, admin, at, [{ face: 4 }, { face: 36 }], draw)).tokens).toHaveLength(2);
+});
+
+it('records every press of Subscribe, with the plan and where it was pressed', async () => {
+  const one = await person();
+  await subscribe(t.db, one.personId, 'One@Example.test');
+  await subscribeInkPlus(t.db, one.personId, 'one@example.test');
+  await subscribeInkPlus(t.db, one.personId, 'one@example.test', 'save picture');
+  expect(await subscribeInkPlus(t.db, one.personId, 'nope', 'save picture')).toBe(false);
+  expect((await subscribeAsks(t.db)).map(({ email, plan, place }) => [email, plan, place])).toEqual([
+    ['one@example.test', 'ink_plus', 'save picture'], ['one@example.test', 'ink_plus', 'group picture'], ['one@example.test', 'ink', 'own animal']]);
 });
 
 it('offers the one drawing that worked, and counts nothing when neither did', async () => {
