@@ -147,7 +147,7 @@ export async function makeFaceAction(data: FormData): Promise<MadeFace> {
   const photo = data.get('photo'), email = data.get('email');
   if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
   try {
-    const made = await makeCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), typeof email === 'string' ? email : null, undefined, viewer.admin || freeCode(data.get('code')));
+    const made = await makeCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), typeof email === 'string' ? email : null, undefined, viewer.admin || freeCode(data.get('code')), String(data.get('note') ?? ''));
     revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
     return { ok: true, own: customFace(made.token), left: made.left };
   } catch (error) {
