@@ -10,6 +10,8 @@
 const PAD = 14; // how far outside a solid landmark's wall a walker's middle is stopped, so faces do not overlap the wall
 const TOWER = 48; // a tower is drawn this many game units across whatever the map's scale, or it would be a dot
 const SOLID = ['hall', 'tower', 'water'];
+/** A lake's shore wanders in and out of its oval: how far out it is, as a share of the oval, at each angle round it. */
+export const shore = a => 1 + 0.09 * Math.sin(3 * a + 1) + 0.05 * Math.sin(5 * a + 2.3);
 
 /** `scale` is game units to a metre: it sets how much room the lines have, not the shape. */
 function ground(name, scale, sections, landmarks = [], more = () => ({})) {
@@ -23,7 +25,8 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
   });
   const outline = ({ kind, x, y, w, h, turn }) => {
     const a = w / 2 + PAD, b = h / 2 + PAD, cos = Math.cos(turn), sin = Math.sin(turn);
-    const corners = kind === 'hall' ? [[-a, -b], [a, -b], [a, b], [-a, b]] : Array.from({ length: 20 }, (_, n) => [Math.cos(n * Math.PI / 10) * a, Math.sin(n * Math.PI / 10) * b]);
+    const far = kind === 'water' ? shore : () => 1;
+    const corners = kind === 'hall' ? [[-a, -b], [a, -b], [a, b], [-a, b]] : Array.from({ length: 30 }, (_, n) => [Math.cos(n * Math.PI / 15) * a * far(n * Math.PI / 15), Math.sin(n * Math.PI / 15) * b * far(n * Math.PI / 15)]);
     return corners.map(([px, py]) => [x + px * cos - py * sin, y + px * sin + py * cos]);
   };
   return { name, ...more(at, scale), rings: sections.map(section => section.ring.map(at)), holes: things.filter(thing => SOLID.includes(thing.kind)).map(outline), things,

@@ -15,7 +15,8 @@ html, body { height: 100%; overflow: hidden; background: #f0e8d4; color: var(--i
 .face { display: block; aspect-ratio: 1; background: var(--sheet) 0 0 / 700% 600% no-repeat; }
 canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
-.hud[hidden], .dash[hidden] { display: none; }
+.hud[hidden], .dash[hidden], .pause[hidden] { display: none; }
+body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still view of one place, for comparing looks */
 
 .hud { position: fixed; z-index: 2; pointer-events: none; background: var(--paper); box-shadow: 3px 3px 0 var(--ink), inset 0 0 0 2px var(--ink); }
 .mine { top: max(14px, env(safe-area-inset-top)); left: 14px; display: flex; align-items: center; gap: 8px; padding: 5px 16px 5px 6px; border-radius: 99px; }
@@ -36,6 +37,10 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .dash { position: fixed; z-index: 2; right: 18px; bottom: max(18px, env(safe-area-inset-bottom)); width: 92px; height: 92px; border-radius: 50%; background: var(--action); color: var(--paper);
   font-weight: 900; font-size: 18px; font-stretch: 110%; box-shadow: 4px 4px 0 var(--ink); touch-action: none; transition: transform .12s var(--expo), box-shadow .12s var(--expo); }
 .dash:active, .dash.on { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); background: var(--action-hover); }
+
+.pause { position: fixed; z-index: 2; left: 132px; bottom: max(14px, env(safe-area-inset-bottom)); width: 48px; height: 48px; border-radius: 50%; background: var(--paper); box-shadow: 3px 3px 0 var(--ink), inset 0 0 0 2px var(--ink); display: grid; place-items: center; }
+.pause:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink), inset 0 0 0 2px var(--ink); }
+.pause svg { width: 18px; }
 
 .say { position: fixed; z-index: 3; top: max(18px, env(safe-area-inset-top)); left: 50%; padding: 9px 20px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 700; font-size: 15px; white-space: nowrap;
   transform: translate(-50%, -80px); opacity: 0; transition: transform .45s var(--expo), opacity .2s; pointer-events: none; }
@@ -61,13 +66,18 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .where { display: flex; gap: 4px; padding: 4px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
 .where button { padding: 9px 14px; border-radius: 99px; background: none; font-weight: 700; font-size: 14px; white-space: nowrap; }
 .where button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+/* What each control does: three side by side on one plate, the control on a key cap and its effect under it. */
+.keys { list-style: none; padding: 10px; display: flex; gap: 8px; border-radius: 16px 16px 16px 4px; background: var(--field); }
+.keys li { flex: 1; min-width: 0; display: grid; gap: 5px; justify-items: start; align-content: start; font-size: 13px; font-weight: 600; line-height: 1.25; }
+.keys kbd { font: inherit; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); white-space: nowrap; }
+.quit { padding: 12px 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
 .score { display: flex; gap: 10px; align-items: stretch; }
 .score div { flex: 1; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: var(--field); display: grid; gap: 2px; }
 .score div + div { background: var(--ink); color: var(--paper); }
 .score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .score span { font-size: 13px; font-weight: 700; }
 @media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
-  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } }
+  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .pause { left: 110px; } .keys { padding: 8px; gap: 6px; } .keys li { font-size: 12px; } .keys kbd { padding: 3px 8px; } }
 </style>
 </head>
 <body>
@@ -77,12 +87,14 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 <div class="hud board" id="board"></div>
 <div class="hud map"><canvas id="map" width="184" height="184"></canvas></div>
 <button class="dash" id="dash" hidden>Dash</button>
+<button class="pause" id="pause" hidden aria-label="Pause"><svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="4.5" height="14" rx="1.5"/><rect x="10.5" y="2" width="4.5" height="14" rx="1.5"/></svg></button>
 <div class="say" id="say"></div>
 
 <section class="card" id="start">
   <h1>Longest line wins</h1>
   <p>Walk into a stray and it joins your line. Walk into another line and yours scatters for anyone to grab.</p>
   <div class="faces" id="faces"></div>
+  <ul class="keys"></ul>
   <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div></div>
 </section>
 
@@ -92,9 +104,15 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
   <div class="row"><button class="go" id="again">Again</button></div>
 </section>
 
+<section class="card" id="paused" hidden>
+  <h1>Paused</h1>
+  <ul class="keys"></ul>
+  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button></div>
+</section>
+
 <script type="module">
-import { createWorld, addLine, place, steer, step, FACES, PLAZA } from './conga/sim.js';
-import { MAPS } from './conga/maps.js';
+import { createWorld, addLine, place, steer, step, removeLine, FACES, PLAZA } from './conga/sim.js';
+import { MAPS, shore } from './conga/maps.js';
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -117,7 +135,8 @@ const ME = 'me';
 const colour = id => id === ME ? C.action : tint(id);
 
 let world, map, land, blossoms = [], me = null, aim = 0;
-let best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES), where = MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
+const ask = new URLSearchParams(location.search);
+let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES), where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
 window.conga = { get world() { return world; } }; // for poking at the game from the console
 
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
@@ -135,8 +154,10 @@ function open(id) {
   for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
   land = new Path2D();
   for (const ring of map.rings) { ring.forEach(([x, y], i) => i ? land.lineTo(x, y) : land.moveTo(x, y)); land.closePath(); }
-  const lead = world.lines.reduce((a, b) => a.tail.length >= b.tail.length ? a : b);
-  cam.x = lead.x; cam.y = lead.y;
+  const lead = world.lines.reduce((a, b) => a.tail.length >= b.tail.length ? a : b), pin = map.things.find(thing => thing.name === ask.get('at'));
+  held = pin ? { x: pin.x + Number(ask.get('dx') ?? 0), y: pin.y + Number(ask.get('dy') ?? 0), dead: true, tail: [] } : null;
+  document.body.classList.toggle('bare', !!held);
+  cam.x = (held ?? lead).x; cam.y = (held ?? lead).y;
   for (const button of $('where').children) button.setAttribute('aria-pressed', button.dataset.map === id);
 }
 
@@ -168,10 +189,36 @@ function begin() {
   me.face = picked;
   aim = me.a;
   $('start').hidden = $('over').hidden = true;
-  $('mine').hidden = false; $('dash').hidden = !touched;
+  $('mine').hidden = $('pause').hidden = false; $('dash').hidden = !touched;
   $('mineFace').style.cssText = cut(picked);
 }
 $('go').onclick = $('again').onclick = begin;
+
+// What the controls are, for the hand that is on them: a mouse and keys, or a thumb.
+function controls() {
+  const rows = touched ? [['Drag', 'Steer, from anywhere'], ['Dash', 'Faster, but sheds animals'], ['Pause button', 'Stop the game']]
+    : [['Mouse', 'Steer. A and D turn too'], ['Space', 'Dash: faster, but sheds animals'], ['P', 'Pause. Esc too']];
+  for (const list of document.querySelectorAll('.keys')) list.innerHTML = rows.map(([key, does]) => `<li><kbd>${key}</kbd>${does}</li>`).join('');
+}
+
+// A game alone can be stopped and picked up again. Nothing moves while it is paused.
+let paused = false;
+function pause(on) {
+  if (!me || me.dead || on === paused) return;
+  paused = on;
+  $('paused').hidden = !on; $('pause').hidden = on;
+  keys.clear(); dash = false; stick = null; $('dash').classList.remove('on');
+}
+$('pause').onclick = () => pause(true);
+$('resume').onclick = () => pause(false);
+// Quit: your animals stay behind as strays, and the first card comes back with its animals and places.
+$('quit').onclick = () => {
+  paused = false; removeLine(world, ME); me = null;
+  $('paused').hidden = $('mine').hidden = $('dash').hidden = $('pause').hidden = true;
+  offer(); $('start').querySelector('p').after($('faces')); $('go').after($('where'));
+  $('start').hidden = false;
+};
+addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
 
 function finish(event) {
   best = Math.max(best, event.size);
@@ -180,7 +227,7 @@ function finish(event) {
   $('overHead').textContent = by ? `You walked into ${by.name}` : 'Scattered';
   $('overCount').textContent = event.size;
   $('overBest').textContent = best;
-  $('mine').hidden = $('dash').hidden = true;
+  $('mine').hidden = $('dash').hidden = $('pause').hidden = true;
   // The same animals and grounds as the first card, moved here: another go can be as someone else, or somewhere else.
   offer(); $('over').querySelector('.score').after($('faces')); $('again').after($('where'));
   setTimeout(() => { $('over').hidden = false; }, 900);
@@ -195,10 +242,11 @@ let dash = false, wide = 0, tall = 0, dpr = 1;
 // On a touch screen the thumb steers like a stick: the line heads the way the thumb has moved from where it went down,
 // so it can stay in a corner and never covers the animal. `stick` is that thumb. A mouse just points where to go.
 let stick = null, touched = matchMedia('(pointer: coarse)').matches;
+controls();
 const REACH = 46;
 const keys = new Set();
 function point(event) { if (me && !me.dead) aim = Math.atan2(event.clientY - tall / 2, event.clientX - wide / 2); }
-addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse' && !touched) { touched = true; if (me && !me.dead) $('dash').hidden = false; } }, true);
+addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse' && !touched) { touched = true; controls(); if (me && !me.dead) $('dash').hidden = false; } }, true);
 canvas.addEventListener('pointerdown', event => {
   if (event.pointerType === 'mouse') { point(event); dash = true; }
   else if (!stick) stick = { id: event.pointerId, x0: event.clientX, y0: event.clientY, x: event.clientX, y: event.clientY };
@@ -213,9 +261,15 @@ addEventListener('pointermove', event => {
 });
 for (const type of ['pointerup', 'pointercancel']) addEventListener(type, event => { if (event.pointerType === 'mouse') dash = false; else if (stick && event.pointerId === stick.id) stick = null; });
 // Leaving the window with a key or the button held would leave it held.
-addEventListener('blur', () => { keys.clear(); dash = false; stick = null; $('dash').classList.remove('on'); });
+addEventListener('blur', () => { keys.clear(); dash = false; stick = null; $('dash').classList.remove('on'); pause(true); });
 for (const [type, on] of [['pointerdown', true], ['pointerup', false], ['pointercancel', false], ['pointerleave', false]]) $('dash').addEventListener(type, event => { event.preventDefault(); dash = on; $('dash').classList.toggle('on', on); });
-addEventListener('keydown', event => { keys.add(event.code); if (event.code === 'Space') { event.preventDefault(); if (me && !me.dead) dash = true; else if (!event.repeat) begin(); } });
+addEventListener('keydown', event => {
+  if ((event.code === 'KeyP' || event.code === 'Escape') && !event.repeat) return pause(!paused);
+  keys.add(event.code);
+  if (event.code !== 'Space') return;
+  event.preventDefault();
+  if (paused) { if (!event.repeat) pause(false); } else if (me && !me.dead) dash = true; else if (!event.repeat) begin();
+});
 addEventListener('keyup', event => { keys.delete(event.code); if (event.code === 'Space') dash = false; });
 addEventListener('contextmenu', event => event.preventDefault());
 
@@ -232,6 +286,76 @@ addEventListener('resize', fit); fit();
 // ---------- drawing ----------
 const cam = { x: 0, y: 0, z: 1 }, puffs = [];
 const SIZE = { stray: 40, tail: 42, head: 58 };
+// ---------- water, grass and trees ----------
+// `?look=a|b|c` tries one of three ways of drawing them (public/demo/mockups-conga-ground.html shows them side by side).
+// `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground.
+const tile = (size, work) => { const sheet = document.createElement('canvas'); sheet.width = sheet.height = size; work(sheet.getContext('2d'), size); return ctx.createPattern(sheet, 'repeat'); };
+const STYLES = {
+  // Ink bands: strong flat blue that pales in steps toward the shore, mown stripes on the grass.
+  a: { deep: 'oklch(60% 0.14 252)', shore: [[170, 'oklch(68% 0.12 246)'], [84, 'oklch(77% 0.09 238)'], [30, 'oklch(89% 0.05 230)']], green: 'oklch(83% 0.14 140)', mown: 'oklch(78% 0.15 142)', tree: 'oklch(60% 0.15 150)', leaf: 'oklch(73% 0.16 145)',
+    marks: [120, 'oklch(72% 0.11 244)', pen => { pen.lineWidth = 4; for (const [x, y] of [[14, 26], [70, 58], [34, 96]]) { pen.beginPath(); pen.moveTo(x, y); pen.quadraticCurveTo(x + 13, y - 9, x + 26, y); pen.stroke(); } }] },
+  // Linocut: dark water with pale cut marks and a broken line of foam, deep grass with tufts, scalloped trees.
+  b: { deep: 'oklch(47% 0.1 240)', shore: [[70, 'oklch(55% 0.1 236)']], foam: true, green: 'oklch(70% 0.15 147)', tree: 'oklch(45% 0.11 158)', leaf: 'oklch(61% 0.14 150)', scallop: true,
+    marks: [150, 'oklch(92% 0.03 220)', pen => { pen.lineWidth = 3.5; for (const [x, y, w, a] of [[16, 22, 20, 0.2], [92, 40, 14, -0.15], [48, 78, 24, 0.1], [118, 110, 16, 0.25], [20, 128, 12, -0.2]]) { pen.beginPath(); pen.moveTo(x, y); pen.lineTo(x + w, y + w * a); pen.stroke(); } }],
+    tufts: [64, 'oklch(80% 0.15 140)', pen => { pen.lineWidth = 2.5; for (const [x, y] of [[12, 16], [44, 40], [20, 54]]) { pen.beginPath(); pen.moveTo(x - 4, y - 7); pen.lineTo(x, y); pen.lineTo(x + 4, y - 7); pen.stroke(); } }] },
+  // Cut paper: pale water that steps down from the shore, lakes sunk into the ground, lawns raised off it.
+  c: { deep: 'oklch(72% 0.1 236)', shore: [[250, 'oklch(79% 0.08 230)'], [120, 'oklch(86% 0.055 225)']], sunk: true, raised: true, green: 'oklch(89% 0.1 136)', tree: 'oklch(66% 0.15 150)', leaf: 'oklch(81% 0.14 140)',
+    tufts: [30, 'oklch(81% 0.13 140)', (pen, size) => { pen.beginPath(); pen.arc(size / 2, size / 2, 3, 0, 7); pen.fill(); }] },
+};
+const style = STYLES[ask.get('look')];
+if (style) {
+  for (const key of ['marks', 'tufts']) if (style[key]) { const [size, colour, work] = style[key]; style[key] = tile(size, (pen, across) => { pen.strokeStyle = pen.fillStyle = colour; pen.lineCap = pen.lineJoin = 'round'; work(pen, across); }); style[key].size = size; }
+  Object.assign(C, { green: style.green, tree: style.tree });
+}
+// The open water round an island, and the paler water close to its shore.
+function sea(t, x, y, w, h) {
+  ctx.fillStyle = style.deep; ctx.fillRect(x, y, w, h);
+  if (quality === 2) return;
+  if (style.marks) { style.marks.setTransform(new DOMMatrix().translate(t * 7 % style.marks.size, Math.sin(t * 0.5) * 5)); ctx.fillStyle = style.marks; ctx.fillRect(x, y, w, h); } // they drift
+  ctx.lineJoin = 'round';
+  for (const [width, colour] of style.shore) { ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.stroke(land); }
+  if (style.foam) { ctx.setLineDash([34, 26]); ctx.lineCap = 'round'; ctx.lineDashOffset = -t * 6; ctx.strokeStyle = C.paper; ctx.lineWidth = 46; ctx.stroke(land); ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.strokeStyle = style.shore[0][1]; ctx.lineWidth = 34; ctx.stroke(land); }
+}
+function lake(thing, t) {
+  ctx.save(); shape(thing); ctx.fillStyle = style.deep; ctx.fill(); ctx.clip();
+  ctx.lineJoin = 'round';
+  for (const [width, colour] of style.shore) { ctx.strokeStyle = colour; ctx.lineWidth = width * 0.5; ctx.stroke(); }
+  if (style.marks) { style.marks.setTransform(new DOMMatrix().translate(t * 7 % style.marks.size, 0)); ctx.fillStyle = style.marks; ctx.fill(); }
+  if (style.foam) { ctx.setLineDash([22, 18]); ctx.lineCap = 'round'; ctx.strokeStyle = C.paper; ctx.lineWidth = 26; ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = style.shore[0][1]; ctx.lineWidth = 16; ctx.stroke(); }
+  // Sunk: the ground's own edge throws a hard shadow onto the water along the top and left.
+  if (style.sunk) { ctx.save(); ctx.rotate(-thing.turn); ctx.translate(9 - thing.x, 9 - thing.y); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 18; ctx.stroke(); ctx.restore(); }
+  ctx.restore();
+  ctx.save(); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+}
+function lawn(thing) {
+  const { w, h } = thing;
+  if (style.raised) { ctx.save(); ctx.translate(7, 7); shape(thing); ctx.fillStyle = C.ink; ctx.fill(); ctx.restore(); }
+  ctx.save(); shape(thing); ctx.fillStyle = C.green; ctx.fill(); ctx.clip();
+  if (style.mown) { ctx.fillStyle = style.mown; for (let y = -h / 2; y < h / 2; y += 56) ctx.fillRect(-w / 2, y, w, 28); }
+  if (style.tufts) { ctx.fillStyle = style.tufts; ctx.fillRect(-w / 2, -h / 2, w, h); }
+  if (thing.kind === 'field') { ctx.beginPath(); for (let k = 1; k < 8; k++) { const y = -h / 2 + h * k / 8; ctx.moveTo(-w / 2 + 8, y); ctx.lineTo(w / 2 - 8, y); } ctx.strokeStyle = C.paper; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); }
+  ctx.restore();
+  ctx.save(); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.stroke(); ctx.restore();
+  // Trees stand round the edge, as they do round a quad, and leave the lawn open.
+  if (thing.kind === 'green') turned(thing, () => {
+    const round = 2 * (w + h), spots = [];
+    for (let k = 0; k < 4 + round / 130; k++) {
+      let d = chance(thing, k) * round, deep = 20 + chance(thing, k + 50) * 16, x, y;
+      if (d < w) [x, y] = [d - w / 2, -h / 2 + deep]; else if ((d -= w) < h) [x, y] = [w / 2 - deep, d - h / 2]; else if ((d -= h) < w) [x, y] = [w / 2 - d, h / 2 - deep]; else [x, y] = [-w / 2 + deep, h / 2 - (d - w)];
+      spots.push([Math.max(-w / 2 + 20, Math.min(w / 2 - 20, x)), Math.max(-h / 2 + 20, Math.min(h / 2 - 20, y)), 9 + chance(thing, k + 9) * 6]);
+    }
+    for (const [x, y, r] of spots.sort((a, b) => a[1] - b[1])) tree(x, y, r);
+  });
+}
+function canopy(x, y, r, fill) {
+  const light = fill === C.tree ? style.leaf : 'rgba(255, 255, 255, .45)';
+  const lobes = (at, by) => { ctx.beginPath(); for (let n = 0; n < 7; n++) { const a = n * Math.PI * 2 / 7; ctx.moveTo(at + Math.cos(a) * r * 0.62 + r * 0.5, by + Math.sin(a) * r * 0.62); ctx.arc(at + Math.cos(a) * r * 0.62, by + Math.sin(a) * r * 0.62, r * 0.5, 0, 7); } ctx.moveTo(at + r * 0.7, by); ctx.arc(at, by, r * 0.7, 0, 7); };
+  const trace = style.scallop ? lobes : (at, by) => ring(at, by, r);
+  trace(x + 4, y + 5); ctx.fillStyle = C.ink; ctx.fill(); // its hard shadow on the ground
+  trace(x, y); ctx.strokeStyle = C.ink; ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.stroke(); ctx.fillStyle = fill; ctx.fill();
+  ring(x - r * 0.2, y - r * 0.22, r * (style.scallop ? 0.42 : 0.56)); ctx.fillStyle = light; ctx.fill();
+}
+
 // The print map's water: blue waves on its paper.
 const waves = (() => {
   const tile = document.createElement('canvas'), pen = tile.getContext('2d');
@@ -281,7 +405,7 @@ const ring = (x, y, r, sides = 0) => { ctx.beginPath(); if (!sides) ctx.arc(x, y
 function shadow(thing, long = 10) { ctx.fillStyle = C.ink; for (let d = long; d > 0; d -= 4) { ctx.save(); ctx.translate(d, d); shape(thing); ctx.fill(); ctx.restore(); } }
 // For a building that is not one box: moves the pen, inside turned(), to where its shadow falls, down and to the right on the page.
 const cast = (thing, d = 9) => ctx.translate(d * (Math.cos(thing.turn) + Math.sin(thing.turn)), d * (Math.cos(thing.turn) - Math.sin(thing.turn)));
-function tree(x, y, r = 11, fill = C.tree) { ring(x, y, r); inked(fill, 2.5); ctx.fillStyle = 'rgba(255,255,255,.4)'; ring(x - r * 0.3, y - r * 0.3, r * 0.28); ctx.fill(); }
+function tree(x, y, r = 11, fill = C.tree) { if (style) return canopy(x, y, r, fill); ring(x, y, r); inked(fill, 2.5); ctx.fillStyle = 'rgba(255,255,255,.4)'; ring(x - r * 0.3, y - r * 0.3, r * 0.28); ctx.fill(); }
 // The same scatter every frame: a number from 0 to 1 that depends only on the thing and which tree it is.
 const chance = (thing, k) => { const v = Math.sin(thing.x * 12.9898 + thing.y * 4.1414 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
 
@@ -420,18 +544,21 @@ function beam(thing, t) {
 // What stands on the ground. Greens and fields are painted on it; halls, towers and water are walked around.
 function shape(thing, inset = 0) {
   ctx.translate(thing.x, thing.y); ctx.rotate(thing.turn); ctx.beginPath();
-  if (thing.kind === 'water' || thing.kind === 'tower') ctx.ellipse(0, 0, thing.w / 2, thing.h / 2, 0, 0, 7);
+  if (thing.kind === 'water') { for (let n = 0; n < 60; n++) { const a = n * Math.PI / 30, far = shore(a); ctx.lineTo(Math.cos(a) * thing.w / 2 * far, Math.sin(a) * thing.h / 2 * far); } ctx.closePath(); }
+  else if (thing.kind === 'tower') ctx.ellipse(0, 0, thing.w / 2, thing.h / 2, 0, 0, 7);
   else ctx.roundRect(-thing.w / 2 + inset, -thing.h / 2 + inset, thing.w - inset * 2, thing.h - inset * 2, thing.kind === 'hall' ? 8 : 26);
 }
 function painted(thing) {
   if (PAINT[thing.name]) return PAINT[thing.name](thing);
+  if (style) return lawn(thing);
   ctx.save(); shape(thing); ctx.fillStyle = C.green; ctx.fill(); ctx.strokeStyle = C.paper; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
   if (thing.kind === 'field') { ctx.beginPath(); for (let k = 1; k < 8; k++) { const y = -thing.h / 2 + thing.h * k / 8; ctx.moveTo(-thing.w / 2 + 8, y); ctx.lineTo(thing.w / 2 - 8, y); } ctx.stroke(); }
   ctx.restore();
   if (thing.kind === 'green') turned(thing, (w, h) => { for (let k = 0; k < 3 + w * h / 9000; k++) tree((chance(thing, k) - 0.5) * (w - 34), (chance(thing, k + 50) - 0.5) * (h - 34), 8 + chance(thing, k + 9) * 5); });
 }
-function solid(thing) {
+function solid(thing, t) {
   if (LOOK[thing.name]) return LOOK[thing.name](thing);
+  if (style && thing.kind === 'water') return lake(thing, t);
   if (thing.kind === 'tower') { ctx.strokeStyle = C.ink; ctx.lineWidth = thing.w * 0.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(thing.x, thing.y); ctx.lineTo(thing.x + 40, thing.y + 40); ctx.stroke(); } // it is tall, so its shadow is long
   else if (thing.kind === 'hall') { ctx.save(); ctx.translate(10, 10); shape(thing); ctx.fillStyle = C.ink; ctx.fill(); ctx.restore(); }
   ctx.save(); shape(thing); ctx.fillStyle = thing.kind === 'water' ? waves : C.roof; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
@@ -446,7 +573,7 @@ function bridge(thing) {
 const SOLID = ['hall', 'tower', 'water'];
 
 function draw(t, dt) {
-  const watch = me && (!me.dead || $('start').hidden) ? me : world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
+  const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b));
   const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.max(0.62, Math.min(wide, tall * 1.25) / 760);
   const zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007)), slide = 1 - Math.exp(-dt * (watch === me ? 9 : 2.5));
   cam.x += (watch.x - cam.x) * slide; cam.y += (watch.y - cam.y) * slide; cam.z += (zoom - cam.z) * (1 - Math.exp(-dt * 3));
@@ -455,7 +582,8 @@ function draw(t, dt) {
   ctx.translate(wide / 2, tall / 2); ctx.scale(cam.z, cam.z); ctx.translate(-cam.x, -cam.y);
   const halfW = wide / 2 / cam.z + 80, halfH = tall / 2 / cam.z + 80, seen = (x, y) => Math.abs(x - cam.x) < halfW && Math.abs(y - cam.y) < halfH;
 
-  ctx.fillStyle = !map.water ? C.town : quality < 2 ? waves : C.sea; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2);
+  if (style && map.water) sea(t, cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2);
+  else { ctx.fillStyle = !map.water ? C.town : quality < 2 ? waves : C.sea; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
   if (map.axis != null) { boats(t); banks(Math.hypot(halfW, halfH)); }
   ctx.save(); ctx.translate(14, 14); ctx.fillStyle = C.ink; ctx.fill(land); ctx.restore(); // the hard shadow the ground casts
   ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(land);
@@ -471,7 +599,7 @@ function draw(t, dt) {
   for (const [x, y] of blossoms) if (seen(x, y)) tree(x, y, 10, C.blossom);
   ctx.restore();
   for (const thing of map.things) if (thing.kind === 'bridge') { bridge(thing); cabs(thing, t); }
-  for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing);
+  for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing, t);
   for (const car of world.shuttles) {
     const due = car.clock < car.ride ? car.clock / car.ride : 0;
     ctx.beginPath(); ctx.arc(car.off[0], car.off[1], PLAZA, 0, 7); ctx.globalAlpha = 0.14 + due * 0.22; ctx.fillStyle = C.action; ctx.fill(); ctx.globalAlpha = 1;
@@ -541,18 +669,18 @@ function board() {
 
 // ---------- the loop ----------
 open(where);
-let last = performance.now(), ticks = 0, pace = 16, settled = 0;
+let last = performance.now(), ticks = 0, pace = 16, settled = 0, clock = 0;
 function frame(now) {
-  const took = now - last, dt = Math.max(0, Math.min(0.05, took / 1000)), t = now / 1000; last = now;
+  const took = now - last, dt = paused ? 0 : Math.max(0, Math.min(0.05, took / 1000)), t = clock += dt; last = now; // the game's own clock, which stops with it
   // `pace` is the usual time between frames. Two seconds of it staying over 24 ms, about 40 frames a second, is too slow.
   if (took < 250) pace += (took - pace) * 0.05;
   if (++settled > 120 && pace > 24 && quality < SHARP.length - 1) { quality++; settled = 0; pace = 16; fit(); }
-  if (me && !me.dead) {
+  if (me && !me.dead && !paused) {
     if (keys.has('ArrowLeft') || keys.has('KeyA')) aim = me.a - 1.2;
     if (keys.has('ArrowRight') || keys.has('KeyD')) aim = me.a + 1.2;
     steer(me, aim, dash);
   }
-  for (const event of step(world, dt)) {
+  for (const event of paused ? [] : step(world, dt)) {
     if (event.type === 'join' && event.line === ME) navigator.vibrate?.(8);
     if (event.type === 'scatter') {
       puffs.push({ x: event.x, y: event.y, t });
