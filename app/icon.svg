@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- The Loop mark (components/LoopGlyphs.tsx, Rings) on a teal tile: aqua rings, the top one lime. -->
+  <defs>
+    <path id="a" d="M27 37.5a23 23 0 1 0 46 0a23 23 0 1 0 -46 0"/>
+    <path id="b" d="M11 64a23 23 0 1 0 46 0a23 23 0 1 0 -46 0"/>
+    <path id="c" d="M43 64a23 23 0 1 0 46 0a23 23 0 1 0 -46 0"/>
+    <mask id="ma" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#c" stroke="#000" stroke-width="15"/></mask>
+    <mask id="mb" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#a" stroke="#000" stroke-width="15"/></mask>
+    <mask id="mc" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#b" stroke="#000" stroke-width="15"/></mask>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="#18484e"/>
+  <g stroke-width="10.5">
+    <g mask="url(#ma)"><use href="#a" stroke="#ebff58"/></g>
+    <g mask="url(#mb)"><use href="#b" stroke="#89f5f3"/></g>
+    <g mask="url(#mc)"><use href="#c" stroke="#89f5f3"/></g>
+  </g>
+</svg>
