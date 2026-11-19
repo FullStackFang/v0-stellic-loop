@@ -581,6 +581,11 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-way.none .go { background: color-mix(in oklab, var(--cs-ink) 38%, var(--pp)); box-shadow: none; } .cs-way.none .go svg { stroke: var(--pp); animation: none; }
 /* the compass is the one button on the map: back to where you are. The bar measures in minutes of walking. */
 .cs .cs-rose { position: absolute; z-index: 3; right: 14px; top: 98px; width: 50px; height: 50px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: rotate .6s var(--cs-ease), scale .2s var(--cs-ease); }
+/* in and out, under the compass and centred on it: one column of map controls */
+.cs .cs-zoom { position: absolute; z-index: 3; right: 19px; top: 158px; display: grid; width: 40px; overflow: hidden; border-radius: 99px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-zoom button { display: grid; place-items: center; height: 38px; transition: background-color .15s; } .cs-zoom button + button { box-shadow: inset 0 1.5px 0 var(--cs-ink); }
+.cs-zoom button:hover { background: color-mix(in oklab, var(--cs-ink) 10%, transparent); } .cs-zoom button:active { background: color-mix(in oklab, var(--cs-ink) 20%, transparent); }
+.cs-zoom svg { width: 16px; height: 16px; fill: none; stroke: var(--cs-ink); stroke-width: 2; stroke-linecap: round; }
 .cs-rose:hover { rotate: 20deg; } .cs-rose:active { scale: .92; } .cs-rose svg { display: block; width: 100%; height: 100%; }
 .cs-rose .ring { fill: none; stroke: var(--cs-ink); stroke-width: 1; stroke-dasharray: 1 3.45; } .cs-rose .north { fill: var(--hot); stroke: var(--cs-ink); stroke-width: 1.2; stroke-linejoin: round; } .cs-rose .south { fill: var(--card); stroke: var(--cs-ink); stroke-width: 1.2; stroke-linejoin: round; }
 .cs-rose .arms { fill: none; stroke: var(--cs-ink); stroke-width: 1.2; stroke-linecap: round; } .cs-rose .hub { fill: var(--cs-ink); }
@@ -627,7 +632,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-tk > .cs-tk-stub { justify-items: center; gap: 4px; border-left: 1.5px dashed var(--cs-ink); border-radius: 0 5px 5px 0; color: var(--cs-paper); background: var(--cs-action); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
 .cs-tk[aria-current] > .cs-tk-stub { background: var(--cs-ink); } .cs-tk-stub svg { width: 32px; height: 32px; } .cs-tk-stub b { font-size: 12px; font-weight: 720; letter-spacing: .02em; }
 /* a phone has no room for the name beside the title: the tag is its engraving and its stub */
-@media (max-width: 860px) { .cs-swap { top: 10px; right: 12px; } .cs-tag { height: 42px; } .cs-tag-face { padding: 0 8px 0 30px; } .cs-tag-face small, .cs-tag-face b { display: none; } .cs-near-band.swaps p { padding-right: 150px; } }
+@media (max-width: 860px) { .cs-swap { top: 10px; right: 12px; } .cs-tag { height: 42px; } .cs-tag-face { padding: 0 8px 0 30px; } .cs-tag-face small, .cs-tag-face b { display: none; } .cs-near-band.swaps p { padding-right: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
 @media (prefers-reduced-motion: reduce) { .cs-tag { animation: none; } }
 
 /* A wide window (components/campus/screen.tsx, "wide"; public/demo/mockups-campus-desktop.html): the search line and the

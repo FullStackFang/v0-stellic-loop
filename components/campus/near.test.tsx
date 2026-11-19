@@ -172,7 +172,12 @@ describe('Near you', () => {
     act(() => map.drag(0, .01));
     fireEvent.click(await screen.findByRole('button', { name: 'Go to Central Campus' }));
     expect(place()).toBe('Central Campus');
-    expect(screen.queryByRole('button', { name: /Zoom/ })).toBeNull();
+    // The map has the usual in and out, one step each, beside the compass.
+    const before = map.getZoom();
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(map.getZoom()).toBe(before + 1);
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(map.getZoom()).toBe(before);
     fireEvent.click(screen.getByRole('button', { name: 'Back to where you are' }));
     expect(place()).toBe('Collegetown');
   });
