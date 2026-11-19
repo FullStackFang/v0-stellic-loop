@@ -12,6 +12,7 @@ import { freeCode, keepPicture, makeCustomFace, retryCustomFace, subscribe, useC
 import { pickFace, placeAt } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
+import { askForSchool } from '@/lib/campus/school-ask';
 import { campusViewer, mayUse, type CampusViewer } from '@/lib/campus/session';
 
 // Every action of the campus screen. Each asks afresh who is signed in, and acts only on the person's own campus
@@ -115,6 +116,11 @@ export async function keepFaceAction(keep: string): Promise<ActResult> {
 /** "Subscribe" to Loop Premium in the account card. Nothing is charged; the ask and its email are kept. */
 export async function subscribeAction(email: string): Promise<ActResult> {
   return act(async viewer => { await subscribe(db(), viewer.personId, String(email)); });
+}
+
+/** "Add my school", for a person whose email is at none of the schools: the school they name is kept with that email. */
+export async function askSchoolAction(school: string): Promise<ActResult> {
+  return act(async viewer => { await askForSchool(db(), viewer.personId, String(school), viewer.principal.verifiedEmail); });
 }
 
 export type MadeFace = { ok: true; own: string; left: number } | { ok: false; message: string; signIn?: boolean };

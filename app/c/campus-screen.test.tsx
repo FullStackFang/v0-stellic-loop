@@ -17,7 +17,8 @@ import { checkIn, imIn, joinByToken, outingByToken } from '@/lib/campus/outings'
 import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
-import { againFaceAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
+import { schoolAsked } from '@/lib/campus/school-ask';
+import { againFaceAction, askSchoolAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
 import InkPage from './ink/page';
 import PostPlanPage from './[campus]/post/page';
@@ -642,7 +643,9 @@ describe('the pages', () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     for (const slug of ['cornell', 'cornell-tech', 'columbia']) {
       render(await withPortalTestSession(outsider, () => page(slug)));
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Loop is at .*Cornell.* for now\.$/);
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now. If that changes, we’ll let you know.');
+      expect(screen.getByText('omar@gmail.com', { selector: 'b' })).toBeInTheDocument();
+      expect(within(screen.getByRole('list')).getAllByRole('listitem').map(each => each.textContent).sort()).toEqual(['CUNYcuny.edu', 'Columbiacolumbia.edu', 'Cornellcornell.edu', 'NYUnyu.edu']);
       expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Post a plan' })).toBeNull();
       cleanup();
@@ -651,6 +654,28 @@ describe('the pages', () => {
     vi.stubEnv('LOOP_ADMIN', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
+  });
+  it('a person at no school names their school, and it is kept for when they come back', async () => {
+    const outsider = await person('Omar Reyes', 'omar@gmail.com');
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getByRole('status')).toHaveTextContent('We will email omar@gmail.com when Loop opens there.');
+    // The box is required, so an empty one never leaves the page; the action refuses one by itself.
+    expect(await withPortalTestSession(outsider, () => askSchoolAction(' '))).toEqual({ ok: false, message: 'Type the name of your school.' });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Your school' }), { target: { value: '  University of   Michigan ' } });
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Add my school' })); await screen.findByText('On the list'); });
+    expect(screen.getByText('University of Michigan')).toBeInTheDocument();
+    expect((await t.db.query('select school,email from campus_school_ask where person_id=$1', [outsider.personId])).rows).toEqual([{ school: 'University of Michigan', email: 'omar@gmail.com' }]);
+    cleanup();
+    // Coming back, and naming another school in its place.
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getByText('University of Michigan')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Change school' }));
+    expect(screen.getByRole('textbox', { name: 'Your school' })).toHaveValue('University of Michigan');
+    expect(await withPortalTestSession(outsider, () => askSchoolAction('Rutgers'))).toEqual({ ok: true });
+    expect((await t.db.query('select school from campus_school_ask')).rows).toEqual([{ school: 'Rutgers' }]);
+    // Before the migration is run on a live database the page still opens, with the box.
+    await t.db.query('alter table campus_school_ask rename to campus_school_ask_gone');
+    try { expect(await schoolAsked(t.db, outsider.personId)).toBeNull(); } finally { await t.db.query('alter table campus_school_ask_gone rename to campus_school_ask'); }
   });
   it('an unknown share link is not found, and a real one opens its event', async () => {
     const { zebs } = await world();
