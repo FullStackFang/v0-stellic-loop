@@ -54,13 +54,14 @@ describe('the door', () => {
     expect(screen.getByText('Example')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'I’m in' })).toBeInTheDocument();
   });
-  it('signed in, goes on to the person\'s own school; anyone from no school to the default campus', async () => {
+  it('signed in, goes on to the person\'s own school; the admin from no school to the default campus', async () => {
     await expect(withPortalTestSession(await signedIn('Noor', 'noor@stern.nyu.edu'), () => FrontDoor())).rejects.toEqual(sentTo('/c/nyu'));
     vi.stubEnv('LOOP_ADMIN', 'user_fay');
     await expect(withPortalTestSession(await signedIn('Fay', 'fay@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell'));
   });
-  it('signed in from no school, goes on to the default campus', async () => {
-    await expect(withPortalTestSession(await signedIn('Omar', 'omar@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell'));
+  it('signed in from no school, is told where Loop is and goes no further', async () => {
+    render(await drawn(withPortalTestSession(await signedIn('Omar', 'omar@gmail.com'), () => FrontDoor())));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Loop is at .* for now\.$/);
   });
   it('/sign-in is the same door', async () => {
     render(await DoorPage({ routing: 'path' }));

@@ -15,43 +15,28 @@ The system SHALL allow a campus to be part of a school that has another campus. 
 - **WHEN** an event is listed at Cornell Tech
 - **THEN** it does not appear on Ithaca's screen
 
-### Requirement: Choosing a campus the first time
-A signed-in person whose school has more than one campus and who has not been placed SHALL be shown one screen asking which campus, with one ticket per open campus, the campus nearest to where the person seems to be first. Each ticket SHALL show the campus's name, one line saying where it is, how many events are on there this week, and a picture of the place on its stub: the clocktower for Ithaca, the tram for New York. Picking a ticket SHALL place the person at that campus and open its screen. Until they pick, no campus screen SHALL open for them.
+### Requirement: A new person starts at the nearer campus
+A signed-in person whose school has more than one campus and who has not been placed SHALL be placed, without being asked, at the campus of their school nearest to where they seem to be. Where they seem to be SHALL be the host's guess from the request, not the browser's location: the person SHALL NOT be prompted for their location to be placed, and the guess SHALL NOT be kept. With no guess they SHALL be placed at the school's first campus (Ithaca for Cornell). A person already placed SHALL stay where they are wherever they sign in from. There SHALL be no screen that asks which campus.
 
-#### Scenario: First sign-in
-- **WHEN** a person signs in for the first time with a verified cornell.edu address
-- **THEN** they see "Which Cornell?" with a ticket for Ithaca and a ticket for New York
+#### Scenario: Signing in from New York City
+- **WHEN** a person signs in for the first time with a verified cornell.edu address and seems to be in New York City
+- **THEN** they are placed at Cornell Tech and its screen opens
 
-#### Scenario: The nearer campus is on top
-- **WHEN** a person who seems to be in New York City sees the choice
-- **THEN** the New York ticket is above the Ithaca ticket, and neither is picked for them
+#### Scenario: Signing in from upstate
+- **WHEN** a person signs in for the first time with a verified cornell.edu address and seems to be nearer Ithaca
+- **THEN** they are placed at Ithaca and its screen opens
 
 #### Scenario: No idea where they are
 - **WHEN** nothing says where the person is
-- **THEN** the Ithaca ticket is first
+- **THEN** they are placed at Ithaca
 
-#### Scenario: Picking New York
-- **WHEN** they pick the New York ticket
-- **THEN** they are placed at Cornell Tech and its screen opens
-
-#### Scenario: Opening a campus before choosing
-- **WHEN** a cornell.edu person who has not chosen opens a campus screen by its address
-- **THEN** they are sent to the choice
-
-#### Scenario: A campus of another school
-- **WHEN** a person submits a campus that is not one of their own school's
-- **THEN** they are not placed there
+#### Scenario: Placed, then travelling
+- **WHEN** a person placed at Ithaca signs in from New York City
+- **THEN** their campus is still Ithaca
 
 #### Scenario: A school with one campus
-- **WHEN** a person signs in with a verified columbia.edu address
-- **THEN** they are placed at Columbia and are not asked to choose
-
-### Requirement: Schools that are not open yet
-The choice screen SHALL list the school's parts that are not open yet under "Coming soon". They SHALL NOT be pickable.
-
-#### Scenario: Weill Cornell Medicine
-- **WHEN** a Cornell person sees the choice
-- **THEN** "Weill Cornell Medicine" is shown as coming soon and is not a button
+- **WHEN** a person signs in with a verified columbia.edu address from anywhere
+- **THEN** they are placed at Columbia
 
 ### Requirement: Looking at another campus
 A signed-in person SHALL be able to open every campus of their own school, and to join and post there, without their own campus changing. Where a school has more than one campus, the map's head SHALL carry one control that names the campus on the page and offers one ticket per campus, each with how many events are on there this week; the person's own campus SHALL be marked as theirs. On a campus that is not the person's own, the map SHALL say they are visiting unless they are standing in one of its sections. A campus of another school SHALL NOT open for them.
@@ -85,7 +70,11 @@ A person whose school has more than one campus SHALL be able to change their own
 
 #### Scenario: Already placed before New York opened
 - **WHEN** a person who was placed at Ithaca before Cornell Tech existed signs in
-- **THEN** they land on Ithaca's screen and are not asked to choose
+- **THEN** they land on Ithaca's screen, and may change to New York from their account card
+
+#### Scenario: A campus of another school
+- **WHEN** a person submits a campus that is not one of their own school's
+- **THEN** they are not placed there
 
 #### Scenario: One campus
 - **WHEN** an NYU person opens their account card

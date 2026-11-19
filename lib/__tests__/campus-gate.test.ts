@@ -8,7 +8,7 @@ import { closedToCaller, getPortalPrincipal, getSignedInPrincipal, withPortalTes
 import { listCampuses } from '@/lib/campus/listings';
 import { campusOf, placeAt } from '@/lib/campus/people';
 import { frontIsCampus, schoolOfEmail } from '@/lib/campus/schools';
-import { campusViewer, mayUse, openableGroups } from '@/lib/campus/session';
+import { campusViewer, mayUse, openableGroups, whereFrom } from '@/lib/campus/session';
 import { config, leadsIntoGroups, proxy } from '@/proxy';
 
 // Specs: openspec/changes/loop-campus-rewards/specs/admin-gate and campus-sign-in.
@@ -95,17 +95,16 @@ describe('a person belongs to the school of their email', () => {
     expect((await campusOf(t.db, { personId: id, verifiedEmail: 'noor@cornell.edu' }))?.slug).toBe('nyu');
     expect((await t.db.query('select 1 from campus_person where person_id=$1', [id])).rows).toHaveLength(1);
   });
-  it('does not place a person whose email is at no school, and shows them the default campus; the admin opens any', async () => {
+  it('does not place a person whose email is at no school, and opens no campus for them; the admin opens any', async () => {
     const { id } = await makePerson(t.db, 'Omar'), omar = who({ personId: id, subject: 'user_omar', verifiedEmail: 'omar@gmail.com' });
     const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
     const viewer = (await withPortalTestSession(omar, () => campusViewer()))!;
-    expect(viewer).toMatchObject({ admin: false, campus: { slug: 'cornell' } });
-    expect(mayUse(viewer, cornell)).toBe(true);
-    expect(mayUse(viewer, (await listCampuses(t.db)).find(campus => campus.slug === 'nyu')!)).toBe(false);
+    expect(viewer).toMatchObject({ admin: false, campus: null, visits: [] });
+    for (const campus of await listCampuses(t.db)) expect(mayUse(viewer, campus)).toBe(false);
     expect((await t.db.query('select 1 from campus_person')).rows).toHaveLength(0);
     vi.stubEnv('LOOP_ADMIN', 'user_omar');
     const admin = (await withPortalTestSession(omar, () => campusViewer()))!;
-    expect(admin.admin).toBe(true);
+    expect(admin).toMatchObject({ admin: true, campus: { slug: 'cornell' } });
     expect(mayUse(admin, cornell)).toBe(true);
     expect(mayUse(admin, (await listCampuses(t.db)).find(campus => campus.slug === 'nyu')!)).toBe(true);
   });
@@ -139,6 +138,26 @@ describe('a person belongs to the school of their email', () => {
     await placeAt(t.db, id, ithaca.id);
     expect((await campusOf(t.db, sam))?.slug).toBe('cornell');
     expect((await t.db.query('select 1 from campus_person where person_id=$1', [id])).rows).toHaveLength(1);
+  });
+  it('places a new person at the nearer campus of their school, and at the school itself when nothing says where they are', async () => {
+    const NEW_YORK: [number, number] = [-73.99, 40.73], SYRACUSE: [number, number] = [-76.15, 43.05];
+    const place = async (name: string, email: string, near?: [number, number] | null) => (await campusOf(t.db, { personId: (await makePerson(t.db, name)).id, verifiedEmail: email }, near))?.slug;
+    expect(await place('Tess', 'tess@cornell.edu', NEW_YORK)).toBe('cornell-tech');
+    expect(await place('Ira', 'ira@cornell.edu', SYRACUSE)).toBe('cornell');
+    expect(await place('Sam', 'sam@cornell.edu', null)).toBe('cornell');
+    expect(await place('Una', 'una@cornell.edu')).toBe('cornell');
+    // A school with one campus places there wherever the person is.
+    expect(await place('Noor', 'noor@nyu.edu', SYRACUSE)).toBe('nyu');
+    expect(await place('Gus', 'gus@gmail.com', NEW_YORK)).toBeUndefined();
+  });
+  it('reads where a person seems to be from the host, and makes nothing of a missing or broken guess', () => {
+    expect(whereFrom('40.73', '-73.99')).toEqual([-73.99, 40.73]);
+    for (const [lat, lon] of [[null, '-73.99'], ['40.73', null], ['', ''], ['north', '-73.99'], ['140', '-73.99']] as const) expect(whereFrom(lat, lon)).toBeNull();
+  });
+  it('leaves a placed person where they are, wherever they sign in from', async () => {
+    const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });
+    expect((await campusOf(t.db, sam, [-76.15, 43.05]))?.slug).toBe('cornell');
+    expect((await campusOf(t.db, sam, [-73.99, 40.73]))?.slug).toBe('cornell');
   });
   it('shows group names in the top bar only to someone who can open them', async () => {
     const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });

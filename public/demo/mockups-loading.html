@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" data-kit="cornell">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loading, three ways</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* One loader for every wait in the app, drawn three ways. Each is shown at the three sizes the app needs:
+   opening the app (whole screen), changing page (the bar stays), and after a press (inside a button).
+   Kit tokens of app/c/campus.css. The dark strip, the lettered bars and the frame tabs belong to the mockup. */
+:root { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --mute: oklch(46.5% 0.012 245); --on-ink: oklch(99.4% 0.003 230); --on-ink-mute: oklch(82% 0.02 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --sunk: color-mix(in oklab, var(--ink) 10%, var(--paper));
+  --r: 22px 22px 22px 6px; --expo: cubic-bezier(.16, 1, .3, 1); --run: cubic-bezier(.62, 0, .3, 1); }
+:root[data-kit=loop] { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); }
+:root[data-kit=cuny] { --field: oklch(88% 0.13 88); --field-shadow: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --action: oklch(38% 0.18 264); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p, ul, figure { margin: 0; padding: 0; } ul { list-style: none; }
+button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* the mockup's own strip */
+.mock { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button { height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+
+main { display: grid; gap: 56px; max-width: 1280px; margin: 0 auto; padding: 30px 32px 90px; }
+.dir { display: grid; gap: 30px; }
+.head { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 10px 12px 10px 10px; border-radius: var(--r); background: var(--ink); color: var(--on-ink); }
+.head i { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--field); color: var(--ink); font-style: normal; font-size: 22px; font-weight: 820; }
+.head b { font-size: 21px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.04em; }
+.head span { margin-right: auto; color: var(--on-ink-mute); font-size: 14.5px; }
+.head button { height: 36px; padding: 0 16px; border-radius: 99px; background: var(--paper); color: var(--ink); font-weight: 600; font-size: 14px; }
+.frames { display: grid; grid-template-columns: 250px minmax(0, 1fr) 250px; gap: 28px; }
+.fr { position: relative; height: 500px; }
+.fr > figcaption { position: absolute; z-index: 5; top: -13px; left: 20px; padding: 3px 12px 4px; border-radius: 99px; background: var(--ink); color: var(--on-ink); font-size: 12.5px; font-weight: 600; }
+.scr { position: absolute; inset: 0; overflow: hidden; isolation: isolate; background: var(--page); border-radius: var(--r); box-shadow: 0 0 0 2px var(--ink), 6px 6px 0 2px var(--field-shadow); }
+.phone .scr { border-radius: 34px; }
+.small .scr { display: grid; align-content: start; justify-items: start; gap: 18px; padding: 0 22px; background: var(--paper); }
+.small .band { display: flex; margin: 0 -22px 8px; padding: 22px 22px 13px; width: calc(100% + 44px); background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.small .scr > .tk { width: 100%; margin-top: 6px; } .small .tk { grid-template-columns: 1fr 58px; }
+.panel { position: relative; display: grid; place-items: center; width: 100%; height: 150px; overflow: hidden; border-radius: 16px 16px 16px 4px; background: var(--page); }
+.panel em { display: none; } .panel .st { scale: .8; } .panel .roll { position: absolute; inset: 0; } .panel .list { padding: 22px 14px 0 12px; }
+@media (max-width: 980px) { .frames { grid-template-columns: 250px minmax(0, 1fr); } .small { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .frames { grid-template-columns: 1fr; } .phone { width: 250px; } }
+
+/* the app's own pieces, as they are in campus.css */
+.nav { position: relative; z-index: 3; display: flex; align-items: center; gap: 6px; height: 60px; padding: 0 14px; background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.wm { margin-right: 6px; } .wm svg { display: block; width: 36px; height: 36px; padding: 5px; border-radius: 10px 10px 10px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.pill { display: inline-flex; align-items: center; gap: 9px; height: 34px; padding: 0 14px; border-radius: 99px; font-size: 14px; font-weight: 580; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.pill[aria-current] { background: var(--ink); color: var(--field); box-shadow: none; }
+.btn { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 18px; border-radius: 99px; font-weight: 580; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.btn.go { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.under { position: absolute; inset: 60px 0 0; } .whole { position: absolute; inset: 0; }
+.wait { display: grid; place-items: center; } .wait.field { background: var(--field); }
+.list { display: grid; gap: 12px; padding: 22px 20px 0 16px; }
+.tk { --i: 0; display: grid; grid-template-columns: 1fr 70px; height: 78px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(4px 4px 0 var(--ink)); }
+.tk > span { display: grid; align-content: center; background: var(--paper); }
+.tk-main { grid-template-columns: 1fr auto; align-items: center; gap: 0 10px; padding: 0 14px 0 16px; border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk-main > span:first-child { display: grid; gap: 3px; min-width: 0; }
+.tk-main small { font-size: 12px; font-weight: 620; color: var(--mute); } .tk-main b { font-size: 18px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; } .tk-main em { font-style: normal; font-size: 12.5px; color: var(--mute); white-space: nowrap; }
+.stack { display: flex; } .stack img { width: 30px; height: 30px; margin-left: -8px; border-radius: 50%; background: var(--stub); box-shadow: 0 0 0 2px var(--paper); }
+.tk > .tk-stub { justify-items: center; border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: var(--stub); font-size: 12.5px; font-weight: 700; mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk > .tk-stub.on { background: var(--action); color: var(--paper); }
+.phone .tk { grid-template-columns: 1fr 58px; } .phone .stack { display: none; } .phone .list { padding-right: 18px; } .phone .tk-main b { font-size: 16.5px; }
+.done { visibility: hidden; background: var(--page); } .done.clear { background: none; } .fin .done { visibility: visible; }
+
+/* ---------- A · Round the loop ---------- */
+.disc { --s: 168px; position: relative; display: grid; place-items: center; width: var(--s); height: var(--s); border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 2px var(--ink), 6px 6px 0 2px var(--ink); }
+.disc > svg { width: 40%; height: 40%; }
+.disc > em { position: absolute; left: 50%; bottom: -15px; translate: -50%; padding: 4px 13px 5px; border-radius: 99px; background: var(--ink); color: var(--on-ink); font-style: normal; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.lap { --t: 2.3s; position: relative; display: inline-block; width: var(--s); height: var(--s); flex: none; }
+.disc > .lap { position: absolute; inset: 0; }
+.lap > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lap .trk { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-dasharray: 1.6 3.4; opacity: .55; }
+.lap .arcw { animation: lap var(--t) var(--run) infinite; }
+.lap .arc { fill: none; stroke: var(--action); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0 100; animation: trail var(--t) ease-in-out infinite; }
+.lap i { --a: 0deg; position: absolute; inset: 0; transform: rotate(var(--a)); animation: lap var(--t) var(--run) var(--d, 0s) infinite; }
+.lap i > * { position: absolute; left: 50%; top: 12%; width: 36%; height: 36%; translate: -50% -50%; transform: rotate(calc(var(--a) * -1)); animation: unlap var(--t) var(--run) var(--d, 0s) infinite; }
+@keyframes lap { to { transform: rotate(calc(var(--a, 0deg) + 360deg)); } }
+@keyframes unlap { to { transform: rotate(calc(var(--a, 0deg) * -1 - 360deg)); } }
+@keyframes trail { 50% { stroke-dasharray: 30 100; } }
+.lap.s { --s: 18px; --t: 1.5s; } .lap.s .trk { stroke-width: 9; stroke-dasharray: none; opacity: .3; } .lap.s i > b { width: 30%; height: 30%; border-radius: 50%; background: currentColor; }
+.fin[data-dir=a] .done { animation: iris .85s var(--expo) both; }
+@keyframes iris { from { clip-path: circle(0 at 50% 50%); } to { clip-path: circle(125% at 50% 50%); } }
+
+/* ---------- B · Saving seats ---------- */
+.st { --t: 4.2s; display: grid; grid-template-columns: 1fr 54px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(5px 5px 0 var(--ink)); }
+.st-main { display: grid; gap: 10px; padding: 15px 13px 16px 15px; background: var(--paper); border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-main b { font-size: 17px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+.socks { display: flex; gap: 5px; }
+.socks span { width: 31px; height: 31px; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 24%, transparent); }
+.socks img { width: 100%; height: 100%; animation: seat var(--t) var(--expo) calc(var(--i) * .45s) infinite backwards; }
+@keyframes seat { 0% { opacity: 0; transform: scale(.2); } 7%, 74% { opacity: 1; transform: none; } 74% { animation-timing-function: ease-in; } 80%, 100% { opacity: 0; transform: scale(.2); } }
+.st-stub { position: relative; display: grid; justify-items: center; align-content: center; gap: 4px; border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: var(--stub); color: var(--paper); --top: var(--paper); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-stub::before { content: ""; position: absolute; inset: 0; background: var(--action); animation: stamp var(--t) var(--expo) infinite; }
+.st-stub svg { position: relative; width: 30px; height: 30px; } .st-stub b { position: relative; font-size: 11.5px; font-weight: 720; white-space: nowrap; }
+.st-stub svg, .st-stub b { animation: stamped var(--t) linear infinite; }
+@keyframes stamp { 0%, 40% { clip-path: inset(100% 0 0); } 48%, 74% { clip-path: inset(0); } 80%, 100% { clip-path: inset(100% 0 0); } }
+@keyframes stamped { 0%, 41% { opacity: 0; } 47%, 74% { opacity: 1; } 79%, 100% { opacity: 0; } }
+.sock { display: inline-flex; gap: 3px; flex: none; } .sock b { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.3px currentColor; background: currentColor; animation: fill3 1.8s linear calc(var(--i) * .22s) infinite backwards; }
+@keyframes fill3 { 0%, 4% { background: transparent; } 12%, 68% { background: currentColor; } 78%, 100% { background: transparent; } }
+.flood { position: absolute; inset: 0; z-index: 1; background: var(--field); clip-path: circle(0 at 66% 50%); } .field + .flood { background: var(--action); }
+.fin .flood { animation: flood .6s var(--expo) both; } @keyframes flood { to { clip-path: circle(130% at 66% 50%); } }
+.fin[data-dir=b] .done { z-index: 2; animation: rise .4s .42s var(--expo) both; } @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+
+/* ---------- C · Off the roll ---------- */
+.roll { overflow: hidden; }
+.belt { --step: 90px; --t: 1.5s; transform: translateY(calc(var(--step) * -1)); animation: feed var(--t) infinite; }
+@keyframes feed { 0% { transform: translateY(calc(var(--step) * -1)); animation-timing-function: var(--expo); } 55%, 100% { transform: none; } }
+.blank u { display: block; height: 11px; border-radius: 99px; background: var(--sunk); transform-origin: 0 50%; } .blank u:first-child { width: 34%; height: 9px; } .blank u:nth-child(2) { width: 62%; height: 15px; } .blank u:nth-child(3) { width: 46%; height: 9px; }
+.blank .tk-stub u { width: 34px; height: 34px; border-radius: 50%; background: color-mix(in oklab, var(--ink) 12%, var(--stub)); transform-origin: 50%; }
+.belt > :first-child u { animation: print var(--t) infinite; }
+@keyframes print { 0%, 45% { transform: scaleX(0); animation-timing-function: var(--expo); } 90%, 100% { transform: none; } }
+.mini { display: inline-grid; grid-template-columns: 1fr 8px; width: 27px; height: 17px; flex: none; border-radius: 3px; box-shadow: inset 0 0 0 1.5px currentColor; }
+.mini::before { content: ""; align-self: center; height: 3px; margin: 0 3px 0 4.5px; border-radius: 9px; background: currentColor; transform-origin: 0 50%; animation: mini-print 1.5s infinite; }
+.mini::after { content: ""; border-radius: 0 3px 3px 0; background: currentColor; animation: mini-stamp 1.5s linear infinite; }
+@keyframes mini-print { 0% { transform: scaleX(0); animation-timing-function: var(--expo); } 50%, 82% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+@keyframes mini-stamp { 0%, 44% { opacity: .22; } 54%, 84% { opacity: 1; } 100% { opacity: .22; } }
+.fin[data-dir=c] .belt { animation: none; } .fin[data-dir=c] .roll.under { opacity: 0; transition: opacity .25s .8s; }
+.fin[data-dir=c] .done .tk { animation: wipe .55s var(--expo) calc(var(--i) * 90ms) both; }
+@keyframes wipe { from { clip-path: inset(-8px 100% -8px -8px); } to { clip-path: inset(-8px); } }
+
+/* Reduced motion: every loader has a still pose that reads as "waiting" on its own. */
+:root[data-still] *, :root[data-still] *::before, :root[data-still] *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <mask id="m0" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="64.5" cy="60" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="50" cy="35" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="35.5" cy="60" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <symbol id="mark" viewBox="0 0 100 100"><g fill="none" stroke-width="9">
+    <g mask="url(#m0)"><circle cx="50" cy="35" r="21" style="stroke:var(--top, var(--action))"/></g>
+    <g mask="url(#m1)"><circle cx="35.5" cy="60" r="21" stroke="currentColor"/></g>
+    <g mask="url(#m2)"><circle cx="64.5" cy="60" r="21" stroke="currentColor"/></g></g></symbol>
+</defs></svg>
+
+<div class="mock">
+  <span><b>Loading, three ways</b> · each shown opening the app, changing page, and after a press</span>
+  <div id="kits"><small>School</small></div>
+  <div id="motion"><small>Motion</small><button aria-pressed="true" data-v="">Full</button><button aria-pressed="false" data-v="1">Reduced</button></div>
+  <div id="ending"><small>Ending</small><button aria-pressed="true" data-v="1">Plays by itself</button><button aria-pressed="false" data-v="">Keep loading</button></div>
+</div>
+<main id="main"></main>
+
+<script>
+const KITS = [['cornell', 'Cornell', 38], ['columbia', 'Columbia', 39], ['nyu', 'NYU', 40], ['cuny', 'CUNY', 12], ['loop', 'Loop', 5]];
+const face = n => `/animals/${String(n).padStart(2, '0')}.png`;
+const mark = '<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#mark"/></svg>';
+const nav = (wait = '') => `<div class="nav"><span class="wm">${mark}</span><span class="pill" aria-current="page">This week${wait}</span><span class="pill">Near you</span></div>`;
+const EVENTS = [['Thu 7:30 pm', 'Trivia night', 'The Regent', 0, [38, 5, 21]], ['Fri 5:00 pm', 'Pickup soccer', 'North field', 1, [12, 30]], ['Sat 10:00 am', 'Market run', 'The landing', 2, [8]],
+  ['Sat 8:00 pm', 'Board games', 'Second floor lounge', 0, [17, 26, 3]], ['Sun 2:00 pm', 'Study hall', 'Main library', 3, [33]]];
+const list = `<div class="list">${EVENTS.map(([when, name, place, more, faces], i) => `<div class="tk" style="--i:${i}"><span class="tk-main"><span><small>${when}</small><b>${name}</b><em>${place}</em></span>
+  <span class="stack">${faces.map(n => `<img src="${face(n)}" alt="">`).join('')}</span></span><span class="tk-stub${more ? '' : ' on'}">${more ? more + ' more' : "It's on"}</span></div>`).join('')}</div>`;
+const blank = '<div class="tk blank"><span class="tk-main"><span><u></u><u></u><u></u></span></span><span class="tk-stub"><u></u></span></div>';
+const status = '<span class="sr" role="status">Opening</span>';
+
+// A: three faces run a lap round the mark. The first face is the school's own.
+const lap = size => `<span class="disc" style="--s:${size}px"><span class="lap">
+  <svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="38"/></svg>
+  <svg class="arcw" viewBox="0 0 100 100"><circle class="arc" cx="50" cy="50" r="38" pathLength="100" transform="translate(100 0) scale(-1 1) rotate(-90 50 50)"/></svg>
+  <i><img data-lead src="${face(38)}" alt=""></i><i style="--a:-34deg;--d:.05s"><img src="${face(5)}" alt=""></i><i style="--a:-68deg;--d:.1s"><img src="${face(21)}" alt=""></i></span>${mark}<em>Rounding everyone up</em></span>`;
+const lapSmall = '<span class="lap s"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="38"/></svg><i><b></b></i><i style="--a:-40deg;--d:.06s"><b></b></i><i style="--a:-80deg;--d:.12s"><b></b></i></span>';
+// B: the ticket's seats fill one by one, then its stub is stamped.
+const seats = `<span class="st"><span class="st-main"><b>Saving your seat</b><span class="socks">${[5, 21, 12].map((n, i) => `<span><img style="--i:${i}" src="${face(n)}" alt=""></span>`).join('')}<span><img data-lead style="--i:3" src="${face(38)}" alt=""></span></span></span>
+  <span class="st-stub">${mark}<b>It's on</b></span></span>`;
+const seatsSmall = '<span class="sock"><b style="--i:0"></b><b style="--i:1"></b><b style="--i:2"></b></span>';
+// C: blank tickets feed out from under the bar, in the places the real ones will take.
+const roll = `<div class="roll under"><div class="belt list">${blank.repeat(7)}</div></div>`;
+const rollSmall = '<span class="mini"></span>';
+
+const fig = (kind, label, inner) => `<figure class="fr ${kind}"><figcaption>${label}</figcaption><div class="scr">${inner}</div></figure>`;
+// The small one sits in whatever was pressed; the last sample is one part of a page (the map) waiting on its own.
+const small = (s, part) => fig('small', 'After a press', `<div class="band"><span class="pill" aria-current="page">Near you${s}</span></div><span class="btn go">${s}Posting</span><span class="btn">${s}Finding places</span>
+  <div class="tk"><span class="tk-main"><span><small>Thu 7:30 pm</small><b>Trivia night</b><em>The Regent</em></span></span><span class="tk-stub on">${s}</span></div><div class="panel">${part}</div>`);
+const DIRS = [
+  ['a', 'Round the loop', 'Three faces run a lap round the mark, then the ring opens onto the page. Reads at every size.',
+    fig('phone', 'Opening the app', `<div class="wait whole field">${lap(168)}${status}</div><div class="done whole">${nav()}${list}</div>`)
+    + fig('page', 'Changing page', `${nav()}<div class="wait under">${lap(136)}</div><div class="done under">${list}</div>`) + small(lapSmall, lap(88))],
+  ['b', 'Saving seats', 'A ticket fills its seats, the stub is stamped, and the school colour floods in. The door, again.',
+    fig('phone', 'Opening the app', `<div class="wait whole field">${seats}${status}</div><div class="flood"></div><div class="done whole">${nav()}${list}</div>`)
+    + fig('page', 'Changing page', `${nav()}<div class="wait under">${seats}</div><div class="flood under"></div><div class="done under">${list}</div>`) + small(seatsSmall, seats)],
+  ['c', 'Off the roll', 'Blank tickets feed out from under the bar and the real ones print over them. Nothing jumps.',
+    fig('phone', 'Opening the app', `${nav()}${roll}${status}<div class="done under clear">${list}</div>`)
+    + fig('page', 'Changing page', `${nav(rollSmall)}${roll}<div class="done under clear">${list}</div>`) + small(rollSmall, `<div class="roll"><div class="belt list">${blank.repeat(3)}</div></div>`)],
+];
+document.getElementById('main').innerHTML = DIRS.map(([key, name, line, frames]) => `<section class="dir" data-dir="${key}">
+  <div class="head"><i>${key.toUpperCase()}</i><b>${name}</b><span>${line}</span><button type="button">Play the ending</button></div><div class="frames">${frames}</div></section>`).join('');
+
+const root = document.documentElement, still = () => 'still' in root.dataset || matchMedia('(prefers-reduced-motion: reduce)').matches;
+// The ending: what the loader does at the moment the page is ready. C waits for its belt to come to rest, so the real tickets land exactly on the blank ones.
+function finish(section) {
+  if (section.classList.contains('fin')) return;
+  const go = () => { section.classList.add('fin'); setTimeout(() => section.classList.remove('fin'), 3200); };
+  const belt = section.querySelector('.roll .belt');
+  if (!belt || still()) return go();
+  belt.addEventListener('animationiteration', function rest(event) { if (event.target !== belt) return; belt.removeEventListener('animationiteration', rest); go(); });
+}
+const sections = [...document.querySelectorAll('.dir')];
+sections.forEach(section => section.querySelector('.head button').onclick = () => finish(section));
+let auto = true, turn = 0;
+setInterval(() => { if (auto) finish(sections[turn++ % sections.length]); }, 4200);
+
+const group = (id, pick) => document.getElementById(id).addEventListener('click', event => {
+  const button = event.target.closest('button'); if (!button) return;
+  for (const each of button.parentElement.querySelectorAll('button')) each.setAttribute('aria-pressed', each === button);
+  pick(button.dataset.v);
+});
+document.getElementById('kits').insertAdjacentHTML('beforeend', KITS.map(([slug, name]) => `<button aria-pressed="${slug === 'cornell'}" data-v="${slug}">${name}</button>`).join(''));
+group('kits', slug => { root.dataset.kit = slug; const lead = face(KITS.find(kit => kit[0] === slug)[2]); for (const img of document.querySelectorAll('img[data-lead]')) img.src = lead; });
+group('motion', on => { if (on) root.dataset.still = ''; else delete root.dataset.still; });
+group('ending', on => { auto = !!on; });
+</script>
+</body>
+</html>
