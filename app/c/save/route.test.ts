@@ -58,7 +58,9 @@ it('gives a signed-in person their animal in each shape, free, with the Loop mar
   expect(cut.size).toEqual([512, 512]);
   expect((await corner(cut.png)).alpha).toBe(0);
   // The pane's preview is the same picture, small.
-  expect((await picture(await ask(ana, 'shape=tall&small=1'))).size).toEqual([360, 640]);
+  expect((await picture(await ask(ana, 'shape=tall&small=1'))).size).toEqual([261, 464]);
+  // A sticker's preview is the sticker itself: made smaller it would be shown blurred.
+  expect((await picture(await ask(ana, 'shape=sticker&small=1'))).size).toEqual([512, 512]);
   expect((await ask(ana, 'shape=poster')).status).toBe(400);
 });
 
