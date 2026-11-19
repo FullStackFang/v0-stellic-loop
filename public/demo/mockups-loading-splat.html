@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" data-kit="cornell">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The splat ending</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* How "Saving seats" ends, the moment the page is ready. The founder did not like the colour flooding in (mockups-loading.html, B) and asked
+   for something of Ink's: a splat, and a different one for Ink+. Three ways for the splat to end the wait, each shown for a member on the free
+   plan, with Ink, and with Ink+. The blot is the one already picked for faces (lib/campus/ink-blot.ts, "Seeping", in the school's two colours).
+   Kit tokens of app/c/campus.css. The dark strip, the lettered bars and the frame tabs belong to the mockup. */
+:root { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --mute: oklch(46.5% 0.012 245); --on-ink: oklch(99.4% 0.003 230); --on-ink-mute: oklch(82% 0.02 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --sunk: color-mix(in oklab, var(--ink) 10%, var(--paper));
+  --r: 22px 22px 22px 6px; --expo: cubic-bezier(.16, 1, .3, 1); }
+:root[data-kit=loop] { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); }
+:root[data-kit=cuny] { --field: oklch(88% 0.13 88); --field-shadow: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --action: oklch(38% 0.18 264); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p, ul, figure { margin: 0; padding: 0; }
+button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+.mock { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button { height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+
+main { display: grid; gap: 58px; max-width: 1080px; margin: 0 auto; padding: 30px 32px 90px; }
+.dir { display: grid; gap: 34px; }
+.head { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 10px 12px 10px 10px; border-radius: var(--r); background: var(--ink); color: var(--on-ink); }
+.head i { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--field); color: var(--ink); font-style: normal; font-size: 22px; font-weight: 820; }
+.head b { font-size: 21px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.04em; } .head span { margin-right: auto; color: var(--on-ink-mute); font-size: 14.5px; }
+.head button { height: 36px; padding: 0 16px; border-radius: 99px; background: var(--paper); color: var(--ink); font-weight: 600; font-size: 14px; }
+.frames { display: flex; flex-wrap: wrap; gap: 44px 40px; justify-content: space-between; }
+.fr { position: relative; flex: none; width: 250px; height: 440px; }
+.fr > figcaption { position: absolute; z-index: 5; top: -13px; left: 20px; padding: 3px 12px 4px; border-radius: 99px; background: var(--ink); color: var(--on-ink); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.fr > small { position: absolute; z-index: 5; bottom: -13px; left: 20px; padding: 3px 12px 4px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 12.5px; font-weight: 560; white-space: nowrap; }
+.scr { position: absolute; inset: 0; overflow: hidden; isolation: isolate; background: var(--page); border-radius: 34px; box-shadow: 0 0 0 2px var(--ink), 6px 6px 0 2px var(--field-shadow); }
+.under { position: absolute; inset: 60px 0 0; }
+.wait { display: grid; place-items: center; }
+.nav { position: relative; z-index: 3; display: flex; align-items: center; gap: 6px; height: 60px; padding: 0 14px; background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.wm { margin-right: 6px; } .wm svg { display: block; width: 36px; height: 36px; padding: 5px; border-radius: 10px 10px 10px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.pill { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 99px; font-size: 14px; font-weight: 580; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.pill[aria-current] { background: var(--ink); color: var(--field); box-shadow: none; }
+.list { display: grid; gap: 12px; padding: 22px 18px 0 16px; }
+.tk { display: grid; grid-template-columns: 1fr 58px; height: 78px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(4px 4px 0 var(--ink)); }
+.tk > span { display: grid; align-content: center; background: var(--paper); }
+.tk-main { gap: 3px; padding: 0 12px 0 16px; border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk-main small { font-size: 12px; font-weight: 620; color: var(--mute); } .tk-main b { font-size: 16.5px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; } .tk-main em { font-style: normal; font-size: 12.5px; color: var(--mute); white-space: nowrap; }
+.tk > .tk-stub { justify-items: center; border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: var(--stub); font-size: 12.5px; font-weight: 700; mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk > .tk-stub.on { background: var(--action); color: var(--paper); }
+.done { background: var(--page); visibility: hidden; } .fin .done { visibility: visible; }
+
+/* the loader, as specified: seats fill, the stub is stamped */
+.tw { position: relative; }
+.st { --t: 2.6s; --gap: .3s; display: grid; grid-template-columns: 1fr 54px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(5px 5px 0 var(--ink)); }
+.st-main { display: grid; gap: 10px; padding: 15px 13px 16px 15px; background: var(--paper); border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-main b { font-size: 17px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+.socks { display: flex; gap: 5px; }
+.socks span { position: relative; width: 31px; height: 31px; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 24%, transparent); }
+.socks img { position: relative; width: 100%; height: 100%; animation: seat var(--t) var(--expo) calc(var(--i) * var(--gap)) infinite backwards; }
+@keyframes seat { 0% { opacity: 0; transform: scale(.2); } 9%, 80% { opacity: 1; transform: none; } 86%, 100% { opacity: 0; transform: scale(.2); } }
+.st-stub { position: relative; display: grid; justify-items: center; align-content: center; gap: 4px; border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: var(--stub); color: var(--paper); --top: var(--paper); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-stub::before { content: ""; position: absolute; inset: 0; background: var(--action); animation: stamp var(--t) var(--expo) infinite; }
+.st-stub svg { position: relative; width: 30px; height: 30px; } .st-stub b { position: relative; font-size: 11.5px; font-weight: 720; white-space: nowrap; }
+.st-stub svg, .st-stub b { animation: stamped var(--t) linear infinite; }
+@keyframes stamp { 0%, 48% { clip-path: inset(100% 0 0); } 56%, 80% { clip-path: inset(0); } 86%, 100% { clip-path: inset(100% 0 0); } }
+@keyframes stamped { 0%, 49% { opacity: 0; } 55%, 80% { opacity: 1; } 85%, 100% { opacity: 0; } }
+/* at the ending the ticket holds its finished pose: every seat full */
+.fin .st * , .fin .st *::before { animation: none; }
+/* B leaves the stub bare: the splat is its stamp */
+[data-dir=b] .st-stub::before, [data-dir=b] .st-stub > * { display: none; }
+
+/* the ink: the school's two colours, as on a face with Ink */
+.splat { position: absolute; overflow: visible; pointer-events: none; opacity: 0; }
+.splat .school { fill: var(--field); } .splat .dark { fill: var(--action); } .splat .seep { fill: var(--action); opacity: .42; } .splat .spark { fill: var(--paper); }
+/* the free plan has one ink, flat */
+.free .splat .school, .free .splat .seep { display: none; }
+
+/* ---------- A · Through the blot: the splat lands on the ticket, and the page opens out of it ---------- */
+[data-dir=a] .splat { left: 50%; top: 50%; width: 252px; height: 252px; margin: -126px 0 0 -126px; z-index: 1; }
+[data-dir=a] .done { z-index: 2; }
+.fin[data-dir=a] .splat { animation: a-splat 1.15s both; }
+@keyframes a-splat { 0% { opacity: 1; transform: scale(.08); animation-timing-function: var(--expo); } 24%, 34% { opacity: 1; transform: none; animation-timing-function: cubic-bezier(.6, 0, .2, 1); } 100% { opacity: 1; transform: scale(7); } }
+.fin[data-dir=a] .tw { animation: gone .1s .2s both; } @keyframes gone { to { opacity: 0; } }
+.fin[data-dir=a] .clip { animation: a-open 1.15s both; }
+.clip { transform-origin: 125px 190px; transform: scale(0); }
+@keyframes a-open { 0%, 34% { transform: scale(0); } 34.1% { transform: scale(.5); animation-timing-function: cubic-bezier(.6, 0, .2, 1); } 100% { transform: scale(6); } }
+
+/* ---------- B · Stamped: the splat is the stamp on the stub; the ticket drops away and the page comes up ---------- */
+[data-dir=b] .splat { right: -34px; top: 50%; width: 132px; height: 132px; margin-top: -66px; z-index: 1; }
+.fin[data-dir=b] .splat { animation: b-splat .34s var(--expo) both; }
+@keyframes b-splat { from { opacity: 1; transform: scale(.06) rotate(-24deg); } to { opacity: 1; transform: none; } }
+.fin[data-dir=b] .tw { animation: b-drop .5s .62s cubic-bezier(.5, 0, .9, .4) both; }
+@keyframes b-drop { to { transform: translateY(150px) rotate(9deg); opacity: 0; } }
+.fin[data-dir=b] .done { animation: rise .45s .86s var(--expo) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+/* ---------- C · Your seat: the blot lands under your own face, the way a face with Ink sits in the app ---------- */
+[data-dir=c] .splat { inset: -70%; width: 240%; height: 240%; }
+.fin[data-dir=c] .splat { animation: b-splat .36s var(--expo) both; }
+[data-dir=c] .free .splat { display: none; }
+.fin[data-dir=c] .free .socks span:last-child { animation: c-ring .4s var(--expo) both; }
+@keyframes c-ring { from { box-shadow: 0 0 0 0 var(--paper), 0 0 0 0 var(--action); } to { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4.5px var(--action); } }
+[data-dir=c] .st-main { mask: none; border-radius: 5px 0 0 5px; }
+.fin[data-dir=c] .tw { animation: c-lift .4s .7s cubic-bezier(.5, 0, .8, .4) both; }
+@keyframes c-lift { to { transform: translateY(-18px) scale(.96); opacity: 0; } }
+.fin[data-dir=c] .done { animation: rise .45s .92s var(--expo) both; }
+
+:root[data-still] *, :root[data-still] *::before { animation-duration: .01s !important; animation-delay: 0s !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before { animation-duration: .01s !important; animation-delay: 0s !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs">
+  <mask id="m0" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="64.5" cy="60" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="50" cy="35" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><circle cx="35.5" cy="60" r="21" fill="none" stroke="#000" stroke-width="15.3"/></mask>
+  <symbol id="mark" viewBox="0 0 100 100"><g fill="none" stroke-width="9">
+    <g mask="url(#m0)"><circle cx="50" cy="35" r="21" style="stroke:var(--top, var(--action))"/></g>
+    <g mask="url(#m1)"><circle cx="35.5" cy="60" r="21" stroke="currentColor"/></g>
+    <g mask="url(#m2)"><circle cx="64.5" cy="60" r="21" stroke="currentColor"/></g></g></symbol>
+</defs></svg>
+
+<div class="mock">
+  <span><b>The splat ending</b> · how the wait ends when the page is ready, for each plan</span>
+  <div id="kits"><small>School</small></div>
+  <div id="ending"><small>Ending</small><button aria-pressed="true" data-v="1">Plays by itself</button><button aria-pressed="false" data-v="">Only when pressed</button></div>
+</div>
+<main id="main"></main>
+
+<script>
+/* The blot of lib/campus/ink-blot.ts, as it is in the app, with its outlines kept as numbers so one can be used to open the page. */
+const TURN = Math.PI * 2, STEPS = 96;
+const hash = text => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+function run(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const out = (angle, far) => [Math.cos(angle) * far, Math.sin(angle) * far], fix = n => Math.round(n * 10) / 10;
+function pool(next, r) {
+  const spin = next() * TURN, ran = next() * TURN, rounds = [[0, 0, r]];
+  for (let i = 0; i < 6; i++) rounds.push([...out(spin + (i + (next() - .5) * .4) / 6 * TURN, r - 20 + next() * 4), 22 + next() * 4]);
+  rounds.push([...out(ran, r + 1), 11], [...out(ran, r + 10), 6]);
+  return { rounds, ran };
+}
+const sway = (waves, angle) => waves.reduce((sum, [times, size, shift]) => sum + Math.sin(angle * times + shift) * size, 0);
+const drawn = (reach, k = 1, x = 0, y = 0) => 'M' + reach.map((far, at) => { const [px, py] = out(at / STEPS * TURN, far * k); return fix(px + x) + ' ' + fix(py + y); }).join('L') + 'Z';
+function edge(rounds, next) {
+  let reach = Array.from({ length: STEPS }, (_, at) => {
+    const angle = at / STEPS * TURN; let far = 0;
+    for (const [x, y, r] of rounds) { const from = Math.hypot(x, y), off = angle - Math.atan2(y, x), under = r * r - (from * Math.sin(off)) ** 2; if (under >= 0) far = Math.max(far, from * Math.cos(off) + Math.sqrt(under)); }
+    return far;
+  });
+  for (let pass = 0; pass < 2; pass++) reach = reach.map((far, at) => (reach[(at + STEPS - 1) % STEPS] + far * 2 + reach[(at + 1) % STEPS]) / 4);
+  const waves = [[2, 2], [3, 1.6], [5, 1.1], [13, .5], [29, .3]].map(([times, size]) => [times, size, next() * TURN]);
+  return reach.map((far, at) => far + sway(waves, at / STEPS * TURN));
+}
+function crept(reach, next) { const waves = [[4, 1.3], [9, .9], [17, .5]].map(([times, size]) => [times, size, next() * TURN]); return reach.map((far, at) => far + 3.4 + sway(waves, at / STEPS * TURN)); }
+const thrown = (next, toward, from, count, wide = 1.2) => Array.from({ length: count }, () => { const [x, y] = out(toward + (next() - .5) * wide, from + 2 + next() * 22); return [fix(x), fix(y), fix(2 + next() * next() * 2.8)]; });
+function inkBlot(seed) {
+  const next = run(hash(seed)), wide = pool(next, 55), middle = pool(next, 41);
+  const blot = { schoolDrops: thrown(next, wide.ran + 2.5 + next() * 1.5, 68, 3), darkDrops: thrown(next, middle.ran + 2.2 + next() * 1.8, 58, 5), school: edge(wide.rounds, next) }; blot.dark = edge(middle.rounds, next); blot.seep = crept(blot.dark, next);
+  // A splat throws more than a blot that has dried on a face: drops all the way round. (New for the ending; not in the app.)
+  blot.flung = thrown(next, 0, 66, 9, TURN);
+  return blot;
+}
+const SPARK = 'M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z';
+const drops = rounds => rounds.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('');
+const sparks = rounds => rounds.map(([x, y, r]) => `<path d="${SPARK}" transform="translate(${x} ${y}) scale(${fix(r / 27 * 2.6)})"/>`).join('');
+/* Free: one flat ink. Ink: the member's own blot, two inks. Ink+: the same blot, the drops it throws are sparks, and one is cut out of its middle. */
+function splat(tier, seed) {
+  const blot = inkBlot(seed), plus = tier === 'plus', cut = plus ? SPARK.replace(/-?\d+(\.\d+)?/g, n => fix(n * .9)) : '';
+  return `<svg class="splat" viewBox="-90 -90 180 180" aria-hidden="true"><g class="school"><path d="${drawn(blot.school)}"/>${plus ? sparks(blot.schoolDrops) : drops(blot.schoolDrops)}</g>
+    <path class="seep" fill-rule="evenodd" d="${drawn(blot.seep)}${cut}"/><g class="dark"><path fill-rule="evenodd" d="${drawn(blot.dark)}${cut}"/>${plus ? sparks([...blot.darkDrops, ...blot.flung]) : drops(tier === 'free' ? blot.darkDrops.slice(0, 3) : [...blot.darkDrops, ...blot.flung.slice(0, 4)])}</g></svg>`;
+}
+
+const KITS = [['cornell', 'Cornell', 38], ['columbia', 'Columbia', 39], ['nyu', 'NYU', 40], ['cuny', 'CUNY', 12], ['loop', 'Loop', 5]];
+const face = n => `/animals/${String(n).padStart(2, '0')}.png`;
+const mark = '<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#mark"/></svg>';
+const nav = `<div class="nav"><span class="wm">${mark}</span><span class="pill" aria-current="page">This week</span><span class="pill">Near you</span></div>`;
+const EVENTS = [['Thu 7:30 pm', 'Trivia night', 'The Regent', 0], ['Fri 5:00 pm', 'Pickup soccer', 'North field', 1], ['Sat 10:00 am', 'Market run', 'The landing', 2], ['Sat 8:00 pm', 'Board games', 'Second floor', 0]];
+const list = `<div class="list">${EVENTS.map(([when, name, place, more]) => `<div class="tk"><span class="tk-main"><small>${when}</small><b>${name}</b><em>${place}</em></span><span class="tk-stub${more ? '' : ' on'}">${more ? more + ' more' : "It's on"}</span></div>`).join('')}</div>`;
+const TIERS = [['free', 'Free', 'Sam', 21, 'One flat ink'], ['ink', 'Ink', 'Maya', 12, 'Your own blot, two inks'], ['plus', 'Ink+', 'Josh', 38, 'Your blot, throwing sparks']];
+const ticket = (mine, inSeat = '') => `<span class="st"><span class="st-main"><b>Looping you in…</b><span class="socks">${[5, 8, 17].map((n, i) => `<span><img style="--i:${i}" src="${face(n)}" alt=""></span>`).join('')}<span>${inSeat}<img style="--i:3" src="${face(mine)}" alt=""></span></span></span>
+  <span class="st-stub">${mark}<b>It's on</b></span></span>`;
+function frame(dir, [tier, name, who, mine, note], at) {
+  const ink = splat(tier, who), id = `clip-${dir}-${tier}`, blot = inkBlot(who);
+  // A opens the page through the splat's own outline: the wide spill, or for the free plan its one ink. 1.4 is the splat's size on screen (252px for 180 units).
+  const clip = dir !== 'a' ? '' : `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><path class="clip" d="${drawn(tier === 'free' ? blot.dark : blot.school, 1.4, 125, 190)}"/></clipPath></svg>`;
+  const wait = dir === 'a' ? `<div class="wait under"><span class="tw">${ticket(mine)}</span>${ink}</div>` : dir === 'b' ? `<div class="wait under"><span class="tw">${ticket(mine)}${ink}</span></div>` : `<div class="wait under"><span class="tw">${ticket(mine, ink)}</span></div>`;
+  return `<figure class="fr ${tier}"><figcaption>${name}</figcaption><div class="scr">${clip}${nav}${wait}<div class="done under"${dir === 'a' ? ` style="clip-path:url(#${id})"` : ''}>${list}</div></div><small>${note}</small></figure>`;
+}
+const DIRS = [['a', 'Through the blot', 'The splat lands on the ticket, and the page opens out of the ink.'], ['b', 'Stamped', 'The splat is the stamp on the stub. The ticket drops away and the page comes up.'], ['c', 'Your seat', 'The blot lands under your own face, as it sits in the app. Quietest of the three.']];
+document.getElementById('main').innerHTML = DIRS.map(([key, name, line]) => `<section class="dir" data-dir="${key}"><div class="head"><i>${key.toUpperCase()}</i><b>${name}</b><span>${line}</span><button type="button">Play the ending</button></div>
+  <div class="frames">${TIERS.map((tier, at) => frame(key, tier, at)).join('')}</div></section>`).join('');
+
+const root = document.documentElement, sections = [...document.querySelectorAll('.dir')];
+function finish(section) { if (section.classList.contains('fin')) return; section.classList.add('fin'); setTimeout(() => section.classList.remove('fin'), 2900); }
+sections.forEach(section => section.querySelector('.head button').onclick = () => finish(section));
+let auto = true, turn = 0;
+setTimeout(() => { if (auto) finish(sections[turn++]); }, 1900);
+setInterval(() => { if (auto) finish(sections[turn++ % sections.length]); }, 3700);
+const group = (id, pick) => document.getElementById(id).addEventListener('click', event => {
+  const button = event.target.closest('button'); if (!button) return;
+  for (const each of button.parentElement.querySelectorAll('button')) each.setAttribute('aria-pressed', each === button);
+  pick(button.dataset.v);
+});
+document.getElementById('kits').insertAdjacentHTML('beforeend', KITS.map(([slug, name]) => `<button aria-pressed="${slug === 'cornell'}" data-v="${slug}">${name}</button>`).join(''));
+group('kits', slug => { root.dataset.kit = slug; });
+group('ending', on => { auto = !!on; });
+</script>
+</body>
+</html>

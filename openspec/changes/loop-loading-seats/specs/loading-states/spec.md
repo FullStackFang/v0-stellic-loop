@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: One loader, in two sizes
-Every wait the app shows SHALL be drawn with the same loader, "Saving seats", in one of two sizes. The ticket SHALL be a ticket with four seats that fill one at a time with faces, and a stub that is stamped "It's on" once the seats are full, after which it starts again. The small one SHALL be three small faces that fill in one at a time and start again. Both SHALL take their colours from the school colours the page is showing. Pages on retired looks (`/emba`, `/b`, `/p`, `/trip`, `/trips`) are outside this requirement.
+Every wait the app shows SHALL be drawn with the same loader, "Saving seats", in one of two sizes. The ticket SHALL be a ticket with four seats that fill one at a time with faces, and a stub that stays blank while it waits; once the seats are full it starts again. The small one SHALL be three small faces that fill in one at a time and start again. Both SHALL take their colours from the school colours the page is showing. Pages on retired looks (`/emba`, `/b`, `/p`, `/trip`, `/trips`) are outside this requirement.
 
 #### Scenario: The ticket on a Cornell page
 - **WHEN** the ticket shows on a page wearing Cornell's colours
-- **THEN** its stub is stamped in Cornell's action colour
+- **THEN** its stub is a light tint of Cornell's field colour and its edges are Cornell's ink colour
 
 #### Scenario: The same loader everywhere
 - **WHEN** a person opens a campus page, opens a group page, and presses "I'm in"
@@ -141,14 +141,56 @@ The loader SHALL NOT appear for a wait shorter than 150 milliseconds, so a fast 
 - **THEN** the button never shows the small one
 
 ### Requirement: Still under reduced motion
-When the person has asked for reduced motion, the loader SHALL NOT move: the ticket SHALL stand with its seats full and its stub stamped, the small one with its three faces shown, and the line SHALL still be shown.
+When the person has asked for reduced motion, the loader SHALL NOT move: the ticket SHALL stand with its seats full and its stub blank, the small one with its three faces shown, and the line SHALL still be shown. There SHALL be no ending.
 
 #### Scenario: Reduced motion on a cold open
 - **WHEN** a person with reduced motion set opens a campus page
-- **THEN** the ticket shows with four faces and a stamped stub, not moving, reading "Looping you in…"
+- **THEN** the ticket shows with four faces and a blank stub, not moving, reading "Looping you in…"
+
+#### Scenario: Reduced motion when the page arrives
+- **WHEN** the page that person was waiting for is ready
+- **THEN** the ticket is replaced by the page with no splat and no movement
+
+### Requirement: A page-sized wait ends with an ink splat
+When a wait that showed the ticket for a whole page (opening the app, changing page, a groups page, a shared link) is over, and the ticket had been visible for at least 400 milliseconds, an ink splat SHALL land on the ticket's stub, and the ticket SHALL then drop away with the splat on it. The page SHALL be shown and usable from the moment it is ready; the ending SHALL NOT delay it or take presses. The whole ending SHALL take under one second. A wait in one part of a page, the slow ticket, the sign-in card and a pressed button SHALL NOT end with a splat.
+
+#### Scenario: A slow page change
+- **WHEN** a person presses "Near you" and the page takes a second
+- **THEN** as the page appears, a splat lands on the ticket's stub and the ticket drops away over the page
+
+#### Scenario: The page can be used during the ending
+- **WHEN** the ending is playing over a page
+- **THEN** a press on the page beneath reaches the page
+
+#### Scenario: A ticket that was barely seen
+- **WHEN** the ticket was visible for 200 milliseconds before the page was ready
+- **THEN** the page replaces it with no splat
+
+#### Scenario: A part of a page
+- **WHEN** Near you finishes finding the person
+- **THEN** the ticket over the map goes with no splat
+
+### Requirement: The splat shows the member's plan
+The splat SHALL be drawn by plan. On the free plan, and wherever the viewer is not known, it SHALL be a small splat of the plain ink colour with no school colour. With Ink it SHALL be the member's own blot, the same shape as the blot under their face, in the school's two colours. With Ink+ it SHALL be that blot with a third, bright colour: a four-point spark in its middle and sparks thrown around it. Thrown drops SHALL NOT cover the loader's line or its faces. The splat SHALL be flat shapes, with no blur or gradient.
+
+#### Scenario: A free member
+- **WHEN** a member on the free plan waits for a page at Cornell
+- **THEN** the splat is one dark shape with no red in it
+
+#### Scenario: A member with Ink
+- **WHEN** a member with Ink waits for a page at Cornell
+- **THEN** the splat is their own blot in Cornell's light and dark red, with no spark
+
+#### Scenario: A member with Ink+
+- **WHEN** a member with Ink+ waits for a page at Cornell
+- **THEN** the splat is their own blot with a yellow spark in the middle and yellow sparks around it
+
+#### Scenario: A visitor who is not signed in
+- **WHEN** a signed-out visitor opens a shared link slowly
+- **THEN** the splat is the free one
 
 ### Requirement: The wait is announced once
-Each wait SHALL be announced to a screen reader once, with the loader's line or, for a button, the button's waiting word. The faces SHALL be hidden from screen readers. A page change that shows both the small one on the link and the ticket in the page SHALL be announced once, not twice.
+Each wait SHALL be announced to a screen reader once, and the ending SHALL NOT be announced, with the loader's line or, for a button, the button's waiting word. The faces SHALL be hidden from screen readers. A page change that shows both the small one on the link and the ticket in the page SHALL be announced once, not twice.
 
 #### Scenario: A page change with a screen reader
 - **WHEN** a screen reader user presses "Near you"

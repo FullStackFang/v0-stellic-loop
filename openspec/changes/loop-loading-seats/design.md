@@ -22,7 +22,9 @@ What the code does today, read on 2026-11-19 on `feat/campus-one-line`:
 - No change to any action, read, or permission. No new dependency.
 
 **Non-Goals:**
-- The ending from the first mockup (the stub stamps and the school colour floods in as the page arrives). A Suspense fallback is removed the moment the page is ready, so an ending needs its own mechanism. See Open Questions.
+- The ending from the first mockup (the school colour flooding in). The founder did not like it; the ending is the splat of D13.
+- Selling or granting Ink+. D13 only draws its splat.
+- An ending on a part of a page or on a button. Those waits end by showing what they were waiting for.
 - The older pages on retired looks (`/emba`, `/b`, `/p`, `/trip`, `/trips`), which may be cut.
 - Making any wait shorter. This change is about what a wait looks like.
 - Moving `CampusBar` into a layout.
@@ -83,9 +85,9 @@ The existing loading screen is held back 150 ms by an animation delay so a fast 
 For buttons this means the button is disabled at once and shows the faces 150 ms later.
 
 ### D7. Motion
-Ported from the mockup: only `transform`, `opacity` and `clip-path` are animated. The ticket's cycle is 4.2 s (a seat every 0.45 s, the stamp at 40%); the small one's is 2.2 s. Easing is the campus `--cs-expo`, with no overshoot.
+Ported from the mockup: only `transform`, `opacity` and `clip-path` are animated. The ticket's cycle is 4.2 s (a seat every 0.45 s; the stub stays blank, D13); the small one's is 2.2 s. Easing is the campus `--cs-expo`, with no overshoot.
 
-Under `prefers-reduced-motion` every animation is off and the resting style is the finished pose: seats full, stub stamped. The resting style is the default in the CSS and the animation takes it away, so reduced motion needs no extra rules beyond `animation: none`.
+Under `prefers-reduced-motion` every animation is off and the resting style is the finished pose: seats full, stub blank. There is no ending under reduced motion (D13). The resting style is the default in the CSS and the animation takes it away, so reduced motion needs no extra rules beyond `animation: none`.
 
 ### D8. The slow ticket is driven by the wait's expected length, and ends on a prop
 `slow` stretches the cycle so three seats fill across about 25 s and does not repeat; the last seat is ringed and empty. When `own-face.tsx` gets its answer it passes the new picture as `filled`; the seat fills, and after about 0.6 s the component moves to its `done` state. If the wait runs past the 25 s the ticket simply rests with three seats full.
@@ -105,6 +107,34 @@ The per-place lines drawn in the placements mockup ("Opening Near you", "Finding
 
 Buttons are a separate thing (D10): the small one has no line, so a button keeps its own short word.
 
+### D13. The ending is an ink splat on the stub, drawn above the page
+Picked by the founder on 2026-11-19 from `public/demo/mockups-loading-splat-2.html`, row A ("A third ink"), after `mockups-loading-splat.html` ("Stamped is good, but perhaps smaller and higher quality").
+
+**What it is.** The stub is blank for the whole wait; the mockup's looping "It's on" stamp is gone, because the splat is the stamp. When the wait is over: the splat lands on the stub (0.24 s), its drops leave it one after another (16 ms apart), the ticket takes a small knock, and the ticket drops away with the splat on it. The mockup holds the splat for 0.75 s before the drop so it can be looked at; the app holds 0.3 s, about 0.8 s in all, since the page is already there underneath.
+
+**The three splats.** All are plain filled shapes, no filters or gradients, about 76 px across on a 54 px stub. Drops are thrown to the right only, away from the line and the faces.
+- Free: the dark pool alone, 62 px, filled with `--cs-ink`, three drops.
+- Ink: `inkBlot(seed)` as it is under the member's face: the wide spill in `--cs-field`, the seep, the dark pool in `--cs-action`, with a few more thrown drops.
+- Ink+: the Ink splat, plus the four-point spark of `InkMark` filled in the middle and every thrown drop drawn as a spark, in a new token `--cs-third` (Cornell and NYU a warm yellow, Columbia a gold, CUNY an orange, Loop a pink; the mockup's `--hot` values).
+
+The seed is the one the member's face blot uses, so the splat is their own blot. `lib/campus/ink-blot.ts` gains the thrown drops (`flung`) as a separate function so the blot under a face does not change.
+
+**Who gets which.** The plan travels with the face: groups pass it from the layout, campus pages remember it in `last-bar` (D3) beside the face (`viewer.asked` is "has Ink" today). Where the viewer is not known (cold open, shared links, sign-in) the splat is the Free one. Nothing in the app says "Ink+" yet, so the component takes `plan: 'free' | 'ink' | 'plus'` and no caller passes `'plus'` until Ink+ exists.
+
+**How it outlives the fallback.** A Suspense fallback is removed the instant the page is ready, so the ending cannot live in it. A client component, `components/loading/seats-ending.tsx`, is mounted once in `app/c/layout.tsx` and `app/groups/layout.tsx`. `SeatsTicket` at page size registers itself with a small module (`components/loading/ending.ts`) when it has been visible for 400 ms; when it unmounts it hands over its place on screen (`getBoundingClientRect`), its face and its plan. `SeatsEnding` then draws a copy of the finished ticket at that place in a fixed layer with `pointer-events: none`, plays the ending, and removes itself. The page beneath is live the whole time.
+
+Rules that follow from this:
+- A wait that was not visible for 400 ms has no ending (a splat on a ticket nobody saw is noise).
+- Only page-sized waits end this way (whole screen, changing page, groups, shared links). A part of a page, the slow ticket (which has its own ending, D8), the sign-in card and buttons do not.
+- Under reduced motion `SeatsEnding` draws nothing.
+- If the layer has not hydrated when a cold open finishes, there is no ending. That is acceptable.
+- The copy is `aria-hidden`; the ending is never announced.
+
+Alternatives considered:
+- View Transitions between the fallback and the page. Rejected for now: the API's state in this Next version was not checked, and it would animate the whole page, which is what the founder did not want.
+- Holding the page back until the ending has played. Rejected: it makes every wait longer.
+- Row B (blue-black ink for Ink+) and row C (three splats). Not picked.
+
 ### D11. Where it is built
 Two other sessions have uncommitted work in this folder (no-collisions reported it on 2026-11-19), and `components/campus/screen.tsx` and `app/c/campus.css` are the busiest files in the repo. The work is done in a new worktree on its own branch, and merged when those sessions have landed.
 
@@ -116,7 +146,10 @@ Two other sessions have uncommitted work in this folder (no-collisions reported 
 - [The loader could flash on fast pages] → D6. Checked by throttling in the browser and by a test on the stylesheet's delay.
 - [Four `<img>` per ticket, three per button] → They are the same small PNGs already used across the page and are cached after first use; on a cold open they are the only images. The first seat's picture gets `fetchpriority="high"`; no preloading of the rest.
 - [The slow ticket guesses 25 s] → It rests when it runs out and ends on the real answer (D8); the page still says "about half a minute".
-- [Differences from the mockup the founder approved] → Listed so they are not a surprise: (1) every ticket reads "Looping you in…" where the mockup had a line per place (D12), so "After signing in" is the same screen as a cold open; (2) the ticket's map box shows the ticket only until the map's frame reports it has loaded, which is when the frame arrives and not when its tiles finish; (3) no ending animation.
+- [Differences from the mockup the founder approved] → Listed so they are not a surprise: (1) every ticket reads "Looping you in…" where the mockup had a line per place (D12), so "After signing in" is the same screen as a cold open; (2) the ticket's map box shows the ticket only until the map's frame reports it has loaded, which is when the frame arrives and not when its tiles finish; (3) the ending holds the splat for 0.3 s, not the mockup's 0.75 s, and plays over the page that has already arrived (D13).
+- [The ending is drawn over a live page] → It is a small ticket-sized layer that takes no presses and is gone in under a second; it is skipped for short waits and under reduced motion (D13).
+- [The splat's colours on each school] → Cornell's red can read like blood, as the founder already accepted for face blots; the third ink is faint on Cornell's light stub outside the splat. Checked per school in task 9.6.
+- [The cold open is on the school colour] → the splat there is the Free one in dark ink, which reads on every school's colour.
 - [Tests that match today's words will fail] → They are updated in the same tasks that change the words; the specs and tests found on 2026-11-19 do not assert any of the six phrases, so this is expected to be small.
 
 ## Migration Plan
@@ -125,7 +158,7 @@ No data and no flag. It ships with a deploy and is undone by reverting the commi
 
 ## Open Questions
 
-1. **The ending.** The first mockup shows the stub stamping and the school colour flooding in as the page arrives. Wanted? If so it is its own change, likely with View Transitions.
+1. **The ending.** Settled: D13. Still open inside it: the exact shade of the third ink per school (mine, from the mockup), and whether Free members should get a splat at all or it should be an Ink perk.
 2. **The words on waiting buttons.** The ticket's line is settled (D12). The button words "Posting", "Reading", "Saving", "Subscribing", "Keeping", "Marking" are my wording; the founder saw three of them in the mockup and did not comment on them.
 3. **Signed-out visitors.** All four seats are stock animals. Should the last seat be an empty, ringed seat instead, as a nudge to sign in?
 4. **The bar into a layout.** Do it next, or leave the remembered copy (D3) in place?

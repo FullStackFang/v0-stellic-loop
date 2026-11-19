@@ -79,13 +79,13 @@ it('gives the people who run a group a menu on its row, and a member none, with 
   expect(screen.queryByRole('button', { name: /^Archive|^Rename|^Restore/ })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Hide the groups inside Team 1' })).toBeInTheDocument();
   cleanup();
-  // The archived list is one statement, and is not read at all for a member.
+  // The archived list is one statement, read for anyone who may start a group of their own: a member as much as the owner.
   const c = counting(t.db);
   setDb(c.db);
   try {
     const member = await c.of(async () => { await withPortalTestSession(f.member, () => GroupsPage()); });
     const owner = await c.of(async () => { await withPortalTestSession(f.owner, () => GroupsPage()); });
-    expect(owner).toBe(member + 1);
+    expect(owner).toBe(member);
   } finally { setDb(t.db); }
 });
 

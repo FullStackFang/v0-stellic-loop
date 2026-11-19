@@ -28,14 +28,15 @@ it('atomically creates an isolated root, owner and unique address for an allowli
   expect((await t.db.query('select id from emba_organization')).rows).toHaveLength(1);
 });
 
-it('denies nonallowlisted, unverified and delegated identities without creating a tenant', async () => {
+it('denies unverified and delegated identities without creating a tenant, and lets anyone verified start their own', async () => {
   const outsider = await person('other@example.test');
   const delegated = await person('owner@example.test', 'claude');
   vi.stubEnv('LOOP_PILOT_OWNER_SUBJECTS', delegated.subject);
-  for (const principal of [outsider, delegated, { ...delegated, clientId: null, verifiedEmail: null }]) {
+  for (const principal of [delegated, { ...delegated, clientId: null, verifiedEmail: null }]) {
     await expect(createWorkspace(t.db, principal, { name: 'Hidden', description: '', namespace: 'hidden' })).rejects.toThrow('forbidden');
   }
   expect((await t.db.query('select id from emba_organization')).rows).toHaveLength(0);
+  expect(await createWorkspace(t.db, outsider, { name: 'Mine', description: '', namespace: 'mine' })).toMatchObject({ namespace: 'mine' });
 });
 
 it('rolls back all records when audit storage fails', async () => {
