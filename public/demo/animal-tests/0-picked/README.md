@@ -1,6 +1,6 @@
 # School mascots: where this stands
 
-Last worked on 2026-11-18. Stopped on purpose by the founder; do not draw or build more unless asked.
+Last worked on 2026-11-19: the founder had Baruch and Brooklyn added to the app and expects to make a few more.
 
 ## Picked (the pictures in this folder)
 
@@ -16,7 +16,8 @@ Every try, picked or not, is in the sibling folders and shows on `/demo/mockups-
 
 ## In the app
 
-Cornell, Columbia and NYU only, as `public/animals/38.png`, `39.png`, `40.png` (faces 37, 38, 39).
+Cornell, Columbia, NYU, Baruch and Brooklyn, as `public/animals/38.png` to `42.png` (faces 37 to 41).
+Baruch and Brooklyn both belong to `cuny`: the app has CUNY as one campus, so all of CUNY may pick either.
 They are the "School" category: free to people of that school, hidden from everyone else, shown first in the
 picker with a ring and a graduation cap in the action colour. The admin can move them under `/c/admin` → Animals.
 
@@ -24,16 +25,14 @@ picker with a ring and a graduation cap in the action colour. The admin can move
 - The rule: `picks`, `schoolOfPerson`, `setBuiltTier` in `lib/campus/animal-tiers.ts`; `pickFace` in `lib/campus/people.ts`
 - The look: `SchoolMark` in `components/campus/ink-mark.tsx`, `.cs-pet.school` in `app/c/campus.css`
 - Tests: "offers a school's own animal to people of that school alone" in `app/c/campus-screen.test.tsx`
-- No migration. As of 2026-11-18 this was uncommitted and not deployed; check `git log` and `git status`.
-
-Baruch and Brooklyn are NOT in the app.
+- No migration.
 
 ## Not done
 
 - CUNY colleges not drawn: City College beavers, Staten Island dolphins, Hunter hawks, John Jay bloodhounds,
   Lehman Lightning, Medgar Evers cougars, City Tech yellow jackets, Queens Knights, York cardinals.
 - Two are not animals. Ideas only, not agreed: Queens = a horse in a knight's helmet, Lehman = a lightning bug.
-- Open question: the app has CUNY as one campus. Offer every CUNY mascot to all of CUNY, or each only to its
+- Open question: every CUNY mascot is offered to all of CUNY for now. Should each go only to its
   college's email (such as `baruch.cuny.edu`)?
 - Not checked: the School ring and cap have not been looked at in a browser.
 
@@ -56,7 +55,8 @@ node --import tsx scripts/animal-test.ts ccny-beaver none 'public/demo/animal-te
 - Copy the picked one into this folder.
 - To put it in the app: `node --import tsx scripts/animal-keep.ts public/demo/animal-tests/0-picked/<name>.png <next number>`
   (redraws it on a transparent ground at 192px), then add its name to `PREMIUM` and its school to `MASCOT`
-  in `lib/campus/animals.ts`, and update the counts in the tests.
+  in `lib/campus/animals.ts` (the next number is 43, face 42), and update the counts in
+  `app/c/campus-screen.test.tsx` (search for "Animals ?42", "toHaveLength(42)", "School 5" and the offered lists).
 
 ## What the founder asked for
 
