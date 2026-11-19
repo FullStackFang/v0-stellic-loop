@@ -9,7 +9,7 @@ import { findCampus } from '@/lib/campus/listings';
 import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
 import { campusScreen } from '@/lib/campus/screen';
 import { Suspense } from 'react';
-import { campusViewer, signInHref } from '@/lib/campus/session';
+import { campusViewer, lookingAt, signInHref } from '@/lib/campus/session';
 import { OnYou } from '../on-you';
 
 export const dynamic = 'force-dynamic';
@@ -17,11 +17,12 @@ export const metadata: Metadata = { title: 'Ink · Loop' };
 
 /**
  * The Ink page: the same top bar as "This week", and under it the approved mockup, which fills the rest of the window
- * and scrolls on its own. Open to signed-out visitors. The bar is drawn from the person's own campus screen, so it
+ * and scrolls on its own. Open to signed-out visitors. The bar is drawn from the screen of the campus the person was last
+ * looking at, or else their own, so "This week" leads back there, and it
  * names the same groups and shows the same face.
  */
 export default async function InkPage() {
-  const viewer = await campusViewer(), campus = viewer?.campus ?? await findCampus(db(), DEFAULT_CAMPUS);
+  const viewer = await campusViewer(), campus = await lookingAt() ?? viewer?.campus ?? await findCampus(db(), DEFAULT_CAMPUS);
   if (!campus) notFound();
   const screen = await campusScreen(db(), campus, viewer && { personId: viewer.personId, admin: viewer.admin, groups: [] });
   return <div className="cs cs-inkpage">

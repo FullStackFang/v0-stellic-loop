@@ -169,6 +169,19 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 .mine label { display: block; margin-bottom: 10px; font-size: 15px; font-weight: 640; }
 .perks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 30px; } .perks span { padding: 8px 18px 9px; border-radius: 99px; font-size: 17px; font-weight: 680; letter-spacing: -0.02em; background: var(--ink); color: var(--hot); }
 
+/* Save your picture: the three shapes it comes in, each with the Loop mark until Ink+ takes it off */
+.take { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .6fr) minmax(0, 1fr); gap: 16px; align-items: end; } .take figure { display: grid; justify-items: center; gap: 12px; }
+.shot { position: relative; width: 100%; display: grid; justify-items: center; align-content: center; border-radius: 16px 16px 16px 5px; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink); --lit: var(--paper); overflow: hidden; }
+.shot.sq { aspect-ratio: 1; } .shot.tall { aspect-ratio: 9 / 16; padding-bottom: 16%; } .shot img { width: 74%; } .shot.tall img { width: 96%; margin-top: 30%; }
+.shot.tall b { font-size: clamp(10px, 1vw, 13px); font-weight: 740; letter-spacing: -0.04em; }
+.shot.cut { aspect-ratio: 1; background: none; box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ink) 30%, transparent); background: repeating-conic-gradient(color-mix(in oklab, var(--ink) 7%, var(--card)) 0 25%, var(--card) 0 50%) 0 0 / 18px 18px; }
+.shot.cut img { width: 80%; filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 3px 0 color-mix(in oklab, var(--ink) 22%, transparent)); }
+.lk { display: flex; align-items: center; gap: 3px; margin-top: 2px; font-size: clamp(11px, 1.1vw, 14px); font-weight: 720; letter-spacing: -0.04em; transition: opacity .25s, scale .25s var(--expo); } .lk svg { width: 1.5em; height: 1.5em; }
+.shot.tall .lk { position: absolute; inset: auto 0 4%; justify-content: center; font-size: 9px; }
+.shot.cut .lk { position: absolute; right: 9%; bottom: 9%; padding: 4px; border-radius: 50%; background: var(--ink); color: var(--paper); --lit: var(--field); box-shadow: 0 0 0 3px #fff; font-size: clamp(13px, 1.4vw, 18px); }
+#save.bare .lk { opacity: 0; scale: .6; }
+#save .cycle { box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--ink); } #save .cycle button { height: 40px; padding: 0 18px; font-size: 15.5px; }
+
 /* compare + questions */
 .rest { padding: 110px 0; } .rest h2 { font-size: clamp(48px, 7vw, 112px); margin-bottom: 44px; }
 .cmp { border-radius: var(--r); background: var(--paper); box-shadow: 7px 7px 0 var(--field-shadow); overflow: hidden; }
@@ -296,6 +309,18 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   </div>
 </div></section>
 
+<section class="band b-ink flip" id="take"><div class="wrap">
+  <div class="say"><h2 class="d">Take it with you.</h2><p>Save your picture, sized for anywhere. Free with the Loop mark. Ink+ takes the mark off.</p></div>
+  <div class="show" id="save">
+    <div class="take">
+      <figure><div class="shot sq"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Profile</figcaption></figure>
+      <figure><div class="shot tall"><img src="../animals/37.png" alt=""><b>Ana Lopez</b><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Lock screen</figcaption></figure>
+      <figure><div class="shot cut"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg></span></div><figcaption class="lab">Sticker</figcaption></figure>
+    </div>
+    <div class="row"><div class="cycle" id="mark" role="group" aria-label="Loop mark"><button aria-pressed="true">With the mark</button><button aria-pressed="false" data-bare>No mark<i>Ink+</i></button></div><span id="mark-says">Free for everyone</span></div>
+  </div>
+</div></section>
+
 <section class="rest" id="compare"><div class="wrap">
   <h2 class="d">Side by side.</h2>
   <div class="cmp"><table><thead><tr><th></th><th>Loop</th><th>Ink</th><th>Ink+</th></tr></thead><tbody id="rows"></tbody></table></div>
@@ -373,7 +398,7 @@ document.querySelector('.cycle').addEventListener('click', event => {
   for (const each of document.querySelectorAll('.price [data-month]')) { each.textContent = each.dataset[hit.dataset.cycle]; each.classList.remove('roll'); void each.offsetWidth; each.classList.add('roll'); }
 });
 
-const ROWS = [['Post, join, show up', 1, 1, 1], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1], ['Animals from a pet photo', '1', '3 a term', '10 a term'],
+const ROWS = [['Post, join, show up', 1, 1, 1], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With the Loop mark', 'With the Loop mark', 'No mark'],
   ['Give an animal', 0, '1 a month', '4 a month'], ['Boost a group', 0, '1 a month', '3 a month'], ['Matched rewards at partner places', 0, 1, 1], ['Join plans at other schools', 0, 1, 1],
   ['Wider map, any number of tags', 0, 1, 1], ['Connect your assistant', 0, 1, 1], ['Friends who get Ink from you', 0, 0, '2'], ['Your own stamp on plans you start', 0, 0, 1]];
 document.getElementById('rows').innerHTML = ROWS.map(([name, ...cells]) => `<tr><td>${name}</td>${cells.map(v => `<td>${v === 1 ? `<span class="ck">${CHECK}</span>` : v === 0 ? '<span class="ck no"></span>' : v}</td>`).join('')}</tr>`).join('');
@@ -387,6 +412,11 @@ document.getElementById('give').addEventListener('click', event => {
 document.getElementById('place').addEventListener('click', event => {
   document.querySelectorAll('#boost .dots i')[3].className = 'boost'; document.getElementById('need').textContent = '4 of 5'; document.getElementById('prize').textContent = 'Two coffees each'; document.getElementById('match').hidden = false;
   event.target.disabled = true; event.target.textContent = 'Boost placed'; document.getElementById('bleft').textContent = 'Next boost Dec 1';
+});
+document.getElementById('mark').addEventListener('click', event => {
+  const hit = event.target.closest('button'); if (!hit) return; const bare = 'bare' in hit.dataset;
+  for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit);
+  document.getElementById('save').classList.toggle('bare', bare); document.getElementById('mark-says').textContent = bare ? 'With Ink+' : 'Free for everyone';
 });
 document.getElementById('mine-i').addEventListener('input', event => { document.getElementById('mine-b').textContent = event.target.value || 'Your plan'; });
 </script>

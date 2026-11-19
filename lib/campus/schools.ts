@@ -27,5 +27,12 @@ export const SWAP_TICKET: Record<string, { title: string; line: string; mark: 't
   'cornell-tech': { title: 'New York', line: 'Cornell Tech and Roosevelt Island', mark: 'tram' },
 };
 
+/**
+ * The cookie that names the campus this browser was last looking at. The campus screen leaves it
+ * (components/campus/looking-at.tsx) and the pages that are not a campus's own read it (lookingAt in session.ts).
+ * It lasts until the browser is closed.
+ */
+export const AT_COOKIE = 'loop-at';
+
 /** The campus shown to a signed-in person whose email is at none of the schools. */
 export const DEFAULT_CAMPUS = 'cornell';

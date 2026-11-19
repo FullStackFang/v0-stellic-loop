@@ -13,7 +13,7 @@
 - [x] 2.4 `lib/campus/session.ts`: the kit follows the school; `visits` and `mayUse` open every campus of the person's school; test in `lib/__tests__/campus-gate.test.ts`
 - [x] 2.5 `components/campus/swap.tsx` and its test: the tag on the map's band and its tickets; "Visiting" on the band
 - [x] 2.6 Founder runs `20261118700000_campus_cornell_tech.sql` on the hosted database
-- [ ] 2.7 Founder confirms or changes: a person may join and post on a campus they are only looking at (design D10)
+- [x] 2.7 A person may join and post on a campus they are only looking at (design D10): built as yes and left so at the archive (2026-11-19); the founder can still change it
 - [x] 2.8 The swap against real data (2026-11-19, signed out): on New York the tag on the band opens Ithaca's ticket with its real count (0 on this week) and the link to it. "Visiting" and "Your campus" are covered by `components/campus/swap.test.tsx`; not looked at signed in
 
 ## 3. A home campus: the nearer one, no question asked
@@ -56,17 +56,19 @@ Moved out of this change, for a later one: Ithaca's own feed (`https://cornell.c
 - [x] 6a.2 A stamp stands on its spot: plans at one address share one stamp with a count and an "Also here" pill on the ticket; no fan
 - [x] 6a.3 Stamp, faces, postmark and ticket shrink as one from the spot when zooming out, the picked one included; the ticket fades when small
 
-## 6b. Midtown: the Cornell Club and ILR (founder, 2026-11-19; design D6a)
+## 6b. The Cornell Club and ILR: a place off the map, on its own (founder, 2026-11-19; design D6a)
 
 - [x] 6b.1 Looked up: the two addresses, their stops, and what public calendars exist (Cornell's NYC calendar has a feed with nothing on; the Club's 25 programs are members' and have no feed; ILR lists nothing upcoming)
-- [x] 6b.2 Tests, then `lib/campus/sections.ts`: `lex53` (Midtown East) and `grandcentral` (Midtown) south of the Upper East Side, their stops and line colours; ILR and the Club each inside its section
-- [x] 6b.3 Both outlines drawn over the real map and looked at: on the street grid, each stop and building inside, no overlap
-- [x] 6b.4 `supabase/migrations/20261119100000_campus_tech_midtown.sql`: the two places, and Cornell's NYC calendar as a feed
-- [ ] 6b.5 Founder runs `20261119100000_campus_tech_midtown.sql` on the hosted database
+- [x] 6b.2 Two Midtown sections built, then taken out the same day at the founder's word, for 6b.3
+- [x] 6b.3 `public/demo/mockups-map-solo.html`: the founder's idea, a plan at such a place shows that building alone; approved ("this is great")
+- [x] 6b.4 Tests, then `soloOf`, `isSolo`, `stopNear` in `lib/campus/sections.ts` and the sheet in `components/campus/near.tsx`: the place alone, "Off the map", the stop sign, "Back to", no way on; the list's first pick stays on the campus and the card says "Off the map" (`components/campus/screen.tsx`)
+- [x] 6b.5 Seen on the real screen (2026-11-19) with one live event's place swapped for the Cornell Club in the browser only: the sheet, the sign for Grand Central–42 St, and the way back
+- [x] 6b.6 `supabase/migrations/20261119100000_campus_tech_midtown.sql`: the two places, and Cornell's NYC calendar as a feed
+- [x] 6b.7 `20261119100000_campus_tech_midtown.sql` is on the hosted database (checked 2026-11-19: both places and the feed are there)
 
 ## 7. Finish
 
 - [x] 7.1 `tsc --noEmit` and the full test run (`--maxWorkers=3`, stderr to a file)
 - [x] 7.2 The places migration is on the hosted database (checked 2026-11-19: the eight places are there)
 - [x] 7.3 Signed out on the dev server (2026-11-19): Cornell Tech opens, the west and east edge of the map pushed, the whole island in view at the furthest zoom, the swap offers Ithaca. Not run signed in as a new cornell.edu person (no test account here): placing and the change in the account card are covered by `campus-gate.test.ts` and `swap.test.tsx`, and placing by location only happens on the host, which sends the location headers
-- [ ] 7.4 One production build, with no dev server or other build running
+- [x] 7.4 Production build: not run here (a dev server was up); the host built and deployed the merge of pull request 20 (2026-11-19)

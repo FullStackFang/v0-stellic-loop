@@ -3,7 +3,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Rings } from '@/components/LoopGlyphs';
 import { CampusScreen } from '@/components/campus/screen';
+import { LookingAt } from '@/components/campus/looking-at';
+import { FitLines, SchoolAsk } from '@/components/campus/no-school';
 import { SignOut } from '@/components/campus/sign-out';
+import { schoolAsked } from '@/lib/campus/school-ask';
+import './no-school.css';
 import { db } from '@/lib/db';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { listCampuses, weekListings, type Campus } from '@/lib/campus/listings';
@@ -27,19 +31,38 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
   // The campuses of this school, when it has more than one: what the swap on the map offers.
   const parts = (await listCampuses(db())).filter(each => schoolOf(each.slug) === schoolOf(campus.slug) && SWAP_TICKET[each.slug]);
   const swap = parts.length < 2 ? [] : await Promise.all(parts.map(async each => ({ slug: each.slug, ...SWAP_TICKET[each.slug], count: (await weekListings(db(), each)).length, home: !!viewer && !viewer.admin && viewer.campus?.id === each.id, here: each.id === campus.id })));
-  return <CampusScreen screen={screen} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={null}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} />;
+  return <><LookingAt slug={campus.slug} /><CampusScreen screen={screen} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={null}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} /></>;
 }
 
-/** For a signed-in person whose email is at none of the schools: which schools Loop is at, and nothing else. */
+/**
+ * For a signed-in person whose email is at none of the schools (public/demo/mockups-no-school.html): Loop is for
+ * schools, the schools it is at, a way back to sign-in with a school email, and a box for the school they are at.
+ * Both buttons that leave sign the person out and land on the front page, where the sign-in card is.
+ */
 export async function NoSchool() {
+  const viewer = await campusViewer(), email = viewer?.principal.verifiedEmail ?? null, signs = clerkPortalConfigured();
   const schools = (await listCampuses(db())).filter(each => schoolOf(each.slug) === each.slug);
-  const names = schools.map(school => school.name).join(', ').replace(/, ([^,]*)$/, ' and $1');
-  return <div className="cs">
-    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link></header>
-    <main className="cs-plain">
-      <h1>Loop is at {names} for now.</h1>
-      <p>The email you signed in with is not at one of these schools, so there is no campus to show you. Sign out and come back with your school email.</p>
-      {clerkPortalConfigured() && <p><SignOut className="cs-btn" /></p>}
+  const asked = viewer ? await schoolAsked(db(), viewer.personId) : null;
+  return <div className="cs cs-ns">
+    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link>
+      <div className="cs-nav-end">{email && <span className="cs-ns-who">{email}</span>}{signs && <SignOut className="cs-btn" />}</div>
+    </header>
+    <main>
+      <section className="cs-ns-band">
+        <FitLines lines={[<>Loop is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
+        {email && <p>You signed in with <b>{email}</b>, which is not a school email.</p>}
+      </section>
+      <div className="cs-ns-two">
+        <section className="cs-ns-tk">
+          <h2 className="cs-ns-tab">At one of these schools?</h2>
+          <ul className="cs-ns-schools">{schools.map(school => <li key={school.slug} data-kit={school.slug}><b>{school.name}</b><small>{school.domains[0]}</small></li>)}</ul>
+          {signs && <div className="cs-ns-row"><SignOut className="cs-btn go">Sign in with your school email<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" /></svg></SignOut></div>}
+        </section>
+        <section className="cs-ns-tk">
+          <h2 className="cs-ns-tab">Which school are you at?</h2>
+          <SchoolAsk asked={asked} email={email} />
+        </section>
+      </div>
     </main>
   </div>;
 }
