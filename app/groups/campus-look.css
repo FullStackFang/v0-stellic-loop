@@ -171,7 +171,7 @@
 .gt-it.you { --cast: var(--ink); animation: gt-nudge 5s var(--ease) infinite; animation-delay: calc(var(--i, 0) * .7s); } .gt-it.you:hover, .gt-it.you:focus-within { animation: none; }
 @keyframes gt-nudge { 0%, 86%, 100% { transform: none; } 90% { transform: rotate(-1.3deg) translateY(-3px); } 95% { transform: rotate(1deg); } }
 .gt .gt-dl { display: flex; flex-direction: column; gap: 1px; margin: 0; font-size: 14px; font-weight: 720; letter-spacing: -0.02em; white-space: nowrap; } .gt-dl span { font-size: 12.5px; font-weight: 600; color: var(--mute); } .gt-dl em { font-style: normal; font-weight: 700; color: var(--action); }
-.gt .gt-dl.row { flex-direction: row; align-items: baseline; gap: 9px; margin: 8px 0 12px; }
+.gt .gt-dl.gt-dl-row { flex-direction: row; align-items: baseline; gap: 9px; margin: 8px 0 12px; }
 .gt-dtile { flex: none; display: grid; justify-items: center; align-content: center; width: 60px; height: 60px; line-height: 1; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); } .gt-dtile small { font-size: 11.5px; font-weight: 640; } .gt-dtile b { font-size: 23px; font-weight: 720; letter-spacing: -0.04em; margin-top: 2px; }
 .gt-dtile.today { background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .gt-dtile.over { background: var(--action); color: var(--paper); } .gt-dtile.later { box-shadow: inset 0 0 0 1.5px var(--dash); color: var(--on-field-2); }
 /* Days across. Whole days only: the columns share the width exactly (as many as fit at about 300px or more), and the row snaps to a day's left edge, so nothing is ever cut off. */

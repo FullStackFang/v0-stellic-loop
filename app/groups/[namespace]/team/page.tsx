@@ -258,7 +258,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
                 <h3 className="gt-dl">{lane.name}<span>{lane.cards.length ? plural(lane.cards.length, 'thing') : 'Nothing'}{mine > 0 && <> · <em>{mine} {mine === 1 ? 'needs' : 'need'} you</em></>}</span></h3></header>
               {lane.cards.length ? <ul>{lane.cards.map((card, at) => <li key={card.key} className={`gt-it ${card.cls}${card.you ? ' you' : ''}`} style={card.you ? { '--i': at } as React.CSSProperties : undefined}>{card.you && <b className="gt-yours">{card.you}</b>}<div>{card.body}</div></li>)}</ul> : <p className="gt-free">Nothing with this day on it.</p>}
             </section>; })}</DaysRow>
-          {settledList.length > 0 && <><h3 className="gt-dl row">Settled lately<span>newest first</span></h3>
+          {settledList.length > 0 && <><h3 className="gt-dl gt-dl-row">Settled lately<span>newest first</span></h3>
             <ul className="gt-minis">{settledList.map(item => <li key={item.key} className="gt-mini"><i className={`gt-g ${item.kind}`} /><span><b><Link href={item.href}>{item.text}</Link></b><small>{item.sub}</small></span><time>{shortDay(dayIn(item.at))}</time></li>)}</ul></>}
         </section>}
 

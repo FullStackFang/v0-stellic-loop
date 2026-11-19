@@ -8,7 +8,8 @@ import { Suspense } from 'react';
 import { OnYou } from '@/app/c/on-you';
 import { getPortalPrincipal, getSignedInPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
 import { frontIsCampus } from '@/lib/campus/schools';
-import { PHOTO, animal, animalOf } from '@/lib/campus/animals';
+import { CUSTOM, PHOTO, animal, animalOf, customFace } from '@/lib/campus/animals';
+import { customFaces } from '@/lib/campus/custom-face';
 import { hasInk } from '@/lib/campus/ink';
 import { campusOf, pickedFaces } from '@/lib/campus/people';
 import { Kit } from '@/components/campus/kit';
@@ -26,9 +27,9 @@ async function barGroups(principal: Principal): Promise<BarGroup[]> {
 /** Whose colours the person sees unless they pick others (their school's, or Loop's own), and the animal that is their face. */
 async function looks(principal: Principal): Promise<{ kit: string; face: string | null; ink: boolean }> {
   try {
-    const [school, [faces, ink]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await hasInk(q, principal.personId)] as const)]);
-    const picked = faces.get(principal.personId);
-    return { kit: school?.slug ?? 'loop', face: picked === PHOTO ? null : animal(picked ?? animalOf(principal.personId)), ink };
+    const [school, [faces, ink, made]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await hasInk(q, principal.personId), await customFaces(q, [principal.personId])] as const)]);
+    const picked = faces.get(principal.personId), own = made.get(principal.personId)?.token;
+    return { kit: school?.slug ?? 'loop', face: picked === PHOTO ? null : picked === CUSTOM && own ? customFace(own) : animal(picked === undefined || picked < 0 ? animalOf(principal.personId) : picked), ink };
   } catch { return { kit: 'loop', face: null, ink: false }; }
 }
 // Runs before the page is painted, so a picked or school kit never flashes in after the default. The key is the one components/campus/kit.tsx uses.

@@ -10,7 +10,8 @@ import { grantScopedRole, removeOrgMembership, revokeScopedRole } from '@/app/em
 import { cancelInvite, saveTagHandle } from '../actions';
 import { getMemberHandle, listMemberHandles } from '@/lib/emba/tags';
 import { clerkEmailsOf } from '@/lib/emba/clerk-identity';
-import { animal, animalOf } from '@/lib/campus/animals';
+import { CUSTOM, animal, animalOf, customFace } from '@/lib/campus/animals';
+import { customFaces } from '@/lib/campus/custom-face';
 import { pickedFaces } from '@/lib/campus/people';
 import { Roster, type Invited, type RoleName, type RosterPerson } from './members-panel';
 
@@ -30,7 +31,8 @@ async function loadGroup(principal: NonNullable<Awaited<ReturnType<typeof getPor
     clerkEmailsOf(db(), roles.map(role => role.personId)).catch(() => ({} as Record<string, string>))]) : [null, null, null, null, null];
   // Each person's face is the animal they picked on the campus screen, or the one their id gives them.
   const picks = await pickedFaces(db(), (roles ?? []).map(role => role.personId).concat(principal.personId)).catch(() => new Map<string, number>());
-  return { roles, invitations, requests, owner, members, tagHandle, handles, emails, picks };
+  const made = await customFaces(db(), [...picks].filter(([, pick]) => pick === CUSTOM).map(([id]) => id)).catch(() => new Map<string, { token: string | null }>());
+  return { roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made };
   });
   return opened && { group: opened.group, scope: opened.scope, ...opened.data };
 }
@@ -41,8 +43,8 @@ export default async function GroupPage({ params }: { params: Promise<GroupRoute
   const route = await params, base = groupPath(route.namespace, route.slug);
   const data = await loadGroup(principal, route).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, roles, invitations, requests, owner, members, tagHandle, handles, emails, picks } = data;
-  const faceOf = (id: string) => { const pick = picks.get(id); return animal(pick === undefined || pick < 0 ? animalOf(id) : pick); };
+  const { group, scope, roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made } = data;
+  const faceOf = (id: string) => { const pick = picks.get(id), own = made.get(id)?.token; return pick === CUSTOM && own ? customFace(own) : animal(pick === undefined || pick < 0 ? animalOf(id) : pick); };
   const top = group.slug === ROOT_SLUG;
   const mayRemove = new Set(members?.map(member => member.personId));
   // A person who does not manage the group is shown their own row only: who else is in it stays with the owners and organizers.
