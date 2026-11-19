@@ -204,6 +204,23 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   .mine { grid-template-columns: 130px minmax(0, 1fr); } .pick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cmp th, .cmp td { padding: 13px 8px; font-size: 14px; } .cmp thead th { font-size: 16px; padding: 14px 8px; } .cmp td:first-child, .cmp th:first-child { padding-left: 16px; } .cmp td:not(:first-child), .cmp th:not(:first-child) { width: 21%; }
 }
+/* the splat: how a wait ends, by plan (openspec/changes/loop-loading-seats, D13; public/demo/mockups-loading-splat-2.html, row A) */
+#splat { gap: 30px; padding-top: 36px; }
+.ld { position: relative; display: grid; grid-template-columns: 1fr 54px; margin-right: 16px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(5px 5px 0 var(--ink)); }
+.ld > i { position: absolute; z-index: 2; top: -13px; left: 14px; font-style: normal; padding: 2px 11px 3px; border-radius: 99px; font-size: 13px; font-weight: 700; background: var(--ink); color: var(--paper); }
+.ld-main { display: grid; gap: 10px; padding: 17px 13px 15px 16px; background: var(--paper); border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.ld-main b { font-size: 17px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+.ld-seats { display: flex; gap: 5px; } .ld-seats img { width: 31px; height: 31px; border-radius: 50%; background: color-mix(in oklab, var(--ink) 10%, var(--paper)); }
+.ld-stub { border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: color-mix(in oklab, var(--field) 34%, var(--paper)); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.sp { position: absolute; right: -11px; top: 50%; width: 76px; height: 76px; margin-top: -38px; overflow: visible; pointer-events: none; }
+.sp .school { fill: var(--field); } .sp .dark { fill: var(--action); } .sp .seep { fill: var(--action); opacity: .42; } .sp .third { fill: var(--hot); stroke: var(--ink); stroke-width: 1.6; paint-order: stroke; stroke-linejoin: round; }
+.sp.free { right: -4px; width: 62px; height: 62px; margin-top: -31px; } .sp.free .dark { fill: var(--ink); }
+.sp .body { transform-box: view-box; transform-origin: 50% 50%; } .sp .drop { transform-box: fill-box; transform-origin: center; }
+#splat.go .sp .body { animation: sp-land .24s var(--expo) var(--at) both; } #splat.go .sp .drop { animation: sp-fly .34s var(--expo) calc(var(--at) + .05s + var(--n) * 16ms) both; }
+#splat.go .ld { animation: sp-knock .3s var(--at) both; }
+@keyframes sp-land { from { transform: scale(.12) rotate(-18deg); opacity: 0; } 30% { opacity: 1; } }
+@keyframes sp-fly { from { translate: var(--dx) var(--dy); scale: .2; opacity: 0; } 25% { opacity: 1; } }
+@keyframes sp-knock { 30% { translate: 2.5px 3px; rotate: .8deg; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
 </style>
 </head>
@@ -321,6 +338,14 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   </div>
 </div></section>
 
+<section class="band b-field"><div class="wrap">
+  <div class="say"><h2 class="d">Land with a splat.</h2><p>While a page loads, Loop saves you a seat. Ink stamps it in your school's colours. Ink+ throws sparks.</p></div>
+  <div class="show" id="splat">
+    <div id="splats" style="display:grid;gap:30px"></div>
+    <div class="row"><button class="btn go" id="again">Splat again</button><span>Every time a page is ready</span></div>
+  </div>
+</div></section>
+
 <section class="rest" id="compare"><div class="wrap">
   <h2 class="d">Side by side.</h2>
   <div class="cmp"><table><thead><tr><th></th><th>Loop</th><th>Ink</th><th>Ink+</th></tr></thead><tbody id="rows"></tbody></table></div>
@@ -398,7 +423,58 @@ document.querySelector('.cycle').addEventListener('click', event => {
   for (const each of document.querySelectorAll('.price [data-month]')) { each.textContent = each.dataset[hit.dataset.cycle]; each.classList.remove('roll'); void each.offsetWidth; each.classList.add('roll'); }
 });
 
-const ROWS = [['Post, join, show up', 1, 1, 1], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With the Loop mark', 'With the Loop mark', 'No mark'],
+// The splat that ends a wait. The blot is the one under a face with Ink (lib/campus/ink-blot.ts); the drops it throws go right, away from the words.
+(function () {
+  const SPARK = 'M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z';
+  const TURN = Math.PI * 2, STEPS = 96;
+  const hash = text => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+  function run(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const out = (angle, far) => [Math.cos(angle) * far, Math.sin(angle) * far], fix = n => Math.round(n * 10) / 10;
+  function pool(next, r) {
+    const spin = next() * TURN, ran = next() * TURN, rounds = [[0, 0, r]];
+    for (let i = 0; i < 6; i++) rounds.push([...out(spin + (i + (next() - .5) * .4) / 6 * TURN, r - 20 + next() * 4), 22 + next() * 4]);
+    rounds.push([...out(ran, r + 1), 11], [...out(ran, r + 10), 6]);
+    return { rounds, ran };
+  }
+  const sway = (waves, angle) => waves.reduce((sum, [times, size, shift]) => sum + Math.sin(angle * times + shift) * size, 0);
+  const drawn = (reach, k = 1, x = 0, y = 0) => 'M' + reach.map((far, at) => { const [px, py] = out(at / STEPS * TURN, far * k); return fix(px + x) + ' ' + fix(py + y); }).join('L') + 'Z';
+  function edge(rounds, next) {
+    let reach = Array.from({ length: STEPS }, (_, at) => {
+      const angle = at / STEPS * TURN; let far = 0;
+      for (const [x, y, r] of rounds) { const from = Math.hypot(x, y), off = angle - Math.atan2(y, x), under = r * r - (from * Math.sin(off)) ** 2; if (under >= 0) far = Math.max(far, from * Math.cos(off) + Math.sqrt(under)); }
+      return far;
+    });
+    for (let pass = 0; pass < 2; pass++) reach = reach.map((far, at) => (reach[(at + STEPS - 1) % STEPS] + far * 2 + reach[(at + 1) % STEPS]) / 4);
+    const waves = [[2, 2], [3, 1.6], [5, 1.1], [13, .5], [29, .3]].map(([times, size]) => [times, size, next() * TURN]);
+    return reach.map((far, at) => far + sway(waves, at / STEPS * TURN));
+  }
+  function crept(reach, next) { const waves = [[4, 1.3], [9, .9], [17, .5]].map(([times, size]) => [times, size, next() * TURN]); return reach.map((far, at) => far + 3.4 + sway(waves, at / STEPS * TURN)); }
+  const thrown = (next, toward, from, count, wide = 1.2) => Array.from({ length: count }, () => { const [x, y] = out(toward + (next() - .5) * wide, from + 2 + next() * 22); return [fix(x), fix(y), fix(2 + next() * next() * 2.8)]; });
+  function inkBlot(seed) {
+    const next = run(hash(seed)), wide = pool(next, 55), middle = pool(next, 41);
+    const blot = { schoolDrops: thrown(next, wide.ran + 2.5 + next() * 1.5, 68, 3), darkDrops: thrown(next, middle.ran + 2.2 + next() * 1.8, 58, 5), school: edge(wide.rounds, next) }; blot.dark = edge(middle.rounds, next); blot.seep = crept(blot.dark, next);
+    // A splat throws more than a blot that has dried on a face: drops all the way round. (New for the ending; not in the app.)
+    blot.flung = thrown(next, 0, 62, 7, 3.2);
+    return blot;
+  }
+  const smaller = k => SPARK.replace(/-?\d+(\.\d+)?/g, n => fix(n * k));
+  const drop = (spark, n) => ([x, y, r]) => { const style = `--n:${n.at++};--dx:${fix(-x * .8)}px;--dy:${fix(-y * .8)}px`; return spark ? `<path class="drop" style="${style}" d="${SPARK}" transform="translate(${x} ${y}) scale(${fix(r / 27 * 3.4)})"/>` : `<circle class="drop" style="${style}" cx="${x}" cy="${y}" r="${fix(r * 1.15)}"/>`; };
+  function splat(plan, seed) {
+    const blot = inkBlot(seed), plus = plan === 'plus', free = plan === 'free', n = { at: 0 }, clear = ([x]) => x > -46;
+    const far = (free ? blot.darkDrops.slice(0, 3) : plus ? [...blot.darkDrops, ...blot.flung] : [...blot.darkDrops, ...blot.flung.slice(0, 3)]).filter(clear);
+    return `<svg class="sp ${plan}" viewBox="-90 -90 180 180" aria-hidden="true"><g class="body">${free ? '' : `<path class="school" d="${drawn(blot.school)}"/><path class="seep" d="${drawn(blot.seep)}"/>`}<path class="dark" d="${drawn(blot.dark)}"/>${plus ? `<path class="third" d="${smaller(1.1)}"/>` : ''}</g>
+      ${free ? '' : `<g class="school">${blot.schoolDrops.filter(clear).map(drop(false, n)).join('')}</g>`}<g class="${plus ? 'third' : 'dark'}">${far.map(drop(plus, n)).join('')}</g></svg>`;
+  }
+  const face = n => `../animals/${String(n).padStart(2, '0')}.png`;
+  document.getElementById('splats').innerHTML = [['free', 'Loop', 'Sam', 21], ['ink', 'Ink', 'Maya', 12], ['plus', 'Ink+', 'Josh', 37]].map(([plan, name, seed, mine], at) =>
+    `<div class="ld" style="--at:${at * .22}s"><i>${name}</i><span class="ld-main"><b>Looping you in…</b><span class="ld-seats">${[5, 8, 17, mine].map(n => `<img src="${face(n)}" alt="">`).join('')}</span></span><span class="ld-stub"></span>${splat(plan, seed)}</div>`).join('');
+  const box = document.getElementById('splat');
+  const play = () => { box.classList.remove('go'); void box.offsetWidth; box.classList.add('go'); };
+  document.getElementById('again').onclick = play;
+  new IntersectionObserver((seen, watch) => { if (seen[0].isIntersecting) { play(); watch.disconnect(); } }, { threshold: .6 }).observe(box);
+})();
+
+const ROWS = [['Post, join, show up', 1, 1, 1], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With the Loop mark', 'With the Loop mark', 'No mark'], ['The splat when a page loads', 'Plain ink', 'Your school\'s colours', 'With sparks'],
   ['Give an animal', 0, '1 a month', '4 a month'], ['Boost a group', 0, '1 a month', '3 a month'], ['Matched rewards at partner places', 0, 1, 1], ['Join plans at other schools', 0, 1, 1],
   ['Wider map, any number of tags', 0, 1, 1], ['Connect your assistant', 0, 1, 1], ['Friends who get Ink from you', 0, 0, '2'], ['Your own stamp on plans you start', 0, 0, 1]];
 document.getElementById('rows').innerHTML = ROWS.map(([name, ...cells]) => `<tr><td>${name}</td>${cells.map(v => `<td>${v === 1 ? `<span class="ck">${CHECK}</span>` : v === 0 ? '<span class="ck no"></span>' : v}</td>`).join('')}</tr>`).join('');

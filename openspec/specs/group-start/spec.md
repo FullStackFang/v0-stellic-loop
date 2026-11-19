@@ -4,10 +4,10 @@
 TBD - created by archiving change loop-group-tree-and-start-form. Update Purpose after archive.
 ## Requirements
 ### Requirement: One page starts a group
-The site SHALL offer one page for starting a group. Its header SHALL be a single row holding the group's name, the handle the group will get, and where the group lives. Only the name SHALL be required. The handle SHALL be suggested from the name and SHALL be editable until the group is made. The page SHALL be shown only to a person who may start a group somewhere: a pilot owner, or an owner or organizer of at least one group.
+The site SHALL offer one page for starting a group. Its header SHALL be a single row holding the group's name, the handle the group will get, and where the group lives. Only the name SHALL be required. The handle SHALL be suggested from the name and SHALL be editable until the group is made. The page SHALL be shown to every person signed in with a verified email: any of them may start a group of their own at the top level, and a new group SHALL start there unless the person puts it inside a group they run. An assistant SHALL NOT start a top-level group.
 
 #### Scenario: Name only
-- **WHEN** a pilot owner types a name and chooses "Create group"
+- **WHEN** a person with a verified email types a name and chooses "Create group"
 - **THEN** a top-level group with that name and the suggested handle exists and the person is its owner
 
 #### Scenario: Handle follows where the group lives
@@ -15,18 +15,18 @@ The site SHALL offer one page for starting a group. Its header SHALL be a single
 - **THEN** the header shows the handle `@emba-2027/nbae-6830`
 
 #### Scenario: Not allowed to start anything
-- **WHEN** a person who is neither a pilot owner nor an owner or organizer of any group opens the page
+- **WHEN** a person whose email is not verified, and who runs no group, opens the page
 - **THEN** the form is not shown
 
 ### Requirement: Choosing where the group lives
-"Where it lives" SHALL open a picker with one column per level. The first column SHALL list "Top level, on its own" (only for a pilot owner) and the groups the person can open at their top. Choosing a group SHALL show the groups inside it in the next column. The picker SHALL say, before the person confirms, where the group will go and who will be able to open it. A group the person may not start a group inside SHALL be shown for walking through but SHALL NOT be offered as the place. Escape or a click outside SHALL close the picker without changing the choice.
+"Where it lives" SHALL open a picker with one column per level. The first column SHALL list "Top level, on its own" and the groups the person can open at their top. Choosing a group SHALL show the groups inside it in the next column. The picker SHALL say, before the person confirms, where the group will go and who will be able to open it. A group the person may not start a group inside SHALL be shown for walking through but SHALL NOT be offered as the place. Escape or a click outside SHALL close the picker without changing the choice.
 
 #### Scenario: Footer states who can open it
 - **WHEN** the person selects "Team 1" inside "EMBA 2027"
 - **THEN** the picker reads that the group goes inside "EMBA 2027 › Team 1" and that everyone in "Team 1" can open it
 
 #### Scenario: Top level
-- **WHEN** a pilot owner selects "Top level, on its own"
+- **WHEN** the person selects "Top level, on its own"
 - **THEN** the picker reads that only people they invite can open it
 
 #### Scenario: A group the person only belongs to

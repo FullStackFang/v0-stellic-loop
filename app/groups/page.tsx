@@ -13,6 +13,7 @@ import { restoreGroupAction } from './organize-actions';
 import { InvitationLink } from './invitation-link';
 import { InvitationPaste } from './invitation-paste';
 import { Arrow, Rings } from '@/components/LoopGlyphs';
+import { mayStartTopLevel } from '@/lib/emba/workspaces';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,14 +37,15 @@ export default async function GroupsPage() {
   } catch {
     return <section className="lt-editor"><h1>Groups unavailable</h1><p role="alert">Your access may have changed. Reload to try again.</p></section>;
   }
-  const ownerAllowed = !!principal.verifiedEmail && (process.env.LOOP_PILOT_OWNER_SUBJECTS ?? '').split(',').some(subject => subject.trim() === principal.subject);
+  const ownerAllowed = mayStartTopLevel(principal);
   const [invite, ...moreInvites] = invitations;
   // The archived groups this person may restore. Read only for someone who runs a group; a failure leaves the page without the list.
   const archived: ArchivedGroup[] = ownerAllowed || groups.some(group => group.canStart) ? await listArchivedGroups(db(), principal).catch(() => []) : [];
-  // One way to start a group, for a pilot owner or an owner or organizer of any group: the start page.
+  // One way to start a group, for anyone with a verified email or an owner or organizer of any group: the start page.
   const create = (ownerAllowed || groups.some(group => group.canStart)) && <Link className="lp-btn lp-create" href="/groups/new">Start a group<Arrow /></Link>;
   // Someone who may start a group and has none yet: starting one is the page, not a link at the bottom of it.
-  const first = ownerAllowed && !invite && groups.length === 0;
+  // Only a pilot owner is expected to arrive with nothing: anyone else with no group is more likely waiting for an invitation.
+  const first = (process.env.LOOP_PILOT_OWNER_SUBJECTS ?? '').split(',').some(subject => subject.trim() === principal.subject) && ownerAllowed && !invite && groups.length === 0;
 
   return <>
     <p className="lp-crumbs"><b>Groups</b></p>

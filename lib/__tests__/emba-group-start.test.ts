@@ -61,13 +61,15 @@ it('starts a group inside a group only where the person may, and makes nothing w
   const inner = { name: 'Team 1', slug: 'team-1', parent: '@emba-2027', links: ['https://example.edu/a'], people: ['priya@example.edu'], note: 'Hello' };
   for (const p of [outer, assistant, await person()]) await expect(start(p, inner)).rejects.toThrow('forbidden');
   await expect(start(owner, { ...inner, parent: '@no-such-group' })).rejects.toThrow('forbidden');
-  await expect(start(outer, { name: 'Mine', slug: 'mine' })).rejects.toThrow('forbidden');
+  // A group of one's own, at the top level, is anyone's to start; an assistant's never.
+  await expect(start(assistant, { name: 'Theirs', slug: 'theirs' })).rejects.toThrow('forbidden');
   // A taken handle: no group, and nothing from the lanes is saved anywhere.
   await expect(start(owner, { ...inner, slug: 'emba-2027' })).rejects.toThrow('conflict');
   expect((await t.db.query('select (select count(*) from emba_loop)::int as loops,(select count(*) from emba_invitation)::int as invites,(select count(*) from emba_team_record)::int as records')).rows).toEqual([{ loops: 1, invites: 0, records: 0 }]);
   const report = await start(organizer, inner);
   expect(report).toMatchObject({ group: { handle: '@emba-2027/team-1', orgName: 'Team 1', loopPath: 'emba-2027/team-1' }, added: { links: ['https://example.edu/a'], people: ['priya@example.edu'], announcement: 'Hello' }, failed: [] });
   expect(await accessRequestPreview(t.db, report.joinToken!)).toMatchObject({ groupName: 'Team 1' });
+  expect((await start(outer, { name: 'Mine', slug: 'mine' })).group).toMatchObject({ namespace: 'mine' });
 });
 it('keeps a Drive folder as a link like any other: Loop itself never reads Drive', async () => {
   const owner = await pilot(), folder = 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz012345';

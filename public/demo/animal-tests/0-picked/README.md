@@ -8,7 +8,7 @@ Last worked on 2026-11-18. Stopped on purpose by the founder; do not draw or bui
 |---|---|---|---|
 | `cornell-bear.png` | Cornell | red knitted scarf, white C | `cornell-bear/…round-4-all-brown-4.png` |
 | `columbia-lion.png` | Columbia | light blue knitted sweater, small white crown | `columbia-lion/…sweater-crown-4.png` |
-| `nyu-bobcat.png` | NYU | violet varsity jacket, white torch | `nyu-bobcat/…jacket-torch-2.png` |
+| `nyu-bobcat.png` | NYU | closed violet varsity jacket, white torch | `nyu-bobcat/…jacket-n1-torch-4.png` (redrawn from `…jacket-n-1.png`; before that `…jacket-torch-2.png`) |
 | `baruch-bearcat.png` | CUNY Baruch | royal blue knitted sweater, white B | `baruch-bearcat/…sweater-b-3.png` |
 | `brooklyn-bulldog.png` | CUNY Brooklyn | maroon cap, gold BC, maroon collar | `brooklyn-bulldog/…cap-bc-3.png` |
 
