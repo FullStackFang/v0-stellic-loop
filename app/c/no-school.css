@@ -23,11 +23,7 @@
 /* Whose LinkedIn account this is, once they signed in with it: photo, name, and the stamp that says it is proven theirs. */
 .cs-ns-me { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--tile); background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs-ns-me img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1.5px var(--cs-ink); } .cs-ns-me > span:not(.cs-ns-stamp) { display: grid; margin-right: auto; line-height: 1.2; }
-.cs-ns-me b { font-size: 17px; font-weight: 720; letter-spacing: -0.03em; overflow-wrap: anywhere; } .cs-ns-me small { font-size: 13px; font-weight: 560; color: var(--cs-on-field-2); } .cs-ns-row > p[role=alert] { font-weight: 620; }
-/* each school in its own colours: data-kit on the tile sets the tokens (campus.css, "Kits") */
-.cs-ns-schools { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
-.cs-ns-schools li { display: grid; gap: 1px; padding: 10px 11px 11px; border-radius: var(--tile); background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); line-height: 1.15; }
-.cs-ns-schools b { font-size: 17px; font-weight: 720; font-stretch: 108%; letter-spacing: -0.035em; } .cs-ns-schools small { font-size: 12px; font-weight: 560; }
+.cs-ns-me b { font-size: 17px; font-weight: 720; letter-spacing: -0.03em; overflow-wrap: anywhere; } .cs-ns-me small { font-size: 13px; font-weight: 560; color: var(--cs-on-field-2); } .cs-ns-tk > p[role=alert] { font-weight: 620; }
 .cs-ns-row { display: flex; gap: 10px; align-items: center; } .cs-ns-row .cs-btn { flex: none; }
 .cs-ns .cs-ns-box { flex: 1; min-width: 0; height: 44px; padding: 0 18px; border: 0; border-radius: 99px; font: inherit; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs-ns .cs-ns-box::placeholder { color: var(--cs-mute); } .cs-ns .cs-ns-box:focus { background: var(--cs-stub); box-shadow: inset 0 0 0 2.5px var(--cs-action); }

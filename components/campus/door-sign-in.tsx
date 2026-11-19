@@ -12,7 +12,9 @@ export type School = { slug: string; name: string; domains: string[] };
 const paper = '#fdfefb', mute = '#5d6570';
 
 /**
- * The one sign-in card (design D21): the sign-in the groups site uses (Google, or, email, Continue), drawn small. As
+ * The one sign-in card (design D21, public/demo/mockups-one-sign-in.html): email and Continue, then Google and, once
+ * it is switched on at the sign-in service, LinkedIn. A school email continues. Any other email, where there is a
+ * LinkedIn button, takes away every way on but LinkedIn (`away`): that is the way in with no school email. As
  * an email is typed the card spots its school and the page takes on that school's colours. That decides nothing:
  * a person's school is the one their verified email ends in, worked out after sign-in.
  * On the front door the page's colours belong to the ticket: there `kit` is the school showing, and `onSpot` is told
@@ -21,7 +23,7 @@ const paper = '#fdfefb', mute = '#5d6570';
 export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean; kit?: string; onSpot?: (slug: string | null) => void }) {
   const [slug, setSlug] = useState(''), [seen, setSeen] = useState(''), card = useRef<HTMLDivElement>(null), last = useRef('');
   // Whether the sign-in form has a LinkedIn button: it does once LinkedIn is switched on at the sign-in service.
-  const [linkedin, setLinkedin] = useState(false);
+  const [linkedin, setLinkedin] = useState(false), [away, setAway] = useState(false);
   const school = schools.find(each => each.slug === slug);
   const names = schools.map(each => each.name).join(', ').replace(/, ([^,]*)$/, ' or $1');
   // The email field belongs to the sign-in form. It is read as it is typed in, and looked at again now and then,
@@ -34,7 +36,9 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
     last.current = email;
     const domain = (email.split('@')[1] ?? '').trim().toLowerCase(), hit = schoolOfEmail(schools, email);
     setSlug(hit?.slug ?? '');
-    setSeen(hit ? `${domain} is ${hit.name}.` : domain.includes('.') ? (has ? 'Not a school email. Continue with LinkedIn, and we check your school.' : `Not an email at ${names}. You can still sign in with it.`) : '');
+    const other = !hit && domain.includes('.');
+    setAway(has && other);
+    setSeen(hit ? `${domain} is ${hit.name}.` : other ? (has ? `${domain} is not a school email. Sign in with LinkedIn.` : `Not an email at ${names}. You can still sign in with it.`) : '');
     if (onSpot) onSpot(hit?.slug ?? null); else showKit(hit?.slug ?? pickedKit() ?? 'loop');
   };
   useEffect(() => { const again = setInterval(read, 500); return () => clearInterval(again); });
@@ -43,6 +47,7 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
   const shared = {
     fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', fallback: <p className="cs-note" aria-hidden="true">Loading sign-in…</p>,
     appearance: {
+      layout: { socialButtonsPlacement: 'bottom' as const },
       variables: { colorBackground: paper, colorForeground: ink, colorMutedForeground: mute, colorPrimary: ink, colorPrimaryForeground: paper, colorInput: paper, colorInputForeground: ink, fontFamily: 'var(--font-archivo), system-ui, sans-serif', borderRadius: '8px' },
       elements: {
         rootBox: { width: '100%' }, cardBox: { boxShadow: 'none', border: 0, borderRadius: 0, background: 'transparent', width: '100%', overflow: 'visible' },
@@ -52,13 +57,13 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
       },
     },
   };
-  return <div className="cs-door-in" ref={card} onInput={read}>
-    <div className="cs-door-in-top"><h2>{school ? `Sign in at ${school.name}` : 'Sign in'}</h2><p>Your school email opens your campus.</p><Rings /></div>
+  return <div className="cs-door-in" ref={card} onInput={read} data-away={away || undefined}>
+    <div className="cs-door-in-top"><h2>{school ? `Sign in at ${school.name}` : 'Sign in'}</h2><p>{away ? 'No school email? LinkedIn gets you in.' : linkedin ? 'Your school email, or LinkedIn.' : 'Your school email opens your campus.'}</p><Rings /></div>
     <div className="cs-door-in-body">
       {configured ? (routing === 'path' ? <SignIn routing="path" path="/sign-in" {...shared} /> : <SignIn routing="hash" {...shared} />)
         : <p role="status">Sign-in is not configured for this deployment.</p>}
       <p className="seen" aria-live="polite">{seen}</p>
-      <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : linkedin ? 'A school email opens your campus straight away. No school email? Continue with LinkedIn, and we check your school.' : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>
+      {(school || !linkedin) && <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>}
     </div>
   </div>;
 }
