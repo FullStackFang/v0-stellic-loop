@@ -6,6 +6,7 @@ import { flushSync } from 'react-dom';
 import { Rings } from '@/components/LoopGlyphs';
 import { ANIMALS, animal } from '@/lib/campus/animals';
 import { DoorSignIn } from './door-sign-in';
+import { SiteFoot } from './foot';
 import { Tile } from './screen';
 
 // The front door, signed out: the pitch, a ticket to try, and the sign-in card. Picked from
@@ -151,5 +152,7 @@ export function Door({ schools, start, routing, configured }: { schools: DoorSch
         <DoorSignIn routing={routing} configured={configured} schools={schools.map(({ slug, name, domains }) => ({ slug, name, domains }))} kit={school?.slug} onSpot={spot} />
       </div>
     </main>
+    {/* The foot every page has: the small print is found there. It wears the colours of the school whose ticket is on top. */}
+    <SiteFoot kit={school?.slug ?? 'loop'} />
   </div>;
 }

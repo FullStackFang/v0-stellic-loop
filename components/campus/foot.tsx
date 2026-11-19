@@ -22,7 +22,7 @@ const clamp = (n: number, low: number, high: number) => Math.max(low, Math.min(h
  * around are the top bar's. `home` is where the wordmark leads; `member` is whether the person is in a group, and so
  * has assistants to connect.
  */
-export function SiteFoot({ home = '/', member = false }: { home?: string; member?: boolean }) {
+export function SiteFoot({ home = '/', member = false, kit: worn }: { home?: string; member?: boolean; /** The colours the page it ends has put on (the front door, which turns from school to school). Then the foot wears them too, and has no colours of its own to pick. */ kit?: string }) {
   const foot = useRef<HTMLElement>(null), [count, setCount] = useState(0), [kit, setKit] = useState<string | null>(null);
   const router = useRouter(), asked = useRef<Promise<boolean> | null>(null), [plus, setPlus] = useState(false), [ask, setAsk] = useState<number | null>(null);
   const [email, setEmail] = useState(''), [busy, setBusy] = useState(false), [said, setSaid] = useState('');
@@ -42,7 +42,8 @@ export function SiteFoot({ home = '/', member = false }: { home?: string; member
   // How many fit is known only once the ticket has a width.
   useLayoutEffect(() => { const stage = foot.current!.querySelector<HTMLElement>('.cs-ft-stage')!; setCount(clamp(Math.floor((stage.clientWidth - 40) / STEP), 4, CROWD.length)); setKit(kitNow()); }, []);
   useEffect(() => { if (count) return crowdIn(foot.current!); }, [count]);
-  return <footer className="cs cs-ft" ref={foot}>
+  // Inside a page that wears colours of its own, the foot is not a .cs box: a .cs takes the colours of the whole site, over the page it ends.
+  return <footer className={worn ? "cs-ft" : "cs cs-ft"} ref={foot} data-kit={worn}>
     <div className="cs-ft-carry" aria-hidden="true"><div className="cs-ft-tk">
       <div className="cs-ft-stage"><small>Pick one up</small>
         {/* eslint-disable-next-line @next/next/no-img-element -- icons from public/animals */}
@@ -58,7 +59,7 @@ export function SiteFoot({ home = '/', member = false }: { home?: string; member
           <button className="cs-btn sm go" disabled={busy}>Subscribe · $9.99</button><button type="button" className="cs-btn sm" onClick={() => setAsk(null)}>Not now</button></form>
         {said && <p role="alert">{said}</p>}</div>}
       <div className="cs-ft-end"><small>© 2026 Loop</small>
-        <div className="cs-ft-kits" role="group" aria-label="Colours">{KITS.map(each => <button key={each.slug} data-kit={each.slug} aria-label={`${each.name} colours`} title={each.name} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }} />)}</div></div></div>
+        {!worn && <div className="cs-ft-kits" role="group" aria-label="Colours">{KITS.map(each => <button key={each.slug} data-kit={each.slug} aria-label={`${each.name} colours`} title={each.name} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }} />)}</div>}</div></div>
   </footer>;
 }
 

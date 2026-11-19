@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import type { Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
@@ -15,6 +15,8 @@ import { GET as readCampusFeeds } from './api/cron/campus-feeds/route';
 // The sign-in form itself is Clerk's. Here it is one email field, which is all the school menu reads from it.
 vi.mock('@clerk/nextjs', () => ({ SignIn: () => <input name="identifier" aria-label="Email" /> }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// The foot of the door (components/campus/foot.tsx) asks for the router; redirect stays the real one.
+vi.mock('next/navigation', async original => ({ ...(await original<typeof import('next/navigation')>()), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 // The campus the browser was last looking at (the cookie the campus screen leaves), or none.
 const jar = vi.hoisted(() => ({ at: null as string | null }));
 vi.mock('next/headers', () => ({ headers: async () => new Headers(), cookies: async () => ({ get: (name: string) => jar.at ? { name, value: jar.at } : undefined }) }));
@@ -36,6 +38,11 @@ describe('the door', () => {
     render(await drawn(FrontDoor()));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Go together at Cornell.');
     expect(screen.getByText('Blitz night')).toBeInTheDocument();
+    // The foot is there too, in the colours of the school on the ticket, with the small print and no colours to pick.
+    const foot = screen.getByRole('contentinfo');
+    expect(foot).toHaveAttribute('data-kit', 'cornell');
+    expect(within(foot).getAllByRole('link').map(link => link.textContent)).toEqual(['Loop', 'Terms', 'Privacy']);
+    expect(within(foot).queryByRole('group', { name: 'Colours' })).toBeNull();
     expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByRole('status')).toHaveTextContent('Sign-in is not configured');
   });
