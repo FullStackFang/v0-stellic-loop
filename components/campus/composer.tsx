@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { imInAction, postLineAction, readPlanLinkAction, type LineFrom } from '@/app/c/actions';
 import { readLine, TIME_WORDS, typingTag, whenIdeas } from '@/lib/campus/line';
 import type { NearTag } from '@/lib/campus/tags';
@@ -73,13 +73,17 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
     const got = await postLineAction(campus.slug, text, from).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
     if (got.ok) { router.refresh(); onDone(); } else setSaid({ text: got.message, bad: true });
   }));
+  // The line is one row that grows with what is typed, so it never scrolls inside itself.
+  useEffect(() => { const el = box.current; if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; } }, [text]);
+  // The second column is there only when it has something to show: places people use, a place being typed, or plans already on at the place.
+  const side = tags.length > 0 || typing !== null || here.length > 0;
   const join = (id: string) => start(async () => { const got = await imInAction(id); if (got.ok) router.refresh(); else setSaid({ text: got.message, bad: true }); });
 
   return <div className="cs-post-cols">
     <div className="cs-line">
       <div className="cs-line-card">
         <label className="cs-line-label" htmlFor="cs-say">What are you up to?</label>
-        <textarea id="cs-say" ref={box} className="cs-say" rows={3} maxLength={400} autoFocus spellCheck={false} placeholder="dumplings tonight 7 @collegetown" value={text}
+        <textarea id="cs-say" ref={box} className="cs-say" rows={1} maxLength={400} autoFocus spellCheck={false} placeholder="dumplings tonight 7 @collegetown" value={text}
           onChange={event => typed(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (!busy) post(); } }} />
         <div className="cs-read" aria-live="polite">
           {title && <span className="cs-chip">{title}</span>}
@@ -96,14 +100,14 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
       </div>
     </div>
 
-    <div className="cs-post-side">
+    {side && <div className="cs-post-side">
       <div className="cs-line-card">
         <h2>{typing ? <>Places near you that start with <b>@{typing}</b></> : 'Places people near you use'}</h2>
         <div className="cs-sug">
           {times.map(word => <button key={word} type="button" onClick={() => asTime(word)}><span><b className="new">{word}</b><small>A time, not a place{say(readLine(word, campus.tz, now).starts ?? '') ? `: ${say(readLine(word, campus.tz, now).starts ?? '')}` : ''}</small></span></button>)}
           {offered.map(tag => <button key={tag.slug} type="button" style={{ '--fill': tag.people / most } as React.CSSProperties} onClick={() => pick(tag.slug)}><span><b>@{tag.slug}</b><small>{people(tag)}</small></span></button>)}
           {typing !== null && typing.length >= 2 && !tags.some(tag => tag.slug === typing) && !TIME_WORDS.includes(typing) && <button type="button" onClick={() => pick(typing)}><span><b className="new">Make @{typing}</b><small>A new place. People nearby see it when they type @</small></span></button>}
-          {!offered.length && (typing ?? '').length < 2 && <p className="cs-note">{tags.length ? 'Keep typing to name a new place.' : 'Nobody has named a place here yet. Type @ and a name: it is yours to make.'}</p>}
+          {!offered.length && (typing ?? '').length < 2 && <p className="cs-note">{tags.length ? 'Keep typing to name a new place.' : 'Nobody has named a place here yet. Keep typing: it is yours to make.'}</p>}
         </div>
       </div>
 
@@ -116,6 +120,6 @@ export function Composer({ campus, tags, soon, onDone }: { campus: { slug: strin
           {plan.mine ? <span className="cs-pill yes">You&rsquo;re in</span> : <button type="button" className="cs-btn sm" disabled={busy} onClick={() => join(plan.id)}>Join</button>}
         </div>)}
       </div>}
-    </div>
+    </div>}
   </div>;
 }

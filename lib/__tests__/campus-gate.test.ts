@@ -107,6 +107,21 @@ describe('a person belongs to the school of their email', () => {
     expect(mayUse(admin, cornell)).toBe(true);
     expect(mayUse(admin, (await listCampuses(t.db)).find(campus => campus.slug === 'nyu')!)).toBe(true);
   });
+  it('lets a Cornell person look at Cornell Tech without moving there, and nobody is placed there by their email', async () => {
+    const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });
+    const all = await listCampuses(t.db), tech = all.find(campus => campus.slug === 'cornell-tech')!, nyu = all.find(campus => campus.slug === 'nyu')!;
+    expect(schoolOfEmail(all, 'sam@cornell.edu')?.slug).toBe('cornell');
+    const viewer = (await withPortalTestSession(sam, () => campusViewer()))!;
+    expect(viewer).toMatchObject({ campus: { slug: 'cornell' }, kit: 'cornell', visits: [tech.id] });
+    expect(mayUse(viewer, tech)).toBe(true);
+    expect(mayUse(viewer, nyu)).toBe(false);
+    // Opening the other campus does not move them.
+    expect((await campusOf(t.db, sam))?.slug).toBe('cornell');
+    const { id: other } = await makePerson(t.db, 'Noor');
+    const noor = (await withPortalTestSession(who({ personId: other, subject: 'user_noor', verifiedEmail: 'noor@nyu.edu' }), () => campusViewer()))!;
+    expect(noor.visits).toEqual([]);
+    expect(mayUse(noor, tech)).toBe(false);
+  });
   it('shows group names in the top bar only to someone who can open them', async () => {
     const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });
     vi.stubEnv('LOOP_FRONT', 'campus');

@@ -5,12 +5,15 @@ import type { Principal } from '../emba/access';
 import { groupHref, treeOrder } from '../emba/group-path';
 import { getSignedInPrincipal, portalGroupTree } from '../emba/portal-session';
 import { isAdmin } from './admin';
-import { findCampus, type Campus } from './listings';
+import { findCampus, listCampuses, type Campus } from './listings';
 import { campusOf } from './people';
-import { DEFAULT_CAMPUS, frontIsCampus } from './schools';
+import { DEFAULT_CAMPUS, frontIsCampus, schoolOf } from './schools';
 
-/** `kit` is whose colours they see unless they pick others: their school's, or Loop's own for an email at no school. */
-export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null; kit: string };
+/**
+ * `kit` is whose colours they see unless they pick others: their school's, or Loop's own for an email at no school.
+ * `visits` is the other campuses of their school, by id: places they may look at and join things without moving there.
+ */
+export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null; kit: string; visits: string[] };
 
 /**
  * Who is looking at the campus screen: the signed-in person, whether they are the admin, and the campus they belong
@@ -22,11 +25,12 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
   const principal = await getSignedInPrincipal().catch(() => null);
   if (!principal) return null;
   const school = await campusOf(db(), principal);
-  return { principal, personId: principal.personId, admin: isAdmin(principal), campus: school ?? await findCampus(db(), DEFAULT_CAMPUS), kit: school?.slug ?? 'loop' };
+  const visits = school ? (await listCampuses(db())).filter(each => each.id !== school.id && schoolOf(each.slug) === schoolOf(school.slug)).map(each => each.id) : [];
+  return { principal, personId: principal.personId, admin: isAdmin(principal), campus: school ?? await findCampus(db(), DEFAULT_CAMPUS), kit: school ? schoolOf(school.slug) : 'loop', visits };
 });
 
-/** Whether this viewer may use a campus's screen: it is their own school's, or they are the admin, who may open any. */
-export const mayUse = (viewer: CampusViewer, campus: { id: string }) => viewer.admin || viewer.campus?.id === campus.id;
+/** Whether this viewer may use a campus's screen: it is their own, or another campus of their school, or they are the admin, who may open any. */
+export const mayUse = (viewer: CampusViewer, campus: { id: string }) => viewer.admin || viewer.campus?.id === campus.id || viewer.visits.includes(campus.id);
 
 /**
  * The person's top-level groups by name, for the top bar: only for someone who can open them. With the campus screen

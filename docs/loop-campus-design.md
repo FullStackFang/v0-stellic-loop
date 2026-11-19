@@ -74,6 +74,7 @@ Body 15px. Numbers are tabular. No all-caps labels.
 ## Shape
 
 - Cards and lists: `22px 22px 22px 6px` (one tight corner, as today).
+- **Nothing clickable is bare text.** Every link, tab, filter and action sits in a pill: filled ink when it is the current one, outlined on paper otherwise. This holds most of all in headers and bars, where bare text on the coral field is hard to see and does not read as something to press. (Founder rule, 2026-11-18.)
 - Buttons and tabs are pills. Date tiles: `12px 12px 12px 3px`.
 - Cards: no border, a hard shadow `5px 5px 0` in the shadow colour. The cover tile and the
   carnelian buttons: hard shadow in ink (`6px 6px 0` and `3px 3px 0`).

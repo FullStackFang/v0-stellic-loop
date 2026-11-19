@@ -54,7 +54,11 @@ it('the "+" on This week opens posting, which is one line: Loop shows what it un
     fireEvent.click(screen.getByRole('button', { name: 'Post a plan' }));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('heading', { name: 'Nothing here yet' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Places people near you use' })).toBeInTheDocument();
+    // Nobody has named a place here yet, so there is no places column: the panel is just the line. Typing @ brings it in.
+    expect(screen.queryByRole('heading', { name: 'Places people near you use' })).toBeNull();
+    expect(document.querySelector('.cs-post-side')).toBeNull();
+    say('dumplings @co');
+    expect(screen.getByRole('button', { name: /Make @co/ })).toBeInTheDocument();
     expect(screen.queryByLabelText('Starts')).toBeNull();
     say('dumplings tomorrow 7pm @collegetown ');
     const understood = document.querySelector('.cs-read')!;

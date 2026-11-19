@@ -4,6 +4,7 @@ import { CampusShell } from '@/components/campus/shell';
 import { db } from '@/lib/db';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { listCampuses, weekListings, type Campus } from '@/lib/campus/listings';
+import { schoolOf } from '@/lib/campus/schools';
 import { campusRewards, groupRewardFor } from '@/lib/campus/rewards';
 import { campusViewer } from '@/lib/campus/session';
 import { dayLabel, timeLabel } from '@/lib/campus/time';
@@ -26,7 +27,7 @@ async function ticket(campus: Campus, now: Date): Promise<DoorSchool> {
 
 /** The pitch, a ticket to try for each school, and the sign-in card. `routing` says whether the card owns the address (/sign-in) or sits on another page (/). */
 export async function DoorPage({ routing }: { routing: 'hash' | 'path' }) {
-  const now = new Date(), schools = await Promise.all((await listCampuses(db())).map(campus => ticket(campus, now)));
+  const now = new Date(), schools = await Promise.all((await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(campus => ticket(campus, now)));
   // Open on a school that has something on this week.
   return <div className="cs"><Door schools={schools} start={Math.max(0, schools.findIndex(school => school.event))} routing={routing} configured={clerkPortalConfigured()} /></div>;
 }

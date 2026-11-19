@@ -46,7 +46,9 @@ The founder picked layout A ("By when") in conversation on 2026-11-18: one list 
 
 **D4. The list lives on the campus screen, as the "yours" side.** It is drawn only from groups the viewer belongs to, for a signed-in viewer, whichever campus screen they are on: membership, not campus, decides what is theirs. It is read with `CampusViewer.principal`. When nothing is on the viewer it is not drawn.
 - The list is its own server component, read separately and handed to the screen as a slot, the way `signOut` is today. It is not a field of `Screen`: `Screen` is built in one await, so a field would hold up the week (D8).
-- Where it sits is not decided here. The screen is one fixed-height view with no obvious room "above the week". The mockup (task 1) offers placements and the founder picks.
+- Where it sits (founder picked 2026-11-18, mockup direction C): behind an "On you N" counter in the top bar, which opens the list in a panel over the screen and closes on a second press. The week keeps its full room. With nothing on the viewer there is no counter. The founder first asked for it to be minimal, so nothing else is added to the screen.
+- Finishing a row must feel smooth (founder, 2026-11-18): the row says what was recorded, fades, the space it held closes and the rows below slide up, and the count changes. The list never jumps or loses its scroll position, and with motion reduced the row is simply removed. The mockup shows the timing.
+- The row of events on the campus screen never shows a cut ticket and its scrolling snaps to whole tickets (founder, same day). In the mockup the tickets share the row width evenly and two round arrow pills on the filter line move one set at a time. The filter pills (Best for you, CampusGroups, Near you) sit on the line with the "+", each on a pill.
 - Alternative: the top of `/groups`. Rejected: the founder named the campus view as the focus, and the groups site is closed to members.
 
 **D5. The list has its own per-group read.** `onYou(db, principal)` in `team-waiting.ts` reads asks, events and ideas only, each ordered by time, and merges them across groups: an ask by when it closes, an event or idea by when it starts, undated ideas last. It returns up to 30 rows and, per group, how many more. It does not reuse `teamWaiting` as it stands: that caps each kind at 10 per group (so "the 30 soonest" would be wrong), counts mentions and announcements into its totals, and reads them twice per group for nothing. `teamWaiting` gains parameters for which kinds to read and how many, used by both callers. `onYou` never writes to `emba_waiting_shown`.
@@ -87,7 +89,7 @@ Each button is a server action in the campus actions file, calling the existing 
 
 ## Risks / Trade-offs
 
-- [The founder picked the layout from a description, and the screen has no obvious room for it] → Task 1 is a mockup with placements; nothing else starts until one is picked.
+- [The founder picked the layout from a description, and the screen has no obvious room for it] → Task 1 was a mockup with placements; the founder picked the counter (C).
 - [Another session is editing `components/campus/screen.tsx` (a "Near you" map tab, uncommitted)] → the list is a separate component handed in as a slot, so the change to that file is a few lines; build after that work is committed.
 - [Reopening breaks a rule every ask read relies on: closed stays closed] → one write does it; tests cover a reopened ask of each kind in the list, the count, the missing list, the result and the messages, and that an idea's day ask is refused.
 - [Opening ask pages to members undoes part of a deliberate gate] → only for members of that ask's group, tested with a non-member and a signed-out visitor.

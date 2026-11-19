@@ -603,7 +603,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
    opens and tips under the pointer. The stub past the tear line is the action; it opens one ticket per campus. */
 .cs-swap { --hot: oklch(90% 0.17 98); position: absolute; z-index: 5; top: 15px; right: 20px; }
 .cs-swap svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.cs-near-band.swaps small { top: auto; bottom: 5px; right: 22px; font-size: 9px; } .cs-near-band.swaps p { padding-right: 220px; }
+.cs-near-band.swaps small { top: calc(100% + 9px); bottom: auto; right: auto; left: 12px; padding: 1px 6px; border-radius: 99px; font-size: 9px; opacity: 1; color: var(--cs-mute); background: color-mix(in oklab, var(--pp) 80%, transparent); } .cs-near-band.swaps p { padding-right: 220px; }
 .cs-tag { display: flex; height: 48px; text-align: left; line-height: 1.1; rotate: -2deg; transform-origin: 15px 50%; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 4px 0 var(--cs-ink));
   animation: cs-swing 1.5s cubic-bezier(.3, 0, .3, 1) .5s both; transition: rotate .5s var(--cs-expo), translate .15s, filter .15s; }
 .cs-tag:hover, .cs-tag[aria-expanded=true] { rotate: 1.5deg; } .cs-tag:active { translate: 2px 2px; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(1px 2px 0 var(--cs-ink)); }

@@ -7,6 +7,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { bounds, held, hops, inside, middle, sectionAt, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Way } from '@/lib/campus/sections';
 import type { Face, Ticket } from '@/lib/campus/view';
 import { FaceDot } from './screen';
+import { Swap, visiting, type SwapCampus } from './swap';
 
 // "Near you": the week on a map, one section of town at a time. The look is public/demo/mockups-map-print.html: a
 // two-ink poster on paper. The ink colour draws the sheet, the school's colour is the second ink printed a little off
@@ -153,6 +154,8 @@ function style(c: ReturnType<typeof paints>, land: readonly Section[], here: Sec
 
 export type NearProps = {
   land: Section[];
+  /** The campuses of this school, when it has more than one: the tag in the corner of the band swaps between them. */
+  swap?: SwapCampus[];
   /** The week's events that the search line has not ruled out. Those with no spot on the map are left out here. */
   tickets: Ticket[];
   /** The viewer's own face, for the spot they stand on. */
@@ -172,7 +175,7 @@ export type NearProps = {
   onYou?: (at: Point | null) => void;
 };
 
-export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou }: NearProps) {
+export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou, swap = [] }: NearProps) {
   const spots = useMemo(() => tickets.flatMap((ticket): Spot[] => {
     if (!ticket.map) return [];
     const at: Point = [ticket.map.lon, ticket.map.lat], sec = sectionAt(land, at);
@@ -384,7 +387,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
 
   const away = hops(land, standing, view), walk = (to: Point) => you ? walkMinutes(you, to) : null;
   const kicker = away ? [`${away} ${away === 1 ? 'step' : 'steps'} from ${you ? 'you' : 'the start'}`, you ? `${walk(middle(here.ring))} min walk` : null].filter(Boolean).join(' · ')
-    : where === 'here' ? 'You are here' : where === 'away' ? 'You are away from campus' : where === 'off' ? 'Your location is off' : 'Finding you';
+    : where === 'here' ? 'You are here' : visiting(swap) ? 'Visiting' : where === 'away' ? 'You are away from campus' : where === 'off' ? 'Your location is off' : 'Finding you';
   const shown = wall && !up && wall.view === view ? wall : null, there = shown?.id ? land.find(each => each.id === shown.id) : undefined;
 
   const pin = (spot: Spot, nth: number) => {
@@ -405,7 +408,8 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     <svg className="cs-near-defs" width={0} height={0} aria-hidden="true"><defs><path id="cs-arc-over" d="M-21 0a21 21 0 0 1 42 0" /><path id="cs-arc-under" d="M-22 0a22 22 0 0 0 44 0" /></defs>
       <filter id="cs-rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves={2} seed={7} /><feDisplacementMap in="SourceGraphic" scale={2.4} /></filter></svg>
     <div className="cs-near-map" ref={canvas} /><i className="cs-near-tooth" /><i className="cs-near-age" />
-    <div className="cs-near-band" ref={band}><p><b>{kicker}</b> · {list.length} on · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2><small>Map © OpenStreetMap, OpenFreeMap</small></div>
+    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2><small>Map © OpenStreetMap, OpenFreeMap</small></div>
+    <Swap campuses={swap} />
     {shown && (shown.kind === 'go' && there
       ? <button className="cs-way" ref={el => { way.current = el; if (el && map) place(map); }} aria-label={`Go to ${there.name}`} onClick={() => step(there.id)}>
           <span><b>{there.name}</b>{[there.id === standing ? (you ? 'Where you stand' : 'Where you started') : you ? `${walk(middle(there.ring))} min walk` : null, `${on[there.id]} on`].filter(Boolean).join(' · ')}</span><Arrow /></button>
