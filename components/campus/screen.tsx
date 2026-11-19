@@ -14,6 +14,7 @@ import type { SwapCampus } from './swap';
 import { Composer, type Soon } from './composer';
 import { Near } from './near';
 import { OwnFace } from './own-face';
+import { SaveFace } from './save-face';
 import { InkBlot, InkMark, SchoolMark } from './ink-mark';
 import { INK_PAGE } from '@/lib/campus/ink';
 import type { Coupon, Face, Screen, Seat, Ticket, Tile as Pet } from '@/lib/campus/view';
@@ -308,6 +309,8 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
   const choose = (next: number) => { const before = face; setFace(next); setMoved(true); save(async () => { if (!(await faceAction(next)).ok) setFace(before); }); };
   // The animal they had made from a photo, how many more they may make, and whether the pane that makes one is open.
   const [own, setOwn] = useState(viewer.own), [owns, setOwns] = useState(viewer.owns), [left, setLeft] = useState(viewer.makesLeft), [asked, setAsked] = useState(viewer.asked), [making, setMaking] = useState(false);
+  // "Save your picture" takes the picker's place in the card: the rows step aside for it as they do for the picker.
+  const [saving, setSaving] = useState(false);
   const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : face === CUSTOM ? own : animal(face), ink: asked }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   /** One of the animals they had made, which may not be the one in use. */
   const chooseOwn = (next: string) => { const before = { face, own }; setOwn(next); setFace(CUSTOM); setMoved(true); save(async () => { if (!(await ownFaceAction(next)).ok) { setOwn(before.own); setFace(before.face); } }); };
@@ -335,16 +338,18 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
   return <div className="cs-acct" ref={box}>
     <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setKit(kitNow()); setPicking(false); setMoved(false); setOpen(!open); }}>{avatar()}</button>
     {open && <div className="cs-lvl" role="dialog" aria-label="Your level">
-      <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => { setPicking(!picking); setMaking(false); }}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
+      <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => { setPicking(saving || !picking); setMaking(false); setSaving(false); }}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* The plan's one row. It steps aside for the picker, where an Ink animal opens the plan for someone without it. */}
       {!picking && <div className="cs-inkrow"><InkMark /><span><b>{asked ? 'You have Ink' : 'Loop Ink'}</b><small>{asked ? 'Every Ink animal is yours to pick.' : 'More animals, and your own pet drawn from a photo.'}</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>}
+      {!picking && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" /></svg><span><b>Save your picture</b><small>A profile picture, a lock screen or a sticker.</small></span><button className="cs-btn sm" onClick={() => { setPicking(true); setSaving(true); }}>Save it</button></div>}
       {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
       {!picking && home && swap.filter(each => !each.home).map(each => <div className="cs-inkrow cs-camprow" key={each.slug}><span><b>Your campus is {home.title}</b><small>{moveNote ?? 'You can look at the other one any time from the map.'}</small></span>
         <button className="cs-btn sm" disabled={moving} onClick={() => move(async () => { const done = await changeCampusAction(each.slug); if (done.ok) window.location.assign(`/c/${each.slug}`); else setMoveNote(done.message); })}>Change to {each.title}</button></div>)}
       {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
-      {picking && making ? <OwnFace asked={asked} left={left} free={viewer.admin} current={owns.includes(own ?? '') ? own ?? '' : owns[owns.length - 1] ?? ''} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
+      {picking && saving ? <SaveFace onBack={() => { setSaving(false); setPicking(false); }} />
+      : picking && making ? <OwnFace asked={asked} left={left} free={viewer.admin} current={owns.includes(own ?? '') ? own ?? '' : owns[owns.length - 1] ?? ''} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
       : picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Search animals" placeholder="Search" />
           {viewer.picks.school.length > 0 && <button className="cs-btn sm school" aria-pressed={only === 'school'} onClick={() => setOnly(only === 'school' ? '' : 'school')}><SchoolMark />Mascots</button>}
           <button className="cs-btn sm gold" aria-pressed={only === 'ink'} onClick={() => setOnly(only === 'ink' ? '' : 'ink')}><InkMark />Ink</button>

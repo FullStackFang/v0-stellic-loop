@@ -172,6 +172,32 @@ describe('who sees whom', () => {
     expect(await offered(as(ana))).toEqual([['Cornell bear'], ['Dachshund']]);
     await expect(setBuiltTier(t.db, 3, 'school')).rejects.toThrow('No such animal');
   });
+  it('opens "Save your picture" from the account card, in the rows\' place, and goes back to them', async () => {
+    const { ana } = await world();
+    // The pane asks the server for its grounds and its picture (app/c/save/route.test.ts): here nothing answers.
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500, json: async () => [], text: async () => '' })));
+    try {
+      await show(as(ana));
+      fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
+      const card = within(screen.getByRole('dialog', { name: 'Your level' }));
+      expect(card.getByText('Save your picture')).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Save it' }));
+      expect(card.getByRole('group', { name: 'Shape' })).toBeInTheDocument();
+      expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', '/c/save?shape=profile&ground=school&small=1');
+      expect(card.getByRole('button', { name: /No mark/ })).toHaveTextContent('Ink+');
+      // The rows stepped aside, as they do for the picker.
+      expect(card.queryByText('Loop Ink')).toBeNull();
+      expect(card.queryByRole('button', { name: 'Save it' })).toBeNull();
+      // The pencil on the picture still leads to the picker.
+      fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
+      expect(card.getByRole('group', { name: 'Pick your picture' })).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Done' }));
+      fireEvent.click(card.getByRole('button', { name: 'Save it' }));
+      fireEvent.click(card.getByRole('button', { name: 'Done' }));
+      expect(card.getByText('Loop Ink')).toBeInTheDocument();
+      expect(card.queryByRole('group', { name: 'Shape' })).toBeNull();
+    } finally { vi.unstubAllGlobals(); }
+  });
   it('lets the viewer pick their picture in the account card: an animal, or their own photo', async () => {
     const { ana } = await world();
     await withPortalTestSession(ana, async () => {

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { InkMark, SchoolMark } from '@/components/campus/ink-mark';
+import { SaveFace } from '@/components/campus/save-face';
 import type { Choice, Pick, PicturePane, TileProps } from '@/lib/emba/group-picture';
 import { groupPictureSrc } from '@/lib/emba/group-picture-src';
 import { drawGroupPictureAction, keepGroupPictureAction, subscribeInkPlusAction } from './picture-actions';
@@ -16,7 +17,7 @@ import './group-picture.css';
 const keyOf = (pick: Pick) => 'face' in pick ? `f${pick.face}` : `t${pick.token}`;
 const FAILED = { ok: false as const, message: 'That did not go through. Try again.' };
 const FILTERS: [Choice['kind'], string][] = [['own', 'Yours'], ['school', 'Schools'], ['ink', 'Ink']];
-type Step = 'pics' | 'pick' | 'plate' | 'sure' | 'wait' | 'two';
+type Step = 'pics' | 'pick' | 'plate' | 'sure' | 'wait' | 'two' | 'save';
 /** The longest line of a person's own the drawing takes (plainNote in lib/emba/group-picture.ts). */
 const NOTE = 60;
 
@@ -26,7 +27,11 @@ export function GroupTile({ scope, picture, pane, name }: TileProps & { name: st
   const [open, setOpen] = useState(false), [kept, setKept] = useState<string | null>(null), worn = kept ?? picture;
   /* eslint-disable-next-line @next/next/no-img-element -- a drawing served from the database at its own address */
   const face = worn ? <img src={groupPictureSrc(worn)} alt="" /> : <Rings />;
-  if (!pane) return <span className={`gt-tile ${worn ? 'gp-has' : ''}`}>{face}</span>;
+  // Someone who does not run the group has nothing to draw. A drawn picture is theirs to save, as it is any member's.
+  if (!pane) return !worn ? <span className="gt-tile">{face}</span> : <span className="gp">
+    <button className="gt-tile gp-has" aria-expanded={open} aria-label={`Group picture of ${name}. Save it`} onClick={() => setOpen(!open)}>{face}</button>
+    {open && <SaveCard scope={scope} onClose={() => setOpen(false)} />}
+  </span>;
   return <span className="gp">
     <button className={`gt-tile ${worn ? 'gp-has' : ''}`} aria-expanded={open} aria-label={`Group picture of ${name}. ${worn ? 'Change it' : 'Draw one'}`} onClick={() => setOpen(!open)}>
       {face}<i className="gp-pen" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3L5 14H2v-3z" /></svg></i>
@@ -35,18 +40,10 @@ export function GroupTile({ scope, picture, pane, name }: TileProps & { name: st
   </span>;
 }
 
-function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope']; pane: PicturePane; onKept: (token: string) => void; onClose: () => void }) {
-  const router = useRouter(), box = useRef<HTMLDivElement>(null);
-  const [step, setStep] = useState<Step>('pics');
-  const [picked, setPicked] = useState<Choice[]>([]), [only, setOnly] = useState<Choice['kind'] | null>(null);
-  const [drawn, setDrawn] = useState(pane.waiting), [kept, setKept] = useState(pane.kept), [all, setAll] = useState(pane.drawn);
-  const [plus, setPlus] = useState(pane.plus), [thanked, setThanked] = useState(false);
-  const [email, setEmail] = useState(''), [note, setNote] = useState(''), [said, setSaid] = useState(''), [busy, setBusy] = useState(false);
-  // Where "Back" on the asking step returns to, and how many more times this person may ask (null: no limit).
-  const [from, setFrom] = useState<'pick' | 'two'>('pick'), [left, setLeft] = useState(pane.asksLeft);
-  const ask = (back: 'pick' | 'two') => { setSaid(''); setFrom(back); setStep('sure'); };
-
-  // The card sits above the page, under the tile: the ticket the tile is in cuts off anything that hangs out of it.
+/** What makes a card of the tile: it sits above the page, under the tile, and closes on Escape or a press anywhere else. */
+function useCard(onClose: () => void) {
+  const box = useRef<HTMLDivElement>(null);
+  // The ticket the tile is in cuts off anything that hangs out of it.
   useLayoutEffect(() => {
     const el = box.current!, by = el.parentElement!.getBoundingClientRect();
     el.style.left = `${Math.max(12, by.left + window.scrollX)}px`; el.style.top = `${by.bottom + window.scrollY + 14}px`;
@@ -59,6 +56,24 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
     document.addEventListener('keydown', key); document.addEventListener('pointerdown', press);
     return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', press); };
   }, [onClose]);
+  return box;
+}
+
+/** The card of a member who does not run the group: the group's picture, to save. */
+function SaveCard({ scope, onClose }: { scope: TileProps['scope']; onClose: () => void }) {
+  return <div ref={useCard(onClose)} className="cs-lvl gp-card" role="dialog" aria-label="Group picture"><SaveFace of={scope} onBack={onClose} /></div>;
+}
+
+function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope']; pane: PicturePane; onKept: (token: string) => void; onClose: () => void }) {
+  const router = useRouter(), box = useCard(onClose);
+  const [step, setStep] = useState<Step>('pics');
+  const [picked, setPicked] = useState<Choice[]>([]), [only, setOnly] = useState<Choice['kind'] | null>(null);
+  const [drawn, setDrawn] = useState(pane.waiting), [kept, setKept] = useState(pane.kept), [all, setAll] = useState(pane.drawn);
+  const [plus, setPlus] = useState(pane.plus), [thanked, setThanked] = useState(false);
+  const [email, setEmail] = useState(''), [note, setNote] = useState(''), [said, setSaid] = useState(''), [busy, setBusy] = useState(false);
+  // Where "Back" on the asking step returns to, and how many more times this person may ask (null: no limit).
+  const [from, setFrom] = useState<'pick' | 'two'>('pick'), [left, setLeft] = useState(pane.asksLeft);
+  const ask = (back: 'pick' | 'two') => { setSaid(''); setFrom(back); setStep('sure'); };
 
   const toggle = (one: Choice) => {
     const at = picked.findIndex(each => keyOf(each.pick) === keyOf(one.pick));
@@ -95,8 +110,10 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
 
   // The card opens on the group's pictures: press one to wear it. The gold tile is the Ink+ part, and opens the animals.
   const fresh = <button className="gp-pic gp-new" onClick={() => { setSaid(''); setStep('pick'); }}><i aria-hidden="true">+</i><span>{all.length ? 'Draw a new one' : 'Draw one'}</span><b className="gp-plus">Ink+</b></button>;
-  const body = step === 'pics' ? <div className="cs-lvl-body cs-pets">
-    <div className="cs-pets-top"><p className="gp-tab">Group pictures{all.length > 0 && <b>{all.length}</b>}</p><button className="cs-btn sm go gp-done" onClick={onClose}>Done</button></div>
+  // Saving the picture the group wears is any member's, and free (openspec loop-save-picture).
+  const body = step === 'save' ? <SaveFace of={scope} onBack={() => { setSaid(''); setStep('pics'); }} />
+  : step === 'pics' ? <div className="cs-lvl-body cs-pets">
+    <div className="cs-pets-top"><p className="gp-tab">Group pictures{all.length > 0 && <b>{all.length}</b>}</p>{kept && <button className="cs-btn sm gp-save" onClick={() => { setSaid(''); setStep('save'); }}>Save the picture</button>}<button className="cs-btn sm go gp-done" onClick={onClose}>Done</button></div>
     {all.length ? <div className="gp-pics" role="group" aria-label="Group pictures">{fresh}
       {all.map((token, at) => <button key={token} className="gp-pic" aria-pressed={kept === token} aria-label={`Drawing ${all.length - at}`} disabled={busy} onClick={() => { if (kept !== token) void keep(token); }}>
         <img src={groupPictureSrc(token, true)} alt="" />{kept === token && <span className="gp-worn">Wearing this</span>}</button>)}</div>
