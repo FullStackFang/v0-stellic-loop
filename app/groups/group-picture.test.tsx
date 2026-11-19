@@ -66,6 +66,10 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   await members(owner);
   fireEvent.click(tileButton()!);
   const card = within(screen.getByRole('dialog', { name: 'Group picture' }));
+  // The card opens on the group's pictures: none yet, and the tile that draws one.
+  expect(card.getByText(/No picture yet/)).toBeInTheDocument();
+  preview('picture-none');
+  fireEvent.click(card.getByRole('button', { name: /Draw one/ }));
   // Fewer than two draws nothing.
   const go = card.getByRole('button', { name: /Draw us together/ });
   expect(go).toBeDisabled();
@@ -120,11 +124,14 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   expect(tileButton()!.querySelector('img')).toHaveAttribute('src', expect.stringContaining('/animals/group/'));
   // Every drawing of the group stays to choose from: the four made so far, and an earlier one can be worn instead.
   fireEvent.click(card.getByRole('button', { name: 'Pick other animals' }));
-  fireEvent.click(card.getByRole('button', { name: 'Drawn 4' }));
-  expect(card.getAllByRole('img', { name: /^Drawing/ })).toHaveLength(4);
+  fireEvent.click(card.getByRole('button', { name: 'Back to pictures' }));
+  expect(card.getByText('Group pictures')).toBeInTheDocument();
+  expect(card.getAllByRole('button', { name: /^Drawing/ })).toHaveLength(4);
+  expect(card.getAllByRole('button', { name: /^Drawing/, pressed: true })).toHaveLength(1);
+  expect(card.getByRole('button', { name: /Draw a new one/ })).toBeInTheDocument();
   preview('picture-drawn');
   const first = (await groupPictures(t.db, [group.loopId])).get(group.loopId)!;
-  fireEvent.click(card.getAllByRole('button', { name: 'Use this one' })[2]);
+  fireEvent.click(card.getAllByRole('button', { name: /^Drawing/, pressed: false })[2]);
   await vi.waitFor(async () => expect((await groupPictures(t.db, [group.loopId])).get(group.loopId)).not.toBe(first));
   const kept = (await groupPictures(t.db, [group.loopId])).get(group.loopId)!;
   await vi.waitFor(() => expect(tileButton()!.querySelector('img')).toHaveAttribute('src', `/animals/group/${kept}`));
@@ -158,10 +165,12 @@ it('stops at six, and closes on Done', async () => {
   await members(owner);
   fireEvent.click(tileButton()!);
   const card = within(screen.getByRole('dialog', { name: 'Group picture' }));
+  fireEvent.click(card.getByRole('button', { name: /Draw one/ }));
   for (const n of [1, 2, 3, 4, 5, 6, 7]) fireEvent.click(card.getByRole('button', { name: `Animal ${n}` }));
   expect(card.getByText('6 of 6')).toBeInTheDocument();
   expect(card.getByRole('alert')).toHaveTextContent('6 is the most for now.');
   expect(card.getByRole('button', { name: 'Animal 7' })).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(card.getByRole('button', { name: 'Back to pictures' }));
   fireEvent.click(card.getByRole('button', { name: 'Done' }));
   expect(screen.queryByRole('dialog', { name: 'Group picture' })).toBeNull();
 });

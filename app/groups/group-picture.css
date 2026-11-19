@@ -28,4 +28,14 @@
 /* The same picture, small, wherever a group is listed. */
 .lp-grouptile.gp-has, .lp-inside-mark.gp-has { background: var(--cs-paper, #fff); box-shadow: inset 0 0 0 1.5px var(--cs-ink, currentColor); overflow: hidden; }
 .lp-grouptile.gp-has > img, .lp-inside-mark.gp-has > img { display: block; width: 92%; height: 92%; object-fit: contain; }
-.gp-two.gp-all { grid-template-columns: repeat(3, 1fr); margin-bottom: 4px; } .gp-all figure { padding: 8px; }
+/* The group's pictures: big, three across, the one worn ringed. The gold tile draws a new one. */
+.gp-card .cs-pets-top { align-items: center; } .cs .cs-lvl-body > .cs-pets-top > .gp-tab { display: inline-flex; align-items: center; gap: 8px; height: 32px; margin: 0; padding: 0 14px; border-radius: 99px; font-size: 14.5px; font-weight: 680; background: var(--cs-ink); color: var(--cs-field); } .gp-tab b { color: var(--cs-paper); }
+.gp-pics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0 12px; }
+.cs .gp-pic { position: relative; display: grid; place-items: center; min-width: 0; aspect-ratio: 1; padding: 0; border: 0; border-radius: 18px 18px 18px 5px; font: inherit; color: inherit; cursor: pointer; background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); transition: transform .15s var(--cs-ease); }
+.cs .gp-pic:hover { transform: translate(-1px, -2px); } .gp-pic > img { position: absolute; inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); object-fit: contain; }
+.cs .gp-pic[aria-pressed=true] { background: var(--cs-paper); box-shadow: 0 0 0 3px var(--cs-action), 4px 4px 0 var(--cs-field-shadow); }
+.gp-worn { position: absolute; left: 50%; bottom: -11px; transform: translateX(-50%); padding: 2px 11px; border-radius: 99px; font-size: 12px; font-weight: 700; white-space: nowrap; background: var(--cs-action); color: var(--cs-paper); }
+.cs .gp-pic.gp-new { align-content: center; gap: 8px; font-weight: 660; line-height: 1.15; text-align: center; background: color-mix(in oklch, var(--cs-gold) 22%, var(--cs-paper)); box-shadow: inset 0 0 0 2.5px var(--cs-gold); }
+.gp-new > i { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; font-style: normal; font-size: 36px; font-weight: 500; line-height: 1; background: var(--cs-ink); color: var(--cs-gold); }
+.gp-none { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; align-items: center; margin-top: 16px; } .cs .cs-lvl-body > .gp-none > p { padding: 14px 18px; border-radius: 16px 16px 16px 5px; font-size: 14.5px; font-weight: 560; color: var(--cs-ink); background: color-mix(in oklch, var(--cs-field) 40%, var(--cs-paper)); }
+.cs .cs-lvl-body > .gp-none > p { display: block; overflow: visible; -webkit-line-clamp: unset; line-clamp: unset; max-height: none; }
