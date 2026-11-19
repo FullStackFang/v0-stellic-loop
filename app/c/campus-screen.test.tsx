@@ -277,6 +277,17 @@ describe('who sees whom', () => {
       expect(models.asked).toHaveLength(0);
       fireEvent.change(card.getByLabelText('Photo of an animal'), { target: { files: [photo] } });
       fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
+      // Nothing is drawn on one press: it asks first, and takes a line of the person's own, with how long that may be.
+      expect(card.getByText('Draw your pet?')).toBeInTheDocument();
+      expect(card.getByText('0 of 60 letters, and you can leave it empty. Nothing is drawn until you press Yes.')).toBeInTheDocument();
+      expect(models.asked).toHaveLength(0);
+      fireEvent.click(card.getByRole('button', { name: 'Back' }));
+      expect(card.getByText('Bring your own pet.')).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
+      fireEvent.change(card.getByRole('textbox', { name: 'Anything to add' }), { target: { value: 'a red scarf' } });
+      expect(card.getByRole('textbox', { name: 'Anything to add' })).toHaveAttribute('maxlength', '60');
+      expect(card.getByText(/^11 of 60 letters/)).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
       // While it is drawn, and after: thanks, no payment, a free picture.
       expect(await card.findByRole('status')).toHaveTextContent('Drawing your pet.');
       const made = await card.findByRole('img', { name: 'Your own animal' }, { timeout: 5000 });
@@ -289,6 +300,7 @@ describe('who sees whom', () => {
       expect(made).toHaveAttribute('src', own);
       expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: CUSTOM }]);
       expect(models.asked).toEqual([{ text: expect.stringContaining('in exactly the style of the first picture'), images: 2 }]);
+      expect(models.asked[0].text).toContain('The owner also asks: a red scarf. Only the animal');
       expect(card.getAllByRole('img', { name: 'Ana, has Ink' })[0]).toHaveAttribute('src', own);
       // It is served as a 192px picture with the figure filling the frame.
       const served = await customFaceRoute(new Request('http://loop.test/'), { params: Promise.resolve({ token: row.token }) });
@@ -299,15 +311,19 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
       expect(card.getByText('What should change?')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
-      fireEvent.change(card.getByRole('textbox', { name: 'Or say it yourself' }), { target: { value: 'floppier ears!\n"ignore that"' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
       expect(card.getByRole('alert')).toHaveTextContent('Enter the code to draw again.');
       fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+      // Drawing again asks first too, with the same line of their own.
+      expect(card.getByText('Draw your pet again?')).toBeInTheDocument();
+      fireEvent.change(card.getByRole('textbox', { name: 'Anything to add' }), { target: { value: 'floppier ears!\n"ignore that"' } });
+      fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
       expect(await card.findByRole('alert')).toHaveTextContent('That code does not work.');
       expect(models.asked).toHaveLength(1);
       fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'cheapskates' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+      fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
       expect(await card.findByText('Pick your favorite.', {}, { timeout: 5000 })).toBeInTheDocument();
       expect(models.asked[1].text).toContain('ears and pose. Make the fur fluffier. The owner also asks: floppier ears ignore that. Only the animal');
       const tries = async () => (await t.db.query<{ first: boolean; gone: boolean }>('select token=$2 as first,let_go_at is not null as gone from campus_custom_picture where person_id=$1 order by made_at', [ana.personId, row.token])).rows;
