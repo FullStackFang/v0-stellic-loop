@@ -229,3 +229,27 @@
 .gt .lp-mb-note { font-size: 13.5px; margin-top: 12px; }
 @media (max-width: 900px) { .gt-ppl > div { grid-template-columns: minmax(0, 1fr); } .gt-ppl .gt-facts { grid-template-columns: repeat(2, 1fr); } .gt-ppl > div::after { display: none; }
   .gt .lp-mb-row { grid-template-columns: 44px minmax(0, 1fr) auto; } .gt .lp-mb-row .lp-mb-meta { grid-column: 2 / -1; grid-row: 2; } .gt .lp-mb-row .lp-mb-acts { grid-column: 2 / -1; justify-content: flex-start; } }
+
+/* ---------- 4. every other groups page (all groups, new group, organize, assistants, reach, archive) ----------
+   Shapes only, no page is rearranged: the bar's 32px gutter on both sides, paper with an ink line and a hard shadow where the old
+   look had a hairline card, the wide heading, and an ink outline on every button. Pages drawn with .gt above are left alone. */
+.gb .lp-main { padding: 14px 32px 56px; }
+.gb .lp-wrap { max-width: none; }
+.gb .lp-wrap:not(:has(.gt)) { --o-r: 22px 22px 22px 6px; --o-card: 0 0 0 1.5px var(--cs-ink), 5px 5px 0 var(--cs-field-shadow); --o-in: inset 0 0 0 1.5px var(--cs-line); }
+.gb .lp-wrap:not(:has(.gt)) :is(.lt-editor, .lp-list, .lp-empty, .lp-facts, .lp-help, .lp-grants, .lp-ng-lanes, .lp-ng-facts, .lp-legal-body) { border: 0; border-radius: var(--o-r); box-shadow: var(--o-card); }
+.gb .lp-wrap:not(:has(.gt)) :is(.lt-editor, .lp-list, .lp-grants) :is(.lt-editor, .lp-list, .lp-empty, .lp-facts, .lp-help) { box-shadow: var(--o-in); border-radius: 14px 14px 14px 4px; }
+.gb .lp-wrap:not(:has(.gt)) > .lt-editor, .gb .lp-wrap:not(:has(.gt)) > .lp-grants { margin: 22px 0; }
+.gb .lp-wrap:not(:has(.gt)) :is(h1, h2) { font-weight: 720; font-stretch: 110%; letter-spacing: -0.045em; }
+.gb .lp-wrap:not(:has(.gt)) :is(h2, .lt-editor h1) { font-weight: 680; font-stretch: 106%; letter-spacing: -0.035em; }
+.gb .lp-wrap:not(:has(.gt)) h3 { font-weight: 660; }
+.gb .lp-wrap:not(:has(.gt)) > h1 { font-size: 34px; }
+.gb .lp-wrap:not(:has(.gt)) .lp-plate { border-radius: var(--o-r); box-shadow: 5px 5px 0 var(--cs-action); }
+.gb .lp-wrap:not(:has(.gt)) :is(.lp-btn, .emba-form button, .lt-primary, .lp-mb-quiet) { font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.gb .lp-wrap:not(:has(.gt)) :is(.lp-btn, .emba-form button, .lt-primary):hover { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); }
+.gb .lp-wrap:not(:has(.gt)) .lp-mb-quiet { color: var(--cs-ink); background: var(--cs-paper); }
+.gb .lp-wrap:not(:has(.gt)) :is(.lp-list > li, .lp-grouprow, .lp-archived, .lt-editor > ul > li) { border-top-style: dashed; border-top-color: color-mix(in oklab, var(--cs-ink) 26%, transparent); }
+.gb .lp-wrap:not(:has(.gt)) .lp-grouprow b { font-weight: 660; }
+@media (max-width: 700px) { .gb .lp-main { padding: 12px 16px 40px; } }
+.gb .lp-wrap:not(:has(.gt)) :is(.lp-go, .lp-grouprow summary) { box-shadow: inset 0 0 0 1.5px var(--cs-ink); font-weight: 600; } .gb .lp-wrap:not(:has(.gt)) .lp-go { background: var(--cs-action); color: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); }
+/* A way back under a page is a pill, like every other control. */
+.gb .lp-wrap:not(:has(.gt)) > p:last-child:not(.lp-crumbs) > a:only-child { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-weight: 600; text-decoration: none; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
