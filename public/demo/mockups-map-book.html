@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map: plans that share a spot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.css">
+<style>
+:root { --ink: oklch(25% 0.07 252); --paper: #f0e8d4; --card: oklch(99% 0.008 100); --page: #fbf7ec; --hot: #ff5a43; --blue: #3f86de; --field: oklch(96.4% 0.19 117); --second: oklch(88% 0.19 118); --action: oklch(47.6% 0.13 250);
+  --bg: oklch(96.5% 0.012 250); --soft: color-mix(in oklab, var(--ink) 22%, transparent); --mute: color-mix(in oklab, var(--ink) 68%, var(--card)); --ease: cubic-bezier(.16, 1, .3, 1); view-transition-name: none; }
+* { box-sizing: border-box; margin: 0; }
+body { font-family: Archivo, system-ui, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding: 22px 24px 50px; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; text-align: left; }
+h1 { font-size: 28px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.02em; }
+.lead { max-width: 980px; margin-top: 6px; font-size: 15px; line-height: 1.45; }
+.modes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 6px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 32px; height: 32px; padding: 0 13px; border-radius: 99px; font-size: 13px; font-weight: 700; white-space: nowrap; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.pill:hover { background: var(--field); } .pill.on, .pill[aria-pressed=true] { color: var(--field); background: var(--ink); }
+.pill.go { color: var(--card); background: var(--action); box-shadow: inset 0 0 0 1.5px var(--ink), 2.5px 2.5px 0 var(--ink); } .pill.go:hover { background: var(--ink); }
+.pill.hot { background: var(--hot); } .pill.hot:hover { background: var(--field); }
+.modes .pill { height: 38px; padding: 0 16px 0 7px; font-size: 14.5px; } .modes .pill i { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; font-style: normal; font-weight: 800; color: var(--ink); background: var(--field); }
+.says { min-height: 44px; max-width: 1050px; margin-bottom: 12px; padding: 9px 15px 10px; border-radius: 14px 14px 14px 4px; font-size: 14px; line-height: 1.4; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+.app { display: grid; grid-template-columns: 400px 1fr; gap: 18px; height: 700px; max-width: 1240px; }
+.side { position: relative; display: grid; grid-template-rows: auto 1fr; gap: 10px; min-height: 0; }
+.bar { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 14px 0 7px; border-radius: 99px; font-size: 14.5px; font-weight: 720; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--second); }
+.bar .sp { flex: 1; } .bar small { font-size: 13px; font-weight: 560; color: var(--mute); }
+.bar .name { padding: 5px 11px 6px; border-radius: 99px; color: var(--field); background: var(--ink); font-size: 13px; }
+.list { display: grid; align-content: start; gap: 14px; min-height: 0; overflow-y: auto; padding: 2px 10px 30px 2px; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--ink) transparent; }
+.card { position: relative; display: grid; gap: 9px; padding: 14px 16px 15px; border-radius: 20px 20px 20px 5px; background: var(--card); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--second); cursor: pointer; transition: box-shadow .25s var(--ease), translate .25s var(--ease); }
+.card:hover { translate: -1px -1px; } .card.on { box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--ink); cursor: default; }
+.card .top { display: flex; align-items: center; gap: 8px; } .card .top .sp { flex: 1; }
+.when { display: grid; justify-items: center; min-width: 56px; padding: 7px 9px 8px; border-radius: 12px 12px 12px 3px; line-height: 1; background: var(--field); } .when small { font-size: 11px; font-weight: 640; } .when b { margin-top: 3px; font-size: 18px; font-weight: 780; letter-spacing: -0.02em; white-space: nowrap; }
+.card h3 { font-size: 18.5px; font-weight: 720; line-height: 1.16; letter-spacing: -0.02em; }
+.card p { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--mute); white-space: nowrap; overflow: hidden; } .card p span { flex: none; padding: 2px 8px 3px; border-radius: 99px; font-size: 11.5px; font-weight: 640; color: var(--ink); box-shadow: inset 0 0 0 1.2px var(--ink); }
+.card .foot { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding-top: 10px; border-top: 1.5px dashed color-mix(in oklab, var(--ink) 30%, transparent); font-size: 13px; color: var(--mute); }
+.card.off .top::after { content: 'Not on the map'; font-size: 12px; color: var(--mute); }
+.daytag { justify-self: start; margin: 4px 0 -6px 4px; padding: 4px 11px 5px; border-radius: 99px; font-size: 12px; font-weight: 760; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+/* B: the book in the list: one panel, a line per plan, the picked one opened */
+.book { position: relative; margin-top: 14px; border-radius: 6px 20px 20px 6px; background: var(--card); box-shadow: 0 0 0 1.5px var(--ink), inset 9px 0 0 var(--ink), inset 10.500px 0 0 var(--second), 4px 4px 0 var(--card), 4px 4px 0 1.5px var(--ink), 9px 9px 0 var(--ink); }
+.book > .name, .rail { position: absolute; left: 22px; top: -15px; z-index: 2; }
+.book > .name { display: flex; align-items: center; height: 30px; padding: 0 13px; border-radius: 99px; font-size: 12.5px; font-weight: 760; color: var(--field); background: var(--ink); }
+.book > .x { position: absolute; right: 12px; top: -15px; z-index: 2; height: 30px; }
+.line { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 11px; padding: 9px 14px 9px 24px; cursor: pointer; border-top: 1.5px dashed color-mix(in oklab, var(--ink) 30%, transparent); } .line:first-of-type { border-top: 0; padding-top: 24px; }
+.line:hover { background: color-mix(in oklab, var(--field) 40%, transparent); } .line .when { min-width: 50px; padding: 5px 7px 6px; } .line .when b { font-size: 14.5px; }
+.line h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.015em; } .line.on { grid-template-columns: 1fr; gap: 9px; padding-bottom: 14px; cursor: default; background: none; }
+.line.on h3 { font-size: 18.5px; } .line.on .top { display: flex; align-items: center; gap: 8px; } .line.on .when { min-width: 56px; padding: 7px 9px 8px; } .line.on .when b { font-size: 18px; }
+.line.on .foot { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; font-size: 13px; color: var(--mute); } .line p { display: none; } .line.on p { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--mute); } .line.on p span { padding: 2px 8px 3px; border-radius: 99px; font-size: 11.5px; font-weight: 640; color: var(--ink); box-shadow: inset 0 0 0 1.2px var(--ink); }
+/* C: one card, a rail of little stamps on its top edge to turn to the others */
+.card.turn { margin-top: 30px; padding-top: 30px; }
+.rail { display: flex; align-items: center; gap: 4px; top: -24px; left: 12px; }
+.rail > small { margin: 0 1px 0 5px; padding: 3px 8px 4px; border-radius: 99px; font-size: 10.5px; font-weight: 800; color: var(--field); background: var(--ink); } .rail > small:first-child { margin-left: 0; }
+.mini { display: grid; place-items: center; min-width: 40px; height: 44px; padding: 0 6px; font-size: 11.5px; font-weight: 800; letter-spacing: -0.02em; background: color-mix(in oklab, var(--hot) 32%, var(--card)); filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink));
+  mask: linear-gradient(#000 0 0) center / calc(100% - 5px) calc(100% - 5px) no-repeat, radial-gradient(circle 1.8px at 50% 50%, #0000 94%, #000) -2.5px -2.5px / 5px 5px; transition: translate .25s var(--ease), rotate .25s var(--ease), background .2s; }
+.mini:hover { background: color-mix(in oklab, var(--hot) 65%, var(--card)); } .mini.on { background: var(--hot); translate: 0 -7px; rotate: -5deg; }
+
+/* The map */
+.panel { position: relative; overflow: hidden; border-radius: 22px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--second); isolation: isolate; }
+.map { position: absolute; inset: 0; }
+.band { position: absolute; inset: 0 0 auto; z-index: 4; padding: 13px 20px 10px; background: var(--paper); box-shadow: 0 1.5px 0 var(--ink), 0 4.5px 0 var(--paper), 0 5.5px 0 var(--ink); pointer-events: none; }
+.band small { display: block; font-stretch: 86%; font-size: 10.5px; font-weight: 720; letter-spacing: .13em; text-transform: uppercase; } .band b { font-size: 30px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.02em; }
+.maplibregl-ctrl-attrib { font-size: 9px; } .maplibregl-marker { z-index: 1; } .maplibregl-marker:has(.sel) { z-index: 6; }
+.mk { display: grid; justify-items: center; }
+.pin { position: relative; display: block; isolation: isolate; transition: scale .3s var(--ease); transform-origin: 50% 100%; } .pin:hover { scale: 1.06; } .pin.sel { scale: 1.22; }
+.pin::after { content: ''; position: absolute; left: 50%; bottom: -6px; z-index: -2; width: 2px; height: 8px; margin-left: -1px; background: var(--ink); }
+.stamp { position: relative; display: block; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); }
+.stamp > span { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
+  mask: linear-gradient(#000 0 0) center / calc(100% - 6px) calc(100% - 6px) no-repeat, radial-gradient(circle 2.1px at 50% 50%, #0000 94%, #000) -3px -3px / 6px 6px; }
+.stamp svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.stamp b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; } .stamp small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.burst { position: absolute; left: 50%; top: 50%; z-index: -1; width: 112px; height: 112px; margin: -56px 0 0 -56px; animation: spin 40s linear infinite; } .burst path { fill: var(--second); stroke: var(--ink); stroke-width: 1.3; stroke-linejoin: round; }
+@keyframes spin { to { rotate: 1turn; } }
+/* The passport book on a spot: shut, and open with the picked stamp on its page */
+.bk .cover { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 50px; height: 62px; border-radius: 3px 8px 8px 3px; line-height: 1; color: var(--field); background: var(--ink);
+  box-shadow: inset 6px 0 0 color-mix(in oklab, var(--ink) 70%, #000), inset 7.5px 0 0 var(--second), 3px 3px 0 var(--page), 3px 3px 0 1.5px var(--ink); rotate: -3deg; }
+.bk .cover b { margin-left: 6px; font-size: 24px; font-weight: 800; } .bk .cover small { margin-left: 6px; font-stretch: 86%; font-size: 8.5px; font-weight: 720; letter-spacing: .12em; text-transform: uppercase; }
+.bk .tab { position: absolute; left: 13px; top: -24px; z-index: -1; display: grid; justify-items: center; width: 40px; padding: 4px 0 12px; border-radius: 3px 3px 0 0; font-size: 10.5px; font-weight: 800; line-height: 1.05; white-space: nowrap; background: var(--hot); box-shadow: 0 0 0 1.5px var(--ink); rotate: 2deg; }
+.bk .tab small { font-stretch: 86%; font-size: 8px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
+.open { display: grid; grid-template-columns: 50px 50px; perspective: 420px; }
+.open .pg { position: relative; display: grid; place-items: center; height: 64px; background: var(--page); box-shadow: 0 0 0 1.5px var(--ink); }
+.open .pg.l { border-radius: 8px 2px 2px 8px; align-content: center; gap: 2px; line-height: 1; background: linear-gradient(90deg, var(--page) 80%, color-mix(in oklab, var(--ink) 14%, var(--page))); }
+.open .pg.l b { font-size: 19px; font-weight: 800; } .open .pg.l small { font-stretch: 86%; font-size: 8.5px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
+.open .pg.r { border-radius: 2px 8px 8px 2px; box-shadow: 0 0 0 1.5px var(--ink), 3px 3px 0 var(--page), 3px 3px 0 1.5px var(--ink); background: linear-gradient(90deg, color-mix(in oklab, var(--ink) 14%, var(--page)), var(--page) 20%); }
+.open .pg.r .stamp { scale: .82; margin: -8px; animation: land .45s var(--ease); }
+.open .lid { position: absolute; left: 50px; top: 0; width: 50px; height: 64px; border-radius: 2px 8px 8px 2px; background: var(--ink); box-shadow: inset 6px 0 0 var(--second); transform-origin: 0 50%; transform: rotateY(-180deg); backface-visibility: hidden; }
+.open.fresh .lid { animation: lid .55s var(--ease); }
+@keyframes lid { from { transform: rotateY(0); } } @keyframes land { from { translate: 0 -16px; rotate: 9deg; opacity: 0; } }
+.bub { position: absolute; left: 50%; bottom: calc(100% + 34px); translate: calc(-50% + var(--shift, 0px)) 0; z-index: 3; display: grid; gap: 8px; width: 236px; padding: 12px 13px 12px; border-radius: 4px; background: var(--page); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--ink); cursor: default; animation: up .3s var(--ease); }
+.bub b { display: block; font-size: 15px; font-weight: 800; font-stretch: 106%; line-height: 1.12; text-transform: uppercase; } .bub span { display: block; margin-top: 3px; font-size: 12px; line-height: 1.3; }
+.bub .row { display: flex; align-items: center; gap: 6px; } .bub .row .at { flex: 1; margin: 0; font-size: 12px; font-weight: 720; text-align: center; } .bub .pill { height: 28px; min-width: 28px; padding: 0 9px; }
+@keyframes up { from { opacity: 0; translate: calc(-50% + var(--shift, 0px)) 8px; } }
+::view-transition-group(*) { animation-duration: .42s; animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
+::view-transition-old(*), ::view-transition-new(*) { animation-duration: .2s; }
+@media (prefers-reduced-motion: reduce) { *, ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; transition: none !important; } .list { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<h1>Plans that share a spot</h1>
+<p class="lead">A stamp alone already works well: tap it and its card comes up on the left. A book of plans should feel the same. The book at Motorgate Plaza is open. Tap the single 5pm stamp at the gallery and compare, then tap the book again. Arrow keys turn the pages. Zoom in on Main Street and its book comes apart.</p>
+<div class="modes"><button class="pill" data-mode="a"><i>A</i>The list becomes the book</button><button class="pill" data-mode="b"><i>B</i>A book in the list</button><button class="pill" data-mode="c"><i>C</i>One card that turns</button></div>
+<div class="says" id="says"></div>
+<div class="app">
+  <div class="side"><div class="bar" id="bar"></div><div class="list" id="list"></div></div>
+  <div class="panel"><div class="map" id="map"></div><div class="band"><small>8 on the map · sheet 1 of 1</small><b>Roosevelt Island</b></div></div>
+</div>
+<script src="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.js"></script>
+<script>
+const ICON = {
+  food: '<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="2.8"/><path d="m6.8 8.6 1 .8M16 6.6l.6 1.1M17.4 13.6l1.2.3M8 16.4l.9-.9M13 17.6l.2 1.2"/>',
+  talk: '<path d="M4 5.500h16v10.500h-9l-4.500 4v-4H4z"/><path d="M8 9.500h8M8 12.500h5"/>',
+  tag: '<path d="M3.500 12.500V4.500h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.600"/>',
+  leaf: '<path d="M5 19c0-9 5-14 15-14 0 10-5 15-14 14"/><path d="M5 19 14 10"/>',
+  art: '<path d="M4 20c1-4 2-5 4-5s3 1 3 3-2 2-7 2z"/><path d="m10.500 15.500 9-11.500 1.500 1.500-9 11.500"/>' };
+const CARTER = [-73.949665, 40.761809], CHURCH = [-73.950058, 40.761809], MOTOR = [-73.94687, 40.76489], RIVAA = [-73.950497, 40.761327], RI = 'Roosevelt Islander', CG = 'CampusGroups';
+const PLANS = [
+  { id: 'turkey', day: 'Thu 19', time: '2pm', icon: 'food', title: 'Thanksgiving Turkey Free Giveaway', place: 'Older Adult Center, 546 Main St', at: CARTER, src: RI },
+  { id: 'rights', day: 'Thu 19', time: '3pm', title: 'Discrimination and Harassment: Your Rights', place: 'Cornell Tech Student & Academic Affairs', src: CG },
+  { id: 'rioc', day: 'Thu 19', time: '5:30pm', icon: 'talk', title: 'RIOC meeting: Tram Overhaul', place: 'RIOC Operations Office', at: MOTOR, src: RI },
+  { id: 'flea', day: 'Sat 21', time: '7am', icon: 'tag', title: 'RIDA Flea Market', place: 'Church Plaza', at: CHURCH, src: RI },
+  { id: 'market1', day: 'Sat 21', time: '8am', icon: 'food', title: 'Farmers Market', place: 'Motorgate Plaza, under the helix', at: MOTOR, src: RI },
+  { id: 'scrap1', day: 'Sat 21', time: '9am', icon: 'leaf', title: 'Food Scrap Drop Off', place: 'Motorgate Plaza', at: MOTOR, src: RI },
+  { id: 'film', day: 'Sun 22', time: '1pm', title: 'Indonesian Film Screening and Filmmaker Q&A', place: 'Cornell Tech', src: CG },
+  { id: 'paint1', day: 'Mon 23', time: '5pm', icon: 'art', title: 'Watercolor Workshop', place: 'RIVAA Gallery, 527 Main St', at: RIVAA, src: RI },
+  { id: 'market2', day: 'Sat 28', time: '8am', icon: 'food', title: 'Farmers Market', place: 'Motorgate Plaza, under the helix', at: MOTOR, src: RI },
+  { id: 'scrap2', day: 'Sat 28', time: '9am', icon: 'leaf', title: 'Food Scrap Drop Off', place: 'Motorgate Plaza', at: MOTOR, src: RI },
+  { id: 'hockey', day: 'Sat 28', time: 'noon', title: 'Frozen Apple Hockey Game', place: 'Cornell Tech', src: CG }];
+const ON_MAP = PLANS.filter(p => p.at), byId = id => PLANS.find(p => p.id === id);
+const RING = [[-73.9622, 40.7498], [-73.9588, 40.7545], [-73.9566, 40.7580], [-73.9530, 40.7625], [-73.9480, 40.7690], [-73.9425, 40.7735], [-73.9385, 40.7735], [-73.9420, 40.7680], [-73.9475, 40.7620], [-73.9538, 40.7566], [-73.9562, 40.7540], [-73.9598, 40.7494]];
+const SAYS = {
+  a: '<b>A · The list becomes the book.</b> Tap the book and the list on the left turns into that spot: only its plans, in order, under their days. The picked one is lifted exactly like a single plan. One pill takes you back to everything.',
+  b: '<b>B · A book in the list.</b> The spot’s plans come to the top of the list as one book: a line per plan, the picked one opened to a full card. Everything else stays below it.',
+  c: '<b>C · One card that turns.</b> The smallest change. One card comes up, exactly as for a single plan. Little stamps on its top edge turn it to the other plans at that spot.' };
+
+const C = { ink: '#12233f', paper: '#f0e8d4', road: '#fbf7ec', second: '#cfe04a', blue: '#3f86de' };
+const shape = [...RING, RING[0]], geo = data => ({ type: 'geojson', data });
+const veil = { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[-74.4, 40.4], [-73.5, 40.4], [-73.5, 41.1], [-74.4, 41.1], [-74.4, 40.4]], shape] } };
+const line = coordinates => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } });
+const spots = { type: 'FeatureCollection', features: [CARTER, CHURCH, MOTOR, RIVAA].map(coordinates => ({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates } })) };
+const MINOR = ['minor'], MAJOR = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'], PATH = ['path', 'track'];
+const wide = px => ['interpolate', ['exponential', 2], ['zoom'], 13, px / 8, 16, px, 19, px * 8];
+const wide2 = (minor, major) => ['interpolate', ['exponential', 2], ['zoom'], 13, ['match', ['get', 'class'], MINOR, minor / 8, major / 8], 16, ['match', ['get', 'class'], MINOR, minor, major], 19, ['match', ['get', 'class'], MINOR, minor * 8, major * 8]];
+const omt = (id, type, layer, paint, more = {}) => ({ id, type, source: 'omt', 'source-layer': layer, paint, ...more });
+const road = (id, classes, paint, more = {}) => omt(id, 'line', 'transportation', paint, { filter: ['all', ['==', ['geometry-type'], 'LineString'], ['match', ['get', 'class'], classes, true, false]], layout: { 'line-cap': 'round', 'line-join': 'round' }, ...more });
+const type = (size, space, more = {}) => ({ 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': size, 'text-transform': 'uppercase', 'text-letter-spacing': space, ...more });
+const inked = { 'text-color': C.ink, 'text-halo-color': C.paper, 'text-halo-width': 1.6 };
+const style = () => ({ version: 8, glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+  sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' }, veil: geo(veil), plate: geo(line(shape)), spots: geo(spots) },
+  layers: [{ id: 'ground', type: 'background', paint: { 'background-color': C.paper } },
+    omt('green', 'fill', 'landcover', { 'fill-pattern': 'dots' }), omt('park', 'fill', 'park', { 'fill-pattern': 'dots' }), omt('park-edge', 'line', 'park', { 'line-color': C.ink, 'line-width': .8, 'line-dasharray': [1, 3], 'line-opacity': .6 }),
+    omt('water', 'fill', 'water', { 'fill-pattern': 'waves' }), omt('water-edge', 'line', 'water', { 'line-color': C.blue, 'line-width': 1.5 }),
+    road('path', PATH, { 'line-color': C.ink, 'line-width': .9, 'line-dasharray': [2, 3], 'line-opacity': .7 }, { minzoom: 16 }),
+    road('edge', [...MINOR, ...MAJOR], { 'line-color': C.ink, 'line-width': ['match', ['get', 'class'], MINOR, .9, 1.4], 'line-opacity': .75, 'line-gap-width': wide2(8, 14) }),
+    road('minor', MINOR, { 'line-color': C.road, 'line-width': wide(8) }), road('major', MAJOR, { 'line-color': C.road, 'line-width': wide(14) }),
+    omt('off', 'fill', 'building', { 'fill-color': C.second, 'fill-opacity': .8, 'fill-translate': [2.5, 2.5], 'fill-translate-anchor': 'viewport' }),
+    omt('roofs', 'fill', 'building', { 'fill-color': '#f5eedc' }), omt('roof-line', 'line', 'building', { 'line-color': C.ink, 'line-width': 1, 'line-opacity': .6 }, { layout: { 'line-join': 'miter' } }),
+    omt('streets', 'symbol', 'transportation_name', inked, { minzoom: 15, filter: ['match', ['get', 'class'], ['path', 'track', 'service'], false, true], layout: type(9.5, .14, { 'symbol-placement': 'line', 'symbol-spacing': 340 }) }),
+    { id: 'veil', type: 'fill', source: 'veil', paint: { 'fill-color': C.paper, 'fill-opacity': .84 } },
+    { id: 'rim-second', type: 'line', source: 'plate', paint: { 'line-color': C.second, 'line-width': 6, 'line-offset': 5 } },
+    { id: 'rim', type: 'line', source: 'plate', layout: { 'line-join': 'miter' }, paint: { 'line-color': C.ink, 'line-width': 2.2 } },
+    { id: 'spot', type: 'circle', source: 'spots', paint: { 'circle-radius': 4.5, 'circle-color': C.ink, 'circle-stroke-color': C.road, 'circle-stroke-width': 2 } }] });
+function swatch(size, draw) { const k = 3, cv = document.createElement('canvas'); cv.width = cv.height = size * k; const x = cv.getContext('2d'); x.scale(k, k); draw(x);
+  const d = x.getImageData(0, 0, size * k, size * k); return [{ width: d.width, height: d.height, data: d.data }, { pixelRatio: k }]; }
+const IMAGES = { dots: swatch(8, x => { x.fillStyle = C.second; for (const [cx, cy] of [[2, 2], [6, 6]]) { x.beginPath(); x.arc(cx, cy, 1.55, 0, 7); x.fill(); } }),
+  waves: swatch(12, x => { x.strokeStyle = C.blue; x.lineWidth = 1.2; for (const y of [3, 9]) { x.beginPath(); x.moveTo(-1, y); x.bezierCurveTo(2, y - 2.2, 4, y - 2.2, 6, y); x.bezierCurveTo(8, y + 2.2, 10, y + 2.2, 13, y); x.stroke(); } }) };
+const BURST = 'M' + Array.from({ length: 32 }, (_, n) => { const r = n % 2 ? 40 : 53, a = n * Math.PI / 16; return `${(r * Math.cos(a)).toFixed(1)} ${(r * Math.sin(a)).toFixed(1)}`; }).join('L') + 'Z';
+
+const st = { mode: 'a', sel: 'market1' };
+let made = [], sig = '', groupsNow = [], lastOpen = '';
+const $ = id => document.getElementById(id), calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const dayOf = p => p.day.split(' ')[0];
+const stamp = p => `<span class="stamp"><span><svg viewBox="0 0 24 24">${ICON[p.icon]}</svg><b>${p.time}</b><small>${dayOf(p)}</small></span></span>`;
+const when = p => `<span class="when"><small>${p.day}</small><b>${p.time}</b></span>`;
+const meta = p => `<p><span>${p.src}</span>${p.place}</p>`, foot = '<div class="foot">Nobody is in yet<button class="pill go">Register</button></div>';
+const card = (p, more = '', cls = '') => `<article class="card ${p.id === st.sel ? 'on' : ''} ${p.at ? '' : 'off'} ${cls}" data-pick="${p.id}" style="view-transition-name:c-${p.id}">${more}
+  <div class="top">${when(p)}<span class="sp"></span>${p.at ? `<button class="pill ${p.id === st.sel ? 'on' : 'hot'}" data-pick="${p.id}">On the map</button>` : ''}</div><h3>${p.title}</h3>${meta(p)}${foot}</article>`;
+const days = items => [...new Set(items.map(p => p.day))];
+const spotName = items => new Set(items.map(p => p.at)).size === 1 ? items.at(-1).place.split(',')[0] : 'Close together';
+/** The plans that share the picked plan's spot on the map right now. One plan alone is not a book. */
+const shared = () => { const g = groupsNow.find(g => g.items.some(p => p.id === st.sel)); return g && g.items.length > 1 ? g.items : null; };
+
+function drawList() {
+  const items = shared(), sel = byId(st.sel), bar = $('bar'), list = $('list');
+  let html = '';
+  if (items && st.mode === 'a') {
+    bar.innerHTML = `<button class="pill" data-clear>&lsaquo; All 11</button><span class="name">${spotName(items)}</span><span class="sp"></span><small>${items.length} plans here</small>`;
+    html = days(items).map(day => `<span class="daytag">${day}</span>` + items.filter(p => p.day === day).map(p => card(p)).join('')).join('');
+  } else {
+    bar.innerHTML = `<span class="pill on" style="pointer-events:none">+</span>Your best 11 of the next ten days<span class="sp"></span><small>8 on the map</small>`;
+    const rest = items ? PLANS.filter(p => !items.includes(p)) : PLANS;
+    if (items && st.mode === 'b') html = `<section class="book" style="view-transition-name:book"><span class="name">${spotName(items)} · ${items.length} plans</span><button class="pill x" data-clear aria-label="Close the book">&times;</button>${items.map(p => p === sel
+      ? `<div class="line on" style="view-transition-name:c-${p.id}"><div class="top">${when(p)}</div><h3>${p.title}</h3>${meta(p)}${foot}</div>`
+      : `<div class="line" data-pick="${p.id}" style="view-transition-name:c-${p.id}">${when(p)}<h3>${p.title}</h3></div>`).join('')}</section>` + rest.map(p => card(p)).join('');
+    else if (items) html = PLANS.filter(p => !items.includes(p) || p === items[0]).map(p => p !== items[0] ? card(p) : card(sel, `<span class="rail">${days(items).map(day => `<small>${day}</small>` + items.filter(q => q.day === day).map(q => `<button class="mini ${q === sel ? 'on' : ''}" data-pick="${q.id}" aria-label="${q.title}">${q.time}</button>`).join('')).join('')}</span>`, 'turn')).join('');
+    else html = PLANS.map(p => card(p)).join('');
+  }
+  const kept = list.scrollTop; list.innerHTML = html; list.scrollTop = items && st.mode === "a" ? 0 : kept;
+  const at = list.querySelector('.card.on, .book');
+  const top = at ? at.offsetTop - list.offsetTop : 0;
+  if (at && (top < list.scrollTop + 30 || top + at.offsetHeight > list.scrollTop + list.clientHeight)) list.scrollTo({ top: Math.max(0, top - 34), behavior: 'instant' });
+}
+function drawSays() { $('says').innerHTML = SAYS[st.mode]; document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === st.mode)); }
+
+const map = new maplibregl.Map({ container: 'map', style: style(), center: [-73.94913, 40.76428], zoom: 15.6, maxZoom: 18.5, minZoom: 12.5, canvasContextAttributes: { antialias: true }, attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false });
+map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Map © OpenStreetMap, OpenFreeMap' }), 'bottom-right');
+map.touchZoomRotate.disableRotation();
+map.on('styleimagemissing', e => IMAGES[e.id] && !map.hasImage(e.id) && map.addImage(e.id, ...IMAGES[e.id]));
+// Stamps that would cover each other on the screen are one book. It stands at the middle of its plans.
+const groups = () => { const out = [];
+  for (const p of ON_MAP) { const xy = map.project(p.at); let g = out.find(g => Math.hypot(g.x - xy.x, g.y - xy.y) < 50); if (!g) out.push(g = { x: xy.x, y: xy.y, items: [] }); g.items.push(p); }
+  for (const g of out) g.at = [0, 1].map(k => g.items.reduce((sum, p) => sum + p.at[k], 0) / g.items.length);
+  return out; };
+const seat = () => { const bub = document.querySelector('.bub'); if (!bub) return; bub.style.setProperty('--shift', '0px');
+  const frame = $('map').getBoundingClientRect(), r = bub.getBoundingClientRect();
+  bub.style.setProperty('--shift', `${r.left < frame.left + 14 ? frame.left + 14 - r.left : r.right > frame.right - 16 ? frame.right - 16 - r.right : 0}px`); };
+function drawMap() {
+  for (const each of made) each.remove();
+  made = groupsNow.map((g, nth) => { const el = document.createElement('div'), many = g.items.length > 1, i = g.items.findIndex(p => p.id === st.sel), on = i >= 0, p = g.items[Math.max(0, i)], key = g.items[0].id;
+    el.className = 'mk'; el.style.setProperty('--lean', `${[-4, 3, -2, 4, -3][nth % 5]}deg`);
+    const burst = `<svg class="burst" viewBox="-56 -56 112 112" aria-hidden="true"><path d="${BURST}"/></svg>`;
+    const bub = on ? `<div class="bub"><div><b>${p.title}</b><span>${p.place}</span></div>${many ? `<div class="row"><button class="pill" data-step="-1" aria-label="Earlier">&lsaquo;</button><span class="at">${i + 1} of ${g.items.length} here</span><button class="pill" data-step="1" aria-label="Later">&rsaquo;</button></div>` : ''}</div>` : '';
+    el.innerHTML = (!many ? `<button class="pin ${on ? 'sel' : ''}" data-pick="${p.id}" aria-label="${p.title}">${on ? burst : ''}${stamp(p)}</button>`
+      : !on ? `<button class="pin bk" data-pick="${p.id}" aria-label="${g.items.length} plans here"><span class="tab"><small>${dayOf(p)}</small>${p.time}</span><span class="cover"><b>${g.items.length}</b><small>plans</small></span></button>`
+      : `<button class="pin sel" data-clear aria-label="Close the book">${burst}<span class="open ${lastOpen === key ? '' : 'fresh'}"><span class="pg l"><b>${i + 1}/${g.items.length}</b><small>here</small></span><span class="pg r">${stamp(p)}</span><span class="lid"></span></span></button>`) + bub;
+    if (on && many) queueMicrotask(() => { lastOpen = key; });
+    return new maplibregl.Marker({ element: el, anchor: 'bottom', offset: [0, -5] }).setLngLat(g.at).addTo(map); });
+  if (!shared()) lastOpen = '';
+  seat();
+}
+function draw(smooth = true) {
+  const go = () => { drawSays(); drawList(); drawMap(); };
+  if (smooth && !calm && document.startViewTransition) { const t = document.startViewTransition(go); t.ready.catch(() => {}); t.finished.catch(() => {}); } else go();
+}
+function pick(id) { st.sel = id; draw(); }
+function step(by) { const items = shared(); if (!items) return; pick(items[(items.findIndex(p => p.id === st.sel) + by + items.length) % items.length].id); }
+document.addEventListener('click', e => {
+  const mode = e.target.closest('[data-mode]'), clear = e.target.closest('[data-clear]'), by = e.target.closest('[data-step]'), to = e.target.closest('[data-pick]');
+  if (mode) { st.mode = mode.dataset.mode; if (!shared()) st.sel = 'market1'; draw(); }
+  else if (clear) { st.sel = null; draw(); }
+  else if (by) step(+by.dataset.step);
+  else if (to && to.dataset.pick !== st.sel && byId(to.dataset.pick)) pick(to.dataset.pick);
+});
+document.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { if (shared()) { e.preventDefault(); step(1); } } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { if (shared()) { e.preventDefault(); step(-1); } } else if (e.key === 'Escape') { st.sel = null; draw(); } });
+const check = () => { groupsNow = groups(); const next = groupsNow.map(g => g.items.map(p => p.id).join('+')).join('|'); if (next !== sig) { sig = next; draw(false); } else seat(); };
+map.on('load', () => { for (const name in IMAGES) if (!map.hasImage(name)) map.addImage(name, ...IMAGES[name]); check(); });
+map.on('move', check);
+drawSays(); drawList();
+</script>
+</body>
+</html>

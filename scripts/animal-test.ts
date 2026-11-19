@@ -9,7 +9,7 @@ import sharp from 'sharp';
 // The originals sent as the style to match: pig, koala, panda, hamster, sheep, penguin. None is close to a dog or a
 // cat: with the shiba and the fox in, a model gave the dachshund their pointed ears.
 // ANIMAL_REFS names other originals, such as the single one a person would hand over with their photo.
-const REFERENCES = process.env.ANIMAL_REFS?.split(',').map(Number) ?? [6, 13, 15, 32, 14, 12];
+const REFERENCES = process.env.ANIMAL_REFS?.split(',').filter(Boolean).map(Number) ?? [6, 13, 15, 32, 14, 12];
 // Models listed as `language` by the gateway hand pictures back as files of a text answer.
 const MODELS: Record<string, 'image' | 'language'> = {
   // One to three cents a picture: asked first, when ANIMAL_MODELS names none. (Recraft takes no attached pictures.)

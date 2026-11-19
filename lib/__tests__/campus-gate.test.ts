@@ -6,7 +6,7 @@ import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import type { Principal } from '@/lib/emba/access';
 import { closedToCaller, getPortalPrincipal, getSignedInPrincipal, withPortalTestSession } from '@/lib/emba/portal-session';
 import { listCampuses } from '@/lib/campus/listings';
-import { campusOf } from '@/lib/campus/people';
+import { campusOf, placeAt } from '@/lib/campus/people';
 import { frontIsCampus, schoolOfEmail } from '@/lib/campus/schools';
 import { campusViewer, mayUse, openableGroups } from '@/lib/campus/session';
 import { config, leadsIntoGroups, proxy } from '@/proxy';
@@ -121,6 +121,22 @@ describe('a person belongs to the school of their email', () => {
     const noor = (await withPortalTestSession(who({ personId: other, subject: 'user_noor', verifiedEmail: 'noor@nyu.edu' }), () => campusViewer()))!;
     expect(noor.visits).toEqual([]);
     expect(mayUse(noor, tech)).toBe(false);
+  });
+  it('moves a person to another campus of their school when they ask, and to no other school', async () => {
+    const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });
+    const all = await listCampuses(t.db), ithaca = all.find(campus => campus.slug === 'cornell')!, tech = all.find(campus => campus.slug === 'cornell-tech')!, nyu = all.find(campus => campus.slug === 'nyu')!;
+    // Not placed yet: there is nothing to change.
+    await expect(placeAt(t.db, id, tech.id)).rejects.toThrow('That campus is not part of your school.');
+    await campusOf(t.db, sam);
+    await expect(placeAt(t.db, id, nyu.id)).rejects.toThrow('That campus is not part of your school.');
+    await placeAt(t.db, id, tech.id);
+    // New York is now their own, Ithaca is the one they visit, and the kit is still Cornell's.
+    const viewer = (await withPortalTestSession(sam, () => campusViewer()))!;
+    expect(viewer).toMatchObject({ campus: { slug: 'cornell-tech' }, kit: 'cornell', visits: [ithaca.id] });
+    expect(mayUse(viewer, ithaca)).toBe(true);
+    await placeAt(t.db, id, ithaca.id);
+    expect((await campusOf(t.db, sam))?.slug).toBe('cornell');
+    expect((await t.db.query('select 1 from campus_person where person_id=$1', [id])).rows).toHaveLength(1);
   });
   it('shows group names in the top bar only to someone who can open them', async () => {
     const { id } = await makePerson(t.db, 'Sam'), sam = who({ personId: id });

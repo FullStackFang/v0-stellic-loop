@@ -6,7 +6,8 @@ Cornell has people in two towns. Today everyone with a cornell.edu address lands
 
 - Cornell Tech becomes a second Cornell campus ("New York"), beside Ithaca. Both take cornell.edu addresses. It has its own events, feeds, places, tags and map sections, as every campus already does.
 - A cornell.edu person who has not been placed yet is asked once, "Which Cornell?", on a screen of two tickets: Ithaca (stub: the clocktower) and New York (stub: the tram). Cornell schools that are not open yet are listed as "Coming soon" and cannot be picked. Founder picked this layout (A "Two tickets") in `public/demo/mockups-nyc-stops.html`.
-- A person can change campus later from their account card.
+- That choice is their own ("home") campus: where they land. They can change it later from their account card.
+- A person can look at the other campus of their school without changing their own, from a small luggage tag in the corner of the map (founder's pick in `public/demo/mockups-campus-swap.html`). This part is built.
 - People already placed at Ithaca stay there. Nobody is moved.
 - The front door still shows four schools. Cornell Tech is part of Cornell, not a fifth school.
 - The "Near you" map gets New York sections. One stop is one section (founder, 2026-11-18): all of Roosevelt Island is one section, not the campus end alone. It starts with three: Roosevelt Island, Lexington Av/63 St and 21 St–Queensbridge.
@@ -16,15 +17,16 @@ Cornell has people in two towns. Today everyone with a cornell.edu address lands
 ## Capabilities
 
 ### New Capabilities
-- `campus-choice`: a school with more than one campus; choosing a campus the first time, the "Coming soon" list, and changing campus later.
+- `campus-choice`: a school with more than one campus; choosing a campus the first time, the "Coming soon" list, looking at the other campus, and changing campus later.
 - `nearby-stops`: a map section that carries its stop and lines, and the station sign shown as the way on between sections.
 
 ### Modified Capabilities
 - `campus-sign-in`: "A person belongs to the school of their email" changes: when the school has more than one campus the person is not placed by email alone, they choose.
+- `campus-screen`: the "Near you" map shows one day at a time, with one stamp for each address (tasks 6a).
 
 ## Impact
 
-- Database: one additive migration (a campus can be part of another; the Cornell Tech row and its places). The founder applies it by hand.
+- Database: two small additive migrations, no schema change (the Cornell Tech row and its places, both written). The founder applies them by hand.
 - `lib/campus/people.ts`, `session.ts`, `schools.ts`, `listings.ts`: placement, the viewer, the list of schools.
 - `lib/campus/sections.ts`, `components/campus/near.tsx`, `app/c/campus.css`: New York sections and the sign. Another session has uncommitted edits in `sections.ts` and `near.tsx`; work on top of them.
 - New page `app/c/choose/`, a new action, and a row in the account card (`components/campus/screen.tsx` or `own-face.tsx`).

@@ -9,7 +9,7 @@ import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
 import { customFace } from '@/lib/campus/animals';
 import { freeCode, keepPicture, makeCustomFace, retryCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
-import { pickFace } from '@/lib/campus/people';
+import { pickFace, placeAt } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
 import { campusViewer, mayUse, type CampusViewer } from '@/lib/campus/session';
@@ -81,6 +81,15 @@ export async function faceAction(face: number): Promise<ActResult> {
 /** A person picks one of the animals they had made, by its address. */
 export async function ownFaceAction(own: string): Promise<ActResult> {
   return act(async viewer => { await useCustomFace(db(), viewer.personId, String(own).split('/').pop() ?? '', viewer.admin); });
+}
+
+/** "Change campus" in the account card: the person's own campus becomes another campus of their school. */
+export async function changeCampusAction(slug: string): Promise<ActResult> {
+  return act(async viewer => {
+    const to = await findCampus(db(), String(slug));
+    if (!to) throw new CampusError('That campus is not part of your school.');
+    await placeAt(db(), viewer.personId, to.id);
+  });
 }
 
 export type AgainFace = { ok: true; own: string } | { ok: false; message: string; signIn?: boolean };

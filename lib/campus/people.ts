@@ -8,7 +8,7 @@ import { builtTiers, NEEDS_PREMIUM, schoolOfPerson } from './animal-tiers';
 import { hasInk } from './ink';
 import { CampusError } from './errors';
 import { listCampuses, type Campus } from './listings';
-import { schoolOfEmail } from './schools';
+import { schoolOf, schoolOfEmail } from './schools';
 
 /**
  * The campus a person belongs to (design D21). They are placed the first time they are seen, at the school their
@@ -25,6 +25,17 @@ export async function campusOf(db: Db, who: { personId: string; verifiedEmail: s
     id = await placed();
   }
   return campuses.find(campus => campus.id === id) ?? null;
+}
+
+/**
+ * A person changes which campus of their school is their own ("Change campus" in the account card). Only between the
+ * campuses of the school they were placed at: someone not placed, or a campus of another school, is refused.
+ */
+export async function placeAt(db: Db, personId: string, campusId: string): Promise<void> {
+  const campuses = await listCampuses(db), to = campuses.find(campus => campus.id === campusId);
+  const now = (await db.query<{ id: string }>('select campus_id as id from campus_person where person_id=$1', [personId])).rows[0]?.id, from = campuses.find(campus => campus.id === now);
+  if (!to || !from || schoolOf(to.slug) !== schoolOf(from.slug)) throw new CampusError('That campus is not part of your school.');
+  await db.query('update campus_person set campus_id=$2,placed_at=now() where person_id=$1', [personId, to.id]);
 }
 
 /** First names, by person. Someone whose name Loop does not have yet is "Someone". */

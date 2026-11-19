@@ -547,33 +547,45 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-near-band h2 { font-stretch: 118%; font-weight: 820; font-size: 31px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; }
 .cs-near-band small { position: absolute; right: 14px; top: 15px; font-size: 10px; opacity: .6; }
 /* a plan is a postage stamp: perforated, in the hot ink, with a drawn picture, its hour, and who is going */
-.cs-pin { display: flex; align-items: flex-end; text-align: left; transition: opacity .3s; }
-.cs-postage { position: relative; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); scale: var(--stamp, 1); transform-origin: 30% 100%; transition: rotate .35s var(--cs-ease), scale .35s var(--cs-ease); }
+/* A stamp, its faces, its postmark and its ticket are one thing standing on a spot. The spot is the middle of the stamp's
+   foot, and the whole thing grows and shrinks with the map from there (--stamp), so nothing slides off its address. */
+.cs-pin { display: flex; align-items: flex-end; text-align: left; transition: opacity .3s; scale: var(--stamp, 1); transform-origin: 24px calc(100% - 6px); }
+.cs-postage { position: relative; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(2px 2.5px 0 var(--soft)); rotate: var(--lean, -3deg); transform-origin: 50% 100%; transition: rotate .35s var(--cs-ease), scale .35s var(--cs-ease); }
 .cs-postage > span { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: 48px; height: 60px; padding: 5px; line-height: 1; background: var(--hot);
   mask: linear-gradient(#000 0 0) center / calc(100% - 6px) calc(100% - 6px) no-repeat, radial-gradient(circle 2.1px at 50% 50%, #0000 94%, #000) -3px -3px / 6px 6px; }
 .cs-postage > span::before { content: ''; position: absolute; inset: 5.5px; box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
 .cs-postage > span svg { width: 23px; height: 23px; fill: none; stroke: var(--cs-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .cs-postage b { font-size: 12.5px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; } .cs-postage small { font-stretch: 86%; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
 .cs-pin:hover .cs-postage { --lean: 0deg; }
-.cs-pin.sel .cs-postage { --lean: 2deg; scale: calc(1.3 * var(--stamp, 1)); filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 3.5px 0 var(--cs-ink)); }
+.cs-pin.sel .cs-postage { --lean: 2deg; scale: 1.15; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 3.5px 0 var(--cs-ink)); }
 .cs-pin.dim { opacity: .25; } .cs-near .maplibregl-marker:has(.cs-pin.sel) { z-index: 5; }
 .cs-pin.now .cs-postage::after { content: ''; position: absolute; inset: 2px; box-shadow: 0 0 0 2.5px var(--cs-ink); pointer-events: none; animation: cs-ping 2.4s var(--cs-expo) infinite; }
 /* the plan that is on: a burst of the second ink behind it, and a postmark over its corner */
 .cs-burst { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 110px; height: 110px; z-index: -1; pointer-events: none; animation: cs-spin 26s linear infinite, cs-show .5s var(--cs-ease) both; }
 .cs-burst path { fill: var(--second); stroke: var(--cs-ink); stroke-width: 1.3; stroke-linejoin: round; }
-.cs-mark { position: absolute; left: 30px; top: -38px; width: 62px; height: 62px; pointer-events: none; rotate: -14deg; scale: var(--stamp, 1); transform-origin: 0 100%; opacity: .82; animation: cs-thunk .34s var(--cs-ease) both; }
+.cs-mark { position: absolute; left: 30px; top: -38px; width: 62px; height: 62px; pointer-events: none; rotate: -14deg; opacity: .82; animation: cs-thunk .34s var(--cs-ease) both; }
 .cs-mark circle { fill: none; stroke: var(--cs-ink); stroke-width: 1.5; } .cs-mark text { fill: var(--cs-ink); font-size: 7.4px; font-weight: 760; letter-spacing: .14em; } .cs-mark .day { font-size: 10px; letter-spacing: .02em; }
-.cs-pin > .cs-stack { position: relative; z-index: 1; margin: 0 0 -3px -10px; scale: var(--stamp, 1); transform-origin: 0 100%; }
+.cs-pin > .cs-stack { position: relative; z-index: 1; margin: 0 0 -3px -10px; }
 .cs-pin > .cs-stack .cs-face { width: 29px; height: 29px; margin-left: -9px; font-size: 11px; background: var(--card); box-shadow: 0 0 0 1.5px var(--cs-ink), 1.5px 2px 0 1px var(--soft); } .cs-pin > .cs-stack .cs-face:first-child { margin-left: 0; }
 /* near the right edge a stamp faces inward, so it is never cut off */
-.far > .cs-pin { translate: -100% 0; flex-direction: row-reverse; } .far > .cs-pin > .cs-stack { margin: 0 -10px -3px 0; transform-origin: 100% 100%; } .far > .cs-pin .cs-postage { transform-origin: 70% 100%; } .far > .cs-pin .cs-mark { left: auto; right: 30px; }
+.far > .cs-pin { translate: calc(48px - 100%) 0; flex-direction: row-reverse; transform-origin: calc(100% - 24px) calc(100% - 6px); } .far > .cs-pin > .cs-stack { margin: 0 -10px -3px 0; } .far > .cs-pin .cs-mark { left: auto; right: 30px; }
+/* Two plans at one address: the edge of a second stamp under the first, how many there are, and a pill on the ticket to turn to the next. */
+.cs-under { position: absolute; inset: 3px -7px 3px 7px; z-index: -1; background: var(--hot); box-shadow: 0 0 0 1.2px var(--cs-ink); rotate: 9deg; }
+.cs-n { position: absolute; right: -11px; top: -9px; z-index: 2; min-width: 22px; padding: 3px 6px 4px; border-radius: 99px; font-style: normal; font-size: 11.5px; font-weight: 800; line-height: 1; text-align: center; color: var(--second); background: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--card); }
+.cs-bub .also { justify-self: start; margin-top: 5px; padding: 4px 10px 5px; border-radius: 99px; font-size: 11.5px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--cs-ink); pointer-events: auto; cursor: pointer; transition: background-color .15s; } .cs-bub .also:hover { background: var(--second); }
+.cs-near[data-let-go] .cs-bub .also { pointer-events: none; }
+/* The days that have something on in this section. One is on the map at a time. */
+.cs-days { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+.cs-days button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 6px 0 11px; border-radius: 99px; font-size: 12.5px; font-weight: 700; line-height: 1; color: var(--cs-ink); background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: background-color .15s; }
+.cs-days button:hover { background: var(--second); } .cs-days button[aria-pressed=true] { color: var(--card); background: var(--cs-ink); }
+.cs-days i { display: grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 99px; font-style: normal; font-size: 11px; font-weight: 800; color: var(--cs-ink); background: var(--second); }
 .cs-you { display: grid; justify-items: center; gap: 3px; pointer-events: none; } .cs-you > * { scale: var(--stamp, 1); }
 .cs-you .cs-face, .cs-you > i { display: grid; width: 34px; height: 34px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3.5px var(--cs-ink); } .cs-you > i { background: var(--second); }
 .cs-you > b { padding: 2px 5px 1px; font-stretch: 86%; font-size: 8.5px; font-weight: 760; letter-spacing: .12em; line-height: 1.2; color: var(--card); background: var(--cs-ink); border-radius: 2px; transform-origin: 50% -40%; }
 /* the plan that is on hands you its ticket; the map picks the corner (data-seat). Pull back and it shrinks with the sheet;
    wander off to look at other plans (--away) and it lets go. */
 .cs-bub { position: absolute; left: -6px; bottom: calc(100% + 24px); width: 226px; display: grid; grid-template-columns: 1fr auto; font-size: 12.5px; font-weight: 440; line-height: 1.3; color: var(--cs-ink); pointer-events: none;
-  filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 4px 0 var(--soft)); rotate: -1.2deg; scale: calc(var(--ticket, 1) * (1 - .35 * var(--away, 0))); opacity: calc(1 - var(--away, 0)); transform-origin: 12% calc(100% + 24px); animation: cs-cell .5s var(--cs-ease) both; }
+  filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 4px 0 var(--soft)); rotate: -1.2deg; scale: calc(var(--ticket, 1) / var(--stamp, 1) * (1 - .35 * var(--away, 0))); opacity: calc((1 - var(--away, 0)) * var(--say, 1)); transform-origin: 12% calc(100% + 24px); animation: cs-cell .5s var(--cs-ease) both; }
 .cs-bub[data-seat~=r] { left: auto; right: -6px; rotate: 1.2deg; transform-origin: 88% calc(100% + 24px); }
 .cs-bub[data-seat~=low] { bottom: auto; top: calc(100% + 14px); transform-origin: 12% -14px; } .cs-bub[data-seat="low r"] { transform-origin: 88% -14px; }
 .cs-bub > span { background: var(--card); }
@@ -592,6 +604,13 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-way .go svg { width: 30px; height: 30px; fill: none; stroke: var(--second); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; animation: cs-nudge .7s cubic-bezier(.45, 0, .55, 1) infinite alternate; }
 .cs .cs-way.none { background: color-mix(in oklab, var(--pp) 86%, var(--cs-ink)); color: color-mix(in oklab, var(--cs-ink) 62%, var(--pp)); box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--cs-ink) 45%, var(--pp)); animation: cs-nope .45s cubic-bezier(.3, 0, .3, 1); }
 .cs-way.none .go { background: color-mix(in oklab, var(--cs-ink) 38%, var(--pp)); box-shadow: none; } .cs-way.none .go svg { stroke: var(--pp); animation: none; }
+/* In New York the way on is the next stop's platform sign: a black plate, a white rule along the top, the lines' bullets. */
+.cs .cs-way.sign { gap: 9px; padding: 14px 13px 10px 14px; border-radius: 3px; color: var(--card); background: #17120f; box-shadow: 4px 4px 0 var(--soft); }
+.cs-way.sign::before { content: ''; position: absolute; inset: 5px 0 auto; border-top: 1.5px solid var(--card); }
+.cs-way.sign > span:first-child { font-size: 11.5px; font-weight: 500; white-space: nowrap; } .cs-way.sign b { font-stretch: 100%; font-size: 17px; font-weight: 720; letter-spacing: -0.015em; line-height: 1.15; }
+.cs-way > .cs-lines { flex: none; display: flex; gap: 3px; } .cs-lines i { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; font-style: normal; font-size: 15px; font-weight: 800; line-height: 1; color: var(--card); } .cs-lines i.dark { color: #17120f; }
+.cs-way.sign .go { width: 26px; height: 26px; margin: 0; background: none; box-shadow: none; } .cs-way.sign .go svg { width: 22px; height: 22px; stroke: var(--card); }
+.cs .cs-way.sign.none { color: var(--card); background: #8d857b; box-shadow: none; } .cs-way.sign.none .cs-lines i { background: #5e5750 !important; color: var(--card); } .cs-way.sign.none .go { background: none; }
 /* the compass is the one button on the map: back to where you are. The bar measures in minutes of walking. */
 /* the compass rose: the map's printed ornament, not a button. Under it and centred on it, the map's own controls in one pill */
 .cs .cs-rose { position: absolute; z-index: 3; right: 14px; top: 98px; width: 50px; height: 50px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); pointer-events: none; } .cs-rose svg { display: block; width: 100%; height: 100%; }
@@ -700,7 +719,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-grid .cs-then { grid-column: 1 / -1; grid-auto-flow: column; justify-content: center; align-items: baseline; padding: 8px 16px; } .cs-grid .cs-then span { writing-mode: horizontal-tb; }
 .cs-grid .cs-nothing { grid-column: 1 / -1; width: 100%; }
 .cs-wide .cs-shelf { margin-top: 22px; }
-.cs-pin.hov .cs-postage { --lean: 0deg; scale: calc(1.16 * var(--stamp, 1)); }
+.cs-pin.hov .cs-postage { --lean: 0deg; scale: 1.08; }
 /* a change of source or word moves each ticket to its new place instead of redrawing the list */
 ::view-transition-group(*) { animation-duration: .55s; animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
@@ -733,6 +752,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 /* the row in the account card: the mark, two short lines, one button */
 .cs-inkrow { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--cs-line); }
 .cs-inkrow > .cs-ink { font-size: 22px; } .cs-inkrow > span { display: grid; min-width: 0; margin-right: auto; line-height: 1.25; }
+.cs-camprow .cs-btn { flex: none; white-space: nowrap; }
 .cs-inkrow b { font-size: 15.5px; font-weight: 720; letter-spacing: -0.02em; } .cs-inkrow small { font-size: 13px; color: var(--cs-mute); }
 /* the picker: its top line holds the way to the Ink page too, so its buttons sit closer; on a phone the search takes a line of its own */
 .cs-pets-top { gap: 6px; } .cs-pets-top .cs-btn { padding: 0 11px; gap: 6px; }

@@ -39,7 +39,7 @@ afterEach(() => { cleanup(); maps.length = 0; vi.unstubAllGlobals(); });
 
 const at = (hours: number) => new Date(Date.now() + hours * 3600000).toISOString();
 function ticket(title: string, time: string, hours: number, lon: number | null, lat = 0, more: Partial<Ticket> = {}): Ticket {
-  return { id: title, title, day: 'Today', time, ends: null, when: at(hours), source: null, by: null, place: `${title} hall`, about: null, link: null, tags: [], map: lon === null ? null : { name: `${title} hall`, lat, lon },
+  return { id: title, title, day: 'Today', mapDate: '2026-11-19', mapDay: 'Today', time, ends: null, when: at(hours), source: null, by: null, place: `${title} hall`, about: null, link: null, tags: [], map: lon === null ? null : { name: `${title} hall`, lat, lon },
     words: [], pull: 0, going: 0, stub: { kind: 'none', say: 'Nobody is in yet', faces: [] }, how: null, known: [], mine: null, action: 'in', status: null, joinToken: null, ...more };
 }
 // Two in Collegetown, one in Central Campus, one in North Campus (two steps from Collegetown), and one with no spot.
@@ -260,6 +260,31 @@ describe('The map beside the week, on a wide window', () => {
     expect(document.querySelector('.cs-bub')).toBeNull();
   });
 
+  it('a second ticket picked while the map is still travelling to the first is whole when the map comes to rest', async () => {
+    const map = await wide();
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Study group'));
+    // The real map takes time to travel. A new move ends the one in flight there and then, which says "moveend" (maplibre's
+    // easeTo stops the transition underway first), and a listener set with `once` hears only the next "moveend".
+    const waiting: Handler[] = [];
+    let aim: { center?: [number, number]; zoom?: number } | null = null;
+    const end = () => { map.fire('moveend'); for (const heard of waiting.splice(0)) heard({}); };
+    map.once = (type, handler) => { if (type === 'moveend') waiting.push(handler); else handler({}); return map; };
+    map.easeTo = to => {
+      if (aim) end();
+      aim = to;
+      if (to.center) map.setCenter([(map.center.lng + to.center[0]) / 2, (map.center.lat + to.center[1]) / 2]);   // half way there
+      map.fire('move');
+    };
+    const arrive = () => { if (aim?.center) map.setCenter(aim.center); if (aim?.zoom !== undefined) map.zoom = aim.zoom; aim = null; map.fire('move'); end(); };
+
+    fireEvent.click(card('Dumpling night'));
+    fireEvent.click(card('Study group'));   // before the map has arrived
+    act(arrive);
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Study group');
+    // "Away" is how far the view has left the ticket since it was dealt: none, the map has only just come to rest on it.
+    expect(document.querySelector<HTMLElement>('.cs-near')!.style.getPropertyValue('--away')).toBe('0.000');
+  });
+
   it('a ticket in another part of town brings the map there, and one with no spot leaves the map alone', async () => {
     await wide();
     expect(place()).toBe('Collegetown');
@@ -287,5 +312,137 @@ describe('The map beside the week, on a wide window', () => {
     expect(document.querySelector('.cs-grid .cs-sheet')).toBeTruthy();
     expect(document.querySelector('.cs-near-sheet.open')).toBeNull();
     expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Dumpling night');
+  });
+});
+
+describe('One day on the map', () => {
+  // Collegetown: two plans today at one address, one more today across the street, and one on Saturday.
+  const days = [ticket('Bagels', '9am', 1, -76.4876, 42.4393), ticket('Chess', '10am', 2, -76.4876, 42.4393), ticket('Dumpling night', '8pm', 6, -76.4852, 42.4406), ticket('Market', '8am', 50, -76.4876, 42.4393, { day: 'Sat', mapDate: '2026-11-21', mapDay: 'Sat' })];
+  const onMap = () => [...document.querySelectorAll('.cs-pin')].map(pin => pin.getAttribute('aria-label'));
+
+  it('shows the first day with anything on, and a day pressed on the band puts that day on the map', async () => {
+    locate(null);
+    await near(days);
+    await waitFor(() => expect(onMap()).toEqual(['Bagels, Today 9am, 2 here', 'Dumpling night, Today 8pm']));
+    const band = screen.getByRole('group', { name: 'Day on the map' });
+    expect(within(band).getByRole('button', { name: 'Today3' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(band).getByRole('button', { name: 'Sat1' }));
+    await waitFor(() => expect(onMap()).toEqual(['Market, Sat 8am']));
+    expect(screen.getByRole('slider').getAttribute('aria-valuemax')).toBe('1');   // the dial turns through that day only
+  });
+
+  it('something already running is under Today, apart from a plan on the same weekday later this week', async () => {
+    // An exhibition that began last Saturday and is still on, and this Saturday's market: both read "Sat" on their stamps.
+    const running = [ticket('Exhibition', '10am', -120, -76.4852, 42.4406, { day: 'Sat' }), ticket('Bagels', '9am', 1, -76.4876, 42.4393), ticket('Market', '8am', 50, -76.4876, 42.4393, { day: 'Sat', mapDate: '2026-11-21', mapDay: 'Sat' })];
+    locate(null);
+    await near(running);
+    await waitFor(() => expect(onMap()).toEqual(['Exhibition, Sat 10am', 'Bagels, Today 9am']));
+    const band = screen.getByRole('group', { name: 'Day on the map' });
+    expect(within(band).getAllByRole('button').map(pill => pill.textContent)).toEqual(['Today2', 'Sat1']);
+    expect(within(band).getByRole('button', { name: 'Today2' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(band).getByRole('button', { name: 'Sat1' }));
+    await waitFor(() => expect(onMap()).toEqual(['Market, Sat 8am']));
+  });
+
+  it('on a phone, a plan opened from another day brings its day onto the map, and the day stays when it closes', async () => {
+    // The composer offers a plan already on with the tag typed, whatever its day; "Look at" opens its ticket.
+    const viewer = { first: 'Ana', name: 'Ana', photo: null, face: 0, ownPhoto: null, own: null, owns: [], picks: { core: [], premium: [], school: [] }, asked: false, makesLeft: 0, level: 0, outings: 0, admin: false, groups: [] };
+    const tagged = days.map(each => each.title === 'Market' ? { ...each, tags: ['market'] } : each);
+    locate(null);
+    render(<CampusScreen screen={{ ...model('cornell', tagged), viewer }} signInHref="/sign-in" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Near you' }));
+    await waitFor(() => expect(onMap()).toHaveLength(2));
+    fireEvent.click(screen.getByRole('button', { name: 'Post a plan' }));
+    fireEvent.change(document.querySelector('#cs-say')!, { target: { value: 'coffee @market ' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Look at Market' }));
+    await waitFor(() => expect(onMap()).toEqual(['Market, Sat 8am']));
+    expect(document.querySelector('.cs-pin')?.className).toContain('sel');
+    fireEvent.click(within(document.querySelector<HTMLElement>('.cs-near-sheet.open')!).getAllByRole('button', { name: /Close/ })[0]);
+    await screen.findByRole('slider');
+    expect(onMap()).toEqual(['Market, Sat 8am']);
+  });
+
+  it('beside the list, pointing at either plan of a shared address lifts its one stamp', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-width'), addEventListener() {}, removeEventListener() {} }));
+    locate(null);
+    render(<CampusScreen screen={model('cornell', days)} signInHref="/sign-in" />);
+    await waitFor(() => expect(maps).toHaveLength(1));
+    await waitFor(() => expect(onMap()).toHaveLength(2));
+    fireEvent.mouseEnter(screen.getByRole('heading', { level: 3, name: 'Chess' }).closest('article')!);
+    expect(document.querySelector('.cs-pin.hov')?.getAttribute('aria-label')).toBe('Bagels, Today 9am, 2 here');
+  });
+
+  it('has no day pills when everything on the map is on one day', async () => {
+    locate(null);
+    await near();
+    await waitFor(() => expect(pins()).toHaveLength(2));
+    expect(screen.queryByRole('group', { name: 'Day on the map' })).toBeNull();
+  });
+
+  it('plans at one address share one stamp, which says how many, and "Also here" turns it to the next', async () => {
+    locate(null);
+    await near(days);
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Bagels'));
+    expect(document.querySelector('.cs-pin .cs-n')?.textContent).toBe('2');
+    fireEvent.click(screen.getByText('Also here: Chess, 10am ›'));
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Chess');
+    expect(onMap()).toEqual(['Chess, Today 10am, 2 here', 'Dumpling night, Today 8pm']);
+    expect(screen.getByText('Also here: Bagels, 9am ›')).toBeTruthy();
+    expect(document.querySelector('.cs-near.picked')).toBeNull();   // turning the stamp does not open a ticket
+  });
+
+  it('beside the list, a ticket from another day brings its day onto the map', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-width'), addEventListener() {}, removeEventListener() {} }));
+    locate(null);
+    render(<CampusScreen screen={model('cornell', days)} signInHref="/sign-in" />);
+    await waitFor(() => expect(maps).toHaveLength(1));
+    await waitFor(() => expect(onMap()).toHaveLength(2));
+    fireEvent.click(screen.getByRole('heading', { level: 3, name: 'Market' }).closest('article')!);
+    await waitFor(() => expect(onMap()).toEqual(['Market, Sat 8am']));
+    expect(within(screen.getByRole('group', { name: 'Day on the map' })).getByRole('button', { name: 'Sat1' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Today3' }));
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Bagels'));
+  });
+});
+
+describe('New York: the way on is a station sign', () => {
+  // One plan on Roosevelt Island and one a stop west, on the Upper East Side.
+  const town = [ticket('Tram ride', '3pm', 1, -73.9552, 40.7562), ticket('Museum night', '6pm', 4, -73.9665, 40.7647)];
+
+  it('by train: the stop, its lines and what is on there, and it takes you there', async () => {
+    locate(null);
+    const map = await near(town, 'cornell-tech');
+    expect(screen.getByRole('heading', { level: 2, name: 'Roosevelt Island' })).toBeTruthy();
+    await wholeSection();
+    act(() => map.drag(-.01, 0));
+    const sign = await screen.findByRole('button', { name: 'Go to Upper East Side' });
+    expect(sign.className).toContain('sign');
+    expect(within(sign).getByText('Lexington Av/63 St')).toBeTruthy();
+    expect(within(sign).getByText('Upper East Side · 1 on')).toBeTruthy();
+    expect([...sign.querySelectorAll('.cs-lines i')].map(each => each.textContent)).toEqual(['F', 'M', 'Q']);
+    fireEvent.click(sign);
+    expect(screen.getByRole('heading', { level: 2, name: 'Upper East Side' })).toBeTruthy();
+  });
+
+  it('a stop with nothing on is a greyed sign that goes nowhere', async () => {
+    locate(null);
+    const map = await near(town, 'cornell-tech');
+    await wholeSection();
+    act(() => map.drag(.01, -.004));
+    const shut = await screen.findByRole('status');
+    expect(shut.className).toContain('sign');
+    expect(within(shut).getByText('21 St–Queensbridge')).toBeTruthy();
+    expect(within(shut).getByText('Nothing on yet. Coming soon')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Go to/ })).toBeNull();
+  });
+
+  it('Ithaca keeps its arrow', async () => {
+    locate(null);
+    const map = await near();
+    await wholeSection();
+    act(() => map.drag(0, .01));
+    const way = await screen.findByRole('button', { name: 'Go to Central Campus' });
+    expect(way.className).not.toContain('sign');
+    expect(way.querySelector('.cs-lines')).toBeNull();
   });
 });

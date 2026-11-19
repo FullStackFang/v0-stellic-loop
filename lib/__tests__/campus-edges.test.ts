@@ -155,3 +155,15 @@ it('the hourly read leaves long-ended events as they are', async () => {
   const { rows } = await t.db.query<{ item: string; gone: boolean }>('select feed_item_id as item,left_feed_at is not null as gone from campus_listing where feed_id=$1 order by starts_at', [feed.id]);
   expect(rows).toEqual([{ item: 'old', gone: false }, { item: 'next', gone: false }, { item: 'new', gone: false }]);
 });
+
+// The map shows one day at a time, so each ticket says which local date it is under and what that day is called.
+// Expected values are read off the November 2026 calendar: the 17th is a Tuesday, the 14th, 21st and 28th are Saturdays.
+it('the map\'s day is the local date: something running is under today, and a day beyond this week carries its date', async () => {
+  const poster = await person('Ana');
+  await event({ title: 'Exhibition', at: new Date('2026-11-14T15:00:00Z'), end: new Date('2026-11-24T22:00:00Z') });
+  await event({ title: 'Market', at: new Date('2026-11-21T13:00:00Z') });
+  await postPlan(t.db, poster, cornell, { title: 'Gorge hike', starts: '2026-11-28T10:00' }, NOW);
+  const { tickets } = await see(poster);
+  expect(tickets.map(ticket => [ticket.title, ticket.day, ticket.mapDate, ticket.mapDay])).toEqual([
+    ['Exhibition', 'Sat', '2026-11-17', 'Today'], ['Market', 'Sat', '2026-11-21', 'Sat'], ['Gorge hike', 'Sat', '2026-11-28', 'Sat 28']]);
+});
