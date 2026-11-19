@@ -5,7 +5,7 @@ import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { subscribe } from '@/lib/campus/custom-face';
 import { subscribeAsks, subscribeInkPlus } from '@/lib/campus/ink';
 import { authenticate } from '@/lib/emba/access';
-import { askGroupPicture, ASKS, asksMade, groupPictureImage, groupPictures, keepGroupPicture, waitingGroupPictures, type DrawGroup, type Pick } from '@/lib/emba/group-picture';
+import { askGroupPicture, ASKS, asksMade, groupPictureImage, groupPictures, keepGroupPicture, picturePane, waitingGroupPictures, type DrawGroup, type Pick } from '@/lib/emba/group-picture';
 import { startGroup } from '@/lib/emba/group-start';
 
 let t: TestDb;
@@ -109,6 +109,21 @@ it('asks for Ink+ first, stops at the limit, and never asks or stops the admin',
   await t.db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'organizer')", [at.orgId, at.loopId, admin.personId]);
   // No Ink+, more than the limit, and an Ink animal with no Ink.
   for (let n = 0; n <= ASKS; n++) expect((await askGroupPicture(t.db, admin, at, [{ face: 4 }, { face: 36 }], draw)).tokens).toHaveLength(2);
+});
+
+it('gives the card what it shows, to whoever runs the group alone, and passes the person\'s own line to the drawing', async () => {
+  const { owner, member, at } = await group(), said: (string | undefined)[] = [];
+  const draw: DrawGroup = (animals, note) => { said.push(note); return drawer().draw(animals); };
+  expect(await picturePane(t.db, member, at)).toBeNull();
+  const before = (await picturePane(t.db, owner, at))!;
+  expect(before).toMatchObject({ fewest: 2, most: 6, plus: true, asksLeft: ASKS, waiting: [], kept: null });
+  // Everyone's 36, and nothing that needs Ink.
+  expect(before.choices.filter(one => one.kind === 'core')).toHaveLength(36);
+  expect(before.choices.some(one => one.kind === 'ink')).toBe(false);
+  const { tokens } = await askGroupPicture(t.db, owner, at, FOUR, draw, '  matching <b>scarves</b>!  ');
+  expect(said).toEqual(['matching b scarves b', 'matching b scarves b']);
+  await keepGroupPicture(t.db, owner, at, tokens[0]);
+  expect(await picturePane(t.db, owner, at)).toMatchObject({ asksLeft: ASKS - 1, waiting: [], kept: tokens[0] });
 });
 
 it('records every press of Subscribe, with the plan and where it was pressed', async () => {

@@ -36,13 +36,15 @@ type Scope = z.infer<typeof scopeSchema>;
 const key = (pick: Pick) => 'face' in pick ? `f${pick.face}` : `t${pick.token}`;
 
 /** Draws the given animals together as one picture: a PNG on a transparent ground. Each animal comes as its own 512px PNG on white. */
-export type DrawGroup = (animals: Uint8Array[]) => Promise<Uint8Array>;
+export type DrawGroup = (animals: Uint8Array[], note?: string) => Promise<Uint8Array>;
+/** A person's own words for what should change, made safe to set in the drawing's words: one short line of plain letters, as for a person's own animal. */
+export const plainNote = (note: string) => note.replace(/[^\p{L}\p{N} ,'-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
 
 /** The real thing. One short line, as for a person's own animal: longer words made the model draw plainer figures. About half a minute. */
-export const drawTogether: DrawGroup = async animals => {
+export const drawTogether: DrawGroup = async (animals, note = '') => {
   const { image } = await generateImage({
     model: 'openai/gpt-image-2.6-flare', size: '1024x1024', maxRetries: 1, abortSignal: AbortSignal.timeout(180000),
-    prompt: { images: animals.map(each => Buffer.from(each)), text: `Draw the ${animals.length} toy figures in these pictures together in one picture, as a close huddle of friends: some in front, some behind, touching. Keep each one exactly as it is: its own colours, markings, face and style. Nothing else in the picture. Transparent background, no shadow.` },
+    prompt: { images: animals.map(each => Buffer.from(each)), text: `Draw the ${animals.length} toy figures in these pictures together in one picture, as a close huddle of friends: some in front, some behind, touching. Keep each one exactly as it is: its own colours, markings, face and style. ${plainNote(note) && `The group also asks: ${plainNote(note)}. `}Nothing else in the picture. Transparent background, no shadow.` },
     providerOptions: { openai: { background: 'transparent', output_format: 'png' } },
   });
   return image.uint8Array;
@@ -63,13 +65,30 @@ const runs = async (q: Q, p: Principal, scope: Scope) => p.clientId === null && 
  * The animals a person may put in a group picture: the ones their own picker offers (everyone's, their school's, the
  * Ink ones when they have Ink) and the animals they had made. The admin may use every one.
  */
-async function mayUse(q: Q, p: Principal, admin: boolean): Promise<Set<string>> {
+const mayUse = async (q: Q, p: Principal, admin: boolean) => new Set((await choices(q, p, admin)).map(one => key(one.pick)));
+
+/** One animal the picker shows: what to send back to pick it, its picture, and what kind it is, for the mark on its corner. */
+export type Choice = { pick: Pick; src: string; kind: 'own' | 'school' | 'ink' | 'core' };
+/** Every animal the person may put in a group picture, in the order their own picker has them: theirs, their school's, the Ink ones, everyone's. */
+async function choices(q: Q, p: Principal, admin: boolean): Promise<Choice[]> {
   const list = await offered(q, admin ? 'all' : await schoolOfPerson(q, p.personId));
-  const open = [...list.core, ...list.school, ...(admin || await hasInk(q, p.personId) ? list.premium : [])];
-  const made = admin ? (await q.query<{ token: string }>('select token::text as token from campus_custom_picture')).rows
-    : (await q.query<{ token: string }>('select token::text as token from campus_custom_picture where person_id=$1 and let_go_at is null', [p.personId])).rows;
   const tokenOf = (src: string) => src.slice(customFace('').length);
-  return new Set([...open.map(tile => tile.face === null ? `t${tokenOf(tile.src)}` : `f${tile.face}`), ...made.map(row => `t${row.token}`)]);
+  const of = (tiles: { face: number | null; src: string }[], kind: Choice['kind']): Choice[] => tiles.map(tile => ({ pick: tile.face === null ? { token: tokenOf(tile.src) } : { face: tile.face }, src: tile.src, kind }));
+  const shown = [...of(list.school, 'school'), ...(admin || await hasInk(q, p.personId) ? of(list.premium, 'ink') : []), ...of(list.core, 'core')];
+  const made = (admin ? (await q.query<{ token: string }>('select token::text as token from campus_custom_picture order by made_at,token')).rows
+    : (await q.query<{ token: string }>('select token::text as token from campus_custom_picture where person_id=$1 and let_go_at is null order by made_at,token', [p.personId])).rows)
+    .filter(row => !shown.some(one => 'token' in one.pick && one.pick.token === row.token));
+  return [...made.map(row => ({ pick: { token: row.token }, src: customFace(row.token), kind: 'own' as const })), ...shown];
+}
+
+/** What the "Group picture" card needs to draw itself for a person who runs the group. Null for anyone else. */
+export type PicturePane = { choices: Choice[]; fewest: number; most: number; plus: boolean; asksLeft: number | null; waiting: string[]; kept: string | null };
+export async function picturePane(q: Q, p: Principal, scope: Scope): Promise<PicturePane | null> {
+  const at = scopeSchema.parse(scope);
+  if (!await runs(q, p, at)) return null;
+  const admin = isAdmin(p);
+  return { choices: await choices(q, p, admin), fewest: FEWEST, most: MOST, plus: admin || await hasInkPlus(q, p.personId), asksLeft: admin ? null : Math.max(0, ASKS - await asksMade(q, p.personId)),
+    waiting: await waitingGroupPictures(q, p, at), kept: (await groupPictures(q, [at.loopId])).get(at.loopId) ?? null };
 }
 
 /** One picked animal as the model is given it: 512px, on white. */
@@ -85,7 +104,7 @@ async function pictureOf(q: Q, pick: Pick): Promise<Buffer> {
  * (keepGroupPicture). A person who is not the admin must have asked for Ink+, and may ask ASKS times in all. An ask
  * that draws nothing is not counted. Returns the tokens of the drawings made: two, or one when the other failed.
  */
-export async function askGroupPicture(db: Db, p: Principal, scope: Scope, picked: readonly Pick[], draw: DrawGroup = drawTogether): Promise<{ ask: string; tokens: string[] }> {
+export async function askGroupPicture(db: Db, p: Principal, scope: Scope, picked: readonly Pick[], draw: DrawGroup = drawTogether, note = ''): Promise<{ ask: string; tokens: string[] }> {
   const at = scopeSchema.parse(scope), wanted = z.array(pickSchema).safeParse(picked);
   if (!wanted.success || wanted.data.length < FEWEST || wanted.data.length > MOST || new Set(wanted.data.map(key)).size !== wanted.data.length) throw new CampusError(HOW_MANY);
   const admin = isAdmin(p);
@@ -100,7 +119,7 @@ export async function askGroupPicture(db: Db, p: Principal, scope: Scope, picked
     return Promise.all(wanted.data.map(pick => pictureOf(q, pick)));
   });
   // The drawing is outside any transaction: it takes half a minute, and holds nothing while it waits.
-  const drawn = await Promise.allSettled(Array.from({ length: DRAWINGS }, async () => sizes(await draw(animals))));
+  const drawn = await Promise.allSettled(Array.from({ length: DRAWINGS }, async () => sizes(await draw(animals, plainNote(note)))));
   const made = drawn.flatMap(one => one.status === 'fulfilled' ? [one.value] : []);
   if (!made.length) {
     // A provider's error can carry the request; only that it failed is kept.
