@@ -42,6 +42,8 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 :where(.cs) :is(h1, h2, h3, h4, p, ul, ol, figure) { margin: 0; padding: 0; } :where(.cs) :is(ul, ol) { list-style: none; }
 :where(.cs) a { color: inherit; text-decoration: none; }
 .cs :focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+/* A field you type in never gets that outline: a box round a box. Its own edge turns to the action colour instead. */
+.cs :where(input:not([type=checkbox], [type=radio], [type=file]), textarea, select):focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--cs-action); }
 .cs [hidden] { display: none !important; }
 .cs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
@@ -92,7 +94,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-fill { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .cs-ask { display: flex; align-items: center; gap: 12px 18px; flex-wrap: wrap; margin-bottom: 14px; }
 .cs-ask input { flex: 1 1 320px; min-width: 0; height: 52px; padding: 0 24px; border: 0; border-radius: 99px; font: inherit; font-size: 18px; font-weight: 520; letter-spacing: -0.02em; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
-.cs-ask input::placeholder { color: var(--cs-mute); } .cs-ask input:focus-visible { outline: 3px solid var(--cs-action); outline-offset: 2px; }
+.cs-ask input::placeholder { color: var(--cs-mute); } .cs-ask input:focus-visible { outline: 0; box-shadow: inset 0 0 0 2.5px var(--cs-action), 4px 4px 0 var(--cs-field-shadow); }
 .cs-tabs { display: flex; gap: 4px; flex: none; }
 .cs-tabs button { padding: 6px 14px; border-radius: 99px; font-weight: 540; color: var(--cs-mute); }
 .cs-tabs button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); }
@@ -277,7 +279,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs .cs-prem-stub > .cs-btn { justify-self: stretch; height: 46px; font-size: 15.5px; }
 .cs-prem-join { display: flex; align-items: center; height: 46px; padding: 4px 5px 4px 16px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); animation: cs-in .32s var(--cs-expo); }
 .cs-prem-join input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; font: inherit; font-size: 15px; color: var(--cs-ink); } .cs .cs-prem-join .cs-btn { height: 36px; padding: 0 16px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 2px 2px 0 var(--cs-ink); margin-right: 3px; }
-.cs-prem-join:focus-within { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 0 0 0 3px color-mix(in oklch, var(--cs-ink) 25%, transparent); } .cs-own .cs-prem-stub [role=alert] { color: var(--cs-ink); font-weight: 620; }
+.cs .cs-prem-join input:focus-visible { box-shadow: none; } .cs-prem-join:focus-within { box-shadow: inset 0 0 0 2.5px var(--cs-action); } .cs-own .cs-prem-stub [role=alert] { color: var(--cs-ink); font-weight: 620; }
 @media (prefers-reduced-motion: reduce) { .cs-prem-join { animation: none; } }
 .cs-own-made { display: grid; justify-items: center; gap: 12px; margin-top: 14px; text-align: center; } .cs-own-made img { width: 132px; height: 132px; object-fit: contain; }
 .cs-own-made img.busy { border-radius: 16px; object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } @keyframes cs-own-wait { to { opacity: .45; transform: scale(.96); } }
@@ -681,7 +683,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-strip { flex: none; display: flex; align-items: center; gap: 12px 16px; margin: 0 6px 14px 0; }
 .cs-find { position: relative; z-index: 5; flex: 1; min-width: 0; display: flex; }
 .cs-find input { width: 100%; min-width: 0; height: var(--h); padding: 0 24px; border: 0; border-radius: 99px; font: inherit; font-size: 18px; font-weight: 520; letter-spacing: -0.02em; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
-.cs-find input::placeholder { color: var(--cs-mute); } .cs-find input:focus-visible { outline: 3px solid var(--cs-action); outline-offset: 2px; }
+.cs-find input::placeholder { color: var(--cs-mute); } .cs-find input:focus-visible { outline: 0; box-shadow: inset 0 0 0 2.5px var(--cs-action), 4px 4px 0 var(--cs-field-shadow); }
 /* the words to try are the search line's own suggestions: they open under it when it is clicked into */
 .cs-try { position: absolute; left: 0; top: calc(100% + 9px); display: flex; align-items: center; gap: 6px; padding: 8px 12px 8px 16px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-ink);
   opacity: 0; visibility: hidden; translate: 0 -6px; transition: opacity .18s, translate .3s var(--cs-expo), visibility 0s .18s; }
