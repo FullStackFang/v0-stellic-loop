@@ -182,6 +182,21 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 #save.bare .lk { opacity: 0; scale: .6; }
 #save .cycle { box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--ink); } #save .cycle button { height: 40px; padding: 0 18px; font-size: 15.5px; }
 
+/* Make it yours: colours, picture and splat share one band, and the tabs pick which one shows. The kits are those of app/c/campus.css. */
+.show[hidden] { display: none; }
+.say .cycle { margin-top: 30px; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--action); }
+[data-kit=loop] { --field: oklch(96.4% 0.19 117); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); --action-hover: oklch(53% 0.14 250); }
+[data-kit=cornell] { --field: oklch(82% 0.12 38); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27); }
+[data-kit=columbia] { --field: oklch(87% 0.075 235); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); --action-hover: oklch(52% 0.15 255); }
+[data-kit=cuny] { --field: oklch(88% 0.13 88); --ink: oklch(24% 0.08 265); --action: oklch(38% 0.18 264); --action-hover: oklch(45% 0.19 264); }
+[data-kit=nyu] { --field: oklch(85% 0.09 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); --action-hover: oklch(46% 0.21 305); }
+.kit-view { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 30px 26px; border-radius: 16px 16px 16px 5px; background: var(--field); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .3s; } .kit-view .btn { pointer-events: none; }
+.kits { display: flex; flex-wrap: wrap; gap: 10px; }
+.kits button { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 10px; border-radius: 99px; background: var(--paper); font-size: 16px; font-weight: 640; box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ink) 30%, transparent); transition: translate .15s; }
+.kits button:hover { translate: 0 -2px; } .kits button[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--ink), 4px 4px 0 var(--ink); }
+.kits s { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(var(--action) 36%, var(--field) 40%); box-shadow: 0 0 0 1px color-mix(in oklab, var(--ink) 25%, transparent); }
+.kits i { font-style: normal; padding: 2px 9px 3px; border-radius: 99px; font-size: 12.5px; font-weight: 720; background: var(--hot); color: var(--ink); } .kits i.own { background: none; box-shadow: inset 0 0 0 1.5px var(--ink); }
+
 /* compare + questions */
 .rest { padding: 110px 0; } .rest h2 { font-size: clamp(48px, 7vw, 112px); margin-bottom: 44px; }
 .cmp { border-radius: var(--r); background: var(--paper); box-shadow: 7px 7px 0 var(--field-shadow); overflow: hidden; }
@@ -256,10 +271,10 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
       <li><span class="ck"></span>Post, join, show up</li><li><span class="ck"></span>Map, tags, rewards</li><li><span class="ck"></span>30 days of stamps</li><li><span class="ck"></span>One pet animal</li></ul></div>
       <div class="tk-stub"><span class="price"><b>$0</b><span>for good</span></span><a class="btn" href="#compare">You have it</a></div></div>
     <div class="tk prem"><div class="tk-main"><h3>Ink <i>Most picked</i></h3><ul>
-      <li><span class="ck"></span>Your book, kept for good</li><li><span class="ck"></span>Give an animal a month</li><li><span class="ck"></span>Boost a group a month</li><li><span class="ck"></span>Join at any school</li><li><span class="ck"></span>Connect your assistant</li></ul></div>
+      <li><span class="ck"></span>Your book, kept for good</li><li><span class="ck"></span>More animals, a coloured splat</li><li><span class="ck"></span>Connect your assistant</li><li><span class="ck"></span>A gift and a boost a month</li><li><span class="ck"></span>Join at any school</li></ul></div>
       <div class="tk-stub"><span class="price"><b data-month="$2.99" data-year="$29">$2.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn">Get Ink</button></div></div>
     <div class="tk super"><div class="tk-main"><h3>Ink+</h3><ul>
-      <li><span class="ck"></span>Everything in Ink</li><li><span class="ck"></span>Two friends get Ink</li><li><span class="ck"></span>Your own stamp</li><li><span class="ck"></span>4 gifts, 3 boosts a month</li><li><span class="ck"></span>The book, printed and mailed</li></ul></div>
+      <li><span class="ck"></span>Everything in Ink</li><li><span class="ck"></span>The book, printed and mailed</li><li><span class="ck"></span>Make it fully yours</li><li><span class="ck"></span>Two friends get Ink</li><li><span class="ck"></span>4 gifts, 3 boosts a month</li><li><span class="ck"></span>Your own stamp</li></ul></div>
       <div class="tk-stub"><span class="price"><b data-month="$9.99" data-year="$99">$9.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn">Get Ink+</button></div></div>
   </div>
 </div></section>
@@ -274,8 +289,45 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   </div>
 </div></div></section>
 
-<section class="band b-ink"><div class="wrap">
-  <div class="say"><h2 class="d">Give one away.</h2><p>Every school has its own animals. A gift is how a friend at Columbia wears a Cornell one.</p></div>
+<section class="band b-ink flip" id="yours"><div class="wrap">
+  <div class="say"><h2 class="d">Make it yours.</h2><p>Your colours, your picture, your splat. Ink+ opens all of it.</p>
+    <div class="cycle" role="group" aria-label="What to make yours"><button aria-pressed="true" data-show="kits">Colours</button><button aria-pressed="false" data-show="save">Picture</button><button aria-pressed="false" data-show="splat">Splat</button></div></div>
+  <div class="show" id="kits">
+    <div class="kit-view" data-kit="nyu"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span><span class="btn go">I'm in</span></div>
+    <div class="kits" role="group" aria-label="Colours">
+      <button aria-pressed="false" data-pick="loop"><s data-kit="loop"></s>Loop</button>
+      <button aria-pressed="false" data-pick="cornell"><s data-kit="cornell"></s>Cornell<i class="own">Yours</i></button>
+      <button aria-pressed="false" data-pick="columbia" data-plus><s data-kit="columbia"></s>Columbia<i>Ink+</i></button>
+      <button aria-pressed="false" data-pick="cuny" data-plus><s data-kit="cuny"></s>CUNY<i>Ink+</i></button>
+      <button aria-pressed="true" data-pick="nyu" data-plus><s data-kit="nyu"></s>NYU<i>Ink+</i></button>
+    </div>
+    <div class="row"><span id="kit-says">Any other school's, with Ink+</span></div>
+  </div>
+  <div class="show" id="save" hidden>
+    <div class="take">
+      <figure><div class="shot sq"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Profile</figcaption></figure>
+      <figure><div class="shot tall"><img src="../animals/37.png" alt=""><b>Ana Lopez</b><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Lock screen</figcaption></figure>
+      <figure><div class="shot cut"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg></span></div><figcaption class="lab">Sticker</figcaption></figure>
+    </div>
+    <div class="row"><div class="cycle" id="mark" role="group" aria-label="Loop mark"><button aria-pressed="true">With the mark</button><button aria-pressed="false" data-bare>No mark<i>Ink+</i></button></div><span id="mark-says">Free for everyone</span></div>
+  </div>
+  <div class="show" id="splat" hidden>
+    <div id="splats" style="display:grid;gap:30px"></div>
+    <div class="row"><button class="btn go" id="again">Splat again</button><span>When a page is ready. Ink adds your colours, Ink+ sparks.</span></div>
+  </div>
+</div></section>
+
+<section class="band b-field" id="assistant"><div class="wrap">
+  <div class="say"><h2 class="d">Plug in your AI.</h2><p>Connect Claude, ChatGPT or whichever assistant you use. It knows your groups and your stamps, so its advice is about you.</p></div>
+  <div class="show">
+    <div class="chat"><p class="me">What should my climbing crew do this week?</p><p>You are one outing from a coffee each. Thursday at 6 suits four of you. Want me to post it?</p></div>
+    <div class="sees"><span>Your groups</span><span>Your stamps</span><span>This week on campus</span><span class="x">Who else was there</span></div>
+  </div>
+</div></section>
+
+<section class="band b-pp flip" id="people"><div class="wrap">
+  <div class="say"><h2 class="d">Bring your people.</h2><p>Give an animal and boost your group, once a month. Ink+ adds more of both, your own stamp, and Ink for two friends.</p>
+    <div class="cycle" role="group" aria-label="What to do for your people"><button aria-pressed="true" data-show="gift">Gift</button><button aria-pressed="false" data-show="boost">Boost</button><button aria-pressed="false" data-show="stamp">Your stamp</button></div></div>
   <div class="show" id="gift">
     <div class="pick">
       <button aria-pressed="true" data-src="../animals/05.png" data-name="A Cornell animal"><img src="../animals/05.png" alt="">Cornell</button>
@@ -286,61 +338,24 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
     <div class="row"><button class="btn go" id="give">Give it to Priya</button><span id="left">1 gift left in November</span></div>
     <div class="ltag" id="arrive" hidden><i></i><img src="../animals/05.png" alt=""><span><b>A Cornell animal</b><small>From you. Priya keeps it.</small></span></div>
   </div>
-</div></section>
-
-<section class="band b-field flip"><div class="wrap">
-  <div class="say"><h2 class="d">Boost your crew.</h2><p>One boost a month. The whole group gets its reward sooner, and partner places match it.</p></div>
-  <div class="show" id="boost">
+  <div class="show" id="boost" hidden>
     <div class="rw"><header>Thursday climbing crew<span id="need">3 of 5</span></header><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
     <div class="coupon"><span><b id="prize">A coffee each</b><small>Northside Coffee</small></span><em id="match" hidden>Matched</em></div>
     <div class="row"><button class="btn go" id="place">Place your boost</button><span id="bleft">1 boost left in November</span></div>
   </div>
-</div></section>
-
-<section class="band"><div class="wrap">
-  <div class="say"><h2 class="d">Go past campus.</h2><p>Your school stays free. Ink joins plans at every other one.</p></div>
-  <div class="show">
-    <div class="mini">Cornell · Ithaca<span class="lab h">Yours</span></div>
-    <div class="mini">Cornell Tech<span class="lab">Free</span></div>
-    <div class="mini">Columbia<span class="lab p">Ink</span></div>
-    <div class="mini">Home for break<span class="lab p">Ink</span></div>
-  </div>
-</div></section>
-
-<section class="band b-pp flip"><div class="wrap">
-  <div class="say"><h2 class="d">Ask your book.</h2><p>Connect your own assistant. It reads your stamps, and nobody else's.</p></div>
-  <div class="show">
-    <div class="chat"><p class="me">Something this weekend like that pottery night?</p><p>Glazing night at Risley, Saturday at 7. Three are in. Want in?</p></div>
-    <div class="sees"><span>The place</span><span>The time</span><span>The tag</span><span class="x">Who else was there</span></div>
-  </div>
-</div></section>
-
-<section class="band b-hot"><div class="wrap">
-  <div class="say"><h2 class="d">Go Ink+.</h2><p>For the one who gets everyone out. Start a plan, and everyone who shows up gets your stamp.</p>
-    <div class="perks"><span>2 friends get Ink</span><span>4 gifts a month</span><span>3 boosts a month</span><span>The book, in the mail each May</span></div></div>
-  <div class="show mine">
+  <div class="show mine" id="stamp" hidden>
     <div class="slot"><div class="st rare" style="--rot:-7deg"><b id="mine-b">Stephen's plan</b><small>Nov 18</small></div></div>
     <div><label for="mine-i">Your stamp says</label><input id="mine-i" value="Stephen's plan" maxlength="20" autocomplete="off"></div>
   </div>
 </div></section>
 
-<section class="band b-ink flip" id="take"><div class="wrap">
-  <div class="say"><h2 class="d">Take it with you.</h2><p>Save your picture, sized for anywhere. Free with the Loop mark. Ink+ takes the mark off.</p></div>
-  <div class="show" id="save">
-    <div class="take">
-      <figure><div class="shot sq"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Profile</figcaption></figure>
-      <figure><div class="shot tall"><img src="../animals/37.png" alt=""><b>Ana Lopez</b><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Lock screen</figcaption></figure>
-      <figure><div class="shot cut"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg></span></div><figcaption class="lab">Sticker</figcaption></figure>
-    </div>
-    <div class="row"><div class="cycle" id="mark" role="group" aria-label="Loop mark"><button aria-pressed="true">With the mark</button><button aria-pressed="false" data-bare>No mark<i>Ink+</i></button></div><span id="mark-says">Free for everyone</span></div>
-  </div>
-</div></section>
-
-<section class="band b-field"><div class="wrap">
-  <div class="say"><h2 class="d">Land with a splat.</h2><p>While a page loads, Loop saves you a seat. Ink stamps it in your school's colours. Ink+ throws sparks.</p></div>
-  <div class="show" id="splat">
-    <div id="splats" style="display:grid;gap:30px"></div>
-    <div class="row"><button class="btn go" id="again">Splat again</button><span>Every time a page is ready</span></div>
+<section class="band b-ink" id="explore"><div class="wrap">
+  <div class="say"><h2 class="d">Go explore.</h2><p>Loop is local, and your own campus stays free. Ink joins plans at every other school.</p></div>
+  <div class="show">
+    <div class="mini">Cornell · Ithaca<span class="lab h">Yours</span></div>
+    <div class="mini">Cornell Tech<span class="lab">Free</span></div>
+    <div class="mini">Columbia<span class="lab p">Ink</span></div>
+    <div class="mini">Home for break<span class="lab p">Ink</span></div>
   </div>
 </div></section>
 
@@ -354,7 +369,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
   <div class="faq">
     <details open><summary>Are free stamps really deleted?</summary><p>Yes, after 30 days: the place, the time and the plan. Only the count stays, so levels and rewards still add up.</p></details>
     <details><summary>What if I stop paying?</summary><p>The book stays for 30 days. Then old stamps go, as for anyone. Animals you were given or made stay yours.</p></details>
-    <details><summary>What does my assistant see?</summary><p>Your own stamps and this week on campus. Never who else was there. Off in one tap.</p></details>
+    <details><summary>What does my assistant see?</summary><p>Your own stamps, your groups and this week on campus. Never who else was there. Off in one tap.</p></details>
     <details><summary>Is anything free today going away?</summary><p>No.</p></details>
   </div>
 </div></section>
@@ -471,9 +486,9 @@ document.querySelector('.cycle').addEventListener('click', event => {
   new IntersectionObserver((seen, watch) => { if (seen[0].isIntersecting) { play(); watch.disconnect(); } }, { threshold: .6 }).observe(box);
 })();
 
-const ROWS = [['Post, join, show up', 1, 1, 1], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With the Loop mark', 'With the Loop mark', 'No mark'], ['The splat when a page loads', 'Plain ink', 'Your school\'s colours', 'With sparks'],
-  ['Give an animal', 0, '1 a month', '4 a month'], ['Boost a group', 0, '1 a month', '3 a month'], ['Matched rewards at partner places', 0, 1, 1], ['Join plans at other schools', 0, 1, 1],
-  ['Wider map, any number of tags', 0, 1, 1], ['Connect your assistant', 0, 1, 1], ['Friends who get Ink from you', 0, 0, '2'], ['Your own stamp on plans you start', 0, 0, 1]];
+const ROWS = [['Post, join, show up', 1, 1, 1], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1], ['Colours', 'Loop or your school', 'Loop or your school', 'Any school'], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With the Loop mark', 'With the Loop mark', 'No mark'], ['The splat when a page loads', 'Plain ink', 'Your school\'s colours', 'With sparks'],
+  ['Connect your assistant', 0, 1, 1], ['Give an animal', 0, '1 a month', '4 a month'], ['Boost a group', 0, '1 a month', '3 a month'], ['Matched rewards at partner places', 0, 1, 1],
+  ['Friends who get Ink from you', 0, 0, '2'], ['Your own stamp on plans you start', 0, 0, 1], ['Join plans at other schools', 0, 1, 1], ['Wider map, any number of tags', 0, 1, 1]];
 document.getElementById('rows').innerHTML = ROWS.map(([name, ...cells]) => `<tr><td>${name}</td>${cells.map(v => `<td>${v === 1 ? `<span class="ck">${CHECK}</span>` : v === 0 ? '<span class="ck no"></span>' : v}</td>`).join('')}</tr>`).join('');
 
 document.querySelector('.pick').addEventListener('click', event => { const hit = event.target.closest('button'); if (hit) for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit); });
@@ -490,6 +505,16 @@ document.getElementById('mark').addEventListener('click', event => {
   const hit = event.target.closest('button'); if (!hit) return; const bare = 'bare' in hit.dataset;
   for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit);
   document.getElementById('save').classList.toggle('bare', bare); document.getElementById('mark-says').textContent = bare ? 'With Ink+' : 'Free for everyone';
+});
+// Make it yours: the tabs show one of the three, and a colour pressed is worn by the piece above it.
+for (const tabs of document.querySelectorAll('.say .cycle')) tabs.addEventListener('click', event => {
+  const hit = event.target.closest('button'); if (!hit) return;
+  for (const each of hit.parentElement.children) { each.setAttribute('aria-pressed', each === hit); document.getElementById(each.dataset.show).hidden = each !== hit; }
+});
+document.querySelector('.kits').addEventListener('click', event => {
+  const hit = event.target.closest('button'); if (!hit) return;
+  for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit);
+  document.querySelector('.kit-view').dataset.kit = hit.dataset.pick; document.getElementById('kit-says').textContent = 'plus' in hit.dataset ? 'Any other school\'s, with Ink+' : 'Free for everyone';
 });
 document.getElementById('mine-i').addEventListener('input', event => { document.getElementById('mine-b').textContent = event.target.value || 'Your plan'; });
 </script>
