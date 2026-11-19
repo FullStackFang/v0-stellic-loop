@@ -45,16 +45,7 @@ export function ConnectLinkedin({ other, fallback }: { other?: ReactNode; fallba
   return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>Continue with LinkedIn</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
 }
 
-/** "My school is not here yet": a pill that opens the box for naming it. Open from the start once a school is named. */
-export function NotHere({ asked, email }: { asked: string | null; email: string | null }) {
-  const [open, setOpen] = useState(asked !== null);
-  return <>
-    <div className="cs-ns-row"><button type="button" className="cs-kit" aria-pressed={open} onClick={() => setOpen(!open)}><i />My school is not here yet</button></div>
-    {open && <SchoolAsk asked={asked} email={email} />}
-  </>;
-}
-
-/** "Which school are you at?": one box and one button, and afterwards the school they named, kept. */
+/** "Sign up my school", for a school Loop is not at yet: one box and one button, and afterwards the school they named, kept. */
 export function SchoolAsk({ asked, email }: { asked: string | null; email: string | null }) {
   const [kept, setKept] = useState(asked), [typed, setTyped] = useState(''), [message, setMessage] = useState(''), [busy, start] = useTransition();
   const add = (event: FormEvent) => {
@@ -71,8 +62,8 @@ export function SchoolAsk({ asked, email }: { asked: string | null; email: strin
   </>;
   return <>
     <form className="cs-ns-row" onSubmit={add}>
-      <input className="cs-ns-box" aria-label="Your school" placeholder="Your school" autoComplete="off" maxLength={120} required value={typed} onChange={event => setTyped(event.target.value)} />
-      <button className="cs-btn go" disabled={busy}>Add my school</button>
+      <input className="cs-ns-box" aria-label="Your school" placeholder="School not listed? Type its name" autoComplete="off" maxLength={120} required value={typed} onChange={event => setTyped(event.target.value)} />
+      <button className="cs-btn" disabled={busy}>Sign up my school</button>
     </form>
     <p role="status">{message || `We will email ${email ?? 'you'} when Loop opens there.`}</p>
   </>;
