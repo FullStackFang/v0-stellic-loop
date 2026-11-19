@@ -19,8 +19,8 @@ export type Ticket = {
   source: string | null; by: string | null; place: string | null; about: string | null;
   /** The event page a posted plan was filled from. */
   link: string | null;
-  /** The @place of a posted plan, without the @. */
-  tag: string | null;
+  /** The tags of a posted plan, in the order typed, without the @. */
+  tags: string[];
   map: { name: string; lat: number; lon: number } | null;
   /** For search: "good for" words plus what the day and hour add. */
   words: string[]; pull: number; going: number;
@@ -48,6 +48,6 @@ export type Viewer = { first: string; name: string; photo: string | null; face: 
 export type Screen = {
   campus: { slug: string; name: string; tz: string; listSource: string };
   viewer: Viewer | null; tickets: Ticket[]; earning: Coupon[]; live: Live | null;
-  /** The @places people on this campus are using, the busiest first: what posting is guided by. Empty for a signed-out visitor. */
+  /** The tags people on this campus are using, by group, the busiest first: what posting is guided by. Empty for a signed-out visitor. */
   places: NearTag[];
 };

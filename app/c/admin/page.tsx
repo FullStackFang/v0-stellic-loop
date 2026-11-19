@@ -13,14 +13,15 @@ import { campusPlaces } from '@/lib/campus/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
+import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, addFeedAction, deletePictureAction, setTierAction, readFeedAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setWordsAction } from './actions';
+import { addCampusAction, addEventAction, addFeedAction, deletePictureAction, joinTagAction, setTierAction, readFeedAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 const RULES = { outings: 'any outings', word: 'outings on events with a word', weeks: 'the same group at the giver’s events, weeks in a row' } as const;
 /** The sections, down the left. The page shows one at a time. */
-const TABS = { events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', animals: 'Animals', premium: 'Premium', campus: 'Campus' } as const;
+const TABS = { events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', campus: 'Campus' } as const;
 type Tab = keyof typeof TABS;
 /** Where an animal stands. One a person had made, and nobody else may pick, is `own`: it is listed with the ones that are off. */
 const TIER = { core: 'Core', premium: 'Premium', off: 'Off', own: 'Maker only' } as const;
@@ -37,13 +38,13 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   if (!campus) notFound();
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
-  const [found, allRewards, allFeeds, allPlaces, asks, all] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db())]);
+  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id)]);
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const at = (to: Tab, school = campus.slug) => `/c/admin?campus=${school}&tab=${to}`;
   /** What every form carries: the campus it acts on, and the section to come back to. */
   const keep = <><input type="hidden" name="campus" value={campus.slug} /><input type="hidden" name="tab" value={tab} /></>;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
-  const counts: Record<Tab, number> = { events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, animals: all.built.length + all.made.length, premium: asks.length, campus: campuses.length };
+  const counts: Record<Tab, number> = { events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
   const top = (beside?: ReactNode) => <div className="cs-adm-top"><h1>{TABS[tab]}</h1>{beside}</div>;
 
@@ -113,6 +114,22 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     </section>;
   }
 
+  /** Tags, group by group (openspec loop-campus-tags, design D6): the lead, then the tags counted with it. */
+  function tags() {
+    const leads = allTags.filter(tag => !tag.lead), led = (slug: string) => allTags.filter(tag => tag.lead === slug).length;
+    const about = (tag: typeof allTags[number]) => `${tag.lead ? `Counted with @${tag.lead}` : led(tag.slug) ? `The word most people use, of ${led(tag.slug) + 1}` : 'On its own'}${tag.byHand ? ' · set by hand' : ''}`;
+    return <section>{top()}
+      <p className="cs-adm-lede">Tags that mean the same thing are counted as one, under the word most people use. Loop sorts them by itself. What you set here it never changes again.</p>
+      <table className="cs-adm-table"><thead><tr><th>People</th><th>Tag</th><th>Kind</th><th>Counted with</th></tr></thead>
+        <tbody>{allTags.map(tag => <tr key={tag.id}><td>{tag.people}</td>
+          <td><b>@{tag.slug}</b><small>{about(tag)}</small></td>
+          <td><form action={setTagKindAction} className="tagf">{keep}<input type="hidden" name="tag" value={tag.id} /><select name="kind" aria-label={`Kind of @${tag.slug}`} defaultValue={tag.kind ?? ''} required>{!tag.kind && <option value="" disabled>Not sorted yet</option>}{KINDS.map(kind => <option key={kind} value={kind}>{kind[0].toUpperCase() + kind.slice(1)}</option>)}</select><button className="b">Save</button></form></td>
+          <td>{tag.lead ? <form action={splitTagAction} className="tagf">{keep}<input type="hidden" name="tag" value={tag.id} /><button className="b" aria-label={`Split @${tag.slug} out of @${tag.lead}`}>Split out</button></form>
+            : <form action={joinTagAction} className="tagf">{keep}<input type="hidden" name="tag" value={tag.id} /><select name="into" aria-label={`Join @${tag.slug} to`} defaultValue="" required><option value="" disabled>Join to…</option>{leads.filter(lead => lead.id !== tag.id).map(lead => <option key={lead.id} value={lead.id}>@{lead.slug}</option>)}</select><button className="b">Join</button></form>}</td></tr>)}</tbody></table>
+      {!allTags.length && <p className="cs-adm-lede">No tags yet. One is made the first time a plan is posted with an @.</p>}
+    </section>;
+  }
+
   function animals() {
     type Pet = { key: string; src: string; name: string; now: keyof typeof TIER; field: 'face' | 'picture'; value: string };
     const pets: Pet[] = [...all.built.map((one): Pet => ({ key: String(one.face), src: one.src, name: one.name, now: one.tier, field: 'face', value: String(one.face) })),
@@ -156,7 +173,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     </section>;
   }
 
-  const body = { events, rewards, feeds, places, animals, premium, campus: school }[tab]();
+  const body = { events, rewards, feeds, places, tags, animals, premium, campus: school }[tab]();
   return <div className="cs">
     <header className="cs-nav"><Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
       <nav className="cs-links"><Link href={`/c/${campus.slug}`}>This week</Link><Link href="/c/admin" aria-current="page">Admin</Link></nav>

@@ -7,7 +7,8 @@ import { campusPlaces, matchPlace } from './places';
 import { eventLink, readEventPage, type PageReader } from '../emba/event-link';
 import { hostOf } from '../emba/team-link';
 import { imIn } from './outings';
-import { tagFor, tagSlug } from './tags';
+import { MOST_TAGS } from './line';
+import { tagListing, tagSlug } from './tags';
 import { localInput, zoned } from './time';
 import { goodFor } from './words';
 
@@ -18,8 +19,10 @@ export const MOST_PLANS = 3, DAYS_AHEAD = 14;
 export type PlanInput = { title: string; starts: string; ends?: string | null; place?: string | null; about?: string | null;
   /** The event page the plan was filled from. Kept when the plan is posted; changing the plan leaves it as it is. */
   link?: string | null;
-  /** An @place, with or without the @. Made on its first use. */
-  tag?: string | null };
+  /** One tag, with or without the @: short for `tags` with one in it. */
+  tag?: string | null;
+  /** Up to four tags, in the order typed, with or without the @. Each is made on its first use. */
+  tags?: string[] | null };
 
 /** The form's local times ('YYYY-MM-DDTHH:mm', on the campus's clock) as instants, checked. */
 function times(tz: string, input: PlanInput, now: Date): { startsAt: string; endsAt: string | null } {
@@ -80,7 +83,9 @@ export async function readPlanLink(campus: { tz: string }, raw: string, now: Dat
  * this campus already has, nothing is added: the person is counted in on that plan, and `existing` says so.
  */
 export async function postPlan(db: Db, personId: string, campus: { id: string; tz: string }, input: PlanInput, now: Date = new Date()): Promise<{ id: string; token: string; existing?: true }> {
-  const text = words(input), when = times(campus.tz, input, now), link = input.link?.trim() ? linkOf(input.link).url : null, tag = input.tag?.trim() ? tagSlug(input.tag) : null;
+  const text = words(input), when = times(campus.tz, input, now), link = input.link?.trim() ? linkOf(input.link).url : null;
+  const tags = [...new Set((input.tags ?? (input.tag?.trim() ? [input.tag] : [])).map(tagSlug))];
+  if (tags.length > MOST_TAGS) throw new CampusError('A plan carries up to four tags.');
   const made = await db.tx(async q => {
     if (link) {
       // Held so the same link pasted twice at once makes one plan.
@@ -94,10 +99,12 @@ export async function postPlan(db: Db, personId: string, campus: { id: string; t
     await q.query('select id from person where id=$1 for update', [personId]);
     const { rows: [{ count }] } = await q.query<{ count: number }>("select count(*)::int as count from campus_listing where posted_by=$1 and origin='member' and cancelled_at is null and hidden_at is null and starts_at>$2", [personId, now.toISOString()]);
     if (count >= MOST_PLANS) throw new CampusError('You have three plans coming up. Cancel one, or wait until one has passed.');
-    const listing = await insertListing(q, 'member', { campusId: campus.id, ...text, ...when, link, tagId: tag ? await tagFor(q, campus.id, tag, personId) : null }, personId);
+    const listing = await insertListing(q, 'member', { campusId: campus.id, ...text, ...when, link }, personId);
     const token = randomBytes(12).toString('base64url');
     const { rows: [outing] } = await q.query<{ id: string }>('insert into campus_outing(listing_id,token,started_by,open_to_anyone) values($1,$2,$3,true) returning id', [listing.id, token, personId]);
     await q.query('insert into campus_outing_member(outing_id,listing_id,person_id) values($1,$2,$3)', [outing.id, listing.id, personId]);
+    // After the poster is counted in, so the count that picks a group's lead has them.
+    if (tags.length) await tagListing(q, campus.id, listing.id, tags, personId);
     return { id: listing.id, token };
   });
   return 'existing' in made ? { ...made, token: (await imIn(db, personId, made.id, now)).token } : made;

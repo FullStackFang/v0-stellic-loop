@@ -39,7 +39,7 @@ afterEach(() => { cleanup(); maps.length = 0; vi.unstubAllGlobals(); });
 
 const at = (hours: number) => new Date(Date.now() + hours * 3600000).toISOString();
 function ticket(title: string, time: string, hours: number, lon: number | null, lat = 0, more: Partial<Ticket> = {}): Ticket {
-  return { id: title, title, day: 'Today', time, ends: null, when: at(hours), source: null, by: null, place: `${title} hall`, about: null, link: null, tag: null, map: lon === null ? null : { name: `${title} hall`, lat, lon },
+  return { id: title, title, day: 'Today', time, ends: null, when: at(hours), source: null, by: null, place: `${title} hall`, about: null, link: null, tags: [], map: lon === null ? null : { name: `${title} hall`, lat, lon },
     words: [], pull: 0, going: 0, stub: { kind: 'none', say: 'Nobody is in yet', faces: [] }, how: null, known: [], mine: null, action: 'in', status: null, joinToken: null, ...more };
 }
 // Two in Collegetown, one in Central Campus, one in North Campus (two steps from Collegetown), and one with no spot.

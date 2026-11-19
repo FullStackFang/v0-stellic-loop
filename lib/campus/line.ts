@@ -5,18 +5,22 @@ import { localParts } from './time';
 // what counts. No 'server-only' here for that reason.
 
 export type LineRead = {
-  /** What it is: the line without its time, its @place and its link. */
+  /** What it is: the line without its time, its @tags and its link. */
   title: string;
   /** The start on the campus's clock ('YYYY-MM-DDTHH:mm'), or null when the line names no time. */
   starts: string | null;
-  /** The @place, without the @, in lower case. */
+  /** The first of `tags`, or null. */
   tag: string | null;
+  /** The @tags in the order typed, without the @, in lower case: a place, an activity, an event (openspec loop-campus-tags). */
+  tags: string[];
   /** A link found in the line, as typed. */
   link: string | null;
 };
 
 export const TAG = /^[a-z0-9][a-z0-9-]{0,28}[a-z0-9]$/;
-/** The @place being typed at the end of the line, for suggestions: '' right after the @, null when there is none. */
+/** How many tags a plan carries. One more in a line stays in the title as written. */
+export const MOST_TAGS = 4;
+/** The @tag being typed at the end of the line, for suggestions: '' right after the @, null when there is none. */
 export const typingTag = (text: string): string | null => /(?:^|\s)@([a-z0-9-]{0,30})$/i.exec(text)?.[1].toLowerCase() ?? null;
 
 const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -33,8 +37,8 @@ const plusDays = (date: string, days: number) => new Date(Date.parse(`${date}T00
 
 /** Reads a typed line. Pure: the same text, timezone and moment always give the same answer. */
 export function readLine(text: string, tz: string, now: Date): LineRead {
-  const { title, starts, tag, link } = scan(text, tz, now);
-  return { title, starts, tag, link };
+  const { title, starts, tag, tags, link } = scan(text, tz, now);
+  return { title, starts, tag, tags, link };
 }
 /** The reading, and whether the line names a day or a date (with or without an hour). */
 function scan(text: string, tz: string, now: Date): LineRead & { named: boolean } {
@@ -43,7 +47,15 @@ function scan(text: string, tz: string, now: Date): LineRead & { named: boolean 
   const link = take(LINK)?.[1] ?? null;
   // People reach for @ for the time too ("@evening", "@7pm", "@sat"): that is a time, not a place.
   rest = rest.replace(new RegExp(` @(?=(?:${DAY}|morning|afternoon|evening|noon|\\d{1,2}(?::[0-5]\\d)?\\s*(?:am|pm)|\\d{1,2}:[0-5]\\d) )`, 'gi'), ' ');
-  const tagged = take(/ (?:(?:in|at|on) )?@([a-z0-9][a-z0-9-]{0,29})(?= )/i)?.[1].toLowerCase().replace(/-+$/, '') ?? null, tag = tagged && TAG.test(tagged) ? tagged : null;
+  // Each @word is a tag, with the small word before it dropped. Past the fourth, one stays in the title as written.
+  const tags: string[] = [];
+  rest = rest.replace(/ (?:(?:in|at|on) )?@([a-z0-9][a-z0-9-]{0,29})(?= )/gi, (all, word: string) => {
+    const slug = word.toLowerCase().replace(/-+$/, ''), fresh = TAG.test(slug) && !tags.includes(slug);
+    if (fresh && tags.length >= MOST_TAGS) return all;
+    if (fresh) tags.push(slug);
+    return ' ';
+  });
+  const tag = tags[0] ?? null;
   take(/ @ /);
 
   // A clock time needs a sign that it is one: am or pm, a colon, "at" before it, or a day word beside it. "5K" and "2110" are not times.
@@ -98,7 +110,7 @@ function scan(text: string, tz: string, now: Date): LineRead & { named: boolean 
     starts = `${date ?? plusDays(today.date, ahead)}T${two(h)}:${two(minute)}`;
   }
   const title = rest.replace(/\s+/g, ' ').trim().replace(/^[\s,.;:-]+|[\s,;:-]+$/g, '');
-  return { title: title ? title[0].toUpperCase() + title.slice(1) : '', starts, tag, link, named };
+  return { title: title ? title[0].toUpperCase() + title.slice(1) : '', starts, tag, tags, link, named };
 }
 
 /**

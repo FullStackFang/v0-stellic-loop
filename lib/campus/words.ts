@@ -27,6 +27,27 @@ const TABLE: [RegExp, string[]][] = [
   [/\b(code|coding|tech|engineering|robotics|ai|data|design)\b/, ['tech', 'build', 'learn']],
 ];
 
+// Words that are one tag when typed after an @ ("@jogging" is "@running"), each of them something to do (openspec
+// loop-campus-tags, design D4). Narrower than the table above on purpose: soccer and basketball are both sport there,
+// and are not one tag. A row of one word only says that the word is something to do.
+const SAME: string[][] = [
+  'run runs running runner runners jog jogs jogging', 'hike hikes hiking', 'walk walks walking', 'bike bikes biking cycling',
+  'swim swims swimming', 'climb climbs climbing bouldering', 'lift lifts lifting weights', 'dance dances dancing', 'ski skiing', 'skate skating',
+  'study studying', 'cook cooking', 'bake baking', 'code coding', 'movie movies film films',
+  'yoga', 'soccer', 'basketball', 'volleyball', 'tennis', 'frisbee', 'pickleball', 'chess', 'poker', 'trivia', 'karaoke',
+].map(row => row.split(' '));
+/** A tag without its dashes and its plural "s": "college-town" is "collegetown", and "dumplings" is "dumpling". */
+const bare = (slug: string) => slug.replace(/-/g, '').replace(/(?<=[a-z0-9]{3})(?<!s)s$/, '');
+
+/**
+ * Which row a tag falls under. Two tags with the same `key` mean the same thing: they are in one row above, or differ
+ * only by a dash or a plural. `activity` says the table knows the word as something to do.
+ */
+export function tagRow(slug: string): { key: string; activity: boolean } {
+  const word = bare(slug), row = SAME.find(words => words.some(each => bare(each) === word));
+  return { key: row ? row[0] : word, activity: !!row };
+}
+
 const plain = (text: string | null | undefined) => (text ?? '').toLowerCase().replace(/[^a-z0-9é\s-]+/g, ' ');
 
 /** Up to twelve "good for" words. Words from the title come first, then the host's, then the about text's. */

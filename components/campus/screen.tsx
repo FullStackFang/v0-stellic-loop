@@ -102,8 +102,8 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
     else if (row && card) row.scrollTo?.({ left: row.scrollLeft + card.getBoundingClientRect().left - row.getBoundingClientRect().left - 6, behavior: 'smooth' });
   }, [open, wide]);
 
-  // Plans already on at an @place, for the posting panel: a person naming that place can join one instead.
-  const soon = useMemo(() => tickets.filter(ticket => ticket.tag).map((ticket): Soon => ({ id: ticket.id, tag: ticket.tag!, title: ticket.title, day: ticket.day, time: ticket.time, mine: !!ticket.mine, faces: ticket.known,
+  // Plans that carry a tag, for the posting panel: a person typing that tag can look at one, and join it instead.
+  const soon = useMemo(() => tickets.filter(ticket => ticket.tags.length).map((ticket): Soon => ({ id: ticket.id, tags: ticket.tags, title: ticket.title, day: ticket.day, time: ticket.time, mine: !!ticket.mine,
     who: ticket.known.length ? `${ticket.known[0].first}${ticket.going > 1 ? ` and ${ticket.going - 1} ${ticket.going === 2 ? 'other' : 'others'}` : ''}` : `${ticket.going} going` })), [tickets]);
   /** The "+" opens the posting panel at the start of the row, and closes it. */
   const togglePost = () => { setOpen(null); setMessage(''); setPosting(now => !now); rail.current?.scrollTo?.({ left: 0, behavior: 'smooth' }); };
@@ -146,7 +146,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
       onMouseEnter={wide ? () => setHot(ticket.id) : undefined} onMouseLeave={wide ? () => setHot(null) : undefined}
       onClick={event => { if ((event.target as HTMLElement).closest('button, a, input')) return; if (wide) setSel(ticket.id); else show(ticket.id, 'more'); }}>
       <div className="cs-top"><Tile top={ticket.day} big={ticket.time} met={ticket.stub.kind === 'group' && ticket.stub.state === 'met'} />
-        <div className="cs-body"><h3>{ticket.title}</h3><p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{ticket.tag && <b className="cs-at">@{ticket.tag}</b>}{[ticket.by, ticket.place].filter(Boolean).join(' · ')}</p></div>
+        <div className="cs-body"><h3>{ticket.title}</h3><p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{ticket.tags.map(tag => <b key={tag} className="cs-at">@{tag}</b>)}{[ticket.by, ticket.place].filter(Boolean).join(' · ')}</p></div>
         {spot && <span className="cs-walk"><Pin />{you ? `${walkMinutes(you, spot)} min walk` : 'On the map'}</span>}
         <button className="cs-more" aria-expanded={details} aria-label={details ? 'Close' : 'Details'} onClick={() => { if (wide) setSel(ticket.id); show(ticket.id, 'more'); }}><span>{details ? 'Close' : 'Details'}</span><Chevron /></button></div>
       {stub(ticket)}
@@ -189,7 +189,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
     {open!.pane === 'invite' && opened.mine ? invite(opened) : more(opened)}</div>;
   const postSheet = posting && viewer && <div key="post" className="cs-sheet cs-post fresh">
     <div className="cs-sheet-top"><h3>Start something</h3><button className="cs-more" aria-expanded="true" onClick={() => setPosting(false)}>Close<Chevron /></button></div>
-    <Composer campus={campus} tags={screen.places} soon={soon} onDone={() => setPosting(false)} /></div>;
+    <Composer campus={campus} tags={screen.places} soon={soon} onDone={() => setPosting(false)} onReview={id => { setTyped(''); if (wide) setSel(id); show(id, 'more'); }} /></div>;
   const nothing = <div className="cs-nothing"><div className="cs-nothing-top"><Tile top="This week" big="Open" /><div><h3>{typed.trim() ? 'Nothing matches' : 'Nothing here yet'}</h3><p>{typed.trim() ? 'Try another word, or post a plan of your own.' : 'Post a plan of your own and it shows here at once.'}</p></div></div>
     <div className="cs-nothing-stub"><small>Yours could be the first this week.</small></div></div>;
   const plus = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" /></svg>;

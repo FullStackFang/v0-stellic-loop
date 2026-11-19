@@ -7,7 +7,7 @@ import { DoorSignIn } from '@/components/campus/door-sign-in';
 import { listCampuses } from '@/lib/campus/listings';
 import { addHandListing } from '@/lib/campus/manage';
 import { DoorPage, FrontDoor } from './door';
-import { addEventAction, saveRewardAction, setHiddenAction } from './c/admin/actions';
+import { addEventAction, joinTagAction, saveRewardAction, setHiddenAction, setTagKindAction, splitTagAction } from './c/admin/actions';
 import { GET as readCampusFeeds } from './api/cron/campus-feeds/route';
 
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-sign-in, admin-gate, campus-listings (the admin page, the hourly read).
@@ -123,6 +123,26 @@ describe('the admin actions', () => {
     }
     expect((await t.db.query('select 1 from campus_listing')).rows).toHaveLength(0);
     expect((await t.db.query('select 1 from campus_reward')).rows).toHaveLength(0);
+  });
+  // Spec: openspec/changes/loop-campus-tags/specs/campus-tags ("The admin can correct kinds and groups").
+  it('change the kind of a tag, join it to a group and split it out, for the admin alone', async () => {
+    const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
+    await t.db.query('delete from campus_tag');
+    const make = async (slug: string) => (await t.db.query<{ id: string }>('insert into campus_tag(campus_id,slug) values($1,$2) returning id', [cornell.id, slug])).rows[0].id;
+    const running = await make('running'), jogging = await make('jogging');
+    const tags = async () => (await t.db.query('select t.slug,t.kind,l.slug as lead,t.by_hand as hand from campus_tag t left join campus_tag l on l.id=t.same_as order by t.slug')).rows;
+    const kind = () => setTagKindAction(form({ campus: 'cornell', tab: 'tags', tag: jogging, kind: 'activity' })), join = () => joinTagAction(form({ campus: 'cornell', tab: 'tags', tag: jogging, into: running })), split = () => splitTagAction(form({ campus: 'cornell', tab: 'tags', tag: jogging }));
+    const sam = await signedIn('Sam', 'sam@cornell.edu');
+    for (const as of [<T,>(run: () => T) => run(), <T,>(run: () => T) => withPortalTestSession(sam, run)]) for (const action of [kind, join, split]) await expect(as(action)).rejects.toEqual(sentTo('/'));
+    expect(await tags()).toEqual([{ slug: 'jogging', kind: null, lead: null, hand: false }, { slug: 'running', kind: null, lead: null, hand: false }]);
+    vi.stubEnv('LOOP_ADMIN', 'user_fay');
+    const fay = await signedIn('Fay', 'fay@cornell.edu'), back = { digest: expect.stringContaining('/c/admin?campus=cornell&tab=tags') };
+    await expect(withPortalTestSession(fay, join)).rejects.toMatchObject(back);
+    expect(await tags()).toEqual([{ slug: 'jogging', kind: null, lead: 'running', hand: true }, { slug: 'running', kind: null, lead: null, hand: false }]);
+    await expect(withPortalTestSession(fay, kind)).rejects.toMatchObject(back);
+    expect(await tags()).toEqual([{ slug: 'jogging', kind: 'activity', lead: 'running', hand: true }, { slug: 'running', kind: 'activity', lead: null, hand: true }]);
+    await expect(withPortalTestSession(fay, split)).rejects.toMatchObject(back);
+    expect(await tags()).toEqual([{ slug: 'jogging', kind: 'activity', lead: null, hand: true }, { slug: 'running', kind: 'activity', lead: null, hand: true }]);
   });
   it('work for the admin', async () => {
     vi.stubEnv('LOOP_ADMIN', 'user_fay');

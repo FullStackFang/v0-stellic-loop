@@ -25,15 +25,15 @@ export async function setFeedOn(q: Q, feedId: string, on: boolean) {
   await q.query('update campus_feed set is_on=$2 where id=$1', [feedId, on]);
 }
 
-export type ListingInput = { campusId: string; title: string; startsAt: string; endsAt?: string | null; place?: string | null; host?: string | null; about?: string | null; link?: string | null; tagId?: string | null };
+export type ListingInput = { campusId: string; title: string; startsAt: string; endsAt?: string | null; place?: string | null; host?: string | null; about?: string | null; link?: string | null };
 const text = (value: string | null | undefined) => value?.trim() || null;
 
 /** Inserts an event with its "good for" words and its matched place. Shared by hand-entered events and posted plans. */
 export async function insertListing(q: Q, origin: 'hand' | 'member', input: ListingInput, postedBy: string | null = null): Promise<{ id: string }> {
   const title = input.title.trim(), about = text(input.about), host = text(input.host), place = text(input.place);
   const placeId = matchPlace(await campusPlaces(q, input.campusId), place)?.id ?? null;
-  return (await q.query<{ id: string }>(`insert into campus_listing(campus_id,origin,title,about,host_name,place_text,place_id,starts_at,ends_at,words,posted_by,link,tag_id)
-    values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id`, [input.campusId, origin, title, about, host, place, placeId, input.startsAt, input.endsAt || null, goodFor(title, about, host), postedBy, input.link ?? null, input.tagId ?? null])).rows[0];
+  return (await q.query<{ id: string }>(`insert into campus_listing(campus_id,origin,title,about,host_name,place_text,place_id,starts_at,ends_at,words,posted_by,link)
+    values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning id`, [input.campusId, origin, title, about, host, place, placeId, input.startsAt, input.endsAt || null, goodFor(title, about, host), postedBy, input.link ?? null])).rows[0];
 }
 export const addHandListing = (q: Q, input: ListingInput) => insertListing(q, 'hand', input);
 

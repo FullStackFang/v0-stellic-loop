@@ -556,7 +556,7 @@ describe('the pages', () => {
     expect(screen.getByRole('button', { name: 'Blitz night is shown' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('textbox', { name: 'Good-for words of Blitz night' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /^Animals ?37$/ })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
-    for (const [tab, section] of Object.entries({ rewards: 'Rewards', feeds: 'Feeds', places: 'Places', animals: 'Animals', premium: 'Premium', campus: 'Campus' })) {
+    for (const [tab, section] of Object.entries({ rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', campus: 'Campus' })) {
       cleanup(); render(await withPortalTestSession(ana, () => admin(tab)));
       expect(screen.getByRole('heading', { level: 1, name: section })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: new RegExp(`^${section} ?[0-9]+$`) })).toHaveAttribute('aria-current', 'page');
@@ -600,7 +600,7 @@ it.skipIf(!process.env.PREVIEW_DIR)('previews', async () => {
   save('in-initials', await campusScreen(t.db, cornell, as(ana, true), { photos: noPhotos }), run.id);
   // The admin's page, one file for each of its sections.
   vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
-  for (const tab of ['events', 'rewards', 'feeds', 'places', 'animals', 'premium', 'campus']) writeFileSync(`${process.env.PREVIEW_DIR}/admin-${tab}.html`,
+  for (const tab of ['events', 'rewards', 'feeds', 'places', 'tags', 'animals', 'premium', 'campus']) writeFileSync(`${process.env.PREVIEW_DIR}/admin-${tab}.html`,
     `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>@font-face{font-family:Archivo;src:url(${font});font-weight:100 900;font-stretch:62% 125%}:root{--font-archivo:Archivo}body{margin:0}${css}</style></head><body>${renderToStaticMarkup(await withPortalTestSession(ana, () => CampusAdminPage({ searchParams: Promise.resolve({ campus: 'cornell', tab, said: tab === 'animals' ? 'Premium now: people who subscribed can pick it.' : undefined }) })))}</body></html>`);
   expect(zeb.personId).toBeTruthy();
 });

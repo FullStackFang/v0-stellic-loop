@@ -152,7 +152,7 @@ export async function postLineAction(slug: string, text: string, from: LineFrom 
     if (!starts) throw new CampusError('When is it? Say tonight, tomorrow 7pm, sat 10am.');
     // The page's end only goes with the page's start.
     await postPlan(db(), viewer.personId, campus, { title, starts, ends: read.starts ? null : page?.ends ? String(page.ends) : null, place: page?.place ? String(page.place) : null,
-      about: page?.about ? String(page.about) : null, link: page?.link ? String(page.link) : read.link, tag: read.tag });
+      about: page?.about ? String(page.about) : null, link: page?.link ? String(page.link) : read.link, tags: read.tags });
   });
 }
 /** Posts a plan from the post form, then returns to the screen. A link the list already has counts the person in on that plan. */

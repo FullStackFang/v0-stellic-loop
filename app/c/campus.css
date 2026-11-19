@@ -153,6 +153,17 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 /* the panel: unfolds to the right of its ticket, inside the row */
 .cs-sheet { flex: 0 0 min(660px, calc(100vw - 32px)); display: flex; flex-direction: column; overflow-y: auto; padding: 14px 20px 16px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-ink); cursor: default; }
 .cs-sheet.fresh { animation: cs-side .5s var(--cs-expo); }
+/* An open ticket and its panel are one piece (founder, 2026-11-18): no gap, the same height, one shadow, and where they meet the same tear the stubs have,
+   a dashed line with a notch bitten out at each end. The notches are masks, as on the stubs, so the shadow follows them. */
+.cs-rail > .cs-ev.open:has(+ .cs-sheet) { transform: none; --lift: 5px; border-top-right-radius: 0; border-bottom-right-radius: 0; filter: drop-shadow(0 var(--lift) 0 var(--cs-ink)); }
+.cs-rail > .cs-ev.open:has(+ .cs-sheet) .cs-more { display: none; }
+.cs-rail > .cs-ev.open:has(+ .cs-sheet) .cs-top { -webkit-mask: radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-rail > .cs-ev.open:has(+ .cs-sheet) .cs-top:has(+ .cs-mech:not(.none)) { -webkit-mask: radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-rail > .cs-ev.open:has(+ .cs-sheet) .cs-mech.none { -webkit-mask: radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-rail > .cs-ev.open:has(+ .cs-sheet) .cs-mech:not(.none) { -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-rail > .cs-ev.open + .cs-sheet { --cut: 10px; position: relative; margin-left: -16px; border-top-left-radius: 0; border-bottom-left-radius: 0; background: none; box-shadow: none; filter: drop-shadow(5px 5px 0 var(--cs-ink)) drop-shadow(-5px 0 0 transparent); }
+.cs-rail > .cs-ev.open + .cs-sheet::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--cs-paper); -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.cs-rail > .cs-ev.open + .cs-sheet::after { content: ''; position: absolute; left: -1px; top: 18px; bottom: 18px; border-left: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
 .cs-sheet-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; } .cs-sheet-top h3 { font-size: 20px; font-weight: 660; letter-spacing: -0.032em; }
 .cs-regp { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); grid-template-rows: 1fr auto; gap: 12px 24px; align-items: stretch; padding-top: 8px; }
 .cs-regp.wide { grid-template-columns: minmax(0, 1fr); }
@@ -410,13 +421,9 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-form .kept { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13px; } .cs-form .kept span { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
 .cs-form .kept button { font-size: 13px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
 /* posting in one line (design D12) */
-.cs-line { display: grid; gap: 12px; }
-.cs-line-card { display: grid; gap: 8px; padding: 16px 18px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 5px 5px 0 var(--cs-field-shadow); }
-.cs-line-card h2, .cs-line-label { font-size: 12px; font-weight: 640; text-transform: uppercase; letter-spacing: .06em; color: var(--cs-mute); } .cs-line-card h2 b { color: var(--cs-action); text-transform: none; letter-spacing: 0; font-size: 13.5px; }
 .cs-say { width: 100%; border: 0; padding: 0; resize: none; background: none; font: inherit; font-size: 22px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; color: var(--cs-ink); outline: none; }
 .cs-say::placeholder { color: color-mix(in oklch, var(--cs-ink) 32%, transparent); }
-.cs-line-card:focus-within { box-shadow: 5px 5px 0 var(--cs-field-shadow), 0 0 0 1.5px var(--cs-ink) inset; }
-.cs-read { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 44px; padding-top: 10px; border-top: 1px dashed var(--cs-line); }
+.cs-read { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 36px; } .cs-read > p { margin: 0; }
 .cs-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 32px; padding: 4px 12px; border-radius: 16px; font-size: 13.5px; font-weight: 600; line-height: 1.2; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); overflow-wrap: anywhere; }
 .cs-chip.when { background: var(--cs-field); } .cs-chip.place { background: var(--cs-ink); color: var(--cs-on-ink); }
 .cs-chip button { font-size: 12.5px; font-weight: 580; color: var(--cs-mute); text-decoration: underline; text-underline-offset: 3px; }
@@ -424,16 +431,14 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 /* a time offered to tap when the line has none: dashed until it is taken */
 .cs .cs-chip.idea { box-shadow: none; border: 1.5px dashed var(--cs-ink); cursor: pointer; transition: background-color .15s; } .cs .cs-chip.idea:hover { background: var(--cs-field); border-style: solid; }
 /* each place has a bar behind its name, as long as the place is busy next to the busiest one */
-.cs-sug { display: grid; gap: 4px; } .cs-sug button { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; border-radius: 12px 12px 12px 4px; }
-.cs-sug button[style]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: max(10px, calc(var(--fill) * 100%)); border-radius: inherit; background: color-mix(in oklch, var(--cs-action) 14%, transparent); transform-origin: left; animation: cs-grow .6s var(--cs-expo) backwards; transition: width .4s var(--cs-expo), background-color .15s; }
-.cs-sug button[style]:hover::before { background: color-mix(in oklch, var(--cs-action) 24%, transparent); } .cs-sug button > span { position: relative; }
+.cs-sug { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; padding: 2px; } .cs-sug > * { flex: none; } .cs .cs-sug button { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 8px 0 14px; border-radius: 99px; font-size: 14.5px; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: background-color .15s; }
+.cs .cs-sug button:hover { background: var(--cs-field); } .cs .cs-sug button.new { padding: 0 14px; box-shadow: none; border: 1.5px dashed var(--cs-ink); }
 /* on a bar the words are ink, not the paler blue and grey */
-.cs-sug button[style] b { color: var(--cs-ink); font-weight: 720; } .cs-sug button[style] small { color: color-mix(in oklch, var(--cs-ink) 78%, transparent); font-weight: 540; }
-.cs-sug button:hover b { text-decoration: underline; text-underline-offset: 3px; } .cs-sug b { font-weight: 680; color: var(--cs-action); } .cs-sug b.new { color: var(--cs-ink); } .cs-sug small { display: block; font-size: 12.5px; color: var(--cs-mute); }
-.cs-mini { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); } .cs-line-card h2 + .cs-mini { border-top: 0; }
-.cs-mini time { flex: none; width: 58px; padding: 6px 0; border-radius: 10px 10px 10px 3px; background: var(--cs-field); text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.15; }
-.cs-mini div { flex: 1; min-width: 0; } .cs-mini div b { display: block; font-weight: 640; } .cs-mini div span { font-size: 12.5px; color: var(--cs-mute); }
-.cs-line-end { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .cs-line-end .cs-note { flex: 1; min-width: 160px; }
+.cs-sug b { font-weight: 660; } .cs-sug small { font-size: 12.5px; color: var(--cs-mute); padding-right: 6px; }
+.cs-sug i, .cs-chip > i { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 99px; font-style: normal; font-size: 12px; font-weight: 720; background: var(--cs-field); color: var(--cs-ink); } .cs-chip > small { font-size: 12px; font-weight: 520; color: var(--cs-mute); }
+.cs-mini { flex: 1 1 0; display: flex; align-items: center; gap: 10px; min-width: 0; max-width: 340px; padding: 6px 8px 6px 6px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); } .cs-mini .cs-btn.sm, .cs-mini .cs-pill { flex: none; height: 32px; }
+.cs-mini time { flex: none; width: 50px; padding: 5px 0; border-radius: 10px 10px 10px 3px; background: var(--cs-field); text-align: center; font-size: 12px; font-weight: 700; line-height: 1.15; }
+.cs-mini div { flex: 1; min-width: 0; } .cs-mini div b { display: block; font-size: 14px; font-weight: 640; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cs-mini div span { display: block; font-size: 12.5px; color: var(--cs-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cs-line-bad { font-size: 14px; font-weight: 580; color: var(--cs-action); }
 .cs-at { margin-right: 7px; font-weight: 660; color: var(--cs-action); }
 /* the "+" that starts a plan sits in the line above the row; its panel opens in the row, the line beside what others are doing */
@@ -445,14 +450,17 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-plus svg { animation: cs-turn 3.2s var(--cs-expo) 1s infinite; } .cs-plus[aria-expanded=true]::after, .cs-plus[aria-expanded=true] svg { animation: none; }
 .cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
 .cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
-.cs-sheet.cs-post { flex-basis: min(780px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
-.cs-post-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 10px; }
-.cs-post .cs-line { align-content: start; } .cs-post .cs-line-card, .cs-post .cs-line-card:focus-within { padding: 0; border-radius: 0; background: none; box-shadow: none; }
-/* The line is plainly a box to type in: filled, outlined, and lit when the cursor is in it. With nothing for the second column the panel is only as wide as the line. */
+.cs-sheet.cs-post { flex-basis: min(900px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
+/* Three rows, each one line: the line and its button, what Loop read, and the top few tags or plans nearby. */
+.cs-post-rows { display: grid; gap: 10px; padding-top: 10px; } .cs-post-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 38px; } .cs-post-row .cs-say { flex: 1; min-width: 0; }
+/* No words float bare here (founder, 2026-11-18). The third row is a tinted tray, and its name is a filled speech bubble that sits over the tray's top edge. Hints are quiet filled pills. */
+.cs-post-row.near { position: relative; margin-top: 10px; padding: 16px 10px 9px; border-radius: 16px 16px 16px 5px; background: var(--cs-stub); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 16%, transparent); }
+.cs-post-row h2 { position: absolute; top: -12px; left: 12px; display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 11px; border-radius: 12px 12px 12px 3px; font-size: 12px; font-weight: 680; letter-spacing: .02em; background: var(--cs-ink); color: var(--cs-on-ink); box-shadow: 2px 2px 0 var(--cs-field-shadow); } .cs-post-row h2 b { color: var(--cs-field); font-weight: 720; }
+.cs-post .cs-chip-hint, .cs-post .cs-note, .cs-post .cs-line-bad { display: inline-flex; align-items: center; min-height: 28px; margin: 0; padding: 3px 11px; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 7%, var(--cs-paper)); color: var(--cs-ink); font-size: 13px; } .cs-post .cs-line-bad { background: var(--cs-action); color: var(--cs-on-ink); }
+.cs-post .cs-mini { background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs .cs-mini .cs-look { width: 34px; padding: 0; justify-content: center; } .cs-look svg { width: 16px; height: 16px; }
+/* The line is plainly a box to type in: filled, outlined, and lit when the cursor is in it. */
 .cs-post .cs-say { overflow: hidden; padding: 12px 14px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); caret-color: var(--cs-action); transition: box-shadow .15s, background-color .15s; }
 .cs .cs-post .cs-say:focus-visible { outline: none; } .cs-post .cs-say:hover { background: var(--cs-paper); } .cs-post .cs-say:focus { background: var(--cs-paper); box-shadow: inset 0 0 0 2.5px var(--cs-action), 4px 4px 0 var(--cs-field-shadow); }
-.cs-sheet.cs-post:not(:has(.cs-post-side)) { flex-basis: min(460px, calc(100vw - 32px)); } .cs-post-cols:not(:has(.cs-post-side)) { grid-template-columns: minmax(0, 1fr); }
-.cs-post-side { display: grid; gap: 16px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
 .cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
 .cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
 /* The admin page: sections down the left with counts, one section at a time on the right. A tool for one person, so it is quiet:
@@ -484,6 +492,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm-table tr.off td b { font-weight: 500; color: var(--cs-mute); text-decoration: line-through; }
 .cs-adm-table .words { display: flex; align-items: center; gap: 8px; margin: -4px 0 -4px -8px; } .cs-adm .cs-adm-table .words input { flex: 1; height: 28px; padding: 0 8px; border-radius: 6px; font-size: 13.5px; background: none; box-shadow: none; } .cs-adm .cs-adm-table .words input:hover { box-shadow: inset 0 0 0 1px var(--cs-line); }
 .cs-adm .cs-adm-table .words input:focus { outline: 0; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-adm-table .words .b { display: none; } .cs-adm-table .words:focus-within .b { display: inline-flex; } .cs-adm-table th:nth-child(3) { width: 34%; }
+.cs-adm-table .tagf { display: flex; align-items: center; gap: 8px; } .cs-adm .cs-adm-table .tagf select { height: 30px; padding: 0 8px; font-size: 13.5px; }
 .cs-adm-rows > li { display: flex; align-items: center; gap: 6px 14px; padding: 13px 0; border-top: 1px solid var(--cs-line); } .cs-adm-rows > li:last-child { border-bottom: 1px solid var(--cs-line); } .cs-adm-rows > li > div, .cs-adm-rows > li > details { flex: 1; min-width: 0; }
 .cs-adm-rows summary { display: flex; align-items: center; gap: 14px; } .cs-adm-rows summary > div { flex: 1; min-width: 0; } .cs-adm-rows b { display: block; font-size: 15px; font-weight: 640; letter-spacing: -0.02em; overflow-wrap: anywhere; }
 .cs-adm-rows span { display: block; font-size: 13.5px; line-height: 1.45; color: var(--cs-mute); overflow-wrap: anywhere; } .cs-adm-rows span.warn { font-weight: 600; color: var(--adm-warn); } .cs-adm-rows li.off b { font-weight: 500; color: var(--cs-mute); }
@@ -703,7 +712,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-adm-table thead { display: none; } .cs-adm-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 0; border-top: 1px solid var(--cs-line); } .cs-adm-table td, .cs-adm-table td:first-child, .cs-adm-table td:last-child { width: auto; padding: 0; border: 0; } .cs-adm-table td:nth-child(1), .cs-adm-table td:nth-child(2), .cs-adm-table td:nth-child(3) { grid-column: 1; } .cs-adm-table td:last-child { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
   .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
   .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
-  .cs-post-cols { grid-template-columns: minmax(0, 1fr); } .cs-post-side { padding: 14px 0 0; border-left: 0; border-top: 1px dashed var(--cs-line); }
+  .cs-post-row.near, .cs-sug { flex-wrap: wrap; } .cs-mini { flex-basis: 100%; max-width: none; }
   .cs-ev { flex-basis: 260px; } .cs-lvl { position: fixed; right: 14px; top: 64px; }
 }
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }

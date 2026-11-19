@@ -11,6 +11,7 @@ import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, se
 import { savePlace } from '@/lib/campus/places';
 import { saveReward, setRewardHidden } from '@/lib/campus/rewards';
 import { campusViewer } from '@/lib/campus/session';
+import { joinTag, setTagKind, splitTag } from '@/lib/campus/tags';
 import { zoned } from '@/lib/campus/time';
 
 // Everything the admin does on /c/admin. Each action asks afresh whether the caller is the admin and refuses anyone
@@ -85,6 +86,17 @@ export async function setWordsAction(data: FormData): Promise<void> {
 }
 export async function setHiddenAction(data: FormData): Promise<void> {
   await admin(data, async () => { const hidden = text(data, 'hidden') === 'true'; await setHidden(db(), uuid(text(data, 'listing')), hidden); return hidden ? 'Hidden. People who were in keep their outings.' : 'Showing again.'; });
+}
+
+// Tags (openspec loop-campus-tags, design D6). What the admin sets here, the automatic sorting never changes again.
+export async function setTagKindAction(data: FormData): Promise<void> {
+  await admin(data, async campus => { await db().tx(q => setTagKind(q, campus.id, uuid(text(data, 'tag')), text(data, 'kind'))); return 'Kind saved, for the tag and the tags counted with it.'; });
+}
+export async function joinTagAction(data: FormData): Promise<void> {
+  await admin(data, async campus => { await db().tx(q => joinTag(q, campus.id, uuid(text(data, 'tag')), uuid(text(data, 'into')))); return 'Joined. They are counted as one now, and plans keep the word that was typed.'; });
+}
+export async function splitTagAction(data: FormData): Promise<void> {
+  await admin(data, async campus => { await db().tx(q => splitTag(q, campus.id, uuid(text(data, 'tag')))); return 'Split out. It stays on its own.'; });
 }
 
 const MOVED: Record<string, string> = { core: 'Core now: it is in everyone’s picker.', premium: 'Premium now: people who subscribed can pick it.', off: 'Off: it is in nobody’s picker. Whoever has it keeps it.', own: 'Its maker’s alone again. Whoever else uses it keeps it.' };

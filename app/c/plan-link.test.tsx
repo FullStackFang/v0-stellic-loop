@@ -54,9 +54,10 @@ it('the "+" on This week opens posting, which is one line: Loop shows what it un
     fireEvent.click(screen.getByRole('button', { name: 'Post a plan' }));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('heading', { name: 'Nothing here yet' })).toBeInTheDocument();
-    // Nobody has named a place here yet, so there is no places column: the panel is just the line. Typing @ brings it in.
-    expect(screen.queryByRole('heading', { name: 'Places people near you use' })).toBeNull();
-    expect(document.querySelector('.cs-post-side')).toBeNull();
+    // Nobody has made a tag here yet, so the third row has no tags to offer. Typing @ brings them in.
+    expect(screen.queryByRole('heading', { name: 'Near you' })).toBeNull();
+    expect(document.querySelector('.cs-sug')).toBeNull();
+    expect(screen.getByText('Shows at Cornell at once. You are counted in.')).toBeInTheDocument();
     say('dumplings @co');
     expect(screen.getByRole('button', { name: /Make @co/ })).toBeInTheDocument();
     expect(screen.queryByLabelText('Starts')).toBeNull();
@@ -64,13 +65,13 @@ it('the "+" on This week opens posting, which is one line: Loop shows what it un
     const understood = document.querySelector('.cs-read')!;
     expect(within(understood as HTMLElement).getByText('Dumplings')).toBeInTheDocument();
     expect(within(understood as HTMLElement).getByText(/7pm$/)).toBeInTheDocument();
-    expect(within(understood as HTMLElement).getByText('@collegetown · a new place, yours to name')).toBeInTheDocument();
+    expect(within(understood as HTMLElement).getByText('@collegetown', { selector: '.cs-chip' })).toHaveTextContent('@collegetownnew');
     fireEvent.click(screen.getByRole('button', { name: 'Post it' }));
     // Posted: the panel closes and the list is asked for again.
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(screen.queryByRole('textbox', { name: 'What are you up to?' })).toBeNull();
   });
-  expect((await weekListings(t.db, cornell))[0]).toMatchObject({ title: 'Dumplings', tag: 'collegetown', postedBy: ana.personId, going: 1 });
+  expect((await weekListings(t.db, cornell))[0]).toMatchObject({ title: 'Dumplings', tags: ['collegetown'], postedBy: ana.personId, going: 1 });
 });
 
 it('typing @ lists the places people use, the busiest first, and offers to make a new one', async () => {
@@ -82,15 +83,56 @@ it('typing @ lists the places people use, the busiest first, and offers to make 
     await open(ana);
     say('dumplings tonight 7 @coll');
     const offered = screen.getAllByRole('button').filter(button => button.closest('.cs-sug')).map(button => button.textContent);
-    expect(offered).toEqual(['@collegetown2 people this week', '@college-ave-courts1 person this week', 'Make @collA new place. People nearby see it when they type @']);
+    expect(offered).toEqual(['@collegetown2', '@college-ave-courts1', 'Make @coll']);
     fireEvent.click(screen.getByRole('button', { name: /@collegetown/ }));
     expect(line()).toHaveValue('dumplings tonight 7 @collegetown ');
-    expect(screen.getByText('@collegetown · 2 people this week')).toBeInTheDocument();
+    expect(within(document.querySelector('.cs-read') as HTMLElement).getByTitle('2 people this week')).toHaveTextContent('@collegetown2');
     // What is already on there is offered to join instead.
-    const already = screen.getByRole('heading', { name: /Already on in/ }).parentElement!;
+    const already = screen.getByRole('heading', { name: /Already on/ }).parentElement!;
     expect(within(already).getByText('Hot pot')).toBeInTheDocument();
-    expect(within(already).getAllByRole('button', { name: 'Join' })).toHaveLength(2);
+    // Nobody joins from here unseen: each opens the plan's own panel, with where and when, and its own way in.
+    expect(within(already).queryByRole('button', { name: 'Join' })).toBeNull();
+    expect(within(already).getAllByRole('button', { name: /^Look at / })).toHaveLength(2);
+    fireEvent.click(within(already).getByRole('button', { name: 'Look at Hot pot' }));
+    expect(screen.queryByRole('textbox', { name: 'What are you up to?' })).toBeNull();
+    const sheet = document.querySelector('.cs-sheet') as HTMLElement;
+    expect(within(sheet).getByRole('heading', { name: 'Hot pot' })).toBeInTheDocument();
+    expect(within(sheet).getByText('Posted by Ben')).toBeInTheDocument();
+    // The way in is on the plan's ticket, which sits beside the panel.
+    expect(within(document.querySelector('.cs-ev.open') as HTMLElement).getByRole('button', { name: 'I\u2019m in' })).toBeInTheDocument();
   });
+});
+
+// Spec: openspec/changes/loop-campus-tags/specs/campus-tags ("Suggestions come from the whole group").
+it('typing the start of any tag in a group offers the group under its lead; a person may keep their own word, and a plan carries several tags', async () => {
+  const ana = await person('Ana Lopez'), ben = await person('Ben Okafor'), cy = await person('Cy Park');
+  await postPlan(t.db, ben.personId, cornell, { title: 'Easy 5K', starts: tomorrow(), tags: ['running'] });
+  await postPlan(t.db, cy.personId, cornell, { title: 'Morning loop', starts: tomorrow(), tags: ['jogging'] });
+  await withPortalTestSession(ana, async () => {
+    await open(ana);
+    say('laps tomorrow 7pm @jog');
+    const offered = screen.getAllByRole('button').filter(button => button.closest('.cs-sug')).map(button => button.textContent);
+    expect(offered).toEqual(['@running2', 'Make @jog']);
+    fireEvent.click(screen.getByRole('button', { name: /@running/ }));
+    expect(line()).toHaveValue('laps tomorrow 7pm @running ');
+    // Their own word is kept as typed, and counted with the group. Each tag has its own chip.
+    say('laps tomorrow 7pm @jogging @collegetown ');
+    expect(screen.queryByRole('button', { name: /Make @/ })).toBeNull();
+    const understood = document.querySelector('.cs-read') as HTMLElement;
+    expect(within(understood).getByText('@jogging', { selector: '.cs-chip' })).toHaveTextContent('@jogging2');
+    expect(within(understood).getByText('@jogging is counted with @running')).toBeInTheDocument();
+    expect(within(understood).getByText('@collegetown', { selector: '.cs-chip' })).toHaveTextContent('@collegetownnew');
+    // Plans with any tag of the group are offered to join.
+    const already = screen.getByRole('heading', { name: 'Already on' }).parentElement!;
+    expect(within(already).getByText('Easy 5K')).toBeInTheDocument();
+    expect(within(already).getByText('Morning loop')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Post it' }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+  });
+  expect((await weekListings(t.db, cornell)).find(plan => plan.title === 'Laps')).toMatchObject({ tags: ['jogging', 'collegetown'], tag: null });
+  cleanup();
+  render(<CampusScreen signInHref="/sign-in" screen={await campusScreen(t.db, cornell, { personId: ana.personId, admin: false })} />);
+  expect([...screen.getByRole('heading', { name: 'Laps' }).parentElement!.querySelectorAll('.cs-at')].map(tag => tag.textContent)).toEqual(['@jogging', '@collegetown']);
 });
 
 it('a pasted event link is read into the line, and the plan keeps the link', async () => {
@@ -99,7 +141,7 @@ it('a pasted event link is read into the line, and the plan keeps the link', asy
   await withPortalTestSession(ana, async () => {
     await open(ana);
     say('lu.ma/4mkwpko0?utm_source=whatsapp');
-    expect(await screen.findByText('Read from lu.ma. Add an @place if you like, then post it.')).toBeInTheDocument();
+    expect(await screen.findByText('Read from lu.ma. Add an @tag if you like, then post it.')).toBeInTheDocument();
     expect(read.page).toHaveBeenCalledWith(LUMA);
     expect(line()).toHaveValue('');
     expect(screen.getByText('Special Special 10 Year Celebration')).toBeInTheDocument();
@@ -107,7 +149,7 @@ it('a pasted event link is read into the line, and the plan keeps the link', asy
     fireEvent.click(screen.getByRole('button', { name: 'Post it' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
   });
-  expect((await weekListings(t.db, cornell))[0]).toMatchObject({ title: 'Special Special 10 Year Celebration', link: LUMA, tag: 'east-village', placeText: '40 E 1st St', about: 'Hosted by Special Special', startsAt: starts.toISOString(), endsAt: ends.toISOString() });
+  expect((await weekListings(t.db, cornell))[0]).toMatchObject({ title: 'Special Special 10 Year Celebration', link: LUMA, tags: ['east-village'], placeText: '40 E 1st St', about: 'Hosted by Special Special', startsAt: starts.toISOString(), endsAt: ends.toISOString() });
 });
 
 it('a line with no time is helped, not refused: times are offered to tap, and a time said with an @ is read as one', async () => {
@@ -118,7 +160,7 @@ it('a line with no time is helped, not refused: times are offered to tap, and a 
     const understood = () => document.querySelector('.cs-read') as HTMLElement;
     expect(within(understood()).getByText('Go for a run')).toBeInTheDocument();
     expect(within(understood()).getByText(/7pm$/)).toBeInTheDocument();
-    expect(within(understood()).getByText('@central-park · a new place, yours to name')).toBeInTheDocument();
+    expect(within(understood()).getByText('@central-park', { selector: '.cs-chip' })).toHaveTextContent('@central-parknew');
     // No time at all: nothing is refused. Pressing "Post it" asks, and the offered times are one tap.
     say('go for a run @central-park ');
     fireEvent.click(screen.getByRole('button', { name: 'Post it' }));
@@ -131,7 +173,7 @@ it('a line with no time is helped, not refused: times are offered to tap, and a 
     expect(within(understood()).getByText(/\d(am|pm)$/)).toBeInTheDocument();
     // Typing a time after an @ offers the time, and does not offer to make a place of it.
     say('go for a run @eve');
-    expect(screen.getByRole('button', { name: /^evening/ })).toHaveTextContent('A time, not a place');
+    expect(screen.getByRole('button', { name: /^evening/ })).toHaveTextContent('A time, not a tag');
     say('go for a run @evening');
     expect(screen.queryByRole('button', { name: /Make @evening/ })).toBeNull();
   });
@@ -169,7 +211,7 @@ it('the list shows the @place and the event page, finds a plan by its place, and
   await expect(withPortalTestSession(ben, () => postPlanAction({ message: '' }, form({ title: 'Typed again', starts: tomorrow(), link: LUMA })))).rejects.toEqual(sentTo('/c/cornell'));
   const list = await weekListings(t.db, cornell);
   expect(list).toHaveLength(1);
-  expect(list[0]).toMatchObject({ title: 'Special Special 10 Year Celebration', link: LUMA, tag: 'east-village', going: 2, postedBy: ana.personId });
+  expect(list[0]).toMatchObject({ title: 'Special Special 10 Year Celebration', link: LUMA, tags: ['east-village'], going: 2, postedBy: ana.personId });
   const week = await campusScreen(t.db, cornell, { personId: ben.personId, admin: false });
   expect(week.tickets[0].words).toContain('east-village');
   render(<CampusScreen signInHref="/sign-in" screen={week} />);
