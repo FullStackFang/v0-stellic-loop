@@ -6,7 +6,7 @@ import { CampusScreen } from '@/components/campus/screen';
 import { SiteFoot } from '@/components/campus/foot';
 import { LookingAt } from '@/components/campus/looking-at';
 import { AddSchools } from '@/components/campus/add-schools';
-import { ConnectLinkedin, FitLines, NotHere } from '@/components/campus/no-school';
+import { ConnectLinkedin, FitLines, SchoolAsk } from '@/components/campus/no-school';
 import { SignOut } from '@/components/campus/sign-out';
 import { addedSchools } from '@/lib/campus/linkedin';
 import { linkedinAccount } from '@/lib/campus/linkedin-account';
@@ -69,12 +69,12 @@ export async function NoSchool() {
           {owner && <div className="cs-ns-me">{owner.photo && <img src={owner.photo} alt="" />}<span><b>{owner.name}</b><small>Signed in with LinkedIn</small></span><span className="cs-ns-stamp">Yours</span></div>}
           {form}
           <p>{waiting ? 'We look at each profile ourselves. Come back to this page: your campus opens here once you are in.' : 'LinkedIn does not tell us the address of your profile, so we ask for it: it is what we open to check your school.'}</p>
-          {!waiting && <NotHere asked={asked} email={email} />}
+          {!waiting && <SchoolAsk asked={asked} email={email} />}
         </section> : <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">{email ? `${email} is not a school email` : 'No school email'}</h2>
           {signs ? <ConnectLinkedin other={another} fallback={form} /> : form}
           <p>Loop is for schools. With LinkedIn we check your school ourselves.</p>
-          <NotHere asked={asked} email={email} />
+          <SchoolAsk asked={asked} email={email} />
         </section>}
       </div>
     </main>

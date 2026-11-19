@@ -825,14 +825,11 @@ describe('the pages', () => {
   it('a person at no school names their school, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('cornell')));
-    // The box for a school Loop is not at stays shut until its pill is pressed.
-    expect(screen.queryByRole('textbox', { name: 'Your school' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'My school is not here yet' }));
     expect(screen.getByRole('status')).toHaveTextContent('We will email omar@gmail.com when Loop opens there.');
     // The box is required, so an empty one never leaves the page; the action refuses one by itself.
     expect(await withPortalTestSession(outsider, () => askSchoolAction(' '))).toEqual({ ok: false, message: 'Type the name of your school.' });
     fireEvent.change(screen.getByRole('textbox', { name: 'Your school' }), { target: { value: '  University of   Michigan ' } });
-    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Add my school' })); await screen.findByText('On the list'); });
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Sign up my school' })); await screen.findByText('On the list'); });
     expect(screen.getByText('University of Michigan')).toBeInTheDocument();
     expect((await t.db.query('select school,email from campus_school_ask where person_id=$1', [outsider.personId])).rows).toEqual([{ school: 'University of Michigan', email: 'omar@gmail.com' }]);
     cleanup();
