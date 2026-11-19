@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { groupHandle, groupHref } from '@/lib/emba/group-path';
+import type { TileProps } from '@/lib/emba/group-picture';
+import { GroupTile } from './group-picture';
 
 type Placed = { namespace: string; slug: string; orgName: string };
 
@@ -23,9 +25,9 @@ export function Crumbs({ trail, here, children }: { trail: Placed[]; here?: stri
  * The head of a group's people pages: its name, how many are in it, and the sections. "Add people" is offered to
  * the owners and organizers only, so the Members page is the list and nothing else.
  */
-export function GroupHead({ group, base, here, people, canAdd, asking }: { group: Placed; base: string; here: 'members' | 'add'; people: number | null; canAdd: boolean; /** How many people are asking to join: shown on the tab, so a request is not missed from the list. */ asking: number }) {
+export function GroupHead({ group, base, here, people, canAdd, asking, tile }: { group: Placed; base: string; here: 'members' | 'add'; people: number | null; canAdd: boolean; /** The group's drawn picture, and the card to draw one for a person who runs the group. */ tile: TileProps; /** How many people are asking to join: shown on the tab, so a request is not missed from the list. */ asking: number }) {
   return <section className="gt-tk gt-head gt-ppl"><div>
-    <header className="gt-plate"><span className="gt-tile"><Rings /></span>
+    <header className="gt-plate"><GroupTile {...tile} name={group.orgName} />
       <div><h1>{group.orgName}</h1><p className="gt-handle"><span>{groupHandle(group)}</span>{people !== null && <em>{people} {people === 1 ? 'person' : 'people'}</em>}</p></div></header>
     <nav className="gt-facts" aria-label="Group sections">
       <Link href={`${base}/team`} aria-label="Team"><b>Team</b><span>What is coming up</span></Link>

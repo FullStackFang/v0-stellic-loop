@@ -68,17 +68,17 @@ const runs = async (q: Q, p: Principal, scope: Scope) => p.clientId === null && 
 const mayUse = async (q: Q, p: Principal, admin: boolean) => new Set((await choices(q, p, admin)).map(one => key(one.pick)));
 
 /** One animal the picker shows: what to send back to pick it, its picture, and what kind it is, for the mark on its corner. */
-export type Choice = { pick: Pick; src: string; kind: 'own' | 'school' | 'ink' | 'core' };
+export type Choice = { pick: Pick; src: string; name: string; kind: 'own' | 'school' | 'ink' | 'core' };
 /** Every animal the person may put in a group picture, in the order their own picker has them: theirs, their school's, the Ink ones, everyone's. */
 async function choices(q: Q, p: Principal, admin: boolean): Promise<Choice[]> {
   const list = await offered(q, admin ? 'all' : await schoolOfPerson(q, p.personId));
   const tokenOf = (src: string) => src.slice(customFace('').length);
-  const of = (tiles: { face: number | null; src: string }[], kind: Choice['kind']): Choice[] => tiles.map(tile => ({ pick: tile.face === null ? { token: tokenOf(tile.src) } : { face: tile.face }, src: tile.src, kind }));
+  const of = (tiles: { face: number | null; src: string; name: string }[], kind: Choice['kind']): Choice[] => tiles.map(tile => ({ pick: tile.face === null ? { token: tokenOf(tile.src) } : { face: tile.face }, src: tile.src, name: tile.name, kind }));
   const shown = [...of(list.school, 'school'), ...(admin || await hasInk(q, p.personId) ? of(list.premium, 'ink') : []), ...of(list.core, 'core')];
   const made = (admin ? (await q.query<{ token: string }>('select token::text as token from campus_custom_picture order by made_at,token')).rows
     : (await q.query<{ token: string }>('select token::text as token from campus_custom_picture where person_id=$1 and let_go_at is null order by made_at,token', [p.personId])).rows)
     .filter(row => !shown.some(one => 'token' in one.pick && one.pick.token === row.token));
-  return [...made.map(row => ({ pick: { token: row.token }, src: customFace(row.token), kind: 'own' as const })), ...shown];
+  return [...made.map((row, at) => ({ pick: { token: row.token }, src: customFace(row.token), name: `Your own animal ${at + 1}`, kind: 'own' as const })), ...shown];
 }
 
 /** What the "Group picture" card needs to draw itself for a person who runs the group. Null for anyone else. */
@@ -168,8 +168,20 @@ export async function groupPictures(q: Q, loopIds: readonly string[]): Promise<M
   const { rows } = await q.query<{ loopId: string; token: string }>('select distinct on (loop_id) loop_id as "loopId",token::text as token from emba_group_picture where loop_id=any($1::uuid[]) and kept_at is not null and let_go_at is null order by loop_id,kept_at desc', [loopIds]);
   return new Map(rows.map(row => [row.loopId, row.token]));
 }
-/** Where a group's picture is served: the 192px tile, and the whole drawing. */
-export const groupPictureSrc = (token: string, full = false) => `/animals/group/${token}${full ? '/full' : ''}`;
+/** What a group's tile needs: the picture the group wears, and, for a person who runs the group, what the card that draws one shows. */
+export type TileProps = { scope: Scope; picture: string | null; pane: PicturePane | null };
+/** Read for a group's page. A page is never lost to its tile: if the picture cannot be read, the tile is the rings. */
+export async function groupTile(db: Db, p: Principal, scope: Scope): Promise<TileProps> {
+  try {
+    return await db.tx(async q => {
+      const pane = await picturePane(q, p, scope);
+      return { scope, pane, picture: pane ? pane.kept : (await groupPictures(q, [scope.loopId])).get(scope.loopId) ?? null };
+    });
+  } catch (error) {
+    console.error('group picture: tile not read', error instanceof Error ? error.name : 'unknown');
+    return { scope, picture: null, pane: null };
+  }
+}
 
 /** The picture behind a token, for /animals/group/<token> and /animals/group/<token>/full. */
 export async function groupPictureImage(q: Q, token: string, full = false): Promise<Uint8Array | null> {
