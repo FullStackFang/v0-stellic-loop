@@ -85,8 +85,18 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   fireEvent.change(card.getByRole('textbox', { name: 'Email' }), { target: { value: 'owner@example.test' } });
   fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
 
-  expect(await card.findByText('Pick your favorite.', undefined, { timeout: 20000 })).toBeInTheDocument();
+  // Subscribing draws nothing: the card asks first, with a line of the person's own and how long it may be.
+  expect(await card.findByText('Draw these 2 together?')).toBeInTheDocument();
   expect(card.getByText(/Thanks for subscribing to Loop Ink\+\. Payment is not set up yet/)).toBeInTheDocument();
+  expect(model.asked).toEqual([]);
+  fireEvent.change(card.getByRole('textbox', { name: 'Anything to add' }), { target: { value: 'party hats' } });
+  expect(card.getByText(/10 of 60 letters/)).toBeInTheDocument();
+  expect(card.getByText(/3 more times/)).toBeInTheDocument();
+  preview('picture-sure');
+  fireEvent.click(card.getByRole('button', { name: 'Yes, draw us' }));
+
+  expect(await card.findByText('Pick your favorite.', undefined, { timeout: 20000 })).toBeInTheDocument();
+  expect(model.asked[0]).toContain('The group also asks: party hats.');
   expect(card.getAllByRole('img', { name: /^Drawing/ })).toHaveLength(2);
   preview('picture-two');
   expect(model.asked).toHaveLength(2);
@@ -94,8 +104,11 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   expect(await groupPictures(t.db, [group.loopId])).toEqual(new Map());
 
   // The person's own line goes to the next drawing.
-  fireEvent.change(card.getByRole('textbox', { name: 'Say what should change' }), { target: { value: 'matching scarves' } });
   fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+  expect(model.asked).toHaveLength(2);
+  expect(card.getByText(/2 more times/)).toBeInTheDocument();
+  fireEvent.change(card.getByRole('textbox', { name: 'Anything to add' }), { target: { value: 'matching scarves' } });
+  fireEvent.click(card.getByRole('button', { name: 'Yes, draw us' }));
   await vi.waitFor(() => expect(model.asked).toHaveLength(4), { timeout: 20000 });
   expect(model.asked[3]).toContain('The group also asks: matching scarves.');
   await card.findByText('Pick your favorite.');

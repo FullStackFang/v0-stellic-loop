@@ -16,7 +16,9 @@ import './group-picture.css';
 const keyOf = (pick: Pick) => 'face' in pick ? `f${pick.face}` : `t${pick.token}`;
 const FAILED = { ok: false as const, message: 'That did not go through. Try again.' };
 const FILTERS: [Choice['kind'], string][] = [['own', 'Yours'], ['school', 'Schools'], ['ink', 'Ink']];
-type Step = 'pick' | 'plate' | 'wait' | 'two';
+type Step = 'pick' | 'plate' | 'sure' | 'wait' | 'two';
+/** The longest line of a person's own the drawing takes (plainNote in lib/emba/group-picture.ts). */
+const NOTE = 60;
 
 /** The group's tile: its drawn picture, or the rings. For a person who runs the group it opens the card. */
 export function GroupTile({ scope, picture, pane, name }: TileProps & { name: string }) {
@@ -39,6 +41,9 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
   const [drawn, setDrawn] = useState(pane.waiting), [kept, setKept] = useState(pane.kept);
   const [plus, setPlus] = useState(pane.plus), [thanked, setThanked] = useState(false);
   const [email, setEmail] = useState(''), [note, setNote] = useState(''), [said, setSaid] = useState(''), [busy, setBusy] = useState(false);
+  // Where "Back" on the asking step returns to, and how many more times this person may ask (null: no limit).
+  const [from, setFrom] = useState<'pick' | 'two'>('pick'), [left, setLeft] = useState(pane.asksLeft);
+  const ask = (back: 'pick' | 'two') => { setSaid(''); setFrom(back); setStep('sure'); };
 
   // The card sits above the page, under the tile: the ticket the tile is in cuts off anything that hangs out of it.
   useLayoutEffect(() => {
@@ -62,8 +67,8 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
   const draw = async () => {
     setSaid(''); setStep('wait');
     const got = await drawGroupPictureAction(scope, picked.map(one => one.pick), note).catch(() => FAILED);
-    if (!got.ok) { setSaid(got.message); setStep(drawn.length ? 'two' : 'pick'); return; }
-    setDrawn(got.tokens ?? []); setStep('two');
+    if (!got.ok) { setSaid(got.message); setStep('sure'); return; }
+    setDrawn(got.tokens ?? []); setLeft(left === null ? null : Math.max(0, left - 1)); setStep('two');
   };
   const subscribe = async () => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setSaid('Enter the email to subscribe with.');
@@ -71,7 +76,7 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
     const got = await subscribeInkPlusAction(email.trim()).catch(() => FAILED);
     setBusy(false);
     if (!got.ok) return setSaid(got.message);
-    setPlus(true); setThanked(true); void draw();
+    setPlus(true); setThanked(true); ask('pick');
   };
   const keep = async (token: string) => {
     setBusy(true); setSaid('');
@@ -101,7 +106,7 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
     </div>
     {alert}
     <div className="cs-prem-stub gp-foot">{faces}<b>{picked.length} of {pane.most}</b>
-      <button className="cs-btn gold gp-go" aria-pressed="true" disabled={picked.length < pane.fewest} onClick={() => plus ? void draw() : (setSaid(''), setStep('plate'))}>Draw us together<i className="gp-plus">Ink+</i></button></div>
+      <button className="cs-btn gold gp-go" aria-pressed="true" disabled={picked.length < pane.fewest} onClick={() => plus ? ask('pick') : (setSaid(''), setStep('plate'))}>Draw us together<i className="gp-plus">Ink+</i></button></div>
   </div>
   : <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     {step === 'plate' ? <>
@@ -113,6 +118,17 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
         <small>Groups of more than {pane.most}, and saving a picture without the Loop mark, are not here yet.</small></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
         <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}>Subscribe</button></div>
+        {alert}
+      </form></>
+    : step === 'sure' ? <>
+      <button className="cs-prem-back" onClick={() => { setSaid(''); setStep(from); }}>Back</button>
+      <p className="cs-prem-kick">Loop Ink+</p>
+      <p className="cs-prem-big said">Draw these {picked.length} together?</p>
+      {thanks}
+      <div className="cs-prem-made gp-wait" aria-hidden="true">{picked.map(one => <img key={one.src} src={one.src} alt="" />)}</div>
+      <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void draw(); }}>
+        <div className="cs-prem-join"><input value={note} onChange={event => setNote(event.target.value)} maxLength={NOTE} aria-label="Anything to add" placeholder="Anything to add? Matching scarves…" autoComplete="off" /><button className="cs-btn go">Yes, draw us</button></div>
+        <p className="cs-prem-small">{note.length} of {NOTE} letters, and you can leave it empty. Nothing is drawn until you press Yes.{left !== null && ` You can do this ${left} more ${left === 1 ? 'time' : 'times'}.`}</p>
         {alert}
       </form></>
     : step === 'wait' ? <>
@@ -128,11 +144,11 @@ function PictureCard({ scope, pane, onClose }: { scope: TileProps['scope']; pane
       {thanks}
       <div className="gp-two">{drawn.map((token, at) => <figure key={token}><img src={groupPictureSrc(token, true)} alt={`Drawing ${at + 1}`} />
         <button className={`cs-btn sm ${kept === token ? 'go' : ''}`} aria-pressed={kept === token} disabled={busy || kept === token} onClick={() => void keep(token)}>{kept === token ? 'Kept' : 'Keep this one'}</button></figure>)}</div>
-      <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void draw(); }}>
-        {picked.length >= pane.fewest && <div className="cs-prem-join"><input value={note} onChange={event => setNote(event.target.value)} maxLength={60} aria-label="Say what should change" placeholder="Say what should change: matching scarves…" autoComplete="off" /><button className="cs-btn go">Draw again</button></div>}
-        <button type="button" className="cs-btn" onClick={() => { setSaid(''); setStep('pick'); }}>Pick other animals</button>
+      <div className="cs-prem-stub">
+        {picked.length >= pane.fewest && <button className="cs-btn go" onClick={() => ask('two')}>Draw again</button>}
+        <button className="cs-btn" onClick={() => { setSaid(''); setStep('pick'); }}>Pick other animals</button>
         {alert}
-      </form></>}
+      </div></>}
   </div></div>;
   return <div ref={box} className="cs-lvl gp-card" role="dialog" aria-label="Group picture">{body}</div>;
 }
