@@ -47,7 +47,7 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
   const shared = {
     fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', fallback: <p className="cs-note" aria-hidden="true">Loading sign-in…</p>,
     appearance: {
-      layout: { socialButtonsPlacement: 'bottom' as const },
+      options: { socialButtonsPlacement: 'bottom' as const },
       variables: { colorBackground: paper, colorForeground: ink, colorMutedForeground: mute, colorPrimary: ink, colorPrimaryForeground: paper, colorInput: paper, colorInputForeground: ink, fontFamily: 'var(--font-archivo), system-ui, sans-serif', borderRadius: '8px' },
       elements: {
         rootBox: { width: '100%' }, cardBox: { boxShadow: 'none', border: 0, borderRadius: 0, background: 'transparent', width: '100%', overflow: 'visible' },
