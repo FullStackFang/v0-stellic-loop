@@ -2,7 +2,8 @@
 
 - [x] 1.1 `public/demo/mockups-loading.html`: three loaders. Founder picks B, "Saving seats" (2026-11-19)
 - [x] 1.2 `public/demo/mockups-loading-places.html`: every wait drawn with B. Founder: "this is all beautiful" (2026-11-19)
-- [ ] 1.3 Founder approves this change, and answers the four open questions in design.md (the ending, the words on waiting buttons, signed-out seats, the bar into a layout)
+- [ ] 1.3 Founder approves this change, and answers the open questions in design.md (the words on waiting buttons, signed-out seats, the bar into a layout, whether Free gets a splat)
+- [x] 1.6 `public/demo/mockups-loading-splat.html` and `mockups-loading-splat-2.html`: the ending. Founder picks "Stamped", then row A, "A third ink" (2026-11-19, design D13)
 - [x] 1.5 Founder sets one standard line for the ticket: "Looping you in…" (2026-11-19, design D12)
 - [ ] 1.4 Make a worktree and branch for this work (design D11); do not build in the shared folder
 
@@ -50,9 +51,18 @@
 - [ ] 6.7 `components/campus/own-face.tsx`: Subscribe and Keep this one hold the small one while `wait`, with "Subscribing" and "Keeping"; test
 - [ ] 6.8 Grep `app/` and `components/campus/` for "One moment", "Reading…", "Saving…", "Opening…", "Loading sign-in" and an ellipsis in a button: none left outside the retired pages
 
+## 9. The ending (design D13)
+
+- [ ] 9.1 Tests first in `lib/__tests__/campus-ink-blot.test.ts`: the thrown drops of a splat are the same for the same seed, all lie to the right of the pool (none over the line or faces), and `inkBlot` gives what it gave before
+- [ ] 9.2 `lib/campus/ink-blot.ts`: the thrown drops, as their own function
+- [ ] 9.3 `--cs-third` for each school in `app/c/campus.css` (values from the mockup's `--hot`), with a fallback in `seats.css`
+- [ ] 9.4 Tests first for `components/loading/seats-ending.tsx` and `ending.ts`: free draws one dark shape and no school colour; ink draws the blot of the given seed with no spark; plus draws the spark and spark drops in the third ink; a ticket seen for under 400 ms hands nothing over; reduced motion draws nothing; the layer is `aria-hidden` and takes no presses; it removes itself when the animation ends
+- [ ] 9.5 `ending.ts`, `seats-ending.tsx` and the ending's rules in `seats.css` (ported from `.splat`, `land`, `fly`, `knock` in the round 2 mockup, with the 0.3 s hold); the page-sized `SeatsTicket` registers and hands over; mount `SeatsEnding` in `app/c/layout.tsx` and `app/groups/layout.tsx`; `last-bar` and the groups layout pass the plan and the blot's seed. Remove the looping stamp from the ticket (the stub stays blank)
+- [ ] 9.6 In the browser with the network throttled: the ending on a page change, a groups page and a cold open, as a free member and as a member with Ink, in each school's colours; a fast page shows no ending; the page beneath takes a press during it; reduced motion shows none. Force `plan="plus"` once to look at the Ink+ splat
+
 ## 7. Design notes
 
-- [ ] 7.1 `docs/loop-campus-design.md`: a short "Waiting" section (the two sizes, where each goes, the 150 ms rule, reduced motion), pointing at the two mockups
+- [ ] 7.1 `docs/loop-campus-design.md`: a short "Waiting" section (the two sizes, where each goes, the 150 ms rule, the ending and its three splats, reduced motion), pointing at the mockups
 - [ ] 7.2 `DESIGN.md`, "Motion": one line that the loader is the exception to "nothing else moves on its own", with the link to 7.1
 
 ## 8. Check it for real
