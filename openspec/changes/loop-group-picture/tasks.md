@@ -1,18 +1,18 @@
 ## 1. Database
 
-- [ ] 1.1 Write `supabase/migrations/20261119300000_group_picture.sql`: tables `emba_group_picture` and `campus_ink_plus` as in design D4 and D6, with the apply and rollback notes at the top
-- [ ] 1.2 Add the two tables to the test database set-up, and confirm the existing suite still passes
+- [x] 1.1 Write `supabase/migrations/20261119300000_group_picture.sql`: tables `emba_group_picture` and `campus_ink_plus` as in design D4 and D6, with the apply and rollback notes at the top
+- [x] 1.2 Add the two tables to the test database set-up, and confirm the existing suite still passes
 
 ## 2. Drawing and keeping (lib)
 
-- [ ] 2.1 Tests first, in `lib/__tests__/emba-group-picture.test.ts`, with a stand-in drawing function: who may, two to six, an animal the person may not pick, two drawings from one ask, one fails, both fail, keeping one, a newer picture, leaving without keeping
-- [ ] 2.2 `lib/emba/group-picture.ts`: `drawGroup` (each pick as its own 512px picture on white, one short line, transparent, kept at 1024 and at 192), `askGroupPicture`, `keepGroupPicture`, `groupPictureImage`
-- [ ] 2.3 Ink+: tests, then `hasInkPlus` and `subscribeInkPlus` in `lib/campus/ink.ts`, and the three-asks limit with the admin exempt
+- [x] 2.1 Tests first, in `lib/__tests__/emba-group-picture.test.ts`, with a stand-in drawing function: who may, two to six, an animal the person may not pick, two drawings from one ask, one fails, both fail, keeping one, a newer picture, leaving without keeping
+- [x] 2.2 `lib/emba/group-picture.ts`: `drawGroup` (each pick as its own 512px picture on white, one short line, transparent, kept at 1024 and at 192), `askGroupPicture`, `keepGroupPicture`, `groupPictureImage`
+- [x] 2.3 Ink+: tests, then `hasInkPlus` and `subscribeInkPlus` in `lib/campus/ink.ts`, and the three-asks limit with the admin exempt
 
 ## 3. Serving the picture
 
-- [ ] 3.1 Routes `app/groups/picture/[token]/route.ts` (small) and `app/groups/picture/[token]/full/route.ts`, immutable, 404 for an unknown token
-- [ ] 3.2 Read each group's kept picture with the group lists in one query, and carry its address on the group types the pages use
+- [x] 3.1 Routes `app/animals/group/[token]/route.ts` (small) and `app/animals/group/[token]/full/route.ts`, immutable, 404 for an unknown token
+- [ ] 3.2 Carry each group's picture address on the group types the pages use (`groupPictures` reads them in one statement; waits for the groups look-and-feel work)
 
 ## 4. The pane
 
