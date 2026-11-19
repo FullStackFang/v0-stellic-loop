@@ -263,7 +263,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     if (!bub || !frame) return;
     const rect = (el: Element) => { const r = el.getBoundingClientRect(); return [r.left - frame.left, r.top - frame.top, r.right - frame.left, r.bottom - frame.top]; };
     const pin = rect(bub.parentElement!), w = bub.offsetWidth, h = bub.offsetHeight, top = band.current?.offsetHeight ?? 0, low = frame.height - (sheet.current?.offsetHeight ?? live.current.low);
-    const others = [...host.current!.querySelectorAll('.cs-pin, .cs-you, .cs-way, .cs-rose, .cs-zoom, .cs-scale')].filter(el => el !== bub.parentElement).map(rect);
+    const others = [...host.current!.querySelectorAll('.cs-pin, .cs-you, .cs-way, .cs-zoom, .cs-scale')].filter(el => el !== bub.parentElement).map(rect);
     const hits = (x: number, y: number) => others.filter(o => x < o[2] && o[0] < x + w && y < o[3] && o[1] < y + h).length + (x < 4 || x + w > frame.width - 4 || y < top + 4 || y + h > low - 4 ? 100 : 0);
     const corners: [string, number, number][] = [['', pin[0], pin[1] - 24 - h], ['r', pin[2] - w, pin[1] - 24 - h], ['low', pin[0], pin[3] + 14], ['low r', pin[2] - w, pin[3] + 14]];
     bub.dataset.seat = corners.map(([name, x, y]) => ({ name, hits: hits(x, y) })).sort((a, b) => a.hits - b.hits)[0].name;
@@ -315,14 +315,18 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   }, [cam, place, seat, tune]);
 
   // Where you are, if the browser will say. Standing in a section makes it yours; anywhere else leaves you where the most is on.
-  useEffect(() => {
+  const find = useCallback(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(found => {
       const spot: Point = [found.coords.longitude, found.coords.latitude], sec = sectionAt(land, spot);
-      if (!sec) { setWhere('away'); return; }
+      if (!sec) { setYou(null); setWhere('away'); return; }
       setYou(spot); setStanding(sec.id); setView(sec.id); setLitId(null); setWhere('here');
     }, () => setWhere('off'), { maximumAge: 60000, timeout: 8000 });
   }, [land]);
+  useEffect(() => { find(); }, [find]);
+  // What the locate button found is said beside it for a few seconds, when it is not simply "here".
+  const [told, setTold] = useState(false);
+  useEffect(() => { if (!told) return; const done = setTimeout(() => setTold(false), 5000); return () => clearTimeout(done); }, [told, where]);
   useEffect(() => { onYou?.(you); }, [you, onYou]);
 
   // The section on screen is cut out of the veil, and its margins name the sections next door.
@@ -382,10 +386,12 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   }, [map, cam, tune, view, litKey, openAt, youAt, standing, picked]);
 
   const step = (id: string) => { wallAt.current = null; setWall(null); setView(id); setLitId(null); onPick(null); };
-  /** Back to where you stand; there already, back to how the view started. */
   /** One step in or out, about the middle of the map. How far out it goes is the section's own limit. */
   const zoom = (by: number) => map?.easeTo({ zoom: map.getZoom() + by, duration: calm() ? 0 : 300 });
+  /** Back to where you stand; there already, back to how the view started. */
   const recenter = () => { if (view !== standing) step(standing); else if (map) { const to = cam(); map.setMinZoom(0); home.current = null; map.easeTo({ ...to, duration: calm() ? 0 : 450 }); } };
+  /** The locate button: ask the browser again where you are, say what it found, and go back to where you stand. */
+  const locate = () => { if (where !== 'here' && navigator.geolocation) setWhere('wait'); setTold(true); find(); recenter(); };
 
   const away = hops(land, standing, view), walk = (to: Point) => you ? walkMinutes(you, to) : null;
   const kicker = away ? [`${away} ${away === 1 ? 'step' : 'steps'} from ${you ? 'you' : 'the start'}`, you ? `${walk(middle(here.ring))} min walk` : null].filter(Boolean).join(' · ')
@@ -418,11 +424,13 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
       : <div className="cs-way none" role="status" key={`${shown.id}|${shown.kind}`} ref={el => { way.current = el; if (el && map) place(map); }}>
           <span><b>{there?.name ?? 'Coming soon'}</b>{shown.kind === 'far' ? 'Not open from here yet' : shown.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>{there && <Arrow />}</div>)}
     {!up && <>
-      {/* The map's own controls, in one column: the compass brings you back to where you are, then in and out. */}
-      <button className="cs-rose" aria-label="Back to where you are" title="Back to where you are" onClick={recenter}><svg viewBox="-25 -25 50 50" aria-hidden="true"><circle className="ring" r={17} /><path className="south" d="M0-21 4.5 0 0 21-4.5 0z" /><path className="north" d="M0-21 4.5 0h-9z" /><path className="arms" d="M-13 0h-5M13 0h5" /><circle className="hub" r={1.6} /></svg></button>
-      <div className="cs-zoom" role="group" aria-label="Zoom">
+      {/* The map's own controls, in one pill: find where you are, then in and out. The locate mark shows what the
+          browser said: a filled centre when you are on the map, struck through when you are away or location is off. */}
+      <div className="cs-zoom" role="group" aria-label="Map">
+        <button className="cs-loc" data-where={where} aria-label="Back to where you are" title={where === 'here' ? 'Back to where you are' : 'Find where you are'} onClick={locate}><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx={8} cy={8} r={4.2} /><path d="M8 1.2v2.6M8 12.2v2.6M1.2 8h2.6M12.2 8h2.6" />{where === 'here' ? <circle className="dot" cx={8} cy={8} r={1.9} /> : where !== 'wait' && <path className="struck" d="M2.6 2.6l10.8 10.8" />}</svg></button>
         <button aria-label="Zoom in" title="Zoom in" onClick={() => zoom(1)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button>
         <button aria-label="Zoom out" title="Zoom out" onClick={() => zoom(-1)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" /></svg></button></div>
+      {told && where !== 'here' && <p className="cs-loc-note" role="status">{where === 'wait' ? 'Finding you' : where === 'away' ? 'You are away from this campus, so you are not on its map' : 'Your location is off. Allow it in your browser to see yourself here'}</p>}
       <div className="cs-scale" ref={rule} style={{ bottom: beside ? (list.length ? 16 : 100) : (lit ? DIAL : 84) + 16 }} aria-hidden="true"><i /></div></>}
     {(!beside || !list.length) && <div className={`cs-near-sheet ${up ? 'open' : lit ? 'dial' : ''}`} ref={sheet}>
       {up ? children : lit ? <Dial list={list} at={at} onTurn={to => setLitId(list[to].ticket.id)} onOpen={() => onPick(lit.ticket.id)} />

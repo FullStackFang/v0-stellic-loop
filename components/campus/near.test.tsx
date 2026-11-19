@@ -93,6 +93,27 @@ describe('Near you', () => {
     await near();
     expect(place()).toBe('Collegetown');
     expect(screen.getByText('You are away from campus')).toBeTruthy();
+    // The locate button says why you are not on the map, and shows it on its own mark.
+    const find = screen.getByRole('button', { name: 'Back to where you are' });
+    expect(find.getAttribute('data-where')).toBe('away');
+    expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(find);
+    expect(screen.getByRole('status').textContent).toMatch(/away from this campus/);
+  });
+
+  it('the locate button asks the browser again, and puts you on the map once it says you are here', async () => {
+    locate(null);
+    await near();
+    const find = screen.getByRole('button', { name: 'Back to where you are' });
+    expect(find.getAttribute('data-where')).toBe('off');
+    fireEvent.click(find);
+    expect(screen.getByRole('status').textContent).toMatch(/location is off/);
+    locate([-76.4790, 42.4548]);
+    fireEvent.click(find);
+    await waitFor(() => expect(place()).toBe('North Campus'));
+    expect(find.getAttribute('data-where')).toBe('here');
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(document.querySelector('.cs-you')).toBeTruthy();
   });
 
   it('the dial turns through the section in order of time, and the plan that is on hands over its ticket', async () => {
