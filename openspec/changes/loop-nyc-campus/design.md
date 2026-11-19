@@ -49,8 +49,12 @@ Where a person seems to be is the host's guess from the request (`x-vercel-ip-la
 | id | name | stop | next |
 | --- | --- | --- | --- |
 | `roosevelt` | Roosevelt Island | Roosevelt Island (F, M) | `lex63`, `queensbridge` |
-| `lex63` | Upper East Side | Lexington Av/63 St (F, M, Q) | `roosevelt` |
+| `lex63` | Upper East Side | Lexington Av/63 St (F, M, Q) | `roosevelt`, `lex53` |
 | `queensbridge` | Long Island City | 21 St–Queensbridge (F, M) | `roosevelt` |
+| `lex53` | Midtown East | Lexington Av/53 St (E, F, M, 6) | `lex63`, `grandcentral` |
+| `grandcentral` | Midtown | Grand Central–42 St (4, 5, 6, 7) | `lex53` |
+
+**D6a. Midtown, for the Cornell Tech pilot** (founder, 2026-11-19: the Cornell Club and the ILR building are "the places they would go or host events"). Two sections run on south from the Upper East Side, a stop each, from just west of Fifth Avenue to Second Avenue: Midtown East (47th to 58th Street) holds ILR's New York building at 570 Lexington Avenue; Midtown (40th to 47th) holds the Cornell Club at 6 East 44th Street. Both buildings are places of the Cornell Tech campus (`20261119100000_campus_tech_midtown.sql`), and the same migration adds Cornell's own New York City calendar as a feed (`https://events.cornell.edu/nyc/calendar/ics`), which was empty on the day it was added. "Next to" here is the next section along the avenues, not one train ride: no single line runs Lexington Av/63 St to 53 St to Grand Central. From the island Midtown East is two steps and the Club three, so the map opens them for someone standing there or next door, or when a plan there is picked in the list. The Cornell Club's own programs (25 listed, no feed) are not loaded: it is a members' club and a student who turns up cannot get in. *My calls: two stops, not one big Midtown section; the 6 on the 53 St sign (the 51 St platform of the same station); the shuttle left off Grand Central's sign to keep it short.*
 
 One stop is one section, and a section is everything that stop serves (founder, 2026-11-18, after the mockup showed only the campus end of the island: "it's still one train station away"). So Roosevelt Island is one section from the southern tip to the lighthouse, about 3 km long and narrow. The whole section must be in view at the map's furthest zoom, so that zoom is lower here than in Ithaca; the map already works this out from the section's outline. A section is not sized to fit the screen. Every later section follows the same rule: named for its stop, covering what is walked to from it.
 

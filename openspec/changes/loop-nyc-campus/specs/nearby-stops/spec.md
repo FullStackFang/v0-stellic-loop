@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: New York sections
-The "Near you" map SHALL have sections for the New York campus, one per subway stop, each covering what that stop serves, starting with Roosevelt Island, Lexington Av/63 St and 21 St–Queensbridge. Roosevelt Island SHALL be one section covering the whole island. The rules of the map SHALL be the same as at every campus: one section in view at a time, a person can open the section they stand in and the ones next to it, and the view cannot leave the section.
+The "Near you" map SHALL have sections for the New York campus, one per subway stop, each covering what that stop serves, starting with Roosevelt Island, Lexington Av/63 St and 21 St–Queensbridge, and running on south through Manhattan to where Cornell people in the city go and host: Lexington Av/53 St (Midtown East, with the ILR School's building at 570 Lexington Avenue) and Grand Central–42 St (Midtown, with the Cornell Club). Roosevelt Island SHALL be one section covering the whole island. The rules of the map SHALL be the same as at every campus: one section in view at a time, a person can open the section they stand in and the ones next to it, and the view cannot leave the section.
 
 #### Scenario: Standing on campus
 - **WHEN** a person at Cornell Tech opens "Near you" while standing on the Cornell Tech campus
@@ -14,6 +14,14 @@ The "Near you" map SHALL have sections for the New York campus, one per subway s
 #### Scenario: Next door only
 - **WHEN** that person pushes the edge of the map toward Manhattan
 - **THEN** the way on leads to Lexington Av/63 St
+
+#### Scenario: The Cornell Club and ILR
+- **WHEN** an event is listed at the Cornell Club, or at ILR's building at 570 Lexington Avenue
+- **THEN** it stands on the map in the Midtown section, or the Midtown East section
+
+#### Scenario: Standing at ILR
+- **WHEN** a person standing at 570 Lexington Avenue opens "Near you"
+- **THEN** the map opens on Midtown East, and the ways on lead to the Upper East Side and to Midtown
 
 ### Requirement: The way on is a station sign
 Where the section a way leads to has a stop, the way on at the edge of the map SHALL be drawn as a station sign: a dark plate with a white rule, the bullets of the lines that stop there in their colours, the stop's name, and how many events are on there. Pressing it SHALL open that section. A section with no stop SHALL show the way on as it does today.

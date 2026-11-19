@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bounds, held, hops, landOf, middle, nearestCampus, reach, sectionAt, walkMinutes, wayOn, type Point } from '@/lib/campus/sections';
+import { bounds, held, hops, landOf, LINE, middle, nearestCampus, reach, sectionAt, walkMinutes, wayOn, type Point } from '@/lib/campus/sections';
 
 const land = landOf('cornell')!;
 const sec = (id: string) => land.find(each => each.id === id)!;
@@ -86,7 +86,7 @@ describe('New York: one stop is one section', () => {
   const TECH: Point = [-73.9566, 40.7558], LIGHTHOUSE: Point = [-73.9402, 40.7727], MOTORGATE: Point = [-73.94687, 40.76489];
 
   it('has the island and one stop each way, each resting inside itself and touching both ways', () => {
-    expect(city.map(each => each.id)).toEqual(['roosevelt', 'lex63', 'queensbridge']);
+    expect(city.map(each => each.id)).toEqual(['roosevelt', 'lex63', 'queensbridge', 'lex53', 'grandcentral']);
     for (const each of city) {
       expect(sectionAt(city, each.rest)?.id).toBe(each.id);
       for (const id of each.next) expect(at(id).next).toContain(each.id);
@@ -98,7 +98,9 @@ describe('New York: one stop is one section', () => {
   });
 
   it('every section carries its stop and lines, and no corner of one lies inside another', () => {
-    expect(city.map(each => [each.stop?.name, each.stop?.lines.join('')])).toEqual([['Roosevelt Island', 'FM'], ['Lexington Av/63 St', 'FMQ'], ['21 St–Queensbridge', 'FM']]);
+    expect(city.map(each => [each.stop?.name, each.stop?.lines.join('')])).toEqual([['Roosevelt Island', 'FM'], ['Lexington Av/63 St', 'FMQ'], ['21 St–Queensbridge', 'FM'], ['Lexington Av/53 St', 'EFM6'], ['Grand Central–42 St', '4567']]);
+    // Every line on a sign has its colour.
+    for (const each of city) for (const line of each.stop!.lines) expect(LINE[line]?.fill).toMatch(/^#/);
     for (const a of city) for (const b of city) if (a !== b) for (const corner of a.ring) expect(sectionAt([b], corner)).toBeNull();
     expect(landOf('cornell')!.every(each => !each.stop)).toBe(true);
   });
@@ -108,6 +110,25 @@ describe('New York: one stop is one section', () => {
     expect(wayOn(city, 'roosevelt', 'roosevelt', [-.01, 0], on)).toMatchObject({ id: 'lex63', kind: 'go' });
     expect(wayOn(city, 'roosevelt', 'roosevelt', [.01, -.004], on)).toMatchObject({ id: 'queensbridge', kind: 'empty' });
     expect(wayOn(city, 'roosevelt', 'roosevelt', [0, .01], on)).toMatchObject({ id: null, kind: 'none' });
+  });
+
+  it('Manhattan runs on south: ILR is in Midtown East, the Cornell Club one stop further by Grand Central', () => {
+    const ILR: Point = [-73.9724543, 40.7570841], CLUB: Point = [-73.9793717, 40.7542822];
+    expect(sectionAt(city, ILR)?.id).toBe('lex53');
+    expect(sectionAt(city, CLUB)?.id).toBe('grandcentral');
+    expect([at('lex53').name, at('grandcentral').name]).toEqual(['Midtown East', 'Midtown']);
+    expect(at('lex63').next).toEqual(['roosevelt', 'lex53']);
+    expect(at('lex53').next).toEqual(['lex63', 'grandcentral']);
+    // From the island Midtown East is two steps and the Club three; standing at ILR, the Club is next door.
+    expect([hops(city, 'roosevelt', 'lex53'), hops(city, 'roosevelt', 'grandcentral')]).toEqual([2, 3]);
+    expect(reach(city, 'lex53', 'grandcentral')).toBe(true);
+    expect(reach(city, 'roosevelt', 'lex53')).toBe(false);
+    const on = { lex53: 1, grandcentral: 2, roosevelt: 4 };
+    // South-west along the avenues from the Upper East Side is Midtown East; east is the island.
+    expect(wayOn(city, 'lex63', 'lex63', [-.004, -.008], on)).toMatchObject({ id: 'lex53', kind: 'go' });
+    expect(wayOn(city, 'lex63', 'lex63', [.01, -.004], on)).toMatchObject({ id: 'roosevelt', kind: 'go' });
+    expect(wayOn(city, 'lex53', 'lex53', [-.004, -.008], on)).toMatchObject({ id: 'grandcentral', kind: 'go' });
+    expect(wayOn(city, 'lex53', 'lex53', [.004, .008], on)).toMatchObject({ id: 'lex63', kind: 'empty' });
   });
 });
 

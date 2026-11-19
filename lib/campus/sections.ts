@@ -17,7 +17,8 @@ export type Section = {
 };
 export type Stop = { name: string; lines: string[] };
 /** The colour of each line's bullet, as on the subway map, and whether its letter is printed dark. */
-export const LINE: Record<string, { fill: string; dark?: boolean }> = { F: { fill: '#ff6319' }, M: { fill: '#ff6319' }, Q: { fill: '#fccc0a', dark: true } };
+export const LINE: Record<string, { fill: string; dark?: boolean }> = { F: { fill: '#ff6319' }, M: { fill: '#ff6319' }, Q: { fill: '#fccc0a', dark: true },
+  E: { fill: '#0039a6' }, 4: { fill: '#00933c' }, 5: { fill: '#00933c' }, 6: { fill: '#00933c' }, 7: { fill: '#b933ad' } };
 
 const section = (corners: Record<string, Point>) => (id: string, name: string, ring: string, rest: Point, next: string[], stop?: Stop): Section => ({ id, name, ring: [...ring].map(key => corners[key]), rest, next, ...(stop ? { stop } : {}) });
 
@@ -33,13 +34,20 @@ const island = section({ a: [-73.9622, 40.7492], b: [-73.9570, 40.7500], c: [-73
   // Lexington Av/63 St: Park Avenue to the river, 59th to 68th Street.
   i: [-73.9697, 40.7630], j: [-73.9655, 40.7688], k: [-73.9562, 40.7648], l: [-73.9603, 40.7592],
   // 21 St-Queensbridge: the river to 24th Street, 38th Avenue down to Queens Plaza.
-  m: [-73.9462, 40.7572], n: [-73.9392, 40.7598], o: [-73.9362, 40.7528], p: [-73.9448, 40.7506] });
+  m: [-73.9462, 40.7572], n: [-73.9392, 40.7598], o: [-73.9362, 40.7528], p: [-73.9448, 40.7506],
+  // Lexington Av/53 St: just west of Fifth Avenue to Second Avenue, 47th to 58th Street. Cornell's ILR School is here, at 570 Lexington.
+  u: [-73.9746, 40.7640], v: [-73.9653, 40.7601], w: [-73.9702, 40.7533], x: [-73.9795, 40.7572],
+  // Grand Central-42 St: the same avenues, 40th to 47th Street. The Cornell Club is here, on 44th.
+  q: [-73.9797, 40.7569], r: [-73.9704, 40.7530], s: [-73.9737, 40.7485], t: [-73.9830, 40.7524] });
 
 const LANDS: Record<string, Section[]> = {
   'cornell-tech': [
     island('roosevelt', 'Roosevelt Island', 'abcdefgh', [-73.9552, 40.7562], ['lex63', 'queensbridge'], { name: 'Roosevelt Island', lines: ['F', 'M'] }),
-    island('lex63', 'Upper East Side', 'ijkl', [-73.9665, 40.7647], ['roosevelt'], { name: 'Lexington Av/63 St', lines: ['F', 'M', 'Q'] }),
+    island('lex63', 'Upper East Side', 'ijkl', [-73.9665, 40.7647], ['roosevelt', 'lex53'], { name: 'Lexington Av/63 St', lines: ['F', 'M', 'Q'] }),
     island('queensbridge', 'Long Island City', 'mnop', [-73.9426, 40.7540], ['roosevelt'], { name: '21 St–Queensbridge', lines: ['F', 'M'] }),
+    // Manhattan runs on south from the Upper East Side, a stop at a time: where Cornell people in the city go and host.
+    island('lex53', 'Midtown East', 'uvwx', [-73.9706, 40.7582], ['lex63', 'grandcentral'], { name: 'Lexington Av/53 St', lines: ['E', 'F', 'M', '6'] }),
+    island('grandcentral', 'Midtown', 'qrst', [-73.9768, 40.7518], ['lex53'], { name: 'Grand Central–42 St', lines: ['4', '5', '6', '7'] }),
   ],
   cornell: [
     ithaca('downtown', 'Downtown', 'abcde', [-76.4968, 42.4418], ['collegetown', 'west']),
