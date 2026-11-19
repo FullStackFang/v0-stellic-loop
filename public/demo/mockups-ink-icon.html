@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ink icon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* The Ink icon. Round 1 here tried six different icons (blot, nib, bottle, drop, letter); the founder said the blot is
+   fine but wants it to say "plus" or "premium". So: the blot as the app draws it (lib/campus/ink-blot.ts), and five ways
+   to mark it. Each is shown everywhere the app puts the mark: the tab in the bar
+   (resting, and as the page you are on), the row in the account card, and the badge on an animal that needs Ink.
+   Kit tokens of app/c/campus.css. The dark strip and the lettered tabs belong to the mockup. */
+:root { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245);
+  --r: 22px 22px 22px 6px; --expo: cubic-bezier(.16, 1, .3, 1); }
+:root[data-kit=loop] { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); }
+:root[data-kit=cuny] { --field: oklch(88% 0.13 88); --field-shadow: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --action: oklch(38% 0.18 264); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
+button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } a { color: inherit; text-decoration: none; } img { display: block; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+.mock { display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button { height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 44px 28px; padding: 38px 32px 56px; }
+.opt { position: relative; border-radius: var(--r); background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); }
+.tag { position: absolute; left: 18px; top: -17px; z-index: 6; display: flex; align-items: center; height: 34px; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 14px; white-space: nowrap; box-shadow: 3px 3px 0 var(--field-shadow); }
+.tag b { display: grid; place-items: center; align-self: stretch; padding: 0 12px 0 14px; border-radius: 99px 0 0 99px; background: var(--field); color: var(--ink); font-weight: 760; box-shadow: inset 0 0 0 1.5px var(--ink); } .tag span { padding: 0 16px 0 11px; font-weight: 560; } .tag em { font-style: normal; font-weight: 720; }
+
+/* the icon: the school's ink spilled (f), the ink dropped in (a), and the thin band where it seeps out (s) */
+.mk { flex: none; width: 1.3em; height: 1.3em; overflow: visible; } .mk .f { fill: var(--field); } .mk .a { fill: var(--action); } .mk .s { fill: var(--action); opacity: .42; }
+
+/* the bar: the Ink tab as it rests, and as the page you are on */
+.nav { display: flex; align-items: center; gap: 6px; padding: 32px 18px 14px; border-radius: 22px 22px 0 0; background: var(--field); border: 1.5px solid var(--ink); border-bottom: 2px dashed color-mix(in oklab, var(--ink) 55%, transparent); }
+.tab { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px; border-radius: 99px; font-size: 15px; font-weight: 580; white-space: nowrap; box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--ink) 45%, transparent); }
+.tab.plan { background: var(--paper); font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); transition: translate .15s var(--expo), box-shadow .15s var(--expo); } .tab.plan:hover { translate: -1px -2px; box-shadow: inset 0 0 0 1.5px var(--ink), 4px 5px 0 var(--ink); }
+.tab.plan.on { margin-left: auto; background: var(--ink); color: var(--field); box-shadow: none; translate: none; }
+.body { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 14px 18px; padding: 20px 20px 24px; align-items: center; }
+.large { grid-row: span 2; display: grid; place-items: center; aspect-ratio: 1; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--field-shadow); } .large .mk { width: 78px; height: 78px; }
+.inkrow { display: flex; align-items: center; gap: 11px; padding: 10px 12px 10px 14px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.inkrow > .mk { font-size: 22px; } .inkrow > span { display: grid; margin-right: auto; min-width: 0; line-height: 1.25; } .inkrow b { font-size: 15.5px; font-weight: 720; letter-spacing: -0.02em; } .inkrow small { font-size: 13px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn { flex: none; display: inline-flex; align-items: center; height: 30px; padding: 0 13px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.pets { display: flex; align-items: center; gap: 16px; padding-left: 4px; }
+.pet { position: relative; flex: none; width: 46px; height: 46px; border-radius: 50%; background: color-mix(in oklch, var(--ink) 10%, var(--paper)); } .pet img { width: 100%; height: 100%; object-fit: contain; }
+.pet > .mk { position: absolute; right: -4px; bottom: -4px; width: 19px; height: 19px; padding: 2px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink); }
+
+@media (max-width: 1180px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); padding-inline: 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="mock"><span><b>The Ink icon.</b> The blot stays. Five ways to make it say "premium", each in the bar, the account card and the picker.</span>
+  <div id="kits"><small>School</small><button data-kit="cornell" aria-pressed="true">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button><button data-kit="cuny">CUNY</button><button data-kit="loop">Loop</button></div></div>
+
+<main class="grid" id="grid"></main>
+
+<script>
+// The blot, as the app draws it (lib/campus/ink-blot.ts), with the seed the app's mark uses.
+const TURN = Math.PI * 2, STEPS = 96, fix = n => Math.round(n * 10) / 10;
+const hash = text => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+const run = seed => () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const out = (angle, far) => [Math.cos(angle) * far, Math.sin(angle) * far];
+function pool(next, r) {
+  const spin = next() * TURN, ran = next() * TURN, rounds = [[0, 0, r]];
+  for (let i = 0; i < 6; i++) rounds.push([...out(spin + (i + (next() - .5) * .4) / 6 * TURN, r - 20 + next() * 4), 22 + next() * 4]);
+  rounds.push([...out(ran, r + 1), 11], [...out(ran, r + 10), 6]);
+  return { rounds, ran };
+}
+const sway = (waves, angle) => waves.reduce((sum, [times, size, shift]) => sum + Math.sin(angle * times + shift) * size, 0);
+const drawn = reach => 'M' + reach.map((far, at) => out(at / STEPS * TURN, far).map(fix).join(' ')).join('L') + 'Z';
+function edge(rounds, next) {
+  let reach = Array.from({ length: STEPS }, (_, at) => { const angle = at / STEPS * TURN; let far = 0;
+    for (const [x, y, r] of rounds) { const from = Math.hypot(x, y), off = angle - Math.atan2(y, x), under = r * r - (from * Math.sin(off)) ** 2; if (under >= 0) far = Math.max(far, from * Math.cos(off) + Math.sqrt(under)); }
+    return far; });
+  for (let pass = 0; pass < 2; pass++) reach = reach.map((far, at) => (reach[(at + STEPS - 1) % STEPS] + far * 2 + reach[(at + 1) % STEPS]) / 4);
+  const waves = [[2, 2], [3, 1.6], [5, 1.1], [13, .5], [29, .3]].map(([times, size]) => [times, size, next() * TURN]);
+  return reach.map((far, at) => far + sway(waves, at / STEPS * TURN));
+}
+function crept(reach, next) { const waves = [[4, 1.3], [9, .9], [17, .5]].map(([times, size]) => [times, size, next() * TURN]); return reach.map((far, at) => far + 3.4 + sway(waves, at / STEPS * TURN)); }
+const thrown = (next, toward, from, count) => Array.from({ length: count }, () => { const [x, y] = out(toward + (next() - .5) * 1.2, from + 2 + next() * 22); return `<circle cx="${fix(x)}" cy="${fix(y)}" r="${fix(2 + next() * next() * 2.8)}"/>`; }).join('');
+function blot(seed) {
+  const next = run(hash(seed)), wide = pool(next, 55), middle = pool(next, 41);
+  const made = { schoolDrops: thrown(next, wide.ran + 2.5 + next() * 1.5, 68, 3), darkDrops: thrown(next, middle.ran + 2.2 + next() * 1.8, 58, 5), school: drawn(edge(wide.rounds, next)) }, dark = edge(middle.rounds, next);
+  return { ...made, dark: drawn(dark), seep: drawn(crept(dark, next)) };
+}
+const B = blot('Loop Ink');
+// Shapes to cut out of the dark ink, or to set beside the blot. All are drawn round 0,0 and moved where they go.
+const SPARK = size => `M0 ${-size}Q${size * .13} ${-size * .13} ${size} 0Q${size * .13} ${size * .13} 0 ${size}Q${-size * .13} ${size * .13} ${-size} 0Q${-size * .13} ${-size * .13} 0 ${-size}Z`;
+const PLUS = (size, wide) => { const h = wide / 2, a = size - h; return `M${-h} ${-size}h${wide}v${a}h${a}v${wide}h${-a}v${a}h${-wide}v${-a}h${-a}v${-wide}h${a}Z`; };
+const STAR = size => 'M' + Array.from({ length: 10 }, (_, at) => out(at / 10 * TURN - TURN / 4, at % 2 ? size * .42 : size).map(fix).join(' ')).join('L') + 'Z';
+const at = (x, y, d, cls = 'a') => `<path class="${cls}" transform="translate(${x} ${y})" d="${d}"/>`;
+/** The blot, with a shape cut out of the dark ink so the school's ink shows through it, and anything set beside it. */
+const mark = (cut = '', beside = '') => `<svg class="mk" viewBox="-68 -68 136 136" fill-rule="evenodd"><g class="f"><path d="${B.school}"/>${B.schoolDrops}</g><path class="s" d="${B.seep}${cut}"/><g class="a"><path d="${B.dark}${cut}"/>${B.darkDrops}</g>${beside}</svg>`;
+
+const ICONS = [
+  ['Blot', 'what the app has now', mark()],
+  ['Spark inside', 'a spark cut out of the ink', mark(SPARK(27))],
+  ['Spark beside', 'the blot, with a spark off its corner', mark('', at(52, -50, SPARK(25)) + at(70, -14, SPARK(11)))],
+  ['Plus inside', 'a plus cut out of the ink', mark(PLUS(23, 11))],
+  ['Plus beside', 'the blot, with a plus off its corner', mark('', at(54, -48, PLUS(21, 10.5)))],
+  ['Star inside', 'a star cut out of the ink', mark(STAR(27))],
+];
+document.getElementById('grid').innerHTML = ICONS.map(([name, line, icon], at) => `<section class="opt"><div class="tag"><b>${'ABCDEF'[at]}</b><span><em>${name}</em> · ${line}</span></div>
+  <div class="nav"><span class="tab">This week</span><span class="tab">Near you</span><a class="tab plan" href="#">${icon}Ink</a><a class="tab plan on" href="#">${icon}Ink</a></div>
+  <div class="body"><div class="large">${icon}</div>
+    <div class="inkrow">${icon}<span><b>Loop Ink</b><small>More animals, and your own pet.</small></span><span class="btn">See it</span></div>
+    <div class="pets"><span class="pet"><img src="../animals/37.png" alt="">${icon}</span><span class="pet"><img src="../animals/30.png" alt="">${icon}</span><span class="btn">${icon}&nbsp;With Ink</span></div>
+  </div></section>`).join('');
+
+document.getElementById('kits').addEventListener('click', event => {
+  const pick = event.target.closest('button'); if (!pick) return;
+  document.documentElement.dataset.kit = pick.dataset.kit;
+  for (const each of pick.parentElement.querySelectorAll('button')) each.setAttribute('aria-pressed', String(each === pick));
+});
+</script>
+</body>
+</html>

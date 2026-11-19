@@ -196,12 +196,12 @@ it('names in the bar the top groups a person can open, and the one they are in',
   expect(screen.getByRole('link', { name: /Team 1/ })).toHaveAttribute('href', '/groups/emba-2027/in/team-1/team');
   expect(screen.getByRole('link', { name: /NBAE 6830/ })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByRole('link', { name: 'All groups' })).toHaveAttribute('href', '/groups');
-  // The Ink tab is in this bar too (openspec/changes/loop-ink-placements), and the avatar wears the mark only with Ink.
+  // The Ink tab is in this bar too (openspec/changes/loop-ink-placements), and the avatar sits on its blot only with Ink.
   expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('href', '/c/ink');
-  expect(screen.getByRole('button', { name: 'Your account and colours' }).querySelector('.cs-ink')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Your account and colours' }).querySelector('.cs-blot')).toBeNull();
   cleanup(); at.params = {}; at.path = '/groups';
   render(<Bar groups={mine} face={null} ink account={null} />);
-  expect(screen.getByRole('button', { name: 'Your account and colours. You have Ink' }).querySelector('.cs-ink')).not.toBeNull();
+  expect(screen.getByRole('button', { name: 'Your account and colours. You have Ink' }).querySelector('.cs-blot')).not.toBeNull();
   expect(screen.queryByRole('link', { name: /NBAE 6830/ })).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'All groups' })).toHaveAttribute('aria-current', 'page');
 });

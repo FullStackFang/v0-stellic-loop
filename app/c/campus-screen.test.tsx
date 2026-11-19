@@ -444,7 +444,7 @@ describe('Loop Ink', () => {
     expect(ticket.mine!.members.find(face => face.me)).toMatchObject({ ink: false });
     const marked = [...container.querySelectorAll('.cs-inked')];
     expect(marked.length).toBeGreaterThan(0);
-    for (const each of marked) { expect(each.querySelector('img')).toHaveAccessibleName('Ben, has Ink'); expect(each.querySelector('.cs-ink')).not.toBeNull(); }
+    for (const each of marked) { expect(each.querySelector('img')).toHaveAccessibleName('Ben, has Ink'); expect(each.querySelector('.cs-blot')).not.toBeNull(); }
     expect(screen.queryByRole('img', { name: 'Ben' })).toBeNull();
     expect(screen.getAllByRole('img', { name: 'Cy' })[0].closest('.cs-inked')).toBeNull();
     expect(container.querySelector('.cs-acct .cs-inked')).toBeNull();
