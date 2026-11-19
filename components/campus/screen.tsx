@@ -10,6 +10,7 @@ import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
 import { landOf, walkMinutes, type Point } from '@/lib/campus/sections';
+import type { SwapCampus } from './swap';
 import { Composer, type Soon } from './composer';
 import { Near } from './near';
 import { OwnFace } from './own-face';
@@ -60,9 +61,9 @@ function Seats({ seats }: { seats: Seat[] }) {
 }
 
 type Pane = 'more' | 'invite';
-export type ScreenProps = { screen: Screen; signInHref: string; openId?: string | null; signOut?: ReactNode };
+export type ScreenProps = { screen: Screen; signInHref: string; openId?: string | null; signOut?: ReactNode; /** The campuses of this school, when it has more than one. */ swap?: SwapCampus[] };
 
-export function CampusScreen({ screen, signInHref, openId = null, signOut = null }: ScreenProps) {
+export function CampusScreen({ screen, signInHref, openId = null, signOut = null, swap }: ScreenProps) {
   const { campus, viewer, tickets, earning, live } = screen;
   const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'all' | 'near'>('best');
   const [open, setOpen] = useState<{ id: string; pane: Pane; fresh: boolean } | null>(openId ? { id: openId, pane: 'more', fresh: false } : null);
@@ -237,7 +238,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
             {shelf}
           </div>
         </div>
-        <Near beside land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} />
+        <Near beside swap={swap} land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} />
       </div>
     </section></main>
   </div>;
@@ -253,7 +254,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
         <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       {near ? <>{postSheet && <div className="cs-railwrap cs-near-post"><div className="cs-rail">{postSheet}</div></div>}
-        <Near land={land} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo }} asked={meant(typed).length ? typed.trim() : ''} picked={opened?.id ?? null} onPick={id => { setCopied(false); setPosting(false); setOpen(id ? { id, pane: 'more', fresh: true } : null); }}>
+        <Near swap={swap} land={land} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo }} asked={meant(typed).length ? typed.trim() : ''} picked={opened?.id ?? null} onPick={id => { setCopied(false); setPosting(false); setOpen(id ? { id, pane: 'more', fresh: true } : null); }}>
           {opened && <div className="cs-rail" ref={rail}>{card(opened, 0)}{sheet}</div>}</Near></>
       : <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
         {picked.nothing ? postSheet ? <div className="cs-railwrap"><div className="cs-rail">{nothing}{postSheet}</div></div> : nothing
@@ -296,7 +297,11 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
     return () => { document.removeEventListener('click', away); document.removeEventListener('keydown', key); };
   }, [open]);
   /** Another animal, never the one you have: the front door's seat, kept. */
-  const shuffle = () => { const pool = viewer.picks.core.flatMap(tile => tile.face === null || tile.face === face ? [] : [tile.face]); if (pool.length) choose(pool[Math.floor(Math.random() * pool.length)]); };
+  // Shuffle gives any animal the person may use: the premium ones too, once they subscribed.
+  const shuffle = () => {
+    const pool = [...viewer.picks.core, ...(asked || viewer.admin ? viewer.picks.premium : [])].filter(tile => tile.face === null ? !(face === CUSTOM && own === tile.src) : tile.face !== face), next = pool[Math.floor(Math.random() * pool.length)];
+    if (next) { if (next.face === null) chooseOwn(next.src); else choose(next.face); }
+  };
   /** One animal of the picker. A premium one opens the plan for someone who has not subscribed. */
   // The picker is one grid. `find` narrows it by name, `gold` to the premium ones, which wear a gold ring wherever they are.
   const [find, setFind] = useState(''), [gold, setGold] = useState(false);
@@ -312,7 +317,7 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
-      {picking && making ? <OwnFace asked={asked} left={left} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
+      {picking && making ? <OwnFace asked={asked} left={left} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
       : picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Search animals" placeholder="Search" />
           <button className="cs-btn sm gold" aria-pressed={gold} onClick={() => setGold(!gold)}>Premium</button>
           <button className="cs-btn sm" onClick={shuffle}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.6c1.3 0 2.4.7 3 1.8l1.8 3.4c.6 1.1 1.7 1.8 3 1.8h2.6M12.5 9.5l2 2-2 2M1.5 11.5h2.6c.8 0 1.6-.3 2.1-.8M9.8 5.3c.5-.5 1.3-.8 2.1-.8h2.6M12.5 2.5l2 2-2 2" /></svg>Shuffle</button>

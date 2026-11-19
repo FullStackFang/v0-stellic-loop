@@ -8,7 +8,7 @@ import { readLine } from '@/lib/campus/line';
 import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
 import { customFace } from '@/lib/campus/animals';
-import { freeCode, makeCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
+import { freeCode, keepPicture, makeCustomFace, retryCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
 import { pickFace } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
@@ -81,6 +81,25 @@ export async function faceAction(face: number): Promise<ActResult> {
 /** A person picks one of the animals they had made, by its address. */
 export async function ownFaceAction(own: string): Promise<ActResult> {
   return act(async viewer => { await useCustomFace(db(), viewer.personId, String(own).split('/').pop() ?? '', viewer.admin); });
+}
+
+export type AgainFace = { ok: true; own: string } | { ok: false; message: string; signIn?: boolean };
+/** "Draw again" on a just-made animal: the same photo once more, with what should change. Takes about 20 seconds. */
+export async function againFaceAction(data: FormData): Promise<AgainFace> {
+  const viewer = await campusViewer();
+  if (!viewer) return { ok: false, signIn: true, message: 'Sign in to continue.' };
+  const photo = data.get('photo');
+  if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
+  try {
+    return { ok: true, own: customFace(await retryCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), String(data.get('first')).split('/').pop() ?? '', data.getAll('change').map(String))) };
+  } catch (error) {
+    return { ok: false, message: error instanceof CampusError ? error.message : 'That did not go through. Try again.' };
+  }
+}
+
+/** "Keep this one": of the two drawings, the one the person keeps, by its address. */
+export async function keepFaceAction(keep: string): Promise<ActResult> {
+  return act(async viewer => { await keepPicture(db(), viewer.personId, String(keep).split('/').pop() ?? ''); });
 }
 
 /** "Subscribe" to Loop Premium in the account card. Nothing is charged; the ask and its email are kept. */

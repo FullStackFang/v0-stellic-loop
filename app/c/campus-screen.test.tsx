@@ -16,7 +16,7 @@ import { checkIn, imIn, joinByToken, outingByToken } from '@/lib/campus/outings'
 import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
-import { checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
+import { againFaceAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
 import PostPlanPage from './[campus]/post/page';
 import CampusAdminPage from './admin/page';
@@ -204,6 +204,24 @@ describe('who sees whom', () => {
       expect(served.headers.get('content-type')).toBe('image/png');
       const meta = await sharp(Buffer.from(await served.arrayBuffer())).metadata(), figure = await sharp(Buffer.from((await customFaceImage(t.db, row.token))!)).trim().toBuffer({ resolveWithObject: true });
       expect([meta.width, meta.height, figure.info.width]).toEqual([192, 192, 168]);
+      // One more try: say what should change, see the two side by side, keep one. The other is let go, and that was the one try.
+      fireEvent.click(card.getByRole('button', { name: 'Try once more' }));
+      expect(card.getByText('What should change?')).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
+      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+      expect(await card.findByText('Pick your favorite.', {}, { timeout: 5000 })).toBeInTheDocument();
+      expect(models.asked[1].text).toContain('ears and pose. Make the fur fluffier. Only the animal');
+      const tries = async () => (await t.db.query<{ first: boolean; gone: boolean }>('select token=$2 as first,let_go_at is not null as gone from campus_custom_picture where person_id=$1 order by made_at', [ana.personId, row.token])).rows;
+      expect(await tries()).toEqual([{ first: true, gone: false }, { first: false, gone: true }]);
+      expect(card.getByRole('button', { name: 'Second drawing' })).toHaveAttribute('aria-pressed', 'true');
+      fireEvent.click(card.getByRole('button', { name: 'First drawing' }));
+      fireEvent.click(card.getByRole('button', { name: 'Keep this one' }));
+      expect(await card.findByText('Say hi to your new picture.')).toBeInTheDocument();
+      expect(card.queryByRole('button', { name: 'Try once more' })).toBeNull();
+      expect(await tries()).toEqual([{ first: true, gone: false }, { first: false, gone: true }]);
+      expect((await t.db.query('select makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ makes: 1 }]);
+      const more = new FormData(); more.set('photo', photo); more.set('first', own);
+      expect(await againFaceAction(more)).toEqual({ ok: false, message: 'You have already tried once more.' });
       // From then on it is a pick like any other, their account says Premium, and the one free animal is all there is to make.
       fireEvent.click(card.getByRole('button', { name: 'Done' }));
       expect(card.getByRole('button', { name: 'Your own animal' })).toHaveAttribute('aria-pressed', 'true');

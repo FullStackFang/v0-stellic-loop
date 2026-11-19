@@ -4,7 +4,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { z } from 'zod';
 import type { Db, Q } from '../db';
-import { CUSTOM, NAMES } from './animals';
+import { CHANGES, CUSTOM, NAMES } from './animals';
 import { NEEDS_PREMIUM, subscribed } from './animal-tiers';
 import { CampusError } from './errors';
 
@@ -16,10 +16,13 @@ export const MAKES = 1;
 const ALL = 'You have made your free animal. Making more is not set up yet.';
 /** Makes a made picture the person's face. Which one is kept on the face itself, so it may be one they did not make. */
 const USE = 'insert into campus_face(person_id,face,picture) values($1,$2,$3) on conflict(person_id) do update set face=excluded.face,picture=excluded.picture,picked_at=now()';
+const ONCE = 'You have already tried once more.';
+/** The short line each asked change adds to the drawing's words. */
+const ASKS: Record<(typeof CHANGES)[number], string> = { Fluffier: 'Make the fur fluffier.', 'Bigger eyes': 'Make the eyes bigger.', 'Different pose': 'Put it in a different pose.', 'Truer colors': "Match the photo's colours more closely." };
 const NOT_NOW = 'That could not be drawn just now. Try again in a minute.';
 
 /** Draws the figure from an uploaded photo: a 192px PNG on a transparent ground. Refuses a photo with no animal in it. */
-export type Draw = (upload: Uint8Array) => Promise<Uint8Array>;
+export type Draw = (upload: Uint8Array, changes?: readonly (typeof CHANGES)[number][]) => Promise<Uint8Array>;
 
 const seen = z.object({ animal: z.boolean(), nearest: z.number().int().min(1).max(NAMES.length) });
 /** Whether the photo shows an animal, and which of the set's it is nearest to. */
@@ -42,7 +45,7 @@ async function frame(drawn: Uint8Array): Promise<Buffer> {
 }
 
 /** The real thing: one look at the photo, then one picture, modelled on the nearest of the set. About 20 seconds. */
-export const drawFace: Draw = async upload => {
+export const drawFace: Draw = async (upload, changes = []) => {
   let photo: Buffer;
   try { photo = await sharp(upload).rotate().resize(1024, 1024, { fit: 'inside' }).flatten({ background: '#fff' }).png().toBuffer(); }
   catch { throw new CampusError('That file is not a photo Loop can read. Try a JPEG or a PNG.'); }
@@ -53,7 +56,7 @@ export const drawFace: Draw = async upload => {
     const like = await sharp(path.join(process.cwd(), 'public', 'animals', `${String(nearest).padStart(2, '0')}.png`)).resize(512, 512).flatten({ background: '#fff' }).png().toBuffer();
     const { image } = await generateImage({
       model: 'openai/gpt-image-2.6-flare', size: '1024x1024', maxRetries: 1, abortSignal: AbortSignal.timeout(120000),
-      prompt: { images: [like, photo], text: "Turn the animal in the second picture into a toy figure in exactly the style of the first picture. Keep the animal's own colours, markings, ears and pose. Only the animal: leave out anything else in the photo. Transparent background, no shadow." },
+      prompt: { images: [like, photo], text: `Turn the animal in the second picture into a toy figure in exactly the style of the first picture. Keep the animal's own colours, markings${changes.includes('Different pose') ? ' and ears' : ', ears and pose'}. ${changes.map(one => `${ASKS[one]} `).join('')}Only the animal: leave out anything else in the photo. Transparent background, no shadow.` },
       providerOptions: { openai: { background: 'transparent', output_format: 'png' } },
     });
     return await frame(image.uint8Array);
@@ -73,7 +76,7 @@ export type CustomFace = { token: string | null; all: string[]; left: number; as
 export async function customFaces(q: Q, personIds: readonly string[]): Promise<Map<string, CustomFace>> {
   if (!personIds.length) return new Map();
   const { rows } = await q.query<{ id: string; token: string | null; every: string[]; makes: number | null }>(`select i.id,(select p.token::text from campus_custom_picture p where p.token=coalesce(c.picture,f.token)) as token,
-    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=i.id),'{}'::text[]) as every,f.makes
+    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=i.id and p.let_go_at is null),'{}'::text[]) as every,f.makes
     from unnest($1::uuid[]) as i(id) left join campus_custom_face f on f.person_id=i.id left join campus_face c on c.person_id=i.id`, [personIds]);
   return new Map(rows.map(row => [row.id, { token: row.token, all: row.every, left: Math.max(0, MAKES - (row.makes ?? 0)), asked: row.makes !== null }]));
 }
@@ -101,6 +104,33 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
   });
 }
 
+/**
+ * "Try once more": the same photo drawn a second time, with what the person asked to be different. It does not count
+ * as another animal made. The second drawing starts let go, so it is nobody's picture until it is kept (keepPicture).
+ * One per first drawing. Returns the second one's token.
+ */
+export async function retryCustomFace(db: Db, personId: string, upload: Uint8Array, first: string, changes: readonly string[], draw: Draw = drawFace): Promise<string> {
+  const { rows: [row] } = z.uuid().safeParse(first).success ? await db.query<{ tried: boolean }>('select (p.retry_of is not null or exists(select 1 from campus_custom_picture r where r.retry_of=p.token)) as tried from campus_custom_picture p where p.token=$2 and p.person_id=$1 and p.let_go_at is null', [personId, first]) : { rows: [] };
+  if (!row) throw new CampusError('Pick one of the animals.');
+  if (row.tried) throw new CampusError(ONCE);
+  const image = await draw(upload, CHANGES.filter(one => changes.includes(one)));
+  // The unique index is what holds it to one, when two are asked for at once.
+  const { rows: [made] } = await db.query<{ token: string }>("insert into campus_custom_picture(person_id,image,retry_of,let_go_at) values($1,decode($2,'base64'),$3,now()) on conflict do nothing returning token::text as token", [personId, Buffer.from(image).toString('base64'), first]);
+  if (!made) throw new CampusError(ONCE);
+  return made.token;
+}
+
+/** Of a first drawing and its retry, the person keeps one: it is their face, and the other is let go. The admin still sees both. */
+export async function keepPicture(db: Db, personId: string, keep: string): Promise<void> {
+  if (!z.uuid().safeParse(keep).success) throw new CampusError('Pick one of the animals.');
+  await db.tx(async q => {
+    const { rows: [row] } = await q.query<{ other: string | null }>('select coalesce(p.retry_of,(select r.token from campus_custom_picture r where r.retry_of=p.token))::text as other from campus_custom_picture p where p.token=$2 and p.person_id=$1', [personId, keep]);
+    if (!row?.other) throw new CampusError('Pick one of the animals.');
+    await q.query('update campus_custom_picture set let_go_at=case when token=$2 then null else now() end where person_id=$1 and token in ($2,$3)', [personId, keep, row.other]);
+    await q.query(USE, [personId, CUSTOM, keep]);
+  });
+}
+
 /** "Subscribe" to Loop Premium. Nothing is charged: that they asked, and the email they gave, is kept. Asking twice changes nothing. */
 export async function subscribe(q: Q, personId: string, email: string): Promise<void> {
   const given = email.trim().toLowerCase();
@@ -125,7 +155,7 @@ export const freeCode = (code: unknown) => typeof code === 'string' && code.trim
 
 /** A person picks a made animal as their face: one of their own, a core one, or a premium one when they subscribed (`premium` is also true for the admin). */
 export async function useCustomFace(q: Q, personId: string, token: string, premium = false): Promise<void> {
-  const { rows: [row] } = z.uuid().safeParse(token).success ? await q.query<{ mine: boolean; tier: string | null }>('select person_id=$1 as mine,tier from campus_custom_picture where token=$2', [personId, token]) : { rows: [] };
+  const { rows: [row] } = z.uuid().safeParse(token).success ? await q.query<{ mine: boolean; tier: string | null }>('select (person_id=$1 and let_go_at is null) as mine,tier from campus_custom_picture where token=$2', [personId, token]) : { rows: [] };
   if (!row || !(row.mine || row.tier)) throw new CampusError('Pick one of the animals.');
   if (!row.mine && row.tier === 'premium' && !premium && !(await subscribed(q, personId))) throw new CampusError(NEEDS_PREMIUM);
   await q.query(USE, [personId, CUSTOM, token]);

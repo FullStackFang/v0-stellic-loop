@@ -51,9 +51,10 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
 .cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
 .cs-links { display: flex; gap: 2px; min-width: 0; }
-.cs-links a { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 99px; font-size: 14.5px; font-weight: 500; white-space: nowrap; }
-.cs-links a:hover { background: color-mix(in oklch, var(--cs-ink) 8%, transparent); }
-.cs-links a[aria-current] { background: var(--cs-ink); color: var(--cs-field); font-weight: 600; }
+/* Nothing clickable is bare text: a link that is not the current page is an outlined pill on paper, the current one is filled ink. */
+.cs-links { gap: 6px; } .cs-links a { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
+.cs-links a:not([aria-current]):hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-links a[aria-current] { background: var(--cs-ink); color: var(--cs-field); font-weight: 600; box-shadow: none; }
 .cs-links a:has(i) { padding: 6px 12px 6px 6px; }
 .cs-links i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; flex: none; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--cs-paper); background: linear-gradient(135deg, var(--cs-action), var(--cs-action-hover) 60%, var(--cs-action-deep)); }
 .cs-nav-end { margin-left: auto; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
@@ -273,6 +274,12 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 /* The made animal, and the photo while it is drawn, on the plate. 96px: the picture is a 192px file. */
 .cs-prem-made { display: grid; justify-items: center; gap: 12px; padding: 22px 0 26px; text-align: center; } .cs-prem-made img { width: 96px; height: 96px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--cs-on-ink) 12%, transparent); box-shadow: 0 0 0 3px var(--cs-field); }
 .cs-prem-made img.busy { object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } .cs-own .cs-prem-made p { color: var(--cs-on-ink-mute); } @media (prefers-reduced-motion: reduce) { .cs-prem-made img.busy { animation: none; } }
+/* One more try: a plain pill on the stub, chips for what should change, then the two drawings side by side. */
+.cs .cs-prem-stub > .cs-btn:not(.go) { background: var(--cs-paper); color: var(--cs-ink); } .cs-own .cs-prem-small { font-size: 13px; font-weight: 540; color: var(--cs-ink); text-align: center; }
+.cs-chips { display: flex; flex-wrap: wrap; gap: 8px; } .cs .cs-chips button { height: 36px; padding: 0 14px; border-radius: 99px; font-size: 14px; font-weight: 600; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs .cs-chips button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); }
+.cs-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px 0 24px; } .cs .cs-two button { display: grid; justify-items: center; gap: 10px; padding: 16px 8px 12px; border-radius: 18px; background: color-mix(in oklch, var(--cs-on-ink) 8%, transparent); color: var(--cs-on-ink); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-on-ink) 30%, transparent); }
+.cs-two img { width: 96px; height: 96px; object-fit: contain; } .cs-two span { height: 26px; padding: 0 12px; border-radius: 99px; font-size: 13px; font-weight: 650; line-height: 26px; box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-on-ink) 45%, transparent); }
+.cs .cs-two button[aria-pressed=true] { background: color-mix(in oklch, var(--cs-field) 16%, transparent); box-shadow: inset 0 0 0 3px var(--cs-field); } .cs-two button[aria-pressed=true] span { background: var(--cs-field); color: var(--cs-ink); box-shadow: none; }
 /* The photo box waits for a photo: a dashed edge and an upload mark. With one in, the edge is solid and the photo shows. */
 .cs .cs-prem-stub .cs-own-photo { justify-content: flex-start; gap: 14px; min-height: 84px; padding: 12px 16px; text-align: left; color: var(--cs-ink); background: var(--cs-paper); box-shadow: none; border: 2px dashed var(--cs-ink); transition: background .15s; } .cs .cs-prem-stub .cs-own-photo:hover { background: color-mix(in oklch, var(--cs-field) 30%, var(--cs-paper)); }
 .cs .cs-prem-stub .cs-own-photo.has { border-style: solid; } .cs-own-photo i { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--cs-ink); color: var(--cs-field); } .cs-own-photo i svg { width: 22px; height: 22px; }
@@ -441,6 +448,10 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-sheet.cs-post { flex-basis: min(780px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
 .cs-post-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; padding-top: 10px; }
 .cs-post .cs-line { align-content: start; } .cs-post .cs-line-card, .cs-post .cs-line-card:focus-within { padding: 0; border-radius: 0; background: none; box-shadow: none; }
+/* The line is plainly a box to type in: filled, outlined, and lit when the cursor is in it. With nothing for the second column the panel is only as wide as the line. */
+.cs-post .cs-say { overflow: hidden; padding: 12px 14px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); caret-color: var(--cs-action); transition: box-shadow .15s, background-color .15s; }
+.cs .cs-post .cs-say:focus-visible { outline: none; } .cs-post .cs-say:hover { background: var(--cs-paper); } .cs-post .cs-say:focus { background: var(--cs-paper); box-shadow: inset 0 0 0 2.5px var(--cs-action), 4px 4px 0 var(--cs-field-shadow); }
+.cs-sheet.cs-post:not(:has(.cs-post-side)) { flex-basis: min(460px, calc(100vw - 32px)); } .cs-post-cols:not(:has(.cs-post-side)) { grid-template-columns: minmax(0, 1fr); }
 .cs-post-side { display: grid; gap: 16px; align-content: start; padding-left: 18px; border-left: 1px dashed var(--cs-line); }
 .cs-facts a { text-decoration: underline; text-underline-offset: 3px; }
 .cs-form [role=alert] { font-size: 14px; font-weight: 580; color: var(--cs-action); }
@@ -586,6 +597,38 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-tick { position: absolute; top: 50%; translate: -50% -50%; display: grid; justify-items: center; line-height: 1; min-width: 52px; padding: 8px 8px 9px; border-radius: 3px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); white-space: nowrap; transition: scale .3s var(--cs-ease), rotate .3s var(--cs-ease), background-color .2s; }
 .cs-tick small { font-stretch: 88%; font-size: 10.5px; font-weight: 640; letter-spacing: .08em; text-transform: uppercase; } .cs-tick b { margin-top: 3px; font-size: 16.5px; font-weight: 760; letter-spacing: -0.02em; }
 .cs-tick.on { z-index: 1; scale: 1.16; rotate: -3deg; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+
+/* Looking at another campus (components/campus/swap.tsx; public/demo/mockups-campus-swap.html): a small luggage tag lying in the
+   corner of the map's head, clear of the map, and the one yellow thing up there. It swings in on its eyelet when the map
+   opens and tips under the pointer. The stub past the tear line is the action; it opens one ticket per campus. */
+.cs-swap { --hot: oklch(90% 0.17 98); position: absolute; z-index: 5; top: 15px; right: 20px; }
+.cs-swap svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.cs-near-band.swaps small { top: auto; bottom: 5px; right: 22px; font-size: 9px; } .cs-near-band.swaps p { padding-right: 220px; }
+.cs-tag { display: flex; height: 48px; text-align: left; line-height: 1.1; rotate: -2deg; transform-origin: 15px 50%; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(3px 4px 0 var(--cs-ink));
+  animation: cs-swing 1.5s cubic-bezier(.3, 0, .3, 1) .5s both; transition: rotate .5s var(--cs-expo), translate .15s, filter .15s; }
+.cs-tag:hover, .cs-tag[aria-expanded=true] { rotate: 1.5deg; } .cs-tag:active { translate: 2px 2px; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(1px 2px 0 var(--cs-ink)); }
+@keyframes cs-swing { from { rotate: 13deg; } 26% { rotate: -8deg; } 50% { rotate: 3deg; } 72% { rotate: -4deg; } 88% { rotate: -1deg; } to { rotate: -2deg; } }
+.cs-tag-face { --cham: polygon(15px 0, 100% 0, 100% 100%, 15px 100%, 0 70%, 0 30%); position: relative; isolation: isolate; display: grid; grid-template-columns: auto auto; align-items: center; gap: 0 8px; padding: 0 14px 0 34px; color: var(--cs-ink); background: var(--hot); clip-path: var(--cham);
+  mask: radial-gradient(circle 5px at 100% 0, #0000 96%, #000), radial-gradient(circle 5px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.cs-tag-face::before, .cs-tag-face::after { content: ''; position: absolute; z-index: -1; clip-path: var(--cham); } .cs-tag-face::before { inset: 4px 0 4px 4px; background: var(--cs-ink); } .cs-tag-face::after { inset: 5px 0 5px 5.2px; background: var(--hot); }
+.cs-tag-face i { position: absolute; left: 13px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: var(--pp, #f0e8d4); box-shadow: 0 0 0 1.2px var(--cs-ink), 0 0 0 3.2px var(--cs-paper), 0 0 0 4.4px var(--cs-ink); }
+.cs-tag-face svg { grid-row: span 2; width: 28px; height: 28px; } .cs-tag-face small { align-self: end; font-stretch: 88%; font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+.cs-tag-face b { align-self: start; font-stretch: 112%; font-size: 16.5px; font-weight: 820; letter-spacing: -0.04em; white-space: nowrap; }
+.cs-tag-stub { display: flex; align-items: center; gap: 5px; padding: 0 12px 0 11px; font-size: 12.5px; font-weight: 720; color: var(--cs-paper); background: var(--cs-action); border-left: 1.5px dashed var(--cs-ink); border-radius: 0 6px 6px 0; transition: background-color .15s;
+  mask: radial-gradient(circle 5px at 0 0, #0000 96%, #000), radial-gradient(circle 5px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.cs-tag:hover .cs-tag-stub { background: var(--cs-action-hover); } .cs-tag-stub svg { width: 15px; height: 15px; stroke-width: 2; transition: rotate .5s var(--cs-expo); } .cs-tag:hover .cs-tag-stub svg, .cs-tag[aria-expanded=true] .cs-tag-stub svg { rotate: 180deg; }
+.cs-swap-menu { position: absolute; top: calc(100% + 12px); right: 0; display: grid; gap: 14px; width: min(368px, calc(100vw - 40px)); padding: 16px 20px 18px 16px; border-radius: 22px 22px 22px 6px; color: var(--cs-ink); background: var(--pp, #f0e8d4); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-ink); animation: cs-swap-in .35s var(--cs-expo); }
+@keyframes cs-swap-in { from { opacity: 0; transform: translateY(-8px); } }
+.cs-swap-menu > small { font-size: 13px; color: var(--cs-mute); }
+.cs-tk { display: grid; grid-template-columns: 1fr 74px; text-align: left; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(4px 4px 0 var(--cs-ink)); transition: translate .15s; } a.cs-tk:hover { translate: -1px -2px; }
+.cs-tk > span { display: grid; align-content: center; background: var(--cs-paper); }
+.cs-tk-main { gap: 3px; padding: 15px 12px 16px 16px; border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.cs-tk-main small { font-stretch: 88%; font-size: 10.5px; font-weight: 680; letter-spacing: .1em; text-transform: uppercase; } .cs-tk-main b { font-stretch: 112%; font-size: 24px; font-weight: 820; letter-spacing: -0.045em; line-height: 1; } .cs-tk-main em { font-style: normal; font-size: 12.5px; line-height: 1.3; }
+.cs-tk > .cs-tk-stub { justify-items: center; gap: 4px; border-left: 1.5px dashed var(--cs-ink); border-radius: 0 5px 5px 0; color: var(--cs-paper); background: var(--cs-action); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.cs-tk[aria-current] > .cs-tk-stub { background: var(--cs-ink); } .cs-tk-stub svg { width: 32px; height: 32px; } .cs-tk-stub b { font-size: 12px; font-weight: 720; letter-spacing: .02em; }
+/* a phone has no room for the name beside the title: the tag is its engraving and its stub */
+@media (max-width: 860px) { .cs-swap { top: 10px; right: 12px; } .cs-tag { height: 42px; } .cs-tag-face { padding: 0 8px 0 30px; } .cs-tag-face small, .cs-tag-face b { display: none; } .cs-near-band.swaps p { padding-right: 150px; } }
+@media (prefers-reduced-motion: reduce) { .cs-tag { animation: none; } }
 
 /* A wide window (components/campus/screen.tsx, "wide"; public/demo/mockups-campus-desktop.html): the search line and the
    sources share one line across the page, the week is a column of tickets that scrolls by itself, and the map stays put
