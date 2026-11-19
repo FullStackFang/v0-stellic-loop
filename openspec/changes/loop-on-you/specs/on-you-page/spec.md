@@ -144,3 +144,22 @@ The campus screen's events SHALL render without waiting for the list to finish l
 #### Scenario: A slow read
 - **WHEN** the list takes longer to read than the week's events
 - **THEN** the events are shown first and the list fills in when ready
+
+### Requirement: A person can reach every group they belong to from the campus screen
+With the campus screen in front, the groups site SHALL open for a signed-in person who belongs to at least one group, and each group page SHALL show them what their role in that group allows. The campus screen SHALL name the groups the person is in, each linking to its page, and the outings on this week that they are going to, each linking to its ticket. A person who belongs to no group SHALL NOT be able to open the groups site.
+
+#### Scenario: A member of Team 1 who is not the admin
+- **WHEN** they open the "On you" panel
+- **THEN** "Your groups" lists Team 1, and following it opens Team 1's page
+
+#### Scenario: Going to an outing and in no group
+- **WHEN** a person who joined a running group posted on the campus week opens the panel
+- **THEN** "You are going" lists that outing with its day and time, and following it opens its ticket
+
+#### Scenario: In no group
+- **WHEN** a signed-in person who belongs to no group opens a group's address
+- **THEN** they are sent to the front door
+
+#### Scenario: A role that ended
+- **WHEN** a person whose only role was revoked opens a group's address
+- **THEN** they are sent to the front door

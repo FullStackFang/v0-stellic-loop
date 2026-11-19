@@ -22,7 +22,7 @@ The founder picked layout A ("By when") in conversation on 2026-11-18: one list 
 - Pulling tasks from email, WhatsApp or CampusGroups.
 - A view of one member's record across asks (who is habitually late). The asks spec forbids it and this change keeps that.
 - A new notification channel or new notification settings.
-- Reopening the whole groups site to members (see D12 for the part this change needs).
+- Opening the groups site to people who belong to no group. (It is opened to the members of a group: see D12, as changed 2026-11-19.)
 
 ## Decisions
 
@@ -70,6 +70,8 @@ Each button is a server action in the campus actions file, calling the existing 
 **D9. Wording for the new kind, everywhere an ask is shown.** "14 of 20 done", "Who has not done it", "6 still to do by Fri Nov 22", "Done" / "Not done after all", "You have done this" / "You have not done this". Places that switch on the kind, all of which need the new case: `app/a/[token]/page.tsx`, `app/a/actions.ts`, `app/groups/reach/answer/[token]/page.tsx`, `app/groups/reach-actions.ts`, `lib/emba/reach-link.ts`, `lib/emba/reach-send.ts`, `components/emba/ask-parts.tsx` (`yourAnswerText`, `AskRow`, `AskForm`), `lib/emba/team-format.ts` (kind words, "answered:" lines, how-to-answer lines), `lib/emba/team-card.ts` (the non-text path draws option picks), `lib/emba/team-mcp.ts`, and `scripts/emba-seed.ts`. The team and organize pages get it through `AskRow`.
 
 **D10. Look.** The campus screen's look, reusing its row, pill and button styles. No new visual language.
+
+**D12, changed by the founder 2026-11-19** ("I need to be able to see the groups that I am a part of ... all of that needs to be accessible"). With the campus screen in front, the groups site opens for the admin and for anyone who belongs to a group; a person in no group is still sent to the front door, and a signed-out visitor too. This replaces "admin only" (loop-campus-rewards D17) for `/groups` and `/e/*`; the older `/emba` pages stay the admin's. The check is one question (`inAGroup`, a live role in a group the person is a live member of) asked by `getPortalPrincipal`, which every groups page and action already goes through; what a member may see and do in a group is still decided by their role in that group. The proxy only turns away signed-out visitors, because membership needs the database. Where a person finds their groups: the campus top bar names their top-level groups (as it did for the admin), and the "On you" panel ends with "Your groups" (every group they are in, each a pill to its page) and "You are going" (the outings on this week they are in, each opening its ticket). The counter is therefore drawn for anyone in a group or going to something.
 
 **D4, as built (2026-11-19).** The counter is drawn for anyone who is in a group; it carries a number only when something waits, and a person in no group sees nothing. Work proposed for the person opens the panel by itself and sits first in it. "Ask a group" is a pill in the panel's head, shown to people who may post in a group; it is one line read like a posted plan (`readDue` in `lib/campus/line.ts`: the time it says, or the end of the day it names), with the group taken from an @tag or picked from pills. It offers three kinds: something to do, pick one, written answer. Dates and pick-several asks are still made from the assistant or the group's page. A finished row needs no measuring to leave: its space closes with a grid row going from 1fr to 0fr.
 

@@ -1,6 +1,7 @@
 import 'server-only';
 import { db } from '../db';
 import type { Principal } from '../emba/access';
+import { groupPath, ROOT_SLUG } from '../emba/group-path';
 import { onYou, type OnYouRow } from '../emba/team-waiting';
 
 // "On you" on the campus screen (openspec loop-on-you): what the person's groups need from them, shaped for drawing. One row
@@ -13,7 +14,10 @@ export type OnYouItem = { id: string; k: 'vote' | 'do' | 'show' | 'missed'; what
   act: { type: 'done'; number: number } | { type: 'pick'; number: number; options: { number: number; label: string }[] } | { type: 'open'; href: string; label: string } | { type: 'go'; event: string } | null };
 export type OnYouClaim = { id: string; scope: Scope; number: number; what: string; group: string; by: string; due: string | null };
 export type OnYouGroup = { tag: string; name: string; scope: Scope; timezone: string };
-export type OnYouView = { count: number; items: OnYouItem[]; /** How many more wait than are listed. */ more: number; claims: OnYouClaim[]; /** The groups the person may ask. */ groups: OnYouGroup[]; /** Whether the person is in any group at all. */ member: boolean };
+export type OnYouView = { count: number; items: OnYouItem[]; /** How many more wait than are listed. */ more: number; claims: OnYouClaim[]; /** The groups the person may ask. */ groups: OnYouGroup[];
+  /** Every group the person is in, each with its page. */ mine: { name: string; href: string }[] };
+/** "@club" is at /groups/club; "@club/vietnam" is the group inside it. */
+const hrefOf = (handle: string) => { const [namespace, slug] = handle.slice(1).split('/'); return groupPath(namespace, slug ?? ROOT_SLUG); };
 
 /** Buttons for a pick-one ask with a few short options; anything longer opens on the ask's own page. */
 const FEW = 4, SHORT = 60;
@@ -40,7 +44,7 @@ function item(row: OnYouRow, now: number): OnYouItem {
 export async function onYouView(principal: Principal, now = Date.now()): Promise<OnYouView | null> {
   const read = await onYou(db(), principal);
   if (!read.groups.length) return null;
-  return { count: read.count, items: read.rows.map(row => item(row, now)), more: read.more.reduce((sum, rest) => sum + rest.count, 0), member: true,
+  return { count: read.count, items: read.rows.map(row => item(row, now)), more: read.more.reduce((sum, rest) => sum + rest.count, 0), mine: read.groups.map(group => ({ name: group.team.name, href: hrefOf(group.team.handle) })),
     claims: read.claims.map(({ team, scope, record }) => ({ id: `${scope.loopId}:c:${record.number}`, scope, number: record.number, what: record.what ?? '', group: team.name, by: record.by.handle ?? 'A teammate', due: record.dueOn ?? null })),
     // "@club" is the tag "club"; "@club/vietnam" is "club-vietnam": a tag has no slash.
     groups: read.groups.filter(group => group.posts).map(group => ({ tag: group.team.handle.slice(1).replace('/', '-'), name: group.team.name, scope: group.scope, timezone: group.timezone })) };

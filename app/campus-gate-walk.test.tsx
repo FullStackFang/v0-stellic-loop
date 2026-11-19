@@ -5,13 +5,16 @@ import type { Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { leadsIntoGroups } from '@/proxy';
 
-// With LOOP_FRONT=campus the groups site is the admin's alone (openspec loop-campus-rewards, specs/admin-gate). This walks
-// every page and every action of the current site that leads into groups, as a signed-in person who is not the admin
-// and as a signed-out visitor, with a database that fails the test if it is touched: nobody gets as far as a group.
+// With LOOP_FRONT=campus the groups site opens for the admin and for the members of a group, and for nobody else (openspec
+// loop-campus-rewards, specs/admin-gate, as changed by loop-on-you, design D12). This walks every page and every action of
+// the current site that leads into groups, as a signed-in person who is not the admin and belongs to no group, and as a
+// signed-out visitor, with a database that fails the test if it is touched: nobody gets as far as a group.
 // The pages and action files are found on disk, so a page added later is walked too.
 
 const { database } = vi.hoisted(() => ({ database: vi.fn(() => { throw new Error('Unexpected database access'); }) }));
 vi.mock('@/lib/db', async original => ({ ...await original<typeof import('@/lib/db')>(), db: database }));
+// The signed-in visitor here belongs to no group. (That a member of a group does get in is tested with a real database, in app/a/share-page.test.tsx.)
+vi.mock('@/lib/emba/in-a-group', () => ({ inAGroup: async () => false }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
 afterEach(() => { vi.unstubAllEnvs(); database.mockClear(); });
 
@@ -38,7 +41,7 @@ async function open(page: (props: object) => unknown) {
     return { drawn: null, sent: digest };
   }
 }
-const visitors: [string, <T>(run: () => T) => T][] = [['a signed-in member who is not the admin', run => withPortalTestSession(member, run)], ['a signed-out visitor', run => run()]];
+const visitors: [string, <T>(run: () => T) => T][] = [['a signed-in person who is in no group and is not the admin', run => withPortalTestSession(member, run)], ['a signed-out visitor', run => run()]];
 
 it('finds the pages and actions of the groups site', () => {
   expect(pages.map(route)).toEqual(expect.arrayContaining(['/groups', '/groups/x', '/groups/x/in/x/team', '/groups/archive', '/groups/connections', '/emba', '/e/x']));

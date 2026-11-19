@@ -3,7 +3,9 @@ import { db } from '@/lib/db';
 import type { Principal } from '@/lib/emba/access';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { groupHandle, treeOrder } from '@/lib/emba/group-path';
-import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
+import { redirect } from 'next/navigation';
+import { getPortalPrincipal, getSignedInPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
+import { frontIsCampus } from '@/lib/campus/schools';
 import { PHOTO, animal, animalOf } from '@/lib/campus/animals';
 import { hasInk } from '@/lib/campus/ink';
 import { campusOf, pickedFaces } from '@/lib/campus/people';
@@ -33,6 +35,8 @@ const kitScript = (own: string) => `try{document.documentElement.dataset.kit=loc
 export default async function GroupsLayout({ children }: { children: React.ReactNode }) {
   const configured = clerkPortalConfigured();
   const principal = await getPortalPrincipal().catch(() => null);
+  // With the campus screen in front, a signed-in person who belongs to no group has nothing here: back to the front door.
+  if (!principal && frontIsCampus() && await getSignedInPrincipal().catch(() => null)) redirect('/');
   // Signed out there is no bar: the page itself carries the way in, in the look it always had.
   let content = <div className="lp">{configured && <SessionRefresh />}<main className="lp-main lp-main-out"><div className="lp-wrap">{children}</div></main></div>;
   if (principal) {

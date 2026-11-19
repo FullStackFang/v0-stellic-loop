@@ -8,7 +8,9 @@ const under = (path: string, base: string) => path === base || path.startsWith(`
 
 /**
  * The pages of the current site that lead into groups (openspec loop-campus-rewards, design D17). With LOOP_FRONT=campus
- * they open for the admin alone and send everyone else to `/`. Sign-in stays reachable, and so does the link in every
+ * they open for a signed-in person and send a signed-out visitor to `/`; whether that person is the admin or belongs
+ * to a group is decided where the page is rendered (lib/emba/portal-session.ts), because that needs the database. The
+ * older `/emba` pages stay the admin's alone. Sign-in stays reachable, and so does the link in every
  * email that stops the emails. An ask's own page and the answer link Loop emails are left to their pages (loop-on-you,
  * design D12): those open for the members of the ask's group and decide that themselves. Crons, the routes members' assistants connect through, the legal pages and /demo are
  * not on this list and are never gated.
@@ -56,7 +58,7 @@ export function proxy(req: NextRequest,event:NextFetchEvent) {
     return clerkMiddleware(async auth=>{
       if(!gated) return;
       const {userId}=await auth();
-      if(!userId||!await adminAccount(userId)) return toFront();
+      if(!userId||(under(path,'/emba')&&!await adminAccount(userId))) return toFront();
     },{signInUrl:isCampus(path)||front?'/sign-in':'/groups/sign-in'})(req,event);
   }
   const res = NextResponse.next();

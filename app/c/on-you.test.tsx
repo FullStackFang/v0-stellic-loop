@@ -77,6 +77,8 @@ it('draws nothing for a signed-out visitor or a person in no group, and for a me
   for (const row of rows) expect(row.querySelector('.cs-oy-grp')!.textContent).toBe('Hiking club');
   expect(rows[0].querySelector('time')!.textContent).toMatch(/^Closes \w{3} \d/);
   expect(rows[2].querySelector('time')!.textContent).toMatch(/^Due \w{3} \d/);
+  // The person's groups are named, each a link to its page.
+  expect(within(within(panel).getByRole('navigation', { name: 'Your groups' })).getByRole('link', { name: 'Hiking club' })).toHaveAttribute('href', '/groups/hiking-club');
   // A short pick-one ask is answered where it is; a written answer opens on the ask's own page.
   expect(within(rows[0]).getAllByRole('button').map(button => button.textContent)).toEqual(['Gorge', 'Ridge']);
   expect(within(rows[3]).getByRole('link', { name: 'Write an answer' }).getAttribute('href')).toMatch(/^\/a\/[\w-]+$/);
@@ -179,3 +181,13 @@ it('lets a member ask a group in one line, choosing among their groups, and offe
   await show(f.ana);
   expect(screen.queryByRole('button', { name: 'Ask a group' })).not.toBeInTheDocument();
 }, 60000);
+
+it('shows a person in no group what they are going to this week, and nothing to someone with neither', async () => {
+  const f = await fixture();
+  session.who = f.outsider;
+  expect(await withPortalTestSession(f.outsider, () => OnYou({ going: [] }))).toBeNull();
+  render((await withPortalTestSession(f.outsider, () => OnYou({ going: [{ id: 'l1', title: 'Sunrise run', when: 'Fri 6:30am', href: '/o/abc' }] })))!);
+  fireEvent.click(screen.getByRole('button', { name: /^On you/ }));
+  expect(screen.getByRole('link', { name: /Sunrise run/ })).toHaveAttribute('href', '/o/abc');
+  expect(screen.queryByRole('button', { name: 'Ask a group' })).not.toBeInTheDocument();
+});

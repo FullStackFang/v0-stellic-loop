@@ -41,6 +41,8 @@
 - [x] 6.4 Starting an ask from the campus screen: failing tests first (a non-admin organizer posts a to-do; a viewer with two groups chooses one; a follower is not offered it; refusals are worded), then the control and form (reusing `AskForm`'s fields) with a campus action calling `createAsk` with the campus viewer's principal, placed as picked in 1.2
 - [x] 6.5 Test that a non-admin owner or organizer sees the missing list, reminder, extend and close on their group's ask page with `LOOP_FRONT` unset
 
+- [x] 6.7 Scope change (founder, 2026-11-19): open the groups site to the members of a group (`inAGroup` in `getPortalPrincipal`, proxy, groups layout), name the person's groups in the campus top bar, and list "Your groups" and "You are going" in the panel; gate tests updated, member and non-member tested
+
 ## 7. Verify
 
 - [x] 7.1 `tsc --noEmit` and the full vitest suite with `--maxWorkers=3`, stderr captured to a file

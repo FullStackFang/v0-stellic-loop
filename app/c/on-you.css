@@ -52,3 +52,10 @@
 .cs-oy-ask .cs-oy-act { padding-top: 0; }
 
 @media (prefers-reduced-motion: reduce) { .cs-oy-n, .cs-oy-drop, .cs-oy-hand, .cs-oy-said { animation: none; } .cs-oy-row, .cs-oy-card { transition: none; } }
+
+/* Where the person belongs: their groups, and what they are going to. Each name is a pill that opens its page. */
+.cs-oy-yours { flex: none; display: grid; gap: 8px; padding-top: 10px; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 35%, transparent); }
+.cs-oy-yours div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cs-oy-yours b { padding: 3px 10px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-on-ink); font-size: 12px; font-weight: 680; }
+.cs-oy-yours a { display: inline-flex; align-items: baseline; gap: 6px; padding: 5px 12px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-size: 13.5px; font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-oy-yours a:hover { background: var(--cs-stub); } .cs-oy-yours small { font-size: 12px; font-weight: 540; color: var(--cs-mute); }

@@ -4,11 +4,11 @@ import { headers } from 'next/headers';
 import { db } from '../db';
 import type { Principal } from '../emba/access';
 import { groupHref, treeOrder } from '../emba/group-path';
-import { getSignedInPrincipal, portalGroupTree } from '../emba/portal-session';
+import { getPortalPrincipal, getSignedInPrincipal, portalGroupTree } from '../emba/portal-session';
 import { isAdmin } from './admin';
 import { findCampus, listCampuses, type Campus } from './listings';
 import { campusOf } from './people';
-import { DEFAULT_CAMPUS, frontIsCampus, schoolOf } from './schools';
+import { DEFAULT_CAMPUS, schoolOf } from './schools';
 import type { Point } from './sections';
 
 /**
@@ -55,11 +55,11 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
 export const mayUse = (viewer: CampusViewer, campus: { id: string }) => viewer.admin || viewer.campus?.id === campus.id || viewer.visits.includes(campus.id);
 
 /**
- * The person's top-level groups by name, for the top bar: only for someone who can open them. With the campus screen
- * as the front door that is the admin alone (design D17).
+ * The person's top-level groups by name, for the top bar: only for someone who can open them (the admin, or a member
+ * of a group).
  */
 export async function openableGroups(viewer: CampusViewer): Promise<{ name: string; href: string }[]> {
-  if (frontIsCampus() && !viewer.admin) return [];
+  if (!await getPortalPrincipal().catch(() => null)) return [];
   try {
     return treeOrder(await portalGroupTree(viewer.principal)).filter(group => group.depth === 0).map(group => ({ name: group.orgName, href: groupHref(group) }));
   } catch { return []; }

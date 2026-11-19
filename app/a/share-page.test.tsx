@@ -2,7 +2,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vite
 import { cleanup, render, screen } from '@testing-library/react';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
-import { withPortalTestSession } from '@/lib/emba/portal-session';
+import { getPortalPrincipal, withPortalTestSession } from '@/lib/emba/portal-session';
+import { campusViewer, openableGroups } from '@/lib/campus/session';
 import { createWorkspace } from '@/lib/emba/workspaces';
 import { setMemberHandle } from '@/lib/emba/tags';
 import { createAsk, type AskResult } from '@/lib/emba/team-asks';
@@ -146,7 +147,7 @@ it('with the campus in front, opens an ask for the members of its group and for 
   await share(f.ben, ask);
   expect(screen.getByRole('heading', { name: 'Which weekend works?' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Send my answer' })).toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: 'Open the team page' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Open the team page' })).toHaveAttribute('href', '/groups/hiking-club/team?tab=asks');
   expect((await answer(f.ben, f.ids, ask, '1')).status).toBe('success');
   cleanup();
   // The person who asked is not the admin either, and still runs their ask: who has not answered, the reminder, a new date, closing.
@@ -200,4 +201,22 @@ it('shows something to do as done or not done, and lets the person who posted it
   await share(f.ben, ask);
   expect(screen.getByText('You have done this.')).toBeInTheDocument();
   expect(screen.getByText(/^1 of \d+ done\.$/)).toBeInTheDocument();
+});
+
+it('with the campus in front, opens the groups site to a member of a group, who sees their own groups, and to nobody outside one', async () => {
+  const f = await fixture();
+  vi.stubEnv('LOOP_FRONT', 'campus'); vi.stubEnv('LOOP_ADMIN', 'founder@cornell.edu');
+  // Ben is in Hiking club and is not the admin: the site knows him, the campus bar names his group, and the group's page opens.
+  expect(await as(f.ben, () => getPortalPrincipal())).toMatchObject({ personId: f.ben.personId });
+  expect(await as(f.ben, async () => openableGroups((await campusViewer())!))).toEqual([{ name: 'Hiking club', href: '/groups/hiking-club' }]);
+  await f.ask(f.ana, 'named');
+  render(await as(f.ben, () => TeamPage({ params: Promise.resolve({ namespace: 'hiking-club' }), searchParams: Promise.resolve({ tab: 'asks' }) })));
+  expect(screen.getByRole('link', { name: 'Which weekend works?' })).toBeInTheDocument();
+  cleanup();
+  // Someone in no group is no one to the groups site, and the bar names no group.
+  expect(await as(f.outsider, () => getPortalPrincipal())).toBeNull();
+  expect(await as(f.outsider, async () => openableGroups((await campusViewer())!))).toEqual([]);
+  // A member whose role ended is outside again.
+  await t.db.query('update emba_role set revoked_at=now() where person_id=$1', [f.ben.personId]);
+  expect(await as(f.ben, () => getPortalPrincipal())).toBeNull();
 });

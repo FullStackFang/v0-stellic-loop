@@ -14,6 +14,8 @@ import '@/app/c/on-you.css';
 const LABEL = { vote: 'Vote', do: 'Do', show: 'Show up', missed: 'Missed' } as const;
 /** How a finished row leaves: it says what was recorded, fades, then the space it held closes. */
 export const LEAVE = { fade: 800, fold: 1120, gone: 1520 } as const;
+/** Something on the campus week the person is going to. */
+export type Going = { id: string; title: string; when: string; href: string };
 type Leaving = { id: string; at: number; text: string; phase: 'said' | 'out' | 'fold'; row?: OnYouItem; claim?: OnYouClaim };
 
 const Tick = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
@@ -24,7 +26,7 @@ function withLeaving<T extends { id: string }>(listed: T[], leaving: Leaving[], 
   return all;
 }
 
-export function OnYouPanel({ view }: { view: OnYouView }) {
+export function OnYouPanel({ view, going = [] }: { view: OnYouView; going?: Going[] }) {
   const [open, setOpen] = useState(view.claims.length > 0), [asking, setAsking] = useState(false), [busy, start] = useTransition();
   const [leaving, setLeaving] = useState<Leaving[]>([]), [notes, setNotes] = useState<Record<string, string>>({});
   // What has left stays gone, also while the list the server sent is a moment behind.
@@ -92,6 +94,11 @@ export function OnYouPanel({ view }: { view: OnYouView }) {
       {asking && <AskLine groups={view.groups} onAsked={() => setAsking(false)} />}
       {rows.length + claims.length > 0 ? <ul className="cs-oy-list">{claims.map(hand)}{rows.map(row)}</ul> : <p className="cs-oy-none">Nothing is waiting on you.</p>}
       {view.more > 0 && <p className="cs-oy-more">{view.more} more after these</p>}
+      {/* Where the person belongs: every group they are in, and what they are going to this week. Each opens its own page. */}
+      {view.mine.length + going.length > 0 && <nav className="cs-oy-yours" aria-label="Your groups">
+        {view.mine.length > 0 && <div><b>Your groups</b>{view.mine.map(group => <Link key={group.href} href={group.href}>{group.name}</Link>)}</div>}
+        {going.length > 0 && <div><b>You are going</b>{going.map(each => <Link key={each.id} href={each.href}>{each.title}<small>{each.when}</small></Link>)}</div>}
+      </nav>}
     </div>}
   </div>;
 }
