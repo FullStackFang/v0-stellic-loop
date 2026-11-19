@@ -85,7 +85,7 @@ main { display: grid; gap: 58px; max-width: 1080px; margin: 0 auto; padding: 30p
 .splat { position: absolute; right: -11px; top: 50%; width: 76px; height: 76px; margin-top: -38px; z-index: 1; overflow: visible; pointer-events: none; visibility: hidden; }
 .fin .splat { visibility: visible; }
 .splat .school { fill: var(--field); } .splat .dark { fill: var(--action); } .splat .seep { fill: var(--action); opacity: .42; } .splat .third { fill: var(--hot); }
-.splat .body { transform-box: view-box; transform-origin: 50% 50%; }
+.splat .body { transform-origin: 0 0; }
 .splat .drop { transform-box: fill-box; transform-origin: center; }
 .fin .splat .body { animation: land .24s var(--expo) var(--at, 0s) both; }
 @keyframes land { from { transform: scale(.12) rotate(-18deg); opacity: 0; } 30% { opacity: 1; } }

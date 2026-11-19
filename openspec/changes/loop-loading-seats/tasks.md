@@ -7,12 +7,14 @@
 - [x] 1.5 Founder sets one standard line for the ticket: "Looping you in…" (2026-11-19, design D12)
 - [ ] 1.4 Make a worktree and branch for this work (design D11); do not build in the shared folder
 
+- [x] 1.7 `public/demo/mockups-loading-small.html`: the small loader. Founder picks row C, "Your blot" (2026-11-19, design D14)
+
 ## 2. The loader
 
 - [ ] 2.1 Read `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/loading.md` and `.../04-functions/use-link-status.md` again before writing any of section 3 (AGENTS.md)
-- [ ] 2.2 Tests first, `components/loading/seats.test.tsx`: the ticket shows "Looping you in…" as text in a `role="status"` and takes no prop that could change it (design D12); four seats; the last seat is `face` when given and a free animal when not; faces have empty `alt`; `slow` rings the last seat and leaves it empty; `filled` puts that picture in it; the small one has three faces and is `aria-hidden`; the same props give the same markup twice (no randomness)
+- [ ] 2.2 Tests first, `components/loading/seats.test.tsx`: the ticket shows "Looping you in…" as text in a `role="status"` and takes no prop that could change it (design D12); four seats; the last seat is `face` when given and a free animal when not; faces have empty `alt`; `slow` rings the last seat and leaves it empty; `filled` puts that picture in it; the small one is one face on a blot and is `aria-hidden`: with `plan="ink"` the blot of the given `seed` in two inks, otherwise one plain shape and no drops; with `line` it shows "Looping you in…" under it; the same props give the same markup twice (no randomness)
 - [ ] 2.3 `components/loading/seats.tsx`: `SeatsTicket` and `SeatsSmall` (design D1, D2, D8, D9)
-- [ ] 2.4 `components/loading/seats.css`, ported from `.st`, `.st.slow` and `.sf` in the places mockup: `seats-` class names, `--cs-*` tokens each with the Loop kit's value as fallback, the 150 ms arrival (D6), the resting style as the finished pose and `prefers-reduced-motion` turning every animation off (D7)
+- [ ] 2.4 `components/loading/seats.css`, ported from `.st` and `.st.slow` in the places mockup and `.l-blot` in the small-loader mockup (D14): `seats-` class names, `--cs-*` tokens each with the Loop kit's value as fallback, the 150 ms arrival (D6), the resting style as the finished pose and `prefers-reduced-motion` turning every animation off (D7)
 - [ ] 2.5 Note what `/c/nope` (an unknown campus) answers today, status and page, to compare after 3.3
 
 ## 3. Changing page and opening the app, on the campus pages
@@ -30,13 +32,13 @@
 - [ ] 4.2 `LinkWait` in the groups bar's links (`app/groups/bar.tsx`); remove the lime `.lp-wait` dot where it is still drawn
 - [ ] 4.3 `app/e/[token]/loading.tsx`, `app/a/[token]/loading.tsx`, `app/o/[token]/loading.tsx`: the whole-screen ticket. Check each still returns its "not found" page for a bad token
 - [ ] 4.4 `components/campus/door-sign-in.tsx` and `app/groups/sign-in`: Clerk's `fallback` is the ticket, in a box the height of the form so the card does not jump
-- [ ] 4.5 Remove `.lp-loading` and `@keyframes lp-wait` from `app/loop.css` once nothing uses them (grep first; `app/emba/loading.tsx` is on a retired look and stays as it is)
+- [ ] 4.5 Remove `.lp-loading` and `@keyframes lp-wait` from `app/loop.css` once nothing uses them (grep first; `app/emba/loading.tsx` changes in 12.1)
 
 ## 5. One part of a page
 
-- [ ] 5.1 Near you, tests first in `components/campus/near.test.tsx`: while `where` is `wait` after a press, the ticket shows over the map and the find button holds the small one; on `away` and `off` the ticket is gone and today's sentences show; the list stays usable throughout
+- [ ] 5.1 Near you, tests first in `components/campus/near.test.tsx`: while `where` is `wait` after a press, the small one and its line show over the map and the find button holds the small one; on `away` and `off` it is gone and today's sentences show; the list stays usable throughout
 - [ ] 5.2 `components/campus/near.tsx`: 5.1
-- [ ] 5.3 A ticket's map in `components/campus/screen.tsx`: the map's box shows the ticket until the frame's `onLoad`; test with a frame that has not loaded and one that has
+- [ ] 5.3 A ticket's map in `components/campus/screen.tsx`: the map's box shows the small one and its line until the frame's `onLoad`; test with a frame that has not loaded and one that has
 - [ ] 5.4 Ink, tests first for `components/campus/own-face.tsx`: `busy` shows the slow ticket with the last seat ringed and the half-a-minute sentence; when the action answers, the new picture fills the seat and then `done` shows; when it fails, the ticket goes and the error shows
 - [ ] 5.5 `components/campus/own-face.tsx`: 5.4 (design D8)
 
@@ -49,7 +51,7 @@
 - [ ] 6.5 The face picker in `components/campus/screen.tsx`: the picked face holds the small one until the save is back, and goes back to the face before if the save fails; test
 - [ ] 6.6 Changing campus in the account card: the pill holds the small one while `moving`; test
 - [ ] 6.7 `components/campus/own-face.tsx`: Subscribe and Keep this one hold the small one while `wait`, with "Subscribing" and "Keeping"; test
-- [ ] 6.8 Grep `app/` and `components/campus/` for "One moment", "Reading…", "Saving…", "Opening…", "Loading sign-in" and an ellipsis in a button: none left outside the retired pages
+- [ ] 6.8 Grep `app/` and `components/campus/` for "One moment", "Reading…", "Saving…", "Opening…", "Loading sign-in" and an ellipsis in a button: none left anywhere (the test of 13.1 is the proof)
 
 ## 9. The ending (design D13)
 
@@ -59,6 +61,32 @@
 - [ ] 9.4 Tests first for `components/loading/seats-ending.tsx` and `ending.ts`: free draws one dark shape and no school colour; ink draws the blot of the given seed with no spark; plus draws the spark and spark drops in the third ink; a ticket seen for under 400 ms hands nothing over; reduced motion draws nothing; the layer is `aria-hidden` and takes no presses; it removes itself when the animation ends
 - [ ] 9.5 `ending.ts`, `seats-ending.tsx` and the ending's rules in `seats.css` (ported from `.splat`, `land`, `fly`, `knock` in the round 2 mockup, with the 0.3 s hold); the page-sized `SeatsTicket` registers and hands over; mount `SeatsEnding` in `app/c/layout.tsx` and `app/groups/layout.tsx`; `last-bar` and the groups layout pass the plan and the blot's seed. Remove the looping stamp from the ticket (the stub stays blank)
 - [ ] 9.6 In the browser with the network throttled: the ending on a page change, a groups page and a cold open, as a free member and as a member with Ink, in each school's colours; a fast page shows no ending; the page beneath takes a press during it; reduced motion shows none. Force `plan="plus"` once to look at the Ink+ splat
+
+## 10. Groups pages: every button and form (design D15)
+
+- [ ] 10.1 Tests first for `ActionForm` (`components/emba/portal-forms.tsx`): while pending the button holds the small one and "Saving", keeps its width, and cannot be pressed; after an error it reads its label again
+- [ ] 10.2 `ActionForm`: 10.1. Then open three of the pages that use it (team, organize, resources) and check nothing else relied on the old words
+- [ ] 10.3 The forms with their own button, test then change, one at a time: `brief-form`, `link-box`, `resource-box`, `planning-form`, `assistant-review`, `group-note-review`, `memory-proposal-review` (`components/emba/`); `start-form` ("Creating"), `invitation-paste` ("Accepting"), `members-panel` (`app/groups/`)
+- [ ] 10.4 The groups layout passes the person's face, plan and blot seed to these through one small context, so the small one is theirs and not a stock animal
+
+## 11. Everything else on the current look (design D15)
+
+- [ ] 11.1 `app/loading.tsx`: the whole-screen ticket, for any page with no nearer loading file. Check `/`, `/sign-in`, `/m/[token]`, `/c/admin`, `/c/[campus]/post`, `/c/save` each show it when slow, and that a bad address still answers with its not-found page
+- [ ] 11.2 `components/campus/on-you.tsx` and its two `Suspense` fallbacks (`app/c/week.tsx`, `app/c/site-bar.tsx`, `app/groups/layout.tsx`): the small one at 16 px in the counter's place; test that the bar does not change width when the count arrives
+- [ ] 11.3 `components/campus/add-schools.tsx` and `no-school.tsx`: their buttons hold the small one; test
+- [ ] 11.4 The Ink page's frame (`app/c/ink/page.tsx`): the small one with its line until the frame has loaded
+- [ ] 11.5 Mount `SeatsEnding` in `app/layout.tsx` (not in the two section layouts) and check the ending on a shared link
+
+## 12. The older pages (design D15; drop this group if they are cut)
+
+- [ ] 12.1 `app/emba/loading.tsx`: the ticket, in the Loop colours
+- [ ] 12.2 `OptIn`, `PlanActions`, `PostForm`, `ShowNameSwitch`, `SlotEditor`, `StartBoard`, `TripView`, `DetailsBox`: each waiting button holds the small one; one test each
+- [ ] 12.3 Look at one page of each in the browser (`/emba`, `/b/…`, `/p/…`, `/trip/…`, `/trips/new`): the loader reads on that page's background
+
+## 13. The check that keeps it so (design D15)
+
+- [ ] 13.1 `lib/__tests__/loading-words.test.ts`: fails on a waiting word with an ellipsis, on `lp-loading` or `lp-wait`, and on a `Suspense` with a `null` fallback outside its allow-list. Write it first and watch it fail on today's code, listing every file it names; that list is the checklist for groups 6, 10, 11 and 12
+- [ ] 13.2 It passes once those groups are done, with every allow-list entry explained in a comment
 
 ## 7. Design notes
 
