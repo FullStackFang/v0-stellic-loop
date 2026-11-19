@@ -5,19 +5,19 @@
 // A landmark is [kind, name, latitude, longitude, metres across, metres deep, degrees turned clockwise from north].
 // Halls, towers and water are solid: everyone walks around them. Greens and fields are painted on the ground.
 // Positions and sizes are OpenStreetMap's, looked up 2026-11-19, with sizes trimmed from its bounding boxes.
-// The three marked "placed by hand" were not found there and are put where I know them to be.
+// Those marked "placed by hand" were not found there and are put where I know them to be.
 
 const PAD = 14; // how far outside a solid landmark's wall a walker's middle is stopped, so faces do not overlap the wall
 const TOWER = 48; // a tower is drawn this many game units across whatever the map's scale, or it would be a dot
 const SOLID = ['hall', 'tower', 'water'];
 
 /** `scale` is game units to a metre: it sets how much room the lines have, not the shape. */
-function ground(name, scale, sections, landmarks = [], water = false) {
+function ground(name, scale, sections, landmarks = [], more = () => ({})) {
   const all = sections.flatMap(section => section.ring), lons = all.map(p => p[0]), lats = all.map(p => p[1]);
   const lon0 = (Math.min(...lons) + Math.max(...lons)) / 2, lat0 = (Math.min(...lats) + Math.max(...lats)) / 2, east = 111320 * Math.cos(lat0 * Math.PI / 180) * scale, north = 110540 * scale;
   const at = ([lon, lat]) => [(lon - lon0) * east, (lat0 - lat) * north];
   const things = landmarks.map(([kind, label, lat, lon, across, deep, turned = 0]) => {
-    if (kind === 'bridge') return { kind, name: label, from: at([lon, lat]), to: at([deep, across]), w: turned * scale }; // a bridge is two ends and a width
+    if (kind === 'bridge' || kind === 'road') return { kind, name: label, from: at([lon, lat]), to: at([deep, across]), w: turned * scale }; // a bridge is two ends and a width
     const [x, y] = at([lon, lat]), size = kind === 'tower' ? [TOWER, TOWER] : [across * scale, deep * scale];
     return { kind, name: label, x, y, w: size[0], h: size[1], turn: turned * Math.PI / 180 };
   });
@@ -26,7 +26,7 @@ function ground(name, scale, sections, landmarks = [], water = false) {
     const corners = kind === 'hall' ? [[-a, -b], [a, -b], [a, b], [-a, b]] : Array.from({ length: 20 }, (_, n) => [Math.cos(n * Math.PI / 10) * a, Math.sin(n * Math.PI / 10) * b]);
     return corners.map(([px, py]) => [x + px * cos - py * sin, y + px * sin + py * cos]);
   };
-  return { name, water, rings: sections.map(section => section.ring.map(at)), holes: things.filter(thing => SOLID.includes(thing.kind)).map(outline), things,
+  return { name, ...more(at, scale), rings: sections.map(section => section.ring.map(at)), holes: things.filter(thing => SOLID.includes(thing.kind)).map(outline), things,
     zones: sections.filter(section => section.name).map(section => ({ name: section.name, at: at(section.rest) })) };
 }
 const cut = corners => (name, ring, rest) => ({ name, ring: [...ring].map(key => corners[key]), rest });
@@ -67,6 +67,8 @@ export const MAPS = {
   'cornell-tech': ground('Roosevelt Island', 2, [island('', 'abcdefgh', [-73.9552, 40.7562])], [
     // From the Manhattan end, over the island beside the tram station, and on the same line to Queens.
     ['bridge', 'Queensboro Bridge', 40.75971, -73.96129, 40.75302, -73.94593, 34],
+    // Main Street, from the subway up to the Octagon, a little west of the buildings that front it. Placed by hand.
+    ['road', 'Main Street', 40.75870, -73.95400, 40.76890, -73.94450, 12],
     ['green', 'Four Freedoms Park', 40.75066, -73.96045, 90, 190, GRID],
     ['green', 'Southpoint Park', 40.75300, -73.95820, 130, 170, GRID],
     ['field', 'Firefighters Field', 40.75773, -73.95293, 60, 95, GRID],
@@ -75,10 +77,17 @@ export const MAPS = {
     ['hall', 'Bloomberg Center', 40.75579, -73.95620, 40, 100, GRID],
     ['hall', 'Tata', 40.75524, -73.95551, 40, 62, GRID],
     ['hall', 'The House', 40.75575, -73.95492, 28, 55, GRID],
+    ['hall', 'Verizon Center', 40.7555900, -73.9556069, 24, 26, GRID],
+    ['hall', 'Graduate', 40.7560214, -73.9553915, 24, 28, GRID],
     ['hall', 'Tram', 40.7573223, -73.9540884, 26, 26, GRID],
     ['hall', 'Subway', 40.7591449, -73.9532600, 26, 26, GRID],
     ['hall', 'Blackwell House', 40.76033, -73.95113, 30, 30, GRID],
     ['hall', 'Good Shepherd', 40.7615, -73.9502, 30, 40, GRID], // placed by hand
     ['hall', 'The Octagon', 40.7689, -73.9438, 60, 60, GRID], // placed by hand
-    ['tower', 'Lighthouse', 40.77284, -73.94018]], true),
+    ['tower', 'Lighthouse', 40.77284, -73.94018]],
+    at => ({ water: true, axis: GRID,
+      // The tram comes over from Second Avenue beside the bridge. Its Manhattan end is placed by hand.
+      tram: { from: at([-73.96413, 40.76127]), to: at([-73.9540884, 40.7573223]) },
+      // It lets its riders off on the plaza just past the station.
+      drops: [{ name: 'Tram', at: at([-73.95383, 40.75757]), every: 40, count: 9 }] })),
 };

@@ -54,10 +54,12 @@ const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world
 /**
  * `rings` are the outlines of the ground, each a list of [x, y] corners. Outlines may touch or overlap.
  * `holes` are the outlines of what stands on it, buildings and water, which everyone walks around.
+ * `drops` are places where animals arrive together on a clock, like a tram station: { name, at: [x, y], every, count },
+ * with `every` in seconds. Each keeps `left`, the seconds until its next arrival.
  */
-export function createWorld(random = Math.random, rings = round(), holes = []) {
+export function createWorld(random = Math.random, rings = round(), holes = [], drops = []) {
   const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]);
-  const world = { t: 0, lines: [], strays: [], random, rings, holes, box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
+  const world = { t: 0, lines: [], strays: [], random, rings, holes, drops: drops.map(drop => ({ ...drop, left: drop.every })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   return world;
 }
@@ -172,7 +174,7 @@ function scatter(world, line, by, events) {
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter', line, ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'drop', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
@@ -247,6 +249,15 @@ export function step(world, dt) {
   }
   for (const [line, by] of hits) scatter(world, line, by, events);
 
+  for (const drop of world.drops) {
+    if ((drop.left -= dt) > 0) continue;
+    drop.left += drop.every;
+    for (let n = 0; n < drop.count; n++) {
+      const a = world.random() * Math.PI * 2, v = 60 + world.random() * 140;
+      world.strays.push({ x: drop.at[0], y: drop.at[1], face: face(world), a, vx: Math.cos(a) * v, vy: Math.sin(a) * v });
+    }
+    events.push({ type: 'drop', name: drop.name, count: drop.count });
+  }
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   if (world.strays.length > STRAY_CAP) world.strays.splice(0, world.strays.length - STRAY_CAP);
   return events;
