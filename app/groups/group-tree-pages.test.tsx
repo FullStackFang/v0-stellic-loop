@@ -197,7 +197,7 @@ it('names in the bar the top groups a person can open, and the one they are in',
   expect(screen.getByRole('link', { name: /NBAE 6830/ })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByRole('link', { name: 'All groups' })).toHaveAttribute('href', '/groups');
   // The Ink tab is in this bar too (openspec/changes/loop-ink-placements), and the avatar wears the mark only with Ink.
-  expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('href', '/demo/mockups-premium.html');
+  expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('href', '/c/ink');
   expect(screen.getByRole('button', { name: 'Your account and colours' }).querySelector('.cs-ink')).toBeNull();
   cleanup(); at.params = {}; at.path = '/groups';
   render(<Bar groups={mine} face={null} ink account={null} />);

@@ -38,5 +38,6 @@
 
 - [x] 7.1 `tsc --noEmit` and the full test run (`--maxWorkers=3`, stderr to a file)
 - [x] 7.2 Look at the campus screen and a groups page in the browser, in the default kit and the Cornell kit, at desktop and phone width
+- [x] 7.5 Founder, 2026-11-18: keep the header on the Ink page. `/c/ink` draws the shared `CampusBar` over the mockup; `INK_PAGE` points there; tests updated
 - [ ] 7.3 One production build at the end, with no dev server running
 - [ ] 7.4 Optional, on the founder's word: rename "Premium" on the admin page

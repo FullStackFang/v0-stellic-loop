@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Loop Ink</title>
+<script>if (window.self !== window.top) document.documentElement.classList.add('framed');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
@@ -99,7 +100,9 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 
 /* the term: scroll is the calendar */
 .term { background: var(--pp); border-block: 2px dashed color-mix(in oklab, var(--ink) 55%, transparent); height: 360vh; }
-.pin { position: sticky; top: 69px; height: calc(100vh - 69px); display: grid; align-content: center; gap: clamp(14px, 2.6vh, 30px); padding: 20px 0; }
+/* Inside the app (app/c/ink) the app's own bar is above this page, so this one's is left out. */
+.framed { --nav: 0px; } .framed .nav { display: none; }
+.pin { position: sticky; top: var(--nav, 69px); height: calc(100vh - var(--nav, 69px)); display: grid; align-content: center; gap: clamp(14px, 2.6vh, 30px); padding: 20px 0; }
 .term-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; } .term-head h2 { font-size: clamp(40px, 6.2vw, 100px); }
 .date { text-align: right; white-space: nowrap; } .date b { display: block; font-size: clamp(30px, 3.6vw, 56px); font-weight: 800; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1; } .date small { font-size: 15px; font-weight: 600; color: color-mix(in oklab, var(--ink) 70%, transparent); }
 .cal { position: relative; height: 34px; border-radius: 99px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink); overflow: hidden; }

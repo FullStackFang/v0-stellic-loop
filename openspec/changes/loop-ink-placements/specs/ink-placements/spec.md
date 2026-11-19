@@ -12,11 +12,15 @@ Every place a person reads about the paid plan SHALL call it "Ink" or "Loop Ink"
 - **THEN** the pane is headed "Loop Ink" and no text in it says "Premium"
 
 ### Requirement: One address for the Ink page
-Every placement that leads to the Ink page SHALL use the same address, held in one place in the code. Until a real page exists, that address SHALL be the approved mockup at `/demo/mockups-premium.html`.
+Every placement that leads to the Ink page SHALL use the same address, held in one place in the code. The Ink page SHALL have the same top bar as the campus screen, with the Ink tab shown as the current page. Until a real page exists, it SHALL show the approved mockup at `/demo/mockups-premium.html` under that bar.
 
 #### Scenario: Any placement
 - **WHEN** a person presses the Ink tab, the account row's button, or the "With Ink" chip
 - **THEN** each one opens the same page
+
+#### Scenario: The bar stays
+- **WHEN** a person opens the Ink page from the campus screen
+- **THEN** the top bar is the one they came from, with "Ink" as the current page in place of "This week"
 
 ### Requirement: A row in the account card
 The account card SHALL hold one row for the plan: the Ink mark, "Loop Ink", one short line, and one button that opens the Ink page. For a person who has Ink the row SHALL say "You have Ink" and keep the button.

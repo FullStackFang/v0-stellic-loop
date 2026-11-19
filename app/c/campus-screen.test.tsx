@@ -19,6 +19,7 @@ import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
 import { againFaceAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
+import InkPage from './ink/page';
 import PostPlanPage from './[campus]/post/page';
 import CampusAdminPage from './admin/page';
 import OutingLinkPage from '../o/[token]/page';
@@ -377,7 +378,7 @@ describe('who sees whom', () => {
 
 // Specs: openspec/changes/loop-ink-placements/specs/ink-placements, and "Top bar on one line" in its campus-screen.
 describe('Loop Ink', () => {
-  const INK = '/demo/mockups-premium.html';
+  const INK = '/c/ink';
   const card = (name: RegExp) => { fireEvent.click(screen.getByRole('button', { name })); return within(screen.getByRole('dialog', { name: 'Your level' })); };
   it('is had by a person who asked to subscribe, and its page has one address', async () => {
     const { ana, ben } = await world();
@@ -606,6 +607,19 @@ describe('the pages', () => {
   const sentTo = (path: string) => expect.objectContaining({ digest: expect.stringContaining(`;${path};`) });
   it('an unknown campus is not found', async () => {
     await expect(page('nowhere')).rejects.toMatchObject({ digest: expect.stringContaining('404') });
+  });
+  it('the Ink page has the same bar as the week, with the Ink tab lit, and the Ink page under it', async () => {
+    const { ana } = await world();
+    render(await InkPage());
+    expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'This week' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/sign-in?redirect_url=%2Fc%2Fink');
+    expect(screen.getByTitle('Loop Ink')).toHaveAttribute('src', '/demo/mockups-premium.html');
+    cleanup();
+    // Signed in, it is the person's own bar: their account, on their own campus.
+    render(await withPortalTestSession(ana, () => InkPage()));
+    expect(screen.getByRole('button', { name: /Ana Lopez, Member/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'This week' })).toHaveAttribute('href', '/c/cornell');
   });
   it('a signed-out visitor sees the campus screen', async () => {
     await world();

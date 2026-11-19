@@ -21,7 +21,7 @@
 
 ## Decisions
 
-**D1. The Ink page has one address, kept in one place.** A constant `INK_PAGE = '/demo/mockups-premium.html'` in `lib/campus/ink.ts`, used by every placement. When the real page exists, one line changes. Alternative considered: a route `/ink` that redirects to the mockup. Rejected for now: it adds a route to maintain for no gain, and a redirect hides that the target is a mockup.
+**D1. The Ink page has one address, kept in one place.** A constant `INK_PAGE = '/c/ink'` in `lib/campus/ink.ts`, used by every placement. Changed on 2026-11-18 at the founder's word ("can we keep the header consistent"): the first version sent people straight to the mockup file, which has a header of its own, so the bar changed on the way. Now `/c/ink` is a page of the app that draws the same top bar as "This week" (`CampusBar`, shared by both) with the Ink tab lit, and shows the approved mockup under it in a frame that fills the rest of the window. The mockup leaves out its own header when it is framed and keeps its "Mockup" strip. Its address is `INK_MOCKUP`: when the real page exists, that one line changes.
 
 **D2. The tab is a plain link in the bar's own nav, after the groups.** It reads "Ink" with the mark before it. It is an outlined pill on the bar with a hard shadow, never the kit's field colour, so it stands apart from "This week" and the groups in every kit. It is shown to everyone, signed in or not, as Discord shows Nitro. It opens the Ink page in the same tab. Alternative considered: a yellow pill as in the mockup. Rejected: yellow is the Cornell kit's highlight and clashes with the default lime kit.
 

@@ -38,8 +38,7 @@ export function Bar({ groups, face, ink = false, account }: { groups: BarGroup[]
     <nav className="cs-links" aria-label="Your groups"><Link href="/">This week</Link>
       {shown.map(group => <Link key={group.id} href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'page' : undefined}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
       <Link href="/groups" aria-current={path === '/groups' ? 'page' : undefined}>All groups</Link>
-      {/* The Ink page is a file in public/, not a page of the app, so it is a plain link. */}
-      <a className="cs-inktab" href={INK_PAGE} aria-label="Ink"><InkMark /><span>Ink</span></a></nav>
+      <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink"><InkMark /><span>Ink</span></Link></nav>
     <div className="cs-nav-end"><div className="cs-acct" ref={box}>
       <button aria-expanded={open} aria-label={`Your account and colours${ink ? '. You have Ink' : ''}`} onClick={() => { setKit(kitNow()); setOpen(!open); }}>
         <span className="cs-ava">{ink ? <span className="cs-inked">{you}<InkMark /></span> : you}</span></button>

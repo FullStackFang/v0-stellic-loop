@@ -203,18 +203,10 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   // Only an event at a place Loop knows has a spot on the map, and the line says how many do.
   const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
-  const bar = <header className="cs-nav">
-      <Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
-      <nav className="cs-links" aria-label={campus.name}><Link href={`/c/${campus.slug}`} aria-current="page">This week</Link>
-        {viewer?.groups.map(group => <Link key={group.href} href={group.href}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
-        {/* The Ink page is a file in public/, not a page of the app, so it is a plain link. */}
-        <a className="cs-inktab" href={INK_PAGE} aria-label="Ink"><InkMark /><span>Ink</span></a></nav>
-      <div className="cs-nav-end">
-        {live && (live.usedAt ? <div className="cs-live used"><small>{live.giver}</small><b>{byId.get(live.listingId)?.status ?? 'Used'}</b></div>
-          : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
-        {viewer ? <Account screen={screen} signOut={signOut} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}
-      </div>
-    </header>;
+  const bar = <CampusBar screen={screen} signInHref={signInHref} signOut={signOut}>
+    {live && (live.usedAt ? <div className="cs-live used"><small>{live.giver}</small><b>{byId.get(live.listingId)?.status ?? 'Used'}</b></div>
+      : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
+  </CampusBar>;
   const ask = <input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />;
   const post = viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>;
   const shelf = earning.length > 0 && <div className="cs-shelf"><h2>Rewards you are earning</h2><ul className="cs-coupons">{earning.map(coupon => <CouponRow key={coupon.id} coupon={coupon} showing={showing === coupon.id} busy={busy}
@@ -276,6 +268,24 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
       {shelf}
     </section></main>
   </div>;
+}
+
+/**
+ * The top bar, one line. "This week" and the Ink page (app/c/ink) both draw this one, so it is the same on both: `on`
+ * is which of the two it is on, and `children` is what a page puts before the avatar.
+ */
+export function CampusBar({ screen, signInHref, signOut = null, on = 'week', children }: { screen: Screen; signInHref: string; signOut?: ReactNode; on?: 'week' | 'ink'; children?: ReactNode }) {
+  const { campus, viewer } = screen;
+  return <header className="cs-nav">
+    <Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
+    <nav className="cs-links" aria-label={campus.name}><Link href={`/c/${campus.slug}`} aria-current={on === 'week' ? 'page' : undefined}>This week</Link>
+      {viewer?.groups.map(group => <Link key={group.href} href={group.href}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
+      <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={on === 'ink' ? 'page' : undefined}><InkMark /><span>Ink</span></Link></nav>
+    <div className="cs-nav-end">
+      {children}
+      {viewer ? <Account screen={screen} signOut={signOut} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}
+    </div>
+  </header>;
 }
 
 function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; showing: boolean; busy: boolean; onShow: () => void; onUse: () => void }) {
