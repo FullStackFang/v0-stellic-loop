@@ -48,7 +48,9 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* top bar: one line */
-.cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); border-bottom: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+.cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); }
+/* Its lower edge is a stamp's: a row of teeth in the bar's own colour, which the page shows between as it scrolls under. No line. */
+.cs-nav::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 7px; pointer-events: none; background: radial-gradient(circle at 50% 0, var(--cs-field) 0 6px, #0000 6.5px) 50% 0 / 16px 7px repeat-x; filter: drop-shadow(0 1.5px 0 color-mix(in oklch, var(--cs-ink) 55%, transparent)); }
 .cs-wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding: 0 20px 0 0; --lime: var(--cs-action); }
 .cs-wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
 .cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
@@ -211,7 +213,8 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 @media (prefers-reduced-motion: reduce) { .cs-crown { animation: none; } }
 .cs-ava.big .cs-face { width: 68px; height: 68px; font-size: 24px; }
 .cs-ava.big .cs-lvb { min-width: 26px; height: 26px; font-size: 15px; right: -4px; bottom: -2px; box-shadow: 0 0 0 3px var(--cs-field); }
-.cs-lvl { position: absolute; right: 0; top: calc(100% + 14px); z-index: 30; width: 468px; max-width: calc(100vw - 28px); border-radius: var(--cs-r); overflow: hidden; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 92% 0; animation: cs-card .3s var(--cs-expo); }
+/* The card hangs clear of the bar, with page showing between: its top is the bar's colour, and touching it the two read as one slab. */
+.cs-lvl { position: absolute; right: 0; top: calc(100% + 32px); z-index: 30; width: 468px; max-width: calc(100vw - 28px); border-radius: var(--cs-r); overflow: hidden; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 92% 0; animation: cs-card .3s var(--cs-expo); }
 .cs-lvl-top { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; align-items: center; padding: 20px 22px 16px 20px; background: var(--cs-field); }
 .cs-lvl-top strong { display: block; font-stretch: 108%; font-weight: 720; font-size: 22px; letter-spacing: -0.035em; line-height: 1.05; overflow-wrap: anywhere; }
 .cs-lvl-top div > span { font-size: 14px; font-weight: 540; color: var(--cs-on-field-2); }
@@ -742,7 +745,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-regp { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } .cs-map { min-height: 180px; }
   .cs-ask input { flex-basis: 100%; height: 46px; font-size: 16px; } .cs-rgo { display: none; }
   .cs-post-row.near, .cs-sug { flex-wrap: wrap; } .cs-mini { flex-basis: 100%; max-width: none; }
-  .cs-ev { flex-basis: 260px; } .cs-lvl { position: fixed; right: 14px; top: 64px; }
+  .cs-ev { flex-basis: 260px; } .cs-lvl { right: -2px; }
 }
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
 
@@ -764,6 +767,9 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-inkrow b { font-size: 15.5px; font-weight: 720; letter-spacing: -0.02em; } .cs-inkrow small { font-size: 13px; color: var(--cs-mute); }
 /* the picker: its top line holds the way to the Ink page too, so its buttons sit closer; on a phone the search takes a line of its own */
 .cs-pets-top { gap: 6px; } .cs-pets-top .cs-btn { padding: 0 11px; gap: 6px; }
+/* its two filters wear the ring of the animals they show; shuffle and done are a picture each, in a round pill */
+.cs .cs-btn.school { box-shadow: inset 0 0 0 2px var(--cs-action); } .cs .cs-btn.school[aria-pressed=true] { background: var(--cs-action); color: var(--cs-paper); }
+.cs-pets-top .cs-btn .cs-ink { width: 15px; height: 15px; } .cs-pets-top .cs-btn.icon { flex: none; aspect-ratio: 1; padding: 0; justify-content: center; } @media (max-width: 520px) { .cs-pets-top .cs-btn.icon:not(.go) { margin-left: auto; } }
 /* the ask pane: none of the four perks is here yet, so the first is not set apart from the rest */
 .cs-prem-perks span:first-child:not(:last-of-type) { font-weight: inherit; color: inherit; }
 /* a face with Ink sits on a blot of its own (components/campus/ink-mark.tsx) in place of the plain circle. The blot reaches

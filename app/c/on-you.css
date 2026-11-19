@@ -7,7 +7,7 @@
 .cs-oy-n { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); font-size: 14px; font-weight: 720; animation: cs-oy-bump .45s var(--cs-expo); }
 @keyframes cs-oy-bump { 40% { transform: scale(1.22); } }
 
-.cs-oy-drop { position: absolute; right: 0; top: calc(100% + 14px); z-index: 7; width: min(430px, calc(100vw - 24px)); max-height: min(560px, calc(100dvh - 96px)); display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 12px; border-radius: var(--cs-r); background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 88% 0; animation: cs-oy-in .3s var(--cs-expo); }
+.cs-oy-drop { position: absolute; right: 0; top: calc(100% + 32px); z-index: 7; width: min(430px, calc(100vw - 24px)); max-height: min(560px, calc(100dvh - 96px)); display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 12px; border-radius: var(--cs-r); background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 88% 0; animation: cs-oy-in .3s var(--cs-expo); }
 @keyframes cs-oy-in { from { opacity: 0; transform: translateY(-6px) scale(.97); } }
 @media (max-width: 560px) { .cs-oy-drop { position: fixed; right: 12px; left: 12px; top: 68px; width: auto; } }
 .cs-oy-head { display: flex; align-items: center; gap: 10px; flex: none; }

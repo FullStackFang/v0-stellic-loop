@@ -6,6 +6,7 @@ import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { CampusScreen } from '@/components/campus/screen';
 import { animal, animalOf, CUSTOM, PHOTO } from '@/lib/campus/animals';
+import { Bar } from '@/app/groups/bar';
 import { catalogue, setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
 import { hasInk, INK_PAGE } from '@/lib/campus/ink';
 import { customFaceImage, deletePicture, makeCustomFace, MAKES, premiumAsks, subscribe } from '@/lib/campus/custom-face';
@@ -34,7 +35,7 @@ vi.mock('ai', async original => ({ ...(await original<typeof import('ai')>()),
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-screen, outings ("Who sees whom"), member-levels, campus-search.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 // The posting panel refreshes the list with the router, which a test render does not mount.
-vi.mock('next/navigation', async original => ({ ...(await original<typeof import('next/navigation')>()), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+vi.mock('next/navigation', async original => ({ ...(await original<typeof import('next/navigation')>()), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }), useParams: () => ({}), usePathname: () => '/groups' }));
 
 let t: TestDb, cornell: Campus;
 beforeAll(async () => { t = await openTestDb(); });
@@ -114,6 +115,26 @@ describe('who sees whom', () => {
     // 36 to 41 are the premium animals; the number after them has no picture.
     await expect(pickFace(t.db, ben.personId, 42)).rejects.toThrow('Pick one of the animals.');
   });
+  it('shows on the groups pages the same account card as the campus screen', async () => {
+    const { ana } = await world();
+    const card = async (admin: boolean) => { cleanup(); render(<Bar groups={[]} face={null} account={<button>Sign out</button>} screen={await campusScreen(t.db, cornell, as(ana, admin), { photos: noPhotos })} />); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); return within(screen.getByRole('dialog', { name: 'Your level' })); };
+    const shown = await card(false);
+    // The level, the picture and its picker, Ink and the colours, as on the campus screen.
+    expect(shown.getByText(/level 1 of 3/)).toBeInTheDocument();
+    expect(shown.getByRole('link', { name: 'See it' })).toHaveAttribute('href', '/c/ink');
+    expect(shown.getByRole('group', { name: 'Colours' })).toBeInTheDocument();
+    // Under them the groups pages' own links, and the way out.
+    expect(within(shown.getByRole('navigation', { name: 'Groups' })).getAllByRole('link').map(each => each.getAttribute('href'))).toEqual(['/groups/connections', '/groups/reach', '/groups/archive']);
+    expect(shown.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    fireEvent.click(shown.getByRole('button', { name: 'Change your picture' }));
+    expect(screen.getByRole('group', { name: 'Pick your picture' })).toBeInTheDocument();
+    // The admin's own list already leads to "How we got here".
+    const admin = await card(true);
+    expect(admin.getAllByRole('link', { name: 'How we got here' })).toHaveLength(1);
+    // With no screen to draw it from, the bar keeps a plain card.
+    cleanup(); render(<Bar groups={[]} face={null} account={null} />);
+    expect(screen.getByRole('button', { name: 'Your account and colours' })).toBeInTheDocument();
+  });
   it("offers a school's own animal to people of that school alone", async () => {
     const { ana } = await world(), noor = await person('Noor Haddad', 'noor@stern.nyu.edu'), bea = await person('Bea Ortiz', 'bea@baruch.cuny.edu'), guest = await person('Gus Reed', 'gus@gmail.com');
     for (const [who, email] of [[ana, 'ana@cornell.edu'], [noor, 'noor@stern.nyu.edu'], [bea, 'bea@baruch.cuny.edu'], [guest, 'gus@gmail.com']] as const) await campusOf(t.db, { personId: who.personId, verifiedEmail: email });
@@ -136,6 +157,12 @@ describe('who sees whom', () => {
     fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); fireEvent.click(screen.getByRole('button', { name: 'Change your picture' }));
     expect(screen.getByRole('button', { name: 'Cornell bear' })).toHaveClass('school');
     expect(screen.queryByRole('button', { name: 'NYU bobcat' })).toBeNull();
+    // Mascots narrows the picker to the school's own, and a second press shows every animal again. Shuffle and Done are a picture each.
+    fireEvent.click(screen.getByRole('button', { name: 'Mascots' }));
+    expect(within(screen.getByRole('group', { name: 'Pick your picture' })).getAllByRole('button').map(each => each.getAttribute('aria-label'))).toEqual(['Create your own', 'Cornell bear']);
+    fireEvent.click(screen.getByRole('button', { name: 'Mascots' }));
+    expect(screen.getByRole('button', { name: 'Dachshund' })).toBeInTheDocument();
+    for (const name of ['Shuffle', 'Done']) expect(screen.getByRole('button', { name })).toHaveTextContent('');
     cleanup();
     // The admin moves it to premium, and back to its school: it stays Cornell's alone either way.
     await setBuiltTier(t.db, 37, 'premium');
