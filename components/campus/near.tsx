@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { createPortal } from 'react-dom';
 import type { GeoJSONSource, Map as GlMap, MapLibreEvent, MapMouseEvent, Marker, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { bounds, held, hops, inside, LINE, middle, sectionAt, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Stop, type Way } from '@/lib/campus/sections';
+import { bounds, held, hops, inside, isSolo, LINE, middle, sectionAt, soloOf, stopNear, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Stop, type Way } from '@/lib/campus/sections';
 import type { Face, Ticket } from '@/lib/campus/view';
 import { FaceDot } from './screen';
 import { Swap, visiting, type SwapCampus } from './swap';
@@ -14,7 +14,9 @@ import { Swap, visiting, type SwapCampus } from './swap';
 // register, and one hot ink is kept for plans and nothing else, so a plan is the loudest thing on the page.
 // The map is the list: each plan is a stamp, the dial under the map turns through them in order of time, and the one
 // that is on hands you its ticket. The map shows one day at a time (public/demo/mockups-map-day.html), so a week of
-// plans that repeat at one address does not pile up on it. Plans at one address on one day share one stamp. The view cannot leave the section (lib/campus/sections.ts, "The wall"). Pushing
+// plans that repeat at one address does not pile up on it. Plans at one address on one day share one stamp. A plan at a place
+// that lies in no section is shown at that place alone, on a round sheet of its own (public/demo/mockups-map-solo.html);
+// the dial and the day pills never lead there, only picking that plan does, and one pill leads back. The view cannot leave the section (lib/campus/sections.ts, "The wall"). Pushing
 // against the wall shows the way on at that edge. Streets are OpenStreetMap data drawn by MapLibre GL from OpenFreeMap
 // tiles, which need no key. The map library is loaded only when this view is opened.
 
@@ -179,21 +181,29 @@ export type NearProps = {
 };
 
 export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou, swap = [] }: NearProps) {
-  const spots = useMemo(() => tickets.flatMap((ticket): Spot[] => {
-    if (!ticket.map) return [];
-    const at: Point = [ticket.map.lon, ticket.map.lat], sec = sectionAt(land, at);
-    return sec ? [{ ticket, at, sec: sec.id }] : [];
-  }).sort((a, b) => a.ticket.when.localeCompare(b.ticket.when)), [tickets, land]);
+  // `all` is the campus's sections and, after them, a sheet for each place off the map that has a plan.
+  const { spots, all } = useMemo(() => {
+    const solos = new Map<string, Section>();
+    const spots = tickets.flatMap((ticket): Spot[] => {
+      if (!ticket.map) return [];
+      const at: Point = [ticket.map.lon, ticket.map.lat], drawn = sectionAt(land, at), alone = drawn ? null : soloOf(ticket.map.name, at);
+      if (alone && !solos.has(alone.id)) solos.set(alone.id, alone);
+      return [{ ticket, at, sec: drawn?.id ?? alone!.id }];
+    }).sort((a, b) => a.ticket.when.localeCompare(b.ticket.when));
+    return { spots, all: [...land, ...solos.values()] };
+  }, [tickets, land]);
   const on = useMemo(() => count(spots), [spots]);
 
   // Until the browser says where you are, you stand where the most is on.
   const [standing, setStanding] = useState(() => { const first = count(spots); return [...land].sort((a, b) => (first[b.id] ?? 0) - (first[a.id] ?? 0))[0].id; });
   const [you, setYou] = useState<Point | null>(null), [where, setWhere] = useState<Where>(() => typeof navigator !== 'undefined' && navigator.geolocation ? 'wait' : 'off');
-  const [view, setView] = useState(standing), [litId, setLitId] = useState<string | null>(null), [dayPick, setDayPick] = useState<string | null>(null);
+  const [viewed, setView] = useState(standing), [litId, setLitId] = useState<string | null>(null), [dayPick, setDayPick] = useState<string | null>(null);
   const [map, setMap] = useState<GlMap | null>(null);
   const [wall, setWall] = useState<Pick<Wall, 'id' | 'kind' | 'view'> | null>(null);
 
-  const here = land.find(each => each.id === view)!, inView = useMemo(() => spots.filter(spot => spot.sec === view), [spots, view]);
+  // A place off the map whose plans have gone is no longer a sheet: the view is back where you stand.
+  const view = all.some(each => each.id === viewed) ? viewed : standing, solo = isSolo(view);
+  const here = all.find(each => each.id === view)!, inView = useMemo(() => spots.filter(spot => spot.sec === view), [spots, view]);
   // One day is on the map: the day of the plan picked in the list, else the day pressed on the band, else the first day with anything on.
   const days = useMemo(() => [...new Map(inView.map(spot => [spot.ticket.mapDate, spot.ticket.mapDay]))], [inView]);
   const day = (beside && picked ? inView.find(spot => spot.ticket.id === picked)?.ticket.mapDate : null) ?? (dayPick && days.some(([date]) => date === dayPick) ? dayPick : days[0]?.[0]) ?? null;
@@ -268,6 +278,18 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     el.toggleAttribute('data-let-go', say * (1 - away) < .5);
     const bar = rule.current, mpp = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (512 * 2 ** zoom), two = 2 * WALK_PER_MINUTE / mpp, mins = two > 170 ? 1 : two < 45 ? 5 : 2;
     if (bar) { bar.style.setProperty('--w', `${Math.round(two * mins / 2)}px`); bar.dataset.mins = `${mins} min walk`; }
+  }, []);
+
+  // The band grows with what it holds (the days, a long name). The compass and the controls hang under it by its
+  // height (--band in campus.css), so nothing of the band ever lies over them.
+  useLayoutEffect(() => {
+    const top = band.current, box = host.current;
+    if (!top || !box) return;
+    const set = () => box.style.setProperty('--band', `${top.offsetHeight}px`);
+    set();
+    const watch = typeof ResizeObserver === 'function' ? new ResizeObserver(set) : null;
+    watch?.observe(top);
+    return () => watch?.disconnect();
   }, []);
 
   /** The ticket takes whichever corner of its stamp covers the fewest other stamps, and stays on the map. */
@@ -399,6 +421,9 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   }, [map, cam, tune, view, litKey, openAt, youAt, standing, picked]);
 
   const step = (id: string) => { wallAt.current = null; setWall(null); setView(id); setLitId(null); onPick(null); };
+  /** Back from a place off the map, to where you stand. Beside the list, the first plan there is the one that is on. */
+  const back = () => { step(standing); if (beside) onPick(spots.find(spot => spot.sec === standing)?.ticket.id ?? null); };
+  const stop = solo ? stopNear(here.rest) : null;
   /** One step in or out, about the middle of the map. How far out it goes is the section's own limit. */
   const zoom = (by: number) => map?.easeTo({ zoom: map.getZoom() + by, duration: calm() ? 0 : 300 });
   /** Back to where you stand; there already, back to how the view started. */
@@ -406,8 +431,8 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   /** The locate button: ask the browser again where you are, say what it found, and go back to where you stand. */
   const locate = () => { if (where !== 'here' && navigator.geolocation) setWhere('wait'); setTold(true); find(); recenter(); };
 
-  const away = hops(land, standing, view), walk = (to: Point) => you ? walkMinutes(you, to) : null;
-  const kicker = away ? [`${away} ${away === 1 ? 'step' : 'steps'} from ${you ? 'you' : 'the start'}`, you ? `${walk(middle(here.ring))} min walk` : null].filter(Boolean).join(' · ')
+  const away = solo ? 0 : hops(land, standing, view), walk = (to: Point) => you ? walkMinutes(you, to) : null;
+  const kicker = solo ? 'Off the map' : away ? [`${away} ${away === 1 ? 'step' : 'steps'} from ${you ? 'you' : 'the start'}`, you ? `${walk(middle(here.ring))} min walk` : null].filter(Boolean).join(' · ')
     : where === 'here' ? 'You are here' : visiting(swap) ? 'Visiting' : where === 'away' ? 'You are away from campus' : where === 'off' ? 'Your location is off' : 'Finding you';
   const shown = wall && !up && wall.view === view ? wall : null, there = shown?.id ? land.find(each => each.id === shown.id) : undefined;
 
@@ -434,8 +459,10 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     <svg className="cs-near-defs" width={0} height={0} aria-hidden="true"><defs><path id="cs-arc-over" d="M-21 0a21 21 0 0 1 42 0" /><path id="cs-arc-under" d="M-22 0a22 22 0 0 0 44 0" /></defs>
       <filter id="cs-rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves={2} seed={7} /><feDisplacementMap in="SourceGraphic" scale={2.4} /></filter></svg>
     <div className="cs-near-map" ref={canvas} /><i className="cs-near-tooth" /><i className="cs-near-age" />
-    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on{days.length > 1 ? ` ${days.find(([date]) => date === day)?.[1]}` : ''} · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2>
-      {days.length > 1 && !up && <div className="cs-days" role="group" aria-label="Day on the map">{days.map(([each, name]) => <button key={each} aria-pressed={each === day} onClick={() => { setDayPick(each); setLitId(null); if (beside) onPick(inView.find(spot => spot.ticket.mapDate === each)!.ticket.id); }}>{name}<i>{inView.filter(spot => spot.ticket.mapDate === each).length}</i></button>)}</div>}<small>Map © OpenStreetMap, OpenFreeMap</small></div>
+    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on{days.length > 1 ? ` ${days.find(([date]) => date === day)?.[1]}` : ''}{!solo && <> · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></>}</p><h2>{here.name}</h2>
+      {(days.length > 1 || solo) && !up && <div className="cs-days" role="group" aria-label="Day on the map">{solo && <button className="back" onClick={back}>‹ Back to {land.find(each => each.id === standing)!.name}</button>}{days.length > 1 && days.map(([each, name]) => <button key={each} aria-pressed={each === day} onClick={() => { setDayPick(each); setLitId(null); if (beside) onPick(inView.find(spot => spot.ticket.mapDate === each)!.ticket.id); }}>{name}<i>{inView.filter(spot => spot.ticket.mapDate === each).length}</i></button>)}</div>}<small>Map © OpenStreetMap, OpenFreeMap</small>
+      {/* Off the map, the stop the place is by hangs from the band as a platform sign. It says where; it leads nowhere. */}
+      {stop && !up && <div className="cs-way sign stop" role="note" aria-label="Nearest stop"><span><b>{stop.name}</b>Nearest stop</span><Lines stop={stop} /></div>}</div>
     <Swap campuses={swap} />
     {shown && (shown.kind === 'go' && there
       // Where the section next door is a subway stop, the way on is that stop's platform sign (public/demo/mockups-nyc-stops.html, A).

@@ -34,20 +34,13 @@ const island = section({ a: [-73.9622, 40.7492], b: [-73.9570, 40.7500], c: [-73
   // Lexington Av/63 St: Park Avenue to the river, 59th to 68th Street.
   i: [-73.9697, 40.7630], j: [-73.9655, 40.7688], k: [-73.9562, 40.7648], l: [-73.9603, 40.7592],
   // 21 St-Queensbridge: the river to 24th Street, 38th Avenue down to Queens Plaza.
-  m: [-73.9462, 40.7572], n: [-73.9392, 40.7598], o: [-73.9362, 40.7528], p: [-73.9448, 40.7506],
-  // Lexington Av/53 St: just west of Fifth Avenue to Second Avenue, 47th to 58th Street. Cornell's ILR School is here, at 570 Lexington.
-  u: [-73.9746, 40.7640], v: [-73.9653, 40.7601], w: [-73.9702, 40.7533], x: [-73.9795, 40.7572],
-  // Grand Central-42 St: the same avenues, 40th to 47th Street. The Cornell Club is here, on 44th.
-  q: [-73.9797, 40.7569], r: [-73.9704, 40.7530], s: [-73.9737, 40.7485], t: [-73.9830, 40.7524] });
+  m: [-73.9462, 40.7572], n: [-73.9392, 40.7598], o: [-73.9362, 40.7528], p: [-73.9448, 40.7506] });
 
 const LANDS: Record<string, Section[]> = {
   'cornell-tech': [
     island('roosevelt', 'Roosevelt Island', 'abcdefgh', [-73.9552, 40.7562], ['lex63', 'queensbridge'], { name: 'Roosevelt Island', lines: ['F', 'M'] }),
-    island('lex63', 'Upper East Side', 'ijkl', [-73.9665, 40.7647], ['roosevelt', 'lex53'], { name: 'Lexington Av/63 St', lines: ['F', 'M', 'Q'] }),
+    island('lex63', 'Upper East Side', 'ijkl', [-73.9665, 40.7647], ['roosevelt'], { name: 'Lexington Av/63 St', lines: ['F', 'M', 'Q'] }),
     island('queensbridge', 'Long Island City', 'mnop', [-73.9426, 40.7540], ['roosevelt'], { name: '21 St–Queensbridge', lines: ['F', 'M'] }),
-    // Manhattan runs on south from the Upper East Side, a stop at a time: where Cornell people in the city go and host.
-    island('lex53', 'Midtown East', 'uvwx', [-73.9706, 40.7582], ['lex63', 'grandcentral'], { name: 'Lexington Av/53 St', lines: ['E', 'F', 'M', '6'] }),
-    island('grandcentral', 'Midtown', 'qrst', [-73.9768, 40.7518], ['lex53'], { name: 'Grand Central–42 St', lines: ['4', '5', '6', '7'] }),
   ],
   cornell: [
     ithaca('downtown', 'Downtown', 'abcde', [-76.4968, 42.4418], ['collegetown', 'west']),
@@ -58,6 +51,23 @@ const LANDS: Record<string, Section[]> = {
     ithaca('ag', 'Ag Quad', 'gwvrpq', [-76.4758, 42.4500], ['central', 'north']),
   ],
 };
+
+// A place off the map. A plan at a known place that lies in no section is shown at that place alone
+// (public/demo/mockups-map-solo.html): a round sheet of its own that leads nowhere, in place of drawing the town between.
+const SOLO = 'solo:', SOLO_METRES = 170;
+export const isSolo = (sectionId: string) => sectionId.startsWith(SOLO);
+/** The sheet for one place off the map: about a block and a half across, named for the place. Plans at one place share it. */
+export function soloOf(name: string, at: Point): Section {
+  const k = 111320 * Math.cos(at[1] * Math.PI / 180);
+  return { id: `${SOLO}${at.join()}`, name, rest: at, next: [], ring: Array.from({ length: 48 }, (_, n): Point => { const a = n * Math.PI / 24; return [at[0] + SOLO_METRES * Math.cos(a) / k, at[1] + SOLO_METRES * Math.sin(a) / 110540]; }) };
+}
+// The stops beside the places off the map that Cornell people in the city go to: the ILR School's building at
+// 570 Lexington Avenue, and the Cornell Club on 44th Street. Coordinates are OpenStreetMap's, looked up 2026-11-19.
+const STOPS: (Stop & { at: Point })[] = [
+  { name: 'Lexington Av/53 St', lines: ['E', 'F', 'M', '6'], at: [-73.9706019, 40.7582149] },
+  { name: 'Grand Central–42 St', lines: ['4', '5', '6', '7'], at: [-73.9768249, 40.7517716] }];
+/** The known stop a place off the map is by, when one is within a short walk of it. */
+export const stopNear = (at: Point): Stop | null => STOPS.map(stop => ({ stop, far: metres(at, stop.at) })).filter(each => each.far < 500).sort((a, b) => a.far - b.far)[0]?.stop ?? null;
 
 /** The campus's sections, or null when none are drawn for it. */
 export const landOf = (campusSlug: string): Section[] | null => LANDS[campusSlug] ?? null;

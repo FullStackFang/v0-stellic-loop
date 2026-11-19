@@ -446,3 +446,78 @@ describe('New York: the way on is a station sign', () => {
     expect(way.querySelector('.cs-lines')).toBeNull();
   });
 });
+
+// A plan at a known place that lies in no section: the map goes off to that place alone (public/demo/mockups-map-solo.html).
+describe('A place on its own, off the map', () => {
+  // The first plan of the week is at the Cornell Club in Midtown; the others are on Roosevelt Island.
+  const club = ticket('Alumni mixer', '1pm', 1, -73.9793717, 40.7542822, { place: 'The Cornell Club, 6 E 44th St', map: { name: 'The Cornell Club', lat: 40.7542822, lon: -73.9793717 } });
+  const town = [club, ticket('Tram ride', '3pm', 2, -73.9552, 40.7562), ticket('Market', '5pm', 4, -73.94687, 40.76489)];
+  async function wide() {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-width'), addEventListener() {}, removeEventListener() {} }));
+    locate(null);
+    render(<CampusScreen screen={model('cornell-tech', town)} signInHref="/sign-in" />);
+    await waitFor(() => expect(maps).toHaveLength(1));
+    return maps[0];
+  }
+  const card = (title: string) => screen.getByRole('heading', { level: 3, name: title }).closest('article')!;
+  const sheet = () => screen.getByRole('heading', { level: 2, name: /Roosevelt Island|The Cornell Club/ }).textContent;
+
+  it('the map starts on the campus, not on the place off it, and the card of a plan off the map says so', async () => {
+    await wide();
+    await waitFor(() => expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Tram ride'));
+    expect(sheet()).toBe('Roosevelt Island');
+    expect(pins()).toEqual(['Tram ride, Today 3pm', 'Market, Today 5pm']);
+    expect(within(card('Alumni mixer')).getByText('Off the map')).toBeTruthy();
+    expect(within(card('Tram ride')).getByText('On the map')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Back to Roosevelt Island/ })).toBeNull();
+  });
+
+  it('picking it shows that place alone, with the stop it is by, and one pill goes back', async () => {
+    await wide();
+    await waitFor(() => expect(sheet()).toBe('Roosevelt Island'));
+    fireEvent.click(card('Alumni mixer'));
+    expect(sheet()).toBe('The Cornell Club');
+    expect(pins()).toEqual(['Alumni mixer, Today 1pm']);
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Alumni mixer');
+    expect(document.querySelector('.cs-near-band p')?.textContent).toContain('Off the map');
+    expect(document.querySelector('.cs-near-band p')?.textContent).not.toContain('sheet');
+    const stop = screen.getByRole('note', { name: 'Nearest stop' });
+    expect(within(stop).getByText('Grand Central–42 St')).toBeTruthy();
+    expect([...stop.querySelectorAll('.cs-lines i')].map(each => each.textContent)).toEqual(['4', '5', '6', '7']);
+    // Pushing the edge of this sheet leads nowhere: there is no way on.
+    await wholeSection();
+    act(() => maps[0].drag(.01, 0));
+    expect(document.querySelector('.cs-way:not(.stop)')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Back to Roosevelt Island/ }));
+    expect(sheet()).toBe('Roosevelt Island');
+    expect(pins()).toEqual(['Tram ride, Today 3pm', 'Market, Today 5pm']);
+    expect(card('Tram ride').className).toContain('sel');
+    expect(screen.queryByRole('note', { name: 'Nearest stop' })).toBeNull();
+  });
+
+  it('picking a plan on the campus from there comes back too', async () => {
+    await wide();
+    fireEvent.click(card('Alumni mixer'));
+    expect(sheet()).toBe('The Cornell Club');
+    fireEvent.click(card('Market'));
+    expect(sheet()).toBe('Roosevelt Island');
+    expect(document.querySelector('.cs-bub .main > b')?.textContent).toBe('Market');
+  });
+
+  it('a place with no known stop near it has no sign', async () => {
+    town[0] = ticket('Far talk', '1pm', 1, -73.99, 40.72, { map: { name: 'Somewhere downtown', lat: 40.72, lon: -73.99 } });
+    await wide();
+    fireEvent.click(card('Far talk'));
+    expect(screen.getByRole('heading', { level: 2, name: 'Somewhere downtown' })).toBeTruthy();
+    expect(screen.queryByRole('note', { name: 'Nearest stop' })).toBeNull();
+    town[0] = club;
+  });
+
+  it('on a phone the dial keeps to the campus', async () => {
+    locate(null);
+    await near(town, 'cornell-tech');
+    expect(sheet()).toBe('Roosevelt Island');
+    await waitFor(() => expect(pins()).toEqual(['Tram ride, Today 3pm', 'Market, Today 5pm']));
+  });
+});
