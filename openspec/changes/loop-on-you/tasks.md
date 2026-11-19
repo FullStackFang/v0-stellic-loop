@@ -6,7 +6,7 @@
 ## 2. The to-do kind
 
 - [ ] 2.1 Write failing tests in `lib/__tests__/emba-club-asks.test.ts` for the `done` kind: created with no options, options refused, saved as named whatever is sent, reveal switch refused, marked done, a choice or text refused, taken back, repeat saves nothing, refused after closing, counted and listed as missing (the asker included)
-- [ ] 2.2 Add a migration dated after `20261118300000` that: widens the `emba_ask.kind` check to include `done`; replaces `emba_ask_check` so `done` requires zero options; replaces `emba_ask_answer_one_shape` so a `done` answer has no choices and no body; makes `emba_ask_answer_guard` refuse choices or a body on a `done` answer
+- [ ] 2.2 Add a migration dated after `20261118900000` (the newest on 2026-11-19; check again before writing it) that: widens the `emba_ask.kind` check to include `done`; replaces `emba_ask_check` so `done` requires zero options; replaces `emba_ask_answer_one_shape` so a `done` answer has no choices and no body; makes `emba_ask_answer_guard` refuse choices or a body on a `done` answer
 - [ ] 2.3 `lib/emba/team-asks.ts`: add `done` to `kinds`; a `done` branch in `createAsk` (no options, new refusal `not_for_done`) and in `answerAsk` (no choices, no text, new refusal); reveal forced to named; `setAskReveal` refuses for `done`; make 2.1 pass
 - [ ] 2.4 Refusal wording for the new cases in `app/a/actions.ts` and `app/groups/reach-actions.ts`
 - [ ] 2.5 Answer links: accept the done answer in `lib/emba/reach-link.ts` and show a Done button on `app/groups/reach/answer/[token]/page.tsx`, with a test

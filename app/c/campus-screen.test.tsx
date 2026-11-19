@@ -416,7 +416,9 @@ describe('Loop Ink', () => {
       // One grid: the Ink animals wear the mark, the others do not.
       expect(shown.getByRole('button', { name: 'Dachshund' }).querySelector('.cs-ink')).not.toBeNull();
       expect(shown.getByRole('button', { name: 'Animal 12' }).querySelector('.cs-ink')).toBeNull();
-      expect(shown.getByRole('link', { name: 'With Ink' })).toHaveAttribute('href', INK);
+      // The picker has no link of its own to the Ink page: the filter wears the mark, and an Ink animal opens the plan.
+      expect(shown.queryByRole('link', { name: 'With Ink' })).toBeNull();
+      expect(shown.getByRole('button', { name: 'Ink' }).querySelector('.cs-ink')).not.toBeNull();
       expect(container.textContent).not.toMatch(/premium/i);
       // The filter is labelled "Ink" and narrows the grid to them.
       fireEvent.click(shown.getByRole('button', { name: 'Ink' }));
