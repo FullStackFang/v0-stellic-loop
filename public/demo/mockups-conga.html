@@ -94,7 +94,7 @@ import { MAPS } from './conga/maps.js';
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 // Outside the ground is the print map's paper, and its blue where there is water (components/campus/near.tsx).
-const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: css('--paper'), action: css('--action'), town: '#f0e8d4', twine: '#fbf7ec', water: '#3f86de' };
+const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: css('--paper'), action: css('--action'), town: '#f0e8d4', twine: '#fbf7ec', water: '#3f86de', roof: '#f5eedc', trim: '#dccfae', lawn: 'oklch(88% 0.075 48)' };
 const src = face => `/animals/${String(face).padStart(2, '0')}.png`;
 const images = Array.from({ length: FACES + 1 }, (_, face) => { if (!face) return null; const image = new Image(); image.src = src(face); return image; });
 const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
@@ -113,7 +113,7 @@ window.conga = { get world() { return world; } }; // for poking at the game from
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
 function open(id) {
   where = id; map = MAPS[id]; me = null;
-  world = createWorld(Math.random, map.rings);
+  world = createWorld(Math.random, map.rings, map.holes);
   GROUPS[id].forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
   for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
   land = new Path2D();
@@ -232,6 +232,35 @@ function rope(points, stripe) {
   ctx.lineCap = 'butt'; ctx.setLineDash([8, 8]); ctx.strokeStyle = stripe; ctx.stroke(); ctx.setLineDash([]);
 }
 
+// What stands on the ground. Greens and fields are painted on it; halls, towers and water are walked around.
+function shape(thing, inset = 0) {
+  ctx.translate(thing.x, thing.y); ctx.rotate(thing.turn); ctx.beginPath();
+  if (thing.kind === 'water' || thing.kind === 'tower') ctx.ellipse(0, 0, thing.w / 2, thing.h / 2, 0, 0, 7);
+  else ctx.roundRect(-thing.w / 2 + inset, -thing.h / 2 + inset, thing.w - inset * 2, thing.h - inset * 2, thing.kind === 'hall' ? 8 : 26);
+}
+function painted(thing) {
+  ctx.save(); shape(thing); ctx.fillStyle = C.lawn; ctx.fill(); ctx.lineCap = 'round';
+  if (thing.kind === 'field') {
+    ctx.strokeStyle = C.paper; ctx.lineWidth = 3; ctx.stroke(); ctx.beginPath();
+    for (let k = 1; k < 8; k++) { const y = -thing.h / 2 + thing.h * k / 8; ctx.moveTo(-thing.w / 2 + 8, y); ctx.lineTo(thing.w / 2 - 8, y); }
+    ctx.stroke();
+  } else { ctx.setLineDash([1, 15]); ctx.strokeStyle = C.dot; ctx.lineWidth = 9; ctx.stroke(); ctx.setLineDash([]); } // a hedge of dots
+  ctx.restore();
+}
+function solid(thing) {
+  if (thing.kind === 'tower') { ctx.strokeStyle = C.ink; ctx.lineWidth = thing.w * 0.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(thing.x, thing.y); ctx.lineTo(thing.x + 40, thing.y + 40); ctx.stroke(); } // it is tall, so its shadow is long
+  else if (thing.kind === 'hall') { ctx.save(); ctx.translate(10, 10); shape(thing); ctx.fillStyle = C.ink; ctx.fill(); ctx.restore(); }
+  ctx.save(); shape(thing); ctx.fillStyle = thing.kind === 'water' ? waves : C.roof; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+  if (thing.kind === 'hall' && Math.min(thing.w, thing.h) > 44) { ctx.save(); shape(thing, 10); ctx.strokeStyle = C.trim; ctx.lineWidth = 3; ctx.stroke(); ctx.restore(); }
+  if (thing.kind === 'tower') { ctx.fillStyle = C.action; ctx.beginPath(); ctx.arc(thing.x, thing.y, thing.w * 0.24, 0, 7); ctx.fill(); ctx.lineWidth = 3; ctx.stroke(); }
+}
+function bridge(thing) {
+  ctx.lineCap = 'butt'; ctx.beginPath(); ctx.moveTo(...thing.from); ctx.lineTo(...thing.to);
+  ctx.strokeStyle = C.ink; ctx.lineWidth = thing.w + 10; ctx.stroke(); ctx.strokeStyle = C.roof; ctx.lineWidth = thing.w; ctx.stroke();
+  ctx.setLineDash([16, 14]); ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
+}
+const SOLID = ['hall', 'tower', 'water'];
+
 function draw(t, dt) {
   const watch = me && (!me.dead || $('start').hidden) ? me : world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.min(wide, tall * 1.25) / 760;
@@ -250,9 +279,16 @@ function draw(t, dt) {
   ctx.strokeStyle = C.dot; ctx.lineWidth = 5; ctx.setLineDash([4, 18]); ctx.lineCap = 'round'; if (map.rings.length > 1) ctx.stroke(land); ctx.setLineDash([]); // where one section meets the next
   ctx.fillStyle = C.dot; ctx.beginPath();
   for (let x = Math.floor((cam.x - halfW) / 90) * 90; x < cam.x + halfW; x += 90) for (let y = Math.floor((cam.y - halfH) / 90) * 90; y < cam.y + halfH; y += 90) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); }
-  ctx.fill(); ctx.restore();
+  ctx.fill();
+  for (const thing of map.things) if (thing.kind === 'green' || thing.kind === 'field') painted(thing);
+  ctx.restore();
+  for (const thing of map.things) if (thing.kind === 'bridge') bridge(thing);
+  for (const thing of map.things) if (SOLID.includes(thing.kind)) solid(thing);
   for (const zone of map.zones) if (seen(...zone.at)) pill(zone.name, zone.at[0], zone.at[1], C.paper, C.ink, 22);
-  for (const mark of map.marks) if (seen(...mark.at)) pill(mark.name, mark.at[0], mark.at[1], C.paper, C.ink, 17, C.action);
+  for (const thing of map.things) {
+    const [x, y] = thing.kind === 'bridge' ? [thing.from[0] + (thing.to[0] - thing.from[0]) * 0.43, thing.from[1] + (thing.to[1] - thing.from[1]) * 0.43] : [thing.x, thing.kind === 'tower' ? thing.y - 44 : thing.y];
+    if (seen(x, y)) SOLID.includes(thing.kind) || thing.kind === 'bridge' ? pill(thing.name, x, y, C.ink, C.paper, 14) : pill(thing.name, x, y, C.paper, C.ink, 14);
+  }
 
   // Where each animal is shown: a soft step as it walks, and a wave down the line while the line dances.
   const sprites = [], heads = [];
@@ -261,10 +297,11 @@ function draw(t, dt) {
     const dancing = line.dance > 0, step = i => 0.5 - 0.5 * Math.cos((t * 7 - i * 0.7) * 2), shown = [{ x: line.x, y: line.y - step(0) * 2.5 }];
     line.tail.forEach((f, i) => {
       const before = shown[i], dx = before.x - f.x, dy = before.y - f.y, far = Math.hypot(dx, dy) || 1, beat = Math.sin(t * 8 - i * 0.8), sway = dancing ? beat * 13 : 0;
-      shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - step(i + 1) * (dancing ? 8 : 2.5), face: f.face, tilt: dancing ? beat * 0.35 : 0 });
+      shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - step(i + 1) * (dancing ? 8 : 2.5), face: f.face, tilt: dancing ? beat * 0.35 : 0,
+        size: SIZE.tail * (1 + (world.t - f.born < 0.4 ? 0.35 * Math.sin((world.t - f.born) / 0.4 * Math.PI) : 0)) }); // a newcomer swells for a moment as it falls in
     });
     if (line.tail.length) rope(shown, colour(line.id));
-    for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push({ ...shown[i], size: SIZE.tail });
+    for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push(shown[i]);
     const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
     sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1 });
     heads.push(line);

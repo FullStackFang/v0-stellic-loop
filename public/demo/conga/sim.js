@@ -36,8 +36,8 @@ function within(ring, x, y) {
   }
   return hit;
 }
-/** Whether a point is on the ground: inside any of the map's outlines. */
-export const inside = (world, x, y) => world.rings.some(ring => within(ring, x, y));
+/** Whether a point is on the ground: inside any of the map's outlines, and not inside anything that stands on it. */
+export const inside = (world, x, y) => world.rings.some(ring => within(ring, x, y)) && !world.holes.some(ring => within(ring, x, y));
 
 // Somewhere on the ground, with `room` clear on each side when asked.
 function spot(world, room = 0) {
@@ -51,10 +51,13 @@ function spot(world, room = 0) {
 const face = world => 1 + Math.floor(world.random() * FACES);
 const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
 
-/** `rings` are the outlines of the ground, each a list of [x, y] corners. Outlines may touch or overlap. */
-export function createWorld(random = Math.random, rings = round()) {
+/**
+ * `rings` are the outlines of the ground, each a list of [x, y] corners. Outlines may touch or overlap.
+ * `holes` are the outlines of what stands on it, buildings and water, which everyone walks around.
+ */
+export function createWorld(random = Math.random, rings = round(), holes = []) {
   const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]);
-  const world = { t: 0, lines: [], strays: [], random, rings, box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
+  const world = { t: 0, lines: [], strays: [], random, rings, holes, box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   return world;
 }
@@ -67,7 +70,7 @@ export function place(world, line, start = 0) {
     at = spot(world, 120);
   }
   const a = world.random() * Math.PI * 2;
-  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, safe: SAFE, dance: 0, drop: 0, top: 0, path: [{ ...at }] });
+  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, safe: SAFE, dance: 0, drop: 0, top: 0, slack: 0, path: [{ ...at }] });
   line.tail = Array.from({ length: start }, () => ({ face: face(world), ...at }));
   return line;
 }
@@ -87,11 +90,12 @@ export function steer(line, want, dash) {
 // Each animal stands a fixed distance further back along the path its head walked.
 function follow(line, dt) {
   const { path, tail } = line, ease = Math.min(1, dt * 14);
-  let px = line.x, py = line.y, walked = 0, need = GAP, i = 0, k = 0;
+  // An animal that has just joined stands at the head, and `slack` is how far the line has still to move back to make room.
+  let px = line.x, py = line.y, walked = 0, need = GAP - line.slack, i = 0, k = 0;
   for (; k < path.length && i < tail.length; k++) {
     const q = path[k], length = Math.hypot(q.x - px, q.y - py);
     while (i < tail.length && walked + length >= need) {
-      const u = length ? (need - walked) / length : 0, f = tail[i++];
+      const u = length ? Math.max(0, need - walked) / length : 0, f = tail[i++];
       f.x += (px + (q.x - px) * u - f.x) * ease;
       f.y += (py + (q.y - py) * u - f.y) * ease;
       need += GAP;
@@ -112,7 +116,7 @@ function think(world, line, dt) {
   const n = line.tail.length, dx = Math.cos(line.a), dy = Math.sin(line.a);
   line.dash = false;
 
-  const clear = turn => inside(world, line.x + Math.cos(line.a + turn) * 150, line.y + Math.sin(line.a + turn) * 150);
+  const clear = turn => [60, 150].every(far => inside(world, line.x + Math.cos(line.a + turn) * far, line.y + Math.sin(line.a + turn) * far));
   if (!clear(0)) { line.want = line.a + (clear(1) ? 1 : clear(-1) ? -1 : 2.6); return; }
 
   const reach = 70 + bot.skill * 120;
@@ -188,6 +192,7 @@ export function step(world, dt) {
       if (inside(world, x, y)) { line.x = x; line.y = y; break; }
     }
     if (Math.hypot(line.x - line.path[0].x, line.y - line.path[0].y) >= STEP) line.path.unshift({ x: line.x, y: line.y });
+    line.slack *= Math.exp(-7 * dt);
     follow(line, dt);
     // Dashing costs animals off the back, and the back of a very long line gets bored and wanders off by itself.
     const bored = line.tail.length > LONG && world.random() < (line.tail.length - LONG) * BORED * dt;
@@ -211,7 +216,9 @@ export function step(world, dt) {
     }
     if (head && close < JOIN) {
       world.strays.splice(i, 1);
-      head.tail.push({ face: s.face, x: s.x, y: s.y });
+      // It falls in right behind the head and the rest of the line moves back one place.
+      head.tail.unshift({ face: s.face, x: s.x, y: s.y, born: world.t });
+      head.slack += GAP;
       events.push({ type: 'join', line: head.id, size: head.tail.length + 1 });
       // A line dances the first time it reaches each size, not every time it gets back there.
       if (MILESTONES.includes(head.tail.length) && head.tail.length > head.top) {
