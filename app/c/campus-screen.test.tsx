@@ -416,7 +416,9 @@ describe('Loop Ink', () => {
       // One grid: the Ink animals wear the mark, the others do not.
       expect(shown.getByRole('button', { name: 'Dachshund' }).querySelector('.cs-ink')).not.toBeNull();
       expect(shown.getByRole('button', { name: 'Animal 12' }).querySelector('.cs-ink')).toBeNull();
-      expect(shown.getByRole('link', { name: 'With Ink' })).toHaveAttribute('href', INK);
+      // The picker has no link of its own to the Ink page: the filter wears the mark, and an Ink animal opens the plan.
+      expect(shown.queryByRole('link', { name: 'With Ink' })).toBeNull();
+      expect(shown.getByRole('button', { name: 'Ink' }).querySelector('.cs-ink')).not.toBeNull();
       expect(container.textContent).not.toMatch(/premium/i);
       // The filter is labelled "Ink" and narrows the grid to them.
       fireEvent.click(shown.getByRole('button', { name: 'Ink' }));
@@ -635,15 +637,17 @@ describe('the pages', () => {
     expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
     expect(await withPortalTestSession(nyu, async () => imInAction((await world()).blitz))).toMatchObject({ ok: false, message: expect.stringContaining("another school's list") });
   });
-  it('a person at no school is shown the default campus, and the admin opens any campus', async () => {
-    await world();
+  it('a person at no school is shown no campus, only where Loop is, and the admin opens any campus', async () => {
+    const { blitz } = await world();
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
-    render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
-    // Another school's address sends them back to the default one.
-    await expect(withPortalTestSession(outsider, () => page('columbia'))).rejects.toEqual(sentTo('/c/cornell'));
-    cleanup();
+    for (const slug of ['cornell', 'cornell-tech', 'columbia']) {
+      render(await withPortalTestSession(outsider, () => page(slug)));
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Loop is at .*Cornell.* for now\.$/);
+      expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Post a plan' })).toBeNull();
+      cleanup();
+    }
+    expect(await withPortalTestSession(outsider, () => imInAction(blitz))).toMatchObject({ ok: false });
     vi.stubEnv('LOOP_ADMIN', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();

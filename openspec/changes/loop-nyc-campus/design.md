@@ -10,7 +10,7 @@ The founder picked, in `public/demo/mockups-nyc-stops.html`: sign A "Station sig
 
 **Goals:**
 - A Cornell Tech student gets a week, places and a map of their own.
-- A cornell.edu person picks a campus once, and can change it.
+- A new cornell.edu person lands on the campus nearer to them, and can change it.
 - The way on in New York reads as the subway.
 - Ithaca behaves exactly as today.
 
@@ -32,13 +32,13 @@ The founder picked, in `public/demo/mockups-nyc-stops.html`: sign A "Station sig
 
 **D1. Which school a campus is part of is kept in code (as built).** `schoolOf(slug)` in `lib/campus/schools.ts` names a campus's school by slug: `cornell-tech` is part of `cornell`. There is no `part_of` column. The Cornell Tech row (`cornell-tech`, "Cornell Tech", America/New_York) has no email domains (`20261118700000_campus_cornell_tech.sql`), so an address alone never places anyone there; the school is found by email as before, and its campuses are the rows whose `schoolOf` is that school. *This was first written as a `campus.part_of` column. The swap was built ahead with the relation in code, and that is kept: two campuses do not earn a schema change, and the deploy does not wait on a migration. Move it to a column when a second school has parts or the admin needs to add one without a deploy.*
 
-**D2. Placement: a home campus, chosen once.** A person has one home campus (`campus_person`). It is where they land, and the one the swap calls "Your campus". `campusOf` keeps returning it. When the person is not placed: find the school by email as today, then the school's campuses. One campus: place there, as today. More than one: place nobody and report that a choice is needed. `campusViewer` carries that (`choose: Campus[]`, empty when none is needed); its `campus` falls back as it does today and `visits` stays as built. Every page that sends a signed-in person to "their" campus, and the campus pages themselves, send a viewer who has a choice to make to `/c/choose` first (one helper). The admin is not sent there. *As built today an unplaced cornell.edu person is placed at Ithaca by their address; this changes that for new people only. Everyone already placed stays where they are.*
+**D2. Placement: the nearer campus, no question asked** (founder, 2026-11-19: "no chooser it'll default to the closest location depending on where you are"). A person has one home campus (`campus_person`). It is where they land, and the one the swap calls "Your campus". When the person is not placed, `campusOf` finds the school by email as before, then that school's campuses (`schoolOf`), and places the person at the one nearest to where they seem to be (`nearestCampus` in `lib/campus/sections.ts`, by where each campus's first section rests). With no guess, or a school with one campus, it places at the school as before. Everyone already placed stays where they are, wherever they sign in from; a Cornell Tech person placed at Ithaca before this changes it in the account card (D3).
 
-**D3. The chooser, `/c/choose`.** Signed-in only. Shows the two tickets from the mockup. A ticket is a form button; the action checks the picked campus is one of the person's school's campuses, writes `campus_person` (insert, or update when changing), and redirects to that campus. Changing the home campus later does not go through this page: the account card has a row, shown only when the person's school has more than one campus, whose pill ("Change to New York") changes it there and opens that campus (`changeCampusAction`, built). A person with nothing to choose who opens the page is sent to their campus. The ticket words, the tower and tram marks and the ticket styles are the ones the swap already uses (`SWAP_TICKET` in `lib/campus/schools.ts`, `MARK` in `components/campus/swap.tsx`, `.cs-tk` in `campus.css`); nothing is drawn twice.
+Where a person seems to be is the host's guess from the request (`x-vercel-ip-latitude`, `x-vercel-ip-longitude`, read by `seemsAt` in `lib/campus/session.ts`), not the browser's location. Nobody is prompted, and the guess is used once and not kept. On a developer's machine there is no guess, so a new Cornell person lands in Ithaca there. *My call: the network guess over the browser's prompt. A prompt before the person has seen anything is a heavy ask, and a guess that is wrong costs one press in the account card or on the swap.* The groups site (`app/groups/layout.tsx`) places without a guess; with the campus in front only the admin reaches it.
 
-What each ticket says is kept in code beside the school rules (`lib/campus/schools.ts`), by campus slug: title ("Ithaca", "New York"), one line ("The hill, Collegetown, downtown"; "Cornell Tech, Roosevelt Island and the stops around it"), and which engraving (tower, tram). The small line on top is the real count of events on in the next seven days ("Open · N on this week"), not a made-up number. The "Coming soon" names are kept in the same place, by school slug: Cornell → "Weill Cornell Medicine". *My call: only that one is listed; the founder has not named others.*
+**D3. Changing it.** The account card has a row, shown only when the person's school has more than one campus, whose pill ("Change to New York") changes the home campus and opens it (`changeCampusAction`, `placeAt`, built). `placeAt` refuses a campus that is not of the person's school.
 
-**D3a. The nearer campus is on top** (founder, 2026-11-18: "put the closer one up top, geolocation or just guess"). The tickets are ordered by distance from where the person seems to be, nearest first. The place is a guess from the request, not the browser's location: the host's own location headers (`x-vercel-ip-latitude`, `x-vercel-ip-longitude`), read on the server. Each campus's centre point is kept with its ticket words. With no guess (local development, a missing header) Ithaca is first. *My call: no location prompt on this screen. Asking for the browser's location before the person has done anything is a heavier ask than the order of two tickets is worth, and the map asks for it later when it matters.* The order is only an order: both tickets are always shown and neither is preselected.
+*Dropped: the "Which Cornell?" screen of two tickets (`/c/choose`), its nearest-first order, and the "Coming soon" list that lived on it. The founder picked that screen in the mockup, then chose placing by location instead. The mockup `public/demo/mockups-nyc-stops.html` still shows it.*
 
 **D4. Cornell Tech is Cornell everywhere else (built).** The viewer's kit is their school's slug, so Cornell Tech gets Cornell Coral with no new colours. The door and the "no school" page list schools only, so they still show four.
 
@@ -49,8 +49,12 @@ What each ticket says is kept in code beside the school rules (`lib/campus/schoo
 | id | name | stop | next |
 | --- | --- | --- | --- |
 | `roosevelt` | Roosevelt Island | Roosevelt Island (F, M) | `lex63`, `queensbridge` |
-| `lex63` | Upper East Side | Lexington Av/63 St (F, M, Q) | `roosevelt` |
+| `lex63` | Upper East Side | Lexington Av/63 St (F, M, Q) | `roosevelt`, `lex53` |
 | `queensbridge` | Long Island City | 21 St–Queensbridge (F, M) | `roosevelt` |
+| `lex53` | Midtown East | Lexington Av/53 St (E, F, M, 6) | `lex63`, `grandcentral` |
+| `grandcentral` | Midtown | Grand Central–42 St (4, 5, 6, 7) | `lex53` |
+
+**D6a. Midtown, for the Cornell Tech pilot** (founder, 2026-11-19: the Cornell Club and the ILR building are "the places they would go or host events"). Two sections run on south from the Upper East Side, a stop each, from just west of Fifth Avenue to Second Avenue: Midtown East (47th to 58th Street) holds ILR's New York building at 570 Lexington Avenue; Midtown (40th to 47th) holds the Cornell Club at 6 East 44th Street. Both buildings are places of the Cornell Tech campus (`20261119100000_campus_tech_midtown.sql`), and the same migration adds Cornell's own New York City calendar as a feed (`https://events.cornell.edu/nyc/calendar/ics`), which was empty on the day it was added. "Next to" here is the next section along the avenues, not one train ride: no single line runs Lexington Av/63 St to 53 St to Grand Central. From the island Midtown East is two steps and the Club three, so the map opens them for someone standing there or next door, or when a plan there is picked in the list. The Cornell Club's own programs (25 listed, no feed) are not loaded: it is a members' club and a student who turns up cannot get in. *My calls: two stops, not one big Midtown section; the 6 on the 53 St sign (the 51 St platform of the same station); the shuttle left off Grand Central's sign to keep it short.*
 
 One stop is one section, and a section is everything that stop serves (founder, 2026-11-18, after the mockup showed only the campus end of the island: "it's still one train station away"). So Roosevelt Island is one section from the southern tip to the lighthouse, about 3 km long and narrow. The whole section must be in view at the map's furthest zoom, so that zoom is lower here than in Ithaca; the map already works this out from the section's outline. A section is not sized to fit the screen. Every later section follows the same rule: named for its stop, covering what is walked to from it.
 
@@ -87,12 +91,12 @@ Sections with no stop (all of Ithaca) draw exactly what they draw today. The sig
 - The tag lives on the map's band, so it shows in the map view only.
 - That slice drew Roosevelt Island as one section with no neighbours and no stop. D6's other two sections and D7's sign were built after it.
 
-**What the built slice leaves open, and the rest of this change closes.** A Cornell Tech student is placed at Ithaca by their address, lands in Ithaca every time they sign in, and is told they are "Visiting" their own campus until they stand on the island. Choosing a home once (D2, D3) is what fixes that.
+**What that slice left open.** A Cornell Tech student was placed at Ithaca by their address and told they were "Visiting" their own campus. Placing by the nearer campus (D2) and the change in the account card (D3) fix that.
 
 ## Risks / Trade-offs
 
-- [A Cornell Tech person was placed at Ithaca before the chooser existed] → They stay there until they change it in the account card. No one is moved for them. Until they do, the swap still gets them to New York in one press.
-- [Some page sends a not-yet-chosen person to the default campus instead of the choice] → One helper for "the viewer's own campus or go choose", and a test that a not-yet-chosen Cornell viewer is redirected from the campus page.
+- [A Cornell Tech person was placed at Ithaca before placing by location existed] → They stay there until they change it in the account card. No one is moved for them. Until they do, the swap still gets them to New York in one press.
+- [The guess is wrong: a network far from the person, or an Ithaca student signing up on a trip to the city] → One press on "Change to Ithaca" in the account card; the swap opens the other campus meanwhile.
 - [Other sessions edit `sections.ts`, `near.tsx` and `campus.css` in the same tree] → Build on the tree as it stands; do not revert their changes; keep edits to those files small.
 - [Line letters and bullet colours look like the MTA's signs] → Plain coloured circles with a letter and a plain plate; no MTA logo, map or typeface.
 - [Hand-drawn outlines are off] → Each is checked by screenshot against the map before it ships, the island's built outline included.
@@ -100,11 +104,10 @@ Sections with no stop (all of Ithaca) draw exactly what they draw today. The sig
 
 ## Migration Plan
 
-- `20261118700000_campus_cornell_tech.sql` (written; the founder runs it): the Cornell Tech row. Until it is run `/c/cornell-tech` does not exist, no tag shows and there is nothing to choose.
+- `20261118700000_campus_cornell_tech.sql` (written; the founder runs it): the Cornell Tech row. Until it is run `/c/cornell-tech` does not exist, no tag shows and everyone is placed at Ithaca.
 - `20261118900000_campus_tech_places.sql` (written; the founder runs it): Cornell Tech's places (D8).
-- No schema change anywhere in this change. Rollback: delete the Cornell Tech row (its places and anything on it go with it); anyone whose home was Cornell Tech is unplaced and chooses again.
+- No schema change anywhere in this change. Rollback: delete the Cornell Tech row (its places and anything on it go with it); anyone whose home was Cornell Tech is unplaced and is placed again the next time they are seen.
 
 ## Open Questions
 
-- Which other Cornell schools should be listed as "Coming soon"?
 - May a person join and post while looking at a campus that is not their home? Built as yes.

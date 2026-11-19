@@ -18,7 +18,7 @@ Every place a person reads about the paid plan SHALL call it "Ink" or "Loop Ink"
 Every placement that leads to the Ink page SHALL use the same address, held in one place in the code. The Ink page SHALL have the same top bar as the campus screen, with the Ink tab shown as the current page. Until a real page exists, it SHALL show the approved mockup at `/demo/mockups-premium.html` under that bar.
 
 #### Scenario: Any placement
-- **WHEN** a person presses the Ink tab, the account row's button, or the "With Ink" chip
+- **WHEN** a person presses the Ink tab or the account row's button
 - **THEN** each one opens the same page
 
 #### Scenario: The bar stays
@@ -37,7 +37,7 @@ The account card SHALL hold one row for the plan: the Ink mark, "Loop Ink", one 
 - **THEN** the row reads "You have Ink"
 
 ### Requirement: Ink animals wear the mark in the picker
-In the animal picker, every animal that comes with the plan SHALL wear the Ink mark. The picker SHALL have one "With Ink" chip that opens the Ink page, and its filter SHALL be labelled "Ink". The ask pane SHALL list the perks the Ink page leads with and SHALL say plainly which of them are not available yet.
+In the animal picker, every animal that comes with the plan SHALL wear the Ink mark. The picker's filter SHALL be labelled "Ink" and wear the Ink mark, and the picker SHALL have no link of its own to the Ink page: an Ink animal pressed by a person without Ink opens the ask pane. The ask pane SHALL list the perks the Ink page leads with and SHALL say plainly which of them are not available yet.
 
 #### Scenario: Seeing which animals need the plan
 - **WHEN** a person without Ink opens the picker
