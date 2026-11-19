@@ -24,7 +24,13 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .mine b { font-weight: 900; font-size: 26px; font-stretch: 110%; line-height: 1; font-variant-numeric: tabular-nums; }
 .mine span { font-size: 13px; font-weight: 600; color: var(--mute); }
 
-.board { top: max(14px, env(safe-area-inset-top)); right: 14px; width: 190px; padding: 6px; border-radius: 16px 16px 16px 4px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+/* The scoreboard, and under it the controls, always there in small. */
+.side { position: fixed; z-index: 2; top: max(14px, env(safe-area-inset-top)); right: 14px; display: grid; gap: 8px; justify-items: end; pointer-events: none; }
+.side .hud { position: static; }
+.hint { display: grid; gap: 4px; padding: 7px 10px 7px 7px; border-radius: 14px 14px 14px 4px; font-size: 12px; font-weight: 600; }
+.hint span { display: flex; align-items: center; gap: 6px; }
+.hint kbd { font: inherit; font-weight: 800; padding: 1px 8px; border-radius: 99px; background: var(--ink); color: var(--paper); }
+.board { width: 190px; padding: 6px; border-radius: 16px 16px 16px 4px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .board div { display: flex; align-items: center; gap: 7px; padding: 2px 8px 2px 3px; border-radius: 99px; font-size: 13px; font-weight: 600; }
 .board div.me { background: var(--ink); color: var(--paper); }
 .board .face { width: 24px; flex: none; }
@@ -77,14 +83,14 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .score span { font-size: 13px; font-weight: 700; }
 @media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
-  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .pause { left: 110px; } .keys { padding: 8px; gap: 6px; } .keys li { font-size: 12px; } .keys kbd { padding: 3px 8px; } }
+  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 11px; padding: 5px 8px 5px 5px; } .pause { left: 110px; } .keys { padding: 8px; gap: 6px; } .keys li { font-size: 12px; } .keys kbd { padding: 3px 8px; } }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 
 <div class="hud mine" id="mine" hidden><span class="face" id="mineFace"></span><b id="mineCount">1</b><span>in your line</span></div>
-<div class="hud board" id="board"></div>
+<div class="side"><div class="hud board" id="board"></div><div class="hud hint" id="hint"></div></div>
 <div class="hud map"><canvas id="map" width="184" height="184"></canvas></div>
 <button class="dash" id="dash" hidden>Dash</button>
 <button class="pause" id="pause" hidden aria-label="Pause"><svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="4.5" height="14" rx="1.5"/><rect x="10.5" y="2" width="4.5" height="14" rx="1.5"/></svg></button>
@@ -199,6 +205,8 @@ function controls() {
   const rows = touched ? [['Drag', 'Steer, from anywhere'], ['Dash', 'Faster, but sheds animals'], ['Pause button', 'Stop the game']]
     : [['Mouse', 'Steer. A and D turn too'], ['Space', 'Dash: faster, but sheds animals'], ['P', 'Pause. Esc too']];
   for (const list of document.querySelectorAll('.keys')) list.innerHTML = rows.map(([key, does]) => `<li><kbd>${key}</kbd>${does}</li>`).join('');
+  // The same three in a word each, under the scoreboard for the whole game.
+  $('hint').innerHTML = (touched ? [['Drag', 'steer'], ['Dash', 'faster']] : [['Mouse', 'steer'], ['Space', 'dash'], ['P', 'pause']]).map(([key, does]) => `<span><kbd>${key}</kbd>${does}</span>`).join('');
 }
 
 // A game alone can be stopped and picked up again. Nothing moves while it is paused.
@@ -287,52 +295,83 @@ addEventListener('resize', fit); fit();
 const cam = { x: 0, y: 0, z: 1 }, puffs = [];
 const SIZE = { stray: 40, tail: 42, head: 58 };
 // ---------- water, grass and trees ----------
-// `?look=a|b|c` tries one of three ways of drawing them (public/demo/mockups-conga-ground.html shows them side by side).
+// `?look=g|h` tries the cartoon water, in blue or aqua (public/demo/mockups-conga-ground.html shows them side by side).
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground.
 const tile = (size, work) => { const sheet = document.createElement('canvas'); sheet.width = sheet.height = size; work(sheet.getContext('2d'), size); return ctx.createPattern(sheet, 'repeat'); };
+// Grass and trees are the linocut ones: deep grass with tufts, scalloped trees. The water is a cartoon's: one flat bright
+// colour, puffy white foam along the shore, rings going out from it, and wave marks drawn with a fat pen.
+const BASE = { green: 'oklch(70% 0.15 147)', tree: 'oklch(45% 0.11 158)', leaf: 'oklch(61% 0.14 150)' };
 const STYLES = {
-  // Ink bands: strong flat blue that pales in steps toward the shore, mown stripes on the grass.
-  a: { deep: 'oklch(60% 0.14 252)', shore: [[170, 'oklch(68% 0.12 246)'], [84, 'oklch(77% 0.09 238)'], [30, 'oklch(89% 0.05 230)']], green: 'oklch(83% 0.14 140)', mown: 'oklch(78% 0.15 142)', tree: 'oklch(60% 0.15 150)', leaf: 'oklch(73% 0.16 145)',
-    marks: [120, 'oklch(72% 0.11 244)', pen => { pen.lineWidth = 4; for (const [x, y] of [[14, 26], [70, 58], [34, 96]]) { pen.beginPath(); pen.moveTo(x, y); pen.quadraticCurveTo(x + 13, y - 9, x + 26, y); pen.stroke(); } }] },
-  // Linocut: dark water with pale cut marks and a broken line of foam, deep grass with tufts, scalloped trees.
-  b: { deep: 'oklch(47% 0.1 240)', shore: [[70, 'oklch(55% 0.1 236)']], foam: true, green: 'oklch(70% 0.15 147)', tree: 'oklch(45% 0.11 158)', leaf: 'oklch(61% 0.14 150)', scallop: true,
-    marks: [150, 'oklch(92% 0.03 220)', pen => { pen.lineWidth = 3.5; for (const [x, y, w, a] of [[16, 22, 20, 0.2], [92, 40, 14, -0.15], [48, 78, 24, 0.1], [118, 110, 16, 0.25], [20, 128, 12, -0.2]]) { pen.beginPath(); pen.moveTo(x, y); pen.lineTo(x + w, y + w * a); pen.stroke(); } }],
-    tufts: [64, 'oklch(80% 0.15 140)', pen => { pen.lineWidth = 2.5; for (const [x, y] of [[12, 16], [44, 40], [20, 54]]) { pen.beginPath(); pen.moveTo(x - 4, y - 7); pen.lineTo(x, y); pen.lineTo(x + 4, y - 7); pen.stroke(); } }] },
-  // Cut paper: pale water that steps down from the shore, lakes sunk into the ground, lawns raised off it.
-  c: { deep: 'oklch(72% 0.1 236)', shore: [[250, 'oklch(79% 0.08 230)'], [120, 'oklch(86% 0.055 225)']], sunk: true, raised: true, green: 'oklch(89% 0.1 136)', tree: 'oklch(66% 0.15 150)', leaf: 'oklch(81% 0.14 140)',
-    tufts: [30, 'oklch(81% 0.13 140)', (pen, size) => { pen.beginPath(); pen.arc(size / 2, size / 2, 3, 0, 7); pen.fill(); }] },
+  g: { ...BASE, deep: 'oklch(71% 0.135 236)' }, // cartoon blue
+  h: { ...BASE, deep: 'oklch(79% 0.115 205)' }, // cartoon aqua
 };
 const style = STYLES[ask.get('look')];
 if (style) {
-  for (const key of ['marks', 'tufts']) if (style[key]) { const [size, colour, work] = style[key]; style[key] = tile(size, (pen, across) => { pen.strokeStyle = pen.fillStyle = colour; pen.lineCap = pen.lineJoin = 'round'; work(pen, across); }); style[key].size = size; }
   Object.assign(C, { green: style.green, tree: style.tree });
+  style.tufts = tile(64, pen => { pen.strokeStyle = 'oklch(80% 0.15 140)'; pen.lineCap = pen.lineJoin = 'round'; pen.lineWidth = 2.5; for (const [x, y] of [[12, 16], [44, 40], [20, 54]]) { pen.beginPath(); pen.moveTo(x - 4, y - 7); pen.lineTo(x, y); pen.lineTo(x + 4, y - 7); pen.stroke(); } });
 }
-// The open water round an island, and the paler water close to its shore.
+// The shore of a cartoon: two rings going out from it and fading, then foam like a row of little clouds.
+// `path` is the island's outline; without one, the outline just traced with the pen is used (a lake). `k` scales it for small water.
+function toonShore(t, path, k) {
+  const stroke = () => path ? ctx.stroke(path) : ctx.stroke();
+  ctx.lineJoin = ctx.lineCap = 'round';
+  for (const beat of [(t * 0.14 + 0.5) % 1, (t * 0.14) % 1].sort((one, two) => two - one)) {
+    const far = (30 + beat * 120) * k;
+    ctx.globalAlpha = (1 - beat) ** 0.7; ctx.strokeStyle = C.paper; ctx.lineWidth = 2 * far + 9 * k; stroke();
+    ctx.globalAlpha = 1; ctx.strokeStyle = style.deep; ctx.lineWidth = 2 * far; stroke(); // leaves only the ring's line
+  }
+  const puff = (17 + 3 * Math.sin(t * 1.6)) * k;
+  ctx.strokeStyle = C.paper; ctx.lineWidth = 2 * puff; stroke();
+  ctx.setLineDash([0.1, 38 * k]); ctx.lineDashOffset = -t * 7; ctx.lineWidth = 2 * puff + 22 * k; stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+}
+// Wave marks on open water: a fat white squiggle here and there, each coming up, sliding a little and going.
+function squiggles(t, x, y, w, h) {
+  ctx.strokeStyle = C.paper; ctx.lineWidth = 6; ctx.lineCap = ctx.lineJoin = 'round';
+  for (let gx = Math.floor(x / 160) * 160; gx < x + w; gx += 160) for (let gy = Math.floor(y / 160) * 160; gy < y + h; gy += 160) {
+    const here = { x: gx, y: gy };
+    if (chance(here, 4) > 0.6) continue;
+    const life = (t * 0.13 + chance(here, 3)) % 1, r = 13 + chance(here, 5) * 11, px = gx + 30 + chance(here, 1) * 100 + life * 26, py = gy + 30 + chance(here, 2) * 100;
+    ctx.globalAlpha = Math.min(1, Math.sin(life * Math.PI) * 1.6);
+    ctx.beginPath(); ctx.moveTo(px - r, py); ctx.quadraticCurveTo(px - r / 2, py - r * 0.75, px, py); ctx.quadraticCurveTo(px + r / 2, py + r * 0.75, px + r, py);
+    if (chance(here, 6) > 0.5) { ctx.moveTo(px - r * 0.1, py + r * 1.7); ctx.quadraticCurveTo(px + r * 0.4, py + r * 1.05, px + r * 0.9, py + r * 1.7); }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+// The open water round an island.
 function sea(t, x, y, w, h) {
   ctx.fillStyle = style.deep; ctx.fillRect(x, y, w, h);
   if (quality === 2) return;
-  if (style.marks) { style.marks.setTransform(new DOMMatrix().translate(t * 7 % style.marks.size, Math.sin(t * 0.5) * 5)); ctx.fillStyle = style.marks; ctx.fillRect(x, y, w, h); } // they drift
-  ctx.lineJoin = 'round';
-  for (const [width, colour] of style.shore) { ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.stroke(land); }
-  if (style.foam) { ctx.setLineDash([34, 26]); ctx.lineCap = 'round'; ctx.lineDashOffset = -t * 6; ctx.strokeStyle = C.paper; ctx.lineWidth = 46; ctx.stroke(land); ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.strokeStyle = style.shore[0][1]; ctx.lineWidth = 34; ctx.stroke(land); }
+  toonShore(t, land, 1);
+  squiggles(t, x, y, w, h);
 }
+// A lake, with what lives on it: lily pads, and two ducks going round.
 function lake(thing, t) {
+  const { w, h } = thing, reach = Math.max(w, h) * 0.62;
   ctx.save(); shape(thing); ctx.fillStyle = style.deep; ctx.fill(); ctx.clip();
-  ctx.lineJoin = 'round';
-  for (const [width, colour] of style.shore) { ctx.strokeStyle = colour; ctx.lineWidth = width * 0.5; ctx.stroke(); }
-  if (style.marks) { style.marks.setTransform(new DOMMatrix().translate(t * 7 % style.marks.size, 0)); ctx.fillStyle = style.marks; ctx.fill(); }
-  if (style.foam) { ctx.setLineDash([22, 18]); ctx.lineCap = 'round'; ctx.strokeStyle = C.paper; ctx.lineWidth = 26; ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = style.shore[0][1]; ctx.lineWidth = 16; ctx.stroke(); }
-  // Sunk: the ground's own edge throws a hard shadow onto the water along the top and left.
-  if (style.sunk) { ctx.save(); ctx.rotate(-thing.turn); ctx.translate(9 - thing.x, 9 - thing.y); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 18; ctx.stroke(); ctx.restore(); }
+  toonShore(t, null, 0.6);
+  squiggles(t, -reach, -reach, reach * 2, reach * 2);
+  [[-0.27, 0.16, 17, 1], [-0.19, 0.25, 12, 0], [0.02, -0.31, 15, 0], [0.3, 0.1, 13, 1]].forEach(([fx, fy, r, flower], n) => {
+    const x = fx * w, y = fy * h + Math.sin(t * 0.9 + n * 2) * 2.5;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, 0.5 + n, 0.5 + n + Math.PI * 1.8); ctx.closePath(); ctx.lineJoin = 'round'; inked('oklch(76% 0.17 140)', 3);
+    if (flower) { ctx.fillStyle = 'oklch(84% 0.11 0)'; for (let q = 0; q < 5; q++) { ring(x + Math.cos(q * 1.257) * 4.5, y + Math.sin(q * 1.257) * 4.5, 3.4); ctx.fill(); } ring(x, y, 2.6); ctx.fillStyle = C.lamp; ctx.fill(); }
+  });
+  for (const [n, fill, size] of [[0, C.paper, 1], [1, C.lamp, 0.78]]) {
+    const around = t * 0.22 - n * 0.95, x = Math.cos(around) * w * 0.2, y = Math.sin(around) * h * 0.15;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(Math.cos(around) * h * 0.15, -Math.sin(around) * w * 0.2)); ctx.scale(size, size);
+    ctx.strokeStyle = C.paper; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-16, -8); ctx.lineTo(-34, -17); ctx.moveTo(-16, 8); ctx.lineTo(-34, 17); ctx.stroke(); // its wake
+    ctx.beginPath(); ctx.moveTo(19, -4.5); ctx.lineTo(28, 0); ctx.lineTo(19, 4.5); ctx.closePath(); ctx.lineJoin = 'round'; inked('oklch(74% 0.17 55)', 3);
+    ctx.beginPath(); ctx.ellipse(-2, 0, 16, 12, 0, 0, 7); inked(fill, 3); ring(12, 0, 8.5); inked(fill, 3);
+    ctx.fillStyle = C.ink; ring(14.5, -3.6, 1.5); ctx.fill(); ring(14.5, 3.6, 1.5); ctx.fill();
+    ctx.restore();
+  }
   ctx.restore();
-  ctx.save(); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+  ctx.save(); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 5; ctx.stroke(); ctx.restore();
 }
 function lawn(thing) {
   const { w, h } = thing;
-  if (style.raised) { ctx.save(); ctx.translate(7, 7); shape(thing); ctx.fillStyle = C.ink; ctx.fill(); ctx.restore(); }
   ctx.save(); shape(thing); ctx.fillStyle = C.green; ctx.fill(); ctx.clip();
-  if (style.mown) { ctx.fillStyle = style.mown; for (let y = -h / 2; y < h / 2; y += 56) ctx.fillRect(-w / 2, y, w, 28); }
-  if (style.tufts) { ctx.fillStyle = style.tufts; ctx.fillRect(-w / 2, -h / 2, w, h); }
+  ctx.fillStyle = style.tufts; ctx.fillRect(-w / 2, -h / 2, w, h);
   if (thing.kind === 'field') { ctx.beginPath(); for (let k = 1; k < 8; k++) { const y = -h / 2 + h * k / 8; ctx.moveTo(-w / 2 + 8, y); ctx.lineTo(w / 2 - 8, y); } ctx.strokeStyle = C.paper; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); }
   ctx.restore();
   ctx.save(); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.stroke(); ctx.restore();
@@ -350,10 +389,10 @@ function lawn(thing) {
 function canopy(x, y, r, fill) {
   const light = fill === C.tree ? style.leaf : 'rgba(255, 255, 255, .45)';
   const lobes = (at, by) => { ctx.beginPath(); for (let n = 0; n < 7; n++) { const a = n * Math.PI * 2 / 7; ctx.moveTo(at + Math.cos(a) * r * 0.62 + r * 0.5, by + Math.sin(a) * r * 0.62); ctx.arc(at + Math.cos(a) * r * 0.62, by + Math.sin(a) * r * 0.62, r * 0.5, 0, 7); } ctx.moveTo(at + r * 0.7, by); ctx.arc(at, by, r * 0.7, 0, 7); };
-  const trace = style.scallop ? lobes : (at, by) => ring(at, by, r);
+  const trace = lobes;
   trace(x + 4, y + 5); ctx.fillStyle = C.ink; ctx.fill(); // its hard shadow on the ground
   trace(x, y); ctx.strokeStyle = C.ink; ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.stroke(); ctx.fillStyle = fill; ctx.fill();
-  ring(x - r * 0.2, y - r * 0.22, r * (style.scallop ? 0.42 : 0.56)); ctx.fillStyle = light; ctx.fill();
+  ring(x - r * 0.2, y - r * 0.22, r * 0.42); ctx.fillStyle = light; ctx.fill();
 }
 
 // The print map's water: blue waves on its paper.
