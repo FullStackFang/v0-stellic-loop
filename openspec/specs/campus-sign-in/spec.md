@@ -41,7 +41,7 @@ The sign-in card SHALL show a school menu listing the four schools. As the visit
 - **THEN** the card names the schools Loop is at and asks for a school email
 
 ### Requirement: A person belongs to the school of their email
-After sign-in the system SHALL place the person at the campus whose domain their verified email ends in, whatever the menu showed, and SHALL send them to that campus's screen. This applies to Google sign-in as well. A person whose verified email matches no school SHALL NOT be placed at a campus and SHALL be told which schools Loop is at; the admin is the exception and MAY open any campus.
+After sign-in the system SHALL find the school whose domain the person's verified email ends in, whatever the menu showed. When that school has one campus the system SHALL place the person there and SHALL send them to that campus's screen. When that school has more than one campus the system SHALL place the person at the campus of that school nearest to where they seem to be, and at the school's first campus when nothing says where they are, and SHALL send them to that campus's screen; a person already placed SHALL stay where they are. This applies to Google sign-in as well. A person whose verified email matches no school SHALL NOT be placed at a campus and SHALL be told which schools Loop is at; the admin is the exception and MAY open any campus.
 
 #### Scenario: Google sign-in with a school account
 - **WHEN** a person continues with a Google account at `columbia.edu`
@@ -58,4 +58,8 @@ After sign-in the system SHALL place the person at the campus whose domain their
 #### Scenario: The admin moves between schools
 - **WHEN** the admin opens another school's campus screen
 - **THEN** it opens
+
+#### Scenario: A school with two campuses
+- **WHEN** a person signs in for the first time with a verified `cornell.edu` address and seems to be in New York City
+- **THEN** they land on Cornell Tech's screen without being asked which campus
 
