@@ -58,7 +58,13 @@ export const inside = (point: Point, ring: readonly Point[]) => ring.reduce((hit
   const b = ring[(at + 1) % ring.length];
   return (a[1] > point[1]) !== (b[1] > point[1]) && point[0] < (b[0] - a[0]) * (point[1] - a[1]) / (b[1] - a[1]) + a[0] ? !hit : hit;
 }, false);
-export const sectionAt = (land: readonly Section[], point: Point) => land.find(each => inside(point, each.ring)) ?? null;
+/** Of these campuses, the one nearest a point, by where each one's first section rests. Null with no point, or when none of them is drawn. */
+export function nearestCampus<T extends { slug: string }>(campuses: readonly T[], at: Point | null | undefined): T | null {
+  if (!at) return null;
+  const drawn = campuses.filter(each => LANDS[each.slug]), far = (each: T) => metres(at, LANDS[each.slug][0].rest);
+  return drawn.reduce<T | null>((best, each) => !best || far(each) < far(best) ? each : best, null);
+}
+export const sectionAt =(land: readonly Section[], point: Point) => land.find(each => inside(point, each.ring)) ?? null;
 export const middle = (ring: readonly Point[]): Point => [ring.reduce((sum, p) => sum + p[0], 0) / ring.length, ring.reduce((sum, p) => sum + p[1], 0) / ring.length];
 export const metres = (a: Point, b: Point) => Math.hypot((a[0] - b[0]) * 111320 * Math.cos(a[1] * Math.PI / 180), (a[1] - b[1]) * 110540);
 /** Metres of straight line covered in a minute on foot: an easy 78 m a minute, with the paths taken as 1.5 times the straight line, the top of the usual range, so the time runs long rather than short. */

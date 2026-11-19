@@ -4,7 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Loop Ink</title>
-<script>if (window.self !== window.top) document.documentElement.classList.add('framed');</script>
+<script>
+// Inside the app (/c/ink) the page wears the colours of the school the person is in: it reads them from the campus
+// screen around it, and again whenever the person picks other colours. Opened on its own it keeps the Cornell ones below.
+(function () {
+  if (window.self === window.top) return;
+  var root = document.documentElement; root.classList.add('framed');
+  var PAIRS = [['--field', '--cs-field'], ['--field-shadow', '--cs-field-shadow'], ['--ink', '--cs-ink'], ['--action', '--cs-action'], ['--action-hover', '--cs-action-hover']];
+  function wear() {
+    try {
+      var host = parent.document.querySelector('.cs'); if (!host) return;
+      var from = parent.getComputedStyle(host);
+      PAIRS.forEach(function (pair) { var value = from.getPropertyValue(pair[1]).trim(); if (value) root.style.setProperty(pair[0], value); });
+      // The highlight is yellow. On a school whose own colour is yellow or lime it would vanish, so there it is a pale tint of the school's other colour.
+      var hue = +(/oklch\([^ ]+ [^ ]+ ([\d.]+)/.exec(from.getPropertyValue('--cs-field')) || [])[1];
+      if (hue >= 70 && hue <= 135) root.style.setProperty('--hot', 'color-mix(in oklab, var(--action) 26%, var(--paper))'); else root.style.removeProperty('--hot');
+    } catch (error) { /* another origin: keep the colours below */ }
+  }
+  wear();
+  try { new MutationObserver(wear).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-kit'] }); } catch (error) { /* as above */ }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">

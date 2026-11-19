@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bounds, held, hops, landOf, middle, reach, sectionAt, walkMinutes, wayOn, type Point } from '@/lib/campus/sections';
+import { bounds, held, hops, landOf, middle, nearestCampus, reach, sectionAt, walkMinutes, wayOn, type Point } from '@/lib/campus/sections';
 
 const land = landOf('cornell')!;
 const sec = (id: string) => land.find(each => each.id === id)!;
@@ -108,5 +108,21 @@ describe('New York: one stop is one section', () => {
     expect(wayOn(city, 'roosevelt', 'roosevelt', [-.01, 0], on)).toMatchObject({ id: 'lex63', kind: 'go' });
     expect(wayOn(city, 'roosevelt', 'roosevelt', [.01, -.004], on)).toMatchObject({ id: 'queensbridge', kind: 'empty' });
     expect(wayOn(city, 'roosevelt', 'roosevelt', [0, .01], on)).toMatchObject({ id: null, kind: 'none' });
+  });
+});
+
+describe('the nearer campus', () => {
+  const both = [{ slug: 'cornell' }, { slug: 'cornell-tech' }];
+  const BROOKLYN: Point = [-73.95, 40.65], SYRACUSE: Point = [-76.15, 43.05];
+
+  it('is New York from the city and Ithaca from upstate, whatever the order', () => {
+    expect(nearestCampus(both, BROOKLYN)?.slug).toBe('cornell-tech');
+    expect(nearestCampus(both, SYRACUSE)?.slug).toBe('cornell');
+    expect(nearestCampus([...both].reverse(), SYRACUSE)?.slug).toBe('cornell');
+  });
+
+  it('is nobody when nothing says where the person is, or no campus is drawn', () => {
+    expect(nearestCampus(both, null)).toBeNull();
+    expect(nearestCampus([{ slug: 'nyu' }], BROOKLYN)).toBeNull();
   });
 });

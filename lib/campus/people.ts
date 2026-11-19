@@ -9,19 +9,23 @@ import { hasInk } from './ink';
 import { CampusError } from './errors';
 import { listCampuses, type Campus } from './listings';
 import { schoolOf, schoolOfEmail } from './schools';
+import { nearestCampus, type Point } from './sections';
 
 /**
  * The campus a person belongs to (design D21). They are placed the first time they are seen, at the school their
  * verified email ends in, and stay there. Null for an address at no school: that person has no campus.
+ * Where the school has more than one campus they are placed at the one nearest `near`, which is where they seem to be
+ * (openspec loop-nyc-campus, design D2); with nothing to go on, at the school's first.
  */
-export async function campusOf(db: Db, who: { personId: string; verifiedEmail: string | null }): Promise<Campus | null> {
+export async function campusOf(db: Db, who: { personId: string; verifiedEmail: string | null }, near?: Point | null): Promise<Campus | null> {
   const campuses = await listCampuses(db);
   const placed = async () => (await db.query<{ id: string }>('select campus_id as id from campus_person where person_id=$1', [who.personId])).rows[0]?.id;
   let id = await placed();
   if (!id) {
     const school = schoolOfEmail(campuses, who.verifiedEmail);
     if (!school) return null;
-    await db.query('insert into campus_person(person_id,campus_id) values($1,$2) on conflict do nothing', [who.personId, school.id]);
+    const home = nearestCampus(campuses.filter(each => schoolOf(each.slug) === school.slug), near) ?? school;
+    await db.query('insert into campus_person(person_id,campus_id) values($1,$2) on conflict do nothing', [who.personId, home.id]);
     id = await placed();
   }
   return campuses.find(campus => campus.id === id) ?? null;
