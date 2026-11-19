@@ -27,20 +27,31 @@ export function FitLines({ lines }: { lines: ReactNode[] }) {
 /**
  * "Continue with LinkedIn", for someone who signed in another way: LinkedIn is connected to the account they have, so
  * nobody signs in twice. They go to LinkedIn and come back to this page, which then knows the LinkedIn account is
- * theirs. Not shown where the sign-in service says LinkedIn is switched off. Rendered only where sign-in is set up.
+ * theirs. `other` sits beside the button. Where the sign-in service says LinkedIn is switched off there is no button,
+ * and `fallback` is shown in its place. Rendered only where sign-in is set up.
  */
-export function ConnectLinkedin() {
+export function ConnectLinkedin({ other, fallback }: { other?: ReactNode; fallback?: ReactNode }) {
   const clerk = useClerk(), { user } = useUser(), [message, setMessage] = useState(''), [busy, start] = useTransition();
   const off = (clerk as unknown as { __unstable__environment?: { userSettings?: { social?: Record<string, { enabled?: boolean } | undefined> } } }).__unstable__environment?.userSettings?.social?.oauth_linkedin_oidc?.enabled === false;
-  if (off || !user) return null;
+  if (off) return <>{fallback}<div className="cs-ns-row">{other}</div></>;
   const connect = () => start(async () => {
     try {
+      if (!user) throw new Error('not signed in');
       const account = await user.createExternalAccount({ strategy: 'oauth_linkedin_oidc', redirectUrl: window.location.href }), to = account.verification?.externalVerificationRedirectURL;
       if (!to) throw new Error('no way to LinkedIn');
       window.location.assign(to.href);
-    } catch { setMessage('LinkedIn did not connect. You can still paste the address of your profile below.'); }
+    } catch { setMessage('LinkedIn did not connect. Try again in a moment.'); }
   });
-  return <div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy} onClick={connect}>Continue with LinkedIn</button>{message && <p role="alert">{message}</p>}</div>;
+  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>Continue with LinkedIn</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
+}
+
+/** "My school is not here yet": a pill that opens the box for naming it. Open from the start once a school is named. */
+export function NotHere({ asked, email }: { asked: string | null; email: string | null }) {
+  const [open, setOpen] = useState(asked !== null);
+  return <>
+    <div className="cs-ns-row"><button type="button" className="cs-kit" aria-pressed={open} onClick={() => setOpen(!open)}><i />My school is not here yet</button></div>
+    {open && <SchoolAsk asked={asked} email={email} />}
+  </>;
 }
 
 /** "Which school are you at?": one box and one button, and afterwards the school they named, kept. */

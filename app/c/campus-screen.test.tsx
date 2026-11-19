@@ -723,8 +723,7 @@ describe('the pages', () => {
     for (const slug of ['cornell', 'cornell-tech', 'columbia']) {
       render(await withPortalTestSession(outsider, () => page(slug)));
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now. If that changes, we’ll let you know.');
-      expect(screen.getByText('omar@gmail.com', { selector: 'b' })).toBeInTheDocument();
-      expect(within(screen.getByRole('list')).getAllByRole('listitem').map(each => each.textContent).sort()).toEqual(['CUNYcuny.edu', 'Columbiacolumbia.edu', 'Cornellcornell.edu', 'NYUnyu.edu']);
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('omar@gmail.com is not a school email');
       expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Post a plan' })).toBeNull();
       cleanup();
@@ -743,7 +742,7 @@ describe('the pages', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Your LinkedIn profile' }), { target: { value: 'omar reyes' } });
     fireEvent.click(schools.getByRole('button', { name: 'Columbia' }));
     expect(schools.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
-    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Unlock' })); await screen.findByRole('alert'); });
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Send for a check' })); await screen.findByRole('alert'); });
     expect(screen.getByRole('alert')).toHaveTextContent('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', []))).toEqual({ ok: false, message: 'Pick at least one school.' });
     cleanup();
@@ -801,13 +800,14 @@ describe('the pages', () => {
   });
   it('a person who signed in with LinkedIn is shown the account is theirs, has one step left, and the admin sees the name', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
-    // Without LinkedIn the ticket says how to get in; the LinkedIn ticket comes first either way.
+    // Without LinkedIn there is one ticket, and it says the email is not a school's.
     render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['No school email? Use LinkedIn', 'At one of these schools?', 'Which school are you at?']);
+    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['omar@gmail.com is not a school email']);
     cleanup();
     linkedinOf.account = { name: 'Omar Reyes', photo: 'https://img.test/omar.jpg' };
     render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('One step left: pick your school');
+    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['Pick your school']);
+    expect(screen.getByRole('button', { name: 'Send for a check' })).toBeInTheDocument();
     expect(screen.getByText('Signed in with LinkedIn').previousElementSibling).toHaveTextContent('Omar Reyes');
     expect(screen.getByText('Yours')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toBeInTheDocument();
@@ -816,6 +816,7 @@ describe('the pages', () => {
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['nyu']))).toEqual({ ok: true });
     render(await withPortalTestSession(outsider, () => page('cornell')));
     expect(screen.getByText('Waiting')).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['We are checking']);
     cleanup(); linkedinOf.account = null;
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
     render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
@@ -824,6 +825,9 @@ describe('the pages', () => {
   it('a person at no school names their school, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('cornell')));
+    // The box for a school Loop is not at stays shut until its pill is pressed.
+    expect(screen.queryByRole('textbox', { name: 'Your school' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'My school is not here yet' }));
     expect(screen.getByRole('status')).toHaveTextContent('We will email omar@gmail.com when Loop opens there.');
     // The box is required, so an empty one never leaves the page; the action refuses one by itself.
     expect(await withPortalTestSession(outsider, () => askSchoolAction(' '))).toEqual({ ok: false, message: 'Type the name of your school.' });

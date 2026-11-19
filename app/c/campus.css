@@ -413,6 +413,11 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-door-in input, .cs-door-in select, .cs-form input, .cs-form textarea, .cs-form select { width: 100%; height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14.5px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-ink) 28%, transparent); }
 .cs-form textarea { height: auto; min-height: 74px; padding: 9px 12px; resize: vertical; }
 .cs-door-in select, .cs-form select { appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--cs-ink) 50%), linear-gradient(135deg, var(--cs-ink) 50%, transparent 50%); background-position: calc(100% - 17px) 16px, calc(100% - 12px) 16px; background-size: 5px 5px; background-repeat: no-repeat; }
+/* An email at no school, where there is a LinkedIn button: LinkedIn is the one way on, and it takes the look of Continue. */
+.cs-door-in[data-away] .cl-formButtonPrimary, .cs-door-in[data-away] .cl-dividerRow, .cs-door-in[data-away] .cl-socialButtonsBlockButton:not([class*="linkedin"]) { display: none !important; }
+.cs-door-in[data-away] .cl-socialButtons { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; }
+.cs-door-in[data-away] .cl-socialButtonsBlockButton[class*="linkedin"] { font-weight: 640 !important; color: var(--cs-paper) !important; background: var(--cs-action) !important; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink) !important; }
+.cs-door-in[data-away] .cl-socialButtonsBlockButton[class*="linkedin"] * { color: inherit !important; }
 .cs-door-in .seen { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin: -2px 0; padding: 4px 13px 4px 8px; border-radius: 99px; background: var(--cs-field); font-size: 13px; font-weight: 640; animation: cs-in .4s var(--cs-expo); }
 .cs-door-in .seen::before { content: ''; flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--cs-action); box-shadow: 0 0 0 1.5px var(--cs-ink); } .cs-door-in .seen:empty { display: none; }
 .cs-door-in .fine { font-size: 12.5px; color: var(--cs-mute); text-align: center; }
