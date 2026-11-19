@@ -101,14 +101,14 @@ export async function customFaces(q: Q, personIds: readonly string[]): Promise<M
  * animal is drawn from the photo and becomes their face. Later pictures need no email again. `unlimited` is for the
  * admin, who tests this and is never stopped at the free one. Returns the picture's token.
  */
-export async function makeCustomFace(db: Db, personId: string, upload: Uint8Array, email: string | null, draw: Draw = drawFace, unlimited = false): Promise<{ token: string; left: number }> {
+export async function makeCustomFace(db: Db, personId: string, upload: Uint8Array, email: string | null, draw: Draw = drawFace, unlimited = false, /** A short line of the person's own for the drawing, as when it is drawn again. */ note = ''): Promise<{ token: string; left: number }> {
   const { rows: [had] } = await db.query<{ makes: number }>('select makes from campus_custom_face where person_id=$1', [personId]);
   const given = (email ?? '').trim().toLowerCase();
   if (!had && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(given)) throw new CampusError('Enter the email to subscribe with.');
   if (had && had.makes >= MAKES && !unlimited) throw new CampusError(ALL);
   // The ask is kept even when the drawing fails: it is what the test counts.
   if (!had) await db.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
-  const image = await draw(upload);
+  const image = await draw(upload, [], note);
   // Every picture is kept; the new one becomes the one in use.
   const made = await db.tx(async q => {
     const { rows: [row] } = await q.query<{ token: string; makes: number }>('update campus_custom_face set token=gen_random_uuid(),makes=makes+1,made_at=now() where person_id=$1 and (makes<$2 or $3) returning token,makes', [personId, MAKES, unlimited]);

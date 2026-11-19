@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" data-kit="columbia">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin animals · names and search words</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
+/* Roles and the Columbia colours, as in app/c/campus.css. */
+:root { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); --action-hover: oklch(52% 0.15 255);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245); --warn: oklch(52% 0.17 28); --expo: cubic-bezier(.16, 1, .3, 1);
+  --school: oklch(62% 0.13 235); --gold: oklch(74% 0.14 85); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font: 15px/1.45 Archivo, system-ui, sans-serif; letter-spacing: -0.012em; color: var(--ink); background: oklch(22% 0.03 252); -webkit-font-smoothing: antialiased; }
+button, input { font: inherit; color: inherit; letter-spacing: inherit; } button { background: none; border: 0; cursor: pointer; } ul { list-style: none; } img { display: block; }
+
+/* The chooser: outside the design. */
+.pick { position: sticky; top: 0; z-index: 9; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 16px; background: oklch(22% 0.03 252); color: oklch(92% 0.01 240); font-size: 13.5px; }
+.pick > b { margin-right: 6px; font-weight: 640; } .pick > button { height: 32px; padding: 0 14px; border-radius: 99px; box-shadow: inset 0 0 0 1px oklch(50% 0.03 250); font-weight: 580; }
+.pick > button[aria-pressed=true] { background: var(--field); color: var(--ink); box-shadow: none; }
+.try { margin-left: auto; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 8px 0 14px; border-radius: 99px; background: oklch(30% 0.035 252); }
+.try input { width: 190px; height: 30px; padding: 0 12px; border: 0; border-radius: 99px; background: oklch(96% 0.01 240); color: oklch(22% 0.03 252); font-size: 13.5px; }
+.try div { display: flex; align-items: center; gap: 4px; min-width: 120px; } .try img { width: 34px; height: 34px; border-radius: 50%; background: oklch(96% 0.01 240); object-fit: contain; } .try i { font-style: normal; color: oklch(72% 0.02 245); }
+.how { padding: 0 16px 10px; color: oklch(78% 0.02 245); font-size: 13.5px; max-width: 1100px; } .how b { color: oklch(96% 0.01 240); font-weight: 640; }
+.frame { margin: 0 12px 12px; border-radius: 14px; overflow: hidden; background: var(--page); min-height: calc(100vh - 110px); }
+
+/* The admin page, as it is live: bar, rail, one section. */
+.bar { display: flex; align-items: center; gap: 14px; height: 58px; padding: 0 24px; background: var(--field); border-bottom: 2px solid var(--ink); }
+.bar .wm { font-size: 24px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.04em; } .bar span { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 99px; background: var(--ink); color: var(--field); font-size: 13.5px; font-weight: 660; }
+.adm { display: grid; grid-template-columns: 216px minmax(0, 1fr); } .rail { display: grid; align-content: start; gap: 4px; padding: 26px 14px 26px 22px; border-right: 1px solid var(--line); min-height: 80vh; }
+.rail a { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 12px; border-radius: 10px; font-weight: 560; } .rail a.on { background: var(--ink); color: var(--paper); font-weight: 660; } .rail small { font-size: 12.5px; opacity: .7; }
+.main { min-width: 0; padding: 26px 32px 110px; } .top { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; } .top h1 { margin-right: auto; font-size: 26px; font-weight: 700; letter-spacing: -0.035em; }
+.said { margin-bottom: 18px; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 580; background: color-mix(in oklch, var(--field) 30%, var(--paper)); animation: in .35s var(--expo); }
+@keyframes in { from { opacity: 0; transform: translateY(6px); } }
+.seg { display: inline-flex; padding: 3px; border-radius: 99px; background: color-mix(in oklch, var(--ink) 8%, transparent); } .seg button, .seg span { display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; }
+.seg .on { font-weight: 660; background: var(--paper); box-shadow: 0 1px 2px color-mix(in oklch, var(--ink) 18%, transparent); }
+.segs { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.b { display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border-radius: 99px; white-space: nowrap; font-size: 13px; font-weight: 620; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 22%, transparent); transition: background .15s, color .15s; }
+.b:hover { background: var(--ink); color: var(--paper); box-shadow: none; } .b.go { background: var(--action); color: var(--paper); box-shadow: none; } .b.go:hover { background: var(--action-hover); }
+input.t { height: 38px; padding: 0 12px; border: 0; border-radius: 8px; font-size: 14.5px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); min-width: 0; width: 100%; } input.t:focus { outline: 0; box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+/* The grid of faces, as live. */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px 4px; margin: 20px 0; align-content: start; }
+.tile { position: relative; display: grid; justify-items: center; gap: 4px; width: 100%; padding: 8px 0 6px; border-radius: 16px; font-size: 11.5px; font-weight: 600; color: var(--mute); transition: background .15s; } .tile:hover { background: color-mix(in oklch, var(--ink) 5%, transparent); }
+.tile img { width: 64px; height: 64px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--ink) 7%, var(--paper)); } .tile.on { background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); }
+.tile.school img { box-shadow: 0 0 0 2.5px var(--school); } .tile.premium img { box-shadow: 0 0 0 2.5px var(--gold); } .tile.premium { color: var(--action); }
+.tray { position: sticky; bottom: 16px; display: flex; align-items: center; gap: 8px; width: fit-content; margin: 24px auto 0; padding: 8px 8px 8px 18px; border-radius: 28px; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px color-mix(in oklch, var(--ink) 30%, transparent); }
+.tray button { height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 660; background: var(--field); color: var(--ink); } .tray .x { background: none; color: var(--paper); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--paper) 40%, transparent); }
+
+/* Shared by A and C: a field with its name on a tab, and the words as chips. */
+.fld { position: relative; display: block; } .fld > b { position: absolute; z-index: 1; top: -9px; left: 10px; height: 18px; padding: 0 8px; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 11px; font-weight: 640; line-height: 18px; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 38px; padding: 7px 8px 5px; border-radius: 8px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); cursor: text; } .chips:focus-within { box-shadow: inset 0 0 0 1.5px var(--ink); }
+.chip { display: inline-flex; align-items: center; gap: 2px; height: 26px; padding: 0 3px 0 11px; border-radius: 99px; background: color-mix(in oklch, var(--field) 55%, var(--paper)); font-size: 13.5px; font-weight: 600; }
+.chip button { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: color-mix(in oklch, var(--ink) 12%, transparent); font-size: 13px; line-height: 1; } .chip button:hover { background: var(--ink); color: var(--paper); }
+.chips input { flex: 1; min-width: 150px; height: 26px; border: 0; background: none; font-size: 14px; } .chips input:focus { outline: 0; }
+.raised { background: var(--paper); border-radius: 18px; box-shadow: inset 0 1px 0 #fff, 0 1px 2px color-mix(in oklch, var(--ink) 14%, transparent), 0 12px 28px color-mix(in oklch, var(--ink) 12%, transparent); }
+
+/* A: the picked animal opens a card beside the grid. */
+.a-split { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; align-items: start; }
+.sheet { position: sticky; top: 76px; display: grid; gap: 18px; margin-top: 20px; padding: 22px 20px 20px; animation: in .3s var(--expo); } .sheet .who { display: flex; align-items: center; gap: 14px; }
+.sheet .who img { width: 88px; height: 88px; border-radius: 50%; object-fit: contain; background: color-mix(in oklch, var(--ink) 7%, var(--paper)); } .sheet .who span { display: inline-flex; height: 26px; align-items: center; padding: 0 12px; border-radius: 99px; background: var(--school); color: var(--paper); font-size: 12.5px; font-weight: 660; }
+.sheet .act { display: flex; gap: 8px; }
+
+/* B: a second view of the same section. One row per animal, typed in place. */
+.tbl { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 14px; } .tbl th { padding: 0 12px 8px 0; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); }
+.tbl td { padding: 7px 12px 7px 0; border-top: 1px solid var(--line); vertical-align: middle; } .tbl td:first-child { width: 60px; } .tbl td:nth-child(2) { width: 24%; } .tbl td:nth-child(4) { width: 96px; } .tbl td:last-child { width: 70px; padding-right: 0; }
+.tbl img { width: 44px; height: 44px; border-radius: 50%; object-fit: contain; background: color-mix(in oklch, var(--ink) 7%, var(--paper)); } .tbl input.t { background: none; box-shadow: none; height: 34px; } .tbl input.t:hover { box-shadow: inset 0 0 0 1px var(--line); } .tbl input.t:focus { background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tbl input.name { font-weight: 640; } .tbl .b.go { visibility: hidden; } .tbl tr:focus-within .b.go, .tbl tr.open .b.go { visibility: visible; } .tbl tr.open input.words { background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tier { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 99px; font-size: 12px; font-weight: 640; background: color-mix(in oklch, var(--ink) 8%, transparent); } .tier.school { background: var(--school); color: var(--paper); } .tier.premium { background: var(--gold); }
+
+/* C: a pencil on each face opens one wide line under its row. */
+.in-c .grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); } .in-c .tile { cursor: default; } .in-c .tile em { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: normal; font-size: 12.5px; color: var(--ink); }
+.pen { position: absolute; top: 2px; right: calc(50% - 44px); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 3px color-mix(in oklch, var(--ink) 30%, transparent); transition: background .15s, color .15s; } .pen:hover, .tile.on .pen { background: var(--ink); color: var(--paper); } .pen svg { width: 13px; height: 13px; }
+.line { position: relative; grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; margin: 6px 0 10px; padding: 18px 16px 14px; animation: in .3s var(--expo); }
+.line::before { content: ""; position: absolute; top: -7px; left: var(--at, 50%); width: 16px; height: 16px; margin-left: -8px; background: var(--paper); transform: rotate(45deg); border-radius: 3px 0 0 0; box-shadow: -1px -1px 1px color-mix(in oklch, var(--ink) 8%, transparent); }
+.line > img { width: 52px; height: 52px; border-radius: 50%; object-fit: contain; background: color-mix(in oklch, var(--ink) 7%, var(--paper)); flex: none; } .line .fld:nth-of-type(1) { flex: 0 0 200px; } .line .fld:nth-of-type(2) { flex: 1; min-width: 0; } .line .b { height: 38px; padding: 0 18px; font-size: 14px; }
+@media (max-width: 900px) { .adm { grid-template-columns: minmax(0, 1fr); } .rail { display: none; } .a-split { grid-template-columns: minmax(0, 1fr); } .line { flex-wrap: wrap; } .line .fld:nth-of-type(2) { flex-basis: 100%; } .main { padding: 20px 16px 96px; } .try { margin-left: 0; } }
+</style>
+</head>
+<body>
+<div class="pick"><b>Names and search words</b>
+  <button data-dir="a">A · Card beside the grid</button><button data-dir="b">B · Names view</button><button data-dir="c">C · Pencil, one line</button>
+  <label class="try">A person searches the picker<input id="q" value="new york university" aria-label="Try a search"><div id="hits"></div></label></div>
+<p class="how" id="how"></p>
+<div class="frame"><div class="bar"><b class="wm">loop</b><span>Columbia</span><span style="background:none;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)">Admin</span></div>
+  <div class="adm"><nav class="rail"><a>Events<small>212</small></a><a>Rewards<small>6</small></a><a>Feeds<small>4</small></a><a>Places<small>38</small></a><a>Tags<small>57</small></a><a class="on">Animals<small>42</small></a><a>Premium<small>3</small></a><a>Campus<small>5</small></a></nav>
+    <main class="main" id="main"></main></div></div>
+<script>
+const NAMES = ['horse', 'snail', 'elephant', 'bee', 'octopus', 'pig', 'frog', 'chicken', 'dinosaur', 'cat', 'turtle', 'penguin', 'koala', 'sheep', 'panda', 'chick', 'fox', 'tortoise', 'crab', 'giraffe', 'hedgehog', 'seal', 'shiba dog', 'cow', 'narwhal', 'grey panda', 'lamb', 'bat', 'hatching chick', 'axolotl', 'platypus', 'hamster', 'sloth', 'bluebird', 'jellyfish', 'snail with a sprout'];
+const PREMIUM = ['Dachshund', 'Cornell bear', 'Columbia lion', 'NYU bobcat', 'Baruch bearcat', 'Brooklyn bulldog'];
+const TIER = { core: 'Core', premium: 'Premium', school: 'School' };
+// What is live today: the first 36 are "Animal N" with one built-in word; the rest have a name and no words at all.
+const pets = Array.from({ length: 42 }, (_, i) => ({ i, src: `/animals/${String(i + 1).padStart(2, '0')}.png`, name: i < 36 ? `Animal ${i + 1}` : PREMIUM[i - 36], words: i < 36 ? [NAMES[i]] : [], tier: i < 36 ? 'core' : i === 36 ? 'premium' : 'school' }));
+pets[39].words = ['nyu', 'new york university', 'ny university', 'violets'];
+const HOW = {
+  a: '<b>A.</b> Tapping still picks. With one animal picked, a card opens beside the grid with its name and its search words. With several picked, only the move bar shows.',
+  b: '<b>B.</b> A second view of the same section. Every animal is a row; the name and the words are typed in place, the way good-for words are typed on Events. Words are separated by commas, so a word can be a phrase.',
+  c: '<b>C.</b> Each face shows its name and carries a pencil. The pencil opens one wide line under that row. Tapping the face still picks it for moving.' };
+let dir = new URLSearchParams(location.search).get('d') || 'b', open = 39, said = '';
+const esc = text => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const main = document.getElementById('main'), q = document.getElementById('q');
+const show = '<div class="seg"><span class="on">All 42</span><span>Core 36</span><span>Premium 1</span><span>School 5</span><span>Off 0</span></div>';
+const chips = pet => `<label class="fld"><b>Search words</b><span class="chips">${pet.words.map((word, at) => `<span class="chip">${esc(word)}<button data-drop="${at}" aria-label="Remove ${esc(word)}">×</button></span>`).join('')}<input data-add placeholder="add a word or phrase, then Enter"></span></label>`;
+const name = pet => `<label class="fld"><b>Name</b><input class="t" data-name value="${esc(pet.name)}"></label>`;
+const pen = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z"/></svg>';
+
+function hits() {
+  const typed = q.value.trim().toLowerCase(), found = typed ? pets.filter(pet => `${pet.name} ${pet.words.join(' ')}`.toLowerCase().includes(typed)) : [];
+  document.getElementById('hits').innerHTML = found.length ? found.slice(0, 5).map(pet => `<img src="${pet.src}" alt="${esc(pet.name)}" title="${esc(pet.name)}">`).join('') + (found.length > 5 ? `<i>+${found.length - 5}</i>` : '') : '<i>finds nothing</i>';
+}
+function draw(focus) {
+  for (const button of document.querySelectorAll('[data-dir]')) button.setAttribute('aria-pressed', button.dataset.dir === dir);
+  document.getElementById('how').innerHTML = HOW[dir];
+  const pet = pets[open], head = `<div class="top"><h1>Animals</h1></div>${said ? `<p class="said">${esc(said)}</p>` : ''}`;
+  if (dir === 'a') main.innerHTML = `${head}${show}<div class="a-split"><ul class="grid">${pets.map(one => `<li><button class="tile ${one.tier} ${one.i === open ? 'on' : ''}" data-open="${one.i}" title="${esc(one.name)}"><img src="${one.src}" alt=""><span>${TIER[one.tier]}</span></button></li>`).join('')}</ul>
+    ${pet ? `<aside class="sheet raised"><div class="who"><img src="${pet.src}" alt=""><span>${TIER[pet.tier]}</span></div>${name(pet)}${chips(pet)}<div class="act"><button class="b go" data-save>Save</button><button class="b" data-close>Close</button></div></aside>` : ''}</div>
+    ${pet ? '<div class="tray"><span>1 picked · move to</span><button>Core</button><button>Premium</button><button>School</button><button>Off</button><button class="x" data-close>Clear</button></div>' : ''}`;
+  if (dir === 'b') main.innerHTML = `${head}<div class="segs">${show}<div class="seg"><span>Faces</span><span class="on">Names</span></div></div>
+    <table class="tbl"><thead><tr><th></th><th>Name</th><th>Search words</th><th>Where</th><th></th></tr></thead><tbody>${first.map(one => `<tr data-row="${one.i}" class="${one.i === open ? 'open' : ''}"><td><img src="${one.src}" alt=""></td>
+      <td><input class="t name" data-name value="${esc(one.name)}" aria-label="Name"></td><td><input class="t words" data-words value="${esc(one.words.join(', '))}" placeholder="what people might type, with commas between" aria-label="Search words of ${esc(one.name)}"></td>
+      <td><span class="tier ${one.tier}">${TIER[one.tier]}</span></td><td><button class="b go" data-save>Save</button></td></tr>`).join('')}</tbody></table>`;
+  if (dir === 'c') {
+    main.innerHTML = `${head}${show}<ul class="grid">${first.map(one => `<li data-pet="${one.i}"><div class="tile ${one.tier} ${one.i === open ? 'on' : ''}" title="${esc(one.name)}"><img src="${one.src}" alt=""><em>${esc(one.name)}</em><span>${TIER[one.tier]}</span><button class="pen" data-open="${one.i}" aria-label="Edit ${esc(one.name)}">${pen}</button></div></li>`).join('')}</ul>`;
+    // The line sits under the row its animal is in, with a notch pointing at it.
+    if (pet) { const items = [...main.querySelectorAll('.grid > li')], at = items.find(item => Number(item.dataset.pet) === open), last = items.filter(item => item.offsetTop === at.offsetTop).pop(), line = document.createElement('li');
+      line.className = 'line raised'; line.style.setProperty('--at', `${at.offsetLeft - at.parentElement.offsetLeft + at.offsetWidth / 2}px`);
+      line.innerHTML = `<img src="${pet.src}" alt="">${name(pet)}${chips(pet)}<button class="b go" data-save>Save</button><button class="b" data-close>Close</button>`; last.after(line); }
+  }
+  main.className = `main in-${dir}`; hits();
+  if (focus) main.querySelector(focus)?.focus();
+}
+const first = [...pets].sort((one, two) => (two.tier !== "core") - (one.tier !== "core") || one.i - two.i);
+const rowOf = target => { const row = target.closest('[data-row]'); return row ? pets[Number(row.dataset.row)] : pets[open]; };
+document.querySelector('.pick').addEventListener('click', event => { const to = event.target.closest('[data-dir]'); if (to) { dir = to.dataset.dir; open = 39; said = ''; draw(); } });
+main.addEventListener('click', event => {
+  const on = event.target.closest('[data-open],[data-drop],[data-save],[data-close]'); if (!on) { event.target.closest('.chips')?.querySelector('input').focus(); return; }
+  if (on.dataset.open) { open = Number(on.dataset.open) === open ? -1 : Number(on.dataset.open); said = ''; draw(); }
+  else if (on.dataset.drop) { pets[open].words.splice(Number(on.dataset.drop), 1); draw('[data-add]'); }
+  else if (on.hasAttribute('data-close')) { open = -1; draw(); }
+  else { const pet = rowOf(on); said = `Saved ${pet.name}: found by ${pet.words.length ? pet.words.join(', ') : 'its name alone'}.`; draw(); }
+});
+main.addEventListener('keydown', event => {
+  if (!event.target.matches('[data-add]') || (event.key !== 'Enter' && event.key !== ',')) return;
+  event.preventDefault(); const word = event.target.value.trim().toLowerCase();
+  if (word && !pets[open].words.includes(word)) pets[open].words.push(word); draw('[data-add]');
+});
+main.addEventListener('input', event => {
+  const pet = rowOf(event.target);
+  if (event.target.matches('[data-name]')) pet.name = event.target.value;
+  if (event.target.matches('[data-words]')) pet.words = event.target.value.split(',').map(word => word.trim().toLowerCase()).filter(Boolean);
+  hits();
+});
+q.addEventListener('input', hits); addEventListener('resize', () => dir === 'c' && draw()); document.fonts.ready.then(() => draw()); draw();
+</script>
+</body>
+</html>

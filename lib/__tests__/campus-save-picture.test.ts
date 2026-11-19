@@ -41,6 +41,10 @@ it('makes each shape at its size, on the ground picked, and the sticker with no 
   keep('sticker', cut);
   expect([seen.width, seen.height]).toEqual([512, 512]);
   expect((await dot(cut, 2, 2)).alpha).toBe(0);
+  // A white edge all round the figure: going in from the left along its middle, solid white comes first, and it is several dots wide.
+  const row = (await sharp(cut).ensureAlpha().extract({ left: 0, top: 256, width: 256, height: 1 }).raw().toBuffer()), white = [...Array(256).keys()].filter(x => row[x * 4 + 3] === 255 && row[x * 4] === 255 && row[x * 4 + 1] === 255 && row[x * 4 + 2] === 255);
+  expect(white.length).toBeGreaterThanOrEqual(5);
+  expect(white[white.length - 1] - white[0]).toBe(white.length - 1);
   // The tag at the corner is the mark.
   expect((await dot(cut, 418, 366)).colour).toBe(hex(ink.bg));
 });

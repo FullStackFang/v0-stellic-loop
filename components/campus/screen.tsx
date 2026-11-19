@@ -327,7 +327,7 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
   // The picker is one grid. `find` narrows it by name, `only` to one kind: the school's own animals, or the Ink ones. Each kind wears its ring wherever it is.
   const [find, setFind] = useState(''), [only, setOnly] = useState<'' | 'school' | 'ink'>('');
   const hit = (words: string, kind: '' | 'school' | 'ink') => (!only || only === kind) && words.toLowerCase().includes(find.trim().toLowerCase());
-  const called = (one: Pet) => `${one.name} ${one.face === null ? 'made' : NAMES[one.face] ?? ''}`;
+  const called = (one: Pet) => `${one.name} ${one.words}`;
   const tile = (one: Pet, premium = false, locked = false, school = false) => <button key={one.src} className={`cs-pet ${premium ? 'gold' : school ? 'school' : ''}`} title={one.face === null ? undefined : NAMES[one.face]} aria-pressed={one.face === null ? face === CUSTOM && own === one.src : face === one.face} aria-label={one.name}
     onClick={() => locked ? setMaking(true) : one.face === null ? chooseOwn(one.src) : choose(one.face)}><img src={one.src} alt="" />{premium ? <InkMark /> : school && <SchoolMark />}</button>;
   const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot key={big ? face : 0} face={me} className={big && moved ? 'new' : ''} /><b className="cs-lvb">{level + 1}</b>{viewer.admin && <i className="cs-crown" title="Admin"><svg viewBox="0 0 24 20" aria-hidden="true"><path d="M3 16.5 1.5 5.5l5.6 4.2L12 2l4.9 7.7 5.6-4.2L21 16.5z" /><circle cx="1.8" cy="4.6" r="1.6" /><circle cx="12" cy="2" r="1.7" /><circle cx="22.2" cy="4.6" r="1.6" /></svg></i>}</span>;

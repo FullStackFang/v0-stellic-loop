@@ -1,7 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import type { Q } from '../db';
-import { animal, ANIMALS, customFace, MASCOT, PREMIUM } from './animals';
+import { animal, ANIMALS, customFace, MASCOT, NAMES, PREMIUM } from './animals';
 import { addedSchools } from './linkedin';
 import { schoolOf } from './schools';
 import type { Tile } from './view';
@@ -18,6 +18,22 @@ export const NEEDS_PREMIUM = 'That one comes with Loop Ink.';
 const BUILT = ANIMALS + PREMIUM.length;
 const TIERS = ['core', 'premium', 'off'] as const;
 const builtName = (face: number) => face < ANIMALS ? `Animal ${face + 1}` : PREMIUM[face - ANIMALS];
+const builtWords = (face: number) => NAMES[face] ? [NAMES[face]] : [];
+
+// The admin may name any picture, and give it the words the picker finds it by (/c/admin, "Animals"). Null is what it
+// shipped with: the name above, and one word for each of the first 36.
+type Said = { name: string | null; words: string[] | null };
+/** What the admin typed, by number and by token. Nothing while the table is not there: the migration is run by hand, after the deploy. */
+async function saidRows(q: Q): Promise<{ built: Map<number, Said>; made: Map<string, Said> }> {
+  try {
+    const built = (await q.query<Said & { face: number }>('select face,name,words from campus_animal_name')).rows;
+    const made = (await q.query<Said & { token: string }>('select token::text as token,name,words from campus_custom_picture where name is not null or words is not null')).rows;
+    return { built: new Map(built.map(row => [row.face, row])), made: new Map(made.map(row => [row.token, row])) };
+  } catch (error) {
+    if (['42P01', '42703'].includes((error as { code?: string }).code ?? '')) return { built: new Map(), made: new Map() };
+    throw error;
+  }
+}
 
 /** The tier of each picture shipped with the app, by its number. */
 export async function builtTiers(q: Q): Promise<Tier[]> {
@@ -44,17 +60,32 @@ export async function schoolsOfPerson(q: Q, personId: string): Promise<string[]>
  * A school's own animal is offered to people who have that school among their `schools` alone; `all` is for the admin, who is offered every one.
  */
 export async function picks(q: Q, schools: readonly string[] | 'all'): Promise<{ core: Tile[]; premium: Tile[]; school: Tile[] }> {
-  const tiers = await builtTiers(q), made = await madeRows(q);
+  const tiers = await builtTiers(q), made = await madeRows(q), said = await saidRows(q);
   const of = (tier: 'core' | 'premium' | 'school'): Tile[] => [
-    ...tiers.flatMap((each, face) => each === tier && (schools === 'all' || !MASCOT[face] || schools.includes(MASCOT[face])) ? [{ face, src: animal(face), name: builtName(face) }] : []),
-    ...made.flatMap((each, at) => each.tier === tier ? [{ face: null, src: customFace(each.token), name: `Made animal ${at + 1}` }] : [])];
+    ...tiers.flatMap((each, face) => each === tier && (schools === 'all' || !MASCOT[face] || schools.includes(MASCOT[face])) ? [{ face, src: animal(face), name: said.built.get(face)?.name ?? builtName(face), words: (said.built.get(face)?.words ?? builtWords(face)).join(' ') }] : []),
+    ...made.flatMap((each, at) => each.tier === tier ? [{ face: null, src: customFace(each.token), name: said.made.get(each.token)?.name ?? `Made animal ${at + 1}`, words: (said.made.get(each.token)?.words ?? ['made']).join(' ') }] : [])];
   return { core: of('core'), premium: of('premium'), school: of('school') };
 }
 
-/** For the admin: every picture there is, with where it stands. A made animal that is nobody's but its maker's has tier null. */
-export async function catalogue(q: Q): Promise<{ built: { face: number; src: string; name: string; tier: Tier }[]; made: { token: string; src: string; tier: 'core' | 'premium' | null; email: string | null }[] }> {
-  const tiers = await builtTiers(q);
-  return { built: tiers.map((tier, face) => ({ face, src: animal(face), name: builtName(face), tier })), made: (await madeRows(q)).map(each => ({ ...each, src: customFace(each.token) })) };
+/** For the admin: every picture there is, with where it stands, its name and the words it is found by. A made animal that is nobody's but its maker's has tier null, and one the admin has not named has name null. */
+export async function catalogue(q: Q): Promise<{ built: { face: number; src: string; name: string; words: string[]; tier: Tier }[]; made: { token: string; src: string; name: string | null; words: string[]; tier: 'core' | 'premium' | null; email: string | null }[] }> {
+  const tiers = await builtTiers(q), said = await saidRows(q);
+  return { built: tiers.map((tier, face) => ({ face, src: animal(face), name: said.built.get(face)?.name ?? builtName(face), words: said.built.get(face)?.words ?? builtWords(face), tier })),
+    made: (await madeRows(q)).map(each => ({ ...each, src: customFace(each.token), name: said.made.get(each.token)?.name ?? null, words: said.made.get(each.token)?.words ?? ['made'] })) };
+}
+/**
+ * The admin names a picture and sets the words it is found by: one shipped with the app, by number, or one a person had made, by token.
+ * An empty name is the name it shipped with. Words are kept in small letters, and a word may be a phrase. Returns the words kept.
+ */
+export async function setAnimalName(q: Q, which: { face: number } | { token: string }, name: string, words: string[]): Promise<string[]> {
+  const kept = [...new Set(words.map(word => word.trim().toLowerCase().replace(/\s+/g, ' ')).filter(Boolean))], called = name.trim().replace(/\s+/g, ' ');
+  if (called.length > 40) throw new Error('A name is 40 letters at most');
+  if (kept.length > 12 || kept.some(word => word.length > 40)) throw new Error('Up to twelve words, of 40 letters at most');
+  if ('face' in which) {
+    if (!Number.isInteger(which.face) || which.face < 0 || which.face >= BUILT) throw new Error('No such animal');
+    await q.query('insert into campus_animal_name(face,name,words) values($1,$2,$3) on conflict(face) do update set name=excluded.name,words=excluded.words', [which.face, called && called !== builtName(which.face) ? called : null, kept]);
+  } else if (!z.uuid().safeParse(which.token).success || !(await q.query('update campus_custom_picture set name=$2,words=$3 where token=$1 returning 1', [which.token, called || null, kept])).rows.length) throw new Error('No such picture');
+  return kept;
 }
 /** The admin moves a picture shipped with the app. */
 export async function setBuiltTier(q: Q, face: number, tier: string): Promise<void> {

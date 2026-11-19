@@ -45,8 +45,16 @@ it('shows the picture as it will be saved, in the shape and on the ground picked
   expect(screen.getByText(/1080 × 1080/)).toBeInTheDocument();
   // The grounds are the server's: this person's school first.
   press(await screen.findByRole('button', { name: 'Cream' }).then(() => 'Cream'));
+  // The same picture stays on the page while the next one comes: it is dimmed until that has arrived.
+  const first = view();
+  fireEvent.load(first);
+  expect(first).not.toHaveClass('wait');
   press('Lock screen');
+  expect(view()).toBe(first);
+  expect(view()).toHaveClass('wait');
   expect(view().getAttribute('src')).toBe('/c/save?shape=tall&ground=cream&small=1');
+  fireEvent.load(first);
+  expect(first).not.toHaveClass('wait');
   expect(screen.getByText(/1080 × 1920/)).toBeInTheDocument();
   preview('pane-tall', 'tall');
   press('Save');

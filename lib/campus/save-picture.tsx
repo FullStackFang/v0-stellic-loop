@@ -17,9 +17,11 @@ const ring = (i: number) => `M${AT[i][0] - R} ${AT[i][1]}a${R} ${R} 0 1 0 ${2 * 
 const markSvg = (fg: string, lit: string) => `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 100 100" fill="none"><defs>${[0, 1, 2].map(i => `<mask id="m${i}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="${ring((i + 2) % 3)}" stroke="black" stroke-width="15.3"/></mask>`).join('')}</defs>${[0, 1, 2].map(i => `<g mask="url(#m${i})"><path d="${ring(i)}" stroke="${i ? fg : lit}" stroke-width="9"/></g>`).join('')}</svg>`;
 const uri = (png: Buffer) => `data:image/png;base64,${png.toString('base64')}`;
 
-/** The figure with its empty edge cut away, as large as fits a box. A small picture is made larger: softer, but whole. */
+/** The figure with its empty edge cut away, as large as fits a box. A small picture is made larger, and sharpened so that it does not come out blurred. */
 async function fit(figure: Uint8Array, w: number, h: number): Promise<{ png: Buffer; w: number; h: number }> {
-  const { data, info } = await sharp(figure).trim().resize(w, h, { fit: 'inside', kernel: 'lanczos3' }).png().toBuffer({ resolveWithObject: true });
+  const cut = await sharp(figure).trim().png().toBuffer({ resolveWithObject: true }), grown = Math.min(w / cut.info.width, h / cut.info.height) > 1.5;
+  const sized = sharp(cut.data).resize(w, h, { fit: 'inside', kernel: 'lanczos3' });
+  const { data, info } = await (grown ? sized.sharpen({ sigma: 1.2, m1: 0.6, m2: 2 }) : sized).png().toBuffer({ resolveWithObject: true });
   return { png: data, w: info.width, h: info.height };
 }
 
@@ -29,8 +31,11 @@ async function sticker(figure: Uint8Array, mark: boolean, ink: Ground): Promise<
   const left = Math.round((w - pet.w) / 2) - (mark ? 10 : 0), top = Math.round((h - pet.h) / 2) - (mark ? 6 : 0);
   const clear = { create: { width: w, height: h, channels: 4 as const, background: { r: 0, g: 0, b: 0, alpha: 0 } } };
   const placed = await sharp(clear).composite([{ input: pet.png, left, top }]).png().toBuffer();
-  // The figure's own outline, spread out every way and filled white.
-  const spread = await sharp(placed).extractChannel('alpha').blur(9).threshold(12).blur(1.2).toBuffer();
+  // The figure's own outline, spread out about 14px every way and filled white. One step at a time: sharp runs the steps of one
+  // pipeline in its own order, not the order they are written in.
+  const soft = await sharp(placed).extractChannel('alpha').blur(9).png().toBuffer();
+  const hard = await sharp(soft).threshold(14).png().toBuffer();
+  const spread = await sharp(hard).blur(1.2).extractChannel(0).toBuffer();
   const edge = await sharp({ create: { width: w, height: h, channels: 3, background: '#fff' } }).joinChannel(spread).png().toBuffer();
   const tag = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><circle cx="418" cy="412" r="62" fill="#fff"/><circle cx="418" cy="412" r="50" fill="${hex(ink.bg)}"/></svg>`);
   const rings = await sharp(Buffer.from(markSvg(hex(ink.fg), hex(ink.lit)))).resize(92, 92).png().toBuffer();
