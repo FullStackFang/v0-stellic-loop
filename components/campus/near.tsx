@@ -263,7 +263,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     if (!bub || !frame) return;
     const rect = (el: Element) => { const r = el.getBoundingClientRect(); return [r.left - frame.left, r.top - frame.top, r.right - frame.left, r.bottom - frame.top]; };
     const pin = rect(bub.parentElement!), w = bub.offsetWidth, h = bub.offsetHeight, top = band.current?.offsetHeight ?? 0, low = frame.height - (sheet.current?.offsetHeight ?? live.current.low);
-    const others = [...host.current!.querySelectorAll('.cs-pin, .cs-you, .cs-way, .cs-zoom, .cs-scale')].filter(el => el !== bub.parentElement).map(rect);
+    const others = [...host.current!.querySelectorAll('.cs-pin, .cs-you, .cs-way, .cs-rose, .cs-zoom, .cs-scale')].filter(el => el !== bub.parentElement).map(rect);
     const hits = (x: number, y: number) => others.filter(o => x < o[2] && o[0] < x + w && y < o[3] && o[1] < y + h).length + (x < 4 || x + w > frame.width - 4 || y < top + 4 || y + h > low - 4 ? 100 : 0);
     const corners: [string, number, number][] = [['', pin[0], pin[1] - 24 - h], ['r', pin[2] - w, pin[1] - 24 - h], ['low', pin[0], pin[3] + 14], ['low r', pin[2] - w, pin[3] + 14]];
     bub.dataset.seat = corners.map(([name, x, y]) => ({ name, hits: hits(x, y) })).sort((a, b) => a.hits - b.hits)[0].name;
@@ -424,8 +424,10 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
       : <div className="cs-way none" role="status" key={`${shown.id}|${shown.kind}`} ref={el => { way.current = el; if (el && map) place(map); }}>
           <span><b>{there?.name ?? 'Coming soon'}</b>{shown.kind === 'far' ? 'Not open from here yet' : shown.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>{there && <Arrow />}</div>)}
     {!up && <>
-      {/* The map's own controls, in one pill: find where you are, then in and out. The locate mark shows what the
+      {/* The compass rose is the map's printed ornament, not a button: north is up. Under it, the map's own controls
+          in one pill: find where you are, then in and out. The locate mark shows what the
           browser said: a filled centre when you are on the map, struck through when you are away or location is off. */}
+      <span className="cs-rose" aria-hidden="true"><svg viewBox="-25 -25 50 50"><circle className="ring" r={17} /><path className="south" d="M0-21 4.5 0 0 21-4.5 0z" /><path className="north" d="M0-21 4.5 0h-9z" /><path className="arms" d="M-13 0h-5M13 0h5" /><circle className="hub" r={1.6} /></svg></span>
       <div className="cs-zoom" role="group" aria-label="Map">
         <button className="cs-loc" data-where={where} aria-label="Back to where you are" title={where === 'here' ? 'Back to where you are' : 'Find where you are'} onClick={locate}><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx={8} cy={8} r={4.2} /><path d="M8 1.2v2.6M8 12.2v2.6M1.2 8h2.6M12.2 8h2.6" />{where === 'here' ? <circle className="dot" cx={8} cy={8} r={1.9} /> : where !== 'wait' && <path className="struck" d="M2.6 2.6l10.8 10.8" />}</svg></button>
         <button aria-label="Zoom in" title="Zoom in" onClick={() => zoom(1)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button>

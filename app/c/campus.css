@@ -580,8 +580,11 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs .cs-way.none { background: color-mix(in oklab, var(--pp) 86%, var(--cs-ink)); color: color-mix(in oklab, var(--cs-ink) 62%, var(--pp)); box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--cs-ink) 45%, var(--pp)); animation: cs-nope .45s cubic-bezier(.3, 0, .3, 1); }
 .cs-way.none .go { background: color-mix(in oklab, var(--cs-ink) 38%, var(--pp)); box-shadow: none; } .cs-way.none .go svg { stroke: var(--pp); animation: none; }
 /* the compass is the one button on the map: back to where you are. The bar measures in minutes of walking. */
-/* the map's own controls in one pill: find where you are, then in and out */
-.cs .cs-zoom { position: absolute; z-index: 3; right: 16px; top: 98px; display: grid; width: 40px; overflow: hidden; border-radius: 99px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+/* the compass rose: the map's printed ornament, not a button. Under it and centred on it, the map's own controls in one pill */
+.cs .cs-rose { position: absolute; z-index: 3; right: 14px; top: 98px; width: 50px; height: 50px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); pointer-events: none; } .cs-rose svg { display: block; width: 100%; height: 100%; }
+.cs-rose .ring { fill: none; stroke: var(--cs-ink); stroke-width: 1; stroke-dasharray: 1 3.45; } .cs-rose .north { fill: var(--hot); stroke: var(--cs-ink); stroke-width: 1.2; stroke-linejoin: round; } .cs-rose .south { fill: var(--card); stroke: var(--cs-ink); stroke-width: 1.2; stroke-linejoin: round; }
+.cs-rose .arms { fill: none; stroke: var(--cs-ink); stroke-width: 1.2; stroke-linecap: round; } .cs-rose .hub { fill: var(--cs-ink); }
+.cs .cs-zoom { position: absolute; z-index: 3; right: 19px; top: 158px; display: grid; width: 40px; overflow: hidden; border-radius: 99px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs-zoom button { display: grid; place-items: center; height: 38px; transition: background-color .15s; } .cs-zoom button + button { box-shadow: inset 0 1.5px 0 var(--cs-ink); }
 .cs-zoom button:hover { background: color-mix(in oklab, var(--cs-ink) 10%, transparent); } .cs-zoom button:active { background: color-mix(in oklab, var(--cs-ink) 20%, transparent); }
 .cs-zoom svg { width: 16px; height: 16px; fill: none; stroke: var(--cs-ink); stroke-width: 2; stroke-linecap: round; }
@@ -589,7 +592,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-loc svg { width: 19px; height: 19px; stroke-width: 1.5; } .cs-loc .dot { fill: var(--cs-action); stroke: none; } .cs-loc .struck { stroke-width: 1.7; }
 .cs-loc[data-where='here'] { background: var(--hot); } .cs-loc[data-where='away'] svg, .cs-loc[data-where='off'] svg { opacity: .55; }
 .cs-loc[data-where='wait'] svg { animation: cs-loc-wait 1s ease-in-out infinite alternate; } @keyframes cs-loc-wait { to { opacity: .3; } }
-.cs-loc-note { position: absolute; z-index: 3; right: 64px; top: 102px; max-width: min(250px, calc(100% - 84px)); margin: 0; padding: 7px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--cs-ink); background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); animation: cs-card .25s var(--cs-ease) backwards; }
+.cs-loc-note { position: absolute; z-index: 3; right: 68px; top: 162px; max-width: min(250px, calc(100% - 84px)); margin: 0; padding: 7px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--cs-ink); background: var(--card); box-shadow: inset 0 0 0 1.5px var(--cs-ink); animation: cs-card .25s var(--cs-ease) backwards; }
 @media (prefers-reduced-motion: reduce) { .cs-loc[data-where='wait'] svg, .cs-loc-note { animation: none; } }
 .cs-scale { position: absolute; z-index: 3; left: 18px; display: grid; gap: 4px; font-stretch: 88%; font-size: 10.5px; font-weight: 680; letter-spacing: .12em; text-transform: uppercase; pointer-events: none; }
 .cs-scale::after { content: attr(data-mins); }
