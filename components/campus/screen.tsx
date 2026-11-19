@@ -298,8 +298,8 @@ function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; s
     {ready && showing && <div className="show"><span>Show at the counter · <Clock /></span><button disabled={busy} onClick={onUse}>Mark as used</button></div>}</li>;
 }
 
-/** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". */
-function Account({ screen, signOut, swap = [] }: { screen: Screen; signOut: ReactNode; swap?: SwapCampus[] }) {
+/** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". The groups pages show the same one (app/groups/bar.tsx), with their own links as `more`. */
+export function Account({ screen, signOut, swap = [], more = null }: { screen: Screen; signOut: ReactNode; swap?: SwapCampus[]; /** Links of the pages this bar is on, above the way out. */ more?: ReactNode }) {
   const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [kit, setKit] = useState('');
   // The pick shows at once, and goes back if it could not be kept.
   const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [, save] = useTransition();
@@ -364,6 +364,7 @@ function Account({ screen, signOut, swap = [] }: { screen: Screen; signOut: Reac
         <ul>{LEVELS.map((each, at) => <li key={each.name} className={at === level ? 'now' : ''}><b>{at + 1}</b><div><strong>{each.name}</strong><span>{each.gets}</span></div><small>{at === level ? 'You' : at < level ? 'Passed' : `${each.from - viewer.outings} to go`}</small></li>)}</ul>
         <div className="cs-kits" role="group" aria-label="Colours"><h4>Colours</h4><div>{KITS.map(each => <button key={each.slug} className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }}><i />{each.name}</button>)}</div></div>
         {viewer.admin && <nav className="cs-lvl-more" aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}
+        {more}
         {signOut && <div className="cs-lvl-more">{signOut}</div>}</div>}</div>}
   </div>;
 }
