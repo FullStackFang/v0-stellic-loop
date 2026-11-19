@@ -5,16 +5,19 @@ set lock_timeout='5s';
 -- every link and every text can carry tags that an assistant works out. Apply after 20261116200000_emba_invitation_name.sql,
 -- as one transaction. Rollback is dropping what this file adds.
 --
+-- Safe to paste into the Supabase SQL editor and safe to run again: the file is plain ASCII (the hidden characters the check
+-- refuses are written as \u escapes, because pasted ones were being altered), and each step is skipped if it is already done.
+--
 -- "One visible line" means the same as in 20261110010000_emba_team_records.sql.
-create function emba_plain_line(value text,most integer) returns boolean language sql immutable set search_path=public as $$
+create or replace function emba_plain_line(value text,most integer) returns boolean language sql immutable set search_path=public as $$
  select value is null or (char_length(value) between 1 and most and value=btrim(value)
-  and value !~ '[\u0001-\u001F\u007F- ­؜ᅟᅠ᠎ -‏ -  -⁯　ㅤ﻿ﾠ\U000E0000-\U000E007F]')
+  and value !~ '[\u0001-\u001F\u007F-\u00A0\u00AD\u061C\u115F\u1160\u180E\u2000-\u200F\u2028-\u202F\u205F-\u206F\u3000\u3164\uFEFF\uFFA0\U000E0000-\U000E007F]')
 $$;
 
 -- 1. Links (design D3). One row per link a member (or an assistant for them) added. Loop keeps the address, never what it points at.
 -- The tags are written by an assistant; none of them is asked of a person on the site. `described_at` is null until some are given,
 -- and they are then given once: an assistant fills in a link that has none, and nothing here is rewritten by it afterwards.
-create table emba_team_link (
+create table if not exists emba_team_link (
  id uuid primary key default gen_random_uuid(),
  org_id uuid not null,
  loop_id uuid not null,
@@ -38,12 +41,12 @@ create table emba_team_link (
  constraint emba_team_link_tags_are_dated check(described_at is not null or (kind is null and about is null and audience is null and found_on is null and summary is null))
 );
 -- A team lists an address once. Adding it again returns the row that is there.
-create unique index emba_team_link_live on emba_team_link(org_id,loop_id,url) where removed_at is null;
-create index emba_team_link_list on emba_team_link(org_id,loop_id,created_at desc) where removed_at is null;
-create index emba_team_link_person on emba_team_link(added_by) where added_by is not null;
+create unique index if not exists emba_team_link_live on emba_team_link(org_id,loop_id,url) where removed_at is null;
+create index if not exists emba_team_link_list on emba_team_link(org_id,loop_id,created_at desc) where removed_at is null;
+create index if not exists emba_team_link_person on emba_team_link(added_by) where added_by is not null;
 
 -- What was saved stays as it was saved. A link is removed once and not brought back, and its tags are set once.
-create function emba_team_link_guard() returns trigger language plpgsql set search_path=public as $$
+create or replace function emba_team_link_guard() returns trigger language plpgsql set search_path=public as $$
 begin
  if tg_op='DELETE'
     or row(new.id,new.org_id,new.loop_id,new.url,new.host,new.name,new.client_id,new.created_at) is distinct from row(old.id,old.org_id,old.loop_id,old.url,old.host,old.name,old.client_id,old.created_at)
@@ -53,22 +56,24 @@ begin
  end if;
  return new;
 end $$;
+drop trigger if exists emba_team_link_guard on emba_team_link;
 create trigger emba_team_link_guard before update or delete on emba_team_link for each row execute function emba_team_link_guard();
 
 -- 2. Texts are the documents that already exist: pasted text, or the words read from a file. They gain the same tags, and the
 -- assistant (if any) that saved a version is recorded the way it is for every other write.
+alter table emba_document drop constraint if exists emba_document_tags_are_dated;
 alter table emba_document
- add column kind text check(emba_plain_line(kind,40)),
- add column about text check(emba_plain_line(about,120)),
- add column audience text check(emba_plain_line(audience,120)),
- add column found_on date,
- add column summary text check(emba_plain_line(summary,240)),
- add column described_at timestamptz,
- add column described_by uuid references person(id) on delete set null,
- add column described_via text check(described_via ~ '^[ -~]{1,200}$'),
+ add column if not exists kind text check(emba_plain_line(kind,40)),
+ add column if not exists about text check(emba_plain_line(about,120)),
+ add column if not exists audience text check(emba_plain_line(audience,120)),
+ add column if not exists found_on date,
+ add column if not exists summary text check(emba_plain_line(summary,240)),
+ add column if not exists described_at timestamptz,
+ add column if not exists described_by uuid references person(id) on delete set null,
+ add column if not exists described_via text check(described_via ~ '^[ -~]{1,200}$'),
  add constraint emba_document_tags_are_dated check(described_at is not null or (kind is null and about is null and audience is null and found_on is null and summary is null));
 alter table emba_document_version
- add column client_id text check(client_id ~ '^[ -~]{1,200}$');
+ add column if not exists client_id text check(client_id ~ '^[ -~]{1,200}$');
 
 alter table emba_team_link enable row level security;
 revoke all on emba_team_link from public,anon,authenticated;
