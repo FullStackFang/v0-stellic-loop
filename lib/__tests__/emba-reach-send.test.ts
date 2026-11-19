@@ -8,7 +8,7 @@ import {setReachChoice} from '@/lib/emba/reach';
 import {answerFromLink,personalAsk} from '@/lib/emba/reach-link';
 import {drainReach,renderEmail,SENDING,type Carrier,type SendResult} from '@/lib/emba/reach-send';
 import {revokeMembership} from '@/lib/emba/roles';
-import {answerAsk,closeAsk,createAsk} from '@/lib/emba/team-asks';
+import {answerAsk,closeAsk,createAsk,extendAsk} from '@/lib/emba/team-asks';
 import {setInterest} from '@/lib/emba/team-interest';
 import {addEvent} from '@/lib/emba/team-events';
 import {postAnnouncement} from '@/lib/emba/team-records';
@@ -305,3 +305,50 @@ it('keeps a sleeping team, a failing lookup, an odd provider id, a retired group
  // Members who chose not to be messaged have a reminder row that was dropped; nobody has one waiting or sent.
  expect(await count("kind='ask_reminder' and state<>'skipped'")).toBe(0);
 },180000);
+
+// Specs: openspec/changes/loop-on-you/specs/group-asks.
+it('words something to do as something done, and reminds and reports again after it is given a new closing time',async()=>{
+ const f=await fixture(),c=carrier();on();
+ const asked=await createAsk(t.db,f.organizer,{...f.root,question:'Upload your W8/W9',kind:'done',closesAt:inHours(72)});
+ expect(asked.saved).toBe(true);
+ await drainReach(t.db,c.it);
+ const fresh=c.to(f.memberB)[0];
+ expect(fresh.subject).toBe('To do · Synthetic EMBA: Upload your W8/W9');
+ expect(fresh.text).toContain('asked Synthetic EMBA to do this:');expect(fresh.text).toContain('Mark it done');expect(fresh.text).toMatch(/Due .+\./);expect(fresh.text).not.toContain('Answer');
+ // The reminder, once.
+ await t.db.query("update emba_reach_message set sent_at=sent_at-interval '2 days'");
+ await age('Upload your W8/W9','49 hours');await drainReach(t.db,c.it);
+ const reminder=c.to(f.memberB).at(-1)!;
+ expect(reminder.subject).toBe('Reminder · Synthetic EMBA: Upload your W8/W9');expect(reminder.text).toContain('you have not done it yet');
+ const sentBefore=c.sent.length,tokens=(await rows("kind='ask_reminder'")).map(row=>row.answerToken);
+ // It passes: the result goes to the person who posted it.
+ await answerAsk(t.db,f.memberA,{...f.root,number:1});
+ await age('Upload your W8/W9','24 hours');await drainReach(t.db,c.it);
+ const result=c.to(f.organizer).at(-1)!;
+ expect(result.subject).toBe('Passed · Synthetic EMBA: Upload your W8/W9');expect(result.text).toContain('See who did it');
+ expect(c.sent).toHaveLength(sentBefore+1);
+ // A new time: nothing is sent for the move itself, and nothing while its reminder is not due again.
+ expect(await extendAsk(t.db,f.organizer,{...f.root,number:1,closesAt:inHours(72)})).toMatchObject({saved:true,changed:true});
+ await drainReach(t.db,c.it);
+ expect(c.sent).toHaveLength(sentBefore+1);
+ // Its reminder comes due again: those who have still not done it are reminded once more, on the same rows, so earlier links still work.
+ await t.db.query("update emba_ask set closes_at=clock_timestamp()+interval '20 hours' where question='Upload your W8/W9'");
+ await drainReach(t.db,c.it);await drainReach(t.db,c.it);
+ expect(c.to(f.memberB).filter(message=>message.subject.startsWith('Reminder'))).toHaveLength(2);
+ expect(c.to(f.memberA).filter(message=>message.subject.startsWith('Reminder'))).toHaveLength(1);
+ expect((await rows("kind='ask_reminder'")).map(row=>row.answerToken).sort()).toEqual([...tokens].sort());
+ // And when it passes again, the result is sent again. (The first result is moved back with the ask, as it would be in real time.)
+ await t.db.query("update emba_reach_message set created_at=created_at-interval '2 days',sent_at=sent_at-interval '2 days' where kind='ask_result'");
+ await age('Upload your W8/W9','21 hours');await drainReach(t.db,c.it);await drainReach(t.db,c.it);
+ expect(c.to(f.organizer).filter(message=>message.subject.startsWith('Passed'))).toHaveLength(2);
+ expect(await count("kind='ask_result'")).toBe(1);
+ // Opened again before a queued result went out: that result waits for the next closing.
+ await extendAsk(t.db,f.organizer,{...f.root,number:1,closesAt:inHours(72)});
+ await t.db.query("update emba_reach_message set created_at=created_at-interval '4 days',sent_at=sent_at-interval '4 days' where kind='ask_result'");
+ await age('Upload your W8/W9','73 hours');await clock(23);await drainReach(t.db,c.it);
+ expect((await rows("kind='ask_result'")).map(row=>row.state)).toEqual(['queued']);
+ await extendAsk(t.db,f.organizer,{...f.root,number:1,closesAt:inHours(72)});
+ await clock(12);await drainReach(t.db,c.it);
+ expect((await rows("kind='ask_result'")).map(row=>row.state)).toEqual(['skipped']);
+ expect(c.to(f.organizer).filter(message=>message.subject.startsWith('Passed'))).toHaveLength(2);
+},240000);

@@ -19,8 +19,10 @@ beforeEach(async () => { await t.reset(); });
 afterEach(() => vi.unstubAllEnvs());
 
 const who = (over: Partial<Principal> = {}) => ({ personId: 'p1', issuer: 'https://issuer.test', subject: 'user_student', verifiedEmail: 'sam@cornell.edu', ...over }) as Principal;
-const GROUPS = ['/groups', '/groups/team-1', '/groups/team-1/in/sub/team', '/groups/archive', '/groups/connections', '/groups/new', '/groups/reach', '/groups/reach/answer/abc', '/groups/metrics/export', '/emba', '/e/sometoken', '/a/sometoken'];
-const OPEN = ['/', '/c/cornell', '/c/admin', '/o/sometoken', '/sign-in', '/groups/sign-in', '/groups/sign-in/sso-callback', '/emba/sign-in', '/groups/reach/stop/abc', '/api/emba/documents/1'];
+const GROUPS = ['/groups', '/groups/team-1', '/groups/team-1/in/sub/team', '/groups/archive', '/groups/connections', '/groups/new', '/groups/reach', '/groups/metrics/export', '/emba', '/e/sometoken'];
+const OPEN = ['/', '/c/cornell', '/c/admin', '/o/sometoken', '/sign-in', '/groups/sign-in', '/groups/sign-in/sso-callback', '/emba/sign-in', '/groups/reach/stop/abc', '/api/emba/documents/1',
+  // An ask's page and the emailed answer link decide for themselves who they open for (loop-on-you, design D12).
+  '/groups/reach/answer/abc', '/a/sometoken'];
 
 describe('which pages lead into groups', () => {
   it.each(GROUPS)('%s does', path => expect(leadsIntoGroups(path)).toBe(true));

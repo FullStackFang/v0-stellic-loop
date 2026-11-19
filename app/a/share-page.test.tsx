@@ -9,7 +9,7 @@ import { createAsk, type AskResult } from '@/lib/emba/team-asks';
 import { nameOf } from '@/components/emba/ask-parts';
 import TeamPage from '../groups/[namespace]/team/page';
 import SharedAskPage, { generateMetadata } from './[token]/page';
-import { answerTeamAsk, closeTeamAsk } from './actions';
+import { answerTeamAsk, closeTeamAsk, extendTeamAsk } from './actions';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
@@ -134,4 +134,70 @@ it('lists an open ask on the team page with its count and the caller\'s own answ
   expect(screen.getByRole('link', { name: 'Which weekend works?' })).toHaveAttribute('href', `/a/${tokenOf(ask)}`);
   expect(screen.getByText(/^1 of \d+ answered$/)).toBeInTheDocument();
   expect(screen.getByText('Your answer: Sunday picnic')).toBeInTheDocument();
+});
+
+// Specs: openspec/changes/loop-on-you (group-asks, on-you-page).
+const sent = async (run: () => Promise<unknown>) => { try { await run(); return null; } catch (error) { return (error as { digest?: string }).digest ?? String(error); } };
+it('with the campus in front, opens an ask for the members of its group and for nobody else', async () => {
+  const f = await fixture();
+  const ask = await f.ask(f.ana, 'named');
+  vi.stubEnv('LOOP_FRONT', 'campus'); vi.stubEnv('LOOP_ADMIN', 'founder@cornell.edu');
+  // A member who is not the admin reads it and answers it.
+  await share(f.ben, ask);
+  expect(screen.getByRole('heading', { name: 'Which weekend works?' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Send my answer' })).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Open the team page' })).not.toBeInTheDocument();
+  expect((await answer(f.ben, f.ids, ask, '1')).status).toBe('success');
+  cleanup();
+  // The person who asked is not the admin either, and still runs their ask: who has not answered, the reminder, a new date, closing.
+  await share(f.ana, ask);
+  expect(screen.getByRole('heading', { name: 'Who has not answered' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Move the date' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Close this ask now' })).toBeInTheDocument();
+  cleanup();
+  // Someone outside the group is sent to the front door and can do nothing; a signed-out visitor is sent to sign in and back.
+  expect(await sent(() => as(f.outsider, () => SharedAskPage({ params: Promise.resolve({ token: tokenOf(ask) }) })))).toMatch(/NEXT_REDIRECT;.*;\/;/);
+  expect((await answer(f.outsider, f.ids, ask, '1')).status).toBe('error');
+  expect(await sent(() => SharedAskPage({ params: Promise.resolve({ token: tokenOf(ask) }) }))).toContain(encodeURIComponent(`/a/${tokenOf(ask)}`));
+  expect((await answerTeamAsk(idle, form({ ...f.ids, number: String(ask.number), choice: '1', route: 'share_link' }))).message).toBe('Sign in to continue.');
+  expect(await generateMetadata({ params: Promise.resolve({ token: tokenOf(ask) }) })).toEqual({ robots: { index: false, follow: false } });
+});
+
+it('shows something to do as done or not done, and lets the person who posted it move the date and open it again', async () => {
+  const f = await fixture();
+  const made = await createAsk(t.db, f.ana, { ...f.scope, question: 'Upload your W8/W9', kind: 'done', closesAt: soon() });
+  if (!made.saved) throw new Error('fixture to-do not saved');
+  const ask = made.ask, ids = { ...f.ids, number: String(ask.number) };
+  await share(f.ben, ask);
+  expect(screen.getByText(/^Due .+ Posted by Ana Smith\.$/)).toBeInTheDocument();
+  expect(screen.getByText('You have not done this.')).toBeInTheDocument();
+  expect(screen.getByText(/^0 of \d+ done\.$/)).toBeInTheDocument();
+  expect(screen.queryByText(/Your answer/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Move the date' })).not.toBeInTheDocument();
+  cleanup();
+  expect((await as(f.ben, () => answerTeamAsk(idle, form({ ...ids, route: 'share_link', done: 'true' })))).status).toBe('success');
+  await share(f.ben, ask);
+  expect(screen.getByText('You have done this.')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Not done after all' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument();
+  cleanup();
+  // The person who posted it sees who has and who has not, and the reminder says "to do".
+  await share(f.ana, ask);
+  expect(screen.getByRole('heading', { name: 'Done' }).parentElement!.textContent).toMatch(/Ben Jones/);
+  expect(screen.getByRole('heading', { name: 'Who has not done it' }).parentElement!.textContent).toMatch(/You/);
+  expect(screen.getByText(/still to do it by/)).toBeInTheDocument();
+  cleanup();
+  // A member cannot move the date; the person who posted it can, also after closing it.
+  const later = new Date(Date.now() + 20 * 86_400_000).toISOString().slice(0, 16);
+  expect((await as(f.ben, () => extendTeamAsk(idle, form({ ...ids, closesAt: later })))).message).toBe('Not saved. Only the person who asked, or an owner or organizer, can do this.');
+  expect((await as(f.ana, () => closeTeamAsk(idle, form(ids)))).status).toBe('success');
+  await share(f.ana, ask);
+  expect(screen.getByRole('button', { name: 'Open it again' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Close this ask now' })).not.toBeInTheDocument();
+  cleanup();
+  expect((await as(f.ana, () => extendTeamAsk(idle, form({ ...ids, closesAt: '2020-01-01T10:00' })))).message).toBe('Not saved. The closing time must be in the future.');
+  expect((await as(f.ana, () => extendTeamAsk(idle, form({ ...ids, closesAt: later })))).status).toBe('success');
+  await share(f.ben, ask);
+  expect(screen.getByText('You have done this.')).toBeInTheDocument();
+  expect(screen.getByText(/^1 of \d+ done\.$/)).toBeInTheDocument();
 });

@@ -6,12 +6,12 @@ import {authenticate,type Principal} from '@/lib/emba/access';
 import {grantLease} from '@/lib/emba/consent';
 import {registerGroupAddress} from '@/lib/emba/groups';
 import {setMemberHandle} from '@/lib/emba/tags';
-import {answerAsk,closeAsk,createAsk} from '@/lib/emba/team-asks';
+import {answerAsk,closeAsk,createAsk,extendAsk} from '@/lib/emba/team-asks';
 import {addEvent} from '@/lib/emba/team-events';
 import {setInterest,upcomingEvents} from '@/lib/emba/team-interest';
 import {saveBrief} from '@/lib/emba/team-read';
 import {amendRecord,claim,postAnnouncement} from '@/lib/emba/team-records';
-import {waiting,WAITING,type Waiting} from '@/lib/emba/team-waiting';
+import {ON_YOU,onYou,waiting,WAITING,type OnYou,type Waiting} from '@/lib/emba/team-waiting';
 
 // Specs: openspec/changes/loop-club-reach/specs/waiting.
 let t:TestDb;
@@ -134,3 +134,76 @@ it('returns at most 10 items and says how many more wait in which team',async()=
  // What was not returned was not shown: the announcements still wait.
  expect((await t.db.query('select count(*)::int as n from emba_waiting_shown')).rows).toEqual([{n:0}]);
 },120000);
+
+// Specs: openspec/changes/loop-on-you/specs/on-you-page.
+const todo=(f:F,who:Principal,question:string,days=5,team:Team=f.root)=>createAsk(t.db,who,{...team,question,kind:'done',closesAt:inDays(days)});
+const rowsOf=(result:OnYou)=>result.rows.map(row=>row.kind==='ask'||row.kind==='missed'?`${row.kind} ${row.ask.question}`:`${row.kind} ${row.event.slug}`);
+/** Moves an ask's closing time into the past, as if time had gone by. */
+async function elapse(question:string,closedAgo:string) {
+ await t.db.query('alter table emba_ask disable trigger emba_ask_guard');
+ await t.db.query(`update emba_ask set created_at=clock_timestamp()-interval '30 days',closes_at=clock_timestamp()-interval '${closedAgo}' where question=$1`,[question]);
+ await t.db.query('alter table emba_ask enable trigger emba_ask_guard');
+}
+it('lists what is on a member across their groups by when, with missed things to do last and proposed work beside it',async()=>{
+ const f=await fixture();
+ const empty=await onYou(t.db,f.memberB);
+ expect(empty).toMatchObject({count:0,rows:[],more:[],claims:[],untrusted:true});
+ expect(empty.groups.map(group=>[group.team.handle,group.timezone,group.posts])).toEqual(expect.arrayContaining([['@club','America/New_York',true],['@club/vietnam',expect.any(String),true]]));
+ await ask(f,f.memberA,'Vote late?',9);await todo(f,f.memberA,'Upload the form',4,f.vietnam);await ask(f,f.memberA,'Vote soon?',1);
+ await event(f,'tasting',6);await event(f,'mixer',2);
+ // Mentions and announcements are not things to do on a day: they are left off, and reading here does not mark them as shown.
+ expect((await claim(t.db,f.memberA,{...f.root,what:'Book the room',tags:['ben']})).saved).toBe(true);
+ expect((await postAnnouncement(t.db,f.organizer,{...f.root,text:'Dues are due Friday.'})).saved).toBe(true);
+ // Work proposed for the member comes beside the rows, oldest first.
+ expect((await claim(t.db,f.memberA,{...f.root,what:'Bring the projector',owner:'ben'})).saved).toBe(true);
+ const result=await onYou(t.db,f.memberB);
+ // By when, across kinds and groups: not asks first.
+ expect(rowsOf(result)).toEqual(['ask Vote soon?','event mixer','ask Upload the form','event tasting','ask Vote late?']);
+ expect(result).toMatchObject({count:5,more:[],rows:[{team:{handle:'@club'},ask:{kind:'one',options:[{label:'Yes'},{label:'No'}]}},{},{team:{handle:'@club/vietnam'},scope:f.vietnam,ask:{kind:'done'}},{},{}],
+  claims:[{team:{handle:'@club'},scope:f.root,record:{kind:'claim',what:'Bring the projector',claimStatus:'proposed'}}]});
+ expect((await t.db.query('select 1 from emba_waiting_shown')).rows).toEqual([]);
+ const told=await waiting(t.db,f.memberB);
+ expect(told.items.filter(item=>item.kind==='mention'||item.kind==='announcement')).toHaveLength(3);
+ // Acting takes a row away; so does answering the proposal.
+ await answerAsk(t.db,f.memberB,{...f.vietnam,number:1});
+ await setInterest(t.db,f.memberB,{...f.root,event:'mixer'});
+ const proposed=result.claims[0].record.number;
+ expect((await amendRecord(t.db,f.memberB,{...f.root,operationId:crypto.randomUUID(),number:proposed,action:'confirm'})).saved).toBe(true);
+ const after=await onYou(t.db,f.memberB);
+ expect(rowsOf(after)).toEqual(['ask Vote soon?','event tasting','ask Vote late?']);expect(after.claims).toEqual([]);
+ // A thing to do that passed without the member is listed as missed, after everything open; a vote that passed simply leaves.
+ const waiver=await todo(f,f.memberA,'Sign the waiver',3),fee=await todo(f,f.memberA,'Pay the fee',3);
+ if(!waiver.saved||!fee.saved)throw new Error('to-do not saved');
+ await answerAsk(t.db,f.memberB,{...f.root,number:fee.ask.number});
+ await elapse('Sign the waiver','1 day');await elapse('Pay the fee','1 day');await elapse('Vote soon?','1 hour');
+ const missed=await onYou(t.db,f.memberB);
+ expect(rowsOf(missed)).toEqual(['event tasting','ask Vote late?','missed Sign the waiver']);
+ expect(missed.count).toBe(2);
+ // The person who posted it missed it too; a follower has nothing on them.
+ expect(rowsOf(await onYou(t.db,f.memberA))).toContain('missed Sign the waiver');
+ await t.db.query("update emba_role set role='follower' where person_id=$1",[f.members[3].personId]);
+ const follows=await onYou(t.db,f.members[3]);
+ expect(follows).toMatchObject({count:0,rows:[]});expect(follows.groups.every(group=>!group.posts)).toBe(true);
+ // Given a new time it is an ordinary row again; after 7 days a missed one is gone.
+ expect((await extendAsk(t.db,f.memberA,{...f.root,number:waiver.ask.number,closesAt:inDays(2)})).saved).toBe(true);
+ expect(rowsOf(await onYou(t.db,f.memberB))).toEqual(['ask Sign the waiver','event tasting','ask Vote late?']);
+ await elapse('Sign the waiver','8 days');
+ expect(rowsOf(await onYou(t.db,f.memberB))).toEqual(['event tasting','ask Vote late?']);
+ expect(JSON.stringify((await onYou(t.db,f.memberB)).rows.map(({scope:_scope,...row})=>row))).not.toMatch(uuids);
+},240000);
+
+it('keeps the soonest rows when one group has many, and says how many more each group holds',async()=>{
+ const f=await fixture();
+ await t.db.query("update emba_role set role='owner' where person_id=$1",[f.organizer.personId]);
+ // More events in one group than the assistant's read lists of a kind, and a later ask in another group.
+ for(let n=0;n<ON_YOU.rows+4;n++)expect((await event(f,`night-${String(n).padStart(2,'0')}`,2+n)).saved).toBe(true);
+ await ask(f,f.memberA,'Sooner than all?',1,f.vietnam);
+ const result=await onYou(t.db,f.memberB);
+ expect(result.rows).toHaveLength(ON_YOU.rows);
+ expect(rowsOf(result).slice(0,3)).toEqual(['ask Sooner than all?','event night-00','event night-01']);
+ expect(rowsOf(result).at(-1)).toBe(`event night-${ON_YOU.rows-2}`);
+ expect(result.count).toBe(ON_YOU.rows+5);
+ expect(result.more).toEqual([{team:{handle:'@club',name:expect.any(String)},count:5}]);
+ // The assistant's read is as it was.
+ expect((await waiting(t.db,f.memberB)).items).toHaveLength(WAITING.items);
+},240000);

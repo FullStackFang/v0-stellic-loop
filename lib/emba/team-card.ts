@@ -266,7 +266,7 @@ function icon(sign,label,off,tap,name){var node=button(sign,null,off,tap);node.c
 function askTop(entry){
  var ask=entry.ask,top=el('div','top');
  top.title=ask.timezone;
- add(top,el('p','meta',entry.team.handle+' #'+ask.number+' · '+(ask.open?'closes ':'closed ')+String(ask.closes).replace(/ 20\d\d,/,',')+' · '+ask.answered+' of '+ask.expected+' answered'));
+ add(top,el('p','meta',entry.team.handle+' #'+ask.number+' · '+(ask.kind==='done'?(ask.open?'due ':'was due '):ask.open?'closes ':'closed ')+String(ask.closes).replace(/ 20\d\d,/,',')+' · '+ask.answered+' of '+ask.expected+(ask.kind==='done'?' done':' answered')));
  if(entry.note==='Saved.')add(top,el('span','tick','✓ Saved'));
  return top;
 }
@@ -342,13 +342,14 @@ function drawAsk(entry){
  (ask.results||[]).forEach(function(option){tally[option.number]=option.count;});
  add(box,askTop(entry),el('p','words',ask.question));
  if(!ask.open){
-  add(box,el('p','note','This ask has closed.'));
+  add(box,el('p','note',ask.kind==='done'?'This has passed its time.':'This ask has closed.'));
   if(ask.results&&ask.options.length){
    var list=el('ul','tally quiet');
    ask.options.forEach(function(option){add(list,el('li','',(days?dayParts(option.label).join(' '):option.label)+': '+(tally[option.number]||0)));});
    add(box,list);
   }
- }else if(ask.kind==='text')add(box,el('p','quiet','It takes a written answer: tell your assistant what to say.'));
+ }else if(ask.kind==='done')add(box,add(el('div','row'),button(mine?'Done':'Mark done',!!mine,off,function(){answer(entry,mine?{remove:true}:{});})));
+ else if(ask.kind==='text')add(box,el('p','quiet','It takes a written answer: tell your assistant what to say.'));
  else if(days)drawDays(entry,box,chosen,tally,off);
  else{
   var row=el('div','row split'),picks=el('div','picks'),acts=el('div','acts'),many=ask.kind!=='one';
@@ -367,9 +368,10 @@ function drawAsk(entry){
   },'go'),icon('✕','Put back',entry.busy,function(){entry.picked=null;entry.note='';draw();}));
   add(box,add(row,picks,acts));
  }
- if(ask.open&&ask.kind!=='text'&&!canCall)add(box,el('p','quiet','To answer, tell your assistant.'));
+ if(ask.open&&ask.kind!=='text'&&!canCall)add(box,el('p','quiet',ask.kind==='done'?'To mark it done, tell your assistant.':'To answer, tell your assistant.'));
  // In an open choice the filled control is the answer; words say it only where no control does.
- if(mine&&(!ask.open||ask.kind==='text'))add(box,el('p','quiet','You answered: '+(typeof mine.text==='string'?mine.text:mine.choices.map(function(choice){return days?dayParts(choice.label).join(' '):choice.label;}).join(', '))+'.'));
+ if(mine&&!ask.open&&ask.kind==='done')add(box,el('p','quiet','You did this.'));
+ else if(mine&&(!ask.open||ask.kind==='text'))add(box,el('p','quiet','You answered: '+(typeof mine.text==='string'?mine.text:mine.choices.map(function(choice){return days?dayParts(choice.label).join(' '):choice.label;}).join(', '))+'.'));
  if(entry.note&&entry.note!=='Saved.')add(box,el('p','note',entry.note));
  return box;
 }

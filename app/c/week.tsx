@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Rings } from '@/components/LoopGlyphs';
@@ -9,6 +10,7 @@ import { listCampuses, weekListings, type Campus } from '@/lib/campus/listings';
 import { schoolOf, SWAP_TICKET } from '@/lib/campus/schools';
 import { campusScreen, type ShareLink } from '@/lib/campus/screen';
 import { campusViewer, mayUse, openableGroups, signInHref } from '@/lib/campus/session';
+import { OnYou } from './on-you';
 
 /**
  * "This week" for one campus, as the person looking may see it. A signed-in person belongs to one school: another
@@ -25,7 +27,7 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
   // The campuses of this school, when it has more than one: what the swap on the map offers.
   const parts = (await listCampuses(db())).filter(each => schoolOf(each.slug) === schoolOf(campus.slug) && SWAP_TICKET[each.slug]);
   const swap = parts.length < 2 ? [] : await Promise.all(parts.map(async each => ({ slug: each.slug, ...SWAP_TICKET[each.slug], count: (await weekListings(db(), each)).length, home: !!viewer && !viewer.admin && viewer.campus?.id === each.id, here: each.id === campus.id })));
-  return <CampusScreen screen={screen} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} />;
+  return <CampusScreen screen={screen} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={null}><OnYou /></Suspense> : null} />;
 }
 
 /** For a signed-in person whose email is at none of the schools: which schools Loop is at, and nothing else. */

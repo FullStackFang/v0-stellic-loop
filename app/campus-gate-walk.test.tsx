@@ -18,6 +18,11 @@ afterEach(() => { vi.unstubAllEnvs(); database.mockClear(); });
 const APP = join(process.cwd(), 'app');
 const files = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? files(join(dir, entry.name)) : [join(dir, entry.name)]);
 const under = ['groups', 'emba', 'e', 'a'].flatMap(root => files(join(APP, root)));
+// An ask belongs to its group's members whichever site is in front (loop-on-you, design D12): these reach the database, where each
+// service checks the caller's role in the ask's group. A signed-out visitor is still stopped before it.
+const MEMBERS = ['addTeamAsk', 'answerTeamAsk', 'closeTeamAsk', 'extendTeamAsk'];
+// The answer link Loop emails is the member's own: its form works for whoever holds the link, and reaches only that ask.
+const LINKS = ['answerFromPersonalLink'];
 const route = (file: string) => `/${relative(APP, file).split(sep).slice(0, -1).map(part => part.replace(/^\[\[?\.{0,3}(\w+)\]?\]$/, 'x')).join('/')}`;
 const pages = under.filter(file => file.endsWith(`${sep}page.tsx`) && leadsIntoGroups(route(file)));
 const actionFiles = under.filter(file => /actions\.ts$/.test(file));
@@ -36,12 +41,13 @@ async function open(page: (props: object) => unknown) {
 const visitors: [string, <T>(run: () => T) => T][] = [['a signed-in member who is not the admin', run => withPortalTestSession(member, run)], ['a signed-out visitor', run => run()]];
 
 it('finds the pages and actions of the groups site', () => {
-  expect(pages.map(route)).toEqual(expect.arrayContaining(['/groups', '/groups/x', '/groups/x/in/x/team', '/groups/archive', '/groups/connections', '/groups/reach/answer/x', '/emba', '/e/x', '/a/x']));
+  expect(pages.map(route)).toEqual(expect.arrayContaining(['/groups', '/groups/x', '/groups/x/in/x/team', '/groups/archive', '/groups/connections', '/emba', '/e/x']));
+  expect(pages.map(route)).not.toEqual(expect.arrayContaining(['/a/x']));
   expect(pages.map(route)).not.toEqual(expect.arrayContaining(['/groups/sign-in/x']));
   expect(actionFiles.length).toBeGreaterThanOrEqual(15);
 });
 
-describe.each(visitors)('with the campus as the front door, %s', (_who, as) => {
+describe.each(visitors)('with the campus as the front door, %s', (who, as) => {
   it.each(pages.map(file => [route(file), file]))('opens %s and reaches no group', async (_route, file) => {
     vi.stubEnv('LOOP_FRONT', 'campus'); vi.stubEnv('LOOP_ADMIN', 'founder@cornell.edu');
     const page = (await load(file)).default as (props: object) => unknown;
@@ -60,7 +66,8 @@ describe.each(visitors)('with the campus as the front door, %s', (_who, as) => {
       if (name === 'stopGroupMessages') continue;
       const data = new FormData(); data.set('token', 'abcdefghijklmnopqrstuvwx'); data.set('orgId', member.personId); data.set('loopId', member.personId);
       const result = await as(() => action({ status: 'idle', message: '' }, data).catch((error: { digest?: string }) => ({ status: 'error', thrown: error.digest ?? String(error) }))) as { status?: string; ok?: boolean } | undefined;
-      expect(database, name).not.toHaveBeenCalled();
+      if (LINKS.includes(name) || (MEMBERS.includes(name) && who.includes('signed-in'))) database.mockClear();
+      else expect(database, name).not.toHaveBeenCalled();
       expect(result?.status === 'success' || result?.ok === true, name).toBe(false);
     }
   });

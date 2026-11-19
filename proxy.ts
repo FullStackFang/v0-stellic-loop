@@ -9,12 +9,13 @@ const under = (path: string, base: string) => path === base || path.startsWith(`
 /**
  * The pages of the current site that lead into groups (openspec loop-campus-rewards, design D17). With LOOP_FRONT=campus
  * they open for the admin alone and send everyone else to `/`. Sign-in stays reachable, and so does the link in every
- * email that stops the emails. Crons, the routes members' assistants connect through, the legal pages and /demo are
+ * email that stops the emails. An ask's own page and the answer link Loop emails are left to their pages (loop-on-you,
+ * design D12): those open for the members of the ask's group and decide that themselves. Crons, the routes members' assistants connect through, the legal pages and /demo are
  * not on this list and are never gated.
  */
 export function leadsIntoGroups(path: string): boolean {
-  if (under(path, '/groups/sign-in') || under(path, '/emba/sign-in') || under(path, '/groups/reach/stop')) return false;
-  return under(path, '/groups') || under(path, '/emba') || path.startsWith('/e/') || path.startsWith('/a/');
+  if (under(path, '/groups/sign-in') || under(path, '/emba/sign-in') || under(path, '/groups/reach/stop') || under(path, '/groups/reach/answer')) return false;
+  return under(path, '/groups') || under(path, '/emba') || path.startsWith('/e/');
 }
 /** The campus app: the front door, the campus screen, share links and its sign-in. */
 const isCampus = (path: string) => path === '/' || under(path, '/c') || under(path, '/o') || under(path, '/sign-in');

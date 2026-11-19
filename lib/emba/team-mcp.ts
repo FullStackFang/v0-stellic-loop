@@ -13,10 +13,10 @@ import {noTags,resourceTags} from './resource-tags';
 import {handleMcpRequest} from './mcp';
 import {listTags,resolveTag} from './tags';
 import {CARD_HTML,CARD_MIME,CARD_URI} from './team-card';
-import {answerAsk,askResults,closeAsk,createAsk,listAsks} from './team-asks';
+import {answerAsk,askResults,closeAsk,createAsk,extendAsk,listAsks} from './team-asks';
 import {OrganizeRefused,type TeamHead} from './team-core';
 import {addEvent,archiveEvent,changeEvent,type EventWrite} from './team-events';
-import {documentParts,failures,formatAnswer,formatArrivals,formatAskChange,formatAskDetail,formatAsks,formatAskWrite,formatBrief,formatChoice,formatDay,formatDescribe,formatDocument,formatResourceWrite,formatEventDetail,formatEvents,formatEventWrite,formatGroupChange,formatIdeaWrite,formatInterest,formatInvites,formatLink,formatNearby,formatNews,formatPassages,formatResolution,formatState,formatTags,formatTravelWrite,formatWrite,waitingText,type GroupChangeResult,type InviteResult,type NotInvited,type OrganizeWord} from './team-format';
+import {documentParts,failures,formatAnswer,formatArrivals,formatAskChange,formatAskDetail,formatAskExtend,formatAsks,formatAskWrite,formatBrief,formatChoice,formatDay,formatDescribe,formatDocument,formatResourceWrite,formatEventDetail,formatEvents,formatEventWrite,formatGroupChange,formatIdeaWrite,formatInterest,formatInvites,formatLink,formatNearby,formatNews,formatPassages,formatResolution,formatState,formatTags,formatTravelWrite,formatWrite,waitingText,type GroupChangeResult,type InviteResult,type NotInvited,type OrganizeWord} from './team-format';
 import {readEventPage,type PageReader} from './event-link';
 import {linkEvent,nearbyCode} from './team-event-links';
 import {cancelIdea,changeIdea,proposeIdea} from './team-ideas';
@@ -244,20 +244,25 @@ export function createTeamMcpServer(db:Db,p:Principal,readPage:PageReader=readEv
   })));
 
  // Club tools: asks.
- server.registerTool('ask',{description:`Ask the team one question and collect one answer from each member, or close an ask early. ${asked} Use it when the user wants to poll the team, pick a date, or get a short answer from everyone. Give the question, its kind, its options and a closing time. The reply has a share link and a message the user can paste into a chat; Loop sends nothing itself. Name an event's tag as the team to attach the ask to that event. To close an ask the user asked (or any ask, if the user is an owner or organizer), set close to its number and leave the rest out.`,
-  inputSchema:z.object({team,question:z.string().optional().describe('The question in one line, at most 200 characters.'),kind:z.string().optional().describe('One of: one (pick one option), many (pick any number), dates (options are days, pick all that work), text (a short written answer). Default: one.'),
+ server.registerTool('ask',{description:`Ask the team one question and collect one answer from each member, or close an ask early. ${asked} Use it when the user wants to poll the team, pick a date, or get a short answer from everyone. Give the question, its kind, its options and a closing time. The reply has a share link and a message the user can paste into a chat; Loop sends nothing itself. Name an event's tag as the team to attach the ask to that event. To close an ask the user asked (or any ask, if the user is an owner or organizer), set close to its number and leave the rest out. To give such an ask a new closing time, which also opens it again if it has closed, set extend to its number and closesAt to the new time. For something everyone has to do (upload a form, pay a fee), use kind done: it has no options, each member marks it done, and the team sees who has.`,
+  inputSchema:z.object({team,question:z.string().optional().describe('The question in one line, at most 200 characters.'),kind:z.string().optional().describe('One of: one (pick one option), many (pick any number), dates (options are days, pick all that work), text (a short written answer), done (something to do: no options, each member marks it done). Default: one.'),
    options:z.array(z.string()).optional().describe('2 to 10 options, each at most 80 characters. For dates, each is YYYY-MM-DD. None for text.'),closesAt:z.string().optional().describe(`When it stops taking answers, at most 60 days from now. ${when}`),
-   reveal:z.string().optional().describe('named (the default): members see who answered what. counts: everyone sees totals only.'),close:ref.optional().describe('The number of an ask to close now, instead of asking a new one.')}),annotations:writes,_meta:card},
+   reveal:z.string().optional().describe('named (the default): members see who answered what. counts: everyone sees totals only.'),close:ref.optional().describe('The number of an ask to close now, instead of asking a new one.'),extend:ref.optional().describe('The number of an ask to give a new closing time, with closesAt. An ask that has closed opens again and keeps its answers.')}),annotations:writes,_meta:card},
   input=>reply(()=>within(input,true,async target=>{
    if(input.close!==undefined){
     if(input.question!==undefined||input.options!==undefined||input.closesAt!==undefined)throw new ZodError([]);
     const result=await closeAsk(db,p,{...scopeOf(target),number:number.parse(input.close)});
     return {text:formatAskChange(result,target.head),data:{...result,team:target.head}};
    }
+   if(input.extend!==undefined){
+    if(input.question!==undefined||input.options!==undefined)throw new ZodError([]);
+    const result=await extendAsk(db,p,{...scopeOf(target),number:number.parse(input.extend),closesAt:z.string().parse(input.closesAt)});
+    return {text:formatAskExtend(result,target.head),data:{...result,team:target.head}};
+   }
    const result=await createAsk(db,p,{...scopeOf(target),question:z.string().parse(input.question),kind:input.kind??'one',options:input.options,closesAt:z.string().parse(input.closesAt),reveal:input.reveal,event:target.event});
    return {text:formatAskWrite(result,target.head),data:{...result,team:target.head}};
   })));
- server.registerTool('answer',{description:`Answer an open ask for the user, replace their earlier answer, or take it back. ${asked} Use it when the user says how they want to answer an ask shown by whats_new or ask_results. Name each chosen option by its number or its exact words; for a written-answer ask send text. For a dates ask the user may also propose days that are not offered: send them in addDays, and each becomes an option everyone can choose and one of the user's choices. It can only be the user's own answer, never anyone else's. The reply states what is recorded now.`,
+ server.registerTool('answer',{description:`Answer an open ask for the user, replace their earlier answer, or take it back. ${asked} Use it when the user says how they want to answer an ask shown by whats_new or ask_results. Name each chosen option by its number or its exact words; for a written-answer ask send text; for something to do, send neither and it is marked done. For a dates ask the user may also propose days that are not offered: send them in addDays, and each becomes an option everyone can choose and one of the user's choices. It can only be the user's own answer, never anyone else's. The reply states what is recorded now.`,
   inputSchema:z.object({team,number:ref.describe('The number of the ask, such as 7.'),choices:z.array(ref).optional().describe('The chosen options, each by number or exact words. One for a pick-one ask.'),text:z.string().optional().describe('For a written-answer ask: one line, at most 400 characters.'),
    remove:z.boolean().optional().describe('True to take the user\'s answer back.'),addDays:z.array(z.string()).optional().describe('For a dates ask: days to add and choose, each as YYYY-MM-DD, today or later.'),via}),annotations:writes},
   input=>reply(()=>within(input,true,async target=>{

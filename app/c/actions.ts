@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
@@ -13,6 +14,10 @@ import { pickFace, placeAt } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
 import { campusViewer, mayUse, type CampusViewer } from '@/lib/campus/session';
+import { askWords } from '@/lib/emba/ask-words';
+import { answerAsk, createAsk, type AnswerWrite } from '@/lib/emba/team-asks';
+import { setInterest } from '@/lib/emba/team-interest';
+import { amendRecord } from '@/lib/emba/team-records';
 
 // Every action of the campus screen. Each asks afresh who is signed in, and acts only on the person's own campus
 // (the admin may act on any). A signed-out caller gets `signIn`, and the screen sends them to sign in and back.
@@ -184,4 +189,44 @@ export async function changePlanAction(_previous: PlanState, data: FormData): Pr
   });
   if (result.ok) redirect(`/c/${slug}`);
   return { message: result.message };
+}
+
+// "On you" (openspec loop-on-you): what a person's groups need from them, answered from the campus screen. Each write is the
+// group's own (the same one its pages and the assistant call), made as the signed-in person, and each checks that person's
+// role in that group before it reads or writes anything of the group's. The group comes from the row; it is never trusted.
+
+export type OnYouResult = { ok: true } | { ok: false; message: string; signIn?: boolean; /** It is no longer there to act on: the row leaves. */ gone?: boolean };
+type GroupScope = { orgId: string; loopId: string };
+const NOT_SAVED = 'That did not go through. Try again.';
+const GONE = ['closed', 'unknown_ask', 'unknown_event', 'unknown_record', 'stale'];
+const plainWords = (declined: { reason: string }) => declined.reason === 'busy' ? 'Not saved. Other changes to this group were in progress. Try again in a moment.'
+  : declined.reason === 'cap' ? 'You have made many changes this hour. Try again later.' : declined.reason === 'members_only' ? 'You follow this group. Only members can do this.'
+  : GONE.includes(declined.reason) ? 'This is no longer waiting for you.' : NOT_SAVED;
+async function onYouWrite<D extends { saved: false; reason: string }>(run: (viewer: CampusViewer) => Promise<{ saved: true } | D>, words: (declined: D) => string): Promise<OnYouResult> {
+  const viewer = await campusViewer();
+  if (!viewer) return { ok: false, signIn: true, message: 'Sign in to continue.' };
+  try {
+    const result = await run(viewer);
+    revalidatePath('/c', 'layout');
+    return result.saved ? { ok: true } : { ok: false, message: words(result), ...(GONE.includes(result.reason) ? { gone: true } : {}) };
+  } catch { return { ok: false, message: NOT_SAVED }; }
+}
+const scopeOf = (scope: GroupScope) => ({ orgId: String(scope?.orgId), loopId: String(scope?.loopId) });
+/** "Done" on something to do, or one option of a pick-one ask. */
+export async function answerOnYouAction(scope: GroupScope, number: number, choice?: number): Promise<OnYouResult> {
+  return onYouWrite<Exclude<AnswerWrite, { saved: true }>>(viewer => answerAsk(db(), viewer.principal, { ...scopeOf(scope), number: Number(number), route: 'site', ...(choice === undefined ? {} : { choices: [String(choice)] }) }),
+    declined => declined.reason === 'closed' ? 'This has closed.' : askWords(declined));
+}
+/** "I'm in" or "Not for me" on a group's event or idea. */
+export async function interestOnYouAction(scope: GroupScope, event: string, going: boolean): Promise<OnYouResult> {
+  return onYouWrite(viewer => setInterest(db(), viewer.principal, { ...scopeOf(scope), event: String(event), interested: !!going, decline: !going, route: 'site' }), plainWords);
+}
+/** "It's mine" or "Not mine" on work someone proposed for the person. */
+export async function claimOnYouAction(scope: GroupScope, number: number, mine: boolean): Promise<OnYouResult> {
+  return onYouWrite(viewer => amendRecord(db(), viewer.principal, { ...scopeOf(scope), operationId: randomUUID(), number: Number(number), action: mine ? 'confirm' : 'decline' }), plainWords);
+}
+/** "Ask a group": the question, what kind of answer it takes and when it closes, as read from the line and shown before sending. */
+export async function askGroupAction(scope: GroupScope, ask: { question: string; kind: 'done' | 'one' | 'text'; options?: string[]; closesAt: string }): Promise<OnYouResult> {
+  return onYouWrite(viewer => createAsk(db(), viewer.principal, { ...scopeOf(scope), question: String(ask?.question ?? ''), kind: ask?.kind, closesAt: String(ask?.closesAt ?? ''),
+    ...(ask?.kind === 'one' ? { options: (ask.options ?? []).map(String) } : {}) }), askWords);
 }

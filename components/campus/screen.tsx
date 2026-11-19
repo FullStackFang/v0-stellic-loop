@@ -66,9 +66,9 @@ function Seats({ seats }: { seats: Seat[] }) {
 }
 
 type Pane = 'more' | 'invite';
-export type ScreenProps = { screen: Screen; signInHref: string; openId?: string | null; signOut?: ReactNode; /** The campuses of this school, when it has more than one. */ swap?: SwapCampus[] };
+export type ScreenProps = { screen: Screen; signInHref: string; openId?: string | null; signOut?: ReactNode; /** The "On you" counter (openspec loop-on-you), read on the server beside the week. */ onYou?: ReactNode; /** The campuses of this school, when it has more than one. */ swap?: SwapCampus[] };
 
-export function CampusScreen({ screen, signInHref, openId = null, signOut = null, swap }: ScreenProps) {
+export function CampusScreen({ screen, signInHref, openId = null, signOut = null, onYou = null, swap }: ScreenProps) {
   const { campus, viewer, tickets, earning, live } = screen;
   const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'all' | 'near'>('best');
   const [open, setOpen] = useState<{ id: string; pane: Pane; fresh: boolean } | null>(openId ? { id: openId, pane: 'more', fresh: false } : null);
@@ -204,6 +204,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
   const bar = <CampusBar screen={screen} signInHref={signInHref} signOut={signOut} swap={swap}>
+    {onYou}
     {live && (live.usedAt ? <div className="cs-live used"><small>{live.giver}</small><b>{byId.get(live.listingId)?.status ?? 'Used'}</b></div>
       : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
   </CampusBar>;
@@ -244,12 +245,12 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
 
   return <div className="cs">{bar}
     <main className="cs-main"><section className="cs-fill">
-      <div className="cs-ask"><input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />
-        <div className="cs-tabs">{([['best', 'Best for you'], ['all', campus.listSource], ...(land ? [['near', 'Near you'] as const] : [])] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div></div>
-      {/* The count sits in a pill, and posting starts from the "+" at its left end: above the row, so it is there wherever the row is scrolled to (design D13). */}
+      <div className="cs-ask"><input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} /></div>
+      {/* The count sits in a pill, and posting starts from the "+" at its left end: above the row, so it is there wherever the row is scrolled to (design D13). The filters sit on the same line, each a pill (loop-on-you, design D4). */}
       <div className="cs-count"><div className="cs-tally">
         {post}
         <h2 aria-live="polite">{near ? nearLine : picked.line}</h2></div>
+        <div className="cs-tabs">{([['best', 'Best for you'], ['all', campus.listSource], ...(land ? [['near', 'Near you'] as const] : [])] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div>
         <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       {near ? <>{postSheet && <div className="cs-railwrap cs-near-post"><div className="cs-rail">{postSheet}</div></div>}

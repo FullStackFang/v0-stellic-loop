@@ -40,6 +40,15 @@ export function readLine(text: string, tz: string, now: Date): LineRead {
   const { title, starts, tag, tags, link } = scan(text, tz, now);
   return { title, starts, tag, tags, link };
 }
+/**
+ * Reads a line that is due, not held: "upload your W8 by friday @emba-council" (openspec loop-on-you). Its time is the one it
+ * says, or else the end of the day it names; null when it names neither. A "by" left where the day stood is dropped.
+ */
+export function readDue(text: string, tz: string, now: Date): { title: string; due: string | null; tags: string[] } {
+  const said = scan(text, tz, now), read = said.starts || !said.named ? said : scan(`${text} 11:59pm`, tz, now);
+  const title = said.title.replace(/^(?:by|before|due|until)\s+|\s+(?:by|before|due|until)$/gi, '').trim();
+  return { title: title ? title[0].toUpperCase() + title.slice(1) : '', due: read.starts, tags: said.tags };
+}
 /** The reading, and whether the line names a day or a date (with or without an hour). */
 function scan(text: string, tz: string, now: Date): LineRead & { named: boolean } {
   let rest = ` ${text.replace(/\s+/g, ' ').trim()} `;

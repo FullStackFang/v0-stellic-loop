@@ -9,7 +9,11 @@ For a signed-in viewer the campus screen SHALL show a list of what is waiting fo
 
 #### Scenario: Nothing waiting
 - **WHEN** a member with nothing waiting opens the campus screen
-- **THEN** no list is drawn and the rest of the screen is as before
+- **THEN** the counter shows no number, its panel says nothing is waiting, and the rest of the screen is as before
+
+#### Scenario: In no group
+- **WHEN** a signed-in person who belongs to no group opens the campus screen
+- **THEN** no counter is drawn
 
 #### Scenario: An open group the viewer has not joined
 - **WHEN** an open group the viewer does not belong to has an open ask
@@ -125,7 +129,7 @@ Every page a row links to SHALL open for a signed-in member of that item's group
 
 #### Scenario: Someone outside the group
 - **WHEN** a signed-in person who is not in the group opens the same link
-- **THEN** they see only the outside view of the ask
+- **THEN** they see what they see today and no more: the outside view of the ask where the groups site is in front, and the front door where the campus screen is
 
 ### Requirement: Opening the page does not use up what the assistant has yet to tell the member
 The page SHALL NOT mark any mention or announcement as shown.

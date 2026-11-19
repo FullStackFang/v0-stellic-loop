@@ -18,7 +18,8 @@ import {lineSchema,nameSchema} from './team-text';
 // nothing here, and no caller of it, computes a view across asks.
 
 export const ASKS={question:200,option:80,answer:400,minOptions:2,maxOptions:10,days:400,openPerTeam:20,openPerMember:5,maxDays:60,missingDays:7,soonHours:48,list:30,closed:10} as const;
-const kinds=['one','many','dates','text'] as const;
+// 'done' is something to do (loop-on-you, design D1): no options, always named, and the answer is that it is done.
+const kinds=['one','many','dates','text','done'] as const;
 export type AskKind=typeof kinds[number];
 export type Reveal='named'|'counts';
 export type AskOption={number:number;label:string};
@@ -46,10 +47,14 @@ export type Written={text:string;
  by?:Member};
 /** One ask with its results, by its reveal setting. */
 export type AskResult=AskView&{results:OptionResult[];written:Written[];
+ /** Only for something to do: who has done it, by name. */
+ done?:Member[];
  /** Present only for the person who asked and the team's owners and organizers, while the ask is open and for 7 days after. */
  missing?:Member[];
  /** The caller may close it: they asked it, or they are an owner or organizer. */
- canClose:boolean};
+ canClose:boolean;
+ /** The caller may give it a new closing time, which opens it again if it has closed. Never the ask Loop opened for an idea's day. */
+ canExtend:boolean};
 export type AskDetail={team:TeamHead;timezone:string;today:string;ask:AskResult;untrusted:true};
 export type AskList={team:TeamHead;timezone:string;today:string;open:Listed<AskView>;closed:Listed<AskView>;untrusted:true};
 
@@ -102,14 +107,15 @@ async function viewAsks(q:Q,{p,team,timezone,manager}:Viewer,ids:string[],detail
   // Written answers of a counts ask carry no name and no order of arrival.
   const texts=given.filter(answer=>answer.body!==null);
   const written:Written[]=named?texts.map(answer=>({text:answer.body!,by:person(answer.personId)})).sort((a,b)=>byName(a.by!,b.by!)):texts.map(answer=>({text:answer.body!})).sort((a,b)=>a.text.localeCompare(b.text));
-  return {...view,results,written,...(mayManage&&recent?{missing:(missing??[]).map(person).sort(byName)}:{}),canClose:mayManage&&row.open};
+  const done=row.kind==='done'?{done:given.map(answer=>person(answer.personId)).sort(byName)}:{};
+  return {...view,results,written,...done,...(mayManage&&recent?{missing:(missing??[]).map(person).sort(byName)}:{}),canClose:mayManage&&row.open,canExtend:mayManage&&!onlyIn};
  });
 }
 
 /** The message a person pastes into a chat to share an ask: the question, then the link on its own line. */
 export const askShareMessage=(ask:AskView)=>`${ask.question}\n${ask.shareUrl}`;
 /** The reminder the asker sends by hand. It says how many, by when and where, and names nobody. */
-export const askReminder=(ask:AskView)=>`${ask.expected-ask.answered} still to answer by ${ask.closes}.\n${ask.shareUrl}`;
+export const askReminder=(ask:AskView)=>`${ask.expected-ask.answered} still to ${ask.kind==='done'?'do it':'answer'} by ${ask.closes}.\n${ask.shareUrl}`;
 
 const dueSql='k.org_id=$1 and k.loop_id=$2 and k.closed_at is null and k.closes_at<=clock_timestamp()';
 /** True when an ask of the team passed its closing time and the change sequence does not say so yet. */
@@ -149,7 +155,7 @@ export type AskWrite=
  |{saved:true;created:boolean;ask:AskResult}
  |Refused
  |{saved:false;reason:'cap';cap:'open_asks'|'own_open_asks'}
- |{saved:false;reason:'options';problem:'too_few'|'too_many'|'duplicate'|'not_for_text'|'not_a_date'}
+ |{saved:false;reason:'options';problem:'too_few'|'too_many'|'duplicate'|'not_for_text'|'not_for_done'|'not_a_date'}
  |{saved:false;reason:'closing_time';problem:'past'|'too_far'}
  |{saved:false;reason:'unknown_event';value:string};
 type AskDeclined=Exclude<AskWrite,{saved:true}|Refused>;
@@ -163,7 +169,7 @@ export async function createAsk(db:Db,p:Principal,input:unknown):Promise<AskWrit
   const no=(declined:AskDeclined)=>stop<AskDeclined>(declined);
   await closeDue(ctx.q,ctx.team);
   const labels=data.options.map(label=>option.parse(label));
-  if(data.kind==='text'){if(labels.length)no({saved:false,reason:'options',problem:'not_for_text'});}
+  if(data.kind==='text'||data.kind==='done'){if(labels.length)no({saved:false,reason:'options',problem:data.kind==='text'?'not_for_text':'not_for_done'});}
   else{
    if(labels.length<ASKS.minOptions)no({saved:false,reason:'options',problem:'too_few'});
    if(labels.length>ASKS.maxOptions)no({saved:false,reason:'options',problem:'too_many'});
@@ -186,7 +192,7 @@ export async function createAsk(db:Db,p:Principal,input:unknown):Promise<AskWrit
   if(open.n>=ASKS.openPerTeam)no({saved:false,reason:'cap',cap:'open_asks'});
   if(mine.length>=ASKS.openPerMember)no({saved:false,reason:'cap',cap:'own_open_asks'});
   const {rows:[ask]}=await ctx.q.query<{id:string}>('insert into emba_ask(org_id,loop_id,number,asker_id,client_id,event_id,question,kind,reveal,created_at,closes_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id',
-   [data.orgId,data.loopId,await ctx.nextNumber(),p.personId,p.clientId,event?.id??null,data.question,data.kind,data.reveal,time.now,time.closes]);
+   [data.orgId,data.loopId,await ctx.nextNumber(),p.personId,p.clientId,event?.id??null,data.question,data.kind,data.kind==='done'?'named':data.reveal,time.now,time.closes]);
   for(const [index,label] of labels.entries())await ctx.q.query('insert into emba_ask_option(ask_id,position,label) values($1,$2,$3)',[ask.id,index+1,label]);
   await ctx.log('asked',{askId:ask.id});
   await queueAsk(ctx.q,ctx.team,ask.id,p.personId);
@@ -203,7 +209,7 @@ export type AnswerWrite=
  // The ask is for an idea's day, and the caller is not in on the idea.
  |{saved:false;reason:'not_in';ask:AskResult}
  |{saved:false;reason:'unknown_option';value:string;ask:AskResult}
- |{saved:false;reason:'answer_shape';problem:'needs_text'|'needs_choice'|'one_only';ask:AskResult}
+ |{saved:false;reason:'answer_shape';problem:'needs_text'|'needs_choice'|'one_only'|'done_only';ask:AskResult}
  // Days are added only to a dates ask, as real days that have not passed in the team's timezone.
  |{saved:false;reason:'add_days';problem:'not_dates'|'not_a_date'|'past'|'too_many';ask:AskResult};
 type AnswerDeclined=Exclude<AnswerWrite,{saved:true}|Refused>;
@@ -241,9 +247,13 @@ export async function answerAsk(db:Db,p:Principal,input:unknown,
    await prune();
    return {saved:true,changed:Boolean(before),ask:await result(ctx,ask.id)};
   }
-  const shape=async(problem:'needs_text'|'needs_choice'|'one_only')=>no({saved:false,reason:'answer_shape',problem,ask:await result(ctx,ask.id)});
+  const shape=async(problem:'needs_text'|'needs_choice'|'one_only'|'done_only')=>no({saved:false,reason:'answer_shape',problem,ask:await result(ctx,ask.id)});
   let choices:number[]=[],body:string|null=null;
-  if(ask.kind==='text'){
+  if(ask.kind==='done'){
+   // Done is the whole answer.
+   if(data.addDays?.length)no({saved:false,reason:'add_days',problem:'not_dates',ask:await result(ctx,ask.id)});
+   if(data.text!==undefined||data.choices?.length)await shape('done_only');
+  }else if(ask.kind==='text'){
    body=data.text?.trim()?lineSchema(ASKS.answer).parse(data.text):'';
    if(!body||data.choices?.length)await shape('needs_text');
   }else{
@@ -291,7 +301,7 @@ export type AskChange=
  |{saved:false;reason:'not_yours'}
  |{saved:false;reason:'reveal_fixed';ask:AskResult};
 type ChangeDeclined=Exclude<AskChange,{saved:true}|Refused>;
-/** Closes an ask before its time. The person who asked, or an owner or organizer, on the site or through an assistant. It is not reopened. */
+/** Closes an ask before its time. The person who asked, or an owner or organizer, on the site or through an assistant. `extendAsk` opens it again. */
 export async function closeAsk(db:Db,p:Principal,input:unknown):Promise<AskChange> {
  const data=z.strictObject({...scope,number:askNumber}).parse(input);
  return teamWrite<Exclude<AskChange,Refused>>(db,p,data,{need:'post',lock:true,count:true},async ctx=>{
@@ -306,6 +316,42 @@ export async function closeAsk(db:Db,p:Principal,input:unknown):Promise<AskChang
   return {saved:true,changed:true,ask:await result(ctx,ask.id)};
  });
 }
+export type AskExtend=AskChange
+ |{saved:false;reason:'closing_time';problem:'past'|'too_far'}
+ |{saved:false;reason:'cap';cap:'open_asks'}
+ // The ask Loop opened to settle an idea's day: closing it set the day, so it is not opened again.
+ |{saved:false;reason:'day_ask'};
+type ExtendDeclined=Exclude<AskExtend,{saved:true}|Refused>;
+/**
+ * Gives an ask a new closing time (loop-on-you, design D3). The person who
+ * asked, or an owner or organizer, on the site or through an assistant. An ask
+ * that has closed, by its time or early, opens again and keeps its answers.
+ */
+export async function extendAsk(db:Db,p:Principal,input:unknown):Promise<AskExtend> {
+ const data=z.strictObject({...scope,number:askNumber,closesAt:moment}).parse(input);
+ return teamWrite<Exclude<AskExtend,Refused>>(db,p,data,{need:'post',lock:true,count:true},async ctx=>{
+  const no=(declined:ExtendDeclined)=>stop<ExtendDeclined>(declined);
+  await closeDue(ctx.q,ctx.team);
+  const ask=await held(ctx,data.number,'update');
+  if(!ask)return no({saved:false,reason:'unknown_ask',value:data.number});
+  if(ask.askerId!==p.personId&&!ctx.manager)no({saved:false,reason:'not_yours'});
+  if(ask.onlyIn)no({saved:false,reason:'day_ask'});
+  // The 60 days are counted from now, not from when the ask was made.
+  const {rows:[time]}=await ctx.q.query<{closes:string;past:boolean;far:boolean;same:boolean}>(`with t as (select ${instant(1,2)} as closes,clock_timestamp() as now)
+   select closes,closes<=now as past,closes-now>interval '${ASKS.maxDays} days' as far,closes=(select closes_at from emba_ask where id=$3) as same from t`,[data.closesAt,ctx.timezone,ask.id]);
+  if(time.past)no({saved:false,reason:'closing_time',problem:'past'});
+  if(time.far)no({saved:false,reason:'closing_time',problem:'too_far'});
+  if(ask.open&&time.same)return {saved:true,changed:false,ask:await result(ctx,ask.id)};
+  if(!ask.open){
+   const {rows:[open]}=await ctx.q.query<{n:number}>(`select count(*)::int as n from emba_ask k where k.org_id=$1 and k.loop_id=$2 and not k.only_in and ${openSql()}`,[data.orgId,data.loopId]);
+   if(open.n>=ASKS.openPerTeam)no({saved:false,reason:'cap',cap:'open_asks'});
+  }
+  await ctx.q.query('update emba_ask set closes_at=$2,closed_at=null where id=$1',[ask.id,time.closes]);
+  // Nothing is sent for the move itself. The scheduled run sends the reminder before the new time and the result after it (reach-send, queueDue).
+  await ctx.log('ask_extended',{askId:ask.id});
+  return {saved:true,changed:true,ask:await result(ctx,ask.id)};
+ });
+}
 /** Switches a named ask to totals only, before anyone has answered. Only the person who asked. It is not switched back. */
 export async function setAskReveal(db:Db,p:Principal,input:unknown):Promise<AskChange> {
  const data=z.strictObject({...scope,number:askNumber,reveal:z.enum(['named','counts'])}).parse(input);
@@ -316,7 +362,7 @@ export async function setAskReveal(db:Db,p:Principal,input:unknown):Promise<AskC
   if(ask.reveal===data.reveal)return {saved:true,changed:false,ask:await result(ctx,ask.id)};
   const {rows:answers}=await ctx.q.query('select 1 from emba_ask_answer where ask_id=$1 limit 1',[ask.id]);
   // Only toward showing less: a member who opened a totals-only ask is never named by an answer sent a moment later.
-  if(answers.length||!ask.open||data.reveal==='named')stop<ChangeDeclined>({saved:false,reason:'reveal_fixed',ask:await result(ctx,ask.id)});
+  if(answers.length||!ask.open||data.reveal==='named'||ask.kind==='done')stop<ChangeDeclined>({saved:false,reason:'reveal_fixed',ask:await result(ctx,ask.id)});
   await ctx.q.query('update emba_ask set reveal=$2 where id=$1',[ask.id,data.reveal]);
   return {saved:true,changed:true,ask:await result(ctx,ask.id)};
  });
@@ -361,7 +407,23 @@ export async function openAsks(q:Q,p:Principal,team:Scope,timezone:string):Promi
  const {rows}=await q.query<{id:string;soon:boolean;total:number}>(`select k.id,k.closes_at<=clock_timestamp()+interval '${ASKS.soonHours} hours' as soon,count(*) over()::int as total from emba_ask k
   where k.org_id=$1 and k.loop_id=$2 and ${openSql()} and ${putTo('$3')} and not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$3) order by k.closes_at,k.number limit ${ASKS.list}`,[team.orgId,team.loopId,p.personId]);
  const views=await viewAsks(q,{p,team,timezone,manager:false},rows.map(row=>row.id),true);
- return {open:count.n,unanswered:{items:views.map(({results,written,missing,canClose,...view},index)=>{void written;void missing;void canClose;return {...view,results:results.map(({number,label,count})=>({number,label,count})),closingSoon:rows[index].soon};}),more:Math.max(0,(rows[0]?.total??0)-rows.length)}};
+ return {open:count.n,unanswered:{items:views.map(({results,written,missing,canClose,canExtend,done,...view},index)=>{void written;void missing;void canClose;void canExtend;void done;return {...view,results:results.map(({number,label,count})=>({number,label,count})),closingSoon:rows[index].soon};}),more:Math.max(0,(rows[0]?.total??0)-rows.length)}};
+}
+/**
+ * For the list of what is on a member (loop-on-you), inside its snapshot: the open asks the caller may answer and has not, soonest
+ * first, and the things to do that passed in the last 7 days without them, latest first. Up to `limit` of each, with how many
+ * there are in all. Nothing is on a follower.
+ */
+export async function asksOnYou(q:Q,p:Principal,team:Scope,timezone:string,limit:number):Promise<Record<'open'|'missed',{items:Unanswered[];total:number}>> {
+ if(!await canAccessLoop(q,p,team.orgId,team.loopId,'post'))return {open:{items:[],total:0},missed:{items:[],total:0}};
+ const mine=`k.org_id=$1 and k.loop_id=$2 and ${putTo('$3')} and not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$3)`;
+ const read=async(where:string,order:string)=>{
+  const {rows}=await q.query<{id:string;soon:boolean;total:number}>(`select k.id,${openSql()} and k.closes_at<=clock_timestamp()+interval '${ASKS.soonHours} hours' as soon,count(*) over()::int as total from emba_ask k
+   where ${mine} and ${where} order by ${order},k.number limit ${limit}`,[team.orgId,team.loopId,p.personId]);
+  const views=await viewAsks(q,{p,team,timezone,manager:false},rows.map(row=>row.id),true);
+  return {items:views.map(({results,written,missing,canClose,canExtend,done,...view},index)=>{void written;void missing;void canClose;void canExtend;void done;return {...view,results:results.map(({number,label,count})=>({number,label,count})),closingSoon:rows[index].soon};}),total:rows[0]?.total??0};
+ };
+ return {open:await read(openSql(),'k.closes_at'),missed:await read(`k.kind='done' and not ${openSql()} and ${endSql()}>clock_timestamp()-interval '${ASKS.missingDays} days'`,`${endSql()} desc`)};
 }
 /** For the brief, inside its snapshot: how many asks are open, and how many of them the caller may answer and has not. Counts only: no ask is built to be counted. */
 export async function openAskCounts(q:Q,p:Principal,team:Scope):Promise<{open:number;unanswered:number}> {

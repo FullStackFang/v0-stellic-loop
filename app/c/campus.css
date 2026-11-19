@@ -94,8 +94,8 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-ask input { flex: 1 1 320px; min-width: 0; height: 52px; padding: 0 24px; border: 0; border-radius: 99px; font: inherit; font-size: 18px; font-weight: 520; letter-spacing: -0.02em; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
 .cs-ask input::placeholder { color: var(--cs-mute); } .cs-ask input:focus-visible { outline: 3px solid var(--cs-action); outline-offset: 2px; }
 .cs-tabs { display: flex; gap: 4px; flex: none; }
-.cs-tabs button { padding: 6px 14px; border-radius: 99px; font-weight: 540; color: var(--cs-mute); }
-.cs-tabs button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); }
+.cs-tabs button { padding: 6px 14px; border-radius: 99px; font-weight: 540; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs-tabs button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
 .cs-count { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 10px; flex-wrap: wrap; }
 :where(.cs) h2 { font-size: 20px; font-weight: 660; letter-spacing: -0.03em; line-height: 1.2; font-variation-settings: normal; text-transform: none; }
 .cs-says { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .cs-says small { font-size: 13px; color: var(--cs-mute); margin-right: 4px; }
@@ -105,8 +105,8 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 
 /* the row of tickets */
 .cs-evs { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 330px; }
-.cs-railwrap { position: relative; display: flex; margin: -6px -16px -6px -6px; }
-.cs-rail { flex: 1; min-width: 0; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-left: 6px; padding: 6px 16px 16px 6px; scrollbar-width: none; } .cs-rail::-webkit-scrollbar { display: none; }
+.cs-railwrap { position: relative; display: flex; margin: -6px -16px -6px -6px; container-type: inline-size; }
+.cs-rail { flex: 1; min-width: 0; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: 6px; padding: 6px 16px 16px 6px; scrollbar-width: none; } .cs-rail::-webkit-scrollbar { display: none; }
 .cs-rgo { position: absolute; top: calc(50% - 26px); width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: var(--cs-ink); color: var(--cs-field); box-shadow: 3px 3px 0 var(--cs-action); transition: transform .2s var(--cs-ease); }
 .cs .cs-rgo { background: var(--cs-ink); color: var(--cs-field); } .cs-rgo:hover { transform: scale(1.08); }
 .cs-rgo svg { width: 18px; height: 18px; } .cs-rgo.l { left: -26px; } .cs-rgo.l svg { transform: rotate(90deg); } .cs-rgo.r { right: -6px; } .cs-rgo.r svg { transform: rotate(-90deg); }
@@ -769,3 +769,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs .cs-pet > .cs-ink { position: absolute; right: -4px; bottom: -4px; z-index: 1; width: 18px; height: 18px; padding: 1.5px; border-radius: 50%; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink); }
 /* in a row of overlapping faces the overlap moves to the wrapper, and the edge of paper that parts two faces goes round the blot */
 .cs-stack > .cs-inked > .cs-face { margin-left: 0; box-shadow: none; } .cs-stack .cs-blot .school path { stroke: var(--ring, var(--cs-paper)); stroke-width: 3px; vector-effect: non-scaling-stroke; paint-order: stroke; } .cs-stack > .cs-inked:not(:first-child) { margin-left: -7px; } .cs-pin > .cs-stack > .cs-inked:not(:first-child) { margin-left: -9px; }
+
+/* The sideways row shows whole tickets only (loop-on-you, design D4): as many as fit at about a ticket's width, each the same share of the row, and it stops on a ticket's edge. */
+.cs-rail { --n: 1; } .cs-railwrap > .cs-rail > .cs-ev { flex-basis: calc((100% - (var(--n) - 1) * 16px) / var(--n)); }
+@container (min-width: 600px) { .cs-rail { --n: 2; } } @container (min-width: 900px) { .cs-rail { --n: 3; } } @container (min-width: 1200px) { .cs-rail { --n: 4; } } @container (min-width: 1500px) { .cs-rail { --n: 5; } }

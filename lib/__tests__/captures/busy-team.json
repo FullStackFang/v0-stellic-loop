@@ -2071,7 +2071,8 @@
        "name": "Dee Member"
       }
      ],
-     "canClose": true
+     "canClose": true,
+     "canExtend": true
     },
     "untrusted": true
    },
@@ -2154,7 +2155,8 @@
        "name": "Eli Member"
       }
      ],
-     "canClose": true
+     "canClose": true,
+     "canExtend": true
     },
     "untrusted": true
    },
@@ -2252,7 +2254,8 @@
        "name": "Dee Member"
       }
      ],
-     "canClose": false
+     "canClose": false,
+     "canExtend": true
     },
     "untrusted": true
    },
@@ -2383,7 +2386,8 @@
        "name": "Dee Member"
       }
      ],
-     "canClose": false
+     "canClose": false,
+     "canExtend": true
     },
     "untrusted": true
    }
@@ -4583,7 +4587,8 @@
       }
      ],
      "written": [],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    },
@@ -4666,7 +4671,8 @@
        "name": "Olivia Owner"
       }
      ],
-     "canClose": true
+     "canClose": true,
+     "canExtend": true
     },
     "untrusted": true
    },
@@ -4741,7 +4747,8 @@
        }
       }
      ],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    },
@@ -4846,7 +4853,8 @@
       }
      ],
      "written": [],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    }
@@ -6965,7 +6973,8 @@
       }
      ],
      "written": [],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    },
@@ -7022,7 +7031,8 @@
       }
      ],
      "written": [],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    },
@@ -7094,7 +7104,8 @@
        }
       }
      ],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    },
@@ -7199,7 +7210,8 @@
       }
      ],
      "written": [],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    }
@@ -9422,7 +9434,8 @@
        "former": false
       }
      ],
-     "canClose": true
+     "canClose": true,
+     "canExtend": true
     },
     "untrusted": true
    },
@@ -9486,7 +9499,8 @@
       }
      ],
      "written": [],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    },
@@ -9555,7 +9569,8 @@
        }
       }
      ],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    },
@@ -9668,7 +9683,8 @@
       }
      ],
      "written": [],
-     "canClose": false
+     "canClose": false,
+     "canExtend": false
     },
     "untrusted": true
    }

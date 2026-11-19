@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { closedToCaller, getPortalPrincipal } from '@/lib/emba/portal-session';
+import { getPortalPrincipal } from '@/lib/emba/portal-session';
 import { setReachChoice, stopFromLink } from '@/lib/emba/reach';
 import { answerFromLink } from '@/lib/emba/reach-link';
 import type { PortalResult } from '@/components/emba/portal-types';
@@ -33,15 +33,14 @@ export async function stopGroupMessages(_previous: PortalResult, data: FormData)
   }
 }
 
-const refused = { gone: 'This link no longer works.', busy: 'Not saved. Other changes to this group were in progress. Try again in a moment.', closed: 'Not saved. This ask has closed and takes no more answers.', needs_text: 'Not saved. This ask takes a short written answer.', needs_choice: 'Choose an option before sending.', one_only: 'Not saved. This ask takes exactly one option.', unknown_option: 'Not saved. That option is not one of the options. Reload the page.' } as const;
+const refused = { gone: 'This link no longer works.', busy: 'Not saved. Other changes to this group were in progress. Try again in a moment.', closed: 'Not saved. This ask has closed and takes no more answers.', needs_text: 'Not saved. This ask takes a short written answer.', needs_choice: 'Choose an option before sending.', one_only: 'Not saved. This ask takes exactly one option.', done_only: 'Not saved. This is only marked done.', unknown_option: 'Not saved. That option is not one of the options. Reload the page.' } as const;
 /** The personal answer link's form. It needs no sign-in and opens none: the link names the member and the ask. */
 export async function answerFromPersonalLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   try {
-    if (await closedToCaller()) return { status: 'error', message: refused.gone };
     const result = await answerFromLink(db(), value(data, 'token'), { choices: data.getAll('choice').map(String), text: data.has('text') ? value(data, 'text') : undefined });
     if (!result.saved) return { status: 'error', message: refused[result.reason] };
     revalidatePath('/groups/reach/answer/[token]', 'page');
-    return { status: 'success', message: `Saved. Your answer: ${result.ask.yourAnswer}` };
+    return { status: 'success', message: result.ask.kind === 'done' ? 'Saved. Marked done.' : `Saved. Your answer: ${result.ask.yourAnswer}` };
   } catch {
     return { status: 'error', message: 'That did not work. Try again.' };
   }

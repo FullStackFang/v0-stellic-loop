@@ -1,4 +1,4 @@
-import type {AnswerWrite,AskChange,AskDetail,AskList,AskResult,AskView,AskWrite} from './team-asks';
+import type {AnswerWrite,AskChange,AskDetail,AskExtend,AskList,AskResult,AskView,AskWrite} from './team-asks';
 import type {Member,OrganizeReason,TeamHead} from './team-core';
 import type {EventView,EventWrite} from './team-events';
 import type {LinkWrite as EventLinkWrite} from './team-event-links';
@@ -223,7 +223,7 @@ function changeLine(change:Change,team:TeamHead):string {
  if(change.event&&(change.action==='event_proposed'||change.action==='event_cancelled'))return `${change.at.slice(0,10)}: ${who(change.by)}${via(change.assistant)} ${change.action==='event_proposed'?'proposed idea':'cancelled'} ${eventTag(team,change.event.slug)}${change.action==='event_proposed'&&change.event.starts?`, ${change.event.starts}`:''}.`;
  if(change.ask?.forThoseIn&&change.action==='asked')return `${change.at.slice(0,10)}: Loop asked the members who are in on ${change.ask.event?`idea ${eventTag(team,change.ask.event)}`:'an idea'} to choose its day (ask #${change.ask.number}).`;
  if(change.event)return `${change.at.slice(0,10)}: ${who(change.by)}${via(change.assistant)} ${eventActions[change.action]??'changed'} event ${eventTag(team,change.event.slug)}${change.event.starts&&change.action!=='event_archived'?`, now ${change.event.starts}`:''}.`;
- if(change.ask)return `${change.at.slice(0,10)}: ${change.action==='asked'?`${who(change.by)}${via(change.assistant)} asked the team (ask #${change.ask.number})`:`ask #${change.ask.number} closed`}.`;
+ if(change.ask)return `${change.at.slice(0,10)}: ${change.action==='asked'?`${who(change.by)}${via(change.assistant)} asked the team (ask #${change.ask.number})`:change.action==='ask_extended'?`${who(change.by)}${via(change.assistant)} gave ask #${change.ask.number} a new closing time`:`ask #${change.ask.number} closed`}.`;
  if(!change.record)return `${change.at.slice(0,10)}: something changed.`;
  const actor=`${who(change.by)}${via(change.assistant)}`,what=`${kinds[change.record.kind]} #${change.record.number}`,other=change.other?`#${change.other}`:'another record',about=change.about?who(change.about):'someone';
  const said:Record<string,string>={filed:`${actor} filed ${what}`,corrected:`${actor} corrected ${what}`,replaced:`${actor} replaced ${what} with ${other}`,logged:`${actor} logged ${what}`,superseded:`${actor} superseded ${what} with ${other}`,
@@ -403,7 +403,9 @@ export function documentParts(body:string):string[][] {
 }
 
 // Asks. The question, the options and written answers are members' words: each sits on a quoted line.
-const kindWords={one:'Pick one option',many:'Pick any number of options',dates:'Pick every date that works',text:'A short written answer'} as const;
+const kindWords={one:'Pick one option',many:'Pick any number of options',dates:'Pick every date that works',text:'A short written answer',done:'Something to do: each member marks it done, with no options and no text'} as const;
+/** Something to do is done, not answered. */
+const did=(ask:AskView)=>ask.kind==='done'?'done':'answered';
 const WRITTEN=20;
 /** How many people one option or the not-answered line names in text; the rest are counted. The structured result has them all. */
 const FEW=8;
@@ -413,16 +415,17 @@ type AskParts={head:string[];items:string[][];tail:string[]};
 /** One ask in parts: Loop's opening lines, then each option and written answer as an item that may be left out and counted when space runs short, then Loop's closing lines, which are never left out. */
 function askParts(team:TeamHead,ask:AskView,result?:AskResult):AskParts {
  const when=ask.open?`open, closes ${ask.closes} (${ask.timezone})`:`closed ${ask.closes} (${ask.timezone})`;
- const yours=!ask.yourAnswer?['The user has not answered.']:ask.yourAnswer.text!==null?['The user answered:',...quote(ask.yourAnswer.text).slice(0,3)]
+ const yours=ask.kind==='done'?[ask.yourAnswer?'The user has marked it done.':ask.open?'The user has not done it.':'The user did not do it.']:!ask.yourAnswer?['The user has not answered.']:ask.yourAnswer.text!==null?['The user answered:',...quote(ask.yourAnswer.text).slice(0,3)]
   :own(`The user answered: option ${ask.yourAnswer.choices.map(choice=>choice.number).join(', ')}.`);
- return {head:[...own(`Ask #${ask.number} by ${who(ask.by)}${via(ask.assistant)}${ask.event?`, for event ${eventTag(team,ask.event)}`:''}: ${when}. ${ask.answered} of ${ask.expected} answered.`),...quote(ask.question),
-   ...own(`${kindWords[ask.kind]}. ${ask.reveal==='named'?'Members see who answered what.':'Members see totals only, never who chose what.'}`)],
+ return {head:[...own(`Ask #${ask.number} by ${who(ask.by)}${via(ask.assistant)}${ask.event?`, for event ${eventTag(team,ask.event)}`:''}: ${when}. ${ask.answered} of ${ask.expected} ${did(ask)}.`),...quote(ask.question),
+   ...own(`${kindWords[ask.kind]}. ${ask.kind==='done'?'Members see who has done it.':ask.reveal==='named'?'Members see who answered what.':'Members see totals only, never who chose what.'}`)],
   items:[...ask.options.map(option=>{
     const tally=result?.results.find(item=>item.number===option.number);
     return [...quote(`${option.number}. ${option.label}`),...(tally?own(`Option ${option.number}: chosen by ${tally.count}${tally.people?.length?` (${names(tally.people,0,FEW)})`:''}.`):[])];
    }),...(result?.written??[]).slice(0,WRITTEN).map(answer=>[...(answer.by?own(`Written by ${who(answer.by)}:`):[]),...quote(answer.text)])],
   tail:[...((result?.written.length??0)>WRITTEN?[`${result!.written.length-WRITTEN} more written answers are in the structured result.`]:[]),...yours,
-   ...(result?.missing?own(result.missing.length?`Not answered yet: ${names(result.missing,0,FEW)}.`:'Everyone who can answer has answered.'):[])]};
+   ...(result?.done?.length?own(`Done by: ${names(result.done,0,FEW)}.`):[]),
+   ...(result?.missing?own(result.missing.length?`Not ${did(ask)} yet: ${names(result.missing,0,FEW)}.`:ask.kind==='done'?'Everyone has done it.':'Everyone who can answer has answered.'):[])]};
 }
 /** Puts an ask on a page of its own. Room is kept for its closing lines and for the share link and the message to paste that follow it. */
 const put=(page:Page,parts:AskParts)=>{
@@ -434,7 +437,7 @@ export const askLines=(team:TeamHead,ask:AskView,result?:AskResult):string[]=>{c
 const askShare=(ask:AskView)=>['Share link (people outside the team see only the question, the group name and the closing time):',ask.shareUrl];
 const noAsk=(value:number)=>`Not saved. No ask in this team has the number ${value}. Call ask_results with no number to list the asks.`;
 const askCaps={writes_per_hour:caps.writes_per_hour,open_asks:'20 open asks in one team. Close one first.',own_open_asks:'5 open asks of the user\'s own in this team. Close one first.'} as const;
-const optionWords={too_few:'An ask of this kind needs at least 2 options.',too_many:'An ask takes at most 10 options.',duplicate:'Two of the options are the same.',not_for_text:'An ask for a written answer takes no options.',
+const optionWords={too_few:'An ask of this kind needs at least 2 options.',too_many:'An ask takes at most 10 options.',duplicate:'Two of the options are the same.',not_for_text:'An ask for a written answer takes no options.',not_for_done:'Something to do takes no options. Leave options out.',
  not_a_date:'Each option of a dates ask is one day, written as YYYY-MM-DD.'} as const;
 const closingWords={past:'The closing time must be in the future.',too_far:'The closing time can be at most 60 days from now.'} as const;
 const general=(result:{reason:'busy'|'organizers_only'|'members_only'})=>`Not saved. ${refusals[result.reason]}`;
@@ -451,13 +454,13 @@ export function formatAskWrite(result:AskWrite,team:TeamHead):string {
   default:return general(result);
  }
 }
-const shapeWords={needs_text:'This ask takes a short written answer: send text, and no choices.',needs_choice:'This ask takes a choice: send choices with an option\'s number or its exact words, and no text.',one_only:'This ask takes exactly one option.'} as const;
+const shapeWords={needs_text:'This ask takes a short written answer: send text, and no choices.',needs_choice:'This ask takes a choice: send choices with an option\'s number or its exact words, and no text.',one_only:'This ask takes exactly one option.',done_only:'This is something to do: call answer with its number and no choices or text to mark it done.'} as const;
 const dayWords={not_dates:'Days are added only to a dates ask.',not_a_date:'Each added day is one day, written as YYYY-MM-DD.',past:'A day that has passed cannot be added.',too_many:'This ask has as many days as it can take.'} as const;
 /** The result of answering: exactly what is recorded now, and how to change it. */
 export function formatAnswer(result:AnswerWrite,team:TeamHead):string {
  const shown=(first:string,ask:AskResult,last:string[]=[])=>put(new Page().line(first),askParts(team,ask,ask)).line(...last,NOTE).end('The structured result has every option and answer.');
  if(result.saved)return shown(!result.changed?'Nothing changed. The ask stands as:':result.ask.yourAnswer?'Saved.':'Saved. The user\'s answer was removed.',result.ask,
-  result.ask.open?['To change the answer, call answer again. To take it back, call answer with remove set to true.']:[]);
+  result.ask.open?[result.ask.kind==='done'?'To take it back, call answer with remove set to true.':'To change the answer, call answer again. To take it back, call answer with remove set to true.']:[]);
  switch(result.reason){
   case 'cap':return `Not saved. Limit reached: ${askCaps[result.cap]}`;
   case 'unknown_ask':return noAsk(result.value);
@@ -480,12 +483,23 @@ export function formatAskChange(result:AskChange,team:TeamHead):string {
   default:return general(result);
  }
 }
+const extendWords={day_ask:'This ask settles the day of an idea, and closing it set the day. It is not opened again.'} as const;
+/** The result of giving an ask a new closing time. */
+export function formatAskExtend(result:AskExtend,team:TeamHead):string {
+ if(result.saved)return put(new Page().line(result.changed?`Saved. It now closes ${result.ask.closes} (${result.ask.timezone}) and takes answers until then.`:'Nothing changed. The ask stands as:'),askParts(team,result.ask,result.ask)).line(NOTE).end('The structured result has every option and answer.');
+ switch(result.reason){
+  case 'closing_time':return `Not saved. ${closingWords[result.problem]}`;
+  case 'day_ask':return `Not saved. ${extendWords.day_ask}`;
+  case 'cap':return `Not saved. Limit reached: ${askCaps[result.cap]}`;
+  default:return formatAskChange(result,team);
+ }
+}
 /** One ask with its results. The reminder is offered only to those who are shown who has not answered; it names nobody. */
 export function formatAskDetail(detail:AskDetail):string {
  const ask=detail.ask,left=ask.expected-ask.answered;
  const page=put(new Page().line(head(detail.team,detail.today,detail.timezone)),askParts(detail.team,ask,ask)).raw(askShare(ask));
- if(ask.open&&ask.missing&&left>0)page.line('Reminder the user can paste into a chat (it names nobody):',`${left} still to answer by ${ask.closes}.`).raw([ask.shareUrl]);
- return page.line(...(ask.open?['To answer for the user, call answer with this number.']:[]),NOTE).end('The structured result has every option and answer.');
+ if(ask.open&&ask.missing&&left>0)page.line('Reminder the user can paste into a chat (it names nobody):',`${left} still to ${ask.kind==='done'?'do it':'answer'} by ${ask.closes}.`).raw([ask.shareUrl]);
+ return page.line(...(ask.open?[ask.kind==='done'?'To mark it done for the user, call answer with this number and no choices or text.':'To answer for the user, call answer with this number.']:[]),...(ask.canExtend?[`To give it a new closing time${ask.open?'':', which opens it again'}, call ask with extend set to ${ask.number} and closesAt.`]:[]),NOTE).end('The structured result has every option and answer.');
 }
 export function formatAsks(list:AskList):string {
  const page=new Page().line(head(list.team,list.today,list.timezone),list.open.items.length?'Open asks, soonest to close first:':'No open asks.');
@@ -508,8 +522,8 @@ export function waitingText(result:Waiting):{text:string;stated:number} {
  for(const item of result.items){
   const team=`${item.team.handle} (${short(item.team.name,60)})`;
   if(item.kind==='ask')page.item([...own(`Ask #${item.ask.number} in ${team}, closes ${item.ask.closes} (${item.ask.timezone})${item.ask.closingSoon?', which is within 48 hours':''}:`),...quote(item.ask.question).slice(0,2),
-   ...own(`${kindWords[item.ask.kind]}. ${item.ask.answered} of ${item.ask.expected} answered.`),...item.ask.options.flatMap(option=>[...quote(`${option.number}. ${option.label}`),...own(`Option ${option.number}: chosen by ${item.ask.results.find(tally=>tally.number===option.number)?.count??0}.`)]),
-   ...own(`To answer, call answer with team ${item.team.handle} and number ${item.ask.number}.${item.ask.kind==='dates'?' To propose a day that is not listed, send it in addDays.':''}`)]);
+   ...own(`${kindWords[item.ask.kind]}. ${item.ask.answered} of ${item.ask.expected} ${did(item.ask)}.`),...item.ask.options.flatMap(option=>[...quote(`${option.number}. ${option.label}`),...own(`Option ${option.number}: chosen by ${item.ask.results.find(tally=>tally.number===option.number)?.count??0}.`)]),
+   ...own(item.ask.kind==='done'?`To mark it done, call answer with team ${item.team.handle} and number ${item.ask.number}, and no choices or text.`:`To answer, call answer with team ${item.team.handle} and number ${item.ask.number}.${item.ask.kind==='dates'?' To propose a day that is not listed, send it in addDays.':''}`)]);
   else if(item.kind==='event'){
    const tag=eventTag(item.team,item.event.slug);
    page.item([...own(`Event ${tag} in ${team}: ${timeOf(item.event)}. ${interestOf(item.event)}.`),...quote(item.event.name),...(item.event.place?quote(`Place: ${item.event.place}`):[]),

@@ -40,7 +40,7 @@ async function view(db:Db,t:Target):Promise<PersonalAsk> {
  const {rows:[mine]}=await db.query<{choices:number[];body:string|null}>('select choices::int[] as choices,body from emba_ask_answer where ask_id=$1 and person_id=$2',[t.askId,t.personId]);
  const chosen=(mine?.choices??[]).map(Number);
  return {group:t.group,asker:t.asker,question:t.question,kind:t.kind,options,closes:t.closes,timezone:t.timezone,open:t.open,
-  yourAnswer:mine?mine.body??options.filter(option=>chosen.includes(option.number)).map(option=>option.label).join(', '):null,chosen,written:mine?.body??null};
+  yourAnswer:mine?t.kind==='done'?'Done':mine.body??options.filter(option=>chosen.includes(option.number)).map(option=>option.label).join(', '):null,chosen,written:mine?.body??null};
 }
 
 /** The ask behind a personal link, for its page. It writes nothing. Null when the link no longer works. */
@@ -53,7 +53,7 @@ export type LinkAnswer=
  |{saved:true;ask:PersonalAsk}
  /** The link no longer works, or the team is busy: nothing says which member or why. */
  |{saved:false;reason:'gone'|'busy'}
- |{saved:false;reason:'closed'|'needs_text'|'needs_choice'|'one_only'|'unknown_option';ask:PersonalAsk};
+ |{saved:false;reason:'closed'|'needs_text'|'needs_choice'|'one_only'|'done_only'|'unknown_option';ask:PersonalAsk};
 /**
  * The link's one action: the member's answer to its ask. It goes through the
  * same checks as an answer given on the site, as that member, with the route
@@ -65,7 +65,7 @@ export async function answerFromLink(db:Db,value:string,input:{choices?:string[]
  if(!t)return {saved:false,reason:'gone'};
  const member=await authenticate(db,'personal-link',async()=>({issuer:t.issuer!,subject:t.subject!,expiresAt:Date.now()+60_000}));
  if(!member||member.personId!==t.personId)return {saved:false,reason:'gone'};
- const answer=t.kind==='text'?{text:input.text??''}:{choices:input.choices??[]};
+ const answer=t.kind==='done'?{}:t.kind==='text'?{text:input.text??''}:{choices:input.choices??[]};
  const result=await answerAsk(db,member,{orgId:t.orgId,loopId:t.loopId,number:t.number,...answer},'personal_link');
  // The ask may have closed between the two reads: say what is true now.
  const now=async()=>view(db,(await target(db,value))??{...t,open:false});

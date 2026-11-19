@@ -9,7 +9,7 @@ import {applyDeletionTombstones,exportPersonalData} from '@/lib/emba/privacy';
 import {grantRole,revokeMembership} from '@/lib/emba/roles';
 import {setMemberHandle} from '@/lib/emba/tags';
 import * as asksModule from '@/lib/emba/team-asks';
-import {answerAsk,askReminder,askResults,askShare,askShareMessage,ASKS,closeAsk,createAsk,listAsks,setAskReveal,type AnswerWrite,type AskWrite} from '@/lib/emba/team-asks';
+import {answerAsk,askReminder,askResults,askShare,askShareMessage,ASKS,closeAsk,createAsk,extendAsk,listAsks,setAskReveal,type AnswerWrite,type AskWrite} from '@/lib/emba/team-asks';
 import {addEvent} from '@/lib/emba/team-events';
 import {saveBrief,teamBrief,whatsNew} from '@/lib/emba/team-read';
 import {LIMITS} from '@/lib/emba/team-records';
@@ -133,7 +133,7 @@ it('takes one answer per member, replaceable and removable while the ask is open
  expect(JSON.stringify(await askResults(t.db,f.memberA,{...f.root,number:1}))).not.toMatch(/share_link|"route"/);
 },120000);
 
-it('closes at its time by the database clock, or earlier by the asker or an organizer, and is never reopened',async()=>{
+it('closes at its time by the database clock, or earlier by the asker or an organizer, and opens again only with a new closing time',async()=>{
  const f=await fixture();
  asked(await dates(f));asked(await createAsk(t.db,f.memberA,{...f.root,question:'Red or white?',kind:'one',options:['Red','White'],closesAt:inDays(1),reveal:'counts'}));
  await pick(f,f.memberB,1,{choices:[1]});await pick(f,f.memberB,2,{choices:['Red']});
@@ -234,7 +234,7 @@ it('shows who has not answered to the asker, owners and organizers only, for one
   expect((views[0] as Awaited<ReturnType<typeof listAsks>>).open.items.map(item=>[item.number,item.answered,item.expected])).toEqual([[2,0,total-1],[1,3,total-1]]);
  }
  // The service has no function that reads across asks: these are all its reads.
- expect(Object.keys(asksModule).filter(name=>typeof (asksModule as Record<string,unknown>)[name]==='function').sort()).toEqual(['answerAsk','askReminder','askResults','askShare','askShareMessage','asksById','asksDue','closeAsk','closeDueAsks','createAsk','listAsks','openAskCounts','openAsks','setAskReveal']);
+ expect(Object.keys(asksModule).filter(name=>typeof (asksModule as Record<string,unknown>)[name]==='function').sort()).toEqual(['answerAsk','askReminder','askResults','askShare','askShareMessage','asksById','asksDue','asksOnYou','closeAsk','closeDueAsks','createAsk','extendAsk','listAsks','openAskCounts','openAsks','setAskReveal']);
  // Six days after closing the list is still there; eight days after it is gone.
  await elapse(1,'6 days');
  expect((await askResults(t.db,f.memberA,{...f.root,number:1})).ask).toMatchObject({open:false,answered:3});
@@ -350,3 +350,84 @@ it('shows someone outside the team the question, the group name and the closing 
  await expect(askShare(t.db,null,'nope')).rejects.toThrow();
  expect((await t.db.query('select 1 from emba_membership where person_id=$1',[f.nonmember.personId])).rows).toEqual([]);
 });
+
+// Specs: openspec/changes/loop-on-you/specs/group-asks.
+const todo=(f:F,who:Principal=f.memberA,extra:Record<string,unknown>={})=>createAsk(t.db,who,{...f.root,question:'Upload your W8/W9',kind:'done',closesAt:inDays(3),...extra});
+it('takes something to do: no options, always named, marked done once and taken back, the asker counted with everyone else',async()=>{
+ const f=await fixture();
+ // No options, and named whatever is sent.
+ const ask=asked(await todo(f,f.memberA,{reveal:'counts'}));
+ expect(ask).toMatchObject({number:1,kind:'done',reveal:'named',options:[],results:[],written:[],done:[],yourAnswer:null,answered:0,youAsked:true});
+ // The person who posted it has it to do as well.
+ expect(ask.missing!.some(member=>member.isYou)).toBe(true);
+ expect(await todo(f,f.memberB,{question:'Sign the waiver',options:['Yes','No']})).toEqual({saved:false,reason:'options',problem:'not_for_done'});
+ expect(await setAskReveal(t.db,f.memberA,{...f.root,number:1,reveal:'counts'})).toMatchObject({saved:false,reason:'reveal_fixed'});
+ // Done is the whole answer: a choice or a line is refused.
+ expect(await pick(f,f.memberB,1,{choices:[1]})).toMatchObject({saved:false,reason:'answer_shape',problem:'done_only'});
+ expect(await pick(f,f.memberB,1,{text:'Sent it'})).toMatchObject({saved:false,reason:'answer_shape',problem:'done_only'});
+ expect(await pick(f,f.memberB,1,{addDays:['2099-03-14']})).toMatchObject({saved:false,reason:'add_days',problem:'not_dates'});
+ const done=answered(await pick(f,f.memberB,1,{}));
+ expect(done).toMatchObject({answered:1,yourAnswer:{choices:[],text:null},done:[{handle:'@club/ben',isYou:true}]});
+ expect(done.expected).toBe(ask.expected);
+ // Again saves nothing; it is taken back and marked again.
+ expect(await pick(f,f.memberB,1,{})).toMatchObject({saved:true,changed:false});
+ expect((await t.db.query('select count(*)::int as n from emba_ask_answer')).rows).toEqual([{n:1}]);
+ expect(await pick(f,f.memberB,1,{remove:true})).toMatchObject({saved:true,changed:true,ask:{yourAnswer:null,answered:0,done:[]}});
+ answered(await pick(f,f.memberB,1,{}));answered(await pick(f,f.memberA,1,{}));
+ const seen=(await askResults(t.db,f.organizer,{...f.root,number:1})).ask;
+ expect(seen.done!.map(member=>member.handle)).toEqual(['@club/ana','@club/ben']);
+ expect(seen.missing!.every(member=>!['@club/ana','@club/ben'].includes(member.handle!))).toBe(true);
+ idFree(seen,f);
+ // The table holds the same rules if a service were wrong.
+ await expect(t.db.query("insert into emba_ask_answer(ask_id,person_id,body,route) select id,$1,'Sent','site' from emba_ask where number=1",[f.members[2].personId])).rejects.toThrow();
+ await expect(t.db.query("insert into emba_ask_answer(ask_id,person_id,choices,route) select id,$1,'{1}','site' from emba_ask where number=1",[f.members[2].personId])).rejects.toThrow();
+ // An answer with neither a choice nor a line is still refused on an ask that has options.
+ asked(await dates(f));
+ await expect(t.db.query("insert into emba_ask_answer(ask_id,person_id,route) select id,$1,'site' from emba_ask where number=2",[f.members[2].personId])).rejects.toThrow();
+ // Past its time it is not marked done.
+ await elapse(1,'1 minute');
+ expect(await pick(f,f.members[2],1,{})).toMatchObject({saved:false,reason:'closed',ask:{open:false,answered:2}});
+},120000);
+
+it('gives any ask a new closing time, before or after it closed, by the asker, an owner or an organizer, keeping its answers',async()=>{
+ const f=await fixture();
+ asked(await dates(f));asked(await todo(f));asked(await createAsk(t.db,f.memberA,{...f.root,question:'Any allergies?',kind:'text',closesAt:inDays(1)}));
+ await pick(f,f.memberB,1,{choices:[1]});await pick(f,f.memberB,2,{});
+ const move=(who:Principal,number:number,closesAt:string)=>extendAsk(t.db,who,{...f.root,number,closesAt});
+ // Still open: the time moves, the answers stay. Not another member.
+ expect(await move(f.memberB,1,inDays(9))).toEqual({saved:false,reason:'not_yours'});
+ const later=await move(f.memberA,1,inDays(9));
+ expect(later).toMatchObject({saved:true,changed:true,ask:{open:true,answered:1,canExtend:true}});
+ expect(later.saved&&Date.parse(later.ask.closesAt)-Date.now()).toBeGreaterThan(8*86400000);
+ expect(await move(f.memberA,1,inDays(10))).toMatchObject({saved:true,changed:true});
+ expect(await move(f.memberA,1,'2020-01-01T00:00:00Z')).toEqual({saved:false,reason:'closing_time',problem:'past'});
+ expect(await move(f.memberA,1,inDays(61))).toEqual({saved:false,reason:'closing_time',problem:'too_far'});
+ expect(await move(f.memberA,9,inDays(2))).toEqual({saved:false,reason:'unknown_ask',value:9});
+ // Past its time: it takes no answers, then an organizer opens it again and it does.
+ await elapse(2,'2 days');
+ expect(await pick(f,f.members[2],2,{})).toMatchObject({saved:false,reason:'closed'});
+ const again=await move(f.organizer,2,inDays(2));
+ expect(again).toMatchObject({saved:true,changed:true,ask:{open:true,answered:1,done:[{handle:'@club/ben'}],canClose:true}});
+ expect(again.saved&&again.ask.missing!.length).toBe(again.saved&&again.ask.expected-1);
+ expect(answered(await pick(f,f.members[2],2,{})).answered).toBe(2);
+ expect((await listAsks(t.db,f.memberA,f.root)).open.items.map(ask=>ask.number)).toContain(2);
+ // Closed early by its asker: opened again too, through an assistant with a read-and-write grant.
+ expect(await closeAsk(t.db,f.memberA,{...f.root,number:3})).toMatchObject({saved:true,changed:true});
+ expect(await move(await assistant(f,f.memberA),3,inDays(3))).toMatchObject({saved:true,changed:true,ask:{open:true}});
+ expect(answered(await pick(f,f.memberB,3,{text:'Nuts'})).answered).toBe(1);
+ // An ask of any age, however long ago it was made.
+ await t.db.query('alter table emba_ask disable trigger emba_ask_guard');
+ await t.db.query("update emba_ask set created_at=clock_timestamp()-interval '200 days',closes_at=clock_timestamp()-interval '150 days',closed_at=clock_timestamp()-interval '150 days' where number=3");
+ await t.db.query('alter table emba_ask enable trigger emba_ask_guard');
+ expect(await move(f.memberA,3,inDays(30))).toMatchObject({saved:true,changed:true,ask:{open:true,answered:1}});
+ // The table still refuses to open a closed ask without a new time, or to move a time into the past.
+ expect(await closeAsk(t.db,f.memberA,{...f.root,number:3})).toMatchObject({saved:true,changed:true});
+ await expect(t.db.query('update emba_ask set closed_at=null where number=3')).rejects.toThrow();
+ await expect(t.db.query("update emba_ask set closes_at=clock_timestamp()-interval '1 hour',closed_at=null where number=3")).rejects.toThrow();
+ // Each move is in the sequence, with who made it.
+ expect((await t.db.query("select k.number,c.actor_id=$1 as organizer,c.client_id from emba_team_change c join emba_ask k on k.id=c.ask_id where c.action='ask_extended' order by c.seq",[f.organizer.personId])).rows).toEqual([
+  {number:1,organizer:false,client_id:null},{number:1,organizer:false,client_id:null},{number:2,organizer:true,client_id:null},{number:3,organizer:false,client_id:'claude'},{number:3,organizer:false,client_id:null}]);
+ // Opening a closed ask counts toward the team's open asks.
+ for(let n=0;n<ASKS.openPerTeam-2;n++)asked(await createAsk(t.db,[f.memberB,f.members[2],f.members[3],f.members[4]][n%4],{...f.root,question:`Filler ${n}?`,kind:'text',closesAt:inDays(1)}));
+ expect(await move(f.memberA,3,inDays(3))).toEqual({saved:false,reason:'cap',cap:'open_asks'});
+},240000);

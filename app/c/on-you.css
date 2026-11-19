@@ -1,0 +1,54 @@
+/* "On you" on the campus screen (openspec loop-on-you, design D4): the counter in the top bar and the panel behind it.
+   Colours and shapes are the campus screen's own (app/c/campus.css). */
+.cs-oy { position: relative; }
+.cs-oy-pill { display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 15px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-weight: 660; white-space: nowrap; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-oy-pill:has(.cs-oy-n) { padding-right: 6px; }
+.cs-oy-pill[aria-expanded=true] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+.cs-oy-n { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); font-size: 14px; font-weight: 720; animation: cs-oy-bump .45s var(--cs-expo); }
+@keyframes cs-oy-bump { 40% { transform: scale(1.22); } }
+
+.cs-oy-drop { position: absolute; right: 0; top: calc(100% + 14px); z-index: 7; width: min(430px, calc(100vw - 24px)); max-height: min(560px, calc(100dvh - 96px)); display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 12px; border-radius: var(--cs-r); background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); transform-origin: 88% 0; animation: cs-oy-in .3s var(--cs-expo); }
+@keyframes cs-oy-in { from { opacity: 0; transform: translateY(-6px) scale(.97); } }
+@media (max-width: 560px) { .cs-oy-drop { position: fixed; right: 12px; left: 12px; top: 68px; width: auto; } }
+.cs-oy-head { display: flex; align-items: center; gap: 10px; flex: none; }
+.cs-oy-head h2 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; }
+.cs-oy-head .cs-btn { margin-left: auto; }
+.cs-oy-list { flex: 1; min-height: 0; display: grid; gap: 8px; align-content: start; margin: 0 -8px 0 0; padding: 0 8px 4px 0; list-style: none; overflow-y: auto; scroll-snap-type: y proximity; scrollbar-width: thin; scrollbar-color: var(--cs-ink) transparent; }
+
+/* A row. The outer two boxes exist so that a finished row can close the space it held without being measured. */
+.cs-oy-row { display: grid; grid-template-rows: 1fr; scroll-snap-align: start; transition: opacity .32s var(--cs-ease), transform .32s var(--cs-ease), grid-template-rows .38s var(--cs-expo), margin .38s var(--cs-expo); }
+.cs-oy-clip { min-height: 0; overflow: hidden; margin: 0 -4px -4px 0; padding: 0 4px 4px 0; }
+.cs-oy-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 11px 13px 12px; border-radius: 14px 14px 14px 4px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); transition: background-color .25s var(--cs-ease); }
+.cs-oy-row.soon .cs-oy-card, .cs-oy-hand .cs-oy-card { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow); }
+.cs-oy-k { justify-self: start; min-width: 62px; text-align: center; padding: 2px 9px 3px; border-radius: 99px; font-size: 12px; font-weight: 680; white-space: nowrap; }
+.k-vote .cs-oy-k { background: var(--cs-ink); color: var(--cs-on-ink); } .k-do .cs-oy-k, .cs-oy-hand .cs-oy-k { background: var(--cs-action); color: var(--cs-paper); } .k-show .cs-oy-k { background: var(--cs-field); }
+.k-missed .cs-oy-k { box-shadow: inset 0 0 0 1.5px var(--cs-mute); color: var(--cs-mute); }
+.cs-oy-when { justify-self: end; font-size: 12.5px; font-weight: 600; color: var(--cs-mute); white-space: nowrap; } .soon .cs-oy-when { color: var(--cs-action); font-weight: 700; }
+.cs-oy-what { grid-column: 1 / -1; min-width: 0; margin-top: 6px; font-size: 15.5px; font-weight: 640; letter-spacing: -0.02em; line-height: 1.25; overflow-wrap: anywhere; }
+.cs-oy-grp { grid-column: 1 / -1; font-size: 13px; color: var(--cs-mute); }
+.cs-oy-act { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 8px; }
+.k-missed .cs-oy-card { background: transparent; } .k-missed .cs-oy-what { color: var(--cs-mute); font-weight: 560; text-decoration: line-through; text-decoration-thickness: 1px; }
+.cs-oy-hand .cs-oy-card { background: var(--cs-stub); } .cs-oy-hand { animation: cs-oy-hand .7s var(--cs-expo) backwards; }
+@keyframes cs-oy-hand { from { opacity: 0; transform: translateX(28px) rotate(2deg); } }
+
+/* Finishing a row: it says what was recorded, fades, then the space closes and the rows under it slide up. */
+.cs-oy-row.done .cs-oy-card { background: var(--cs-stub); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-oy-row.done .cs-oy-what { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.cs-oy-said { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 640; animation: cs-oy-said .28s var(--cs-expo); } .cs-oy-said svg { width: 18px; height: 18px; padding: 3px; border-radius: 50%; background: var(--cs-ink); color: var(--cs-field); }
+@keyframes cs-oy-said { from { opacity: 0; transform: translateY(5px); } }
+.cs-oy-row.out, .cs-oy-row.fold { opacity: 0; transform: scale(.97); }
+.cs-oy-row.fold { grid-template-rows: 0fr; margin-bottom: -8px; }
+.cs-oy-note { padding: 4px 10px; border-radius: 10px; background: var(--cs-page); font-size: 13px; color: var(--cs-ink); }
+.cs-oy-more, .cs-oy-none { margin: 0; padding: 10px 14px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); font-size: 13.5px; color: var(--cs-mute); }
+
+/* Asking a group in one line */
+.cs-oy-ask { flex: none; display: grid; gap: 10px; padding: 12px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); }
+.cs-oy-ask textarea, .cs-oy-ask input { width: 100%; padding: 10px 13px; border: 0; border-radius: 12px; background: var(--cs-paper); color: var(--cs-ink); font: inherit; font-size: 15px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); outline: none; resize: none; }
+.cs-oy-ask textarea:focus-visible, .cs-oy-ask input:focus-visible { box-shadow: inset 0 0 0 2.5px var(--cs-action); }
+.cs-oy-read, .cs-oy-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs-oy-read span { padding: 3px 10px; border-radius: 99px; background: var(--cs-paper); font-size: 12.5px; font-weight: 600; }
+.cs-oy-read .kind { background: var(--cs-ink); color: var(--cs-on-ink); } .cs-oy-read .miss { background: transparent; box-shadow: inset 0 0 0 1.5px var(--cs-mute); color: var(--cs-mute); }
+.cs-oy-pills button { padding: 5px 12px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-size: 13px; font-weight: 580; box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs-oy-pills button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+.cs-oy-ask .cs-oy-act { padding-top: 0; }
+
+@media (prefers-reduced-motion: reduce) { .cs-oy-n, .cs-oy-drop, .cs-oy-hand, .cs-oy-said { animation: none; } .cs-oy-row, .cs-oy-card { transition: none; } }

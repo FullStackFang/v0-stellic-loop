@@ -26,7 +26,7 @@ const CLASSMATES = [['priya', 'Priya Raman'], ['marcus', 'Marcus Bell'], ['elena
 type Who = typeof CLASSMATES[number][0];
 
 type SeedEvent = { slug: string; name: string; startsAt: string; endsAt?: string; note?: string; interested: Who[] };
-type SeedAsk = { by?: Who; question: string; kind: 'one' | 'many' | 'dates' | 'text'; options?: string[]; closesAt: string; reveal?: 'named' | 'counts'; event?: string;
+type SeedAsk = { by?: Who; question: string; kind: 'one' | 'many' | 'dates' | 'text' | 'done'; options?: string[]; closesAt: string; reveal?: 'named' | 'counts'; event?: string;
   answers: [Who, number[] | string][] };
 type SeedGroup = { namespace: string; name: string; description: string; brief: string; events: SeedEvent[]; asks: SeedAsk[] };
 
@@ -72,6 +72,9 @@ export const GROUPS: SeedGroup[] = [{
       answers: [['priya', [1, 3]], ['dev', [3]], ['hannah', [2, 3]], ['elena', [3]]] },
     { by: 'marcus', question: 'Who can take the accretion and dilution model?', kind: 'one', options: ['I can', 'I can help', 'Not this time'], closesAt: '2026-11-21T18:00',
       answers: [['dev', [1]], ['priya', [2]]] },
+    // Something to do (loop-on-you): each person marks it done, and it shows who has.
+    { by: 'hannah', question: 'Upload your section of the M&A deck to the shared folder', kind: 'done', closesAt: '2026-11-23T20:00',
+      answers: [['priya', []], ['dev', []]] },
   ],
 }];
 
@@ -132,7 +135,7 @@ async function fill(db: Db, owner: Principal, people: Record<Who, Principal>, sc
     if (instantOf(ask.closesAt) <= now) continue;
     const result = saved(await createAsk(db, by ? people[by] : owner, { ...scope, ...ask, ...(event && live.has(event) ? { event } : {}) }), ask.question);
     if (!result.saved) continue;
-    for (const [key, value] of answers) saved(await answerAsk(db, people[key], { ...scope, number: result.ask.number, ...(typeof value === 'string' ? { text: value } : { choices: value }) }), `${ask.question} answer`);
+    for (const [key, value] of answers) saved(await answerAsk(db, people[key], { ...scope, number: result.ask.number, ...(typeof value === 'string' ? { text: value } : ask.kind === 'done' ? {} : { choices: value }) }), `${ask.question} answer`);
     asks++;
   }
   return { events, asks };

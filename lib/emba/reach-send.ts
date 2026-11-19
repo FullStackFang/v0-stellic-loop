@@ -61,7 +61,16 @@ export async function queueAnnouncement(q:Q,team:Scope,recordId:string,authorId:
 
 /** When an ask's reminder is due: 24 hours before it closes, or halfway to closing when it runs under 48 hours. Worked out from the ask on every run, so a late run sends late and never twice. */
 export const reminderDueSql=(k='k')=>`(case when ${k}.closes_at-${k}.created_at>=interval '48 hours' then ${k}.closes_at-interval '24 hours' else ${k}.created_at+(${k}.closes_at-${k}.created_at)/2 end)`;
-/** Writes the rows that have become due since the last run. One row per member and ask and kind, whatever the number of runs. */
+/**
+ * A reminder or result that already went out for an ask is sent once more
+ * after the ask was given a new closing time (loop-on-you, design D3). The row
+ * is used again, so the links in the earlier message keep working. `before` is
+ * the moment the earlier row must predate.
+ */
+const again=(before:string)=>`on conflict(person_id,ask_id,kind) where ask_id is not null do update set state='queued',way=null,sent_at=null,claimed_at=null,attempts=0,provider_id=null,created_at=clock_timestamp()
+  where emba_reach_message.state<>'queued' and emba_reach_message.created_at<${before}`;
+const lastMoved="(select max(c.at) from emba_team_change c where c.ask_id=excluded.ask_id and c.action='ask_extended')";
+/** Writes the rows that have become due since the last run. One row per member and ask and kind for each closing time the ask has had, whatever the number of runs. */
 async function queueDue(db:Db):Promise<void> {
  // A reminder: the ask is open, its reminder time has come, and the member can answer and has not.
  await db.query(`insert into emba_reach_message(org_id,loop_id,person_id,kind,ask_id)
@@ -71,12 +80,12 @@ async function queueDue(db:Db):Promise<void> {
    and not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=m.person_id) and ${posts('m.person_id','k.org_id','k.loop_id')}
    -- Not on the heels of the ask itself: its own message must have gone, and not in the last few hours.
    and not exists(select 1 from emba_reach_message n where n.ask_id=k.id and n.person_id=m.person_id and n.kind='ask_new' and (n.state='queued' or n.sent_at>clock_timestamp()-interval '${SENDING.reminderGapHours} hours'))
-  on conflict do nothing`);
+  ${again(lastMoved)}`);
  // The result, to the person who asked, once the ask has ended.
  await db.query(`insert into emba_reach_message(org_id,loop_id,person_id,kind,ask_id)
   select k.org_id,k.loop_id,k.asker_id,'ask_result',k.id from emba_ask k join emba_group_address d on d.org_id=k.org_id and d.loop_id=k.loop_id and d.retired_at is null
   where k.asker_id is not null and coalesce(k.closed_at,k.closes_at)<=clock_timestamp() and coalesce(k.closed_at,k.closes_at)>clock_timestamp()-interval '${SENDING.resultHours} hours'
-   and ${posts('k.asker_id','k.org_id','k.loop_id')} on conflict do nothing`);
+   and ${posts('k.asker_id','k.org_id','k.loop_id')} ${again("(select coalesce(k.closed_at,k.closes_at) from emba_ask k where k.id=excluded.ask_id)")}`);
 }
 
 /** One message, as the templates see it. It names the group, the item and the person who asked or announced, and nobody else. */
@@ -89,6 +98,8 @@ export type Outgoing={id:string;kind:Kind;group:string;
  closes:string|null;timezone:string;
  /** The personal answer link (a new ask or a reminder), else the page to read the item on. */
  link:string;stopLink:string;
+ /** The ask is something to do (loop-on-you): the words say done, not answered. */
+ todo?:boolean;
  /** A calendar invite or its cancellation: when and where, and whether this member already holds the entry. `text` is the event's name. */
  event?:{when:string;place:string|null;update:boolean}};
 export type Email={subject:string;text:string;html:string};
@@ -98,11 +109,14 @@ export function renderEmail(m:Outgoing):Email {
  const who=m.from??'A member',closes=m.closes?`${m.closes} (${m.timezone})`:'';
  const [subject,lead,action]=m.kind==='invite'?[`${m.group}: ${m.text}`,m.event?.update?`${m.group}: the time or place of this has changed.`:`${m.group}: you are in on this. The calendar entry is attached.`,'Open in Loop']
   :m.kind==='invite_cancel'?[`Off your calendar · ${m.group}: ${m.text}`,`${m.group}: this is off your calendar.`,'Open in Loop']
+  :m.todo&&m.kind==='ask_new'?[`To do · ${m.group}: ${m.text}`,`${who} asked ${m.group} to do this:`,'Mark it done']
+  :m.todo&&m.kind==='ask_reminder'?[`Reminder · ${m.group}: ${m.text}`,`${who} asked ${m.group} to do this, and you have not done it yet:`,'Mark it done']
+  :m.todo&&m.kind==='ask_result'?[`Passed · ${m.group}: ${m.text}`,`What you asked ${m.group} to do has passed its time:`,'See who did it']
   :m.kind==='ask_new'?[`${m.group}: ${m.text}`,`${who} asked ${m.group}:`,'Answer']
   :m.kind==='ask_reminder'?[`Reminder · ${m.group}: ${m.text}`,`${who} asked ${m.group}, and you have not answered yet:`,'Answer']
   :m.kind==='ask_result'?[`Closed · ${m.group}: ${m.text}`,`Your question to ${m.group} has closed:`,'See the answers']
   :[`${m.group}: announcement`,`${who} announced to ${m.group}:`,'Open in Loop'];
- const when=m.event?[`${m.event.when} (${m.timezone})`,m.event.place].filter(Boolean).join(' · '):m.kind==='ask_result'||!closes?'':`Closes ${closes}.`;
+ const when=m.event?[`${m.event.when} (${m.timezone})`,m.event.place].filter(Boolean).join(' · '):m.kind==='ask_result'||!closes?'':`${m.todo?'Due':'Closes'} ${closes}.`;
  const stop=`Stop messages from ${m.group}`;
  const text=[lead,m.text,when,`${action}: ${m.link}`,`${stop}: ${m.stopLink}`].filter(Boolean).join('\n\n');
  const html=`<!doctype html><html><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#1a1a1a"><p>${escape(lead)}</p><p style="font-size:18px"><strong>${escape(m.text)}</strong></p>${when?`<p>${escape(when)}</p>`:''}<p><a href="${escape(m.link)}">${escape(action)}</a></p><p style="font-size:13px;color:#666"><a href="${escape(m.stopLink)}" style="color:#666">${escape(stop)}</a></p></body></html>`;
@@ -124,7 +138,7 @@ export type Carrier={
   calendar?:{method:'REQUEST'|'CANCEL';content:string}}&Email)=>Promise<SendResult>};
 
 type Row={id:string;kind:Kind;personId:string;attempts:number;way:Way;group:string;timezone:string;hour:number;belongs:boolean;canAnswer:boolean;
- askOpen:boolean|null;answered:boolean|null;closes:string|null;question:string|null;asker:string|null;shareToken:string|null;answerToken:string;stopToken:string;
+ askOpen:boolean|null;answered:boolean|null;closes:string|null;question:string|null;askKind:string|null;asker:string|null;shareToken:string|null;answerToken:string;stopToken:string;
  body:string|null;recordLive:boolean|null;author:string|null;
  /** Null when the group's address has been retired: nothing is sent for a group that is gone. */
  namespace:string|null;slug:string|null;sentTeam:number;sentAll:number;
@@ -149,7 +163,7 @@ const rowSql=()=>`select g.id,g.kind,g.person_id as "personId",g.attempts,${wayS
   extract(hour from clock_timestamp() at time zone coalesce(s.timezone,'UTC'))::int as hour,
   ${belongsTo('g.person_id','g.org_id','g.loop_id')} as belongs,(${posts('g.person_id','g.org_id','g.loop_id')} and (k.only_in is not true or exists(select 1 from emba_event_interest i where i.event_id=k.event_id and i.person_id=g.person_id))) as "canAnswer",
   (k.closed_at is null and k.closes_at>clock_timestamp()) as "askOpen",exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=g.person_id) as answered,
-  ${local('coalesce(k.closed_at,k.closes_at)',"coalesce(s.timezone,'UTC')")} as closes,k.question,(select p.name from person p where p.id=k.asker_id) as asker,k.share_token as "shareToken",
+  ${local('coalesce(k.closed_at,k.closes_at)',"coalesce(s.timezone,'UTC')")} as closes,k.question,k.kind as "askKind",(select p.name from person p where p.id=k.asker_id) as asker,k.share_token as "shareToken",
   g.answer_token as "answerToken",g.stop_token as "stopToken",
   (select v.body from emba_team_record_version v where v.record_id=r.id and v.version=r.current_version) as body,r.state='current' as "recordLive",(select p.name from person p where p.id=r.author_id) as author,
   d.namespace,d.slug,
@@ -176,6 +190,8 @@ function verdict(row:Row):'skipped'|'held'|'wait'|null {
  else if(row.kind==='announcement'){if(!row.recordLive)return 'skipped';}
  else if(!row.canAnswer)return 'skipped';
  else if(row.kind!=='ask_result'&&(!row.askOpen||row.answered))return 'skipped';
+ // The ask was opened again before its result went out: the result follows when it closes again.
+ else if(row.kind==='ask_result'&&row.askOpen)return 'skipped';
  if(row.hour>=SENDING.quietFrom||row.hour<SENDING.quietTo)return 'wait';
  // The day's limits are for messages that ask for attention. A calendar entry follows the member's own "I'm in": held back a day, it could arrive after the plan.
  if(!calendarKind(row.kind)&&(row.sentTeam>=SENDING.perTeamDay||row.sentAll>=SENDING.perDay))return 'held';
@@ -185,7 +201,7 @@ const outgoing=(row:Row):Outgoing=>{
  const team=`${groupPath(row.namespace!,row.slug)}/team`;
  if(calendarKind(row.kind))return {id:row.id,kind:row.kind,group:row.group,from:null,text:row.eventName??'',closes:null,timezone:row.timezone,
   link:appUrl(row.kind==='invite'?`/e/${row.eventToken}`:team),stopLink:appUrl(`/groups/reach/stop/${row.stopToken}`),event:{when:row.eventStarts??'No date',place:row.eventPlace,update:row.kind==='invite'&&row.invited}};
- return {id:row.id,kind:row.kind,group:row.group,from:row.kind==='announcement'?row.author:row.asker,text:(row.kind==='announcement'?row.body:row.question)??'',closes:row.kind==='announcement'?null:row.closes,timezone:row.timezone,
+ return {id:row.id,kind:row.kind,group:row.group,from:row.kind==='announcement'?row.author:row.asker,text:(row.kind==='announcement'?row.body:row.question)??'',closes:row.kind==='announcement'?null:row.closes,timezone:row.timezone,...(row.askKind==='done'?{todo:true}:{}),
   link:appUrl(row.kind==='announcement'?team:row.kind==='ask_result'?`/a/${row.shareToken}`:`/groups/reach/answer/${row.answerToken}`),stopLink:appUrl(`/groups/reach/stop/${row.stopToken}`)};
 };
 
