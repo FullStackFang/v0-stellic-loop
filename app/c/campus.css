@@ -49,8 +49,8 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 
 /* top bar: one line */
 .cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); }
-/* Its lower edge is a stamp's: a row of teeth in the bar's own colour, which the page shows between as it scrolls under. No line. */
-.cs-nav::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 7px; pointer-events: none; background: radial-gradient(circle at 50% 0, var(--cs-field) 0 6px, #0000 6.5px) 50% 0 / 16px 7px repeat-x; filter: drop-shadow(0 1.5px 0 color-mix(in oklch, var(--cs-ink) 55%, transparent)); }
+/* Its lower edge is the edge every card has: a thin ink line, and under it a hard shadow in the darker shade of the school's colour. */
+.cs-nav { border-bottom: 1.5px solid var(--cs-ink); box-shadow: 0 5px 0 var(--cs-field-shadow); }
 .cs-wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding: 0 20px 0 0; --lime: var(--cs-action); }
 .cs-wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); transition: transform .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
 .cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
