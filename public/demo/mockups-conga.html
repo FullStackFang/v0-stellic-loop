@@ -90,7 +90,7 @@ button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 </section>
 
 <script type="module">
-import { createWorld, addLine, place, steer, step, FACES } from './conga/sim.js';
+import { createWorld, addLine, place, steer, step, FACES, PLAZA } from './conga/sim.js';
 import { MAPS } from './conga/maps.js';
 
 const $ = id => document.getElementById(id);
@@ -388,9 +388,9 @@ function tram(car) {
   for (const side of [-7, 7]) { ctx.moveTo(from[0] - dy / far * side, from[1] + dx / far * side); ctx.lineTo(to[0] - dy / far * side, to[1] + dx / far * side); }
   ctx.stroke();
   for (const at of [0.36, 0.74]) { box(22, 22, 3, from[0] + dx * at, from[1] + dy * at); inked(C.stone, 3); } // its towers
-  ctx.globalAlpha = 0.2; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 24, y + 34, 30, 14, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); box(78, 44, 11); inked(C.action, 3.5); box(64, 26, 5); ctx.fillStyle = C.paper; ctx.fill(); ctx.restore();
-  for (let n = 0; n < Math.min(3, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + (n - 1) * 20 * dx / far, y + (n - 1) * 20 * dy / far - 3, 26);
+  ctx.globalAlpha = 0.2; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 26, y + 40, 62, 30, Math.atan2(dy, dx), 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); box(132, 72, 16); inked(C.action, 4); box(112, 46, 8); ctx.fillStyle = C.paper; ctx.fill(); ctx.restore();
+  for (let n = 0; n < Math.min(4, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + (n - 1.5) * 26 * dx / far, y + (n - 1.5) * 26 * dy / far - 2, 38);
 }
 // The lighthouse lamp turning.
 function beam(thing, t) {
@@ -452,6 +452,11 @@ function draw(t, dt) {
   ctx.restore();
   for (const thing of map.things) if (thing.kind === 'bridge') { bridge(thing); cabs(thing, t); }
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing);
+  for (const car of world.shuttles) {
+    const due = car.clock < car.ride ? car.clock / car.ride : 0;
+    ctx.beginPath(); ctx.arc(car.off[0], car.off[1], PLAZA, 0, 7); ctx.globalAlpha = 0.14 + due * 0.22; ctx.fillStyle = C.action; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.setLineDash([14, 12]); ctx.strokeStyle = C.paper; ctx.lineWidth = 5; ctx.stroke(); ctx.setLineDash([]);
+  }
   for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t);
   for (const zone of map.zones) if (seen(...zone.at)) pill(zone.name, zone.at[0], zone.at[1], C.paper, C.ink, 22);
   for (const thing of map.things) {
@@ -534,7 +539,13 @@ function frame(now) {
       if (event.line === ME) { navigator.vibrate?.(60); finish(event); }
       else if (event.by === ME) say(`${world.lines.find(line => line.id === event.line).name} scattered on your line`);
     }
-    if (event.type === 'arrive') { puffs.push({ x: event.x, y: event.y, t }); if (me && !me.dead) say(`The ${event.name.toLowerCase()} let ${event.count} off at the station`); }
+    if (event.type === 'arrive') {
+      puffs.push({ x: event.x, y: event.y, t });
+      const mine = event.onto.find(each => each.line === ME), car = event.name.toLowerCase();
+      if (mine) { navigator.vibrate?.(30); say(`${mine.count} got off the ${car} straight onto your line`); }
+      else if (me && !me.dead) say(event.onto.length ? `${world.lines.find(line => line.id === event.onto[0].line).name} met the ${car} and took its riders` : `The ${car} let ${event.count} off at the station`);
+    }
+    if (event.type === 'lift') { puffs.push({ x: event.x, y: event.y, t }); if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
   }
   draw(t, dt);
