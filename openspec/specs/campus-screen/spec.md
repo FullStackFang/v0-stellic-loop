@@ -19,7 +19,7 @@ The campus screen SHALL fit one window without page scrolling at 1440 by 900, wi
 - **THEN** the page scrolls and nothing is cut off
 
 ### Requirement: Top bar on one line
-The top bar SHALL be one line holding the Loop mark, "This week", the person's groups by name, "Post a plan" and the person's avatar with its level badge. A group SHALL be listed only for a person who is able to open it. When a group reward is unlocked and not yet used, the bar SHALL also show it. The bar SHALL NOT hold a page title band or reward pills.
+The top bar SHALL be one line holding the Loop mark, "This week", the person's groups by name, the Ink tab, "Post a plan" and the person's avatar with its level badge. A group SHALL be listed only for a person who is able to open it. The Ink tab SHALL be shown to everyone, signed in or not, SHALL be a pill, and SHALL open the Ink page. When a group reward is unlocked and not yet used, the bar SHALL also show it. The bar SHALL NOT hold a page title band or reward pills.
 
 #### Scenario: Groups for someone who can open them
 - **WHEN** the admin, who belongs to three groups, opens the screen
@@ -36,6 +36,14 @@ The top bar SHALL be one line holding the Loop mark, "This week", the person's g
 #### Scenario: Signed out
 - **WHEN** a signed-out visitor opens the screen
 - **THEN** the top bar shows "Sign in" where the avatar would be
+
+#### Scenario: The Ink tab
+- **WHEN** anyone, signed in or not, opens the screen
+- **THEN** the top bar shows a pill reading "Ink" with the Ink mark, and pressing it opens the Ink page
+
+#### Scenario: The Ink tab on a narrow screen
+- **WHEN** the screen is narrower than 520px
+- **THEN** the tab shows the Ink mark alone and is still named "Ink" to a screen reader
 
 ### Requirement: Events as a sideways row of tickets
 Events SHALL be shown as ticket cards side by side in one row that scrolls sideways, with arrows to move it. The system SHALL NOT offer a "show all" control and SHALL NOT expand the list downward. A ticket's upper half SHALL show the day and time, the title, who posted it or its source label and host, its place, and a "Details" control. Its lower half SHALL be visibly part of the same ticket, cut like a tear-off stub.
