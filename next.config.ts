@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
       { source: "/:page([^/.]+)\\.html", destination: "/demo/:page", permanent: false },
     ];
   },
+  // A file under public/ is asked for again on every visit unless told otherwise. The Conga game's sprite sheets carry
+  // a version in their name (scripts/conga-atlas.mjs), so a browser may keep one for good.
+  async headers() {
+    return [{ source: "/demo/conga/:file(.+\\.v\\d+\\.webp)", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }];
+  },
   async rewrites() {
     return [{ source: "/demo/:page([^/.]+)", destination: "/demo/:page.html" }];
   },

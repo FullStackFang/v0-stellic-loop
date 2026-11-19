@@ -84,9 +84,18 @@ export function addLine(world, { id, face, name, bot = null, start = 0 }) {
   return place(world, line, start);
 }
 
+/** Where a line wants to go. What a player sends is not trusted: a heading that is not a number is ignored, since it would stop the line for good. */
 export function steer(line, want, dash) {
-  line.want = want;
-  line.dash = dash;
+  if (Number.isFinite(want)) line.want = want;
+  line.dash = dash === true;
+}
+
+/** Takes a line out, when its player leaves. Its animals stay behind as strays. */
+export function removeLine(world, id) {
+  const at = world.lines.findIndex(line => line.id === id);
+  if (at < 0) return;
+  const [line] = world.lines.splice(at, 1);
+  for (const f of line.dead ? [] : line.tail) world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
 }
 
 // Each animal stands a fixed distance further back along the path its head walked.
