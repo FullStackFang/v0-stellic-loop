@@ -1,7 +1,7 @@
 /* The foot of every page (public/demo/mockups-footer.html, picked 2026-11-19): a ticket with the crowd in it, then a
    bar that is the top bar turned over. It is its own .cs box, so the school's colours (app/c/campus.css, [data-kit])
    reach it on any page, and it is as tall as what is in it, not the window. */
-.cs.cs-ft { min-height: 0; padding-top: 34px; }
+.cs.cs-ft { min-height: 0; } .cs-ft { padding-top: 34px; }
 
 /* The ticket goes where the hand takes it. Everyone in it rides along. */
 .cs-ft-carry { position: relative; z-index: 3; margin: 0 32px 34px; transform-origin: 50% 100%; will-change: transform; }

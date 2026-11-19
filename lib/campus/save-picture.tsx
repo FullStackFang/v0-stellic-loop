@@ -42,13 +42,13 @@ async function sticker(figure: Uint8Array, mark: boolean, ink: Ground): Promise<
   return sharp(clear).composite([{ input: edge }, { input: placed }, ...(mark ? [{ input: tag }, { input: rings, left: 418 - 46, top: 412 - 44 }] : [])]).png().toBuffer();
 }
 
-export type Saved = { figure: Uint8Array; shape: Shape; ground: Ground; /** The Ink ground of the same school: what the sticker's tag is drawn in. */ ink: Ground; mark: boolean; name: string; /** Under the name on the lock screen: a person's school. */ sub: string };
+export type Saved = { figure: Uint8Array; shape: Shape; ground: Ground; /** The Ink ground of the same school: what the sticker's tag is drawn in. */ ink: Ground; mark: boolean; name: string; /** Under the name on the lock screen: a person's school. */ sub: string; /** The pane's preview: the same picture drawn 464 high, which is quicker than drawing it whole and making it smaller. A sticker is always whole. */ small?: boolean };
 /** The saved picture, as a PNG. */
-export async function savedPicture({ figure, shape, ground, ink, mark, name, sub }: Saved): Promise<Buffer> {
+export async function savedPicture({ figure, shape, ground, ink, mark, name, sub, small = false }: Saved): Promise<Buffer> {
   if (shape === 'sticker') return sticker(figure, mark, ink);
   const { w, h } = SHAPES[shape], tall = shape === 'tall', bg = hex(ground.bg), fg = hex(ground.fg);
   // Without the mark the figure of a profile picture sits in the middle.
-  const cy = tall ? 1010 : mark ? 468 : 510, r = tall ? 450 : 372, pet = await fit(figure, tall ? 860 : 700, tall ? 760 : 600);
+  const k = small ? 464 / h : 1, cy = tall ? 1010 : mark ? 468 : 510, r = tall ? 450 : 372, pet = await fit(figure, tall ? 860 : 700, tall ? 760 : 600);
   const rings = uri(await sharp(Buffer.from(markSvg(fg, hex(ground.lit)))).png().toBuffer());
   const lockup = (y: number, size: number) => <div style={{ position: 'absolute', left: 0, top: y - size, width: w, height: size * 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- a picture file is being drawn, not a page */}
@@ -58,7 +58,7 @@ export async function savedPicture({ figure, shape, ground, ink, mark, name, sub
   const line = (words: string, y: number, size: number, opacity = 1) => <div style={{ position: 'absolute', left: 60, top: y - size, width: w - 120, height: size * 2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size, letterSpacing: -size * 0.015, color: fg, opacity, whiteSpace: 'nowrap' }}>{words}</div>;
   // A long name is set smaller, so it stays on one line.
   const big = Math.min(104, Math.floor(1560 / Math.max(1, name.length)));
-  const made = new ImageResponse(<div style={{ position: 'relative', display: 'flex', width: w, height: h, background: bg, fontFamily: 'Archivo' }}>
+  const made = new ImageResponse(<div style={{ display: 'flex', width: Math.round(w * k), height: Math.round(h * k), background: bg }}><div style={{ position: 'relative', display: 'flex', flexShrink: 0, width: w, height: h, background: bg, fontFamily: 'Archivo', transform: `scale(${k})`, transformOrigin: 'top left' }}>
     {/* A round of lighter ground behind the figure, so it stands off the colour. */}
     <div style={{ position: 'absolute', left: w / 2 - r, top: cy + 30 - r, width: r * 2, height: r * 2, borderRadius: r, background: fg, opacity: 0.1 }} />
     {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
@@ -67,6 +67,6 @@ export async function savedPicture({ figure, shape, ground, ink, mark, name, sub
     {tall && sub && line(sub, 1560 + big * 0.36 + 46, 46, 0.72)}
     {/* On a profile picture the mark sits inside the round the picture is cut to. */}
     {mark && lockup(tall ? 1786 : 920, tall ? 50 : 58)}
-  </div>, { width: w, height: h, fonts: [{ name: 'Archivo', data: await font, weight: 900, style: 'normal' }] });
+  </div></div>, { width: Math.round(w * k), height: Math.round(h * k), fonts: [{ name: 'Archivo', data: await font, weight: 900, style: 'normal' }] });
   return Buffer.from(await made.arrayBuffer());
 }

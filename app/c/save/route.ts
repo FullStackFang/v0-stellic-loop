@@ -1,4 +1,3 @@
-import sharp from 'sharp';
 import { db } from '@/lib/db';
 import { listCampuses } from '@/lib/campus/listings';
 import { savedPicture } from '@/lib/campus/save-picture';
@@ -29,11 +28,10 @@ export async function GET(request: Request) {
   const all = grounds(viewer.kit), ground = all.find(each => each.key === asked.get('ground')) ?? all[0];
   // Under a person's name, their school. A group has only its name.
   const sub = group || !viewer.campus ? '' : (await listCampuses(db())).find(each => each.slug === viewer.kit)?.name ?? '';
-  let png = await savedPicture({ figure: source.figure, shape, ground, ink: all[1], mark, name: source.name, sub });
-  // The pane shows its preview 232px tall: twice that, so it is sharp on a dense screen. The sticker is small already, and is shown whole.
+  // The pane shows its preview 232px tall, and it is drawn twice that, so it is sharp on a dense screen. The sticker is small already, and is shown whole.
   const small = asked.get('small') === '1';
-  if (small && shape !== 'sticker') png = await sharp(png).resize({ height: 464 }).png().toBuffer();
-  // A preview may be shown again from the browser's own copy for a minute, so going back to a pick is at once. The file itself is always made afresh.
-  return new Response(new Uint8Array(png), { headers: { 'content-type': 'image/png', 'cache-control': small ? 'private, max-age=60' : 'private, no-store',
+  const png = await savedPicture({ figure: source.figure, shape, ground, ink: all[1], mark, name: source.name, sub, small });
+  // A preview is kept by the browser for five minutes: the pane asks for each shape ahead, and a press shows the copy it has. The file itself is always made afresh.
+  return new Response(new Uint8Array(png), { headers: { 'content-type': 'image/png', 'cache-control': small ? 'private, max-age=300' : 'private, no-store',
     'content-disposition': `${asked.get('dl') === '1' ? 'attachment' : 'inline'}; filename="${mark ? 'loop-' : ''}${SHAPES[shape].file}.png"` } });
 }

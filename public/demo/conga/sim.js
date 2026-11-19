@@ -8,6 +8,7 @@ export const TURN = 3.4; // radians a second
 export const FACES = 42;
 export const MILESTONES = [10, 25, 50, 100];
 export const SAFE = 2.5; // seconds a fresh line cannot be scattered
+export { PLAZA };
 
 const JOIN = 36; // a stray this close to a head joins
 const PULL = 95; // a stray this close runs to the head
@@ -22,6 +23,10 @@ const DROP = 0.45; // seconds of dashing that cost one animal
 const DANCE = 4;
 const DAZE = 0.03; // chance, each time a bot looks, that it stops looking for a moment
 const BACK = 2.5; // seconds before a scattered bot comes back
+const PLAZA = 130; // a head this close to where a car lets its riders off is waiting for it
+const SWEEP = 80; // a car passing this close over a line takes animals off its back
+const TAKEN = 6; // how many it takes. Over the head of the line it takes half the line, if that is more
+const SPARED = 1.5; // seconds before the same line is swept again, if the car is still over it
 
 const wrap = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
 
@@ -54,12 +59,13 @@ const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world
 /**
  * `rings` are the outlines of the ground, each a list of [x, y] corners. Outlines may touch or overlap.
  * `holes` are the outlines of what stands on it, buildings and water, which everyone walks around.
- * `drops` are places where animals arrive together on a clock, like a tram station: { name, at: [x, y], every, count },
- * with `every` in seconds. Each keeps `left`, the seconds until its next arrival.
+ * `shuttles` are cars that bring animals in, like a tram: { name, from: [x, y], to: [x, y], off: [x, y], riders, ride, stay, away }.
+ * A car leaves `from` full, takes `ride` seconds to reach `to`, lets its riders off at `off`, waits `stay` seconds,
+ * rides back empty and is `away` for a while. Each keeps where it is (`x`, `y`) and how many are still aboard (`load`).
  */
-export function createWorld(random = Math.random, rings = round(), holes = [], drops = []) {
+export function createWorld(random = Math.random, rings = round(), holes = [], shuttles = []) {
   const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]);
-  const world = { t: 0, lines: [], strays: [], random, rings, holes, drops: drops.map(drop => ({ ...drop, left: drop.every })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
+  const world = { t: 0, lines: [], strays: [], random, rings, holes, shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, kept: 0, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   return world;
 }
@@ -72,7 +78,7 @@ export function place(world, line, start = 0) {
     at = spot(world, 120);
   }
   const a = world.random() * Math.PI * 2;
-  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, safe: SAFE, dance: 0, drop: 0, top: 0, slack: 0, path: [{ ...at }] });
+  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, safe: SAFE, dance: 0, drop: 0, top: 0, slack: 0, spared: 0, path: [{ ...at }] });
   line.tail = Array.from({ length: start }, () => ({ face: face(world), ...at }));
   return line;
 }
@@ -84,9 +90,18 @@ export function addLine(world, { id, face, name, bot = null, start = 0 }) {
   return place(world, line, start);
 }
 
+/** Where a line wants to go. What a player sends is not trusted: a heading that is not a number is ignored, since it would stop the line for good. */
 export function steer(line, want, dash) {
-  line.want = want;
-  line.dash = dash;
+  if (Number.isFinite(want)) line.want = want;
+  line.dash = dash === true;
+}
+
+/** Takes a line out, when its player leaves. Its animals stay behind as strays. */
+export function removeLine(world, id) {
+  const at = world.lines.findIndex(line => line.id === id);
+  if (at < 0) return;
+  const [line] = world.lines.splice(at, 1);
+  for (const f of line.dead ? [] : line.tail) world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
 }
 
 // Each animal stands a fixed distance further back along the path its head walked.
@@ -136,6 +151,11 @@ function think(world, line, dt) {
   }
   if (near < Infinity) { line.want = line.a - Math.sign(side || 1) * 1.6; return; }
 
+  for (const car of world.shuttles) {
+    const dx = car.off[0] - line.x, dy = car.off[1] - line.y, far = Math.hypot(dx, dy);
+    if (car.clock < car.ride && car.clock > car.ride - 8 && far < 1100) { line.want = far > 60 ? Math.atan2(dy, dx) : line.a + 1; return; }
+  }
+
   if (n >= 5 && bot.aggro > 0.4 && (bot.chase > 0 || bot.chase <= -5)) {
     let prey = null, close = 420;
     for (const other of world.lines) {
@@ -163,6 +183,19 @@ function think(world, line, dt) {
   line.want = bot.drift;
 }
 
+// An animal falls in right behind the head and the rest of the line moves back one place.
+function join(world, line, face, x, y, events) {
+  line.tail.unshift({ face, x, y, born: world.t });
+  line.slack += GAP;
+  events.push({ type: 'join', line: line.id, size: line.tail.length + 1 });
+  // A line dances the first time it reaches each size, not every time it gets back there.
+  if (MILESTONES.includes(line.tail.length) && line.tail.length > line.top) {
+    line.top = line.tail.length;
+    line.dance = DANCE;
+    events.push({ type: 'dance', line: line.id, size: line.tail.length });
+  }
+}
+
 function scatter(world, line, by, events) {
   for (const f of line.tail) {
     const a = world.random() * Math.PI * 2, v = 120 + world.random() * 160;
@@ -174,7 +207,7 @@ function scatter(world, line, by, events) {
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'drop', ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
@@ -204,6 +237,7 @@ export function step(world, dt) {
       world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
     }
     line.safe = Math.max(0, line.safe - dt);
+    line.spared = Math.max(0, line.spared - dt);
     line.dance = Math.max(0, line.dance - dt);
   }
 
@@ -218,16 +252,7 @@ export function step(world, dt) {
     }
     if (head && close < JOIN) {
       world.strays.splice(i, 1);
-      // It falls in right behind the head and the rest of the line moves back one place.
-      head.tail.unshift({ face: s.face, x: s.x, y: s.y, born: world.t });
-      head.slack += GAP;
-      events.push({ type: 'join', line: head.id, size: head.tail.length + 1 });
-      // A line dances the first time it reaches each size, not every time it gets back there.
-      if (MILESTONES.includes(head.tail.length) && head.tail.length > head.top) {
-        head.top = head.tail.length;
-        head.dance = DANCE;
-        events.push({ type: 'dance', line: head.id, size: head.tail.length });
-      }
+      join(world, head, s.face, s.x, s.y, events);
       continue;
     }
     s.a += (world.random() - 0.5) * 2 * dt;
@@ -249,14 +274,37 @@ export function step(world, dt) {
   }
   for (const [line, by] of hits) scatter(world, line, by, events);
 
-  for (const drop of world.drops) {
-    if ((drop.left -= dt) > 0) continue;
-    drop.left += drop.every;
-    for (let n = 0; n < drop.count; n++) {
-      const a = world.random() * Math.PI * 2, v = 60 + world.random() * 140;
-      world.strays.push({ x: drop.at[0], y: drop.at[1], face: face(world), a, vx: Math.cos(a) * v, vy: Math.sin(a) * v });
+  for (const car of world.shuttles) {
+    const there = car.ride, leaves = there + car.stay, back = leaves + car.ride, was = car.clock, ease = f => f * f * (3 - 2 * f);
+    car.clock = (car.clock + dt) % (back + car.away);
+    if (car.clock < was) { car.load = car.riders + car.kept; car.kept = 0; } // it sets off again, full, with anyone it carried away
+    const at = car.clock < there ? ease(car.clock / there) : car.clock < leaves ? 1 : car.clock < back ? 1 - ease((car.clock - leaves) / car.ride) : 0;
+    car.x = car.from[0] + (car.to[0] - car.from[0]) * at;
+    car.y = car.from[1] + (car.to[1] - car.from[1]) * at;
+    const out = (x, y, push) => { const a = world.random() * Math.PI * 2, v = push * (0.3 + world.random() * 0.7); world.strays.push({ x, y, face: face(world), a, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); car.load--; };
+    // Coming in over the ground, the keenest few jump early. The rest get off together when it stops.
+    if (car.clock < there && car.load > car.riders * 0.7 && inside(world, car.x, car.y) && (car.hop -= dt) <= 0) { car.hop = 0.45; out(car.x, car.y, 40); }
+    // While it moves over the ground it sweeps: a line it passes over loses the animals at its back, which ride on.
+    // Swept on the way in, they get off with the rest. Swept on the way out, they come back on the next car.
+    const moving = car.clock < there || (car.clock >= leaves && car.clock < back);
+    if (moving && inside(world, car.x, car.y)) for (const line of world.lines) {
+      if (line.dead || line.safe > 0 || line.spared > 0 || !line.tail.length) continue;
+      const head = Math.hypot(line.x - car.x, line.y - car.y) < SWEEP * 0.75;
+      if (!head && !line.tail.some(f => Math.hypot(f.x - car.x, f.y - car.y) < SWEEP)) continue;
+      const taken = line.tail.splice(-(head ? Math.max(TAKEN, Math.ceil(line.tail.length / 2)) : TAKEN)).length;
+      line.spared = SPARED;
+      if (car.clock < there) car.load += taken; else { car.load += taken; car.kept += taken; }
+      events.push({ type: 'lift', name: car.name, line: line.id, count: taken, head, x: car.x, y: car.y });
     }
-    events.push({ type: 'drop', name: drop.name, count: drop.count });
+    if (was < there && car.clock >= there && car.load > 0) {
+      // Whoever is waiting where it stops gets its riders straight onto their line, dealt round. With nobody there they scatter.
+      const count = car.load, waiting = world.lines.filter(line => !line.dead && Math.hypot(line.x - car.off[0], line.y - car.off[1]) < PLAZA), onto = waiting.map(line => ({ line: line.id, count: 0 }));
+      for (let n = 0; car.load > 0; n++) {
+        if (!waiting.length) { out(car.off[0], car.off[1], 210); continue; }
+        join(world, waiting[n % waiting.length], face(world), car.off[0], car.off[1], events); onto[n % waiting.length].count++; car.load--;
+      }
+      events.push({ type: 'arrive', name: car.name, count, onto, x: car.off[0], y: car.off[1] });
+    }
   }
   while (world.strays.length < STRAYS) world.strays.push(stray(world));
   if (world.strays.length > STRAY_CAP) world.strays.splice(0, world.strays.length - STRAY_CAP);
