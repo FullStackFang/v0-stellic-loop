@@ -16,7 +16,8 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={archivo.variable}>
+    // The campus pages set data-kit on <html> before React loads (components/campus/shell.tsx), so it differs from what the server sent.
+    <html lang="en" className={archivo.variable} suppressHydrationWarning>
       <body>{children}<SiteNav /></body>
     </html>
   );

@@ -1,0 +1,4 @@
+/** The mark of Loop Ink: a small stamp, a dashed ring with a dot. It is as big as the type it sits in, and says nothing to a screen reader: what it stands for is in the name of the thing that wears it. */
+export const InkMark = () => <svg className="cs-ink" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden="true"><circle cx={8} cy={8} r={6} strokeDasharray="2.3 1.8" /><circle cx={8} cy={8} r={2} fill="currentColor" stroke="none" /></svg>;
+/** The mark of a school's own animal: a graduation cap, worn where an Ink animal wears its stamp. */
+export const SchoolMark = () => <svg className="cs-ink" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 3 1.5 6.2 8 9.4l6.5-3.2z" /><path d="M4.3 8.6v2.3c1 .9 2.3 1.4 3.7 1.4s2.700-.5 3.700-1.400V8.600L8 10.500z" /></svg>;

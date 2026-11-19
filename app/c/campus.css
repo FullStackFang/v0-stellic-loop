@@ -256,7 +256,7 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-pets h5 { margin: 16px 0 0; font-size: 12.5px; font-weight: 620; color: var(--cs-mute); } .cs-pets h5 + .cs-pets-grid { margin-top: 8px; }
 /* "Create your own": the tile that opens it, and its pane in the card (components/campus/own-face.tsx). */
 .cs .cs-pet.add { display: grid; place-items: center; background: none; color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-pet.add svg { width: 45%; height: 45%; }
-.cs-lvl-top .cs-own-tag { margin-left: 8px; } .cs-own .cs-pets-top h4 { margin-right: 0; } .cs-own-tag { margin-right: auto; padding: 2px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 700; color: var(--cs-paper); background: var(--cs-action); }
+.cs-own .cs-pets-top h4 { margin-right: 0; }
 .cs-own-form { display: grid; gap: 12px; margin-top: 12px; } .cs-own p { margin: 0; font-size: 13.5px; color: var(--cs-mute); } .cs-own .cs-btn { justify-self: start; }
 .cs .cs-own-photo { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 76px; padding: 8px 14px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 40%, transparent); }
 .cs-own-photo img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
@@ -302,6 +302,10 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 /* A premium animal wears a gold ring, with one glint going round it. */
 .cs-pets { --cs-gold: oklch(80% 0.15 86); } .cs .cs-pet.gold { position: relative; background: color-mix(in oklch, var(--cs-gold) 26%, var(--cs-paper)); box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4.5px var(--cs-gold); }
 .cs-pet.gold::after { content: ""; position: absolute; inset: -4.5px; border-radius: 50%; pointer-events: none; background: conic-gradient(transparent 0 68%, oklch(98% 0.07 96) 84%, transparent 100%); mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px)); animation: cs-glint 3.6s linear infinite; }
+/* A school's own animal wears a ring and a cap in the action colour where an Ink one wears gold: it is the school's, not Ink's. */
+.cs .cs-pet.school { position: relative; background: color-mix(in oklch, var(--cs-action) 22%, var(--cs-paper)); box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4.5px var(--cs-action); }
+.cs .cs-pet.school[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4.5px var(--cs-action), 0 0 0 6.5px var(--cs-ink); }
+.cs .cs-pet.school > .cs-ink { background: var(--cs-action); color: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-paper); }
 @keyframes cs-glint { to { transform: rotate(1turn); } } @media (prefers-reduced-motion: reduce) { .cs-pet.gold::after { animation: none; } }
 .cs .cs-pet.add.gold { background: none; box-shadow: inset 0 0 0 2px var(--cs-gold); } .cs-pet.add.gold::after { content: none; }.cs .cs-pet[aria-pressed=true] { box-shadow: 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-action); }
 /* The account card is one width whether or not a picture is being picked. The animals are 192px files, so nothing here is drawn
@@ -716,3 +720,26 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-ev { flex-basis: 260px; } .cs-lvl { position: fixed; right: 14px; top: 64px; }
 }
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
+
+/* Loop Ink (openspec/changes/loop-ink-placements): the mark, the tab in the bar, the row in the account card, the mark
+   in the picker and on a face. Kit tokens only, so it holds in every school's colours. Kept in this one block. */
+.cs-ink { flex: none; width: 1.15em; height: 1.15em; }
+/* the tab: paper with a hard shadow, never the field colour, so it stands apart from the other links in any kit. Shown at every width. */
+.cs-links a.cs-inktab { display: flex; gap: 7px; margin-left: 6px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-links a.cs-inktab:hover { translate: -1px -2px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 5px 0 var(--cs-ink); }
+@media (max-width: 520px) { .cs-links a.cs-inktab { margin-left: 0; padding: 9px; } .cs-inktab span { display: none; } .cs-pets-top { flex-wrap: wrap; } .cs-pets-top input { flex-basis: 100%; } }
+/* the row in the account card: the mark, two short lines, one button */
+.cs-inkrow { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--cs-line); }
+.cs-inkrow > .cs-ink { font-size: 22px; } .cs-inkrow > span { display: grid; min-width: 0; margin-right: auto; line-height: 1.25; }
+.cs-inkrow b { font-size: 15.5px; font-weight: 720; letter-spacing: -0.02em; } .cs-inkrow small { font-size: 13px; color: var(--cs-mute); }
+/* the picker: its top line holds the way to the Ink page too, so its buttons sit closer; on a phone the search takes a line of its own */
+.cs-pets-top { gap: 6px; } .cs-pets-top .cs-btn { padding: 0 11px; gap: 6px; }
+/* the ask pane: none of the four perks is here yet, so the first is not set apart from the rest */
+.cs-prem-perks span:first-child:not(:last-of-type) { font-weight: inherit; color: inherit; }
+/* the mark as a small stamp on an animal of the picker and on a face: lower right; lower left on an avatar, whose lower right is the level */
+.cs-inked { display: inline-grid; flex: none; } .cs-inked > * { grid-area: 1 / 1; }
+.cs-inked > .cs-ink, .cs-pet > .cs-ink { z-index: 1; width: 12px; height: 12px; padding: 1px; border-radius: 50%; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1px var(--cs-ink); }
+.cs-inked > .cs-ink { place-self: end; translate: 2px 3px; } .cs .cs-pet > .cs-ink { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; padding: 1.5px; box-shadow: 0 0 0 1.5px var(--cs-ink); }
+.cs-ava .cs-inked > .cs-ink { place-self: end start; translate: -5px 4px; width: 17px; height: 17px; padding: 1.5px; box-shadow: 0 0 0 1.5px var(--cs-ink); } .cs-ava.big .cs-inked > .cs-ink { width: 26px; height: 26px; padding: 3px; translate: -4px 2px; }
+/* in a row of overlapping faces the overlap moves to the wrapper */
+.cs-stack > .cs-inked > .cs-face { margin-left: 0; } .cs-stack > .cs-inked:not(:first-child) { margin-left: -7px; } .cs-pin > .cs-stack > .cs-inked:not(:first-child) { margin-left: -9px; }

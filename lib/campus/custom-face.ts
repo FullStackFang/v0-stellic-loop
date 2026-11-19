@@ -5,7 +5,8 @@ import sharp from 'sharp';
 import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { CHANGES, CUSTOM, NAMES } from './animals';
-import { NEEDS_PREMIUM, subscribed } from './animal-tiers';
+import { NEEDS_PREMIUM } from './animal-tiers';
+import { hasInk } from './ink';
 import { CampusError } from './errors';
 
 // A person's own animal: a photo of an animal, drawn as a figure of the set in public/animals. Premium, with no payment
@@ -162,7 +163,7 @@ export const freeCode = (code: unknown) => typeof code === 'string' && code.trim
 export async function useCustomFace(q: Q, personId: string, token: string, premium = false): Promise<void> {
   const { rows: [row] } = z.uuid().safeParse(token).success ? await q.query<{ mine: boolean; tier: string | null }>('select (person_id=$1 and let_go_at is null) as mine,tier from campus_custom_picture where token=$2', [personId, token]) : { rows: [] };
   if (!row || !(row.mine || row.tier)) throw new CampusError('Pick one of the animals.');
-  if (!row.mine && row.tier === 'premium' && !premium && !(await subscribed(q, personId))) throw new CampusError(NEEDS_PREMIUM);
+  if (!row.mine && row.tier === 'premium' && !premium && !(await hasInk(q, personId))) throw new CampusError(NEEDS_PREMIUM);
   await q.query(USE, [personId, CUSTOM, token]);
 }
 

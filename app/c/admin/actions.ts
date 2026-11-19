@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
+import { MASCOT } from '@/lib/campus/animals';
 import { deletePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
 import { findCampus, type Campus } from '@/lib/campus/listings';
@@ -99,12 +100,13 @@ export async function splitTagAction(data: FormData): Promise<void> {
   await admin(data, async campus => { await db().tx(q => splitTag(q, campus.id, uuid(text(data, 'tag')))); return 'Split out. It stays on its own.'; });
 }
 
-const MOVED: Record<string, string> = { core: 'Core now: it is in everyone’s picker.', premium: 'Premium now: people who subscribed can pick it.', off: 'Off: it is in nobody’s picker. Whoever has it keeps it.', own: 'Its maker’s alone again. Whoever else uses it keeps it.' };
+const MOVED: Record<string, string> = { core: 'Core now: it is in everyone’s picker.', premium: 'Premium now: people who subscribed can pick it.', school: 'School now: free to people of its school, and nobody else.', off: 'Off: it is in nobody’s picker. Whoever has it keeps it.', own: 'Its maker’s alone again. Whoever else uses it keeps it.' };
 /** Core, Premium or Off on the animals that were picked: ones shipped with the app, by number, and ones people had made. Off, for a made one, is its maker's alone. */
 export async function setTierAction(data: FormData): Promise<void> {
   await admin(data, async () => {
     const tier = text(data, 'tier'), faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String);
     if (!faces.length && !pictures.length) throw new Error('Pick an animal first');
+    if (tier === 'school' && (pictures.length || faces.some(face => !MASCOT[number(face)]))) throw new Error('School is only for a school’s own animal');
     for (const face of faces) await setBuiltTier(db(), number(face), tier);
     for (const picture of pictures) await setPictureTier(db(), picture, tier === 'off' ? 'own' : tier);
     const many = faces.length + pictures.length;

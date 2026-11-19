@@ -24,8 +24,8 @@ const RULES = { outings: 'any outings', word: 'outings on events with a word', w
 const TABS = { events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', campus: 'Campus' } as const;
 type Tab = keyof typeof TABS;
 /** Where an animal stands. One a person had made, and nobody else may pick, is `own`: it is listed with the ones that are off. */
-const TIER = { core: 'Core', premium: 'Premium', off: 'Off', own: 'Maker only' } as const;
-const SHOW = ['all', 'core', 'premium', 'off'] as const;
+const TIER = { core: 'Core', premium: 'Premium', school: 'School', off: 'Off', own: 'Maker only' } as const;
+const SHOW = ['all', 'core', 'premium', 'school', 'off'] as const;
 type Show = typeof SHOW[number];
 
 /** The admin's page for running a campus by hand (design D2, D6, D8). Anyone who is not the admin is told it does not exist. */
@@ -142,7 +142,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} />
         <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label></li>)}</ul>
         <p className="cs-adm-lede">Tap animals to pick them, then move them together. Whoever already has one keeps it.</p>
-        <div className="cs-adm-tray"><span>picked · move to</span><button name="tier" value="core">Core</button><button name="tier" value="premium">Premium</button><button name="tier" value="off">Off</button>
+        <div className="cs-adm-tray"><span>picked · move to</span><button name="tier" value="core">Core</button><button name="tier" value="premium">Premium</button><button name="tier" value="school">School</button><button name="tier" value="off">Off</button>
           <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details><button type="reset" className="x">Clear</button></div></form>
     </section>;
     /* eslint-enable @next/next/no-img-element */
