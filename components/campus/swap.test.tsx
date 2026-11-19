@@ -1,8 +1,15 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Screen } from '@/lib/campus/view';
+import { CampusScreen } from './screen';
 import { inside, landOf } from '@/lib/campus/sections';
 import { schoolOf } from '@/lib/campus/schools';
 import { Swap, visiting, type SwapCampus } from './swap';
+
+const actions = vi.hoisted(() => ({ changeCampusAction: vi.fn(async () => ({ ok: true }) as { ok: boolean; message?: string }) }));
+vi.mock('@/app/c/actions', () => actions);
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+vi.mock('maplibre-gl', () => ({ default: {} }));
 
 afterEach(cleanup);
 
@@ -40,13 +47,44 @@ describe('The tag that swaps campus', () => {
 });
 
 describe('Cornell Tech', () => {
-  it('is part of Cornell, and has Roosevelt Island as its one section with the campus inside it', () => {
+  it('is part of Cornell, and has Roosevelt Island as its first section with the campus inside it', () => {
     expect(schoolOf('cornell-tech')).toBe('cornell');
     expect(schoolOf('cornell')).toBe('cornell');
     const land = landOf('cornell-tech')!;
-    expect(land.map(each => each.id)).toEqual(['roosevelt']);
+    expect(land[0].id).toBe('roosevelt');
     expect(inside(land[0].rest, land[0].ring)).toBe(true);
     expect(inside([-73.9561, 40.7557], land[0].ring)).toBe(true);   // the Bloomberg Center
     expect(inside([-73.9862, 40.7484], land[0].ring)).toBe(false);  // Manhattan
+  });
+});
+
+describe('"Change campus" in the account card', () => {
+  const viewer = { first: 'Sam', name: 'Sam Lee', photo: null, face: 0, ownPhoto: null, own: null, owns: [], picks: { core: [], premium: [], school: [] }, asked: false, makesLeft: 0, level: 0, outings: 0, admin: false, groups: [] } as unknown as NonNullable<Screen['viewer']>;
+  const model: Screen = { campus: { slug: 'cornell', name: 'Cornell', tz: 'America/New_York', listSource: 'CampusGroups' }, viewer, tickets: [], earning: [], live: null, places: [] };
+  const card = (swap?: SwapCampus[]) => { render(<CampusScreen screen={model} swap={swap} signInHref="/sign-in" />); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); };
+
+  it('names your campus and moves you to the other one with one press', async () => {
+    const assign = vi.fn(); vi.stubGlobal('location', { ...window.location, assign });
+    card([ithaca, newYork]);
+    expect(screen.getByText('Your campus is Ithaca')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Change to New York' }));
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/c/cornell-tech'));
+    expect(actions.changeCampusAction).toHaveBeenCalledWith('cornell-tech');
+    vi.unstubAllGlobals();
+  });
+
+  it('says why when the move is refused, and stays', async () => {
+    actions.changeCampusAction.mockResolvedValueOnce({ ok: false, message: 'That campus is not part of your school.' });
+    card([{ ...ithaca, home: false, here: false }, { ...newYork, home: true, here: true }]);
+    fireEvent.click(screen.getByRole('button', { name: 'Change to Ithaca' }));
+    expect(await screen.findByText('That campus is not part of your school.')).toBeTruthy();
+  });
+
+  it('is not there for a school with one campus, or for someone with no campus of their own', () => {
+    card();
+    expect(screen.queryByRole('button', { name: /^Change to/ })).toBeNull();
+    cleanup();
+    card([{ ...ithaca, home: false }, newYork]);
+    expect(screen.queryByRole('button', { name: /^Change to/ })).toBeNull();
   });
 });

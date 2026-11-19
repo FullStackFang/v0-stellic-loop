@@ -12,19 +12,35 @@ export type Section = {
   rest: Point;
   /** The sections it touches. */
   next: string[];
+  /** In New York a section is everything one subway stop serves. The way on to it is drawn as that stop's platform sign. */
+  stop?: Stop;
 };
+export type Stop = { name: string; lines: string[] };
+/** The colour of each line's bullet, as on the subway map, and whether its letter is printed dark. */
+export const LINE: Record<string, { fill: string; dark?: boolean }> = { F: { fill: '#ff6319' }, M: { fill: '#ff6319' }, Q: { fill: '#fccc0a', dark: true } };
 
-const section = (corners: Record<string, Point>) => (id: string, name: string, ring: string, rest: Point, next: string[]): Section => ({ id, name, ring: [...ring].map(key => corners[key]), rest, next });
+const section = (corners: Record<string, Point>) => (id: string, name: string, ring: string, rest: Point, next: string[], stop?: Stop): Section => ({ id, name, ring: [...ring].map(key => corners[key]), rest, next, ...(stop ? { stop } : {}) });
 
 // Ithaca, roughly along the creeks and main streets.
 const ithaca = section({ a: [-76.5005, 42.4378], b: [-76.4908, 42.4370], c: [-76.4915, 42.4410], d: [-76.4910, 42.4437], e: [-76.5008, 42.4432], f: [-76.4856, 42.4443], g: [-76.4802, 42.4436], h: [-76.4806, 42.4380], i: [-76.4852, 42.4362],
   j: [-76.4962, 42.4462], k: [-76.4952, 42.4510], l: [-76.4898, 42.4518], m: [-76.4893, 42.4472], o: [-76.4845, 42.4528], p: [-76.4796, 42.4516], q: [-76.4792, 42.4472], r: [-76.4722, 42.4530], s: [-76.4728, 42.4585], t: [-76.4800, 42.4600], u: [-76.4850, 42.4570], v: [-76.4708, 42.4482], w: [-76.4725, 42.4428] });
 
-// Roosevelt Island is one section, tip to tip: everything its one stop serves.
-const island = section({ a: [-73.9622, 40.7492], b: [-73.9570, 40.7500], c: [-73.9478, 40.7600], d: [-73.9385, 40.7722], e: [-73.9395, 40.7740], f: [-73.9440, 40.7715], g: [-73.9530, 40.7625], h: [-73.9600, 40.7545] });
+// New York. One stop is one section. Roosevelt Island is one section, tip to tip: everything its one stop serves.
+// One stop west under the river is Lexington Av/63 St, one stop east is 21 St-Queensbridge. Water lies between them, so
+// they share no corners. Each rests on its station. Which lines stop where was checked in November 2026: the F and the M
+// share the 63 St tunnel (the M by day on weekdays, the F at night and at weekends), and the Q also stops at Lexington Av.
+const island = section({ a: [-73.9622, 40.7492], b: [-73.9570, 40.7500], c: [-73.9478, 40.7600], d: [-73.9385, 40.7722], e: [-73.9395, 40.7740], f: [-73.9440, 40.7715], g: [-73.9530, 40.7625], h: [-73.9600, 40.7545],
+  // Lexington Av/63 St: Park Avenue to the river, 59th to 68th Street.
+  i: [-73.9697, 40.7630], j: [-73.9655, 40.7688], k: [-73.9562, 40.7648], l: [-73.9603, 40.7592],
+  // 21 St-Queensbridge: the river to 24th Street, 38th Avenue down to Queens Plaza.
+  m: [-73.9462, 40.7572], n: [-73.9392, 40.7598], o: [-73.9362, 40.7528], p: [-73.9448, 40.7506] });
 
 const LANDS: Record<string, Section[]> = {
-  'cornell-tech': [island('roosevelt', 'Roosevelt Island', 'abcdefgh', [-73.9552, 40.7562], [])],
+  'cornell-tech': [
+    island('roosevelt', 'Roosevelt Island', 'abcdefgh', [-73.9552, 40.7562], ['lex63', 'queensbridge'], { name: 'Roosevelt Island', lines: ['F', 'M'] }),
+    island('lex63', 'Upper East Side', 'ijkl', [-73.9665, 40.7647], ['roosevelt'], { name: 'Lexington Av/63 St', lines: ['F', 'M', 'Q'] }),
+    island('queensbridge', 'Long Island City', 'mnop', [-73.9426, 40.7540], ['roosevelt'], { name: '21 St–Queensbridge', lines: ['F', 'M'] }),
+  ],
   cornell: [
     ithaca('downtown', 'Downtown', 'abcde', [-76.4968, 42.4418], ['collegetown', 'west']),
     ithaca('collegetown', 'Collegetown', 'bihgfdc', [-76.4862, 42.4424], ['downtown', 'central']),

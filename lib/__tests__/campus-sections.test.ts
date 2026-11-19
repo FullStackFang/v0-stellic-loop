@@ -80,3 +80,33 @@ describe('pushing against the wall', () => {
     expect(wayOn(land, 'collegetown', 'collegetown', [0, 0], on)).toBeNull();
   });
 });
+
+describe('New York: one stop is one section', () => {
+  const city = landOf('cornell-tech')!, at = (id: string) => city.find(each => each.id === id)!;
+  const TECH: Point = [-73.9566, 40.7558], LIGHTHOUSE: Point = [-73.9402, 40.7727], MOTORGATE: Point = [-73.94687, 40.76489];
+
+  it('has the island and one stop each way, each resting inside itself and touching both ways', () => {
+    expect(city.map(each => each.id)).toEqual(['roosevelt', 'lex63', 'queensbridge']);
+    for (const each of city) {
+      expect(sectionAt(city, each.rest)?.id).toBe(each.id);
+      for (const id of each.next) expect(at(id).next).toContain(each.id);
+    }
+  });
+
+  it('the whole island is one section: the campus, Motorgate and the lighthouse', () => {
+    for (const spot of [TECH, MOTORGATE, LIGHTHOUSE]) expect(sectionAt(city, spot)?.id).toBe('roosevelt');
+  });
+
+  it('every section carries its stop and lines, and no corner of one lies inside another', () => {
+    expect(city.map(each => [each.stop?.name, each.stop?.lines.join('')])).toEqual([['Roosevelt Island', 'FM'], ['Lexington Av/63 St', 'FMQ'], ['21 St–Queensbridge', 'FM']]);
+    for (const a of city) for (const b of city) if (a !== b) for (const corner of a.ring) expect(sectionAt([b], corner)).toBeNull();
+    expect(landOf('cornell')!.every(each => !each.stop)).toBe(true);
+  });
+
+  it('a push west finds Lexington Av, a push east finds Queensbridge, and north finds nothing', () => {
+    const on = { roosevelt: 2, lex63: 1 };
+    expect(wayOn(city, 'roosevelt', 'roosevelt', [-.01, 0], on)).toMatchObject({ id: 'lex63', kind: 'go' });
+    expect(wayOn(city, 'roosevelt', 'roosevelt', [.01, -.004], on)).toMatchObject({ id: 'queensbridge', kind: 'empty' });
+    expect(wayOn(city, 'roosevelt', 'roosevelt', [0, .01], on)).toMatchObject({ id: null, kind: 'none' });
+  });
+});

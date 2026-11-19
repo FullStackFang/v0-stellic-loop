@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { createPortal } from 'react-dom';
 import type { GeoJSONSource, Map as GlMap, MapLibreEvent, MapMouseEvent, Marker, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { bounds, held, hops, inside, middle, sectionAt, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Way } from '@/lib/campus/sections';
+import { bounds, held, hops, inside, LINE, middle, sectionAt, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Stop, type Way } from '@/lib/campus/sections';
 import type { Face, Ticket } from '@/lib/campus/view';
 import { FaceDot } from './screen';
 import { Swap, visiting, type SwapCampus } from './swap';
@@ -13,7 +13,8 @@ import { Swap, visiting, type SwapCampus } from './swap';
 // two-ink poster on paper. The ink colour draws the sheet, the school's colour is the second ink printed a little off
 // register, and one hot ink is kept for plans and nothing else, so a plan is the loudest thing on the page.
 // The map is the list: each plan is a stamp, the dial under the map turns through them in order of time, and the one
-// that is on hands you its ticket. The view cannot leave the section (lib/campus/sections.ts, "The wall"). Pushing
+// that is on hands you its ticket. The map shows one day at a time (public/demo/mockups-map-day.html), so a week of
+// plans that repeat at one address does not pile up on it. Plans at one address on one day share one stamp. The view cannot leave the section (lib/campus/sections.ts, "The wall"). Pushing
 // against the wall shows the way on at that edge. Streets are OpenStreetMap data drawn by MapLibre GL from OpenFreeMap
 // tiles, which need no key. The map library is loaded only when this view is opened.
 
@@ -26,6 +27,8 @@ type Wall = Way & { at: Point; view: string };
 const calm = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const count = (spots: readonly Spot[]) => spots.reduce<Record<string, number>>((sum, spot) => ({ ...sum, [spot.sec]: (sum[spot.sec] ?? 0) + 1 }), {});
 const Arrow = () => <i className="go"><svg viewBox="-8 -8 16 16" aria-hidden="true"><path d="M-6 0H6M1 -5l5 5-5 5" /></svg></i>;
+/** A stop's lines, as the round bullets on a platform sign. */
+const Lines = ({ stop }: { stop: Stop }) => <span className="cs-lines">{stop.lines.map(each => <i key={each} className={LINE[each]?.dark ? 'dark' : ''} style={{ background: LINE[each]?.fill }}>{each}</i>)}</span>;
 /** Runs `step` from 0 to 1, easing out. Returns the way to stop it. */
 function tween(ms: number, step: (t: number) => void) {
   if (calm() || typeof requestAnimationFrame !== 'function') { step(1); return () => {}; }
@@ -186,19 +189,24 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   // Until the browser says where you are, you stand where the most is on.
   const [standing, setStanding] = useState(() => { const first = count(spots); return [...land].sort((a, b) => (first[b.id] ?? 0) - (first[a.id] ?? 0))[0].id; });
   const [you, setYou] = useState<Point | null>(null), [where, setWhere] = useState<Where>(() => typeof navigator !== 'undefined' && navigator.geolocation ? 'wait' : 'off');
-  const [view, setView] = useState(standing), [litId, setLitId] = useState<string | null>(null);
+  const [view, setView] = useState(standing), [litId, setLitId] = useState<string | null>(null), [dayPick, setDayPick] = useState<string | null>(null);
   const [map, setMap] = useState<GlMap | null>(null);
   const [wall, setWall] = useState<Pick<Wall, 'id' | 'kind' | 'view'> | null>(null);
 
-  const here = land.find(each => each.id === view)!, list = useMemo(() => spots.filter(spot => spot.sec === view), [spots, view]);
+  const here = land.find(each => each.id === view)!, inView = useMemo(() => spots.filter(spot => spot.sec === view), [spots, view]);
+  // One day is on the map: the day of the plan picked in the list, else the day pressed on the band, else the first day with anything on.
+  const days = useMemo(() => [...new Set(inView.map(spot => spot.ticket.day))], [inView]);
+  const day = (beside && picked ? inView.find(spot => spot.ticket.id === picked)?.ticket.day : null) ?? (dayPick && days.includes(dayPick) ? dayPick : days[0]) ?? null;
+  const list = useMemo(() => inView.filter(spot => spot.ticket.day === day), [inView, day]);
   // Beside the list, the plan that is on is the one the list picked, and no ticket is ever open over the map (`up`).
   const at = Math.max(0, list.findIndex(spot => spot.ticket.id === litId)), lit = beside ? list.find(spot => spot.ticket.id === picked) ?? null : list[at] ?? null;
   const up = beside ? null : picked, open = up ? spots.find(spot => spot.ticket.id === up) ?? null : null;
   // A plan picked in the list that is in another section brings the map to that section.
   const [seen, setSeen] = useState(picked);
-  if (picked !== seen) { setSeen(picked); const to = beside && picked ? spots.find(spot => spot.ticket.id === picked)?.sec : null; if (to && to !== view) setView(to); }
+  if (picked !== seen) { setSeen(picked); const found = beside && picked ? spots.find(spot => spot.ticket.id === picked) : null; if (found) { setDayPick(found.ticket.day); if (found.sec !== view) setView(found.sec); } }
   // What the map hangs each stamp on. The map places these; the page draws the stamps inside them.
-  const pins = useMemo(() => typeof document === 'undefined' ? [] : list.map(spot => ({ id: spot.ticket.id, at: spot.at, el: document.createElement('div') })), [list]);
+  // Plans at one address stand on one stamp, so no stamp is ever pushed off its spot.
+  const pins = useMemo(() => typeof document === 'undefined' ? [] : [...new Set(list.map(spot => spot.at.join()))].map(key => { const same = list.filter(spot => spot.at.join() === key); return { id: key, at: same[0].at, same, el: document.createElement('div') }; }), [list]);
   const youEl = useMemo(() => you && view === standing && typeof document !== 'undefined' ? document.createElement('div') : null, [you, view, standing]);
 
   const host = useRef<HTMLDivElement>(null), canvas = useRef<HTMLDivElement>(null), band = useRef<HTMLDivElement>(null), sheet = useRef<HTMLDivElement>(null), way = useRef<HTMLElement>(null), rule = useRef<HTMLDivElement>(null);
@@ -250,7 +258,9 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     const el = host.current, zoom = map.getZoom(), s = live.current;
     if (!el) return;
     const by = (rate: number, least: number) => Math.max(least, Math.min(1, 2 ** ((zoom - 16.2) * rate))).toFixed(3);
-    el.style.setProperty('--ticket', by(.8, .62)); el.style.setProperty('--stamp', by(.45, .68));
+    el.style.setProperty('--ticket', by(.8, .62)); el.style.setProperty('--stamp', by(.62, .32));
+    // With the whole section in view the stamps are small, and the ticket has let go: the list or the dial still says what is on.
+    el.style.setProperty('--say', Math.max(0, Math.min(1, (+by(.62, .32) - .5) / .14)).toFixed(2));
     const from = home.current, to = from && s.lit ? map.project(s.lit.at) : null;
     el.style.setProperty('--away', (from && to ? Math.max(0, Math.min(1, Math.max((from.zoom - zoom) / .7, (Math.hypot(to.x - from.x, to.y - from.y) - 30) / 150))) : 0).toFixed(3));
     const bar = rule.current, mpp = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (512 * 2 ** zoom), two = 2 * WALK_PER_MINUTE / mpp, mins = two > 170 ? 1 : two < 45 ? 5 : 2;
@@ -353,15 +363,11 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     return () => { done = true; stop(); stopInk(); };
   }, [map, litAt, openAt, youAt, view, standing]);
 
-  // A stamp for each plan in the section. Plans at one address fan out, so none hides another.
+  // A stamp for each address in the section, standing on its spot: the middle of the stamp's foot is the address.
   useEffect(() => {
     if (!map || !lib.current) return;
-    const { Marker } = lib.current, same = new Map<string, number>();
-    const made = pins.map(pin => {
-      const key = pin.at.join(), nth = same.get(key) ?? 0;
-      same.set(key, nth + 1);
-      return new Marker({ element: pin.el, anchor: 'bottom-left', offset: [nth * 40 - 24, nth * -14 + 6] }).setLngLat(pin.at).addTo(map);
-    });
+    const { Marker } = lib.current;
+    const made = pins.map(pin => new Marker({ element: pin.el, anchor: 'bottom-left', offset: [-24, 6] }).setLngLat(pin.at).addTo(map));
     marks.current = pins; place(map);
     return () => { for (const each of made) each.remove(); };
   }, [map, pins, place]);
@@ -398,16 +404,21 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     : where === 'here' ? 'You are here' : visiting(swap) ? 'Visiting' : where === 'away' ? 'You are away from campus' : where === 'off' ? 'Your location is off' : 'Finding you';
   const shown = wall && !up && wall.view === view ? wall : null, there = shown?.id ? land.find(each => each.id === shown.id) : undefined;
 
-  const pin = (spot: Spot, nth: number) => {
+  const pin = (same: Spot[], nth: number) => {
+    // Of the plans at this address, the stamp shows the one that is on, or the first. `next` is the one after it.
+    const shown = Math.max(0, same.findIndex(each => each.ticket.id === (up ?? lit?.ticket.id))), spot = same[shown], next = same.length > 1 ? same[(shown + 1) % same.length].ticket : null;
     const { ticket } = spot, isLit = !up && lit?.ticket.id === ticket.id, faces = ticket.mine ? ticket.mine.members : ticket.known;
     const reward = ticket.stub.kind === 'none' ? null : ticket.stub.text, mins = view === standing ? walk(spot.at) : null;
     return <button className={`cs-pin ${isLit || up === ticket.id ? 'sel' : ''} ${up && up !== ticket.id ? 'dim' : ''} ${hot === ticket.id ? 'hov' : ''} ${ticket.action === 'checkin' ? 'now' : ''}`} style={{ '--lean': `${[-4, 3, -2, 4, -3][nth % 5]}deg` } as CSSProperties}
-      aria-label={`${ticket.title}, ${ticket.day} ${ticket.time}`} {...(beside ? { 'aria-pressed': isLit } : { 'aria-expanded': up === ticket.id })} onMouseEnter={() => onHover?.(ticket.id)} onMouseLeave={() => onHover?.(null)} onClick={() => { setLitId(ticket.id); onPick(picked === ticket.id ? null : ticket.id); }}>
-      <span className="cs-postage">{isLit && <svg className="cs-burst" viewBox="-55 -55 110 110" aria-hidden="true"><path d={BURST} /></svg>}
-        <span><svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[pictureOf(ticket)]}</svg><b>{ticket.time}</b><small>{ticket.day}</small></span></span>
+      aria-label={`${ticket.title}, ${ticket.day} ${ticket.time}${next ? `, ${same.length} here` : ''}`} {...(beside ? { 'aria-pressed': isLit } : { 'aria-expanded': up === ticket.id })} onMouseEnter={() => onHover?.(ticket.id)} onMouseLeave={() => onHover?.(null)} onClick={event => {
+        // "Also here" turns the stamp to the next plan at this address. Anywhere else on it picks the plan, or lets go of it.
+        if (next && (event.target as Element).closest('.also')) { setLitId(next.id); if (beside) onPick(next.id); return; }
+        setLitId(ticket.id); onPick(picked === ticket.id ? null : ticket.id); }}>
+      <span className="cs-postage">{isLit && <svg className="cs-burst" viewBox="-55 -55 110 110" aria-hidden="true"><path d={BURST} /></svg>}{next && <i className="cs-under" />}
+        <span><svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[pictureOf(ticket)]}</svg><b>{ticket.time}</b><small>{ticket.day}</small></span>{next && <i className="cs-n">{same.length}</i>}</span>
       {isLit && <Postmark town={here.name} time={ticket.time} day={ticket.day} />}
       {faces.length > 0 && <span className="cs-stack">{faces.slice(0, 3).map((face, n) => <FaceDot key={n} face={face} />)}</span>}
-      {isLit && <span className="cs-bub"><span className="main"><b>{ticket.title}</b><span>{ticket.place ?? ticket.map?.name}</span>{reward && <em>{reward}</em>}<span className="in">{ticket.stub.say}</span></span>
+      {isLit && <span className="cs-bub"><span className="main"><b>{ticket.title}</b><span>{ticket.place ?? ticket.map?.name}</span>{reward && <em>{reward}</em>}<span className="in">{ticket.stub.say}</span>{next && <span className="also">Also here: {next.title}, {next.time} ›</span>}</span>
         {mins !== null && <span className="stub"><b>{mins}</b><small>min<br />walk</small></span>}</span>}
     </button>;
   };
@@ -416,13 +427,17 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     <svg className="cs-near-defs" width={0} height={0} aria-hidden="true"><defs><path id="cs-arc-over" d="M-21 0a21 21 0 0 1 42 0" /><path id="cs-arc-under" d="M-22 0a22 22 0 0 0 44 0" /></defs>
       <filter id="cs-rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves={2} seed={7} /><feDisplacementMap in="SourceGraphic" scale={2.4} /></filter></svg>
     <div className="cs-near-map" ref={canvas} /><i className="cs-near-tooth" /><i className="cs-near-age" />
-    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2><small>Map © OpenStreetMap, OpenFreeMap</small></div>
+    <div className={`cs-near-band ${swap.length > 1 ? 'swaps' : ''}`} ref={band}><p><b>{kicker}</b> · {list.length} on{days.length > 1 ? ` ${day}` : ''} · <i>sheet {land.indexOf(here) + 1} of {land.length}</i></p><h2>{here.name}</h2>
+      {days.length > 1 && !up && <div className="cs-days" role="group" aria-label="Day on the map">{days.map(each => <button key={each} aria-pressed={each === day} onClick={() => { setDayPick(each); setLitId(null); if (beside) onPick(inView.find(spot => spot.ticket.day === each)!.ticket.id); }}>{each}<i>{inView.filter(spot => spot.ticket.day === each).length}</i></button>)}</div>}<small>Map © OpenStreetMap, OpenFreeMap</small></div>
     <Swap campuses={swap} />
     {shown && (shown.kind === 'go' && there
-      ? <button className="cs-way" ref={el => { way.current = el; if (el && map) place(map); }} aria-label={`Go to ${there.name}`} onClick={() => step(there.id)}>
+      // Where the section next door is a subway stop, the way on is that stop's platform sign (public/demo/mockups-nyc-stops.html, A).
+      ? there.stop ? <button className="cs-way sign" ref={el => { way.current = el; if (el && map) place(map); }} aria-label={`Go to ${there.name}`} onClick={() => step(there.id)}>
+          <span><b>{there.stop.name}</b>{`${there.name} · ${on[there.id]} on`}</span><Lines stop={there.stop} /><Arrow /></button>
+      : <button className="cs-way" ref={el => { way.current = el; if (el && map) place(map); }} aria-label={`Go to ${there.name}`} onClick={() => step(there.id)}>
           <span><b>{there.name}</b>{[there.id === standing ? (you ? 'Where you stand' : 'Where you started') : you ? `${walk(middle(there.ring))} min walk` : null, `${on[there.id]} on`].filter(Boolean).join(' · ')}</span><Arrow /></button>
-      : <div className="cs-way none" role="status" key={`${shown.id}|${shown.kind}`} ref={el => { way.current = el; if (el && map) place(map); }}>
-          <span><b>{there?.name ?? 'Coming soon'}</b>{shown.kind === 'far' ? 'Not open from here yet' : shown.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>{there && <Arrow />}</div>)}
+      : <div className={`cs-way none ${there?.stop ? 'sign' : ''}`} role="status" key={`${shown.id}|${shown.kind}`} ref={el => { way.current = el; if (el && map) place(map); }}>
+          <span><b>{there?.stop?.name ?? there?.name ?? 'Coming soon'}</b>{shown.kind === 'far' ? 'Not open from here yet' : shown.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>{there?.stop && <Lines stop={there.stop} />}{there && <Arrow />}</div>)}
     {!up && <>
       {/* The compass rose is the map's printed ornament, not a button: north is up. Under it, the map's own controls
           in one pill: find where you are, then in and out. The locate mark shows what the
@@ -437,7 +452,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     {(!beside || !list.length) && <div className={`cs-near-sheet ${up ? 'open' : lit ? 'dial' : ''}`} ref={sheet}>
       {up ? children : lit ? <Dial list={list} at={at} onTurn={to => setLitId(list[to].ticket.id)} onOpen={() => onPick(lit.ticket.id)} />
         : <p className="cs-near-none"><b>{asked ? `Nothing in ${here.name} for “${asked}”` : `Nothing on in ${here.name} yet`}</b>{asked ? 'Try another word, or push the edge of the map to look next door.' : 'Push the edge of the map to look next door.'}</p>}</div>}
-    {pins.map((each, nth) => { const spot = list.find(one => one.ticket.id === each.id); return spot ? createPortal(pin(spot, nth), each.el, each.id) : null; })}
+    {pins.map((each, nth) => createPortal(pin(each.same, nth), each.el, each.id))}
     {youEl && createPortal(<span className="cs-you">{me ? <FaceDot face={{ ...me, me: true }} /> : <i />}<b>YOU</b></span>, youEl)}
   </div>;
 }

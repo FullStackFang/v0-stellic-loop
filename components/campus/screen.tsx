@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
-import { checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
+import { changeCampusAction, checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import { Rings } from '@/components/LoopGlyphs';
 import { animal, CUSTOM, NAMES, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
@@ -203,7 +203,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   // Only an event at a place Loop knows has a spot on the map, and the line says how many do.
   const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
-  const bar = <CampusBar screen={screen} signInHref={signInHref} signOut={signOut}>
+  const bar = <CampusBar screen={screen} signInHref={signInHref} signOut={signOut} swap={swap}>
     {live && (live.usedAt ? <div className="cs-live used"><small>{live.giver}</small><b>{byId.get(live.listingId)?.status ?? 'Used'}</b></div>
       : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
   </CampusBar>;
@@ -274,7 +274,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
  * The top bar, one line. "This week" and the Ink page (app/c/ink) both draw this one, so it is the same on both: `on`
  * is which of the two it is on, and `children` is what a page puts before the avatar.
  */
-export function CampusBar({ screen, signInHref, signOut = null, on = 'week', children }: { screen: Screen; signInHref: string; signOut?: ReactNode; on?: 'week' | 'ink'; children?: ReactNode }) {
+export function CampusBar({ screen, signInHref, signOut = null, on = 'week', swap, children }: { screen: Screen; signInHref: string; signOut?: ReactNode; on?: 'week' | 'ink'; swap?: SwapCampus[]; children?: ReactNode }) {
   const { campus, viewer } = screen;
   return <header className="cs-nav">
     <Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
@@ -283,7 +283,7 @@ export function CampusBar({ screen, signInHref, signOut = null, on = 'week', chi
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={on === 'ink' ? 'page' : undefined}><InkMark /><span>Ink</span></Link></nav>
     <div className="cs-nav-end">
       {children}
-      {viewer ? <Account screen={screen} signOut={signOut} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}
+      {viewer ? <Account screen={screen} signOut={signOut} swap={swap} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}
     </div>
   </header>;
 }
@@ -296,10 +296,12 @@ function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; s
 }
 
 /** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". */
-function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
+function Account({ screen, signOut, swap = [] }: { screen: Screen; signOut: ReactNode; swap?: SwapCampus[] }) {
   const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [kit, setKit] = useState('');
   // The pick shows at once, and goes back if it could not be kept.
   const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [, save] = useTransition();
+  // Their own campus, for a school with more than one, and the move to another.
+  const home = swap.find(each => each.home), [moving, move] = useTransition(), [moveNote, setMoveNote] = useState<string | null>(null);
   const choose = (next: number) => { const before = face; setFace(next); setMoved(true); save(async () => { if (!(await faceAction(next)).ok) setFace(before); }); };
   // The animal they had made from a photo, how many more they may make, and whether the pane that makes one is open.
   const [own, setOwn] = useState(viewer.own), [owns, setOwns] = useState(viewer.owns), [left, setLeft] = useState(viewer.makesLeft), [asked, setAsked] = useState(viewer.asked), [making, setMaking] = useState(false);
@@ -335,6 +337,9 @@ function Account({ screen, signOut }: { screen: Screen; signOut: ReactNode }) {
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* The plan's one row. The picker has its own way to the Ink page, so the row steps aside for it. */}
       {!picking && <div className="cs-inkrow"><InkMark /><span><b>{asked ? 'You have Ink' : 'Loop Ink'}</b><small>{asked ? 'Every Ink animal is yours to pick.' : 'More animals, and your own pet drawn from a photo.'}</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>}
+      {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
+      {!picking && home && swap.filter(each => !each.home).map(each => <div className="cs-inkrow cs-camprow" key={each.slug}><span><b>Your campus is {home.title}</b><small>{moveNote ?? 'You can look at the other one any time from the map.'}</small></span>
+        <button className="cs-btn sm" disabled={moving} onClick={() => move(async () => { const done = await changeCampusAction(each.slug); if (done.ok) window.location.assign(`/c/${each.slug}`); else setMoveNote(done.message); })}>Change to {each.title}</button></div>)}
       {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
       {picking && making ? <OwnFace asked={asked} left={left} free={viewer.admin} current={owns.includes(own ?? '') ? own ?? '' : owns[owns.length - 1] ?? ''} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
       : picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Search animals" placeholder="Search" />
