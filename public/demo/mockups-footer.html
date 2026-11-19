@@ -1,0 +1,266 @@
+<!doctype html><html lang="en" data-kit="cornell"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Footer · the bar, and the crowd in a ticket</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
+/* Roles and school colours, as in app/c/campus.css. */
+:root { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --ink-2: oklch(35.4% 0.095 252); --action: oklch(47.6% 0.13 250); --action-hover: oklch(54% 0.14 250);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245); --on-ink-mute: oklch(82% 0.02 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --ease: cubic-bezier(.22, 1, .36, 1); --expo: cubic-bezier(.16, 1, .3, 1); }
+:root[data-kit="cornell"] { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --ink-2: oklch(34% 0.05 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27); }
+:root[data-kit="columbia"] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --ink-2: oklch(35% 0.08 255); --action: oklch(46% 0.14 255); --action-hover: oklch(52% 0.15 255); }
+:root[data-kit="cuny"] { --field: oklch(88% 0.13 88); --field-shadow: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --ink-2: oklch(34% 0.1 265); --action: oklch(38% 0.18 264); --action-hover: oklch(45% 0.19 264); }
+:root[data-kit="nyu"] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --ink-2: oklch(34% 0.1 305); --action: oklch(40% 0.2 305); --action-hover: oklch(46% 0.21 305); }
+[data-dot="loop"] { --dot: oklch(96.4% 0.19 117); } [data-dot="cornell"] { --dot: oklch(82% 0.12 38); } [data-dot="columbia"] { --dot: oklch(87% 0.075 235); } [data-dot="cuny"] { --dot: oklch(88% 0.13 88); } [data-dot="nyu"] { --dot: oklch(85% 0.09 305); }
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; padding: 26px 28px 80px; background: oklch(93% 0.006 60); color: var(--ink); font: 15px/1.45 Archivo, system-ui, sans-serif; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; } button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+/* ---------- the mockup's own chrome ---------- */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 10px; max-width: 1480px; margin: 0 auto 26px; }
+.top h1 { font-size: 17px; font-weight: 700; padding: 9px 16px; border-radius: 14px 14px 14px 4px; background: var(--ink); color: var(--paper); margin-right: 4px; }
+.say { padding: 8px 14px; border-radius: 99px; background: var(--paper); font-size: 13.5px; } .say b { font-weight: 700; }
+.frame { position: relative; max-width: 1480px; margin: 0 auto; }
+.page { position: relative; overflow: clip; border-radius: 22px 22px 22px 6px; background: var(--page); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--ink); }
+
+/* ---------- the one header (app/c/campus.css) ---------- */
+.nav { position: relative; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--field); border-bottom: 1.5px solid var(--ink); box-shadow: 0 5px 0 var(--field-shadow); }
+.wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding-right: 20px; }
+.wm svg { display: block; width: 44px; height: 44px; padding: 6px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); --lime: var(--action); }
+.links { display: flex; gap: 6px; min-width: 0; }
+.pl { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; white-space: nowrap; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); transition: translate .2s var(--ease), box-shadow .2s var(--ease); }
+.pl:not([aria-current]):hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.pl[aria-current] { background: var(--ink); color: var(--field); box-shadow: none; }
+.pl:has(i) { padding: 6px 12px 6px 6px; }
+.pl i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--paper); background: var(--action); }
+.pl.ink { gap: 7px; margin-left: 6px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .pl.ink svg { width: 18px; height: 18px; fill: var(--ink); }
+.nav-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.n { min-width: 20px; height: 20px; padding: 0 5px; display: grid; place-items: center; border-radius: 99px; font-size: 12px; font-weight: 740; background: var(--action); color: var(--paper); }
+.ava { position: relative; display: block; } .ava img { display: block; width: 38px; height: 38px; border-radius: 50%; object-fit: contain; background: color-mix(in oklch, var(--ink) 14%, var(--paper)); }
+.ava b { position: absolute; right: -5px; bottom: -4px; min-width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; font-size: 11.5px; font-weight: 740; color: var(--paper); background: var(--action); box-shadow: 0 0 0 2px var(--field); }
+
+/* a little of the page, so the footer has something to end */
+.body { padding: 26px 32px 56px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+.rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.tk { display: grid; grid-template-columns: 74px minmax(0, 1fr); border-radius: 22px 22px 22px 6px; background: var(--paper); box-shadow: 5px 5px 0 var(--field-shadow); overflow: hidden; }
+.tk > i { display: grid; place-content: center; text-align: center; background: var(--field); font-style: normal; font-size: 12.5px; font-weight: 600; line-height: 1.15; }
+.tk > i b { display: block; font-size: 23px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.04em; }
+.tk > div { padding: 13px 15px 13px; min-width: 0; } .tk h3 { font-size: 16.5px; font-weight: 680; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tk p { font-size: 13.5px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk span { display: flex; margin-top: 9px; } .tk span img { width: 30px; height: 30px; margin-right: -7px; border-radius: 50%; object-fit: contain; background: var(--stub); box-shadow: 0 0 0 2px var(--paper); }
+
+/* ---------- the footer: a ticket with everyone in it ---------- */
+/* A set of links is a strip with its name on a tab that overlaps it: never a bare heading. */
+.set { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 19px 12px 12px; border-radius: 16px 16px 16px 5px; background: var(--set, var(--stub)); }
+.set > h3, .stage > h3 { position: absolute; z-index: 3; left: 12px; top: -11px; font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.sets { display: flex; flex-wrap: wrap; gap: 26px 14px; }
+/* Colours: where a footer elsewhere has "Language". A dot per school; the one in use wears the ring. */
+.kit { width: 34px; height: 34px; border-radius: 50%; background: var(--dot); box-shadow: inset 0 0 0 1.5px var(--ink), 0 0 0 3px var(--set); transition: scale .2s var(--ease); } .kit:hover { scale: 1.12; }
+.kit[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--ink), 0 0 0 3px var(--set), 0 0 0 5px var(--ink); }
+.note { padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: var(--ink); color: var(--paper); }
+
+footer { padding: 0; }
+/* The foot of every page: the header turned over. One line: the ways around, then the colours. */
+.bar { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 13px 32px 12px; background: var(--field); border-top: 1.5px solid var(--ink); box-shadow: 0 -5px 0 var(--field-shadow); }
+.bar .wm { font-size: 21px; gap: 10px; padding-right: 14px; } .bar .wm svg { width: 36px; height: 36px; padding: 5px; box-shadow: 2px 2px 0 var(--ink); }
+.bar .end { margin-left: auto; display: flex; align-items: center; gap: 12px; } .bar .kit { width: 26px; height: 26px; }
+.bar .kits { display: flex; gap: 9px; padding: 5px 8px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); --set: var(--paper); }
+.bar .note { background: color-mix(in oklab, var(--ink) 12%, var(--field)); color: var(--ink); }
+/* The ticket goes where the hand takes it. Everything in it rides along. */
+.carry { position: relative; z-index: 3; margin: 0 32px 34px; transform-origin: 50% 100%; will-change: transform; }
+.stubtk { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 232px; border-radius: 26px 26px 26px 7px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--field-shadow); cursor: grab; touch-action: none; user-select: none; transition: box-shadow .25s var(--ease); }
+.held > .stubtk { cursor: grabbing; box-shadow: 0 0 0 1.5px var(--ink), 14px 16px 0 var(--field-shadow); }
+.face { padding: 26px 26px 0; }
+.stubtk .wm { font-size: 34px; gap: 15px; margin-bottom: 30px; width: max-content; } .stubtk .wm svg { width: 56px; height: 56px; padding: 8px; background: var(--field); }
+/* the tear: a dashed line with a bite out of each end, and the school's colour beyond it */
+.tear { position: relative; grid-column: 2; padding: 24px 22px 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; background: var(--field); border-radius: 0 26px 26px 0; border-left: 2px dashed var(--ink); --set: color-mix(in oklab, var(--field) 60%, var(--paper)); }
+.tear::before, .tear::after { content: ''; position: absolute; left: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tear::before { top: -12px; clip-path: inset(50% 0 0 0); } .tear::after { bottom: -12px; clip-path: inset(0 0 50% 0); }
+.admit { rotate: -4deg; padding: 6px 13px; white-space: nowrap; border-radius: 12px 12px 12px 4px; background: var(--ink); color: var(--field); font-size: 18px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.035em; box-shadow: 3px 3px 0 var(--action); }
+.code { align-self: stretch; height: 46px; margin-top: auto; background: repeating-linear-gradient(90deg, var(--ink) 0 3px, #0000 3px 5px, var(--ink) 5px 6px, #0000 6px 10px, var(--ink) 10px 14px, #0000 14px 16px, var(--ink) 16px 17px, #0000 17px 21px); }
+
+/* The room in the ticket where everyone stands. Its floor is the darker band; nothing clips, so a thrown one can leave the room and come back. */
+.stage { position: relative; grid-column: 1; height: 132px; margin: 32px 24px 22px; border-radius: 16px 16px 16px 5px; background: var(--stub); box-shadow: inset 0 -9px 0 color-mix(in oklab, var(--field) 62%, var(--paper)); }
+.pet { position: absolute; left: 0; bottom: 7px; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 88%; cursor: grab; touch-action: none; will-change: transform; -webkit-user-drag: none; }
+.pet.up { cursor: grabbing; z-index: 5; }
+/* the shadow each one stands on: it shrinks as they leave the floor */
+.shade { position: absolute; left: 0; bottom: 5px; width: 84px; height: 9px; border-radius: 50%; background: color-mix(in oklab, var(--ink) 20%, transparent); pointer-events: none; will-change: transform, opacity; }
+.stage .note { position: absolute; z-index: 3; right: 12px; top: -13px; }
+
+@media (max-width: 900px) { body { padding-inline: 12px; } .rail { grid-template-columns: repeat(2, minmax(0, 1fr)); } .links .pl:not([aria-current], .ink) { display: none; } .stubtk { grid-template-columns: minmax(0, 1fr); } .tear { display: none; grid-column: 1; border-left: 0; border-top: 2px dashed var(--ink); border-radius: 0 0 26px 7px; flex-direction: row; flex-wrap: wrap; align-items: center; } .tear::before, .tear::after, .code { display: none; } .stage .note { display: none; } }
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <mask id="m0" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask>
+  <mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask>
+  <mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="black" stroke-width="15.3"/></mask>
+  <symbol id="rings" viewBox="0 0 100 100" fill="none"><g mask="url(#m0)"><path d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="var(--lime, var(--action))" stroke-width="9"/></g><g mask="url(#m1)"><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/></g><g mask="url(#m2)"><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0" stroke="currentColor" stroke-width="9"/></g></symbol>
+  <symbol id="blot" viewBox="-68 -68 136 136"><path fill-rule="evenodd" d="M47.8 0L47.5 3.1L46.3 6.1L45.1 9L44.7 12L43.4 14.7L41.3 17.1L39.5 19.5L37.6 21.7L35.6 23.8L34.8 26.7L34.3 30.1L32.9 32.9L31.1 35.5L29.2 38L26.4 39.6L23.3 40.4L20.6 41.8L17.8 42.9L14.7 43.3L11.8 44L8.8 44.4L5.7 43.5L2.8 42.6L0 42.8L-2.8 43.5L-5.9 44.6L-9.2 46.4L-12.7 47.3L-15.9 46.7L-19.1 46.1L-22.2 45.1L-24.9 43.1L-27.5 41.2L-30.3 39.4L-32.1 36.6L-33.3 33.3L-34.4 30.1L-34.6 26.6L-34.5 23L-35.5 20.5L-37.3 18.4L-38.7 16L-40.2 13.7L-41.8 11.2L-42.2 8.4L-42.5 5.6L-43.6 2.9L-44.2 0L-44.2 -2.9L-44.5 -5.9L-43.9 -8.7L-42.1 -11.3L-40.3 -13.7L-39 -16.2L-37.7 -18.6L-37.3 -21.5L-37.8 -25.2L-37.3 -28.6L-36 -31.6L-34.8 -34.8L-33.2 -37.9L-31.1 -40.5L-29.1 -43.6L-27 -46.7L-24 -48.6L-20.7 -50L-17.4 -51.2L-13.7 -51.3L-10.1 -51L-6.9 -52.2L-3.6 -54.3L0 -56.4L3.8 -57.8L7.5 -56.8L10.5 -52.7L12.8 -47.8L15 -44L17 -41L19.1 -38.8L21.5 -37.3L23.4 -35.1L24.7 -32.2L26.3 -30L28 -28L29.4 -25.8L31.5 -24.1L34.1 -22.8L36.1 -20.9L38.2 -18.8L40.8 -16.9L42.9 -14.6L44.4 -11.9L46.5 -9.2L48 -6.3L48 -3.1ZM0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></symbol>
+</defs></svg>
+
+<div class="top"><h1>Footer · the bar, and the crowd in a ticket</h1>
+  <span class="say"><b>Pick one up</b> and throw it</span><span class="say"><b>Poke one</b> for a flip</span><span class="say"><b>Tip the ticket</b>: drag it and they slide</span><span class="say"><b>Point at a link</b> and they look</span><span class="say"><b>Change the colours</b> and they cheer</span></div>
+
+<section class="frame"><div class="page">
+  <header class="nav"><a class="wm" href="#"><svg><use href="#rings"/></svg>Loop</a>
+    <nav class="links"><a class="pl" href="#" aria-current="page">This week</a><a class="pl" href="#"><i>E</i>Extreme Cheapskates</a><a class="pl" href="#"><i>T</i>Team 1</a><a class="pl" href="#">All groups</a><a class="pl ink" href="#"><svg><use href="#blot"/></svg>Ink</a></nav>
+    <div class="nav-end"><a class="pl" href="#">Groups<span class="n">4</span></a><a class="pl" href="#">On you</a><span class="ava"><img src="/animals/41.png" alt=""><b>1</b></span></div></header>
+  <div class="body"><div class="tabs"><a class="pl" href="#" aria-current="page">Best for you</a><a class="pl" href="#">CampusGroups</a><a class="pl" href="#">Near you</a></div>
+    <div class="rail">
+      <article class="tk"><i>Thu<b>7:30</b>pm</i><div><h3>Trivia at the Big Red Barn</h3><p>Big Red Barn · 6 min walk</p><span><img src="/animals/03.png" alt=""><img src="/animals/17.png" alt=""><img src="/animals/22.png" alt=""><img src="/animals/09.png" alt=""></span></div></article>
+      <article class="tk"><i>Fri<b>5:00</b>pm</i><div><h3>Sunset run, Beebe Lake loop</h3><p>Beebe Lake · 11 min walk</p><span><img src="/animals/12.png" alt=""><img src="/animals/30.png" alt=""><img src="/animals/05.png" alt=""></span></div></article>
+      <article class="tk"><i>Sat<b>11:00</b>am</i><div><h3>Farmers market, then dumplings</h3><p>Ithaca Farmers Market · bus 13</p><span><img src="/animals/27.png" alt=""><img src="/animals/08.png" alt=""><img src="/animals/36.png" alt=""><img src="/animals/14.png" alt=""><img src="/animals/19.png" alt=""></span></div></article>
+      <article class="tk"><i>Sun<b>2:00</b>pm</i><div><h3>Board games in the lounge</h3><p>Donlon 2F lounge · here</p><span><img src="/animals/33.png" alt=""><img src="/animals/02.png" alt=""></span></div></article>
+    </div></div>
+
+  <footer>
+    <div class="carry"><div class="stubtk">
+      <div class="stage"><h3>Going this week</h3><span class="note">Pick one up</span></div>
+      <aside class="tear"><span class="admit">Admit everyone</span><div class="code" aria-hidden="true"></div></aside>
+    </div></div>
+    <div class="bar"><a class="wm" href="#"><svg><use href="#rings"/></svg>Loop</a>
+      <a class="pl" href="#">This week</a><a class="pl" href="#">All groups</a><a class="pl" href="#">Start a group</a><a class="pl" href="#">Assistants</a><a class="pl" href="#">Reach</a><a class="pl" href="#">Terms</a><a class="pl" href="#">Privacy</a>
+      <div class="end"><span class="note">© 2026 Loop</span><div class="kits" role="group" aria-label="Colours"><button class="kit" data-dot="loop" aria-label="Loop colours"></button><button class="kit" data-dot="cornell" aria-label="Cornell colours"></button><button class="kit" data-dot="columbia" aria-label="Columbia colours"></button><button class="kit" data-dot="nyu" aria-label="NYU colours"></button><button class="kit" data-dot="cuny" aria-label="CUNY colours"></button></div></div></div>
+  </footer>
+</div></section>
+
+<script>
+const $ = (sel, root = document) => [...root.querySelectorAll(sel)], pad = n => String(n).padStart(2, '0');
+const clamp = (n, low, high) => Math.max(low, Math.min(high, n)), near = (d, reach) => Math.exp(-(d * d) / (2 * reach * reach));
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+$('a[href="#"]').forEach(link => link.addEventListener('click', event => event.preventDefault()));
+
+const carry = $('.carry')[0], paper = $('.stubtk')[0], stage = $('.stage')[0];
+const SIZE = 84, GAP = 60, ROOF = 330, FALL = 2100;
+const FACES = [10, 26, 3, 37, 16, 41, 20, 32, 1, 28, 13, 39, 24];
+
+/* Everyone in the ticket. x is along the floor, y is height above it; `lift` and `r` are the small moves on top. */
+let wide = stage.clientWidth, count = clamp(Math.floor((wide - 40) / 78), 4, FACES.length);
+const slot = rank => 20 + rank * (wide - 40 - SIZE) / (count - 1);
+const crowd = FACES.slice(0, count).map((face, at) => {
+  stage.insertAdjacentHTML('beforeend', `<i class="shade"></i><img class="pet" src="/animals/${pad(face)}.png" alt="" draggable="false">`);
+  const el = stage.lastElementChild;
+  return { el, shade: el.previousElementSibling, x: slot(at), vx: 0, y: 0, vy: 0, r: 0, vr: 0, lift: 0, vl: 0, held: false, wait: 0 };
+});
+const draw = one => {
+  one.el.style.transform = `translate(${one.x.toFixed(1)}px, ${(-one.y - one.lift).toFixed(1)}px) rotate(${one.r.toFixed(1)}deg)`;
+  const high = clamp((one.y + one.lift) / 220, 0, 1);
+  one.shade.style.transform = `translateX(${one.x.toFixed(1)}px) scale(${(.74 - high * .4).toFixed(2)})`; one.shade.style.opacity = (1 - high * .75).toFixed(2);
+};
+crowd.forEach(draw);
+addEventListener('resize', () => { wide = stage.clientWidth; });
+
+/* The ticket: a spring to where the hand has it. */
+const tk = { x: 0, y: 0, r: 0, vx: 0, vy: 0, vr: 0, tx: 0, ty: 0, tr: 0, held: null, was: 0, wasV: 0 };
+let pointer = null, pill = null, grabbed = null, seen = false, running = false, last = 0;
+/** Where on the floor a point of the window is. */
+const onFloor = (clientX, clientY) => { const box = stage.getBoundingClientRect(); return { x: clientX - box.left, y: box.bottom - 7 - clientY }; };
+
+function tick(now) {
+  const dt = Math.min(.032, (now - last) / 1000) || .016; last = now;
+  // the ticket
+  const stiff = tk.held ? 420 : 120, damp = tk.held ? 30 : 9;
+  for (const [at, v, to] of [['x', 'vx', 'tx'], ['y', 'vy', 'ty'], ['r', 'vr', 'tr']]) { tk[v] += ((tk[to] - tk[at]) * stiff - tk[v] * damp) * dt; tk[at] += tk[v] * dt; }
+  carry.style.transform = `translate(${tk.x.toFixed(1)}px, ${tk.y.toFixed(1)}px) rotate(${tk.r.toFixed(2)}deg)`;
+  // What the ticket does to those in it: a tipped floor is a slope, and a ticket that is snatched away leaves them behind for a moment.
+  const slope = 2900 * Math.sin(tk.r * Math.PI / 180), jolt = clamp((tk.vx - tk.wasV) / dt, -7000, 7000) * .8; tk.wasV = tk.vx;
+  const calm = !tk.held && Math.abs(tk.r) < 1.1;
+  // Each one's own place is by where they stand now, so one dropped in a new spot keeps it and the rest move along.
+  const order = crowd.filter(one => !one.held).sort((a, b) => a.x - b.x), spare = count - order.length;
+  const look = grabbed ? grabbed.x + SIZE / 2 : pill ?? pointer?.x ?? null;
+
+  for (const one of crowd) {
+    if (one.held) continue;
+    const air = one.y > 0, home = slot(order.indexOf(one) + (grabbed && grabbed.x < one.x ? spare : 0));
+    one.vx += (slope - jolt + (calm && !air ? (home - one.x) * 14 : 0) - one.vx * (air ? .5 : 3.4)) * dt; one.x += one.vx * dt;
+    if (air || one.vy > 0) {
+      one.vy -= FALL * dt; one.y += one.vy * dt;
+      if (one.y > ROOF) { one.y = ROOF; one.vy = -Math.abs(one.vy) * .4; }
+      if (one.y <= 0) { one.y = 0; one.vy = one.vy < -300 ? -one.vy * .36 : 0; one.vr += one.vx * .5; }
+    }
+    if (one.x < 4) { one.x = 4; one.vx = Math.abs(one.vx) * .45; } else if (one.x > wide - SIZE - 4) { one.x = wide - SIZE - 4; one.vx = -Math.abs(one.vx) * .45; }
+  }
+  // Two on the floor cannot share a spot: they part, pass the push along, and a hard bump makes both hop.
+  const floor = crowd.filter(one => !one.held && one.y < 40).sort((a, b) => a.x - b.x);
+  for (let pass = 0; pass < 2; pass++) for (let at = 0; at < floor.length - 1; at++) {
+    const a = floor[at], b = floor[at + 1], over = GAP - (b.x - a.x);
+    if (over <= 0) continue;
+    a.x -= over / 2; b.x += over / 2;
+    const hit = a.vx - b.vx;
+    if (hit > 0) { const mean = (a.vx + b.vx) / 2; a.vx = mean - hit * .2; b.vx = mean + hit * .2; if (hit > 260 && a.y === 0 && b.y === 0) { a.vy = b.vy = Math.min(hit * .45, 330); } }
+  }
+  for (const one of crowd) {
+    const dx = look === null ? 0 : look - (one.x + SIZE / 2), close = look === null ? 0 : near(dx, 110);
+    // They turn to what they are looking at, lean into a run, and try to stay upright on a tipped ticket.
+    const turn = one.held ? clamp(-one.vx * .045, -38, 38) : clamp(dx / 380, -1, 1) * 11 * (1 - close * .6) + clamp(one.vx * .04, -18, 18) - tk.r * .7;
+    one.vr += ((turn - one.r) * 150 - one.vr * 13) * dt; one.r += one.vr * dt;
+    const tiptoe = one.held || one.y > 0 || pill !== null || grabbed ? 0 : 15 * close * (pointer ? 1 : 0);
+    one.vl += ((tiptoe - one.lift) * 190 - one.vl * 15) * dt; one.lift += one.vl * dt;
+    draw(one);
+  }
+  if (seen) requestAnimationFrame(tick); else running = false;
+}
+const wake = () => { if (!running && !still) { running = true; last = performance.now(); requestAnimationFrame(tick); } };
+
+// They are dropped into the ticket the first time it comes into view, and the scene rests while it is out of view.
+let arrived = false;
+new IntersectionObserver(([entry]) => {
+  seen = entry.isIntersecting;
+  if (seen && !arrived && !still) { arrived = true; crowd.forEach((one, at) => { one.y = 300 + at * 34 + (at % 3) * 60; one.vy = -200; one.r = (at % 2 ? 1 : -1) * 40; }); }
+  if (seen) wake();
+}, { threshold: .25 }).observe(carry);
+
+/* Looking: at the pointer, or at the link it is on. The one nearest a link hops, as if to say "that one". */
+carry.addEventListener('pointermove', event => { pointer = onFloor(event.clientX, event.clientY); if (!tk.held) { const box = carry.getBoundingClientRect(); tk.tr = ((event.clientX - box.left) / box.width - .5) * 1.2; } });
+carry.addEventListener('pointerleave', () => { pointer = null; if (!tk.held) tk.tr = 0; });
+const hop = (one, speed) => { if (!one.held && one.y === 0) one.vy = speed; };
+const nearest = x => crowd.filter(one => !one.held).reduce((best, one) => Math.abs(one.x + SIZE / 2 - x) < Math.abs(best.x + SIZE / 2 - x) ? one : best);
+$('footer .pl, footer .kit').forEach(link => {
+  link.addEventListener('pointerenter', () => { const box = link.getBoundingClientRect(); pill = clamp(onFloor(box.left + box.width / 2, 0).x, 0, wide); hop(nearest(pill), 430); });
+  link.addEventListener('pointerleave', () => { pill = null; });
+});
+
+/* Colours: the page changes, and they cheer from one end to the other. */
+const setKit = kit => { document.documentElement.dataset.kit = kit; $('.kit').forEach(dot => dot.setAttribute('aria-pressed', dot.dataset.dot === kit)); };
+$('.kit').forEach(dot => dot.addEventListener('click', () => { setKit(dot.dataset.dot); [...crowd].sort((a, b) => b.x - a.x).forEach((one, at) => setTimeout(() => { hop(one, 520); one.r -= 360; }, at * 55)); }));
+setKit('cornell');
+
+/* Picking one up. It hangs from the hand and swings; let go and it flies with the throw. A press with no pull is a poke: a flip, and those beside it hop. */
+crowd.forEach(one => one.el.addEventListener('pointerdown', event => {
+  if (still) return;
+  event.stopPropagation(); event.preventDefault(); one.el.setPointerCapture(event.pointerId);
+  const from = onFloor(event.clientX, event.clientY), grip = { x: from.x - one.x, y: from.y - one.y }; let far = 0, when = performance.now();
+  const move = e => {
+    const at = onFloor(e.clientX, e.clientY), now = performance.now(), dt = Math.max(.008, (now - when) / 1000), x = at.x - grip.x, y = Math.max(0, at.y - grip.y); when = now;
+    far = Math.max(far, Math.hypot(at.x - from.x, at.y - from.y));
+    if (far > 6 && !one.held) { one.held = true; grabbed = one; one.el.classList.add('up'); }
+    if (!one.held) return;
+    one.vx = one.vx * .55 + (x - one.x) / dt * .45; one.vy = one.vy * .55 + (y - one.y) / dt * .45; one.x = x; one.y = y;
+  };
+  const up = () => {
+    one.el.removeEventListener('pointermove', move); one.el.removeEventListener('pointerup', up); one.el.removeEventListener('pointercancel', up);
+    if (one.held) { one.held = false; grabbed = null; one.el.classList.remove('up'); one.vx = clamp(one.vx, -2200, 2200); one.vy = clamp(one.vy, -1600, 1900); if (one.y === 0 && one.vy <= 0) one.vy = 0; return; }
+    hop(one, 640); one.r += one.x > wide / 2 ? 360 : -360;
+    crowd.forEach(other => { const away = Math.abs(other.x - one.x); if (other !== one && away < 300) setTimeout(() => hop(other, 420 - away), away * 1.1); });
+  };
+  one.el.addEventListener('pointermove', move); one.el.addEventListener('pointerup', up); one.el.addEventListener('pointercancel', up);
+}));
+
+/* Picking the ticket up. Tip it and they slide to the low end and pile up; let go and it swings back, they jump, and then they find their places. */
+paper.addEventListener('pointerdown', event => {
+  if (still || event.target.closest('a, button, .pet')) return;
+  tk.held = { x: event.clientX, y: event.clientY }; paper.setPointerCapture(event.pointerId); carry.classList.add('held');
+});
+paper.addEventListener('pointermove', event => {
+  if (!tk.held) return;
+  const dx = event.clientX - tk.held.x, dy = event.clientY - tk.held.y;
+  tk.tx = dx * .7; tk.ty = dy * .55; tk.tr = clamp(dx * .022 + dy * (tk.held.x > innerWidth / 2 ? .03 : -.03), -9, 9);
+});
+const drop = () => { if (!tk.held) return; tk.held = null; carry.classList.remove('held'); tk.tx = tk.ty = tk.tr = 0; crowd.forEach((one, at) => hop(one, 300 + 140 * Math.sin(at * 1.7))); };
+paper.addEventListener('pointerup', drop); paper.addEventListener('pointercancel', drop);
+
+// Left alone, one of them gets restless now and then.
+setInterval(() => { if (seen && !pointer && !tk.held && !grabbed) hop(crowd[Math.floor(Math.random() * crowd.length)], 330); }, 2600);
+</script>
+</body></html>

@@ -20,17 +20,21 @@ const paper = '#fdfefb', mute = '#5d6570';
  */
 export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean; kit?: string; onSpot?: (slug: string | null) => void }) {
   const [slug, setSlug] = useState(''), [seen, setSeen] = useState(''), card = useRef<HTMLDivElement>(null), last = useRef('');
+  // Whether the sign-in form has a LinkedIn button: it does once LinkedIn is switched on at the sign-in service.
+  const [linkedin, setLinkedin] = useState(false);
   const school = schools.find(each => each.slug === slug);
   const names = schools.map(each => each.name).join(', ').replace(/, ([^,]*)$/, ' or $1');
   // The email field belongs to the sign-in form. It is read as it is typed in, and looked at again now and then,
   // because a browser or the form itself can fill it in without a keystroke.
   const read = () => {
     const field = card.current?.querySelector<HTMLInputElement>('input[name=identifier], input[type=email]'), email = field?.value ?? '';
+    const has = !!card.current?.querySelector('button[class*="linkedin"]');
+    if (has !== linkedin) { setLinkedin(has); last.current = '\0'; }
     if (email === last.current) return;
     last.current = email;
     const domain = (email.split('@')[1] ?? '').trim().toLowerCase(), hit = schoolOfEmail(schools, email);
     setSlug(hit?.slug ?? '');
-    setSeen(hit ? `${domain} is ${hit.name}.` : domain.includes('.') ? `Not an email at ${names}. You can still sign in with it.` : '');
+    setSeen(hit ? `${domain} is ${hit.name}.` : domain.includes('.') ? (has ? 'Not a school email. Continue with LinkedIn, and we check your school.' : `Not an email at ${names}. You can still sign in with it.`) : '');
     if (onSpot) onSpot(hit?.slug ?? null); else showKit(hit?.slug ?? pickedKit() ?? 'loop');
   };
   useEffect(() => { const again = setInterval(read, 500); return () => clearInterval(again); });
@@ -54,7 +58,7 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
       {configured ? (routing === 'path' ? <SignIn routing="path" path="/sign-in" {...shared} /> : <SignIn routing="hash" {...shared} />)
         : <p role="status">Sign-in is not configured for this deployment.</p>}
       <p className="seen" aria-live="polite">{seen}</p>
-      <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>
+      <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : linkedin ? 'A school email opens your campus straight away. No school email? Continue with LinkedIn, and we check your school.' : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>
     </div>
   </div>;
 }

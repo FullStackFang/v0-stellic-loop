@@ -44,16 +44,20 @@ The system SHALL give a picture without the Loop mark only to a person who has I
 - **WHEN** a person without Ink+ asks the server for a picture without the mark
 - **THEN** it is refused
 
-### Requirement: Only a picture that is large enough
-The system SHALL offer saving only for a picture kept large enough to save sharp, and SHALL keep the large drawing of every animal made from this change on. For a picture that has none, the pane SHALL say so and offer the way to get one.
+### Requirement: Every animal can be saved, from the largest picture Loop has
+The system SHALL keep the large drawing of every animal made from this change on, and SHALL save a picture from its large drawing when there is one. A picture Loop has only small (an animal shipped with the app, or a pet made before this change) SHALL still be saved, made larger. A person who wears their own photo has no animal to save, and the pane SHALL say so.
 
 #### Scenario: A pet made after this change
-- **WHEN** a person has a pet drawn and opens "Save your picture"
-- **THEN** the three shapes are offered
+- **WHEN** a person has a pet drawn and saves it
+- **THEN** the file is made from the large drawing
 
-#### Scenario: A pet made before
-- **WHEN** a person whose pet was made before this change opens "Save your picture"
-- **THEN** saving is not offered, and "Redraw your pet" is
+#### Scenario: An animal Loop has only small
+- **WHEN** a person wearing one of the animals shipped with the app saves their picture
+- **THEN** they receive the file, with the animal made larger
+
+#### Scenario: Wearing their own photo
+- **WHEN** a person whose picture is the photo of their sign-in account opens "Save your picture"
+- **THEN** no file is offered, and the pane says to pick an animal
 
 ### Requirement: A group's picture
 The system SHALL let any member of a group save the group's drawn picture in the same three shapes, under the same rule for the mark, with the group's name where a person's name would be.

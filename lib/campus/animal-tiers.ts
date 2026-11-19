@@ -2,6 +2,7 @@ import 'server-only';
 import { z } from 'zod';
 import type { Q } from '../db';
 import { animal, ANIMALS, customFace, MASCOT, PREMIUM } from './animals';
+import { addedSchools } from './linkedin';
 import { schoolOf } from './schools';
 import type { Tile } from './view';
 
@@ -32,15 +33,20 @@ export async function schoolOfPerson(q: Q, personId: string): Promise<string | n
   const slug = (await q.query<{ slug: string }>('select c.slug from campus_person p join campus c on c.id=p.campus_id where p.person_id=$1', [personId])).rows[0]?.slug;
   return slug ? schoolOf(slug) : null;
 }
+/** Every school a person has: the one they are at, then the ones their LinkedIn profile unlocked (lib/campus/linkedin.ts). */
+export async function schoolsOfPerson(q: Q, personId: string): Promise<string[]> {
+  const [at, { added }] = [await schoolOfPerson(q, personId), await addedSchools(q, personId)];
+  return [...new Set([...(at ? [at] : []), ...added])];
+}
 
 /**
- * What the picker offers: the core animals, the premium ones, and the person's school's own. A made animal is named by when it was made.
- * A school's own animal is offered to people of that `school` alone; `all` is for the admin, who is offered every one.
+ * What the picker offers: the core animals, the premium ones, and the person's schools' own. A made animal is named by when it was made.
+ * A school's own animal is offered to people who have that school among their `schools` alone; `all` is for the admin, who is offered every one.
  */
-export async function picks(q: Q, school: string | null | 'all'): Promise<{ core: Tile[]; premium: Tile[]; school: Tile[] }> {
+export async function picks(q: Q, schools: readonly string[] | 'all'): Promise<{ core: Tile[]; premium: Tile[]; school: Tile[] }> {
   const tiers = await builtTiers(q), made = await madeRows(q);
   const of = (tier: 'core' | 'premium' | 'school'): Tile[] => [
-    ...tiers.flatMap((each, face) => each === tier && (school === 'all' || !MASCOT[face] || MASCOT[face] === school) ? [{ face, src: animal(face), name: builtName(face) }] : []),
+    ...tiers.flatMap((each, face) => each === tier && (schools === 'all' || !MASCOT[face] || schools.includes(MASCOT[face])) ? [{ face, src: animal(face), name: builtName(face) }] : []),
     ...made.flatMap((each, at) => each.tier === tier ? [{ face: null, src: customFace(each.token), name: `Made animal ${at + 1}` }] : [])];
   return { core: of('core'), premium: of('premium'), school: of('school') };
 }

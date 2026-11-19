@@ -6,13 +6,15 @@ import type { Principal } from '../emba/access';
 import { getSignedInPrincipal } from '../emba/portal-session';
 import { isAdmin } from './admin';
 import { findCampus, listCampuses, type Campus } from './listings';
+import { addedSchools } from './linkedin';
 import { campusOf } from './people';
 import { AT_COOKIE, DEFAULT_CAMPUS, schoolOf } from './schools';
 import type { Point } from './sections';
 
 /**
  * `kit` is whose colours they see unless they pick others: their school's, or Loop's own for an email at no school.
- * `visits` is the other campuses of their school, by id: places they may look at and join things without moving there.
+ * `visits` is the other campuses of their school, and the campuses of the schools their LinkedIn profile unlocked, by id:
+ * places they may look at and join things without moving there.
  */
 export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null; kit: string; visits: string[] };
 
@@ -44,13 +46,14 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
   const principal = await getSignedInPrincipal().catch(() => null);
   if (!principal) return null;
   const school = await campusOf(db(), principal, await seemsAt());
-  const visits = school ? (await listCampuses(db())).filter(each => each.id !== school.id && schoolOf(each.slug) === schoolOf(school.slug)).map(each => each.id) : [];
+  const theirs = school ? [schoolOf(school.slug), ...(await addedSchools(db(), principal.personId)).added] : [];
+  const visits = school ? (await listCampuses(db())).filter(each => each.id !== school.id && theirs.includes(schoolOf(each.slug))).map(each => each.id) : [];
   const admin = isAdmin(principal);
   // Loop is for people at a school: an email at none has no campus. The admin, who may open any, starts at the default one.
   return { principal, personId: principal.personId, admin, campus: school ?? (admin ? await findCampus(db(), DEFAULT_CAMPUS) : null), kit: school ? schoolOf(school.slug) : 'loop', visits };
 });
 
-/** Whether this viewer may use a campus's screen: it is their own, or another campus of their school, or they are the admin, who may open any. */
+/** Whether this viewer may use a campus's screen: it is their own, or another campus of a school they have, or they are the admin, who may open any. */
 export const mayUse = (viewer: CampusViewer, campus: { id: string }) => viewer.admin || viewer.campus?.id === campus.id || viewer.visits.includes(campus.id);
 
 /**

@@ -1,0 +1,23 @@
+/* "Save your picture" (components/campus/save-face.tsx), on the dark plate of Loop Ink (.cs-prem in campus.css). */
+/* The pane is as tall as what is in it: nothing scrolls inside the card. */
+.cs .cs-lvl-body.cs-save { max-height: none; overflow: visible; }
+.cs-save-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; }
+.cs .cs-save-tabs button, .cs .cs-save-marks button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 36px; border-radius: 99px; font-size: 14px; font-weight: 600; color: var(--cs-on-ink); box-shadow: inset 0 0 0 1.5px var(--cs-on-ink-mute); transition: background-color .15s; }
+.cs .cs-save-tabs button:hover, .cs .cs-save-marks button:hover { background: color-mix(in oklch, var(--cs-on-ink) 10%, transparent); }
+.cs .cs-save-tabs button[aria-pressed=true], .cs .cs-save-marks button[aria-pressed=true] { background: var(--cs-field); color: var(--cs-ink); box-shadow: none; }
+.cs-save-view { display: grid; place-items: center; height: 232px; margin-top: 14px; }
+.cs-save-view img { display: block; height: 232px; width: auto; max-width: 100%; border-radius: 14px; box-shadow: 0 0 0 1.5px color-mix(in oklch, var(--cs-on-ink) 30%, transparent); animation: cs-save-in .2s ease-out; }
+.cs-save-view img.sticker { border-radius: 0; box-shadow: none; }
+@keyframes cs-save-in { from { opacity: .4; } }
+.cs-save-inks { display: flex; justify-content: center; gap: 10px; height: 34px; margin-top: 12px; }
+.cs .cs-save-inks button { width: 34px; height: 34px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-on-ink) 45%, transparent); transition: transform .15s var(--cs-ease); }
+.cs .cs-save-inks button:hover { transform: scale(1.08); }
+.cs .cs-save-inks button[aria-pressed=true] { box-shadow: 0 0 0 2.5px var(--cs-ink), 0 0 0 5px var(--cs-field); }
+.cs-save-marks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 12px; }
+.cs-save-marks b { padding: 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 700; background: var(--cs-field); color: var(--cs-ink); }
+.cs-save-marks button[aria-pressed=true] b { background: var(--cs-ink); color: var(--cs-field); }
+.cs .cs-save .cs-prem-stub > .cs-btn svg { width: 17px; height: 17px; }
+.cs-save-foot { height: 22px; }
+/* The row that opens the pane, in the account card. */
+.cs-inkrow.cs-saverow > svg { flex: none; width: 22px; height: 22px; }
+@media (prefers-reduced-motion: reduce) { .cs-save-view img { animation: none; } }

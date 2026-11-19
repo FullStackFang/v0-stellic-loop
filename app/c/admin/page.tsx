@@ -1,27 +1,28 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Rings } from '@/components/LoopGlyphs';
 import { db } from '@/lib/db';
 import { customFace } from '@/lib/campus/animals';
 import { catalogue } from '@/lib/campus/animal-tiers';
 import { premiumAsks } from '@/lib/campus/custom-face';
 import { LEVELS } from '@/lib/campus/levels';
+import { linkedinPeople } from '@/lib/campus/linkedin';
 import { listCampuses } from '@/lib/campus/listings';
 import { adminListings, campusFeeds } from '@/lib/campus/manage';
 import { campusPlaces } from '@/lib/campus/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
+import { siteBar } from '../site-bar';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, addFeedAction, deletePictureAction, joinTagAction, setTierAction, readFeedAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setTierAction, readFeedAction, removeLinkedinAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 const RULES = { outings: 'any outings', word: 'outings on events with a word', weeks: 'the same group at the giver’s events, weeks in a row' } as const;
 /** The sections, down the left. The page shows one at a time. */
-const TABS = { events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', campus: 'Campus' } as const;
+const TABS = { events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
 type Tab = keyof typeof TABS;
 /** Where an animal stands. One a person had made, and nobody else may pick, is `own`: it is listed with the ones that are off. */
 const TIER = { core: 'Core', premium: 'Premium', school: 'School', off: 'Off', own: 'Maker only' } as const;
@@ -38,13 +39,14 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   if (!campus) notFound();
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
-  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id)]);
+  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db())]);
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const at = (to: Tab, school = campus.slug) => `/c/admin?campus=${school}&tab=${to}`;
   /** What every form carries: the campus it acts on, and the section to come back to. */
   const keep = <><input type="hidden" name="campus" value={campus.slug} /><input type="hidden" name="tab" value={tab} /></>;
+  const waiting = linked.filter(each => each.waiting).length;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
-  const counts: Record<Tab, number> = { events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, campus: campuses.length };
+  const counts: Record<Tab, number> = { events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
   const top = (beside?: ReactNode) => <div className="cs-adm-top"><h1>{TABS[tab]}</h1>{beside}</div>;
 
@@ -156,6 +158,18 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     </section>;
   }
 
+  /** Everyone who unlocked schools with a LinkedIn profile, across every campus: the profile to look at, and a way to take it back. */
+  function linkedin() {
+    const named = (slug: string) => campuses.find(each => each.slug === slug)?.name ?? slug;
+    return <section>{top()}
+      <p className="cs-adm-lede">{linked.length ? 'People who added a LinkedIn profile to unlock schools, across every campus. Someone with no school email waits here until you approve them. Loop reads nothing from LinkedIn: open the profile to check a school. Removing one closes what it unlocked.' : 'Nobody has added a LinkedIn profile yet.'}</p>
+      <ul className="cs-adm-rows">{linked.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span><span>{each.owner ? `Signed in with LinkedIn as ${each.owner}` : 'Pasted an address only: the LinkedIn account is not proven theirs'}</span>{each.waiting && <span className="warn">Waiting for you: no school email</span>}</div>
+        <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
+        {each.waiting && <form action={approveLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm go">Approve</button></form>}
+        <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Remove</button></form></li>)}</ul>
+    </section>;
+  }
+
   function school() {
     return <section>{top(<details><summary>Add campus</summary><form action={addCampusAction} className="cs-adm-form">{keep}<div className="three">
         <label>Name<input name="name" required maxLength={80} placeholder="Barnard" /></label>
@@ -173,15 +187,14 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     </section>;
   }
 
-  const body = { events, rewards, feeds, places, tags, animals, premium, campus: school }[tab]();
+  const { bar, foot } = await siteBar({ campus, viewer, back: '/c/admin' });
+  const body = { events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
   return <div className="cs">
-    <header className="cs-nav"><Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link>
-      <nav className="cs-links"><Link href={`/c/${campus.slug}`}>This week</Link><Link href="/c/admin" aria-current="page">Admin</Link></nav>
-      <div className="cs-nav-end"><Link className="cs-btn sm" href="/groups">The groups site</Link><Link className="cs-btn sm" href="/groups/archive">How we got here</Link></div></header>
+    {bar}
     <main className="cs-adm">
       <aside className="cs-adm-rail">
         <details className="school"><summary>{campus.name}</summary><nav aria-label="Campus">{campuses.filter(each => each.id !== campus.id).map(each => <Link key={each.id} href={at(tab, each.slug)}>{each.name}</Link>)}</nav></details>
-        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : <small>{counts[each]}</small>}</Link>)}</nav>
+        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'linkedin' && waiting ? <small className="warn">{waiting} waiting</small> : <small>{counts[each]}</small>}</Link>)}</nav>
         <p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is open to its members again: LOOP_FRONT is set to groups.'}</p>
       </aside>
       <div className="cs-adm-main">
@@ -189,5 +202,6 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
         {body}
       </div>
     </main>
+    {foot}
   </div>;
 }

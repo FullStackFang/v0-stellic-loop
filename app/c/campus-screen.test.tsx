@@ -18,8 +18,9 @@ import { checkIn, imIn, joinByToken, outingByToken } from '@/lib/campus/outings'
 import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
+import { approveLinkedin } from '@/lib/campus/linkedin';
 import { schoolAsked } from '@/lib/campus/school-ask';
-import { againFaceAction, askSchoolAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
+import { againFaceAction, askSchoolAction, setSchoolsAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
 import InkPage from './ink/page';
 import PostPlanPage from './[campus]/post/page';
@@ -34,6 +35,9 @@ vi.mock('ai', async original => ({ ...(await original<typeof import('ai')>()),
 
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-screen, outings ("Who sees whom"), member-levels, campus-search.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// Whether the person signed in with LinkedIn is the sign-in service's to say. Here a test says it.
+const linkedinOf = vi.hoisted(() => ({ account: null as { name: string; photo: string | null } | null }));
+vi.mock('@/lib/campus/linkedin-account', () => ({ linkedinAccount: async () => linkedinOf.account }));
 // The posting panel refreshes the list with the router, which a test render does not mount.
 vi.mock('next/navigation', async original => ({ ...(await original<typeof import('next/navigation')>()), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }), useParams: () => ({}), usePathname: () => '/groups' }));
 
@@ -41,7 +45,7 @@ let t: TestDb, cornell: Campus;
 beforeAll(async () => { t = await openTestDb(); });
 afterAll(async () => { await t?.close(); });
 beforeEach(async () => { await t.reset(); await t.db.query('delete from campus_place'); cornell = (await findCampus(t.db, 'cornell'))!; });
-afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); linkedinOf.account = null; });
 
 const soon = (hours: number) => new Date(Date.now() + hours * 3600000).toISOString();
 async function person(name: string, email = `${name.split(' ')[0].toLowerCase()}@cornell.edu`): Promise<Principal> {
@@ -171,6 +175,32 @@ describe('who sees whom', () => {
     await setBuiltTier(t.db, 37, 'school');
     expect(await offered(as(ana))).toEqual([['Cornell bear'], ['Dachshund']]);
     await expect(setBuiltTier(t.db, 3, 'school')).rejects.toThrow('No such animal');
+  });
+  it('opens "Save your picture" from the account card, in the rows\' place, and goes back to them', async () => {
+    const { ana } = await world();
+    // The pane asks the server for its grounds and its picture (app/c/save/route.test.ts): here nothing answers.
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500, json: async () => [], text: async () => '' })));
+    try {
+      await show(as(ana));
+      fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
+      const card = within(screen.getByRole('dialog', { name: 'Your level' }));
+      expect(card.getByText('Save your picture')).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Save it' }));
+      expect(card.getByRole('group', { name: 'Shape' })).toBeInTheDocument();
+      expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', '/c/save?shape=profile&ground=school&small=1');
+      expect(card.getByRole('button', { name: /No mark/ })).toHaveTextContent('Ink+');
+      // The rows stepped aside, as they do for the picker.
+      expect(card.queryByText('Loop Ink')).toBeNull();
+      expect(card.queryByRole('button', { name: 'Save it' })).toBeNull();
+      // The pencil on the picture still leads to the picker.
+      fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
+      expect(card.getByRole('group', { name: 'Pick your picture' })).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Done' }));
+      fireEvent.click(card.getByRole('button', { name: 'Save it' }));
+      fireEvent.click(card.getByRole('button', { name: 'Done' }));
+      expect(card.getByText('Loop Ink')).toBeInTheDocument();
+      expect(card.queryByRole('group', { name: 'Shape' })).toBeNull();
+    } finally { vi.unstubAllGlobals(); }
   });
   it('lets the viewer pick their picture in the account card: an animal, or their own photo', async () => {
     const { ana } = await world();
@@ -659,7 +689,9 @@ describe('the pages', () => {
     await world();
     render(await page('cornell'));
     expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'This week' })).toHaveAttribute('aria-current', 'page');
+    expect(within(screen.getByRole('banner')).getByRole('link', { name: 'This week' })).toHaveAttribute('aria-current', 'page');
+    // The foot goes with the page (public/demo/mockups-footer.html): signed out it has the way home and the small print, not the groups pages.
+    expect(within(screen.getByRole('contentinfo')).getAllByRole('link').map(link => link.textContent)).toEqual(['Loop', 'This week', 'Terms', 'Privacy']);
   });
   it("another school's address sends a person to their own, and each school has its own list", async () => {
     await world();
@@ -685,6 +717,93 @@ describe('the pages', () => {
     vi.stubEnv('LOOP_ADMIN', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
+  });
+  it('a person at no school adds their LinkedIn profile, picks a school, waits, and is let in there once approved', async () => {
+    const outsider = await person('Omar Reyes', 'omar@gmail.com');
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    const schools = within(screen.getByRole('group', { name: 'Your schools' }));
+    expect(schools.getAllByRole('button').map(each => [each.textContent, each.getAttribute('aria-pressed')]).sort()).toEqual([['CUNY', 'false'], ['Columbia', 'false'], ['Cornell', 'false'], ['NYU', 'false']]);
+    // An address that is not a profile's is refused, in words, and nobody is let in.
+    fireEvent.change(screen.getByRole('textbox', { name: 'Your LinkedIn profile' }), { target: { value: 'omar reyes' } });
+    fireEvent.click(schools.getByRole('button', { name: 'Columbia' }));
+    expect(schools.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Unlock' })); await screen.findByRole('alert'); });
+    expect(screen.getByRole('alert')).toHaveTextContent('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', []))).toEqual({ ok: false, message: 'Pick at least one school.' });
+    cleanup();
+    // With a profile and a school they wait: the page says so, shows what they sent, and lets them change it.
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['columbia']))).toEqual({ ok: true });
+    render(await withPortalTestSession(outsider, () => page('columbia')));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now.');
+    expect(screen.getByText('Waiting').previousElementSibling).toHaveTextContent('Columbia');
+    expect(screen.queryByRole('button', { name: 'Unlock' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Change it' }));
+    expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toHaveValue('linkedin.com/in/omar-reyes');
+    expect(screen.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
+    cleanup();
+    // The admin sees them waiting and approves. Then that school's campus is theirs, with its animal in their picker.
+    vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
+    const admin = await person('Ana Lopez');
+    render(await withPortalTestSession(admin, () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
+    expect(screen.getByText('Waiting for you: no school email')).toBeInTheDocument();
+    expect(screen.getByText('Pasted an address only: the LinkedIn account is not proven theirs')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /LinkedIn/ })).toHaveTextContent('1 waiting');
+    expect(screen.getByRole('link', { name: 'Open profile' })).toHaveAttribute('href', 'https://www.linkedin.com/in/omar-reyes');
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
+    cleanup(); vi.unstubAllEnvs();
+    await approveLinkedin(t.db, outsider.personId);
+    render(await withPortalTestSession(outsider, () => page('columbia')));
+    expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
+    const theirs = (await campusScreen(t.db, (await findCampus(t.db, 'columbia'))!, as(outsider), { photos: noPhotos })).viewer!;
+    expect(theirs.schools).toMatchObject({ profile: 'https://www.linkedin.com/in/omar-reyes', home: 'columbia', added: [] });
+    expect(theirs.picks.school.map(tile => tile.name)).toEqual(['Columbia lion']);
+  });
+  it('a person adds their LinkedIn profile in the account card, and the schools they tick are theirs too', async () => {
+    const { ana } = await world();
+    await campusOf(t.db, { personId: ana.personId, verifiedEmail: 'ana@cornell.edu' });
+    const open = async () => { cleanup(); await show(as(ana)); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); return within(screen.getByRole('dialog', { name: 'Your level' })); };
+    let card = await open();
+    expect(card.getByText('Your schools').nextElementSibling).toHaveTextContent('Cornell');
+    fireEvent.click(card.getByRole('button', { name: 'Add a school' }));
+    // Their own school is ticked and stays so.
+    expect(card.getByRole('button', { name: 'Cornell' })).toBeDisabled();
+    expect(card.getByRole('button', { name: 'Cornell' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.change(card.getByRole('textbox', { name: 'Your LinkedIn profile' }), { target: { value: 'https://www.linkedin.com/in/Ana-Lopez/' } });
+    fireEvent.click(card.getByRole('button', { name: 'NYU' }));
+    await withPortalTestSession(ana, async () => { fireEvent.click(card.getByRole('button', { name: 'Unlock' })); await card.findByRole('button', { name: 'Add a school' }); });
+    // Coming back: both schools, NYU's animal beside Cornell's, and a way to NYU's campus.
+    card = await open();
+    expect(card.getByText('Your schools').nextElementSibling).toHaveTextContent('Cornell, NYU');
+    fireEvent.click(card.getByRole('button', { name: 'Add a school' }));
+    expect(card.getByRole('textbox', { name: 'Your LinkedIn profile' })).toHaveValue('linkedin.com/in/ana-lopez');
+    expect(card.getByRole('button', { name: 'NYU' })).toHaveAttribute('aria-pressed', 'true');
+    expect(card.getByRole('link', { name: 'Open NYU' })).toHaveAttribute('href', '/c/nyu');
+    fireEvent.click(card.getByRole('button', { name: 'Back' })); fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
+    expect(['Cornell bear', 'NYU bobcat'].map(name => card.getByRole('button', { name }).className)).toEqual(['cs-pet school', 'cs-pet school']);
+    render(await withPortalTestSession(ana, () => page('nyu')));
+    expect(screen.getAllByRole('button', { name: 'Post a plan' }).length).toBeGreaterThan(0);
+  });
+  it('a person who signed in with LinkedIn is shown the account is theirs, has one step left, and the admin sees the name', async () => {
+    const outsider = await person('Omar Reyes', 'omar@gmail.com');
+    // Without LinkedIn the ticket says how to get in; the LinkedIn ticket comes first either way.
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['No school email? Use LinkedIn', 'At one of these schools?', 'Which school are you at?']);
+    cleanup();
+    linkedinOf.account = { name: 'Omar Reyes', photo: 'https://img.test/omar.jpg' };
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('One step left: pick your school');
+    expect(screen.getByText('Signed in with LinkedIn').previousElementSibling).toHaveTextContent('Omar Reyes');
+    expect(screen.getByText('Yours')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toBeInTheDocument();
+    cleanup();
+    // Sending keeps the name on the LinkedIn account, and they still wait for the admin.
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['nyu']))).toEqual({ ok: true });
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    expect(screen.getByText('Waiting')).toBeInTheDocument();
+    cleanup(); linkedinOf.account = null;
+    vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
+    render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
+    expect(screen.getByText('Signed in with LinkedIn as Omar Reyes')).toBeInTheDocument();
   });
   it('a person at no school names their school, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');

@@ -1,12 +1,11 @@
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { Rings } from '@/components/LoopGlyphs';
 import { PlanForm, type PlanDraft } from '@/components/campus/plan-form';
 import { db } from '@/lib/db';
 import { findCampus } from '@/lib/campus/listings';
 import { DAYS_AHEAD, editablePlan } from '@/lib/campus/plans';
 import { campusViewer, mayUse, signInHref } from '@/lib/campus/session';
 import { localInput as local } from '@/lib/campus/time';
+import { siteBar } from '../../site-bar';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,13 +20,14 @@ export default async function PostPlanPage({ params, searchParams }: { params: P
   const plan = /^[0-9a-f-]{36}$/i.test(planId) ? await editablePlan(db(), { personId: viewer.personId, admin: viewer.admin }, planId) : null;
   if (!plan || plan.campusId !== campus.id) notFound();
   const draft: PlanDraft = { id: plan.id, title: plan.title, starts: local(campus.tz, new Date(plan.startsAt)), ends: plan.endsAt ? local(campus.tz, new Date(plan.endsAt)) : '', place: plan.placeText ?? '', about: plan.about ?? '' };
-  const now = new Date();
+  const now = new Date(), { bar, foot } = await siteBar({ campus, viewer, back: here });
   return <div className="cs">
-    <header className="cs-nav"><Link className="cs-wm" href={`/c/${campus.slug}`}><Rings />Loop</Link><nav className="cs-links"><Link href={`/c/${campus.slug}`}>This week</Link><Link href={here} aria-current="page">Change a plan</Link></nav></header>
+    {bar}
     <main className="cs-plain">
       <h1>Change your plan</h1>
       <p>You can change or cancel it until it starts.</p>
       <PlanForm campus={{ slug: campus.slug, name: campus.name }} earliest={local(campus.tz, now)} latest={local(campus.tz, new Date(now.getTime() + DAYS_AHEAD * 86400000))} plan={draft} />
     </main>
+    {foot}
   </div>;
 }
