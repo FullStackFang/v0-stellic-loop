@@ -22,6 +22,7 @@ Cornell has people in two towns. Today everyone with a cornell.edu address lands
 
 ### Modified Capabilities
 - `campus-sign-in`: "A person belongs to the school of their email" changes: when the school has more than one campus the person is not placed by email alone, they choose.
+- `campus-screen`: the "Near you" map shows one day at a time, with one stamp for each address (tasks 6a).
 
 ## Impact
 
