@@ -9,7 +9,7 @@ import { animal, CUSTOM, NAMES, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { KITS, kitNow, pickKit } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
-import { landOf, walkMinutes, type Point } from '@/lib/campus/sections';
+import { landOf, sectionAt, walkMinutes, type Point } from '@/lib/campus/sections';
 import type { SwapCampus } from './swap';
 import { Composer, type Soon } from './composer';
 import { Near } from './near';
@@ -87,7 +87,9 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
   const byId = useMemo(() => new Map(tickets.map(ticket => [ticket.id, ticket])), [tickets]);
   const shown = [...picked.best, ...picked.rest], opened = open && shown.includes(open.id) ? byId.get(open.id) ?? null : null;
   const onMap = useMemo(() => { const left = new Set([...picked.best, ...picked.rest]); return tickets.filter(ticket => ticket.map && left.has(ticket.id)); }, [tickets, picked]);
-  const lit = !wide || sel === null ? null : sel && shown.includes(sel) ? sel : shown.find(id => byId.get(id)?.map) ?? null;
+  /** Whether a spot lies in one of the campus's sections. A plan at a place off the map is shown at that place alone, and only when it is picked. */
+  const drawn = (spot: { lon: number; lat: number } | null | undefined) => !!spot && !!land && !!sectionAt(land, [spot.lon, spot.lat]);
+  const lit = !wide || sel === null ? null : sel && shown.includes(sel) ? sel : shown.find(id => drawn(byId.get(id)?.map)) ?? null;
   // The ink thumb of the sources sits under the one that is on.
   useLayoutEffect(() => {
     const bar = srcs.current;
@@ -152,7 +154,7 @@ export function CampusScreen({ screen, signInHref, openId = null, signOut = null
       onClick={event => { if ((event.target as HTMLElement).closest('button, a, input')) return; if (wide) setSel(ticket.id); else show(ticket.id, 'more'); }}>
       <div className="cs-top"><Tile top={ticket.day} big={ticket.time} met={ticket.stub.kind === 'group' && ticket.stub.state === 'met'} />
         <div className="cs-body"><h3>{ticket.title}</h3><p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{ticket.tags.map(tag => <b key={tag} className="cs-at">@{tag}</b>)}{[ticket.by, ticket.place].filter(Boolean).join(' · ')}</p></div>
-        {spot && <span className="cs-walk"><Pin />{you ? `${walkMinutes(you, spot)} min walk` : 'On the map'}</span>}
+        {spot && <span className="cs-walk"><Pin />{!drawn(ticket.map) ? 'Off the map' : you ? `${walkMinutes(you, spot)} min walk` : 'On the map'}</span>}
         <button className="cs-more" aria-expanded={details} aria-label={details ? 'Close' : 'Details'} onClick={() => { if (wide) setSel(ticket.id); show(ticket.id, 'more'); }}><span>{details ? 'Close' : 'Details'}</span><Chevron /></button></div>
       {stub(ticket)}
     </article>;

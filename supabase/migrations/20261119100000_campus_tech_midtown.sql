@@ -1,6 +1,7 @@
 -- Where Cornell people in the city go and host, beyond Roosevelt Island: the Cornell Club and the ILR School's
--- New York building, as places of the Cornell Tech campus, so an event that names one stands on the map in its
--- section (Midtown, Midtown East; lib/campus/sections.ts). Coordinates are OpenStreetMap's, looked up 2026-11-19.
+-- New York building, as places of the Cornell Tech campus. Neither is in a section of the map: an event that names one
+-- is shown at that building alone when it is picked (components/campus/near.tsx, "a place on its own"), with the stop
+-- it is by (lib/campus/sections.ts, STOPS). Coordinates are OpenStreetMap's, looked up 2026-11-19.
 -- Safe to run twice: a place already there under the same name is left as it is.
 insert into campus_place(campus_id, name, other_names, lat, lon)
 select c.id, p.name, p.other_names, p.lat, p.lon
