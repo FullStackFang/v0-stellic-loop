@@ -47,10 +47,20 @@ function useCard(onClose: () => void) {
   const box = useRef<HTMLDivElement>(null);
   // The ticket the tile is in cuts off anything that hangs out of it.
   useLayoutEffect(() => {
-    const el = box.current!, by = el.parentElement!.getBoundingClientRect();
-    el.style.left = `${Math.max(12, by.left + window.scrollX)}px`; el.style.top = `${by.bottom + window.scrollY + 14}px`;
+    const el = box.current!;
+    // Under the tile, inside the window: as wide as its step wants and no taller than the room below the tile, so
+    // nothing in it is out of reach (the page cannot scroll a card lifted above it). Placed again as its step changes its size.
+    const place = () => {
+      const by = el.parentElement!.getBoundingClientRect(), top = by.bottom + 14;
+      el.style.left = `${Math.max(12, Math.min(by.left, innerWidth - el.offsetWidth - 12)) + window.scrollX}px`; el.style.top = `${top + window.scrollY}px`;
+      el.style.maxHeight = `${Math.max(320, innerHeight - top - 16)}px`;
+    };
+    place();
     // Where the browser can lift it above the page it is lifted; elsewhere it is a card placed over the page.
     if (typeof el.showPopover === 'function') { el.setAttribute('popover', 'manual'); el.showPopover(); }
+    const sized = typeof ResizeObserver === 'function' ? new ResizeObserver(place) : null;
+    sized?.observe(el); addEventListener('resize', place);
+    return () => { sized?.disconnect(); removeEventListener('resize', place); };
   }, []);
   useEffect(() => {
     const key = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
