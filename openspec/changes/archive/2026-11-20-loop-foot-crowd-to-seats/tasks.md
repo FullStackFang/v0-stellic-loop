@@ -23,4 +23,4 @@
 - [x] 4.1 `vitest` for the foot test (`--maxWorkers=3`), type check and lint
 - [x] 4.2 In the browser: the foot on This week, a groups page, Doodles and the front door is the bar alone (checked: /terms in the browser, the front door by its served HTML; signed-in pages share the same SiteFoot)
 - [x] 4.3 In the browser at desktop and phone width: a Seats round with pokes, tipping, looking and idle hops; a won round keeps its best; reduced motion
-- [ ] 4.4 The founder's yes
+- [x] 4.4 The founder's yes

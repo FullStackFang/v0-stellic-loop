@@ -27,4 +27,4 @@
 - [x] 3.1 Tests, type check and lint
 - [x] 3.2 The page as served to a signed-out visitor holds Conga and no staged game
 - [x] 3.3 Looked at in a browser at desktop and phone width, signed out
-- [ ] 3.4 The founder's yes to the name
+- [x] 3.4 The founder's yes to the name
