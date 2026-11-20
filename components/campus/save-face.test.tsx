@@ -56,6 +56,8 @@ it('shows the picture as it will be saved, in the shape and on the ground picked
   press('Lock screen');
   expect(view().parentElement).toHaveClass('cs-save-frame', 'tall');
   expect(view()).toHaveClass('wait');
+  // Its frame holds the small loader until it has.
+  expect(screen.getByRole('status')).toHaveTextContent('Looping you in…');
   expect(view().getAttribute('src')).toBe('/c/save?shape=tall&ground=cream&small=1');
   fireEvent.load(view());
   expect(view()).not.toHaveClass('wait');
