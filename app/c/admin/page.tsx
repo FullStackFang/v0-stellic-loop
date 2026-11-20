@@ -6,7 +6,7 @@ import { customFace } from '@/lib/campus/animals';
 import { catalogue } from '@/lib/campus/animal-tiers';
 import { premiumAsks } from '@/lib/campus/custom-face';
 import { LEVELS } from '@/lib/campus/levels';
-import { linkedinPeople } from '@/lib/campus/linkedin';
+import { linkedinPeople, type LinkedinPerson } from '@/lib/campus/linkedin';
 import { listCampuses } from '@/lib/campus/listings';
 import { adminListings, campusFeeds } from '@/lib/campus/manage';
 import { campusPlaces } from '@/lib/campus/places';
@@ -166,13 +166,16 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   }
 
   const named = (slug: string) => campuses.find(each => each.slug === slug)?.name ?? slug;
-  const proof = (owner: string | null) => owner ? <span>Signed in with LinkedIn as {owner}</span> : <span className="warn">Pasted an address only: the LinkedIn account is not proven theirs</span>;
+  const proof = ({ owner, profile }: LinkedinPerson) => owner ? <span>Signed in with LinkedIn as {owner}</span> : profile ? <span className="warn">Pasted an address only: the LinkedIn account is not proven theirs</span> : <span>Signed in with LinkedIn</span>;
+  // The profile to look at. Someone who signed in with LinkedIn gave no address, so they are looked up by name and school.
+  const look = (each: LinkedinPerson) => each.profile ? <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
+    : <a className="cs-btn sm" href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent([each.owner ?? each.name, ...each.schools.slice(0, 1).map(named)].join(' '))}`} target="_blank" rel="noreferrer">Find on LinkedIn</a>;
   /** The queue: people with no school email, waiting for their school to be checked. Approving or turning one down takes them off it. */
   function review() {
     return <section>{top()}
       <p className="cs-adm-lede">{waiting ? 'People with no school email, waiting for you to check their school. The longest wait first.' : 'Nobody is waiting for you.'}</p>
-      <ul className="cs-adm-rows">{queue.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, `wants ${each.schools.map(named).join(', ')}`, each.days < 1 ? 'waiting since today' : `waiting ${each.days} ${each.days === 1 ? 'day' : 'days'}`].filter(Boolean).join(' · ')}</span>{proof(each.owner)}</div>
-        <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
+      <ul className="cs-adm-rows">{queue.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, `wants ${each.schools.map(named).join(', ')}`, each.days < 1 ? 'waiting since today' : `waiting ${each.days} ${each.days === 1 ? 'day' : 'days'}`].filter(Boolean).join(' · ')}</span>{proof(each)}</div>
+        {look(each)}
         <form action={approveLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm go">Approve</button></form>
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Turn down</button></form></li>)}</ul>
     </section>;
@@ -193,8 +196,8 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     const inside = linked.filter(each => !each.waiting);
     return <section>{top()}
       <p className="cs-adm-lede">{inside.length ? 'People a LinkedIn profile unlocked schools for, across every campus. Someone still waiting for a check is under Review. Removing one closes what it unlocked.' : 'Nobody has unlocked a school with LinkedIn yet.'}</p>
-      <ul className="cs-adm-rows">{inside.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span>{proof(each.owner)}</div>
-        <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
+      <ul className="cs-adm-rows">{inside.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span>{proof(each)}</div>
+        {look(each)}
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Remove</button></form></li>)}</ul>
     </section>;
   }

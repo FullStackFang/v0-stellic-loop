@@ -100,6 +100,16 @@ describe('unlocking schools with a LinkedIn profile', () => {
     await setSchools(t.db, omar, 'linkedin.com/in/omar-reyes', ['columbia'], '  Omar Reyes ');
     await setSchools(t.db, pia, 'linkedin.com/in/pia-novak', ['cuny']);
     expect((await linkedinPeople(t.db)).map(each => [each.name, each.owner]).sort()).toEqual([['Ana', null], ['Omar', 'Omar Reyes'], ['Pia', null]]);
+    // Signed in with LinkedIn, the address may be left out, and the one sent before is kept. Without LinkedIn it is required.
+    await setSchools(t.db, omar, ' ', ['columbia'], 'Omar Reyes');
+    expect((await linkedinPeople(t.db)).find(each => each.name === 'Omar')?.profile).toBe('https://www.linkedin.com/in/omar-reyes');
+    await expect(setSchools(t.db, pia, '', ['cuny'])).rejects.toThrow('Paste the address of your LinkedIn profile');
+    await expect(setSchools(t.db, pia, 'not an address', ['cuny'], 'Pia Novak')).rejects.toThrow('Paste the address of your LinkedIn profile');
+    const [zed, yan] = [await someone('Zed', 'zed@gmail.com'), await someone('Yan', 'yan@gmail.com')];
+    await setSchools(t.db, zed, '', ['nyu'], 'Zed Ali');
+    await setSchools(t.db, yan, '', ['nyu'], 'Yan Li');
+    expect((await linkedinPeople(t.db)).filter(each => ['Zed', 'Yan'].includes(each.name)).map(each => [each.profile, each.owner, each.waiting]).sort()).toEqual([[null, 'Yan Li', true], [null, 'Zed Ali', true]]);
+    await removeLinkedin(t.db, zed.personId); await removeLinkedin(t.db, yan.personId);
     expect((await linkedinPeople(t.db)).map(each => [each.name, each.waiting]).sort()).toEqual([['Ana', false], ['Omar', true], ['Pia', true]]);
     expect((await linkedinPeople(t.db))[2].name).toBe('Ana');
     // A person removed while waiting was never let in.

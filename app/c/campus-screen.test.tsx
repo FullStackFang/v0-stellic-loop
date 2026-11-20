@@ -814,10 +814,23 @@ describe('the pages', () => {
     expect(screen.getByRole('button', { name: 'Send for a check' })).toBeInTheDocument();
     expect(screen.getByText('Signed in with LinkedIn').previousElementSibling).toHaveTextContent('Omar Reyes');
     expect(screen.getByText('Yours')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toBeInTheDocument();
+    // Signed in with LinkedIn, they are not asked for the address of their profile as well: they tick a school and send.
+    expect(screen.queryByRole('textbox', { name: 'Your LinkedIn profile' })).toBeNull();
+    expect(screen.getByText('Pick the school you are at. We look you up on LinkedIn by your name to check it.')).toBeInTheDocument();
     cleanup();
+    // On a database that still requires the address (the migration is run by hand), the box is still there.
+    await t.db.query('alter table campus_linkedin alter column profile set not null');
+    try {
+      render(await withPortalTestSession(outsider, () => page('cornell')));
+      expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toBeInTheDocument();
+      expect(await withPortalTestSession(outsider, () => setSchoolsAction('', ['nyu']))).toEqual({ ok: false, message: 'Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.' });
+      cleanup();
+    } finally { await t.db.query('alter table campus_linkedin alter column profile drop not null'); }
     // Sending keeps the name on the LinkedIn account, and they still wait for the admin.
-    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['nyu']))).toEqual({ ok: true });
+    render(await withPortalTestSession(outsider, () => page('cornell')));
+    fireEvent.click(screen.getByRole('button', { name: 'NYU' }));
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Send for a check' })); await vi.waitFor(async () => expect((await t.db.query('select profile,schools,owner_name from campus_linkedin where person_id=$1', [outsider.personId])).rows).toEqual([{ profile: null, schools: ['nyu'], owner_name: 'Omar Reyes' }])); });
+    cleanup();
     render(await withPortalTestSession(outsider, () => page('cornell')));
     expect(screen.getByText('Waiting')).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['We are checking']);
@@ -825,6 +838,8 @@ describe('the pages', () => {
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
     render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'review' }) })));
     expect(screen.getByText('Signed in with LinkedIn as Omar Reyes')).toBeInTheDocument();
+    // No address was asked for, so the admin looks them up by name and school.
+    expect(screen.getByRole('link', { name: 'Find on LinkedIn' })).toHaveAttribute('href', 'https://www.linkedin.com/search/results/people/?keywords=Omar%20Reyes%20NYU');
     cleanup();
     // Approved, they leave the queue and are listed with the people let in.
     await approveLinkedin(t.db, outsider.personId);
