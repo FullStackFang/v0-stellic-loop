@@ -20,7 +20,10 @@ describe('the part of the site a page belongs to',()=>{
   expect(areaOf('/c/cornell')).toBe('This week');
   expect(areaOf('/c/cornell/post')).toBe('Post a plan');
   expect(areaOf('/c/ink')).toBe('Ink');
-  expect(areaOf('/c/doodles/seats')).toBe('Doodles');
+  expect(areaOf('/c/doodles')).toBe('Doodles');
+  expect(areaOf('/c/doodles/seats')).toBe('Seats');
+  expect(areaOf('/conga')).toBe('Conga');
+  expect(areaOf('/organizers')).toBe('Organizers');
   expect(areaOf('/groups/connections')).toBe('Assistants');
   expect(areaOf('/groups/acme/team')).toBe('Groups');
   expect(areaOf('/groups/sign-in')).toBe('Sign in');
