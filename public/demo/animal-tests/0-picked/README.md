@@ -11,12 +11,15 @@ Last worked on 2026-11-19: the founder had Baruch and Brooklyn added to the app 
 | `nyu-bobcat.png` | NYU | closed violet varsity jacket, white torch | `nyu-bobcat/…jacket-n1-torch-4.png` (redrawn from `…jacket-n-1.png`; before that `…jacket-torch-2.png`) |
 | `baruch-bearcat.png` | CUNY Baruch | royal blue knitted sweater, white B | `baruch-bearcat/…sweater-b-3.png` |
 | `brooklyn-bulldog.png` | CUNY Brooklyn | maroon cap, gold BC, maroon collar | `brooklyn-bulldog/…cap-bc-3.png` |
+| `oakland-grizzly.png` | Oakland University | a girl: black knitted sweater, gold O, gold ear bow | `oakland-grizzly/…sweater-o-4.png` |
 
 Every try, picked or not, is in the sibling folders and shows on `/demo/mockups-animals.html`.
 
 ## In the app
 
-Cornell, Columbia, NYU, Baruch and Brooklyn, as `public/animals/38.png` to `42.png` (faces 37 to 41).
+Cornell, Columbia, NYU, Baruch, Brooklyn and Oakland, as `public/animals/38.png` to `43.png` (faces 37 to 42).
+Oakland's grizzly belongs to the slug `oakland`, which is not a campus yet: until the admin adds one with that slug
+(domain `oakland.edu`), only the admin sees her.
 Baruch and Brooklyn both belong to `cuny`: the app has CUNY as one campus, so all of CUNY may pick either.
 They are the "School" category: free to people of that school, hidden from everyone else, shown first in the
 picker with a ring and a graduation cap in the action colour. The admin can move them under `/c/admin` → Animals.
@@ -55,8 +58,8 @@ node --import tsx scripts/animal-test.ts ccny-beaver none 'public/demo/animal-te
 - Copy the picked one into this folder.
 - To put it in the app: `node --import tsx scripts/animal-keep.ts public/demo/animal-tests/0-picked/<name>.png <next number>`
   (redraws it on a transparent ground at 192px), then add its name to `PREMIUM` and its school to `MASCOT`
-  in `lib/campus/animals.ts` (the next number is 43, face 42), and update the counts in
-  `app/c/campus-screen.test.tsx` (search for "Animals ?42", "toHaveLength(42)", "School 5" and the offered lists).
+  in `lib/campus/animals.ts` (the next number is 44, face 43), and update the counts in
+  `app/c/campus-screen.test.tsx` (search for "Animals ?43", "toHaveLength(43)", "School 6", "face: 43" in lib/__tests__/campus-animal-names.test.ts and the offered lists).
 
 ## What the founder asked for
 
