@@ -13,7 +13,7 @@ it('shows everyone what is out, each with a way to play it', () => {
   render(<DoodleShelf doodles={doodlesFor(false)} />);
   expect(names()).toEqual(['Conga', 'Seats']);
   expect(screen.getByRole('link', { name: 'Play Conga' })).toHaveAttribute('href', '/conga');
-  expect(screen.getByRole('link', { name: 'Play Seats' })).toHaveAttribute('href', '/seats');
+  expect(screen.getByRole('link', { name: 'Play Seats' })).toHaveAttribute('href', '/c/doodles/seats');
   expect(screen.queryByText(/Staged/)).toBeNull();
 });
 
