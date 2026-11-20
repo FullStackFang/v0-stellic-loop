@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { setAnimalName, setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
 import { MASCOT } from '@/lib/campus/animals';
+import { decideClubClaim } from '@/lib/campus/club-claim';
 import { deletePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
 import { approveLinkedin, removeLinkedin } from '@/lib/campus/linkedin';
@@ -71,6 +72,15 @@ export async function removeSchoolAskAction(data: FormData): Promise<void> {
 
 export async function removeLinkedinAction(data: FormData): Promise<void> {
   await admin(data, async () => { const id = uuid(text(data, 'person')); if (!id) throw new Error('No such person'); await removeLinkedin(db(), id); return 'Removed. The schools it unlocked are closed to them again.'; });
+}
+
+/** "Approve", "Turn down" and "Take back" beside a claim to a club: the admin's word stands over what the officer list said. */
+export async function decideClubClaimAction(data: FormData): Promise<void> {
+  await admin(data, async () => {
+    const id = uuid(text(data, 'claim')), to = text(data, 'to') === 'approved' ? 'approved' as const : 'refused' as const;
+    if (!id || !await decideClubClaim(db(), id, to)) throw new Error('No such claim');
+    return to === 'approved' ? 'Approved. The club is theirs.' : 'Turned down. The club is not theirs.';
+  });
 }
 
 export async function addFeedAction(data: FormData): Promise<void> {
