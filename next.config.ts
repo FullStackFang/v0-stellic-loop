@@ -15,15 +15,19 @@ const nextConfig: NextConfig = {
       { source: "/demo", destination: "/demo/stellic", permanent: false },
       { source: "/index.html", destination: "/demo/stellic", permanent: false },
       { source: "/:page([^/.]+)\\.html", destination: "/demo/:page", permanent: false },
+      // Conga was first a mockup under /demo. Links to it follow it to its own address.
+      { source: "/demo/mockups-conga", destination: "/conga", permanent: false },
+      { source: "/demo/mockups-conga.html", destination: "/conga", permanent: false },
     ];
   },
-  // A file under public/ is asked for again on every visit unless told otherwise. The Conga game's sprite sheets carry
+  // A file under public/ is asked for again on every visit unless told otherwise. The Conga game's sprite sheets (public/conga) carry
   // a version in their name (scripts/conga-atlas.mjs), so a browser may keep one for good.
   async headers() {
-    return [{ source: "/demo/conga/:file(.+\\.v\\d+\\.webp)", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }];
+    return [{ source: "/conga/:file(.+\\.v\\d+\\.webp)", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }];
   },
   async rewrites() {
-    return [{ source: "/demo/:page([^/.]+)", destination: "/demo/:page.html" }];
+    // Conga is a plain page with its own scripts beside it (public/conga), served at /conga.
+    return [{ source: "/demo/:page([^/.]+)", destination: "/demo/:page.html" }, { source: "/conga", destination: "/conga/index.html" }];
   },
   turbopack: {
     rules: {

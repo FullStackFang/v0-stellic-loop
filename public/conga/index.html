@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Conga · playable mockup</title>
+<title>Conga · Loop</title>
+<meta name="description" content="Walk your animal round campus and gather the longest line.">
 <link rel="modulepreload" href="./conga/sim.js"><link rel="modulepreload" href="./conga/maps.js">
 <style>
 @font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
@@ -76,7 +77,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .keys { list-style: none; padding: 10px; display: flex; gap: 8px; border-radius: 16px 16px 16px 4px; background: var(--field); }
 .keys li { flex: 1; min-width: 0; display: grid; gap: 5px; justify-items: start; align-content: start; font-size: 13px; font-weight: 600; line-height: 1.25; }
 .keys kbd { font: inherit; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); white-space: nowrap; }
-.quit { padding: 12px 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
+.quit { text-decoration: none; color: inherit; padding: 12px 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
 .score { display: flex; gap: 10px; align-items: stretch; }
 .score div { flex: 1; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: var(--field); display: grid; gap: 2px; }
 .score div + div { background: var(--ink); color: var(--paper); }
@@ -101,7 +102,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
   <p>Walk into a stray and it joins your line. Walk into another line and yours scatters for anyone to grab.</p>
   <div class="faces" id="faces"></div>
   <ul class="keys"></ul>
-  <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div></div>
+  <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div><a class="quit" href="/">Back to Loop</a></div>
 </section>
 
 <section class="card" id="over" hidden>

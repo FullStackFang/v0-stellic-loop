@@ -15,7 +15,7 @@ export const ALL_GROUPS = 'all';
 
 /**
  * The one top bar of the app, the same on every page: the wordmark, "This week", the person's groups, "All groups",
- * Ink, then what the page puts at the end (`children`) and the account (`account`). A group inside another is named
+ * Conga (the game, a plain page at /conga, so an ordinary link), Ink, then what the page puts at the end (`children`) and the account (`account`). A group inside another is named
  * only while the person is in it. `home` is where "This week" leads. `on` is the page this is: 'week', 'ink',
  * ALL_GROUPS, or the id of the group the person is in.
  */
@@ -28,6 +28,7 @@ export function TopBar({ home = '/', on, groups = [], all = groups.length > 0, a
     <nav className="cs-links" aria-label="Loop"><Link href={home} aria-current={on === 'week' ? 'page' : undefined}>This week</Link>
       {shown.map(group => <Link key={group.id} href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'page' : undefined}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
       {all && <Link href="/groups" aria-current={on === ALL_GROUPS ? 'page' : undefined}>All groups</Link>}
+      <a href="/conga">Conga</a>
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={on === 'ink' ? 'page' : undefined}><InkMark /><span>Ink</span></Link></nav>
     <div className="cs-nav-end">{children}{account}</div>
   </header>;

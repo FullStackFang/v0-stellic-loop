@@ -6,7 +6,7 @@
 import { readdirSync, statSync } from 'node:fs';
 import sharp from 'sharp';
 
-const version = process.argv[2] ?? '1', from = 'public/animals/', to = 'public/demo/conga/', COLS = 7;
+const version = process.argv[2] ?? '1', from = 'public/animals/', to = 'public/conga/', COLS = 7;
 const files = readdirSync(from).filter(name => /^\d+\.png$/.test(name)).sort();
 for (const cell of [96, 192]) {
   const shadow = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell}" height="${cell}"><ellipse cx="50%" cy="89%" rx="34%" ry="10%" fill="#2e1d18" fill-opacity=".16"/></svg>`);
