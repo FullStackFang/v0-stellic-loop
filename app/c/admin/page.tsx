@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { customFace } from '@/lib/campus/animals';
 import { catalogue } from '@/lib/campus/animal-tiers';
 import { premiumAsks } from '@/lib/campus/custom-face';
+import { clubAsks } from '@/lib/campus/imprint';
 import { LEVELS } from '@/lib/campus/levels';
 import { linkedinPeople, type LinkedinPerson } from '@/lib/campus/linkedin';
 import { listCampuses } from '@/lib/campus/listings';
@@ -41,7 +42,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   if (!campus) notFound();
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
-  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db())]);
+  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => [])]);
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const at = (to: Tab, school = campus.slug) => `/c/admin?campus=${school}&tab=${to}`;
   /** What every form carries: the campus it acts on, and the section to come back to. */
@@ -162,6 +163,9 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       <p className="cs-adm-lede">{asks.length ? `Asked to subscribe, across every campus. Nobody is charged, and each got one animal free.` : 'Nobody has asked to subscribe yet.'}</p>
       {/* eslint-disable-next-line @next/next/no-img-element -- pictures Loopd made, served from the database at their own address */}
       <ul className="cs-adm-rows">{asks.map(ask => <li key={ask.email + ask.asked}><div><b>{ask.email}</b><span>{ask.asked}</span></div><span className="made">{ask.pictures.map(token => <img key={token} src={customFace(token)} alt="" />)}</span></li>)}</ul>
+      {/* Claims from the organizers page (lib/campus/imprint.ts): a field test, so no club is made and nobody is charged. */}
+      <p className="cs-adm-lede">{clubs.length ? 'Clubs claimed on the organizers page, across every campus. Nothing is made or charged yet.' : 'Nobody has claimed a club yet.'}</p>
+      <ul className="cs-adm-rows">{clubs.map((ask, at) => <li key={at}><div><b>{ask.club}</b><span>{ask.email} · {ask.plan === 'imprint' ? 'Imprint' : 'Free'} · {ask.asked}</span></div></li>)}</ul>
     </section>;
   }
 

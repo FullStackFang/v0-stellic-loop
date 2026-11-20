@@ -63,6 +63,11 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-links a:has(i) { padding: 6px 12px 6px 6px; }
 .cs-links i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; flex: none; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--cs-paper); background: linear-gradient(135deg, var(--cs-action), var(--cs-action-hover) 60%, var(--cs-action-deep)); }
 .cs-nav-end { margin-left: auto; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+/* "Claim your club", the organizers' door: outlined and flat, so Ink stays the loudest thing in the bar. On a phone it is a row in the account card. */
+.cs-org { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 15px; border-radius: 99px; font-size: 14.5px; font-weight: 620; white-space: nowrap; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
+.cs-org:not([aria-current]):hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-org[aria-current] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+@media (max-width: 860px) { .cs-org { display: none; } }
 .cs-live { display: flex; align-items: baseline; gap: 10px; padding: 6px 8px 6px 14px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); }
 .cs-live small { font-size: 12.5px; font-weight: 560; } .cs-live b { font-size: 16px; font-weight: 720; letter-spacing: -0.03em; } .cs-live time { font-size: 13px; font-weight: 600; }
 .cs-live button { align-self: center; height: 28px; padding: 0 12px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); font-size: 13px; font-weight: 620; }

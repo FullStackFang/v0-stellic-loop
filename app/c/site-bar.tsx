@@ -16,7 +16,7 @@ import { SeatsSmall } from '@/components/loading/seats';
  * "This week", with the person's groups, the counters and the account, and the foot that goes with it. `back` is
  * where sign-in returns to.
  */
-export async function siteBar({ campus, viewer, back, on }: { campus: Campus; viewer: CampusViewer | null; back: string; on?: 'ink' | 'doodles' }): Promise<{ bar: ReactNode; foot: ReactNode }> {
+export async function siteBar({ campus, viewer, back, on }: { campus: Campus; viewer: CampusViewer | null; back: string; on?: 'ink' | 'doodles' | 'organizers' }): Promise<{ bar: ReactNode; foot: ReactNode }> {
   const [screen, groups] = await Promise.all([campusScreen(db(), campus, viewer && { personId: viewer.personId, admin: viewer.admin, groups: [] }), viewer ? barGroups(viewer.principal) : []]);
   const bar = <CampusBar screen={screen} groups={groups} on={on} signInHref={signInHref(back)} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null}>{viewer && <Suspense fallback={<SeatsSmall size={16} />}><OnYou /></Suspense>}</CampusBar>;
   return { bar, foot: <SiteFoot home={`/c/${campus.slug}`} /> };
