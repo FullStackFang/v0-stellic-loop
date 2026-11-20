@@ -176,6 +176,16 @@ section > h2 i { font-style: normal; color: var(--field); }
 .ft .menu { left: auto; right: 0; top: auto; bottom: calc(100% + 10px); }
 .dot.rest { width: auto; padding: 0 9px; border-radius: 99px; font-size: 12px; font-weight: 700; background: var(--page); }
 .ft .rest-pop { position: absolute; z-index: 9; right: 8px; bottom: calc(100% + 10px); display: grid; grid-template-columns: repeat(5, 24px); gap: 9px; padding: 10px; border-radius: 16px 16px 5px 16px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--shadow); animation: ask .3s var(--expo); }
+/* ---- the pick: one card for the foot's Ink+ pill. What it does here on top, then what Ink+ is. ---- */
+.ask.both { width: min(390px, calc(100% - 16px)); }
+.ask.both .swatches { margin-bottom: 8px; }
+.ask .here { margin: 0 0 14px; font-size: 13.5px; color: var(--on-ink-mute); }
+.ask .gives { display: inline-block; margin: 0 0 8px; padding: 3px 10px 4px; border-radius: 99px; font-size: 12px; font-weight: 700; background: color-mix(in oklch, var(--paper) 14%, transparent); color: var(--on-ink); }
+.ask .rule { height: 1px; margin: 0 0 12px; background: color-mix(in oklch, var(--paper) 18%, transparent); }
+.mine { margin-bottom: 40px; }
+details.tried { margin-top: 10px; } details.tried > summary { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 99px; cursor: pointer; font-weight: 640; list-style: none; box-shadow: inset 0 0 0 1.5px var(--ink); background: var(--paper); }
+details.tried > summary::-webkit-details-marker { display: none; }
+details.tried[open] > summary { margin-bottom: 28px; }
 </style>
 </head>
 <body class="k" data-kit="cornell">
@@ -191,6 +201,14 @@ section > h2 i { font-style: normal; color: var(--field); }
   </div>
 </header>
 
+<section class="mine">
+  <h2>My pick <i>(the account card's drop-down, and one Ink+ pill in the foot)</i></h2>
+  <div class="row" style="grid-template-columns:minmax(0,760px)">
+    <div class="frame k tall" data-kit="cornell" data-pick="1"><span class="tag pick">Recommended</span></div>
+  </div>
+</section>
+
+<details class="tried"><summary>Everything else we tried</summary>
 <section>
   <h2>1 · The account card <i>(what the branch built)</i></h2>
   <div class="row two">
@@ -233,6 +251,8 @@ section > h2 i { font-style: normal; color: var(--field); }
     <div class="frame k tall" data-kit="cornell" data-quiet="g" data-state="open"><span class="tag">Pressed: the card</span></div>
   </div>
 </section>
+
+</details>
 
 <script>
 const RINGS = '<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><circle cx="50" cy="35" r="21" stroke="currentColor" stroke-width="9"/><circle cx="35.5" cy="60" r="21" stroke="currentColor" stroke-width="9"/><circle cx="64.5" cy="60" r="21" stroke="currentColor" stroke-width="9"/></svg>';
@@ -281,7 +301,7 @@ const ALL = [...KITS, ['penn', 'Penn'], ['princeton', 'Princeton'], ['yale', 'Ya
 const CHEVRON = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>';
 const named = slug => ALL.find(([each]) => each === slug);
 /** `footOnly`, when given, is the note to show under the foot alone, with no account card above it. */
-function many(frame, option, footOnly) {
+function many(frame, option, footOnly, ownFoot) {
   const kit = frame.dataset.kit, free = who === 'free', open = frame.dataset.open ?? '', recent = (frame.dataset.recent ?? 'nyu,columbia').split(',').filter(Boolean);
   const pill = ([slug, name], cls = 'kit') => { const locked = !mayWear(slug); return `<button type="button" class="${cls} k${locked ? ' locked' : ''}" data-kit="${slug}" ${locked ? `data-lock="${slug}"` : `data-wear="${slug}"`} aria-pressed="${kit === slug}" title="${name}${locked ? ' · Ink+' : ''}" aria-label="${name}${locked ? ', with Ink+' : ''}">${cls === 'dot' ? (locked ? MARK : '') : `${locked ? MARK : '<i></i>'}${name}`}</button>`; };
   // D: Loopd's, yours, and the one you are wearing if it is another; everything else in one list.
@@ -300,9 +320,31 @@ function many(frame, option, footOnly) {
     : `Four at most: Loopd's, yours${free ? '' : ', and the two you wore last'}. "+${rest.length}" ends the one row and opens the rest over the card. Quick when you wear the same few; finding one school in a long open list is slower than typing.`;
   return `${who === 'out' || footOnly ? '' : `<div class="card" style="margin:0"><div class="card-top"><img src="/animals/10.png" alt=""><div><strong>Ana Lopez</strong><span>Regular · level 2 of 5${who === 'plus' ? ' · Ink+' : ''}</span></div></div>
       <div class="card-body"><div class="kits"><h4>Colours</h4><div>${kits}</div></div></div></div>`}
-    <div class="page-end" style="margin-top:24px"><div class="stuff" style="padding:0 18px 26px"><i></i></div>
-    <footer class="ft">${askCard(frame, frame.dataset.asked === 'yes')}<span class="wm">${RINGS}Loopd</span><nav><a>Terms</a><a>Privacy</a></nav><div class="ft-end"><small>© 2026 Loopd</small>${dots}</div></footer></div>
+${ownFoot ?? `<div class="page-end" style="margin-top:24px"><div class="stuff" style="padding:0 18px 26px"><i></i></div>
+    <footer class="ft">${askCard(frame, frame.dataset.asked === 'yes')}<span class="wm">${RINGS}Loopd</span><nav><a>Terms</a><a>Privacy</a></nav><div class="ft-end"><small>© 2026 Loopd</small>${dots}</div></footer></div>`}
     <p class="note">${footOnly ?? note}</p>`;
+}
+
+// ---- The pick. The account card is D's (Loopd's, yours, "Any school"). Without Ink+ the foot has your two dots and
+// one pill, "Every school · Ink+", and its card says what it does here (the colours) and then what Ink+ is. A locked
+// school in the drop-down opens the same card, named for that school. With Ink+ or signed out the foot is D's.
+function pickView(frame) {
+  const kit = frame.dataset.kit, open = frame.dataset.open === 'foot' || frame.dataset.asked === 'yes';
+  if (who !== 'free') return many(frame, 'd', null, null).replace(/<p class="note">[\s\S]*$/, `<p class="note">With Ink+ or signed out: every school in the drop-down, and the foot's dots with "Any school". No pill asks for Ink+.</p>`);
+  const yours = ALL.filter(([slug]) => slug === 'loop' || slug === OWN), wanted = frame.dataset.asked === 'yes' && named(frame.dataset.wanted);
+  const dot = ([slug, name]) => `<button type="button" class="dot k" data-kit="${slug}" data-wear="${slug}" aria-label="${name} colours" title="${name}" aria-pressed="${kit === slug}"></button>`;
+  const card = `<div class="ask both" ${open ? '' : 'hidden'}><span class="ask-tab">${MARK}Ink+</span>
+    <h3>${wanted ? `Wear <em>${wanted[1]}'s</em> colours` : `Every school's <em>colours</em>`}</h3>
+    <div class="swatches">${ALL.filter(each => !yours.includes(each)).map(([slug, name]) => `<i class="k" data-kit="${slug}" title="${name}"${wanted && wanted[0] === slug ? ' style="opacity:1;box-shadow:0 0 0 2px var(--paper)"' : ''}></i>`).join('')}</div>
+    <p class="here">Yours and Loopd's are free. The other ${ALL.length - 2} come with Ink+.</p>
+    <div class="rule"></div>
+    <span class="gives">What Ink+ gives you</span>
+    <div class="perks"><span>Every school's colours, not just yours</span><span>Play as your own animal, in Seats and Conga</span><span>The book of stamps keeps every place, for good</span></div>
+    <span class="price">From <b>$2.99</b> a month</span>
+    <div class="acts"><a href="/c/ink">See Ink+</a><button type="button" data-close-pick>Not now</button></div></div>`;
+  const foot = `<div class="page-end" style="margin-top:24px"><div class="stuff" style="padding:0 18px 26px"><i></i></div>
+    <footer class="ft">${card}<span class="wm">${RINGS}Loopd</span><nav><a>Terms</a><a>Privacy</a></nav><div class="ft-end"><small>© 2026 Loopd</small><div class="dots">${yours.map(dot).join('')}</div><button type="button" class="inkq" data-toggle="foot" aria-expanded="${open}">${MARK}Every school<b>Ink+</b></button></div></footer></div>`;
+  return many(frame, 'd', null, foot).replace(/<p class="note">[\s\S]*$/, `<p class="note">The card: Loopd, Cornell and "Any school"; other schools in the list wear the Ink mark. The foot: your two dots and one pill. Its card shows <b>what it does here</b> (every school's colours) on top, then <b>what Ink+ is</b> and the price. Picking a locked school in the list opens the same card, named for it.</p>`);
 }
 
 // ---- 4: the foot for someone without Ink+ shows only what they can wear, and one pill that opens Ink+. With Ink+ (or
@@ -330,7 +372,7 @@ function quiet(frame, option) {
 
 function draw(frame) {
   const tag = frame.querySelector('.tag').outerHTML;
-  frame.innerHTML = tag + (frame.dataset.card ? card(frame, frame.dataset.card === 'after') : frame.dataset.many ? many(frame, frame.dataset.many) : frame.dataset.quiet ? quiet(frame, frame.dataset.quiet) : foot(frame, frame.dataset.foot));
+  frame.innerHTML = tag + (frame.dataset.card ? card(frame, frame.dataset.card === 'after') : frame.dataset.many ? many(frame, frame.dataset.many) : frame.dataset.pick ? pickView(frame) : frame.dataset.quiet ? quiet(frame, frame.dataset.quiet) : foot(frame, frame.dataset.foot));
   const dots = frame.querySelector('.dots');
   if (dots && frame.dataset.foot === 'b' && who === 'free' && frame.dataset.asked !== 'no') { const at = KITS.findIndex(([slug]) => slug === (frame.dataset.wanted ?? 'nyu')); dots.style.setProperty('--at', `${14 + at * 32}px`); requestAnimationFrame(() => dots.classList.add('flood')); }
 }
@@ -346,10 +388,11 @@ document.addEventListener('click', event => {
     const slug = pick.dataset.wear;
     // E keeps the two worn last beside Loopd's and yours.
     if (frame.dataset.many && slug !== 'loop' && slug !== OWN) frame.dataset.recent = [slug, ...(frame.dataset.recent ?? 'nyu,columbia').split(',').filter(each => each && each !== slug)].slice(0, 2).join(',');
-    if (frame.dataset.many === 'd') frame.dataset.open = '';
+    if (frame.dataset.many === 'd' || frame.dataset.pick) frame.dataset.open = '';
     frame.dataset.asked = 'no'; wear(frame, slug);
   }
-  if (lock && frame) { frame.dataset.wanted = lock.dataset.lock; frame.dataset.asked = 'yes'; if (frame.dataset.many) frame.dataset.open = ''; draw(frame); }
+  if (lock && frame) { frame.dataset.wanted = lock.dataset.lock; frame.dataset.asked = 'yes'; if (frame.dataset.many || frame.dataset.pick) frame.dataset.open = ''; draw(frame); }
+  if (event.target.closest('[data-close-pick]') && frame) { frame.dataset.asked = 'no'; frame.dataset.open = ''; draw(frame); }
   if (close && frame) { frame.dataset.asked = 'no'; draw(frame); }
   if (person) {
     who = person.dataset.who;
@@ -361,6 +404,7 @@ document.addEventListener('click', event => {
 document.addEventListener('input', event => { const box = event.target.closest('[data-filter]'); if (!box) return; const typed = box.value.trim().toLowerCase(); box.closest('.menu').querySelectorAll('li').forEach(li => { li.hidden = !li.textContent.toLowerCase().includes(typed); }); });
 // D and E open in the state that shows how they differ: the drop-down open, and the rest shown.
 document.querySelectorAll('[data-many]').forEach(frame => { frame.dataset.open = 'card'; });
+document.querySelectorAll('[data-pick]').forEach(frame => { frame.dataset.open = 'foot'; });
 document.querySelectorAll('[data-quiet]').forEach(frame => { frame.dataset.open = !frame.dataset.state || frame.dataset.state === 'open' ? 'foot' : ''; });
 document.querySelectorAll('.frame').forEach(frame => { frame.dataset.wanted = 'nyu'; draw(frame); });
 </script>
