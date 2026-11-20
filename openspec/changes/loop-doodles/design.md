@@ -20,7 +20,9 @@ Conga is a plain page under `public/conga`, served at `/conga`, linked from the 
 
 **D5. The best score is read in the browser.** The stub shows "Your best" from the game's own stored value, and nothing before a first game.
 
-**D6. Staged tickets say "Try".** For the admin a staged ticket links to where the game is being worked on. For Seats that is its mockup.
+**D6. Staged tickets say "Try".** For the admin a staged ticket links to where the game is being worked on. Nothing is staged today.
+
+**D7. Seats is a plain page.** `public/seats/index.html`, served at `/seats` as Conga is at `/conga`: the footer ticket of `public/demo/mockups-footer-seats.html` with the mockup strip taken off, a way back to Doodles, and "In the works". It wears the colours the person picked. It has nothing to play for yet.
 
 ## Risks / Trade-offs
 

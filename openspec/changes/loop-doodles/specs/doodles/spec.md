@@ -5,7 +5,7 @@ The app SHALL have a page, Doodles, that shows each game that is out as a ticket
 
 #### Scenario: A visitor opens the page
 - **WHEN** someone signed out opens Doodles
-- **THEN** they see a ticket for Conga with a "Play" link to the game
+- **THEN** they see a ticket for each game that is out, Conga first, each with a "Play" link to the game
 
 #### Scenario: The best is shown
 - **WHEN** the browser has kept a best for a game
@@ -14,6 +14,17 @@ The app SHALL have a page, Doodles, that shows each game that is out as a ticket
 #### Scenario: No game played yet
 - **WHEN** the browser has kept no best for a game
 - **THEN** its ticket says nothing about a best
+
+### Requirement: A game can be out while still in the works
+A game that is out and not finished SHALL say "In the works" on its ticket, and its own page SHALL say so too. It SHALL be playable by everyone.
+
+#### Scenario: Seats on the page
+- **WHEN** anyone opens Doodles
+- **THEN** the Seats ticket says "In the works" and has a "Play" link to the game
+
+#### Scenario: Seats is opened
+- **WHEN** someone opens Seats
+- **THEN** the page says it is in the works and has a way back to Doodles
 
 ### Requirement: A staged game is the admin's alone
 A game that is not out SHALL be shown only to the admin, after the games that are out, marked as staged, with a "Try" link in place of "Play". Nothing about it SHALL be sent to anyone else.

@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
   // Restored Turbopack build caches have reused stale CSS across deployments.
   experimental: { turbopackFileSystemCacheForBuild: false, serverActions: { bodySizeLimit: '4mb' } },
   // A person's own animal is drawn after one of the set's, read from disk by the campus screen's action (lib/campus/custom-face.ts).
-  outputFileTracingIncludes: { '/c/**': ['./public/animals/*.png'] },
+  // The Conga game's page is read from disk too, by the route that serves it (app/conga).
+  outputFileTracingIncludes: { '/c/**': ['./public/animals/*.png'], '/conga': ['./public/conga/index.html'] },
   // Every page is per-viewer and live (counts, your answer); nothing is prerendered or cached.
   // The static demos live in public/demo/ and serve without .html: /demo/stellic, /demo/quorum, /demo/mockups-….
   // Links to the old static site (/index.html, /quorum.html, …) follow them there.
@@ -26,8 +27,8 @@ const nextConfig: NextConfig = {
     return [{ source: "/conga/:file(.+\\.v\\d+\\.webp)", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }];
   },
   async rewrites() {
-    // Conga is a plain page with its own scripts beside it (public/conga), served at /conga.
-    return [{ source: "/demo/:page([^/.]+)", destination: "/demo/:page.html" }, { source: "/conga", destination: "/conga/index.html" }];
+    // Conga's page is served by app/conga, with its scripts beside it in public/conga.  Seats (public/seats) is one too.
+    return [{ source: "/demo/:page([^/.]+)", destination: "/demo/:page.html" }, { source: "/seats", destination: "/seats/index.html" }];
   },
   turbopack: {
     rules: {

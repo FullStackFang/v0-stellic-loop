@@ -7,10 +7,10 @@ Loopd has one game, Conga, with its own link in the top bar, and a second idea t
 - A new page, **Doodles**, at `/c/doodles`, holds the games. Each is a ticket on a rail: the game moving on its face, its name on a tilted ink plate, Play on the stub (direction A of `public/demo/mockups-games-shelf.html`, with the name plate of B; founder, 2026-11-20: "love A", "i like the way the name is splattered across").
 - The top bar's "Conga" link becomes "Doodles" and leads there. Conga itself stays at `/conga`.
 - A game is either out or staged. A staged one is on the page for the admin alone, greyed and marked, with "Try" in place of "Play". Putting it out is one word in `lib/campus/doodles.ts`.
-- Seats is the first staged one. "Try" opens its mockup; it is not a game yet.
+- A game that is out can be marked as still in the works: its ticket says "In the works". Seats is out that way (founder, 2026-11-20: "toss in the ticket thing that was intended for the footer and leave it there as a game, but add a pending status"): the footer ticket with seats, on a page of its own at `/seats`.
 - The page is open to signed-out visitors, as Conga is.
 
-Not in this change: a game offered on an event or idea card (founder: "that would be distracting for now"), Seats as a real game, and an admin switch for putting a game out.
+Not in this change: a game offered on an event or idea card (founder: "that would be distracting for now"), anything to play for in Seats (a clock, a score), and an admin switch for putting a game out.
 
 The name: the founder asked for something "ink themed or loopd themed" in place of "Games". Doodles was the suggestion he answered "love it" to. It is one word in the bar and the page title if he wants another.
 
