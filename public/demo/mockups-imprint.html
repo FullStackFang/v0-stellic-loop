@@ -454,7 +454,12 @@ $('#claim-form').addEventListener('submit', event => {
   if (!inApp) return show();
   const button = form.querySelector('button'); button.disabled = true; form.querySelector('.wrong')?.remove();
   fetch('/organizers/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ club: data.get('club'), email: data.get('email'), plan: data.get('plan') }) })
-    .then(answer => { if (!answer.ok) throw new Error(String(answer.status)); show(); })
+    .then(answer => {
+      if (!answer.ok) throw new Error(String(answer.status));
+      // The next step, in the app only: checking that the club is theirs (app/organizers/claim).
+      const next = document.createElement('a'); next.className = 'btn go'; next.href = '/organizers/claim'; next.target = '_top'; next.textContent = 'Check you run it';
+      mark.after(next); show();
+    })
     .catch(() => { button.disabled = false; const wrong = document.createElement('p'); wrong.className = 'lab k wrong'; wrong.setAttribute('role', 'alert'); wrong.textContent = 'That did not save. Check the email and try again.'; form.append(wrong); });
 });
 

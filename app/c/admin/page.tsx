@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { db } from '@/lib/db';
 import { customFace } from '@/lib/campus/animals';
+import { clubClaims, type AdminClaim } from '@/lib/campus/club-claim';
 import { catalogue } from '@/lib/campus/animal-tiers';
 import { premiumAsks } from '@/lib/campus/custom-face';
 import { clubAsks } from '@/lib/campus/imprint';
@@ -20,14 +21,14 @@ import { siteBar } from '../site-bar';
 import { WordsField } from '@/components/campus/words-field';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 import { Activity, People, SPANS, type Span } from './stats';
 
 export const dynamic = 'force-dynamic';
 
 const RULES = { outings: 'any outings', word: 'outings on events with a word', weeks: 'the same group at the giver’s events, weeks in a row' } as const;
 /** The sections, down the left. The page shows one at a time. What waits for the admin comes first (public/demo/mockups-admin-review.html). */
-const TABS = { activity: 'Activity', people: 'People', review: 'Review', schools: 'Schools', events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
+const TABS = { activity: 'Activity', people: 'People', review: 'Review', clubs: 'Clubs', schools: 'Schools', events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
 type Tab = keyof typeof TABS;
 /** Where an animal stands. One a person had made, and nobody else may pick, is `own`: it is listed with the ones that are off. */
 const TIER = { core: 'Core', premium: 'Premium', school: 'School', off: 'Off', own: 'Maker only' } as const;
@@ -44,16 +45,17 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   if (!campus) notFound();
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
-  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => [])]);
+  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs, claims] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => []), clubClaims(db()).catch((): AdminClaim[] => [])]);
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const at = (to: Tab, school = campus.slug) => `/c/admin?campus=${school}&tab=${to}`;
   /** What every form carries: the campus it acts on, and the section to come back to. */
   const keep = <><input type="hidden" name="campus" value={campus.slug} /><input type="hidden" name="tab" value={tab} /></>;
   // Waiting for a school check, the longest wait first. Everyone else in `linked` is let in.
   const queue = linked.filter(each => each.waiting).sort((a, b) => b.days - a.days || a.added.localeCompare(b.added)), waiting = queue.length;
+  const claimsWaiting = claims.filter(each => each.state === 'waiting').length;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
   // Activity and People are about the whole site and carry no count.
-  const counts: Partial<Record<Tab, number>> = { review: waiting, schools: wanted_.length, events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
+  const counts: Partial<Record<Tab, number>> = { review: waiting, clubs: claims.length, schools: wanted_.length, events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
   const top = (beside?: ReactNode) => <div className="cs-adm-top"><h1>{TABS[tab]}</h1>{beside}</div>;
 
@@ -187,6 +189,20 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Turn down</button></form></li>)}</ul>
     </section>;
   }
+  /** Claims to run a club (lib/campus/club-claim.ts). Those waiting come first. One Loopd approved by itself, from the club's officer list, is marked so, and can be taken back. */
+  function clubsClaimed() {
+    const decide = (claim: AdminClaim, to: 'approved' | 'refused', word: string, go = false) => <form action={decideClubClaimAction}>{keep}<input type="hidden" name="claim" value={claim.id} /><input type="hidden" name="to" value={to} /><button className={go ? 'cs-btn sm go' : 'cs-btn sm'}>{word}</button></form>;
+    return <section>{top()}
+      <p className="cs-adm-lede">{claims.length ? 'People who say they run a club, across every campus. Someone whose name is on the club’s CampusGroups officer list is approved without you; anyone else waits here. You can take any of them back.' : 'Nobody has claimed a club yet.'}</p>
+      <ul className="cs-adm-rows">{claims.map(claim => <li key={claim.id}><div><b>{claim.club}</b>
+          <span>{[claim.person, claim.email, claim.role, 'asked ' + claim.asked].filter(Boolean).join(' · ')}</span>
+          {claim.state === 'waiting' ? <span className="warn">Waiting for you{claim.note ? ': ' + claim.note : ''}</span> : <span>{claim.state === 'approved' ? 'Approved' : 'Turned down'} {claim.how === 'officer list' ? 'by Loopd, from the officer list' : 'by you'}</span>}
+          {claim.seen && <span>Officers listed: {claim.seen}</span>}</div>
+        <a className="cs-btn sm" href={claim.page + 'officers/'} target="_blank" rel="noreferrer">Open the list</a>
+        {claim.state !== 'approved' && decide(claim, 'approved', 'Approve', true)}
+        {claim.state !== 'refused' && decide(claim, 'refused', claim.state === 'approved' ? 'Take back' : 'Turn down')}</li>)}</ul>
+    </section>;
+  }
   /** Schools Loopd is not at that people signed up, the most asked first. A row opens to show who asked. One typed in as "Other" is marked, and can be taken off. */
   function askedFor() {
     const most = wanted_[0]?.people ?? 1, people = wanted_.reduce((sum, each) => sum + each.people, 0);
@@ -231,13 +247,13 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const span: Span = days && days in SPANS ? days as Span : '30', signsIn: Way | null = way && way in WAYS ? way as Way : null, lines = Math.min(Math.max(Number(n) || 50, 50), 2000);
   const activity = () => <Activity tz={tz} span={span} top={top} href={to => `${at('activity')}&days=${to}`} />;
   const people = () => <People tz={tz} way={signsIn} shown={lines} top={top} href={(to, shown) => `${at('people')}${to ? `&way=${to}` : ''}${shown ? `&n=${shown}` : ''}`} />;
-  const body = { activity, people, review, schools: askedFor, events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
+  const body = { activity, people, review, clubs: clubsClaimed, schools: askedFor, events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
   return <div className="cs">
     {bar}
     <main className="cs-adm">
       <aside className="cs-adm-rail">
         <details className="school"><summary>{campus.name}</summary><nav aria-label="Campus">{campuses.filter(each => each.id !== campus.id).map(each => <Link key={each.id} href={at(tab, each.slug)}>{each.name}</Link>)}</nav></details>
-        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'review' && waiting ? <small className="warn">{waiting} waiting</small> : counts[each] !== undefined && <small>{counts[each]}</small>}</Link>)}</nav>
+        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'review' && waiting ? <small className="warn">{waiting} waiting</small> : each === 'clubs' && claimsWaiting ? <small className="warn">{claimsWaiting} waiting</small> : counts[each] !== undefined && <small>{counts[each]}</small>}</Link>)}</nav>
         <p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is open to its members again: LOOP_FRONT is set to groups.'}</p>
       </aside>
       <div className="cs-adm-main">
