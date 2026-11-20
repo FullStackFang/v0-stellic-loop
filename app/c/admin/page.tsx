@@ -12,6 +12,7 @@ import { listCampuses } from '@/lib/campus/listings';
 import { adminListings, campusFeeds } from '@/lib/campus/manage';
 import { campusPlaces } from '@/lib/campus/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
+import { WAYS, type Way } from '@/lib/campus/stats';
 import { schoolsAsked } from '@/lib/campus/school-ask';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
@@ -20,12 +21,13 @@ import { WordsField } from '@/components/campus/words-field';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
 import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { Activity, People, SPANS, type Span } from './stats';
 
 export const dynamic = 'force-dynamic';
 
 const RULES = { outings: 'any outings', word: 'outings on events with a word', weeks: 'the same group at the giver’s events, weeks in a row' } as const;
 /** The sections, down the left. The page shows one at a time. What waits for the admin comes first (public/demo/mockups-admin-review.html). */
-const TABS = { review: 'Review', schools: 'Schools', events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
+const TABS = { activity: 'Activity', people: 'People', review: 'Review', schools: 'Schools', events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
 type Tab = keyof typeof TABS;
 /** Where an animal stands. One a person had made, and nobody else may pick, is `own`: it is listed with the ones that are off. */
 const TIER = { core: 'Core', premium: 'Premium', school: 'School', off: 'Off', own: 'Maker only' } as const;
@@ -33,11 +35,11 @@ const SHOW = ['all', 'core', 'premium', 'school', 'off'] as const;
 type Show = typeof SHOW[number];
 
 /** The admin's page for running a campus by hand (design D2, D6, D8). Anyone who is not the admin is told it does not exist. */
-export default async function CampusAdminPage({ searchParams }: { searchParams: Promise<{ campus?: string; said?: string; q?: string; tab?: string; show?: string }> }) {
+export default async function CampusAdminPage({ searchParams }: { searchParams: Promise<{ campus?: string; said?: string; q?: string; tab?: string; show?: string; days?: string; way?: string; n?: string }> }) {
   const viewer = await campusViewer();
   if (!viewer) redirect(signInHref('/c/admin'));
   if (!viewer.admin) notFound();
-  const { campus: slug, said, q = '', tab: asked, show: wanted } = await searchParams, campuses = await listCampuses(db());
+  const { campus: slug, said, q = '', tab: asked, show: wanted, days, way, n } = await searchParams, campuses = await listCampuses(db());
   const campus = campuses.find(each => each.slug === slug) ?? campuses[0];
   if (!campus) notFound();
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
@@ -50,7 +52,8 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   // Waiting for a school check, the longest wait first. Everyone else in `linked` is let in.
   const queue = linked.filter(each => each.waiting).sort((a, b) => b.days - a.days || a.added.localeCompare(b.added)), waiting = queue.length;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
-  const counts: Record<Tab, number> = { review: waiting, schools: wanted_.length, events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
+  // Activity and People are about the whole site and carry no count.
+  const counts: Partial<Record<Tab, number>> = { review: waiting, schools: wanted_.length, events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
   const top = (beside?: ReactNode) => <div className="cs-adm-top"><h1>{TABS[tab]}</h1>{beside}</div>;
 
@@ -224,13 +227,17 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   }
 
   const { bar, foot } = await siteBar({ campus, viewer, back: '/c/admin' });
-  const body = { review, schools: askedFor, events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
+  // Activity and People read the sign-in provider, so they are asked only when their section is open.
+  const span: Span = days && days in SPANS ? days as Span : '30', signsIn: Way | null = way && way in WAYS ? way as Way : null, lines = Math.min(Math.max(Number(n) || 50, 50), 2000);
+  const activity = () => <Activity tz={tz} span={span} top={top} href={to => `${at('activity')}&days=${to}`} />;
+  const people = () => <People tz={tz} way={signsIn} shown={lines} top={top} href={(to, shown) => `${at('people')}${to ? `&way=${to}` : ''}${shown ? `&n=${shown}` : ''}`} />;
+  const body = { activity, people, review, schools: askedFor, events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
   return <div className="cs">
     {bar}
     <main className="cs-adm">
       <aside className="cs-adm-rail">
         <details className="school"><summary>{campus.name}</summary><nav aria-label="Campus">{campuses.filter(each => each.id !== campus.id).map(each => <Link key={each.id} href={at(tab, each.slug)}>{each.name}</Link>)}</nav></details>
-        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'review' && waiting ? <small className="warn">{waiting} waiting</small> : <small>{counts[each]}</small>}</Link>)}</nav>
+        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'review' && waiting ? <small className="warn">{waiting} waiting</small> : counts[each] !== undefined && <small>{counts[each]}</small>}</Link>)}</nav>
         <p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is open to its members again: LOOP_FRONT is set to groups.'}</p>
       </aside>
       <div className="cs-adm-main">
