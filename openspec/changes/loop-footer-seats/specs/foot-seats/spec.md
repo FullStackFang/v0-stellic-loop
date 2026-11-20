@@ -64,7 +64,7 @@ Once every seat is filled, the ticket SHALL show a "Drop them again" button. Pre
 
 #### Scenario: All are in
 - **WHEN** the last empty seat is filled
-- **THEN** a "Drop them again" button is shown beside the "All in" pill
+- **THEN** a "Drop them again" button is shown as a pill on the top edge of the ticket
 
 #### Scenario: The button is pressed
 - **WHEN** the person presses "Drop them again"
