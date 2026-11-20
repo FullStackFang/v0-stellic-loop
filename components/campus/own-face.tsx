@@ -123,9 +123,10 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
       <div className="cs-prem-stub"><button className="cs-btn" onClick={() => { setSaid(''); setState('ask'); }}>Redraw your pet</button><p className="cs-prem-small">A new drawing, set beside this one. You keep one.</p></div></>
     : state === 'sure' ? <><div className="cs-prem-made">{shown && <img src={shown} alt="The photo you chose" />}</div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void (from === 'ask' ? again() : make()); }}>
-        <div className="cs-prem-join"><input value={note} onChange={event => setNote(event.target.value)} maxLength={60} aria-label="Anything to add" placeholder="Anything to add: floppier ears…" autoComplete="off" autoFocus /></div>
+        {/* A redraw was already told what to change, chips and words together, on the step before: it is only asked here. */}
+        {from === 'photo' && <div className="cs-prem-join"><input value={note} onChange={event => setNote(event.target.value)} maxLength={60} aria-label="Anything to add" placeholder="Anything to add: floppier ears…" autoComplete="off" autoFocus /></div>}
         <button className="cs-btn go">Yes, draw it</button>
-        <p className="cs-prem-small">{note.length} of 60 letters, and you can leave it empty. Nothing is drawn until you press Yes.</p>
+        <p className="cs-prem-small">{from === 'photo' && `${note.length} of 60 letters, and you can leave it empty. `}Nothing is drawn until you press Yes.</p>
       </form></>
     : state === 'busy' ? <div className="cs-prem-made"><SeatsTicket slow quiet filled={fresh} /><p>This takes about half a minute.</p></div>
     : state === 'ask' ? <><div className="cs-prem-perks"><span>Give a photo and say what should change. We’ll draw it again.</span></div>

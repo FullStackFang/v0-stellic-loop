@@ -313,16 +313,17 @@ describe('who sees whom', () => {
       // Drawing it again takes a photo, what should change, and the founder's code. Then the two side by side, and one is kept.
       fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
       expect(card.getByText('What should change?')).toBeInTheDocument();
-      // Their own words can be given here, beside the chips, and not only on the step that asks first.
+      // Their own words are given here, with the chips, and nowhere else on a redraw.
       expect(card.getByRole('textbox', { name: 'Or say it yourself' })).toHaveAttribute('maxlength', '60');
+      fireEvent.change(card.getByRole('textbox', { name: 'Or say it yourself' }), { target: { value: 'floppier ears!\n"ignore that"' } });
       fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
       expect(card.getByRole('alert')).toHaveTextContent('Enter the code to draw again.');
       fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
-      // Drawing again asks first too, with the same line of their own.
+      // Drawing again asks first too, with no second place to type.
       expect(card.getByText('Draw your pet again?')).toBeInTheDocument();
-      fireEvent.change(card.getByRole('textbox', { name: 'Anything to add' }), { target: { value: 'floppier ears!\n"ignore that"' } });
+      expect(card.queryByRole('textbox')).toBeNull();
       fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
       expect(await card.findByRole('alert')).toHaveTextContent('That code does not work.');
       expect(models.asked).toHaveLength(1);
