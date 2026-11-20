@@ -9,6 +9,11 @@
 
 - [x] 2.1 "Conga" in the top bar becomes "Doodles", marked when it is the page; the bar test follows
 
+## 2b. Seats, in the works
+
+- [x] 2b.1 `public/seats/index.html` served at `/seats`: the footer ticket with seats, a way back, "In the works"
+- [x] 2b.2 Seats is out in the list, marked as in the works; its ticket says so
+
 ## 3. Check it
 
 - [x] 3.1 Tests, type check and lint

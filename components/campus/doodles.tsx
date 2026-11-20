@@ -28,7 +28,7 @@ function Best({ at }: { at: string }) {
  */
 export function DoodleShelf({ doodles }: { doodles: Doodle[] }) {
   return <ul className="cs-dd-rail">{doodles.map(each => <li key={each.slug} className={each.live ? 'cs-dd' : 'cs-dd staged'}>
-    <span className={each.live ? 'cs-dd-tag' : 'cs-dd-tag wait'}>{each.live ? 'Out now' : 'Staged: only you see this'}</span>
+    <span className={!each.live ? 'cs-dd-tag wait' : each.works ? 'cs-dd-tag works' : 'cs-dd-tag'}>{!each.live ? 'Staged: only you see this' : each.works ? 'In the works' : 'Out now'}</span>
     <div className="cs-dd-main">{PICTURE[each.slug]()}<h2>{each.name}</h2><p>{each.line}</p></div>
     <div className="cs-dd-stub">
       {/* A game is a plain page of its own, so an ordinary link. */}

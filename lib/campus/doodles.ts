@@ -11,6 +11,8 @@ export type Doodle = {
   href: string;
   /** Out for everyone. One that is not is staged: the admin alone sees it on the page, greyed. */
   live: boolean;
+  /** Out, and not finished: its ticket says "In the works". */
+  works?: boolean;
   /** The name the game keeps the player's best under, in the browser. */
   bestKey?: string;
 };
@@ -18,7 +20,7 @@ export type Doodle = {
 /** Every doodle, in the order of the page. To put a staged one out, set `live`. */
 export const DOODLES: readonly Doodle[] = [
   { slug: 'conga', name: 'Conga', line: 'Walk your animal round campus and gather the longest line.', href: '/conga', live: true, bestKey: 'conga-best' },
-  { slug: 'seats', name: 'Seats', line: 'The seats fell out. Get everyone back in.', href: '/demo/mockups-footer-seats.html', live: false },
+  { slug: 'seats', name: 'Seats', line: 'The seats fell out. Get everyone back in.', href: '/seats', live: true, works: true },
 ];
 
 /** The doodles a person is shown: the ones that are out, and for the admin the staged ones after them. */

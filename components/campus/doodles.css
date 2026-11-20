@@ -15,6 +15,7 @@
 .cs-dd-go.try { background: var(--cs-paper); color: var(--cs-ink); }
 .cs-dd-tag { position: absolute; z-index: 2; left: 14px; top: -11px; padding: 3px 11px 4px; border-radius: 99px; font-size: 12.5px; font-weight: 600; white-space: nowrap; background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs-dd-tag.wait { background: var(--cs-third); box-shadow: none; }
+.cs-dd-tag.works { background: var(--cs-ink); color: var(--cs-paper); box-shadow: none; }
 .cs-dd.staged .cs-dd-stub { background: color-mix(in oklab, var(--cs-ink) 10%, var(--cs-paper)); } .cs-dd.staged .cs-dd-pv { opacity: .55; }
 .cs-dd.staged h2 { background: var(--cs-mute); color: var(--cs-paper); box-shadow: none; }
 
