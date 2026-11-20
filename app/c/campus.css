@@ -780,7 +780,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-links a.cs-inktab { display: flex; gap: 7px; margin-left: 6px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
 .cs-links a.cs-inktab:not([aria-current]):hover { translate: -1px -2px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 5px 0 var(--cs-ink); } .cs-links a.cs-inktab[aria-current] { box-shadow: none; }
 /* the Ink page (app/c/ink): the bar, and under it the page itself, which fills the rest of the window and scrolls on its own */
-.cs.cs-inkpage { height: 100dvh; } .cs-inkframe { flex: 1; min-height: 0; width: 100%; border: 0; display: block; }
+.cs.cs-inkpage { height: 100dvh; } html:has(.cs-inkpage) { scrollbar-width: none; } html:has(.cs-inkpage)::-webkit-scrollbar { display: none; } .cs-inkframe { flex: 1; min-height: 0; width: 100%; border: 0; display: block; }
 @media (max-width: 520px) { .cs-links a.cs-inktab { margin-left: 0; padding: 9px; } .cs-inktab span { display: none; } .cs-pets-top { flex-wrap: wrap; } .cs-pets-top input { flex-basis: 100%; } }
 /* the row in the account card: the mark, two short lines, one button */
 .cs-inkrow { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--cs-line); }
