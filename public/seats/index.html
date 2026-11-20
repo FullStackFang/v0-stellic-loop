@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seats · Loopd</title>
-<meta name="description" content="The seats fell out. Get everyone back in.">
+<meta name="description" content="Everyone gets kicked out. Put each one back in its own seat, as fast as you can.">
 <style>
 /* Seats, a doodle (app/c/doodles), in the works: the ticket first drawn for the footer (public/demo/mockups-footer-seats.html, openspec/changes/loop-footer-seats),
    on a page of its own. A plain page, as Conga is.
@@ -47,7 +47,10 @@ body { margin: 0; min-height: 100dvh; display: flex; flex-direction: column; jus
 /* it sits on the top edge of the ticket itself, over the paper, clear of the stub */
 #redo { height: 34px; padding: 0 16px; border-radius: 99px; font-size: 13.5px; font-weight: 620; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); transition: translate .15s var(--ease), box-shadow .15s var(--ease); }
 #redo:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } #redo:active { translate: 2px 2px; box-shadow: inset 0 0 0 1.5px var(--ink); }
-.tk:not(.full) #redo { display: none; }
+.tags small[hidden] { display: none; } .tags small { font-variant-numeric: tabular-nums; }
+.tags #best { background: var(--sunk); color: var(--ink); }
+@keyframes hit { from { background: oklch(58% 0.2 25); scale: 1.14; } } .tags small.hit { animation: hit .5s var(--ease); }
+@keyframes no { 25% { translate: -6px 0; } 75% { translate: 6px 0; } } .seat.no { animation: no .28s 2; }
 .tags small { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: 99px; font-size: 13.5px; font-weight: 600; white-space: nowrap; background: var(--ink); color: var(--paper); transition: background-color .3s, color .3s; }
 .tk.full .tags small { background: var(--action); }
 .pet { position: absolute; z-index: 3; left: 0; bottom: 7px; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 88%; cursor: grab; touch-action: none; will-change: transform; -webkit-user-drag: none; }
@@ -66,18 +69,18 @@ body { margin: 0; min-height: 100dvh; display: flex; flex-direction: column; jus
 <body>
 
 <header class="top"><a href="/c/doodles"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>Doodles</a><h1 class="admit" style="margin:0">Seats</h1><span class="works">In the works</span>
-  <p><span>The seats fell out. Drag everyone back in. More is coming: this one is not finished.</span></p></header>
+  <p><span>Remember who sits where. Everyone gets kicked out: put each one back in its own seat, as fast as you can. A wrong seat costs 2 seconds.</span></p></header>
 <main class="ft">
   <div class="carry"><div class="tk">
     <div class="stage"></div>
     <div class="tear"><span class="admit">Admit everyone</span><div class="code"></div></div>
-    <div class="tags"><small>Pick one up</small><button type="button" id="redo">Drop them again</button></div>
+    <div class="tags"><small role="timer">Remember who sits where</small><small id="best" hidden></small><button type="button" id="redo">Kick them out</button></div>
   </div></div>
 </main>
 
 <script>
 // The crowd of the live footer (components/campus/foot.tsx), cut down to what seats need: a place along the floor, a height
-// above it, picking up and throwing. Seats add one state: `seat`, the index of the seat an animal is in, or null.
+// above it, picking up and throwing. Seats add `seat`, the index of the seat an animal is in, or null, and `home`, the seat that is its own.
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const CROWD = [9, 25, 2, 30, 15, 21, 19, 31, 0, 27, 12, 6, 23], SIZE = 84, GAP = 60, FALL = 2100, STEP = 96;
 const animal = n => `/animals/${String(n + 1).padStart(2, '0')}.png`, clamp = (n, low, high) => Math.max(low, Math.min(high, n));
@@ -90,7 +93,6 @@ const seats = Array.from({ length: count }, (_, i) => { const el = document.crea
 const crowd = CROWD.slice(0, count).map((face, i) => { const el = document.createElement('img'); el.className = 'pet'; el.src = animal(face); el.alt = ''; el.draggable = false; stage.append(el); return { el, seat: i, x: 0, y: 0, vx: 0, vy: 0, r: 0, held: false }; });
 const place = () => { seats.forEach((el, i) => el.style.left = `${seatX(i)}px`); crowd.forEach(one => { if (one.seat !== null) { one.x = seatX(one.seat) - SIZE / 2; one.y = seatY(); } draw(one); }); };
 function draw(one) { const k = one.seat !== null ? small() : 1; one.el.style.transform = `translate(${one.x.toFixed(1)}px, ${(-one.y).toFixed(1)}px) rotate(${one.r.toFixed(1)}deg) scale(${k.toFixed(2)})`; }
-function told() { seats.forEach((el, i) => el.classList.toggle('taken', crowd.some(one => one.seat === i))); const full = crowd.every(one => one.seat !== null); tk.classList.toggle('full', full); pill.textContent = full ? 'All in' : 'Pick one up'; }
 
 let running = false, last = 0;
 const wake = () => { if (!running) { running = true; last = performance.now(); requestAnimationFrame(tick); } };
@@ -106,27 +108,56 @@ function tick(now) { const dt = Math.min(.032, (now - last) / 1000) || .016; las
   for (let at = 0; at < floor.length - 1; at++) { const a = floor[at], b = floor[at + 1], over = GAP - (b.x - a.x); if (over > 0) { a.x -= over / 2; b.x += over / 2; const mean = (a.vx + b.vx) / 2; a.vx = mean - 20; b.vx = mean + 20; moving = true; } }
   crowd.forEach(draw); if (moving || crowd.some(one => one.held)) requestAnimationFrame(tick); else running = false; }
 
-const nearest = one => { let best = null, far = 46; seats.forEach((_, i) => { if (crowd.some(other => other !== one && other.seat === i)) return; const d = Math.hypot(seatX(i) - (one.x + SIZE / 2), seatY() + seatSize() / 2 - (one.y + SIZE / 2)); if (d < far) { far = d; best = i; } }); return best; };
+// The game. Everyone has a seat of their own. A round shows them in it; "Kick them out" throws them all to the floor and starts
+// the clock, which stops when each is back in its own seat. A wrong seat sends the animal back down and adds to the time.
+const WRONG = 2, KEY = 'seats-best', button = document.getElementById('redo'), bestPill = document.getElementById('best');
+let state = 'look', began = 0, fine = 0, took = 0, clock = 0;
+const secs = n => `${n.toFixed(1)}s`, elapsed = () => (performance.now() - began) / 1000 + fine;
+const kept = () => { try { return parseFloat(localStorage.getItem(KEY)) || null; } catch { return null; } };
+const told = () => seats.forEach((el, i) => el.classList.toggle('taken', crowd.some(one => one.seat === i)));
+function say() {
+  tk.classList.toggle('full', state === 'done');
+  pill.textContent = state === 'look' ? 'Remember who sits where' : state === 'play' ? secs(elapsed()) : `All in: ${secs(took)}`;
+  button.textContent = state === 'look' ? 'Kick them out' : state === 'play' ? 'Start over' : 'Again';
+  const best = kept(); bestPill.hidden = best === null;
+  if (best !== null) bestPill.textContent = state === 'done' && took <= best ? 'Your best yet' : `Best ${secs(best)}`;
+}
+const mixed = () => { const order = crowd.map((_, i) => i); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } return order; };
 const sit = (one, i) => { one.seat = i; one.x = seatX(i) - SIZE / 2; one.y = seatY(); one.vx = one.vy = one.r = 0; draw(one); told(); };
+/** A new round: everyone is given a seat, and shown in it. */
+function round() { clearInterval(clock); state = 'look'; const order = mixed(); crowd.forEach((one, i) => { one.home = order[i]; one.held = false; one.el.classList.remove('up'); sit(one, one.home); }); say(); }
+/** Out they go, all at once and every which way, and the clock starts. With reduced motion they are on the floor at once. */
+function kick() { state = 'play'; began = performance.now(); fine = 0; const spots = mixed();
+  crowd.forEach((one, i) => { one.seat = null;
+    if (reduce) { one.x = 20 + spots[i] * (wide - 40 - SIZE) / Math.max(1, count - 1); one.y = 0; one.vx = one.vy = 0; } else { one.vx = (Math.random() - .5) * 1800; one.vy = 250 + Math.random() * 450; }
+    draw(one); });
+  told(); say(); wake(); clock = setInterval(say, 100); }
+function won() { clearInterval(clock); took = Math.round(elapsed() * 10) / 10; state = 'done'; const best = kept();
+  if (best === null || took < best) { try { localStorage.setItem(KEY, secs(took)); } catch { /* shown, not kept */ } }
+  say(); }
+const again = el => { el.classList.remove('hit', 'no'); void el.offsetWidth; };
+
+const nearest = one => { let best = null, far = 46; seats.forEach((_, i) => { if (crowd.some(other => other !== one && other.seat === i)) return; const d = Math.hypot(seatX(i) - (one.x + SIZE / 2), seatY() + seatSize() / 2 - (one.y + SIZE / 2)); if (d < far) { far = d; best = i; } }); return best; };
 for (const one of crowd) { let grip = null, when = 0;
-  one.el.addEventListener('pointerdown', event => { event.preventDefault(); one.el.setPointerCapture(event.pointerId); const box = stage.getBoundingClientRect();
-    one.seat = null; one.held = true; one.el.classList.add('up'); grip = { x: event.clientX - box.left - one.x, y: box.bottom - 7 - event.clientY - one.y }; when = performance.now(); told(); wake(); });
+  // Only while the clock runs, and only one that is out: one back in its own seat stays there.
+  one.el.addEventListener('pointerdown', event => { event.preventDefault(); if (state !== 'play' || one.seat !== null) return; one.el.setPointerCapture(event.pointerId); const box = stage.getBoundingClientRect();
+    one.held = true; one.el.classList.add('up'); grip = { x: event.clientX - box.left - one.x, y: box.bottom - 7 - event.clientY - one.y }; when = performance.now(); wake(); });
   one.el.addEventListener('pointermove', event => { if (!one.held) return; const box = stage.getBoundingClientRect(), now = performance.now(), dt = Math.max(.008, (now - when) / 1000); when = now;
     const x = event.clientX - box.left - grip.x, y = Math.max(0, box.bottom - 7 - event.clientY - grip.y);
     one.vx = one.vx * .55 + (x - one.x) / dt * .45; one.vy = one.vy * .55 + (y - one.y) / dt * .45; one.x = x; one.y = y;
     const near = nearest(one); seats.forEach((el, i) => el.classList.toggle('near', i === near)); });
   const up = () => { if (!one.held) return; one.held = false; one.el.classList.remove('up'); seats.forEach(el => el.classList.remove('near'));
-    const near = nearest(one); if (near !== null) return sit(one, near);
+    const near = nearest(one);
+    if (near !== null && near === one.home) { sit(one, near); if (crowd.every(each => each.seat !== null)) won(); return; }
+    // Not its seat: the seat shakes it off, and the clock is charged.
+    if (near !== null) { fine += WRONG; again(seats[near]); seats[near].classList.add('no'); again(pill); pill.classList.add('hit'); one.vx = clamp(one.vx, -260, 260); one.vy = Math.min(one.vy, 0); }
     one.vx = clamp(one.vx, -2200, 2200); one.vy = clamp(one.vy, -1600, 1900); if (reduce) { one.y = 0; one.vx = one.vy = 0; draw(one); } wake(); };
   one.el.addEventListener('pointerup', up); one.el.addEventListener('pointercancel', up); }
 
-/** They start in their seats and leave them one after another. With reduced motion they are on the floor from the start. */
-function start() { crowd.forEach((one, i) => sit(one, i)); crowd.forEach((one, i) => setTimeout(() => {
-  const from = one.x; one.seat = null; one.x = reduce ? 20 + i * (wide - 40 - SIZE) / Math.max(1, count - 1) : from; one.y = reduce ? 0 : one.y; one.vx = reduce ? 0 : (Math.random() - .5) * 260; one.vy = reduce ? 0 : 180; draw(one); told(); wake(); }, reduce ? 0 : 500 + i * 250)); }
 try { const kit = localStorage.getItem('loop-kit'); if (kit) document.documentElement.dataset.kit = kit; } catch { /* the first colours stay */ }
-place(); told(); start();
+place(); round();
 addEventListener('resize', () => { wide = stage.clientWidth; place(); });
-document.getElementById('redo').addEventListener('click', start);
+button.addEventListener('click', () => state === 'look' ? kick() : round());
 </script>
 </body>
 </html>

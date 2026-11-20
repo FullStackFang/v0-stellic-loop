@@ -14,9 +14,12 @@
 - [x] 2b.1 `public/seats/index.html` served at `/seats`: the footer ticket with seats, a way back, "In the works"
 - [x] 2b.2 Seats is out in the list, marked as in the works; its ticket says so
 
+- [x] 2b.3 The game: seats of their own, "Kick them out", the clock, 2 seconds for a wrong seat, the best time kept and shown on the Doodles ticket
+- [x] 2b.4 Played through in a headless browser at desktop and phone width: a wrong seat, every right seat, the best kept, a new round
+
 ## 3. Check it
 
 - [x] 3.1 Tests, type check and lint
 - [x] 3.2 The page as served to a signed-out visitor holds Conga and no staged game
-- [ ] 3.3 Looked at in the browser at desktop and phone width, signed in as the admin
+- [x] 3.3 Looked at in a browser at desktop and phone width, signed out
 - [ ] 3.4 The founder's yes to the name

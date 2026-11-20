@@ -22,7 +22,7 @@ Conga is a plain page under `public/conga`, served at `/conga`, linked from the 
 
 **D6. Staged tickets say "Try".** For the admin a staged ticket links to where the game is being worked on. Nothing is staged today.
 
-**D7. Seats is a plain page.** `public/seats/index.html`, served at `/seats` as Conga is at `/conga`: the footer ticket of `public/demo/mockups-footer-seats.html` with the mockup strip taken off, a way back to Doodles, and "In the works". It wears the colours the person picked. It has nothing to play for yet.
+**D7. Seats is a plain page.** `public/seats/index.html`, served at `/seats` as Conga is at `/conga`: the footer ticket of `public/demo/mockups-footer-seats.html` with the mockup strip taken off, a way back to Doodles, and "In the works". It wears the colours the person picked. The game (founder, 2026-11-20: "they all get kicked out and you need to put them back in the same order, and there is a timer for the fastest"): each round gives every animal a seat and shows it there; "Kick them out" throws all to the floor and starts the clock; an animal sits only in its own seat; a wrong seat adds 2 seconds; the clock stops when all are in. The best time is kept in the browser under `seats-best` and shown on the Doodles ticket. A narrow window holds fewer animals, so a phone best is not a desktop best.
 
 ## Risks / Trade-offs
 
