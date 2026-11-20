@@ -75,13 +75,14 @@ main { display: grid; gap: 64px; max-width: 1360px; margin: 0 auto; padding: 30p
 .gt:not(.staged):hover { translate: 0 -5px; rotate: -.6deg; }
 .gt-main { display: grid; gap: 12px; padding: 14px 14px 18px; background: var(--paper); border-radius: 8px 0 0 8px; mask: radial-gradient(circle 9px at 100% 0, #0000 96%, #000), radial-gradient(circle 9px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
 .gt-main .pv { height: 170px; border-radius: 12px 12px 12px 4px; }
-.gt-main h3 { font-size: 27px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.045em; line-height: 1; }
+/* the name is an ink plate thrown across the picture, as on the boxes of direction B */
+.gt-main h3 { position: relative; z-index: 2; justify-self: start; margin: -40px 0 0 8px; padding: 5px 16px 7px; border-radius: 14px 14px 14px 4px; background: var(--ink); color: var(--field); font-size: 27px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.045em; line-height: 1.05; box-shadow: 3px 3px 0 var(--action); rotate: -3deg; }
 .gt-main p { color: var(--mute); font-size: 14px; min-height: 2.8em; }
 .gt-stub { display: grid; align-content: space-between; justify-items: center; padding: 16px 0; border-left: 2px dashed var(--ink); border-radius: 0 8px 8px 0; background: var(--field); mask: radial-gradient(circle 9px at 0 0, #0000 96%, #000), radial-gradient(circle 9px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
 .gt-stub b { writing-mode: vertical-rl; rotate: 180deg; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
 .gt-stub .pill { width: 62px; padding: 0; }
 .gt .tag { position: absolute; z-index: 2; left: 14px; top: -11px; }
-.gt.staged .gt-stub { background: var(--sunk); } .gt.staged .pv, .gt.staged h3 { opacity: .55; }
+.gt.staged .gt-stub { background: var(--sunk); } .gt.staged .pv { opacity: .55; } .gt.staged h3 { background: var(--mute); color: var(--paper); box-shadow: none; }
 
 /* ---- B: boxes on a shelf ---- */
 .shelf { position: relative; display: flex; align-items: flex-end; gap: 30px; padding: 30px 34px 0; min-height: 400px; }
@@ -130,25 +131,19 @@ main { display: grid; gap: 64px; max-width: 1360px; margin: 0 auto; padding: 30p
 </style>
 </head>
 <body>
-<div class="mock"><span><b>A shelf for games.</b> Games are what you play while a group is still forming: one is offered under an idea that waits for people, and "Games" in the bar holds them all. Conga is live; Seats and Spill are staged, as an admin sees them.</span>
-  <div><small>Jump to</small><a href="#w">Where</a><a href="#a">A</a><a href="#b">B</a><a href="#c">C</a></div>
+<div class="mock"><span><b>The shelf, as tickets on a rail.</b> Direction A, with each name on a tilted ink plate as in B. Try a name for the page with "Call it". Conga is live; Seats and Spill are staged, as an admin sees them.</span>
+  <div id="names"><small>Call it</small><button aria-pressed="true">Doodles</button><button>Blots</button><button>Inkwell</button><button>Side loops</button><button>Games</button></div>
   <div id="kits"><small>Colours</small><button data-kit="loop" aria-pressed="true">Loopd</button><button data-kit="cornell">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button></div></div>
 
 <main>
-<section class="dir" id="w"><div class="head"><i>W</i><b>Where you meet them</b><span>An idea still gathering people offers a game under it. Once it has its people the game is gone: there is nothing left to wait for.</span></div>
-  <div class="scr" data-dir="w"></div></section>
-<section class="dir" id="a"><div class="head"><i>A</i><b>Tickets on a rail</b><span>Each game is a ticket, with the game moving on its face and Play on its stub. A staged game is a greyed ticket only an admin sees.</span></div>
+<section class="dir" id="a"><div class="head"><i>A</i><b>Tickets on a rail</b><span>Each one is a ticket, with it moving on the face, its name on an ink plate and Play on the stub. A staged game is a greyed ticket only an admin sees.</span></div>
   <div class="scr" data-dir="a"></div></section>
-<section class="dir" id="b"><div class="head"><i>B</i><b>Boxes on a shelf</b><span>Each game is a box standing on a shelf; point at one and it leans out. A staged game lies on its side, not yet stood up.</span></div>
-  <div class="scr" data-dir="b"></div></section>
-<section class="dir" id="c"><div class="head"><i>C</i><b>One on the table</b><span>The game you pick is large and ready to play; the others wait in a column beside it. Press a row to put it on the table.</span></div>
-  <div class="scr" data-dir="c"></div></section>
 </main>
 
 <script>
 const animal = n => `/animals/${String(n).padStart(2, '0')}.png`;
 const RINGS = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="16" cy="11" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>';
-const BAR = `<div class="bar"><span class="wm">${RINGS}Loopd</span><a class="pill">This week</a><a class="pill on">Games</a><a class="pill">Ink</a><a class="pill">Assistants</a><img class="me" src="${animal(12)}" alt=""></div>`;
+const BAR = `<div class="bar"><span class="wm">${RINGS}Loopd</span><a class="pill">This week</a><a class="pill on" data-name>Doodles</a><a class="pill">Ink</a><a class="pill">Assistants</a><img class="me" src="${animal(12)}" alt=""></div>`;
 const GAMES = {
   conga: { name: 'Conga', line: 'Walk your animal round campus and gather the longest line.', best: 'Your best: 23', state: 'live',
     pv: () => `<div class="pv conga">${[12, 5, 8, 17, 23, 3, 30].map((n, i) => `<img style="--i:${i}" src="${animal(n)}" alt="">`).join('')}</div>` },
@@ -179,6 +174,7 @@ const draw = {
 };
 for (const scr of document.querySelectorAll('.scr')) scr.innerHTML = (scr.dataset.dir === 'w' ? BAR.replace('"pill">This week', '"pill on">This week').replace('"pill on">Games', '"pill">Games') : BAR) + draw[scr.dataset.dir]();
 document.addEventListener('click', event => { const row = event.target.closest('.row'); if (!row || event.target.closest('a')) return; row.closest('.scr').innerHTML = BAR + draw.c(row.dataset.game); });
+document.querySelectorAll('#names button').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('[data-name]').forEach(each => each.textContent = button.textContent); document.querySelectorAll('#names button').forEach(each => each.setAttribute('aria-pressed', each === button)); }));
 document.querySelectorAll('#kits button').forEach(button => button.addEventListener('click', () => { document.documentElement.dataset.kit = button.dataset.kit; document.querySelectorAll('#kits button').forEach(each => each.setAttribute('aria-pressed', each === button)); }));
 </script>
 </body>
