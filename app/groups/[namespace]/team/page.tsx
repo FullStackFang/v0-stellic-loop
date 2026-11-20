@@ -40,10 +40,11 @@ export const maxDuration = 120;
 type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
 // The record is one section at a time, chosen by ?tab=. Every tab is a link, so a view can be shared and nothing depends on script.
 // "All" opens first: what is coming up, a column a day, with what waits on the reader marked.
-const TABS = [['all', 'All'], ['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['events', 'Events'], ['asks', 'Asks'], ['ideas', 'Ideas'], ['resources', 'Resources'], ['travel', 'Travel'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
+// The bar leads with Members, then what people do together; the record's own kinds sit under "More", since the counts in the head already link to them.
+const TABS = [['all', 'All'], ['events', 'Events'], ['ideas', 'Ideas'], ['asks', 'Asks'], ['resources', 'Resources'], ['travel', 'Travel'], ['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
 type Tab = typeof TABS[number][0];
-/** The sections kept under "More", with the group's Members page. */
-const MORE: readonly Tab[] = ['brief', 'mine'];
+/** The sections kept under "More". */
+const MORE: readonly Tab[] = ['decisions', 'claims', 'outputs', 'brief', 'mine'];
 /** How many days past today get a column of their own on "All"; anything further is under Later. */
 const DAYS_AHEAD = 6;
 /** How many settled things "All" lists. */
@@ -241,9 +242,9 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
 
     <Inside group={group} pictures={data.inside} />
 
-    <nav className="gt-tabs" aria-label="Team sections">{TABS.filter(([key]) => !MORE.includes(key)).map(tabLink)}
+    <nav className="gt-tabs" aria-label="Team sections"><Link href={base}>Members</Link>{TABS.filter(([key]) => !MORE.includes(key)).map(tabLink)}
       <details className="gt-more" data-on={MORE.includes(tab) || undefined}><summary>{MORE.includes(tab) ? TABS.find(([key]) => key === tab)![1] : 'More'}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg></summary>
-        <div><Link href={base}>Members</Link>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}</div></details>
+        <div>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}</div></details>
       <time dateTime={today}>{shortDay(today)} · {zoneName(state.timezone)}</time></nav>
 
     <div className="gt-strip">
