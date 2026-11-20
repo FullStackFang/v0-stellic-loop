@@ -17,6 +17,11 @@
 - [x] 2b.3 The game: seats of their own, "Kick them out", the clock, 2 seconds for a wrong seat, the best time kept and shown on the Doodles ticket
 - [x] 2b.4 Played through in a headless browser at desktop and phone width: a wrong seat, every right seat, the best kept, a new round
 
+- [x] 2b.5 Flourishes: the bob, the jolt, the landing, "+2s", the cheer, the ink drops, the stamp; nothing moves with reduced motion
+- [x] 2b.6 `app/seats/route.ts` writes who is playing into the page; `proxy.ts` reads the sign-in for `/seats`; test in `app/seats/route.test.ts`
+- [x] 2b.7 With Ink+ your own animal plays, with a spark, chosen from "You"; without, a pill to the Ink page
+- [x] 2b.8 Played in a headless browser signed out, as someone with Ink+, and at phone width
+
 ## 3. Check it
 
 - [x] 3.1 Tests, type check and lint
