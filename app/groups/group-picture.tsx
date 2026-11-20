@@ -10,6 +10,7 @@ import { groupPictureSrc } from '@/lib/emba/group-picture-src';
 import { drawGroupPictureAction, keepGroupPictureAction, subscribeInkPlusAction } from './picture-actions';
 import './group-picture.css';
 import { SeatsTicket, SeatsWord } from '@/components/loading/seats';
+import { PicturesWait } from '@/components/loading/pictures-wait';
 
 // A group's tile, and the card that draws its picture (openspec loop-group-picture; the look and the steps are
 // public/demo/mockups-group-picture-place.html, A). The card wears the classes of the account card's animal picker
@@ -126,13 +127,13 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
       {kinds.map(([kind, label]) => <button key={kind} className={`cs-btn sm ${kind === 'ink' ? 'gold' : ''}`} aria-pressed={only === kind} onClick={() => setOnly(only === kind ? null : kind)}>{kind === 'ink' ? <InkMark /> : kind === 'school' && <SchoolMark />}{label}</button>)}
       <button className="cs-btn sm gp-done" onClick={() => { setSaid(''); setStep('pics'); }}>Back to pictures</button>
     </div>
-    <div className="cs-pets-grid" role="group" aria-label="Animals for the picture">
+    <PicturesWait className="cs-pets-grid" label="Animals for the picture">
       {pane.choices.filter(one => !only || one.kind === only).map(one => {
         const at = picked.findIndex(each => keyOf(each.pick) === keyOf(one.pick));
         return <button key={one.src} className={`cs-pet ${one.kind === 'ink' ? 'gold' : one.kind === 'school' ? 'school' : ''}`} aria-pressed={at >= 0} aria-label={one.name} onClick={() => toggle(one)}>
           <img src={one.src} alt="" />{one.kind === 'ink' ? <InkMark /> : one.kind === 'school' && <SchoolMark />}{at >= 0 && <b className="gp-n">{at + 1}</b>}</button>;
       })}
-    </div>
+    </PicturesWait>
     {alert}
     <div className="cs-prem-stub gp-foot">{faces}<b>{picked.length} of {pane.most}</b>
       <button className="cs-btn gold gp-go" aria-pressed="true" disabled={picked.length < pane.fewest} onClick={() => plus ? ask('pick') : (setSaid(''), setStep('plate'))}>Draw us together<i className="gp-plus">Ink+</i></button></div>
@@ -164,7 +165,7 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
       <p className="cs-prem-kick">Loopd Ink+</p>
       <p className="cs-prem-big said" role="status">Drawing you together.</p>
       {thanks}
-      <div className="cs-prem-made gp-wait"><SeatsTicket slow quiet /></div>
+      <div className="cs-prem-made gp-wait"><SeatsTicket quiet /></div>
       <div className="cs-prem-stub"><p className="cs-prem-small">About a minute. Two drawings, and you keep one.</p></div></>
     : <>
       <button className="cs-prem-back" onClick={() => { setSaid(''); setStep('pics'); }}>Pictures</button>

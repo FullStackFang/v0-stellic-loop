@@ -20,6 +20,7 @@ import { SaveFace } from './save-face';
 import { InkBlot, InkMark, SchoolMark } from './ink-mark';
 import { rememberMe } from '@/components/loading/last-bar';
 import { SeatsSmall, SeatsWord } from '@/components/loading/seats';
+import { PicturesWait } from '@/components/loading/pictures-wait';
 import { FrameWait } from '@/components/loading/frame-wait';
 import { INK_PAGE } from '@/lib/campus/ink';
 import { IMPRINT_PAGE } from '@/lib/campus/imprint';
@@ -370,14 +371,14 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
           <button className="cs-btn sm gold" aria-pressed={only === 'ink'} onClick={() => setOnly(only === 'ink' ? '' : 'ink')}><InkMark />Ink</button>
           <button className="cs-btn sm icon" aria-label="Shuffle" title="Shuffle" onClick={shuffle}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.6c1.3 0 2.4.7 3 1.8l1.8 3.4c.6 1.1 1.7 1.8 3 1.8h2.6M12.5 9.5l2 2-2 2M1.5 11.5h2.6c.8 0 1.6-.3 2.1-.8M9.8 5.3c.5-.5 1.3-.8 2.1-.8h2.6M12.5 2.5l2 2-2 2" /></svg></button>
           <button className="cs-btn sm go icon" aria-label="Done" title="Done" onClick={() => setPicking(false)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg></button></div>
-        <div className="cs-pets-grid" role="group" aria-label="Pick your picture">
+        <PicturesWait className="cs-pets-grid" label="Pick your picture">
           {/* Making one is always first. Then the person's own, their school's, the premium ones, and the rest. */}
           <button className="cs-pet add gold" aria-label="Create your own" onClick={() => setMaking(true)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button>
           {viewer.ownPhoto && hit('your photo', '') && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
           {hit('your own animal made', 'ink') && owns.filter(one => ![...viewer.picks.core, ...viewer.picks.premium].some(each => each.src === one)).map((one, at) => <button key={one} className="cs-pet gold" aria-pressed={face === CUSTOM && own === one} aria-label={`Your own animal${owns.length > 1 ? ` ${at + 1}` : ''}`} onClick={() => chooseOwn(one)}><img src={one} alt="" /></button>)}
           {viewer.picks.school.filter(one => hit(called(one), 'school')).map(one => tile(one, false, false, true))}
           {viewer.picks.premium.filter(one => hit(called(one), 'ink')).map(one => tile(one, true, !asked && !viewer.admin))}
-          {viewer.picks.core.filter(one => hit(called(one), '')).map(one => tile(one))}</div>
+          {viewer.picks.core.filter(one => hit(called(one), '')).map(one => tile(one))}</PicturesWait>
         <small>Animal icons by <a href="https://www.figma.com/community/file/1514963172455082116" target="_blank" rel="noreferrer">Tran Mau Tri Tam</a>, CC BY 4.0.</small></div>
       /* eslint-enable @next/next/no-img-element */
       : schooling ? <div className="cs-lvl-body cs-sch-pane"><AddSchools schools={viewer.schools} onDone={() => setSchooling(false)} />

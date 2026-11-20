@@ -30,8 +30,6 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
   // `asking` is the email field in the button's place. `first` is whether they subscribed on this visit: the thanks are shown for it until the pane is left.
   const [state, setState] = useState<'plan' | 'photo' | 'sure' | 'busy' | 'done' | 'ask' | 'pick'>(asked ? 'photo' : 'plan'), [asking, setAsking] = useState(false), [first, setFirst] = useState(false);
   const [wait, setWait] = useState(false), [said, setSaid] = useState(''), [own, setOwn] = useState('');
-  // The picture that has just been drawn sits down in the ticket's last seat for a moment before it is shown large (openspec loop-loading-seats, design D8).
-  const [fresh, setFresh] = useState<string | null>(null), seated = (made: string) => new Promise<void>(done => { setFresh(made); setTimeout(done, 900); });
   // Drawing again takes the founder's code (`free`: the admin needs none). `typed` is the field, `coded` whether the server took it on this visit.
   const [typed, setTyped] = useState(''), [coded, setCoded] = useState(false);
   // The animal a new drawing is set beside: the one made on this visit, or the one they had (`current`).
@@ -47,7 +45,7 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
   };
   const again = async () => {
     if (!file) return setSaid('Choose a photo of an animal first.');
-    setSaid(''); setFresh(null); setState('busy');
+    setSaid(''); setState('busy');
     const data = new FormData();
     data.set('photo', await small(file), 'photo.jpg'); data.set('first', mine); data.set('code', typed.trim());
     for (const one of changes) data.append('change', one);
@@ -55,7 +53,7 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
     // With no animal of their own left to set it beside, it is simply made.
     if (!mine) {
       const got = await makeFaceAction(data).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
-      if (got.ok) { await seated(got.own); setOwn(got.own); setCoded(true); setState('done'); onMade(got.own, got.left); } else { setSaid(got.message); setState('ask'); }
+      if (got.ok) { setOwn(got.own); setCoded(true); setState('done'); onMade(got.own, got.left); } else { setSaid(got.message); setState('ask'); }
       return;
     }
     const got = await againFaceAction(data).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
@@ -80,13 +78,13 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
   };
   const make = async () => {
     if (!file) return setSaid('Choose a photo of an animal first.');
-    setSaid(''); setFresh(null); setState('busy');
+    setSaid(''); setState('busy');
     const data = new FormData();
     data.set('photo', await small(file), 'photo.jpg');
     if (typed.trim()) data.set('code', typed.trim());
     if (note.trim()) data.set('note', note.trim());
     const got = await makeFaceAction(data).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
-    if (got.ok) { await seated(got.own); setOwn(got.own); setState('done'); onMade(got.own, got.left); } else { setSaid(got.message); setState('photo'); }
+    if (got.ok) { setOwn(got.own); setState('done'); onMade(got.own, got.left); } else { setSaid(got.message); setState('photo'); }
   };
   const thanks = first && !tried && state !== 'ask' && <p className="cs-own-thanks">Thanks for subscribing to Loopd Ink. Payment is not set up yet, so this one is free. Enjoy your avatar.</p>;
   /* eslint-disable @next/next/no-img-element -- icons from public/animals, the person's own photo from their device, and the picture made from it */
@@ -128,7 +126,7 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
         <button className="cs-btn go">Yes, draw it</button>
         <p className="cs-prem-small">{from === 'photo' && `${note.length} of 60 letters, and you can leave it empty. `}Nothing is drawn until you press Yes.</p>
       </form></>
-    : state === 'busy' ? <div className="cs-prem-made"><SeatsTicket slow quiet filled={fresh} /><p>This takes about half a minute.</p></div>
+    : state === 'busy' ? <div className="cs-prem-made"><SeatsTicket quiet /><p>This takes about half a minute.</p></div>
     : state === 'ask' ? <><div className="cs-prem-perks"><span>Give a photo and say what should change. We’ll draw it again.</span></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); sure('ask'); }}>
         <input ref={input} type="file" accept="image/*" hidden aria-label="Photo of an animal" onChange={event => choose(event.target.files?.[0])} />

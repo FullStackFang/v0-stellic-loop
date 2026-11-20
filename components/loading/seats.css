@@ -81,3 +81,9 @@
 .seats-over { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; pointer-events: none; }
 .cs-pet { position: relative; }
 .cs-save-frame { position: relative; }
+/* a grid of pictures that has not all arrived (pictures-wait.tsx): the grid keeps its place, unseen, and the ticket stands over it */
+.seats-pics { position: relative; }
+.seats-pics[aria-busy] > [role=group] { opacity: 0; pointer-events: none; }
+.seats-pics > [role=group] { transition: opacity 0.25s ease; }
+.seats-pics-tk { position: absolute; inset: 0; z-index: 2; display: grid; justify-items: center; align-content: start; padding-top: 28px; }
+@media (prefers-reduced-motion: reduce) { .seats-pics > [role=group] { transition: none; } }
