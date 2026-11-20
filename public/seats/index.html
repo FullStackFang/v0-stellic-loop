@@ -232,22 +232,63 @@ function won() { clearInterval(clock); took = Math.round(elapsed() * 10) / 10; s
 const again = el => { el.classList.remove('hit', 'no', 'yes', 'pop', 'jolt'); void el.offsetWidth; };
 
 const nearest = one => { let best = null, far = 46; seats.forEach((_, i) => { if (crowd.some(other => other !== one && other.seat === i)) return; const d = Math.hypot(seatX(i) - (one.x + SIZE / 2), seatY() + seatSize() / 2 - (one.y + SIZE / 2)); if (d < far) { far = d; best = i; } }); return best; };
-for (const one of crowd) { let grip = null, when = 0;
-  // Only while the clock runs, and only one that is out: one back in its own seat stays there.
-  one.el.addEventListener('pointerdown', event => { event.preventDefault(); if (state !== 'play' || one.seat !== null) return; one.el.setPointerCapture(event.pointerId); const box = stage.getBoundingClientRect();
-    one.held = true; one.el.classList.add('up'); grip = { x: event.clientX - box.left - one.x, y: box.bottom - 7 - event.clientY - one.y }; when = performance.now(); wake(); });
-  one.el.addEventListener('pointermove', event => { if (!one.held) return; const box = stage.getBoundingClientRect(), now = performance.now(), dt = Math.max(.008, (now - when) / 1000); when = now;
-    const x = event.clientX - box.left - grip.x, y = Math.max(0, box.bottom - 7 - event.clientY - grip.y);
+/** Let go of one that was held: into its own seat, shaken off a wrong one with the clock charged, or flying with the throw. */
+function drop(one) { one.held = false; grabbed = null; one.el.classList.remove('up'); seats.forEach(el => el.classList.remove('near'));
+  const near = nearest(one);
+  if (near !== null && near === one.home) { sit(one, near); again(one.el); one.el.classList.add('pop'); again(seats[near]); seats[near].classList.add('yes'); if (crowd.every(each => each.seat !== null)) won(); wake(); return; }
+  // Not its seat: the seat shakes it off, and the clock is charged.
+  if (near !== null) { fine += WRONG; again(seats[near]); seats[near].classList.add('no'); again(pill); pill.classList.add('hit');
+    const cost = Object.assign(document.createElement('b'), { className: 'fine', textContent: `+${WRONG}s` }); cost.style.left = `${seatX(near)}px`; cost.addEventListener('animationend', () => cost.remove()); stage.append(cost); if (reduce) setTimeout(() => cost.remove(), 900); one.vx = clamp(one.vx, -260, 260); one.vy = Math.min(one.vy, 0); }
+  one.vx = clamp(one.vx, -2200, 2200); one.vy = clamp(one.vy, -1600, 1900); if (one.y === 0 && one.vy <= 0) one.vy = 0;
+  if (reduce) { one.y = 0; one.vx = one.vy = 0; draw(one); } wake(); }
+// Pressing one. A seated one stays where it is. A pull picks one up, and only while the clock runs; a press with no pull is a poke:
+// a flip, and the ones beside it on the floor hop.
+for (const one of crowd) one.el.addEventListener('pointerdown', event => {
+  event.preventDefault(); if (one.seat !== null) return;
+  one.el.setPointerCapture(event.pointerId);
+  const from = onFloor(event.clientX, event.clientY), grip = { x: from.x - one.x, y: from.y - one.y }, done = new AbortController(), until = { signal: done.signal };
+  let far = 0, when = performance.now();
+  one.el.addEventListener('pointermove', move => {
+    const at = onFloor(move.clientX, move.clientY), now = performance.now(), dt = Math.max(.008, (now - when) / 1000), x = at.x - grip.x, y = Math.max(0, at.y - grip.y); when = now;
+    far = Math.max(far, Math.hypot(at.x - from.x, at.y - from.y));
+    if (far > 6 && !one.held && state === 'play' && one.seat === null) { one.held = true; grabbed = one; one.el.classList.add('up'); }
+    if (!one.held) return;
     one.vx = one.vx * .55 + (x - one.x) / dt * .45; one.vy = one.vy * .55 + (y - one.y) / dt * .45; one.x = x; one.y = y;
-    const near = nearest(one); seats.forEach((el, i) => el.classList.toggle('near', i === near)); });
-  const up = () => { if (!one.held) return; one.held = false; one.el.classList.remove('up'); seats.forEach(el => el.classList.remove('near'));
-    const near = nearest(one);
-    if (near !== null && near === one.home) { sit(one, near); again(one.el); one.el.classList.add('pop'); again(seats[near]); seats[near].classList.add('yes'); if (crowd.every(each => each.seat !== null)) won(); return; }
-    // Not its seat: the seat shakes it off, and the clock is charged.
-    if (near !== null) { fine += WRONG; again(seats[near]); seats[near].classList.add('no'); again(pill); pill.classList.add('hit');
-      const cost = Object.assign(document.createElement('b'), { className: 'fine', textContent: `+${WRONG}s` }); cost.style.left = `${seatX(near)}px`; cost.addEventListener('animationend', () => cost.remove()); stage.append(cost); if (reduce) setTimeout(() => cost.remove(), 900); one.vx = clamp(one.vx, -260, 260); one.vy = Math.min(one.vy, 0); }
-    one.vx = clamp(one.vx, -2200, 2200); one.vy = clamp(one.vy, -1600, 1900); if (reduce) { one.y = 0; one.vx = one.vy = 0; draw(one); } wake(); };
-  one.el.addEventListener('pointerup', up); one.el.addEventListener('pointercancel', up); }
+    const spot = nearest(one); seats.forEach((el, i) => el.classList.toggle('near', i === spot)); wake();
+  }, until);
+  const up = () => {
+    done.abort();
+    if (one.held) return drop(one);
+    if (reduce || one.seat !== null) return;
+    if (one.y === 0) one.r += one.x > wide / 2 ? 360 : -360;
+    hop(one, 640);
+    crowd.forEach(other => { const away = Math.abs(other.x - one.x); if (other !== one && away < 300) setTimeout(() => hop(other, 420 - away), away * 1.1); });
+    wake();
+  };
+  one.el.addEventListener('pointerup', up, until); one.el.addEventListener('pointercancel', up, until);
+});
+
+if (!reduce) {
+  // Looking: at the pointer while it is over the ticket, which leans a little toward it.
+  carry.addEventListener('pointermove', event => { pointer = onFloor(event.clientX, event.clientY); if (!hand) { const box = carry.getBoundingClientRect(); lean.tr = clamp((event.clientX - box.left) / box.width - .5, -.5, .5) * 1.2; } wake(); });
+  carry.addEventListener('pointerleave', () => { pointer = null; if (!hand) lean.tr = 0; wake(); });
+  // Picking the ticket up, with a mouse or a pen on its paper. Tip it and those on the floor slide to the low end and pile up; let go and
+  // it swings back and they hop. Seated ones ride along in their seats. Touch scrolls the page as ever (touch-action: pan-y).
+  tk.addEventListener('pointerdown', event => {
+    if (event.pointerType === 'touch' || event.target.closest('.pet, .tags')) return;
+    hand = { x: event.clientX, y: event.clientY }; tk.setPointerCapture(event.pointerId); carry.classList.add('held'); wake();
+  });
+  tk.addEventListener('pointermove', event => {
+    if (!hand) return;
+    const dx = event.clientX - hand.x, dy = event.clientY - hand.y;
+    lean.tx = dx * .7; lean.ty = dy * .55; lean.tr = clamp(dx * .022 + dy * (hand.x > innerWidth / 2 ? .03 : -.03), -9, 9); wake();
+  });
+  const letGo = () => { if (!hand) return; hand = null; carry.classList.remove('held'); lean.tx = lean.ty = lean.tr = 0; crowd.forEach((one, at) => hop(one, 300 + 140 * Math.sin(at * 1.7))); wake(); };
+  tk.addEventListener('pointerup', letGo); tk.addEventListener('pointercancel', letGo);
+  // Left alone, one on the floor gets restless now and then.
+  setInterval(() => { if (pointer || hand || grabbed || document.hidden) return; const floor = crowd.filter(one => out(one) && one.y === 0); if (floor.length) hop(floor[Math.floor(Math.random() * floor.length)], 330); }, 2600);
+  document.addEventListener('visibilitychange', wake);
+}
 
 try { const kit = localStorage.getItem('loop-kit'); if (kit) document.documentElement.dataset.kit = kit; } catch { /* the first colours stay */ }
 
@@ -273,7 +314,7 @@ if (you?.ink) {
 } else slot.outerHTML = '<a class="inkask" href="/c/ink"><i>Ink+</i>Play as your own animal</a>';
 const stamp = document.getElementById('stamp');
 place(); round();
-addEventListener('resize', () => { wide = stage.clientWidth; place(); });
+addEventListener('resize', () => { wide = stage.clientWidth; place(); wake(); });
 button.addEventListener('click', () => state === 'look' ? kick() : round());
 </script>
 </body>
