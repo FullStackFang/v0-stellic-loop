@@ -54,7 +54,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .say.show { transform: translate(-50%, 0); opacity: 1; }
 
 .card { position: fixed; z-index: 4; left: 50%; top: 50%; width: min(520px, calc(100vw - 32px)); padding: 26px 26px 24px; background: var(--paper); border-radius: 26px 26px 26px 6px; box-shadow: 7px 7px 0 var(--ink), inset 0 0 0 2px var(--ink);
-  transform: translate(-50%, -50%); transition: transform .5s var(--expo), opacity .25s; display: grid; gap: 16px; }
+  transform: translate(-50%, -50%); transition: transform .5s var(--expo), opacity .25s; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .card[hidden] { display: grid; opacity: 0; transform: translate(-50%, -42%) scale(.96); pointer-events: none; }
 .card h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 8vw, 44px); line-height: .98; letter-spacing: -.02em; }
 .card p { font-size: 16px; line-height: 1.4; font-weight: 500; }
@@ -79,20 +79,27 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .ask div { display: flex; flex-wrap: wrap; gap: 8px; }
 .ask .pl { padding: 8px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 650; white-space: nowrap; text-decoration: none; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
 .ask .pl.see { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--field); }
-.go { justify-self: start; padding: 14px 34px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s var(--expo), box-shadow .12s var(--expo), background .12s; }
+.go { justify-self: start; padding: 0 30px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s var(--expo), box-shadow .12s var(--expo), background .12s; }
 .go:hover { background: var(--action-hover); }
 .go:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
-.row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
-.where { display: flex; gap: 4px; padding: 4px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
-.where button { padding: 9px 14px; border-radius: 99px; background: none; font-weight: 700; font-size: 14px; white-space: nowrap; }
+/* A card's controls: one line, every one the same height. */
+.row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.row > * { height: 48px; flex: none; display: inline-flex; align-items: center; }
+.where { gap: 4px; padding: 4px; flex: 0 1 auto; min-width: 0; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
+.where button { height: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 0 14px; border-radius: 99px; background: none; font-weight: 700; font-size: 14px; white-space: nowrap; }
 .where button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-.quit { text-decoration: none; color: inherit; padding: 12px 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
+/* The way back to Loopd: an arrow and the mark. */
+.back { gap: 5px; padding: 0 13px 0 11px; border-radius: 99px; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); transition: background .12s; }
+.back:hover { background: var(--field); }
+.back svg:first-child { width: 16px; height: 16px; } .back svg:last-child { width: 28px; height: 28px; }
+.quit { text-decoration: none; color: inherit; padding: 0 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
 .score { display: flex; gap: 10px; align-items: stretch; }
 .score div { flex: 1; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: var(--field); display: grid; gap: 2px; }
 .score div + div { background: var(--ink); color: var(--paper); }
 .score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .score span { font-size: 13px; font-weight: 700; }
 @media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
+  .card { padding: 22px 16px 20px; } .row { gap: 6px; } .go { padding: 0 13px; font-size: 17px; } .where button { padding: 0 6px; font-size: 12.5px; } .back { padding: 0 9px 0 7px; gap: 3px; } .back svg:first-child { width: 13px; } .back svg:last-child { width: 24px; height: 24px; } .quit { padding: 0 16px; }
   .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 11px; padding: 5px 8px 5px 5px; } .pause { left: 110px; } }
 </style>
 </head>
@@ -106,22 +113,30 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 <button class="pause" id="pause" hidden aria-label="Pause"><svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="4.5" height="14" rx="1.5"/><rect x="10.5" y="2" width="4.5" height="14" rx="1.5"/></svg></button>
 <div class="say" id="say"></div>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <path id="ra" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rb" d="M14.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rc" d="M43.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/>
+  <mask id="ma" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rc" stroke="#000" stroke-width="15"/></mask>
+  <mask id="mb" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#ra" stroke="#000" stroke-width="15"/></mask>
+  <mask id="mc" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rb" stroke="#000" stroke-width="15"/></mask>
+  <symbol id="loopd" viewBox="0 0 100 100"><g fill="none" stroke-width="9"><g mask="url(#ma)"><use href="#ra" stroke="var(--action)"/></g><g mask="url(#mb)"><use href="#rb" stroke="currentColor"/></g><g mask="url(#mc)"><use href="#rc" stroke="currentColor"/></g></g></symbol>
+</defs></svg>
+
 <section class="card" id="start">
   <h1>Longest line wins</h1>
   <p>Walk into a stray and it joins your line. Walk into another line and yours scatters for anyone to grab.</p>
   <div class="faces" id="faces"></div>
-  <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div><a class="quit" href="/">Back to Loopd</a></div>
+  <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
 </section>
 
 <section class="card" id="over" hidden>
   <h1 id="overHead">Scattered</h1>
   <div class="score"><div><b id="overCount">1</b><span>in your line</span></div><div><b id="overBest">1</b><span>your best</span></div></div>
-  <div class="row"><button class="go" id="again">Again</button><a class="quit" href="/">Back to Loopd</a></div>
+  <div class="row"><button class="go" id="again">Again</button><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
 </section>
 
 <section class="card" id="paused" hidden>
   <h1>Paused</h1>
-  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><a class="quit" href="/">Back to Loopd</a></div>
+  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
 </section>
 
 <script type="module">
@@ -185,7 +200,7 @@ function offer() {
   const row = [];
   if (you) {
     // Your own animal. With Ink+ it is picked like any other; without, it opens the card that says what Ink+ gives.
-    const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(you.face) + (you.ink ? '' : '<span class="plus">Ink+</span>') });
+    const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(you.face) + `<span class="plus">${you.ink ? 'You' : 'Ink+'}</span>` });
     seat.setAttribute('aria-pressed', mine);
     const card = Object.assign(document.createElement('div'), { className: 'ask', hidden: true,
       innerHTML: '<span class="tab">Ink+</span><h3>Play as your own pet</h3><p>Your pet leads the line, with a sparkle.</p><div><a class="pl see" href="/c/ink">See Ink+ · $9.99</a><button class="pl">Not now</button></div>' });
