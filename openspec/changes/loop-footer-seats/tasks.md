@@ -13,7 +13,7 @@
 - [ ] 2.5 Letting go within reach of an empty seat seats the animal; picking a seated one up frees the seat; the seat a held animal is over is ringed
 - [ ] 2.6 The pill reads "All in" when every seat is filled, and "Pick one up" otherwise
 - [ ] 2.7 The idle hop and the cheer leave seated animals in their seats
-- [ ] 2.8 "Drop them again": a button beside the pill, shown only when all are in, that empties the seats; the animals and seats stay hidden from screen readers and the button is not
+- [ ] 2.8 "Drop them again": a pill on the top edge of the ticket, shown only when all are in, that empties the seats; the animals and seats stay hidden from screen readers and the button is not
 
 ## 3. Check it
 

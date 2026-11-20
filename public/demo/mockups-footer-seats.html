@@ -40,9 +40,10 @@ body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font
 .stage { position: relative; height: 196px; margin: 32px 24px 22px; border-radius: 16px 16px 16px 5px; background: var(--stub); box-shadow: inset 0 -9px 0 color-mix(in oklab, var(--field) 62%, var(--paper)); touch-action: none; }
 .tags { position: absolute; z-index: 6; right: 12px; top: -14px; display: flex; align-items: center; gap: 6px; }
 /* new: once all are in, the ticket offers to drop them again */
-.tags button { height: 30px; padding: 0 13px; border-radius: 99px; font-size: 12.5px; font-weight: 620; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); transition: translate .15s var(--ease), box-shadow .15s var(--ease); }
-.tags button:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .tags button:active { translate: 2px 2px; box-shadow: inset 0 0 0 1.5px var(--ink); }
-.tk:not(.full) .tags button { display: none; }
+/* it sits on the top edge of the ticket itself, over the paper, clear of the stub */
+#redo { position: absolute; z-index: 7; top: -17px; right: 268px; height: 34px; padding: 0 16px; border-radius: 99px; font-size: 13.5px; font-weight: 620; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); transition: translate .15s var(--ease), box-shadow .15s var(--ease); }
+#redo:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } #redo:active { translate: 2px 2px; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tk:not(.full) #redo { display: none; }
 .tags small { padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: var(--ink); color: var(--paper); transition: background-color .3s, color .3s; }
 .tk.full .tags small { background: var(--action); }
 .pet { position: absolute; z-index: 3; left: 0; bottom: 7px; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 88%; cursor: grab; touch-action: none; will-change: transform; -webkit-user-drag: none; }
@@ -59,7 +60,7 @@ body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font
 .bar a.l { padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
 .bar > small { margin-left: auto; padding: 6px 12px; border-radius: 99px; font-size: 12.5px; background: color-mix(in oklab, var(--ink) 12%, var(--field)); }
 
-@media (max-width: 860px) { .carry { margin: 0 16px 28px; } .tk { grid-template-columns: minmax(0, 1fr); } .tear { display: none; } .stage { margin: 22px 14px 16px; } .seat { width: 44px; height: 44px; margin-left: -22px; } .bar { padding: 12px 16px 14px; } }
+@media (max-width: 860px) { .carry { margin: 0 16px 28px; } .tk { grid-template-columns: minmax(0, 1fr); } .tear { display: none; } #redo { right: 26px; } .stage { margin: 22px 14px 16px; } .seat { width: 44px; height: 44px; margin-left: -22px; } .bar { padding: 12px 16px 14px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -71,8 +72,9 @@ body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font
 
 <footer class="ft">
   <div class="carry"><div class="tk">
-    <div class="stage"><div class="tags"><small>Pick one up</small><button type="button" id="redo">Drop them again</button></div></div>
+    <div class="stage"><div class="tags"><small>Pick one up</small></div></div>
     <div class="tear"><span class="admit">Admit everyone</span><div class="code"></div></div>
+    <button type="button" id="redo">Drop them again</button>
   </div></div>
   <div class="bar"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="16" cy="11" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd</span>
     <a class="l">Terms</a><a class="l">Privacy</a><small>© 2026 Loopd</small></div>
