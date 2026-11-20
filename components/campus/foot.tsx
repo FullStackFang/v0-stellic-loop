@@ -9,7 +9,7 @@ import './foot.css';
 
 /**
  * The foot of every page (public/demo/mockups-footer.html): one bar with the small print and the colours. The crowd
- * ticket that stood above it lives on in Seats (public/seats, a doodle). The ways around are the top bar's, Assistants
+ * ticket that stood above it lived on in Seats for a while (a doodle; it is three games now, components/doodles). The ways around are the top bar's, Assistants
  * among them (components/campus/assistants-link.tsx). `home` is where the wordmark leads.
  * The colours are a dot for each school the person may wear. Someone signed in without Ink+ has their own, and one pill,
  * "Every school · Ink+", whose card says the rest come with it (public/demo/mockups-ink-colours.html, "My pick").
