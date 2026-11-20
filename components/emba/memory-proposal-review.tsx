@@ -8,7 +8,7 @@ import { ActionForm } from './portal-forms';
 export function MemoryProposalReview({ reviewAction, acceptAction }: { reviewAction: PortalAction; acceptAction: PortalAction }) {
   const [state,submit,pending]=useActionState(reviewAction,{status:'idle',message:''} as PortalResult);
   const review=state.memoryReview;
-  return <><form action={submit}><fieldset disabled={pending}><label>Structured want proposal (JSON)<textarea name="candidate" required maxLength={4096} /></label><p>Submit structured fields only. Do not paste a conversation. A proposal is temporary until you explicitly accept it.</p><button type="submit">{pending?<SeatsWord word="Reading" plate />:'Review proposed want'}</button></fieldset></form>
+  return <><form action={submit}><fieldset disabled={pending}><label>Structured want proposal (JSON)<textarea name="candidate" required maxLength={4096} /></label><p>Submit structured fields only. Do not paste a conversation. A proposal is temporary until you explicitly accept it.</p><button type="submit"><SeatsWord on={pending} word="Reading" plate>Review proposed want</SeatsWord></button></fieldset></form>
     {state.message && <p role={state.status==='error'?'alert':'status'}>{state.message}</p>}
     {review && <div><h3>Proposal review</h3><p>Result: {review.outcome.replace('_',' ')}</p>
       <article><h4>Proposed want</h4><p>{review.candidate.text}</p><p>{review.candidate.category} · {review.candidate.place ?? 'No place'} · Strength {review.candidate.strength} · Extraction confidence {review.candidate.confidence}</p><p>{review.candidate.orgId ? 'Trip context' : 'Global personal context'} · {review.candidate.id ? `Based on version ${review.candidate.expectedVersion}` : 'New want'}</p></article>

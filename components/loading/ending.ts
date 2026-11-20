@@ -7,10 +7,15 @@ export type Plan = 'free' | 'ink' | 'plus';
 export type Me = { face?: string | null; plan?: Plan; seed?: string };
 export type Left = { box: { left: number; top: number; width: number; height: number }; face: string; plan: Plan; seed: string };
 
-/** A ticket seen for less than this has no ending: a splat on a ticket nobody saw is noise. */
-export const SEEN_MS = 400;
+/**
+ * A ticket that left before it had faded in has no ending: a splat on a ticket nobody saw is noise. Any ticket that was
+ * seen gets its ending, and the ending is its least time on screen: the ticket stands in it for about half a second.
+ */
+export const SEEN_MS = 150;
 /** How long the loader waits before it shows at all, so a fast answer never flashes it. The same number is in seats.css. */
-export const ARRIVE_MS = 150;
+export const ARRIVE_MS = 300;
+/** Once the small one has shown, the least time it stays, so it never blips. */
+export const HOLD_MS = 400;
 
 let hear: ((left: Left) => void) | null = null;
 export function listen(heard: (left: Left) => void) { hear = heard; return () => { if (hear === heard) hear = null; }; }

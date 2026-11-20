@@ -64,7 +64,7 @@ export function PostForm({ slug, signedIn, from, days }: { slug: string; signedI
       <IntentComposer value={raw} onChange={setRaw} days={days} disabled={busy || stage === "code"} />
       <p className="intent-quorum">You’re the first yes. A plan forms at 4.</p>
       {error && !stage ? <div className="err" role="alert">{error}</div>:null}
-      {!stage?<button className="solid" type="submit" disabled={busy}>{busy ? <SeatsWord word="Posting" plate /> : <>Post an intent <Arrow/></>}</button>:null}
+      {!stage?<button className="solid" type="submit" disabled={busy}><SeatsWord on={busy} word="Posting" plate>Post an intent <Arrow/></SeatsWord></button>:null}
     </form>
     <IdentityFields signedIn={signedIn} stage={stage} value={ident} onChange={setIdent} onSubmit={onIdentity} busy={busy} error={stage?error:null} cta="Post an intent"/>
     <Link className="cancel" href={'/b/'+slug}>Cancel</Link>

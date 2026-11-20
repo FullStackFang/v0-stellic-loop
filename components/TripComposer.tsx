@@ -255,7 +255,7 @@ export function TripComposer({ mode, id }: { mode: 'new' | 'edit'; id?: string }
             </details>
           </div>
         </div>
-        <button className="tc-primary" type="button" onClick={publish}>{busy ? <SeatsWord word="Saving" plate /> : mode === 'new' ? 'Create trip' : 'Save'} <span>→</span></button>
+        <button className="tc-primary" type="button" onClick={publish}><SeatsWord on={busy} word="Saving" plate>{mode === 'new' ? 'Create trip' : 'Save'}</SeatsWord> <span>→</span></button>
       </aside>
     </main>
   </div>;

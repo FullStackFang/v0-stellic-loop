@@ -53,7 +53,7 @@ export function StartBoard({ signedIn, trip = false }: { signedIn: boolean; trip
           <input id="sb-name" name="board" placeholder="e.g. Strategy team" value={board} onChange={(e) => setBoard(e.target.value)} maxLength={60} required />
         </div>
         {error && !stage ? <div className="hint" role="alert">{error}</div> : null}
-        {!stage ? <button className="pill" type="submit" disabled={busy}>{busy ? <SeatsWord word="Creating" plate /> : <>{trip ? "Create trip" : "Start a board"} <Arrow /></>}</button> : null}
+        {!stage ? <button className="pill" type="submit" disabled={busy}><SeatsWord on={busy} word="Creating" plate>{trip ? "Create trip" : "Start a board"} <Arrow /></SeatsWord></button> : null}
       </form>
       <IdentityFields signedIn={signedIn} stage={stage} value={ident} onChange={setIdent} onSubmit={submit} busy={busy} error={stage ? error : null} cta={trip ? "Create trip" : "Start a board"} />
     </>

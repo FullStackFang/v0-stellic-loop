@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type IframeHTMLAttributes } from 'react';
-import { SeatsSmall } from './seats';
+import { SeatsOver } from './seats';
 
 /** A frame that never says it loaded is not waited on for ever. */
 const GIVE_UP_MS = 8000;
@@ -19,5 +19,5 @@ export function FrameWait(frame: IframeHTMLAttributes<HTMLIFrameElement>) {
     const late = setTimeout(() => setHere(true), GIVE_UP_MS);
     return () => clearTimeout(late);
   }, []);
-  return <>{!here && <span className="seats-over"><SeatsSmall line /></span>}<iframe {...frame} ref={box} onLoad={() => setHere(true)} /></>;
+  return <><SeatsOver on={!here} /><iframe {...frame} ref={box} onLoad={() => setHere(true)} /></>;
 }

@@ -1,9 +1,9 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { animal } from '@/lib/campus/animals';
 import { inkBlot } from '@/lib/campus/ink-blot';
-import { ARRIVE_MS, leave, SEEN_MS, type Me, type Plan } from './ending';
+import { ARRIVE_MS, HOLD_MS, leave, SEEN_MS, type Me, type Plan } from './ending';
 import { lastBar } from './last-bar';
 
 // "Saving seats", the one loader of the app (openspec loop-loading-seats). Two sizes: the ticket for a whole page, and
@@ -56,10 +56,33 @@ export function SeatsTicket({ slow, filled, page, quiet, ...given }: Me & { slow
 }
 
 /**
- * What a button says while its own press is being answered: the small one, then one short word with no ellipsis
- * (design D10). The button is disabled meanwhile, and the word is what a screen reader hears.
+ * Whether a loader is on screen for a wait that is `on`. It waits ARRIVE_MS, so a fast answer shows nothing; once it has
+ * shown it stays at least HOLD_MS, so it never blips.
  */
-export const SeatsWord = ({ word, plate }: { word: ReactNode; plate?: boolean }) => <span className="seats-hold"><SeatsSmall plate={plate} />{word}</span>;
+export function useShown(on: boolean) {
+  const [shown, setShown] = useState(false), since = useRef(0);
+  useEffect(() => {
+    if (on === shown && on) return;
+    if (!on && !shown) return;
+    const timer = on ? setTimeout(() => { since.current = Date.now(); setShown(true); }, ARRIVE_MS) : setTimeout(() => setShown(false), Math.max(0, since.current + HOLD_MS - Date.now()));
+    return () => clearTimeout(timer);
+  }, [on, shown]);
+  return shown;
+}
+
+/**
+ * What a button says. While its own press is being answered (`on`) and the answer is slow, the small one and one short
+ * word with no ellipsis (design D10); otherwise its own words (the children). The button is disabled meanwhile by its
+ * owner, and the word is what a screen reader hears.
+ */
+export function SeatsWord({ on, word, plate, children }: { on: boolean; word: ReactNode; plate?: boolean; children: ReactNode }) {
+  return useShown(on) ? <span className="seats-hold"><SeatsSmall plate={plate} />{word}</span> : <>{children}</>;
+}
+
+/** The small one and its line over a positioned box (a frame, a picture) while what goes in it is on its way. */
+export function SeatsOver({ on, plate }: { on: boolean; plate?: boolean }) {
+  return useShown(on) ? <span className="seats-over"><SeatsSmall line plate={plate} /></span> : null;
+}
 
 /** The blot under the small one's face. With Ink it is the member's own, in the school's two inks; otherwise one plain shape. */
 function Blot({ plan, seed }: { plan: Plan; seed: string }) {

@@ -43,7 +43,7 @@ export function ConnectLinkedin({ other, fallback }: { other?: ReactNode; fallba
       window.location.assign(to.href);
     } catch { setMessage('LinkedIn did not connect. Try again in a moment.'); }
   });
-  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>{busy ? <SeatsWord word="Continue with LinkedIn" plate /> : 'Continue with LinkedIn'}</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
+  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}><SeatsWord on={busy} word="Continue with LinkedIn" plate>Continue with LinkedIn</SeatsWord></button>{other}</div>{message && <p role="alert">{message}</p>}</>;
 }
 
 /** "Sign up my school", for a school Loopd is not at yet: one box and one button, and afterwards the school they named, kept. */
@@ -64,7 +64,7 @@ export function SchoolAsk({ asked, email }: { asked: string | null; email: strin
   return <>
     <form className="cs-ns-row" onSubmit={add}>
       <input className="cs-ns-box" aria-label="Your school" placeholder="School not listed? Type its name" autoComplete="off" maxLength={120} required value={typed} onChange={event => setTyped(event.target.value)} />
-      <button className="cs-btn" disabled={busy}>{busy ? <SeatsWord word="Sign up my school" /> : 'Sign up my school'}</button>
+      <button className="cs-btn" disabled={busy}><SeatsWord on={busy} word="Sign up my school">Sign up my school</SeatsWord></button>
     </form>
     <p role="status">{message || `We will email ${email ?? 'you'} when Loopd opens there.`}</p>
   </>;

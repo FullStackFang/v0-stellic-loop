@@ -146,7 +146,7 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
       <div className="cs-prem-perks"><span>Your group, drawn together from the animals you pick</span><span>Say what should change, and it is drawn again</span>
         <small>Groups of more than {pane.most}, and saving a picture without the Loopd mark, are not here yet.</small></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
-        <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}>{busy ? <SeatsWord word="Subscribing" plate /> : 'Subscribe'}</button></div>
+        <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}><SeatsWord on={busy} word="Subscribing" plate>Subscribe</SeatsWord></button></div>
         {alert}
       </form></>
     : step === 'sure' ? <>

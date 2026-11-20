@@ -81,7 +81,7 @@ A shared `WaitButton` is not introduced: the buttons differ in class and content
 ### D6. The 150 ms rule is CSS
 The existing loading screen is held back 150 ms by an animation delay so a fast page never flashes it. The same is done here, once, in `seats.css`: the ticket and the small one start hidden and appear with `animation: seats-arrive .2s .15s both`. No timers in JavaScript.
 
-For buttons this means the button is disabled at once and shows the faces 150 ms later.
+For buttons this means the button is disabled at once and shows the faces 150 ms later. Changed 2026-11-20 after loaders were seen to blip: the wait is 300 ms, and a loader that has shown stays (the small one 400 ms through `useShown`, the ticket through its ending). See "Waiting" in docs/loop-campus-design.md.
 
 ### D7. Motion
 Ported from the mockup: only `transform`, `opacity` and `clip-path` are animated. The ticket's cycle is 4.2 s (a seat every 0.45 s; the stub stays blank, D13); the small one's is 2.2 s. Easing is the campus `--cs-expo`, with no overshoot.

@@ -88,7 +88,7 @@ export function Composer({ campus, tags, soon, onDone, onReview }: { campus: { s
       <label className="cs-sr" htmlFor="cs-say">What are you up to?</label>
       <textarea id="cs-say" ref={box} className="cs-say" rows={1} maxLength={400} autoFocus spellCheck={false} placeholder="dumplings tonight 7 @collegetown" value={text}
         onChange={event => typed(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (!busy) post(); } }} />
-      <button type="button" className="cs-btn go" disabled={busy} onClick={post}>{busy ? <SeatsWord word="Posting" plate /> : 'Post it'}</button>
+      <button type="button" className="cs-btn go" disabled={busy} onClick={post}><SeatsWord on={busy} word="Posting" plate>Post it</SeatsWord></button>
     </div>
 
     <div className="cs-read" aria-live="polite">

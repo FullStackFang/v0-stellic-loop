@@ -108,7 +108,7 @@ Anything that loads, or takes time, shows one of two loaders (`components/loadin
 - **The ticket** ("Saving seats") for a whole page: four seats fill with faces, the last one yours, and one line, "Looping you in…". After a page that had the top bar, the bar stays and the pressed link is marked. Mockup: `/demo/mockups-loading-places.html`.
 - **The small one** ("Your blot") for a button, a row, or a late part of a page: your face with your ink welling up under it. In a button it sits before one short word with no ellipsis ("Saving", "Posting"). For a part of a page it carries the line in a pill. Mockup: `/demo/mockups-loading-small.html`, row C.
 - **A long, known wait** (drawing a pet): the ticket fills once, slowly, and its last seat stays ringed and empty until the picture comes.
-- **150 ms rule**: a loader fades in after 150 ms, so a fast answer never flashes one.
+- **Never a blip**: a loader waits 300 ms before it shows, so a fast answer shows none. Once shown it stays: the small one at least 400 ms, and the ticket gets its ending, about half a second. A press that almost never fails (I'm in, Join, an invite) shows its answer at once and holds no loader.
 - **The ending**: a page-sized ticket seen for 400 ms or more ends with a small ink splat on its stub, then drops away over the page that has arrived. Free is one plain dark shape; Ink is your own blot in the school's two inks; Ink+ adds a spark and thrown sparks in a third ink (`--cs-third`). Mockup: `/demo/mockups-loading-splat-2.html`, row A.
 - Under `prefers-reduced-motion` every loader stands still in its finished pose, still says its line, and there is no ending.
 
