@@ -19,7 +19,10 @@ export function areaOf(path: string): string | null {
   if (under('/c/admin') || under('/emba')) return null;
   if (under('/sign-in') || under('/groups/sign-in')) return 'Sign in';
   if (under('/c/ink')) return 'Ink';
+  if (under('/conga')) return 'Conga';
+  if (under('/c/doodles/seats')) return 'Seats';
   if (under('/c/doodles')) return 'Doodles';
+  if (under('/organizers')) return 'Organizers';
   if (/^\/c\/[^/]+\/post$/.test(path)) return 'Post a plan';
   if (/^\/c\/[^/]+$/.test(path)) return 'This week';
   if (under('/o')) return 'Shared plan';
