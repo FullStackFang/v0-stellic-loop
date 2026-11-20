@@ -193,4 +193,7 @@ describe('the stylesheet', () => {
     for (const token of ['--cs-field', '--cs-ink', '--cs-action', '--cs-paper', '--cs-third']) expect(css).toMatch(new RegExp(`var\\(${token}, oklch`));
     expect(css.replace(/var\(--cs-[a-z]+, /g, '')).not.toMatch(/var\(--cs-/);
   });
+  it('keeps its seats where a drawing is waited for: the plate sizes only its own picture, not the faces in the ticket', () => {
+    for (const file of ['app/c/campus.css', 'app/groups/group-picture.css']) expect(readFileSync(file, 'utf8')).not.toMatch(/\.cs-prem-made(\.gp-wait)? img/);
+  });
 });

@@ -313,6 +313,8 @@ describe('who sees whom', () => {
       // Drawing it again takes a photo, what should change, and the founder's code. Then the two side by side, and one is kept.
       fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
       expect(card.getByText('What should change?')).toBeInTheDocument();
+      // Their own words can be given here, beside the chips, and not only on the step that asks first.
+      expect(card.getByRole('textbox', { name: 'Or say it yourself' })).toHaveAttribute('maxlength', '60');
       fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
       expect(card.getByRole('alert')).toHaveTextContent('Enter the code to draw again.');
