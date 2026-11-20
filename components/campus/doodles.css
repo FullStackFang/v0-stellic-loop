@@ -1,0 +1,37 @@
+/* Doodles (/c/doodles): tickets on a rail, direction A of public/demo/mockups-games-shelf.html. Colours are the campus tokens (app/c/campus.css). */
+.cs-dd-page { flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; padding: 40px 32px 56px; }
+.cs-dd-rail { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 34px 26px; align-items: start; margin: 0; padding: 0; list-style: none; }
+
+.cs-dd { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 84px; filter: drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(0 0 .7px var(--cs-ink)) drop-shadow(6px 6px 0 var(--cs-ink)); transition: translate .25s cubic-bezier(.22, 1, .36, 1), rotate .25s cubic-bezier(.22, 1, .36, 1); }
+.cs-dd:not(.staged):hover { translate: 0 -5px; rotate: -.6deg; }
+.cs-dd-main { display: grid; gap: 12px; padding: 14px 14px 18px; background: var(--cs-paper); border-radius: 8px 0 0 8px; mask: radial-gradient(circle 9px at 100% 0, #0000 96%, #000), radial-gradient(circle 9px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+/* the name is an ink plate thrown across the picture */
+.cs-dd-main h2 { position: relative; z-index: 2; justify-self: start; margin: -40px 0 0 8px; padding: 5px 16px 7px; border-radius: 14px 14px 14px 4px; background: var(--cs-ink); color: var(--cs-field); font-size: 27px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.045em; line-height: 1.05; box-shadow: 3px 3px 0 var(--cs-action); rotate: -3deg; }
+.cs-dd-main p { margin: 0; min-height: 2.8em; color: var(--cs-mute); font-size: 14px; }
+.cs-dd-stub { display: grid; align-content: space-between; justify-items: center; padding: 16px 0; border-left: 2px dashed var(--cs-ink); border-radius: 0 8px 8px 0; background: var(--cs-field); mask: radial-gradient(circle 9px at 0 0, #0000 96%, #000), radial-gradient(circle 9px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+.cs-dd-stub b { writing-mode: vertical-rl; rotate: 180deg; font-size: 14px; font-weight: 700; }
+.cs-dd-go { display: inline-flex; align-items: center; justify-content: center; width: 62px; height: 34px; border-radius: 99px; font-size: 14px; font-weight: 620; background: var(--cs-action); color: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); transition: translate .15s, box-shadow .15s, background-color .15s; }
+.cs-dd-go:hover { background: var(--cs-action-hover); } .cs-dd-go:active { translate: 2px 2px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-dd-go.try { background: var(--cs-paper); color: var(--cs-ink); }
+.cs-dd-tag { position: absolute; z-index: 2; left: 14px; top: -11px; padding: 3px 11px 4px; border-radius: 99px; font-size: 12.5px; font-weight: 600; white-space: nowrap; background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-dd-tag.wait { background: var(--cs-third); box-shadow: none; }
+.cs-dd.staged .cs-dd-stub { background: color-mix(in oklab, var(--cs-ink) 10%, var(--cs-paper)); } .cs-dd.staged .cs-dd-pv { opacity: .55; }
+.cs-dd.staged h2 { background: var(--cs-mute); color: var(--cs-paper); box-shadow: none; }
+
+/* the pictures */
+.cs-dd-pv { position: relative; height: 170px; overflow: hidden; border-radius: 12px 12px 12px 4px; background: color-mix(in oklab, var(--cs-field) 34%, var(--cs-paper)); }
+.cs-dd-pv img { position: absolute; width: 38px; height: 38px; }
+.cs-dd-pv.conga { background: var(--cs-field); }
+.cs-dd-pv.conga::before { content: ""; position: absolute; inset: 18% 12%; border-radius: 40px; border: 2px dashed color-mix(in oklab, var(--cs-ink) 30%, transparent); }
+.cs-dd-pv.conga img { left: 0; top: 0; offset-path: inset(18% 12% round 40px); offset-rotate: 0deg; offset-anchor: 50% 60%; animation: cs-dd-walk 9s linear infinite; animation-delay: calc(var(--i) * -.42s); }
+.cs-dd-pv.conga img:first-child { width: 48px; height: 48px; }
+@keyframes cs-dd-walk { to { offset-distance: 100%; } }
+.cs-dd-pv.seats i { position: absolute; top: 20%; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: color-mix(in oklab, var(--cs-ink) 10%, var(--cs-paper)); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--cs-ink) 24%, transparent); }
+.cs-dd-pv.seats i.in { background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-dd-pv.seats::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 9px; background: color-mix(in oklab, var(--cs-field) 62%, var(--cs-paper)); }
+.cs-dd-pv.seats img { bottom: 7px; margin-left: -19px; animation: cs-dd-hop 1.5s cubic-bezier(.22, 1, .36, 1) infinite; animation-delay: calc(var(--i) * -.37s); }
+.cs-dd-pv.seats img.in { top: calc(20% + 2px); bottom: auto; width: 26px; height: 26px; margin-left: -13px; animation: none; }
+@keyframes cs-dd-hop { 0%, 55%, 100% { transform: none; } 28% { transform: translateY(-26px) rotate(8deg); } }
+
+@media (max-width: 760px) { .cs-dd-page { padding: 30px 16px 40px; } }
+@media (prefers-reduced-motion: reduce) { .cs-dd, .cs-dd-go { transition: none; } .cs-dd-pv img { animation-play-state: paused; } }

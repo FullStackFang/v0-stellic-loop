@@ -35,7 +35,7 @@ describe('changing page', () => {
   it('keeps the bar: the same links, and the ticket under it', () => {
     const container = from('Ink');
     expect(container.querySelector('.seats-screen')).toBeNull();
-    expect(screen.getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'This week', 'Conga', 'Ink', 'Sign in']);
+    expect(screen.getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'This week', 'Doodles', 'Ink', 'Sign in']);
     expect(screen.getByRole('status')).toHaveTextContent(LINE);
   });
   it('marks the link that was pressed, which holds the small one, and no other', () => {
@@ -69,7 +69,7 @@ describe('changing page', () => {
   });
   it('a link never changes width for it: the box is always there, off the flow', () => {
     render(<TopBar home="/c/cornell" on="week" account={<a href="/sign-in">Sign in</a>} />);
-    for (const link of screen.getByRole('navigation').querySelectorAll('a:not([href="/conga"])')) expect(link.querySelector('.seats-linkwait')).not.toBeNull();
+    for (const link of screen.getByRole('navigation').querySelectorAll('a')) expect(link.querySelector('.seats-linkwait')).not.toBeNull();
   });
 });
 
