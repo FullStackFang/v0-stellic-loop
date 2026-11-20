@@ -1,7 +1,5 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Rings } from '@/components/LoopGlyphs';
 import { CampusScreen } from '@/components/campus/screen';
 import { SiteFoot } from '@/components/campus/foot';
 import { LookingAt } from '@/components/campus/looking-at';
@@ -14,12 +12,13 @@ import { schoolAsked } from '@/lib/campus/school-ask';
 import './no-school.css';
 import { db } from '@/lib/db';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
-import { listCampuses, weekListings, type Campus } from '@/lib/campus/listings';
-import { schoolOf, SWAP_TICKET } from '@/lib/campus/schools';
+import { findCampus, listCampuses, weekListings, type Campus } from '@/lib/campus/listings';
+import { DEFAULT_CAMPUS, schoolOf, SWAP_TICKET } from '@/lib/campus/schools';
 import { campusScreen, type ShareLink } from '@/lib/campus/screen';
 import { campusViewer, mayUse, signInHref } from '@/lib/campus/session';
 import { barGroups } from '@/lib/campus/bar-groups';
 import { OnYou } from './on-you';
+import { siteBar } from './site-bar';
 import { SeatsSmall } from '@/components/loading/seats';
 
 /**
@@ -57,11 +56,11 @@ export async function NoSchool() {
   const bare = !!owner && await profileOptional(db());
   const form = <AddSchools box="cs-ns-box" send="Send for a check" profile={!bare} waiting={waiting} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />;
   const another = <SignOut className="cs-btn">Use another email</SignOut>;
-  return <div className="cs cs-ns">
-    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loopd</Link>
-      <div className="cs-nav-end">{email && <span className="cs-ns-who">{email}</span>}{signs && <SignOut className="cs-btn" />}</div>
-    </header>
-    <main>
+  // The same top bar and foot as every other page, drawn from the first campus: this person has none of their own.
+  const first = await findCampus(db(), DEFAULT_CAMPUS), frame = first ? await siteBar({ campus: first, viewer, back: '/' }) : null;
+  return <div className="cs">
+    {frame?.bar}
+    <main className="cs-ns">
       <section className="cs-ns-band">
         <FitLines lines={[<>Loopd is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
       </section>
@@ -71,7 +70,7 @@ export async function NoSchool() {
           {/* eslint-disable-next-line @next/next/no-img-element -- the LinkedIn account's photo, at the sign-in service's own address */}
           {owner && <div className="cs-ns-me">{owner.photo && <img src={owner.photo} alt="" />}<span><b>{owner.name}</b><small>Signed in with LinkedIn</small></span><span className="cs-ns-stamp">Yours</span></div>}
           {form}
-          <p>{waiting ? 'We look at each profile ourselves. Come back to this page: your campus opens here once you are in.' : bare ? 'Pick the school you are at. We look you up on LinkedIn by your name to check it.' : 'LinkedIn does not tell us the address of your profile, so we ask for it: it is what we open to check your school.'}</p>
+          <p>{waiting ? 'We look at each one ourselves. Sign in again any time: your campus opens here once you are in.' : bare ? 'Pick the school you are at. We look you up on LinkedIn by your name to check it.' : 'LinkedIn does not tell us the address of your profile, so we ask for it: it is what we open to check your school.'}</p>
           {!waiting && <SchoolAsk asked={asked} email={email} />}
         </section> : <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">{email ? `${email} is not a school email` : 'No school email'}</h2>
@@ -81,5 +80,6 @@ export async function NoSchool() {
         </section>}
       </div>
     </main>
+    {frame?.foot}
   </div>;
 }

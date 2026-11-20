@@ -3,8 +3,7 @@
 @keyframes cs-ns-stamp { from { opacity: 0; transform: rotate(-7deg) scale(1.7); } }
 
 .cs-ns { --tile: 12px 12px 12px 3px; }
-.cs-ns-who { display: flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-field); font-size: 14px; font-weight: 600; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cs-ns .cs-btn { height: 44px; padding: 0 20px; font-weight: 620; } .cs-ns .cs-nav .cs-btn { height: 40px; padding: 0 16px; }
+.cs-ns .cs-btn { height: 44px; padding: 0 20px; font-weight: 620; }
 .cs-ns .cs-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* the band says what happened; the two tickets sit over its lower edge */
