@@ -24,15 +24,13 @@ const builtWords = (face: number) => NAMES[face] ? [NAMES[face]] : [];
 // shipped with: the name above, and one word for each of the first 36.
 type Said = { name: string | null; words: string[] | null };
 /** What the admin typed, by number and by token. Nothing while the table is not there: the migration is run by hand, after the deploy. */
+// Asked of the catalogue first, not by a query that fails: a failed query aborts the transaction it is in, and every read after it in that transaction.
 async function saidRows(q: Q): Promise<{ built: Map<number, Said>; made: Map<string, Said> }> {
-  try {
-    const built = (await q.query<Said & { face: number }>('select face,name,words from campus_animal_name')).rows;
-    const made = (await q.query<Said & { token: string }>('select token::text as token,name,words from campus_custom_picture where name is not null or words is not null')).rows;
-    return { built: new Map(built.map(row => [row.face, row])), made: new Map(made.map(row => [row.token, row])) };
-  } catch (error) {
-    if (['42P01', '42703'].includes((error as { code?: string }).code ?? '')) return { built: new Map(), made: new Map() };
-    throw error;
-  }
+  const { rows: [there] } = await q.query<{ ok: boolean }>("select to_regclass('campus_animal_name') is not null and exists(select 1 from information_schema.columns where table_schema=current_schema() and table_name='campus_custom_picture' and column_name='words') as ok");
+  if (!there?.ok) return { built: new Map(), made: new Map() };
+  const built = (await q.query<Said & { face: number }>('select face,name,words from campus_animal_name')).rows;
+  const made = (await q.query<Said & { token: string }>('select token::text as token,name,words from campus_custom_picture where name is not null or words is not null')).rows;
+  return { built: new Map(built.map(row => [row.face, row])), made: new Map(made.map(row => [row.token, row])) };
 }
 
 /** The tier of each picture shipped with the app, by its number. */
