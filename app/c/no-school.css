@@ -26,6 +26,12 @@
 .cs-ns-me b { font-size: 17px; font-weight: 720; letter-spacing: -0.03em; overflow-wrap: anywhere; } .cs-ns-me small { font-size: 13px; font-weight: 560; color: var(--cs-on-field-2); } .cs-ns-tk > p[role=alert] { font-weight: 620; }
 .cs-ns-row { display: flex; gap: 10px; align-items: center; } .cs-ns-row .cs-btn { flex: none; }
 .cs-ns .cs-ns-box { flex: 1; min-width: 0; height: 44px; padding: 0 18px; border: 0; border-radius: 99px; font: inherit; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+/* what the school box found: a pill each, the town in small beside the name; the picked one is filled, and "Other" is in the action colour */
+.cs-ns-sug { display: flex; flex-wrap: wrap; gap: 8px; }
+.cs-ns-sug button { min-height: 40px; padding: 6px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; border: 0; border-radius: 20px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); font: inherit; font-size: 15px; font-weight: 620; text-align: left; color: var(--cs-ink); cursor: pointer; }
+.cs-ns-sug button small { font-size: 13px; font-weight: 520; color: var(--cs-mute); } .cs-ns-sug button:hover { background: var(--cs-stub); }
+.cs-ns-sug button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); } .cs-ns-sug button[aria-pressed=true] small { color: inherit; opacity: .75; }
+.cs-ns-sug button.other { box-shadow: inset 0 0 0 1.5px var(--cs-action); color: var(--cs-action); } .cs-ns-sug button.other[aria-pressed=true] { background: var(--cs-action); color: var(--cs-paper); }
 .cs-ns .cs-ns-box::placeholder { color: var(--cs-mute); } .cs-ns .cs-ns-box:focus { background: var(--cs-stub); box-shadow: inset 0 0 0 2.5px var(--cs-action); }
 
 /* asked: the ticket holds the school on a stub, with a stamp on it */

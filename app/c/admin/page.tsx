@@ -177,14 +177,14 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Turn down</button></form></li>)}</ul>
     </section>;
   }
-  /** Schools Loopd is not at that people signed up, the most asked first. A row opens to show who asked. */
+  /** Schools Loopd is not at that people signed up, the most asked first. A row opens to show who asked. One typed in as "Other" is marked, and can be taken off. */
   function askedFor() {
     const most = wanted_[0]?.people ?? 1, people = wanted_.reduce((sum, each) => sum + each.people, 0);
     return <section>{top()}
       <p className="cs-adm-lede">{wanted_.length ? `Schools people signed up that Loopd is not at yet, the most asked first. ${people} ${people === 1 ? 'person' : 'people'}, ${wanted_.length} ${wanted_.length === 1 ? 'school' : 'schools'}. Open a row to see who asked.` : 'Nobody has signed up a school yet.'}</p>
-      <ol className="cs-adm-rows cs-adm-asked">{wanted_.map((each, at) => <li key={each.key}><details><summary><i>{at + 1}</i><div><b>{each.school}</b><span>Last asked {each.last}</span></div>
+      <ol className="cs-adm-rows cs-adm-asked">{wanted_.map((each, at) => <li key={each.key}><details><summary><i>{at + 1}</i><div><b>{each.school}</b>{each.where ? <span>{each.where} · last asked {each.last}</span> : <span className="warn">Typed in, not on the list · last asked {each.last}</span>}</div>
         <span className="bar" aria-hidden="true"><i style={{ width: `${Math.round(each.people / most * 100)}%` }} /></span><span className="n">{each.people} {each.people === 1 ? 'person' : 'people'}</span>
-        <form action={removeSchoolAskAction}>{keep}<input type="hidden" name="school" value={each.key} /><button className="cs-btn sm" aria-label={`Remove ${each.school}`}>Remove</button></form></summary>
+        <form action={removeSchoolAskAction} style={each.where ? { visibility: 'hidden' } : undefined}>{keep}<input type="hidden" name="school" value={each.key} /><button className="cs-btn sm" disabled={!!each.where} aria-label={`Remove ${each.school}`}>Remove</button></form></summary>
         <p>{each.emails.length ? each.emails.join(' · ') : 'No email was kept for them.'}</p></details></li>)}</ol>
     </section>;
   }
