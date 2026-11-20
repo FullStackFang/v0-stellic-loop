@@ -131,6 +131,19 @@ section > h2 i { font-style: normal; color: var(--field); }
 .kits .lock { display: inline-flex; } .kit .mark { width: 16px; height: 16px; margin-left: -1px; }
 .kit.locked { color: var(--mute); }
 .frame[data-many] .card { overflow: visible; } .frame[data-many] .card-top { border-radius: 22px 22px 0 0; } .frame[data-many] .card::before { display: none; }
+/* ---- 4: the foot without Ink+. One pill, ink runs into it from its mark on hover (as the Assistants pill did). ---- */
+.inkq { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px 0 7px; border-radius: 99px; overflow: hidden; isolation: isolate; font-size: 13.5px; font-weight: 640; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: color .2s; }
+.inkq::before { content: ''; position: absolute; z-index: -1; inset: 0; background: var(--ink); clip-path: circle(0 at 17px 50%); transition: clip-path .55s var(--expo); }
+.inkq:hover::before, .inkq[aria-expanded=true]::before { clip-path: circle(150% at 17px 50%); } .inkq:hover, .inkq[aria-expanded=true] { color: var(--field); }
+.inkq:hover .mark .blot, .inkq[aria-expanded=true] .mark .blot { fill: var(--paper); }
+.inkq b { padding: 2px 8px 3px; border-radius: 99px; font-size: 11.5px; font-weight: 740; background: var(--ink); color: var(--field); transition: background-color .3s, color .3s; }
+.inkq:hover b, .inkq[aria-expanded=true] b { background: var(--field); color: var(--ink); }
+.ask .swatches { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 14px; }
+.ask .swatches i { position: relative; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(var(--action) 36%, var(--field) 40%); box-shadow: 0 0 0 1.5px var(--on-ink-mute); opacity: .55; }
+.ask .perks { display: grid; gap: 6px; margin: 4px 0 14px; font-size: 14px; color: var(--on-ink-mute); }
+.ask .perks span { display: grid; grid-template-columns: 7px 1fr; gap: 10px; align-items: baseline; } .ask .perks span::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--field); }
+.ask .perks span:first-child { color: var(--on-ink); font-weight: 620; }
+.ask .price { display: block; margin: -4px 0 12px; font-size: 13px; color: var(--on-ink-mute); } .ask .price b { color: var(--field); font-size: 18px; }
 /* D: the drop-down */
 .pick { position: relative; }
 .pick > button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 12px; border-radius: 99px; font-size: 13.5px; font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--ink); }
@@ -149,7 +162,11 @@ section > h2 i { font-style: normal; color: var(--field); }
 .menu .menu-ink .mark .blot { fill: var(--paper); }
 /* E: four, then the rest */
 .kit.rest { padding: 0 12px; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink); font-weight: 650; }
-.rest-all { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border-radius: 14px; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--line); animation: ask .3s var(--expo); }
+/* E keeps one row: the four and "+n" never wrap; the rest open over the card, not under it */
+.frame[data-many=e] .kits > div { flex-wrap: nowrap; }
+.frame[data-many=e] .kit { flex: none; }
+.kit.rest[aria-expanded=true] { background: var(--ink); color: var(--paper); }
+.rest-all { position: absolute; z-index: 9; right: 0; top: calc(100% + 8px); width: 300px; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border-radius: 16px 5px 16px 16px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--shadow); animation: ask .3s var(--expo); }
 /* the foot with many schools */
 .ft .pick > button { height: 34px; background: var(--paper); }
 .ft .menu { left: auto; right: 0; top: auto; bottom: calc(100% + 10px); }
@@ -192,6 +209,14 @@ section > h2 i { font-style: normal; color: var(--field); }
   <div class="row two">
     <div class="frame k" data-kit="cornell" data-many="d"><span class="tag">D · Yours, then "Any school" drop-down</span></div>
     <div class="frame k" data-kit="cornell" data-many="e"><span class="tag">E · Up to four, then "+ more"</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>4 · The foot without Ink+ <i>(no list at all: one pill to Ink+)</i></h2>
+  <div class="row two">
+    <div class="frame k tall" data-kit="cornell" data-quiet="f"><span class="tag">F · Locked behind Ink+</span></div>
+    <div class="frame k tall" data-kit="cornell" data-quiet="g"><span class="tag">G · Ask about Ink+</span></div>
   </div>
 </section>
 
@@ -241,7 +266,8 @@ const askCard = (frame, show) => `<div class="ask" ${show ? '' : 'hidden'}><span
 const ALL = [...KITS, ['penn', 'Penn'], ['princeton', 'Princeton'], ['yale', 'Yale'], ['harvard', 'Harvard'], ['mit', 'MIT'], ['stanford', 'Stanford'], ['brown', 'Brown'], ['duke', 'Duke']];
 const CHEVRON = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>';
 const named = slug => ALL.find(([each]) => each === slug);
-function many(frame, option) {
+/** `footOnly`, when given, is the note to show under the foot alone, with no account card above it. */
+function many(frame, option, footOnly) {
   const kit = frame.dataset.kit, free = who === 'free', open = frame.dataset.open ?? '', recent = (frame.dataset.recent ?? 'nyu,columbia').split(',').filter(Boolean);
   const pill = ([slug, name], cls = 'kit') => { const locked = !mayWear(slug); return `<button type="button" class="${cls} k${locked ? ' locked' : ''}" data-kit="${slug}" ${locked ? `data-lock="${slug}"` : `data-wear="${slug}"`} aria-pressed="${kit === slug}" title="${name}${locked ? ' · Ink+' : ''}" aria-label="${name}${locked ? ', with Ink+' : ''}">${cls === 'dot' ? (locked ? MARK : '') : `${locked ? MARK : '<i></i>'}${name}`}</button>`; };
   // D: Loopd's, yours, and the one you are wearing if it is another; everything else in one list.
@@ -252,22 +278,42 @@ function many(frame, option) {
   // E: four at most, Loopd's, yours, then the two you wore last; the rest behind "+n".
   const four = [...new Set(['loop', OWN, ...(free ? [] : recent)])].slice(0, 4).map(named), rest = ALL.filter(each => !four.includes(each));
   const kits = option === 'd' ? core.map(each => pill(each)).join('') + menu('card')
-    : four.map(each => pill(each)).join('') + `<button type="button" class="kit rest" data-toggle="card" aria-expanded="${open === 'card'}">${open === 'card' ? 'Fewer' : `+${rest.length} more`}</button>${open === 'card' ? `<div class="rest-all">${rest.map(each => pill(each)).join('')}</div>` : ''}`;
+    : four.map(each => pill(each)).join('') + `<span class="pick"><button type="button" class="kit rest" data-toggle="card" aria-expanded="${open === 'card'}" aria-label="${rest.length} more schools">+${rest.length}</button>${open === 'card' ? `<div class="rest-all">${rest.map(each => pill(each)).join('')}</div>` : ''}</span>`;
   const dots = option === 'd' ? `<div class="dots">${core.map(each => pill(each, 'dot')).join('')}</div>${menu('foot')}`
     : `<div class="dots">${four.map(each => pill(each, 'dot')).join('')}<button type="button" class="dot rest" data-toggle="foot" aria-expanded="${open === 'foot'}">+${rest.length}</button></div>${open === 'foot' ? `<div class="rest-pop">${rest.map(each => pill(each, 'dot')).join('')}</div>` : ''}`;
   const note = option === 'd'
     ? 'Two pills and one drop-down, however many schools there are. Type to find one. Locked schools wear the Ink mark; picking one opens the Ink+ card. The foot does the same with a small "Any school" button.'
-    : `Four at most: Loopd's, yours${free ? '' : ', and the two you wore last'}. "+${rest.length} more" opens the rest in place. Quick for a few schools; past a dozen the open list is long again.`;
-  return `${who === 'out' ? '' : `<div class="card" style="margin:0"><div class="card-top"><img src="/animals/10.png" alt=""><div><strong>Ana Lopez</strong><span>Regular · level 2 of 5${who === 'plus' ? ' · Ink+' : ''}</span></div></div>
+    : `Four at most: Loopd's, yours${free ? '' : ', and the two you wore last'}. "+${rest.length}" ends the one row and opens the rest over the card. Quick when you wear the same few; finding one school in a long open list is slower than typing.`;
+  return `${who === 'out' || footOnly ? '' : `<div class="card" style="margin:0"><div class="card-top"><img src="/animals/10.png" alt=""><div><strong>Ana Lopez</strong><span>Regular · level 2 of 5${who === 'plus' ? ' · Ink+' : ''}</span></div></div>
       <div class="card-body"><div class="kits"><h4>Colours</h4><div>${kits}</div></div></div></div>`}
     <div class="page-end" style="margin-top:24px"><div class="stuff" style="padding:0 18px 26px"><i></i></div>
     <footer class="ft">${askCard(frame, frame.dataset.asked === 'yes')}<span class="wm">${RINGS}Loopd</span><nav><a>Terms</a><a>Privacy</a></nav><div class="ft-end"><small>© 2026 Loopd</small>${dots}</div></footer></div>
+    <p class="note">${footOnly ?? note}</p>`;
+}
+
+// ---- 4: the foot for someone without Ink+ shows only what they can wear, and one pill that opens Ink+. With Ink+ (or
+// signed out) it is D's foot: the dots and "Any school".
+function quiet(frame, option) {
+  const kit = frame.dataset.kit, free = who === 'free', open = frame.dataset.open === 'foot';
+  if (!free) return many(frame, 'd', 'With Ink+ or signed out the foot is D\'s: the dots and "Any school". Only someone without Ink+ sees the pill.');
+  const dot = ([slug, name]) => `<button type="button" class="dot k" data-kit="${slug}" data-wear="${slug}" aria-label="${name} colours" title="${name}" aria-pressed="${kit === slug}"></button>`;
+  const yours = ALL.filter(([slug]) => slug === 'loop' || slug === OWN);
+  const pill = option === 'f' ? `<button type="button" class="inkq" data-toggle="foot" aria-expanded="${open}">${MARK}Every school<b>Ink+</b></button>`
+    : `<button type="button" class="inkq" data-toggle="foot" aria-expanded="${open}">${MARK}More with Ink+</button>`;
+  const card = option === 'f'
+    ? `<div class="ask" ${open ? '' : 'hidden'}><span class="ask-tab">${MARK}Ink+</span><h3>Every school's <em>colours</em></h3><div class="swatches">${ALL.filter(each => !yours.includes(each)).map(([slug, name]) => `<i class="k" data-kit="${slug}" title="${name}"></i>`).join('')}</div><p>Yours and Loopd's are free. The other ${ALL.length - 2} come with Ink+.</p><div class="acts"><a href="/c/ink">See Ink+</a><button type="button" data-toggle="foot">Not now</button></div></div>`
+    : `<div class="ask" ${open ? '' : 'hidden'}><span class="ask-tab">${MARK}Ink+</span><h3>What <em>Ink+</em> gives you</h3><div class="perks"><span>Every school's colours, not just yours</span><span>Play as your own animal, in Seats and Conga</span><span>The book of stamps keeps every place, for good</span></div><span class="price">From <b>$2.99</b> a month</span><div class="acts"><a href="/c/ink">See Ink+</a><button type="button" data-toggle="foot">Not now</button></div></div>`;
+  const note = option === 'f'
+    ? 'Your two dots, then one pill: <b>Every school · Ink+</b>. Ink runs into it on hover; press it and a card shows the other schools faded, and the way to Ink+.'
+    : 'Your two dots, then <b>More with Ink+</b>. Press it to ask what Ink+ is: the colours are one perk among three, with the price. It sells Ink+, not just colours.';
+  return `<div class="page-end"><div class="stuff" style="padding:0 18px 26px"><i></i><i></i></div>
+    <footer class="ft">${card}<span class="wm">${RINGS}Loopd</span><nav><a>Terms</a><a>Privacy</a></nav><div class="ft-end"><small>© 2026 Loopd</small><div class="dots">${yours.map(dot).join('')}</div>${pill}</div></footer></div>
     <p class="note">${note}</p>`;
 }
 
 function draw(frame) {
   const tag = frame.querySelector('.tag').outerHTML;
-  frame.innerHTML = tag + (frame.dataset.card ? card(frame, frame.dataset.card === 'after') : frame.dataset.many ? many(frame, frame.dataset.many) : foot(frame, frame.dataset.foot));
+  frame.innerHTML = tag + (frame.dataset.card ? card(frame, frame.dataset.card === 'after') : frame.dataset.many ? many(frame, frame.dataset.many) : frame.dataset.quiet ? quiet(frame, frame.dataset.quiet) : foot(frame, frame.dataset.foot));
   const dots = frame.querySelector('.dots');
   if (dots && frame.dataset.foot === 'b' && who === 'free' && frame.dataset.asked !== 'no') { const at = KITS.findIndex(([slug]) => slug === (frame.dataset.wanted ?? 'nyu')); dots.style.setProperty('--at', `${14 + at * 32}px`); requestAnimationFrame(() => dots.classList.add('flood')); }
 }
@@ -296,6 +342,7 @@ document.addEventListener('click', event => {
 document.addEventListener('input', event => { const box = event.target.closest('[data-filter]'); if (!box) return; const typed = box.value.trim().toLowerCase(); box.closest('.menu').querySelectorAll('li').forEach(li => { li.hidden = !li.textContent.toLowerCase().includes(typed); }); });
 // D and E open in the state that shows how they differ: the drop-down open, and the rest shown.
 document.querySelectorAll('[data-many]').forEach(frame => { frame.dataset.open = 'card'; });
+document.querySelectorAll('[data-quiet]').forEach(frame => { frame.dataset.open = 'foot'; });
 document.querySelectorAll('.frame').forEach(frame => { frame.dataset.wanted = 'nyu'; draw(frame); });
 </script>
 </body>
