@@ -16,7 +16,7 @@ import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type Pla
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
 import { setSchools } from '@/lib/campus/linkedin';
 import { linkedinAccount } from '@/lib/campus/linkedin-account';
-import { askForSchool } from '@/lib/campus/school-ask';
+import { askForSchool, findSchools, type FoundSchool } from '@/lib/campus/school-ask';
 import { campusViewer, mayUse, type CampusViewer } from '@/lib/campus/session';
 import { askWords } from '@/lib/emba/ask-words';
 import { answerAsk, createAsk, type AnswerWrite } from '@/lib/emba/team-asks';
@@ -126,7 +126,12 @@ export async function subscribeAction(email: string): Promise<ActResult> {
   return act(async viewer => { await subscribe(db(), viewer.personId, String(email)); });
 }
 
-/** "Add my school", for a person whose email is at none of the schools: the school they name is kept with that email. */
+/** What the "Sign up my school" box shows as someone types: the US colleges it could be. Nothing for someone signed out. */
+export async function findSchoolsAction(typed: string): Promise<{ found: FoundSchool[]; total: number }> {
+  return await campusViewer() ? findSchools(db(), String(typed)) : { found: [], total: 0 };
+}
+
+/** "Sign up my school", for a person whose email is at none of the schools: the school they pick is kept with that email. */
 export async function askSchoolAction(school: string): Promise<ActResult> {
   return act(async viewer => { await askForSchool(db(), viewer.personId, String(school), viewer.principal.verifiedEmail); });
 }
