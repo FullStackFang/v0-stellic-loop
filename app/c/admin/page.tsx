@@ -11,19 +11,20 @@ import { listCampuses } from '@/lib/campus/listings';
 import { adminListings, campusFeeds } from '@/lib/campus/manage';
 import { campusPlaces } from '@/lib/campus/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
+import { schoolsAsked } from '@/lib/campus/school-ask';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { siteBar } from '../site-bar';
 import { WordsField } from '@/components/campus/words-field';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 const RULES = { outings: 'any outings', word: 'outings on events with a word', weeks: 'the same group at the giver’s events, weeks in a row' } as const;
-/** The sections, down the left. The page shows one at a time. */
-const TABS = { events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
+/** The sections, down the left. The page shows one at a time. What waits for the admin comes first (public/demo/mockups-admin-review.html). */
+const TABS = { review: 'Review', schools: 'Schools', events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
 type Tab = keyof typeof TABS;
 /** Where an animal stands. One a person had made, and nobody else may pick, is `own`: it is listed with the ones that are off. */
 const TIER = { core: 'Core', premium: 'Premium', school: 'School', off: 'Off', own: 'Maker only' } as const;
@@ -40,14 +41,15 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   if (!campus) notFound();
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
-  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db())]);
+  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db())]);
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const at = (to: Tab, school = campus.slug) => `/c/admin?campus=${school}&tab=${to}`;
   /** What every form carries: the campus it acts on, and the section to come back to. */
   const keep = <><input type="hidden" name="campus" value={campus.slug} /><input type="hidden" name="tab" value={tab} /></>;
-  const waiting = linked.filter(each => each.waiting).length;
+  // Waiting for a school check, the longest wait first. Everyone else in `linked` is let in.
+  const queue = linked.filter(each => each.waiting).sort((a, b) => b.days - a.days || a.added.localeCompare(b.added)), waiting = queue.length;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
-  const counts: Record<Tab, number> = { events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length, campus: campuses.length };
+  const counts: Record<Tab, number> = { review: waiting, schools: wanted_.length, events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
   const top = (beside?: ReactNode) => <div className="cs-adm-top"><h1>{TABS[tab]}</h1>{beside}</div>;
 
@@ -163,14 +165,36 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     </section>;
   }
 
-  /** Everyone who unlocked schools with a LinkedIn profile, across every campus: the profile to look at, and a way to take it back. */
-  function linkedin() {
-    const named = (slug: string) => campuses.find(each => each.slug === slug)?.name ?? slug;
+  const named = (slug: string) => campuses.find(each => each.slug === slug)?.name ?? slug;
+  const proof = (owner: string | null) => owner ? <span>Signed in with LinkedIn as {owner}</span> : <span className="warn">Pasted an address only: the LinkedIn account is not proven theirs</span>;
+  /** The queue: people with no school email, waiting for their school to be checked. Approving or turning one down takes them off it. */
+  function review() {
     return <section>{top()}
-      <p className="cs-adm-lede">{linked.length ? 'People who added a LinkedIn profile to unlock schools, across every campus. Someone with no school email waits here until you approve them. Loop reads nothing from LinkedIn: open the profile to check a school. Removing one closes what it unlocked.' : 'Nobody has added a LinkedIn profile yet.'}</p>
-      <ul className="cs-adm-rows">{linked.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span><span>{each.owner ? `Signed in with LinkedIn as ${each.owner}` : 'Pasted an address only: the LinkedIn account is not proven theirs'}</span>{each.waiting && <span className="warn">Waiting for you: no school email</span>}</div>
+      <p className="cs-adm-lede">{waiting ? 'People with no school email, waiting for you to check their school. The longest wait first.' : 'Nobody is waiting for you.'}</p>
+      <ul className="cs-adm-rows">{queue.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, `wants ${each.schools.map(named).join(', ')}`, each.days < 1 ? 'waiting since today' : `waiting ${each.days} ${each.days === 1 ? 'day' : 'days'}`].filter(Boolean).join(' · ')}</span>{proof(each.owner)}</div>
         <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
-        {each.waiting && <form action={approveLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm go">Approve</button></form>}
+        <form action={approveLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm go">Approve</button></form>
+        <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Turn down</button></form></li>)}</ul>
+    </section>;
+  }
+  /** Schools Loop is not at that people signed up, the most asked first. A row opens to show who asked. */
+  function askedFor() {
+    const most = wanted_[0]?.people ?? 1, people = wanted_.reduce((sum, each) => sum + each.people, 0);
+    return <section>{top()}
+      <p className="cs-adm-lede">{wanted_.length ? `Schools people signed up that Loop is not at yet, the most asked first. ${people} ${people === 1 ? 'person' : 'people'}, ${wanted_.length} ${wanted_.length === 1 ? 'school' : 'schools'}. Open a row to see who asked.` : 'Nobody has signed up a school yet.'}</p>
+      <ol className="cs-adm-rows cs-adm-asked">{wanted_.map((each, at) => <li key={each.key}><details><summary><i>{at + 1}</i><div><b>{each.school}</b><span>Last asked {each.last}</span></div>
+        <span className="bar" aria-hidden="true"><i style={{ width: `${Math.round(each.people / most * 100)}%` }} /></span><span className="n">{each.people} {each.people === 1 ? 'person' : 'people'}</span>
+        <form action={removeSchoolAskAction}>{keep}<input type="hidden" name="school" value={each.key} /><button className="cs-btn sm" aria-label={`Remove ${each.school}`}>Remove</button></form></summary>
+        <p>{each.emails.length ? each.emails.join(' · ') : 'No email was kept for them.'}</p></details></li>)}</ol>
+    </section>;
+  }
+  /** Everyone let in or given more schools by a LinkedIn profile, across every campus: the profile to look at, and a way to take it back. */
+  function linkedin() {
+    const inside = linked.filter(each => !each.waiting);
+    return <section>{top()}
+      <p className="cs-adm-lede">{inside.length ? 'People a LinkedIn profile unlocked schools for, across every campus. Someone still waiting for a check is under Review. Removing one closes what it unlocked.' : 'Nobody has unlocked a school with LinkedIn yet.'}</p>
+      <ul className="cs-adm-rows">{inside.map(each => <li key={each.personId}><div><b>{each.name}</b><span>{[each.email, each.schools.map(named).join(', '), each.added].filter(Boolean).join(' · ')}</span>{proof(each.owner)}</div>
+        <a className="cs-btn sm" href={each.profile} target="_blank" rel="noreferrer">Open profile</a>
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Remove</button></form></li>)}</ul>
     </section>;
   }
@@ -193,13 +217,13 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   }
 
   const { bar, foot } = await siteBar({ campus, viewer, back: '/c/admin' });
-  const body = { events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
+  const body = { review, schools: askedFor, events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
   return <div className="cs">
     {bar}
     <main className="cs-adm">
       <aside className="cs-adm-rail">
         <details className="school"><summary>{campus.name}</summary><nav aria-label="Campus">{campuses.filter(each => each.id !== campus.id).map(each => <Link key={each.id} href={at(tab, each.slug)}>{each.name}</Link>)}</nav></details>
-        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'linkedin' && waiting ? <small className="warn">{waiting} waiting</small> : <small>{counts[each]}</small>}</Link>)}</nav>
+        <nav aria-label="Sections">{(Object.keys(TABS) as Tab[]).map(each => <Link key={each} href={at(each)} aria-current={each === tab ? 'page' : undefined}>{TABS[each]}{each === 'feeds' && failed ? <small className="warn">{failed} failed</small> : each === 'review' && waiting ? <small className="warn">{waiting} waiting</small> : <small>{counts[each]}</small>}</Link>)}</nav>
         <p>Only you see this page.{frontIsCampus() ? ' Everyone else gets This week and nothing more.' : ' The groups site is open to its members again: LOOP_FRONT is set to groups.'}</p>
       </aside>
       <div className="cs-adm-main">
