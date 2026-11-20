@@ -49,7 +49,7 @@ export type Live = { listingId: string; giver: string; text: string; usedAt: str
  */
 /** The school a person is at (`home`), the ones their LinkedIn `profile` unlocked (`added`), and every school Loopd is at (`all`). */
 export type Schools = { profile: string | null; home: string | null; added: string[]; all: { slug: string; name: string }[] };
-export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[]; school: Tile[] }; schools: Schools; asked: boolean; makesLeft: number; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
+export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[]; school: Tile[] }; schools: Schools; asked: boolean; makesLeft: number; /** Whether they may wear every school's colours: an Ink+ perk, and the admin's. Without it, Loopd's and their schools' (`schools`). */ anyKit: boolean; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
 
 export type Screen = {
   campus: { slug: string; name: string; tz: string; listSource: string };

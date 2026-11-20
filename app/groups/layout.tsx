@@ -18,6 +18,7 @@ import { SiteFoot } from '@/components/campus/foot';
 import { SignOut } from '@/components/campus/sign-out';
 import { findCampus } from '@/lib/campus/listings';
 import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
+import { kitScript } from '@/lib/campus/kit-script';
 import { campusScreen } from '@/lib/campus/screen';
 import { campusViewer, lookingAt } from '@/lib/campus/session';
 import type { Screen } from '@/lib/campus/view';
@@ -41,8 +42,6 @@ async function accountScreen(): Promise<Screen | null> {
     return viewer && campus ? await campusScreen(db(), campus, { personId: viewer.personId, admin: viewer.admin, groups: [] }) : null;
   } catch { return null; }
 }
-// Runs before the page is painted, so a picked or school kit never flashes in after the default. The key is the one components/campus/kit.tsx uses.
-const kitScript = (own: string) => `try{document.documentElement.dataset.kit=localStorage.getItem('loop-kit')||${JSON.stringify(own).replace(/</g, '\\u003c')}}catch(e){}`;
 
 export default async function GroupsLayout({ children }: { children: React.ReactNode }) {
   const configured = clerkPortalConfigured();
@@ -52,9 +51,11 @@ export default async function GroupsLayout({ children }: { children: React.React
   // Signed out there is no bar: the page itself carries the way in, in the look it always had. The foot is there either way.
   let content = <><div className="lp">{configured && <SessionRefresh />}<main className="lp-main lp-main-out"><div className="lp-wrap">{children}</div></main></div><SiteFoot /></>;
   if (principal) {
-    const [groups, look, screen] = await Promise.all([barGroups(principal), looks(principal), accountScreen()]);
-    content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit) }} /><Kit own={look.kit} />
-      <Bar groups={groups} face={look.face} ink={look.ink} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} />}><OnYou /></Suspense></Bar>
+    const [groups, look, screen, viewer] = await Promise.all([barGroups(principal), looks(principal), accountScreen(), campusViewer().catch(() => null)]);
+    // The colours they may wear: Loopd's and their schools', or every school's with Ink+ (components/campus/kit.tsx).
+    const yours = viewer?.kits ?? ['loop', look.kit], any = viewer?.anyKit ?? false;
+    content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit, yours, any) }} /><Kit own={look.kit} yours={yours} any={any} />
+      <Bar groups={groups} kits={yours} anyKit={any} face={look.face} ink={look.ink} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} />}><OnYou /></Suspense></Bar>
       <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div><SiteFoot /></div>;
   }
   return configured ? <ClerkProvider signInUrl="/groups/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;

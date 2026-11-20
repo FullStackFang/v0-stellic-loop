@@ -558,17 +558,25 @@ describe('levels on the screen', () => {
     expect(card).toHaveTextContent('5 more to Regular');
     expect(within(card).queryByText('Admin')).toBeNull();
     expect(within(card).queryByRole('link', { name: 'The groups site' })).toBeNull();
-    // The card also lets anyone pick whose colours the screen wears, and the pick is kept on this browser.
+    // The card also picks whose colours the screen wears. Loopd's and your schools' are free; another school's is an
+    // Ink+ perk: in "Any school" it wears the Ink mark and opens the Ink+ card (public/demo/mockups-ink-colours.html).
     const colours = within(within(card).getByRole('group', { name: 'Colours' }));
-    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loopd', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
-    fireEvent.click(colours.getByRole('button', { name: 'Columbia' }));
-    expect(colours.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
-    expect(document.documentElement.dataset.kit).toBe('columbia');
-    expect(localStorage.getItem('loop-kit')).toBe('columbia');
-    delete document.documentElement.dataset.kit; localStorage.clear();
+    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loopd', 'Any school']);
+    fireEvent.click(colours.getByRole('button', { name: 'Any school' }));
+    fireEvent.click(colours.getByRole('button', { name: 'Columbia, with Ink+' }));
+    expect(within(card).getByRole('dialog', { name: "Columbia's colours come with Ink+" })).toBeInTheDocument();
+    expect(localStorage.getItem('loop-kit')).toBeNull();
     cleanup();
+    // The admin may wear any, and the pick is kept on this browser.
     await show(as(ana, true));
     fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
+    const theirs = within(within(screen.getByRole('dialog', { name: 'Your level' })).getByRole('group', { name: 'Colours' }));
+    fireEvent.click(theirs.getByRole('button', { name: 'Any school' }));
+    fireEvent.click(theirs.getByRole('button', { name: 'Columbia' }));
+    expect(document.documentElement.dataset.kit).toBe('columbia');
+    expect(localStorage.getItem('loop-kit')).toBe('columbia');
+    await vi.waitFor(() => expect(theirs.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true'));
+    delete document.documentElement.dataset.kit; localStorage.clear();
     const admin = within(screen.getByRole('navigation', { name: 'Admin' }));
     expect(admin.getByRole('link', { name: 'Run the campus' })).toHaveAttribute('href', '/c/admin');
     expect(admin.getByRole('link', { name: 'The groups site' })).toHaveAttribute('href', '/groups');
