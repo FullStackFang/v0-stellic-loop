@@ -175,7 +175,7 @@ const tint = n => `oklch(64% 0.17 ${[125, 235, 80, 305, 165, 0, 200, 140, 55, 27
 const ME = 'me';
 const colour = id => id === ME ? C.action : tint(id);
 
-let world, map, land, blossoms = [], me = null, aim = 0;
+let world, map, land, blossoms = [], me = null, aim = 0, followed = null;
 const ask = new URLSearchParams(location.search);
 let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * CORE), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
 window.conga = { get world() { return world; } }; // for poking at the game from the console
@@ -198,7 +198,7 @@ function open(id) {
   const lead = world.lines.reduce((a, b) => a.tail.length >= b.tail.length ? a : b), pin = map.things.find(thing => thing.name === ask.get('at'));
   held = pin ? { x: pin.x + Number(ask.get('dx') ?? 0), y: pin.y + Number(ask.get('dy') ?? 0), dead: true, tail: [] } : null;
   document.body.classList.toggle('bare', !!held);
-  cam.x = (held ?? lead).x; cam.y = (held ?? lead).y;
+  followed = lead; cam.x = (held ?? lead).x; cam.y = (held ?? lead).y;
   for (const button of $('where').children) button.setAttribute('aria-pressed', button.dataset.map === id);
 }
 
@@ -673,7 +673,9 @@ function bridge(thing) {
 const SOLID = ['hall', 'tower', 'water'];
 
 function draw(t, dt) {
-  const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b));
+  // Before a game the view stays with one line, the longest when it was chosen, and moves on only when that line is scattered.
+  if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
+  const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : followed);
   const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.max(0.62, Math.min(wide, tall * 1.25) / 760);
   const zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007)), slide = 1 - Math.exp(-dt * (watch === me ? 9 : 2.5));
   cam.x += (watch.x - cam.x) * slide; cam.y += (watch.y - cam.y) * slide; cam.z += (zoom - cam.z) * (1 - Math.exp(-dt * 3));
