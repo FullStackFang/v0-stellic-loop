@@ -1,0 +1,42 @@
+/* "The spill", the app's error page (components/errors/spill.tsx; public/demo/mockups-error-pages.html, direction C).
+   Colours are the campus kit's (app/c/campus.css). Only transform, opacity, translate and scale are animated, and the
+   resting style of everything is its finished pose, so reduced motion needs only `animation: none`. */
+.sp { background: var(--cs-paper); }
+/* the older pages' side menu (components/SiteNav.tsx) has no place on an error page */
+body:has(.sp) .sitenav { display: none; }
+.sp-bar { position: relative; z-index: 3; }
+.sp-stage { position: relative; flex: 1; display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: clamp(24px, 7vw, 110px); padding: 32px clamp(16px, 5vw, 72px); overflow: hidden; cursor: crosshair; touch-action: manipulation; user-select: none; }
+
+/* the ink */
+.sp svg { display: block; width: 100%; overflow: visible; }
+.sp-school { fill: var(--cs-field); } .sp-dark { fill: var(--cs-action); } .sp-seep { fill: var(--cs-action); opacity: .42; } .sp-third { fill: var(--cs-third); }
+.sp-land { transform-origin: 0 0; animation: sp-land .3s var(--cs-expo) both; }
+@keyframes sp-land { from { transform: scale(.1) rotate(-20deg); opacity: 0; } 30% { opacity: 1; } }
+.sp-fly { transform-box: fill-box; transform-origin: center; animation: sp-fly .42s var(--cs-expo) calc(.05s + var(--n) * 18ms) both; }
+@keyframes sp-fly { from { translate: var(--dx) var(--dy); scale: .2; opacity: 0; } 25% { opacity: 1; } }
+
+/* the first blot, with the person's own animal in the middle of it */
+.sp-blot { position: relative; justify-self: center; width: min(430px, 42vw); pointer-events: none; }
+.sp-blot img { position: absolute; left: 50%; top: 50%; width: 38.4%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; object-fit: cover; animation: sp-sit .5s var(--cs-expo) .12s both; }
+@keyframes sp-sit { from { transform: scale(.3); opacity: 0; } }
+/* what a press adds */
+.sp-more { position: absolute; z-index: 1; translate: -50% -50%; pointer-events: none; }
+
+/* the plate: what happened, and the ways on */
+.sp-say { position: relative; z-index: 2; display: grid; gap: 18px; width: min(380px, 100%); padding: 26px 26px 34px; border-radius: var(--cs-r); background: var(--cs-ink); color: var(--cs-on-ink); box-shadow: 7px 7px 0 var(--cs-field-shadow); cursor: default; user-select: text; }
+.sp-say h1 { margin: 0; font-size: clamp(34px, 4.4vw, 46px); font-weight: 760; font-stretch: 108%; letter-spacing: -0.045em; line-height: .96; }
+.sp-say h1 em { display: block; font-style: normal; color: var(--cs-field); }
+.sp-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.cs .sp-acts .cs-btn:not(.go):hover { background: var(--cs-paper); translate: -1px -1px; box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 3px 3px 0 var(--cs-field-shadow); }
+.cs .sp-acts .cs-btn.go { box-shadow: 0 0 0 1.5px var(--cs-on-ink) inset, 3px 3px 0 var(--cs-field-shadow); }
+.sp-code { gap: 10px; background: var(--cs-stub); font-family: ui-monospace, "Cascadia Mono", Menlo, monospace; font-size: 13.5px; letter-spacing: 0; }
+.sp-code b { padding-left: 10px; border-left: 1.5px solid var(--cs-ink); font-family: var(--font-archivo), Archivo, system-ui, sans-serif; font-weight: 640; letter-spacing: -0.012em; }
+/* a hint is a bubble that overlaps the plate it is about */
+.sp-hint { position: absolute; left: 26px; bottom: -13px; padding: 4px 14px 5px; border-radius: 99px; background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); font-size: 13px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+
+@media (max-width: 760px) {
+  .sp-stage { grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: center; gap: 8px; padding: 20px 16px 40px; }
+  .sp-blot { width: min(300px, 82vw); }
+}
+@media (prefers-reduced-motion: reduce) { .sp-land, .sp-fly, .sp-blot img { animation: none; } }
+

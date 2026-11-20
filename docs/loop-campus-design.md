@@ -127,3 +127,12 @@ Anything that loads, or takes time, shows one of two loaders (`components/loadin
 
 The founder has not yet said when to start. The branch had a lot of uncommitted work in
 `app/loop.css` and the team pages on 2026-11-17.
+
+## When something goes wrong
+
+One page, "the spill" (`components/errors/spill.tsx`, picked 2026-11-20 from `/demo/mockups-error-pages.html`, direction C), for an address that leads nowhere (`app/not-found.tsx`) and for a page that broke (`app/error.tsx`, `app/global-error.tsx`).
+
+- Ink on the paper, the viewer's own animal in the middle of it, and one ink plate with the headline and the ways on. Pressing the page spills more.
+- A page that broke shows a code with a Copy button. Its blot is drawn from that code, with the third ink in it, so no two errors look alike.
+- The code is the one in the server's log. The page also sends it, with the address and the message, to `app/api/errors`, which writes one `page error` line to the log.
+- It draws its own small bar (the wordmark only) and no foot: the page that broke may be why the app's bar cannot be drawn.
