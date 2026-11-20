@@ -1,0 +1,59 @@
+/* The admin's Activity and People sections (app/c/admin/stats.tsx), after public/demo/mockups-admin-stats.html.
+   Every rule sits under .cs-st, inside the admin page, and uses the campus tokens of app/c/campus.css. */
+@keyframes cs-st-rise { from { transform: scaleY(0); } }
+@keyframes cs-st-run { from { transform: scaleX(0); } }
+
+.cs-st .cs-adm-top { margin-bottom: 30px; }
+/* a switch of pills: the current one filled, the rest outlined */
+.cs-st-sw { display: flex; gap: 6px; flex-wrap: wrap; }
+.cs-st-sw a { display: inline-flex; align-items: center; height: 34px; padding: 0 15px; border-radius: 99px; font-size: 13.5px; font-weight: 600; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .15s, box-shadow .15s; }
+.cs-st-sw a:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-st-sw a[aria-current] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; translate: none; }
+.cs-st-sw small { margin-left: 7px; font-size: 12.5px; opacity: .75; }
+
+/* a panel: a paper card with the ink edge and hard shadow. Its name is a filled tab that sits over the top edge. */
+.cs-st-pn { position: relative; min-width: 0; padding: 30px 22px 20px; border-radius: 18px 18px 18px 5px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.cs-st-pn > h2 { position: absolute; top: -13px; left: 16px; display: flex; align-items: center; height: 27px; max-width: calc(100% - 32px); padding: 0 13px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-paper); font-size: 13px; font-weight: 640; white-space: nowrap; }
+.cs-st-pn > h2 em { margin-left: 8px; font-style: normal; font-weight: 500; color: var(--cs-field); }
+.cs-st-grid { display: grid; gap: 30px 20px; } .cs-st-grid + .cs-st-grid { margin-top: 30px; }
+.cs-st-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); } .cs-st-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cs-st-grid.wide { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+.cs-st-none { font-size: 14px; line-height: 1.5; color: var(--cs-mute); }
+
+/* number tiles */
+.cs-st-pn.num > b { display: block; font-size: 40px; font-weight: 720; font-stretch: 108%; letter-spacing: -0.045em; line-height: 1.05; }
+.cs-st-pn.num > span { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--cs-mute); }
+.cs-st-pn.num > span i { font-style: normal; padding: 1px 8px; border-radius: 6px; background: var(--cs-stub); color: var(--cs-ink); }
+.cs-st-pn.num.lead { background: var(--cs-field); } .cs-st-pn.num.lead > span { color: var(--cs-ink); } .cs-st-pn.num.lead > span i { background: var(--cs-paper); }
+
+/* the days chart: one bar a day, weekends lighter, today in ink */
+.cs-st-days { display: flex; align-items: flex-end; gap: 4px; height: 168px; padding-top: 6px; }
+.cs-st-days i { flex: 1; min-width: 0; max-width: 64px; border-radius: 5px 5px 2px 2px; background: var(--cs-action); transform-origin: bottom; animation: cs-st-rise .7s var(--cs-expo) backwards; }
+.cs-st-days i.we { background: color-mix(in oklch, var(--cs-action) 45%, var(--cs-paper)); } .cs-st-days i.now { background: var(--cs-ink); } .cs-st-days i:hover { background: var(--cs-third); }
+.cs-st-axis { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 7px; border-top: 1.5px solid var(--cs-ink); font-size: 12.5px; font-weight: 580; color: var(--cs-mute); }
+.cs-st-axis b { color: var(--cs-ink); font-weight: 660; }
+
+/* how people can sign in: one split bar, then one line a way */
+.cs-st .google { background: var(--cs-ink); } .cs-st .email { background: var(--cs-action); } .cs-st .linkedin { background: var(--cs-third); } .cs-st .other { background: var(--cs-mute); }
+.cs-st-split { display: flex; gap: 3px; height: 30px; margin-bottom: 14px; } .cs-st-split i { min-width: 6px; border-radius: 7px; transform-origin: left; animation: cs-st-run .7s var(--cs-expo) backwards; }
+.cs-st-ways li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); font-weight: 580; } .cs-st-ways li:first-child { border-top: 0; }
+.cs-st-ways u { flex: none; width: 14px; height: 14px; border-radius: 4px; } .cs-st-ways b { margin-left: auto; font-weight: 700; } .cs-st-ways small { width: 44px; text-align: right; font-size: 13px; color: var(--cs-mute); }
+
+/* ranked lines: name, bar, count, on one line */
+.cs-st-rank li { display: grid; grid-template-columns: 170px minmax(0, 1fr) 62px; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--cs-line); font-weight: 580; } .cs-st-rank li:first-child { border-top: 0; }
+.cs-st-rank .bar { height: 12px; border-radius: 99px; background: var(--cs-line); overflow: hidden; } .cs-st-rank .bar i { display: block; height: 100%; border-radius: 99px; background: var(--cs-action); transform-origin: left; animation: cs-st-run .7s var(--cs-expo) backwards; }
+.cs-st-rank b { text-align: right; font-weight: 700; }
+
+/* the people table */
+.cs-adm .cs-st .cs-st-people td { padding: 9px 12px 9px 0; vertical-align: middle; white-space: nowrap; color: inherit; width: auto; }
+.cs-adm .cs-st .cs-st-people th:last-child, .cs-adm .cs-st .cs-st-people td:last-child { text-align: right; padding-right: 0; }
+.cs-st-people .who { display: flex; align-items: center; gap: 11px; } .cs-st-people .who img { flex: none; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--cs-stub); box-shadow: 0 0 0 1.5px var(--cs-ink); }
+.cs-st-people .who b { display: block; } .cs-st-people .who small { font-size: 12.5px; }
+.cs-st-people .way { display: inline-flex; align-items: center; gap: 6px; margin-right: 5px; padding: 2px 9px 2px 6px; border-radius: 7px; font-size: 12.5px; font-weight: 620; background: var(--cs-page); }
+.cs-st-people .way u { width: 10px; height: 10px; border-radius: 3px; }
+.cs-st-people .plan { padding: 2px 9px; border-radius: 7px; font-size: 12.5px; font-weight: 680; background: var(--cs-ink); color: var(--cs-field); } .cs-st-people .plan.plus { background: var(--cs-third); color: var(--cs-ink); }
+.cs-st-people .spark { display: inline-flex; align-items: flex-end; gap: 2px; height: 22px; margin-right: 9px; vertical-align: middle; } .cs-st-people .spark i { width: 5px; height: 100%; border-radius: 2px; background: var(--cs-action); } .cs-st-people .spark i.z { height: 12%; background: var(--cs-line); }
+.cs-st-more { display: flex; justify-content: center; margin-top: 16px; }
+
+@media (max-width: 1000px) { .cs-st-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cs-st-grid.two, .cs-st-grid.wide { grid-template-columns: minmax(0, 1fr); } .cs-st-people th:nth-child(n+4):not(:last-child), .cs-st-people td:nth-child(n+4):not(:last-child) { display: none; } }
+@media (max-width: 560px) { .cs-st-grid.four { grid-template-columns: minmax(0, 1fr); } .cs-st-rank li { grid-template-columns: 120px minmax(0, 1fr) 52px; } .cs-st-people th:nth-child(n+2):not(:last-child), .cs-st-people td:nth-child(n+2):not(:last-child) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cs-st-days i, .cs-st-split i, .cs-st-rank .bar i { animation: none; } }
