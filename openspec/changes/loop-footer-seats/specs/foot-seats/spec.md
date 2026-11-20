@@ -46,7 +46,7 @@ When every seat holds an animal, the ticket SHALL say "All in". When one is take
 
 #### Scenario: The last one is seated
 - **WHEN** the last empty seat is filled
-- **THEN** the pill on the ticket reads "All in"
+- **THEN** the pill on the top edge of the ticket reads "All in"
 
 #### Scenario: One is taken out
 - **WHEN** a seated animal is picked up after all were in
@@ -64,7 +64,7 @@ Once every seat is filled, the ticket SHALL show a "Drop them again" button. Pre
 
 #### Scenario: All are in
 - **WHEN** the last empty seat is filled
-- **THEN** a "Drop them again" button is shown as a pill on the top edge of the ticket
+- **THEN** a "Drop them again" button is shown beside it, on the top edge of the ticket
 
 #### Scenario: The button is pressed
 - **WHEN** the person presses "Drop them again"

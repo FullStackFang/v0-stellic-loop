@@ -30,6 +30,8 @@ Direction A of `public/demo/mockups-error-pages.html` is a different, smaller mo
 
 **D6. Restlessness and cheering.** The idle hop every 2.6 seconds and the cheer on a colour change apply to those on the floor only. A seated one does a small bob in its seat for the cheer.
 
+**D7a. Every pill sits on the top edge of the ticket.** The "Pick one up" / "All in" pill moves from the edge of the room to the top edge of the ticket itself, in one row with "Drop them again", over the paper and clear of the stub (founder, 2026-11-20: "put all pills up there"). In Seats nothing is pinned to the room's edge.
+
 **D7. One control, and it is a real button.** Once all are in, "Drop them again" appears as an outlined pill of its own on the top edge of the ticket itself, over the paper and clear of the stub (founder, 2026-11-20: "further up like a pill on the ticket itself"). It is a `<button>`, reachable by keyboard and read by a screen reader; the animals and seats stay decoration (`aria-hidden`), so `aria-hidden` moves from the whole ticket to the room's animals and seats. There is no keyboard way to seat an animal, and no "Seat them all" in the ticket: that button is the mockup's own, for looking at the finished state.
 
 **D8. Phone.** Under 860px the stub is hidden today and the room is narrower. Seats keeps the same rule; the seats are 44px so a thumb can drop on one, and the row holds as many as there are animals (at least 4).
