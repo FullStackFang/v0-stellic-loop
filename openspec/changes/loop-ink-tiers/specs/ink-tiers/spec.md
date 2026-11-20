@@ -54,11 +54,39 @@ No place SHALL use the Ink+ mark for something that comes with Ink, or the Ink m
 
 #### Scenario: An Ink+ ask
 - **WHEN** the Assistants card, the colours card, the save card or the group picture asks for Ink+
-- **THEN** its "Ink+" tab wears the Ink+ mark
+- **THEN** its tab is the Ink+ mark
 
 #### Scenario: Locked school colours
 - **WHEN** the "Any school" list shows a school that needs Ink+
 - **THEN** that school wears the Ink+ mark
+
+### Requirement: Features show the plan by its mark, not its name
+Where a feature, a button, a pill, an animal or a list item is marked as coming with a plan, it SHALL show that plan's mark and SHALL NOT write the plan's name beside it:
+- the blot means Ink;
+- the blot with the spark means Ink+.
+
+Every such mark SHALL have the accessible name "Ink" or "Ink+".
+
+The words "Ink" and "Ink+" SHALL appear only where plans are named or compared:
+- the Ink page and its tab in the top bar;
+- the account card's plan row;
+- the body of an ask card, which says what the plan gives and its price.
+
+#### Scenario: The foot's colours pill
+- **WHEN** a person without Ink+ sees the foot
+- **THEN** the pill reads "Every school" with the Ink+ mark, and no "Ink+" text
+
+#### Scenario: The game's pill
+- **WHEN** a person with neither plan opens Seats or Conga
+- **THEN** the pill reads "Play as your own animal" with the Ink mark, and no "Ink" text
+
+#### Scenario: An ask card
+- **WHEN** the Assistants ask opens
+- **THEN** its tab is the Ink+ mark alone, and its body names Ink+ and $9.99
+
+#### Scenario: A screen reader
+- **WHEN** a screen reader reaches a mark
+- **THEN** it reads "Ink" or "Ink+"
 
 ### Requirement: Ink+ faces sparkle
 The face of a person on Ink+ SHALL sit on the same blot as an Ink face, with three small sparks around it that twinkle in turn. Where motion is reduced, the sparks SHALL be shown still. The loading splat SHALL show the sparks for a person on Ink+. A free face SHALL have no blot, and an Ink face SHALL have the blot alone.

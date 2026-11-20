@@ -14,6 +14,7 @@
 - [ ] 3.2 Add the sparks CSS next to `.cs-blot`: three sizes and places, the staggered `twinkle`, `--cs-third` with an ink stroke, and still under reduced motion. Make sure the groups pages get the same rules, shared rather than copied.
 - [ ] 3.3 Faces: the blot for `plan !== 'free'`, plus `InkSparks` for `'plus'`. Cover the campus `Dot`, `near.tsx`, the account avatar, and the groups bar avatar. The accessible name says "has Ink" or "has Ink+". Test each of the three looks.
 - [ ] 3.4 Mark each use per the design's table. Use `plus` on: the Ink+ ask tabs (`assistants-link.tsx`, `kit.tsx`, save-face, group picture), the locked schools in the "Any school" list and its foot link, the foot's "Every school" pill, and the account row for Ink+. Everything else keeps the blot alone.
+- [ ] 3.6 Use the mark, not the name, in features. Ask-card tabs become the mark alone. The foot pill reads "Every school" with the Ink+ mark. The picker filter is the Ink mark alone. Each mark gets an accessible name ("Ink" or "Ink+"). Keep the words only on the Ink page and tab, the account row, and ask-card bodies.
 - [ ] 3.5 Have the loader pass `plan` (with `'plus'`) through `rememberMe` from `components/campus/screen.tsx` and `app/groups/bar.tsx`. Test that the splat gets `'plus'`.
 
 ## 4. Pet-photo animals by plan
@@ -24,7 +25,7 @@
 ## 5. Games
 
 - [ ] 5.1 `congaPlayer` gives your own animal with `hasInk`, which includes Ink+. Update `app/conga/route.test.ts` and `app/seats/route.test.ts`.
-- [ ] 5.2 In `public/seats/index.html` and `public/conga/index.html`, the ask pill reads "Ink", and the comments say Ink.
+- [ ] 5.2 In `public/seats/index.html` and `public/conga/index.html`, the ask pill drops its "Ink+" text for the Ink mark (the blot, drawn inline), and the comments say Ink.
 
 ## 6. Asks and the account row
 

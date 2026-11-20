@@ -25,7 +25,7 @@ What the row shows depends on the person's plan:
 - **THEN** the row reads "You have Ink+" and wears the Ink+ mark
 
 ### Requirement: Ink animals wear the mark in the picker
-In the animal picker, every animal that comes with the plan SHALL wear the Ink mark, the blot alone. The picker's filter SHALL be labelled "Ink" and wear the Ink mark. The picker SHALL have no link of its own to the Ink page: an Ink animal pressed by a person without Ink or Ink+ opens the ask pane. The ask pane SHALL list the perks the Ink page leads with, and SHALL say plainly which of them are not available yet.
+In the animal picker, every animal that comes with the plan SHALL wear the Ink mark, the blot alone. The picker's filter SHALL be the Ink mark alone, named "Ink" to a screen reader. The picker SHALL have no link of its own to the Ink page: an Ink animal pressed by a person without Ink or Ink+ opens the ask pane. The ask pane SHALL list the perks the Ink page leads with, and SHALL say plainly which of them are not available yet.
 
 #### Scenario: Seeing which animals need the plan
 - **WHEN** a person without Ink opens the picker
