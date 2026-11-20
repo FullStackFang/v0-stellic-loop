@@ -2,6 +2,8 @@ import 'server-only';
 import type { Q } from '../db';
 import { collegeNamed, findColleges } from './colleges';
 import { CampusError } from './errors';
+import { animal, animalOf } from './animals';
+import { pickedFaces } from './people';
 
 // The school a person signs up when their email is at none of Loopd's schools (supabase/migrations/20261119200000_campus_school_ask.sql).
 // They pick it from the list of US colleges (./colleges), so everyone who means one school gives one name. A school
@@ -65,6 +67,37 @@ export async function schoolsAsked(q: Q): Promise<AskedSchool[]> {
     throw error;
   }
 }
+/** How many people from a school sign it up before Loopd opens there: the seats on its ticket (public/demo/mockups-school-waitlist.html, D). */
+export const OPEN_AT = 100;
+/** A school in line: its name and how many signed it up. */
+export type InLine = { school: string; people: number };
+/**
+ * Where the school this person signed up stands (mockups-school-waitlist.html, D): its place among every school people
+ * named, the most asked first (a tie goes to the school asked first), how many asked, the schools just ahead and just
+ * behind, and the faces in its seats, the first to ask first. Only animals are shown: a photo face counts as the
+ * person's own animal, so nobody's photo reaches strangers. `mine` is the seat that is this person's. Null when they
+ * named no school, or while the table is not there.
+ */
+export type Standing = InLine & { place: number; ahead: InLine | null; behind: InLine | null; faces: string[]; mine: number };
+export async function schoolStanding(q: Q, personId: string): Promise<Standing | null> {
+  try {
+    const line = (await q.query<{ key: string; school: string; people: number }>(`select lower(school) as key,(array_agg(school order by asked_at desc))[1] as school,count(*)::int as people
+      from campus_school_ask group by lower(school) order by count(*) desc,min(asked_at),lower(school)`)).rows;
+    const own = (await q.query<{ key: string }>('select lower(school) as key from campus_school_ask where person_id=$1', [personId])).rows[0];
+    const at = own ? line.findIndex(each => each.key === own.key) : -1;
+    if (at < 0) return null;
+    const named = (each: (typeof line)[number] | undefined): InLine | null => each ? { school: collegeNamed(each.key)?.label ?? each.school, people: each.people } : null;
+    const seated = (await q.query<{ id: string }>('select person_id as id from campus_school_ask where lower(school)=$1 order by asked_at,person_id limit $2', [own.key, OPEN_AT])).rows.map(row => row.id);
+    if (!seated.includes(personId)) seated[seated.length - 1] = personId;
+    const picks = await pickedFaces(q, seated);
+    return { ...named(line[at])!, place: at + 1, ahead: named(line[at - 1]), behind: named(line[at + 1]),
+      faces: seated.map(id => { const pick = picks.get(id); return animal(pick !== undefined && pick >= 0 ? pick : animalOf(id)); }), mine: seated.indexOf(personId) };
+  } catch (error) {
+    if ((error as { code?: string }).code === '42P01') return null;
+    throw error;
+  }
+}
+
 /** The admin takes a school off the list, with everyone who named it: for a name that is no school. */
 export async function removeAskedSchool(q: Q, key: string): Promise<void> {
   await q.query('delete from campus_school_ask where lower(school)=$1', [key.trim().toLowerCase()]);
