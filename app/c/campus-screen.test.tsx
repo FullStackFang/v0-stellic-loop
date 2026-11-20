@@ -119,8 +119,8 @@ describe('who sees whom', () => {
     // A person who picked their photo and has none is back to their animal.
     await show(as(ana));
     expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('src', animal(animalOf(ben.personId)));
-    // 36 to 43 are the premium animals; the number after them has no picture.
-    await expect(pickFace(t.db, ben.personId, 44)).rejects.toThrow('Pick one of the animals.');
+    // 36 to 44 are the premium animals; the number after them has no picture.
+    await expect(pickFace(t.db, ben.personId, 45)).rejects.toThrow('Pick one of the animals.');
   });
   it('shows on the groups pages the same account card as the campus screen', async () => {
     const { ana } = await world();
@@ -151,7 +151,7 @@ describe('who sees whom', () => {
     // A school can have more than one: every CUNY college's animal is offered to all of CUNY.
     expect(await offered(as(bea))).toEqual([['Baruch bearcat', 'Brooklyn bulldog'], ['Dachshund']]);
     expect(await offered(as(guest))).toEqual([[], ['Dachshund']]);
-    expect(await offered(as(guest, true))).toEqual([['Cornell bear', 'Columbia lion', 'NYU bobcat', 'Baruch bearcat', 'Brooklyn bulldog', 'Oakland grizzly', 'Maryland terrapin'], ['Dachshund']]);
+    expect(await offered(as(guest, true))).toEqual([['Cornell bear', 'Columbia lion', 'NYU bobcat', 'Baruch bearcat', 'Brooklyn bulldog', 'Oakland grizzly', 'Maryland terrapin', 'Buffalo bull'], ['Dachshund']]);
     // It is free to its own school's people, with no Ink; another school's person cannot pick it at all.
     await pickFace(t.db, ana.personId, 37);
     await expect(pickFace(t.db, noor.personId, 37)).rejects.toThrow('Pick one of the animals.');
@@ -986,7 +986,7 @@ describe('the pages', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Events' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Blitz night is shown' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('textbox', { name: 'Good-for words of Blitz night' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /^Animals ?44$/ })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
+    expect(screen.getByRole('link', { name: /^Animals ?45$/ })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
     for (const [tab, section] of Object.entries({ rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', campus: 'Campus' })) {
       cleanup(); render(await withPortalTestSession(ana, () => admin(tab)));
       expect(screen.getByRole('heading', { level: 1, name: section })).toBeInTheDocument();
@@ -994,7 +994,7 @@ describe('the pages', () => {
       for (const field of document.querySelectorAll('input[name=tab]')) expect(field).toHaveValue(tab);
       if (tab === 'rewards') expect(screen.getByText(/Chess Club: Skip the door/)).toBeInTheDocument();
       // Animals are picked, any number of them, and moved together.
-      if (tab === 'animals') { expect(screen.getAllByRole('checkbox')).toHaveLength(44); expect(screen.getByRole('checkbox', { name: 'Dachshund' })).toHaveAttribute('name', 'face'); expect(screen.getByRole('link', { name: 'School 7' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=school'); expect(screen.getByRole('link', { name: 'Premium 1' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=premium'); expect(screen.getByRole('button', { name: 'Core' })).toHaveAttribute('value', 'core'); }
+      if (tab === 'animals') { expect(screen.getAllByRole('checkbox')).toHaveLength(45); expect(screen.getByRole('checkbox', { name: 'Dachshund' })).toHaveAttribute('name', 'face'); expect(screen.getByRole('link', { name: 'School 8' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=school'); expect(screen.getByRole('link', { name: 'Premium 1' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=premium'); expect(screen.getByRole('button', { name: 'Core' })).toHaveAttribute('value', 'core'); }
     }
   });
 });

@@ -33,7 +33,7 @@ it('an empty name is the name it shipped with, and no words is no words', async 
 });
 
 it('refuses a picture there is none of, a long name, and too many words', async () => {
-  await expect(setAnimalName(t.db, { face: 44 }, 'Nobody', [])).rejects.toThrow('No such animal');
+  await expect(setAnimalName(t.db, { face: 45 }, 'Nobody', [])).rejects.toThrow('No such animal');
   await expect(setAnimalName(t.db, { token: '00000000-0000-4000-8000-000000000000' }, 'Nobody', [])).rejects.toThrow('No such picture');
   await expect(setAnimalName(t.db, { face: 9 }, 'x'.repeat(41), [])).rejects.toThrow('40 letters');
   await expect(setAnimalName(t.db, { face: 9 }, 'Cat', Array.from({ length: 13 }, (_, at) => `word ${at}`))).rejects.toThrow('twelve');
