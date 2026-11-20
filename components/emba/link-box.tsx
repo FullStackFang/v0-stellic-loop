@@ -1,5 +1,6 @@
 'use client';
 
+import { SeatsWord } from '@/components/loading/seats';
 import { useActionState, useState } from 'react';
 import type { PortalAction, PortalResult } from './portal-types';
 
@@ -27,7 +28,7 @@ export function LinkBox({ action, orgId, loopId, timezone }: { action: PortalAct
         <label>Starts ({timezone})<input name="startsAt" type="datetime-local" required value={startsAt} onChange={event => setStartsAt(event.target.value)} /></label>
         <label>Ends ({timezone}, optional)<input name="endsAt" type="datetime-local" value={endsAt} onChange={event => setEndsAt(event.target.value)} /></label>
         <label>Place (optional)<input name="place" maxLength={120} value={place} onChange={event => setPlace(event.target.value)} /></label></>}
-      <button className="lt-primary" type="submit">{pending ? 'Saving…' : 'Add event'}</button>
+      <button className="lt-primary" type="submit">{pending ? <SeatsWord word="Saving" plate /> : 'Add event'}</button>
     </fieldset>
     {state.message && <p role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}
   </form>;

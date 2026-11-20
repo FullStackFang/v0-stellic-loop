@@ -56,3 +56,11 @@
   .cs-ft-carry { margin: 0 16px 28px; } .cs-ft-tk { grid-template-columns: minmax(0, 1fr); } .cs-ft-tear, .cs-ft-stage > small { display: none; } .cs-ft-stage { margin: 22px 14px 16px; }
   .cs-ft-bar { padding: 12px 16px 14px; } .cs-ft-end { margin-left: 0; flex-basis: 100%; justify-content: space-between; }
 }
+/* Assistants in the top bar (components/campus/assistants-link.tsx): the same pill, and its card opens under it. */
+.cs-asst { position: relative; display: flex; }
+.cs-links a.cs-ft-asst { position: relative; overflow: hidden; isolation: isolate; gap: 8px; transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease), color .2s; }
+.cs-links a.cs-ft-asst svg { width: 20px; height: 20px; flex: none; }
+.cs-links a.cs-ft-asst:has(b) { padding-right: 7px; }
+.cs-asst .cs-ft-ask { left: 0; top: calc(100% + 18px); bottom: auto; width: min(400px, calc(100vw - 32px)); border-radius: 6px 20px 20px 20px; transform-origin: 40px 0; }
+.cs-asst .cs-ft-ask::after { top: -9px; bottom: auto; }
+.cs-asst .cs-ft-ask-tab { top: auto; bottom: -12px; }

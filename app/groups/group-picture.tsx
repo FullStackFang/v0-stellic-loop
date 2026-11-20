@@ -9,6 +9,7 @@ import type { Choice, Pick, PicturePane, TileProps } from '@/lib/emba/group-pict
 import { groupPictureSrc } from '@/lib/emba/group-picture-src';
 import { drawGroupPictureAction, keepGroupPictureAction, subscribeInkPlusAction } from './picture-actions';
 import './group-picture.css';
+import { SeatsTicket, SeatsWord } from '@/components/loading/seats';
 
 // A group's tile, and the card that draws its picture (openspec loop-group-picture; the look and the steps are
 // public/demo/mockups-group-picture-place.html, A). The card wears the classes of the account card's animal picker
@@ -145,7 +146,7 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
       <div className="cs-prem-perks"><span>Your group, drawn together from the animals you pick</span><span>Say what should change, and it is drawn again</span>
         <small>Groups of more than {pane.most}, and saving a picture without the Loop mark, are not here yet.</small></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
-        <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}>Subscribe</button></div>
+        <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}>{busy ? <SeatsWord word="Subscribing" plate /> : 'Subscribe'}</button></div>
         {alert}
       </form></>
     : step === 'sure' ? <>
@@ -163,7 +164,7 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
       <p className="cs-prem-kick">Loop Ink+</p>
       <p className="cs-prem-big said" role="status">Drawing you together.</p>
       {thanks}
-      <div className="cs-prem-made gp-wait" aria-hidden="true">{picked.map(one => <img key={one.src} className="busy" src={one.src} alt="" />)}</div>
+      <div className="cs-prem-made gp-wait"><SeatsTicket slow quiet /></div>
       <div className="cs-prem-stub"><p className="cs-prem-small">About a minute. Two drawings, and you keep one.</p></div></>
     : <>
       <button className="cs-prem-back" onClick={() => { setSaid(''); setStep('pics'); }}>Pictures</button>

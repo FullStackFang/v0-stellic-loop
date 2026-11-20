@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { askSchoolAction } from '@/app/c/actions';
+import { SeatsWord } from '@/components/loading/seats';
 
 /** A headline of whole lines, sized so the longest one runs from edge to edge of the room it has. */
 export function FitLines({ lines }: { lines: ReactNode[] }) {
@@ -42,7 +43,7 @@ export function ConnectLinkedin({ other, fallback }: { other?: ReactNode; fallba
       window.location.assign(to.href);
     } catch { setMessage('LinkedIn did not connect. Try again in a moment.'); }
   });
-  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>Continue with LinkedIn</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
+  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>{busy ? <SeatsWord word="Continue with LinkedIn" plate /> : 'Continue with LinkedIn'}</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
 }
 
 /** "My school is not here yet": a pill that opens the box for naming it. Open from the start once a school is named. */
@@ -72,7 +73,7 @@ export function SchoolAsk({ asked, email }: { asked: string | null; email: strin
   return <>
     <form className="cs-ns-row" onSubmit={add}>
       <input className="cs-ns-box" aria-label="Your school" placeholder="Your school" autoComplete="off" maxLength={120} required value={typed} onChange={event => setTyped(event.target.value)} />
-      <button className="cs-btn go" disabled={busy}>Add my school</button>
+      <button className="cs-btn go" disabled={busy}>{busy ? <SeatsWord word="Add my school" plate /> : 'Add my school'}</button>
     </form>
     <p role="status">{message || `We will email ${email ?? 'you'} when Loop opens there.`}</p>
   </>;

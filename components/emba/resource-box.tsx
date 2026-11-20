@@ -1,5 +1,6 @@
 'use client';
 
+import { SeatsWord } from '@/components/loading/seats';
 import { useActionState, useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 import type { PortalAction, PortalResult } from './portal-types';
 
@@ -51,7 +52,7 @@ export function ResourceBox({ action, orgId, loopId }: { action: PortalAction; o
         <div className="lp-found">{tile(sorted.type === 'link' ? 'link' : 'text')}<div><b>{sorted.type === 'link' ? 'Link' : sorted.type === 'file' ? 'File' : 'Text'}</b><small>{sorted.type === 'link' ? sorted.host : sorted.type === 'file' ? `${sorted.file.name} · ${size(sorted.file.size)}` : 'Searchable by assistants'}</small></div></div>
         <label className="lp-field">Name (optional)<input name="name" maxLength={120} value={name} onChange={event => setName(event.target.value)} placeholder={sorted.type === 'file' ? sorted.file.name.replace(/\.[a-z0-9]+$/i, '') : sorted.type === 'link' ? 'Left as the address' : 'Interview transcript'} /></label>
         <p className="lp-hint">{sorted.type === 'link' ? 'Nothing else to fill in. An assistant works out what it is for, and for whom, when it first reads it.' : sorted.type === 'file' ? 'Loop reads the words and does not keep the file. An assistant tags it when it first reads it.' : 'Kept as pasted. An assistant tags it when it first reads it.'}</p>
-        <button className="lt-primary" type="submit" disabled={pending}>{pending ? 'Saving…' : sorted.type === 'link' ? 'Add link' : 'Add text'}</button></>}
+        <button className="lt-primary" type="submit" disabled={pending}>{pending ? <SeatsWord word="Saving" plate /> : sorted.type === 'link' ? 'Add link' : 'Add text'}</button></>}
     </div>}
     {state.message && <p className={state.status === 'error' ? 'lp-err' : 'emba-meta'} role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}
   </form>;

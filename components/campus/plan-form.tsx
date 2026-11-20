@@ -1,5 +1,6 @@
 'use client';
 
+import { SeatsWord } from '@/components/loading/seats';
 import Link from 'next/link';
 import { useActionState, useState, useTransition } from 'react';
 import { changePlanAction, postPlanAction, readPlanLinkAction, type PlanState } from '@/app/c/actions';
@@ -32,7 +33,7 @@ export function PlanForm({ campus, earliest, latest, plan }: { campus: { slug: s
       <div className="row">
         <input id="plan-link" inputMode="url" autoComplete="off" maxLength={2000} placeholder="https://lu.ma/…" value={typed} onChange={event => setTyped(event.target.value)}
           onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (typed.trim() && !reading) fill(); } }} />
-        <button type="button" className="cs-btn" disabled={reading || !typed.trim()} onClick={fill}>{reading ? 'Reading…' : 'Fill in'}</button>
+        <button type="button" className="cs-btn" disabled={reading || !typed.trim()} onClick={fill}>{reading ? <SeatsWord word="Reading" /> : 'Fill in'}</button>
       </div>
       {said && <p role={said.bad ? 'alert' : 'status'} className={said.bad ? undefined : 'cs-note'}>{said.text}</p>}
       {link && <p className="kept"><input type="hidden" name="link" value={link} /><span>{link.replace(/^https:\/\//, '')}</span>
@@ -51,7 +52,7 @@ export function PlanForm({ campus, earliest, latest, plan }: { campus: { slug: s
       <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {plan && <button className="cs-btn" name="intent" value="cancel" formNoValidate disabled={pending}>Cancel this plan</button>}
         <Link className="cs-btn" href={`/c/${campus.slug}`}>Back</Link>
-        <button className="cs-btn go" disabled={pending || reading}>{pending ? 'Saving…' : plan ? 'Save' : 'Post it'}</button>
+        <button className="cs-btn go" disabled={pending || reading}>{pending ? <SeatsWord word={plan ? 'Saving' : 'Posting'} plate /> : plan ? 'Save' : 'Post it'}</button>
       </span>
     </div>
   </form>;

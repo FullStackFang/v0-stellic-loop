@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from 'react';
 import { setSchoolsAction } from '@/app/c/actions';
 import type { Schools } from '@/lib/campus/view';
+import { SeatsWord } from '@/components/loading/seats';
 
 /**
  * "Add a school": the address of the person's LinkedIn profile, the schools Loop is at to tick, and one button. The
@@ -31,7 +32,7 @@ export function AddSchools({ schools, box, waiting = false, send = 'Unlock', onD
     <input className={box} aria-label="Your LinkedIn profile" placeholder="linkedin.com/in/your-name" autoComplete="off" inputMode="url" maxLength={200} required value={typed} onChange={event => setTyped(event.target.value)} />
     <div role="group" aria-label="Your schools">{schools.all.map(each => <button type="button" key={each.slug} className="cs-kit" data-kit={each.slug} disabled={each.slug === schools.home} aria-pressed={each.slug === schools.home || ticked.includes(each.slug)}
       onClick={() => setTicked(had => had.includes(each.slug) ? had.filter(one => one !== each.slug) : [...had, each.slug])}><i />{each.name}</button>)}</div>
-    <button className="cs-btn go" disabled={busy}>{send}</button>
+    <button className="cs-btn go" disabled={busy}>{busy ? <SeatsWord word={send} plate /> : send}</button>
     {message && <p role="alert">{message}</p>}
   </form>;
 }

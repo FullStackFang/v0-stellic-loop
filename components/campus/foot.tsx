@@ -1,12 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { animal } from '@/lib/campus/animals';
-import { hasInkPlusAction, subscribeAtFootAction } from './foot-actions';
-import { InkMark } from './ink-mark';
 import { KITS, kitNow, pickKit } from './kit';
 import './foot.css';
 
@@ -17,28 +14,11 @@ const clamp = (n: number, low: number, high: number) => Math.max(low, Math.min(h
 
 /**
  * The foot of every page (public/demo/mockups-footer.html): a ticket with the crowd in it, then one bar with the small print and the
- * colours (its links were picked from public/demo/mockups-foot-legal.html). Assistants is part of Ink+: for someone
- * without it, pressing the link opens a card over the ticket that says so, in place of going there. The ways
- * around are the top bar's. `home` is where the wordmark leads; `member` is whether the person is in a group, and so
- * has assistants to connect.
+ * colours. The ways around are the top bar's, Assistants among them (components/campus/assistants-link.tsx).
+ * `home` is where the wordmark leads.
  */
-export function SiteFoot({ home = '/', member = false, kit: worn }: { home?: string; member?: boolean; /** The colours the page it ends has put on (the front door, which turns from school to school). Then the foot wears them too, and has no colours of its own to pick. */ kit?: string }) {
+export function SiteFoot({ home = '/', kit: worn }: { home?: string; /** The colours the page it ends has put on (the front door, which turns from school to school). Then the foot wears them too, and has no colours of its own to pick. */ kit?: string }) {
   const foot = useRef<HTMLElement>(null), [count, setCount] = useState(0), [kit, setKit] = useState<string | null>(null);
-  const router = useRouter(), asked = useRef<Promise<boolean> | null>(null), [plus, setPlus] = useState(false), [ask, setAsk] = useState<number | null>(null);
-  const [email, setEmail] = useState(''), [busy, setBusy] = useState(false), [said, setSaid] = useState('');
-  // Subscribe on the card: the press is kept (when, and that it was at the foot), and then Assistants opens.
-  const subscribe = async () => {
-    setBusy(true); setSaid('');
-    const got = await subscribeAtFootAction(email.trim()).catch(() => null);
-    setBusy(false);
-    if (!got) return setSaid(got === false ? 'Enter the email to subscribe with.' : 'That did not go through. Try again.');
-    asked.current = Promise.resolve(true); setPlus(true); setAsk(null); router.push('/groups/connections');
-  };
-  // Asked once, when the link is first pointed at. If it cannot be asked, the link stays a link.
-  const knows = () => asked.current ??= hasInkPlusAction().catch(() => true).then(has => { setPlus(has); return has; });
-  // The card opens over the pill: `ask` is how far along the bar that is.
-  const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); const at = Math.max(16, event.currentTarget.offsetLeft - 18); if (ask !== null) return setAsk(null); if (await knows()) router.push('/groups/connections'); else setAsk(at); };
-  useEffect(() => { if (ask === null) return; const key = (event: KeyboardEvent) => { if (event.key === 'Escape') setAsk(null); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); }, [ask]);
   // How many fit is known only once the ticket has a width.
   useLayoutEffect(() => { const stage = foot.current!.querySelector<HTMLElement>('.cs-ft-stage')!; setCount(clamp(Math.floor((stage.clientWidth - 40) / STEP), 4, CROWD.length)); setKit(kitNow()); }, []);
   useEffect(() => { if (count) return crowdIn(foot.current!); }, [count]);
@@ -51,13 +31,7 @@ export function SiteFoot({ home = '/', member = false, kit: worn }: { home?: str
       <div className="cs-ft-tear"><span className="cs-ft-admit">Admit everyone</span><div className="cs-ft-code" /></div>
     </div></div>
     <div className="cs-ft-bar"><Link className="cs-wm" href={home}><Rings />Loop</Link>
-      <nav aria-label="Loop, at the foot">        {member && <Link className="cs-ft-asst" href="/groups/connections" data-open={ask !== null || undefined} onPointerEnter={knows} onFocus={knows} onClick={press}><InkMark />Assistants{!plus && <b>Ink+</b>}</Link>}
-        <Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></nav>
-      {ask !== null && <div className="cs-ft-ask" role="dialog" aria-label="Assistants come with Ink+" style={{ left: ask }}>
-        <span className="cs-ft-ask-tab"><InkMark />Ink+</span><h3>Assistants come with Ink+</h3><p>Your own AI, answering from your groups.</p>
-        <form onSubmit={event => { event.preventDefault(); void subscribe(); }}><input type="email" required value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" />
-          <button className="cs-btn sm go" disabled={busy}>Subscribe · $9.99</button><button type="button" className="cs-btn sm" onClick={() => setAsk(null)}>Not now</button></form>
-        {said && <p role="alert">{said}</p>}</div>}
+      <nav aria-label="Loop, at the foot">        <Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></nav>
       <div className="cs-ft-end"><small>© 2026 Loop</small>
         {!worn && <div className="cs-ft-kits" role="group" aria-label="Colours">{KITS.map(each => <button key={each.slug} data-kit={each.slug} aria-label={`${each.name} colours`} title={each.name} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }} />)}</div>}</div></div>
   </footer>;

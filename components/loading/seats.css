@@ -1,0 +1,77 @@
+/* "Saving seats", the one loader of the app (openspec loop-loading-seats). Its own file, loaded by the root layout,
+   because it is used where the campus look (.cs) is not an ancestor: sign-in, shared links, the older pages. It reads the
+   campus colours and falls back to the Loop kit's, so it is never colourless.
+   Ported from public/demo/mockups-loading-places.html (the ticket), mockups-loading-small.html row C (the small one)
+   and mockups-loading-splat-2.html row A (the ending). Only transform, opacity, translate and scale are animated.
+   The resting style of everything is its finished pose, so reduced motion needs only `animation: none`. */
+.seats-tk, .seats-sm, .seats-part, .seats-end, .seats-screen, .seats-page {
+  --s-field: var(--cs-field, oklch(96.4% 0.19 117)); --s-ink: var(--cs-ink, oklch(25% 0.07 252)); --s-action: var(--cs-action, oklch(47.6% 0.13 250));
+  --s-paper: var(--cs-paper, oklch(99.3% 0.004 117)); --s-third: var(--cs-third, oklch(72% 0.2 350)); --s-expo: var(--cs-expo, cubic-bezier(.16, 1, .3, 1));
+  --s-stub: color-mix(in oklab, var(--s-field) 34%, var(--s-paper)); --s-sunk: color-mix(in oklab, var(--s-ink) 10%, var(--s-paper));
+}
+/* A fast answer never flashes the loader: it arrives after 150 ms (components/loading/ending.ts has the same number). */
+@keyframes seats-arrive { from { opacity: 0; } }
+
+/* ---- the ticket ---- */
+.seats-tk { display: inline-grid; grid-template-columns: 1fr 54px; text-align: left; color: var(--s-ink); font-family: var(--font-archivo), Archivo, system-ui, sans-serif; letter-spacing: -0.012em;
+  filter: drop-shadow(0 0 .7px var(--s-ink)) drop-shadow(0 0 .7px var(--s-ink)) drop-shadow(5px 5px 0 var(--s-ink)); animation: seats-arrive .2s .15s both; }
+.seats-main { display: grid; gap: 10px; padding: 15px 13px 16px 15px; background: var(--s-paper); border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.seats-main b { font-size: 17px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+.seats-row { display: flex; gap: 5px; }
+.seats-row > span { width: 31px; height: 31px; border-radius: 50%; background: var(--s-sunk); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--s-ink) 24%, transparent); }
+.seats-row img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; animation: seats-seat 4.2s var(--s-expo) calc(var(--i) * .45s) infinite backwards; }
+@keyframes seats-seat { 0% { opacity: 0; transform: scale(.2); } 7%, 74% { opacity: 1; transform: none; } 80%, 100% { opacity: 0; transform: scale(.2); } }
+.seats-stub { border-left: 1.5px dashed var(--s-ink); border-radius: 0 5px 5px 0; background: var(--s-stub); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+/* a long wait: the seats fill once, across about 25 seconds, and the last one is ringed and empty until its picture comes */
+.seats-slow .seats-row img { animation: seats-sit .5s var(--s-expo) calc(var(--i) * 8s + .3s) both; }
+.seats-slow .seats-mine { box-shadow: inset 0 2px 0 color-mix(in oklab, var(--s-ink) 24%, transparent), 0 0 0 2px var(--s-paper), 0 0 0 4px var(--s-action); }
+.seats-slow .seats-mine img { animation: seats-sit .5s var(--s-expo) both; }
+@keyframes seats-sit { from { opacity: 0; transform: scale(.2); } }
+
+/* ---- where the ticket stands for a whole page ---- */
+.seats-screen { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--s-field); animation: seats-arrive .2s .15s both; }
+.seats-screen .seats-tk { animation: none; }
+.seats-page { display: grid; place-items: center; min-height: min(60vh, 520px); padding: 40px 16px; }
+
+/* ---- the small one: your face, your ink welling up under it ---- */
+.seats-sm { --s: 22px; position: relative; flex: none; display: inline-flex; width: var(--s); height: var(--s); vertical-align: middle; animation: seats-arrive .2s .15s both; }
+.seats-sm img { position: relative; display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.seats-sm svg { position: absolute; inset: -46%; width: 192%; height: 192%; overflow: visible; }
+.seats-school { fill: var(--s-field); } .seats-dark { fill: var(--s-action); } .seats-seep { fill: var(--s-action); opacity: .42; } .seats-third { fill: var(--s-third); }
+.seats-free .seats-dark { fill: var(--s-ink); }
+.seats-sm .seats-body { transform-origin: 0 0; animation: seats-well 1.9s cubic-bezier(.6, 0, .2, 1) infinite; }
+.seats-sm .seats-drop { transform-box: fill-box; transform-origin: center; animation: seats-spit 1.9s var(--s-expo) infinite; }
+@keyframes seats-well { 0%, 100% { transform: scale(.62) rotate(-14deg); } 38%, 70% { transform: none; } }
+@keyframes seats-spit { 0%, 26% { translate: var(--dx) var(--dy); scale: .2; opacity: 0; } 44%, 70% { translate: 0 0; scale: 1; opacity: 1; } 86%, 100% { translate: 0 0; scale: 1; opacity: 0; } }
+/* on a button filled with the action colour the dark ink would vanish: a paper plate under it */
+.seats-plate { border-radius: 50%; box-shadow: 0 0 0 calc(var(--s) * .34) var(--s-paper); margin: 0 calc(var(--s) * .34); }
+/* a late part of a page: the small one, larger, with the line in a pill under it */
+.seats-part { display: inline-grid; justify-items: center; gap: 14px; animation: seats-arrive .2s .15s both; } .seats-part .seats-sm { --s: 44px; animation: none; }
+.seats-say { padding: 4px 13px 5px; border-radius: 99px; background: var(--s-paper); box-shadow: inset 0 0 0 1.5px var(--s-ink); color: var(--s-ink); font-family: var(--font-archivo), Archivo, system-ui, sans-serif; font-size: 13px; font-weight: 640; line-height: 1.3; white-space: nowrap; }
+/* the box a waiting button or link keeps for the small one, so nothing shifts when it comes and goes */
+.seats-hold { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+/* a pressed link holds it on its corner, like a badge, so the link never changes width */
+.cs-links a { position: relative; }
+.seats-linkwait { position: absolute; top: -9px; right: -7px; width: 18px; height: 18px; pointer-events: none; } .seats-linkwait .seats-sm { margin: 0; }
+
+/* ---- the ending: the splat lands on the stub, the ticket takes the knock and drops away ---- */
+.seats-end { position: fixed; z-index: 2147483000; pointer-events: none; display: block; animation: seats-knock .8s both; }
+.seats-end .seats-tk { display: grid; width: 100%; height: 100%; animation: none; } .seats-end .seats-row img { animation: none; }
+@keyframes seats-knock { 0%, 3% { transform: none; } 10% { transform: translate(2.5px, 3px) rotate(.8deg); animation-timing-function: var(--s-expo); } 25%, 67% { transform: none; opacity: 1; animation-timing-function: cubic-bezier(.5, 0, .9, .4); } 100% { transform: translateY(150px) rotate(9deg); opacity: 0; } }
+.seats-splat { position: absolute; right: -11px; top: 50%; width: 76px; height: 76px; margin-top: -38px; overflow: visible; }
+.seats-splat.seats-free { right: -4px; width: 62px; height: 62px; margin-top: -31px; }
+.seats-splat .seats-body { transform-origin: 0 0; animation: seats-land .24s var(--s-expo) both; }
+.seats-splat .seats-drop { transform-box: fill-box; transform-origin: center; animation: seats-fly .34s var(--s-expo) calc(.05s + var(--n) * 16ms) both; }
+@keyframes seats-land { from { transform: scale(.12) rotate(-18deg); opacity: 0; } 30% { opacity: 1; } }
+@keyframes seats-fly { from { translate: var(--dx) var(--dy); scale: .2; opacity: 0; } 25% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .seats-tk, .seats-tk *, .seats-sm, .seats-sm *, .seats-part, .seats-screen, .seats-end, .seats-end * { animation: none !important; }
+}
+
+/* the sign-in form on the front door, while it loads: the ticket, in a box the height of the form */
+.seats-form { display: grid; place-items: center; min-height: 262px; }
+/* a frame that has not loaded: the small one and its line in the middle of the frame's box */
+.cs-map, .cs-inkpage { position: relative; }
+.seats-over { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; pointer-events: none; }
+.cs-pet { position: relative; }

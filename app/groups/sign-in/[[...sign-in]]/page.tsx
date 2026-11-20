@@ -1,6 +1,7 @@
 import { SignIn } from '@clerk/nextjs';
 import { Rings } from '@/components/LoopGlyphs';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
+import { SeatsTicket } from "@/components/loading/seats";
 
 // The Clerk form with no card: its fields sit straight on the teal plate (app/loop.css).
 // Clerk derives shades from these, so they are hex copies of the Loop tokens: teal, aqua, lime, navy, on-dark, surface.
@@ -26,7 +27,7 @@ const look = {
   },
 };
 // Outlines of the fields, shown in the form's place until it arrives.
-const hold = <div className="lp-signin-hold" aria-hidden="true"><i /><i /><i /><i /><i /></div>;
+const hold = <div className="lp-signin-hold"><SeatsTicket /></div>;
 
 /**
  * The front door: what Loop is and the sign-in form, on one screen. Every signed-out visit lands here.

@@ -6,6 +6,7 @@ import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { OnYou } from '@/app/c/on-you';
+import { SeatsSmall } from '@/components/loading/seats';
 import { getPortalPrincipal, getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { frontIsCampus } from '@/lib/campus/schools';
 import { CUSTOM, PHOTO, animal, animalOf, customFace } from '@/lib/campus/animals';
@@ -53,8 +54,8 @@ export default async function GroupsLayout({ children }: { children: React.React
   if (principal) {
     const [groups, look, screen] = await Promise.all([barGroups(principal), looks(principal), accountScreen()]);
     content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit) }} /><Kit own={look.kit} />
-      <Bar groups={groups} face={look.face} ink={look.ink} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={null}><OnYou /></Suspense></Bar>
-      <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div><SiteFoot member /></div>;
+      <Bar groups={groups} face={look.face} ink={look.ink} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} />}><OnYou /></Suspense></Bar>
+      <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div><SiteFoot /></div>;
   }
   return configured ? <ClerkProvider signInUrl="/groups/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;
 }

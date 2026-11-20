@@ -47,8 +47,8 @@ function crept(reach: number[], next: () => number) {
   return reach.map((far, at) => far + 3.4 + sway(waves, at / STEPS * TURN));
 }
 /** Small round drops thrown off to one side, a few near and a few far. */
-function thrown(next: () => number, toward: number, from: number, count: number): Round[] {
-  return Array.from({ length: count }, () => { const [x, y] = out(toward + (next() - .5) * 1.2, from + 2 + next() * 22); return [fix(x), fix(y), fix(2 + next() * next() * 2.8)] as const; });
+function thrown(next: () => number, toward: number, from: number, count: number, wide = 1.2): Round[] {
+  return Array.from({ length: count }, () => { const [x, y] = out(toward + (next() - .5) * wide, from + 2 + next() * 22); return [fix(x), fix(y), fix(2 + next() * next() * 2.8)] as const; });
 }
 
 const made = new Map<string, InkBlot>();
@@ -59,4 +59,14 @@ export function inkBlot(seed: string): InkBlot {
   blot.dark = drawn(dark); blot.seep = drawn(crept(dark, next));
   made.set(seed, blot);
   return blot;
+}
+
+/** The drops a blot throws when it lands as a splat, at the end of a wait (components/loading). They go to the right
+    only, away from the words and faces beside the splat. Their own run of numbers, so the blot under a face is as it was. */
+const flung = new Map<string, Round[]>();
+export function inkFlung(seed: string): Round[] {
+  const known = flung.get(seed); if (known) return known;
+  const drops = thrown(run(hash(`${seed} splat`)), 0, 62, 7, 3.2);
+  flung.set(seed, drops);
+  return drops;
 }

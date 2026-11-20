@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 import "./loop.css";
+import "@/components/loading/seats.css";
+import { SeatsEnding } from "@/components/loading/seats-ending";
 
 const archivo = localFont({ src: "../public/fonts/Archivo.ttf", variable: "--font-archivo", weight: "100 900", declarations: [{ prop: "font-stretch", value: "62% 125%" }] });
 
@@ -18,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // The campus pages set data-kit on <html> before React loads (components/campus/shell.tsx), so it differs from what the server sent.
     <html lang="en" className={archivo.variable} suppressHydrationWarning>
-      <body>{children}<SiteNav /></body>
+      <body>{children}<SiteNav /><SeatsEnding /></body>
     </html>
   );
 }

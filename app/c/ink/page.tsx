@@ -6,6 +6,7 @@ import { findCampus } from '@/lib/campus/listings';
 import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
 import { campusViewer, lookingAt } from '@/lib/campus/session';
 import { siteBar } from '../site-bar';
+import { FrameWait } from '@/components/loading/frame-wait';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Ink · Loop' };
@@ -21,6 +22,6 @@ export default async function InkPage() {
   if (!campus) notFound();
   return <div className="cs cs-inkpage">
     {(await siteBar({ campus, viewer, back: INK_PAGE, on: 'ink' })).bar}
-    <iframe className="cs-inkframe" src={INK_MOCKUP} title="Loop Ink" />
+    <FrameWait className="cs-inkframe" src={INK_MOCKUP} title="Loop Ink" />
   </div>;
 }

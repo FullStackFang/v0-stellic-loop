@@ -1,5 +1,6 @@
 'use client';
 
+import { SeatsWord } from '@/components/loading/seats';
 import { useActionState, useState } from 'react';
 import type { PortalResult } from '@/components/emba/portal-types';
 import { Arrow } from '@/components/LoopGlyphs';
@@ -25,7 +26,7 @@ export function InvitationPaste() {
     <div>
       <input aria-label="Invitation link" placeholder="Paste your invitation link" value={text ?? (arrived ? `/groups#invite=${arrived}` : '')} onChange={event => setText(event.target.value)} />
       <input type="hidden" name="token" value={token ?? ''} />
-      <button type="submit" disabled={!token || pending}>{pending ? 'Accepting…' : 'Accept'}<Arrow /></button>
+      <button type="submit" disabled={!token || pending}>{pending ? <SeatsWord word="Accepting" plate /> : 'Accept'}<Arrow /></button>
     </div>
     {state.message && <p role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}
   </form>;

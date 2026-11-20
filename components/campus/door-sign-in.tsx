@@ -5,6 +5,7 @@ import { SignIn } from '@clerk/nextjs';
 import { Rings } from '@/components/LoopGlyphs';
 import { schoolOfEmail } from '@/lib/campus/schools';
 import { KITS, pickedKit, showKit } from './kit';
+import { SeatsTicket } from '@/components/loading/seats';
 
 export type School = { slug: string; name: string; domains: string[] };
 
@@ -45,7 +46,7 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
   const ink = (KITS.find(each => each.slug === (kit ?? slug)) ?? KITS[0]).ink;
   const label = { fontSize: 0, '&::before': { content: `"${school ? `${school.name} email` : 'Email'}"`, fontSize: '13px', fontWeight: 600 } };
   const shared = {
-    fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', fallback: <p className="cs-note" aria-hidden="true">Loading sign-in…</p>,
+    fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', fallback: <span className="seats-form"><SeatsTicket /></span>,
     appearance: {
       options: { socialButtonsPlacement: 'bottom' as const },
       variables: { colorBackground: paper, colorForeground: ink, colorMutedForeground: mute, colorPrimary: ink, colorPrimaryForeground: paper, colorInput: paper, colorInputForeground: ink, fontFamily: 'var(--font-archivo), system-ui, sans-serif', borderRadius: '8px' },
