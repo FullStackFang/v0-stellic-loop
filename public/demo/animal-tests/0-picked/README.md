@@ -14,14 +14,15 @@ Last worked on 2026-11-19: the founder had Baruch and Brooklyn added to the app 
 | `oakland-grizzly.png` | Oakland University | a girl: black knitted sweater, gold O, gold ear bow | `oakland-grizzly/…sweater-o-4.png` |
 | `maryland-terrapin.png` | Maryland | a girl: red knitted scarf, white M, gold bow | `maryland-terrapin/…scarf-m-2.png` |
 | `buffalo-bull.png` | University at Buffalo | a boy: cream knitted sweater, blue UB | `buffalo-bull/…boy-sweater-ub-4.png` |
+| `georgetown-bulldog.png` | Georgetown | a girl: navy knitted scarf, grey G, grey ear bow | `georgetown-bulldog/…scarf-g-4.png` |
 
 Every try, picked or not, is in the sibling folders and shows on `/demo/mockups-animals.html` (up to Maryland); from now on each new animal gets its own page, `/demo/mockups-animals-<name>.html`.
 
 ## In the app
 
-Cornell, Columbia, NYU, Baruch, Brooklyn, Oakland, Maryland and Buffalo, as `public/animals/38.png` to `45.png` (faces 37 to 44).
-Oakland's grizzly (slug `oakland`), Maryland's terrapin (`maryland`) and Buffalo's bull (`buffalo`) belong to schools that are not campuses yet:
-until the admin adds each with that slug (`oakland.edu`, `umd.edu`, `buffalo.edu`), only the admin sees them.
+Cornell, Columbia, NYU, Baruch, Brooklyn, Oakland, Maryland, Buffalo and Georgetown, as `public/animals/38.png` to `46.png` (faces 37 to 45).
+Oakland's grizzly (slug `oakland`), Maryland's terrapin (`maryland`) Buffalo's bull (`buffalo`) and Georgetown's bulldog (`georgetown`) belong to schools that are not campuses yet:
+until the admin adds each with that slug (`oakland.edu`, `umd.edu`, `buffalo.edu`, `georgetown.edu`), only the admin sees them.
 Baruch and Brooklyn both belong to `cuny`: the app has CUNY as one campus, so all of CUNY may pick either.
 They are the "School" category: free to people of that school, hidden from everyone else, shown first in the
 picker with a ring and a graduation cap in the action colour. The admin can move them under `/c/admin` → Animals.
@@ -60,8 +61,8 @@ node --import tsx scripts/animal-test.ts ccny-beaver none 'public/demo/animal-te
 - Copy the picked one into this folder.
 - To put it in the app: `node --import tsx scripts/animal-keep.ts public/demo/animal-tests/0-picked/<name>.png <next number>`
   (redraws it on a transparent ground at 192px), then add its name to `PREMIUM` and its school to `MASCOT`
-  in `lib/campus/animals.ts` (the next number is 46, face 45), and update the counts in
-  `app/c/campus-screen.test.tsx` (search for "Animals ?45", "toHaveLength(45)", "School 8", "face: 45" in lib/__tests__/campus-animal-names.test.ts and the offered lists).
+  in `lib/campus/animals.ts` (the next number is 47, face 46), and update the counts in
+  `app/c/campus-screen.test.tsx` (search for "Animals ?46", "toHaveLength(46)", "School 9", "face: 46" in lib/__tests__/campus-animal-names.test.ts and the offered lists).
 
 ## What the founder asked for
 
