@@ -4,8 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { animal } from '@/lib/campus/animals';
 import { inkBlot } from '@/lib/campus/ink-blot';
-import { ARRIVE_MS, SEEN_MS } from './ending';
-import { LINE, SeatsMe, SeatsSmall, SeatsTicket } from './seats';
+import { ARRIVE_MS, HOLD_MS, SEEN_MS } from './ending';
+import { LINE, SeatsMe, SeatsOver, SeatsSmall, SeatsTicket, SeatsWord } from './seats';
 import { SeatsEnding } from './seats-ending';
 
 // "Saving seats" (openspec loop-loading-seats): the ticket, the small one, and the splat that ends a page-sized wait.
@@ -72,6 +72,54 @@ describe('the small one', () => {
   });
 });
 
+describe('a loader never blips', () => {
+  const button = (on: boolean) => <button><SeatsWord on={on} word="Saving">Save</SeatsWord></button>;
+  const waiting = () => document.querySelector('.seats-sm') !== null;
+  it('a fast answer shows no loader and never changes the button\'s words', () => {
+    vi.useFakeTimers();
+    const view = render(button(false));
+    view.rerender(button(true));
+    act(() => { vi.advanceTimersByTime(ARRIVE_MS - 50); });
+    expect(screen.getByRole('button')).toHaveTextContent(/^Save$/); expect(waiting()).toBe(false);
+    view.rerender(button(false));
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(screen.getByRole('button')).toHaveTextContent(/^Save$/); expect(waiting()).toBe(false);
+  });
+  it('a slow answer shows it after 300 ms, and it then stays at least 400 ms', () => {
+    vi.useFakeTimers();
+    const view = render(button(true));
+    act(() => { vi.advanceTimersByTime(ARRIVE_MS); });
+    expect(screen.getByRole('button')).toHaveTextContent(/^Saving$/); expect(waiting()).toBe(true);
+    // The answer comes 50 ms after the loader showed: it stays for the rest of its least time.
+    act(() => { vi.advanceTimersByTime(50); });
+    view.rerender(button(false));
+    act(() => { vi.advanceTimersByTime(HOLD_MS - 100); });
+    expect(waiting()).toBe(true);
+    act(() => { vi.advanceTimersByTime(100); });
+    expect(screen.getByRole('button')).toHaveTextContent(/^Save$/); expect(waiting()).toBe(false);
+  });
+  it('a long wait ends the moment the answer comes', () => {
+    vi.useFakeTimers();
+    const view = render(button(true));
+    act(() => { vi.advanceTimersByTime(ARRIVE_MS + HOLD_MS + 500); });
+    view.rerender(button(false));
+    act(() => { vi.advanceTimersByTime(0); });
+    expect(waiting()).toBe(false);
+  });
+  it('the loader over a box keeps the same times', () => {
+    vi.useFakeTimers();
+    const view = render(<SeatsOver on />);
+    expect(screen.queryByRole('status')).toBeNull();
+    act(() => { vi.advanceTimersByTime(ARRIVE_MS); });
+    expect(screen.getByRole('status')).toHaveTextContent(LINE);
+    view.rerender(<SeatsOver on={false} />);
+    act(() => { vi.advanceTimersByTime(HOLD_MS - 1); });
+    expect(screen.queryByRole('status')).not.toBeNull();
+    act(() => { vi.advanceTimersByTime(1); });
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+});
+
 describe('the splat that ends a page-sized wait', () => {
   const box = { left: 40, top: 200, width: 250, height: 80, right: 290, bottom: 280, x: 40, y: 200, toJSON() {} };
   const measured = () => vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(box as DOMRect);
@@ -96,7 +144,7 @@ describe('the splat that ends a page-sized wait', () => {
     expect(container.querySelector('.seats-end')).toBeNull();
   });
   it('does not play for a ticket that was barely seen', () => {
-    expect(waited(ARRIVE_MS + 200).querySelector('.seats-end')).toBeNull();
+    expect(waited(ARRIVE_MS + SEEN_MS - 50).querySelector('.seats-end')).toBeNull();
   });
   it('does not play under reduced motion', () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: /reduce/.test(query), addEventListener() {}, removeEventListener() {} }));
@@ -134,9 +182,9 @@ describe('the splat that ends a page-sized wait', () => {
 
 describe('the stylesheet', () => {
   const css = readFileSync('components/loading/seats.css', 'utf8');
-  it('holds the loader back 150 ms so a fast answer never flashes it', () => {
-    expect(ARRIVE_MS).toBe(150);
-    for (const rule of ['.seats-tk', '.seats-sm', '.seats-part', '.seats-screen']) expect(css).toMatch(new RegExp(`\\${rule} \\{[^}]*animation: seats-arrive \\.2s \\.15s both`));
+  it('holds the loader back 300 ms so a fast answer never flashes it', () => {
+    expect(ARRIVE_MS).toBe(300);
+    for (const rule of ['.seats-tk', '.seats-sm', '.seats-part', '.seats-screen']) expect(css).toMatch(new RegExp(`\\${rule} \\{[^}]*animation: seats-arrive \\.15s \\.3s both`));
   });
   it('stands still under reduced motion', () => {
     expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.seats-tk, \.seats-tk \*, \.seats-sm, \.seats-sm \*[^{]*\{ animation: none !important; \}/);

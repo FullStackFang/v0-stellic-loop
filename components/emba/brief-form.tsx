@@ -17,7 +17,7 @@ export function BriefForm({ action, orgId, loopId, version, body, deadline, time
       <label>Deadline (optional)<input name="deadline" type="date" value={due} onChange={event => setDue(event.target.value)} /></label>
       <label>Team timezone<input name="timezone" value={zone} onChange={event => setZone(event.target.value)} maxLength={64} placeholder="America/New_York" /></label>
       <p>Every member&apos;s assistant receives the brief as written. Earlier versions are kept below. Saving an empty brief clears it.</p>
-      <button className="lt-primary" type="submit">{pending ? <SeatsWord word="Saving" plate /> : 'Save brief'}</button>
+      <button className="lt-primary" type="submit"><SeatsWord on={pending} word="Saving" plate>Save brief</SeatsWord></button>
     </fieldset>
     {state.message && <p role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}
   </form>;

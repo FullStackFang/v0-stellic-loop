@@ -150,7 +150,7 @@ export function StartForm({ tree, canTop, initialParent }: { tree: StartNode[]; 
     {note && <div className="lp-ng-say"><h3>First announcement</h3><textarea value={note} onChange={event => setNote(event.target.value)} aria-label="First announcement" rows={Math.min(6, note.split('\n').length + 1)} maxLength={600} /></div>}
 
     <div className="lp-ng-go">
-      <button type="submit" className="lp-ng-create" disabled={!name.trim() || slug.length < 2 || pending}>{pending ? <SeatsWord word="Creating" plate /> : 'Create group'}</button>
+      <button type="submit" className="lp-ng-create" disabled={!name.trim() || slug.length < 2 || pending}><SeatsWord on={pending} word="Creating" plate>Create group</SeatsWord></button>
       {state.status === 'error' ? <p role="alert">{state.message}</p> : <p>Only the name is needed. Everything else can be added later.</p>}
     </div>
   </form>;

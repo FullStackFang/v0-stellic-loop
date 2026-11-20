@@ -97,7 +97,7 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
     <div className="cs-prem-figs" aria-hidden="true"><img src={animal(22)} alt="" /><img src={animal(36)} alt="" /></div>
     <div className="cs-prem-perks">{PERKS.map(perk => <span key={perk}>{perk}</span>)}<small>These four are not here yet. Today Ink is the Ink animals and your own pet, drawn from your photo.</small></div>
     <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
-      {asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}>{wait ? <SeatsWord word="Subscribing" plate /> : 'Subscribe'}</button></div>
+      {asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}><SeatsWord on={wait} word="Subscribing" plate>Subscribe</SeatsWord></button></div>
         : <button className="cs-btn go">Subscribe to Loopd Ink</button>}
       {said && <p role="alert">{said}</p>}
     </form>
@@ -138,7 +138,7 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
         {said && <p role="alert">{said}</p>}
       </form></>
     : state === 'pick' ? <><div className="cs-two" role="group" aria-label="Pick your favorite">{[own, second].map((one, at) => <button key={one} aria-pressed={pick === at} aria-label={at ? 'Second drawing' : 'First drawing'} onClick={() => setPick(at)}><img src={one} alt="" /><span>{at ? 'Second' : 'First'}</span></button>)}</div>
-      <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void keep()}>{wait ? <SeatsWord word="Keeping" plate /> : 'Keep this one'}</button><p className="cs-prem-small">The other one is let go.</p>{said && <p role="alert">{said}</p>}</div></>
+      <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void keep()}><SeatsWord on={wait} word="Keeping" plate>Keep this one</SeatsWord></button><p className="cs-prem-small">The other one is let go.</p>{said && <p role="alert">{said}</p>}</div></>
     : <><div className="cs-prem-perks"><span>Grab your favorite photo of your favorite pet, and we’ll do the rest.</span></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); sure('photo'); }}>
         <input ref={input} type="file" accept="image/*" hidden aria-label="Photo of an animal" onChange={event => choose(event.target.files?.[0])} />

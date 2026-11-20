@@ -26,7 +26,7 @@ export function InvitationPaste() {
     <div>
       <input aria-label="Invitation link" placeholder="Paste your invitation link" value={text ?? (arrived ? `/groups#invite=${arrived}` : '')} onChange={event => setText(event.target.value)} />
       <input type="hidden" name="token" value={token ?? ''} />
-      <button type="submit" disabled={!token || pending}>{pending ? <SeatsWord word="Accepting" plate /> : 'Accept'}<Arrow /></button>
+      <button type="submit" disabled={!token || pending}><SeatsWord on={pending} word="Accepting" plate>Accept</SeatsWord><Arrow /></button>
     </div>
     {state.message && <p role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}
   </form>;

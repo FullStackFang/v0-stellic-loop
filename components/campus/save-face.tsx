@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { subscribeToSaveAction } from '@/app/c/actions';
 import { GROUNDS_HREF, saveHref, SHAPES, type Shape, type Swatch } from '@/lib/campus/save-shapes';
 import '@/app/c/save-face.css';
-import { SeatsSmall, SeatsWord } from '@/components/loading/seats';
+import { SeatsOver, SeatsWord } from '@/components/loading/seats';
 
 /** What Ink+ gives here. Nothing is charged for it yet, and the plate says so once the person has subscribed. */
 const PERKS = ['Your picture, no mark', 'Everything in Ink'];
@@ -78,8 +78,8 @@ export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: 
     : <><p className="cs-prem-big">$9.99 <small>a month</small></p>
       <div className="cs-prem-perks">{PERKS.map(perk => <span key={perk}>{perk}</span>)}</div></>}
     <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
-      {joined ? <button type="button" className="cs-btn go" disabled={wait} onClick={() => void save()}>{wait ? <SeatsWord word="Saving" plate /> : <>{DOWN}Save without the mark</>}</button>
-      : asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}>{wait ? <SeatsWord word="Subscribing" plate /> : 'Subscribe'}</button></div>
+      {joined ? <button type="button" className="cs-btn go" disabled={wait} onClick={() => void save()}><SeatsWord on={wait} word="Saving" plate>{DOWN}Save without the mark</SeatsWord></button>
+      : asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}><SeatsWord on={wait} word="Subscribing" plate>Subscribe</SeatsWord></button></div>
       : <button className="cs-btn go">Subscribe to Loopd Ink+</button>}
       {said && <p role="alert">{said}</p>}
     </form>
@@ -93,11 +93,11 @@ export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: 
       <div className="cs-save-tabs" role="group" aria-label="Shape">{(Object.keys(SHAPES) as Shape[]).map(each => <button key={each} aria-pressed={shape === each} onClick={() => setShape(each)}>{SHAPES[each].name}</button>)}</div>
       {/* The picture as it will be saved: the same address as the file, made small. */}
       {/* eslint-disable-next-line @next/next/no-img-element -- made for this person by /c/save */}
-      <div className="cs-save-view"><div className={`cs-save-frame ${shape}`}>{!arrived.has(shown) && !none && <span className="seats-over"><SeatsSmall line plate /></span>}<img className={arrived.has(shown) ? '' : 'wait'} src={shown} onLoad={() => here(shown)} alt={`The picture as a ${SHAPES[shape].name.toLowerCase()}`} onError={() => { fetch(shown).then(got => got.status === 409 ? got.text() : '').then(setNone, () => {}); }} /></div></div>
+      <div className="cs-save-view"><div className={`cs-save-frame ${shape}`}><SeatsOver on={!arrived.has(shown) && !none} plate /><img className={arrived.has(shown) ? '' : 'wait'} src={shown} onLoad={() => here(shown)} alt={`The picture as a ${SHAPES[shape].name.toLowerCase()}`} onError={() => { fetch(shown).then(got => got.status === 409 ? got.text() : '').then(setNone, () => {}); }} /></div></div>
       {/* A sticker has no ground, so no colour to pick: the row keeps its place. */}
       <div className="cs-save-inks" role="group" aria-label="Colour" style={shape === 'sticker' ? { visibility: 'hidden' } : undefined}>{swatches.map(each => <button key={each.key} aria-label={each.name} aria-pressed={ground === each.key} style={{ '--c': each.colour } as React.CSSProperties} onClick={() => setGround(each.key)} />)}</div>
       <div className="cs-save-marks" role="group" aria-label="Loopd mark"><button aria-pressed={mark} onClick={() => setMark(true)}>With the mark</button><button aria-pressed={!mark} disabled={wait} onClick={() => { if (mark) void noMark(); }}>No mark<b>Ink+</b></button></div>
-      <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void save()}>{wait ? <SeatsWord word="Saving" plate /> : <>{DOWN}Save</>}</button><p className="cs-prem-small">{SHAPES[shape].fits}</p>{said && <p role="alert">{said}</p>}</div>
+      <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void save()}><SeatsWord on={wait} word="Saving" plate>{DOWN}Save</SeatsWord></button><p className="cs-prem-small">{SHAPES[shape].fits}</p>{said && <p role="alert">{said}</p>}</div>
     </>}
   </div></div>;
 }

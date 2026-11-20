@@ -44,7 +44,7 @@ export function ConnectLinkedin({ other, fallback }: { other?: ReactNode; fallba
       window.location.assign(to.href);
     } catch { setMessage('LinkedIn did not connect. Try again in a moment.'); }
   });
-  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>{busy ? <SeatsWord word="Continue with LinkedIn" plate /> : 'Continue with LinkedIn'}</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
+  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}><SeatsWord on={busy} word="Continue with LinkedIn" plate>Continue with LinkedIn</SeatsWord></button>{other}</div>{message && <p role="alert">{message}</p>}</>;
 }
 
 /**
@@ -82,7 +82,7 @@ export function SchoolAsk({ asked, email }: { asked: string | null; email: strin
   return <>
     <form className="cs-ns-row" onSubmit={add}>
       <input className="cs-ns-box" aria-label="Your school" placeholder="School not listed? Search for it" autoComplete="off" maxLength={120} value={typed} onChange={event => { setTyped(event.target.value); setPick(null); setMessage(''); }} />
-      <button className="cs-btn" disabled={busy || !pick || !!here}>{busy ? <SeatsWord word="Sign up my school" /> : 'Sign up my school'}</button>
+      <button className="cs-btn" disabled={busy || !pick || !!here}><SeatsWord on={busy} word="Sign up my school">Sign up my school</SeatsWord></button>
     </form>
     {(found.length > 0 || other) && <div className="cs-ns-sug" role="group" aria-label="Schools found">
       {found.map(each => pill(each.label, <>{each.label}<small>{each.here ? 'Loopd is here' : each.where}</small></>))}

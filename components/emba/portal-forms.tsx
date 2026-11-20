@@ -11,7 +11,7 @@ const initial: PortalResult = { status: 'idle', message: '' };
 export function ActionForm({ action, children, label }: { action: PortalAction; children: ReactNode; label: string }) {
   const [state, submit, pending] = useActionState(action, initial);
   return <form action={submit} className="emba-form">
-    <fieldset disabled={pending}>{children}<button className="lt-primary" type="submit">{pending ? <SeatsWord word="Saving" plate /> : label}</button></fieldset>
+    <fieldset disabled={pending}>{children}<button className="lt-primary" type="submit"><SeatsWord on={pending} word="Saving" plate>{label}</SeatsWord></button></fieldset>
     {state.message && <p role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}
     {state.invitationToken && <label>Invitation link (share privately with the recipient)<input readOnly value={`/groups#invite=${state.invitationToken}`} /><button type="button" onClick={() => navigator.clipboard.writeText(new URL(`/groups#invite=${state.invitationToken}`, window.location.origin).href)}>Copy link</button></label>}
     {state.accessRequestToken && <label>Request-access link (share only with people you intend to invite)<input readOnly value={`/groups/request#token=${state.accessRequestToken}`} /><button type="button" onClick={() => navigator.clipboard.writeText(new URL(`/groups/request#token=${state.accessRequestToken}`, window.location.origin).href)}>Copy link</button></label>}

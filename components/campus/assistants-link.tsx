@@ -33,7 +33,7 @@ export function AssistantsLink() {
     {ask && <div className="cs-ft-ask" role="dialog" aria-label="Assistants come with Ink+">
       <span className="cs-ft-ask-tab"><InkMark />Ink+</span><h3>Assistants come with Ink+</h3><p>Your own AI, answering from your groups.</p>
       <form onSubmit={event => { event.preventDefault(); void subscribe(); }}><input type="email" required value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" />
-        <button className="cs-btn sm go" disabled={busy}>{busy ? <SeatsWord word="Subscribing" plate /> : 'Subscribe · $9.99'}</button><button type="button" className="cs-btn sm" onClick={() => setAsk(false)}>Not now</button></form>
+        <button className="cs-btn sm go" disabled={busy}><SeatsWord on={busy} word="Subscribing" plate>Subscribe · $9.99</SeatsWord></button><button type="button" className="cs-btn sm" onClick={() => setAsk(false)}>Not now</button></form>
       {said && <p role="alert">{said}</p>}</div>}
   </span>;
 }

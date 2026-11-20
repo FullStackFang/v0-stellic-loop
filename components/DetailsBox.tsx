@@ -50,7 +50,7 @@ export function DetailsBox({ proposalId, rows, canAdd, cal }: { proposalId: stri
       {canAdd ? (
         <form className="addrow" onSubmit={(e) => { e.preventDefault(); add(); }}>
           <input aria-label="Add a link, a place, a note" placeholder="Add a link, a place, a note" value={text} onChange={(e) => setText(e.target.value)} maxLength={280} />
-          <button className="ghost" type="submit" disabled={busy}>{busy ? <SeatsWord word="Saving" /> : 'Add'}</button>
+          <button className="ghost" type="submit" disabled={busy}><SeatsWord on={busy} word="Saving">Add</SeatsWord></button>
         </form>
       ) : (
         null
