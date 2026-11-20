@@ -817,3 +817,11 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 /* The sideways row shows whole tickets only (loop-on-you, design D4): as many as fit at about a ticket's width, each the same share of the row, and it stops on a ticket's edge. */
 .cs-rail { --n: 1; } .cs-railwrap > .cs-rail > .cs-ev { flex-basis: calc((100% - (var(--n) - 1) * 16px) / var(--n)); }
 @container (min-width: 600px) { .cs-rail { --n: 2; } } @container (min-width: 900px) { .cs-rail { --n: 3; } } @container (min-width: 1200px) { .cs-rail { --n: 4; } } @container (min-width: 1500px) { .cs-rail { --n: 5; } }
+/* The moves of the one animal picked, in its card under its words; the bar below is then for picking more than one */
+.cs-adm-moves > span { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 14px 8px 8px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--cs-line); }
+.cs-adm-moves button, .cs-adm-moves summary { display: inline-flex; align-items: center; height: 30px; padding: 0 13px; border-radius: 99px; font-size: 13px; font-weight: 640; background: var(--cs-field); color: var(--cs-ink); cursor: pointer; }
+.cs-adm-moves button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-paper); }
+.cs-adm-moves details { display: flex; align-items: center; } .cs-adm-moves summary { list-style: none; background: none; box-shadow: inset 0 0 0 1px var(--cs-line); } .cs-adm-moves summary::-webkit-details-marker { display: none; }
+.cs-adm-moves details[open] summary { display: none; } .cs-adm-moves details button { background: var(--adm-warn); color: var(--cs-paper); }
+.cs-adm-pick:has(.cs-adm-grid :checked):not(:has(.cs-adm-grid li:has(:checked) ~ li:has(:checked))) .cs-adm-tray { display: none; }
+.cs-adm-pick:has(.cs-adm-grid input:checked:not([data-mascot])) .cs-adm-tray button[value=school] { display: none; }
