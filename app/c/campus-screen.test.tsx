@@ -19,12 +19,13 @@ import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
 import { approveLinkedin } from '@/lib/campus/linkedin';
-import { schoolAsked } from '@/lib/campus/school-ask';
+import { askForSchool, schoolAsked, schoolsAsked } from '@/lib/campus/school-ask';
 import { againFaceAction, askSchoolAction, setSchoolsAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
 import InkPage from './ink/page';
 import PostPlanPage from './[campus]/post/page';
 import CampusAdminPage from './admin/page';
+import { removeSchoolAskAction } from './admin/actions';
 import OutingLinkPage from '../o/[token]/page';
 
 // The two models behind a person's own animal: one reads the photo, one draws it. Both are stood in for here.
@@ -759,10 +760,13 @@ describe('the pages', () => {
     // The admin sees them waiting and approves. Then that school's campus is theirs, with its animal in their picker.
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
     const admin = await person('Ana Lopez');
-    render(await withPortalTestSession(admin, () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
-    expect(screen.getByText('Waiting for you: no school email')).toBeInTheDocument();
+    render(await withPortalTestSession(admin, () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'review' }) })));
+    expect(screen.getByText('omar@gmail.com · wants Columbia · waiting since today')).toBeInTheDocument();
     expect(screen.getByText('Pasted an address only: the LinkedIn account is not proven theirs')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /LinkedIn/ })).toHaveTextContent('1 waiting');
+    expect(screen.getByRole('link', { name: /Review/ })).toHaveTextContent('1 waiting');
+    expect(screen.getByRole('button', { name: 'Turn down' })).toBeInTheDocument();
+    // Someone waiting is in the queue and not yet among the people let in.
+    expect(screen.getByRole('link', { name: /LinkedIn/ })).toHaveTextContent('LinkedIn0');
     expect(screen.getByRole('link', { name: 'Open profile' })).toHaveAttribute('href', 'https://www.linkedin.com/in/omar-reyes');
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
     cleanup(); vi.unstubAllEnvs();
@@ -819,8 +823,38 @@ describe('the pages', () => {
     expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['We are checking']);
     cleanup(); linkedinOf.account = null;
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
+    render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'review' }) })));
+    expect(screen.getByText('Signed in with LinkedIn as Omar Reyes')).toBeInTheDocument();
+    cleanup();
+    // Approved, they leave the queue and are listed with the people let in.
+    await approveLinkedin(t.db, outsider.personId);
+    render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'review' }) })));
+    expect(screen.getByText('Nobody is waiting for you.')).toBeInTheDocument();
+    cleanup();
     render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'linkedin' }) })));
     expect(screen.getByText('Signed in with LinkedIn as Omar Reyes')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Approve' })).toBeNull();
+  });
+  it('the admin sees the schools people signed up, the most asked first, and takes a junk one off', async () => {
+    const asks: [string, string, string][] = [['Maya', 'maya@gmail.com', 'University of Michigan'], ['Dan', 'dan@umich.edu', 'university of michigan'], ['Sam', 'sam@rutgers.edu', 'Rutgers'], ['Xo', 'x@mail.test', 'asdf']];
+    for (const [name, email, school] of asks) await askForSchool(t.db, (await person(name, email)).personId, school, email);
+    // Two spellings that differ only in capitals are one school, under the spelling given last.
+    expect((await schoolsAsked(t.db)).map(each => [each.school, each.people, each.emails])).toEqual([['university of michigan', 2, ['dan@umich.edu', 'maya@gmail.com']], ['asdf', 1, ['x@mail.test']], ['Rutgers', 1, ['sam@rutgers.edu']]]);
+    vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
+    const admin = await person('Ana Lopez');
+    render(await withPortalTestSession(admin, () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'schools' }) })));
+    expect(screen.getByRole('link', { name: /Schools/ })).toHaveTextContent('Schools3');
+    expect(screen.getByText(/4 people, 3 schools\./)).toBeInTheDocument();
+    expect(within(screen.getAllByRole('listitem')[0]).getByText('2 people')).toBeInTheDocument();
+    expect(screen.getByText('dan@umich.edu · maya@gmail.com')).toBeInTheDocument();
+    cleanup();
+    const form = new FormData(); form.set('campus', 'cornell'); form.set('tab', 'schools'); form.set('school', 'asdf');
+    await expect(withPortalTestSession(admin, () => removeSchoolAskAction(form))).rejects.toMatchObject({ digest: expect.stringContaining('NEXT_REDIRECT') });
+    expect((await schoolsAsked(t.db)).map(each => each.school)).toEqual(['university of michigan', 'Rutgers']);
+    // Nobody but the admin takes one off.
+    form.set('school', 'rutgers');
+    await withPortalTestSession(await person('Maya', 'maya@gmail.com'), () => removeSchoolAskAction(form)).catch(() => {});
+    expect((await schoolsAsked(t.db)).map(each => each.school)).toEqual(['university of michigan', 'Rutgers']);
   });
   it('a person at no school names their school, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
