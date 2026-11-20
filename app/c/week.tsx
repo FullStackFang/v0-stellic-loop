@@ -8,7 +8,7 @@ import { LookingAt } from '@/components/campus/looking-at';
 import { AddSchools } from '@/components/campus/add-schools';
 import { ConnectLinkedin, FitLines, SchoolAsk } from '@/components/campus/no-school';
 import { SignOut } from '@/components/campus/sign-out';
-import { addedSchools } from '@/lib/campus/linkedin';
+import { addedSchools, profileOptional } from '@/lib/campus/linkedin';
 import { linkedinAccount } from '@/lib/campus/linkedin-account';
 import { schoolAsked } from '@/lib/campus/school-ask';
 import './no-school.css';
@@ -43,7 +43,7 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
 /**
  * For a signed-in person whose email is at none of the schools (public/demo/mockups-one-sign-in.html, frames 2 and 3):
  * one ticket. The way in with no school email is LinkedIn. Someone who signed in with it, or connected it here, picks
- * their school and sends their profile for the admin's check, and then waits. Anyone else is asked to continue with
+ * their school and sends it for the admin's check, and then waits. They are not asked for the address of their profile. Anyone else is asked to continue with
  * LinkedIn, or to use another email (which signs them out, to the front page and its sign-in card). Where LinkedIn is
  * not switched on at the sign-in service, the profile's address can be sent without it.
  */
@@ -53,7 +53,9 @@ export async function NoSchool() {
   const asked = viewer ? await schoolAsked(db(), viewer.personId) : null, linked = viewer ? await addedSchools(db(), viewer.personId) : { profile: null, added: [], waiting: [] };
   // Whether a LinkedIn account is theirs: they signed in with it, or connected it on this page.
   const owner = viewer ? await linkedinAccount(viewer.principal) : null, waiting = linked.waiting.length > 0;
-  const form = <AddSchools box="cs-ns-box" send="Send for a check" waiting={waiting} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />;
+  // Signed in with LinkedIn, they are not asked for their profile's address as well (once the database can keep a row without one).
+  const bare = !!owner && await profileOptional(db());
+  const form = <AddSchools box="cs-ns-box" send="Send for a check" profile={!bare} waiting={waiting} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />;
   const another = <SignOut className="cs-btn">Use another email</SignOut>;
   return <div className="cs cs-ns">
     <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loopd</Link>
@@ -69,7 +71,7 @@ export async function NoSchool() {
           {/* eslint-disable-next-line @next/next/no-img-element -- the LinkedIn account's photo, at the sign-in service's own address */}
           {owner && <div className="cs-ns-me">{owner.photo && <img src={owner.photo} alt="" />}<span><b>{owner.name}</b><small>Signed in with LinkedIn</small></span><span className="cs-ns-stamp">Yours</span></div>}
           {form}
-          <p>{waiting ? 'We look at each profile ourselves. Come back to this page: your campus opens here once you are in.' : 'LinkedIn does not tell us the address of your profile, so we ask for it: it is what we open to check your school.'}</p>
+          <p>{waiting ? 'We look at each profile ourselves. Come back to this page: your campus opens here once you are in.' : bare ? 'Pick the school you are at. We look you up on LinkedIn by your name to check it.' : 'LinkedIn does not tell us the address of your profile, so we ask for it: it is what we open to check your school.'}</p>
           {!waiting && <SchoolAsk asked={asked} email={email} />}
         </section> : <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">{email ? `${email} is not a school email` : 'No school email'}</h2>
