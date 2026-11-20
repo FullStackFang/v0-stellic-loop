@@ -2,6 +2,8 @@
 // (openspec/changes/loop-doodles, public/demo/mockups-games-shelf.html).
 
 export const DOODLES_PAGE = '/c/doodles';
+/** Where Seats is played: a page of the app, under Doodles. */
+export const SEATS_PAGE = '/c/doodles/seats';
 
 export type Doodle = {
   slug: 'conga' | 'seats';
@@ -20,7 +22,7 @@ export type Doodle = {
 /** Every doodle, in the order of the page. To put a staged one out, set `live`. */
 export const DOODLES: readonly Doodle[] = [
   { slug: 'conga', name: 'Conga', line: 'Walk your animal round campus and gather the longest line.', href: '/conga', live: true, bestKey: 'conga-best' },
-  { slug: 'seats', name: 'Seats', line: 'Everyone gets kicked out. Put each one back in its own seat, fast.', href: '/seats', live: true, works: true, bestKey: 'seats-best' },
+  { slug: 'seats', name: 'Seats', line: 'Three quick games on one clock: find the pairs, seat them by colour, spot who moved.', href: SEATS_PAGE, live: true, works: true, bestKey: 'seats-best' },
 ];
 
 /** The doodles a person is shown: the ones that are out, and for the admin the staged ones after them. */

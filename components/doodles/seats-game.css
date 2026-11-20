@@ -1,0 +1,150 @@
+/* Seats, the doodle (components/doodles/seats-game.ts; public/demo/mockups-seats-game.html is what the founder picked).
+   On a laptop: how it goes on the left, the game in the middle, your best and "You" on the right. On a phone the game alone,
+   with its name, "You" and the modes inside it. Colours are the school's, from the page's kit. */
+.cs-seats { flex: 1; display: grid; width: 100%; max-width: 1360px; margin: 0 auto; padding: 34px 32px 48px; }
+/* the game's place on the page: as tall as the game from the start, so nothing jumps when it draws itself, with the loader in its middle until then */
+.sg-box { position: relative; align-self: center; display: grid; align-items: center; min-height: 600px; } .sg-wait { position: absolute; inset: 0; display: grid; place-items: center; } .sg:not(:empty) + .sg-wait { display: none; }
+@media (max-width: 1100px) { .sg-box { min-height: 684px; } }
+@keyframes sg-rise { to { translate: 0 -46px; opacity: 0; } }
+@keyframes sg-twinkle { 0%, 50%, 100% { scale: .55; rotate: 0deg; } 68% { scale: 1.2; rotate: 30deg; } }
+@keyframes sg-no { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+@keyframes sg-slam { from { scale: 2.4; opacity: 0; } 60% { scale: .95; } }
+@keyframes sg-jolt { 30% { translate: 0 7px; } }
+@keyframes sg-wiggle { 20% { rotate: -9deg; } 45% { rotate: 8deg; } 70% { rotate: -5deg; } }
+@keyframes sg-thump { 30% { scale: 1.12; rotate: 9deg; } }
+@keyframes sg-toast { 40% { scale: 1.16; } }
+
+.sg {
+  --field: var(--cs-field); --field-shadow: var(--cs-field-shadow); --ink: var(--cs-ink); --action: var(--cs-action); --third: var(--cs-third); --paper: var(--cs-paper); --page: var(--cs-page);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --sunk: color-mix(in oklab, var(--ink) 9%, var(--paper)); --warn: oklch(58% 0.2 25); --r: 22px 22px 22px 6px; --ease: cubic-bezier(.22, 1, .36, 1);
+  display: grid; grid-template-columns: minmax(0, 1fr) 360px minmax(0, 1fr); gap: 56px; align-items: center; color: var(--ink); font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums;
+
+  button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; } p { margin: 0; }
+  :focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+  /* ---- beside the game, on a laptop ---- */
+  .how { justify-self: end; display: grid; gap: 14px; justify-items: start; max-width: 340px; }
+  .how .title { rotate: -4deg; margin-bottom: 10px; padding: 6px 24px 12px; border-radius: 22px 22px 22px 6px; background: var(--ink); color: var(--field); font-size: 68px; font-weight: 780; font-stretch: 114%; letter-spacing: -0.055em; line-height: 1; box-shadow: 6px 6px 0 var(--action); }
+  .works { display: inline-flex; padding: 5px 13px 6px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--ink); color: var(--paper); }
+  .how p { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; padding: 9px 16px 10px 9px; border-radius: 99px 99px 99px 14px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 16px; font-weight: 560; line-height: 1.25; }
+  .how p i { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink); font-style: normal; font-weight: 780; }
+  .side { justify-self: start; display: grid; gap: 22px; justify-items: start; }
+  .yours { rotate: 4deg; display: grid; gap: 2px; padding: 12px 22px 14px; border-radius: 18px 18px 18px 5px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 5px 5px 0 var(--ink); } .yours[hidden] { display: none; }
+  .yours small { font-size: 14px; font-weight: 620; } .yours b { font-size: 50px; font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: .95; }
+  .back { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px 0 14px; border-radius: 99px; font-weight: 620; color: inherit; text-decoration: none; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .back svg { width: 16px; height: 16px; }
+
+  /* ---- the modes, and "You" ---- */
+  .modes { display: flex; gap: 6px; }
+  .modes button { flex: 1 0 auto; height: 32px; padding: 0 12px; white-space: nowrap; border-radius: 99px; font-size: 14px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .15s, color .15s; }
+  .modes button[aria-pressed=true] { background: var(--ink); color: var(--field); }
+  .how .modes { align-self: stretch; } .how .modes button { height: 40px; font-size: 16px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+  .you { display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 13px 0 4px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); transition: background-color .15s, color .15s; }
+  .you img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; background: var(--stub); } .you[aria-expanded=true] { background: var(--ink); color: var(--field); }
+  .side .you { height: 42px; padding: 0 18px 0 6px; gap: 8px; font-size: 15px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .side .you img { width: 32px; height: 32px; }
+  .pick { position: relative; width: 240px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 20px 12px 12px; border-radius: 18px 6px 18px 18px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 4px 4px 0 var(--ink); }
+  .pick .tag { left: 12px; top: -13px; }
+  .pick button { display: grid; place-items: center; aspect-ratio: 1; border-radius: 50%; background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .15s; } .pick button img { width: 78%; height: 78%; object-fit: contain; border-radius: 50%; pointer-events: none; }
+  .pick button:hover { background: var(--field); } .pick button[aria-pressed=true] { background: var(--field); box-shadow: inset 0 0 0 3px var(--action); }
+  .pick.ask { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0 var(--action); } .pick.ask .tag { background: var(--field); color: var(--ink); }
+  .pick.ask p { flex: 1 1 100%; font-size: 15px; font-weight: 600; line-height: 1.3; } .pick.ask a { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: 99px; background: var(--field); color: var(--ink); font-weight: 660; text-decoration: none; }
+  .pick[hidden], .pick.ask[hidden] { display: none; }
+
+  /* ---- the game ---- */
+  .stage { position: relative; width: 360px; height: 600px; overflow: hidden; border-radius: 30px 30px 30px 8px; background: var(--page); box-shadow: 0 0 0 2px var(--ink), 8px 8px 0 var(--ink); user-select: none; transition: background-color .25s; }
+  .stage[data-mode=a] { background: var(--field); }
+  .stage > .name, .stage > .you, .stage > .modes, .stage > .pick { display: none; }
+  .board { position: absolute; left: 0; right: 0; top: -40px; height: 640px; touch-action: none; } .board[hidden] { display: none; }
+  .pet { position: absolute; left: 0; top: 0; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 100%; will-change: transform; -webkit-user-drag: none; }
+  .play .pet:not(.in) { cursor: grab; } .pet.up { cursor: grabbing; filter: drop-shadow(0 14px 0 color-mix(in oklab, var(--ink) 18%, transparent)); }
+  .go { position: absolute; z-index: 40; left: 18px; right: 18px; bottom: 18px; height: 54px; border-radius: 99px; font-size: 19px; font-weight: 680; letter-spacing: -0.025em; background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 4px 4px 0 var(--ink); transition: translate .15s var(--ease), box-shadow .15s var(--ease), background-color .2s; }
+  .go:active { translate: 3px 3px; box-shadow: inset 0 0 0 2px var(--ink), 1px 1px 0 var(--ink); } .play .go { background: var(--paper); color: var(--ink); }
+  /* app/globals.css has an old `.tag` of its own (a spaced, upper-case heading): what it sets is put back here */
+  .tag { position: absolute; z-index: 30; display: block; margin: 0; letter-spacing: inherit; text-transform: none; padding: 3px 12px 4px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--ink); color: var(--paper); white-space: nowrap; }
+  .cost { position: absolute; z-index: 60; margin: -14px 0 0 -22px; padding: 3px 9px; border-radius: 99px; font-size: 14px; font-weight: 720; background: var(--warn); color: var(--paper); pointer-events: none; animation: sg-rise .9s var(--ease) forwards; }
+  .spark { position: absolute; z-index: 55; left: 0; top: 0; width: 0; height: 0; pointer-events: none; } .spark[hidden] { display: none; }
+  .spark::before { content: ""; position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; background: var(--third); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: sg-twinkle 2.4s ease-in-out infinite; }
+  .seat { position: absolute; } .seat.near { --ring: 0 0 0 3px var(--paper), 0 0 0 6.5px var(--action); } .seat.no { animation: sg-no .26s 2; }
+  .best { display: none; } .done .best.on { display: inline; }
+  /* the clock stops at a minute: the round is lost, and the digits never grow past four */
+  .lost [data-clock] { color: var(--warn); } .c.lost .table { background: var(--warn); color: var(--paper); }
+  .blot .school { fill: var(--field); } .blot .dark { fill: var(--action); } .blot .seep { fill: var(--action); opacity: .42; }
+
+  /* ---- Who moved?: the ticket stub. Twelve seats on the ticket, the clock on the stub, the rounds under it ---- */
+  .t .tk { position: absolute; left: 16px; top: 66px; width: 328px; height: 418px; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 84px; gap: 14px 10px; padding: 26px 14px 0; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 6px 6px 0 var(--field-shadow); }
+  .t .tag { left: 30px; top: 53px; }
+  .spot { position: relative; display: grid; place-items: end center; border-radius: 16px 16px 5px 5px; background: var(--sunk); box-shadow: inset 0 4px 0 color-mix(in oklab, var(--ink) 20%, transparent); cursor: default; transition: background-color .2s; }
+  .spot img { width: 68px; height: 68px; object-fit: contain; object-position: 50% 100%; } .spot.no { animation: sg-no .26s 2; }
+  .t.play:not(.dark) .spot:not(.hit):not(:disabled) { cursor: pointer; } .t.play:not(.dark) .spot:not(.hit):not(:disabled):hover { background: var(--stub); box-shadow: inset 0 0 0 2px var(--action); }
+  .spot.hit { background: var(--field); box-shadow: inset 0 0 0 2.5px var(--ink); }
+  /* the hint: the animal wiggles; the dashed ring stays, so it also shows with reduced motion */
+  .spot.hint { outline: 2px dashed var(--action); outline-offset: -4px; } .spot.hint img { transform-origin: 50% 100%; animation: sg-wiggle .7s ease-in-out; }
+  /* lights out: ink over the seats while they swap. With Ink+ it is the app's own blot that spills across. */
+  .lights { position: absolute; z-index: 20; inset: 2px 2px 94px; display: grid; place-items: center; overflow: hidden; border-radius: 20px 20px 0 0; background: var(--ink); opacity: 0; pointer-events: none; transition: opacity .22s; }
+  .t.dark .lights { opacity: 1; }
+  .lights .blot { width: 330px; height: 330px; display: none; scale: .35; transition: scale .5s var(--ease); } &[data-ink=plus] .lights .blot { display: block; } .t.dark .lights .blot { scale: 1; }
+  .t .stubb { position: absolute; left: 18px; top: 390px; width: 324px; height: 92px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 16px; border-radius: 0 0 20px 5px; background: var(--stub); border-top: 2.5px dashed var(--ink); transition: background-color .3s; }
+  .t .stubb::before, .t .stubb::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 2px var(--ink); }
+  .t .stubb::before { left: -13px; clip-path: inset(0 0 0 50%); } .t .stubb::after { right: -13px; clip-path: inset(0 50% 0 0); }
+  .t .admit { rotate: -4deg; padding: 4px 12px 6px; border-radius: 10px 10px 10px 3px; background: var(--ink); color: var(--field); font-size: 17px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.04em; }
+  .t .clock { font-size: 52px; font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: 1; }
+  .t .stamp { position: absolute; z-index: 45; left: 26px; top: 404px; rotate: -8deg; display: none; padding: 4px 14px 7px; line-height: 1.15; border-radius: 10px; border: 3px solid var(--action); background: var(--paper); color: var(--action); font-size: 21px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.04em; white-space: nowrap; }
+  .t .stamp .best.on { display: block; font-size: 13px; font-stretch: 100%; letter-spacing: -0.01em; line-height: 1.1; }
+  .t.done .stamp { display: block; animation: sg-slam .45s var(--ease); } .t.done .stubb { background: var(--field); } .t.done .admit { visibility: hidden; }
+  /* the five rounds: small discs, not pills, since they are not pressed */
+  .pips { position: absolute; left: 0; right: 0; top: 502px; display: flex; justify-content: center; gap: 10px; }
+  .pips i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-style: normal; font-size: 13.5px; font-weight: 700; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .2s, color .2s; }
+  .pips i.past { background: var(--field); } .pips i.on { background: var(--ink); color: var(--field); }
+  .t.rest .admit { background: var(--action); color: var(--paper); } .t.rest .clock { opacity: .45; } .t.rest .go { background: var(--action); color: var(--paper); }
+
+  /* ---- Chart: drenched in the school colour, the clock biggest ---- */
+  .a .clock { position: absolute; left: 20px; top: 66px; font-size: 84px; font-weight: 800; font-stretch: 118%; letter-spacing: -0.065em; line-height: .86; }
+  .a .clock small { display: block; margin: 6px 0 0 4px; font-size: 14px; font-weight: 600; font-stretch: 100%; letter-spacing: -0.01em; }
+  .a .chart { position: absolute; left: 16px; top: 172px; width: 328px; height: 380px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px 16px; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 6px 6px 0 var(--ink); }
+  .a .chart.jolt { animation: sg-jolt .3s var(--ease); }
+  .a .chart::before, .a .chart::after { content: ""; position: absolute; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); }
+  .a .chart::before { left: -11px; clip-path: inset(0 0 0 50%); } .a .chart::after { right: -11px; clip-path: inset(0 50% 0 0); }
+  /* a tile: the animal on one side, ink on the other */
+  .tile { position: relative; perspective: 600px; cursor: default; } .tile.no { animation: sg-no .26s 2; }
+  .tile > span { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 16px 16px 16px 5px; backface-visibility: hidden; transition: transform .4s var(--ease), background-color .2s; }
+  .tile .face { background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); } .tile .face img { position: relative; width: 66px; height: 66px; object-fit: contain; }
+  .tile .back { transform: rotateY(180deg); background: var(--ink); box-shadow: 3px 3px 0 var(--action); }
+  .tile .back::after { content: ""; width: 22px; height: 20px; border-radius: 7px 7px 3px 3px; background: var(--field); }
+  .tile.down .face { transform: rotateY(-180deg); } .tile.down .back { transform: rotateY(0deg); }
+  .play .tile.down { cursor: pointer; } .play .tile.down:hover .back { background: var(--action); box-shadow: 3px 3px 0 var(--ink); }
+  .tile.found .face { background: var(--field); box-shadow: inset 0 0 0 2.5px var(--ink); }
+  .wave .tile > span { transition-delay: calc(var(--i) * 28ms); }
+  .tile .spark { left: auto; right: 16px; top: 16px; }
+  /* Ink+: the back of every tile carries the app's own ink blot, a different one on each tile */
+  .tile .blot { width: 78px; height: 78px; overflow: visible; display: none; transition: scale .25s var(--ease), rotate .25s var(--ease); }
+  &[data-ink=plus] .tile .blot { display: block; } &[data-ink=plus] .tile .back::after { display: none; }
+  .play .tile.down:hover .blot { scale: 1.12; rotate: 8deg; }
+  &[data-ink=plus] .play .tile.down:hover .back { background: var(--ink); box-shadow: 3px 3px 0 var(--action); }
+  .a .punch { position: absolute; z-index: 45; right: 16px; top: 112px; rotate: 6deg; display: none; justify-items: center; padding: 7px 16px 10px; border-radius: 16px 16px 16px 5px; background: var(--ink); color: var(--field); box-shadow: 4px 4px 0 var(--action); white-space: nowrap; }
+  .a .punch b { font-size: 24px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1.05; } .a .punch span { font-size: 13px; font-weight: 620; color: var(--paper); }
+  .a.done .punch { display: grid; animation: sg-slam .45s var(--ease); } .a.done .clock { color: var(--action); }
+
+  /* ---- Table: each chair has a colour, the clock is the table, and after the kick the chairs turn ---- */
+  .c .rug { position: absolute; left: 14px; top: 126px; width: 332px; height: 332px; border-radius: 40px 40px 40px 10px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); }
+  .c .tag { left: 50%; top: 445px; translate: -50% 0; }
+  .c .table { position: absolute; z-index: 5; left: 102px; top: 214px; width: 156px; height: 156px; display: grid; place-content: center; justify-items: center; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2.5px var(--ink), 6px 6px 0 var(--ink); transition: background-color .3s, color .3s; }
+  .c .clock { font-size: 50px; font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: .95; } .c .table small { font-size: 13px; font-weight: 620; }
+  .c .seat { width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: var(--hue); box-shadow: inset 0 0 0 2px var(--ink), 3px 3px 0 var(--ink), var(--ring, 0 0 0 0 #0000); }
+  .c .seat.taken { box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 6px var(--paper), 3px 3px 0 var(--ink); }
+  .c .table.thump { animation: sg-thump .45s var(--ease); }
+  .c.done .table { background: var(--ink); color: var(--field); } .c.done .seat { animation: sg-toast .5s var(--ease) both; animation-delay: calc(var(--i) * 60ms); }
+  .c .edge { position: absolute; left: 0; right: 0; height: 74px; background: var(--sunk); } .c .edge.top { top: 56px; } .c .edge.low { top: 486px; }
+
+  /* ---- narrower than a laptop: the game alone, taller, with its name, "You" and the modes inside it ---- */
+  @media (max-width: 1100px) {
+    grid-template-columns: minmax(0, 1fr); justify-items: center;
+    .how, .side { display: none; }
+    .stage { height: 684px; border-radius: 30px; } .board { top: 44px; }
+    .stage > .name { display: block; position: absolute; z-index: 40; left: 18px; top: 14px; rotate: -4deg; padding: 4px 13px 6px; border-radius: 12px 12px 12px 4px; background: var(--ink); color: var(--field); font-size: 19px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.04em; box-shadow: 3px 3px 0 var(--action); }
+    .stage > .you { display: flex; position: absolute; z-index: 40; right: 16px; top: 12px; }
+    .stage > .modes { display: flex; position: absolute; z-index: 40; left: 18px; right: 18px; top: 60px; }
+    .stage > .pick { display: grid; position: absolute; z-index: 70; right: 14px; top: 58px; } .stage > .pick.ask { display: flex; } .stage > .pick[hidden] { display: none; }
+  }
+  @media (max-width: 392px) { .stage { zoom: .86; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+}
+@media (max-width: 760px) { .cs-seats { padding: 22px 8px 32px; } }
