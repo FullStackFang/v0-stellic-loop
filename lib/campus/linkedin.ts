@@ -27,14 +27,12 @@ export async function profileOptional(q: Q): Promise<boolean> {
  * The profile a person added and the schools it unlocked, beyond the one they are placed at. While the admin has not
  * approved it, it unlocks nothing: the schools they ticked are `waiting`. Nothing while the table is not there.
  */
+// Asked of the catalogue first, not by a query that fails: it is read inside other transactions (a group's tile), and a failed query aborts every read after it there.
 export async function addedSchools(q: Q, personId: string): Promise<{ profile: string | null; added: string[]; waiting: string[] }> {
-  try {
-    const row = (await q.query<{ profile: string | null; schools: string[]; approved: boolean }>('select profile,schools,approved_at is not null as approved from campus_linkedin where person_id=$1', [personId])).rows[0];
-    return { profile: row?.profile ?? null, added: row?.approved ? row.schools : [], waiting: row && !row.approved ? row.schools : [] };
-  } catch (error) {
-    if (missing(error)) return { profile: null, added: [], waiting: [] };
-    throw error;
-  }
+  const { rows: [there] } = await q.query<{ ok: boolean }>("select exists(select 1 from information_schema.columns where table_schema=current_schema() and table_name='campus_linkedin' and column_name='approved_at') as ok");
+  if (!there?.ok) return { profile: null, added: [], waiting: [] };
+  const row = (await q.query<{ profile: string | null; schools: string[]; approved: boolean }>('select profile,schools,approved_at is not null as approved from campus_linkedin where person_id=$1', [personId])).rows[0];
+  return { profile: row?.profile ?? null, added: row?.approved ? row.schools : [], waiting: row && !row.approved ? row.schools : [] };
 }
 
 /**
