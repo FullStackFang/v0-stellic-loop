@@ -62,9 +62,9 @@ describe('unlocking schools with a LinkedIn profile', () => {
     expect((await withPortalTestSession(omar.as, () => campusViewer()))!.campus).toBeNull();
     await expect(setSchools(t.db, omar, 'linkedin.com/in/omar-reyes', [])).rejects.toThrow('Pick at least one school.');
     expect((await t.db.query('select 1 from campus_linkedin')).rows).toHaveLength(0);
-    // Sent, and nothing opens: no campus, no animals, and the schools are only waiting. Sending again changes what waits.
-    await setSchools(t.db, omar, 'linkedin.com/in/omar-reyes', ['cuny']);
+    // Sent, and nothing opens: no campus, no animals, and the schools are only waiting. What was sent is final.
     await setSchools(t.db, omar, 'linkedin.com/in/omar-reyes', ['nyu', 'columbia']);
+    await expect(setSchools(t.db, omar, 'linkedin.com/in/omar-reyes', ['cuny'])).rejects.toThrow('Your school is already with us for a check.');
     expect(await addedSchools(t.db, omar.personId)).toEqual({ profile: 'https://www.linkedin.com/in/omar-reyes', added: [], waiting: ['nyu', 'columbia'] });
     expect((await withPortalTestSession(omar.as, () => campusViewer()))!.campus).toBeNull();
     expect(await mascots(omar.personId)).toEqual([]);
@@ -101,8 +101,9 @@ describe('unlocking schools with a LinkedIn profile', () => {
     await setSchools(t.db, pia, 'linkedin.com/in/pia-novak', ['cuny']);
     expect((await linkedinPeople(t.db)).map(each => [each.name, each.owner]).sort()).toEqual([['Ana', null], ['Omar', 'Omar Reyes'], ['Pia', null]]);
     // Signed in with LinkedIn, the address may be left out, and the one sent before is kept. Without LinkedIn it is required.
-    await setSchools(t.db, omar, ' ', ['columbia'], 'Omar Reyes');
-    expect((await linkedinPeople(t.db)).find(each => each.name === 'Omar')?.profile).toBe('https://www.linkedin.com/in/omar-reyes');
+    await setSchools(t.db, ana, ' ', ['nyu'], 'Ana Lopez');
+    expect((await linkedinPeople(t.db)).find(each => each.name === 'Ana')).toMatchObject({ profile: 'https://www.linkedin.com/in/ana-lopez', owner: 'Ana Lopez' });
+    await setSchools(t.db, ana, 'linkedin.com/in/ana-lopez', ['nyu']);
     await expect(setSchools(t.db, pia, '', ['cuny'])).rejects.toThrow('Paste the address of your LinkedIn profile');
     await expect(setSchools(t.db, pia, 'not an address', ['cuny'], 'Pia Novak')).rejects.toThrow('Paste the address of your LinkedIn profile');
     const [zed, yan] = [await someone('Zed', 'zed@gmail.com'), await someone('Yan', 'yan@gmail.com')];

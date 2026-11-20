@@ -36,6 +36,8 @@ vi.mock('ai', async original => ({ ...(await original<typeof import('ai')>()),
 
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-screen, outings ("Who sees whom"), member-levels, campus-search.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// The bar's counter loads by itself on the server (its own tests: on-you.test.tsx). Drawn here it never settles, and the page under it loses what was pressed.
+vi.mock('./on-you', () => ({ OnYou: () => null }));
 // Whether the person signed in with LinkedIn is the sign-in service's to say. Here a test says it.
 const linkedinOf = vi.hoisted(() => ({ account: null as { name: string; photo: string | null } | null }));
 vi.mock('@/lib/campus/linkedin-account', () => ({ linkedinAccount: async () => linkedinOf.account }));
@@ -747,15 +749,19 @@ describe('the pages', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', []))).toEqual({ ok: false, message: 'Pick at least one school.' });
     cleanup();
-    // With a profile and a school they wait: the page says so, shows what they sent, and lets them change it.
+    // With a profile and a school they wait: the page says so and shows what they sent. It is final: nothing to change it with, and sending again is refused.
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['columbia']))).toEqual({ ok: true });
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loopd is only for schools right now.');
     expect(screen.getByText('Waiting').previousElementSibling).toHaveTextContent('Columbia');
     expect(screen.queryByRole('button', { name: 'Unlock' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Change it' }));
-    expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toHaveValue('linkedin.com/in/omar-reyes');
-    expect(screen.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: 'Change it' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send for a check' })).toBeNull();
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['nyu']))).toEqual({ ok: false, message: 'Your school is already with us for a check.' });
+    // The page has the same top bar and foot as every other.
+    expect(screen.getByRole('link', { name: 'This week' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Terms' })).toBeInTheDocument();
     cleanup();
     // The admin sees them waiting and approves. Then that school's campus is theirs, with its animal in their picker.
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');

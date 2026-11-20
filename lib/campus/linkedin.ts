@@ -40,7 +40,7 @@ export async function addedSchools(q: Q, personId: string): Promise<{ profile: s
 /**
  * "Unlock": the person's profile and the schools they tick. A person placed at a school keeps it, and the others are
  * added to it at once. A person at no school has to tick one, and then waits: nothing opens for them until the admin
- * approves the profile (approveLinkedin).
+ * approves the profile (approveLinkedin). What they sent is then final: sending again is refused, until the admin turns it down.
  * `owner` is the name on the LinkedIn account they signed in with or connected, if they did (lib/campus/linkedin-account.ts).
  * With it the address may be left out, and one sent before is then kept. Without it the address is required.
  */
@@ -54,10 +54,12 @@ export async function setSchools(db: Db, who: { personId: string; verifiedEmail:
   const placed = (await db.query<{ slug: string }>('select c.slug from campus_person p join campus c on c.id=p.campus_id where p.person_id=$1', [who.personId])).rows[0]?.slug;
   if (!placed && !picked.length) throw new CampusError('Pick at least one school.');
   try {
-    // Someone placed is approved as they save, and stays approved. Someone not placed waits, and saving again keeps them waiting.
-    await db.query(`insert into campus_linkedin(person_id,profile,schools,email,approved_at) values($1,$2,$3,$4,case when $5::boolean then now() end)
-      on conflict(person_id) do update set profile=coalesce(excluded.profile,campus_linkedin.profile),schools=excluded.schools,email=excluded.email,approved_at=case when $5::boolean then coalesce(campus_linkedin.approved_at,now()) end`,
+    // Someone placed is approved as they save, and stays approved. Someone not placed waits, and what waits cannot be sent again.
+    const kept = await db.query(`insert into campus_linkedin(person_id,profile,schools,email,approved_at) values($1,$2,$3,$4,case when $5::boolean then now() end)
+      on conflict(person_id) do update set profile=coalesce(excluded.profile,campus_linkedin.profile),schools=excluded.schools,email=excluded.email,approved_at=case when $5::boolean then coalesce(campus_linkedin.approved_at,now()) end
+      where $5::boolean returning person_id`,
       [who.personId, profile, placed ? picked.filter(school => school !== schoolOf(placed)) : picked, who.verifiedEmail, !!placed]);
+    if (!kept.rows.length) throw new CampusError('Your school is already with us for a check.');
   } catch (error) {
     if ((error as { code?: string }).code === '23505') throw new CampusError('That LinkedIn profile is already on another account.');
     // No address, on a database where one is still required (migration 20261120100000 not run).
