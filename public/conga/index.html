@@ -187,6 +187,7 @@ function begin() {
   keep.set('conga-face', picked);
   if (me) place(world, me);
   else me = addLine(world, { id: ME, face: picked, name: 'You' });
+  me.ink = ask.has('ink'); // until the game knows who has Ink+, `?ink` shows its sparkle on your own line
   me.face = picked;
   aim = me.a;
   $('start').hidden = $('over').hidden = true;
@@ -388,6 +389,29 @@ function sprite(face, x, y, size, tilt = 0, alpha = 1) {
   else if (tilt) { ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(sheet, sx, sy, SHEET, SHEET, -size / 2, -size / 2, size, size); ctx.restore(); }
   else ctx.drawImage(sheet, sx, sy, SHEET, SHEET, x - size / 2, y - size / 2, size, size);
   if (alpha !== 1) ctx.globalAlpha = 1;
+}
+// What an Ink+ line wears, on its own animal and nowhere else: a glint that slides across it every few seconds, and
+// three small sparks beside it that twinkle in turn.
+const lit = document.createElement('canvas'), litPen = lit.getContext('2d'); lit.width = lit.height = 96;
+const SPARKS = [[-0.4, -0.3, 1], [0.42, -0.22, 0.75], [0.34, 0.3, 0.6]];
+function sparkle(face, x, y, size, t) {
+  const pass = (t % 3.2) / 0.7;
+  if (pass < 1 && sheet.complete && sheet.naturalWidth) {
+    litPen.globalCompositeOperation = 'source-over'; litPen.clearRect(0, 0, 96, 96);
+    litPen.drawImage(sheet, (face - 1) % COLS * SHEET, Math.floor((face - 1) / COLS) * SHEET, SHEET, SHEET, 0, 0, 96, 96);
+    litPen.globalCompositeOperation = 'source-in'; // the band of light, cut to the animal's own shape
+    const at = -40 + pass * 176, band = litPen.createLinearGradient(at - 22, 0, at + 22, 26);
+    band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.5, 'rgba(255,255,255,.9)'); band.addColorStop(1, 'rgba(255,255,255,0)');
+    litPen.fillStyle = band; litPen.fillRect(0, 0, 96, 96);
+    ctx.drawImage(lit, x - size / 2, y - size / 2, size, size);
+  }
+  ctx.lineJoin = 'round'; ctx.lineWidth = 2.5; ctx.strokeStyle = C.ink; ctx.fillStyle = C.paper;
+  SPARKS.forEach(([fx, fy, big], n) => {
+    const life = ((t + n * 0.8) % 2.4) / 0.8; if (life >= 1) return;
+    const r = size * 0.17 * big * Math.sin(life * Math.PI), px = x + fx * size, py = y + fy * size - life * 4, thin = r * 0.16;
+    ctx.beginPath(); ctx.moveTo(px, py - r); ctx.quadraticCurveTo(px + thin, py - thin, px + r, py); ctx.quadraticCurveTo(px + thin, py + thin, px, py + r);
+    ctx.quadraticCurveTo(px - thin, py + thin, px - r, py); ctx.quadraticCurveTo(px - thin, py - thin, px, py - r); ctx.closePath(); ctx.stroke(); ctx.fill();
+  });
 }
 
 function pill(text, x, y, fill, ink, size = 13, dot = '') {
@@ -639,12 +663,12 @@ function draw(t, dt) {
     if (line.tail.length && shown.some(each => seen(each.x, each.y))) rope(shown, colour(line.id));
     for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push(shown[i]);
     const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
-    sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1 });
+    sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1, ink: line.ink });
     heads.push(line);
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
-  for (const s of sprites) sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha);
+  for (const s of sprites) { sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.face, s.x, s.y, s.size, t); }
   for (const car of world.shuttles) tram(car);
 
   for (let i = puffs.length - 1; i >= 0; i--) {

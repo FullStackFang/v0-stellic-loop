@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · Ink+ in play 2</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --field: oklch(82% 0.12 38); --ink: oklch(24% 0.035 30); --paper: oklch(99.2% 0.004 60); }
+* { box-sizing: border-box; margin: 0; }
+body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1100px; margin: 0 auto; display: grid; gap: 30px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 70ch; margin-top: 10px; }
+.set { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 30px 22px; }
+.one { position: relative; padding-top: 14px; }
+.tab { position: absolute; z-index: 3; left: 18px; top: 0; font-size: 15px; font-weight: 700; padding: 5px 14px 6px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+canvas { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 26px 26px 26px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); background: var(--field); }
+.note { margin-top: 16px; padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.4; }
+</style>
+
+<main>
+<header><h1>Ink+ in play, second round</h1>
+<p class="lead">Four different kinds of idea, each on the same line of animals led by the dachshund. They all move; give each a few seconds.</p></header>
+<div class="set">
+  <div class="one"><span class="tab">H · Paw prints</span><canvas data-look="paws"></canvas><p class="note">Your pet walks in ink: a trail of little paw prints, left and right, that fades behind it.</p></div>
+  <div class="one"><span class="tab">I · A splash when one joins</span><canvas data-look="splash"></canvas><p class="note">Nothing is on you while you walk. When an animal joins your line, it lands with a splash of ink.</p></div>
+  <div class="one"><span class="tab">J · A shine</span><canvas data-look="shine"></canvas><p class="note">Every few seconds a glint of light slides across your pet, like a foil card turned in the hand.</p></div>
+  <div class="one"><span class="tab">K · A braided rope</span><canvas data-look="braid"></canvas><p class="note">Your rope is braided in ink and red, and the braid runs along it as you go. Everyone else has the plain rope.</p></div>
+</div>
+</main>
+
+<script>
+const INK = '#2b1b17', PAPER = '#fdfcfb', FIELD = '#ffa98c', DOT = '#f59a7d', ROPE = '#f4ead9', RED = '#b3161b';
+const pic = n => { const image = new Image(); image.src = `/animals/${n}.png`; return image; };
+const FACES = ['37', '04', '19', '23', '11'].map(pic), GAP = 62, W = 480, H = 360;
+
+for (const canvas of document.querySelectorAll('canvas')) {
+  const look = canvas.dataset.look, pen = canvas.getContext('2d');
+  const fit = () => { const k = Math.min(2, devicePixelRatio || 1); canvas.width = canvas.clientWidth * k; canvas.height = canvas.clientHeight * k; };
+  fit(); addEventListener('resize', fit);
+  const way = t => [240 + 150 * Math.sin(t * 0.5), 185 + 95 * Math.sin(t * 1.0 + 0.6)];
+  // The head and those behind it, each a fixed walk back along the way the head came.
+  const line = t => { const out = [way(t)]; let back = t, last = out[0], gone = 0; while (out.length < FACES.length && t - back < 30) { back -= 0.008; const here = way(back); gone += Math.hypot(here[0] - last[0], here[1] - last[1]); last = here; if (gone >= GAP) { out.push(here); gone = 0; } } return out; };
+  const path = pts => { pen.beginPath(); pts.forEach(([x, y], n) => n ? pen.lineTo(x, y) : pen.moveTo(x, y)); };
+  const stroke = (pts, colour, width, dash, offset = 0) => { path(pts); pen.strokeStyle = colour; pen.lineWidth = width; pen.lineCap = dash ? 'butt' : 'round'; pen.lineJoin = 'round'; pen.setLineDash(dash || []); pen.lineDashOffset = offset; pen.stroke(); pen.setLineDash([]); };
+  const glint = document.createElement('canvas'); glint.width = glint.height = 160; const lit = glint.getContext('2d');
+  const marks = []; let stamped = 0, side = 1, joined = -9;
+
+  const frame = now => {
+    const t = now / 1000, k = canvas.width / W;
+    pen.setTransform(k, 0, 0, k, 0, 0); pen.fillStyle = FIELD; pen.fillRect(0, 0, W, H);
+    pen.fillStyle = DOT; for (let x = 30; x < W; x += 60) for (let y = 30; y < H; y += 60) { pen.beginPath(); pen.arc(x, y, 4, 0, 7); pen.fill(); }
+    const pts = line(t), head = pts[0], ahead = way(t + 0.05), turn = Math.atan2(ahead[1] - head[1], ahead[0] - head[0]);
+
+    if (look === 'paws') {
+      if (t - stamped > 0.26) { stamped = t; side = -side; marks.push({ x: head[0] - Math.sin(turn) * 20 * side, y: head[1] + Math.cos(turn) * 20 * side, turn, born: t }); }
+      for (const mark of marks) { const age = (t - mark.born) / 2.6; if (age >= 1) continue; pen.save(); pen.translate(mark.x, mark.y); pen.rotate(mark.turn + Math.PI / 2); pen.scale(1.6, 1.6); pen.globalAlpha = 0.7 * (1 - age) ** 0.8; pen.fillStyle = INK;
+        pen.beginPath(); pen.ellipse(0, 2.5, 4.6, 3.8, 0, 0, 7); pen.fill(); for (const [x, y] of [[-4.6, -3], [0, -5.4], [4.6, -3]]) { pen.beginPath(); pen.arc(x, y, 1.9, 0, 7); pen.fill(); } pen.restore(); }
+      while (marks.length && t - marks[0].born > 2.6) marks.shift();
+    }
+
+    if (look === 'braid') { stroke(pts, INK, 11); stroke(pts, PAPER, 7); stroke(pts, RED, 7, [7, 14], -t * 26); stroke(pts, INK, 7, [7, 14], -t * 26 + 10.5); }
+    else { stroke(pts, ROPE, 7); stroke(pts, INK, 1.8, [2, 7]); }
+
+    // A join, every so often, at the end of the line.
+    const beat = t % 2.6; if (beat < 0.05 && t - joined > 1) joined = t;
+    const since = t - joined, last = pts[pts.length - 1];
+    if (look === 'splash' && since < 0.7) {
+      const go = since / 0.7, out = 1 - (1 - go) ** 3; pen.fillStyle = INK; pen.globalAlpha = 1 - go ** 2;
+      for (let n = 0; n < 9; n++) { const a = n * 0.698 + 0.3, far = (26 + (n % 3) * 9) * out + 14, r = (5.5 - (n % 3) * 1.3) * (1 - go * 0.6); pen.beginPath(); pen.arc(last[0] + Math.cos(a) * far, last[1] + Math.sin(a) * far * 0.85, r, 0, 7); pen.fill(); }
+      pen.beginPath(); pen.ellipse(last[0], last[1] + 14, 30 * out, 12 * out, 0, 0, 7); pen.fill(); pen.globalAlpha = 1;
+    }
+
+    for (let n = pts.length - 1; n >= 0; n--) {
+      const pop = look === 'splash' && n === pts.length - 1 && since < 0.45 ? 1 + 0.28 * Math.sin(since / 0.45 * Math.PI) : 1, size = (n ? 54 : 78) * pop;
+      if (!FACES[n].complete) continue;
+      if (look === 'shine' && n === 0) {
+        // The glint: a slanted band of light, cut to the pet's own shape.
+        const pass = (t % 2.8) / 0.75; lit.clearRect(0, 0, 160, 160); lit.globalCompositeOperation = 'source-over'; lit.drawImage(FACES[0], 0, 0, 160, 160);
+        if (pass < 1) { lit.globalCompositeOperation = 'source-atop'; const x = -70 + pass * 300, band = lit.createLinearGradient(x - 34, 0, x + 34, 40); band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.5, 'rgba(255,255,255,.92)'); band.addColorStop(1, 'rgba(255,255,255,0)'); lit.fillStyle = band; lit.fillRect(0, 0, 160, 160); }
+        pen.drawImage(glint, pts[0][0] - size / 2, pts[0][1] - size / 2, size, size);
+      } else pen.drawImage(FACES[n], pts[n][0] - size / 2, pts[n][1] - size / 2, size, size);
+    }
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+</script>
+</html>
