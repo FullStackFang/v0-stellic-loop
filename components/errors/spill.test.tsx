@@ -31,6 +31,11 @@ describe('an address that leads nowhere', () => {
     expect(screen.getByRole('link', { name: 'Your groups' })).toHaveAttribute('href', '/groups');
     expect(screen.queryByText(/^Code/)).toBeNull();
   });
+  it('ends with the foot, as every page does', () => {
+    render(<Spill kind="lost" />);
+    expect(screen.getByRole('contentinfo')).toHaveTextContent('© 2026 Loopd');
+    expect(screen.getByRole('link', { name: 'Terms' })).toHaveAttribute('href', '/terms');
+  });
   it('spills more where the page is pressed, and not where the plate is', () => {
     const { container } = render(<Spill kind="lost" />), count = () => container.querySelectorAll('.sp-more').length;
     fireEvent.pointerDown(container.querySelector('.sp-stage')!, { clientX: 40, clientY: 60 });

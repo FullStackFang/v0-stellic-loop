@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import { SiteFoot } from '@/components/campus/foot';
 import { pickedKit, showKit } from '@/components/campus/kit';
 import { Rings } from '@/components/LoopGlyphs';
 import { useMe } from '@/components/loading/seats';
@@ -12,7 +13,8 @@ import { errorCode, fromServer } from './code';
 // "The spill", the app's error page (public/demo/mockups-error-pages.html, direction C): ink on the page, the viewer's
 // own animal in the middle of it, and one dark plate that says what happened and where to go. Pressing the page
 // spills more. A page that broke shows a code, and its blot is drawn from that code, so no two errors look alike.
-// It draws its own small bar and not the app's: the page that broke may be the reason the bar cannot be drawn.
+// It draws its own small bar and not the app's: the page that broke may be the reason the bar cannot be drawn. The foot,
+// which needs nothing from the server, is the app's own.
 
 type Round = readonly [x: number, y: number, r: number];
 type More = { key: number; x: number; y: number; size: number; seed: string; plain: boolean };
@@ -68,5 +70,6 @@ export function Spill({ kind, error, retry }: { /** `lost`: no page at this addr
         <span className="sp-hint" aria-hidden="true">{broke ? 'This blot is drawn from the code' : 'Press the page to spill more'}</span>
       </div>
     </main>
+    <SiteFoot />
   </div>;
 }

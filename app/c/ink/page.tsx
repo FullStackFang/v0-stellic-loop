@@ -13,15 +13,17 @@ export const metadata: Metadata = { title: 'Ink · Loopd' };
 
 /**
  * The Ink page: the same top bar as "This week", and under it the approved mockup, which fills the rest of the window
- * and scrolls on its own. Open to signed-out visitors. The bar is drawn from the screen of the campus the person was last
+ * and scrolls on its own; the foot follows, below the window. Open to signed-out visitors. The bar is drawn from the screen of the campus the person was last
  * looking at, or else their own, so "This week" leads back there, and it
  * names the same groups and shows the same face.
  */
 export default async function InkPage() {
   const viewer = await campusViewer(), campus = await lookingAt() ?? viewer?.campus ?? await findCampus(db(), DEFAULT_CAMPUS);
   if (!campus) notFound();
-  return <div className="cs cs-inkpage">
-    {(await siteBar({ campus, viewer, back: INK_PAGE, on: 'ink' })).bar}
-    <FrameWait className="cs-inkframe" src={INK_MOCKUP} title="Loopd Ink" />
-  </div>;
+  const { bar, foot } = await siteBar({ campus, viewer, back: INK_PAGE, on: 'ink' });
+  // The bar and the mockup fill the window; the foot is just below it, as on every page.
+  return <>
+    <div className="cs cs-inkpage">{bar}<FrameWait className="cs-inkframe" src={INK_MOCKUP} title="Loopd Ink" /></div>
+    {foot}
+  </>;
 }
