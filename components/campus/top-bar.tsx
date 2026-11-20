@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, type ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { DOODLES_PAGE } from '@/lib/campus/doodles';
+import { IMPRINT_PAGE } from '@/lib/campus/imprint';
 import { INK_PAGE } from '@/lib/campus/ink';
 import { AssistantsLink } from './assistants-link';
 import { InkMark } from './ink-mark';
@@ -13,7 +14,7 @@ import { LinkWait } from '@/components/loading/link-wait';
 /**
  * The one top bar of the app, the same on every page: the wordmark, "This week", Doodles (the page that holds the games,
  * Conga among them), Ink, and for someone in a group Assistants; then what the page puts at the end (`children`: the "Groups" and "On you" counters, which are the way to
- * every group) and the account (`account`). `home` is where "This week" leads. `on` is the page this is: 'week', 'doodles' or 'ink'.
+ * every group) and the account (`account`), after "Claim your club", the way to the organizers page. `home` is where "This week" leads. `on` is the page this is: 'week', 'doodles', 'ink' or 'organizers'.
  *
  * The bar tells the loading state what it shows (components/loading/last-bar.ts), so the next page's loading state can
  * draw it again. `going` is for that copy: the address of the link that was pressed, which is marked in place of `on`.
@@ -29,7 +30,8 @@ export function TopBar({ home = '/', on, member = false, going, account, childre
       <Link href={DOODLES_PAGE} aria-current={at(DOODLES_PAGE, on === 'doodles')}>Doodles<LinkWait on={going === DOODLES_PAGE} /></Link>
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={at(INK_PAGE, on === 'ink')}><InkMark /><span>Ink</span><LinkWait on={going === INK_PAGE} /></Link>
       {member && <AssistantsLink />}</nav>
-    <div className="cs-nav-end">{children}{account}</div>
+    {/* The organizers' door (public/demo/mockups-organizer-flow.html). On a phone it leaves the bar for a row in the account card. */}
+    <div className="cs-nav-end"><Link className="cs-org" href={IMPRINT_PAGE} aria-current={at(IMPRINT_PAGE, on === 'organizers')} onClick={() => pressed(IMPRINT_PAGE)}>Claim your club<LinkWait on={going === IMPRINT_PAGE} /></Link>{children}{account}</div>
   </header>;
 }
 

@@ -448,7 +448,14 @@ $('#claim-form').addEventListener('submit', event => {
   mark.textContent = imprint ? 'Nothing was charged' : 'It costs nothing';
   done.append(head, line, mark);
   done.insertAdjacentHTML('beforeend', '<div class="slot" aria-hidden="true"><div class="st" style="--rot:-9deg"><b>On the list</b><small>' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '</small></div></div>');
-  form.replaceChildren(done); done.focus({ preventScroll: true });
+  // In the app (framed by the page at /organizers) the claim is kept first, and the answer waits for it. Opened on its own, as a mockup, nothing is sent.
+  const show = () => { form.replaceChildren(done); done.focus({ preventScroll: true }); };
+  let inApp = false; try { inApp = parent !== window && parent.location.pathname === '/organizers'; } catch (error) { /* framed by another site: a mockup */ }
+  if (!inApp) return show();
+  const button = form.querySelector('button'); button.disabled = true; form.querySelector('.wrong')?.remove();
+  fetch('/organizers/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ club: data.get('club'), email: data.get('email'), plan: data.get('plan') }) })
+    .then(answer => { if (!answer.ok) throw new Error(String(answer.status)); show(); })
+    .catch(() => { button.disabled = false; const wrong = document.createElement('p'); wrong.className = 'lab k wrong'; wrong.setAttribute('role', 'alert'); wrong.textContent = 'That did not save. Check the email and try again.'; form.append(wrong); });
 });
 
 // The blot a press leaves: the one under a face with Ink (lib/campus/ink-blot.ts), as on the Ink page.

@@ -35,7 +35,7 @@ describe('changing page', () => {
   it('keeps the bar: the same links, and the ticket under it', () => {
     const container = from('Ink');
     expect(container.querySelector('.seats-screen')).toBeNull();
-    expect(screen.getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'This week', 'Doodles', 'Ink', 'Sign in']);
+    expect(screen.getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'This week', 'Doodles', 'Ink', 'Claim your club', 'Sign in']);
     expect(screen.getByRole('status')).toHaveTextContent(LINE);
   });
   it('marks the link that was pressed, which holds the small one, and no other', () => {
