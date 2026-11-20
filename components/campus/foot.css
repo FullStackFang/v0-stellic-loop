@@ -1,26 +1,8 @@
-/* The foot of every page (public/demo/mockups-footer.html, picked 2026-11-19): a ticket with the crowd in it, then a
-   bar that is the top bar turned over. It is its own .cs box, so the school's colours (app/c/campus.css, [data-kit])
-   reach it on any page, and it is as tall as what is in it, not the window. */
+/* The foot of every page (public/demo/mockups-footer.html, picked 2026-11-19): one bar, the top bar turned over.
+   The crowd ticket that stood above it moved to Seats (public/seats). It is its own .cs box, so the school's colours
+   (app/c/campus.css, [data-kit]) reach it on any page, and it is as tall as what is in it, not the window. The top
+   padding keeps it clear of the page it ends. */
 .cs.cs-ft { min-height: 0; } .cs-ft { padding-top: 34px; }
-
-/* The ticket goes where the hand takes it. Everyone in it rides along. */
-.cs-ft-carry { position: relative; z-index: 3; margin: 0 32px 34px; transform-origin: 50% 100%; will-change: transform; }
-.cs-ft-tk { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 232px; border-radius: 26px 26px 26px 7px; background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 7px 7px 0 var(--cs-field-shadow); cursor: grab; touch-action: pan-y; user-select: none; transition: box-shadow .25s var(--cs-ease); }
-.cs-ft-carry.held > .cs-ft-tk { cursor: grabbing; box-shadow: 0 0 0 1.5px var(--cs-ink), 14px 16px 0 var(--cs-field-shadow); }
-/* the tear: a dashed line with a bite out of each end, and the school's colour beyond it */
-.cs-ft-tear { position: relative; padding: 24px 22px 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; background: var(--cs-field); border-radius: 0 26px 26px 0; border-left: 2px dashed var(--cs-ink); }
-.cs-ft-tear::before, .cs-ft-tear::after { content: ''; position: absolute; left: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
-.cs-ft-tear::before { top: -12px; clip-path: inset(50% 0 0 0); } .cs-ft-tear::after { bottom: -12px; clip-path: inset(0 0 50% 0); }
-.cs-ft-admit { rotate: -4deg; padding: 6px 13px; white-space: nowrap; border-radius: 12px 12px 12px 4px; background: var(--cs-ink); color: var(--cs-field); font-size: 18px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.035em; box-shadow: 3px 3px 0 var(--cs-action); }
-.cs-ft-code { align-self: stretch; height: 46px; margin-top: auto; background: repeating-linear-gradient(90deg, var(--cs-ink) 0 3px, #0000 3px 5px, var(--cs-ink) 5px 6px, #0000 6px 10px, var(--cs-ink) 10px 14px, #0000 14px 16px, var(--cs-ink) 16px 17px, #0000 17px 21px); }
-
-/* The room in the ticket where everyone stands. Its floor is the darker band; nothing clips, so a thrown one can leave the room and come back. */
-.cs-ft-stage { position: relative; height: 132px; margin: 32px 24px 22px; border-radius: 16px 16px 16px 5px; background: var(--cs-stub); box-shadow: inset 0 -9px 0 color-mix(in oklab, var(--cs-field) 62%, var(--cs-paper)); }
-.cs-ft-stage > small { position: absolute; z-index: 3; right: 12px; top: -13px; padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: var(--cs-ink); color: var(--cs-paper); }
-.cs-ft-pet { position: absolute; left: 0; bottom: 7px; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 88%; cursor: grab; touch-action: none; will-change: transform; -webkit-user-drag: none; }
-.cs-ft-pet.up { cursor: grabbing; z-index: 5; }
-/* the shadow each one stands on: it shrinks as they leave the floor */
-.cs-ft-shade { position: absolute; left: 0; bottom: 5px; width: 84px; height: 9px; border-radius: 50%; background: color-mix(in oklab, var(--cs-ink) 20%, transparent); pointer-events: none; will-change: transform, opacity; }
 
 /* The bar: one line. The ways around, then the colours. */
 .cs-ft-bar { position: relative; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 13px 32px 12px; background: var(--cs-field); color: var(--cs-ink); border-top: 1.5px solid var(--cs-ink); box-shadow: 0 -5px 0 var(--cs-field-shadow); }
@@ -36,7 +18,7 @@
 .cs-ft-asst:hover::before, .cs-ft-asst[data-open]::before { clip-path: circle(150% at 22px 50%); } .cs-ft-asst:hover, .cs-ft-asst[data-open] { color: var(--cs-field); }
 .cs-ft-asst b { padding: 2px 9px 3px; border-radius: 99px; font-size: 12px; font-weight: 740; background: var(--cs-ink); color: var(--cs-field); transition: background-color .3s, color .3s; }
 .cs-ft-asst:hover b, .cs-ft-asst[data-open] b { background: var(--cs-field); color: var(--cs-ink); }
-/* The card that says so. It grows out of the pill and lies over the ticket above. */
+/* The card that says so. It grows out of the pill and lies over what is above. */
 .cs-ft-ask { position: absolute; z-index: 8; bottom: calc(100% + 16px); width: min(400px, calc(100% - 32px)); padding: 26px 18px 16px; border-radius: 20px 20px 20px 6px; background: var(--cs-ink); color: var(--cs-on-ink); box-shadow: 6px 6px 0 var(--cs-action); transform-origin: 40px 100%; animation: cs-ft-ask .4s var(--cs-expo); }
 @keyframes cs-ft-ask { from { opacity: 0; scale: .7; translate: 0 14px; } }
 .cs-ft-ask::after { content: ''; position: absolute; left: 40px; bottom: -9px; width: 18px; height: 18px; rotate: 45deg; background: var(--cs-ink); }
@@ -53,7 +35,6 @@
 .cs .cs-ft-kits button:hover { scale: 1.12; } .cs .cs-ft-kits button[aria-pressed=true] { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-ink); }
 
 @media (max-width: 860px) {
-  .cs-ft-carry { margin: 0 16px 28px; } .cs-ft-tk { grid-template-columns: minmax(0, 1fr); } .cs-ft-tear, .cs-ft-stage > small { display: none; } .cs-ft-stage { margin: 22px 14px 16px; }
   .cs-ft-bar { padding: 12px 16px 14px; } .cs-ft-end { margin-left: 0; flex-basis: 100%; justify-content: space-between; }
 }
 /* Assistants in the top bar (components/campus/assistants-link.tsx): the same pill, and its card opens under it. */

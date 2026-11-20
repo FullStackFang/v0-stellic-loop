@@ -18,6 +18,23 @@ it('has the small print only', () => {
   expect(links()).toEqual(['Loopd', 'Terms', 'Privacy']);
 });
 
+// The crowd ticket moved to Seats (openspec/changes/loop-foot-crowd-to-seats): the foot is the bar alone.
+it('has no ticket and no crowd', () => {
+  const { container } = render(<SiteFoot />);
+  expect(screen.queryByText('Pick one up')).toBeNull();
+  expect(screen.queryByText('Admit everyone')).toBeNull();
+  expect(container.querySelectorAll('img')).toHaveLength(0);
+});
+
+it('rings the colours picked', async () => {
+  render(<SiteFoot />);
+  const cornell = screen.getByRole('button', { name: /^Cornell/ });
+  fireEvent.click(cornell);
+  await vi.waitFor(() => expect(cornell).toHaveAttribute('aria-pressed', 'true'));
+  expect(document.documentElement.dataset.kit).toBe('cornell');
+  delete document.documentElement.dataset.kit;
+});
+
 it('opens a card that says Assistants come with Ink+ for a member without it, and closes it again', async () => {
   server.plus.mockResolvedValue(false);
   render(<AssistantsLink />);
