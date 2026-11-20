@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loopd Imprint · For organizers</title>
+<script>
+// Inside the app (/organizers) the page wears the colours of the school the person is in, as the Ink page does: it reads
+// them from the campus screen around it. Opened on its own it keeps the Cornell ones below.
+(function () {
+  if (window.self === window.top) return;
+  var root = document.documentElement; root.classList.add('framed');
+  var PAIRS = [['--field', '--cs-field'], ['--field-shadow', '--cs-field-shadow'], ['--ink', '--cs-ink'], ['--action', '--cs-action'], ['--action-hover', '--cs-action-hover']];
+  function wear() {
+    try {
+      var host = parent.document.querySelector('.cs'); if (!host) return;
+      var from = parent.getComputedStyle(host);
+      PAIRS.forEach(function (pair) { var value = from.getPropertyValue(pair[1]).trim(); if (value) root.style.setProperty(pair[0], value); });
+      var hue = +(/oklch\([^ ]+ [^ ]+ ([\d.]+)/.exec(from.getPropertyValue('--cs-field')) || [])[1];
+      if (hue >= 70 && hue <= 135) root.style.setProperty('--hot', 'color-mix(in oklab, var(--action) 26%, var(--paper))'); else root.style.removeProperty('--hot');
+    } catch (error) { /* another origin: keep the colours below */ }
+  }
+  wear();
+  try { new MutationObserver(wear).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-kit'] }); } catch (error) { /* as above */ }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* The sister page of mockups-premium.html (Ink): the same kit, paper, tickets, stamps and display voice, and the same loud parts.
+   Ink is for a member, Imprint is for a club: the two never share a pricing table. A field test: nothing here is built.
+   The buttons take a club and an email and say we are not ready yet. Every number comes from RATES in the script at the foot.
+   The one moving part, as on the Ink page: in "the term" the page's scroll is the calendar. Each outing stamps both ledgers; only one of them is paid. */
+:root { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --on-field-2: color-mix(in oklab, var(--ink) 74%, var(--field));
+  --pp: #f0e8d4; --card: #fbf7ec; --hot: oklch(90% 0.17 98);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .2  0 0 0 0 .13  0 0 0 0 .1  0 0 0 .26 -.1'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23g)'/%3E%3C/svg%3E");
+  --r: 22px 22px 22px 6px; --expo: cubic-bezier(.16, 1, .3, 1); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p, ul, ol, dl, dd, figure, blockquote { margin: 0; padding: 0; } ul, ol { list-style: none; }
+button, input { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; } button { cursor: pointer; }
+a { color: inherit; text-decoration: none; } img { display: block; }
+/* No scroll bar is drawn, here or inside the app: the page still scrolls by wheel, touch and keys. */
+html { scroll-behavior: smooth; scrollbar-width: none; } html::-webkit-scrollbar { display: none; }
+body { position: relative; margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.mock { display: flex; gap: 14px; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; } .mock b { color: #fff; font-weight: 640; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 40px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 46px; padding: 0 24px; border-radius: 99px; font-weight: 640; white-space: nowrap; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .15s, translate .15s var(--expo); }
+.btn.go { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--ink); } .btn.go:hover { background: var(--action-hover); } .btn.go:active { translate: 2px 2px; }
+.btn.big { height: 62px; padding: 0 36px; font-size: 20px; }
+.d { font-weight: 800; font-stretch: 118%; letter-spacing: -0.055em; line-height: .92; text-wrap: balance; }
+.mark { background: var(--hot); color: var(--ink); padding: 0 .1em .04em; border-radius: .14em .14em .14em .04em; box-shadow: .06em .06em 0 var(--ink); display: inline-block; rotate: -2deg; }
+/* a word that is not real yet says so, on the thing itself */
+.ph { display: inline-block; padding: 2px 10px 3px; border-radius: 99px; font-size: 12.5px; font-weight: 720; letter-spacing: 0; font-stretch: 100%; line-height: 1.3; white-space: nowrap; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); vertical-align: middle; }
+/* a name for a thing: an ink bubble that sits over the edge of what it names, never bare text */
+.bub { position: absolute; z-index: 2; top: -13px; left: 14px; padding: 3px 13px 4px; border-radius: 99px 99px 99px 4px; font-size: 13.5px; font-weight: 700; letter-spacing: 0; white-space: nowrap; background: var(--ink); color: var(--paper); }
+.lab { flex: none; padding: 5px 13px 6px; border-radius: 99px; font-size: 14px; font-weight: 700; letter-spacing: 0; white-space: nowrap; box-shadow: inset 0 0 0 1.5px var(--ink); background: var(--paper); } .lab.p { background: var(--action); color: var(--paper); } .lab.h { background: var(--hot); } .lab.k { background: var(--ink); color: var(--paper); }
+.cycle { position: relative; display: inline-flex; padding: 5px; border-radius: 99px; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--action); }
+.cycle button { height: 44px; padding: 0 22px; border-radius: 99px; font-weight: 640; font-size: 16.5px; transition: background-color .2s, color .2s; } .cycle button[aria-pressed=true] { background: var(--ink); color: var(--field); }
+
+.nav { background: var(--field); position: sticky; top: 0; z-index: 30; border-bottom: 2px dashed color-mix(in oklab, var(--ink) 55%, transparent); }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 11px; padding-bottom: 12px; }
+.wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; }
+.wm svg { width: 44px; height: 44px; padding: 7px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.wm i { font-style: normal; padding: 3px 12px 4px; border-radius: 99px; font-size: 14px; font-weight: 700; font-stretch: 100%; letter-spacing: 0; background: var(--ink); color: var(--field); }
+.nav .btn { height: 40px; padding: 0 20px; font-size: 15px; }
+/* Inside the app the app's own bar is above this page, so this one's is left out. */
+.framed { --nav: 0px; } .framed .nav, .framed .mock { display: none; }
+
+/* hero */
+.hero { background: var(--field); overflow: hidden; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; min-height: min(84vh, 780px); padding-top: 56px; padding-bottom: 84px; }
+.hero h1 { font-size: clamp(42px, 5.5vw, 90px); }
+.hero .lede { margin-top: 28px; max-width: 22em; font-size: clamp(19px, 1.7vw, 24px); font-weight: 520; color: var(--on-field-2); }
+.acts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
+.acts small { padding: 6px 15px 7px; border-radius: 99px; font-size: 15px; font-weight: 640; background: color-mix(in oklab, var(--paper) 55%, var(--field)); }
+.stage { position: relative; }
+.pet { position: absolute; width: 104px; filter: drop-shadow(4px 4px 0 var(--ink)); animation: bob 5s ease-in-out infinite alternate; pointer-events: none; z-index: 3; }
+.pet.a { left: -78px; bottom: -40px; rotate: -8deg; --d: 26px; } .pet.b { right: -26px; top: -62px; rotate: 9deg; animation-delay: -2s; width: 92px; --d: -30px; }
+/* the calculator and the animals lean toward the pointer */
+.stage .calc { transform: translate(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -8px)); transition: transform .6s var(--expo); }
+.stage .pet { transform: translate(calc(var(--px, 0) * var(--d, 20px)), calc(var(--py, 0) * var(--d, 20px))); transition: transform .7s var(--expo); }
+@keyframes bob { to { translate: 0 -10px; } }
+@keyframes rise { from { opacity: 0; translate: 0 .32em; } } @keyframes swipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(-.2em -.2em -.2em -.2em); } } @keyframes settle { from { opacity: 0; translate: 40px 30px; rotate: 3deg; } }
+@keyframes pop { from { opacity: 0; scale: .5; rotate: -14deg; } } @keyframes stamp { from { opacity: 0; scale: 2.3; rotate: -14deg; } }
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1 { animation: rise .9s var(--expo) both; } .hero .mark { animation: swipe .7s .38s var(--expo) both; } .hero .lede { animation: rise .9s .16s var(--expo) both; } .hero .acts { animation: rise .9s .26s var(--expo) both; } .stage { animation: settle 1.1s .1s var(--expo) both; }
+  @supports (animation-timeline: view()) { .steps li, .two .tk, .band .show { animation: rise linear both; animation-timeline: view(); animation-range: entry 5% entry 70%; } .steps li:nth-child(2), .two .tk:nth-child(2) { animation-range: entry 15% entry 80%; } .steps li:nth-child(3) { animation-range: entry 25% entry 90%; } }
+}
+
+/* the calculator: three things a club knows, and the one number it wants */
+.calc { position: relative; display: grid; gap: 30px; padding: 38px 28px 0; border-radius: var(--r); background: var(--card) var(--grain); box-shadow: inset 0 0 0 1.5px var(--ink), 8px 8px 0 var(--ink); }
+.dial { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 16px; align-items: center; padding: 20px 14px 14px 18px; border-radius: 16px 16px 16px 5px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.dial output { justify-self: end; font-size: 34px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1; }
+input[type=range] { appearance: none; -webkit-appearance: none; width: 100%; height: 34px; background: none; cursor: grab; } input[type=range]:active { cursor: grabbing; }
+input[type=range]::-webkit-slider-runnable-track { height: 12px; border-radius: 99px; background: linear-gradient(90deg, var(--action) var(--fill, 50%), var(--page) 0); box-shadow: inset 0 0 0 1.5px var(--ink); }
+input[type=range]::-moz-range-track { height: 12px; border-radius: 99px; background: linear-gradient(90deg, var(--action) var(--fill, 50%), var(--page) 0); box-shadow: inset 0 0 0 1.5px var(--ink); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -9px; border-radius: 50%; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); transition: scale .2s var(--expo); } input[type=range]:active::-webkit-slider-thumb { scale: 1.18; }
+input[type=range]::-moz-range-thumb { width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.sum { display: grid; grid-template-columns: minmax(0, 1fr) auto; margin: 0 -28px; border-top: 1.5px dashed var(--ink); border-radius: 0 0 22px 6px; overflow: hidden; }
+.sum > div { position: relative; padding: 30px 28px 22px; } .sum .bub { position: static; display: inline-block; margin-bottom: 8px; }
+.sum .back { background: var(--ink); color: var(--paper); } .sum .back .bub { background: var(--hot); color: var(--ink); } .sum .back b { color: var(--field); }
+.sum .fee { background: var(--stub); border-left: 1.5px dashed var(--ink); } .sum .fee .bub { background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.sum b { display: block; font-size: clamp(54px, 6vw, 88px); font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: .86; } .sum .fee b { font-size: clamp(38px, 4vw, 56px); line-height: 1.24; }
+b.roll { animation: roll .3s var(--expo); } @keyframes roll { from { translate: 0 .3em; opacity: 0; } }
+.sum .verdict { grid-column: 1 / -1; padding: 15px 28px 17px; font-size: 18.5px; font-weight: 680; letter-spacing: -0.025em; background: var(--hot); border-top: 1.5px solid var(--ink); transition: background-color .3s; } .sum .verdict.no { background: var(--paper); }
+
+/* the ribbon: it runs faster while the page is scrolled */
+.tape { position: relative; z-index: 3; overflow: clip; margin: -38px 0; padding: 34px 0; pointer-events: none; }
+.tape-tilt { width: 108vw; margin-left: -4vw; overflow: hidden; rotate: -1.6deg; padding: 13px 0 15px; background: var(--ink); color: var(--field); box-shadow: 0 6px 0 var(--action); }
+.tape-run { display: flex; width: max-content; font-size: clamp(20px, 2.5vw, 36px); font-weight: 800; font-stretch: 118%; letter-spacing: -0.045em; white-space: nowrap; animation: tape 30s linear infinite; }
+.tape-run span { display: flex; align-items: center; gap: .65em; padding-right: .65em; } .tape-run svg { width: .62em; height: .62em; fill: var(--hot); }
+@keyframes tape { to { translate: -50% 0; } }
+
+/* sections */
+.sec { padding: clamp(84px, 10vw, 130px) 0; } .sec h2 { font-size: clamp(46px, 6.8vw, 108px); margin-bottom: 52px; }
+.b-pp { background: var(--pp); --bg: var(--pp); } .b-ink { background: var(--ink); color: var(--paper); --bg: var(--ink); } .b-field { background: var(--field); --bg: var(--field); } .b-hot { background: var(--hot); --bg: var(--hot); }
+/* ink floods a band in as it is scrolled to */
+@media (prefers-reduced-motion: no-preference) { @supports (animation-timeline: view()) {
+  .flood { position: relative; isolation: isolate; background: var(--prev); }
+  .flood::before, .flood::after { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--bg); animation: flood linear both; animation-timeline: view(); animation-range: entry 0% entry 80%; }
+  .flood::after { animation-name: flood-b; animation-range: entry 12% entry 100%; }
+} }
+@keyframes flood { from { clip-path: circle(0% at 20% 0%); } to { clip-path: circle(150% at 20% 0%); } }
+@keyframes flood-b { from { clip-path: circle(0% at 86% 4%); } to { clip-path: circle(150% at 86% 4%); } }
+/* headlines are stamped on, a letter at a time */
+.split .wd { display: inline-block; white-space: nowrap; } .split .ch { display: inline-block; opacity: 0; }
+.split.hit .ch { opacity: 1; animation: thud .44s var(--expo) calc(var(--c) * 32ms) both; }
+@keyframes thud { from { opacity: 0; scale: 2.2; rotate: var(--tilt); } 50% { opacity: 1; } }
+/* a press on bare page leaves a blot, which dries and goes */
+.blot { position: absolute; z-index: 25; width: 170px; height: 170px; margin: -85px 0 0 -85px; overflow: visible; pointer-events: none; animation: blot-in .3s var(--expo) both, blot-out .9s 1.5s ease-in forwards; }
+.blot .school { fill: var(--field); stroke: var(--ink); stroke-width: 1.5; } .blot .dark { fill: var(--action); }
+@keyframes blot-in { from { opacity: 0; scale: .08; } } @keyframes blot-out { to { opacity: 0; scale: .94; } }
+
+/* three steps: three tickets, each with the thing itself drawn on it */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+.steps li { position: relative; display: grid; grid-template-rows: auto 1fr; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(7px 7px 0 var(--ink)); transition: translate .25s var(--expo); } .steps li:hover { translate: -2px -4px; }
+.steps .no { position: absolute; z-index: 2; top: -20px; left: 22px; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; font-size: 26px; font-weight: 800; font-stretch: 112%; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); rotate: -6deg; }
+.st-main { padding: 46px 28px 26px; background: var(--paper); border-radius: 10px 10px 0 0; mask: radial-gradient(circle 11px at 0 100%, #0000 96%, #000), radial-gradient(circle 11px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-main h3 { font-size: clamp(27px, 2.7vw, 38px); font-weight: 800; font-stretch: 114%; letter-spacing: -0.05em; line-height: 1; } .st-main p { margin-top: 12px; font-size: 18px; font-weight: 540; color: var(--mute); }
+.st-stub { display: grid; align-content: center; gap: 12px; padding: 22px 24px 26px; background: var(--stub); border-top: 1.5px dashed var(--ink); border-radius: 0 0 10px 10px; mask: radial-gradient(circle 11px at 0 0, #0000 96%, #000), radial-gradient(circle 11px at 100% 0, #0000 96%, #000); mask-composite: intersect; transform-origin: 0 0; transition: rotate .35s var(--expo), translate .35s var(--expo); } .steps li:hover .st-stub { rotate: 1.4deg; translate: 0 3px; }
+.line { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 12px 11px 16px; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 16.5px; font-weight: 680; letter-spacing: -0.02em; } .line small { display: block; font-size: 13.5px; font-weight: 560; color: var(--mute); letter-spacing: 0; }
+.faces { display: flex; align-items: center; } .faces img { width: 40px; height: 40px; margin-right: -9px; border-radius: 50%; background: var(--field); box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink); } .faces .lab { margin-left: 20px; }
+
+/* the term: scroll is the calendar. Every outing stamps both ledgers. The free one is not paid. */
+.term { background: var(--pp); border-block: 2px dashed color-mix(in oklab, var(--ink) 55%, transparent); height: 320vh; }
+.pin { position: sticky; top: var(--nav, 69px); height: calc(100vh - var(--nav, 69px)); display: grid; align-content: center; gap: clamp(14px, 2.6vh, 30px); padding: 20px 0; }
+.term-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; } .term-head h2 { font-size: clamp(36px, min(6.2vw, 11vh), 100px); }
+.date { text-align: right; white-space: nowrap; } .date b { display: block; font-size: clamp(30px, 3.6vw, 56px); font-weight: 800; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1; }
+.date small { display: inline-block; margin-top: 8px; padding: 3px 12px 4px; border-radius: 99px; font-size: 14px; font-weight: 660; background: var(--ink); color: var(--paper); }
+.cal { position: relative; height: 34px; border-radius: 99px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--ink); overflow: hidden; }
+.cal .win { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--field); border-right: 2.5px solid var(--ink); }
+.cal i { position: absolute; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--ink); z-index: 1; }
+.months { position: relative; height: 16px; margin-top: -8px; font-size: 13px; font-weight: 640; color: color-mix(in oklab, var(--ink) 62%, transparent); } .months span { position: absolute; top: 0; padding-left: 7px; border-left: 1.5px solid currentColor; line-height: 1.1; }
+.duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 3.4vw, 54px); }
+.ledger { position: relative; display: grid; gap: 14px; padding: 34px 22px 20px; border-radius: var(--r); background: var(--card) var(--grain); box-shadow: inset 0 0 0 1.5px var(--ink), 8px 8px 0 var(--ink); }
+.who { position: absolute; z-index: 3; top: -19px; left: 22px; display: flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 99px 99px 99px 5px; font-size: 18px; font-weight: 760; font-stretch: 110%; letter-spacing: -0.035em; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 4px 4px 0 var(--ink); rotate: -2deg; } .paid > .who, [data-plan=imprint] > .who { background: var(--action); color: var(--paper); }
+.keep { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .keep b { font-size: clamp(44px, min(6.4vw, 10.5vh), 104px); font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: .8; }
+.ledger:not(.paid) .keep b { color: color-mix(in oklab, var(--ink) 28%, var(--card)); }
+.marks { display: grid; grid-template-columns: repeat(var(--cols, 8), var(--size, 60px)); grid-auto-rows: var(--size, 60px); gap: 7px; justify-content: space-between; }
+.slot { container-type: inline-size; position: relative; aspect-ratio: 1; display: grid; }
+.st { position: relative; display: grid; place-content: center; justify-items: center; gap: 1cqi; padding: 6cqi; border-radius: 50%; text-align: center; color: var(--action); border: 4cqi solid currentColor; rotate: var(--rot, -6deg); mix-blend-mode: multiply; opacity: 0; scale: 2.2; filter: url(#ink); }
+.st::before { content: ''; position: absolute; inset: 5cqi; border-radius: inherit; border: 1px dashed currentColor; }
+.st b { font-size: 27cqi; font-weight: 800; font-stretch: 84%; line-height: 1; letter-spacing: -0.02em; } .st small { font-size: 13cqi; font-weight: 640; font-stretch: 85%; } .marks.many .st small { display: none; } .marks.many .st b { font-size: 32cqi; } .marks .st b.long { font-size: 21cqi; }
+.slot.in .st { opacity: 1; scale: 1; transition: opacity .12s, scale .34s var(--expo); }
+/* on the free ledger the outing happened and the money did not come: the stamp is a ghost */
+.ledger:not(.paid) .st { color: var(--ink); border-style: dashed; border-width: 2.5cqi; filter: none; } .ledger:not(.paid) .st::before { display: none; } .ledger:not(.paid) .slot.in .st { opacity: .34; }
+.seal { position: absolute; z-index: 4; right: -24px; top: -52px; width: clamp(92px, min(10vw, 15vh), 140px); aspect-ratio: 1; display: grid; place-content: center; border-radius: 50%; text-align: center; background: var(--hot); color: var(--ink); box-shadow: 5px 5px 0 var(--ink); outline: 2px dashed var(--ink); outline-offset: -9px; rotate: -11deg; font-weight: 800; font-stretch: 112%; letter-spacing: -0.04em; line-height: .95; font-size: clamp(17px, 1.9vw, 26px); opacity: 0; scale: 2.4; pointer-events: none; }
+.seal.in { opacity: 1; scale: 1; transition: opacity .12s, scale .4s var(--expo); }
+
+/* the organizer's home: a band, with the screen itself beside the words */
+.band { padding: clamp(80px, 11vw, 150px) 0; } .band .wrap { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(36px, 6vw, 90px); align-items: center; }
+.band h2 { font-size: clamp(56px, 8.2vw, 132px); } .band .say p { margin-top: 26px; max-width: 19em; text-wrap: pretty; font-size: clamp(19px, 1.75vw, 25px); font-weight: 520; } .band .say .cycle { margin-top: 30px; }
+.show { position: relative; color: var(--ink); display: grid; gap: 26px; padding: 44px 22px 24px; border-radius: 34px 34px 34px 10px; background: var(--card) var(--grain); box-shadow: inset 0 0 0 1.5px var(--ink), 8px 8px 0 var(--ink); }
+.pc { position: relative; padding: 24px 16px 16px; border-radius: 16px 16px 16px 5px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); display: grid; gap: 10px; }
+.pc .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 20px; font-weight: 740; letter-spacing: -0.035em; }
+.pc .line { background: var(--card); padding: 9px 10px 9px 14px; font-size: 15.5px; }
+.sumrow { display: flex; gap: 6px; flex-wrap: wrap; } .sum .of { display: inline-block; margin-top: 12px; padding: 4px 13px 5px; border-radius: 99px; font-size: 14.5px; font-weight: 660; background: color-mix(in oklab, var(--paper) 16%, var(--ink)); color: var(--paper); }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px 14px; }
+.money { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .money b { font-size: clamp(50px, 5.4vw, 80px); font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: .84; }
+[data-plan=free] .money b { color: color-mix(in oklab, var(--ink) 30%, var(--paper)); }
+[data-plan=free] .for-paid, [data-plan=imprint] .for-free { display: none; }
+.pc.dark { background: var(--ink); color: var(--paper); box-shadow: 5px 5px 0 var(--action); } .pc.dark .bub { background: var(--hot); color: var(--ink); } .pc.dark p { font-size: 16.5px; font-weight: 540; color: color-mix(in oklab, var(--paper) 80%, var(--ink)); } .pc.dark .btn { justify-self: start; height: 42px; padding: 0 20px; font-size: 15.5px; box-shadow: inset 0 0 0 1.5px var(--paper), 3px 3px 0 var(--field); }
+.pc.bill { background: var(--hot); } .pc.bill .head { font-size: clamp(22px, 2.3vw, 30px); font-weight: 800; font-stretch: 112%; letter-spacing: -0.045em; line-height: 1.02; }
+.bill dl { display: grid; gap: 6px; } .bill dl div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 14px 9px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 15.5px; font-weight: 660; } .bill dd { font-weight: 780; } .bill dl div.net { background: var(--ink); color: var(--paper); }
+/* the lines of the statement come in one after another, and the upgrade card is stamped on */
+.show.swap .for-paid.bill dl div { animation: rise .5s var(--expo) calc(.1s + var(--n) * 90ms) both; } .show.swap .for-paid.bill, .show.swap .for-free.dark { animation: rise .45s var(--expo) both; } .show.swap .money .lab { animation: stamp .42s var(--expo) .1s both; }
+
+/* the two plans of a club. Not Ink's table: Ink is for a member. */
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; max-width: 980px; }
+.tk { display: grid; grid-template-rows: 1fr auto; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(7px 7px 0 var(--ink)); transition: translate .25s var(--expo); } .tk:hover { translate: -2px -4px; }
+.tk-main { padding: 30px 30px 32px; background: var(--paper); border-radius: 10px 10px 0 0; mask: radial-gradient(circle 11px at 0 100%, #0000 96%, #000), radial-gradient(circle 11px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.tk-stub { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 22px 24px 24px 28px; background: var(--stub); border-top: 1.5px dashed var(--ink); border-radius: 0 0 10px 10px; mask: radial-gradient(circle 11px at 0 0, #0000 96%, #000), radial-gradient(circle 11px at 100% 0, #0000 96%, #000); mask-composite: intersect; transform-origin: 0 0; transition: rotate .35s var(--expo), translate .35s var(--expo); } .tk:hover .tk-stub { rotate: 1.4deg; translate: 0 3px; }
+.tk h3 { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 40px; font-weight: 800; font-stretch: 116%; letter-spacing: -0.05em; line-height: 1; }
+.tk ul { margin-top: 22px; display: grid; gap: 11px; font-size: 18.5px; font-weight: 580; letter-spacing: -0.02em; } .tk li { display: flex; gap: 11px; align-items: center; }
+.ck { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--ink) no-repeat center / 12px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 6.4l2.4 2.3 4.6-5'/%3E%3C/svg%3E"); }
+.two.live li { animation: rise .5s var(--expo) calc(var(--n) * 60ms) both; } .two.live .ck { animation: pop .45s var(--expo) calc(.12s + var(--n) * 60ms) both; }
+.price { display: flex; align-items: baseline; gap: 7px; } .price b { font-size: 40px; font-weight: 800; font-stretch: 110%; letter-spacing: -0.05em; line-height: 1; } .price span { font-size: 15px; font-weight: 600; white-space: nowrap; }
+.tk.imp .tk-main { background: var(--ink); color: var(--paper); } .tk.imp h3 { color: var(--hot); } .tk.imp .ck { background-color: var(--hot); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23261a17' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 6.4l2.4 2.3 4.6-5'/%3E%3C/svg%3E"); } .tk.imp .tk-stub { background: var(--hot); }
+.tk-stub .btn { height: 42px; padding: 0 20px; font-size: 15.5px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+
+/* the promise, and what one organizer said */
+.vow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(24px, 4vw, 60px); align-items: center; }
+.vow .seal { position: static; width: clamp(130px, 16vw, 220px); font-size: clamp(20px, 2.5vw, 34px); box-shadow: 7px 7px 0 var(--action); }
+.vow blockquote { font-size: clamp(34px, 4.9vw, 78px); color: var(--field); } .vow .ph, .said .ph { margin-top: 24px; }
+.said { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(22px, 3.4vw, 50px); align-items: center; }
+.said img { width: clamp(110px, 13vw, 180px); border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink), 6px 6px 0 var(--ink); rotate: -5deg; }
+.said blockquote { font-size: clamp(28px, 3.8vw, 58px); } .said cite { display: inline-block; margin: 22px 10px 0 0; padding: 6px 16px 7px; border-radius: 99px; font-style: normal; font-size: 16px; font-weight: 660; background: var(--ink); color: var(--paper); }
+
+/* the ask: a club and an email, and an honest answer */
+.ask { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(30px, 5vw, 80px); align-items: center; } .ask h2 { margin-bottom: 0; } .ask .say p { margin-top: 24px; max-width: 20em; font-size: clamp(19px, 1.7vw, 24px); font-weight: 520; }
+.form { position: relative; display: grid; gap: 28px; padding: 40px 26px 28px; border-radius: var(--r); background: var(--card) var(--grain); box-shadow: inset 0 0 0 1.5px var(--ink), 8px 8px 0 var(--ink); }
+.fld { position: relative; } .fld label { cursor: text; }
+.fld input:not([type=radio]) { width: 100%; height: 58px; padding: 6px 22px 0; border-radius: 16px 16px 16px 5px; font-size: 19px; font-weight: 600; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); } .fld input:focus-visible { outline-offset: 3px; } .fld input::placeholder { color: color-mix(in oklab, var(--mute) 70%, var(--paper)); font-weight: 500; }
+.picks { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 12px; } .picks label { position: relative; cursor: pointer; } .picks input { position: absolute; opacity: 0; inset: 0; }
+.picks label > span { display: inline-flex; gap: .28em; align-items: center; height: 44px; padding: 0 18px; border-radius: 99px; font-size: 16px; font-weight: 640; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); } .picks input:checked + span { background: var(--ink); color: var(--field); } .picks input:focus-visible + span { outline: 2px solid var(--action); outline-offset: 2px; }
+.form .btn { justify-self: start; }
+.done { outline: 0; position: relative; display: grid; gap: 14px; justify-items: start; padding: 6px 4px; animation: rise .6s var(--expo) both; } .done > b { font-size: clamp(30px, 3.4vw, 48px); font-weight: 800; font-stretch: 114%; letter-spacing: -0.05em; line-height: 1; } .done p { font-size: 19px; font-weight: 540; max-width: 24em; }
+.done .slot { position: absolute; right: 0; bottom: -6px; width: 112px; } .done .st { animation: stamp .5s var(--expo) .25s both; opacity: 1; scale: 1; } .done .st b { font-size: 17cqi; }
+
+@media (max-width: 900px) {
+  .wrap { padding: 0 18px; } .mock { padding: 8px 18px; } .wm i { display: none; }
+  .hero .wrap, .steps, .duo, .two, .ask, .vow, .said, .band .wrap { grid-template-columns: minmax(0, 1fr); } .hero .wrap { padding-bottom: 96px; min-height: 0; } .steps { gap: 44px; }
+  .pet { width: 76px; } .pet.a { left: -10px; bottom: -52px; } .pet.b { right: -6px; top: -50px; width: 70px; }
+  .dial { grid-template-columns: minmax(0, 1fr) 76px; } .dial output { font-size: 28px; } .sum { grid-template-columns: minmax(0, 1fr); } .sum .fee { border-left: 0; border-top: 1.5px dashed var(--ink); display: flex; align-items: center; gap: 14px; padding: 16px 28px; } .sum .fee .bub { margin: 0; }
+  .term { height: auto; } .pin { position: static; height: auto; padding: 64px 0; } .term-head { display: grid; } .date { text-align: left; } .duo { gap: 46px; }
+  .pair { grid-template-columns: minmax(0, 1fr); } .done .slot { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="mock"><b>Mockup</b><span>Loopd Imprint, for organizers. A field test: nothing is built. Prices, rates, clubs, places, people and the quote are placeholders. Move the sliders, scroll through "the term" slowly, and press the bare page.</span></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="ink" x="-6%" y="-6%" width="112%" height="112%">
+  <feTurbulence type="fractalNoise" baseFrequency="1.05" numOctaves="1" seed="2" result="fine"/><feDisplacementMap in="SourceGraphic" in2="fine" scale="0.9" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+  <feTurbulence type="fractalNoise" baseFrequency=".09 .12" numOctaves="2" seed="11" result="blot"/><feColorMatrix in="blot" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.25 1.5" result="dense"/><feComposite in="rough" in2="dense" operator="in"/>
+</filter></svg>
+
+<header class="nav"><div class="wrap">
+  <a class="wm" href="#top"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="oklch(48.5% 0.185 27)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd<i>For organizers</i></a>
+  <a class="btn go" href="#claim" data-plan="free">Claim your club</a>
+</div></header>
+
+<div class="hero" id="top"><div class="wrap">
+  <div>
+    <h1 class="d">The membership that pays your club <span class="mark">back.</span></h1>
+    <p class="lede">Places give groups a rate. Your club keeps the saving. See what yours would get.</p>
+    <div class="acts"><a class="btn go big" href="#claim" data-plan="free">Claim your club</a><small>Free. No card.</small></div>
+  </div>
+  <div class="stage">
+    <form class="calc" id="calc" aria-label="What comes back to your club">
+      <div class="dial"><label class="bub" for="people">People per outing</label><input type="range" id="people" min="4" max="40" value="12"><output for="people"></output></div>
+      <div class="dial"><label class="bub" for="outings">Outings a month</label><input type="range" id="outings" min="1" max="12" value="4"><output for="outings"></output></div>
+      <div class="dial"><label class="bub" for="spend">Spend per head</label><input type="range" id="spend" min="5" max="80" step="5" value="25"><output for="spend"></output></div>
+      <div class="sum" aria-live="polite">
+        <div class="back"><span class="bub">Back to your club a month</span><b data-v="back"></b><span class="of">About <span data-n="group"></span> of the <span data-v="spendMonth"></span> your club spends</span></div>
+        <div class="fee"><span class="bub">Imprint a month</span><b data-n="fee"></b></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </form>
+    <img class="pet a" src="../animals/12.png" alt=""><img class="pet b" src="../animals/29.png" alt="">
+  </div>
+</div></div>
+
+<div class="tape" aria-hidden="true"><div class="tape-tilt"><div class="tape-run" id="tape"></div></div></div>
+
+<section class="sec"><div class="wrap">
+  <h2 class="d">Three steps.</h2>
+  <ol class="steps">
+    <li><span class="no">1</span><div class="st-main"><h3>Claim your club.</h3><p>Your events are already on Loopd. Say they are yours.</p></div>
+      <div class="st-stub"><div class="line"><span>Noodle night<small>Thursday Supper Club · Thu 7:00</small></span><span class="lab p">Claim this club</span></div></div></li>
+    <li><span class="no">2</span><div class="st-main"><h3>See who's in.</h3><p>A real headcount before you book. No group chat roll call.</p></div>
+      <div class="st-stub"><div class="faces"><img src="../animals/03.png" alt=""><img src="../animals/14.png" alt=""><img src="../animals/21.png" alt=""><img src="../animals/08.png" alt=""><img src="../animals/33.png" alt=""><span class="lab k"><span data-v="people"></span> in</span></div></div></li>
+    <li><span class="no">3</span><div class="st-main"><h3>Book at the group rate.</h3><p>Food, activities and events each set their own rate. It comes to about <span data-n="total"></span> off, and your club keeps <span data-n="group"></span>.</p></div>
+      <div class="st-stub"><div class="line"><span>Half Court Lanes<small>Activity · 8 or more</small></span><span class="lab h"><span data-n="activity"></span> off</span></div></div></li>
+  </ol>
+</div></section>
+
+<section class="term" id="term"><div class="pin"><div class="wrap" style="display:grid;gap:inherit;width:100%">
+  <div class="term-head"><h2 class="d">Free shows it.<br>Imprint <span class="mark">pays it.</span></h2><div class="date"><b id="date">Aug 24</b><small id="count">Fall term</small></div></div>
+  <div class="cal" id="cal"><div class="win"></div></div>
+  <div class="months" id="months" aria-hidden="true"></div>
+  <div class="duo">
+    <div class="ledger"><span class="who">Free club</span><div class="keep"><b>$0</b><span class="lab h">would have been <span id="n-free">$0</span> with Imprint</span></div><div class="marks" data-marks></div></div>
+    <div class="ledger paid"><span class="who">Imprint club</span><div class="keep"><b id="n-paid">$0</b><span class="lab p">paid to your club</span></div><div class="marks" data-marks></div><span class="seal" id="seal">Paid<br>back</span></div>
+  </div>
+</div></div></section>
+
+<section class="band b-field flood" id="home" style="--prev: var(--pp)"><div class="wrap">
+  <div class="say"><h2 class="d">Your club, one screen.</h2><p>Who's in. The rates near you. What came back. Who keeps showing up.</p>
+    <div class="cycle" role="group" aria-label="The club's plan" id="plan"><button aria-pressed="true" data-to="free">Free club</button><button aria-pressed="false" data-to="imprint">Imprint club</button></div></div>
+  <div class="show" id="screen" data-plan="free"><span class="who" id="screen-who">Free club</span>
+    <div class="pair">
+      <div class="pc"><span class="bub">Your next event</span><div class="head">Noodle night<span class="lab">Thu 7:00</span></div><div class="faces"><img src="../animals/03.png" alt=""><img src="../animals/14.png" alt=""><img src="../animals/21.png" alt=""><img src="../animals/08.png" alt=""><span class="lab k"><span data-v="people"></span> in</span></div></div>
+      <div class="pc"><span class="bub">Group rates near you</span><div class="line"><span>Luna's Noodle Bar<small>Food</small></span><span class="lab h"><span data-n="food"></span> off</span></div><div class="line"><span>Half Court Lanes<small>Activity</small></span><span class="lab h"><span data-n="activity"></span> off</span></div><div class="line"><span>Fall Formal tickets<small>Event</small></span><span class="lab h"><span data-n="event"></span> off</span></div></div>
+    </div>
+    <div class="pc"><span class="bub">Back to your club this term</span>
+      <div class="sumrow"><span class="lab"><span data-v="outingsTerm"></span> outings</span><span class="lab"><span data-v="spendTerm"></span> spent at group rates</span><span class="lab k">about <span data-n="group"></span> comes back</span></div>
+      <div class="money for-free"><b>$0</b><span class="lab h">would have been <span data-v="term"></span> with Imprint</span></div>
+      <div class="money for-paid"><b data-v="term"></b><span class="lab p">paid to your club</span></div></div>
+    <div class="pc"><span class="bub">Your regulars</span><div class="faces"><img src="../animals/14.png" alt=""><img src="../animals/33.png" alt=""><img src="../animals/08.png" alt=""><img src="../animals/26.png" alt=""><span class="lab">7 came back</span></div></div>
+    <div class="pc dark for-free"><span class="bub">Imprint</span><p>If your club doesn't save more than the fee this term, we refund the difference.</p><a class="btn go" href="#claim" data-plan="imprint">Get Imprint · <span data-n="fee"></span></a></div>
+    <div class="pc bill for-paid"><span class="bub">End of term</span><div class="head"><span>Imprint paid your club <span data-v="term"></span>.</span></div>
+      <dl><div style="--n:0"><dt>Back to your club</dt><dd data-v="term"></dd></div><div style="--n:1"><dt>Imprint, <span data-n="months"></span> months</dt><dd data-v="feeTerm"></dd></div><div class="net" style="--n:2"><dt data-v="netLabel"></dt><dd data-v="net"></dd></div></dl></div>
+  </div>
+</div></section>
+
+<section class="sec"><div class="wrap">
+  <h2 class="d">Free, or paid back.</h2>
+  <div class="two" id="two">
+    <div class="tk"><div class="tk-main"><h3>Free</h3><ul>
+      <li><span class="ck"></span>Claim your club</li><li><span class="ck"></span>See who's in</li><li><span class="ck"></span>Group rates near you</li><li><span class="ck"></span>Your regulars</li></ul></div>
+      <div class="tk-stub"><span class="price"><b>$0</b><span>for good</span></span><a class="btn" href="#claim" data-plan="free">Claim your club</a></div></div>
+    <div class="tk imp"><div class="tk-main"><h3>Imprint <span class="ph">Placeholder price</span></h3><ul>
+      <li><span class="ck"></span>Everything in Free</li><li><span class="ck"></span>The saving comes back to your club</li><li><span class="ck"></span>Ink for your officers</li><li><span class="ck"></span>A statement each term</li><li><span class="ck"></span>The refund promise</li></ul></div>
+      <div class="tk-stub"><span class="price"><b data-n="fee"></b><span>a month, a club</span></span><a class="btn" href="#claim" data-plan="imprint">Get Imprint</a></div></div>
+  </div>
+</div></section>
+
+<section class="sec b-ink flood" id="vow" style="--prev: var(--page)"><div class="wrap vow">
+  <div class="seal" id="vow-seal">Paid back<br>or refunded</div>
+  <div><blockquote class="d">If your club doesn't save more than the fee this term, we refund the difference.</blockquote><span class="ph">Placeholder, pending approval</span></div>
+</div></section>
+
+<section class="sec b-pp flood" id="said" style="--prev: var(--ink)"><div class="wrap said">
+  <img src="../animals/22.png" alt="">
+  <div><blockquote class="d">"We stopped passing a hat. Dinner pays for the bus now."</blockquote><cite>An organizer, a club of 40</cite><span class="ph">Placeholder quote, not a real person</span></div>
+</div></section>
+
+<section class="sec b-hot flood" id="claim" style="--prev: var(--pp)"><div class="wrap ask">
+  <div class="say"><h2 class="d">Claim your club.</h2><p>It's free. Tell us which club is yours and where to write.</p></div>
+  <form class="form" id="claim-form">
+    <div class="fld"><label class="bub" for="club">Your club</label><input id="club" name="club" required autocomplete="organization" placeholder="Thursday Supper Club"></div>
+    <div class="fld"><label class="bub" for="email">Your school email</label><input id="email" name="email" type="email" required autocomplete="email" placeholder="you@school.edu"></div>
+    <div class="fld"><span class="bub" id="plan-name">The plan you want</span><div class="picks" role="radiogroup" aria-labelledby="plan-name">
+      <label><input type="radio" name="plan" value="free" checked><span>Free</span></label>
+      <label><input type="radio" name="plan" value="imprint"><span>Imprint · <span data-n="fee"></span> a month</span></label></div></div>
+    <button class="btn go big">Claim your club</button>
+  </form>
+</div></section>
+
+<script>
+// The one place the numbers live. A group rate differs by the kind of place: these three are the placeholders, and the page works from their average.
+// Of any saving the club keeps two-thirds and Loopd a third. Then the fee a club pays a month, and the months in a term.
+const KINDS = { food: 0.10, activity: 0.20, event: 0.15 }, CLUB_SHARE = 2 / 3;
+const USUAL = Object.values(KINDS).reduce((sum, rate) => sum + rate, 0) / Object.keys(KINDS).length;
+const RATES = { group: USUAL * CLUB_SHARE, loopd: USUAL * (1 - CLUB_SHARE), fee: 59, months: 4 };
+
+const $ = (selector, root = document) => root.querySelector(selector), $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const money = amount => '$' + Math.round(amount).toLocaleString('en-US'), exact = amount => Number.isInteger(amount) ? money(amount) : '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), percent = share => Math.round(share * 100) + '%';
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FIXED = { group: percent(RATES.group), loopd: percent(RATES.loopd), total: percent(USUAL), food: percent(KINDS.food), activity: percent(KINDS.activity), event: percent(KINDS.event), fee: money(RATES.fee), months: String(RATES.months) };
+$$('[data-n]').forEach(node => { node.textContent = FIXED[node.dataset.n]; });
+/** Puts a value in a place, and rolls a big number in when it changes. */
+function put(node, value) { value = String(value); if (node.textContent === value) return; node.textContent = value; if (node.tagName === 'B') { node.classList.remove('roll'); void node.offsetWidth; node.classList.add('roll'); } }
+
+/** What comes back to a club in a month: the group's share of everything its people spend. */
+const backAMonth = (people, outings, spend) => people * outings * spend * RATES.group;
+
+// The term, for the two ledgers: it starts Aug 24 and runs the months of RATES. Each outing is a day in it and an amount.
+const END = RATES.months * 28, dayName = day => new Date(2026, 7, 24 + Math.round(day)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+let term = { days: [], each: 0 }; const termBox = $('#term');
+function ledgers(outings, each) {
+  const n = outings * RATES.months; if (term.days.length === n && term.each === each) return;
+  term = { days: Array.from({ length: n }, (_, i) => (i + .6) / n * END), each };
+  for (const marks of $$('[data-marks]')) {
+    marks.innerHTML = term.days.map((day, i) => `<div class="slot" data-d="${day}"><div class="st" style="--rot:${(i * 37) % 19 - 9}deg"><b class="${exact(each).length > 4 ? 'long' : ''}">${exact(each)}</b><small>${dayName(day)}</small></div></div>`).join('');
+  }
+  $$('#cal i').forEach(dot => dot.remove());
+  $('#cal').insertAdjacentHTML('beforeend', term.days.map(day => `<i style="left:${2 + day / END * 96}%"></i>`).join(''));
+  fit(); turn();
+}
+/** Sizes the stamps so that all of them fit the ledger: as large as its width and the height left in the window allow, in one to four rows. */
+function fit() {
+  const n = term.days.length, gap = 7, pinned = termBox.offsetHeight - innerHeight > 200, pin = $('.pin'), inside = $('.wrap', pin), first = $('[data-marks]');
+  // While the section is pinned the stamps get the height the window has left once everything else in it is counted.
+  const high = pinned ? Math.min(260, Math.max(70, pin.clientHeight - 44 - (inside.offsetHeight - first.offsetHeight))) : 200;
+  for (const marks of $$('[data-marks]')) {
+    const wide = marks.clientWidth; let best = { size: 0, cols: n };
+    for (let rows = 1; rows <= 4; rows++) { const cols = Math.ceil(n / rows), size = Math.min((wide - (cols - 1) * gap) / cols, (high - (rows - 1) * gap) / rows, 86); if (size > best.size) best = { size, cols }; }
+    marks.style.setProperty('--cols', best.cols); marks.style.setProperty('--size', Math.floor(best.size) + 'px'); marks.classList.toggle('many', best.size < 56);
+  }
+}
+$('#months').innerHTML = Array.from({ length: RATES.months + 1 }, (_, i) => Math.round((new Date(2026, 8 + i, 1) - new Date(2026, 7, 24)) / 864e5)).filter(day => day < END).map(day => `<span style="left:${2 + day / END * 96}%">${dayName(day).split(' ')[0]}</span>`).join('');
+const forced = new URLSearchParams(location.search).get('day');
+/** Shows the ledgers as they stand at the place the page is scrolled to. `?day=60` holds a day, for a still picture. */
+function turn() {
+  const room = termBox.offsetHeight - innerHeight, pinned = room > 200 && forced === null;
+  const t = pinned ? Math.min(1, Math.max(0, -termBox.getBoundingClientRect().top / room)) : 1, day = forced === null ? Math.min(1, t * 1.14) * END : +forced;
+  let held = 0;
+  for (const slot of $$('[data-marks] .slot')) { const on = +slot.dataset.d <= day; if (on && slot.closest('.paid')) held++; slot.classList.toggle('in', on); }
+  put($('#n-paid'), money(held * term.each)); put($('#n-free'), money(held * term.each));
+  put($('#date'), dayName(Math.min(day, END - 1))); put($('#count'), held ? `${held} outing${held === 1 ? '' : 's'} × ${exact(term.each)} back` : 'Fall term');
+  $('.cal .win').style.width = `${2 + Math.min(1, day / END) * 96}%`;
+  $('#seal').classList.toggle('in', term.days.length > 0 && held === term.days.length);
+}
+let queued = false; addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; turn(); }); } }, { passive: true }); addEventListener('resize', () => { fit(); turn(); });
+
+function work() {
+  const [people, outings, spend] = ['people', 'outings', 'spend'].map(id => +$('#' + id).value);
+  const back = backAMonth(people, outings, spend), all = back * RATES.months, feeTerm = RATES.fee * RATES.months, net = all - feeTerm;
+  const shown = { people, outings, spend: money(spend) };
+  $$('.dial').forEach(dial => { const input = $('input', dial); $('output', dial).textContent = shown[input.id]; input.style.setProperty('--fill', (input.value - input.min) / (input.max - input.min) * 100 + '%'); });
+  const values = { spendMonth: money(people * outings * spend), spendTerm: money(people * outings * spend * RATES.months), outingsTerm: outings * RATES.months, back: money(back), people, term: money(all), feeTerm: money(feeTerm), net: money(Math.abs(net)), netLabel: net >= 0 ? 'Your club is ahead by' : 'We refund' };
+  $$('[data-v]').forEach(node => put(node, values[node.dataset.v]));
+  const times = back / RATES.fee, verdict = $('#verdict');
+  verdict.textContent = times >= 2 ? `That covers the fee ${Math.floor(times)} times over.` : times >= 1 ? `That covers the fee, with ${money(back - RATES.fee)} left.` : `That doesn't cover the fee yet. Stay on Free: it costs nothing.`;
+  verdict.classList.toggle('no', times < 1);
+  ledgers(outings, people * spend * RATES.group);
+}
+$('#calc').addEventListener('input', work); $('#calc').addEventListener('submit', event => event.preventDefault()); work();
+
+// The ribbon under the hero.
+const SPARK = '<svg viewBox="-27 -27 54 54"><path d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>';
+$('#tape').innerHTML = `<span>${['Claim your club', "See who's in", 'Book at the group rate', 'Get paid back'].map(words => words + SPARK).join('')}</span>`.repeat(4);
+
+// The organizer's home, as a free club sees it and as an Imprint club does.
+const screen = $('#screen');
+$('#plan').addEventListener('click', event => {
+  const hit = event.target.closest('button'); if (!hit || hit.getAttribute('aria-pressed') === 'true') return;
+  for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit);
+  screen.dataset.plan = hit.dataset.to; $('#screen-who').textContent = hit.textContent;
+  screen.classList.remove('swap'); void screen.offsetWidth; screen.classList.add('swap');
+});
+
+// Things that arrive once, when they are scrolled to: the ticks of the two plans, and the seal of the promise.
+$$('#two li').forEach((item, at) => item.style.setProperty('--n', at % 5));
+const seen = new IntersectionObserver(found => { for (const each of found) if (each.isIntersecting) { each.target.classList.add(each.target.id === 'two' ? 'live' : 'in'); seen.unobserve(each.target); } }, { threshold: .4 });
+seen.observe($('#two')); seen.observe($('#vow-seal'));
+
+// A button that leads to the ask says which plan it was pressed for.
+$$('a[data-plan]').forEach(link => link.addEventListener('click', () => { $(`#claim-form [value=${link.dataset.plan}]`).checked = true; }));
+
+// The ask is kept (in the app: one row, with who, the email, the plan and where it was pressed) and answered honestly: not yet.
+$('#claim-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const form = event.currentTarget, data = new FormData(form), imprint = data.get('plan') === 'imprint';
+  const done = document.createElement('div'); done.className = 'done'; done.setAttribute('role', 'status'); done.tabIndex = -1;
+  const head = document.createElement('b'), line = document.createElement('p'), mark = document.createElement('span'); mark.className = 'lab k';
+  head.textContent = "We're not ready yet.";
+  line.textContent = `${data.get('club')} is on the list. We'll write to ${data.get('email')} when ${imprint ? 'Imprint opens' : 'clubs can be claimed'} at your school.`;
+  mark.textContent = imprint ? 'Nothing was charged' : 'It costs nothing';
+  done.append(head, line, mark);
+  done.insertAdjacentHTML('beforeend', '<div class="slot" aria-hidden="true"><div class="st" style="--rot:-9deg"><b>On the list</b><small>' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '</small></div></div>');
+  form.replaceChildren(done); done.focus({ preventScroll: true });
+});
+
+// The blot a press leaves: the one under a face with Ink (lib/campus/ink-blot.ts), as on the Ink page.
+const loopBlot = (function () {
+  const TURN = Math.PI * 2, STEPS = 96;
+  const hash = text => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+  function run(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const out = (angle, far) => [Math.cos(angle) * far, Math.sin(angle) * far], fix = n => Math.round(n * 10) / 10;
+  function pool(next, r) {
+    const spin = next() * TURN, ran = next() * TURN, rounds = [[0, 0, r]];
+    for (let i = 0; i < 6; i++) rounds.push([...out(spin + (i + (next() - .5) * .4) / 6 * TURN, r - 20 + next() * 4), 22 + next() * 4]);
+    rounds.push([...out(ran, r + 1), 11], [...out(ran, r + 10), 6]);
+    return rounds;
+  }
+  const sway = (waves, angle) => waves.reduce((sum, [times, size, shift]) => sum + Math.sin(angle * times + shift) * size, 0);
+  const drawn = reach => 'M' + reach.map((far, at) => { const [px, py] = out(at / STEPS * TURN, far); return fix(px) + ' ' + fix(py); }).join('L') + 'Z';
+  function edge(rounds, next) {
+    let reach = Array.from({ length: STEPS }, (_, at) => {
+      const angle = at / STEPS * TURN; let far = 0;
+      for (const [x, y, r] of rounds) { const from = Math.hypot(x, y), off = angle - Math.atan2(y, x), under = r * r - (from * Math.sin(off)) ** 2; if (under >= 0) far = Math.max(far, from * Math.cos(off) + Math.sqrt(under)); }
+      return far;
+    });
+    for (let pass = 0; pass < 2; pass++) reach = reach.map((far, at) => (reach[(at + STEPS - 1) % STEPS] + far * 2 + reach[(at + 1) % STEPS]) / 4);
+    const waves = [[2, 2], [3, 1.6], [5, 1.1], [13, .5], [29, .3]].map(([times, size]) => [times, size, next() * TURN]);
+    return reach.map((far, at) => far + sway(waves, at / STEPS * TURN));
+  }
+  return seed => { const next = run(hash(seed)), wide = pool(next, 55), middle = pool(next, 41); return { school: drawn(edge(wide, next)), dark: drawn(edge(middle, next)) }; };
+})();
+
+// The loud parts. None of them runs under reduced motion; the page is whole without them.
+(function () {
+  if (calm) return;
+  // Headlines are stamped on a letter at a time. Each keeps its words to a screen reader in aria-label.
+  let count = 0;
+  function split(node) {
+    for (const child of [...node.childNodes]) {
+      if (child.nodeType === 1) { if (child.tagName !== 'BR') split(child); continue; }
+      if (child.nodeType !== 3) continue;
+      const made = document.createDocumentFragment();
+      for (const part of child.textContent.split(/(\s+)/)) {
+        if (!part) continue; if (/^\s+$/.test(part)) { made.append(' '); continue; }
+        const word = document.createElement('span'); word.className = 'wd'; word.setAttribute('aria-hidden', 'true');
+        for (const letter of part) { const one = document.createElement('span'); one.className = 'ch'; one.textContent = letter; one.style.setProperty('--c', count); one.style.setProperty('--tilt', (count * 37 % 23 - 11) + 'deg'); count++; word.append(one); }
+        made.append(word);
+      }
+      child.replaceWith(made);
+    }
+  }
+  const landed = new IntersectionObserver(found => { for (const each of found) if (each.isIntersecting) { each.target.classList.add('hit'); landed.unobserve(each.target); } }, { threshold: .35 });
+  for (const head of $$('.sec h2, .term h2, .band h2')) { head.setAttribute('aria-label', head.innerText.replace(/\s+/g, ' ').trim()); count = 0; split(head); head.classList.add('split'); landed.observe(head); }
+
+  // The ribbon runs faster while the page is being scrolled, and eases back.
+  const going = $('.tape-run').getAnimations()[0]; let last = scrollY, rate = 1;
+  if (going) (function tick() { const moved = Math.abs(scrollY - last); last = scrollY; rate += (Math.min(9, 1 + moved * .12) - rate) * .12; going.playbackRate = rate; requestAnimationFrame(tick); })();
+
+  // A press on bare page leaves a blot, which dries and goes.
+  addEventListener('pointerdown', event => {
+    if (event.target.closest('button, a, input, label, .calc, .show, .ledger, .tk, .steps li, .form, .cycle, .nav, .mock')) return;
+    const blot = loopBlot('press' + event.pageX + event.pageY);
+    document.body.insertAdjacentHTML('beforeend', `<svg class="blot" viewBox="-90 -90 180 180" aria-hidden="true" style="left:${event.pageX}px;top:${event.pageY}px;rotate:${Math.round(event.pageX * 7 % 360)}deg"><path class="school" d="${blot.school}"/><path class="dark" d="${blot.dark}"/></svg>`);
+    const made = document.body.lastElementChild; made.addEventListener('animationend', done => { if (done.animationName === 'blot-out') made.remove(); });
+  });
+
+  // The hero's calculator and animals lean toward the pointer.
+  const hero = $('.hero'), stage = $('.stage');
+  hero.addEventListener('pointermove', event => { const box = hero.getBoundingClientRect(); stage.style.setProperty('--px', ((event.clientX - box.left) / box.width * 2 - 1).toFixed(3)); stage.style.setProperty('--py', ((event.clientY - box.top) / box.height * 2 - 1).toFixed(3)); });
+  hero.addEventListener('pointerleave', () => { stage.style.setProperty('--px', 0); stage.style.setProperty('--py', 0); });
+})();
+</script>
+</body>
+</html>

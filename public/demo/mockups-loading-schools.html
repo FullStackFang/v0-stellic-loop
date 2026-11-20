@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en" data-kit="cornell">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schools on the way</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* The loading ticket ("Saving seats", components/loading/seats.tsx) with the schools still on the way shown beside it: the schools people
+   have signed up from "Sign up my school" (campus_school_ask). Three directions, each in a phone and on a laptop. The ticket, its line and its
+   seats are exactly as built; only what stands beside it is new. Counts and school names are sample data.
+   Kit tokens are app/c/campus.css's. The dark strip, the lettered bars and the frame tabs belong to the mockup. */
+:root { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --mute: oklch(46.5% 0.012 245); --on-ink: oklch(99.4% 0.003 230); --on-ink-mute: oklch(82% 0.02 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --sunk: color-mix(in oklab, var(--ink) 10%, var(--paper));
+  --r: 22px 22px 22px 6px; --expo: cubic-bezier(.16, 1, .3, 1); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); }
+:root[data-kit=cuny] { --field: oklch(88% 0.13 88); --field-shadow: oklch(74% 0.14 80); --ink: oklch(24% 0.08 265); --action: oklch(38% 0.18 264); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3, p, ul, ol, figure { margin: 0; padding: 0; } li { list-style: none; }
+button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+.mock { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button { height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+
+main { display: grid; gap: 58px; max-width: 1080px; margin: 0 auto; padding: 30px 32px 90px; }
+.dir { display: grid; gap: 34px; }
+.head { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 10px 18px 10px 10px; border-radius: var(--r); background: var(--ink); color: var(--on-ink); }
+.head i { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--field); color: var(--ink); font-style: normal; font-size: 22px; font-weight: 820; }
+.head b { font-size: 21px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.04em; } .head span { margin-right: auto; color: var(--on-ink-mute); font-size: 14.5px; }
+.frames { display: flex; flex-wrap: wrap; gap: 44px 40px; align-items: flex-start; }
+.fr { position: relative; flex: none; width: 250px; height: 440px; }
+.fr.wide { flex: 1 1 520px; width: auto; max-width: 720px; height: 440px; }
+.fr > figcaption { position: absolute; z-index: 5; top: -13px; left: 20px; padding: 3px 12px 4px; border-radius: 99px; background: var(--ink); color: var(--on-ink); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.fr > small { position: absolute; z-index: 5; bottom: -13px; left: 20px; padding: 3px 12px 4px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 12.5px; font-weight: 560; white-space: nowrap; }
+.scr { position: absolute; inset: 0; overflow: hidden; isolation: isolate; display: grid; place-items: center; align-content: center; gap: 30px; background: var(--field); border-radius: 34px; box-shadow: 0 0 0 2px var(--ink), 6px 6px 0 2px var(--field-shadow); }
+.wide .scr { border-radius: 18px; gap: 34px; }
+
+/* ---- the ticket, as built (seats.css) ---- */
+.st { position: relative; z-index: 2; display: inline-grid; grid-template-columns: 1fr 54px; filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(5px 5px 0 var(--ink)); }
+.st-main { display: grid; gap: 10px; padding: 15px 13px 16px 15px; background: var(--paper); border-radius: 5px 0 0 5px; mask: radial-gradient(circle 6px at 100% 0, #0000 96%, #000), radial-gradient(circle 6px at 100% 100%, #0000 96%, #000); mask-composite: intersect; }
+.st-main b { font-size: 17px; font-weight: 760; font-stretch: 108%; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+.seat { display: flex; gap: 5px; }
+.seat span { width: 31px; height: 31px; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 24%, transparent); }
+.seat img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; animation: seat 4.2s var(--expo) calc(var(--i) * .45s) infinite backwards; }
+@keyframes seat { 0% { opacity: 0; transform: scale(.2); } 7%, 74% { opacity: 1; transform: none; } 80%, 100% { opacity: 0; transform: scale(.2); } }
+.st-stub { border-left: 1.5px dashed var(--ink); border-radius: 0 5px 5px 0; background: var(--stub); mask: radial-gradient(circle 6px at 0 0, #0000 96%, #000), radial-gradient(circle 6px at 0 100%, #0000 96%, #000); mask-composite: intersect; }
+
+/* a label is never bare: it is a filled tab that overlaps what it names */
+.tab { position: absolute; z-index: 3; top: -12px; left: 14px; padding: 3px 11px 4px; border-radius: 99px; background: var(--ink); color: var(--field); font-size: 12px; font-weight: 680; white-space: nowrap; }
+
+/* ---- A · Next stops: a station board under the ticket, the lead name flips in letter by letter ---- */
+.board { position: relative; width: 222px; padding: 18px 14px 12px; border-radius: 14px 14px 14px 4px; background: var(--ink); color: var(--paper); }
+.wide .board { width: 300px; }
+.board .tab { background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.lead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 9px; border-bottom: 1.5px dashed color-mix(in oklab, var(--paper) 30%, transparent); }
+.flap { display: inline-flex; font-size: 21px; font-weight: 780; font-stretch: 110%; letter-spacing: -0.03em; line-height: 1; white-space: nowrap; color: var(--field); }
+.flap span { display: inline-block; min-width: .2em; }
+.flap span.fl { animation: flick .07s steps(1) 1; }
+@keyframes flick { from { translate: 0 -.12em; opacity: .55; } }
+.lead em, .next em { font-style: normal; font-size: 12px; font-weight: 600; color: color-mix(in oklab, var(--paper) 72%, transparent); white-space: nowrap; }
+.next { display: grid; gap: 4px; padding-top: 8px; }
+.next li { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; font-weight: 600; }
+.next li { animation: rise .5s var(--expo) both; }
+@keyframes rise { from { translate: 0 8px; opacity: 0; } }
+
+/* ---- B · In the press: the schools on the way are blank, unprinted tickets stacked behind the live one ---- */
+.press { position: relative; display: grid; padding-top: 74px; }
+.ghost { position: absolute; left: 0; right: 0; top: calc(var(--k) * 25px); z-index: var(--k); display: grid; grid-template-columns: 1fr 54px; height: 90px;
+  transform: rotate(calc((var(--k) - 1.5) * -2.2deg)); transition: top .7s var(--expo), transform .7s var(--expo), opacity .5s; }
+.ghost > span { border: 1.5px dashed var(--ink); background: color-mix(in oklab, var(--field) 18%, var(--paper)); }
+.ghost > span:first-child { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px 0 12px; border-right: 0; border-radius: 5px 0 0 5px; font-size: 12.5px; font-weight: 680; }
+.ghost > span:first-child em { font-style: normal; font-weight: 560; color: var(--mute); }
+.ghost > span:last-child { border-radius: 0 5px 5px 0; }
+.ghost.out { top: 100px; opacity: 0; transform: rotate(0); }
+.ghost.in { top: -30px; opacity: 0; }
+.press-say { position: relative; z-index: 3; justify-self: center; margin-top: 18px; padding: 4px 13px 5px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 13px; font-weight: 640; white-space: nowrap; }
+
+/* ---- C · Filling up: each school opens when its seats fill, like a group reward ---- */
+.fill { position: relative; width: 226px; padding: 18px 12px 10px; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 4px 4px 0 1.5px var(--ink); }
+.wide .fill { width: 320px; }
+.fill li { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 8px; padding: 6px 0; }
+.fill li + li { border-top: 1.5px dashed color-mix(in oklab, var(--ink) 22%, transparent); }
+.fill b { font-size: 14px; font-weight: 700; letter-spacing: -0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fill em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--mute); white-space: nowrap; }
+.dots { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.dots i { height: 7px; border-radius: 99px; background: var(--sunk); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--ink) 20%, transparent); }
+.dots i.on { background: var(--action); box-shadow: none; }
+.dots i.new { animation: pop .6s var(--expo) both; }
+@keyframes pop { from { scale: .2 1; background: var(--field); } }
+.fill li.open em { padding: 1px 8px; border-radius: 99px; background: var(--action); color: var(--paper); }
+
+/* ---- where A shows: the page around the loader ---- */
+.scr.pg { display: block; background: var(--page); }
+.nav { display: flex; align-items: center; gap: 6px; height: 60px; padding: 0 14px; background: var(--field); border-bottom: 2px dashed color-mix(in oklch, var(--ink) 55%, transparent); }
+.wm { display: grid; place-items: center; width: 36px; height: 36px; margin-right: 6px; border-radius: 10px 10px 10px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); }
+.wm svg { width: 24px; height: 24px; fill: none; stroke: var(--ink); stroke-width: 2.4; }
+.pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 99px; font-size: 13.5px; font-weight: 580; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.pill[aria-current] { background: var(--ink); color: var(--field); box-shadow: none; }
+.pg-body { display: grid; justify-items: center; align-content: center; gap: 26px; height: calc(100% - 60px); padding: 0 12px; }
+.pet { position: relative; display: grid; justify-items: center; gap: 14px; width: 222px; padding: 24px 0 16px; border-radius: 14px 14px 14px 4px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 4px 4px 0 1.5px var(--ink); }
+.pet .st { filter: drop-shadow(0 0 .7px var(--ink)) drop-shadow(0 0 .7px var(--ink)) drop-shadow(3px 3px 0 var(--ink)); }
+.pet .st-main { padding: 12px 10px 13px 12px; } .pet .st-main b { font-size: 15px; } .pet .seat span { width: 27px; height: 27px; } .pet .st { grid-template-columns: 1fr 40px; }
+.pet .say { padding: 3px 11px 4px; border-radius: 99px; background: var(--sunk); font-size: 12.5px; font-weight: 600; }
+/* the slow ticket: the seats fill once, the last one ringed and empty until the picture comes */
+.slow .seat img { animation: sit .5s var(--expo) calc(var(--i) * 8s + .3s) both; }
+.slow .seat span:last-child { box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 24%, transparent), 0 0 0 2px var(--paper), 0 0 0 4px var(--action); }
+.slow .seat span:last-child img { display: none; }
+@keyframes sit { from { opacity: 0; transform: scale(.2); } }
+.none { position: absolute; z-index: 4; left: 50%; bottom: 46px; translate: -50% 0; padding: 4px 12px 5px; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 12.5px; font-weight: 620; white-space: nowrap; }
+
+.note { max-width: 70ch; color: var(--mute); font-size: 14px; }
+.note b { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="mock"><span><b>Schools on the way</b> · the loading ticket, with the schools people have signed up for beside it</span>
+  <div><small>Campus</small><button data-kit="cornell" aria-pressed="true">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button><button data-kit="cuny">CUNY</button></div>
+</div>
+<main>
+  <section class="dir" data-dir="a">
+    <div class="head"><i>A</i><b>Next stops</b><span>A station board under the ticket. The next school flips in letter by letter, the two after it wait below.</span></div>
+    <div class="frames">
+      <figure class="fr"><figcaption>Phone</figcaption><div class="scr" data-make="a"></div><small>Readable in the first frame</small></figure>
+      <figure class="fr wide"><figcaption>Laptop</figcaption><div class="scr" data-make="a"></div><small>Same board, a little wider</small></figure>
+    </div>
+  </section>
+
+  <section class="dir" data-dir="where">
+    <div class="head"><i>A</i><b>Where it shows</b><span>Only on the two waits people actually see: opening the app, and drawing a pet. A tap to another page keeps the plain ticket.</span></div>
+    <div class="frames">
+      <figure class="fr"><figcaption>1 · Opening the app</figcaption><div class="scr" data-make="a"></div><small>The full screen, before any page</small></figure>
+      <figure class="fr"><figcaption>2 · Drawing your pet</figcaption><div class="scr pg" data-make="pet"></div><small>Half a minute: the board flips through all eight</small></figure>
+      <figure class="fr"><figcaption>3 · Moving between pages</figcaption><div class="scr pg" data-make="hop"></div><small>Plain ticket, as today</small></figure>
+    </div>
+  </section>
+
+  <section class="dir" data-dir="b">
+    <div class="head"><i>B</i><b>In the press</b><span>The schools on the way are blank tickets stacked behind yours. Each time the seats fill, the front one slides off and a new one joins the back.</span></div>
+    <div class="frames">
+      <figure class="fr"><figcaption>Phone</figcaption><div class="scr" data-make="b"></div><small>The front door's fan, again</small></figure>
+      <figure class="fr wide"><figcaption>Laptop</figcaption><div class="scr" data-make="b"></div><small>Dashed and pale: not printed yet</small></figure>
+    </div>
+  </section>
+
+  <section class="dir" data-dir="c">
+    <div class="head"><i>C</i><b>Filling up</b><span>Each school opens when enough people sign up, the same way a group reward unlocks. The seats tick up while you wait.</span></div>
+    <div class="frames">
+      <figure class="fr"><figcaption>Phone</figcaption><div class="scr" data-make="c"></div><small>Tells you how a school gets in</small></figure>
+      <figure class="fr wide"><figcaption>Laptop</figcaption><div class="scr" data-make="c"></div><small>One school reaches 50 and opens</small></figure>
+    </div>
+  </section>
+
+  <p class="note"><b>Things to know.</b> Most waits are under two seconds, so whatever sits beside the ticket has to read in the first frame; every direction starts already filled in and the motion is only a bonus for a long wait. The names and counts would come from "Sign up my school", counted per school, with only schools that a few people asked for. The same names would show for every school's campus, the school you are at is never in the list. The small loader on buttons stays as it is.</p>
+</main>
+
+<script>
+const WAITING = [
+  ['Michigan', 41], ['UCLA', 33], ['Penn', 28], ['Northwestern', 24], ['Boston University', 19], ['Georgetown', 17], ['UT Austin', 15], ['Duke', 12],
+];
+const OPEN_AT = 50;
+const face = n => `/animals/${String(n).padStart(2, '0')}.png`;
+const ticket = () => `<span class="st"><span class="st-main"><b>Looping you in…</b><span class="seat">${[5, 8, 17, 12].map((n, i) => `<span><img style="--i:${i}" src="${face(n)}" alt=""></span>`).join('')}</span></span><span class="st-stub"></span></span>`;
+const want = n => `${n} want in`;
+
+const nav = `<div class="nav"><span class="wm"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><circle cx="8" cy="15" r="5"/><circle cx="16" cy="15" r="5"/></svg></span><span class="pill" aria-current="page">This week</span><span class="pill">Near you</span></div>`;
+function makePet(scr) {
+  scr.innerHTML = nav + `<div class="pg-body"></div>`;
+  makeA(scr, false, scr.querySelector('.pg-body'), `<div class="pet"><span class="tab">Your pet</span><span class="slow">${ticket()}</span><span class="say">This takes about half a minute.</span></div>`, 3600);
+}
+function makeHop(scr) {
+  scr.innerHTML = nav + `<div class="pg-body">${ticket()}</div><span class="none">No board on a tap</span>`;
+}
+
+function makeA(scr, wide, host = scr, lead = ticket(), every = 4200) {
+  host.innerHTML = lead + `<div class="board" role="status"><span class="tab">Next stops</span><div class="lead"><span class="flap"></span><em></em></div><ol class="next"></ol></div>`;
+  const flap = scr.querySelector('.flap'), em = scr.querySelector('.lead em'), next = scr.querySelector('.next');
+  const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let at = 0, first = true;
+  const show = () => {
+    const [name, n] = WAITING[at % WAITING.length];
+    em.textContent = want(n);
+    next.innerHTML = [1, 2].map(k => WAITING[(at + k) % WAITING.length]).map(([nm, c]) => `<li><span>${nm}</span><em>${c}</em></li>`).join('');
+    if (first || matchMedia('(prefers-reduced-motion: reduce)').matches) { flap.innerHTML = [...name].map(ch => `<span>${ch === ' ' ? '&nbsp;' : ch}</span>`).join(''); first = false; return; }
+    flap.innerHTML = [...name].map(() => '<span></span>').join('');
+    [...name].forEach((ch, i) => {
+      const span = flap.children[i];
+      let ticks = 3 + i * 1.4 | 0;
+      const step = () => {
+        span.classList.remove('fl'); void span.offsetWidth; span.classList.add('fl');
+        if (ticks-- <= 0 || ch === ' ') { span.innerHTML = ch === ' ' ? '&nbsp;' : ch; return; }
+        span.textContent = ABC[Math.random() * 26 | 0];
+        setTimeout(step, 45);
+      };
+      step();
+    });
+  };
+  show();
+  setInterval(() => { at++; show(); }, every);
+}
+
+function makeB(scr) {
+  scr.innerHTML = `<div class="press">${ticket()}<span class="press-say">${WAITING.length} schools on the way</span></div>`;
+  const press = scr.querySelector('.press');
+  let at = 0;
+  const ghost = ([name, n], k) => { const g = document.createElement('span'); g.className = 'ghost'; g.style.setProperty('--k', k); g.innerHTML = `<span>${name}<em>${n}</em></span><span></span>`; return g; };
+  const ghosts = [0, 1, 2].map(k => ghost(WAITING[2 - k], k)).reverse();
+  ghosts.forEach(g => press.prepend(g));
+  // the deck: --k 0 is the back (top of the stack), 2 the front, nearest your ticket
+  let deck = [2, 1, 0].map(k => ghosts.find(g => g.style.getPropertyValue('--k') == k));
+  setInterval(() => {
+    at++;
+    const front = deck.pop();
+    front.classList.add('out');
+    setTimeout(() => front.remove(), 700);
+    deck.forEach((g, i) => g.style.setProperty('--k', i + 1));
+    const fresh = ghost(WAITING[(at + 2) % WAITING.length], 0);
+    fresh.classList.add('in');
+    press.prepend(fresh);
+    requestAnimationFrame(() => requestAnimationFrame(() => fresh.classList.remove('in')));
+    deck = [fresh, ...deck];
+  }, 4200);
+}
+
+function makeC(scr, wide) {
+  const rows = WAITING.slice(0, wide ? 4 : 3).map(([name, n]) => ({ name, n: wide && name === 'Michigan' ? 47 : n }));
+  scr.innerHTML = ticket() + `<div class="fill" role="status"><span class="tab">Schools on the way</span><ul></ul></div>`;
+  const ul = scr.querySelector('ul');
+  const draw = fresh => {
+    ul.innerHTML = rows.map((r, at) => {
+      const lit = Math.floor(r.n / (OPEN_AT / 10)), open = r.n >= OPEN_AT;
+      return `<li class="${open ? 'open' : ''}"><b>${r.name}</b><em>${open ? 'Opening' : `${r.n} of ${OPEN_AT}`}</em><span class="dots">${Array.from({ length: 10 }, (_, i) => `<i class="${i < lit ? 'on' : ''}${i === lit - 1 && at === fresh ? ' new' : ''}"></i>`).join('')}</span></li>`;
+    }).join('');
+  };
+  draw(-1);
+  setInterval(() => {
+    const at = rows.findIndex(r => r.n < OPEN_AT);
+    if (at < 0) { rows.forEach((r, i) => r.n = WAITING[i][1]); draw(-1); return; }
+    rows[at].n = Math.min(OPEN_AT, rows[at].n + 5);
+    draw(at);
+  }, 2100);
+}
+
+document.querySelectorAll('[data-make]').forEach(scr => {
+  const wide = !!scr.closest('.wide');
+  ({ a: makeA, b: makeB, c: makeC, pet: makePet, hop: makeHop })[scr.dataset.make](scr, wide);
+});
+document.querySelectorAll('.mock [data-kit]').forEach(btn => btn.addEventListener('click', () => {
+  document.documentElement.dataset.kit = btn.dataset.kit;
+  document.querySelectorAll('.mock [data-kit]').forEach(b => b.setAttribute('aria-pressed', b === btn));
+}));
+</script>
+</body>
+</html>

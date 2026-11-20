@@ -1,13 +1,14 @@
 <!doctype html>
-<html lang="en" data-kit="loop">
+<html lang="en" data-kit="loop" data-ink="plus">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seats, the game: three modes</title>
 <style>
-/* Seats with three modes, picked from pills on the game itself: Ticket (the stub format that is live today), Chart and Table.
-   The rules are the same in all three: remember, kick them out, put each back where it was, a wrong place costs 2 seconds.
-   Table adds one thing: each chair has a colour, and after the kick the chairs turn, so the colour is what you remember.
+/* Seats with three modes, picked from pills on the game itself: Chart first, then Table, then Who moved? (on the ticket stub).
+   Ticket: remember, kick them out, put each back where it was. Table: the same, but each chair has a colour and the chairs
+   turn after the kick, so the colour is what you remember. Chart: a matching game, tiles flip over and you find the pairs.
+   All three run on the same clock, and a mistake costs 2 seconds.
    The dark strip, the lettered bars and the pills under each phone belong to the mockup. */
 @font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
 :root { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); --third: oklch(72% 0.2 350);
@@ -43,7 +44,7 @@ main { display: flex; flex-wrap: wrap; justify-content: center; gap: 44px 40px; 
 .you { position: absolute; z-index: 40; right: 16px; top: 12px; display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 13px 0 4px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
 .you img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; background: var(--stub); }
 .modes { position: absolute; z-index: 40; left: 18px; right: 18px; top: 60px; display: flex; gap: 6px; }
-.modes button { flex: 1; height: 32px; padding: 0 14px; border-radius: 99px; font-size: 14px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .15s, color .15s; }
+.modes button { flex: 1 0 auto; height: 32px; padding: 0 12px; white-space: nowrap; border-radius: 99px; font-size: 14px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .15s, color .15s; }
 .modes button[aria-pressed=true] { background: var(--ink); color: var(--field); }
 .go { position: absolute; z-index: 40; left: 18px; right: 18px; bottom: 18px; height: 54px; border-radius: 99px; font-size: 19px; font-weight: 680; letter-spacing: -0.025em; background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 4px 4px 0 var(--ink); transition: translate .15s var(--ease), box-shadow .15s var(--ease), background-color .2s; }
 .go:active { translate: 3px 3px; box-shadow: inset 0 0 0 2px var(--ink), 1px 1px 0 var(--ink); } .play .go { background: var(--paper); color: var(--ink); }
@@ -56,40 +57,67 @@ main { display: flex; flex-wrap: wrap; justify-content: center; gap: 44px 40px; 
 .seat { position: absolute; } .seat.near { --ring: 0 0 0 3px var(--paper), 0 0 0 6.5px var(--action); }
 @keyframes no { 25% { translate: -6px 0; } 75% { translate: 6px 0; } } .seat.no { animation: no .26s 2; }
 .best { display: none; } .done .best.on { display: inline; }
+/* the clock stops at a minute: the round is lost, and the digits never grow past four */
+.lost [data-clock] { color: var(--warn); } .c.lost .table { background: var(--warn); color: var(--paper); }
 @keyframes slam { from { scale: 2.4; opacity: 0; } 60% { scale: .95; } }
 @keyframes jolt { 30% { translate: 0 7px; } }
 
-/* ============ Ticket: the stub format. Seats on the ticket, the clock on the stub, the floor under it ============ */
-.t .tk { position: absolute; left: 16px; top: 66px; width: 328px; height: 318px; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 6px 6px 0 var(--field-shadow); }
-.t .tk.jolt { animation: jolt .3s var(--ease); }
+/* ============ Who moved?: the ticket stub format. Twelve seats on the ticket, the clock on the stub, the rounds under it ============ */
+.t .tk { position: absolute; left: 16px; top: 66px; width: 328px; height: 418px; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 84px; gap: 14px 10px; padding: 26px 14px 0; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 6px 6px 0 var(--field-shadow); }
 .t .tag { left: 30px; top: 53px; }
-.t .seat { width: 68px; height: 62px; margin: -56px 0 0 -34px; border-radius: 16px 16px 5px 5px; background: var(--sunk); box-shadow: inset 0 4px 0 color-mix(in oklab, var(--ink) 20%, transparent), var(--ring, 0 0 0 0 #0000); }
-.t .seat.taken { background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink), var(--ring, 0 0 0 0 #0000); }
-.t .stubb { position: absolute; left: 18px; top: 290px; width: 324px; height: 92px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 16px; border-radius: 0 0 20px 5px; background: var(--stub); border-top: 2.5px dashed var(--ink); transition: background-color .3s; }
+.spot { position: relative; display: grid; place-items: end center; border-radius: 16px 16px 5px 5px; background: var(--sunk); box-shadow: inset 0 4px 0 color-mix(in oklab, var(--ink) 20%, transparent); cursor: default; transition: background-color .2s; }
+.spot img { width: 68px; height: 68px; object-fit: contain; object-position: 50% 100%; } .spot .spark { left: auto; right: 10px; top: 12px; } .spot.no { animation: no .26s 2; }
+.t.play:not(.dark) .spot:not(.hit) { cursor: pointer; } .t.play:not(.dark) .spot:not(.hit):hover { background: var(--stub); box-shadow: inset 0 0 0 2px var(--action); }
+.spot.hit { background: var(--field); box-shadow: inset 0 0 0 2.5px var(--ink); }
+/* the hint: the animal wiggles; the dashed ring stays, so it also shows with reduced motion */
+.spot.hint { outline: 2px dashed var(--action); outline-offset: -4px; } .spot.hint img { transform-origin: 50% 100%; animation: wiggle .7s ease-in-out; }
+@keyframes wiggle { 20% { rotate: -9deg; } 45% { rotate: 8deg; } 70% { rotate: -5deg; } }
+/* lights out: ink over the seats while they swap. With Ink+ it is the app's own blot that spills across. */
+.lights { position: absolute; z-index: 20; inset: 2px 2px 94px; display: grid; place-items: center; overflow: hidden; border-radius: 20px 20px 0 0; background: var(--ink); opacity: 0; pointer-events: none; transition: opacity .22s; }
+.t.dark .lights { opacity: 1; }
+.lights .blot { width: 330px; height: 330px; display: none; scale: .35; transition: scale .5s var(--ease); } [data-ink=plus] .lights .blot { display: block; } .t.dark .lights .blot { scale: 1; }
+.t .stubb { position: absolute; left: 18px; top: 390px; width: 324px; height: 92px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 16px; border-radius: 0 0 20px 5px; background: var(--stub); border-top: 2.5px dashed var(--ink); transition: background-color .3s; }
 .t .stubb::before, .t .stubb::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 2px var(--ink); }
 .t .stubb::before { left: -13px; clip-path: inset(0 0 0 50%); } .t .stubb::after { right: -13px; clip-path: inset(0 50% 0 0); }
 .t .admit { rotate: -4deg; padding: 4px 12px 6px; border-radius: 10px 10px 10px 3px; background: var(--ink); color: var(--field); font-size: 17px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.04em; }
 .t .clock { font-size: 52px; font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: 1; }
-.t .stamp { position: absolute; z-index: 45; left: 26px; top: 304px; rotate: -8deg; display: none; padding: 4px 14px 7px; line-height: 1.15; border-radius: 10px; border: 3px solid var(--action); background: var(--paper); color: var(--action); font-size: 21px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.04em; white-space: nowrap; }
+.t .stamp { position: absolute; z-index: 45; left: 26px; top: 404px; rotate: -8deg; display: none; padding: 4px 14px 7px; line-height: 1.15; border-radius: 10px; border: 3px solid var(--action); background: var(--paper); color: var(--action); font-size: 21px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.04em; white-space: nowrap; }
 .t .stamp .best.on { display: block; font-size: 13px; font-stretch: 100%; letter-spacing: -0.01em; line-height: 1.1; }
 .t.done .stamp { display: block; animation: slam .45s var(--ease); } .t.done .stubb { background: var(--field); } .t.done .admit { visibility: hidden; }
-.t .floor { position: absolute; left: 0; right: 0; top: 410px; height: 152px; background: var(--sunk); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 16%, transparent); }
+/* the five rounds: small discs, not pills, since they are not pressed */
+.pips { position: absolute; left: 0; right: 0; top: 502px; display: flex; justify-content: center; gap: 10px; }
+.pips i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-style: normal; font-size: 13.5px; font-weight: 700; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .2s, color .2s; }
+.t.rest .admit { background: var(--action); color: var(--paper); } .t.rest .clock { opacity: .45; } .t.rest .go { background: var(--action); color: var(--paper); }
+.pips i.past { background: var(--field); } .pips i.on { background: var(--ink); color: var(--field); }
 
 /* ============ Chart: the screen is the ticket, drenched in the school colour; numbered seats, the clock biggest ============ */
-.a .clock { position: absolute; left: 20px; top: 62px; font-size: 92px; font-weight: 800; font-stretch: 118%; letter-spacing: -0.065em; line-height: .86; }
+.a .clock { position: absolute; left: 20px; top: 66px; font-size: 84px; font-weight: 800; font-stretch: 118%; letter-spacing: -0.065em; line-height: .86; }
 .a .clock small { display: block; margin: 6px 0 0 4px; font-size: 14px; font-weight: 600; font-stretch: 100%; letter-spacing: -0.01em; }
-.a .chart { position: absolute; left: 16px; top: 172px; width: 328px; height: 272px; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 6px 6px 0 var(--ink); }
+.a .chart { position: absolute; left: 16px; top: 172px; width: 328px; height: 380px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px 16px; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 6px 6px 0 var(--ink); }
 .a .chart.jolt { animation: jolt .3s var(--ease); }
 .a .chart::before, .a .chart::after { content: ""; position: absolute; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); }
 .a .chart::before { left: -11px; clip-path: inset(0 0 0 50%); } .a .chart::after { right: -11px; clip-path: inset(0 50% 0 0); }
-.a .seat { width: 84px; height: 70px; margin: -64px 0 0 -42px; border-radius: 16px 16px 16px 5px; background: var(--sunk); box-shadow: inset 0 4px 0 color-mix(in oklab, var(--ink) 20%, transparent), var(--ring, 0 0 0 0 #0000); }
-.a .seat b { position: absolute; left: -5px; top: -8px; padding: 1px 7px 2px; border-radius: 99px; font-size: 11.5px; font-weight: 700; background: var(--ink); color: var(--paper); }
-.a .seat.taken { background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink), var(--ring, 0 0 0 0 #0000); }
-.a .aisle { position: absolute; left: 0; right: 0; top: 458px; height: 104px; background: color-mix(in oklab, var(--ink) 9%, var(--field)); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 30%, transparent); }
-.a .punch { position: absolute; z-index: 45; left: 50%; top: 510px; translate: -50% -50%; rotate: -7deg; display: none; justify-items: center; padding: 10px 22px 13px; border-radius: 18px 18px 18px 5px; background: var(--ink); color: var(--field); box-shadow: 5px 5px 0 var(--action); white-space: nowrap; }
-.a .punch b { font-size: 34px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1; } .a .punch span { font-size: 14px; font-weight: 620; color: var(--paper); }
-.a.done .punch { display: grid; animation: slam .45s var(--ease); }
-.a.done .aisle { background: var(--action); } .a.done .clock { color: var(--action); }
+/* a tile is a seat seen from above: the animal on one side, the seat number on the other */
+.tile { position: relative; perspective: 600px; cursor: default; } .tile.no { animation: no .26s 2; }
+.tile > span { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 16px 16px 16px 5px; backface-visibility: hidden; transition: transform .4s var(--ease), background-color .2s; }
+.tile .face { background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); } .tile .face img { width: 66px; height: 66px; object-fit: contain; }
+.tile .back { transform: rotateY(180deg); background: var(--ink); box-shadow: 3px 3px 0 var(--action); }
+.tile .back::after { content: ""; width: 22px; height: 20px; border-radius: 7px 7px 3px 3px; background: var(--field); }
+.tile.down .face { transform: rotateY(-180deg); } .tile.down .back { transform: rotateY(0deg); }
+.play .tile.down { cursor: pointer; } .play .tile.down:hover .back { background: var(--action); box-shadow: 3px 3px 0 var(--ink); }
+.tile.found .face { background: var(--field); box-shadow: inset 0 0 0 2.5px var(--ink); }
+.wave .tile > span { transition-delay: calc(var(--i) * 28ms); }
+.tile .spark { left: auto; right: 16px; top: 16px; } .tile .face img { position: relative; }
+/* Ink+: the back of every tile carries the app's own ink blot (lib/campus/ink-blot.ts), a different one on each tile. It is made from
+   where the tile sits, never from the animal under it, so the backs give nothing away. */
+.tile .blot { width: 78px; height: 78px; overflow: visible; display: none; transition: scale .25s var(--ease), rotate .25s var(--ease); }
+[data-ink=plus] .tile .blot { display: block; } [data-ink=plus] .tile .back::after { display: none; }
+.play .tile.down:hover .blot { scale: 1.12; rotate: 8deg; }
+.blot .school { fill: var(--field); } .blot .dark { fill: var(--action); } .blot .seep { fill: var(--action); opacity: .42; }
+[data-ink=plus] .play .tile.down:hover .back { background: var(--ink); box-shadow: 3px 3px 0 var(--action); }
+.a .punch { position: absolute; z-index: 45; right: 16px; top: 112px; rotate: 6deg; display: none; justify-items: center; padding: 7px 16px 10px; border-radius: 16px 16px 16px 5px; background: var(--ink); color: var(--field); box-shadow: 4px 4px 0 var(--action); white-space: nowrap; }
+.a .punch b { font-size: 24px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1.05; } .a .punch span { font-size: 13px; font-weight: 620; color: var(--paper); }
+.a.done .punch { display: grid; animation: slam .45s var(--ease); } .a.done .clock { color: var(--action); }
 
 /* ============ Table: each chair has a colour, the clock is the table, and after the kick the chairs turn ============ */
 .c .rug { position: absolute; left: 14px; top: 126px; width: 332px; height: 332px; border-radius: 40px 40px 40px 10px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); }
@@ -127,35 +155,37 @@ main { display: flex; flex-wrap: wrap; justify-content: center; gap: 44px 40px; 
 </style>
 </head>
 <body>
-<div class="mock"><span><b>Seats, one game with three modes.</b> The pills on each phone switch the mode. Press the button, then drag everyone back. "Finished" under a phone shows the end without playing.</span>
+<div class="mock"><span><b>Seats, one game with three modes.</b> The pills on each phone switch the mode. Chart: flip two tiles to find a pair. Table: drag everyone back. Who moved?: tap the ones that swapped. The clock stops at 60 seconds and the round is lost. "Finished" under a phone shows the end without playing.</span>
+  <div id="inks"><small>Plan</small><button data-ink="plus" aria-pressed="true">Ink+</button><button data-ink="free">Free</button></div>
   <div id="kits"><small>Colours</small><button data-kit="loop" aria-pressed="true">Loopd</button><button data-kit="cornell">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button></div></div>
 
 <template id="board-t"><div class="board game t" data-dir="t">
-  <div class="floor"></div><div class="tk"></div><span class="tag" data-say data-play="Put each one back" data-done="All in">Remember who sits where</span>
-  <div class="stubb"><span class="admit">Admit everyone</span><span class="clock" data-clock>0.0</span></div>
-  <span class="stamp">All in<span class="best">your best yet</span></span>
+  <div class="tk"><div class="lights"></div></div><span class="tag" data-say data-done="All spotted" data-lost="Out of time">Remember who sits where</span>
+  <div class="stubb"><span class="admit">Who moved?</span><span class="clock" data-clock>0.0</span></div>
+  <span class="stamp">All spotted<span class="best">your best yet</span></span>
+  <div class="pips"></div>
   <button class="go" type="button"></button></div></template>
 <template id="board-a"><div class="board game a" data-dir="a">
-  <div class="clock"><span data-clock>0.0</span><small data-say data-play="seconds. Put each one back." data-done="seconds">seconds. Remember who sits where.</small></div>
-  <div class="chart"></div><div class="aisle"></div>
-  <div class="punch"><b data-time></b><span>All in<span class="best"> · your best yet</span></span></div>
+  <div class="clock"><span data-clock>0.0</span><small data-say data-play="seconds. Flip two to find a pair." data-done="seconds" data-lost="seconds. Out of time.">seconds. Remember the pairs.</small></div>
+  <div class="chart"></div>
+  <div class="punch"><b>All paired</b><span class="best">your best yet</span></div>
   <button class="go" type="button"></button></div></template>
 <template id="board-c"><div class="board game c" data-dir="c">
   <div class="edge top"></div><div class="edge low"></div><div class="rug"></div>
-  <span class="tag" data-say data-play="The chairs are turning. Go by colour." data-done="All in">Remember each one's colour</span>
+  <span class="tag" data-say data-play="The chairs are turning. Go by colour." data-done="All in" data-lost="Out of time">Remember each one's colour</span>
   <div class="table"><span class="clock" data-clock>0.0</span><small>seconds</small></div>
   <button class="go" type="button"></button></div></template>
 
 <main>
-<section class="dir"><div class="head"><i>1</i><b>Ticket</b><span>The stub format you liked: seats on the ticket, the clock on the stub, the time stamped there at the end.</span></div>
-  <div class="phone"><div class="stage" data-start="t"></div></div>
-  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button></div></section>
-<section class="dir"><div class="head"><i>2</i><b>Chart</b><span>Numbered seats and a huge clock. New kick: the chart jolts and they are thrown out in an arc. No flipping seats.</span></div>
+<section class="dir"><div class="head"><i>1</i><b>Chart</b><span>A matching game. Every animal is on the chart twice; the tiles flip over and you find the pairs. No dragging.</span></div>
   <div class="phone"><div class="stage" data-start="a"></div></div>
-  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button></div></section>
-<section class="dir"><div class="head"><i>3</i><b>Table</b><span>Each chair has a colour. After the kick the chairs turn round the table, so you go by colour and not by place.</span></div>
+  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button><button data-to="lost">Out of time</button></div></section>
+<section class="dir"><div class="head"><i>2</i><b>Table</b><span>Each chair has a colour. After the kick the chairs turn round the table, so you go by colour and not by place.</span></div>
   <div class="phone"><div class="stage" data-start="c"></div></div>
-  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button></div></section>
+  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button><button data-to="lost">Out of time</button></div></section>
+<section class="dir"><div class="head"><i>3</i><b>Who moved?</b><span>On the ticket stub you liked. The lights go out, some of them swap seats, and you tap the ones that moved. Five rounds.</span></div>
+  <div class="phone"><div class="stage" data-start="t"></div></div>
+  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button><button data-to="lost">Out of time</button></div></section>
 </main>
 
 <section class="lapwrap" id="laptop"><div class="head"><i>+</i><b>On a laptop</b><span>The app's bar above and its foot below, as on every page. Beside the game: the modes, how it goes, and your best.</span></div>
@@ -164,8 +194,8 @@ main { display: flex; flex-wrap: wrap; justify-content: center; gap: 44px 40px; 
     <div class="lap-body">
       <div class="how"><h2>Seats</h2><span class="works">In the works</span>
         <div class="modes" id="lapmodes"></div>
-        <p><i>1</i><span id="how1"></span></p><p><i>2</i><span id="how2"></span></p><p><i>3</i>Put each one back. A wrong place costs 2 seconds.</p></div>
-      <div class="stage" id="lapstage" data-start="t"></div>
+        <p><i>1</i><span id="how1"></span></p><p><i>2</i><span id="how2"></span></p><p><i>3</i><span id="how3"></span></p></div>
+      <div class="stage" id="lapstage" data-start="a"></div>
       <div class="side"><span class="yours"><small>Your best</small><b>11.9s</b></span><span class="you"></span>
         <span class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>All doodles</span></div>
     </div>
@@ -174,22 +204,19 @@ main { display: flex; flex-wrap: wrap; justify-content: center; gap: 44px 40px; 
   </div></section>
 
 <script>
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, WRONG = 2, G = 2400;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, WRONG = 2, MAX = 60, G = 2400;
 const animal = n => `/animals/${String(n).padStart(2, '0')}.png`, FACES = [40, 10, 26, 3, 31, 16, 22, 20, 1, 28, 13, 7, 24];
 const mixed = n => { const order = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } return order; };
 const rand = (low, high) => low + Math.random() * (high - low);
 const again = (el, name) => { el.classList.remove(name); void el.offsetWidth; el.classList.add(name); };
-const MODES = [['t', 'Ticket'], ['a', 'Chart'], ['c', 'Table']], HUES = [25, 70, 115, 155, 200, 250, 300, 345];
-const HOW = { t: ['Remember who sits where.', 'Kick them out. The clock starts.'], a: ['Remember who sits where. The numbers help.', 'Kick them out. The clock starts.'], c: ['Remember the colour of each one\'s chair.', 'Kick them out. The chairs start turning.'] };
+const MODES = [['a', 'Chart'], ['c', 'Table'], ['t', 'Who moved?']], HUES = [25, 70, 115, 155, 200, 250, 300, 345];
+const BACK = 'Put each one back. A wrong place costs 2 seconds.';
+const HOW = { t: ['Remember who sits where.', 'Lights out. Some of them swap seats.', 'Tap the ones that moved. A wrong tap costs 2 seconds.'], a: ['Every animal is on the chart twice. Remember the pairs.', 'Flip them over. The clock starts.', 'Flip two to find a pair. A miss costs 2 seconds.'], c: ['Remember the colour of each one\'s chair.', 'Kick them out. The chairs start turning.', BACK] };
 const ring = (places, angle) => places.forEach((place, i) => { const turn = (i * 45 - 90) * Math.PI / 180 + angle; place.x = 180 + Math.cos(turn) * 126; place.y = 292 + Math.sin(turn) * 126 + 22; });
 
 // What differs between the modes: where the places are (the animal's feet, and how large it is drawn there), where the
 // kicked-out ones land, what the kick looks like, and whether the places turn. Everything else is one game.
 const DIRS = {
-  t: { seats: () => [0, 1].flatMap(row => [0, 1, 2, 3].map(col => ({ x: 57 + col * 82, y: 162 + row * 100, s: .72 }))),
-       floor: i => ({ x: 44 + i * 39 + rand(-6, 6), y: i % 2 ? 552 : 492, s: .74 }), kick: root => again(root.querySelector('.tk'), 'jolt') },
-  a: { seats: () => [0, 1, 2].flatMap(row => [0, 1, 2].map(col => ({ x: 74 + col * 106, y: 252 + row * 84, s: .7, label: 'ABC'[row] + (col + 1) }))),
-       floor: i => ({ x: 44 + i * 34 + rand(-6, 6), y: i % 2 ? 552 : 508, s: .7 }), kick: root => again(root.querySelector('.chart'), 'jolt') },
   c: { seats: () => { const places = HUES.map(hue => ({ x: 0, y: 0, s: .66, cy: -22, hue: `oklch(82% 0.13 ${hue})` })); ring(places, 0); return places; }, spin: .24, place: ring,
        floor: i => ({ x: 52 + (i >> 1) * 85 + rand(-8, 8), y: i % 2 ? 122 : 552, s: .7 }), kick: root => again(root.querySelector('.table'), 'thump') },
 };
@@ -223,7 +250,8 @@ function game(root) {
     one.vy = -Math.sqrt(2 * G * (one.y - Math.min(one.y, to.y) + rand(50, 90))); const flight = (-one.vy + Math.sqrt(one.vy * one.vy + 2 * G * (to.y - one.y))) / G; one.vx = (to.x - one.x) / flight; wake(); };
   const secs = value => value.toFixed(1), elapsed = () => (performance.now() - began) / 1000 + fine;
   function tell() {
-    root.classList.remove('look', 'play', 'done'); root.classList.add(state);
+    if (state === 'play' && elapsed() >= MAX) { clearInterval(timer); took = MAX; state = 'lost'; }
+    root.classList.remove('look', 'play', 'done', 'lost'); root.classList.add(state);
     clock.textContent = secs(state === 'look' ? 0 : state === 'play' ? elapsed() : took);
     if (say) say.textContent = say.dataset[state] ?? words;
     button.textContent = state === 'look' ? 'Kick them out' : state === 'play' ? 'Start over' : 'Again';
@@ -243,7 +271,7 @@ function game(root) {
     one.el.addEventListener('pointerdown', event => { event.preventDefault(); if (state !== 'play' || one.in) return; one.el.setPointerCapture(event.pointerId); const p = at(event);
       one.held = true; one.air = false; one.wait = 0; one.el.classList.add('up'); grip = { x: p.x - one.x, y: p.y - one.y }; one.vx = one.vy = 0; one.ts = .9; one.s = .9; wake(); });
     one.el.addEventListener('pointermove', event => { if (!one.held) return; const p = at(event); one.x = p.x - grip.x; one.y = p.y - grip.y; draw(one); const near = nearest(one); seats.forEach((el, i) => el.classList.toggle('near', i === near)); });
-    const up = () => { if (!one.held) return; one.held = false; one.el.classList.remove('up'); seats.forEach(el => el.classList.remove('near')); const near = nearest(one);
+    const up = () => { if (!one.held) return; one.held = false; one.el.classList.remove('up'); seats.forEach(el => el.classList.remove('near')); if (state !== 'play') return send(one, one.spot); const near = nearest(one);
       if (near === one.home) { one.in = true; one.el.classList.add('in'); send(one, places[near]); tell(); if (crowd.every(each => each.in)) won(); return; }
       if (near !== null) { fine += WRONG; again(seats[near], 'no');
         const cost = Object.assign(document.createElement('b'), { className: 'cost', textContent: `+${WRONG}s` }); cost.style.left = `${places[near].x}px`; cost.style.top = `${places[near].y - 60}px`; cost.addEventListener('animationend', () => cost.remove()); root.append(cost); if (reduce) setTimeout(() => cost.remove(), 900);
@@ -253,7 +281,111 @@ function game(root) {
   button.addEventListener('click', () => state === 'look' ? kick() : round());
   round(); crowd.forEach(one => { one.wait = 0; one.x = one.tx; one.y = one.ty; one.s = one.ts; draw(one); }); // opens with everyone already in place
   // for the pills under the phone: any state without playing to it
-  return to => { round(); if (to === 'look') return; kick(); if (to === 'play') return; began = performance.now() - rand(9000, 14000); crowd.forEach((one, i) => { one.in = true; one.el.classList.add('in'); send(one, places[one.home], i * .03); }); won(); };
+  return to => { round(); if (to === 'look') return; kick(); if (to === 'play') return; if (to === 'lost') { began = performance.now() - MAX * 1000; return tell(); } began = performance.now() - rand(9000, 14000); crowd.forEach((one, i) => { one.in = true; one.el.classList.add('in'); send(one, places[one.home], i * .03); }); won(); };
+}
+
+// The app's ink blot, copied from lib/campus/ink-blot.ts so the mockup draws the very same shapes. The real game imports it.
+const inkBlot = (() => { const TURN = Math.PI * 2, STEPS = 96;
+  const hash = text => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+  const run = seed => () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const out = (angle, far) => [Math.cos(angle) * far, Math.sin(angle) * far], fix = n => Math.round(n * 10) / 10;
+  const pool = (next, r) => { const spin = next() * TURN, ran = next() * TURN, rounds = [[0, 0, r]]; for (let i = 0; i < 6; i++) rounds.push([...out(spin + (i + (next() - .5) * .4) / 6 * TURN, r - 20 + next() * 4), 22 + next() * 4]); rounds.push([...out(ran, r + 1), 11], [...out(ran, r + 10), 6]); return { rounds, ran }; };
+  const sway = (waves, angle) => waves.reduce((sum, [times, size, shift]) => sum + Math.sin(angle * times + shift) * size, 0);
+  const drawn = reach => 'M' + reach.map((far, at) => out(at / STEPS * TURN, far).map(fix).join(' ')).join('L') + 'Z';
+  const edge = (rounds, next) => { let reach = Array.from({ length: STEPS }, (_, at) => { const angle = at / STEPS * TURN; let far = 0; for (const [x, y, r] of rounds) { const from = Math.hypot(x, y), off = angle - Math.atan2(y, x), under = r * r - (from * Math.sin(off)) ** 2; if (under >= 0) far = Math.max(far, from * Math.cos(off) + Math.sqrt(under)); } return far; });
+    for (let pass = 0; pass < 2; pass++) reach = reach.map((far, at) => (reach[(at + STEPS - 1) % STEPS] + far * 2 + reach[(at + 1) % STEPS]) / 4);
+    const waves = [[2, 2], [3, 1.6], [5, 1.1], [13, .5], [29, .3]].map(([times, size]) => [times, size, next() * TURN]); return reach.map((far, at) => far + sway(waves, at / STEPS * TURN)); };
+  const crept = (reach, next) => { const waves = [[4, 1.3], [9, .9], [17, .5]].map(([times, size]) => [times, size, next() * TURN]); return reach.map((far, at) => far + 3.4 + sway(waves, at / STEPS * TURN)); };
+  const thrown = (next, toward, from, count, wide = 1.2) => Array.from({ length: count }, () => { const [x, y] = out(toward + (next() - .5) * wide, from + 2 + next() * 22); return [fix(x), fix(y), fix(2 + next() * next() * 2.8)]; });
+  return seed => { const next = run(hash(seed)), wide = pool(next, 55), middle = pool(next, 41);
+    const blot = { schoolDrops: thrown(next, wide.ran + 2.5 + next() * 1.5, 68, 3), darkDrops: thrown(next, middle.ran + 2.2 + next() * 1.8, 58, 5), school: drawn(edge(wide.rounds, next)), dark: '', seep: '' }, dark = edge(middle.rounds, next);
+    blot.dark = drawn(dark); blot.seep = drawn(crept(dark, next)); return blot; }; })();
+const blotSvg = seed => { const blot = inkBlot(seed), drops = rounds => rounds.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('');
+  return `<svg class="blot" viewBox="-80 -80 160 160" aria-hidden="true"><g class="school"><path d="${blot.school}"/>${drops(blot.schoolDrops)}</g><path class="seep" d="${blot.seep}"/><g class="dark"><path d="${blot.dark}"/>${drops(blot.darkDrops)}</g></svg>`; };
+
+// Chart is a different game on the same clock: twelve tiles, six animals twice. Look, flip them all over, then turn two at a
+// time. A pair stays up; a miss costs the same 2 seconds and turns back.
+function pairs(root) {
+  const chart = root.querySelector('.chart'), clock = root.querySelector('[data-clock]'), say = root.querySelector('[data-say]'), button = root.querySelector('.go'), words = say.textContent;
+  const tiles = Array.from({ length: 12 }, (_, i) => { const el = document.createElement('button'); el.type = 'button'; el.className = 'tile'; el.style.setProperty('--i', i);
+    el.innerHTML = `<span class="face"><img alt="" draggable="false"></span><span class="back">${blotSvg(`seat ${i}`)}</span>`; chart.append(el); return { el, face: 0, open: true, found: false }; });
+  let state = 'look', began = 0, fine = 0, took = 0, timer = 0, best = null, first = null, busy = 0;
+  const elapsed = () => (performance.now() - began) / 1000 + fine;
+  function tell() {
+    if (state === 'play' && elapsed() >= MAX) { clearInterval(timer); took = MAX; state = 'lost'; }
+    root.classList.remove('look', 'play', 'done', 'lost'); root.classList.add(state);
+    clock.textContent = (state === 'look' ? 0 : state === 'play' ? elapsed() : took).toFixed(1);
+    say.textContent = say.dataset[state] ?? words;
+    button.textContent = state === 'look' ? 'Flip them over' : state === 'play' ? 'Start over' : 'Again';
+    for (const tile of tiles) { tile.el.classList.toggle('down', !tile.open); tile.el.classList.toggle('found', tile.found); tile.el.disabled = state !== 'play' || tile.open; tile.el.setAttribute('aria-label', tile.open ? 'Animal' : 'Face down'); }
+    root.querySelectorAll('.best').forEach(el => el.classList.toggle('on', state === 'done' && took <= best));
+  }
+  function round() { clearInterval(timer); clearTimeout(busy); busy = 0; first = null; state = 'look'; root.classList.remove('wave');
+    mixed(12).forEach((at, i) => { const tile = tiles[at]; tile.face = FACES[i >> 1]; tile.open = true; tile.found = false; tile.el.querySelector('img').src = animal(tile.face); tile.el.querySelector('.spark')?.remove();
+      if (tile.face === FACES[0]) tile.el.firstChild.append(Object.assign(document.createElement('i'), { className: 'spark' })); }); tell(); }
+  function flip() { state = 'play'; began = performance.now(); fine = 0; again(chart, 'jolt'); root.classList.add('wave'); setTimeout(() => root.classList.remove('wave'), 800); tiles.forEach(tile => tile.open = false); tell(); timer = setInterval(tell, 100); }
+  function won() { clearInterval(timer); took = Math.round(elapsed() * 10) / 10; state = 'done'; if (best === null || took < best) best = took; tell(); }
+  function pick(tile) { if (state !== 'play' || tile.open || busy) return; tile.open = true; if (!first) { first = tile; return tell(); }
+    const other = first; first = null;
+    if (other.face === tile.face) { other.found = tile.found = true; tell(); if (tiles.every(each => each.found)) won(); return; }
+    fine += WRONG; tell(); again(other.el, 'no'); again(tile.el, 'no');
+    const cost = Object.assign(document.createElement('b'), { className: 'cost', textContent: `+${WRONG}s` }); cost.style.left = `${chart.offsetLeft + tile.el.offsetLeft + tile.el.offsetWidth / 2}px`; cost.style.top = `${chart.offsetTop + tile.el.offsetTop + 14}px`; root.append(cost); setTimeout(() => cost.remove(), 900);
+    busy = setTimeout(() => { busy = 0; other.open = tile.open = false; tell(); }, 750); }
+  tiles.forEach(tile => tile.el.addEventListener('click', () => pick(tile)));
+  button.addEventListener('click', () => state === 'look' ? flip() : round());
+  round();
+  return to => { round(); if (to === 'look') return; flip(); if (to === 'play') return; if (to === 'lost') { began = performance.now() - MAX * 1000; return tell(); } began = performance.now() - rand(9000, 14000); tiles.forEach(tile => tile.open = tile.found = true); won(); };
+}
+
+// Who moved?: everyone sits on the ticket. The lights go out, some pairs swap seats, and you tap the ones that moved.
+// Five rounds on the one clock, with more swaps as it goes; a wrong tap costs the same 2 seconds.
+function moved(root) {
+  const tk = root.querySelector('.tk'), clock = root.querySelector('[data-clock]'), say = root.querySelector('[data-say]'), button = root.querySelector('.go'), pips = root.querySelector('.pips'), words = say.textContent;
+  const ROUNDS = [1, 1, 1, 2, 2];
+  tk.querySelector('.lights').innerHTML = blotSvg('lights out'); pips.innerHTML = ROUNDS.map((_, i) => `<i>${i + 1}</i>`).join('');
+  const spots = Array.from({ length: 12 }, () => { const el = document.createElement('button'); el.type = 'button'; el.className = 'spot'; el.innerHTML = '<img alt="" draggable="false">'; tk.append(el); return { el, face: 0, moved: false, hit: false }; });
+  let state = 'look', began = 0, fine = 0, took = 0, timer = 0, best = null, at = 0, wait = 0, dark = false, hold = false, look = 0, lookFrom = 0, off = 0, since = 0;
+  // stuck for a while with nothing found: one of the ones that moved gives itself away, and again every few seconds
+  const HINT = 10000, HINT_AGAIN = 4000;
+  // between rounds there is a look at the new seats, shorter each time, and the clock waits for it
+  const LOOK = [10, 8, 6, 5], elapsed = () => ((lookFrom || performance.now()) - began - off) / 1000 + fine;
+  const show = spot => { spot.el.firstChild.src = animal(spot.face); }; // no spark on your own animal here: it would show whether yours moved
+  function tell() {
+    if (state === 'play' && elapsed() >= MAX) { clearInterval(timer); clearTimeout(wait); dark = false; took = MAX; state = 'lost'; }
+    root.classList.remove('look', 'play', 'done', 'lost'); root.classList.add(state); root.classList.toggle('dark', dark);
+    clock.textContent = (state === 'look' ? 0 : state === 'play' ? elapsed() : took).toFixed(1);
+    const left = spots.filter(spot => spot.moved && !spot.hit).length;
+    const total = spots.filter(spot => spot.moved).length;
+    say.textContent = state === 'play' ? dark ? 'Lights out' : look ? 'Remember the new seats' : left ? `${total} moved. Tap them.` : 'Got them' : say.dataset[state] ?? words;
+    // the plate on the stub counts them down, so how many are left is always in one place
+    root.querySelector('.admit').textContent = state === 'play' && look ? `Look: ${look}` : state === 'play' && !dark ? left ? `${left} to find` : 'Got them' : state === 'play' ? 'Lights out' : 'Who moved?';
+    button.textContent = state === 'look' || state === 'play' && look ? 'Lights out' : state === 'play' ? 'Start over' : 'Again';
+    for (const spot of spots) { spot.el.classList.toggle('hit', spot.hit); spot.el.disabled = state !== 'play' || dark || hold || spot.hit; if (spot.hit || state !== 'play' || dark || hold) spot.el.classList.remove('hint'); }
+    if (state === 'play' && !dark && !hold && performance.now() - since > HINT) { const one = spots.find(spot => spot.moved && !spot.hit); if (one) again(one.el, 'hint'); since = performance.now() - HINT + HINT_AGAIN; }
+    root.classList.toggle('rest', state === 'play' && look > 0);
+    [...pips.children].forEach((pip, i) => { pip.classList.toggle('on', state === 'play' && i === at); pip.classList.toggle('past', state === 'done' || state !== 'look' && i < at); });
+    root.querySelectorAll('.best').forEach(el => el.classList.toggle('on', state === 'done' && took <= best));
+  }
+  // in the dark: this round's pairs change places, and what was found last round is cleared
+  function swapped() { const order = mixed(12).slice(0, ROUNDS[at] * 2); for (const spot of spots) spot.moved = spot.hit = false;
+    for (let i = 0; i < order.length; i += 2) { const a = spots[order[i]], b = spots[order[i + 1]]; [a.face, b.face] = [b.face, a.face]; a.moved = b.moved = true; show(a); show(b); } }
+  function dim() { dark = true; hold = false; tell(); wait = setTimeout(() => { swapped(); wait = setTimeout(() => { dark = false; since = performance.now(); tell(); }, 380); }, 480); }
+  function round() { clearInterval(timer); clearTimeout(wait); state = 'look'; at = 0; dark = hold = false; look = lookFrom = off = 0; mixed(12).forEach((to, i) => { const spot = spots[to]; spot.face = FACES[i]; spot.moved = spot.hit = false; show(spot); }); tell(); }
+  function start() { state = 'play'; began = performance.now(); fine = 0; at = 0; off = 0; timer = setInterval(tell, 100); dim(); }
+  function won() { clearInterval(timer); took = Math.round(elapsed() * 10) / 10; state = 'done'; if (best === null || took < best) best = took; tell(); }
+  function pick(spot) { if (state !== 'play' || dark || hold || spot.hit) return;
+    if (!spot.moved) { fine += WRONG; again(spot.el, 'no'); const cost = Object.assign(document.createElement('b'), { className: 'cost', textContent: `+${WRONG}s` }); cost.style.left = `${tk.offsetLeft + spot.el.offsetLeft + spot.el.offsetWidth / 2}px`; cost.style.top = `${tk.offsetTop + spot.el.offsetTop + 62}px`; root.append(cost); setTimeout(() => cost.remove(), 900); return tell(); }
+    spot.hit = true; since = performance.now(); tell(); if (spots.some(each => each.moved && !each.hit)) return;
+    if (at === ROUNDS.length - 1) return won(); hold = true; wait = setTimeout(rest, 450); }
+  function rest() { for (const spot of spots) spot.moved = spot.hit = false; look = LOOK[at]; lookFrom = performance.now(); tell();
+    const tick = () => { look--; if (look > 0) { tell(); wait = setTimeout(tick, 1000); return; } on(); }; wait = setTimeout(tick, 1000); }
+  // the look ends by itself, or at once from the button
+  function on() { clearTimeout(wait); off += performance.now() - lookFrom; lookFrom = 0; look = 0; at++; dim(); }
+  spots.forEach(spot => spot.el.addEventListener('click', () => pick(spot)));
+  button.addEventListener('click', () => state === 'look' ? start() : state === 'play' && look ? on() : round());
+  round();
+  return to => { round(); if (to === 'look') return; start(); if (to === 'play') return; if (to === 'lost') { began = performance.now() - MAX * 1000; return tell(); }
+    clearTimeout(wait); dark = false; at = ROUNDS.length - 1; began = performance.now() - rand(9000, 14000); won(); };
 }
 
 // One stage: the name, you, the mode pills, and a board per mode with one shown.
@@ -261,10 +393,10 @@ function stage(el, pills) {
   const you = `<img src="${animal(FACES[0])}" alt="">You`, buttons = MODES.map(([key, name]) => `<button type="button" data-mode="${key}">${name}</button>`).join('');
   el.innerHTML = `<span class="name">Seats</span><span class="you">${you}</span><div class="modes">${buttons}</div>`;
   if (pills) pills.innerHTML = buttons;
-  const boards = MODES.map(([key]) => { const board = document.getElementById(`board-${key}`).content.firstElementChild.cloneNode(true); el.append(board); return { key, board, show: game(board) }; });
+  const boards = MODES.map(([key]) => { const board = document.getElementById(`board-${key}`).content.firstElementChild.cloneNode(true); el.append(board); return { key, board, show: ({ a: pairs, t: moved }[key] ?? game)(board) }; });
   const rows = [el.querySelector('.modes'), pills].filter(Boolean);
   const set = mode => { el.dataset.mode = mode; boards.forEach(each => each.board.hidden = each.key !== mode); rows.forEach(row => [...row.children].forEach(button => button.setAttribute('aria-pressed', button.dataset.mode === mode)));
-    if (pills) { document.getElementById('how1').textContent = HOW[mode][0]; document.getElementById('how2').textContent = HOW[mode][1]; } };
+    if (pills) { document.getElementById('how1').textContent = HOW[mode][0]; document.getElementById('how2').textContent = HOW[mode][1]; document.getElementById('how3').textContent = HOW[mode][2]; } };
   rows.forEach(row => row.addEventListener('click', event => { const mode = event.target.dataset?.mode; if (mode) set(mode); }));
   set(el.dataset.start);
   return to => boards.find(each => each.key === el.dataset.mode).show(to);
@@ -274,6 +406,7 @@ stage(document.getElementById('lapstage'), document.getElementById('lapmodes'));
 document.querySelector('.side .you').innerHTML = `<img src="${animal(FACES[0])}" alt="">You`;
 document.getElementById('laptk').innerHTML = [10, 26, 3, 31, 16, 22, 20, 1, 28, 13, 7].map(n => `<img src="${animal(n)}" alt="">`).join('');
 document.querySelectorAll('#kits button').forEach(button => button.addEventListener('click', () => { document.documentElement.dataset.kit = button.dataset.kit; document.querySelectorAll('#kits button').forEach(each => each.setAttribute('aria-pressed', each === button)); }));
+document.querySelectorAll('#inks button').forEach(button => button.addEventListener('click', () => { document.documentElement.dataset.ink = button.dataset.ink; document.querySelectorAll('#inks button').forEach(each => each.setAttribute('aria-pressed', each === button)); }));
 </script>
 </body>
 </html>
