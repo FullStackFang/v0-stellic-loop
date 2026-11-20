@@ -1,0 +1,71 @@
+import { afterEach, beforeEach, expect, it } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { kitScript } from '@/lib/campus/kit-script';
+import { Kit, Kits } from './kit';
+
+// Other schools' colours are an Ink+ perk (public/demo/mockups-ink-colours.html, "My pick"): Loopd's and your schools'
+// are free, the account card shows those and "Any school", and the rest wear the Ink mark.
+const root = document.documentElement;
+const reset = () => { localStorage.clear(); delete root.dataset.kit; delete root.dataset.kits; delete root.dataset.anyKit; };
+beforeEach(reset);
+afterEach(() => { cleanup(); reset(); });
+const pills = () => within(screen.getByRole('group', { name: 'Colours' })).getAllByRole('button').map(pill => pill.textContent);
+
+it('shows Loopd, your school and "Any school"; another school opens the Ink+ card, named for it', () => {
+  root.dataset.kit = 'cornell';
+  render(<Kits yours={['loop', 'cornell']} any={false} />);
+  expect(pills()).toEqual(['Loopd', 'Cornell', 'Any school']);
+  fireEvent.click(screen.getByRole('button', { name: 'Any school' }));
+  expect(screen.getByRole('link', { name: 'Every school comes with Ink+' })).toHaveAttribute('href', '/c/ink');
+  fireEvent.click(screen.getByRole('button', { name: 'NYU, with Ink+' }));
+  expect(screen.getByRole('dialog', { name: "NYU's colours come with Ink+" })).toHaveTextContent("Wear NYU's colours");
+  // Nothing was put on.
+  expect(root.dataset.kit).toBe('cornell');
+  expect(localStorage.getItem('loop-kit')).toBeNull();
+});
+
+it('with Ink+, any school may be picked from the list, and then shows beside yours', async () => {
+  root.dataset.kit = 'cornell';
+  render(<Kits yours={['loop', 'cornell']} any />);
+  fireEvent.click(screen.getByRole('button', { name: 'Any school' }));
+  expect(screen.queryByRole('link', { name: /Every school/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'NYU' }));
+  expect(root.dataset.kit).toBe('nyu');
+  await act(async () => {});
+  expect(pills()).toEqual(['Loopd', 'Cornell', 'NYU', 'Any school']);
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it('passes over a pick kept from before that is not yours to wear', () => {
+  localStorage.setItem('loop-kit', 'nyu');
+  render(<Kit own="cornell" yours={['loop', 'cornell']} any={false} />);
+  expect(root.dataset.kit).toBe('cornell');
+  expect(root.dataset.kits).toBe('loop cornell');
+  expect(root.dataset.anyKit).toBeUndefined();
+});
+
+it('keeps that pick with Ink+, and signed out', () => {
+  localStorage.setItem('loop-kit', 'nyu');
+  const { unmount } = render(<Kit own="cornell" yours={['loop', 'cornell']} any />);
+  expect(root.dataset.kit).toBe('nyu');
+  unmount(); reset(); localStorage.setItem('loop-kit', 'nyu');
+  render(<Kit own="loop" yours={null} any />);
+  expect(root.dataset.kit).toBe('nyu');
+  expect(root.dataset.kits).toBeUndefined();
+});
+
+it('the script before the first paint follows the same rule', () => {
+  const run = (script: string) => new Function(script)();
+  localStorage.setItem('loop-kit', 'nyu');
+  run(kitScript('cornell', ['loop', 'cornell'], false));
+  expect([root.dataset.kit, root.dataset.kits, root.dataset.anyKit]).toEqual(['cornell', 'loop cornell', undefined]);
+  reset(); localStorage.setItem('loop-kit', 'nyu');
+  run(kitScript('cornell', ['loop', 'cornell'], true));
+  expect([root.dataset.kit, root.dataset.anyKit]).toEqual(['nyu', '']);
+  reset(); localStorage.setItem('loop-kit', 'loop');
+  run(kitScript('cornell', ['loop', 'cornell'], false));
+  expect(root.dataset.kit).toBe('loop');
+  reset();
+  run(kitScript('</script>', null, true));
+  expect(root.dataset.kit).toBe('</script>');
+});

@@ -1,0 +1,40 @@
+/* Colours and the Ink+ card that goes with them (components/campus/kit.tsx; public/demo/mockups-ink-colours.html, "My pick").
+   The pills are app/c/campus.css's .cs-kit; the card is foot.css's .cs-ft-ask, with what it shows here added. */
+
+/* "Any school": one pill, and its list opens under it, over what follows. */
+.cs-kit-any { position: relative; display: inline-flex; }
+.cs .cs-kit-any > .cs-kit { padding: 0 9px 0 12px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-kit-any > .cs-kit svg { width: 12px; height: 12px; transition: rotate .2s var(--cs-ease); } .cs-kit-any > .cs-kit[aria-expanded=true] svg { rotate: 180deg; }
+.cs-kit-menu { position: absolute; z-index: 9; left: 0; top: calc(100% + 8px); width: 240px; padding: 8px; border-radius: 16px 16px 16px 5px; background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 5px 5px 0 var(--cs-field-shadow, var(--cs-ink)); animation: cs-ft-ask .3s var(--cs-expo); }
+.cs-kit-menu input { width: 100%; height: 34px; margin-bottom: 6px; padding: 0 12px; border: 0; border-radius: 99px; font: inherit; font-size: 14px; color: var(--cs-ink); background: var(--cs-page, var(--cs-paper)); box-shadow: inset 0 0 0 1.5px var(--cs-line); }
+.cs-kit-menu input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--cs-ink); }
+.cs-kit-menu ul { margin: 0; padding: 0; list-style: none; }
+.cs .cs-kit-menu li button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border-radius: 10px; font-size: 14px; font-weight: 560; text-align: left; }
+.cs .cs-kit-menu li button:hover { background: color-mix(in oklch, var(--cs-ink) 7%, transparent); }
+.cs-kit-menu li button.locked { color: var(--cs-mute); } .cs-kit-menu li .cs-ink { width: 18px; height: 18px; margin-left: auto; }
+.cs-kit-menu li i { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(var(--cs-action) 36%, var(--cs-field) 40%); box-shadow: 0 0 0 1px color-mix(in oklch, var(--cs-ink) 25%, transparent); }
+.cs-kit-menu-ink { display: flex; align-items: center; gap: 7px; margin-top: 6px; padding: 8px 10px; border-radius: 12px; font-size: 13px; font-weight: 600; background: var(--cs-ink); color: var(--cs-paper); }
+.cs-kit-menu-ink .cs-ink { width: 18px; height: 18px; }
+
+/* The card: the other schools' colours, faded (the one asked for lit), then what Ink+ gives, and the price. */
+.cs-kit-ask h3 em { font-style: normal; color: var(--cs-field); }
+.cs-kit-ask-sw { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 2px; }
+.cs-kit-ask-sw i { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(var(--cs-action) 36%, var(--cs-field) 40%); box-shadow: 0 0 0 1.5px var(--cs-on-ink-mute); opacity: .55; }
+.cs-kit-ask-sw i.on { opacity: 1; box-shadow: 0 0 0 2px var(--cs-paper); }
+.cs-ft-ask.cs-kit-ask > p { margin: 6px 0 12px; font-size: 13.5px; padding-bottom: 12px; border-bottom: 1px solid color-mix(in oklch, var(--cs-paper) 18%, transparent); }
+.cs-kit-ask-gives { display: inline-block; margin-bottom: 8px; padding: 3px 10px 4px; border-radius: 99px; font-size: 12px; font-weight: 700; background: color-mix(in oklch, var(--cs-paper) 14%, transparent); color: var(--cs-on-ink); }
+.cs-kit-ask ul { display: grid; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; font-size: 14px; color: var(--cs-on-ink-mute); }
+.cs-kit-ask li { display: grid; grid-template-columns: 7px 1fr; gap: 10px; align-items: baseline; } .cs-kit-ask li::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--cs-field); }
+.cs-kit-ask li:first-child { color: var(--cs-on-ink); font-weight: 620; }
+.cs-ft-ask.cs-kit-ask > p.cs-kit-ask-price { margin: 0 0 12px; padding: 0; border: 0; color: var(--cs-on-ink-mute); } .cs-kit-ask-price b { font-size: 18px; color: var(--cs-field); }
+.cs-kit-ask-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+/* In the account card it stands in place, under the colours: no arrow, nothing to grow out of. */
+.cs-ft-ask.cs-kit-ask.in { position: relative; bottom: auto; width: auto; margin-top: 18px; border-radius: 18px; transform-origin: 50% 0; }
+.cs-ft-ask.cs-kit-ask.in::after { display: none; }
+
+/* The foot's pill, for someone without Ink+: the Assistants pill's look (foot.css), and its card opens up and to the left. */
+.cs-ft-inkpick { position: relative; display: flex; }
+.cs .cs-ft-inkpick > .cs-ft-asst { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 7px 0 10px; border-radius: 99px; font-size: 14px; font-weight: 600; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: color .2s; }
+.cs-ft-inkpick > .cs-ft-asst .cs-ink { width: 20px; height: 20px; flex: none; }
+.cs-ft-inkpick .cs-ft-ask { left: auto; right: 0; width: min(400px, calc(100vw - 32px)); border-radius: 20px 20px 6px 20px; transform-origin: calc(100% - 40px) 100%; }
+.cs-ft-inkpick .cs-ft-ask::after { left: auto; right: 40px; }

@@ -8,7 +8,7 @@ import type { BarGroup } from '@/lib/campus/bar-groups';
 import { GroupLinks, TopBar } from './top-bar';
 import { animal, CUSTOM, NAMES, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
-import { KITS, kitNow, pickKit } from './kit';
+import { Kits } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
 import { landOf, sectionAt, walkMinutes, type Point } from '@/lib/campus/sections';
 import type { SwapCampus } from './swap';
@@ -308,7 +308,7 @@ function CouponRow({ coupon, showing, busy, waiting, onShow, onUse }: { coupon: 
 
 /** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". The groups pages show the same one (app/groups/bar.tsx), with their own links as `more`. */
 export function Account({ screen, signOut, swap = [], more = null }: { screen: Screen; signOut: ReactNode; swap?: SwapCampus[]; /** Links of the pages this bar is on, above the way out. */ more?: ReactNode }) {
-  const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [kit, setKit] = useState('');
+  const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null);
   // The pick shows at once, and goes back if it could not be kept.
   const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [keeping, save] = useTransition(), [schooling, setSchooling] = useState(false);
   // Their own campus, for a school with more than one, and the move to another.
@@ -345,7 +345,7 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
     onClick={() => locked ? setMaking(true) : one.face === null ? chooseOwn(one.src) : choose(one.face)}><img src={one.src} alt="" />{premium ? <InkMark /> : school && <SchoolMark />}{keeping && (one.face === null ? face === CUSTOM && own === one.src : face === one.face) && <span className="seats-over"><SeatsSmall size={20} face={one.src} /></span>}</button>;
   const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot key={big ? face : 0} face={me} className={big && moved ? 'new' : ''} /><b className="cs-lvb">{level + 1}</b>{viewer.admin && <i className="cs-crown" title="Admin"><svg viewBox="0 0 24 20" aria-hidden="true"><path d="M3 16.5 1.5 5.5l5.6 4.2L12 2l4.9 7.7 5.6-4.2L21 16.5z" /><circle cx="1.8" cy="4.6" r="1.6" /><circle cx="12" cy="2" r="1.7" /><circle cx="22.2" cy="4.6" r="1.6" /></svg></i>}</span>;
   return <div className="cs-acct" ref={box}>
-    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setKit(kitNow()); setPicking(false); setSchooling(false); setMoved(false); setOpen(!open); }}>{avatar()}</button>
+    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setPicking(false); setSchooling(false); setMoved(false); setOpen(!open); }}>{avatar()}</button>
     {open && <div className="cs-lvl" role="dialog" aria-label="Your level">
       <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => { setPicking(saving || !picking); setMaking(false); setSchooling(false); setSaving(false); }}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
@@ -382,7 +382,7 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
         <div className="cs-sch-open">{viewer.schools.added.flatMap(slug => viewer.schools.all.filter(each => each.slug === slug)).map(each => <a key={each.slug} className="cs-btn sm" href={`/c/${each.slug}`}>Open {each.name}</a>)}<button className="cs-btn sm" onClick={() => setSchooling(false)}>Back</button></div></div>
       : <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
         <ul>{LEVELS.map((each, at) => <li key={each.name} className={at === level ? 'now' : ''}><b>{at + 1}</b><div><strong>{each.name}</strong><span>{each.gets}</span></div><small>{at === level ? 'You' : at < level ? 'Passed' : `${each.from - viewer.outings} to go`}</small></li>)}</ul>
-        <div className="cs-kits" role="group" aria-label="Colours"><h4>Colours</h4><div>{KITS.map(each => <button key={each.slug} className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }}><i />{each.name}</button>)}</div></div>
+        <Kits yours={['loop', ...(viewer.schools.home ? [viewer.schools.home] : []), ...viewer.schools.added]} any={viewer.anyKit} />
         {viewer.admin && <nav className="cs-lvl-more" aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}
         {more}
         {signOut && <div className="cs-lvl-more">{signOut}</div>}</div>}</div>}

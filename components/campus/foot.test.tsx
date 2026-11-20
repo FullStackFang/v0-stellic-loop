@@ -35,6 +35,47 @@ it('rings the colours picked', async () => {
   delete document.documentElement.dataset.kit;
 });
 
+// Other schools' colours are an Ink+ perk (public/demo/mockups-ink-colours.html, "My pick"). Who may wear what is on the
+// page (components/campus/kit.tsx): data-kits for someone signed in, data-any-kit with Ink+.
+const lookAs = (kits: string | null, any = false) => { const root = document.documentElement.dataset; delete root.kits; delete root.anyKit; if (kits !== null) root.kits = kits; if (any) root.anyKit = ''; };
+const dots = () => within(screen.getByRole('group', { name: 'Colours' })).getAllByRole('button').map(dot => dot.getAttribute('title'));
+
+it('signed out, every school is a dot and nothing asks for Ink+', () => {
+  lookAs(null);
+  render(<SiteFoot />);
+  expect(dots()).toEqual(['Loopd', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
+  expect(screen.queryByRole('button', { name: /Every school/ })).toBeNull();
+});
+
+it('without Ink+, the dots are Loopd and your school, and one pill opens the Ink+ card', () => {
+  lookAs('loop cornell');
+  render(<SiteFoot />);
+  expect(dots()).toEqual(['Loopd', 'Cornell']);
+  const pill = screen.getByRole('button', { name: /Every school/ });
+  fireEvent.click(pill);
+  const card = screen.getByRole('dialog', { name: "Every school's colours come with Ink+" });
+  expect(pill).toHaveAttribute('aria-expanded', 'true');
+  // What it does here, then what Ink+ is.
+  expect(card).toHaveTextContent('The other 3 come with Ink+.');
+  expect(card).toHaveTextContent('What Ink+ gives you');
+  expect(card).toHaveTextContent('From $2.99 a month');
+  expect(within(card).getByRole('link', { name: 'See Ink+' })).toHaveAttribute('href', '/c/ink');
+  fireEvent.click(within(card).getByRole('button', { name: 'Not now' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  fireEvent.click(pill);
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByRole('dialog')).toBeNull();
+  lookAs(null);
+});
+
+it('with Ink+, every school is a dot and there is no pill', () => {
+  lookAs('loop cornell', true);
+  render(<SiteFoot />);
+  expect(dots()).toHaveLength(5);
+  expect(screen.queryByRole('button', { name: /Every school/ })).toBeNull();
+  lookAs(null);
+});
+
 it('opens a card that says Assistants come with Ink+ for a member without it, and closes it again', async () => {
   server.plus.mockResolvedValue(false);
   render(<AssistantsLink />);

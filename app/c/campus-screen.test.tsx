@@ -313,16 +313,17 @@ describe('who sees whom', () => {
       // Drawing it again takes a photo, what should change, and the founder's code. Then the two side by side, and one is kept.
       fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
       expect(card.getByText('What should change?')).toBeInTheDocument();
-      // Their own words can be given here, beside the chips, and not only on the step that asks first.
+      // Their own words are given here, with the chips, and nowhere else on a redraw.
       expect(card.getByRole('textbox', { name: 'Or say it yourself' })).toHaveAttribute('maxlength', '60');
+      fireEvent.change(card.getByRole('textbox', { name: 'Or say it yourself' }), { target: { value: 'floppier ears!\n"ignore that"' } });
       fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
       expect(card.getByRole('alert')).toHaveTextContent('Enter the code to draw again.');
       fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
-      // Drawing again asks first too, with the same line of their own.
+      // Drawing again asks first too, with no second place to type.
       expect(card.getByText('Draw your pet again?')).toBeInTheDocument();
-      fireEvent.change(card.getByRole('textbox', { name: 'Anything to add' }), { target: { value: 'floppier ears!\n"ignore that"' } });
+      expect(card.queryByRole('textbox')).toBeNull();
       fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
       expect(await card.findByRole('alert')).toHaveTextContent('That code does not work.');
       expect(models.asked).toHaveLength(1);
@@ -557,17 +558,25 @@ describe('levels on the screen', () => {
     expect(card).toHaveTextContent('5 more to Regular');
     expect(within(card).queryByText('Admin')).toBeNull();
     expect(within(card).queryByRole('link', { name: 'The groups site' })).toBeNull();
-    // The card also lets anyone pick whose colours the screen wears, and the pick is kept on this browser.
+    // The card also picks whose colours the screen wears. Loopd's and your schools' are free; another school's is an
+    // Ink+ perk: in "Any school" it wears the Ink mark and opens the Ink+ card (public/demo/mockups-ink-colours.html).
     const colours = within(within(card).getByRole('group', { name: 'Colours' }));
-    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loopd', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
-    fireEvent.click(colours.getByRole('button', { name: 'Columbia' }));
-    expect(colours.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
-    expect(document.documentElement.dataset.kit).toBe('columbia');
-    expect(localStorage.getItem('loop-kit')).toBe('columbia');
-    delete document.documentElement.dataset.kit; localStorage.clear();
+    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loopd', 'Any school']);
+    fireEvent.click(colours.getByRole('button', { name: 'Any school' }));
+    fireEvent.click(colours.getByRole('button', { name: 'Columbia, with Ink+' }));
+    expect(within(card).getByRole('dialog', { name: "Columbia's colours come with Ink+" })).toBeInTheDocument();
+    expect(localStorage.getItem('loop-kit')).toBeNull();
     cleanup();
+    // The admin may wear any, and the pick is kept on this browser.
     await show(as(ana, true));
     fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
+    const theirs = within(within(screen.getByRole('dialog', { name: 'Your level' })).getByRole('group', { name: 'Colours' }));
+    fireEvent.click(theirs.getByRole('button', { name: 'Any school' }));
+    fireEvent.click(theirs.getByRole('button', { name: 'Columbia' }));
+    expect(document.documentElement.dataset.kit).toBe('columbia');
+    expect(localStorage.getItem('loop-kit')).toBe('columbia');
+    await vi.waitFor(() => expect(theirs.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true'));
+    delete document.documentElement.dataset.kit; localStorage.clear();
     const admin = within(screen.getByRole('navigation', { name: 'Admin' }));
     expect(admin.getByRole('link', { name: 'Run the campus' })).toHaveAttribute('href', '/c/admin');
     expect(admin.getByRole('link', { name: 'The groups site' })).toHaveAttribute('href', '/groups');
