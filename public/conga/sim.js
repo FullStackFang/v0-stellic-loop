@@ -26,6 +26,7 @@ const BACK = 2.5; // seconds before a scattered bot comes back
 const PLAZA = 130; // a head this close to where a car lets its riders off is waiting for it
 const SWEEP = 80; // a car passing this close over a line takes animals off its back
 const TAKEN = 6; // how many it takes. Over the head of the line it takes half the line, if that is more
+const SEATS = 40; // how many a car can carry: without it one car could hand a single line hundreds at once
 const SPARED = 1.5; // seconds before the same line is swept again, if the car is still over it
 
 const wrap = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -277,7 +278,7 @@ export function step(world, dt) {
   for (const car of world.shuttles) {
     const there = car.ride, leaves = there + car.stay, back = leaves + car.ride, was = car.clock, ease = f => f * f * (3 - 2 * f);
     car.clock = (car.clock + dt) % (back + car.away);
-    if (car.clock < was) { car.load = car.riders + car.kept; car.kept = 0; } // it sets off again, full, with anyone it carried away
+    if (car.clock < was) { car.load = Math.min(SEATS, car.riders + car.kept); car.kept = 0; } // it sets off again, full, with anyone it carried away
     const at = car.clock < there ? ease(car.clock / there) : car.clock < leaves ? 1 : car.clock < back ? 1 - ease((car.clock - leaves) / car.ride) : 0;
     car.x = car.from[0] + (car.to[0] - car.from[0]) * at;
     car.y = car.from[1] + (car.to[1] - car.from[1]) * at;
@@ -291,9 +292,11 @@ export function step(world, dt) {
       if (line.dead || line.safe > 0 || line.spared > 0 || !line.tail.length) continue;
       const head = Math.hypot(line.x - car.x, line.y - car.y) < SWEEP * 0.75;
       if (!head && !line.tail.some(f => Math.hypot(f.x - car.x, f.y - car.y) < SWEEP)) continue;
-      const taken = line.tail.splice(-(head ? Math.max(TAKEN, Math.ceil(line.tail.length / 2)) : TAKEN)).length;
+      const off = line.tail.splice(-(head ? Math.max(TAKEN, Math.ceil(line.tail.length / 2)) : TAKEN)), taken = off.length, aboard = Math.min(taken, Math.max(0, SEATS - car.load));
+      // Those there is no seat for are left where they stood, as strays.
+      for (const f of off.slice(aboard)) world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
       line.spared = SPARED;
-      if (car.clock < there) car.load += taken; else { car.load += taken; car.kept += taken; }
+      car.load += aboard; if (car.clock >= there) car.kept += aboard;
       events.push({ type: 'lift', name: car.name, line: line.id, count: taken, head, x: car.x, y: car.y });
     }
     if (was < there && car.clock >= there && car.load > 0) {
