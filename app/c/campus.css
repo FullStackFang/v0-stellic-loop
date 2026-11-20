@@ -829,3 +829,8 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-lvl:has(.cs-pets-grid) { width: min(960px, calc(100vw - 28px)); }
 .cs-lvl .cs-pets-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
 .cs-lvl:has(.cs-pets-grid) .cs-lvl-body { max-height: min(72vh, 720px); scrollbar-width: none; scrollbar-gutter: auto; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body::-webkit-scrollbar { display: none; }
+/* How many more animals they may make, on the "Create your own" tile's corner (loop-own-animal-drafts, look A): an ink circle with the number, pink at none left, the Ink+ mark with no limit. */
+.cs .cs-pet.add .cs-own-left { position: absolute; right: -5px; top: -5px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: 13px; font-weight: 780; line-height: 1; background: var(--cs-ink); color: var(--cs-gold); box-shadow: 0 0 0 2px var(--cs-paper); }
+.cs .cs-pet.add .cs-own-left.none { background: var(--cs-third); color: var(--cs-paper); }
+.cs .cs-pet.add .cs-own-left.plus { right: -7px; top: -7px; width: 28px; height: 28px; padding: 3px; background: var(--cs-paper); box-shadow: 0 0 0 2px var(--cs-gold); }
+.cs .cs-pet.add .cs-own-left.plus > .cs-ink { width: 100%; height: 100%; }
