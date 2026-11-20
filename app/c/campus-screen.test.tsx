@@ -19,7 +19,7 @@ import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
 import { campusScreen, type ScreenViewer, type ShareLink } from '@/lib/campus/screen';
 import { approveLinkedin } from '@/lib/campus/linkedin';
-import { askForSchool, schoolAsked, schoolsAsked } from '@/lib/campus/school-ask';
+import { askForSchool, OPEN_AT, schoolAsked, schoolsAsked, schoolStanding } from '@/lib/campus/school-ask';
 import { againFaceAction, askSchoolAction, setSchoolsAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
 import InkPage from './ink/page';
@@ -924,7 +924,8 @@ describe('the pages', () => {
     const other = await withPortalTestSession(outsider, async () => { fireEvent.change(screen.getByRole('textbox', { name: 'Your school' }), { target: { value: 'McGill  University' } }); return screen.findByRole('button', { name: 'Other: “McGill University”' }); });
     expect(screen.getByRole('status')).toHaveTextContent('No US college by that name on our list. Check the spelling, or add it as Other.');
     fireEvent.click(other);
-    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Sign up my school' })); await screen.findByText('On the list'); });
+    // Beside its place in line, a school signed up shows only the way to change it again.
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Sign up my school' })); await screen.findByRole('button', { name: 'Change school' }); });
     expect((await t.db.query('select school from campus_school_ask')).rows).toEqual([{ school: 'McGill University' }]);
     // The action holds the same line by itself: no short name as "Other", and no school Loopd is already at.
     expect(await withPortalTestSession(outsider, () => askSchoolAction('Rutgers'))).toEqual({ ok: false, message: 'Pick your school from the ones found.' });
@@ -933,6 +934,29 @@ describe('the pages', () => {
     // Before the migration is run on a live database the page still opens, with the box.
     await t.db.query('alter table campus_school_ask rename to campus_school_ask_gone');
     try { expect(await schoolAsked(t.db, outsider.personId)).toBeNull(); } finally { await t.db.query('alter table campus_school_ask_gone rename to campus_school_ask'); }
+  });
+  it('a person whose school is signed up sees its place in line, its seats, and how to move it up', async () => {
+    const asks: [string, string, string][] = [['Ana', 'a@mail.test', 'Rutgers University-Newark'], ['Bo', 'b@mail.test', 'Rutgers University-Newark'], ['Cy', 'c@mail.test', 'Rutgers University-Newark'],
+      ['Di', 'd@mail.test', 'University of Michigan-Ann Arbor'], ['Ed', 'e@mail.test', 'university of michigan-ann arbor'], ['Fa', 'f@mail.test', 'McGill University']];
+    for (const [name, email, school] of asks) await askForSchool(t.db, (await person(name, email)).personId, school, email);
+    const omar = await person('Omar Reyes', 'omar@gmail.com');
+    expect(await schoolStanding(t.db, omar.personId)).toBeNull();
+    await askForSchool(t.db, omar.personId, 'University of Michigan-Ann Arbor', 'omar@gmail.com');
+    // Michigan ties Rutgers at three, and Rutgers was asked first: Michigan is second, between Rutgers and McGill.
+    const standing = (await schoolStanding(t.db, omar.personId))!;
+    expect({ ...standing, faces: standing.faces.length }).toEqual({ school: 'University of Michigan-Ann Arbor', people: 3, place: 2, ahead: { school: 'Rutgers University-Newark', people: 3 }, behind: { school: 'McGill University', people: 1 }, faces: 3, mine: 2 });
+    expect(standing.faces.every(face => /^\/animals\/\d+\.png$/.test(face))).toBe(true);
+    render(await withPortalTestSession(omar, () => page('cornell')));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('University of Michigan-Ann Arbor is #2 in line.');
+    expect(screen.getByText(`${OPEN_AT - 3} more and it opens there.`, { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('1 more to pass')).toBeInTheDocument();
+    expect(screen.getByText(`3 of ${OPEN_AT}`)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Send the email' }).getAttribute('href')).toMatch(/^mailto:\?subject=Bring%20Loopd%20to%20University%20of%20Michigan-Ann%20Arbor&body=.*3%20of%20us%20have%20already%20signed%20up/);
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
+    // Its name is not asked again: only the way to change it, and the box comes back with it.
+    expect(screen.queryByRole('textbox', { name: 'Your school' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Change school' }));
+    expect(screen.getByRole('textbox', { name: 'Your school' })).toHaveValue('University of Michigan-Ann Arbor');
   });
   it('an unknown share link is not found, and a real one opens its event', async () => {
     const { zebs } = await world();

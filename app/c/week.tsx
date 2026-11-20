@@ -4,11 +4,12 @@ import { CampusScreen } from '@/components/campus/screen';
 import { SiteFoot } from '@/components/campus/foot';
 import { LookingAt } from '@/components/campus/looking-at';
 import { AddSchools } from '@/components/campus/add-schools';
-import { ConnectLinkedin, FitLines, SchoolAsk } from '@/components/campus/no-school';
+import { headers } from 'next/headers';
+import { ConnectLinkedin, FitLines, MoveUp, SchoolAsk, SchoolStanding } from '@/components/campus/no-school';
 import { SignOut } from '@/components/campus/sign-out';
 import { addedSchools, profileOptional } from '@/lib/campus/linkedin';
 import { linkedinAccount } from '@/lib/campus/linkedin-account';
-import { schoolAsked } from '@/lib/campus/school-ask';
+import { OPEN_AT, schoolAsked, schoolStanding } from '@/lib/campus/school-ask';
 import './no-school.css';
 import { db } from '@/lib/db';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
@@ -49,7 +50,10 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
 export async function NoSchool() {
   const viewer = await campusViewer(), email = viewer?.principal.verifiedEmail ?? null, signs = clerkPortalConfigured();
   const schools = (await listCampuses(db())).filter(each => schoolOf(each.slug) === each.slug);
-  const asked = viewer ? await schoolAsked(db(), viewer.personId) : null, linked = viewer ? await addedSchools(db(), viewer.personId) : { profile: null, added: [], waiting: [] };
+  const asked = viewer ? await schoolAsked(db(), viewer.personId) : null, standing = viewer && asked ? await schoolStanding(db(), viewer.personId) : null;
+  // The address the "Move it up" link gives out: this site's own.
+  const site = (await headers()).get('host') ?? 'getloopdin.social';
+  const linked = viewer ? await addedSchools(db(), viewer.personId) : { profile: null, added: [], waiting: [] };
   // Whether a LinkedIn account is theirs: they signed in with it, or connected it on this page.
   const owner = viewer ? await linkedinAccount(viewer.principal) : null, waiting = linked.waiting.length > 0;
   // Signed in with LinkedIn, they are not asked for their profile's address as well (once the database can keep a row without one).
@@ -62,21 +66,28 @@ export async function NoSchool() {
     {frame?.bar}
     <main className="cs-ns">
       <section className="cs-ns-band">
-        <FitLines lines={[<>Loopd is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
+        {standing
+          // A school's full name can be long, so this headline wraps instead of being fitted to the width.
+          ? <><h1 className="cs-ns-rank">{standing.school} is <em>#{standing.place}</em> in line.</h1><p>{standing.people < OPEN_AT ? <>Loopd opens at a school when <b>{OPEN_AT} people</b> from it sign up. {OPEN_AT - standing.people} more and it opens there.</> : 'Enough have signed up. Loopd opens there soon.'}</p></>
+          : <FitLines lines={[<>Loopd is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />}
       </section>
       <div className="cs-ns-two">
+        {standing && <>
+          <section className="cs-ns-tk"><h2 className="cs-ns-tab">Where it stands</h2><SchoolStanding standing={standing} seats={OPEN_AT} /><SchoolAsk asked={asked} email={email} lined /></section>
+          <section className="cs-ns-tk"><h2 className="cs-ns-tab">Move it up</h2><MoveUp school={standing.school} people={standing.people} site={site} /></section>
+        </>}
         {owner || waiting ? <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">{waiting ? 'We are checking' : 'Pick your school'}</h2>
           {/* eslint-disable-next-line @next/next/no-img-element -- the LinkedIn account's photo, at the sign-in service's own address */}
           {owner && <div className="cs-ns-me">{owner.photo && <img src={owner.photo} alt="" />}<span><b>{owner.name}</b><small>Signed in with LinkedIn</small></span><span className="cs-ns-stamp">Yours</span></div>}
           {form}
           <p>{waiting ? 'We look at each one ourselves. Sign in again any time: your campus opens here once you are in.' : bare ? 'Pick the school you are at. We look you up on LinkedIn by your name to check it.' : 'LinkedIn does not tell us the address of your profile, so we ask for it: it is what we open to check your school.'}</p>
-          {!waiting && <SchoolAsk asked={asked} email={email} />}
+          {!waiting && !standing && <SchoolAsk asked={asked} email={email} />}
         </section> : <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">{email ? `${email} is not a school email` : 'No school email'}</h2>
           {signs ? <ConnectLinkedin other={another} fallback={form} /> : form}
           <p>Loopd is for schools. With LinkedIn we check your school ourselves.</p>
-          <SchoolAsk asked={asked} email={email} />
+          {!standing && <SchoolAsk asked={asked} email={email} />}
         </section>}
       </div>
     </main>
