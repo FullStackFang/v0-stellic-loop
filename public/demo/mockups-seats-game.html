@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en" data-kit="loop">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seats, the game: three directions</title>
+<style>
+/* Three directions for Seats as a game of its own, not the footer strip with effects on it (what is live at /seats today).
+   The scene: a student with half a minute between classes, phone in one hand, in daylight. So each is one phone screen, the same
+   eight or nine animals on any device, big things to grab, and a clock you can read from arm's length.
+   All three play, by the same rules: remember, kick them out, put each back where it was, a wrong place costs 2 seconds.
+   The dark strip, the lettered bars and the pills under each phone belong to the mockup. */
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250); --third: oklch(72% 0.2 350);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --mute: oklch(46.5% 0.012 245); --on-ink: oklch(99.4% 0.003 230); --on-ink-mute: oklch(82% 0.02 245);
+  --stub: color-mix(in oklab, var(--field) 34%, var(--paper)); --sunk: color-mix(in oklab, var(--ink) 9%, var(--paper)); --warn: oklch(58% 0.2 25);
+  --r: 22px 22px 22px 6px; --ease: cubic-bezier(.22, 1, .36, 1); --expo: cubic-bezier(.16, 1, .3, 1); }
+:root[data-kit=cornell] { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --third: oklch(80% 0.16 85); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); --third: oklch(74% 0.19 25); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); --third: oklch(86% 0.17 100); }
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, p { margin: 0; } button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; }
+body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+.mock { position: sticky; top: 0; z-index: 80; display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button { display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+main { display: flex; flex-wrap: wrap; justify-content: center; gap: 44px 40px; padding: 30px 24px 80px; }
+.dir { display: grid; gap: 16px; width: 380px; align-content: start; }
+.head { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; padding: 10px 14px 12px 10px; border-radius: var(--r); background: var(--ink); color: var(--on-ink); }
+.head i { grid-row: span 2; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px 12px 12px 3px; background: var(--field); color: var(--ink); font-style: normal; font-size: 22px; font-weight: 820; }
+.head b { font-size: 20px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.04em; line-height: 1.1; } .head span { color: var(--on-ink-mute); font-size: 13.5px; line-height: 1.35; }
+.jump { display: flex; gap: 6px; justify-content: center; } .jump button { height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+/* ---- one phone ---- */
+.phone { justify-self: center; padding: 9px; border-radius: 44px; background: var(--ink); box-shadow: 8px 8px 0 var(--field-shadow); }
+.stage { position: relative; width: 360px; height: 640px; overflow: hidden; border-radius: 36px; background: var(--page); user-select: none; touch-action: none; }
+.pet { position: absolute; left: 0; top: 0; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 100%; will-change: transform; -webkit-user-drag: none; }
+.play .pet:not(.in) { cursor: grab; } .pet.up { cursor: grabbing; filter: drop-shadow(0 14px 0 color-mix(in oklab, var(--ink) 18%, transparent)); }
+/* what every direction has: its name, you, the button, what a wrong place cost, the spark on your own animal */
+.name { position: absolute; z-index: 40; left: 18px; top: 16px; rotate: -4deg; padding: 4px 13px 6px; border-radius: 12px 12px 12px 4px; background: var(--ink); color: var(--field); font-size: 19px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.04em; box-shadow: 3px 3px 0 var(--action); }
+.you { position: absolute; z-index: 40; right: 16px; top: 14px; display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 13px 0 4px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.you img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; background: var(--stub); }
+.go { position: absolute; z-index: 40; left: 18px; right: 18px; bottom: 18px; height: 54px; border-radius: 99px; font-size: 19px; font-weight: 680; letter-spacing: -0.025em; background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 4px 4px 0 var(--ink); transition: translate .15s var(--ease), box-shadow .15s var(--ease), background-color .2s; }
+.go:active { translate: 3px 3px; box-shadow: inset 0 0 0 2px var(--ink), 1px 1px 0 var(--ink); } .play .go { background: var(--paper); color: var(--ink); }
+.cost { position: absolute; z-index: 60; margin: -14px 0 0 -22px; padding: 3px 9px; border-radius: 99px; font-size: 14px; font-weight: 720; background: var(--warn); color: var(--paper); pointer-events: none; animation: rise .9s var(--ease) forwards; }
+@keyframes rise { to { translate: 0 -46px; opacity: 0; } }
+.spark { position: absolute; z-index: 55; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+.spark::before { content: ""; position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; background: var(--third); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 2.4s ease-in-out infinite; }
+@keyframes twinkle { 0%, 50%, 100% { scale: .55; rotate: 0deg; } 68% { scale: 1.2; rotate: 30deg; } }
+.seat { position: absolute; } .seat.near { --ring: 0 0 0 3px var(--paper), 0 0 0 6.5px var(--action); }
+@keyframes no { 25% { translate: -6px 0; } 75% { translate: 6px 0; } } .seat.no { animation: no .26s 2; }
+.best { display: none; } .done .best.on { display: inline-block; }
+
+/* ============ A · The seating chart: the screen is the ticket, drenched in the school colour ============ */
+.stage.a { background: var(--field); }
+.a .clock { position: absolute; left: 20px; top: 62px; font-size: 92px; font-weight: 800; font-stretch: 118%; letter-spacing: -0.065em; line-height: .86; }
+.a .clock small { display: block; margin: 6px 0 0 4px; font-size: 14px; font-weight: 600; font-stretch: 100%; letter-spacing: -0.01em; }
+.a .chart { position: absolute; left: 16px; top: 172px; width: 328px; height: 272px; border-radius: var(--r); background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 6px 6px 0 var(--ink); }
+.a .chart::before, .a .chart::after { content: ""; position: absolute; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); }
+.a .chart::before { left: -11px; clip-path: inset(0 0 0 50%); } .a .chart::after { right: -11px; clip-path: inset(0 50% 0 0); }
+.a .seat { width: 84px; height: 70px; margin: -64px 0 0 -42px; border-radius: 16px 16px 16px 5px; background: var(--sunk); box-shadow: inset 0 4px 0 color-mix(in oklab, var(--ink) 20%, transparent), var(--ring, 0 0 0 0 #0000); transform-origin: 50% 100%; }
+.a .seat b { position: absolute; left: -5px; top: -8px; padding: 1px 7px 2px; border-radius: 99px; font-size: 11.5px; font-weight: 700; background: var(--ink); color: var(--paper); }
+.a .seat.taken { background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink), var(--ring, 0 0 0 0 #0000); }
+@keyframes tip { 35% { transform: perspective(300px) rotateX(-62deg); } } .a .seat.tip { animation: tip .5s var(--ease) both; animation-delay: calc(var(--i) * 28ms); }
+.a .aisle { position: absolute; left: 0; right: 0; top: 458px; height: 104px; background: color-mix(in oklab, var(--ink) 9%, var(--field)); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 30%, transparent); }
+.a .punch { position: absolute; z-index: 45; left: 50%; top: 510px; translate: -50% -50%; rotate: -7deg; display: none; justify-items: center; padding: 10px 22px 13px; border-radius: 18px 18px 18px 5px; background: var(--ink); color: var(--field); box-shadow: 5px 5px 0 var(--action); white-space: nowrap; }
+.a .punch span { white-space: nowrap; } .a .punch b { font-size: 34px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1; } .a .punch span { font-size: 14px; font-weight: 620; color: var(--paper); }
+.a.done .punch { display: grid; animation: slam .45s var(--ease); } @keyframes slam { from { scale: 2.4; opacity: 0; } 60% { scale: .95; } }
+.a.done .aisle { background: var(--action); } .a.done .clock { color: var(--action); }
+
+/* ============ B · The group photo: they pose, the flash goes, you pose them again, and the photo is yours ============ */
+
+.b .scene { position: absolute; inset: 0; transform-origin: 50% 42%; transition: rotate .6s var(--expo), scale .6s var(--expo), translate .6s var(--expo); }
+.b .print { position: absolute; left: 10px; top: 60px; width: 340px; height: 420px; border-radius: 6px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 7px 7px 0 var(--ink); opacity: 0; transition: opacity .3s .15s; }
+.b .photo { position: absolute; left: 22px; top: 72px; width: 316px; height: 330px; overflow: hidden; border-radius: 4px; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); }
+.b .photo i { position: absolute; left: 0; right: 0; height: 74px; background: color-mix(in oklab, var(--ink) 9%, var(--field)); box-shadow: inset 0 3px 0 color-mix(in oklab, var(--ink) 26%, transparent); }
+.b .photo i:nth-child(1) { top: 172px; } .b .photo i:nth-child(2) { top: 242px; height: 90px; background: color-mix(in oklab, var(--ink) 16%, var(--field)); }
+.b .photo u { position: absolute; width: 22px; height: 22px; border: 3px solid var(--ink); } .b .photo u:nth-of-type(1) { left: 12px; top: 12px; border-width: 3px 0 0 3px; } .b .photo u:nth-of-type(2) { right: 12px; top: 12px; border-width: 3px 3px 0 0; }
+.b .seat { width: 58px; height: 18px; margin: -11px 0 0 -29px; border-radius: 50%; border: 2px dashed color-mix(in oklab, var(--ink) 55%, transparent); box-shadow: var(--ring, 0 0 0 0 #0000); }
+.b .seat.taken { border-style: solid; border-color: transparent; background: color-mix(in oklab, var(--ink) 22%, transparent); }
+.b .clock { position: absolute; z-index: 40; left: 50%; top: 14px; translate: -50% 0; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 15px; border-radius: 99px; font-size: 18px; font-weight: 720; background: var(--ink); color: var(--paper); }
+.b .clock::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--third); } .b.play .clock::before { animation: rec 1s steps(2, jump-none) infinite; } @keyframes rec { to { opacity: .2; } }
+.b .name { left: 14px; } .b .floor { position: absolute; left: 0; right: 0; top: 426px; height: 136px; background: var(--sunk); box-shadow: inset 0 2px 0 color-mix(in oklab, var(--ink) 16%, transparent); transition: opacity .3s; }
+.b .flash { position: absolute; z-index: 70; inset: 0; background: var(--paper); opacity: 0; pointer-events: none; } .b .flash.on { animation: flash .55s ease-out; } @keyframes flash { 0% { opacity: .96; } 100% { opacity: 0; } }
+.b .caption { position: absolute; left: 26px; top: 410px; width: 308px; display: flex; align-items: baseline; justify-content: space-between; opacity: 0; transition: opacity .3s .3s; }
+.b .caption b { font-size: 40px; font-weight: 790; font-stretch: 114%; letter-spacing: -0.055em; line-height: 1.2; } .b .caption span { font-size: 14px; font-weight: 620; } .b .caption .best { padding: 3px 11px 4px; border-radius: 99px; background: var(--third); }
+.b.done .scene { rotate: -3deg; scale: .93; translate: 0 26px; } .b.done .print, .b.done .caption { opacity: 1; } .b.done .floor { opacity: 0; } .b.done .seat { opacity: 0; }
+
+/* ============ C · The table: everyone has a chair, the clock is the table ============ */
+
+.c .rug { position: absolute; left: 14px; top: 126px; width: 332px; height: 332px; border-radius: 40px 40px 40px 10px; background: var(--stub); box-shadow: inset 0 0 0 2px var(--ink); }
+.c .table { position: absolute; z-index: 5; left: 102px; top: 214px; width: 156px; height: 156px; display: grid; place-content: center; justify-items: center; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2.5px var(--ink), 6px 6px 0 var(--ink); transition: background-color .3s, color .3s; }
+.c .clock { font-size: 50px; font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: .95; } .c .table small { font-size: 13px; font-weight: 620; }
+.c .seat { width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 3px 3px 0 var(--ink), var(--ring, 0 0 0 0 #0000); }
+.c .seat.taken { background: var(--field); }
+@keyframes thump { 30% { scale: 1.12; rotate: 9deg; } } .c .table.thump { animation: thump .45s var(--ease); }
+.c.done .table { background: var(--ink); color: var(--field); } .c.done .seat { animation: toast .5s var(--ease) both; animation-delay: calc(var(--i) * 60ms); } @keyframes toast { 40% { scale: 1.16; } }
+.c .edge { position: absolute; left: 0; right: 0; height: 74px; background: var(--sunk); } .c .edge.top { top: 56px; } .c .edge.low { top: 486px; }
+
+/* ---- on a laptop: the app's own bar above and foot below (neither is redrawn here), and the room beside the game used ---- */
+.lapwrap { display: grid; gap: 16px; max-width: 1320px; margin: 0 auto; padding: 0 24px 90px; }
+.lapwrap .head { grid-template-columns: auto auto 1fr auto; } .lapwrap .head i { grid-row: auto; } .pick { display: flex; gap: 4px; } .pick button { width: 38px; height: 34px; border-radius: 99px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--on-ink-mute); } .pick button[aria-pressed=true] { background: var(--field); color: var(--ink); box-shadow: none; }
+.lap { overflow: hidden; border-radius: 14px; background: var(--page); box-shadow: 0 0 0 2px var(--ink), 7px 7px 0 var(--field-shadow); }
+.lap-bar { display: flex; align-items: center; gap: 6px; padding: 9px 20px 10px; background: var(--field); border-bottom: 1.5px solid var(--ink); }
+.lap-bar b { margin-right: 12px; font-size: 21px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.045em; } .lap-bar span, .lap-foot span { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 99px; font-size: 14px; font-weight: 580; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); } .lap-bar span.on { background: var(--ink); color: var(--field); box-shadow: none; }
+.lap-body { display: grid; grid-template-columns: minmax(0, 1fr) 360px minmax(0, 1fr); gap: 56px; align-items: center; padding: 34px 32px 40px; }
+.lap-body .stage { border-radius: 30px 30px 30px 8px; box-shadow: 0 0 0 2px var(--ink), 8px 8px 0 var(--ink); } .lap-body .stage[hidden] { display: none; }
+.lap .stage > .name, .lap .stage > .you { display: none; } .lap .b .clock { left: 50%; }
+.how { justify-self: end; display: grid; gap: 14px; justify-items: start; max-width: 330px; }
+.how h2 { rotate: -4deg; margin-bottom: 10px; padding: 6px 24px 12px; border-radius: 22px 22px 22px 6px; background: var(--ink); color: var(--field); font-size: 68px; font-weight: 780; font-stretch: 114%; letter-spacing: -0.055em; line-height: 1; box-shadow: 6px 6px 0 var(--action); }
+.how p { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; padding: 9px 16px 10px 9px; border-radius: 99px 99px 99px 14px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 16px; font-weight: 560; line-height: 1.25; }
+.how p i { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink); font-style: normal; font-weight: 780; }
+.side { justify-self: start; display: grid; gap: 22px; justify-items: start; }
+.side .yours { rotate: 4deg; display: grid; gap: 2px; padding: 12px 22px 14px; border-radius: 18px 18px 18px 5px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 5px 5px 0 var(--ink); } .side .yours small { font-size: 14px; font-weight: 620; } .side .yours b { font-size: 50px; font-weight: 800; font-stretch: 116%; letter-spacing: -0.06em; line-height: .95; }
+.side .you, .side .back { position: static; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px 0 6px; border-radius: 99px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .side .you img { width: 32px; height: 32px; } .side .back { padding-left: 14px; } .side .back svg { width: 16px; height: 16px; }
+.works { display: inline-flex; padding: 5px 13px 6px; border-radius: 99px; font-size: 13.5px; font-weight: 620; background: var(--ink); color: var(--paper); }
+.lap-foot { display: flex; align-items: center; gap: 6px; padding: 12px 20px; background: var(--field); border-top: 1.5px solid var(--ink); box-shadow: 0 -5px 0 var(--field-shadow); position: relative; } .lap-foot b { margin-right: 12px; font-size: 19px; font-weight: 720; font-stretch: 112%; letter-spacing: -0.045em; } .lap-foot small { margin-left: auto; }
+.lap-tk { display: flex; align-items: flex-end; justify-content: space-around; height: 96px; margin: 0 32px 30px; padding: 0 24px; border-radius: 22px 22px 22px 6px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--field-shadow); } .lap-tk img { width: 70px; height: 70px; object-fit: contain; }
+@media (max-width: 1100px) { .lap-body { grid-template-columns: 1fr; justify-items: center; } .how, .side { justify-self: center; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="mock"><span><b>Seats, the game: three directions.</b> Each one plays: press its button, then drag everyone back. "Finished" under a phone shows the end without playing.</span>
+  <div id="kits"><small>Colours</small><button data-kit="loop" aria-pressed="true">Loopd</button><button data-kit="cornell">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button></div></div>
+
+<main>
+<section class="dir"><div class="head"><i>A</i><b>The seating chart</b><span>The screen is the ticket. Seats have numbers to remember by, and the clock is the biggest thing on it.</span></div>
+  <div class="phone"><div class="stage game a" data-dir="a">
+    <span class="name">Seats</span><span class="you"></span>
+    <div class="clock"><span data-clock>0.0</span><small data-say>seconds. Remember who sits where.</small></div>
+    <div class="chart"></div><div class="aisle"></div>
+    <div class="punch"><b data-time></b><span>All in<span class="best"> · your best yet</span></span></div>
+    <button class="go" type="button"></button></div></div>
+  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button></div></section>
+
+<section class="dir"><div class="head"><i>B</i><b>The group photo</b><span>They pose, the flash goes off and they scatter. Pose them again and the photo is yours, with your time on it.</span></div>
+  <div class="phone"><div class="stage game b" data-dir="b">
+    <span class="name">Seats</span><span class="you"></span><span class="clock"><span data-clock>0.0</span></span>
+    <div class="floor"></div>
+    <div class="scene"><div class="print"></div><div class="photo"><i></i><i></i><u></u><u></u></div>
+      <div class="caption"><b data-time></b><span>All in <span class="best">Your best yet</span></span></div></div>
+    <div class="flash"></div>
+    <button class="go" type="button"></button></div></div>
+  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button></div></section>
+
+<section class="dir"><div class="head"><i>C</i><b>The table</b><span>Everyone has a chair at one table, and the clock is the table. A bump sends them to the edges of the room.</span></div>
+  <div class="phone"><div class="stage game c" data-dir="c">
+    <span class="name">Seats</span><span class="you"></span>
+    <div class="edge top"></div><div class="edge low"></div><div class="rug"></div>
+    <div class="table"><span class="clock" data-clock>0.0</span><small data-say>seconds</small></div>
+    <button class="go" type="button"></button></div></div>
+  <div class="jump"><button data-to="look">Start</button><button data-to="play">Kicked out</button><button data-to="done">Finished</button></div></section>
+</main>
+
+<section class="lapwrap" id="laptop"><div class="head"><i>+</i><b>On a laptop</b><span>The app's bar above and its foot below, as on every page. Beside the game: how it goes, and your best. Nothing floats in white.</span>
+    <div class="pick" id="pick"><button data-dir="a">A</button><button data-dir="b" aria-pressed="true">B</button><button data-dir="c">C</button></div></div>
+  <div class="lap">
+    <div class="lap-bar"><b>Loopd</b><span>This week</span><span class="on">Doodles</span><span>Ink</span><span>Assistants</span></div>
+    <div class="lap-body">
+      <div class="how"><h2>Seats</h2><span class="works">In the works</span>
+        <p><i>1</i>Remember who is where.</p><p><i>2</i>Kick them out. The clock starts.</p><p><i>3</i>Put each one back. A wrong place costs 2 seconds.</p></div>
+      <div id="lapstage"></div>
+      <div class="side"><span class="yours"><small>Your best</small><b>11.9s</b></span><span class="you"></span>
+        <span class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>All doodles</span></div>
+    </div>
+    <div class="lap-tk" id="laptk"></div>
+    <div class="lap-foot"><b>Loopd</b><span>Terms</span><span>Privacy</span><small>© 2026 Loopd</small></div>
+  </div></section>
+
+<script>
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, WRONG = 2;
+const animal = n => `/animals/${String(n).padStart(2, '0')}.png`, FACES = [40, 10, 26, 3, 31, 16, 22, 20, 1, 28, 13, 7, 24];
+const mixed = n => { const order = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } return order; };
+const rand = (low, high) => low + Math.random() * (high - low);
+
+// What differs between the directions: where the places are (the animal's feet, and how large it is drawn there), where the
+// kicked-out ones end up, and what the kick and the end look like. Everything else is one game.
+const DIRS = {
+  a: { seats: () => [0, 1, 2].flatMap(row => [0, 1, 2].map(col => ({ x: 74 + col * 106, y: 252 + row * 84, s: .7, label: 'ABC'[row] + (col + 1) }))),
+       floor: i => ({ x: 44 + i * 34 + rand(-6, 6), y: i % 2 ? 552 : 508, s: .7 }), kick: root => root.querySelectorAll('.seat').forEach(seat => { seat.classList.remove('tip'); void seat.offsetWidth; seat.classList.add('tip'); }) },
+  b: { seats: () => [[112, 246, .78], [180, 240, .78], [248, 246, .78], [82, 318, .9], [180, 314, .9], [278, 318, .9], [130, 392, 1.02], [230, 392, 1.02]].map(([x, y, s]) => ({ x, y, s })),
+       floor: i => ({ x: 48 + i * 38 + rand(-6, 6), y: i % 2 ? 550 : 496, s: .74 }), kick: root => { const flash = root.querySelector('.flash'); flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on'); },
+       done: root => DIRS.b.kick(root) },
+  c: { seats: () => Array.from({ length: 8 }, (_, i) => { const turn = (i * 45 - 90) * Math.PI / 180; return { x: 180 + Math.cos(turn) * 126, y: 292 + Math.sin(turn) * 126 + 22, s: .66, cy: -22 }; }),
+       floor: i => ({ x: 52 + (i >> 1) * 85 + rand(-8, 8), y: i % 2 ? 122 : 552, s: .7 }), kick: root => { const table = root.querySelector('.table'); table.classList.remove('thump'); void table.offsetWidth; table.classList.add('thump'); } },
+};
+
+function game(root) {
+  const dir = DIRS[root.dataset.dir], places = dir.seats(), n = places.length, holder = root.querySelector('.scene') ?? root;
+  const clock = root.querySelector('[data-clock]'), say = root.querySelector('[data-say]'), button = root.querySelector('.go'), words = say?.textContent;
+  root.querySelector('.you').innerHTML = `<img src="${animal(FACES[0])}" alt="">You`;
+  const seats = places.map((place, i) => { const el = document.createElement('i'); el.className = 'seat'; el.style.cssText = `left:${place.x}px;top:${place.y + (place.cy ?? 0)}px;--i:${i}`; if (place.label) el.innerHTML = `<b>${place.label}</b>`; holder.append(el); return el; });
+  const crowd = FACES.slice(0, n).map((face, i) => { const el = document.createElement('img'); el.className = 'pet'; el.src = animal(face); el.alt = ''; el.draggable = false; holder.append(el); return { el, mine: i === 0, home: i, in: true, held: false, x: 0, y: 0, s: 1, tx: 0, ty: 0, ts: 1, vx: 0, vy: 0, wait: 0 }; });
+  const spark = Object.assign(document.createElement('i'), { className: 'spark' }); holder.append(spark);
+  let state = 'look', began = 0, fine = 0, took = 0, timer = 0, best = null, running = false, last = 0;
+
+  // Every animal is pulled to where it should be by a spring that settles without overshooting: nothing here is timed.
+  const draw = one => { one.el.style.transform = `translate(${(one.x - 42).toFixed(1)}px, ${(one.y - 84).toFixed(1)}px) scale(${one.s.toFixed(3)})`; one.el.style.zIndex = one.held ? 50 : 10 + Math.round(one.y / 8);
+    if (one.mine) spark.style.transform = `translate(${(one.x + 30 * one.s).toFixed(1)}px, ${(one.y - 74 * one.s).toFixed(1)}px)`; };
+  const wake = () => { if (!running) { running = true; last = performance.now(); requestAnimationFrame(step); } };
+  function step(now) { const dt = Math.min(.032, (now - last) / 1000) || .016; last = now; let moving = false;
+    for (const one of crowd) { if (one.held) { moving = true; continue; } if (one.wait > 0) { one.wait -= dt; moving = true; continue; }
+      const k = 340, c = 2 * Math.sqrt(k);
+      one.vx += (k * (one.tx - one.x) - c * one.vx) * dt; one.vy += (k * (one.ty - one.y) - c * one.vy) * dt; one.x += one.vx * dt; one.y += one.vy * dt; one.s += (one.ts - one.s) * Math.min(1, dt * 14);
+      if (Math.abs(one.tx - one.x) + Math.abs(one.ty - one.y) + Math.abs(one.vx) + Math.abs(one.vy) > .4) moving = true; else { one.x = one.tx; one.y = one.ty; one.s = one.ts; } draw(one); }
+    if (moving) requestAnimationFrame(step); else running = false; }
+  const send = (one, to, wait = 0) => { one.tx = to.x; one.ty = to.y; one.ts = to.s; one.wait = reduce ? 0 : wait; if (reduce) { one.x = to.x; one.y = to.y; one.s = to.s; draw(one); } wake(); };
+  const secs = value => value.toFixed(1), elapsed = () => (performance.now() - began) / 1000 + fine;
+  function tell() {
+    root.classList.remove('look', 'play', 'done'); root.classList.add(state);
+    clock.textContent = secs(state === 'look' ? 0 : state === 'play' ? elapsed() : took);
+    if (say && words.length > 8) say.textContent = state === 'look' ? words : state === 'play' ? 'seconds. Put each one back.' : 'seconds';
+    button.textContent = state === 'look' ? 'Kick them out' : state === 'play' ? 'Start over' : 'Again';
+    seats.forEach((el, i) => el.classList.toggle('taken', crowd.some(one => one.in && one.home === i)));
+    root.querySelectorAll('[data-time]').forEach(el => el.textContent = `${secs(took)}s`);
+    root.querySelectorAll('.best').forEach(el => el.classList.toggle('on', state === 'done' && took <= best));
+  }
+  function round() { clearInterval(timer); state = 'look'; const order = mixed(n); crowd.forEach((one, i) => { one.home = order[i]; one.in = true; one.held = false; one.el.classList.add('in'); one.el.classList.remove('up'); send(one, places[one.home], i * .02); }); tell(); }
+  function kick() { state = 'play'; began = performance.now(); fine = 0; dir.kick?.(root);
+    const order = mixed(n); crowd.forEach((one, i) => { one.in = false; one.el.classList.remove('in'); one.spot = dir.floor(order[i]); send(one, one.spot, order[i] * .03); });
+    tell(); timer = setInterval(tell, 100); }
+  function won() { clearInterval(timer); took = Math.round(elapsed() * 10) / 10; state = 'done'; if (best === null || took < best) best = took; tell(); dir.done?.(root); }
+  const nearest = one => { let pick = null, far = 50; places.forEach((place, i) => { if (crowd.some(other => other.in && other.home === i)) return; const d = Math.hypot(place.x - one.x, place.y - one.y); if (d < far) { far = d; pick = i; } }); return pick; };
+
+  for (const one of crowd) { let grip = null;
+    const at = event => { const box = root.getBoundingClientRect(); return { x: event.clientX - box.left, y: event.clientY - box.top }; };
+    one.el.addEventListener('pointerdown', event => { event.preventDefault(); if (state !== 'play' || one.in) return; one.el.setPointerCapture(event.pointerId); const p = at(event);
+      one.held = true; one.el.classList.add('up'); grip = { x: p.x - one.x, y: p.y - one.y }; one.vx = one.vy = 0; one.ts = .9; one.s = .9; wake(); });
+    one.el.addEventListener('pointermove', event => { if (!one.held) return; const p = at(event); one.x = p.x - grip.x; one.y = p.y - grip.y; draw(one); const near = nearest(one); seats.forEach((el, i) => el.classList.toggle('near', i === near)); });
+    const up = () => { if (!one.held) return; one.held = false; one.el.classList.remove('up'); seats.forEach(el => el.classList.remove('near')); const near = nearest(one);
+      if (near === one.home) { one.in = true; one.el.classList.add('in'); send(one, places[near]); tell(); if (crowd.every(each => each.in)) won(); return; }
+      if (near !== null) { fine += WRONG; const seat = seats[near]; seat.classList.remove('no'); void seat.offsetWidth; seat.classList.add('no');
+        const cost = Object.assign(document.createElement('b'), { className: 'cost', textContent: `+${WRONG}s` }); cost.style.left = `${places[near].x}px`; cost.style.top = `${places[near].y - 60}px`; cost.addEventListener('animationend', () => cost.remove()); holder.append(cost); if (reduce) setTimeout(() => cost.remove(), 900);
+        return send(one, one.spot); }
+      one.spot = { x: Math.max(40, Math.min(320, one.x)), y: one.y, s: one.spot.s }; send(one, one.spot); };
+    one.el.addEventListener('pointerup', up); one.el.addEventListener('pointercancel', up); }
+  button.addEventListener('click', () => state === 'look' ? kick() : round());
+  crowd.forEach(one => { const place = places[one.home]; one.x = place.x; one.y = place.y; one.s = place.s; draw(one); });
+  round(); crowd.forEach(one => { one.wait = 0; one.x = one.tx; one.y = one.ty; one.s = one.ts; draw(one); }); root._crowd = crowd; // the mockup opens with everyone already in place
+  // for the pills under the phone: any state without playing to it
+  return to => { round(); if (to === 'look') return; kick(); if (to === 'play') return; began = performance.now() - rand(9000, 14000); crowd.forEach((one, i) => { one.in = true; one.el.classList.add('in'); send(one, places[one.home], i * .03); }); won(); };
+}
+// The laptop frame holds a copy of each direction's screen, one shown at a time.
+const lapstage = document.getElementById('lapstage');
+for (const root of document.querySelectorAll('main .game')) { const copy = root.cloneNode(true); copy.hidden = copy.dataset.dir !== 'b'; lapstage.append(copy); }
+document.querySelector('.side .you').innerHTML = `<img src="${animal(FACES[0])}" alt="">You`;
+document.getElementById('laptk').innerHTML = [10, 26, 3, 31, 16, 22, 20, 1, 28, 13, 7].map(n => `<img src="${animal(n)}" alt="">`).join('');
+document.getElementById('pick').addEventListener('click', event => { const dir = event.target.dataset?.dir; if (!dir) return;
+  for (const each of lapstage.children) each.hidden = each.dataset.dir !== dir; for (const button of event.currentTarget.children) button.setAttribute('aria-pressed', button.dataset.dir === dir); });
+for (const root of document.querySelectorAll('.game')) { const show = game(root); root.closest('.dir')?.querySelector('.jump').addEventListener('click', event => { const to = event.target.dataset?.to; if (to) show(to); }); }
+document.querySelectorAll('#kits button').forEach(button => button.addEventListener('click', () => { document.documentElement.dataset.kit = button.dataset.kit; document.querySelectorAll('#kits button').forEach(each => each.setAttribute('aria-pressed', each === button)); }));
+</script>
+</body>
+</html>

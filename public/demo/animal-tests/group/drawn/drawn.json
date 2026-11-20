@@ -1,0 +1,66 @@
+[
+ {
+  "file": "earlier-d2-1.png",
+  "faces": [
+   "37",
+   "38"
+  ],
+  "note": "matching red scarves",
+  "at": "2026-11-19T18:20:00.688Z",
+  "kept": false
+ },
+ {
+  "file": "earlier-d2-2.png",
+  "faces": [
+   "37",
+   "38"
+  ],
+  "note": "matching red scarves",
+  "at": "2026-11-19T18:20:00.691Z",
+  "kept": false
+ },
+ {
+  "file": "earlier-d3-1.png",
+  "faces": [
+   "8e68d22d-4142-471a-a687-11ad1f881b87",
+   "38"
+  ],
+  "note": "",
+  "at": "2026-11-19T18:20:00.700Z",
+  "kept": false
+ },
+ {
+  "file": "earlier-d3-2.png",
+  "faces": [
+   "8e68d22d-4142-471a-a687-11ad1f881b87",
+   "38"
+  ],
+  "note": "",
+  "at": "2026-11-19T18:20:00.703Z",
+  "kept": false
+ },
+ {
+  "file": "earlier-drawn-1.png",
+  "faces": [
+   "37",
+   "5",
+   "23",
+   "12"
+  ],
+  "note": "",
+  "at": "2026-11-19T18:20:00.711Z",
+  "kept": false
+ },
+ {
+  "file": "earlier-drawn-2.png",
+  "faces": [
+   "37",
+   "5",
+   "23",
+   "12"
+  ],
+  "note": "",
+  "at": "2026-11-19T18:20:00.712Z",
+  "kept": false
+ }
+]
