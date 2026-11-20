@@ -21,9 +21,9 @@ canvas { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 26px 2
 
 <main>
 <header><h1>The Ink+ sparkle</h1>
-<p class="lead">What is in the game now: sparks twinkle beside your own animal, and a glint slides across it every few seconds. Shown close up and at the size it is in play, with a plain line beside it.</p></header>
+<p class="lead">What is in the game now: a small spark twinkles beside your own animal now and then, and that is all. Shown close up and at the size it is in play, with a plain line beside it.</p></header>
 <div class="set">
-  <div class="one"><span class="tab">Close up</span><canvas data-look="near"></canvas><p class="note">Three animals, each with the effect, drawn large so the glint and the sparks are easy to see.</p></div>
+  <div class="one"><span class="tab">Close up</span><canvas data-look="near"></canvas><p class="note">Three animals, each with the effect, drawn large so the spark is easy to see.</p></div>
   <div class="one"><span class="tab">In play</span><canvas data-look="play"></canvas><p class="note">The dachshund's line has Ink+. The penguin's line does not. The rope and the animals behind are the same on both.</p></div>
 </div>
 <a class="play" href="/conga?ink">Play with it on</a>
@@ -39,21 +39,12 @@ for (const canvas of document.querySelectorAll('canvas')) {
   const look = canvas.dataset.look, pen = canvas.getContext('2d');
   const fit = () => { const k = Math.min(2, devicePixelRatio || 1); canvas.width = canvas.clientWidth * k; canvas.height = canvas.clientHeight * k; };
   fit(); addEventListener('resize', fit);
-  const lit = document.createElement('canvas'), litPen = lit.getContext('2d'); lit.width = lit.height = 192;
   // The same drawing as the game's (public/conga/index.html, sparkle).
   const sparkle = (face, x, y, size, t) => {
-    const pass = (t % 3.2) / 0.7;
-    if (pass < 1 && face.complete) {
-      litPen.globalCompositeOperation = 'source-over'; litPen.clearRect(0, 0, 192, 192); litPen.drawImage(face, 0, 0, 192, 192);
-      litPen.globalCompositeOperation = 'source-in';
-      const at = -80 + pass * 352, band = litPen.createLinearGradient(at - 44, 0, at + 44, 52);
-      band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.5, 'rgba(255,255,255,.9)'); band.addColorStop(1, 'rgba(255,255,255,0)');
-      litPen.fillStyle = band; litPen.fillRect(0, 0, 192, 192); pen.drawImage(lit, x - size / 2, y - size / 2, size, size);
-    }
-    pen.lineJoin = 'round'; pen.lineWidth = Math.max(2.5, size * 0.03); pen.strokeStyle = INK; pen.fillStyle = PAPER;
+    pen.lineJoin = 'round'; pen.lineWidth = Math.max(2, size * 0.025); pen.strokeStyle = INK; pen.fillStyle = PAPER;
     SPARKS.forEach(([fx, fy, big], n) => {
-      const life = ((t + n * 0.8) % 2.4) / 0.8; if (life >= 1) return;
-      const r = size * 0.17 * big * Math.sin(life * Math.PI), px = x + fx * size, py = y + fy * size - life * 4, thin = r * 0.16;
+      const life = ((t + n * 1.7) % 5.1) / 0.7; if (life >= 1) return;
+      const r = size * 0.12 * big * Math.sin(life * Math.PI), px = x + fx * size, py = y + fy * size - life * 4, thin = r * 0.16;
       pen.beginPath(); pen.moveTo(px, py - r); pen.quadraticCurveTo(px + thin, py - thin, px + r, py); pen.quadraticCurveTo(px + thin, py + thin, px, py + r);
       pen.quadraticCurveTo(px - thin, py + thin, px - r, py); pen.quadraticCurveTo(px - thin, py - thin, px, py - r); pen.closePath(); pen.stroke(); pen.fill();
     });
