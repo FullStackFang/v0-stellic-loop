@@ -825,3 +825,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm-moves details[open] summary { display: none; } .cs-adm-moves details button { background: var(--adm-warn); color: var(--cs-paper); }
 .cs-adm-pick:has(.cs-adm-grid :checked):not(:has(.cs-adm-grid li:has(:checked) ~ li:has(:checked))) .cs-adm-tray { display: none; }
 .cs-adm-pick:has(.cs-adm-grid input:checked:not([data-mascot])) .cs-adm-tray button[value=school] { display: none; }
+/* Picking an animal, the account card is as wide as the window allows, as the group picture's card is: more in a row, less to scroll, and no bar drawn */
+.cs-lvl:has(.cs-pets-grid) { width: min(960px, calc(100vw - 28px)); }
+.cs-lvl .cs-pets-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
+.cs-lvl:has(.cs-pets-grid) .cs-lvl-body { max-height: min(72vh, 720px); scrollbar-width: none; scrollbar-gutter: auto; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body::-webkit-scrollbar { display: none; }
