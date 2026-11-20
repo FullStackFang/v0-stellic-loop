@@ -16,7 +16,7 @@ export type { BarGroup };
  * screen's own card (level, picture, Ink, colours), drawn from `screen`, with the groups pages' links added. Without a
  * screen (it could not be read) there is a plain card: colours, the links, the way out.
  */
-export function Bar({ groups, face, ink = false, account, screen = null, children }: { /** The person's campus screen, for the account card. */ screen?: Screen | null; /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** Whether the person has Loop Ink: their avatar sits on its blot. */ ink?: boolean; account: ReactNode }) {
+export function Bar({ groups, face, ink = false, account, screen = null, children }: { /** The person's campus screen, for the account card. */ screen?: Screen | null; /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** Whether the person has Loopd Ink: their avatar sits on its blot. */ ink?: boolean; account: ReactNode }) {
   const [open, setOpen] = useState(false), [kit, setKit] = useState('loop'), box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;

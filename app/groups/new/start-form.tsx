@@ -62,14 +62,14 @@ export function StartForm({ tree, canTop, initialParent }: { tree: StartNode[]; 
     };
     setLinks(next.links); setPeople(next.people); setNote(next.note); setText('');
     const lost = links.length + sorted.links.length > START_LIMITS.links || people.length + sorted.emails.length > START_LIMITS.people;
-    setNotice(lost ? `A new group starts with up to ${START_LIMITS.links} links and ${START_LIMITS.people} people. Add the rest from the group's pages.` : raw.trim() && !sorted.links.length && !sorted.emails.length && !sorted.note ? 'Nothing there Loop can keep. Links need to start with https.' : '');
+    setNotice(lost ? `A new group starts with up to ${START_LIMITS.links} links and ${START_LIMITS.people} people. Add the rest from the group's pages.` : raw.trim() && !sorted.links.length && !sorted.emails.length && !sorted.note ? 'Nothing there Loopd can keep. Links need to start with https.' : '');
     return next;
   }
   function addFiles(list: FileList | File[]) {
     const kept = [...files], refused: string[] = [];
     for (const file of list) {
       if (kept.some(item => item.name === file.name && item.size === file.size)) continue;
-      if (!readable(file)) refused.push(`${file.name}: Loop reads .txt, .md and text PDFs. Share anything else as a link.`);
+      if (!readable(file)) refused.push(`${file.name}: Loopd reads .txt, .md and text PDFs. Share anything else as a link.`);
       else if (tooBig(file) || kept.length >= START_LIMITS.files || kept.reduce((sum, item) => sum + item.size, file.size) > START_LIMITS.bytes) refused.push(`${file.name} is too much to send with this form. Add it on the group's Resources tab after the group is made.`);
       else kept.push(file);
     }
@@ -132,7 +132,7 @@ export function StartForm({ tree, canTop, initialParent }: { tree: StartNode[]; 
 
     <div className={over ? 'lp-ng-box lp-ng-over' : 'lp-ng-box'} onDragOver={event => { event.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={drop}>
       <textarea value={text} onChange={event => setText(event.target.value)} aria-label="Add anything"
-        placeholder={`Drop files here, or paste anything: links, emails, a note to the group. Loop sorts it.`}
+        placeholder={`Drop files here, or paste anything: links, emails, a note to the group. Loopd sorts it.`}
         onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (text.trim()) sort(text); } }} />
       <div className="lp-ng-boxfoot">
         <label className="lp-ng-pill">Choose files<input type="file" multiple hidden accept=".txt,.md,.pdf" onChange={event => { if (event.target.files) addFiles(event.target.files); event.target.value = ''; }} /></label>
@@ -142,9 +142,9 @@ export function StartForm({ tree, canTop, initialParent }: { tree: StartNode[]; 
     </div>
 
     <div className="lp-ng-lanes">
-      {lane('Files', 'Loop keeps a copy of the text.', files.map(file => ({ key: `${file.name} ${file.size}`, label: file.name, meta: size(file.size), remove: () => setFiles(files.filter(item => item !== file)) })))}
+      {lane('Files', 'Loopd keeps a copy of the text.', files.map(file => ({ key: `${file.name} ${file.size}`, label: file.name, meta: size(file.size), remove: () => setFiles(files.filter(item => item !== file)) })))}
       {lane('Links', 'Address and title only. Your assistant opens them with your own access.', links.map(link => ({ key: link, label: link.replace(/^https:\/\//, ''), remove: () => setLinks(links.filter(item => item !== link)) })))}
-      {lane('People', 'Invited as members. Loop does not email them: they see the invitation when they sign in with this address.', people.map(person => ({ key: person, label: person, remove: () => setPeople(people.filter(item => item !== person)) })))}
+      {lane('People', 'Invited as members. Loopd does not email them: they see the invitation when they sign in with this address.', people.map(person => ({ key: person, label: person, remove: () => setPeople(people.filter(item => item !== person)) })))}
     </div>
 
     {note && <div className="lp-ng-say"><h3>First announcement</h3><textarea value={note} onChange={event => setNote(event.target.value)} aria-label="First announcement" rows={Math.min(6, note.split('\n').length + 1)} maxLength={600} /></div>}
@@ -174,7 +174,7 @@ function Ready({ made, where }: { made: Extract<StartState, { status: 'ready' }>
       {announcement && row('First announcement', announcement)}
       {files.length > 0 && row('Files', files.join(', '))}
       {links.length > 0 && row('Links', links.map(link => link.replace(/^https:\/\//, '')).join(', '))}
-      {people.length > 0 && row('Invited', <>{people.join(', ')}<small>They see the invitation when they sign in with that address. Loop does not email them.</small></>)}
+      {people.length > 0 && row('Invited', <>{people.join(', ')}<small>They see the invitation when they sign in with that address. Loopd does not email them.</small></>)}
     </dl>
     {made.failed.length > 0 && <div className="lp-ng-failed" role="alert"><h2>Not added</h2><ul>{made.failed.map(item => <li key={item.what}><b>{item.what}</b> {item.why}</li>)}</ul></div>}
   </section>;

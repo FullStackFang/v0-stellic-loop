@@ -183,11 +183,11 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
         {people.map((face, at) => <li className="who" key={at}><FaceDot face={face} /><span><b>{face.first}</b>{face.why}</span></li>)}</ul></div>
       {map && <figure className="cs-map"><FrameWait key={box} title={`Map of ${map.name}`} loading="lazy" src={`https://www.openstreetmap.org/export/embed.html?bbox=${box}&layer=mapnik&marker=${map.lat}%2C${map.lon}`} /><figcaption><b>{map.name}</b>{ticket.place !== map.name ? ticket.place : ''}</figcaption></figure>}
       <div className="cs-regact">{ticket.mine ? <>
-          <small>{ticket.mine.registered ? 'You are registered, in Loop. ' : 'You are in. '}A reward only unlocks for people who check in together, so bring them.{' '}
+          <small>{ticket.mine.registered ? 'You are registered, in Loopd. ' : 'You are in. '}A reward only unlocks for people who check in together, so bring them.{' '}
             {ticket.mine.canEdit && <Link className="quiet" href={`/c/${campus.slug}/post?plan=${ticket.id}`}>Change this plan</Link>}{' '}
             {ticket.mine.canLeave && <button className="quiet" disabled={busy} aria-busy={busy && pressed === `leave ${ticket.id}`} onClick={() => run(`leave ${ticket.id}`, () => leaveAction(ticket.id))}>{say(`leave ${ticket.id}`, 'Leave', false)}</button>}</small>
           <button className="cs-btn go" onClick={() => show(ticket.id, 'invite')}>Invite people</button></>
-        : ticket.action === 'register' ? <><small>Loop keeps your registration here, so the people you know can see you are going. {ticket.source ?? 'The organizer'} is not told: if the event asks you to register with them, do that too.</small>
+        : ticket.action === 'register' ? <><small>Loopd keeps your registration here, so the people you know can see you are going. {ticket.source ?? 'The organizer'} is not told: if the event asks you to register with them, do that too.</small>
           {viewer ? <button className="cs-btn go" disabled={busy} aria-busy={busy && pressed === `in ${ticket.id}`} onClick={() => run(`in ${ticket.id}`, () => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: false }))}>{say(`in ${ticket.id}`, 'Register me')}</button> : <Link className="cs-btn go" href={signInHref}>Register me</Link>}</>
         : ticket.action === 'join' ? <><small>You were sent a link to a group going to this.</small>{action(ticket)}</> : null}</div></div>;
   };
@@ -212,7 +212,7 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
   const plus = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" /></svg>;
   const row = (id: string, at: number) => { const ticket = byId.get(id)!; return [card(ticket, at), opened?.id === id ? sheet : null]; };
   const [count, ...words] = (picked.marker ?? '').split(' ');
-  // Only an event at a place Loop knows has a spot on the map, and the line says how many do.
+  // Only an event at a place Loopd knows has a spot on the map, and the line says how many do.
   const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
   const bar = <CampusBar screen={screen} groups={groups} on="week" signInHref={signInHref} signOut={signOut} swap={swap}>
@@ -347,7 +347,7 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* The plan's one row. It steps aside for the picker, where an Ink animal opens the plan for someone without it. */}
-      {!picking && <div className="cs-inkrow"><InkMark /><span><b>{asked ? 'You have Ink' : 'Loop Ink'}</b><small>{asked ? 'Every Ink animal is yours to pick.' : 'More animals, and your own pet drawn from a photo.'}</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>}
+      {!picking && <div className="cs-inkrow"><InkMark /><span><b>{asked ? 'You have Ink' : 'Loopd Ink'}</b><small>{asked ? 'Every Ink animal is yours to pick.' : 'More animals, and your own pet drawn from a photo.'}</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>}
       {!picking && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" /></svg><span><b>Save your picture</b><small>A profile picture, a lock screen or a sticker.</small></span><button className="cs-btn sm" onClick={() => { setPicking(true); setSaving(true); setSchooling(false); }}>Save it</button></div>}
       {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
       {!picking && home && swap.filter(each => !each.home).map(each => <div className="cs-inkrow cs-camprow" key={each.slug}><span><b>Your campus is {home.title}</b><small>{moveNote ?? 'You can look at the other one any time from the map.'}</small></span>

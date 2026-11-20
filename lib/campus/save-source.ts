@@ -16,7 +16,7 @@ import { firstNames } from './people';
 /** What the saved picture is made from. `figure` is null when there is no animal to save: the person wears their own photo, or the group has no drawing. */
 export type Source = { figure: Uint8Array | null; name: string };
 
-/** The animal a person wears, as large as Loop has it, and their name. */
+/** The animal a person wears, as large as Loopd has it, and their name. */
 export async function ownSource(q: Q, personId: string): Promise<Source> {
   const { rows: [worn] } = await q.query<{ face: number | null; token: string | null }>(`select c.face,(select p.token::text from campus_custom_picture p where p.token=coalesce(c.picture,f.token)) as token
     from (select $1::uuid as id) i left join campus_face c on c.person_id=i.id left join campus_custom_face f on f.person_id=i.id`, [personId]);
@@ -36,5 +36,5 @@ export async function groupSource(q: Q, principal: Principal, scope: { orgId: st
   return { figure: token ? await groupPictureImage(q, token, true) : null, name: group.name };
 }
 
-/** Whether a person may have a picture without the Loop mark: with Ink+, or as the admin. */
+/** Whether a person may have a picture without the Loopd mark: with Ink+, or as the admin. */
 export const mayDropMark = async (q: Q, principal: Principal) => isAdmin(principal) || await hasInkPlus(q, principal.personId);

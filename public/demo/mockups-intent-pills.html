@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Drop an intent — pill styling, 3 looks</title>
+<title>Loopd · Drop an intent — pill styling, 3 looks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -243,7 +243,7 @@ const curFor=(k,st)=> k==='kind'?LEAD[st.cat] : k==='act'?st.act : k==='day'?st.
 /* ---------- phone shell ---------- */
 const SHELL = `
   <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
-  <div class="header"><span class="wordmark">Loop<i></i></span></div>
+  <div class="header"><span class="wordmark">Loopd<i></i></span></div>
   <div class="bg"><div class="k">What your intent lands in</div>${POPULAR.map(p=>`<div class="bgrow"><div class="ring"></div><div><div class="t">${esc(sentence(p).replace(/^(Grabbing|Studying|Up for) /,''))}</div><div class="s">${p.want} want · your floor</div></div></div>`).join('')}</div>
   <div class="scrim"></div>
   <div class="sheet">

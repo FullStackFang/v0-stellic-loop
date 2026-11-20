@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Loop rings · polish</title>
+<title>Loopd rings · polish</title>
 <style>
 @font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
 :root{
@@ -169,14 +169,14 @@ const svg=(m,o={})=>`<svg class="rings" viewBox="0 0 100 100" aria-hidden="true"
 const marks=document.getElementById('marks');
 MARKS.forEach((m,i)=>{
   const el=document.createElement('article');el.className='mk';el.tabIndex=0;el.setAttribute('role','button');el.dataset.key=m.key;
-  el.innerHTML=`<div class="mk-hero">${svg(m,{big:true})}</div><div class="mk-row"><span class="lock">${svg(m)}Loop</span><span class="sm">${svg(m)}${svg(m)}${svg(m,{big:true})}</span></div><div class="mk-txt"><b><i>${i}</i>${m.name}</b><span>${m.why}</span></div>`;
+  el.innerHTML=`<div class="mk-hero">${svg(m,{big:true})}</div><div class="mk-row"><span class="lock">${svg(m)}Loopd</span><span class="sm">${svg(m)}${svg(m)}${svg(m,{big:true})}</span></div><div class="mk-txt"><b><i>${i}</i>${m.name}</b><span>${m.why}</span></div>`;
   el.onclick=()=>{current=m.key;render();};
   marks.appendChild(el);
 });
 
 const arrow='<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg>';
 function screen(m){
-  const rail=`<aside class="rail"><a class="wm" href="#">${svg(m)}<span>Loop</span></a><nav><p class="navl">You</p><ul><li><a class="nv" href="#" aria-current="page"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/></svg>Groups</a></li><li><a class="nv" href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5.5" cy="8" r="3"/><circle cx="10.5" cy="8" r="3"/></svg>Assistants</a></li></ul></nav></aside>`;
+  const rail=`<aside class="rail"><a class="wm" href="#">${svg(m)}<span>Loopd</span></a><nav><p class="navl">You</p><ul><li><a class="nv" href="#" aria-current="page"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/></svg>Groups</a></li><li><a class="nv" href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5.5" cy="8" r="3"/><circle cx="10.5" cy="8" r="3"/></svg>Assistants</a></li></ul></nav></aside>`;
   return `<div class="app">${rail}<main class="main"><div class="scroll"><div class="s-wrap"><section class="s-plate">
     <div class="s-copy"><p class="s-kick"><i></i>Private groups</p><h1>Three steps <em>into the loop.</em></h1>
       <ol class="s-steps"><li class="on"><span class="n">1</span><div><b>Sign in</b><span>With the email your invitation went to.</span></div></li><li><span class="n">2</span><div><b>Accept your invitation</b><span>Your team appears in the menu.</span></div></li><li><span class="n">3</span><div><b>Connect your assistant</b><span>Ask Claude what’s yours, where the file is, when it’s due.</span></div></li></ol>

@@ -11,7 +11,7 @@ export function Shell({ board, tab, plan, children, footer }: { board: Board; ta
   const classes = ['app', footer && 'with-footer', plan && 'sun', plan && 'w-' + plan.sky, plan && solar(plan.hour, plan.sky).dark && !ended && 'night', ended && 'dnf', plan?.state === 'formed' && plan.me === 'in' && 'formed'].filter(Boolean).join(' ');
   return <ToastProvider><div className={classes} style={plan ? solarStyle(plan.hour, plan.sky, ended) : undefined}>
     {plan && !ended ? <Sky sky={plan.sky} /> : null}
-    <header className="head"><Link className="wm" href={'/b/' + board.slug}>Loop</Link><Link className="space" href={'/b/' + board.slug + (tab === 'board' ? '/you' : '')}>{tab === "board" ? "Your plans" : board.name}</Link></header>
+    <header className="head"><Link className="wm" href={'/b/' + board.slug}>Loopd</Link><Link className="space" href={'/b/' + board.slug + (tab === 'board' ? '/you' : '')}>{tab === "board" ? "Your plans" : board.name}</Link></header>
     <main className={'screen' + (tab === 'you' || tab === 'new' || plan?.state === 'past' ? ' nobar' : '')}>{children}</main>
     {footer}
   </div></ToastProvider>;

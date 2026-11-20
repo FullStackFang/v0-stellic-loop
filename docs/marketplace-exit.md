@@ -12,9 +12,9 @@ Read through authenticated Vercel CLI resource inspection and Supabase CLI proje
 
 | Resource | Observed plan | Dependencies / exit status |
 | --- | --- | --- |
-| loop-mvp-auth | Clerk Hobby, installation billing | Connected to Loop development/preview; no production connection. Direct ownership transfer support not established. Preserve identity/config before any replacement or cancellation. |
+| loop-mvp-auth | Clerk Hobby, installation billing | Connected to Loopd development/preview; no production connection. Direct ownership transfer support not established. Preserve identity/config before any replacement or cancellation. |
 | supabase-shared | Supabase Pro, installation billing | Active project fhtbbdmhfhrvuohcfkso; no Marketplace project connections, but existing Runs and migration consumers use it. |
-| supabase-loop | Same Supabase Pro installation | Active gtxvuhxjequvhxuerfdw; connected to Loop preview/production. Preserve environment configuration before transfer. |
+| supabase-loop | Same Supabase Pro installation | Active gtxvuhxjequvhxuerfdw; connected to Loopd preview/production. Preserve environment configuration before transfer. |
 | supabase-stoop | Same Supabase Pro installation | Active zipuqihidfkynvoaejza; no Marketplace project connections does not establish no application consumers. |
 | lodestone-db | Neon Free | Connected to v0-lodestone in all environments. |
 | cornell-bingo-neon-db | Neon Free | Connected to v0-bingo-web-app in all environments. |
@@ -37,7 +37,7 @@ The available CLI can create organizations but has no project-transfer command. 
 
 1. Review the destination plan and eligibility for the existing shared project. Transfer supabase-shared using Supabase Project Settings → General → Transfer project → FullstackFang Direct. A paid-to-Free transfer may cause brief downtime and lose paid features; do not assume all three projects fit the two-active-Free-project quota.
 2. Verify database, auth, storage and app connections after transfer. Preserve keys/connection settings securely and account for Marketplace environment synchronization before transferring connected source projects.
-3. Complete outstanding Loop/Stoop app cutovers and final-delta verification before retiring source databases, or transfer those projects if they must remain active. Their copied snapshots alone do not prove safe retirement.
+3. Complete outstanding Loopd/Stoop app cutovers and final-delta verification before retiring source databases, or transfer those projects if they must remain active. Their copied snapshots alone do not prove safe retirement.
 4. Review Clerk ownership transfer/replacement and Neon transfer paths under the user's direct accounts. Free resources still need ownership work but have no demonstrated paid base subscription to cancel now.
 5. After every required resource has moved or been deliberately retired, remove the empty Marketplace installations and verify provider plan status and final Vercel invoices. Historical usage may remain payable after exit.
 

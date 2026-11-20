@@ -1,4 +1,4 @@
-/* How we got here: the earlier versions of Loop as a timeline. Tokens come from app/loop.css. */
+/* How we got here: the earlier versions of Loopd as a timeline. Tokens come from app/loop.css. */
 .lp .lp-tl{list-style:none;position:relative;margin:26px 0 0;padding:0 0 0 34px}
 .lp-tl::before{content:'';position:absolute;left:11px;top:8px;bottom:8px;width:2px;background:var(--line-2)}
 .lp-tl > li{position:relative;margin-bottom:34px}

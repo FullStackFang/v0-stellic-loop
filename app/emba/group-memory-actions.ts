@@ -16,7 +16,7 @@ export async function connectGroupAssistant(_previous:PortalResult,data:FormData
  try{
   const clientId=value(data,'clientId');if(!authConfig().clientIds.includes(clientId))return unavailable;
   await grantLease(db(),p,{clientId,orgId:value(data,'orgId'),loopId:value(data,'loopId'),actions:['plan:read',...(data.get('allowWrites')==='yes'?['group-memory:write']:[])],expiresAt:new Date(Date.now()+7*24*60*60*1000).toISOString()});
-  revalidatePath('/emba');return {status:'success',message:'Group access granted. Add the Loop connector in your assistant and sign in with this same account. You can revoke access below.'};
+  revalidatePath('/emba');return {status:'success',message:'Group access granted. Add the Loopd connector in your assistant and sign in with this same account. You can revoke access below.'};
  }catch{return unavailable;}
 }
 function parsed(d:FormData){const raw=value(d,'binding');if(Buffer.byteLength(raw,'utf8')>10000)throw new Error('Invalid size');return JSON.parse(raw);}

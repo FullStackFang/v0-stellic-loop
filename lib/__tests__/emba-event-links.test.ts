@@ -70,14 +70,14 @@ it('refuses a follower before any page is requested, and names an assistant in t
 it('saves nothing for a link it cannot read until the member gives a name and a start',async()=>{
  const f=await fixture(),read=pages({}),partiful='https://partiful.com/e/abc?x=1';
  expect(await linkEvent(t.db,f.memberA,{...f.root,url:partiful},read)).toEqual({saved:false,reason:'needs_facts',listed:false});
- // A site Loop does not read is never requested.
+ // A site Loopd does not read is never requested.
  expect(read).not.toHaveBeenCalled();
  expect(await linkEvent(t.db,f.memberA,{...f.root,url:luma},read)).toEqual({saved:false,reason:'needs_facts',listed:true});
  expect(await rows('select 1 from emba_team_event')).toEqual([]);
  const added=ok(await linkEvent(t.db,f.memberA,{...f.root,url:partiful,name:'Rooftop  birthday',startsAt:'2099-01-20T19:00',place:'The roof'},read));
  // The link is kept whole; the start is read in the team's timezone.
  expect(added.event).toMatchObject({slug:'rooftop-birthday',name:'Rooftop birthday',startsAt:'2099-01-21T00:00:00.000Z',place:'The roof',url:partiful,note:null,youAreInterested:true});
- // Nothing to follow: Loop does not read that page again.
+ // Nothing to follow: Loopd does not read that page again.
  expect(await rows('select source,source_follow as follow from emba_team_event')).toEqual([{source:'link',follow:false}]);
  expect(await linkEvent(t.db,f.memberA,{...f.root,url:'http://lu.ma/x'},read)).toEqual({saved:false,reason:'link_refused',problem:'not_https'});
  expect(await linkEvent(t.db,f.memberA,{...f.root,url:'https://partiful.com/e/late',name:'Late',startsAt:'2099-02-01T10:00',endsAt:'2099-02-01T09:00'},read)).toEqual({saved:false,reason:'end_before_start'});
@@ -149,7 +149,7 @@ it('follows the source once a day: a moved start changes the event, is reported,
  expect(await rereadLinkedEvents(t.db,pages({[luma]:moved({startsAt:'2099-01-16T00:00:00.000Z',place:'Room 2'})}))).toEqual({read:1,changed:1,gone:0});
  const news=await whatsNew(t.db,f.memberB,{...f.root,cursor:start.cursor});
  expect(news.changes.map(change=>[change.action,change.event?.startsAt,change.event?.place])).toEqual([['event_changed','2099-01-16T00:00:00.000Z','Room 2']]);
- // Loop made the change, not a member; the calendar entry has a new version.
+ // Loopd made the change, not a member; the calendar entry has a new version.
  expect(await rows("select actor_id,client_id from emba_team_change where action='event_changed'")).toEqual([{actor_id:null,client_id:null}]);
  expect(await rows('select sequence from emba_team_event')).toEqual([{sequence:1}]);
 });

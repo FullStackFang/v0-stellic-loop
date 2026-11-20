@@ -232,7 +232,7 @@ main { padding: 22px var(--gut) 56px; }
 
 <div class="frame"><div class="app" id="app" data-kit="cornell">
   <header class="bar">
-    <a class="wm" href="#"><svg viewBox="0 0 100 100" fill="none" stroke-width="9"><circle cx="35" cy="62" r="21" stroke="currentColor"/><circle cx="65" cy="62" r="21" stroke="currentColor"/><circle cx="50" cy="36" r="21" stroke="var(--action)"/></svg>Loop</a>
+    <a class="wm" href="#"><svg viewBox="0 0 100 100" fill="none" stroke-width="9"><circle cx="35" cy="62" r="21" stroke="currentColor"/><circle cx="65" cy="62" r="21" stroke="currentColor"/><circle cx="50" cy="36" r="21" stroke="var(--action)"/></svg>Loopd</a>
     <nav class="links"><a href="#">This week</a><a href="#" aria-current="page"><i>T</i>Team 1</a><a href="#"><i>S</i>Strategy study group</a><a href="#"><i>E</i>Entrepreneurship Club</a><a href="#">All groups</a></nav>
     <div class="acct"><button aria-label="Your account" data-pop><img class="face" src="/animals/07.png" alt=""></button>
       <div class="pop"><b>Stephen Fang</b><span>Regular · level 2 of 4</span><h4>Colours</h4><div class="kits"></div></div></div>
@@ -271,7 +271,7 @@ main { padding: 22px var(--gut) 56px; }
 </div></div>
 
 <script>
-const KITS = [['loop', 'Loop', 'oklch(47.6% 0.13 250)', 'oklch(96.4% 0.19 117)'], ['columbia', 'Columbia', 'oklch(46% 0.14 255)', 'oklch(87% 0.075 235)'], ['cornell', 'Cornell', 'oklch(48.5% 0.185 27)', 'oklch(82% 0.12 38)'], ['cuny', 'CUNY', 'oklch(38% 0.18 264)', 'oklch(88% 0.13 88)'], ['nyu', 'NYU', 'oklch(40% 0.2 305)', 'oklch(85% 0.09 305)']];
+const KITS = [['loop', 'Loopd', 'oklch(47.6% 0.13 250)', 'oklch(96.4% 0.19 117)'], ['columbia', 'Columbia', 'oklch(46% 0.14 255)', 'oklch(87% 0.075 235)'], ['cornell', 'Cornell', 'oklch(48.5% 0.185 27)', 'oklch(82% 0.12 38)'], ['cuny', 'CUNY', 'oklch(38% 0.18 264)', 'oklch(88% 0.13 88)'], ['nyu', 'NYU', 'oklch(40% 0.2 305)', 'oklch(85% 0.09 305)']];
 const app = document.getElementById('app'), $$ = q => [...document.querySelectorAll(q)];
 const face = (n, cls = 'face') => `<img class="${cls}" src="/animals/${n}.png" alt="">`, who = (n, name) => `<span class="who">${face(n)}${name}</span>`;
 const P = { you: ['07', 'You · Claude'], maya: ['12', 'maya · ChatGPT'], josh: ['21', 'josh · Claude'], dana: ['30', 'dana'] };

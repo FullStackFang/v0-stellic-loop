@@ -6,7 +6,7 @@ and the OpenSpec changes in `openspec/changes/` (archive `2026-10-23-quorum-boar
 
 ## The pivot, in one line
 
-Loop stopped being a campus engagement tool and became **Quorum**, a board
+Loopd stopped being a campus engagement tool and became **Quorum**, a board
 with thresholds for one bounded group. The first group is the founder's EMBA cohort
 (about 60 people, one WhatsApp group, a trip to Hoi An Feb 14–20 2027).
 Anyone posts an intent. Others tap **in / out / maybe**. When enough people

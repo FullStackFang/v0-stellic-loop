@@ -13,7 +13,7 @@ import {lineSchema} from './team-text';
 
 // Nearby (design D7, D9 of loop-group-event-links). An owner or organizer
 // gives the group calendar feeds, on the site only: an assistant never names
-// an address Loop fetches. Each feed that is on is read every hour; what it
+// an address Loopd fetches. Each feed that is on is read every hour; what it
 // holds in the next 14 days is the group's Nearby list. A nearby item is not
 // a group event: it enters no change sequence, waits for nobody and counts
 // toward no limit. The first member interested makes it one (team-event-links).
@@ -95,7 +95,7 @@ export async function teamFeeds(db:Db,p:Principal,input:unknown):Promise<FeedVie
  * it; an item that is gone or cancelled leaves the list. An item that became
  * a group event carries its changes to that event, and labels it when it
  * goes. A feed that fails keeps its items, has the failure recorded on it in
- * Loop's own words, and does not stop the others.
+ * Loopd's own words, and does not stop the others.
  */
 export async function readTeamFeeds(db:Db,options:GuardDeps&{now?:Date;feedId?:string}={}):Promise<{feeds:number;failed:number}> {
  const {now=new Date(),feedId,...deps}=options;

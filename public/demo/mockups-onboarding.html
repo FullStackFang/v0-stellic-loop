@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Onboarding — one page instead of three</title>
+<title>Loopd · Onboarding — one page instead of three</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -135,7 +135,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Loop · onboarding · after the story</div>
+  <div class="eyebrow">Loopd · onboarding · after the story</div>
   <h1>Verify + basics + intent on one screen</h1>
   <p class="lede">Today Sarah leaves the story card, then hits three separate screens for six fields (email · name · year · dorm · major · intent), each with its own header, back button and CTA. Same six fields below, <b>one surface, no screen swaps</b>. All three are live: type, tap, clear the email, watch what happens. Pick one and I'll build it into <code>index.html</code>.</p>
 
@@ -169,7 +169,7 @@
 
           <div class="reveal" id="A-r1"><div>
             <div class="sec">
-              <div class="sec-head"><span class="n">02</span><span class="t">The basics</span><span class="s">so Loop can seat you close</span></div>
+              <div class="sec-head"><span class="n">02</span><span class="t">The basics</span><span class="s">so Loopd can seat you close</span></div>
               <div class="stagger">
                 <label class="lbl" style="margin-top:0"><span class="kicker">Name</span><div class="field"><input value="Sarah Chen" /></div></label>
                 <div class="lbl"><span class="kicker">Class year</span>
@@ -245,7 +245,7 @@
           </label>
 
           <div class="idstrip">
-            <div class="row between"><span class="kicker">So Loop can seat you close</span><span class="stepno" id="C-count" style="letter-spacing:.08em">5 · 5</span></div>
+            <div class="row between"><span class="kicker">So Loopd can seat you close</span><span class="stepno" id="C-count" style="letter-spacing:.08em">5 · 5</span></div>
             <div class="pills" id="C-pills"></div>
             <div id="C-editor"></div>
             <div class="why"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span>Email only confirms you're a Cornellian. Your loops see your name, floor and major, never your inbox.</span></div>
@@ -314,7 +314,7 @@
       { id:'email', k:'Email', q:'What\'s your Cornell email?', sub:'Only used to confirm you\'re a Cornellian. Nobody in your loops sees it.', kind:'text', icon:svgMail, valid:v=>CORNELL.test(v.trim()), show:v=>v.replace(/@cornell\.edu$/i,'') + '@cornell.edu' },
       { id:'name', k:'Name', q:'What should your crew call you?', kind:'text', icon:svgUser, valid:v=>v.trim().length>1 },
       { id:'year', k:'Year', q:'Class of?', kind:'chips', opts:YEARS, show:v=>'Class of '+v },
-      { id:'dorm', k:'Live', q:'Where do you live?', sub:'Loop starts with your floor and building, then widens out.', kind:'chips', opts:DORMS },
+      { id:'dorm', k:'Live', q:'Where do you live?', sub:'Loopd starts with your floor and building, then widens out.', kind:'chips', opts:DORMS },
       { id:'major', k:'Major', q:'What are you studying?', kind:'chips', opts:MAJORS },
       { id:'intent', k:'Intent', q:'What are you trying to make happen this semester?', sub:'Say it plainly. We\'ll loop you in, not hand you a stranger.', kind:'area', valid:v=>v.trim().length>0 },
     ];

@@ -3,7 +3,7 @@ import { CampusShell } from '@/components/campus/shell';
 import { DoorPage } from '../../door';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Sign in · Loop' };
+export const metadata: Metadata = { title: 'Sign in · Loopd' };
 
 /**
  * Sign-in for the campus screen: the same door as the front page. Afterwards a person goes back to the page they came

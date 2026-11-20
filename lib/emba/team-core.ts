@@ -99,7 +99,7 @@ type Options<T>={need:'post'|'manage';
  /** The answer when a unique name is already taken. */
  taken?:T};
 
-/** Adds an entry about an event or an ask to the team's change sequence. The caller holds the team's lock. A null actor means Loop itself. */
+/** Adds an entry about an event or an ask to the team's change sequence. The caller holds the team's lock. A null actor means Loopd itself. */
 export async function logChange(q:Q,team:Scope,action:string,target:{eventId:string}|{askId:string},actorId:string|null,clientId:string|null):Promise<void> {
  const {rows:[row]}=await q.query<{n:number}>('update emba_team_state set change_seq=change_seq+1 where org_id=$1 and loop_id=$2 returning change_seq::int as n',[team.orgId,team.loopId]);
  await q.query('insert into emba_team_change(org_id,loop_id,seq,event_id,ask_id,action,actor_id,client_id) values($1,$2,$3,$4,$5,$6,$7,$8)',

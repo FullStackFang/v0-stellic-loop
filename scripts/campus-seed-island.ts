@@ -40,7 +40,7 @@ const local = (value: unknown, timed: boolean) => typeof value === 'string' && /
 const venueName = (name: string | null) => name && /motorgate plaza/i.test(name) ? 'Motorgate Plaza' : name;
 const GENERIC = /^(website|more info(rmation)?|info|tickets?|register|rsvp|details|link|event( page)?|facebook|instagram|google form)$/i;
 
-/** The events in the page's script that have not ended, as Loop keeps them. */
+/** The events in the page's script that have not ended, as Loopd keeps them. */
 export function islandEvents(script: string, now: Date): IslandEvent[] {
   const list = served(script).Events;
   if (!Array.isArray(list)) return [];

@@ -7,7 +7,7 @@ import type { PortalAction, PortalResult } from './portal-types';
 const initial: PortalResult = { status: 'idle', message: '' };
 
 /**
- * The one box above a team's events: paste a link and add it. When Loop cannot read the page the answer says so, and the same form
+ * The one box above a team's events: paste a link and add it. When Loopd cannot read the page the answer says so, and the same form
  * opens name, start, end and place fields and keeps the link, so the next press saves. Every field is held here, because a form
  * action clears the fields it does not control.
  */

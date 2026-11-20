@@ -121,7 +121,7 @@ export async function keepFaceAction(keep: string): Promise<ActResult> {
   return act(async viewer => { await keepPicture(db(), viewer.personId, String(keep).split('/').pop() ?? ''); });
 }
 
-/** "Subscribe" to Loop Premium in the account card. Nothing is charged; the ask and its email are kept. */
+/** "Subscribe" to Loopd Premium in the account card. Nothing is charged; the ask and its email are kept. */
 export async function subscribeAction(email: string): Promise<ActResult> {
   return act(async viewer => { await subscribe(db(), viewer.personId, String(email)); });
 }
@@ -245,7 +245,7 @@ export async function askGroupAction(scope: GroupScope, ask: { question: string;
     ...(ask?.kind === 'one' ? { options: (ask.options ?? []).map(String) } : {}) }), askWords);
 }
 
-/** "Subscribe" on the Ink+ plate of "Save your picture": what takes the Loop mark off. Nothing is charged: the ask is kept, with where it was made. */
+/** "Subscribe" on the Ink+ plate of "Save your picture": what takes the Loopd mark off. Nothing is charged: the ask is kept, with where it was made. */
 export async function subscribeToSaveAction(email: string): Promise<ActResult> {
   return act(async viewer => { if (!await subscribeInkPlus(db(), viewer.personId, String(email), 'save picture')) throw new CampusError('Enter the email to subscribe with.'); });
 }

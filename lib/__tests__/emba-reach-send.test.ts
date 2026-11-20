@@ -213,7 +213,7 @@ it('tells the person who asked when their ask closes, and sends an announcement 
  const announced=c.sent.slice(sent);
  expect(announced).toHaveLength(8);
  expect(c.to(f.members[7]).at(-1)!.text).toContain('Organizer announced to Synthetic EMBA:\n\nCellar tour moved to Saturday.');
- expect(c.to(f.members[7]).at(-1)!.text).toContain('Open in Loop: https://loop.test/groups/club/team');
+ expect(c.to(f.members[7]).at(-1)!.text).toContain('Open in Loopd: https://loop.test/groups/club/team');
  expect(c.to(f.organizer).filter(message=>message.subject.includes('announcement'))).toEqual([]);
 },120000);
 

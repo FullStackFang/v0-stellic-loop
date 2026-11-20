@@ -263,7 +263,7 @@ it('offers read, or read and write, per assistant and team, and says what write 
   expect((await act(f.ben, () => revokeGroupRead(idle, form({ id: renewed.rows[0].id })))).status).toBe('success');
   // Disconnecting ends every team grant the person gave that assistant, and says where its sign-in is cleared.
   expect((await act(f.ben, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue })))).status).toBe('success');
-  expect((await act(f.ben, () => disconnectAssistant(idle, form({ clientId: 'claude-test' })))).message).toBe('claude-test can no longer reach your teams. To clear its sign-in too, remove the Loop connector in claude-test.');
+  expect((await act(f.ben, () => disconnectAssistant(idle, form({ clientId: 'claude-test' })))).message).toBe('claude-test can no longer reach your teams. To clear its sign-in too, remove the Loopd connector in claude-test.');
   expect((await t.db.query('select 1 from emba_lease where person_id=$1 and revoked_at is null', [f.ben.personId])).rows).toEqual([]);
 });
 it('stops listing a grant once its group is gone, and names the assistant the provider registered', async () => {
@@ -275,7 +275,7 @@ it('stops listing a grant once its group is gone, and names the assistant the pr
   expect(screen.getByRole('option', { name: 'Muse' })).toHaveValue('oJLiBHFWfm5De8eq');
   expect(document.body.textContent).not.toContain('oJLiBHFWfm5De8eq');
   // One line carries everything Muse needs, and a granted Muse can be disconnected in one press.
-  expect(screen.getByLabelText('Line to paste into Muse')).toHaveValue('Connect to Loop at https://loop.example/api/mcp/team with client ID oJLiBHFWfm5De8eq');
+  expect(screen.getByLabelText('Line to paste into Muse')).toHaveValue('Connect to Loopd at https://loop.example/api/mcp/team with client ID oJLiBHFWfm5De8eq');
   expect(screen.getByRole('button', { name: 'Disconnect Muse' })).toBeInTheDocument();
   cleanup();
   // A link that names an admitted assistant opens the form with it chosen; any other name is ignored.

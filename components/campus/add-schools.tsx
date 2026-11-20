@@ -6,7 +6,7 @@ import type { Schools } from '@/lib/campus/view';
 import { SeatsWord } from '@/components/loading/seats';
 
 /**
- * "Add a school": the address of the person's LinkedIn profile, the schools Loop is at to tick, and one button. The
+ * "Add a school": the address of the person's LinkedIn profile, the schools Loopd is at to tick, and one button. The
  * school a person is at stays ticked. Nothing is read from LinkedIn (lib/campus/linkedin.ts). `box` is the class of
  * the text box where the page has its own. Afterwards `onDone` runs, or else the page is loaded again. `waiting` is
  * for someone with no school email whose profile the admin has not approved yet: they are shown what they sent, and

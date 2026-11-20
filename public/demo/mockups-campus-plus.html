@@ -546,7 +546,7 @@ function draw(dir) {
     if (empty && !s.posted.length) last = sheet; else first = sheet;
   }
   if (dir === 'C') over = `<button class="mk-fab" data-toggle="C" aria-expanded="${s.open}" aria-label="Post a plan"><span>+</span></button>` + (s.open ? `<div class="mk-pop"><div class="cs-line">${sayBox('C')}<div class="cs-line-card" data-side="C"></div>${end('C')}</div></div>` : '');
-  frame.innerHTML = `<div class="cs"><header class="cs-nav"><a class="cs-wm">Loop</a><nav class="cs-links"><a aria-current="page">This week</a></nav><div class="cs-nav-end"><span class="cs-ava">${face(12).replace('cs-face pet', 'cs-face pet')}</span></div></header>
+  frame.innerHTML = `<div class="cs"><header class="cs-nav"><a class="cs-wm">Loopd</a><nav class="cs-links"><a aria-current="page">This week</a></nav><div class="cs-nav-end"><span class="cs-ava">${face(12).replace('cs-face pet', 'cs-face pet')}</span></div></header>
     <main class="cs-main"><section class="cs-fill"><div class="cs-ask"><input type="search" placeholder="What do you feel like doing?"><div class="cs-tabs"><button aria-pressed="true">Best for you</button><button>All of CampusGroups</button></div></div>
     <div class="cs-count">${inRow ? `<div class="cs-tally">${inRow}` : ''}<h2>${empty && !s.posted.length ? 'Nothing on this week yet' : `${(empty ? 0 : WEEK.length) + s.posted.length} things on this week`}</h2>${inRow ? '</div>' : ''}</div>
     <div class="cs-evs"><div class="cs-railwrap"><div class="cs-rail">${first}${mine}${rest}${last}</div></div></div>

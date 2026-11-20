@@ -17,13 +17,13 @@ import {belongsTo,scope,type Scope} from './team-core';
 export const WAYS=['assistant','email','whatsapp','none'] as const;
 export type Way=typeof WAYS[number];
 export const DEFAULT_WAY:Way='email';
-/** WhatsApp is offered only once the operator has set up Loop's own number. */
+/** WhatsApp is offered only once the operator has set up Loopd's own number. */
 export const whatsappConfigured=(env:Record<string,string|undefined>=process.env)=>Boolean(env.WHATSAPP_NUMBER&&env.WHATSAPP_PHONE_NUMBER_ID&&env.WHATSAPP_ACCESS_TOKEN&&env.WHATSAPP_APP_SECRET);
 
 export type ReachChoice={way:Way;
  /** No choice was saved: the default applies. */
  isDefault:boolean;
- /** off: the operator has not set WhatsApp up. not_linked: the member has yet to message Loop's number. */
+ /** off: the operator has not set WhatsApp up. not_linked: the member has yet to message Loopd's number. */
  whatsapp:'off'|'not_linked'|'linked'};
 
 /** SQL: the way a team reaches a person, the default when they saved none. */
@@ -53,7 +53,7 @@ export type ReachWrite={saved:true;way:Way}|{saved:false;reason:'whatsapp_off'|'
 /**
  * Site only: the caller chooses how one team reaches them. It takes effect
  * for the next message. WhatsApp can be chosen only after the member's own
- * message to Loop's number has linked their number.
+ * message to Loopd's number has linked their number.
  */
 export async function setReachChoice(db:Db,p:Principal,input:unknown):Promise<ReachWrite> {
  const {way,...team}=z.strictObject({...scope,way:z.enum(WAYS)}).parse(input);

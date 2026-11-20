@@ -24,7 +24,7 @@ import { SeatsSmall } from '@/components/loading/seats';
 
 /**
  * "This week" for one campus, as the person looking may see it. A signed-in person belongs to one school: another
- * school's address sends them to their own, and someone at no school is told where Loop is. The admin opens any.
+ * school's address sends them to their own, and someone at no school is told where Loopd is. The admin opens any.
  * `back` is where sign-in returns to. `link` is the share link the page was opened from, if any.
  */
 export async function Week({ campus, back, link }: { campus: Campus; back: string; link?: ShareLink }) {
@@ -56,12 +56,12 @@ export async function NoSchool() {
   const form = <AddSchools box="cs-ns-box" send="Send for a check" waiting={waiting} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />;
   const another = <SignOut className="cs-btn">Use another email</SignOut>;
   return <div className="cs cs-ns">
-    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link>
+    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loopd</Link>
       <div className="cs-nav-end">{email && <span className="cs-ns-who">{email}</span>}{signs && <SignOut className="cs-btn" />}</div>
     </header>
     <main>
       <section className="cs-ns-band">
-        <FitLines lines={[<>Loop is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
+        <FitLines lines={[<>Loopd is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
       </section>
       <div className="cs-ns-two">
         {owner || waiting ? <section className="cs-ns-tk cs-ns-wide">
@@ -74,7 +74,7 @@ export async function NoSchool() {
         </section> : <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">{email ? `${email} is not a school email` : 'No school email'}</h2>
           {signs ? <ConnectLinkedin other={another} fallback={form} /> : form}
-          <p>Loop is for schools. With LinkedIn we check your school ourselves.</p>
+          <p>Loopd is for schools. With LinkedIn we check your school ourselves.</p>
           <NotHere asked={asked} email={email} />
         </section>}
       </div>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Intent → Anchor → Loop — 2 directions</title>
+<title>Loopd · Intent → Anchor → Loopd — 2 directions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -193,14 +193,14 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · intent → anchor → loop</div>
+    <div class="eyebrow">Loopd · intent → anchor → loop</div>
     <h1>How a forming anchor reads next to a real loop</h1>
     <p>Same flow on both phones: your intent is personal, it lands in a shared anchor others can add a yes to, and at quorum the anchor fires and everyone who said yes is asked to join. No Join button exists before the fire. The two directions differ only in whether an anchor borrows the loop card's shape or gets its own.</p>
     <div class="ladder">
       <span><b>Intent</b> · yours</span><i>→</i>
       <span><b>Anchor</b> · shared count</span><i>→</i>
       <span><b>Fire</b> · at quorum</span><i>→</i>
-      <span><b>Loop</b> · invited, on your week</span>
+      <span><b>Loopd</b> · invited, on your week</span>
     </div>
   </div>
 
@@ -370,7 +370,7 @@ function Phone(el, worldEl, dir){
     const q = S.q.trim(); const exact = q && S.items.some(x=>x.status==='forming'&&x.t.toLowerCase().includes(q.toLowerCase()));
     el.innerHTML = `
       <div class="status"><span>9:41</span><span>●●● ▲ ▮</span></div>
-      <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:4px"><div class="hicon" data-act="bell">🔔${S.unread?'<span class="dot"></span>':''}</div><div class="hicon" style="background:var(--accent-quiet);color:var(--accent-strong);font:700 11px var(--font-mono)">SC</div></div></div>
+      <div class="apphead"><span class="wordmark">Loopd<i></i></span><div style="display:flex;gap:4px"><div class="hicon" data-act="bell">🔔${S.unread?'<span class="dot"></span>':''}</div><div class="hicon" style="background:var(--accent-quiet);color:var(--accent-strong);font:700 11px var(--font-mono)">SC</div></div></div>
       <div class="chips">
         <div class="chip ico" data-act="search">🔍</div>
         <div class="chip ${S.pulse==='upcoming'?'pulse':''}" data-on="${S.chip==='upcoming'?1:0}" data-chip="upcoming">Upcoming <span class="n">${nUp}</span></div>

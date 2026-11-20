@@ -99,7 +99,7 @@ it('takes only animals the person could wear: their own made ones, and the Ink o
 it('asks for Ink+ first, stops at the limit, and never asks or stops the admin', async () => {
   const { owner, at } = await group(), { draw } = drawer();
   await t.db.query('delete from campus_ink_plus');
-  await expect(askGroupPicture(t.db, owner, at, FOUR, draw)).rejects.toThrow('comes with Loop Ink+');
+  await expect(askGroupPicture(t.db, owner, at, FOUR, draw)).rejects.toThrow('comes with Loopd Ink+');
   expect(await subscribeInkPlus(t.db, owner.personId, 'not an email')).toBe(false);
   expect(await subscribeInkPlus(t.db, owner.personId, ' Owner@Example.test ')).toBe(true);
   for (let n = 0; n < ASKS; n++) await askGroupPicture(t.db, owner, at, FOUR, draw);

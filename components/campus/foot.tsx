@@ -30,9 +30,9 @@ export function SiteFoot({ home = '/', kit: worn }: { home?: string; /** The col
         {CROWD.slice(0, count).map(face => [<i key={`s${face}`} className="cs-ft-shade" />, <img key={face} className="cs-ft-pet" src={animal(face)} alt="" draggable={false} />])}</div>
       <div className="cs-ft-tear"><span className="cs-ft-admit">Admit everyone</span><div className="cs-ft-code" /></div>
     </div></div>
-    <div className="cs-ft-bar"><Link className="cs-wm" href={home}><Rings />Loop</Link>
-      <nav aria-label="Loop, at the foot">        <Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></nav>
-      <div className="cs-ft-end"><small>© 2026 Loop</small>
+    <div className="cs-ft-bar"><Link className="cs-wm" href={home}><Rings />Loopd</Link>
+      <nav aria-label="Loopd, at the foot">        <Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></nav>
+      <div className="cs-ft-end"><small>© 2026 Loopd</small>
         {!worn && <div className="cs-ft-kits" role="group" aria-label="Colours">{KITS.map(each => <button key={each.slug} data-kit={each.slug} aria-label={`${each.name} colours`} title={each.name} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setKit(each.slug); }} />)}</div>}</div></div>
   </footer>;
 }

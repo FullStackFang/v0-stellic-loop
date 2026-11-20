@@ -16,11 +16,11 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const site = (link: string) => link.replace(/^https?:\/\//, '').split('/')[0];
 
 /**
- * Posting in one line (design D12): the person types it the way they would text it, and sees what Loop understood as
+ * Posting in one line (design D12): the person types it the way they would text it, and sees what Loopd understood as
  * they type: what, when, and each @tag (openspec loop-campus-tags). Typing @ lists the tags people nearby use, by group. A pasted event link is read into
  * the line. The server reads the line again when it is posted, so what is shown here is never what is trusted.
  * It fills the panel the "+" on This week opens (design D13) with three rows, each one line (founder, 2026-11-18: wide, not
- * long): the line, what Loop read, and what is nearby. The last row holds one thing at a time, and only the top few of it.
+ * long): the line, what Loopd read, and what is nearby. The last row holds one thing at a time, and only the top few of it.
  */
 export function Composer({ campus, tags, soon, onDone, onReview }: { campus: { slug: string; name: string; tz: string }; tags: NearTag[]; soon: Soon[]; onDone: () => void;
   /** Opens a plan's own panel: where, when, who is going, and its own way in. Nobody joins a plan from here unseen (founder, 2026-11-18). */

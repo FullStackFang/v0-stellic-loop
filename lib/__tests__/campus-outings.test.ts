@@ -95,7 +95,7 @@ describe("saying I'm in",()=>{
   await refusal(imIn(t.db,a,ended,NOW));await refusal(imIn(t.db,a,hidden,NOW));
   await refusal(imIn(t.db,a,'00000000-0000-4000-8000-000000000000',NOW));
  });
- it('on a feed event is a registration kept in Loop',async()=>{
+ it('on a feed event is a registration kept in Loopd',async()=>{
   const a=await person('Ana'),campus=await cornell(),feed=await addFeed(t.db,{campusId:campus.id,source:'CampusGroups',url:'https://feeds.test/a.ics'});
   const {rows:[row]}=await t.db.query<{id:string}>("insert into campus_listing(campus_id,origin,feed_id,feed_item_id,title,starts_at) values($1,'feed',$2,'x1','Blitz night',$3) returning id",[campus.id,feed.id,hours(3).toISOString()]);
   await imIn(t.db,a,row.id,NOW);

@@ -80,6 +80,6 @@ export async function disconnectAssistant(_previous: PortalResult, data: FormDat
     const open = (await listLeases(db(), principal)).filter(lease => lease.client_id === clientId && !lease.revoked_at && teamGrant(lease.actions as string[]));
     for (const lease of open) await revokeLease(db(), principal, String(lease.id));
     const name = assistantName(clientId);
-    return `${name} can no longer reach your teams. To clear its sign-in too, remove the Loop connector in ${name}.`;
+    return `${name} can no longer reach your teams. To clear its sign-in too, remove the Loopd connector in ${name}.`;
   });
 }

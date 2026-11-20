@@ -59,7 +59,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; 
 </head>
 <body>
 <div class="mock"><span><b>The Ink icon.</b> The blot stays. Five ways to make it say "premium", each in the bar, the account card and the picker.</span>
-  <div id="kits"><small>School</small><button data-kit="cornell" aria-pressed="true">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button><button data-kit="cuny">CUNY</button><button data-kit="loop">Loop</button></div></div>
+  <div id="kits"><small>School</small><button data-kit="cornell" aria-pressed="true">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button><button data-kit="cuny">CUNY</button><button data-kit="loop">Loopd</button></div></div>
 
 <main class="grid" id="grid"></main>
 
@@ -92,7 +92,7 @@ function blot(seed) {
   const made = { schoolDrops: thrown(next, wide.ran + 2.5 + next() * 1.5, 68, 3), darkDrops: thrown(next, middle.ran + 2.2 + next() * 1.8, 58, 5), school: drawn(edge(wide.rounds, next)) }, dark = edge(middle.rounds, next);
   return { ...made, dark: drawn(dark), seep: drawn(crept(dark, next)) };
 }
-const B = blot('Loop Ink');
+const B = blot('Loopd Ink');
 // Shapes to cut out of the dark ink, or to set beside the blot. All are drawn round 0,0 and moved where they go.
 const SPARK = size => `M0 ${-size}Q${size * .13} ${-size * .13} ${size} 0Q${size * .13} ${size * .13} 0 ${size}Q${-size * .13} ${size * .13} ${-size} 0Q${-size * .13} ${-size * .13} 0 ${-size}Z`;
 const PLUS = (size, wide) => { const h = wide / 2, a = size - h; return `M${-h} ${-size}h${wide}v${a}h${a}v${wide}h${-a}v${a}h${-wide}v${-a}h${-a}v${-wide}h${a}Z`; };
@@ -112,7 +112,7 @@ const ICONS = [
 document.getElementById('grid').innerHTML = ICONS.map(([name, line, icon], at) => `<section class="opt"><div class="tag"><b>${'ABCDEF'[at]}</b><span><em>${name}</em> · ${line}</span></div>
   <div class="nav"><span class="tab">This week</span><span class="tab">Near you</span><a class="tab plan" href="#">${icon}Ink</a><a class="tab plan on" href="#">${icon}Ink</a></div>
   <div class="body"><div class="large">${icon}</div>
-    <div class="inkrow">${icon}<span><b>Loop Ink</b><small>More animals, and your own pet.</small></span><span class="btn">See it</span></div>
+    <div class="inkrow">${icon}<span><b>Loopd Ink</b><small>More animals, and your own pet.</small></span><span class="btn">See it</span></div>
     <div class="pets"><span class="pet"><img src="../animals/37.png" alt="">${icon}</span><span class="pet"><img src="../animals/30.png" alt="">${icon}</span><span class="btn">${icon}&nbsp;With Ink</span></div>
   </div></section>`).join('');
 

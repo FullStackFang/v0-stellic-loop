@@ -1,12 +1,12 @@
-# Loop: evidence for the value of an intent layer
+# Loopd: evidence for the value of an intent layer
 
-Research checked 2026-11-08. These sources motivate a product hypothesis; none measures Loop, proves its privacy controls, or establishes a time saving for its users.
+Research checked 2026-11-08. These sources motivate a product hypothesis; none measures Loopd, proves its privacy controls, or establishes a time saving for its users.
 
 ## Recommended promise
 
 **Keep what matters. Bring it to what comes next.**
 
-Loop gives the preferences and intentions you choose to save a life beyond one chat. Your next assistant can use relevant context from you and the groups you belong to, with access you control.
+Loopd gives the preferences and intentions you choose to save a life beyond one chat. Your next assistant can use relevant context from you and the groups you belong to, with access you control.
 
 The distinctive value is the connection: personal context + current group context + a future occasion to use them. A stored preference alone is memory. An itinerary alone is information. Together, “I like quiet local places” and “I have two hours before our bus” can become a useful plan without assembling the background again.
 
@@ -30,7 +30,7 @@ Source: Zhao et al., *Do LLMs Recognize Your Preferences? Evaluating Personalize
 
 **Safe takeaway:** Personal context should be maintained and corrected, not accumulated indiscriminately. The relevant goal is remembering what is true and useful now.
 
-**Limitation:** Results describe the paper's systems and benchmark setup. They do not prove Loop improves accuracy, and “30%” must not be represented as a universal failure rate or percentage-point change.
+**Limitation:** Results describe the paper's systems and benchmark setup. They do not prove Loopd improves accuracy, and “30%” must not be represented as a universal failure rate or percentage-point change.
 
 **Page copy:** “Your next conversation can start where you are now.” A preference card can visibly show “Prefer small groups · updated by you” to make correction concrete.
 
@@ -42,7 +42,7 @@ Source: Wu et al., *LongMemEval: Benchmarking Chat Assistants on Long-Term Inter
 
 **Safe takeaway:** Helping people specify when and how they will act can improve follow-through in some settings. This supports making a saved want actionable at a relevant opportunity.
 
-**Limitation:** A vaccination planning prompt is not a group-trip conditional-commitment system. It does not establish that Loop increases attendance, or that “I'll go if three others go” has the same effect. Do not convert the result into a Loop conversion claim.
+**Limitation:** A vaccination planning prompt is not a group-trip conditional-commitment system. It does not establish that Loopd increases attendance, or that “I'll go if three others go” has the same effect. Do not convert the result into a Loopd conversion claim.
 
 **Page copy:** “Give ‘I'd love to’ a next step.” Illustrate a saved interest becoming a proposed plan with a time and the member's chosen participation conditions.
 

@@ -110,7 +110,7 @@ describe('who the admin is',()=>{
 
 describe('good-for words',()=>{
  it('come from the title, the about text and the host name',()=>{
-  expect(goodFor('Sunset run, easy 5K','Conversation pace. Loop around Beebe Lake.',null)).toEqual(expect.arrayContaining(['exercise','fitness','outside']));
+  expect(goodFor('Sunset run, easy 5K','Conversation pace. Loopd around Beebe Lake.',null)).toEqual(expect.arrayContaining(['exercise','fitness','outside']));
   expect(goodFor('Dumpling night','Order for the table and split it.','Supper Club')).toEqual(expect.arrayContaining(['food','eat','social']));
   expect(goodFor('Weekly meeting',null,'Outing Club')).toEqual(expect.arrayContaining(['outside']));
   expect(goodFor('Pickup basketball',null,null)).toEqual(expect.arrayContaining(['exercise','sport','game']));

@@ -22,7 +22,7 @@ export const SeatsMe = ({ me, children }: { me: Me; children: ReactNode }) => <K
 /** What is given wins over what is known from above, then what the person's avatar last said (last-bar.ts); what nobody knows is a free animal on the free plan. */
 export function useMe(given: Me = {}): { face: string; plan: Plan; seed: string } {
   const above = useContext(Known), last = lastBar().me;
-  return { face: given.face || above.face || last.face || animal(SPARE), plan: given.plan ?? above.plan ?? last.plan ?? 'free', seed: given.seed ?? above.seed ?? last.seed ?? 'Loop' };
+  return { face: given.face || above.face || last.face || animal(SPARE), plan: given.plan ?? above.plan ?? last.plan ?? 'free', seed: given.seed ?? above.seed ?? last.seed ?? 'Loopd' };
 }
 
 /** The ticket's face, with no behaviour: the line, four seats, and a blank stub. `still` is the finished pose. */

@@ -124,7 +124,7 @@ export function Door({ schools, start, routing, configured }: { schools: DoorSch
 
   return <div className={`cs-doorway ${won ? 'won' : ''}`} data-kit={school?.slug}>
     <header className="cs-nav">
-      <Link className="cs-wm" href="/"><Rings />Loop</Link>
+      <Link className="cs-wm" href="/"><Rings />Loopd</Link>
       {many && <div className="cs-dots" role="group" aria-label="Schools">{schools.map((each, to) => <button key={each.slug} data-kit={each.slug} aria-pressed={to === at} aria-label={each.name} onClick={press => { rest(); go(to, press.currentTarget); }}>{to === at && each.name}</button>)}</div>}
     </header>
     <main className="cs-door" onPointerMove={lean}>

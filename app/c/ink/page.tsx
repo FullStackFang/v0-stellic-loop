@@ -9,7 +9,7 @@ import { siteBar } from '../site-bar';
 import { FrameWait } from '@/components/loading/frame-wait';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Ink · Loop' };
+export const metadata: Metadata = { title: 'Ink · Loopd' };
 
 /**
  * The Ink page: the same top bar as "This week", and under it the approved mockup, which fills the rest of the window
@@ -22,6 +22,6 @@ export default async function InkPage() {
   if (!campus) notFound();
   return <div className="cs cs-inkpage">
     {(await siteBar({ campus, viewer, back: INK_PAGE, on: 'ink' })).bar}
-    <FrameWait className="cs-inkframe" src={INK_MOCKUP} title="Loop Ink" />
+    <FrameWait className="cs-inkframe" src={INK_MOCKUP} title="Loopd Ink" />
   </div>;
 }

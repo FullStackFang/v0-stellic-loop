@@ -2,7 +2,7 @@ import 'server-only';
 import type { Q } from '../db';
 import { CampusError } from './errors';
 
-// The school a person names when their email is at none of Loop's schools (supabase/migrations/20261119200000_campus_school_ask.sql).
+// The school a person names when their email is at none of Loopd's schools (supabase/migrations/20261119200000_campus_school_ask.sql).
 
 /** "Add my school". One per person: naming another school replaces the first. `email` is the one they signed in with. */
 export async function askForSchool(q: Q, personId: string, school: string, email: string | null): Promise<void> {

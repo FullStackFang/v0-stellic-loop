@@ -15,7 +15,7 @@ it('a signed-out visitor to the groups page is sent to the one sign-in screen', 
   await expect(GroupsPage()).rejects.toEqual(sentTo('/groups/sign-in'));
 });
 
-it('the sign-in screen says what Loop is, with no steps page and no trip-board link', () => {
+it('the sign-in screen says what Loopd is, with no steps page and no trip-board link', () => {
   render(SignInPage());
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Stay in the loop. Without chasing it.');
   expect(screen.queryByRole('link', { name: /trip board/ })).toBeNull();

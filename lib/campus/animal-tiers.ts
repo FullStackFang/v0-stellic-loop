@@ -14,7 +14,7 @@ import type { Tile } from './view';
 // A school's own animal (MASCOT) starts in a fourth place, school: free to people of that school. Wherever the admin
 // moves it, it stays that school's alone. No row is kept for it while it is there, so the table needs no new value.
 export type Tier = 'core' | 'premium' | 'school' | 'off';
-export const NEEDS_PREMIUM = 'That one comes with Loop Ink.';
+export const NEEDS_PREMIUM = 'That one comes with Loopd Ink.';
 const BUILT = ANIMALS + PREMIUM.length;
 const TIERS = ['core', 'premium', 'off'] as const;
 const builtName = (face: number) => face < ANIMALS ? `Animal ${face + 1}` : PREMIUM[face - ANIMALS];

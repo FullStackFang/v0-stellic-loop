@@ -27,7 +27,7 @@ export async function previewAccessRequest(token: string) {
   catch { return null; }
 }
 export async function enableRequestLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
-  return mutate(async principal => ({ accessRequestToken: await enableAccessRequests(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), publicLabel: value(data, 'publicLabel') }), message: 'Link enabled. Copy it now; Loop stores only its hash.' }));
+  return mutate(async principal => ({ accessRequestToken: await enableAccessRequests(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), publicLabel: value(data, 'publicLabel') }), message: 'Link enabled. Copy it now; Loopd stores only its hash.' }));
 }
 export async function disableRequestLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(principal => disableAccessRequests(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId') }));
@@ -74,7 +74,7 @@ export async function setJoinLink(_previous: PortalResult, data: FormData): Prom
   });
 }
 export async function replaceRequestLink(_previous: PortalResult, data: FormData): Promise<PortalResult> {
-  return mutate(async principal => ({ accessRequestToken: await replaceJoinLink(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId') }), message: 'Link replaced. The old link no longer works. Copy the new one now; Loop stores only its hash.' }));
+  return mutate(async principal => ({ accessRequestToken: await replaceJoinLink(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId') }), message: 'Link replaced. The old link no longer works. Copy the new one now; Loopd stores only its hash.' }));
 }
 export async function reviewRequest(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   return mutate(principal => reviewMembershipRequest(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), personId: value(data, 'personId'), decision: value(data, 'decision') }));

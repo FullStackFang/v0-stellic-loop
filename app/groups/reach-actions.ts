@@ -15,7 +15,7 @@ export async function saveReachChoice(_previous: PortalResult, data: FormData): 
   if (!principal) return { status: 'error', message: 'Sign in to continue.' };
   try {
     const result = await setReachChoice(db(), principal, { orgId: value(data, 'orgId'), loopId: value(data, 'loopId'), way: value(data, 'way') });
-    if (!result.saved) return { status: 'error', message: result.reason === 'whatsapp_off' ? 'WhatsApp is not available yet.' : 'Message Loop from your WhatsApp first, then choose it here.' };
+    if (!result.saved) return { status: 'error', message: result.reason === 'whatsapp_off' ? 'WhatsApp is not available yet.' : 'Message Loopd from your WhatsApp first, then choose it here.' };
     revalidatePath('/groups/reach');
     return { status: 'success', message: 'Saved. It applies from the next message.' };
   } catch {

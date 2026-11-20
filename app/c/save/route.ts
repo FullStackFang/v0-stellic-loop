@@ -7,7 +7,7 @@ import { campusViewer } from '@/lib/campus/session';
 
 // The picture a person saves out of the app (openspec loop-save-picture): their own animal, or with `org` and `group`
 // the drawn picture of a group they are in. `small=1` is the pane's preview of the same picture. Who is asking is
-// found here, and so is whether the Loop mark may be left off: nothing in the address is taken on trust.
+// found here, and so is whether the Loopd mark may be left off: nothing in the address is taken on trust.
 
 const no = (status: number, words: string) => new Response(words, { status, headers: { 'cache-control': 'no-store' } });
 
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   if (!isShape(shape)) return no(400, 'Pick one of the shapes.');
   const mark = asked.get('mark') !== '0';
   // Taking the mark off is Ink+. It is refused, not quietly given with the mark on.
-  if (!mark && !await mayDropMark(db(), viewer.principal)) return no(403, 'Saving without the Loop mark comes with Loop Ink+.');
+  if (!mark && !await mayDropMark(db(), viewer.principal)) return no(403, 'Saving without the Loopd mark comes with Loopd Ink+.');
   const group = asked.get('group'), org = asked.get('org');
   const source = group || org ? await groupSource(db(), viewer.principal, { orgId: org ?? '', loopId: group ?? '' }) : await ownSource(db(), viewer.personId);
   if (!source) return no(404, 'Not found');

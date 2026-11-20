@@ -67,7 +67,7 @@ export function SchoolAsk({ asked, email }: { asked: string | null; email: strin
     });
   };
   if (kept) return <>
-    <div className="cs-ns-kept"><small>We will email you when Loop opens at</small><b>{kept}</b><span className="cs-ns-stamp">On the list</span></div>
+    <div className="cs-ns-kept"><small>We will email you when Loopd opens at</small><b>{kept}</b><span className="cs-ns-stamp">On the list</span></div>
     <div className="cs-ns-row"><button className="cs-btn" onClick={() => { setTyped(kept); setKept(null); }}>Change school</button></div>
   </>;
   return <>
@@ -75,6 +75,6 @@ export function SchoolAsk({ asked, email }: { asked: string | null; email: strin
       <input className="cs-ns-box" aria-label="Your school" placeholder="Your school" autoComplete="off" maxLength={120} required value={typed} onChange={event => setTyped(event.target.value)} />
       <button className="cs-btn go" disabled={busy}>{busy ? <SeatsWord word="Add my school" plate /> : 'Add my school'}</button>
     </form>
-    <p role="status">{message || `We will email ${email ?? 'you'} when Loop opens there.`}</p>
+    <p role="status">{message || `We will email ${email ?? 'you'} when Loopd opens there.`}</p>
   </>;
 }

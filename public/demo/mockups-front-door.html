@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Loop · the front door</title>
+<title>Loopd · the front door</title>
 <style>
 @font-face{font-family:Archivo;src:url(/fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
 :root{
@@ -158,13 +158,13 @@ svg.rings{--lp-ring-bg:var(--canvas);flex:none}
 
   <!-- 1 · signed out -->
   <section class="view on" id="v-out">
-    <div class="top"><a class="mark" href="#out"><svg class="rings" data-rings></svg>Loop</a><button class="ghost" data-focus>Sign in</button></div>
+    <div class="top"><a class="mark" href="#out"><svg class="rings" data-rings></svg>Loopd</a><button class="ghost" data-focus>Sign in</button></div>
     <div class="plate">
       <svg class="rings big" data-rings="inline"></svg>
       <div>
         <p class="kick">For the groups you’re already in</p>
         <h1>Stay in the loop. <em>Without chasing it.</em></h1>
-        <p>Loop connects the AI you already use to your team, so everyone can ask it what the plan is.</p>
+        <p>Loopd connects the AI you already use to your team, so everyone can ask it what the plan is.</p>
         <ul class="says">
           <li><span>You ask your AI</span>What’s mine this week, and where’s the latest deck?</li>
           <li><span>It answers from your team’s plan</span>The market sizing slide, due Thursday. Here is the link.</li>
@@ -187,7 +187,7 @@ svg.rings{--lp-ring-bg:var(--canvas);flex:none}
   <section class="view" id="v-in">
     <div class="app">
       <aside class="rail">
-        <a class="mark" href="#in"><svg class="rings" data-rings></svg>Loop</a>
+        <a class="mark" href="#in"><svg class="rings" data-rings></svg>Loopd</a>
         <p>You</p>
         <ul><li><a class="on" href="#in"><i></i>Groups</a></li><li><a href="#in"><i></i>Assistants</a></li></ul>
         <div class="who"><i>SF</i>Stephen<button class="ghost" data-go="out" style="margin-left:auto;height:30px;padding:0 12px;background:transparent;color:inherit;box-shadow:inset 0 0 0 1px oklch(99.4% 0.003 230 / .3)">Sign out</button></div>
@@ -212,7 +212,7 @@ svg.rings{--lp-ring-bg:var(--canvas);flex:none}
 
   <!-- 3 · shared link -->
   <section class="view" id="v-link">
-    <div class="top"><a class="mark" href="#link"><svg class="rings" data-rings></svg>Loop</a><button class="ghost" data-go="out">Sign in</button></div>
+    <div class="top"><a class="mark" href="#link"><svg class="rings" data-rings></svg>Loopd</a><button class="ghost" data-go="out">Sign in</button></div>
     <div class="share">
       <div class="ev">
         <div class="day"><span>Thu</span><b>19</b><span>Nov</span></div>
@@ -235,7 +235,7 @@ svg.rings{--lp-ring-bg:var(--canvas);flex:none}
 </div></div>
 
 <script>
-// The Loop mark, as in components/LoopGlyphs.tsx: three woven rings, the top one lime.
+// The Loopd mark, as in components/LoopGlyphs.tsx: three woven rings, the top one lime.
 const C=[[50,35],[35.5,60],[64.5,60]],R=21,r2=n=>Math.round(n*100)/100;
 const ring=i=>`M${C[i][0]-R} ${C[i][1]}a${R} ${R} 0 1 0 ${2*R} 0a${R} ${R} 0 1 0 ${-2*R} 0`;
 function cross(a,b){const[x1,y1]=C[a],[x2,y2]=C[b],dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy),h=Math.sqrt(R*R-d*d/4);return[[x1+dx/2-dy/d*h,y1+dy/2+dx/d*h],[x1+dx/2+dy/d*h,y1+dy/2-dx/d*h]];}

@@ -60,7 +60,7 @@ export async function startGroup(db: Db, p: Principal, input: StartInput): Promi
     try { await run(); } catch (error) { report.failed.push({ what, why: error instanceof ResourceInputError ? error.message : why }); }
   };
 
-  for (const file of files) await attempt(file.name, 'Loop could not read this file. Add it on the Resources tab.', async () => {
+  for (const file of files) await attempt(file.name, 'Loopd could not read this file. Add it on the Resources tab.', async () => {
     const document = await uploadDocument(db, p, { ...scope, operationId: randomUUID(), ...await parseResourceFile(file) });
     report.added.files.push(file.name);
     // Reading the text can be retried from the Resources tab; the file is already kept.
@@ -68,7 +68,7 @@ export async function startGroup(db: Db, p: Principal, input: StartInput): Promi
   });
 
   // A link dropped into the box is kept as one of the group's links (the Resources tab), not filed as an output.
-  for (const raw of data.links) await attempt(raw.slice(0, 80), 'Loop only keeps plain https links.', async () => {
+  for (const raw of data.links) await attempt(raw.slice(0, 80), 'Loopd only keeps plain https links.', async () => {
     const link = normaliseLink(raw);
     if ('problem' in link) throw new Error(link.problem);
     const result = await addLink(db, p, { ...scope, url: link.url });
@@ -77,7 +77,7 @@ export async function startGroup(db: Db, p: Principal, input: StartInput): Promi
   });
 
   const expiresAt = new Date(Date.now() + INVITATION_DAYS * 86_400_000).toISOString();
-  for (const raw of data.people) await attempt(raw, 'This is not an email address Loop can invite.', async () => {
+  for (const raw of data.people) await attempt(raw, 'This is not an email address Loopd can invite.', async () => {
     const recipientEmail = emailOf(raw);
     if (!recipientEmail) throw new Error('not an email');
     await issueInvitation(db, p, { ...scope, recipientEmail, role: 'member', expiresAt });

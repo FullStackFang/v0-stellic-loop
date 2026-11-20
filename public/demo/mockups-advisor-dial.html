@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Advisor (Dana) v4 — B3 cards, three sub-tab dials</title>
+<title>Loopd · Advisor (Dana) v4 — B3 cards, three sub-tab dials</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -167,7 +167,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · Advisor · Dana · v4</div>
+    <div class="eyebrow">Loopd · Advisor · Dana · v4</div>
     <h1>B3 cards, with three sub-tab dials</h1>
     <p>The body is B3 as picked. Only the row under the header changes. Each dial is a control the app already uses somewhere, so whichever you pick, Dana's tabs will look like something she has tapped before.</p>
   </div>
@@ -303,7 +303,7 @@ document.querySelectorAll('.phone').forEach(ph=>{
       ph.querySelectorAll('[data-tab]').forEach(b=>b.dataset.on = b.dataset.tab===cur?'1':'0');
       setTimeout(render, 140); return; }
     const reach = e.target.closest('[data-reach]');
-    if (reach && reach.dataset.done!=='1'){ reach.dataset.done='1'; reach.innerHTML=I.check; const name = reach.closest('.r').querySelector('.t').textContent; say(`Reached out to ${name.split(' ')[0]}`, 'A warm note from you. Loop never tells them how you knew.'); return; }
+    if (reach && reach.dataset.done!=='1'){ reach.dataset.done='1'; reach.innerHTML=I.check; const name = reach.closest('.r').querySelector('.t').textContent; say(`Reached out to ${name.split(' ')[0]}`, 'A warm note from you. Loopd never tells them how you knew.'); return; }
     const act = e.target.closest('[data-act]');
     if (act && act.dataset.done!=='1'){ act.dataset.done='1'; act.innerHTML = I.check+' Sent'; const s = SCOPES.find(s=>s.id===act.dataset.act);
       const card = ph.querySelector(`[data-card="${s.id}"]`); if (card) card.dataset.done='1'; say(s.cta, `${s.to} get the count, never who.`); return; }

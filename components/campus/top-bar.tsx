@@ -22,8 +22,8 @@ export function TopBar({ home = '/', on, member = false, going, account, childre
   /** Whether a link is the page: the one pressed, in the copy a loading state draws; else the one the page says. */
   const at = (href: string, here: boolean) => (going === undefined ? here : going === href) ? 'page' as const : undefined;
   return <header className="cs-nav">
-    <Link className="cs-wm" href={home}><Rings />Loop</Link>
-    <nav className="cs-links" aria-label="Loop" onClickCapture={event => { const href = (event.target as Element).closest('a')?.getAttribute('href'); if (href) pressed(href); }}>
+    <Link className="cs-wm" href={home}><Rings />Loopd</Link>
+    <nav className="cs-links" aria-label="Loopd" onClickCapture={event => { const href = (event.target as Element).closest('a')?.getAttribute('href'); if (href) pressed(href); }}>
       <Link href={home} aria-current={at(home, on === 'week')}>This week<LinkWait on={going === home} /></Link>
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={at(INK_PAGE, on === 'ink')}><InkMark /><span>Ink</span><LinkWait on={going === INK_PAGE} /></Link>
       {member && <AssistantsLink />}</nav>

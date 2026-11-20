@@ -4,7 +4,7 @@ import { boardBySlug } from '@/lib/load';
 import { viewer } from '@/lib/viewer';
 import { getTrip, tripItems } from '@/lib/trip-store';
 import { TripView } from '@/components/TripView';
-export const metadata = { title: 'Cohort trip · Loop', robots: { index: false, follow: false } };
+export const metadata = { title: 'Cohort trip · Loopd', robots: { index: false, follow: false } };
 export default async function TripPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params, q = db(), board = await boardBySlug(q, slug);
   if (!board) notFound();

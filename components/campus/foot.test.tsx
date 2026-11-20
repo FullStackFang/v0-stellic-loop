@@ -15,7 +15,7 @@ const links = () => screen.getAllByRole('link').map(link => link.textContent);
 
 it('has the small print only', () => {
   render(<SiteFoot />);
-  expect(links()).toEqual(['Loop', 'Terms', 'Privacy']);
+  expect(links()).toEqual(['Loopd', 'Terms', 'Privacy']);
 });
 
 it('opens a card that says Assistants come with Ink+ for a member without it, and closes it again', async () => {

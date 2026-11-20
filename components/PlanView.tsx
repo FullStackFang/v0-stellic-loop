@@ -29,7 +29,7 @@ export function PlanView({ board, c, details, signedIn, isPoster }: PlanPageMode
     <div className="lead">{ended ? `${c.count} were in. Nobody has to chase anyone.` : formed ? `Formed. One message went to all ${c.count}.` : `${c.remaining === 1 ? "One" : c.remaining} more and it forms.`}</div>
     <Faces faces={c.faces} remaining={formed ? 0 : Math.max(0, c.threshold - c.count)} ended={ended} />
     {c.dropped.map(f => <div className="out" key={f.id}>{f.name || "Someone"} can&apos;t make it</div>)}
-    {ended ? <div className="det"><div><span>Try a different night? Posting again starts a fresh count.</span><small>Loop</small></div></div> : <DetailsBox proposalId={c.id} rows={details} canAdd={c.me === "in"} cal={null} />}
+    {ended ? <div className="det"><div><span>Try a different night? Posting again starts a fresh count.</span><small>Loopd</small></div></div> : <DetailsBox proposalId={c.id} rows={details} canAdd={c.me === "in"} cal={null} />}
     {c.state === "didnt_form" ? <div className="bar"><Link className="cta ghost" href={`/b/${board.slug}/new?again=${c.id}`}>Post it again</Link><Link className="alt" href={`/b/${board.slug}`}>Back to {board.name}</Link></div> : !ended && c.state !== "past" ? <PlanActions proposalId={c.id} me={c.me} on={formed} day={c.day} signedIn={signedIn} /> : null}
   </>;
 }

@@ -137,7 +137,7 @@ const frames = (L, part) => `
 const DIRS = [['0', 'Three faces', 'In the spec today. Three faces fill in, then start again.', 'three', 34], ['A', 'One seat', 'One seat, a new face every beat. The smallest; it fits anywhere a dot would.', 'a', 44],
   ['B', 'Mini ticket', 'The ticket at the size of a word: one seat, and the stub inks in on each face.', 'b', 44], ['C', 'Your blot', 'Your own face, with your ink welling up under it. The plan shows: no blot on Free.', 'c', 44]];
 document.getElementById('main').innerHTML = DIRS.map(([key, name, line, kind, part]) => `<section class="dir"><div class="head"><i>${key}</i><b>${name}</b><span>${line}</span></div><div class="frames">${frames(LOADERS[kind], part)}</div></section>`).join('');
-const KITS = [['cornell', 'Cornell'], ['columbia', 'Columbia'], ['nyu', 'NYU'], ['cuny', 'CUNY'], ['loop', 'Loop']];
+const KITS = [['cornell', 'Cornell'], ['columbia', 'Columbia'], ['nyu', 'NYU'], ['cuny', 'CUNY'], ['loop', 'Loopd']];
 document.getElementById('kits').insertAdjacentHTML('beforeend', KITS.map(([slug, name]) => `<button aria-pressed="${slug === 'cornell'}" data-v="${slug}">${name}</button>`).join(''));
 document.getElementById('kits').addEventListener('click', event => {
   const button = event.target.closest('button'); if (!button) return;

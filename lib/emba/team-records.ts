@@ -245,7 +245,7 @@ const link=(raw:string)=>{const found=normaliseLink(raw);return 'problem' in fou
 
 /**
  * The conflict check (design D5). The caller must hold the team's current
- * decisions and say which of them the output contradicts. Loop runs no model:
+ * decisions and say which of them the output contradicts. Loopd runs no model:
  * this proves the decisions were delivered, not that they were compared.
  */
 async function checked(ctx:Ctx,data:{decisionsVersion?:number;conflictsWith:(number|string)[];fileAnyway:boolean}):Promise<string[]> {

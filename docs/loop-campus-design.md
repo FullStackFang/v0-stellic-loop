@@ -1,10 +1,10 @@
-# Loop Campus · the design
+# Loopd Campus · the design
 
 *Named and picked by the founder on 2026-11-17. Status: **mockup only, not yet in the app.***
 
-"Loop Campus" is the name of this look, so it can be told apart from the earlier ones
+"Loopd Campus" is the name of this look, so it can be told apart from the earlier ones
 (Stellic demo, Sun, Night, Quorum, HAI). To pick it up in a new session, say
-"continue Loop Campus" and point at this file.
+"continue Loopd Campus" and point at this file.
 
 It is not the same thing as the OpenSpec change `loop-campus-rewards`, which is a product
 feature (a campus page and group rewards). This file is only about how the app looks.

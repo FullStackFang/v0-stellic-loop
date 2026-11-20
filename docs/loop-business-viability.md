@@ -1,10 +1,10 @@
-# Loop business viability: a working thesis
+# Loopd business viability: a working thesis
 
 2026-11-08. Decision memo, not a forecast or validated market assessment. User goal: evaluate a business that gives groups an agent and helps members form useful connections. The separate market-evidence note records primary sources.
 
 ## Current judgment
 
-There is an established market for community software and facilitated member connections. There is not yet evidence that buyers will purchase Loop or that conversational intent produces better results than a short opt-in form. A plausible first business is software for operators of repeated professional cohorts who already spend time helping members find one another. A general personal intent network is a possible later direction, not a prerequisite for that business.
+There is an established market for community software and facilitated member connections. There is not yet evidence that buyers will purchase Loopd or that conversational intent produces better results than a short opt-in form. A plausible first business is software for operators of repeated professional cohorts who already spend time helping members find one another. A general personal intent network is a possible later direction, not a prerequisite for that business.
 
 The purchase hypothesis: **Help more cohort members find useful people and form groups that meet, while reducing staff coordination work.** The agent is how members interact. Intent, permissions and commitments are supporting product machinery. The buyer purchases a program outcome.
 
@@ -13,10 +13,10 @@ The purchase hypothesis: **Help more cohort members find useful people and form 
 - [Circle](https://circle.so/pricing) lists Scale at $419/month in USD on annual billing, with AI agents and a broad community platform. Its [agent description](https://circle.so/ai-agents) includes community knowledge, targeted audiences, and an admin inbox that can view agent conversations. Pricing was checked against the current pricing page; older product-page availability language still refers to 2025.
 - [Hivebrite](https://hivebrite.io/pricing/) starts its Focus plan at $8,000/year and lists people/content recommendations, a conversation-nudger agent, and MCP. It is a substantial adjacent platform, not merely a directory.
 - [Orbiit](https://orbiit.ai/how-it-works/) already offers interest-based matching, one-to-one and small-group conversations, scheduling, feedback, and matching improvements across rounds. It says members do not need a separate profile or login. Its site identifies its acquisition by Hivebrite.
-- [Bevy](https://bevy.com/b/blog/bevy-unveils-engagement-hub-to-help-community-teams-drive-deeper-connections) explicitly combines community agents with the personalized introduction engine it acquired from Intros AI. Agent plus matching is already an offered combination, not a defensible novelty claim for Loop.
-- [Donut](https://www.donut.com/pricing/) lists Standard from $74/month billed annually, varying with participants. Its introductions and connection workflows establish a lower-priced alternative. These are not like-for-like quotes for a Loop target customer.
+- [Bevy](https://bevy.com/b/blog/bevy-unveils-engagement-hub-to-help-community-teams-drive-deeper-connections) explicitly combines community agents with the personalized introduction engine it acquired from Intros AI. Agent plus matching is already an offered combination, not a defensible novelty claim for Loopd.
+- [Donut](https://www.donut.com/pricing/) lists Standard from $74/month billed annually, varying with participants. Its introductions and connection workflows establish a lower-priced alternative. These are not like-for-like quotes for a Loopd target customer.
 
-These vendor offers demonstrate alternatives and published pricing. They do not prove purchase volume, realized ROI, or willingness to buy an additional Loop subscription.
+These vendor offers demonstrate alternatives and published pricing. They do not prove purchase volume, realized ROI, or willingness to buy an additional Loopd subscription.
 
 ## Where to start
 
@@ -52,7 +52,7 @@ Avoid outcome-contingent retention pricing initially: attribution and measuremen
 
 ## Illustrative economics
 
-All numbers in this section are assumptions for sensitivity analysis, not measured Loop costs or market forecasts.
+All numbers in this section are assumptions for sensitivity analysis, not measured Loopd costs or market forecasts.
 
 At $6,000 annual contract value, equivalent monthly revenue is $500. If direct monthly delivery costs are $50 technical services and one support hour valued at $50, gross contribution is $400/month (80%). If support takes six hours instead, direct costs are $350 and contribution falls to $150 (30%). Neither scenario includes product development, sales, central administration, or taxes. Onboarding cost must also be recovered.
 

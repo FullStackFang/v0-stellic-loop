@@ -156,7 +156,7 @@ it('closes at its time by the database clock, or earlier by the asker or an orga
  asked(await createAsk(t.db,f.memberB,{...f.root,question:'Third?',kind:'text',closesAt:inDays(1)}));
  expect(await closeAsk(t.db,await assistant(f,f.memberA),{...f.root,number:3})).toEqual({saved:false,reason:'not_yours'});
  expect(await closeAsk(t.db,await assistant(f,f.organizer,['plan:read','group-memory:write'],'lead'),{...f.root,number:3})).toMatchObject({saved:true,changed:true});
- // Asked, closed by its time (by Loop), closed early twice. Answers are not in the sequence.
+ // Asked, closed by its time (by Loopd), closed early twice. Answers are not in the sequence.
  expect((await t.db.query('select c.action,k.number,c.actor_id is null as loop,c.client_id from emba_team_change c join emba_ask k on k.id=c.ask_id order by c.seq')).rows).toEqual([
   {action:'asked',number:1,loop:false,client_id:null},{action:'asked',number:2,loop:false,client_id:null},{action:'ask_closed',number:1,loop:true,client_id:null},
   {action:'ask_closed',number:2,loop:false,client_id:null},{action:'asked',number:3,loop:false,client_id:null},{action:'ask_closed',number:3,loop:false,client_id:'lead'}]);
@@ -282,14 +282,14 @@ it('puts asked and closed in what is new, never an answer, and lists the open as
  // A follower cannot answer, so nothing waits for a follower.
  await follower(f,f.members[6]??f.members[5]);
  expect((await whatsNew(t.db,f.members[6]??f.members[5],f.root)).unanswered.items).toEqual([]);
- // An ask that passed its time shows as closed in what is new, entered by Loop, once.
+ // An ask that passed its time shows as closed in what is new, entered by Loopd, once.
  await elapse(2,'1 minute');
  const later=await whatsNew(t.db,f.memberB,{...f.root,cursor:news.cursor});
  expect(later.changes.map(change=>[change.action,change.ask?.number,change.ask?.open,change.by,change.assistant])).toEqual([['ask_closed',2,false,{handle:null,isYou:false,former:true},null]]);
  expect(later.unanswered.items).toEqual([]);
  expect((await whatsNew(t.db,f.memberB,{...f.root,cursor:later.cursor})).changes).toEqual([]);
  expect((await t.db.query('select count(*)::int as n from emba_team_change')).rows).toEqual([{n:3}]);
- // A person outside the team cannot make Loop do even that.
+ // A person outside the team cannot make Loopd do even that.
  await elapse(1,'1 minute');
  await expect(whatsNew(t.db,f.nonmember,f.root)).rejects.toThrow('forbidden');
  expect((await t.db.query('select count(*)::int as n from emba_team_change')).rows).toEqual([{n:3}]);

@@ -1,4 +1,4 @@
-/* The Loop system, the look for the whole app (see DESIGN.md): Stanford HAI's system on an app shell.
+/* The Loopd system, the look for the whole app (see DESIGN.md): Stanford HAI's system on an app shell.
    A page opts in by wrapping itself in .lp; pages that don't are untouched.
    Navy rail, cool canvas, teal plate with aqua type, lime only on small chips, panels with one tight corner, pill controls.
    Everything is scoped under .lp, and class names carry the lp- prefix because globals.css owns short names such as .row and .num. */

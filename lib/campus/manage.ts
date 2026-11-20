@@ -10,7 +10,7 @@ import { cleanWords, goodFor } from './words';
 const domain = (typed: string) => typed.trim().toLowerCase().replace(/^@/, '');
 
 export async function addCampus(q: Q, input: { slug: string; name: string; tz: string; domains: string[]; listSource?: string }): Promise<{ id: string }> {
-  if (!validTimezone(input.tz)) throw new Error('Not a timezone Loop knows, such as America/New_York');
+  if (!validTimezone(input.tz)) throw new Error('Not a timezone Loopd knows, such as America/New_York');
   const domains = [...new Set(input.domains.map(domain).filter(Boolean))];
   if (!domains.length || domains.some(name => !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(name))) throw new Error('A campus needs at least one email domain, such as cornell.edu');
   return (await q.query<{ id: string }>('insert into campus(slug,name,tz,domains,list_source) values($1,$2,$3,$4,$5) returning id', [input.slug.trim().toLowerCase(), input.name.trim(), input.tz, domains, input.listSource?.trim() || 'CampusGroups'])).rows[0];

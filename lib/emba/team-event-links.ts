@@ -24,7 +24,7 @@ export type LinkWrite=
   existing:boolean}
  |Refused
  |{saved:false;reason:'cap';cap:'upcoming_events'|'linked_events'}
- // Loop could not read the page: nothing is saved until the member gives a name and a start. `listed` says whether it is a site Loop reads at all.
+ // Loopd could not read the page: nothing is saved until the member gives a name and a start. `listed` says whether it is a site Loopd reads at all.
  |{saved:false;reason:'needs_facts';listed:boolean}
  |{saved:false;reason:'link_refused';problem:LinkProblem}
  |{saved:false;reason:'end_before_start'}
@@ -38,7 +38,7 @@ type None={saved:false;reason:'none'};
 
 export const nearbyCode=z.string().regex(/^[0-9a-f]{8}$/);
 const linkSchema=z.strictObject({...scope,url:z.string().min(1).max(8000).optional(),nearby:nearbyCode.optional(),
- // Used only when Loop cannot read the page.
+ // Used only when Loopd cannot read the page.
  name:lineSchema(EVENTS.name).optional(),startsAt:moment.optional(),endsAt:moment.nullish(),place:lineSchema(EVENTS.place).nullish(),route,card})
  .refine(data=>(data.url===undefined)!==(data.nearby===undefined));
 
@@ -60,7 +60,7 @@ async function freeTag(ctx:WriteCtx,name:string):Promise<string> {
  * and marks the caller interested. A link the team already holds, or an event
  * with the same name and start, adds nothing: the caller is marked interested
  * in the one that exists. `read` fetches the page; it is called only for a
- * site Loop reads, and only after the caller is known to be allowed to post.
+ * site Loopd reads, and only after the caller is known to be allowed to post.
  */
 export async function linkEvent(db:Db,p:Principal,input:unknown,read:PageReader=readEventPage):Promise<LinkWrite> {
  const data=linkSchema.parse(input),team={orgId:data.orgId,loopId:data.loopId};
@@ -164,7 +164,7 @@ export const REREAD={most:200} as const;
 /**
  * The daily read (design D6): every upcoming event that follows a link is
  * read again, the one read longest ago first, at most 200 a run. A changed
- * start, end or place is applied as Loop's own change. A page that is gone,
+ * start, end or place is applied as Loopd's own change. A page that is gone,
  * or says the event is cancelled, labels the event. A page that cannot be
  * read changes nothing. One event that fails does not stop the others.
  */

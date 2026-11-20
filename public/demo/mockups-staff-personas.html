@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Staff personas — RA · TA · Counselor dashboards</title>
+<title>Loopd · Staff personas — RA · TA · Counselor dashboards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Loop · staff personas</div>
+  <div class="eyebrow">Loopd · staff personas</div>
   <h1>Three staff lenses on the same loops — floor · class · school</h1>
   <p class="lede">Josh (RA, Donlon 2F), Maya (TA, CS 2110) and Dana (counselor, whole school) each get a dashboard scoped to what they can act on. Same guardrail everywhere: <b>counts and loops, never intents by name</b>. Everything below is clickable — buttons flip to "done", the school view has its own tabs. Pick what to keep, cut, or change.</p>
 
@@ -180,7 +180,7 @@
       <li><b>Josh Park → RA of Donlon 2F</b> (Class of 2027). Today he's a Balch resident who "seeded" the Sunday HW crew. Moving him to Donlon 2F puts Sarah on his floor, so his dashboard, the loop he seeded, and Sarah's onboarding all tie together.</li>
       <li><b>Maya Idris → CS 2110 TA</b> (Class of 2027, Collegetown). Today she's a Donlon 2F freshman "latecomer". The join notification becomes <i>"Maya, your CS 2110 TA, joined the Sunday HW crew"</i> — arguably a stronger beat. If you'd rather keep a student Maya, I'd add a 5th persona for the TA instead.</li>
       <li><b>Dana Okafor → whole-school view</b>, with her 128-advisee caseload kept as a section at the bottom (the reach-out list she has today).</li>
-      <li>Student personas keep their student app. In direction A, RA/TA see one extra tab; in B they get a "Staff view" entry in the account menu and a "← my Loop" pill to get back.</li>
+      <li>Student personas keep their student app. In direction A, RA/TA see one extra tab; in B they get a "Staff view" entry in the account menu and a "← my Loopd" pill to get back.</li>
     </ul>
     <p class="q">Once you pick, I'll implement it in <span class="mono">index.html</span>: new <span class="mono">RADashboard</span> / <span class="mono">TADashboard</span> components, <span class="mono">AdvisorDashboard</span> upgraded to school-wide, persona data + switcher updated.</p>
   </div>
@@ -204,7 +204,7 @@ function josh(){
     <div class="status"><span>9:41</span><span>●●● ᯤ ▮</span></div>
     <div class="apphead">
       <div class="id"><div class="ic">2F</div><div><h2>Donlon 2F</h2><div class="k">Josh · RA view · 34 residents</div></div></div>
-      ${tabs ? '<div class="av">JP</div>' : '<span class="backpill">← my Loop</span>'}
+      ${tabs ? '<div class="av">JP</div>' : '<span class="backpill">← my Loopd</span>'}
     </div>
     <div class="scroll"><div class="pad ${tabs?'tabs':''} in">
       <div class="kicker"><span class="dot"></span>your floor · right now</div>
@@ -234,10 +234,10 @@ function josh(){
       </div>
 
       <div class="sechead"><h3>Seed a loop</h3><span class="c hi">2 gaps</span></div>
-      <p class="lede2">You seed it, Loop runs it. You don't own it — you can fade once it holds.</p>
+      <p class="lede2">You seed it, Loopd runs it. You don't own it — you can fade once it holds.</p>
       <div class="card hi">
         <div class="row"><div class="ic">6</div><div class="m"><div class="t">Helen Newman lift crew</div><div class="s">Tue + Thu 7p · suggested</div></div><span class="badge acc">gap</span></div>
-        <p class="why"><b>6 residents</b> dropped "lift" and none is in a crew. Three said evenings. Loop drafts the anchor; they get "your floor is starting a lift loop", not your name.</p>
+        <p class="why"><b>6 residents</b> dropped "lift" and none is in a crew. Three said evenings. Loopd drafts the anchor; they get "your floor is starting a lift loop", not your name.</p>
         <div class="btns">${btn('j-seed1','Seed it','p')}${btn('j-edit1','Edit draft')}</div>
       </div>
       <div class="card">
@@ -247,7 +247,7 @@ function josh(){
       </div>
 
       <div class="sechead"><h3>Throw a floor event</h3><span class="c">next 2 weeks</span></div>
-      <p class="lede2">One-offs that ride an existing rhythm — Loop tells you why now.</p>
+      <p class="lede2">One-offs that ride an existing rhythm — Loopd tells you why now.</p>
       <div class="card">
         <div class="row"><div class="ic form">Thu</div><div class="m"><div class="t">Prelim-week snack night · lounge</div><div class="s">Wed Oct 8 · 8p · before CS 2110 Prelim 1</div></div></div>
         <p class="why"><b>11 residents</b> are in CS 2110 and the Sunday crew meets 3 doors down. Floors that host something in prelim week see +9% loop attendance after.</p>
@@ -260,7 +260,7 @@ function josh(){
       </div>
 
       <div class="sechead"><h3>Not landed yet</h3><span class="c hi">8 residents</span></div>
-      <p class="lede2">Greet, don't nudge. Loop shows who hasn't joined anything — not what they typed.</p>
+      <p class="lede2">Greet, don't nudge. Loopd shows who hasn't joined anything — not what they typed.</p>
       <div class="card">
         ${who('Theo Nguyen','0 loops · 3 wks in')}
         ${who('Hannah Weiss','dropped an intent · never joined')}
@@ -281,7 +281,7 @@ function maya(){
     <div class="status"><span>9:41</span><span>●●● ᯤ ▮</span></div>
     <div class="apphead">
       <div class="id"><div class="ic">TA</div><div><h2>CS 2110</h2><div class="k">Maya · TA view · 412 enrolled</div></div></div>
-      ${tabs ? '<div class="av">MI</div>' : '<span class="backpill">← my Loop</span>'}
+      ${tabs ? '<div class="av">MI</div>' : '<span class="backpill">← my Loopd</span>'}
     </div>
     <div class="scroll"><div class="pad ${tabs?'tabs':''} in">
       <div class="kicker"><span class="dot"></span>your class · this week</div>
@@ -304,7 +304,7 @@ function maya(){
         </div>
         <div class="heat-lab"><span>where they live · North 24 · West 8 · C-town 5</span></div>
         <div class="row" style="margin-top:12px"><div class="ic form">Wed</div><div class="m"><div class="t">Seed a Wed 7p loop · Rhodes 571</div><div class="s">most are free then · 2 blocks from Duffield</div></div></div>
-        <p class="why">Loop invites the 37 as "a CS 2110 crew is starting Wed 7p" — <b>no roster, no names to you</b>. Quorum of 3 makes it real.</p>
+        <p class="why">Loopd invites the 37 as "a CS 2110 crew is starting Wed 7p" — <b>no roster, no names to you</b>. Quorum of 3 makes it real.</p>
         <div class="btns">${btn('m-seed','Seed it','p')}${btn('m-oh','Anchor to my Tue 5p office hours')}</div>
       </div>
 
@@ -331,7 +331,7 @@ function maya(){
       </div>
       <div class="card">
         <div class="row"><div class="ic form">5/8</div><div class="m"><div class="t">Prelim 2 review</div><div class="s">forming · needs 3 more</div></div><span class="badge forming">forming</span></div>
-        <p class="why">A word from you gets it over quorum: Loop posts <b>"your TA will drop by"</b> to the 37 waiting.</p>
+        <p class="why">A word from you gets it over quorum: Loopd posts <b>"your TA will drop by"</b> to the 37 waiting.</p>
         <div class="btns">${btn('m-boost','Boost it','p')}</div>
       </div>
       <div class="foot" style="border:0;padding-top:0"><span>+ 6 more loops</span>${btn('m-all','See all','g')}</div>
@@ -443,7 +443,7 @@ function render(){
     </div>`).join('');
   $('#entrysub').innerHTML = state.entry==='tab'
     ? 'RA/TA keep the normal student app; a 5th tab (<b>Floor</b> / <b>CS 2110</b>) opens their staff view. Dana has no student app — she lands straight on hers.'
-    : 'RA/TA open a separate staff surface from their account menu (no tab bar, "← my Loop" to return) — same pattern Dana has today.';
+    : 'RA/TA open a separate staff surface from their account menu (no tab bar, "← my Loopd" to return) — same pattern Dana has today.';
   document.querySelectorAll('#entry button').forEach(b=> b.dataset.on = b.dataset.v===state.entry ? 1 : 0);
 }
 document.addEventListener('click', e => {

@@ -44,14 +44,14 @@ export function ResourceBox({ action, orgId, loopId }: { action: PortalAction; o
     onDragOver={event => { event.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={drop}>
     <input type="hidden" name="orgId" value={orgId} /><input type="hidden" name="loopId" value={loopId} />
     <button type="button" className="lp-plus" aria-label="Add a link, a file or text" onClick={() => box.current?.focus()}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button>
-    <textarea ref={box} name="body" rows={1} aria-label="Add to resources" placeholder="Paste a link, drop a file, or paste text. Loop works out which." value={text} onKeyDown={enter}
+    <textarea ref={box} name="body" rows={1} aria-label="Add to resources" placeholder="Paste a link, drop a file, or paste text. Loopd works out which." value={text} onKeyDown={enter}
       onChange={event => { setText(event.target.value); if (event.target.value) setFile(null); if (fileInput.current && event.target.value) fileInput.current.value = ''; }} />
     <label className="lp-pickfile">Choose a file<input ref={fileInput} type="file" name="file" accept={FILE_TYPES} className="lp-sr" onChange={event => take(event.target.files?.[0] ?? null)} /></label>
     {sorted && <div className="lp-detect">
       {sorted.type === 'bad' ? <p className="lp-err" role="alert">Links need to start with https.</p> : <>
         <div className="lp-found">{tile(sorted.type === 'link' ? 'link' : 'text')}<div><b>{sorted.type === 'link' ? 'Link' : sorted.type === 'file' ? 'File' : 'Text'}</b><small>{sorted.type === 'link' ? sorted.host : sorted.type === 'file' ? `${sorted.file.name} · ${size(sorted.file.size)}` : 'Searchable by assistants'}</small></div></div>
         <label className="lp-field">Name (optional)<input name="name" maxLength={120} value={name} onChange={event => setName(event.target.value)} placeholder={sorted.type === 'file' ? sorted.file.name.replace(/\.[a-z0-9]+$/i, '') : sorted.type === 'link' ? 'Left as the address' : 'Interview transcript'} /></label>
-        <p className="lp-hint">{sorted.type === 'link' ? 'Nothing else to fill in. An assistant works out what it is for, and for whom, when it first reads it.' : sorted.type === 'file' ? 'Loop reads the words and does not keep the file. An assistant tags it when it first reads it.' : 'Kept as pasted. An assistant tags it when it first reads it.'}</p>
+        <p className="lp-hint">{sorted.type === 'link' ? 'Nothing else to fill in. An assistant works out what it is for, and for whom, when it first reads it.' : sorted.type === 'file' ? 'Loopd reads the words and does not keep the file. An assistant tags it when it first reads it.' : 'Kept as pasted. An assistant tags it when it first reads it.'}</p>
         <button className="lt-primary" type="submit" disabled={pending}>{pending ? <SeatsWord word="Saving" plate /> : sorted.type === 'link' ? 'Add link' : 'Add text'}</button></>}
     </div>}
     {state.message && <p className={state.status === 'error' ? 'lp-err' : 'emba-meta'} role={state.status === 'error' ? 'alert' : 'status'}>{state.message}</p>}

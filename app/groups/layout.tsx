@@ -26,7 +26,7 @@ import { SessionRefresh } from './session-refresh';
 import '@/app/c/campus.css';
 import './campus-look.css';
 
-/** Whose colours the person sees unless they pick others (their school's, or Loop's own), and the animal that is their face. */
+/** Whose colours the person sees unless they pick others (their school's, or Loopd's own), and the animal that is their face. */
 async function looks(principal: Principal): Promise<{ kit: string; face: string | null; ink: boolean }> {
   try {
     const [school, [faces, ink, made]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await hasInk(q, principal.personId), await customFaces(q, [principal.personId])] as const)]);

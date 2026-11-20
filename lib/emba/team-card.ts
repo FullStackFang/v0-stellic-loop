@@ -1,7 +1,7 @@
 // The in-chat card (waiting spec of loop-club-reach, design D2 and D2a).
 //
 // One self-contained page that an assistant with support for in-chat
-// interfaces shows beside a tool result. It wears Loop's own panel (app/loop.css:
+// interfaces shows beside a tool result. It wears Loopd's own panel (app/loop.css:
 // tight corner, teal plate, pill buttons) in a light and a dark form, on a
 // transparent page. An ask is drawn by its kind: pills for a choice, day tiles
 // with a calendar for a dates ask, where the member may add days. It uses only the standard keys and
@@ -28,7 +28,7 @@ export const CARD_HTML=String.raw`<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Loop</title>
+<title>Loopd</title>
 <style>
 :root{color-scheme:light dark;
  --teal:oklch(37.3% 0.052 206);--lime:oklch(96.4% 0.19 117);--aqua:oklch(90.4% 0.1 194);--on:oklch(99.4% 0.003 230);
@@ -90,14 +90,14 @@ button.cell[aria-pressed="true"]{color:var(--on-go);background:var(--go);box-sha
 </head>
 <body>
 <div class="card">
-<div class="brand"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="you" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.26 40.49A21 21 0 0 1 54.64 51.36M54.64 68.64A21 21 0 0 1 43.26 79.51"/><path d="M42.58 40.23A21 21 0 0 1 54.93 52.03M54.93 67.97A21 21 0 0 1 42.58 79.77"/></svg><span>Loop</span><span class="chip" id="chip" hidden></span></div>
+<div class="brand"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="you" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path class="gap" d="M43.26 40.49A21 21 0 0 1 54.64 51.36M54.64 68.64A21 21 0 0 1 43.26 79.51"/><path d="M42.58 40.23A21 21 0 0 1 54.93 52.03M54.93 67.97A21 21 0 0 1 42.58 79.77"/></svg><span>Loopd</span><span class="chip" id="chip" hidden></span></div>
 <main id="loop" aria-live="polite"></main>
 </div>
 <script>
 (function(){
 'use strict';
-var UNREACHABLE="Couldn't reach Loop. Try again";
-var DENIED='This assistant no longer has access to this group. You can grant it on the Loop site.';
+var UNREACHABLE="Couldn't reach Loopd. Try again";
+var DENIED='This assistant no longer has access to this group. You can grant it on the Loopd site.';
 var SHOWN=5;
 var root=document.getElementById('loop'),chip=document.getElementById('chip'),page=document.documentElement;
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'],DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],strips=[];
@@ -218,7 +218,7 @@ function read(result){
 
 // A button tap: the same tool the model calls, marked as coming from the card.
 function refusal(data){
- return data.reason==='busy'?'Loop was busy. Try again.'
+ return data.reason==='busy'?'Loopd was busy. Try again.'
   :data.reason==='cap'?'Too many changes this hour. Try again later.'
   :data.reason==='members_only'?'Only members of the group can do this.'
   :data.reason==='not_in'?'Only those who are in on the idea can answer.'
@@ -455,7 +455,7 @@ function retry(){
 function draw(){
  root.textContent='';strips=[];
  chip.hidden=!(model.count&&model.entries&&model.entries.length);chip.textContent=chip.hidden?'':model.count;
- if(model.loading)add(root,el('p','quiet','Loading from Loop'));
+ if(model.loading)add(root,el('p','quiet','Loading from Loopd'));
  else if(model.failed){
   add(root,el('p','note',model.failed));
   // Only a read is asked for again; a write is never repeated by the card on its own.

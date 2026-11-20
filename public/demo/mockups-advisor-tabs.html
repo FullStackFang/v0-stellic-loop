@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Advisor (Dana) v2 — sub tabs: three ways to split her screen</title>
+<title>Loopd · Advisor (Dana) v2 — sub tabs: three ways to split her screen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -188,7 +188,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · Advisor · Dana · v2</div>
+    <div class="eyebrow">Loopd · Advisor · Dana · v2</div>
     <h1>Sub tabs: three ways to split her screen</h1>
     <p>One screen was too much. Each tab below is a whole screen with its own headline, so it can breathe. The split is the decision: <b>whose students</b>, <b>what she does</b>, or <b>which question</b>. Each phone opens on the tab that makes it different; tap the others.</p>
     <div class="swatches"><span><i style="background:var(--unit-dorm)"></i>house</span><span><i style="background:var(--unit-class)"></i>course</span><span><i style="background:var(--unit-year)"></i>class year</span><span><i style="background:var(--accent)"></i>campus · falling</span></div>
@@ -327,7 +327,7 @@ function screenAdvisees(){
     <p class="sub">The one signal that predicts who stays. A nudge from you, not an algorithm.</p>
     <div class="stats"><div><b class="live">${CASE.inLoop}</b><span>in a loop</span></div><div><b class="acc">${not}</b><span>not yet</span></div><div><b class="form">${CASE.landed}</b><span>landed this wk</span></div></div>
     <div class="sec"><h3>Worth a check-in</h3><span class="n acc">${PEOPLE.length} flagged</span></div>
-    <p class="lede">Zero loops, or left their only one. Loop shows who, never what they typed.</p>
+    <p class="lede">Zero loops, or left their only one. Loopd shows who, never what they typed.</p>
     <div class="list">${PEOPLE.map(p=>personRow(p)).join('')}</div>
     <button class="more" data-more="not">The other ${not-PEOPLE.length} not in a loop<span>${I.chev}</span></button>
     <div class="list hidden" data-more-body="not">${[['Ava Rossi','AR','Balch','0 loops · 1 wk in'],['Sam Okoro','SO','Donlon','0 loops · intent dropped'],['Lena Fischer','LF','Mews','0 loops · 2 wks in']].map(([name,ini,dorm,signal])=>personRow({ id:ini, name, ini, dorm, signal })).join('')}</div>
@@ -380,7 +380,7 @@ function screenRoute(){
     <div class="sec"><h3>Nudge</h3><span class="n acc">${cold.length} · someone can act</span></div>
     <div class="list">${cold.map(s=>scopeRow(s,{ toggle:true, chev:true, sub:`<span class="to">${I.arrow} <b>${esc(s.to)}</b></span> · ${s.line}` }) + coldBody(s, false)).join('')}</div>
     <div class="sec"><h3>Watch</h3><span class="n">${watch.length} · nothing to do yet</span></div>
-    <p class="lede">Still above the line for its kind. Loop flags it the week it crosses, with a route.</p>
+    <p class="lede">Still above the line for its kind. Loopd flags it the week it crosses, with a route.</p>
     <div class="list">${watch.map(s=>scopeRow(s)).join('')}</div>
     ${guard()}`;
 }
@@ -415,7 +415,7 @@ document.querySelectorAll('.phone').forEach(ph=>{
     const tab = e.target.closest('[data-tab]'); if (tab){ cur = tab.dataset.tab; render(); return; }
     const reach = e.target.closest('[data-reach]');
     if (reach && reach.dataset.done!=='1'){ reach.dataset.done='1'; reach.innerHTML=I.check;
-      const row = reach.closest('.row'); say(`Reached out to ${row.querySelector('.t').textContent.split(' ')[0]}`, 'A warm note from you — Loop never tells them how you knew.'); return; }
+      const row = reach.closest('.row'); say(`Reached out to ${row.querySelector('.t').textContent.split(' ')[0]}`, 'A warm note from you — Loopd never tells them how you knew.'); return; }
     const act = e.target.closest('[data-act]');
     if (act && act.dataset.done!=='1'){ act.dataset.done='1'; act.innerHTML = I.check+'Sent'; const s = SCOPES.find(s=>s.id===act.dataset.act); say(s.cta, `${s.to} get the count — never who.`); return; }
     const tg = e.target.closest('[data-toggle]');

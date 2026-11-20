@@ -15,7 +15,7 @@ const WINDOW = 30 * 86400000;
 // CampusGroups marks a title as quoted-printable; the bytes are UTF-8.
 const unquote = (value: string) => /=[0-9A-F]{2}/.test(value) ? Buffer.from(value.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16))), 'latin1').toString('utf8') : value;
 const line = (value: unknown, most: number) => typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, most) || null : null;
-/** The about text with nothing that leads out of Loop: lines holding a link, and the rule above them, are dropped. */
+/** The about text with nothing that leads out of Loopd: lines holding a link, and the rule above them, are dropped. */
 function about(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const kept = value.split(/\r?\n/).map(part => part.trim()).filter(part => part && !/https?:\/\/|www\.|^-{3,}$/i.test(part) && !/^address:$/i.test(part));
@@ -93,7 +93,7 @@ export async function readFeeds(db: Db, options: { fetch?: Fetcher; now?: Date; 
           const start = Date.parse(item.startsAt), wanted = Date.parse(item.endsAt ?? item.startsAt) >= now.getTime() && start < now.getTime() + WINDOW;
           if (wanted) inWindow++;
           const id = known.get(item.id), placeId = matchPlace(places, item.place)?.id ?? null, words = goodFor(item.title, item.about, item.host);
-          // An event Loop already holds follows its item wherever it moved; a new one is taken only inside the 30 days.
+          // An event Loopd already holds follows its item wherever it moved; a new one is taken only inside the 30 days.
           if (id) await q.query(`update campus_listing set title=$2,about=$3,host_name=$4,place_text=$5,place_id=$6,starts_at=$7,ends_at=$8,left_feed_at=null,
             words=case when words_by_hand then words else $9 end where id=$1`, [id, item.title, item.about, item.host, item.place, placeId, item.startsAt, item.endsAt, words]);
           else if (wanted) await q.query(`insert into campus_listing(campus_id,origin,feed_id,feed_item_id,title,about,host_name,place_text,place_id,starts_at,ends_at,words)

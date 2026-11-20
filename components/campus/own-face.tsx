@@ -20,7 +20,7 @@ async function small(file: File): Promise<Blob> {
 const PERKS = ['Your book, kept for good', 'Give an animal a month', 'Boost a group a month', 'Join at any school'];
 
 /**
- * "Create your own" in the account card. It is part of Loop Ink, so it opens on the plan: what Ink is, its
+ * "Create your own" in the account card. It is part of Loopd Ink, so it opens on the plan: what Ink is, its
  * price, and Subscribe, which asks for an email in its own place. There is no payment yet: the ask is kept
  * (lib/campus/custom-face.ts), the person is told so, and then gives a photo of an animal, which is drawn as one of
  * the set, free.
@@ -88,24 +88,24 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
     const got = await makeFaceAction(data).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
     if (got.ok) { await seated(got.own); setOwn(got.own); setState('done'); onMade(got.own, got.left); } else { setSaid(got.message); setState('photo'); }
   };
-  const thanks = first && !tried && state !== 'ask' && <p className="cs-own-thanks">Thanks for subscribing to Loop Ink. Payment is not set up yet, so this one is free. Enjoy your avatar.</p>;
+  const thanks = first && !tried && state !== 'ask' && <p className="cs-own-thanks">Thanks for subscribing to Loopd Ink. Payment is not set up yet, so this one is free. Enjoy your avatar.</p>;
   /* eslint-disable @next/next/no-img-element -- icons from public/animals, the person's own photo from their device, and the picture made from it */
   if (state === 'plan') return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     <button className="cs-prem-back" onClick={onBack}>Back</button>
-    <p className="cs-prem-kick">Loop Ink</p>
+    <p className="cs-prem-kick">Loopd Ink</p>
     <p className="cs-prem-big">$2.99 <small>a month</small></p>
     <div className="cs-prem-figs" aria-hidden="true"><img src={animal(22)} alt="" /><img src={animal(36)} alt="" /></div>
     <div className="cs-prem-perks">{PERKS.map(perk => <span key={perk}>{perk}</span>)}<small>These four are not here yet. Today Ink is the Ink animals and your own pet, drawn from your photo.</small></div>
     <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
       {asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}>{wait ? <SeatsWord word="Subscribing" plate /> : 'Subscribe'}</button></div>
-        : <button className="cs-btn go">Subscribe to Loop Ink</button>}
+        : <button className="cs-btn go">Subscribe to Loopd Ink</button>}
       {said && <p role="alert">{said}</p>}
     </form>
   </div></div>;
   // The free animal is made: the same plate says so, and offers to draw it again.
   if (state === 'photo' && left <= 0) return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     <button className="cs-prem-back" onClick={onBack}>Back</button>
-    <p className="cs-prem-kick">Loop Ink</p>
+    <p className="cs-prem-kick">Loopd Ink</p>
     <p className="cs-prem-big said">You’re already subscribed and got your free avatar!</p>
     <div className="cs-prem-perks"><span>More pets and more perks will come with Ink once it officially launches. Stay tuned!</span></div>
     <div className="cs-prem-stub"><button className="cs-btn go" onClick={() => { setSaid(''); setState('ask'); }}>Redraw your pet</button><p className="cs-prem-small">A new drawing, set beside the one you have. You keep one.</p></div>
@@ -116,7 +116,7 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
     {state === 'sure' ? <button className="cs-prem-back" onClick={() => { setSaid(''); setState(from); }}>Back</button>
     : state === 'ask' ? <button className="cs-prem-back" onClick={() => { setSaid(''); setState(own ? 'done' : 'photo'); }}>Back</button>
     : state !== 'busy' && state !== 'pick' && <button className="cs-prem-back" onClick={onBack}>{state === 'done' ? 'Done' : 'Back'}</button>}
-    <p className="cs-prem-kick">Loop Ink</p>
+    <p className="cs-prem-kick">Loopd Ink</p>
     <p className="cs-prem-big said" role={state === 'busy' ? 'status' : undefined}>{head}</p>
     {thanks}
     {state === 'done' ? <><div className="cs-prem-made"><img src={own} alt="Your own animal" /></div>

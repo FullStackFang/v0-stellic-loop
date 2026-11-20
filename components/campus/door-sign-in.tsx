@@ -64,7 +64,7 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
       {configured ? (routing === 'path' ? <SignIn routing="path" path="/sign-in" {...shared} /> : <SignIn routing="hash" {...shared} />)
         : <p role="status">Sign-in is not configured for this deployment.</p>}
       <p className="seen" aria-live="polite">{seen}</p>
-      {(school || !linkedin) && <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : 'Type your school email and Loop takes on your school\u2019s colours. Any other email signs in too.'}</p>}
+      {(school || !linkedin) && <p className="fine">{school ? `With your ${school.name} email you see ${school.name}.` : 'Type your school email and Loopd takes on your school\u2019s colours. Any other email signs in too.'}</p>}
     </div>
   </div>;
 }

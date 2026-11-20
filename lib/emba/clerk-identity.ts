@@ -41,7 +41,7 @@ function personId(issuer:string,subject:string):string {
 }
 /**
  * A member's verified primary email address, read from the sign-in provider when a message is about to be sent.
- * Loop keeps no copy of it. Null when the account is gone, banned or locked, or has no verified address.
+ * Loopd keeps no copy of it. Null when the account is gone, banned or locked, or has no verified address.
  * It throws when the provider could not be asked, so the caller tries again later instead of giving up.
  */
 export async function clerkEmailOf(database:Db,personId:string):Promise<string|null> {
@@ -55,7 +55,7 @@ export async function clerkEmailOf(database:Db,personId:string):Promise<string|n
 }
 /**
  * The verified primary address of each person who has one, by person, read from the sign-in provider in batches.
- * For the roster an owner or organizer sees; Loop keeps no copy. A person the provider does not know is left out.
+ * For the roster an owner or organizer sees; Loopd keeps no copy. A person the provider does not know is left out.
  */
 export async function clerkEmailsOf(database:Db,personIds:string[]):Promise<Record<string,string>> {
  const issuer=clerkIssuer();

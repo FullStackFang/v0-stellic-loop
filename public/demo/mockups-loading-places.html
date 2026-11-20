@@ -124,7 +124,7 @@ main { display: grid; gap: 58px; max-width: 1280px; margin: 0 auto; padding: 30p
 <main id="main"></main>
 
 <script>
-const KITS = [['cornell', 'Cornell', 38], ['columbia', 'Columbia', 39], ['nyu', 'NYU', 40], ['cuny', 'CUNY', 12], ['loop', 'Loop', 5]];
+const KITS = [['cornell', 'Cornell', 38], ['columbia', 'Columbia', 39], ['nyu', 'NYU', 40], ['cuny', 'CUNY', 12], ['loop', 'Loopd', 5]];
 const face = n => `/animals/${String(n).padStart(2, '0')}.png`;
 const mark = '<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#mark"/></svg>';
 const nav = (tabs, at, wait) => `<div class="nav"><span class="wm">${mark}</span>${tabs.map((tab, i) => `<span class="pill"${i === at ? ' aria-current="page"' : ''}>${tab}${i === at && wait ? sf : ''}</span>`).join('')}</div>`;

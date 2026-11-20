@@ -1,4 +1,4 @@
-/** The blot a member with Loop Ink sits on, in place of the plain circle behind a face: a wide spill of the school's
+/** The blot a member with Loopd Ink sits on, in place of the plain circle behind a face: a wide spill of the school's
     ink with a dark ink dropped into the middle of it and seeping a little way out into it, and a few drops thrown
     off each. It is worked out from a word (the member's name and picture), so the same member always gets the same
     blot and no two members match.

@@ -128,7 +128,7 @@ const LINK_SAYS: Record<JoinMode, string> = {
   ask_first: 'Anyone with the link can ask to join. You approve each one.',
   admit: 'Anyone with the link who signs in becomes a member at once. Share it only where you would welcome everyone who sees it.',
 };
-/** The join link: off, ask first, or admit on sign-in. A link is shown once, when it is made, because Loop keeps no copy of it. */
+/** The join link: off, ask first, or admit on sign-in. A link is shown once, when it is made, because Loopd keeps no copy of it. */
 export function JoinLink({ scope, mode, actions }: { scope: Scope; mode: JoinMode; actions: Pick<Actions, 'setLink' | 'replaceLink'> }) {
   const { result, pending, run } = useRun();
   const link = result.accessRequestToken ? `${typeof window === 'undefined' ? '' : window.location.origin}/groups/request#token=${result.accessRequestToken}` : null;
@@ -143,7 +143,7 @@ export function JoinLink({ scope, mode, actions }: { scope: Scope; mode: JoinMod
   </section>;
 }
 
-/** Adds one person by email. They are in the group at once, with nothing to accept, and Loop sends them nothing. */
+/** Adds one person by email. They are in the group at once, with nothing to accept, and Loopd sends them nothing. */
 export function AddPerson({ scope, isOwner, actions }: { scope: Scope; isOwner: boolean; actions: Pick<Actions, 'add'> }) {
   const { result, pending, run } = useRun();
   const form = useRef<HTMLFormElement>(null);
@@ -154,7 +154,7 @@ export function AddPerson({ scope, isOwner, actions }: { scope: Scope; isOwner: 
       <select className="lp-mb-role lp-mb-boxed" name="role" aria-label="Add as" disabled={pending}><option value="member">Member</option><option value="follower">Follower</option>{isOwner && <option value="organizer">Organizer</option>}</select>
       <button className="lp-mb-go" disabled={pending}>{pending ? 'Adding' : 'Add'}</button>
     </form>
-    <p className="lp-mb-note" role={result.status === 'error' ? 'alert' : 'status'} data-warn={result.status === 'error' || undefined}>{result.message || 'They are in the group at once and open it when they sign in with that address. Loop sends them no email. The name becomes their tag, so teammates can mention them.'}</p>
+    <p className="lp-mb-note" role={result.status === 'error' ? 'alert' : 'status'} data-warn={result.status === 'error' || undefined}>{result.message || 'They are in the group at once and open it when they sign in with that address. Loopd sends them no email. The name becomes their tag, so teammates can mention them.'}</p>
   </section>;
 }
 

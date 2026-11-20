@@ -24,7 +24,7 @@ const under = ['groups', 'emba', 'e', 'a'].flatMap(root => files(join(APP, root)
 // An ask belongs to its group's members whichever site is in front (loop-on-you, design D12): these reach the database, where each
 // service checks the caller's role in the ask's group. A signed-out visitor is still stopped before it.
 const MEMBERS = ['addTeamAsk', 'answerTeamAsk', 'closeTeamAsk', 'extendTeamAsk'];
-// The answer link Loop emails is the member's own: its form works for whoever holds the link, and reaches only that ask.
+// The answer link Loopd emails is the member's own: its form works for whoever holds the link, and reaches only that ask.
 const LINKS = ['answerFromPersonalLink'];
 const route = (file: string) => `/${relative(APP, file).split(sep).slice(0, -1).map(part => part.replace(/^\[\[?\.{0,3}(\w+)\]?\]$/, 'x')).join('/')}`;
 const pages = under.filter(file => file.endsWith(`${sep}page.tsx`) && leadsIntoGroups(route(file)));

@@ -1,6 +1,6 @@
 /* "Saving seats", the one loader of the app (openspec loop-loading-seats). Its own file, loaded by the root layout,
    because it is used where the campus look (.cs) is not an ancestor: sign-in, shared links, the older pages. It reads the
-   campus colours and falls back to the Loop kit's, so it is never colourless.
+   campus colours and falls back to the Loopd kit's, so it is never colourless.
    Ported from public/demo/mockups-loading-places.html (the ticket), mockups-loading-small.html row C (the small one)
    and mockups-loading-splat-2.html row A (the ending). Only transform, opacity, translate and scale are animated.
    The resting style of everything is its finished pose, so reduced motion needs only `animation: none`. */

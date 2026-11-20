@@ -37,7 +37,7 @@ export type AskView={number:number;question:string;kind:AskKind;reveal:Reveal;
  answered:number;expected:number;
  /** Names the ask and grants nothing. */
  shareUrl:string;
- /** Present on the ask Loop opens for an idea's day: only the members who are in on the idea answer it. */
+ /** Present on the ask Loopd opens for an idea's day: only the members who are in on the idea answer it. */
  forThoseIn?:true};
 export type OptionResult=AskOption&{count:number;
  /** Only in a named ask. */
@@ -53,7 +53,7 @@ export type AskResult=AskView&{results:OptionResult[];written:Written[];
  missing?:Member[];
  /** The caller may close it: they asked it, or they are an owner or organizer. */
  canClose:boolean;
- /** The caller may give it a new closing time, which opens it again if it has closed. Never the ask Loop opened for an idea's day. */
+ /** The caller may give it a new closing time, which opens it again if it has closed. Never the ask Loopd opened for an idea's day. */
  canExtend:boolean};
 export type AskDetail={team:TeamHead;timezone:string;today:string;ask:AskResult;untrusted:true};
 export type AskList={team:TeamHead;timezone:string;today:string;open:Listed<AskView>;closed:Listed<AskView>;untrusted:true};
@@ -122,7 +122,7 @@ const dueSql='k.org_id=$1 and k.loop_id=$2 and k.closed_at is null and k.closes_
 export async function asksDue(q:Q,team:Scope):Promise<boolean> {
  return (await q.query(`select 1 from emba_ask k where ${dueSql} limit 1`,[team.orgId,team.loopId])).rows.length>0;
 }
-/** Notes each ask that passed its closing time as closed, and adds it to the change sequence as closed by Loop. The caller holds the team's lock. */
+/** Notes each ask that passed its closing time as closed, and adds it to the change sequence as closed by Loopd. The caller holds the team's lock. */
 async function closeDue(q:Q,team:Scope):Promise<void> {
  const {rows}=await q.query<{id:string}>(`update emba_ask k set closed_at=k.closes_at where ${dueSql} returning k.id,k.number`,[team.orgId,team.loopId]);
  for(const row of rows){
@@ -228,7 +228,7 @@ const answerSchema=z.strictObject({...scope,number:askNumber,choices:z.array(z.u
  * nobody chooses any longer is taken away.
  */
 export async function answerAsk(db:Db,p:Principal,input:unknown,
- /** Set by Loop's own code, never from a request: the answer came through the member's personal link or a WhatsApp button. */
+ /** Set by Loopd's own code, never from a request: the answer came through the member's personal link or a WhatsApp button. */
  via?:'personal_link'|'whatsapp'):Promise<AnswerWrite> {
  const data=answerSchema.parse(input);
  // The last answer to an ask for an idea's day closes it and sets the day: that is decided under the team's lock. The flag never changes.
@@ -319,7 +319,7 @@ export async function closeAsk(db:Db,p:Principal,input:unknown):Promise<AskChang
 export type AskExtend=AskChange
  |{saved:false;reason:'closing_time';problem:'past'|'too_far'}
  |{saved:false;reason:'cap';cap:'open_asks'}
- // The ask Loop opened to settle an idea's day: closing it set the day, so it is not opened again.
+ // The ask Loopd opened to settle an idea's day: closing it set the day, so it is not opened again.
  |{saved:false;reason:'day_ask'};
 type ExtendDeclined=Exclude<AskExtend,{saved:true}|Refused>;
 /**

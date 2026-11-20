@@ -1,10 +1,10 @@
-# Loop · Design system
+# Loopd · Design system
 
 *Settled 2026-11-12. This is the look for the whole app. Every new page and every
 redraw uses it. The product reasoning that used to live in this file is now
 `docs/proposal-board-design.md`.*
 
-**Next look: Loop Campus** (picked 2026-11-17, mockup only). This file still describes what the
+**Next look: Loopd Campus** (picked 2026-11-17, mockup only). This file still describes what the
 app looks like today, known as the HAI look. The look that will replace it is in
 `docs/loop-campus-design.md`. Until that is applied, build new pages to this file.
 
