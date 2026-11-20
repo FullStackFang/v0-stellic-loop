@@ -1,9 +1,10 @@
 import { SignIn } from '@clerk/nextjs';
 import { Rings } from '@/components/LoopGlyphs';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
+import { SeatsTicket } from "@/components/loading/seats";
 
 // The Clerk form with no card: its fields sit straight on the teal plate (app/loop.css).
-// Clerk derives shades from these, so they are hex copies of the Loop tokens: teal, aqua, lime, navy, on-dark, surface.
+// Clerk derives shades from these, so they are hex copies of the Loopd tokens: teal, aqua, lime, navy, on-dark, surface.
 const teal = '#1b4a50', aqua = '#8ff3ee', lime = '#ebff57', navy = '#0f3b6c', onDark = '#fbfdfe', surface = '#fcfdfe';
 const soft = 'rgba(251,253,254,.78)', faint = 'rgba(251,253,254,.14)';
 const look = {
@@ -26,10 +27,10 @@ const look = {
   },
 };
 // Outlines of the fields, shown in the form's place until it arrives.
-const hold = <div className="lp-signin-hold" aria-hidden="true"><i /><i /><i /><i /><i /></div>;
+const hold = <div className="lp-signin-hold"><SeatsTicket /></div>;
 
 /**
- * The front door: what Loop is and the sign-in form, on one screen. Every signed-out visit lands here.
+ * The front door: what Loopd is and the sign-in form, on one screen. Every signed-out visit lands here.
  * Afterwards a person goes back to the page they asked for (Clerk reads ?redirect_url), else to their groups.
  */
 export default function SignInPage() {
@@ -38,7 +39,7 @@ export default function SignInPage() {
       <Rings className="lp-signin-mark" inline />
       <p className="lp-signin-kick">For the groups you’re already in</p>
       <h1 id="signin-title">Stay in the loop. <em>Without chasing it.</em></h1>
-      <p>Loop connects the AI you already use to your team, club or trip, so anyone can ask it what the plan is.</p>
+      <p>Loopd connects the AI you already use to your team, club or trip, so anyone can ask it what the plan is.</p>
     </div>
     <div className="lp-signin-side">
       {clerkPortalConfigured() ? <SignIn routing="path" path="/groups/sign-in" fallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" appearance={look} fallback={hold} /> : <p role="status">Sign-in is not configured for this deployment.</p>}

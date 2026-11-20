@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 // A kit is one school's colours for the campus screen. The values live in app/c/campus.css under [data-kit]; this is
 // the list of them and the one place that says which is on. "loop" is the look with no school.
 export const KITS = [
-  { slug: 'loop', name: 'Loop', ink: '#0d2747' },
+  { slug: 'loop', name: 'Loopd', ink: '#0d2747' },
   { slug: 'columbia', name: 'Columbia', ink: '#0c2340' },
   { slug: 'cornell', name: 'Cornell', ink: '#2a1815' },
   { slug: 'cuny', name: 'CUNY', ink: '#0a1f4d' },

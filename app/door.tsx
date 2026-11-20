@@ -34,7 +34,7 @@ export async function DoorPage({ routing }: { routing: 'hash' | 'path' }) {
 
 /**
  * The front door when the campus screen is the front of the site (the default). Signed out: the pitch and the
- * sign-in card. Signed in: on to the campus they were last looking at, or else their own. Someone at no school is told where Loop is; the admin goes to the default campus.
+ * sign-in card. Signed in: on to the campus they were last looking at, or else their own. Someone at no school is told where Loopd is; the admin goes to the default campus.
  */
 export async function FrontDoor() {
   const viewer = await campusViewer();

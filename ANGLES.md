@@ -1,4 +1,4 @@
-# Loop — Six Angles, Sized
+# Loopd — Six Angles, Sized
 
 *2026-09-22 · TAM/SAM/SOM for every buyer the intent→recurring-group mechanic
 could serve. All sizings are constructions from cited inputs; vendor prices ✓
@@ -64,9 +64,9 @@ cohorts + connectedness programming, one indicator across all of them.
 
 The uncomfortable one. Timeleft is the only company in this research that
 turned recurring stranger-groups into real revenue — by charging. Payment
-is also the strongest known anti-flake device, which is Loop's biggest risk.
+is also the strongest known anti-flake device, which is Loopd's biggest risk.
 
-- Model: Loop free to form; a small paid tier (~$5–8/mo ~) for the
+- Model: Loopd free to form; a small paid tier (~$5–8/mo ~) for the
   recurring dinner/activity loops, Timeleft-style fixed weekly ritual.
   Study loops stay free (that's the institutional product).
 - Campus is the density seed (every user within a mile), then Collegetown,
@@ -83,7 +83,7 @@ is also the strongest known anti-flake device, which is Loop's biggest risk.
 lenses, the indicator, the research narrative), starts with the wedge
 already chosen (learning center, 1–3 months, no compliance floor), and has
 a venture-sized destination the point-solution version lacks. It is also
-the only angle where Loop's multi-office design — RA lens, TA lens, advisor
+the only angle where Loopd's multi-office design — RA lens, TA lens, advisor
 lens — stops being scope creep and becomes the product.
 
 Keep G as a controlled experiment, not a strategy: one paid dinner loop on

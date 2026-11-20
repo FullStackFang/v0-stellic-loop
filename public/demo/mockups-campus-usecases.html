@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop · Three use cases</title>
+<title>Loopd · Three use cases</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
 <style>
-/* The three pitch use cases in the Loop Campus look (docs/loop-campus-design.md: layout C, Cornell Coral).
+/* The three pitch use cases in the Loopd Campus look (docs/loop-campus-design.md: layout C, Cornell Coral).
    Coral holds the big areas with dark type. Carnelian is the action with white type. Hard shadows, one tight corner.
    The bar on top is outside the design: it switches use case and holds the demo controls. */
 @property --drift { syntax: '<number>'; inherits: true; initial-value: 0; }
@@ -421,7 +421,7 @@ const face = (k, cls = '') => `<img class="face ${cls}" src="https://i.pravatar.
 const stack = ks => `<span class="stack">${ks.map(k => face(k)).join('')}</span>`;
 const names = ks => ks.map(k => P[k][0]).join(', ').replace(/, ([^,]*)$/, ' and $1');
 
-// The Loop mark, as in mockups-campus.html: three woven rings, the top ring takes --mark-top.
+// The Loopd mark, as in mockups-campus.html: three woven rings, the top ring takes --mark-top.
 const RC = [[50, 35], [35.5, 60], [64.5, 60]], RR = 21; let uid = 0;
 const rp = (i, r = RR) => { const [x, y] = RC[i]; return `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`; };
 function mark(inline) {
@@ -440,7 +440,7 @@ const hhmm = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', min
 
 function rail(sections, who, sub) {
   $('nav').dataset.top = '1'; $('nav').parentElement.dataset.menu = 'top';
-  $('nav').innerHTML = `<a class="wm" href="#"><span class="mk">${mark()}</span>Loop</a>` + sections.map(([label, items]) =>
+  $('nav').innerHTML = `<a class="wm" href="#"><span class="mk">${mark()}</span>Loopd</a>` + sections.map(([label, items]) =>
     `<p class="nav-label">${label}</p><nav class="links">${items.map(([name, state, extra]) => `<a href="#" ${state === 'cur' ? 'aria-current="page"' : state === 'on' ? 'data-on' : ''}>${state === 'on' || state === 'grp' ? `<i>${name[0]}</i>` : ''}${name}${extra ? `<small>${extra}</small>` : ''}</a>`).join('')}</nav>`).join('') +
     (who === 'you' ? `<button class="acct" id="me" aria-expanded="${lvOpen}" aria-label="Stephen Fang, ${LEVELS[lvNow()][0]}. Show your level">${ava()}<span>Stephen Fang<small>${sub}</small></span></button>`
       : `<div class="acct">${face(who)}<span>${P[who][0]}<small>${sub}</small></span></div>`);
@@ -454,7 +454,7 @@ const LEVELS = [['Member', 0, 'The standard group reward everywhere.'], ['Regula
 // kw: what the event is good for, in plain words, so "exercise" can find a run, a hike or a pickup game.
 const makeEvents = () => [
   { id: 'cs', title: 'CS 2110 study group', by: 'Posted by Maya', day: 'Today', time: '3pm', ends: 'until 5pm', where: 'Northside Coffee', room: 'The back table', walk: 4, lat: 42.4534, lon: -76.4780, about: 'Problem set 6, worked through together. Bring a laptop.', kw: 'study homework work coffee cafe quiet class focus', giver: 'Northside Coffee', n: 3, get: ['A drink and a pastry, $4.50 each', 'A drink and a pastry, $4.00 each', 'A drink and a pastry, $3.50 each'], inn: ['maya', 'dev', 'you'], here: ['maya', 'dev'], now: true },
-  { id: 'run', title: 'Sunset run, easy 5K', by: 'Posted by Kai', day: 'Today', time: '5pm', ends: 'about 40 minutes', where: 'Arts Quad', room: 'Meet at the statue', walk: 7, lat: 42.4488, lon: -76.4845, about: 'Conversation pace, nobody gets dropped. Loop around Beebe Lake and back.', kw: 'exercise workout active fitness jog cardio outside outdoors tonight social', giver: 'Finger Lakes Running Co.', toward: [3, 5, 'group runs'], get: Array(3).fill('20% off Brooks running shoes'), inn: ['kai', 'june'], here: [] },
+  { id: 'run', title: 'Sunset run, easy 5K', by: 'Posted by Kai', day: 'Today', time: '5pm', ends: 'about 40 minutes', where: 'Arts Quad', room: 'Meet at the statue', walk: 7, lat: 42.4488, lon: -76.4845, about: 'Conversation pace, nobody gets dropped. Loopd around Beebe Lake and back.', kw: 'exercise workout active fitness jog cardio outside outdoors tonight social', giver: 'Finger Lakes Running Co.', toward: [3, 5, 'group runs'], get: Array(3).fill('20% off Brooks running shoes'), inn: ['kai', 'june'], here: [] },
   { id: 'hoops', title: 'Pickup basketball', by: 'Posted by Tomás', day: 'Today', time: '6pm', ends: 'until 7pm', where: 'Helen Newman Hall', room: 'Court 2', walk: 12, lat: 42.4530, lon: -76.4772, about: 'Half court, first to 11, winners stay. All levels.', kw: 'exercise workout active sport sports game games play team tonight', giver: 'Cornell Rec', n: 6, get: ['The court held for the hour', 'The court held for the hour', 'The court held for the hour, and balls provided'], inn: ['tomas', 'dev', 'marcus', 'kai', 'priya'], here: [] },
   { id: 'chess', title: 'Blitz night', src: 'CampusGroups', by: 'Chess Club', day: 'Today', time: '7pm', ends: 'until 9:30pm', where: 'Willard Straight Hall', room: 'Room 414', walk: 6, lat: 42.4466, lon: -76.4857, going: 18, about: 'Five-minute games, all levels. Boards and clocks provided.', kw: 'games game play indoor chill board competitive tonight', giver: 'Chess Club', n: 3, get: ['Skip the $5 door', 'Skip the door, and a board held for you', 'Skip the door, a board held, and a seat at the final'], inn: [], here: [] },
   { id: 'bao', title: 'Dumpling night', by: 'Posted by Priya', day: 'Today', time: '8pm', ends: 'about 90 minutes', where: 'Bao House', room: 'Table booked under Priya', walk: 9, lat: 42.4420, lon: -76.4853, about: 'Order for the table and split it. Vegetarian is easy here.', kw: 'food eat dinner hungry dumplings restaurant social tonight', giver: 'Bao House', n: 4, get: ['Starters on the house', 'Starters and dessert on the house', 'Starters, dessert and a round of drinks'], inn: ['priya', 'tomas', 'june'], here: [] },
@@ -501,9 +501,9 @@ let PAL = 'lime1', VIEW = 'student', ADMIN = false;
 const PALS = [['', 'Coral'], ['lime1', 'Lime 1'], ['lime2', 'Lime 2'], ['lime3', 'Lime 3']], VIEWS = [['student', 'Student'], ['out', 'Signed out'], ['admin', 'Admin (you)']];
 const switchers = () => { const set = (label, list, attr, now) => `<span style="opacity:.7;font-size:13px;margin:0 2px 0 6px">${label}</span>${list.map(([k, t]) => `<button class="demo" data-${attr}="${k}" ${now === k ? 'style="background:var(--P);color:var(--ink)"' : ''}>${t}</button>`).join(' ')}`; return set('Colour', PALS, 'pal', PAL) + set('See it as', VIEWS, 'view2', VIEW); };
 const bindSwitchers = () => { document.querySelectorAll('.demo[data-pal]').forEach(b => b.onclick = () => { PAL = b.dataset.pal; draw(); }); document.querySelectorAll('.demo[data-view2]').forEach(b => b.onclick = () => { VIEW = b.dataset.view2; ADMIN = false; draw(); }); };
-const WM = () => `<a class="wm" href="#"><span class="mk">${mark()}</span>Loop</a>`;
-// Signed out: one door for everyone. The admin signs in here too; Loop knows the account.
-// The schools Loop starts at: name, email domain (subdomains count, like stern.nyu.edu or baruch.cuny.edu), and a sample address.
+const WM = () => `<a class="wm" href="#"><span class="mk">${mark()}</span>Loopd</a>`;
+// Signed out: one door for everyone. The admin signs in here too; Loopd knows the account.
+// The schools Loopd starts at: name, email domain (subdomains count, like stern.nyu.edu or baruch.cuny.edu), and a sample address.
 const CAMPI = { cornell: ['Cornell', 'cornell.edu', 'netid@cornell.edu'], columbia: ['Columbia', 'columbia.edu', 'uni@columbia.edu'], nyu: ['NYU', 'nyu.edu', 'netid@nyu.edu'], cuny: ['CUNY', 'cuny.edu', 'you@baruch.cuny.edu'] };
 let CAMPUS = 'cornell';
 function door() {
@@ -513,23 +513,23 @@ function door() {
   $('page').innerHTML = `<div class="door"><div class="door-say"><h1>Go together. Get more for it.</h1><p>Events from your campus and plans posted by people near you. Show up as a group and the reward unlocks.</p><ul class="mine">${peek}</ul></div>
     <form class="door-in" id="signin"><h2 id="dh"></h2><button class="gbtn" data-in><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71a5.41 5.41 0 0 1 0-3.42V4.96H.96a9 9 0 0 0 0 8.08l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>Continue with Google</button><div class="or"><span>or</span></div>
       <div class="two"><div><label for="camp">School</label><select id="camp">${Object.entries(CAMPI).map(([k, c]) => `<option value="${k}">${c[0]}</option>`).join('')}</select></div><div><label for="em" id="el"></label><input id="em" type="email" autocomplete="off" spellcheck="false"></div></div>
-      <p class="seen" id="seen" aria-live="polite"></p><button class="cont" data-in>Continue</button><p class="fine">One door for everyone. If the account is yours, Loop adds the Admin page after you sign in.</p></form></div>`;
+      <p class="seen" id="seen" aria-live="polite"></p><button class="cont" data-in>Continue</button><p class="fine">One door for everyone. If the account is yours, Loopd adds the Admin page after you sign in.</p></form></div>`;
   // The school follows the email: type an nyu.edu address and the form switches to NYU. The menu is there for anyone who would rather pick.
   const show = why => { const c = CAMPI[CAMPUS]; $('camp').value = CAMPUS; $('dh').textContent = `Sign in at ${c[0]}`; $('el').textContent = `${c[0]} email`; $('em').placeholder = c[2]; $('seen').textContent = why || ''; };
   show(); $('camp').onchange = () => { CAMPUS = $('camp').value; show(); };
   $('em').oninput = () => { const dom = ($('em').value.split('@')[1] || '').toLowerCase(), hit = Object.keys(CAMPI).find(k => dom === CAMPI[k][1] || dom.endsWith('.' + CAMPI[k][1]));
-    if (hit) { CAMPUS = hit; show(`${dom} is ${CAMPI[hit][0]}. Switched for you.`); } else show(dom.includes('.') ? `Loop is at ${Object.values(CAMPI).map(c => c[0]).join(', ')} for now. Use your school email.` : ''); };
+    if (hit) { CAMPUS = hit; show(`${dom} is ${CAMPI[hit][0]}. Switched for you.`); } else show(dom.includes('.') ? `Loopd is at ${Object.values(CAMPI).map(c => c[0]).join(', ')} for now. Use your school email.` : ''); };
   document.querySelectorAll('[data-in]').forEach(b => b.onclick = e => { e.preventDefault(); VIEW = 'admin'; draw(); });
   $('demo').innerHTML = switchers(); bindSwitchers(); $('note').textContent = 'Signed out. Press Sign in to come in as you, the admin.';
 }
-// The admin page: run the campus, and the earlier versions of Loop, kept for the admin alone.
+// The admin page: run the campus, and the earlier versions of Loopd, kept for the admin alone.
 function adminPage() {
   delete $('nav').dataset.full; $('nav').dataset.top = '2';
   $('nav').innerHTML = `${WM()}<nav class="links"><a href="#" id="toweek">This week</a><a href="#" aria-current="page">Admin</a></nav>${$('me').outerHTML}`;
   const row = ([name, line, act]) => `<li><div><b>${name}</b><span>${line}</span></div><button class="btn sm">${act}</button></li>`;
   $('page').innerHTML = `<div class="adm-page"><header><h2>Admin</h2><p>Only you see this page. Everyone else gets This week and nothing more.</p></header>
     <section><h3>Run the campus</h3><ul class="adm-list">${[['CampusGroups feed', 'Read 40 minutes ago · 212 events this month', 'Read now'], ['Luma · Startup Cornell', 'Read 40 minutes ago · 6 events', 'Read now'], ['Rewards', '5 rewards from 4 givers', 'Edit'], ['Asks to host', '1 waiting: Chess Club treasurer', 'Review'], ['People', '38 signed in this week · 11 outings', 'See']].map(row).join('')}</ul></section>
-    <section><h3>How we got here</h3><p>Earlier versions of Loop. They still work, for you alone; anyone else who opens one of their links lands on This week.</p><ul class="adm-list">${[['Groups', 'The team layer: your groups, resources, trips and the assistant connection', 'Open'], ['Quorum boards', 'The proposal board built for the EMBA cohort', 'Open'], ['Demos and mockups', 'Every clickable demo, this one included', 'Open'], ['The archive page', 'The written history of each direction', 'Open']].map(row).join('')}</ul></section></div>`;
+    <section><h3>How we got here</h3><p>Earlier versions of Loopd. They still work, for you alone; anyone else who opens one of their links lands on This week.</p><ul class="adm-list">${[['Groups', 'The team layer: your groups, resources, trips and the assistant connection', 'Open'], ['Quorum boards', 'The proposal board built for the EMBA cohort', 'Open'], ['Demos and mockups', 'Every clickable demo, this one included', 'Open'], ['The archive page', 'The written history of each direction', 'Open']].map(row).join('')}</ul></section></div>`;
   $('toweek').onclick = e => { e.preventDefault(); ADMIN = false; draw(); };
   $('demo').innerHTML = switchers(); bindSwitchers(); $('note').textContent = 'The admin page. Students never see it or the earlier versions.';
 }
@@ -565,7 +565,7 @@ function uc1() {
 
       <figure class="map"><iframe title="Map of ${d.where}" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=${box}&layer=mapnik&marker=${d.lat}%2C${d.lon}"></iframe><figcaption><b>${d.where}</b>${d.room} · ${d.walk} min walk</figcaption></figure>
       <div class="regact">${yours ? `<small>You are in. A reward only unlocks for people who check in together, so bring them.</small><button class="btn go" data-invite="${d.id}">Invite people</button>`
-        : d.src ? `<small>Loop passes your name and Cornell email to ${d.src}. Your spot is held there, and you stay here.</small><button class="btn go" data-regok="${d.id}">Register me</button>`
+        : d.src ? `<small>Loopd passes your name and Cornell email to ${d.src}. Your spot is held there, and you stay here.</small><button class="btn go" data-regok="${d.id}">Register me</button>`
         : ''}</div></div>`; };
   // Inviting: people you already know first (suggested by what the event is), then a whole group, then the link.
   const invite = d => { const asked = S1.asked[d.id] || [], order = (/run/.test(d.kw + d.title.toLowerCase()) ? ['lena', 'kai', 'june'] : /study/.test(d.kw) ? ['june', 'priya'] : []).concat(Object.keys(WHY));
@@ -579,8 +579,8 @@ function uc1() {
   const price = on && me && !S1.used ? mine.get[lv].match(/\$[\d.]+ each/)[0] : '';
   const live = S1.used ? `<div class="live"><small>Northside Coffee</small><b>Used ${S1.used}</b></div>` : price ? `<div class="live"><small>Show at the counter</small><b>${price}</b><time id="clk">${clock()}</time></div>` : '';
   const ask = `<div class="ask"><input id="q" type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value="${esc(S1.q)}"><div class="tabs"><button aria-selected="${S1.view === 'best'}" data-view="best">Best for you</button><button aria-selected="${S1.view === 'cg'}" data-view="cg">All of CampusGroups</button></div></div>`;
-  // The top bar is one line: Loop, this page, your groups as small icons, a live reward if there is one, the rewards you are earning, Post a plan, you.
-  const GRP = [['T', 'Team 4'], ['S', 'Supper Club'], ['L', 'Lisbon in March']], wm = `<a class="wm" href="#"><span class="mk">${mark()}</span>Loop</a>`, post = '<a class="btn sm go post" href="#">Post a plan</a>';
+  // The top bar is one line: Loopd, this page, your groups as small icons, a live reward if there is one, the rewards you are earning, Post a plan, you.
+  const GRP = [['T', 'Team 4'], ['S', 'Supper Club'], ['L', 'Lisbon in March']], wm = `<a class="wm" href="#"><span class="mk">${mark()}</span>Loopd</a>`, post = '<a class="btn sm go post" href="#">Post a plan</a>';
   const acct = $('me').outerHTML, mini = pills.replace('class="earn"', 'class="earn mini"'), grp = full => GRP.map(([c, n]) => `<a href="#" title="${n}" aria-label="${n}"><i>${c}</i>${full ? n : ''}</a>`).join('');
   $('nav').dataset.top = '2';
   // BOT: what sits under the row (options to pick from). a: rewards. b: nothing, the tickets grow. c: your plans beside your rewards.
@@ -781,7 +781,7 @@ function uc4() {
     <section><h2>${S4.how ? 'Your payment' : 'Take your spot'} <span>${S4.how ? '' : 'One tap. No account to set up.'}</span></h2>${pay}</section>
   </div>
   <aside class="side">
-    <div class="card ann"><h3>When you are charged</h3><p>${on ? 'Charged when the 60th person joined.' : off ? 'Never. The hold dropped at the deadline.' : 'Only if it reaches 60. If it does not, the hold drops on its own.'}</p><div class="who"><span>Of your $8.00, Chess Club gets $7.60. Loop keeps 40¢ for filling the seat.</span></div></div>
+    <div class="card ann"><h3>When you are charged</h3><p>${on ? 'Charged when the 60th person joined.' : off ? 'Never. The hold dropped at the deadline.' : 'Only if it reaches 60. If it does not, the hold drops on its own.'}</p><div class="who"><span>Of your $8.00, Chess Club gets $7.60. Loopd keeps 40¢ for filling the seat.</span></div></div>
     <div class="card"><h3>What the money does</h3><ol class="steps"><li>You tap once. Your wallet confirms with your face or passcode.</li><li>$8.00 is held, not taken.</li><li>At 60 people, everyone is charged at the same moment.</li><li>Short of 60 by the deadline, every hold is released.</li></ol></div>
   </aside>`;
   document.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => { S4.how = b.dataset.pay; draw(); });

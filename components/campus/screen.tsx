@@ -18,6 +18,9 @@ import { AddSchools } from './add-schools';
 import { OwnFace } from './own-face';
 import { SaveFace } from './save-face';
 import { InkBlot, InkMark, SchoolMark } from './ink-mark';
+import { rememberMe } from '@/components/loading/last-bar';
+import { SeatsSmall, SeatsWord } from '@/components/loading/seats';
+import { FrameWait } from '@/components/loading/frame-wait';
 import { INK_PAGE } from '@/lib/campus/ink';
 import type { Coupon, Face, Screen, Seat, Ticket, Tile as Pet } from '@/lib/campus/view';
 
@@ -123,8 +126,12 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
   /** Wide: a stamp pressed on the map picks its ticket, and the list brings that ticket into view. */
   const pickOnMap = (id: string | null) => { setSel(id); if (id) requestAnimationFrame(() => rail.current?.querySelector(`[data-id="${CSS.escape(id)}"]`)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })); };
   /** Runs an action; a signed-out caller is sent to sign in and back. */
-  const run = (action: () => Promise<ActResult>, after?: () => void) => start(async () => {
-    setMessage('');
+  // Which control was pressed: it alone holds the small one while the answer comes; the rest are only disabled (openspec loop-loading-seats, design D5).
+  const [pressed, setPressed] = useState<string | null>(null);
+  /** What a control says: its own words, with the small one before them while its own press is being answered. */
+  const say = (key: string, label: ReactNode, plate = true) => busy && pressed === key ? <SeatsWord word={label} plate={plate} /> : label;
+  const run = (key: string, action: () => Promise<ActResult>, after?: () => void) => start(async () => {
+    setMessage(''); setPressed(key);
     const result = await action();
     if (result.ok) after?.(); else if (result.signIn) location.assign(signInHref); else setMessage(result.message);
   });
@@ -132,11 +139,11 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
   const action = (ticket: Ticket) => {
     if (!viewer) return ticket.action ? <Link className="cs-btn sm go" href={signInHref}>{ticket.action === 'register' ? 'Register' : ticket.action === 'join' ? 'Join' : "I'm in"}</Link> : null;
     switch (ticket.action) {
-      case 'in': return <button className="cs-btn sm go" disabled={busy} onClick={() => run(() => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: true }))}>I&rsquo;m in</button>;
-      case 'join': return <button className="cs-btn sm go" disabled={busy} onClick={() => run(() => joinAction(ticket.joinToken!))}>Join</button>;
+      case 'in': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `in ${ticket.id}`} onClick={() => run(`in ${ticket.id}`, () => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: true }))}>{say(`in ${ticket.id}`, <>I&rsquo;m in</>)}</button>;
+      case 'join': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `join ${ticket.id}`} onClick={() => run(`join ${ticket.id}`, () => joinAction(ticket.joinToken!))}>{say(`join ${ticket.id}`, 'Join')}</button>;
       case 'register': return <button className="cs-btn sm go" onClick={() => setOpen({ id: ticket.id, pane: 'more', fresh: open?.id !== ticket.id })}>Register</button>;
-      case 'checkin': return <button className="cs-btn sm go" disabled={busy} onClick={() => run(() => checkInAction(ticket.id))}>Check in</button>;
-      case 'use': return <button className="cs-btn sm go" disabled={busy} onClick={() => run(() => markRewardUsed(ticket.id))}>Mark as used</button>;
+      case 'checkin': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `checkin ${ticket.id}`} onClick={() => run(`checkin ${ticket.id}`, () => checkInAction(ticket.id))}>{say(`checkin ${ticket.id}`, 'Check in')}</button>;
+      case 'use': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `use ${ticket.id}`} onClick={() => run(`use ${ticket.id}`, () => markRewardUsed(ticket.id))}>{say(`use ${ticket.id}`, 'Mark as used')}</button>;
       default: return ticket.status ? <span className={`cs-pill ${ticket.status.startsWith('Used') ? 'yes' : 'hot'}`}>{ticket.status}</span> : null;
     }
   };
@@ -174,22 +181,22 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
         {!map && ticket.place && <li><b>{ticket.place}</b>Where</li>}
         {ticket.link && <li><b><a href={ticket.link} target="_blank" rel="noopener noreferrer nofollow">{ticket.link.slice('https://'.length).split('/')[0]}</a></b>Event page</li>}
         {people.map((face, at) => <li className="who" key={at}><FaceDot face={face} /><span><b>{face.first}</b>{face.why}</span></li>)}</ul></div>
-      {map && <figure className="cs-map"><iframe title={`Map of ${map.name}`} loading="lazy" src={`https://www.openstreetmap.org/export/embed.html?bbox=${box}&layer=mapnik&marker=${map.lat}%2C${map.lon}`} /><figcaption><b>{map.name}</b>{ticket.place !== map.name ? ticket.place : ''}</figcaption></figure>}
+      {map && <figure className="cs-map"><FrameWait key={box} title={`Map of ${map.name}`} loading="lazy" src={`https://www.openstreetmap.org/export/embed.html?bbox=${box}&layer=mapnik&marker=${map.lat}%2C${map.lon}`} /><figcaption><b>{map.name}</b>{ticket.place !== map.name ? ticket.place : ''}</figcaption></figure>}
       <div className="cs-regact">{ticket.mine ? <>
-          <small>{ticket.mine.registered ? 'You are registered, in Loop. ' : 'You are in. '}A reward only unlocks for people who check in together, so bring them.{' '}
+          <small>{ticket.mine.registered ? 'You are registered, in Loopd. ' : 'You are in. '}A reward only unlocks for people who check in together, so bring them.{' '}
             {ticket.mine.canEdit && <Link className="quiet" href={`/c/${campus.slug}/post?plan=${ticket.id}`}>Change this plan</Link>}{' '}
-            {ticket.mine.canLeave && <button className="quiet" disabled={busy} onClick={() => run(() => leaveAction(ticket.id))}>Leave</button>}</small>
+            {ticket.mine.canLeave && <button className="quiet" disabled={busy} aria-busy={busy && pressed === `leave ${ticket.id}`} onClick={() => run(`leave ${ticket.id}`, () => leaveAction(ticket.id))}>{say(`leave ${ticket.id}`, 'Leave', false)}</button>}</small>
           <button className="cs-btn go" onClick={() => show(ticket.id, 'invite')}>Invite people</button></>
-        : ticket.action === 'register' ? <><small>Loop keeps your registration here, so the people you know can see you are going. {ticket.source ?? 'The organizer'} is not told: if the event asks you to register with them, do that too.</small>
-          {viewer ? <button className="cs-btn go" disabled={busy} onClick={() => run(() => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: false }))}>Register me</button> : <Link className="cs-btn go" href={signInHref}>Register me</Link>}</>
+        : ticket.action === 'register' ? <><small>Loopd keeps your registration here, so the people you know can see you are going. {ticket.source ?? 'The organizer'} is not told: if the event asks you to register with them, do that too.</small>
+          {viewer ? <button className="cs-btn go" disabled={busy} aria-busy={busy && pressed === `in ${ticket.id}`} onClick={() => run(`in ${ticket.id}`, () => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: false }))}>{say(`in ${ticket.id}`, 'Register me')}</button> : <Link className="cs-btn go" href={signInHref}>Register me</Link>}</>
         : ticket.action === 'join' ? <><small>You were sent a link to a group going to this.</small>{action(ticket)}</> : null}</div></div>;
   };
 
   const invite = (ticket: Ticket) => {
     const mine = ticket.mine!, link = typeof location === 'undefined' ? `/o/${mine.token}` : `${location.host}/o/${mine.token}`;
     return <><div className="cs-opts"><small>{mine.choices.length ? 'People you know' : 'Nobody you know is left to invite. Send the link.'}</small>
-        {mine.choices.map(choice => <button key={choice.personId} className="cs-who2" aria-pressed={choice.invited} disabled={busy} onClick={() => run(() => inviteAction(ticket.id, choice.personId, !choice.invited))}>
-          <FaceDot face={choice} /><span><b>{choice.first}</b>{choice.why}</span><em>{choice.invited ? 'Invited' : 'Invite'}</em></button>)}</div>
+        {mine.choices.map(choice => <button key={choice.personId} className="cs-who2" aria-pressed={choice.invited} disabled={busy} aria-busy={busy && pressed === `invite ${ticket.id} ${choice.personId}`} onClick={() => run(`invite ${ticket.id} ${choice.personId}`, () => inviteAction(ticket.id, choice.personId, !choice.invited))}>
+          <FaceDot face={choice} /><span><b>{choice.first}</b>{choice.why}</span><em>{say(`invite ${ticket.id} ${choice.personId}`, choice.invited ? 'Invited' : 'Invite', false)}</em></button>)}</div>
       <div className="cs-opts"><small>Or send a link. Anyone can also just show up with you and check in.</small><span className="cs-field">{link}</span>
         <button className="cs-opt" onClick={() => { navigator.clipboard?.writeText(new URL(`/o/${mine.token}`, location.origin).href).then(() => setCopied(true), () => setMessage('Copy the link from the box.')); }}>{copied ? 'Copied' : 'Copy link'}</button></div></>;
   };
@@ -205,18 +212,18 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
   const plus = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" /></svg>;
   const row = (id: string, at: number) => { const ticket = byId.get(id)!; return [card(ticket, at), opened?.id === id ? sheet : null]; };
   const [count, ...words] = (picked.marker ?? '').split(' ');
-  // Only an event at a place Loop knows has a spot on the map, and the line says how many do.
+  // Only an event at a place Loopd knows has a spot on the map, and the line says how many do.
   const nearLine = meant(typed).length ? `${onMap.length} on the map for “${typed.trim()}”` : !shown.length ? 'Nothing on this week yet' : onMap.length === shown.length ? `${onMap.length} on the map this week` : `${onMap.length} of ${shown.length} this week are on the map`;
 
   const bar = <CampusBar screen={screen} groups={groups} on="week" signInHref={signInHref} signOut={signOut} swap={swap}>
     {onYou}
     {live && (live.usedAt ? <div className="cs-live used"><small>{live.giver}</small><b>{byId.get(live.listingId)?.status ?? 'Used'}</b></div>
-      : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} onClick={() => run(() => markRewardUsed(live.listingId))}>Mark as used</button></div>)}
+      : <div className="cs-live"><small>Show at the counter</small><b>{live.text}</b><Clock /><button disabled={busy} aria-busy={busy && pressed === `use ${live.listingId}`} onClick={() => run(`use ${live.listingId}`, () => markRewardUsed(live.listingId))}>{say(`use ${live.listingId}`, 'Mark as used')}</button></div>)}
   </CampusBar>;
   const ask = <input type="search" placeholder="What do you feel like doing?" aria-label="Say what you feel like doing" value={typed} onChange={event => search(event.target.value)} />;
   const post = viewer ? <button className="cs-plus" aria-label="Post a plan" aria-expanded={posting} onClick={togglePost}>{plus}</button> : <Link className="cs-plus" aria-label="Post a plan" href={signInHref}>{plus}</Link>;
-  const shelf = earning.length > 0 && <div className="cs-shelf"><h2>Rewards you are earning</h2><ul className="cs-coupons">{earning.map(coupon => <CouponRow key={coupon.id} coupon={coupon} showing={showing === coupon.id} busy={busy}
-    onShow={() => setShowing(now => now === coupon.id ? null : coupon.id)} onUse={() => run(() => markCouponUsed(coupon.id), () => setShowing(null))} />)}</ul></div>;
+  const shelf = earning.length > 0 && <div className="cs-shelf"><h2>Rewards you are earning</h2><ul className="cs-coupons">{earning.map(coupon => <CouponRow key={coupon.id} coupon={coupon} showing={showing === coupon.id} busy={busy} waiting={busy && pressed === `coupon ${coupon.id}`}
+    onShow={() => setShowing(now => now === coupon.id ? null : coupon.id)} onUse={() => run(`coupon ${coupon.id}`, () => markCouponUsed(coupon.id), () => setShowing(null))} />)}</ul></div>;
 
   // Wide: search and sources on one line across the page, then the week in a column of its own with the map beside it.
   // The words to try open under the search line, and the list is what turns the map.
@@ -284,22 +291,22 @@ export function CampusBar({ screen, groups = [], signInHref, signOut = null, on,
   const { campus, viewer } = screen;
   // The groups pages' links are in the card for anyone who has a group, as they are on those pages. The admin's own list already has "How we got here".
   const more = viewer && groups.length > 0 ? <nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!viewer.admin} /></nav> : null;
-  return <TopBar home={`/c/${campus.slug}`} on={on} groups={groups}
+  return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0}
     account={viewer ? <Account screen={screen} signOut={signOut} swap={swap} more={more} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}>{children}</TopBar>;
 }
 
-function CouponRow({ coupon, showing, busy, onShow, onUse }: { coupon: Coupon; showing: boolean; busy: boolean; onShow: () => void; onUse: () => void }) {
+function CouponRow({ coupon, showing, busy, waiting, onShow, onUse }: { coupon: Coupon; showing: boolean; busy: boolean; /** This row's own press is being answered. */ waiting: boolean; onShow: () => void; onUse: () => void }) {
   const ready = coupon.earned && !coupon.usedAt;
   return <li className={ready ? 'ready' : ''}><Gauge have={coupon.done} need={coupon.need} /><div><small>{coupon.giver}</small><b>{coupon.text}</b><span>{coupon.progress}</span></div>
     {ready && <button aria-expanded={showing} onClick={onShow}>{showing ? 'Close' : 'Ready'}</button>}
-    {ready && showing && <div className="show"><span>Show at the counter · <Clock /></span><button disabled={busy} onClick={onUse}>Mark as used</button></div>}</li>;
+    {ready && showing && <div className="show"><span>Show at the counter · <Clock /></span><button disabled={busy} aria-busy={waiting} onClick={onUse}>{waiting ? <SeatsWord word="Mark as used" plate /> : 'Mark as used'}</button></div>}</li>;
 }
 
 /** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". The groups pages show the same one (app/groups/bar.tsx), with their own links as `more`. */
 export function Account({ screen, signOut, swap = [], more = null }: { screen: Screen; signOut: ReactNode; swap?: SwapCampus[]; /** Links of the pages this bar is on, above the way out. */ more?: ReactNode }) {
   const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [kit, setKit] = useState('');
   // The pick shows at once, and goes back if it could not be kept.
-  const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [, save] = useTransition(), [schooling, setSchooling] = useState(false);
+  const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [keeping, save] = useTransition(), [schooling, setSchooling] = useState(false);
   // Their own campus, for a school with more than one, and the move to another.
   const home = swap.find(each => each.home), [moving, move] = useTransition(), [moveNote, setMoveNote] = useState<string | null>(null);
   const choose = (next: number) => { const before = face; setFace(next); setMoved(true); save(async () => { if (!(await faceAction(next)).ok) setFace(before); }); };
@@ -308,6 +315,8 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
   // "Save your picture" takes the picker's place in the card: the rows step aside for it as they do for the picker.
   const [saving, setSaving] = useState(false);
   const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : face === CUSTOM ? own : animal(face), ink: asked }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
+  // Every loader shows this face on this blot (components/loading): the last seat of the ticket, and the small one.
+  useEffect(() => { rememberMe({ face: me.photo, plan: asked ? 'ink' : 'free', seed: `${viewer.first}${me.photo ?? ''}` }); }, [me.photo, asked, viewer.first]);
   /** One of the animals they had made, which may not be the one in use. */
   const chooseOwn = (next: string) => { const before = { face, own }; setOwn(next); setFace(CUSTOM); setMoved(true); save(async () => { if (!(await ownFaceAction(next)).ok) { setOwn(before.own); setFace(before.face); } }); };
   useEffect(() => {
@@ -329,7 +338,7 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
   const hit = (words: string, kind: '' | 'school' | 'ink') => (!only || only === kind) && words.toLowerCase().includes(find.trim().toLowerCase());
   const called = (one: Pet) => `${one.name} ${one.words}`;
   const tile = (one: Pet, premium = false, locked = false, school = false) => <button key={one.src} className={`cs-pet ${premium ? 'gold' : school ? 'school' : ''}`} title={one.face === null ? undefined : NAMES[one.face]} aria-pressed={one.face === null ? face === CUSTOM && own === one.src : face === one.face} aria-label={one.name}
-    onClick={() => locked ? setMaking(true) : one.face === null ? chooseOwn(one.src) : choose(one.face)}><img src={one.src} alt="" />{premium ? <InkMark /> : school && <SchoolMark />}</button>;
+    onClick={() => locked ? setMaking(true) : one.face === null ? chooseOwn(one.src) : choose(one.face)}><img src={one.src} alt="" />{premium ? <InkMark /> : school && <SchoolMark />}{keeping && (one.face === null ? face === CUSTOM && own === one.src : face === one.face) && <span className="seats-over"><SeatsSmall size={20} face={one.src} /></span>}</button>;
   const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot key={big ? face : 0} face={me} className={big && moved ? 'new' : ''} /><b className="cs-lvb">{level + 1}</b>{viewer.admin && <i className="cs-crown" title="Admin"><svg viewBox="0 0 24 20" aria-hidden="true"><path d="M3 16.5 1.5 5.5l5.6 4.2L12 2l4.9 7.7 5.6-4.2L21 16.5z" /><circle cx="1.8" cy="4.6" r="1.6" /><circle cx="12" cy="2" r="1.7" /><circle cx="22.2" cy="4.6" r="1.6" /></svg></i>}</span>;
   return <div className="cs-acct" ref={box}>
     <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setKit(kitNow()); setPicking(false); setSchooling(false); setMoved(false); setOpen(!open); }}>{avatar()}</button>
@@ -338,11 +347,11 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* The plan's one row. It steps aside for the picker, where an Ink animal opens the plan for someone without it. */}
-      {!picking && <div className="cs-inkrow"><InkMark /><span><b>{asked ? 'You have Ink' : 'Loop Ink'}</b><small>{asked ? 'Every Ink animal is yours to pick.' : 'More animals, and your own pet drawn from a photo.'}</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>}
+      {!picking && <div className="cs-inkrow"><InkMark /><span><b>{asked ? 'You have Ink' : 'Loopd Ink'}</b><small>{asked ? 'Every Ink animal is yours to pick.' : 'More animals, and your own pet drawn from a photo.'}</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>}
       {!picking && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" /></svg><span><b>Save your picture</b><small>A profile picture, a lock screen or a sticker.</small></span><button className="cs-btn sm" onClick={() => { setPicking(true); setSaving(true); setSchooling(false); }}>Save it</button></div>}
       {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
       {!picking && home && swap.filter(each => !each.home).map(each => <div className="cs-inkrow cs-camprow" key={each.slug}><span><b>Your campus is {home.title}</b><small>{moveNote ?? 'You can look at the other one any time from the map.'}</small></span>
-        <button className="cs-btn sm" disabled={moving} onClick={() => move(async () => { const done = await changeCampusAction(each.slug); if (done.ok) window.location.assign(`/c/${each.slug}`); else setMoveNote(done.message); })}>Change to {each.title}</button></div>)}
+        <button className="cs-btn sm" disabled={moving} onClick={() => move(async () => { const done = await changeCampusAction(each.slug); if (done.ok) window.location.assign(`/c/${each.slug}`); else setMoveNote(done.message); })}>{moving ? <SeatsWord word={`Change to ${each.title}`} /> : `Change to ${each.title}`}</button></div>)}
       {/* The schools the person has. Adding their LinkedIn profile unlocks the others they have been at: their animals, and their campuses. */}
       {!picking && !schooling && <div className="cs-inkrow cs-camprow"><SchoolMark /><span><b>Your schools</b><small>{[viewer.schools.home, ...viewer.schools.added].flatMap(slug => viewer.schools.all.find(each => each.slug === slug)?.name ?? []).join(', ') || 'Unlock the ones you have been at.'}</small></span>
         <button className="cs-btn sm" onClick={() => setSchooling(true)}>Add a school</button></div>}

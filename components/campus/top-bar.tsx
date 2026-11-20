@@ -1,35 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { INK_PAGE } from '@/lib/campus/ink';
-import type { BarGroup } from '@/lib/campus/bar-groups';
-import { groupPath } from '@/lib/emba/group-path';
+import { AssistantsLink } from './assistants-link';
 import { InkMark } from './ink-mark';
-
-/** How many groups the bar names before it leaves the rest to "All groups". */
-const SHOWN = 5;
-/** `on` for the page that lists every group. */
-export const ALL_GROUPS = 'all';
+import { pressed, rememberBar } from '@/components/loading/last-bar';
+import { LinkWait } from '@/components/loading/link-wait';
 
 /**
- * The one top bar of the app, the same on every page: the wordmark, "This week", the person's groups, "All groups",
- * Conga (the game, a plain page at /conga, so an ordinary link), Ink, then what the page puts at the end (`children`) and the account (`account`). A group inside another is named
- * only while the person is in it. `home` is where "This week" leads. `on` is the page this is: 'week', 'ink',
- * ALL_GROUPS, or the id of the group the person is in.
+ * The one top bar of the app, the same on every page: the wordmark, "This week", Conga (the game, a plain page at
+ * /conga, so an ordinary link), Ink, and for someone in a group Assistants; then what the page puts at the end (`children`: the "Groups" and "On you" counters, which are the way to
+ * every group) and the account (`account`). `home` is where "This week" leads. `on` is the page this is: 'week' or 'ink'.
+ *
+ * The bar tells the loading state what it shows (components/loading/last-bar.ts), so the next page's loading state can
+ * draw it again. `going` is for that copy: the address of the link that was pressed, which is marked in place of `on`.
  */
-export function TopBar({ home = '/', on, groups = [], all = groups.length > 0, account, children }: { home?: string; on?: string; groups?: BarGroup[]; /** Whether "All groups" is there. Someone in no group has no groups page to go to (app/groups/layout.tsx sends them back to the front door). */ all?: boolean; /** The end of the bar: the account card, or the way in. */ account: ReactNode; /** What a page puts before the account. */ children?: ReactNode }) {
-  const current = groups.find(group => group.id === on);
-  const top = groups.filter(group => group.depth === 0).slice(0, SHOWN);
-  const shown = current && !top.includes(current) ? [...top, current] : top;
+export function TopBar({ home = '/', on, member = false, going, account, children }: { home?: string; on?: string; going?: string; /** Whether the person is in a group, and so has assistants to connect. */ member?: boolean; /** The end of the bar: the account card, or the way in. */ account: ReactNode; /** What a page puts before the account. */ children?: ReactNode }) {
+  useEffect(() => { if (going === undefined) rememberBar({ home, on, member, account }); });
+  /** Whether a link is the page: the one pressed, in the copy a loading state draws; else the one the page says. */
+  const at = (href: string, here: boolean) => (going === undefined ? here : going === href) ? 'page' as const : undefined;
   return <header className="cs-nav">
-    <Link className="cs-wm" href={home}><Rings />Loop</Link>
-    <nav className="cs-links" aria-label="Loop"><Link href={home} aria-current={on === 'week' ? 'page' : undefined}>This week</Link>
-      {shown.map(group => <Link key={group.id} href={`${groupPath(group.namespace, group.slug)}/team`} aria-current={group === current ? 'page' : undefined}><i>{group.name.slice(0, 1).toUpperCase()}</i>{group.name}</Link>)}
-      {all && <Link href="/groups" aria-current={on === ALL_GROUPS ? 'page' : undefined}>All groups</Link>}
+    <Link className="cs-wm" href={home}><Rings />Loopd</Link>
+    <nav className="cs-links" aria-label="Loopd" onClickCapture={event => { const href = (event.target as Element).closest('a')?.getAttribute('href'); if (href) pressed(href); }}>
+      <Link href={home} aria-current={at(home, on === 'week')}>This week<LinkWait on={going === home} /></Link>
       <a href="/conga">Conga</a>
-      <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={on === 'ink' ? 'page' : undefined}><InkMark /><span>Ink</span></Link></nav>
+      <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={at(INK_PAGE, on === 'ink')}><InkMark /><span>Ink</span><LinkWait on={going === INK_PAGE} /></Link>
+      {member && <AssistantsLink />}</nav>
     <div className="cs-nav-end">{children}{account}</div>
   </header>;
 }

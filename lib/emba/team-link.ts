@@ -1,4 +1,4 @@
-// A filed output is a pointer. Loop never fetches it; it only decides whether
+// A filed output is a pointer. Loopd never fetches it; it only decides whether
 // the text is a plain https link to a named host, and stores one normal form.
 
 const label='[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?';

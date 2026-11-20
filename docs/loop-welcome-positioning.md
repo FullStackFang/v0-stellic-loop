@@ -1,4 +1,4 @@
-# Loop welcome: carry intent into what comes next
+# Loopd welcome: carry intent into what comes next
 
 2026-11-08. Positioning for a review prototype, not a claim of shipped functionality.
 
@@ -6,7 +6,7 @@
 
 **Keep what matters. Bring it to what comes next.**
 
-What you want should have a life beyond one chat. Loop carries the preferences and intentions you choose to save into future conversations, alongside the resources and opportunities in groups you belong to. You control access. A useful suggestion can become a plan with other people, and feedback can inform the next suggestion.
+What you want should have a life beyond one chat. Loopd carries the preferences and intentions you choose to save into future conversations, alongside the resources and opportunities in groups you belong to. You control access. A useful suggestion can become a plan with other people, and feedback can inform the next suggestion.
 
 The practical unit of value is **personal intent + current, authorized group context + an opportunity to act**. For example, a preference for hands-on learning in small groups can inform a cooking activity on a trip, a course practice session, or a workshop at a conference. A relevant preference transfers; a specific itinerary and a past commitment do not become permanent preferences.
 
@@ -14,9 +14,9 @@ The practical unit of value is **personal intent + current, authorized group con
 
 The supplied three-page Living Brain workspace PDF gives a new visitor an understandable problem (re-explaining context), a short personal introduction, specific benefits, evidence, an explanation of the mechanism, and candid limitations. Its illustrations make an abstract memory layer tangible. The useful pattern is that sequence, not its benchmark numbers.
 
-Living Brain's current [homepage](https://livingbrain.com/) describes shared memory across compatible assistants and retrieval of relevant context. Its accuracy, token and latency figures are internal evaluations with different benchmark conditions, not evidence about Loop. Its [sign-in documentation](https://docs.livingbrain.com/mcp/sign-in) already describes OAuth scopes for reading, searching and capturing. Cross-assistant memory or scoped access alone is therefore an insufficient distinction. Do not reuse the deck's categorical competitor claim that other memory products have no sharing or access control without a current feature review.
+Living Brain's current [homepage](https://livingbrain.com/) describes shared memory across compatible assistants and retrieval of relevant context. Its accuracy, token and latency figures are internal evaluations with different benchmark conditions, not evidence about Loopd. Its [sign-in documentation](https://docs.livingbrain.com/mcp/sign-in) already describes OAuth scopes for reading, searching and capturing. Cross-assistant memory or scoped access alone is therefore an insufficient distinction. Do not reuse the deck's categorical competitor claim that other memory products have no sharing or access control without a current feature review.
 
-Loop's proposed distinction is making owned intent useful in the communities, courses, trips and events a person participates in, including conditional group commitments and feedback on what happened. The deck itself says to compete on plans kept rather than memory storage (slides 12 and 17).
+Loopd's proposed distinction is making owned intent useful in the communities, courses, trips and events a person participates in, including conditional group commitments and feedback on what happened. The deck itself says to compete on plans kept rather than memory storage (slides 12 and 17).
 
 ## Reasons a person might care
 
@@ -29,15 +29,15 @@ Loop's proposed distinction is making owned intent useful in the communities, co
 | Carry learning forward | Feedback and explicit corrections update reusable preferences | Better fit on later uses, without overgeneralizing a single experience |
 | Choose what travels | Scope and expiry separate assistant access from group disclosure | Users understand and can successfully inspect, restrict and revoke future reads |
 
-These are design hypotheses, not established product outcomes. Avoid unsupported time savings, attendance lifts, retention improvements, or claims that Loop reaches every chat automatically.
+These are design hypotheses, not established product outcomes. Avoid unsupported time savings, attendance lifts, retention improvements, or claims that Loopd reaches every chat automatically.
 
 ## Page choices
 
-- Keep the warm ivory, terracotta, navy and typography requested earlier; use only Loop branding.
+- Keep the warm ivory, terracotta, navy and typography requested earlier; use only Loopd branding.
 - Lead with the portable intent benefit. Use the EMBA trip as one worked example rather than the product definition.
 - Show one preference being reused in three situations with a working selector. Label generated suggestions as illustrative.
 - Make permission control tangible with a clearly simulated revoke action. Explain that revocation blocks future reads and cannot erase data already received by another system.
-- Put research in expandable explanations. Separate benchmark findings, the inference motivating Loop, and the test still required.
+- Put research in expandable explanations. Separate benchmark findings, the inference motivating Loopd, and the test still required.
 - Avoid importing the deck's loneliness, surveys and retention statistics into this first-user page: they address a different buyer and need their own source verification.
 
 ## Evidence and limits

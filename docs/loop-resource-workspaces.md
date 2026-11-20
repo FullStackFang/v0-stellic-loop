@@ -1,4 +1,4 @@
-# Loop resource workspaces
+# Loopd resource workspaces
 
 This runbook covers the private group workspace implemented by the
 `loop-resource-workspaces` OpenSpec change. It is an operator guide, not a
@@ -126,7 +126,7 @@ already received.
 2. Deploy the isolated HTTPS pilot and set `LOOP_AUTH_AUDIENCE` to its exact
    `/api/mcp` URL.
 3. In Claude, add a custom web connector with that MCP URL and complete OAuth.
-4. In Loop, open `/groups/connections` and grant Claude a 30-day read lease for
+4. In Loopd, open `/groups/connections` and grant Claude a 30-day read lease for
    one group.
 5. Verify listing the authorized group, a cited search and read, a resource
    replacement showing only the new version, nonmember denial, and immediate

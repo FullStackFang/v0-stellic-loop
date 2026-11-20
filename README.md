@@ -60,7 +60,7 @@ npm run build
 
 Last run (2026-10-26, quorum-board-sms, Verify revision): lint clean · `npm test` 20 files / 211 tests green · build green · `app/globals.css` unchanged since 7a26f1d · local walkthrough with the log notifier (one-more, lock, drop, `/m/` sign-in) · `test:db` **not yet run**: it needs `board-test` (task 1.1).
 
-The static demos live in `public/demo/` and serve without `.html`: `/demo/stellic` (the Loop campus demo), `/demo/quorum` (the v5 mockup), `/demo/mockups-…`. `next.config.ts` redirects the old static-site URLs (`/quorum.html`, `/index.html`, …) there.
+The static demos live in `public/demo/` and serve without `.html`: `/demo/stellic` (the Loopd campus demo), `/demo/quorum` (the v5 mockup), `/demo/mockups-…`. `next.config.ts` redirects the old static-site URLs (`/quorum.html`, `/index.html`, …) there.
 
 Screenshots of board, proposal, post and you at 390px, 1280px and with reduced motion are in `docs/`.
 

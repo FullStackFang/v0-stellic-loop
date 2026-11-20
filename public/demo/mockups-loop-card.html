@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · the loop card — 3 directions</title>
+<title>Loopd · the loop card — 3 directions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -260,7 +260,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · tap a row in Your week</div>
+    <div class="eyebrow">Loopd · tap a row in Your week</div>
     <h1>What opens when you tap Lift Fridays</h1>
     <p>Three shapes for the loop card. Each phone starts on Home. Tap the Lift Fridays row, then poke the card: hype it, post to the crew, close it. Same content in all three; only the container changes.</p>
   </div>
@@ -268,7 +268,7 @@
   <div class="brief">
     <div class="q"><div class="k">Q1 · glance</div><b>Am I going, and when?</b><p>The next meet, the countdown, and my own state (in, hyped, on my calendar). Answered before anything scrolls.</p></div>
     <div class="q"><div class="k">Q2 · people</div><b>Who else is in?</b><p>The same four faces, named. A crew is a small fixed set, so show every member, not a stack with a +3.</p></div>
-    <div class="q"><div class="k">Q3 · change</div><b>What did I miss?</b><p>Short posts from the crew and from Loop itself. Announcements, not chat. Newest first, three visible, no threads.</p></div>
+    <div class="q"><div class="k">Q3 · change</div><b>What did I miss?</b><p>Short posts from the crew and from Loopd itself. Announcements, not chat. Newest first, three visible, no threads.</p></div>
     <div class="guard"><b>Guardrails kept:</b> no going / declined grid · no stranger DMs (posts live inside a loop that already meets) · "can't this week" stays private · share, leave, report live behind "···"</div>
   </div>
 
@@ -295,7 +295,7 @@
       <div class="caption">
         <div class="tag"><b>C</b> Board</div>
         <h2>The crew's board, summary pinned</h2>
-        <p>The loop is its feed. A compact summary stays pinned and shrinks as you scroll; posts from people and from Loop fill the page. Best if the board becomes the daily reason to open a loop.</p>
+        <p>The loop is its feed. A compact summary stays pinned and shrinks as you scroll; posts from people and from Loopd fill the page. Best if the board becomes the daily reason to open a loop.</p>
         <div class="try">try: tap the row · scroll the board · react 🔥 · post from the dock</div>
       </div>
       <div class="phone" data-dir="c"></div>
@@ -310,10 +310,10 @@
       <tbody>
         <tr><td>Time to Q1 (am I going)</td><td>Fastest. Sheet opens over Home; the countdown is the first thing that lands.</td><td>Fast. Dark top half is the meet; one screen push.</td><td>Fast, then it recedes. The summary compacts as soon as you scroll.</td></tr>
         <tr><td>Q2 (who's in) fidelity</td><td>Four named faces with hype. Good enough for a crew of six or fewer.</td><td>Richest. One stub per person with dorm and hype; open seats shown as dashed stubs.</td><td>Thinnest. Names in one line, faces stacked. Fine for six, weak at eight.</td></tr>
-        <tr><td>Q3 (what changed)</td><td>Three posts, then the sheet ends. Enough for announcements.</td><td>Posts below the pass; you scroll past the artifact to reach them.</td><td>The whole page. Loop's own system posts (moved, streak, hype) read as part of the story.</td></tr>
+        <tr><td>Q3 (what changed)</td><td>Three posts, then the sheet ends. Enough for announcements.</td><td>Posts below the pass; you scroll past the artifact to reach them.</td><td>The whole page. Loopd's own system posts (moved, streak, hype) read as part of the story.</td></tr>
         <tr><td>Interaction cost to close</td><td>Lowest: drag, tap scrim, or the ×. You never left Home.</td><td>Back button. One push, one pop.</td><td>Back button, plus you may have scrolled.</td></tr>
         <tr><td>Guardrail risk</td><td>Low. Nothing browsable; sheet has no room for extras.</td><td>Low. The pass is shareable, which is the intended vector (drop to a friend).</td><td>Medium. A feed invites feed habits: threads, likes, noise. Announcement-only posting has to be enforced by design.</td></tr>
-        <tr><td>Where the current LoopDetail content goes</td><td colspan="3">Governance copy (locked, presence moves it), safety report, share, leave: all move behind "···" or into contextual moments (a "We moved" post from Loop, a "Report" entry in the overflow). The card itself never explains the rules; it shows the state.</td></tr>
+        <tr><td>Where the current LoopDetail content goes</td><td colspan="3">Governance copy (locked, presence moves it), safety report, share, leave: all move behind "···" or into contextual moments (a "We moved" post from Loopd, a "Report" entry in the overflow). The card itself never explains the rules; it shows the state.</td></tr>
       </tbody>
     </table>
     <div class="rec">
@@ -392,7 +392,7 @@ function homeHTML(st, now){
   const ch = crewHype(st.hype);
   return `
   <div class="status"><span>9:41</span><span>●●●</span></div>
-  <div class="apphead"><span class="wordmark">Loop<i></i></span>${av('sarah',30)}</div>
+  <div class="apphead"><span class="wordmark">Loopd<i></i></span>${av('sarah',30)}</div>
   <div class="chips"><span class="chip">🔍</span><span class="chip" data-on="1">Your week <span class="n">2</span></span><span class="chip">Waiting <span class="n">1</span></span><span class="chip">Past <span class="n">2</span></span></div>
   <div class="scroll"><div class="pad">
     <div class="wk">${wk}</div>
@@ -415,7 +415,7 @@ function homeHTML(st, now){
           <div class="faces"><div style="z-index:10">${av('josh')}</div><div style="z-index:9">${av('priya')}</div><div style="z-index:8">${av('sarah')}</div></div></div>
       </div>
     </div>
-    <div class="foot" style="margin-top:28px">Loop keeps the rhythm and the next one.</div>
+    <div class="foot" style="margin-top:28px">Loopd keeps the rhythm and the next one.</div>
   </div></div>
   <div class="toast"></div>`;
 }
@@ -489,7 +489,7 @@ function cardC(st, now){
       <div class="post sys"><div class="dot">↻</div><div class="b"><div class="tx">Ryan hyped it to LET’S GO. Crew hype hit 🔥🔥🔥🔥.</div></div></div>
       <div class="post">${av('priya',28)}<div class="b"><div class="who"><b>Priya</b><span class="when">Aug 21</span></div><div class="tx">PR on deadlift. Not saying the number, but it happened.</div><button class="rx" data-act="rx" data-i="-1" data-on="1">🔥 4</button></div></div>
       <div class="post sys"><div class="dot">↻</div><div class="b"><div class="tx">Sarah joined. Same rhythm, no cold start.</div></div></div>
-      <div class="foot">The board is for announcements. Loop posts the moves, streaks and joins itself.</div>
+      <div class="foot">The board is for announcements. Loopd posts the moves, streaks and joins itself.</div>
     </div>
   </div>
   <div class="dock">${composeHTML()}</div>`;

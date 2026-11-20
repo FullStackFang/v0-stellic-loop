@@ -19,7 +19,7 @@ const points=(value:string)=>[...value].length;
 export const lineSchema=(max:number)=>z.string().max(max*8).transform(singleLine)
  .refine(value=>points(value)>=1&&points(value)<=max&&/[\p{L}\p{N}]/u.test(value));
 
-// Names an assistant or a chat app could read as addressing a crowd or Loop itself.
+// Names an assistant or a chat app could read as addressing a crowd or Loopd itself.
 const reserved=new Set(['all','anyone','channel','everyone','here','loop','me','nobody','team','you']);
 /** A slug or handle: lowercase letters, digits and hyphens, 2 to 48 characters, not a reserved word. */
 export const nameSchema=z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/).refine(value=>!reserved.has(value));
@@ -28,7 +28,7 @@ export const nameSchema=z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/).refine(val
 export function assistantName(clientId:string):string {
  if(clientId==='https://claude.ai/oauth/mcp-oauth-client-metadata')return 'Claude';
  if(clientId==='https://claude.ai/oauth/claude-code-client-metadata')return 'Claude Code';
- // Meta's assistant has no published identity, so Loop's sign-in provider registered this one for it.
+ // Meta's assistant has no published identity, so Loopd's sign-in provider registered this one for it.
  if(clientId==='oJLiBHFWfm5De8eq')return 'Muse';
  try{return new URL(clientId).hostname||clientId;}catch{return clientId;}
 }

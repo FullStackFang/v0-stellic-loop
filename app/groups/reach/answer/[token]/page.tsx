@@ -5,9 +5,9 @@ import { ActionForm } from '@/components/emba/portal-forms';
 import { answerFromPersonalLink } from '../../../reach-actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Answer · Loop', robots: { index: false, follow: false }, referrer: 'no-referrer' };
+export const metadata: Metadata = { title: 'Answer · Loopd', robots: { index: false, follow: false }, referrer: 'no-referrer' };
 
-// A member's own link to one ask, from a message Loop sent them. Opening it
+// A member's own link to one ask, from a message Loopd sent them. Opening it
 // changes nothing; the answer is saved only when the form is sent. The link
 // signs nobody in: it shows this one ask and takes this one answer. It works whichever site is in front (loop-on-you,
 // design D12): the link is the member's own, and it reaches nothing but this ask.

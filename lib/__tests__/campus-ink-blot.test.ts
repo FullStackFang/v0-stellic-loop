@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { inkBlot } from '@/lib/campus/ink-blot';
+import { inkBlot, inkFlung } from '@/lib/campus/ink-blot';
 
 it('gives the same member the same blot, and two members different ones', () => {
   expect(inkBlot('Ben/animals/14.png')).toEqual(inkBlot('Ben/animals/14.png'));
@@ -20,4 +20,15 @@ it('keeps the dark ink behind the whole face and the blot inside the room it is 
     const seep = far(blot.seep); for (const [at, each] of seep.entries()) { expect(each).toBeGreaterThan(dark[at] + .5); expect(each).toBeLessThan(dark[at] + 6.5); }
     expect(blot.darkDrops).toHaveLength(5); expect(blot.schoolDrops).toHaveLength(3);
   }
+});
+
+it('throws the drops of a splat to the right, the same ones each time, and leaves the blot as it was', () => {
+  for (const seed of ['Ben', 'Eve/animals/30.png', 'You', '']) {
+    const before = JSON.stringify(inkBlot(seed)), drops = inkFlung(seed);
+    expect(drops).toHaveLength(7); expect(inkFlung(seed)).toEqual(drops);
+    // Past the edge of the pool, and never to its left, where the loader's words and faces are.
+    for (const [x, y] of drops) { expect(x).toBeGreaterThan(-10); expect(Math.hypot(x, y)).toBeGreaterThan(60); expect(Math.hypot(x, y)).toBeLessThan(90); }
+    expect(JSON.stringify(inkBlot(seed))).toBe(before);
+  }
+  expect(inkFlung('Ben')).not.toEqual(inkFlung('Eve'));
 });

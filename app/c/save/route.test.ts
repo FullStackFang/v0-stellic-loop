@@ -36,7 +36,7 @@ const corner = async (png: Buffer) => { const { data } = await sharp(png).ensure
 /** How much the strip where the mark's word sits on a profile picture varies: next to nothing when it is only ground. */
 const word = async (png: Buffer) => (await sharp(await sharp(png).extract({ left: 380, top: 925, width: 320, height: 45 }).png().toBuffer()).stats()).channels[0].stdev;
 
-it('gives a signed-in person their animal in each shape, free, with the Loop mark, and nothing to someone signed out', async () => {
+it('gives a signed-in person their animal in each shape, free, with the Loopd mark, and nothing to someone signed out', async () => {
   const ana = await person('ana@cornell.edu');
   expect((await ask(null, 'shape=profile')).status).toBe(401);
   const [school, , cream] = grounds('cornell');

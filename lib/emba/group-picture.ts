@@ -24,7 +24,7 @@ export const ASKS = 3;
 const DRAWINGS = 2;
 const HOW_MANY = `Pick ${FEWEST} to ${MOST} animals.`;
 const NOT_THAT = 'Pick from your own animals.';
-export const NEEDS_INK_PLUS = 'Drawing a group together comes with Loop Ink+.';
+export const NEEDS_INK_PLUS = 'Drawing a group together comes with Loopd Ink+.';
 const ALL_ASKED = `You have had a group drawn ${ASKS} times. Drawing more is not set up yet.`;
 const NOT_NOW = 'That could not be drawn just now. Try again in a minute.';
 

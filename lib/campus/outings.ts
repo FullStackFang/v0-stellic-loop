@@ -59,7 +59,7 @@ const sweep = (q: Q, outingId: string) =>
   q.query('delete from campus_outing o where o.id=$1 and not o.open_to_anyone and not exists(select 1 from campus_outing_member m where m.outing_id=o.id)', [outingId]);
 
 /**
- * "I'm in", and "Register me" for a feed event (recorded in Loop only, marked as registered).
+ * "I'm in", and "Register me" for a feed event (recorded in Loopd only, marked as registered).
  * Pressing it again changes nothing. Returns the share token of the outing the person is now in.
  */
 export async function imIn(db: Db, personId: string, listingId: string, now: Date = new Date()): Promise<{ token: string; joined: boolean }> {

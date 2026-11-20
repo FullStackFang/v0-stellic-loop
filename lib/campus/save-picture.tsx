@@ -6,12 +6,12 @@ import sharp from 'sharp';
 import { hex, SHAPES, type Ground, type Shape } from './save-shapes';
 
 // Makes the file a person saves (openspec loop-save-picture, as approved on public/demo/mockups-avatar-download.html):
-// their animal on a ground, with their name and the Loop mark. Made here, on the server, so that leaving the mark off is
+// their animal on a ground, with their name and the Loopd mark. Made here, on the server, so that leaving the mark off is
 // not something a browser can decide.
 
 const font = readFile(path.join(process.cwd(), 'public/fonts/Archivo-Black.ttf'));
 
-/** The Loop mark, as in components/LoopGlyphs.tsx: three woven rings, the top one lit. */
+/** The Loopd mark, as in components/LoopGlyphs.tsx: three woven rings, the top one lit. */
 const AT = [[50, 35], [35.5, 60], [64.5, 60]], R = 21;
 const ring = (i: number) => `M${AT[i][0] - R} ${AT[i][1]}a${R} ${R} 0 1 0 ${2 * R} 0a${R} ${R} 0 1 0 ${-2 * R} 0`;
 const markSvg = (fg: string, lit: string) => `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 100 100" fill="none"><defs>${[0, 1, 2].map(i => `<mask id="m${i}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="${ring((i + 2) % 3)}" stroke="black" stroke-width="15.3"/></mask>`).join('')}</defs>${[0, 1, 2].map(i => `<g mask="url(#m${i})"><path d="${ring(i)}" stroke="${i ? fg : lit}" stroke-width="9"/></g>`).join('')}</svg>`;
@@ -53,7 +53,7 @@ export async function savedPicture({ figure, shape, ground, ink, mark, name, sub
   const lockup = (y: number, size: number) => <div style={{ position: 'absolute', left: 0, top: y - size, width: w, height: size * 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- a picture file is being drawn, not a page */}
     <img src={rings} width={size * 1.5} height={size * 1.5} style={{ marginRight: size * 0.12, marginTop: -size * 0.06 }} />
-    <div style={{ display: 'flex', fontSize: size, letterSpacing: -size * 0.03, color: fg }}>Loop</div>
+    <div style={{ display: 'flex', fontSize: size, letterSpacing: -size * 0.03, color: fg }}>Loopd</div>
   </div>;
   const line = (words: string, y: number, size: number, opacity = 1) => <div style={{ position: 'absolute', left: 60, top: y - size, width: w - 120, height: size * 2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size, letterSpacing: -size * 0.015, color: fg, opacity, whiteSpace: 'nowrap' }}>{words}</div>;
   // A long name is set smaller, so it stays on one line.

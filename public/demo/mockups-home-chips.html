@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Where your stuff lives — 3 directions</title>
+<title>Loopd · Where your stuff lives — 3 directions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -133,7 +133,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · Where your stuff lives</div>
+    <div class="eyebrow">Loopd · Where your stuff lives</div>
     <h1>Three ways to keep your loops and intents one tap away</h1>
     <p>Today a dropped intent only exists on the Floor, then hides under You → Intents. Commitment apps (Partiful, Luma, Airbnb Trips) put <em>yours</em> on the first screen and let discovery sit beside it. Each phone is clickable: switch chips, join a row, tap ＋ to drop an intent and watch where it lands.</p>
   </div>
@@ -200,7 +200,7 @@ function buildA(){
   const el=document.getElementById('phoneA'); const D=seed(); let chip='upcoming';
   el.innerHTML=`
     <div class="status"><span>9:41</span><span>5G</span></div>
-    <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
+    <div class="apphead"><span class="wordmark">Loopd<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
     <div class="chips" id="aChips"></div>
     <div class="scroll"><div class="pad" id="aList"></div></div>
     <div class="fab" id="aFab">＋</div>
@@ -241,7 +241,7 @@ function buildB(){
   const el=document.getElementById('phoneB'); const D=seed();
   el.innerHTML=`
     <div class="status"><span>9:41</span><span>5G</span></div>
-    <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
+    <div class="apphead"><span class="wordmark">Loopd<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
     <div class="scroll"><div class="pad" id="bBody"></div></div>
     <div class="fab" id="bFab">＋</div>
     ${tabbar('home',[['home','◉','Home'],['class','◈','Class'],['you','○','You']])}
@@ -273,7 +273,7 @@ function buildC(){
     <div class="toast"></div>`;
   const body=el.querySelector('#cBody');
   function render(){
-    el.querySelector('#cHead').innerHTML=`<span class="wordmark">${tab==='mine'?'Mine':'Loop'}<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div>`;
+    el.querySelector('#cHead').innerHTML=`<span class="wordmark">${tab==='mine'?'Mine':'Loopd'}<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div>`;
     el.querySelector('#cTabs').innerHTML=tabbar(tab,[['home','◉','Home'],['mine','◎','Mine'],['class','◈','Class']]);
     el.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>{ tab=t.dataset.tab==='class'?tab:t.dataset.tab; render(); });
     if(tab==='home'){

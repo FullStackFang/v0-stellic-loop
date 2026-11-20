@@ -92,7 +92,7 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
 
   // Subscribing draws nothing: the card asks first, with a line of the person's own and how long it may be.
   expect(await card.findByText('Draw these 2 together?')).toBeInTheDocument();
-  expect(card.getByText(/Thanks for subscribing to Loop Ink\+\. Payment is not set up yet/)).toBeInTheDocument();
+  expect(card.getByText(/Thanks for subscribing to Loopd Ink\+\. Payment is not set up yet/)).toBeInTheDocument();
   expect(model.asked).toEqual([]);
   fireEvent.change(card.getByRole('textbox', { name: 'Anything to add' }), { target: { value: 'party hats' } });
   expect(card.getByText(/10 of 60 letters/)).toBeInTheDocument();

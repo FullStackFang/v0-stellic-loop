@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Advisor (Dana) — three groupings, one row language</title>
+<title>Loopd · Advisor (Dana) — three groupings, one row language</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -179,7 +179,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · Advisor · Dana</div>
+    <div class="eyebrow">Loopd · Advisor · Dana</div>
     <h1>Same numbers, three ways to group them</h1>
     <p>All three drop the tile cards for the row language the student side already uses: hairline rows, the divider under a scope filled to its % in a loop, one action per row. What differs is <b>what the screen is organised around</b>: who acts, where it's cold, or what Dana does this week. Tap anything.</p>
     <div class="swatches"><span><i style="background:var(--unit-dorm)"></i>house</span><span><i style="background:var(--unit-class)"></i>course</span><span><i style="background:var(--unit-year)"></i>class year</span><span><i style="background:var(--accent)"></i>campus · falling</span></div>
@@ -360,7 +360,7 @@ function dirC(){
         right:`<button class="pill s" data-act="${s.id}">${I.send}Send</button>` })).join('')}</div>
 
     <div class="sec verb"><h3>Watch</h3><span class="n">${watch.length} slipping · nothing to do yet</span></div>
-    <div class="list">${watch.map(s=>scopeRow(s, { toggle:true, chev:true }) + `<div class="body" data-body="${s.id}"><div class="fact"><div class="l">why</div><div class="v">Still above the line for its unit. Loop flags it the week it crosses, with a route.</div></div></div>`).join('')}</div>
+    <div class="list">${watch.map(s=>scopeRow(s, { toggle:true, chev:true }) + `<div class="body" data-body="${s.id}"><div class="fact"><div class="l">why</div><div class="v">Still above the line for its unit. Loopd flags it the week it crosses, with a route.</div></div></div>`).join('')}</div>
 
     <button class="more" data-more="C">All houses, courses, years<span>${SCOPES.length} rows ${I.chev}</span></button>
     <div class="list hidden" data-more-body="C">${byPct.filter(s=>!s.cold && !s.watch).map(s=>scopeRow(s)).join('')}</div>
@@ -378,7 +378,7 @@ document.querySelectorAll('.phone').forEach(ph=>{
   ph.addEventListener('click', e=>{
     const reach = e.target.closest('[data-reach]');
     if (reach && reach.dataset.done!=='1'){ reach.dataset.done='1'; reach.innerHTML=I.check;
-      const p = PEOPLE.find(p=>p.id===reach.dataset.reach); say(`Reached out to ${p.name.split(' ')[0]}`, 'A warm note from you — Loop never tells them how you knew.'); return; }
+      const p = PEOPLE.find(p=>p.id===reach.dataset.reach); say(`Reached out to ${p.name.split(' ')[0]}`, 'A warm note from you — Loopd never tells them how you knew.'); return; }
     const act = e.target.closest('[data-act]');
     if (act && act.dataset.done!=='1'){ act.dataset.done='1'; act.innerHTML = I.check+'Sent';
       const s = SCOPES.find(s=>s.id===act.dataset.act); say(s.cta, `${s.to} get the count — never who.`); return; }

@@ -1,12 +1,12 @@
-# Loop business: market evidence and wedge
+# Loopd business: market evidence and wedge
 
-Researched 8 November 2026. Vendor statements establish advertised capabilities and pricing, not independent proof of effectiveness or willingness to buy Loop.
+Researched 8 November 2026. Vendor statements establish advertised capabilities and pricing, not independent proof of effectiveness or willingness to buy Loopd.
 
 ## Conclusion
 
 Start with an operator running repeated professional learning cohorts, leadership programs, or fellowships. Sell completed peer connections and reduced coordination work. Use the Cornell EMBA trip as a bounded experiment, then test renewal across the next cohort. This is a hypothesis about buyer fit, not validated demand.
 
-An agent for every group is already competitive territory. Loop needs to win on the transition from a member's privately authorized, current intention to an accepted, attended activity, while keeping the personal explanation away from organizers. Matching, group formation, reminders, and feedback individually are not new.
+An agent for every group is already competitive territory. Loopd needs to win on the transition from a member's privately authorized, current intention to an accepted, attended activity, while keeping the personal explanation away from organizers. Matching, group formation, reminders, and feedback individually are not new.
 
 ## What buyers can already buy
 
@@ -30,13 +30,13 @@ Orbiit's acquisition by Hivebrite is confirmed by [Orbiit's July 2024 announceme
 | Professional associations / paid communities | Membership lead: give members reasons to participate and renew. | Existing budgets for platforms, events, and mentoring; recurring relationship rather than one-off event. | Direct competition from Hivebrite, Bevy, Circle and existing matchmakers; incremental renewal attribution is difficult. |
 | Repeat group-travel operators | Operations / guest experience lead: reduce repetitive support and improve free-time participation. | Shared place, times and itinerary create strong coordination density. | Trips end; itineraries are already served cheaply; operator may not value optional social plans enough to pay. Repeat operator contracts matter more than individual traveler retention. |
 
-Primary contextual evidence: [Cornell executive education](https://ecornell.cornell.edu/executive-education/) describes networking, program management and refinement for future cohorts; [eCornell FAQ](https://ecornell.cornell.edu/about-ecornell/faq/) describes small professional cohorts and peer networking. These support contextual fit, not Cornell purchasing intent. Platform prices above support an existing software budget category, not Loop's price.
+Primary contextual evidence: [Cornell executive education](https://ecornell.cornell.edu/executive-education/) describes networking, program management and refinement for future cohorts; [eCornell FAQ](https://ecornell.cornell.edu/about-ecornell/faq/) describes small professional cohorts and peer networking. These support contextual fit, not Cornell purchasing intent. Platform prices above support an existing software budget category, not Loopd's price.
 
 ## Defensible hypothesis to test
 
-Loop helps people who would not publicly post an invitation translate a current, approved interest into a concrete group activity. The relevant information is willingness under conditions, not a static similarity score. Any claimed advantage over surveys or existing matching products requires a direct comparison.
+Loopd helps people who would not publicly post an invitation translate a current, approved interest into a concrete group activity. The relevant information is willingness under conditions, not a static similarity score. Any claimed advantage over surveys or existing matching products requires a direct comparison.
 
-Privacy is a product choice with a buyer tradeoff. Circle advertises administrator visibility into agent conversations. Loop can instead make organizer access aggregate-only, but must prove that members understand the boundary and that operators will pay without seeing individual conversations. Never claim competitor products lack privacy controls beyond what their published material establishes.
+Privacy is a product choice with a buyer tradeoff. Circle advertises administrator visibility into agent conversations. Loopd can instead make organizer access aggregate-only, but must prove that members understand the boundary and that operators will pay without seeing individual conversations. Never claim competitor products lack privacy controls beyond what their published material establishes.
 
 Begin with one cohort and one repeated behavior: small peer meetups around an approved topic, time and group size. Track eligible members, opt-ins, accepted invitations, attendance, useful new contacts, subsequent meetings, organizer minutes, and total service cost. Compare against ordinary organizer-led invitations or a short private form; do not equate chatbot activity with impact.
 

@@ -1,7 +1,7 @@
 import type { Q } from '../db';
 import { isAdmin } from './admin';
 
-// Loop Ink, the paid plan (openspec/changes/loop-ink-placements). This file is read by the browser too (the bar links
+// Loopd Ink, the paid plan (openspec/changes/loop-ink-placements). This file is read by the browser too (the bar links
 // to INK_PAGE), so it imports nothing that is for the server only.
 
 /** Where every placement leads: the Ink page of the app (app/c/ink), which has the app's own top bar. */

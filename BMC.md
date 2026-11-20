@@ -1,4 +1,4 @@
-# Loop — Business Model Canvas Stress Test
+# Loopd — Business Model Canvas Stress Test
 
 *2026-09-21 · evaluated as a VC would, not as a fan. Companion to `PITCH.md`.*
 
@@ -9,7 +9,7 @@ go in a deck.
 
 ## The brief I evaluated (filled in for you)
 
-- **Concept:** Loop is a campus app where a student states a plain-language
+- **Concept:** Loopd is a campus app where a student states a plain-language
   intent ("lock in for CS 2110"); intents pool anonymously into an anchor, and
   at quorum the anchor *fires* into a small, ownerless group that meets weekly
   at a set time and place. The output is always a recurring loop, never a match.
@@ -61,7 +61,7 @@ lagging one (week-8 midterm).
   source found; treat as a hypothesis to measure). A loop that fires at quorum 3
   into 4–6 seats should expect **2–3 bodies at meeting one**. Pie reports >70%
   retention *after a user's third group event* ~ — the cliff is before three,
-  and Loop has no commitment device (hype meter is an easter egg, not a stake).
+  and Loopd has no commitment device (hype meter is an easter egg, not a stake).
   Fiveable made study rooms its core bet and then shut them.
 - **The evidence supports the structure, not the app.** Effect sizes exist for
   *structured, academically anchored* recurring groups (Supplemental Instruction

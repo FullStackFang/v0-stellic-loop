@@ -71,8 +71,8 @@ it('refuses everyone but the operator: an organizer, a member, an assistant, and
   expect((await withPortalTestSession(f.organizer, () => exportCsv())).status).toBe(404);
   // The operator gets the page and the file.
   render(await page(f.nonmember));
-  expect(screen.getByRole('heading', { name: 'Do assistants check Loop first?' })).toBeInTheDocument();
-  expect(screen.getByText(/Conversations in which the assistant never contacted Loop cannot be seen here/)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Do assistants check Loopd first?' })).toBeInTheDocument();
+  expect(screen.getByText(/Conversations in which the assistant never contacted Loopd cannot be seen here/)).toBeInTheDocument();
   expect(screen.getByText('9 joined a group · 2 opened the connect page')).toBeInTheDocument();
   expect(document.body.textContent).not.toMatch(/Member [A-Z0-9]|Secret answer/);
   const file = await withPortalTestSession(f.nonmember, () => exportCsv());

@@ -55,7 +55,7 @@ export type LinkFill =
   | { ok: false; message: string };
 /**
  * Reads a pasted event link for the post form (loop-group-event-links, design D11). Nothing is saved here: the person
- * checks what was read and posts it. On a site Loop does not read, or a page it could not read, the link is kept and
+ * checks what was read and posts it. On a site Loopd does not read, or a page it could not read, the link is kept and
  * the person types the rest. Never throws.
  */
 export async function readPlanLink(campus: { tz: string }, raw: string, now: Date = new Date(), read: PageReader = readEventPage): Promise<LinkFill> {
@@ -64,7 +64,7 @@ export async function readPlanLink(campus: { tz: string }, raw: string, now: Dat
   const site = hostOf(link), page = listed ? await read(link) : { ok: false as const, reason: 'unlisted' as const };
   if (!page.ok) {
     if (page.reason === 'gone') return { ok: false, message: 'That page is gone, or says the event is off.' };
-    return { ok: true, link, filled: null, note: `${page.reason === 'unlisted' ? `Loop does not read ${site}.` : 'Loop could not read that page.'} The link is kept: fill in the rest.` };
+    return { ok: true, link, filled: null, note: `${page.reason === 'unlisted' ? `Loopd does not read ${site}.` : 'Loopd could not read that page.'} The link is kept: fill in the rest.` };
   }
   const { name, startsAt, endsAt, place, host } = page.facts;
   // A page time with no offset is already a time on the campus's clock.

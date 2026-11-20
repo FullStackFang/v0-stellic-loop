@@ -1,11 +1,11 @@
 import { useId } from 'react';
 
-// Marks shared by every page on the Loop system (app/loop.css). See DESIGN.md, "The mark".
+// Marks shared by every page on the Loopd system (app/loop.css). See DESIGN.md, "The mark".
 
 /** The arrow that ends a pill button. */
 export const Arrow = () => <svg viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5" /></svg>;
 
-// The Loop mark: three woven rings, the top one lime (you, linked to the other two).
+// The Loopd mark: three woven rings, the top one lime (you, linked to the other two).
 // Each ring passes over one neighbour and under the other (top over left, left over right, right over top).
 // Where a ring passes beneath, it is masked by a slightly wider copy of the ring above it, so the gap
 // follows that ring's edge exactly and touches nothing else. The mark needs no background colour.
@@ -24,7 +24,7 @@ function Ring({ i, width, inline }: { i: number; width: number; inline: boolean 
 }
 
 /**
- * The Loop mark. Solid for small sizes; `inline` for large ones (48px and up).
+ * The Loopd mark. Solid for small sizes; `inline` for large ones (48px and up).
  * `tight` narrows the gap at each crossing to the spacing of the inline lines, for very large sizes.
  */
 export function Rings({ className, inline = false, tight = false }: { className?: string; inline?: boolean; tight?: boolean }) {

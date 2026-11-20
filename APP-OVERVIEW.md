@@ -1,6 +1,6 @@
-# Loop: app overview
+# Loopd: app overview
 
-Loop helps a group turn a casual “we should do something” into a plan that actually happens. The broader idea is to make belonging through repeated time together: especially for students, a small recurring crew can matter more than a one-time match. The current app focuses on the first step—getting one real plan formed with minimal coordination.
+Loopd helps a group turn a casual “we should do something” into a plan that actually happens. The broader idea is to make belonging through repeated time together: especially for students, a small recurring crew can matter more than a one-time match. The current app focuses on the first step—getting one real plan formed with minimal coordination.
 
 ## What we have built
 
@@ -14,4 +14,4 @@ Loop helps a group turn a casual “we should do something” into a plan that a
 
 This is a Next.js app backed by Postgres on Supabase. Phone sign-in uses SMS verification when Twilio Verify is configured. The latest intent composer and preference storage were implemented and verified locally; their database migration (`0009_intent_preferences.sql`) must be applied to the hosted database before those app changes are deployed.
 
-Rhythm is currently a **preference**, not an automatic recurring event. Each follow-up plan needs a new post and its own count. The longer-term Loop vision—stable recurring crews and an early belonging signal for advisors—remains a product direction rather than a capability of this app today.
+Rhythm is currently a **preference**, not an automatic recurring event. Each follow-up plan needs a new post and its own count. The longer-term Loopd vision—stable recurring crews and an early belonging signal for advisors—remains a product direction rather than a capability of this app today.

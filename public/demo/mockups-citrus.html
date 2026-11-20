@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop · Citrus directions</title>
+<title>Loopd · Citrus directions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
@@ -377,7 +377,7 @@ h2 { font-size: 13.5px; font-weight: 560; color: var(--muted); }
 
 <div class="app">
   <header class="nav">
-    <a class="wm" href="#"><span class="mk" data-mark></span>Loop</a>
+    <a class="wm" href="#"><span class="mk" data-mark></span>Loopd</a>
     <p class="nav-label">Your groups</p>
     <div class="groups" role="tablist" aria-label="Your groups" id="groups"></div>
     <p class="nav-label">This group</p>
@@ -491,7 +491,7 @@ const NOTES = {
   b: 'Partiful-leaning. Dark page, one loud citrus poster per group with condensed Archivo, big faces, chunky lime buttons. Top bar instead of the rail.',
   c: 'Closest to today. Keeps the rail, the tight corner and the row lists; swaps navy and teal for ink, a lemon band and lime actions with hard shadows.' };
 
-// The Loop mark, ported from components/LoopGlyphs.tsx (three woven rings, top ring takes --mark-top).
+// The Loopd mark, ported from components/LoopGlyphs.tsx (three woven rings, top ring takes --mark-top).
 const RC = [[50, 35], [35.5, 60], [64.5, 60]], RR = 21; let uid = 0;
 const rp = (i, r = RR) => { const [x, y] = RC[i]; return `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`; };
 function mark(inline) {

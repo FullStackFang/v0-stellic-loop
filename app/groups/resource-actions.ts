@@ -53,8 +53,8 @@ export async function removeResource(_previous: PortalResult, data: FormData): P
   return mutate(principal => deleteDocument(db(), principal, value(data, 'documentId'), Number(value(data, 'version'))));
 }
 
-const linkProblems = { not_https: 'Links need to start with https.', has_login: 'Loop does not keep a link that holds a user name or password.', has_port: 'Loop does not keep a link that names a port.', host_not_a_name: 'The link’s host must be a normal domain name.', too_long: 'That link is too long. Use a shorter share link.', not_a_link: 'That is not a link Loop can keep.' } as const;
-const refusals = { busy: 'Loop was busy. Try again in a moment.', cap: 'Too many changes this hour. Try again later.', members_only: 'Only members of the group can add to Resources.', organizers_only: 'Only owners and organizers of the group can do this.', not_found: 'This is no longer there.', texts_full: 'This group keeps 100 texts. Remove one first.' } as const;
+const linkProblems = { not_https: 'Links need to start with https.', has_login: 'Loopd does not keep a link that holds a user name or password.', has_port: 'Loopd does not keep a link that names a port.', host_not_a_name: 'The link’s host must be a normal domain name.', too_long: 'That link is too long. Use a shorter share link.', not_a_link: 'That is not a link Loopd can keep.' } as const;
+const refusals = { busy: 'Loopd was busy. Try again in a moment.', cap: 'Too many changes this hour. Try again later.', members_only: 'Only members of the group can add to Resources.', organizers_only: 'Only owners and organizers of the group can do this.', not_found: 'This is no longer there.', texts_full: 'This group keeps 100 texts. Remove one first.' } as const;
 const failed = (message: string): Partial<PortalResult> => ({ status: 'error', message });
 /** A text's name when none was given: its first words. */
 const firstWords = (words: string) => singleLine(words).slice(0, 80) || 'Text';

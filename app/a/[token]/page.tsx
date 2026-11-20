@@ -88,7 +88,7 @@ export default async function SharedAskPage({ params }: { params: Promise<{ toke
         <label>{todo ? 'New due time' : 'New closing time'} ({ask.timezone})<input name="closesAt" type="datetime-local" required /></label>
         <p>{ask.open ? 'Everything already recorded stays.' : `It takes ${todo ? 'being marked done' : 'answers'} again until the new time. Everything already recorded stays.`}</p></ActionForm></section>}
       {ask.canClose && <section className="lt-editor"><ActionForm action={closeTeamAsk} label="Close this ask now">{ids}<p>No more answers will be taken. It can be opened again with a new date.</p></ActionForm></section>}
-      {portal ? <p><Link href={`${groupPath(namespace, groupSlug)}/team?tab=asks`}>Open the team page</Link></p> : <p><Link href="/">Back to Loop</Link></p>}
+      {portal ? <p><Link href={`${groupPath(namespace, groupSlug)}/team?tab=asks`}>Open the team page</Link></p> : <p><Link href="/">Back to Loopd</Link></p>}
     </div></main></div>;
   }
   const { join, signedIn } = share;

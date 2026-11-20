@@ -20,7 +20,7 @@ import { Bar } from './bar';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const at = vi.hoisted(() => ({ params: {} as Record<string, string>, path: '/groups' }));
-vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path, useSearchParams: () => new URLSearchParams() }));
+vi.mock('next/navigation', async original => ({ ...await original<typeof import('next/navigation')>(), useParams: () => at.params, usePathname: () => at.path, useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
 
 // PREVIEW_DIR=… writes each state as a static page for screenshots.
 const preview = (name: string) => process.env.PREVIEW_DIR && writeFileSync(`${process.env.PREVIEW_DIR}/${name}.html`, `<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..600&display=swap" rel="stylesheet"><link rel="stylesheet" href="loop.css"><style>.lp{--font-archivo:Archivo}</style></head><body><div class="lp"><aside class="lp-rail"></aside><main class="lp-main"><div class="lp-wrap">${document.body.firstElementChild!.innerHTML}</div></main></div></body></html>`);
@@ -192,16 +192,14 @@ it('names in the bar the top groups a person can open, and the one they are in',
   expect(mine.map(group => `${group.depth} ${group.name} ${group.handle}`)).toEqual(['0 Team 1 @emba-2027/team-1', '1 NBAE 6830 @emba-2027/nbae-6830']);
   at.params = { namespace: 'emba-2027', slug: 'nbae-6830' }; at.path = '/groups/emba-2027/in/nbae-6830/team';
   render(<Bar groups={mine} face={null} account={null} />);
-  // Team 1 is the highest group this person can open; NBAE 6830 is inside it and is named because they are in it.
-  expect(screen.getByRole('link', { name: /Team 1/ })).toHaveAttribute('href', '/groups/emba-2027/in/team-1/team');
-  expect(screen.getByRole('link', { name: /NBAE 6830/ })).toHaveAttribute('aria-current', 'page');
-  expect(screen.getByRole('link', { name: 'All groups' })).toHaveAttribute('href', '/groups');
+  // The bar names no group: the Groups counter is the way to each of them. Someone in a group has Assistants there.
+  expect(screen.queryByRole('link', { name: /Team 1/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'All groups' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /Assistants/ })).toHaveAttribute('href', '/groups/connections');
   // The Ink tab is in this bar too (openspec/changes/loop-ink-placements), and the avatar sits on its blot only with Ink.
   expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('href', '/c/ink');
   expect(screen.getByRole('button', { name: 'Your account and colours' }).querySelector('.cs-blot')).toBeNull();
   cleanup(); at.params = {}; at.path = '/groups';
   render(<Bar groups={mine} face={null} ink account={null} />);
   expect(screen.getByRole('button', { name: 'Your account and colours. You have Ink' }).querySelector('.cs-blot')).not.toBeNull();
-  expect(screen.queryByRole('link', { name: /NBAE 6830/ })).not.toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'All groups' })).toHaveAttribute('aria-current', 'page');
 });

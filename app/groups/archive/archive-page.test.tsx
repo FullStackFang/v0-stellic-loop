@@ -21,7 +21,7 @@ it('tells the story newest first, and every file it links to exists', async () =
   const titles = screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent);
   expect(titles).toHaveLength(4);
   expect(titles[0]).toMatch(/A layer between your AI and your groups/);
-  expect(titles[3]).toMatch(/Campus Loop/);
+  expect(titles[3]).toMatch(/Campus Loopd/);
   expect(screen.getAllByText(/What turned us/)).toHaveLength(3);
   const files = [...new Set([...document.querySelectorAll('a[href^="/demo/"]')].map(a => a.getAttribute('href')!))];
   expect(files.length).toBeGreaterThan(55);

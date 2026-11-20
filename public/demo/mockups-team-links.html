@@ -171,7 +171,7 @@ body.phone .main{max-width:390px;padding:0 16px 40px;margin:0 auto;box-shadow:0 
 .tags span:not(.chip) + span:not(.chip)::before{content:'·';margin:0 7px}
 .who small{white-space:nowrap}
 
-/* in chat: the assistant's side of the same thing. The chat around the card is not Loop's to style */
+/* in chat: the assistant's side of the same thing. The chat around the card is not Loopd's to style */
 .chats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:20px;align-items:start;margin-top:8px}
 .chats h3{font-size:15px}.chats h3 + p{font-size:13px;color:var(--muted);margin:2px 0 10px;min-height:38px}
 .chat{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0;background:oklch(98.2% 0.004 90);border:1px solid oklch(88% 0.008 90);border-radius:14px;padding:14px;color:oklch(24% 0.005 90)}
@@ -237,7 +237,7 @@ body.phone .main{max-width:390px;padding:0 16px 40px;margin:0 auto;box-shadow:0 
 </div>
 <p class="why" id="why"></p>
 <div class="shell">
-  <nav class="rail" aria-label="Team 1"><div class="word"><svg data-rings></svg>Loop</div><p>Team 1</p>
+  <nav class="rail" aria-label="Team 1"><div class="word"><svg data-rings></svg>Loopd</div><p>Team 1</p>
     <a href="#" data-go="team"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 7 8 2.5 13.5 7v6.5h-11z"/></svg>Team</a>
     <a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c.6-2.6 2.5-4 5-4s4.4 1.4 5 4"/></svg>Members</a>
     <a href="#" data-go="resources"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 2.5h5.5L12 5v8.5H4zM9.5 2.5V5H12M6 8h4M6 10.5h4"/></svg>Resources</a>
@@ -294,7 +294,7 @@ const WHY={
   b:'<b>B · Tab.</b> Resources stop being a separate page and become a tab of the team page, next to Outputs. One box at the top takes anything: paste a link, drop a file, or paste text, and it shows what it found before you add it. The rail\'s Resources opens this tab.',
   c:'<b>C · Side panel.</b> Links head the right column, beside the record, on every tab. Nothing moves in the main column. On a narrow window or a phone the column drops below the record, so the links end up at the bottom.',
 };
-const SAME=' In all three: Loop keeps the address, a name and one line on what it is for, never the file. Your assistant gets the list with the brief and opens each link with your own access.';
+const SAME=' In all three: Loopd keeps the address, a name and one line on what it is for, never the file. Your assistant gets the list with the brief and opens each link with your own access.';
 
 function plate(){return `<header class="plate">${rings()}
   <div><p class="mono">@nbae-6830/team-1</p><h1>Team 1</h1><p>Pitch a new venture to the NBAE 6830 panel: a deck, a model and a ten minute talk.</p></div>
@@ -330,7 +330,7 @@ function library(){
   const list=cur(),tx=texts();
   return `<form class="compose" id="compose" novalidate>
     <button type="button" class="plus" id="plus" aria-label="Add a link, a file or text"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
-    <textarea id="box" rows="1" aria-label="Add to resources" placeholder="Paste a link, drop a file, or paste text. Loop works out which."></textarea>
+    <textarea id="box" rows="1" aria-label="Add to resources" placeholder="Paste a link, drop a file, or paste text. Loopd works out which."></textarea>
     <label class="pickfile go">Choose a file<input type="file" id="file" accept=".pdf,.txt,.md" hidden></label>
     <div id="detect" hidden></div></form>
   <p class="meta">The tags under each one are worked out by an assistant from what it read: what it is, what it is for, who it is for, and any date in it. Nobody types them.</p>
@@ -365,7 +365,7 @@ function showFound(next){
      <p class="hint" style="margin:0;align-self:center">Nothing else to fill in. An assistant works out what it is for, and for whom, when it first reads it.</p><button class="btn fill">Add link</button>`
    :next.type==='file'?`<div class="found">${tile('text')}<div><b>File</b><small>${esc(next.file.name)} · ${size(next.file.size)}</small></div></div>
      <label class="field">Name<input name="name" maxlength="80" value="${esc(next.file.name.replace(/\.[a-z0-9]+$/i,''))}"></label>
-     <p class="hint" style="margin:0;align-self:center">Loop reads the words and does not keep the file. An assistant tags it when it first reads it.</p><button class="btn fill">Add text</button>`
+     <p class="hint" style="margin:0;align-self:center">Loopd reads the words and does not keep the file. An assistant tags it when it first reads it.</p><button class="btn fill">Add text</button>`
    :`<div class="found">${tile('text')}<div><b>Text</b><small>Searchable by assistants</small></div></div>
      <label class="field">Name<input name="name" maxlength="80" placeholder="Interview transcript"></label>
      <p class="hint" style="margin:0;align-self:center">Kept as pasted. An assistant tags it when it first reads it.</p><button class="btn fill">Add text</button>`;
@@ -394,24 +394,24 @@ function render(){
   document.querySelectorAll('.rail a').forEach(a=>{const on=a.dataset.go&&(a.dataset.go==='resources')===onResources;on?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current');});
   const main=document.getElementById('main');
   if(state.page==='chat'){
-    document.getElementById('why').innerHTML='<b>In chat.</b> You hand your assistant a file and say where it should go in a few words, or none. It reads the file, works out the tags and the group, and saves. It only stops to ask when it cannot tell, and then it asks on a Loop card, one tap to answer. Tap a group on the right to see it save.';
+    document.getElementById('why').innerHTML='<b>In chat.</b> You hand your assistant a file and say where it should go in a few words, or none. It reads the file, works out the tags and the group, and saves. It only stops to ask when it cannot tell, and then it asks on a Loopd card, one tap to answer. Tap a group on the right to see it save.';
     const doc='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.500h5.500L12 5v8.500H4zM9.500 2.500V5H12M6 8h4M6 10.500h4"/></svg>';
     const facts=rows=>`<dl class="facts2">${rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
-    const saved=(group,name,sum,rows)=>`<div class="card"><div class="brand">${rings()}Loop</div><div class="cbody">
+    const saved=(group,name,sum,rows)=>`<div class="card"><div class="brand">${rings()}Loopd</div><div class="cbody">
       <p class="cmeta">Saved to ${group} · just now</p><p class="words">${name}</p><p class="quiet">${sum}</p>
-      <div class="citem">${facts(rows)}</div><div class="crow"><button class="go">Open in Loop</button><button>Change a tag</button><button>Undo</button></div></div></div>`;
+      <div class="citem">${facts(rows)}</div><div class="crow"><button class="go">Open in Loopd</button><button>Change a tag</button><button>Undo</button></div></div></div>`;
     const memo=[['Kind','Draft'],['About','Deal memo, valuation section'],['For','Whole team'],['Date in it','Due Nov 24'],['Read from','Valuation memo, draft 2.docx']];
-    main.innerHTML=`<p class="crumbs"><span>Outside Loop</span><span>›</span><b>Your assistant's chat</b></p>
+    main.innerHTML=`<p class="crumbs"><span>Outside Loopd</span><span>›</span><b>Your assistant's chat</b></p>
     <div class="chats">
       <div><h3>It can tell: saved, nothing asked</h3><p>The file names the team and the date, so there is nothing to ask.</p>
-        <div class="chat"><div class="me"><div class="attach">${doc}Team1 - Loop what to prove before December 4.docx</div>Put this where the team can find it.</div>
+        <div class="chat"><div class="me"><div class="attach">${doc}Team1 - Loopd what to prove before December 4.docx</div>Put this where the team can find it.</div>
         <p class="says">Saved to Team 1. It is a plan for the whole team, with a December 4 date in it.</p>
-        ${saved('Team 1','Loop: what to prove before December 4','The three things the pilot has to show by December 4, and who checks each one.',[['Kind','Plan'],['About','Loop pilot'],['For','Whole team'],['Date in it','Dec 4'],['Read from','Team1 - Loop what to prove before December 4.docx']])}</div></div>
+        ${saved('Team 1','Loopd: what to prove before December 4','The three things the pilot has to show by December 4, and who checks each one.',[['Kind','Plan'],['About','Loopd pilot'],['For','Whole team'],['Date in it','Dec 4'],['Read from','Team1 - Loopd what to prove before December 4.docx']])}</div></div>
       <div><h3>It cannot tell: one question, then saved</h3><p>Two groups fit, so it asks before saving. Everything else is already worked out.</p>
-        <div class="chat"><div class="me"><div class="attach">${doc}Valuation memo, draft 2.docx</div>Save this to Loop.</div>
+        <div class="chat"><div class="me"><div class="attach">${doc}Valuation memo, draft 2.docx</div>Save this to Loopd.</div>
         ${state.asked?`<p class="says">Saved to ${state.asked}.</p>${saved(state.asked,'Valuation memo, draft 2','Draft of the valuation section: comparable companies and a first DCF range.',[['Kind','Draft'],...memo.slice(1)])}`
         :`<p class="says">One question before I save this.</p>
-        <div class="card"><div class="brand">${rings()}Loop</div><div class="cbody">
+        <div class="card"><div class="brand">${rings()}Loopd</div><div class="cbody">
           <p class="cmeta">Not saved yet</p><p class="words">Which group is this for?</p>
           <p class="quiet">It reads like NBAE 6561 work, but Team 1 also has an open claim on valuation.</p>
           <div class="crow"><button data-ask="NBAE 6561 Investment Banking">NBAE 6561 Investment Banking</button><button data-ask="Team 1">Team 1</button><button data-ask="NBAE 6830 Innovation and New Venture Creation">NBAE 6830</button></div>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop Ink</title>
+<title>Loopd Ink</title>
 <script>
 // Inside the app (/c/ink) the page wears the colours of the school the person is in: it reads them from the campus
 // screen around it, and again whenever the person picks other colours. Opened on its own it keeps the Cornell ones below.
@@ -169,7 +169,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 .mine label { display: block; margin-bottom: 10px; font-size: 15px; font-weight: 640; }
 .perks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 30px; } .perks span { padding: 8px 18px 9px; border-radius: 99px; font-size: 17px; font-weight: 680; letter-spacing: -0.02em; background: var(--ink); color: var(--hot); }
 
-/* Save your picture: the three shapes it comes in, each with the Loop mark until Ink+ takes it off */
+/* Save your picture: the three shapes it comes in, each with the Loopd mark until Ink+ takes it off */
 .take { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .6fr) minmax(0, 1fr); gap: 16px; align-items: end; } .take figure { display: grid; justify-items: center; gap: 12px; }
 .shot { position: relative; width: 100%; display: grid; justify-items: center; align-content: center; border-radius: 16px 16px 16px 5px; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink); --lit: var(--paper); overflow: hidden; }
 .shot.sq { aspect-ratio: 1; } .shot.tall { aspect-ratio: 9 / 16; padding-bottom: 16%; } .shot img { width: 74%; } .shot.tall img { width: 96%; margin-top: 30%; }
@@ -286,7 +286,7 @@ body { position: relative; }
 </style>
 </head>
 <body>
-<div class="mock"><b>Mockup</b><span>Loop Ink. Prices, limits, people and places are placeholders. Scroll through "the term" slowly, and press the page in the hero.</span></div>
+<div class="mock"><b>Mockup</b><span>Loopd Ink. Prices, limits, people and places are placeholders. Scroll through "the term" slowly, and press the page in the hero.</span></div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="ink" x="-6%" y="-6%" width="112%" height="112%">
   <feTurbulence type="fractalNoise" baseFrequency="1.05" numOctaves="1" seed="2" result="fine"/><feDisplacementMap in="SourceGraphic" in2="fine" scale="0.9" xChannelSelector="R" yChannelSelector="G" result="rough"/>
@@ -294,7 +294,7 @@ body { position: relative; }
 </filter></svg>
 
 <header class="nav"><div class="wrap">
-  <a class="wm" href="#top"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="oklch(48.5% 0.185 27)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</a>
+  <a class="wm" href="#top"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="oklch(48.5% 0.185 27)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd</a>
   <a class="btn go" href="#plans">Get Ink</a>
 </div></header>
 
@@ -317,7 +317,7 @@ body { position: relative; }
   <div class="plans-head"><h2 class="d">Pick one.</h2>
     <div class="cycle" role="group" aria-label="Billing"><button aria-pressed="true" data-cycle="month">Monthly</button><button aria-pressed="false" data-cycle="year">Yearly<i>2 months free</i></button></div></div>
   <div class="tiers">
-    <div class="tk"><div class="tk-main"><h3>Loop</h3><ul>
+    <div class="tk"><div class="tk-main"><h3>Loopd</h3><ul>
       <li><span class="ck"></span>Post, join, show up</li><li><span class="ck"></span>Map, tags, rewards</li><li><span class="ck"></span>30 days of stamps</li><li><span class="ck"></span>One pet animal</li></ul></div>
       <div class="tk-stub"><span class="price"><b>$0</b><span>for good</span></span><a class="btn" href="#compare">You have it</a></div></div>
     <div class="tk prem"><div class="tk-main"><h3>Ink <i>Most picked</i></h3><ul>
@@ -334,7 +334,7 @@ body { position: relative; }
   <div class="cal" id="cal"><div class="win"></div></div>
   <div class="months" id="months" aria-hidden="true"></div>
   <div class="duo">
-    <figure><div class="keep"><b id="n-free">1</b>stamps<span class="tag">Loop</span></div><div class="book" data-book="free"></div></figure>
+    <figure><div class="keep"><b id="n-free">1</b>stamps<span class="tag">Loopd</span></div><div class="book" data-book="free"></div></figure>
     <figure><div class="keep"><b id="n-prem">1</b>stamps<span class="tag p">Ink</span></div><div class="book" data-book="prem"></div></figure>
   </div>
 </div></div></section>
@@ -344,9 +344,9 @@ body { position: relative; }
     <div class="cycle" role="group" aria-label="What to make yours"><button aria-pressed="true" data-show="kits">Colours</button><button aria-pressed="false" data-show="save">Picture</button><button aria-pressed="false" data-show="splat">Splat</button></div></div>
   <div class="stack">
   <div class="show" id="kits">
-    <div class="kit-view" data-kit="nyu"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span><span class="btn go">I'm in</span></div>
+    <div class="kit-view" data-kit="nyu"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd</span><span class="btn go">I'm in</span></div>
     <div class="kits" role="group" aria-label="Colours">
-      <button aria-pressed="false" data-pick="loop"><s data-kit="loop"></s>Loop</button>
+      <button aria-pressed="false" data-pick="loop"><s data-kit="loop"></s>Loopd</button>
       <button aria-pressed="false" data-pick="cornell"><s data-kit="cornell"></s>Cornell<i class="own">Yours</i></button>
       <hr>
       <button aria-pressed="false" data-pick="columbia" data-plus><s data-kit="columbia"></s>Columbia<i>Ink+</i></button>
@@ -357,11 +357,11 @@ body { position: relative; }
   </div>
   <div class="show" id="save" inert>
     <div class="take">
-      <figure><div class="shot sq"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Profile</figcaption></figure>
-      <figure><div class="shot tall"><img src="../animals/37.png" alt=""><b>Ana Lopez</b><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loop</span></div><figcaption class="lab">Lock screen</figcaption></figure>
+      <figure><div class="shot sq"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd</span></div><figcaption class="lab">Profile</figcaption></figure>
+      <figure><div class="shot tall"><img src="../animals/37.png" alt=""><b>Ana Lopez</b><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd</span></div><figcaption class="lab">Lock screen</figcaption></figure>
       <figure><div class="shot cut"><img src="../animals/37.png" alt=""><span class="lk"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="16" cy="10.5" r="6.5" stroke="var(--lit)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg></span></div><figcaption class="lab">Sticker</figcaption></figure>
     </div>
-    <div class="row"><div class="cycle" id="mark" role="group" aria-label="Loop mark"><button aria-pressed="true">With the mark</button><button aria-pressed="false" data-bare>No mark<i>Ink+</i></button></div><span id="mark-says">Free for everyone</span></div>
+    <div class="row"><div class="cycle" id="mark" role="group" aria-label="Loopd mark"><button aria-pressed="true">With the mark</button><button aria-pressed="false" data-bare>No mark<i>Ink+</i></button></div><span id="mark-says">Free for everyone</span></div>
   </div>
   <div class="show" id="splat" inert>
     <div id="splats" style="display:grid;gap:30px"></div>
@@ -406,7 +406,7 @@ body { position: relative; }
 </div></section>
 
 <section class="band b-ink" id="explore"><div class="wrap">
-  <div class="say"><h2 class="d">Go explore.</h2><p>Loop is local, and your own campus stays free. Ink joins plans at every other school.</p></div>
+  <div class="say"><h2 class="d">Go explore.</h2><p>Loopd is local, and your own campus stays free. Ink joins plans at every other school.</p></div>
   <div class="show">
     <div class="mini" style="--n:0">Cornell · Ithaca<span class="lab h">Yours</span></div>
     <div class="mini" style="--n:1">Cornell Tech<span class="lab">Free</span></div>
@@ -417,7 +417,7 @@ body { position: relative; }
 
 <section class="rest" id="compare"><div class="wrap">
   <h2 class="d">Side by side.</h2>
-  <div class="cmp"><table><thead><tr><th></th><th>Loop</th><th>Ink</th><th>Ink+</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <div class="cmp"><table><thead><tr><th></th><th>Loopd</th><th>Ink</th><th>Ink+</th></tr></thead><tbody id="rows"></tbody></table></div>
 </div></section>
 
 <section class="rest" style="padding-top:0"><div class="wrap">
@@ -468,7 +468,7 @@ function turn() {
   const t = pinned ? Math.min(1, Math.max(0, -term.getBoundingClientRect().top / room)) : 1, day = forced === null ? Math.round(Math.min(1, t * 1.12) * END) : +forced;
   for (const [id, held] of [['n-free', show(free, day)], ['n-prem', show(prem, day)]]) { const count = document.getElementById(id); if (count.textContent !== String(held)) { count.textContent = held; count.classList.remove('roll'); void count.offsetWidth; count.classList.add('roll'); } }
   document.getElementById('date').textContent = dayName(day);
-  // the coral window is the 30 days Loop still remembers
+  // the coral window is the 30 days Loopd still remembers
   const right = 2 + day / END * 96, left = Math.max(0, 2 + (day - KEPT) / END * 96);
   win.style.left = `${left}%`; win.style.width = `${right - left}%`; document.getElementById('since').textContent = day > KEPT ? 'Free remembers back to ' + dayName(day - KEPT) : 'Fall term';
 }
@@ -536,7 +536,7 @@ document.querySelector('.cycle').addEventListener('click', event => {
       ${free ? '' : `<g class="school">${blot.schoolDrops.filter(clear).map(drop(false, n)).join('')}</g>`}<g class="${plus ? 'third' : 'dark'}">${far.map(drop(plus, n)).join('')}</g></svg>`;
   }
   const face = n => `../animals/${String(n).padStart(2, '0')}.png`;
-  document.getElementById('splats').innerHTML = [['free', 'Loop', 'Sam', 21], ['ink', 'Ink', 'Maya', 12], ['plus', 'Ink+', 'Josh', 37]].map(([plan, name, seed, mine], at) =>
+  document.getElementById('splats').innerHTML = [['free', 'Loopd', 'Sam', 21], ['ink', 'Ink', 'Maya', 12], ['plus', 'Ink+', 'Josh', 37]].map(([plan, name, seed, mine], at) =>
     `<div class="ld" style="--at:${at * .22}s"><i>${name}</i><span class="ld-main"><b>Looping you in…</b><span class="ld-seats">${[5, 8, 17, mine].map(n => `<img src="${face(n)}" alt="">`).join('')}</span></span><span class="ld-stub"></span>${splat(plan, seed)}</div>`).join('');
   const box = document.getElementById('splat');
   const play = () => { box.classList.remove('go'); void box.offsetWidth; box.classList.add('go'); };

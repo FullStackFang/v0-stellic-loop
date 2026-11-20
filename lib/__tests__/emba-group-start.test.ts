@@ -71,7 +71,7 @@ it('starts a group inside a group only where the person may, and makes nothing w
   expect(await accessRequestPreview(t.db, report.joinToken!)).toMatchObject({ groupName: 'Team 1' });
   expect((await start(outer, { name: 'Mine', slug: 'mine' })).group).toMatchObject({ namespace: 'mine' });
 });
-it('keeps a Drive folder as a link like any other: Loop itself never reads Drive', async () => {
+it('keeps a Drive folder as a link like any other: Loopd itself never reads Drive', async () => {
   const owner = await pilot(), folder = 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz012345';
   expect(await start(owner, { links: [folder] })).toMatchObject({ added: { links: [folder] }, failed: [] });
   expect((await t.db.query("select to_regclass('emba_drive_folder') as found")).rows).toEqual([{ found: null }]);

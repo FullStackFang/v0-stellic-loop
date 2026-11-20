@@ -63,7 +63,7 @@ async function keepLarge(q: Q, token: string, large: Uint8Array): Promise<void> 
 export const drawFace: Draw = async (upload, changes = [], note = '') => {
   let photo: Buffer;
   try { photo = await sharp(upload).rotate().resize(1024, 1024, { fit: 'inside' }).flatten({ background: '#fff' }).png().toBuffer(); }
-  catch { throw new CampusError('That file is not a photo Loop can read. Try a JPEG or a PNG.'); }
+  catch { throw new CampusError('That file is not a photo Loopd can read. Try a JPEG or a PNG.'); }
   try {
     const { animal, nearest } = await look(photo);
     if (!animal) throw new CampusError('That does not look like an animal. Try a clear photo of one animal.');
@@ -152,7 +152,7 @@ export async function keepPicture(db: Db, personId: string, keep: string): Promi
   });
 }
 
-/** "Subscribe" to Loop Premium. Nothing is charged: that they asked, and the email they gave, is kept. Asking twice changes nothing. */
+/** "Subscribe" to Loopd Premium. Nothing is charged: that they asked, and the email they gave, is kept. Asking twice changes nothing. */
 export async function subscribe(q: Q, personId: string, email: string, place: AskPlace = 'own animal'): Promise<void> {
   const given = email.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(given)) throw new CampusError('Enter the email to subscribe with.');
@@ -191,7 +191,7 @@ export async function customFaceImage(q: Q, token: string): Promise<Uint8Array |
   const { rows: [row] } = await q.query<{ image: string | null }>("select encode(image,'base64') as image from campus_custom_picture where token=$1", [token]);
   return row?.image ? Buffer.from(row.image, 'base64') : null;
 }
-/** A made animal as large as Loop has it, for saving it out of the app: the large drawing, or else the 192px picture. */
+/** A made animal as large as Loopd has it, for saving it out of the app: the large drawing, or else the 192px picture. */
 export async function customFaceLarge(q: Q, token: string): Promise<Uint8Array | null> {
   if (!z.uuid().safeParse(token).success) return null;
   // Before the migration that adds the column is run, there is only the small one.

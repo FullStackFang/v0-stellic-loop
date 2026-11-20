@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { askSchoolAction } from '@/app/c/actions';
+import { SeatsWord } from '@/components/loading/seats';
 
 /** A headline of whole lines, sized so the longest one runs from edge to edge of the room it has. */
 export function FitLines({ lines }: { lines: ReactNode[] }) {
@@ -42,19 +43,10 @@ export function ConnectLinkedin({ other, fallback }: { other?: ReactNode; fallba
       window.location.assign(to.href);
     } catch { setMessage('LinkedIn did not connect. Try again in a moment.'); }
   });
-  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>Continue with LinkedIn</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
+  return <><div className="cs-ns-row"><button type="button" className="cs-btn go" disabled={busy || !user} onClick={connect}>{busy ? <SeatsWord word="Continue with LinkedIn" plate /> : 'Continue with LinkedIn'}</button>{other}</div>{message && <p role="alert">{message}</p>}</>;
 }
 
-/** "My school is not here yet": a pill that opens the box for naming it. Open from the start once a school is named. */
-export function NotHere({ asked, email }: { asked: string | null; email: string | null }) {
-  const [open, setOpen] = useState(asked !== null);
-  return <>
-    <div className="cs-ns-row"><button type="button" className="cs-kit" aria-pressed={open} onClick={() => setOpen(!open)}><i />My school is not here yet</button></div>
-    {open && <SchoolAsk asked={asked} email={email} />}
-  </>;
-}
-
-/** "Which school are you at?": one box and one button, and afterwards the school they named, kept. */
+/** "Sign up my school", for a school Loopd is not at yet: one box and one button, and afterwards the school they named, kept. */
 export function SchoolAsk({ asked, email }: { asked: string | null; email: string | null }) {
   const [kept, setKept] = useState(asked), [typed, setTyped] = useState(''), [message, setMessage] = useState(''), [busy, start] = useTransition();
   const add = (event: FormEvent) => {
@@ -66,14 +58,14 @@ export function SchoolAsk({ asked, email }: { asked: string | null; email: strin
     });
   };
   if (kept) return <>
-    <div className="cs-ns-kept"><small>We will email you when Loop opens at</small><b>{kept}</b><span className="cs-ns-stamp">On the list</span></div>
+    <div className="cs-ns-kept"><small>We will email you when Loopd opens at</small><b>{kept}</b><span className="cs-ns-stamp">On the list</span></div>
     <div className="cs-ns-row"><button className="cs-btn" onClick={() => { setTyped(kept); setKept(null); }}>Change school</button></div>
   </>;
   return <>
     <form className="cs-ns-row" onSubmit={add}>
-      <input className="cs-ns-box" aria-label="Your school" placeholder="Your school" autoComplete="off" maxLength={120} required value={typed} onChange={event => setTyped(event.target.value)} />
-      <button className="cs-btn go" disabled={busy}>Add my school</button>
+      <input className="cs-ns-box" aria-label="Your school" placeholder="School not listed? Type its name" autoComplete="off" maxLength={120} required value={typed} onChange={event => setTyped(event.target.value)} />
+      <button className="cs-btn" disabled={busy}>{busy ? <SeatsWord word="Sign up my school" /> : 'Sign up my school'}</button>
     </form>
-    <p role="status">{message || `We will email ${email ?? 'you'} when Loop opens there.`}</p>
+    <p role="status">{message || `We will email ${email ?? 'you'} when Loopd opens there.`}</p>
   </>;
 }

@@ -7,7 +7,7 @@ import {lineSchema} from './team-text';
 
 // Travel (design D2 of loop-trip). One entry per member per team: when and
 // where they arrive and leave, and optionally a flight number and where they
-// are staying. It is the member's own statement: only they write it, Loop
+// are staying. It is the member's own statement: only they write it, Loopd
 // checks no flight and concludes nothing from it. Members and followers of the
 // team read every entry; nobody outside the team reads any.
 
@@ -21,7 +21,7 @@ export type TravelLeg={
  /** False when the member stated the day and no time. */
  timed:boolean;place:string|null;flight:string|null};
 export type TravelEntry={who:Member;arrival:TravelLeg|null;departure:TravelLeg|null;stay:string|null;
- /** When the member last changed it, as a date in the team's timezone. Loop does not check flights. */
+ /** When the member last changed it, as a date in the team's timezone. Loopd does not check flights. */
  changedOn:string;assistant:string|null;
  /** Another member whose stated arrival (or departure) is at the caller's place within two hours of the caller's. Never set on the caller's own entry. */
  nearYourArrival:boolean;nearYourDeparture:boolean};

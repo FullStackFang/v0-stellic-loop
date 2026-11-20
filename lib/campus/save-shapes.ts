@@ -20,7 +20,7 @@ const KIT: Record<string, { field: Lch; ink: Lch; action: Lch }> = {
   cuny: { field: [0.88, 0.13, 88], ink: [0.24, 0.08, 265], action: [0.38, 0.18, 264] },
   nyu: { field: [0.85, 0.09, 305], ink: [0.24, 0.08, 305], action: [0.4, 0.2, 305] },
 };
-/** A ground a picture sits on: its colour, what is written on it, and the one lit ring of the Loop mark. */
+/** A ground a picture sits on: its colour, what is written on it, and the one lit ring of the Loopd mark. */
 export type Ground = { key: string; name: string; bg: Lch; fg: Lch; lit: Lch };
 /** Grounds that belong to no school. A school whose own colour is one of them is offered the next instead. */
 const OTHERS: (Ground & { kit: string })[] = [

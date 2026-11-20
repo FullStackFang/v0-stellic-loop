@@ -72,7 +72,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 15px; 
 
 <div class="mock"><span><b>The Ink blot as real ink on paper.</b> Four kinds, each made from the member's name. Hover a face.</span>
   <div id="blots"><small>Ink colour</small><button data-blot="blue" aria-pressed="true">Ink blue</button><button data-blot="school">School colour</button><button data-blot="dark">Dark</button></div>
-  <div id="kits"><small>School</small><button data-kit="cornell" aria-pressed="true">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button><button data-kit="loop">Loop</button></div></div>
+  <div id="kits"><small>School</small><button data-kit="cornell" aria-pressed="true">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button><button data-kit="loop">Loopd</button></div></div>
 
 <main class="grid" id="grid"></main>
 
@@ -152,7 +152,7 @@ function face(style, name, size) {
 const faces = (style, names, size) => names.map(name => face(style, name, size)).join('');
 /** The same for every way of drawing: the bar with the tab and your face, four members large, then a ticket's seats and a row of overlapping faces. */
 const slice = style => `
-  <div class="nav"><span class="tab" aria-current="page">This week</span><span class="tab">Near you</span><span class="tab plan">${blot(style, 'Loop Ink', 20).replace('class="blot" ', '')}Ink</span>${face(style, 'Stephen', 38)}</div>
+  <div class="nav"><span class="tab" aria-current="page">This week</span><span class="tab">Near you</span><span class="tab plan">${blot(style, 'Loopd Ink', 20).replace('class="blot" ', '')}Ink</span>${face(style, 'Stephen', 38)}</div>
   <div class="body">
     <div class="big">${faces(style, ['Stephen', 'Ben', 'Eve', 'Gus'], 100)}</div>
     <div class="pair">

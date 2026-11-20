@@ -22,7 +22,7 @@ async function main() {
   const lease = await grantLease(t.db,member,{clientId:'local-demo',actions:['memory:read'],expiresAt:new Date(claims.expiresAt).toISOString()});
   const server = createMemoryMcpServer(t.db,delegate);
   if (process.argv.includes('--stdio')) {
-    console.error('Synthetic Loop demo only: disposable memory; no real accounts or OAuth.');
+    console.error('Synthetic Loopd demo only: disposable memory; no real accounts or OAuth.');
     const transport = new StdioServerTransport(process.stdin,process.stdout,{maxBufferSize:32768});
     server.server.onclose = () => { void t.close(); };
     await server.connect(transport);
@@ -49,4 +49,4 @@ async function main() {
   }
 }
 
-main().catch(() => { console.error('Loop rehearsal failed; no credentials or private payloads logged.'); process.exitCode=1; });
+main().catch(() => { console.error('Loopd rehearsal failed; no credentials or private payloads logged.'); process.exitCode=1; });

@@ -16,4 +16,4 @@ async function main() {
 }
 
 // Stdout belongs exclusively to the MCP protocol. Never log token or claims.
-main().catch(() => { console.error('Loop MCP could not start: check auth configuration, credential and identity mapping.'); process.exitCode=1; });
+main().catch(() => { console.error('Loopd MCP could not start: check auth configuration, credential and identity mapping.'); process.exitCode=1; });

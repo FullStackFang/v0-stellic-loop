@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop card in chat · directions</title>
+<title>Loopd card in chat · directions</title>
 <style>
 @font-face{font-family:Archivo;src:url(../fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%;font-display:swap}
 *{box-sizing:border-box}
@@ -41,7 +41,7 @@ body[data-theme=dark] .chat{--chat-bg:#262624;--chat-ink:#eeece6;--chat-soft:#a8
 .now .note{margin-top:6px;font-weight:500}
 .now .brand,.now .chip{display:none}
 
-/* ---------- Loop's own values (app/loop.css) ---------- */
+/* ---------- Loopd's own values (app/loop.css) ---------- */
 .lpc{--navy:oklch(35.4% 0.095 252);--blue:oklch(47.6% 0.13 250);--lime:oklch(96.4% 0.19 117);--teal:oklch(37.3% 0.052 206);--aqua:oklch(90.4% 0.1 194);
  --surface:oklch(99.3% 0.003 230);--canvas:oklch(96.2% 0.004 230);--sunk:oklch(97.7% 0.006 240);--line:oklch(90.6% 0.008 240);--line-2:oklch(85.5% 0.011 240);--muted:oklch(46.5% 0.012 245);--pale-blue:oklch(95.3% 0.017 245);
  --on-dark:oklch(99.4% 0.003 230);--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -59,7 +59,7 @@ body[data-theme=dark] .chat{--chat-bg:#262624;--chat-ink:#eeece6;--chat-soft:#a8
 .lpc button:active{transform:translateY(1px)}
 .lpc .note{margin-top:6px;font-size:12.5px;font-weight:500}
 
-/* A · Accent: sits on the chat's own background; Loop shows in the mark, the type and the pills. */
+/* A · Accent: sits on the chat's own background; Loopd shows in the mark, the type and the pills. */
 .a{color:var(--chat-ink);padding:2px 2px 0}
 .a .brand svg{color:var(--blue)}
 .a .item{padding:12px 0 0;margin:12px 0 0;border-top:1px solid var(--chat-line)}
@@ -70,7 +70,7 @@ body[data-theme=dark] .chat{--chat-bg:#262624;--chat-ink:#eeece6;--chat-soft:#a8
 body[data-theme=dark] .a .brand svg{color:var(--aqua)}
 body[data-theme=dark] .a button[aria-pressed=true],body[data-theme=dark] .a button.go{background:var(--aqua);color:var(--navy)}
 
-/* B · Panel: Loop's panel with the tight corner and the teal plate on top. */
+/* B · Panel: Loopd's panel with the tight corner and the teal plate on top. */
 .b{background:var(--surface);color:var(--navy);border:1px solid var(--line);border-radius:24px 24px 24px 6px;overflow:hidden}
 .b .brand{background:var(--teal);color:var(--on-dark);padding:12px 16px}
 .b .brand svg{color:var(--aqua)}
@@ -100,7 +100,7 @@ body[data-theme=dark] .b .note{color:var(--aqua)}
 </head>
 <body data-theme="light">
 <div class="top">
-  <h1>Loop card in chat</h1>
+  <h1>Loopd card in chat</h1>
   <p>The same result, four ways. Every button works: tap an option, tap "I'm in". Switch the chat between light and dark.</p>
   <div class="seg" role="group" aria-label="Chat theme"><button aria-pressed="true" data-t="light">Light chat</button><button aria-pressed="false" data-t="dark">Dark chat</button></div>
 </div>
@@ -108,9 +108,9 @@ body[data-theme=dark] .b .note{color:var(--aqua)}
 <script>
 (function(){
 var cols=[
- {k:'now',cls:'now',title:'Now · what shipped',why:'Takes every colour and the font from the chat. Nothing says Loop.'},
- {k:'a',cls:'lpc a',title:'A · Accent',why:'Still sits on the chat background. Loop shows in the mark, Archivo, mono tags and pill buttons.'},
- {k:'b',cls:'lpc b',title:'B · Panel',why:'Loop’s own panel: tight corner, teal plate on top, blue for what you chose. Has its own dark version.'},
+ {k:'now',cls:'now',title:'Now · what shipped',why:'Takes every colour and the font from the chat. Nothing says Loopd.'},
+ {k:'a',cls:'lpc a',title:'A · Accent',why:'Still sits on the chat background. Loopd shows in the mark, Archivo, mono tags and pill buttons.'},
+ {k:'b',cls:'lpc b',title:'B · Panel',why:'Loopd’s own panel: tight corner, teal plate on top, blue for what you chose. Has its own dark version.'},
  {k:'c',cls:'lpc c',title:'C · Plate',why:'The whole card is the teal plate, the same in light and dark. Lime marks what you chose.'}
 ];
 var n=0;
@@ -129,7 +129,7 @@ function card(col){
  var root=el('div',col.cls);
  function draw(){
   root.textContent='';
-  var brand=el('div','brand');brand.innerHTML=rings()+'<span>Loop</span><span class="chip">3 waiting</span>';root.appendChild(brand);
+  var brand=el('div','brand');brand.innerHTML=rings()+'<span>Loopd</span><span class="chip">3 waiting</span>';root.appendChild(brand);
   root.appendChild(el('p','head','3 things from your groups.'));
   // ask
   var a=el('section','item');
@@ -168,7 +168,7 @@ cols.forEach(function(col){
  var c=el('div','col');c.appendChild(el('h2','',col.title));c.appendChild(el('p','why',col.why));
  var chat=el('div','chat');
  chat.appendChild(el('p','you','Can you help me outline the DCF section?'));
- chat.appendChild(el('p','tool','Loop · waiting'));
+ chat.appendChild(el('p','tool','Loopd · waiting'));
  chat.appendChild(card(col));
  var says=el('p','says','Three things are waiting in your investment banking group: an ask about case prep night, the prep session itself, and a note on the deck template. Now, the DCF outline:');says.style.marginTop='12px';chat.appendChild(says);
  c.appendChild(chat);grid.appendChild(c);

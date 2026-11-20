@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- The Loop mark (components/LoopGlyphs.tsx, Rings) on a teal tile: aqua rings, the top one lime. -->
+  <!-- The Loopd mark (components/LoopGlyphs.tsx, Rings) on a teal tile: aqua rings, the top one lime. -->
   <defs>
     <path id="a" d="M27 37.5a23 23 0 1 0 46 0a23 23 0 1 0 -46 0"/>
     <path id="b" d="M11 64a23 23 0 1 0 46 0a23 23 0 1 0 -46 0"/>

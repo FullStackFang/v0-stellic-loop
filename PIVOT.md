@@ -1,6 +1,6 @@
-# Loop — Engagement Model (the pivot)
+# Loopd — Engagement Model (the pivot)
 
-*2026-09-23 · the current direction. Loop facilitates recurring participation
+*2026-09-23 · the current direction. Loopd facilitates recurring participation
 in campus life (studying, clubs, events) and measures student engagement as
 the byproduct. The measurement is the product; facilitation is how you earn
 the right to measure. Supersedes the advising/belonging-signal framing in
@@ -8,7 +8,7 @@ the right to measure. Supersedes the advising/belonging-signal framing in
 
 ## Thesis
 
-> Loop is the crew-and-commitment layer on top of campus life. It gives
+> Loopd is the crew-and-commitment layer on top of campus life. It gives
 > students a small recurring group — and a reason to show up — for the things
 > that make campus worth being at: study, clubs, events. In doing so it
 > produces the one thing student-affairs offices measure and can't get:
@@ -28,13 +28,13 @@ the institution the measurement of its own engagement goal.** Facilitation
 earns the right to measure. (This is exactly Stellic's move: sell the
 workflow, harvest the signal.)
 
-**What Loop measures that nobody else can.** Today's engagement measurement is
+**What Loopd measures that nobody else can.** Today's engagement measurement is
 poor:
 - NSSE — annual, self-report, lagging, low response.
 - CampusGroups — only official events, only who scanned.
 - Card swipes (rec, dining, library) — siloed, not "engagement."
 
-By facilitating the crews, Loop generates a **continuous, behavioral,
+By facilitating the crews, Loopd generates a **continuous, behavioral,
 per-student, cross-domain** read: who is in a recurring group, how many,
 attending (verified by the stake / check-in), across study + clubs + events,
 from week one, over time. A **leading** engagement index, not a lagging
@@ -44,7 +44,7 @@ engagement.
 
 **Why facilitation earns it.** You can't measure engagement by asking; you
 measure it by being the thing students use to engage. The signal is
-trustworthy and continuous *because* Loop is woven into how students
+trustworthy and continuous *because* Loopd is woven into how students
 participate — which is also why a competitor can't just buy the metric; they'd
 have to facilitate the behavior first.
 
@@ -55,15 +55,15 @@ vendor or a single-office tool can't build this.
 
 ## The facilitation layer (what students touch)
 
-Loop is **not** an events list or a club directory — that is the aggregation
+Loopd is **not** an events list or a club directory — that is the aggregation
 graveyard (Agnes, AppDev's abandoned attempts, Big Red Radar; governance and
-no-feeds make it unwinnable). Supply already exists. **Loop supplies the two
+no-feeds make it unwinnable). Supply already exists. **Loopd supplies the two
 missing ingredients that make supply get used: a crew to go with, and a
 commitment to go.**
 
 The real reason the Tuesday event is empty isn't that nobody knows — it's that
-**nobody wants to walk in alone and nobody committed.** Loop's wedge, in one
-line: *everyone else lists what's happening; Loop is the only one that
+**nobody wants to walk in alone and nobody committed.** Loopd's wedge, in one
+line: *everyone else lists what's happening; Loopd is the only one that
 assembles the group and makes them show.*
 
 Three flavors of one engine:
@@ -72,7 +72,7 @@ Three flavors of one engine:
 - **Events** → the crew that goes together (vitality anchor).
 
 Events/clubs are **ingested as anchors** (the campus Localist calendar has an
-open API); Loop owns the crew and the show-up, never the listing. Discipline:
+open API); Loopd owns the crew and the show-up, never the listing. Discipline:
 ingest supply, own the crew and the commitment. Cross that line and it's a
 dead events app.
 
@@ -80,14 +80,14 @@ dead events app.
 
 The mechanism, not the dinner. Timeleft proves four things worth stealing:
 1. **A stake converts intent into attendance.** A small refundable deposit is
-   the anti-flake lever — the answer to Loop's oldest risk (the third
+   the anti-flake lever — the answer to Loopd's oldest risk (the third
    meeting). A stake needs a commitment *problem*, so aim the engine at things
    students mean to do and don't (study, gym, going to the thing), not at pure
    fun.
 2. **A fixed recurring ritual beats ad-hoc scheduling.** A standing slot kills
    coordination cost — the direct fix for "logistical fatigue."
 3. **Blind curation is a feature.** No profiles, no browsing, no rejection —
-   the algorithm places you. (Loop already had this.)
+   the algorithm places you. (Loopd already had this.)
 4. **The activity is an interchangeable pretext.** One engine, many
    activities, many buyers.
 
@@ -137,9 +137,9 @@ in things they wanted; disclosed, it isn't surveillance.
 
 ## Honest limits
 
-1. **Loop measures what it facilitates**, not all of campus. Defense:
+1. **Loopd measures what it facilitates**, not all of campus. Defense:
    recurring small-group participation is the *high-signal* kind of engagement
-   (recurring > one-off for retention), so Loop measures the part that
+   (recurring > one-off for retention), so Loopd measures the part that
    matters — but it is not a total campus census, and shouldn't be sold as
    one.
 2. **Still hostage to the crew forming and holding.** The stake improves the
@@ -147,7 +147,7 @@ in things they wanted; disclosed, it isn't surveillance.
 3. **Engagement → retention is correlational** at the point of sale until a
    clean study exists. Sell engagement/vitality as the near-term outcome;
    earn the retention claim with the pilot.
-4. **The aggregation trap is one design decision away.** The day Loop becomes
+4. **The aggregation trap is one design decision away.** The day Loopd becomes
    "a better events app," the moat is gone.
 
 ## Where it sits

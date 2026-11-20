@@ -42,7 +42,7 @@ export async function setSchools(db: Db, who: { personId: string; verifiedEmail:
   if (!profile) throw new CampusError('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
   const campuses = await listCampuses(db), known = new Set(campuses.map(each => schoolOf(each.slug)));
   const picked = [...new Set(ticked.map(String))];
-  if (picked.some(school => !known.has(school))) throw new CampusError('Pick from the schools Loop is at.');
+  if (picked.some(school => !known.has(school))) throw new CampusError('Pick from the schools Loopd is at.');
   const placed = (await db.query<{ slug: string }>('select c.slug from campus_person p join campus c on c.id=p.campus_id where p.person_id=$1', [who.personId])).rows[0]?.slug;
   if (!placed && !picked.length) throw new CampusError('Pick at least one school.');
   try {
@@ -58,12 +58,12 @@ export async function setSchools(db: Db, who: { personId: string; verifiedEmail:
   try { await db.query('update campus_linkedin set owner_name=$2 where person_id=$1', [who.personId, owner?.trim().slice(0, 200) || null]); } catch (error) { if (!missing(error)) throw error; }
 }
 
-/** `owner` is the name on the LinkedIn account the person signed in with, or null when they only pasted an address. */
-export type LinkedinPerson = { personId: string; name: string; email: string | null; profile: string; schools: string[]; added: string; waiting: boolean; owner: string | null };
+/** `owner` is the name on the LinkedIn account the person signed in with, or null when they only pasted an address. `days` is how many whole days ago they sent it. */
+export type LinkedinPerson = { personId: string; name: string; email: string | null; profile: string; schools: string[]; added: string; days: number; waiting: boolean; owner: string | null };
 /** For the admin: everyone who added a profile, the ones waiting for approval first and then the newest, with every school it got them or would. */
 export async function linkedinPeople(q: Q): Promise<LinkedinPerson[]> {
   try {
-    const { rows } = await q.query<LinkedinPerson & { placed: string | null }>(`select l.person_id as "personId",p.name,l.email,l.profile,l.schools,to_char(l.added_at,'YYYY-MM-DD') as added,l.approved_at is null as waiting,to_jsonb(l)->>'owner_name' as owner,c.slug as placed
+    const { rows } = await q.query<LinkedinPerson & { placed: string | null }>(`select l.person_id as "personId",p.name,l.email,l.profile,l.schools,to_char(l.added_at,'YYYY-MM-DD') as added,floor(extract(epoch from now()-l.added_at)/86400)::int as days,l.approved_at is null as waiting,to_jsonb(l)->>'owner_name' as owner,c.slug as placed
       from campus_linkedin l join person p on p.id=l.person_id left join campus_person cp on cp.person_id=l.person_id left join campus c on c.id=cp.campus_id order by l.approved_at is not null,l.added_at desc,l.person_id`);
     return rows.map(({ placed, ...row }) => ({ ...row, schools: [...new Set([...(placed ? [schoolOf(placed)] : []), ...row.schools])] }));
   } catch (error) {

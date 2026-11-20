@@ -122,12 +122,12 @@ const linkWords = (result: LinkDeclined): string => {
     case 'feed_exists': return 'Not saved. This team already has that feed.';
     case 'not_yours': return 'Not saved. Only the member who added this event can take it back.';
     case 'others_interested': return 'Not saved. Other members are interested in it now, so only an owner or organizer can archive it.';
-    case 'needs_facts': return result.listed ? 'Not saved. Loop could not read that page. Give the event a name and a start time.' : 'Not saved. Loop does not read that site. Give the event a name and a start time.';
+    case 'needs_facts': return result.listed ? 'Not saved. Loopd could not read that page. Give the event a name and a start time.' : 'Not saved. Loopd does not read that site. Give the event a name and a start time.';
     default: return eventWords(result as Declined);
   }
 };
 const marked = (result: Extract<LinkWrite, { saved: true }>) => result.existing ? 'Already in this team. You are marked interested.' : 'Saved. You are marked interested.';
-/** Adds an event from a pasted link. Name, start, end and place count only when Loop cannot read the page; the answer says when to ask for them. */
+/** Adds an event from a pasted link. Name, start, end and place count only when Loopd cannot read the page; the answer says when to ask for them. */
 export async function linkTeamEvent(_previous: PortalResult, data: FormData): Promise<PortalResult> {
   const given = { name: fact(data, 'name'), startsAt: fact(data, 'startsAt'), endsAt: fact(data, 'endsAt'), place: fact(data, 'place') };
   const supplied = Object.fromEntries(Object.entries(given).filter(([, entry]) => entry !== null));

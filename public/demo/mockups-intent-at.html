@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Drop an intent — free text + @ pins, 3 directions</title>
+<title>Loopd · Drop an intent — free text + @ pins, 3 directions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -132,7 +132,7 @@
   .prow__vl{ position:relative; z-index:1; font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); }
   .prow--custom .prow__nm{ color:var(--accent-strong); }
 
-  /* what Loop read */
+  /* what Loopd read */
   .read{ margin-top:12px; }
   .read .k{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-tertiary); margin:0 2px 7px; display:flex; justify-content:space-between; }
   .read .k span:last-child{ text-transform:none; letter-spacing:0; font-weight:500; }
@@ -151,7 +151,7 @@
 <body>
 
 <h1>Drop an intent · free text + <code style="font-size:22px">@</code> pins</h1>
-<p class="lede">You write whatever you want. Structure is opt-in: type <b>@</b> and Loop offers what people near you already want (what · day · how often · where · time), ranked by demand — or pin your own word. Pinned things are what fires matching; every other word travels with the intent as <b>your note</b>, so nothing you type is thrown away. Opens with the most popular recent drop as a ghost you can take with <kbd style="font-family:var(--font-mono);font-size:12px;border:1px solid #c5b8aa;border-radius:5px;padding:0 5px">Tab</kbd> or ignore.</p>
+<p class="lede">You write whatever you want. Structure is opt-in: type <b>@</b> and Loopd offers what people near you already want (what · day · how often · where · time), ranked by demand — or pin your own word. Pinned things are what fires matching; every other word travels with the intent as <b>your note</b>, so nothing you type is thrown away. Opens with the most popular recent drop as a ghost you can take with <kbd style="font-family:var(--font-mono);font-size:12px;border:1px solid #c5b8aa;border-radius:5px;padding:0 5px">Tab</kbd> or ignore.</p>
 <div class="toolbar"><button id="themeBtn">☾ flip theme on all three</button></div>
 
 <div class="grid">
@@ -160,7 +160,7 @@
     <div class="phone" data-variant="at" data-theme="daylight"></div>
     <ul class="notes">
       <li>Slack-style: type freely; <b>@</b> opens the ranked picker; the pick lands as an <b>inline chip</b> in your sentence. Everything else stays plain text.</li>
-      <li>Words Loop recognises without an @ (<i>dinner, Fridays, weekly</i>) show underneath as <b>dashed "read from your words"</b> pills — it understood you, you didn't have to do anything. Tap a chip to swap it.</li>
+      <li>Words Loopd recognises without an @ (<i>dinner, Fridays, weekly</i>) show underneath as <b>dashed "read from your words"</b> pills — it understood you, you didn't have to do anything. Tap a chip to swap it.</li>
       <li>No known activity? It still drops — routed as <b>pending</b> for a human read, exactly like the You-tab quick-add today.</li>
     </ul>
     <p class="try">Try: <kbd>Tab</kbd> to take the ghost · type <i>@</i> · type <i>@ram</i> → pin your own · type <i>with people who like spicy food</i>.</p>
@@ -170,7 +170,7 @@
     <div class="phone" data-variant="plain" data-theme="daylight"></div>
     <ul class="notes">
       <li>Nothing fancy in the field — it's a normal textarea. <b>@</b> still opens the ranked picker, but the pick is inserted as text (<code>@Collegetown</code>), like the Floor's tag input.</li>
-      <li>"What Loop read" underneath is the only structure you see; dashed <b>+ day / + often</b> pills are tap-to-fill gaps.</li>
+      <li>"What Loopd read" underneath is the only structure you see; dashed <b>+ day / + often</b> pills are tap-to-fill gaps.</li>
       <li>Least surprising, least code (reuses <code>parseQuickIntent</code>). Slightly less legible which words are pinned.</li>
     </ul>
     <p class="try">Try: type <i>jog fridays</i>, then <i>@</i> → <i>Collegetown</i>; tap <i>+ how often</i>.</p>
@@ -242,7 +242,7 @@ function groupsFor(term, only){
   return { groups:G, custom: t && !exact && !only ? t : null };
 }
 
-/* ---------- soft parse of plain words (what Loop read without @) ---------- */
+/* ---------- soft parse of plain words (what Loopd read without @) ---------- */
 function softParse(text){
   const t=' '+text.toLowerCase()+' ';
   const find=(pairs)=>{ let best=null; for(const [al,v] of pairs){ const m=new RegExp('(^|[^a-z0-9])'+rx(al)+'(?=[^a-z0-9]|$)').exec(t); if(m && (!best||al.length>best.len)) best={ v, len:al.length }; } return best?best.v:null; };
@@ -265,7 +265,7 @@ function compat(r){ let n=((ACTPOP[r.what]||6)+(DAYPOP[r.day]||8))/2*(CADF[r.oft
 /* ---------- shell ---------- */
 const SHELL = `
   <div class="status"><span class="t">9:41</span><span class="r"><span class="g">5G</span><span class="bat"></span></span></div>
-  <div class="header"><span class="wordmark">Loop<i></i></span></div>
+  <div class="header"><span class="wordmark">Loopd<i></i></span></div>
   <div class="bg"><div class="k">What your intent lands in</div>${POPULAR.map(p=>`<div class="bgrow"><div class="ring"></div><div><div class="t">${esc(p.what+' '+p.day+', '+p.often+(p.where?' @'+p.where:''))}</div><div class="s">${p.want} want · your floor</div></div></div>`).join('')}</div>
   <div class="scrim"></div>
   <div class="sheet">
@@ -437,7 +437,7 @@ function makeComposer(phone){
     phone.querySelector('[data-hint]').innerHTML = variant==='plain'
       ? 'Write it however you like. <b>@</b> pins a place, time or your own word so matching sees it — the rest travels as your note.'
       : variant==='auto'
-      ? 'Write it however you like — words Loop knows lock in as you go. <b>@</b> for a place, a time, or your own word.'
+      ? 'Write it however you like — words Loopd knows lock in as you go. <b>@</b> for a place, a time, or your own word.'
       : 'Write it however you like. <b>@</b> to pin what · day · how often · where — or your own word. Everything else travels as your note.';
   }
   sheet.addEventListener('click',()=>closePop());

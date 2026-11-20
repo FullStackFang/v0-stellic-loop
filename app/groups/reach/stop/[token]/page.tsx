@@ -5,7 +5,7 @@ import { ActionForm } from '@/components/emba/portal-forms';
 import { stopGroupMessages } from '../../../reach-actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Stop messages · Loop', robots: { index: false, follow: false }, referrer: 'no-referrer' };
+export const metadata: Metadata = { title: 'Stop messages · Loopd', robots: { index: false, follow: false }, referrer: 'no-referrer' };
 
 // Opening this page changes nothing, because mail scanners and chat previews
 // open links. The one button does it. Nobody is signed in by the link, and the

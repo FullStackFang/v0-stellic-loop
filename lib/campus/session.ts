@@ -12,7 +12,7 @@ import { AT_COOKIE, DEFAULT_CAMPUS, schoolOf } from './schools';
 import type { Point } from './sections';
 
 /**
- * `kit` is whose colours they see unless they pick others: their school's, or Loop's own for an email at no school.
+ * `kit` is whose colours they see unless they pick others: their school's, or Loopd's own for an email at no school.
  * `visits` is the other campuses of their school, and the campuses of the schools their LinkedIn profile unlocked, by id:
  * places they may look at and join things without moving there.
  */
@@ -49,7 +49,7 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
   const theirs = school ? [schoolOf(school.slug), ...(await addedSchools(db(), principal.personId)).added] : [];
   const visits = school ? (await listCampuses(db())).filter(each => each.id !== school.id && theirs.includes(schoolOf(each.slug))).map(each => each.id) : [];
   const admin = isAdmin(principal);
-  // Loop is for people at a school: an email at none has no campus. The admin, who may open any, starts at the default one.
+  // Loopd is for people at a school: an email at none has no campus. The admin, who may open any, starts at the default one.
   return { principal, personId: principal.personId, admin, campus: school ?? (admin ? await findCampus(db(), DEFAULT_CAMPUS) : null), kit: school ? schoolOf(school.slug) : 'loop', visits };
 });
 

@@ -8,6 +8,7 @@ import { bounds, held, hops, inside, isSolo, LINE, middle, sectionAt, soloOf, st
 import type { Face, Ticket } from '@/lib/campus/view';
 import { FaceDot } from './screen';
 import { Swap, visiting, type SwapCampus } from './swap';
+import { LINE as WAIT_LINE, SeatsSmall } from '@/components/loading/seats';
 
 // "Near you": the week on a map, one section of town at a time. The look is public/demo/mockups-map-print.html: a
 // two-ink poster on paper. The ink colour draws the sheet, the school's colour is the second ink printed a little off
@@ -478,10 +479,10 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
           browser said: a filled centre when you are on the map, struck through when you are away or location is off. */}
       <span className="cs-rose" aria-hidden="true"><svg viewBox="-25 -25 50 50"><circle className="ring" r={17} /><path className="south" d="M0-21 4.5 0 0 21-4.5 0z" /><path className="north" d="M0-21 4.5 0h-9z" /><path className="arms" d="M-13 0h-5M13 0h5" /><circle className="hub" r={1.6} /></svg></span>
       <div className="cs-zoom" role="group" aria-label="Map">
-        <button className="cs-loc" data-where={where} aria-label="Back to where you are" title={where === 'here' ? 'Back to where you are' : 'Find where you are'} onClick={locate}><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx={8} cy={8} r={4.2} /><path d="M8 1.2v2.6M8 12.2v2.6M1.2 8h2.6M12.2 8h2.6" />{where === 'here' ? <circle className="dot" cx={8} cy={8} r={1.9} /> : where !== 'wait' && <path className="struck" d="M2.6 2.6l10.8 10.8" />}</svg></button>
+        <button className="cs-loc" data-where={where} aria-label="Back to where you are" title={where === 'here' ? 'Back to where you are' : 'Find where you are'} onClick={locate}>{told && where === 'wait' ? <SeatsSmall size={18} /> : <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx={8} cy={8} r={4.2} /><path d="M8 1.2v2.6M8 12.2v2.6M1.2 8h2.6M12.2 8h2.6" />{where === 'here' ? <circle className="dot" cx={8} cy={8} r={1.9} /> : where !== 'wait' && <path className="struck" d="M2.6 2.6l10.8 10.8" />}</svg>}</button>
         <button aria-label="Zoom in" title="Zoom in" onClick={() => zoom(1)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button>
         <button aria-label="Zoom out" title="Zoom out" onClick={() => zoom(-1)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" /></svg></button></div>
-      {told && where !== 'here' && <p className="cs-loc-note" role="status">{where === 'wait' ? 'Finding you' : where === 'away' ? 'You are away from this campus, so you are not on its map' : 'Your location is off. Allow it in your browser to see yourself here'}</p>}
+      {told && where !== 'here' && <p className="cs-loc-note" role="status">{where === 'wait' ? <span className="seats-hold"><SeatsSmall />{WAIT_LINE}</span> : where === 'away' ? 'You are away from this campus, so you are not on its map' : 'Your location is off. Allow it in your browser to see yourself here'}</p>}
       <div className="cs-scale" ref={rule} style={{ bottom: beside ? (list.length ? 16 : 100) : (lit ? DIAL : 84) + 16 }} aria-hidden="true"><i /></div></>}
     {(!beside || !list.length) && <div className={`cs-near-sheet ${up ? 'open' : lit ? 'dial' : ''}`} ref={sheet}>
       {up ? children : lit ? <Dial list={list} at={at} onTurn={to => setLitId(list[to].ticket.id)} onOpen={() => onPick(lit.ticket.id)} />

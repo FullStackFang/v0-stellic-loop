@@ -1,4 +1,4 @@
-# Loop EMBA pilot: hardened architecture and delivery contract
+# Loopd EMBA pilot: hardened architecture and delivery contract
 
 Status: review draft, 2026-11-06. This is a proposed specification, not an implemented capability or an approved stack migration. Three independent reviews covered security/privacy, coordination, and repository architecture. Product choices below are recommended defaults unless explicitly marked open.
 
@@ -39,7 +39,7 @@ Use Postgres as the integration-test source of truth for tenant constraints, tra
 | --- | --- |
 | Person | Global identity; not owned by a cohort |
 | Organization / membership | Tenant boundary and explicit enrollment |
-| Loop / role binding | Stable ID plus human-readable path within an organization |
+| Loopd / role binding | Stable ID plus human-readable path within an organization |
 | Want | Private persistent preference owned by a person; weight, evidence count, last-confirmed time and provenance category |
 | Intent | Person's time-boxed expression of interest; sharing scope explicit |
 | Activity | Shared proposal with place, timezone-aware interval, deadline and version |
@@ -52,7 +52,7 @@ Use Postgres as the integration-test source of truth for tenant constraints, tra
 
 Organization-scoped rows carry `org_id` and enforce same-tenant references. Personal wants carry `person_id`; joining an organization does not transfer them to it. Sharing is an explicit scoped relationship. Separate private intent evidence from the shared activity description. No stored conversation excerpts in provenance.
 
-Loop paths are aliases, not authority. Use stable IDs internally. For the pilot, parent membership grants descendant read access; roles can only add privileges within that tree. Restricted children require a later explicit policy model. Followers read but cannot post or commit. Organizers manage scoped resources and activities; only owners delegate organizer authority. No role grants access to another person's private wants.
+Loopd paths are aliases, not authority. Use stable IDs internally. For the pilot, parent membership grants descendant read access; roles can only add privileges within that tree. Restricted children require a later explicit policy model. Followers read but cannot post or commit. Organizers manage scoped resources and activities; only owners delegate organizer authority. No role grants access to another person's private wants.
 
 Before launch, root ownership must be approved by an identified operator with recorded evidence; no such approval has been established by this review. A verified email domain alone is not proof of institutional representation. Invitations are scoped, expiring and single-use, with explicit acceptance; possession of a trip link is insufficient.
 
@@ -60,14 +60,14 @@ Before launch, root ownership must be approved by an identified operator with re
 
 - Derive the subject from a verified session or access token. Ignore/reject subject and tenant claims supplied in headers, bodies or tool arguments when they attempt to override authority.
 - Verify issuer, intended audience, expiry and authorized client. Account sign-in and third-party OAuth delegation are separate flows. Use an established authorization implementation, not bespoke token issuance.
-- Implement remote MCP protected-resource discovery and interoperable OAuth behavior against a pinned supported specification. Validate PKCE and resource/audience binding; never accept arbitrary upstream tokens as Loop credentials. Keep stdio development explicitly bound to a test or locally authorized principal.
+- Implement remote MCP protected-resource discovery and interoperable OAuth behavior against a pinned supported specification. Validate PKCE and resource/audience binding; never accept arbitrary upstream tokens as Loopd credentials. Keep stdio development explicitly bound to a test or locally authorized principal.
 - Bind leases to the authenticated client identity and person. An `agent_id` parameter is not proof of identity. Effective authority is the intersection of identity, role, OAuth scopes, lease actions/resources, consent and current membership.
 - Every delegated personal-data read, including `plan_for_me`, search previews, caches and streams, checks its active lease and commits a minimal audit record before releasing data. Export is first-party only for the pilot. Fail closed if required audit persistence fails. Recheck access for later pages and delivery batches.
 - First-party self-service reads use the member's authenticated session and are audited; they do not require granting a third-party lease. An agent cannot use that exception. Revocation/expiry blocks subsequent reads, including already-open sessions, and never promises to retract previous disclosures.
 - Granting or broadening a lease requires a first-party consent screen. MCP may propose a grant but cannot approve its own authority. Deletion, identity disclosure and consequential commitments require explicit, version-bound confirmation rather than instructions embedded in retrieved content.
 - Audit records contain who/client, action, resource IDs, grant ID, time and outcome, not preference values, document bodies, credentials or raw prompts. Record rejected access minimally without leaking another person's resource existence.
 
-Replace “agents never get a copy” with: “Loop releases only consented data under bounded access; revocation stops future access. An assistant provider may retain previously received data under its own policies.”
+Replace “agents never get a copy” with: “Loopd releases only consented data under bounded access; revocation stops future access. An assistant provider may retain previously received data under its own policies.”
 
 ## Content, documents and crisis boundary
 
@@ -156,9 +156,9 @@ These references inform connector requirements, not proof that a connector has b
 
 ### Assessment
 
-Living Brain documents a compilation pipeline that produces versioned, source-linked knowledge, with separate indexing and retrieval. This supports the split between durable records and assistant-facing context. Its documented partial-failure behavior also shows why “saved” and “searchable” need distinct states. Loop will retain typed wants and intents as canonical records rather than adopt generated Markdown pages as transactional truth. [Core concepts](https://docs.livingbrain.com/docs/concepts)
+Living Brain documents a compilation pipeline that produces versioned, source-linked knowledge, with separate indexing and retrieval. This supports the split between durable records and assistant-facing context. Its documented partial-failure behavior also shows why “saved” and “searchable” need distinct states. Loopd will retain typed wants and intents as canonical records rather than adopt generated Markdown pages as transactional truth. [Core concepts](https://docs.livingbrain.com/docs/concepts)
 
-Its policies separate retention, placement, linking and resurfacing, with permission checks before scoring. Loop should make those decisions explicit without copying unpublished scoring formulas or adding a graph engine for this pilot. A relevant preference is neither verified truth nor permission to act. [Design policies](https://docs.livingbrain.com/docs/design-policies)
+Its policies separate retention, placement, linking and resurfacing, with permission checks before scoring. Loopd should make those decisions explicit without copying unpublished scoring formulas or adding a graph engine for this pilot. A relevant preference is neither verified truth nor permission to act. [Design policies](https://docs.livingbrain.com/docs/design-policies)
 
 ### Memory lifecycle
 
@@ -175,7 +175,7 @@ These are Loop-specific requirements, not claims about Living Brain implementati
 
 Raw chat compilation happens transiently within the request. Persist only accepted structured output; on interruption before acceptance, the caller retries. Durable workers may process deliberately uploaded documents or already accepted structured records, never queued raw conversation payloads. Document ingestion tracks acceptance, extraction, indexing and failure separately. An indexing retry must not duplicate canonical records or evidence. Reject late worker output for an obsolete version, deleted source or revoked authority.
 
-Living Brain documents combining keyword and semantic retrieval, and cautions that vector similarity is not correctness. For Loop, apply authorization and context filters to both retrieval paths before ranking. Preserve exact dates, names and identifiers; use vector search as a complement. Enforce a response budget and report truncation, source versions and indexing state. [Search ranking](https://docs.livingbrain.com/docs/search-ranking)
+Living Brain documents combining keyword and semantic retrieval, and cautions that vector similarity is not correctness. For Loopd, apply authorization and context filters to both retrieval paths before ranking. Preserve exact dates, names and identifiers; use vector search as a complement. Enforce a response budget and report truncation, source versions and indexing state. [Search ranking](https://docs.livingbrain.com/docs/search-ranking)
 
 Return supporting passages with sufficient surrounding context, not a similarity score presented as an answer. Conflicting bus times remain disputed unless an authorized correction explicitly supersedes an earlier source. If evidence is unavailable, stale or contradictory, return that status with citations instead of guessing. These requirements adapt the documented distinction between retrieving material and deciding whether it supports an answer. [Build guidance](https://docs.livingbrain.com/docs/build)
 
@@ -183,11 +183,11 @@ Any summary or contextual bundle inherits restrictions from every source it incl
 
 ### Important differences from Living Brain
 
-Living Brain's application API documents an organization-wide server credential and a subject selected by the backend; it explicitly says to keep the key out of browsers. That is a trusted backend delegation model, not evidence that arbitrary clients should choose their own identity. Loop's assistant endpoint still requires verified user OAuth and leases. If any backend provider is adopted later, only Loop derives its subject from authenticated identity. [Authentication](https://docs.livingbrain.com/docs/authentication)
+Living Brain's application API documents an organization-wide server credential and a subject selected by the backend; it explicitly says to keep the key out of browsers. That is a trusted backend delegation model, not evidence that arbitrary clients should choose their own identity. Loopd's assistant endpoint still requires verified user OAuth and leases. If any backend provider is adopted later, only Loopd derives its subject from authenticated identity. [Authentication](https://docs.livingbrain.com/docs/authentication)
 
-Living Brain separately documents account-based OAuth MCP with distinct read/search/capture scopes. That validates treating consumer assistant access separately from a backend API key, but does not establish Loop's lease semantics or cohort permissions. [MCP sign-in](https://docs.livingbrain.com/mcp/sign-in)
+Living Brain separately documents account-based OAuth MCP with distinct read/search/capture scopes. That validates treating consumer assistant access separately from a backend API key, but does not establish Loopd's lease semantics or cohort permissions. [MCP sign-in](https://docs.livingbrain.com/mcp/sign-in)
 
-Its capture guidance accepts conversation turns and says removing a source leaves derived pages intact. Neither behavior is Loop's default: no automatic conversation retention, and deletion must propagate through derived data. Retention of provenance is limited to permitted structured evidence and intentional document uploads. [Capture behavior](https://docs.livingbrain.com/docs/capturing)
+Its capture guidance accepts conversation turns and says removing a source leaves derived pages intact. Neither behavior is Loopd's default: no automatic conversation retention, and deletion must propagate through derived data. Retention of provenance is limited to permitted structured evidence and intentional document uploads. [Capture behavior](https://docs.livingbrain.com/docs/capturing)
 
 Keep machine synchronization cursors, notification-delivery status and human-read acknowledgement separate. Reading `get_updates` must not mark an announcement as seen by the person. This follows the useful distinction in Living Brain's change-feed documentation without adding external webhooks to the pilot. [Change feed](https://docs.livingbrain.com/docs/changes)
 
