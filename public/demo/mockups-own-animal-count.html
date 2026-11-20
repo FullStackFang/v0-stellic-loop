@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockups · How many animals you can make</title>
+<style>
+  :root {
+    --field: oklch(96.4% 0.19 117); --shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252);
+    --action: oklch(47.6% 0.13 250); --paper: oklch(99.3% 0.004 117); --mute: oklch(46.5% 0.012 245);
+    --on-ink: oklch(99.4% 0.003 230); --gold: oklch(80% 0.15 86); --third: oklch(72% 0.2 350);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: -0.012em; color: var(--ink); background: var(--field); }
+  header { padding: 28px 32px 8px; }
+  header h1 { display: inline-block; margin: 0; padding: 8px 18px; border-radius: 99px; font-size: 22px; background: var(--ink); color: var(--field); }
+  header p { display: inline-block; margin: 12px 0 0; padding: 8px 16px; border-radius: 14px 14px 14px 4px; background: var(--paper); font-weight: 560; max-width: 760px; }
+  section { margin: 22px 32px 34px; padding: 22px 24px 26px; border-radius: 24px 24px 24px 8px; background: var(--paper); box-shadow: 6px 6px 0 var(--shadow); }
+  .tag { display: inline-flex; gap: 10px; align-items: center; margin: -36px 0 14px -6px; padding: 7px 16px; border-radius: 99px; font-weight: 720; font-size: 16px; background: var(--action); color: var(--on-ink); }
+  .tag b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--on-ink); color: var(--action); font-size: 13px; }
+  .why { margin: 0 0 18px; padding: 9px 15px; border-radius: 14px 14px 14px 4px; background: color-mix(in oklch, var(--field) 55%, var(--paper)); font-weight: 560; }
+  .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+  .card { padding: 12px 14px 16px; border-radius: 18px 18px 18px 6px; background: color-mix(in oklch, var(--ink) 5%, var(--paper)); }
+  .state { display: inline-block; margin-bottom: 12px; padding: 3px 12px; border-radius: 99px; font-size: 13px; font-weight: 700; background: var(--ink); color: var(--field); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .pet { position: relative; aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklch, var(--ink) 10%, var(--paper)); display: grid; place-items: center; }
+  .pet img { width: 86%; height: 86%; object-fit: contain; }
+  .pet.gold { background: color-mix(in oklch, var(--gold) 26%, var(--paper)); box-shadow: 0 0 0 2px var(--paper), 0 0 0 4.5px var(--gold); }
+  .pet.on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--action); }
+  .add { background: none; box-shadow: inset 0 0 0 2px var(--gold); color: var(--ink); }
+  .add > svg.plus { width: 42%; height: 42%; }
+  .add.out { box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--ink) 30%, transparent); color: color-mix(in oklch, var(--ink) 45%, transparent); }
+  .blot { width: 100%; height: 100%; }
+  .blot .b { fill: var(--ink); } .blot .s { fill: var(--gold); }
+
+  /* A: a round ink badge on the corner */
+  .a-n { position: absolute; right: -5px; top: -5px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: 13px; font-weight: 780; background: var(--ink); color: var(--gold); box-shadow: 0 0 0 2px var(--paper); }
+  .a-n.zero { background: var(--third); color: var(--paper); }
+  .a-n.plus { width: 28px; height: 28px; right: -7px; top: -7px; padding: 3px; background: var(--paper); box-shadow: 0 0 0 2px var(--gold); }
+
+  /* B: the number sits in the tile, under the plus */
+  .b-in { display: grid; justify-items: center; gap: 1px; line-height: 1; }
+  .b-in svg.plus { width: 22px; height: 22px; }
+  .b-in small { padding: 2px 7px; border-radius: 99px; font-size: 11.5px; font-weight: 760; background: var(--ink); color: var(--gold); white-space: nowrap; }
+  .b-in small.zero { background: var(--third); color: var(--paper); }
+  .b-in .mk { width: 26px; height: 26px; }
+
+  /* C: dots under the tile, one per animal left */
+  .c-dots { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); display: flex; gap: 3px; padding: 3px 6px; border-radius: 99px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink); }
+  .c-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: inset 0 0 0 1px var(--ink); }
+  .c-dots i.used { background: none; box-shadow: inset 0 0 0 1.2px color-mix(in oklch, var(--ink) 35%, transparent); }
+  .c-dots .mk { width: 16px; height: 16px; margin: -3px 0; }
+
+  /* The maker */
+  .maker { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .pane { padding: 18px; border-radius: 20px 20px 20px 6px; background: var(--ink); color: var(--on-ink); }
+  .pane h4 { margin: 0 0 12px; display: flex; align-items: center; gap: 10px; font-size: 16px; }
+  .left { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 3px 11px; border-radius: 99px; font-size: 13px; font-weight: 740; background: var(--gold); color: var(--ink); }
+  .left .mk { width: 18px; height: 18px; }
+  .left .mk .b { fill: var(--ink); }
+  .draw { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .draw figure { margin: 0; padding: 10px; border-radius: 14px; background: color-mix(in oklch, var(--on-ink) 12%, transparent); display: grid; place-items: center; }
+  .draw img { width: 100%; aspect-ratio: 1; object-fit: contain; }
+  .draw figcaption { margin-top: 6px; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; background: color-mix(in oklch, var(--on-ink) 18%, transparent); }
+  .draft-tag { background: var(--third) !important; color: var(--paper); }
+  .acts { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; height: 38px; padding: 0 18px; border: 0; border-radius: 99px; font: inherit; font-weight: 700; cursor: pointer; }
+  .btn.go { background: var(--gold); color: var(--ink); }
+  .btn.ghost { background: color-mix(in oklch, var(--on-ink) 16%, transparent); color: var(--on-ink); }
+  .note { margin-top: 12px; padding: 7px 12px; border-radius: 12px 12px 12px 3px; font-size: 13px; font-weight: 560; background: color-mix(in oklch, var(--on-ink) 10%, transparent); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="inkplus" viewBox="-68 -68 136 136">
+      <path class="b" d="M59 0L58 12L53 22L47 31L40 40L30 49L18 53L4 55L-8 61L-17 65L-24 59L-33 50L-40 40L-48 32L-57 24L-62 12L-61 0L-55 -11L-52 -21L-51 -34L-46 -46L-36 -54L-22 -53L-7 -55L7 -54L18 -53L27 -46L35 -39L42 -30L50 -23L57 -15L59 -4Z"/>
+      <path class="s" d="M0 -30L7 -7L30 0L7 7L0 30L-7 7L-30 0L-7 -7Z"/>
+      <circle class="b" cx="40" cy="-67" r="4"/><circle class="b" cx="58" cy="42" r="4"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header>
+  <h1>How many animals you can make</h1><br>
+  <p>The "Create your own" tile in the animal picker shows what is left: 3, 2, 1 on Ink, the Ink+ mark on Ink+. It drops only when you press Keep it. Three looks below, each in every state. Then the drawing screen with the draft.</p>
+</header>
+
+<section>
+  <div class="tag"><b>A</b>Corner badge</div>
+  <p class="why">A small ink circle on the tile's corner, like the numbers on the group picture's animals. At 0 it turns pink. On Ink+ the circle holds the Ink+ mark.</p>
+  <div class="row" id="rowA"></div>
+</section>
+
+<section>
+  <div class="tag"><b>B</b>Inside the tile</div>
+  <p class="why">The plus gets smaller and "2 left" sits under it, inside the circle. Reads without knowing what a badge means. On Ink+ the plus is the Ink+ mark itself.</p>
+  <div class="row" id="rowB"></div>
+</section>
+
+<section>
+  <div class="tag"><b>C</b>Three dots</div>
+  <p class="why">A little pill under the tile with one dot per animal, gold while unused. You see what you have used as well as what is left. On Ink+ the pill holds the Ink+ mark.</p>
+  <div class="row" id="rowC"></div>
+</section>
+
+<section>
+  <div class="tag"><b>D</b>The drawing screen: a draft until kept</div>
+  <p class="why">Same for every look. The new drawing is marked Draft. Your face and your count do not change until Keep it. Draw again replaces the draft and costs nothing.</p>
+  <div class="maker">
+    <div class="pane">
+      <h4>Your own animal <span class="left">2 left</span></h4>
+      <div class="draw">
+        <figure><img src="/animals/23.png" alt=""><figcaption>Your photo's dog</figcaption></figure>
+        <figure><img src="/animals/17.png" alt=""><figcaption class="draft-tag">Draft</figcaption></figure>
+      </div>
+      <div class="acts"><button class="btn go">Keep it</button><button class="btn ghost">Draw again</button><button class="btn ghost">Throw away</button></div>
+      <div class="note">Keep it uses one of your 2. Draw again uses none.</div>
+    </div>
+    <div class="pane">
+      <h4>Your own animal <span class="left"><svg class="mk blot"><use href="#inkplus"/></svg>Ink+</span></h4>
+      <div class="draw">
+        <figure><img src="/animals/10.png" alt=""><figcaption>Kept: Lucy</figcaption></figure>
+        <figure><img src="/animals/13.png" alt=""><figcaption class="draft-tag">Draft</figcaption></figure>
+      </div>
+      <div class="acts"><button class="btn go">Keep the new one</button><button class="btn ghost">Draw again</button><button class="btn ghost">Keep Lucy</button></div>
+      <div class="note">Redrawing Lucy. Keeping the new one replaces her everywhere she is worn.</div>
+    </div>
+    <div class="pane">
+      <h4>Your own animal <span class="left">2 left</span></h4>
+      <div class="draw">
+        <figure><img src="/animals/06.png" alt=""><figcaption class="draft-tag">Waiting from earlier</figcaption></figure>
+        <figure style="opacity:.35"><img src="/animals/06.png" alt=""><figcaption>Gone tomorrow</figcaption></figure>
+      </div>
+      <div class="acts"><button class="btn go">Keep it</button><button class="btn ghost">Draw again</button><button class="btn ghost">Throw away</button></div>
+      <div class="note">You closed the tab on this one. It waits a day, then it is deleted.</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const others = ['17', '10', '23', '06', '13', '29', '33'];
+  const states = [
+    { name: 'Ink · none made', n: 3 }, { name: 'Ink · one kept', n: 2 }, { name: 'Ink · two kept', n: 1 },
+    { name: 'Ink · none left', n: 0 }, { name: 'Ink+', n: null },
+  ];
+  const mark = '<svg class="mk blot"><use href="#inkplus"/></svg>';
+  const plus = '<svg class="plus"><use href="#plus"/></svg>';
+  const tile = {
+    A: (n) => `<div class="pet add ${n === 0 ? 'out' : ''}">${plus}${n === null ? `<span class="a-n plus">${mark}</span>` : `<span class="a-n ${n === 0 ? 'zero' : ''}">${n}</span>`}</div>`,
+    B: (n) => `<div class="pet add ${n === 0 ? 'out' : ''}"><span class="b-in">${n === null ? mark : plus}<small class="${n === 0 ? 'zero' : ''}">${n === null ? 'no limit' : n === 0 ? 'Ink+' : n + ' left'}</small></span></div>`,
+    C: (n) => `<div class="pet add ${n === 0 ? 'out' : ''}">${plus}<span class="c-dots">${n === null ? mark : [0, 1, 2].map(i => `<i class="${i < n ? '' : 'used'}"></i>`).join('')}</span></div>`,
+  };
+  for (const k of ['A', 'B', 'C']) {
+    document.getElementById('row' + k).innerHTML = states.map((s) => {
+      const kept = s.n === null ? 4 : 3 - s.n;
+      const made = others.slice(0, kept).map((a, i) => `<div class="pet gold ${i === 0 ? 'on' : ''}"><img src="/animals/${a}.png" alt=""></div>`).join('');
+      const rest = others.slice(kept, kept + 7 - kept).map(a => `<div class="pet"><img src="/animals/${a}.png" alt=""></div>`).join('');
+      return `<div class="card"><span class="state">${s.name}</span><div class="grid">${tile[k](s.n)}${made}${rest}</div></div>`;
+    }).join('');
+  }
+</script>
+</body>
+</html>
