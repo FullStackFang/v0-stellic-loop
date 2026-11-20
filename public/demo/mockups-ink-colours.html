@@ -134,12 +134,16 @@ section > h2 i { font-style: normal; color: var(--field); }
 /* ---- 4: the foot without Ink+. One pill, ink runs into it from its mark on hover (as the Assistants pill did). ---- */
 .inkq { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px 0 7px; border-radius: 99px; overflow: hidden; isolation: isolate; font-size: 13.5px; font-weight: 640; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); transition: color .2s; }
 .inkq::before { content: ''; position: absolute; z-index: -1; inset: 0; background: var(--ink); clip-path: circle(0 at 17px 50%); transition: clip-path .55s var(--expo); }
-.inkq:hover::before, .inkq[aria-expanded=true]::before { clip-path: circle(150% at 17px 50%); } .inkq:hover, .inkq[aria-expanded=true] { color: var(--field); }
-.inkq:hover .mark .blot, .inkq[aria-expanded=true] .mark .blot { fill: var(--paper); }
+.inkq.on::before, .inkq:hover::before, .inkq[aria-expanded=true]::before { clip-path: circle(150% at 17px 50%); } .inkq.on, .inkq:hover, .inkq[aria-expanded=true] { color: var(--field); }
+.inkq.on .mark .blot, .inkq:hover .mark .blot, .inkq[aria-expanded=true] .mark .blot { fill: var(--paper); }
 .inkq b { padding: 2px 8px 3px; border-radius: 99px; font-size: 11.5px; font-weight: 740; background: var(--ink); color: var(--field); transition: background-color .3s, color .3s; }
 .inkq:hover b, .inkq[aria-expanded=true] b { background: var(--field); color: var(--ink); }
 .ask .swatches { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 14px; }
 .ask .swatches i { position: relative; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(var(--action) 36%, var(--field) 40%); box-shadow: 0 0 0 1.5px var(--on-ink-mute); opacity: .55; }
+.labels { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 14px; padding: 6px; width: fit-content; border-radius: 99px; background: var(--paper, #fff); box-shadow: inset 0 0 0 1.5px var(--ink, #2a1815); }
+.labels > span { padding: 0 8px 0 10px; font-size: 13px; font-weight: 600; }
+.labels button { height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 620; }
+.labels button[aria-pressed=true] { background: var(--ink, #2a1815); color: #fff; }
 .ask .perks { display: grid; gap: 6px; margin: 4px 0 14px; font-size: 14px; color: var(--on-ink-mute); }
 .ask .perks span { display: grid; grid-template-columns: 7px 1fr; gap: 10px; align-items: baseline; } .ask .perks span::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--field); }
 .ask .perks span:first-child { color: var(--on-ink); font-weight: 620; }
@@ -220,6 +224,16 @@ section > h2 i { font-style: normal; color: var(--field); }
   </div>
 </section>
 
+<section>
+  <h2>5 · "More with Ink+" up close <i>(G, at rest, on hover, pressed)</i></h2>
+  <div class="labels" role="group" aria-label="The pill says"><span>The pill says</span><button type="button" data-label="More with Ink+" aria-pressed="true">More with Ink+</button><button type="button" data-label="Get more with Ink+" aria-pressed="false">Get more with Ink+</button><button type="button" data-label="What's Ink+?" aria-pressed="false">What's Ink+?</button></div>
+  <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr))">
+    <div class="frame k tall" data-kit="cornell" data-quiet="g" data-state="rest"><span class="tag">At rest</span></div>
+    <div class="frame k tall" data-kit="cornell" data-quiet="g" data-state="hover"><span class="tag">Hovered: ink runs in from the mark</span></div>
+    <div class="frame k tall" data-kit="cornell" data-quiet="g" data-state="open"><span class="tag">Pressed: the card</span></div>
+  </div>
+</section>
+
 <script>
 const RINGS = '<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><circle cx="50" cy="35" r="21" stroke="currentColor" stroke-width="9"/><circle cx="35.5" cy="60" r="21" stroke="currentColor" stroke-width="9"/><circle cx="64.5" cy="60" r="21" stroke="currentColor" stroke-width="9"/></svg>';
 const MARK = '<svg class="mark" viewBox="-68 -68 136 136" aria-hidden="true"><path class="blot" d="M-8 -60C22 -66 52 -44 58 -14C66 18 46 54 10 60C-24 66 -58 44 -62 10C-66 -24 -40 -54 -8 -60Z"/><circle class="blot" cx="56" cy="-50" r="9"/><circle class="blot" cx="-58" cy="46" r="6"/><path class="spark" d="M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z"/></svg>';
@@ -293,19 +307,22 @@ function many(frame, option, footOnly) {
 
 // ---- 4: the foot for someone without Ink+ shows only what they can wear, and one pill that opens Ink+. With Ink+ (or
 // signed out) it is D's foot: the dots and "Any school".
+/** What the G pill says; section 5 lets the founder try the wording. */
+let LABEL = 'More with Ink+';
 function quiet(frame, option) {
   const kit = frame.dataset.kit, free = who === 'free', open = frame.dataset.open === 'foot';
   if (!free) return many(frame, 'd', 'With Ink+ or signed out the foot is D\'s: the dots and "Any school". Only someone without Ink+ sees the pill.');
   const dot = ([slug, name]) => `<button type="button" class="dot k" data-kit="${slug}" data-wear="${slug}" aria-label="${name} colours" title="${name}" aria-pressed="${kit === slug}"></button>`;
   const yours = ALL.filter(([slug]) => slug === 'loop' || slug === OWN);
   const pill = option === 'f' ? `<button type="button" class="inkq" data-toggle="foot" aria-expanded="${open}">${MARK}Every school<b>Ink+</b></button>`
-    : `<button type="button" class="inkq" data-toggle="foot" aria-expanded="${open}">${MARK}More with Ink+</button>`;
+    : `<button type="button" class="inkq${frame.dataset.state === 'hover' && !open ? ' on' : ''}" data-toggle="foot" aria-expanded="${open}">${MARK}${LABEL}</button>`;
   const card = option === 'f'
     ? `<div class="ask" ${open ? '' : 'hidden'}><span class="ask-tab">${MARK}Ink+</span><h3>Every school's <em>colours</em></h3><div class="swatches">${ALL.filter(each => !yours.includes(each)).map(([slug, name]) => `<i class="k" data-kit="${slug}" title="${name}"></i>`).join('')}</div><p>Yours and Loopd's are free. The other ${ALL.length - 2} come with Ink+.</p><div class="acts"><a href="/c/ink">See Ink+</a><button type="button" data-toggle="foot">Not now</button></div></div>`
     : `<div class="ask" ${open ? '' : 'hidden'}><span class="ask-tab">${MARK}Ink+</span><h3>What <em>Ink+</em> gives you</h3><div class="perks"><span>Every school's colours, not just yours</span><span>Play as your own animal, in Seats and Conga</span><span>The book of stamps keeps every place, for good</span></div><span class="price">From <b>$2.99</b> a month</span><div class="acts"><a href="/c/ink">See Ink+</a><button type="button" data-toggle="foot">Not now</button></div></div>`;
   const note = option === 'f'
     ? 'Your two dots, then one pill: <b>Every school · Ink+</b>. Ink runs into it on hover; press it and a card shows the other schools faded, and the way to Ink+.'
-    : 'Your two dots, then <b>More with Ink+</b>. Press it to ask what Ink+ is: the colours are one perk among three, with the price. It sells Ink+, not just colours.';
+    : frame.dataset.state ? { rest: 'Quiet: an outlined pill with the small blot, beside your two colour dots. Nothing else asks for Ink+ on the page.', hover: 'On hover (or focus) the ink runs in from the blot and the words turn your school colour: the same move as the Ink+ pill you liked.', open: 'Pressed: the card rises from the footer. Colours are one of three things Ink+ gives, then the price, See Ink+ or Not now.' }[frame.dataset.state]
+    : `Your two dots, then <b>${LABEL}</b>. Press it to ask what Ink+ is: the colours are one perk among three, with the price. It sells Ink+, not just colours.`;
   return `<div class="page-end"><div class="stuff" style="padding:0 18px 26px"><i></i><i></i></div>
     <footer class="ft">${card}<span class="wm">${RINGS}Loopd</span><nav><a>Terms</a><a>Privacy</a></nav><div class="ft-end"><small>© 2026 Loopd</small><div class="dots">${yours.map(dot).join('')}</div>${pill}</div></footer></div>
     <p class="note">${note}</p>`;
@@ -319,6 +336,8 @@ function draw(frame) {
 }
 
 document.addEventListener('click', event => {
+  const label = event.target.closest('[data-label]');
+  if (label) { LABEL = label.dataset.label; document.querySelectorAll('[data-label]').forEach(each => each.setAttribute('aria-pressed', each === label)); document.querySelectorAll('[data-quiet]').forEach(draw); return; }
   const pick = event.target.closest('[data-wear]'), lock = event.target.closest('[data-lock]'), close = event.target.closest('[data-close]'), person = event.target.closest('[data-who]');
   if (event.target.closest('a[href="/c/ink"]')) { event.preventDefault(); return; }
   const frame = event.target.closest('.frame'), toggle = event.target.closest('[data-toggle]');
@@ -342,7 +361,7 @@ document.addEventListener('click', event => {
 document.addEventListener('input', event => { const box = event.target.closest('[data-filter]'); if (!box) return; const typed = box.value.trim().toLowerCase(); box.closest('.menu').querySelectorAll('li').forEach(li => { li.hidden = !li.textContent.toLowerCase().includes(typed); }); });
 // D and E open in the state that shows how they differ: the drop-down open, and the rest shown.
 document.querySelectorAll('[data-many]').forEach(frame => { frame.dataset.open = 'card'; });
-document.querySelectorAll('[data-quiet]').forEach(frame => { frame.dataset.open = 'foot'; });
+document.querySelectorAll('[data-quiet]').forEach(frame => { frame.dataset.open = !frame.dataset.state || frame.dataset.state === 'open' ? 'foot' : ''; });
 document.querySelectorAll('.frame').forEach(frame => { frame.dataset.wanted = 'nyu'; draw(frame); });
 </script>
 </body>
