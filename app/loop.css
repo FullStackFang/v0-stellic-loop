@@ -629,6 +629,61 @@ a.lp-grouprow:hover .lp-go{background:var(--blue);color:var(--on-dark);box-shado
 }
 @container (max-width:520px){.lp-allow{grid-template-columns:1fr}.lp .lp-give .emba-form fieldset{grid-template-columns:minmax(0,1fr)}}
 
+/* Connections: one ticket, two steps (public/demo/mockups-connections-layout.html, direction C).
+   Connect once on the left half, give access on the right, a tear line between them. Below 900px the halves stack and the line runs across.
+   --x is where the tear line is; the bites at each end of it are cut with a mask, so the outer box carries the hard shadow. */
+.lp-cx{container:cx / inline-size;margin:22px 0 30px;filter:drop-shadow(5px 5px 0 var(--cs-field-shadow,var(--line-2)))}
+.lp-cx > div{--x:46%;--cut:11px;position:relative;display:grid;grid-template-columns:var(--x) minmax(0,1fr);border-radius:22px 22px 22px 6px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--navy);
+  -webkit-mask:radial-gradient(circle var(--cut) at var(--x) 0,#0000 calc(var(--cut) - .5px),#000 var(--cut)),radial-gradient(circle var(--cut) at var(--x) 100%,#0000 calc(var(--cut) - .5px),#000 var(--cut));-webkit-mask-composite:source-in;
+  mask:radial-gradient(circle var(--cut) at var(--x) 0,#0000 calc(var(--cut) - .5px),#000 var(--cut)),radial-gradient(circle var(--cut) at var(--x) 100%,#0000 calc(var(--cut) - .5px),#000 var(--cut));mask-composite:intersect}
+.lp-cx > div::after{content:'';position:absolute;left:calc(var(--x) - 1px);top:calc(var(--cut) + 8px);bottom:calc(var(--cut) + 8px);border-left:2px dashed color-mix(in oklch,var(--navy) 30%,transparent)}
+.lp-cx-one > div{grid-template-columns:minmax(0,1fr);-webkit-mask:none;mask:none}
+.lp-cx-one > div::after{display:none}
+.lp-cx-half{container-type:inline-size;min-width:0;padding:22px 24px}
+.lp .lp-cx-half.lp-give{border-top:0;background:var(--sunk);border-radius:0 22px 22px 0;padding:22px 24px}
+.lp .lp-cx-step{display:inline-flex;align-items:center;gap:8px;height:30px;margin:0 0 16px;padding:0 14px 0 5px;border-radius:var(--pill);background:var(--navy);color:var(--surface);font-size:14.5px;font-weight:660;letter-spacing:-.02em}
+.lp-cx-step b{display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:var(--lime);color:var(--navy);font-size:12px;font-weight:760}
+.lp-cx-ready{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:14px 14px 14px 4px;background:var(--pale-blue);color:var(--ink-2);font-size:13.5px;line-height:1.45}
+.lp-cx-ready .lp-chip{flex:none;background:var(--lime);color:var(--navy);font-weight:600}
+.lp-cx-note{margin-top:10px;padding:8px 12px;border-radius:14px 14px 14px 4px;background:var(--canvas);color:var(--muted);font-size:13px;line-height:1.5;max-width:72ch}
+.lp-cx-note code{font:12px var(--mono);letter-spacing:0}
+/* An address to copy: its name, the address in a pill, and the copy button at the pill's end. */
+.lp-cx-urls{display:grid;gap:10px;margin-top:12px}
+.lp-cx-urls > div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}
+.lp-cx-urls label{display:grid;gap:5px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+.lp .lp-cx-urls input{height:38px;width:100%;min-width:0;padding:0 14px;border:0;border-radius:var(--pill);background:var(--canvas);box-shadow:inset 0 0 0 1.5px var(--line);color:var(--navy);font:12.5px var(--mono);letter-spacing:0;text-overflow:ellipsis}
+.lp-cx-urls .lp-btn{height:38px}
+/* Which assistant's steps show: a segmented pill of radios, no script. */
+.lp-cx-who{display:flex;flex-wrap:wrap;gap:4px;width:fit-content;max-width:100%;margin-top:18px;padding:3px;border-radius:var(--pill);background:var(--canvas);box-shadow:inset 0 0 0 1.5px var(--line)}
+.lp-cx-who label{position:relative;display:grid;place-items:center;height:32px;padding:0 15px;border-radius:var(--pill);font-size:13.5px;font-weight:560;color:var(--ink-2);cursor:pointer;white-space:nowrap;transition:background-color .2s var(--ease)}
+.lp-cx-who input{position:absolute;opacity:0;pointer-events:none}
+.lp-cx-who label:has(:checked){background:var(--surface);color:var(--navy);font-weight:660;box-shadow:inset 0 0 0 1.5px var(--navy)}
+.lp-cx-who label:has(:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+.lp-cx-guide{display:none;margin-top:14px}
+.lp-cx-half:has([name=guide][value=claude]:checked) [data-guide=claude],.lp-cx-half:has([name=guide][value=muse]:checked) [data-guide=muse],.lp-cx-half:has([name=guide][value=chatgpt]:checked) [data-guide=chatgpt]{display:block;animation:lp-cx-in .35s var(--ease)}
+@keyframes lp-cx-in{from{opacity:0;translate:0 4px}}
+.lp .lp-cx-guide ol{display:grid;gap:8px;margin:0;padding:0;list-style:none;counter-reset:cx}
+.lp .lp-cx-guide ol li{counter-increment:cx;display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start;color:var(--ink-2);font-size:14px;line-height:1.45}
+.lp-cx-guide ol li::before{content:counter(cx);display:grid;place-items:center;width:24px;height:24px;border-radius:8px 8px 8px 3px;background:var(--lime);color:var(--navy);font-weight:760;font-size:12.5px}
+.lp-cx-links{margin-top:12px}
+.lp-cx-guide .emba-form{margin-top:12px}
+/* The give-access form in the right half: two fields across, then the access choice, then the button. */
+.lp .lp-cx .lp-give .emba-form fieldset{grid-template-columns:1fr 1fr}
+.lp .lp-cx .lp-give .lp-seg,.lp .lp-cx .lp-give .emba-form .lt-primary,.lp .lp-cx .lp-give .emba-form .lp-give-hint,.lp .lp-cx .lp-give .emba-form .lp-give-note{grid-column:1 / -1;grid-row:auto}
+.lp .lp-cx .lp-give .emba-form .lt-primary{justify-self:start;padding:0 20px}
+.lp .lp-cx .lp-give .lp-give-note{margin:0;font-size:13px;color:var(--ink-2)}
+@container cx (max-width:900px){
+  .lp-cx > div{grid-template-columns:minmax(0,1fr);-webkit-mask:none;mask:none}
+  .lp-cx > div::after{display:none}
+  .lp .lp-cx-half.lp-give{border-top:2px dashed color-mix(in oklch,var(--navy) 30%,transparent);border-radius:0 0 22px 6px}
+}
+@container cx (max-width:480px){.lp-cx-half,.lp .lp-cx-half.lp-give{padding:20px 16px}}
+/* Days left on a grant, as a short bar under the date. */
+.lp-left{display:block;width:96px;height:4px;margin-top:3px;border-radius:4px;background:var(--line);overflow:hidden}
+.lp-left::before{content:'';display:block;height:100%;width:calc(var(--left) * 100%);border-radius:inherit;background:var(--navy)}
+.lp-left.lp-soon::before{background:var(--plum)}
+@media (prefers-reduced-motion:reduce){.lp-cx-guide{animation:none!important}}
+
 /* ---------- Organizing groups (loop-organize-and-fix) ---------- */
 /* A row of the Groups list: a fold toggle, the group, and for the people who run it a Manage menu that opens under the row. */
 .lp-groupitem{--row:92px;position:relative;border-top:1px solid var(--line);background:var(--surface)}

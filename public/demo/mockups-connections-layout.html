@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistants page: three layouts</title>
+<style>
+@font-face { font-family: Archivo; src: url(../fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --field: oklch(82% 0.12 38); --shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --ink-2: oklch(34% 0.04 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(55% 0.19 30);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --line: oklch(90.6% 0.008 240); --mute: oklch(46.5% 0.012 245);
+  --on-ink: oklch(97% 0.01 60); --on-ink-mute: oklch(80% 0.02 40); --wash: color-mix(in oklch, var(--field) 30%, var(--paper)); --sunk: color-mix(in oklch, var(--field) 10%, var(--paper));
+  --dash: color-mix(in oklch, var(--ink) 30%, transparent); --r: 22px 22px 22px 6px; --r-in: 14px 14px 14px 4px; --ease: cubic-bezier(.22, 1, .36, 1);
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 34px 24px 80px; background: oklch(91% 0.008 240); color: var(--ink); font: 15px/1.45 Archivo, system-ui, sans-serif; letter-spacing: -0.015em; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+button, select { font: inherit; color: inherit; letter-spacing: inherit; }
+button { border: 0; background: none; padding: 0; cursor: pointer; }
+h1, h2, h3, p, ul, ol { margin: 0; } ul, ol { list-style: none; padding: 0; } [hidden] { display: none !important; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+/* ---------- the page around the mockups ---------- */
+.top { max-width: 1280px; margin: 0 auto 30px; padding: 20px 24px; border-radius: var(--r); background: var(--ink); color: var(--on-ink); box-shadow: 6px 6px 0 var(--shadow); }
+.top h1 { font-size: 30px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.045em; } .top p { max-width: 80ch; margin-top: 8px; color: var(--on-ink-mute); }
+.dir { max-width: 1280px; margin: 0 auto 56px; }
+.dir-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px; }
+.dir-head h2 { display: inline-flex; align-items: center; gap: 10px; margin-left: 16px; padding: 8px 16px 16px; border-radius: 16px 16px 0 0; background: var(--ink); color: var(--on-ink); font-size: 16px; font-weight: 680; }
+.dir-head h2 b { padding: 2px 10px; border-radius: 99px; background: var(--field); color: var(--ink); font-size: 12.5px; }
+.widths { display: flex; gap: 4px; margin: 0 0 8px auto; padding: 3px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.widths button { height: 30px; padding: 0 14px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+.widths button[aria-pressed=true] { background: var(--ink); color: var(--on-ink); }
+.why { margin: -8px 0 0; padding: 12px 18px; border-radius: var(--r); background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink); font-weight: 540; position: relative; z-index: 1; max-width: none; }
+.why span { display: block; margin-top: 4px; font-weight: 400; color: var(--mute); font-size: 14px; }
+.stage { margin-top: 12px; display: flex; justify-content: center; }
+.app { width: min(var(--w, 1280px), 100%); container: app / inline-size; overflow: hidden; border-radius: 18px; background: var(--page); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--shadow); transition: width .45s var(--ease); }
+
+/* ---------- the app shell: campus bar ---------- */
+.nav { display: flex; align-items: center; gap: 6px; padding: 11px 24px 12px; background: var(--field); border-bottom: 1.5px solid var(--ink); box-shadow: 0 5px 0 var(--shadow); }
+.nav .wm { display: flex; align-items: center; gap: 10px; font-weight: 720; font-stretch: 112%; font-size: 21px; letter-spacing: -0.045em; margin-right: 12px; }
+.nav .wm i { width: 34px; height: 34px; border-radius: 10px 10px 10px 3px; background: var(--paper); box-shadow: 3px 3px 0 var(--ink); display: grid; place-items: center; }
+.nav .wm svg { width: 22px; height: 22px; color: var(--action); }
+.nav a { padding: 6px 13px; border-radius: 99px; font-size: 14px; font-weight: 580; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); text-decoration: none; white-space: nowrap; }
+.nav a[aria-current] { background: var(--ink); color: var(--field); box-shadow: none; }
+.nav .me { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+@container app (max-width: 620px) { .nav { padding-inline: 14px; } .nav a:not([aria-current]) { display: none; } .nav .wm span { display: none; } }
+.main { padding: 22px 32px 40px; }
+@container app (max-width: 620px) { .main { padding: 16px 14px 32px; } }
+.main > h1 { font-size: 34px; line-height: 1.08; font-weight: 720; font-stretch: 110%; letter-spacing: -0.045em; }
+.main > .lede { margin-top: 8px; color: var(--mute); max-width: 72ch; }
+
+/* ---------- shared pieces ---------- */
+.panel { position: relative; background: var(--paper); border-radius: var(--r); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--shadow); min-width: 0; }
+/* A panel's name sits on a tab that overlaps its top edge, never as floating text. */
+.tab { position: absolute; top: -14px; left: 18px; display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: 99px; background: var(--ink); color: var(--on-ink); font-size: 13.5px; font-weight: 660; font-stretch: 106%; letter-spacing: -0.02em; white-space: nowrap; z-index: 2; }
+.tab b { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--field); color: var(--ink); font-size: 11.5px; }
+.pad { padding: 26px 22px 20px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 16px; border-radius: 99px; background: var(--paper); font-weight: 600; font-size: 14px; box-shadow: inset 0 0 0 1.5px var(--ink); white-space: nowrap; text-decoration: none; transition: box-shadow .2s var(--ease), translate .2s var(--ease), background-color .2s var(--ease); }
+.btn:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.btn.go { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.btn.go:hover { background: var(--action-hover); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+.btn.sm { height: 30px; padding: 0 12px; font-size: 13px; }
+.btn.quiet { box-shadow: inset 0 0 0 1.5px var(--line); color: var(--mute); }
+.btn.quiet:hover { background: color-mix(in oklch, var(--action) 9%, var(--paper)); color: var(--action); box-shadow: inset 0 0 0 1.5px var(--action); }
+.btn svg { width: 14px; height: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 99px; font-size: 12.5px; font-weight: 600; white-space: nowrap; background: var(--page); color: var(--ink-2); }
+.chip.on { background: var(--field); color: var(--ink); } .chip.ink { background: var(--ink); color: var(--on-ink); }
+.chip.off { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--mute); }
+.chip.bad { background: color-mix(in oklch, var(--action) 12%, var(--paper)); color: var(--action); }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+/* Ready status: one line, a filled bubble. */
+.ready { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-in); background: var(--wash); font-size: 14px; }
+.ready .chip { flex: none; }
+.ready p { color: var(--ink-2); min-width: 0; }
+
+/* An address you copy: the whole row is one pill. */
+.urls { display: grid; gap: 8px; margin-top: 12px; }
+.url { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 44px; padding: 0 4px 0 14px; border-radius: 99px; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--line); }
+.url > span { font-size: 12.5px; font-weight: 640; color: var(--ink-2); white-space: nowrap; }
+.url code { font: 12.5px var(--mono); letter-spacing: 0; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.copy { position: relative; overflow: hidden; }
+.copy .done { position: absolute; inset: 0; display: grid; place-items: center; background: var(--ink); color: var(--field); border-radius: inherit; clip-path: circle(0 at var(--cx, 50%) var(--cy, 50%)); transition: clip-path .5s var(--ease); }
+.copy.did .done { clip-path: circle(140% at var(--cx, 50%) var(--cy, 50%)); }
+
+/* Assistants: a segmented pill, one guide shown. */
+.who { display: flex; gap: 4px; padding: 3px; margin-top: 18px; border-radius: 99px; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--line); width: fit-content; max-width: 100%; }
+.who button { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 580; color: var(--ink-2); white-space: nowrap; }
+.who button[aria-selected=true] { background: var(--paper); color: var(--ink); font-weight: 660; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.who i { width: 16px; height: 16px; border-radius: 5px 5px 5px 2px; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 800; color: var(--paper); }
+.who i.c { background: oklch(62% 0.13 45); } .who i.m { background: oklch(45% 0.12 300); } .who i.g { background: oklch(35% 0.02 180); }
+.guide { margin-top: 14px; }
+.steps { display: grid; gap: 8px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+.steps li::before { content: counter(s); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 8px 8px 8px 3px; background: var(--field); color: var(--ink); font-weight: 760; font-size: 12.5px; }
+.steps kbd { font: 600 12.5px Archivo, sans-serif; padding: 1px 7px; border-radius: 6px; background: var(--page); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); white-space: nowrap; }
+.guide .foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+.guide .note { font-size: 13px; color: var(--mute); padding: 8px 12px; border-radius: var(--r-in); background: var(--page); }
+
+/* Grants: the ledger. */
+.ended { margin: 0 22px 12px; padding: 10px 14px; border-radius: var(--r-in); background: color-mix(in oklch, var(--action) 9%, var(--paper)); color: var(--action); font-size: 13.5px; }
+.ledger li { display: grid; grid-template-columns: minmax(0, 1fr) 96px 118px 124px auto; column-gap: 14px; align-items: center; min-height: 62px; padding: 10px 22px; border-top: 1.5px dashed var(--dash); }
+.ledger li:hover { background: var(--sunk); }
+.ledger .team b { display: block; font-weight: 640; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ledger .team span { font: 12.5px var(--mono); letter-spacing: 0; color: var(--mute); }
+.ledger .team small { display: block; font-size: 12.5px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.via { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 560; white-space: nowrap; }
+.via i { width: 18px; height: 18px; border-radius: 6px 6px 6px 2px; display: grid; place-items: center; font-style: normal; font-size: 10.5px; font-weight: 800; color: var(--paper); }
+.via i.c { background: oklch(62% 0.13 45); } .via i.m { background: oklch(45% 0.12 300); } .via i.g { background: oklch(35% 0.02 180); }
+.when { display: grid; line-height: 1.3; white-space: nowrap; font-size: 14px; }
+.when small { font-size: 12.5px; color: var(--mute); } .when .soon { color: var(--action); font-weight: 640; }
+/* Days left drawn as a short bar under the date. */
+.left { height: 4px; margin-top: 4px; border-radius: 4px; background: var(--line); overflow: hidden; width: 100px; }
+.left i { display: block; height: 100%; width: calc(var(--d) / 30 * 100%); background: var(--ink); border-radius: inherit; }
+.left.soon i { background: var(--action); }
+.acts { display: flex; gap: 6px; justify-content: flex-end; }
+.ledger li.new { animation: land .9s var(--ease); }
+@keyframes land { from { background: var(--wash); } }
+
+.give { padding: 18px 22px 20px; border-top: 1.5px solid var(--ink); background: var(--sunk); }
+.give h3 { font-size: 15px; font-weight: 680; margin-bottom: 12px; display: inline-flex; padding: 3px 12px; border-radius: 99px; background: var(--ink); color: var(--on-ink); }
+.form { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto auto; gap: 12px; align-items: end; }
+.form label { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); min-width: 0; }
+.form select { height: 38px; padding: 0 12px; border: 0; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); min-width: 0; }
+.seg { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.seg > div { display: flex; height: 38px; padding: 3px; border-radius: 99px; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--line); }
+.seg label { display: grid; place-items: center; padding: 0 14px; border-radius: 99px; font-size: 13.5px; white-space: nowrap; cursor: pointer; color: var(--ink-2); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(:checked) { background: var(--paper); color: var(--ink); font-weight: 640; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.hint { grid-column: 1 / -1; font-size: 12.5px; color: var(--mute); }
+.more { padding: 14px 22px 18px; border-top: 1.5px dashed var(--dash); }
+.more summary { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px; border-radius: 99px; box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 13.5px; font-weight: 600; cursor: pointer; list-style: none; }
+.more summary::-webkit-details-marker { display: none; }
+.more summary::after { content: ''; width: 6px; height: 6px; border-right: 1.6px solid; border-bottom: 1.6px solid; rotate: 45deg; margin: -3px 0 0 2px; transition: rotate .2s var(--ease); }
+.more[open] summary::after { rotate: 225deg; margin-top: 3px; }
+.allow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; margin-top: 14px; }
+.allow h4 { margin: 0 0 6px; font-size: 14px; font-weight: 660; } .allow h4 small { font-weight: 400; color: var(--mute); }
+.allow li { position: relative; padding: 2px 0 2px 14px; font-size: 13.5px; color: var(--ink-2); }
+.allow li::before { content: ''; position: absolute; left: 1px; top: 10px; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); }
+.allow > p { grid-column: 1 / -1; font-size: 13px; color: var(--mute); padding-top: 12px; border-top: 1.5px dashed var(--dash); }
+
+/* The grants panel reflows on its own width, so the same panel works in a wide or a narrow column. */
+.grants { container: grants / inline-size; }
+@container grants (max-width: 720px) {
+  .ledger li { grid-template-columns: auto auto minmax(0, 1fr); row-gap: 8px; }
+  .ledger .team, .ledger .when, .ledger .acts { grid-column: 1 / -1; }
+  .ledger .acts { justify-content: flex-start; }
+  .form { grid-template-columns: 1fr 1fr; } .form .seg, .form .btn { grid-column: 1 / -1; } .form .btn { justify-self: start; }
+}
+@container grants (max-width: 460px) { .allow { grid-template-columns: 1fr; } .form { grid-template-columns: minmax(0, 1fr); } .ledger li { padding-inline: 16px; } .give, .more { padding-inline: 16px; } .ended { margin-inline: 16px; } }
+
+/* ============ A · Two panes ============ */
+.A .cols { display: grid; grid-template-columns: minmax(340px, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; margin-top: 30px; }
+.A .setup { position: sticky; top: 14px; }
+@container app (max-width: 980px) { .A .cols { grid-template-columns: minmax(0, 1fr); gap: 34px; } .A .setup { position: static; } }
+
+/* ============ B · Ledger with a setup stub ============ */
+.B .cols { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; margin-top: 30px; }
+.B .setup { position: sticky; top: 14px; background: var(--wash); }
+.B .setup .url { background: var(--paper); }
+.B .setup .who { background: var(--paper); }
+.B .setup .stub-top { display: flex; align-items: center; gap: 10px; }
+.B .setup .stub-top .chip { flex: none; }
+.B .setup .stub-top p { font-size: 13.5px; color: var(--ink-2); }
+@container app (max-width: 980px) { .B .cols { grid-template-columns: minmax(0, 1fr); gap: 34px; } .B .setup { position: static; order: -1; } }
+
+/* ============ C · One ticket, two steps ============ */
+.C .ticket { margin-top: 30px; filter: drop-shadow(5px 5px 0 var(--shadow)); }
+.C .ticket > div { --cut: 11px; --x: 46%; position: relative; display: grid; grid-template-columns: var(--x) minmax(0, 1fr); background: var(--paper); border-radius: var(--r); box-shadow: inset 0 0 0 1.5px var(--ink);
+  -webkit-mask: radial-gradient(circle var(--cut) at var(--x) 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at var(--x) 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in;
+  mask: radial-gradient(circle var(--cut) at var(--x) 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at var(--x) 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+.C .ticket > div::after { content: ''; position: absolute; left: calc(var(--x) - 1px); top: calc(var(--cut) + 8px); bottom: calc(var(--cut) + 8px); border-left: 2px dashed var(--dash); }
+.C .half { position: relative; padding: 22px 24px 22px; min-width: 0; }
+.C .half + .half { background: var(--sunk); border-radius: 0 22px 22px 0; }
+.C .step { display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px 0 4px; border-radius: 99px; background: var(--ink); color: var(--on-ink); font-size: 13.5px; font-weight: 660; margin-bottom: 14px; }
+.C .step b { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--field); color: var(--ink); font-size: 12px; }
+.C .half .form { grid-template-columns: 1fr 1fr; } .C .half .form .seg, .C .half .form .btn { grid-column: 1 / -1; } .C .half .form .btn { justify-self: start; }
+.C .grants { margin-top: 34px; }
+@container app (max-width: 900px) {
+  .C .ticket > div { --x: 0px; grid-template-columns: minmax(0, 1fr); -webkit-mask: none; mask: none; }
+  .C .ticket > div::after { display: none; }
+  .C .half + .half { border-top: 2px dashed var(--dash); border-radius: 0 0 22px 22px; }
+}
+@container app (max-width: 520px) { .C .half .form { grid-template-columns: minmax(0, 1fr); } .C .half { padding: 20px 16px; } }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } ::view-transition-group(*) { animation: none !important; } }
+::view-transition-group(*) { animation-duration: .45s; animation-timing-function: cubic-bezier(.22, 1, .36, 1); }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Assistants page: three ways to use the width</h1>
+  <p>Today the setup panel stops at 860px and the grants panel runs the full width, so a laptop shows a ragged right edge, a lot of empty space and a long scroll. Each direction below keeps every word and control the page has now and only moves them around. Try the width buttons above each frame to see how it stacks. Granting, copying and switching assistants all work.</p>
+</header>
+<main id="dirs"></main>
+
+<template id="setup">
+  <div class="ready"><span class="chip on"><span class="dot"></span>Ready</span><p>Sign-in is set up. Test the connection once with your own account.</p></div>
+  <div class="urls">
+    <div class="url"><span>Team tools</span><code>https://www.getloopdin.social/api/mcp/team</code><button class="btn sm copy" data-copy>Copy<span class="done">Copied</span></button></div>
+    <div class="url"><span>Earlier tools</span><code>https://www.getloopdin.social/api/mcp</code><button class="btn sm copy" data-copy>Copy<span class="done">Copied</span></button></div>
+  </div>
+  <div class="who" role="tablist" aria-label="Assistant">
+    <button role="tab" aria-selected="true" data-who="claude"><i class="c">C</i>Claude</button>
+    <button role="tab" aria-selected="false" data-who="muse"><i class="m">M</i>Muse</button>
+    <button role="tab" aria-selected="false" data-who="chatgpt"><i class="g">G</i>ChatGPT</button>
+  </div>
+  <div class="guide" data-guide="claude">
+    <ol class="steps">
+      <li><span>In Claude, open <kbd>Customize</kbd> › <kbd>Connectors</kbd> › <kbd>Add</kbd> › <kbd>Custom</kbd> › <kbd>Web</kbd>.</span></li>
+      <li><span>Paste the Team tools address above.</span></li>
+      <li><span>Choose sign-in and Claude’s published OAuth identity, then connect your account.</span></li>
+    </ol>
+    <div class="foot"><a class="btn sm" href="#">Claude’s setup guide</a></div>
+  </div>
+  <div class="guide" data-guide="muse" hidden>
+    <ol class="steps">
+      <li><span>Give Muse access to a team first.</span></li>
+      <li><span>Paste this line to Muse, press Connect and sign in.</span></li>
+    </ol>
+    <div class="urls"><div class="url"><span>Line</span><code>Connect to Loopd at https://www.getloopdin.social/api/mcp/team with client ID oJLiBHFWfm5De8eq</code><button class="btn sm copy" data-copy>Copy<span class="done">Copied</span></button></div></div>
+    <div class="foot"><button class="btn sm quiet">Disconnect Muse</button></div>
+  </div>
+  <div class="guide" data-guide="chatgpt" hidden>
+    <p class="note">Custom connections depend on your ChatGPT plan and workspace permissions. This connection has not been checked for the pilot yet.</p>
+    <div class="foot"><a class="btn sm" href="#">OpenAI’s instructions</a></div>
+  </div>
+</template>
+
+<template id="ledger">
+  <div class="ended" role="status"><b>Ithaca Hikers</b> was removed on Nov 12. Claude can no longer reach it.</div>
+  <ul class="ledger"></ul>
+</template>
+
+<template id="giveform">
+  <div class="form">
+    <label>Assistant<select name="who"><option>Claude</option><option>Muse</option><option>ChatGPT</option></select></label>
+    <label>Team<select name="team"><option>EMBA Cohort 2027</option><option>Study Group 4</option><option>Consulting Club</option><option>Spring Trek</option></select></label>
+    <div class="seg"><span>Access</span><div><label><input type="radio" value="read" checked>Read</label><label><input type="radio" value="write">Read and write</label></div></div>
+    <button class="btn go" data-grant>Grant 30-day access</button>
+    <p class="hint">Access to a team covers every group inside it, including ones added later. <span data-hint>It can see the team’s records. It cannot save anything.</span></p>
+  </div>
+</template>
+
+<template id="allow">
+  <details class="more"><summary>What each level allows</summary><div class="allow">
+    <div><h4>Read <small>lets it see</small></h4><ul><li>The brief and announcements</li><li>Decisions, outputs and claims</li><li>The team’s links and texts, with their tags</li><li>Teammates’ handles</li></ul></div>
+    <div><h4>Read and write <small>also lets it, under your name</small></h4><ul><li>Save decisions, outputs and claims</li><li>Save links and texts to Resources</li><li>Correct or withdraw what you saved</li><li>Confirm, decline, finish or release your claims</li><li>Tag teammates</li></ul></div>
+    <p>It writes only when you ask, with no further approval step. Everything it saves is listed on the team page, where you can withdraw it. Granting again replaces the earlier grant. Revoking blocks later use, but cannot recall text already delivered in an outside chat.</p>
+  </div></details>
+</template>
+
+<script>
+const GRANTS = [
+  { team: 'EMBA Cohort 2027', handle: '@emba27', covers: 'Study Group 4, Consulting Club and Spring Trek', who: 'Claude', w: true, ends: 'Dec 14', left: 24 },
+  { team: 'Study Group 4', handle: '@emba27/sg4', who: 'Muse', w: false, ends: 'Nov 24', left: 4 },
+  { team: 'Consulting Club', handle: '@consult', who: 'Claude', w: false, revoked: 'Nov 10' },
+  { team: 'Spring Trek', handle: '@trek', who: 'Claude', w: true, expired: 'Nov 2' },
+];
+const ini = { Claude: 'c', Muse: 'm', ChatGPT: 'g' };
+const row = g => `<li><div class="team"><b>${g.team}</b><span>${g.handle}</span>${g.covers && !g.revoked && !g.expired ? `<small>Covers ${g.covers}</small>` : ''}</div>
+  <span class="via"><i class="${ini[g.who]}">${g.who[0]}</i>${g.who}</span>
+  <span><span class="chip ${g.w ? 'ink' : ''}">${g.w ? 'Read and write' : 'Read'}</span></span>
+  <span class="when">${g.revoked ? `<span class="chip off">Revoked</span><small>${g.revoked}</small>` : g.expired ? `<span class="chip bad">Expired</span><small>${g.expired}</small>`
+    : `<span>Ends ${g.ends}</span><small class="${g.left <= 7 ? 'soon' : ''}">${g.left} days left</small><span class="left ${g.left <= 7 ? 'soon' : ''}" style="--d:${g.left}"><i></i></span>`}</span>
+  <span class="acts">${g.revoked ? '' : `<button class="btn sm">${g.expired ? 'Renew' : 'Renew for 30 days'}</button><button class="btn sm quiet">Revoke</button>`}</span></li>`;
+const t = id => document.getElementById(id).innerHTML;
+const head = (n, label, sub) => `<span class="tab">${n ? `<b>${n}</b>` : ''}${label}</span>`;
+
+const shell = (body, key) => `<div class="app" data-app="${key}">
+  <div class="nav"><span class="wm"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M8 12a4 4 0 1 1 4 4h-1a4 4 0 1 1 4-4"/></svg></i><span>Loopd</span></span><a href="#">Cornell</a><a href="#">Groups</a><a href="#" aria-current="page">Assistants</a><span class="me">SF</span></div>
+  <div class="main"><h1>Connect your assistant</h1><p class="lede">Connect Loopd once in your assistant, then give it access to a team. That covers the groups inside it too.</p>${body}</div></div>`;
+
+const grantsPanel = (withForm, title = 'Team grants') => `<section class="panel grants">${head(0, title)}
+  <p class="pad" style="padding-bottom:12px;color:var(--mute);font-size:14px">Each grant lets one assistant reach one team, and the groups inside it, for 30 days.</p>
+  ${t('ledger')}${withForm ? `<div class="give"><h3>Give an assistant access</h3>${t('giveform')}</div>` : ''}${t('allow')}</section>`;
+
+const DIRS = [
+  { key: 'A', name: 'Two panes', tag: 'set up | your grants',
+    why: 'Setup on the left, grants on the right, side by side from about 1000px wide.',
+    more: 'The setup pane stays put while the grants list scrolls. Each assistant’s steps sit behind one pill, so only one guide shows at a time. Below 1000px the setup sits on top and grants follow.',
+    body: () => `<div class="cols"><section class="panel setup pad">${head(1, 'Connect Loopd once')}${t('setup')}</section><div>${grantsPanel(true)}</div></div>` },
+  { key: 'B', name: 'Grants first, setup on the side', tag: 'for people already connected',
+    why: 'Grants get the wide column; setup becomes a narrow stub on the right.',
+    more: 'Most visits after the first one are to renew or revoke, so the grants list gets the space. The stub stays sticky with the addresses and the steps. On a narrow screen the stub moves above the grants.',
+    body: () => `<div class="cols">${grantsPanel(true)}<section class="panel setup pad">${head(0, 'Set up')}${t('setup')}</section></div>` },
+  { key: 'C', name: 'One ticket, two steps', tag: 'connect, then give access',
+    why: 'Connecting and giving access sit side by side on one ticket, with the grants list full width below it.',
+    more: 'It follows the order you do things in: step 1 on the left half, step 2 on the right, with the tear line between them. Grant something and it lands in the list underneath. On a narrow screen the tear line runs across and step 2 sits under step 1.',
+    body: () => `<div class="ticket"><div><div class="half"><span class="step"><b>1</b>Connect Loopd once</span>${t('setup')}</div><div class="half"><span class="step"><b>2</b>Give an assistant access</span>${t('giveform')}</div></div></div>${grantsPanel(false, 'Your grants')}` },
+];
+
+const W = [['Laptop', 1280], ['Narrow', 820], ['Phone', 390]];
+document.getElementById('dirs').innerHTML = DIRS.map(d => `<section class="dir ${d.key}" data-dir="${d.key}">
+  <div class="dir-head"><h2>${d.key} · ${d.name} <b>${d.tag}</b></h2><div class="widths" role="group" aria-label="Width">${W.map(([l, w], i) => `<button aria-pressed="${i === 0}" data-w="${w}">${l}</button>`).join('')}</div></div>
+  <p class="why">${d.why}<span>${d.more}</span></p>
+  <div class="stage">${shell(d.body(), d.key)}</div></section>`).join('');
+document.querySelectorAll('.ledger').forEach(ul => ul.innerHTML = GRANTS.map(row).join(''));
+
+const vt = fn => document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches ? document.startViewTransition(fn) : fn();
+
+document.addEventListener('click', e => {
+  const w = e.target.closest('[data-w]');
+  if (w) { const dir = w.closest('.dir'); dir.querySelectorAll('[data-w]').forEach(b => b.setAttribute('aria-pressed', b === w)); dir.querySelector('.app').style.setProperty('--w', w.dataset.w + 'px'); return; }
+  const copy = e.target.closest('[data-copy]');
+  if (copy) { const r = copy.getBoundingClientRect(); copy.style.setProperty('--cx', e.clientX - r.left + 'px'); copy.style.setProperty('--cy', e.clientY - r.top + 'px');
+    navigator.clipboard?.writeText(copy.parentElement.querySelector('code').textContent).catch(() => {}); copy.classList.add('did'); setTimeout(() => copy.classList.remove('did'), 1400); return; }
+  const tab = e.target.closest('[data-who]');
+  if (tab) { const box = tab.closest('.who').parentElement; vt(() => { box.querySelectorAll('[data-who]').forEach(b => b.setAttribute('aria-selected', b === tab)); box.querySelectorAll('[data-guide]').forEach(g => g.hidden = g.dataset.guide !== tab.dataset.who); }); return; }
+  const go = e.target.closest('[data-grant]');
+  if (go) { const app = go.closest('.app'), form = go.closest('.form');
+    const g = { team: form.querySelector('[name=team]').value, handle: '@' + form.querySelector('[name=team]').value.toLowerCase().replace(/[^a-z0-9]+/g, ''), who: form.querySelector('[name=who]').value, w: form.querySelector('[value=write]').checked, ends: 'Dec 20', left: 30 };
+    const ul = app.querySelector('.ledger');
+    go.style.viewTransitionName = 'grant-' + app.dataset.app;
+    vt(() => { go.style.viewTransitionName = ''; [...ul.children].forEach(li => { if (li.querySelector('.team b').textContent === g.team && li.querySelector('.via').textContent.endsWith(g.who)) li.remove(); });
+      ul.insertAdjacentHTML('afterbegin', row(g)); const li = ul.firstElementChild; li.classList.add('new'); li.style.viewTransitionName = 'grant-' + app.dataset.app; });
+    setTimeout(() => { const li = ul.firstElementChild; if (li) li.style.viewTransitionName = ''; }, 700); }
+});
+document.addEventListener('change', e => { const f = e.target.closest('.form'); if (f && e.target.type === 'radio') { f.querySelectorAll('.seg input').forEach(i => i.checked = i === e.target); f.querySelector('[data-hint]').textContent = e.target.value === 'write' ? 'It can also save, correct and withdraw records under your name when you ask.' : 'It can see the team’s records. It cannot save anything.'; } });
+</script>
+</body>
+</html>

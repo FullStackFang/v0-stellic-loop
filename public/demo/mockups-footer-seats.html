@@ -38,8 +38,13 @@ body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font
 .code { align-self: stretch; height: 46px; margin-top: auto; background: repeating-linear-gradient(90deg, var(--ink) 0 3px, #0000 3px 5px, var(--ink) 5px 6px, #0000 6px 10px, var(--ink) 10px 14px, #0000 14px 16px, var(--ink) 16px 17px, #0000 17px 21px); }
 /* the room: taller than today's 132px, to hold the seats above the heads */
 .stage { position: relative; height: 196px; margin: 32px 24px 22px; border-radius: 16px 16px 16px 5px; background: var(--stub); box-shadow: inset 0 -9px 0 color-mix(in oklab, var(--field) 62%, var(--paper)); touch-action: none; }
-.stage > small { position: absolute; z-index: 6; right: 12px; top: -13px; padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: var(--ink); color: var(--paper); transition: background-color .3s, color .3s; }
-.tk.full .stage > small { background: var(--action); }
+.tags { position: absolute; z-index: 6; right: 12px; top: -14px; display: flex; align-items: center; gap: 6px; }
+/* new: once all are in, the ticket offers to drop them again */
+.tags button { height: 30px; padding: 0 13px; border-radius: 99px; font-size: 12.5px; font-weight: 620; white-space: nowrap; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); transition: translate .15s var(--ease), box-shadow .15s var(--ease); }
+.tags button:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); } .tags button:active { translate: 2px 2px; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tk:not(.full) .tags button { display: none; }
+.tags small { padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: var(--ink); color: var(--paper); transition: background-color .3s, color .3s; }
+.tk.full .tags small { background: var(--action); }
 .pet { position: absolute; z-index: 3; left: 0; bottom: 7px; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 88%; cursor: grab; touch-action: none; will-change: transform; -webkit-user-drag: none; }
 .pet.up { cursor: grabbing; z-index: 5; }
 
@@ -59,14 +64,14 @@ body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font
 </style>
 </head>
 <body>
-<div class="mock"><span><b>Footer with seats.</b> The live footer's ticket, with a row of seats. They fall out when it comes into view; drag one back to a seat.</span>
-  <div><button id="again">Drop them again</button><button id="all">Seat them all</button><a href="/" target="_blank" rel="noopener">The footer today</a></div>
+<div class="mock"><span><b>Footer with seats.</b> The live footer's ticket, with a row of seats. They fall out when it comes into view; drag one back to a seat. Once all are in, the ticket offers to drop them again.</span>
+  <div><button id="all">Seat them all</button><a href="/" target="_blank" rel="noopener">The footer today</a></div>
   <div id="kits"><small>Colours</small><button data-kit="loop" aria-pressed="true">Loopd</button><button data-kit="cornell">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button></div></div>
 <div class="above"></div>
 
 <footer class="ft">
   <div class="carry"><div class="tk">
-    <div class="stage"><small>Pick one up</small></div>
+    <div class="stage"><div class="tags"><small>Pick one up</small><button type="button" id="redo">Drop them again</button></div></div>
     <div class="tear"><span class="admit">Admit everyone</span><div class="code"></div></div>
   </div></div>
   <div class="bar"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="16" cy="11" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd</span>
@@ -123,7 +128,7 @@ function start() { crowd.forEach((one, i) => sit(one, i)); crowd.forEach((one, i
   const from = one.x; one.seat = null; one.x = reduce ? 20 + i * (wide - 40 - SIZE) / Math.max(1, count - 1) : from; one.y = reduce ? 0 : one.y; one.vx = reduce ? 0 : (Math.random() - .5) * 260; one.vy = reduce ? 0 : 180; draw(one); told(); wake(); }, reduce ? 0 : 500 + i * 250)); }
 place(); told(); start();
 addEventListener('resize', () => { wide = stage.clientWidth; place(); });
-document.getElementById('again').addEventListener('click', start);
+document.getElementById('redo').addEventListener('click', start);
 document.getElementById('all').addEventListener('click', () => crowd.forEach((one, i) => sit(one, i)));
 document.querySelectorAll('#kits button').forEach(button => button.addEventListener('click', () => { document.documentElement.dataset.kit = button.dataset.kit; document.querySelectorAll('#kits button').forEach(each => each.setAttribute('aria-pressed', each === button)); }));
 </script>
