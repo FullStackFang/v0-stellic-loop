@@ -59,9 +59,24 @@ Tipping or pulling the ticket SHALL move only the animals on the floor.
 - **WHEN** the ticket is picked up and tipped with some animals seated
 - **THEN** the seated ones stay in their seats and the ones on the floor slide
 
+### Requirement: They can be dropped again
+Once every seat is filled, the ticket SHALL show a "Drop them again" button. Pressing it SHALL empty every seat onto the floor, as when the ticket first came into view. The button SHALL NOT be shown while any seat is empty.
+
+#### Scenario: All are in
+- **WHEN** the last empty seat is filled
+- **THEN** a "Drop them again" button is shown beside the "All in" pill
+
+#### Scenario: The button is pressed
+- **WHEN** the person presses "Drop them again"
+- **THEN** every animal leaves its seat for the floor, the pill reads "Pick one up", and the button is gone
+
+#### Scenario: Pressed with reduced motion
+- **WHEN** the person presses "Drop them again" and their device asks for reduced motion
+- **THEN** the animals are on the floor at once, with nothing falling
+
 ### Requirement: Nothing of it is needed to use the site
-The ticket and everything in it SHALL be hidden from screen readers, as today, and SHALL hold no link or control that leads anywhere.
+The animals and seats SHALL be hidden from screen readers, as today. The ticket SHALL hold no link, and no control other than "Drop them again", which SHALL be a button a keyboard and a screen reader can reach.
 
 #### Scenario: Read by a screen reader
 - **WHEN** a screen reader reads the footer
-- **THEN** it reads the bar's links and the colours, and nothing of the ticket
+- **THEN** it reads the bar's links and the colours, and of the ticket only "Drop them again" when it is shown

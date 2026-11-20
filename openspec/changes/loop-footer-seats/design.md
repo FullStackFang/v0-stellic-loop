@@ -30,7 +30,7 @@ Direction A of `public/demo/mockups-error-pages.html` is a different, smaller mo
 
 **D6. Restlessness and cheering.** The idle hop every 2.6 seconds and the cheer on a colour change apply to those on the floor only. A seated one does a small bob in its seat for the cheer.
 
-**D7. Screen readers and keys.** The ticket is decoration today (`aria-hidden`) and stays so in Seats. Nothing in it is needed to use the site, so there is no keyboard way to seat an animal.
+**D7. One control, and it is a real button.** Once all are in, "Drop them again" appears beside the "All in" pill, as an outlined pill of its own. It is a `<button>`, reachable by keyboard and read by a screen reader; the animals and seats stay decoration (`aria-hidden`), so `aria-hidden` moves from the whole ticket to the room's animals and seats. There is no keyboard way to seat an animal, and no "Seat them all" in the ticket: that button is the mockup's own, for looking at the finished state.
 
 **D8. Phone.** Under 860px the stub is hidden today and the room is narrower. Seats keeps the same rule; the seats are 44px so a thumb can drop on one, and the row holds as many as there are animals (at least 4).
 
