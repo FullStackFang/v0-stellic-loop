@@ -23,36 +23,51 @@ async function person(email: string, name = 'Ana Lopez') {
   await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]);
   return (await authenticate(t.db, 'test', async () => ({ issuer: 'https://issuer.test', subject: row.id, expiresAt: Date.parse('2099-01-01'), verifiedEmail: email })))!;
 }
-const ask = async (who: Principal | null) => (await (who ? withPortalTestSession(who, GET) : GET())).json();
+const ask = async (who: Principal | null) => { const page = await (await (who ? withPortalTestSession(who, GET) : GET())).text(); expect(page).toContain('<canvas id="game"'); return JSON.parse(/<script>window.congaPlayer = (.*);<\/script>/.exec(page)![1]); };
 
 it('tells the game nothing about someone signed out', async () => {
   expect(await ask(null)).toBeNull();
 });
 
-it('gives the animal a person wears, by its place on the sheet, and no Ink+ until they have it', async () => {
+it('gives the animal a person wears, by its place on the sheet, in their school\'s colours, and no more without Ink+', async () => {
   const ana = await person('ana@cornell.edu');
-  expect(await ask(ana)).toEqual({ face: animalOf(ana.personId) + 1, picture: null, ink: false });
+  expect(await ask(ana)).toEqual({ ink: false, kit: 'cornell', animals: [{ face: animalOf(ana.personId) + 1, picture: null, kit: 'cornell' }] });
   await pickFace(t.db, ana.personId, 11);
-  expect(await ask(ana)).toEqual({ face: 12, picture: null, ink: false });
-  await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
-  expect((await ask(ana)).ink).toBe(true);
+  expect((await ask(ana)).animals).toEqual([{ face: 12, picture: null, kit: 'cornell' }]);
 });
 
 it('gives someone who wears their photo the animal they were given', async () => {
   const ana = await person('ana@cornell.edu');
   await pickFace(t.db, ana.personId, PHOTO);
-  expect((await ask(ana)).face).toBe(animalOf(ana.personId) + 1);
+  expect((await ask(ana)).animals[0].face).toBe(animalOf(ana.personId) + 1);
 });
 
 it('gives a pet of their own as a picture', async () => {
   const ana = await person('ana@cornell.edu');
   const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64'));
   const { token } = await makeCustomFace(t.db, ana.personId, png, 'ana@cornell.edu', async () => ({ small: png, large: png }));
-  expect(await ask(ana)).toEqual({ face: 0, picture: `/animals/custom/${token}`, ink: false });
+  expect((await ask(ana)).animals).toEqual([{ face: 0, picture: `/animals/custom/${token}`, kit: 'cornell' }]);
 });
 
-it('counts the admin as having Ink+', async () => {
+it('with Ink+ offers their school\'s animal and the premium ones too, the one worn first and none twice', async () => {
+  const ana = await person('ana@cornell.edu');
+  await pickFace(t.db, ana.personId, 11);
+  await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
+  const told = await ask(ana), faces = told.animals.map((each: { face: number }) => each.face);
+  expect(told.ink).toBe(true);
+  expect(told.animals[0]).toEqual({ face: 12, picture: null, kit: 'cornell' });
+  // public/animals: 37 is the dachshund (premium), 38 Cornell's bear, 39 Columbia's lion, which is not hers.
+  expect(faces).toContain(37);
+  expect(faces).toContain(38);
+  expect(faces).not.toContain(39);
+  expect(new Set(faces).size).toBe(faces.length);
+});
+
+it('counts the admin as having Ink+, and offers every school\'s animal in that school\'s colours', async () => {
   const ana = await person('boss@cornell.edu');
   vi.stubEnv('LOOP_ADMIN', 'boss@cornell.edu');
-  expect((await ask(ana)).ink).toBe(true);
+  const told = await ask(ana);
+  expect(told.ink).toBe(true);
+  expect(told.animals).toContainEqual({ face: 38, picture: null, kit: 'cornell' });
+  expect(told.animals).toContainEqual({ face: 39, picture: null, kit: 'columbia' });
 });
