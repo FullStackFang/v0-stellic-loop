@@ -3,13 +3,15 @@
 import "server-only";
 import { headers } from "next/headers";
 
-type Bucket = "identify" | "verify" | "share" | "board";
+type Bucket = "identify" | "verify" | "share" | "board" | "seen";
 
 export const LIMITS: Record<Bucket, { perIp: number; perPhone: number; windowMs: number }> = {
   identify: { perIp: 30, perPhone: 10, windowMs: 60_000 },
   verify: { perIp: 20, perPhone: 10, windowMs: 60_000 },
   share: { perIp: 20, perPhone: 20, windowMs: 60_000 },
   board: { perIp: 5, perPhone: 5, windowMs: 3_600_000 },
+  // Page opens counted for the admin (app/c/seen): far more than a person clicks, far fewer than a script sends.
+  seen: { perIp: 120, perPhone: 120, windowMs: 60_000 },
 };
 
 const hits = new Map<string, { n: number; reset: number }>();

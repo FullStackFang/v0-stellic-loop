@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin: sign-ins and activity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* Mockup only. Tokens and the admin shell are copied from app/c/campus.css (.cs, .cs-adm) so the frames read as the live admin. */
+html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; }
+body { margin: 0; padding: 40px 28px 120px; background: oklch(93% 0.006 240); font-family: Archivo, system-ui, sans-serif; }
+.cs {
+  --cs-field: oklch(96.4% 0.19 117); --cs-field-shadow: oklch(80% 0.17 121); --cs-ink: oklch(25% 0.07 252); --cs-action: oklch(47.6% 0.13 250);
+  --cs-action-hover: oklch(54% 0.14 250); --cs-third: oklch(72% 0.2 350); --cs-paper: oklch(99.3% 0.004 117); --cs-page: oklch(96.2% 0.004 230);
+  --cs-line: oklch(90.6% 0.008 240); --cs-mute: oklch(46.5% 0.012 245); --cs-stub: color-mix(in oklch, var(--cs-field) 32%, var(--cs-paper));
+  --cs-expo: cubic-bezier(.16, 1, .3, 1);
+  font-size: 15px; line-height: 1.45; letter-spacing: -0.012em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; color: var(--cs-ink); background: var(--cs-page);
+}
+.cs *, .cs *::before, .cs *::after { box-sizing: border-box; }
+.cs :is(h1, h2, h3, p, ul, ol) { margin: 0; padding: 0; } .cs :is(ul, ol) { list-style: none; }
+.cs button { font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+.cs [hidden] { display: none !important; }
+
+/* the mockup's own frame */
+.mk-frame { max-width: 1320px; margin: 0 auto 72px; }
+.mk-tab { display: inline-flex; align-items: center; gap: 12px; margin: 0 0 0 22px; padding: 9px 20px 9px 9px; border-radius: 14px 14px 0 0; background: oklch(25% 0.07 252); color: oklch(99% 0.003 230); font-size: 16px; font-weight: 640; letter-spacing: -0.02em; }
+.mk-tab b { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px 9px 9px 3px; background: oklch(96.4% 0.19 117); color: oklch(25% 0.07 252); font-weight: 800; }
+.mk-why { margin: 0; padding: 14px 22px; border-radius: 16px 16px 0 0; background: oklch(25% 0.07 252); color: oklch(88% 0.02 245); font-size: 14px; line-height: 1.5; }
+.mk-why b { color: oklch(96.4% 0.19 117); font-weight: 620; }
+.mk-frame > .cs { border-radius: 0 0 18px 18px; overflow: hidden; box-shadow: 0 30px 60px -30px oklch(25% 0.07 252 / .45); }
+
+/* top bar, cut down */
+.cs-nav { display: flex; align-items: center; gap: 8px; padding: 11px 32px 12px; background: var(--cs-field); border-bottom: 1.5px solid var(--cs-ink); box-shadow: 0 5px 0 var(--cs-field-shadow); position: relative; z-index: 1; }
+.cs-wm { font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; margin-right: 20px; }
+.cs-nav a { padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-nav a[aria-current] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+
+/* admin shell, as live */
+.cs-adm { display: grid; grid-template-columns: 216px minmax(0, 1fr); }
+.cs-adm-rail { display: flex; flex-direction: column; gap: 4px; padding: 26px 14px 26px 22px; border-right: 1px solid var(--cs-line); }
+.cs-adm-rail .school { display: flex; align-items: center; height: 38px; margin-bottom: 14px; padding: 0 12px; border-radius: 10px; font-weight: 640; background: var(--cs-paper); box-shadow: inset 0 0 0 1px var(--cs-line); }
+.cs-adm-rail nav { display: grid; gap: 4px; } .cs-adm-rail nav a { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 12px; border-radius: 10px; font-weight: 560; cursor: pointer; }
+.cs-adm-rail nav a:hover { box-shadow: inset 0 0 0 1px var(--cs-line); }
+.cs-adm-rail nav a[aria-current] { background: var(--cs-ink); color: var(--cs-paper); font-weight: 660; box-shadow: none; }
+.cs-adm-rail small { font-size: 12.5px; opacity: .7; } .cs-adm-rail small.warn { opacity: 1; font-weight: 600; color: oklch(52% 0.17 28); }
+.cs-adm-rail nav a.new::after { content: "new"; order: 2; margin-left: 8px; padding: 1px 7px; border-radius: 99px; font-size: 11px; font-weight: 700; background: var(--cs-field); color: var(--cs-ink); }
+.cs-adm-rail nav a.new small { margin-left: auto; }
+.cs-adm-main { min-width: 0; padding: 26px 32px 56px; }
+.cs-adm-top { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin-bottom: 30px; } .cs-adm-top h1 { margin-right: auto; font-size: 26px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.2; }
+
+/* a switch of pills: one filled, the rest outlined */
+.sw { display: flex; gap: 6px; flex-wrap: wrap; } .sw button { height: 34px; padding: 0 15px; border-radius: 99px; font-size: 13.5px; font-weight: 600; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .15s, box-shadow .15s; }
+.sw button:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.sw button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; translate: none; }
+.sw button small { margin-left: 7px; font-size: 12.5px; opacity: .75; }
+
+/* a panel: paper card with the ink edge and hard shadow; its name is a filled tab that sits over the top edge */
+.pn { position: relative; padding: 30px 22px 20px; border-radius: 18px 18px 18px 5px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
+.pn > h2 { position: absolute; top: -13px; left: 16px; display: flex; align-items: center; height: 27px; padding: 0 13px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-paper); font-size: 13px; font-weight: 640; letter-spacing: -0.005em; white-space: nowrap; }
+.pn > h2 em { margin-left: 8px; font-style: normal; font-weight: 500; color: var(--cs-field); }
+.grid { display: grid; gap: 30px 20px; }
+.four { grid-template-columns: repeat(4, minmax(0, 1fr)); } .two { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wide { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+.grid + .grid { margin-top: 30px; }
+
+/* number tiles */
+.num b { display: block; font-size: 40px; font-weight: 720; font-stretch: 108%; letter-spacing: -0.045em; line-height: 1.05; }
+.num span { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--cs-mute); }
+.num span i { font-style: normal; padding: 1px 8px; border-radius: 6px; background: var(--cs-stub); color: var(--cs-ink); }
+.num.lead { background: var(--cs-field); } .num.lead span { color: var(--cs-ink); } .num.lead span i { background: var(--cs-paper); }
+
+/* the days chart: one bar a day, today in ink */
+.days { display: flex; align-items: flex-end; gap: 4px; height: 168px; padding-top: 6px; }
+.days i { flex: 1; min-width: 0; border-radius: 5px 5px 2px 2px; background: var(--cs-action); transform-origin: bottom; animation: rise .7s var(--cs-expo) backwards; }
+.days i.we { background: color-mix(in oklch, var(--cs-action) 45%, var(--cs-paper)); } .days i.now { background: var(--cs-ink); } .days i:hover { background: var(--cs-third); }
+@keyframes rise { from { transform: scaleY(0); } }
+.axis { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 7px; border-top: 1.5px solid var(--cs-ink); font-size: 12.5px; font-weight: 580; color: var(--cs-mute); }
+.axis b { color: var(--cs-ink); font-weight: 660; }
+
+/* how people sign in: one split bar, then one line per way */
+.split { display: flex; gap: 3px; height: 30px; margin-bottom: 14px; } .split i { border-radius: 7px; min-width: 6px; animation: rise .7s var(--cs-expo) backwards; transform-origin: left; }
+.ways li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--cs-line); font-weight: 580; } .ways li:first-child { border-top: 0; }
+.ways li u { flex: none; width: 14px; height: 14px; border-radius: 4px; } .ways li b { margin-left: auto; font-weight: 700; } .ways li small { width: 44px; text-align: right; font-size: 13px; color: var(--cs-mute); }
+.g { background: var(--cs-ink); } .e { background: var(--cs-action); } .l { background: var(--cs-third); }
+
+/* ranked lines: name, bar, count, all on one line */
+.rank li { display: grid; grid-template-columns: 150px minmax(0, 1fr) 62px; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--cs-line); font-weight: 580; } .rank li:first-child { border-top: 0; }
+.rank .bar { height: 12px; border-radius: 99px; background: var(--cs-line); overflow: hidden; } .rank .bar i { display: block; height: 100%; border-radius: 99px; background: var(--cs-action); animation: rise .7s var(--cs-expo) backwards; transform-origin: left; }
+.rank b { text-align: right; font-weight: 700; }
+
+/* people table */
+.cs-adm-table { width: 100%; border-collapse: collapse; font-size: 14px; } .cs-adm-table th { padding: 0 12px 8px 0; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--cs-mute); }
+.cs-adm-table td { padding: 9px 12px 9px 0; border-top: 1px solid var(--cs-line); vertical-align: middle; white-space: nowrap; }
+.who { display: flex; align-items: center; gap: 11px; } .who img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--cs-stub); box-shadow: 0 0 0 1.5px var(--cs-ink); }
+.who b { display: block; font-weight: 640; letter-spacing: -0.02em; } .who small { display: block; font-size: 12.5px; color: var(--cs-mute); }
+.way { display: inline-flex; align-items: center; gap: 6px; margin-right: 5px; padding: 2px 9px 2px 6px; border-radius: 7px; font-size: 12.5px; font-weight: 620; background: var(--cs-page); }
+.way u { width: 10px; height: 10px; border-radius: 3px; }
+.plan { padding: 2px 9px; border-radius: 7px; font-size: 12.5px; font-weight: 680; background: var(--cs-ink); color: var(--cs-field); } .plan.plus { background: var(--cs-third); color: var(--cs-ink); }
+td.r, th.r { text-align: right; padding-right: 0; }
+.spark { display: inline-flex; align-items: flex-end; gap: 2px; height: 22px; vertical-align: middle; margin-right: 9px; } .spark i { width: 5px; border-radius: 2px; background: var(--cs-action); min-height: 2px; } .spark i.z { background: var(--cs-line); }
+.more { display: flex; justify-content: center; margin-top: 16px; }
+@media (max-width: 1000px) { .four { grid-template-columns: repeat(2, minmax(0, 1fr)); } .two, .wide { grid-template-columns: minmax(0, 1fr); } .cs-adm { grid-template-columns: minmax(0, 1fr); } .cs-adm-rail { display: none; } }
+@media (prefers-reduced-motion: reduce) { .days i, .split i, .rank .bar i { animation: none; } }
+</style>
+</head>
+<body>
+
+<section class="mk-frame">
+  <h2 class="mk-tab"><b>1</b>Activity: how busy the site is</h2>
+  <p class="mk-why">New section, first in the list. <b>Sign-in numbers come from Clerk</b>, which already has them for everyone, so they are right from day one. <b>Page opens and actions are counted by us</b> in one small table, starting the day it ships. The three pills switch the whole page between 7 days, 30 days and all time (they work here).</p>
+  <div class="cs">
+    <div class="cs-nav"><span class="cs-wm">Loopd</span><a>This week</a><a>Near you</a><a>Groups</a><a aria-current="page">Admin</a></div>
+    <div class="cs-adm">
+      <aside class="cs-adm-rail"><span class="school">Cornell</span><nav>
+        <a class="new" aria-current="page">Activity</a><a class="new">People<small>412</small></a><a>Review<small class="warn">3 waiting</small></a><a>Schools<small>5</small></a><a>Events<small>42</small></a><a>Rewards<small>6</small></a><a>Feeds<small>4</small></a><a>Places<small>31</small></a><a>Tags<small>58</small></a><a>Animals<small>64</small></a><a>Premium<small>58</small></a><a>LinkedIn<small>47</small></a><a>Campus<small>2</small></a>
+      </nav></aside>
+      <main class="cs-adm-main" id="act">
+        <div class="cs-adm-top"><h1>Activity</h1><div class="sw" id="period"><button aria-pressed="false" data-p="7">7 days</button><button aria-pressed="true" data-p="30">30 days</button><button aria-pressed="false" data-p="all">All time</button></div></div>
+        <div class="grid four">
+          <div class="pn num lead"><h2>People signed up</h2><b data-n="people"></b><span><i data-n="peopleNew"></i>new in this time</span></div>
+          <div class="pn num"><h2>Signed in today</h2><b data-n="today"></b><span><i data-n="todayVs"></i>against yesterday</span></div>
+          <div class="pn num"><h2>Signed in, this time</h2><b data-n="active"></b><span><i data-n="activePct"></i>of everyone</span></div>
+          <div class="pn num"><h2>Pages opened</h2><b data-n="opens"></b><span><i data-n="perPerson"></i>a person</span></div>
+        </div>
+        <div class="grid wide">
+          <div class="pn"><h2>People signing in, by day<em data-n="span"></em></h2><div class="days" id="days"></div><div class="axis"><span data-n="from"></span><span>most in a day <b data-n="peak"></b></span><span>today</span></div></div>
+          <div class="pn"><h2>How they sign in</h2><div class="split" id="split"></div><ul class="ways" id="ways"></ul></div>
+        </div>
+        <div class="grid two">
+          <div class="pn"><h2>Where people go<em>pages opened</em></h2><ul class="rank" id="where"></ul></div>
+          <div class="pn"><h2>What people do<em>times pressed</em></h2><ul class="rank" id="what"></ul></div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<section class="mk-frame">
+  <h2 class="mk-tab"><b>2</b>People: every account and how it signs in</h2>
+  <p class="mk-why">New section. One line a person, most recently signed in first. <b>All of it is read from Clerk and our own person rows</b>, nothing new to store. The pills filter by the way they sign in (they work here). The small bars are the last 14 days: a bar for each day they signed in.</p>
+  <div class="cs">
+    <div class="cs-nav"><span class="cs-wm">Loopd</span><a>This week</a><a>Near you</a><a>Groups</a><a aria-current="page">Admin</a></div>
+    <div class="cs-adm">
+      <aside class="cs-adm-rail"><span class="school">Cornell</span><nav>
+        <a class="new">Activity</a><a class="new" aria-current="page">People<small>412</small></a><a>Review<small class="warn">3 waiting</small></a><a>Schools<small>5</small></a><a>Events<small>42</small></a><a>Rewards<small>6</small></a><a>Feeds<small>4</small></a><a>Places<small>31</small></a><a>Tags<small>58</small></a><a>Animals<small>64</small></a><a>Premium<small>58</small></a><a>LinkedIn<small>47</small></a><a>Campus<small>2</small></a>
+      </nav></aside>
+      <main class="cs-adm-main">
+        <div class="cs-adm-top"><h1>People</h1><div class="sw" id="filter"><button aria-pressed="true" data-w="">Everyone<small>412</small></button><button aria-pressed="false" data-w="g">Google<small>268</small></button><button aria-pressed="false" data-w="e">Email code<small>97</small></button><button aria-pressed="false" data-w="l">LinkedIn<small>47</small></button></div></div>
+        <div class="pn"><h2>Most recently signed in<em id="shown"></em></h2>
+          <table class="cs-adm-table"><thead><tr><th>Person</th><th>School</th><th>Signs in with</th><th>Joined</th><th>Last 14 days</th><th>Last signed in</th><th class="r">Plan</th></tr></thead><tbody id="people"></tbody></table>
+          <div class="more sw"><button>Show 25 more</button></div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<script>
+// Made-up numbers, shaped like a real month: quieter weekends, a slow climb.
+const WAY = { g: 'Google', e: 'Email code', l: 'LinkedIn' };
+const DATA = {
+  7:   { people: 412, peopleNew: '+41', today: 86, todayVs: '+12', active: 233, opens: '5,120', perPerson: '22', span: 'last 7 days', from: 'Nov 14', n: 7,
+         ways: { g: 152, e: 54, l: 27 }, where: [['This week', 2140], ['Front door', 980], ['Near you', 720], ['Groups', 610], ['Doodles', 440], ['Ink', 170], ['Assistants', 60]],
+         what: [['Going pressed', 386], ['Check-ins', 121], ['Plans posted', 97], ['Pictures saved', 52], ['Event links pasted', 31], ['Subscribe pressed', 19]] },
+  30:  { people: 412, peopleNew: '+158', today: 86, todayVs: '+12', active: 341, opens: '16,515', perPerson: '48', span: 'last 30 days', from: 'Oct 22', n: 30,
+         ways: { g: 224, e: 79, l: 38 }, where: [['This week', 6840], ['Front door', 3120], ['Near you', 2310], ['Groups', 1975], ['Doodles', 1420], ['Ink', 610], ['Assistants', 240]],
+         what: [['Going pressed', 1264], ['Check-ins', 402], ['Plans posted', 318], ['Pictures saved', 173], ['Event links pasted', 96], ['Subscribe pressed', 58]] },
+  all: { people: 412, peopleNew: '+412', today: 86, todayVs: '+12', active: 412, opens: '21,930', perPerson: '53', span: 'all time, by week', from: 'Sep 1', n: 7,
+         ways: { g: 268, e: 97, l: 47 }, where: [['This week', 9020], ['Front door', 4410], ['Near you', 2980], ['Groups', 2630], ['Doodles', 1790], ['Ink', 800], ['Assistants', 300]],
+         what: [['Going pressed', 1610], ['Check-ins', 498], ['Plans posted', 421], ['Pictures saved', 214], ['Event links pasted', 118], ['Subscribe pressed', 74]] },
+};
+const MONTH = [18,22,8,7,21,25,24,27,29,11,10,30,33,31,36,38,15,13,41,44,47,49,52,22,19,58,66,61,74,86];
+const WEEKS = [12,19,27,34,48,61,83,104,139,171,212,233];
+const fmt = n => n.toLocaleString('en-US');
+function show(p) {
+  const d = DATA[p], root = document.getElementById('act');
+  root.querySelectorAll('[data-n]').forEach(el => { const v = d[el.dataset.n]; if (v !== undefined) el.textContent = typeof v === 'number' ? fmt(v) : v; });
+  root.querySelector('[data-n=activePct]').textContent = Math.round(d.active / d.people * 100) + '%';
+  const days = p === 'all' ? WEEKS : MONTH.slice(-d.n), top = Math.max(...days);
+  root.querySelector('[data-n=peak]').textContent = top;
+  document.getElementById('days').innerHTML = days.map((n, i) => { const back = days.length - 1 - i, we = p !== 'all' && (back % 7 === 5 || back % 7 === 6);
+    return `<i class="${back === 0 ? 'now' : we ? 'we' : ''}" title="${n} people" style="height:${Math.max(n / top * 100, 1.5)}%;animation-delay:${i * 14}ms"></i>`; }).join('');
+  const sum = d.ways.g + d.ways.e + d.ways.l;
+  document.getElementById('split').innerHTML = Object.keys(WAY).map(k => `<i class="${k}" style="flex:${d.ways[k]}"></i>`).join('');
+  document.getElementById('ways').innerHTML = Object.keys(WAY).map(k => `<li><u class="${k}"></u>${WAY[k]}<b>${d.ways[k]}</b><small>${Math.round(d.ways[k] / sum * 100)}%</small></li>`).join('');
+  for (const id of ['where', 'what']) { const rows = d[id], most = rows[0][1];
+    document.getElementById(id).innerHTML = rows.map(([name, n], i) => `<li>${name}<span class="bar"><i style="width:${n / most * 100}%;animation-delay:${i * 40}ms"></i></span><b>${fmt(n)}</b></li>`).join(''); }
+}
+document.getElementById('period').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#period button').forEach(x => x.setAttribute('aria-pressed', x === b)); show(b.dataset.p); });
+show('30');
+
+const PEOPLE = [
+  ['Priya Raman', 'pr482@cornell.edu', 'Cornell', 'g', 'Nov 11', '11011101111011', '4 min ago', 'plus', '03'],
+  ['Marcus Bell', 'mjb377@cornell.edu', 'Cornell', 'gl', 'Nov 10', '11111101111111', '11 min ago', 'ink', '07'],
+  ['Sofia Lindqvist', 'sl2291@cornell.edu', 'Cornell Tech', 'e', 'Nov 16', '00000000011101', '26 min ago', '', '12'],
+  ['Daniel Okafor', 'dokafor@gmail.com', 'Cornell', 'gl', 'Nov 12', '01101100110111', '1 hr ago', '', '05'],
+  ['Hana Kobayashi', 'hk764@cornell.edu', 'Cornell', 'g', 'Nov 10', '11011011101101', '1 hr ago', 'ink', '09'],
+  ['Theo Marchetti', 'tm553@cornell.edu', 'Cornell', 'e', 'Nov 18', '00000000000111', '2 hr ago', '', '02'],
+  ['Amara Diallo', 'amara.diallo@gmail.com', 'No school yet', 'g', 'Nov 19', '00000000000011', '3 hr ago', '', '11'],
+  ['Lucas Ferreira', 'lf318@cornell.edu', 'Cornell Tech', 'el', 'Nov 13', '00110100101101', '5 hr ago', 'plus', '06'],
+  ['Grace Whitfield', 'gw229@cornell.edu', 'Cornell', 'g', 'Nov 10', '11100100000001', 'Yesterday', '', '08'],
+  ['Noah Stein', 'ns941@cornell.edu', 'Cornell', 'e', 'Nov 14', '00011000100000', '6 days ago', '', '04'],
+];
+function list(w) {
+  const rows = PEOPLE.filter(p => !w || p[3].includes(w));
+  document.getElementById('shown').textContent = `showing ${rows.length} of ${w ? { g: 268, e: 97, l: 47 }[w] : 412}`;
+  document.getElementById('people').innerHTML = rows.map(([name, mail, school, ways, joined, days, last, plan, face]) => `<tr>
+    <td><span class="who"><img src="/animals/${face}.png" alt=""><span><b>${name}</b><small>${mail}</small></span></span></td><td>${school}</td>
+    <td>${[...ways].map(k => `<span class="way"><u class="${k}"></u>${WAY[k]}</span>`).join('')}</td><td>${joined}</td>
+    <td><span class="spark">${[...days].map(d => `<i class="${d === '1' ? '' : 'z'}" style="height:${d === '1' ? 100 : 12}%"></i>`).join('')}</span>${[...days].filter(d => d === '1').length} days</td>
+    <td>${last}</td><td class="r">${plan ? `<span class="plan ${plan === 'plus' ? 'plus' : ''}">${plan === 'plus' ? 'Ink+' : 'Ink'}</span>` : ''}</td></tr>`).join('');
+}
+document.getElementById('filter').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#filter button').forEach(x => x.setAttribute('aria-pressed', x === b)); list(b.dataset.w); });
+list('');
+</script>
+</body>
+</html>
