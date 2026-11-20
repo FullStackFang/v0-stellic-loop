@@ -1,6 +1,6 @@
 ## 0. Before building
 
-- [ ] 0.1 Founder picks the badge look from `/demo/mockups-own-animal-count.html`
+- [x] 0.1 Founder picks the badge look from `/demo/mockups-own-animal-count.html`
 - [ ] 0.2 `loop-ink-tiers` is committed (it edits `custom-face.ts` and `own-face.tsx` too)
 - [ ] 0.3 Founder: create a Vercel Blob store on the project; `BLOB_READ_WRITE_TOKEN` is in production and `.env.local`
 
@@ -21,7 +21,7 @@
 ## 3. The count
 
 - [ ] 3.1 Test first: the "Create your own" tile's badge reads 3/2/1/0 on Ink, the Ink+ mark on Ink+ and for the admin, nothing on free; accessible names "N left" / "no limit"
-- [ ] 3.2 Badge on the tile in `components/campus/screen.tsx`, in the picked look; at 0 the tile opens the Ink+ offer
+- [x] 3.2 Badge on the tile in `components/campus/screen.tsx`, in the picked look; at 0 the tile opens the Ink+ offer
 - [ ] 3.3 The maker's line says the same, replacing "N of 3 left"
 
 ## 4. Pictures in Blob
