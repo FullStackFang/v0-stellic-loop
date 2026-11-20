@@ -11,7 +11,7 @@
 - [ ] 2.3 Give each animal a seat state in `crowdIn()`: seated ones are skipped by the floor and slope steps and drawn at their seat
 - [ ] 2.4 Start them seated and let them leave one after another when the ticket is first seen; on the floor from the start with reduced motion
 - [ ] 2.5 Letting go within reach of an empty seat seats the animal; picking a seated one up frees the seat; the seat a held animal is over is ringed
-- [ ] 2.6 The pill reads "All in" when every seat is filled, and "Pick one up" otherwise
+- [ ] 2.6 The pill sits on the top edge of the ticket, not the room, and reads "All in" when every seat is filled, and "Pick one up" otherwise
 - [ ] 2.7 The idle hop and the cheer leave seated animals in their seats
 - [ ] 2.8 "Drop them again": a pill on the top edge of the ticket, shown only when all are in, that empties the seats; the animals and seats stay hidden from screen readers and the button is not
 
