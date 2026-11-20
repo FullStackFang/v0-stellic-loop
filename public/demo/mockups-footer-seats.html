@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-kit="loop">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Footer with seats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+/* "The seats fell out" (direction A of mockups-error-pages.html) as a way to draw the footer's ticket: openspec/changes/loop-footer-seats.
+   The ticket, room, stub and bar are the live footer's (components/campus/foot.css). New here: the row of seats, and what the pill says.
+   The dark strip belongs to the mockup. */
+:root { --field: oklch(96.4% 0.19 117); --field-shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250);
+  --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --stub: color-mix(in oklch, var(--field) 32%, var(--paper)); --sunk: color-mix(in oklab, var(--ink) 10%, var(--paper));
+  --ease: cubic-bezier(.22, 1, .36, 1); }
+:root[data-kit=cornell] { --field: oklch(82% 0.12 38); --field-shadow: oklch(67% 0.13 36); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); }
+:root[data-kit=columbia] { --field: oklch(87% 0.075 235); --field-shadow: oklch(71% 0.09 240); --ink: oklch(25% 0.06 255); --action: oklch(46% 0.14 255); }
+:root[data-kit=nyu] { --field: oklch(85% 0.09 305); --field-shadow: oklch(69% 0.12 305); --ink: oklch(24% 0.08 305); --action: oklch(40% 0.2 305); }
+*, *::before, *::after { box-sizing: border-box; }
+button { font: inherit; color: inherit; letter-spacing: inherit; border: 0; background: none; padding: 0; cursor: pointer; } img { display: block; } a { color: inherit; text-decoration: none; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.4; letter-spacing: -0.012em; -webkit-font-smoothing: antialiased; background: var(--page); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+.mock { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px 22px; flex-wrap: wrap; padding: 8px 32px; background: #1d1f24; color: #d6d8dd; font-size: 13.5px; }
+.mock b { color: #fff; font-weight: 640; } .mock > span { margin-right: auto; } .mock div { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; } .mock small { margin-right: 6px; font-size: 13px; }
+.mock button, .mock a { display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border-radius: 99px; font-weight: 580; box-shadow: inset 0 0 0 1.5px #5b5f69; } .mock button[aria-pressed=true] { background: #fff; color: #1d1f24; box-shadow: none; }
+.above { flex: 1; min-height: 120px; }
+
+/* ---- the live footer's ticket and bar ---- */
+.ft { padding-top: 34px; }
+.carry { position: relative; z-index: 3; margin: 0 32px 34px; }
+.tk { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 232px; border-radius: 26px 26px 26px 7px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 7px 7px 0 var(--field-shadow); user-select: none; }
+.tear { position: relative; padding: 24px 22px 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 26px; background: var(--field); border-radius: 0 26px 26px 0; border-left: 2px dashed var(--ink); }
+.tear::before, .tear::after { content: ''; position: absolute; left: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tear::before { top: -12px; clip-path: inset(50% 0 0 0); } .tear::after { bottom: -12px; clip-path: inset(0 0 50% 0); }
+.admit { rotate: -4deg; padding: 6px 13px; white-space: nowrap; border-radius: 12px 12px 12px 4px; background: var(--ink); color: var(--field); font-size: 18px; font-weight: 760; font-stretch: 112%; letter-spacing: -0.035em; box-shadow: 3px 3px 0 var(--action); }
+.code { align-self: stretch; height: 46px; margin-top: auto; background: repeating-linear-gradient(90deg, var(--ink) 0 3px, #0000 3px 5px, var(--ink) 5px 6px, #0000 6px 10px, var(--ink) 10px 14px, #0000 14px 16px, var(--ink) 16px 17px, #0000 17px 21px); }
+/* the room: taller than today's 132px, to hold the seats above the heads */
+.stage { position: relative; height: 196px; margin: 32px 24px 22px; border-radius: 16px 16px 16px 5px; background: var(--stub); box-shadow: inset 0 -9px 0 color-mix(in oklab, var(--field) 62%, var(--paper)); touch-action: none; }
+.stage > small { position: absolute; z-index: 6; right: 12px; top: -13px; padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: var(--ink); color: var(--paper); transition: background-color .3s, color .3s; }
+.tk.full .stage > small { background: var(--action); }
+.pet { position: absolute; z-index: 3; left: 0; bottom: 7px; width: 84px; height: 84px; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 88%; cursor: grab; touch-action: none; will-change: transform; -webkit-user-drag: none; }
+.pet.up { cursor: grabbing; z-index: 5; }
+
+/* ---- new: the seats ---- */
+.seat { position: absolute; top: 16px; width: 58px; height: 58px; margin-left: -29px; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 3px 0 color-mix(in oklab, var(--ink) 24%, transparent); transition: box-shadow .2s; }
+.seat.near { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--ink) 24%, transparent), 0 0 0 2px var(--stub), 0 0 0 4.5px var(--action); }
+.seat.taken { background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+.bar { position: relative; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 13px 32px 12px; background: var(--field); border-top: 1.5px solid var(--ink); box-shadow: 0 -5px 0 var(--field-shadow); }
+.wm { display: flex; align-items: center; gap: 10px; padding-right: 14px; font-weight: 720; font-stretch: 112%; font-size: 21px; letter-spacing: -0.045em; }
+.wm svg { width: 36px; height: 36px; padding: 5px; border-radius: 12px 12px 12px 3px; background: var(--paper); box-shadow: 2px 2px 0 var(--ink); }
+.bar a.l { padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.bar > small { margin-left: auto; padding: 6px 12px; border-radius: 99px; font-size: 12.5px; background: color-mix(in oklab, var(--ink) 12%, var(--field)); }
+
+@media (max-width: 860px) { .carry { margin: 0 16px 28px; } .tk { grid-template-columns: minmax(0, 1fr); } .tear { display: none; } .stage { margin: 22px 14px 16px; } .seat { width: 44px; height: 44px; margin-left: -22px; } .bar { padding: 12px 16px 14px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="mock"><span><b>Footer with seats.</b> The live footer's ticket, with a row of seats. They fall out when it comes into view; drag one back to a seat.</span>
+  <div><button id="again">Drop them again</button><button id="all">Seat them all</button><a href="/" target="_blank" rel="noopener">The footer today</a></div>
+  <div id="kits"><small>Colours</small><button data-kit="loop" aria-pressed="true">Loopd</button><button data-kit="cornell">Cornell</button><button data-kit="columbia">Columbia</button><button data-kit="nyu">NYU</button></div></div>
+<div class="above"></div>
+
+<footer class="ft">
+  <div class="carry"><div class="tk">
+    <div class="stage"><small>Pick one up</small></div>
+    <div class="tear"><span class="admit">Admit everyone</span><div class="code"></div></div>
+  </div></div>
+  <div class="bar"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="16" cy="11" r="6.5" stroke="var(--action)"/><circle cx="10.5" cy="20" r="6.5"/><circle cx="21.5" cy="20" r="6.5"/></svg>Loopd</span>
+    <a class="l">Terms</a><a class="l">Privacy</a><small>© 2026 Loopd</small></div>
+</footer>
+
+<script>
+// The crowd of the live footer (components/campus/foot.tsx), cut down to what seats need: a place along the floor, a height
+// above it, picking up and throwing. Seats add one state: `seat`, the index of the seat an animal is in, or null.
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CROWD = [9, 25, 2, 30, 15, 21, 19, 31, 0, 27, 12, 6, 23], SIZE = 84, GAP = 60, FALL = 2100, STEP = 96;
+const animal = n => `/animals/${String(n + 1).padStart(2, '0')}.png`, clamp = (n, low, high) => Math.max(low, Math.min(high, n));
+const stage = document.querySelector('.stage'), tk = document.querySelector('.tk'), pill = stage.querySelector('small');
+let wide = stage.clientWidth, count = clamp(Math.floor((wide - 40) / STEP), 4, CROWD.length);
+const seatX = i => 44 + i * (wide - 88) / Math.max(1, count - 1), seatSize = () => innerWidth <= 860 ? 44 : 58;
+// The height above the floor at which a seated one sits, and how small it is drawn there.
+const seatY = () => stage.clientHeight - 7 - 16 - seatSize() + 3, small = () => (seatSize() - 8) / SIZE;
+const seats = Array.from({ length: count }, (_, i) => { const el = document.createElement('i'); el.className = 'seat'; stage.append(el); return el; });
+const crowd = CROWD.slice(0, count).map((face, i) => { const el = document.createElement('img'); el.className = 'pet'; el.src = animal(face); el.alt = ''; el.draggable = false; stage.append(el); return { el, seat: i, x: 0, y: 0, vx: 0, vy: 0, r: 0, held: false }; });
+const place = () => { seats.forEach((el, i) => el.style.left = `${seatX(i)}px`); crowd.forEach(one => { if (one.seat !== null) { one.x = seatX(one.seat) - SIZE / 2; one.y = seatY(); } draw(one); }); };
+function draw(one) { const k = one.seat !== null ? small() : 1; one.el.style.transform = `translate(${one.x.toFixed(1)}px, ${(-one.y).toFixed(1)}px) rotate(${one.r.toFixed(1)}deg) scale(${k.toFixed(2)})`; }
+function told() { seats.forEach((el, i) => el.classList.toggle('taken', crowd.some(one => one.seat === i))); const full = crowd.every(one => one.seat !== null); tk.classList.toggle('full', full); pill.textContent = full ? 'All in' : 'Pick one up'; }
+
+let running = false, last = 0;
+const wake = () => { if (!running) { running = true; last = performance.now(); requestAnimationFrame(tick); } };
+function tick(now) { const dt = Math.min(.032, (now - last) / 1000) || .016; last = now; let moving = false;
+  for (const one of crowd) { if (one.held || one.seat !== null) continue;
+    one.vx -= one.vx * (one.y > 0 ? .5 : 3.4) * dt; one.x += one.vx * dt;
+    if (one.y > 0 || one.vy > 0) { one.vy -= FALL * dt; one.y += one.vy * dt; if (one.y <= 0) { one.y = 0; one.vy = one.vy < -300 ? -one.vy * .36 : 0; } }
+    if (one.x < 4) { one.x = 4; one.vx = Math.abs(one.vx) * .45; } else if (one.x > wide - SIZE - 4) { one.x = wide - SIZE - 4; one.vx = -Math.abs(one.vx) * .45; }
+    one.r += (clamp(one.vx * .04, -18, 18) - one.r) * Math.min(1, dt * 10);
+    if (one.y > 0 || Math.abs(one.vx) + Math.abs(one.vy) > 3 || Math.abs(one.r) > .3) moving = true; }
+  // two on the floor cannot share a spot
+  const floor = crowd.filter(one => !one.held && one.seat === null && one.y < 40).sort((a, b) => a.x - b.x);
+  for (let at = 0; at < floor.length - 1; at++) { const a = floor[at], b = floor[at + 1], over = GAP - (b.x - a.x); if (over > 0) { a.x -= over / 2; b.x += over / 2; const mean = (a.vx + b.vx) / 2; a.vx = mean - 20; b.vx = mean + 20; moving = true; } }
+  crowd.forEach(draw); if (moving || crowd.some(one => one.held)) requestAnimationFrame(tick); else running = false; }
+
+const nearest = one => { let best = null, far = 46; seats.forEach((_, i) => { if (crowd.some(other => other !== one && other.seat === i)) return; const d = Math.hypot(seatX(i) - (one.x + SIZE / 2), seatY() + seatSize() / 2 - (one.y + SIZE / 2)); if (d < far) { far = d; best = i; } }); return best; };
+const sit = (one, i) => { one.seat = i; one.x = seatX(i) - SIZE / 2; one.y = seatY(); one.vx = one.vy = one.r = 0; draw(one); told(); };
+for (const one of crowd) { let grip = null, when = 0;
+  one.el.addEventListener('pointerdown', event => { event.preventDefault(); one.el.setPointerCapture(event.pointerId); const box = stage.getBoundingClientRect();
+    one.seat = null; one.held = true; one.el.classList.add('up'); grip = { x: event.clientX - box.left - one.x, y: box.bottom - 7 - event.clientY - one.y }; when = performance.now(); told(); wake(); });
+  one.el.addEventListener('pointermove', event => { if (!one.held) return; const box = stage.getBoundingClientRect(), now = performance.now(), dt = Math.max(.008, (now - when) / 1000); when = now;
+    const x = event.clientX - box.left - grip.x, y = Math.max(0, box.bottom - 7 - event.clientY - grip.y);
+    one.vx = one.vx * .55 + (x - one.x) / dt * .45; one.vy = one.vy * .55 + (y - one.y) / dt * .45; one.x = x; one.y = y;
+    const near = nearest(one); seats.forEach((el, i) => el.classList.toggle('near', i === near)); });
+  const up = () => { if (!one.held) return; one.held = false; one.el.classList.remove('up'); seats.forEach(el => el.classList.remove('near'));
+    const near = nearest(one); if (near !== null) return sit(one, near);
+    one.vx = clamp(one.vx, -2200, 2200); one.vy = clamp(one.vy, -1600, 1900); if (reduce) { one.y = 0; one.vx = one.vy = 0; draw(one); } wake(); };
+  one.el.addEventListener('pointerup', up); one.el.addEventListener('pointercancel', up); }
+
+/** They start in their seats and leave them one after another. With reduced motion they are on the floor from the start. */
+function start() { crowd.forEach((one, i) => sit(one, i)); crowd.forEach((one, i) => setTimeout(() => {
+  const from = one.x; one.seat = null; one.x = reduce ? 20 + i * (wide - 40 - SIZE) / Math.max(1, count - 1) : from; one.y = reduce ? 0 : one.y; one.vx = reduce ? 0 : (Math.random() - .5) * 260; one.vy = reduce ? 0 : 180; draw(one); told(); wake(); }, reduce ? 0 : 500 + i * 250)); }
+place(); told(); start();
+addEventListener('resize', () => { wide = stage.clientWidth; place(); });
+document.getElementById('again').addEventListener('click', start);
+document.getElementById('all').addEventListener('click', () => crowd.forEach((one, i) => sit(one, i)));
+document.querySelectorAll('#kits button').forEach(button => button.addEventListener('click', () => { document.documentElement.dataset.kit = button.dataset.kit; document.querySelectorAll('#kits button').forEach(each => each.setAttribute('aria-pressed', each === button)); }));
+</script>
+</body>
+</html>
