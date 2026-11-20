@@ -10,7 +10,7 @@ Loopd has one game, Conga, with its own link in the top bar, and a second idea t
 - A game that is out can be marked as still in the works: its ticket says "In the works". Seats is out that way (founder, 2026-11-20: "toss in the ticket thing that was intended for the footer and leave it there as a game, but add a pending status"): the footer ticket with seats, on a page of its own at `/seats`.
 - The page is open to signed-out visitors, as Conga is.
 
-Not in this change: a game offered on an event or idea card (founder: "that would be distracting for now"), anything to play for in Seats (a clock, a score), and an admin switch for putting a game out.
+Not in this change: a game offered on an event or idea card (founder: "that would be distracting for now"), a best time kept on the server or compared between people, and an admin switch for putting a game out.
 
 The name: the founder asked for something "ink themed or loopd themed" in place of "Games". Doodles was the suggestion he answered "love it" to. It is one word in the bar and the page title if he wants another.
 

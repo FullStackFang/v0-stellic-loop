@@ -26,6 +26,33 @@ A game that is out and not finished SHALL say "In the works" on its ticket, and 
 - **WHEN** someone opens Seats
 - **THEN** the page says it is in the works and has a way back to Doodles
 
+### Requirement: Seats is played against the clock
+A round of Seats SHALL give each animal a seat of its own and show it there. On "Kick them out" every animal SHALL leave its seat for the floor and a clock SHALL start. An animal SHALL sit only in its own seat. Dropping one on another empty seat SHALL add 2 seconds and send it back to the floor. The clock SHALL stop when every animal is in its own seat, and the fastest time SHALL be kept in the browser.
+
+#### Scenario: A round starts
+- **WHEN** Seats opens, or "Again" or "Start over" is pressed
+- **THEN** the animals are seated in a new order, no clock runs, and the button reads "Kick them out"
+
+#### Scenario: They are kicked out
+- **WHEN** "Kick them out" is pressed
+- **THEN** every seat is empty, the animals are on the floor in no order, and the clock runs
+
+#### Scenario: Its own seat
+- **WHEN** an animal is dropped on its own seat
+- **THEN** it sits there and cannot be picked up again in that round
+
+#### Scenario: Another seat
+- **WHEN** an animal is dropped on an empty seat that is not its own
+- **THEN** it falls back to the floor, the seat shakes, and 2 seconds are added
+
+#### Scenario: All in
+- **WHEN** the last animal is seated
+- **THEN** the clock stops, the ticket says "All in" with the time, and a time faster than the best kept replaces it
+
+#### Scenario: Reduced motion
+- **WHEN** the device asks for reduced motion and "Kick them out" is pressed
+- **THEN** the animals are on the floor at once, with nothing thrown
+
 ### Requirement: A staged game is the admin's alone
 A game that is not out SHALL be shown only to the admin, after the games that are out, marked as staged, with a "Try" link in place of "Play". Nothing about it SHALL be sent to anyone else.
 
