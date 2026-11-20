@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · way back</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --field: oklch(82% 0.12 38); --dot: oklch(77% 0.13 37); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --paper: oklch(99.2% 0.004 60); --expo: cubic-bezier(.16, 1, .3, 1); }
+* { box-sizing: border-box; margin: 0; }
+body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; gap: 30px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 70ch; margin-top: 10px; }
+.set { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: 30px 20px; }
+.one { position: relative; padding-top: 14px; }
+.tab { position: absolute; z-index: 3; left: 18px; top: 0; font-size: 15px; font-weight: 700; padding: 5px 14px 6px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.frame { padding: 54px 12px 34px; border-radius: 26px 26px 26px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); background: var(--field) radial-gradient(var(--dot) 4px, transparent 5px) 0 0 / 54px 54px; }
+.card { padding: 20px 16px 20px; background: var(--paper); border-radius: 24px 24px 24px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); display: grid; gap: 14px; }
+.card h2 { font-weight: 900; font-stretch: 112%; font-size: 30px; line-height: .98; letter-spacing: -.02em; }
+.note { margin-top: 16px; padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.4; }
+.row { display: flex; align-items: center; gap: 7px; min-width: 0; } .row > * { height: 48px; flex: none; display: inline-flex; align-items: center; }
+.go { padding: 0 14px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 17px; box-shadow: 4px 4px 0 var(--ink); }
+.where { gap: 4px; padding: 4px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 12.5px; flex: 0 1 auto; min-width: 0; }
+.where span { height: 100%; display: inline-flex; align-items: center; padding: 0 7px; border-radius: 99px; white-space: nowrap; } .where .on { background: var(--ink); color: var(--paper); }
+a { color: inherit; text-decoration: none; }
+.mark { display: block; }
+
+/* A · the tile from the app's top bar: the mark on paper, hard shadow, one square corner. It lifts when pointed at. */
+.a { margin-left: auto; width: 48px; justify-content: center; border-radius: 13px 13px 13px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 3px 3px 0 var(--ink); transition: transform .2s var(--expo), box-shadow .2s var(--expo); }
+.a .mark { width: 36px; height: 36px; } .a:hover { transform: translate(-2px, -2px); box-shadow: inset 0 0 0 2px var(--ink), 5px 5px 0 var(--ink); }
+/* B · the tile in ink, the mark in paper with the top ring in the field colour. */
+.b { margin-left: auto; width: 48px; justify-content: center; border-radius: 13px 13px 13px 4px; background: var(--ink); color: var(--paper); --top: var(--field); box-shadow: 3px 3px 0 var(--action); transition: transform .2s var(--expo), box-shadow .2s var(--expo); }
+.b .mark { width: 36px; height: 36px; } .b:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--action); }
+/* C · a round seat like the animals: the mark where a face would be, and the rings turn a little when pointed at. */
+.c { margin-left: auto; width: 48px; justify-content: center; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); }
+.c .mark { width: 34px; height: 34px; transition: rotate .5s var(--expo); } .c:hover .mark { rotate: -120deg; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <path id="ra" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rb" d="M14.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rc" d="M43.5 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/>
+  <mask id="ma" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rc" stroke="#000" stroke-width="17"/></mask>
+  <mask id="mb" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#ra" stroke="#000" stroke-width="17"/></mask>
+  <mask id="mc" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rb" stroke="#000" stroke-width="17"/></mask>
+  <symbol id="loopd" viewBox="4 4 92 92"><g fill="none" stroke-width="10.5"><g mask="url(#ma)"><use href="#ra" stroke="var(--top, var(--action))"/></g><g mask="url(#mb)"><use href="#rb" stroke="currentColor"/></g><g mask="url(#mc)"><use href="#rc" stroke="currentColor"/></g></g></symbol>
+</defs></svg>
+
+<main>
+<header><h1>The way back to Loopd</h1>
+<p class="lead">Three ways to show the woven mark as the way back, each in the real row at phone width. No arrow in any of them: the mark alone, large enough for the weave to read. Point at each to see it move.</p></header>
+<div class="set">
+  <div class="one"><span class="tab">A · The app's tile</span><div class="frame"><div class="card"><h2>Longest line wins</h2>
+    <div class="row"><span class="go">Start</span><span class="where"><span class="on">Ithaca</span><span>Roosevelt Island</span></span><a class="a" href="#" aria-label="Back to Loopd"><svg class="mark"><use href="#loopd"/></svg></a></div></div></div>
+    <p class="note">The same tile the mark sits on in the app's top bar: paper, hard shadow, one square corner. It lifts when pointed at, as it does there.</p></div>
+  <div class="one"><span class="tab">B · An ink tile</span><div class="frame"><div class="card"><h2>Longest line wins</h2>
+    <div class="row"><span class="go">Start</span><span class="where"><span class="on">Ithaca</span><span>Roosevelt Island</span></span><a class="b" href="#" aria-label="Back to Loopd"><svg class="mark"><use href="#loopd"/></svg></a></div></div></div>
+    <p class="note">The tile in ink with the rings in paper and the top ring in coral. It stands apart from the game's own controls.</p></div>
+  <div class="one"><span class="tab">C · A seat</span><div class="frame"><div class="card"><h2>Longest line wins</h2>
+    <div class="row"><span class="go">Start</span><span class="where"><span class="on">Ithaca</span><span>Roosevelt Island</span></span><a class="c" href="#" aria-label="Back to Loopd"><svg class="mark"><use href="#loopd"/></svg></a></div></div></div>
+    <p class="note">A round seat like the animals above it, with the mark where a face would be. The rings turn a third of the way round when pointed at.</p></div>
+</div>
+</main>
+</html>
