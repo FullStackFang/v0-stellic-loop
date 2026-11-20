@@ -368,6 +368,15 @@ export function formatInterest(result:InterestWrite,team:TeamHead):string {
   :(result.changed?'Saved. The user is no longer marked as interested.':'The user was not marked as interested. Nothing changed.');
  return new Page().line(said).raw(eventLines(team,result.event)).line(result.interested?'To take it back, call interested again with interested set to false.':'To mark interest again, call interested with this tag.',NOTE).end();
 }
+/**
+ * A summary is text, and what the user must answer is shown where it can be answered. So a summary of a team that holds
+ * something for the user ends by sending the assistant to waiting. A summary already at its full length goes without the line.
+ */
+export function withNeedsYou(text:string,count:number):string {
+ if(!count)return text;
+ const line=`\n${count===1?'1 thing in this team needs':`${count} things in this team need`} the user's answer. Call waiting to show ${count===1?'it':'them'} to the user.`;
+ return text.length+line.length<=TOTAL?text+line:text;
+}
 /** No team was named and Loopd will not guess. */
 export function formatChoice(handles:string[],write:boolean,grantAt?:string):string {
  if(!handles.length)return `${write?'Not saved. ':''}${noAccess(grantAt)}`;

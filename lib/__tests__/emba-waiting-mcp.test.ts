@@ -74,6 +74,9 @@ it('states what is waiting as text and as data, and one short line when nothing 
   expect(none.data).toMatchObject({count:0,items:[],more:[]});
   await createAsk(t.db,f.memberA,{...f.root,question:'Red or <b>white</b>?',kind:'one',options:['Red','White'],closesAt:inDays(1)});
   await addEvent(t.db,f.organizer,{...f.root,slug:'spring-mixer',name:'Spring mixer',startsAt:inDays(4),place:'The cellar'});
+  // A summary stays text, and says when the team holds something for the user to answer.
+  const hint="\n2 things in this team need the user's answer. Call waiting to show them to the user.";
+  for(const tool of ['team_brief','team_state','whats_new'])expect((await s.call(tool,{team:'@club'})).text.endsWith(hint),tool).toBe(true);
   const two=await s.call('waiting');
   expect(two.text).toMatch(/^2 things from your groups\.\nAsk #1 in @club \(Synthetic EMBA\), closes .* \(America\/New_York\), which is within 48 hours:\n> Red or <b>white<\/b>\?\nPick one option\. 0 of \d+ answered\.\n> 1\. Red\nOption 1: chosen by 0\.\n> 2\. White\nOption 2: chosen by 0\.\nTo answer, call answer with team @club and number 1\.\nEvent @club\/spring-mixer in @club \(Synthetic EMBA\): .*\. 0 interested\.\n> Spring mixer\n> Place: The cellar\nTo mark the user interested, call interested with team @club\/spring-mixer\. If it is not for them, call it with notForMe set to true\./);
   expect(two.data).toMatchObject({count:2,untrusted:true,items:[{kind:'ask',team:{handle:'@club'},ask:{number:1,options:[{number:1,label:'Red'},{number:2,label:'White'}]}},{kind:'event',event:{slug:'spring-mixer'}}]});
@@ -84,6 +87,7 @@ it('states what is waiting as text and as data, and one short line when nothing 
   expect(declined.text).toContain('this event will not be offered to them again');
   expect((await s.call('interested',{team:'@club/spring-mixer',notForMe:true,interested:true})).isError).toBe(true);
   expect((await s.call('waiting')).text).toBe('Nothing waiting from your groups.');
+  for(const tool of ['team_brief','team_state','whats_new'])expect((await s.call(tool,{team:'@club'})).text,tool).not.toContain("the user's answer");
   // An announcement is told once.
   await postAnnouncement(t.db,f.organizer,{...f.root,text:'Dues are due Friday.'});
   expect((await s.call('waiting')).text).toMatch(/^1 thing from your groups\.\nAnnouncement in @club \(Synthetic EMBA\):\nAnnouncement #2 by .*\n> Dues are due Friday\./);

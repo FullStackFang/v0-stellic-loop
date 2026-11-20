@@ -103,6 +103,11 @@ async function teamWaiting(db:Db,p:Principal,team:Scope):Promise<TeamWaiting> {
  }));
 }
 
+/** How many asks, events and ideas in one team still need the caller to act. Nothing is noted as shown. */
+export async function teamNeedsYou(db:Db,p:Principal,team:Scope):Promise<number> {
+ return (await teamWaiting(db,p,team)).found.filter(({item})=>item.kind==='ask'||item.kind==='event'||item.kind==='idea').length;
+}
+
 const order=['ask','event','idea','mention','announcement'] as const;
 /**
  * What is waiting for the caller across every team they belong to and, through

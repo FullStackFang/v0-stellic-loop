@@ -16,7 +16,7 @@ import {CARD_HTML,CARD_MIME,CARD_URI} from './team-card';
 import {answerAsk,askResults,closeAsk,createAsk,extendAsk,listAsks} from './team-asks';
 import {OrganizeRefused,type TeamHead} from './team-core';
 import {addEvent,archiveEvent,changeEvent,type EventWrite} from './team-events';
-import {documentParts,failures,formatAnswer,formatArrivals,formatAskChange,formatAskDetail,formatAskExtend,formatAsks,formatAskWrite,formatBrief,formatChoice,formatDay,formatDescribe,formatDocument,formatResourceWrite,formatEventDetail,formatEvents,formatEventWrite,formatGroupChange,formatIdeaWrite,formatInterest,formatInvites,formatLink,formatNearby,formatNews,formatPassages,formatResolution,formatState,formatTags,formatTravelWrite,formatWrite,waitingText,type GroupChangeResult,type InviteResult,type NotInvited,type OrganizeWord} from './team-format';
+import {documentParts,failures,formatAnswer,formatArrivals,formatAskChange,formatAskDetail,formatAskExtend,formatAsks,formatAskWrite,formatBrief,formatChoice,formatDay,formatDescribe,formatDocument,formatResourceWrite,formatEventDetail,formatEvents,formatEventWrite,formatGroupChange,formatIdeaWrite,formatInterest,formatInvites,formatLink,formatNearby,formatNews,formatPassages,formatResolution,formatState,formatTags,formatTravelWrite,formatWrite,waitingText,withNeedsYou,type GroupChangeResult,type InviteResult,type NotInvited,type OrganizeWord} from './team-format';
 import {readEventPage,type PageReader} from './event-link';
 import {linkEvent,nearbyCode} from './team-event-links';
 import {cancelIdea,changeIdea,proposeIdea} from './team-ideas';
@@ -27,7 +27,7 @@ import {amendRecord,claim,correctOutput,fileOutput,logDecision,type WriteResult}
 import {nameSchema,singleLine} from './team-text';
 import {describeResource,addLink,saveText,type LinkWrite,type TextWrite} from './team-resources';
 import {arrivals,removeTravel,saveTravel} from './team-travel';
-import {waiting} from './team-waiting';
+import {teamNeedsYou,waiting} from './team-waiting';
 
 // The team toolset (design D10, D11; club tools from loop-club-events-and-asks)
 // at its own route. Every result has a text form that is complete without the
@@ -112,12 +112,12 @@ export function createTeamMcpServer(db:Db,p:Principal,readPage:PageReader=readEv
  const grantAt=/^https?:/.test(appUrl('/'))?appUrl(`/groups/connections${p.clientId?`?assistant=${encodeURIComponent(p.clientId)}`:''}`):undefined;
 
  server.registerTool('team_brief',{description:`Read a team's brief: what the team is doing, its deadline, current announcements, the links and texts the team keeps with their tags (those with none are marked), and how much is open. Start here. ${data}`,inputSchema:z.object({team}),annotations:reads},
-  input=>reply(()=>within(input,false,async target=>{const result=await teamBrief(db,p,scopeOf(target));return {text:formatBrief(result),data:result};})));
+  input=>reply(()=>within(input,false,async target=>{const result=await teamBrief(db,p,scopeOf(target));return {text:withNeedsYou(formatBrief(result),await teamNeedsYou(db,p,scopeOf(target))),data:result};})));
  server.registerTool('team_state',{description:`Read where a team is now: open claims with owner and due date, current outputs, current decisions and conflict flags. Name an event tag to see only that event's claims and outputs. Returns the decisions version that file_output needs. An output is a link: open it with the user's own connection to where it lives (Google Drive, for example). Loopd holds no file and cannot open one for you, and if the user has no access to it, say so rather than guess what it holds. Says nothing about how active anyone is. ${data}`,inputSchema:z.object({team}),annotations:reads},
-  input=>reply(()=>within(input,false,async target=>{const result=await teamState(db,p,{...scopeOf(target),event:target.event});return {text:formatState(result),data:result};})));
+  input=>reply(()=>within(input,false,async target=>{const result=await teamState(db,p,{...scopeOf(target),event:target.event});return {text:withNeedsYou(formatState(result),await teamNeedsYou(db,p,scopeOf(target))),data:result};})));
  server.registerTool('whats_new',{description:`Read what changed in a team's records, oldest first, 30 at a time. Pass the cursor from the last call to see only what is new; with no cursor it covers the last 7 days. Entries that tag the user are marked. ${data}`,
   inputSchema:z.object({team,cursor:z.string().optional().describe('The cursor returned by the previous call.'),since:z.string().optional().describe('A date, YYYY-MM-DD, used only when no cursor is given.')}),annotations:reads},
-  input=>reply(()=>within(input,false,async target=>{const result=await whatsNew(db,p,{...scopeOf(target),cursor:input.cursor,since:input.since});return {text:formatNews(result),data:result};})));
+  input=>reply(()=>within(input,false,async target=>{const result=await whatsNew(db,p,{...scopeOf(target),cursor:input.cursor,since:input.since});return {text:withNeedsYou(formatNews(result),await teamNeedsYou(db,p,scopeOf(target))),data:result};})));
 
  server.registerTool('file_output',{description:`File a link to something the user produced (a document, deck, sheet), with a title and a short summary. Loopd stores the link, never the file. If you made the document yourself, first save it where the team keeps its files (the user's Google Drive, for example) through the user's own connection to that place, then file the link here. ${ask} First compare the output with the team's current decisions: send decisionsVersion from team_state and list in conflictsWith every decision it contradicts (an empty list if none). If you send no version, nothing is saved and the decisions are returned for you to compare. To correct an output the user filed before, set corrects to its number and expectedVersion to its version.`,
   inputSchema:z.object({team,url:z.string().describe('An https link, at most 500 characters.'),title:z.string().describe('At most 120 characters.'),summary:z.string().describe('At most 600 characters, one line.'),
