@@ -78,6 +78,9 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .ask h3 { font-size: 25px; font-weight: 740; font-stretch: 110%; letter-spacing: -.045em; line-height: 1.02; } .card .ask p { margin: 6px 0 14px; color: oklch(80% 0.03 40); font-size: 15px; }
 .ask div { display: flex; flex-wrap: wrap; gap: 8px; }
 .ask .pl { padding: 8px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 650; white-space: nowrap; text-decoration: none; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+/* An Ink+ member's own animals, to pick one. */
+.ask .pick { width: 48px; height: 48px; padding: 3px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--paper); } .ask .pick .face { width: 100%; }
+.ask .pick[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 4px var(--action); }
 .ask .pl.see { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--field); }
 .go { justify-self: start; padding: 0 30px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s var(--expo), box-shadow .12s var(--expo), background .12s; }
 .go:hover { background: var(--action-hover); }
@@ -152,10 +155,16 @@ const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: 
 const COLS = 7, SHEET = Math.min(innerWidth, innerHeight * 1.25) / 760 * Math.min(2, devicePixelRatio || 1) > 1.4 ? 192 : 96;
 const sheet = Object.assign(new Image(), { src: `./conga/animals-${SHEET}.v1.webp` });
 document.documentElement.style.setProperty('--sheet', `url(${sheet.src})`);
-// Who is playing, for someone signed in (app/c/conga): the animal they wear on campus and whether they have Ink+. Face 0 is a pet of their own, a picture apart from the sheet.
-let you = null; const pet = new Image();
-const cut = face => !face ? `background: var(--field) url(${pet.src}) center / contain no-repeat; border-radius: 50%` : `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (Math.ceil(FACES / COLS) - 1) * 100}%`;
-const faceTag = face => `<span class="face" style="${cut(face)}"></span>`;
+// Who is playing, for someone signed in (app/conga): whether they have Ink+, their school, and the animals that are theirs to
+// play as, the one they wear on campus first. `chosen` is the one in their seat. Face 0 is a made pet, a picture apart from the sheet.
+let you = null, chosen = 0; const pet = new Image();
+const own = () => you.animals[chosen];
+const CORE = 36; // the animals anyone may play as; the rest are an Ink+ member's own
+// Each school's two colours (app/c/campus.css, [data-kit]): what an Ink+ line's sparkle wears.
+const KITS = { loop: ['oklch(96.4% 0.19 117)', 'oklch(47.6% 0.13 250)'], cornell: ['oklch(99.2% 0.004 60)', 'oklch(48.5% 0.185 27)'], columbia: ['oklch(87% 0.075 235)', 'oklch(46% 0.14 255)'],
+  cuny: ['oklch(88% 0.13 88)', 'oklch(38% 0.18 264)'], nyu: ['oklch(85% 0.09 305)', 'oklch(40% 0.2 305)'] };
+const cut = (face, picture = pet.src) => !face ? `background: var(--field) url(${picture}) center / contain no-repeat; border-radius: 50%` : `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (Math.ceil(FACES / COLS) - 1) * 100}%`;
+const faceTag = (face, picture) => `<span class="face" style="${cut(face, picture)}"></span>`;
 const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
 
 // The other lines. In live play these are people; here each one is a bot with its own nerve and temper.
@@ -167,7 +176,7 @@ const colour = id => id === ME ? C.action : tint(id);
 
 let world, map, land, blossoms = [], me = null, aim = 0;
 const ask = new URLSearchParams(location.search);
-let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
+let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * CORE), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
 window.conga = { get world() { return world; } }; // for poking at the game from the console
 
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
@@ -195,17 +204,29 @@ function open(id) {
 // ---------- the cards ----------
 function offer() {
   const set = new Set([picked]);
-  while (set.size < 6) set.add(1 + Math.floor(Math.random() * FACES));
+  while (set.size < 6) set.add(1 + Math.floor(Math.random() * CORE));
   const press = button => { for (const other of $('faces').children) if (other.tagName === 'BUTTON') other.setAttribute('aria-pressed', other === button); };
   const row = [];
   if (you) {
-    // Your own animal. With Ink+ it is picked like any other; without, it opens the card that says what Ink+ gives.
-    const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(you.face) + `<span class="plus">${you.ink ? 'You' : 'Ink+'}</span>` });
+    // Your own seat. With Ink+ it is picked like any other, and opens your animals to choose one; without, it opens the card that says what Ink+ gives.
+    const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(own().face, own().picture) + `<span class="plus">${you.ink ? 'You' : 'Ink+'}</span>` });
     seat.setAttribute('aria-pressed', mine);
-    const card = Object.assign(document.createElement('div'), { className: 'ask', hidden: true,
-      innerHTML: '<span class="tab">Ink+</span><h3>Play as your own pet</h3><p>Your pet leads the line, with a sparkle.</p><div><a class="pl see" href="/c/ink">See Ink+ · $9.99</a><button class="pl">Not now</button></div>' });
-    card.querySelector('button').onclick = () => { card.hidden = true; seat.setAttribute('aria-expanded', false); };
-    seat.onclick = () => { if (you.ink) { mine = true; press(seat); } else { card.hidden = !card.hidden; seat.setAttribute('aria-expanded', !card.hidden); } };
+    const card = Object.assign(document.createElement('div'), { className: 'ask', hidden: true });
+    const show = open => { card.hidden = !open; seat.setAttribute('aria-expanded', open); };
+    if (you.ink) {
+      card.innerHTML = '<span class="tab">Ink+</span><h3>Your animals</h3><p>Pick the one that leads your line.</p><div></div>';
+      card.lastChild.replaceChildren(...you.animals.map((animal, n) => {
+        const button = Object.assign(document.createElement('button'), { className: 'pick', ariaLabel: `Your animal ${n + 1}`, innerHTML: faceTag(animal.face, animal.picture) });
+        button.setAttribute('aria-pressed', n === chosen);
+        button.onclick = () => { chosen = n; keep.set('conga-own', n); if (animal.picture) pet.src = animal.picture; mine = true; offer(); };
+        return button;
+      }));
+      seat.onclick = () => { mine = true; press(seat); if (you.animals.length > 1) show(card.hidden); };
+    } else {
+      card.innerHTML = '<span class="tab">Ink+</span><h3>Play as your own pet</h3><p>Your pet leads the line, with a sparkle.</p><div><a class="pl see" href="/c/ink">See Ink+ · $9.99</a><button class="pl">Not now</button></div>';
+      card.querySelector('button').onclick = () => show(false);
+      seat.onclick = () => show(card.hidden);
+    }
     row.push(seat, card);
   }
   $('faces').replaceChildren(...row, ...[...set].slice(0, you ? 5 : 6).map(face => {
@@ -220,9 +241,10 @@ function offer() {
 }
 offer();
 // Someone signed in gets their own seat, and with Ink+ starts in it unless they chose another animal last time.
-fetch('/c/conga').then(answer => answer.ok ? answer.json() : null).then(player => {
+// The page arrives saying who is playing (app/conga writes `congaPlayer` into it), so a sign-in gone stale is renewed as on any page.
+Promise.resolve(window.congaPlayer ?? null).then(player => {
   if (!player) return;
-  you = player; if (you.picture) pet.src = you.picture;
+  you = player; chosen = Math.min(Number(keep.get('conga-own')) || 0, you.animals.length - 1); if (own().picture) pet.src = own().picture;
   mine = you.ink && (mine || keep.get('conga-face') == null);
   offer();
 }).catch(() => {});
@@ -233,11 +255,12 @@ $('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {
 }));
 
 function begin() {
-  const own = mine && you?.ink, face = own ? you.face : picked;
-  keep.set('conga-face', own ? 'mine' : picked);
+  const animal = mine && you?.ink ? own() : null, face = animal ? animal.face : picked;
+  keep.set('conga-face', animal ? 'mine' : picked);
   if (me) place(world, me);
   else me = addLine(world, { id: ME, face, name: 'You' });
-  me.ink = !!you?.ink || ask.has('ink'); // someone with Ink+ sparkles, whichever animal they play; `?ink` shows it to anyone
+  me.ink = !!you?.ink || ask.has('ink'); // someone with Ink+ sparkles, whichever animal they play; `?ink` shows it to anyone, `?ink=nyu` in a school's colours
+  me.kit = animal?.kit ?? (KITS[ask.get('ink')] ? ask.get('ink') : you?.kit ?? 'cornell'); // the colours it sparkles in: the school of the animal, else the player's
   me.face = face;
   aim = me.a;
   $('start').hidden = $('over').hidden = true;
@@ -441,15 +464,17 @@ function sprite(face, x, y, size, tilt = 0, alpha = 1) {
   else ctx.drawImage(sheet, sx, sy, SHEET, SHEET, x - size / 2, y - size / 2, size, size);
   if (alpha !== 1) ctx.globalAlpha = 1;
 }
-// What an Ink+ line wears, on its own animal and nowhere else: a small spark beside it now and then, in one of three places.
+// What an Ink+ line wears, on its own animal and nowhere else: a small spark beside it now and then, in one of three places,
+// in the two colours of a school in turn.
 const SPARKS = [[-0.4, -0.3, 1], [0.42, -0.22, 0.75], [0.34, 0.3, 0.6]];
-function sparkle(x, y, size, t) {
-  ctx.lineJoin = 'round'; ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.fillStyle = C.paper;
+function sparkle(x, y, size, t, kit) {
+  const colours = KITS[kit] ?? KITS.cornell;
+  ctx.lineJoin = 'round'; ctx.lineWidth = 2; ctx.strokeStyle = C.ink;
   SPARKS.forEach(([fx, fy, big], n) => {
     const life = ((t + n * 1.7) % 5.1) / 0.7; if (life >= 1) return;
     const r = size * 0.12 * big * Math.sin(life * Math.PI), px = x + fx * size, py = y + fy * size - life * 4, thin = r * 0.16;
     ctx.beginPath(); ctx.moveTo(px, py - r); ctx.quadraticCurveTo(px + thin, py - thin, px + r, py); ctx.quadraticCurveTo(px + thin, py + thin, px, py + r);
-    ctx.quadraticCurveTo(px - thin, py + thin, px - r, py); ctx.quadraticCurveTo(px - thin, py - thin, px, py - r); ctx.closePath(); ctx.stroke(); ctx.fill();
+    ctx.quadraticCurveTo(px - thin, py + thin, px - r, py); ctx.quadraticCurveTo(px - thin, py - thin, px, py - r); ctx.closePath(); ctx.stroke(); ctx.fillStyle = colours[n % 2]; ctx.fill();
   });
 }
 
@@ -702,12 +727,12 @@ function draw(t, dt) {
     if (line.tail.length && shown.some(each => seen(each.x, each.y))) rope(shown, colour(line.id));
     for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push(shown[i]);
     const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
-    sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1, ink: line.ink });
+    sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1, ink: line.ink, kit: line.kit });
     heads.push(line);
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
-  for (const s of sprites) { sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t); }
+  for (const s of sprites) { sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t, s.kit); }
   for (const car of world.shuttles) tram(car);
 
   for (let i = puffs.length - 1; i >= 0; i--) {
