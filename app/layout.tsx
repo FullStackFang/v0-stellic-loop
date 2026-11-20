@@ -4,6 +4,9 @@ import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 import "./loop.css";
 import "@/components/loading/seats.css";
+// The error page is drawn where no page of its own has loaded its styles, so the root layout brings them.
+import "@/app/c/campus.css";
+import "@/components/errors/spill.css";
 import { SeatsEnding } from "@/components/loading/seats-ending";
 
 const archivo = localFont({ src: "../public/fonts/Archivo.ttf", variable: "--font-archivo", weight: "100 900", declarations: [{ prop: "font-stretch", value: "62% 125%" }] });
