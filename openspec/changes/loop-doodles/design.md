@@ -33,3 +33,5 @@ Conga is a plain page under `public/conga`, served at `/conga`, linked from the 
 
 1. Is "Doodles" the name?
 2. Should Conga's "back to Loopd" lead to Doodles?
+
+**D8. Flourishes, and your own animal.** Asked for on 2026-11-20 ("add some nice touches and flourishes", "with ink+ you can choose your avatar to participate in the game instead of random"). The seated animals bob while they are shown; the ticket jolts on the kick; an animal lands in its own seat with a squash and a ring; a wrong seat sends up "+2s"; on "All in" the row cheers, ink drops fly in the school colours, and the time is stamped on the stub, in the third ink when it is a best. All of it is CSS on `translate`, `scale` and `rotate`, which add to the transform the script moves the animals with, and none of it plays with reduced motion. The page is served by `app/seats/route.ts`, which writes who is playing into it exactly as `app/conga` does (the same `congaPlayer`). With Ink+ one of the person's own animals takes a place in the crowd with a spark, chosen from a "You" pill above the ticket and kept under `seats-own`. Without Ink+ a pill says what it gives and leads to the Ink page.

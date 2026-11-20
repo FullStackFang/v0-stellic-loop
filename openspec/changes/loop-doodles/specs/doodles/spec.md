@@ -53,6 +53,36 @@ A round of Seats SHALL give each animal a seat of its own and show it there. On 
 - **WHEN** the device asks for reduced motion and "Kick them out" is pressed
 - **THEN** the animals are on the floor at once, with nothing thrown
 
+### Requirement: With Ink+ your own animal plays Seats
+For a signed-in person with Ink+, one of their own animals SHALL take a place in the crowd, marked with a spark, and they SHALL be able to choose which of their animals it is. The choice SHALL be kept in the browser. Anyone else SHALL be shown a link that says Ink+ gives this, and SHALL play with the crowd as it is.
+
+#### Scenario: Someone with Ink+ opens Seats
+- **WHEN** a person with Ink+ opens Seats
+- **THEN** one of their own animals is in the crowd with a spark, and a "You" pill shows it
+
+#### Scenario: They choose another
+- **WHEN** they press "You" and pick another of their animals
+- **THEN** that animal takes the place, a new round starts, and it is the one next time
+
+#### Scenario: Their animal is already in the crowd
+- **WHEN** the animal they chose is one the crowd already has
+- **THEN** it is in the crowd once
+
+#### Scenario: Someone without Ink+
+- **WHEN** a person without Ink+, or signed out, opens Seats
+- **THEN** a pill reads "Ink+ Play as your own animal" and leads to the Ink page
+
+### Requirement: Seats answers what the player does
+Seats SHALL show each thing that happens: the kick, an animal reaching its own seat, a wrong seat and what it cost, and the end of a round with its time. With reduced motion none of this SHALL move, and the same facts SHALL still be shown.
+
+#### Scenario: A wrong seat
+- **WHEN** an animal is dropped on a seat that is not its own
+- **THEN** "+2s" rises from that seat
+
+#### Scenario: All in
+- **WHEN** the last animal is seated
+- **THEN** the time is stamped on the stub of the ticket, and says so when it is the best yet
+
 ### Requirement: A staged game is the admin's alone
 A game that is not out SHALL be shown only to the admin, after the games that are out, marked as staged, with a "Try" link in place of "Play". Nothing about it SHALL be sent to anyone else.
 
