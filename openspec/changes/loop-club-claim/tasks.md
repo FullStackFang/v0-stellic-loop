@@ -24,5 +24,5 @@
 
 - [x] 5.1 The founder runs the migration on production.
 - [x] 5.2 Run the affected tests, `tsc --noEmit` and eslint. (No local production build: the dev server was running; the deploy builds it.)
-- [ ] 5.3 Commit only this change's files, push, open the PR, merge.
+- [x] 5.3 Commit only this change's files, push, open the PR, merge.
 - [ ] 5.4 On the live site: a real claim by a listed officer, one sent for review, and both in the admin's Clubs section. Read a second club's officer page, and one at another school.
