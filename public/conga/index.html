@@ -58,14 +58,27 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .card[hidden] { display: grid; opacity: 0; transform: translate(-50%, -42%) scale(.96); pointer-events: none; }
 .card h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 8vw, 44px); line-height: .98; letter-spacing: -.02em; }
 .card p { font-size: 16px; line-height: 1.4; font-weight: 500; }
-.faces { display: flex; gap: 8px; align-items: center; }
-.faces button { flex: 1; aspect-ratio: 1; min-width: 0; padding: 4px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); transition: transform .15s var(--expo); }
-.faces button .face { width: 100%; }
-.faces button[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 4px var(--action), 3px 3px 0 var(--ink); transform: translateY(-4px); }
+.faces { display: flex; gap: 8px; align-items: center; position: relative; }
+.faces > button { flex: 1; position: relative; aspect-ratio: 1; min-width: 0; padding: 4px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); transition: transform .15s var(--expo); }
+.faces > button .face { width: 100%; }
+.faces > button[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 4px var(--action), 3px 3px 0 var(--ink); transform: translateY(-4px); }
 /* Shuffle: a round button the size of an animal, in ink so it reads as a control and not a seventh animal. */
 .faces .more { background: var(--ink); color: var(--paper); display: grid; place-items: center; }
 .faces .more svg { width: 52%; transition: transform .45s var(--expo); }
 .faces .more:active svg { transform: rotate(180deg); }
+/* Your own animal, for someone signed in: the first seat of the row, on ink. Without Ink+ it wears the plan's tag and opens the join card. */
+.faces > .own { background: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), 3px 3px 0 var(--action); }
+.faces > .own[aria-pressed="true"] { background: var(--ink); }
+.plus { position: absolute; left: 50%; bottom: -9px; translate: -50% 0; padding: 2px 8px 3px; border-radius: 99px; font-size: 11.5px; font-weight: 760; background: var(--ink); color: var(--field); white-space: nowrap; box-shadow: 0 0 0 2px var(--paper); }
+/* The join card: grows out of the seat and overlaps what is above it. */
+.ask { position: absolute; z-index: 8; left: -6px; bottom: calc(100% + 20px); width: min(360px, calc(100vw - 60px)); padding: 26px 18px 16px; border-radius: 20px 20px 20px 6px; background: var(--ink); color: var(--paper); box-shadow: 6px 6px 0 var(--action); transform-origin: 34px 100%; transition: opacity .3s, scale .4s var(--expo), translate .4s var(--expo), display .4s allow-discrete; }
+.ask[hidden] { display: none; } @starting-style { .ask { opacity: 0; scale: .7; translate: 0 14px; } }
+.ask::after { content: ''; position: absolute; left: 26px; bottom: -9px; width: 18px; height: 18px; rotate: 45deg; background: var(--ink); }
+.ask .tab { position: absolute; left: 14px; top: -12px; padding: 3px 11px 4px; border-radius: 9px 9px 9px 3px; font-size: 13px; font-weight: 700; background: var(--field); color: var(--ink); }
+.ask h3 { font-size: 25px; font-weight: 740; font-stretch: 110%; letter-spacing: -.045em; line-height: 1.02; } .card .ask p { margin: 6px 0 14px; color: oklch(80% 0.03 40); font-size: 15px; }
+.ask div { display: flex; flex-wrap: wrap; gap: 8px; }
+.ask .pl { padding: 8px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 650; white-space: nowrap; text-decoration: none; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.ask .pl.see { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--field); }
 .go { justify-self: start; padding: 14px 34px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s var(--expo), box-shadow .12s var(--expo), background .12s; }
 .go:hover { background: var(--action-hover); }
 .go:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
@@ -124,7 +137,9 @@ const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: 
 const COLS = 7, SHEET = Math.min(innerWidth, innerHeight * 1.25) / 760 * Math.min(2, devicePixelRatio || 1) > 1.4 ? 192 : 96;
 const sheet = Object.assign(new Image(), { src: `./conga/animals-${SHEET}.v1.webp` });
 document.documentElement.style.setProperty('--sheet', `url(${sheet.src})`);
-const cut = face => `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (Math.ceil(FACES / COLS) - 1) * 100}%`;
+// Who is playing, for someone signed in (app/c/conga): the animal they wear on campus and whether they have Ink+. Face 0 is a pet of their own, a picture apart from the sheet.
+let you = null; const pet = new Image();
+const cut = face => !face ? `background: var(--field) url(${pet.src}) center / contain no-repeat; border-radius: 50%` : `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (Math.ceil(FACES / COLS) - 1) * 100}%`;
 const faceTag = face => `<span class="face" style="${cut(face)}"></span>`;
 const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
 
@@ -137,7 +152,7 @@ const colour = id => id === ME ? C.action : tint(id);
 
 let world, map, land, blossoms = [], me = null, aim = 0;
 const ask = new URLSearchParams(location.search);
-let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES), where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
+let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * FACES), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
 window.conga = { get world() { return world; } }; // for poking at the game from the console
 
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
@@ -166,17 +181,36 @@ function open(id) {
 function offer() {
   const set = new Set([picked]);
   while (set.size < 6) set.add(1 + Math.floor(Math.random() * FACES));
-  $('faces').replaceChildren(...[...set].map(face => {
+  const press = button => { for (const other of $('faces').children) if (other.tagName === 'BUTTON') other.setAttribute('aria-pressed', other === button); };
+  const row = [];
+  if (you) {
+    // Your own animal. With Ink+ it is picked like any other; without, it opens the card that says what Ink+ gives.
+    const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(you.face) + (you.ink ? '' : '<span class="plus">Ink+</span>') });
+    seat.setAttribute('aria-pressed', mine);
+    const card = Object.assign(document.createElement('div'), { className: 'ask', hidden: true,
+      innerHTML: '<span class="tab">Ink+</span><h3>Play as your own pet</h3><p>Your pet leads the line, with a sparkle.</p><div><a class="pl see" href="/c/ink">See Ink+ · $9.99</a><button class="pl">Not now</button></div>' });
+    card.querySelector('button').onclick = () => { card.hidden = true; seat.setAttribute('aria-expanded', false); };
+    seat.onclick = () => { if (you.ink) { mine = true; press(seat); } else { card.hidden = !card.hidden; seat.setAttribute('aria-expanded', !card.hidden); } };
+    row.push(seat, card);
+  }
+  $('faces').replaceChildren(...row, ...[...set].slice(0, you ? 5 : 6).map(face => {
     const button = document.createElement('button');
-    button.setAttribute('aria-pressed', face === picked);
+    button.setAttribute('aria-pressed', !mine && face === picked);
     button.setAttribute('aria-label', `Animal ${face}`);
     button.innerHTML = faceTag(face);
-    button.onclick = () => { picked = face; for (const other of $('faces').children) other.setAttribute('aria-pressed', other === button); };
+    button.onclick = () => { picked = face; mine = false; press(button); };
     return button;
   }), Object.assign(document.createElement('button'), { className: 'more', ariaLabel: 'Shuffle the animals', title: 'Shuffle', onclick: () => offer(),
     innerHTML: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h3.5c3.5 0 5.5 10 9 10H21M3 17h3.5c1.4 0 2.5-1.5 3.5-3.3M14 8.300C14.700 7.500 15.500 7 16.500 7H21M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>' }));
 }
 offer();
+// Someone signed in gets their own seat, and with Ink+ starts in it unless they chose another animal last time.
+fetch('/c/conga').then(answer => answer.ok ? answer.json() : null).then(player => {
+  if (!player) return;
+  you = player; if (you.picture) pet.src = you.picture;
+  mine = you.ink && (mine || keep.get('conga-face') == null);
+  offer();
+}).catch(() => {});
 $('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {
   const button = Object.assign(document.createElement('button'), { textContent: each.name, onclick: () => { keep.set('conga-map', id); open(id); } });
   button.dataset.map = id;
@@ -184,15 +218,16 @@ $('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {
 }));
 
 function begin() {
-  keep.set('conga-face', picked);
+  const own = mine && you?.ink, face = own ? you.face : picked;
+  keep.set('conga-face', own ? 'mine' : picked);
   if (me) place(world, me);
-  else me = addLine(world, { id: ME, face: picked, name: 'You' });
-  me.ink = ask.has('ink'); // until the game knows who has Ink+, `?ink` shows its sparkle on your own line
-  me.face = picked;
+  else me = addLine(world, { id: ME, face, name: 'You' });
+  me.ink = !!you?.ink || ask.has('ink'); // someone with Ink+ sparkles, whichever animal they play; `?ink` shows it to anyone
+  me.face = face;
   aim = me.a;
   $('start').hidden = $('over').hidden = true;
   $('mine').hidden = $('pause').hidden = false; $('dash').hidden = !touched;
-  $('mineFace').style.cssText = cut(picked);
+  $('mineFace').style.cssText = cut(face);
 }
 $('go').onclick = $('again').onclick = begin;
 
@@ -385,7 +420,8 @@ function canopy(x, y, r, fill) {
 function sprite(face, x, y, size, tilt = 0, alpha = 1) {
   const sx = (face - 1) % COLS * SHEET, sy = Math.floor((face - 1) / COLS) * SHEET;
   if (alpha !== 1) ctx.globalAlpha = alpha;
-  if (!sheet.complete || !sheet.naturalWidth) { ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(x, y, size * 0.36, 0, 7); ctx.fill(); }
+  if (!face) { if (pet.complete && pet.naturalWidth) { ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(pet, -size / 2, -size / 2, size, size); ctx.restore(); } }
+  else if (!sheet.complete || !sheet.naturalWidth) { ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(x, y, size * 0.36, 0, 7); ctx.fill(); }
   else if (tilt) { ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(sheet, sx, sy, SHEET, SHEET, -size / 2, -size / 2, size, size); ctx.restore(); }
   else ctx.drawImage(sheet, sx, sy, SHEET, SHEET, x - size / 2, y - size / 2, size, size);
   if (alpha !== 1) ctx.globalAlpha = 1;
