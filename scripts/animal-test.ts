@@ -81,20 +81,22 @@ async function main() {
     }
   }));
 
-  // The page shows every animal tested so far, each model's pictures in a row under the originals.
+  // Each animal gets its own page, /demo/mockups-animals-<animal>.html, with its tries in rows under the originals.
+  // (The one page of every animal, mockups-animals.html, grew too big and is no longer added to.)
   const root = 'public/demo/animal-tests';
-  const sections = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => {
+  const sections = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory() && entry.name === slug(animal)).map(entry => {
     const files = readdirSync(`${root}/${entry.name}`).filter(file => file.endsWith('.png')).sort();
     const by = new Map<string, string[]>();
     for (const file of files) { if (file === '0-photo.png') continue; const model = file.replace(/-\d+\.png$/, ''); by.set(model, [...(by.get(model) ?? []), file]); }
     return `<h2>${entry.name}</h2>${files.includes('0-photo.png') ? `<h3>The photo to recreate</h3><div class="row"><img src="animal-tests/${entry.name}/0-photo.png" alt=""></div>` : ''}${[...by].map(([model, list]) => `<h3>${model}</h3><div class="row">${list.map(file => `<figure><img src="animal-tests/${entry.name}/${file}" alt=""><figcaption>${file.replace('.png', '')}</figcaption></figure>`).join('')}</div>`).join('')}`;
   });
-  writeFileSync('public/demo/mockups-animals.html', `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Custom animals: model test</title>
+  const page = `public/demo/mockups-animals-${slug(animal)}.html`;
+  writeFileSync(page, `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Custom animals: model test</title>
 <style>body{font:15px/1.4 system-ui,sans-serif;margin:24px;background:#fff;color:#1a1a1a}h1{font-size:22px}h2{margin-top:40px;text-transform:capitalize}h3{font-size:14px;margin:20px 0 8px;color:#555}
 .row{display:flex;flex-wrap:wrap;gap:12px}figure{margin:0;text-align:center}img{width:192px;height:192px;object-fit:contain;border:1px solid #eee;border-radius:12px;background:#fff}.small img{width:96px;height:96px}figcaption{font-size:11px;color:#888}</style>
 <h1>Custom animals: which model holds the style?</h1><p>Top row: originals from the set. Below: what each model made from the same prompt and the same six originals.</p>
 <h3>Originals</h3><div class="row small">${Array.from({ length: 36 }, (_, index) => `<img src="/animals/${String(index + 1).padStart(2, '0')}.png" alt="">`).join('')}</div>
 ${sections.join('')}</html>`);
-  console.log('Open /demo/mockups-animals.html');
+  console.log(`Open ${page.replace('public', '')}`);
 }
 void main().catch(error => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });

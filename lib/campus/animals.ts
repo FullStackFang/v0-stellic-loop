@@ -1,9 +1,9 @@
 /** public/animals, 01 to 36: icons by Tran Mau Tri Tam, CC BY 4.0. These are the ones given by default and at the door. */
 export const ANIMALS = 36;
 /** public/animals, 37 on: premium animals Loopd had made, by name. A person picks one; nobody is given one. */
-export const PREMIUM = ['Dachshund', 'Cornell bear', 'Columbia lion', 'NYU bobcat', 'Baruch bearcat', 'Brooklyn bulldog', 'Oakland grizzly'];
+export const PREMIUM = ['Dachshund', 'Cornell bear', 'Columbia lion', 'NYU bobcat', 'Baruch bearcat', 'Brooklyn bulldog', 'Oakland grizzly', 'Maryland terrapin'];
 /** Animals that are one school's own, by number. They are neither core nor premium: free to people of that school, and offered to nobody else. A school may have more than one: CUNY has one for each college drawn so far, and all of CUNY may pick any of them. */
-export const MASCOT: Record<number, string> = { 37: 'cornell', 38: 'columbia', 39: 'nyu', 40: 'cuny', 41: 'cuny', 42: 'oakland' };
+export const MASCOT: Record<number, string> = { 37: 'cornell', 38: 'columbia', 39: 'nyu', 40: 'cuny', 41: 'cuny', 42: 'oakland', 43: 'maryland' };
 export const animal = (n: number) => `/animals/${String(n % (ANIMALS + PREMIUM.length) + 1).padStart(2, '0')}.png`;
 /** The animal a person has until they pick one: the same one every time, for the same person. */
 export const animalOf = (personId: string) => parseInt(personId.replace(/-/g, '').slice(0, 8), 16) % ANIMALS;
