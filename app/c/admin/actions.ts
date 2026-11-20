@@ -8,6 +8,7 @@ import { MASCOT } from '@/lib/campus/animals';
 import { deletePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
 import { approveLinkedin, removeLinkedin } from '@/lib/campus/linkedin';
+import { removeAskedSchool } from '@/lib/campus/school-ask';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
 import { savePlace } from '@/lib/campus/places';
@@ -63,6 +64,11 @@ export async function approveLinkedinAction(data: FormData): Promise<void> {
   await admin(data, async () => { const id = uuid(text(data, 'person')); if (!id) throw new Error('No such person'); await approveLinkedin(db(), id); return 'Approved. They are in the next time they open Loopd.'; });
 }
 /** "Remove" beside a person who added a LinkedIn profile: the profile goes, and what it unlocked. */
+/** "Remove" on a school people asked for: the name comes off the list, with everyone who gave it. */
+export async function removeSchoolAskAction(data: FormData): Promise<void> {
+  await admin(data, async () => { const key = text(data, 'school'); if (!key) throw new Error('No such school'); await removeAskedSchool(db(), key); return 'Removed from the list.'; });
+}
+
 export async function removeLinkedinAction(data: FormData): Promise<void> {
   await admin(data, async () => { const id = uuid(text(data, 'person')); if (!id) throw new Error('No such person'); await removeLinkedin(db(), id); return 'Removed. The schools it unlocked are closed to them again.'; });
 }
