@@ -61,7 +61,7 @@ export async function setCampusAction(data: FormData): Promise<void> {
 
 /** "Approve" beside a person with no school email who is waiting: they are let in at the first school they ticked. */
 export async function approveLinkedinAction(data: FormData): Promise<void> {
-  await admin(data, async () => { const id = uuid(text(data, 'person')); if (!id) throw new Error('No such person'); await approveLinkedin(db(), id); return 'Approved. They are in the next time they open Loop.'; });
+  await admin(data, async () => { const id = uuid(text(data, 'person')); if (!id) throw new Error('No such person'); await approveLinkedin(db(), id); return 'Approved. They are in the next time they open Loopd.'; });
 }
 /** "Remove" beside a person who added a LinkedIn profile: the profile goes, and what it unlocked. */
 /** "Remove" on a school people asked for: the name comes off the list, with everyone who gave it. */

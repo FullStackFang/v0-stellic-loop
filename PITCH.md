@@ -1,4 +1,4 @@
-# Loop — Pitch & Overview
+# Loopd — Pitch & Overview
 
 *Your people, on repeat.*
 
@@ -6,7 +6,7 @@ A campus belonging app that turns a student's plain-language intent into a
 *recurring group with an owner* — not a one-off match — and surfaces that
 participation as a wellbeing signal for advising (Stellic tie-in).
 
-> This doc reflects the current `index.html` demo (renamed **Loop**, with the
+> This doc reflects the current `index.html` demo (renamed **Loopd**, with the
 > Stellic advising/wellbeing surfaces and "The Floor" momentum feed). It
 > supersedes the older `SPEC.md`, which still refers to the app as "Pulse."
 
@@ -17,7 +17,7 @@ participation as a wellbeing signal for advising (Stellic tie-in).
 > Every campus app helps you *meet* someone once. Then the group chat spirals,
 > plans fizzle, and you never see them again.
 >
-> **Loop is different. It operates on plain-language intent** — *"I need to lock in
+> **Loopd is different. It operates on plain-language intent** — *"I need to lock in
 > for CS 2110"* — and instead of a match, you get **folded into a recurring
 > loop**: a real study crew with a time, a place, that meets on its
 > own rhythm with people that have the *same intent* every week.
@@ -25,11 +25,11 @@ participation as a wellbeing signal for advising (Stellic tie-in).
 > It starts with the people closest to you — your floor, your building — intentionally
 > keeps these groups small, and drafts the next session for you and removes fatigue and 
 > friction. And because being in a loop is the single best predictor a student stays
-> enrolled, **Loop quietly shares belonging signal with advising** — so a
+> enrolled, **Loopd quietly shares belonging signal with advising** — so a
 > counselor can reach the freshman who hasn't landed anywhere yet, before they
 > fall through the cracks.
 >
-> Loop turns "freshman fatigue and a source of anxiety" into "these are my people" and 
+> Loopd turns "freshman fatigue and a source of anxiety" into "these are my people" and 
 > a place of belonging.
 
 *Trim to the first two paragraphs for a true 30-second cut.*
@@ -42,7 +42,7 @@ participation as a wellbeing signal for advising (Stellic tie-in).
 > **two to six weeks**, and the students who slip away are the ones no one flagged
 > until the week-eight midterm.
 >
-> Loop turns belonging from a fuzzy concept into a **leading indicator.** It asks
+> Loopd turns belonging from a fuzzy concept into a **leading indicator.** It asks
 > one binary question — *is this student in a recurring peer loop during their
 > first 50 days?* — and hands that signal to advising. A counselor can reach the
 > freshman who hasn't landed anywhere in **week three**, long before they become a
@@ -61,30 +61,30 @@ names this **Logistical Fatigue**.
 
 The output is **always a loop, never a match.**
 
-| | Every other campus feed | **Loop** |
+| | Every other campus feed | **Loopd** |
 |---|---|---|
 | Output | a match (name + email, go DIY) | a **loop** — recurring session with time, place, owner |
 | Job | discovery (meet someone new) | repetition (see the same people again) |
 | After the intro | up to you (this is where it fizzles) | the app drafts the next session; owner taps send |
 | Declining | a visible going/maybe/no grid | never shown — "can't this week" silently reshapes the draft |
 
-**Judge sentence:** *"Every other campus app helps you meet someone once. Loop
+**Judge sentence:** *"Every other campus app helps you meet someone once. Loopd
 makes sure you see them again."*
 
 ## Why it works (the evidence)
 
-Loop isn't a hunch — every mechanic maps to an established finding in higher-ed
-retention research. The originality is not the research; it's that Loop makes
+Loopd isn't a hunch — every mechanic maps to an established finding in higher-ed
+retention research. The originality is not the research; it's that Loopd makes
 these forces **operational and measurable** in real time.
 
-| Research finding | What it says | How Loop operationalizes it |
+| Research finding | What it says | How Loopd operationalizes it |
 |---|---|---|
-| **Belonging drives retention** — Tinto (1993); Strayhorn (2012) [¹] | Social + academic integration is the strongest predictor of persistence; belonging is a precondition for academic success, not a nice-to-have | Loop's *only* output is a recurring group you belong to — it manufactures integration instead of hoping for it |
-| **The first 2–6 weeks are the danger zone** — Woosley (2003) [²] | Initial social adjustment in the opening weeks statistically predicts long-term degree completion | Loop front-loads belonging in onboarding (drop an intent → land in a loop *now*) and treats the **first ~50 days** as the window that matters |
-| **Recurring peer study groups rescue hard courses** — Treisman / Emerging Scholars (1985) [³] | Students who failed calculus studied *alone*; those who succeeded formed informal, recurring peer groups. Engineering those groups made failure rates collapse | Loop *is* the engineered recurring peer group — same faces, weekly cadence, built around a hard course (CS 2110), owner drafts the next session so it never dissolves |
+| **Belonging drives retention** — Tinto (1993); Strayhorn (2012) [¹] | Social + academic integration is the strongest predictor of persistence; belonging is a precondition for academic success, not a nice-to-have | Loopd's *only* output is a recurring group you belong to — it manufactures integration instead of hoping for it |
+| **The first 2–6 weeks are the danger zone** — Woosley (2003) [²] | Initial social adjustment in the opening weeks statistically predicts long-term degree completion | Loopd front-loads belonging in onboarding (drop an intent → land in a loop *now*) and treats the **first ~50 days** as the window that matters |
+| **Recurring peer study groups rescue hard courses** — Treisman / Emerging Scholars (1985) [³] | Students who failed calculus studied *alone*; those who succeeded formed informal, recurring peer groups. Engineering those groups made failure rates collapse | Loopd *is* the engineered recurring peer group — same faces, weekly cadence, built around a hard course (CS 2110), owner drafts the next session so it never dissolves |
 
 **The synthesis:** research proves belonging matters, that it's fragile early,
-and that recurring academic peer groups are the fix. Loop is the delivery
+and that recurring academic peer groups are the fix. Loopd is the delivery
 mechanism for all three — and, critically, the **sensor** that reports whether
 it's working, per student, in time to act.
 
@@ -95,7 +95,7 @@ it's working, per student, in time to act.
    friendships grow around a shared task (an **Activity Anchor**), in small
    **Micro-Tribes** capped at 4–6 so nobody's left out.
 2. **Drop an intent** in plain language — *"lock in for CS 2110 before HW2."*
-3. **Get folded into a loop** — Loop returns a short set of cards: an existing
+3. **Get folded into a loop** — Loopd returns a short set of cards: an existing
    crew to **join**, a session to **spin up**, or one that's **forming**. No feed
    of strangers, no browsable profiles, no match list.
 4. **Spin-up is natural** — free text → an editable, confident draft
@@ -108,7 +108,7 @@ it's working, per student, in time to act.
 
 ## The Stellic / advising tie-in (what makes it more than social)
 
-Loop positions itself as *"the connective tissue that makes hard courses
+Loopd positions itself as *"the connective tissue that makes hard courses
 survivable"* — it touches degree progress **and** belonging. The strategic wedge:
 it converts belonging into a **leading indicator** advising can act on, instead of
 the lagging one (a failed midterm, a dropped course) they get today.
@@ -117,7 +117,7 @@ the lagging one (a failed midterm, a dropped course) they get today.
   peer loop during their first ~50 days?* — passed to an advising dashboard (e.g.
   Stellic's Care module). It flips the intervention from **week eight** (midterm
   failure, a lagging signal) to **week three** (still unattached, a leading one).
-- **Belonging signal, not surveillance:** Loop shares *one number* — a sign to
+- **Belonging signal, not surveillance:** Loopd shares *one number* — a sign to
   reach out — never anyone's conversations or their loop's contents. Students in
   at least one loop stay enrolled and see an advisor earlier.
 - **Advisor surface:** a counselor (Dana, Advising & Wellbeing) sees a
@@ -150,7 +150,7 @@ later upgrade, kept out of the live demo so it never fails on stage.
 ## References
 
 Evidence backing the retention claims above. Cite as an appendix if a judge or
-enterprise buyer asks Loop to defend the data.
+enterprise buyer asks Loopd to defend the data.
 
 1. **Belonging → retention (the foundation).**
    - Tinto, V. (1993). *Leaving College: Rethinking the Causes and Cures of
@@ -165,7 +165,7 @@ enterprise buyer asks Loop to defend the data.
      Long-Term Effects of Initial College Experiences." *College Student Journal.*
      — Initial social adjustment in the opening 2–6 weeks is a direct statistical
      indicator of long-term degree completion.
-3. **Recurring academic peer groups (the "Loop" model).**
+3. **Recurring academic peer groups (the "Loopd" model).**
    - Treisman, U. (1985 / 1992). *Emerging Scholars Program*, UC Berkeley. —
      Failing calculus students studied alone; succeeding students formed informal,
      recurring peer study groups. Engineering those communities — merging students'

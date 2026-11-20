@@ -1,4 +1,4 @@
-# Loop — Business Idea & Model Presentation (spine)
+# Loopd — Business Idea & Model Presentation (spine)
 
 *Base for the workshop deck. One bullet block per slide; copy is deck-ready
 where it's in quotes. Two-sided model → every per-side section has a Student
@@ -11,16 +11,16 @@ Section 7.*
 
 ## Slide 1 · Title
 
-- "Business Idea & Business Model — Loop"
+- "Business Idea & Business Model — Loopd"
 - Stephen Fang · date submitted
 
 ## Slide 2 · Thesis + aspiration
 
 **Thesis, student side**
-> Loop gives a first-year student a small recurring crew to show up with for the campus activities they already meant to attend.
+> Loopd gives a first-year student a small recurring crew to show up with for the campus activities they already meant to attend.
 
 **Thesis, institution side**
-> Loop gives a student-engagement director a live, behavioral measure of which first-years are actually participating in campus life.
+> Loopd gives a student-engagement director a live, behavioral measure of which first-years are actually participating in campus life.
 
 (Each: one offering, one segment, one benefit. No "and", no "if".)
 
@@ -70,7 +70,7 @@ Section 7.*
 
 **Slide 5 · Student use case (B2C side) — Sarah**
 - (a) Awareness: an RA seeds a floor anchor at the first hall meeting; a club
-  officer and the CS 2110 SI leader each seed one ("put it in Loop"). Sarah
+  officer and the CS 2110 SI leader each seed one ("put it in Loopd"). Sarah
   sees a crew forming around something she already wanted to do.
 - (b) Acquisition: free; installs, verifies with .edu, a few taps; puts a
   small **refundable stake** on her first seat.
@@ -130,7 +130,7 @@ Section 7.*
   be bought off the shelf.
 - *Gain creators:* the data compounds as more activities are facilitated;
   the crew-and-commitment layer no engagement-platform incumbent has —
-  everyone lists what's happening; Loop makes students show up.
+  everyone lists what's happening; Loopd makes students show up.
 
 ## Section 6 · Business model canvases (2 slides)
 
@@ -206,7 +206,7 @@ Section 7.*
   the campus engagement index at $75–150K. Sizing (`ANGLES.md`): ~$130M TAM,
   ~$60M SAM.
 - **The line we don't cross:** ingest supply as anchors; own the crew and the
-  commitment. The day Loop becomes "a better events app," the moat is gone.
+  commitment. The day Loopd becomes "a better events app," the moat is gone.
 
 **Slide 12 · The seven questions (iterating for attractiveness)**
 1. *Switching costs* — strong once it's the engagement system of record: the

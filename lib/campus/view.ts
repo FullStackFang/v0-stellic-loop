@@ -3,7 +3,7 @@
 
 import type { NearTag } from './tags';
 
-/** `ink` is whether the person has Loop Ink: their face wears its mark. */
+/** `ink` is whether the person has Loopd Ink: their face wears its mark. */
 export type Face = { first: string; photo: string | null; ink: boolean; here?: boolean; me?: boolean };
 /** One seat of a group reward. A seat taken by someone the viewer does not know has no face. */
 export type Seat = { taken: boolean; face: Face | null; here: boolean; yours: boolean };
@@ -47,7 +47,7 @@ export type Live = { listingId: string; giver: string; text: string; usedAt: str
  * `face` is the animal's number, PHOTO or CUSTOM; `ownPhoto` is the sign-in account's photo, offered as a pick when there is one.
  * `own` is the animal they had made from a photo and are using, `owns` every one they made, `picks` what the picker offers (the admin decides which animals are core and which premium), `asked` whether they have asked to subscribe, `makesLeft` how many more they may make.
  */
-/** The school a person is at (`home`), the ones their LinkedIn `profile` unlocked (`added`), and every school Loop is at (`all`). */
+/** The school a person is at (`home`), the ones their LinkedIn `profile` unlocked (`added`), and every school Loopd is at (`all`). */
 export type Schools = { profile: string | null; home: string | null; added: string[]; all: { slug: string; name: string }[] };
 export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[]; school: Tile[] }; schools: Schools; asked: boolean; makesLeft: number; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
 

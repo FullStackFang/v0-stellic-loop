@@ -1,4 +1,4 @@
-# Loop MCP pilot
+# Loopd MCP pilot
 
 This working tree contains an EMBA service, portal, and MCP pilot implementation. It is **not ready for real-member enrollment**. The earlier production deployment does not contain this continuation, and the hosted database has not received these migrations. `/emba` displays “Sign-in is not configured yet” until a trusted browser provider is connected; it does not use the legacy cookie or a request-selected person.
 
@@ -40,7 +40,7 @@ The remote server uses a provider-issued signed access token. Configure these en
 
 `npm run emba:mcp` runs stdio against the configured database and credential. There is no default principal, local owner bypass, or token issuance. The issuer/subject must already map to a verified person. A matching, unexpired first-party lease and token scope are required for each delegated read. Expired or revoked authority denies later calls on an existing connection.
 
-HTTP surfaces include `/api/mcp`, `/api/emba/memory`, `/api/emba/documents/[id]`, and `/.well-known/oauth-protected-resource`. MCP exposes memory, bounded planning, source search/read, activities, updates, and prepare/execute tools for publication, commitments and name disclosure. Consequential execution requires exact single-use first-party approval and rechecks current authority. The `loop://memory` resource reads global personal memory. Loop scope is exact: a global lease does not authorize a loop-specific read. Responses must not be publicly cached.
+HTTP surfaces include `/api/mcp`, `/api/emba/memory`, `/api/emba/documents/[id]`, and `/.well-known/oauth-protected-resource`. MCP exposes memory, bounded planning, source search/read, activities, updates, and prepare/execute tools for publication, commitments and name disclosure. Consequential execution requires exact single-use first-party approval and rechecks current authority. The `loop://memory` resource reads global personal memory. Loopd scope is exact: a global lease does not authorize a loop-specific read. Responses must not be publicly cached.
 
 These routes do not implement an OAuth authorization server or browser sign-in. The portal consent UI cannot be used by real members until its trusted browser provider is configured. Missing auth configuration fails closed. Provider discovery, PKCE, audience and verified client identity must be tested with the actual intended hosts before connecting real accounts. Never create identity mappings based on an unverified email or legacy magic link.
 

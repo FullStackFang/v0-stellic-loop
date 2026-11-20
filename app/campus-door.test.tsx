@@ -41,7 +41,7 @@ describe('the door', () => {
     // The foot is there too, in the colours of the school on the ticket, with the small print and no colours to pick.
     const foot = screen.getByRole('contentinfo');
     expect(foot).toHaveAttribute('data-kit', 'cornell');
-    expect(within(foot).getAllByRole('link').map(link => link.textContent)).toEqual(['Loop', 'Terms', 'Privacy']);
+    expect(within(foot).getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'Terms', 'Privacy']);
     expect(within(foot).queryByRole('group', { name: 'Colours' })).toBeNull();
     expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByRole('status')).toHaveTextContent('Sign-in is not configured');
@@ -85,9 +85,9 @@ describe('the door', () => {
     vi.stubEnv('LOOP_ADMIN', 'user_fay'); jar.at = 'cornell-tech';
     await expect(withPortalTestSession(await signedIn('Fay', 'fay@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell-tech'));
   });
-  it('signed in from no school, is told where Loop is and goes no further', async () => {
+  it('signed in from no school, is told where Loopd is and goes no further', async () => {
     render(await drawn(withPortalTestSession(await signedIn('Omar', 'omar@gmail.com'), () => FrontDoor())));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now. If that changes, we’ll let you know.');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loopd is only for schools right now. If that changes, we’ll let you know.');
   });
   it('/sign-in is the same door', async () => {
     render(await DoorPage({ routing: 'path' }));
@@ -128,7 +128,7 @@ describe('the sign-in card', () => {
     expect(screen.getByText('Not an email at Cornell or NYU. You can still sign in with it.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/^Sign in$/);
   });
-  it('goes back to the picked colours, or Loop\'s own, when the email is at no school', () => {
+  it('goes back to the picked colours, or Loopd\'s own, when the email is at no school', () => {
     render(<DoorSignIn schools={schools} routing="hash" configured />);
     type('name@nyu.edu'); type('name@gmail.com');
     expect(document.documentElement.dataset.kit).toBe('loop');

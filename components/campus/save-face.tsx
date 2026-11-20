@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { subscribeToSaveAction } from '@/app/c/actions';
 import { GROUNDS_HREF, saveHref, SHAPES, type Shape, type Swatch } from '@/lib/campus/save-shapes';
 import '@/app/c/save-face.css';
+import { SeatsWord } from '@/components/loading/seats';
 
 /** What Ink+ gives here. Nothing is charged for it yet, and the plate says so once the person has subscribed. */
 const PERKS = ['Your picture, no mark', 'Everything in Ink'];
@@ -12,7 +13,7 @@ const NOT_NOW = 'That did not go through. Try again.';
 
 /**
  * "Save your picture" (openspec loop-save-picture, as approved on public/demo/mockups-avatar-download.html): pick a
- * shape and a ground, and take the picture out of the app. Free, with the Loop mark on it; "No mark" is Ink+. The
+ * shape and a ground, and take the picture out of the app. Free, with the Loopd mark on it; "No mark" is Ink+. The
  * picture is made by the server (/c/save), which is also what says whether this person may leave the mark off: the
  * pane asks, and shows the Ink+ plan when the answer is no. `of` is a group, for its drawn picture; without it the
  * picture is the person's own.
@@ -70,15 +71,15 @@ export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: 
 
   if (plan) return <div className="cs-lvl-body cs-pets cs-own cs-save"><div className="cs-prem">
     <button className="cs-prem-back" onClick={() => { setPlan(false); setAsking(false); setSaid(''); }}>Back</button>
-    <p className="cs-prem-kick">Loop Ink+</p>
+    <p className="cs-prem-kick">Loopd Ink+</p>
     {joined ? <><p className="cs-prem-big said">You’re in. The mark is off.</p>
-      <p className="cs-own-thanks">Thanks for subscribing to Loop Ink+. Payment is not set up yet, so this is free.</p></>
+      <p className="cs-own-thanks">Thanks for subscribing to Loopd Ink+. Payment is not set up yet, so this is free.</p></>
     : <><p className="cs-prem-big">$9.99 <small>a month</small></p>
       <div className="cs-prem-perks">{PERKS.map(perk => <span key={perk}>{perk}</span>)}</div></>}
     <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
-      {joined ? <button type="button" className="cs-btn go" disabled={wait} onClick={() => void save()}>{DOWN}Save without the mark</button>
-      : asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}>Subscribe</button></div>
-      : <button className="cs-btn go">Subscribe to Loop Ink+</button>}
+      {joined ? <button type="button" className="cs-btn go" disabled={wait} onClick={() => void save()}>{wait ? <SeatsWord word="Saving" plate /> : <>{DOWN}Save without the mark</>}</button>
+      : asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}>{wait ? <SeatsWord word="Subscribing" plate /> : 'Subscribe'}</button></div>
+      : <button className="cs-btn go">Subscribe to Loopd Ink+</button>}
       {said && <p role="alert">{said}</p>}
     </form>
   </div></div>;
@@ -94,8 +95,8 @@ export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: 
       <div className="cs-save-view"><div className={`cs-save-frame ${shape}`}><img className={arrived.has(shown) ? '' : 'wait'} src={shown} onLoad={() => here(shown)} alt={`The picture as a ${SHAPES[shape].name.toLowerCase()}`} onError={() => { fetch(shown).then(got => got.status === 409 ? got.text() : '').then(setNone, () => {}); }} /></div></div>
       {/* A sticker has no ground, so no colour to pick: the row keeps its place. */}
       <div className="cs-save-inks" role="group" aria-label="Colour" style={shape === 'sticker' ? { visibility: 'hidden' } : undefined}>{swatches.map(each => <button key={each.key} aria-label={each.name} aria-pressed={ground === each.key} style={{ '--c': each.colour } as React.CSSProperties} onClick={() => setGround(each.key)} />)}</div>
-      <div className="cs-save-marks" role="group" aria-label="Loop mark"><button aria-pressed={mark} onClick={() => setMark(true)}>With the mark</button><button aria-pressed={!mark} disabled={wait} onClick={() => { if (mark) void noMark(); }}>No mark<b>Ink+</b></button></div>
-      <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void save()}>{DOWN}Save</button><p className="cs-prem-small">{SHAPES[shape].fits}</p>{said && <p role="alert">{said}</p>}</div>
+      <div className="cs-save-marks" role="group" aria-label="Loopd mark"><button aria-pressed={mark} onClick={() => setMark(true)}>With the mark</button><button aria-pressed={!mark} disabled={wait} onClick={() => { if (mark) void noMark(); }}>No mark<b>Ink+</b></button></div>
+      <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void save()}>{wait ? <SeatsWord word="Saving" plate /> : <>{DOWN}Save</>}</button><p className="cs-prem-small">{SHAPES[shape].fits}</p>{said && <p role="alert">{said}</p>}</div>
     </>}
   </div></div>;
 }

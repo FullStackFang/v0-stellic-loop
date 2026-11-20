@@ -1,4 +1,5 @@
 'use client';
+import { SeatsWord } from '@/components/loading/seats';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useSyncExternalStore, useTransition, type FormEvent } from 'react';
@@ -65,7 +66,7 @@ export function TripView({ board, trip, items, me, written = null }: { board: Bo
   }
   const titles = { activity: 'Plan something together', arrival: 'Add your arrival', stay: 'Add your stay', document: 'Upload a document', settings: 'Trip details', signin: 'Join the trip' };
   return <div className="lt-trip">
-    <header className="lt-header"><Link href='/' className="lt-logo">Loop</Link><span>A little less coordinating. A lot more going.</span><button onClick={share}>Share trip</button></header>
+    <header className="lt-header"><Link href='/' className="lt-logo">Loopd</Link><span>A little less coordinating. A lot more going.</span><button onClick={share}>Share trip</button></header>
     <main className="lt-main">
       <section className="lt-hero">
         <div><p className="lt-eyebrow">Your cohort, out in the world</p><h1>{board.name}</h1><p>{trip.destination || 'The destination is still open.'}</p><div className="lt-dates">{trip.start_day ? tripDate(trip.start_day) : 'Dates to come'}{trip.end_day ? ` — ${tripDate(trip.end_day)}` : ''}</div></div>
@@ -88,7 +89,7 @@ export function TripView({ board, trip, items, me, written = null }: { board: Bo
                 {panel === 'document' ? <><label>Choose a file<input name='file' type='file' accept='.pdf,.jpg,.jpeg,.png,.txt' required /></label><p className="lt-caption">PDF, JPG, PNG, or text. Up to 3 MB. The original file is saved; add scheduled activities separately.</p></> : <><div className="lt-pair"><label>{panel === 'arrival' ? 'Arrival date' : panel === 'stay' ? 'Check-in date' : 'Date'}<input name='day' type='date' /></label><label>Local time<input name='time' type='time' /></label></div><label>{panel === 'arrival' ? 'Arrival airport or station' : 'Place'}<input name='location' maxLength={200} placeholder={panel === 'arrival' ? 'Use the airport code, e.g. LHR' : 'Address or meeting point'} /></label><label>Details<textarea name='notes' maxLength={4000} rows={3} placeholder='Anything useful to know' /></label></>}
                 {panel !== 'activity' ? <label className="lt-check"><input name='shared' type='checkbox' /> Share with anyone who has the trip link</label> : <p className="lt-caption">Activities are shared with the cohort. People can join independently.</p>}
               </>}
-              <button className="lt-primary" disabled={busy}>{busy ? 'Saving…' : panel === 'document' ? 'Save document' : 'Save'}</button>
+              <button className="lt-primary" disabled={busy}>{busy ? <SeatsWord word="Saving" plate /> : panel === 'document' ? 'Save document' : 'Save'}</button>
             </form>}
           </section>}
           {!visible.length ? <section className="lt-empty"><div className="lt-routeArt" aria-hidden='true'><span>&#9675;</span><i /><span>&#9678;</span><i /><span>&#9675;</span></div><h2>{tab === 'Itinerary' ? 'A trip starts with a plan.' : tab === 'My travel' ? 'Your journey belongs here.' : 'All the details, in one place.'}</h2><p>{tab === 'Itinerary' ? 'Have the cohort itinerary? Upload it so everyone can find it, then add the activities you’ll do together.' : tab === 'My travel' ? 'Arrive when it works for you. Add your flight or stay and choose what to share.' : 'Save the itinerary for everyone, or keep your own booking documents private.'}</p><button className="lt-primary" onClick={() => open(tab === 'My travel' ? 'arrival' : 'document')}>{tab === 'My travel' ? 'Add your arrival' : 'Upload itinerary'}</button></section> : <div className="lt-timeline">{visible.map(item => <article className="lt-item" key={item.id}>
@@ -102,7 +103,7 @@ export function TripView({ board, trip, items, me, written = null }: { board: Bo
           <section className="lt-coordination"><h2>Around the cohort</h2>{nearby.length ? <><p>You have company arriving at the same place on the same day.</p>{nearby.map(i => <p key={i.id}><strong>{i.owner}</strong><br />{i.location} · {tripDate(i.day)}{i.time ? `, ${i.time}` : ''}</p>)}<button onClick={() => open('activity')}>Plan a shared transfer</button></> : <p>Share your arrival details to help others coordinate a transfer with you.</p>}<hr /><p>{activities.filter(i => !i.joined).length ? `${activities.filter(i => !i.joined).length} activities you haven’t joined yet.` : 'Something in mind for the group?'}</p><button onClick={() => open('activity')}>Suggest an activity</button></section>
         </aside>
       </div>
-      <footer className="lt-footer"><Link href='/'>Loop</Link><span>Everyone has a plan. Now they’re in one place.</span><Link href='/privacy'>Privacy</Link></footer>
+      <footer className="lt-footer"><Link href='/'>Loopd</Link><span>Everyone has a plan. Now they’re in one place.</span><Link href='/privacy'>Privacy</Link></footer>
     </main>
   </div>;
 }

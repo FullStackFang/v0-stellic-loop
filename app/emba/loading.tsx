@@ -1,3 +1,5 @@
+import { PageWait } from '@/components/loading/page-wait';
+
 export default function PortalLoading() {
-  return <section className="lt-editor"><p role="status">Loading your member space…</p></section>;
+  return <PageWait />;
 }

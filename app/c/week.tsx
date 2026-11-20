@@ -20,10 +20,11 @@ import { campusScreen, type ShareLink } from '@/lib/campus/screen';
 import { campusViewer, mayUse, signInHref } from '@/lib/campus/session';
 import { barGroups } from '@/lib/campus/bar-groups';
 import { OnYou } from './on-you';
+import { SeatsSmall } from '@/components/loading/seats';
 
 /**
  * "This week" for one campus, as the person looking may see it. A signed-in person belongs to one school: another
- * school's address sends them to their own, and someone at no school is told where Loop is. The admin opens any.
+ * school's address sends them to their own, and someone at no school is told where Loopd is. The admin opens any.
  * `back` is where sign-in returns to. `link` is the share link the page was opened from, if any.
  */
 export async function Week({ campus, back, link }: { campus: Campus; back: string; link?: ShareLink }) {
@@ -36,7 +37,7 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
   // The campuses of this school, when it has more than one: what the swap on the map offers.
   const parts = (await listCampuses(db())).filter(each => schoolOf(each.slug) === schoolOf(campus.slug) && SWAP_TICKET[each.slug]);
   const swap = parts.length < 2 ? [] : await Promise.all(parts.map(async each => ({ slug: each.slug, ...SWAP_TICKET[each.slug], count: (await weekListings(db(), each)).length, home: !!viewer && !viewer.admin && viewer.campus?.id === each.id, here: each.id === campus.id })));
-  return <><LookingAt slug={campus.slug} /><CampusScreen screen={screen} groups={groups} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={null}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} /><SiteFoot home={`/c/${campus.slug}`} member={groups.length > 0} /></>;
+  return <><LookingAt slug={campus.slug} /><CampusScreen screen={screen} groups={groups} swap={swap} signInHref={signInHref(back)} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={<SeatsSmall size={16} />}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} /><SiteFoot home={`/c/${campus.slug}`} /></>;
 }
 
 /**
@@ -55,12 +56,12 @@ export async function NoSchool() {
   const form = <AddSchools box="cs-ns-box" send="Send for a check" waiting={waiting} schools={{ profile: linked.profile, added: linked.waiting, home: null, all: schools.map(each => ({ slug: each.slug, name: each.name })) }} />;
   const another = <SignOut className="cs-btn">Use another email</SignOut>;
   return <div className="cs cs-ns">
-    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loop</Link>
+    <header className="cs-nav"><Link className="cs-wm" href="/"><Rings />Loopd</Link>
       <div className="cs-nav-end">{email && <span className="cs-ns-who">{email}</span>}{signs && <SignOut className="cs-btn" />}</div>
     </header>
     <main>
       <section className="cs-ns-band">
-        <FitLines lines={[<>Loop is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
+        <FitLines lines={[<>Loopd is only for <em>schools</em> right now.</>, 'If that changes, we’ll let you know.']} />
       </section>
       <div className="cs-ns-two">
         {owner || waiting ? <section className="cs-ns-tk cs-ns-wide">
@@ -73,7 +74,7 @@ export async function NoSchool() {
         </section> : <section className="cs-ns-tk cs-ns-wide">
           <h2 className="cs-ns-tab">{email ? `${email} is not a school email` : 'No school email'}</h2>
           {signs ? <ConnectLinkedin other={another} fallback={form} /> : form}
-          <p>Loop is for schools. With LinkedIn we check your school ourselves.</p>
+          <p>Loopd is for schools. With LinkedIn we check your school ourselves.</p>
           <SchoolAsk asked={asked} email={email} />
         </section>}
       </div>

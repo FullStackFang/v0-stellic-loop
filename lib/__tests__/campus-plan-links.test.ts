@@ -31,11 +31,11 @@ it('takes a page time with no offset as the campus\'s time, and leaves out what 
  expect(await readPlanLink(await cornell(),LUMA,NOW,reads(page({startsAt:'2026-11-19T18:00',endsAt:null,place:null,host:null})))).toMatchObject({ok:true,
   filled:{title:'Special Special 10 Year Celebration',starts:'2026-11-19T18:00',ends:'',place:'',about:''}});
 });
-it('keeps the link and asks for the rest when the site is not one Loop reads, or the page could not be read',async()=>{
+it('keeps the link and asks for the rest when the site is not one Loopd reads, or the page could not be read',async()=>{
  const campus=await cornell(),never=reads(page());
- expect(await readPlanLink(campus,'https://partiful.com/e/abc123?x=1',NOW,never)).toEqual({ok:true,link:'https://partiful.com/e/abc123?x=1',filled:null,note:'Loop does not read partiful.com. The link is kept: fill in the rest.'});
+ expect(await readPlanLink(campus,'https://partiful.com/e/abc123?x=1',NOW,never)).toEqual({ok:true,link:'https://partiful.com/e/abc123?x=1',filled:null,note:'Loopd does not read partiful.com. The link is kept: fill in the rest.'});
  expect(never).not.toHaveBeenCalled();
- expect(await readPlanLink(campus,LUMA,NOW,reads({ok:false,reason:'unreadable'}))).toEqual({ok:true,link:LUMA,filled:null,note:'Loop could not read that page. The link is kept: fill in the rest.'});
+ expect(await readPlanLink(campus,LUMA,NOW,reads({ok:false,reason:'unreadable'}))).toEqual({ok:true,link:LUMA,filled:null,note:'Loopd could not read that page. The link is kept: fill in the rest.'});
 });
 it('says why when the link cannot be used: not a link, gone, already started, or too far ahead',async()=>{
  const campus=await cornell(),said=async(raw:string,answer:PageRead)=>{const got=await readPlanLink(campus,raw,NOW,reads(answer));return got.ok?null:got.message;};

@@ -1,4 +1,5 @@
 "use client";
+import { SeatsWord } from '@/components/loading/seats';
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { closeProposal } from "@/actions/lifecycle";
@@ -14,6 +15,6 @@ export function SlotEditor({ id, title, intent = emptyIntent(), days, day, time,
     start(async () => { const r = await editProposal({ proposalId: id, day: draft.day, time: draft.time, place: draft.place, intent: draft.intent }); setError(r.status === "error" ? r.message : ""); router.refresh(); });
   }}>
     <IntentComposer value={raw} onChange={setRaw} days={days} disabled={busy} fixedTitle />
-    {error ? <p role="alert">{error}</p> : null}<button className="ghost" disabled={busy}>Save changes</button>
+    {error ? <p role="alert">{error}</p> : null}<button className="ghost" disabled={busy}>{busy ? <SeatsWord word="Saving" /> : 'Save changes'}</button>
   </form><button className="alt" disabled={busy} onClick={() => start(async () => { const r = await closeProposal({proposalId:id}); setError(r.status === "error" ? r.message : ""); router.refresh(); })}>Close plan</button></details>;
 }

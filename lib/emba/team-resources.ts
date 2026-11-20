@@ -14,7 +14,7 @@ import {lineSchema,singleLine} from './team-text';
 
 // Resources (change loop-resources-tab): a team's links, which are their own thing, and its texts, which are the documents
 // that already exist. Every link and every text can carry tags that an assistant works out and a person never types.
-// Loop keeps a link's address and name, never what it points at.
+// Loopd keeps a link's address and name, never what it points at.
 
 export const RESOURCE_LIMITS={links:100,list:100,brief:30,name:120} as const;
 

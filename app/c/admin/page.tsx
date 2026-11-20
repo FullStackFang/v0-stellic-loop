@@ -124,7 +124,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     const leads = allTags.filter(tag => !tag.lead), led = (slug: string) => allTags.filter(tag => tag.lead === slug).length;
     const about = (tag: typeof allTags[number]) => `${tag.lead ? `Counted with @${tag.lead}` : led(tag.slug) ? `The word most people use, of ${led(tag.slug) + 1}` : 'On its own'}${tag.byHand ? ' · set by hand' : ''}`;
     return <section>{top()}
-      <p className="cs-adm-lede">Tags that mean the same thing are counted as one, under the word most people use. Loop sorts them by itself. What you set here it never changes again.</p>
+      <p className="cs-adm-lede">Tags that mean the same thing are counted as one, under the word most people use. Loopd sorts them by itself. What you set here it never changes again.</p>
       <table className="cs-adm-table"><thead><tr><th>People</th><th>Tag</th><th>Kind</th><th>Counted with</th></tr></thead>
         <tbody>{allTags.map(tag => <tr key={tag.id}><td>{tag.people}</td>
           <td><b>@{tag.slug}</b><small>{about(tag)}</small></td>
@@ -140,7 +140,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     const pets: Pet[] = [...all.built.map((one): Pet => ({ key: String(one.face), src: one.src, name: one.name, named: one.name, words: one.words, now: one.tier, field: 'face', value: String(one.face) })),
       ...all.made.map((one): Pet => ({ key: one.token, src: one.src, name: one.name ?? (one.email ? `Made by ${one.email}` : 'Made animal'), named: one.name ?? '', words: one.words, now: one.tier ?? 'own', field: 'picture', value: one.token }))];
     const within = (which: Show) => pets.filter(pet => which === 'all' || pet.now === which || (which === 'off' && pet.now === 'own'));
-    /* eslint-disable @next/next/no-img-element -- icons from public/animals, and pictures Loop made, served from the database */
+    /* eslint-disable @next/next/no-img-element -- icons from public/animals, and pictures Loopd made, served from the database */
     return <section>{top()}
       <nav className="cs-adm-seg" aria-label="Show">{SHOW.map(each => <Link key={each} href={`${at('animals')}&show=${each}`} aria-current={each === show ? 'true' : undefined}>{each === 'all' ? 'All' : TIER[each]} {within(each).length}</Link>)}</nav>
       {/* Pick any number, then move them together. The bar counts what is picked, and shows only then. With one picked, its card shows beside the grid: its name, and the words the picker finds it by. */}
@@ -160,7 +160,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   function premium() {
     return <section>{top()}
       <p className="cs-adm-lede">{asks.length ? `Asked to subscribe, across every campus. Nobody is charged, and each got one animal free.` : 'Nobody has asked to subscribe yet.'}</p>
-      {/* eslint-disable-next-line @next/next/no-img-element -- pictures Loop made, served from the database at their own address */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- pictures Loopd made, served from the database at their own address */}
       <ul className="cs-adm-rows">{asks.map(ask => <li key={ask.email + ask.asked}><div><b>{ask.email}</b><span>{ask.asked}</span></div><span className="made">{ask.pictures.map(token => <img key={token} src={customFace(token)} alt="" />)}</span></li>)}</ul>
     </section>;
   }
@@ -177,11 +177,11 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
         <form action={removeLinkedinAction}>{keep}<input type="hidden" name="person" value={each.personId} /><button className="cs-btn sm">Turn down</button></form></li>)}</ul>
     </section>;
   }
-  /** Schools Loop is not at that people signed up, the most asked first. A row opens to show who asked. */
+  /** Schools Loopd is not at that people signed up, the most asked first. A row opens to show who asked. */
   function askedFor() {
     const most = wanted_[0]?.people ?? 1, people = wanted_.reduce((sum, each) => sum + each.people, 0);
     return <section>{top()}
-      <p className="cs-adm-lede">{wanted_.length ? `Schools people signed up that Loop is not at yet, the most asked first. ${people} ${people === 1 ? 'person' : 'people'}, ${wanted_.length} ${wanted_.length === 1 ? 'school' : 'schools'}. Open a row to see who asked.` : 'Nobody has signed up a school yet.'}</p>
+      <p className="cs-adm-lede">{wanted_.length ? `Schools people signed up that Loopd is not at yet, the most asked first. ${people} ${people === 1 ? 'person' : 'people'}, ${wanted_.length} ${wanted_.length === 1 ? 'school' : 'schools'}. Open a row to see who asked.` : 'Nobody has signed up a school yet.'}</p>
       <ol className="cs-adm-rows cs-adm-asked">{wanted_.map((each, at) => <li key={each.key}><details><summary><i>{at + 1}</i><div><b>{each.school}</b><span>Last asked {each.last}</span></div>
         <span className="bar" aria-hidden="true"><i style={{ width: `${Math.round(each.people / most * 100)}%` }} /></span><span className="n">{each.people} {each.people === 1 ? 'person' : 'people'}</span>
         <form action={removeSchoolAskAction}>{keep}<input type="hidden" name="school" value={each.key} /><button className="cs-btn sm" aria-label={`Remove ${each.school}`}>Remove</button></form></summary>

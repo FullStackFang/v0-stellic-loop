@@ -42,7 +42,7 @@ export async function placeAt(db: Db, personId: string, campusId: string): Promi
   await db.query('update campus_person set campus_id=$2,placed_at=now() where person_id=$1', [personId, to.id]);
 }
 
-/** First names, by person. Someone whose name Loop does not have yet is "Someone". */
+/** First names, by person. Someone whose name Loopd does not have yet is "Someone". */
 export async function firstNames(q: Q, personIds: readonly string[]): Promise<Map<string, { first: string; name: string }>> {
   if (!personIds.length) return new Map();
   const { rows } = await q.query<{ id: string; name: string }>('select id,name from person where id=any($1::uuid[])', [personIds]);
@@ -70,7 +70,7 @@ export async function pickFace(q: Q, personId: string, face: number, premium = f
 
 export type Photos =(db: Db, personIds: string[]) => Promise<Record<string, string>>;
 
-/** Photos come from the sign-in account (design D19), read when a page needs them, for people who picked theirs as their face. Loop keeps no copy. A person with none is left out. */
+/** Photos come from the sign-in account (design D19), read when a page needs them, for people who picked theirs as their face. Loopd keeps no copy. A person with none is left out. */
 export const accountPhotos: Photos = async (db, personIds) => {
   const issuer = clerkIssuer();
   if (!issuer || !clerkPortalConfigured() || !personIds.length) return {};

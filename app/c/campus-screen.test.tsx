@@ -191,7 +191,7 @@ describe('who sees whom', () => {
       expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', '/c/save?shape=profile&ground=school&small=1');
       expect(card.getByRole('button', { name: /No mark/ })).toHaveTextContent('Ink+');
       // The rows stepped aside, as they do for the picker.
-      expect(card.queryByText('Loop Ink')).toBeNull();
+      expect(card.queryByText('Loopd Ink')).toBeNull();
       expect(card.queryByRole('button', { name: 'Save it' })).toBeNull();
       // The pencil on the picture still leads to the picker.
       fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
@@ -199,7 +199,7 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Done' }));
       fireEvent.click(card.getByRole('button', { name: 'Save it' }));
       fireEvent.click(card.getByRole('button', { name: 'Done' }));
-      expect(card.getByText('Loop Ink')).toBeInTheDocument();
+      expect(card.getByText('Loopd Ink')).toBeInTheDocument();
       expect(card.queryByRole('group', { name: 'Shape' })).toBeNull();
     } finally { vi.unstubAllGlobals(); }
   });
@@ -217,7 +217,7 @@ describe('who sees whom', () => {
       expect(card.getAllByRole('img', { name: 'Ana' })[0]).toHaveAttribute('src', animal(11));
       // A premium animal is for people who subscribed: for anyone else it opens the plan, and nothing is picked.
       fireEvent.click(card.getByRole('button', { name: 'Dachshund' }));
-      expect(card.getByText('Loop Ink')).toBeInTheDocument();
+      expect(card.getByText('Loopd Ink')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Back' }));
       expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: 11 }]);
       fireEvent.click(card.getByRole('button', { name: 'Animal 12' }));
@@ -255,22 +255,22 @@ describe('who sees whom', () => {
       expect(screen.getByRole('dialog', { name: 'Your level' })).toBeInTheDocument();
       shown.container.removeEventListener('click', redraw);
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
-      // It opens on the plan: Loop Ink, its price, and more than this one thing.
-      expect(card.getByText('Loop Ink')).toBeInTheDocument();
+      // It opens on the plan: Loopd Ink, its price, and more than this one thing.
+      expect(card.getByText('Loopd Ink')).toBeInTheDocument();
       expect(card.getByText('a month')).toBeInTheDocument();
       expect(card.getByText('Join at any school')).toBeInTheDocument();
       expect(card.queryByLabelText('Photo of an animal')).toBeNull();
       // Subscribe asks for an email in its own place. Without one nothing is kept.
-      fireEvent.click(card.getByRole('button', { name: 'Subscribe to Loop Ink' }));
+      fireEvent.click(card.getByRole('button', { name: 'Subscribe to Loopd Ink' }));
       fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
       expect(card.getByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
       expect((await t.db.query('select 1 from campus_custom_face')).rows).toEqual([]);
       fireEvent.change(card.getByLabelText('Email'), { target: { value: 'Ana@Cornell.edu' } });
       fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
       // Subscribed: told there is no payment yet, their face wears the mark, and only now is a photo asked for.
-      expect(await card.findByText('Thanks for subscribing to Loop Ink. Payment is not set up yet, so this one is free. Enjoy your avatar.')).toBeInTheDocument();
+      expect(await card.findByText('Thanks for subscribing to Loopd Ink. Payment is not set up yet, so this one is free. Enjoy your avatar.')).toBeInTheDocument();
       expect((await t.db.query('select email,makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ email: 'ana@cornell.edu', makes: 0 }]);
-      // The pane is the Loop Ink plate, and nothing in the card says Premium.
+      // The pane is the Loopd Ink plate, and nothing in the card says Premium.
       expect(card.queryByText(/Premium/)).toBeNull();
       expect(card.getByText('Bring your own pet.')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
@@ -381,7 +381,7 @@ describe('who sees whom', () => {
       expect((await t.db.query('select f.makes,(select count(*)::int from campus_custom_picture p where p.person_id=f.person_id) as pictures from campus_custom_face f where f.person_id=$1', [ana.personId])).rows).toEqual([{ makes: 0, pictures: 0 }]);
       expect((await t.db.query('select 1 from campus_face where person_id=$1', [ana.personId])).rows).toEqual([]);
       const bad = new FormData(); bad.set('photo', new File(['not a picture'], 'p.jpg'));
-      expect(await makeFaceAction(bad)).toEqual({ ok: false, message: 'That file is not a photo Loop can read. Try a JPEG or a PNG.' });
+      expect(await makeFaceAction(bad)).toEqual({ ok: false, message: 'That file is not a photo Loopd can read. Try a JPEG or a PNG.' });
       models.look = '{"animal": true, "nearest": 23}';
       for (let made = 1; made <= MAKES; made++) expect(await makeFaceAction(send())).toMatchObject({ ok: true, left: MAKES - made });
       expect(await makeFaceAction(send())).toEqual({ ok: false, message: 'You have made your free animal. Making more is not set up yet.' });
@@ -413,13 +413,13 @@ describe('who sees whom', () => {
       // Premium is for people who subscribed: a made animal, and one shipped with the app, both ways.
       await setPictureTier(t.db, second.token, 'premium');
       expect(await premium(ben)).toEqual(['/animals/37.png', address(second.token)]);
-      await withPortalTestSession(ben, async () => expect(await ownFaceAction(address(second.token))).toEqual({ ok: false, message: 'That one comes with Loop Ink.' }));
-      await expect(pickFace(t.db, ben.personId, 36)).rejects.toThrow('That one comes with Loop Ink.');
+      await withPortalTestSession(ben, async () => expect(await ownFaceAction(address(second.token))).toEqual({ ok: false, message: 'That one comes with Loopd Ink.' }));
+      await expect(pickFace(t.db, ben.personId, 36)).rejects.toThrow('That one comes with Loopd Ink.');
       await pickFace(t.db, ben.personId, 36, true);
       await setBuiltTier(t.db, 36, 'core'); await setBuiltTier(t.db, 4, 'premium'); await setBuiltTier(t.db, 5, 'off');
       expect([(await core(ben)).includes('/animals/37.png'), (await core(ben)).includes('/animals/05.png'), (await core(ben)).includes('/animals/06.png'), await premium(ben)]).toEqual([true, false, false, ['/animals/05.png', address(second.token)]]);
       await pickFace(t.db, ben.personId, 36);
-      await expect(pickFace(t.db, ben.personId, 4)).rejects.toThrow('That one comes with Loop Ink.');
+      await expect(pickFace(t.db, ben.personId, 4)).rejects.toThrow('That one comes with Loopd Ink.');
       await expect(pickFace(t.db, ben.personId, 5)).rejects.toThrow('Pick one of the animals.');
       await subscribe(t.db, ben.personId, 'ben@cornell.edu');
       await pickFace(t.db, ben.personId, 4);
@@ -456,7 +456,7 @@ describe('who sees whom', () => {
 });
 
 // Specs: openspec/changes/loop-ink-placements/specs/ink-placements, and "Top bar on one line" in its campus-screen.
-describe('Loop Ink', () => {
+describe('Loopd Ink', () => {
   const INK = '/c/ink';
   const card = (name: RegExp) => { fireEvent.click(screen.getByRole('button', { name })); return within(screen.getByRole('dialog', { name: 'Your level' })); };
   it('is had by a person who asked to subscribe, and its page has one address', async () => {
@@ -476,7 +476,7 @@ describe('Loop Ink', () => {
     const { ana } = await world();
     await show(as(ana));
     let shown = card(/Ana Lopez, Member/);
-    expect(shown.getByText('Loop Ink')).toBeInTheDocument();
+    expect(shown.getByText('Loopd Ink')).toBeInTheDocument();
     expect(shown.queryByText('You have Ink')).toBeNull();
     expect(shown.getByRole('link', { name: 'See it' })).toHaveAttribute('href', INK);
     cleanup();
@@ -505,11 +505,11 @@ describe('Loop Ink', () => {
       expect(shown.queryByRole('button', { name: 'Animal 12' })).toBeNull();
       // Pressing one without Ink opens the ask pane, as before: the four perks, and plainly that they are not here yet.
       fireEvent.click(shown.getByRole('button', { name: 'Dachshund' }));
-      expect(shown.getByText('Loop Ink')).toBeInTheDocument();
+      expect(shown.getByText('Loopd Ink')).toBeInTheDocument();
       for (const perk of ['Your book, kept for good', 'Give an animal a month', 'Boost a group a month', 'Join at any school']) expect(shown.getByText(perk)).toBeInTheDocument();
       expect(shown.getByText(/These four are not here yet/)).toBeInTheDocument();
       expect(container.textContent).not.toMatch(/premium/i);
-      await expect(pickFace(t.db, ana.personId, 36)).rejects.toThrow('That one comes with Loop Ink.');
+      await expect(pickFace(t.db, ana.personId, 36)).rejects.toThrow('That one comes with Loopd Ink.');
     });
   });
   it('puts its mark on the face of a person who has it, and on nobody else', async () => {
@@ -555,7 +555,7 @@ describe('levels on the screen', () => {
     expect(within(card).queryByRole('link', { name: 'The groups site' })).toBeNull();
     // The card also lets anyone pick whose colours the screen wears, and the pick is kept on this browser.
     const colours = within(within(card).getByRole('group', { name: 'Colours' }));
-    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loop', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
+    expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loopd', 'Columbia', 'Cornell', 'CUNY', 'NYU']);
     fireEvent.click(colours.getByRole('button', { name: 'Columbia' }));
     expect(colours.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
     expect(document.documentElement.dataset.kit).toBe('columbia');
@@ -580,7 +580,7 @@ describe('the row and its panel', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Details' })[0]);
     expect(screen.getByText('Five-minute games, all levels.')).toBeInTheDocument();
     expect(screen.getByText(/Once 3 of you check in together/)).toBeInTheDocument();
-    expect(document.querySelector('iframe')).toBeNull();   // Willard Straight Hall is not a place Loop knows
+    expect(document.querySelector('iframe')).toBeNull();   // Willard Straight Hall is not a place Loopd knows
     fireEvent.click(screen.getAllByRole('button', { name: 'Details' })[0]);
     expect(screen.queryByText('Five-minute games, all levels.')).toBeNull();
     expect(document.querySelector('iframe')).toHaveAttribute('title', 'Map of Olin Library');
@@ -695,7 +695,7 @@ describe('the pages', () => {
     expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'This week' })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/sign-in?redirect_url=%2Fc%2Fink');
-    expect(screen.getByTitle('Loop Ink')).toHaveAttribute('src', '/demo/mockups-premium.html');
+    expect(screen.getByTitle('Loopd Ink')).toHaveAttribute('src', '/demo/mockups-premium.html');
     cleanup();
     // Signed in, it is the person's own bar: their account, on their own campus.
     render(await withPortalTestSession(ana, () => InkPage()));
@@ -708,7 +708,7 @@ describe('the pages', () => {
     expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
     expect(within(screen.getByRole('banner')).getByRole('link', { name: 'This week' })).toHaveAttribute('aria-current', 'page');
     // The foot goes with the page (public/demo/mockups-footer.html): signed out it has the way home and the small print, not the groups pages.
-    expect(within(screen.getByRole('contentinfo')).getAllByRole('link').map(link => link.textContent)).toEqual(['Loop', 'Terms', 'Privacy']);
+    expect(within(screen.getByRole('contentinfo')).getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'Terms', 'Privacy']);
   });
   it("another school's address sends a person to their own, and each school has its own list", async () => {
     await world();
@@ -718,12 +718,12 @@ describe('the pages', () => {
     expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
     expect(await withPortalTestSession(nyu, async () => imInAction((await world()).blitz))).toMatchObject({ ok: false, message: expect.stringContaining("another school's list") });
   });
-  it('a person at no school is shown no campus, only where Loop is, and the admin opens any campus', async () => {
+  it('a person at no school is shown no campus, only where Loopd is, and the admin opens any campus', async () => {
     const { blitz } = await world();
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     for (const slug of ['cornell', 'cornell-tech', 'columbia']) {
       render(await withPortalTestSession(outsider, () => page(slug)));
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now. If that changes, we’ll let you know.');
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loopd is only for schools right now. If that changes, we’ll let you know.');
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('omar@gmail.com is not a school email');
       expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Post a plan' })).toBeNull();
@@ -750,7 +750,7 @@ describe('the pages', () => {
     // With a profile and a school they wait: the page says so, shows what they sent, and lets them change it.
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['columbia']))).toEqual({ ok: true });
     render(await withPortalTestSession(outsider, () => page('columbia')));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loop is only for schools right now.');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loopd is only for schools right now.');
     expect(screen.getByText('Waiting').previousElementSibling).toHaveTextContent('Columbia');
     expect(screen.queryByRole('button', { name: 'Unlock' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Change it' }));
@@ -859,7 +859,7 @@ describe('the pages', () => {
   it('a person at no school names their school, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getByRole('status')).toHaveTextContent('We will email omar@gmail.com when Loop opens there.');
+    expect(screen.getByRole('status')).toHaveTextContent('We will email omar@gmail.com when Loopd opens there.');
     // The box is required, so an empty one never leaves the page; the action refuses one by itself.
     expect(await withPortalTestSession(outsider, () => askSchoolAction(' '))).toEqual({ ok: false, message: 'Type the name of your school.' });
     fireEvent.change(screen.getByRole('textbox', { name: 'Your school' }), { target: { value: '  University of   Michigan ' } });

@@ -19,7 +19,7 @@ const transactionDb=(q:Q):Db=>({...q,tx:fn=>fn(q)});
 export async function prepareGroupMemory(db:Db,p:Principal,input:unknown){
  const review=binding(p,input);
  await db.tx(q=>validateGroupNote(q,p,review.payload));
- return {review,reviewPath:'/emba',requiresFirstPartyApproval:true,instruction:'Paste the review in Loop. Review the exact group, note and assistant before approving. This is a member note, not a group decision. Preparation stores no note.'};
+ return {review,reviewPath:'/emba',requiresFirstPartyApproval:true,instruction:'Paste the review in Loopd. Review the exact group, note and assistant before approving. This is a member note, not a group decision. Preparation stores no note.'};
 }
 export async function reviewGroupMemory(db:Db,p:Principal,input:unknown){
  const review=groupReviewSchema.parse(input);

@@ -9,7 +9,7 @@ import {EmbaError} from './errors';
 import {belongsTo,posts,scope,stop,teamWrite,type Refused,type Scope} from './team-core';
 import {nameSchema} from './team-text';
 
-// Calendar (design D5, D6 of loop-trip). Loop keeps no calendar of its own: a
+// Calendar (design D5, D6 of loop-trip). Loopd keeps no calendar of its own: a
 // plan reaches a member's calendar as an invite by email, and a team's fixed
 // events and plans can be subscribed to as a feed. An invite is queued in the
 // write that causes it, as a row of emba_reach_message, and sent by the

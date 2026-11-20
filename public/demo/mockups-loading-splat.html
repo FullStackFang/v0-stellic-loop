@@ -177,7 +177,7 @@ function splat(tier, seed) {
     <path class="seep" fill-rule="evenodd" d="${drawn(blot.seep)}${cut}"/><g class="dark"><path fill-rule="evenodd" d="${drawn(blot.dark)}${cut}"/>${plus ? sparks([...blot.darkDrops, ...blot.flung]) : drops(tier === 'free' ? blot.darkDrops.slice(0, 3) : [...blot.darkDrops, ...blot.flung.slice(0, 4)])}</g></svg>`;
 }
 
-const KITS = [['cornell', 'Cornell', 38], ['columbia', 'Columbia', 39], ['nyu', 'NYU', 40], ['cuny', 'CUNY', 12], ['loop', 'Loop', 5]];
+const KITS = [['cornell', 'Cornell', 38], ['columbia', 'Columbia', 39], ['nyu', 'NYU', 40], ['cuny', 'CUNY', 12], ['loop', 'Loopd', 5]];
 const face = n => `/animals/${String(n).padStart(2, '0')}.png`;
 const mark = '<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#mark"/></svg>';
 const nav = `<div class="nav"><span class="wm">${mark}</span><span class="pill" aria-current="page">This week</span><span class="pill">Near you</span></div>`;

@@ -80,7 +80,7 @@ it('sends each member who is in an invite that names the plan, its time, place a
  // The member already said they are in: the entry asks for no reply.
  expect(ics.content).toMatch(/ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=FALSE:mailto:/);
  expect(mail.subject).toBe('Synthetic EMBA: Buy suits; bring cash');
- expect(mail.text).toContain('you are in on this');expect(mail.text).toContain('Tailor, Hang Gai');expect(mail.text).toMatch(/Open in Loop: https:\/\/loop\.test\/e\/[0-9a-f]{32}/);
+ expect(mail.text).toContain('you are in on this');expect(mail.text).toContain('Tailor, Hang Gai');expect(mail.text).toMatch(/Open in Loopd: https:\/\/loop\.test\/e\/[0-9a-f]{32}/);
  expect(mail.text).toMatch(/Stop messages from Synthetic EMBA: https:\/\/loop\.test\/groups\/reach\/stop\/[0-9a-f]{32}/);
  // No other member's name, handle or address is in any part of any invite.
  for(const message of sent){

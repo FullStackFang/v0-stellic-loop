@@ -1,4 +1,4 @@
-# Loop — the proposal board. Design.
+# Loopd — the proposal board. Design.
 
 *2026-10-21 · the current direction. Supersedes `PIVOT.md` (campus engagement
 model) as the thing being built. `web/` (the campus MVP) stays as is; nothing
@@ -30,7 +30,7 @@ produces endless chatter about what we *could* do and nothing countable. The
 same few people herd. Proposals die from embarrassment: posting makes you the
 owner, and a yes to a half-formed plan is a commitment you didn't mean.
 
-The threshold is the whole mechanism, and it is the same idea Loop has always
+The threshold is the whole mechanism, and it is the same idea Loopd has always
 carried (quorum, ownerless anchors, "fire" before "join"). Posting costs the
 poster nothing because the board owns the count, not them. A yes costs the
 joiner nothing because it only binds once enough others say it. A WhatsApp
@@ -507,7 +507,7 @@ needs in November.
 
 ## Left to the builder
 
-Visual design within the existing Loop design language (`SPEC.md` §4, raised
+Visual design within the existing Loopd design language (`SPEC.md` §4, raised
 paper not ink borders, one meaning per surface, facts-only cards). Exact
 copy of each text. Schema details. How the cookie and magic link are signed.
 Rate limits on share minting and SMS. The OG image's layout.

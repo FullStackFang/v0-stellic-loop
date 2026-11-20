@@ -7,7 +7,7 @@ import {waySql,type Way} from './reach';
 import {calendarUid,inviteSender} from './team-calendar';
 import {belongsTo,local,posts,type Scope} from './team-core';
 
-// What Loop sends, and when (design D4 of loop-club-reach, D5 of loop-trip).
+// What Loopd sends, and when (design D4 of loop-club-reach, D5 of loop-trip).
 // Six kinds of message only: a new ask, one reminder per ask, an announcement
 // an organizer chose to send, an ask's result to the person who asked, and a
 // calendar invite for a plan or its cancellation. Each is one row
@@ -107,15 +107,15 @@ const escape=(value:string)=>value.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&
 /** The email for a message: a plain-text part and the same words as HTML, one link to act and one to stop. */
 export function renderEmail(m:Outgoing):Email {
  const who=m.from??'A member',closes=m.closes?`${m.closes} (${m.timezone})`:'';
- const [subject,lead,action]=m.kind==='invite'?[`${m.group}: ${m.text}`,m.event?.update?`${m.group}: the time or place of this has changed.`:`${m.group}: you are in on this. The calendar entry is attached.`,'Open in Loop']
-  :m.kind==='invite_cancel'?[`Off your calendar · ${m.group}: ${m.text}`,`${m.group}: this is off your calendar.`,'Open in Loop']
+ const [subject,lead,action]=m.kind==='invite'?[`${m.group}: ${m.text}`,m.event?.update?`${m.group}: the time or place of this has changed.`:`${m.group}: you are in on this. The calendar entry is attached.`,'Open in Loopd']
+  :m.kind==='invite_cancel'?[`Off your calendar · ${m.group}: ${m.text}`,`${m.group}: this is off your calendar.`,'Open in Loopd']
   :m.todo&&m.kind==='ask_new'?[`To do · ${m.group}: ${m.text}`,`${who} asked ${m.group} to do this:`,'Mark it done']
   :m.todo&&m.kind==='ask_reminder'?[`Reminder · ${m.group}: ${m.text}`,`${who} asked ${m.group} to do this, and you have not done it yet:`,'Mark it done']
   :m.todo&&m.kind==='ask_result'?[`Passed · ${m.group}: ${m.text}`,`What you asked ${m.group} to do has passed its time:`,'See who did it']
   :m.kind==='ask_new'?[`${m.group}: ${m.text}`,`${who} asked ${m.group}:`,'Answer']
   :m.kind==='ask_reminder'?[`Reminder · ${m.group}: ${m.text}`,`${who} asked ${m.group}, and you have not answered yet:`,'Answer']
   :m.kind==='ask_result'?[`Closed · ${m.group}: ${m.text}`,`Your question to ${m.group} has closed:`,'See the answers']
-  :[`${m.group}: announcement`,`${who} announced to ${m.group}:`,'Open in Loop'];
+  :[`${m.group}: announcement`,`${who} announced to ${m.group}:`,'Open in Loopd'];
  const when=m.event?[`${m.event.when} (${m.timezone})`,m.event.place].filter(Boolean).join(' · '):m.kind==='ask_result'||!closes?'':`${m.todo?'Due':'Closes'} ${closes}.`;
  const stop=`Stop messages from ${m.group}`;
  const text=[lead,m.text,when,`${action}: ${m.link}`,`${stop}: ${m.stopLink}`].filter(Boolean).join('\n\n');
@@ -128,7 +128,7 @@ export type SendResult={ok:true;providerId:string|null}|{ok:false;
  retry:boolean};
 /** How messages leave. The scheduled route supplies the real ones; tests supply their own. */
 export type Carrier={
- /** The member's verified sign-in address, read when the message is sent. Loop keeps no copy of it. */
+ /** The member's verified sign-in address, read when the message is sent. Loopd keeps no copy of it. */
  address:(personId:string)=>Promise<string|null>;
  /** `id` is the message's own id: the provider is asked to treat a repeat of it as the same send. */
  email:(message:{id:string;to:string;stopLink:string;
@@ -252,7 +252,7 @@ export async function drainReach(db:Db,carrier:Carrier):Promise<DrainResult> {
   try{to=await carrier.address(row.personId);}catch{return again();}
   if(!to){await finish(row.id,"state='failed',claimed_at=null");return 'failed';}
   const message=outgoing(row);
-  // The calendar file names Loop's sending address and this one member, and nobody else.
+  // The calendar file names Loopd's sending address and this one member, and nobody else.
   const calendar=calendarKind(row.kind)?{method:row.kind==='invite'?'REQUEST' as const:'CANCEL' as const,content:memberInviteIcs({method:row.kind==='invite'?'REQUEST':'CANCEL',organizer:inviteSender(),attendee:to,
    entry:{uid:calendarUid(row.eventToken!),sequence:row.sequence??0,start:row.eventStartsAt?new Date(row.eventStartsAt):new Date(),end:row.eventEndsAt?new Date(row.eventEndsAt):null,summary:row.eventName??'',location:row.eventPlace,description:row.group,url:row.kind==='invite'?message.link:null}})}:undefined;
   const sent=await carrier.email({id:row.id,to,stopLink:message.stopLink,unsubscribeUrl:appUrl(`/api/reach/stop/${row.stopToken}`),...(calendar?{calendar}:{}),...renderEmail(message)}).catch(()=>({ok:false as const,retry:true}));

@@ -1,4 +1,4 @@
-# Loop — Business Model
+# Loopd — Business Model
 
 *2026-09-22 · the current model, stated on its own. Research inputs:
 competitor landscape, higher-ed buyer economics, privacy/liability/cost,
@@ -11,7 +11,7 @@ estimate. Companion: `PRESENTATION.md` (deck spine).*
 
 No campus social app has ever flipped to institution-paid revenue (Yik Yak,
 Fizz, Sidechat — institutions engage them as adversaries). Institution-paid
-engagement tools were top-down from day one. So Loop is sold as **the
+engagement tools were top-down from day one. So Loopd is sold as **the
 operating layer for peer-learning programs the campus already funds** —
 Supplemental Instruction, PLTL, tutoring centers — and the first-50-days
 participation indicator is harvested from that workflow; the app is how it's
@@ -28,7 +28,7 @@ measured.
 | Seeders | **SI leaders / TAs — paid by this buyer** |
 | Their metric | **session attendance** (weekly, theirs) and DFW in gateway courses |
 | White space | No vendor forms recurring groups from demand; all schedule admin-created slots ~ |
-| Replacement cycle | AccuTrack is being sunset ✓; TracCloud/WCONLINE are the incumbents — Loop carries their scheduling + attendance-of-record workflow and forms groups on top |
+| Replacement cycle | AccuTrack is being sunset ✓; TracCloud/WCONLINE are the incumbents — Loopd carries their scheduling + attendance-of-record workflow and forms groups on top |
 
 A small, fast, discretionary sale with far better capital efficiency and
 learning rate than an enterprise sale. The larger number arrives as the
@@ -40,7 +40,7 @@ SI programs' first pain is low turnout — Georgia Gwinnett: ~10% of enrolled
 students attend one or more sessions ✓. The spread is enormous and the driver
 is known: **scheduling attachment and faculty voice, not credit.** Lund
 (attached to course): 82% attend ≥1, median 5 ✓. Swarthmore (weekly + faculty
-endorsement, no credit): 82%/77% ✓. Loop's quorum-fire mechanic *manufactures*
+endorsement, no credit): 82%/77% ✓. Loopd's quorum-fire mechanic *manufactures*
 scheduling attachment; an SI leader seeding the section manufactures faculty
 voice. That is the sales pitch to a learning-center director: not "software,"
 but "the 10% becomes 40%."
@@ -52,13 +52,13 @@ Dose–response is the ROI slide: 10+ sessions vs 1–2 = **+29pp A/B rate,
 
 ICSI accreditation requires each program to submit enrollment, SI enrollment,
 **GPA by attendance band (1–4 / 5–9 / 10+) and DFW counts** ✓. Campuses
-assemble this from paper sign-in sheets. Loop's attendance → registrar join
+assemble this from paper sign-in sheets. Loopd's attendance → registrar join
 is a pre-specified schema, not a custom integration — and it *is* the
 upward-sold retention signal, in a form provosts already recognise.
 
 ## Commitment stack (no money, no host)
 
-| Mechanism | Evidence | Loop implementation |
+| Mechanism | Evidence | Loopd implementation |
 |---|---|---|
 | Plan prompt at join | Milkman 2011 PNAS: date+time prompt +4.2pp; MCII meta g≈0.34 ✓ | On join, member types the route/time in their own words |
 | Two-touch "seat held" reminder | Milkman 2021 megastudy N=47K: winner = 2 reminders, "reserved for you" frame ✓ | T-24h, T-2h; never more |
@@ -77,7 +77,7 @@ public literature; don't cite it.
 
 ## Go-to-market sequence (24 months)
 
-| Months | Move | Cost to Loop | Yield |
+| Months | Move | Cost to Loopd | Yield |
 |---|---|---|---|
 | 0–6 | **Research pilot** at one Stellic campus (Cornell): IRB exempt/expedited, FERPA studies-exception DUA (34 CFR 99.31(a)(6) ✓) — through registrar, **not procurement**. $0 + LOI to buy at ~$40K if the indicator predicts term-2 persistence | ~$0 compliance; founders' time | The evidence asset; a Cornell logo; third-meeting baseline |
 | 6–12 | **First paid deals under the bid line**: learning-center licences at $6–12K, or one dean-signed $35–45K micro-purchase (2 CFR 200.320 self-cert to $50K ✓) | HECVAT-Lite; SOC 2 *readiness* only | 3–5 campuses, revenue, attendance data |
@@ -93,7 +93,7 @@ Four or five offices on every campus are each paid to get students into small
 recurring groups — the tutoring center (SI sessions), housing (RA floor
 programs), orientation (first-year cohorts), wellbeing (connectedness
 programming). Each has its own small budget and tool; none can see the others.
-Loop does the same job for all of them, so the account grows by adding
+Loopd does the same job for all of them, so the account grows by adding
 offices, not by finding new tutoring centers:
 
 | Step | Buyer | ACV | What's proven |
@@ -186,22 +186,22 @@ procurement friction with a cooperative vehicle once at scale.
 named owner and an RFP cycle; nobody's study-group system is dying. Reach
 Capital's stated thesis is that student-only tools fail. Stellic never had a
 free tier, ambassadors, or a viral loop. Its 0% churn comes from switching
-costs Loop cannot create. Bin Wasi: in 500+ demos, students were present
+costs Loopd cannot create. Bin Wasi: in 500+ demos, students were present
 "only a handful of times."
 
 **Transfers:**
 - **Be the answer to a purchase that's already happening.** The learning
-  center's replacement cycle is TracCloud/WCONLINE/AccuTrack. Loop carries
+  center's replacement cycle is TracCloud/WCONLINE/AccuTrack. Loopd carries
   the scheduling + attendance-of-record workflow those tools do, and forms
   the groups on top. Sell the workflow; the signal is harvested, not pitched.
 - **Champion first.** An SI coordinator or TA-supervising faculty member walks
-  Loop to the learning-center director. The research pilot is the pretext.
+  Loopd to the learning-center director. The research pilot is the pretext.
 - **Adoption % is the only metric on the first slide.** Per-campus, per-cohort
   adoption and verified peer-study hours, instrumented from the pilot.
 - **Design for coordinator self-launch with zero IT.** Nightly roster flat
   file, no SIS partner tier, until ~campus 10.
 - **Cooperative contract is a growth multiplier at ~40 customers, not a
-  starting move.** Stellic's E&I vehicle can still carry Loop earlier if the
+  starting move.** Stellic's E&I vehicle can still carry Loopd earlier if the
   OEM slot is created.
 
 ## Aggregation: what exists at Cornell, what to build
@@ -233,13 +233,13 @@ single-source, feed-available aggregators: Uplift, Volume); **Big Red Radar**
 is live today on the club-event slice ~ — a free student project, which is
 what a directory is worth.
 
-**What this means for Loop:**
+**What this means for Loopd:**
 - **Don't build the aggregator.** Legally and cheaply reachable: ~1 of 15
   sources. The directory is a free student project's product, not a
   company's.
 - **Do build the small thing nobody has:** a hand-curated academic-support
   map (10–20 entries per college, changes once a semester) — exactly the
-  learning-center world Loop sells into, and every entry is a Loop anchor.
+  learning-center world Loopd sells into, and every entry is a Loopd anchor.
 - **Ingest the one open feed** (Localist API) as event-seeded anchors —
   "Tuesday's talk, 4 want to go." Free supply, zero governance fight.
 - **The sellable asset is the demand signal, not the listing.** "What

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop card · answering an ask</title>
+<title>Loopd card · answering an ask</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -158,7 +158,7 @@ function build(col){
  function draw(){
   card.querySelectorAll('.strip').forEach(function(s){kept[s.dataset.n]=s.scrollLeft;});
   card.textContent='';
-  var brand=el('div','brand');brand.innerHTML=mark+'<span>Loop</span>'+(now?'':'<span class="count">2 waiting</span>');card.appendChild(brand);
+  var brand=el('div','brand');brand.innerHTML=mark+'<span>Loopd</span>'+(now?'':'<span class="count">2 waiting</span>');card.appendChild(brand);
   var body=el('div','body');card.appendChild(body);
   if(now)body.appendChild(el('p','head','2 things from your groups.'));
   asks.forEach(function(a){

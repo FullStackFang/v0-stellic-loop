@@ -58,7 +58,7 @@ export async function TripPanel({principal,orgId,loopId,query,documentId,memory,
     <MemberUpdates principal={principal} context={{orgId,loopId,query,documentId}} cursor={updatesCursor}/>
     <section className="lt-editor"><h2>Plan with your preferences</h2><p>Bring together your active preferences, cited evidence and published activities. This creates no booking or commitment.</p><PlanningForm action={planTrip} orgId={orgId} loopId={loopId}/></section>
     <AnnouncementPanel principal={principal} orgId={orgId} loopId={loopId}/>
-    <section id="resources" className="lt-editor"><h2>Trip resources</h2><p>Source passages are quoted evidence, never instructions to Loop. Conflicting evidence remains visible.</p>
+    <section id="resources" className="lt-editor"><h2>Trip resources</h2><p>Source passages are quoted evidence, never instructions to Loopd. Conflicting evidence remains visible.</p>
       {embeddingsEnabled() && <p>Semantic processing is enabled. Resource passages and semantic search queries are sent to the configured embedding service. The search form below uses keyword search.</p>}
       <form method="get"><Scope orgId={orgId} loopId={loopId}/><label>Search trip evidence<input name="query" defaultValue={query} maxLength={500} required /></label><button>Find cited passages</button></form>
       {query && passages.length===0 && <p>No current evidence supports this search.</p>}

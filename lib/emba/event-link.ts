@@ -3,13 +3,13 @@ import {guardedFetch,type GuardDeps} from '../guarded-fetch';
 import {normaliseLink,type LinkProblem} from './team-link';
 import {singleLine} from './team-text';
 
-// Reading an event page (design D3 of loop-group-event-links). Loop fetches a
+// Reading an event page (design D3 of loop-group-event-links). Loopd fetches a
 // pasted link only on a fixed list of event sites, one reader per site. A page
 // counts as an event when it yields a name and a start. Everything read is
 // untrusted text: it is cut to the event's column limits here and shown to
 // assistants under the untrusted marking.
 
-/** The sites Loop reads. A link anywhere else is kept as a pointer and never fetched. */
+/** The sites Loopd reads. A link anywhere else is kept as a pointer and never fetched. */
 export const EVENT_SITES=['lu.ma','luma.com','posh.vip','www.eventbrite.com'] as const;
 const LIMIT={name:80,place:120,host:120} as const;
 
@@ -18,12 +18,12 @@ export type PageFacts={name:string;
  startsAt:string;endsAt:string|null;place:string|null;host:string|null};
 export type PageRead=
  |{ok:true;facts:PageFacts}
- // unlisted: not a site Loop reads, nothing was requested. gone: the page does not exist or says the event is cancelled.
+ // unlisted: not a site Loopd reads, nothing was requested. gone: the page does not exist or says the event is cancelled.
  |{ok:false;reason:'unlisted'|'unreadable'|'gone'};
 export type PageReader=(url:string)=>Promise<PageRead>;
 
 const listed=(host:string,path:string)=>(EVENT_SITES as readonly string[]).includes(host)&&(host!=='posh.vip'||path.startsWith('/e/'));
-/** The stored form of a pasted link. On a site Loop reads, the query and fragment are dropped, so one event has one link. */
+/** The stored form of a pasted link. On a site Loopd reads, the query and fragment are dropped, so one event has one link. */
 export function eventLink(raw:string):{url:string;listed:boolean}|{problem:LinkProblem} {
  const found=normaliseLink(raw);
  if('problem' in found)return found;

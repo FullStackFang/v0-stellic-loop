@@ -12,7 +12,7 @@ import '@/app/c/campus.css';
 
 /**
  * What every campus page sits in: the campus stylesheet, the colours (the person's pick, or else their school's, or
- * else Loop's own), and the sign-in provider when sign-in is set up.
+ * else Loopd's own), and the sign-in provider when sign-in is set up.
  */
 export async function CampusShell({ children }: { children: ReactNode }) {
   const own = (await campusViewer())?.kit ?? 'loop';

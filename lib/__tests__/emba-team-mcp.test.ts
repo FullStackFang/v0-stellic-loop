@@ -71,7 +71,7 @@ it('serves exactly the team tools, and leaves the existing server as it was',asy
   // Every tool that saves says it does so at once, and only on the user's request.
   for(const name of WRITES)expect(tools.find(tool=>tool.name===name)!.description,name).toMatch(/Call this only when the user asked .* It saves at once under the user's name/);
   for(const name of ['amend_record','claim','file_output','log_decision'])expect(tools.find(tool=>tool.name===name)!.description).toContain('only when the user asked to share');
-  // Loop holds links only: the assistant opens them, and saves what it makes, through the user's own connection (Google Drive, for example).
+  // Loopd holds links only: the assistant opens them, and saves what it makes, through the user's own connection (Google Drive, for example).
   for(const name of ['team_state','file_output'])expect(tools.find(tool=>tool.name===name)!.description).toContain("the user's own connection");
   for(const name of ['list_memory','plan_for_me','execute_group_memory','list_activities','execute_commitment','execute_disclosure','search_group_memory'])
    expect((await s.client.callTool({name,arguments:{}})).isError,name).toBe(true);
@@ -156,7 +156,7 @@ it('keeps member words inside quoted lines, whatever they contain',async()=>{
    }
    expect(result.data.untrusted).toBe(true);
   }
-  // The only link in any result is the one Loop stored, alone on its line.
+  // The only link in any result is the one Loopd stored, alone on its line.
   expect((await s.call('team_state',{team:'@cohort'})).text.split('\n').filter(line=>line.includes('://'))).toEqual(['https://docs.google.com/document/d/abc']);
   // Reading instruction-like text changes nothing about the limits on what follows.
   for(let i=0;i<LIMITS.writesPerHour-2;i++)await claim(t.db,f.agent,{...f.root,what:`Task ${i}`});
@@ -368,7 +368,7 @@ it('keeps every closing line of an ask when its options, names and written answe
    formatAnswer({saved:true,changed:true,ask},team),formatAskChange({saved:true,changed:true,ask},team)];
   for(const text of texts){
    rules(text);
-   // Items were cut and counted; Loop's own lines after them were not.
+   // Items were cut and counted; Loopd's own lines after them were not.
    expect(text).toMatch(/\n\d+ more not shown\. The structured result has every option and answer\.$/);
    expect(text).toContain(last);expect(text).toContain('Not answered yet: ');expect(text).toMatch(/\nThe user answered:/);
   }
@@ -440,7 +440,7 @@ it('runs a trip through its tools: travel stated and read, an idea proposed, joi
  expect(mine.text).toMatch(/^Saved\. The team's members and followers can see it\./);expect(mine.text).toContain('flight VN 54');expect(mine.data).toMatchObject({saved:true,entry:{arrival:{place:'Hanoi'}}});
  await b.call('my_travel',{team:'@cohort',arrivesAt:`${day}T15:30`,arrivesPlace:'hanoi'});
  const near=await a.call('arrivals',{team:'@cohort'});
- expect(near.text).toContain("Arriving at the user's place within two hours of the user: @cohort/ben.");expect(near.text).toContain('Loop does not check flights.');
+ expect(near.text).toContain("Arriving at the user's place within two hours of the user: @cohort/ben.");expect(near.text).toContain('Loopd does not check flights.');
  expect((await b.call('my_travel',{team:'@cohort',stay:'Hotel Metropole',arrivesFlight:''})).text).toContain('> Staying: Hotel Metropole');
  expect((await a.call('my_travel',{team:'@cohort',remove:true,stay:'x'})).isError).toBe(true);
  expect((await b.call('my_travel',{team:'@cohort',remove:true})).text).toBe("Saved. The user's travel for this team was removed.");
@@ -504,7 +504,7 @@ it('lets an organizer start, rename and archive a group from chat, as on the sit
   expect(renamed.text).toMatch(/^Renamed\. @cohort\/nbae-6900 keeps its tag.*\n> Investment Banking\n/);
   expect((await t.db.query('select name from emba_loop where id=$1',[made.id])).rows).toEqual([{name:'Investment Banking'}]);
   const archived=await f.owner.call('manage_group',{team:'@cohort/nbae-6900',action:'archive'});
-  expect(archived.text).toMatch(/^Archived\. @cohort\/nbae-6900 is hidden from everyone.*Nothing was deleted\.\nAn owner or organizer can restore it on the Groups page of the Loop site\.$/);
+  expect(archived.text).toMatch(/^Archived\. @cohort\/nbae-6900 is hidden from everyone.*Nothing was deleted\.\nAn owner or organizer can restore it on the Groups page of the Loopd site\.$/);
   expect(archived.data).toMatchObject({saved:true,action:'archive',alsoHidden:0});
   expect((await t.db.query('select 1 from emba_group_address where loop_id=$1 and retired_at is not null',[made.id])).rows).toHaveLength(1);
   // Nothing restores a group from chat, and a second archive finds no such group.
@@ -529,7 +529,7 @@ it('refuses organizing to a member, to a read-only grant and on a top-level grou
   }
   for(const args of [{action:'archive'},{action:'rename',name:'New name'}]){
    const top=await f.owner.call('manage_group',{team:'@cohort',...args});
-   expect(top.text).toBe('Not saved. A top-level group is renamed or archived on the Loop site, not through an assistant.');
+   expect(top.text).toBe('Not saved. A top-level group is renamed or archived on the Loopd site, not through an assistant.');
    expect(top.data).toMatchObject({saved:false,reason:'site_only'});
   }
   expect((await t.db.query('select 1 from emba_group_address where retired_at is not null')).rows).toEqual([]);
@@ -542,7 +542,7 @@ it('invites people by email as members from chat, names every address that was n
  const f=await organizers();
  try{
   const three=await f.owner.call('invite_people',{team:'@cohort',emails:['Ana.Lee@Example.test','b_two@example.test ','c+class@example.test']});
-  expect(three.text).toMatch(/^Invited to @cohort as members\. An invitation can be accepted until 20\d\d-\d\d-\d\d\.\n> ana\.lee@example\.test\n> b_two@example\.test\n> c\+class@example\.test\nLoop sent no email\./);
+  expect(three.text).toMatch(/^Invited to @cohort as members\. An invitation can be accepted until 20\d\d-\d\d-\d\d\.\n> ana\.lee@example\.test\n> b_two@example\.test\n> c\+class@example\.test\nLoopd sent no email\./);
   expect(three.data).toMatchObject({saved:true,invited:['ana.lee@example.test','b_two@example.test','c+class@example.test'],notInvited:[]});
   const stored=async()=>(await t.db.query<{recipient_email:string;role:string;loop_id:string}>('select recipient_email,role,loop_id from emba_invitation order by recipient_email')).rows;
   expect(await stored()).toEqual(['ana.lee@example.test','b_two@example.test','c+class@example.test'].map(recipient_email=>({recipient_email,role:'member',loop_id:f.rootId})));
@@ -553,7 +553,7 @@ it('invites people by email as members from chat, names every address that was n
   expect(mixed.data).toMatchObject({invited:['d@example.test','e@example.test'],notInvited:[{address:'not an address',reason:'not_an_email'}]});
   expect(await stored()).toHaveLength(5);
   const role=await f.owner.call('invite_people',{team:'@cohort',emails:['f@example.test'],role:'organizer'});
-  expect(role.text).toBe('Not saved. Nobody was invited. People are invited here as members. Other roles are given on the Members page of the Loop site.');
+  expect(role.text).toBe('Not saved. Nobody was invited. People are invited here as members. Other roles are given on the Members page of the Loopd site.');
   expect((await f.owner.call('invite_people',{team:'@cohort',emails:['nobody','@']})).text).toMatch(/^Not saved\. Nobody was invited\. None of these is an email address\./);
   expect((await f.owner.call('invite_people',{team:'@cohort',emails:Array.from({length:31},(_,n)=>`p${n}@example.test`)})).isError).toBe(true);
   expect(await stored()).toHaveLength(5);
@@ -594,15 +594,15 @@ it('adds an event by link or from nearby through link_event, and lists nearby it
   const added=await s.call('link_event',{team:'@cohort',url:'https://lu.ma/dinner?utm_source=x'});
   expect(added.data).toMatchObject({saved:true,existing:false,untrusted:true,event:{url:'https://lu.ma/dinner',startsAt:'2099-01-15T23:00:00.000Z',youAreInterested:true}});
   expect(added.text).toMatch(/^Saved\. The event was added to the team and the user is marked as interested\.\nEvent @cohort\//);
-  // What the page said is quoted data, never a line of Loop's own.
+  // What the page said is quoted data, never a line of Loopd's own.
   const lines=added.text.split('\n');
   expect(lines.find(line=>line.includes('FORGED'))!.startsWith(QUOTE)).toBe(true);
   expect(lines).toEqual(expect.arrayContaining([`${QUOTE}Place: 40 E 1st St`,`${QUOTE}Note: Hosted by Special Special`,'https://lu.ma/dinner']));
   expect((await s.call('link_event',{team:'@cohort',url:'https://lu.ma/dinner'})).text).toMatch(/^The team already has this event and the user was already marked as interested\. Nothing changed\./);
-  // A page Loop cannot read: nothing is saved until the name and start are given.
+  // A page Loopd cannot read: nothing is saved until the name and start are given.
   const unread=await s.call('link_event',{team:'@cohort',url:'https://partiful.com/e/abc'});
   expect(unread.data).toMatchObject({saved:false,reason:'needs_facts',listed:false});
-  expect(unread.text).toBe("Not saved. Loop does not read that site. Ask the user for the event's name and start time, then call link_event again with the same link and with name and startsAt.");
+  expect(unread.text).toBe("Not saved. Loopd does not read that site. Ask the user for the event's name and start time, then call link_event again with the same link and with name and startsAt.");
   expect((await s.call('link_event',{team:'@cohort',url:'https://partiful.com/e/abc',name:'Rooftop birthday',startsAt:'2099-01-20T19:00'})).data).toMatchObject({saved:true,event:{slug:'rooftop-birthday',startsAt:'2099-01-21T00:00:00.000Z'}});
   expect((await s.call('link_event',{team:'@cohort',url:'https://lu.ma/a',nearby:'0123abcd'})).isError).toBe(true);
   // Nearby: listed by whats_on with a code, and made the team's event by that code.

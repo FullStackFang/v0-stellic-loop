@@ -461,7 +461,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
 .cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
 .cs-sheet.cs-post { flex-basis: min(900px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
-/* Three rows, each one line: the line and its button, what Loop read, and the top few tags or plans nearby. */
+/* Three rows, each one line: the line and its button, what Loopd read, and the top few tags or plans nearby. */
 .cs-post-rows { display: grid; gap: 10px; padding-top: 10px; } .cs-post-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 38px; } .cs-post-row .cs-say { flex: 1; min-width: 0; }
 /* No words float bare here (founder, 2026-11-18). The third row is a tinted tray, and its name is a filled speech bubble that sits over the tray's top edge. Hints are quiet filled pills. */
 .cs-post-row.near { position: relative; margin-top: 10px; padding: 16px 10px 9px; border-radius: 16px 16px 16px 5px; background: var(--cs-stub); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 16%, transparent); }
@@ -741,7 +741,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 <body>
 <div class="cs mk">
   <div class="mk-top"><h1>Posting with several tags, in three lines</h1>
-    <p>What the app has now. Three lines: the line you type, what Loop read, and one row of what is nearby. That last row holds one thing at a time and only the top few: at most five tags, at most three plans. Nothing scrolls and nothing stacks.</p></div>
+    <p>What the app has now. Three lines: the line you type, what Loopd read, and one row of what is nearby. That last row holds one thing at a time and only the top few: at most five tags, at most three plans. Nothing scrolls and nothing stacks.</p></div>
   <div class="mk-state"><small>Before any tag</small><p>The five tags most people near you are in plans with this week. Tap one to add it.</p><div class="cs-sheet cs-post"><div class="cs-sheet-top"><h3>Start something</h3><button class="cs-more" aria-expanded="true">Close</button></div>
   <div class="cs-post-rows"><div class="cs-post-row"><div class="cs-say">morning loop tomorrow 7am<i class="caret"></i></div><button type="button" class="cs-btn go">Post it</button></div>
   <div class="cs-read"><span class="cs-chip">Morning loop</span><span class="cs-chip when">Tomorrow 7am</span></div><div class="cs-post-row near"><h2>Near you</h2><div class="cs-sug"><button type="button"><b>@running</b><i>12</i></button><button type="button"><b>@collegetown</b><i>8</i></button><button type="button"><b>@slope-day</b><i>6</i></button><button type="button"><b>@arts-quad</b><i>5</i></button><button type="button"><b>@dumplings</b><i>3</i></button></div></div></div></div></div>

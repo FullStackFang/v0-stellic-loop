@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop · the front door, school by school</title>
+<title>Loopd · the front door, school by school</title>
 <style>
 @font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; }
 @keyframes in { from { opacity: 0; transform: translateY(14px); } }
@@ -231,8 +231,8 @@ let mine = null, at = 0, step = 0, dir = 'a', have = 0, hold = 0, dragging = fal
 
 // the mark: three woven rings, the top one in the action colour
 const ring = i => { const [x, y] = [[50, 35], [35.5, 60], [64.5, 60]][i]; return `M${x - 21} ${y}a21 21 0 1 0 42 0a21 21 0 1 0 -42 0`; };
-$$('.wm').forEach((el, n) => { el.innerHTML = `<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs>${[0, 1, 2].map(i => `<mask id="m${n}${i}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="${ring((i + 2) % 3)}" stroke="black" stroke-width="15.3"/></mask>`).join('')}</defs>${[0, 1, 2].map(i => `<g mask="url(#m${n}${i})"><path d="${ring(i)}" stroke="${i ? 'currentColor' : 'var(--action)'}" stroke-width="9"/></g>`).join('')}</svg>Loop`; });
-$$('.in').forEach((el, n) => { el.innerHTML = `<div class="in-top"><h2>Sign in</h2><p>Your school email opens your campus.</p>${$('.wm svg').outerHTML.replace(/m0(\d)/g, `k${n}$1`)}</div><div class="in-body"><button class="g"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>Continue with Google</button><div class="or">or</div><label>Email</label><input type="email" placeholder="you@school.edu" autocomplete="off"><p class="seen" aria-live="polite"></p><button class="go">Continue<svg viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg></button><p class="fine">Type your school email and Loop takes on your school’s colours. Any other email signs in too.</p></div>`; });
+$$('.wm').forEach((el, n) => { el.innerHTML = `<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs>${[0, 1, 2].map(i => `<mask id="m${n}${i}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="white"/><path d="${ring((i + 2) % 3)}" stroke="black" stroke-width="15.3"/></mask>`).join('')}</defs>${[0, 1, 2].map(i => `<g mask="url(#m${n}${i})"><path d="${ring(i)}" stroke="${i ? 'currentColor' : 'var(--action)'}" stroke-width="9"/></g>`).join('')}</svg>Loopd`; });
+$$('.in').forEach((el, n) => { el.innerHTML = `<div class="in-top"><h2>Sign in</h2><p>Your school email opens your campus.</p>${$('.wm svg').outerHTML.replace(/m0(\d)/g, `k${n}$1`)}</div><div class="in-body"><button class="g"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>Continue with Google</button><div class="or">or</div><label>Email</label><input type="email" placeholder="you@school.edu" autocomplete="off"><p class="seen" aria-live="polite"></p><button class="go">Continue<svg viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg></button><p class="fine">Type your school email and Loopd takes on your school’s colours. Any other email signs in too.</p></div>`; });
 $$('.banners').forEach(el => { el.innerHTML = SCHOOLS.map((s, i) => `<button class="banner" data-kit="${s.slug}" data-go="${i}">${s.name}<i></i></button>`).join(''); });
 $('.rim').innerHTML = Array.from({ length: 12 }, (_, j) => `<button class="stop" data-kit="${SCHOOLS[j % 4].slug}" data-stop="${j}" style="--j:${j}">${SCHOOLS[j % 4].name}</button>`).join('');
 
@@ -285,7 +285,7 @@ document.addEventListener('click', event => {
 document.addEventListener('input', event => {
   if (!event.target.matches('.in input')) return;
   const domain = (event.target.value.split('@')[1] || '').trim().toLowerCase(), hit = SCHOOLS.findIndex(s => domain === s.domain || domain.endsWith('.' + s.domain));
-  $('.seen', event.target.parentNode).textContent = hit >= 0 ? `${domain} is ${SCHOOLS[hit].name}.` : domain.includes('.') ? 'Not a school Loop knows yet. You can still sign in with it.' : '';
+  $('.seen', event.target.parentNode).textContent = hit >= 0 ? `${domain} is ${SCHOOLS[hit].name}.` : domain.includes('.') ? 'Not a school Loopd knows yet. You can still sign in with it.' : '';
   event.target.closest('.in').querySelector('h2').textContent = hit >= 0 ? `Sign in at ${SCHOOLS[hit].name}` : 'Sign in';
   rest(600000); if (hit >= 0) go(hit, event.target);
 });

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · You hub — intents · upcoming · past</title>
+<title>Loopd · You hub — intents · upcoming · past</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -115,7 +115,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Loop · You tab</div>
+  <div class="eyebrow">Loopd · You tab</div>
   <h1>One place for what you want, what's coming, what wrapped</h1>
   <p class="lede">Same data every time — Sarah's intents, her upcoming loops, and the loops that wrapped (two still waiting to be rated). Three ways to lay it out. Pick one and I'll build it into the You tab.</p>
 
@@ -213,7 +213,7 @@ const VIEWS = {
     render: () => `
       ${profile()}
       <div class="sechead"><h3>Your intents</h3><span class="c">${DATA.intents.length} waiting</span></div>
-      <p class="lede2">What you're up for. Loop pulls you into a crew when enough people near you want the same.</p>
+      <p class="lede2">What you're up for. Loopd pulls you into a crew when enough people near you want the same.</p>
       ${DATA.intents.map(intentCard).join('')}
       <div class="sechead"><h3>Upcoming</h3><span class="c">${DATA.upcoming.length} running</span></div>
       <p class="lede2">The loops you're in — next meet, push to calendar, check in when you're there.</p>
@@ -235,7 +235,7 @@ const VIEWS = {
       <div class="in" key="${v.seg}">
       ${v.seg==='upcoming' ? `<p class="lede2">Next meets first. Tap in to check in, move it, or message the crew.</p>${DATA.upcoming.map(upCard).join('')}`
        : v.seg==='past'   ? `<p class="lede2">${toRate} still to rate. Private — only tunes who you're seated with next.</p>${DATA.past.map(pastCard).join('')}`
-       :                    `<p class="lede2">What you've said you want. Add one in plain English; Loop holds it until a crew forms.</p><div class="card" style="color:var(--text-tertiary);font-size:13.5px">＋ e.g. lift 3× a week in the mornings</div>${DATA.intents.map(intentCard).join('')}`}
+       :                    `<p class="lede2">What you've said you want. Add one in plain English; Loopd holds it until a crew forms.</p><div class="card" style="color:var(--text-tertiary);font-size:13.5px">＋ e.g. lift 3× a week in the mornings</div>${DATA.intents.map(intentCard).join('')}`}
       </div>`
   },
   c: {

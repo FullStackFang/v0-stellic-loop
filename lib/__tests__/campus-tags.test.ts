@@ -89,7 +89,7 @@ it('a plan posted with two tags has both in order, and its place is its first ta
  expect(list.find(plan=>plan.id===one.id)).toMatchObject({tags:['jogging'],tag:null});
  await expect(post(a,'Too many',['a1','b2','c3','d4','e5'],20)).rejects.toThrow('A plan carries up to four tags');
  // Said twice, a tag is one tag.
- const twice=await post(a,'Loop',['jogging','jogging'],20);
+ const twice=await post(a,'Loopd',['jogging','jogging'],20);
  expect((await weekListings(t.db,campus,NOW)).find(plan=>plan.id===twice.id)).toMatchObject({tags:['jogging']});
 });
 it('tags the word table knows to mean the same are one group, and what was typed is kept',async()=>{

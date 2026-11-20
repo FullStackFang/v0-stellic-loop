@@ -470,7 +470,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
 .cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
 .cs-sheet.cs-post { flex-basis: min(900px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
-/* Three rows, each one line: the line and its button, what Loop read, and the top few tags or plans nearby. */
+/* Three rows, each one line: the line and its button, what Loopd read, and the top few tags or plans nearby. */
 .cs-post-rows { display: grid; gap: 10px; padding-top: 10px; } .cs-post-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 38px; } .cs-post-row .cs-say { flex: 1; min-width: 0; }
 /* No words float bare here (founder, 2026-11-18). The third row is a tinted tray, and its name is a filled speech bubble that sits over the tray's top edge. Hints are quiet filled pills. */
 .cs-post-row.near { position: relative; margin-top: 10px; padding: 16px 10px 9px; border-radius: 16px 16px 16px 5px; background: var(--cs-stub); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 16%, transparent); }
@@ -759,7 +759,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 }
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
 
-/* Loop Ink (openspec/changes/loop-ink-placements): the mark, the tab in the bar, the row in the account card, the mark
+/* Loopd Ink (openspec/changes/loop-ink-placements): the mark, the tab in the bar, the row in the account card, the mark
    in the picker, and the blot a face sits on. Kit tokens only, so it holds in every school's colours. Kept in this one block. */
 .cs-ink { flex: none; width: 1.15em; height: 1.15em; }
 /* the two inks of the mark and of a face's blot are the school's own two colours: the field colour spilled wide, the action colour dropped into it, and thinly where it seeps out between the two */
@@ -916,7 +916,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; }
 <section class="mk-frame"><h2 class="mk-tab"><b>3</b>Pressed Google with a personal Gmail</h2><p class="mk-why">The one case the card cannot catch, because no email is typed. You get the same ask as the card, not a page of tickets: one button, and a way to use another email.</p><div class="cs"><div class="mk-row mk-up" data-kit="loop">
   <div class="mk-step"><b>Straight after Google</b><div class="cs-ns" style="display:grid"><section class="cs-ns-tk" style="animation:none"><h2 class="cs-ns-tab">omar@gmail.com is not a school email</h2>
     <div class="cs-ns-row"><button class="cs-btn go">Continue with LinkedIn</button><button class="cs-btn">Use another email</button></div>
-    <p>Loop is for schools. With LinkedIn we check your school ourselves.</p></section></div></div>
+    <p>Loopd is for schools. With LinkedIn we check your school ourselves.</p></section></div></div>
 </div></div></section>
 
 <script>

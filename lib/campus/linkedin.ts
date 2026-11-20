@@ -42,7 +42,7 @@ export async function setSchools(db: Db, who: { personId: string; verifiedEmail:
   if (!profile) throw new CampusError('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
   const campuses = await listCampuses(db), known = new Set(campuses.map(each => schoolOf(each.slug)));
   const picked = [...new Set(ticked.map(String))];
-  if (picked.some(school => !known.has(school))) throw new CampusError('Pick from the schools Loop is at.');
+  if (picked.some(school => !known.has(school))) throw new CampusError('Pick from the schools Loopd is at.');
   const placed = (await db.query<{ slug: string }>('select c.slug from campus_person p join campus c on c.id=p.campus_id where p.person_id=$1', [who.personId])).rows[0]?.slug;
   if (!placed && !picked.length) throw new CampusError('Pick at least one school.');
   try {

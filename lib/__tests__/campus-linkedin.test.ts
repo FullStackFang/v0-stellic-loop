@@ -81,11 +81,11 @@ describe('unlocking schools with a LinkedIn profile', () => {
     expect(await addedSchools(t.db, omar.personId)).toMatchObject({ added: ['cuny'], waiting: [] });
   });
 
-  it('refuses an address that is not a profile, a school Loop is not at, and a profile someone else added', async () => {
+  it('refuses an address that is not a profile, a school Loopd is not at, and a profile someone else added', async () => {
     const [ana, ben] = [await someone('Ana', 'ana@cornell.edu'), await someone('Ben', 'ben@gmail.com')];
     await campusOf(t.db, ana);
     await expect(setSchools(t.db, ana, 'facebook.com/ana', ['nyu'])).rejects.toThrow('Paste the address of your LinkedIn profile');
-    await expect(setSchools(t.db, ana, 'linkedin.com/in/ana-lopez', ['hogwarts'])).rejects.toThrow('Pick from the schools Loop is at.');
+    await expect(setSchools(t.db, ana, 'linkedin.com/in/ana-lopez', ['hogwarts'])).rejects.toThrow('Pick from the schools Loopd is at.');
     await setSchools(t.db, ana, 'linkedin.com/in/ana-lopez', ['nyu']);
     await expect(setSchools(t.db, ben, 'https://www.linkedin.com/in/ANA-LOPEZ/', ['cornell'])).rejects.toThrow('That LinkedIn profile is already on another account.');
     // Refused whole: nothing of Ben's waits for the admin.

@@ -38,7 +38,7 @@ export async function exportPersonalData(db:Db,p:Principal) {
   // Asks: the questions this person asked, and their own answers. Nobody else's answers.
   const asks=await own("select k.org_id,k.loop_id,k.number,k.question,k.kind,k.reveal,k.client_id,k.created_at,k.closes_at,k.closed_at,(select array_agg(o.label order by o.position) from emba_ask_option o where o.ask_id=k.id) as options from emba_ask k where k.asker_id=$1 order by k.created_at");
   const askAnswers=await own("select k.org_id,k.loop_id,k.number,k.question,(select array_agg(o.label order by o.position) from emba_ask_option o where o.ask_id=k.id and o.position=any(a.choices)) as chose,a.body,a.route,a.client_id,a.at from emba_ask_answer a join emba_ask k on k.id=a.ask_id where a.person_id=$1 order by a.at");
-  // Reach: how each team may reach this person, a linked WhatsApp number, and the messages Loop sent them. No message text is stored.
+  // Reach: how each team may reach this person, a linked WhatsApp number, and the messages Loopd sent them. No message text is stored.
   const reachChoices=await own('select org_id,loop_id,way,at from emba_reach_choice where person_id=$1 order by org_id,loop_id');
   const whatsappNumber=await own('select phone,linked_at,stopped_at from emba_whatsapp_number where person_id=$1');
   const messages=await own('select org_id,loop_id,kind,state,way,created_at,sent_at from emba_reach_message where person_id=$1 order by created_at');

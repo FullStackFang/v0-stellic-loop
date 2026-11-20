@@ -185,7 +185,7 @@ button{cursor:pointer}
   <div class="pick"><button data-dir="a" aria-pressed="true">A · One list</button><button data-dir="b" aria-pressed="false">B · List and a side panel (picked)</button><button data-dir="c" aria-pressed="false">C · A column per role</button><i></i><button data-size="6" aria-pressed="true">Team of 6</button><button data-size="68" aria-pressed="false">Cohort of 68</button><button data-size="400" aria-pressed="false">Club of 400</button></div></div>
 <p class="why" id="why"></p>
 <div class="shell">
-  <nav class="rail" aria-label="Groups"><div class="word"><svg data-rings></svg>Loop</div><p>Your groups</p>
+  <nav class="rail" aria-label="Groups"><div class="word"><svg data-rings></svg>Loopd</div><p>Your groups</p>
     <a href="#" aria-current="page">NBAE 6561 Investment Banking</a><a href="#">NBAE 6830 Venture Creation</a></nav>
   <div class="main">
     <p class="crumbs"><span>Groups</span><span>›</span><b>NBAE 6561 Investment Banking</b></p>
@@ -240,7 +240,7 @@ const waitActs=w=>w.kind==='request'?`<button class="btn fill" data-approve="${w
 const tagCell=p=>p.you?`<label class="tag mono">@nbae-6561/<input data-tag value="${esc(p.tag)}" placeholder="your-tag" maxlength="48" aria-label="Your tag"></label>`:p.tag?`<span class="mono muted">@nbae-6561/${esc(p.tag)}</span>`:`<span class="muted" style="font-size:13px">No tag yet</span>`;
 const personRow=p=>`<div class="row" ${vt(p.id)}>${av(p)}<span class="who">${esc(p.name)}${p.you?'<span class="you">You</span>':''}</span><span class="meta">${tagCell(p)}</span>${roleSel(p)}<span class="acts">${p.you?'<button class="btn quiet" data-leave>Leave</button>':`<button class="btn quiet" data-remove="${p.id}">Remove</button>`}</span></div>`;
 const waitRow=w=>`<div class="row wait" ${vt(w.id)}>${w.kind==='request'?av(w):`<span class="av mail">${MAIL}</span>`}<span class="who">${esc(w.name)}</span><span class="meta">${esc(w.meta)}</span><span></span><span class="acts">${waitActs(w)}</span></div>`;
-const door=()=>`<div class="door"><div><h2>Add people</h2>${invite()}<p class="note">They see the invitation when they sign in with that address. Loop sends no email.</p></div><div><h2>Join link</h2>${link()}${note()}</div></div>`;
+const door=()=>`<div class="door"><div><h2>Add people</h2>${invite()}<p class="note">They see the invitation when they sign in with that address. Loopd sends no email.</p></div><div><h2>Join link</h2>${link()}${note()}</div></div>`;
 
 const big=()=>S.people.length>12;
 const seen=()=>S.people.filter(p=>(S.filter==='all'||p.role===S.filter)&&(!S.q||(p.name+' '+p.tag).toLowerCase().includes(S.q.toLowerCase())));
@@ -253,7 +253,7 @@ const roster=()=>{const list=seen();return rosterLabel(list)+(list.slice(0,S.cap
 function drawA(){return door()+tools()+`<div class="list">${S.waiting.length?`<p class="label"><b>Waiting</b>${S.waiting.length}</p>${shownWaiting().map(waitRow).join('')}${moreWaiting()}`:''}${roster()}</div>`;}
 function drawB(){const list=seen();return `<div class="b-grid"><div>${tools()}<div class="list">${rosterLabel(list)}<div class="rows" tabindex="0" aria-label="People in the group">${list.map(personRow).join('')||'<p class="empty">Nobody matches. Clear the search to see everyone.</p>'}</div>${list.length?'<p class="foot"><span id="where"></span><span id="letter"></span></p>':''}</div></div>
   <aside class="side"><section><h2>Join link</h2>${link()}${note()}</section>
-  <section><h2>Invite by email</h2>${invite()}<p class="note" style="margin-top:6px">They see it when they sign in. Loop sends no email.</p></section>
+  <section><h2>Invite by email</h2>${invite()}<p class="note" style="margin-top:6px">They see it when they sign in. Loopd sends no email.</p></section>
   <section><h2>Waiting <span>${S.waiting.length}</span></h2><div class="waitbox">${S.waiting.length?S.waiting.map(w=>`<div class="mini" ${vt(w.id)}>${w.kind==='request'?av(w):`<span class="av mail">${MAIL}</span>`}<div><b>${esc(w.name)}</b><span>${esc(w.meta)}</span></div>${waitActs(w)}</div>`).join(''):'<p class="note">Nobody is waiting.</p>'}</div></section></aside></div>`;}
 function drawC(){
   const card=p=>`<div class="card" draggable="true" data-card="${p.id}" ${vt(p.id)}>${av(p)}<div><b>${esc(p.name)}${p.you?'<span class="you">You</span>':''}</b><span class="sub">${p.you?`<label class="tag mono">@<input data-tag value="${esc(p.tag)}" placeholder="your-tag" maxlength="48" aria-label="Your tag"></label>`:`<span class="mono">${p.tag?'@'+esc(p.tag):'No tag yet'}</span>`}${p.you?'<button class="btn quiet" data-leave>Leave</button>':`<button class="btn quiet" data-remove="${p.id}">Remove</button>`}</span></div>${roleSel(p)}</div>`;

@@ -628,7 +628,7 @@ body { margin: 0; background: oklch(93% 0.006 240) !important; font-family: Arch
 <div class="mk-top">
   <h1>From an area to a spot</h1>
   <p>A plan can start loose: "dumplings tonight after class @downtown". The @place is the area. The exact spot is a second, optional thing that the people going settle between them, on the plan itself. Nobody has to fill it in to post, and nobody has to approve it.</p>
-  <p>You are one of four people going. Open the plan and you see the spots people have suggested in @downtown, side by side. Tap "I'm for this" on every spot you would be happy with (the button then reads "You're for this"; tap it again to take it back. The suggestion stays, at 0, for others to back. If you suggested it and nobody is for it, an x removes it), or suggest another: the box always offers two or three places in the area that nobody has suggested yet, so one tap is enough and it is clear what to type. The one with the most people is what the ticket shows. Once more than half of those going back the same spot, it is the spot, and the map appears. Each spot Loop can place has a small map tile in its corner. Tap the tile and the map takes the whole panel, in the Print look, with every suggested spot as a stamp (the one you opened is the coral one; tap another stamp to move to it). The x in the corner, or Esc, goes back to the spots. Try it: back Dumpling House.</p>
+  <p>You are one of four people going. Open the plan and you see the spots people have suggested in @downtown, side by side. Tap "I'm for this" on every spot you would be happy with (the button then reads "You're for this"; tap it again to take it back. The suggestion stays, at 0, for others to back. If you suggested it and nobody is for it, an x removes it), or suggest another: the box always offers two or three places in the area that nobody has suggested yet, so one tap is enough and it is clear what to type. The one with the most people is what the ticket shows. Once more than half of those going back the same spot, it is the spot, and the map appears. Each spot Loopd can place has a small map tile in its corner. Tap the tile and the map takes the whole panel, in the Print look, with every suggested spot as a stamp (the one you opened is the coral one; tap another stamp to move to it). The x in the corner, or Esc, goes back to the spots. Try it: back Dumpling House.</p>
   <div class="mk-bar">See it as <button data-see="none" aria-pressed="false">Just posted, no suggestions</button><button data-see="some" aria-pressed="true">Two suggestions</button><button data-see="set" aria-pressed="false">Settled</button></div>
 </div>
 <div class="mk-wrap"><div class="cs mk-frame" id="frame"></div></div>
@@ -640,7 +640,7 @@ const GOING = [{ name: 'You', pet: 12 }, { name: 'Maya', pet: 4 }, { name: 'Josh
 const KNOWN = [['Dumpling House', 'The Commons · 11 min walk', [-76.4972, 42.4397]], ['Taste of Thai', 'The Commons · 12 min walk', [-76.4962, 42.4394]], ['Asia Cuisine', 'State St · 14 min walk', [-76.4990, 42.4395]], ['Gola Osteria', 'Quarry Arms · 15 min walk', [-76.4925, 42.4412]], ['Saigon Kitchen', 'State St · 13 min walk', [-76.5003, 42.4394]], ['Viva Taqueria', 'The Commons · 12 min walk', [-76.4957, 42.4397]], ['Ithaca Ale House', 'Aurora St · 12 min walk', [-76.4953, 42.4402]]];
 const at = name => (KNOWN.find(k => k[0] === name) || [])[2];
 const PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5c4.6-4.9 7-8.500 7-11.500a7 7 0 0 0-14 0c0 3 2.400 6.600 7 11.500z"/><circle cx="12" cy="10" r="2.600"/></svg>';
-// a name Loop can place is a link to its map; one it cannot place is plain text
+// a name Loopd can place is a link to its map; one it cannot place is plain text
 const nameOf = n => at(n) ? `<button class="mk-name" data-look="${n}" title="See it on the map">${PIN}<span>${n}</span><strong class="mk-go">Map<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></strong></button>` : n;
 const START = { mine: [{ name: 'Dumpling House', for: ['Maya', 'You'] }, { name: 'Taste of Thai', for: ['Ana'] }, { name: 'Asia Cuisine', for: [], by: 'You' }], none: [], some: [{ name: 'Dumpling House', for: ['Maya', 'Josh'] }, { name: 'Taste of Thai', for: ['Ana'] }], set: [{ name: 'Dumpling House', for: ['Maya', 'Josh', 'You'] }, { name: 'Taste of Thai', for: ['Ana'] }] };
 let spots = structuredClone(START[location.hash.slice(1)] || START.some), typed = '', fresh = null, look = new URLSearchParams(location.search).get('look');
@@ -650,7 +650,7 @@ const settled = () => { const [top, next] = ranked(); return top && top.for.leng
 const mine = () => spots.find(s => s.for.includes('You'));
 function back(name) { let s = spots.find(x => x.name.toLowerCase() === name.toLowerCase()); if (!s) { s = { name, for: [], by: 'You' }; spots.push(s); fresh = name; } s.for = s.for.includes('You') ? s.for.filter(n => n !== 'You') : [...s.for, 'You']; draw(); }
 
-/** The name and address of a spot, with the way to its map. A name Loop cannot place is plain text in every style. */
+/** The name and address of a spot, with the way to its map. A name Loopd cannot place is plain text in every style. */
 function head(n) {
   const plain = `<b>${n}</b><small>${near(n)}</small>`, tip = 'title="See it on the map"';
   if (!at(n)) return plain;

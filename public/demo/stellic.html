@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Loop — Your people, on repeat</title>
+  <title>Loopd — Your people, on repeat</title>
 
   <!-- Tailwind (Play CDN) — layout utilities only; all color/shape/type is token-driven -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -691,7 +691,7 @@
     const UNIT_HUE = { dorm:'var(--unit-dorm)', class:'var(--unit-class)', major:'var(--unit-major)' };
 
     // Assigned counselor — the human the safety route reaches (Stellic advising + wellbeing).
-    const COUNSELOR = { id:'dana', name:'Dana Okafor', role:'your Loop counselor', unit:'Advising & Wellbeing', hours:'Walk-ins Tue + Thu · 2–4p' };
+    const COUNSELOR = { id:'dana', name:'Dana Okafor', role:'your Loopd counselor', unit:'Advising & Wellbeing', hours:'Walk-ins Tue + Thu · 2–4p' };
 
     /* ============================================================
        CAMPUS AT SCALE (§ "alive") — a deterministic mock student body.
@@ -1002,7 +1002,7 @@
       ],
       seeds:[
         { id:'ra-lift', title:'Helen Newman lift crew', target:'lift', line:'Tue + Thu · 7:00p · Helen Newman', count:6,
-          why:'6 residents dropped "lift" and none is in an activity. Three said evenings. Loop drafts the anchor; they get "your floor is starting a lift loop", not your name.', cta:'Seed it', hi:true },
+          why:'6 residents dropped "lift" and none is in an activity. Three said evenings. Loopd drafts the anchor; they get "your floor is starting a lift loop", not your name.', cta:'Seed it', hi:true },
         { id:'ra-run',  title:'Beebe Lake morning run', target:'running', line:'Mon · Wed · Fri · 7:30a · Beebe Lake', count:3,
           why:'3 want it — under quorum. Seeding opens it to Donlon 3F too (5 more there).', cta:'Seed for 2F + 3F' },
       ],
@@ -1025,7 +1025,7 @@
       // when the 37 waiting are free (evenings, aggregate) — Mon..Sun, 0..100
       freeHeat:[22,48,100,74,61,30,44], freeTop:'Wed', where:'North 24 · West 8 · C-town 5',
       seed:{ id:'ta-wed', title:'CS 2110 · Wed crew', target:'CS 2110', line:'Wed · 7:00p · Rhodes 571', cta:'Seed it',
-        why:'Loop invites the 37 as "a CS 2110 loop is starting Wed 7p" — no roster, no names to you. Quorum of 3 makes it real.' },
+        why:'Loopd invites the 37 as "a CS 2110 loop is starting Wed 7p" — no roster, no names to you. Quorum of 3 makes it real.' },
       // phrases 5+ students used in intents — k-anonymized, never one person's words
       stuck:[ { label:'HW3 · recursion', n:14 }, { label:'Generics', n:9 }, { label:'Prelim 2', n:8 }, { label:'Big-O proofs', n:5 } ],
     };
@@ -1157,7 +1157,7 @@
       return (
         <span className="pls-display" style={{ fontWeight:800, fontSize:size, letterSpacing:'-.03em',
           color:'var(--text-primary)', display:'inline-flex', alignItems:'baseline', lineHeight:1 }}>
-          Loop
+          Loopd
           <span style={{ width:Math.max(5,size*0.17), height:Math.max(5,size*0.17), borderRadius:'50%',
             background:'var(--accent)', display:'inline-block', marginLeft:2 }} />
         </span>
@@ -1356,7 +1356,7 @@
       const memberIds = w.faces.map(f=>f.id);
       const rated = !!feedback[w.id];
       return (
-        <Sheet kicker={"Loop wrapped · "+w.when} title={w.title} onClose={onClose}>
+        <Sheet kicker={"Loopd wrapped · "+w.when} title={w.title} onClose={onClose}>
           <div className="flex items-center justify-between gap-3">
             <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
               {w.reason[0].toUpperCase()+w.reason.slice(1)} · {w.sessions} sessions · same faces. Take a second — it only tunes who you get seated with next.
@@ -1541,7 +1541,7 @@
                     </button>
                   </div>
                 </div>
-                <div style={{ padding:'6px 10px 6px', fontSize:11, color:'var(--text-tertiary)' }}>Loop never shows anyone your activity.</div>
+                <div style={{ padding:'6px 10px 6px', fontSize:11, color:'var(--text-tertiary)' }}>Loopd never shows anyone your activity.</div>
               </div>
             </>
           ), document.querySelector('.phone') || document.body)}
@@ -1693,7 +1693,7 @@
         <div style={{ borderRadius:14, overflow:'hidden', border:'1px solid rgba(0,0,0,.10)', background:'#fff', width:242 }}>
           <div style={{ background:'#FF5C3A', padding:'13px 14px 12px', color:'#fff' }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, fontWeight:800, letterSpacing:'-.02em', fontSize:15 }}>
-              <Icon name="flame" size={16} /> Loop
+              <Icon name="flame" size={16} /> Loopd
             </div>
             <div style={{ marginTop:9, fontSize:11.5, fontWeight:600, opacity:.94, letterSpacing:'.02em' }}>{course} · study loop</div>
           </div>
@@ -1996,8 +1996,8 @@
     }
 
     /* ------------------------------------------------------------
-       STORY — the narrative onboarding ("The Living Loop"). Five
-       screens that reframe why Loop exists, each carried by one
+       STORY — the narrative onboarding ("The Living Loopd"). Five
+       screens that reframe why Loopd exists, each carried by one
        continuous canvas that morphs to match the message:
        chaos -> anchor -> the group lights up -> a micro-tribe ->
        the loop, alive and on repeat. The anchor picked on the last
@@ -2022,7 +2022,7 @@
           body:<>Friendships grow around a shared task — an {term('Activity Anchor')}, not small talk.</>,
           cta:'That makes sense' },
         { k:'Close to home', h:'Start where you are.',  
-          body:<>Loop starts with the people {term('closest to you')} — your floor, your building — then widens out.</>,
+          body:<>Loopd starts with the people {term('closest to you')} — your floor, your building — then widens out.</>,
           cta:'Show me how' },
         { k:'The science', h:'Small groups. Big impact.',
           body:<>We bond best in {term('Micro-Tribes')}, students who meet in a small group every week land about {term('a letter grade higher')}. So every hangout is capped and intentional. </>,
@@ -2266,7 +2266,7 @@
 
             <div style={{ marginTop:22 }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                <span className="pls-kicker">So Loop can seat you close</span>
+                <span className="pls-kicker">So Loopd can seat you close</span>
                 <span className="pls-mono" style={{ fontSize:10.5, letterSpacing:'.08em', color: okCount===SETUP_FIELDS.length ? 'var(--text-tertiary)' : 'var(--accent-strong)' }}>{okCount} · {SETUP_FIELDS.length}</span>
               </div>
               <div style={{ display:'flex', flexWrap:'wrap', gap:7, marginTop:10 }}>
@@ -2342,7 +2342,7 @@
             <span className="flex items-center gap-0.5 pls-kicker" style={{ color:'var(--accent-strong)' }}>see the class<Icon name="chevron-right" size={13} /></span>
           </div>
           <div className="flex items-center justify-between">
-            <Item n={campus.total.toLocaleString()} label="on Loop" />
+            <Item n={campus.total.toLocaleString()} label="on Loopd" />
             <Item n={campus.loopsRunning.toLocaleString()} label="loops running" />
             <Item n={campus.dropsTonight} label="drops tonight" />
           </div>
@@ -2891,7 +2891,7 @@
       const chipEl=(type,v)=>{ const s=document.createElement('span'); s.className='ic-chip'; s.contentEditable='false'; s.dataset.icType=type; s.dataset.icV=v; s.style.setProperty('--c',icColor(type,v)); s.innerHTML='<span class="ic-chip__g">'+icGlyph(type,v)+'</span>'+icEsc(v); return s; };
       const rawOf=()=>{ let s=''; edRef.current.childNodes.forEach(n=>{ if(n.nodeType===3) s+=n.textContent; else if(n.dataset&&n.dataset.icType){ const t=n.dataset.icType; s+=(t==='pref'||t==='custom'?'@':'')+n.dataset.icV+' '; } else s+=n.textContent; }); return s.replace(/\s+/g,' ').trim(); };
 
-      /* --- what Loop read: chips first, then the quick-add parser on the plain words --- */
+      /* --- what Loopd read: chips first, then the quick-add parser on the plain words --- */
       const r=(()=>{ const r={ what:null, cat:null, day:null, often:null, where:null, time:null, pins:[], soft:{} };
         m.chips.forEach(c=>{ if(c.type==='pref'||c.type==='custom') r.pins.push(c); else { r[c.type]=c.v; if(c.type==='what') r.cat=icCat(c.v); } });
         const p=parseQuickIntent(m.text.replace(/@[\w' -]+/g,' '));
@@ -3831,7 +3831,7 @@
 
 
             <p className="text-center text-[12.5px] mt-6 flex items-center justify-center gap-1.5" style={{ color:'var(--text-tertiary)' }}>
-              <Icon name="repeat" size={14} />Loop keeps the rhythm and the next one.
+              <Icon name="repeat" size={14} />Loopd keeps the rhythm and the next one.
             </p>
           </div>
         </div>
@@ -4566,7 +4566,7 @@
             <Card variant="sunken" className="p-4 mt-4">
               <div className="pls-kicker mb-1.5 flex items-center gap-1.5"><Icon name="shield" size={12} />No scoreboard for people</div>
               <p className="text-[13px] leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                Loops and houses show up here — never individuals. Nobody in the Class of {COHORT.classOf} is ranked, scored, or told where they land. The only thing Loop counts is how often the same people come back.
+                Loops and houses show up here — never individuals. Nobody in the Class of {COHORT.classOf} is ranked, scored, or told where they land. The only thing Loopd counts is how often the same people come back.
               </p>
             </Card>
           </div>
@@ -4731,7 +4731,7 @@
             </Card>
 
             <StaffSection icon="sprout" title="Seed a loop" count={`${F.seeds.length} gaps`} countAccent
-              lede="You seed it, Loop runs it. You don't own it — you can fade once it holds." />
+              lede="You seed it, Loopd runs it. You don't own it — you can fade once it holds." />
             <div className="space-y-2.5">
               {F.seeds.map((s,i)=>{
                 const done = seededHere(s.id);
@@ -4757,7 +4757,7 @@
             </div>
 
             <StaffSection icon="calendar" title="Throw a floor event" count="next 2 weeks"
-              lede="One-offs that ride an existing rhythm — Loop tells you why now." />
+              lede="One-offs that ride an existing rhythm — Loopd tells you why now." />
             <div className="space-y-2.5">
               {F.events.map((e,i)=>{
                 const done = isDone(e.id);
@@ -4785,7 +4785,7 @@
             </div>
 
             <StaffSection icon="life-buoy" title="Not landed yet" count={`${F.notLandedTotal} residents`} countAccent
-              lede="Greet, don't nudge. Loop shows who hasn't joined anything — not what they typed." />
+              lede="Greet, don't nudge. Loopd shows who hasn't joined anything — not what they typed." />
             <Card className="p-3.5">
               {F.notLanded.map(p => (
                 <StaffPerson key={p.id} id={p.id} name={p.name} signal={p.signal} done={isDone('reach-'+p.id)}
@@ -4915,7 +4915,7 @@
                   </div>
                   {l.status==='forming' ? (
                     <>
-                      <p className="text-[12.5px] mt-2 leading-relaxed" style={{ color:'var(--text-secondary)' }}>A word from you gets it over quorum: Loop posts <span style={{ color:'var(--text-primary)', fontWeight:600 }}>"{bylineFor(viewerId)} will drop by"</span> to the {C.waiting} waiting.</p>
+                      <p className="text-[12.5px] mt-2 leading-relaxed" style={{ color:'var(--text-secondary)' }}>A word from you gets it over quorum: Loopd posts <span style={{ color:'var(--text-primary)', fontWeight:600 }}>"{bylineFor(viewerId)} will drop by"</span> to the {C.waiting} waiting.</p>
                       <div className="mt-3">
                         <Button size="sm" icon={isDone('boost-'+l.id)?'check':'zap'} disabled={isDone('boost-'+l.id)}
                           onClick={()=>actions.staffBoost(l)}>{isDone('boost-'+l.id) ? 'Boosted' : 'Boost it'}</Button>
@@ -5246,7 +5246,7 @@
         if (parse.type==='study' && parse.target) cards.push({ kind:'spinup', target:parse.target, subtitle:'11 others on your floor dropped this' });
         const forming = loops.find(l => l.target===parse.target && l.status==='forming');
         if (forming) cards.push({ kind:'forming', loop:forming });
-        if (cards.length===0) cards.push({ kind:'spinup', target: parse.target || one.trim(), subtitle:'Be the one who starts it — Loop fills the seats.' });
+        if (cards.length===0) cards.push({ kind:'spinup', target: parse.target || one.trim(), subtitle:'Be the one who starts it — Loopd fills the seats.' });
         return cards;
       };
       const runIntent = (raw) => {
@@ -5467,13 +5467,13 @@
         showToast(it.status==='pending' ? { icon:'clock', title:'Requested.', body:`“${it.label}” isn’t on the list yet — we’ll add it if it fits.` }
                                         : { icon:'circle-dot', title:'Dropped.', body:`${it.label} is counting. We’ll tell you when it fires.` });
       };
-      // Calendar export is the one place Loop leaves the app: push the weekly slot to your phone's
-      // calendar. One-shot per person; Loop keeps it in sync if the crew moves it. (Simulated.)
+      // Calendar export is the one place Loopd leaves the app: push the weekly slot to your phone's
+      // calendar. One-shot per person; Loopd keeps it in sync if the crew moves it. (Simulated.)
       const syncCalendar = (loopId) => {
         const l = loops.find(x=>x.id===loopId); if (!l) return;
         const on = !(l.calIds||[]).includes(viewerId);
         setLoops(ls => ls.map(x => x.id!==loopId ? x : { ...x, calIds: on ? [...(x.calIds||[]), viewerId] : (x.calIds||[]).filter(id=>id!==viewerId) }));
-        showToast(on ? { icon:'calendar', title:'On your phone calendar.', body:`Repeats ${l.rhythm || l.nextLine}. Loop keeps it in sync if the crew moves it.` }
+        showToast(on ? { icon:'calendar', title:'On your phone calendar.', body:`Repeats ${l.rhythm || l.nextLine}. Loopd keeps it in sync if the crew moves it.` }
                      : { icon:'calendar', title:'Removed from your phone calendar.', body:'Your week still has it.' });
       };
       const sendSafety = () => {
@@ -5499,7 +5499,7 @@
         };
         setLoops(ls => [newLoop, ...ls]);
         setSheet(null); setSuggestions(null);
-        showToast({ title:'Sent. 3 classmates already joined.', body:'Loop holds the time, the place, and the next one.' });
+        showToast({ title:'Sent. 3 classmates already joined.', body:'Loopd holds the time, the place, and the next one.' });
         openLoop(id);
         armRecurrence(newLoop);
       };
@@ -5508,7 +5508,7 @@
       const armRecurrence = (baseLoop) => {
         setNudge({
           kicker:'Two weeks later',
-          body:`hw3 is due thursday. Loop drafted the next ${baseLoop.target} session — same faces?`,
+          body:`hw3 is due thursday. Loopd drafted the next ${baseLoop.target} session — same faces?`,
           cta:'Bring the crew back', base:baseLoop,
         });
       };
@@ -5595,7 +5595,7 @@
       const messageCrew = (loop) => showToast({ icon:'message-square', title:`Sent to the ${loop.title}`, body:`${loop.memberIds.length} regulars get it — no new thread, no cold DM.` });
 
       /* ----- advisor controls ----- */
-      const advisorReach = (name) => showToast({ icon:'heart-handshake', title:`Reached out to ${name.split(' ')[0]}`, body:`A warm note from you — Loop never tells them how you knew.` });
+      const advisorReach = (name) => showToast({ icon:'heart-handshake', title:`Reached out to ${name.split(' ')[0]}`, body:`A warm note from you — Loopd never tells them how you knew.` });
 
       /* ----- staff lens actions (RA floor · TA class · counselor school) -----
          Every one is a world mutation: seeds become real forming loops with an audience
@@ -5644,7 +5644,7 @@
       };
       const staffReach = (name, id) => {
         if (id) staffMark(id);
-        showToast({ icon:'heart-handshake', title:`Reached out to ${name.split(' ')[0]}`, body:`A warm note from you — Loop never tells them how you knew.` });
+        showToast({ icon:'heart-handshake', title:`Reached out to ${name.split(' ')[0]}`, body:`A warm note from you — Loopd never tells them how you knew.` });
       };
       const schoolAct = (c) => {
         staffMark(c.id);

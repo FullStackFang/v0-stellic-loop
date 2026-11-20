@@ -24,7 +24,7 @@ beforeEach(() => {
     const answer = (status: number, body: unknown) => ({ ok: status < 300, status, json: async () => body, text: async () => String(body), blob: async () => new Blob(['png'], { type: 'image/png' }) });
     if (href.includes('grounds=1')) return answer(200, SWATCHES);
     if (!server.animal) return answer(409, 'Pick an animal as your picture to save it.');
-    if (href.includes('mark=0') && !server.plus) return answer(403, 'Saving without the Loop mark comes with Loop Ink+.');
+    if (href.includes('mark=0') && !server.plus) return answer(403, 'Saving without the Loopd mark comes with Loopd Ink+.');
     return answer(200, '');
   }));
   ahead.length = 0; vi.spyOn(HTMLImageElement.prototype, 'src', 'set').mockImplementation(href => { ahead.push(href); });
@@ -85,7 +85,7 @@ it('shows the Ink+ plan for "No mark", takes an email, charges nothing and then 
   expect(screen.getByText('Your picture, no mark')).toBeInTheDocument();
   preview('pane-plan', 'profile');
   expect(saved).toEqual([]);
-  press('Subscribe to Loop Ink+');
+  press('Subscribe to Loopd Ink+');
   press('Subscribe');
   expect(screen.getByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
   expect(act.subscribe).not.toHaveBeenCalled();

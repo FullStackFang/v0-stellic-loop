@@ -10,7 +10,7 @@ Reopening an activity selects recipients from the previous revision's commitment
 
 Authorization locks the person before identity rows. Services that update that person take `FOR UPDATE` before authorization: memory writes, feedback writes, confirmed-action consumption, and activity publication. This avoids concurrent shared-to-exclusive upgrades.
 
-Loop authorization holds shared locks on hierarchy rows and the membership/role rows that grant access. Activity services first read the immutable scope, authorize the actor, and then lock the activity. This ordering also applies to disclosure and assistant action preparation. Manager authorization is completed before the activity lock. Withdrawal needs only personal authority and still takes that authority first. Lifecycle hooks retain their person/authority-before-activity ordering.
+Loopd authorization holds shared locks on hierarchy rows and the membership/role rows that grant access. Activity services first read the immutable scope, authorize the actor, and then lock the activity. This ordering also applies to disclosure and assistant action preparation. Manager authorization is completed before the activity lock. Withdrawal needs only personal authority and still takes that authority first. Lifecycle hooks retain their person/authority-before-activity ordering.
 
 The lock order is person(s), identity/hierarchy/authority, activity, then activity-owned records. Multi-person role management acquires persons in sorted order; see the role-management service. The transaction helper has not gained automatic deadlock retries.
 

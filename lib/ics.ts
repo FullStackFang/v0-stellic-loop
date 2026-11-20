@@ -77,7 +77,7 @@ export function memberInviteIcs(i: { method: "REQUEST" | "CANCEL"; entry: Calend
   return calendar(i.method, [
     "BEGIN:VEVENT",
     ...entryLines(i.entry, i.now ?? new Date()),
-    `ORGANIZER;CN=Loop:mailto:${address(i.organizer)}`,
+    `ORGANIZER;CN=Loopd:mailto:${address(i.organizer)}`,
     // The member already said they are in: the entry lands as accepted and asks for no reply.
     `ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=FALSE:mailto:${address(i.attendee)}`,
     `STATUS:${i.method === "CANCEL" ? "CANCELLED" : "CONFIRMED"}`,

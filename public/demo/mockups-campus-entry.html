@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop · Campus entry point</title>
+<title>Loopd · Campus entry point</title>
 <style>
 /* Mockup for openspec change loop-campus-rewards. Three ways the campus page could open (A, B, C), then the screens they all lead to.
    Colours borrow the Cream kit from mockups-school-colors.html (cream holds big areas, carnelian is the action). The look is being
@@ -183,7 +183,7 @@ h1, h2, h3, p { margin: 0; }
     <div class="col"><div class="ph"><div class="scr" id="B"></div></div>
       <div class="cap"><b>B · Go together</b><span>Rewards lead. The offers open right now are the first thing seen, with what each group size earns. The list of things to do sits under them.</span></div></div>
     <div class="col"><div class="ph"><div class="scr" id="C"></div></div>
-      <div class="cap"><b>C · What do you want to do?</b><span>Posting leads. You say what you want; Loop shows who is already planning it and which places reward it. The list is one tap away.</span></div></div>
+      <div class="cap"><b>C · What do you want to do?</b><span>Posting leads. You say what you want; Loopd shows who is already planning it and which places reward it. The list is one tap away.</span></div></div>
   </div>
 </section>
 
@@ -209,7 +209,7 @@ const $ = id => document.getElementById(id);
 const face = (n, cls = 'face') => `<img class="${cls}" src="https://i.pravatar.cc/80?img=${n}" alt="">`;
 const stack = ns => `<span class="stack">${ns.map(n => face(n)).join('')}</span>`;
 const mark = `<svg viewBox="0 0 100 100" fill="none" stroke-width="9"><circle cx="35.5" cy="60" r="21" stroke="currentColor"/><circle cx="64.5" cy="60" r="21" stroke="currentColor"/><circle cx="50" cy="35" r="21" stroke="var(--A)"/></svg>`;
-const bar = `<div class="bar"><span class="wm">${mark}Loop</span><span class="campus">Cornell</span>${face(12)}</div>`;
+const bar = `<div class="bar"><span class="wm">${mark}Loopd</span><span class="campus">Cornell</span>${face(12)}</div>`;
 const INTERESTS = ['Study', 'Food and coffee', 'Sports and fitness', 'Music and arts', 'Games', 'Outdoors', 'Career', 'Social'];
 
 // One campus, one Tuesday. kind: event (from a feed), plan (posted by a student), offer (a venue).
@@ -329,7 +329,7 @@ drawP();
 
 // Venue host view
 const SLOTS = [['Tue 2 to 5', 5, 2], ['Wed 2 to 5', 3, 1], ['Thu 2 to 5', 4, 1], ['Sun 6 to 9', 2, 0]];
-$('H').innerHTML = `<div class="bar"><span class="wm">${mark}Loop</span><span class="campus">Northside Coffee</span>${face(15)}</div><div class="body">
+$('H').innerHTML = `<div class="bar"><span class="wm">${mark}Loopd</span><span class="campus">Northside Coffee</span>${face(15)}</div><div class="body">
   <div class="pad"><h2>This week</h2><div class="facts"><span>Nov 16 to 22 · counts only, no names</span></div></div>
   <div class="grid4"><div class="stat"><b>14</b><span>groups in</span></div><div class="stat"><b>11</b><span>groups checked in</span></div><div class="stat red"><b>4</b><span>groups came back</span></div><div class="stat"><b>9</b><span>rewards used</span></div></div>
   <div class="lbl">By time slot <span style="font-weight:440;color:var(--mute)">· red came back</span></div>

@@ -1,4 +1,4 @@
-/* "Save your picture" (components/campus/save-face.tsx), on the dark plate of Loop Ink (.cs-prem in campus.css). */
+/* "Save your picture" (components/campus/save-face.tsx), on the dark plate of Loopd Ink (.cs-prem in campus.css). */
 /* The pane is as tall as what is in it: nothing scrolls inside the card. */
 .cs .cs-lvl-body.cs-save { max-height: none; overflow: visible; }
 .cs-save-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; }

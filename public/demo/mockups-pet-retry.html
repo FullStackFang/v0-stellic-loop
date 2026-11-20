@@ -686,7 +686,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 <script>
 const img = '/animals/37.png';
 const chips = ['Fluffier', 'Bigger eyes', 'Different pose', 'Truer colors'];
-const head = (kick, big, back) => (back ? '<button class="cs-prem-back" data-go="' + back[1] + '">' + back[0] + '</button>' : '') + '<p class="cs-prem-kick">Loop Premium</p><p class="cs-prem-big said">' + big + '</p>';
+const head = (kick, big, back) => (back ? '<button class="cs-prem-back" data-go="' + back[1] + '">' + back[0] + '</button>' : '') + '<p class="cs-prem-kick">Loopd Premium</p><p class="cs-prem-big said">' + big + '</p>';
 const views = {
   done: () => head('', 'Say hi to your new picture.', ['Done', 'kept']) + '<div class="cs-prem-made"><img src="' + img + '" alt=""></div><div class="cs-prem-stub"><button class="cs-btn rt-again" data-go="ask">Try once more</button><p class="rt-small">One more try. You pick the one you like.</p></div>',
   ask: el => head('', 'What should change?', ['Back', 'done']) + '<div class="cs-prem-perks"><span>We’ll draw it once more from the same photo.</span></div><div class="cs-prem-stub">' + (el.dataset.kind === 'B'

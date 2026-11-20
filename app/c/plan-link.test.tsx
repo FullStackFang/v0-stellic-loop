@@ -44,7 +44,7 @@ const form = (fields: Record<string, string>) => { const data = new FormData(); 
 const line = () => screen.getByRole('textbox', { name: 'What are you up to?' });
 const say = (text: string) => fireEvent.change(line(), { target: { value: text } });
 
-it('the "+" on This week opens posting, which is one line: Loop shows what it understood, and the plan lands on the list with its @place', async () => {
+it('the "+" on This week opens posting, which is one line: Loopd shows what it understood, and the plan lands on the list with its @place', async () => {
   const ana = await person('Ana Lopez');
   await withPortalTestSession(ana, async () => {
     render(<CampusScreen signInHref="/sign-in" screen={await campusScreen(t.db, cornell, { personId: ana.personId, admin: false })} />);
@@ -180,14 +180,14 @@ it('a line with no time is helped, not refused: times are offered to tap, and a 
   expect(await weekListings(t.db, cornell)).toHaveLength(0);
 });
 
-it('says what is missing instead of posting, and a link Loop cannot read asks for what and when', async () => {
+it('says what is missing instead of posting, and a link Loopd cannot read asks for what and when', async () => {
   const ana = await person('Ana Lopez');
   await withPortalTestSession(ana, async () => {
     expect(await postLineAction('cornell', '@collegetown', null)).toEqual({ ok: false, message: 'What is it? Say dumplings, a run, a study group.' });
     expect(await postLineAction('cornell', 'dumplings @collegetown', null)).toEqual({ ok: false, message: 'When is it? Say tonight, tomorrow 7pm, sat 10am.' });
     await open(ana);
     say('https://partiful.com/e/abc123 ');
-    expect(await screen.findByText('Loop does not read partiful.com. The link is kept: say what it is and when.')).toBeInTheDocument();
+    expect(await screen.findByText('Loopd does not read partiful.com. The link is kept: say what it is and when.')).toBeInTheDocument();
     expect(read.page).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
     expect(screen.queryByText('partiful.com')).toBeNull();

@@ -284,22 +284,22 @@ button{cursor:pointer}
 
       <div class="sec"><header><h2>What it knows</h2><p>Members' assistants answer from these. Nothing here is required.</p></header>
         <div>
-          <div class="src"><h3>Files <small>PDF, Word, slides, text. Loop keeps a copy.</small></h3>
+          <div class="src"><h3>Files <small>PDF, Word, slides, text. Loopd keeps a copy.</small></h3>
             <label class="drop" id="a-drop"><span class="tile" data-i="file"></span><span><b style="color:var(--navy);font-weight:550">Drop files here</b> or choose them</span><input type="file" multiple id="a-file"></label>
             <ul class="list" id="a-files"></ul></div>
-          <div class="src"><h3>Links <small>Loop keeps the address and a title, not a copy.</small></h3>
+          <div class="src"><h3>Links <small>Loopd keeps the address and a title, not a copy.</small></h3>
             <div class="row"><input class="field" id="a-link" placeholder="Paste a link: a doc, a sheet, Canvas, a site" aria-label="Link"><button type="button" class="pill" id="a-link-add">Add link</button></div>
             <ul class="list" id="a-links"></ul></div>
           <div class="src"><h3>Google Drive <small>One folder, not your Drive.</small></h3>
             <div class="drive" id="a-drive">
-              <button type="button" id="a-drive-btn"><span class="tile" data-i="folder"></span><span><b style="font-weight:550" id="a-drive-title">Connect one folder</b><br><span class="muted" style="font-size:12.5px" id="a-drive-sub">You pick it in Google's own window. Loop never sees the rest.</span></span></button>
+              <button type="button" id="a-drive-btn"><span class="tile" data-i="folder"></span><span><b style="font-weight:550" id="a-drive-title">Connect one folder</b><br><span class="muted" style="font-size:12.5px" id="a-drive-sub">You pick it in Google's own window. Loopd never sees the rest.</span></span></button>
               <div class="folders"><p>Signed in to Google as you. Choose the folder this group may read.</p>
                 <button type="button" data-folder="NBAE 6830 · Team 4" data-n="23"><span class="tile" data-i="folder"></span><span><b style="font-weight:520">NBAE 6830 · Team 4</b><br><span class="muted" style="font-size:12.5px">23 files · changed yesterday</span></span></button>
                 <button type="button" data-folder="Customer interviews" data-n="9"><span class="tile" data-i="folder"></span><span><b style="font-weight:520">Customer interviews</b><br><span class="muted" style="font-size:12.5px">9 files · changed Nov 9</span></span></button>
                 <button type="button" data-folder="Pitch deck drafts" data-n="6"><span class="tile" data-i="folder"></span><span><b style="font-weight:520">Pitch deck drafts</b><br><span class="muted" style="font-size:12.5px">6 files · changed Nov 2</span></span></button>
               </div>
             </div>
-            <p class="only"><span data-i="lock"></span><span>Read only. Loop can open files inside this folder and nothing else. New files added to it show up here without another step. Disconnect it any time.</span></p></div>
+            <p class="only"><span data-i="lock"></span><span>Read only. Loopd can open files inside this folder and nothing else. New files added to it show up here without another step. Disconnect it any time.</span></p></div>
         </div></div>
 
       <div class="sec"><header><h2>First announcement</h2><p>What everyone reads when they arrive.</p></header>
@@ -333,23 +333,23 @@ button{cursor:pointer}
     <div class="b-plate"><span class="b-mark"><svg class="mark" data-rings></svg></span><div><input class="nm" id="b-name" placeholder="Name your group" aria-label="Group name" maxlength="80">
       <div class="b-sub"><span class="mono" id="b-handle">@your-group</span><details class="b-where" id="b-where"><summary><span id="b-path"></span><u>Change</u></summary><div class="tree" id="b-tree"></div></details></div></div></div>
     <div class="box" id="b-box">
-      <textarea id="b-in" aria-label="Add anything" placeholder="Drop files here, or paste anything: links, a Drive folder, emails, a note to the group. Loop sorts it."></textarea>
+      <textarea id="b-in" aria-label="Add anything" placeholder="Drop files here, or paste anything: links, a Drive folder, emails, a note to the group. Loopd sorts it."></textarea>
       <div class="box-foot"><label class="pill" style="cursor:pointer">Choose files<input type="file" multiple id="b-file" hidden></label><button type="button" class="pill" id="b-sample">Paste an example</button><span class="sp">Enter sorts what you typed. Shift and Enter makes a new line.</span></div>
     </div>
     <div class="lanes">
-      <div class="lane zero" id="l-files"><h3>Files <em>0</em></h3><p>Loop keeps a copy.</p><ul class="list"></ul></div>
+      <div class="lane zero" id="l-files"><h3>Files <em>0</em></h3><p>Loopd keeps a copy.</p><ul class="list"></ul></div>
       <div class="lane zero" id="l-links"><h3>Links <em>0</em></h3><p>Address and title only.</p><ul class="list"></ul></div>
       <div class="lane zero" id="l-drive"><h3>Drive folder <em>0</em></h3><p>One folder, read only. Not your Drive.</p><ul class="list"></ul></div>
       <div class="lane zero" id="l-people"><h3>People <em>0</em></h3><p>Invited by email when you create.</p><ul class="list"></ul></div>
     </div>
     <div class="say" id="b-say"><h3>First announcement</h3><p></p></div>
-    <div class="b-foot"><button type="button" class="pill go" id="b-go" disabled>Create group</button><span class="muted">Only the name is needed. A link that does not open for Loop is kept as a link and marked.</span></div>
+    <div class="b-foot"><button type="button" class="pill go" id="b-go" disabled>Create group</button><span class="muted">Only the name is needed. A link that does not open for Loopd is kept as a link and marked.</span></div>
   </div>
   <div class="done" id="b-done"></div>
 </div></section>
 
 <!-- ======================= C ======================= -->
-<section class="dir" id="dir-c"><div class="wrap"><div class="c-shell"><nav class="c-rail" aria-label="Groups"><div class="c-word"><svg data-rings></svg>Loop</div><p>Your groups</p><div id="c-tree"></div></nav><div class="c-main" id="c-main"></div></div></div></section>
+<section class="dir" id="dir-c"><div class="wrap"><div class="c-shell"><nav class="c-rail" aria-label="Groups"><div class="c-word"><svg data-rings></svg>Loopd</div><p>Your groups</p><div id="c-tree"></div></nav><div class="c-main" id="c-main"></div></div></div></section>
 
 <script>
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -380,7 +380,7 @@ const handleOf=id=>chain(id).map(n=>n.seg).join('/');
 const depth=id=>chain(id).length;
 const TAKEN=['nbae-6830','nbae-6561','hiking-club'];
 const WHY={c:'<b>Groups inside groups.</b> Any group can hold groups, to any depth: the cohort holds learning teams, a team holds its courses. The rail is the tree, the crumbs walk back up, and a new group starts wherever you are standing. Handles read like a path, so an assistant can be told exactly which one.',a:'<b>A · Builds beside you.</b> A form in five plain parts on the left; on the right, the group itself, drawn as members will see it, filling in as you type. Nothing to imagine: the preview is the confirmation. On Create the preview becomes the page.',
- b:'<b>B · One box.</b> One slim row for the name, its handle and where it lives; then throw everything at one box: files, links, a Drive folder link, emails, a note. Loop sorts each thing into its lane and says what it will do with it. Fastest for someone arriving with a pile of stuff from a group chat.'};
+ b:'<b>B · One box.</b> One slim row for the name, its handle and where it lives; then throw everything at one box: files, links, a Drive folder link, emails, a note. Loopd sorts each thing into its lane and says what it will do with it. Fastest for someone arriving with a pile of stuff from a group chat.'};
 function show(dir){document.querySelectorAll('.dir').forEach(el=>el.classList.toggle('on',el.id==='dir-'+dir));document.querySelectorAll('.pick button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.dir===dir));$('why').innerHTML=WHY[dir];history.replaceState(null,'','#'+dir);}
 document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>show(b.dataset.dir));
 const morph=fn=>document.startViewTransition&&!matchMedia('(prefers-reduced-motion:reduce)').matches?document.startViewTransition(fn):fn();
@@ -418,10 +418,10 @@ function drawA(){
   const box=$('pv-list'),have=box.children.length;
   if(rows.length<have)box.innerHTML='';
   rows.slice(box.children.length).forEach(([a,b])=>{const d=document.createElement('div');d.className='pv-row';d.innerHTML=`<span>${esc(a)}</span><b>${esc(b)}</b>`;box.append(d);});
-  $('a-files').replaceChildren(...A.files.map((f,i)=>row('file',f.name,size(f.size)+' · kept by Loop',()=>{A.files.splice(i,1);drawA();})));
+  $('a-files').replaceChildren(...A.files.map((f,i)=>row('file',f.name,size(f.size)+' · kept by Loopd',()=>{A.files.splice(i,1);drawA();})));
   $('a-links').replaceChildren(...A.links.map((l,i)=>row('link',l.replace(/^https?:\/\//,''),kind(l)+' · link only',()=>{A.links.splice(i,1);drawA();})));
   $('a-people').replaceChildren(...A.people.map((m,i)=>{const c=document.createElement('span');c.className='chip';c.innerHTML=`${esc(m)}<button type="button" class="x" aria-label="Remove ${esc(m)}">${icon('x',10)}</button>`;c.querySelector('.x').onclick=()=>{A.people.splice(i,1);drawA();};return c;}));
-  $('a-drive-title').textContent=A.drive?A.drive.name:'Connect one folder';$('a-drive-sub').textContent=A.drive?`${A.drive.n} files · read only · choose again to change`:"You pick it in Google's own window. Loop never sees the rest.";
+  $('a-drive-title').textContent=A.drive?A.drive.name:'Connect one folder';$('a-drive-sub').textContent=A.drive?`${A.drive.n} files · read only · choose again to change`:"You pick it in Google's own window. Loopd never sees the rest.";
   document.querySelectorAll('#a-join button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===A.join));
   $('a-join-note').textContent={off:'Only people you invite by email can join.',ask:'Anyone with the link can ask to join. You approve each one.',admit:'Anyone who signs in with the link is in straight away, as a member. Good for a class or a club.'}[A.join];
   $('a-go').disabled=!A.name.trim()||!A.handle||taken;

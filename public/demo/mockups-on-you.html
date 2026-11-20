@@ -240,7 +240,7 @@ h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
   <h2><b>2</b>"This is yours": work someone put on you <span class="sw"><button aria-pressed="false" id="replay">Play it again</button></span></h2>
   <p>When a teammate proposes a piece of work for you, it is not a row. It is handed to you: a card drops in from the top corner, the person's picture pulses twice, and it waits for one of two answers. It stays until you answer and is back on your next visit if you ignore it. One at a time, oldest first.</p>
   <div class="stage" id="stage">
-    <div class="nav"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke-width="3.2"><circle cx="12" cy="18" r="8" stroke="var(--ink)"/><circle cx="20" cy="13" r="8" stroke="var(--action)"/></svg>Loop</span><a>Cornell</a><span class="nav-end"><span class="ava"><img src="/animals/07.png" alt=""><b>2</b></span></span></div>
+    <div class="nav"><span class="wm"><svg viewBox="0 0 32 32" fill="none" stroke-width="3.2"><circle cx="12" cy="18" r="8" stroke="var(--ink)"/><circle cx="20" cy="13" r="8" stroke="var(--action)"/></svg>Loopd</span><a>Cornell</a><span class="nav-end"><span class="ava"><img src="/animals/07.png" alt=""><b>2</b></span></span></div>
     <div class="ghost" id="ghost"></div>
   </div>
 </div>
@@ -257,7 +257,7 @@ h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
 <!-- 4 -->
 <div class="wrap part">
   <h2><b>4</b>Asking a group, from the campus screen</h2>
-  <p>Opened by "Ask a group" at the top of the list, which only people who may post in a group see. It is one line, like posting a plan: Loop reads the group, the kind and the date out of the sentence and shows what it understood. Edit the line and watch the reading change. The "+" on the week still means one thing: post a plan.</p>
+  <p>Opened by "Ask a group" at the top of the list, which only people who may post in a group see. It is one line, like posting a plan: Loopd reads the group, the kind and the date out of the sentence and shows what it understood. Edit the line and watch the reading change. The "+" on the week still means one thing: post a plan.</p>
   <div class="askbox">
     <div class="panel">
       <textarea class="say" id="say" spellcheck="false">upload your W8/W9 to Nav by friday @emba-council</textarea>
@@ -277,7 +277,7 @@ h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
 <!-- 5 -->
 <div class="wrap part" style="padding-bottom:70px">
   <h2><b>5</b>How it reaches you</h2>
-  <p>Most people will not open Loop to look at a list. These are the three ways the same items come to you, on a phone. The first two exist today for votes; the third is new and is not in the written plan yet. Tap through each.</p>
+  <p>Most people will not open Loopd to look at a list. These are the three ways the same items come to you, on a phone. The first two exist today for votes; the third is new and is not in the written plan yet. Tap through each.</p>
   <div class="ways">
     <section class="way"><h3><b>A</b>A link in the group chat</h3>
       <p>The organizer posts once and drops the link where the group already talks. You tap it, land on that one item, answer, and leave. Tap the link below.</p>
@@ -286,7 +286,7 @@ h1, h2, h3, p, ul { margin: 0; padding: 0; } ul { list-style: none; }
       <p>For anyone who has connected one. At the start of a conversation it says what is waiting, with the same rows and buttons, then gets on with what you asked.</p>
       <div class="phone" id="ph-chat"></div></section>
     <section class="way"><h3><b>C</b>One message a week</h3>
-      <p>New. Monday morning, one email with everything on you across your groups, soonest first, and nothing else. It replaces a separate email per item. Each button answers without opening Loop.</p>
+      <p>New. Monday morning, one email with everything on you across your groups, soonest first, and nothing else. It replaces a separate email per item. Each button answers without opening Loopd.</p>
       <div class="phone" id="ph-mail"></div></section>
   </div>
 </div>
@@ -332,7 +332,7 @@ const TICKETS = [
 ];
 const ticket = t => `<div class="ev"><div class="ev-top"><span class="tile"><small>${t[0]}</small><b>${t[1]}</b></span>${t[4] ? `<span class="src">${t[4]}</span>` : '<span></span>'}<h5>${t[2]}</h5><p>${t[3]}</p></div><div class="ev-stub"><div><small>${t[4] ? 'Together' : 'So far'}</small><b>${t[5]}</b></div><div class="foot"><span class="faces">${t[6].map(n => `<img src="${face(n)}" alt="">`).join('')}</span><button class="btn go sm">I'm in</button></div></div></div>`;
 const rings = '<svg viewBox="0 0 32 32" fill="none" stroke-width="3.2"><circle cx="12" cy="18" r="8" stroke="var(--ink)"/><circle cx="20" cy="13" r="8" stroke="var(--action)"/></svg>';
-const nav = extra => `<div class="nav"><span class="wm">${rings}Loop</span><a>Cornell</a><span class="nav-end">${extra}<span class="ava"><img src="${face(7)}" alt=""><b>2</b></span></span></div>`;
+const nav = extra => `<div class="nav"><span class="wm">${rings}Loopd</span><a>Cornell</a><span class="nav-end">${extra}<span class="ava"><img src="${face(7)}" alt=""><b>2</b></span></span></div>`;
 const week = () => `<div class="ask"><span class="in">What do you feel like doing?</span></div><div class="count"><span class="tally"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></svg></span><h4>8 this week</h4></span><span class="tabs"><span class="on">Best for you</span><span>CampusGroups</span><span>Near you</span></span><span class="rgos"><button class="rgo l" data-go="-1" aria-label="Earlier events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><button class="rgo r" data-go="1" aria-label="More events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></span></div><div class="railwrap"><div class="rail">${TICKETS.map(ticket).join('')}</div></div>`;
 
 const wins = { a: structuredClone(ITEMS), b: structuredClone(ITEMS), c: structuredClone(ITEMS) };
@@ -394,7 +394,7 @@ function page() {
     <div class="panel"><h4>${passed ? 'Did not do it' : 'Has not done it'}<span class="oy-n">${left}</span></h4>
       <ul class="names">${missing.map(person => `<li><img src="${face(person.face)}" alt=""><div><b>${person.name}</b><span>${person.email}</span></div></li>`).join('')}</ul>
       ${passed ? '<p style="margin-top:12px;font-size:13.5px;color:var(--mute)">It no longer takes answers. Give it a new date to open it again; the reminder comes back with it.</p>'
-        : `<div class="rem">${reminder}</div><div class="acts"><button class="btn go">Send to WhatsApp</button><button class="btn">Copy</button><span style="align-self:center;font-size:13px;color:var(--mute)">It names nobody. Loop also reminds each of them the day before.</span></div>`}</div>
+        : `<div class="rem">${reminder}</div><div class="acts"><button class="btn go">Send to WhatsApp</button><button class="btn">Copy</button><span style="align-self:center;font-size:13px;color:var(--mute)">It names nobody. Loopd also reminds each of them the day before.</span></div>`}</div>
     <div class="aside">
       <div class="panel ext"><h4>${passed ? 'Open it again' : 'Move the date'}</h4><p>${passed ? 'Pick a new date. Everyone already done stays done.' : 'Not enough in yet? Give people longer. Everyone already done stays done.'}</p>
         <div class="pills">${['Two more days', 'One more week', 'Pick a date'].map(label => `<button class="pill" data-move="${label}">${label}</button>`).join('')}</div>
@@ -472,14 +472,14 @@ $('#win-m')?.addEventListener('click', event => {
 });
 
 // 5: how it reaches you
-const loopBar = '<div class="ph-bar loop">Loop<span>Cornell</span></div>';
+const loopBar = '<div class="ph-bar loop">Loopd<span>Cornell</span></div>';
 function linkPhone(step = 'chat') {
   const el = $('#ph-link');
   if (step === 'chat') el.innerHTML = `<div class="ph-bar"><img src="${face(22)}" alt=""><div>EMBA Council<small>20 people</small></div></div><div class="ph-body">
     <span class="day">Today</span>
     <div class="msg"><small>Marcus</small>Is the speaker confirmed for Thursday?</div>
     <div class="msg"><small>Priya</small>Yes, 6pm. Room still to book.</div>
-    <div class="msg"><small>Priya</small>Upload your W8/W9 to Nav<button class="linkcard" data-step="item"><b>Upload your W8/W9 to Nav</b><span>Loop · EMBA Council · due Fri 5:00pm · 14 of 20 done</span></button></div>
+    <div class="msg"><small>Priya</small>Upload your W8/W9 to Nav<button class="linkcard" data-step="item"><b>Upload your W8/W9 to Nav</b><span>Loopd · EMBA Council · due Fri 5:00pm · 14 of 20 done</span></button></div>
     <div class="msg me">on it</div></div>`;
   if (step === 'item') el.innerHTML = loopBar + `<div class="ph-body"><div class="one"><small>EMBA Council · something to do</small><h4>Upload your W8/W9 to Nav</h4><p>Due Fri 20 Nov, 5:00pm. Posted by Priya. 14 of 20 done.</p><button class="btn go" data-step="done">Done</button><button class="btn" data-step="chat">Back to the chat</button></div></div>`;
   if (step === 'done') el.innerHTML = loopBar + `<div class="ph-body"><div class="one"><small>EMBA Council</small><div class="clear">${tick}Done. 15 of 20 now.</div><p>That was the only thing EMBA Council needed from you. Two more are on you in other groups.</p><button class="btn go" data-step="list">See the 2</button><button class="btn" data-step="chat">Back to the chat</button></div></div>`;
@@ -488,15 +488,15 @@ function linkPhone(step = 'chat') {
 linkPhone();
 $('#ph-link').addEventListener('click', event => { const hit = event.target.closest('[data-step]'); if (hit) return linkPhone(hit.dataset.step); const act = event.target.closest('.oy-act button'); if (act) act.closest('.oy-act').innerHTML = said(act.dataset.say); });
 
-$('#ph-chat').innerHTML = `<div class="ph-bar"><img src="${face(28)}" alt=""><div>Your assistant<small>Connected to Loop</small></div></div><div class="ph-body">
+$('#ph-chat').innerHTML = `<div class="ph-bar"><img src="${face(28)}" alt=""><div>Your assistant<small>Connected to Loopd</small></div></div><div class="ph-body">
   <div class="msg me">help me plan the rest of my week</div>
   <div class="msg">Before that, three things from your groups are waiting. One closes today.</div>
-  <div class="chatcard"><header>Loop<span>3 waiting</span></header><ul class="oy-list">${[ITEMS[0], ITEMS[1], ITEMS[3]].map(row).join('')}</ul></div>
+  <div class="chatcard"><header>Loopd<span>3 waiting</span></header><ul class="oy-list">${[ITEMS[0], ITEMS[1], ITEMS[3]].map(row).join('')}</ul></div>
   <div class="msg">Now, your week. You have the mixer Thursday if you go, and Friday is clear after 5.</div></div>`;
 $('#ph-chat').addEventListener('click', event => { const act = event.target.closest('.oy-act button'); if (act && act.dataset.say) { act.closest('.oy-row').classList.add('done'); act.closest('.oy-act').innerHTML = said(act.dataset.say); } });
 
 const MAIL = [['Closing first', [{ ...ITEMS[0], when: 'Closes Wed 6:00pm' }]], ['Later this week', [ITEMS[1], ITEMS[3], ITEMS[4]]], ['Next week', [ITEMS[5], ITEMS[6]]]];
-$('#ph-mail').innerHTML = `<div class="mail"><div class="mail-top"><b>6 things from your groups this week</b><span>Loop · Mon 16 Nov, 8:00am · to you</span></div><div class="mail-body">
+$('#ph-mail').innerHTML = `<div class="mail"><div class="mail-top"><b>6 things from your groups this week</b><span>Loopd · Mon 16 Nov, 8:00am · to you</span></div><div class="mail-body">
   ${MAIL.map(([label, items]) => `<div><h5>${label}</h5><ul class="oy-list">${items.map(item => row({ ...item, done: false })).join('')}</ul></div>`).join('')}
   <p class="mail-foot">Only from groups you are in. One message a week, on Monday, and nothing if nothing is on you.<br><button class="quiet" style="margin-top:8px">Stop these</button></p></div></div>`;
 $('#ph-mail').addEventListener('click', event => { const act = event.target.closest('.oy-act button'); if (act && act.dataset.say) { act.closest('.oy-row').classList.add('done'); act.closest('.oy-act').innerHTML = said(act.dataset.say); } });

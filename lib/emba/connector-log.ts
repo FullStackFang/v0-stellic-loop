@@ -3,7 +3,7 @@ import type {Db} from '../db';
 import type {Principal} from './access';
 
 // The connector request log (design D8 of loop-club-reach). It answers one
-// question for the pilot: do assistants check Loop at the start of a
+// question for the pilot: do assistants check Loopd at the start of a
 // conversation, and do members act by the card or by the model. It records
 // that a tool was called and by what route. Nothing a member wrote is read
 // into it: of a call's arguments only the card's own `via` mark is looked at.

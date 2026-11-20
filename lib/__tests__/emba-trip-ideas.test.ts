@@ -107,7 +107,7 @@ it('becomes a plan in the write that adds the last person, and stays one when so
  const third=await join(f,f.c,'buy-suits');
  expect(third.event).toMatchObject({interested:3,idea:{state:'planned',needs:0}});
  expect(await actions()).toEqual(['event_proposed','event_planned']);
- // Loop made it a plan: the entry names no member.
+ // Loopd made it a plan: the entry names no member.
  expect((await t.db.query("select actor_id from emba_team_change where action='event_planned'")).rows).toEqual([{actor_id:null}]);
  expect((await whatsNew(t.db,f.d,f.root)).changes.map(change=>[change.action,change.event?.slug])).toEqual([['event_proposed','buy-suits'],['event_planned','buy-suits']]);
  expect(formatNews(await whatsNew(t.db,f.d,f.root))).toMatch(/: idea @trip\/buy-suits has the people it needs and is now a plan, /);
@@ -193,7 +193,7 @@ it('opens one ask for a missing day to those who are in, and the day with most a
  expect(Date.parse(asked.closesAt)-Date.parse(asked.createdAt)).toBe(IDEAS.askHours*3600000);
  expect(asked.missing?.map(person=>person.handle).sort()).toEqual(['@trip/ana','@trip/ben','@trip/cy']);
  expect((await actions()).at(-1)).toBe('asked');
- expect(formatNews(await whatsNew(t.db,f.d,f.root))).toMatch(/Loop asked the members who are in on idea @trip\/cooking-class to choose its day \(ask #1\)\./);
+ expect(formatNews(await whatsNew(t.db,f.d,f.root))).toMatch(/Loopd asked the members who are in on idea @trip\/cooking-class to choose its day \(ask #1\)\./);
  // It waits for those who are in and for nobody else, who cannot answer it.
  expect((await waiting(t.db,f.b)).items).toMatchObject([{kind:'ask',ask:{number:1}}]);
  expect((await waiting(t.db,f.d)).items).toEqual([]);
@@ -269,7 +269,7 @@ it('lapses an idea that goes nowhere, and keeps it in the team\'s history',async
  // The day's list leaves them out, and notes the lapse as it does.
  expect((await whatsOn(t.db,f.b,f.root)).ideas.items.map(idea=>idea.slug)).toEqual(['fresh']);
  expect(await stateOf('someday')).toMatchObject({state:'lapsed',archived:true});
- // A read notes them, as Loop, in the change sequence.
+ // A read notes them, as Loopd, in the change sequence.
  const news=await whatsNew(t.db,f.b,f.root);
  expect(news.changes.map(change=>change.action).sort()).toEqual(['event_lapsed','event_lapsed','event_proposed','event_proposed','event_proposed']);
  expect(formatNews(news)).toMatch(/idea @trip\/someday lapsed without becoming a plan\./);
@@ -303,7 +303,7 @@ it('lists what is on a day: fixed events, plans and ideas with names, those clos
  const text=formatDay(list);textRules(text);
  expect(text).toContain(`What is on ${thursday}:`);expect(text).toContain('Idea @trip/buy-suits');expect(text).toContain('2 in, needs 1 more of 3.');expect(text).toContain('In: @trip/ana, @trip/ben.');
  expect(text.indexOf('Fixed events:')).toBeLessThan(text.indexOf('Plans:'));expect(text.indexOf('Plans:')).toBeLessThan(text.indexOf('Ideas, those closest'));
- // Loop lists; it recommends nothing.
+ // Loopd lists; it recommends nothing.
  expect(text).not.toMatch(/recommend|suggest|should/i);
  // With no day: everything that has not ended.
  const all=await whatsOn(t.db,f.d,f.root);
@@ -377,7 +377,7 @@ it('sets the day of a timed-out ask on a plain read of the site, with nobody cal
  expect((await whatsOn(t.db,f.d,{...f.root,day:days[0]})).ideas.items.map(idea=>[idea.slug,idea.idea!.day])).toEqual([['gallery',days[0]]]);
  expect((await actions()).filter(action=>action==='ask_closed')).toHaveLength(2);
 });
-it('closes the ask for a day when the last member it waits for drops out, and keeps Loop\'s asks out of the member\'s own room for asks',async()=>{
+it('closes the ask for a day when the last member it waits for drops out, and keeps Loopd\'s asks out of the member\'s own room for asks',async()=>{
  const f=await fixture(),days=[day(2),day(3)];
  ok(await proposeIdea(t.db,f.a,{...f.root,name:'Museum',offeredDays:days}));
  await join(f,f.b,'museum');await join(f,f.c,'museum');

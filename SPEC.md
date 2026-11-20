@@ -134,7 +134,7 @@ Tightest video cut: **1 → 2 → 3 → 5 → 6**.
   - **Spin up:** `Start a CS 2110 study session` — *11 others on your floor
     dropped this* · *[Spin one up]*
   - **Forming:** `CS 2110 · Prelim 1 review` — forming · *[Notify me when it's set]*
-- **S7 · Loop detail.** Title, cadence (*Sundays 4pm, weekly*), **next session**
+- **S7 · Loopd detail.** Title, cadence (*Sundays 4pm, weekly*), **next session**
   (date · time · place), member avatars (display only), coordinator badge,
   actions *Count me in* / *Can't this week*. Footer *"Pulse handles the reminders
   and the next one."* **No going/declined grid.**
@@ -158,7 +158,7 @@ User    { id, name, avatarUrl, classYear, dorm, major, courses[] }
 Intent  { id, userId, rawText, type, target, createdAt }
         // type: "study" | "activity" | "social"
         // target: course code ("CS 2110") or activity ("bouldering")
-Loop    { id, type, title, target, cadence, nextSession,
+Loopd    { id, type, title, target, cadence, nextSession,
           location, memberIds[], coordinatorId, status }
         // status: "forming" | "active" | "dormant"
 Session { id, loopId, date, attendeeIds[] }
@@ -236,7 +236,7 @@ not a polish item.
 2. Onboarding S2 → S3 → S4 (state accumulates the Sarah user).
 3. Home S5 with seeded loops + persistent intent bar.
 4. Layer-A parser + Suggestions S6.
-5. Loop detail S7 + *Count me in* mutates state.
+5. Loopd detail S7 + *Count me in* mutates state.
 6. Spin-up S8 (draft → Send it → confirmation) + fold-in notification S9.
 7. Recurrence view (same avatars) — the payoff frame.
 8. Polish: copy, teammate avatars, mobile framing. (S10 / Layer B only if time.)

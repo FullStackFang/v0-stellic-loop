@@ -9,6 +9,7 @@ import type { Choice, Pick, PicturePane, TileProps } from '@/lib/emba/group-pict
 import { groupPictureSrc } from '@/lib/emba/group-picture-src';
 import { drawGroupPictureAction, keepGroupPictureAction, subscribeInkPlusAction } from './picture-actions';
 import './group-picture.css';
+import { SeatsTicket, SeatsWord } from '@/components/loading/seats';
 
 // A group's tile, and the card that draws its picture (openspec loop-group-picture; the look and the steps are
 // public/demo/mockups-group-picture-place.html, A). The card wears the classes of the account card's animal picker
@@ -103,7 +104,7 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
   };
 
   /* eslint-disable @next/next/no-img-element -- icons from public/animals, made animals and drawings at their own addresses */
-  const thanks = thanked && <p className="cs-own-thanks">Thanks for subscribing to Loop Ink+. Payment is not set up yet, so this one is free. Enjoy your group picture.</p>;
+  const thanks = thanked && <p className="cs-own-thanks">Thanks for subscribing to Loopd Ink+. Payment is not set up yet, so this one is free. Enjoy your group picture.</p>;
   const alert = said && <p role="alert" className="gp-said">{said}</p>;
   const faces = <span className="gp-faces" aria-hidden="true">{picked.map(one => <img key={one.src} src={one.src} alt="" />)}</span>;
   const kinds = FILTERS.filter(([kind]) => pane.choices.some(one => one.kind === kind));
@@ -139,18 +140,18 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
   : <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     {step === 'plate' ? <>
       <button className="cs-prem-back" onClick={() => { setSaid(''); setStep('pick'); }}>Back</button>
-      <p className="cs-prem-kick">Loop Ink+</p>
+      <p className="cs-prem-kick">Loopd Ink+</p>
       <p className="cs-prem-big">$9.99 <small>a month</small></p>
       <div className="cs-prem-figs" aria-hidden="true">{picked.slice(0, 2).map(one => <img key={one.src} src={one.src} alt="" />)}</div>
       <div className="cs-prem-perks"><span>Your group, drawn together from the animals you pick</span><span>Say what should change, and it is drawn again</span>
-        <small>Groups of more than {pane.most}, and saving a picture without the Loop mark, are not here yet.</small></div>
+        <small>Groups of more than {pane.most}, and saving a picture without the Loopd mark, are not here yet.</small></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
-        <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}>Subscribe</button></div>
+        <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}>{busy ? <SeatsWord word="Subscribing" plate /> : 'Subscribe'}</button></div>
         {alert}
       </form></>
     : step === 'sure' ? <>
       <button className="cs-prem-back" onClick={() => { setSaid(''); setStep(from); }}>Back</button>
-      <p className="cs-prem-kick">Loop Ink+</p>
+      <p className="cs-prem-kick">Loopd Ink+</p>
       <p className="cs-prem-big said">Draw these {picked.length} together?</p>
       {thanks}
       <div className="cs-prem-made gp-wait" aria-hidden="true">{picked.map(one => <img key={one.src} src={one.src} alt="" />)}</div>
@@ -160,14 +161,14 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
         {alert}
       </form></>
     : step === 'wait' ? <>
-      <p className="cs-prem-kick">Loop Ink+</p>
+      <p className="cs-prem-kick">Loopd Ink+</p>
       <p className="cs-prem-big said" role="status">Drawing you together.</p>
       {thanks}
-      <div className="cs-prem-made gp-wait" aria-hidden="true">{picked.map(one => <img key={one.src} className="busy" src={one.src} alt="" />)}</div>
+      <div className="cs-prem-made gp-wait"><SeatsTicket slow quiet /></div>
       <div className="cs-prem-stub"><p className="cs-prem-small">About a minute. Two drawings, and you keep one.</p></div></>
     : <>
       <button className="cs-prem-back" onClick={() => { setSaid(''); setStep('pics'); }}>Pictures</button>
-      <p className="cs-prem-kick">Loop Ink+</p>
+      <p className="cs-prem-kick">Loopd Ink+</p>
       <p className="cs-prem-big said">{kept && drawn.includes(kept) ? 'Say hi to your group.' : 'Pick your favorite.'}</p>
       {thanks}
       <div className="gp-two">{drawn.map((token, at) => <figure key={token}><img src={groupPictureSrc(token, true)} alt={`Drawing ${at + 1}`} />

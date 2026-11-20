@@ -177,7 +177,7 @@ const groupTicket = (g, at) => `<article class="ev grp" data-open="${g.name}" st
 const week = filter => `<div class="main"><div class="ask"><span class="in">Search this week, or @ a tag</span></div>
   <div class="count"><span class="tally"><span class="plus">${plus}</span><h4>${filter === 'yours' ? '6 groups you are in' : '14 things this week'}</h4></span>${filter === 'yours' ? '<button class="btn go" style="margin:0;height:38px" data-open="Start a group">Start a group</button>' : ''}${filter ? `<span class="tabs"><button aria-pressed="${filter === 'all'}" data-tab="all">All</button><button aria-pressed="false" data-tab="near">Near you</button><button aria-pressed="${filter === 'yours'}" data-tab="yours">Yours<span class="n sm q">6</span></button></span>` : '<span class="tabs"><button aria-pressed="true">All</button><button aria-pressed="false">Near you</button></span>'}</div>
   <div class="rail">${filter === 'yours' ? [...GROUPS, ...GOING].map(groupTicket).join('') : WEEK.map(ticket).join('')}</div></div>`;
-const bar = inner => `<div class="nav"><span class="wm">${logo}Loop</span><span class="lk on">This week</span>${inner}</div>`;
+const bar = inner => `<div class="nav"><span class="wm">${logo}Loopd</span><span class="lk on">This week</span>${inner}</div>`;
 const end = more => `<span class="nav-end">${more}<span class="ava">${face(7)}</span></span>`;
 const onYouPill = open => `<button class="pill" data-toggle="oy" aria-expanded="${open}">On you<span class="n">3</span></button>`;
 const rows = ROWS.map(r => `<li class="row ${r.soon ? 'soon' : ''}"><span class="k ${r.k}">${r.label}</span><span class="when">${r.when}</span><span class="what">${r.what}</span><span class="from">${r.from}</span></li>`).join('');

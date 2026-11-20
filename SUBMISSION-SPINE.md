@@ -1,4 +1,4 @@
-# Loop — Business Idea & Model Presentation (submission spine)
+# Loopd — Business Idea & Model Presentation (submission spine)
 
 *Consolidated, rubric-ordered written spine for the NBAE 6830 workshop deliverable.
 This is the **single-sided B2B** version: the customer segment is the academic-support
@@ -31,7 +31,7 @@ for the purpose of this submission.*
 
 ## §1 · Title slide
 
-- **Business Idea & Business Model — Loop**
+- **Business Idea & Business Model — Loopd**
 - Stephen Fang
 - *[date submitted]*
 
@@ -41,7 +41,7 @@ for the purpose of this submission.*
 
 **Business thesis** (one sentence; single offering · single segment · single benefit):
 
-> **Loop's self-forming recurring study groups give the Supplemental Instruction director
+> **Loopd's self-forming recurring study groups give the Supplemental Instruction director
 > at a four-year residential university the session turnout their program is judged on.**
 
 - *Offering* — self-forming (quorum-fired) recurring study groups.
@@ -103,7 +103,7 @@ One job-title hypothesis per role — a top guess, not a laundry list.
 | **Initiator** | **SI Coordinator** — the one professional staffer who supervises the SI leaders | *Awareness:* hears a peer present turnout results at the annual NCLCA conference. |
 | **Decider** | **Director, Academic Success Center** | *JTBD:* **"Get more of my enrolled students into the SI sessions I already pay leaders to run."** |
 | **Buyer** | **Same Director** — departmental P-card / PO under the campus bid threshold (~$10–25K) | Purchases the $6–15K annual license without an RFP. *(Buyer = Decider is a deliberate single guess at this ACV, not a hedge.)* |
-| **End user** | **The paid undergraduate SI leader** — runs the sessions in Loop | *JTBD:* **"Have the same people in the room every week so the session is worth preparing for."** |
+| **End user** | **The paid undergraduate SI leader** — runs the sessions in Loopd | *JTBD:* **"Have the same people in the room every week so the session is worth preparing for."** |
 
 - *Beneficiary (named, not a role card):* the **first-year student** is who the product
   ultimately serves — showing up week after week is the behavior the director is buying. The
@@ -135,7 +135,7 @@ One job-title hypothesis per role — a top guess, not a laundry list.
 - *Gains:* more students in the room; the *same* students returning; attendance that joins
   to the registrar automatically; a report the provost believes.
 
-**Value map (Loop):**
+**Value map (Loopd):**
 
 - *Products & services:* quorum-fired recurring SI groups seeded by SI leaders; mutual
   check-in as attendance of record; SI-leader roster + timesheet export; ICSI-format report
@@ -200,7 +200,7 @@ no student jobs/pains leak into this canvas.
 **7b · The seven questions (iterating for attractiveness)**
 
 1. **Switching costs** — weak → strong once two offices share it: attendance of record and
-   the ICSI report make Loop the ledger; the cross-office indicator makes it the system of
+   the ICSI report make Loopd the ledger; the cross-office indicator makes it the system of
    record for peer participation.
 2. **Recurring revenue** — annual license per center; renewal tied to the center's own
    attendance numbers; consolidation raises it to the provost.
@@ -225,7 +225,7 @@ no student jobs/pains leak into this canvas.
   recurring groups: the tutoring center (SI), housing (RA programs), orientation (first-year
   cohorts), wellbeing (connectedness). Each has its own small budget; none can see the
   others.
-- Loop enters through the tutoring center (cheapest, fastest sale), then adds offices **on
+- Loopd enters through the tutoring center (cheapest, fastest sale), then adds offices **on
   the same campus** before adding campuses. The **provost** buys the consolidated layer at
   **$75–150K** — EAB's band — because only the cross-office view answers *"is this student in
   any recurring group?"*
@@ -277,9 +277,9 @@ external validity needs a second, representative campus. (Now assumption #6 in �
 
 **3 · Two internal contradictions a grader/VC will catch** `[your call]`
 These aren't just risks — they're inconsistencies. Pick a lane before you build:
-- *Attendance-of-record vs. "defer compliance to campus 5."* If Loop is the system of record
-  it holds FERPA education records → DPA, SOC 2, SSO **now**. Either (a) Loop **is** the
-  attendance ledger (then compliance is a real §6 cost, not deferred), or (b) Loop is
+- *Attendance-of-record vs. "defer compliance to campus 5."* If Loopd is the system of record
+  it holds FERPA education records → DPA, SOC 2, SSO **now**. Either (a) Loopd **is** the
+  attendance ledger (then compliance is a real §6 cost, not deferred), or (b) Loopd is
   **turnout-only** and rides the incumbent's ledger (then "attendance of record" leaves the
   value prop). You can't be both the ledger and compliance-light.
 - *"Ownerless so it runs free" vs. "paid SI leaders seed every group."* You can't claim both
@@ -336,7 +336,7 @@ them. Put a short "assumptions" line under the slides that lean on these:*
 1. **The third meeting.** ≥40% of fired loops recur to a 3rd/4th session (the single biggest
    unknown; the whole B2B value rides on it).
 2. **Turnout lift is causal.** The commitment stack moves turnout from ~10% toward ~40% —
-   currently supported by analogous studies (Lund, Swarthmore, Milkman), not Loop's own data.
+   currently supported by analogous studies (Lund, Swarthmore, Milkman), not Loopd's own data.
 3. **The director is a real buyer.** Discretionary $6–15K, pain acute enough to buy this
    term, and the sunsetting sign-in system is a live trigger.
 4. **Free-tier student adoption.** Enough students in a 200-seat course drop an intent within
@@ -344,5 +344,5 @@ them. Put a short "assumptions" line under the slides that lean on these:*
 5. **The expand is reachable.** A second office on the same campus buys, and the provost
    consolidation ($75–150K) is a destination, not a fantasy.
 6. **External validity.** A pilot at dense-dorm Cornell transfers to the commuter /
-   regional-public campuses that are the *actual* buyers — where the residential density Loop
+   regional-public campuses that are the *actual* buyers — where the residential density Loopd
    leans on doesn't exist. (Name Cornell as *design partner*, not proof of the market.)

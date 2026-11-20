@@ -28,7 +28,7 @@ export type IdeaFacts={state:'idea'|'planned'|'cancelled'|'lapsed';
  needed:number;needs:number;youProposed:boolean;
  /** While it has no start time: the days the proposer offered, and the day those who are in chose. */
  offeredDays:string[];day:string|null;
- /** The one ask Loop opened to settle the day, if it did. */
+ /** The one ask Loopd opened to settle the day, if it did. */
  dayAsk:{number:number;open:boolean}|null};
 /** The open ideas that need exactly one more person, that `personId` is not in on and has not said are not for them: soonest first, at most 10. */
 export async function oneShortFor(q:Q,team:Scope,personId:string):Promise<string[]> {
@@ -38,7 +38,7 @@ export async function oneShortFor(q:Q,team:Scope,personId:string):Promise<string
   order by e.starts_at asc nulls last,e.slug limit 10`,[team.orgId,team.loopId,personId]);
  return rows.map(row=>row.id);
 }
-/** Closes the ask Loop opened for an idea's day, if it is still open, and enters that in the change sequence. The caller holds the team's lock. */
+/** Closes the ask Loopd opened for an idea's day, if it is still open, and enters that in the change sequence. The caller holds the team's lock. */
 export async function endDayAsk(q:Q,team:Scope,askId:string|null,actorId:string|null=null,clientId:string|null=null):Promise<void> {
  if(!askId)return;
  const {rows}=await q.query('update emba_ask set closed_at=clock_timestamp() where id=$1 and closed_at is null and closes_at>clock_timestamp() returning id',[askId]);
@@ -89,7 +89,7 @@ export async function closeDayAskIfAnswered(q:Q,team:Scope,askId:string,eventId:
  * the team's lock.
  */
 export async function lapseDue(q:Q,team:Scope):Promise<void> {
- // First the asks for a day that ran out their time: each is noted as closed by Loop, and its day is set.
+ // First the asks for a day that ran out their time: each is noted as closed by Loopd, and its day is set.
  const {rows:asks}=await q.query<{id:string}>(`update emba_ask k set closed_at=k.closes_at where ${dayAskDue} returning k.id`,[team.orgId,team.loopId]);
  for(const ask of asks){
   await logChange(q,team,'ask_closed',{askId:ask.id},null,null);
@@ -131,7 +131,7 @@ export type EventView={slug:string;name:string;
  shareUrl:string|null;
  /** Present on an idea or a plan only. */
  idea?:IdeaFacts;
- /** Present, and true, when the event came from a link or a feed that no longer lists it. Loop keeps the event. */
+ /** Present, and true, when the event came from a link or a feed that no longer lists it. Loopd keeps the event. */
  sourceGone?:true;
  /** Present, and true, when the caller added this event by link or from the nearby list. */
  youLinked?:true};
@@ -250,7 +250,7 @@ async function change(db:Db,p:Principal,input:unknown):Promise<Done|Declined|Ref
   const same=(key:keyof typeof next)=>key==='startsAt'||key==='endsAt'?(next[key]===null?row[key]===null:row[key]!==null&&Date.parse(next[key]!)===Date.parse(row[key]!)):next[key]===row[key];
   const changed=(Object.keys(next) as (keyof typeof next)[]).filter(key=>!same(key));
   if(!changed.length)return done(ctx,row.id,false);
-  // An event that came from a link or a feed stays as an owner or organizer set it: Loop stops following its source.
+  // An event that came from a link or a feed stays as an owner or organizer set it: Loopd stops following its source.
   const byHand=row.sourced&&changed.some(key=>key==='name'||key==='startsAt'||key==='endsAt'||key==='place');
   await ctx.q.query('update emba_team_event set slug=$2,name=$3,starts_at=$4,ends_at=$5,place=$6,url=$7,note=$8,source_follow=source_follow and not $9::boolean where id=$1',[row.id,next.slug,next.name,next.startsAt,next.endsAt,next.place,next.url,next.note,byHand]);
   // What is new reports a change of time or place. A new name or note is seen on the event itself.
@@ -276,7 +276,7 @@ async function archive(db:Db,p:Principal,input:unknown):Promise<Done|Declined|Re
 }
 
 /**
- * Loop's own change to an event that follows its source (design D6 of
+ * Loopd's own change to an event that follows its source (design D6 of
  * loop-group-event-links): what the source shows now, or that it no longer
  * lists the event. A changed start, end or place enters the change sequence
  * with no actor and moves invites already sent. A source that is gone labels

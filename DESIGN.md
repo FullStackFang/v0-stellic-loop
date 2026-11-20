@@ -1,10 +1,10 @@
-# Loop · Design system
+# Loopd · Design system
 
 *Settled 2026-11-12. This is the look for the whole app. Every new page and every
 redraw uses it. The product reasoning that used to live in this file is now
 `docs/proposal-board-design.md`.*
 
-**Next look: Loop Campus** (picked 2026-11-17, mockup only). This file still describes what the
+**Next look: Loopd Campus** (picked 2026-11-17, mockup only). This file still describes what the
 app looks like today, known as the HAI look. The look that will replace it is in
 `docs/loop-campus-design.md`. Until that is applied, build new pages to this file.
 
@@ -127,6 +127,8 @@ other two. `Rings` in `components/LoopGlyphs.tsx`.
 - Ease `--ease: cubic-bezier(.22,1,.36,1)`; hovers and presses 0.1 to 0.2s, colour only.
 - One large moment at most per page: the mark opens once (clip reveal, 1.6s), then
   turns very slowly (90s a turn). Nothing else moves on its own.
+- The one exception is the loader, which moves while something is waited for: see "Waiting" in
+  `docs/loop-campus-design.md`.
 - No bounce, no writing animations, no pulsing. `prefers-reduced-motion` stops everything.
 
 ## Copy

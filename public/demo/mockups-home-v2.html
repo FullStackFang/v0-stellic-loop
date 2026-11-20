@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Home v2 — 3 directions</title>
+<title>Loopd · Home v2 — 3 directions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -236,7 +236,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · Home v2</div>
+    <div class="eyebrow">Loopd · Home v2</div>
     <h1>Three homes for the same four chips</h1>
     <p>Same chip row (🔍 · Upcoming · Waiting · Past), same full-height search takeover behind 🔍, ＋ and the live stats. The directions differ on where the live stats sit and how your next meet shows up. Every phone is clickable; today is Thursday.</p>
   </div>
@@ -373,7 +373,7 @@ function buildTakeover(el, D, api){
     list = list.slice(0,4);
     $('[data-res]').innerHTML = list.map(x => rowForming(x,true)).join('') || `<div class="empty">Nothing close yet. Drop it and it waits on your floor.</div>`;
     $('[data-drop]').textContent = editing ? 'Save changes' : fits ? `Drop it · ${fits} near you fit this` : 'Drop it';
-    $('[data-hint]').textContent = editing ? 'Editing your intent · people already in stay in' : g ? `Sounds like ${CAT[g].l.toLowerCase()}. Join one below, or drop yours.` : 'Say it plain. Loop finds the people.';
+    $('[data-hint]').textContent = editing ? 'Editing your intent · people already in stay in' : g ? `Sounds like ${CAT[g].l.toLowerCase()}. Join one below, or drop yours.` : 'Say it plain. Loopd finds the people.';
   }
   function renderFeed(){
     const items = D.near.filter(x => RANK[scope].includes(x.b) && (cat==='all' || x.c===cat)).sort((a,b) => b.n/b.g - a.n/a.g);
@@ -410,7 +410,7 @@ function makePhone(pid, cfg){
   const S = { chip:'upcoming', scope:'floor', cal:new Set() };
   el.innerHTML = `
     <div class="status"><span>9:41</span><span>5G</span></div>
-    <div class="apphead"><span class="wordmark">Loop<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
+    <div class="apphead"><span class="wordmark">Loopd<i></i></span><div style="display:flex;gap:6px;align-items:center"><span class="hicon">🔔</span><span class="avatar">SC</span></div></div>
     <div data-top></div>
     <div class="chips" data-chips></div>
     <div data-mid></div>

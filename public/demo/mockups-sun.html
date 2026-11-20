@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Sun · lit by the hour, the weather, and the moon</title>
+<title>Loopd · Sun · lit by the hour, the weather, and the moon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet">
@@ -124,7 +124,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Loop · Sun · 2026-11-03</div>
+  <div class="eyebrow">Loopd · Sun · 2026-11-03</div>
   <h1>Lit the way the plan will be: <em>its hour, its weather, its moon.</em></h1>
   <p>The page takes the time of the plan and the forecast for that day and lights itself to match, around the full clock. The sun and the moon ride one wheel, bigger than the phone: at noon the sun is at twelve o'clock, at six it slips out through the right edge while the moon slides in on the left, at midnight the moon is at the top. A boat at six on a clear Friday glows apricot. Case prep at half past seven is already night, flat and grey under cloud. Dim sum in the rain goes cool and the drops come down. After dark the sky is ink-blue, the type turns to paper and the stars come out. <b>Grab the sun or the moon on any phone and turn the wheel, drag the hour, switch the weather, tap "I'm in."</b></p>
 
@@ -223,7 +223,7 @@ function phone(o){
   const faces=o.faces.map(f=> f==null ? `<div class="p slot" data-slot><span class="face">+1</span>one more</div>` : `<div class="p">${F(f[0])}${f[1]}</div>`).join('');
   return `<div class="phone sun ${o.formed?'formed':''}" id="${o.id}" data-temp="${o.temp}" data-when="${o.whenShort}">
     <div class="sky">${STARS}<div class="disc s"></div><div class="disc m"></div>${CLOUD}<canvas class="rain" aria-hidden="true"></canvas></div>${STATUS}
-    <div class="head"><span class="wm">Loop</span><span class="space">EMBA 2027</span></div>
+    <div class="head"><span class="wm">Loopd</span><span class="space">EMBA 2027</span></div>
     <div class="screen">
       <div class="tag"><i></i><span data-state>${o.formed?`Formed · ${o.n} of ${o.of}`:`Open · forms at ${o.of}`}</span></div>
       <h2>${o.title}</h2>
@@ -257,7 +257,7 @@ const MAIN = { id:'a', title:'Overnight<br>boat', when:'Fri 20 Feb, 6:00pm', whe
 const MINIS = [
   { id:'m1', t:19.5, w:'cloudy', title:'Tuesday<br>case prep', when:'Tue 17 Feb, 7:30pm', when2:'two hours', whenDay:'Tue', whenShort:'7:30pm', where:'Library 2F · bring the Zara case', temp:23, n:2, of:4, faces:[[5,'Priya'],[20,'Dan'],null], det:[['Room booked under Priya','Priya']], cap:'Case prep at 7:30 under cloud: night already, the moon behind the cloud, short grey shadows.' },
   { id:'m2', t:11, w:'rain', title:'Dim sum<br>Sunday', when:'Sun 22 Feb, 11:00am', when2:'walk-ins only', whenDay:'Sun', whenShort:'11am', where:'Tim Ho Wan, Sham Shui Po', temp:24, n:1, of:4, faces:[[8,'You'],null], det:[['Queue is 20 min, worth it','You']], cap:'Dim sum at eleven in the rain: the sun hides behind the cloud, the page cools, drops fall.' },
-  { id:'m3', t:7.25, w:'clear', title:'Thursday<br>run', when:'Thu 19 Feb, 7:15am', when2:'5k, easy pace', whenDay:'Thu', whenShort:'7:15am', where:'The Bund, meet at the clock', temp:17, n:5, of:6, formed:true, faces:[[8,'You'],[14,'Mei'],[22,'Jon'],[31,'Ana'],[44,'Luis']], det:[['Still on? asked at 12:30am','Loop']], cap:'A formed crew just after dawn: apricot, the sun barely in through the left edge, soft shadows to the right.' },
+  { id:'m3', t:7.25, w:'clear', title:'Thursday<br>run', when:'Thu 19 Feb, 7:15am', when2:'5k, easy pace', whenDay:'Thu', whenShort:'7:15am', where:'The Bund, meet at the clock', temp:17, n:5, of:6, formed:true, faces:[[8,'You'],[14,'Mei'],[22,'Jon'],[31,'Ana'],[44,'Luis']], det:[['Still on? asked at 12:30am','Loopd']], cap:'A formed crew just after dawn: apricot, the sun barely in through the left edge, soft shadows to the right.' },
   { id:'m4', t:22, w:'clear', title:'Night<br>market', when:'Fri 27 Feb, 10:00pm', when2:'after the last class', whenDay:'Fri', whenShort:'10pm', where:'Temple Street, Jordan exit A', temp:21, n:3, of:5, faces:[[16,'Hana'],[29,'Wei'],[52,'Omar'],null,null], det:[['Cash only, bring small notes','Wei']], cap:'A plan at ten at night: ink-blue sky, the moon climbing the left side of the wheel, paper type, stars out because it is clear.' },
 ];
 

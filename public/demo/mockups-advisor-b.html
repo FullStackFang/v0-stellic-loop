@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Advisor (Dana) v3 — scheme B restyled three ways</title>
+<title>Loopd · Advisor (Dana) v3 — scheme B restyled three ways</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -214,7 +214,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · Advisor · Dana · v3</div>
+    <div class="eyebrow">Loopd · Advisor · Dana · v3</div>
     <h1>Scheme B, restyled three ways</h1>
     <p>Check on · Route · Pulse stays. What changes is how components separate. The old version put a gauge, a red mono line, a number column and a chevron on every row, so nothing had an edge. Each direction below picks one way to draw the edge and removes the rest. All open on Route.</p>
   </div>
@@ -395,7 +395,7 @@ document.querySelectorAll('.phone').forEach(ph=>{
     const tab = e.target.closest('[data-tab]');
     if (tab){ if (tab.dataset.tab===cur) return; moveUl(tab); cur = tab.dataset.tab; setTimeout(render, 120); return; }
     const reach = e.target.closest('[data-reach]');
-    if (reach && reach.dataset.done!=='1'){ reach.dataset.done='1'; reach.innerHTML=I.check; const name = reach.closest('.r').querySelector('.t').textContent; say(`Reached out to ${name.split(' ')[0]}`, 'A warm note from you. Loop never tells them how you knew.'); return; }
+    if (reach && reach.dataset.done!=='1'){ reach.dataset.done='1'; reach.innerHTML=I.check; const name = reach.closest('.r').querySelector('.t').textContent; say(`Reached out to ${name.split(' ')[0]}`, 'A warm note from you. Loopd never tells them how you knew.'); return; }
     const act = e.target.closest('[data-act]');
     if (act && act.dataset.done!=='1'){ act.dataset.done='1'; act.innerHTML = I.check+' Sent'; const s = SCOPES.find(s=>s.id===act.dataset.act);
       const card = ph.querySelector(`[data-card="${s.id}"]`); if (card) card.dataset.done='1';

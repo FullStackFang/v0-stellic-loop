@@ -1,6 +1,6 @@
 import { assistantName } from '@/lib/emba/team-text';
 
-// Small marks used by the /groups pages (the Loop mark and the arrow live in components/LoopGlyphs.tsx). Each assistant has its own shape, always followed by its name, so who saved a record never rests on colour.
+// Small marks used by the /groups pages (the Loopd mark and the arrow live in components/LoopGlyphs.tsx). Each assistant has its own shape, always followed by its name, so who saved a record never rests on colour.
 
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · Redundancy cuts — 6 decisions</title>
+<title>Loopd · Redundancy cuts — 6 decisions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -262,7 +262,7 @@
 <body>
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · UX review · redundancy cuts</div>
+    <div class="eyebrow">Loopd · UX review · redundancy cuts</div>
     <h1>Six places the app says the same thing twice.</h1>
     <p>Each section is one decision. The grey frame is what ships today, opened in the state that shows the overlap. The red frames are the cut. Tap a pick per section; the bar keeps your choices.</p>
   </div>
@@ -344,7 +344,7 @@
     <div class="sec-head">
       <div class="num">4</div>
       <div class="txt">
-        <h2>Loop detail: two shares, two safety entries, and the row's action again</h2>
+        <h2>Loopd detail: two shares, two safety entries, and the row's action again</h2>
         <p>Header share icon and "Drop this loop to a friend" open the same sheet. "Report a safety concern" sits on every loop but carries no loop (same as the You-tab button). Hype / I'm here is on the week row and again in the "This week" card. "You're in this loop" is a banner next to a Leave button.</p>
       </div>
       <div class="pick" data-sec="4"><span>Pick</span><button data-v="A">A</button><button data-v="B">B</button></div>
@@ -416,7 +416,7 @@ const tabbar = (on='home', opts={}) => {
   if (!opts.noYou) tabs.push(['you','○','You']);
   return `<div class="tabbar">${tabs.map(([k,g,l,b])=>`<div class="${on===k?'on':''}"><span class="g">${g}</span>${l}${b?`<span class="b">${b}</span>`:''}</div>`).join('')}</div>`;
 };
-const head = (right, left) => `<div class="apphead">${left||'<span class="wordmark">Loop<i></i></span>'}<div class="hicons">${right}</div></div>`;
+const head = (right, left) => `<div class="apphead">${left||'<span class="wordmark">Loopd<i></i></span>'}<div class="hicons">${right}</div></div>`;
 const bell = (dot) => `<div class="hicon">🔔${dot?'<span class="dot"></span>':''}</div>`;
 const av = (t='SC') => `<div class="avatar" data-av>${t}</div>`;
 const faces = (arr) => `<span class="faces">${arr.map(f=>`<i class="${f==='SC'||f==='JP'&&false?'me':''}">${f}</i>`).join('')}</span>`;
@@ -429,12 +429,12 @@ const popNow = `<div class="scrim" data-close></div><div class="pop">
   <div class="who">${av('SC').replace('data-av','')}<div><b>Sarah Chen</b><span>Donlon 2F · CS</span><em>Class of 2029</em></div></div>
   <hr><div class="item">○ Your profile <span class="go">›</span></div>
   <hr><div class="sect"><span class="kick">Theme</span><div class="seg"><button data-on="1">☀ Daylight</button><button>☾ Big Red Night</button></div></div>
-  <div class="foot">Loop never shows anyone your activity.</div></div>`;
+  <div class="foot">Loopd never shows anyone your activity.</div></div>`;
 q('#p1-now').innerHTML = `${status()}${head(bell()+av('SC'), '<div><span class="kick">You</span><div class="ttl" style="font-size:19px">Sarah Chen</div></div>')}
 <div class="scroll"><div class="pad">
   <div style="display:flex;gap:12px;align-items:center;margin-top:6px">${av('SC').replace('class="avatar"','class="avatar lg"')}<div><div style="font-size:13px;color:var(--text-secondary)">Donlon 2F · CS</div><div class="mono" style="font-size:12px;color:var(--text-tertiary);margin-top:2px">Class of 2029</div></div></div>
   <div class="stat3 strike" data-why="= home chips"><div><b>1</b><span>loops running</span></div><div><b>0</b><span>intents waiting</span></div><div class="hi"><b>3</b><span>to rate</span></div></div>
-  <div class="card" style="margin-top:22px"><div class="row2"><div style="width:44px;height:44px;border-radius:50%;background:var(--accent-quiet);display:grid;place-items:center">💚</div><div style="flex:1"><div style="font-weight:700;font-size:15px">Dana Okafor</div><div style="font-size:12.5px;color:var(--text-secondary)">your Loop counselor · Advising & Wellbeing</div></div></div><div class="mono" style="font-size:12px;color:var(--text-tertiary);margin-top:10px">Walk-ins Tue + Thu · 2–4p</div><div class="actions"><button class="btn">💬 Message Dana</button><button class="btn">🛡 Report a concern</button></div></div>
+  <div class="card" style="margin-top:22px"><div class="row2"><div style="width:44px;height:44px;border-radius:50%;background:var(--accent-quiet);display:grid;place-items:center">💚</div><div style="flex:1"><div style="font-weight:700;font-size:15px">Dana Okafor</div><div style="font-size:12.5px;color:var(--text-secondary)">your Loopd counselor · Advising & Wellbeing</div></div></div><div class="mono" style="font-size:12px;color:var(--text-tertiary);margin-top:10px">Walk-ins Tue + Thu · 2–4p</div><div class="actions"><button class="btn">💬 Message Dana</button><button class="btn">🛡 Report a concern</button></div></div>
   <div class="card sunken"><span class="kick">○ Private notes</span><p>Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.</p></div>
   <div class="card strike" data-why="theme again" style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:14px">☾ Big Red Night</span><span class="kick">theme</span></div>
 </div></div>${popNow}${tabbar('you')}`;
@@ -444,7 +444,7 @@ const popA = `<div class="scrim" data-close></div><div class="pop">
   <hr><div class="item">💚 Dana Okafor <small>counselor · Tue + Thu 2–4p</small><span class="go">›</span></div>
   <div class="item">🛡 Report a concern <span class="go">›</span></div>
   <hr><div class="sect"><span class="kick">Theme</span><div class="seg"><button data-on="1">☀ Daylight</button><button>☾ Big Red Night</button></div></div>
-  <div class="foot">Your notes on people and loops stay on this phone. Loop never shows anyone your activity.</div></div>`;
+  <div class="foot">Your notes on people and loops stay on this phone. Loopd never shows anyone your activity.</div></div>`;
 const homeA = (extra='') => `${status()}${head(bell()+av('SC'))}${chips()}<div class="scroll"><div class="pad">${week()}<div class="glbl">Wed 9 <span class="c">next up</span></div>${boxRow()}</div></div><div class="fab">+</div>${extra}`;
 const p1a = q('#p1-a');
 p1a.innerHTML = homeA(popA + tabbar('home', { noYou:true }));
@@ -453,7 +453,7 @@ p1a.addEventListener('click', e => { if (e.target.closest('[data-close]')) { q('
 const youB = `${status()}${head(bell()+av('SC'), '<div class="back">‹</div><div class="ttl">You</div>')}
 <div class="scroll"><div class="pad">
   <div style="display:flex;gap:12px;align-items:center;margin-top:6px">${av('SC').replace('class="avatar"','class="avatar lg"')}<div><div style="font:700 17px var(--font-display)">Sarah Chen</div><div style="font-size:13px;color:var(--text-secondary);margin-top:2px">Donlon 2F · CS · Class of 2029</div></div></div>
-  <div class="card" style="margin-top:18px"><div class="row2"><div style="width:44px;height:44px;border-radius:50%;background:var(--accent-quiet);display:grid;place-items:center">💚</div><div style="flex:1"><div style="font-weight:700;font-size:15px">Dana Okafor</div><div style="font-size:12.5px;color:var(--text-secondary)">your Loop counselor · Tue + Thu 2–4p</div></div></div><div class="actions"><button class="btn">💬 Message Dana</button><button class="btn">🛡 Report a concern</button></div></div>
+  <div class="card" style="margin-top:18px"><div class="row2"><div style="width:44px;height:44px;border-radius:50%;background:var(--accent-quiet);display:grid;place-items:center">💚</div><div style="flex:1"><div style="font-weight:700;font-size:15px">Dana Okafor</div><div style="font-size:12.5px;color:var(--text-secondary)">your Loopd counselor · Tue + Thu 2–4p</div></div></div><div class="actions"><button class="btn">💬 Message Dana</button><button class="btn">🛡 Report a concern</button></div></div>
   <div class="card sunken"><span class="kick">○ Private notes</span><p>Your like / neutral / dislike on people and loops stays on this phone. Nobody is ever ranked, scored, or told.</p></div>
   <div class="card" style="padding:12px 15px"><span class="kick">Theme</span><div class="seg"><button data-on="1">☀ Daylight</button><button>☾ Big Red Night</button></div></div>
   <div class="note">no stats strip · no popover · no splash toggle</div>
@@ -514,7 +514,7 @@ q('#p4-now').innerHTML = `${status()}${detailHead(true)}<div class="scroll" id="
   <div class="banner">✓ You're in this loop</div>
   <div class="strike" data-why="share again" style="margin-top:14px"><button class="btn" style="margin-top:0">⇪ Drop this loop to a friend</button></div>
   <button class="btn ghost">⇥ Leave loop</button>
-  <div class="banner q strike" data-why="= you tab" style="align-items:flex-start;gap:12px"><span style="font-size:18px;color:var(--accent-strong)">🛡</span><div><b style="color:var(--text-primary);font-size:14px">Report a safety concern</b><br>Goes straight to Dana Okafor, your Loop counselor. Confidential — never shown to the loop.</div><span class="go">›</span></div>
+  <div class="banner q strike" data-why="= you tab" style="align-items:flex-start;gap:12px"><span style="font-size:18px;color:var(--accent-strong)">🛡</span><div><b style="color:var(--text-primary);font-size:14px">Report a safety concern</b><br>Goes straight to Dana Okafor, your Loopd counselor. Confidential — never shown to the loop.</div><span class="go">›</span></div>
 </div></div>`;
 const weekCardInfo = `<div class="card acc"><span class="kick acc">✓ This week · closed</span><div class="big">Wed · 6:30p · Teagle gym</div><p>Already met this week. Next one Wed 6:30p. Nobody runs it; whoever checks in can move it.</p><div class="mono" style="font-size:12px;color:var(--text-secondary);margin-top:8px">crew hype 🔥🔥🔥🔥 · 4 of 5 &nbsp;·&nbsp; Ryan, Lydia were here</div></div>`;
 const stackA = `<button class="btn ghost" style="margin-top:14px">⇥ Leave loop <span style="font-weight:500;color:var(--text-tertiary)">· you’re in since wk 3</span></button><div class="note">share = header icon only · safety = account popover · hype = week row</div>`;
@@ -546,7 +546,7 @@ q('#p6').innerHTML = `${status()}${head('', '<div class="ttl">State fixes</div>'
 </div></div>`;
 
 /* ---------- picks ---------- */
-const NAMES = { 1:'Identity', 2:'Alerts', 3:'Search', 4:'Loop detail', 5:'Self-seed', 6:'Fixes' };
+const NAMES = { 1:'Identity', 2:'Alerts', 3:'Search', 4:'Loopd detail', 5:'Self-seed', 6:'Fixes' };
 const KEY = 'loop.mock.redundancy';
 let picks = {}; try { picks = JSON.parse(localStorage.getItem(KEY)||'{}'); } catch(e){}
 function renderPicks(){

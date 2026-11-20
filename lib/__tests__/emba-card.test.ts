@@ -107,7 +107,7 @@ it('declares one card on the five tools, with standard keys only, and serves it 
   expect(CARD_HTML).not.toMatch(/https?:|\/\/[a-z]|\bsrc=|\bhref=|@import|url\(|fetch\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|openai|claude/i);
   // Data never becomes markup.
   expect(CARD_HTML).not.toMatch(/innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function/);
-  // Every colour is Loop's own, with a pair wherever light and dark differ; the page behind the panel is the host's.
+  // Every colour is Loopd's own, with a pair wherever light and dark differ; the page behind the panel is the host's.
   expect(CARD_HTML).toContain('<meta name="color-scheme" content="light dark">');
   const style=/<style>([\s\S]*?)<\/style>/.exec(CARD_HTML)![1];
   expect(style.replace(/light-dark\([^)]*\)/g,'')).not.toMatch(/#[0-9a-f]{3,8}\b|rgb|hsl|:\s*(white|black)\b/i);
@@ -124,7 +124,7 @@ it('shows what is waiting, records a tap through the same tool the model calls, 
  try{
   // The handshake comes first, and there is something to see before any result.
   expect(card.sent[0]).toMatchObject({jsonrpc:'2.0',id:1,method:'ui/initialize',params:{appInfo:{name:'loop-card'},appCapabilities:{},protocolVersion:'2026-01-26'}});
-  expect(card.text()).toBe('Loading from Loop');
+  expect(card.text()).toBe('Loading from Loopd');
   await card.settle();
   expect(card.sent[1]).toMatchObject({method:'ui/notifications/initialized'});
   // The host's theme and its style values are followed; a name that is not a style variable is not.
@@ -133,7 +133,7 @@ it('shows what is waiting, records a tap through the same tool the model calls, 
   expect(card.page.documentElement.getAttribute('style')).not.toContain('red');
   // A message from anywhere but the host is ignored.
   card.deliver({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{content:[{type:'text',text:'x'}],structuredContent:{count:0,items:[]}}},null);
-  expect(card.text()).toBe('Loading from Loop');
+  expect(card.text()).toBe('Loading from Loopd');
 
   const result=await card.give('waiting');
   // How many are waiting is said once, in the header.
@@ -192,7 +192,7 @@ it('saves nothing from a stale card when the ask has closed, and says so',async(
  }finally{card.close();await s.close();}
 },120000);
 
-it('says it could not reach Loop and changes nothing, then works on the next tap',async()=>{
+it('says it could not reach Loopd and changes nothing, then works on the next tap',async()=>{
  const f=await fixture(),s=await connect(f.agent);
  await createAsk(t.db,f.memberA,{...f.root,question:'Which days?',kind:'many',options:['Mon','Tue','Wed'],closesAt:inDays(2)});
  const card=mount(s.client);
@@ -204,21 +204,21 @@ it('says it could not reach Loop and changes nothing, then works on the next tap
   expect(card.calls()).toEqual([]);
   card.host.offline=true;
   await card.tap('✓');
-  expect(card.text()).toContain("Couldn't reach Loop. Try again");
+  expect(card.text()).toContain("Couldn't reach Loopd. Try again");
   expect(await answers()).toEqual([]);
   // The choice is still there to send again.
   expect(card.buttons().map(item=>[item.textContent,item.getAttribute('aria-pressed'),item.disabled])).toEqual([['Mon (1)','true',false],['Tue (0)','false',false],['Wed (1)','true',false],['✓',null,false],['✕',null,false]]);
   card.host.offline=false;
   await card.tap('✓');
   expect(card.calls().at(-1)).toEqual({name:'answer',arguments:{team:'@club',number:1,choices:[1,3],via:'card'}});
-  expect(card.text()).not.toContain("Couldn't reach Loop");
+  expect(card.text()).not.toContain("Couldn't reach Loopd");
   expect(card.buttons().map(item=>[item.textContent,item.getAttribute('aria-pressed')])).toEqual([['Mon (1)','true'],['Tue (0)','false'],['Wed (1)','true']]);
   expect(await answers()).toEqual([{route:'assistant_card'}]);
 
   // A result that is an error offers the read again, and the read can then succeed.
   card.deliver({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:{}}});
-  card.deliver({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{isError:true,content:[{type:'text',text:'Loop could not complete this right now.'}],structuredContent:{error:'unavailable'}}});
-  expect(card.text()).toBe("Couldn't reach Loop. Try againTry again");
+  card.deliver({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{isError:true,content:[{type:'text',text:'Loopd could not complete this right now.'}],structuredContent:{error:'unavailable'}}});
+  expect(card.text()).toBe("Couldn't reach Loopd. Try againTry again");
   await card.tap('Try again');
   expect(card.calls().at(-1)).toEqual({name:'waiting',arguments:{}});
   expect(card.text()).toBe(waitingHeadline(0));
@@ -338,7 +338,7 @@ it('still shows what is waiting in an assistant that sends no theme, no styles a
   card.deliver({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{content:[{type:'text',text:'1 thing from your groups.\nAsk #1'}]}});
   expect(card.text()).toBe('1 thing from your groups.');
   card.deliver({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{content:[]}});
-  expect(card.text()).toBe("Couldn't reach Loop. Try again");
+  expect(card.text()).toBe("Couldn't reach Loopd. Try again");
   // Messages a host may send at any time: a theme change is followed, a cancelled call is said, a ping is answered, anything else is refused.
   card.deliver({jsonrpc:'2.0',method:'ui/notifications/host-context-changed',params:{theme:'light'}});
   expect(card.page.documentElement.style.colorScheme).toBe('light');

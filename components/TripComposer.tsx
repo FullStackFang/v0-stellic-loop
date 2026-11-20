@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { emptyTripDraft, mergeExtraction, MENTIONS, setDraftField, type DraftSource, type TripDraft, type TripWorkspace } from '@/lib/trip-draft';
 import './TripComposer.css';
+import { SeatsWord } from '@/components/loading/seats';
 
 type LocalWorkspace = TripWorkspace & { token: string };
 const tokenKey = (id: string) => `loop:trip:edit:${id}`;
@@ -61,7 +62,7 @@ function paintWriter(el: HTMLElement, writer: string, sources: Record<string, Dr
 export function TripComposer({ mode, id }: { mode: 'new' | 'edit'; id?: string }) {
   const router = useRouter();
   const [work, setWork] = useState<LocalWorkspace | null>(null);
-  const [saveState, setSaveState] = useState('Saving…');
+  const [saveState, setSaveState] = useState('Saving');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [mention, setMention] = useState<{ query: string; offset: number; x: number; y: number } | null>(null);
@@ -72,7 +73,7 @@ export function TripComposer({ mode, id }: { mode: 'new' | 'edit'; id?: string }
   const update = useCallback((change: (w: LocalWorkspace) => LocalWorkspace) => {
     setWork(prev => {
       if (!prev) return prev;
-      const next = change(prev); current.current = next; setSaveState('Saving…'); return next;
+      const next = change(prev); current.current = next; setSaveState('Saving'); return next;
     });
   }, []);
   useEffect(() => {
@@ -211,7 +212,7 @@ export function TripComposer({ mode, id }: { mode: 'new' | 'edit'; id?: string }
   const d = work?.draft ?? emptyTripDraft(), pins = work?.pins ?? {};
   const field = (path: string, label: string, value: string, placeholder: string) => <DraftInput path={path} label={label} value={value} placeholder={placeholder} draft={d} pins={pins} onEdit={edit} onClear={clear} />;
   return <div className="tc-page">
-    <header className="tc-header"><Link href="/" className="tc-logo">Loop</Link><span className="tc-save" aria-live="polite">{saveState}</span><Link href={work?.slug ? `/trip/${work.slug}` : '/'} className="tc-cancel">Cancel</Link></header>
+    <header className="tc-header"><Link href="/" className="tc-logo">Loopd</Link><span className="tc-save" aria-live="polite">{saveState}</span><Link href={work?.slug ? `/trip/${work.slug}` : '/'} className="tc-cancel">Cancel</Link></header>
     <main className="tc-layout">
       <section className="tc-compose">
         <input className="tc-name" aria-label="Trip name" placeholder="TRIP NAME" value={d.name} onChange={e => update(w => ({ ...w, draft: { ...w.draft, name: e.target.value } }))} maxLength={60} />
@@ -254,7 +255,7 @@ export function TripComposer({ mode, id }: { mode: 'new' | 'edit'; id?: string }
             </details>
           </div>
         </div>
-        <button className="tc-primary" type="button" onClick={publish}>{busy ? 'Saving…' : mode === 'new' ? 'Create trip' : 'Save'} <span>→</span></button>
+        <button className="tc-primary" type="button" onClick={publish}>{busy ? <SeatsWord word="Saving" plate /> : mode === 'new' ? 'Create trip' : 'Save'} <span>→</span></button>
       </aside>
     </main>
   </div>;

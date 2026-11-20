@@ -11,7 +11,7 @@ export const REACH_LABEL: Record<Way, string> = {
 /**
  * The line and control on a join form: it states the default before the
  * person confirms, with the control to change it beside it. WhatsApp is not
- * offered here, because it needs the member's own message to Loop's number
+ * offered here, because it needs the member's own message to Loopd's number
  * first; that starts from the Reach page.
  */
 export function ReachAtJoin({ email }: { email: string | null }) {

@@ -17,18 +17,18 @@ import {assistantName,singleLine} from './team-text';
 // The text form of every team tool result (design D10). Some assistants show
 // their model only this text, and a member may paste it into a chat, so it
 // must be complete, and member-written words must not be able to pass for a
-// line Loop wrote. Rules, all tested:
+// line Loopd wrote. Rules, all tested:
 //  - no "{", UUID, "|", "**", and no line starting with "#" (a link line is the member's link as stored, and is exempt);
 //  - no line over 200 characters, except a link, which stands alone on its line;
 //  - at most 3,500 characters, ending with a count of what was left out;
 //  - words written by members or organizers appear only after QUOTE, one line at a time.
 export const QUOTE='> ';
 export const LINE=200,TOTAL=3500;
-// Room kept for Loop's own closing lines (what to do next, the note on quoted lines), so items are cut, never those.
+// Room kept for Loopd's own closing lines (what to do next, the note on quoted lines), so items are cut, never those.
 const RESERVE=600;
 const uuid=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 
-/** Member or curated text made safe to sit inside Loop's output: one line, no chat formatting, no link, no braces. */
+/** Member or curated text made safe to sit inside Loopd's output: one line, no chat formatting, no link, no braces. */
 export function plain(text:string):string {
  // Characters are removed first: removing one afterwards could join the pieces of a link or an id.
  const clean=singleLine(text).replace(/[*_~`]/g,'').replace(/\{/g,'(').replace(/\}/g,')').replace(/\|/g,'/').replace(/\s+/g,' ').replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi,'(link omitted)').replace(uuid,'(id omitted)').trim();
@@ -50,7 +50,7 @@ const own=(text:string)=>wrap(text,LINE);
 const who=(person:PersonView)=>person.handle?(person.isYou?`${person.handle} (you)`:person.handle):person.isYou?'you':person.former?'a former teammate':'a teammate';
 const via=(assistant:string|null)=>assistant?` via ${short(assistantName(assistant),40)}`:'';
 
-/** Collects lines within the size limit. Loop's own lines always go in; items are left out, and counted, once space runs short. */
+/** Collects lines within the size limit. Loopd's own lines always go in; items are left out, and counted, once space runs short. */
 class Page {
  private lines:string[]=[];private size=0;private omitted=0;private full=false;private reserve=RESERVE;
  /** How many items went in. Once one is left out, every later one is too, so these are the first ones offered. */
@@ -79,13 +79,13 @@ const state=(record:RecordView)=>record.state==='withdrawn'?' (withdrawn)':recor
 const topic=(key:string|null)=>key?` (${key})`:' (withdrawn)';
 const claimWords={open:'Open.',proposed:'Proposed: waiting for its owner to confirm or decline.',done:'Done.',released:'Released: nobody holds it now.',declined:'Declined by the person it was proposed for.'} as const;
 
-/** One record as lines: Loop's description, then the member's words as quoted data. */
+/** One record as lines: Loopd's description, then the member's words as quoted data. */
 export function recordLines(record:RecordView&{pastDue?:boolean}):string[] {
  const meta=`${who(record.by)}${via(record.assistant)}, ${record.createdAt.slice(0,10)}${record.event?`, event ${record.event}`:''}`;
  const tags=record.tags.length?own(`Tagged: ${record.tags.map(who).join(', ')}.`):[];
  if(record.kind==='output'){
   if(record.url===undefined)return own(`Output #${record.number}${state(record)} by ${meta}. Its text and link were removed.`);
-  return [...own(`Output #${record.number}${state(record)} by ${meta}. Link on ${record.host}${record.recognisedHost?'':' (a host Loop does not recognise; check it before opening)'}:`),
+  return [...own(`Output #${record.number}${state(record)} by ${meta}. Link on ${record.host}${record.recognisedHost?'':' (a host Loopd does not recognise; check it before opening)'}:`),
    ...quote(record.title??''),record.url,...quote(record.summary??''),
    ...(record.conflicts??[]).flatMap(flag=>own(flag.state==='flagged'?`Marked as conflicting with decision #${flag.decision}${topic(flag.topic)}.`:`Needs a re-check: decision #${flag.decision}${topic(flag.topic)} changed after this was marked as conflicting.`)),...tags];
  }
@@ -146,7 +146,7 @@ const head=(team:{handle:string;name:string},today:string,timezone:string)=>`Tea
 const briefLines=(brief:Brief)=>brief.body.split('\n').map(line=>line?quote(line):[QUOTE.trim()]);
 export function formatBrief(brief:TeamBrief):string {
  const page=new Page().line(head(brief.team,brief.today,brief.timezone));
- if(brief.grantExpiresOn)page.line(`This assistant's access to the team ends on ${brief.grantExpiresOn}. The user can renew it on the Loop site.`);
+ if(brief.grantExpiresOn)page.line(`This assistant's access to the team ends on ${brief.grantExpiresOn}. The user can renew it on the Loopd site.`);
  page.line(brief.brief?.deadline?`Deadline: ${brief.brief.deadline}.`:'No deadline is set.',`Open claims: ${brief.counts.openClaims}. Current outputs: ${brief.counts.currentOutputs}. Current decisions: ${brief.counts.currentDecisions}.`,
   `Open asks: ${brief.asks.open}${brief.asks.unanswered?` (${brief.asks.unanswered} waiting for the user's answer; whats_new lists them)`:''}.`,NOTE,'');
  // The brief comes first: it is what the tool is for, and long lists after it must not push it out.
@@ -155,7 +155,7 @@ export function formatBrief(brief:TeamBrief):string {
  if(brief.announcements.length)page.line('','Announcements, newest first:');
  for(const item of brief.announcements)page.item(recordLines(item));
  const {links:linked,texts}=brief.resources;
- if(linked.items.length)page.line('','Links the team keeps (Loop stores the address, not what it points at; open one with the user\'s own access):');
+ if(linked.items.length)page.line('','Links the team keeps (Loopd stores the address, not what it points at; open one with the user\'s own access):');
  for(const item of linked.items)page.item(resourceLines(item));
  page.more(linked.more);
  if(texts.items.length)page.line('','Texts the team keeps (read one with read_document and its title):');
@@ -171,20 +171,20 @@ const tagWords=(tags:Tags)=>[tags.kind&&`Kind: ${tags.kind}`,tags.about&&`About:
 const resourceTagLines=(item:{tags:Tags;described:boolean}):string[]=>item.described?[...(tagWords(item.tags)?quote(`${tagWords(item.tags)}.`):[]),...(item.tags.summary?quote(item.tags.summary):[])]:['Not described yet.'];
 /** One link or text: its name, its address when it is a link, and what an assistant has said about it. */
 function resourceLines(item:ResourceLine):string[] {
- const meta=`${item.url?'Link':'Text'} added ${item.at.slice(0,10)}${via(item.assistant)}${item.url&&!item.recognisedHost?', on a host Loop does not recognise (check it before opening)':''}.`;
+ const meta=`${item.url?'Link':'Text'} added ${item.at.slice(0,10)}${via(item.assistant)}${item.url&&!item.recognisedHost?', on a host Loopd does not recognise (check it before opening)':''}.`;
  return [...own(meta),...quote(item.name),...(item.url?[item.url]:[]),...resourceTagLines(item)];
 }
 /** The result of saving a link or a text, or of removing one. */
 export function formatResourceWrite(result:LinkWrite|TextWrite,team:TeamHead):string {
  if(result.saved){
-  const page=new Page().line(result.existed?`Already saved earlier. Nothing new was added to ${team.handle}.`:`Saved to ${team.handle} (${short(team.name,60)}) as ${result.kind==='link'?'a link':'a text'}.`,...(result.kind==='link'?[`Link on ${result.host}${result.recognisedHost?'':' (a host Loop does not recognise; check it before opening)'}:`]:[]));
+  const page=new Page().line(result.existed?`Already saved earlier. Nothing new was added to ${team.handle}.`:`Saved to ${team.handle} (${short(team.name,60)}) as ${result.kind==='link'?'a link':'a text'}.`,...(result.kind==='link'?[`Link on ${result.host}${result.recognisedHost?'':' (a host Loopd does not recognise; check it before opening)'}:`]:[]));
   page.raw([...quote(result.name),...(result.kind==='link'?[result.url]:[]),...resourceTagLines(result)]);
   return page.line(...(result.described?[]:['It has no tags yet. Work them out from what you read and call describe_resource with its name.']),...(result.kind==='text'&&!result.indexed?['Its words are still being prepared for search. Searching finds them once that is done.']:[]),NOTE).end();
  }
  switch(result.reason){
   case 'cap':return `Not saved. Limit reached: ${RESOURCE_CAPS[result.cap]}`;
   case 'link_refused':return `Not saved. The link was refused: ${links[result.problem]}.`;
-  case 'texts_full':return 'Not saved. Limit reached: 100 texts in one team. Remove some on the Loop site first.';
+  case 'texts_full':return 'Not saved. Limit reached: 100 texts in one team. Remove some on the Loopd site first.';
   default:return `Not saved. ${refusals[result.reason]}`;
  }
 }
@@ -217,11 +217,11 @@ const kinds={output:'output',decision:'decision',claim:'claim',announcement:'ann
 const eventTag=(team:TeamHead,slug:string)=>`${team.handle.split('/')[0]}/${slug}`;
 const eventActions:Record<string,string>={event_added:'added',event_changed:'changed the time or place of',event_archived:'archived',event_restored:'restored'};
 function changeLine(change:Change,team:TeamHead):string {
- // Loop itself makes an idea a plan and notes one that ran out of time; a member proposes or cancels one.
+ // Loopd itself makes an idea a plan and notes one that ran out of time; a member proposes or cancels one.
  if(change.event&&change.action==='event_planned')return `${change.at.slice(0,10)}: idea ${eventTag(team,change.event.slug)} has the people it needs and is now a plan${change.event.starts?`, ${change.event.starts}`:''}.`;
  if(change.event&&change.action==='event_lapsed')return `${change.at.slice(0,10)}: idea ${eventTag(team,change.event.slug)} lapsed without becoming a plan.`;
  if(change.event&&(change.action==='event_proposed'||change.action==='event_cancelled'))return `${change.at.slice(0,10)}: ${who(change.by)}${via(change.assistant)} ${change.action==='event_proposed'?'proposed idea':'cancelled'} ${eventTag(team,change.event.slug)}${change.action==='event_proposed'&&change.event.starts?`, ${change.event.starts}`:''}.`;
- if(change.ask?.forThoseIn&&change.action==='asked')return `${change.at.slice(0,10)}: Loop asked the members who are in on ${change.ask.event?`idea ${eventTag(team,change.ask.event)}`:'an idea'} to choose its day (ask #${change.ask.number}).`;
+ if(change.ask?.forThoseIn&&change.action==='asked')return `${change.at.slice(0,10)}: Loopd asked the members who are in on ${change.ask.event?`idea ${eventTag(team,change.ask.event)}`:'an idea'} to choose its day (ask #${change.ask.number}).`;
  if(change.event)return `${change.at.slice(0,10)}: ${who(change.by)}${via(change.assistant)} ${eventActions[change.action]??'changed'} event ${eventTag(team,change.event.slug)}${change.event.starts&&change.action!=='event_archived'?`, now ${change.event.starts}`:''}.`;
  if(change.ask)return `${change.at.slice(0,10)}: ${change.action==='asked'?`${who(change.by)}${via(change.assistant)} asked the team (ask #${change.ask.number})`:change.action==='ask_extended'?`${who(change.by)}${via(change.assistant)} gave ask #${change.ask.number} a new closing time`:`ask #${change.ask.number} closed`}.`;
  if(!change.record)return `${change.at.slice(0,10)}: something changed.`;
@@ -265,7 +265,7 @@ export function formatResolution(result:TagResolution):string {
  return page.end();
 }
 /** Where to grant is given as a full address when the site knows its own. Otherwise the site is only named. */
-const noAccess=(grantAt?:string)=>`This assistant has no team access yet. The user can grant it ${grantAt?`at this address:\n${grantAt}`:'on the Loop site.'}`;
+const noAccess=(grantAt?:string)=>`This assistant has no team access yet. The user can grant it ${grantAt?`at this address:\n${grantAt}`:'on the Loopd site.'}`;
 export function formatTags(list:TagList,grantAt?:string):string {
  const all=[...list.teams,...list.events,...list.people];
  if(!all.length)return noAccess(grantAt);
@@ -283,7 +283,7 @@ function ideaLacks(event:EventView):string[] {
  if(!event.starts&&!idea.day)return [idea.dayAsk?.open?`It has the people it needs. Ask #${idea.dayAsk.number} is open to those who are in, to choose the day.`
   :idea.dayAsk?`It has the people it needs. Ask #${idea.dayAsk.number} for its day ended with no clear answer: the person who proposed it chooses the day.`:'It has the people it needs and no day yet.'];
  if(!event.starts)return [`It has the people it needs and a day. It needs a start time${event.place?'':' and a place'} from the person who proposed it.`];
- return event.place?[]:['It has the people it needs and a time. It needs a place from the person who proposed it; Loop does not poll for one.'];
+ return event.place?[]:['It has the people it needs and a time. It needs a place from the person who proposed it; Loopd does not poll for one.'];
 }
 function ideaLines(team:TeamHead,event:EventView):string[] {
  const idea=event.idea!,label={idea:'Idea',planned:'Plan',cancelled:'Cancelled',lapsed:'Lapsed idea'}[idea.state];
@@ -293,7 +293,7 @@ function ideaLines(team:TeamHead,event:EventView):string[] {
   ...(idea.state==='idea'&&!event.starts&&!idea.day&&idea.offeredDays.length?own(`Days on offer: ${idea.offeredDays.join(', ')}.`):[]),...ideaLacks(event).flatMap(own),
   ...(event.url?['Its link:',event.url]:[]),...(event.shareUrl?['Share link (people outside the team see its name, time and place, and no names):',event.shareUrl]:[])];
 }
-/** One event as lines: Loop's facts, then the organizer's words as quoted data, then its links, each alone on a line. */
+/** One event as lines: Loopd's facts, then the organizer's words as quoted data, then its links, each alone on a line. */
 export function eventLines(team:TeamHead,event:EventView):string[] {
  if(event.idea)return ideaLines(team,event);
  return [...own(`Event ${eventTag(team,event.slug)}${event.archived?' (archived)':''}: ${timeOf(event)}. ${interestOf(event)}.${event.sourceGone?' No longer listed at the source.':''}`),...quote(event.name),
@@ -318,7 +318,7 @@ export function formatEventDetail(detail:EventDetail):string {
  return page.end();
 }
 const refusals={busy:'Other writes to this team were in progress. Call again in a moment.',organizers_only:'Only owners and organizers of the team can do this.',members_only:'The user follows this team and can read it, but only members can do this.',
- name_taken:'That tag is already used by an event, a group or a person in this team. Choose another tag.',archived:'That event is archived. An owner or organizer can restore it on the Loop site.',
+ name_taken:'That tag is already used by an event, a group or a person in this team. Choose another tag.',archived:'That event is archived. An owner or organizer can restore it on the Loopd site.',
  end_before_start:'The end time is earlier than the start time. Correct the end time.',end_needs_start:'An end time needs a start time. Set the start time too.'} as const;
 const clubCaps={writes_per_hour:caps.writes_per_hour,upcoming_events:'50 upcoming events in one team. Archive some first.'} as const;
 const noEvent=(value:string)=>`Not saved. No current event in this team has the tag ${short(value,60)}. Use events to see what exists.`;
@@ -340,7 +340,7 @@ export function formatLink(result:EventLinkWrite,team:TeamHead):string {
  switch(result.reason){
   case 'cap':return `Not saved. Limit reached: ${result.cap==='linked_events'?'10 upcoming events added by one member in one team.':clubCaps[result.cap]}`;
   case 'link_refused':return `Not saved. The link was refused: ${links[result.problem]}.`;
-  case 'needs_facts':return `Not saved. ${result.listed?'Loop could not read that page.':'Loop does not read that site.'} Ask the user for the event's name and start time, then call link_event again with the same link and with name and startsAt.`;
+  case 'needs_facts':return `Not saved. ${result.listed?'Loopd could not read that page.':'Loopd does not read that site.'} Ask the user for the event's name and start time, then call link_event again with the same link and with name and startsAt.`;
   case 'unknown_nearby':return `Not saved. No nearby item has the code ${short(result.value,20)}. Call whats_on to see the nearby list.`;
   case 'unknown_event':return noEvent(result.value);
   default:return `Not saved. ${refusals[result.reason]}`;
@@ -368,13 +368,13 @@ export function formatInterest(result:InterestWrite,team:TeamHead):string {
   :(result.changed?'Saved. The user is no longer marked as interested.':'The user was not marked as interested. Nothing changed.');
  return new Page().line(said).raw(eventLines(team,result.event)).line(result.interested?'To take it back, call interested again with interested set to false.':'To mark interest again, call interested with this tag.',NOTE).end();
 }
-/** No team was named and Loop will not guess. */
+/** No team was named and Loopd will not guess. */
 export function formatChoice(handles:string[],write:boolean,grantAt?:string):string {
  if(!handles.length)return `${write?'Not saved. ':''}${noAccess(grantAt)}`;
  return new Page().line(write?'Not saved. The user belongs to more than one team, so the team must be named. Ask the user which team, then call again with team set to one of:':'Which team? Call again with team set to one of:',...handles.map(handle=>handle)).end();
 }
-export const failures={forbidden:'Access denied. The user may need to grant this assistant access to the team on the Loop site, or the grant may have ended.',invalid:'Invalid request. Check the field names, types and length limits.',
- conflict:'That operation id was already used for a different request, or the item changed. Read it again before retrying.',not_found:'Nothing in this team matches that reference.',unavailable:'Loop could not complete this right now. Nothing was saved. Try again later.'} as const;
+export const failures={forbidden:'Access denied. The user may need to grant this assistant access to the team on the Loopd site, or the grant may have ended.',invalid:'Invalid request. Check the field names, types and length limits.',
+ conflict:'That operation id was already used for a different request, or the item changed. Read it again before retrying.',not_found:'Nothing in this team matches that reference.',unavailable:'Loopd could not complete this right now. Nothing was saved. Try again later.'} as const;
 
 export type PassageView={title:string;version:number;location:string;text:string;disputed:boolean};
 export function formatPassages(passages:PassageView[]):string {
@@ -412,7 +412,7 @@ const FEW=8;
 // Beyond the usual reserve: the share link, and the question and link to paste.
 const ASK_AFTER=400;
 type AskParts={head:string[];items:string[][];tail:string[]};
-/** One ask in parts: Loop's opening lines, then each option and written answer as an item that may be left out and counted when space runs short, then Loop's closing lines, which are never left out. */
+/** One ask in parts: Loopd's opening lines, then each option and written answer as an item that may be left out and counted when space runs short, then Loopd's closing lines, which are never left out. */
 function askParts(team:TeamHead,ask:AskView,result?:AskResult):AskParts {
  const when=ask.open?`open, closes ${ask.closes} (${ask.timezone})`:`closed ${ask.closes} (${ask.timezone})`;
  const yours=ask.kind==='done'?[ask.yourAnswer?'The user has marked it done.':ask.open?'The user has not done it.':'The user did not do it.']:!ask.yourAnswer?['The user has not answered.']:ask.yourAnswer.text!==null?['The user answered:',...quote(ask.yourAnswer.text).slice(0,3)]
@@ -583,7 +583,7 @@ export function formatDay(list:DayList):string {
 const legWords=(label:string,leg:TravelLeg|null)=>leg?quote(`${label}: ${leg.when}${leg.timed?'':' (day only)'}${leg.place?`, ${leg.place}`:''}${leg.flight?`, flight ${leg.flight}`:''}`):[];
 const travelLines=(entry:TravelEntry)=>[...own(`${who(entry.who)}${via(entry.assistant)}, last changed ${entry.changedOn}:${entry.nearYourArrival?' arrives at the user\'s place within two hours of the user.':''}${entry.nearYourDeparture?' leaves from the user\'s place within two hours of the user.':''}`),
  ...legWords('Arrives',entry.arrival),...legWords('Leaves',entry.departure),...(entry.stay?quote(`Staying: ${entry.stay}`):[])];
-const travelNote='Travel is what each member stated. Loop does not check flights.';
+const travelNote='Travel is what each member stated. Loopd does not check flights.';
 /** Everyone's stated travel in order of arrival, with the members who land near the user named first. */
 export function formatArrivals(list:Arrivals):string {
  const page=new Page().line(head(list.team,list.today,list.timezone));
@@ -615,12 +615,12 @@ export type InviteResult=
  |{saved:true;team:TeamHead;invited:string[];notInvited:NotInvited[];acceptBy:string;site:string}
  |{saved:false;reason:OrganizeWord;notInvited?:NotInvited[]};
 const organizeWords:Record<OrganizeWord,string>={
- needs_write:'This assistant has read access only. Organizing needs read-and-write access, which the user can give on the Assistants page of the Loop site.',
+ needs_write:'This assistant has read access only. Organizing needs read-and-write access, which the user can give on the Assistants page of the Loopd site.',
  organizers_only:'Only owners and organizers of the group can do this.',
- site_only:'A top-level group is renamed or archived on the Loop site, not through an assistant.',
+ site_only:'A top-level group is renamed or archived on the Loopd site, not through an assistant.',
  cap:`Limit reached: ${caps.writes_per_hour}`,name_taken:refusals.name_taken,
- archived:'That group is archived. An owner or organizer can restore it on the Groups page of the Loop site.',
- member_only:'People are invited here as members. Other roles are given on the Members page of the Loop site.',
+ archived:'That group is archived. An owner or organizer can restore it on the Groups page of the Loopd site.',
+ member_only:'People are invited here as members. Other roles are given on the Members page of the Loopd site.',
  no_address:'None of these is an email address.'};
 /** The result of starting, renaming or archiving a group. */
 export function formatGroupChange(result:GroupChangeResult):string {
@@ -628,7 +628,7 @@ export function formatGroupChange(result:GroupChangeResult):string {
  if(result.action==='archive'){
   const more=result.alsoHidden;
   return new Page().line(`Archived. ${result.group.handle} is hidden from everyone${more?`, with the ${more} ${more===1?'group':'groups'} inside it`:''}, and assistant access given on ${more?'them':'it'} has ended. Nothing was deleted.`,
-   'An owner or organizer can restore it on the Groups page of the Loop site.').end();
+   'An owner or organizer can restore it on the Groups page of the Loopd site.').end();
  }
  const page=new Page();
  if(result.action==='start')page.line(`Started. The new group is ${result.group.handle}, inside ${result.inside}. The user is its owner. Its name:`).raw(quote(result.group.name))
@@ -644,6 +644,6 @@ export function formatInvites(result:InviteResult):string {
  // The addresses are shown exactly as invited: only letters, digits and . _ % + - @ are accepted in one.
  for(const address of result.invited)page.item([QUOTE+address]);
  refusedLines(result.notInvited);
- return page.line('Loop sent no email. Each person sees the invitation after signing in to Loop with that address, at:').raw([result.site])
-  .line('Tell the user which addresses were invited. An invitation that was accepted cannot be taken back. One that was not can be cancelled on the Members page of the Loop site.').end('The structured result has every address.');
+ return page.line('Loopd sent no email. Each person sees the invitation after signing in to Loopd with that address, at:').raw([result.site])
+  .line('Tell the user which addresses were invited. An invitation that was accepted cannot be taken back. One that was not can be cancelled on the Members page of the Loopd site.').end('The structured result has every address.');
 }

@@ -9,7 +9,7 @@ import {posts} from './team-core';
 // pilot-metrics). For the operator only, and aggregate only: every number is
 // a count over members or sessions, and nothing here returns a row for one
 // member. What it cannot see is said on the page: a conversation in which the
-// assistant never contacted Loop leaves no trace.
+// assistant never contacted Loopd leaves no trace.
 
 /** The operator is named by sign-in subject in LOOP_OPERATOR_SUBJECTS, apart from who may start a group. On the site only. */
 export const isOperator=(p:Principal|null,env:Record<string,string|undefined>=process.env):p is Principal=>
@@ -22,7 +22,7 @@ export type Route=typeof ROUTES[number];
 export type HostRow={host:string;
  /** Members with at least one session from this host. */
  members:number;sessions:number;
- /** Sessions whose first Loop call was `waiting`, was another tool, or that made no call. */
+ /** Sessions whose first Loopd call was `waiting`, was another tool, or that made no call. */
  waitingFirst:number;otherFirst:number;noCall:number;
  /** Answers and interest marks made by a tap on the card, and by the model in text. */
  byCard:number;byModel:number};

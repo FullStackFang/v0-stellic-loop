@@ -50,7 +50,7 @@ async function ahead(ctx:WriteCtx,startsAt:string|null,offered:string[]):Promise
 /**
  * An idea that has the people it needs. With a start time and a place it
  * becomes a plan, here and once: invites go to everyone who is in. With no
- * start time and no day, Loop opens the one ask it ever opens for the idea, in
+ * start time and no day, Loopd opens the one ask it ever opens for the idea, in
  * the proposer's name, to the members who are in. With no place it does
  * nothing: the proposer is shown that the idea needs one. The caller holds the
  * team's lock and calls this after every write that adds a person or a detail.
@@ -63,7 +63,7 @@ export async function settle(ctx:WriteCtx,eventId:string):Promise<void> {
  if(!idea||idea.n<idea.needed)return;
  if(idea.dated&&idea.placed){
   await q.query("update emba_team_event set state='planned',invites_at=clock_timestamp() where id=$1",[eventId]);
-  // Loop made it a plan; no one member did.
+  // Loopd made it a plan; no one member did.
   await logChange(q,team,'event_planned',{eventId},null,null);
   await endDayAsk(q,team,idea.askId);
   await inviteAll(q,team,eventId);

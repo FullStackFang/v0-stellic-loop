@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Loop · the loop card v3 — one card, three finishes</title>
+<title>Loopd · the loop card v3 — one card, three finishes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -184,7 +184,7 @@
 <body data-finish="raised">
 <div class="wrap">
   <div class="gallery-head">
-    <div class="eyebrow">Loop · the loop card · v3</div>
+    <div class="eyebrow">Loopd · the loop card · v3</div>
     <h1>One card. Every row. Every state.</h1>
     <p>A single standardized card component. Next up shows it open with no tap. Any other row expands into the exact same card when tapped: same slots, same order, same actions. The three phones are the same Home at three moments; the finish picker sets how much the card stands out.</p>
   </div>
@@ -316,13 +316,13 @@ function homeHTML(M, st){
   const glbl = F.state==='soon' ? `Fri · tomorrow <span class="c">next up</span>` : F.state==='live' ? `Fri · today <span class="c live"><span class="ld"></span>meeting now</span>` : `Fri · today <span class="c" style="color:var(--text-tertiary)">met</span>`;
   return `
   <div class="status"><span>${M.clock}</span><span>●●●</span></div>
-  <div class="apphead"><span class="wordmark">Loop<i></i></span>${av('sarah',30)}</div>
+  <div class="apphead"><span class="wordmark">Loopd<i></i></span>${av('sarah',30)}</div>
   <div class="chips"><span class="chip">🔍</span><span class="chip" data-on="1">Your week <span class="n">2</span></span><span class="chip">Waiting <span class="n">1</span></span><span class="chip">Past <span class="n">2</span></span></div>
   <div class="scroll"><div class="pad">
     <div class="wk">${wk}</div>
     <div class="grp"><div class="glbl">${glbl}</div>${st.open.fri ? cardHTML(LOOPS.fri, F, st.fri) : rowHTML(LOOPS.fri, F, st.fri)}</div>
     <div class="grp"><div class="glbl">Sun</div>${st.open.sun ? cardHTML(LOOPS.sun, Su, st.sun) : rowHTML(LOOPS.sun, Su, st.sun)}</div>
-    <div style="text-align:center;font-size:12px;color:var(--text-tertiary);margin-top:28px">Loop keeps the rhythm and the next one.</div>
+    <div style="text-align:center;font-size:12px;color:var(--text-tertiary);margin-top:28px">Loopd keeps the rhythm and the next one.</div>
   </div></div>
   <div class="toast"></div>`;
 }

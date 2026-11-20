@@ -475,7 +475,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs .cs-plus:hover { transform: scale(1.08); } .cs .cs-plus[aria-expanded=true] { background: var(--cs-ink); }
 .cs-plus svg { width: 18px; height: 18px; transition: transform .35s var(--cs-expo); } .cs-plus[aria-expanded=true] svg { transform: rotate(45deg); }
 .cs-sheet.cs-post { flex-basis: min(900px, calc(100vw - 32px)); } .cs-rail > .cs-nothing { flex: 0 0 min(440px, calc(100vw - 32px)); animation: none; }
-/* Three rows, each one line: the line and its button, what Loop read, and the top few tags or plans nearby. */
+/* Three rows, each one line: the line and its button, what Loopd read, and the top few tags or plans nearby. */
 .cs-post-rows { display: grid; gap: 10px; padding-top: 10px; } .cs-post-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 38px; } .cs-post-row .cs-say { flex: 1; min-width: 0; }
 /* No words float bare here (founder, 2026-11-18). The third row is a tinted tray, and its name is a filled speech bubble that sits over the tray's top edge. Hints are quiet filled pills. */
 .cs-post-row.near { position: relative; margin-top: 10px; padding: 16px 10px 9px; border-radius: 16px 16px 16px 5px; background: var(--cs-stub); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 16%, transparent); }
@@ -774,7 +774,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 }
 @media (prefers-reduced-motion: reduce) { .cs *, .cs *::before, .cs *::after { animation: none !important; transition: none !important; } }
 
-/* Loop Ink (openspec/changes/loop-ink-placements): the mark, the tab in the bar, the row in the account card, the mark
+/* Loopd Ink (openspec/changes/loop-ink-placements): the mark, the tab in the bar, the row in the account card, the mark
    in the picker, and the blot a face sits on. Kit tokens only, so it holds in every school's colours. Kept in this one block. */
 .cs-ink { flex: none; width: 1.15em; height: 1.15em; }
 /* the two inks of the mark and of a face's blot are the school's own two colours: the field colour spilled wide, the action colour dropped into it, and thinly where it seeps out between the two */
@@ -851,7 +851,7 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; }
 
 <section class="mk-frame"><h2 class="mk-tab"><b>2</b>Schools: asked for, ranked by how many people asked</h2><p class="mk-why">New section. Every school typed into “Sign up my school”, most asked first. Same name in different capitals counts as one. Press a row to see who asked. Remove is for junk.</p><div class="cs"><div class="mk-adm"><aside class="mk-side"><b class="mk-school">Cornell</b><nav><a>Review<small class="warn">3 waiting</small></a><a aria-current="page">Schools<small>5</small></a><a>Events<small>42</small></a><a>Rewards<small>6</small></a><a>Feeds<small>4</small></a><a>Places<small>31</small></a><a>Tags<small>58</small></a><a>Animals<small>44</small></a><a>Premium<small>2</small></a><a>LinkedIn<small>9</small></a><a>Campus<small></small></a></nav></aside><main class="cs-adm-main"><section>
   <div class="cs-adm-top"><h1>Schools</h1></div>
-  <p class="cs-adm-lede">Schools people signed up that Loop is not at yet. 32 people, 5 schools.</p>
+  <p class="cs-adm-lede">Schools people signed up that Loopd is not at yet. 32 people, 5 schools.</p>
   <ul class="cs-adm-rows"><li><details><summary><i class="mk-rank">1</i><div><b>University of Michigan</b><span>Last asked today</span></div><span class="mk-bar"><i style="width:100%"></i></span><span class="mk-n">14 people</span><button class="cs-btn sm">Remove</button></summary><p class="mk-who">maya.r@gmail.com · dkim@umich.edu · j.osei@outlook.com · 11 more</p></details></li><li><details><summary><i class="mk-rank">2</i><div><b>Rutgers</b><span>Last asked today</span></div><span class="mk-bar"><i style="width:64%"></i></span><span class="mk-n">9 people</span><button class="cs-btn sm">Remove</button></summary><p class="mk-who">sam@rutgers.edu · priya.n@gmail.com · 7 more</p></details></li><li><details><summary><i class="mk-rank">3</i><div><b>Boston University</b><span>Last asked yesterday</span></div><span class="mk-bar"><i style="width:43%"></i></span><span class="mk-n">6 people</span><button class="cs-btn sm">Remove</button></summary><p class="mk-who">leo@bu.edu · 5 more</p></details></li><li><details><summary><i class="mk-rank">4</i><div><b>Fordham</b><span>Last asked 3 days ago</span></div><span class="mk-bar"><i style="width:14%"></i></span><span class="mk-n">2 people</span><button class="cs-btn sm">Remove</button></summary><p class="mk-who">ana@fordham.edu · k.wu@gmail.com</p></details></li><li><details><summary><i class="mk-rank">5</i><div><b>asdf</b><span>Last asked 5 days ago</span></div><span class="mk-bar"><i style="width:7%"></i></span><span class="mk-n">1 person</span><button class="cs-btn sm">Remove</button></summary><p class="mk-who">x@mailinator.com</p></details></li></ul></section></main></div></div></section>
 
 <script>document.querySelector('.mk-adm details').open = true;</script>
