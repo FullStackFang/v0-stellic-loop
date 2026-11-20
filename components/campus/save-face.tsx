@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { subscribeToSaveAction } from '@/app/c/actions';
 import { GROUNDS_HREF, saveHref, SHAPES, type Shape, type Swatch } from '@/lib/campus/save-shapes';
 import '@/app/c/save-face.css';
-import { SeatsWord } from '@/components/loading/seats';
+import { SeatsSmall, SeatsWord } from '@/components/loading/seats';
 
 /** What Ink+ gives here. Nothing is charged for it yet, and the plate says so once the person has subscribed. */
 const PERKS = ['Your picture, no mark', 'Everything in Ink'];
@@ -28,7 +28,8 @@ export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: 
   useEffect(() => { fetch(GROUNDS_HREF).then(got => got.ok ? got.json() : []).then(setSwatches, () => {}); }, []);
   const shown = saveHref(shape, ground, mark, of, true);
   // The pictures that have arrived. Each shape is asked for as the pane opens, and each ground of the shape in view, so a
-  // press shows a picture the browser already has. One that has not arrived leaves its frame, at its own size, empty.
+  // press shows a picture the browser already has. One that has not arrived leaves its frame, at its own size, holding
+  // the small loader (components/loading).
   const [arrived, setArrived] = useState<ReadonlySet<string>>(new Set());
   const here = (href: string) => setArrived(had => had.has(href) ? had : new Set(had).add(href));
   const org = of?.orgId, group = of?.loopId;
@@ -92,7 +93,7 @@ export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: 
       <div className="cs-save-tabs" role="group" aria-label="Shape">{(Object.keys(SHAPES) as Shape[]).map(each => <button key={each} aria-pressed={shape === each} onClick={() => setShape(each)}>{SHAPES[each].name}</button>)}</div>
       {/* The picture as it will be saved: the same address as the file, made small. */}
       {/* eslint-disable-next-line @next/next/no-img-element -- made for this person by /c/save */}
-      <div className="cs-save-view"><div className={`cs-save-frame ${shape}`}><img className={arrived.has(shown) ? '' : 'wait'} src={shown} onLoad={() => here(shown)} alt={`The picture as a ${SHAPES[shape].name.toLowerCase()}`} onError={() => { fetch(shown).then(got => got.status === 409 ? got.text() : '').then(setNone, () => {}); }} /></div></div>
+      <div className="cs-save-view"><div className={`cs-save-frame ${shape}`}>{!arrived.has(shown) && !none && <span className="seats-over"><SeatsSmall line plate /></span>}<img className={arrived.has(shown) ? '' : 'wait'} src={shown} onLoad={() => here(shown)} alt={`The picture as a ${SHAPES[shape].name.toLowerCase()}`} onError={() => { fetch(shown).then(got => got.status === 409 ? got.text() : '').then(setNone, () => {}); }} /></div></div>
       {/* A sticker has no ground, so no colour to pick: the row keeps its place. */}
       <div className="cs-save-inks" role="group" aria-label="Colour" style={shape === 'sticker' ? { visibility: 'hidden' } : undefined}>{swatches.map(each => <button key={each.key} aria-label={each.name} aria-pressed={ground === each.key} style={{ '--c': each.colour } as React.CSSProperties} onClick={() => setGround(each.key)} />)}</div>
       <div className="cs-save-marks" role="group" aria-label="Loopd mark"><button aria-pressed={mark} onClick={() => setMark(true)}>With the mark</button><button aria-pressed={!mark} disabled={wait} onClick={() => { if (mark) void noMark(); }}>No mark<b>Ink+</b></button></div>

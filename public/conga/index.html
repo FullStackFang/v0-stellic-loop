@@ -73,10 +73,6 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .where { display: flex; gap: 4px; padding: 4px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
 .where button { padding: 9px 14px; border-radius: 99px; background: none; font-weight: 700; font-size: 14px; white-space: nowrap; }
 .where button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-/* What each control does: three side by side on one plate, the control on a key cap and its effect under it. */
-.keys { list-style: none; padding: 10px; display: flex; gap: 8px; border-radius: 16px 16px 16px 4px; background: var(--field); }
-.keys li { flex: 1; min-width: 0; display: grid; gap: 5px; justify-items: start; align-content: start; font-size: 13px; font-weight: 600; line-height: 1.25; }
-.keys kbd { font: inherit; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); white-space: nowrap; }
 .quit { text-decoration: none; color: inherit; padding: 12px 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
 .score { display: flex; gap: 10px; align-items: stretch; }
 .score div { flex: 1; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: var(--field); display: grid; gap: 2px; }
@@ -84,7 +80,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .score span { font-size: 13px; font-weight: 700; }
 @media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
-  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 11px; padding: 5px 8px 5px 5px; } .pause { left: 110px; } .keys { padding: 8px; gap: 6px; } .keys li { font-size: 12px; } .keys kbd { padding: 3px 8px; } }
+  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 11px; padding: 5px 8px 5px 5px; } .pause { left: 110px; } }
 </style>
 </head>
 <body>
@@ -101,20 +97,18 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
   <h1>Longest line wins</h1>
   <p>Walk into a stray and it joins your line. Walk into another line and yours scatters for anyone to grab.</p>
   <div class="faces" id="faces"></div>
-  <ul class="keys"></ul>
   <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div><a class="quit" href="/">Back to Loopd</a></div>
 </section>
 
 <section class="card" id="over" hidden>
   <h1 id="overHead">Scattered</h1>
   <div class="score"><div><b id="overCount">1</b><span>in your line</span></div><div><b id="overBest">1</b><span>your best</span></div></div>
-  <div class="row"><button class="go" id="again">Again</button></div>
+  <div class="row"><button class="go" id="again">Again</button><a class="quit" href="/">Back to Loopd</a></div>
 </section>
 
 <section class="card" id="paused" hidden>
   <h1>Paused</h1>
-  <ul class="keys"></ul>
-  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button></div>
+  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><a class="quit" href="/">Back to Loopd</a></div>
 </section>
 
 <script type="module">
@@ -201,12 +195,8 @@ function begin() {
 }
 $('go').onclick = $('again').onclick = begin;
 
-// What the controls are, for the hand that is on them: a mouse and keys, or a thumb.
+// What the controls are, in a word each, under the scoreboard for the whole game: for a mouse and keys, or a thumb.
 function controls() {
-  const rows = touched ? [['Drag', 'Steer, from anywhere'], ['Dash', 'Faster, but sheds animals'], ['Pause button', 'Stop the game']]
-    : [['Mouse', 'Steer. A and D turn too'], ['Space', 'Dash: faster, but sheds animals'], ['P', 'Pause. Esc too']];
-  for (const list of document.querySelectorAll('.keys')) list.innerHTML = rows.map(([key, does]) => `<li><kbd>${key}</kbd>${does}</li>`).join('');
-  // The same three in a word each, under the scoreboard for the whole game.
   $('hint').innerHTML = (touched ? [['Drag', 'steer'], ['Dash', 'faster']] : [['Mouse', 'steer'], ['Space', 'dash'], ['P', 'pause']]).map(([key, does]) => `<span><kbd>${key}</kbd>${does}</span>`).join('');
 }
 

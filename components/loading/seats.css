@@ -75,3 +75,4 @@
 .cs-map, .cs-inkpage { position: relative; }
 .seats-over { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; pointer-events: none; }
 .cs-pet { position: relative; }
+.cs-save-frame { position: relative; }
