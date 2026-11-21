@@ -55,8 +55,13 @@ export function fromPool(url: string | undefined): Db {
   if (!url) throw new Error("DATABASE_URL (or POSTGRES_URL) is not set");
   const pool = new pg.Pool({
     ...poolConfig(url),
-    // A page starts its reads together (a team page starts up to eight), so the pool must hold one page's worth.
-    max: 10,
+    // A page starts its reads together: its layout, the page under it and the bar's counters ask for about sixteen
+    // connections at their peak. With ten, the rest queued, and under load a read waited its ten seconds and failed
+    // ("timeout exceeded when trying to connect"). The database is reached through the transaction pooler, which has room.
+    max: 20,
+    // Opening a connection is a TLS handshake with the pooler (about 0.6 s from a laptop). The default closes one after
+    // ten idle seconds, so a page opened after a short pause paid for new ones; a minute keeps them through a visit.
+    idleTimeoutMillis: 60_000,
     // With every connection in use, a read waits this long for one and then fails; without it, it would wait without limit.
     connectionTimeoutMillis: 10_000,
     types: {
