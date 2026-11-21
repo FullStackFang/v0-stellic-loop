@@ -10,7 +10,8 @@ import { addFeed, addHandListing } from '@/lib/campus/manage';
 import { checkIn, imIn, joinByToken } from '@/lib/campus/outings';
 import { postPlan } from '@/lib/campus/plans';
 import { saveReward, useBuildingReward, useGroupReward } from '@/lib/campus/rewards';
-import { campusScreen } from '@/lib/campus/screen';
+import { barScreen, campusScreen } from '@/lib/campus/screen';
+import type { Db } from '@/lib/db';
 import { fit } from '@/lib/campus/search';
 
 // Cases an independent review of loop-campus-rewards found (tasks 4.9 and 7.7), each pinned here.
@@ -32,6 +33,21 @@ async function together(listing: string, people: string[], at: Date = NOW) {
 }
 const noPhotos = async () => ({});
 const see = (personId: string | null, now: Date = NOW) => campusScreen(t.db, cornell, personId ? { personId, admin: false } : null, { now, photos: noPhotos });
+
+it('a bar that draws no week reads the same account card as the week, and none of the week', async () => {
+  const [a, b] = [await person('Ana Smith'), await person('Ben')];
+  for (let n = 3; n >= 1; n--) await together(await event({ title: `Earlier ${n}`, at: hours(-24 * n), end: hours(-24 * n + 1) }), [a, b], hours(-24 * n));
+  await event({ title: 'This week' });
+  const said: string[] = [];
+  const watched: Db = { query: (text, params) => { said.push(text); return t.db.query(text, params); }, tx: fn => t.db.tx(q => fn({ query: (text, params) => { said.push(text); return q.query(text, params); } })) };
+  const bar = await barScreen(watched, cornell, { personId: a, admin: false });
+  expect(bar.viewer).toEqual((await see(a)).viewer);
+  expect(bar.viewer).toMatchObject({ first: 'Ana', outings: 3 });
+  expect(bar).toMatchObject({ campus: { slug: 'cornell' }, tickets: [], earning: [], live: null, places: [] });
+  // The level counts the person's outings (the one read that joins an event); nothing else of the week is read.
+  expect(said.filter(text => /campus_listing|campus_place|campus_reward/.test(text) && !/ as others/.test(text))).toEqual([]);
+  expect((await barScreen(t.db, cornell, null)).viewer).toBeNull();
+});
 
 it('a reward unlocked at the end of an event can still be shown and marked used after it ends, for a day', async () => {
   const [a, b] = [await person('Ana'), await person('Ben')], cafe = await event({ end: hours(1) });

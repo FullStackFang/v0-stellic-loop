@@ -1,6 +1,5 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { db } from '@/lib/db';
-import type { Principal } from '@/lib/emba/access';
 import { barGroups } from '@/lib/campus/bar-groups';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { redirect } from 'next/navigation';
@@ -9,38 +8,35 @@ import { OnYou, startOnYou } from '@/app/c/on-you';
 import { SeatsSmall } from '@/components/loading/seats';
 import { getPortalPrincipal, getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { frontIsCampus } from '@/lib/campus/schools';
-import { CUSTOM, PHOTO, animal, animalOf, customFace } from '@/lib/campus/animals';
-import { customFaces } from '@/lib/campus/custom-face';
-import { planOf, type Plan } from '@/lib/campus/ink';
-import { campusOf, pickedFaces } from '@/lib/campus/people';
+import { PHOTO } from '@/lib/campus/animals';
+import type { Plan } from '@/lib/campus/ink';
 import { Kit } from '@/components/campus/kit';
 import { SiteFoot } from '@/components/campus/foot';
 import { SignOut } from '@/components/campus/sign-out';
 import { findCampus } from '@/lib/campus/listings';
 import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
 import { kitScript } from '@/lib/campus/kit-script';
-import { campusScreen } from '@/lib/campus/screen';
-import { campusViewer, lookingAt } from '@/lib/campus/session';
+import { barScreen } from '@/lib/campus/screen';
+import { campusViewer, lookingAt, type CampusViewer } from '@/lib/campus/session';
 import type { Screen } from '@/lib/campus/view';
 import { Bar } from './bar';
 import { SessionRefresh } from './session-refresh';
 import '@/app/c/campus.css';
 import './campus-look.css';
 
-/** Whose colours the person sees unless they pick others (their school's, or Loopd's own), and the animal that is their face. */
-async function looks(principal: Principal): Promise<{ kit: string; face: string | null; plan: Plan }> {
+/**
+ * The account card, read on its own (lib/campus/screen.ts, accountViewer): the same card the campus pages draw, without
+ * their week. With it, whose colours the person sees unless they pick others (their school's, or Loopd's own), and the
+ * animal that is their face. If the card cannot be read the screen is null and the bar has a plain card.
+ */
+async function account(viewer: CampusViewer | null): Promise<{ kit: string; face: string | null; plan: Plan; screen: Screen | null }> {
+  const kit = viewer && viewer.kit !== 'loop' && viewer.campus ? viewer.campus.slug : 'loop';
   try {
-    const [school, [faces, plan, made]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await planOf(q, principal.personId), await customFaces(q, [principal.personId])] as const)]);
-    const picked = faces.get(principal.personId), own = made.get(principal.personId)?.token;
-    return { kit: school?.slug ?? 'loop', face: picked === PHOTO ? null : picked === CUSTOM && own ? customFace(own) : animal(picked === undefined || picked < 0 ? animalOf(principal.personId) : picked), plan };
-  } catch { return { kit: 'loop', face: null, plan: 'free' }; }
-}
-/** The person's campus screen, for the account card: the same one the campus pages draw theirs from (app/c/ink/page.tsx). Null if it cannot be read; the bar then has a plain card. */
-async function accountScreen(): Promise<Screen | null> {
-  try {
-    const viewer = await campusViewer(), campus = viewer && (await lookingAt() ?? viewer.campus ?? await findCampus(db(), DEFAULT_CAMPUS));
-    return viewer && campus ? await campusScreen(db(), campus, { personId: viewer.personId, admin: viewer.admin, groups: [] }) : null;
-  } catch { return null; }
+    const campus = viewer && (await lookingAt() ?? viewer.campus ?? await findCampus(db(), DEFAULT_CAMPUS));
+    if (!viewer || !campus) return { kit, face: null, plan: 'free', screen: null };
+    const screen = await barScreen(db(), campus, { personId: viewer.personId, admin: viewer.admin, groups: [] }), me = screen.viewer!;
+    return { kit, face: me.face === PHOTO ? null : me.photo, plan: me.plan, screen };
+  } catch { return { kit, face: null, plan: 'free', screen: null }; }
 }
 
 export default async function GroupsLayout({ children }: { children: React.ReactNode }) {
@@ -53,7 +49,8 @@ export default async function GroupsLayout({ children }: { children: React.React
   if (principal) {
     // The bar's counters are read beside everything else, not after the bar is drawn (app/c/on-you.tsx).
     startOnYou();
-    const [groups, look, screen, viewer] = await Promise.all([barGroups(principal), looks(principal), accountScreen(), campusViewer().catch(() => null)]);
+    const seen = campusViewer().catch(() => null);
+    const [groups, { screen, ...look }, viewer] = await Promise.all([barGroups(principal), seen.then(account), seen]);
     // The colours they may wear: Loopd's and their schools', or every school's with Ink+ (components/campus/kit.tsx).
     const yours = viewer?.kits ?? ['loop', look.kit], any = viewer?.anyKit ?? false;
     content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit, yours, any) }} /><Kit own={look.kit} yours={yours} any={any} />

@@ -20,10 +20,13 @@
 
 ## 3. The account card's own read (D3)
 
-- [ ] 3.1 List every field of `screen` that `Bar` and `Account` use; confirm it is `screen.viewer` and `screen.campus` alone
-- [ ] 3.2 Extract `accountViewer` from the tail of `campusScreen`, reading in one wave; `campusScreen` calls it
-- [ ] 3.3 Use it in `app/groups/layout.tsx` (replacing `accountScreen` and `looks`, keeping the plain-card fallback) and in `app/c/site-bar.tsx`
-- [ ] 3.4 Tests: `app/groups/group-tree-pages.test.tsx` and the campus screen tests still pass; add one that the bar's read makes no listing query
+- [x] 3.1 List every field of `screen` that `Bar` and `Account` use; confirm it is `screen.viewer` and `screen.campus` alone
+  - `Bar` and `Account` read `screen.viewer` only; `CampusBar` reads `screen.campus` and `screen.viewer`. So a `Screen` with empty lists (`barScreen`) touches no component.
+- [x] 3.2 Extract `accountViewer` from the tail of `campusScreen`, reading in one wave; `campusScreen` calls it
+  - Two waves: the person's rows, school, LinkedIn schools and campuses together, then the picker's animals (which need the schools).
+- [x] 3.3 Use it in `app/groups/layout.tsx` (replacing `accountScreen` and `looks`, keeping the plain-card fallback) and in `app/c/site-bar.tsx`
+- [x] 3.4 Tests: `app/groups/group-tree-pages.test.tsx` and the campus screen tests still pass; add one that the bar's read makes no listing query
+  - Added in `lib/__tests__/campus-edges.test.ts` (`app/c/campus-screen.test.tsx` holds another session's work).
 - [ ] 3.5 Open a groups page and the Ink page signed in and check the card against the week page's card; commit by path
 
 ## 4. The Assistants page (D4)
