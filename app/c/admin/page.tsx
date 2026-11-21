@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { db } from '@/lib/db';
-import { customFace, MASCOT } from '@/lib/campus/animals';
+import { customFace } from '@/lib/campus/animals';
 import { clubClaims, type AdminClaim } from '@/lib/campus/club-claim';
 import { catalogue } from '@/lib/campus/animal-tiers';
 import { premiumAsks } from '@/lib/campus/custom-face';
@@ -17,7 +17,7 @@ import { campusPlaces } from '@/lib/campus/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { WAYS, type Way } from '@/lib/campus/stats';
 import { schoolsAsked } from '@/lib/campus/school-ask';
-import { frontIsCampus, schoolOf } from '@/lib/campus/schools';
+import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { siteBar } from '../site-bar';
 import { WordsField } from '@/components/campus/words-field';
@@ -149,32 +149,25 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   }
 
   function animals() {
-    type Pet = { key: string; src: string; name: string; named: string; words: string[]; now: keyof typeof TIER; school: string | null; field: 'face' | 'picture'; value: string };
-    const pets: Pet[] = [...all.built.map((one): Pet => ({ key: String(one.face), src: one.src, name: one.name, named: one.name, words: one.words, now: one.tier, school: one.school, field: 'face', value: String(one.face) })),
-      ...all.made.map((one): Pet => ({ key: one.token, src: one.src, name: one.name ?? (one.email ? `Made by ${one.email}` : 'Made animal'), named: one.name ?? '', words: one.words, now: one.tier ?? 'own', school: one.school, field: 'picture', value: one.token }))];
-    // Any animal can be made a school's own: the schools Loopd is at, and the ones the app ships a mascot for. The chooser starts on the animal's school, or this campus's.
-    const home = schoolOf(campus.slug), schools = [...new Set([...campuses.map(each => schoolOf(each.slug)), ...Object.values(MASCOT)])];
-    const schoolName = (slug: string) => campuses.find(each => each.slug === slug)?.name ?? slug[0].toUpperCase() + slug.slice(1);
-    const chooser = (name: string, at: string | null, label: string) => <select name={name} defaultValue={at ?? home} aria-label={label}>{schools.map(each => <option key={each} value={each}>{schoolName(each)}</option>)}</select>;
-    const stands = (pet: Pet) => pet.now === 'school' && pet.school ? schoolName(pet.school) : TIER[pet.now];
+    type Pet = { key: string; src: string; name: string; named: string; words: string[]; now: keyof typeof TIER; field: 'face' | 'picture'; value: string };
+    const pets: Pet[] = [...all.built.map((one): Pet => ({ key: String(one.face), src: one.src, name: one.name, named: one.name, words: one.words, now: one.tier, field: 'face', value: String(one.face) })),
+      ...all.made.map((one): Pet => ({ key: one.token, src: one.src, name: one.name ?? (one.email ? `Made by ${one.email}` : 'Made animal'), named: one.name ?? '', words: one.words, now: one.tier ?? 'own', field: 'picture', value: one.token }))];
     const within = (which: Show) => pets.filter(pet => which === 'all' || pet.now === which || (which === 'off' && pet.now === 'own'));
     /* eslint-disable @next/next/no-img-element -- icons from public/animals, and pictures Loopd made, served from the database */
     return <section>{top()}
       <nav className="cs-adm-seg" aria-label="Show">{SHOW.map(each => <Link key={each} href={`${at('animals')}&show=${each}`} aria-current={each === show ? 'true' : undefined}>{each === 'all' ? 'All' : TIER[each]} {within(each).length}</Link>)}</nav>
       {/* Pick any number, then move them together. The bar counts what is picked, and shows only then. With one picked, its card shows beside the grid: its name, and the words the picker finds it by. */}
       <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} /><PickCount />
-        <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{stands(pet)}</span></label>
-          <div className="cs-adm-card"><p><img src={pet.src} alt="" /><i>{pet.now === 'school' ? `School · ${stands(pet)}` : TIER[pet.now]}</i></p>
+        <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label>
+          <div className="cs-adm-card"><p><img src={pet.src} alt="" /><i>{TIER[pet.now]}</i></p>
             <span className="cs-adm-fld"><b>Name</b><input name={`name-${pet.value}`} defaultValue={pet.named} placeholder="Made animal" maxLength={40} aria-label={`Name of ${pet.name}`} /></span>
             <span className="cs-adm-fld"><b>Search words</b><WordsField name={`words-${pet.value}`} words={pet.words} /></span>
             <button className="cs-btn go" formAction={setAnimalNameAction}>Save</button>
-            {/* Where it is offered, under the words, with where it is now pressed. School goes with the school it is for, chosen beside it. */}
-            <span className="cs-adm-fld cs-adm-moves"><b>Move to</b><span>{MOVES.map(tier => tier === 'school'
-              ? <span key={tier} className="cs-adm-school">{chooser(`school-${pet.value}`, pet.school, `School for ${pet.name}`)}<button name="tier" value={tier} aria-pressed={pet.now === 'school'}>{TIER[tier]}</button></span>
-              : <button key={tier} name="tier" value={tier} aria-pressed={tier === pet.now || (tier === 'off' && pet.now === 'own')}>{TIER[tier]}</button>)}
+            {/* Where it is offered, under the words, with where it is now pressed. School makes it the own animal of this campus's school. */}
+            <span className="cs-adm-fld cs-adm-moves"><b>Move to</b><span>{MOVES.map(tier => <button key={tier} name="tier" value={tier} aria-pressed={tier === pet.now || (tier === 'off' && pet.now === 'own')}>{TIER[tier]}</button>)}
               {pet.field === 'picture' && <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details>}</span></span></div></li>)}</ul>
         <p className="cs-adm-lede">Tap animals to pick them, then move them together. Whoever already has one keeps it. Tap one alone to name it and set the words it is found by.</p>
-        <div className="cs-adm-tray"><span>picked · move to</span><button name="tier" value="core">Core</button><button name="tier" value="premium">Premium</button><span className="cs-adm-school">{chooser('school', null, 'School for the picked animals')}<button name="tier" value="school">School</button></span><button name="tier" value="off">Off</button>
+        <div className="cs-adm-tray"><span>picked · move to</span><button name="tier" value="core">Core</button><button name="tier" value="premium">Premium</button><button name="tier" value="school">School</button><button name="tier" value="off">Off</button>
           <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details><button type="reset" className="x">Clear</button></div></form>
     </section>;
     /* eslint-enable @next/next/no-img-element */
