@@ -51,7 +51,9 @@ export function FaceDot({ face, className = '' }: { face: Face; className?: stri
   // Someone with a plan sits on a blot of their own, not a plain circle, Ink+ with sparks round it, and the name says which.
   const name = face.plan !== 'free' ? `${who}, ${face.me ? 'you have' : 'has'} ${face.plan === 'plus' ? 'Ink+' : 'Ink'}` : who;
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals, or the sign-in account's photo at its own address
-  const dot = face.photo ? <img className={cls} src={face.photo} alt={name} title={name} /> : <i className={cls} role="img" aria-label={name} title={name}>{who.slice(0, 1).toUpperCase()}</i>;
+  // Pointed at, it is named with its school by one tag for the page (components/campus/face-tag.tsx), not the browser's slow title.
+  const tag = { 'data-who': who, 'data-school': face.school?.name, 'data-school-kit': face.school?.slug };
+  const dot = face.photo ? <img className={cls} src={face.photo} alt={name} {...tag} /> : <i className={cls} role="img" aria-label={name} {...tag}>{who.slice(0, 1).toUpperCase()}</i>;
   return face.plan !== 'free' ? <span className="cs-inked"><InkBlot seed={`${face.first}${face.photo ?? ''}`} />{dot}{face.plan === 'plus' && <InkSparks />}</span> : dot;
 }
 const Stack = ({ faces }: { faces: Face[] }) => faces.length ? <span className="cs-stack">{faces.slice(0, 6).map((face, at) => <FaceDot key={at} face={face} />)}</span> : null;

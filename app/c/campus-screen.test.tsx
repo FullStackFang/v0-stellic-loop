@@ -122,6 +122,17 @@ describe('who sees whom', () => {
     // 36 to 47 are the premium animals; the number after them has no picture.
     await expect(pickFace(t.db, ben.personId, 48)).rejects.toThrow('Pick one of the animals.');
   });
+  // A face pointed at is named with its school (components/campus/face-tag.tsx, public/demo/mockups-school-labels.html).
+  it('says which school a face is at, once the person has been placed at one', async () => {
+    const { ana, ben } = await world();
+    await show(as(ana));
+    expect(screen.getByRole('img', { name: 'Ben' })).not.toHaveAttribute('data-school');
+    cleanup();
+    await campusOf(t.db, { personId: ben.personId, verifiedEmail: 'ben@cornell.edu' });
+    await show(as(ana));
+    expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('data-school', cornell.name);
+    expect(screen.getByRole('img', { name: 'Ben' })).toHaveAttribute('data-school-kit', 'cornell');
+  });
   it('shows on the groups pages the same account card as the campus screen', async () => {
     const { ana } = await world();
     const card = async (admin: boolean) => { cleanup(); render(<Bar groups={[]} face={null} account={<button>Sign out</button>} screen={await campusScreen(t.db, cornell, as(ana, admin), { photos: noPhotos })} />); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); return within(screen.getByRole('dialog', { name: 'Your level' })); };

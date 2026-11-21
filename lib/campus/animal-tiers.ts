@@ -55,6 +55,12 @@ export async function schoolOfPerson(q: Q, personId: string): Promise<string | n
   const slug = (await q.query<{ slug: string }>('select c.slug from campus_person p join campus c on c.id=p.campus_id where p.person_id=$1', [personId])).rows[0]?.slug;
   return slug ? schoolOf(slug) : null;
 }
+/** The school each person is at, by the campus they were placed on: its slug and name. A person at no school is left out. */
+export async function schoolsAt(q: Q, personIds: readonly string[]): Promise<Map<string, { slug: string; name: string }>> {
+  if (!personIds.length) return new Map();
+  const { rows } = await q.query<{ id: string; slug: string; name: string }>('select p.person_id::text as id,c.slug,c.name from campus_person p join campus c on c.id=p.campus_id where p.person_id=any($1::uuid[])', [personIds]);
+  return new Map(rows.map(row => [row.id, { slug: schoolOf(row.slug), name: row.name }]));
+}
 /** Every school a person has: the one they are at, then the ones their LinkedIn profile unlocked (lib/campus/linkedin.ts). */
 export async function schoolsOfPerson(q: Q, personId: string): Promise<string[]> {
   const [at, { added }] = [await schoolOfPerson(q, personId), await addedSchools(q, personId)];

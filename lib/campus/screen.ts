@@ -7,7 +7,7 @@ import { findListing, listCampuses, weekListings, type Campus, type Listing } fr
 import { schoolOf } from './schools';
 import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
 import { animal, animalOf, CUSTOM, customFace, PHOTO } from './animals';
-import { picks as offered, schoolOfPerson } from './animal-tiers';
+import { picks as offered, schoolOfPerson, schoolsAt } from './animal-tiers';
 import { customFaces, type CustomFace } from './custom-face';
 import { plansOf, type Plan } from './ink';
 import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
@@ -85,7 +85,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     for (const listing of listings) if (listing.origin === 'member' && listing.postedBy) shown.add(listing.postedBy);
     for (const some of choices.values()) for (const choice of some) shown.add(choice.personId);
   }
-  const names = await firstNames(db, [...shown]), picks = await pickedFaces(db, [...shown]);
+  const [names, picks, schoolAt] = await Promise.all([firstNames(db, [...shown]), pickedFaces(db, [...shown]), schoolsAt(db, [...shown])]);
   // Everyone has an animal: the one they picked, else the one their id works out to. A photo is read only for a person
   // who picked theirs, and for the viewer, who is offered it in the account card.
   const wanted = [...shown].filter(id => id === me || picks.get(id) === PHOTO);
@@ -95,7 +95,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   const made = await customFaces(db, [...shown]), plans = await plansOf(db, [...new Set([...shown, ...(viewer ? [viewer.personId] : [])])]);
   const planOf = (id: string) => plans.get(id) ?? 'free';
   const { picture } = facesOf({ picks, photos, made });
-  const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: picture(id), plan: planOf(id), ...more });
+  const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: picture(id), plan: planOf(id), school: schoolAt.get(id) ?? null, ...more });
 
   let live: Live | null = null;
   const tickets = listings.map((listing): Ticket => {
@@ -181,7 +181,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
         token: mine.token, registered: self.registered, here: iAmHere, canLeave: !iAmHere,
         canEdit: listing.origin === 'member' && listing.postedBy === me && Date.parse(listing.startsAt) > now.getTime(),
         members: mine.members.map(member => face(member.personId, { here: member.here, me: member.personId === me })),
-        choices: (choices.get(mine.id) ?? []).map(choice => ({ ...choice, first: names.get(choice.personId)?.first ?? 'Someone', photo: picture(choice.personId), plan: planOf(choice.personId) })),
+        choices: (choices.get(mine.id) ?? []).map(choice => ({ ...choice, first: names.get(choice.personId)?.first ?? 'Someone', photo: picture(choice.personId), plan: planOf(choice.personId), school: schoolAt.get(choice.personId) ?? null })),
       } : null,
       action, status, joinToken,
     };
