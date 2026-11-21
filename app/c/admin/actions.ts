@@ -10,7 +10,7 @@ import { deletePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
 import { approveLinkedin, removeLinkedin } from '@/lib/campus/linkedin';
 import { removeAskedSchool } from '@/lib/campus/school-ask';
-import { findCampus, listCampuses, type Campus } from '@/lib/campus/listings';
+import { findCampus, type Campus } from '@/lib/campus/listings';
 import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
 import { savePlace } from '@/lib/campus/places';
 import { saveReward, setRewardHidden } from '@/lib/campus/rewards';
@@ -130,13 +130,12 @@ export async function splitTagAction(data: FormData): Promise<void> {
 const MOVED: Record<string, string> = { core: 'Core now: it is in everyone’s picker.', premium: 'Premium now: people who subscribed can pick it.', school: 'School now: free to people of its school, and nobody else.', off: 'Off: it is in nobody’s picker. Whoever has it keeps it.', own: 'Its maker’s alone again. Whoever else uses it keeps it.' };
 /** Core, Premium or Off on the animals that were picked: ones shipped with the app, by number, and ones people had made. Off, for a made one, is its maker's alone. */
 export async function setTierAction(data: FormData): Promise<void> {
-  await admin(data, async () => {
+  await admin(data, async campus => {
     const tier = text(data, 'tier'), faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String);
     if (!faces.length && !pictures.length) throw new Error('Pick an animal first');
-    // School goes with the school it is for: the one picked animal's own chooser, or the bar's when more are picked.
-    const one = faces.length + pictures.length === 1 ? faces[0] ?? pictures[0] : null, school = tier === 'school' ? text(data, one ? `school-${one}` : 'school') : '';
-    if (tier === 'school' && !(await listCampuses(db())).some(each => schoolOf(each.slug) === school) && !Object.values(MASCOT).includes(school)) throw new Error('Pick the school it is for');
-    for (const face of faces) await setBuiltTier(db(), number(face), tier, school);
+    // School makes it the own animal of the school of the campus the page is on. A mascot keeps its own school.
+    const school = schoolOf(campus.slug);
+    for (const face of faces) await setBuiltTier(db(), number(face), tier, MASCOT[number(face)] ?? school);
     for (const picture of pictures) await setPictureTier(db(), picture, tier === 'off' ? 'own' : tier, school);
     const many = faces.length + pictures.length;
     return many === 1 ? MOVED[tier] ?? 'Saved.' : `${many} animals moved to ${tier}. Whoever has one keeps it.`;
