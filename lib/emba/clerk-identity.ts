@@ -74,6 +74,15 @@ export async function clerkEmailsOf(database:Db,personIds:string[]):Promise<Reco
  return found;
 }
 export async function getClerkPortalPrincipal(database:Db):Promise<Principal|null> {
+ return (await clerkSignIn(database))?.principal??null;
+}
+/**
+ * Who is signed in with Clerk, and, when it was read on the way, whether they belong to any group (null when it was not).
+ * A known account with nothing to write is identified by one statement and takes no lock: the locks below guard the
+ * insert and the name, which that statement never makes. A new account, a revoked or deleted one, and one whose name the
+ * provider has just given take the locked path, which refuses or enrols exactly as before.
+ */
+export async function clerkSignIn(database:Db):Promise<{principal:Principal;inAGroup:boolean|null}|null> {
  if(!clerkPortalConfigured()||(await headers()).has('authorization')) return null;
  const issuer=clerkIssuer()!;
  const session=await auth({acceptsToken:'session_token'});
@@ -86,10 +95,25 @@ export async function getClerkPortalPrincipal(database:Db):Promise<Principal|nul
  const email=user.emailAddresses.find(email=>email.id===user.primaryEmailAddressId&&email.verification?.status==='verified')?.emailAddress.trim().toLowerCase();
  if(!email) return null;
  const name=cleanName([user.firstName,user.lastName].filter(Boolean).join(' '));
- return database.tx(async q=>{
+ const verified=async()=>({issuer,subject:user.id,expiresAt:Math.min(claims.exp*1000,active.expireAt),authenticatedAt:verifiedAt(claims),verifiedEmail:email});
+ // The same identity authenticate reads, with its person's name and whether they hold a live role in a group.
+ const {rows:[known]}=await database.query<{person_id:string;name:string;inAGroup:boolean}>(
+  `select i.person_id,p.name,exists(select 1 from emba_role r join emba_membership m on m.org_id=r.org_id and m.person_id=r.person_id
+    where r.person_id=i.person_id and r.revoked_at is null and m.revoked_at is null) as "inAGroup"
+   from emba_identity i join person p on p.id=i.person_id
+   where i.issuer=$1 and i.subject=$2 and i.revoked_at is null and not exists(select 1 from emba_deletion_tombstone t where t.person_id=i.person_id)`,
+  [issuer,user.id]);
+ if(known&&!(known.name===UNNAMED&&name&&name!==UNNAMED)) {
+  // authenticate asks for that row again; it is answered with the row just read, so no second statement is made.
+  const read:Q={query:async()=>({rows:[{person_id:known.person_id}]}) as never};
+  const principal=await authenticate(read,'verified-clerk-session',verified);
+  return principal&&{principal,inAGroup:known.inAGroup};
+ }
+ const principal=await database.tx(async q=>{
   if(!await enrolClerkAccount(q,issuer,user.id,name)) return null;
-  return authenticate(q,'verified-clerk-session',async()=>({issuer,subject:user.id,expiresAt:Math.min(claims.exp*1000,active.expireAt),authenticatedAt:verifiedAt(claims),verifiedEmail:email}));
+  return authenticate(q,'verified-clerk-session',verified);
  });
+ return principal&&{principal,inAGroup:null};
 }
 /**
  * The person for a sign-in account, made the first time the account is seen: at their first sign-in, or when an

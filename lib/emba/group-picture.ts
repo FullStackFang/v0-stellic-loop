@@ -68,17 +68,17 @@ const runs = async (q: Q, p: Principal, scope: Scope) => p.clientId === null && 
 const mayUse = async (q: Q, p: Principal, admin: boolean) => new Set((await choices(q, p, admin)).map(one => key(one.pick)));
 
 /** One animal the picker shows: what to send back to pick it, its picture, and what kind it is, for the mark on its corner. */
-export type Choice = { pick: Pick; src: string; name: string; kind: 'own' | 'school' | 'ink' | 'core' };
+export type Choice = { pick: Pick; src: string; name: string; words: string; kind: 'own' | 'school' | 'ink' | 'core' };
 /** Every animal the person may put in a group picture, in the order their own picker has them: theirs, their school's, the Ink ones, everyone's. */
 async function choices(q: Q, p: Principal, admin: boolean): Promise<Choice[]> {
   const list = await offered(q, admin ? 'all' : await schoolsOfPerson(q, p.personId));
   const tokenOf = (src: string) => src.slice(customFace('').length);
-  const of = (tiles: { face: number | null; src: string; name: string }[], kind: Choice['kind']): Choice[] => tiles.map(tile => ({ pick: tile.face === null ? { token: tokenOf(tile.src) } : { face: tile.face }, src: tile.src, name: tile.name, kind }));
+  const of = (tiles: { face: number | null; src: string; name: string; words: string }[], kind: Choice['kind']): Choice[] => tiles.map(tile => ({ pick: tile.face === null ? { token: tokenOf(tile.src) } : { face: tile.face }, src: tile.src, name: tile.name, words: tile.words, kind }));
   const shown = [...of(list.school, 'school'), ...(admin || await hasInk(q, p.personId) ? of(list.premium, 'ink') : []), ...of(list.core, 'core')];
   const made = (admin ? (await q.query<{ token: string }>('select token::text as token from campus_custom_picture order by made_at,token')).rows
     : (await q.query<{ token: string }>('select token::text as token from campus_custom_picture where person_id=$1 and let_go_at is null order by made_at,token', [p.personId])).rows)
     .filter(row => !shown.some(one => 'token' in one.pick && one.pick.token === row.token));
-  return [...made.map((row, at) => ({ pick: { token: row.token }, src: customFace(row.token), name: `Your own animal ${at + 1}`, kind: 'own' as const })), ...shown];
+  return [...made.map((row, at) => ({ pick: { token: row.token }, src: customFace(row.token), name: `Your own animal ${at + 1}`, words: 'your own made', kind: 'own' as const })), ...shown];
 }
 
 /** What the "Group picture" card needs to draw itself for a person who runs the group. Null for anyone else. */

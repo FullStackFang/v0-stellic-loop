@@ -164,12 +164,12 @@ describe('who sees whom', () => {
     fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); fireEvent.click(screen.getByRole('button', { name: 'Change your picture' }));
     expect(screen.getByRole('button', { name: 'Cornell bear' })).toHaveClass('school');
     expect(screen.queryByRole('button', { name: 'NYU bobcat' })).toBeNull();
-    // Mascots narrows the picker to the school's own, and a second press shows every animal again. Mascots, Shuffle and Done are a picture each.
+    // Mascots narrows the picker to the school's own, and a second press shows every animal again. Shuffle and Done carry their word, in the foot under the animals.
     fireEvent.click(screen.getByRole('button', { name: 'Mascots' }));
     expect(within(screen.getByRole('group', { name: 'Pick your picture' })).getAllByRole('button').map(each => each.getAttribute('aria-label'))).toEqual(['Create your own', 'Cornell bear']);
     fireEvent.click(screen.getByRole('button', { name: 'Mascots' }));
     expect(screen.getByRole('button', { name: 'Dachshund' })).toBeInTheDocument();
-    for (const name of ['Shuffle', 'Done']) expect(screen.getByRole('button', { name })).toHaveTextContent('');
+    for (const name of ['Shuffle', 'Done']) expect(screen.getByRole('button', { name }).closest('.cs-pets-foot')).not.toBeNull();
     cleanup();
     // The admin moves it to premium, and back to its school: it stays Cornell's alone either way.
     await setBuiltTier(t.db, 37, 'premium');

@@ -77,9 +77,10 @@ async function records(q:Q,p:Principal,team:Scope,head:TeamHead,kind:'mention'|'
  return {found:views.map((record,index)=>({item:{kind,team:head,record},recordId:rows[index].id,key:-rows[index].number})),total:rows[0]?.total??0};
 }
 /** The dated events and the ideas that wait for the caller, soonest first: up to `limit` of each, and how many there are in all. */
-async function eventsWaiting(q:Q,p:Principal,team:Scope,timezone:string,limit:number) {
+async function eventsWaiting(q:Q,p:Principal,team:Scope,timezone:string,limit:number,
+ /** Whether the caller may post, when this same transaction has already checked it. */ posts?:boolean) {
  // Interest belongs to members who may post, so no event waits for a follower.
- if(!await canAccessLoop(q,p,team.orgId,team.loopId,'post'))return {events:[],eventTotal:0,ideas:[],ideaTotal:0};
+ if(!(posts??await canAccessLoop(q,p,team.orgId,team.loopId,'post')))return {events:[],eventTotal:0,ideas:[],ideaTotal:0};
  const {rows:events}=await q.query<{id:string;total:number}>(`select e.id,count(*) over()::int as total from emba_team_event e where ${eventWaits}
   order by e.starts_at,e.slug limit ${limit}`,[team.orgId,team.loopId,p.personId]);
  const {rows:ideas}=await q.query<{id:string;why:IdeaWaits;total:number}>(`select x.id,x.why,count(*) over()::int as total from (select e.id,e.starts_at,e.slug,${ideaWhy} as why from emba_team_event e where e.org_id=$1 and e.loop_id=$2 and ${openIdea()}) x
@@ -170,12 +171,14 @@ async function teamOnYou(db:Db,p:Principal,team:Scope):Promise<TeamOnYou> {
  return settled(db,team,check=>reading(db,p,team,async({q,...base})=>{
   await check(q);
   const at={team:base.team,scope:team},late=Number.MAX_SAFE_INTEGER;
-  const asks=await asksOnYou(q,p,team,base.timezone,ON_YOU.rows);
-  const {events,eventTotal,ideas,ideaTotal}=await eventsWaiting(q,p,team,base.timezone,ON_YOU.rows);
+  // Whether the caller may post here, checked once in this snapshot with its rows held, and given to each part of the read.
+  const posts=await canAccessLoop(q,p,team.orgId,team.loopId,'post');
+  const asks=await asksOnYou(q,p,team,base.timezone,ON_YOU.rows,posts);
+  const {events,eventTotal,ideas,ideaTotal}=await eventsWaiting(q,p,team,base.timezone,ON_YOU.rows,posts);
   const {rows:proposed}=await q.query<Row>(`select ${rowColumns} from ${rowFrom} where r.org_id=$1 and r.loop_id=$2 and r.state='current' and r.kind='claim' and r.claim_status='proposed' and r.owner_id=$3
    order by r.number limit ${ON_YOU.claims}`,[team.orgId,team.loopId,p.personId]);
   const open=asks.open.total+eventTotal+ideaTotal;
-  return {...at,timezone:base.timezone,posts:await canAccessLoop(q,p,team.orgId,team.loopId,'post'),open,total:open+asks.missed.total,claims:(await viewRecords(q,p,team,proposed)).map(record=>({record,at:Date.parse(record.createdAt)})),rows:[
+  return {...at,timezone:base.timezone,posts,open,total:open+asks.missed.total,claims:(await viewRecords(q,p,team,proposed)).map(record=>({record,at:Date.parse(record.createdAt)})),rows:[
    ...asks.open.items.map(ask=>({row:{kind:'ask' as const,...at,ask},key:Date.parse(ask.closesAt)})),
    ...events.map(event=>({row:{kind:'event' as const,...at,event},key:Date.parse(event.startsAt!)})),
    // An idea with no time yet comes after everything that has one.
@@ -184,9 +187,14 @@ async function teamOnYou(db:Db,p:Principal,team:Scope):Promise<TeamOnYou> {
  }));
 }
 /** Everything on the caller across the groups they belong to, by when. Reading it changes nothing. */
-export async function onYou(db:Db,p:Principal):Promise<OnYou> {
+export async function onYou(db:Db,p:Principal,
+ /**
+  * The site's own listing of the caller's groups, made once for the page view. Each group is still read under its own checks,
+  * so a group lost since the listing is refused. Left out for an assistant: then the groups are listed with its grants.
+  */
+ listed?:Promise<readonly Scope[]>):Promise<OnYou> {
  const denied=(error:unknown)=>error instanceof EmbaError&&error.code==='forbidden';
- const groups=await listGroups(db,p,{limit:WAITING.teams}).catch(error=>{if(denied(error))return [];throw error;});
+ const groups=(await (listed??listGroups(db,p,{limit:WAITING.teams})).catch(error=>{if(denied(error))return [];throw error;})).slice(0,WAITING.teams);
  const teams:TeamOnYou[]=[];
  // Each group is read in its own snapshot. A few at a time: every read holds a connection.
  for(let from=0;from<groups.length;from+=ON_YOU.together){

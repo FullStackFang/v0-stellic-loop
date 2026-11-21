@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { getPortalPrincipal, portalGroupTree } from '@/lib/emba/portal-session';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { authConfig } from '@/lib/emba/auth-token';
-import { listLeases, listRemovedGroupGrants } from '@/lib/emba/consent';
+import { listGrants } from '@/lib/emba/consent';
 import { assistantName } from '@/lib/emba/team-text';
 import { noteConnectView } from '@/lib/emba/pilot-metrics';
 import { hasAssistants } from '@/lib/campus/ink';
@@ -26,6 +26,10 @@ export default async function ConnectionsPage({ searchParams }: { searchParams?:
   if (!principal) return <section className="lt-editor"><h1>Assistant connections</h1><p>Sign in to manage your own group grants.</p><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/connections')}`}>Sign in</Link></section>;
   // Counted once per member, for the operator's connecting funnel.
   // Assistants are part of Ink+. Nothing is charged yet: pressing Subscribe is kept (when, and that it was here) and opens the page.
+  // The groups come from the listing the side menu already makes for this page view: started beside the rest, not after it.
+  const listing = portalGroupTree(principal);
+  // Awaited below; a failure in the meantime must not count as unhandled.
+  listing.catch(() => {});
   const [, may] = await Promise.all([noteConnectView(db(), principal), hasAssistants(db(), principal)]);
   if (!may) return <>
     <h1>Connect your assistant</h1>
@@ -35,10 +39,11 @@ export default async function ConnectionsPage({ searchParams }: { searchParams?:
   let config: ReturnType<typeof authConfig> | null = null;
   try { config = authConfig(); } catch { /* Explain missing configuration below. */ }
   const ready = clerkPortalConfigured() && !!config && new URL(config.audience).pathname === '/api/mcp';
-  // The groups come from the listing the side menu already made for this page view.
-  let groups, leases, removed, clock;
-  try { [groups, leases, removed, { rows: [clock] }] = await Promise.all([portalGroupTree(principal), listLeases(db(), principal), listRemovedGroupGrants(db(), principal), db().query<{ now: string }>('select current_timestamp as now')]); }
+  // The grants are read only for someone who may have them: one transaction for the grants, the ended ones and the clock.
+  let groups, grants;
+  try { [groups, grants] = await Promise.all([listing, listGrants(db(), principal)]); }
   catch { return <section className="lt-editor"><h1>Connections unavailable</h1><p role="alert">Your membership or session may have changed.</p></section>; }
+  const { leases, removed } = grants, clock = { now: grants.now };
   const access = (lease: Record<string, unknown>) => [...(lease.actions as string[])].sort().join(' ');
   // A grant for a group this person can no longer open reaches nothing, so it is not listed.
   const groupLeases = leases.flatMap(lease => { const group = groups.find(item => item.orgId === lease.org_id && item.loopId === lease.loop_id); return group && ['plan:read', 'group-memory:write plan:read'].includes(access(lease)) ? [{ lease, group }] : []; });

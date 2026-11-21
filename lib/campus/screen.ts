@@ -8,13 +8,13 @@ import { schoolOf } from './schools';
 import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
 import { animal, animalOf, CUSTOM, customFace, PHOTO } from './animals';
 import { picks as offered, schoolOfPerson } from './animal-tiers';
-import { customFaces } from './custom-face';
-import { plansOf } from './ink';
+import { customFaces, type CustomFace } from './custom-face';
+import { plansOf, type Plan } from './ink';
 import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
-import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Reward } from './rewards';
+import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Counted, type Reward } from './rewards';
 import { nearTags } from './tags';
 import { checkInOpen, dayLabel, endOf, localParts, timeLabel } from './time';
-import type { Coupon, Face, Live, Screen, Seat, Stub, Ticket } from './view';
+import type { Coupon, Face, Live, Screen, Seat, Stub, Ticket, Viewer } from './view';
 
 // Everything the campus screen shows one viewer (design D16, D19). What a person may see of others is decided here and
 // nowhere else: first names and photos of people they know and of the people in their own outing, a count for the rest,
@@ -94,8 +94,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   // The same rows say who has Ink, which every face shows, so they are read for everyone shown.
   const made = await customFaces(db, [...shown]), plans = await plansOf(db, [...new Set([...shown, ...(viewer ? [viewer.personId] : [])])]);
   const planOf = (id: string) => plans.get(id) ?? 'free';
-  const faceOf = (id: string) => { const pick = picks.get(id); return pick === PHOTO && photos[id] ? PHOTO : pick === CUSTOM && made.get(id)?.token ? CUSTOM : pick === undefined || pick < 0 ? animalOf(id) : pick; };
-  const picture = (id: string) => { const pick = faceOf(id); return pick === PHOTO ? photos[id] : pick === CUSTOM ? customFace(made.get(id)!.token!) : animal(pick); };
+  const { picture } = facesOf({ picks, photos, made });
   const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: picture(id), plan: planOf(id), ...more });
 
   let live: Live | null = null;
@@ -196,12 +195,44 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     return made.done > 0 || made.earned ? [{ id: reward.id, giver: reward.giver, text, ...made, usedAt, progress: made.earned ? 'Earned' : `${made.done} of ${made.need} ${unitOf(reward)}` }] : [];
   });
 
-  const self = me ? names.get(me) : undefined;
-  const home = me ? await schoolOfPerson(db, me) : null, linked = me ? await addedSchools(db, me) : { profile: null, added: [], waiting: [] };
   return {
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
-    viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null,
-      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, owns: (made.get(viewer.personId)?.all ?? []).map(customFace), picks: await offered(db, viewer.admin ? 'all' : [...(home ? [home] : []), ...linked.added]), schools: { profile: linked.profile, added: linked.added, home, all: (await listCampuses(db)).filter(each => schoolOf(each.slug) === each.slug).map(each => ({ slug: each.slug, name: each.name })) }, asked: planOf(viewer.personId) !== 'free', makesLeft: viewer.admin || planOf(viewer.personId) === 'plus' ? null : made.get(viewer.personId)?.left ?? 0, plan: planOf(viewer.personId), anyKit: viewer.admin || planOf(viewer.personId) === 'plus', level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
+    viewer: viewer && await accountViewer(db, viewer, { read: { names, picks, photos, made, plans, counted } }),
     tickets, earning, live, places: me ? await nearTags(db, campus.id, known, now) : [],
   };
+}
+
+/** What is read of people to draw their faces: names, picked animals, photos, made animals and plans, by person. */
+type People = { names: Map<string, { first: string; name: string }>; picks: Map<string, number>; photos: Record<string, string>; made: Map<string, CustomFace>; plans: Map<string, Plan> };
+/** A person's face: the animal they picked, their photo or the animal they had made, else the animal their id works out to. */
+function facesOf({ picks, photos, made }: Pick<People, 'picks' | 'photos' | 'made'>) {
+  const faceOf = (id: string) => { const pick = picks.get(id); return pick === PHOTO && photos[id] ? PHOTO : pick === CUSTOM && made.get(id)?.token ? CUSTOM : pick === undefined || pick < 0 ? animalOf(id) : pick; };
+  const picture = (id: string) => { const pick = faceOf(id); return pick === PHOTO ? photos[id] : pick === CUSTOM ? customFace(made.get(id)!.token!) : animal(pick); };
+  return { faceOf, picture };
+}
+
+/**
+ * What the account card shows (components/campus/screen.tsx, Account): face, picks, schools, plan, level, colours and
+ * links. The campus screen passes what it has already read of people (`read`); a bar that draws no week reads only this,
+ * in two waves, and none of the week's events, places or other people's pictures.
+ */
+export async function accountViewer(db: Db, viewer: ScreenViewer, options: { photos?: Photos; read?: People & { counted: Counted[] } } = {}): Promise<Viewer> {
+  const me = viewer.personId;
+  const [read, home, linked, campuses] = await Promise.all([
+    options.read ?? Promise.all([firstNames(db, [me]), pickedFaces(db, [me]), (options.photos ?? accountPhotos)(db, [me]), customFaces(db, [me]), plansOf(db, [me]), countedOutings(db, me)])
+      .then(([names, picks, photos, made, plans, counted]) => ({ names, picks, photos, made, plans, counted })),
+    schoolOfPerson(db, me), addedSchools(db, me), listCampuses(db)]);
+  const shown = await offered(db, viewer.admin ? 'all' : [...(home ? [home] : []), ...linked.added]);
+  const { faceOf, picture } = facesOf(read), self = read.names.get(me), mine = read.made.get(me), plan = read.plans.get(me) ?? 'free';
+  return { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(me), face: faceOf(me), ownPhoto: read.photos[me] ?? null,
+    own: mine?.token ? customFace(mine.token) : null, owns: (mine?.all ?? []).map(customFace), picks: shown,
+    schools: { profile: linked.profile, added: linked.added, home, all: campuses.filter(each => schoolOf(each.slug) === each.slug).map(each => ({ slug: each.slug, name: each.name })) },
+    asked: plan !== 'free', makesLeft: viewer.admin || plan === 'plus' ? null : mine?.left ?? 0, plan, anyKit: viewer.admin || plan === 'plus',
+    level: levelOf(read.counted.length), outings: read.counted.length, admin: viewer.admin, groups: viewer.groups ?? [] };
+}
+
+/** The screen a bar that draws no week is given: its campus and the account card, with the week's lists left empty. */
+export async function barScreen(db: Db, campus: Campus, viewer: ScreenViewer | null): Promise<Screen> {
+  return { campus: { slug: campus.slug, name: campus.name, tz: campus.tz, listSource: campus.listSource },
+    viewer: viewer && await accountViewer(db, viewer), tickets: [], earning: [], live: null, places: [] };
 }

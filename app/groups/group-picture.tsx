@@ -80,7 +80,7 @@ function SaveCard({ scope, onClose }: { scope: TileProps['scope']; onClose: () =
 function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope']; pane: PicturePane; onKept: (token: string) => void; onClose: () => void }) {
   const router = useRouter(), box = useCard(onClose);
   const [step, setStep] = useState<Step>('pics');
-  const [picked, setPicked] = useState<Choice[]>([]), [only, setOnly] = useState<Choice['kind'] | null>(null);
+  const [picked, setPicked] = useState<Choice[]>([]), [only, setOnly] = useState<Choice['kind'] | null>(null), [find, setFind] = useState('');
   const [drawn, setDrawn] = useState(pane.waiting), [kept, setKept] = useState(pane.kept), [all, setAll] = useState(pane.drawn);
   const [plus, setPlus] = useState(pane.plus), [thanked, setThanked] = useState(false);
   const [email, setEmail] = useState(''), [note, setNote] = useState(''), [said, setSaid] = useState(''), [busy, setBusy] = useState(false);
@@ -134,12 +134,14 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
     {alert}
   </div>
   : step === 'pick' ? <div className="cs-lvl-body cs-pets">
+    {/* As the account card's picker: search on its own line, the filters under it with how many each shows (public/demo/mockups-picture-card-height.html, C) */}
     <div className="cs-pets-top" role="group" aria-label="Show">
-      {kinds.map(([kind, label]) => <button key={kind} className={`cs-btn sm ${kind === 'ink' ? 'gold' : ''}`} aria-pressed={only === kind} onClick={() => setOnly(only === kind ? null : kind)}>{kind === 'ink' ? <InkMark /> : kind === 'school' && <SchoolMark />}{label}</button>)}
+      <input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Search animals" placeholder="Search animals" />
+      {kinds.map(([kind, label]) => <button key={kind} className={`cs-btn sm ${kind === 'ink' ? 'gold' : kind === 'school' ? 'school' : ''}`} aria-label={kind === 'own' ? undefined : label} title={kind === 'own' ? undefined : label} aria-pressed={only === kind} onClick={() => setOnly(only === kind ? null : kind)}>{kind === 'ink' ? <InkMark /> : kind === 'school' && <SchoolMark />}{kind === 'own' && `${label} `}<small aria-hidden="true">{pane.choices.filter(one => one.kind === kind).length}</small></button>)}
       <button className="cs-btn sm gp-done" onClick={() => { setSaid(''); setStep('pics'); }}>Back to pictures</button>
     </div>
     <PicturesWait className="cs-pets-grid" label="Animals for the picture">
-      {pane.choices.filter(one => !only || one.kind === only).map(one => {
+      {pane.choices.filter(one => (!only || one.kind === only) && `${one.name} ${one.words}`.toLowerCase().includes(find.trim().toLowerCase())).map(one => {
         const at = picked.findIndex(each => keyOf(each.pick) === keyOf(one.pick));
         return <button key={one.src} className={`cs-pet ${one.kind === 'ink' ? 'gold' : one.kind === 'school' ? 'school' : ''}`} aria-pressed={at >= 0} aria-label={one.name} onClick={() => toggle(one)}>
           <img src={one.src} alt="" />{one.kind === 'ink' ? <InkMark /> : one.kind === 'school' && <SchoolMark />}{at >= 0 && <b className="gp-n">{at + 1}</b>}</button>;

@@ -97,10 +97,12 @@ export async function renewGroupReadLease(db: Db, principal: Principal, id: stri
   });
 }
 
+const leaseRows = async (q: Q, principal: Principal) =>
+  (await q.query('select id,client_id,actions,org_id,loop_id,expires_at,revoked_at from emba_lease where person_id=$1 order by created_at desc limit 100',[principal.personId])).rows;
 export async function listLeases(db: Db, principal: Principal) {
   return db.tx(async q => {
     await requireFirstParty(q,principal);
-    const { rows } = await q.query('select id,client_id,actions,org_id,loop_id,expires_at,revoked_at from emba_lease where person_id=$1 order by created_at desc limit 100',[principal.personId]);
+    const rows = await leaseRows(q,principal);
     await audit(q,principal,'lease:list');
     return rows;
   });
@@ -115,13 +117,26 @@ export type RemovedGroupGrants = { group: string; removedAt: string | Date; clie
 export async function listRemovedGroupGrants(db: Db, principal: Principal): Promise<RemovedGroupGrants[]> {
   return db.tx(async q => {
     await requireFirstParty(q,principal);
-    const { rows } = await q.query<RemovedGroupGrants>(
-      `select coalesce(l.name,o.name) as "group",a.retired_at as "removedAt",array_agg(distinct e.client_id order by e.client_id) as "clientIds"
-       from emba_lease e join emba_group_address a on a.org_id=e.org_id and a.loop_id=e.loop_id
-       join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
-       where e.person_id=$1 and a.retired_at is not null and (e.revoked_at is null or e.revoked_at>=a.retired_at) and e.expires_at>clock_timestamp()
-       group by a.org_id,a.loop_id,l.name,o.name,a.retired_at order by a.retired_at desc,a.loop_id limit 20`,[principal.personId]);
-    return rows;
+    return removedRows(q,principal);
+  });
+}
+const removedRows = async (q: Q, principal: Principal) => (await q.query<RemovedGroupGrants>(
+  `select coalesce(l.name,o.name) as "group",a.retired_at as "removedAt",array_agg(distinct e.client_id order by e.client_id) as "clientIds"
+   from emba_lease e join emba_group_address a on a.org_id=e.org_id and a.loop_id=e.loop_id
+   join emba_loop l on l.org_id=a.org_id and l.id=a.loop_id join emba_organization o on o.id=a.org_id
+   where e.person_id=$1 and a.retired_at is not null and (e.revoked_at is null or e.revoked_at>=a.retired_at) and e.expires_at>clock_timestamp()
+   group by a.org_id,a.loop_id,l.name,o.name,a.retired_at order by a.retired_at desc,a.loop_id limit 20`,[principal.personId])).rows;
+/**
+ * What the Assistants page shows of the person's grants, in one transaction with one personal check and one `lease:list`
+ * record: their grants (listLeases), the grants a removed group ended (listRemovedGroupGrants), and the clock they are read by.
+ */
+export async function listGrants(db: Db, principal: Principal) {
+  return db.tx(async q => {
+    await requireFirstParty(q,principal);
+    const leases = await leaseRows(q,principal), removed = await removedRows(q,principal);
+    const { rows: [clock] } = await q.query<{ now: string }>('select clock_timestamp() as now');
+    await audit(q,principal,'lease:list');
+    return { leases, removed, now: clock.now };
   });
 }
 
