@@ -4,7 +4,8 @@ import {openTestDb,type TestDb} from '@/test/db';
 import {seedEmbaFixture} from '@/test/emba-fixture';
 import {authenticate,type Principal} from '@/lib/emba/access';
 import {grantLease} from '@/lib/emba/consent';
-import {registerGroupAddress} from '@/lib/emba/groups';
+import {listGroups,registerGroupAddress} from '@/lib/emba/groups';
+import type {Db,Q} from '@/lib/db';
 import {setMemberHandle} from '@/lib/emba/tags';
 import {answerAsk,closeAsk,createAsk,extendAsk} from '@/lib/emba/team-asks';
 import {addEvent} from '@/lib/emba/team-events';
@@ -190,6 +191,33 @@ it('lists what is on a member across their groups by when, with missed things to
  await elapse('Sign the waiver','8 days');
  expect(rowsOf(await onYou(t.db,f.memberB))).toEqual(['event tasting','ask Vote late?']);
  expect(JSON.stringify((await onYou(t.db,f.memberB)).rows.map(({scope:_scope,...row})=>row))).not.toMatch(uuids);
+},240000);
+
+/** The database with every statement written down. */
+function watched(){
+ const said:string[]=[];
+ const count=(q:Q):Q=>({query:(text,params)=>{said.push(text);return q.query(text,params);}});
+ const db:Db={...count(t.db),tx:fn=>t.db.tx(q=>fn(count(q)))};
+ return {db,said};
+}
+const listing=/from emba_group_address g join accessible/;
+const roleCheck=/join emba_role r on r\.org_id=\$1 and r\.loop_id=a\.id and r\.person_id=\$3/;
+it('on the site, reads the groups the page view listed, and checks each group\'s roles once per action',async()=>{
+ const f=await fixture();
+ await ask(f,f.memberA,'Vote?',3);await todo(f,f.memberA,'Upload the form',4,f.vietnam);
+ const listed=await listGroups(t.db,f.memberB,{limit:WAITING.teams});
+ const site=watched(),given=await onYou(site.db,f.memberB,Promise.resolve(listed));
+ // The same answer as when it lists the groups itself, without listing them.
+ expect(given).toEqual(await onYou(t.db,f.memberB));
+ expect(site.said.filter(text=>listing.test(text))).toEqual([]);
+ // One check of the person's role to read the group and one to post in it, for each group: not one for every part of the read.
+ expect(site.said.filter(text=>roleCheck.test(text))).toHaveLength(2*listed.length);
+ // A group lost after the listing was made is refused when it is read, and adds nothing.
+ await t.db.query('update emba_role set revoked_at=now() where person_id=$1',[f.memberB.personId]);
+ expect(await onYou(t.db,f.memberB,Promise.resolve(listed))).toMatchObject({count:0,rows:[],groups:[]});
+ // Without the listing (an assistant's read), it lists the groups, with their grants, as before.
+ const assistantRead=watched();await onYou(assistantRead.db,f.memberA);
+ expect(assistantRead.said.filter(text=>listing.test(text))).toHaveLength(1);
 },240000);
 
 it('keeps the soonest rows when one group has many, and says how many more each group holds',async()=>{

@@ -10,11 +10,13 @@
 
 ## 2. Counters: the page view's groups, one check per transaction (D2)
 
-- [ ] 2.1 Confirm that the four `canAccessLoop` calls in `teamOnYou` run in one transaction; any that runs in its own keeps its own check
-- [ ] 2.2 Tests first (`emba-waiting.test.ts`, `emba-team-speed.test.ts`, `app/c/on-you.test.tsx`): the site path does not list groups again; statements per group drop; a role revoked between two groups' reads refuses the second; the assistant path is unchanged
-- [ ] 2.3 `onYou` takes the groups as an argument on the site path (`lib/campus/on-you.ts` passes `portalGroupTree`); the assistant path keeps `listGroups`
-- [ ] 2.4 Carry the access answer through `teamOnYou`'s readers as an argument, never as a module or request memo
-- [ ] 2.5 Run the affected tests, type check, lint; commit by path
+- [x] 2.1 Confirm that the four `canAccessLoop` calls in `teamOnYou` run in one transaction; any that runs in its own keeps its own check
+  - All four run on `reading`'s one `q`. One is `authorize`'s `read` check (a different action, kept); the other three are the same `post` check, now made once.
+- [x] 2.2 Tests first (`emba-waiting.test.ts`, `emba-team-speed.test.ts`, `app/c/on-you.test.tsx`): the site path does not list groups again; statements per group drop; a role revoked between two groups' reads refuses the second; the assistant path is unchanged
+  - The new test is in `emba-waiting.test.ts`; the other two files pass unchanged.
+- [x] 2.3 `onYou` takes the groups as an argument on the site path (`lib/campus/on-you.ts` passes `portalGroupTree`); the assistant path keeps `listGroups`
+- [x] 2.4 Carry the access answer through `teamOnYou`'s readers as an argument, never as a module or request memo
+- [x] 2.5 Run the affected tests, type check, lint; commit by path
 
 ## 3. The account card's own read (D3)
 

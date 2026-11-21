@@ -414,8 +414,9 @@ export async function openAsks(q:Q,p:Principal,team:Scope,timezone:string):Promi
  * first, and the things to do that passed in the last 7 days without them, latest first. Up to `limit` of each, with how many
  * there are in all. Nothing is on a follower.
  */
-export async function asksOnYou(q:Q,p:Principal,team:Scope,timezone:string,limit:number):Promise<Record<'open'|'missed',{items:Unanswered[];total:number}>> {
- if(!await canAccessLoop(q,p,team.orgId,team.loopId,'post'))return {open:{items:[],total:0},missed:{items:[],total:0}};
+export async function asksOnYou(q:Q,p:Principal,team:Scope,timezone:string,limit:number,
+ /** Whether the caller may post, when this same transaction has already checked it. Never an answer from another transaction. */ posts?:boolean):Promise<Record<'open'|'missed',{items:Unanswered[];total:number}>> {
+ if(!(posts??await canAccessLoop(q,p,team.orgId,team.loopId,'post')))return {open:{items:[],total:0},missed:{items:[],total:0}};
  const mine=`k.org_id=$1 and k.loop_id=$2 and ${putTo('$3')} and not exists(select 1 from emba_ask_answer a where a.ask_id=k.id and a.person_id=$3)`;
  const read=async(where:string,order:string)=>{
   const {rows}=await q.query<{id:string;soon:boolean;total:number}>(`select k.id,${openSql()} and k.closes_at<=clock_timestamp()+interval '${ASKS.soonHours} hours' as soon,count(*) over()::int as total from emba_ask k

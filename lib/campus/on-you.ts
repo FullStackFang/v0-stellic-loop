@@ -4,6 +4,7 @@ import type { Principal } from '../emba/access';
 import { groupPath, ROOT_SLUG } from '../emba/group-path';
 import { groupPictureMap } from '../emba/group-picture';
 import { groupPictureSrc } from '../emba/group-picture-src';
+import { portalGroupTree } from '../emba/portal-session';
 import { onYou, type OnYouRow } from '../emba/team-waiting';
 import { animal, animalOf } from './animals';
 import { pickedFaces } from './people';
@@ -58,7 +59,8 @@ async function membersOf(loopIds: string[]): Promise<Map<string, { people: numbe
 
 /** Everything on this person across their groups. Null when they are in no group. */
 export async function onYouView(principal: Principal, now = Date.now()): Promise<OnYouView | null> {
-  const read = await onYou(db(), principal);
+  // The groups come from the page view's one listing (the bar and the page share it), not from a second one.
+  const read = await onYou(db(), principal, portalGroupTree(principal));
   if (!read.groups.length) return null;
   // Two reads that do not wait on each other: together, not one after the other.
   const [members, pictures] = await Promise.all([membersOf(read.groups.map(group => group.scope.loopId)).catch(() => new Map<string, { people: number; faces: string[] }>()), groupPictureMap(db(), read.groups.map(group => group.scope.loopId))]);
