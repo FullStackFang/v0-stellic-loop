@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { INK_PAGE } from '@/lib/campus/ink';
 import { InkMark } from './ink-mark';
+import { JoinPlan } from './join-plan';
 import './foot.css';
 import './kits.css';
 
@@ -68,14 +69,14 @@ export function InkColours({ wanted = null, yours, onClose, inside = false }: { 
   useEffect(() => { const key = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); }, [onClose]);
   const others = KITS.filter(each => !yours.includes(each.slug)), name = KITS.find(each => each.slug === wanted)?.name;
   return <div className={`cs-ft-ask cs-kit-ask${inside ? ' in' : ''}`} role="dialog" aria-label={name ? `${name}'s colours come with Ink+` : "Every school's colours come with Ink+"}>
-    <span className="cs-ft-ask-tab"><InkMark />Ink+</span>
+    <span className="cs-ft-ask-tab"><InkMark plus named /></span>
     <h3>{name ? <>Wear <em>{name}&apos;s</em> colours</> : <>Every school&apos;s <em>colours</em></>}</h3>
     <div className="cs-kit-ask-sw">{others.map(each => <i key={each.slug} data-kit={each.slug} title={each.name} className={each.slug === wanted ? 'on' : undefined} />)}</div>
     <p>Yours and Loopd&apos;s are free. The other {others.length} come with Ink+.</p>
     <span className="cs-kit-ask-gives">What Ink+ gives you</span>
-    <ul><li>Every school&apos;s colours, not just yours</li><li>Play as your own animal, in Seats and Conga</li><li>The book of stamps keeps every place, for good</li></ul>
-    <p className="cs-kit-ask-price">From <b>$2.99</b> a month</p>
-    <div className="cs-kit-ask-acts"><Link className="cs-btn sm go" href={INK_PAGE}>See Ink+</Link><button type="button" className="cs-btn sm" onClick={onClose}>Not now</button></div>
+    <ul><li>Everything in Ink</li><li>Every school&apos;s colours, not just yours</li><li>Your own AI, answering from your groups</li><li>As many of your own animals as you like</li></ul>
+    <p className="cs-kit-ask-price"><b>$9.99</b> a month</p>
+    <div className="cs-kit-ask-acts"><JoinPlan plan="plus" place="colours: Sign up">Sign up for Ink+</JoinPlan><button type="button" className="cs-btn sm" onClick={onClose}>Not now</button></div>
   </div>;
 }
 
@@ -96,7 +97,7 @@ export function Kits({ yours, any, className = '' }: { yours: string[]; any: boo
     {rest.length > 0 && <span className="cs-kit-any"><button type="button" className="cs-kit" aria-expanded={open} onClick={() => { setOpen(!open); setAsking(null); }}>Any school<Chevron /></button>
       {open && <div className="cs-kit-menu">
         {rest.length > FIND_PAST && <input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Find a school" placeholder="Find a school" />}
-        <ul>{found.map(each => { const locked = !mayWear(each.slug, yours, any); return <li key={each.slug}><button type="button" data-kit={each.slug} className={locked ? 'locked' : undefined} aria-label={locked ? `${each.name}, with Ink+` : each.name} onClick={() => choose(each.slug)}><i />{each.name}{locked && <InkMark />}</button></li>; })}</ul>
-        {!any && <Link className="cs-kit-menu-ink" href={INK_PAGE}><InkMark />Every school comes with Ink+</Link>}</div>}</span>}
+        <ul>{found.map(each => { const locked = !mayWear(each.slug, yours, any); return <li key={each.slug}><button type="button" data-kit={each.slug} className={locked ? 'locked' : undefined} aria-label={locked ? `${each.name}, with Ink+` : each.name} onClick={() => choose(each.slug)}><i />{each.name}{locked && <InkMark plus />}</button></li>; })}</ul>
+        {!any && <Link className="cs-kit-menu-ink" href={INK_PAGE}><InkMark plus />Every school comes with Ink+</Link>}</div>}</span>}
   </div>{asking && <InkColours wanted={asking} yours={yours} inside onClose={() => setAsking(null)} />}</div>;
 }

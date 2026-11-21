@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { TopBar } from '@/components/campus/top-bar';
+import { FIRST } from './fresh-wait';
 import { lastBar } from './last-bar';
 import { SeatsTicket } from './seats';
 
@@ -15,11 +16,11 @@ const barred = (path: string | null) => path === '/' || !!path?.startsWith('/c/'
  */
 export function PageWait() {
   const path = usePathname(), { bar, me, going } = lastBar();
-  if (!bar || !barred(path)) return <div className="cs seats-screen"><SeatsTicket page {...me} /></div>;
-  return <div className="cs"><TopBar {...bar} going={going ?? ''} /><div className="seats-page"><SeatsTicket page {...me} /></div></div>;
+  if (!bar || !barred(path)) return <div className="cs seats-screen" {...FIRST}><SeatsTicket page {...me} /></div>;
+  return <div className="cs"><TopBar {...bar} going={going ?? ''} /><div className="seats-page" {...FIRST}><SeatsTicket page {...me} /></div></div>;
 }
 
 /** The same, for a page whose bar is in its layout and so never left (the groups pages). */
 export function PartWait() {
-  return <div className="seats-page"><SeatsTicket page {...lastBar().me} /></div>;
+  return <div className="seats-page" {...FIRST}><SeatsTicket page {...lastBar().me} /></div>;
 }

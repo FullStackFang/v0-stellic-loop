@@ -1,10 +1,11 @@
 // What the campus screen is drawn from. Built on the server for one viewer (lib/campus/screen.ts) and handed to the
 // screen's client parts, so it holds only what that viewer may see: a stranger's name is never in it.
 
+import type { Plan } from './ink';
 import type { NearTag } from './tags';
 
-/** `ink` is whether the person has Loopd Ink: their face wears its mark. */
-export type Face = { first: string; photo: string | null; ink: boolean; here?: boolean; me?: boolean };
+/** `plan` is the person's plan: an Ink face sits on a blot, an Ink+ face on a blot with sparks (openspec loop-ink-tiers). */
+export type Face = { first: string; photo: string | null; plan: Plan; here?: boolean; me?: boolean };
 /** One seat of a group reward. A seat taken by someone the viewer does not know has no face. */
 export type Seat = { taken: boolean; face: Face | null; here: boolean; yours: boolean };
 
@@ -13,7 +14,7 @@ export type Stub =
   | { kind: 'building'; giver: string; text: string; need: number; done: number; say: string; faces: Face[] }
   | { kind: 'none'; say: string; faces: Face[] };
 
-export type Choice = { personId: string; first: string; photo: string | null; ink: boolean; why: string; invited: boolean };
+export type Choice = { personId: string; first: string; photo: string | null; plan: Plan; why: string; invited: boolean };
 
 export type Ticket = {
   id: string; title: string; day: string; time: string; ends: string | null; when: string;
@@ -45,11 +46,11 @@ export type Coupon = { id: string; giver: string; text: string; done: number; ne
 export type Live = { listingId: string; giver: string; text: string; usedAt: string | null };
 /**
  * `face` is the animal's number, PHOTO or CUSTOM; `ownPhoto` is the sign-in account's photo, offered as a pick when there is one.
- * `own` is the animal they had made from a photo and are using, `owns` every one they made, `picks` what the picker offers (the admin decides which animals are core and which premium), `asked` whether they have asked to subscribe, `makesLeft` how many more they may make.
+ * `own` is the animal they had made from a photo and are using, `owns` every one they made, `picks` what the picker offers (the admin decides which animals are core and which premium), `asked` whether they have asked to subscribe, `makesLeft` how many more Ink lets them make (null: no limit, on Ink+ and for the admin), `plan` their plan.
  */
 /** The school a person is at (`home`), the ones their LinkedIn `profile` unlocked (`added`), and every school Loopd is at (`all`). */
 export type Schools = { profile: string | null; home: string | null; added: string[]; all: { slug: string; name: string }[] };
-export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[]; school: Tile[] }; schools: Schools; asked: boolean; makesLeft: number; /** Whether they may wear every school's colours: an Ink+ perk, and the admin's. Without it, Loopd's and their schools' (`schools`). */ anyKit: boolean; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
+export type Viewer = { first: string; name: string; photo: string | null; face: number; ownPhoto: string | null; own: string | null; owns: string[]; picks: { core: Tile[]; premium: Tile[]; school: Tile[] }; schools: Schools; asked: boolean; makesLeft: number | null; plan: Plan; /** Whether they may wear every school's colours: an Ink+ perk, and the admin's. Without it, Loopd's and their schools' (`schools`). */ anyKit: boolean; level: number; outings: number; admin: boolean; groups: { name: string; href: string }[] };
 
 export type Screen = {
   campus: { slug: string; name: string; tz: string; listSource: string };

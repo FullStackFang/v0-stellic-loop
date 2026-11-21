@@ -8,8 +8,8 @@ import { CampusScreen } from '@/components/campus/screen';
 import { animal, animalOf, CUSTOM, PHOTO } from '@/lib/campus/animals';
 import { Bar } from '@/app/groups/bar';
 import { catalogue, setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
-import { hasInk, INK_PAGE } from '@/lib/campus/ink';
-import { customFaceImage, deletePicture, makeCustomFace, MAKES, premiumAsks, subscribe } from '@/lib/campus/custom-face';
+import { hasInk, INK_PAGE, subscribeInkPlus } from '@/lib/campus/ink';
+import { customFaceImage, deletePicture, makeCustomFace, INK_MAKES, premiumAsks, subscribe } from '@/lib/campus/custom-face';
 import { GET as customFaceRoute } from '@/app/animals/custom/[token]/route';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { campusOf, pickFace } from '@/lib/campus/people';
@@ -191,7 +191,7 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Save it' }));
       expect(card.getByRole('group', { name: 'Shape' })).toBeInTheDocument();
       expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', '/c/save?shape=profile&ground=school&small=1');
-      expect(card.getByRole('button', { name: /No mark/ })).toHaveTextContent('Ink+');
+      expect(card.getByRole('button', { name: 'No mark, with Ink+' })).not.toHaveTextContent('Ink+');
       // The rows stepped aside, as they do for the picker.
       expect(card.queryByText('Loopd Ink')).toBeNull();
       expect(card.queryByRole('button', { name: 'Save it' })).toBeNull();
@@ -238,7 +238,7 @@ describe('who sees whom', () => {
     models.look = '{"animal": true, "nearest": 23}'; models.asked = [];
     models.drawn = await sharp({ create: { width: 400, height: 400, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
       .composite([{ input: await sharp({ create: { width: 100, height: 60, channels: 4, background: '#b5651d' } }).png().toBuffer(), left: 20, top: 30 }]).png().toBuffer();
-    const photo = new File([await sharp({ create: { width: 64, height: 48, channels: 3, background: '#996644' } }).jpeg().toBuffer()], 'lili.jpg', { type: 'image/jpeg' });
+    const photo = new File([new Uint8Array(await sharp({ create: { width: 64, height: 48, channels: 3, background: '#996644' } }).jpeg().toBuffer())], 'lili.jpg', { type: 'image/jpeg' });
     URL.createObjectURL = vi.fn(() => 'blob:lili'); URL.revokeObjectURL = vi.fn();
     let own = '';
     await withPortalTestSession(ana, async () => {
@@ -269,8 +269,8 @@ describe('who sees whom', () => {
       expect((await t.db.query('select 1 from campus_custom_face')).rows).toEqual([]);
       fireEvent.change(card.getByLabelText('Email'), { target: { value: 'Ana@Cornell.edu' } });
       fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
-      // Subscribed: told there is no payment yet, their face wears the mark, and only now is a photo asked for.
-      expect(await card.findByText('Thanks for subscribing to Loopd Ink. Payment is not set up yet, so this one is free. Enjoy your avatar.')).toBeInTheDocument();
+      // Subscribed: thanked as every sign-up is (openspec loop-ink-tiers), their face wears the mark, and only now is a photo asked for.
+      expect(await card.findByText('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now. Enjoy your avatar.')).toBeInTheDocument();
       expect((await t.db.query('select email,makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ email: 'ana@cornell.edu', makes: 0 }]);
       // The pane is the Loopd Ink plate, and nothing in the card says Premium.
       expect(card.queryByText(/Premium/)).toBeNull();
@@ -294,7 +294,7 @@ describe('who sees whom', () => {
       // While it is drawn, and after: thanks, no payment, a free picture.
       expect(await card.findByRole('status')).toHaveTextContent('Drawing your pet.');
       const made = await card.findByRole('img', { name: 'Your own animal' }, { timeout: 5000 });
-      expect(card.getByText(/Thanks for subscribing/)).toBeInTheDocument();
+      expect(card.getByText(/Thanks for your interest/)).toBeInTheDocument();
       expect(card.getByText('Say hi to your new picture.')).toBeInTheDocument();
       // The ask and its email are kept, the picture is theirs, and it was drawn from one of the set and the photo.
       const { rows: [row] } = await t.db.query<{ email: string; makes: number; token: string }>('select email,makes,token from campus_custom_face where person_id=$1', [ana.personId]);
@@ -350,18 +350,14 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Your own animal' }));
       await vi.waitFor(async () => expect((await t.db.query('select face from campus_face where person_id=$1', [ana.personId])).rows).toEqual([{ face: CUSTOM }]));
       expect(card.queryByText(/Premium/)).toBeNull();
-      // The "+" is always there. With the free pet made it offers to draw it again, any number of times, with the code.
+      // The "+" is always there. Ink makes three in all, and the maker says how many are left.
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
-      expect(card.getByText('You’re already subscribed and got your free avatar!')).toBeInTheDocument();
-      expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
-      fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
-      expect(card.getByRole('textbox', { name: 'Code' })).toBeInTheDocument();
-      const again = new FormData(); again.set('photo', photo);
-      await withPortalTestSession(ana, async () => expect(await makeFaceAction(again)).toEqual({ ok: false, message: 'You have made your free animal. Making more is not set up yet.' }));
-      again.set('first', own); again.set('code', 'CHEAPSKATES');
+      expect(card.getByText('Bring your own pet.')).toBeInTheDocument();
+      expect(card.getByText('2 of 3 left.')).toBeInTheDocument();
+      // Drawing one again does not count as another, any number of times, with the code.
+      const again = new FormData(); again.set('photo', photo); again.set('first', own); again.set('code', 'CHEAPSKATES');
       await withPortalTestSession(ana, async () => { expect(await againFaceAction(again)).toMatchObject({ ok: true }); expect(await againFaceAction(again)).toMatchObject({ ok: true }); });
       expect((await t.db.query('select count(*)::int as n from campus_custom_picture where person_id=$1 and let_go_at is null', [ana.personId])).rows).toEqual([{ n: 1 }]);
-      fireEvent.click(card.getByRole('button', { name: 'Back' }));
       fireEvent.click(card.getByRole('button', { name: 'Back' }));
     });
     cleanup();
@@ -373,7 +369,7 @@ describe('who sees whom', () => {
   it('refuses a photo with no animal, a made animal nobody made, and more than a few', async () => {
     const { ana, ben } = await world(), sharp = (await import('sharp')).default;
     const jpeg = await sharp({ create: { width: 64, height: 48, channels: 3, background: '#996644' } }).jpeg().toBuffer();
-    const send = (email?: string) => { const data = new FormData(); data.set('photo', new File([jpeg], 'p.jpg', { type: 'image/jpeg' })); if (email) data.set('email', email); return data; };
+    const send = (email?: string) => { const data = new FormData(); data.set('photo', new File([new Uint8Array(jpeg)], 'p.jpg', { type: 'image/jpeg' })); if (email) data.set('email', email); return data; };
     models.drawn = await sharp({ create: { width: 64, height: 64, channels: 4, background: '#b5651d' } }).png().toBuffer();
     await expect(pickFace(t.db, ben.personId, CUSTOM)).rejects.toThrow('Pick one of the animals.');
     expect((await customFaceRoute(new Request('http://loop.test/'), { params: Promise.resolve({ token: 'nope' }) })).status).toBe(404);
@@ -388,14 +384,20 @@ describe('who sees whom', () => {
       const bad = new FormData(); bad.set('photo', new File(['not a picture'], 'p.jpg'));
       expect(await makeFaceAction(bad)).toEqual({ ok: false, message: 'That file is not a photo Loopd can read. Try a JPEG or a PNG.' });
       models.look = '{"animal": true, "nearest": 23}';
-      for (let made = 1; made <= MAKES; made++) expect(await makeFaceAction(send())).toMatchObject({ ok: true, left: MAKES - made });
-      expect(await makeFaceAction(send())).toEqual({ ok: false, message: 'You have made your free animal. Making more is not set up yet.' });
+      for (let made = 1; made <= INK_MAKES; made++) expect(await makeFaceAction(send())).toMatchObject({ ok: true, left: INK_MAKES - made });
+      expect(await makeFaceAction(send())).toEqual({ ok: false, message: 'You have made all three of your animals. Ink+ makes as many as you like.' });
       // Every picture made is kept, and a person may use any of their own. The admin's list has each ask with its pictures.
       const { rows: [first] } = await t.db.query<{ token: string }>('select token from campus_custom_picture where person_id=$1', [ana.personId]);
       const { rows: [second] } = await t.db.query<{ token: string }>('insert into campus_custom_picture(person_id,image) select person_id,image from campus_custom_picture where token=$1 returning token', [first.token]);
       expect(await ownFaceAction(`/animals/custom/${second.token}`)).toEqual({ ok: true });
-      expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer).toMatchObject({ own: `/animals/custom/${second.token}`, owns: [first.token, second.token].map(token => `/animals/custom/${token}`), asked: true, makesLeft: 0 });
-      expect(await premiumAsks(t.db)).toEqual([{ email: 'ana@cornell.edu', asked: expect.stringMatching(/^[0-9-]{10}$/), pictures: [first.token, second.token] }]);
+      const all = (await t.db.query<{ token: string }>('select token from campus_custom_picture where person_id=$1', [ana.personId])).rows.map(row => row.token).sort();
+      expect(all).toHaveLength(INK_MAKES + 1);
+      const shown = (await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer!;
+      expect(shown).toMatchObject({ own: `/animals/custom/${second.token}`, asked: true, makesLeft: 0 });
+      expect([...shown.owns].sort()).toEqual(all.map(token => `/animals/custom/${token}`));
+      const asks = await premiumAsks(t.db);
+      expect(asks).toEqual([{ email: 'ana@cornell.edu', asked: expect.stringMatching(/^[0-9-]{10}$/), pictures: expect.any(Array) }]);
+      expect([...asks[0].pictures].sort()).toEqual(all);
       await withPortalTestSession(ben, async () => expect(await ownFaceAction(`/animals/custom/${first.token}`)).toEqual({ ok: false, message: 'Pick one of the animals.' }));
       // The admin offers one to everyone: it is in every picker, and Ben, who never subscribed, may use it.
       const seenBy = async (who: typeof ana) => (await campusScreen(t.db, cornell, as(who), { photos: noPhotos }))!.viewer!;
@@ -403,7 +405,10 @@ describe('who sees whom', () => {
       const core = async (who: typeof ana) => (await seenBy(who)).picks.core.map(tile => tile.src), premium = async (who: typeof ana) => (await seenBy(who)).picks.premium.map(tile => tile.src);
       expect([(await core(ben)).length, await premium(ben)]).toEqual([36, ['/animals/37.png']]);
       await setPictureTier(t.db, first.token, 'core');
-      expect((await catalogue(t.db)).made).toEqual([{ token: first.token, src: address(first.token), tier: 'core', email: 'ana@cornell.edu', name: null, words: ['made'] }, { token: second.token, src: address(second.token), tier: null, email: 'ana@cornell.edu', name: null, words: ['made'] }]);
+      const made = (await catalogue(t.db)).made;
+      expect(made.map(one => one.token).sort()).toEqual(all);
+      expect(made.find(one => one.token === first.token)).toEqual({ token: first.token, src: address(first.token), tier: 'core', email: 'ana@cornell.edu', name: null, words: ['made'] });
+      expect(made.find(one => one.token === second.token)).toEqual({ token: second.token, src: address(second.token), tier: null, email: 'ana@cornell.edu', name: null, words: ['made'] });
       expect((await core(ben)).at(-1)).toBe(address(first.token));
       expect(await seenBy(ben)).toMatchObject({ own: null, owns: [], asked: false });
       await withPortalTestSession(ben, async () => {
@@ -437,12 +442,18 @@ describe('who sees whom', () => {
       await withPortalTestSession(ben, async () => { await setPictureTier(t.db, first.token, 'core'); expect(await ownFaceAction(address(first.token))).toEqual({ ok: true }); await setPictureTier(t.db, first.token, 'own'); });
       await deletePicture(t.db, first.token);
       expect(await seenBy(ben)).toMatchObject({ face: animalOf(ben.personId), own: null });
-      expect(await seenBy(ana)).toMatchObject({ owns: [address(second.token)], own: address(second.token) });
+      const left = await seenBy(ana);
+      expect(left.own).toBe(address(second.token));
+      expect([...left.owns].sort()).toEqual(all.filter(token => token !== first.token).map(address));
       expect(await customFaceImage(t.db, first.token)).toBeNull();
       await expect(deletePicture(t.db, first.token)).rejects.toThrow('No such picture');
-      // The admin tests this, and is never stopped at the free one.
-      expect(await makeCustomFace(t.db, ana.personId, jpeg, null, undefined, true)).toMatchObject({ left: MAKES });
-      expect((await campusScreen(t.db, cornell, as(ana, true), { photos: noPhotos }))!.viewer).toMatchObject({ owns: { length: 2 }, makesLeft: MAKES });
+      // The admin tests this, and is never stopped.
+      expect(await makeCustomFace(t.db, ana.personId, jpeg, null, undefined, true)).toMatchObject({ left: null });
+      expect((await campusScreen(t.db, cornell, as(ana, true), { photos: noPhotos }))!.viewer).toMatchObject({ owns: { length: all.length }, makesLeft: null });
+      // Ink+ has no limit, and holds Ink: Ana, at three, makes a fourth once she has it, and is shown no count.
+      await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
+      expect(await makeFaceAction(send())).toMatchObject({ ok: true, left: null });
+      expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer).toMatchObject({ plan: 'plus', asked: true, makesLeft: null });
     });
   });
   it('a stranger in the same outing is shown, by first name only', async () => {
@@ -489,8 +500,15 @@ describe('Loopd Ink', () => {
     await show(as(ana));
     shown = card(/Ana Lopez, Member/);
     expect(shown.getByText('You have Ink')).toBeInTheDocument();
-    expect(shown.getByRole('link', { name: 'See it' })).toHaveAttribute('href', INK);
+    // On Ink, the row offers Ink+, and pressing it signs them up (openspec loop-ink-tiers).
+    expect(shown.getByRole('button', { name: 'Ink+ · $9.99' })).toBeInTheDocument();
     expect(shown.queryByText(/Premium/)).toBeNull();
+    cleanup();
+    await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
+    await show(as(ana));
+    shown = card(/Ana Lopez, Member/);
+    expect(shown.getByText('You have Ink+')).toBeInTheDocument();
+    expect(shown.getByRole('link', { name: 'See it' })).toHaveAttribute('href', INK);
   });
   it('marks the animals that come with it in the picker, and is never called Premium', async () => {
     const { ana } = await world();
@@ -517,27 +535,41 @@ describe('Loopd Ink', () => {
       await expect(pickFace(t.db, ana.personId, 36)).rejects.toThrow('That one comes with Loopd Ink.');
     });
   });
-  it('puts its mark on the face of a person who has it, and on nobody else', async () => {
+  it('puts its plan on the face of a person who has one: a blot for Ink, a blot with sparks for Ink+, and nothing for anyone else', async () => {
     const { ana, ben } = await world(), others = [await person('Cy Park'), await person('Dee Ito'), await person('Eve Hart')];
     const trivia = await event('Trivia'), bens = await imIn(t.db, ben.personId, trivia);
     for (const each of [ana, ...others]) await joinByToken(t.db, each.personId, bens.token);
     await subscribe(t.db, ben.personId, 'ben@cornell.edu');
-    // Ana is the admin and has not asked for Ink: being the admin does not give the mark.
+    // Cy asked only for Ink+, which holds Ink.
+    await subscribeInkPlus(t.db, others[0].personId, 'cy@cornell.edu');
+    expect([await hasInk(t.db, others[0].personId), await hasInk(t.db, others[1].personId)]).toEqual([true, false]);
+    // Ana is the admin and has asked for neither: being the admin does not give the mark.
     const { model, container } = await show(as(ana, true));
     const ticket = model.tickets.find(each => each.title === 'Trivia')!;
-    // Four faces on the ticket, one with Ink.
-    expect(ticket.stub.kind === 'none' && ticket.stub.faces.map(face => [face.first, face.ink])).toEqual([['Ben', true], ['Cy', false], ['Dee', false], ['Eve', false]]);
-    expect(ticket.mine!.members.find(face => face.me)).toMatchObject({ ink: false });
+    // Four faces on the ticket: one with Ink, one with Ink+.
+    expect(ticket.stub.kind === 'none' && ticket.stub.faces.map(face => [face.first, face.plan])).toEqual([['Ben', 'ink'], ['Cy', 'plus'], ['Dee', 'free'], ['Eve', 'free']]);
+    expect(ticket.mine!.members.find(face => face.me)).toMatchObject({ plan: 'free' });
     const marked = [...container.querySelectorAll('.cs-inked')];
     expect(marked.length).toBeGreaterThan(0);
-    for (const each of marked) { expect(each.querySelector('img')).toHaveAccessibleName('Ben, has Ink'); expect(each.querySelector('.cs-blot')).not.toBeNull(); }
+    for (const each of marked) {
+      expect(each.querySelector('.cs-blot')).not.toBeNull();
+      const name = each.querySelector('img')!.getAttribute('alt');
+      expect(['Ben, has Ink', 'Cy, has Ink+']).toContain(name);
+      // Only the Ink+ face has sparks.
+      expect(!!each.querySelector('.cs-sparks')).toBe(name === 'Cy, has Ink+');
+    }
     expect(screen.queryByRole('img', { name: 'Ben' })).toBeNull();
-    expect(screen.getAllByRole('img', { name: 'Cy' })[0].closest('.cs-inked')).toBeNull();
+    expect(screen.getAllByRole('img', { name: 'Dee' })[0].closest('.cs-inked')).toBeNull();
     expect(container.querySelector('.cs-acct .cs-inked')).toBeNull();
     cleanup();
-    // Ben's own avatar in the bar wears it.
+    // Ben's own avatar in the bar wears the blot, and Cy's the blot with sparks.
     const bar = await show(as(ben));
     expect(bar.container.querySelector('.cs-acct .cs-inked img')).toHaveAccessibleName('Ben, has Ink');
+    expect(bar.container.querySelector('.cs-acct .cs-sparks')).toBeNull();
+    cleanup();
+    const cys = await show(as(others[0]));
+    expect(cys.container.querySelector('.cs-acct .cs-inked img')).toHaveAccessibleName('Cy, has Ink+');
+    expect(cys.container.querySelector('.cs-acct .cs-sparks')).not.toBeNull();
   });
 });
 
@@ -715,13 +747,9 @@ describe('the pages', () => {
     expect(screen.getByRole('button', { name: /Ana Lopez, Member/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'This week' })).toHaveAttribute('href', '/c/cornell');
   });
-  it('a signed-out visitor sees the campus screen', async () => {
+  it('sends a signed-out visitor from the campus screen to sign in, and back', async () => {
     await world();
-    render(await page('cornell'));
-    expect(screen.getByRole('heading', { name: 'Blitz night' })).toBeInTheDocument();
-    expect(within(screen.getByRole('banner')).getByRole('link', { name: 'This week' })).toHaveAttribute('aria-current', 'page');
-    // The foot goes with the page (public/demo/mockups-footer.html): signed out it has the way home and the small print, not the groups pages.
-    expect(within(screen.getByRole('contentinfo')).getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'Terms', 'Privacy']);
+    await expect(page('cornell')).rejects.toEqual(sentTo('/sign-in?redirect_url=%2Fc%2Fcornell'));
   });
   it("another school's address sends a person to their own, and each school has its own list", async () => {
     await world();

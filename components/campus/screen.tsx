@@ -17,7 +17,8 @@ import { Near } from './near';
 import { AddSchools } from './add-schools';
 import { OwnFace } from './own-face';
 import { SaveFace } from './save-face';
-import { InkBlot, InkMark, SchoolMark } from './ink-mark';
+import { InkBlot, InkMark, InkSparks, SchoolMark } from './ink-mark';
+import { JoinPlan } from './join-plan';
 import { rememberMe } from '@/components/loading/last-bar';
 import { SeatsSmall, SeatsWord } from '@/components/loading/seats';
 import { PicturesWait } from '@/components/loading/pictures-wait';
@@ -47,11 +48,11 @@ const Chevron = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"
 
 export function FaceDot({ face, className = '' }: { face: Face; className?: string }) {
   const cls = `cs-face ${face.photo?.startsWith('/animals/') ? 'pet' : ''} ${face.here ? 'here' : ''} ${className}`.replace(/\s+/g, ' ').trim(), who = face.me ? 'You' : face.first;
-  // Someone who has Ink sits on a blot of their own, not a plain circle, and the name says so.
-  const name = face.ink ? `${who}, ${face.me ? 'you have' : 'has'} Ink` : who;
+  // Someone with a plan sits on a blot of their own, not a plain circle, Ink+ with sparks round it, and the name says which.
+  const name = face.plan !== 'free' ? `${who}, ${face.me ? 'you have' : 'has'} ${face.plan === 'plus' ? 'Ink+' : 'Ink'}` : who;
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals, or the sign-in account's photo at its own address
   const dot = face.photo ? <img className={cls} src={face.photo} alt={name} title={name} /> : <i className={cls} role="img" aria-label={name} title={name}>{who.slice(0, 1).toUpperCase()}</i>;
-  return face.ink ? <span className="cs-inked"><InkBlot seed={`${face.first}${face.photo ?? ''}`} />{dot}</span> : dot;
+  return face.plan !== 'free' ? <span className="cs-inked"><InkBlot seed={`${face.first}${face.photo ?? ''}`} />{dot}{face.plan === 'plus' && <InkSparks />}</span> : dot;
 }
 const Stack = ({ faces }: { faces: Face[] }) => faces.length ? <span className="cs-stack">{faces.slice(0, 6).map((face, at) => <FaceDot key={at} face={face} />)}</span> : null;
 export const Tile = ({ top, big, met = false }: { top: string; big: string; met?: boolean }) => <span className={`cs-tile ${met ? 'met' : ''}`}><small>{top}</small><b>{big}</b></span>;
@@ -256,7 +257,7 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
             {shelf}
           </div>
         </div>
-        <Near beside swap={swap} land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, ink: viewer.asked }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} />
+        <Near beside swap={swap} land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} />
       </div>
     </section></main>
   </div>;
@@ -272,7 +273,7 @@ export function CampusScreen({ screen, groups, signInHref, openId = null, signOu
         <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       {near ? <>{postSheet && <div className="cs-railwrap cs-near-post"><div className="cs-rail">{postSheet}</div></div>}
-        <Near swap={swap} land={land} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, ink: viewer.asked }} asked={meant(typed).length ? typed.trim() : ''} picked={opened?.id ?? null} onPick={id => { setCopied(false); setPosting(false); setOpen(id ? { id, pane: 'more', fresh: true } : null); }}>
+        <Near swap={swap} land={land} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} picked={opened?.id ?? null} onPick={id => { setCopied(false); setPosting(false); setOpen(id ? { id, pane: 'more', fresh: true } : null); }}>
           {opened && <div className="cs-rail" ref={rail}>{card(opened, 0)}{sheet}</div>}</Near></>
       : <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
         {picked.nothing ? postSheet ? <div className="cs-railwrap"><div className="cs-rail">{nothing}{postSheet}</div></div> : nothing
@@ -320,9 +321,9 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
   const [own, setOwn] = useState(viewer.own), [owns, setOwns] = useState(viewer.owns), [left, setLeft] = useState(viewer.makesLeft), [asked, setAsked] = useState(viewer.asked), [making, setMaking] = useState(false);
   // "Save your picture" takes the picker's place in the card: the rows step aside for it as they do for the picker.
   const [saving, setSaving] = useState(false);
-  const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : face === CUSTOM ? own : animal(face), ink: asked }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
+  const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : face === CUSTOM ? own : animal(face), plan: viewer.plan === 'plus' ? 'plus' : asked ? 'ink' : 'free' }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   // Every loader shows this face on this blot (components/loading): the last seat of the ticket, and the small one.
-  useEffect(() => { rememberMe({ face: me.photo, plan: asked ? 'ink' : 'free', seed: `${viewer.first}${me.photo ?? ''}` }); }, [me.photo, asked, viewer.first]);
+  useEffect(() => { rememberMe({ face: me.photo, plan: me.plan, seed: `${viewer.first}${me.photo ?? ''}` }); }, [me.photo, me.plan, viewer.first]);
   /** One of the animals they had made, which may not be the one in use. */
   const chooseOwn = (next: string) => { const before = { face, own }; setOwn(next); setFace(CUSTOM); setMoved(true); save(async () => { if (!(await ownFaceAction(next)).ok) { setOwn(before.own); setFace(before.face); } }); };
   useEffect(() => {
@@ -353,7 +354,9 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* The plan's one row. It steps aside for the picker, where an Ink animal opens the plan for someone without it. */}
-      {!picking && <div className="cs-inkrow"><InkMark /><span><b>{asked ? 'You have Ink' : 'Loopd Ink'}</b><small>{asked ? 'Every Ink animal is yours to pick.' : 'More animals, and your own pet drawn from a photo.'}</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>}
+      {!picking && (me.plan === 'plus' ? <div className="cs-inkrow"><InkMark plus /><span><b>You have Ink+</b><small>Everything in Ink, your AI, any school’s colours, no limits.</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>
+        : me.plan === 'ink' ? <div className="cs-inkrow"><InkMark /><span><b>You have Ink</b><small>Every Ink animal is yours, and 3 pets from a photo.</small></span><JoinPlan plan="plus" place="account: Get Ink+" className="cs-btn sm"><InkMark plus />Ink+ · $9.99</JoinPlan></div>
+        : <div className="cs-inkrow"><InkMark /><span><b>Loopd Ink</b><small>More animals, and 3 pets drawn from your photos.</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>)}
       {!picking && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" /></svg><span><b>Save your picture</b><small>A profile picture, a lock screen or a sticker.</small></span><button className="cs-btn sm" onClick={() => { setPicking(true); setSaving(true); setSchooling(false); }}>Save it</button></div>}
       {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
       {!picking && home && swap.filter(each => !each.home).map(each => <div className="cs-inkrow cs-camprow" key={each.slug}><span><b>Your campus is {home.title}</b><small>{moveNote ?? 'You can look at the other one any time from the map.'}</small></span>
@@ -368,12 +371,12 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
       : picking && making ? <OwnFace asked={asked} left={left} free={viewer.admin} current={owns.includes(own ?? '') ? own ?? '' : owns[owns.length - 1] ?? ''} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
       : picking ? <div className="cs-lvl-body cs-pets"><div className="cs-pets-top"><input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Search animals" placeholder="Search" />
           {viewer.picks.school.length > 0 && <button className="cs-btn sm school" aria-pressed={only === 'school'} onClick={() => setOnly(only === 'school' ? '' : 'school')}><SchoolMark />Mascots</button>}
-          <button className="cs-btn sm gold" aria-pressed={only === 'ink'} onClick={() => setOnly(only === 'ink' ? '' : 'ink')}><InkMark />Ink</button>
+          <button className="cs-btn sm gold" aria-pressed={only === 'ink'} onClick={() => setOnly(only === 'ink' ? '' : 'ink')}><InkMark named /></button>
           <button className="cs-btn sm icon" aria-label="Shuffle" title="Shuffle" onClick={shuffle}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1.5 4.5h2.6c1.3 0 2.4.7 3 1.8l1.8 3.4c.6 1.1 1.7 1.8 3 1.8h2.6M12.5 9.5l2 2-2 2M1.5 11.5h2.6c.8 0 1.6-.3 2.1-.8M9.8 5.3c.5-.5 1.3-.8 2.1-.8h2.6M12.5 2.5l2 2-2 2" /></svg></button>
           <button className="cs-btn sm go icon" aria-label="Done" title="Done" onClick={() => setPicking(false)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg></button></div>
         <PicturesWait className="cs-pets-grid" label="Pick your picture">
           {/* Making one is always first. Then the person's own, their school's, the premium ones, and the rest. */}
-          <button className="cs-pet add gold" aria-label="Create your own" aria-describedby={asked || viewer.admin ? 'cs-own-left' : undefined} onClick={() => setMaking(true)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg>{viewer.admin || left === null ? <span id="cs-own-left" className="cs-own-left plus" title="No limit"><InkMark /><span className="cs-sr">no limit</span></span> : asked && <span id="cs-own-left" className={`cs-own-left ${left ? '' : 'none'}`} title={`${left} left`}>{left}<span className="cs-sr"> left</span></span>}</button>
+          <button className="cs-pet add gold" aria-label="Create your own" aria-describedby={me.plan !== 'free' || viewer.admin ? 'cs-own-left' : undefined} onClick={() => setMaking(true)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg>{me.plan === 'plus' || viewer.admin ? <span id="cs-own-left" className="cs-own-left plus" title="No limit"><InkMark plus /><span className="cs-sr">no limit</span></span> : me.plan === 'ink' && <span id="cs-own-left" className={`cs-own-left ${left ? '' : 'none'}`} title={`${left} left`}>{left}<span className="cs-sr"> left</span></span>}</button>
           {viewer.ownPhoto && hit('your photo', '') && <button className="cs-pet photo" aria-pressed={face === PHOTO} aria-label="Your photo" onClick={() => choose(PHOTO)}><img src={viewer.ownPhoto} alt="" /></button>}
           {hit('your own animal made', 'ink') && owns.filter(one => ![...viewer.picks.core, ...viewer.picks.premium].some(each => each.src === one)).map((one, at) => <button key={one} className="cs-pet gold" aria-pressed={face === CUSTOM && own === one} aria-label={`Your own animal${owns.length > 1 ? ` ${at + 1}` : ''}`} onClick={() => chooseOwn(one)}><img src={one} alt="" /></button>)}
           {viewer.picks.school.filter(one => hit(called(one), 'school')).map(one => tile(one, false, false, true))}

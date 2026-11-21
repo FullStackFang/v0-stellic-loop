@@ -82,19 +82,39 @@ it('Who moved?: after ten seconds with nothing found, one that moved gives itsel
   expect(moved).toContain(hinted);
 });
 
-it('signed out, or without Ink+: "You" opens what Ink+ gives, and no animal is marked', () => {
+it('signed out, or without Ink: "You" opens what Ink gives, with a sign-up, and no animal is marked', () => {
   open({ ink: false, animals: [{ face: 12, picture: null }] });
   expect(root.dataset.ink).toBe('free');
   expect(srcs('a', '.tile').filter(src => src === '/animals/12.png')).toHaveLength(2);
   expect(root.querySelector('.spark:not([hidden])')).toBeNull();
   root.querySelector<HTMLElement>('.side .you')!.click();
   const box = root.querySelector('.side .pick')!;
-  expect(box.textContent).toContain('Play as your own animal'); expect(box.querySelector('a')!.getAttribute('href')).toBe('/c/ink');
+  expect(box.textContent).toContain('Play as your own animal');
+  // The Ink mark in place of the plan's name, and the button signs up (openspec loop-ink-tiers).
+  expect(box.querySelector('[role=img]')!.getAttribute('aria-label')).toBe('Ink');
+  expect(box.querySelector('[data-join]')!.textContent).toBe('Get Ink · $2.99');
 });
 
-it('with Ink+: "You" lists your animals, and the one picked plays in every mode and is kept', () => {
-  open({ ink: true, animals: [{ face: 12, picture: null }, { face: 0, picture: '/pets/mine.png' }, { face: 10, picture: null }] });
+it('signs up for Ink from the box, recording where, and thanks them', async () => {
+  const posted = vi.fn(async (_: string, init: RequestInit) => new Response(JSON.stringify({ ok: true, said: 'Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now.', sent: init.body })));
+  vi.stubGlobal('fetch', posted);
+  open({ ink: false, animals: [{ face: 12, picture: null }] });
+  root.querySelector<HTMLElement>('.side .you')!.click();
+  root.querySelector<HTMLElement>('.side .pick [data-join]')!.click();
+  await vi.waitFor(() => expect(root.querySelector('.side .pick p')!.textContent).toBe('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now.'));
+  expect(JSON.parse(String(posted.mock.calls[0][1].body))).toMatchObject({ plan: 'ink', place: 'seats: Get Ink' });
+  expect(root.querySelector('.side .pick [data-join]')).toBeNull();
+  vi.unstubAllGlobals();
+});
+
+it('with Ink+ the page says so, for the sparkle', () => {
+  open({ ink: true, plus: true, animals: [{ face: 12, picture: null }] });
   expect(root.dataset.ink).toBe('plus');
+});
+
+it('with Ink: "You" lists your animals, and the one picked plays in every mode and is kept', () => {
+  open({ ink: true, animals: [{ face: 12, picture: null }, { face: 0, picture: '/pets/mine.png' }, { face: 10, picture: null }] });
+  expect(root.dataset.ink).toBe('ink');
   root.querySelector<HTMLElement>('.side .you')!.click();
   const choices = [...root.querySelectorAll<HTMLElement>('.side .pick [data-n]')];
   expect(choices).toHaveLength(3);

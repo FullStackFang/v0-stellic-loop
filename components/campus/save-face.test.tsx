@@ -95,7 +95,7 @@ it('shows the Ink+ plan for "No mark", takes an email, charges nothing and then 
   press('Subscribe');
   expect(await screen.findByText('You’re in. The mark is off.')).toBeInTheDocument();
   expect(act.subscribe).toHaveBeenCalledWith('ana@cornell.edu');
-  expect(screen.getByText(/Payment is not set up yet, so this is free/)).toBeInTheDocument();
+  expect(screen.getByText(/This isn’t ready yet, so we’ve upgraded you to Ink\+ for now/)).toBeInTheDocument();
   preview('pane-joined', 'profile');
   press('Save without the mark');
   await waitFor(() => expect(saved).toEqual([{ name: 'profile.png', href: 'blob:picture' }]));

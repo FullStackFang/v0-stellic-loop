@@ -200,6 +200,12 @@ it('names in the bar the top groups a person can open, and the one they are in',
   expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('href', '/c/ink');
   expect(screen.getByRole('button', { name: 'Your account and colours' }).querySelector('.cs-blot')).toBeNull();
   cleanup(); at.params = {}; at.path = '/groups';
-  render(<Bar groups={mine} face={null} ink account={null} />);
-  expect(screen.getByRole('button', { name: 'Your account and colours. You have Ink' }).querySelector('.cs-blot')).not.toBeNull();
+  render(<Bar groups={mine} face={null} plan="ink" account={null} />);
+  const inked = screen.getByRole('button', { name: 'Your account and colours. You have Ink' });
+  expect([!!inked.querySelector('.cs-blot'), !!inked.querySelector('.cs-sparks')]).toEqual([true, false]);
+  // With Ink+ it is the same blot, with sparks (openspec loop-ink-tiers).
+  cleanup();
+  render(<Bar groups={mine} face={null} plan="plus" account={null} />);
+  const plus = screen.getByRole('button', { name: 'Your account and colours. You have Ink+' });
+  expect([!!plus.querySelector('.cs-blot'), !!plus.querySelector('.cs-sparks')]).toEqual([true, true]);
 });

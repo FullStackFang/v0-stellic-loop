@@ -45,3 +45,5 @@
 .cs-asst .cs-ft-ask { left: 0; top: calc(100% + 18px); bottom: auto; width: min(400px, calc(100vw - 32px)); border-radius: 6px 20px 20px 20px; transform-origin: 40px 0; }
 .cs-asst .cs-ft-ask::after { top: -9px; bottom: auto; }
 .cs-asst .cs-ft-ask-tab { top: auto; bottom: -12px; }
+/* On a phone a colour dot is big enough for a thumb. */
+@media (max-width: 700px) { .cs .cs-ft-kits button { width: 32px; height: 32px; } }

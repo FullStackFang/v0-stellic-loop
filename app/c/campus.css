@@ -292,6 +292,8 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 @media (prefers-reduced-motion: reduce) { .cs-prem-join { animation: none; } }
 .cs-own-made { display: grid; justify-items: center; gap: 12px; margin-top: 14px; text-align: center; } .cs-own-made img { width: 132px; height: 132px; object-fit: contain; }
 .cs-own-made img.busy { border-radius: 16px; object-fit: cover; animation: cs-own-wait 1.4s ease-in-out infinite alternate; } @keyframes cs-own-wait { to { opacity: .45; transform: scale(.96); } }
+/* The thanks every sign-up says, in place of its button (components/campus/join-plan.tsx). */
+.cs .cs-joined { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 14px; font-weight: 600; line-height: 1.35; }
 .cs-own .cs-own-thanks { margin-top: 12px; font-size: 14px; line-height: 1.4; font-weight: 540; color: var(--cs-field); }
 /* The made animal, and the photo while it is drawn, on the plate. 96px: the picture is a 192px file. */
 .cs-prem-made { display: grid; justify-items: center; gap: 12px; padding: 22px 0 26px; text-align: center; } .cs-prem-made > img { width: 96px; height: 96px; object-fit: contain; border-radius: 50%; background: color-mix(in oklch, var(--cs-on-ink) 12%, transparent); box-shadow: 0 0 0 3px var(--cs-field); }
@@ -809,6 +811,13 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-inked { position: relative; display: inline-grid; flex: none; } .cs-inked > * { grid-area: 1 / 1; }
 .cs-blot { position: absolute; inset: -30%; width: 160%; height: 160%; overflow: visible; pointer-events: none; }
 .cs-inked > .cs-face { position: relative; background: none; scale: .84; } .cs-inked > i.cs-face { color: var(--cs-paper); }
+/* an Ink+ face: the same blot, and three small sparks round it that twinkle in turn (openspec loop-ink-tiers, "Sparkles"
+   in public/demo/mockups-ink-tiers.html). They sit over the face and the blot, and take no room. */
+.cs-sparks { position: absolute; inset: -30%; z-index: 1; pointer-events: none; }
+.cs-sparks svg { position: absolute; width: 22%; height: 22%; overflow: visible; fill: var(--cs-third); stroke: var(--cs-ink); stroke-width: 5; paint-order: stroke; animation: cs-twinkle 2.6s var(--cs-ease) infinite; }
+.cs-sparks svg:nth-child(1) { right: 6%; top: 4%; } .cs-sparks svg:nth-child(2) { left: 2%; top: 46%; width: 15%; height: 15%; animation-delay: .9s; } .cs-sparks svg:nth-child(3) { right: 16%; bottom: 2%; width: 13%; height: 13%; animation-delay: 1.7s; }
+@keyframes cs-twinkle { 0%, 50%, 100% { scale: .55; rotate: 0deg; } 68% { scale: 1.2; rotate: 30deg; } }
+@media (prefers-reduced-motion: reduce) { .cs-sparks svg { animation: none; } }
 /* an animal of the picker that needs Ink wears the mark as a small stamp, lower right */
 .cs .cs-pet > .cs-ink { position: absolute; right: -4px; bottom: -4px; z-index: 1; width: 18px; height: 18px; padding: 1.5px; border-radius: 50%; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink); }
 /* in a row of overlapping faces the overlap moves to the wrapper, and the edge of paper that parts two faces goes round the blot */
@@ -825,12 +834,66 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm-moves details[open] summary { display: none; } .cs-adm-moves details button { background: var(--adm-warn); color: var(--cs-paper); }
 .cs-adm-pick:has(.cs-adm-grid :checked):not(:has(.cs-adm-grid li:has(:checked) ~ li:has(:checked))) .cs-adm-tray { display: none; }
 .cs-adm-pick:has(.cs-adm-grid input:checked:not([data-mascot])) .cs-adm-tray button[value=school] { display: none; }
+
+/* Phones: the week runs down the page, not sideways. Each ticket takes the width, and an open ticket's panel unfolds
+   under it as one piece: the same tear between them that the stub has, turned to run across. */
+@media (max-width: 700px) {
+  .cs-evs { display: block; min-height: 0; }
+  .cs-railwrap { margin: 0; } .cs-railwrap > .cs-rail, .cs-near-sheet .cs-rail { flex-direction: column; gap: 18px; scroll-snap-type: none; }
+  .cs-railwrap > .cs-rail { overflow: visible; padding: 0 5px 12px 0; } .cs-near-sheet.open .cs-rail { overflow: hidden auto; max-height: min(70dvh, 560px); }
+  .cs-railwrap > .cs-rail > .cs-ev, .cs-rail > .cs-ev, .cs-rail > .cs-sheet, .cs-rail > .cs-sheet.cs-post, .cs-rail > .cs-nothing { flex: none; width: 100%; }
+  .cs-rail > .cs-sheet { overflow: visible; padding: 14px 16px 16px; } .cs-rail > .cs-sheet.cs-post { order: -1; }
+  .cs-then { flex: none; grid-auto-flow: column; justify-content: center; align-items: baseline; padding: 8px 16px; } .cs-then span { writing-mode: horizontal-tb; }
+  .cs-rail > .cs-ev.open:has(+ .cs-sheet) { border-radius: var(--cs-r) var(--cs-r) 0 0; }
+  .cs-rail > .cs-ev.open:has(+ .cs-sheet) :is(.cs-top, .cs-mech.none) { -webkit-mask: none; mask: none; }
+  .cs-rail > .cs-ev.open:has(+ .cs-sheet) .cs-top:has(+ .cs-mech:not(.none)) { -webkit-mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 100%, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+  .cs-rail > .cs-ev.open:has(+ .cs-sheet) .cs-mech:not(.none) { -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
+  .cs-rail > .cs-ev.open + .cs-sheet { margin: -18px 0 0; border-radius: 0 0 var(--cs-r) var(--cs-r); }
+  .cs-rail > .cs-ev.open + .cs-sheet::before { -webkit-mask: none; mask: none; }
+  .cs-rail > .cs-ev.open + .cs-sheet::after { left: 18px; right: 18px; top: -1px; bottom: auto; border-left: 0; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
+  .cs-tabs { flex-wrap: wrap; }
+}
 /* Picking an animal, the account card is as wide as the window allows, as the group picture's card is: more in a row, less to scroll, and no bar drawn */
 .cs-lvl:has(.cs-pets-grid) { width: min(960px, calc(100vw - 28px)); }
 .cs-lvl .cs-pets-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
 .cs-lvl:has(.cs-pets-grid) .cs-lvl-body { max-height: min(72vh, 720px); scrollbar-width: none; scrollbar-gutter: auto; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body::-webkit-scrollbar { display: none; }
-/* How many more animals they may make, on the "Create your own" tile's corner (loop-own-animal-drafts, look A): an ink circle with the number, pink at none left, the Ink+ mark with no limit. */
-.cs .cs-pet.add .cs-own-left { position: absolute; right: -5px; top: -5px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: 13px; font-weight: 780; line-height: 1; background: var(--cs-ink); color: var(--cs-gold); box-shadow: 0 0 0 2px var(--cs-paper); }
-.cs .cs-pet.add .cs-own-left.none { background: var(--cs-third); color: var(--cs-paper); }
-.cs .cs-pet.add .cs-own-left.plus { right: -7px; top: -7px; width: 28px; height: 28px; padding: 3px; background: var(--cs-paper); box-shadow: 0 0 0 2px var(--cs-gold); }
-.cs .cs-pet.add .cs-own-left.plus > .cs-ink { width: 100%; height: 100%; }
+
+/* Phones: the bar is one row: the wordmark, the face, and a menu button. Everything else in the bar (the links, the organizers'
+   door, Groups, On you) folds into the menu: pressed, it opens as a card under the bar, one wide pill each, and a counter's
+   panel unfolds in the card under its own pill. On a wide screen the menu is not a box at all: its parts sit in the bar. */
+.cs-burger { display: none; } .cs-menu { display: contents; } .cs-menu > .cs-org { margin-left: auto; } .cs-menu > .cs-oy-pair, .cs-menu ~ .cs-nav-end { margin-left: 8px; }
+@media (max-width: 860px) {
+  .cs-nav { flex-wrap: nowrap; gap: 8px; } .cs-nav-end { flex-wrap: nowrap; gap: 8px; } .cs-menu ~ .cs-nav-end { margin-left: auto; }
+  .cs-burger { order: 3; flex: none; display: grid; place-items: center; width: 42px; height: 38px; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+  .cs-burger i, .cs-burger i::before, .cs-burger i::after { display: block; width: 18px; height: 2.5px; border-radius: 2px; background: currentColor; transition: transform .25s var(--cs-ease), opacity .15s; }
+  .cs-burger i { position: relative; } .cs-burger i::before, .cs-burger i::after { content: ''; position: absolute; left: 0; } .cs-burger i::before { top: -6px; } .cs-burger i::after { top: 6px; }
+  .cs .cs-burger[aria-expanded=true] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; } .cs-burger[aria-expanded=true] i { background: transparent; }
+  .cs-burger[aria-expanded=true] i::before { transform: translateY(6px) rotate(45deg); } .cs-burger[aria-expanded=true] i::after { transform: translateY(-6px) rotate(-45deg); }
+  .cs-menu { display: none; }
+  .cs-menu[data-open] { position: absolute; z-index: 7; left: 12px; right: 12px; top: calc(100% + 14px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; max-height: calc(100dvh - 92px); overflow-y: auto; scrollbar-width: none; padding: 12px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); animation: cs-in .3s var(--cs-expo); }
+  .cs-menu .cs-links, .cs-menu > .cs-oy-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 0; } .cs-menu .cs-oy { min-width: 0; }
+  .cs-nav .cs-links a, .cs-nav .cs-links a.cs-inktab, .cs-menu > .cs-org { display: flex; height: 46px; margin: 0; padding: 0 16px; font-size: 16px; } .cs-nav .cs-inktab span:not(.seats-linkwait) { display: inline; } .cs-nav .cs-asst > a { flex: 1; }
+  .cs-menu > .cs-oy-pair .cs-oy-pill { width: 100%; height: 46px; padding: 0 10px 0 16px; justify-content: space-between; font-size: 16px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+  .cs-menu .cs-oy-drop { position: static; width: auto; max-height: none; margin-top: 8px; padding: 12px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); background: var(--cs-page); animation: none; } .cs-menu .cs-oy-list { overflow: visible; margin: 0; padding: 0; }
+}
+
+/* Phones: the door's ticket takes the whole width, and the other schools peek out above it as name tabs rather than
+   beside it, where they squeezed the ticket to two thirds and cut its title short. */
+@media (max-width: 560px) {
+  .cs-deck { width: auto; margin-right: 6px; } .cs-deck:has(.cs-dtab) { margin-top: 44px; } .cs-deck:has(.cs-dtab + .cs-dtab) { margin-top: 74px; } .cs-deck:has(.cs-dtab + .cs-dtab + .cs-dtab) { margin-top: 104px; }
+  .cs-dtab, .cs-dtab:hover { inset: 0 calc(var(--k) * 9px + 6px); padding: 5px 18px; transform: translateY(calc(var(--k) * -30px)); } .cs-dtab:active { transform: translateY(calc(var(--k) * -30px - 4px)); }
+  .cs-dtab span { writing-mode: horizontal-tb; font-size: 15px; line-height: 20px; }
+  .cs-door-say > p.cs-tip { margin-top: 22px; }
+}
+
+/* The school name that rolled away rests out of sight by itself, not only while its animation holds it there: with
+   motion turned off there is no animation, and the old name sat on top of the new one. */
+@keyframes cs-roll-away { from { transform: none; } }
+.cs-roll em.out { transform: translateY(-100%); animation-name: cs-roll-away; }
+
+/* Phones: the account card hangs from the bar, edge to edge like the menu. Hung from the face it ran off the left of the
+   screen, because the menu button now sits to the right of the face. */
+@media (max-width: 860px) {
+  .cs-nav .cs-acct { position: static; }
+  .cs-nav .cs-acct .cs-lvl { left: 12px; right: 12px; top: calc(100% + 14px); width: auto; max-width: none; max-height: calc(100dvh - 92px); overflow-y: auto; scrollbar-width: none; transform-origin: 80% 0; }
+}

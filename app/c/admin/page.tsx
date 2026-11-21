@@ -7,6 +7,8 @@ import { clubClaims, type AdminClaim } from '@/lib/campus/club-claim';
 import { catalogue } from '@/lib/campus/animal-tiers';
 import { premiumAsks } from '@/lib/campus/custom-face';
 import { clubAsks } from '@/lib/campus/imprint';
+import { callAsks } from '@/lib/campus/call-ask';
+import { signedOutAsks, subscribeAsks } from '@/lib/campus/ink';
 import { LEVELS } from '@/lib/campus/levels';
 import { linkedinPeople, type LinkedinPerson } from '@/lib/campus/linkedin';
 import { listCampuses } from '@/lib/campus/listings';
@@ -48,6 +50,8 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
   const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs, claims] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => []), clubClaims(db()).catch((): AdminClaim[] => [])]);
+  // Every sign-up, with the button pressed, and every ask for a call (app/c/ink). Read only on the Premium tab.
+  const [signUps, calls, outs] = tab === 'premium' ? await Promise.all([subscribeAsks(db()).catch(() => []), callAsks(db()).catch(() => []), signedOutAsks(db()).catch(() => [])]) : [[], [], []];
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
   const at = (to: Tab, school = campus.slug) => `/c/admin?campus=${school}&tab=${to}`;
   /** What every form carries: the campus it acts on, and the section to come back to. */
@@ -175,6 +179,14 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       <p className="cs-adm-lede">{asks.length ? `Asked to subscribe, across every campus. Nobody is charged, and each got one animal free.` : 'Nobody has asked to subscribe yet.'}</p>
       {/* eslint-disable-next-line @next/next/no-img-element -- pictures Loopd made, served from the database at their own address */}
       <ul className="cs-adm-rows">{asks.map(ask => <li key={ask.email + ask.asked}><div><b>{ask.email}</b><span>{ask.asked}</span></div><span className="made">{ask.pictures.map(token => <img key={token} src={customFace(token)} alt="" />)}</span></li>)}</ul>
+      {/* Who said when a 15-minute call would suit them, after signing up on the Ink page (lib/campus/call-ask.ts). Nothing is booked: write back to set one up. */}
+      <p className="cs-adm-lede">{calls.length ? 'Asked for a 15-minute call, newest first. Their days and times are their own local time. Write back to set one up.' : 'Nobody has asked for a call yet.'}</p>
+      <ul className="cs-adm-rows">{calls.map((ask, at) => <li key={at}><div><b>{ask.email}</b><span>{ask.role === 'organizer' ? 'Organizer' : 'Student'} · sent {ask.asked}</span></div><div><span>{ask.times.map(time => time.replace('T', ' ')).join(' · ') || 'No time given'}</span>{ask.note && <span>{ask.note}</span>}</div></li>)}</ul>
+      {/* Every press that signed someone up (lib/campus/ink.ts): who, which plan, where (the feature, then the button) and when. */}
+      <p className="cs-adm-lede">{signUps.length ? 'Every sign-up, newest first, with where it was pressed. Nobody is charged.' : 'Nobody has signed up yet.'}</p>
+      <ul className="cs-adm-rows">{signUps.map((ask, at) => <li key={at}><div><b>{ask.email}</b><span>{ask.plan === 'ink_plus' ? 'Ink+' : 'Ink'} · {ask.place} · {ask.asked}</span></div></li>)}</ul>
+      {outs.length > 0 && <p className="cs-adm-lede">Signed up on the Ink page without an account, newest first. Each gets the plan when they sign in with that email.</p>}
+      <ul className="cs-adm-rows">{outs.map((ask, at) => <li key={at}><div><b>{ask.email}</b><span>{ask.plan === 'ink_plus' ? 'Ink+' : 'Ink'} · {ask.place} · {ask.asked} · {ask.claimed ? 'signed in since' : 'not signed in yet'}</span></div></li>)}</ul>
       {/* Claims from the organizers page (lib/campus/imprint.ts): a field test, so no club is made and nobody is charged. */}
       <p className="cs-adm-lede">{clubs.length ? 'Clubs claimed on the organizers page, across every campus. Nothing is made or charged yet.' : 'Nobody has claimed a club yet.'}</p>
       <ul className="cs-adm-rows">{clubs.map((ask, at) => <li key={at}><div><b>{ask.club}</b><span>{ask.email} · {ask.plan === 'imprint' ? 'Imprint' : 'Free'} · {ask.asked}</span></div></li>)}</ul>

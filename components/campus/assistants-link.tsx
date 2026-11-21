@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { SeatsWord } from '@/components/loading/seats';
-import { hasInkPlusAction, subscribeAtFootAction } from './foot-actions';
+import { hasInkPlusAction, planHereAction, subscribeAtFootAction } from './foot-actions';
 import { InkMark } from './ink-mark';
 import './foot.css';
 
@@ -16,6 +16,8 @@ import './foot.css';
 export function AssistantsLink() {
   const router = useRouter(), asked = useRef<Promise<boolean> | null>(null), [plus, setPlus] = useState(false), [ask, setAsk] = useState(false);
   const [email, setEmail] = useState(''), [busy, setBusy] = useState(false), [said, setSaid] = useState('');
+  // Someone on Ink is told what Ink+ adds, and what it costs in place of Ink (openspec loop-ink-tiers).
+  const [onInk, setOnInk] = useState(false);
   // Subscribe on the card: the press is kept (when, and where it was made), and then Assistants opens.
   const subscribe = async () => {
     setBusy(true); setSaid('');
@@ -26,14 +28,14 @@ export function AssistantsLink() {
   };
   // Asked once, when the link is first pointed at. If it cannot be asked, the link stays a link.
   const knows = () => asked.current ??= hasInkPlusAction().catch(() => true).then(has => { setPlus(has); return has; });
-  const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); if (ask) return setAsk(false); if (await knows()) router.push('/groups/connections'); else setAsk(true); };
+  const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); if (ask) return setAsk(false); if (await knows()) router.push('/groups/connections'); else { setAsk(true); setOnInk((await planHereAction().catch(() => 'free')) === 'ink'); } };
   useEffect(() => { if (!ask) return; const key = (event: KeyboardEvent) => { if (event.key === 'Escape') setAsk(false); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); }, [ask]);
   return <span className="cs-asst">
-    <Link className="cs-ft-asst" href="/groups/connections" data-open={ask || undefined} onPointerEnter={knows} onFocus={knows} onClick={press}><InkMark />Assistants{!plus && <b>Ink+</b>}</Link>
+    <Link className="cs-ft-asst" href="/groups/connections" data-open={ask || undefined} onPointerEnter={knows} onFocus={knows} onClick={press} aria-label={plus ? undefined : 'Assistants, with Ink+'}><InkMark plus />Assistants</Link>
     {ask && <div className="cs-ft-ask" role="dialog" aria-label="Assistants come with Ink+">
-      <span className="cs-ft-ask-tab"><InkMark />Ink+</span><h3>Assistants come with Ink+</h3><p>Your own AI, answering from your groups.</p>
+      <span className="cs-ft-ask-tab"><InkMark plus named /></span><h3>Assistants come with Ink+</h3><p>{onInk ? 'You have Ink. Ink+ adds your own AI, answering from your groups, any school’s colours, and no limits: $9.99 a month, in place of $2.99.' : 'Your own AI, answering from your groups.'}</p>
       <form onSubmit={event => { event.preventDefault(); void subscribe(); }}><input type="email" required value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" />
-        <button className="cs-btn sm go" disabled={busy}><SeatsWord on={busy} word="Subscribing" plate>Subscribe · $9.99</SeatsWord></button><button type="button" className="cs-btn sm" onClick={() => setAsk(false)}>Not now</button></form>
+        <button className="cs-btn sm go" disabled={busy}><SeatsWord on={busy} word="Subscribing" plate>{onInk ? 'Move to Ink+ · $9.99' : 'Subscribe · $9.99'}</SeatsWord></button><button type="button" className="cs-btn sm" onClick={() => setAsk(false)}>Not now</button></form>
       {said && <p role="alert">{said}</p>}</div>}
   </span>;
 }

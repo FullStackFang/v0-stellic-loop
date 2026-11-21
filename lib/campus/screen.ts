@@ -8,8 +8,8 @@ import { schoolOf } from './schools';
 import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
 import { animal, animalOf, CUSTOM, customFace, PHOTO } from './animals';
 import { picks as offered, schoolOfPerson } from './animal-tiers';
-import { customFaces, MAKES } from './custom-face';
-import { hasInkPlus } from './ink';
+import { customFaces } from './custom-face';
+import { plansOf } from './ink';
 import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
 import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Reward } from './rewards';
 import { nearTags } from './tags';
@@ -92,10 +92,11 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   const photos = wanted.length ? await (options.photos ?? accountPhotos)(db, wanted) : {};
   // The animal a person had made is used for those who picked it, and for the viewer, who is offered theirs in the account card.
   // The same rows say who has Ink, which every face shows, so they are read for everyone shown.
-  const made = await customFaces(db, [...shown]);
+  const made = await customFaces(db, [...shown]), plans = await plansOf(db, [...new Set([...shown, ...(viewer ? [viewer.personId] : [])])]);
+  const planOf = (id: string) => plans.get(id) ?? 'free';
   const faceOf = (id: string) => { const pick = picks.get(id); return pick === PHOTO && photos[id] ? PHOTO : pick === CUSTOM && made.get(id)?.token ? CUSTOM : pick === undefined || pick < 0 ? animalOf(id) : pick; };
   const picture = (id: string) => { const pick = faceOf(id); return pick === PHOTO ? photos[id] : pick === CUSTOM ? customFace(made.get(id)!.token!) : animal(pick); };
-  const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: picture(id), ink: !!made.get(id)?.asked, ...more });
+  const face = (id: string, more: Partial<Face> = {}): Face => ({ first: names.get(id)?.first ?? 'Someone', photo: picture(id), plan: planOf(id), ...more });
 
   let live: Live | null = null;
   const tickets = listings.map((listing): Ticket => {
@@ -181,7 +182,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
         token: mine.token, registered: self.registered, here: iAmHere, canLeave: !iAmHere,
         canEdit: listing.origin === 'member' && listing.postedBy === me && Date.parse(listing.startsAt) > now.getTime(),
         members: mine.members.map(member => face(member.personId, { here: member.here, me: member.personId === me })),
-        choices: (choices.get(mine.id) ?? []).map(choice => ({ ...choice, first: names.get(choice.personId)?.first ?? 'Someone', photo: picture(choice.personId), ink: !!made.get(choice.personId)?.asked })),
+        choices: (choices.get(mine.id) ?? []).map(choice => ({ ...choice, first: names.get(choice.personId)?.first ?? 'Someone', photo: picture(choice.personId), plan: planOf(choice.personId) })),
       } : null,
       action, status, joinToken,
     };
@@ -200,7 +201,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   return {
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
     viewer: viewer && { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(viewer.personId), face: faceOf(viewer.personId), ownPhoto: photos[viewer.personId] ?? null,
-      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, owns: (made.get(viewer.personId)?.all ?? []).map(customFace), picks: await offered(db, viewer.admin ? 'all' : [...(home ? [home] : []), ...linked.added]), schools: { profile: linked.profile, added: linked.added, home, all: (await listCampuses(db)).filter(each => schoolOf(each.slug) === each.slug).map(each => ({ slug: each.slug, name: each.name })) }, asked: !!made.get(viewer.personId)?.asked, makesLeft: viewer.admin ? MAKES : made.get(viewer.personId)?.left ?? MAKES, anyKit: viewer.admin || await hasInkPlus(db, viewer.personId), level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
+      own: made.get(viewer.personId)?.token ? customFace(made.get(viewer.personId)!.token!) : null, owns: (made.get(viewer.personId)?.all ?? []).map(customFace), picks: await offered(db, viewer.admin ? 'all' : [...(home ? [home] : []), ...linked.added]), schools: { profile: linked.profile, added: linked.added, home, all: (await listCampuses(db)).filter(each => schoolOf(each.slug) === each.slug).map(each => ({ slug: each.slug, name: each.name })) }, asked: planOf(viewer.personId) !== 'free', makesLeft: viewer.admin || planOf(viewer.personId) === 'plus' ? null : made.get(viewer.personId)?.left ?? 0, plan: planOf(viewer.personId), anyKit: viewer.admin || planOf(viewer.personId) === 'plus', level, outings: counted.length, admin: viewer.admin, groups: viewer.groups ?? [] },
     tickets, earning, live, places: me ? await nearTags(db, campus.id, known, now) : [],
   };
 }

@@ -60,6 +60,9 @@ export function Roster({ scope, namespace, people, invited, isOwner, canLeave, a
   const { result, pending, run } = useRun();
   const [find, setFind] = useState(''), [show, setShow] = useState<RoleName | 'all'>('all');
   const [span, setSpan] = useState<[number, number] | null>(null);
+  /** On a phone a row is one line and unfolds for its tag and what can be done. Your own starts unfolded. */
+  const [open, setOpen] = useState<string | null>(() => people.find(person => person.isYou)?.personId ?? null);
+  const more = (id: string, name: string) => <button type="button" className="lp-mb-more" aria-expanded={open === id} aria-label={`${open === id ? 'Hide' : 'Show'} options for ${name}`} onClick={() => setOpen(open === id ? null : id)} />;
   const frame = useRef<HTMLDivElement>(null);
   const seen = people.filter(person => (show === 'all' || person.role === show) && (!find.trim() || `${person.name} ${person.handle ?? ''} ${person.email ?? ''}`.toLowerCase().includes(find.trim().toLowerCase())));
   const seenInvited = invited.filter(item => (show === 'all' || item.role === show) && (!find.trim() || `${item.name ?? ''} ${item.email}`.toLowerCase().includes(find.trim().toLowerCase())));
@@ -91,7 +94,7 @@ export function Roster({ scope, namespace, people, invited, isOwner, canLeave, a
     <section className="lp-mb-list" id="roles" aria-labelledby="roster-title">
       <h2 className="lp-mb-label" id="roster-title"><b>In the group</b>{seen.length === people.length ? people.length : `${seen.length} of ${people.length}`}{invited.length > 0 && <span>· {invited.length} invited</span>}</h2>
       <div className="lp-mb-rows" ref={frame} tabIndex={0} aria-label="People in the group">
-        {seen.map(person => <div className="lp-mb-row" data-row key={person.personId} id={person.isYou ? 'tag' : undefined}>
+        {seen.map(person => <div className="lp-mb-row" data-row data-open={open === person.personId || undefined} key={person.personId} id={person.isYou ? 'tag' : undefined}>
           <Face id={person.personId} name={person.name} face={person.face} />
           <span className="lp-mb-who">{person.name}{person.isYou && person.name !== 'You' && <span className="lp-mb-you">You</span>}{person.email && <small>{person.email}</small>}</span>
           <span className="lp-mb-meta">{person.isYou
@@ -107,13 +110,15 @@ export function Roster({ scope, namespace, people, invited, isOwner, canLeave, a
             {!person.isYou && person.remove === 'group' && <Twice label="Remove" confirm="Confirm: remove" disabled={pending} onGo={() => run(actions.removeFromGroup, { orgId: scope.orgId, personId: person.personId }, `${person.name} was removed from the group.`)} />}
             {!person.isYou && person.remove === 'role' && <Twice label="Remove" confirm="Confirm: remove" disabled={pending} onGo={() => run(actions.revokeRole, { ...scope, personId: person.personId }, `${person.name} was removed from this group.`)} />}
           </span>
+          {more(person.personId, person.name)}
         </div>)}
-        {seenInvited.map(item => <div className="lp-mb-row" data-row data-invited key={item.id}>
+        {seenInvited.map(item => <div className="lp-mb-row" data-row data-invited data-open={open === item.id || undefined} key={item.id}>
           <Mail />
           <span className="lp-mb-who">{item.name ?? item.email}{item.name && <small>{item.email}</small>}</span>
           <span className="lp-mb-meta">Invited, not joined yet · until {day(item.until)}</span>
           <span className="lp-mb-role lp-mb-fixed">{NAME[item.role]}</span>
           <span className="lp-mb-acts"><Twice label="Revoke" confirm="Confirm: revoke" disabled={pending} onGo={() => run(actions.cancelInvite, { id: item.id }, `Invitation to ${item.name ?? item.email} revoked.`)} /></span>
+          {more(item.id, item.name ?? item.email)}
         </div>)}
         {!count && <p className="lp-mb-empty">Nobody matches. Clear the search to see everyone.</p>}
       </div>

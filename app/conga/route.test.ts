@@ -6,6 +6,7 @@ import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { animalOf, PHOTO } from '@/lib/campus/animals';
 import { makeCustomFace } from '@/lib/campus/custom-face';
 import { subscribeInkPlus } from '@/lib/campus/ink';
+import { subscribe } from '@/lib/campus/custom-face';
 import { pickFace } from '@/lib/campus/people';
 import { GET } from './route';
 
@@ -31,7 +32,7 @@ it('tells the game nothing about someone signed out', async () => {
 
 it('gives the animal a person wears, by its place on the sheet, in their school\'s colours, and no more without Ink+', async () => {
   const ana = await person('ana@cornell.edu');
-  expect(await ask(ana)).toEqual({ ink: false, kit: 'cornell', animals: [{ face: animalOf(ana.personId) + 1, picture: null, kit: 'cornell' }] });
+  expect(await ask(ana)).toEqual({ ink: false, plus: false, kit: 'cornell', animals: [{ face: animalOf(ana.personId) + 1, picture: null, kit: 'cornell' }] });
   await pickFace(t.db, ana.personId, 11);
   expect((await ask(ana)).animals).toEqual([{ face: 12, picture: null, kit: 'cornell' }]);
 });
@@ -46,7 +47,10 @@ it('gives a pet of their own as a picture', async () => {
   const ana = await person('ana@cornell.edu');
   const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64'));
   const { token } = await makeCustomFace(t.db, ana.personId, png, 'ana@cornell.edu', async () => ({ small: png, large: png }));
-  expect((await ask(ana)).animals).toEqual([{ face: 0, picture: `/animals/custom/${token}`, kit: 'cornell' }]);
+  // Making a pet takes Ink, so the pet leads, and Ink's animals follow it.
+  const { animals } = await ask(ana);
+  expect(animals[0]).toEqual({ face: 0, picture: `/animals/custom/${token}`, kit: 'cornell' });
+  expect(animals.map((each: { face: number }) => each.face)).toContain(37);
 });
 
 it('with Ink+ offers their school\'s animal and the premium ones too, the one worn first and none twice', async () => {
@@ -54,7 +58,7 @@ it('with Ink+ offers their school\'s animal and the premium ones too, the one wo
   await pickFace(t.db, ana.personId, 11);
   await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
   const told = await ask(ana), faces = told.animals.map((each: { face: number }) => each.face);
-  expect(told.ink).toBe(true);
+  expect([told.ink, told.plus]).toEqual([true, true]);
   expect(told.animals[0]).toEqual({ face: 12, picture: null, kit: 'cornell' });
   // public/animals: 37 is the dachshund (premium), 38 Cornell's bear, 39 Columbia's lion, which is not hers.
   expect(faces).toContain(37);
@@ -63,11 +67,20 @@ it('with Ink+ offers their school\'s animal and the premium ones too, the one wo
   expect(new Set(faces).size).toBe(faces.length);
 });
 
+// Your own animal is Ink's (openspec loop-ink-tiers): Ink+ adds only the sparkle.
+it('with Ink plays as your own animal, without the sparkle', async () => {
+  const ana = await person('ana@cornell.edu');
+  await subscribe(t.db, ana.personId, 'ana@cornell.edu');
+  const told = await ask(ana);
+  expect([told.ink, told.plus]).toEqual([true, false]);
+  expect(told.animals.map((each: { face: number }) => each.face)).toContain(37);
+});
+
 it('counts the admin as having Ink+, and offers every school\'s animal in that school\'s colours', async () => {
   const ana = await person('boss@cornell.edu');
   vi.stubEnv('LOOP_ADMIN', 'boss@cornell.edu');
   const told = await ask(ana);
-  expect(told.ink).toBe(true);
+  expect([told.ink, told.plus]).toEqual([true, true]);
   expect(told.animals).toContainEqual({ face: 38, picture: null, kit: 'cornell' });
   expect(told.animals).toContainEqual({ face: 39, picture: null, kit: 'columbia' });
 });

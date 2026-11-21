@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { DOODLES_PAGE } from '@/lib/campus/doodles';
 import { IMPRINT_PAGE } from '@/lib/campus/imprint';
@@ -21,17 +21,28 @@ import { LinkWait } from '@/components/loading/link-wait';
  */
 export function TopBar({ home = '/', on, member = false, going, account, children }: { home?: string; on?: string; going?: string; /** Whether the person is in a group, and so has assistants to connect. */ member?: boolean; /** The end of the bar: the account card, or the way in. */ account: ReactNode; /** What a page puts before the account. */ children?: ReactNode }) {
   useEffect(() => { if (going === undefined) rememberBar({ home, on, member, account }); });
+  // On a phone the links fold into a menu (app/c/campus.css). It closes when a link is pressed, on Escape, and on a press anywhere else.
+  const [menu, setMenu] = useState(false);
+  useEffect(() => {
+    if (!menu) return;
+    const away = (event: Event) => { if (!(event.target as Element).closest?.('.cs-menu, .cs-burger')) setMenu(false); }, key = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenu(false); };
+    addEventListener('pointerdown', away); addEventListener('keydown', key);
+    return () => { removeEventListener('pointerdown', away); removeEventListener('keydown', key); };
+  }, [menu]);
   /** Whether a link is the page: the one pressed, in the copy a loading state draws; else the one the page says. */
   const at = (href: string, here: boolean) => (going === undefined ? here : going === href) ? 'page' as const : undefined;
   return <header className="cs-nav">
     <Link className="cs-wm" href={home}><Rings />Loopd</Link>
-    <nav className="cs-links" aria-label="Loopd" onClickCapture={event => { const href = (event.target as Element).closest('a')?.getAttribute('href'); if (href) pressed(href); }}>
+    <button className="cs-burger" aria-label="Menu" aria-expanded={menu} aria-controls="cs-menu" onClick={() => setMenu(now => !now)}><i /></button>
+    <div className="cs-menu" id="cs-menu" data-open={menu || undefined} onClickCapture={event => { const href = (event.target as Element).closest('a')?.getAttribute('href'); if (href) { pressed(href); setMenu(false); } }}>
+    <nav className="cs-links" aria-label="Loopd">
       <Link href={home} aria-current={at(home, on === 'week')}>This week<LinkWait on={going === home} /></Link>
       <Link href={DOODLES_PAGE} aria-current={at(DOODLES_PAGE, on === 'doodles')}>Doodles<LinkWait on={going === DOODLES_PAGE} /></Link>
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={at(INK_PAGE, on === 'ink')}><InkMark /><span>Ink</span><LinkWait on={going === INK_PAGE} /></Link>
       {member && <AssistantsLink />}</nav>
-    {/* The organizers' door (public/demo/mockups-organizer-flow.html). On a phone it leaves the bar for a row in the account card. */}
-    <div className="cs-nav-end"><Link className="cs-org" href={IMPRINT_PAGE} aria-current={at(IMPRINT_PAGE, on === 'organizers')} onClick={() => pressed(IMPRINT_PAGE)}>Claim your club<LinkWait on={going === IMPRINT_PAGE} /></Link>{children}{account}</div>
+      {/* The organizers' door (public/demo/mockups-organizer-flow.html), then what the page adds. They sit at the bar's far end, and on a phone they are in the menu with the links. */}
+      <Link className="cs-org" href={IMPRINT_PAGE} aria-current={at(IMPRINT_PAGE, on === 'organizers')}>Claim your club<LinkWait on={going === IMPRINT_PAGE} /></Link>{children}</div>
+    <div className="cs-nav-end">{account}</div>
   </header>;
 }
 
