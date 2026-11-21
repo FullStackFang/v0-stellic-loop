@@ -48,8 +48,9 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs [hidden] { display: none !important; }
 .cs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* top bar: one line */
-.cs-nav { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); }
+/* top bar: one line. It, and every panel that opens from it, lies over anything on the page (whose own pop-ups go no
+   higher than 30); only the loading screen (z-index 50) covers it. */
+.cs-nav { position: sticky; top: 0; z-index: 40; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 11px 32px 12px; background: var(--cs-field); color: var(--cs-ink); }
 /* Its lower edge is the edge every card has: a thin ink line, and under it a hard shadow in the darker shade of the school's colour. */
 .cs-nav { border-bottom: 1.5px solid var(--cs-ink); box-shadow: 0 5px 0 var(--cs-field-shadow); }
 .cs-wm { display: flex; align-items: center; gap: 13px; font-weight: 720; font-stretch: 112%; font-size: 25px; letter-spacing: -0.045em; padding: 0 20px 0 0; --lime: var(--cs-action); }
