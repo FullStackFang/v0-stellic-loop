@@ -27,7 +27,8 @@
 - [x] 3.3 Use it in `app/groups/layout.tsx` (replacing `accountScreen` and `looks`, keeping the plain-card fallback) and in `app/c/site-bar.tsx`
 - [x] 3.4 Tests: `app/groups/group-tree-pages.test.tsx` and the campus screen tests still pass; add one that the bar's read makes no listing query
   - Added in `lib/__tests__/campus-edges.test.ts` (`app/c/campus-screen.test.tsx` holds another session's work).
-- [ ] 3.5 Open a groups page and the Ink page signed in and check the card against the week page's card; commit by path
+- [x] 3.5 Open a groups page and the Ink page signed in and check the card against the week page's card; commit by path
+  - Done in `app/groups/account-card.test.tsx`: a signed-in member's groups layout and campus site bar draw the same avatar, card top and plan row as the week page's bar (checked to fail when the bar's card is off by one outing).
 
 ## 4. The Assistants page (D4)
 
@@ -38,14 +39,20 @@
 
 ## 5. Proof
 
-- [ ] 5.1 Take the laptop timings in design.md's Context again and write the new numbers there
-  - Blocked 2026-11-20: the owner subject in `.env.local` has no identity in the development database, so a read-only probe cannot act as the owner. Round trip measured: 79 ms. Counts from the tests: identity 9 → 1 statement; counters lose the second listing (about 17) and 8 per group; Assistants grants 12 in three reads → 8 in one.
-- [ ] 5.2 Reload `/groups/extreme-cheapskates`, `/groups/connections` and `/c/ink` signed in; watch the dev server's log for errors
-- [ ] 5.3 Push and open one pull request to `main` after the owner has tried it on localhost
+- [x] 5.1 Take the laptop timings in design.md's Context again and write the new numbers there
+  - The owner subject in `.env.local` has no identity in the development database, so the read-only probe measured as the member there in the most groups (5).
+- [x] 5.2 Reload `/groups/extreme-cheapskates`, `/groups/connections` and `/c/ink` signed in; watch the dev server's log for errors
+  - 2026-11-20: signed out on localhost `/c/ink` renders and the groups pages redirect to sign-in; signed in, drawn in `app/groups/account-card.test.tsx` (task 3.5); in production, 3 hours after the deploy, no runtime errors and no error or warning log lines.
+- [x] 5.3 Push and open one pull request to `main` after the owner has tried it on localhost
+  - Overtaken: the four code commits went to production inside pull requests #80 and #81 (cut from local `main` by other sessions) before the owner tried them. Production deployments `dpl_5XNaexSXiZ5Go3ikXwDMvaRhezpP` and `dpl_4cw8e6b5Qoz8YkVPuPKJdRmXj2vs` are READY; either earlier one is a rollback target.
 
 ## 6. Waiting for the owner (not part of this change until answered)
 
-- [ ] 6.1 Ask: listing groups checks access once under lock (design.md, Open Question 1)
-- [ ] 6.2 Ask: read records only for assistant reads (Open Question 2)
-- [ ] 6.3 Ask: remember the Clerk session check for page views; time the Clerk calls in production first (Open Question 3)
-- [ ] 6.4 Ask: a development database near the laptop (Open Question 4)
+- [x] 6.1 Ask: listing groups checks access once under lock (design.md, Open Question 1)
+  - Yes (2026-11-20); built in `lib/emba/groups.ts`, tested in `emba-groups.test.ts`.
+- [x] 6.2 Ask: read records only for assistant reads (Open Question 2)
+  - Assistants only (2026-11-20); built with `recordsRead`; `team-page`, `emba-group-tree` and `emba-groups` tests updated; the 32 test files touching the audit table pass.
+- [x] 6.3 Ask: remember the Clerk session check for page views; time the Clerk calls in production first (Open Question 3)
+  - Not yet (2026-11-20): time the Clerk calls in production first. Nothing built.
+- [x] 6.4 Ask: a development database near the laptop (Open Question 4)
+  - No (2026-11-20). Nothing built.

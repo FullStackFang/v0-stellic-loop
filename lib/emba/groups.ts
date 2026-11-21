@@ -2,7 +2,7 @@ import 'server-only';
 import {z} from 'zod';
 import type {Db,Q} from '../db';
 import {canAccessLoop,canAccessLoops,canAccessPersonal,type Principal} from './access';
-import {audit,leaseCovers,leaseFor,requireFirstParty} from './consent';
+import {audit,leaseCovers,leaseFor,recordsRead,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
 
 const name=z.string().regex(/^[a-z0-9][a-z0-9-]{1,47}$/);
@@ -87,6 +87,8 @@ async function discover(db:Db,p:Principal,limit:number,namespace:string|null=nul
     and ${leaseCovers('e','g.org_id','g.loop_id')} and 'plan:read'=any(e.actions) and e.revoked_at is null and e.expires_at>clock_timestamp())))
    order by g.namespace,g.slug limit $6`,[p.personId,p.clientId,namespace,slug,p.scopes.includes('plan:read'),limit]);
   if(!rows.length){
+   // The site checked the person above, with their row locked, and records no view of its own groups.
+   if(!recordsRead(p))return [];
    await audit(q,p,'plan:read');
    if(!await canAccessPersonal(q,p,p.personId))throw new EmbaError('forbidden');
    return [];
@@ -99,9 +101,12 @@ async function discover(db:Db,p:Principal,limit:number,namespace:string|null=nul
    return leases;
   };
   const leases=await allowed();
+  // The site: one check, with the rows it read locked until commit, so nothing can revoke them mid-read; and no record
+  // of a member viewing their own groups (openspec loop-faster-signed-in-pages, Open Questions 1 and 2).
+  if(!recordsRead(p))return currentAddresses(q,rows);
   await q.query(`insert into emba_audit (person_id,client_id,action,resource_id,lease_id) select $1,$2,'plan:read',t.resource,t.lease
    from unnest($3::uuid[],$4::uuid[]) with ordinality as t(resource,lease,n) order by t.n`,[p.personId,p.clientId,rows.map(row=>row.loopId),leases]);
-  // Authority is checked again before anything is returned.
+  // For an assistant, authority and its grants are checked again before anything is returned.
   await allowed();
   const groups=await currentAddresses(q,rows);
   if(!await canAccessPersonal(q,p,p.personId))throw new EmbaError('forbidden');

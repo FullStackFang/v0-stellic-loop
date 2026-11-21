@@ -130,14 +130,27 @@ it('does not reach a group beside the leased one, accept expired consent or let 
 });
 it('fails closed when audit or authority fails before output and masks expired-principal resolution',async()=>{
  const f=await fixture();await registerGroupAddress(t.db,f.organizer,{...f.vietnam,namespace:'cohort',slug:'trip'});
+ // An assistant's listing is recorded, and checked again after the record: it fails closed on either.
+ await grantLease(t.db,f.memberA,{...f.vietnam,clientId:'claude',actions:['plan:read'],expiresAt:'2099-01-01T00:00:00Z'});
+ const assistant=await delegate(f);
  const failing:Db={...t.db,tx:fn=>t.db.tx(q=>fn({query:async<T>(sql:string,params?:unknown[])=>{
   if(sql.startsWith('insert into emba_audit'))throw new Error('audit unavailable');return q.query<T>(sql,params);
  }}))};
- await expect(listGroups(failing,f.memberA,{})).rejects.toThrow('audit unavailable');
+ await expect(listGroups(failing,assistant,{})).rejects.toThrow('audit unavailable');
  const revoked:Db={...t.db,tx:fn=>t.db.tx(q=>fn({query:async<T>(sql:string,params?:unknown[])=>{
   const result=await q.query<T>(sql,params);if(sql.startsWith('insert into emba_audit'))await q.query('update emba_role set revoked_at=now() where person_id=$1',[f.memberA.personId]);return result;
  }}))};
- await expect(listGroups(revoked,f.memberA,{})).rejects.toThrow('forbidden');
+ await expect(listGroups(revoked,assistant,{})).rejects.toThrow('forbidden');
+ await t.db.query('update emba_role set revoked_at=null where person_id=$1',[f.memberA.personId]);
+ // A member's own listing on the site (openspec loop-faster-signed-in-pages, Open Questions 1 and 2): no record, and one
+ // check of their roles, whose rows stay locked until the listing commits; a role revoked before it is refused.
+ const said:string[]=[];
+ const site:Db={...t.db,tx:fn=>t.db.tx(q=>fn({query:async<T>(sql:string,params?:unknown[])=>{said.push(sql);return q.query<T>(sql,params);}}))};
+ expect((await listGroups(site,f.memberA,{})).map(group=>group.slug)).toEqual(['trip']);
+ expect(said.filter(sql=>sql.startsWith('insert into emba_audit'))).toEqual([]);
+ expect(said.filter(sql=>/for share of m,r,i/.test(sql))).toHaveLength(1);
+ await t.db.query('update emba_role set revoked_at=now() where person_id=$1',[f.memberA.personId]);
+ expect(await listGroups(t.db,f.memberA,{})).toEqual([]);
  const expired={...f.memberA,expiresAt:0};
  expect(await resolveGroup(t.db,expired,{handle:'@cohort/trip'})).toEqual({status:'unavailable',connectionsPath:'/emba'});
  expect(await resolveGroup(t.db,expired,{handle:'@cohort/unknown'})).toEqual({status:'unavailable',connectionsPath:'/emba'});

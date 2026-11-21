@@ -14,6 +14,16 @@ What one signed-in page view does today, from a read of the code on 2026-11-20 (
 
 Measured from a laptop about 80 ms from the database: one statement 80 ms, an empty transaction 250 ms, the listing 1.5 to 1.7 s. In production a statement is expected to cost a few ms (same region; not measured: per-route metrics need Observability Plus).
 
+After this change (2026-11-20, laptop, round trip 75 ms, the development database, as the member there in the most groups: 5 groups). Taken on one connection inside one rolled-back transaction, so the times are the sequential cost; the app runs some of these side by side, and the counts are exact:
+
+| Part | Before | After |
+|---|---|---|
+| Identify a known account | 8 to 9 statements in a row | 1 statement, 78 ms |
+| "On you" counters, 5 groups | about 152 statements (a second listing, and 3 post checks per group) | 95 statements, 7.4 s sequential (the second listing alone was 17 statements, 4.8 s) |
+| Account card | 20 statements, 1.55 s (campus screen) | 14 statements, 1.09 s sequential, in two waves in the app |
+| Assistants page grants | 12 statements in three reads, 0.93 s | 8 in one transaction, 0.62 s |
+| The page view's listing (unchanged) | 18 statements, 1.48 s | the same, now made once per view |
+
 Constraints:
 - `openspec/specs/page-speed/spec.md` requires that every read keeps its checks of the person, the sign-in and the role inside its own transaction, and still records its `plan:read`.
 - Reads lock what they check (`for share`), so a revoke waits for a read in progress and never lands in the middle of one.
@@ -91,3 +101,9 @@ For the owner. Each is outside this change until answered; a yes adds a task gro
 2. **Read records for the site:** do you need a record every time a member views their own groups, or only when an assistant reads? Today about 15 rows are written per full load; they are read only by the old `/emba` portal (newest 100) and the privacy export, and nothing removes them.
 3. **Clerk session check:** is up to a minute's delay before a revoked or banned session stops seeing pages acceptable, if every action still checks live? Probably the largest saving in production; the Clerk calls should be timed there first.
 4. **Development database:** a second Supabase project near the laptop would make localhost several times faster with no code change. Wanted?
+
+Answered by the owner on 2026-11-20:
+1. Yes, check once. Built: `listGroups` on the site returns after its one locked check; an assistant's listing keeps its record and its second check.
+2. Assistants only. Built: `recordsRead` in `lib/emba/consent.ts`; the listing, `reading` (team reads) and `teamWrite`'s declined-write and refusal reads skip `plan:read` on the site. Records already written stay.
+3. Not yet: time the Clerk calls in production first.
+4. No: keep one development database.

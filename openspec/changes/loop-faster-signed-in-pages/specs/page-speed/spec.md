@@ -55,15 +55,23 @@ The Assistants page SHALL start the reads it needs together and SHALL read the p
 ## MODIFIED Requirements
 
 ### Requirement: Access checks and read records are kept
-Every read that runs SHALL make the same checks of the person, the sign-in and the role, inside its own transaction, as it made before this change. Within one transaction, a check of the same person and the same group that has already been made, and whose rows that transaction holds locked, MAY stand for the rest of that transaction; it SHALL NOT stand for any other transaction or request. Every read that recorded a `plan:read` before this change SHALL still record it when it runs.
+Every read that runs SHALL make the same checks of the person, the sign-in and the role, inside its own transaction, as it made before this change. Within one transaction, a check of the same person and the same group that has already been made, and whose rows that transaction holds locked, MAY stand for the rest of that transaction; it SHALL NOT stand for any other transaction or request. On the site, the listing of a member's own groups SHALL check the person and their roles once, with those rows locked until the listing commits. Every read by an assistant that recorded a `plan:read` before this change SHALL still record it. A member's own view of their groups on the site (the listing, a group's team reads, and a team write that saves nothing) SHALL NOT be recorded as a `plan:read`; every other record, the site's included, SHALL be kept.
 
 #### Scenario: Access removed while a page is open
 - **WHEN** an owner removes a member and the member then opens a tab
 - **THEN** the member is shown that the group is unavailable
 
-#### Scenario: A read is recorded
-- **WHEN** a member opens a team page
-- **THEN** the team's state and brief each have a `plan:read` record naming the group
+#### Scenario: An assistant's read is recorded
+- **WHEN** an assistant reads a team's state or brief
+- **THEN** each has a `plan:read` record naming the group
+
+#### Scenario: A member's own view is not recorded
+- **WHEN** a member opens their team page on the site
+- **THEN** no `plan:read` record is written for it
+
+#### Scenario: The site lists groups with one check
+- **WHEN** a member's groups are listed on the site
+- **THEN** their roles are checked once, under lock, and a role revoked before the listing leaves that group out
 
 #### Scenario: A check does not outlive its transaction
 - **WHEN** a member's role is revoked between two reads of the same group made in separate transactions
