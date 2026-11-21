@@ -1,12 +1,13 @@
 import 'server-only';
 import { generateImage, generateText } from 'ai';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { CHANGES, CUSTOM, NAMES } from './animals';
 import { hasInk, INK_MAKES, joinPlan, planOf, type AskPlace } from './ink';
-import { NEEDS_PREMIUM, schoolsOfPerson } from './animal-tiers';
+import { builtAnimals, NEEDS_PREMIUM, schoolsOfPerson } from './animal-tiers';
 import { CampusError } from './errors';
 
 // A person's own animal: a photo of an animal, drawn as a figure of the set in public/animals. Premium, with no payment
@@ -81,17 +82,18 @@ export const drawFace: Draw = async (upload, changes = [], note = '') => {
   }
 };
 
-export type CustomFace = { token: string | null; all: string[]; left: number; asked: boolean };
+export type CustomFace = { token: string | null; all: string[]; /** Of `all`, the ones still theirs alone: the admin has not put them in a tier (core, premium, school or off). */ personal: string[]; left: number; asked: boolean };
 /**
  * For each person: the token of the made animal they use (their own, or one the admin offers to everyone), of every one
  * they made (oldest first), how many more they may make, and whether they asked to subscribe.
  */
 export async function customFaces(q: Q, personIds: readonly string[]): Promise<Map<string, CustomFace>> {
   if (!personIds.length) return new Map();
-  const { rows } = await q.query<{ id: string; token: string | null; every: string[]; makes: number | null }>(`select i.id,(select p.token::text from campus_custom_picture p where p.token=coalesce(c.picture,f.token)) as token,
-    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=i.id and p.let_go_at is null),'{}'::text[]) as every,f.makes
+  const { rows } = await q.query<{ id: string; token: string | null; every: string[]; personal: string[]; makes: number | null }>(`select i.id,(select p.token::text from campus_custom_picture p where p.token=coalesce(c.picture,f.token)) as token,
+    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=i.id and p.let_go_at is null),'{}'::text[]) as every,
+    coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=i.id and p.let_go_at is null and p.tier is null),'{}'::text[]) as personal,f.makes
     from unnest($1::uuid[]) as i(id) left join campus_custom_face f on f.person_id=i.id left join campus_face c on c.person_id=i.id`, [personIds]);
-  return new Map(rows.map(row => [row.id, { token: row.token, all: row.every, left: Math.max(0, INK_MAKES - (row.makes ?? 0)), asked: row.makes !== null }]));
+  return new Map(rows.map(row => [row.id, { token: row.token, all: row.every, personal: row.personal, left: Math.max(0, INK_MAKES - (row.makes ?? 0)), asked: row.makes !== null }]));
 }
 
 /**
@@ -123,16 +125,73 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
   return made;
 }
 
+const NEEDS_PLUS = 'Starting from another pet comes with Ink+.';
+const NOT_A_BASE = 'That one can’t be drawn again. Pick one of your own pets, or an Ink one.';
+const SAY = 'Say what should change.';
+
+/** Draws a figure again from the figure itself, changed only as the person asked. No photo, so no look at one: the base is already one of the set. */
+export const drawFromBase: Draw = async (base, changes = [], note = '') => {
+  // The ready-made changes count as something said. "Truer colors" is about a photo, and there is none here.
+  const asked = [...changes.filter(one => one !== 'Truer colors').map(one => ASKS[one].replace(/.$/, '')), plain(note)].filter(Boolean).join('. ');
+  if (!asked) throw new CampusError(SAY);
+  try {
+    // A shipped animal is 192px: it is enlarged, and the model draws it anew at its own size.
+    const figure = await sharp(base).resize(1024, 1024, { fit: 'inside' }).flatten({ background: '#fff' }).png().toBuffer();
+    const { image } = await generateImage({
+      model: 'openai/gpt-image-2.6-flare', size: '1024x1024', maxRetries: 1, abortSignal: AbortSignal.timeout(120000),
+      prompt: { images: [figure], text: `Keep this toy figure exactly as it is: its colours, markings, face, pose and style. Change only this: ${asked}. Nothing else in the picture. Transparent background, no shadow.` },
+      providerOptions: { openai: { background: 'transparent', output_format: 'png' } },
+    });
+    return await frame(image.uint8Array);
+  } catch (error) {
+    if (error instanceof CampusError) throw error;
+    console.error('custom face: drawing from a base failed', error instanceof Error ? error.name : 'unknown');
+    throw new CampusError(NOT_NOW);
+  }
+};
+
 /**
- * "Redraw your pet": a photo drawn again beside an animal the person already had made, with what they asked to be
- * different (the ready-made changes, and a short line of their own). It does not count as another animal made. The
- * new drawing starts let go, so it is nobody's picture until it is kept (keepPicture). Who may do this is the
- * caller's to check: it takes the founder's code. Returns the new one's token.
+ * The picture a new animal may be drawn from, by its address (`/animals/NN.png` or `/animals/custom/<token>`). Ink+ only.
+ * A person may start from one of their own made animals while it is theirs alone (no tier), or from an Ink (premium)
+ * one; never a core one, a school's own, or one that is off, even one they made. The admin may start from any. Returns the largest picture Loopd has of it.
  */
-export async function retryCustomFace(db: Db, personId: string, upload: Uint8Array, first: string, changes: readonly string[], note = '', draw: Draw = drawFace): Promise<string> {
+export async function baseOf(q: Q, personId: string, src: string, admin = false): Promise<Uint8Array> {
+  if (!admin && (await planOf(q, personId)) !== 'plus') throw new CampusError(NEEDS_PLUS);
+  const built = /^\/animals\/(\d{2})\.png$/.exec(src), token = /^\/animals\/custom\/([^/?#]+)$/.exec(src)?.[1];
+  if (built) {
+    const face = Number(built[1]) - 1, { tiers } = await builtAnimals(q);
+    if (face >= 0 && face < tiers.length && (admin || tiers[face] === 'premium')) return readFile(path.join(process.cwd(), 'public', 'animals', `${built[1]}.png`));
+  } else if (token && z.uuid().safeParse(token).success) {
+    const { rows: [row] } = await q.query<{ ok: boolean }>("select ((p.person_id=$1 and p.let_go_at is null and p.tier is null) or p.tier='premium' or $3) as ok from campus_custom_picture p where p.token=$2", [personId, token, admin]);
+    const image = row?.ok ? await customFaceLarge(q, token) : null;
+    if (image) return image;
+  }
+  throw new CampusError(NOT_A_BASE);
+}
+
+/**
+ * "Start from another pet" (Ink+): an animal drawn again from one the person may start from (baseOf), changed as they
+ * said. It is made as a pet from a photo is (makeCustomFace): a new animal of their own, and their face.
+ */
+export async function makeFromBase(db: Db, personId: string, src: string, note: string, email: string | null, admin = false, draw: Draw = drawFromBase): Promise<{ token: string; left: number | null }> {
+  if (!plain(note)) throw new CampusError(SAY);
+  const base = await baseOf(db, personId, src, admin);
+  return makeCustomFace(db, personId, base, email, draw, true, note);
+}
+
+/**
+ * "Redraw your pet": an animal the person already had made, drawn again beside it with what they asked to be
+ * different (the ready-made changes, and a short line of their own). With no new photo (`upload` null) it is drawn from
+ * the made animal itself, so something to change must be said; with one, from the photo. It does not count as another animal made. The
+ * new drawing starts let go, so it is nobody's picture until it is kept (keepPicture). Who may do this is the
+ * caller's to check: it comes with Ink+. Returns the new one's token.
+ */
+export async function retryCustomFace(db: Db, personId: string, upload: Uint8Array | null, first: string, changes: readonly string[], note = '', draw: Draw = drawFace, redraw: Draw = drawFromBase): Promise<string> {
   const { rows: [row] } = z.uuid().safeParse(first).success ? await db.query('select 1 from campus_custom_picture p where p.token=$2 and p.person_id=$1 and p.let_go_at is null', [personId, first]) : { rows: [] };
   if (!row) throw new CampusError('Pick one of the animals.');
-  const image = await draw(upload, CHANGES.filter(one => changes.includes(one)), note);
+  const from = upload ?? await customFaceLarge(db, first);
+  if (!from) throw new CampusError('Pick one of the animals.');
+  const image = await (upload ? draw : redraw)(from, CHANGES.filter(one => changes.includes(one)), note);
   // A pair is the kept one and its newest drawing: earlier pairs of this one are untied first. The unique index holds it to one when two are asked for at once.
   const made = await db.tx(async q => {
     await q.query('update campus_custom_picture set retry_of=null where person_id=$1 and (token=$2 or retry_of=$2)', [personId, first]);
@@ -172,8 +231,6 @@ export async function deletePicture(q: Q, token: string): Promise<void> {
   if (!z.uuid().safeParse(token).success || !(await q.query('delete from campus_custom_picture where token=$1 returning 1', [token])).rows.length) throw new Error('No such picture');
 }
 
-/** The founder's code for making another animal once the free one is used. Checked here, on the server, and nowhere in the page. */
-export const freeCode = (code: unknown) => typeof code === 'string' && code.trim().toUpperCase() === 'CHEAPSKATES';
 
 /** A person picks a made animal as their face: one of their own, a core one, or a premium one when they subscribed (`premium` is also true for the admin). */
 export async function useCustomFace(q: Q, personId: string, token: string, premium = false): Promise<void> {

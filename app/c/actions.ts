@@ -9,8 +9,8 @@ import { readLine } from '@/lib/campus/line';
 import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
 import { customFace } from '@/lib/campus/animals';
-import { freeCode, keepPicture, makeCustomFace, retryCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
-import { subscribeInkPlus } from '@/lib/campus/ink';
+import { keepPicture, makeCustomFace, makeFromBase, retryCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
+import { planOf as inkPlan, subscribeInkPlus } from '@/lib/campus/ink';
 import { pickFace, placeAt } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
@@ -106,11 +106,12 @@ export type AgainFace = { ok: true; own: string } | { ok: false; message: string
 export async function againFaceAction(data: FormData): Promise<AgainFace> {
   const viewer = await campusViewer();
   if (!viewer) return { ok: false, signIn: true, message: 'Sign in to continue.' };
-  const photo = data.get('photo');
-  if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
-  if (!viewer.admin && !freeCode(data.get('code'))) return { ok: false, message: String(data.get('code') ?? '').trim() ? 'That code does not work.' : 'Enter the code to draw again.' };
+  // A new photo is not needed: without one the animal is drawn again from itself.
+  const photo = data.get('photo'), given = photo instanceof File && photo.size > 0 ? photo : null;
+  // Drawing a pet again comes with Ink+ (and the admin tests it). The page offers Ink+ in its place.
+  if (!viewer.admin && (await inkPlan(db(), viewer.personId)) !== 'plus') return { ok: false, message: 'Redrawing your pet comes with Ink+.' };
   try {
-    return { ok: true, own: customFace(await retryCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), String(data.get('first')).split('/').pop() ?? '', data.getAll('change').map(String), String(data.get('note') ?? ''))) };
+    return { ok: true, own: customFace(await retryCustomFace(db(), viewer.personId, given && new Uint8Array(await given.arrayBuffer()), String(data.get('first')).split('/').pop() ?? '', data.getAll('change').map(String), String(data.get('note') ?? ''))) };
   } catch (error) {
     return { ok: false, message: error instanceof CampusError ? error.message : 'That did not go through. Try again.' };
   }
@@ -149,10 +150,13 @@ export type MadeFace = { ok: true; own: string; /** How many more Ink lets them 
 export async function makeFaceAction(data: FormData): Promise<MadeFace> {
   const viewer = await campusViewer();
   if (!viewer) return { ok: false, signIn: true, message: 'Sign in to continue.' };
-  const photo = data.get('photo'), email = data.get('email');
-  if (!(photo instanceof File) || !photo.size) return { ok: false, message: 'Choose a photo of an animal first.' };
+  const photo = data.get('photo'), email = data.get('email'), base = data.get('base'), note = String(data.get('note') ?? '');
+  // "Start from another pet" (Ink+): no photo, an animal they may start from and what should change.
+  const fromBase = typeof base === 'string' && base !== '';
+  if (!fromBase && (!(photo instanceof File) || !photo.size)) return { ok: false, message: 'Choose a photo of an animal first.' };
   try {
-    const made = await makeCustomFace(db(), viewer.personId, new Uint8Array(await photo.arrayBuffer()), typeof email === 'string' ? email : null, undefined, viewer.admin || freeCode(data.get('code')), String(data.get('note') ?? ''));
+    const made = fromBase ? await makeFromBase(db(), viewer.personId, base, note, viewer.principal.verifiedEmail, viewer.admin)
+      : await makeCustomFace(db(), viewer.personId, new Uint8Array(await (photo as File).arrayBuffer()), typeof email === 'string' ? email : null, undefined, viewer.admin, note);
     revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
     return { ok: true, own: customFace(made.token), left: made.left };
   } catch (error) {

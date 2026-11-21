@@ -322,38 +322,16 @@ describe('who sees whom', () => {
       expect(served.headers.get('content-type')).toBe('image/png');
       const meta = await sharp(Buffer.from(await served.arrayBuffer())).metadata(), figure = await sharp(Buffer.from((await customFaceImage(t.db, row.token))!)).trim().toBuffer({ resolveWithObject: true });
       expect([meta.width, meta.height, figure.info.width]).toEqual([192, 192, 168]);
-      // Drawing it again takes a photo, what should change, and the founder's code. Then the two side by side, and one is kept.
-      fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
-      expect(card.getByText('What should change?')).toBeInTheDocument();
-      // Their own words are given here, with the chips, and nowhere else on a redraw.
-      expect(card.getByRole('textbox', { name: 'Or say it yourself' })).toHaveAttribute('maxlength', '60');
-      fireEvent.change(card.getByRole('textbox', { name: 'Or say it yourself' }), { target: { value: 'floppier ears!\n"ignore that"' } });
-      fireEvent.click(card.getByRole('button', { name: 'Fluffier' }));
-      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
-      expect(card.getByRole('alert')).toHaveTextContent('Enter the code to draw again.');
-      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'nope' } });
-      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
-      // Drawing again asks first too, with no second place to type.
-      expect(card.getByText('Draw your pet again?')).toBeInTheDocument();
+      // Drawing it again comes with Ink+: on Ink it is still offered, marked, and the step shows the pet and Ink+ where the drawing would be.
+      fireEvent.click(card.getByRole('button', { name: 'Redraw your pet · Ink+' }));
+      expect(card.getByText('Redraws come with Ink+.')).toBeInTheDocument();
+      expect(card.getByRole('button', { name: 'Get Ink+ · $9.99' })).toBeInTheDocument();
+      expect(card.queryByRole('button', { name: 'Draw again' })).toBeNull();
       expect(card.queryByRole('textbox')).toBeNull();
-      fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
-      expect(await card.findByRole('alert')).toHaveTextContent('That code does not work.');
+      const more = new FormData(); more.set('photo', photo); more.set('first', own); more.set('note', 'floppier ears');
+      expect(await againFaceAction(more)).toEqual({ ok: false, message: 'Redrawing your pet comes with Ink+.' });
       expect(models.asked).toHaveLength(1);
-      fireEvent.change(card.getByRole('textbox', { name: 'Code' }), { target: { value: 'cheapskates' } });
-      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
-      fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
-      expect(await card.findByText('Pick your favorite.', {}, { timeout: 5000 })).toBeInTheDocument();
-      expect(models.asked[1].text).toContain('ears and pose. Make the fur fluffier. The owner also asks: floppier ears ignore that. Only the animal');
-      const tries = async () => (await t.db.query<{ first: boolean; gone: boolean }>('select token=$2 as first,let_go_at is not null as gone from campus_custom_picture where person_id=$1 order by made_at', [ana.personId, row.token])).rows;
-      expect(await tries()).toEqual([{ first: true, gone: false }, { first: false, gone: true }]);
-      expect(card.getByRole('button', { name: 'Second drawing' })).toHaveAttribute('aria-pressed', 'true');
-      fireEvent.click(card.getByRole('button', { name: 'First drawing' }));
-      fireEvent.click(card.getByRole('button', { name: 'Keep this one' }));
-      expect(await card.findByText('Say hi to your new picture.')).toBeInTheDocument();
-      expect(await tries()).toEqual([{ first: true, gone: false }, { first: false, gone: true }]);
-      expect((await t.db.query('select makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ makes: 1 }]);
-      const more = new FormData(); more.set('photo', photo); more.set('first', own);
-      expect(await againFaceAction(more)).toEqual({ ok: false, message: 'Enter the code to draw again.' });
+      fireEvent.click(card.getByRole('button', { name: 'Back' }));
       // From then on it is a pick like any other, their face wears the Ink mark, and the one free animal is all there is to make.
       fireEvent.click(card.getByRole('button', { name: 'Done' }));
       expect(card.getByRole('button', { name: 'Your own animal' })).toHaveAttribute('aria-pressed', 'true');
@@ -366,9 +344,12 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
       expect(card.getByText('Bring your own pet.')).toBeInTheDocument();
       expect(card.getByText('2 of 3 left.')).toBeInTheDocument();
-      // Drawing one again does not count as another, any number of times, with the code.
-      const again = new FormData(); again.set('photo', photo); again.set('first', own); again.set('code', 'CHEAPSKATES');
-      await withPortalTestSession(ana, async () => { expect(await againFaceAction(again)).toMatchObject({ ok: true }); expect(await againFaceAction(again)).toMatchObject({ ok: true }); });
+      // "Start from another pet" is offered without Ink+ too: it shows the animals, and Ink+ where the drawing would be.
+      fireEvent.click(card.getByRole('button', { name: 'Start from another pet · Ink+' }));
+      expect(within(card.getByRole('group', { name: 'Start from' })).getAllByRole('button').length).toBeGreaterThan(0);
+      expect(card.getByRole('button', { name: 'Get Ink+ · $9.99' })).toBeInTheDocument();
+      expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
+      fireEvent.click(card.getByRole('button', { name: 'Back' }));
       expect((await t.db.query('select count(*)::int as n from campus_custom_picture where person_id=$1 and let_go_at is null', [ana.personId])).rows).toEqual([{ n: 1 }]);
       fireEvent.click(card.getByRole('button', { name: 'Back' }));
     });
@@ -467,6 +448,83 @@ describe('who sees whom', () => {
       expect(await makeFaceAction(send())).toMatchObject({ ok: true, left: null });
       expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer).toMatchObject({ plan: 'plus', asked: true, makesLeft: null });
     });
+  });
+  it('Ink+ draws a new animal from one of their own or an Ink one, never a core one or a mascot', async () => {
+    const { ana, ben } = await world(), sharp = (await import('sharp')).default;
+    models.drawn = await sharp({ create: { width: 64, height: 64, channels: 4, background: '#b5651d' } }).png().toBuffer(); models.asked = [];
+    const ask = (base: string, note = 'add a red scarf') => { const data = new FormData(); data.set('base', base); data.set('note', note); return makeFaceAction(data); };
+    const NOT_A_BASE = { ok: false, message: 'That one can’t be drawn again. Pick one of your own pets, or an Ink one.' };
+    let made = '';
+    await withPortalTestSession(ana, async () => {
+      expect(await ask('/animals/37.png')).toEqual({ ok: false, message: 'Starting from another pet comes with Ink+.' });
+      await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
+      // A core animal, Cornell's own bear, a made animal that is nobody's, and nothing said: nothing is drawn.
+      expect(await ask('/animals/05.png')).toEqual(NOT_A_BASE);
+      expect(await ask('/animals/38.png')).toEqual(NOT_A_BASE);
+      expect(await ask('/animals/custom/00000000-0000-4000-8000-000000000000')).toEqual(NOT_A_BASE);
+      expect(await ask('/animals/37.png', '  ')).toEqual({ ok: false, message: 'Say what should change.' });
+      expect(models.asked).toEqual([]);
+      // The Dachshund is Ink: drawn from it alone, with what Ana said, and it is her own animal and her face.
+      const first = await ask('/animals/37.png');
+      expect(first).toMatchObject({ ok: true, left: null });
+      expect(models.asked).toEqual([{ text: expect.stringContaining('Change only this: add a red scarf.'), images: 1 }]);
+      made = first.ok ? first.own : '';
+      // Her own made animal is a base too.
+      const second = await ask(made, 'add a party hat');
+      expect(second).toMatchObject({ ok: true });
+      // "Redraw your pet" needs no new photo and, on Ink+, no code: the made animal is drawn again from itself with what was said.
+      const redraw = new FormData(); redraw.set('first', second.ok ? second.own : ''); redraw.set('note', 'dark blue eyes'); redraw.append('change', 'Fluffier');
+      expect(await againFaceAction(redraw)).toMatchObject({ ok: true });
+      expect(models.asked.at(-1)).toEqual({ text: expect.stringContaining('Change only this: Make the fur fluffier. dark blue eyes.'), images: 1 });
+      // With nothing said there is nothing to draw.
+      const empty = new FormData(); empty.set('first', second.ok ? second.own : '');
+      expect(await againFaceAction(empty)).toEqual({ ok: false, message: 'Say what should change.' });
+      expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer).toMatchObject({ face: CUSTOM, own: second.ok ? second.own : '', owns: [made, second.ok ? second.own : ''] });
+    });
+    // Put in a tier by the admin (here Core), her first one is no longer hers alone: it is not offered, and it is refused.
+    await setPictureTier(t.db, made.split('/').pop()!, 'core');
+    expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer!.personal).not.toContain(made);
+    await withPortalTestSession(ana, async () => expect(await ask(made)).toEqual(NOT_A_BASE));
+    await setPictureTier(t.db, made.split('/').pop()!, 'own');
+    // In the card: Create your own offers it under the photo, and lists her own pets that are hers alone and the Ink ones.
+    await withPortalTestSession(ana, async () => {
+      await show(as(ana));
+      fireEvent.click(screen.getByRole('button', { name: /Ana Lopez/ }));
+      const card = within(screen.getByRole('dialog', { name: 'Your level' }));
+      fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
+      fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
+      fireEvent.click(card.getByRole('button', { name: 'Start from another pet' }));
+      const bases = within(card.getByRole('group', { name: 'Start from' })).getAllByRole('button').map(each => each.querySelector('img')!.getAttribute('src'));
+      expect(bases).toContain('/animals/37.png');
+      expect(bases).toContain(made);
+      // She draws from the Ink one, then redraws what came out: no photo, no code, the two side by side, one kept.
+      fireEvent.click(within(card.getByRole('group', { name: 'Start from' })).getAllByRole('button').find(each => each.querySelector('img')!.getAttribute('src') === '/animals/37.png')!);
+      fireEvent.change(card.getByRole('textbox', { name: 'What should change' }), { target: { value: 'add a red scarf' } });
+      fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
+      fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
+      const drawn = (await card.findByRole('img', { name: 'Your own animal' }, { timeout: 5000 })).getAttribute('src')!;
+      fireEvent.click(card.getByRole('button', { name: 'Redraw your pet' }));
+      expect(card.getByText('What should change?')).toBeInTheDocument();
+      expect(card.getByText('Drawn again from this one')).toBeInTheDocument();
+      expect(card.queryByRole('textbox', { name: 'Code' })).toBeNull();
+      expect(card.queryByRole('button', { name: 'Truer colors' })).toBeNull();
+      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+      expect(card.getByRole('alert')).toHaveTextContent('Say what should change.');
+      fireEvent.change(card.getByRole('textbox', { name: 'Or say it yourself' }), { target: { value: 'dark blue eyes' } });
+      fireEvent.click(card.getByRole('button', { name: 'Draw again' }));
+      expect(card.getByText('Draw your pet again?')).toBeInTheDocument();
+      fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
+      expect(await card.findByText('Pick your favorite.', {}, { timeout: 5000 })).toBeInTheDocument();
+      expect(models.asked.at(-1)).toEqual({ text: expect.stringContaining('Change only this: dark blue eyes.'), images: 1 });
+      fireEvent.click(card.getByRole('button', { name: 'First drawing' }));
+      fireEvent.click(card.getByRole('button', { name: 'Keep this one' }));
+      expect(await card.findByText('Say hi to your new picture.')).toBeInTheDocument();
+      expect((await t.db.query('select token::text as token from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ token: drawn.split('/').pop() }]);
+      cleanup();
+    });
+    // Ben, on Ink+, may not start from Ana's.
+    await subscribeInkPlus(t.db, ben.personId, 'ben@cornell.edu');
+    await withPortalTestSession(ben, async () => expect(await ask(made)).toEqual(NOT_A_BASE));
   });
   it('a stranger in the same outing is shown, by first name only', async () => {
     const { ana, zebs } = await world();
