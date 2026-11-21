@@ -168,7 +168,7 @@ import { SHEET as SCENERY, AT } from './conga/scenery.js';
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 // Outside the ground is the print map's paper, and its blue where there is water (components/campus/near.tsx).
-const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: css('--paper'), action: css('--action'), town: '#f0e8d4', twine: '#fbf7ec', water: '#3f86de', roof: '#f5eedc', trim: '#dccfae', green: 'oklch(87% 0.1 140)', tree: 'oklch(71% 0.14 148)', blossom: 'oklch(84% 0.1 0)', panel: '#c5d6ea', stone: '#d9d4c7', lamp: '#ffe27a', cab: '#fccc0a' };
+const C = { field: css('--field'), ink: css('--ink'), paper: css('--paper'), action: css('--action'), town: '#f0e8d4', twine: '#fbf7ec', water: '#3f86de', roof: '#f5eedc', trim: '#dccfae', green: 'oklch(87% 0.1 140)', tree: 'oklch(71% 0.14 148)', blossom: 'oklch(84% 0.1 0)', panel: '#c5d6ea', stone: '#d9d4c7', lamp: '#ffe27a', cab: '#fccc0a' };
 // Every animal is on one sheet (scripts/conga-atlas.mjs), seven across, with its ground shadow already under it.
 // A small screen takes the small sheet. The version is in the name so the file can be kept by the browser for good.
 const COLS = 7, SHEET = Math.min(innerWidth, innerHeight * 1.25) / 760 * Math.min(2, devicePixelRatio || 1) > 1.4 ? 192 : 96;
@@ -202,6 +202,17 @@ const tint = n => `oklch(${TINTS[n % TINTS.length]})`;
 const ME = 'me';
 const colour = id => id === ME ? C.action : tint(id);
 
+/** A ring's outline moved `by` towards its inside, each corner along the middle of its two edges' normals. */
+function inward(ring, by) {
+  const n = ring.length, turn = ring.reduce((sum, [x, y], i) => { const [u, v] = ring[(i + 1) % n]; return sum + x * v - u * y; }, 0) > 0 ? 1 : -1;
+  return ring.map(([x, y], i) => {
+    const [px, py] = ring[(i - 1 + n) % n], [qx, qy] = ring[(i + 1) % n];
+    const a = Math.hypot(x - px, y - py) || 1, b = Math.hypot(qx - x, qy - y) || 1;
+    let nx = -(y - py) / a - (qy - y) / b, ny = (x - px) / a + (qx - x) / b; const l = Math.hypot(nx, ny) || 1;
+    return [x + turn * nx / l * by, y + turn * ny / l * by];
+  });
+}
+let hem;
 let world, map, land, me = null, aim = 0, followed = null;
 const ask = new URLSearchParams(location.search);
 let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * CORE), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
@@ -216,6 +227,9 @@ function open(id) {
   for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
   land = new Path2D();
   for (const ring of map.rings) { ring.forEach(([x, y], i) => i ? land.lineTo(x, y) : land.moveTo(x, y)); land.closePath(); }
+  // The running stitch just inside each area's edge: round the mat, and two rows where two areas are sewn together.
+  hem = new Path2D();
+  for (const ring of map.rings) { inward(ring, 18).forEach(([x, y], i) => i ? hem.lineTo(x, y) : hem.moveTo(x, y)); hem.closePath(); }
   const lead = world.lines.reduce((a, b) => a.tail.length >= b.tail.length ? a : b), pin = map.things.find(thing => thing.name === ask.get('at'));
   held = pin ? { x: pin.x + Number(ask.get('dx') ?? 0), y: pin.y + Number(ask.get('dy') ?? 0), dead: true, tail: [] } : null;
   document.body.classList.toggle('bare', !!held);
@@ -404,13 +418,31 @@ const CLOSE = 1.25; // the least a unit is drawn, in pixels: on a phone a stray 
 // ---------- water, grass and trees ----------
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground: for looking at the drawing.
 const tile = (size, work) => { const sheet = document.createElement('canvas'); sheet.width = sheet.height = size; work(sheet.getContext('2d'), size); return ctx.createPattern(sheet, 'repeat'); };
-// Grass and trees are the linocut ones: deep grass with tufts, scalloped trees. The water is a cartoon's: one flat bright
+// Trees drawn before the toys come are scalloped ones. The water is a cartoon's: one flat bright
 // colour, puffy white foam along the shore, rings going out from it, and wave marks drawn with a fat pen.
 const style = { green: 'oklch(70% 0.15 147)', tree: 'oklch(45% 0.11 158)', leaf: 'oklch(61% 0.14 150)', deep: 'oklch(71% 0.135 236)' };
 {
   Object.assign(C, { green: style.green, tree: style.tree });
-  style.tufts = tile(64, pen => { pen.strokeStyle = 'oklch(80% 0.15 140)'; pen.lineCap = pen.lineJoin = 'round'; pen.lineWidth = 2.5; for (const [x, y] of [[12, 16], [44, 40], [20, 54]]) { pen.beginPath(); pen.moveTo(x - 4, y - 7); pen.lineTo(x, y); pen.lineTo(x + 4, y - 7); pen.stroke(); } });
 }
+// ---------- the felt playmat (/demo/mockups-conga-ground.html, F) ----------
+// The ground is a kids' felt play mat the toys stand on: felt with a fibre grain, pieces sewn on with a running stitch.
+const FELT = { mat: 'oklch(80% 0.11 38)', table: 'oklch(90% 0.02 70)', grass: 'oklch(70% 0.12 145)', grassThread: 'oklch(90% 0.09 130)', road: 'oklch(72% 0.025 55)',
+  yellow: 'oklch(90% 0.15 95)', thread: 'oklch(94% 0.04 60)', seam: 'oklch(70% 0.12 36)', under: 'oklch(35% 0.06 40 / .3)' };
+const fibres = tile(160, (pen, size) => {
+  let seed = 11; const r = () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; };
+  pen.lineWidth = 0.8;
+  for (let i = 0; i < 900; i++) { const x = r() * size, y = r() * size, a = r() * Math.PI, l = 3 + r() * 7; pen.strokeStyle = r() < 0.5 ? 'rgba(255,255,255,.11)' : 'rgba(60,30,20,.08)'; pen.beginPath(); pen.moveTo(x, y); pen.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); pen.stroke(); }
+});
+/** A running stitch along the current path (or `path`): thread with a little shadow under it. */
+function stitch(colour, width = 2.6, dash = [9, 7], path = null) {
+  const go = () => path ? ctx.stroke(path) : ctx.stroke();
+  ctx.save(); ctx.setLineDash(dash); ctx.lineCap = 'round'; ctx.lineWidth = width;
+  ctx.strokeStyle = 'rgba(40,25,20,.28)'; ctx.translate(0, 1.2); go(); ctx.translate(0, -1.2);
+  ctx.strokeStyle = colour; go(); ctx.restore();
+}
+/** A felt piece sewn on: the thickness of the felt under it, then the felt. Draws the current path. */
+function feltPiece(fill) { ctx.save(); ctx.translate(0, 3); ctx.fillStyle = FELT.under; ctx.fill(); ctx.restore(); ctx.fillStyle = fill; ctx.fill(); }
+
 // The shore of a cartoon: two rings going out from it and fading, then foam like a row of little clouds.
 // `path` is the island's outline; without one, the outline just traced with the pen is used (a lake). `k` scales it for small water.
 function toonShore(t, path, k) {
@@ -488,12 +520,15 @@ function lake(thing, t) {
 }
 function lawn(thing) {
   const { w, h } = thing;
-  ctx.save(); shape(thing); ctx.fillStyle = C.green; ctx.fill(); ctx.clip();
-  ctx.fillStyle = style.tufts; ctx.fillRect(-w / 2, -h / 2, w, h);
-  if (thing.kind === 'field') { ctx.beginPath(); for (let k = 1; k < 8; k++) { const y = -h / 2 + h * k / 8; ctx.moveTo(-w / 2 + 8, y); ctx.lineTo(w / 2 - 8, y); } ctx.strokeStyle = C.paper; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); }
-  ctx.restore();
-  // With the toys the lawn is soft-edged ground they stand on, not an inked shape.
-  ctx.save(); shape(thing); ctx.strokeStyle = toysIn() ? 'oklch(58% 0.13 148)' : C.ink; ctx.lineWidth = toysIn() ? 6 : 3.5; ctx.stroke(); ctx.restore();
+  // A felt patch with a running stitch round it; a sports field also has its markings stitched in white.
+  ctx.save(); shape(thing); feltPiece(FELT.grass); ctx.restore();
+  ctx.save(); shape(thing, 9); stitch(FELT.grassThread); ctx.restore();
+  if (thing.kind === 'field') {
+    ctx.save(); ctx.translate(thing.x, thing.y); ctx.rotate(thing.turn);
+    const iw = w - 56, ih = h - 56, r = Math.min(iw, ih) * 0.2; ctx.beginPath(); ctx.rect(-iw / 2, -ih / 2, iw, ih);
+    if (iw >= ih) { ctx.moveTo(0, -ih / 2); ctx.lineTo(0, ih / 2); } else { ctx.moveTo(-iw / 2, 0); ctx.lineTo(iw / 2, 0); }
+    ctx.moveTo(r, 0); ctx.arc(0, 0, r, 0, 7); stitch(C.paper, 3, [8, 6]); ctx.restore();
+  }
   // Its trees are the map's (maps.js treesOn), drawn with everything else that stands up.
 }
 function canopy(x, y, r, fill) {
@@ -600,7 +635,7 @@ function pickup(kind, x, y, t, size = 50) {
   const art = ART[kind]; if (art.complete && art.naturalWidth) ctx.drawImage(art, x - size / 2, y - size / 2 - lift, size, size);
 }
 
-// The rope a line holds, in the line's own colour so lines can be told apart, with a light twist along it like twine.
+// The rope a line holds, in the line's own colour so lines can be told apart, twisted like yarn on the felt mat.
 // Drawn as one smooth curve through the animals. With the whistle, a yellow band runs round it.
 function rope(points, colour, band = false) {
   const low = 13;
@@ -608,10 +643,13 @@ function rope(points, colour, band = false) {
   for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
   ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
   ctx.lineJoin = ctx.lineCap = 'round';
-  if (band) { ctx.strokeStyle = C.ink; ctx.lineWidth = 30; ctx.stroke(); ctx.strokeStyle = `oklch(${OWN.whistle})`; ctx.lineWidth = 25; ctx.stroke(); }
-  ctx.strokeStyle = C.ink; ctx.lineWidth = 16; ctx.stroke();
-  ctx.strokeStyle = colour; ctx.lineWidth = 10; ctx.stroke();
-  ctx.lineCap = 'butt'; ctx.setLineDash([5, 9]); ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  // Twisted yarn: a soft shadow on the mat, the colour, then the twist as short strands of a darker and a lighter shade.
+  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .25)'; ctx.lineWidth = band ? 28 : 15; ctx.stroke(); ctx.restore();
+  if (band) { ctx.strokeStyle = `oklch(${OWN.whistle})`; ctx.lineWidth = 25; ctx.stroke(); }
+  ctx.strokeStyle = colour; ctx.lineWidth = 13; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([3, 5]); ctx.globalAlpha = 0.55; ctx.strokeStyle = tone(colour, { light: -14 }); ctx.stroke();
+  ctx.lineDashOffset = 4; ctx.globalAlpha = 0.5; ctx.strokeStyle = tone(colour, { light: 20, chroma: 0.6 }); ctx.lineWidth = 7; ctx.stroke();
+  ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1;
 }
 
 // ---------- the toys that stand on the ground ----------
@@ -705,8 +743,11 @@ const PAINT = {
   // Kahn's park: a lawn that narrows to the point of the island between two rows of trees, and ends in a room of white stone.
   'Four Freedoms Park': thing => turned(thing, (w, h) => {
     const narrow = w * 0.16, edge = f => w / 2 - (w / 2 - narrow) * f;
-    ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 2); ctx.lineTo(narrow, h / 2); ctx.lineTo(-narrow, h / 2); ctx.closePath(); ctx.fillStyle = C.green; ctx.fill(); ctx.fillStyle = style.tufts; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.lineJoin = 'round'; ctx.stroke();
-    ctx.beginPath(); ctx.rect(-narrow - 6, h / 2 - 4, narrow * 2 + 12, narrow * 2 + 12); inked(C.paper, 3); ring(0, h / 2 + 4, 5); inked(C.stone, 2); }),
+    const lawnShape = (m = 0) => { ctx.beginPath(); ctx.moveTo(-w / 2 + m, -h / 2 + m); ctx.lineTo(w / 2 - m, -h / 2 + m); ctx.lineTo(narrow - m * 0.5, h / 2 - m); ctx.lineTo(-narrow + m * 0.5, h / 2 - m); ctx.closePath(); };
+    lawnShape(); feltPiece(FELT.grass); lawnShape(10); stitch(FELT.grassThread);
+    // The room of white stone at the point: a pale felt square, stitched round.
+    const room = (m = 0) => { ctx.beginPath(); ctx.roundRect(-narrow - 6 + m, h / 2 - 4 + m, narrow * 2 + 12 - m * 2, narrow * 2 + 12 - m * 2, 6); };
+    room(); feltPiece(FELT.table); room(8); stitch(C.stone); }),
 };
 
 // The far banks, with their street grids: Manhattan to the west and Queens to the east. These and the boats were placed
@@ -721,7 +762,7 @@ function banks(reach) {
     if (Math.abs(vx) > half + reach) continue;
     const west = Math.max(10 - half, vx - reach), east = Math.min(half - 10, vx + reach), top = vy - reach, foot = vy + reach;
     ctx.save(); ctx.translate(Math.cos(a) * far, Math.sin(a) * far); ctx.rotate(a);
-    if (toysIn()) { const bank = new Path2D(); bank.rect(-half, top - 20, half * 2, reach * 2 + 40); shallows(bank); ctx.fillStyle = C.town; ctx.fill(bank); lip(bank); }
+    if (toysIn()) { const bank = new Path2D(); bank.rect(-half, top - 20, half * 2, reach * 2 + 40); shallows(bank); ctx.fillStyle = FELT.table; ctx.fill(bank); lip(bank); }
     else { ctx.beginPath(); ctx.rect(-half, top - 20, half * 2, reach * 2 + 40); ctx.fillStyle = C.town; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.stroke(); }
     ctx.beginPath(); for (let y = Math.ceil(top / block) * block; y < foot; y += block) { ctx.moveTo(west, y); ctx.lineTo(east, y); } for (let x = -2580 * k; x < east; x += avenue) if (x > west) { ctx.moveTo(x, top); ctx.lineTo(x, foot); }
     ctx.strokeStyle = C.trim; ctx.lineWidth = 7; ctx.stroke(); ctx.restore();
@@ -749,7 +790,11 @@ function boats(t) {
 }
 // Main Street, and the island's red bus going up and down it.
 function road(thing, t) {
-  ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(...thing.from); ctx.lineTo(...thing.to); ctx.strokeStyle = C.roof; ctx.lineWidth = thing.w; ctx.stroke();
+  // Warm grey felt sewn on, with yellow stitches down the middle.
+  ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(...thing.from); ctx.lineTo(...thing.to);
+  ctx.save(); ctx.translate(0, 3); ctx.strokeStyle = FELT.under; ctx.lineWidth = thing.w; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = FELT.road; ctx.lineWidth = thing.w; ctx.stroke();
+  stitch(FELT.yellow, 4, [16, 14]);
   if (world.shuttles.some(car => car.kind === 'bus')) return;
   const f = 0.5 - 0.5 * Math.cos(t * 0.1), going = Math.sin(t * 0.1) > 0 ? 0 : Math.PI;
   if (toysIn()) {
@@ -827,7 +872,6 @@ function airborne(t) {
   for (let i = homes.length - 1; i >= 0; i--) {
     const home = homes[i], u = (t - home.t) / 0.9;
     if (u > 1) { homes.splice(i, 1); continue; }
-    if (!seen(home.x, home.y)) continue;
     const x = home.x + Math.cos(home.a) * 70 * u, y = home.y + Math.sin(home.a) * 70 * u - Math.abs(Math.sin(u * Math.PI * 3)) * 6;
     sprite(home.face, x, y, SIZE.stray, 0, 1 - u * u);
   }
@@ -886,9 +930,14 @@ function solid(thing, t) {
   if (thing.kind === 'tower') { ctx.fillStyle = C.action; ctx.beginPath(); ctx.arc(thing.x, thing.y, thing.w * 0.24, 0, 7); ctx.fill(); ctx.lineWidth = 3; ctx.stroke(); }
 }
 function bridge(thing) {
-  ctx.lineCap = 'butt'; ctx.beginPath(); ctx.moveTo(...thing.from); ctx.lineTo(...thing.to);
-  ctx.strokeStyle = C.ink; ctx.lineWidth = thing.w + 10; ctx.stroke(); ctx.strokeStyle = C.roof; ctx.lineWidth = thing.w; ctx.stroke();
-  ctx.setLineDash([16, 14]); ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
+  // A strip of grey felt laid over the water, stitched along both sides.
+  const along = Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]), nx = -Math.sin(along), ny = Math.cos(along);
+  const span = (off = 0) => { ctx.beginPath(); ctx.moveTo(thing.from[0] + nx * off, thing.from[1] + ny * off); ctx.lineTo(thing.to[0] + nx * off, thing.to[1] + ny * off); };
+  ctx.lineCap = 'butt';
+  span(); ctx.save(); ctx.translate(0, 6); ctx.strokeStyle = FELT.under; ctx.lineWidth = thing.w; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = FELT.road; ctx.lineWidth = thing.w; ctx.stroke();
+  for (const side of [-1, 1]) { span(side * (thing.w / 2 - 8)); stitch(FELT.thread); }
+  span(); stitch(FELT.yellow, 4, [16, 14]);
 }
 const SOLID = ['hall', 'tower', 'water'];
 
@@ -909,21 +958,17 @@ function draw(t, dt) {
   standing.length = 0;
 
   if (map.water) sea(t, cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2);
-  else { ctx.fillStyle = C.town; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
+  else { ctx.fillStyle = FELT.table; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
   if (map.axis != null) { boats(t); banks(Math.hypot(halfW, halfH)); }
-  // On clay water the ground has a lit lip and no ink; otherwise a hard shadow and an inked edge.
+  // The mat: on clay water it has the water's lit lip; on the table, the felt's thickness under it.
   const clay = toysIn() && map.water;
-  if (!clay) {
-    ctx.save(); ctx.translate(14, 14); ctx.fillStyle = C.ink; ctx.fill(land); ctx.restore(); // the hard shadow the ground casts
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(land);
-  }
-  ctx.fillStyle = C.field; ctx.fill(land);
+  if (!clay) { ctx.save(); ctx.translate(0, 6); ctx.fillStyle = FELT.under; ctx.fill(land); ctx.restore(); }
+  ctx.fillStyle = FELT.mat; ctx.fill(land);
   if (clay) lip(land);
   ctx.save(); ctx.clip(land);
-  ctx.strokeStyle = C.dot; ctx.lineWidth = 5; ctx.setLineDash([4, 18]); ctx.lineCap = 'round'; if (map.rings.length > 1) ctx.stroke(land); ctx.setLineDash([]); // where one section meets the next
-  ctx.fillStyle = C.dot; ctx.beginPath();
-  for (let x = Math.floor((cam.x - halfW) / 90) * 90; x < cam.x + halfW; x += 90) for (let y = Math.floor((cam.y - halfH) / 90) * 90; y < cam.y + halfH; y += 90) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); }
-  ctx.fill();
+  // Where one area is sewn to the next, a darker seam; the running stitch round each area runs either side of it.
+  if (map.rings.length > 1) { ctx.strokeStyle = FELT.seam; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.stroke(land); }
+  stitch(FELT.thread, 2.6, [10, 8], hem);
   for (const thing of map.things) if (thing.kind === 'road') road(thing, t);
   const near = thing => Math.abs(thing.x - cam.x) < halfW + Math.max(thing.w, thing.h) && Math.abs(thing.y - cam.y) < halfH + Math.max(thing.w, thing.h);
   for (const thing of map.things) if ((thing.kind === 'green' || thing.kind === 'field') && near(thing)) painted(thing);
@@ -936,7 +981,10 @@ function draw(t, dt) {
   for (const zone of map.zones) if (Math.abs(zone.at[0] - cam.x) < halfW + 300 && Math.abs(zone.at[1] - cam.y) < halfH + 60) groundName(zone.name, zone.at[0], zone.at[1], 40);
   for (const thing of map.things) if (!thing.from && !(toysIn() && thing.toy) && near(thing)) groundName(thing.name, thing.x, thing.y, 22);
   ctx.restore();
-  for (const thing of map.things) if (thing.kind === 'bridge') { bridge(thing); cabs(thing, t); }
+  for (const thing of map.things) if (thing.kind === 'bridge') bridge(thing);
+  // The felt's fibres over all of it, fixed to the ground so they slide by as you walk.
+  if (quality < 2) { fibres.setTransform(new DOMMatrix().scale(0.55)); ctx.fillStyle = fibres; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
+  for (const thing of map.things) if (thing.kind === 'bridge') cabs(thing, t);
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing, t);
   for (const car of world.shuttles) stop(car);
   for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t);
