@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockups · Doodles, the real game on each tile</title>
+<style>
+  :root {
+    --field: oklch(96.4% 0.19 117); --shadow: oklch(80% 0.17 121); --ink: oklch(25% 0.07 252); --action: oklch(47.6% 0.13 250);
+    --paper: oklch(99.3% 0.004 117); --page: oklch(96.2% 0.004 230); --on-ink: oklch(99.4% 0.003 230);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: -0.012em; color: var(--ink); background: var(--field); }
+  a { color: inherit; text-decoration: none; } button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  header.pg { padding: 28px 32px 4px; }
+  header.pg h1 { display: inline-block; margin: 0; padding: 8px 18px; border-radius: 99px; font-size: 22px; background: var(--ink); color: var(--field); }
+  header.pg p { width: fit-content; max-width: 1000px; margin: 12px 0 0; padding: 8px 16px; border-radius: 14px 14px 14px 4px; background: var(--paper); font-weight: 560; }
+  .pick { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; }
+  .pick > b { padding: 6px 14px; border-radius: 99px; background: var(--paper); font-size: 14px; }
+  .switch { display: inline-flex; gap: 4px; padding: 4px; border-radius: 99px; background: var(--ink); }
+  .switch button { height: 32px; padding: 0 14px; border-radius: 99px; font-size: 14px; font-weight: 640; color: var(--paper); }
+  .switch button[aria-pressed=true] { background: var(--field); color: var(--ink); }
+  section.frame { position: relative; margin: 44px 32px 0; }
+  section.frame:last-of-type { margin-bottom: 56px; }
+  .tag { position: absolute; z-index: 9; top: -16px; left: 16px; display: inline-flex; gap: 10px; align-items: center; padding: 6px 16px 6px 6px; border-radius: 99px; font-weight: 720; font-size: 15.5px; background: var(--action); color: var(--on-ink); }
+  .tag b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--paper); color: var(--ink); font-size: 13px; }
+  .say { max-width: 1000px; margin: 14px 0 0; padding: 8px 14px; border-radius: 12px 12px 12px 4px; background: var(--paper); font-size: 14px; font-weight: 540; }
+
+  /* The page, 1240 wide, under the bar */
+  .site { width: 1240px; border-radius: 18px; overflow: hidden; background: var(--page); box-shadow: 0 0 0 1.5px var(--ink), 6px 6px 0 var(--shadow); }
+  .bar { display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 32px; background: var(--field); border-bottom: 1.5px solid var(--ink); box-shadow: 0 5px 0 var(--shadow); }
+  .bar strong { margin-right: 16px; font-size: 24px; font-weight: 760; letter-spacing: -0.045em; }
+  .bar a { height: 36px; padding: 0 15px; display: inline-flex; align-items: center; border-radius: 99px; font-size: 14.5px; font-weight: 620; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--shadow); }
+  .bar a.on { background: var(--ink); color: var(--field); box-shadow: none; }
+  .bar a.in { margin-left: auto; background: var(--action); color: var(--on-ink); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+  .main { padding: 44px 36px 60px; }
+  /* the page's name, on an ink plate */
+  .main h2.name { width: fit-content; margin: 0 0 40px 4px; padding: 8px 26px 12px; border-radius: 22px 22px 22px 6px; background: var(--ink); color: var(--field); font-size: 54px; font-weight: 780; letter-spacing: -0.05em; line-height: 1.05; rotate: -1.5deg; box-shadow: 6px 6px 0 var(--shadow); }
+
+  /* a game: its picture, its name, Play. Nothing else. */
+  .rail { display: grid; grid-template-columns: 806fr 328fr; gap: 34px; }
+  .game { position: relative; display: block; padding: 14px 14px 46px; border-radius: 22px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 7px 7px 0 var(--ink); transition: translate .25s cubic-bezier(.22, 1, .36, 1); }
+  .game:hover { translate: -2px -3px; }
+  .game .pic { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; background: var(--field); box-shadow: 0 0 0 1.5px var(--ink); }
+  .game .plate { position: absolute; left: 26px; bottom: 16px; padding: 4px 20px 8px; border-radius: 16px 16px 16px 5px; background: var(--ink); color: var(--field); font-size: 38px; font-weight: 780; letter-spacing: -0.05em; line-height: 1.05; rotate: -2.5deg; }
+  .game .go { position: absolute; right: 26px; bottom: 16px; display: inline-flex; align-items: center; height: 50px; padding: 0 30px; border-radius: 99px; font-size: 17px; font-weight: 680; background: var(--action); color: var(--on-ink); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
+  .game .works { position: absolute; z-index: 2; right: 22px; top: -12px; padding: 3px 12px 4px; border-radius: 99px; font-size: 12.5px; font-weight: 620; background: var(--ink); color: var(--paper); }
+  .game.tall .plate { left: 22px; font-size: 32px; } .game.tall .go { right: 22px; padding: 0 24px; }
+  @media (prefers-reduced-motion: reduce) { .game { transition: none; } }
+</style>
+</head>
+<body>
+<header class="pg">
+  <h1>Doodles: the real game on each tile</h1>
+  <p>Each tile is a picture of the game being played, its name, and Play. No course codes, no "You will learn", no credits. A is a still; B is the same tile with a six-second clip.</p>
+  <div class="pick"><b>Call the page</b>
+    <div class="switch" id="names">
+      <button aria-pressed="true">Study break</button><button aria-pressed="false">Ink break</button><button aria-pressed="false">Doodle session</button><button aria-pressed="false">In the margins</button><button aria-pressed="false">Doodles</button>
+    </div>
+  </div>
+</header>
+
+<section class="frame">
+  <span class="tag"><b>A</b>Still pictures</span>
+  <div class="site">
+    <div class="bar"><strong>Loopd</strong><a>This week</a><a class="on">Doodles</a><a>Ink</a><a class="in">Sign in</a></div>
+    <div class="main">
+      <h2 class="name" data-name>Study break</h2>
+      <div class="rail">
+        <a class="game" href="/conga"><img class="pic" src="/demo/doodles-shots/conga.webp" width="960" height="540" alt="Conga being played: a line of animals walking past Duffield Hall"><span class="plate">Conga</span><span class="go">Play</span></a>
+        <a class="game tall" href="/c/doodles/seats"><span class="works">In the works</span><img class="pic" src="/demo/doodles-shots/seats.webp" width="348" height="508" style="aspect-ratio: 348 / 508" alt="Seats being played: pairs of animals turned up on the chart, the clock at 10.5 seconds"><span class="plate">Seats</span><span class="go">Play</span></a>
+      </div>
+    </div>
+  </div>
+  <p class="say">Two pictures, 47 KB together. Nothing moves and no game code loads until Play.</p>
+</section>
+
+<section class="frame">
+  <span class="tag"><b>B</b>Short clips</span>
+  <div class="site">
+    <div class="bar"><strong>Loopd</strong><a>This week</a><a class="on">Doodles</a><a>Ink</a><a class="in">Sign in</a></div>
+    <div class="main">
+      <h2 class="name" data-name>Study break</h2>
+      <div class="rail">
+        <a class="game" href="/conga"><video class="pic" muted loop playsinline preload="none" poster="/demo/doodles-shots/conga.webp" src="/demo/doodles-shots/conga.mp4" width="640" height="360" aria-label="Conga being played: a line of animals walking past Duffield Hall"></video><span class="plate">Conga</span><span class="go">Play</span></a>
+        <a class="game tall" href="/c/doodles/seats"><span class="works">In the works</span><video class="pic" muted loop playsinline preload="none" poster="/demo/doodles-shots/seats.webp" src="/demo/doodles-shots/seats.mp4" width="348" height="508" style="aspect-ratio: 348 / 508" aria-label="Seats being played: the last pairs found and the chart stamped All paired"></video><span class="plate">Seats</span><span class="go">Play</span></a>
+      </div>
+    </div>
+  </div>
+  <p class="say">The same still shows first. A six-second silent recording of a real game (Conga 163 KB, Seats 51 KB) is fetched only when the tile comes on screen, and stops when it leaves. With "reduce motion" on, the still stays.</p>
+</section>
+
+<script>
+  // the name switcher
+  const names = document.getElementById('names');
+  names.addEventListener('click', event => { const b = event.target.closest('button'); if (!b) return;
+    for (const each of names.children) each.setAttribute('aria-pressed', String(each === b));
+    for (const each of document.querySelectorAll('[data-name]')) each.textContent = b.textContent; });
+  // a clip plays only while its tile is on screen, and never when the person asked for less motion
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const watch = new IntersectionObserver(seen => { for (const each of seen) each.isIntersecting ? each.target.play().catch(() => {}) : each.target.pause(); }, { threshold: 0.4 });
+    for (const clip of document.querySelectorAll('video')) watch.observe(clip);
+  }
+</script>
+</body>
+</html>

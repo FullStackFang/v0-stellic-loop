@@ -22,9 +22,10 @@ const nextConfig: NextConfig = {
     ];
   },
   // A file under public/ is asked for again on every visit unless told otherwise. The Conga game's sprite sheets (public/conga) carry
-  // a version in their name (scripts/conga-atlas.mjs), so a browser may keep one for good.
+  // a version in their name (scripts/conga-atlas.mjs), so a browser may keep one for good. So do the recordings and stills of the games on the Doodles page (public/doodles).
   async headers() {
     return [{ source: "/conga/:file(.+\\.v\\d+\\.webp)", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
+      { source: "/doodles/:file(.+\\.v\\d+\\.(?:mp4|webp))", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
       // The animal faces are on every page. Their names carry no version and a face is redrawn now and then, so a browser keeps
       // one for a day, and may show the kept one for a week while it asks again.
       { source: "/animals/:file(\\d+\\.png)", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] }];
