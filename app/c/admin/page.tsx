@@ -21,6 +21,7 @@ import { frontIsCampus } from '@/lib/campus/schools';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { siteBar } from '../site-bar';
 import { WordsField } from '@/components/campus/words-field';
+import { PickCount } from '@/components/campus/pick-count';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
 import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
@@ -158,7 +159,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     return <section>{top()}
       <nav className="cs-adm-seg" aria-label="Show">{SHOW.map(each => <Link key={each} href={`${at('animals')}&show=${each}`} aria-current={each === show ? 'true' : undefined}>{each === 'all' ? 'All' : TIER[each]} {within(each).length}</Link>)}</nav>
       {/* Pick any number, then move them together. The bar counts what is picked, and shows only then. With one picked, its card shows beside the grid: its name, and the words the picker finds it by. */}
-      <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} />
+      <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} /><PickCount />
         <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} data-mascot={mascot(pet) || undefined} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label>
           <div className="cs-adm-card"><p><img src={pet.src} alt="" /><i>{TIER[pet.now]}</i></p>
             <span className="cs-adm-fld"><b>Name</b><input name={`name-${pet.value}`} defaultValue={pet.named} placeholder="Made animal" maxLength={40} aria-label={`Name of ${pet.name}`} /></span>

@@ -831,7 +831,8 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm-moves button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-paper); }
 .cs-adm-moves details { display: flex; align-items: center; } .cs-adm-moves summary { list-style: none; background: none; box-shadow: inset 0 0 0 1px var(--cs-line); } .cs-adm-moves summary::-webkit-details-marker { display: none; }
 .cs-adm-moves details[open] summary { display: none; } .cs-adm-moves details button { background: var(--adm-warn); color: var(--cs-paper); }
-.cs-adm-pick:has(.cs-adm-grid :checked):not(:has(.cs-adm-grid li:has(:checked) ~ li:has(:checked))) .cs-adm-tray { display: none; }
+/* One picked: its card, and no bar. PickCount (components/campus/pick-count.tsx) counts them: :has() inside :has() is not allowed, so a rule that tried it here was dropped. */
+.cs-adm-pick[data-picked="1"]:has(.cs-adm-grid :checked) .cs-adm-tray { display: none; }
 .cs-adm-pick:has(.cs-adm-grid input:checked:not([data-mascot])) .cs-adm-tray button[value=school] { display: none; }
 
 /* Phones: the week runs down the page, not sideways. Each ticket takes the width, and an open ticket's panel unfolds
