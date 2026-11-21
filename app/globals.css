@@ -188,3 +188,6 @@
 .plan-preferences{margin-top:16px;text-shadow:none}.plan-preferences p{font-size:12px;line-height:1.4}
 .slot-edit .intent-composer{padding:12px;background:var(--paper);color:var(--ink);border-radius:10px}
 @media(max-width:360px){.post-page h1.ptitle{font-size:28px}.intent-writing textarea{font-size:22px;min-height:84px}.intent-writing{margin-bottom:16px}.intent-pin{font-size:12px;padding:6px 8px}.post-page{padding-top:12px}.post-page .pbody{font-size:13px;margin-bottom:12px}}
+
+/* Phones. iOS zooms the whole page when a text field under 16px is tapped, so every field is 16px there. */
+@media (max-width: 700px) { input:not([type=checkbox], [type=radio], [type=range], [type=file]), textarea, select { font-size: 16px !important; } }
