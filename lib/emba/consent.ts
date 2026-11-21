@@ -51,6 +51,12 @@ export async function leaseFor(q: Q, principal: Principal, action: Action, scope
   return lease.id;
 }
 
+/**
+ * Whether a member's view of their own groups (the listing, and a group's team reads) is recorded. An assistant's always
+ * is: that is what the records are for. The site's is not (openspec loop-faster-signed-in-pages, Open Question 2): it
+ * filled the table on every page load. Every other record, the site's included, is kept.
+ */
+export const recordsRead = (principal: Principal) => principal.clientId !== null;
 export async function audit(q: Q, principal: Principal, action: string, resourceId: string | null = null, leaseId: string | null = null) {
   await q.query('insert into emba_audit (person_id,client_id,action,resource_id,lease_id) values ($1,$2,$3,$4,$5)',
     [principal.personId,principal.clientId,action,resourceId,leaseId]);

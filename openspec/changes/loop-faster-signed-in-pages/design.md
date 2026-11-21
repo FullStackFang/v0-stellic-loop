@@ -101,3 +101,9 @@ For the owner. Each is outside this change until answered; a yes adds a task gro
 2. **Read records for the site:** do you need a record every time a member views their own groups, or only when an assistant reads? Today about 15 rows are written per full load; they are read only by the old `/emba` portal (newest 100) and the privacy export, and nothing removes them.
 3. **Clerk session check:** is up to a minute's delay before a revoked or banned session stops seeing pages acceptable, if every action still checks live? Probably the largest saving in production; the Clerk calls should be timed there first.
 4. **Development database:** a second Supabase project near the laptop would make localhost several times faster with no code change. Wanted?
+
+Answered by the owner on 2026-11-20:
+1. Yes, check once. Built: `listGroups` on the site returns after its one locked check; an assistant's listing keeps its record and its second check.
+2. Assistants only. Built: `recordsRead` in `lib/emba/consent.ts`; the listing, `reading` (team reads) and `teamWrite`'s declined-write and refusal reads skip `plan:read` on the site. Records already written stay.
+3. Not yet: time the Clerk calls in production first.
+4. No: keep one development database.

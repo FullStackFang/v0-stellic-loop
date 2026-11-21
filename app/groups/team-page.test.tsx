@@ -129,26 +129,27 @@ it('shows a member the team as their assistant would see it, with only the contr
   expect(screen.getByRole('heading', { name: 'Group unavailable' })).toBeInTheDocument();
   expect(screen.queryByText(/Google Slides|Deck draft|Slides 1 to 3|Ten slides/)).not.toBeInTheDocument();
 });
-it('reads the header and the shown tab only, records no read it did not make, and keeps the tab bar counts', async () => {
+it('reads the header and the shown tab only, records no member\'s view of their own group, and keeps the tab bar counts', async () => {
   const f = await fixture();
   expect((await createAsk(t.db, f.ana, { ...f.scope, question: 'Red or white?', kind: 'one', options: ['Red', 'White'], closesAt: new Date(Date.now() + 86_400_000).toISOString().slice(0, 19) + 'Z' })).saved).toBe(true);
   const reads = { listAsks: vi.mocked(listAsks), briefHistory: vi.mocked(briefHistory), myRecentRecords: vi.mocked(myRecentRecords), upcomingEvents: vi.mocked(upcomingEvents), listTeamEvents: vi.mocked(listTeamEvents) };
   const made = () => Object.entries(reads).flatMap(([name, read]) => read.mock.calls.map(call => name === 'listTeamEvents' && (call[2] as { archived?: boolean }).archived ? 'archivedEvents' : name)).sort();
   const recorded = async () => (await t.db.query<{ n: number }>("select count(*)::int as n from emba_audit where person_id=$1 and action='plan:read'", [f.owner.personId])).rows[0].n;
   const open = async (tab?: string) => { for (const read of Object.values(reads)) read.mockClear(); const before = await recorded(); const page = await view(f.owner, tab); const out = { made: made(), recorded: await recorded() - before }; return { page, ...out }; };
-  // Decisions, claims and outputs come from the header's reads: the list of groups, the team's state and its brief are the three reads recorded.
+  // Decisions, claims and outputs come from the header's reads. A member viewing their own group on the site is not
+  // recorded (openspec loop-faster-signed-in-pages, Open Question 2): an assistant's reads are (team-read tests).
   for (const tab of ['decisions', 'claims', 'outputs']) {
     const shown = await open(tab);
-    expect([shown.made, shown.recorded], tab).toEqual([['listTeamEvents'], 3]);
+    expect([shown.made, shown.recorded], tab).toEqual([['listTeamEvents'], 0]);
     // The count of open asks is in the tab bar on every tab, without the asks being listed.
     expect(screen.getByRole('link', { name: 'Asks1' })).toHaveAttribute('href', '/groups/study-team/team?tab=asks');
     shown.page.unmount();
   }
   // The first tab, All, lays out what is coming up, so it also reads the asks, the upcoming events, the ideas and the travel.
   const all = await open();
-  expect([all.made, all.recorded]).toEqual([['listAsks', 'listTeamEvents', 'upcomingEvents'], 7]);
+  expect([all.made, all.recorded]).toEqual([['listAsks', 'listTeamEvents', 'upcomingEvents'], 0]);
   all.page.unmount();
-  for (const [tab, extra, records] of [['asks', ['listAsks'], 4], ['brief', ['briefHistory'], 3], ['mine', ['myRecentRecords'], 4], ['events', ['archivedEvents', 'upcomingEvents'], 6]] as const) {
+  for (const [tab, extra, records] of [['asks', ['listAsks'], 0], ['brief', ['briefHistory'], 0], ['mine', ['myRecentRecords'], 0], ['events', ['archivedEvents', 'upcomingEvents'], 0]] as const) {
     const shown = await open(tab);
     expect([shown.made, shown.recorded], tab).toEqual([[...extra, 'listTeamEvents'].sort(), records]);
     if (tab === 'asks') expect(screen.getByText('Red or white?')).toBeInTheDocument();

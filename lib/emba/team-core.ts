@@ -2,7 +2,7 @@ import 'server-only';
 import {z,ZodError} from 'zod';
 import type {Db,Q} from '../db';
 import {canAccessLoop,type Principal} from './access';
-import {audit,authorize,requireFirstParty} from './consent';
+import {audit,authorize,recordsRead,requireFirstParty} from './consent';
 import {EmbaError} from './errors';
 import {knownPeople,LIMITS,type PersonView} from './team-records';
 
@@ -55,7 +55,7 @@ export async function reading<T>(db:Db,p:Principal,team:Scope,work:(base:Base)=>
    where a.org_id=$1 and a.loop_id=$2 and a.retired_at is null`,[team.orgId,team.loopId]);
   if(!head)throw new EmbaError('forbidden');
   const value=await work({q,lease,team:{handle:head.root?`@${head.namespace}`:`@${head.namespace}/${head.slug}`,name:head.name},timezone:head.timezone,today:head.today,decisionSeq:head.decisionSeq,changeSeq:head.changeSeq});
-  await audit(q,p,'plan:read',team.loopId,lease);
+  if(recordsRead(p))await audit(q,p,'plan:read',team.loopId,lease);
   return value;
  });
 }
@@ -165,7 +165,7 @@ export async function teamWrite<T extends {saved:boolean}>(db:Db,p:Principal,tea
    const first=await authority();
    const refusal=(held:{post:boolean;manage:boolean}):Refused|null=>options.need==='manage'&&!held.manage?{saved:false,reason:'organizers_only'}:held.post?null:{saved:false,reason:'members_only'};
    const refused=refusal(first);
-   if(refused){await audit(q,p,'plan:read',team.loopId,first.lease);return refused;}
+   if(refused){if(recordsRead(p))await audit(q,p,'plan:read',team.loopId,first.lease);return refused;}
    const {rows:[address]}=await q.query(`select 1 from emba_group_address where org_id=$1 and loop_id=$2 and ($3::boolean or retired_at is null) for share`,[team.orgId,team.loopId,Boolean(options.retired)]);
    if(!address)throw new EmbaError('forbidden');
    if(options.lock){
@@ -173,7 +173,7 @@ export async function teamWrite<T extends {saved:boolean}>(db:Db,p:Principal,tea
     await q.query('select 1 from emba_team_state where org_id=$1 and loop_id=$2 for update',[team.orgId,team.loopId]);
    }
    const {rows:[state]}=await q.query<{timezone:string}>('select timezone from emba_team_state where org_id=$1 and loop_id=$2',[team.orgId,team.loopId]);
-   if(options.count&&await writesThisHour(q,team,p)>=LIMITS.writesPerHour){await audit(q,p,'plan:read',team.loopId,first.lease);return {saved:false,reason:'cap',cap:'writes_per_hour'};}
+   if(options.count&&await writesThisHour(q,team,p)>=LIMITS.writesPerHour){if(recordsRead(p))await audit(q,p,'plan:read',team.loopId,first.lease);return {saved:false,reason:'cap',cap:'writes_per_hour'};}
    const locked=()=>{if(!options.lock)throw new Error('The team lock is not held');};
    const ctx:WriteCtx={q,p,team,timezone:state?.timezone??'UTC',manager:first.manage,
     log:async(action,target,actorId=p.personId)=>{locked();await logChange(q,team,action,target,actorId,actorId===null?null:p.clientId);},
@@ -191,8 +191,8 @@ export async function teamWrite<T extends {saved:boolean}>(db:Db,p:Principal,tea
    const final=await authority();
    if(refusal(final))throw new EmbaError('forbidden');
    if(result.saved&&options.count)await q.query('insert into emba_team_write(org_id,loop_id,person_id,client_id) values($1,$2,$3,$4)',[team.orgId,team.loopId,p.personId,p.clientId]);
-   // A declined write may have shown team data; that is a read, and is recorded as one.
-   await audit(q,p,result.saved?'activity:write':'plan:read',team.loopId,final.lease);
+   // A declined write may have shown team data; that is a read, and an assistant's is recorded as one.
+   if(result.saved||recordsRead(p))await audit(q,p,result.saved?'activity:write':'plan:read',team.loopId,final.lease);
    return result;
   });
  }catch(error){

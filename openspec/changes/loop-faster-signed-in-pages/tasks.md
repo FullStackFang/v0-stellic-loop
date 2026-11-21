@@ -48,7 +48,11 @@
 
 ## 6. Waiting for the owner (not part of this change until answered)
 
-- [ ] 6.1 Ask: listing groups checks access once under lock (design.md, Open Question 1)
-- [ ] 6.2 Ask: read records only for assistant reads (Open Question 2)
-- [ ] 6.3 Ask: remember the Clerk session check for page views; time the Clerk calls in production first (Open Question 3)
-- [ ] 6.4 Ask: a development database near the laptop (Open Question 4)
+- [x] 6.1 Ask: listing groups checks access once under lock (design.md, Open Question 1)
+  - Yes (2026-11-20); built in `lib/emba/groups.ts`, tested in `emba-groups.test.ts`.
+- [x] 6.2 Ask: read records only for assistant reads (Open Question 2)
+  - Assistants only (2026-11-20); built with `recordsRead`; `team-page`, `emba-group-tree` and `emba-groups` tests updated; the 32 test files touching the audit table pass.
+- [x] 6.3 Ask: remember the Clerk session check for page views; time the Clerk calls in production first (Open Question 3)
+  - Not yet (2026-11-20): time the Clerk calls in production first. Nothing built.
+- [x] 6.4 Ask: a development database near the laptop (Open Question 4)
+  - No (2026-11-20). Nothing built.

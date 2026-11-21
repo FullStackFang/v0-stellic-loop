@@ -219,7 +219,9 @@ it('refuses several groups at once when one is named under an organization it do
   expect(await all([scope(team1), { orgId: cohort.orgId, loopId: other.loopId }, scope(team2)])).toBe(false);
 });
 
-it('lists groups in the same number of statements for four groups as for one, and still records a read of each', async () => {
+// The site's listing records no member's view of their own groups (openspec loop-faster-signed-in-pages, Open Question 2);
+// an assistant's listing records each group it was shown (emba-groups.test.ts).
+it('lists groups in the same number of statements for four groups as for one, and records no view of them on the site', async () => {
   const { owner, team2 } = await tree();
   const member = await person('Member');
   await join(team2, member, 'member');
@@ -234,5 +236,5 @@ it('lists groups in the same number of statements for four groups as for one, an
   const one = await counted(member), four = await counted(owner);
   expect([one.groups, four.groups]).toEqual([1, 4]);
   expect(four.statements).toBe(one.statements);
-  expect(await reads(owner) - before).toBe(4);
+  expect(await reads(owner) - before).toBe(0);
 });
