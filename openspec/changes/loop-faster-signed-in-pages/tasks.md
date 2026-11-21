@@ -41,7 +41,9 @@
 - [x] 5.1 Take the laptop timings in design.md's Context again and write the new numbers there
   - The owner subject in `.env.local` has no identity in the development database, so the read-only probe measured as the member there in the most groups (5).
 - [ ] 5.2 Reload `/groups/extreme-cheapskates`, `/groups/connections` and `/c/ink` signed in; watch the dev server's log for errors
-- [ ] 5.3 Push and open one pull request to `main` after the owner has tried it on localhost
+  - Done short of signing in (2026-11-20): signed out on localhost `/c/ink` renders and the groups pages redirect to sign-in; in production, 3 hours after the deploy, no runtime errors and no error or warning log lines. Left for the owner: the account card signed in, beside the week page's.
+- [x] 5.3 Push and open one pull request to `main` after the owner has tried it on localhost
+  - Overtaken: the four code commits went to production inside pull requests #80 and #81 (cut from local `main` by other sessions) before the owner tried them. Production deployments `dpl_5XNaexSXiZ5Go3ikXwDMvaRhezpP` and `dpl_4cw8e6b5Qoz8YkVPuPKJdRmXj2vs` are READY; either earlier one is a rollback target.
 
 ## 6. Waiting for the owner (not part of this change until answered)
 
