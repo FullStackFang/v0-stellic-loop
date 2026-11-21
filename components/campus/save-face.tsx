@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { subscribeToSaveAction } from '@/app/c/actions';
-import { GROUNDS_HREF, saveHref, SHAPES, type Shape, type Swatch } from '@/lib/campus/save-shapes';
+import { GROUNDS_HREF, saveHref as hrefOf, SHAPES, type Shape, type Swatch } from '@/lib/campus/save-shapes';
 import '@/app/c/save-face.css';
 import { SeatsOver, SeatsWord } from '@/components/loading/seats';
 import { joinedWords } from '@/lib/campus/ink';
@@ -20,7 +20,8 @@ const NOT_NOW = 'That did not go through. Try again.';
  * pane asks, and shows the Ink+ plan when the answer is no. `of` is a group, for its drawn picture; without it the
  * picture is the person's own.
  */
-export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: string } | null; onBack: () => void }) {
+export function SaveFace({ of = null, face = '', onBack }: { of?: { orgId: string; loopId: string } | null; /** The picture the person wears. It is part of each address, so a preview the browser kept of an earlier face is never shown. */ face?: string; onBack: () => void }) {
+  const saveHref = (...args: Parameters<typeof hrefOf>) => `${hrefOf(...args)}${face ? `&face=${encodeURIComponent(face)}` : ''}`;
   const [shape, setShape] = useState<Shape>('profile'), [ground, setGround] = useState('school'), [mark, setMark] = useState(true);
   const [swatches, setSwatches] = useState<Swatch[]>([]);
   // `plan` is the Ink+ plate, in the pane's place. `asking` is the email field in the button's place, `joined` whether they subscribed on this visit.
@@ -39,7 +40,8 @@ export function SaveFace({ of = null, onBack }: { of?: { orgId: string; loopId: 
     const scope = org && group ? { orgId: org, loopId: group } : null, keys = shape === 'sticker' ? [ground] : [ground, ...swatches.map(each => each.key)];
     const wanted = new Set([...(Object.keys(SHAPES) as Shape[]).map(each => saveHref(each, ground, mark, scope, true)), ...keys.map(each => saveHref(shape, each, mark, scope, true))]);
     for (const href of wanted) { const ahead = new Image(); ahead.onload = () => here(href); ahead.src = href; }
-  }, [shape, ground, mark, swatches, org, group]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- saveHref is remade each render; `face` is what it adds
+  }, [shape, ground, mark, swatches, org, group, face]);
 
   /** "No mark": the server says whether this person may. If not, the plan is shown. */
   const noMark = async () => {

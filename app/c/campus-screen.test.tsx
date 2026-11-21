@@ -202,7 +202,7 @@ describe('who sees whom', () => {
       expect(card.getByText('Save your picture')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Save it' }));
       expect(card.getByRole('group', { name: 'Shape' })).toBeInTheDocument();
-      expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', '/c/save?shape=profile&ground=school&small=1');
+      expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', expect.stringMatching(/^\/c\/save\?shape=profile&ground=school&small=1&face=%2Fanimals%2F\d+\.png$/)); // the face worn is part of the address
       expect(card.getByRole('button', { name: 'No mark, with Ink+' })).not.toHaveTextContent('Ink+');
       // The rows stepped aside, as they do for the picker.
       expect(card.queryByText('Loopd Ink')).toBeNull();

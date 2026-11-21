@@ -346,7 +346,7 @@ describe('One day on the map', () => {
 
   it('on a phone, a plan opened from another day brings its day onto the map, and the day stays when it closes', async () => {
     // The composer offers a plan already on with the tag typed, whatever its day; "Look at" opens its ticket.
-    const viewer = { first: 'Ana', name: 'Ana', photo: null, face: 0, ownPhoto: null, own: null, owns: [], picks: { core: [], premium: [], school: [] }, schools: { profile: null, home: null, added: [], all: [] }, asked: false, makesLeft: 0, plan: 'free' as const, anyKit: false, level: 0, outings: 0, admin: false, groups: [] };
+    const viewer = { first: 'Ana', name: 'Ana', photo: null, face: 0, ownPhoto: null, own: null, owns: [], personal: [], picks: { core: [], premium: [], school: [] }, schools: { profile: null, home: null, added: [], all: [] }, asked: false, makesLeft: 0, plan: 'free' as const, anyKit: false, level: 0, outings: 0, admin: false, groups: [] };
     const tagged = days.map(each => each.title === 'Market' ? { ...each, tags: ['market'] } : each);
     locate(null);
     render(<CampusScreen screen={{ ...model('cornell', tagged), viewer }} signInHref="/sign-in" />);
