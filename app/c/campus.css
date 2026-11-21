@@ -57,15 +57,13 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-wm:hover svg { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--cs-ink); }
 .cs-links { display: flex; gap: 2px; min-width: 0; }
 /* Nothing clickable is bare text: a link that is not the current page is an outlined pill on paper, the current one is filled ink. */
-.cs-links { gap: 6px; } .cs-links a { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
-.cs-links a:not([aria-current]):hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
-.cs-links a[aria-current] { background: var(--cs-ink); color: var(--cs-field); font-weight: 600; box-shadow: none; }
+.cs-links { gap: 6px; } .cs-links a { display: flex; align-items: center; gap: 10px; border-radius: 99px; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-links a[aria-current] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
 .cs-links a:has(i) { padding: 6px 12px 6px 6px; }
 .cs-links i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; flex: none; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--cs-paper); background: linear-gradient(135deg, var(--cs-action), var(--cs-action-hover) 60%, var(--cs-action-deep)); }
 .cs-nav-end { margin-left: auto; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
 /* "Claim your club", the organizers' door: outlined and flat, so Ink stays the loudest thing in the bar. On a phone it is a row in the account card. */
-.cs-org { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 15px; border-radius: 99px; font-size: 14.5px; font-weight: 620; white-space: nowrap; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
-.cs-org:not([aria-current]):hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-org { display: flex; align-items: center; gap: 8px; border-radius: 99px; white-space: nowrap; background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs-org[aria-current] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
 @media (max-width: 860px) { .cs-org { display: none; } }
 .cs-live { display: flex; align-items: baseline; gap: 10px; padding: 6px 8px 6px 14px; border-radius: 99px; background: var(--cs-action); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); }
@@ -784,8 +782,8 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 /* the two inks of the mark and of a face's blot are the school's own two colours: the field colour spilled wide, the action colour dropped into it, and thinly where it seeps out between the two */
 :is(.cs-ink, .cs-blot) .school { fill: var(--cs-field); } :is(.cs-ink, .cs-blot) .dark { fill: var(--cs-action); } :is(.cs-ink, .cs-blot) .seep { fill: var(--cs-action); opacity: .42; }
 /* the tab: paper with a hard shadow, never the field colour, so it stands apart from the other links in any kit. Shown at every width. */
-.cs-links a.cs-inktab { display: flex; gap: 7px; margin-left: 6px; font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
-.cs-links a.cs-inktab:not([aria-current]):hover { translate: -1px -2px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 5px 0 var(--cs-ink); } .cs-links a.cs-inktab[aria-current] { box-shadow: none; }
+.cs-links a.cs-inktab { display: flex; gap: 7px; }
+
 /* the Ink page (app/c/ink): the bar, and under it the page itself, which fills the rest of the window and scrolls on its own */
 .cs.cs-inkpage { height: 100dvh; } html:has(.cs-inkpage) { scrollbar-width: none; } html:has(.cs-inkpage)::-webkit-scrollbar { display: none; } .cs-inkframe { flex: 1; min-height: 0; width: 100%; border: 0; display: block; }
 @media (max-width: 520px) { .cs-links a.cs-inktab { margin-left: 0; padding: 9px; } .cs-inktab span { display: none; } .cs-pets-top { flex-wrap: wrap; } .cs-pets-top input { flex-basis: 100%; } }
@@ -873,7 +871,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-menu[data-open] { position: absolute; z-index: 7; left: 12px; right: 12px; top: calc(100% + 14px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; max-height: calc(100dvh - 92px); overflow-y: auto; scrollbar-width: none; padding: 12px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); animation: cs-in .3s var(--cs-expo); }
   .cs-menu .cs-links, .cs-menu > .cs-oy-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 0; } .cs-menu .cs-oy { min-width: 0; }
   .cs-nav .cs-links a, .cs-nav .cs-links a.cs-inktab, .cs-menu > .cs-org { display: flex; height: 46px; margin: 0; padding: 0 16px; font-size: 16px; } .cs-nav .cs-inktab span:not(.seats-linkwait) { display: inline; } .cs-nav .cs-asst > a { flex: 1; }
-  .cs-menu > .cs-oy-pair .cs-oy-pill { width: 100%; height: 46px; padding: 0 10px 0 16px; justify-content: space-between; font-size: 16px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+  .cs-menu > .cs-oy-pair .cs-oy-pill { width: 100%; height: 46px; padding: 0 10px 0 16px; justify-content: space-between; font-size: 16px; }
   .cs-menu .cs-oy-drop { position: static; width: auto; max-height: none; margin-top: 8px; padding: 12px; box-shadow: inset 0 0 0 1.5px var(--cs-ink); background: var(--cs-page); animation: none; } .cs-menu .cs-oy-list { overflow: visible; margin: 0; padding: 0; }
 }
 

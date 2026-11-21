@@ -9,13 +9,24 @@
 .cs-ft-bar .cs-wm { font-size: 21px; gap: 10px; padding-right: 14px; } .cs-ft-bar .cs-wm svg { width: 36px; height: 36px; padding: 5px; box-shadow: 2px 2px 0 var(--cs-ink); }
 .cs-ft-bar .cs-wm:hover svg { box-shadow: 4px 4px 0 var(--cs-ink); }
 .cs-ft-bar > nav { display: contents; }
-.cs-ft-bar > nav a { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 580; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease); }
-.cs-ft-bar > nav a:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
-/* Assistants: the one link that is part of Ink+. Ink runs into the pill from its mark when it is pointed at or open. */
-.cs-ft-bar > nav a.cs-ft-asst { position: relative; overflow: hidden; isolation: isolate; gap: 8px; transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease), color .2s; }
+.cs-ft-bar > nav a { display: inline-flex; align-items: center; border-radius: 99px; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+/* One pill for the bar and the foot: the same height, type and ink line, and no shadow. Pointed at, it fills with ink
+   from its left end, as Assistants did first. The page you are on, and a panel that is open, stay filled. */
+:is(.cs-links a, .cs-org, .cs-oy-pill, .cs-ft-bar > nav a) { position: relative; isolation: isolate; height: 38px; padding: 0 15px; font-size: 14.5px; font-weight: 600; transition: color .2s, transform .15s var(--cs-ease), box-shadow .15s var(--cs-ease); }
+/* Depth, as a ticket has it: each pill stands 3px off the bar on the field's own shadow, and goes down under a press. */
+:is(.cs-links a, .cs-org, .cs-oy-pill, .cs-ft-bar > nav a), :is(.cs-links a, .cs-org, .cs-oy-pill):is([aria-current], [aria-expanded=true]), .cs .cs-burger { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow); }
+:is(.cs-links a, .cs-org, .cs-oy-pill, .cs-ft-bar > nav a):active { transform: translate(2px, 2px); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 1px 1px 0 var(--cs-field-shadow); }
+:is(.cs-links a, .cs-org, .cs-oy-pill, .cs-ft-bar > nav a)::before { content: ''; position: absolute; z-index: -1; inset: 0; border-radius: inherit; background: var(--cs-ink); clip-path: circle(0 at 22px 50%); transition: clip-path .55s var(--cs-expo); }
+:is(.cs-links a, .cs-org, .cs-ft-bar > nav a):is([aria-current], [data-open])::before, .cs-oy-pill[aria-expanded=true]::before { clip-path: circle(150% at 22px 50%); }
+:is(.cs-links a, .cs-org, .cs-ft-bar > nav a)[data-open] { color: var(--cs-field); }
+@media (hover: hover) {
+  :is(.cs-links a, .cs-org, .cs-oy-pill, .cs-ft-bar > nav a):hover::before { clip-path: circle(150% at 22px 50%); }
+  :is(.cs-links a, .cs-org, .cs-oy-pill, .cs-ft-bar > nav a):hover { color: var(--cs-field); } .cs-oy-pill:hover .cs-oy-n.q { background: var(--cs-field); color: var(--cs-ink); }
+}
+@media (prefers-reduced-motion: reduce) { :is(.cs-links a, .cs-org, .cs-oy-pill, .cs-ft-bar > nav a)::before { transition: none; } }
+/* Assistants: the one link that is part of Ink+, so it carries the mark and, without Ink+, a badge. */
+.cs-ft-bar > nav a.cs-ft-asst { gap: 8px; }
 .cs-ft-asst:has(b) { padding-right: 7px; }
-.cs-ft-asst::before { content: ''; position: absolute; z-index: -1; inset: 0; background: var(--cs-ink); clip-path: circle(0 at 22px 50%); transition: clip-path .55s var(--cs-expo); }
-.cs-ft-asst:hover::before, .cs-ft-asst[data-open]::before { clip-path: circle(150% at 22px 50%); } .cs-ft-asst:hover, .cs-ft-asst[data-open] { color: var(--cs-field); }
 .cs-ft-asst b { padding: 2px 9px 3px; border-radius: 99px; font-size: 12px; font-weight: 740; background: var(--cs-ink); color: var(--cs-field); transition: background-color .3s, color .3s; }
 .cs-ft-asst:hover b, .cs-ft-asst[data-open] b { background: var(--cs-field); color: var(--cs-ink); }
 /* The card that says so. It grows out of the pill and lies over what is above. */
@@ -30,7 +41,7 @@
 .cs-ft-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 .cs-ft-end > small { padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: color-mix(in oklab, var(--cs-ink) 12%, var(--cs-field)); }
 /* Colours: a dot per school; the one in use wears the ring. */
-.cs-ft-kits { display: flex; gap: 9px; padding: 5px 8px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-ft-kits { display: flex; gap: 9px; padding: 5px 8px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow); }
 .cs .cs-ft-kits button { width: 26px; height: 26px; border-radius: 50%; background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: scale .2s var(--cs-ease); }
 .cs .cs-ft-kits button:hover { scale: 1.12; } .cs .cs-ft-kits button[aria-pressed=true] { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-ink); }
 
@@ -39,7 +50,7 @@
 }
 /* Assistants in the top bar (components/campus/assistants-link.tsx): the same pill, and its card opens under it. */
 .cs-asst { position: relative; display: flex; }
-.cs-links a.cs-ft-asst { position: relative; overflow: hidden; isolation: isolate; gap: 8px; transition: translate .2s var(--cs-ease), box-shadow .2s var(--cs-ease), color .2s; }
+.cs-links a.cs-ft-asst { gap: 8px; }
 .cs-links a.cs-ft-asst svg { width: 20px; height: 20px; flex: none; }
 .cs-links a.cs-ft-asst:has(b) { padding-right: 7px; }
 .cs-asst .cs-ft-ask { left: 0; top: calc(100% + 18px); bottom: auto; width: min(400px, calc(100vw - 32px)); border-radius: 6px 20px 20px 20px; transform-origin: 40px 0; }
@@ -47,3 +58,13 @@
 .cs-asst .cs-ft-ask-tab { top: auto; bottom: -12px; }
 /* On a phone a colour dot is big enough for a thumb. */
 @media (max-width: 700px) { .cs .cs-ft-kits button { width: 32px; height: 32px; } }
+/* On a phone the foot is two even lines: the wordmark with the colours at the right, then the links with the year at
+   the right. */
+@media (max-width: 560px) {
+  .cs-ft-bar { gap: 0 6px; padding: 14px 16px 16px; } .cs-ft-end { display: contents; }
+  .cs-ft-bar .cs-wm { order: 1; } .cs-ft-kits { order: 2; margin-left: auto; gap: 7px; padding: 4px 6px; }
+  .cs-ft-bar::after { content: ''; order: 3; flex-basis: 100%; height: 0; }
+  .cs-ft-bar > nav > * { order: 4; margin-top: 12px; } .cs-ft-end > small { order: 5; margin: 12px 0 0 auto; }
+}
+/* The narrowest phones: the mark alone, so the colours stay on its line. */
+@media (max-width: 380px) { .cs-ft-bar .cs-wm { gap: 0; padding-right: 0; font-size: 0; } }
