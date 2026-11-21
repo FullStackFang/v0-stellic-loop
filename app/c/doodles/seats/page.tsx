@@ -24,7 +24,7 @@ export default async function SeatsPage() {
   const [{ bar, foot }, player] = await Promise.all([siteBar({ campus, viewer, back: SEATS_PAGE, on: 'doodles' }), viewer ? congaPlayer(db(), viewer) : null]);
   return <div className="cs">
     {bar}
-    <main className="cs-seats"><h1 className="cs-sr">Seats</h1><SeatsGame player={player && { ink: player.ink, animals: player.animals.map(({ face, picture }) => ({ face, picture })) }} /></main>
+    <main className="cs-seats"><h1 className="cs-sr">Seats</h1><SeatsGame player={player && { ink: player.ink, plus: player.plus, animals: player.animals.map(({ face, picture }) => ({ face, picture })) }} /></main>
     {foot}
   </div>;
 }

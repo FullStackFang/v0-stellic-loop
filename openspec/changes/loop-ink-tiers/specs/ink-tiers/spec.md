@@ -120,6 +120,42 @@ To a person who already has Ink, an Ink+ ask SHALL say what Ink+ adds, and that 
 - **WHEN** a person on Ink opens the Assistants ask
 - **THEN** the card says they have Ink, what Ink+ adds, and "$9.99 a month, in place of $2.99"
 
+### Requirement: Every ask signs you up
+Every place that asks a person to look into an Ink or Ink+ feature SHALL let them sign up for that plan right there, with one press. This covers:
+- the Ink page's plan cards;
+- the colours card;
+- Assistants;
+- saving with no mark;
+- the group picture;
+- the pet maker;
+- the account row's Ink+ offer;
+- the Seats and Conga asks.
+
+Signing up SHALL give them the plan at once, since there is no payment yet. It SHALL record:
+- who signed up;
+- the email of their account;
+- which plan;
+- the feature and the button it was pressed on;
+- when.
+
+Every sign-up SHALL thank them in the same words: the feature is not ready yet, and they have been upgraded for now. A person who is signed out SHALL be sent to sign in, and brought back.
+
+#### Scenario: The Ink page
+- **WHEN** a signed-in person on Loopd presses "Get Ink+" on the Ink page
+- **THEN** they have Ink+, the press is recorded with the place "ink page: Get Ink+", and the card thanks them
+
+#### Scenario: A game
+- **WHEN** a signed-in person with neither plan signs up from the Seats ask
+- **THEN** they have Ink, the press is recorded with the Seats place, and the ask thanks them
+
+#### Scenario: Signed out
+- **WHEN** a signed-out visitor presses "Get Ink" on the Ink page
+- **THEN** they are sent to sign in, and come back to the Ink page
+
+#### Scenario: Already on the plan
+- **WHEN** a person on Ink+ presses a sign-up for Ink+
+- **THEN** nothing changes, the press is still recorded, and they are told they have it
+
 ### Requirement: The Ink page lists the plans as approved
 The Ink page SHALL list what Loopd, Ink and Ink+ each give, as in the approved table:
 - Assistants and the group picture under Ink+;
@@ -132,3 +168,28 @@ Rows not built yet SHALL say so.
 #### Scenario: Assistants
 - **WHEN** a person reads the Ink page's table
 - **THEN** "Connect your assistant" is ticked for Ink+ only
+
+### Requirement: The Ink page knows you
+The Ink page SHALL show each ticket for the person looking (direction A of public/demo/mockups-ink-join.html):
+- the plan they have: lifted, punched, with a "Your plan" tab;
+- plans under it: faded, saying they are in theirs;
+- Ink+ for someone on Ink: "Move to Ink+", in place of Ink and not on top of it;
+- signed out: every "Get" goes to sign in and back.
+
+#### Scenario: On Ink
+- **WHEN** someone with Ink opens the Ink page
+- **THEN** the Ink ticket is theirs, Loopd's says "In Ink", and Ink+'s offers "Move to Ink+"
+
+### Requirement: Signing up confirms, waits, and says nothing was charged
+Pressing "Get" on the Ink page SHALL open a confirm slip under that ticket: the plan, its price, when it renews, cancel any time, and today's total. "Confirm" SHALL wait about two seconds as a payment would, then sign them up and record the press. The answer SHALL say the plan is on, that they were not charged, and that they will be emailed before payments open. No card is asked for.
+
+#### Scenario: Confirming Ink+
+- **WHEN** a free person presses "Get Ink+" and then "Confirm"
+- **THEN** after the wait they have Ink+, the press is recorded as "ink page: Get Ink+", and the page says "Ink+ is on. You weren't charged."
+
+### Requirement: 15 minutes?
+After signing up on the Ink page, the person SHALL be asked whether, as a student or an organizer, they would give a 15-minute Zoom call. They pick which they are, then type when suits them in one free line, the way a post is typed ("@tue @2pm or @12/12 @10am"), with a few hints to tap in. The line is kept as written; it is not read into times. Each ask SHALL be kept with who, their email and when, and listed on the admin page's Premium tab. Nothing is booked: the founder writes back.
+
+#### Scenario: Sending times
+- **WHEN** an organizer types "@tue @2pm or @12/12 @10am" and presses "Send my times"
+- **THEN** the ask is kept with that line, and the page says they will be emailed to settle a time from it

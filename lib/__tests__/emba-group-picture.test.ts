@@ -82,16 +82,14 @@ it('is for whoever runs the group on the site, with two to six different animals
   expect(await asksMade(t.db, owner.personId)).toBe(0);
 });
 
-it('takes only animals the person could wear: their own made ones, and the Ink ones with Ink', async () => {
+it('takes only animals the person could wear: their own made ones, and the Ink ones, which Ink+ holds', async () => {
   const { owner, member, at } = await group(), { draw, asked } = drawer();
   const pet = await sharp({ create: { width: 192, height: 192, channels: 4, background: '#963' } }).png().toBuffer();
   const made = async (personId: string) => (await t.db.query<{ token: string }>("insert into campus_custom_picture(person_id,image) values($1,decode($2,'base64')) returning token::text as token", [personId, pet.toString('base64')])).rows[0].token;
   const mine = await made(owner.personId), theirs = await made(member.personId);
-  // Another person's made animal, and an Ink animal (36 is the first) without Ink.
+  // Another person's made animal is not theirs. Ink animals (36 is the first) are: drawing needs Ink+, which holds Ink (openspec loop-ink-tiers).
   await expect(askGroupPicture(t.db, owner, at, [{ face: 4 }, { token: theirs }], draw)).rejects.toThrow('Pick from your own animals.');
-  await expect(askGroupPicture(t.db, owner, at, [{ face: 4 }, { face: 36 }], draw)).rejects.toThrow('Pick from your own animals.');
   expect(asked).toEqual([]);
-  await subscribe(t.db, owner.personId, 'owner@example.test');
   expect((await askGroupPicture(t.db, owner, at, [{ face: 4 }, { face: 36 }, { token: mine }], draw)).tokens).toHaveLength(2);
   expect(asked).toEqual([3, 3]);
 });
@@ -120,9 +118,9 @@ it('gives the card what it shows, to whoever runs the group alone, and passes th
   expect(await picturePane(t.db, member, at)).toBeNull();
   const before = (await picturePane(t.db, owner, at))!;
   expect(before).toMatchObject({ fewest: 2, most: 6, plus: true, asksLeft: ASKS, waiting: [], kept: null });
-  // Everyone's 36, and nothing that needs Ink.
+  // Everyone's 36, and the Ink ones, since Ink+ holds Ink.
   expect(before.choices.filter(one => one.kind === 'core')).toHaveLength(36);
-  expect(before.choices.some(one => one.kind === 'ink')).toBe(false);
+  expect(before.choices.some(one => one.kind === 'ink')).toBe(true);
   const { tokens } = await askGroupPicture(t.db, owner, at, FOUR, draw, '  matching <b>scarves</b>!  ');
   expect(said).toEqual(['matching b scarves b', 'matching b scarves b']);
   await keepGroupPicture(t.db, owner, at, tokens[0]);

@@ -4,6 +4,9 @@ import { useRef, useState } from 'react';
 import { againFaceAction, keepFaceAction, makeFaceAction, subscribeAction } from '@/app/c/actions';
 import { animal, CHANGES } from '@/lib/campus/animals';
 import { SeatsTicket, SeatsWord } from '@/components/loading/seats';
+import { INK_MAKES, joinedWords } from '@/lib/campus/ink';
+import { JoinPlan } from './join-plan';
+import { InkMark } from './ink-mark';
 
 /** Shrinks a photo in the browser, on white, so it uploads quickly. A file the browser cannot draw is sent as it is. */
 async function small(file: File): Promise<Blob> {
@@ -25,7 +28,7 @@ const PERKS = ['Your book, kept for good', 'Give an animal a month', 'Boost a gr
  * (lib/campus/custom-face.ts), the person is told so, and then gives a photo of an animal, which is drawn as one of
  * the set, free.
  */
-export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, onBack }: { asked: boolean; left: number; current: string; free: boolean; onAsked: () => void; onMade: (own: string, left: number) => void; onKept: (kept: string, dropped: string) => void; onBack: () => void }) {
+export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, onBack }: { asked: boolean; /** How many more Ink lets them make; null for no limit (Ink+, and the admin). */ left: number | null; current: string; free: boolean; onAsked: () => void; onMade: (own: string, left: number | null) => void; onKept: (kept: string, dropped: string) => void; onBack: () => void }) {
   const [file, setFile] = useState<File | null>(null), [shown, setShown] = useState(''), [email, setEmail] = useState('');
   // `asking` is the email field in the button's place. `first` is whether they subscribed on this visit: the thanks are shown for it until the pane is left.
   const [state, setState] = useState<'plan' | 'photo' | 'sure' | 'busy' | 'done' | 'ask' | 'pick'>(asked ? 'photo' : 'plan'), [asking, setAsking] = useState(false), [first, setFirst] = useState(false);
@@ -86,27 +89,27 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
     const got = await makeFaceAction(data).catch(() => ({ ok: false as const, message: 'That did not go through. Try again.' }));
     if (got.ok) { setOwn(got.own); setState('done'); onMade(got.own, got.left); } else { setSaid(got.message); setState('photo'); }
   };
-  const thanks = first && !tried && state !== 'ask' && <p className="cs-own-thanks">Thanks for subscribing to Loopd Ink. Payment is not set up yet, so this one is free. Enjoy your avatar.</p>;
+  const thanks = first && !tried && state !== 'ask' && <p className="cs-own-thanks">{joinedWords('ink')} Enjoy your avatar.</p>;
   /* eslint-disable @next/next/no-img-element -- icons from public/animals, the person's own photo from their device, and the picture made from it */
   if (state === 'plan') return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     <button className="cs-prem-back" onClick={onBack}>Back</button>
     <p className="cs-prem-kick">Loopd Ink</p>
     <p className="cs-prem-big">$2.99 <small>a month</small></p>
     <div className="cs-prem-figs" aria-hidden="true"><img src={animal(22)} alt="" /><img src={animal(36)} alt="" /></div>
-    <div className="cs-prem-perks">{PERKS.map(perk => <span key={perk}>{perk}</span>)}<small>These four are not here yet. Today Ink is the Ink animals and your own pet, drawn from your photo.</small></div>
+    <div className="cs-prem-perks">{PERKS.map(perk => <span key={perk}>{perk}</span>)}<small>These four are not here yet. Today Ink is the Ink animals and three pets, drawn from your photos.</small></div>
     <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
       {asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}><SeatsWord on={wait} word="Subscribing" plate>Subscribe</SeatsWord></button></div>
         : <button className="cs-btn go">Subscribe to Loopd Ink</button>}
       {said && <p role="alert">{said}</p>}
     </form>
   </div></div>;
-  // The free animal is made: the same plate says so, and offers to draw it again.
-  if (state === 'photo' && left <= 0) return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
+  // All three of Ink's animals are made: the same plate says so and offers Ink+, which has no limit, and still offers to draw one again.
+  if (state === 'photo' && left !== null && left <= 0) return <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     <button className="cs-prem-back" onClick={onBack}>Back</button>
     <p className="cs-prem-kick">Loopd Ink</p>
-    <p className="cs-prem-big said">You’re already subscribed and got your free avatar!</p>
-    <div className="cs-prem-perks"><span>More pets and more perks will come with Ink once it officially launches. Stay tuned!</span></div>
-    <div className="cs-prem-stub"><button className="cs-btn go" onClick={() => { setSaid(''); setState('ask'); }}>Redraw your pet</button><p className="cs-prem-small">A new drawing, set beside the one you have. You keep one.</p></div>
+    <p className="cs-prem-big said">You have made all three.</p>
+    <div className="cs-prem-perks"><span>Ink+ makes as many as you like, with your AI and any school’s colours. $9.99 a month.</span></div>
+    <div className="cs-prem-stub"><JoinPlan plan="plus" place="pets: Get Ink+" className="cs-btn go"><InkMark plus />Get Ink+ · $9.99</JoinPlan><button className="cs-btn" onClick={() => { setSaid(''); setState('ask'); }}>Redraw your pet</button><p className="cs-prem-small">A redraw is set beside the one you have. You keep one.</p></div>
   </div></div>;
   // The photo, the wait, the made animal and its one retry are the same plate as the plan: one headline each, and the stub holds what to press.
   const head = { photo: 'Bring your own pet.', sure: from === 'ask' ? 'Draw your pet again?' : 'Draw your pet?', busy: 'Drawing your pet.', done: 'Say hi to your new picture.', ask: 'What should change?', pick: 'Pick your favorite.', plan: '' }[state];
@@ -139,7 +142,7 @@ export function OwnFace({ asked, left, current, free, onAsked, onMade, onKept, o
       </form></>
     : state === 'pick' ? <><div className="cs-two" role="group" aria-label="Pick your favorite">{[own, second].map((one, at) => <button key={one} aria-pressed={pick === at} aria-label={at ? 'Second drawing' : 'First drawing'} onClick={() => setPick(at)}><img src={one} alt="" /><span>{at ? 'Second' : 'First'}</span></button>)}</div>
       <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void keep()}><SeatsWord on={wait} word="Keeping" plate>Keep this one</SeatsWord></button><p className="cs-prem-small">The other one is let go.</p>{said && <p role="alert">{said}</p>}</div></>
-    : <><div className="cs-prem-perks"><span>Grab your favorite photo of your favorite pet, and we’ll do the rest.</span></div>
+    : <><div className="cs-prem-perks"><span>Grab your favorite photo of your favorite pet, and we’ll do the rest.</span>{left !== null && <small>{left} of {INK_MAKES} left.</small>}</div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); sure('photo'); }}>
         <input ref={input} type="file" accept="image/*" hidden aria-label="Photo of an animal" onChange={event => choose(event.target.files?.[0])} />
         <button type="button" className={`cs-own-photo ${shown ? 'has' : ''}`} onClick={() => input.current?.click()}>{shown ? <><img src={shown} alt="" /><span><b>Photo added</b><small>Tap to change it</small></span></> : <><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg></i><span><b>Upload a photo of your pet</b><small>Tap here to choose one</small></span></>}</button>

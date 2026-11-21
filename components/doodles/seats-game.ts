@@ -8,7 +8,7 @@ import { inkBlot } from '@/lib/campus/ink-blot';
  * A mistake costs 2 seconds in every mode, and the clock stops at a minute: the round is lost.
  * It is drawn by hand into one element and not in React: nothing here is the page's state, and the Table moves each frame.
  */
-export type SeatsPlayer = { ink: boolean; animals: { face: number; picture: string | null }[] } | null;
+export type SeatsPlayer = { /** Ink or Ink+: one of their own animals plays. */ ink: boolean; /** Ink+: it sparkles, and the boards wear their blot. */ plus?: boolean; animals: { face: number; picture: string | null }[] } | null;
 type Mode = 'a' | 'c' | 't';
 type State = 'look' | 'play' | 'done' | 'lost';
 type Game = { /** A new round, with whoever is playing now. */ fresh: () => void };
@@ -42,10 +42,19 @@ const BOARD: Record<Mode, string> = {
 const animal = (n: number) => `/animals/${String(n).padStart(2, '0')}.png`;
 const rand = (low: number, high: number) => low + Math.random() * (high - low);
 const mixed = (n: number) => { const order = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } return order; };
+/** Signs the player up for Ink (app/c/ink/join), and gives back the thanks to show. Someone signed out is sent to sign in. */
+async function signUp(): Promise<string | null> {
+  const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place: 'seats: Get Ink', back: location.pathname }) }).catch(() => null);
+  const got = await answer?.json().catch(() => null) as { ok?: boolean; said?: string; signIn?: string } | null;
+  if (got?.signIn) location.assign(got.signIn);
+  return got?.ok && got.said ? got.said : null;
+}
 /** Lets an animation that has played be played again. */
 const again = (el: Element, name: string) => { el.classList.remove(name); void (el as HTMLElement).offsetWidth; el.classList.add(name); };
 const find = <T extends Element = HTMLElement>(root: Element, what: string) => root.querySelector<T>(what)!;
 const make = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string) => Object.assign(document.createElement(tag), { className });
+/** The mark of Ink (components/campus/ink-mark.tsx): the blot alone, in the school's two inks. */
+const inkMark = () => blotSvg('Loopd Ink').replace('class="blot" viewBox="-80 -80 160 160"', 'class="mark" viewBox="-68 -68 136 136"');
 /** The app's ink blot (lib/campus/ink-blot.ts), as the faces with Ink sit on. */
 const blotSvg = (seed: string) => { const blot = inkBlot(seed), drops = (rounds: readonly (readonly [number, number, number])[]) => rounds.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('');
   return `<svg class="blot" viewBox="-80 -80 160 160" aria-hidden="true"><g class="school"><path d="${blot.school}"/>${drops(blot.schoolDrops)}</g><path class="seep" d="${blot.seep}"/><g class="dark"><path d="${blot.dark}"/>${drops(blot.darkDrops)}</g></svg>`; };
@@ -195,19 +204,19 @@ const BACK_ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 
 /**
  * Draws the game into `root` and runs it. `player` is who is playing (null signed out): their animal is "You" in every
- * mode, and with Ink+ they choose which of their animals it is. Returns what stops it and clears it away.
+ * mode, and with Ink they choose which of their animals it is; with Ink+ it sparkles too (openspec loop-ink-tiers). Returns what stops it and clears it away.
  */
 export function mountSeats(root: HTMLElement, player: SeatsPlayer): () => void {
   let alive = true, chosen = Number(read('seats-own')) || 0;
-  const timers = new Set<number>(), plus = !!player?.ink, picture = (each: { face: number; picture: string | null }) => each.picture ?? animal(each.face);
+  const timers = new Set<number>(), ink = !!player?.ink, plus = !!player?.plus, picture = (each: { face: number; picture: string | null }) => each.picture ?? animal(each.face);
   const later = (run: () => void, ms: number) => { const id = window.setTimeout(() => { timers.delete(id); run(); }, ms); timers.add(id); return id; };
   const every = (run: () => void, ms: number) => { const id = window.setInterval(run, ms); timers.add(id); return id; };
   const stop = (id: number) => { clearTimeout(id); clearInterval(id); timers.delete(id); };
   /** Who plays, you first. Your animal is in the crowd once: the one it would double stands aside. */
-  const faces = () => { const crowd = CROWD.map(animal); if (!player?.animals.length) return crowd; chosen = Math.max(0, Math.min(player.animals.length - 1, plus ? chosen : 0)); const own = picture(player.animals[chosen]); return [own, ...crowd.filter(each => each !== own)]; };
+  const faces = () => { const crowd = CROWD.map(animal); if (!player?.animals.length) return crowd; chosen = Math.max(0, Math.min(player.animals.length - 1, ink ? chosen : 0)); const own = picture(player.animals[chosen]); return [own, ...crowd.filter(each => each !== own)]; };
   const best = (mode: Mode) => parseFloat(read(`seats-best-${mode}`) ?? '') || null;
   const buttons = MODES.map(([key, name]) => `<button type="button" data-mode="${key}">${name}</button>`).join('');
-  root.dataset.ink = plus ? 'plus' : 'free';
+  root.dataset.ink = plus ? 'plus' : ink ? 'ink' : 'free';
   root.innerHTML = `<div class="how"><span class="title" aria-hidden="true">Seats</span><span class="works">In the works</span><div class="modes">${buttons}</div>
       <p><i>1</i><span data-how="0"></span></p><p><i>2</i><span data-how="1"></span></p><p><i>3</i><span data-how="2"></span></p></div>
     <div class="stage"><span class="name" aria-hidden="true">Seats</span><button type="button" class="you"></button><div class="modes">${buttons}</div>${MODES.map(([key]) => BOARD[key]).join('')}</div>
@@ -225,16 +234,20 @@ export function mountSeats(root: HTMLElement, player: SeatsPlayer): () => void {
     root.querySelectorAll<HTMLElement>('[data-how]').forEach(el => { el.textContent = HOW[mode][Number(el.dataset.how)]; }); shown(); };
   for (const row of rows) row.addEventListener('click', event => { const mode = (event.target as HTMLElement).dataset?.mode as Mode | undefined; if (mode) set(mode); });
 
-  // "You". With Ink+ the pill opens your own animals, and the one picked plays in every mode. Without, it opens what Ink+ gives.
+  // "You". With Ink the pill opens your own animals, and the one picked plays in every mode. Without, it opens what Ink gives, under the Ink mark.
   const pills = Array.from(root.querySelectorAll<HTMLButtonElement>('.you')), boxes: HTMLElement[] = [];
   const shut = () => { for (const box of boxes) box.hidden = true; for (const pill of pills) pill.setAttribute('aria-expanded', 'false'); };
   const fill = () => { for (const pill of pills) pill.innerHTML = `<img src="${faces()[0]}" alt="">You`; };
-  for (const pill of pills) { const box = Object.assign(make('div', 'pick'), { hidden: true }); boxes.push(box); pill.after(box); pill.setAttribute('aria-expanded', 'false'); pill.setAttribute('aria-label', plus ? 'You: choose your animal' : 'You: play as your own animal with Ink+');
-    pill.addEventListener('click', event => { event.stopPropagation(); if (!box.hidden) return shut(); shut(); box.classList.toggle('ask', !plus);
-      box.innerHTML = plus ? '<span class="tag">Your animal</span>' + player!.animals.map((each, n) => `<button type="button" data-n="${n}" aria-pressed="${n === chosen}" aria-label="Your animal ${n + 1}"><img src="${picture(each)}" alt=""></button>`).join('')
-        : '<span class="tag">Ink+</span><p>Play as your own animal, in every mode.</p><a href="/c/ink">See Ink+</a>';
+  for (const pill of pills) { const box = Object.assign(make('div', 'pick'), { hidden: true }); boxes.push(box); pill.after(box); pill.setAttribute('aria-expanded', 'false'); pill.setAttribute('aria-label', ink ? 'You: choose your animal' : 'You: play as your own animal with Ink');
+    pill.addEventListener('click', event => { event.stopPropagation(); if (!box.hidden) return shut(); shut(); box.classList.toggle('ask', !ink);
+      box.innerHTML = ink ? '<span class="tag">Your animal</span>' + player!.animals.map((each, n) => `<button type="button" data-n="${n}" aria-pressed="${n === chosen}" aria-label="Your animal ${n + 1}"><img src="${picture(each)}" alt=""></button>`).join('')
+        : `<span class="tag mark" role="img" aria-label="Ink">${inkMark()}</span><p>Play as your own animal, in every mode.</p><button type="button" data-join>Get Ink · $2.99</button>`;
       box.hidden = false; pill.setAttribute('aria-expanded', 'true'); });
-    box.addEventListener('click', event => { event.stopPropagation(); const button = (event.target as HTMLElement).closest<HTMLElement>('[data-n]'); if (!button) return;
+    box.addEventListener('click', event => { event.stopPropagation();
+      // Signing up for Ink from here (openspec loop-ink-tiers): the same route as every ask in the app, then its thanks.
+      const join = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-join]');
+      if (join) { join.disabled = true; void signUp().then(said => { if (said) { find(box, 'p').textContent = said; join.remove(); } else { find(box, 'p').textContent = 'That did not go through. Try again.'; join.disabled = false; } }); return; }
+      const button = (event.target as HTMLElement).closest<HTMLElement>('[data-n]'); if (!button) return;
       chosen = Number(button.dataset.n); keep('seats-own', String(chosen)); fill(); for (const each of games) each.game.fresh(); shut(); }); }
   document.addEventListener('click', shut);
   fill(); set('a');

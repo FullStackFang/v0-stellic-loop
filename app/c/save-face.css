@@ -17,8 +17,7 @@
 .cs .cs-save-inks button:hover { transform: scale(1.08); }
 .cs .cs-save-inks button[aria-pressed=true] { box-shadow: 0 0 0 2.5px var(--cs-ink), 0 0 0 5px var(--cs-field); }
 .cs-save-marks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 12px; }
-.cs-save-marks b { padding: 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 700; background: var(--cs-field); color: var(--cs-ink); }
-.cs-save-marks button[aria-pressed=true] b { background: var(--cs-ink); color: var(--cs-field); }
+.cs-save-marks .cs-ink { width: 18px; height: 18px; }
 .cs .cs-save .cs-prem-stub > .cs-btn svg { width: 17px; height: 17px; }
 .cs-save-foot { height: 22px; }
 /* The row that opens the pane, in the account card. */

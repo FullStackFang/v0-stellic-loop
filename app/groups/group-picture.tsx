@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { InkMark, SchoolMark } from '@/components/campus/ink-mark';
 import { SaveFace } from '@/components/campus/save-face';
+import { joinedWords } from '@/lib/campus/ink';
 import type { Choice, Pick, PicturePane, TileProps } from '@/lib/emba/group-picture';
 import { groupPictureSrc } from '@/lib/emba/group-picture-src';
 import { drawGroupPictureAction, keepGroupPictureAction, subscribeInkPlusAction } from './picture-actions';
@@ -115,13 +116,13 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
   };
 
   /* eslint-disable @next/next/no-img-element -- icons from public/animals, made animals and drawings at their own addresses */
-  const thanks = thanked && <p className="cs-own-thanks">Thanks for subscribing to Loopd Ink+. Payment is not set up yet, so this one is free. Enjoy your group picture.</p>;
+  const thanks = thanked && <p className="cs-own-thanks">{joinedWords('plus')} Enjoy your group picture.</p>;
   const alert = said && <p role="alert" className="gp-said">{said}</p>;
   const faces = <span className="gp-faces" aria-hidden="true">{picked.map(one => <img key={one.src} src={one.src} alt="" />)}</span>;
   const kinds = FILTERS.filter(([kind]) => pane.choices.some(one => one.kind === kind));
 
   // The card opens on the group's pictures: press one to wear it. The gold tile is the Ink+ part, and opens the animals.
-  const fresh = <button className="gp-pic gp-new" onClick={() => { setSaid(''); setStep('pick'); }}><i aria-hidden="true">+</i><span>{all.length ? 'Draw a new one' : 'Draw one'}</span><b className="gp-plus">Ink+</b></button>;
+  const fresh = <button className="gp-pic gp-new" onClick={() => { setSaid(''); setStep('pick'); }}><i aria-hidden="true">+</i><span>{all.length ? 'Draw a new one' : 'Draw one'}</span><InkMark plus named /></button>;
   // Saving the picture the group wears is any member's, and free (openspec loop-save-picture).
   const body = step === 'save' ? <SaveFace of={scope} onBack={() => { setSaid(''); setStep('pics'); }} />
   : step === 'pics' ? <div className="cs-lvl-body cs-pets">
@@ -146,7 +147,7 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
     </PicturesWait>
     {alert}
     <div className="cs-prem-stub gp-foot">{faces}<b>{picked.length} of {pane.most}</b>
-      <button className="cs-btn gold gp-go" aria-pressed="true" disabled={picked.length < pane.fewest} onClick={() => plus ? ask('pick') : (setSaid(''), setStep('plate'))}>Draw us together<i className="gp-plus">Ink+</i></button></div>
+      <button className="cs-btn gold gp-go" aria-pressed="true" disabled={picked.length < pane.fewest} onClick={() => plus ? ask('pick') : (setSaid(''), setStep('plate'))}>Draw us together<InkMark plus named /></button></div>
   </div>
   : <div className="cs-lvl-body cs-pets cs-own"><div className="cs-prem">
     {step === 'plate' ? <>

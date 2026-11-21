@@ -66,7 +66,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .faces .more { background: var(--ink); color: var(--paper); display: grid; place-items: center; }
 .faces .more svg { width: 52%; transition: transform .45s var(--expo); }
 .faces .more:active svg { transform: rotate(180deg); }
-/* Your own animal, for someone signed in: the first seat of the row, on ink. Without Ink+ it wears the plan's tag and opens the join card. */
+/* Your own animal, for someone signed in: the first seat of the row, on ink. Without Ink it wears the Ink mark and opens the join card. */
 .faces > .own { background: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), 3px 3px 0 var(--action); }
 .faces > .own[aria-pressed="true"] { background: var(--ink); }
 .plus { position: absolute; left: 50%; bottom: -9px; translate: -50% 0; padding: 2px 8px 3px; border-radius: 99px; font-size: 11.5px; font-weight: 760; background: var(--ink); color: var(--field); white-space: nowrap; box-shadow: 0 0 0 2px var(--paper); }
@@ -78,7 +78,9 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .ask h3 { font-size: 25px; font-weight: 740; font-stretch: 110%; letter-spacing: -.045em; line-height: 1.02; } .card .ask p { margin: 6px 0 14px; color: oklch(80% 0.03 40); font-size: 15px; }
 .ask div { display: flex; flex-wrap: wrap; gap: 8px; }
 .ask .pl { padding: 8px 14px; border-radius: 99px; font-size: 14.5px; font-weight: 650; white-space: nowrap; text-decoration: none; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
-/* An Ink+ member's own animals, to pick one. */
+/* An Ink member's own animals, to pick one. */
+/* The mark of Ink (components/campus/ink-mark.tsx): the blot alone, in the colour of what it sits on (openspec loop-ink-tiers). */
+.mk { display: block; width: 17px; height: 17px; fill: currentColor; } .ask .tab .mk { width: 19px; height: 19px; }
 .ask .pick { width: 48px; height: 48px; padding: 3px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--paper); } .ask .pick .face { width: 100%; }
 .ask .pick[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 4px var(--action); }
 .ask .pl.see { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--field); }
@@ -156,11 +158,13 @@ const C = { field: css('--field'), dot: css('--dot'), ink: css('--ink'), paper: 
 const COLS = 7, SHEET = Math.min(innerWidth, innerHeight * 1.25) / 760 * Math.min(2, devicePixelRatio || 1) > 1.4 ? 192 : 96;
 const sheet = Object.assign(new Image(), { src: `./conga/animals-${SHEET}.v1.webp` });
 document.documentElement.style.setProperty('--sheet', `url(${sheet.src})`);
-// Who is playing, for someone signed in (app/conga): whether they have Ink+, their school, and the animals that are theirs to
+// Who is playing, for someone signed in (app/conga): whether they have Ink (`ink`) or Ink+ (`plus`), their school, and the animals that are theirs to
 // play as, the one they wear on campus first. `chosen` is the one in their seat. Face 0 is a made pet, a picture apart from the sheet.
 let you = null, chosen = 0; const pet = new Image();
 const own = () => you.animals[chosen];
-const CORE = 36; // the animals anyone may play as; the rest are an Ink+ member's own
+const CORE = 36; // the animals anyone may play as; the rest are an Ink member's own
+// The Ink mark, in place of the plan's name: a feature that comes with Ink wears it.
+const INK = '<svg class="mk" viewBox="-68 -68 136 136" role="img" aria-label="Ink"><path d="M-8 -60C22 -66 52 -44 58 -14C66 18 46 54 10 60C-24 66 -58 44 -62 10C-66 -24 -40 -54 -8 -60Z"/><circle cx="56" cy="-50" r="9"/><circle cx="-58" cy="46" r="6"/></svg>';
 // Each school's two colours (app/c/campus.css, [data-kit]): what an Ink+ line's sparkle wears.
 const KITS = { loop: ['oklch(96.4% 0.19 117)', 'oklch(47.6% 0.13 250)'], cornell: ['oklch(99.2% 0.004 60)', 'oklch(48.5% 0.185 27)'], columbia: ['oklch(87% 0.075 235)', 'oklch(46% 0.14 255)'],
   cuny: ['oklch(88% 0.13 88)', 'oklch(38% 0.18 264)'], nyu: ['oklch(85% 0.09 305)', 'oklch(40% 0.2 305)'] };
@@ -209,13 +213,13 @@ function offer() {
   const press = button => { for (const other of $('faces').children) if (other.tagName === 'BUTTON') other.setAttribute('aria-pressed', other === button); };
   const row = [];
   if (you) {
-    // Your own seat. With Ink+ it is picked like any other, and opens your animals to choose one; without, it opens the card that says what Ink+ gives.
-    const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(own().face, own().picture) + `<span class="plus">${you.ink ? 'You' : 'Ink+'}</span>` });
+    // Your own seat. With Ink it is picked like any other, and opens your animals to choose one; without, it opens the card that says what Ink gives.
+    const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(own().face, own().picture) + `<span class="plus">${you.ink ? 'You' : INK}</span>` });
     seat.setAttribute('aria-pressed', mine);
     const card = Object.assign(document.createElement('div'), { className: 'ask', hidden: true });
     const show = open => { card.hidden = !open; seat.setAttribute('aria-expanded', open); };
     if (you.ink) {
-      card.innerHTML = '<span class="tab">Ink+</span><h3>Your animals</h3><p>Pick the one that leads your line.</p><div></div>';
+      card.innerHTML = '<span class="tab">' + INK + '</span><h3>Your animals</h3><p>Pick the one that leads your line.</p><div></div>';
       card.lastChild.replaceChildren(...you.animals.map((animal, n) => {
         const button = Object.assign(document.createElement('button'), { className: 'pick', ariaLabel: `Your animal ${n + 1}`, innerHTML: faceTag(animal.face, animal.picture) });
         button.setAttribute('aria-pressed', n === chosen);
@@ -224,8 +228,18 @@ function offer() {
       }));
       seat.onclick = () => { mine = true; press(seat); if (you.animals.length > 1) show(card.hidden); };
     } else {
-      card.innerHTML = '<span class="tab">Ink+</span><h3>Play as your own pet</h3><p>Your pet leads the line, with a sparkle.</p><div><a class="pl see" href="/c/ink">See Ink+ · $9.99</a><button class="pl">Not now</button></div>';
-      card.querySelector('button').onclick = () => show(false);
+      card.innerHTML = '<span class="tab">' + INK + '</span><h3>Play as your own pet</h3><p>Your pet leads the line.</p><div><button class="pl see" data-join>Get Ink · $2.99</button><button class="pl" data-shut>Not now</button></div>';
+      card.querySelector('[data-shut]').onclick = () => show(false);
+      // Signing up for Ink from here (openspec loop-ink-tiers): the same route as every ask in the app, then its thanks.
+      const join = card.querySelector('[data-join]');
+      join.onclick = async () => {
+        join.disabled = true;
+        const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place: 'conga: Get Ink', back: location.pathname }) }).catch(() => null);
+        const got = await answer?.json().catch(() => null);
+        if (got?.signIn) return location.assign(got.signIn);
+        card.querySelector('p').textContent = got?.ok ? got.said : 'That did not go through. Try again.';
+        if (got?.ok) join.remove(); else join.disabled = false;
+      };
       seat.onclick = () => show(card.hidden);
     }
     row.push(seat, card);
@@ -241,7 +255,7 @@ function offer() {
     innerHTML: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h3.5c3.5 0 5.5 10 9 10H21M3 17h3.5c1.4 0 2.5-1.5 3.5-3.3M14 8.300C14.700 7.500 15.500 7 16.500 7H21M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>' }));
 }
 offer();
-// Someone signed in gets their own seat, and with Ink+ starts in it unless they chose another animal last time.
+// Someone signed in gets their own seat, and with Ink starts in it unless they chose another animal last time.
 // The page arrives saying who is playing (app/conga writes `congaPlayer` into it), so a sign-in gone stale is renewed as on any page.
 Promise.resolve(window.congaPlayer ?? null).then(player => {
   if (!player) return;
@@ -260,7 +274,7 @@ function begin() {
   keep.set('conga-face', animal ? 'mine' : picked);
   if (me) place(world, me);
   else me = addLine(world, { id: ME, face, name: 'You' });
-  me.ink = !!you?.ink || ask.has('ink'); // someone with Ink+ sparkles, whichever animal they play; `?ink` shows it to anyone, `?ink=nyu` in a school's colours
+  me.ink = !!you?.plus || ask.has('ink'); // someone with Ink+ sparkles, whichever animal they play; `?ink` shows it to anyone, `?ink=nyu` in a school's colours
   me.kit = animal?.kit ?? (KITS[ask.get('ink')] ? ask.get('ink') : you?.kit ?? 'cornell'); // the colours it sparkles in: the school of the animal, else the player's
   me.face = face;
   aim = me.a;

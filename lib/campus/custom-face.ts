@@ -5,17 +5,15 @@ import sharp from 'sharp';
 import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { CHANGES, CUSTOM, NAMES } from './animals';
-import { recordAsk, type AskPlace } from './ink';
+import { hasInk, INK_MAKES, joinPlan, planOf, type AskPlace } from './ink';
 import { NEEDS_PREMIUM } from './animal-tiers';
-import { hasInk } from './ink';
 import { CampusError } from './errors';
 
 // A person's own animal: a photo of an animal, drawn as a figure of the set in public/animals. Premium, with no payment
 // yet: asking to subscribe is recorded, and the picture is made free.
 
-/** How many pictures one person may have made: the one that is free while there is no payment. Each costs a few cents. */
-export const MAKES = 1;
-const ALL = 'You have made your free animal. Making more is not set up yet.';
+export { INK_MAKES };
+const ALL = 'You have made all three of your animals. Ink+ makes as many as you like.';
 /** Makes a made picture the person's face. Which one is kept on the face itself, so it may be one they did not make. */
 const USE = 'insert into campus_face(person_id,face,picture) values($1,$2,$3) on conflict(person_id) do update set face=excluded.face,picture=excluded.picture,picked_at=now()';
 const ONCE = 'That one is already being drawn again. Try in a minute.';
@@ -93,29 +91,33 @@ export async function customFaces(q: Q, personIds: readonly string[]): Promise<M
   const { rows } = await q.query<{ id: string; token: string | null; every: string[]; makes: number | null }>(`select i.id,(select p.token::text from campus_custom_picture p where p.token=coalesce(c.picture,f.token)) as token,
     coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=i.id and p.let_go_at is null),'{}'::text[]) as every,f.makes
     from unnest($1::uuid[]) as i(id) left join campus_custom_face f on f.person_id=i.id left join campus_face c on c.person_id=i.id`, [personIds]);
-  return new Map(rows.map(row => [row.id, { token: row.token, all: row.every, left: Math.max(0, MAKES - (row.makes ?? 0)), asked: row.makes !== null }]));
+  return new Map(rows.map(row => [row.id, { token: row.token, all: row.every, left: Math.max(0, INK_MAKES - (row.makes ?? 0)), asked: row.makes !== null }]));
 }
 
 /**
  * "Subscribe" on a person's own animal. What they asked, and the email they gave, is kept; nothing is charged. Their
- * animal is drawn from the photo and becomes their face. Later pictures need no email again. `unlimited` is for the
- * admin, who tests this and is never stopped at the free one. Returns the picture's token.
+ * animal is drawn from the photo and becomes their face. Later pictures need no email again, and someone on Ink+ gives
+ * none: the one they gave for Ink+ is used. Ink makes three in all, Ink+ any number (openspec loop-ink-tiers).
+ * `unlimited` is for the admin, who tests this and is never stopped. Returns the picture's token, and how many more
+ * Ink lets them make: null for no limit.
  */
-export async function makeCustomFace(db: Db, personId: string, upload: Uint8Array, email: string | null, draw: Draw = drawFace, unlimited = false, /** A short line of the person's own for the drawing, as when it is drawn again. */ note = ''): Promise<{ token: string; left: number }> {
+export async function makeCustomFace(db: Db, personId: string, upload: Uint8Array, email: string | null, draw: Draw = drawFace, unlimited = false, /** A short line of the person's own for the drawing, as when it is drawn again. */ note = ''): Promise<{ token: string; left: number | null }> {
   const { rows: [had] } = await db.query<{ makes: number }>('select makes from campus_custom_face where person_id=$1', [personId]);
-  const given = (email ?? '').trim().toLowerCase();
+  const plus = (await planOf(db, personId)) === 'plus', free = unlimited || plus;
+  const kept = plus && !had ? (await db.query<{ email: string }>('select email from campus_ink_plus where person_id=$1', [personId])).rows[0]?.email : null;
+  const given = (kept ?? email ?? '').trim().toLowerCase();
   if (!had && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(given)) throw new CampusError('Enter the email to subscribe with.');
-  if (had && had.makes >= MAKES && !unlimited) throw new CampusError(ALL);
+  if (had && had.makes >= INK_MAKES && !free) throw new CampusError(ALL);
   // The ask is kept even when the drawing fails: it is what the test counts.
   if (!had) await db.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
   const image = await draw(upload, [], note);
   // Every picture is kept; the new one becomes the one in use.
   const made = await db.tx(async q => {
-    const { rows: [row] } = await q.query<{ token: string; makes: number }>('update campus_custom_face set token=gen_random_uuid(),makes=makes+1,made_at=now() where person_id=$1 and (makes<$2 or $3) returning token,makes', [personId, MAKES, unlimited]);
+    const { rows: [row] } = await q.query<{ token: string; makes: number }>('update campus_custom_face set token=gen_random_uuid(),makes=makes+1,made_at=now() where person_id=$1 and (makes<$2 or $3) returning token,makes', [personId, INK_MAKES, free]);
     if (!row) throw new CampusError(ALL);
     await q.query("insert into campus_custom_picture(token,person_id,image) values($1,$2,decode($3,'base64'))", [row.token, personId, Buffer.from(image.small).toString('base64')]);
     await q.query(USE, [personId, CUSTOM, row.token]);
-    return { token: row.token, left: unlimited ? MAKES : Math.max(0, MAKES - row.makes) };
+    return { token: row.token, left: free ? null : Math.max(0, INK_MAKES - row.makes) };
   });
   await keepLarge(db, made.token, image.large);
   return made;
@@ -154,11 +156,8 @@ export async function keepPicture(db: Db, personId: string, keep: string): Promi
 
 /** "Subscribe" to Loopd Premium. Nothing is charged: that they asked, and the email they gave, is kept. Asking twice changes nothing. */
 export async function subscribe(q: Q, personId: string, email: string, place: AskPlace = 'own animal'): Promise<void> {
-  const given = email.trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(given)) throw new CampusError('Enter the email to subscribe with.');
-  await q.query('insert into campus_custom_face(person_id,email) values($1,$2) on conflict(person_id) do nothing', [personId, given.slice(0, 320)]);
   // Every press is kept, with where it was made (lib/campus/ink.ts).
-  await recordAsk(q, personId, given.slice(0, 320), 'ink', place);
+  if (!await joinPlan(q, personId, email, 'ink', place)) throw new CampusError('Enter the email to subscribe with.');
 }
 
 export type PremiumAsk = { email: string; asked: string; pictures: string[] };

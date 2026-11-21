@@ -5,8 +5,8 @@ import { SiteFoot } from './foot';
 
 // The foot has the small print only. Assistants, which first stood there (public/demo/mockups-foot-legal.html), is in
 // the top bar, and is part of Ink+.
-const server = vi.hoisted(() => ({ plus: vi.fn<() => Promise<boolean>>(), subscribe: vi.fn<(email: string) => Promise<boolean>>(), push: vi.fn() }));
-vi.mock('./foot-actions', () => ({ hasInkPlusAction: server.plus, subscribeAtFootAction: server.subscribe }));
+const server = vi.hoisted(() => ({ plan: vi.fn(async () => 'free'), plus: vi.fn<() => Promise<boolean>>(), subscribe: vi.fn<(email: string) => Promise<boolean>>(), push: vi.fn() }));
+vi.mock('./foot-actions', () => ({ planHereAction: server.plan, hasInkPlusAction: server.plus, subscribeAtFootAction: server.subscribe }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: server.push, refresh: vi.fn() }) }));
 
 beforeEach(() => { server.plus.mockReset(); server.subscribe.mockReset(); server.push.mockReset(); });
@@ -51,20 +51,37 @@ it('without Ink+, the dots are Loopd and your school, and one pill opens the Ink
   lookAs('loop cornell');
   render(<SiteFoot />);
   expect(dots()).toEqual(['Loopd', 'Cornell']);
-  const pill = screen.getByRole('button', { name: /Every school/ });
+  // The pill wears the Ink+ mark in place of the plan's name (openspec loop-ink-tiers).
+  const pill = screen.getByRole('button', { name: 'Every school, with Ink+' });
+  expect(pill).not.toHaveTextContent('Ink+');
   fireEvent.click(pill);
   const card = screen.getByRole('dialog', { name: "Every school's colours come with Ink+" });
   expect(pill).toHaveAttribute('aria-expanded', 'true');
-  // What it does here, then what Ink+ is.
+  // What it does here, then what Ink+ is, and its price.
   expect(card).toHaveTextContent('The other 3 come with Ink+.');
   expect(card).toHaveTextContent('What Ink+ gives you');
-  expect(card).toHaveTextContent('From $2.99 a month');
-  expect(within(card).getByRole('link', { name: 'See Ink+' })).toHaveAttribute('href', '/c/ink');
+  expect(card).toHaveTextContent('$9.99 a month');
+  expect(card).not.toHaveTextContent('$2.99');
+  expect(within(card).getByRole('button', { name: 'Sign up for Ink+' })).toBeInTheDocument();
   fireEvent.click(within(card).getByRole('button', { name: 'Not now' }));
   expect(screen.queryByRole('dialog')).toBeNull();
   fireEvent.click(pill);
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(screen.queryByRole('dialog')).toBeNull();
+  lookAs(null);
+});
+
+it('signs up for Ink+ from the colours card, recording where, and thanks them', async () => {
+  lookAs('loop cornell');
+  const posted = vi.fn(async (_: string, init: RequestInit) => new Response(JSON.stringify({ ok: true, said: 'Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink+ for now.', sent: init.body })));
+  vi.stubGlobal('fetch', posted);
+  render(<SiteFoot />);
+  fireEvent.click(screen.getByRole('button', { name: 'Every school, with Ink+' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Sign up for Ink+' }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink+ for now.');
+  expect(posted).toHaveBeenCalledWith('/c/ink/join', expect.objectContaining({ method: 'POST' }));
+  expect(JSON.parse(String(posted.mock.calls[0][1].body))).toMatchObject({ plan: 'plus', place: 'colours: Sign up' });
+  vi.unstubAllGlobals();
   lookAs(null);
 });
 
@@ -79,7 +96,9 @@ it('with Ink+, every school is a dot and there is no pill', () => {
 it('opens a card that says Assistants come with Ink+ for a member without it, and closes it again', async () => {
   server.plus.mockResolvedValue(false);
   render(<AssistantsLink />);
-  expect(links()).toEqual(['AssistantsInk+']);
+  // It wears the Ink+ mark in place of the plan's name.
+  expect(links()).toEqual(['Assistants']);
+  expect(screen.getByRole('link', { name: 'Assistants, with Ink+' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('link', { name: /Assistants/ }));
   const card = await screen.findByRole('dialog', { name: 'Assistants come with Ink+' });
   expect(server.push).not.toHaveBeenCalled();
@@ -90,6 +109,16 @@ it('opens a card that says Assistants come with Ink+ for a member without it, an
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(server.plus).toHaveBeenCalledTimes(1);
+});
+
+it('tells someone on Ink what Ink+ adds, and what it costs in place of Ink', async () => {
+  server.plus.mockResolvedValue(false); server.plan.mockResolvedValueOnce('ink');
+  render(<AssistantsLink />);
+  fireEvent.click(screen.getByRole('link', { name: /Assistants/ }));
+  const card = await screen.findByRole('dialog');
+  await vi.waitFor(() => expect(card).toHaveTextContent('You have Ink. Ink+ adds your own AI'));
+  expect(card).toHaveTextContent('$9.99 a month, in place of $2.99');
+  expect(within(card).getByRole('button', { name: 'Move to Ink+ · $9.99' })).toBeInTheDocument();
 });
 
 it('subscribes from the card with the email given, and then opens Assistants', async () => {

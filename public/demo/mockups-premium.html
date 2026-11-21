@@ -117,6 +117,56 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 .price b.roll { animation: roll .4s var(--expo); } @keyframes roll { from { translate: 0 .5em; opacity: 0; } }
 .tk.prem .tk-stub { background: var(--action); color: var(--paper); } .tk.prem .tk-main { background: var(--card); }
 .tk.super .tk-main { background: var(--ink); color: var(--paper); } .tk.super .ck { background: var(--hot); color: var(--ink); } .tk.super .tk-stub { background: var(--hot); } .tk.super h3 { color: var(--hot); }
+/* Signing up (public/demo/mockups-ink-join.html, direction A). The plan you have: lifted, punched, a tab on top. */
+.tk { position: relative; }
+.tk.j-yours { translate: 0 -10px; } .tk.j-yours:hover { translate: 0 -10px; }
+.j-tab { position: absolute; z-index: 2; top: -15px; left: 22px; display: flex; align-items: center; gap: 7px; padding: 5px 13px 6px; border-radius: 10px 10px 10px 3px; background: oklch(62% 0.13 150); color: var(--paper); font-size: 14px; font-weight: 720; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.j-tab svg { width: 14px; height: 14px; }
+.j-held { display: flex; align-items: center; gap: 12px; min-height: 42px; font-weight: 700; font-size: 16px; }
+.j-punch { width: 40px; height: 40px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink), inset 3px 3px 0 color-mix(in oklab, var(--ink) 30%, transparent); }
+.tk.j-below { opacity: .62; } .tk.j-below .tk-stub { background: var(--line); color: var(--ink); }
+.j-inc { padding: 7px 14px; border-radius: 99px; font-size: 14px; font-weight: 700; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.tk-stub:has(.j-swap) { flex-wrap: wrap; } .j-swap { flex: 1 1 100%; font-size: 14px; font-weight: 620; }
+/* the confirm slip hangs under the ticket pressed */
+.j-slip { margin-top: 14px; padding: 20px 22px 22px; border-radius: 4px 4px 14px 14px; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 5px 5px 0 var(--ink); border-top: 2px dashed var(--ink); transform-origin: 50% 0; }
+@media (prefers-reduced-motion: no-preference) { .j-slip { animation: j-tear .5s var(--expo) both; } }
+@keyframes j-tear { from { translate: 0 -14px; rotate: -2deg; opacity: 0; } }
+.j-slip h4 { font-size: 21px; font-weight: 780; letter-spacing: -0.02em; }
+.j-lines { margin: 12px 0 18px; display: grid; gap: 7px; font-size: 15.5px; font-weight: 560; }
+.j-lines div { display: flex; justify-content: space-between; gap: 12px; } .j-lines .tot { padding-top: 9px; border-top: 1.5px dashed var(--line); font-weight: 760; }
+.j-acts { display: flex; flex-wrap: wrap; gap: 10px; } .j-acts .btn { height: 44px; padding: 0 22px; font-size: 15.5px; }
+.j-wrong { margin: 0 0 12px; font-weight: 640; color: var(--action); } .j-wrong[hidden] { display: none; }
+.j-email { display: grid; gap: 6px; margin: -4px 0 14px; font-size: 14.5px; font-weight: 680; }
+.j-email input { height: 44px; padding: 0 16px; border-radius: 99px; background: var(--page); box-shadow: inset 0 0 0 1.5px var(--ink); font-weight: 600; font-size: 15.5px; }
+/* the wait: the small blot, a bar, three steps */
+.j-wait { display: grid; gap: 12px; } .j-wait-row { display: flex; align-items: center; gap: 12px; font-weight: 660; }
+.j-blot { width: 30px; height: 30px; fill: var(--ink); }
+@media (prefers-reduced-motion: no-preference) { .j-wait .j-blot { animation: j-pulse 1s ease-in-out infinite alternate; } }
+@keyframes j-pulse { to { scale: 1.18; rotate: 14deg; } }
+.j-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; } .j-bar i { display: block; height: 100%; width: 0; background: var(--action); transition: width .5s linear; }
+.j-steps { display: grid; gap: 6px; font-size: 14.5px; font-weight: 560; } .j-steps li { display: flex; gap: 8px; align-items: center; opacity: .4; transition: opacity .25s; } .j-steps li.done { opacity: 1; }
+.j-steps li::before { content: ''; width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--ink); } .j-steps li.done::before { background: oklch(62% 0.13 150); }
+/* the answer, across the page under the tickets, and the ask for 15 minutes */
+.j-after { margin-top: 30px; padding: 26px 28px 28px; background: var(--paper); border-radius: 16px 16px 16px 5px; box-shadow: inset 0 0 0 1.5px var(--ink), 7px 7px 0 var(--ink); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 30px; }
+.j-done { display: grid; gap: 18px; align-content: start; } .j-done-top { display: flex; gap: 14px; align-items: flex-start; }
+.j-seal { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--hot); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); rotate: -8deg; }
+.j-done h4 { font-size: 26px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.04em; line-height: 1.05; }
+.j-done p { margin-top: 8px; font-size: 16px; font-weight: 540; line-height: 1.4; }
+.j-talk { position: relative; padding: 28px 22px 22px; border-radius: 14px 14px 14px 4px; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.j-talk-tab { position: absolute; top: -15px; left: 16px; padding: 5px 13px 6px; border-radius: 12px 12px 12px 3px; background: var(--action); color: var(--paper); font-size: 14px; font-weight: 700; }
+.j-talk h5 { margin: 0; font-size: 20px; font-weight: 780; letter-spacing: -0.02em; line-height: 1.15; }
+.j-talk > p { margin: 6px 0 14px; font-size: 15.5px; font-weight: 540; }
+.j-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.j-chip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 99px; font-weight: 640; font-size: 15px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.j-chip[aria-pressed=true] { background: var(--ink); color: var(--field); } .j-chip img { width: 26px; height: 26px; margin-left: -6px; border-radius: 50%; }
+.j-then { margin-top: 16px; display: grid; gap: 10px; } .j-then[hidden] { display: none; } .j-then > b { font-size: 14.5px; font-weight: 700; }
+.j-note { display: block; width: 100%; resize: none; padding: 11px 16px; border: 0; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font: inherit; font-weight: 600; font-size: 15.5px; line-height: 1.4; color: var(--ink); } .j-note::placeholder { color: var(--mute); }
+.j-hints { display: flex; flex-wrap: wrap; gap: 6px; } .j-hints .j-chip { height: 32px; padding: 0 12px; font-size: 13.5px; }
+.j-add { width: fit-content; background: none; box-shadow: none; border: 1.5px dashed var(--ink); } .j-add[hidden] { display: none; }
+.j-x { width: 34px; height: 34px; border-radius: 50%; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); font-size: 18px; line-height: 1; }
+.j-booked { display: flex; align-items: center; gap: 10px; padding: 13px 15px; border-radius: 12px; background: var(--paper); font-weight: 640; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.j-booked svg { width: 22px; height: 22px; flex: none; }
+@media (max-width: 900px) { .j-after { grid-template-columns: 1fr; padding: 22px 18px; } }
 .tk-stub .btn { height: 42px; padding: 0 20px; font-size: 15.5px; box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink); }
 
 /* the term: scroll is the calendar */
@@ -277,9 +327,6 @@ body { margin: 0; font-family: Archivo, system-ui, sans-serif; font-size: 16px; 
 .tape-run span { display: flex; align-items: center; gap: .65em; padding-right: .65em; } .tape-run svg { width: .62em; height: .62em; fill: var(--hot); }
 @keyframes tape { to { translate: -50% 0; } }
 body { position: relative; }
-.blot { position: absolute; z-index: 25; width: 170px; height: 170px; margin: -85px 0 0 -85px; overflow: visible; pointer-events: none; animation: blot-in .3s var(--expo) both, blot-out .9s 1.5s ease-in forwards; }
-.blot .school { fill: var(--field); stroke: var(--ink); stroke-width: 1.5; } .blot .dark { fill: var(--action); }
-@keyframes blot-in { from { opacity: 0; scale: .08; } } @keyframes blot-out { to { opacity: 0; scale: .94; } }
 .stage .book { transform: translate(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px)); transition: transform .6s var(--expo); }
 .stage .pet { transform: translate(calc(var(--px, 0) * var(--d, 20px)), calc(var(--py, 0) * var(--d, 20px))); transition: transform .7s var(--expo); } .pet.b { --d: -28px; } .pet.c { --d: 38px; }
 .cmp.live tbody tr { animation: rise .5s var(--expo) calc(var(--r) * 34ms) both; } .cmp.live .ck:not(.no) { animation: pop .45s var(--expo) calc(.12s + var(--r) * 34ms) both; }
@@ -318,16 +365,17 @@ body { position: relative; }
   <div class="plans-head"><h2 class="d">Pick one.</h2>
     <div class="cycle" role="group" aria-label="Billing"><button aria-pressed="true" data-cycle="month">Monthly</button><button aria-pressed="false" data-cycle="year">Yearly<i>2 months free</i></button></div></div>
   <div class="tiers">
-    <div class="tk"><div class="tk-main"><h3>Loopd</h3><ul>
-      <li><span class="ck"></span>Post, join, show up</li><li><span class="ck"></span>Map, tags, rewards</li><li><span class="ck"></span>30 days of stamps</li><li><span class="ck"></span>One pet animal</li></ul></div>
+    <div class="tk" data-tier="free"><div class="tk-main"><h3>Loopd</h3><ul>
+      <li><span class="ck"></span>Post, join, show up</li><li><span class="ck"></span>Map, tags, rewards</li><li><span class="ck"></span>30 days of stamps</li><li><span class="ck"></span>Your school's colours</li></ul></div>
       <div class="tk-stub"><span class="price"><b>$0</b><span>for good</span></span><a class="btn" href="#compare">You have it</a></div></div>
-    <div class="tk prem"><div class="tk-main"><h3>Ink <i>Most picked</i></h3><ul>
-      <li><span class="ck"></span>Your book, kept for good</li><li><span class="ck"></span>More animals, a coloured splat</li><li><span class="ck"></span>Connect your assistant</li><li><span class="ck"></span>A gift and a boost a month</li><li><span class="ck"></span>Join at any school</li></ul></div>
-      <div class="tk-stub"><span class="price"><b data-month="$2.99" data-year="$29">$2.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn">Get Ink</button></div></div>
-    <div class="tk super"><div class="tk-main"><h3>Ink+</h3><ul>
-      <li><span class="ck"></span>Everything in Ink</li><li><span class="ck"></span>The book, printed and mailed</li><li><span class="ck"></span>Make it fully yours</li><li><span class="ck"></span>Two friends get Ink</li><li><span class="ck"></span>4 gifts, 3 boosts a month</li><li><span class="ck"></span>Your own stamp</li></ul></div>
-      <div class="tk-stub"><span class="price"><b data-month="$9.99" data-year="$99">$9.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn">Get Ink+</button></div></div>
+    <div class="tk prem" data-tier="ink"><div class="tk-main"><h3>Ink <i>Most picked</i></h3><ul>
+      <li><span class="ck"></span>Every Ink animal, and the blot</li><li><span class="ck"></span>3 pets from your photos</li><li><span class="ck"></span>Play as your own animal</li><li><span class="ck"></span>Your book, kept for good</li><li><span class="ck"></span>A gift and a boost a month</li></ul></div>
+      <div class="tk-stub"><span class="price"><b data-month="$2.99" data-year="$29">$2.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn" data-join="ink">Get Ink</button></div></div>
+    <div class="tk super" data-tier="plus"><div class="tk-main"><h3>Ink+</h3><ul>
+      <li><span class="ck"></span>Everything in Ink</li><li><span class="ck"></span>Your own AI, from your groups</li><li><span class="ck"></span>Pets with no limit, any school's colours</li><li><span class="ck"></span>Group pictures, drawn</li><li><span class="ck"></span>The book, printed and mailed</li><li><span class="ck"></span>New things first</li></ul></div>
+      <div class="tk-stub"><span class="price"><b data-month="$9.99" data-year="$99">$9.99</b><span data-month="a month" data-year="a year">a month</span></span><button class="btn" data-join="plus">Get Ink+</button></div></div>
   </div>
+  <div data-after></div>
 </div></section>
 
 <section class="term" id="passport"><div class="pin"><div class="wrap" style="display:grid;gap:inherit;width:100%">
@@ -526,8 +574,6 @@ document.querySelector('.cycle').addEventListener('click', event => {
     blot.flung = thrown(next, 0, 62, 7, 3.2);
     return blot;
   }
-  // The same blot, for the one a press on the page leaves (the loud parts, at the end).
-  window.loopBlot = seed => { const blot = inkBlot(seed); return { school: drawn(blot.school), dark: drawn(blot.dark) }; };
   const smaller = k => SPARK.replace(/-?\d+(\.\d+)?/g, n => fix(n * k));
   const drop = (spark, n) => ([x, y, r]) => { const style = `--n:${n.at++};--dx:${fix(-x * .8)}px;--dy:${fix(-y * .8)}px`; return spark ? `<path class="drop" style="${style}" d="${SPARK}" transform="translate(${x} ${y}) scale(${fix(r / 27 * 3.4)})"/>` : `<circle class="drop" style="${style}" cx="${x}" cy="${y}" r="${fix(r * 1.15)}"/>`; };
   function splat(plan, seed) {
@@ -546,12 +592,14 @@ document.querySelector('.cycle').addEventListener('click', event => {
 })();
 
 // A row of one string is the name of a group: the band above that the rows under it belong to.
+// The approved table (public/demo/mockups-ink-tiers.html, openspec loop-ink-tiers).
 const ROWS = [['Post, join, show up', 1, 1, 1],
-  ['The book'], ['Stamps kept', '30 days', 'For good', 'For good, in print'], ['Rare stamps and a term poster', 0, 1, 1],
-  ['Make it yours'], ['Colours', 'Your school', 'Your school', 'Any school'], ['Animals from a pet photo', '1', '3 a term', '10 a term'], ['Save your picture', 'With mark', 'With mark', 'No mark'], ['The splat when a page loads', 'Plain', 'Your colours', 'With sparks'],
-  ['Your AI'], ['Connect your assistant', 0, 1, 1],
+  ['Make it yours'], ['The Ink animals in the picker', 0, 1, 1], ['The mark on your face', 0, 'A blot', 'A blot with sparks'], ['Animals from a pet photo', 0, '3', 'No limit'], ['Play as your own animal in Seats and Conga', 0, 1, 1],
+  ['Colours', 'Your schools', 'Your schools', 'Any school'], ['Save your picture', 'With the mark', 'With the mark', 'No mark'], ['The splat when a page loads', 'Plain', 'Your colours', 'With sparks'],
+  ['Your AI'], ['Connect your assistant', 0, 0, 1], ['A group picture drawn from your animals', 0, 0, 1],
+  ['The book'], ['Stamps kept', '30 days', 'For good', 'For good, and in print'], ['Rare stamps and a term poster', 0, 1, 1],
   ['Your people'], ['Give an animal', 0, '1 a month', '4 a month'], ['Boost a group', 0, '1 a month', '3 a month'], ['Matched rewards at partner places', 0, 1, 1], ['Friends who get Ink from you', 0, 0, '2'], ['Your own stamp on plans you start', 0, 0, 1],
-  ['Explore'], ['Join plans at other schools', 0, 1, 1], ['Wider map, any number of tags', 0, 1, 1]];
+  ['Explore'], ['Join plans at other schools', 0, 1, 1], ['Wider map, any number of tags', 0, 1, 1], ['New things first', 0, 0, 1]];
 document.getElementById('rows').innerHTML = ROWS.map(([name, ...cells]) => cells.length ? `<tr><td>${name}</td>${cells.map(v => `<td>${v === 1 ? `<span class="ck">${CHECK}</span>` : v === 0 ? '<span class="ck no"></span>' : v}</td>`).join('')}</tr>` : `<tr class="grp"><th colspan="4" scope="rowgroup">${name}</th></tr>`).join('');
 
 document.querySelector('.pick').addEventListener('click', event => { const hit = event.target.closest('button'); if (hit) for (const each of hit.parentElement.children) each.setAttribute('aria-pressed', each === hit); });
@@ -639,14 +687,6 @@ document.getElementById('mine-i').addEventListener('input', event => { document.
   const run = document.querySelector('.tape-run'), going = run && run.getAnimations()[0]; let last = scrollY, rate = 1;
   if (going) (function tick() { const moved = Math.abs(scrollY - last); last = scrollY; rate += (Math.min(9, 1 + moved * .12) - rate) * .12; going.playbackRate = rate; requestAnimationFrame(tick); })();
 
-  // A press on bare page leaves a blot, which dries and goes.
-  addEventListener('pointerdown', event => {
-    if (!window.loopBlot || event.target.closest('button, a, input, summary, label, .show, .book, .tk, .cmp, .faq, .cycle, .nav, .mock')) return;
-    const blot = window.loopBlot('press' + event.pageX + event.pageY);
-    document.body.insertAdjacentHTML('beforeend', `<svg class="blot" viewBox="-90 -90 180 180" aria-hidden="true" style="left:${event.pageX}px;top:${event.pageY}px;rotate:${Math.round(event.pageX * 7 % 360)}deg"><path class="school" d="${blot.school}"/><path class="dark" d="${blot.dark}"/></svg>`);
-    const made = document.body.lastElementChild; made.addEventListener('animationend', done => { if (done.animationName === 'blot-out') made.remove(); });
-  });
-
   // The hero's book and animals lean toward the pointer.
   const hero = document.querySelector('.hero'), stage = hero.querySelector('.stage');
   hero.addEventListener('pointermove', event => { const box = hero.getBoundingClientRect(); stage.style.setProperty('--px', ((event.clientX - box.left) / box.width * 2 - 1).toFixed(3)); stage.style.setProperty('--py', ((event.clientY - box.top) / box.height * 2 - 1).toFixed(3)); });
@@ -655,6 +695,144 @@ document.getElementById('mine-i').addEventListener('input', event => { document.
   // The comparison fills in row by row.
   const table = document.querySelector('.cmp'); [...table.querySelectorAll('tbody tr')].forEach((row, at) => row.style.setProperty('--r', at));
   new IntersectionObserver((seen, watch) => { if (seen[0].isIntersecting) { table.classList.add('live'); watch.disconnect(); } }, { threshold: .08 }).observe(table);
+})();
+// Signing up on the Ink page (public/demo/mockups-ink-join.html, direction A; openspec loop-ink-tiers). The page asks
+// who is looking (app/c/ink/join): their plan's ticket is punched, the ones under it are included, the one above offers
+// the move. "Get" tears a confirm slip off the ticket; confirming waits as a payment would, then signs them up, which
+// records who, which plan, which button and when. Nothing is charged, and the answer says so. Then "15 minutes?" asks a
+// student or organizer for days and times that suit a short Zoom call (app/c/ink/call). The page sits in a frame on
+// /c/ink, so signing in and "Try it out" happen on the page around it.
+(function () {
+  const top = window.top ?? window, tiers = document.querySelector('.tiers'), after = document.querySelector('[data-after]');
+  if (!tiers || !after) return;
+  const NAME = { free: 'Loopd', ink: 'Ink', plus: 'Ink+' }, RANK = { free: 0, ink: 1, plus: 2 }, TIERS = ['free', 'ink', 'plus'];
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3.5 8.5 3 3 6-7"/></svg>';
+  const BLOT = '<svg class="j-blot" viewBox="-68 -68 136 136" aria-hidden="true"><path d="M-8 -60C22 -66 52 -44 58 -14C66 18 46 54 10 60C-24 66 -58 44 -62 10C-66 -24 -40 -54 -8 -60Z"/><circle cx="56" cy="-50" r="9"/><circle cx="-58" cy="46" r="6"/></svg>';
+  const SIGN_IN = '/sign-in?redirect_url=%2Fc%2Fink';
+  const esc = text => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const card = tier => tiers.querySelector(`[data-tier="${tier}"]`);
+  const ORIG = Object.fromEntries(TIERS.map(tier => [tier, card(tier).querySelector('.tk-stub').innerHTML]));
+  const cycle = () => document.querySelector('[data-cycle][aria-pressed=true]')?.dataset.cycle ?? 'month';
+  let me = { signedIn: false, plan: 'free', email: '' };
+
+  /** The tickets for the person looking. */
+  function paint() {
+    for (const tier of TIERS) {
+      const tk = card(tier), stub = tk.querySelector('.tk-stub');
+      stub.innerHTML = ORIG[tier];
+      for (const each of stub.querySelectorAll('[data-month]')) each.textContent = each.dataset[cycle()];
+      tk.classList.remove('j-yours', 'j-below'); tk.querySelector('.j-tab')?.remove();
+      // Loopd free is an account, made on the sign-in page with a school email. Ink and Ink+ take an email here.
+      if (!me.signedIn) { if (tier === 'free') stub.querySelector('a').outerHTML = `<a class="btn" href="${SIGN_IN}" target="_top">Join free</a>`; continue; }
+      if (tier === me.plan) {
+        tk.classList.add('j-yours'); tk.insertAdjacentHTML('afterbegin', `<span class="j-tab">${CHECK}Your plan</span>`);
+        stub.innerHTML = `<span class="j-held"><span class="j-punch" aria-hidden="true"></span>You have ${tier === 'free' ? 'it' : NAME[tier]}</span>`;
+      } else if (RANK[tier] < RANK[me.plan]) {
+        tk.classList.add('j-below'); stub.querySelector('.btn').outerHTML = `<span class="j-inc">In ${NAME[me.plan]}</span>`;
+      } else if (tier === 'plus' && me.plan === 'ink') {
+        stub.querySelector('[data-join]').textContent = 'Move to Ink+';
+        stub.insertAdjacentHTML('beforeend', '<span class="j-swap">In place of your Ink, not on top of it.</span>');
+      }
+    }
+  }
+  /** The confirm slip, torn off the ticket pressed. */
+  function slip(plan) {
+    tiers.querySelector('.j-slip')?.remove();
+    const tk = card(plan), cost = tk.querySelector('.price b').textContent, move = me.plan === 'ink' && plan === 'plus', yearly = cycle() === 'year';
+    const renews = new Date(); if (yearly) renews.setFullYear(renews.getFullYear() + 1); else renews.setMonth(renews.getMonth() + 1);
+    const title = move ? 'Move to Ink+' : `Get ${NAME[plan]}`;
+    tk.insertAdjacentHTML('beforeend', `<div class="j-slip" role="dialog" aria-label="${title}"><h4>${title}?</h4>
+      <div class="j-lines"><div><span>Loopd ${NAME[plan]}, ${yearly ? 'yearly' : 'monthly'}</span><span>${cost}</span></div>
+        ${move ? '<div><span>Your Ink, which this replaces</span><span>Ends today</span></div>' : ''}
+        <div><span>Renews</span><span>${renews.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span></div><div><span>Cancel</span><span>Any time</span></div>
+        <div class="tot"><span>Today</span><span>${cost}</span></div></div>
+      ${me.signedIn ? '' : '<label class="j-email"><span>Your email</span><input type="email" required autocomplete="email" placeholder="you@school.edu"></label><p class="j-wrong" role="alert" hidden></p>'}
+      <div class="j-acts"><button class="btn go" data-confirm="${plan}">Confirm · ${cost}</button><button class="btn" data-back>Not now</button></div></div>`);
+    (tk.querySelector('.j-email input') ?? tk.querySelector('[data-confirm]')).focus();
+  }
+  const STEPS = ['Checking your account', 'Holding your plan', 'Confirming'];
+  /** About two seconds of steps, as a payment would take. */
+  function wait(box) {
+    box.innerHTML = `<div class="j-wait" role="status"><div class="j-wait-row">${BLOT}Processing…</div><div class="j-bar"><i></i></div><ul class="j-steps">${STEPS.map(each => `<li>${each}</li>`).join('')}</ul></div>`;
+    const bar = box.querySelector('.j-bar i'), steps = [...box.querySelectorAll('.j-steps li')], gap = calm ? 150 : 700;
+    return new Promise(done => {
+      steps.forEach((li, at) => setTimeout(() => { li.classList.add('done'); bar.style.width = `${(at + 1) / steps.length * 100}%`; }, gap * (at + .4)));
+      setTimeout(done, gap * (steps.length + .5));
+    });
+  }
+  async function confirm(plan, box) {
+    const move = me.plan === 'ink' && plan === 'plus', place = move ? 'ink page: Move to Ink+' : plan === 'plus' ? 'ink page: Get Ink+' : 'ink page: Get Ink';
+    // Signed out, the email given stands in for the account's.
+    const field = box.querySelector('.j-email input'), email = field?.value.trim() ?? '';
+    if (field && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { const wrong = box.querySelector('.j-wrong'); wrong.hidden = false; wrong.textContent = 'Enter the email to sign up with.'; field.focus(); return; }
+    const asked = fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan, place, back: '/c/ink', ...field ? { email } : {} }) }).then(answer => answer.json()).catch(() => null);
+    const [got] = await Promise.all([asked, wait(box)]);
+    if (got?.signIn) return top.location.assign(got.signIn);
+    if (got?.ok && got.signedOut) {
+      box.remove(); me.email = email;
+      after.innerHTML = `<div class="j-after">${doneOut(plan)}${talk()}</div>`;
+      after.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'nearest' });
+      return;
+    }
+    if (!got?.ok) {
+      box.innerHTML = `<p class="j-wrong" role="alert">${esc(got?.message ?? 'That did not go through. Try again.')}</p><div class="j-acts"><button class="btn go" data-confirm="${plan}">Try again</button><button class="btn" data-back>Not now</button></div>`;
+      return;
+    }
+    box.remove(); me.plan = plan; paint();
+    after.innerHTML = `<div class="j-after">${done(plan)}${talk()}</div>`;
+    after.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'nearest' });
+  }
+  const done = plan => `<div class="j-done" role="status"><div class="j-done-top"><span class="j-seal">${BLOT}</span><div>
+      <h4>${NAME[plan]} is on. You weren’t charged.</h4>
+      <p>Payments aren’t open yet. We’ve switched ${NAME[plan]} on for you for now, and we’ll email ${me.email ? `<b>${esc(me.email)}</b>` : 'you'} before they open, so nothing changes without you saying so.</p></div></div>
+    <div class="j-acts"><a class="btn go" href="/c" target="_top">Try it out</a></div></div>`;
+  /** The answer for someone signed out: kept with their email, and theirs to try once they sign in with it. */
+  const doneOut = plan => `<div class="j-done" role="status"><div class="j-done-top"><span class="j-seal">${BLOT}</span><div>
+      <h4>You’re on the list. You weren’t charged.</h4>
+      <p>Payments aren’t open yet. We’ll email <b>${esc(me.email)}</b> when they are. Sign in with that email and we’ll switch ${NAME[plan]} on for you now, free until then.</p></div></div>
+    <div class="j-acts"><a class="btn go" href="${SIGN_IN}" target="_top">Sign in to try it</a></div></div>`;
+
+  /* 15 minutes? */
+  // When suits them, typed the way a post is: "@12/12 @2pm", "@tue @4pm or @thu morning". Kept as they wrote it; we write back.
+  const HINTS = ['@tue @2pm', '@12/12 @10am', 'any weekday after 4'];
+  const talk = () => `<div class="j-talk" data-talk><span class="j-talk-tab">15 minutes?</span>
+    <h5>Student or organizer? We’d love to hear from you.</h5>
+    <p>One short Zoom call about what you want from Loopd and what gets in your way. Tell us when suits you, and we’ll write back to set it up.</p>
+    <div class="j-row" role="group" aria-label="You are"><button class="j-chip" data-role="student" aria-pressed="false"><img src="/animals/05.png" alt="">I’m a student</button><button class="j-chip" data-role="organizer" aria-pressed="false"><img src="/animals/23.png" alt="">I run a club or events</button></div>
+    <div class="j-then" hidden>
+      <textarea class="j-note" rows="2" maxlength="200" aria-label="When suits you" placeholder="When suits you? Say, @tue @2pm or @12/12 @10am, or any weekday after 4"></textarea>
+      <div class="j-hints" role="group" aria-label="Add to it">${HINTS.map(hint => `<button class="j-chip" data-hint="${hint}">+ ${hint}</button>`).join('')}</div>
+      <div class="j-acts"><button class="btn go" data-send disabled>Send my times</button><button class="btn" data-no>No thanks</button></div><p class="j-wrong" role="alert" hidden></p></div></div>`;
+  const ready = box => { box.querySelector('[data-send]').disabled = !box.querySelector('.j-note').value.trim(); };
+  async function book(box) {
+    const times = [], note = box.querySelector('.j-note').value.trim(), role = box.querySelector('[data-role][aria-pressed=true]').dataset.role, button = box.querySelector('[data-send]');
+    button.disabled = true;
+    const answer = await fetch('/c/ink/call', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ role, times, note, ...me.signedIn ? {} : { email: me.email } }) }).catch(() => null);
+    if (!answer?.ok) { const wrong = box.querySelector('.j-wrong'); wrong.hidden = false; wrong.textContent = 'That did not go through. Try again.'; button.disabled = false; return; }
+    box.innerHTML = `<span class="j-talk-tab">15 minutes?</span><div class="j-booked">${CHECK}<span>Thanks. We’ll email ${me.email ? esc(me.email) : 'you'} to settle a time from “${esc(note)}”.</span></div>`;
+  }
+
+  tiers.addEventListener('click', event => {
+    const join = event.target.closest('[data-join]'), confirmIt = event.target.closest('[data-confirm]');
+    if (join) { event.preventDefault(); slip(join.dataset.join); }
+    if (event.target.closest('[data-back]')) event.target.closest('.j-slip').remove();
+    if (confirmIt) void confirm(confirmIt.dataset.confirm, confirmIt.closest('.j-slip'));
+  });
+  tiers.addEventListener('keydown', event => { if (event.key === 'Escape') { const open = tiers.querySelector('.j-slip'); if (open && !open.querySelector('.j-wait')) open.remove(); } });
+  after.addEventListener('input', event => { const box = event.target.closest('[data-talk]'); if (box) ready(box); });
+  after.addEventListener('click', event => {
+    const box = event.target.closest('[data-talk]'); if (!box) return;
+    const role = event.target.closest('[data-role]');
+    if (role) { for (const each of box.querySelectorAll('[data-role]')) each.setAttribute('aria-pressed', each === role); box.querySelector('.j-then').hidden = false; }
+    const hint = event.target.closest('[data-hint]');
+    if (hint) { const field = box.querySelector('.j-note'), was = field.value.trim(); field.value = (was ? `${was}${hint.dataset.hint.startsWith('@') ? ' or ' : ', '}` : '') + hint.dataset.hint; field.focus(); ready(box); }
+    if (event.target.closest('[data-send]')) void book(box);
+    if (event.target.closest('[data-no]')) box.innerHTML = '<span class="j-talk-tab">15 minutes?</span><div class="j-booked">No problem. Thanks for trying Loopd.</div>';
+  });
+  // The yearly prices change the stubs; the stubs keep the person's state.
+  document.querySelector('.cycle')?.addEventListener('click', () => setTimeout(() => { if (!tiers.querySelector('.j-slip')) paint(); }));
+  fetch('/c/ink/join', { headers: { accept: 'application/json' } }).then(answer => answer.json()).then(got => { if (got && typeof got.signedIn === 'boolean') { me = got; paint(); } }).catch(() => {});
 })();
 </script>
 </body>

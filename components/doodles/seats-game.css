@@ -45,8 +45,11 @@
   .pick .tag { left: 12px; top: -13px; }
   .pick button { display: grid; place-items: center; aspect-ratio: 1; border-radius: 50%; background: var(--stub); box-shadow: inset 0 0 0 1.5px var(--ink); transition: background-color .15s; } .pick button img { width: 78%; height: 78%; object-fit: contain; border-radius: 50%; pointer-events: none; }
   .pick button:hover { background: var(--field); } .pick button[aria-pressed=true] { background: var(--field); box-shadow: inset 0 0 0 3px var(--action); }
+  /* the Ink mark in place of the plan's name (openspec loop-ink-tiers): the blot alone, on paper */
+  .tag.mark { display: flex; padding: 3px 9px; background: var(--paper); } .pick.ask .tag.mark { background: var(--paper); } .tag.mark svg { display: block; width: 22px; height: 22px; overflow: visible; }
+  .tag.mark .school { fill: var(--field); } .tag.mark .dark, .tag.mark .seep { fill: var(--ink); }
   .pick.ask { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0 var(--action); } .pick.ask .tag { background: var(--field); color: var(--ink); }
-  .pick.ask p { flex: 1 1 100%; font-size: 15px; font-weight: 600; line-height: 1.3; } .pick.ask a { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: 99px; background: var(--field); color: var(--ink); font-weight: 660; text-decoration: none; }
+  .pick.ask p { flex: 1 1 100%; font-size: 15px; font-weight: 600; line-height: 1.3; } .pick.ask a, .pick.ask button[data-join] { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: 99px; background: var(--field); color: var(--ink); font-weight: 660; text-decoration: none; }
   .pick[hidden], .pick.ask[hidden] { display: none; }
 
   /* ---- the game ---- */
@@ -81,7 +84,7 @@
   /* lights out: ink over the seats while they swap. With Ink+ it is the app's own blot that spills across. */
   .lights { position: absolute; z-index: 20; inset: 2px 2px 94px; display: grid; place-items: center; overflow: hidden; border-radius: 20px 20px 0 0; background: var(--ink); opacity: 0; pointer-events: none; transition: opacity .22s; }
   .t.dark .lights { opacity: 1; }
-  .lights .blot { width: 330px; height: 330px; display: none; scale: .35; transition: scale .5s var(--ease); } &[data-ink=plus] .lights .blot { display: block; } .t.dark .lights .blot { scale: 1; }
+  .lights .blot { width: 330px; height: 330px; display: none; scale: .35; transition: scale .5s var(--ease); } &:is([data-ink=ink], [data-ink=plus]) .lights .blot { display: block; } .t.dark .lights .blot { scale: 1; }
   .t .stubb { position: absolute; left: 18px; top: 390px; width: 324px; height: 92px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 16px; border-radius: 0 0 20px 5px; background: var(--stub); border-top: 2.5px dashed var(--ink); transition: background-color .3s; }
   .t .stubb::before, .t .stubb::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: var(--page); box-shadow: inset 0 0 0 2px var(--ink); }
   .t .stubb::before { left: -13px; clip-path: inset(0 0 0 50%); } .t .stubb::after { right: -13px; clip-path: inset(0 50% 0 0); }
@@ -116,9 +119,9 @@
   .tile .spark { left: auto; right: 16px; top: 16px; }
   /* Ink+: the back of every tile carries the app's own ink blot, a different one on each tile */
   .tile .blot { width: 78px; height: 78px; overflow: visible; display: none; transition: scale .25s var(--ease), rotate .25s var(--ease); }
-  &[data-ink=plus] .tile .blot { display: block; } &[data-ink=plus] .tile .back::after { display: none; }
+  &:is([data-ink=ink], [data-ink=plus]) .tile .blot { display: block; } &:is([data-ink=ink], [data-ink=plus]) .tile .back::after { display: none; }
   .play .tile.down:hover .blot { scale: 1.12; rotate: 8deg; }
-  &[data-ink=plus] .play .tile.down:hover .back { background: var(--ink); box-shadow: 3px 3px 0 var(--action); }
+  &:is([data-ink=ink], [data-ink=plus]) .play .tile.down:hover .back { background: var(--ink); box-shadow: 3px 3px 0 var(--action); }
   .a .punch { position: absolute; z-index: 45; right: 16px; top: 112px; rotate: 6deg; display: none; justify-items: center; padding: 7px 16px 10px; border-radius: 16px 16px 16px 5px; background: var(--ink); color: var(--field); box-shadow: 4px 4px 0 var(--action); white-space: nowrap; }
   .a .punch b { font-size: 24px; font-weight: 780; font-stretch: 112%; letter-spacing: -0.05em; line-height: 1.05; } .a .punch span { font-size: 13px; font-weight: 620; color: var(--paper); }
   .a.done .punch { display: grid; animation: sg-slam .45s var(--ease); } .a.done .clock { color: var(--action); }

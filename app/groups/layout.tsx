@@ -11,7 +11,7 @@ import { getPortalPrincipal, getSignedInPrincipal } from '@/lib/emba/portal-sess
 import { frontIsCampus } from '@/lib/campus/schools';
 import { CUSTOM, PHOTO, animal, animalOf, customFace } from '@/lib/campus/animals';
 import { customFaces } from '@/lib/campus/custom-face';
-import { hasInk } from '@/lib/campus/ink';
+import { planOf, type Plan } from '@/lib/campus/ink';
 import { campusOf, pickedFaces } from '@/lib/campus/people';
 import { Kit } from '@/components/campus/kit';
 import { SiteFoot } from '@/components/campus/foot';
@@ -28,12 +28,12 @@ import '@/app/c/campus.css';
 import './campus-look.css';
 
 /** Whose colours the person sees unless they pick others (their school's, or Loopd's own), and the animal that is their face. */
-async function looks(principal: Principal): Promise<{ kit: string; face: string | null; ink: boolean }> {
+async function looks(principal: Principal): Promise<{ kit: string; face: string | null; plan: Plan }> {
   try {
-    const [school, [faces, ink, made]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await hasInk(q, principal.personId), await customFaces(q, [principal.personId])] as const)]);
+    const [school, [faces, plan, made]] = await Promise.all([campusOf(db(), principal), db().tx(async q => [await pickedFaces(q, [principal.personId]), await planOf(q, principal.personId), await customFaces(q, [principal.personId])] as const)]);
     const picked = faces.get(principal.personId), own = made.get(principal.personId)?.token;
-    return { kit: school?.slug ?? 'loop', face: picked === PHOTO ? null : picked === CUSTOM && own ? customFace(own) : animal(picked === undefined || picked < 0 ? animalOf(principal.personId) : picked), ink };
-  } catch { return { kit: 'loop', face: null, ink: false }; }
+    return { kit: school?.slug ?? 'loop', face: picked === PHOTO ? null : picked === CUSTOM && own ? customFace(own) : animal(picked === undefined || picked < 0 ? animalOf(principal.personId) : picked), plan };
+  } catch { return { kit: 'loop', face: null, plan: 'free' }; }
 }
 /** The person's campus screen, for the account card: the same one the campus pages draw theirs from (app/c/ink/page.tsx). Null if it cannot be read; the bar then has a plain card. */
 async function accountScreen(): Promise<Screen | null> {
@@ -55,7 +55,7 @@ export default async function GroupsLayout({ children }: { children: React.React
     // The colours they may wear: Loopd's and their schools', or every school's with Ink+ (components/campus/kit.tsx).
     const yours = viewer?.kits ?? ['loop', look.kit], any = viewer?.anyKit ?? false;
     content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit, yours, any) }} /><Kit own={look.kit} yours={yours} any={any} />
-      <Bar groups={groups} kits={yours} anyKit={any} face={look.face} ink={look.ink} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} />}><OnYou /></Suspense></Bar>
+      <Bar groups={groups} kits={yours} anyKit={any} face={look.face} plan={look.plan} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} />}><OnYou /></Suspense></Bar>
       <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div><SiteFoot /></div>;
   }
   return configured ? <ClerkProvider signInUrl="/groups/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;

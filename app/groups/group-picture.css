@@ -16,7 +16,7 @@
 .gp-n { position: absolute; left: -4px; top: -4px; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11.5px; font-weight: 740; background: var(--cs-action); color: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-paper); }
 .cs .gp-foot { display: flex; align-items: center; gap: 12px; margin: 16px -20px -16px; font-weight: 640; }
 .gp-faces { display: flex; min-width: 0; margin-right: auto; } .gp-faces img { width: 38px; height: 38px; margin-left: -10px; border-radius: 50%; object-fit: contain; background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink); } .gp-faces img:first-child { margin-left: 0; }
-.cs .gp-foot > .gp-go { gap: 8px; padding: 0 16px; } .gp-plus { padding: 1px 8px; border-radius: 99px; font-size: 11.5px; font-style: normal; font-weight: 740; background: var(--cs-ink); color: var(--cs-gold); }
+.cs .gp-foot > .gp-go { gap: 8px; padding: 0 16px; } .gp-pic .cs-ink, .gp-go .cs-ink { width: 20px; height: 20px; }
 .gp-card .gp-said { margin: 12px 0 0; padding: 8px 14px; border-radius: 12px 12px 12px 3px; font-size: 13.5px; font-weight: 600; background: var(--cs-action); color: var(--cs-paper); }
 .gp-card .cs-prem-stub .gp-said { margin: 0; }
 .gp-wait { display: flex; flex-wrap: wrap; justify-content: center; gap: 0; } .cs-prem-made.gp-wait > img { width: 72px; height: 72px; margin: 0 -8px; }

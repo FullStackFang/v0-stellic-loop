@@ -141,7 +141,7 @@ export async function setSchoolsAction(profile: string, schools: string[]): Prom
   return act(async viewer => { await setSchools(db(), { personId: viewer.personId, verifiedEmail: viewer.principal.verifiedEmail }, String(profile), Array.isArray(schools) ? schools.map(String) : [], (await linkedinAccount(viewer.principal))?.name ?? null); });
 }
 
-export type MadeFace = { ok: true; own: string; left: number } | { ok: false; message: string; signIn?: boolean };
+export type MadeFace = { ok: true; own: string; /** How many more Ink lets them make; null for no limit. */ left: number | null } | { ok: false; message: string; signIn?: boolean };
 /**
  * "Subscribe" on a person's own animal, and "Make it" after that: the photo is drawn as one of the set and becomes their
  * face. Nothing is charged; the first ask is kept with its email. Takes about 20 seconds.

@@ -1,7 +1,10 @@
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { kitScript } from '@/lib/campus/kit-script';
 import { Kit, Kits } from './kit';
+
+// The Ink+ card signs up from where it is (components/campus/join-plan.tsx), which refreshes the page once done.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 // Other schools' colours are an Ink+ perk (public/demo/mockups-ink-colours.html, "My pick"): Loopd's and your schools'
 // are free, the account card shows those and "Any school", and the rest wear the Ink mark.
