@@ -38,8 +38,8 @@
 
 ## 5. Proof
 
-- [ ] 5.1 Take the laptop timings in design.md's Context again and write the new numbers there
-  - Blocked 2026-11-20: the owner subject in `.env.local` has no identity in the development database, so a read-only probe cannot act as the owner. Round trip measured: 79 ms. Counts from the tests: identity 9 → 1 statement; counters lose the second listing (about 17) and 8 per group; Assistants grants 12 in three reads → 8 in one.
+- [x] 5.1 Take the laptop timings in design.md's Context again and write the new numbers there
+  - The owner subject in `.env.local` has no identity in the development database, so the read-only probe measured as the member there in the most groups (5).
 - [ ] 5.2 Reload `/groups/extreme-cheapskates`, `/groups/connections` and `/c/ink` signed in; watch the dev server's log for errors
 - [ ] 5.3 Push and open one pull request to `main` after the owner has tried it on localhost
 

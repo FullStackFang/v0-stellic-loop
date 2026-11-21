@@ -14,6 +14,16 @@ What one signed-in page view does today, from a read of the code on 2026-11-20 (
 
 Measured from a laptop about 80 ms from the database: one statement 80 ms, an empty transaction 250 ms, the listing 1.5 to 1.7 s. In production a statement is expected to cost a few ms (same region; not measured: per-route metrics need Observability Plus).
 
+After this change (2026-11-20, laptop, round trip 75 ms, the development database, as the member there in the most groups: 5 groups). Taken on one connection inside one rolled-back transaction, so the times are the sequential cost; the app runs some of these side by side, and the counts are exact:
+
+| Part | Before | After |
+|---|---|---|
+| Identify a known account | 8 to 9 statements in a row | 1 statement, 78 ms |
+| "On you" counters, 5 groups | about 152 statements (a second listing, and 3 post checks per group) | 95 statements, 7.4 s sequential (the second listing alone was 17 statements, 4.8 s) |
+| Account card | 20 statements, 1.55 s (campus screen) | 14 statements, 1.09 s sequential, in two waves in the app |
+| Assistants page grants | 12 statements in three reads, 0.93 s | 8 in one transaction, 0.62 s |
+| The page view's listing (unchanged) | 18 statements, 1.48 s | the same, now made once per view |
+
 Constraints:
 - `openspec/specs/page-speed/spec.md` requires that every read keeps its checks of the person, the sign-in and the role inside its own transaction, and still records its `plan:read`.
 - Reads lock what they check (`for share`), so a revoke waits for a read in progress and never lands in the middle of one.
