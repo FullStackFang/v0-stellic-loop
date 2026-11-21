@@ -85,6 +85,37 @@ it('lets a line dash for free with coffee', () => {
   expect(line.tail.length).toBeLessThan(20);
 });
 
+// A long line scattered leaves its animals as one mob where it fell; a head that reaches it draws the whole mob in.
+it('leaves a scattered line as one mob that a head draws in whole, and that breaks up if nobody comes', () => {
+  const world = createWorld(seeded(11), round(), []) as { strays: unknown[]; feed: number; items: unknown[]; lay: number; mobs: { x: number; y: number; faces: number[] }[] };
+  world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0;
+  const big = addLine(world, { id: 'big', face: 1, name: 'Glee Club', start: 30 }) as Line & { safe: number; dead: number };
+  const small = addLine(world, { id: 'small', face: 2, name: 'Risley', start: 3 }) as Line & { safe: number; dead: number };
+  // The big line's head walks into the small line's back.
+  // The big line lies along the x axis heading east; the small one heads south across its path, its back just ahead of the big head.
+  Object.assign(big, { x: 0, y: 0, a: 0, want: 0, safe: 0, path: [{ x: 0, y: 0 }, { x: -2000, y: 0 }] });
+  Object.assign(small, { x: 10, y: 60, a: Math.PI / 2, want: Math.PI / 2, safe: 0, path: [{ x: 10, y: 60 }, { x: 10, y: -400 }] });
+  (big.tail as { x: number; y: number }[]).forEach((f, i) => Object.assign(f, { x: -33 * (i + 1), y: 0 }));
+  (small.tail as { x: number; y: number }[]).forEach((f, i) => Object.assign(f, { x: 10, y: 60 - 33 * (i + 1) }));
+  const events = step(world, 1 / 30) as { type: string; size?: number }[];
+  expect(events).toContainEqual(expect.objectContaining({ type: 'spill', size: 30 }));
+  expect(world.mobs).toHaveLength(1);
+  expect(world.strays).toHaveLength(0); // none of them flew off loose
+  // The small line reaches the mob and takes all thirty, in about a second.
+  const mob = world.mobs[0];
+  for (let n = 0; n < 45; n++) { Object.assign(small, { x: mob.x + 20, y: mob.y }); steer(small as never, 0, false); step(world, 1 / 30); }
+  expect(world.mobs).toHaveLength(0);
+  expect(small.tail.length).toBeGreaterThanOrEqual(33);
+  // A mob nobody reaches stays whole for a while, then breaks up into strays.
+  world.mobs.push({ x: -800, y: 0, faces: Array(20).fill(1), from: 'x', born: (world as never as { t: number }).t, take: 0, leak: 0 } as never);
+  Object.assign(small, { x: 800, y: 0 });
+  for (let n = 0; n < 30 * 11; n++) { steer(small as never, small.a + 1, false); step(world, 1 / 30); }
+  expect(world.mobs[0].faces).toHaveLength(20);
+  for (let n = 0; n < 30 * 10; n++) { steer(small as never, small.a + 1, false); step(world, 1 / 30); }
+  expect(world.mobs).toHaveLength(0);
+  expect(world.strays.length).toBeGreaterThan(0);
+});
+
 it('keeps the bus from taking anyone off a line with the whistle', () => {
   const run = (whistle: boolean) => {
     const world = createWorld(seeded(9), round(), [], [{ name: 'Bus', from: [-1400, 0], to: [1400, 0], off: [1400, 0], riders: 0, ride: 20, stay: 5, away: 5 }] as never) as { strays: unknown[]; feed: number; items: unknown[]; lay: number };

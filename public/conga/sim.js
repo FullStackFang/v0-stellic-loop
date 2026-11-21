@@ -43,6 +43,15 @@ export const LOUD = PULL * 2; // how far a megaphone draws strays from
 const TAKE = 46; // a head this close to a pickup takes it
 const LYING = 50; // strays kept on the ground for each pickup lying there, so a bigger ground has more
 const AGAIN = 6; // seconds before a taken pickup is replaced somewhere else
+// A scattered line leaves a mob: all its animals in one heap where it fell, kept as one thing rather than many strays,
+// so a big spill costs no more to run or draw than a small one. A head that reaches it draws the whole mob in, a stream
+// of them a second. Left alone, it breaks up into strays after a while.
+const MOB_MIN = 6; // a line shorter than this just scatters
+const MOB_RATE = 30; // animals a second a mob pours into a line that reaches it
+const MOB_HOLD = 12; // seconds a mob stays whole
+const MOB_LEAK = 3; // animals a second it loses after that, as strays
+/** How far from its middle a mob of n reaches: a bigger heap is bigger on the ground. */
+export const mobReach = n => 34 + Math.sqrt(n) * 9;
 
 const wrap = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
 
@@ -70,8 +79,8 @@ function spot(world, room = 0) {
   }
   return { x: world.rings[0][0][0], y: world.rings[0][0][1] };
 }
-/** Every animal in the world: in lines, loose, and aboard cars. */
-const counted = world => world.lines.reduce((sum, line) => sum + (line.dead ? 0 : line.tail.length), world.strays.length) + world.shuttles.reduce((sum, car) => sum + car.load, 0);
+/** Every animal in the world: in lines, loose, in mobs, and aboard cars. */
+const counted = world => world.lines.reduce((sum, line) => sum + (line.dead ? 0 : line.tail.length), world.strays.length) + world.shuttles.reduce((sum, car) => sum + car.load, 0) + world.mobs.reduce((sum, mob) => sum + mob.faces.length, 0);
 const face = world =>1 + Math.floor(world.random() * FACES);
 const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
 const KINDS = Object.keys(POWERS);
@@ -91,7 +100,7 @@ export function createWorld(random = Math.random, rings = round(), holes = [], s
   const area = rings.reduce((sum, ring) => sum + areaOf(ring), 0) - holes.reduce((sum, ring) => sum + areaOf(ring), 0);
   const world = { t: 0, lines: [], strays: [], random, rings, holes, feed: Math.round(Math.min(260, Math.max(60, area / ROOMY))), shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, kept: 0, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < world.feed) world.strays.push(stray(world));
-  world.items = []; world.lay = Math.max(2, Math.round(world.feed / LYING)); world.later = 0;
+  world.mobs = []; world.items = []; world.lay = Math.max(2, Math.round(world.feed / LYING)); world.later = 0;
   while (world.items.length < world.lay) world.items.push(item(world));
   return world;
 }
@@ -199,8 +208,12 @@ function think(world, line, dt) {
     }
   }
 
+  // A mob is worth going a long way for.
+  let pick = null, far = 1000;
+  for (const mob of world.mobs) { const d = Math.hypot(mob.x - line.x, mob.y - line.y); if (d < far) { far = d; pick = mob; } }
+  if (pick) { line.want = Math.atan2(pick.y - line.y, pick.x - line.x); return; }
   // A pickup close by is worth a short detour.
-  let pick = null, far = 600;
+  far = 600;
   for (const it of world.items) { const d = Math.hypot(it.x - line.x, it.y - line.y); if (d < 260 + bot.skill * 140 && d < far) { far = d; pick = it; } }
   if (pick) { line.want = Math.atan2(pick.y - line.y, pick.x - line.x); return; }
   for (const s of world.strays) {
@@ -227,7 +240,12 @@ function join(world, line, face, x, y, events) {
 }
 
 function scatter(world, line, by, events) {
-  for (const f of line.tail) {
+  if (line.tail.length >= MOB_MIN) {
+    // A long line's animals stay together where it fell, as one mob.
+    // Its head stays with them, to lead the huddle until they are taken; the head itself is not one of them.
+    world.mobs.push({ x: line.x, y: line.y, faces: line.tail.map(f => f.face), from: line.id, lead: line.face, name: line.name, born: world.t, take: 0, leak: 0 });
+    events.push({ type: 'spill', line: line.id, name: line.name, size: line.tail.length, x: line.x, y: line.y });
+  } else for (const f of line.tail) {
     const a = world.random() * Math.PI * 2, v = 120 + world.random() * 160;
     world.strays.push({ x: f.x, y: f.y, face: f.face, a, vx: Math.cos(a) * v, vy: Math.sin(a) * v });
   }
@@ -237,7 +255,7 @@ function scatter(world, line, by, events) {
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power', ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
@@ -282,6 +300,26 @@ export function step(world, dt) {
   }
   // A taken pickup turns up again somewhere else after a while.
   if (world.items.length < world.lay && (world.later += dt) >= AGAIN) { world.later = 0; world.items.push(item(world)); }
+
+  // A mob pours into the nearest head that reaches it; left alone long enough, it breaks up into strays.
+  for (let m = world.mobs.length - 1; m >= 0; m--) {
+    const mob = world.mobs[m], r = mobReach(mob.faces.length);
+    let head = null, close = Infinity;
+    for (const line of world.lines) {
+      if (line.dead) continue;
+      const d = Math.hypot(line.x - mob.x, line.y - mob.y);
+      if (d < r + JOIN && d < close) { close = d; head = line; }
+    }
+    if (head) {
+      for (mob.take += MOB_RATE * dt; mob.take >= 1 && mob.faces.length; mob.take--) join(world, head, mob.faces.pop(), mob.x, mob.y, events);
+    } else if (world.t - mob.born > MOB_HOLD) {
+      for (mob.leak += MOB_LEAK * dt; mob.leak >= 1 && mob.faces.length; mob.leak--) {
+        const a = world.random() * Math.PI * 2, v = 60 + world.random() * 80;
+        world.strays.push({ x: mob.x + Math.cos(a) * r * 0.6, y: mob.y + Math.sin(a) * r * 0.6, face: mob.faces.pop(), a, vx: Math.cos(a) * v, vy: Math.sin(a) * v });
+      }
+    }
+    if (!mob.faces.length) world.mobs.splice(m, 1);
+  }
 
   const slow = Math.exp(-3 * dt);
   for (let i = world.strays.length - 1; i >= 0; i--) {

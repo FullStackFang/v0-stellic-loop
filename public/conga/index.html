@@ -157,7 +157,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 </section>
 
 <script type="module">
-import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD } from './conga/sim.js';
+import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD, mobReach } from './conga/sim.js';
 import { MAPS, shore } from './conga/maps.js';
 
 const $ = id => document.getElementById(id);
@@ -824,7 +824,7 @@ function draw(t, dt) {
   }
 
   // Where each animal is shown: a soft step as it walks, and a wave down the line while the line dances.
-  const sprites = [], heads = [];
+  const sprites = [], heads = [], mobTags = [];
   for (const line of world.lines) {
     if (line.dead) continue;
     const dancing = line.dance > 0, step = i => 0.5 - 0.5 * Math.cos((t * 7 - i * 0.7) * 2), shown = [{ x: line.x, y: line.y - step(0) * 2.5 }];
@@ -840,6 +840,20 @@ function draw(t, dt) {
     heads.push(line);
   }
   for (const it of world.items) if (seen(it.x, it.y)) pickup(it.kind, it.x, it.y, t);
+  // A mob, as a huddle: the fallen line's own head in the middle holding up a flag of its colour with its name and count,
+  // and at most fifteen of its animals round it, however many it holds.
+  for (const mob of world.mobs) {
+    const n = mob.faces.length, r = mobReach(n);
+    if (Math.abs(mob.x - cam.x) > halfW + r || Math.abs(mob.y - cam.y) > halfH + r + 120) continue;
+    ctx.beginPath(); ctx.ellipse(mob.x, mob.y + 16, r * 0.95, r * 0.58, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .16)'; ctx.fill();
+    const shown = Math.min(15, n);
+    for (let i = 0; i < shown; i++) {
+      const a = i * 2.39996, d = Math.sqrt((i + 0.5) / shown) * r * 0.74; // the sunflower spiral: an even huddle
+      sprites.push({ x: mob.x + Math.cos(a) * d * 1.1, y: mob.y + Math.sin(a) * d * 0.7 + 8 - Math.abs(Math.sin(t * 4 + i)) * 3, face: mob.faces[n - 1 - i], size: SIZE.stray });
+    }
+    sprites.push({ x: mob.x, y: mob.y - 6 - Math.abs(Math.sin(t * 3)) * 2, face: mob.lead, size: SIZE.head });
+    mobTags.push({ x: mob.x, y: mob.y, text: `${mob.name} · ${n}`, c: colour(mob.from) });
+  }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
   for (const s of sprites) { sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t, s.kit); }
@@ -850,6 +864,18 @@ function draw(t, dt) {
     if (age > 1) { puffs.splice(i, 1); continue; }
     ctx.strokeStyle = C.paper; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
     ctx.beginPath(); ctx.arc(puff.x, puff.y, 30 + age * 130, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  // Each huddle's flag: a pole from its leader and a pennant of the line's colour, waving, with its name and count on it.
+  for (const tag of mobTags) {
+    const px = tag.x + 22, top = tag.y - 96, wave = Math.sin(t * 4 + tag.x) * 3, size = Math.max(15, 11 / cam.z);
+    ctx.beginPath(); ctx.moveTo(px, tag.y - 10); ctx.lineTo(px, top); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); ctx.lineCap = 'butt';
+    ctx.font = `800 ${size}px Archivo, system-ui, sans-serif`;
+    const w = ctx.measureText(tag.text).width + size * 2, high = size * 2;
+    ctx.beginPath(); ctx.moveTo(px, top); ctx.quadraticCurveTo(px + w / 2, top - 4 + wave, px + w, top + wave); ctx.lineTo(px + w - size * 0.66, top + high / 2 + wave * 0.5); ctx.lineTo(px + w, top + high + wave);
+    ctx.quadraticCurveTo(px + w / 2, top + high - 4 + wave, px, top + high); ctx.closePath();
+    ctx.fillStyle = tag.c; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
+    // Ink lettering on a light flag, paper on a dark one.
+    ctx.fillStyle = Number(/([\d.]+)%/.exec(tag.c)?.[1] ?? 60) > 66 ? C.ink : C.paper; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(tag.text, px + size * 0.6, top + high / 2 + wave * 0.5);
   }
   for (const line of heads) {
     if (!seen(line.x, line.y)) continue;
@@ -875,6 +901,12 @@ function chart() {
   chartPen.setTransform(1, 0, 0, 1, 0, 0); chartPen.clearRect(0, 0, 184, 184);
   chartPen.translate(92, 92); chartPen.scale(scale, scale); chartPen.translate(-(west + east) / 2, -(north + south) / 2);
   chartPen.fillStyle = C.field; chartPen.strokeStyle = C.ink; chartPen.lineWidth = 3 / scale; chartPen.lineJoin = 'round'; chartPen.stroke(land); chartPen.fill(land);
+  // A mob pings on the small map, in the colour of the line it was.
+  for (const mob of world.mobs) {
+    const beat = (world.t % 1.2) / 1.2;
+    chartPen.beginPath(); chartPen.arc(mob.x, mob.y, (7 + beat * 14) / scale, 0, 7); chartPen.globalAlpha = 1 - beat; chartPen.strokeStyle = colour(mob.from); chartPen.lineWidth = 3 / scale; chartPen.stroke(); chartPen.globalAlpha = 1;
+    chartPen.beginPath(); chartPen.arc(mob.x, mob.y, 7 / scale, 0, 7); chartPen.fillStyle = colour(mob.from); chartPen.fill(); chartPen.strokeStyle = C.ink; chartPen.lineWidth = 2 / scale; chartPen.stroke();
+  }
   for (const it of world.items) { chartPen.beginPath(); chartPen.arc(it.x, it.y, 5 / scale, 0, 7); chartPen.fillStyle = `oklch(${OWN[it.kind]})`; chartPen.fill(); chartPen.lineWidth = 1.5 / scale; chartPen.stroke(); }
   for (const car of world.shuttles) { chartPen.beginPath(); chartPen.rect(car.x - 6 / scale, car.y - 6 / scale, 12 / scale, 12 / scale); chartPen.fillStyle = C.action; chartPen.fill(); chartPen.lineWidth = 2 / scale; chartPen.stroke(); }
   for (const line of world.lines) {
@@ -919,6 +951,8 @@ function frame(now) {
     }
     if (event.type === 'lift') { puffs.push({ x: event.x, y: event.y, t }); if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
+    // Someone else's big spill is news everywhere; a small one only near you.
+    if (event.type === 'spill' && event.line !== ME && me && !me.dead && event.by !== ME && (event.size >= 15 || Math.hypot(event.x - me.x, event.y - me.y) < 1200)) say(`${event.name} spilled ${event.size}`);
     if (event.type === 'power' && event.line === ME) {
       navigator.vibrate?.(20);
       say({ megaphone: 'Megaphone! Strays come from twice as far', coffee: 'Coffee! Dash for free', whistle: `Whistle! The ${car()} can't take anyone off your line` }[event.kind]);
