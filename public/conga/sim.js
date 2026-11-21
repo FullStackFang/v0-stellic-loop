@@ -15,12 +15,15 @@ const PULL = 150; // a stray this close is drawn to the head, faster the closer 
 const HIT = 27; // a head this close to another line's animal scatters
 const HEAD_HIT = 38;
 const STEP = 5; // distance between remembered points of a head's path
-const ROOMY = 45000; // square units of ground for each stray kept on it
+const ROOMY = 30000; // square units of ground for each stray kept on it: the grounds grew 1.5 times across, so this came down to keep them as busy
 const STRAY_CAP = 420;
-// A line has no longest length. What keeps a frame cheap is that the world holds at most BUDGET animals, in lines, loose
-// and aboard cars together: past it no new strays appear and cars set off empty, so a line grows by taking from others,
-// and one scattered feeds everyone.
-const BUDGET = 750;
+const SPROUT = 3; // strays a second that turn up on a ground below its feed
+// The world has no cap. The ground always refills to `feed` strays, and a really long line sheds from its back as it goes,
+// each one shed a stray for anyone (agar.io's decay, slither.io's trail). Barely at first, then fast as it gets huge.
+// If the lines together still pass what a slow phone can draw, step() says so ('full') and the page starts a new round.
+const EASY = 40; // a line this long or shorter sheds nothing
+const SHED = 4; // animals a second shed at EASY + 100; an eighth of that at EASY + 50 and a sixty-fourth at EASY + 25
+export const FULL = 800; // animals in all the lines together that a slow phone was measured to draw at 60 frames a second
 // A line that has picked nobody up for IDLE seconds gets restless: its back wanders off, slowly at first and faster the
 // longer the line (agar.io's decay is a share of size; slither.io has none). Picking anyone up settles it again.
 const IDLE = 10;
@@ -80,8 +83,6 @@ function spot(world, room = 0) {
   }
   return { x: world.rings[0][0][0], y: world.rings[0][0][1] };
 }
-/** Every animal in the world: in lines, loose, in mobs, and aboard cars. */
-const counted = world => world.lines.reduce((sum, line) => sum + (line.dead ? 0 : line.tail.length), world.strays.length) + world.shuttles.reduce((sum, car) => sum + car.load, 0) + world.mobs.reduce((sum, mob) => sum + mob.faces.length, 0);
 const face = world =>1 + Math.floor(world.random() * FACES);
 const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
 const KINDS = Object.keys(POWERS);
@@ -99,7 +100,7 @@ export function createWorld(random = Math.random, rings = round(), holes = [], s
   const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]);
   // A bigger ground keeps more strays on it. Outlines that overlap are counted twice, which is near enough.
   const area = rings.reduce((sum, ring) => sum + areaOf(ring), 0) - holes.reduce((sum, ring) => sum + areaOf(ring), 0);
-  const world = { t: 0, lines: [], strays: [], random, rings, holes, boxes: holes.map(boxOf), feed: Math.round(Math.min(260, Math.max(60, area / ROOMY))), shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, kept: 0, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
+  const world = { t: 0, lines: [], strays: [], random, rings, holes, boxes: holes.map(boxOf), feed: Math.round(Math.min(400, Math.max(60, area / ROOMY))), shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, kept: 0, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < world.feed) world.strays.push(stray(world));
   world.mobs = []; world.items = []; world.lay = Math.max(2, Math.round(world.feed / LYING)); world.later = 0;
   while (world.items.length < world.lay) world.items.push(item(world));
@@ -256,7 +257,7 @@ function scatter(world, line, by, events) {
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill', ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill' | 'grab' | 'full', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
@@ -283,6 +284,7 @@ export function step(world, dt) {
     line.idle += dt;
     if (was < IDLE && line.idle >= IDLE && line.tail.length) events.push({ type: 'restless', line: line.id });
     if (line.idle >= IDLE) line.wander += (WANDER + line.tail.length * WANDER_SHARE) * dt;
+    if (line.tail.length > EASY) line.wander += SHED * ((line.tail.length - EASY) / 100) ** 3 * dt;
     // One that wandered off will not come back to the line it left for a while, or walking in circles would undo it.
     const leave = shy => { const f = line.tail.pop(); world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0, ...shy }); };
     if (dashing && line.powers.coffee <= 0 && (line.drop += dt) >= DROP && line.tail.length) { line.drop = 0; leave(); }
@@ -360,7 +362,7 @@ export function step(world, dt) {
   for (const car of world.shuttles) {
     const there = car.ride, leaves = there + car.stay, back = leaves + car.ride, was = car.clock, ease = f => f * f * (3 - 2 * f);
     car.clock = (car.clock + dt) % (back + car.away);
-    if (car.clock < was) { car.load = Math.min(SEATS, (counted(world) < BUDGET ? car.riders : 0) + car.kept); car.kept = 0; } // it sets off again, full, with anyone it carried away
+    if (car.clock < was) { car.load = Math.min(SEATS, car.riders + car.kept); car.kept = 0; } // it sets off again, full, with anyone it carried away
     const at = car.clock < there ? ease(car.clock / there) : car.clock < leaves ? 1 : car.clock < back ? 1 - ease((car.clock - leaves) / car.ride) : 0;
     car.x = car.from[0] + (car.to[0] - car.from[0]) * at;
     car.y = car.from[1] + (car.to[1] - car.from[1]) * at;
@@ -391,7 +393,10 @@ export function step(world, dt) {
       events.push({ type: 'arrive', name: car.name, stop: car.stop, count, onto, x: car.off[0], y: car.off[1] });
     }
   }
-  for (let total = counted(world); world.strays.length < world.feed && total < BUDGET; total++) world.strays.push(stray(world));
+  // The ground refills at a steady rate, never all at once, so it stays busy without being bottomless.
+  for (world.sprout = (world.sprout ?? 0) + SPROUT * dt; world.sprout >= 1; world.sprout--) if (world.strays.length < world.feed) world.strays.push(stray(world));
   if (world.strays.length > STRAY_CAP) world.strays.splice(0, world.strays.length - STRAY_CAP);
+  // Once, when the lines together pass FULL: the page starts a new round.
+  if (!world.full && world.lines.reduce((sum, line) => sum + (line.dead ? 0 : line.tail.length), 0) > FULL) { world.full = true; events.push({ type: 'full' }); }
   return events;
 }

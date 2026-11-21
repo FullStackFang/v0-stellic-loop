@@ -1,37 +1,46 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { addLine, createWorld, POWERS, round, steer, step } from '@/public/conga/sim.js';
+import { addLine, createWorld, FULL, POWERS, round, steer, step } from '@/public/conga/sim.js';
 
 // The same game every run.
 function seeded(seed: number) {
   return () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; };
 }
 
-// What a frame costs follows how many animals there are and how much of its path each line remembers. The rules keep
-// both from growing as a game goes on: the world holds a fixed budget of animals, so no new ones appear once lines hold
-// most of them, and strays over the cap are taken away. A line has no longest length; it loses animals only by dashing or
-// by going a while without picking anyone up.
-// The limits here are well inside what a browser was measured to carry (2026-11-20): with the processor slowed four times, the
-// page kept 60 frames a second with 800 animals in lines and 250 strays, and fell to 30 with a single line of 400.
+// What a frame costs follows how many animals there are and how much of its path each line remembers. The ground always
+// refills and has no cap; what keeps a game drawable is that a really long line sheds from its back, faster the longer it
+// is, and that if the lines together still pass FULL the game says so and the page starts a new round.
+// The limits here are what a browser was measured to carry (2026-11-20): with the processor slowed four times, the page
+// kept 60 frames a second with 800 animals in lines and 250 strays, and fell to 30 with a single line of 400.
 // A rule that lets a game past them needs measuring again before it ships.
 it('keeps the lines, the strays and the remembered paths within what a slow phone can draw, through a long game', () => {
   const random = seeded(7);
-  const world = createWorld(random, round(), [], [{ name: 'Bus', from: [-1400, 0], to: [0, 0], off: [40, 40], riders: 18, ride: 36, stay: 5, away: 5 }] as never);
-  for (let id = 0; id < 12; id++) addLine(world, { id, face: 1, name: `Line ${id}`, bot: { skill: 0.35 + random() * 0.65, aggro: random() } as never, start: 3 + Math.floor(random() * 14) });
-  const lines = world.lines as { tail: unknown[]; path: unknown[] }[];
-  const most = { line: 0, inLines: 0, strays: 0, path: 0, aboard: 0 };
+  const fresh = () => {
+    const world = createWorld(random, round(), [], [{ name: 'Bus', from: [-1400, 0], to: [0, 0], off: [40, 40], riders: 18, ride: 36, stay: 5, away: 5 }] as never);
+    for (let id = 0; id < 12; id++) addLine(world, { id, face: 1, name: `Line ${id}`, bot: { skill: 0.35 + random() * 0.65, aggro: random() } as never, start: 3 + Math.floor(random() * 14) });
+    return world;
+  };
+  let world = fresh();
+  const most = { line: 0, inLines: 0, strays: 0, path: 0, aboard: 0, longFor: 0 };
+  let longFor = 0;
   for (let n = 0; n < 30 * 60 * 15; n++) {
-    step(world, 1 / 30);
-    let inLines = 0;
-    for (const line of lines) { inLines += line.tail.length; most.line = Math.max(most.line, line.tail.length); most.path = Math.max(most.path, line.path.length); }
+    const events = step(world, 1 / 30) as { type: string }[];
+    let inLines = 0, top = 0;
+    for (const line of world.lines as { tail: unknown[]; path: unknown[] }[]) { inLines += line.tail.length; top = Math.max(top, line.tail.length); most.path = Math.max(most.path, line.path.length); }
+    most.line = Math.max(most.line, top);
+    longFor = top > 400 ? longFor + 1 / 30 : 0; most.longFor = Math.max(most.longFor, longFor);
     most.inLines = Math.max(most.inLines, inLines); most.strays = Math.max(most.strays, world.strays.length); most.aboard = Math.max(most.aboard, world.shuttles[0].load);
+    if (events.some(event => event.type === 'full')) world = fresh(); // as the page does: a new round
+    else if (inLines > FULL) most.inLines = Infinity; // past FULL only on the frame that says so
   }
   expect(most.line).toBeGreaterThan(30); // the game did go on long enough for lines to grow
-  expect(most.inLines).toBeLessThan(800); // and so no one line passes it either
+  // A line can jump past 400 for a moment by taking a big sack, but sheds so fast up there that it never stays.
+  expect(most.longFor).toBeLessThan(2);
+  expect(most.inLines).toBeLessThan(FULL + 60); // one frame's gathering past it at the most
   expect(most.strays).toBeLessThanOrEqual(420);
-  expect(most.path).toBeLessThan(5300); // a line of the whole budget, 800, standing 33 apart on points 5 apart
+  expect(most.path).toBeLessThan(5300); // a line of 800, standing 33 apart on points 5 apart
   expect(most.aboard).toBeLessThanOrEqual(40); // a car has seats, so it cannot hand one line hundreds at once
-});
+}, 120_000);
 
 // A line that keeps gathering never shrinks on its own. One that goes ten seconds without picking anyone up starts to lose
 // its back, and walking in circles over the ones it lost does not win them back.

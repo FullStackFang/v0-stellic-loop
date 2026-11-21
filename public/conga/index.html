@@ -110,6 +110,10 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 @media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
   .card { padding: 22px 16px 20px; } .row { gap: 6px; } .go { padding: 0 13px; font-size: 17px; } .where button { padding: 0 6px; font-size: 12.5px; } .quit { padding: 0 16px; }
   .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 11px; padding: 5px 8px 5px 5px; } .pause { left: 110px; } }
+/* On a phone the animals to pick from are four to a row, each big enough for a thumb, and the scoreboard and controls
+   step aside while a card is up so nothing sits over it. */
+@media (max-width: 560px) { .faces { flex-wrap: wrap; row-gap: 12px; } .faces > button { flex: 0 0 calc(25% - 6px); }
+  body:has(.card:not([hidden])) :is(.board, .hint) { visibility: hidden; } }
 /* A long notice wraps rather than runs off a narrow screen. */
 .say { width: max-content; max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 /* A phone on its side: little height, so the scoreboard keeps its top three and you, and everything round the edge is
@@ -158,7 +162,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 
 <script type="module">
 import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD } from './conga/sim.js';
-import { MAPS, shore } from './conga/maps.js';
+import { MAPS, shore, TALL, treeWidth } from './conga/maps.js';
 import { SHEET as SCENERY, AT } from './conga/scenery.js';
 
 const $ = id => document.getElementById(id);
@@ -203,11 +207,12 @@ const ask = new URLSearchParams(location.search);
 let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * CORE), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
 window.conga = { get world() { return world; } }; // for poking at the game from the console
 
+const BOTS = 10; // lines played by the game; more fill the ground faster than it refills
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
 function open(id) {
   where = id; map = MAPS[id]; me = null;
   world = createWorld(Math.random, map.rings, map.holes, map.shuttles ?? []);
-  GROUPS[id].forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
+  GROUPS[id].slice(0, BOTS).forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
   for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
   land = new Path2D();
   for (const ring of map.rings) { ring.forEach(([x, y], i) => i ? land.lineTo(x, y) : land.moveTo(x, y)); land.closePath(); }
@@ -331,7 +336,7 @@ function finish(event) {
   best = Math.max(best, event.size);
   keep.set('conga-best', best);
   const by = world.lines.find(line => line.id === event.by);
-  $('overHead').textContent = by ? `You walked into ${by.name}` : 'Scattered';
+  $('overHead').textContent = event.full ? 'The ground filled up. New round' : by ? `You walked into ${by.name}` : 'Scattered';
   $('overCount').textContent = event.size;
   $('overBest').textContent = best;
   $('mine').hidden = $('dash').hidden = $('pause').hidden = true;
@@ -394,6 +399,7 @@ addEventListener('resize', fit); fit();
 const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [];
 const SIZE = { stray: 40, tail: 42, head: 58 };
 const SACK = 70; // how wide a spilled line's sack is drawn
+const VIEW = 920 * 575; // square units of ground on screen: 920 across on a laptop, closer in on a phone held upright
 // ---------- water, grass and trees ----------
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground: for looking at the drawing.
 const tile = (size, work) => { const sheet = document.createElement('canvas'); sheet.width = sheet.height = size; work(sheet.getContext('2d'), size); return ctx.createPattern(sheet, 'repeat'); };
@@ -530,6 +536,26 @@ function pill(text, x, y, fill, ink, size = 13, dot = '') {
   if (dot) { ctx.fillStyle = dot; ctx.beginPath(); ctx.arc(x - width / 2 + size * 0.95, y, size * 0.36, 0, 7); ctx.fill(); }
   ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + lead / 2, y + 1);
   return width;
+}
+
+// Place names (/demo/mockups-conga-labels.html, F with the paper plate). An area's name is painted into the ground, under
+// everyone: a see-through dark fill with a lit lower edge, so it reads as pressed in on grass, ground or water alike.
+function groundName(text, x, y, size) {
+  ctx.font = `900 ${size}px Archivo, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'oklch(100% 0 0 / .2)'; ctx.fillText(text, x, y + size * 0.05);
+  ctx.fillStyle = 'oklch(24% 0.05 30 / .16)'; ctx.fillText(text, x, y);
+}
+/** A building's name plate: the app's card shape (one tight corner, hard ink shadow) on paper, fixed low on the front of
+ * its toy. It grows out of the wall by `grow` (0 to 1) as the line comes near; animals in front of the building cover it. */
+function plaque(text, x, foot, grow) {
+  const size = Math.max(14, 11 / cam.z);
+  ctx.save(); ctx.translate(x, foot); ctx.scale(grow, grow);
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const w = ctx.measureText(text).width + size * 1.6, h = size * 2, r = [size * 0.7, size * 0.7, size * 0.7, size * 0.2];
+  ctx.beginPath(); ctx.roundRect(-w / 2 + 3, -h + 3, w, h, r); ctx.fillStyle = C.ink; ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, r); ctx.fillStyle = C.paper; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
+  ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, 0, -h / 2 + 1);
+  ctx.restore();
 }
 
 // A colour's parts, to make it lighter, darker or see-through: `oklch(L% C H)` in, `oklch(...)` out.
@@ -840,10 +866,8 @@ function painted(thing) {
   if (PAINT[thing.name]) return PAINT[thing.name](thing);
   lawn(thing);
 }
-// A tower's toy is drawn this much wider than the tower is on the ground, so it stands up tall above the line.
-const TALL = 2.3;
 function solid(thing, t) {
-  if (toysIn() && thing.toy) return void standing.push(thing.kind === 'tower' ? { x: thing.x, y: thing.y + 12, name: thing.toy, width: thing.w * TALL } : { x: thing.x, y: thing.y + thing.h / 2, name: thing.toy, width: thing.w });
+  if (toysIn() && thing.toy) return void standing.push(thing.kind === 'tower' ? { x: thing.x, y: thing.y + 12, name: thing.toy, width: thing.w * TALL, label: thing.name } : { x: thing.x, y: thing.y + thing.h / 2, name: thing.toy, width: thing.w, label: thing.name });
   if (LOOK[thing.name]) return LOOK[thing.name](thing);
   if (thing.kind === 'water') return lake(thing, t);
   if (thing.kind === 'tower') { ctx.strokeStyle = C.ink; ctx.lineWidth = thing.w * 0.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(thing.x, thing.y); ctx.lineTo(thing.x + 40, thing.y + 40); ctx.stroke(); } // it is tall, so its shadow is long
@@ -863,7 +887,7 @@ function draw(t, dt) {
   // Before a game the view stays with one line, the longest when it was chosen, and moves on only when that line is scattered.
   if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : followed);
-  const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.max(0.62, Math.min(wide, tall * 1.25) / 760);
+  const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.sqrt(wide * tall / VIEW); // every screen shows the same amount of ground, whatever its shape
   let zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007));
   // With the megaphone the view pulls back until its whole reach fits on the screen.
   if (!watch.dead && watch.powers?.megaphone > 0) zoom = Math.min(zoom, Math.min(wide, tall) / 2 / (LOUD + 60));
@@ -896,23 +920,23 @@ function draw(t, dt) {
   for (const thing of map.things) if ((thing.kind === 'green' || thing.kind === 'field') && near(thing)) painted(thing);
   // Every tree is the map's (maps.js), and solid: a toy standing up once the sheet is in, a drawn crown until then.
   for (const each of map.trees) if (Math.abs(each.x - cam.x) < halfW + 60 && Math.abs(each.y - cam.y) < halfH + 120) {
-    if (toysIn()) standing.push({ x: each.x, y: each.y + each.r * 0.6, name: each.kind, width: each.r * 4.2 });
+    if (toysIn()) standing.push({ x: each.x, y: each.y + each.r * 0.6, name: each.kind, width: treeWidth(each.r) });
     else tree(each.x, each.y, each.r, each.kind === 'blossom' ? C.blossom : C.tree);
   }
+  // Names painted into the ground: the areas big, and a place with no toy (a lawn, a field) smaller at its middle.
+  for (const zone of map.zones) if (Math.abs(zone.at[0] - cam.x) < halfW + 300 && Math.abs(zone.at[1] - cam.y) < halfH + 60) groundName(zone.name, zone.at[0], zone.at[1], 40);
+  for (const thing of map.things) if (!thing.from && !(toysIn() && thing.toy) && near(thing)) groundName(thing.name, thing.x, thing.y, 22);
   ctx.restore();
   for (const thing of map.things) if (thing.kind === 'bridge') { bridge(thing); cabs(thing, t); }
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing, t);
   for (const car of world.shuttles) stop(car);
   for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t);
-  for (const zone of map.zones) if (seen(...zone.at)) pill(zone.name, zone.at[0], zone.at[1], C.paper, C.ink, 22);
+  // A road or bridge's name, and the banks a bridge joins, painted on after it is drawn. Buildings carry theirs on a plaque.
   for (const thing of map.things) {
-    const across = thing.kind === 'bridge' ? 0.43 : 0.5, hard = SOLID.includes(thing.kind) || thing.kind === 'bridge';
-    // A building's name sits under it, so the building itself can be seen.
-    const standsUp = toysIn() && thing.toy;
-    const [x, y] = thing.from ? [thing.from[0] + (thing.to[0] - thing.from[0]) * across, thing.from[1] + (thing.to[1] - thing.from[1]) * across]
-      : [thing.x, standsUp ? thing.y + (thing.kind === 'tower' ? 12 : thing.h / 2) + 20 : thing.kind === 'tower' ? thing.y - 44 : thing.kind === 'hall' ? thing.y + Math.max(thing.w, thing.h) * 0.42 + 18 : thing.y];
-    if (seen(x, y)) pill(thing.name, x, y, hard ? C.ink : C.paper, hard ? C.paper : C.ink, 14);
-    if (thing.kind === 'bridge' && map.axis != null) BANKS.forEach(([, name], n) => pill(name, thing.from[0] + (thing.to[0] - thing.from[0]) * (n ? 0.93 : 0.05), thing.from[1] + (thing.to[1] - thing.from[1]) * (n ? 0.93 : 0.05) - 60, C.paper, C.ink, 22));
+    if (!thing.from) continue;
+    const across = thing.kind === 'bridge' ? 0.43 : 0.5, x = thing.from[0] + (thing.to[0] - thing.from[0]) * across, y = thing.from[1] + (thing.to[1] - thing.from[1]) * across;
+    if (seen(x, y)) groundName(thing.name, x, y, 22);
+    if (thing.kind === 'bridge' && map.axis != null) BANKS.forEach(([, name], n) => groundName(name, thing.from[0] + (thing.to[0] - thing.from[0]) * (n ? 0.93 : 0.05), thing.from[1] + (thing.to[1] - thing.from[1]) * (n ? 0.93 : 0.05) - 60, 40));
   }
 
   // A line with the megaphone: its reach opens out round it and closes again when the megaphone wears off.
@@ -961,7 +985,15 @@ function draw(t, dt) {
   for (const each of standing) if (Math.abs(each.x - cam.x) < halfW + each.width && each.y - cam.y > -halfH && each.y - cam.y < halfH + each.width * 2) sprites.push({ y: each.y, stands: each });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
   for (const s of sprites) {
-    if (s.stands) { const { x, y, name, width, flip } = s.stands; foot(x, y, width * 0.42); toy(name, x, y + width * 0.04, width, flip); continue; }
+    if (s.stands) {
+      const { x, y, name, width, flip, label } = s.stands; foot(x, y, width * 0.42); toy(name, x, y + width * 0.04, width, flip);
+      if (label) {
+        // How near you are (or, watching, the middle of the view), eased so the plate pops out rather than creeps.
+        const high = width * AT[name][3] / AT[name][2], from = me && !me.dead ? me : cam, u = Math.max(0, Math.min(1, (360 - Math.hypot(from.x - x, from.y - (y - high / 2))) / 110));
+        if (u > 0) plaque(label, x, y - high * 0.1, 0.4 + 0.6 * (1 - (1 - u) ** 3));
+      }
+      continue;
+    }
     sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t, s.kit); }
   for (const car of world.shuttles) tram(car);
   airborne(t);
@@ -1067,6 +1099,12 @@ function frame(now) {
         counts.push({ line, text: `−${event.count}`, fill: C.ink, ink: C.paper, t });
       }
       if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
+    if (event.type === 'full') {
+      // The lines together got too long to draw smoothly: the round ends with your count kept, and a fresh ground opens.
+      if (me && !me.dead) { const size = me.tail.length + 1; removeLine(world, ME); me = null; finish({ size, full: true }); }
+      open(where);
+      break;
+    }
     if (event.type === 'grab') {
       // A sack taken: a ring in the fallen line's colour where it lay, and its count by the taker's name.
       const line = world.lines.find(one => one.id === event.line);

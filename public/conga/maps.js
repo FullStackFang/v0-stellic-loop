@@ -17,18 +17,19 @@ export const TOYS = { 'Willard Straight': 'stonehall', 'Sage Chapel': 'chapel', 
   'Bailey Hall': 'dome', 'Mann Library': 'brickhall', 'Johnson Museum': 'museum', 'Risley': 'castle', 'Donlon': 'dorm', 'RPCC': 'dorm', 'Noyes': 'dorm', 'Becker House': 'brickhall',
   'CTB': 'cafe', 'McGraw Tower': 'clocktower', 'Bloomberg Center': 'bloomberg', 'Tata': 'tata', 'The House': 'tower', 'Verizon Center': 'glasshall', 'Graduate': 'tower',
   'Tram': 'station', 'Subway': 'subway', 'Smallpox Hospital': 'ruin', 'Blackwell House': 'farmhouse', 'Good Shepherd': 'stonechapel', 'The Octagon': 'octagon', 'Lighthouse': 'lighthouse', 'Beebe Lake': 'pond' };
-const POND = 300; // a pond's toy is drawn this wide, a little less than the biggest halls
-// How wide a hall's toy is, in game units, the same on every ground: a small building 85 across, growing with the real
-// one's width across the page, up to 230 for the biggest. A toy taller than it is wide is drawn narrower, so no hall
-// stands more than 1.25 times as high as a low hall of the same footprint would be wide, and the towers stand out.
-const toyWidth = (metres, toy) => { const wide = Math.min(230, 85 + metres * 0.9), [, , w, h] = AT[toy]; return h / w > 1.25 ? wide * 1.25 / (h / w) : wide; };
-// The landmarks each campus is known by are drawn bigger than the rest, so they read from across the ground.
-const PROUD = { 'Barton Hall': 1.4, 'Willard Straight': 1.35, 'Risley': 1.3, 'Bailey Hall': 1.25, 'Lynah Rink': 1.2, 'Johnson Museum': 1.15, 'Sage Chapel': 1.15,
-  'Bloomberg Center': 1.3, 'The Octagon': 1.35, 'Smallpox Hospital': 1.25, 'Tata': 1.15, 'Good Shepherd': 1.1 };
-// Trees stand on the ground as things to walk round, like halls. Only the foot of the trunk is solid, so a line can pass
-// close behind a tree and be hidden by its crown for a moment.
+const POND = 220; // a pond's toy is drawn this wide
+// Every building is drawn the same size, on every ground: HALL across, or narrower for a toy taller than it is wide, so
+// none stands more than 1.25 times HALL high. Kept small enough that the packed pictures stay sharp on screen.
+const HALL = 150;
+const toyWidth = toy => { const [, , w, h] = AT[toy]; return h / w > 1.25 ? HALL * 1.25 / (h / w) : HALL; };
+/** A tower's toy is drawn this much wider than the tower is on the ground, so it stands up tall above the line. */
+export const TALL = 2.3;
+/** How wide a tree's toy is drawn, from the tree's size. */
+export const treeWidth = r => r * 4.2;
+// Trees stand on the ground as things to walk round, like halls. A tree is solid over the whole of its toy, from its foot
+// to its crown, so walking into one is bumping into it.
 const chance = (thing, k) => { const v = Math.sin(thing.x * 12.9898 + thing.y * 4.1414 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
-const TREE_GAP = 58; // trees on a lawn keep this far apart
+const TREE_GAP = 115; // trees on a lawn keep this far apart, so a line fits between any two
 function treesOn(thing) {
   const { w, h } = thing, cos = Math.cos(thing.turn), sin = Math.sin(thing.turn), spots = [];
   const place = (px, py, r) => spots.push({ x: thing.x + px * cos - py * sin, y: thing.y + px * sin + py * cos, r, kind: 'tree' });
@@ -40,7 +41,7 @@ function treesOn(thing) {
   }
   // Round the edge, as round a quad, leaving the lawn open.
   const round = 2 * (w + h);
-  for (let k = 0; k < 4 + round / 130; k++) {
+  for (let k = 0; k < 8 + round / 60; k++) { // plenty of tries: the gap between trees decides how many stand
     let d = chance(thing, k) * round, x, y;
     const deep = 20 + chance(thing, k + 50) * 16;
     if (d < w) [x, y] = [d - w / 2, -h / 2 + deep]; else if ((d -= w) < h) [x, y] = [w / 2 - deep, d - h / 2]; else if ((d -= h) < w) [x, y] = [w / 2 - d, h / 2 - deep]; else [x, y] = [-w / 2 + deep, h / 2 - (d - w)];
@@ -48,8 +49,41 @@ function treesOn(thing) {
   }
   return spots.filter((spot, n) => spots.slice(0, n).every(other => Math.hypot(other.x - spot.x, other.y - spot.y) > TREE_GAP));
 }
-/** What a tree is solid over: a small ring round the foot of its trunk. */
-const trunk = ({ x, y, r }) => Array.from({ length: 8 }, (_, n) => [x + Math.cos(n * Math.PI / 4) * (r * 1.4 + 4), y + r * 0.6 + Math.sin(n * Math.PI / 4) * (r * 0.9 + 4)]);
+/** What a tree is solid over: an oval round its toy as drawn, with room for a face, so a head stops at its edge. */
+function crown({ x, y, r, kind }) {
+  const wide = treeWidth(r), [, , w, h] = AT[kind], high = wide * h / w, mid = y + r * 0.6 - high * 0.3, rx = wide * 0.42 + 10, ry = high * 0.42 + 10;
+  return Array.from({ length: 12 }, (_, n) => [x + Math.cos(n * Math.PI / 6) * rx, mid + Math.sin(n * Math.PI / 6) * ry]);
+}
+/** The part of the page a solid landmark covers, as [left, top, right, bottom]: a toy from its foot up to its top. */
+function cover(thing) {
+  if (thing.toy) {
+    const [, , w, h] = AT[thing.toy], wide = thing.kind === 'tower' ? thing.w * TALL : thing.w, foot = thing.kind === 'tower' ? thing.y + 12 : thing.y + thing.h / 2;
+    return [thing.x - wide / 2, foot - wide * h / w, thing.x + wide / 2, foot];
+  }
+  const half = Math.max(thing.w, thing.h) / 2;
+  return [thing.x - half, thing.y - half, thing.x + half, thing.y + half];
+}
+const SPREAD = 60; // the least room between any two landmarks as drawn, so a line can pass between them
+const onLand = (rings, x, y) => rings.some(ring => { let hit = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit; } return hit; });
+/** Moves landmarks that crowd each other apart, a little at a time, until each has room round it; one that would leave the
+ * ground stays put and its neighbour moves the whole way instead. Positions stay near the real ones. */
+function spread(things, rings) {
+  const stand = things.filter(thing => SOLID.includes(thing.kind));
+  for (let round = 0; round < 80; round++) {
+    let moved = false;
+    for (let i = 0; i < stand.length; i++) for (let j = i + 1; j < stand.length; j++) {
+      const a = stand[i], b = stand[j], A = cover(a), B = cover(b);
+      const across = Math.min(A[2], B[2]) - Math.max(A[0], B[0]) + SPREAD, down = Math.min(A[3], B[3]) - Math.max(A[1], B[1]) + SPREAD;
+      if (across <= 0 || down <= 0) continue;
+      const [dx, dy] = across < down ? [Math.sign(b.x - a.x || 1) * across, 0] : [0, Math.sign((B[3] - A[3]) || 1) * down];
+      const aFree = onLand(rings, a.x - dx / 2, a.y - dy / 2), bFree = onLand(rings, b.x + dx / 2, b.y + dy / 2);
+      const share = aFree && bFree ? 0.5 : aFree ? 1 : 0;
+      if (!aFree && !bFree) continue;
+      a.x -= dx * share; a.y -= dy * share; b.x += dx * (1 - share); b.y += dy * (1 - share); moved = true;
+    }
+    if (!moved) break;
+  }
+}
 const SOLID = ['hall', 'tower', 'water'];
 const ROOM = 1.5; // every ground is drawn this much bigger than it first was, for longer lines. Cars take this much longer to cross, at the same speed.
 /** A lake's shore wanders in and out of its oval: how far out it is, as a share of the oval, at each angle round it. */
@@ -62,11 +96,11 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
   const at = ([lon, lat]) => [(lon - lon0) * east, (lat0 - lat) * north];
   const things = landmarks.map(([kind, label, lat, lon, across, deep, turned = 0]) => {
     if (kind === 'bridge' || kind === 'road') return { kind, name: label, from: at([lon, lat]), to: at([deep, across]), w: turned * scale }; // a bridge is two ends and a width
-    const [x, y] = at([lon, lat]), size = kind === 'tower' ? [TOWER, TOWER] : [across * scale, deep * scale], turn = turned * Math.PI / 180;
+    const [x, y] = at([lon, lat]), size = kind === 'tower' ? Array(2).fill(TOYS[label] ? toyWidth(TOYS[label]) / TALL : TOWER) : [across * scale, deep * scale], turn = turned * Math.PI / 180;
     // A hall is drawn as a toy building standing up off the ground, seen from the front. What it stands on is a plain box,
     // square to the page, as wide as the toy and half as deep, so the toy covers it.
     if (kind === 'hall' && TOYS[label]) {
-      const wide = toyWidth(Math.abs(across * Math.cos(turn)) + Math.abs(deep * Math.sin(turn)), TOYS[label]) * (PROUD[label] ?? 1);
+      const wide = toyWidth(TOYS[label]);
       return { kind, name: label, toy: TOYS[label], x, y, w: wide, h: wide / 2, turn: 0 };
     }
     // A pond is a toy too, standing like a big hall: what it stands on is the oval of its stones.
@@ -80,14 +114,18 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
     return corners.map(([px, py]) => [x + px * cos - py * sin, y + px * sin + py * cos]);
   };
   const extra = more(at, scale), rings = sections.map(section => section.ring.map(at));
+  spread(things, rings);
   const trees = things.filter(thing => thing.kind === 'green').flatMap(treesOn);
   // Roosevelt Island's cherry trees: a row just in from the west shore.
   if (extra.axis != null) {
     const a = extra.axis * Math.PI / 180, edge = rings[0], mid = [edge.reduce((sum, q) => sum + q[0], 0) / edge.length, edge.reduce((sum, q) => sum + q[1], 0) / edge.length];
     edge.forEach((from, i) => { const to = edge[(i + 1) % edge.length], far = Math.hypot(to[0] - from[0], to[1] - from[1]);
-      for (let d = 40; d < far; d += 85) { const x = from[0] + (to[0] - from[0]) * d / far, y = from[1] + (to[1] - from[1]) * d / far; if ((x - mid[0]) * Math.cos(a) + (y - mid[1]) * Math.sin(a) < -60) trees.push({ x: x + Math.cos(a) * 38, y: y + Math.sin(a) * 38, r: 10, kind: 'blossom' }); } });
+      for (let d = 40; d < far; d += 160) { const x = from[0] + (to[0] - from[0]) * d / far, y = from[1] + (to[1] - from[1]) * d / far; if ((x - mid[0]) * Math.cos(a) + (y - mid[1]) * Math.sin(a) < -60) trees.push({ x: x + Math.cos(a) * 38, y: y + Math.sin(a) * 38, r: 10, kind: 'blossom' }); } });
   }
-  return { name, scale, ...extra, rings, holes: [...things.filter(thing => SOLID.includes(thing.kind)).map(outline), ...trees.map(trunk)], things, trees,
+  // A tree that a moved landmark now stands over is left out.
+  const standing = things.filter(thing => SOLID.includes(thing.kind)).map(cover);
+  const kept = trees.filter(tree => standing.every(([l, t, r, b]) => tree.x < l - 30 || tree.x > r + 30 || tree.y < t - 30 || tree.y > b + 40));
+  return { name, scale, ...extra, rings, holes: [...things.filter(thing => SOLID.includes(thing.kind)).map(outline), ...kept.map(crown)], things, trees: kept,
     zones: sections.filter(section => section.name).map(section => ({ name: section.name, at: at(section.rest) })) };
 }
 const cut = corners => (name, ring, rest) => ({ name, ring: [...ring].map(key => corners[key]), rest });
