@@ -43,7 +43,7 @@ it('keeps the lines, the strays and the remembered paths within what a slow phon
 }, 120_000);
 
 // A line that keeps gathering never shrinks on its own. One that goes ten seconds without picking anyone up starts to lose
-// its back, and walking in circles over the ones it lost does not win them back.
+// its back: those go home, so walking in circles where they were does not win them back.
 it('lets a line keep its animals while it gathers, and lets the back wander off once it stops', () => {
   const world = createWorld(seeded(3), round(), []);
   world.strays.length = 0; world.feed = 0; // nothing to pick up
@@ -59,7 +59,7 @@ it('lets a line keep its animals while it gathers, and lets the back wander off 
 // The three pickups: walked over, each does its one thing for a while, then wears off.
 type Line = { x: number; y: number; a: number; tail: unknown[]; powers: Record<string, number> };
 const alone = () => {
-  const world = createWorld(seeded(5), round(), []) as { strays: { x: number; y: number; face: number; a: number; vx: number; vy: number }[]; items: { x: number; y: number; kind: string }[]; feed: number; lay: number };
+  const world = createWorld(seeded(5), round(), []) as never as { strays: { x: number; y: number; face: number; a: number; vx: number; vy: number }[]; items: { x: number; y: number; kind: string }[]; feed: number; lay: number };
   world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0;
   const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 20 }) as Line;
   Object.assign(line, { x: 0, y: 0, a: 0 }); steer(line as never, 0, false);
@@ -96,7 +96,7 @@ it('lets a line dash for free with coffee', () => {
 
 // A long line scattered leaves its animals as one mob where it fell; a head that reaches it draws the whole mob in.
 it('leaves a scattered line as one mob that a head draws in whole, and that breaks up if nobody comes', () => {
-  const world = createWorld(seeded(11), round(), []) as { strays: unknown[]; feed: number; items: unknown[]; lay: number; mobs: { x: number; y: number; faces: number[] }[] };
+  const world = createWorld(seeded(11), round(), []) as never as { strays: unknown[]; feed: number; items: unknown[]; lay: number; mobs: { x: number; y: number; faces: number[] }[] };
   world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0;
   const big = addLine(world, { id: 'big', face: 1, name: 'Glee Club', start: 30 }) as Line & { safe: number; dead: number };
   const small = addLine(world, { id: 'small', face: 2, name: 'Risley', start: 3 }) as Line & { safe: number; dead: number };
@@ -129,7 +129,7 @@ it('leaves a scattered line as one mob that a head draws in whole, and that brea
 
 it('keeps the bus from taking anyone off a line with the whistle', () => {
   const run = (whistle: boolean) => {
-    const world = createWorld(seeded(9), round(), [], [{ name: 'Bus', from: [-1400, 0], to: [1400, 0], off: [1400, 0], riders: 0, ride: 20, stay: 5, away: 5 }] as never) as { strays: unknown[]; feed: number; items: unknown[]; lay: number };
+    const world = createWorld(seeded(9), round(), [], [{ name: 'Bus', from: [-1400, 0], to: [1400, 0], off: [1400, 0], riders: 0, ride: 20, stay: 5, away: 5 }] as never) as never as { strays: unknown[]; feed: number; items: unknown[]; lay: number };
     world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0;
     const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 20 }) as Line & { safe: number };
     Object.assign(line, { x: 0, y: 30, a: Math.PI / 2, safe: 0 });

@@ -810,7 +810,7 @@ function stop(car) {
 }
 // Riders in the air: from a car onto a line waiting at the stop, or up off the back of a line into a car. Each goes in a
 // little arc, a touch bigger at the top. `to` is followed as it moves, so a rider lands on its line wherever the line has got to.
-const hops = [], counts = [];
+const hops = [], counts = [], homes = [];
 function hopping(count, from, to, t) {
   for (let n = 0; n < Math.min(12, count); n++) hops.push({ face: 1 + Math.floor(Math.random() * FACES), from, to, t: t + n * 0.07, life: 0.5 });
 }
@@ -821,6 +821,14 @@ function airborne(t) {
     if (u < 0) continue;
     const to = hop.to(), x = hop.from.x + (to.x - hop.from.x) * u, y = hop.from.y + (to.y - hop.from.y) * u - Math.sin(u * Math.PI) * 70;
     sprite(hop.face, x, y, SIZE.stray * (1 + Math.sin(u * Math.PI) * 0.15));
+  }
+  // One going home walks off to the side of its old line with little hops, fading as it goes.
+  for (let i = homes.length - 1; i >= 0; i--) {
+    const home = homes[i], u = (t - home.t) / 0.9;
+    if (u > 1) { homes.splice(i, 1); continue; }
+    if (!seen(home.x, home.y)) continue;
+    const x = home.x + Math.cos(home.a) * 70 * u, y = home.y + Math.sin(home.a) * 70 * u - Math.abs(Math.sin(u * Math.PI * 3)) * 6;
+    sprite(home.face, x, y, SIZE.stray, 0, 1 - u * u);
   }
   // "+18" or "−6" beside a line's name for a moment, in the car's colour, rising a little as it goes.
   for (let i = counts.length - 1; i >= 0; i--) {
@@ -1099,6 +1107,7 @@ function frame(now) {
         counts.push({ line, text: `−${event.count}`, fill: C.ink, ink: C.paper, t });
       }
       if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
+    if (event.type === 'home') homes.push({ x: event.x, y: event.y, face: event.face, a: event.a + (Math.random() < 0.5 ? 1.6 : -1.6), t });
     if (event.type === 'full') {
       // The lines together got too long to draw smoothly: the round ends with your count kept, and a fresh ground opens.
       if (me && !me.dead) { const size = me.tail.length + 1; removeLine(world, ME); me = null; finish({ size, full: true }); }

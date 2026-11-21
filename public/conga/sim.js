@@ -17,7 +17,7 @@ const HEAD_HIT = 38;
 const STEP = 5; // distance between remembered points of a head's path
 const ROOMY = 30000; // square units of ground for each stray kept on it: the grounds grew 1.5 times across, so this came down to keep them as busy
 const STRAY_CAP = 420;
-const SPROUT = 3; // strays a second that turn up on a ground below its feed
+const SPROUT = 9; // strays a second that turn up on a ground below its feed
 // The world has no cap. The ground always refills to `feed` strays, and a really long line sheds from its back as it goes,
 // each one shed a stray for anyone (agar.io's decay, slither.io's trail). Barely at first, then fast as it gets huge.
 // If the lines together still pass what a slow phone can draw, step() says so ('full') and the page starts a new round.
@@ -29,7 +29,6 @@ export const FULL = 800; // animals in all the lines together that a slow phone 
 const IDLE = 10;
 const WANDER = 0.4; // animals a second off a restless line, at the least
 const WANDER_SHARE = 0.004; // and this share of the line a second on top
-const SHY = 12; // seconds before one that wandered off will join the line it left again
 const DROP = 0.45; // seconds of dashing that cost one animal
 const DANCE = 4;
 const DAZE = 0.03; // chance, each time a bot looks, that it stops looking for a moment
@@ -82,6 +81,14 @@ function spot(world, room = 0) {
     if (inside(world, x, y) && (!room || [[room, 0], [-room, 0], [0, room], [0, -room]].every(([dx, dy]) => inside(world, x + dx, y + dy)))) return { x, y };
   }
   return { x: world.rings[0][0][0], y: world.rings[0][0][1] };
+}
+/** The nearest open ground to a point, looking outwards in rings; anywhere open if there is none near. */
+function outTo(world, x, y) {
+  for (let far = 20; far <= 400; far += 20) for (let n = 0; n < 16; n++) {
+    const a = n * Math.PI / 8, px = x + Math.cos(a) * far, py = y + Math.sin(a) * far;
+    if (inside(world, px, py)) return { x: px, y: py };
+  }
+  return spot(world);
 }
 const face = world =>1 + Math.floor(world.random() * FACES);
 const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
@@ -285,10 +292,13 @@ export function step(world, dt) {
     if (was < IDLE && line.idle >= IDLE && line.tail.length) events.push({ type: 'restless', line: line.id });
     if (line.idle >= IDLE) line.wander += (WANDER + line.tail.length * WANDER_SHARE) * dt;
     if (line.tail.length > EASY) line.wander += SHED * ((line.tail.length - EASY) / 100) ** 3 * dt;
-    // One that wandered off will not come back to the line it left for a while, or walking in circles would undo it.
-    const leave = shy => { const f = line.tail.pop(); world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0, ...shy }); };
-    if (dashing && line.powers.coffee <= 0 && (line.drop += dt) >= DROP && line.tail.length) { line.drop = 0; leave(); }
-    for (; line.wander >= 1; line.wander--) if (line.tail.length) leave({ shy: line.id, until: world.t + SHY });
+    // One dropped by dashing is an ordinary stray, anyone's to pick up, its own line's too. One that wanders off a line too
+    // long or too idle goes home: it leaves the game ('home', for the page to show it walking off), so a line cannot
+    // undo its shedding by circling, and nothing lies on the ground that cannot be picked up.
+    if (dashing && line.powers.coffee <= 0 && (line.drop += dt) >= DROP && line.tail.length) {
+      line.drop = 0; const f = line.tail.pop(); world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
+    }
+    for (; line.wander >= 1; line.wander--) if (line.tail.length) { const f = line.tail.pop(); events.push({ type: 'home', x: f.x, y: f.y, face: f.face, a: line.a }); }
     line.safe = Math.max(0, line.safe - dt);
     line.spared = Math.max(0, line.spared - dt);
     line.dance = Math.max(0, line.dance - dt);
@@ -331,7 +341,7 @@ export function step(world, dt) {
     // Each head draws strays from its own reach, twice as far with a megaphone; the nearest head that reaches one has it.
     let head = null, close = Infinity, span = PULL;
     for (const line of world.lines) {
-      if (line.dead || (s.shy === line.id && world.t < s.until)) continue;
+      if (line.dead) continue;
       const d = Math.hypot(line.x - s.x, line.y - s.y), r = reachOf(line);
       if (d < r && d < close) { close = d; head = line; span = r; }
     }
@@ -340,6 +350,9 @@ export function step(world, dt) {
       join(world, head, s.face, s.x, s.y, events);
       continue;
     }
+    // One that landed somewhere no head can reach (spilled or dropped into a building, a tree or the water) steps out to the
+    // nearest open ground, or failing that anywhere open, so every animal lying about can be picked up.
+    if (!inside(world, s.x, s.y)) { Object.assign(s, outTo(world, s.x, s.y)); s.vx = s.vy = 0; continue; }
     s.a += (world.random() - 0.5) * 2 * dt;
     s.vx *= slow; s.vy *= slow;
     const pull = head ? (170 + 280 * (1 - close / span)) / (close || 1) : 0;
