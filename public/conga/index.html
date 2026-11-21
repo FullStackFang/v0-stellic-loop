@@ -212,7 +212,7 @@ function inward(ring, by) {
     return [x + turn * nx / l * by, y + turn * ny / l * by];
   });
 }
-let hem;
+let hem, shallowsEdge;
 let world, map, land, me = null, aim = 0, followed = null;
 const ask = new URLSearchParams(location.search);
 let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * CORE), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
@@ -230,6 +230,9 @@ function open(id) {
   // The running stitch just inside each area's edge: round the mat, and two rows where two areas are sewn together.
   hem = new Path2D();
   for (const ring of map.rings) { inward(ring, 18).forEach(([x, y], i) => i ? hem.lineTo(x, y) : hem.moveTo(x, y)); hem.closePath(); }
+  // The stitch at the outer edge of the shallows, out in the water.
+  shallowsEdge = new Path2D();
+  for (const ring of map.rings) { inward(ring, -50).forEach(([x, y], i) => i ? shallowsEdge.lineTo(x, y) : shallowsEdge.moveTo(x, y)); shallowsEdge.closePath(); }
   const lead = world.lines.reduce((a, b) => a.tail.length >= b.tail.length ? a : b), pin = map.things.find(thing => thing.name === ask.get('at'));
   held = pin ? { x: pin.x + Number(ask.get('dx') ?? 0), y: pin.y + Number(ask.get('dy') ?? 0), dead: true, tail: [] } : null;
   document.body.classList.toggle('bare', !!held);
@@ -471,25 +474,27 @@ function squiggles(t, x, y, w, h) {
   }
   ctx.globalAlpha = 1;
 }
-// With the toys the water is clay, as the toys would be made: soft matte teal with no ink, paler where it is shallow along
-// every shore, the bank's shadow just off it, and the bank's lit lip just inside the ground (/demo/mockups-conga-water.html, A).
-const CLAY = { deep: 'oklch(67% 0.1 218)', mid: 'oklch(73% 0.1 210)', shallow: 'oklch(80% 0.09 200)', shade: 'oklch(40% 0.06 220 / .18)', lip: 'oklch(99% 0.01 60 / .3)' };
-/** The shallows going out from ground that is about to be filled over them. */
-function shallows(path) { ctx.lineJoin = 'round'; for (const [w, c] of [[140, CLAY.mid], [52, CLAY.shallow], [24, CLAY.shade]]) { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.stroke(path); } }
-/** The bank's lit lip, just inside the ground's edge. */
-function lip(path) { ctx.save(); ctx.clip(path); ctx.strokeStyle = CLAY.lip; ctx.lineWidth = 20; ctx.lineJoin = 'round'; ctx.stroke(path); ctx.restore(); }
-// Soft glints drifting on open water, each coming and going.
+// The water is felt too (founder, 2026-11-21): deep blue felt, a paler felt band of shallows along every shore with a
+// running stitch at its edge, and waves stitched in here and there.
+const WATER = { deep: 'oklch(64% 0.1 228)', shallow: 'oklch(75% 0.085 215)', thread: 'oklch(90% 0.04 210)' };
+/** The shallows going out from ground that is about to be filled over them, stitched along `edge` out in the water. */
+function shallows(path, edge = null) {
+  ctx.lineJoin = 'round'; ctx.strokeStyle = WATER.shallow; ctx.lineWidth = 120; ctx.stroke(path);
+  if (edge) stitch(WATER.thread, 2.6, [10, 8], edge);
+}
+// Waves stitched into the open water, here and there.
 function glints(t, x, y, w, h) {
   for (let gx = Math.floor(x / 220) * 220; gx < x + w; gx += 220) for (let gy = Math.floor(y / 220) * 220; gy < y + h; gy += 220) {
     const here = { x: gx, y: gy }; if (chance(here, 4) > 0.5) continue;
-    const life = (t * 0.08 + chance(here, 3)) % 1;
-    ctx.beginPath(); ctx.ellipse(gx + 40 + chance(here, 1) * 140 + life * 40, gy + 40 + chance(here, 2) * 140, 30, 6, -0.15, 0, 7);
-    ctx.fillStyle = `oklch(97% 0.02 200 / ${Math.sin(life * Math.PI) * 0.35})`; ctx.fill();
+    // A wave stitched into the felt: two little humps in pale thread.
+    const wx = gx + 40 + chance(here, 1) * 140, wy = gy + 40 + chance(here, 2) * 140;
+    ctx.beginPath(); ctx.arc(wx - 14, wy, 14, Math.PI * 1.1, Math.PI * 1.9); ctx.moveTo(wx + 14 + 14 * Math.cos(Math.PI * 1.1), wy + 14 * Math.sin(Math.PI * 1.1)); ctx.arc(wx + 14, wy, 14, Math.PI * 1.1, Math.PI * 1.9);
+    stitch(WATER.thread, 2.4, [6, 5]);
   }
 }
 // The open water round an island.
 function sea(t, x, y, w, h) {
-  if (toysIn()) { ctx.fillStyle = CLAY.deep; ctx.fillRect(x, y, w, h); if (quality < 2) { glints(t, x, y, w, h); shallows(land); } return; }
+  if (toysIn()) { ctx.fillStyle = WATER.deep; ctx.fillRect(x, y, w, h); if (quality < 2) glints(t, x, y, w, h); shallows(land, shallowsEdge); return; }
   ctx.fillStyle = style.deep; ctx.fillRect(x, y, w, h);
   if (quality === 2) return;
   toonShore(t, land, 1);
@@ -762,7 +767,10 @@ function banks(reach) {
     if (Math.abs(vx) > half + reach) continue;
     const west = Math.max(10 - half, vx - reach), east = Math.min(half - 10, vx + reach), top = vy - reach, foot = vy + reach;
     ctx.save(); ctx.translate(Math.cos(a) * far, Math.sin(a) * far); ctx.rotate(a);
-    if (toysIn()) { const bank = new Path2D(); bank.rect(-half, top - 20, half * 2, reach * 2 + 40); shallows(bank); ctx.fillStyle = FELT.table; ctx.fill(bank); lip(bank); }
+    if (toysIn()) {
+      const bank = new Path2D(), edge = new Path2D(); bank.rect(-half, top - 20, half * 2, reach * 2 + 40); edge.rect(-half - 50, top - 70, half * 2 + 100, reach * 2 + 140);
+      shallows(bank, edge); ctx.save(); ctx.translate(0, 6); ctx.fillStyle = FELT.under; ctx.fill(bank); ctx.restore(); ctx.fillStyle = FELT.table; ctx.fill(bank);
+    }
     else { ctx.beginPath(); ctx.rect(-half, top - 20, half * 2, reach * 2 + 40); ctx.fillStyle = C.town; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.stroke(); }
     ctx.beginPath(); for (let y = Math.ceil(top / block) * block; y < foot; y += block) { ctx.moveTo(west, y); ctx.lineTo(east, y); } for (let x = -2580 * k; x < east; x += avenue) if (x > west) { ctx.moveTo(x, top); ctx.lineTo(x, foot); }
     ctx.strokeStyle = C.trim; ctx.lineWidth = 7; ctx.stroke(); ctx.restore();
@@ -960,11 +968,9 @@ function draw(t, dt) {
   if (map.water) sea(t, cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2);
   else { ctx.fillStyle = FELT.table; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
   if (map.axis != null) { boats(t); banks(Math.hypot(halfW, halfH)); }
-  // The mat: on clay water it has the water's lit lip; on the table, the felt's thickness under it.
-  const clay = toysIn() && map.water;
-  if (!clay) { ctx.save(); ctx.translate(0, 6); ctx.fillStyle = FELT.under; ctx.fill(land); ctx.restore(); }
+  // The mat, with the felt's thickness under it, on the table or on the felt water alike.
+  ctx.save(); ctx.translate(0, 6); ctx.fillStyle = FELT.under; ctx.fill(land); ctx.restore();
   ctx.fillStyle = FELT.mat; ctx.fill(land);
-  if (clay) lip(land);
   ctx.save(); ctx.clip(land);
   // Where one area is sewn to the next, a darker seam; the running stitch round each area runs either side of it.
   if (map.rings.length > 1) { ctx.strokeStyle = FELT.seam; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.stroke(land); }
@@ -1011,7 +1017,7 @@ function draw(t, dt) {
   for (let i = smoke.length - 1; i >= 0; i--) {
     const puff = smoke[i], age = (t - puff.t) / 0.7;
     if (age > 1) { smoke.splice(i, 1); continue; }
-    ctx.beginPath(); ctx.arc(puff.x, puff.y - age * 14, 7 + age * 16, 0, 7); ctx.fillStyle = `oklch(96% 0.008 60 / ${0.75 * (1 - age)})`; ctx.fill();
+    ctx.beginPath(); ctx.arc(puff.x, puff.y - age * 14, (7 + age * 16) * (puff.big ?? 1), 0, 7); ctx.fillStyle = `oklch(96% 0.008 60 / ${0.75 * (1 - age)})`; ctx.fill();
   }
 
   // Where each animal is shown: a soft step as it walks, and a wave down the line while the line dances.
@@ -1032,10 +1038,14 @@ function draw(t, dt) {
   }
   for (const it of world.items) if (seen(it.x, it.y)) pickup(it.kind, it.x, it.y, t);
   // A mob is a sack (/demo/mockups-conga-pond.html, A), with how many it holds on a tag in the fallen line's colour.
+  // A sack just flung from a burst line flies in an arc from where the line fell, spinning a little, its shadow on the ground.
   for (const mob of world.mobs) {
-    if (Math.abs(mob.x - cam.x) > halfW + 80 || Math.abs(mob.y - cam.y) > halfH + 160) continue;
-    if (toysIn()) standing.push({ x: mob.x, y: mob.y + 22, name: 'sack', width: SACK });
-    mobTags.push({ x: mob.x, y: mob.y, text: `${mob.faces.length}`, c: colour(mob.from) });
+    const u = mob.ready > world.t ? 1 - (mob.ready - world.t) / mob.fly : 1, x = mob.fx == null ? mob.x : mob.fx + (mob.x - mob.fx) * u, y = mob.fy == null ? mob.y : mob.fy + (mob.y - mob.fy) * u;
+    if (Math.abs(x - cam.x) > halfW + 80 || Math.abs(y - cam.y) > halfH + 160) continue;
+    const lift = u < 1 ? Math.sin(u * Math.PI) * 140 : 0, spin = u < 1 ? (1 - u) * 5 * (mob.x > mob.fx ? 1 : -1) : 0;
+    if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width: SACK, lift, spin });
+    if (u >= 1) mobTags.push({ x, y, text: `${mob.faces.length}`, c: colour(mob.from) });
+    else if (u > 0.92 && !mob.landed) { mob.landed = true; smoke.push({ x, y: y + 18, t, big: 1.4 }, { x: x - 20, y: y + 22, t, big: 1 }, { x: x + 20, y: y + 22, t, big: 1 }); }
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   // The toys that stand on the ground go in among the animals, each by where its foot is.
@@ -1043,7 +1053,9 @@ function draw(t, dt) {
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
   for (const s of sprites) {
     if (s.stands) {
-      const { x, y, name, width, flip, label } = s.stands; foot(x, y, width * 0.42); toy(name, x, y + width * 0.04, width, flip);
+      const { x, y, name, width, flip, label, lift = 0, spin = 0 } = s.stands; foot(x, y, width * 0.42 * (1 - lift / 300));
+      if (lift || spin) { ctx.save(); ctx.translate(x, y - lift - width * 0.4); ctx.rotate(spin); toy(name, 0, width * 0.44, width, flip); ctx.restore(); }
+      else toy(name, x, y + width * 0.04, width, flip);
       if (label) {
         // How near you are (or, watching, the middle of the view), eased so the plate pops out rather than creeps.
         const high = width * AT[name][3] / AT[name][2], from = me && !me.dead ? me : cam, u = Math.max(0, Math.min(1, (360 - Math.hypot(from.x - x, from.y - (y - high / 2))) / 110));
@@ -1156,6 +1168,11 @@ function frame(now) {
         counts.push({ line, text: `−${event.count}`, fill: C.ink, ink: C.paper, t });
       }
       if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
+    // An animal owed from a sack or a car steps into the line out of a little cloud at its head.
+    if (event.type === 'pop' && Math.abs(event.x - cam.x) < wide / cam.z && Math.abs(event.y - cam.y) < tall / cam.z) {
+      const a = Math.random() * Math.PI * 2;
+      smoke.push({ x: event.x + Math.cos(a) * 14, y: event.y + Math.sin(a) * 8 + 6, t, big: 1.5 + Math.random() * 0.6 });
+    }
     if (event.type === 'home') homes.push({ x: event.x, y: event.y, face: event.face, a: event.a + (Math.random() < 0.5 ? 1.6 : -1.6), t });
     if (event.type === 'full') {
       // The lines together got too long to draw smoothly: the round ends with your count kept, and a fresh ground opens.

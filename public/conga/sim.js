@@ -49,6 +49,10 @@ const AGAIN = 6; // seconds before a taken pickup is replaced somewhere else
 // so a big spill costs no more to run or draw than a small one. It is drawn as one sack with its count on it, and a head
 // that reaches it takes the whole count at once. Left alone, it breaks up into strays after a while.
 const MOB_MIN = 6; // a line shorter than this just scatters
+const PILE = 12; // animals to a sack when a long line bursts; never more than PILES sacks
+const PILES = 8;
+const FLING = [150, 420]; // how far the sacks land from where the line fell
+const FLY = 0.7; // seconds a sack is in the air, and cannot be taken
 const MOB_HOLD = 12; // seconds a mob stays whole
 const MOB_LEAK = 3; // animals a second it loses after that, as strays
 /** How far from its middle a mob reaches: the sack is the same size however much it holds. */
@@ -122,7 +126,7 @@ export function place(world, line, start = 0) {
     at = spot(world, 120);
   }
   const a = world.random() * Math.PI * 2;
-  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, safe: SAFE, dance: 0, drop: 0, idle: 0, wander: 0, powers: { megaphone: 0, coffee: 0, whistle: 0 }, top: 0, slack: 0, spared: 0, path: [{ ...at }] });
+  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, owed: [], owing: 0, safe: SAFE, dance: 0, drop: 0, idle: 0, wander: 0, powers: { megaphone: 0, coffee: 0, whistle: 0 }, top: 0, slack: 0, spared: 0, path: [{ ...at }] });
   line.tail = Array.from({ length: start }, () => ({ face: face(world), ...at }));
   return line;
 }
@@ -248,23 +252,41 @@ function join(world, line, face, x, y, events) {
   }
 }
 
+/** A line owed a sack's or a car's animals takes them one after another at its head, each out of a puff ('pop'), quickly
+ * while many are owed and slower as they run out: all at once they would pile up at the back of the line. */
+const OWE = 8, OWE_SHARE = 0.6; // animals a second at the least, and this share of those still owed on top
+function owe(world, line, dt, events) {
+  if (!line.owed.length) { line.owing = 0; return; }
+  for (line.owing += (OWE + line.owed.length * OWE_SHARE) * dt; line.owing >= 1 && line.owed.length; line.owing--) {
+    join(world, line, line.owed.shift(), line.x, line.y, events);
+    events.push({ type: 'pop', line: line.id, x: line.x, y: line.y, left: line.owed.length });
+  }
+}
+
 function scatter(world, line, by, events) {
-  if (line.tail.length >= MOB_MIN) {
-    // A long line's animals stay together where it fell, as one mob.
+  if (line.tail.length + line.owed.length >= MOB_MIN) {
+    // A long line bursts into sacks flung all round where it fell, which whoever wants them has to go and get.
     // The head itself is not one of them.
-    world.mobs.push({ x: line.x, y: line.y, faces: line.tail.map(f => f.face), from: line.id, lead: line.face, name: line.name, born: world.t, leak: 0 });
-    events.push({ type: 'spill', line: line.id, name: line.name, size: line.tail.length, x: line.x, y: line.y });
+    const faces = [...line.tail.map(f => f.face), ...line.owed], piles = Math.min(PILES, Math.ceil(faces.length / PILE)), turn = world.random() * Math.PI * 2;
+    for (let n = 0; n < piles; n++) {
+      const a = turn + n * Math.PI * 2 / piles + (world.random() - 0.5) * 0.6, far = FLING[0] + world.random() * (FLING[1] - FLING[0]);
+      let x = line.x + Math.cos(a) * far, y = line.y + Math.sin(a) * far;
+      if (!inside(world, x, y)) ({ x, y } = outTo(world, x, y));
+      const share = faces.splice(0, Math.ceil(faces.length / (piles - n)));
+      world.mobs.push({ x, y, fx: line.x, fy: line.y, ready: world.t + FLY, fly: FLY, faces: share, from: line.id, lead: line.face, name: line.name, born: world.t, leak: 0 });
+    }
+    events.push({ type: 'spill', line: line.id, name: line.name, size: line.tail.length + line.owed.length, piles, x: line.x, y: line.y });
   } else for (const f of line.tail) {
     const a = world.random() * Math.PI * 2, v = 120 + world.random() * 160;
     world.strays.push({ x: f.x, y: f.y, face: f.face, a, vx: Math.cos(a) * v, vy: Math.sin(a) * v });
   }
   events.push({ type: 'scatter', line: line.id, by: by.id, size: line.tail.length + 1, x: line.x, y: line.y });
-  line.tail = [];
+  line.tail = []; line.owed = [];
   line.dash = false;
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill' | 'grab' | 'full', ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill' | 'grab' | 'pop' | 'full', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
@@ -286,6 +308,7 @@ export function step(world, dt) {
     if (Math.hypot(line.x - line.path[0].x, line.y - line.path[0].y) >= STEP) line.path.unshift({ x: line.x, y: line.y });
     line.slack *= Math.exp(-7 * dt);
     follow(line, dt);
+    owe(world, line, dt, events);
     // Dashing costs animals off the back, and so does a line that has gone a while without picking anyone up.
     const was = line.idle;
     line.idle += dt;
@@ -319,13 +342,13 @@ export function step(world, dt) {
     const mob = world.mobs[m], r = mobReach();
     let head = null, close = Infinity;
     for (const line of world.lines) {
-      if (line.dead) continue;
+      if (line.dead || world.t < (mob.ready ?? 0)) continue; // still in the air
       const d = Math.hypot(line.x - mob.x, line.y - mob.y);
       if (d < r + JOIN && d < close) { close = d; head = line; }
     }
     if (head) {
       events.push({ type: 'grab', line: head.id, from: mob.from, count: mob.faces.length, x: mob.x, y: mob.y });
-      while (mob.faces.length) join(world, head, mob.faces.pop(), mob.x, mob.y, events);
+      head.owed.push(...mob.faces.splice(0)); // they join one after another (see owe)
     } else if (world.t - mob.born > MOB_HOLD) {
       for (mob.leak += MOB_LEAK * dt; mob.leak >= 1 && mob.faces.length; mob.leak--) {
         const a = world.random() * Math.PI * 2, v = 60 + world.random() * 80;
@@ -401,7 +424,7 @@ export function step(world, dt) {
       const count = car.load, waiting = world.lines.filter(line => !line.dead && Math.hypot(line.x - car.off[0], line.y - car.off[1]) < PLAZA), onto = waiting.map(line => ({ line: line.id, count: 0 }));
       for (let n = 0; car.load > 0; n++) {
         if (!waiting.length) { out(car.off[0], car.off[1], 210); continue; }
-        join(world, waiting[n % waiting.length], face(world), car.off[0], car.off[1], events); onto[n % waiting.length].count++; car.load--;
+        waiting[n % waiting.length].owed.push(face(world)); onto[n % waiting.length].count++; car.load--;
       }
       events.push({ type: 'arrive', name: car.name, stop: car.stop, count, onto, x: car.off[0], y: car.off[1] });
     }

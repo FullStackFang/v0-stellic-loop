@@ -107,16 +107,23 @@ it('leaves a scattered line as one mob that a head draws in whole, and that brea
   (big.tail as { x: number; y: number }[]).forEach((f, i) => Object.assign(f, { x: -33 * (i + 1), y: 0 }));
   (small.tail as { x: number; y: number }[]).forEach((f, i) => Object.assign(f, { x: 10, y: 60 - 33 * (i + 1) }));
   const events = step(world, 1 / 30) as { type: string; size?: number }[];
-  expect(events).toContainEqual(expect.objectContaining({ type: 'spill', size: 30 }));
-  expect(world.mobs).toHaveLength(1);
-  expect(world.strays).toHaveLength(0); // none of them flew off loose
-  // The small line reaches the mob and takes all thirty at once.
-  const mob = world.mobs[0], before = small.tail.length;
+  expect(events).toContainEqual(expect.objectContaining({ type: 'spill', size: 30, piles: 3 }));
+  // Thirty burst into three sacks flung away from where the line fell, none of them loose.
+  expect(world.mobs).toHaveLength(3);
+  expect(world.mobs.reduce((sum, mob) => sum + mob.faces.length, 0)).toBe(30);
+  expect(world.strays).toHaveLength(0);
+  for (const mob of world.mobs) expect(Math.hypot(mob.x - big.x, mob.y - big.y)).toBeGreaterThan(100);
+  // A sack in the air cannot be taken.
+  const mob = world.mobs[0], held = mob.faces.length, before = small.tail.length;
   Object.assign(small, { x: mob.x + 20, y: mob.y }); steer(small as never, 0, false);
-  const taken = step(world, 1 / 30) as { type: string; count?: number }[];
-  expect(taken).toContainEqual(expect.objectContaining({ type: 'grab', count: 30 }));
-  expect(world.mobs).toHaveLength(0);
-  expect(small.tail.length).toBe(before + 30);
+  expect(step(world, 1 / 30)).not.toContainEqual(expect.objectContaining({ type: 'grab' }));
+  // Landed, the small line takes it whole, and its animals step into the line one after another, not all at once.
+  for (let n = 0; n < 30; n++) { Object.assign(small, { x: mob.x + 20, y: mob.y }); step(world, 1 / 30); }
+  expect(world.mobs).not.toContain(mob);
+  expect(small.tail.length).toBeLessThan(before + held);
+  for (let n = 0; n < 60; n++) step(world, 1 / 30);
+  expect(small.tail.length).toBe(before + held);
+  world.mobs.length = 0;
   // A mob nobody reaches stays whole for a while, then breaks up into strays.
   world.mobs.push({ x: -800, y: 0, faces: Array(20).fill(1), from: 'x', born: (world as never as { t: number }).t, leak: 0 } as never);
   Object.assign(small, { x: 800, y: 0 });
