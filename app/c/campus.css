@@ -852,10 +852,20 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-rail > .cs-ev.open + .cs-sheet::after { left: 18px; right: 18px; top: -1px; bottom: auto; border-left: 0; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
   .cs-tabs { flex-wrap: wrap; }
 }
-/* Picking an animal, the account card is as wide as the window allows, as the group picture's card is: more in a row, less to scroll, and no bar drawn */
-.cs-lvl:has(.cs-pets-grid) { width: min(960px, calc(100vw - 28px)); }
-.cs-lvl .cs-pets-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
-.cs-lvl:has(.cs-pets-grid) .cs-lvl-body { max-height: min(72vh, 720px); scrollbar-width: none; scrollbar-gutter: auto; } .cs-lvl:has(.cs-pets-grid) .cs-lvl-body::-webkit-scrollbar { display: none; }
+/* Picking an animal (public/demo/mockups-picture-card-height.html, C), here and in the group picture's card: the card is 560 wide
+   and stops above the window's bottom edge, and only the animals scroll, with no bar drawn and a fade at their foot. Search has a
+   line of its own, the filters sit under it with their word and how many they show, and Shuffle and Done stay in sight in the foot. */
+.cs-lvl:has(.cs-pets-grid) { display: flex; flex-direction: column; width: min(560px, calc(100vw - 28px)); max-height: calc(100dvh - 120px); }
+.cs-lvl:has(.cs-pets-grid) > .cs-lvl-top { flex: none; }
+.cs .cs-lvl .cs-pets:has(.cs-pets-grid) { flex: 1 1 auto; min-height: 0; max-height: none; display: flex; flex-direction: column; overflow: hidden; }
+.cs-pets:has(.cs-pets-grid) > .seats-pics { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none; margin: 12px -4px 0; padding: 4px 4px 24px; -webkit-mask: linear-gradient(#000 calc(100% - 28px), #0000); mask: linear-gradient(#000 calc(100% - 28px), #0000); }
+.cs-pets:has(.cs-pets-grid) > .seats-pics::-webkit-scrollbar { display: none; }
+.cs-lvl .cs-pets-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); margin-top: 0; }
+.cs-pets-top { flex-wrap: wrap; row-gap: 10px; } .cs-pets-top input { flex: 1 1 100%; height: 40px; }
+.cs-pets-top .cs-btn { height: 40px; } .cs-pets-top .cs-btn svg, .cs-pets-top .cs-btn .cs-ink { width: 20px; height: 20px; }
+.cs-pets-top .cs-btn small { display: inline; margin: 0; font-size: 12.5px; font-weight: 700; color: inherit; opacity: .7; }
+.cs-pets-foot { flex: none; display: flex; align-items: center; gap: 8px; margin: 0 -20px -16px; padding: 12px 20px 14px; border-top: 1px solid var(--cs-line); }
+.cs-pets .cs-pets-foot small { margin: 0 auto 0 0; } .cs-pets-foot .cs-btn { height: 40px; } .cs-pets-foot .cs-btn svg { width: 18px; height: 18px; }
 
 /* Phones: the bar is one row: the wordmark, the face, and a menu button. Everything else in the bar (the links, the organizers'
    door, Groups, On you) folds into the menu: pressed, it opens as a card under the bar, one wide pill each, and a counter's
