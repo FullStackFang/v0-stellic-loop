@@ -31,6 +31,9 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .hint { display: grid; gap: 4px; padding: 7px 10px 7px 7px; border-radius: 14px 14px 14px 4px; font-size: 12px; font-weight: 600; }
 .hint span { display: flex; align-items: center; gap: 6px; }
 .hint kbd { font: inherit; font-weight: 800; padding: 1px 8px; border-radius: 99px; background: var(--ink); color: var(--paper); }
+/* What each pickup does, under the controls: its picture and a few words. */
+.hint .it { gap: 5px; } .hint .it:first-of-type { margin-top: 4px; padding-top: 6px; box-shadow: 0 -1.5px 0 var(--line); }
+.hint .it img { width: 22px; height: 22px; margin: -2px 0; }
 .board { width: 190px; padding: 6px; border-radius: 16px 16px 16px 4px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .board div { display: flex; align-items: center; gap: 7px; padding: 2px 8px 2px 3px; border-radius: 99px; font-size: 13px; font-weight: 600; }
 .board div.me { background: var(--ink); color: var(--paper); }
@@ -154,7 +157,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 </section>
 
 <script type="module">
-import { createWorld, addLine, place, steer, step, removeLine, FACES, PLAZA } from './conga/sim.js';
+import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD, mobReach } from './conga/sim.js';
 import { MAPS, shore } from './conga/maps.js';
 
 const $ = id => document.getElementById(id);
@@ -178,12 +181,19 @@ const KITS = { loop: ['oklch(96.4% 0.19 117)', 'oklch(47.6% 0.13 250)'], cornell
   cuny: ['oklch(88% 0.13 88)', 'oklch(38% 0.18 264)'], nyu: ['oklch(85% 0.09 305)', 'oklch(40% 0.2 305)'] };
 const cut = (face, picture = pet.src) => !face ? `background: var(--field) url(${picture}) center / contain no-repeat; border-radius: 50%` : `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (Math.ceil(FACES / COLS) - 1) * 100}%`;
 const faceTag = (face, picture) => `<span class="face" style="${cut(face, picture)}"></span>`;
+// The pickups, drawn as toys in the animals' style (scripts/pickup-art.ts), and each one's own colour, for its light on the ground.
+const ART = Object.fromEntries(Object.keys(POWERS).map(kind => [kind, Object.assign(new Image(), { src: `./conga/pickups/${kind}.v1.webp` })]));
+const OWN = { megaphone: '62% 0.2 27', coffee: '62% 0.09 60', whistle: '84% 0.16 88' };
 const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
 
 // The other lines. In live play these are people; here each one is a bot with its own nerve and temper.
-const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'Big Red Band', 'Club Frisbee', 'Glee Club', 'West Campus', 'Olin late shift', 'Slope Day crew', 'Ag Quad lab'],
-  'cornell-tech': ['Bloomberg 2F', 'Tata studio', 'The House 12', 'Studio team 4', 'Johnson MBA', 'Tram regulars', 'Jacobs', 'Health Tech', 'Connective Media', 'Urban Tech', 'Cafe line'] };
-const tint = n => `oklch(64% 0.17 ${[125, 235, 80, 305, 165, 0, 200, 140, 55, 270, 330][n]})`;
+// The grounds grew half again (maps.js ROOM), so each has more lines on it.
+const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'Big Red Band', 'Club Frisbee', 'Glee Club', 'West Campus', 'Olin late shift', 'Slope Day crew', 'Ag Quad lab', 'Collegetown', 'Rowing', 'Hotelies', 'Mews Hall', 'Dairy Bar line', 'Physics 1112'],
+  'cornell-tech': ['Bloomberg 2F', 'Tata studio', 'The House 12', 'Studio team 4', 'Johnson MBA', 'Tram regulars', 'Jacobs', 'Health Tech', 'Connective Media', 'Urban Tech', 'Cafe line', 'Runway', 'Startup Studio', 'Ferry crew', 'Bloomberg 3F', 'Run club', 'Verizon EC'] };
+// Each line's rope colour, one for every line on a ground, told apart by hue and by lightness, and kept off the coral ground and your own red.
+const TINTS = ['88% 0.17 98', '62% 0.2 262', '74% 0.2 140', '62% 0.24 320', '76% 0.13 195', '55% 0.2 290', '82% 0.16 125', '66% 0.22 350', '62% 0.13 225', '72% 0.17 305', '58% 0.14 165',
+  '46% 0.13 150', '88% 0.08 230', '45% 0.17 300', '90% 0.11 165', '72% 0.13 85', '42% 0.06 260'];
+const tint = n => `oklch(${TINTS[n % TINTS.length]})`;
 const ME = 'me';
 const colour = id => id === ME ? C.action : tint(id);
 
@@ -212,7 +222,9 @@ function open(id) {
   document.body.classList.toggle('bare', !!held);
   followed = lead; cam.x = (held ?? lead).x; cam.y = (held ?? lead).y;
   for (const button of $('where').children) button.setAttribute('aria-pressed', button.dataset.map === id);
+  controls(); // the whistle's words name this ground's bus or tram
 }
+const car = () => map?.shuttles?.[0]?.name.toLowerCase() ?? 'bus';
 
 // ---------- the cards ----------
 function offer() {
@@ -280,8 +292,10 @@ $('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {
 function begin() {
   const animal = mine && you?.ink ? own() : null, face = animal ? animal.face : picked;
   keep.set('conga-face', animal ? 'mine' : picked);
-  if (me) place(world, me);
-  else me = addLine(world, { id: ME, face, name: 'You' });
+  // Every game starts from scratch: while the card was up the bots kept playing, and some grew huge. A new world puts
+  // them all back at their starting sizes.
+  open(where);
+  me = addLine(world, { id: ME, face, name: 'You' });
   me.ink = !!you?.plus || ask.has('ink'); // someone with Ink+ sparkles, whichever animal they play; `?ink` shows it to anyone, `?ink=nyu` in a school's colours
   me.kit = animal?.kit ?? (KITS[ask.get('ink')] ? ask.get('ink') : you?.kit ?? 'cornell'); // the colours it sparkles in: the school of the animal, else the player's
   me.face = face;
@@ -293,8 +307,11 @@ function begin() {
 $('go').onclick = $('again').onclick = begin;
 
 // What the controls are, in a word each, under the scoreboard for the whole game: for a mouse and keys, or a thumb.
+// Under them, what each pickup does, in a few words beside its picture.
 function controls() {
-  $('hint').innerHTML = (touched ? [['Drag', 'steer'], ['Dash', 'faster']] : [['Mouse', 'steer'], ['Space', 'dash'], ['P', 'pause']]).map(([key, does]) => `<span><kbd>${key}</kbd>${does}</span>`).join('');
+  const does = { megaphone: 'Pulls from twice as far', coffee: 'Dash for free', whistle: `The ${car()} can't take any` };
+  $('hint').innerHTML = (touched ? [['Drag', 'steer'], ['Dash', 'faster']] : [['Mouse', 'steer'], ['Space', 'dash'], ['P', 'pause']]).map(([key, does]) => `<span><kbd>${key}</kbd>${does}</span>`).join('')
+    + Object.entries(does).map(([kind, words]) => `<span class="it"><img src="${ART[kind].src}" alt="${kind[0].toUpperCase() + kind.slice(1)}">${words}</span>`).join('');
 }
 
 // A game alone can be stopped and picked up again. Nothing moves while it is paused.
@@ -380,7 +397,7 @@ function fit() {
 addEventListener('resize', fit); fit();
 
 // ---------- drawing ----------
-const cam = { x: 0, y: 0, z: 1 }, puffs = [];
+const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [];
 const SIZE = { stray: 40, tail: 42, head: 58 };
 // ---------- water, grass and trees ----------
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground: for looking at the drawing.
@@ -508,18 +525,62 @@ function pill(text, x, y, fill, ink, size = 13, dot = '') {
   ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fill();
   if (dot) { ctx.fillStyle = dot; ctx.beginPath(); ctx.arc(x - width / 2 + size * 0.95, y, size * 0.36, 0, 7); ctx.fill(); }
   ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + lead / 2, y + 1);
+  return width;
 }
 
-// The rope a line holds: baker's twine in the line's colour, drawn as one smooth curve through the animals.
-function rope(points, stripe) {
+// A colour's parts, to make it lighter, darker or see-through: `oklch(L% C H)` in, `oklch(...)` out.
+function tone(colour, { light = 0, chroma = 1, alpha = 1 } = {}) {
+  const got = /oklch\(\s*([\d.]+)%?\s+([\d.]+)\s+([\d.]+)/.exec(colour);
+  if (!got) return colour;
+  return `oklch(${Math.min(97, Math.max(15, Number(got[1]) + light))}% ${(Number(got[2]) * chroma).toFixed(3)} ${got[3]} / ${alpha})`;
+}
+
+// The megaphone's reach round a line: a thin cord of the line's own rope lying on the ground, lit along its top, its
+// strands crawling slowly round, with the line's colour glowing just inside it. `open` runs 0 to 1 as it opens and closes.
+// It keeps one thickness on the screen however far the view pulls back.
+function reachRing(x, y, colour, open, t) {
+  const ease = 1 - (1 - open) ** 3, r = LOUD * ease, w = Math.min(1.3, Math.max(1, 0.9 / cam.z));
+  if (r < 8) return;
+  ctx.save(); ctx.globalAlpha = Math.min(1, open * 2.5);
+  const glow = ctx.createRadialGradient(x, y, r * 0.84, x, y, r);
+  glow.addColorStop(0, tone(colour, { alpha: 0 })); glow.addColorStop(1, tone(colour, { alpha: 0.16 }));
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = glow; ctx.fill();
+  const ring = (dy = 0) => { ctx.beginPath(); ctx.arc(x, y + dy, r, 0, Math.PI * 2); };
+  ring(4 * w); ctx.strokeStyle = 'oklch(24% 0.035 30 / .2)'; ctx.lineWidth = 9 * w; if (quality === 0) ctx.filter = `blur(${2.5 * w}px)`; ctx.stroke(); ctx.filter = 'none';
+  ring(); ctx.strokeStyle = C.ink; ctx.lineWidth = 9 * w; ctx.stroke();
+  ctx.strokeStyle = colour; ctx.lineWidth = 5.5 * w; ctx.stroke();
+  ctx.setLineDash([3 * w, 4 * w]); ctx.lineDashOffset = -t * 16 * w; ctx.strokeStyle = tone(colour, { light: -14, alpha: 0.5 }); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+  ring(-1.3 * w); ctx.strokeStyle = tone(colour, { light: 22, chroma: 0.6, alpha: 0.7 }); ctx.lineWidth = 1.4 * w; ctx.stroke();
+  ctx.restore();
+}
+
+// A pickup lying on the ground: a soft column of its own colour rising behind it, so it is seen from across the map, and
+// the pickup floating a little over its shadow.
+function pickup(kind, x, y, t, size = 50) {
+  const c = OWN[kind], s = t + x * 0.013, lift = 6 + Math.sin(s * 2.6) * 4, foot = y + size * 0.42, high = size * 2.3, wide = size * (0.36 + Math.sin(s * 3.1) * 0.03);
+  const beam = ctx.createLinearGradient(0, foot, 0, foot - high);
+  beam.addColorStop(0, `oklch(${c} / .55)`); beam.addColorStop(0.45, `oklch(${c} / .22)`); beam.addColorStop(1, `oklch(${c} / 0)`);
+  ctx.beginPath(); ctx.moveTo(x - wide, foot); ctx.lineTo(x - wide * 0.7, foot - high); ctx.lineTo(x + wide * 0.7, foot - high); ctx.lineTo(x + wide, foot); ctx.closePath(); ctx.fillStyle = beam; ctx.fill();
+  const core = ctx.createLinearGradient(0, foot, 0, foot - high * 0.8);
+  core.addColorStop(0, 'oklch(99% 0.02 80 / .5)'); core.addColorStop(1, 'oklch(99% 0.02 80 / 0)');
+  ctx.fillStyle = core; ctx.fillRect(x - wide * 0.22, foot - high * 0.8, wide * 0.44, high * 0.8);
+  ctx.beginPath(); ctx.ellipse(x, foot, wide * 1.15, wide * 0.37, 0, 0, 7); ctx.fillStyle = `oklch(${c} / .5)`; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x, foot, size * 0.34 - lift * 0.6, size * 0.1 - lift * 0.15, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .22)'; ctx.fill();
+  const art = ART[kind]; if (art.complete && art.naturalWidth) ctx.drawImage(art, x - size / 2, y - size / 2 - lift, size, size);
+}
+
+// The rope a line holds, in the line's own colour so lines can be told apart, with a light twist along it like twine.
+// Drawn as one smooth curve through the animals. With the whistle, a yellow band runs round it.
+function rope(points, colour, band = false) {
   const low = 13;
   ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
   for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
   ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
   ctx.lineJoin = ctx.lineCap = 'round';
-  ctx.strokeStyle = C.ink; ctx.lineWidth = 13; ctx.stroke();
-  ctx.strokeStyle = C.twine; ctx.lineWidth = 8; ctx.stroke();
-  ctx.lineCap = 'butt'; ctx.setLineDash([8, 8]); ctx.strokeStyle = stripe; ctx.stroke(); ctx.setLineDash([]);
+  if (band) { ctx.strokeStyle = C.ink; ctx.lineWidth = 30; ctx.stroke(); ctx.strokeStyle = `oklch(${OWN.whistle})`; ctx.lineWidth = 25; ctx.stroke(); }
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 16; ctx.stroke();
+  ctx.strokeStyle = colour; ctx.lineWidth = 10; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([5, 9]); ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
 }
 
 // ---------- what makes a ground its own place ----------
@@ -595,26 +656,28 @@ const PAINT = {
     ctx.beginPath(); ctx.rect(-narrow - 6, h / 2 - 4, narrow * 2 + 12, narrow * 2 + 12); inked(C.paper, 3); ring(0, h / 2 + 4, 5); inked(C.stone, 2); }),
 };
 
-// The far banks, with their street grids: Manhattan to the west and Queens to the east.
+// The far banks, with their street grids: Manhattan to the west and Queens to the east. These and the boats were placed
+// for the island drawn at 2 units a metre, so they move with it when it is drawn bigger.
 const BANKS = [[-880, 'Manhattan'], [1080, 'Queens']];
+const across = () => map.scale / 2;
 function banks(reach) {
-  const a = map.axis * Math.PI / 180;
+  const a = map.axis * Math.PI / 180, k = across(), half = 3000 * k, block = 170 * k, avenue = 420 * k;
   for (const [off] of BANKS) {
     // Where the view is on this bank, in the bank's own turned frame. Only the streets in view are drawn.
-    const far = off + Math.sign(off) * 3000, rx = cam.x - Math.cos(a) * far, ry = cam.y - Math.sin(a) * far, vx = rx * Math.cos(a) + ry * Math.sin(a), vy = ry * Math.cos(a) - rx * Math.sin(a);
-    if (Math.abs(vx) > 3000 + reach) continue;
-    const west = Math.max(-2990, vx - reach), east = Math.min(2990, vx + reach), top = vy - reach, foot = vy + reach;
+    const far = (off + Math.sign(off) * 3000) * k, rx = cam.x - Math.cos(a) * far, ry = cam.y - Math.sin(a) * far, vx = rx * Math.cos(a) + ry * Math.sin(a), vy = ry * Math.cos(a) - rx * Math.sin(a);
+    if (Math.abs(vx) > half + reach) continue;
+    const west = Math.max(10 - half, vx - reach), east = Math.min(half - 10, vx + reach), top = vy - reach, foot = vy + reach;
     ctx.save(); ctx.translate(Math.cos(a) * far, Math.sin(a) * far); ctx.rotate(a);
-    ctx.beginPath(); ctx.rect(-3000, top - 20, 6000, reach * 2 + 40); ctx.fillStyle = C.town; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.stroke();
-    ctx.beginPath(); for (let y = Math.ceil(top / 170) * 170; y < foot; y += 170) { ctx.moveTo(west, y); ctx.lineTo(east, y); } for (let x = -2580; x < east; x += 420) if (x > west) { ctx.moveTo(x, top); ctx.lineTo(x, foot); }
+    ctx.beginPath(); ctx.rect(-half, top - 20, half * 2, reach * 2 + 40); ctx.fillStyle = C.town; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.stroke();
+    ctx.beginPath(); for (let y = Math.ceil(top / block) * block; y < foot; y += block) { ctx.moveTo(west, y); ctx.lineTo(east, y); } for (let x = -2580 * k; x < east; x += avenue) if (x > west) { ctx.moveTo(x, top); ctx.lineTo(x, foot); }
     ctx.strokeStyle = C.trim; ctx.lineWidth = 7; ctx.stroke(); ctx.restore();
   }
 }
 // A ferry up the east channel and a tug down the west one.
 function boats(t) {
-  const a = map.axis * Math.PI / 180;
-  for (const [off, speed, fill] of [[900, 70, C.paper], [-690, -45, C.action]]) {
-    const along = ((t * speed % 9000) + 9000) % 9000 - 4500;
+  const a = map.axis * Math.PI / 180, k = across(), loop = 9000 * k;
+  for (const [off, speed, fill] of [[900 * k, 70, C.paper], [-690 * k, -45, C.action]]) {
+    const along = ((t * speed % loop) + loop) % loop - loop / 2;
     ctx.save(); ctx.translate(Math.cos(a) * off + Math.sin(a) * along, Math.sin(a) * off - Math.cos(a) * along); ctx.rotate(a + (speed < 0 ? Math.PI : 0));
     ctx.strokeStyle = C.paper; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-12, 44); ctx.lineTo(-26, 96); ctx.moveTo(12, 44); ctx.lineTo(26, 96); ctx.stroke(); // its wake
     ctx.beginPath(); ctx.moveTo(0, -46); ctx.quadraticCurveTo(20, -20, 18, 0); ctx.lineTo(18, 38); ctx.lineTo(-18, 38); ctx.lineTo(-18, 0); ctx.quadraticCurveTo(-20, -20, 0, -46); ctx.closePath(); inked(fill, 3.5);
@@ -699,7 +762,10 @@ function draw(t, dt) {
   if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : followed);
   const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.max(0.62, Math.min(wide, tall * 1.25) / 760);
-  const zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007)), slide = 1 - Math.exp(-dt * (watch === me ? 9 : 2.5));
+  let zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007));
+  // With the megaphone the view pulls back until its whole reach fits on the screen.
+  if (!watch.dead && watch.powers?.megaphone > 0) zoom = Math.min(zoom, Math.min(wide, tall) / 2 / (LOUD + 60));
+  const slide = 1 - Math.exp(-dt * (watch === me ? 9 : 2.5));
   cam.x += (watch.x - cam.x) * slide; cam.y += (watch.y - cam.y) * slide; cam.z += (zoom - cam.z) * (1 - Math.exp(-dt * 3));
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -739,8 +805,26 @@ function draw(t, dt) {
     if (thing.kind === 'bridge' && map.axis != null) BANKS.forEach(([, name], n) => pill(name, thing.from[0] + (thing.to[0] - thing.from[0]) * (n ? 0.93 : 0.05), thing.from[1] + (thing.to[1] - thing.from[1]) * (n ? 0.93 : 0.05) - 60, C.paper, C.ink, 22));
   }
 
+  // A line with the megaphone: its reach opens out round it and closes again when the megaphone wears off.
+  for (const line of world.lines) {
+    const on = !line.dead && line.powers.megaphone > 0;
+    line.heard = (line.heard ?? 0) + ((on ? 1 : 0) - (line.heard ?? 0)) * (1 - Math.exp(-dt * (on ? 5 : 7)));
+    if (line.heard > 0.01 && !line.dead && Math.abs(line.x - cam.x) < halfW + LOUD && Math.abs(line.y - cam.y) < halfH + LOUD) reachRing(line.x, line.y, colour(line.id), line.heard, t);
+  }
+  // A line dashing on coffee leaves a puff of smoke behind its head every few steps.
+  for (const line of world.lines) {
+    if (line.dead || !line.dash || !line.tail.length || line.powers.coffee <= 0 || (line.fume = (line.fume ?? 0) + dt) < 0.05) continue;
+    line.fume = 0;
+    if (seen(line.x, line.y)) smoke.push({ x: line.x - Math.cos(line.a) * 22 + (Math.random() - 0.5) * 10, y: line.y - Math.sin(line.a) * 22 + 8, t });
+  }
+  for (let i = smoke.length - 1; i >= 0; i--) {
+    const puff = smoke[i], age = (t - puff.t) / 0.7;
+    if (age > 1) { smoke.splice(i, 1); continue; }
+    ctx.beginPath(); ctx.arc(puff.x, puff.y - age * 14, 7 + age * 16, 0, 7); ctx.fillStyle = `oklch(96% 0.008 60 / ${0.75 * (1 - age)})`; ctx.fill();
+  }
+
   // Where each animal is shown: a soft step as it walks, and a wave down the line while the line dances.
-  const sprites = [], heads = [];
+  const sprites = [], heads = [], mobTags = [];
   for (const line of world.lines) {
     if (line.dead) continue;
     const dancing = line.dance > 0, step = i => 0.5 - 0.5 * Math.cos((t * 7 - i * 0.7) * 2), shown = [{ x: line.x, y: line.y - step(0) * 2.5 }];
@@ -749,11 +833,26 @@ function draw(t, dt) {
       shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - step(i + 1) * (dancing ? 8 : 2.5), face: f.face, tilt: dancing ? beat * 0.35 : 0,
         size: SIZE.tail * (1 + (world.t - f.born < 0.4 ? 0.35 * Math.sin((world.t - f.born) / 0.4 * Math.PI) : 0)) }); // a newcomer swells for a moment as it falls in
     });
-    if (line.tail.length && shown.some(each => seen(each.x, each.y))) rope(shown, colour(line.id));
+    if (line.tail.length && shown.some(each => seen(each.x, each.y))) rope(shown, colour(line.id), line.powers.whistle > 0);
     for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push(shown[i]);
     const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
     sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1, ink: line.ink, kit: line.kit });
     heads.push(line);
+  }
+  for (const it of world.items) if (seen(it.x, it.y)) pickup(it.kind, it.x, it.y, t);
+  // A mob, as a huddle: the fallen line's own head in the middle holding up a flag of its colour with its name and count,
+  // and at most fifteen of its animals round it, however many it holds.
+  for (const mob of world.mobs) {
+    const n = mob.faces.length, r = mobReach(n);
+    if (Math.abs(mob.x - cam.x) > halfW + r || Math.abs(mob.y - cam.y) > halfH + r + 120) continue;
+    ctx.beginPath(); ctx.ellipse(mob.x, mob.y + 16, r * 0.95, r * 0.58, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .16)'; ctx.fill();
+    const shown = Math.min(15, n);
+    for (let i = 0; i < shown; i++) {
+      const a = i * 2.39996, d = Math.sqrt((i + 0.5) / shown) * r * 0.74; // the sunflower spiral: an even huddle
+      sprites.push({ x: mob.x + Math.cos(a) * d * 1.1, y: mob.y + Math.sin(a) * d * 0.7 + 8 - Math.abs(Math.sin(t * 4 + i)) * 3, face: mob.faces[n - 1 - i], size: SIZE.stray });
+    }
+    sprites.push({ x: mob.x, y: mob.y - 6 - Math.abs(Math.sin(t * 3)) * 2, face: mob.lead, size: SIZE.head });
+    mobTags.push({ x: mob.x, y: mob.y, text: `${mob.name} · ${n}`, c: colour(mob.from) });
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
@@ -766,7 +865,33 @@ function draw(t, dt) {
     ctx.strokeStyle = C.paper; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
     ctx.beginPath(); ctx.arc(puff.x, puff.y, 30 + age * 130, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
   }
-  for (const line of heads) if (seen(line.x, line.y)) pill(`${line.name} · ${line.tail.length + 1}`, line.x, line.y - 46, line === me ? C.action : C.ink, C.paper);
+  // Each huddle's flag: a pole from its leader and a pennant of the line's colour, waving, with its name and count on it.
+  for (const tag of mobTags) {
+    const px = tag.x + 22, top = tag.y - 96, wave = Math.sin(t * 4 + tag.x) * 3, size = Math.max(15, 11 / cam.z);
+    ctx.beginPath(); ctx.moveTo(px, tag.y - 10); ctx.lineTo(px, top); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); ctx.lineCap = 'butt';
+    ctx.font = `800 ${size}px Archivo, system-ui, sans-serif`;
+    const w = ctx.measureText(tag.text).width + size * 2, high = size * 2;
+    ctx.beginPath(); ctx.moveTo(px, top); ctx.quadraticCurveTo(px + w / 2, top - 4 + wave, px + w, top + wave); ctx.lineTo(px + w - size * 0.66, top + high / 2 + wave * 0.5); ctx.lineTo(px + w, top + high + wave);
+    ctx.quadraticCurveTo(px + w / 2, top + high - 4 + wave, px, top + high); ctx.closePath();
+    ctx.fillStyle = tag.c; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
+    // Ink lettering on a light flag, paper on a dark one.
+    ctx.fillStyle = Number(/([\d.]+)%/.exec(tag.c)?.[1] ?? 60) > 66 ? C.ink : C.paper; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(tag.text, px + size * 0.6, top + high / 2 + wave * 0.5);
+  }
+  for (const line of heads) {
+    if (!seen(line.x, line.y)) continue;
+    const across = pill(`${line.name} · ${line.tail.length + 1}`, line.x, line.y - 46, line === me ? C.action : C.ink, C.paper);
+    // What the line holds, beside its name: the pickup on a paper disc, with its time running down round it in the line's colour.
+    let x = line.x + across / 2 + 4;
+    for (const kind of Object.keys(POWERS)) {
+      const left = line.powers[kind];
+      if (left <= 0) continue;
+      const r = Math.max(14, 11 / cam.z); x += r + 4;
+      ctx.beginPath(); ctx.arc(x, line.y - 46, r, 0, 7); ctx.fillStyle = C.paper; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, line.y - 46, r + 3.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left / POWERS[kind]); ctx.strokeStyle = colour(line.id); ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.stroke(); ctx.lineCap = 'butt';
+      const art = ART[kind]; if (art.complete && art.naturalWidth) ctx.drawImage(art, x - r * 0.8, line.y - 46 - r * 0.8, r * 1.6, r * 1.6);
+      x += r + 4;
+    }
+  }
 }
 
 // The small map: the whole ground in its real shape, and where every line is on it.
@@ -776,6 +901,13 @@ function chart() {
   chartPen.setTransform(1, 0, 0, 1, 0, 0); chartPen.clearRect(0, 0, 184, 184);
   chartPen.translate(92, 92); chartPen.scale(scale, scale); chartPen.translate(-(west + east) / 2, -(north + south) / 2);
   chartPen.fillStyle = C.field; chartPen.strokeStyle = C.ink; chartPen.lineWidth = 3 / scale; chartPen.lineJoin = 'round'; chartPen.stroke(land); chartPen.fill(land);
+  // A mob pings on the small map, in the colour of the line it was.
+  for (const mob of world.mobs) {
+    const beat = (world.t % 1.2) / 1.2;
+    chartPen.beginPath(); chartPen.arc(mob.x, mob.y, (7 + beat * 14) / scale, 0, 7); chartPen.globalAlpha = 1 - beat; chartPen.strokeStyle = colour(mob.from); chartPen.lineWidth = 3 / scale; chartPen.stroke(); chartPen.globalAlpha = 1;
+    chartPen.beginPath(); chartPen.arc(mob.x, mob.y, 7 / scale, 0, 7); chartPen.fillStyle = colour(mob.from); chartPen.fill(); chartPen.strokeStyle = C.ink; chartPen.lineWidth = 2 / scale; chartPen.stroke();
+  }
+  for (const it of world.items) { chartPen.beginPath(); chartPen.arc(it.x, it.y, 5 / scale, 0, 7); chartPen.fillStyle = `oklch(${OWN[it.kind]})`; chartPen.fill(); chartPen.lineWidth = 1.5 / scale; chartPen.stroke(); }
   for (const car of world.shuttles) { chartPen.beginPath(); chartPen.rect(car.x - 6 / scale, car.y - 6 / scale, 12 / scale, 12 / scale); chartPen.fillStyle = C.action; chartPen.fill(); chartPen.lineWidth = 2 / scale; chartPen.stroke(); }
   for (const line of world.lines) {
     if (line.dead) continue;
@@ -819,6 +951,13 @@ function frame(now) {
     }
     if (event.type === 'lift') { puffs.push({ x: event.x, y: event.y, t }); if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
+    // Someone else's big spill is news everywhere; a small one only near you.
+    if (event.type === 'spill' && event.line !== ME && me && !me.dead && event.by !== ME && (event.size >= 15 || Math.hypot(event.x - me.x, event.y - me.y) < 1200)) say(`${event.name} spilled ${event.size}`);
+    if (event.type === 'power' && event.line === ME) {
+      navigator.vibrate?.(20);
+      say({ megaphone: 'Megaphone! Strays come from twice as far', coffee: 'Coffee! Dash for free', whistle: `Whistle! The ${car()} can't take anyone off your line` }[event.kind]);
+    }
+    if (event.type === 'restless' && event.line === ME) say('Nobody new for a while. The back of your line is wandering off');
   }
   draw(t, dt);
   if (stick) {

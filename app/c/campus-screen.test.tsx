@@ -1033,7 +1033,7 @@ describe('the pages', () => {
       expect(screen.getByRole('link', { name: new RegExp(`^${section} ?[0-9]+$`) })).toHaveAttribute('aria-current', 'page');
       for (const field of document.querySelectorAll('input[name=tab]')) expect(field).toHaveValue(tab);
       if (tab === 'rewards') expect(screen.getByText(/Chess Club: Skip the door/)).toBeInTheDocument();
-      // Animals are picked, any number of them, and moved together.
+      // Animals are picked one at a time; each opens with its own moves.
       if (tab === 'animals') { expect(screen.getAllByRole('checkbox')).toHaveLength(48); expect(screen.getByRole('checkbox', { name: 'Dachshund' })).toHaveAttribute('name', 'face'); expect(screen.getByRole('link', { name: 'School 11' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=school'); expect(screen.getByRole('link', { name: 'Premium 1' })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals&show=premium'); for (const core of screen.getAllByRole('button', { name: 'Core' })) expect(core).toHaveAttribute('value', 'core'); }
     }
   });

@@ -10,6 +10,7 @@
 const PAD = 14; // how far outside a solid landmark's wall a walker's middle is stopped, so faces do not overlap the wall
 const TOWER = 48; // a tower is drawn this many game units across whatever the map's scale, or it would be a dot
 const SOLID = ['hall', 'tower', 'water'];
+const ROOM = 1.5; // every ground is drawn this much bigger than it first was, for longer lines. Cars take this much longer to cross, at the same speed.
 /** A lake's shore wanders in and out of its oval: how far out it is, as a share of the oval, at each angle round it. */
 export const shore = a => 1 + 0.09 * Math.sin(3 * a + 1) + 0.05 * Math.sin(5 * a + 2.3);
 
@@ -29,7 +30,7 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
     const corners = kind === 'hall' ? [[-a, -b], [a, -b], [a, b], [-a, b]] : Array.from({ length: 30 }, (_, n) => [Math.cos(n * Math.PI / 15) * a * far(n * Math.PI / 15), Math.sin(n * Math.PI / 15) * b * far(n * Math.PI / 15)]);
     return corners.map(([px, py]) => [x + px * cos - py * sin, y + px * sin + py * cos]);
   };
-  return { name, ...more(at, scale), rings: sections.map(section => section.ring.map(at)), holes: things.filter(thing => SOLID.includes(thing.kind)).map(outline), things,
+  return { name, scale, ...more(at, scale), rings: sections.map(section => section.ring.map(at)), holes: things.filter(thing => SOLID.includes(thing.kind)).map(outline), things,
     zones: sections.filter(section => section.name).map(section => ({ name: section.name, at: at(section.rest) })) };
 }
 const cut = corners => (name, ring, rest) => ({ name, ring: [...ring].map(key => corners[key]), rest });
@@ -40,7 +41,7 @@ const island = cut({ a: [-73.9622, 40.7492], b: [-73.9570, 40.7500], c: [-73.947
 const GRID = 38; // Roosevelt Island's buildings stand along the island, which runs this many degrees east of north
 
 export const MAPS = {
-  cornell: ground('Ithaca', 1.15, [
+  cornell: ground('Ithaca', 1.15 * ROOM, [
     ithaca('Downtown', 'abcde', [-76.4968, 42.4418]), ithaca('Collegetown', 'bihgfdc', [-76.4862, 42.4424]), ithaca('West Campus', 'djklm', [-76.4930, 42.4500]),
     ithaca('Central Campus', 'dfgqpolm', [-76.4868, 42.4502]), ithaca('North Campus', 'oprstu', [-76.4790, 42.4548]), ithaca('Ag Quad', 'gwvrpq', [-76.4758, 42.4500])], [
     // The bus up the hill from the Commons to campus. The real route 10 winds; this one is drawn straight, by hand.
@@ -69,9 +70,9 @@ export const MAPS = {
     ['hall', 'Becker House', 42.44824, -76.48947, 97, 92],
     ['hall', 'CTB', 42.44225, -76.48547, 40, 40]],
     // The bus climbs slowly from the Commons, lets its riders off by Statler, and rolls back down empty.
-    at => ({ shuttles: [{ name: 'Bus', kind: 'bus', stop: 'Statler', from: at([-76.49790, 42.43960]), to: at([-76.48400, 42.44602]), off: at([-76.48340, 42.44650]), riders: 18, ride: 36, stay: 5, away: 5 }] })),
+    at => ({ shuttles: [{ name: 'Bus', kind: 'bus', stop: 'Statler', from: at([-76.49790, 42.43960]), to: at([-76.48400, 42.44602]), off: at([-76.48340, 42.44650]), riders: 18, ride: 36 * ROOM, stay: 5, away: 5 }] })),
   // One section, tip to tip, so it carries no section name.
-  'cornell-tech': ground('Roosevelt Island', 2, [island('', 'abcdefgh', [-73.9552, 40.7562])], [
+  'cornell-tech': ground('Roosevelt Island', 2 * ROOM, [island('', 'abcdefgh', [-73.9552, 40.7562])], [
     // From the Manhattan end, over the island beside the tram station, and on the same line to Queens.
     ['bridge', 'Queensboro Bridge', 40.75971, -73.96129, 40.75302, -73.94593, 34],
     // Main Street, from the subway up to the Octagon, a little west of the buildings that front it. Placed by hand.
@@ -95,5 +96,5 @@ export const MAPS = {
     at => ({ water: true, axis: GRID,
       // The tram comes over very slowly from Second Avenue beside the bridge, lets its riders off on the plaza just past the
       // station, and goes back empty. Its Manhattan end is placed by hand.
-      shuttles: [{ name: 'Tram', stop: 'the station', from: at([-73.96413, 40.76127]), to: at([-73.9540884, 40.7573223]), off: at([-73.95383, 40.75757]), riders: 18, ride: 32, stay: 5, away: 5 }] })),
+      shuttles: [{ name: 'Tram', stop: 'the station', from: at([-73.96413, 40.76127]), to: at([-73.9540884, 40.7573223]), off: at([-73.95383, 40.75757]), riders: 18, ride: 32 * ROOM, stay: 5, away: 5 }] })),
 };

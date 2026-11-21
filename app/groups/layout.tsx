@@ -15,7 +15,6 @@ import { SiteFoot } from '@/components/campus/foot';
 import { SignOut } from '@/components/campus/sign-out';
 import { findCampus } from '@/lib/campus/listings';
 import { DEFAULT_CAMPUS } from '@/lib/campus/schools';
-import { kitScript } from '@/lib/campus/kit-script';
 import { barScreen } from '@/lib/campus/screen';
 import { campusViewer, lookingAt, type CampusViewer } from '@/lib/campus/session';
 import type { Screen } from '@/lib/campus/view';
@@ -53,7 +52,7 @@ export default async function GroupsLayout({ children }: { children: React.React
     const [groups, { screen, ...look }, viewer] = await Promise.all([barGroups(principal), seen.then(account), seen]);
     // The colours they may wear: Loopd's and their schools', or every school's with Ink+ (components/campus/kit.tsx).
     const yours = viewer?.kits ?? ['loop', look.kit], any = viewer?.anyKit ?? false;
-    content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit, yours, any) }} /><Kit own={look.kit} yours={yours} any={any} />
+    content = <div className="cs gb"><Kit own={look.kit} yours={yours} any={any} />
       <Bar groups={groups} kits={yours} anyKit={any} face={look.face} plan={look.plan} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} first />}><OnYou /></Suspense></Bar>
       <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div><SiteFoot /></div>;
   }

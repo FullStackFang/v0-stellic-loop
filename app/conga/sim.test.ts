@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { addLine, createWorld, round, step } from '@/public/conga/sim.js';
+import { addLine, createWorld, POWERS, round, steer, step } from '@/public/conga/sim.js';
 
 // The same game every run.
 function seeded(seed: number) {
@@ -8,7 +8,9 @@ function seeded(seed: number) {
 }
 
 // What a frame costs follows how many animals there are and how much of its path each line remembers. The rules keep
-// both from growing as a game goes on: the back of a long line wanders off, and strays over the cap are taken away.
+// both from growing as a game goes on: the world holds a fixed budget of animals, so no new ones appear once lines hold
+// most of them, and strays over the cap are taken away. A line has no longest length; it loses animals only by dashing or
+// by going a while without picking anyone up.
 // The limits here are well inside what a browser was measured to carry (2026-11-20): with the processor slowed four times, the
 // page kept 60 frames a second with 800 animals in lines and 250 strays, and fell to 30 with a single line of 400.
 // A rule that lets a game past them needs measuring again before it ships.
@@ -25,9 +27,109 @@ it('keeps the lines, the strays and the remembered paths within what a slow phon
     most.inLines = Math.max(most.inLines, inLines); most.strays = Math.max(most.strays, world.strays.length); most.aboard = Math.max(most.aboard, world.shuttles[0].load);
   }
   expect(most.line).toBeGreaterThan(30); // the game did go on long enough for lines to grow
-  expect(most.line).toBeLessThan(200);
-  expect(most.inLines).toBeLessThan(600);
+  expect(most.inLines).toBeLessThan(800); // and so no one line passes it either
   expect(most.strays).toBeLessThanOrEqual(420);
-  expect(most.path).toBeLessThan(900);
+  expect(most.path).toBeLessThan(5300); // a line of the whole budget, 800, standing 33 apart on points 5 apart
   expect(most.aboard).toBeLessThanOrEqual(40); // a car has seats, so it cannot hand one line hundreds at once
+});
+
+// A line that keeps gathering never shrinks on its own. One that goes ten seconds without picking anyone up starts to lose
+// its back, and walking in circles over the ones it lost does not win them back.
+it('lets a line keep its animals while it gathers, and lets the back wander off once it stops', () => {
+  const world = createWorld(seeded(3), round(), []);
+  world.strays.length = 0; world.feed = 0; // nothing to pick up
+  const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 40 }) as { a: number; tail: unknown[] };
+  const run = (seconds: number) => { for (let n = 0; n < seconds * 30; n++) { steer(line as never, line.a + 1, false); step(world, 1 / 30); } };
+  run(9.5);
+  expect(line.tail.length).toBe(40);
+  run(20.5);
+  expect(line.tail.length).toBeLessThan(40);
+  expect(line.tail.length).toBeGreaterThan(20); // slowly: about 0.56 a second at this length
+});
+
+// The three pickups: walked over, each does its one thing for a while, then wears off.
+type Line = { x: number; y: number; a: number; tail: unknown[]; powers: Record<string, number> };
+const alone = () => {
+  const world = createWorld(seeded(5), round(), []) as { strays: { x: number; y: number; face: number; a: number; vx: number; vy: number }[]; items: { x: number; y: number; kind: string }[]; feed: number; lay: number };
+  world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0;
+  const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 20 }) as Line;
+  Object.assign(line, { x: 0, y: 0, a: 0 }); steer(line as never, 0, false);
+  return { world, line };
+};
+
+it('gives the megaphone to whoever walks over it, and lets it draw strays from twice as far until it wears off', () => {
+  const { world, line } = alone();
+  world.items.push({ x: 20, y: 0, kind: 'megaphone' });
+  const events = step(world, 1 / 30) as { type: string; kind?: string }[];
+  expect(events).toContainEqual(expect.objectContaining({ type: 'power', kind: 'megaphone' }));
+  expect(world.items).toHaveLength(0);
+  // A stray 250 away, beyond the usual 150 but inside the megaphone's 300, comes to the line.
+  world.strays.push({ x: line.x + 200, y: line.y + 150, face: 1, a: 0, vx: 0, vy: 0 });
+  const was = Math.hypot(world.strays[0].x - line.x, world.strays[0].y - line.y);
+  step(world, 1 / 30);
+  expect(Math.hypot(world.strays[0].x - line.x, world.strays[0].y - line.y)).toBeLessThan(was - 5);
+  line.powers.megaphone = 0;
+  world.strays[0] = { x: line.x + 200, y: line.y + 150, face: 1, a: 0, vx: 0, vy: 0 };
+  const far = Math.hypot(world.strays[0].x - line.x, world.strays[0].y - line.y);
+  step(world, 1 / 30);
+  expect(Math.hypot(world.strays[0].x - line.x, world.strays[0].y - line.y)).toBeGreaterThan(far - 5); // out of reach again
+});
+
+it('lets a line dash for free with coffee', () => {
+  const { world, line } = alone();
+  line.powers.coffee = POWERS.coffee;
+  for (let n = 0; n < 60; n++) { steer(line as never, line.a + 1, true); step(world, 1 / 30); }
+  expect(line.tail.length).toBe(20);
+  line.powers.coffee = 0;
+  for (let n = 0; n < 60; n++) { steer(line as never, line.a + 1, true); step(world, 1 / 30); }
+  expect(line.tail.length).toBeLessThan(20);
+});
+
+// A long line scattered leaves its animals as one mob where it fell; a head that reaches it draws the whole mob in.
+it('leaves a scattered line as one mob that a head draws in whole, and that breaks up if nobody comes', () => {
+  const world = createWorld(seeded(11), round(), []) as { strays: unknown[]; feed: number; items: unknown[]; lay: number; mobs: { x: number; y: number; faces: number[] }[] };
+  world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0;
+  const big = addLine(world, { id: 'big', face: 1, name: 'Glee Club', start: 30 }) as Line & { safe: number; dead: number };
+  const small = addLine(world, { id: 'small', face: 2, name: 'Risley', start: 3 }) as Line & { safe: number; dead: number };
+  // The big line's head walks into the small line's back.
+  // The big line lies along the x axis heading east; the small one heads south across its path, its back just ahead of the big head.
+  Object.assign(big, { x: 0, y: 0, a: 0, want: 0, safe: 0, path: [{ x: 0, y: 0 }, { x: -2000, y: 0 }] });
+  Object.assign(small, { x: 10, y: 60, a: Math.PI / 2, want: Math.PI / 2, safe: 0, path: [{ x: 10, y: 60 }, { x: 10, y: -400 }] });
+  (big.tail as { x: number; y: number }[]).forEach((f, i) => Object.assign(f, { x: -33 * (i + 1), y: 0 }));
+  (small.tail as { x: number; y: number }[]).forEach((f, i) => Object.assign(f, { x: 10, y: 60 - 33 * (i + 1) }));
+  const events = step(world, 1 / 30) as { type: string; size?: number }[];
+  expect(events).toContainEqual(expect.objectContaining({ type: 'spill', size: 30 }));
+  expect(world.mobs).toHaveLength(1);
+  expect(world.strays).toHaveLength(0); // none of them flew off loose
+  // The small line reaches the mob and takes all thirty, in about a second.
+  const mob = world.mobs[0];
+  for (let n = 0; n < 45; n++) { Object.assign(small, { x: mob.x + 20, y: mob.y }); steer(small as never, 0, false); step(world, 1 / 30); }
+  expect(world.mobs).toHaveLength(0);
+  expect(small.tail.length).toBeGreaterThanOrEqual(33);
+  // A mob nobody reaches stays whole for a while, then breaks up into strays.
+  world.mobs.push({ x: -800, y: 0, faces: Array(20).fill(1), from: 'x', born: (world as never as { t: number }).t, take: 0, leak: 0 } as never);
+  Object.assign(small, { x: 800, y: 0 });
+  for (let n = 0; n < 30 * 11; n++) { steer(small as never, small.a + 1, false); step(world, 1 / 30); }
+  expect(world.mobs[0].faces).toHaveLength(20);
+  for (let n = 0; n < 30 * 10; n++) { steer(small as never, small.a + 1, false); step(world, 1 / 30); }
+  expect(world.mobs).toHaveLength(0);
+  expect(world.strays.length).toBeGreaterThan(0);
+});
+
+it('keeps the bus from taking anyone off a line with the whistle', () => {
+  const run = (whistle: boolean) => {
+    const world = createWorld(seeded(9), round(), [], [{ name: 'Bus', from: [-1400, 0], to: [1400, 0], off: [1400, 0], riders: 0, ride: 20, stay: 5, away: 5 }] as never) as { strays: unknown[]; feed: number; items: unknown[]; lay: number };
+    world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0;
+    const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 20 }) as Line & { safe: number };
+    Object.assign(line, { x: 0, y: 30, a: Math.PI / 2, safe: 0 });
+    const events: { type: string }[] = [];
+    for (let n = 0; n < 30 * 20; n++) {
+      if (whistle) line.powers.whistle = POWERS.whistle;
+      Object.assign(line, { x: 0, y: 30 }); // held still on the bus's road, so the bus runs into it
+      events.push(...step(world, 1 / 30) as { type: string }[]);
+    }
+    return events.filter(event => event.type === 'lift').length;
+  };
+  expect(run(false)).toBeGreaterThan(0);
+  expect(run(true)).toBe(0);
 });

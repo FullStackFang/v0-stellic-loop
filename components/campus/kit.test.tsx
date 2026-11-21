@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { kitScript } from '@/lib/campus/kit-script';
 import { Kit, Kits } from './kit';
 
@@ -55,6 +56,12 @@ it('keeps that pick with Ink+, and signed out', () => {
   render(<Kit own="loop" yours={null} any />);
   expect(root.dataset.kit).toBe('nyu');
   expect(root.dataset.kits).toBeUndefined();
+});
+
+it('the script before the first paint is drawn by the server only, never when Kit is reached without a page load', () => {
+  expect(renderToString(<Kit own="cornell" yours={['loop', 'cornell']} any={false} />)).toContain(`<script>${kitScript('cornell', ['loop', 'cornell'], false)}</script>`);
+  const { container } = render(<Kit own="cornell" yours={['loop', 'cornell']} any={false} />);
+  expect(container.querySelector('script')).toBeNull();
 });
 
 it('the script before the first paint follows the same rule', () => {

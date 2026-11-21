@@ -156,7 +156,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     /* eslint-disable @next/next/no-img-element -- icons from public/animals, and pictures Loopd made, served from the database */
     return <section>{top()}
       <nav className="cs-adm-seg" aria-label="Show">{SHOW.map(each => <Link key={each} href={`${at('animals')}&show=${each}`} aria-current={each === show ? 'true' : undefined}>{each === 'all' ? 'All' : TIER[each]} {within(each).length}</Link>)}</nav>
-      {/* Pick any number, then move them together with the bar, which counts what is picked and shows only then. With one picked, it opens where it is in the grid
+      {/* One animal is picked at a time (PickCount): it opens where it is in the grid
           (public/demo/mockups-admin-animal-card.html, C): its name, the words the picker finds it by, and where it stands. Tapping its face folds it back. */}
       <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} /><PickCount />
         <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key} style={{ viewTransitionName: `pet-${pet.key}` }}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label>
@@ -165,9 +165,8 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
             <WordsField name={`words-${pet.value}`} words={pet.words} />
             {/* Where it stands, pressed; another moves it there. School makes it the own animal of this campus's school. */}
             <span className="cs-adm-stand" role="group" aria-label="Where it stands">{MOVES.map(tier => <button key={tier} name="tier" value={tier} aria-pressed={tier === pet.now || (tier === 'off' && pet.now === 'own')}>{TIER[tier]}</button>)}</span></div></li>)}</ul>
-        <p className="cs-adm-lede">Tap animals to pick them, then move them together. Whoever already has one keeps it. Tap one alone to name it and set the words it is found by.</p>
-        <div className="cs-adm-tray"><span>picked · move to</span><button name="tier" value="core">Core</button><button name="tier" value="premium">Premium</button><button name="tier" value="school">School</button><button name="tier" value="off">Off</button>
-          <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details><button type="reset" className="x">Clear</button></div></form>
+        <p className="cs-adm-lede">Tap an animal to open it: its name, the words it is found by, and where it stands. Whoever already has one keeps it.</p>
+      </form>
     </section>;
     /* eslint-enable @next/next/no-img-element */
   }
