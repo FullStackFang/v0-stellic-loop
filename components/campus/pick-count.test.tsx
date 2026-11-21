@@ -20,4 +20,8 @@ it('keeps one animal picked: another tap moves the pick, and the same tap lets i
   fireEvent.click(getByRole('button', { name: 'Clear' }));
   await new Promise(done => setTimeout(done));
   expect(form.dataset.picked).toBe('0');
+  fireEvent.click(box('a'));
+  fireEvent.keyDown(box('a'), { key: 'Escape' });
+  await new Promise(done => setTimeout(done));
+  expect([box('a').checked, form.dataset.picked]).toEqual([false, '0']);
 });
