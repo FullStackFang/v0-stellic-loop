@@ -149,6 +149,19 @@ it('takes a member with Ink+ to Assistants, and drops the tag', async () => {
   expect(links()).toEqual(['Assistants']);
 });
 
+it('shows the small one on the link while a press waits for the server', async () => {
+  let answer: (has: boolean) => void = () => {};
+  server.plus.mockReturnValue(new Promise<boolean>(done => { answer = done; }));
+  render(<AssistantsLink />);
+  const link = screen.getByRole('link', { name: /Assistants/ });
+  expect(link.querySelector('.seats-sm')).toBeNull();
+  fireEvent.click(link);
+  await vi.waitFor(() => expect(link.querySelector('.seats-sm')).not.toBeNull());
+  answer(false);
+  await screen.findByRole('dialog');
+  expect(link.querySelector('.seats-sm')).toBeNull();
+});
+
 it('is a plain link from the start for someone the page knows has Ink+: nothing is asked, nothing is waited for', () => {
   render(<AssistantsLink plus />);
   expect(screen.getByRole('link', { name: 'Assistants' })).toHaveAttribute('href', '/groups/connections');

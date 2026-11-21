@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { LinkWait } from '@/components/loading/link-wait';
 import { SeatsWord } from '@/components/loading/seats';
 import { hasInkPlusAction, planHereAction, subscribeAtFootAction } from './foot-actions';
 import { InkMark } from './ink-mark';
@@ -21,6 +22,8 @@ export function AssistantsLink({ plus: known = false }: { plus?: boolean } = {})
   const [email, setEmail] = useState(''), [busy, setBusy] = useState(false), [said, setSaid] = useState('');
   // Someone on Ink is told what Ink+ adds, and what it costs in place of Ink (openspec loop-ink-tiers).
   const [onInk, setOnInk] = useState(false);
+  // While a press waits for the server's answer, the link shows the small one, as every link of the bar does while its page is on its way.
+  const [asking, setAsking] = useState(false);
   // Subscribe on the card: the press is kept (when, and where it was made), and then Assistants opens.
   const subscribe = async () => {
     setBusy(true); setSaid('');
@@ -31,10 +34,10 @@ export function AssistantsLink({ plus: known = false }: { plus?: boolean } = {})
   };
   // Asked once, when the link is first pointed at. If it cannot be asked, the link stays a link.
   const knows = () => asked.current ??= hasInkPlusAction().catch(() => true).then(has => { setPlus(has); return has; });
-  const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { if (plus) return; event.preventDefault(); if (ask) return setAsk(false); if (await knows()) router.push('/groups/connections'); else { setAsk(true); setOnInk((await planHereAction().catch(() => 'free')) === 'ink'); } };
+  const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { if (plus) return; event.preventDefault(); if (ask) return setAsk(false); setAsking(true); const has = await knows(); setAsking(false); if (has) router.push('/groups/connections'); else { setAsk(true); setOnInk((await planHereAction().catch(() => 'free')) === 'ink'); } };
   useEffect(() => { if (!ask) return; const key = (event: KeyboardEvent) => { if (event.key === 'Escape') setAsk(false); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); }, [ask]);
   return <span className="cs-asst">
-    <Link className="cs-ft-asst" href="/groups/connections" data-open={ask || undefined} onPointerEnter={knows} onFocus={knows} onClick={press} aria-label={plus ? undefined : 'Assistants, with Ink+'}><InkMark plus />Assistants</Link>
+    <Link className="cs-ft-asst" href="/groups/connections" data-open={ask || undefined} onPointerEnter={knows} onFocus={knows} onClick={press} aria-label={plus ? undefined : 'Assistants, with Ink+'}><InkMark plus />Assistants<LinkWait on={asking} /></Link>
     {ask && <div className="cs-ft-ask" role="dialog" aria-label="Assistants come with Ink+">
       <span className="cs-ft-ask-tab"><InkMark plus named /></span><h3>Assistants come with Ink+</h3><p>{onInk ? 'You have Ink. Ink+ adds your own AI, answering from your groups, any school’s colours, and no limits: $9.99 a month, in place of $2.99.' : 'Your own AI, answering from your groups.'}</p>
       <form onSubmit={event => { event.preventDefault(); void subscribe(); }}><input type="email" required value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" />
