@@ -35,10 +35,24 @@ it('rings the colours picked', async () => {
   delete document.documentElement.dataset.kit;
 });
 
+// Each dot says its school: the one on is open with its name, and a face pointed at is named with its school
+// (public/demo/mockups-school-labels.html, foot C and faces A).
+it('names the colours, and the school of a face pointed at', async () => {
+  render(<><SiteFoot /><img alt='Ben' src='/animals/01.png' data-who='Ben' data-school='Cornell' data-school-kit='cornell' /></>);
+  expect(screen.getByRole('button', { name: 'Cornell colours' })).toHaveTextContent('Cornell');
+  expect(screen.queryByRole('tooltip')).toBeNull();
+  fireEvent.pointerOver(screen.getByRole('img', { name: 'Ben' }));
+  const tag = await screen.findByRole('tooltip');
+  expect(tag).toHaveTextContent('BenCornell');
+  expect(tag.querySelector('[data-kit=cornell]')).not.toBeNull();
+  fireEvent.pointerOut(screen.getByRole('img', { name: 'Ben' }));
+  await vi.waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
+});
+
 // Other schools' colours are an Ink+ perk (public/demo/mockups-ink-colours.html, "My pick"). Who may wear what is on the
 // page (components/campus/kit.tsx): data-kits for someone signed in, data-any-kit with Ink+.
 const lookAs = (kits: string | null, any = false) => { const root = document.documentElement.dataset; delete root.kits; delete root.anyKit; if (kits !== null) root.kits = kits; if (any) root.anyKit = ''; };
-const dots = () => within(screen.getByRole('group', { name: 'Colours' })).getAllByRole('button').map(dot => dot.getAttribute('title'));
+const dots = () => within(screen.getByRole('group', { name: 'Colours' })).getAllByRole('button').map(dot => dot.textContent);
 
 it('signed out, every school is a dot and nothing asks for Ink+', () => {
   lookAs(null);

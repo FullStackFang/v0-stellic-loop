@@ -4,8 +4,9 @@
 import type { Plan } from './ink';
 import type { NearTag } from './tags';
 
-/** `plan` is the person's plan: an Ink face sits on a blot, an Ink+ face on a blot with sparks (openspec loop-ink-tiers). */
-export type Face = { first: string; photo: string | null; plan: Plan; here?: boolean; me?: boolean };
+/** `plan` is the person's plan: an Ink face sits on a blot, an Ink+ face on a blot with sparks (openspec loop-ink-tiers).
+ * `school` is the school they are at, named when the face is pointed at (components/campus/face-tag.tsx). */
+export type Face = { first: string; photo: string | null; plan: Plan; here?: boolean; me?: boolean; school?: { slug: string; name: string } | null };
 /** One seat of a group reward. A seat taken by someone the viewer does not know has no face. */
 export type Seat = { taken: boolean; face: Face | null; here: boolean; yours: boolean };
 

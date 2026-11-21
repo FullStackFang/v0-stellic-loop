@@ -40,10 +40,34 @@
 @media (prefers-reduced-motion: reduce) { .cs-ft-ask { animation: none; } .cs-ft-asst::before { transition: none; } }
 .cs-ft-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 .cs-ft-end > small { padding: 6px 12px; border-radius: 99px; font-size: 12.5px; white-space: nowrap; background: color-mix(in oklab, var(--cs-ink) 12%, var(--cs-field)); }
-/* Colours: a dot per school; the one in use wears the ring. */
-.cs-ft-kits { display: flex; gap: 9px; padding: 5px 8px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow); }
-.cs .cs-ft-kits button { width: 26px; height: 26px; border-radius: 50%; background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: scale .2s var(--cs-ease); }
-.cs .cs-ft-kits button:hover { scale: 1.12; } .cs .cs-ft-kits button[aria-pressed=true] { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 0 0 0 2px var(--cs-paper), 0 0 0 4px var(--cs-ink); }
+/* Colours: a dot per school that opens into the school's name (public/demo/mockups-school-labels.html, foot C). The one
+   in use is always open and filled with ink; another opens while it is pointed at. */
+.cs-ft-kits { display: flex; align-items: center; gap: 6px; padding: 4px 5px; border-radius: 99px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow); }
+.cs .cs-ft-kits button { display: inline-flex; align-items: center; height: 28px; border-radius: 99px; color: var(--cs-ink); transition: background-color .2s, color .2s; }
+.cs-ft-kits button > i { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-ft-kits button > span { display: grid; grid-template-columns: 0fr; transition: grid-template-columns .4s var(--cs-expo); }
+.cs-ft-kits button > span > b { overflow: hidden; min-width: 0; white-space: nowrap; font-size: 13.5px; font-weight: 680; }
+/* The room round the name is inside what is clipped, so a shut dot shows none of it. */
+.cs-ft-kits button > span > b::before, .cs-ft-kits button > span > b::after { content: ''; display: inline-block; width: 7px; } .cs-ft-kits button > span > b::after { width: 11px; }
+.cs .cs-ft-kits button:is(:focus-visible, [aria-pressed=true]) { background: var(--cs-ink); color: var(--cs-paper); }
+.cs-ft-kits button:is(:focus-visible, [aria-pressed=true]) > span { grid-template-columns: 1fr; }
+.cs-ft-kits button:is(:focus-visible, [aria-pressed=true]) > i { box-shadow: inset 0 0 0 1.5px var(--cs-ink), inset 0 0 0 3px var(--cs-paper); }
+@media (hover: hover) {
+  .cs .cs-ft-kits button:hover { background: var(--cs-ink); color: var(--cs-paper); }
+  .cs-ft-kits button:hover > span { grid-template-columns: 1fr; }
+  .cs-ft-kits button:hover > i { box-shadow: inset 0 0 0 1.5px var(--cs-ink), inset 0 0 0 3px var(--cs-paper); }
+}
+@media (prefers-reduced-motion: reduce) { .cs-ft-kits button > span { transition: none; } }
+
+/* The tag a face shows when pointed at (components/campus/face-tag.tsx): name, school, and a dot in the school's colours. */
+.cs-facetag { position: fixed; z-index: 60; translate: -50% 10px; display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 6px; border-radius: 99px; white-space: nowrap; pointer-events: none;
+  font-size: 13.5px; font-weight: 680; line-height: 1.2; letter-spacing: -0.012em; background: var(--cs-ink); color: var(--cs-paper); animation: cs-facetag .3s var(--cs-expo); }
+.cs-facetag:has(> i) { padding-left: 6px; }
+.cs-facetag::before { content: ''; position: absolute; left: 50%; top: -5px; width: 11px; height: 11px; translate: -50% 0; rotate: 45deg; border-radius: 2px; background: var(--cs-ink); }
+.cs-facetag > i { width: 16px; height: 16px; border-radius: 50%; background: var(--cs-field); box-shadow: 0 0 0 1.5px var(--cs-paper); }
+.cs-facetag > small { font-size: 12px; font-weight: 560; opacity: .72; }
+@keyframes cs-facetag { from { opacity: 0; scale: .7; } }
+@media (prefers-reduced-motion: reduce) { .cs-facetag { animation: none; } }
 
 @media (max-width: 860px) {
   .cs-ft-bar { padding: 12px 16px 14px; } .cs-ft-end { margin-left: 0; flex-basis: 100%; justify-content: space-between; }
@@ -57,7 +81,7 @@
 .cs-asst .cs-ft-ask::after { top: -9px; bottom: auto; }
 .cs-asst .cs-ft-ask-tab { top: auto; bottom: -12px; }
 /* On a phone a colour dot is big enough for a thumb. */
-@media (max-width: 700px) { .cs .cs-ft-kits button { width: 32px; height: 32px; } }
+@media (max-width: 700px) { .cs .cs-ft-kits button, .cs-ft-kits button > i { height: 32px; } .cs-ft-kits button > i { width: 32px; } }
 /* On a phone the foot is two even lines: the wordmark with the colours at the right, then the links with the year at
    the right. */
 @media (max-width: 560px) {
