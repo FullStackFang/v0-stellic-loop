@@ -400,6 +400,7 @@ const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [];
 const SIZE = { stray: 40, tail: 42, head: 58 };
 const SACK = 70; // how wide a spilled line's sack is drawn
 const VIEW = 920 * 575; // square units of ground on screen: 920 across on a laptop, closer in on a phone held upright
+const CLOSE = 1.25; // the least a unit is drawn, in pixels: on a phone a stray stays about 50 pixels across
 // ---------- water, grass and trees ----------
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground: for looking at the drawing.
 const tile = (size, work) => { const sheet = document.createElement('canvas'); sheet.width = sheet.height = size; work(sheet.getContext('2d'), size); return ctx.createPattern(sheet, 'repeat'); };
@@ -895,7 +896,7 @@ function draw(t, dt) {
   // Before a game the view stays with one line, the longest when it was chosen, and moves on only when that line is scattered.
   if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : followed);
-  const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.sqrt(wide * tall / VIEW); // every screen shows the same amount of ground, whatever its shape
+  const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.max(CLOSE, Math.sqrt(wide * tall / VIEW)); // the same amount of ground on every screen, but never so far out that an animal is small on a phone
   let zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007));
   // With the megaphone the view pulls back until its whole reach fits on the screen.
   if (!watch.dead && watch.powers?.megaphone > 0) zoom = Math.min(zoom, Math.min(wide, tall) / 2 / (LOUD + 60));
