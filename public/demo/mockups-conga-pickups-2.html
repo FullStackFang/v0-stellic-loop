@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · pickups, round two</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --field: oklch(82% 0.12 38); --dot: oklch(77% 0.13 37); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --paper: oklch(99.2% 0.004 60); --mute: oklch(45% 0.016 40); --expo: cubic-bezier(.16, 1, .3, 1); }
+* { box-sizing: border-box; margin: 0; }
+body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; gap: 34px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+h2 { font-weight: 900; font-stretch: 112%; font-size: clamp(24px, 4vw, 32px); letter-spacing: -.02em; line-height: 1; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 68ch; margin-top: 10px; }
+.sets { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 34px 20px; margin-top: 18px; }
+.one { position: relative; padding-top: 14px; }
+.tab { position: absolute; z-index: 3; left: 18px; top: 0; font-size: 15px; font-weight: 700; padding: 5px 14px 6px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.frame { position: relative; overflow: hidden; border-radius: 26px 26px 26px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); background: var(--field); }
+.frame canvas { display: block; width: 100%; }
+.set .frame canvas { aspect-ratio: 1 / 1.02; }
+.scene .frame canvas { aspect-ratio: 16 / 9; }
+@media (max-width: 640px) { .scene .frame canvas { aspect-ratio: 1; } }
+.frame::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--ink); pointer-events: none; }
+.note { margin-top: 16px; padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.4; }
+.use { margin-top: 12px; font: inherit; font-weight: 700; font-size: 14.5px; height: 42px; padding: 0 18px; border: 0; border-radius: 99px; cursor: pointer; background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); transition: background .15s var(--expo), color .15s var(--expo); }
+.use:hover { background: oklch(94% 0.02 50); }
+.use[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.scenes { display: grid; gap: 34px; margin-top: 18px; }
+</style>
+
+<main>
+  <header>
+    <h1>Conga · pickups, round two</h1>
+    <p class="lead">New drawings for the megaphone, the coffee and the whistle, and three ways to show how far the megaphone reaches. Pick an icon set and it is used in the scenes below.</p>
+  </header>
+
+  <section>
+    <h2>The icons</h2>
+    <div class="sets">
+      <div class="one set"><span class="tab">1 · Linocut</span><div class="frame"><canvas data-set="lino"></canvas></div>
+        <p class="note">Drawn like the trees and halls already on the map: heavy ink line, flat colour, one light patch, a hard shadow down and right.</p>
+        <button class="use" data-use="lino" aria-pressed="true">Use in the scenes</button></div>
+      <div class="one set"><span class="tab">2 · Toy</span><div class="frame"><canvas data-set="toy"></canvas></div>
+        <p class="note">Drawn like the animals: no ink line, a deeper edge of the same colour, a glossy highlight, and a soft shadow on the ground under it.</p>
+        <button class="use" data-use="toy" aria-pressed="false">Use in the scenes</button></div>
+      <div class="one set"><span class="tab">3 · Badge</span><div class="frame"><canvas data-set="badge"></canvas></div>
+        <p class="note">An enamel pin: the pickup in ink on a coloured coin with a paper ring. The simplest shape, so it reads best when small or far off.</p>
+        <button class="use" data-use="badge" aria-pressed="false">Use in the scenes</button></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How far the megaphone reaches</h2>
+    <div class="scenes">
+      <div class="one scene"><span class="tab">A · Puffy edge</span><div class="frame"><canvas data-reach="puff"></canvas></div>
+        <p class="note">The ground inside the reach goes a shade lighter, edged with the same puffy foam as the water's shore, turning slowly. Strays inside hop toward you.</p></div>
+      <div class="one scene"><span class="tab">B · Shout</span><div class="frame"><canvas data-reach="shout"></canvas></div>
+        <p class="note">Rings go out from the megaphone's mouth and stop at the edge of its reach, where a soft dotted line stays. The reach is shown by the shouting itself.</p></div>
+      <div class="one scene"><span class="tab">C · Lasso</span><div class="frame"><canvas data-reach="lasso"></canvas></div>
+        <p class="note">A loop of your own rope, in your line's colour, thrown round the reach and turning slowly, with a knot where it closes. Every line's megaphone is told apart by its colour.</p></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const C = { field: 'oklch(82% 0.12 38)', dot: 'oklch(77% 0.13 37)', ink: 'oklch(24% 0.035 30)', action: 'oklch(48.5% 0.185 27)', paper: 'oklch(99.2% 0.004 60)', twine: '#fbf7ec',
+  lamp: 'oklch(89% 0.15 95)', lampDeep: 'oklch(76% 0.15 80)', kraft: 'oklch(64% 0.09 62)', kraftLight: 'oklch(72% 0.08 65)', redLight: 'oklch(62% 0.19 27)', redDeep: 'oklch(38% 0.15 27)', inkSoft: 'oklch(32% 0.03 30)' };
+const COLS = 7, SHEET = 96;
+const sheet = Object.assign(new Image(), { src: '/conga/animals-96.v1.webp' });
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- the three pickups, as shapes in a 64-unit box round the middle ----------
+const P = () => new Path2D();
+const rr = (x, y, w, h, r) => { const p = P(); p.roundRect(x, y, w, h, r); return p; };
+const poly = (...pts) => { const p = P(); pts.forEach(([x, y], i) => i ? p.lineTo(x, y) : p.moveTo(x, y)); p.closePath(); return p; };
+const oval = (x, y, rx, ry) => { const p = P(); p.ellipse(x, y, rx, ry, 0, 0, 7); return p; };
+const line = (...pts) => { const p = P(); pts.forEach(([x, y], i) => i ? p.lineTo(x, y) : p.moveTo(x, y)); return p; };
+const curve = (from, ...beziers) => { const p = P(); p.moveTo(...from); for (const b of beziers) p.bezierCurveTo(...b); return p; };
+
+// `parts` are filled shapes, back to front, each with its colour and the deeper edge a toy is drawn with.
+// `marks` are drawn over them: holes, light, steam. `under` is drawn behind everything (the whistle's cord).
+const ICONS = {
+  megaphone: {
+    parts: [
+      { d: rr(-13, 4, 11, 22, 4), fill: C.inkSoft, deep: C.ink },
+      { d: rr(-26, -9, 16, 18, 4), fill: C.paper, deep: 'oklch(86% 0.01 60)' },
+      { d: poly([-12, -11], [20, -24], [20, 24], [-12, 11]), fill: C.action, deep: C.redDeep },
+      { d: poly([0, -15.8], [7, -18.6], [7, 18.6], [0, 15.8]), fill: C.paper, deep: 'oklch(86% 0.01 60)', band: true },
+      { d: oval(20, 0, 7.5, 24), fill: C.paper, deep: 'oklch(86% 0.01 60)' },
+    ],
+    marks: [{ d: oval(21.8, 0, 4, 19), fill: C.ink, hole: true }, { d: line([-9, -10.4], [-1, -13.6]), stroke: C.redLight, w: 3.2, light: true }, { d: line([10, -18.6], [16, -21]), stroke: C.redLight, w: 3.2, light: true }],
+  },
+  coffee: {
+    under: [{ d: curve([-5, -30], [-11, -35, 1, -40, -5, -47]), steam: true }, { d: curve([6, -30], [0, -35, 12, -40, 6, -46]), steam: true }],
+    parts: [
+      { d: poly([-15, -14], [15, -14], [11, 26], [-11, 26]), fill: C.paper, deep: 'oklch(86% 0.01 60)' },
+      { d: poly([-13.6, -2], [13.6, -2], [12.2, 13], [-12.2, 13]), fill: C.kraft, deep: 'oklch(52% 0.08 60)' },
+      { d: rr(-18.5, -22, 37, 9, 4), fill: C.paper, deep: 'oklch(86% 0.01 60)' },
+      { d: rr(-13, -28, 26, 7, 3), fill: C.paper, deep: 'oklch(86% 0.01 60)' },
+    ],
+    marks: [{ d: rr(3, -26.6, 7, 3, 1.5), fill: C.ink, hole: true }, { d: oval(0, 5.5, 4.6, 4.6), fill: C.paper, ring: true }, { d: line([-10.6, 1], [-9.8, 10]), stroke: C.kraftLight, w: 3, light: true }],
+  },
+  whistle: {
+    under: [{ d: curve([19, -13], [27, -22, 36, -30, 30, -40]), cord: true }],
+    parts: [
+      { d: rr(-29, -13, 27, 12, 3.5), fill: C.lamp, deep: C.lampDeep },
+      { d: oval(6, 2, 16, 16), fill: C.lamp, deep: C.lampDeep },
+    ],
+    marks: [{ d: (() => { const p = P(); p.arc(6, 2, 12, 0.15 * Math.PI, 0.85 * Math.PI); return p; })(), stroke: C.lampDeep, w: 4, shade: true },
+      { d: oval(6, 2, 6.5, 6.5), fill: C.ink, hole: true }, { d: rr(-9, -13, 6, 5, 1.5), fill: C.ink, hole: true },
+      { d: (() => { const p = P(); p.arc(6, 2, 11, 1.12 * Math.PI, 1.45 * Math.PI); return p; })(), stroke: C.paper, w: 3, light: true },
+      { d: oval(19, -13, 4.6, 4.6), ringOnly: true }],
+  },
+};
+const COIN = { megaphone: C.action, coffee: C.kraft, whistle: C.lamp };
+
+function icon(ctx, kind, set, x, y, s = 1, turn = 0) {
+  const it = ICONS[kind];
+  ctx.save(); ctx.translate(x, y); ctx.rotate(turn); ctx.scale(s, s); ctx.lineJoin = ctx.lineCap = 'round';
+  if (set === 'badge') {
+    ctx.beginPath(); ctx.arc(4, 4, 31, 0, 7); ctx.fillStyle = C.ink; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, 31, 0, 7); ctx.fillStyle = COIN[kind]; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 25.5, 0, 7); ctx.strokeStyle = C.paper; ctx.lineWidth = 2.5; ctx.setLineDash([3.5, 4.5]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.scale(0.6, 0.6); ctx.translate(kind === 'coffee' ? 0 : -1, kind === 'coffee' ? 7 : kind === 'whistle' ? 6 : 0);
+    const mark = kind === 'whistle' ? C.ink : C.paper, cut = COIN[kind];
+    for (const u of it.under ?? []) { ctx.strokeStyle = mark; ctx.lineWidth = 6; ctx.stroke(u.d); }
+    for (const part of it.parts) if (!part.band) { ctx.fillStyle = mark; ctx.fill(part.d); }
+    for (const m of it.marks) if (m.hole) { ctx.fillStyle = cut; ctx.fill(m.d); } else if (m.ringOnly) { ctx.strokeStyle = mark; ctx.lineWidth = 4; ctx.stroke(m.d); }
+    ctx.restore(); return;
+  }
+  const lino = set === 'lino';
+  if (lino) { ctx.save(); ctx.translate(4, 4); ctx.fillStyle = C.ink; for (const part of it.parts) ctx.fill(part.d); ctx.restore(); }
+  else { ctx.beginPath(); ctx.ellipse(1, 30, 24, 6, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .2)'; ctx.fill(); }
+  for (const u of it.under ?? []) {
+    if (u.steam) { ctx.strokeStyle = lino ? C.ink : 'oklch(92% 0.01 60)'; ctx.lineWidth = lino ? 9 : 7; ctx.stroke(u.d); ctx.strokeStyle = C.paper; ctx.lineWidth = lino ? 4.5 : 4.5; ctx.stroke(u.d); }
+    if (u.cord) { ctx.strokeStyle = lino ? C.ink : C.redDeep; ctx.lineWidth = lino ? 8 : 6.5; ctx.stroke(u.d); ctx.strokeStyle = C.action; ctx.lineWidth = 4; ctx.stroke(u.d); }
+  }
+  for (const part of it.parts) {
+    ctx.fillStyle = part.fill; ctx.fill(part.d);
+    ctx.strokeStyle = lino ? C.ink : part.deep; ctx.lineWidth = lino ? 3.2 : 2.6; ctx.stroke(part.d);
+  }
+  for (const m of it.marks) {
+    if (m.light && !lino) { ctx.strokeStyle = C.paper; ctx.globalAlpha = 0.75; ctx.lineWidth = m.w + 0.5; ctx.stroke(m.d); ctx.globalAlpha = 1; continue; }
+    if (m.stroke) { ctx.strokeStyle = m.stroke; ctx.lineWidth = m.w; ctx.stroke(m.d); continue; }
+    if (m.ringOnly) { ctx.strokeStyle = lino ? C.ink : C.lampDeep; ctx.lineWidth = 3; ctx.stroke(m.d); continue; }
+    ctx.fillStyle = m.fill; ctx.fill(m.d);
+    if (m.ring) { ctx.strokeStyle = lino ? C.ink : 'oklch(52% 0.08 60)'; ctx.lineWidth = 2; ctx.stroke(m.d); }
+  }
+  if (!lino) { // the toy's gloss: one soft oval of light up and to the left
+    const at = { megaphone: [-4, -9, 5, 2.2, -0.4], coffee: [-8, -8, 2.4, 5, 0.1], whistle: [0, -6, 4.4, 2.6, -0.6] }[kind];
+    ctx.beginPath(); ctx.ellipse(at[0], at[1], at[2], at[3], at[4], 0, 7); ctx.fillStyle = 'oklch(99.2% 0.004 60 / .7)'; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function sprite(ctx, face, x, y, size) {
+  if (!sheet.complete || !sheet.naturalWidth) { ctx.beginPath(); ctx.arc(x, y, size * 0.36, 0, 7); ctx.fillStyle = C.paper; ctx.fill(); return; }
+  ctx.drawImage(sheet, (face - 1) % COLS * SHEET, Math.floor((face - 1) / COLS) * SHEET, SHEET, SHEET, x - size / 2, y - size / 2, size, size);
+}
+function field(ctx, w, h, step = 90) {
+  ctx.fillStyle = C.field; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = C.dot; ctx.beginPath(); for (let x = step / 2; x < w; x += step) for (let y = step / 2; y < h; y += step) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); } ctx.fill();
+}
+function pill(ctx, text, x, y, fill, ink, size = 13) {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const width = ctx.measureText(text).width + size * 1.4, high = size * 1.7;
+  ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fillStyle = fill; ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+}
+function rope(ctx, points, colour, closed = false) {
+  const low = closed ? 0 : 13;
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
+  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
+  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 16; ctx.stroke();
+  ctx.strokeStyle = colour; ctx.lineWidth = 10; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([5, 9]); ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+}
+
+// ---------- the icon sets: big, then at game size on the ground beside an animal ----------
+function drawSet(canvas) {
+  const set = canvas.dataset.set, box = canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  canvas.width = Math.round(box.width * dpr); canvas.height = Math.round(box.height * dpr);
+  const ctx = canvas.getContext('2d'), W = 400, k = box.width / W, H = box.height / k;
+  ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0); field(ctx, W, H);
+  // Big, one each, on a paper plate so their shapes read on their own.
+  ctx.beginPath(); ctx.roundRect(18, 22, W - 36, 176, 22); ctx.fillStyle = C.paper; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
+  ['megaphone', 'coffee', 'whistle'].forEach((kind, n) => icon(ctx, kind, set, 82 + n * 118, 112, 1.38));
+  // At the size they would be in play, on the ground with the strays.
+  const ground = [[70, 300, 'megaphone'], [200, 268, 'coffee'], [330, 302, 'whistle']];
+  const faces = [[118, 330, 14], [160, 300, 22], [254, 318, 5], [290, 268, 30], [40, 250, 9], [372, 360, 18]];
+  for (const [x, y, face] of faces) sprite(ctx, face, x, y, 40);
+  for (const [x, y, kind] of ground) icon(ctx, kind, set, x, y, set === 'badge' ? 0.62 : 0.74);
+  sprite(ctx, 12, 200, 365, 58); pill(ctx, 'You · 9', 200, 322 + 4, C.action, C.paper, 12);
+}
+
+// ---------- the megaphone's reach, three ways ----------
+function seeded(seed) { return () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; }; }
+let iconSet = 'lino';
+const REACH = 300, SPEED = 150, GAP = 33, JOIN = 38, LIFE = 1.5;
+
+function scene(canvas) {
+  const look = canvas.dataset.reach, ctx = canvas.getContext('2d'), random = seeded(look.length * 131);
+  let W = 900, H = 506, k = 1, dpr = 1;
+  const me = { face: 12, theta: -Math.PI / 2, x: 0, y: 0, a: 0, path: [], tail: [] }, strays = [], waves = [];
+  let shout = 0;
+  const lap = () => ({ cx: W / 2, cy: H / 2 + 10, rx: W * 0.3, ry: H * 0.26 });
+  const at = theta => { const p = lap(); return { x: p.cx + Math.cos(theta) * p.rx, y: p.cy + Math.sin(theta) * p.ry }; };
+  const face = () => 1 + Math.floor(random() * 36);
+  const loose = () => { for (let n = 0; n < 40; n++) { const x = 30 + random() * (W - 60), y = 30 + random() * (H - 60); if (Math.hypot(x - me.x, y - me.y) > 200) return { x, y }; } return { x: 30, y: 30 }; };
+  function size() { const box = canvas.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); canvas.width = Math.round(box.width * dpr); canvas.height = Math.round(box.height * dpr); W = box.width < 600 ? 640 : 900; k = box.width / W; H = box.height / k; }
+  function reset() {
+    me.theta = -Math.PI / 2; Object.assign(me, at(me.theta)); me.path = [{ x: me.x, y: me.y }];
+    me.tail = Array.from({ length: 10 }, () => ({ face: face(), x: me.x, y: me.y }));
+    strays.length = 0; for (let n = 0; n < (W > 700 ? 22 : 15); n++) strays.push({ ...loose(), face: face(), a: random() * 7, hop: random() * 7 });
+    for (let n = 0; n < 240; n++) walk(1 / 60, true);
+  }
+  function walk(dt, quiet) {
+    const p = lap(), before = { x: me.x, y: me.y };
+    me.theta += SPEED * dt / Math.hypot(Math.sin(me.theta) * p.rx, Math.cos(me.theta) * p.ry);
+    Object.assign(me, at(me.theta)); me.a = Math.atan2(me.y - before.y, me.x - before.x);
+    if (Math.hypot(me.x - me.path[0].x, me.y - me.path[0].y) >= 5) me.path.unshift({ x: me.x, y: me.y });
+    let px = me.x, py = me.y, walked = 0, need = GAP, i = 0, n = 0;
+    for (; n < me.path.length && i < me.tail.length; n++) {
+      const q = me.path[n], length = Math.hypot(q.x - px, q.y - py);
+      while (i < me.tail.length && walked + length >= need) { const u = length ? (need - walked) / length : 0, f = me.tail[i++], ease = quiet ? 1 : Math.min(1, dt * 14); f.x += (px + (q.x - px) * u - f.x) * ease; f.y += (py + (q.y - py) * u - f.y) * ease; need += GAP; }
+      walked += length; px = q.x; py = q.y;
+    }
+    if (me.path.length > n + 2) me.path.length = n + 2;
+  }
+  function tick(dt) {
+    walk(dt);
+    for (const s of strays) {
+      const d = Math.hypot(me.x - s.x, me.y - s.y);
+      if (d < JOIN) { me.tail.unshift({ face: s.face, x: s.x, y: s.y }); if (me.tail.length > 16) me.tail.length = 16; Object.assign(s, loose(), { face: face() }); continue; }
+      s.a += (random() - 0.5) * 2 * dt; s.hop += dt * (d < REACH ? 11 : 3);
+      let vx = Math.cos(s.a) * 14, vy = Math.sin(s.a) * 14;
+      s.drawn = d < REACH;
+      if (s.drawn) { const pull = (170 + 280 * (1 - d / REACH)) / d; vx += (me.x - s.x) * pull; vy += (me.y - s.y) * pull; }
+      s.x = Math.max(20, Math.min(W - 20, s.x + vx * dt)); s.y = Math.max(20, Math.min(H - 20, s.y + vy * dt));
+    }
+    if ((shout -= dt) <= 0) { shout = 0.5; waves.push({ t: 0, a: me.a }); }
+    for (let i = waves.length - 1; i >= 0; i--) if ((waves[i].t += dt) > LIFE) waves.splice(i, 1);
+  }
+
+  // The reach, drawn under the line and the animals.
+  function reach(t) {
+    const x = me.x, y = me.y;
+    if (look === 'puff') {
+      ctx.beginPath(); ctx.arc(x, y, REACH, 0, 7); ctx.fillStyle = 'oklch(99.2% 0.004 60 / .16)'; ctx.fill();
+      // The shore's foam: a ring of little clouds, slowly turning, a second smaller ring inside it a beat behind.
+      const puffs = (r, size, n, turn, alpha) => { ctx.globalAlpha = alpha; ctx.fillStyle = C.paper; ctx.beginPath();
+        for (let i = 0; i < n; i++) { const a = turn + i * Math.PI * 2 / n, s = size * (0.8 + 0.25 * Math.sin(i * 2.7 + t * 2)); ctx.moveTo(x + Math.cos(a) * r + s, y + Math.sin(a) * r); ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r, s, 0, 7); }
+        ctx.fill(); ctx.globalAlpha = 1; };
+      // A solid band first, so the foam reads as one shore and not loose bubbles, then the clouds along it.
+      ctx.beginPath(); ctx.arc(x, y, REACH - 22, 0, 7); ctx.strokeStyle = C.paper; ctx.globalAlpha = 0.35; ctx.lineWidth = 6; ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(x, y, REACH, 0, 7); ctx.strokeStyle = C.paper; ctx.lineWidth = 16; ctx.stroke();
+      puffs(REACH, 13, 90, t * 0.08, 1);
+    } else if (look === 'shout') {
+      ctx.beginPath(); ctx.arc(x, y, REACH, 0, 7); ctx.fillStyle = 'oklch(99.2% 0.004 60 / .08)'; ctx.fill();
+      ctx.strokeStyle = C.paper; ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.setLineDash([0.1, 16]); ctx.globalAlpha = 0.9; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      // Each shout goes out as a ring that is strongest in front of the megaphone and thins round the back.
+      for (const w of waves) {
+        const u = w.t / LIFE, r = 50 + (REACH - 50) * u, fade = u < 0.8 ? 1 : (1 - u) / 0.2;
+        for (const [span, width, alpha] of [[Math.PI, 4, 0.5], [1.1, 9, 1]]) { ctx.beginPath(); ctx.arc(x, y, r, w.a - span, w.a + span); ctx.strokeStyle = C.paper; ctx.globalAlpha = fade * alpha; ctx.lineWidth = width; ctx.stroke(); }
+        ctx.globalAlpha = 1;
+      }
+    } else {
+      ctx.beginPath(); ctx.arc(x, y, REACH, 0, 7); ctx.fillStyle = 'oklch(99.2% 0.004 60 / .1)'; ctx.fill();
+      // The loop is drawn as a true circle in the rope's three layers, its twist running round it.
+      ctx.beginPath(); ctx.arc(x, y, REACH, 0, 7); ctx.lineCap = 'butt';
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = C.action; ctx.lineWidth = 10; ctx.stroke();
+      ctx.setLineDash([5, 9]); ctx.lineDashOffset = -t * 24; ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1;
+      // The knot where the loop closes, with its loose end, kept on the side of the loop toward the middle of the view.
+      const turn = Math.atan2(H / 2 - y, W / 2 - x) + Math.sin(t * 0.8) * 0.25, kx = x + Math.cos(turn) * REACH, ky = y + Math.sin(turn) * REACH, out = { x: Math.cos(turn), y: Math.sin(turn) };
+      ctx.beginPath(); ctx.moveTo(kx, ky); ctx.quadraticCurveTo(kx + out.x * 26 - out.y * 10, ky + out.y * 26 + out.x * 10, kx + out.x * 18 - out.y * 30, ky + out.y * 18 + out.x * 30);
+      ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.lineWidth = 14; ctx.stroke(); ctx.strokeStyle = C.action; ctx.lineWidth = 8; ctx.stroke();
+      ctx.beginPath(); ctx.arc(kx, ky, 11, 0, 7); ctx.fillStyle = C.action; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(kx - 6, ky - 3); ctx.quadraticCurveTo(kx, ky + 5, kx + 6, ky - 3); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+  }
+
+  function draw(t) {
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
+    field(ctx, W, H);
+    reach(t);
+    const shown = [{ x: me.x, y: me.y }, ...me.tail.map((f, i) => ({ x: f.x, y: f.y - (0.5 - 0.5 * Math.cos((t * 7 - (i + 1) * 0.7) * 2)) * 2.5, face: f.face }))];
+    rope(ctx, shown, C.action);
+    const sprites = [];
+    for (let i = shown.length - 1; i > 0; i--) sprites.push({ ...shown[i], size: 42 });
+    // A stray inside the reach hops toward you: a quick little bounce, not a streak.
+    for (const s of strays) sprites.push({ x: s.x, y: s.y - (s.drawn ? Math.abs(Math.sin(s.hop)) * 9 : (0.5 - 0.5 * Math.cos(s.hop)) * 2), face: s.face, size: 40, shadow: s.drawn ? Math.abs(Math.sin(s.hop)) : 0 });
+    sprites.sort((a, b) => a.y - b.y);
+    for (const s of sprites) sprite(ctx, s.face, s.x, s.y, s.size);
+    sprite(ctx, me.face, me.x, me.y - (0.5 - 0.5 * Math.cos(t * 14)) * 2.5, 58);
+    // The megaphone, held out in front.
+    const fx = Math.cos(me.a), fy = Math.sin(me.a);
+    icon(ctx, 'megaphone', iconSet, me.x + fx * 38, me.y + fy * 38 - 4, iconSet === 'badge' ? 0.62 : 0.82, iconSet === 'badge' ? 0 : me.a);
+    pill(ctx, `You · ${me.tail.length + 1}`, me.x, me.y - 48, C.action, C.paper, 13);
+  }
+  size(); reset();
+  return { canvas, size() { size(); reset(); }, tick, draw };
+}
+
+// ---------- the page ----------
+const sets = [...document.querySelectorAll('[data-set]')];
+const scenes = [...document.querySelectorAll('[data-reach]')].map(canvas => ({ ...scene(canvas), seen: true }));
+const redraw = () => { sets.forEach(drawSet); for (const one of scenes) { one.size(); if (still) settle(one); } };
+function settle(one) { for (let n = 0; n < 50; n++) one.tick(1 / 60); one.draw(1.3); }
+for (const button of document.querySelectorAll('[data-use]')) button.onclick = () => {
+  iconSet = button.dataset.use;
+  for (const other of document.querySelectorAll('[data-use]')) other.setAttribute('aria-pressed', other === button);
+  if (still) scenes.forEach(one => one.draw(1.3));
+  document.querySelector('.scenes').scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' });
+};
+new ResizeObserver(redraw).observe(document.querySelector('main'));
+sheet.onload = () => { sets.forEach(drawSet); if (still) scenes.forEach(settle); };
+const watch = new IntersectionObserver(entries => { for (const entry of entries) { const one = scenes.find(each => each.canvas === entry.target); if (one) one.seen = entry.isIntersecting; } });
+for (const one of scenes) watch.observe(one.canvas);
+document.fonts?.ready.then(() => sets.forEach(drawSet));
+if (!still) {
+  let last = performance.now(), clock = 0;
+  const frame = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt; for (const one of scenes) if (one.seen) { one.tick(dt); one.draw(clock); } requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+</script>

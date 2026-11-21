@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · pickup effects</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --field: oklch(82% 0.12 38); --ink: oklch(24% 0.035 30); --paper: oklch(99.2% 0.004 60); }
+* { box-sizing: border-box; margin: 0; }
+body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; gap: 38px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 68ch; margin-top: 10px; }
+.one { position: relative; padding-top: 14px; }
+.tab { position: absolute; z-index: 3; left: 18px; top: 0; font-size: 15px; font-weight: 700; padding: 5px 14px 6px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.frame { position: relative; overflow: hidden; border-radius: 26px 26px 26px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); background: var(--field); }
+.frame canvas { display: block; width: 100%; }
+.frame::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--ink); pointer-events: none; }
+#scene { aspect-ratio: 16 / 9; } #sheet { aspect-ratio: 16 / 6; }
+@media (max-width: 640px) { #scene { aspect-ratio: 4 / 5; } #sheet { aspect-ratio: 1 / 1; } }
+.picks { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; align-items: center; }
+.picks button { font: 700 15px Archivo, system-ui, sans-serif; color: var(--ink); background: var(--paper); border: 0; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 999px; padding: 8px 16px 9px; cursor: pointer; }
+.picks button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.picks .swatch { width: 34px; height: 34px; padding: 0; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--ink); }
+.picks .swatch[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 3px var(--paper), 0 0 0 5px var(--ink); }
+.picks .gap { width: 14px; }
+.note { margin-top: 14px; padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.4; max-width: 80ch; }
+</style>
+
+<main>
+  <header>
+    <h1>Conga · pickup effects</h1>
+    <p class="lead">Four looks for the megaphone's reach, each in your line's own colour, and four ways for a pickup to catch the eye on the ground. Tap through them; the scenes play live.</p>
+  </header>
+
+  <section class="one"><span class="tab">The megaphone's reach</span><div class="frame"><canvas id="scene"></canvas></div>
+    <div class="picks" id="reach-picks">
+      <button data-reach="pool">A · Tinted pool</button><button data-reach="rope">B · Rope ring</button><button data-reach="spot">C · Spotlight</button><button data-reach="waves">D · Sound waves</button>
+      <span class="gap"></span>
+    </div>
+    <p class="note" id="reach-note"></p></section>
+
+  <section class="one"><span class="tab">Pickups on the ground</span><div class="frame"><canvas id="sheet"></canvas></div>
+    <div class="picks" id="glow-picks">
+      <button data-glow="ripple">1 · Colour ripple</button><button data-glow="beam">2 · Light beam</button><button data-glow="stage">3 · Stage disc</button><button data-glow="orbit">4 · Orbit</button>
+    </div>
+    <p class="note" id="glow-note"></p></section>
+</main>
+
+<script>
+const C = { field: 'oklch(82% 0.12 38)', dot: 'oklch(77% 0.13 37)', ink: 'oklch(24% 0.035 30)', paper: 'oklch(99.2% 0.004 60)', twine: '#fbf7ec' };
+// The rope colours the game gives lines; yours is one of them.
+const YOU = { red: '48.5% 0.185 27', blue: '62% 0.2 262', green: '74% 0.2 140', purple: '62% 0.24 320', yellow: '88% 0.17 98' };
+// Each pickup's own colour, taken from its picture.
+const OWN = { megaphone: '62% 0.2 27', coffee: '62% 0.09 60', whistle: '84% 0.16 88' };
+const col = (c, a = 1) => `oklch(${c} / ${a})`;
+const REACH_NOTES = {
+  pool: 'Your colour pools inside the reach, faint at you and deeper toward the edge, with a clean rim of your colour on an ink line. Calm, no motion; the strongest colour sits where the edge is.',
+  rope: 'The edge is a cord of your own rope, lying on the ground with a soft shadow under it, lit along its top, its twisted strands crawling slowly round. Your colour glows just inside it; the middle stays clear ground. It keeps the same thickness on screen however far the view pulls back.',
+  spot: 'The ground outside your reach dims a touch, as if the lights went down, and everything inside stays bright. A thin rim of your colour, and the strays inside stand on a small dot of your colour: they are about to be yours.',
+  waves: 'A still rim of your colour, and thin rings of it go out from you every second, like the sound leaving the megaphone. The only one that moves inside.',
+};
+const GLOW_NOTES = {
+  ripple: 'A disc in the pickup\'s own colour under it, and two rings of that colour going out across the ground in turn. Red for the megaphone, brown for the coffee, yellow for the whistle.',
+  beam: 'A soft column of the pickup\'s own colour rising from the ground behind it, as loot does in games, fading upward. Seen from across the map.',
+  stage: 'The pickup floats over a small round stage in a pale tint of its colour, with an ink rim and a dashed ring of its colour turning slowly round it.',
+  orbit: 'Three beads of the pickup\'s colour circle it at ground level, passing in front of it and behind, over a faint disc of its colour.',
+};
+let reachStyle = 'rope', you = 'red', glow = 'beam';
+
+const COLS = 7, SHEET = 96;
+const sheet = Object.assign(new Image(), { src: '/conga/animals-96.v1.webp' });
+const ART = Object.fromEntries(Object.keys(OWN).map(kind => [kind, Object.assign(new Image(), { src: `/demo/pickup-art/${kind}.png` })]));
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- drawing ----------
+function sprite(ctx, face, x, y, size) {
+  if (!sheet.complete || !sheet.naturalWidth) return;
+  ctx.drawImage(sheet, (face - 1) % COLS * SHEET, Math.floor((face - 1) / COLS) * SHEET, SHEET, SHEET, x - size / 2, y - size / 2, size, size);
+}
+// A pickup lying on the ground, floating a little over its shadow, with the chosen way of standing out.
+function pickup(ctx, kind, x, y, size, t, seed = 0) {
+  const c = OWN[kind], s = still ? 0.6 : t + seed, lift = still ? 5 : 6 + Math.sin(s * 2.6) * 4, foot = y + size * 0.42;
+  const disc = (rx, a) => { ctx.beginPath(); ctx.ellipse(x, foot, rx, rx * 0.32, 0, 0, 7); ctx.fillStyle = col(c, a); ctx.fill(); };
+  let front = null;
+  if (glow === 'ripple') {
+    disc(size * 0.5, 0.35);
+    for (const shift of [0, 0.5]) {
+      const u = ((s / 1.6 + shift) % 1), rx = size * (0.5 + u * 0.8);
+      ctx.beginPath(); ctx.ellipse(x, foot, rx, rx * 0.32, 0, 0, 7); ctx.strokeStyle = col(c, (1 - u) * 0.85); ctx.lineWidth = 4 * (1 - u) + 1; ctx.stroke();
+    }
+  } else if (glow === 'beam') {
+    const high = size * 2.3, wide = size * (0.36 + Math.sin(s * 3.1) * 0.03);
+    const g = ctx.createLinearGradient(0, foot, 0, foot - high);
+    g.addColorStop(0, col(c, 0.55)); g.addColorStop(0.45, col(c, 0.22)); g.addColorStop(1, col(c, 0));
+    ctx.beginPath(); ctx.moveTo(x - wide, foot); ctx.lineTo(x - wide * 0.7, foot - high); ctx.lineTo(x + wide * 0.7, foot - high); ctx.lineTo(x + wide, foot); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    // a brighter core up the middle
+    const core = ctx.createLinearGradient(0, foot, 0, foot - high * 0.8);
+    core.addColorStop(0, 'oklch(99% 0.02 80 / .5)'); core.addColorStop(1, 'oklch(99% 0.02 80 / 0)');
+    ctx.fillStyle = core; ctx.fillRect(x - wide * 0.22, foot - high * 0.8, wide * 0.44, high * 0.8);
+    disc(wide * 1.15, 0.5);
+  } else if (glow === 'stage') {
+    const rx = size * 0.52;
+    ctx.beginPath(); ctx.ellipse(x, foot + 3, rx, rx * 0.34, 0, 0, 7); ctx.fillStyle = C.ink; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x, foot, rx, rx * 0.34, 0, 0, 7); ctx.fillStyle = `oklch(93% 0.05 ${c.split(' ')[2]})`; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x, foot, rx + 10, (rx + 10) * 0.34, 0, 0, 7); ctx.setLineDash([7, 7]); ctx.lineDashOffset = -s * 14; ctx.strokeStyle = col(c, 0.95); ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); ctx.setLineDash([]); ctx.lineCap = 'butt';
+  } else if (glow === 'orbit') {
+    disc(size * 0.5, 0.22);
+    const beads = [0, 1, 2].map(n => { const a = s * 1.8 + n * Math.PI * 2 / 3; return { x: x + Math.cos(a) * size * 0.62, y: foot - size * 0.12 + Math.sin(a) * size * 0.2, front: Math.sin(a) > 0 }; });
+    const bead = b => { ctx.beginPath(); ctx.arc(b.x, b.y, size * 0.075, 0, 7); ctx.fillStyle = col(c); ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke(); ctx.beginPath(); ctx.arc(b.x - size * 0.022, b.y - size * 0.025, size * 0.022, 0, 7); ctx.fillStyle = 'oklch(99% 0.01 80 / .8)'; ctx.fill(); };
+    beads.filter(b => !b.front).forEach(bead); front = () => beads.filter(b => b.front).forEach(bead);
+  }
+  ctx.beginPath(); ctx.ellipse(x, foot, size * 0.34 - lift * 0.6, size * 0.1 - lift * 0.15, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .22)'; ctx.fill();
+  const art = ART[kind]; if (art.complete && art.naturalWidth) ctx.drawImage(art, x - size / 2, y - size / 2 - lift, size, size);
+  front?.();
+}
+function field(ctx, x0, y0, w, h) {
+  ctx.fillStyle = C.field; ctx.fillRect(x0, y0, w, h); ctx.fillStyle = C.dot; ctx.beginPath();
+  for (let x = Math.floor(x0 / 90) * 90; x < x0 + w + 90; x += 90) for (let y = Math.floor(y0 / 90) * 90; y < y0 + h + 90; y += 90) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); }
+  ctx.fill();
+}
+function pill(ctx, text, x, y, fill, ink, size = 13) {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const width = ctx.measureText(text).width + size * 1.4, high = size * 1.7;
+  ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fillStyle = fill; ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+  return width;
+}
+function strokeRope(ctx, colour, dash = 0) {
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = colour; ctx.lineWidth = 10; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([5, 9]); ctx.lineDashOffset = dash; ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1;
+}
+function rope(ctx, points, colour) {
+  const low = 13;
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
+  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
+  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
+  strokeRope(ctx, colour);
+}
+const fit = canvas => { const box = canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); canvas.width = Math.round(box.width * dpr); canvas.height = Math.round(box.height * dpr); return { box, dpr }; };
+const ease = u => 1 - (1 - Math.min(1, Math.max(0, u))) ** 3;
+
+// The reach, in your colour, in the chosen look. a is how far it has opened (0 to 1).
+function reach(ctx, x, y, r, a, t, view) {
+  const c = YOU[you];
+  ctx.save(); ctx.globalAlpha = Math.min(1, a * 2.5);
+  if (reachStyle === 'pool') {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, col(c, 0.03)); g.addColorStop(0.7, col(c, 0.1)); g.addColorStop(1, col(c, 0.26));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 6.5; ctx.stroke(); ctx.strokeStyle = col(c); ctx.lineWidth = 3.5; ctx.stroke();
+  } else if (reachStyle === 'rope') {
+    // A cord the same make as your rope, kept the same thickness on screen however far the view pulls back.
+    const w = Math.min(1.3, Math.max(1, 0.9 / cam.z)), [L, Ch, Hu] = c.split(' '), l = parseFloat(L);
+    const shade = `oklch(${Math.max(20, l - 14)}% ${Ch} ${Hu})`, lit = `oklch(${Math.min(96, l + 22)}% ${(parseFloat(Ch) * 0.6).toFixed(3)} ${Hu})`;
+    // A glow of your colour just inside the rim; the middle stays clear ground.
+    const g = ctx.createRadialGradient(x, y, r * 0.84, x, y, r);
+    g.addColorStop(0, col(c, 0)); g.addColorStop(1, col(c, 0.16));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+    const ring = (dy = 0, rr = r) => { ctx.beginPath(); ctx.arc(x, y + dy, rr, 0, Math.PI * 2); };
+    // It lies on the ground: a soft shadow under it, then the ink, then the cord.
+    ring(5 * w); ctx.strokeStyle = 'oklch(24% 0.035 30 / .22)'; ctx.lineWidth = 15 * w; ctx.filter = `blur(${3 * w}px)`; ctx.stroke(); ctx.filter = 'none';
+    ring(); ctx.strokeStyle = C.ink; ctx.lineWidth = 15 * w; ctx.stroke();
+    ctx.strokeStyle = col(c); ctx.lineWidth = 10 * w; ctx.stroke();
+    // Twisted strands: short darker bands across the cord, crawling slowly round.
+    ctx.setLineDash([3.5 * w, 5.5 * w]); ctx.lineDashOffset = still ? 0 : -t * 18 * w; ctx.strokeStyle = shade; ctx.globalAlpha *= 0.5; ctx.lineWidth = 10 * w; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = Math.min(1, a * 2.5);
+    // Lit from above: a thin light line along the cord's top edge.
+    ring(-2.2 * w, r); ctx.strokeStyle = lit; ctx.globalAlpha *= 0.7; ctx.lineWidth = 2.2 * w; ctx.stroke();
+  } else if (reachStyle === 'spot') {
+    ctx.beginPath(); ctx.rect(view.x, view.y, view.w, view.h); ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = 'oklch(24% 0.035 30 / .2)'; ctx.fill('evenodd');
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.strokeStyle = 'oklch(24% 0.035 30 / .5)'; ctx.lineWidth = 5; ctx.stroke(); ctx.strokeStyle = col(c); ctx.lineWidth = 2.5; ctx.stroke();
+  } else if (reachStyle === 'waves') {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fillStyle = col(c, 0.07); ctx.fill();
+    if (!still) for (let n = 0; n < 3; n++) {
+      const u = ((t / 1.1 + n / 3) % 1), rr = 40 + (r - 40) * u;
+      ctx.beginPath(); ctx.arc(x, y, rr, 0, 7); ctx.strokeStyle = col(c, 0.5 * (1 - u * 0.7)); ctx.lineWidth = 3; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.strokeStyle = C.ink; ctx.lineWidth = 6.5; ctx.stroke(); ctx.strokeStyle = col(c); ctx.lineWidth = 3.5; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ---------- the megaphone scene ----------
+const REACH = 300, PULL = 150, SPEED = 150, GAP = 33, JOIN = 38, ON = 9, AGAIN = 2;
+function seeded(seed) { return () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; }; }
+const canvas = document.getElementById('scene'), ctx = canvas.getContext('2d');
+const WORLD = { w: 2600, h: 1800 }, LAP = { cx: 1300, cy: 900, rx: 430, ry: 260 };
+let random, box, dpr, me, strays, lying, item, active, wait, opened, cam, puffs;
+const at = theta => ({ x: LAP.cx + Math.cos(theta) * LAP.rx, y: LAP.cy + Math.sin(theta) * LAP.ry });
+const face = () => 1 + Math.floor(random() * 36);
+const view = loud => { const narrow = box.width < 640, units = loud ? (narrow ? 760 : 1500) : (narrow ? 480 : 900); return box.width / units; };
+function reset() {
+  random = seeded(41);
+  me = { face: 12, theta: Math.PI * 0.75, x: 0, y: 0, path: [], tail: [] }; Object.assign(me, at(me.theta)); me.path = [{ x: me.x, y: me.y }];
+  me.tail = Array.from({ length: 10 }, () => ({ face: face(), x: me.x, y: me.y }));
+  strays = Array.from({ length: 90 }, () => ({ x: 60 + random() * (WORLD.w - 120), y: 60 + random() * (WORLD.h - 120), face: face(), a: random() * 7, hop: random() * 7 }));
+  lying = [{ kind: 'coffee', x: LAP.cx + 120, y: LAP.cy - 30 }, { kind: 'whistle', x: LAP.cx - 140, y: LAP.cy + 60 }];
+  for (let n = 0; n < 240; n++) walk(1 / 60, true);
+  // It opens with the megaphone already taken, so the reach shows at once.
+  active = { left: ON }; opened = 0; wait = 0; puffs = []; item = null;
+  cam = { x: me.x, y: me.y, z: view(true) };
+}
+function lay() { const theta = me.theta + SPEED * 2.4 / ((LAP.rx + LAP.ry) / 2); item = { kind: 'megaphone', ...at(theta) }; }
+function walk(dt, quiet) {
+  me.theta += SPEED * dt / Math.hypot(Math.sin(me.theta) * LAP.rx, Math.cos(me.theta) * LAP.ry);
+  Object.assign(me, at(me.theta));
+  if (Math.hypot(me.x - me.path[0].x, me.y - me.path[0].y) >= 5) me.path.unshift({ x: me.x, y: me.y });
+  let px = me.x, py = me.y, walked = 0, need = GAP, i = 0, n = 0;
+  for (; n < me.path.length && i < me.tail.length; n++) {
+    const q = me.path[n], length = Math.hypot(q.x - px, q.y - py);
+    while (i < me.tail.length && walked + length >= need) { const u = length ? (need - walked) / length : 0, f = me.tail[i++], k = quiet ? 1 : Math.min(1, dt * 14); f.x += (px + (q.x - px) * u - f.x) * k; f.y += (py + (q.y - py) * u - f.y) * k; need += GAP; }
+    walked += length; px = q.x; py = q.y;
+  }
+  if (me.path.length > n + 2) me.path.length = n + 2;
+}
+function tick(dt) {
+  walk(dt);
+  if (item && Math.hypot(me.x - item.x, me.y - item.y) < JOIN + 8) { puffs.push({ x: item.x, y: item.y, t: 0 }); active = { left: ON }; item = null; }
+  if (active && (active.left -= dt) <= 0) { active = null; wait = AGAIN; }
+  if (!active && !item && (wait -= dt) <= 0) lay();
+  opened += ((active ? 1 : 0) - opened) * (1 - Math.exp(-dt * (active ? 5 : 7)));
+  const r = PULL + (REACH - PULL) * opened;
+  for (const s of strays) {
+    const d = Math.hypot(me.x - s.x, me.y - s.y);
+    if (d < JOIN) { me.tail.unshift({ face: s.face, x: s.x, y: s.y }); if (me.tail.length > 18) me.tail.length = 18; Object.assign(s, { x: 60 + random() * (WORLD.w - 120), y: 60 + random() * (WORLD.h - 120), face: face() }); continue; }
+    s.a += (random() - 0.5) * 2 * dt; s.drawn = d < r; s.hop += dt * (s.drawn ? 11 : 3);
+    let vx = Math.cos(s.a) * 14, vy = Math.sin(s.a) * 14;
+    if (s.drawn) { const pull = (170 + 280 * (1 - d / r)) / d; vx += (me.x - s.x) * pull; vy += (me.y - s.y) * pull; }
+    s.x = Math.max(40, Math.min(WORLD.w - 40, s.x + vx * dt)); s.y = Math.max(40, Math.min(WORLD.h - 40, s.y + vy * dt));
+  }
+  const z = view(!!active);
+  cam.x += (me.x - cam.x) * (1 - Math.exp(-dt * 6)); cam.y += (me.y - cam.y) * (1 - Math.exp(-dt * 6));
+  cam.z += (z - cam.z) * (1 - Math.exp(-dt * 2.6));
+  for (let i = puffs.length - 1; i >= 0; i--) if ((puffs[i].t += dt) > 0.6) puffs.splice(i, 1);
+}
+function draw(t) {
+  const W = box.width / cam.z, H = box.height / cam.z, v = { x: cam.x - W / 2, y: cam.y - H / 2, w: W, h: H };
+  ctx.setTransform(dpr * cam.z, 0, 0, dpr * cam.z, dpr * box.width / 2 - dpr * cam.z * cam.x, dpr * box.height / 2 - dpr * cam.z * cam.y);
+  field(ctx, v.x, v.y, W, H);
+  const r = REACH * ease(opened);
+  if (opened > 0.01 && reachStyle !== 'spot') reach(ctx, me.x, me.y, r, opened, t, v);
+  const shown = [{ x: me.x, y: me.y }, ...me.tail.map((f, i) => ({ x: f.x, y: f.y - (0.5 - 0.5 * Math.cos((t * 7 - (i + 1) * 0.7) * 2)) * 2.5, face: f.face }))];
+  rope(ctx, shown, col(YOU[you]));
+  for (const [n, b] of lying.entries()) pickup(ctx, b.kind, b.x, b.y, 50, t, n * 0.6);
+  if (item) pickup(ctx, item.kind, item.x, item.y, 56, t, 0.3);
+  const sprites = [];
+  for (let i = shown.length - 1; i > 0; i--) sprites.push({ ...shown[i], size: 42 });
+  for (const s of strays) if (Math.abs(s.x - cam.x) < W / 2 + 40 && Math.abs(s.y - cam.y) < H / 2 + 40) sprites.push({ x: s.x, y: s.y - (s.drawn && opened > 0.5 ? Math.abs(Math.sin(s.hop)) * 9 : (0.5 - 0.5 * Math.cos(s.hop)) * 2), foot: s.y, face: s.face, size: 40, drawn: s.drawn && opened > 0.5 });
+  sprites.sort((a, b) => a.y - b.y);
+  // In the spotlight look, the strays caught by the reach stand on a dot of your colour.
+  if (reachStyle === 'spot') for (const s of sprites) if (s.drawn) { ctx.beginPath(); ctx.ellipse(s.x, s.foot + 15, 17, 6, 0, 0, 7); ctx.fillStyle = col(YOU[you], 0.75); ctx.fill(); }
+  for (const s of sprites) sprite(ctx, s.face, s.x, s.y, s.size);
+  sprite(ctx, me.face, me.x, me.y - (0.5 - 0.5 * Math.cos(t * 14)) * 2.5, 58);
+  if (opened > 0.01 && reachStyle === 'spot') reach(ctx, me.x, me.y, r, opened, t, v);
+  for (const p of puffs) { const age = p.t / 0.6; ctx.strokeStyle = col(YOU[you]); ctx.globalAlpha = 1 - age; ctx.lineWidth = 8 * (1 - age) + 2; ctx.beginPath(); ctx.arc(p.x, p.y, 24 + age * 70, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  const tagY = me.y - 48, tagW = pill(ctx, `You · ${me.tail.length + 1}`, me.x, tagY, col(YOU[you]), you === 'yellow' || you === 'green' ? C.ink : C.paper, 13);
+  if (active) {
+    const bx = me.x + tagW / 2 + 22;
+    ctx.beginPath(); ctx.arc(bx, tagY, 17, 0, 7); ctx.fillStyle = C.paper; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(bx, tagY, 21, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * active.left / ON); ctx.strokeStyle = col(YOU[you]); ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); ctx.lineCap = 'butt';
+    const art = ART.megaphone; if (art.complete && art.naturalWidth) ctx.drawImage(art, bx - 14, tagY - 14, 28, 28);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (active && active.left > ON - 2.4) pill(ctx, 'Megaphone! Strays come from twice as far', box.width / 2, 30, C.ink, C.paper, box.width < 640 ? 12 : 15);
+}
+
+// ---------- the pickups on the ground ----------
+function drawSheet(t) {
+  const c = document.getElementById('sheet'), b = c.getBoundingClientRect(), pen = c.getContext('2d'), r = Math.min(2, devicePixelRatio || 1);
+  if (c.width !== Math.round(b.width * r)) { c.width = Math.round(b.width * r); c.height = Math.round(b.height * r); }
+  const narrow = b.width < 640, W = narrow ? 420 : 1000, k = b.width / W, H = b.height / k;
+  pen.setTransform(r * k, 0, 0, r * k, 0, 0); field(pen, 0, 0, W, H);
+  const faces = narrow ? [[0.15, 0.15, 14], [0.82, 0.12, 22], [0.5, 0.42, 5], [0.12, 0.88, 30], [0.86, 0.86, 9]] : [[0.06, 0.25, 14], [0.3, 0.8, 22], [0.4, 0.22, 5], [0.66, 0.82, 30], [0.68, 0.2, 9], [0.95, 0.75, 18]];
+  for (const [fx, fy, f] of faces) sprite(pen, f, W * fx, H * fy, narrow ? 40 : 48);
+  const spots = narrow ? [[0.3, 0.32, 'megaphone'], [0.72, 0.5, 'coffee'], [0.36, 0.74, 'whistle']] : [[0.2, 0.58, 'megaphone'], [0.52, 0.6, 'coffee'], [0.82, 0.58, 'whistle']];
+  spots.forEach(([fx, fy, kind], n) => pickup(pen, kind, W * fx, H * fy, narrow ? 60 : 78, t, n * 0.45));
+}
+
+// ---------- the choices ----------
+const reachPicks = document.getElementById('reach-picks');
+for (const [name, c] of Object.entries(YOU)) reachPicks.insertAdjacentHTML('beforeend', `<button class="swatch" data-you="${name}" aria-label="Your colour: ${name}" style="background:oklch(${c})"></button>`);
+function mark() {
+  document.querySelectorAll('[data-reach]').forEach(b => b.setAttribute('aria-pressed', b.dataset.reach === reachStyle));
+  document.querySelectorAll('[data-you]').forEach(b => b.setAttribute('aria-pressed', b.dataset.you === you));
+  document.querySelectorAll('[data-glow]').forEach(b => b.setAttribute('aria-pressed', b.dataset.glow === glow));
+  document.getElementById('reach-note').textContent = REACH_NOTES[reachStyle];
+  document.getElementById('glow-note').textContent = GLOW_NOTES[glow];
+  if (still && me) { draw(1); drawSheet(1); }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.reach) { reachStyle = b.dataset.reach; if (!active) { active = { left: ON }; item = null; } }
+  if (b.dataset.you) you = b.dataset.you;
+  if (b.dataset.glow) glow = b.dataset.glow;
+  mark();
+});
+mark();
+
+function layout() { const got = fit(canvas); box = got.box; dpr = got.dpr; reset(); if (still) { for (let n = 0; n < 200; n++) tick(1 / 60); draw(1); drawSheet(1); } }
+new ResizeObserver(layout).observe(document.querySelector('main'));
+if (!still) {
+  let last = performance.now(), clock = 0;
+  const frame = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt; if (me) { tick(dt); draw(clock); drawSheet(clock); } requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+</script>
