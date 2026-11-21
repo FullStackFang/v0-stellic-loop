@@ -149,6 +149,14 @@ it('takes a member with Ink+ to Assistants, and drops the tag', async () => {
   expect(links()).toEqual(['Assistants']);
 });
 
+it('is a plain link from the start for someone the page knows has Ink+: nothing is asked, nothing is waited for', () => {
+  render(<AssistantsLink plus />);
+  expect(screen.getByRole('link', { name: 'Assistants' })).toHaveAttribute('href', '/groups/connections');
+  expect(fireEvent.click(screen.getByRole('link', { name: 'Assistants' }))).toBe(true);
+  expect(server.plus).not.toHaveBeenCalled();
+  expect(server.push).not.toHaveBeenCalled();
+});
+
 it('leaves Assistants a plain link when it cannot be asked', async () => {
   server.plus.mockRejectedValue(new Error('offline'));
   render(<AssistantsLink />);

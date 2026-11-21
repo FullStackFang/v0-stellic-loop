@@ -101,8 +101,8 @@ function Blot({ plan, seed }: { plan: Plan; seed: string }) {
  * of a page, and carries the line under it. `plate` is for a button filled with the action colour, where the dark ink
  * would not show.
  */
-export function SeatsSmall({ line, plate, size, first, ...given }: Me & { line?: boolean; plate?: boolean; size?: number; /** A part of the bar that a fresh load is held for (fresh-wait.tsx). */ first?: boolean }) {
+export function SeatsSmall({ line, plate, size, first, ...given }: Me & { line?: boolean; plate?: boolean; size?: number; /** A part of a bar that a fresh load is held for, so the bar does not fill in afterwards (fresh-wait.tsx). */ first?: boolean }) {
   const me = useMe(given);
-  const small = <span className={`seats-sm${plate ? ' seats-plate' : ''}`} style={size ? { '--s': `${size}px` } as CSSProperties : undefined} aria-hidden="true" data-seats-wait={first ? '' : undefined}><Blot plan={me.plan} seed={me.seed} /><img src={me.face} alt="" /></span>;
+  const small = <span className={`seats-sm${plate ? ' seats-plate' : ''}`} style={size ? { '--s': `${size}px` } as CSSProperties : undefined} aria-hidden="true" data-seats-wait={first ? 'part' : undefined}><Blot plan={me.plan} seed={me.seed} /><img src={me.face} alt="" /></span>;
   return line ? <span className="seats-part" role="status">{small}<span className="seats-say">{LINE}</span></span> : small;
 }

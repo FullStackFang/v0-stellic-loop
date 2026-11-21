@@ -5,7 +5,7 @@ import { barGroups } from '@/lib/campus/bar-groups';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { OnYou } from '@/app/c/on-you';
+import { OnYou, startOnYou } from '@/app/c/on-you';
 import { SeatsSmall } from '@/components/loading/seats';
 import { getPortalPrincipal, getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { frontIsCampus } from '@/lib/campus/schools';
@@ -51,6 +51,8 @@ export default async function GroupsLayout({ children }: { children: React.React
   // Signed out there is no bar: the page itself carries the way in, in the look it always had. The foot is there either way.
   let content = <><div className="lp">{configured && <SessionRefresh />}<main className="lp-main lp-main-out"><div className="lp-wrap">{children}</div></main></div><SiteFoot /></>;
   if (principal) {
+    // The bar's counters are read beside everything else, not after the bar is drawn (app/c/on-you.tsx).
+    startOnYou();
     const [groups, look, screen, viewer] = await Promise.all([barGroups(principal), looks(principal), accountScreen(), campusViewer().catch(() => null)]);
     // The colours they may wear: Loopd's and their schools', or every school's with Ink+ (components/campus/kit.tsx).
     const yours = viewer?.kits ?? ['loop', look.kit], any = viewer?.anyKit ?? false;

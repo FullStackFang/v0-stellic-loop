@@ -23,8 +23,12 @@ const RANK: RoleName[] = ['owner', 'organizer', 'member', 'follower'];
 async function loadGroup(principal: NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>, route: GroupRoute) {
   const opened = await openGroup(principal, route, async scope => {
   // Reads that do not wait on each other start together. What only a manager sees waits for the roles, which say whether this person is one.
+  // The group's tile waits on nothing, so it starts now and is collected at the end, not read alone after everything else.
+  const tile = groupTile(db(), principal, scope); tile.catch(() => null);
   const [roles, tagHandle] = await Promise.all([listScopedRoles(db(), principal, scope.orgId, scope.loopId).catch(() => null), getMemberHandle(db(), principal, scope.orgId)]);
   const owner = roles?.find(role => role.personId === principal.personId)?.effectiveRoles.includes('owner') ?? false;
+  // Each person's face is the animal they picked on the campus screen, or the one their id gives them. Read beside the lists below.
+  const picking = pickedFaces(db(), (roles ?? []).map(role => role.personId).concat(principal.personId)).catch(() => new Map<string, number>());
   const [invitations, requests, members, handles, emails] = roles ? await Promise.all([
     listInvitations(db(), principal, scope.orgId, scope.loopId), listMembershipRequests(db(), principal, scope),
     // Removing a person from the whole group is done on the top-level group only: an inner group's owner is not shown its members.
@@ -32,10 +36,9 @@ async function loadGroup(principal: NonNullable<Awaited<ReturnType<typeof getPor
     listMemberHandles(db(), principal, scope.orgId, scope.loopId).catch(() => ({} as Record<string, string>)),
     // Listing the roles succeeded, so this person is an owner or organizer here: they see each person's sign-in address, to tell people apart.
     clerkEmailsOf(db(), roles.map(role => role.personId)).catch(() => ({} as Record<string, string>))]) : [null, null, null, null, null];
-  // Each person's face is the animal they picked on the campus screen, or the one their id gives them.
-  const picks = await pickedFaces(db(), (roles ?? []).map(role => role.personId).concat(principal.personId)).catch(() => new Map<string, number>());
+  const picks = await picking;
   const made = await customFaces(db(), [...picks].filter(([, pick]) => pick === CUSTOM).map(([id]) => id)).catch(() => new Map<string, { token: string | null }>());
-  return { roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made, tile: await groupTile(db(), principal, scope) };
+  return { roles, invitations, requests, owner, members, tagHandle, handles, emails, picks, made, tile: await tile };
   });
   return opened && { group: opened.group, scope: opened.scope, ...opened.data };
 }

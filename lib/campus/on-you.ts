@@ -60,8 +60,8 @@ async function membersOf(loopIds: string[]): Promise<Map<string, { people: numbe
 export async function onYouView(principal: Principal, now = Date.now()): Promise<OnYouView | null> {
   const read = await onYou(db(), principal);
   if (!read.groups.length) return null;
-  const members = await membersOf(read.groups.map(group => group.scope.loopId)).catch(() => new Map<string, { people: number; faces: string[] }>());
-  const pictures = await groupPictureMap(db(), read.groups.map(group => group.scope.loopId));
+  // Two reads that do not wait on each other: together, not one after the other.
+  const [members, pictures] = await Promise.all([membersOf(read.groups.map(group => group.scope.loopId)).catch(() => new Map<string, { people: number; faces: string[] }>()), groupPictureMap(db(), read.groups.map(group => group.scope.loopId))]);
   const waits = (loopId: string) => [...read.claims.filter(claim => claim.scope.loopId === loopId).map(claim => claim.record.what ?? ''), ...read.rows.filter(row => row.scope.loopId === loopId && row.kind !== 'missed').map(row => 'ask' in row ? row.ask.question : row.event.name)];
   const byHandle = [...read.groups].sort((a, b) => a.team.handle.localeCompare(b.team.handle));
   return { count: read.count, items: read.rows.map(row => item(row, now)), more: read.more.reduce((sum, rest) => sum + rest.count, 0), 

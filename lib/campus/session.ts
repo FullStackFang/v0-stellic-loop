@@ -47,11 +47,13 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
   const principal = await getSignedInPrincipal().catch(() => null);
   if (!principal) return null;
   const school = await campusOf(db(), principal, await seemsAt());
-  const theirs = school ? [schoolOf(school.slug), ...(await addedSchools(db(), principal.personId)).added] : [];
-  const visits = school ? (await listCampuses(db())).filter(each => each.id !== school.id && theirs.includes(schoolOf(each.slug))).map(each => each.id) : [];
   const admin = isAdmin(principal);
+  // What follows waits only on the school: read together, not one after the other.
+  const [added, campuses, start, inkPlus] = await Promise.all([school ? addedSchools(db(), principal.personId) : null, school ? listCampuses(db()) : [], !school && admin ? findCampus(db(), DEFAULT_CAMPUS) : null, admin || hasInkPlus(db(), principal.personId)]);
+  const theirs = school ? [schoolOf(school.slug), ...added!.added] : [];
+  const visits = school ? campuses.filter(each => each.id !== school.id && theirs.includes(schoolOf(each.slug))).map(each => each.id) : [];
   // Loopd is for people at a school: an email at none has no campus. The admin, who may open any, starts at the default one.
-  return { principal, personId: principal.personId, admin, campus: school ?? (admin ? await findCampus(db(), DEFAULT_CAMPUS) : null), kit: school ? schoolOf(school.slug) : 'loop', kits: ['loop', ...theirs], anyKit: admin || await hasInkPlus(db(), principal.personId), visits };
+  return { principal, personId: principal.personId, admin, campus: school ?? start, kit: school ? schoolOf(school.slug) : 'loop', kits: ['loop', ...theirs], anyKit: inkPlus, visits };
 });
 
 /** Whether this viewer may use a campus's screen: it is their own, or another campus of a school they have, or they are the admin, who may open any. */

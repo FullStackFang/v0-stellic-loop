@@ -1,58 +1,86 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, render } from '@testing-library/react';
-import { SeatsSmall } from './seats';
+import { animal } from '@/lib/campus/animals';
+import { forget, rememberMe } from './last-bar';
+import { LINE, SeatsSmall } from './seats';
 import { FreshWait } from './fresh-wait';
 import { PageWait, PartWait } from './page-wait';
 
-// A fresh load is one ticket, then everything (public/demo/mockups-loading-one.html, direction B).
+// One ticket for a whole load, and one ending (public/demo/mockups-loading-one.html, direction B).
 vi.mock('next/navigation', () => ({ usePathname: () => '/groups/extreme-cheapskates' }));
-afterEach(() => { document.body.innerHTML = ''; });
+afterEach(() => { document.body.innerHTML = ''; forget(); });
 
 const cover = () => document.querySelector('.seats-fresh');
-/** A piece of the page that has not come: what the server sent in its place. */
+const tickets = () => document.querySelectorAll('.seats-tk');
+/** A piece of the page that has not come: what stands in its place. */
 function piece(html: string) { const box = document.createElement('div'); box.innerHTML = html; document.body.append(box); return box; }
 /** Lets the watcher hear what changed on the page. */
 const settle = () => act(async () => { await Promise.resolve(); });
+const PAGE = '<div data-seats-wait="page"></div>', PART = '<span data-seats-wait="part"></span>';
 
-describe('the loaders a fresh load is held for', () => {
-  it('are the page-sized ones and the small one of a bar, and no other small one', () => {
-    for (const loader of [<PageWait key="page" />, <PartWait key="part" />, <SeatsSmall key="bar" first />]) {
-      const { container, unmount } = render(loader);
-      expect(container.querySelector('[data-seats-wait]')).not.toBeNull();
-      unmount();
-    }
+describe('the loaders', () => {
+  it('say what they wait for: a page, or a part of a bar; any other small one says nothing', () => {
+    expect(render(<SeatsSmall first />).container.querySelector('[data-seats-wait="part"]')).not.toBeNull();
+    expect(render(<PageWait />).container.querySelector('[data-seats-wait="page"]')).not.toBeNull();
+    expect(render(<PartWait />).container.querySelector('[data-seats-wait="page"]')).not.toBeNull();
     expect(render(<SeatsSmall />).container.querySelector('[data-seats-wait]')).toBeNull();
   });
 });
 
-describe('the one ticket of a fresh load', () => {
-  it('stays while any first wait is on the page, through one piece taking the place of another', async () => {
-    const page = piece('<div data-seats-wait></div>');
+describe('a fresh load', () => {
+  it('has one ticket, the same one while each piece takes the place of the last', async () => {
+    const page = piece(PAGE);
     render(<FreshWait />);
-    expect(cover()).not.toBeNull();
     const ticket = cover()!.querySelector('.seats-tk');
-    // The layout lands: its bar, still waiting for its counters, and the page's own loader.
-    page.innerHTML = '<span data-seats-wait></span><div data-seats-wait></div>';
+    expect(ticket).toHaveTextContent(LINE);
+    // The layout lands: its bar, and the page's own loader in the first one's place.
+    page.innerHTML = PART + PAGE;
     await settle();
-    expect(cover()!.querySelector('.seats-tk')).toBe(ticket);
-    // The page lands; the counters have not.
-    page.innerHTML = '<span data-seats-wait></span><main>Members</main>';
+    // The page lands; the bar's counters have not.
+    page.innerHTML = PART + '<main>Members</main>';
     await settle();
-    expect(cover()!.querySelector('.seats-tk')).toBe(ticket);
+    expect([...tickets()]).toEqual([ticket]);
   });
-  it('goes when the last piece has come, and does not come back for a later change of page', async () => {
-    const page = piece('<div data-seats-wait></div>');
+  it('ends when the last piece has come', async () => {
+    const page = piece(PART + PAGE);
     render(<FreshWait />);
     page.innerHTML = '<main>Members</main>';
     await settle();
     expect(cover()).toBeNull();
-    page.innerHTML = '<div data-seats-wait></div>';
-    await settle();
-    expect(cover()).toBeNull();
+    expect(tickets()).toHaveLength(0);
   });
-  it('is not there at all on a page that had nothing to wait for', () => {
+  it('has no ticket at all on a page that had nothing to wait for', () => {
     piece('<main>Terms</main>');
     render(<FreshWait />);
+    expect(tickets()).toHaveLength(0);
+  });
+});
+
+describe('a change of page, after the first load', () => {
+  /** The first load has wholly arrived. */
+  async function arrived() { const page = piece('<main>Members</main>'); render(<FreshWait />); await settle(); return page; }
+
+  it('has one ticket under the bar, the same one from the first loader to the last, with the person\'s face', async () => {
+    rememberMe({ face: animal(37) });
+    const page = await arrived();
+    page.innerHTML = PAGE;
+    await settle();
     expect(cover()).toBeNull();
+    const [ticket] = tickets();
+    expect(ticket.closest('.seats-page')).not.toBeNull();
+    expect([...ticket.querySelectorAll('.seats-row img')].at(-1)).toHaveAttribute('src', animal(37));
+    // The next layout lands with its own page loader in the first one's place.
+    page.innerHTML = '<nav>Bar</nav>' + PAGE;
+    await settle();
+    expect([...tickets()]).toEqual([ticket]);
+    page.innerHTML = '<nav>Bar</nav><main>Team</main>';
+    await settle();
+    expect(tickets()).toHaveLength(0);
+  });
+  it('is not held for a part of the bar: the page is there to use', async () => {
+    const page = await arrived();
+    page.innerHTML = PART + '<main>Team</main>';
+    await settle();
+    expect(tickets()).toHaveLength(0);
   });
 });

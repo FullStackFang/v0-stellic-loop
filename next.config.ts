@@ -24,7 +24,10 @@ const nextConfig: NextConfig = {
   // A file under public/ is asked for again on every visit unless told otherwise. The Conga game's sprite sheets (public/conga) carry
   // a version in their name (scripts/conga-atlas.mjs), so a browser may keep one for good.
   async headers() {
-    return [{ source: "/conga/:file(.+\\.v\\d+\\.webp)", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }];
+    return [{ source: "/conga/:file(.+\\.v\\d+\\.webp)", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
+      // The animal faces are on every page. Their names carry no version and a face is redrawn now and then, so a browser keeps
+      // one for a day, and may show the kept one for a week while it asks again.
+      { source: "/animals/:file(\\d+\\.png)", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] }];
   },
   async rewrites() {
     // Conga's page is served by app/conga, with its scripts beside it in public/conga. Seats' page is served by app/seats.

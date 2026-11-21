@@ -12,9 +12,12 @@ import './foot.css';
  * "Assistants" in the top bar, for someone in a group. Assistants is part of Ink+: for someone without it, pressing the
  * link opens a card under it that says so, in place of going there (the pill and the card are the ones picked in
  * public/demo/mockups-foot-legal.html, where the link first stood at the foot of the page).
+ *
+ * `plus` is what the page already knows: the person has Ink+. The link is then a plain link from the start. Without it
+ * the server is asked, and a press waited for that answer before it went anywhere, with nothing shown meanwhile.
  */
-export function AssistantsLink() {
-  const router = useRouter(), asked = useRef<Promise<boolean> | null>(null), [plus, setPlus] = useState(false), [ask, setAsk] = useState(false);
+export function AssistantsLink({ plus: known = false }: { plus?: boolean } = {}) {
+  const router = useRouter(), asked = useRef<Promise<boolean> | null>(known ? Promise.resolve(true) : null), [plus, setPlus] = useState(known), [ask, setAsk] = useState(false);
   const [email, setEmail] = useState(''), [busy, setBusy] = useState(false), [said, setSaid] = useState('');
   // Someone on Ink is told what Ink+ adds, and what it costs in place of Ink (openspec loop-ink-tiers).
   const [onInk, setOnInk] = useState(false);
@@ -28,7 +31,7 @@ export function AssistantsLink() {
   };
   // Asked once, when the link is first pointed at. If it cannot be asked, the link stays a link.
   const knows = () => asked.current ??= hasInkPlusAction().catch(() => true).then(has => { setPlus(has); return has; });
-  const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); if (ask) return setAsk(false); if (await knows()) router.push('/groups/connections'); else { setAsk(true); setOnInk((await planHereAction().catch(() => 'free')) === 'ink'); } };
+  const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { if (plus) return; event.preventDefault(); if (ask) return setAsk(false); if (await knows()) router.push('/groups/connections'); else { setAsk(true); setOnInk((await planHereAction().catch(() => 'free')) === 'ink'); } };
   useEffect(() => { if (!ask) return; const key = (event: KeyboardEvent) => { if (event.key === 'Escape') setAsk(false); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); }, [ask]);
   return <span className="cs-asst">
     <Link className="cs-ft-asst" href="/groups/connections" data-open={ask || undefined} onPointerEnter={knows} onFocus={knows} onClick={press} aria-label={plus ? undefined : 'Assistants, with Ink+'}><InkMark plus />Assistants</Link>

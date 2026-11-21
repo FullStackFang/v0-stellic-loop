@@ -30,7 +30,7 @@ export function Bar({ groups, face, plan = 'free', kits = ['loop'], anyKit = fal
   useEffect(() => { if (!carded) rememberMe({ face, plan, seed: face ?? 'You' }); }, [carded, face, plan]);
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals
   const you = face ? <img className="cs-face pet" src={face} alt="" /> : <span className="cs-face">You</span>;
-  return <TopBar member={groups.length > 0} account={screen?.viewer
+  return <TopBar member={groups.length > 0} plus={anyKit} account={screen?.viewer
       // The admin's own list already has "How we got here".
       ? <Account screen={screen} signOut={account} more={<nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!screen.viewer.admin} /></nav>} />
       : <div className="cs-acct" ref={box}>

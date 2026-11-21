@@ -298,7 +298,7 @@ export function CampusBar({ screen, groups = [], signInHref, signOut = null, on,
   const { campus, viewer } = screen;
   // The groups pages' links are in the card for anyone who has a group, as they are on those pages. The admin's own list already has "How we got here".
   const more = viewer && groups.length > 0 ? <nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!viewer.admin} /></nav> : null;
-  return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0}
+  return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0} plus={viewer?.anyKit}
     account={viewer ? <Account screen={screen} signOut={signOut} swap={swap} more={more} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}>{children}</TopBar>;
 }
 
