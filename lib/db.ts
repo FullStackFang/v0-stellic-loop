@@ -20,16 +20,18 @@ export const PARSERS: Record<number, (v: string) => unknown> = {
   [TIMESTAMPTZ]: parseTs,
 };
 
-let current: Db | null = null;
+// Kept on globalThis, not in this module: in development a changed file loads this module again, and a module-level pool
+// would be made again each time, leaving the old connections open and paying for new ones on the next page view.
+const held = globalThis as { loopDb?: Db | null };
 
 export function db(): Db {
-  if (!current) current = fromPool(databaseUrl(process.env));
-  return current;
+  if (!held.loopDb) held.loopDb = fromPool(databaseUrl(process.env));
+  return held.loopDb;
 }
 
 /** Tests point the app at PGlite or board-test. */
 export function setDb(d: Db | null) {
-  current = d;
+  held.loopDb = d;
 }
 
 /** DATABASE_URL, else POSTGRES_URL, which the Vercel Supabase integration injects. */
