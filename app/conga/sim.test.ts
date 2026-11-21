@@ -101,13 +101,15 @@ it('leaves a scattered line as one mob that a head draws in whole, and that brea
   expect(events).toContainEqual(expect.objectContaining({ type: 'spill', size: 30 }));
   expect(world.mobs).toHaveLength(1);
   expect(world.strays).toHaveLength(0); // none of them flew off loose
-  // The small line reaches the mob and takes all thirty, in about a second.
-  const mob = world.mobs[0];
-  for (let n = 0; n < 45; n++) { Object.assign(small, { x: mob.x + 20, y: mob.y }); steer(small as never, 0, false); step(world, 1 / 30); }
+  // The small line reaches the mob and takes all thirty at once.
+  const mob = world.mobs[0], before = small.tail.length;
+  Object.assign(small, { x: mob.x + 20, y: mob.y }); steer(small as never, 0, false);
+  const taken = step(world, 1 / 30) as { type: string; count?: number }[];
+  expect(taken).toContainEqual(expect.objectContaining({ type: 'grab', count: 30 }));
   expect(world.mobs).toHaveLength(0);
-  expect(small.tail.length).toBeGreaterThanOrEqual(33);
+  expect(small.tail.length).toBe(before + 30);
   // A mob nobody reaches stays whole for a while, then breaks up into strays.
-  world.mobs.push({ x: -800, y: 0, faces: Array(20).fill(1), from: 'x', born: (world as never as { t: number }).t, take: 0, leak: 0 } as never);
+  world.mobs.push({ x: -800, y: 0, faces: Array(20).fill(1), from: 'x', born: (world as never as { t: number }).t, leak: 0 } as never);
   Object.assign(small, { x: 800, y: 0 });
   for (let n = 0; n < 30 * 11; n++) { steer(small as never, small.a + 1, false); step(world, 1 / 30); }
   expect(world.mobs[0].faces).toHaveLength(20);
@@ -132,4 +134,15 @@ it('keeps the bus from taking anyone off a line with the whistle', () => {
   };
   expect(run(false)).toBeGreaterThan(0);
   expect(run(true)).toBe(0);
+});
+
+// Trees stand on the ground as things to walk round: nobody can stand on the foot of a trunk.
+it('makes every tree on both grounds solid at its trunk', async () => {
+  const { MAPS } = await import('@/public/conga/maps.js');
+  const { inside } = await import('@/public/conga/sim.js');
+  for (const map of Object.values(MAPS) as { rings: number[][][]; holes: number[][][]; shuttles?: never[]; trees: { x: number; y: number; r: number }[] }[]) {
+    const world = createWorld(seeded(3), map.rings, map.holes, map.shuttles ?? []);
+    expect(map.trees.length).toBeGreaterThan(10);
+    for (const tree of map.trees) expect(inside(world, tree.x, tree.y + tree.r * 0.6)).toBe(false);
+  }
 });

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · pond and spill toys</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --ink: oklch(24% 0.035 30); --paper: oklch(99.2% 0.004 60); }
+* { box-sizing: border-box; margin: 0; }
+body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; gap: 34px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 70ch; margin-top: 10px; }
+.one { position: relative; padding-top: 14px; }
+.tab { position: absolute; z-index: 3; left: 18px; top: 0; font-size: 15px; font-weight: 700; padding: 5px 14px 6px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.frame { position: relative; overflow: hidden; border-radius: 26px 26px 26px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); }
+.frame canvas { display: block; width: 100%; aspect-ratio: 16 / 9; }
+@media (max-width: 640px) { .frame canvas { aspect-ratio: 4 / 5; } }
+.frame::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--ink); pointer-events: none; }
+.note { margin-top: 14px; padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.4; max-width: 80ch; }
+.note b { font-weight: 800; }
+</style>
+
+<main>
+  <header>
+    <h1>Conga · pond and spill toys</h1>
+    <p class="lead">The five new pictures (about 18 cents, as agreed), shown on the ground beside a hall and trees so you can judge their size and fit.</p>
+  </header>
+
+  <section class="one"><span class="tab">1 · Pond as a toy</span><div class="frame"><canvas id="pond"></canvas></div>
+    <p class="note"><b>A · Round pond</b> (middle) and <b>B · Long pond with jetty</b> (right), each standing on the ground like a hall with its name under it. Lines walk round it and pass behind it; nothing moves on it. The river on the left stays the clay water you liked. Pick A or B for Beebe Lake.</p></section>
+
+  <section class="one"><span class="tab">2 · What a spill leaves</span><div class="frame"><canvas id="spill"></canvas></div>
+    <p class="note"><b>A · Sack</b>, <b>B · Medal</b>, <b>C · Popper</b>, each left by a different line. The picture is the same for everyone; the number on it is drawn by the game, in the fallen line's colour, and shows how many it holds. Your line walks through them: each one pops, and its number joins your line with "+N" by your name. One icon per spill, nothing flying. Pick one.</p></section>
+</main>
+
+<script>
+const C = { ink: 'oklch(24% 0.035 30)', paper: 'oklch(99.2% 0.004 60)', land: 'oklch(82% 0.12 38)', dot: 'oklch(77% 0.13 37)', action: 'oklch(48.5% 0.185 27)' };
+const art = {}; for (const name of ['pond', 'pondlong', 'sack', 'medal', 'popper', 'stonehall', 'tree', 'blossom']) art[name] = Object.assign(new Image(), { src: `/demo/pickup-art/${name}.png` });
+const sheet = Object.assign(new Image(), { src: '/conga/animals-96.v1.webp' });
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ready = img => img.complete && img.naturalWidth;
+
+function fitCanvas(canvas) {
+  const box = canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  canvas.width = Math.round(box.width * dpr); canvas.height = Math.round(box.height * dpr);
+  const W = box.width < 640 ? 900 : 1400;
+  return { ctx: canvas.getContext('2d'), k: box.width / W * dpr, W, H: box.height / (box.width / W) };
+}
+/** Draws a picture standing on (x, y), `width` wide, and returns its height. */
+function toy(ctx, name, x, y, width, scale = 1, alpha = 1) {
+  const img = art[name]; if (!ready(img)) return 0;
+  const h = width * img.naturalHeight / img.naturalWidth;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale); ctx.drawImage(img, -width / 2, -h, width, h); ctx.restore(); return h;
+}
+function foot(ctx, x, y, half, a = 0.2) { ctx.beginPath(); ctx.ellipse(x, y - half * 0.12, half, half * 0.3, 0, 0, 7); ctx.fillStyle = `oklch(24% 0.035 30 / ${a})`; ctx.fill(); }
+function animal(ctx, face, x, y, size) { if (ready(sheet)) ctx.drawImage(sheet, (face - 1) % 7 * 96, Math.floor((face - 1) / 7) * 96, 96, 96, x - size / 2, y - size / 2, size, size); }
+function pill(ctx, text, x, y, fill, ink, size = 14) {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const w = ctx.measureText(text).width + size * 1.4, h = size * 1.7;
+  ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); ctx.fillStyle = fill; ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1); return w;
+}
+function ground(ctx, W, H) {
+  ctx.fillStyle = C.land; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = C.dot; ctx.beginPath(); for (let x = 45; x < W; x += 90) for (let y = 45; y < H; y += 90) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); } ctx.fill();
+}
+function line(ctx, pts, colour, faces) {
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y + 13) : ctx.moveTo(p.x, p.y + 13));
+  ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = colour; ctx.lineWidth = 10; ctx.stroke();
+  for (let i = pts.length - 1; i >= 1; i--) animal(ctx, faces(i), pts[i].x, pts[i].y, 42);
+  animal(ctx, faces(0), pts[0].x, pts[0].y, 58);
+}
+
+// ---------- 1 · the pond toys ----------
+const pc = document.getElementById('pond'); let P;
+const riverEdge = (y, H) => 210 + Math.sin(y / H * 5.2) * 22 + Math.sin(y / H * 13 + 1) * 8;
+function river(ctx, H, inset = 0) { ctx.beginPath(); ctx.moveTo(-20, -20); for (let y = -20; y <= H + 20; y += 10) ctx.lineTo(riverEdge(y, H) - inset, y); ctx.lineTo(-20, H + 20); ctx.closePath(); }
+function pondDraw(t) {
+  const { ctx, k, W, H } = P; ctx.setTransform(k, 0, 0, k, 0, 0);
+  ground(ctx, W, H);
+  // The clay river, as picked.
+  for (const [inset, fill] of [[-10, 'oklch(86% 0.09 45)'], [0, 'oklch(80% 0.09 200)'], [26, 'oklch(73% 0.1 210)'], [70, 'oklch(67% 0.1 218)']]) { river(ctx, H, inset); ctx.fillStyle = fill; ctx.fill(); }
+  // A line walking round between the ponds, passing behind the round one.
+  const path = s => ({ x: W * 0.47 + Math.cos(s) * W * 0.17, y: H * 0.5 + Math.sin(s) * H * 0.3 });
+  const s0 = t * 0.35, pts = Array.from({ length: 12 }, (_, i) => path(s0 - i * 0.07));
+  // Everything that stands, nearest the bottom drawn last.
+  const things = [
+    { y: H * 0.62, draw: () => { foot(ctx, W * 0.47, H * 0.62, 125, 0.16); toy(ctx, 'pond', W * 0.47, H * 0.62 + 8, 250); pill(ctx, 'A · Beebe Lake', W * 0.47, H * 0.62 + 30, C.ink, C.paper, 15); } },
+    { y: H * 0.7, draw: () => { foot(ctx, W * 0.8, H * 0.7, 150, 0.16); toy(ctx, 'pondlong', W * 0.8, H * 0.7 + 8, 310); pill(ctx, 'B · Beebe Lake', W * 0.8, H * 0.7 + 30, C.ink, C.paper, 15); } },
+    { y: H * 0.3, draw: () => { foot(ctx, W * 0.8, H * 0.3, 100); toy(ctx, 'stonehall', W * 0.8, H * 0.3 + 6, 210); pill(ctx, 'Willard Straight', W * 0.8, H * 0.3 + 28, C.ink, C.paper, 15); } },
+    ...[[W * 0.3, H * 0.2, 'tree', 54], [W * 0.62, H * 0.15, 'blossom', 50], [W * 0.28, H * 0.9, 'tree', 58], [W * 0.62, H * 0.92, 'tree', 52]].map(([x, y, name, w]) => ({ y, draw: () => { foot(ctx, x, y, w * 0.42); toy(ctx, name, x, y + 4, w); } })),
+    { y: Math.max(...pts.map(p => p.y)) - 40, draw: () => { line(ctx, pts, C.action, i => 1 + (i * 7) % 36); pill(ctx, 'You · 12', pts[0].x, pts[0].y - 46, C.action, C.paper, 14); } },
+  ];
+  things.sort((a, b) => a.y - b.y).forEach(thing => thing.draw());
+}
+
+// ---------- 2 · the spill toys ----------
+const sc = document.getElementById('spill'); let S, clock = 0;
+const SPILLS = [
+  { name: 'sack', label: 'A', n: 30, colour: 'oklch(74% 0.2 140)', ink: C.ink, fx: 0.32, fy: 0.45, w: 74 },
+  { name: 'medal', label: 'B', n: 12, colour: 'oklch(62% 0.17 255)', ink: C.paper, fx: 0.55, fy: 0.5, w: 58 },
+  { name: 'popper', label: 'C', n: 7, colour: 'oklch(85% 0.16 90)', ink: C.ink, fx: 0.76, fy: 0.42, w: 76 },
+];
+const LOOP = 8;
+function spillDraw(t) {
+  const { ctx, k, W, H } = S; ctx.setTransform(k, 0, 0, k, 0, 0);
+  ground(ctx, W, H);
+  const u = clock % LOOP, path = s => ({ x: -150 + s * 190, y: H * 0.5 + Math.sin(s * 1.1) * H * 0.12 });
+  const head = path(u);
+  let gained = 0, flash = null;
+  const stand = [];
+  for (const spill of SPILLS) {
+    const x = W * spill.fx, y = H * spill.fy;
+    // Taken the moment the head first comes within reach.
+    let took = null; for (let s = 0; s <= u; s += 0.02) { const p = path(s); if (Math.hypot(p.x - x, p.y - (y - 30)) < 60) { took = s; break; } }
+    const since = took == null ? -1 : u - took;
+    if (took != null) { gained += spill.n; if (since < 1.4) flash = { spill, since }; }
+    if (took != null && since > 0.35) continue;
+    stand.push({ y, draw: () => {
+      const pop = since < 0 ? 1 : 1 + since * 1.6, alpha = since < 0 ? 1 : 1 - since / 0.35, bob = since < 0 ? Math.sin(t * 2.4 + spill.fx * 9) * 4 : 0;
+      foot(ctx, x, y, spill.w * 0.45, 0.2 * alpha);
+      const h = toy(ctx, spill.name, x, y - 6 + bob, spill.w, pop, alpha);
+      // The count the game draws: a pill in the fallen line's colour at the toy's shoulder.
+      ctx.globalAlpha = alpha; pill(ctx, `${spill.n}`, x + spill.w * 0.42, y - 6 + bob - h * 0.85, spill.colour, spill.ink, 17); ctx.globalAlpha = 1;
+      pill(ctx, spill.label, x, y + 24, C.paper, C.ink, 13);
+    } });
+    if (since > 0 && since < 0.5) stand.push({ y: y + 1, draw: () => { const f = since / 0.5; ctx.beginPath(); ctx.ellipse(x, y - 30, 30 + f * 80, (30 + f * 80) * 0.8, 0, 0, 7); ctx.strokeStyle = spill.colour; ctx.globalAlpha = 1 - f; ctx.lineWidth = 8 * (1 - f) + 2; ctx.stroke(); ctx.globalAlpha = 1; } });
+  }
+  const n = 8 + gained, pts = Array.from({ length: n + 1 }, (_, i) => path(u - i * 0.16));
+  stand.push({ y: head.y, draw: () => {
+    line(ctx, pts, C.action, i => i ? 1 + (i * 5) % 36 : 12);
+    const w = pill(ctx, `You · ${n + 1}`, head.x, head.y - 46, C.action, C.paper, 14);
+    if (flash) { ctx.globalAlpha = Math.min(1, (1.4 - flash.since) * 2); pill(ctx, `+${flash.spill.n}`, head.x + w / 2 + 26, head.y - 46, flash.spill.colour, flash.spill.ink, 14); ctx.globalAlpha = 1; }
+  } });
+  stand.sort((a, b) => a.y - b.y).forEach(s => s.draw());
+}
+
+const layout = () => { P = fitCanvas(pc); S = fitCanvas(sc); };
+new ResizeObserver(layout).observe(pc); layout();
+let then = performance.now();
+const frame = now => { const dt = Math.min(0.05, (now - then) / 1000); then = now; clock += dt; pondDraw(now / 1000); spillDraw(now / 1000); if (!still) requestAnimationFrame(frame); };
+if (still) setTimeout(() => { pondDraw(2); spillDraw(2); }, 500); else requestAnimationFrame(frame);
+</script>

@@ -44,14 +44,13 @@ const TAKE = 46; // a head this close to a pickup takes it
 const LYING = 50; // strays kept on the ground for each pickup lying there, so a bigger ground has more
 const AGAIN = 6; // seconds before a taken pickup is replaced somewhere else
 // A scattered line leaves a mob: all its animals in one heap where it fell, kept as one thing rather than many strays,
-// so a big spill costs no more to run or draw than a small one. A head that reaches it draws the whole mob in, a stream
-// of them a second. Left alone, it breaks up into strays after a while.
+// so a big spill costs no more to run or draw than a small one. It is drawn as one sack with its count on it, and a head
+// that reaches it takes the whole count at once. Left alone, it breaks up into strays after a while.
 const MOB_MIN = 6; // a line shorter than this just scatters
-const MOB_RATE = 30; // animals a second a mob pours into a line that reaches it
 const MOB_HOLD = 12; // seconds a mob stays whole
 const MOB_LEAK = 3; // animals a second it loses after that, as strays
-/** How far from its middle a mob of n reaches: a bigger heap is bigger on the ground. */
-export const mobReach = n => 34 + Math.sqrt(n) * 9;
+/** How far from its middle a mob reaches: the sack is the same size however much it holds. */
+export const mobReach = () => 40;
 
 const wrap = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
 
@@ -68,7 +67,9 @@ function within(ring, x, y) {
 }
 const areaOf = ring => Math.abs(ring.reduce((twice, p, i) => { const q = ring[(i + 1) % ring.length]; return twice + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
 /** Whether a point is on the ground: inside any of the map's outlines, and not inside anything that stands on it. */
-export const inside = (world, x, y) => world.rings.some(ring => within(ring, x, y)) && !world.holes.some(ring => within(ring, x, y));
+// A ground can hold hundreds of things that stand on it (every tree is one), so each is first tried against the box round it.
+export const inside = (world, x, y) => world.rings.some(ring => within(ring, x, y)) && !world.holes.some((ring, i) => { const box = world.boxes[i]; return x > box[0] && x < box[2] && y > box[1] && y < box[3] && within(ring, x, y); });
+const boxOf = ring => ring.reduce((box, [x, y]) => [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x), Math.max(box[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
 
 // Somewhere on the ground, with `room` clear on each side when asked.
 function spot(world, room = 0) {
@@ -98,7 +99,7 @@ export function createWorld(random = Math.random, rings = round(), holes = [], s
   const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]);
   // A bigger ground keeps more strays on it. Outlines that overlap are counted twice, which is near enough.
   const area = rings.reduce((sum, ring) => sum + areaOf(ring), 0) - holes.reduce((sum, ring) => sum + areaOf(ring), 0);
-  const world = { t: 0, lines: [], strays: [], random, rings, holes, feed: Math.round(Math.min(260, Math.max(60, area / ROOMY))), shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, kept: 0, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
+  const world = { t: 0, lines: [], strays: [], random, rings, holes, boxes: holes.map(boxOf), feed: Math.round(Math.min(260, Math.max(60, area / ROOMY))), shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, kept: 0, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
   while (world.strays.length < world.feed) world.strays.push(stray(world));
   world.mobs = []; world.items = []; world.lay = Math.max(2, Math.round(world.feed / LYING)); world.later = 0;
   while (world.items.length < world.lay) world.items.push(item(world));
@@ -242,8 +243,8 @@ function join(world, line, face, x, y, events) {
 function scatter(world, line, by, events) {
   if (line.tail.length >= MOB_MIN) {
     // A long line's animals stay together where it fell, as one mob.
-    // Its head stays with them, to lead the huddle until they are taken; the head itself is not one of them.
-    world.mobs.push({ x: line.x, y: line.y, faces: line.tail.map(f => f.face), from: line.id, lead: line.face, name: line.name, born: world.t, take: 0, leak: 0 });
+    // The head itself is not one of them.
+    world.mobs.push({ x: line.x, y: line.y, faces: line.tail.map(f => f.face), from: line.id, lead: line.face, name: line.name, born: world.t, leak: 0 });
     events.push({ type: 'spill', line: line.id, name: line.name, size: line.tail.length, x: line.x, y: line.y });
   } else for (const f of line.tail) {
     const a = world.random() * Math.PI * 2, v = 120 + world.random() * 160;
@@ -301,9 +302,9 @@ export function step(world, dt) {
   // A taken pickup turns up again somewhere else after a while.
   if (world.items.length < world.lay && (world.later += dt) >= AGAIN) { world.later = 0; world.items.push(item(world)); }
 
-  // A mob pours into the nearest head that reaches it; left alone long enough, it breaks up into strays.
+  // The nearest head that reaches a mob takes all of it at once; left alone long enough, it breaks up into strays.
   for (let m = world.mobs.length - 1; m >= 0; m--) {
-    const mob = world.mobs[m], r = mobReach(mob.faces.length);
+    const mob = world.mobs[m], r = mobReach();
     let head = null, close = Infinity;
     for (const line of world.lines) {
       if (line.dead) continue;
@@ -311,7 +312,8 @@ export function step(world, dt) {
       if (d < r + JOIN && d < close) { close = d; head = line; }
     }
     if (head) {
-      for (mob.take += MOB_RATE * dt; mob.take >= 1 && mob.faces.length; mob.take--) join(world, head, mob.faces.pop(), mob.x, mob.y, events);
+      events.push({ type: 'grab', line: head.id, from: mob.from, count: mob.faces.length, x: mob.x, y: mob.y });
+      while (mob.faces.length) join(world, head, mob.faces.pop(), mob.x, mob.y, events);
     } else if (world.t - mob.born > MOB_HOLD) {
       for (mob.leak += MOB_LEAK * dt; mob.leak >= 1 && mob.faces.length; mob.leak--) {
         const a = world.random() * Math.PI * 2, v = 60 + world.random() * 80;

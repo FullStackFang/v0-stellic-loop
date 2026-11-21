@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · toy scenery</title>
+<style>
+@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --ink: oklch(24% 0.035 30); --paper: oklch(99.2% 0.004 60); }
+* { box-sizing: border-box; margin: 0; }
+body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; gap: 30px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 70ch; margin-top: 10px; }
+.one { position: relative; padding-top: 14px; }
+.tab { position: absolute; z-index: 3; left: 18px; top: 0; font-size: 15px; font-weight: 700; padding: 5px 14px 6px; border-radius: 9px 9px 9px 3px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+.frame { position: relative; overflow: hidden; border-radius: 26px 26px 26px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); }
+.frame canvas { display: block; width: 100%; aspect-ratio: 16 / 9; }
+@media (max-width: 640px) { .frame canvas { aspect-ratio: 4 / 5; } }
+.frame::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--ink); pointer-events: none; }
+.picks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.picks button { font: 700 15px Archivo, system-ui, sans-serif; color: var(--ink); background: var(--paper); border: 0; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 999px; padding: 8px 16px 9px; cursor: pointer; }
+.picks button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.note { margin-top: 14px; padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.4; max-width: 80ch; }
+.sheet { display: block; width: 100%; max-width: 700px; margin-top: 14px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); padding: 10px; }
+</style>
+
+<main>
+  <header>
+    <h1>Conga · toy scenery</h1>
+    <p class="lead">Trees, cherry trees, the ferry, the tug, the cabs on the bridge, McGraw Tower and the lighthouse, made as toys in the animals' style. Halls stay as they are: each is the real building's footprint, so no two are the same shape.</p>
+  </header>
+  <section class="one"><span class="tab">A corner of the island</span><div class="frame"><canvas id="scene"></canvas></div>
+    <div class="picks"><button data-look="toys">Toys</button><button data-look="drawn">Drawn now</button></div></section>
+  <section class="one"><span class="tab">What it costs to load and draw</span>
+    <p class="note">All seven are one picture file of 36 KB, packed the way the animals are, so one extra download. The game can start on the ground as it is now and the toys appear a moment later. Trees, cherry trees and the two towers never move, so the game paints them onto the ground once and reuses that every frame, which costs about what the drawn ones cost now. Only the boats and cabs are drawn fresh, a handful at a time.</p>
+    <img class="sheet" src="/demo/pickup-art/scenery.webp" alt="The seven toys in one sheet: tree, cherry tree, ferry, tug, cab, clock tower, lighthouse"></section>
+</main>
+
+<script>
+const C = { ink: 'oklch(24% 0.035 30)', paper: 'oklch(99.2% 0.004 60)', action: 'oklch(48.5% 0.185 27)', twine: '#fbf7ec', roof: '#f5eedc', trim: '#dccfae', panel: '#c5d6ea', stone: '#d9d4c7', lamp: '#ffe27a', cab: '#fccc0a',
+  land: 'oklch(82% 0.12 38)', dot: 'oklch(77% 0.13 37)', green: 'oklch(70% 0.15 147)', tree: 'oklch(45% 0.11 158)', leaf: 'oklch(61% 0.14 150)', blossom: 'oklch(84% 0.1 0)', deep: 'oklch(71% 0.135 236)' };
+const KIND = ['tree', 'blossom', 'ferry', 'tug', 'cab', 'clocktower', 'lighthouse'], CELL = 160;
+const toys = Object.assign(new Image(), { src: '/demo/pickup-art/scenery.webp' });
+const sheet = Object.assign(new Image(), { src: '/conga/animals-96.v1.webp' });
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canvas = document.getElementById('scene'), ctx = canvas.getContext('2d');
+let look = 'toys', box, dpr, k, W, H, scene;
+
+function toy(kind, x, y, size, flip = false) {
+  if (!toys.complete || !toys.naturalWidth) return;
+  ctx.save(); ctx.translate(x, y); if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(toys, KIND.indexOf(kind) * CELL, 0, CELL, CELL, -size / 2, -size, size, size); // stands on its foot
+  ctx.restore();
+}
+function foot(x, y, w, a = 0.22) { ctx.beginPath(); ctx.ellipse(x, y - 2, w, w * 0.3, 0, 0, 7); ctx.fillStyle = `oklch(24% 0.035 30 / ${a})`; ctx.fill(); }
+function animal(face, x, y, size) { if (sheet.complete && sheet.naturalWidth) ctx.drawImage(sheet, (face - 1) % 7 * 96, Math.floor((face - 1) / 7) * 96, 96, 96, x - size / 2, y - size / 2, size, size); }
+const ring = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); };
+const inked = (fill, width = 4) => { ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = width; ctx.stroke(); };
+function pill(text, x, y) {
+  ctx.font = '700 14px Archivo, system-ui, sans-serif';
+  const w = ctx.measureText(text).width + 20; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 12, w, 24, 12); ctx.fillStyle = C.paper; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+}
+// The game's drawn ones, as they are now.
+function canopy(x, y, r, fill) {
+  const lobes = (at, by) => { ctx.beginPath(); for (let n = 0; n < 7; n++) { const a = n * Math.PI * 2 / 7; ctx.moveTo(at + Math.cos(a) * r * 0.62 + r * 0.5, by + Math.sin(a) * r * 0.62); ctx.arc(at + Math.cos(a) * r * 0.62, by + Math.sin(a) * r * 0.62, r * 0.5, 0, 7); } ctx.moveTo(at + r * 0.7, by); ctx.arc(at, by, r * 0.7, 0, 7); };
+  lobes(x + 4, y + 5); ctx.fillStyle = C.ink; ctx.fill();
+  lobes(x, y); ctx.strokeStyle = C.ink; ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.stroke(); ctx.fillStyle = fill; ctx.fill();
+  ring(x - r * 0.2, y - r * 0.22, r * 0.42); ctx.fillStyle = fill === C.tree ? C.leaf : 'rgba(255,255,255,.45)'; ctx.fill();
+}
+function drawnBoat(x, y, fill, a) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+  ctx.beginPath(); ctx.moveTo(0, -46); ctx.quadraticCurveTo(20, -20, 18, 0); ctx.lineTo(18, 38); ctx.lineTo(-18, 38); ctx.lineTo(-18, 0); ctx.quadraticCurveTo(-20, -20, 0, -46); ctx.closePath(); inked(fill, 3.5);
+  ctx.beginPath(); ctx.roundRect(-11, -5, 22, 30, 4); inked(C.panel, 2.5); ctx.restore();
+}
+
+function seeded(seed) { return () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; }; }
+function layout() {
+  box = canvas.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
+  canvas.width = Math.round(box.width * dpr); canvas.height = Math.round(box.height * dpr);
+  W = box.width < 640 ? 900 : 1500; k = box.width / W; H = box.height / k;
+  const random = seeded(4), shore = W * 0.3, park = { x: shore + 90, y: H * 0.5, w: W * 0.34, h: H * 0.38 };
+  const trees = [];
+  for (let n = 0; n < 7; n++) trees.push({ kind: 'tree', x: park.x + 30 + n * park.w / 7, y: park.y + 6 });
+  for (let n = 0; n < 7; n++) trees.push({ kind: 'tree', x: park.x + 30 + n * park.w / 7, y: park.y + park.h - 8 });
+  for (let n = 0; n < 6; n++) trees.push({ kind: 'blossom', x: shore + 34, y: H * 0.3 + n * H * 0.11 });
+  scene = { shore, park, trees, bridge: H * 0.17, tower: { x: W * 0.84, y: H * 0.62 }, light: { x: shore + 30, y: H * 0.94 },
+    line: Array.from({ length: 12 }, (_, i) => ({ face: 1 + Math.floor(random() * 36) })), head: 12 };
+}
+new ResizeObserver(() => { layout(); if (still) draw(4); }).observe(canvas);
+
+function draw(t) {
+  if (!scene) return;
+  const { shore, park, trees, bridge, tower, light } = scene, toyLook = look === 'toys';
+  ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
+  // Water on the left, the island on the right, with its hard shadow and edge.
+  ctx.fillStyle = C.deep; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = C.ink; ctx.fillRect(shore + 14, 14, W, H);
+  ctx.fillStyle = C.land; ctx.fillRect(shore, 0, W, H);
+  ctx.fillStyle = C.dot; ctx.beginPath(); for (let x = shore + 45; x < W; x += 90) for (let y = 45; y < H; y += 90) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); } ctx.fill();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(shore, 0); ctx.lineTo(shore, H); ctx.stroke();
+  ctx.strokeStyle = C.paper; ctx.lineWidth = 26; ctx.globalAlpha = 0.9; ctx.beginPath(); ctx.moveTo(shore - 18, 0); ctx.lineTo(shore - 18, H); ctx.setLineDash([0.1, 38]); ctx.lineCap = 'round'; ctx.lineDashOffset = -t * 7; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  // The park lawn.
+  ctx.beginPath(); ctx.roundRect(park.x, park.y, park.w, park.h, 26); ctx.fillStyle = C.green; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.stroke();
+  // The boats in the channel.
+  const ferryY = ((t * 40) % (H + 300)) - 150, tugY = H - ((t * 26 + 200) % (H + 300)) + 150;
+  if (toyLook) {
+    for (const [kind, x, y, flip] of [['ferry', shore * 0.62, ferryY, false], ['tug', shore * 0.28, tugY, true]]) {
+      // Its wake: a wide V opening out behind it, fading.
+      const back = kind === 'ferry' ? -1 : 1, stern = y + (back > 0 ? 18 : -30);
+      ctx.strokeStyle = C.paper; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.globalAlpha = 0.75; ctx.beginPath();
+      ctx.moveTo(x - 14, stern); ctx.quadraticCurveTo(x - 40, stern + back * 40, x - 80, stern + back * 70); ctx.moveTo(x + 14, stern); ctx.quadraticCurveTo(x + 40, stern + back * 40, x + 80, stern + back * 70); ctx.stroke(); ctx.globalAlpha = 1;
+      foot(x, y + 24, 40, 0.18); toy(kind, x, y + 30, 96, flip);
+    }
+  } else { drawnBoat(shore * 0.62, ferryY, C.paper, Math.PI); drawnBoat(shore * 0.28, tugY, C.action, 0); }
+  // The bridge, with cabs each way.
+  ctx.lineCap = 'butt'; ctx.beginPath(); ctx.moveTo(0, bridge); ctx.lineTo(W, bridge);
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 78; ctx.stroke(); ctx.strokeStyle = C.roof; ctx.lineWidth = 68; ctx.stroke();
+  ctx.setLineDash([16, 14]); ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
+  for (let n = 0; n < 6; n++) {
+    const back = n % 2, f = (t * 0.04 + n / 6) % 1, x = back ? W * (1 - f) : W * f, y = bridge + (back ? -16 : 16);
+    if (toyLook) toy('cab', x, y + 18, 46, !back);
+    else { ctx.beginPath(); ctx.roundRect(x - 10, y - 5.5, 20, 11, 3); inked(C.cab, 2); }
+  }
+  // What stands up: trees, the towers, and the line, sorted by how far down the page they stand.
+  const up = [];
+  if (toyLook) {
+    for (const tr of trees) up.push({ y: tr.y, draw: () => { foot(tr.x, tr.y, 22); toy(tr.kind, tr.x, tr.y + 4, 64); } });
+    up.push({ y: tower.y, draw: () => { foot(tower.x, tower.y, 34); toy('clocktower', tower.x, tower.y + 6, 190); } });
+    up.push({ y: light.y, draw: () => { foot(light.x, light.y, 30); toy('lighthouse', light.x, light.y + 4, 120); } });
+  } else {
+    for (const tr of trees) up.push({ y: tr.y - 1000, draw: () => canopy(tr.x, tr.y - 10, 13, tr.kind === 'tree' ? C.tree : C.blossom) });
+    up.push({ y: -1000, draw: () => { ctx.strokeStyle = C.ink; ctx.lineWidth = 22; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(tower.x, tower.y - 20); ctx.lineTo(tower.x + 40, tower.y + 20); ctx.stroke(); ring(tower.x, tower.y - 20, 14); inked(C.roof, 4); ring(tower.x, tower.y - 20, 6); inked(C.action, 3); } });
+    up.push({ y: -1000, draw: () => { ctx.strokeStyle = C.ink; ctx.lineWidth = 22; ctx.beginPath(); ctx.moveTo(light.x, light.y - 20); ctx.lineTo(light.x + 44, light.y + 24); ctx.stroke(); ring(light.x, light.y - 20, 15); inked(C.stone); ring(light.x, light.y - 20, 9); inked(C.paper, 3); ring(light.x, light.y - 20, 4.5); inked(C.lamp, 2.5); } });
+  }
+  // A line walking a loop round the park and past the tower.
+  const cx = park.x + park.w * 0.62, cy = park.y + park.h * 0.5, rx = park.w * 0.62, ry = park.h * 0.78;
+  const at = s => ({ x: cx + Math.cos(s) * rx, y: cy + Math.sin(s) * ry });
+  const s0 = t * 0.28, pts = [at(s0), ...scene.line.map((_, i) => at(s0 - (i + 1) * 0.085))];
+  up.push({ y: -999, draw: () => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y + 13) : ctx.moveTo(p.x, p.y + 13)); ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = C.action; ctx.lineWidth = 10; ctx.stroke(); } });
+  scene.line.forEach((f, i) => { const p = pts[i + 1]; up.push({ y: p.y + 20, draw: () => animal(f.face, p.x, p.y - Math.abs(Math.sin(t * 6 + i)) * 3, 42) }); });
+  up.push({ y: pts[0].y + 20, draw: () => animal(scene.head, pts[0].x, pts[0].y - 4, 58) });
+  up.sort((a, b) => a.y - b.y).forEach(u => u.draw());
+  pill('McGraw Tower', tower.x, tower.y + 30); pill('Lighthouse', light.x + 70, light.y - 30); pill('Queensboro Bridge', W * 0.62, bridge - 56);
+}
+
+function mark() { document.querySelectorAll('[data-look]').forEach(b => b.setAttribute('aria-pressed', b.dataset.look === look)); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-look]'); if (!b) return; look = b.dataset.look; mark(); if (still) draw(4); });
+mark();
+toys.onload = sheet.onload = () => { if (still) draw(4); };
+if (!still) { const frame = now => { draw(now / 1000); requestAnimationFrame(frame); }; requestAnimationFrame(frame); }
+</script>

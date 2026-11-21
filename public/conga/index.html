@@ -157,8 +157,9 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 </section>
 
 <script type="module">
-import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD, mobReach } from './conga/sim.js';
+import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD } from './conga/sim.js';
 import { MAPS, shore } from './conga/maps.js';
+import { SHEET as SCENERY, AT } from './conga/scenery.js';
 
 const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -197,7 +198,7 @@ const tint = n => `oklch(${TINTS[n % TINTS.length]})`;
 const ME = 'me';
 const colour = id => id === ME ? C.action : tint(id);
 
-let world, map, land, blossoms = [], me = null, aim = 0, followed = null;
+let world, map, land, me = null, aim = 0, followed = null;
 const ask = new URLSearchParams(location.search);
 let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * CORE), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
 window.conga = { get world() { return world; } }; // for poking at the game from the console
@@ -206,13 +207,6 @@ window.conga = { get world() { return world; } }; // for poking at the game from
 function open(id) {
   where = id; map = MAPS[id]; me = null;
   world = createWorld(Math.random, map.rings, map.holes, map.shuttles ?? []);
-  // Roosevelt Island's cherry trees: a row just in from the west shore.
-  blossoms = [];
-  if (map.axis != null) {
-    const a = map.axis * Math.PI / 180, shore = map.rings[0], mid = [shore.reduce((sum, q) => sum + q[0], 0) / shore.length, shore.reduce((sum, q) => sum + q[1], 0) / shore.length];
-    shore.forEach((from, i) => { const to = shore[(i + 1) % shore.length], far = Math.hypot(to[0] - from[0], to[1] - from[1]);
-      for (let d = 40; d < far; d += 85) { const x = from[0] + (to[0] - from[0]) * d / far, y = from[1] + (to[1] - from[1]) * d / far; if ((x - mid[0]) * Math.cos(a) + (y - mid[1]) * Math.sin(a) < -60) blossoms.push([x + Math.cos(a) * 38, y + Math.sin(a) * 38]); } });
-  }
   GROUPS[id].forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
   for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
   land = new Path2D();
@@ -399,6 +393,7 @@ addEventListener('resize', fit); fit();
 // ---------- drawing ----------
 const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [];
 const SIZE = { stray: 40, tail: 42, head: 58 };
+const SACK = 70; // how wide a spilled line's sack is drawn
 // ---------- water, grass and trees ----------
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground: for looking at the drawing.
 const tile = (size, work) => { const sheet = document.createElement('canvas'); sheet.width = sheet.height = size; work(sheet.getContext('2d'), size); return ctx.createPattern(sheet, 'repeat'); };
@@ -437,8 +432,25 @@ function squiggles(t, x, y, w, h) {
   }
   ctx.globalAlpha = 1;
 }
+// With the toys the water is clay, as the toys would be made: soft matte teal with no ink, paler where it is shallow along
+// every shore, the bank's shadow just off it, and the bank's lit lip just inside the ground (/demo/mockups-conga-water.html, A).
+const CLAY = { deep: 'oklch(67% 0.1 218)', mid: 'oklch(73% 0.1 210)', shallow: 'oklch(80% 0.09 200)', shade: 'oklch(40% 0.06 220 / .18)', lip: 'oklch(99% 0.01 60 / .3)' };
+/** The shallows going out from ground that is about to be filled over them. */
+function shallows(path) { ctx.lineJoin = 'round'; for (const [w, c] of [[140, CLAY.mid], [52, CLAY.shallow], [24, CLAY.shade]]) { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.stroke(path); } }
+/** The bank's lit lip, just inside the ground's edge. */
+function lip(path) { ctx.save(); ctx.clip(path); ctx.strokeStyle = CLAY.lip; ctx.lineWidth = 20; ctx.lineJoin = 'round'; ctx.stroke(path); ctx.restore(); }
+// Soft glints drifting on open water, each coming and going.
+function glints(t, x, y, w, h) {
+  for (let gx = Math.floor(x / 220) * 220; gx < x + w; gx += 220) for (let gy = Math.floor(y / 220) * 220; gy < y + h; gy += 220) {
+    const here = { x: gx, y: gy }; if (chance(here, 4) > 0.5) continue;
+    const life = (t * 0.08 + chance(here, 3)) % 1;
+    ctx.beginPath(); ctx.ellipse(gx + 40 + chance(here, 1) * 140 + life * 40, gy + 40 + chance(here, 2) * 140, 30, 6, -0.15, 0, 7);
+    ctx.fillStyle = `oklch(97% 0.02 200 / ${Math.sin(life * Math.PI) * 0.35})`; ctx.fill();
+  }
+}
 // The open water round an island.
 function sea(t, x, y, w, h) {
+  if (toysIn()) { ctx.fillStyle = CLAY.deep; ctx.fillRect(x, y, w, h); if (quality < 2) { glints(t, x, y, w, h); shallows(land); } return; }
   ctx.fillStyle = style.deep; ctx.fillRect(x, y, w, h);
   if (quality === 2) return;
   toonShore(t, land, 1);
@@ -473,17 +485,9 @@ function lawn(thing) {
   ctx.fillStyle = style.tufts; ctx.fillRect(-w / 2, -h / 2, w, h);
   if (thing.kind === 'field') { ctx.beginPath(); for (let k = 1; k < 8; k++) { const y = -h / 2 + h * k / 8; ctx.moveTo(-w / 2 + 8, y); ctx.lineTo(w / 2 - 8, y); } ctx.strokeStyle = C.paper; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke(); }
   ctx.restore();
-  ctx.save(); shape(thing); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.stroke(); ctx.restore();
-  // Trees stand round the edge, as they do round a quad, and leave the lawn open.
-  if (thing.kind === 'green') turned(thing, () => {
-    const round = 2 * (w + h), spots = [];
-    for (let k = 0; k < 4 + round / 130; k++) {
-      let d = chance(thing, k) * round, deep = 20 + chance(thing, k + 50) * 16, x, y;
-      if (d < w) [x, y] = [d - w / 2, -h / 2 + deep]; else if ((d -= w) < h) [x, y] = [w / 2 - deep, d - h / 2]; else if ((d -= h) < w) [x, y] = [w / 2 - d, h / 2 - deep]; else [x, y] = [-w / 2 + deep, h / 2 - (d - w)];
-      spots.push([Math.max(-w / 2 + 20, Math.min(w / 2 - 20, x)), Math.max(-h / 2 + 20, Math.min(h / 2 - 20, y)), 9 + chance(thing, k + 9) * 6]);
-    }
-    for (const [x, y, r] of spots.sort((a, b) => a[1] - b[1])) tree(x, y, r);
-  });
+  // With the toys the lawn is soft-edged ground they stand on, not an inked shape.
+  ctx.save(); shape(thing); ctx.strokeStyle = toysIn() ? 'oklch(58% 0.13 148)' : C.ink; ctx.lineWidth = toysIn() ? 6 : 3.5; ctx.stroke(); ctx.restore();
+  // Its trees are the map's (maps.js treesOn), drawn with everything else that stands up.
 }
 function canopy(x, y, r, fill) {
   const light = fill === C.tree ? style.leaf : 'rgba(255, 255, 255, .45)';
@@ -583,6 +587,29 @@ function rope(points, colour, band = false) {
   ctx.lineCap = 'butt'; ctx.setLineDash([5, 9]); ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
 }
 
+// ---------- the toys that stand on the ground ----------
+// Buildings, towers, trees, boats and cars, made as toys in the animals' style (scripts/pickup-art.ts) and packed on one
+// sheet (scripts/conga-scenery.mjs). Until the sheet has come, the ground is drawn the plain way below.
+const toys = Object.assign(new Image(), { src: SCENERY, decoding: 'async' });
+const toysIn = () => toys.complete && toys.naturalWidth > 0;
+// Which toy each landmark is comes with it from the map (maps.js TOYS).
+// The toys that were drawn facing left; the rest face right.
+const LEFTWARD = new Set(['cab']);
+/** Stands a toy with the middle of its foot at (x, y), `width` across. A vehicle is turned to face left when `left`. */
+function toy(name, x, y, width, left = false, alpha = 1) {
+  const [sx, sy, sw, sh] = AT[name], height = width * sh / sw, flip = left !== LEFTWARD.has(name);
+  if (alpha !== 1) ctx.globalAlpha = alpha;
+  if (flip) { ctx.save(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.drawImage(toys, sx, sy, sw, sh, -width / 2, -height, width, height); ctx.restore(); }
+  else ctx.drawImage(toys, sx, sy, sw, sh, x - width / 2, y - height, width, height);
+  if (alpha !== 1) ctx.globalAlpha = 1;
+  return height;
+}
+/** The soft shadow a toy stands in. */
+function foot(x, y, half, alpha = 0.2) { ctx.beginPath(); ctx.ellipse(x, y - half * 0.12, half, half * 0.3, 0, 0, 7); ctx.fillStyle = `oklch(24% 0.035 30 / ${alpha})`; ctx.fill(); }
+// What stands up this frame, gathered while the ground is drawn and then drawn with the animals, nearest the bottom of the
+// screen last, so a line walking behind a building goes behind it.
+const standing = [];
+
 // ---------- what makes a ground its own place ----------
 const turned = (thing, work) => { ctx.save(); ctx.translate(thing.x, thing.y); ctx.rotate(thing.turn); work(thing.w, thing.h); ctx.restore(); };
 const box = (w, h, r = 6, x = 0, y = 0) => { ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, r); };
@@ -652,7 +679,6 @@ const PAINT = {
   'Four Freedoms Park': thing => turned(thing, (w, h) => {
     const narrow = w * 0.16, edge = f => w / 2 - (w / 2 - narrow) * f;
     ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 2); ctx.lineTo(narrow, h / 2); ctx.lineTo(-narrow, h / 2); ctx.closePath(); ctx.fillStyle = C.green; ctx.fill(); ctx.fillStyle = style.tufts; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.lineJoin = 'round'; ctx.stroke();
-    for (let k = 0; k < 9; k++) { const f = 0.04 + k * 0.095, y = -h / 2 + h * f; tree(-edge(f) + 4, y, 9); tree(edge(f) - 4, y, 9); }
     ctx.beginPath(); ctx.rect(-narrow - 6, h / 2 - 4, narrow * 2 + 12, narrow * 2 + 12); inked(C.paper, 3); ring(0, h / 2 + 4, 5); inked(C.stone, 2); }),
 };
 
@@ -668,7 +694,8 @@ function banks(reach) {
     if (Math.abs(vx) > half + reach) continue;
     const west = Math.max(10 - half, vx - reach), east = Math.min(half - 10, vx + reach), top = vy - reach, foot = vy + reach;
     ctx.save(); ctx.translate(Math.cos(a) * far, Math.sin(a) * far); ctx.rotate(a);
-    ctx.beginPath(); ctx.rect(-half, top - 20, half * 2, reach * 2 + 40); ctx.fillStyle = C.town; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.stroke();
+    if (toysIn()) { const bank = new Path2D(); bank.rect(-half, top - 20, half * 2, reach * 2 + 40); shallows(bank); ctx.fillStyle = C.town; ctx.fill(bank); lip(bank); }
+    else { ctx.beginPath(); ctx.rect(-half, top - 20, half * 2, reach * 2 + 40); ctx.fillStyle = C.town; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.stroke(); }
     ctx.beginPath(); for (let y = Math.ceil(top / block) * block; y < foot; y += block) { ctx.moveTo(west, y); ctx.lineTo(east, y); } for (let x = -2580 * k; x < east; x += avenue) if (x > west) { ctx.moveTo(x, top); ctx.lineTo(x, foot); }
     ctx.strokeStyle = C.trim; ctx.lineWidth = 7; ctx.stroke(); ctx.restore();
   }
@@ -679,6 +706,15 @@ function boats(t) {
   for (const [off, speed, fill] of [[900 * k, 70, C.paper], [-690 * k, -45, C.action]]) {
     const along = ((t * speed % loop) + loop) % loop - loop / 2;
     ctx.save(); ctx.translate(Math.cos(a) * off + Math.sin(a) * along, Math.sin(a) * off - Math.cos(a) * along); ctx.rotate(a + (speed < 0 ? Math.PI : 0));
+    if (toysIn()) {
+      // Its wake opens out wide behind it; the toy floats upright on top, facing the way it goes across the page.
+      ctx.strokeStyle = C.paper; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.globalAlpha = 0.75; ctx.beginPath();
+      ctx.moveTo(-14, 20); ctx.quadraticCurveTo(-40, 60, -80, 110); ctx.moveTo(14, 20); ctx.quadraticCurveTo(40, 60, 80, 110); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.restore();
+      const x = Math.cos(a) * off + Math.sin(a) * along, y = Math.sin(a) * off - Math.cos(a) * along, facing = Math.sin(a + (speed < 0 ? Math.PI : 0));
+      foot(x, y + 20, 40, 0.16); toy(fill === C.paper ? 'ferry' : 'tug', x, y + 26, 100, facing < 0);
+      continue;
+    }
     ctx.strokeStyle = C.paper; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-12, 44); ctx.lineTo(-26, 96); ctx.moveTo(12, 44); ctx.lineTo(26, 96); ctx.stroke(); // its wake
     ctx.beginPath(); ctx.moveTo(0, -46); ctx.quadraticCurveTo(20, -20, 18, 0); ctx.lineTo(18, 38); ctx.lineTo(-18, 38); ctx.lineTo(-18, 0); ctx.quadraticCurveTo(-20, -20, 0, -46); ctx.closePath(); inked(fill, 3.5);
     box(22, 30, 4, 0, 10); inked(C.panel, 2.5); ctx.restore();
@@ -689,6 +725,11 @@ function road(thing, t) {
   ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(...thing.from); ctx.lineTo(...thing.to); ctx.strokeStyle = C.roof; ctx.lineWidth = thing.w; ctx.stroke();
   if (world.shuttles.some(car => car.kind === 'bus')) return;
   const f = 0.5 - 0.5 * Math.cos(t * 0.1), going = Math.sin(t * 0.1) > 0 ? 0 : Math.PI;
+  if (toysIn()) {
+    const x = thing.from[0] + (thing.to[0] - thing.from[0]) * f, y = thing.from[1] + (thing.to[1] - thing.from[1]) * f;
+    standing.push({ x, y: y + 12, name: 'bus', width: 64, flip: Math.cos(Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]) + going) < 0 });
+    return;
+  }
   ctx.save(); ctx.translate(thing.from[0] + (thing.to[0] - thing.from[0]) * f, thing.from[1] + (thing.to[1] - thing.from[1]) * f); ctx.rotate(Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]) + going);
   box(34, 15, 4); inked(C.action, 2.5); ctx.fillStyle = C.paper; ctx.fillRect(-12, -4, 20, 8); ctx.restore();
 }
@@ -697,6 +738,7 @@ function cabs(thing, t) {
   const dx = thing.to[0] - thing.from[0], dy = thing.to[1] - thing.from[1], far = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
   for (let k = 0; k < 8; k++) {
     const back = k % 2, f = (t * 0.03 + k / 8 + chance({ x: k, y: 1 }, 3) * 0.08) % 1, at = back ? 1 - f : f, lane = (back ? -1 : 1) * thing.w * 0.24;
+    if (toysIn()) { const x = thing.from[0] + dx * at - dy / far * lane, y = thing.from[1] + dy * at + dx / far * lane; foot(x, y + 8, 16, 0.18); toy('cab', x, y + 12, 40, (back ? -dx : dx) < 0); continue; }
     ctx.save(); ctx.translate(thing.from[0] + dx * at - dy / far * lane, thing.from[1] + dy * at + dx / far * lane); ctx.rotate(a); box(20, 11, 3); inked(C.cab, 2); ctx.restore();
   }
 }
@@ -709,13 +751,68 @@ function tram(car) {
   for (const side of [-7, 7]) { ctx.moveTo(from[0] - dy / far * side, from[1] + dx / far * side); ctx.lineTo(to[0] - dy / far * side, to[1] + dx / far * side); }
   ctx.stroke();
   for (const at of [0.36, 0.74]) { box(22, 22, 3, from[0] + dx * at, from[1] + dy * at); inked(C.stone, 3); } // its towers
+  if (toysIn()) {
+    // The toy cabin hangs from the cable, its shadow on the ground below and to the side.
+    ctx.globalAlpha = 0.18; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 30, y + 70, 60, 20, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    toy('tram', x, y + 62, 140, dx < 0 === car.clock < car.ride + car.stay);
+    return;
+  }
   ctx.globalAlpha = 0.2; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 26, y + 40, 62, 30, Math.atan2(dy, dx), 0, 7); ctx.fill(); ctx.globalAlpha = 1;
   ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx)); box(132, 72, 16); inked(C.action, 4); box(112, 46, 8); ctx.fillStyle = C.paper; ctx.fill(); ctx.restore();
   for (let n = 0; n < Math.min(4, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + (n - 1.5) * 26 * dx / far, y + (n - 1.5) * 26 * dy / far - 2, 38);
 }
+// Each car's own colour, the colour of its toy: the stop's cord, the count of riders it brings, and the count it takes.
+const carColour = car => `oklch(${car.kind === 'bus' ? '72% 0.12 235' : '58% 0.2 27'})`;
+// Where a car lets its riders off: roped off like a queue, little posts round it with a cord of the car's colour between
+// them. The cord hangs slack while the car is far off and pulls taut as it comes, and the stop's name says how long it will be.
+function stop(car) {
+  const [x, y] = car.off, coming = car.clock < car.ride, due = coming ? car.clock / car.ride : car.clock < car.ride + car.stay ? 1 : 0, posts = 12, sag = 22 * (1 - due);
+  const at = n => { const a = n / posts * Math.PI * 2; return [x + Math.cos(a) * PLAZA, y + Math.sin(a) * PLAZA * 0.7]; };
+  ctx.beginPath(); ctx.ellipse(x, y, PLAZA, PLAZA * 0.7, 0, 0, 7); ctx.fillStyle = carColour(car).replace(')', ` / ${0.1 + due * 0.14})`); ctx.fill();
+  ctx.beginPath();
+  for (let n = 0; n < posts; n++) { const [px, py] = at(n), [qx, qy] = at(n + 1); if (!n) ctx.moveTo(px, py - 26); ctx.quadraticCurveTo((px + qx) / 2, (py + qy) / 2 - 26 + sag, qx, qy - 26); }
+  ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.lineWidth = 9; ctx.stroke(); ctx.strokeStyle = carColour(car); ctx.lineWidth = 5.5; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([3, 6]); ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  for (let n = 0; n < posts; n++) {
+    const [px, py] = at(n);
+    ctx.beginPath(); ctx.ellipse(px, py, 8, 3.5, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .25)'; ctx.fill();
+    ctx.fillStyle = C.ink; ctx.fillRect(px - 3, py - 30, 6, 30);
+    ctx.beginPath(); ctx.arc(px, py - 31, 6, 0, 7); ctx.fillStyle = C.lamp; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
+  }
+  const left = Math.ceil(car.ride - car.clock);
+  pill(coming && left <= 20 ? `${car.name} in ${left}` : car.stop, x, y + PLAZA * 0.7 + 30, C.ink, C.paper, 16);
+}
+// Riders in the air: from a car onto a line waiting at the stop, or up off the back of a line into a car. Each goes in a
+// little arc, a touch bigger at the top. `to` is followed as it moves, so a rider lands on its line wherever the line has got to.
+const hops = [], counts = [];
+function hopping(count, from, to, t) {
+  for (let n = 0; n < Math.min(12, count); n++) hops.push({ face: 1 + Math.floor(Math.random() * FACES), from, to, t: t + n * 0.07, life: 0.5 });
+}
+function airborne(t) {
+  for (let i = hops.length - 1; i >= 0; i--) {
+    const hop = hops[i], u = (t - hop.t) / hop.life;
+    if (u > 1) { hops.splice(i, 1); continue; }
+    if (u < 0) continue;
+    const to = hop.to(), x = hop.from.x + (to.x - hop.from.x) * u, y = hop.from.y + (to.y - hop.from.y) * u - Math.sin(u * Math.PI) * 70;
+    sprite(hop.face, x, y, SIZE.stray * (1 + Math.sin(u * Math.PI) * 0.15));
+  }
+  // "+18" or "−6" beside a line's name for a moment, in the car's colour, rising a little as it goes.
+  for (let i = counts.length - 1; i >= 0; i--) {
+    const count = counts[i], age = (t - count.t) / 1.8;
+    if (age > 1 || count.line.dead) { counts.splice(i, 1); continue; }
+    ctx.globalAlpha = Math.min(1, (1 - age) * 3);
+    pill(count.text, count.line.x, count.line.y - 82 - age * 14, count.fill, count.ink, 16);
+    ctx.globalAlpha = 1;
+  }
+}
 // A bus is on the ground, so its shadow is close under it. It faces the way it is going.
 function bus(car, ux, uy) {
   const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay;
+  if (toysIn()) {
+    foot(x, y + 34, 66, 0.22); const high = toy('bus', x, y + 40, 160, (back ? -ux : ux) < 0);
+    pill(car.name, x, y + 40 - high - 14, C.ink, C.paper, 14);
+    return;
+  }
   ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(uy, ux) + (back ? Math.PI : 0));
   box(140, 66, 14, 5, 8); ctx.fillStyle = C.ink; ctx.fill();
   box(140, 66, 14); inked(C.water, 4); box(96, 44, 8, -12, 0); ctx.fillStyle = C.paper; ctx.fill();
@@ -727,7 +824,9 @@ function bus(car, ux, uy) {
 }
 // The lighthouse lamp turning.
 function beam(thing, t) {
-  ctx.fillStyle = 'rgba(255, 236, 150, .3)'; ctx.beginPath(); ctx.moveTo(thing.x, thing.y); ctx.arc(thing.x, thing.y, 460, t * 0.6, t * 0.6 + 0.42); ctx.closePath(); ctx.fill();
+  // From the lamp, which on the toy is up near its top.
+  const y = toysIn() ? thing.y + 12 - thing.w * TALL * AT.lighthouse[3] / AT.lighthouse[2] * 0.82 : thing.y;
+  ctx.fillStyle = 'rgba(255, 236, 150, .3)'; ctx.beginPath(); ctx.moveTo(thing.x, y); ctx.arc(thing.x, y, 460, t * 0.6, t * 0.6 + 0.42); ctx.closePath(); ctx.fill();
 }
 
 // What stands on the ground. Greens and fields are painted on it; halls, towers and water are walked around.
@@ -741,7 +840,10 @@ function painted(thing) {
   if (PAINT[thing.name]) return PAINT[thing.name](thing);
   lawn(thing);
 }
+// A tower's toy is drawn this much wider than the tower is on the ground, so it stands up tall above the line.
+const TALL = 2.3;
 function solid(thing, t) {
+  if (toysIn() && thing.toy) return void standing.push(thing.kind === 'tower' ? { x: thing.x, y: thing.y + 12, name: thing.toy, width: thing.w * TALL } : { x: thing.x, y: thing.y + thing.h / 2, name: thing.toy, width: thing.w });
   if (LOOK[thing.name]) return LOOK[thing.name](thing);
   if (thing.kind === 'water') return lake(thing, t);
   if (thing.kind === 'tower') { ctx.strokeStyle = C.ink; ctx.lineWidth = thing.w * 0.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(thing.x, thing.y); ctx.lineTo(thing.x + 40, thing.y + 40); ctx.stroke(); } // it is tall, so its shadow is long
@@ -771,13 +873,19 @@ function draw(t, dt) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.translate(wide / 2, tall / 2); ctx.scale(cam.z, cam.z); ctx.translate(-cam.x, -cam.y);
   const halfW = wide / 2 / cam.z + 80, halfH = tall / 2 / cam.z + 80, seen = (x, y) => Math.abs(x - cam.x) < halfW && Math.abs(y - cam.y) < halfH;
+  standing.length = 0;
 
   if (map.water) sea(t, cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2);
   else { ctx.fillStyle = C.town; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
   if (map.axis != null) { boats(t); banks(Math.hypot(halfW, halfH)); }
-  ctx.save(); ctx.translate(14, 14); ctx.fillStyle = C.ink; ctx.fill(land); ctx.restore(); // the hard shadow the ground casts
-  ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(land);
+  // On clay water the ground has a lit lip and no ink; otherwise a hard shadow and an inked edge.
+  const clay = toysIn() && map.water;
+  if (!clay) {
+    ctx.save(); ctx.translate(14, 14); ctx.fillStyle = C.ink; ctx.fill(land); ctx.restore(); // the hard shadow the ground casts
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(land);
+  }
   ctx.fillStyle = C.field; ctx.fill(land);
+  if (clay) lip(land);
   ctx.save(); ctx.clip(land);
   ctx.strokeStyle = C.dot; ctx.lineWidth = 5; ctx.setLineDash([4, 18]); ctx.lineCap = 'round'; if (map.rings.length > 1) ctx.stroke(land); ctx.setLineDash([]); // where one section meets the next
   ctx.fillStyle = C.dot; ctx.beginPath();
@@ -786,21 +894,23 @@ function draw(t, dt) {
   for (const thing of map.things) if (thing.kind === 'road') road(thing, t);
   const near = thing => Math.abs(thing.x - cam.x) < halfW + Math.max(thing.w, thing.h) && Math.abs(thing.y - cam.y) < halfH + Math.max(thing.w, thing.h);
   for (const thing of map.things) if ((thing.kind === 'green' || thing.kind === 'field') && near(thing)) painted(thing);
-  for (const [x, y] of blossoms) if (seen(x, y)) tree(x, y, 10, C.blossom);
+  // Every tree is the map's (maps.js), and solid: a toy standing up once the sheet is in, a drawn crown until then.
+  for (const each of map.trees) if (Math.abs(each.x - cam.x) < halfW + 60 && Math.abs(each.y - cam.y) < halfH + 120) {
+    if (toysIn()) standing.push({ x: each.x, y: each.y + each.r * 0.6, name: each.kind, width: each.r * 4.2 });
+    else tree(each.x, each.y, each.r, each.kind === 'blossom' ? C.blossom : C.tree);
+  }
   ctx.restore();
   for (const thing of map.things) if (thing.kind === 'bridge') { bridge(thing); cabs(thing, t); }
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing, t);
-  for (const car of world.shuttles) {
-    const due = car.clock < car.ride ? car.clock / car.ride : 0;
-    ctx.beginPath(); ctx.arc(car.off[0], car.off[1], PLAZA, 0, 7); ctx.globalAlpha = 0.14 + due * 0.22; ctx.fillStyle = C.action; ctx.fill(); ctx.globalAlpha = 1;
-    ctx.setLineDash([14, 12]); ctx.strokeStyle = C.paper; ctx.lineWidth = 5; ctx.stroke(); ctx.setLineDash([]);
-  }
+  for (const car of world.shuttles) stop(car);
   for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t);
   for (const zone of map.zones) if (seen(...zone.at)) pill(zone.name, zone.at[0], zone.at[1], C.paper, C.ink, 22);
   for (const thing of map.things) {
     const across = thing.kind === 'bridge' ? 0.43 : 0.5, hard = SOLID.includes(thing.kind) || thing.kind === 'bridge';
     // A building's name sits under it, so the building itself can be seen.
-    const [x, y] = thing.from ? [thing.from[0] + (thing.to[0] - thing.from[0]) * across, thing.from[1] + (thing.to[1] - thing.from[1]) * across] : [thing.x, thing.kind === 'tower' ? thing.y - 44 : thing.kind === 'hall' ? thing.y + Math.max(thing.w, thing.h) * 0.42 + 18 : thing.y];
+    const standsUp = toysIn() && thing.toy;
+    const [x, y] = thing.from ? [thing.from[0] + (thing.to[0] - thing.from[0]) * across, thing.from[1] + (thing.to[1] - thing.from[1]) * across]
+      : [thing.x, standsUp ? thing.y + (thing.kind === 'tower' ? 12 : thing.h / 2) + 20 : thing.kind === 'tower' ? thing.y - 44 : thing.kind === 'hall' ? thing.y + Math.max(thing.w, thing.h) * 0.42 + 18 : thing.y];
     if (seen(x, y)) pill(thing.name, x, y, hard ? C.ink : C.paper, hard ? C.paper : C.ink, 14);
     if (thing.kind === 'bridge' && map.axis != null) BANKS.forEach(([, name], n) => pill(name, thing.from[0] + (thing.to[0] - thing.from[0]) * (n ? 0.93 : 0.05), thing.from[1] + (thing.to[1] - thing.from[1]) * (n ? 0.93 : 0.05) - 60, C.paper, C.ink, 22));
   }
@@ -840,42 +950,33 @@ function draw(t, dt) {
     heads.push(line);
   }
   for (const it of world.items) if (seen(it.x, it.y)) pickup(it.kind, it.x, it.y, t);
-  // A mob, as a huddle: the fallen line's own head in the middle holding up a flag of its colour with its name and count,
-  // and at most fifteen of its animals round it, however many it holds.
+  // A mob is a sack (/demo/mockups-conga-pond.html, A), with how many it holds on a tag in the fallen line's colour.
   for (const mob of world.mobs) {
-    const n = mob.faces.length, r = mobReach(n);
-    if (Math.abs(mob.x - cam.x) > halfW + r || Math.abs(mob.y - cam.y) > halfH + r + 120) continue;
-    ctx.beginPath(); ctx.ellipse(mob.x, mob.y + 16, r * 0.95, r * 0.58, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .16)'; ctx.fill();
-    const shown = Math.min(15, n);
-    for (let i = 0; i < shown; i++) {
-      const a = i * 2.39996, d = Math.sqrt((i + 0.5) / shown) * r * 0.74; // the sunflower spiral: an even huddle
-      sprites.push({ x: mob.x + Math.cos(a) * d * 1.1, y: mob.y + Math.sin(a) * d * 0.7 + 8 - Math.abs(Math.sin(t * 4 + i)) * 3, face: mob.faces[n - 1 - i], size: SIZE.stray });
-    }
-    sprites.push({ x: mob.x, y: mob.y - 6 - Math.abs(Math.sin(t * 3)) * 2, face: mob.lead, size: SIZE.head });
-    mobTags.push({ x: mob.x, y: mob.y, text: `${mob.name} · ${n}`, c: colour(mob.from) });
+    if (Math.abs(mob.x - cam.x) > halfW + 80 || Math.abs(mob.y - cam.y) > halfH + 160) continue;
+    if (toysIn()) standing.push({ x: mob.x, y: mob.y + 22, name: 'sack', width: SACK });
+    mobTags.push({ x: mob.x, y: mob.y, text: `${mob.faces.length}`, c: colour(mob.from) });
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
+  // The toys that stand on the ground go in among the animals, each by where its foot is.
+  for (const each of standing) if (Math.abs(each.x - cam.x) < halfW + each.width && each.y - cam.y > -halfH && each.y - cam.y < halfH + each.width * 2) sprites.push({ y: each.y, stands: each });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
-  for (const s of sprites) { sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t, s.kit); }
+  for (const s of sprites) {
+    if (s.stands) { const { x, y, name, width, flip } = s.stands; foot(x, y, width * 0.42); toy(name, x, y + width * 0.04, width, flip); continue; }
+    sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t, s.kit); }
   for (const car of world.shuttles) tram(car);
+  airborne(t);
 
   for (let i = puffs.length - 1; i >= 0; i--) {
     const puff = puffs[i], age = (t - puff.t) / 0.6;
     if (age > 1) { puffs.splice(i, 1); continue; }
-    ctx.strokeStyle = C.paper; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
+    ctx.strokeStyle = puff.colour ?? C.paper; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
     ctx.beginPath(); ctx.arc(puff.x, puff.y, 30 + age * 130, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
   }
-  // Each huddle's flag: a pole from its leader and a pennant of the line's colour, waving, with its name and count on it.
+  // Each sack's count, at its shoulder: ink figures on a light colour, paper on a dark one. Until the toys are in, the
+  // count alone marks where the sack lies.
   for (const tag of mobTags) {
-    const px = tag.x + 22, top = tag.y - 96, wave = Math.sin(t * 4 + tag.x) * 3, size = Math.max(15, 11 / cam.z);
-    ctx.beginPath(); ctx.moveTo(px, tag.y - 10); ctx.lineTo(px, top); ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); ctx.lineCap = 'butt';
-    ctx.font = `800 ${size}px Archivo, system-ui, sans-serif`;
-    const w = ctx.measureText(tag.text).width + size * 2, high = size * 2;
-    ctx.beginPath(); ctx.moveTo(px, top); ctx.quadraticCurveTo(px + w / 2, top - 4 + wave, px + w, top + wave); ctx.lineTo(px + w - size * 0.66, top + high / 2 + wave * 0.5); ctx.lineTo(px + w, top + high + wave);
-    ctx.quadraticCurveTo(px + w / 2, top + high - 4 + wave, px, top + high); ctx.closePath();
-    ctx.fillStyle = tag.c; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
-    // Ink lettering on a light flag, paper on a dark one.
-    ctx.fillStyle = Number(/([\d.]+)%/.exec(tag.c)?.[1] ?? 60) > 66 ? C.ink : C.paper; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(tag.text, px + size * 0.6, top + high / 2 + wave * 0.5);
+    const ink = Number(/([\d.]+)%/.exec(tag.c)?.[1] ?? 60) > 66 ? C.ink : C.paper;
+    pill(tag.text, tag.x + SACK * 0.4, tag.y + 22 - SACK * 1.05, tag.c, ink, 17);
   }
   for (const line of heads) {
     if (!seen(line.x, line.y)) continue;
@@ -939,17 +1040,40 @@ function frame(now) {
   for (const event of paused ? [] : step(world, dt)) {
     if (event.type === 'join' && event.line === ME) navigator.vibrate?.(8);
     if (event.type === 'scatter') {
-      puffs.push({ x: event.x, y: event.y, t });
+      puffs.push({ x: event.x, y: event.y, t, colour: colour(event.line) });
       if (event.line === ME) { navigator.vibrate?.(60); finish(event); }
       else if (event.by === ME) say(`${world.lines.find(line => line.id === event.line).name} scattered on your line`);
     }
     if (event.type === 'arrive') {
-      puffs.push({ x: event.x, y: event.y, t });
+      // Its riders hop off into each line waiting; with nobody waiting they hop down round the stop.
+      const ride = world.shuttles.find(each => each.name === event.name), from = { x: ride.x, y: ride.y + (ride.kind === 'bus' ? -20 : 20) }, fill = carColour(ride);
+      for (const each of event.onto) {
+        const line = world.lines.find(one => one.id === each.line);
+        if (!line || !each.count) continue;
+        hopping(each.count, from, () => line, t);
+        counts.push({ line, text: `+${each.count}`, fill, ink: C.ink, t });
+      }
+      if (!event.onto.length) for (let n = 0; n < 8; n++) { const a = n * 0.785, spot = { x: event.x + Math.cos(a) * 90, y: event.y + Math.sin(a) * 60 }; hopping(1, from, () => spot, t + n * 0.06); }
       const mine = event.onto.find(each => each.line === ME), car = event.name.toLowerCase();
       if (mine) { navigator.vibrate?.(30); say(`${mine.count} got off the ${car} straight onto your line`); }
       else if (me && !me.dead) say(event.onto.length ? `${world.lines.find(line => line.id === event.onto[0].line).name} met the ${car} and took its riders` : `The ${car} let ${event.count} off at ${event.stop}`);
     }
-    if (event.type === 'lift') { puffs.push({ x: event.x, y: event.y, t }); if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
+    if (event.type === 'lift') {
+      // The back of the line hops up into the car, which it goes on carrying.
+      const ride = world.shuttles.find(each => each.name === event.name), line = world.lines.find(one => one.id === event.line);
+      if (ride && line) {
+        const end = line.tail.at(-1) ?? line;
+        hopping(event.count, { x: end.x, y: end.y }, () => ({ x: ride.x, y: ride.y + (ride.kind === 'bus' ? -20 : 20) }), t);
+        counts.push({ line, text: `−${event.count}`, fill: C.ink, ink: C.paper, t });
+      }
+      if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }
+    if (event.type === 'grab') {
+      // A sack taken: a ring in the fallen line's colour where it lay, and its count by the taker's name.
+      const line = world.lines.find(one => one.id === event.line);
+      puffs.push({ x: event.x, y: event.y, t, colour: colour(event.from) });
+      if (line) counts.push({ line, text: `+${event.count}`, fill: colour(event.from), ink: Number(/([\d.]+)%/.exec(colour(event.from))?.[1] ?? 60) > 66 ? C.ink : C.paper, t });
+      if (event.line === ME) navigator.vibrate?.(30);
+    }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
     // Someone else's big spill is news everywhere; a small one only near you.
     if (event.type === 'spill' && event.line !== ME && me && !me.dead && event.by !== ME && (event.size >= 15 || Math.hypot(event.x - me.x, event.y - me.y) < 1200)) say(`${event.name} spilled ${event.size}`);
