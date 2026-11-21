@@ -187,10 +187,13 @@ const OWN = { megaphone: '62% 0.2 27', coffee: '62% 0.09 60', whistle: '84% 0.16
 const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
 
 // The other lines. In live play these are people; here each one is a bot with its own nerve and temper.
-const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'Big Red Band', 'Club Frisbee', 'Glee Club', 'West Campus', 'Olin late shift', 'Slope Day crew', 'Ag Quad lab'],
-  'cornell-tech': ['Bloomberg 2F', 'Tata studio', 'The House 12', 'Studio team 4', 'Johnson MBA', 'Tram regulars', 'Jacobs', 'Health Tech', 'Connective Media', 'Urban Tech', 'Cafe line'] };
-// Each line's rope colour, as far apart round the wheel as eleven can be, and kept off the coral ground and your own red.
-const tint = n => `oklch(${['88% 0.17 98', '62% 0.2 262', '74% 0.2 140', '62% 0.24 320', '76% 0.13 195', '55% 0.2 290', '82% 0.16 125', '66% 0.22 350', '62% 0.13 225', '72% 0.17 305', '58% 0.14 165'][n % 11]})`;
+// The grounds grew half again (maps.js ROOM), so each has more lines on it.
+const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'Big Red Band', 'Club Frisbee', 'Glee Club', 'West Campus', 'Olin late shift', 'Slope Day crew', 'Ag Quad lab', 'Collegetown', 'Rowing', 'Hotelies', 'Mews Hall', 'Dairy Bar line', 'Physics 1112'],
+  'cornell-tech': ['Bloomberg 2F', 'Tata studio', 'The House 12', 'Studio team 4', 'Johnson MBA', 'Tram regulars', 'Jacobs', 'Health Tech', 'Connective Media', 'Urban Tech', 'Cafe line', 'Runway', 'Startup Studio', 'Ferry crew', 'Bloomberg 3F', 'Run club', 'Verizon EC'] };
+// Each line's rope colour, one for every line on a ground, told apart by hue and by lightness, and kept off the coral ground and your own red.
+const TINTS = ['88% 0.17 98', '62% 0.2 262', '74% 0.2 140', '62% 0.24 320', '76% 0.13 195', '55% 0.2 290', '82% 0.16 125', '66% 0.22 350', '62% 0.13 225', '72% 0.17 305', '58% 0.14 165',
+  '46% 0.13 150', '88% 0.08 230', '45% 0.17 300', '90% 0.11 165', '72% 0.13 85', '42% 0.06 260'];
+const tint = n => `oklch(${TINTS[n % TINTS.length]})`;
 const ME = 'me';
 const colour = id => id === ME ? C.action : tint(id);
 
