@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
-import { kitScript } from '@/lib/campus/kit-script';
 import { campusViewer } from '@/lib/campus/session';
 import { Kit } from './kit';
 import '@/app/c/campus.css';
@@ -13,6 +12,6 @@ import '@/app/c/campus.css';
 export async function CampusShell({ children }: { children: ReactNode }) {
   // Signed out there is no one to hold to the colours: any may be worn.
   const viewer = await campusViewer(), own = viewer?.kit ?? 'loop', yours = viewer?.kits ?? null, any = viewer?.anyKit ?? true;
-  const inside = <><script dangerouslySetInnerHTML={{ __html: kitScript(own, yours, any) }} /><Kit own={own} yours={yours} any={any} />{children}</>;
+  const inside = <><Kit own={own} yours={yours} any={any} />{children}</>;
   return clerkPortalConfigured() ? <ClerkProvider signInUrl="/sign-in" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" telemetry={{ disabled: true }}>{inside}</ClerkProvider> : inside;
 }

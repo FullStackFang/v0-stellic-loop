@@ -1,7 +1,6 @@
 // The script that puts the colours on before the page is painted, so a picked or school kit never flashes in after the
-// default (components/campus/shell.tsx, app/groups/layout.tsx). It is here and not in components/campus/kit.tsx because
-// a server component cannot call a function of a client file; it follows the same rule as Kit and mayWear there. The
-// key is the one kit.tsx uses.
+// default. Kit (components/campus/kit.tsx) draws it, from the server only; it follows the same rule as Kit and mayWear
+// there. The key is the one kit.tsx uses.
 
 /** Where the colours last put on are kept on this browser, for the loader of the next fresh load (components/loading/fresh-wait.tsx). */
 export const WORN = 'loop-kit-worn';

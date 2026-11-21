@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { INK_PAGE } from '@/lib/campus/ink';
+import { kitScript } from '@/lib/campus/kit-script';
 import { InkMark } from './ink-mark';
 import { JoinPlan } from './join-plan';
 import './foot.css';
@@ -44,8 +45,12 @@ export function Kit({ own, yours, any }: { own: string; yours: string[] | null; 
     if (any) root.dataset.anyKit = ''; else delete root.dataset.anyKit;
     showKit(picked && KITS.some(each => each.slug === picked) && mayWear(picked, mine, any) ? picked : own);
   }, [own, list, any]);
-  return null;
+  // The script is drawn by the server and kept while the page hydrates. Reached without a page load, a script React
+  // draws never runs (and React warns of it), so there is none then: the effect above does its work.
+  const served = useSyncExternalStore(never, () => false, () => true);
+  return served ? <script dangerouslySetInnerHTML={{ __html: kitScript(own, yours, any) }} /> : null;
 }
+const never = () => () => {};
 
 /** The colours and who may wear them, as the page has them: whoever changes them, what shows them follows. */
 const onLook = (changed: () => void) => { const watch = new MutationObserver(changed); watch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-kit', 'data-kits', 'data-any-kit'] }); return () => watch.disconnect(); };
