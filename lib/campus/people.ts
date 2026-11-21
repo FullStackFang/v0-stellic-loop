@@ -3,8 +3,8 @@ import { clerkClient } from '@clerk/nextjs/server';
 import type { Db, Q } from '../db';
 import { clerkIssuer, clerkPortalConfigured } from '../emba/clerk-identity';
 import { UNNAMED } from '../emba/member-name';
-import { ANIMALS, CUSTOM, MASCOT, PREMIUM } from './animals';
-import { builtTiers, NEEDS_PREMIUM, schoolsOfPerson } from './animal-tiers';
+import { ANIMALS, CUSTOM, PREMIUM } from './animals';
+import { builtAnimals, NEEDS_PREMIUM, schoolsOfPerson } from './animal-tiers';
 import { hasInk } from './ink';
 import { CampusError } from './errors';
 import { listCampuses, type Campus } from './listings';
@@ -59,10 +59,10 @@ export async function pickedFaces(q: Q, personIds: readonly string[]): Promise<M
 export async function pickFace(q: Q, personId: string, face: number, premium = false): Promise<void> {
   if (!Number.isInteger(face) || face < CUSTOM || face >= ANIMALS + PREMIUM.length) throw new CampusError('Pick one of the animals.');
   // A premium animal is for someone who subscribed (`premium` is also true for the admin); one that is off is for nobody.
-  const tier = face >= 0 ? (await builtTiers(q))[face] : 'core';
+  const built = face >= 0 ? await builtAnimals(q) : null, tier = built ? built.tiers[face] : 'core', school = built?.schools[face];
   if (tier === 'off') throw new CampusError('Pick one of the animals.');
   // A school's own animal is for people who have that school (and the admin), free unless the admin made it premium.
-  if (MASCOT[face] && !premium && !(await schoolsOfPerson(q, personId)).includes(MASCOT[face])) throw new CampusError('Pick one of the animals.');
+  if (school && !premium && !(await schoolsOfPerson(q, personId)).includes(school)) throw new CampusError('Pick one of the animals.');
   if (tier === 'premium' && !premium && !(await hasInk(q, personId))) throw new CampusError(NEEDS_PREMIUM);
   if (face === CUSTOM && !(await q.query('select 1 from campus_custom_picture p where p.token=(select coalesce(c.picture,f.token) from (select $1::uuid as id) i left join campus_face c on c.person_id=i.id left join campus_custom_face f on f.person_id=i.id)', [personId])).rows.length) throw new CampusError('Pick one of the animals.');
   await q.query('insert into campus_face(person_id,face) values($1,$2) on conflict(person_id) do update set face=excluded.face,picked_at=now()', [personId, face]);

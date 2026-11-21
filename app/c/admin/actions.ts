@@ -10,11 +10,12 @@ import { deletePicture } from '@/lib/campus/custom-face';
 import { readFeeds } from '@/lib/campus/import';
 import { approveLinkedin, removeLinkedin } from '@/lib/campus/linkedin';
 import { removeAskedSchool } from '@/lib/campus/school-ask';
-import { findCampus, type Campus } from '@/lib/campus/listings';
+import { findCampus, listCampuses, type Campus } from '@/lib/campus/listings';
 import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
 import { savePlace } from '@/lib/campus/places';
 import { saveReward, setRewardHidden } from '@/lib/campus/rewards';
 import { campusViewer } from '@/lib/campus/session';
+import { schoolOf } from '@/lib/campus/schools';
 import { joinTag, setTagKind, splitTag } from '@/lib/campus/tags';
 import { zoned } from '@/lib/campus/time';
 
@@ -132,9 +133,11 @@ export async function setTierAction(data: FormData): Promise<void> {
   await admin(data, async () => {
     const tier = text(data, 'tier'), faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String);
     if (!faces.length && !pictures.length) throw new Error('Pick an animal first');
-    if (tier === 'school' && (pictures.length || faces.some(face => !MASCOT[number(face)]))) throw new Error('School is only for a school’s own animal');
-    for (const face of faces) await setBuiltTier(db(), number(face), tier);
-    for (const picture of pictures) await setPictureTier(db(), picture, tier === 'off' ? 'own' : tier);
+    // School goes with the school it is for: the one picked animal's own chooser, or the bar's when more are picked.
+    const one = faces.length + pictures.length === 1 ? faces[0] ?? pictures[0] : null, school = tier === 'school' ? text(data, one ? `school-${one}` : 'school') : '';
+    if (tier === 'school' && !(await listCampuses(db())).some(each => schoolOf(each.slug) === school) && !Object.values(MASCOT).includes(school)) throw new Error('Pick the school it is for');
+    for (const face of faces) await setBuiltTier(db(), number(face), tier, school);
+    for (const picture of pictures) await setPictureTier(db(), picture, tier === 'off' ? 'own' : tier, school);
     const many = faces.length + pictures.length;
     return many === 1 ? MOVED[tier] ?? 'Saved.' : `${many} animals moved to ${tier}. Whoever has one keeps it.`;
   });

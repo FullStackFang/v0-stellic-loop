@@ -833,7 +833,9 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm-moves details[open] summary { display: none; } .cs-adm-moves details button { background: var(--adm-warn); color: var(--cs-paper); }
 /* One picked: its card, and no bar. PickCount (components/campus/pick-count.tsx) counts them: :has() inside :has() is not allowed, so a rule that tried it here was dropped. */
 .cs-adm-pick[data-picked="1"]:has(.cs-adm-grid :checked) .cs-adm-tray { display: none; }
-.cs-adm-pick:has(.cs-adm-grid input:checked:not([data-mascot])) .cs-adm-tray button[value=school] { display: none; }
+/* School goes with a chooser of which school, joined to its button as one pill. Any animal can be a school's own. */
+.cs-adm-school { display: inline-flex; align-items: center; } .cs-adm-school > select { height: 30px; padding: 0 6px 0 12px; border: 0; border-radius: 99px 0 0 99px; font: inherit; font-size: 13px; font-weight: 600; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1px var(--cs-line); cursor: pointer; }
+.cs .cs-adm-school > button { border-radius: 0 99px 99px 0; } .cs-adm-tray .cs-adm-school > select { height: 32px; }
 
 /* Phones: the week runs down the page, not sideways. Each ticket takes the width, and an open ticket's panel unfolds
    under it as one piece: the same tear between them that the stub has, turned to run across. */

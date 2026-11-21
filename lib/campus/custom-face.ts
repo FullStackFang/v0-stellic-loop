@@ -6,7 +6,7 @@ import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { CHANGES, CUSTOM, NAMES } from './animals';
 import { hasInk, INK_MAKES, joinPlan, planOf, type AskPlace } from './ink';
-import { NEEDS_PREMIUM } from './animal-tiers';
+import { NEEDS_PREMIUM, schoolsOfPerson } from './animal-tiers';
 import { CampusError } from './errors';
 
 // A person's own animal: a photo of an animal, drawn as a figure of the set in public/animals. Premium, with no payment
@@ -177,8 +177,10 @@ export const freeCode = (code: unknown) => typeof code === 'string' && code.trim
 
 /** A person picks a made animal as their face: one of their own, a core one, or a premium one when they subscribed (`premium` is also true for the admin). */
 export async function useCustomFace(q: Q, personId: string, token: string, premium = false): Promise<void> {
-  const { rows: [row] } = z.uuid().safeParse(token).success ? await q.query<{ mine: boolean; tier: string | null }>('select (person_id=$1 and let_go_at is null) as mine,tier from campus_custom_picture where token=$2', [personId, token]) : { rows: [] };
+  const { rows: [row] } = z.uuid().safeParse(token).success ? await q.query<{ mine: boolean; tier: string | null; school: string | null }>('select (person_id=$1 and let_go_at is null) as mine,tier,school from campus_custom_picture where token=$2', [personId, token]) : { rows: [] };
   if (!row || !(row.mine || row.tier)) throw new CampusError('Pick one of the animals.');
+  // One the admin made a school's own is for people of that school (and the admin, whose `premium` is true).
+  if (!row.mine && row.school && !premium && !(await schoolsOfPerson(q, personId)).includes(row.school)) throw new CampusError('Pick one of the animals.');
   if (!row.mine && row.tier === 'premium' && !premium && !(await hasInk(q, personId))) throw new CampusError(NEEDS_PREMIUM);
   await q.query(USE, [personId, CUSTOM, token]);
 }
