@@ -25,9 +25,9 @@ export default async function ConnectionsPage({ searchParams }: { searchParams?:
   const principal = await getPortalPrincipal();
   if (!principal) return <section className="lt-editor"><h1>Assistant connections</h1><p>Sign in to manage your own group grants.</p><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent('/groups/connections')}`}>Sign in</Link></section>;
   // Counted once per member, for the operator's connecting funnel.
-  await noteConnectView(db(), principal);
   // Assistants are part of Ink+. Nothing is charged yet: pressing Subscribe is kept (when, and that it was here) and opens the page.
-  if (!await hasAssistants(db(), principal)) return <>
+  const [, may] = await Promise.all([noteConnectView(db(), principal), hasAssistants(db(), principal)]);
+  if (!may) return <>
     <h1>Connect your assistant</h1>
     <section className="lt-editor"><h2>Assistants come with Ink+</h2><p>Your own AI, answering from your groups: what was decided, who has what, and what is due. Ink+ is $9.99 a month.</p>
       <ActionForm action={subscribeForAssistants} label="Subscribe"><label>Email to subscribe with<input type="email" name="email" required autoComplete="email" defaultValue={principal.verifiedEmail ?? ''}/></label></ActionForm></section>
