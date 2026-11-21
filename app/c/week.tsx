@@ -18,9 +18,9 @@ import { DEFAULT_CAMPUS, schoolOf, SWAP_TICKET } from '@/lib/campus/schools';
 import { campusScreen, type ShareLink } from '@/lib/campus/screen';
 import { campusViewer, mayUse, signInHref } from '@/lib/campus/session';
 import { barGroups } from '@/lib/campus/bar-groups';
-import { OnYou } from './on-you';
-import { siteBar } from './site-bar';
 import { SeatsSmall } from '@/components/loading/seats';
+import { OnYou, startOnYou } from './on-you';
+import { siteBar } from './site-bar';
 
 /**
  * "This week" for one campus, as the person looking may see it. A signed-in person belongs to one school: another
@@ -33,6 +33,7 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
     if (viewer.campus) redirect(`/c/${viewer.campus.slug}`);
     return NoSchool();
   }
+  if (viewer) startOnYou();
   const [screen, groups] = await Promise.all([campusScreen(db(), campus, viewer && { personId: viewer.personId, admin: viewer.admin, groups: [] }, { link }), viewer ? barGroups(viewer.principal) : []]);
   // The campuses of this school, when it has more than one: what the swap on the map offers.
   const parts = (await listCampuses(db())).filter(each => schoolOf(each.slug) === schoolOf(campus.slug) && SWAP_TICKET[each.slug]);

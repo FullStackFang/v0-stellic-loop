@@ -37,7 +37,7 @@ vi.mock('ai', async original => ({ ...(await original<typeof import('ai')>()),
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-screen, outings ("Who sees whom"), member-levels, campus-search.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 // The bar's counter loads by itself on the server (its own tests: on-you.test.tsx). Drawn here it never settles, and the page under it loses what was pressed.
-vi.mock('./on-you', () => ({ OnYou: () => null }));
+vi.mock('./on-you', () => ({ OnYou: () => null, startOnYou: () => {} }));
 // Whether the person signed in with LinkedIn is the sign-in service's to say. Here a test says it.
 const linkedinOf = vi.hoisted(() => ({ account: null as { name: string; photo: string | null } | null }));
 vi.mock('@/lib/campus/linkedin-account', () => ({ linkedinAccount: async () => linkedinOf.account }));

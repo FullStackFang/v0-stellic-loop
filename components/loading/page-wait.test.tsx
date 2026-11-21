@@ -1,26 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { TopBar } from '@/components/campus/top-bar';
-import { animal } from '@/lib/campus/animals';
-import { forget, lastBar, rememberMe } from './last-bar';
+import { forget, lastBar } from './last-bar';
 import { PageWait, PartWait } from './page-wait';
-import { LINE } from './seats';
 
 // What a page shows while it loads (openspec loop-loading-seats): after a page with the top bar, the bar stays.
 let path = '/c/cornell';
 vi.mock('next/navigation', () => ({ usePathname: () => path }));
 afterEach(() => { forget(); path = '/c/cornell'; });
 
-const BEAR = animal(37);
-const faces = (box: HTMLElement) => [...box.querySelectorAll('.seats-row img')].map(img => img.getAttribute('src'));
+/** The loader says the page is waiting, and draws no ticket of its own: the one ticket of the app stands over it (fresh-wait.tsx). */
+const asks = (box: HTMLElement) => { expect(box.querySelector('[data-seats-wait="page"]')).not.toBeNull(); expect(box.querySelector('.seats-tk')).toBeNull(); };
 
 describe('opening the app', () => {
-  it('shows the ticket alone on the whole screen, with no bar', () => {
+  it('asks for the ticket on the whole screen, with no bar', () => {
     const { container } = render(<PageWait />);
     expect(container.querySelector('.seats-screen')).not.toBeNull();
-    expect(screen.getByRole('status')).toHaveTextContent(LINE);
     expect(screen.queryByRole('navigation')).toBeNull();
-    expect(faces(container).at(-1)).toBe(animal(11));
+    asks(container);
   });
 });
 
@@ -32,11 +29,11 @@ describe('changing page', () => {
     page.unmount();
     return render(<PageWait />).container;
   }
-  it('keeps the bar: the same links, and the ticket under it', () => {
+  it('keeps the bar: the same links, and asks for the ticket under it', () => {
     const container = from('Ink');
     expect(container.querySelector('.seats-screen')).toBeNull();
     expect(screen.getAllByRole('link').map(link => link.textContent)).toEqual(['Loopd', 'This week', 'Doodles', 'Ink', 'Claim your club', 'Sign in']);
-    expect(screen.getByRole('status')).toHaveTextContent(LINE);
+    asks(container);
   });
   it('marks the link that was pressed, which holds the small one, and no other', () => {
     from('Ink');
@@ -45,14 +42,10 @@ describe('changing page', () => {
     expect(screen.getByRole('link', { name: 'Ink' }).querySelector('.seats-sm')).not.toBeNull();
     expect(screen.getByRole('link', { name: 'This week' }).querySelector('.seats-sm')).toBeNull();
   });
-  it('announces the wait once: the small one on the link says nothing', () => {
+  it('the small one on the link says nothing: the ticket announces the wait', () => {
     from('Ink');
-    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.queryAllByRole('status')).toHaveLength(0);
     expect(screen.getByRole('link', { name: 'Ink' }).querySelector('.seats-linkwait')).toHaveAttribute('aria-hidden', 'true');
-  });
-  it('seats the person whose bar it was', () => {
-    rememberMe({ face: BEAR, plan: 'ink', seed: 'Josh' });
-    expect(faces(from('Ink')).at(-1)).toBe(BEAR);
   });
   it('forgets the pressed link once the next page has drawn its bar', () => {
     from('Ink');
@@ -74,11 +67,9 @@ describe('changing page', () => {
 });
 
 describe('a groups page', () => {
-  it('shows the ticket in the page\'s place, with the person\'s face', () => {
-    rememberMe({ face: BEAR });
+  it('asks for the ticket in the place of the page, under the bar that stayed', () => {
     const { container } = render(<PartWait />);
     expect(container.querySelector('.seats-screen')).toBeNull();
-    expect(screen.getByRole('status')).toHaveTextContent(LINE);
-    expect(faces(container).at(-1)).toBe(BEAR);
+    asks(container);
   });
 });
