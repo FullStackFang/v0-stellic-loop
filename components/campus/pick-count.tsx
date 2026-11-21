@@ -3,26 +3,30 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Marks the form it is in with how many of its grid's animals are ticked (data-picked), for the admin's Animals
- * section (app/c/admin/page.tsx): one picked opens in the grid, two or more show the bar of moves. CSS alone cannot
- * tell one from two across the grid's items: that needs :has() inside :has(), which browsers do not allow.
- * Where the browser can, a tick is made inside a view transition, so the picked one grows in place and the others glide aside.
+ * Keeps one animal picked at a time in the admin's Animals grid (app/c/admin/page.tsx): tapping another closes the open one
+ * and opens that one, and tapping the open one's face closes it. It marks the form with how many are picked (data-picked),
+ * which the grid's CSS reads to open the picked one. Where the browser can, each tap is made inside a view transition, so the
+ * picked one grows in place and the others glide aside.
  */
 export function PickCount() {
   const mark = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const form = mark.current?.closest('form');
     if (!form) return;
-    const count = () => { form.dataset.picked = String(form.querySelectorAll('.cs-adm-grid input[type=checkbox]:checked').length); };
+    const boxes = () => Array.from(form.querySelectorAll<HTMLInputElement>('.cs-adm-grid input[type=checkbox]'));
+    const count = () => { form.dataset.picked = String(boxes().filter(box => box.checked).length); };
     // A reset clears the boxes after its event, so it is counted once that is done.
     const reset = () => setTimeout(count);
     const tick = (event: MouseEvent) => {
       const box = (event.target as Element).closest?.('.cs-adm-grid input[type=checkbox]');
-      if (!(box instanceof HTMLInputElement) || !document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      // By now the click has flipped the box; preventing it flips it back, and the transition sets it again.
-      const to = box.checked;
+      if (!(box instanceof HTMLInputElement)) return;
+      // By now the click has flipped the box. The others are let go, so one is picked at most.
+      const to = box.checked, others = boxes().filter(each => each !== box && each.checked);
+      const settle = () => { for (const each of others) each.checked = false; box.checked = to; box.dispatchEvent(new Event('change', { bubbles: true })); };
+      if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return settle();
+      // Preventing the click flips the box back; the transition sets it again.
       event.preventDefault();
-      document.startViewTransition(() => { box.checked = to; box.dispatchEvent(new Event('change', { bubbles: true })); });
+      document.startViewTransition(settle);
     };
     count(); form.addEventListener('change', count); form.addEventListener('reset', reset); form.addEventListener('click', tick);
     return () => { form.removeEventListener('change', count); form.removeEventListener('reset', reset); form.removeEventListener('click', tick); };
