@@ -12,7 +12,8 @@ import type { Tile } from './view';
 // starts as theirs alone. A move changes only what can be picked from then on: whoever has a picture keeps it.
 
 // A school's own animal (MASCOT) starts in a fourth place, school: free to people of that school. Wherever the admin
-// moves it, it stays that school's alone. No row is kept for it while it is there, so the table needs no new value.
+// moves it, it stays that school's alone. No row is kept for it while it is there. The admin may also make any other
+// animal, shipped or made, a school's own: its row then holds tier school and the school (migration 20261120600000).
 export type Tier = 'core' | 'premium' | 'school' | 'off';
 export const NEEDS_PREMIUM = 'That one comes with Loopd Ink.';
 const BUILT = ANIMALS + PREMIUM.length;
@@ -33,14 +34,21 @@ async function saidRows(q: Q): Promise<{ built: Map<number, Said>; made: Map<str
   return { built: new Map(built.map(row => [row.face, row])), made: new Map(made.map(row => [row.token, row])) };
 }
 
-/** The tier of each picture shipped with the app, by its number. */
-export async function builtTiers(q: Q): Promise<Tier[]> {
+/** Each picture shipped with the app, by its number: its tier, and the school it is the own animal of (null: everyone's). */
+export async function builtAnimals(q: Q): Promise<{ tiers: Tier[]; schools: (string | null)[] }> {
   const tiers: Tier[] = Array.from({ length: BUILT }, (_, face) => face < ANIMALS ? 'core' : MASCOT[face] ? 'school' : 'premium');
-  for (const row of (await q.query<{ face: number; tier: Tier }>('select face,tier from campus_animal')).rows) if (row.face >= 0 && row.face < BUILT) tiers[row.face] = row.tier;
-  return tiers;
+  const schools = Array.from({ length: BUILT }, (_, face): string | null => MASCOT[face] ?? null);
+  // The admin may make any of them a school's own (migration 20261120600000): its row then says which school.
+  for (const row of (await q.query<{ face: number; tier: Tier; school: string | null }>('select face,tier,school from campus_animal')).rows) if (row.face >= 0 && row.face < BUILT) {
+    tiers[row.face] = row.tier;
+    if (row.school) schools[row.face] = row.school;
+  }
+  return { tiers, schools };
 }
-type Made = { token: string; tier: 'core' | 'premium' | null; email: string | null };
-const madeRows = async (q: Q) => (await q.query<Made>('select p.token::text as token,p.tier,f.email from campus_custom_picture p left join campus_custom_face f on f.person_id=p.person_id order by p.made_at,p.token')).rows;
+/** The tier of each picture shipped with the app, by its number. */
+export const builtTiers = async (q: Q): Promise<Tier[]> => (await builtAnimals(q)).tiers;
+type Made = { token: string; tier: 'core' | 'premium' | 'school' | null; school: string | null; email: string | null };
+const madeRows = async (q: Q) => (await q.query<Made>('select p.token::text as token,p.tier,p.school,f.email from campus_custom_picture p left join campus_custom_face f on f.person_id=p.person_id order by p.made_at,p.token')).rows;
 
 /** The school a person is at, by the campus they were placed on. Null for a person at no school. */
 export async function schoolOfPerson(q: Q, personId: string): Promise<string | null> {
@@ -58,17 +66,21 @@ export async function schoolsOfPerson(q: Q, personId: string): Promise<string[]>
  * A school's own animal is offered to people who have that school among their `schools` alone; `all` is for the admin, who is offered every one.
  */
 export async function picks(q: Q, schools: readonly string[] | 'all'): Promise<{ core: Tile[]; premium: Tile[]; school: Tile[] }> {
-  const tiers = await builtTiers(q), made = await madeRows(q), said = await saidRows(q);
+  const { tiers, schools: own } = await builtAnimals(q), made = await madeRows(q), said = await saidRows(q);
+  const theirs = (school: string | null) => schools === 'all' || !school || schools.includes(school);
   const of = (tier: 'core' | 'premium' | 'school'): Tile[] => [
-    ...tiers.flatMap((each, face) => each === tier && (schools === 'all' || !MASCOT[face] || schools.includes(MASCOT[face])) ? [{ face, src: animal(face), name: said.built.get(face)?.name ?? builtName(face), words: (said.built.get(face)?.words ?? builtWords(face)).join(' ') }] : []),
-    ...made.flatMap((each, at) => each.tier === tier ? [{ face: null, src: customFace(each.token), name: said.made.get(each.token)?.name ?? `Made animal ${at + 1}`, words: (said.made.get(each.token)?.words ?? ['made']).join(' ') }] : [])];
+    ...tiers.flatMap((each, face) => each === tier && theirs(own[face]) ? [{ face, src: animal(face), name: said.built.get(face)?.name ?? builtName(face), words: (said.built.get(face)?.words ?? builtWords(face)).join(' ') }] : []),
+    ...made.flatMap((each, at) => each.tier === tier && theirs(each.school) ? [{ face: null, src: customFace(each.token), name: said.made.get(each.token)?.name ?? `Made animal ${at + 1}`, words: (said.made.get(each.token)?.words ?? ['made']).join(' ') }] : [])];
   return { core: of('core'), premium: of('premium'), school: of('school') };
 }
 
-/** For the admin: every picture there is, with where it stands, its name and the words it is found by. A made animal that is nobody's but its maker's has tier null, and one the admin has not named has name null. */
-export async function catalogue(q: Q): Promise<{ built: { face: number; src: string; name: string; words: string[]; tier: Tier }[]; made: { token: string; src: string; name: string | null; words: string[]; tier: 'core' | 'premium' | null; email: string | null }[] }> {
-  const tiers = await builtTiers(q), said = await saidRows(q);
-  return { built: tiers.map((tier, face) => ({ face, src: animal(face), name: said.built.get(face)?.name ?? builtName(face), words: said.built.get(face)?.words ?? builtWords(face), tier })),
+/**
+ * For the admin: every picture there is, with where it stands, its name, the words it is found by, and the school it is
+ * the own animal of. A made animal that is nobody's but its maker's has tier null, and one the admin has not named has name null.
+ */
+export async function catalogue(q: Q): Promise<{ built: { face: number; src: string; name: string; words: string[]; tier: Tier; school: string | null }[]; made: { token: string; src: string; name: string | null; words: string[]; tier: Made['tier']; school: string | null; email: string | null }[] }> {
+  const { tiers, schools } = await builtAnimals(q), said = await saidRows(q);
+  return { built: tiers.map((tier, face) => ({ face, src: animal(face), name: said.built.get(face)?.name ?? builtName(face), words: said.built.get(face)?.words ?? builtWords(face), tier, school: schools[face] })),
     made: (await madeRows(q)).map(each => ({ ...each, src: customFace(each.token), name: said.made.get(each.token)?.name ?? null, words: said.made.get(each.token)?.words ?? ['made'] })) };
 }
 /**
@@ -85,15 +97,25 @@ export async function setAnimalName(q: Q, which: { face: number } | { token: str
   } else if (!z.uuid().safeParse(which.token).success || !(await q.query('update campus_custom_picture set name=$2,words=$3 where token=$1 returning 1', [which.token, called || null, kept])).rows.length) throw new Error('No such picture');
   return kept;
 }
-/** The admin moves a picture shipped with the app. */
-export async function setBuiltTier(q: Q, face: number, tier: string): Promise<void> {
-  // Back to its school: a school's own animal is there whenever no row says otherwise.
-  if (tier === 'school' && MASCOT[face]) { await q.query('delete from campus_animal where face=$1', [face]); return; }
-  if (!Number.isInteger(face) || face < 0 || face >= BUILT || !TIERS.includes(tier as (typeof TIERS)[number])) throw new Error('No such animal');
-  await q.query('insert into campus_animal(face,tier) values($1,$2) on conflict(face) do update set tier=excluded.tier', [face, tier]);
+/**
+ * The admin moves a picture shipped with the app. To School it goes with the school it is to be the own animal of
+ * (`school`, a school's slug, checked by the caller); a mascot sent back to its own school needs no row.
+ */
+export async function setBuiltTier(q: Q, face: number, tier: string, school?: string): Promise<void> {
+  if (!Number.isInteger(face) || face < 0 || face >= BUILT) throw new Error('No such animal');
+  if (tier === 'school') {
+    const to = school || MASCOT[face];
+    if (!to) throw new Error('Pick the school it is for');
+    if (to === MASCOT[face]) await q.query('delete from campus_animal where face=$1', [face]);
+    else await q.query('insert into campus_animal(face,tier,school) values($1,$2,$3) on conflict(face) do update set tier=excluded.tier,school=excluded.school', [face, tier, to]);
+    return;
+  }
+  if (!TIERS.includes(tier as (typeof TIERS)[number])) throw new Error('No such animal');
+  await q.query('insert into campus_animal(face,tier,school) values($1,$2,null) on conflict(face) do update set tier=excluded.tier,school=null', [face, tier]);
 }
-/** The admin moves an animal a person had made: core, premium, or `own` for its maker alone. */
-export async function setPictureTier(q: Q, token: string, tier: string): Promise<void> {
-  if (!z.uuid().safeParse(token).success || !['core', 'premium', 'own'].includes(tier)) throw new Error('No such picture');
-  if (!(await q.query('update campus_custom_picture set tier=$2 where token=$1 returning 1', [token, tier === 'own' ? null : tier])).rows.length) throw new Error('No such picture');
+/** The admin moves an animal a person had made: core, premium, school (with the school it is for), or `own` for its maker alone. */
+export async function setPictureTier(q: Q, token: string, tier: string, school?: string): Promise<void> {
+  if (!z.uuid().safeParse(token).success || !['core', 'premium', 'school', 'own'].includes(tier)) throw new Error('No such picture');
+  if (tier === 'school' && !school) throw new Error('Pick the school it is for');
+  if (!(await q.query('update campus_custom_picture set tier=$2,school=$3 where token=$1 returning 1', [token, tier === 'own' ? null : tier, tier === 'school' ? school : null])).rows.length) throw new Error('No such picture');
 }

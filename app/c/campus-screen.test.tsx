@@ -177,7 +177,8 @@ describe('who sees whom', () => {
     expect(await offered(as(noor))).toEqual([['NYU bobcat'], ['Dachshund']]);
     await setBuiltTier(t.db, 37, 'school');
     expect(await offered(as(ana))).toEqual([['Cornell bear'], ['Dachshund']]);
-    await expect(setBuiltTier(t.db, 3, 'school')).rejects.toThrow('No such animal');
+    // Any other animal can be made a school's own too, but only with the school it is for (lib/__tests__/campus-animal-school.test.ts).
+    await expect(setBuiltTier(t.db, 3, 'school')).rejects.toThrow('Pick the school it is for');
   });
   it('opens "Save your picture" from the account card, in the rows\' place, and goes back to them', async () => {
     const { ana } = await world();
@@ -407,8 +408,8 @@ describe('who sees whom', () => {
       await setPictureTier(t.db, first.token, 'core');
       const made = (await catalogue(t.db)).made;
       expect(made.map(one => one.token).sort()).toEqual(all);
-      expect(made.find(one => one.token === first.token)).toEqual({ token: first.token, src: address(first.token), tier: 'core', email: 'ana@cornell.edu', name: null, words: ['made'] });
-      expect(made.find(one => one.token === second.token)).toEqual({ token: second.token, src: address(second.token), tier: null, email: 'ana@cornell.edu', name: null, words: ['made'] });
+      expect(made.find(one => one.token === first.token)).toEqual({ token: first.token, src: address(first.token), tier: 'core', school: null, email: 'ana@cornell.edu', name: null, words: ['made'] });
+      expect(made.find(one => one.token === second.token)).toEqual({ token: second.token, src: address(second.token), tier: null, school: null, email: 'ana@cornell.edu', name: null, words: ['made'] });
       expect((await core(ben)).at(-1)).toBe(address(first.token));
       expect(await seenBy(ben)).toMatchObject({ own: null, owns: [], asked: false });
       await withPortalTestSession(ben, async () => {
