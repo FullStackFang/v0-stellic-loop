@@ -6,7 +6,7 @@ import type { Principal } from './access';
 import {db} from '../db';
 import {isAdmin} from '../campus/admin';
 import {frontIsCampus} from '../campus/schools';
-import {clerkPortalConfigured,getClerkPortalPrincipal} from './clerk-identity';
+import {clerkPortalConfigured,clerkSignIn} from './clerk-identity';
 import {ROOT_SLUG,placeGroup,type GroupRoute} from './group-path';
 import {listGroupTree} from './group-tree';
 import {addressedScope} from './groups';
@@ -17,10 +17,12 @@ const fixture = new AsyncLocalStorage<Principal>();
 // Never fall back to legacy cookies, request identities, or assistant tokens.
 // One page view asks who is signed in from its layout and its page: within a render the session is checked once.
 // An action is not a render, so every action checks afresh.
-export const getSignedInPrincipal = cache(async (): Promise<Principal | null> => {
-  if(process.env.NODE_ENV==='test') return fixture.getStore()??null;
-  return clerkPortalConfigured()?getClerkPortalPrincipal(db()):null;
+// The sign-in also says, when it read it on the way, whether the person is in a group; the groups site uses that answer.
+const signedIn = cache(async (): Promise<{ principal: Principal; inAGroup: boolean | null } | null> => {
+  if(process.env.NODE_ENV==='test') { const principal = fixture.getStore(); return principal ? { principal, inAGroup: null } : null; }
+  return clerkPortalConfigured()?clerkSignIn(db()):null;
 });
+export const getSignedInPrincipal = cache(async (): Promise<Principal | null> => (await signedIn())?.principal ?? null);
 
 /**
  * Who is signed in, for the groups site: its pages, its layout and every one of its actions ask here. With
@@ -30,8 +32,9 @@ export const getSignedInPrincipal = cache(async (): Promise<Principal | null> =>
  * asks getSignedInPrincipal instead.
  */
 export const getPortalPrincipal = cache(async (): Promise<Principal | null> => {
-  const principal = await getSignedInPrincipal();
-  return principal && frontIsCampus() && !isAdmin(principal) && !await inAGroup(principal.personId) ? null : principal;
+  const found = await signedIn();
+  if (!found || !frontIsCampus() || isAdmin(found.principal)) return found?.principal ?? null;
+  return (found.inAGroup ?? await inAGroup(found.principal.personId)) ? found.principal : null;
 });
 
 /** The signed-in person's groups, read once per page view however many of its parts (the side menu, the page) ask. */

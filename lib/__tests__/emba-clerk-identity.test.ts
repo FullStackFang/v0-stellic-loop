@@ -2,11 +2,12 @@ import {afterAll,afterEach,beforeAll,beforeEach,expect,it,vi} from 'vitest';
 import {auth,currentUser,clerkClient} from '@clerk/nextjs/server';
 import {headers} from 'next/headers';
 import {openTestDb,type TestDb} from '@/test/db';
-import {clerkEmailsOf,clerkIssuer,getClerkPortalPrincipal} from '@/lib/emba/clerk-identity';
+import {clerkEmailsOf,clerkIssuer,clerkSignIn,getClerkPortalPrincipal} from '@/lib/emba/clerk-identity';
+import type {Db} from '@/lib/db';
 import {addMemberNow} from '@/lib/emba/add-member';
 import {issueInvitation} from '@/lib/emba/invitations';
 import {deletePersonalData,exportPersonalData} from '@/lib/emba/privacy';
-import {authenticate} from '@/lib/emba/access';
+import {authenticate,canAccessPersonal} from '@/lib/emba/access';
 import {TextNotifier} from '@/lib/notify/text';
 vi.mock('@clerk/nextjs/server',()=>({auth:vi.fn(),currentUser:vi.fn(),clerkClient:vi.fn()}));
 vi.mock('next/headers',()=>({headers:vi.fn(async()=>new Headers())}));
@@ -51,6 +52,39 @@ it('takes the name from the sign-in account, and tags a member whose name arrive
  session('user_b');vi.mocked(currentUser).mockResolvedValue({id:'user_b',firstName:'Mary',lastName:'Cha',primaryEmailAddressId:'email',emailAddresses:[{id:'email',emailAddress:'mary@example.test',verification:{status:'verified'}}]} as never);
  const b=(await getClerkPortalPrincipal(t.db))!;
  expect((await t.db.query('select name from person where id=$1',[b.personId])).rows).toEqual([{name:'Mary Cha'}]);
+});
+// The database as a request sees it, with every statement and every transaction it is asked for written down.
+function watched() {
+ const seen={statements:[] as string[],transactions:0};
+ const db:Db={query:(text,params)=>{seen.statements.push(text);return t.db.query(text,params);},
+  tx:fn=>{seen.transactions++;return t.db.tx(q=>fn({query:(text,params)=>{seen.statements.push(text);return q.query(text,params);}}));}};
+ return {db,seen};
+}
+it('identifies a known account with one statement, no transaction and no lock, and says whether they are in a group',async()=>{
+ const first=watched(),a=(await clerkSignIn(first.db))!;
+ expect(first.seen.transactions).toBe(1);expect(a.inAGroup).toBeNull();
+ const again=watched(),b=(await clerkSignIn(again.db))!;
+ expect(again.seen).toMatchObject({transactions:0});expect(again.seen.statements).toHaveLength(1);
+ expect(again.seen.statements[0]).not.toMatch(/for (update|share)|advisory|insert|update /i);
+ expect(b.principal.personId).toBe(a.principal.personId);expect(b.inAGroup).toBe(false);
+ // The principal is the same kind the locked path makes: it opens what a principal opens.
+ expect(await t.db.tx(q=>canAccessPersonal(q,b.principal,b.principal.personId))).toBe(true);
+ const {rows:[org]}=await t.db.query<{id:string}>("insert into emba_organization(name) values('Test') returning id");
+ const {rows:[loop]}=await t.db.query<{id:string}>("insert into emba_loop(org_id,path) values($1,'root') returning id",[org.id]);
+ await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)',[org.id,a.principal.personId]);
+ await t.db.query("insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,'member')",[org.id,loop.id,a.principal.personId]);
+ expect((await clerkSignIn(t.db))!.inAGroup).toBe(true);
+ await t.db.query('update emba_role set revoked_at=now()');
+ expect((await clerkSignIn(t.db))!.inAGroup).toBe(false);
+});
+it('takes the locked path, once, for a member still unnamed whose name the provider now has',async()=>{
+ await getClerkPortalPrincipal(t.db);
+ vi.mocked(currentUser).mockResolvedValue({id:'user_a',firstName:'Danny',lastName:'Lau',primaryEmailAddressId:'email',emailAddresses:[{id:'email',emailAddress:'member@example.test',verification:{status:'verified'}}]} as never);
+ const named=watched();await getClerkPortalPrincipal(named.db);
+ expect(named.seen.transactions).toBe(1);
+ expect((await t.db.query('select name from person')).rows).toEqual([{name:'Danny Lau'}]);
+ const after=watched();await getClerkPortalPrincipal(after.db);
+ expect(after.seen.transactions).toBe(0);
 });
 it('reads the verified address of each person in one request, leaving out anyone the provider does not return',async()=>{
  const a=(await getClerkPortalPrincipal(t.db))!;session('user_b');const b=(await getClerkPortalPrincipal(t.db))!;
