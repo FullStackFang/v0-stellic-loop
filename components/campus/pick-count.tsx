@@ -28,8 +28,10 @@ export function PickCount() {
       event.preventDefault();
       document.startViewTransition(settle);
     };
-    count(); form.addEventListener('change', count); form.addEventListener('reset', reset); form.addEventListener('click', tick);
-    return () => { form.removeEventListener('change', count); form.removeEventListener('reset', reset); form.removeEventListener('click', tick); };
+    // Escape closes the open one, as its Close button does.
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && boxes().some(box => box.checked)) form.reset(); };
+    count(); form.addEventListener('change', count); form.addEventListener('reset', reset); form.addEventListener('click', tick); form.addEventListener('keydown', escape);
+    return () => { form.removeEventListener('change', count); form.removeEventListener('reset', reset); form.removeEventListener('click', tick); form.removeEventListener('keydown', escape); };
   }, []);
   return <span ref={mark} hidden />;
 }

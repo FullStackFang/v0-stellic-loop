@@ -157,11 +157,11 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     return <section>{top()}
       <nav className="cs-adm-seg" aria-label="Show">{SHOW.map(each => <Link key={each} href={`${at('animals')}&show=${each}`} aria-current={each === show ? 'true' : undefined}>{each === 'all' ? 'All' : TIER[each]} {within(each).length}</Link>)}</nav>
       {/* One animal is picked at a time (PickCount): it opens where it is in the grid
-          (public/demo/mockups-admin-animal-card.html, C): its name, the words the picker finds it by, and where it stands. Tapping its face folds it back. */}
+          (public/demo/mockups-admin-animal-card.html, C): its name, the words the picker finds it by, and where it stands. Close, Escape or tapping its face folds it back. */}
       <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} /><PickCount />
         <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key} style={{ viewTransitionName: `pet-${pet.key}` }}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label>
           <div className="cs-adm-card">
-            <span className="cs-adm-row"><input name={`name-${pet.value}`} defaultValue={pet.named} placeholder="Made animal" maxLength={40} aria-label={`Name of ${pet.name}`} />{pet.field === 'picture' && <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details>}<button className="cs-btn sm go" formAction={setAnimalNameAction}>Save</button></span>
+            <span className="cs-adm-row"><input name={`name-${pet.value}`} defaultValue={pet.named} placeholder="Made animal" maxLength={40} aria-label={`Name of ${pet.name}`} />{pet.field === 'picture' && <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details>}<button className="cs-btn sm go" formAction={setAnimalNameAction}>Save</button><button type="reset" className="cs-btn sm">Close</button></span>
             <WordsField name={`words-${pet.value}`} words={pet.words} />
             {/* Where it stands, pressed; another moves it there. School makes it the own animal of this campus's school. */}
             <span className="cs-adm-stand" role="group" aria-label="Where it stands">{MOVES.map(tier => <button key={tier} name="tier" value={tier} aria-pressed={tier === pet.now || (tier === 'off' && pet.now === 'own')}>{TIER[tier]}</button>)}</span></div></li>)}</ul>
