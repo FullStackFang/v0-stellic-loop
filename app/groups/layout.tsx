@@ -55,7 +55,7 @@ export default async function GroupsLayout({ children }: { children: React.React
     // The colours they may wear: Loopd's and their schools', or every school's with Ink+ (components/campus/kit.tsx).
     const yours = viewer?.kits ?? ['loop', look.kit], any = viewer?.anyKit ?? false;
     content = <div className="cs gb"><script dangerouslySetInnerHTML={{ __html: kitScript(look.kit, yours, any) }} /><Kit own={look.kit} yours={yours} any={any} />
-      <Bar groups={groups} kits={yours} anyKit={any} face={look.face} plan={look.plan} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} />}><OnYou /></Suspense></Bar>
+      <Bar groups={groups} kits={yours} anyKit={any} face={look.face} plan={look.plan} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} first />}><OnYou /></Suspense></Bar>
       <div className="lp"><main className="lp-main"><div className="lp-wrap">{children}</div></main></div><SiteFoot /></div>;
   }
   return configured ? <ClerkProvider signInUrl="/groups/sign-in" signInFallbackRedirectUrl="/groups" signUpFallbackRedirectUrl="/groups" telemetry={{ disabled: true }}>{content}</ClerkProvider> : content;

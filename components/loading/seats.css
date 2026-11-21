@@ -35,6 +35,11 @@
 .seats-screen .seats-tk { animation: none; }
 /* The same element is the page (.cs), whose own layout and background come later in the cascade: said again, so the ticket stands in the middle on the school's colour. */
 .cs.seats-screen { display: grid; background: var(--s-field); }
+/* A fresh load (fresh-wait.tsx): one ticket over everything, for as long as any first wait is on the page. The pieces land under it. */
+.cs.seats-screen.seats-fresh { display: none; z-index: 51; background: none; }
+body:has([data-seats-wait]) .cs.seats-screen.seats-fresh { display: block; }
+.seats-fresh-in { position: absolute; inset: 0; display: grid; place-items: center; background: var(--cs-field, oklch(96.4% 0.19 117)); }
+.seats-fresh .seats-tk { animation: none; }
 /* On a page change the ticket stands in the middle of the window, wherever the page puts this box, and nothing under it takes a press until the page is here. */
 .seats-page { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; }
 
