@@ -31,9 +31,10 @@
 
 ## 4. The Assistants page (D4)
 
-- [ ] 4.1 One transaction for grants, removed-group grants and the clock in `lib/emba/consent.ts`, with one personal check and one `lease:list` record; tests in `emba-memory.test.ts` / `emba-team-read.test.ts`
-- [ ] 4.2 Start the page's reads together in `app/groups/connections/page.tsx`; a member without Ink+ still reads no grant
-- [ ] 4.3 Run the affected tests, type check, lint; commit by path
+- [x] 4.1 One transaction for grants, removed-group grants and the clock in `lib/emba/consent.ts`, with one personal check and one `lease:list` record; tests in `emba-memory.test.ts` / `emba-team-read.test.ts`
+  - `listGrants`; its test is in `emba-groups.test.ts`, beside the removed-group grants it covers. `listLeases` and `listRemovedGroupGrants` stay for their other callers and share the same statements.
+- [x] 4.2 Start the page's reads together in `app/groups/connections/page.tsx`; a member without Ink+ still reads no grant
+- [x] 4.3 Run the affected tests, type check, lint; commit by path
 
 ## 5. Proof
 

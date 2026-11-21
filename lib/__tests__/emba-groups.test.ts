@@ -3,7 +3,7 @@ import {afterAll,beforeAll,beforeEach,expect,it} from 'vitest';
 import {openTestDb,type TestDb} from '@/test/db';
 import {seedEmbaFixture} from '@/test/emba-fixture';
 import {authenticate} from '@/lib/emba/access';
-import {grantLease,listRemovedGroupGrants,revokeLease} from '@/lib/emba/consent';
+import {grantLease,listGrants,listLeases,listRemovedGroupGrants,revokeLease} from '@/lib/emba/consent';
 import {listGroups,listPortalGroups,registerGroupAddress,resolveGroup,retireGroupAddress} from '@/lib/emba/groups';
 import type {Db} from '@/lib/db';
 
@@ -61,6 +61,26 @@ it('revokes every grant on a group when it is removed, tells each person about t
  // Once the grant would have run out anyway, there is nothing left to tell.
  await t.db.query("update emba_lease set created_at=clock_timestamp()-interval '2 hours',expires_at=clock_timestamp()-interval '1 second' where id=$1",[gone.id]);
  expect(await listRemovedGroupGrants(t.db,f.memberA)).toEqual([]);
+});
+it('reads the Assistants page\'s grants, the grants a removed group ended and the clock in one transaction, recorded once',async()=>{
+ const f=await fixture(),ends={clientId:'claude',actions:['plan:read'],expiresAt:'2099-01-01T00:00:00Z'};
+ await registerGroupAddress(t.db,f.organizer,{...f.vietnam,namespace:'cohort',slug:'vietnam'});
+ await registerGroupAddress(t.db,f.organizer,{...f.estonia,namespace:'cohort',slug:'estonia'});
+ await grantLease(t.db,f.memberA,{...f.vietnam,...ends});const kept=await grantLease(t.db,f.memberA,{...f.estonia,...ends});
+ await retireGroupAddress(t.db,f.organizer,f.vietnam);
+ const seen={transactions:0};
+ const watched:Db={query:(text,params)=>t.db.query(text,params),tx:fn=>{seen.transactions++;return t.db.tx(fn);}};
+ const before=(await t.db.query("select 1 from emba_audit where action='lease:list'")).rows.length;
+ const grants=await listGrants(watched,f.memberA);
+ expect(seen.transactions).toBe(1);
+ expect((await t.db.query("select 1 from emba_audit where action='lease:list'")).rows).toHaveLength(before+1);
+ // The same as the two reads it stands for.
+ expect(grants.leases).toEqual(await listLeases(t.db,f.memberA));
+ expect(grants.removed).toEqual(await listRemovedGroupGrants(t.db,f.memberA));
+ expect(grants.leases.map(lease=>lease.id)).toContain(kept.id);
+ expect(grants.removed).toEqual([{group:expect.any(String),removedAt:expect.anything(),clientIds:['claude']}]);
+ expect(Date.parse(grants.now)).toBeGreaterThan(0);
+ await expect(listGrants(t.db,await delegate(f))).rejects.toThrow('forbidden');
 });
 it('discovers only exact consented groups and reports ambiguity only among permitted matches',async()=>{
  const f=await fixture(),other=await secondGroup(f),p=await delegate(f);
