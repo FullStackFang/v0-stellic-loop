@@ -16,9 +16,23 @@ const TOWER = 48; // a tower is drawn this many game units across whatever the m
 export const TOYS = { 'Willard Straight': 'stonehall', 'Sage Chapel': 'chapel', 'Duffield Hall': 'glasshall', 'Statler': 'brickhall', 'Barton Hall': 'armory', 'Lynah Rink': 'rink',
   'Bailey Hall': 'dome', 'Mann Library': 'brickhall', 'Johnson Museum': 'museum', 'Risley': 'castle', 'Donlon': 'dorm', 'RPCC': 'dorm', 'Noyes': 'dorm', 'Becker House': 'brickhall',
   'CTB': 'cafe', 'McGraw Tower': 'clocktower', 'Bloomberg Center': 'bloomberg', 'Tata': 'tata', 'The House': 'tower', 'Verizon Center': 'glasshall', 'Graduate': 'tower',
-  'Tram': 'station', 'Subway': 'subway', 'Smallpox Hospital': 'ruin', 'Blackwell House': 'farmhouse', 'Good Shepherd': 'stonechapel', 'The Octagon': 'octagon', 'Lighthouse': 'lighthouse', 'Beebe Lake': 'pond',
+  'Tram': 'station', 'Subway': 'subway', 'Smallpox Hospital': 'ruin', 'Blackwell House': 'farmhouse', 'Good Shepherd': 'stonechapel', 'The Octagon': 'octagon', 'Lighthouse': 'lighthouse',
   'FDR Four Freedoms': 'fourfreedoms' };
-const POND = 320; // a pond's toy is drawn this wide: a lake is bigger than any building, and its picture is 320 across
+// A lake with a shore drawn by hand, on a box 690 by 260: Beebe Lake, traced from the real one (/demo/mockups-conga-ithaca-sizes.html).
+// Narrow at the west end where it spills into the gorge, the south shore bellying out towards the wider east end.
+const SHORES = { 'Beebe Lake': [[-345, -18], [-305, -44], [-230, -58], [-130, -74], [-20, -94], [100, -110], [210, -116], [300, -96], [345, -46], [348, 16], [312, 70], [240, 106], [140, 122], [40, 110], [-50, 84], [-150, 58], [-250, 38], [-322, 22]] };
+/** Points round a lake's hand-drawn shore, smoothed (a closed Catmull-Rom curve) and placed on the ground: `sx` and `sy`
+ * shrink it about its middle (for the felt layers inside it), and `out` pushes every point that far out from the water. */
+export function shoreline(thing, out = 0, sx = 1, sy = 1) {
+  const P = SHORES[thing.name].map(([px, py]) => [thing.x + px * thing.w / 690 * sx, thing.y + py * thing.h / 260 * sy]), n = P.length, line = [];
+  for (let i = 0; i < n; i++) {
+    const [a, b, c, d] = [P[(i - 1 + n) % n], P[i], P[(i + 1) % n], P[(i + 2) % n]];
+    for (let s = 0; s < 8; s++) { const u = s / 8, u2 = u * u, u3 = u2 * u;
+      line.push([0, 1].map(k => 0.5 * (2 * b[k] + (-a[k] + c[k]) * u + (2 * a[k] - 5 * b[k] + 4 * c[k] - d[k]) * u2 + (-a[k] + 3 * b[k] - 3 * c[k] + d[k]) * u3))); }
+  }
+  if (!out) return line;
+  return line.map(([px, py], i) => { const [ax, ay] = line[(i - 1 + line.length) % line.length], [bx, by] = line[(i + 1) % line.length], l = Math.hypot(bx - ax, by - ay) || 1; return [px + (by - ay) / l * out, py - (bx - ax) / l * out]; });
+}
 // A lawn or field is at least this much each way (about two road widths), so none is thinner than the road beside it or
 // smaller than the buildings round it, however small the real one is.
 const OPEN = 260;
@@ -46,13 +60,14 @@ function treesOn(thing) {
     for (let k = 0; k < 9; k++) { const f = 0.04 + k * 0.095, y = -h / 2 + h * f; place(-edge(f) + 4, y, 9); place(edge(f) - 4, y, 9); }
     return spots;
   }
-  // Round the edge, as round a quad, leaving the lawn open.
-  const round = 2 * (w + h);
+  // Round the edge, as round a quad, leaving the lawn open. On the Arts Quad, none stands on the paths crossing it corner to corner.
+  const round = 2 * (w + h), onPath = (px, py) => thing.name === 'Arts Quad' && Math.min(Math.abs(px * h - py * w), Math.abs(px * h + py * w)) / Math.hypot(w, h) < 45;
   for (let k = 0; k < 8 + round / 60; k++) { // plenty of tries: the gap between trees decides how many stand
     let d = chance(thing, k) * round, x, y;
     const deep = 20 + chance(thing, k + 50) * 16;
     if (d < w) [x, y] = [d - w / 2, -h / 2 + deep]; else if ((d -= w) < h) [x, y] = [w / 2 - deep, d - h / 2]; else if ((d -= h) < w) [x, y] = [w / 2 - d, h / 2 - deep]; else [x, y] = [-w / 2 + deep, h / 2 - (d - w)];
-    place(Math.max(-w / 2 + 20, Math.min(w / 2 - 20, x)), Math.max(-h / 2 + 20, Math.min(h / 2 - 20, y)), 9 + chance(thing, k + 9) * 6);
+    const px = Math.max(-w / 2 + 20, Math.min(w / 2 - 20, x)), py = Math.max(-h / 2 + 20, Math.min(h / 2 - 20, y));
+    if (!onPath(px, py)) place(px, py, 9 + chance(thing, k + 9) * 6);
   }
   return spots.filter((spot, n) => spots.slice(0, n).every(other => Math.hypot(other.x - spot.x, other.y - spot.y) > TREE_GAP));
 }
@@ -67,6 +82,7 @@ function cover(thing) {
     const [, , w, h] = AT[thing.toy], wide = thing.kind === 'tower' ? thing.w * TALL : thing.w, foot = thing.kind === 'tower' ? thing.y + 12 : thing.y + thing.h / 2;
     return [thing.x - wide / 2, foot - wide * h / w, thing.x + wide / 2, foot];
   }
+  if (SHORES[thing.name]) { const line = shoreline(thing), xs = line.map(p => p[0]), ys = line.map(p => p[1]); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
   const half = Math.max(thing.w, thing.h) / 2;
   return [thing.x - half, thing.y - half, thing.x + half, thing.y + half];
 }
@@ -125,13 +141,14 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
       const wide = toyWidth(label);
       return { kind, name: label, toy: TOYS[label], x, y, w: wide, h: wide / 2, turn: 0 };
     }
-    // A pond is a toy too, standing like a big hall: what it stands on is the oval of its stones.
-    if (kind === 'water' && TOYS[label]) return { kind, name: label, toy: TOYS[label], x, y, w: POND, h: POND * 0.47, turn: 0 };
+    // A lake with a hand-drawn shore is sewn into the mat in felt (index.html feltLake), at its size on the map.
+    if (kind === 'water' && SHORES[label]) return { kind, name: label, x, y, w: size[0], h: size[1], turn: 0, shore: true };
     if (kind === 'green' || kind === 'field') return { kind, name: label, toy: TOYS[label], x, y, w: Math.max(OPEN, size[0]), h: Math.max(OPEN, size[1]), turn };
     return { kind, name: label, toy: TOYS[label], x, y, w: size[0], h: size[1], turn };
   });
-  const outline = ({ kind, x, y, w, h, turn, toy }) => {
-    const a = w / 2 + PAD, b = h / 2 + PAD, cos = Math.cos(turn), sin = Math.sin(turn);
+  const outline = thing => {
+    if (SHORES[thing.name]) return shoreline(thing, PAD);
+    const { kind, x, y, w, h, turn, toy } = thing, a = w / 2 + PAD, b = h / 2 + PAD, cos = Math.cos(turn), sin = Math.sin(turn);
     const far = kind === 'water' && !toy ? shore : () => 1;
     const corners = kind === 'hall' ? [[-a, -b], [a, -b], [a, b], [-a, b]] : Array.from({ length: 30 }, (_, n) => [Math.cos(n * Math.PI / 15) * a * far(n * Math.PI / 15), Math.sin(n * Math.PI / 15) * b * far(n * Math.PI / 15)]);
     return corners.map(([px, py]) => [x + px * cos - py * sin, y + px * sin + py * cos]);
@@ -169,12 +186,14 @@ export const MAPS = {
     ithaca('Central Campus', 'dfgqpolm', [-76.4868, 42.4502]), ithaca('North Campus', 'oprstu', [-76.4790, 42.4548]), ithaca('Ag Quad', 'gwvrpq', [-76.4758, 42.4500])], [
     // The bus up the hill from the Commons to campus. The real route 10 winds; this one is drawn straight, by hand.
     ['road', 'Route 10', 42.43960, -76.49790, 42.44620, -76.48360, 58],
-    ['green', 'Arts Quad', 42.4489, -76.4843, 150, 230], // placed by hand
+    // Sizes on campus, side by side (/demo/mockups-conga-ithaca-sizes.html): the Arts Quad is the biggest lawn, wider than
+    // Libe Slope beside it, and Schoellkopf is a football field's shape. Both are drawn about twice their real size, like the halls.
+    ['green', 'Arts Quad', 42.44899, -76.48397, 220, 255], // placed by hand
     ['green', 'Libe Slope', 42.44869, -76.48661, 110, 260],
     ['green', 'Botanic Gardens', 42.44951, -76.47250, 200, 170],
     ['green', 'The Commons', 42.43957, -76.49793, 180, 44],
     ['green', 'DeWitt Park', 42.44189, -76.49854, 83, 83],
-    ['field', 'Schoellkopf Field', 42.44402, -76.47836, 80, 140],
+    ['field', 'Schoellkopf Field', 42.44459, -76.47874, 151, 220], // moved a little north-west by hand, so its length stays on the ground
     ['water', 'Beebe Lake', 42.45125, -76.47576, 400, 150],
     ['tower', 'McGraw Tower', 42.44757, -76.48504],
     ['hall', 'Willard Straight', 42.44647, -76.48561, 58, 66],

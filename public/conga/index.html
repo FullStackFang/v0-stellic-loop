@@ -171,7 +171,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 
 <script type="module">
 import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD } from './conga/sim.js';
-import { MAPS, shore, TALL, treeWidth } from './conga/maps.js';
+import { MAPS, shore, shoreline, TALL, treeWidth } from './conga/maps.js';
 import { SHEET as SCENERY, AT } from './conga/scenery.js';
 
 const $ = id => document.getElementById(id);
@@ -810,7 +810,67 @@ const PAINT = {
     const narrow = w * 0.16;
     const lawnShape = (m = 0) => { ctx.beginPath(); ctx.moveTo(-w / 2 + m, -h / 2 + m); ctx.lineTo(w / 2 - m, -h / 2 + m); ctx.lineTo(narrow - m * 0.5, h / 2 - m); ctx.lineTo(-narrow + m * 0.5, h / 2 - m); ctx.closePath(); };
     lawnShape(); feltPiece(FELT.grass); lawnShape(10); stitch(FELT.grassThread); }),
+  // Ithaca's open ground, each told apart from a plain lawn (/demo/mockups-conga-ithaca-sizes.html).
+  // The Arts Quad: two felt paths crossing it corner to corner.
+  'Arts Quad': thing => { lawn(thing); turned(thing, (w, h) => {
+    ctx.save(); ctx.beginPath(); ctx.roundRect(-w / 2 + 12, -h / 2 + 12, w - 24, h - 24, 20); ctx.clip(); ctx.lineCap = 'butt';
+    for (const s of [1, -1]) {
+      ctx.beginPath(); ctx.moveTo(-w / 2, -s * h / 2); ctx.lineTo(w / 2, s * h / 2);
+      ctx.save(); ctx.translate(0, 3); ctx.strokeStyle = FELT.under; ctx.lineWidth = 30; ctx.stroke(); ctx.restore();
+      ctx.strokeStyle = FELT.road; ctx.lineWidth = 30; ctx.stroke(); stitch(FELT.thread, 2.2, [8, 7]);
+    }
+    ctx.restore(); }); },
+  // Libe Slope is a hill: its low west side in darker felt, and contour lines stitched down it.
+  'Libe Slope': thing => { lawn(thing); turned(thing, (w, h) => {
+    ctx.save(); ctx.beginPath(); ctx.roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6, 24); ctx.clip();
+    ctx.fillStyle = 'oklch(64% 0.12 148)'; ctx.fillRect(-w / 2, -h / 2, w * 0.3, h);
+    for (const f of [0.3, 0.52, 0.74]) {
+      ctx.beginPath(); for (let k = 0; k <= 20; k++) { const py = -h / 2 + 20 + (h - 40) * k / 20, px = -w / 2 + w * f + Math.sin(k * 0.7 + f * 9) * 9; k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+      stitch(tone(FELT.grassThread, { light: -6 }), 2.4, [7, 7]);
+    }
+    ctx.restore(); }); },
+  // Schoellkopf is a football field: yard lines stitched across and red felt end zones.
+  'Schoellkopf Field': thing => { lawn({ ...thing, kind: 'green' }); turned(thing, (w, h) => {
+    const iw = w - 56, ih = h - 56;
+    ctx.beginPath(); ctx.rect(-iw / 2, -ih / 2, iw, ih); for (let k = 1; k < 10; k++) { const y = -ih / 2 + ih * k / 10; ctx.moveTo(-iw / 2, y); ctx.lineTo(iw / 2, y); }
+    stitch(C.paper, 3, [8, 6]);
+    for (const end of [-1, 1]) { ctx.beginPath(); ctx.rect(-iw / 2 + 4, end < 0 ? -ih / 2 + 4 : ih / 2 - ih / 10 + 4, iw - 8, ih / 10 - 8); feltPiece('oklch(52% 0.17 27)'); } }); },
 };
+function trace(points) { ctx.beginPath(); points.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); }
+/** A lake sewn into the mat (/demo/mockups-conga-ithaca-sizes.html, A "Layered"): felt cut to its shore and stacked like a
+ * contour map, each piece smaller and a deeper blue and sewn on with its own stitch, a couple of waves stitched on top.
+ * It does not move, so it is painted with the ground. Beebe Lake also spills west into its gorge, over Triphammer Falls. */
+function feltLake(thing) {
+  if (thing.name === 'Beebe Lake') falls(thing);
+  for (const [sx, sy, fill] of [[1, 1, 'oklch(84% 0.06 205)'], [0.93, 0.8, WATER.shallow], [0.84, 0.56, WATER.deep], [0.7, 0.3, 'oklch(55% 0.1 238)']]) {
+    trace(shoreline(thing, 0, sx, sy)); feltPiece(fill);
+    trace(shoreline(thing, 0, sx, sy).map(([px, py]) => [thing.x + (px - thing.x) * (1 - 8 / (thing.w * sx / 2)), thing.y + (py - thing.y) * (1 - 8 / (thing.h * sy / 2))]));
+    stitch(tone(fill, { light: 14, chroma: 0.5 }), 2.2, [8, 6]);
+  }
+  for (const [fx, wx] of [[-0.17, 0], [0.22, -0.12]]) { const x = thing.x + fx * thing.w, y = thing.y + wx * thing.h, r = 14;
+    ctx.beginPath(); ctx.arc(x - r, y, r, Math.PI * 1.1, Math.PI * 1.9); ctx.moveTo(x + r + r * Math.cos(Math.PI * 1.1), y + r * Math.sin(Math.PI * 1.1)); ctx.arc(x + r, y, r, Math.PI * 1.1, Math.PI * 1.9); stitch(WATER.thread, 2.4, [6, 5]); }
+}
+/** Triphammer Falls: the lake spills west down a gorge of stone felt, over a white felt step, under a plank footbridge. It is
+ * painted on the mat, so lines walk over it. */
+function falls(thing) {
+  const k = thing.w / 690, tip = thing.x - 340 * k, gy = thing.y - 18 * thing.h / 260, len = 320;
+  // The stone ends round about the lake's tip, so the lake looks to drain into the gorge; the creek runs on under the lake.
+  const course = (from = tip + 10) => { ctx.beginPath(); ctx.moveTo(from, gy); ctx.lineTo(tip - 20, gy); ctx.quadraticCurveTo(tip - len * 0.5, gy - 6, tip - len, gy + 50); };
+  ctx.lineCap = 'butt';
+  ctx.save(); ctx.translate(0, 4); course(); ctx.strokeStyle = FELT.under; ctx.lineWidth = 96; ctx.stroke(); ctx.beginPath(); ctx.arc(tip + 10, gy, 48, 0, 7); ctx.fillStyle = FELT.under; ctx.fill(); ctx.restore();
+  course(); ctx.strokeStyle = 'oklch(62% 0.035 55)'; ctx.lineWidth = 96; ctx.stroke(); ctx.beginPath(); ctx.arc(tip + 10, gy, 48, 0, 7); ctx.fillStyle = 'oklch(62% 0.035 55)'; ctx.fill();
+  course(); stitch('oklch(80% 0.02 60)', 2.2, [8, 7]);
+  course(tip + 80); ctx.strokeStyle = WATER.shallow; ctx.lineWidth = 46; ctx.stroke();
+  const fx = tip - 50;
+  ctx.beginPath(); ctx.roundRect(fx - 14, gy - 30, 28, 60, 8); feltPiece('oklch(97% 0.012 220)');
+  ctx.beginPath(); for (const dy of [-18, -6, 6, 18]) { ctx.moveTo(fx + 9, gy + dy); ctx.lineTo(fx - 9, gy + dy); } stitch('oklch(80% 0.05 220)', 2, [4, 4]);
+  for (const [dx, dy, r] of [[-26, -10, 10], [-40, 8, 12], [-60, -2, 8]]) { ctx.beginPath(); ctx.arc(fx + dx, gy + dy, r, 0, 7); ctx.fillStyle = 'oklch(97% 0.012 220 / .7)'; ctx.fill(); } // its foam
+  ctx.save(); ctx.translate(tip - 200, gy + 8); ctx.rotate(0.12);
+  ctx.beginPath(); ctx.roundRect(-26, -74, 52, 148, 6); feltPiece('oklch(68% 0.08 62)');
+  ctx.beginPath(); for (let py = -60; py < 70; py += 17) { ctx.moveTo(-22, py); ctx.lineTo(22, py); } stitch('oklch(52% 0.07 50)', 2, [5, 4]);
+  ctx.lineCap = 'round'; for (const side of [-24, 24]) { ctx.beginPath(); ctx.moveTo(side, -72); ctx.lineTo(side, 72); ctx.strokeStyle = 'oklch(55% 0.09 45)'; ctx.lineWidth = 6; ctx.stroke(); stitch('oklch(45% 0.08 40)', 1.6, [3, 5]); }
+  ctx.restore(); ctx.lineCap = 'butt';
+}
 
 // The far banks, with their street grids: Manhattan to the west and Queens to the east. These and the boats were placed
 // for the island drawn at 2 units a metre, so they move with it when it is drawn bigger.
@@ -1046,7 +1106,9 @@ function beam(thing, t, seen) {
 
 // What stands on the ground. Greens and fields are painted on it; halls, towers and water are walked around.
 function shape(thing, inset = 0) {
-  ctx.translate(thing.x, thing.y); ctx.rotate(thing.turn); ctx.beginPath();
+  ctx.translate(thing.x, thing.y); ctx.rotate(thing.turn);
+  if (thing.kind === 'water' && thing.shore) return trace(shoreline(thing).map(([px, py]) => [px - thing.x, py - thing.y]));
+  ctx.beginPath();
   if (thing.kind === 'water') { for (let n = 0; n < 60; n++) { const a = n * Math.PI / 30, far = shore(a); ctx.lineTo(Math.cos(a) * thing.w / 2 * far, Math.sin(a) * thing.h / 2 * far); } ctx.closePath(); }
   else if (thing.kind === 'tower') ctx.ellipse(0, 0, thing.w / 2, thing.h / 2, 0, 0, 7);
   else ctx.roundRect(-thing.w / 2 + inset, -thing.h / 2 + inset, thing.w - inset * 2, thing.h - inset * 2, thing.kind === 'hall' ? 8 : 26);
@@ -1058,6 +1120,7 @@ function painted(thing) {
 function solid(thing, t) {
   if (toysIn() && thing.toy) return void standing.push(thing.kind === 'tower' ? { x: thing.x, y: thing.y + 12, name: thing.toy, width: thing.w * TALL, label: thing.name } : { x: thing.x, y: thing.y + thing.h / 2, name: thing.toy, width: thing.w, label: thing.name });
   if (LOOK[thing.name]) return LOOK[thing.name](thing);
+  if (thing.shore && toysIn()) return; // a felt lake is painted with the ground
   if (thing.kind === 'water') return lake(thing, t);
   if (thing.kind === 'tower') { ctx.strokeStyle = C.ink; ctx.lineWidth = thing.w * 0.8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(thing.x, thing.y); ctx.lineTo(thing.x + 40, thing.y + 40); ctx.stroke(); } // it is tall, so its shadow is long
   else if (thing.kind === 'hall') { ctx.save(); ctx.translate(10, 10); shape(thing); ctx.fillStyle = C.ink; ctx.fill(); ctx.restore(); }
@@ -1086,6 +1149,7 @@ function ground(t, cx, cy, hw, hh) {
   for (const thing of map.things) if (thing.kind === 'road') { road(thing); if (!toysIn()) roadBus(thing, t); }
   const near = thing => Math.abs(thing.x - cx) < hw + Math.max(thing.w, thing.h) && Math.abs(thing.y - cy) < hh + Math.max(thing.w, thing.h);
   for (const thing of map.things) if ((thing.kind === 'green' || thing.kind === 'field') && near(thing)) painted(thing);
+  if (toysIn()) for (const thing of map.things) if (thing.shore && near(thing)) feltLake(thing);
   // Until the toys are in, a tree is a drawn crown.
   if (!toysIn()) for (const each of map.trees) if (Math.abs(each.x - cx) < hw + 60 && Math.abs(each.y - cy) < hh + 120) tree(each.x, each.y, each.r, each.kind === 'blossom' ? C.blossom : C.tree);
   // Names painted into the ground: the areas big, and a place with no toy (a lawn, a field) smaller at its middle.
