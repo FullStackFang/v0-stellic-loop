@@ -1015,11 +1015,28 @@ function bus(car, ux, uy) {
   for (let n = 0; n < Math.min(3, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + ((n - 1) * 28 - 12 * (back ? -1 : 1)) * ux, y + ((n - 1) * 28 - 12 * (back ? -1 : 1)) * uy - 2, 36);
   pill(car.name, x, y - 52, C.ink, C.paper, 14);
 }
-// The lighthouse lamp turning.
-function beam(thing, t) {
-  // From the lamp, which on the toy is up near its top.
-  const y = toysIn() ? thing.y + 12 - thing.w * TALL * AT.lighthouse[3] / AT.lighthouse[2] * 0.82 : thing.y;
-  ctx.fillStyle = 'rgba(255, 236, 150, .3)'; ctx.beginPath(); ctx.moveTo(thing.x, y); ctx.arc(thing.x, y, 460, t * 0.6, t * 0.6 + 0.42); ctx.closePath(); ctx.fill();
+// The lighthouse lamp turning, shown by no beam (/demo/mockups-conga-lighthouse.html, B): where its light passes, white
+// four-point glints pop up on the ground and water and shrink away behind it, sweeping round like a clock hand.
+const GLINT = { turn: 0.6, life: 0.8, reach: 760, size: 20 };
+function beam(thing, t, seen) {
+  const th = t * GLINT.turn, ground = thing.y + 12, rand = n => chance({ x: n, y: 7 }, 3);
+  thing.glints ??= Array.from({ length: 700 }, (_, n) => { const d = 60 + 680 * rand(n * 3) ** 0.8, a = rand(n * 3 + 1) * Math.PI * 2; return { x: thing.x + Math.cos(a) * d, y: ground + Math.sin(a) * d * 0.9, d, a, seed: rand(n * 3 + 2), size: 0.6 + rand(n * 3 + 2) * 0.8 }; });
+  for (const p of thing.glints) {
+    // How long ago the light passed this point, in seconds.
+    let behind = (th - p.a) % (Math.PI * 2); if (behind < 0) behind += Math.PI * 2;
+    const age = behind / GLINT.turn - p.seed * 0.25, far = 1 - p.d / GLINT.reach;
+    if (age < 0 || age > GLINT.life || far <= 0 || !seen(p.x, p.y)) continue;
+    const u = age / GLINT.life, pop = Math.min(1, age / 0.08), r = GLINT.size * p.size * pop * (1 - u * 0.5) * (0.5 + far * 0.7);
+    const a = Math.min(1, (1 - u) ** 1.6 * (0.65 + 0.35 * Math.sin(t * 14 + p.seed * 50)) * (0.35 + far));
+    // A soft glow under it, then the star solid, so it shows on the felt as well as the water.
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 1.1); g.addColorStop(0, `rgba(255, 255, 248, ${a * 0.45})`); g.addColorStop(1, 'rgba(255, 255, 248, 0)');
+    ctx.fillStyle = g; ctx.fillRect(p.x - r * 1.1, p.y - r * 1.1, r * 2.2, r * 2.2);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = `rgba(255, 255, 248, ${a})`; ctx.beginPath(); ctx.moveTo(p.x, p.y - r);
+    for (const [ex, ey] of [[r, 0], [0, r], [-r, 0], [0, -r]]) ctx.quadraticCurveTo(p.x, p.y, p.x + ex, p.y + ey);
+    ctx.fill();
+  }
 }
 
 // What stands on the ground. Greens and fields are painted on it; halls, towers and water are walked around.
@@ -1152,7 +1169,7 @@ function draw(t, dt) {
   for (const thing of map.things) if (thing.kind === 'bridge') cabs(thing, t);
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing, t);
   for (const car of world.shuttles) stop(car);
-  for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t);
+  for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t, seen);
   // A road or bridge's name, and the banks a bridge joins, painted on after it is drawn. Buildings carry theirs on a plaque.
   for (const thing of map.things) {
     if (!thing.from) continue;
