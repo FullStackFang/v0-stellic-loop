@@ -20,8 +20,9 @@ const paper = '#fdfefb', mute = '#5d6570';
  * a person's school is the one their verified email ends in, worked out after sign-in.
  * On the front door the page's colours belong to the ticket: there `kit` is the school showing, and `onSpot` is told
  * which school the email is at (or none) in place of the card setting the colours itself.
+ * On a page that someone signs in from without leaving it (a poll), `back` is that page: signing in lands there.
  */
-export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean; kit?: string; onSpot?: (slug: string | null) => void }) {
+export function DoorSignIn({ schools, routing, configured, kit, onSpot, back }: { schools: School[]; routing: 'hash' | 'path'; configured: boolean; kit?: string; onSpot?: (slug: string | null) => void; back?: string }) {
   const [slug, setSlug] = useState(''), [seen, setSeen] = useState(''), card = useRef<HTMLDivElement>(null), last = useRef('');
   // Whether the sign-in form has a LinkedIn button: it does once LinkedIn is switched on at the sign-in service.
   const [linkedin, setLinkedin] = useState(false), [away, setAway] = useState(false);
@@ -46,7 +47,7 @@ export function DoorSignIn({ schools, routing, configured, kit, onSpot }: { scho
   const ink = (KITS.find(each => each.slug === (kit ?? slug)) ?? KITS[0]).ink;
   const label = { fontSize: 0, '&::before': { content: `"${school ? `${school.name} email` : 'Email'}"`, fontSize: '13px', fontWeight: 600 } };
   const shared = {
-    fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', fallback: <span className="seats-form"><SeatsTicket /></span>,
+    fallbackRedirectUrl: '/', signUpFallbackRedirectUrl: '/', ...(back ? { forceRedirectUrl: back, signUpForceRedirectUrl: back } : {}), fallback: <span className="seats-form"><SeatsTicket /></span>,
     appearance: {
       options: { socialButtonsPlacement: 'bottom' as const },
       variables: { colorBackground: paper, colorForeground: ink, colorMutedForeground: mute, colorPrimary: ink, colorPrimaryForeground: paper, colorInput: paper, colorInputForeground: ink, fontFamily: 'var(--font-archivo), system-ui, sans-serif', borderRadius: '8px' },

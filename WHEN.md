@@ -12,7 +12,7 @@ Design: `docs/superpowers/specs/2026-11-22-loopd-when-design.md`. Approved look:
 - The grid shows five days at a time on a phone and seven on a laptop, the first days first. Each set says its best count, and the three best times carry a 1, 2 or 3. The stub of the ticket says who can make a time: the best so far, then whichever time was last touched. On a phone the screen fits without scrolling and Save stays at its foot (`public/demo/mockups-when-fit.html`, 3).
 - People paint whole hours. When the organizer picks an hour they may start it at :00, :15, :30 or :45 and say how long it runs (30 minutes to 2 hours). Who is "in" is who painted that hour.
 - Nothing is sent to the group until the organizer presses send. Send happens once.
-- Anyone with the link can see a poll. Answering needs a Loopd sign-in.
+- Anyone with the link can see a poll. Answering needs a Loopd sign-in. A visitor signs in on the poll itself (`/when/<id>?in=1`: its ticket beside the sign-in card) and lands back on it; they are never sent to the front door.
 - Loopd only emails an address its owner signed in with. Addresses are read from the sign-in provider when a message is sent and are not stored.
 - A first poll reminds nobody, because nobody is known yet. Reminders (48 and 24 hours before the deadline) go to the people of a series, from its second poll on.
 - "Ask the group again" makes next week's poll in the same series, with each person's usual times filled in as a draft. A draft counts only once that person saves.

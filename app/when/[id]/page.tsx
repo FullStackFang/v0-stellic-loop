@@ -3,7 +3,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getSignedInPrincipal } from '@/lib/emba/portal-session';
-import { signInHref } from '@/lib/campus/session';
+import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
+import { listCampuses } from '@/lib/campus/listings';
+import { schoolOf } from '@/lib/campus/schools';
+import { DoorSignIn } from '@/components/campus/door-sign-in';
 import { facesOf } from '@/lib/when/faces';
 import { pollView, type Person, type PollView } from '@/lib/when/polls';
 import { meetingSpan, shareMessage } from '@/lib/when/send';
@@ -13,7 +16,7 @@ import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
 import { Grid } from './grid';
 import { Copy, Opened, Pick } from './pick';
 
-type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string; in?: string }> };
 const REACHED: Record<Threshold, string> = { majority: 'majority reached', two_thirds: 'two thirds reached', everyone: 'everyone can' };
 const zoneName = (zone: string) => new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'shortGeneric' }).formatToParts(new Date()).find(part => part.type === 'timeZoneName')?.value ?? zone;
 
@@ -61,7 +64,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
       <a className="cs-btn go wn-big" href={`${here}/calendar.ics`}>Add to my calendar</a>
       {(mine || view.isOrganizer) && <p className="wn-note">Also in your email, with the invite attached.</p>}
       <div className="wn-acts wn-mid">
-        {who ? <a className="cs-btn sm" href={`${here}?edit=1`}>Update your answer</a> : <a className="cs-btn sm" href={signInHref(here)}>Sign in to add your times</a>}
+        {who ? <a className="cs-btn sm" href={`${here}?edit=1`}>Update your answer</a> : <a className="cs-btn sm" href={`${here}?in=1`}>Sign in to add your times</a>}
         {(mine || view.isOrganizer) && <a className="cs-btn sm" href={`${here}/again`}>Ask the group again</a>}
         {who && <Link className="cs-btn sm" href="/when">Your polls</Link>}
       </div>
@@ -98,6 +101,15 @@ export default async function WhenPage({ params, searchParams }: Props) {
       {who && <Link className="cs-btn sm" href="/when">Your polls</Link>}
     </div>}
   </>;
+  // Signing in, without leaving the poll: its ticket, the sign-in card, and straight back here afterwards.
+  if (!who && query.in) {
+    const schools = (await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(({ slug, name, domains }) => ({ slug, name, domains }));
+    return <main className="wn wn-in">
+      <div className="wn-col"><Ticket tile={tile} stub="Sign in and you are back on this poll, ready to add your times.">{title}</Ticket>
+        <div className="wn-acts wn-mid"><a className="cs-btn sm" href={here}>Back to the poll</a></div></div>
+      <DoorSignIn schools={schools} routing="hash" configured={clerkPortalConfigured()} back={here} />
+    </main>;
+  }
   const zonePill = <span className="cs-pill">Times are in {zoneName(zone)}</span>;
   return <main className="wn wn-two wn-fit">
     <Opened pollId={view.id} />
@@ -106,6 +118,6 @@ export default async function WhenPage({ params, searchParams }: Props) {
           tab={view.mine?.draft ? 'Your times from last time. Change them, then save' : undefined}
           after={view.chosen ? 'Saved. The time stays as it is.' : who.verifiedEmail ? `The result comes to ${who.verifiedEmail}` : 'Saved. You get an email when the time is set.'}>{zonePill}</Grid>
       : <Grid slots={slots} free={free} won={view.chosen?.at} tile={tile} title={title} best={best} tail={tail} size={view.size}
-          action={<><a className="cs-btn go wn-big" href={signInHref(here)}>Sign in to add your times</a><p className="wn-note">An email and a code. No password.</p></>}>{zonePill}</Grid>}
+          action={<><a className="cs-btn go wn-big" href={`${here}?in=1`}>Sign in to add your times</a><p className="wn-note">An email and a code. No password.</p></>}>{zonePill}</Grid>}
   </main>;
 }

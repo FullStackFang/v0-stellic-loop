@@ -111,6 +111,13 @@ button.wn-cell { cursor: pointer; }
   .wn-two .wn-cal-d { height: 46px; }
 }
 
+/* signing in from a poll: its ticket, then the sign-in card; side by side where there is room */
+.wn-in .cs-door-in { margin-right: 7px; }
+@media (min-width: 900px) {
+  .wn.wn-in { max-width: 940px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px 30px; align-items: start; padding-top: 32px; }
+  .wn-in .wn-col { display: grid; gap: 22px; min-width: 0; }
+}
+
 /* making or changing a poll on a laptop: one screen. The ticket lies across the top, the plan and the days stand side by
    side at one height, and the action is a line across the foot. On a phone it is the one column above. */
 @media (min-width: 900px) {

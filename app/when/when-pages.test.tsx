@@ -15,6 +15,8 @@ import { GET as calendar } from './[id]/calendar.ics/route';
 import NewWhenPage from './new/page';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('@/lib/emba/clerk-identity', async original => ({ ...await original<typeof import('@/lib/emba/clerk-identity')>(), clerkPortalConfigured: () => true }));
+vi.mock('@clerk/nextjs', () => ({ SignIn: (props: { forceRedirectUrl?: string }) => <div data-testid="sign-in" data-back={props.forceRedirectUrl} /> }));
 const missing = new Error('NEXT_NOT_FOUND');
 vi.mock('next/navigation', () => ({ notFound: () => { throw missing; }, redirect: vi.fn() }));
 
@@ -40,18 +42,32 @@ async function fixture() {
   await saveAnswer(t.db, priya, { pollId: id, slots: [TUE7] });
   return { id, maya, josh, priya, dana };
 }
-const open = async (who: Principal | null, id: string, query: { edit?: string; pick?: string } = {}) => {
+const open = async (who: Principal | null, id: string, query: { edit?: string; pick?: string; in?: string } = {}) => {
   const page = () => WhenPage({ params: Promise.resolve({ id }), searchParams: Promise.resolve(query) });
   return render(await (who ? withPortalTestSession(who, page) : page()));
 };
 const clean = (html: string) => { expect(html).not.toContain('—'); expect(html.toLowerCase()).not.toContain('fold in'); };
+
+it('signs a visitor in on the poll itself, and brings them back to it', async () => {
+  const { id, josh } = await fixture(), view = await open(null, id, { in: '1' });
+  expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
+  expect(screen.getByTestId('sign-in')).toHaveAttribute('data-back', `/when/${id}`);
+  expect(screen.getByRole('link', { name: 'Back to the poll' })).toHaveAttribute('href', `/when/${id}`);
+  expect(screen.queryByLabelText('Tue 1, 7 pm: 3 free')).toBeNull();
+  clean(view.container.innerHTML);
+  cleanup();
+  // Someone already signed in has nothing to sign in to: they get the poll.
+  await open(josh, id, { in: '1' });
+  expect(screen.queryByTestId('sign-in')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toBeInTheDocument();
+});
 
 it('shows a visitor who has not signed in what is free so far, and one way in', async () => {
   const { id } = await fixture(), view = await open(null, id);
   expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
   expect(view.container).toHaveTextContent('Maya asked for 1 hr · 3 of 7 answered · by Fri 27 Nov');
   expect(view.container).toHaveTextContent('Best so far');
-  expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toHaveAttribute('href', signInHref(`/when/${id}`));
+  expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toHaveAttribute('href', `/when/${id}?in=1`);
   expect(screen.queryByRole('button', { name: 'Tue 1, 7 pm' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Save my times' })).toBeNull();
   expect(screen.getByLabelText('Tue 1, 7 pm: 3 free')).toHaveTextContent('3');
