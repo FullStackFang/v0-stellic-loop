@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · Ithaca sizes</title>
+<style>
+@font-face { font-family: Archivo; src: url(../fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --ink: oklch(21% 0.016 30); --paper: oklch(99.2% 0.004 60); }
+* { box-sizing: border-box; margin: 0; }
+body { background: oklch(96.8% 0.01 70); color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+section { display: grid; gap: 12px; margin-top: 26px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px; background: var(--ink); color: var(--paper); padding: 6px 16px 7px; border-radius: 14px 14px 14px 4px; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 72ch; margin-top: 10px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; }
+.bar button { font: 700 15px Archivo, system-ui, sans-serif; color: var(--ink); background: var(--paper); border: 0; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 999px; padding: 8px 16px 9px; cursor: pointer; }
+.bar button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.frame { position: relative; overflow: hidden; border-radius: 22px 22px 22px 6px; box-shadow: 5px 5px 0 oklch(68% 0.14 33); }
+.frame canvas { display: block; width: 100%; aspect-ratio: 16 / 9; background: oklch(80% 0.11 38); }
+@media (max-width: 640px) { .frame canvas { aspect-ratio: 3 / 4; } }
+.note { padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.45; max-width: 85ch; }
+</style>
+<main>
+  <header>
+    <h1>Conga · Ithaca sizes</h1>
+    <p class="lead">The same check we did for Roosevelt Island, on the Ithaca ground. Each frame is a real corner of the map, with things where the game puts them, beside a line of animals for scale.</p>
+  </header>
+
+  <section data-part="lake" data-w="1200" data-phone="820" data-cx="1300" data-cy="-470">
+    <h2>Beebe Lake</h2>
+    <div class="bar"><button data-v="felt">B · Felt lake, real size</button><button data-v="falls">C · Felt lake + Triphammer Falls</button><button data-v="long">A · Long pond toy</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
+
+  <section data-part="quads" data-w="1400" data-phone="900" data-cx="200" data-cy="-130">
+    <h2>Arts Quad and Libe Slope</h2>
+    <div class="bar"><button data-v="b">Proposed</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
+
+  <section data-part="field" data-w="1300" data-phone="860" data-cx="840" data-cy="705">
+    <h2>Schoellkopf Field</h2>
+    <div class="bar"><button data-v="b">Proposed</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
+</main>
+<script>
+// Relative paths and no imports, so the page also works opened straight from the folder (file:///).
+// The drawing is the game's own (public/conga/index.html): the same felt, stitches, yarn ropes, toys and animal sheet,
+// and the places are where public/conga/maps.js puts them on the Ithaca ground (game units, 1.725 to a metre).
+const AT = {"chapel":[0,0,166,320],"castle":[168,0,303,320],"cafe":[473,0,298,320],"clocktower":[1386,0,320,320],"pond":[1480,322,320,281],"dorm":[0,638,320,276],"glasshall":[322,638,320,269],"dome":[644,638,320,258],"stonehall":[0,916,320,248],"armory":[322,916,320,239],"museum":[644,916,320,228],"rink":[966,916,320,209],"brickhall":[322,1166,320,162],"tree":[966,1166,128,128],"blossom":[1096,1166,128,128]};
+const toys = Object.assign(new Image(), { src: '../conga/scenery.v5.webp' });
+const sheet = Object.assign(new Image(), { src: '../conga/animals-96.v1.webp' });
+const longPond = Object.assign(new Image(), { src: 'pickup-art/pondlong.png' });
+const ok = img => img.complete && img.naturalWidth;
+const C = { ink: 'oklch(24% 0.035 30)', paper: 'oklch(99.2% 0.004 60)', lamp: '#ffe27a' };
+const FELT = { mat: 'oklch(80% 0.11 38)', grass: 'oklch(70% 0.12 145)', grassThread: 'oklch(90% 0.09 130)', road: 'oklch(72% 0.025 55)',
+  yellow: 'oklch(90% 0.15 95)', thread: 'oklch(94% 0.04 60)', under: 'oklch(35% 0.06 40 / .3)' };
+const WATER = { deep: 'oklch(64% 0.1 228)', shallow: 'oklch(75% 0.085 215)', thread: 'oklch(90% 0.04 210)' };
+// ---------- shared drawing, from the game ----------
+const seeded = seed => () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; };
+const fibreTile = (() => { const c = document.createElement('canvas'); c.width = c.height = 160; const pen = c.getContext('2d'), r = seeded(11); pen.lineWidth = 0.8;
+  for (let i = 0; i < 900; i++) { const x = r() * 160, y = r() * 160, a = r() * Math.PI, l = 3 + r() * 7; pen.strokeStyle = r() < 0.5 ? 'rgba(255,255,255,.11)' : 'rgba(60,30,20,.08)'; pen.beginPath(); pen.moveTo(x, y); pen.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); pen.stroke(); }
+  return c; })();
+let ctx, W, H;
+function stitch(colour, width = 2.6, dash = [9, 7], path = null) {
+  const go = () => path ? ctx.stroke(path) : ctx.stroke();
+  ctx.save(); ctx.setLineDash(dash); ctx.lineCap = 'round'; ctx.lineWidth = width;
+  ctx.strokeStyle = 'rgba(40,25,20,.28)'; ctx.translate(0, 1.2); go(); ctx.translate(0, -1.2);
+  ctx.strokeStyle = colour; go(); ctx.restore();
+}
+function feltPiece(fill, drop = 3) { ctx.save(); ctx.translate(0, drop); ctx.fillStyle = FELT.under; ctx.fill(); ctx.restore(); ctx.fillStyle = fill; ctx.fill(); }
+function tone(colour, { light = 0, chroma = 1, alpha = 1 } = {}) {
+  const got = /oklch\(\s*([\d.]+)%?\s+([\d.]+)\s+([\d.]+)/.exec(colour);
+  return `oklch(${Math.min(97, Math.max(15, Number(got[1]) + light))}% ${(Number(got[2]) * chroma).toFixed(3)} ${got[3]} / ${alpha})`;
+}
+function sprite(face, x, y, size) {
+  if (!ok(sheet)) return;
+  const sx = (face - 1) % 7 * 96, sy = Math.floor((face - 1) / 7) * 96;
+  ctx.drawImage(sheet, sx, sy, 96, 96, x - size / 2, y - size / 2, size, size);
+}
+function toy(name, x, y, width) {
+  if (!ok(toys)) return 0;
+  const [sx, sy, sw, sh] = AT[name], height = width * sh / sw;
+  ctx.drawImage(toys, sx, sy, sw, sh, x - width / 2, y - height, width, height);
+  return height;
+}
+function foot(x, y, half, alpha = 0.2) { ctx.beginPath(); ctx.ellipse(x, y - half * 0.12, half, half * 0.3, 0, 0, 7); ctx.fillStyle = `oklch(24% 0.035 30 / ${alpha})`; ctx.fill(); }
+function pill(text, x, y, fill, ink, size = 15) {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const width = ctx.measureText(text).width + size * 1.4, high = size * 1.7;
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+}
+function groundName(text, x, y, size = 22) {
+  ctx.font = `900 ${size}px Archivo, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'oklch(100% 0 0 / .2)'; ctx.fillText(text, x, y + size * 0.05);
+  ctx.fillStyle = 'oklch(24% 0.05 30 / .16)'; ctx.fillText(text, x, y);
+}
+function yarn(colour, width = 13) {
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .25)'; ctx.lineWidth = width + 2; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([3, 5]); ctx.globalAlpha = 0.55; ctx.strokeStyle = tone(colour, { light: -14 }); ctx.stroke();
+  ctx.lineDashOffset = 4; ctx.globalAlpha = 0.5; ctx.strokeStyle = tone(colour, { light: 20, chroma: 0.6 }); ctx.lineWidth = width * 0.54; ctx.stroke();
+  ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1; ctx.lineCap = 'round';
+}
+function rope(points, colour, width = 13, low = 13) {
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
+  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
+  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
+  yarn(colour, width);
+}
+/** A line of animals walking left from (x, y), stood up with everything else so it goes behind what is in front of it. */
+function line(x, y, t, colour = 'oklch(60% 0.2 305)', faces = [4, 9, 14, 2, 22, 30, 11, 17]) {
+  const pts = faces.map((face, i) => ({ x: x - i * 33, y: y - (0.5 - 0.5 * Math.cos(t * 7 - i * 0.7)) * 2.5, face, size: i ? 42 : 58 }));
+  return { y, draw: () => { rope(pts, colour); pts.slice().reverse().forEach(p => sprite(p.face, p.x, p.y, p.size)); } };
+}
+// A building's toy, as maps.js sizes it: a landmark 195 across, any other 150, and a toy taller than it is wide drawn narrower.
+const across = (name, size) => { const [, , w, h] = AT[name]; return h / w > 1.25 ? size * 1.25 / (h / w) : size; };
+function hall(name, x, y, landmark, label) {
+  const width = across(name, landmark ? 195 : 150), footY = name === 'clocktower' ? y + 12 : y + width / 4;
+  return { y: footY, draw: () => { foot(x, footY, width * 0.42); const high = toy(name, x, footY, width); if (label) pill(label, x, footY - high * 0.1, C.paper, C.ink, 15); } };
+}
+const tree = (x, y, r = 12, kind = 'tree') => ({ y: y + r * 0.6, draw: () => { foot(x, y + r * 0.6, r * 4.2 * 0.42); toy(kind, x, y + r * 0.6, r * 4.2); } });
+function stand(list) { list.sort((a, b) => a.y - b.y).forEach(each => each.draw()); }
+
+// ---------- lawns ----------
+function lawnShape(x, y, w, h, inset = 0) { ctx.beginPath(); ctx.roundRect(x - w / 2 + inset, y - h / 2 + inset, w - inset * 2, h - inset * 2, 26); }
+function lawn(x, y, w, h) { lawnShape(x, y, w, h); feltPiece(FELT.grass); lawnShape(x, y, w, h, 9); stitch(FELT.grassThread); }
+/** A sports field: the game's lawn with its markings stitched in white. Proposed adds end zones and yard lines, so it reads as football. */
+function field(x, y, w, h, full) {
+  lawn(x, y, w, h);
+  const iw = w - 56, ih = h - 56, r = Math.min(iw, ih) * 0.2;
+  ctx.beginPath(); ctx.rect(x - iw / 2, y - ih / 2, iw, ih);
+  if (iw >= ih) { ctx.moveTo(x, y - ih / 2); ctx.lineTo(x, y + ih / 2); } else { ctx.moveTo(x - iw / 2, y); ctx.lineTo(x + iw / 2, y); }
+  if (!full) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 7); }
+  else for (let k = 1; k < 10; k++) if (k !== 5) { const ly = y - ih / 2 + ih * k / 10; ctx.moveTo(x - iw / 2, ly); ctx.lineTo(x + iw / 2, ly); }
+  stitch(C.paper, 3, [8, 6]);
+  if (full) for (const end of [-1, 1]) { ctx.beginPath(); ctx.rect(x - iw / 2 + 4, end < 0 ? y - ih / 2 + 4 : y + ih / 2 - ih / 10 + 4, iw - 8, ih / 10 - 8); feltPiece('oklch(52% 0.17 27)', 2); }
+}
+/** Libe Slope as a hill: the low west side in darker felt, and contour lines stitched down it. */
+function slope(x, y, w, h) {
+  lawn(x, y, w, h);
+  ctx.save(); lawnShape(x, y, w, h, 3); ctx.clip();
+  ctx.beginPath(); ctx.rect(x - w / 2, y - h / 2, w * 0.3, h); ctx.fillStyle = 'oklch(64% 0.12 148)'; ctx.fill();
+  for (const f of [0.3, 0.52, 0.74]) {
+    ctx.beginPath(); for (let k = 0; k <= 20; k++) { const py = y - h / 2 + 20 + (h - 40) * k / 20, px = x - w / 2 + w * f + Math.sin(k * 0.7 + f * 9) * 9; k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+    stitch(tone(FELT.grassThread, { light: -6 }), 2.4, [7, 7]);
+  }
+  ctx.restore();
+}
+/** The Arts Quad: a big lawn with two felt paths crossing it corner to corner. */
+function quad(x, y, w, h) {
+  lawn(x, y, w, h);
+  ctx.save(); lawnShape(x, y, w, h, 12); ctx.clip();
+  for (const [ax, ay, bx, by] of [[-1, -1, 1, 1], [1, -1, -1, 1]]) {
+    ctx.beginPath(); ctx.moveTo(x + ax * w / 2, y + ay * h / 2); ctx.lineTo(x + bx * w / 2, y + by * h / 2);
+    ctx.lineCap = 'butt'; ctx.save(); ctx.translate(0, 3); ctx.strokeStyle = FELT.under; ctx.lineWidth = 30; ctx.stroke(); ctx.restore();
+    ctx.strokeStyle = FELT.road; ctx.lineWidth = 30; ctx.stroke(); stitch(FELT.thread, 2.2, [8, 7]);
+  }
+  ctx.restore();
+}
+
+// ---------- the lake ----------
+/** Beebe Lake's outline: long and narrow with a gentle bend, fuller at the east end, round at both ends. `k` shrinks
+ * its width (not its length) for the deep water inside, and `out` grows it for the hem on the mat. */
+function lakePath(x, y, w, h, k = 1, out = 0) {
+  const spine = u => y - Math.sin(u * Math.PI) * h * 0.18 + (u - 0.5) * h * 0.2, half = u => (h / 2) * Math.pow(Math.sin(u * Math.PI), 0.35) * (0.62 + 0.3 * u) * (1 + 0.05 * Math.sin(u * 17)) * k + out;
+  const N = 48, len = w / 2 * (k < 1 ? 0.92 : 1) + out, xs = u => x - len + u * len * 2;
+  ctx.beginPath();
+  for (let n = 0; n <= N; n++) { const u = n / N; ctx.lineTo(xs(u), spine(u) - half(u)); }
+  for (let n = N; n >= 0; n--) { const u = n / N; ctx.lineTo(xs(u), spine(u) + half(u)); }
+  ctx.closePath();
+}
+/** Beebe Lake sewn into the mat with the river's felt (index.html sea): a paler band of shallows round the shore, deep felt
+ * in the middle, a running stitch where they meet, and a few waves stitched in. Nothing on it. */
+function feltLake(x, y, w, h) {
+  lakePath(x, y, w, h); ctx.fillStyle = WATER.shallow; ctx.fill();
+  ctx.save(); ctx.clip();
+  lakePath(x, y, w, h); ctx.translate(0, 6); ctx.strokeStyle = FELT.under; ctx.lineWidth = 10; ctx.stroke(); ctx.translate(0, -6); // the mat's thickness over the water
+  lakePath(x, y, w, h, 0.62); ctx.fillStyle = WATER.deep; ctx.fill();
+  lakePath(x, y, w, h, 0.62, 9); stitch(WATER.thread, 2.6, [10, 8]);
+  for (const [fx, fy] of [[-0.22, 0.02], [0.08, -0.12], [0.28, 0.06]]) { const wx = x + fx * w, wy = y + fy * h; ctx.beginPath(); ctx.arc(wx - 14, wy, 14, Math.PI * 1.1, Math.PI * 1.9); ctx.moveTo(wx + 14 + 14 * Math.cos(Math.PI * 1.1), wy + 14 * Math.sin(Math.PI * 1.1)); ctx.arc(wx + 14, wy, 14, Math.PI * 1.1, Math.PI * 1.9); stitch(WATER.thread, 2.4, [6, 5]); }
+  ctx.restore();
+  lakePath(x, y, w, h, 1, 12); stitch(FELT.thread, 2.6, [10, 8]); // the hem round it, on the mat
+}
+/** Triphammer Falls: the lake spills west down a felt gorge, under a plank footbridge. Painted on the mat, so lines can cross. */
+function falls(x, y, w, h, t) {
+  const tip = x - w / 2 + 10, gy = y - h * 0.1, len = 320; // the lake's west end (lakePath's spine at its start)
+  // The gorge: a strip of stone felt with the creek down its middle, running west from the lake's tip.
+  const course = () => { ctx.beginPath(); ctx.moveTo(tip + 50, gy); ctx.quadraticCurveTo(tip - len * 0.5, gy - 6, tip - len, gy + 50); };
+  ctx.lineCap = 'butt';
+  course(); ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = FELT.under; ctx.lineWidth = 96; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = 'oklch(62% 0.035 55)'; ctx.lineWidth = 96; ctx.stroke();
+  course(); stitch('oklch(80% 0.02 60)', 2.2, [8, 7]);
+  course(); ctx.strokeStyle = WATER.shallow; ctx.lineWidth = 46; ctx.stroke();
+  // The falls: a white felt step across the creek with stitched lines falling down it, and foam where it lands.
+  const fx = tip - 50;
+  ctx.beginPath(); ctx.roundRect(fx - 14, gy - 30, 28, 60, 8); feltPiece('oklch(97% 0.012 220)', 2);
+  ctx.beginPath(); for (const dy of [-18, -6, 6, 18]) { ctx.moveTo(fx + 9, gy + dy); ctx.lineTo(fx - 9, gy + dy); } stitch('oklch(80% 0.05 220)', 2, [4, 4]);
+  for (let k = 0; k < 4; k++) { const u = (t * 0.6 + k / 4) % 1; ctx.beginPath(); ctx.arc(fx - 26 - u * 50, gy - 12 + (k % 2) * 22 + u * 3, 9 + u * 6, 0, 7); ctx.fillStyle = `oklch(97% 0.012 220 / ${0.85 * (1 - u)})`; ctx.fill(); }
+  // The footbridge, square across the gorge below the falls: planks between two yarn rails.
+  const bx = tip - 200, by = gy + 8;
+  ctx.save(); ctx.translate(bx, by); ctx.rotate(0.12);
+  ctx.beginPath(); ctx.roundRect(-26, -74, 52, 148, 6); feltPiece('oklch(68% 0.08 62)', 4);
+  ctx.beginPath(); for (let py = -60; py < 70; py += 17) { ctx.moveTo(-22, py); ctx.lineTo(22, py); } stitch('oklch(52% 0.07 50)', 2, [5, 4]);
+  for (const side of [-24, 24]) { ctx.beginPath(); ctx.moveTo(side, -72); ctx.lineTo(side, 72); yarn('oklch(55% 0.09 45)', 6); }
+  ctx.restore();
+}
+
+// ---------- the scenes ----------
+const SAY = {
+  lake: {
+    felt: 'B · Felt lake, real size. Beebe Lake sewn into the mat at its size on the map, 690 across and 260 deep: over twice the pond toy, and the biggest thing on the ground, as it is on campus. Long and narrow with a gentle bend, like the real one. The same felt water as the river round Roosevelt Island and nothing else on it: a pale band of shallows, deep felt in the middle, a stitch where they meet, a few stitched waves. Lines walk round it as they do now. Nothing to pay for.',
+    falls: 'C · Felt lake + Triphammer Falls. B, plus the gorge the lake spills down at its west end: felt falls, and a plank footbridge across below them. The gorge is painted on the mat like a lawn, so lines walk straight over it (and over the bridge). Gives the lake a landmark the way McGraw has its clock. Nothing to pay for.',
+    long: 'A · Long pond toy. The long pond picture made earlier and never used, standing at 600 across: long like the real lake, cattails at one end and a jetty at the other, and no duck bigger than an animal. Still a garden pond, just a longer one. Already paid for; it only needs packing onto the scenery sheet.',
+    now: 'Today. The round pond toy at 320 across. Its duck is bigger than an animal and a half and its cattails stand as tall as a hall, so the lake reads as a garden pond, and the long lake comes out round.',
+  },
+  quads: {
+    b: 'Proposed. The Arts Quad grows to 380 by 440, the biggest lawn on campus, with its two paths crossing corner to corner. Libe Slope keeps its size (260 by 450) but reads as a hill: its low west side in darker felt and contour lines stitched down it. McGraw Tower stands between them, as it does.',
+    now: 'Today. Neither is as wide as the 260 floor, so both are pushed up to it: the Arts Quad (260 by 400) and Libe Slope (260 by 450) are two near-identical green strips side by side.',
+  },
+  field: {
+    b: 'Proposed. Schoellkopf takes a football field\'s shape, 290 by 500: about twice its real size, like the halls round it. Stitched yard lines and red felt end zones, so it is a football field and not another lawn.',
+    now: 'Today. The real field is smaller than the 260 floor each way, so it is drawn as a 260 square, no longer than Barton Hall beside it.',
+  },
+};
+function lakeScene(look, t) {
+  const L = { x: 1423, y: -601 }, list = [hall('dome', 805, -229, true, 'Bailey Hall'), hall('brickhall', 1367, -147, false, 'Mann Library'), line(1500, -330, t), tree(1720, -360, 13), tree(1980, -330, 11, 'blossom')];
+  lawn(1885, -269, 345, 293); groundName('Botanic Gardens', 1885, -240);
+  if (look === 'felt' || look === 'falls') { if (look === 'falls') falls(L.x, L.y, 690, 260, t); feltLake(L.x, L.y, 690, 260); list.push({ y: L.y + 130, draw: () => pill('Beebe Lake', L.x + 60, L.y + 82, C.paper, C.ink) }); }
+  else if (look === 'long') list.push({ y: L.y + 140, draw: () => { foot(L.x, L.y + 140, 250); if (ok(longPond)) { const h = 600 * longPond.naturalHeight / longPond.naturalWidth; ctx.drawImage(longPond, L.x - 300, L.y + 140 - h, 600, h); pill('Beebe Lake', L.x, L.y + 140 - h * 0.15, C.paper, C.ink); } } });
+  else list.push({ y: L.y + 75, draw: () => { foot(L.x, L.y + 75, 320 * 0.42); const high = toy('pond', L.x, L.y + 75, 320); pill('Beebe Lake', L.x, L.y + 75 - high * 0.1, C.paper, C.ink); } });
+  stand(list);
+}
+function quadsScene(look, t) {
+  if (look === 'b') { slope(-115, -113, 260, 448); quad(260, -170, 380, 440); }
+  else { lawn(-115, -113, 260, 448); groundName('Libe Slope', -115, -113); lawn(213, -153, 260, 397); groundName('Arts Quad', 213, -153); }
+  if (look === 'b') { groundName('Libe Slope', -115, -60); groundName('Arts Quad', 260, -330); }
+  stand([hall('clocktower', 38, 101, true, 'McGraw Tower'), hall('chapel', 259, 172, true, 'Sage Chapel'), hall('museum', -58, -500, true, 'Johnson Museum'), hall('brickhall', -520, -27, false), hall('dome', 805, -229, true, 'Bailey Hall'),
+    tree(-200, -300, 12), tree(-30, 60, 10), ...(look === 'b' ? [tree(110, -350, 13), tree(420, -350, 11), tree(420, 20, 12)] : [tree(110, -320, 13), tree(320, 10, 11)]), line(620, 60, t)]);
+}
+function fieldScene(look, t) {
+  if (look === 'b') { field(1054, 778, 290, 500, true); groundName('Schoellkopf Field', 1054, 778); }
+  else { field(1054, 778, 260, 260, false); groundName('Schoellkopf Field', 1054, 778); }
+  stand([hall('armory', 730, 412, true, 'Barton Hall'), hall('rink', 1173, 439, false, 'Lynah Rink'), hall('glasshall', 453, 681, false, 'Duffield Hall'), hall('brickhall', 497, 328, false, 'Statler'), line(820, 760, t, 'oklch(70% 0.13 195)')]);
+}
+
+// ---------- the page ----------
+const SCENES = { lake: lakeScene, quads: quadsScene, field: fieldScene };
+const grainPattern = () => { const p = ctx.createPattern(fibreTile, 'repeat'); p.setTransform(new DOMMatrix().scale(0.55)); return p; };
+const parts = [...document.querySelectorAll('section[data-part]')].map(section => {
+  const d = section.dataset, part = { name: d.part, canvas: section.querySelector('canvas'), note: section.querySelector('.note'), look: '', clock: 0, cx: +d.cx, cy: +d.cy };
+  const pick = look => { part.look = look; section.querySelectorAll('.bar button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === look))); part.note.textContent = SAY[part.name][look]; };
+  section.querySelectorAll('.bar button[data-v]').forEach(b => b.onclick = () => pick(b.dataset.v));
+  pick(section.querySelector('.bar button[data-v]').dataset.v);
+  new IntersectionObserver(([e]) => part.seen = e.isIntersecting).observe(part.canvas);
+  new ResizeObserver(() => {
+    const box = part.canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+    part.canvas.width = box.width * dpr; part.canvas.height = box.height * dpr;
+    part.w = box.width < 640 ? +d.phone : +d.w; part.k = box.width / part.w * dpr; part.h = box.height / box.width * part.w;
+  }).observe(part.canvas);
+  return part;
+});
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  for (const part of parts) {
+    if (!part.seen || !part.canvas.width) continue;
+    part.clock += dt;
+    ctx = part.canvas.getContext('2d'); W = part.w; H = part.h;
+    ctx.setTransform(part.k, 0, 0, part.k, 0, 0);
+    ctx.fillStyle = FELT.mat; ctx.fillRect(0, 0, W, H); ctx.fillStyle = grainPattern(); ctx.fillRect(0, 0, W, H);
+    ctx.translate(W / 2 - part.cx, H / 2 - part.cy);
+    SCENES[part.name](part.look, part.clock);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
