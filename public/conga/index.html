@@ -878,7 +878,7 @@ function roadBus(thing, t) {
   const f = 0.5 - 0.5 * Math.cos(t * 0.1), going = Math.sin(t * 0.1) > 0 ? 0 : Math.PI;
   if (toysIn()) {
     const x = thing.from[0] + (thing.to[0] - thing.from[0]) * f, y = thing.from[1] + (thing.to[1] - thing.from[1]) * f;
-    standing.push({ x, y: y + 12, name: 'bus', width: BUS, flip: Math.cos(Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]) + going) < 0 });
+    hopBus(thing.ride ??= {}, x, y - 28, Math.cos(Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]) + going) < 0);
     return;
   }
   ctx.save(); ctx.translate(thing.from[0] + (thing.to[0] - thing.from[0]) * f, thing.from[1] + (thing.to[1] - thing.from[1]) * f); ctx.rotate(Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]) + going);
@@ -985,13 +985,12 @@ function airborne(t) {
 // A bus is on the ground. It faces the way it is going.
 const HOP = 46; // road between the bus's hops
 const BUS = 120; // the bus across: smaller than the tram (140) and the buildings (/demo/mockups-conga-sizes.html)
-function bus(car, ux, uy) {
-  const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay;
-  if (toysIn()) {
-    // It hops along the road like a toy pushed by hand (/demo/mockups-conga-bus-boats.html, 1): a small bounce every HOP
-    // of road and a little squash as it lands, a soft shadow under each tyre only (smaller and fainter as it lifts), and
-    // two tiny cream felt clouds kicked out sideways from the wheels at each landing. No oval under it.
-    const flip = (back ? -ux : ux) < 0, high = BUS * AT.bus[3] / AT.bus[2], t = world.t, dust = car.dust ??= [], s = BUS / 160, tyres = (flip ? [-38, 52] : [-52, 38]).map(v => v * s), ground = y + 40 - 39 * s;
+// It hops along the road like a toy pushed by hand (/demo/mockups-conga-bus-boats.html, 1): a small bounce every HOP
+// of road and a little squash as it lands, a soft shadow under each tyre only (smaller and fainter as it lifts), and
+// two tiny cream felt clouds kicked out sideways from the wheels at each landing. No oval under it. The shuttle bus and
+// the bus that drives the roads between times both go this way; `car` keeps its hop and dust. Gives how high it is.
+function hopBus(car, x, y, flip) {
+    const t = world.t, dust = car.dust ??= [], s = BUS / 160, tyres = (flip ? [-38, 52] : [-52, 38]).map(v => v * s), ground = y + 40 - 39 * s;
     const moved = car.px == null ? 0 : Math.hypot(x - car.px, y - car.py); car.px = x; car.py = y;
     const before = car.hop ?? 0; car.hop = before + moved;
     const ph = (car.hop % HOP) / HOP, lift = moved > 0.05 ? Math.sin(ph * Math.PI) * 14 * s : 0, squash = moved > 0.05 && ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0;
@@ -1003,7 +1002,13 @@ function bus(car, ux, uy) {
       ctx.save(); ctx.translate(cx, cy); ctx.scale(1, 0.38); ctx.translate(-cx, -cy); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 26 * k, 0, 7); ctx.fill(); ctx.restore();
     }
     ctx.save(); ctx.translate(x, y + 40 - lift); ctx.scale(1 + 0.08 * squash, 1 - 0.1 * squash); toy('bus', 0, 0, BUS, flip); ctx.restore();
-    pill(car.name, x, y + 40 - lift - high - 14, C.ink, C.paper, 14);
+    return lift;
+}
+function bus(car, ux, uy) {
+  const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay;
+  if (toysIn()) {
+    const lift = hopBus(car, x, y, (back ? -ux : ux) < 0);
+    pill(car.name, x, y + 40 - lift - BUS * AT.bus[3] / AT.bus[2] - 14, C.ink, C.paper, 14);
     return;
   }
   ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(uy, ux) + (back ? Math.PI : 0));
@@ -1159,7 +1164,6 @@ function draw(t, dt) {
   if (toysIn()) {
     if (!carpet(halfW, halfH)) ground(t, cam.x, cam.y, halfW, halfH); // no room for a new square: painted whole this frame, as it was before
     if (map.axis != null) boats(t);
-    for (const thing of map.things) if (thing.kind === 'road') roadBus(thing, t);
     // Every tree is the map's (maps.js), and solid: a toy standing up among the animals.
     for (const each of map.trees) if (Math.abs(each.x - cam.x) < halfW + 60 && Math.abs(each.y - cam.y) < halfH + 120) standing.push({ x: each.x, y: each.y + each.r * 0.6, name: each.kind, width: treeWidth(each.r) });
   } else ground(t, cam.x, cam.y, halfW, halfH);
@@ -1168,6 +1172,8 @@ function draw(t, dt) {
   if (quality < 2) { fibres.setTransform(new DOMMatrix().scale(0.55)); ctx.fillStyle = fibres; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
   for (const thing of map.things) if (thing.kind === 'bridge') cabs(thing, t);
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing, t);
+  // The bus between times, drawn where the shuttle bus is (after the fibres), so it hops the same way.
+  if (toysIn()) for (const thing of map.things) if (thing.kind === 'road') roadBus(thing, t);
   for (const car of world.shuttles) stop(car);
   for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t, seen);
   // A road or bridge's name, and the banks a bridge joins, painted on after it is drawn. Buildings carry theirs on a plaque.
