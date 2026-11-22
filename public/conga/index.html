@@ -961,19 +961,17 @@ function airborne(t) {
   }
 }
 // A bus is on the ground. It faces the way it is going.
-const HOP = 46; // road between the bus's hops
 function bus(car, ux, uy) {
   const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay;
   if (toysIn()) {
-    // It hops along the road like a toy pushed by hand (/demo/mockups-conga-bus-boats.html, A): a small bounce every
-    // HOP of road, a little squash as it lands, and a puff of dust from under each wheel. No shadow under it.
-    const moved = car.px == null ? 0 : Math.hypot(x - car.px, y - car.py); car.px = x; car.py = y;
-    const before = car.hop ?? 0; car.hop = before + moved;
-    const ph = (car.hop % HOP) / HOP, lift = moved > 0.05 ? Math.sin(ph * Math.PI) * 14 : 0, squash = moved > 0.05 && ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0;
-    if (Math.floor(car.hop / HOP) > Math.floor(before / HOP) && Math.abs(x - cam.x) < wide / cam.z && Math.abs(y - cam.y) < tall / cam.z) for (const side of [-46, 46]) smoke.push({ x: x + side, y: y + 36, t: world.t, big: 0.7 });
-    const flip = (back ? -ux : ux) < 0, high = 160 * AT.bus[3] / AT.bus[2];
-    ctx.save(); ctx.translate(x, y + 40 - lift); ctx.scale(1 + 0.08 * squash, 1 - 0.1 * squash); toy('bus', 0, 0, 160, flip); ctx.restore();
-    pill(car.name, x, y + 40 - lift - high - 14, C.ink, C.paper, 14);
+    // It drives along the road leaving small felt clouds from its back end (/demo/mockups-conga-bus-boats.html, C), which
+    // sit on the road behind it, drift up and fade, so the trail runs along the road it follows. No shadow under it.
+    const flip = (back ? -ux : ux) < 0, high = 160 * AT.bus[3] / AT.bus[2], t = world.t, trail = car.exhaust ??= [];
+    const moved = car.px != null && Math.hypot(x - car.px, y - car.py) > 0.05; car.px = x; car.py = y;
+    if (moved && Math.abs(x - cam.x) < wide / cam.z && Math.abs(y - cam.y) < tall / cam.z && (trail.at(-1)?.t ?? -1) < t - 0.12) trail.push({ x: x + (flip ? 70 : -70), y: y + 18, t, s: 22 + Math.random() * 12 });
+    for (let i = trail.length - 1; i >= 0; i--) { const p = trail[i], age = (t - p.t) / 1.4; if (age > 1 || age < 0) { trail.splice(i, 1); continue; } cloud(p.x, p.y - age * 16, p.s * (0.7 + age * 0.6), (1 - age) * 0.95); }
+    toy('bus', x, y + 40, 160, flip);
+    pill(car.name, x, y + 40 - high - 14, C.ink, C.paper, 14);
     return;
   }
   ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(uy, ux) + (back ? Math.PI : 0));

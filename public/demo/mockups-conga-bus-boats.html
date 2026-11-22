@@ -30,7 +30,7 @@ h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px;
 
   <section data-part="bus">
     <h2>1 · The bus</h2>
-    <div class="bar"><button data-v="a">A · Hops along</button><button data-v="b">B · On a cloud</button><button data-v="c">C · Exhaust puffs</button><button data-v="now">Today</button></div>
+    <div class="bar"><button data-v="c">C · Exhaust puffs (built)</button><button data-v="s1">1 · Wheel shadows</button><button data-v="s2">2 · Soft drop shadow</button><button data-v="s3">3 · Felt shadow</button><button data-v="a">Built now</button><button data-v="b">B · On a cloud</button><button data-v="now">Today</button></div>
     <div class="frame"><canvas></canvas></div>
     <p class="note"></p>
   </section>
@@ -162,9 +162,12 @@ const pt = (r, s, off = 0) => ({ x: r.cx + Math.cos(r.a) * s - Math.sin(r.a) * o
 // Both are side-on toy pictures moving along a slanted road or channel, so today they slide sideways across it.
 const SAY = {
   bus: {
-    a: 'A · Hops along (built). The bus stays on the road and hops along it like a toy being pushed by hand: a little bounce and squash with each step, and a small puff of dust from under each wheel where it lands. No shadow under it.',
+    s1: '1 · Wheel shadows. Only a small soft dark patch right under each tyre, the way a toy really sits on a table, getting smaller and fainter as the bus lifts on each hop. The dust is two tiny cream felt clouds kicked out sideways from the wheels.',
+    s2: '2 · Soft drop shadow. A blurred shadow made from the bus\'s own outline, laid flat on the road behind it as if lit from above and to the left, sliding away a little as the bus lifts. Felt dust from the wheels.',
+    s3: '3 · Felt shadow. The bus\'s outline cut from a darker grey felt and laid on the road under and behind it, flat with a crisp edge like every other felt piece on the mat. Felt dust from the wheels.',
+    a: 'Built now: the hop with no shadow at all, and grey dust dots under the wheels. The bus stays on the road and hops along it like a toy being pushed by hand: a little bounce and squash with each step, and a small puff of dust from under each wheel where it lands. No shadow under it.',
     b: 'B · On a cloud, like the tram. The bus floats just above the road on a small bank of felt clouds, bobbing gently, its shadow on the road under it. Bus and tram then look like one family.',
-    c: 'C · Exhaust puffs. The bus drives smoothly along the road and leaves small felt clouds from its back end, which sit on the road behind it, drift up and fade. The trail of puffs runs along the road, so you see the bus following it.',
+    c: 'C · Exhaust puffs (built, no shadow). The bus drives smoothly along the road and leaves small felt clouds from its back end, which sit on the road behind it, drift up and fade. The trail of puffs runs along the road, so you see the bus following it.',
     now: 'Today: the bus slides along the slanted road side-on, with nothing tying it to the road but its shadow.',
   },
   boats: {
@@ -195,6 +198,16 @@ function trailOf(list, t, every, add, life, draw) {
   if (add && (list.at(-1)?.t ?? -1) < t - every) list.push({ ...add, t });
   for (let i = list.length - 1; i >= 0; i--) { const p = list[i], age = (t - p.t) / life; if (age > 1 || age < 0) { list.splice(i, 1); continue; } draw(p, age); }
 }
+/** Where the bus picture's tyres are, across from its middle, as it faces. */
+const wheels = left => left ? [-38, 52] : [-52, 38];
+/** A toy's outline filled with one colour, made once. */
+const outlines = {};
+function silhouette(name, fill = '#000') {
+  const key = name + fill; if (outlines[key]) return outlines[key];
+  const [sx, sy, sw, sh] = AT[name], c = document.createElement('canvas'); c.width = sw; c.height = sh;
+  const pen = c.getContext('2d'); pen.drawImage(toys, sx, sy, sw, sh, 0, 0, sw, sh); pen.globalCompositeOperation = 'source-in'; pen.fillStyle = fill; pen.fillRect(0, 0, sw, sh);
+  return outlines[key] = c;
+}
 function busScene(look, t) {
   mat();
   lawn(W * 0.04, H * 0.06, W * 0.24, H * 0.3); lawn(W * 0.7, H * 0.62, W * 0.26, H * 0.32);
@@ -203,8 +216,32 @@ function busScene(look, t) {
   grain();
   const from = pt(r, -H * 0.34, 0), to = pt(r, H * 0.42, 0), s = shuttle(t, from, to);
   let { x, y } = s, lift = 0, squash = 0;
-  if (look === 'a' && s.moving) { const ph = (s.d / 46) % 1; lift = Math.sin(ph * Math.PI) * 14; squash = ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0; if (ph < 0.06 && (puffs.bus.at(-1)?.t ?? -1) < t - 0.15) for (const side of [-46, 46]) puffs.bus.push({ x: x + side, y: y + 36, t, s: 1 }); }
+  const hops = look === 'a' || look[0] === 's';
+  if (hops && s.moving) { const ph = (s.d / 46) % 1; lift = Math.sin(ph * Math.PI) * 14; squash = ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0; if (ph < 0.06 && (puffs.bus.at(-1)?.t ?? -1) < t - 0.15) for (const side of wheels(s.left)) puffs.bus.push({ x: x + side + (side < 0 ? -8 : 8), y: y + 2, t, s: 1, dir: Math.sign(side) }); }
   if (look === 'a') trailOf(puffs.bus, t, 99, null, 0.7, (p, age) => puff(p.x, p.y, age, 0.7));
+  // The new options' dust: two tiny cream felt clouds kicked out sideways from each wheel, not grey dots.
+  if (look[0] === 's') trailOf(puffs.bus, t, 99, null, 0.6, (p, age) => cloud(p.x + p.dir * age * 16, p.y - age * 10, 16 + age * 8, (1 - age) * 0.95));
+  if (look === 's1') for (const side of wheels(s.left)) {
+    // Contact shadows: a small soft dark patch under each tyre only, smaller and fainter as the bus lifts.
+    const k = 1 - lift / 30, g = ctx.createRadialGradient(x + side, y + 1, 0, x + side, y + 1, 28 * k);
+    g.addColorStop(0, `oklch(25% 0.03 40 / ${0.5 * k})`); g.addColorStop(1, 'oklch(25% 0.03 40 / 0)');
+    ctx.save(); ctx.translate(x + side, y + 1); ctx.scale(1, 0.38); ctx.translate(-(x + side), -(y + 1)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x + side, y + 1, 28 * k, 0, 7); ctx.fill(); ctx.restore();
+  }
+  if (look === 's2' && ok(toys)) {
+    // A soft drop shadow made from the bus's own outline, laid flat on the road behind it and blurred, like a light
+    // above and to the left. It slides away a little as the bus lifts.
+    const sil = silhouette('bus'), w = 160, h = w * sil.height / sil.width;
+    ctx.save(); ctx.globalAlpha = 0.22 * (1 - lift / 40); ctx.filter = 'blur(5px)';
+    ctx.translate(x + 2 + lift * 0.6, y + 4); ctx.transform(1, 0, -0.75, 0.3, 0, 0); if (s.left) ctx.scale(-1, 1);
+    ctx.drawImage(sil, -w / 2, -h, w, h); ctx.restore();
+  }
+  if (look === 's3' && ok(toys)) {
+    // A felt shadow: the bus's outline cut from a darker grey felt and sewn on the road just under and behind it,
+    // flat with a crisp edge, like every other piece on the mat.
+    const sil = silhouette('bus', 'oklch(58% 0.03 45)'), w = 160, h = w * sil.height / sil.width;
+    ctx.save(); ctx.translate(x + 3, y + 5); ctx.transform(1, 0, -0.55, 0.36, 0, 0); if (s.left) ctx.scale(-1, 1);
+    ctx.drawImage(sil, -w / 2, -h, w, h); ctx.restore();
+  }
   if (look === 'c') { const back = s.left ? 1 : -1; trailOf(puffs.bus, t, 0.12, s.moving ? { x: x + back * 70, y: y + 18, s: 22 + Math.random() * 12 } : null, 1.4, (p, age) => cloud(p.x, p.y - age * 16, p.s * (0.7 + age * 0.6), (1 - age) * 0.95)); }
   if (look === 'b') {
     const bob = Math.sin(t * 2.2) * 5, top = y - 46 + bob;
@@ -213,7 +250,7 @@ function busScene(look, t) {
     toy('bus', x, top + 40, 160, s.left);
     cloud(x, top + 50 + Math.sin(t * 2.2 + 0.5) * 2, 96);
   } else {
-    if (look !== 'a') foot(x, y + 34, 66 * (1 - lift / 60), 0.22); // the built bus (A) has no shadow under it
+    if (look === 'now') foot(x, y + 34, 66 * (1 - lift / 60), 0.22); // the hopping bus has no oval under it
     ctx.save(); ctx.translate(x, y + 40 - lift); ctx.scale(1 + 0.08 * squash, 1 - 0.1 * squash); toy('bus', 0, 0, 160, s.left); ctx.restore();
   }
   for (const [tx, ty] of [[W * 0.1, H * 0.16], [W * 0.22, H * 0.3], [W * 0.88, H * 0.74]]) { foot(tx, ty, 26, 0.2); toy('tree', tx, ty + 4, 60); }
@@ -259,7 +296,7 @@ const parts = [...document.querySelectorAll('section[data-part]')].map(section =
   const pick = look => { part.look = look; part.clock = 0; section.querySelectorAll('.bar button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === look))); part.note.textContent = SAY[part.name][look]; };
   section.querySelectorAll('.bar button[data-v]').forEach(b => b.onclick = () => pick(b.dataset.v));
   const slow = section.querySelector('.slow'); if (slow) slow.onclick = () => { part.slow = !part.slow; slow.setAttribute('aria-pressed', String(part.slow)); };
-  pick('a');
+  pick(section.querySelector('.bar button[data-v]').dataset.v);
   new IntersectionObserver(([e]) => part.seen = e.isIntersecting).observe(part.canvas);
   return part;
 });
