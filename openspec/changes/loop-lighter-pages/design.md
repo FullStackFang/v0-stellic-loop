@@ -82,6 +82,8 @@ A script under `scripts/` writes `NN.webp` beside each `public/animals/NN.png` w
 
 `public/demo/mockups-premium.html` and `public/demo/mockups-imprint.html` replace their Google Fonts link with an `@font-face` for `/fonts/Archivo.woff2`. Same family, so no visual change; one fewer download and no request to a third party from the app's pages.
 
+- Found while building (2026-11-21): the app loads its font from the address next/font gives it (`/_next/static/media/Archivo-….woff2`), so a frame naming `/fonts/Archivo.woff2` downloaded the same 185 kB again. The app announces that address in an HTTP `Link` header, not a tag, so the frames read it from the `@font-face` rule in the stylesheet of the page around them and add the font with `FontFace`; the browser serves it from its cache. Opened on its own, a mockup falls back to `/fonts/Archivo.woff2`. On localhost, `/c/ink` and `/organizers` each download the font once (185 kB) and ask no font host outside the app.
+
 ### D6. Order and proof
 
 Order: D1, D5, D2, D3, D4. Each is its own commit. After all five, one production build, then the byte table in the proposal is measured again on a preview or production and written into this file. The measuring script loads a page with an empty cache at 390 px and sums transferred bytes by kind.

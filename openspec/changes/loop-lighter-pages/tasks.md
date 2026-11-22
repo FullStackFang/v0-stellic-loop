@@ -13,8 +13,8 @@
 
 ## 2. The framed mockups use the app's font (D5)
 
-- [ ] 2.1 In `public/demo/mockups-premium.html` and `public/demo/mockups-imprint.html`, replace the Google Fonts link with an `@font-face` for `/fonts/Archivo.woff2` covering the same weights and widths
-- [ ] 2.2 Open `/c/ink` and `/organizers` on localhost; check the text looks the same and no request leaves for a font host; commit by path
+- [x] 2.1 In `public/demo/mockups-premium.html` and `public/demo/mockups-imprint.html`, replace the Google Fonts link with an `@font-face` for `/fonts/Archivo.woff2` covering the same weights and widths
+- [x] 2.2 Open `/c/ink` and `/organizers` on localhost; check the text looks the same and no request leaves for a font host; commit by path
 
 ## 3. Faces as WebP (D2)
 

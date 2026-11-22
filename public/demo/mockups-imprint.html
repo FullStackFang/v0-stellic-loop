@@ -24,9 +24,7 @@
   try { new MutationObserver(wear).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-kit'] }); } catch (error) { /* as above */ }
 })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<script>/* The app's font, from the address in the stylesheet of the page around this frame, so the browser has it already (openspec loop-lighter-pages, D5). Opened on its own, the copy in public/fonts. */ try { var at = "/fonts/Archivo.woff2"; try { for (var s of parent.document.styleSheets) try { for (var r of s.cssRules) { var m = r.type === 5 && /url\(["']?([^"')]*Archivo[^"')]*\.woff2)/.exec(r.style.getPropertyValue("src")); if (m) at = new URL(m[1], s.href || parent.location.href).href; } } catch (e) {} } catch (e) {} document.fonts.add(new FontFace("Archivo", "url(" + at + ")", { weight: "100 900", stretch: "62% 125%", display: "swap" })); } catch (e) {}</script>
 <style>
 /* The sister page of mockups-premium.html (Ink): the same kit, paper, tickets, stamps and display voice, and the same loud parts.
    Ink is for a member, Imprint is for a club: the two never share a pricing table. A field test: nothing here is built.
