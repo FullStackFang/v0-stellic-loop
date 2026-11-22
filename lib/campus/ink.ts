@@ -62,7 +62,8 @@ export const subscribeInkPlus = (q: Q, personId: string, email: string, place: A
 export const JOIN_PLACES = ['ink page: Get Ink', 'ink page: Get Ink+', 'ink page: Move to Ink+', 'colours: Sign up', 'account: Get Ink+', 'pets: Get Ink+', 'pets: Start from another pet', 'pets: Redraw your pet', 'seats: Get Ink', 'conga: Get Ink'] as const;
 export type JoinPlace = (typeof JOIN_PLACES)[number];
 /** What every sign-up says once it is done. */
-export const joinedWords = (plan: 'ink' | 'plus') => `Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to ${plan === 'plus' ? 'Ink+' : 'Ink'} for now.`;
+/** The thanks after signing up. With the email it was kept under, it says so, so the person knows it was received. */
+export const joinedWords = (plan: 'ink' | 'plus', email?: string) => `Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to ${plan === 'plus' ? 'Ink+' : 'Ink'} for now.${email ? ` We’ll write to ${email.trim().toLowerCase()} when it is.` : ''}`;
 
 /**
  * Signing up on the Ink page without an account: the email given, the plan and the button are kept, and nothing else

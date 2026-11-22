@@ -39,5 +39,5 @@ export async function POST(request: Request) {
   if (!viewer) return no(401, { ok: false, signIn: signInHref(back) });
   if (!await joinPlan(db(), viewer.personId, viewer.principal.verifiedEmail ?? '', plan, place)) return no(400, { ok: false, message: 'Your account has no email to sign up with.' });
   revalidatePath('/c', 'layout'); revalidatePath('/groups', 'layout');
-  return Response.json({ ok: true, said: joinedWords(plan) }, { headers: { 'cache-control': 'private, no-store' } });
+  return Response.json({ ok: true, said: joinedWords(plan, viewer.principal.verifiedEmail ?? undefined) }, { headers: { 'cache-control': 'private, no-store' } });
 }

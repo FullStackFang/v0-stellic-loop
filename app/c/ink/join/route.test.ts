@@ -27,7 +27,7 @@ const join = async (who: Principal | null, body: object, origin: string | null =
 
 it('gives the plan at once, with the account email, and records who, which plan and where', async () => {
   const ana = await person('Ana@Cornell.edu');
-  expect(await join(ana, { plan: 'plus', place: 'ink page: Get Ink+' })).toEqual({ status: 200, body: { ok: true, said: 'Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink+ for now.' } });
+  expect(await join(ana, { plan: 'plus', place: 'ink page: Get Ink+' })).toEqual({ status: 200, body: { ok: true, said: 'Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink+ for now. We’ll write to ana@cornell.edu when it is.' } });
   expect(await planOf(t.db, ana.personId)).toBe('plus');
   // Signing up again changes nothing, and is recorded again.
   expect((await join(ana, { plan: 'plus', place: 'colours: Sign up' })).status).toBe(200);
@@ -36,7 +36,7 @@ it('gives the plan at once, with the account email, and records who, which plan 
 
 it('signs up for Ink from a game', async () => {
   const ana = await person('ana@cornell.edu');
-  expect((await join(ana, { plan: 'ink', place: 'seats: Get Ink' })).body.said).toBe('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now.');
+  expect((await join(ana, { plan: 'ink', place: 'seats: Get Ink' })).body.said).toBe('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now. We’ll write to ana@cornell.edu when it is.');
   expect(await planOf(t.db, ana.personId)).toBe('ink');
   expect((await subscribeAsks(t.db))[0]).toMatchObject({ plan: 'ink', place: 'seats: Get Ink' });
 });
