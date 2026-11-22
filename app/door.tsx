@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Door, type DoorSchool } from '@/components/campus/door';
 import { CampusShell } from '@/components/campus/shell';
@@ -25,9 +26,17 @@ async function ticket(campus: Campus, now: Date): Promise<DoorSchool> {
   };
 }
 
+/** Each school's ticket for the pitch. The same for everyone: no person is in it. */
+export async function pitchTickets(): Promise<DoorSchool[]> {
+  const now = new Date();
+  return Promise.all((await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(campus => ticket(campus, now)));
+}
+/** The tickets, kept for a minute across visitors (openspec/changes/loop-lighter-pages, D4): a burst of visitors costs one read. */
+const keptPitch = unstable_cache(pitchTickets, ['door-pitch'], { revalidate: 60 });
+
 /** The pitch, a ticket to try for each school, and the sign-in card. `routing` says whether the card owns the address (/sign-in) or sits on another page (/). */
 export async function DoorPage({ routing }: { routing: 'hash' | 'path' }) {
-  const now = new Date(), schools = await Promise.all((await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(campus => ticket(campus, now)));
+  const schools = await keptPitch();
   // Open on a school that has something on this week.
   return <div className="cs"><Door schools={schools} start={Math.max(0, schools.findIndex(school => school.event))} routing={routing} configured={clerkPortalConfigured()} /></div>;
 }

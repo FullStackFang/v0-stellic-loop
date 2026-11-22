@@ -7,14 +7,23 @@ import { DoorSignIn } from '@/components/campus/door-sign-in';
 import { listCampuses } from '@/lib/campus/listings';
 import { addHandListing } from '@/lib/campus/manage';
 import { campusViewer, lookingAt } from '@/lib/campus/session';
-import { DoorPage, FrontDoor } from './door';
+import { DoorPage, FrontDoor, pitchTickets } from './door';
 import { addEventAction, joinTagAction, saveRewardAction, setHiddenAction, setTagKindAction, splitTagAction } from './c/admin/actions';
 import { GET as readCampusFeeds } from './api/cron/campus-feeds/route';
 
 // Specs: openspec/changes/loop-campus-rewards/specs/campus-sign-in, admin-gate, campus-listings (the admin page, the hourly read).
 // The sign-in form itself is Clerk's. Here it is one email field, which is all the school menu reads from it.
 vi.mock('@clerk/nextjs', () => ({ SignIn: () => <input name="identifier" aria-label="Email" /> }));
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// Next's cache needs a running server. In its place: a stand-in that keeps nothing, unless a test turns keeping on, and
+// notes what each kept function was asked to be kept for.
+const kept = vi.hoisted(() => ({ on: false, values: new Map<string, unknown>(), asked: new Map<string, unknown>() }));
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+  unstable_cache: (read: () => Promise<unknown>, keys: string[], options: unknown) => {
+    const key = keys.join('|'); kept.asked.set(key, options);
+    return () => { if (!kept.on) return read(); if (!kept.values.has(key)) kept.values.set(key, read()); return kept.values.get(key); };
+  },
+}));
 // The foot of the door (components/campus/foot.tsx) asks for the router; redirect stays the real one.
 vi.mock('next/navigation', async original => ({ ...(await original<typeof import('next/navigation')>()), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 // The campus the browser was last looking at (the cookie the campus screen leaves), or none.
@@ -92,6 +101,35 @@ describe('the door', () => {
   it('/sign-in is the same door', async () => {
     render(await DoorPage({ routing: 'path' }));
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/^Sign in$/);
+  });
+  // openspec/changes/loop-lighter-pages, D4: the pitch's tickets are read once a minute, and the door still asks who is looking.
+  describe('while the pitch is kept', () => {
+    beforeEach(() => { kept.on = true; kept.values.clear(); });
+    afterEach(() => { kept.on = false; });
+    it('is kept for a minute, and a second visit shows what the first read', async () => {
+      expect(kept.asked.get('door-pitch')).toEqual({ revalidate: 60 });
+      const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
+      await addHandListing(t.db, { campusId: cornell.id, title: 'Blitz night', host: 'Chess Club', startsAt: new Date(Date.now() + 3 * 3600000).toISOString() });
+      render(await drawn(FrontDoor()));
+      expect(screen.getByText('Blitz night')).toBeInTheDocument();
+      cleanup();
+      // Posted after the first visit: not read again until the minute is up.
+      await addHandListing(t.db, { campusId: cornell.id, title: 'Board games', host: 'Games Club', startsAt: new Date(Date.now() + 2 * 3600000).toISOString() });
+      render(await drawn(FrontDoor()));
+      expect(screen.getByText('Blitz night')).toBeInTheDocument();
+      expect(screen.queryByText('Board games')).toBeNull();
+    });
+    it('names no person, so it can be the same for everyone', async () => {
+      const [cornell] = (await listCampuses(t.db)).filter(campus => campus.slug === 'cornell');
+      await addHandListing(t.db, { campusId: cornell.id, title: 'Blitz night', host: 'Chess Club', startsAt: new Date(Date.now() + 3 * 3600000).toISOString() });
+      const tickets = await pitchTickets();
+      expect(Object.keys(tickets[0]).sort()).toEqual(['domains', 'event', 'name', 'reward', 'slug']);
+      expect(JSON.parse(JSON.stringify(tickets))).toEqual(tickets);
+    });
+    it('still sends a signed-in member on to their campus', async () => {
+      await drawn(FrontDoor());
+      await expect(withPortalTestSession(await signedIn('Noor', 'noor@stern.nyu.edu'), () => FrontDoor())).rejects.toEqual(sentTo('/c/nyu'));
+    });
   });
 });
 
