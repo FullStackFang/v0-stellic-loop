@@ -128,6 +128,38 @@ body.touch .side.open .place i { rotate: 180deg; } body.touch .side.open { z-ind
    step aside while a card is up so nothing sits over it. */
 @media (max-width: 560px) { .faces { flex-wrap: wrap; row-gap: 12px; } .faces > button { flex: 0 0 calc(25% - 6px); }
   body:has(.card:not([hidden])) :is(.board, .hint, .place) { visibility: hidden; } }
+/* Learning to play (/demo/mockups-conga-tutorial.html, A): an ink card at the foot of the screen, one step at a time,
+   with a ghost thumb showing the move on a touch screen. Touches go through it to the game; only Skip is pressed. */
+.coach { position: fixed; z-index: 3; left: 50%; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 10px); width: min(440px, calc(100vw - 28px)); padding: 22px 60px 16px 18px; border-radius: 22px 22px 22px 6px; background: var(--ink); color: var(--paper);
+  box-shadow: 5px 5px 0 var(--action); pointer-events: none; translate: -50% 0; transition: opacity .25s, translate .45s var(--expo); }
+.coach[hidden] { display: block; opacity: 0; translate: -50% 30px; }
+.coach .dots { position: absolute; left: 14px; top: -14px; display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 10px 10px 10px 3px; background: var(--field); }
+.coach .dots i { width: 9px; height: 9px; border-radius: 50%; background: oklch(24% 0.035 30 / .25); } .coach .dots i.on { background: var(--ink); }
+.coach .skip { position: absolute; right: 12px; top: -15px; padding: 4px 12px 5px; border-radius: 99px; background: var(--paper); color: var(--ink); font-weight: 750; font-size: 14px; box-shadow: inset 0 0 0 2px var(--ink); pointer-events: auto; }
+.coach h3 { font-weight: 800; font-stretch: 110%; font-size: 25px; letter-spacing: -.03em; line-height: 1.05; }
+.coach p { margin-top: 5px; font-size: 15px; font-weight: 550; color: oklch(84% 0.03 40); line-height: 1.3; }
+.coach kbd { font: inherit; font-weight: 800; padding: 0 8px; border-radius: 99px; background: var(--field); color: var(--ink); }
+.coach .tick { position: absolute; right: 14px; bottom: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--action); display: grid; place-items: center; scale: 0; transition: scale .35s var(--expo); }
+.coach .tick svg { width: 18px; } .coach.done .tick { scale: 1; }
+@media (max-width: 560px) { .coach { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 100px); } .coach h3 { font-size: 23px; } }
+body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { visibility: hidden; }
+#paused .row { flex-wrap: wrap; row-gap: 10px; }
+/* The ghost thumb: where a thumb usually rests, low on the right. Drag: it slides in an arc. Dash: tap, tap, then held
+   while a ring fills round it. */
+.ghost { position: fixed; z-index: 3; right: 70px; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 270px); width: 50px; height: 50px; pointer-events: none; }
+.ghost[hidden] { display: none; }
+.ghost b { position: absolute; inset: 0; border-radius: 50%; background: oklch(24% 0.035 30 / .5); box-shadow: 0 0 0 9px oklch(24% 0.035 30 / .14); }
+.ghost i { position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 4px var(--paper); opacity: 0; }
+.ghost s { position: absolute; inset: -9px; border-radius: 50%; background: conic-gradient(var(--action) var(--fill), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent 78%, #000 80%); mask: radial-gradient(closest-side, transparent 78%, #000 80%); opacity: 0; }
+.ghost.steer b { animation: ghost-drag 2.6s var(--expo) infinite; }
+@keyframes ghost-drag { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 60% { transform: translate(-130px, -60px); opacity: 1; } 85%, 100% { transform: translate(-130px, -60px); opacity: 0; } }
+.ghost.dash b { animation: ghost-press 2.6s infinite; } .ghost.dash i { animation: ghost-tap 2.6s infinite; } .ghost.dash i + i { animation-delay: .28s; }
+.ghost.dash s { opacity: 1; animation: ghost-hold 2.6s linear infinite; }
+@keyframes ghost-tap { 0% { transform: scale(.7); opacity: 0; } 4% { opacity: 1; } 18%, 100% { transform: scale(1.9); opacity: 0; } }
+@keyframes ghost-press { 0%, 8% { transform: scale(1); } 4% { transform: scale(.8); } 15% { transform: scale(.8); } 19% { transform: scale(1); } 26%, 85% { transform: scale(.8); } 90%, 100% { transform: scale(1); } }
+@property --fill { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+@keyframes ghost-hold { 0%, 30% { --fill: 0%; } 80%, 100% { --fill: 100%; } }
+@media (prefers-reduced-motion: reduce) { .ghost b, .ghost i, .ghost s { animation: none !important; } }
 /* A long notice wraps rather than runs off a narrow screen. */
 .say { width: max-content; max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 /* A phone on its side: little height, so the scoreboard keeps its top three and you, and everything round the edge is
@@ -146,6 +178,8 @@ body.touch .side.open .place i { rotate: 180deg; } body.touch .side.open { z-ind
 <div class="hud map"><canvas id="map" width="184" height="184"></canvas></div>
 <button class="pause" id="pause" hidden aria-label="Pause"><svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="4.5" height="14" rx="1.5"/><rect x="10.5" y="2" width="4.5" height="14" rx="1.5"/></svg></button>
 <div class="say" id="say"></div>
+<div class="coach" id="coach" hidden aria-live="polite"><span class="dots" id="coachDots"></span><button class="skip" id="coachSkip">Skip</button><h3 id="coachHead"></h3><p id="coachSay"></p><span class="tick"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5l3.200 3L14 5.500"/></svg></span></div>
+<div class="ghost" id="ghost" hidden aria-hidden="true"><s></s><i></i><i></i><b></b></div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <path id="ra" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rb" d="M14.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rc" d="M43.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/>
@@ -170,7 +204,7 @@ body.touch .side.open .place i { rotate: 180deg; } body.touch .side.open { z-ind
 
 <section class="card" id="paused" hidden>
   <h1>Paused</h1>
-  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
+  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><button class="quit" id="howto">How to play</button><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
 </section>
 
 <script type="module">
@@ -339,8 +373,9 @@ function begin() {
   aim = me.a;
   $('start').hidden = $('over').hidden = true;
   $('mine').hidden = $('pause').hidden = $('place').hidden = false; fold(false);
-  // On a touch screen the controls are said once, as the game starts (/demo/mockups-conga-phone.html, 2 B).
-  if (touched) say('Drag to steer · double tap and hold to dash');
+  // A player still learning is taught as the game starts; otherwise, on a touch screen, the controls are said once
+  // (/demo/mockups-conga-phone.html, 2 B).
+  if (!teach() && touched) say('Drag to steer · double tap and hold to dash');
   $('mineFace').style.cssText = cut(face);
 }
 $('go').onclick = $('again').onclick = begin;
@@ -364,6 +399,42 @@ function pause(on) {
 }
 $('pause').onclick = () => pause(true);
 $('resume').onclick = () => pause(false);
+
+// ---------- learning to play ----------
+// A new player's first game teaches itself (/demo/mockups-conga-tutorial.html, A): one card at a time at the foot of the
+// screen, each waiting until it has been done, then ticked. What has been learnt is kept in the browser, so it never comes
+// back on its own; someone who played before this was added (a best is kept) is shown only the dash. How to play, on the
+// pause card, goes through it all again.
+const LESSONS = ['steer', 'gather', 'dash'];
+const learnt = new Set(keep.get('conga-learnt')?.split(',').filter(Boolean) ?? (keep.get('conga-best') ? ['steer', 'gather'] : []));
+let lesson = null, shownAt = 0, dashed = 0;
+function lessonWords(step) {
+  if (step === 'steer') return touched ? ['Drag anywhere to steer', 'Your line follows your thumb.'] : ['Point to steer', 'Your line heads for the mouse.'];
+  if (step === 'gather') return ['Walk into a stray', 'It joins the back of your line.'];
+  return touched ? ['Tap, tap and hold to dash', 'Keep holding to keep going. Each half second costs an animal.']
+    : ['Hold <kbd>Space</kbd> to dash', 'Or hold the mouse button. Each half second costs an animal.'];
+}
+/** Shows the first step not yet learnt; false when there is none. */
+function teach() {
+  lesson = LESSONS.find(step => !learnt.has(step)) ?? null;
+  $('coach').hidden = $('ghost').hidden = !lesson;
+  if (!lesson) return false;
+  const [head, words] = lessonWords(lesson);
+  $('coachHead').innerHTML = head; $('coachSay').textContent = words; $('coach').classList.remove('done');
+  $('coachDots').innerHTML = LESSONS.map(step => `<i${learnt.has(step) || step === lesson ? ' class="on"' : ''}></i>`).join('');
+  $('ghost').className = `ghost ${lesson}`; $('ghost').hidden = !touched || lesson === 'gather';
+  shownAt = performance.now(); dashed = 0;
+  return true;
+}
+/** A step done: ticked, kept, and after a moment the next one. Only the step on show counts, once it has been read. */
+function learn(step) {
+  if (lesson !== step || performance.now() - shownAt < 1200) return;
+  lesson = null; learnt.add(step); keep.set('conga-learnt', [...learnt].join());
+  $('coach').classList.add('done'); $('ghost').hidden = true;
+  setTimeout(() => { if (!lesson) teach(); }, 900);
+}
+$('coachSkip').onclick = () => { for (const step of LESSONS) learnt.add(step); keep.set('conga-learnt', LESSONS.join()); teach(); };
+$('howto').onclick = () => { learnt.clear(); keep.set('conga-learnt', ''); pause(false); teach(); };
 // Quit: your animals stay behind as strays, and the first card comes back with its animals and places.
 $('quit').onclick = () => {
   paused = false; removeLine(world, ME); me = null;
@@ -399,7 +470,7 @@ let stick = null, touched = matchMedia('(pointer: coarse)').matches;
 controls();
 const REACH = 46;
 const keys = new Set();
-function point(event) { if (me && !me.dead) aim = Math.atan2(event.clientY - tall / 2, event.clientX - wide / 2); }
+function point(event) { if (me && !me.dead) { aim = Math.atan2(event.clientY - tall / 2, event.clientX - wide / 2); learn('steer'); } }
 addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse' && !touched) { touched = true; controls(); } }, true);
 // A thumb dashes with a double tap held down (/demo/mockups-conga-phone.html, 1 C): a press that comes within TAP of
 // the last one lifting, near where it was, dashes for as long as it stays down, steering as usual.
@@ -418,7 +489,7 @@ addEventListener('pointermove', event => {
   if (!stick || event.pointerId !== stick.id) return;
   stick.x = event.clientX; stick.y = event.clientY;
   const dx = stick.x - stick.x0, dy = stick.y - stick.y0, far = Math.hypot(dx, dy);
-  if (far > 8 && me && !me.dead) aim = Math.atan2(dy, dx);
+  if (far > 8 && me && !me.dead) { aim = Math.atan2(dy, dx); learn('steer'); }
   if (far > REACH) { stick.x0 += dx * (1 - REACH / far); stick.y0 += dy * (1 - REACH / far); } // the stick is dragged along behind a thumb that goes further
 });
 for (const type of ['pointerup', 'pointercancel']) addEventListener(type, event => {
@@ -1418,10 +1489,12 @@ function frame(now) {
   if (me && !me.dead && !paused) {
     if (keys.has('ArrowLeft') || keys.has('KeyA')) aim = me.a - 1.2;
     if (keys.has('ArrowRight') || keys.has('KeyD')) aim = me.a + 1.2;
+    if (['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].some(key => keys.has(key))) learn('steer');
     steer(me, aim, dash);
+    if (dash && me.tail.length && (dashed += dt) > 0.3) learn('dash'); // under DROP, so a line of one still learns it
   }
   for (const event of paused ? [] : step(world, dt)) {
-    if (event.type === 'join' && event.line === ME) navigator.vibrate?.(8);
+    if (event.type === 'join' && event.line === ME) { navigator.vibrate?.(8); learn('gather'); }
     if (event.type === 'spill') {
       // The whole line goes at once in a soft puff, with a few twinkles from where its head was.
       const shown = world.lines.find(one => one.id === event.line)?.shown ?? [], c = colour(event.line), near = p => Math.abs(p.x - cam.x) < wide / cam.z && Math.abs(p.y - cam.y) < tall / cam.z;
@@ -1486,6 +1559,16 @@ function frame(now) {
     if (event.type === 'restless' && event.line === ME) say('Nobody new for a while. The back of your line is wandering off');
   }
   draw(t, dt);
+  // Learning to gather: a ring pulses round the stray nearest your head.
+  if (lesson === 'gather' && me && !me.dead && !paused) {
+    let near = null, gap = Infinity;
+    for (const s of world.strays) { const d = Math.hypot(s.x - me.x, s.y - me.y); if (d < gap) { gap = d; near = s; } }
+    if (near) {
+      const k = (t * 0.7) % 1, x = (near.x - cam.x) * cam.z + wide / 2, y = (near.y - cam.y) * cam.z + tall / 2;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 1 - k; ctx.strokeStyle = C.action; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(x, y, (24 + 30 * (1 - (1 - k) ** 3)) * cam.z, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+  }
   if (stick) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(stick.x0, stick.y0, REACH, 0, 7); ctx.fillStyle = C.paper; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
     ctx.beginPath(); ctx.arc(stick.x, stick.y, 20, 0, 7); ctx.fillStyle = C.ink; ctx.fill();
