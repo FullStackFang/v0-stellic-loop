@@ -34,6 +34,13 @@ h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px;
     <div class="frame"><canvas></canvas></div>
     <p class="note"></p>
   </section>
+
+  <section data-part="halls">
+    <h2>Buildings</h2>
+    <div class="bar"><button data-v="tiers">A · Two tiers (built)</button><button data-v="one">B · All one size</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
 </main>
 <script>
 // Relative paths and no imports, so the page also works opened straight from the folder (file:///).
@@ -124,15 +131,41 @@ function ring(x, y, age, colour) {
 // Every moving or standing thing beside a line of animals, at today's size or the proposed one.
 const SAY = {
   sizes: {
-    b: 'Proposed. Everything measured against an animal in a line (42 across). A cab is a small car, under half a building (40 → 70). Buildings grow a little (150 → 180). The bus is smaller than the tram (160 → 120, tram 140), and the little bus on a road with no bus route matches it (64 → 120). Ferry and tug stay as they are (100). Trees grow about a third.',
+    b: 'Proposed. Everything measured against an animal in a line (42 across). A cab is a small car, under half a building (40 → 70). Buildings: see the tiers below. The bus is smaller than the tram (160 → 120, tram 140), and the little bus on a road with no bus route matches it (64 → 120). Ferry and tug stay as they are (100). Trees stay as they are.',
     now: 'Today. A cab is the size of one animal, the ferry and tug are smaller than the bus, the little bus is under half the size of the bus that stops, and trees are about one animal across.',
   },
 };
 Object.assign(AT, { cab: [904, 1166, 128, 128], bus: [1482, 638, 256, 256], tram: [1740, 638, 256, 256], ferry: [966, 638, 256, 256], tug: [1224, 638, 256, 256], tree: [644, 1166, 128, 128], blossom: [774, 1166, 128, 128], brickhall: [0, 1166, 320, 162], sack: [1034, 1166, 111, 128] });
 toys.src = '../conga/scenery.v4.webp';
+SAY.halls = {
+  tiers: 'A · Two tiers (built). Landmarks stand out at 195 across: McGraw Tower, Sage Chapel, Willard Straight, Barton Hall, Bailey Hall, Johnson Museum, Bloomberg Center, the Lighthouse and the Smallpox Hospital. Every other building (dorms, cafes, halls, stations) stays at 150, still bigger than the bus (120).',
+  one: 'B · All one size. Every building is 240 across, so all of them tower over the bus and tram, and none stands out from the others.',
+  now: 'Today. Every building is 150 across, about the size of the bus.',
+};
+Object.assign(AT, { clocktower: [1386, 0, 320, 320], stonehall: [0, 916, 320, 248], dorm: [0, 638, 320, 276], cafe: [473, 0, 298, 320] });
+const HALLS = { tiers: [195, 150], one: [240, 240], now: [150, 150] };
+const across = (name, size) => { const [, , w, h] = AT[name]; return h / w > 1.25 ? size * 1.25 / (h / w) : size; };
+function hallsScene(look, t) {
+  const [big, small] = HALLS[look], ry = H * 0.86;
+  mat();
+  ctx.beginPath(); ctx.rect(0, ry - 50, W, 100); feltPiece(FELT.road);
+  for (const side of [-42, 42]) { ctx.beginPath(); ctx.moveTo(0, ry + side); ctx.lineTo(W, ry + side); stitch(FELT.thread, 2.6, [10, 8]); }
+  for (let x = 20; x < W; x += 74) { ctx.beginPath(); ctx.roundRect(x, ry - 5.5, 42, 11, 5.5); feltPiece(FELT.yellow, 2); }
+  grain();
+  const row = H * 0.6;
+  for (const [name, x, size, label] of [['clocktower', W * 0.12, big, 'Landmark'], ['stonehall', W * 0.36, big, 'Landmark'], ['dorm', W * 0.6, small, 'Dorm'], ['cafe', W * 0.8, small, 'Cafe']]) { toy(name, x, row, across(name, size)); tag(label, x, row + 14); }
+  const pts = [0, 1, 2, 3, 4, 5].map(i => ({ x: W * 0.62 - i * 33, y: row + 66 - (0.5 - 0.5 * Math.cos(t * 7 - i * 0.7)) * 2.5, face: [4, 9, 14, 2, 22, 30][i], size: i ? 42 : 58 }));
+  rope(pts, 'oklch(60% 0.2 305)'); pts.slice().reverse().forEach(p => sprite(p.face, p.x, p.y, p.size));
+  toy('bus', W * 0.3, ry + 30, 120, true); tag('Bus', W * 0.3, ry + 44);
+  toy('cab', W * 0.55, ry + 22, 70); toy('cab', W * 0.66, ry + 22, 70, true);
+  const tx = W * 0.85, ty = ry - 40 + Math.sin(t * 2.2) * 4, [sx, sy, sw, sh] = AT.tram, cut = Math.round(sh * 0.3), high = 140 * sh / sw;
+  cloud(tx - 46, ty, 70); cloud(tx + 50, ty + 2, 62);
+  if (ok(toys)) ctx.drawImage(toys, sx, sy + cut, sw, sh - cut, tx - 70, ty + 4 - high + high * cut / sh, 140, high * (sh - cut) / sh);
+  cloud(tx + 2, ty + 12, 84); tag('Tram', tx, ty + 34);
+}
 const SIZES = {
   now: { cab: 40, ferry: 100, tug: 100, littlebus: 64, bus: 160, hall: 150, tree: [38, 63] },
-  b: { cab: 70, ferry: 100, tug: 100, littlebus: 120, bus: 120, hall: 180, tree: [52, 84] },
+  b: { cab: 70, ferry: 100, tug: 100, littlebus: 120, bus: 120, hall: 195, tree: [38, 63] },
 };
 const WATER = { deep: 'oklch(64% 0.1 228)', shallow: 'oklch(75% 0.085 215)', thread: 'oklch(90% 0.04 210)' };
 function cloud(x, y, w) {
@@ -180,7 +213,7 @@ function sizesScene(look, t) {
 }
 
 // ---------- the page ----------
-const SCENES = { sizes: sizesScene };
+const SCENES = { sizes: sizesScene, halls: hallsScene };
 const parts = [...document.querySelectorAll('section[data-part]')].map(section => {
   const part = { name: section.dataset.part, canvas: section.querySelector('canvas'), note: section.querySelector('.note'), look: 'a', clock: 0, slow: false };
   const pick = look => { part.look = look; part.clock = 0; section.querySelectorAll('.bar button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === look))); part.note.textContent = SAY[part.name][look]; };

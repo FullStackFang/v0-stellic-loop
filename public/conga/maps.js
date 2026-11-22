@@ -18,10 +18,13 @@ export const TOYS = { 'Willard Straight': 'stonehall', 'Sage Chapel': 'chapel', 
   'CTB': 'cafe', 'McGraw Tower': 'clocktower', 'Bloomberg Center': 'bloomberg', 'Tata': 'tata', 'The House': 'tower', 'Verizon Center': 'glasshall', 'Graduate': 'tower',
   'Tram': 'station', 'Subway': 'subway', 'Smallpox Hospital': 'ruin', 'Blackwell House': 'farmhouse', 'Good Shepherd': 'stonechapel', 'The Octagon': 'octagon', 'Lighthouse': 'lighthouse', 'Beebe Lake': 'pond' };
 const POND = 220; // a pond's toy is drawn this wide
-// Every building is drawn the same size, on every ground: HALL across, or narrower for a toy taller than it is wide, so
-// none stands more than 1.25 times HALL high. Kept small enough that the packed pictures stay sharp on screen.
-const HALL = 150;
-const toyWidth = toy => { const [, , w, h] = AT[toy]; return h / w > 1.25 ? HALL * 1.25 / (h / w) : HALL; };
+// Buildings come in two sizes on every ground (/demo/mockups-conga-sizes.html, A): a LANDMARK stands out at
+// LANDMARK_HALL across, every other building is HALL, both bigger than the bus (120). A toy taller than it is wide is
+// drawn narrower, so none stands more than 1.25 times its width high. Kept small enough that the packed pictures stay
+// sharp on screen.
+const HALL = 150, LANDMARK_HALL = 195;
+const LANDMARKS = new Set(['McGraw Tower', 'Sage Chapel', 'Willard Straight', 'Barton Hall', 'Bailey Hall', 'Johnson Museum', 'Bloomberg Center', 'Lighthouse', 'Smallpox Hospital']);
+const toyWidth = label => { const [, , w, h] = AT[TOYS[label]], size = LANDMARKS.has(label) ? LANDMARK_HALL : HALL; return h / w > 1.25 ? size * 1.25 / (h / w) : size; };
 /** A tower's toy is drawn this much wider than the tower is on the ground, so it stands up tall above the line. */
 export const TALL = 2.3;
 /** How wide a tree's toy is drawn, from the tree's size. */
@@ -111,11 +114,11 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
   const at = ([lon, lat]) => [(lon - lon0) * east, (lat0 - lat) * north];
   const things = landmarks.map(([kind, label, lat, lon, across, deep, turned = 0]) => {
     if (kind === 'bridge' || kind === 'road') return { kind, name: label, from: at([lon, lat]), to: at([deep, across]), w: turned * scale }; // a bridge is two ends and a width
-    const [x, y] = at([lon, lat]), size = kind === 'tower' ? Array(2).fill(TOYS[label] ? toyWidth(TOYS[label]) / TALL : TOWER) : [across * scale, deep * scale], turn = turned * Math.PI / 180;
+    const [x, y] = at([lon, lat]), size = kind === 'tower' ? Array(2).fill(TOYS[label] ? toyWidth(label) / TALL : TOWER) : [across * scale, deep * scale], turn = turned * Math.PI / 180;
     // A hall is drawn as a toy building standing up off the ground, seen from the front. What it stands on is a plain box,
     // square to the page, as wide as the toy and half as deep, so the toy covers it.
     if (kind === 'hall' && TOYS[label]) {
-      const wide = toyWidth(TOYS[label]);
+      const wide = toyWidth(label);
       return { kind, name: label, toy: TOYS[label], x, y, w: wide, h: wide / 2, turn: 0 };
     }
     // A pond is a toy too, standing like a big hall: what it stands on is the oval of its stones.
