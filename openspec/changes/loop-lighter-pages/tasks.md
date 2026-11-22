@@ -1,6 +1,6 @@
 ## 0. Stay clear of Conga (D7)
 
-- [ ] 0.1 Before every commit of this change: `git diff --cached --name-only` lists nothing under `public/conga/`, `app/conga/` or `scripts/conga-*`, and `public/fonts/Archivo.ttf` and every `public/animals/NN.png` are unchanged
+- [x] 0.1 Before every commit of this change: `git diff --cached --name-only` lists nothing under `public/conga/`, `app/conga/` or `scripts/conga-*`, and `public/fonts/Archivo.ttf` and every `public/animals/NN.png` are unchanged
 - [x] 0.2 After the faces' WebP files exist (3.1): `app/conga/sim.test.ts` and `app/conga/route.test.ts` pass, and `scripts/conga-atlas.mjs`'s file filter still finds the same list of faces (count the PNGs; do not run the script)
 
 ## 1. The font as WOFF2 (D1)
@@ -43,9 +43,9 @@
 
 ## 6. Proof
 
-- [ ] 6.1 Make sure no dev server or other build is running, then run one production build; the route table marks `/terms` and `/privacy` static
-- [ ] 6.2 Start the built app; load `/`, `/terms`, `/c/ink` and `/c/doodles` with an empty cache at 390 px and write the byte table (total, font, scripts, images) into design.md beside the numbers in the proposal
-- [ ] 6.3 On `/terms`, check that no sign-in script is requested and the console is clean
+- [x] 6.1 Make sure no dev server or other build is running, then run one production build; the route table marks `/terms` and `/privacy` static
+- [x] 6.2 Start the built app; load `/`, `/terms`, `/c/ink` and `/c/doodles` with an empty cache at 390 px and write the byte table (total, font, scripts, images) into design.md beside the numbers in the proposal
+- [x] 6.3 On `/terms`, check that no sign-in script is requested and the console is clean
 - [ ] 6.4 After the owner pushes: check the response headers of `/terms` in production (served from the cache) and that the production log shows no new errors
 
 ## 7. Waiting for the owner (not part of this change until answered)

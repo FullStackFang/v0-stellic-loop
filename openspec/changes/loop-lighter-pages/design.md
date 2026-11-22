@@ -89,6 +89,17 @@ A script under `scripts/` writes `NN.webp` beside each `public/animals/NN.png` w
 
 Order: D1, D5, D2, D3, D4. Each is its own commit. After all five, one production build, then the byte table in the proposal is measured again on a preview or production and written into this file. The measuring script loads a page with an empty cache at 390 px and sums transferred bytes by kind.
 
+Measured after (2026-11-21), one production build run locally with , same script, empty cache, 390 px. Before is production from the proposal. Local  compresses with gzip where Vercel uses Brotli, so the scripts column is only roughly comparable; the font and images are not compressed further by either.
+
+| Page | Total before → after | Font | Scripts | Images |
+|---|---|---|---|---|
+|  signed out | 1152 → 1002 kB | 235 → 185 kB | 704 → 698 kB | 127 → 35 kB |
+|  | 945 → 508 kB | 235 → 185 kB | 530 → 221 kB (no sign-in script) | 101 → 25 kB |
+|  | 1335 → 1035 kB | 323 → 185 kB (one download) | 661 → 668 kB | 226 → 52 kB |
+|  | 1598 → 1465 kB | 235 → 185 kB | 661 → 656 kB | 163 → 87 kB, video unchanged (447 kB) |
+
+The build's route table marks  and  static (○);  answers , . No console errors on any of the four. Found while measuring: the Ink and organizers mockups named the faces as  themselves, so they now name the WebP too ( images 252 → 52 kB).
+
 ### D7. Nothing here touches Conga
 
 `conga-smooth-followups` is in progress and edits `public/conga/index.html` only. This change shares no file with it and leaves alone everything the game reads (checked 2026-11-21):
