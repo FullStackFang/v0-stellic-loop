@@ -483,7 +483,7 @@ function finish(event) {
   best = Math.max(best, event.size);
   keep.set('conga-best', best);
   const by = world.lines.find(line => line.id === event.by);
-  $('overHead').textContent = event.full ? 'The ground filled up. New round' : by ? `You walked into ${by.name}` : 'Scattered';
+  $('overHead').textContent = by ? `You walked into ${by.name}` : 'Scattered';
   $('overCount').textContent = event.size;
   $('overBest').textContent = best;
   $('mine').hidden = $('place').hidden = $('pause').hidden = true;
@@ -1610,12 +1610,6 @@ function frame(now) {
       smoke.push({ x: event.x + Math.cos(a) * 14, y: event.y + Math.sin(a) * 8 + 6, t, big: 1.5 + Math.random() * 0.6 });
     }
     if (event.type === 'home') homes.push({ x: event.x, y: event.y, face: event.face, a: event.a + (Math.random() < 0.5 ? 1.6 : -1.6), t });
-    if (event.type === 'full') {
-      // The lines together got too long to draw smoothly: the round ends with your count kept, and a fresh ground opens.
-      if (me && !me.dead) { const size = me.tail.length + 1; removeLine(world, ME); me = null; finish({ size, full: true }); }
-      open(where);
-      break;
-    }
     if (event.type === 'grab') {
       // A sack taken: a ring in the fallen line's colour where it lay, and its count by the taker's name.
       const line = world.lines.find(one => one.id === event.line);

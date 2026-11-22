@@ -20,12 +20,16 @@ const STRAY_CAP = 420;
 const SPROUT = 9; // strays a second that turn up on a ground below its feed
 // The world has no cap. The ground always refills to `feed` strays, and a really long line sheds from its back as it goes,
 // each one shed a stray for anyone (agar.io's decay, slither.io's trail). Barely at first, then fast as it gets huge.
-// If the lines together still pass what a slow phone can draw, step() says so ('full') and the page starts a new round.
+// The game never ends a round for being full (it used to, and the founder found 'The ground filled up' unclear, 2026-11-22).
+// Instead, once the lines together pass CROWD of what a slow phone can draw, the ground pushes back, harder the fuller it is:
+// fewer new strays turn up, the cars bring fewer riders, and the bots' lines (never the player's) lose animals home.
 // Lighter since the founder felt a line of 100+ "losing a few per second" (2026-11-22): a line of 140 sheds about 0.3 a
 // second (was 2), one of 200 about 1.6 (was 5.5).
 const EASY = 60; // a line this long or shorter sheds nothing
 const SHED = 0.6; // animals a second shed at EASY + 100; an eighth of that at EASY + 50 and a sixty-fourth at EASY + 25
 export const FULL = 800; // animals in all the lines together that a slow phone was measured to draw at 60 frames a second
+const CROWD = 0.6; // the share of FULL in lines past which the ground starts to push back
+const CROWDED = 0.05; // share of a bot's line a second that goes home when the lines together reach FULL, and more past it
 // A line that has picked nobody up for IDLE seconds gets restless: its back wanders off, slowly at first and faster the
 // longer the line (agar.io's decay is a share of size; slither.io has none). Picking anyone up settles it again.
 const IDLE = 15;
@@ -313,10 +317,13 @@ function scatter(world, line, by, events) {
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill' | 'grab' | 'pop' | 'full', ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill' | 'grab' | 'pop', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
+  // How crowded the ground is: 0 up to CROWD of FULL in lines, 1 at FULL, more past it.
+  const inLines = world.lines.reduce((sum, line) => sum + (line.dead ? 0 : line.tail.length + line.owed.length), 0);
+  const crowd = Math.max(0, (inLines / FULL - CROWD) / (1 - CROWD)), thin = Math.max(0, 1 - crowd);
 
   for (const line of world.lines) {
     if (line.dead) {
@@ -342,6 +349,7 @@ export function step(world, dt) {
     if (was < IDLE && line.idle >= IDLE && line.tail.length) events.push({ type: 'restless', line: line.id });
     if (line.idle >= IDLE) line.wander += (WANDER + line.tail.length * WANDER_SHARE) * dt;
     if (line.tail.length > EASY) line.wander += SHED * ((line.tail.length - EASY) / 100) ** 3 * dt;
+    if (line.bot && crowd > 0) line.wander += CROWDED * crowd * line.tail.length * dt; // a crowded ground thins the bots
     // One dropped by dashing is an ordinary stray, anyone's to pick up, its own line's too. One that wanders off a line too
     // long or too idle goes home: it leaves the game ('home', for the page to show it walking off), so a line cannot
     // undo its shedding by circling, and nothing lies on the ground that cannot be picked up.
@@ -428,7 +436,7 @@ export function step(world, dt) {
   for (const car of world.shuttles) {
     const there = car.ride, leaves = there + car.stay, back = leaves + car.ride, was = car.clock, ease = f => f * f * (3 - 2 * f);
     car.clock = (car.clock + dt) % (back + car.away);
-    if (car.clock < was) { car.load = Math.min(SEATS, car.riders + car.kept); car.kept = 0; } // it sets off again, full, with anyone it carried away
+    if (car.clock < was) { car.load = Math.min(SEATS, Math.round(car.riders * thin) + car.kept); car.kept = 0; } // it sets off again, full, with anyone it carried away
     const at = car.clock < there ? ease(car.clock / there) : car.clock < leaves ? 1 : car.clock < back ? 1 - ease((car.clock - leaves) / car.ride) : 0;
     car.x = car.from[0] + (car.to[0] - car.from[0]) * at;
     car.y = car.from[1] + (car.to[1] - car.from[1]) * at;
@@ -460,9 +468,7 @@ export function step(world, dt) {
     }
   }
   // The ground refills at a steady rate, never all at once, so it stays busy without being bottomless.
-  for (world.sprout = (world.sprout ?? 0) + SPROUT * dt; world.sprout >= 1; world.sprout--) if (world.strays.length < world.feed) world.strays.push(stray(world));
+  for (world.sprout = (world.sprout ?? 0) + SPROUT * thin * dt; world.sprout >= 1; world.sprout--) if (world.strays.length < world.feed) world.strays.push(stray(world));
   if (world.strays.length > STRAY_CAP) world.strays.splice(0, world.strays.length - STRAY_CAP);
-  // Once, when the lines together pass FULL: the page starts a new round.
-  if (!world.full && world.lines.reduce((sum, line) => sum + (line.dead ? 0 : line.tail.length), 0) > FULL) { world.full = true; events.push({ type: 'full' }); }
   return events;
 }
