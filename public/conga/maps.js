@@ -63,6 +63,21 @@ function cover(thing) {
   const half = Math.max(thing.w, thing.h) / 2;
   return [thing.x - half, thing.y - half, thing.x + half, thing.y + half];
 }
+// Names painted into the ground (index.html groundName): an area's at this size, a lawn's or a field's at this one.
+export const ZONE_NAME = 40, PLACE_NAME = 22;
+/** The part of the page a painted name covers, from its middle: Archivo Black is about 0.62 of its size a letter. */
+const nameBox = (text, x, y, size) => { const half = text.length * size * 0.32 + 8; return [x - half, y - size * 0.75, x + half, y + size * 0.75]; };
+const overlaps = (A, B) => A[0] < B[2] && B[0] < A[2] && A[1] < B[3] && B[1] < A[3];
+/** The part of the page a tree's toy covers, from its foot up to its crown. */
+const treeBox = ({ x, y, r, kind }) => { const wide = treeWidth(r), [, , w, h] = AT[kind], foot = y + r * 0.6; return [x - wide / 2, foot - wide * h / w, x + wide / 2, foot]; };
+/** The nearest spot to (x, y), on the ground, where a name no landmark covers can be painted: rings outward from it. */
+function clearOf(standing, rings, text, x, y, size) {
+  for (let ring = 0; ring < 16; ring++) for (let n = 0, many = Math.max(1, ring * 8); n < many; n++) {
+    const a = n / many * Math.PI * 2, px = x + Math.cos(a) * ring * size * 1.1, py = y + Math.sin(a) * ring * size * 0.8, box = nameBox(text, px, py, size);
+    if (onLand(rings, px, py) && standing.every(cover => !overlaps(cover, box))) return [px, py];
+  }
+  return [x, y];
+}
 const SPREAD = 60; // the least room between any two landmarks as drawn, so a line can pass between them
 const onLand = (rings, x, y) => rings.some(ring => { let hit = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit; } return hit; });
 /** Moves landmarks that crowd each other apart, a little at a time, until each has room round it; one that would leave the
@@ -124,9 +139,14 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
   }
   // A tree that a moved landmark now stands over is left out.
   const standing = things.filter(thing => SOLID.includes(thing.kind)).map(cover);
-  const kept = trees.filter(tree => standing.every(([l, t, r, b]) => tree.x < l - 30 || tree.x > r + 30 || tree.y < t - 30 || tree.y > b + 40));
-  return { name, scale, ...extra, rings, holes: [...things.filter(thing => SOLID.includes(thing.kind)).map(outline), ...kept.map(crown)], things, trees: kept,
-    zones: sections.filter(section => section.name).map(section => ({ name: section.name, at: at(section.rest) })) };
+  let kept = trees.filter(tree => standing.every(([l, t, r, b]) => tree.x < l - 30 || tree.x > r + 30 || tree.y < t - 30 || tree.y > b + 40));
+  // A name painted into the ground is never under something standing up: it moves to the nearest spot no building covers,
+  // and a tree still standing on it is left out.
+  const zones = sections.filter(section => section.name).map(section => ({ name: section.name, at: clearOf(standing, rings, section.name, ...at(section.rest), ZONE_NAME) }));
+  for (const thing of things) if (!thing.from && !thing.toy) thing.label = clearOf(standing, rings, thing.name, thing.x, thing.y, PLACE_NAME);
+  const names = [...zones.map(zone => nameBox(zone.name, ...zone.at, ZONE_NAME)), ...things.filter(thing => thing.label).map(thing => nameBox(thing.name, ...thing.label, PLACE_NAME))];
+  kept = kept.filter(tree => names.every(box => !overlaps(box, treeBox(tree))));
+  return { name, scale, ...extra, rings, holes: [...things.filter(thing => SOLID.includes(thing.kind)).map(outline), ...kept.map(crown)], things, trees: kept, zones };
 }
 const cut = corners => (name, ring, rest) => ({ name, ring: [...ring].map(key => corners[key]), rest });
 

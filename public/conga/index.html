@@ -985,7 +985,7 @@ function draw(t, dt) {
   }
   // Names painted into the ground: the areas big, and a place with no toy (a lawn, a field) smaller at its middle.
   for (const zone of map.zones) if (Math.abs(zone.at[0] - cam.x) < halfW + 300 && Math.abs(zone.at[1] - cam.y) < halfH + 60) groundName(zone.name, zone.at[0], zone.at[1], 40);
-  for (const thing of map.things) if (!thing.from && !(toysIn() && thing.toy) && near(thing)) groundName(thing.name, thing.x, thing.y, 22);
+  for (const thing of map.things) if (!thing.from && !(toysIn() && thing.toy) && near(thing)) groundName(thing.name, ...(thing.label ?? [thing.x, thing.y]), 22);
   ctx.restore();
   for (const thing of map.things) if (thing.kind === 'bridge') bridge(thing);
   // The felt's fibres over all of it, fixed to the ground so they slide by as you walk.

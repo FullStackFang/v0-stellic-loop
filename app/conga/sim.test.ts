@@ -152,6 +152,24 @@ it('keeps the bus from taking anyone off a line with the whistle', () => {
   expect(run(true)).toBe(0);
 });
 
+// A name painted into the ground is read from above, so no tree or building may stand on it.
+it('keeps every name painted into the ground clear of trees and buildings', async () => {
+  const { MAPS, ZONE_NAME, PLACE_NAME, treeWidth, TALL } = await import('@/public/conga/maps.js');
+  const { AT } = await import('@/public/conga/scenery.js');
+  type Box = number[];
+  const box = (text: string, [x, y]: number[], size: number): Box => { const half = text.length * size * 0.32 + 8; return [x - half, y - size * 0.75, x + half, y + size * 0.75]; };
+  const hit = (A: Box, B: Box) => A[0] < B[2] && B[0] < A[2] && A[1] < B[3] && B[1] < A[3];
+  for (const map of Object.values(MAPS) as { things: { kind: string; name: string; x: number; y: number; w: number; h: number; toy?: string; from?: unknown; label?: number[] }[]; zones: { name: string; at: number[] }[]; trees: { x: number; y: number; r: number; kind: string }[] }[]) {
+    const names = [...map.zones.map(zone => box(zone.name, zone.at, ZONE_NAME)), ...map.things.filter(thing => !thing.from && !thing.toy).map(thing => box(thing.name, thing.label!, PLACE_NAME))];
+    const trees = map.trees.map(({ x, y, r, kind }) => { const wide = treeWidth(r), [, , w, h] = AT[kind as keyof typeof AT], foot = y + r * 0.6; return [x - wide / 2, foot - wide * h / w, x + wide / 2, foot]; });
+    const toys = map.things.filter(thing => thing.toy && ['hall', 'tower', 'water'].includes(thing.kind)).map(thing => {
+      const [, , w, h] = AT[thing.toy as keyof typeof AT], wide = thing.kind === 'tower' ? thing.w * TALL : thing.w, foot = thing.kind === 'tower' ? thing.y + 12 : thing.y + thing.h / 2;
+      return [thing.x - wide / 2, foot - wide * h / w, thing.x + wide / 2, foot];
+    });
+    for (const name of names) for (const over of [...trees, ...toys]) expect(hit(name, over)).toBe(false);
+  }
+});
+
 // Trees stand on the ground as things to walk round: nobody can stand on the foot of a trunk.
 it('makes every tree on both grounds solid at its trunk', async () => {
   const { MAPS } = await import('@/public/conga/maps.js');
