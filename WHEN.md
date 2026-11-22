@@ -4,10 +4,13 @@ Find a time that works for a group. One person makes a poll and passes on its li
 make. When enough can make one hour, or the deadline passes, Loopd tells the person who asked. They pick the time, add a
 line, and press send. Everyone who answered gets an email with a calendar invite.
 
-Design: `docs/superpowers/specs/2026-11-22-loopd-when-design.md`. Approved look: `public/demo/mockups-when.html`.
+Design: `docs/superpowers/specs/2026-11-22-loopd-when-design.md`. Approved look: `public/demo/mockups-when.html`, and `public/demo/mockups-when-days.html` for the calendar, the sets of days and the laptop layout.
 
 ## Rules worth knowing
 
+- The one who asked picks the days on one calendar, and whether weekends are in the poll. "Answer by" is a day; the poll closes when that day ends on their clock.
+- The grid shows five days at a time on a phone and seven on a laptop, the first days first. Each set says its best count.
+- People paint whole hours. When the organizer picks an hour they may start it at :00, :15, :30 or :45 and say how long it runs (30 minutes to 2 hours). Who is "in" is who painted that hour.
 - Nothing is sent to the group until the organizer presses send. Send happens once.
 - Anyone with the link can see a poll. Answering needs a Loopd sign-in.
 - Loopd only emails an address its owner signed in with. Addresses are read from the sign-in provider when a message is sent and are not stored.
@@ -38,7 +41,7 @@ Design: `docs/superpowers/specs/2026-11-22-loopd-when-design.md`. Approved look:
 
 ## Tables
 
-`supabase/migrations/20261122000000_when.sql`: `when_poll`, `when_answer`, `when_message` (the outbox, one row per
+`supabase/migrations/20261122000000_when.sql` and `20261122010000_when_days.sql`: `when_poll`, `when_answer`, `when_message` (the outbox, one row per
 poll, person and kind, so nothing is sent twice), `when_event` (what the numbers are counted from).
 
 ## Settings

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { addDays } from '@/lib/days';
+import { isWeekend } from '@/lib/when/slots';
 import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { Ticket } from '../parts';
@@ -10,9 +11,13 @@ export const metadata: Metadata = { title: 'Find a time · Loopd', description: 
 // Loopd When, screen 1: the plan for a poll. Signed out, the form is all there and the action is to sign in.
 export default async function NewWhenPage() {
   const who = await getSignedInPrincipal(), today = new Date().toISOString().slice(0, 10);
-  return <main className="wn">
-    <Ticket stub="One link. It tells you when a time works, and you pick."><h1 className="xl">Find a time that works for <em>everyone.</em></h1></Ticket>
-    <CreateForm signIn={who ? null : signInHref('/when/new')}
-      first={{ title: '', startDate: addDays(today, 3), endDate: addDays(today, 7), hourStart: '17', hourEnd: '22', expectedSize: '7', by: `${addDays(today, 2)}T18:00`, threshold: 'two_thirds' }} />
+  // Weekends start left out, so the days offered first are weekdays: from three days on, to the Friday of a five day run.
+  let startDate = addDays(today, 3), endDate: string;
+  while (isWeekend(startDate)) startDate = addDays(startDate, 1);
+  for (endDate = addDays(startDate, 4); isWeekend(endDate);) endDate = addDays(endDate, -1);
+  return <main className="wn wn-two">
+    <CreateForm signIn={who ? null : signInHref('/when/new')} today={today}
+      head={<Ticket stub="One link. It tells you when a time works, and you pick."><h1 className="xl">Find a time that works for <em>everyone.</em></h1></Ticket>}
+      first={{ title: '', startDate, endDate, hourStart: '17', hourEnd: '22', expectedSize: '7', by: addDays(today, 2), threshold: 'two_thirds', weekends: '0' }} />
   </main>;
 }

@@ -6,11 +6,11 @@ import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { facesOf } from '@/lib/when/faces';
 import { pollView, type Person, type PollView } from '@/lib/when/polls';
-import { shareMessage } from '@/lib/when/send';
+import { meetingSpan, shareMessage } from '@/lib/when/send';
 import { slotLabel, slotsOf, type Threshold } from '@/lib/when/slots';
 import { saveAnswerAction } from '../actions';
 import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
-import { Grid, Shade } from './grid';
+import { Grid } from './grid';
 import { Copy, Opened, Pick } from './pick';
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string }> };
@@ -52,7 +52,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
       <Opened pollId={view.id} />
       <Ticket met={isIn.length >= view.needed} tile={<Tile met top={label.dow} big={`${label.date} ${label.month}`} />}
         stub={<><Seats people={isIn} size={size} me={me} /><span><b>{isIn.length} of {size}</b> can make it{isIn.length >= view.needed ? ` · ${REACHED[view.threshold]}` : ''}</span></>}>
-        <h1 className="xl">{label.dowLong} at {label.time}. <em>It&apos;s on.</em></h1>
+        <h1 className="xl">{label.dowLong}, {meetingSpan(view.chosen, zone)}. <em>It&apos;s on.</em></h1>
       </Ticket>
       {view.chosen.note && <Panel tab={`${view.organizer.name} says`}><p className="wn-msg">{view.chosen.note}</p></Panel>}
       <Panel tab={view.title}><ul className="wn-rows">
@@ -75,7 +75,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
         <h1 className="xl">{met ? 'Enough can make it.' : view.ready ? 'Answers are in.' : 'Not everyone has answered.'} <em>Pick the time.</em></h1>
       </Ticket>
       <Pick pollId={view.id} goesTo={new Set([view.organizer.personId, ...view.answered.map(each => each.personId)]).size} as={view.organizer.name}
-        choices={view.best.map(slot => { const label = slotLabel(slot.at, zone), n = slot.people.length; return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, line: `${n} of ${view.size}${n >= view.needed ? ` · ${REACHED[view.threshold]}` : ''}`, people: slot.people.map(shown) }; })} />
+        choices={view.best.map(slot => { const label = slotLabel(slot.at, zone), n = slot.people.length; return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, hour: label.hour, line: `${n} of ${view.size}${n >= view.needed ? ` · ${REACHED[view.threshold]}` : ''}`, people: slot.people.map(shown) }; })} />
       <div className="wn-acts wn-mid"><a className="cs-btn sm" href={`${here}?edit=1`}>Change my times</a></div>
     </main>;
   }
@@ -84,28 +84,26 @@ export default async function WhenPage({ params, searchParams }: Props) {
   const slots = slotsOf(view.frame), by = slotLabel(view.deadline, zone), counted = view.mine && !view.mine.draft ? view.mine.slots : [];
   const others = Object.fromEntries(Object.entries(view.counts).map(([at, n]) => [at, n - (counted.includes(at) ? 1 : 0)]));
   const set = view.chosen && slotLabel(view.chosen.at, zone);
-  return <main className="wn">
-    <Opened pollId={view.id} />
-    <Ticket tile={set ? <Tile met top={set.dow} big={`${set.date} ${set.month}`} /> : <Tile top="Answer by" big={`${by.dow} ${by.date}`} />} stub={<><Seats people={answered} size={view.size} me={who?.personId} />{count}</>}>
-      <h1>{view.title}</h1>
-      <p>{view.organizer.name} asks · {dayNum(view.frame.startDate)} {mon(view.frame.startDate)} to {dayNum(view.frame.endDate)} {mon(view.frame.endDate)}{set ? ` · set for ${set.dow} ${set.time}` : ''}</p>
-    </Ticket>
-    {who
-      ? <Grid slots={slots} others={others} mine={view.mine?.slots ?? []} draft={view.mine?.draft ?? false} onSave={saveAnswerAction.bind(null, view.id)}
-          tab={view.mine?.draft ? 'Your times from last time. Change them, then save' : undefined}
-          after={view.chosen ? 'Saved. The time stays as it is.' : who.verifiedEmail ? `The result comes to ${who.verifiedEmail}` : 'Saved. You get an email when the time is set.'}>
-          <span className="cs-pill">Times are in {zoneName(zone)}</span>
-        </Grid>
-      : <>
-        <Panel tab="When people are free so far"><Shade slots={slots} counts={view.counts} won={view.chosen?.at} />
-          <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />More people free</span><span className="cs-pill">Times are in {zoneName(zone)}</span></div></Panel>
-        <a className="cs-btn go wn-big" href={signInHref(here)}>Sign in to add your times</a>
-        <p className="wn-note">An email and a code. No password.</p>
-      </>}
+  const head = <Ticket tile={set ? <Tile met top={set.dow} big={`${set.date} ${set.month}`} /> : <Tile top="Answer by" big={`${by.dow} ${by.date}`} />} stub={<><Seats people={answered} size={view.size} me={who?.personId} />{count}</>}>
+    <h1>{view.title}</h1>
+    <p>{view.organizer.name} asks · {dayNum(view.frame.startDate)} {mon(view.frame.startDate)} to {dayNum(view.frame.endDate)} {mon(view.frame.endDate)}{set ? ` · set for ${set.dow} ${set.time}` : ''}</p>
+  </Ticket>;
+  const best = view.best.map(slot => { const label = slotLabel(slot.at, zone); return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, line: `${slot.people.length} of ${view.size} can make it`, people: slot.people.map(shown) }; });
+  const tail = <>
     {view.chosen && <div className="wn-acts wn-mid"><a className="cs-btn sm" href={here}>Back to the result</a></div>}
     {view.isOrganizer && !view.chosen && <>
       <PassOn tab="Pass it on" view={view} />
       {view.best.length > 0 && <div className="wn-acts wn-mid"><a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a></div>}
     </>}
+  </>;
+  const zonePill = <span className="cs-pill">Times are in {zoneName(zone)}</span>;
+  return <main className="wn wn-two">
+    <Opened pollId={view.id} />
+    {who
+      ? <Grid slots={slots} others={others} mine={view.mine?.slots ?? []} draft={view.mine?.draft ?? false} onSave={saveAnswerAction.bind(null, view.id)} head={head} best={best} tail={tail} size={view.size}
+          tab={view.mine?.draft ? 'Your times from last time. Change them, then save' : undefined}
+          after={view.chosen ? 'Saved. The time stays as it is.' : who.verifiedEmail ? `The result comes to ${who.verifiedEmail}` : 'Saved. You get an email when the time is set.'}>{zonePill}</Grid>
+      : <Grid slots={slots} others={view.counts} won={view.chosen?.at} head={head} best={best} tail={tail} size={view.size}
+          action={<><a className="cs-btn go wn-big" href={signInHref(here)}>Sign in to add your times</a><p className="wn-note">An email and a code. No password.</p></>}>{zonePill}</Grid>}
   </main>;
 }

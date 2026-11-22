@@ -40,7 +40,7 @@ export async function createPollAction(_: Said, data: FormData): Promise<Said> {
   if (!who) redirect(signInHref('/when/new'));
   let id: string;
   try {
-    ({ id } = await createPoll(db(), who, Object.fromEntries(['title', 'startDate', 'endDate', 'hourStart', 'hourEnd', 'timezone', 'expectedSize', 'deadline', 'threshold'].map(key => [key, data.get(key) ?? undefined]))));
+    ({ id } = await createPoll(db(), who, Object.fromEntries(['title', 'startDate', 'endDate', 'hourStart', 'hourEnd', 'timezone', 'expectedSize', 'deadline', 'threshold', 'weekends'].map(key => [key, data.get(key) ?? undefined]))));
   } catch (error) { return said(error); }
   redirect(`/when/${id}`);
 }
@@ -62,7 +62,7 @@ export async function sendPollAction(_: Said, data: FormData): Promise<Said> {
   const who = await getSignedInPrincipal(), pollId = String(data.get('pollId') ?? '');
   if (!who) return { error: 'Sign in to send it.' };
   try {
-    await sendPoll(db(), who, { pollId, slot: String(data.get('slot') ?? ''), note: String(data.get('note') ?? '') });
+    await sendPoll(db(), who, { pollId, slot: String(data.get('slot') ?? ''), note: String(data.get('note') ?? ''), minute: data.get('minute') ?? undefined, duration: data.get('duration') ?? undefined });
     await flush(pollId);
   } catch (error) { return said(error); }
   redirect(`/when/${pollId}`);

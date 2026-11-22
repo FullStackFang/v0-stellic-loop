@@ -1,47 +1,46 @@
 'use client';
 
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
-import { dayNum, dow } from '@/lib/days';
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { dayNum, dow, mon } from '@/lib/days';
 import { hourText, type Slot } from '@/lib/when/slots';
 import type { Said } from '../actions';
-import { Panel } from '../parts';
+import { Panel, Stack, Tile, type Shown } from '../parts';
 
-const WEEK = 7;
+/** One of the times most people can make, as the list beside the grid shows it. */
+export type Best = { at: string; dow: string; date: string; time: string; line: string; people: Shown[] };
+
+const WIDE = '(min-width: 900px)';
+/** How many days fit side by side: five on a phone, seven where there is room. The server draws five. */
+function usePer(): number {
+  return useSyncExternalStore(
+    change => { const query = window.matchMedia?.(WIDE); query?.addEventListener('change', change); return () => query?.removeEventListener('change', change); },
+    () => window.matchMedia?.(WIDE).matches ? 7 : 5, () => 5);
+}
 const dayLabel = (day: string) => `${dow(day)} ${dayNum(day)}`;
-
-/** The days across and hours down that the slots cover, a week to a block. An hour a day does not have (the clocks changed) is a gap. */
-function layout(slots: Slot[]) {
-  const days = [...new Set(slots.map(slot => slot.day))], hours = [...new Set(slots.map(slot => slot.hour))].sort((a, b) => a - b);
-  const at = new Map(slots.map(slot => [`${slot.day} ${slot.hour}`, slot.at]));
-  const weeks = Array.from({ length: Math.ceil(days.length / WEEK) }, (_, week) => days.slice(week * WEEK, (week + 1) * WEEK));
-  return { weeks, hours, at };
-}
-const Heads = ({ days }: { days: string[] }) => <><span />{days.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}</>;
-
-/** When people are free so far, to look at: for a visitor who has not signed in. */
-export function Shade({ slots, counts, won = null }: { slots: Slot[]; counts: Record<string, number>; won?: string | null }) {
-  const { weeks, hours, at } = layout(slots);
-  return <>{weeks.map(days => <div key={days[0]} className="wn-grid" style={{ '--days': days.length } as React.CSSProperties}>
-    <Heads days={days} />
-    {hours.map(hour => [<span key={hour} className="wn-h">{hourText(hour)}</span>, ...days.map(day => {
-      const slot = at.get(`${day} ${hour}`), n = slot ? counts[slot] ?? 0 : 0;
-      return slot ? <span key={day} className={`wn-cell${slot === won ? ' won' : ''}`} data-n={Math.min(n, 5)} style={{ '--n': Math.min(n, 5) } as React.CSSProperties} aria-label={`${dayLabel(day)}, ${hourText(hour)}: ${n} free`}>{n}</span> : <span key={day} className="wn-none" />;
-    })])}
-  </div>)}</>;
-}
+const span = (days: string[]) => { const a = days[0], b = days[days.length - 1]; return a === b ? `${dayLabel(a)} ${mon(a)}` : mon(a) === mon(b) ? `${dayNum(a)} to ${dayNum(b)} ${mon(b)}` : `${dayNum(a)} ${mon(a)} to ${dayNum(b)} ${mon(b)}`; };
+const Arrow = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 
 /**
- * The grid a person paints their times on. Press and drag to paint, starting on a painted time to rub out; the arrow
- * keys move and Space paints. Each time shows how many can make it, the person included. Nothing is kept until Save.
+ * The grid of a poll (public/demo/mockups-when-days.html): a few days at a time, the first ones first, with the best
+ * count of each set on its pill and the best times of all days listed beside it. With `onSave` a person paints their
+ * times on it: press and drag to paint, starting on a painted time to rub out; the arrow keys move and Space paints.
+ * Each time shows how many can make it, the person included, and nothing is kept until Save. Without `onSave` it is
+ * only to look at, and `action` stands where Save would.
  */
-export function Grid({ slots, others, mine, draft = false, onSave, tab = 'Paint the times you can make', after, children }: {
-  slots: Slot[]; /** How many other people can make each time. */ others: Record<string, number>; mine: string[]; /** The times are carried over from an earlier poll and not yet this one's: shown painted, kept only on Save. */ draft?: boolean;
-  onSave: (slots: string[]) => Promise<Said>; tab?: string; /** The line under the action once nothing is unsaved. */ after: string; /** Pills for the key, after the two that are always there. */ children?: ReactNode;
+export function Grid({ slots, others, mine = [], draft = false, onSave, tab, after = '', children, head, best = [], action, tail, won = null, size }: {
+  slots: Slot[]; /** How many other people can make each time. */ others: Record<string, number>; mine?: string[]; /** The times are carried over from an earlier poll and not yet this one's: shown painted, kept only on Save. */ draft?: boolean;
+  onSave?: (slots: string[]) => Promise<Said>; tab?: string; /** The line under the action once nothing is unsaved. */ after?: string; /** Pills for the key, after the ones that are always there. */ children?: ReactNode;
+  /** What leads the page on a phone and the second column on a laptop. */ head?: ReactNode; best?: Best[]; /** In place of Save, for someone who cannot paint. */ action?: ReactNode; /** After the action. */ tail?: ReactNode; /** The time that was set. */ won?: string | null; /** The size of the group, for "best is 4 of 7". */ size?: number;
 }) {
-  const { weeks, hours, at } = layout(slots);
+  const per = usePer(), days = [...new Set(slots.map(slot => slot.day))], hours = [...new Set(slots.map(slot => slot.hour))].sort((a, b) => a - b);
+  const at = new Map(slots.map(slot => [`${slot.day} ${slot.hour}`, slot.at])), dayOf = new Map(slots.map(slot => [slot.at, slot.day])), of = size ? ` of ${size}` : '';
+  const pages = Array.from({ length: Math.max(1, Math.ceil(days.length / per)) }, (_, page) => days.slice(page * per, (page + 1) * per));
   const [picked, setPicked] = useState(() => new Set(mine)), [saved, setSaved] = useState(() => new Set(draft ? [] : mine)), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const [turned, setTurned] = useState(0), page = Math.min(turned, pages.length - 1), shown = pages[page];
   const painting = useRef<boolean | null>(null), box = useRef<HTMLDivElement>(null);
   useEffect(() => { const stop = () => { painting.current = null; }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
+  const count = (slot: string) => (others[slot] ?? 0) + (picked.has(slot) ? 1 : 0);
+  const top = (set: string[]) => Math.max(0, ...slots.filter(slot => set.includes(slot.day)).map(slot => count(slot.at)));
   const paint = (slot: string, on: boolean) => setPicked(now => { if (now.has(slot) === on) return now; const next = new Set(now); if (on) next.add(slot); else next.delete(slot); return next; });
   const down = (slot: string) => (event: PointerEvent<HTMLButtonElement>) => {
     // A finger holds on to the cell it first touched: let go, so the cells it then crosses hear it too.
@@ -53,37 +52,54 @@ export function Grid({ slots, others, mine, draft = false, onSave, tab = 'Paint 
     const step = ({ ArrowRight: [0, 1], ArrowLeft: [0, -1], ArrowDown: [1, 0], ArrowUp: [-1, 0] } as Record<string, [number, number]>)[event.key];
     if (!step) return;
     event.preventDefault();
-    const { r, c, w } = event.currentTarget.dataset;
-    for (let row = Number(r) + step[0], col = Number(c) + step[1]; row >= 0 && row < hours.length && col >= 0 && col < WEEK; row += step[0], col += step[1]) {
-      const next = box.current?.querySelector<HTMLButtonElement>(`[data-w="${w}"][data-r="${row}"][data-c="${col}"]`);
+    const { r, c } = event.currentTarget.dataset;
+    for (let row = Number(r) + step[0], col = Number(c) + step[1]; row >= 0 && row < hours.length && col >= 0 && col < per; row += step[0], col += step[1]) {
+      const next = box.current?.querySelector<HTMLButtonElement>(`[data-r="${row}"][data-c="${col}"]`);
       if (next) { next.focus(); return; }
     }
   };
   const changed = picked.size !== saved.size || [...picked].some(slot => !saved.has(slot));
   const save = async () => {
+    if (!onSave) return;
     setBusy(true); setError('');
     const kept = [...picked], result = await onSave(kept).catch(() => ({ error: 'That did not save. Try again.' }));
     setBusy(false);
     if (result?.error) setError(result.error); else setSaved(new Set(kept));
   };
-  const first = slots.find(slot => picked.has(slot.at))?.at ?? slots[0]?.at;
+  const here = slots.filter(slot => shown.includes(slot.day)), first = here.find(slot => picked.has(slot.at))?.at ?? here[0]?.at;
+  const pad = Array.from({ length: per - shown.length }, (_, n) => <span key={`pad${n}`} />);
+  const pager = pages.length < 2 ? null : pages.length <= 3
+    ? <div className="wn-modes wn-sets" style={{ '--n': pages.length } as React.CSSProperties}>{pages.map((set, n) => <button key={set[0]} type="button" aria-pressed={n === page} onClick={() => setTurned(n)}><small>Best is {top(set)}{of}</small><b>{span(set)}</b></button>)}</div>
+    : <div className="wn-cal-head wn-sets">
+      <button type="button" className="wn-cal-nav" aria-label="Earlier days" disabled={page === 0} onClick={() => setTurned(page - 1)}><Arrow d="M10 3 5 8l5 5" /></button>
+      <span className="wn-cal-month" role="status">{span(shown)} · best is {top(shown)}{of}</span>
+      <button type="button" className="wn-cal-nav" aria-label="Later days" disabled={page === pages.length - 1} onClick={() => setTurned(page + 1)}><Arrow d="M6 3l5 5-5 5" /></button>
+    </div>;
   return <>
-    <Panel tab={tab}><div ref={box}>{weeks.map((days, week) => <div key={days[0]} className="wn-grid" role="group" aria-label="Times you can make" style={{ '--days': days.length } as React.CSSProperties}>
-      <Heads days={days} />
-      {hours.map((hour, row) => [<span key={hour} className="wn-h">{hourText(hour)}</span>, ...days.map((day, col) => {
-        const slot = at.get(`${day} ${hour}`);
-        if (!slot) return <span key={day} className="wn-none" />;
-        const on = picked.has(slot), n = (others[slot] ?? 0) + (on ? 1 : 0);
-        return <button key={day} type="button" className="wn-cell" data-w={week} data-r={row} data-c={col} data-n={Math.min(n, 5)} style={{ '--n': Math.min(n, 5) } as React.CSSProperties}
-          aria-pressed={on} aria-label={`${dayLabel(day)}, ${hourText(hour)}`} tabIndex={slot === first ? 0 : -1}
-          onPointerDown={down(slot)} onPointerEnter={() => { if (painting.current !== null) paint(slot, painting.current); }} onKeyDown={keys}
-          // A press already painted on the way down. A click that no pointer made is the keyboard's.
-          onClick={event => { if (event.detail === 0) paint(slot, !on); }}>{n}</button>;
-      })])}
-    </div>)}</div>
-    <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />More people free</span><span className="cs-pill"><i className="mine" />Your times</span>{children}</div></Panel>
-    {error && <p className="wn-note bad" role="alert">{error}</p>}
-    <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={save}>{busy ? 'Saving' : 'Save my times'}</button>
-    <p className="wn-note" role="status">{changed ? 'Not saved yet.' : after}</p>
+    <div className="wn-col"><Panel tab={tab ?? (onSave ? 'Paint the times you can make' : 'When people are free so far')}>{pager}
+      <div ref={box} className="wn-grid" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per } as React.CSSProperties}>
+        <span />{shown.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
+        {hours.map((hour, row) => [<span key={hour} className="wn-h">{hourText(hour)}</span>, ...shown.map((day, col) => {
+          const slot = at.get(`${day} ${hour}`);
+          if (!slot) return <span key={day} className="wn-none" />;
+          const on = picked.has(slot), n = count(slot), shade = { 'data-n': Math.min(n, 5), style: { '--n': Math.min(n, 5) } as React.CSSProperties };
+          if (!onSave) return <span key={day} className={`wn-cell${slot === won ? ' won' : ''}`} {...shade} aria-label={`${dayLabel(day)}, ${hourText(hour)}: ${n} free`}>{n}</span>;
+          return <button key={day} type="button" className="wn-cell" data-r={row} data-c={col} {...shade}
+            aria-pressed={on} aria-label={`${dayLabel(day)}, ${hourText(hour)}`} tabIndex={slot === first ? 0 : -1}
+            onPointerDown={down(slot)} onPointerEnter={() => { if (painting.current !== null) paint(slot, painting.current); }} onKeyDown={keys}
+            // A press already painted on the way down. A click that no pointer made is the keyboard's.
+            onClick={event => { if (event.detail === 0) paint(slot, !on); }}>{n}</button>;
+        }), ...pad.map((_, n) => <span key={`pad${hour}${n}`} />)])}
+      </div>
+      <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />More people free</span>{onSave && <span className="cs-pill"><i className="mine" />Your times</span>}{children}</div></Panel></div>
+    <div className="wn-col side">{head}
+      {best.length > 0 && <Panel tab="Best so far, all days"><div className="wn-picks">{best.map(each => <button key={each.at} type="button" aria-label={`Show ${each.dow} ${each.date}, ${each.time}`} onClick={() => setTurned(Math.max(0, pages.findIndex(set => set.includes(dayOf.get(each.at) ?? ''))))}>
+        <Tile top={each.dow} big={each.date} /><span><b>{each.time}</b><small>{each.line}</small></span><Stack people={each.people} /></button>)}</div></Panel>}
+      {onSave ? <>
+        {error && <p className="wn-note bad" role="alert">{error}</p>}
+        <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={save}>{busy ? 'Saving' : 'Save my times'}</button>
+        <p className="wn-note" role="status">{changed ? 'Not saved yet.' : after}</p>
+      </> : action}
+      {tail}</div>
   </>;
 }

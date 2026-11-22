@@ -30,8 +30,8 @@
 .wn-f > span { position: absolute; z-index: 1; top: -10px; left: 10px; padding: 1px 8px 2px; border-radius: 9px 9px 9px 3px; font-size: 11.5px; font-weight: 680; background: var(--cs-ink); color: var(--cs-on-ink); white-space: nowrap; }
 .wn-f :is(input, select, textarea) { display: block; width: 100%; min-height: 48px; padding: 13px 14px 9px; border: 0; border-radius: 14px 14px 14px 4px; font: inherit; font-size: 15.5px; font-weight: 560; color: var(--cs-ink); background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); appearance: none; }
 .wn-f :is(input, select, textarea)::placeholder { color: var(--cs-mute); font-weight: 460; }
-.wn-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding-top: 14px; }
-.wn-three label { position: relative; display: grid; place-items: center; height: 38px; border-radius: 99px; font-size: 14px; font-weight: 580; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); cursor: pointer; }
+.wn-three { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 5px; padding-top: 14px; }
+.wn-three label { position: relative; display: grid; place-items: center; height: 38px; border-radius: 99px; font-size: 14px; white-space: nowrap; font-weight: 580; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); cursor: pointer; }
 .wn-three input { position: absolute; inset: 0; opacity: 0; min-height: 0; cursor: pointer; }
 .wn-three label:has(input:checked) { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
 .wn-three label:has(input:focus-visible) { outline: 2px solid var(--cs-action); outline-offset: 2px; }
@@ -82,7 +82,7 @@ button.wn-cell { cursor: pointer; }
 
 /* the organizer's pick: the best times, one chosen */
 .wn-picks { display: grid; gap: 8px; padding: 2px 0 16px; }
-.wn-picks label { position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 10px 8px 8px; border-radius: 16px 16px 16px 5px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); cursor: pointer; }
+.wn-picks :is(label, button) { position: relative; display: flex; width: 100%; border: 0; font: inherit; color: inherit; text-align: left; align-items: center; gap: 11px; padding: 8px 10px 8px 8px; border-radius: 16px 16px 16px 5px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); cursor: pointer; }
 .wn-picks input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .wn-picks .cs-tile { min-width: 54px; min-height: 48px; }
 .wn-picks span > b { font-size: 17px; font-weight: 700; }
@@ -92,3 +92,47 @@ button.wn-cell { cursor: pointer; }
 .wn-picks label:has(input:checked) { background: var(--cs-ink); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-action); }
 .wn-picks label:has(input:checked) > span:not(.cs-tile) small { color: var(--cs-field); }
 .wn-picks label:has(input:focus-visible) { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+
+/* two columns where there is room (public/demo/mockups-when-days.html). On a phone the columns dissolve, and the ticket
+   of the second one leads the page. */
+.wn-col { display: contents; }
+.wn-col.side > .wn-tk { order: -1; }
+@media (min-width: 900px) {
+  .wn.wn-two { max-width: 980px; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 26px 30px; align-items: start; padding-top: 32px; }
+  .wn-two .wn-col { display: grid; gap: 22px; min-width: 0; align-content: start; }
+  .wn-two .wn-col.side > .wn-tk { order: 0; }
+  .wn-two .wn-cell { min-height: 50px; font-size: 14.5px; }
+  .wn-two .wn-d b { font-size: 19px; }
+  .wn-two .wn-cal-d { height: 46px; }
+}
+
+/* two things one calendar sets, and the sets of days of a grid: a pill each, the one in hand in ink */
+.wn-modes { display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 5px; padding-top: 14px; }
+.wn-modes.wn-sets { padding-top: 4px; }
+.wn-sets { margin-bottom: 14px; }
+.cs .wn-modes button, .wn-modes button { display: grid; align-content: center; justify-items: center; height: 50px; padding: 0 4px; border: 0; border-radius: 16px 16px 16px 5px; font: inherit; line-height: 1.15; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); cursor: pointer; }
+.wn-modes small { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.wn-modes b { font-size: 14.5px; font-weight: 700; white-space: nowrap; }
+.wn-modes[style*="--n: 3"] b, .wn-modes[style*="--n:3"] b { font-size: 13px; }
+.cs .wn-modes button[aria-pressed=true], .wn-modes button[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-on-ink); box-shadow: 3px 3px 0 var(--cs-action); }
+.wn-modes button[aria-pressed=true] b { color: var(--cs-field); }
+.wn-modes button:focus-visible, .wn-cal button:focus-visible, .wn-cal-nav:focus-visible, .wn-picks button:focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+
+/* the calendar: weeks running on from this one, never taller or shorter than it starts */
+.wn-cal { display: grid; gap: 6px; padding-top: 10px; }
+.wn-cal-head { display: flex; align-items: center; gap: 6px; }
+.wn-cal-month { margin-right: auto; display: inline-flex; align-items: center; height: 32px; padding: 0 13px; border-radius: 99px; background: var(--cs-field); font-size: 14px; font-weight: 680; white-space: nowrap; }
+.wn-sets .wn-cal-month { margin: 0; flex: 1; justify-content: center; }
+.cs .wn-cal-nav, .wn-cal-nav { flex: none; width: 42px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 99px; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); cursor: pointer; }
+.wn-cal-nav svg { width: 14px; height: 14px; }
+.wn-cal-nav:disabled { opacity: .3; cursor: default; }
+.wn-cal-wk, .wn-cal-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.wn-cal-wk { padding: 4px 0 5px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-on-ink); font-size: 11.5px; font-weight: 600; text-align: center; }
+.cs .wn-cal-d, .wn-cal-d { display: grid; align-content: center; justify-items: center; height: 42px; padding: 0; border: 0; border-radius: 12px 12px 12px 3px; font: inherit; line-height: 1; font-size: 15.5px; font-weight: 640; color: var(--cs-ink); background: var(--cs-page); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-ink) 16%, transparent); cursor: pointer; }
+.wn-cal-d small { font-size: 10px; font-weight: 680; margin-bottom: 2px; }
+.cs .wn-cal-d.in, .wn-cal-d.in { background: color-mix(in oklab, var(--cs-field) 62%, var(--cs-paper)); box-shadow: none; }
+.cs .wn-cal-d.end, .wn-cal-d.end { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+.cs .wn-cal-d.by, .wn-cal-d.by { background: var(--cs-action); color: var(--cs-paper); box-shadow: none; }
+.wn-cal-d:disabled { opacity: .3; cursor: default; }
+/* three weeks on a phone, five where there is room */
+@media (max-width: 899px) { .wn-cal-days .wn-cal-d:nth-child(n+22) { display: none; } }

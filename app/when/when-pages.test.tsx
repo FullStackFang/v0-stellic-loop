@@ -80,7 +80,7 @@ it('gives the organizer words to pass on while they wait, and the pick when they
   cleanup();
   view = await open(maya, id, { pick: '1' });
   expect(screen.getByRole('heading', { name: 'The times that work best' })).toBeInTheDocument();
-  const picks = screen.getAllByRole('radio');
+  const picks = within(screen.getByRole('radiogroup', { name: 'The times that work best' })).getAllByRole('radio');
   expect(picks.map(each => (each as HTMLInputElement).value)).toEqual([TUE7, TUE8]);
   expect(picks[0]).toBeChecked();
   expect(view.container).toHaveTextContent('3 of 7');
@@ -105,7 +105,7 @@ it('shows the result once it is sent: you first, then who is in, then who cannot
   await saveAnswer(t.db, dana, { pollId: id, slots: [THU7] });
   await sendPoll(t.db, maya, { pollId: id, slot: TUE7, note: 'Olin Library, room 301.' });
   const view = await open(priya, id);
-  expect(screen.getByRole('heading', { name: "Tuesday at 7 pm. It's on." })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: "Tuesday, 7 to 8 pm. It's on." })).toBeInTheDocument();
   expect(view.container).toHaveTextContent('3 of 7 can make it');
   expect(view.container).toHaveTextContent('Olin Library, room 301.');
   const rows = within(screen.getByRole('heading', { name: 'Problem set night' }).parentElement!).getAllByRole('listitem').map(row => row.textContent);
