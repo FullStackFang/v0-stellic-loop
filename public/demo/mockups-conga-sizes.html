@@ -4,122 +4,209 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Conga · sizes</title>
 <style>
-@font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
-:root { --ink: oklch(24% 0.035 30); --paper: oklch(99.2% 0.004 60); --coral: oklch(82% 0.12 38); }
+@font-face { font-family: Archivo; src: url(../fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --ink: oklch(21% 0.016 30); --paper: oklch(99.2% 0.004 60); }
 * { box-sizing: border-box; margin: 0; }
-body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
-main { max-width: 1240px; margin: 0 auto; display: grid; gap: 22px; }
+body { background: oklch(96.8% 0.01 70); color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+section { display: grid; gap: 12px; margin-top: 26px; }
 h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px; background: var(--ink); color: var(--paper); padding: 6px 16px 7px; border-radius: 14px 14px 14px 4px; }
 .lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 72ch; margin-top: 10px; }
-.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; }
 .bar button { font: 700 15px Archivo, system-ui, sans-serif; color: var(--ink); background: var(--paper); border: 0; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 999px; padding: 8px 16px 9px; cursor: pointer; }
-.bar button[aria-pressed="true"], .bar button.go { background: var(--ink); color: var(--paper); }
-.frame { position: relative; overflow: hidden; border-radius: 26px 26px 26px 6px; box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); background: var(--coral); }
-.frame canvas { display: block; width: 100%; }
-.frame::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--ink); pointer-events: none; }
-.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 8px; }
-.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; background: var(--paper); border-radius: 14px 14px 14px 4px; box-shadow: inset 0 0 0 2px var(--ink); padding: 8px 12px 10px; }
-.row b { font-weight: 800; font-size: 15px; }
-.row span { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.row input { grid-column: 1 / -1; width: 100%; accent-color: oklch(48.5% 0.185 27); }
-.row.moved { box-shadow: inset 0 0 0 3px oklch(48.5% 0.185 27); }
-.note { padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.4; max-width: 85ch; }
+.bar button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.bar .slow { margin-left: auto; }
+.frame { position: relative; overflow: hidden; border-radius: 22px 22px 22px 6px; box-shadow: 5px 5px 0 oklch(68% 0.14 33); }
+.frame canvas { display: block; width: 100%; aspect-ratio: 16 / 9; background: oklch(80% 0.11 38); }
+@media (max-width: 640px) { .frame canvas { aspect-ratio: 3 / 4; } }
+.note { padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.45; max-width: 85ch; }
 </style>
-
 <main>
   <header>
     <h1>Conga · sizes</h1>
-    <p class="lead">Every toy at the size the game draws it today, side by side, with a line of animals for scale. The dashed box is how much of the ground one laptop screen shows. Drag a slider to change a toy; the picture follows. When it looks right, press Copy sizes and paste them to me.</p>
+    <p class="lead">Everything that stands or moves on the ground, beside a line of animals for scale. Switch between Today and the proposed sizes.</p>
   </header>
-  <div class="bar" id="maps"><button data-map="cornell">Ithaca</button><button data-map="cornell-tech">Roosevelt Island</button></div>
-  <div class="frame"><canvas id="lineup"></canvas></div>
-  <div class="bar"><button class="go" id="copy">Copy sizes</button><button id="reset">Back to today's sizes</button><span id="said" style="font-weight:700"></span></div>
-  <p class="note">Sizes are game units, the same on both grounds. An animal at the head of a line is 58 across, one in the line 42. Halls are sorted biggest first; the toys that are not buildings (trees, cars, boats, the sack) are on the last row.</p>
-  <div class="list" id="list"></div>
+
+  <section data-part="sizes">
+    <h2>Sizes</h2>
+    <div class="bar"><button data-v="b">Proposed</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
 </main>
+<script>
+// Relative paths and no imports, so the page also works opened straight from the folder (file:///).
+// The drawing is the game's own (public/conga/index.html): the same felt, stitches, yarn ropes, toys and animal sheet.
+const AT = { tree: [0, 1128, 128, 128], sack: [390, 1128, 111, 128], bus: [838, 638, 256, 256], tram: [1096, 638, 256, 256] };
+const toys = Object.assign(new Image(), { src: '../conga/scenery.v3.webp' });
+const sheet = Object.assign(new Image(), { src: '../conga/animals-96.v1.webp' });
+const ok = img => img.complete && img.naturalWidth;
+const C = { ink: 'oklch(24% 0.035 30)', paper: 'oklch(99.2% 0.004 60)', lamp: '#ffe27a', twine: '#fbf7ec' };
+const FELT = { mat: 'oklch(80% 0.11 38)', grass: 'oklch(70% 0.12 145)', grassThread: 'oklch(90% 0.09 130)', road: 'oklch(72% 0.025 55)',
+  yellow: 'oklch(90% 0.15 95)', thread: 'oklch(94% 0.04 60)', under: 'oklch(35% 0.06 40 / .3)' };
+const BUS = 'oklch(72% 0.12 235)', TRAM = 'oklch(58% 0.2 27)';
+const PURPLE = 'oklch(60% 0.2 305)', TEAL = 'oklch(70% 0.13 195)', GOLD = 'oklch(80% 0.15 80)';
+// ---------- shared drawing, from the game ----------
+const seeded = seed => () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; };
+const fibreTile = (() => { const c = document.createElement('canvas'); c.width = c.height = 160; const pen = c.getContext('2d'), r = seeded(11); pen.lineWidth = 0.8;
+  for (let i = 0; i < 900; i++) { const x = r() * 160, y = r() * 160, a = r() * Math.PI, l = 3 + r() * 7; pen.strokeStyle = r() < 0.5 ? 'rgba(255,255,255,.11)' : 'rgba(60,30,20,.08)'; pen.beginPath(); pen.moveTo(x, y); pen.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); pen.stroke(); }
+  return c; })();
+let ctx, W, H;
+const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
+const outCubic = u => 1 - (1 - u) ** 3, inQuad = u => u * u;
+function stitch(colour, width = 2.6, dash = [9, 7], path = null) {
+  const go = () => path ? ctx.stroke(path) : ctx.stroke();
+  ctx.save(); ctx.setLineDash(dash); ctx.lineCap = 'round'; ctx.lineWidth = width;
+  ctx.strokeStyle = 'rgba(40,25,20,.28)'; ctx.translate(0, 1.2); go(); ctx.translate(0, -1.2);
+  ctx.strokeStyle = colour; go(); ctx.restore();
+}
+function feltPiece(fill, drop = 3) { ctx.save(); ctx.translate(0, drop); ctx.fillStyle = FELT.under; ctx.fill(); ctx.restore(); ctx.fillStyle = fill; ctx.fill(); }
+function tone(colour, { light = 0, chroma = 1, alpha = 1 } = {}) {
+  const got = /oklch\(\s*([\d.]+)%?\s+([\d.]+)\s+([\d.]+)/.exec(colour);
+  return `oklch(${Math.min(97, Math.max(15, Number(got[1]) + light))}% ${(Number(got[2]) * chroma).toFixed(3)} ${got[3]} / ${alpha})`;
+}
+function mat() { ctx.fillStyle = FELT.mat; ctx.fillRect(0, 0, W, H); }
+function grain() { const p = ctx.createPattern(fibreTile, 'repeat'); p.setTransform(new DOMMatrix().scale(0.55)); ctx.fillStyle = p; ctx.fillRect(0, 0, W, H); }
+function lawn(x, y, w, h) { ctx.beginPath(); ctx.roundRect(x, y, w, h, 34); feltPiece(FELT.grass); ctx.beginPath(); ctx.roundRect(x + 12, y + 12, w - 24, h - 24, 24); stitch(FELT.grassThread); }
+function sprite(face, x, y, size, tilt = 0, alpha = 1) {
+  if (!ok(sheet) || size <= 0) return;
+  const sx = (face - 1) % 7 * 96, sy = Math.floor((face - 1) / 7) * 96;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(sheet, sx, sy, 96, 96, -size / 2, -size / 2, size, size); ctx.restore();
+}
+function toy(name, x, y, width, left = false) {
+  if (!ok(toys)) return 0;
+  const [sx, sy, sw, sh] = AT[name], height = width * sh / sw;
+  ctx.save(); ctx.translate(x, y); if (left) ctx.scale(-1, 1); ctx.drawImage(toys, sx, sy, sw, sh, -width / 2, -height, width, height); ctx.restore();
+  return height;
+}
+function foot(x, y, half, alpha = 0.2) { ctx.beginPath(); ctx.ellipse(x, y - half * 0.12, half, half * 0.3, 0, 0, 7); ctx.fillStyle = `oklch(24% 0.035 30 / ${alpha})`; ctx.fill(); }
+function pill(text, x, y, fill, ink, size = 15) {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const width = ctx.measureText(text).width + size * 1.4, high = size * 1.7;
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+  return width;
+}
+function groundName(text, x, y, size) {
+  ctx.font = `900 ${size}px Archivo, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'oklch(100% 0 0 / .2)'; ctx.fillText(text, x, y + size * 0.05);
+  ctx.fillStyle = 'oklch(24% 0.05 30 / .16)'; ctx.fillText(text, x, y);
+}
+/** The yarn a line holds: one smooth curve through the animals. */
+function rope(points, colour, width = 13, low = 13) {
+  if (points.length < 2) return;
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
+  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
+  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
+  yarn(colour, width);
+}
+/** Strokes the current path as twisted yarn on the felt. */
+function yarn(colour, width = 13) {
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .25)'; ctx.lineWidth = width + 2; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([3, 5]); ctx.globalAlpha = 0.55; ctx.strokeStyle = tone(colour, { light: -14 }); ctx.stroke();
+  ctx.lineDashOffset = 4; ctx.globalAlpha = 0.5; ctx.strokeStyle = tone(colour, { light: 20, chroma: 0.6 }); ctx.lineWidth = width * 0.54; ctx.stroke();
+  ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1; ctx.lineCap = 'round';
+}
+function puff(x, y, age, big = 1) {
+  if (age < 0 || age > 1) return;
+  ctx.beginPath(); ctx.arc(x, y - age * 14, (7 + age * 16) * big, 0, 7); ctx.fillStyle = `oklch(96% 0.008 60 / ${0.75 * (1 - age)})`; ctx.fill();
+}
+function ring(x, y, age, colour) {
+  if (age < 0 || age > 1) return;
+  ctx.strokeStyle = colour; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
+  ctx.beginPath(); ctx.arc(x, y, 30 + age * 130, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+}
 
-<script type="module">
-import { MAPS, TALL, treeWidth } from '/conga/maps.js';
-import { SHEET, AT } from '/conga/scenery.js';
-const toys = Object.assign(new Image(), { src: '/' + SHEET.replace(/^\.\//, '') });
-const sheet = Object.assign(new Image(), { src: '/conga/animals-96.v1.webp' });
-const ready = img => img.complete && img.naturalWidth;
-const SCREEN = 920; // units across one laptop screen in the game (index.html fitTo)
+// ---------- sizes ----------
+// Every moving or standing thing beside a line of animals, at today's size or the proposed one.
+const SAY = {
+  sizes: {
+    b: 'Proposed. Everything measured against an animal in a line (42 across). A cab is a car, about two and a half animals long (40 → 100). The ferry is the biggest thing that moves (100 → 190), the tug a bit smaller (100 → 140), and the little bus on a road with no bus route is as big as the bus that stops (64 → 160). Trees grow about a third (one animal → one and a half). The bus (160), tram (140), buildings (150), sacks and pickups stay as they are.',
+    now: 'Today. A cab is the size of one animal, the ferry and tug are smaller than the bus, the little bus is under half the size of the bus that stops, and trees are about one animal across.',
+  },
+};
+Object.assign(AT, { cab: [904, 1166, 128, 128], bus: [1482, 638, 256, 256], tram: [1740, 638, 256, 256], ferry: [966, 638, 256, 256], tug: [1224, 638, 256, 256], tree: [644, 1166, 128, 128], blossom: [774, 1166, 128, 128], brickhall: [0, 1166, 320, 162], sack: [1034, 1166, 111, 128] });
+toys.src = '../conga/scenery.v4.webp';
+const SIZES = {
+  now: { cab: 40, ferry: 100, tug: 100, littlebus: 64, tree: [38, 63] },
+  b: { cab: 100, ferry: 190, tug: 140, littlebus: 160, tree: [52, 84] },
+};
+const WATER = { deep: 'oklch(64% 0.1 228)', shallow: 'oklch(75% 0.085 215)', thread: 'oklch(90% 0.04 210)' };
+function cloud(x, y, w) {
+  const h = w * 0.42, bumps = [[-0.3, 0.05, 0.26], [-0.02, -0.12, 0.34], [0.28, 0.02, 0.25]];
+  const path = () => { ctx.beginPath(); for (const [bx, by, r] of bumps) { ctx.moveTo(x + bx * w + r * w, y + by * w); ctx.arc(x + bx * w, y + by * w, r * w, 0, 7); } ctx.roundRect(x - w * 0.5, y - h * 0.15, w, h * 0.55, h * 0.27); };
+  ctx.save(); ctx.translate(0, 3); path(); ctx.fillStyle = 'oklch(90% 0.02 70)'; ctx.fill(); ctx.restore(); path(); ctx.fillStyle = 'oklch(98% 0.008 80)'; ctx.fill();
+}
+/** A name on a small ink pill just under a thing, so you can tell what each one is. */
+function tag(text, x, y) { pill(text, x, y, C.ink, C.paper, 13); }
+function sizesScene(look, t) {
+  const S = SIZES[look];
+  mat();
+  // Water across the top, a wide felt road across the middle, grass at the bottom left.
+  ctx.fillStyle = WATER.shallow; ctx.fillRect(0, 0, W, H * 0.3); ctx.fillStyle = WATER.deep; ctx.fillRect(0, 0, W, H * 0.26);
+  ctx.beginPath(); ctx.moveTo(0, H * 0.28); ctx.lineTo(W, H * 0.28); stitch(WATER.thread, 2.4, [9, 7]);
+  const ry = H * 0.56; ctx.beginPath(); ctx.rect(0, ry - 65, W, 130); feltPiece(FELT.road);
+  for (const side of [-55, 55]) { ctx.beginPath(); ctx.moveTo(0, ry + side); ctx.lineTo(W, ry + side); stitch(FELT.thread, 2.6, [10, 8]); }
+  for (let x = 20; x < W; x += 74) { ctx.beginPath(); ctx.roundRect(x, ry - 5.5, 42, 11, 5.5); feltPiece(FELT.yellow, 2); }
+  lawn(W * 0.02, H * 0.74, W * 0.42, H * 0.24);
+  grain();
+  // On the water: the ferry and the tug, bobbing.
+  const bob = k => Math.sin(t * 2.4 + k) * 3;
+  toy('ferry', W * 0.22, H * 0.25 + bob(0), S.ferry); tag('Ferry', W * 0.22, H * 0.25 + 4);
+  toy('tug', W * 0.7, H * 0.25 + bob(1), S.tug); tag('Tug', W * 0.7, H * 0.25 + 4);
+  // On the road: three cabs, the little bus, and the bus that stops; a line of animals walking beside them.
+  const drift = (t * 40) % 140;
+  for (const [n, x] of [[0, W * 0.08], [1, W * 0.24], [2, W * 0.4]]) toy('cab', x + drift * 0.2, ry - 18 + 12, S.cab, n % 2 === 1);
+  tag('Cabs', W * 0.24, ry + 32);
+  toy('bus', W * 0.6, ry - 6 + 12, S.littlebus, true); tag('Little bus', W * 0.6, ry + 32);
+  toy('bus', W * 0.85, ry - 6 + 12, 160, true); tag('Bus', W * 0.85, ry + 32);
+  // A line of six animals on the grass, for scale.
+  const pts = [0, 1, 2, 3, 4, 5].map(i => ({ x: W * 0.36 - i * 33, y: H * 0.84 - (0.5 - 0.5 * Math.cos(t * 7 - i * 0.7)) * 2.5, face: [4, 9, 14, 2, 22, 30][i], size: i ? 42 : 58 }));
+  rope(pts, 'oklch(60% 0.2 305)');
+  pts.slice().reverse().forEach(p => sprite(p.face, p.x, p.y, p.size));
+  // Trees on the grass (smallest and biggest), a building and a sack.
+  toy('tree', W * 0.06, H * 0.95, S.tree[0]); toy('blossom', W * 0.4, H * 0.96, S.tree[1]); tag('Trees', W * 0.23, H * 0.97);
+  toy('brickhall', W * 0.62, H * 0.94, 150); tag('Building', W * 0.62, H * 0.97);
+  toy('sack', W * 0.86, H * 0.93, 55); tag('Sack of 10', W * 0.86, H * 0.97);
+  // The tram over the road on its clouds.
+  const tx = W * 0.5, ty = H * 0.4 + Math.sin(t * 2.2) * 4;
+  cloud(tx - 46, ty + 58, 70); cloud(tx + 50, ty + 60, 62);
+  const [sx, sy, sw, sh] = AT.tram, cut = Math.round(sh * 0.3), high = 140 * sh / sw;
+  if (ok(toys)) ctx.drawImage(toys, sx, sy + cut, sw, sh - cut, tx - 70, ty + 62 - high + high * cut / sh, 140, high * (sh - cut) / sh);
+  cloud(tx + 2, ty + 70, 84); tag('Tram', tx, ty + 92);
+}
 
-// What the game draws today, as name → width.
-function today(id) {
-  const items = MAPS[id].things.filter(thing => thing.toy).map(thing => ({ key: thing.name, toy: thing.toy, width: Math.round(thing.kind === 'tower' ? thing.w * TALL : thing.w), kind: thing.kind }));
-  items.sort((a, b) => b.width - a.width);
-  const small = [['Tree', 'tree', treeWidth(12)], ['Cherry tree', 'blossom', treeWidth(10)], ['Spill sack', 'sack', 70],
-    ...(id === 'cornell' ? [['Bus', 'bus', 160], ['Main St bus', 'bus', 64]] : [['Tram cabin', 'tram', 140], ['Ferry', 'ferry', 100], ['Tug', 'tug', 100], ['Cab', 'cab', 40]])];
-  return [...items, ...small.map(([key, toy, width]) => ({ key, toy, width: Math.round(width), kind: 'small' }))];
-}
-let id = 'cornell', items = today(id), base = new Map(items.map(it => [it.key, it.width]));
-const keep = {}; // what has been changed, on both grounds, by name
-
-const canvas = document.getElementById('lineup');
-function layout() {
-  const box = canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
-  // One row is as wide as a screen and a half, so the screen box sits over part of it.
-  const ROW = SCREEN * 1.5, k = box.width / ROW, GAP = 36;
-  let x = GAP, y = 0, rowHigh = 0, rows = [], row = [];
-  const placed = [];
-  const heightOf = it => it.width * AT[it.toy][3] / AT[it.toy][2];
-  const lines = [...items.filter(it => it.kind !== 'small'), null, ...items.filter(it => it.kind === 'small')];
-  for (const it of lines) {
-    const room = it && Math.max(it.width, 170); // wide enough for its name, however small the toy
-    if (it === null || x + room + GAP > ROW) { rows.push({ row, high: rowHigh }); row = []; x = GAP; rowHigh = 0; if (it === null) continue; }
-    row.push({ it, x: x + room / 2 }); x += room + GAP; rowHigh = Math.max(rowHigh, heightOf(it));
-  }
-  rows.push({ row, high: rowHigh });
-  for (const { row, high } of rows) { y += high + 50; for (const { it, x } of row) placed.push({ it, x, foot: y }); y += 30; }
-  const tall = y + 140; // room for the animal line under it all
-  canvas.style.height = `${tall * k}px`; canvas.width = Math.round(box.width * dpr); canvas.height = Math.round(tall * k * dpr);
-  return { ctx: canvas.getContext('2d'), s: k * dpr, ROW, tall, placed };
-}
-function draw() {
-  const { ctx, s, ROW, tall, placed } = layout();
-  ctx.setTransform(s, 0, 0, s, 0, 0);
-  ctx.fillStyle = 'oklch(82% 0.12 38)'; ctx.fillRect(0, 0, ROW, tall);
-  ctx.fillStyle = 'oklch(77% 0.13 37)'; ctx.beginPath(); for (let x = 45; x < ROW; x += 90) for (let y = 45; y < tall; y += 90) { ctx.moveTo(x + 5, y); ctx.arc(x, y, 5, 0, 7); } ctx.fill();
-  for (const { it, x, foot } of placed) {
-    ctx.beginPath(); ctx.ellipse(x, foot - it.width * 0.05, it.width * 0.42, it.width * 0.12, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .18)'; ctx.fill();
-    if (ready(toys)) { const [sx, sy, sw, sh] = AT[it.toy], h = it.width * sh / sw; ctx.drawImage(toys, sx, sy, sw, sh, x - it.width / 2, foot - h, it.width, h); }
-    ctx.font = '700 14px Archivo, system-ui, sans-serif'; const label = `${it.key} · ${it.width}`, w = ctx.measureText(label).width + 20;
-    ctx.beginPath(); ctx.roundRect(x - w / 2, foot + 6, w, 24, 12); ctx.fillStyle = 'oklch(24% 0.035 30)'; ctx.fill();
-    ctx.fillStyle = 'oklch(99.2% 0.004 60)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, x, foot + 19);
-  }
-  // A line of ten animals for scale along the bottom.
-  const ly = tall - 60;
-  ctx.beginPath(); ctx.moveTo(60, ly + 13); ctx.lineTo(60 + 30 * 10, ly + 13); ctx.lineCap = 'round'; ctx.strokeStyle = 'oklch(24% 0.035 30)'; ctx.lineWidth = 16; ctx.stroke(); ctx.strokeStyle = 'oklch(48.5% 0.185 27)'; ctx.lineWidth = 10; ctx.stroke();
-  if (ready(sheet)) for (let i = 10; i >= 0; i--) { const f = 1 + (i * 5) % 36, size = i ? 42 : 58, x = 60 + 30 * 10 - i * 30; ctx.drawImage(sheet, (f - 1) % 7 * 96, Math.floor((f - 1) / 7) * 96, 96, 96, x - size / 2, ly - size / 2, size, size); }
-  // One screen's worth of ground.
-  ctx.setLineDash([14, 10]); ctx.strokeStyle = 'oklch(24% 0.035 30)'; ctx.lineWidth = 4; ctx.strokeRect(ROW - SCREEN - 20, 20, SCREEN, SCREEN / 1.6); ctx.setLineDash([]);
-  ctx.font = '800 16px Archivo, system-ui, sans-serif'; ctx.fillStyle = 'oklch(24% 0.035 30)'; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillText('one laptop screen', ROW - 32, 30);
-}
-function list() {
-  document.getElementById('list').innerHTML = items.map((it, n) => `<label class="row${it.width !== base.get(it.key) ? ' moved' : ''}"><b>${it.key}</b><span>${it.width}${it.width !== base.get(it.key) ? ` (was ${base.get(it.key)})` : ''}</span>
-    <input type="range" min="${Math.max(20, Math.round(base.get(it.key) * 0.3))}" max="${Math.round(base.get(it.key) * 2.2)}" value="${it.width}" data-n="${n}"></label>`).join('');
-}
-document.getElementById('list').addEventListener('input', e => {
-  const it = items[e.target.dataset.n]; if (!it) return;
-  it.width = Number(e.target.value); keep[it.key] = it.width;
-  const row = e.target.closest('.row'); row.classList.toggle('moved', it.width !== base.get(it.key)); row.querySelector('span').textContent = `${it.width}${it.width !== base.get(it.key) ? ` (was ${base.get(it.key)})` : ''}`;
-  draw();
+// ---------- the page ----------
+const SCENES = { sizes: sizesScene };
+const parts = [...document.querySelectorAll('section[data-part]')].map(section => {
+  const part = { name: section.dataset.part, canvas: section.querySelector('canvas'), note: section.querySelector('.note'), look: 'a', clock: 0, slow: false };
+  const pick = look => { part.look = look; part.clock = 0; section.querySelectorAll('.bar button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === look))); part.note.textContent = SAY[part.name][look]; };
+  section.querySelectorAll('.bar button[data-v]').forEach(b => b.onclick = () => pick(b.dataset.v));
+  const slow = section.querySelector('.slow'); if (slow) slow.onclick = () => { part.slow = !part.slow; slow.setAttribute('aria-pressed', String(part.slow)); };
+  pick(section.querySelector('.bar button[data-v]').dataset.v);
+  new IntersectionObserver(([e]) => part.seen = e.isIntersecting).observe(part.canvas);
+  return part;
 });
-function open(next) {
-  id = next; items = today(id); base = new Map(items.map(it => [it.key, it.width]));
-  for (const it of items) if (keep[it.key]) it.width = keep[it.key];
-  document.querySelectorAll('#maps button').forEach(b => b.setAttribute('aria-pressed', b.dataset.map === id));
-  list(); draw();
+function fit(part) {
+  const box = part.canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  part.canvas.width = box.width * dpr; part.canvas.height = box.height * dpr;
+  part.w = box.width < 640 ? 600 : 920; part.k = box.width / part.w * dpr; part.h = box.height / box.width * part.w;
 }
-document.getElementById('maps').addEventListener('click', e => { const b = e.target.closest('button'); if (b) open(b.dataset.map); });
-document.getElementById('reset').addEventListener('click', () => { for (const k of Object.keys(keep)) delete keep[k]; open(id); });
-document.getElementById('copy').addEventListener('click', async () => {
-  const text = Object.keys(keep).length ? 'Conga sizes: ' + Object.entries(keep).map(([k, v]) => `${k} ${v}`).join(', ') : 'Conga sizes: no changes';
-  try { await navigator.clipboard.writeText(text); document.getElementById('said').textContent = 'Copied. Paste it to me.'; } catch { document.getElementById('said').textContent = text; }
-});
-toys.onload = sheet.onload = draw;
-new ResizeObserver(draw).observe(canvas.parentElement);
-open('cornell');
+parts.forEach(part => new ResizeObserver(() => fit(part)).observe(part.canvas));
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  for (const part of parts) {
+    if (!part.seen || !part.canvas.width) continue;
+    part.clock += dt * (part.slow ? 0.3 : 1);
+    ctx = part.canvas.getContext('2d'); W = part.w; H = part.h;
+    ctx.setTransform(part.k, 0, 0, part.k, 0, 0);
+    SCENES[part.name](part.look, part.clock);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
 </script>
