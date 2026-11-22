@@ -42,6 +42,8 @@ const PICKUPS = {
   farmhouse: 'a small white wooden farmhouse with a grey pitched roof and a chimney, seen from the front and a little above',
   stonechapel: 'a small grey stone church with a square bell tower and a red door, seen from the front and a little above',
   octagon: 'an eight-sided domed stone building with two long wings, seen from the front and a little above',
+  // Four Freedoms Park at Roosevelt Island's south tip: the granite room at the point of the lawn.
+  fourfreedoms: 'a memorial park at the tip of an island: a pale granite plaza open to the sky, walled on three sides by tall plain granite blocks, a big bronze head sculpture set in a granite niche at the back wall, a few round trees and a strip of green lawn leading up to it, seen from the front and a little above',
   // Water that stands on the ground like a building: a small pond model, nothing moving on it.
   pond: 'a small round pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, a clump of reeds with brown cattails at one side, and a little white duck, seen from the front and a little above',
   pondlong: 'a long oval pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, reeds with brown cattails at one end and a small wooden jetty at the other, seen from the front and a little above',

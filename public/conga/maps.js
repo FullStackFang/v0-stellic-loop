@@ -16,7 +16,8 @@ const TOWER = 48; // a tower is drawn this many game units across whatever the m
 export const TOYS = { 'Willard Straight': 'stonehall', 'Sage Chapel': 'chapel', 'Duffield Hall': 'glasshall', 'Statler': 'brickhall', 'Barton Hall': 'armory', 'Lynah Rink': 'rink',
   'Bailey Hall': 'dome', 'Mann Library': 'brickhall', 'Johnson Museum': 'museum', 'Risley': 'castle', 'Donlon': 'dorm', 'RPCC': 'dorm', 'Noyes': 'dorm', 'Becker House': 'brickhall',
   'CTB': 'cafe', 'McGraw Tower': 'clocktower', 'Bloomberg Center': 'bloomberg', 'Tata': 'tata', 'The House': 'tower', 'Verizon Center': 'glasshall', 'Graduate': 'tower',
-  'Tram': 'station', 'Subway': 'subway', 'Smallpox Hospital': 'ruin', 'Blackwell House': 'farmhouse', 'Good Shepherd': 'stonechapel', 'The Octagon': 'octagon', 'Lighthouse': 'lighthouse', 'Beebe Lake': 'pond' };
+  'Tram': 'station', 'Subway': 'subway', 'Smallpox Hospital': 'ruin', 'Blackwell House': 'farmhouse', 'Good Shepherd': 'stonechapel', 'The Octagon': 'octagon', 'Lighthouse': 'lighthouse', 'Beebe Lake': 'pond',
+  'FDR Four Freedoms': 'fourfreedoms' };
 const POND = 320; // a pond's toy is drawn this wide: a lake is bigger than any building, and its picture is 320 across
 // A lawn or field is at least this much each way (about two road widths), so none is thinner than the road beside it or
 // smaller than the buildings round it, however small the real one is.
@@ -26,7 +27,7 @@ const OPEN = 260;
 // drawn narrower, so none stands more than 1.25 times its width high. Kept small enough that the packed pictures stay
 // sharp on screen.
 const HALL = 150, LANDMARK_HALL = 195;
-const LANDMARKS = new Set(['McGraw Tower', 'Sage Chapel', 'Willard Straight', 'Barton Hall', 'Bailey Hall', 'Johnson Museum', 'Bloomberg Center', 'Lighthouse', 'Smallpox Hospital']);
+const LANDMARKS = new Set(['McGraw Tower', 'Sage Chapel', 'Willard Straight', 'Barton Hall', 'Bailey Hall', 'Johnson Museum', 'Bloomberg Center', 'Lighthouse', 'Smallpox Hospital', 'FDR Four Freedoms']);
 const toyWidth = label => { const [, , w, h] = AT[TOYS[label]], size = LANDMARKS.has(label) ? LANDMARK_HALL : HALL; return h / w > 1.25 ? size * 1.25 / (h / w) : size; };
 /** A tower's toy is drawn this much wider than the tower is on the ground, so it stands up tall above the line. */
 export const TALL = 2.3;
@@ -199,10 +200,12 @@ export const MAPS = {
     ['bridge', 'Queensboro Bridge', 40.75971, -73.96129, 40.75302, -73.94593, 34],
     // Main Street, from the subway up to the Octagon, a little west of the buildings that front it. Placed by hand.
     ['road', 'Main Street', 40.75870, -73.95400, 40.76890, -73.94450, 12],
-    ['green', 'Four Freedoms Park', 40.75066, -73.96045, 90, 190, GRID],
+    ['green', 'Four Freedoms Park', 40.75014, -73.96098, 90, 190, GRID], // its point runs down to the island's tip
     ['green', 'Southpoint Park', 40.75300, -73.95820, 130, 170, GRID],
     ['field', 'Firefighters Field', 40.75773, -73.95293, 60, 95, GRID],
     ['green', 'Lighthouse Park', 40.77180, -73.94120, 100, 170, GRID],
+    // The granite room at the point of Four Freedoms Park, at the narrow end of its lawn.
+    ['hall', 'FDR Four Freedoms', 40.74937, -73.96177, 60, 60, GRID],
     ['hall', 'Smallpox Hospital', 40.75159, -73.95961, 40, 45, GRID],
     ['hall', 'Bloomberg Center', 40.75579, -73.95620, 40, 100, GRID],
     ['hall', 'Tata', 40.75524, -73.95551, 40, 62, GRID],

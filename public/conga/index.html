@@ -256,6 +256,9 @@ function offer() {
     const show = open => { card.hidden = !open; seat.setAttribute('aria-expanded', open); };
     if (you.ink) {
       card.innerHTML = '<span class="tab">' + INK + '</span><h3>Your animals</h3><p>Pick the one that leads your line.</p><div></div>';
+      // The card is hidden until it is opened, and a hidden card's pictures are not fetched; fetch them now, so they are
+      // all there when it opens instead of coming in one by one.
+      for (const animal of you.animals) if (animal.picture) new Image().src = animal.picture;
       card.lastChild.replaceChildren(...you.animals.map((animal, n) => {
         const button = Object.assign(document.createElement('button'), { className: 'pick', ariaLabel: `Your animal ${n + 1}`, innerHTML: faceTag(animal.face, animal.picture) });
         button.setAttribute('aria-pressed', n === chosen);
@@ -700,11 +703,18 @@ const toysIn = () => toys.complete && toys.naturalWidth > 0;
 // Which toy each landmark is comes with it from the map (maps.js TOYS).
 // The toys that were drawn facing left; the rest face right.
 const LEFTWARD = new Set(['cab']);
+// Where a toy has writing on it, in its picture's own pixels [x, y, w, h]: the cab's roof sign.
+const SIGN = { cab: [50, 12, 42, 32] };
 /** Stands a toy with the middle of its foot at (x, y), `width` across. A vehicle is turned to face left when `left`. */
 function toy(name, x, y, width, left = false, alpha = 1) {
   const [sx, sy, sw, sh] = AT[name], height = width * sh / sw, flip = left !== LEFTWARD.has(name);
   if (alpha !== 1) ctx.globalAlpha = alpha;
-  if (flip) { ctx.save(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.drawImage(toys, sx, sy, sw, sh, -width / 2, -height, width, height); ctx.restore(); }
+  if (flip) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.drawImage(toys, sx, sy, sw, sh, -width / 2, -height, width, height); ctx.restore();
+    // Writing on a toy would read backwards in the mirror ("IXAT"), so its patch is drawn again the right way round.
+    const sign = SIGN[name];
+    if (sign) { const [a, b, w, h] = sign, k = width / sw; ctx.drawImage(toys, sx + a, sy + b, w, h, x + width / 2 - (a + w) * k, y - height + b * k, w * k, h * k); }
+  }
   else ctx.drawImage(toys, sx, sy, sw, sh, x - width / 2, y - height, width, height);
   if (alpha !== 1) ctx.globalAlpha = 1;
   return height;
@@ -780,14 +790,12 @@ const LOOK = {
 
 /** How each well-known park is drawn. Anything not here is a lawn with trees. */
 const PAINT = {
-  // Kahn's park: a lawn that narrows to the point of the island between two rows of trees, and ends in a room of white stone.
+  // Kahn's park: a lawn that narrows to the point of the island between two rows of trees. The granite room it ends in
+  // stands at its point as a landmark toy (maps.js 'FDR Four Freedoms').
   'Four Freedoms Park': thing => turned(thing, (w, h) => {
-    const narrow = w * 0.16, edge = f => w / 2 - (w / 2 - narrow) * f;
+    const narrow = w * 0.16;
     const lawnShape = (m = 0) => { ctx.beginPath(); ctx.moveTo(-w / 2 + m, -h / 2 + m); ctx.lineTo(w / 2 - m, -h / 2 + m); ctx.lineTo(narrow - m * 0.5, h / 2 - m); ctx.lineTo(-narrow + m * 0.5, h / 2 - m); ctx.closePath(); };
-    lawnShape(); feltPiece(FELT.grass); lawnShape(10); stitch(FELT.grassThread);
-    // The room of white stone at the point: a pale felt square, stitched round.
-    const room = (m = 0) => { ctx.beginPath(); ctx.roundRect(-narrow - 6 + m, h / 2 - 4 + m, narrow * 2 + 12 - m * 2, narrow * 2 + 12 - m * 2, 6); };
-    room(); feltPiece(FELT.table); room(8); stitch(C.stone); }),
+    lawnShape(); feltPiece(FELT.grass); lawnShape(10); stitch(FELT.grassThread); }),
 };
 
 // The far banks, with their street grids: Manhattan to the west and Queens to the east. These and the boats were placed
@@ -974,11 +982,11 @@ function bus(car, ux, uy) {
     const before = car.hop ?? 0; car.hop = before + moved;
     const ph = (car.hop % HOP) / HOP, lift = moved > 0.05 ? Math.sin(ph * Math.PI) * 14 * s : 0, squash = moved > 0.05 && ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0;
     if (Math.floor(car.hop / HOP) > Math.floor(before / HOP) && Math.abs(x - cam.x) < wide / cam.z && Math.abs(y - cam.y) < tall / cam.z) for (const side of tyres) dust.push({ x: x + side + Math.sign(side) * 8, y: ground + 1, t, dir: Math.sign(side) });
-    for (let i = dust.length - 1; i >= 0; i--) { const p = dust[i], age = (t - p.t) / 0.6; if (age > 1 || age < 0) { dust.splice(i, 1); continue; } cloud(p.x + p.dir * age * 16 * s, p.y - age * 10 * s, (16 + age * 8) * s, (1 - age) * 0.95); }
+    for (let i = dust.length - 1; i >= 0; i--) { const p = dust[i], age = (t - p.t) / 0.6; if (age > 1 || age < 0) { dust.splice(i, 1); continue; } cloud(p.x + p.dir * age * 22, p.y - age * 12, 20 + age * 12, (1 - age) * 0.95); }
     for (const side of tyres) {
-      const k = 1 - lift / 30 / s, cx = x + side, cy = ground, g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 28 * s * k);
-      g.addColorStop(0, `oklch(25% 0.03 40 / ${0.5 * k})`); g.addColorStop(1, 'oklch(25% 0.03 40 / 0)');
-      ctx.save(); ctx.translate(cx, cy); ctx.scale(1, 0.38); ctx.translate(-cx, -cy); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 28 * s * k, 0, 7); ctx.fill(); ctx.restore();
+      const k = 1 - lift / 30 / s, cx = x + side, cy = ground, g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 26 * k);
+      g.addColorStop(0, `oklch(25% 0.03 40 / ${0.6 * k})`); g.addColorStop(1, 'oklch(25% 0.03 40 / 0)');
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(1, 0.38); ctx.translate(-cx, -cy); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 26 * k, 0, 7); ctx.fill(); ctx.restore();
     }
     ctx.save(); ctx.translate(x, y + 40 - lift); ctx.scale(1 + 0.08 * squash, 1 - 0.1 * squash); toy('bus', 0, 0, BUS, flip); ctx.restore();
     pill(car.name, x, y + 40 - lift - high - 14, C.ink, C.paper, 14);
