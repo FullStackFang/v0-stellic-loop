@@ -19,12 +19,12 @@
 ## 3. Faces as WebP (D2)
 
 - [x] 3.1 Add a script under `scripts/` that writes `NN.webp` beside each `public/animals/NN.png` with `sharp` (192 px, alpha kept); run it and write down the total size before and after
-- [ ] 3.2 Build `/demo/mockups-faces-webp.html`: each face as PNG beside WebP at 26, 32, 38 and 96 px on the light and dark grounds. Stop and hand it to the owner; go on after his yes
-- [ ] 3.3 Test first: every PNG in the set has a WebP that decodes to the same picture within a small tolerance; `animal()` returns a `.webp` address
-- [ ] 3.4 Change `animal()` in `lib/campus/animals.ts`; widen the faces' cache header in `next.config.ts` to both endings; leave `outputFileTracingIncludes` on the PNGs
-- [ ] 3.5 Find every place that writes a face's address without `animal()` (grep for `/animals/`) and every test that expects `.png`; fix each
-- [ ] 3.6 Check a person's own animal still draws from the PNG (`lib/campus/custom-face.ts`) by its test
-- [ ] 3.7 Run the affected tests, type check, lint; commit by path
+- [x] 3.2 Build `/demo/mockups-faces-webp.html`: each face as PNG beside WebP at 26, 32, 38 and 96 px on the light and dark grounds. Stop and hand it to the owner; go on after his yes
+- [x] 3.3 Test first: every PNG in the set has a WebP that decodes to the same picture within a small tolerance; `animal()` returns a `.webp` address
+- [x] 3.4 Change `animal()` in `lib/campus/animals.ts`; widen the faces' cache header in `next.config.ts` to both endings; leave `outputFileTracingIncludes` on the PNGs
+- [x] 3.5 Find every place that writes a face's address without `animal()` (grep for `/animals/`) and every test that expects `.png`; fix each
+- [x] 3.6 Check a person's own animal still draws from the PNG (`lib/campus/custom-face.ts`) by its test
+- [x] 3.7 Run the affected tests, type check, lint; commit by path
 
 ## 4. Static legal pages (D3)
 

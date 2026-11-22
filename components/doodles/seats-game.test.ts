@@ -85,7 +85,7 @@ it('Who moved?: after ten seconds with nothing found, one that moved gives itsel
 it('signed out, or without Ink: "You" opens what Ink gives, with a sign-up, and no animal is marked', () => {
   open({ ink: false, animals: [{ face: 12, picture: null }] });
   expect(root.dataset.ink).toBe('free');
-  expect(srcs('a', '.tile').filter(src => src === '/animals/12.png')).toHaveLength(2);
+  expect(srcs('a', '.tile').filter(src => src === '/animals/12.webp')).toHaveLength(2);
   expect(root.querySelector('.spark:not([hidden])')).toBeNull();
   root.querySelector<HTMLElement>('.side .you')!.click();
   const box = root.querySelector('.side .pick')!;
@@ -127,7 +127,7 @@ it('with Ink: "You" lists your animals, and the one picked plays in every mode a
   expect(localStorage.getItem('seats-own')).toBe('1');
   // an animal the crowd already has is in it once
   root.querySelector<HTMLElement>('.side .you')!.click(); root.querySelectorAll<HTMLElement>('.side .pick [data-n]')[2].click();
-  expect(srcs('t', '.spot').filter(src => src === '/animals/10.png')).toHaveLength(1);
+  expect(srcs('t', '.spot').filter(src => src === '/animals/10.webp')).toHaveLength(1);
 });
 
 it('leaves nothing behind when the page goes', () => {

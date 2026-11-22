@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
       { source: "/doodles/:file(.+\\.v\\d+\\.(?:mp4|webp))", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
       // The animal faces are on every page. Their names carry no version and a face is redrawn now and then, so a browser keeps
       // one for a day, and may show the kept one for a week while it asks again.
-      { source: "/animals/:file(\\d+\\.png)", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] }];
+      { source: "/animals/:file(\\d+\\.(?:png|webp))", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] }];
   },
   async rewrites() {
     // Conga's page is served by app/conga, with its scripts beside it in public/conga. Seats' page is served by app/seats.

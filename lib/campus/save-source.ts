@@ -5,7 +5,7 @@ import type { Q } from '../db';
 import { canAccessLoop, type Principal } from '../emba/access';
 import { groupPictureImage, groupPictures } from '../emba/group-picture';
 import { isAdmin } from './admin';
-import { animal, animalOf, CUSTOM, PHOTO } from './animals';
+import { animalOf, animalPng, CUSTOM, PHOTO } from './animals';
 import { customFaceLarge } from './custom-face';
 import { hasInkPlus } from './ink';
 import { firstNames } from './people';
@@ -24,7 +24,7 @@ export async function ownSource(q: Q, personId: string): Promise<Source> {
   if (worn?.face === PHOTO) return { figure: null, name };
   if (worn?.face === CUSTOM && worn.token) return { figure: await customFaceLarge(q, worn.token), name };
   const face = worn?.face == null || worn.face < 0 ? animalOf(personId) : worn.face;
-  return { figure: await readFile(path.join(process.cwd(), 'public', animal(face))), name };
+  return { figure: await readFile(path.join(process.cwd(), 'public', animalPng(face))), name };
 }
 
 /** A group's drawn picture and the group's name, for anyone who may open the group. Null for anyone else, and for a group that is not there. */

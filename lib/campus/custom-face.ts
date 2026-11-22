@@ -151,13 +151,13 @@ export const drawFromBase: Draw = async (base, changes = [], note = '') => {
 };
 
 /**
- * The picture a new animal may be drawn from, by its address (`/animals/NN.png` or `/animals/custom/<token>`). Ink+ only.
+ * The picture a new animal may be drawn from, by its address (`/animals/NN.webp`, or `.png`, or `/animals/custom/<token>`). Ink+ only.
  * A person may start from one of their own made animals while it is theirs alone (no tier), or from an Ink (premium)
  * one; never a core one, a school's own, or one that is off, even one they made. The admin may start from any. Returns the largest picture Loopd has of it.
  */
 export async function baseOf(q: Q, personId: string, src: string, admin = false): Promise<Uint8Array> {
   if (!admin && (await planOf(q, personId)) !== 'plus') throw new CampusError(NEEDS_PLUS);
-  const built = /^\/animals\/(\d{2})\.png$/.exec(src), token = /^\/animals\/custom\/([^/?#]+)$/.exec(src)?.[1];
+  const built = /^\/animals\/(\d{2})\.(?:webp|png)$/.exec(src), token = /^\/animals\/custom\/([^/?#]+)$/.exec(src)?.[1];
   if (built) {
     const face = Number(built[1]) - 1, { tiers } = await builtAnimals(q);
     if (face >= 0 && face < tiers.length && (admin || tiers[face] === 'premium')) return readFile(path.join(process.cwd(), 'public', 'animals', `${built[1]}.png`));

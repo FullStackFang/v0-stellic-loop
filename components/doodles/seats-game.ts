@@ -39,7 +39,7 @@ const BOARD: Record<Mode, string> = {
     <span class="stamp">All spotted<span class="best">your best yet</span></span><div class="pips"></div><button class="go" type="button"></button></div>`,
 };
 
-const animal = (n: number) => `/animals/${String(n).padStart(2, '0')}.png`;
+const animal = (n: number) => `/animals/${String(n).padStart(2, '0')}.webp`;
 const rand = (low: number, high: number) => low + Math.random() * (high - low);
 const mixed = (n: number) => { const order = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } return order; };
 /** Signs the player up for Ink (app/c/ink/join), and gives back the thanks to show. Someone signed out is sent to sign in. */

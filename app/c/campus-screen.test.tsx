@@ -202,7 +202,7 @@ describe('who sees whom', () => {
       expect(card.getByText('Save your picture')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Save it' }));
       expect(card.getByRole('group', { name: 'Shape' })).toBeInTheDocument();
-      expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', expect.stringMatching(/^\/c\/save\?shape=profile&ground=school&small=1&face=%2Fanimals%2F\d+\.png$/)); // the face worn is part of the address
+      expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', expect.stringMatching(/^\/c\/save\?shape=profile&ground=school&small=1&face=%2Fanimals%2F\d+\.webp$/)); // the face worn is part of the address
       expect(card.getByRole('button', { name: 'No mark, with Ink+' })).not.toHaveTextContent('Ink+');
       // The rows stepped aside, as they do for the picker.
       expect(card.queryByText('Loopd Ink')).toBeNull();
@@ -396,7 +396,7 @@ describe('who sees whom', () => {
       const seenBy = async (who: typeof ana) => (await campusScreen(t.db, cornell, as(who), { photos: noPhotos }))!.viewer!;
       const address = (token: string) => `/animals/custom/${token}`;
       const core = async (who: typeof ana) => (await seenBy(who)).picks.core.map(tile => tile.src), premium = async (who: typeof ana) => (await seenBy(who)).picks.premium.map(tile => tile.src);
-      expect([(await core(ben)).length, await premium(ben)]).toEqual([36, ['/animals/37.png']]);
+      expect([(await core(ben)).length, await premium(ben)]).toEqual([36, ['/animals/37.webp']]);
       await setPictureTier(t.db, first.token, 'core');
       const made = (await catalogue(t.db)).made;
       expect(made.map(one => one.token).sort()).toEqual(all);
@@ -415,12 +415,12 @@ describe('who sees whom', () => {
       expect(await seenBy(ben)).toMatchObject({ own: address(first.token) });
       // Premium is for people who subscribed: a made animal, and one shipped with the app, both ways.
       await setPictureTier(t.db, second.token, 'premium');
-      expect(await premium(ben)).toEqual(['/animals/37.png', address(second.token)]);
+      expect(await premium(ben)).toEqual(['/animals/37.webp', address(second.token)]);
       await withPortalTestSession(ben, async () => expect(await ownFaceAction(address(second.token))).toEqual({ ok: false, message: 'That one comes with Loopd Ink.' }));
       await expect(pickFace(t.db, ben.personId, 36)).rejects.toThrow('That one comes with Loopd Ink.');
       await pickFace(t.db, ben.personId, 36, true);
       await setBuiltTier(t.db, 36, 'core'); await setBuiltTier(t.db, 4, 'premium'); await setBuiltTier(t.db, 5, 'off');
-      expect([(await core(ben)).includes('/animals/37.png'), (await core(ben)).includes('/animals/05.png'), (await core(ben)).includes('/animals/06.png'), await premium(ben)]).toEqual([true, false, false, ['/animals/05.png', address(second.token)]]);
+      expect([(await core(ben)).includes('/animals/37.webp'), (await core(ben)).includes('/animals/05.webp'), (await core(ben)).includes('/animals/06.webp'), await premium(ben)]).toEqual([true, false, false, ['/animals/05.webp', address(second.token)]]);
       await pickFace(t.db, ben.personId, 36);
       await expect(pickFace(t.db, ben.personId, 4)).rejects.toThrow('That one comes with Loopd Ink.');
       await expect(pickFace(t.db, ben.personId, 5)).rejects.toThrow('Pick one of the animals.');
@@ -465,7 +465,7 @@ describe('who sees whom', () => {
       expect(await ask('/animals/37.png', '  ')).toEqual({ ok: false, message: 'Say what should change.' });
       expect(models.asked).toEqual([]);
       // The Dachshund is Ink: drawn from it alone, with what Ana said, and it is her own animal and her face.
-      const first = await ask('/animals/37.png');
+      const first = await ask('/animals/37.webp');
       expect(first).toMatchObject({ ok: true, left: null });
       expect(models.asked).toEqual([{ text: expect.stringContaining('Change only this: add a red scarf.'), images: 1 }]);
       made = first.ok ? first.own : '';
@@ -495,10 +495,10 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
       fireEvent.click(card.getByRole('button', { name: 'Start from another pet' }));
       const bases = within(card.getByRole('group', { name: 'Start from' })).getAllByRole('button').map(each => each.querySelector('img')!.getAttribute('src'));
-      expect(bases).toContain('/animals/37.png');
+      expect(bases).toContain('/animals/37.webp');
       expect(bases).toContain(made);
       // She draws from the Ink one, then redraws what came out: no photo, no code, the two side by side, one kept.
-      fireEvent.click(within(card.getByRole('group', { name: 'Start from' })).getAllByRole('button').find(each => each.querySelector('img')!.getAttribute('src') === '/animals/37.png')!);
+      fireEvent.click(within(card.getByRole('group', { name: 'Start from' })).getAllByRole('button').find(each => each.querySelector('img')!.getAttribute('src') === '/animals/37.webp')!);
       fireEvent.change(card.getByRole('textbox', { name: 'What should change' }), { target: { value: 'add a red scarf' } });
       fireEvent.click(card.getByRole('button', { name: 'Draw it' }));
       fireEvent.click(card.getByRole('button', { name: 'Yes, draw it' }));
@@ -1043,7 +1043,7 @@ describe('the pages', () => {
     // Michigan ties Rutgers at three, and Rutgers was asked first: Michigan is second, between Rutgers and McGill.
     const standing = (await schoolStanding(t.db, omar.personId))!;
     expect({ ...standing, faces: standing.faces.length }).toEqual({ school: 'University of Michigan-Ann Arbor', people: 3, place: 2, ahead: { school: 'Rutgers University-Newark', people: 3 }, behind: { school: 'McGill University', people: 1 }, faces: 3, mine: 2 });
-    expect(standing.faces.every(face => /^\/animals\/\d+\.png$/.test(face))).toBe(true);
+    expect(standing.faces.every(face => /^\/animals\/\d+\.webp$/.test(face))).toBe(true);
     render(await withPortalTestSession(omar, () => page('cornell')));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('University of Michigan-Ann Arbor is #2 in line.');
     expect(screen.getByText(`${OPEN_AT - 3} more and it opens there.`, { exact: false })).toBeInTheDocument();

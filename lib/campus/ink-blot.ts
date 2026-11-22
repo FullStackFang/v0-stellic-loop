@@ -9,7 +9,9 @@ type Round = readonly [x: number, y: number, r: number];
 export type InkBlot = { school: string; seep: string; dark: string; schoolDrops: Round[]; darkDrops: Round[] };
 
 const TURN = Math.PI * 2, STEPS = 96;
-const hash = (text: string) => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+// A face of the set was named by its PNG until it was shown as WebP (openspec loop-lighter-pages, D2); worked out from the
+// old name, each member keeps the blot they had.
+const hash = (text: string) => [...text.replace(/(\/animals\/\d+)\.webp\b/, '$1.png')].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
 /** A run of numbers from 0 to 1 that is the same every time for the same start. */
 function run(seed: number) {
   return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
