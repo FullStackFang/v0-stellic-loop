@@ -11,7 +11,7 @@ import { FreshWait } from "@/components/loading/fresh-wait";
 import { SeatsEnding } from "@/components/loading/seats-ending";
 import { Seen } from "@/components/seen";
 
-const archivo = localFont({ src: "../public/fonts/Archivo.ttf", variable: "--font-archivo", weight: "100 900", declarations: [{ prop: "font-stretch", value: "62% 125%" }] });
+const archivo = localFont({ src: "../public/fonts/Archivo.woff2", variable: "--font-archivo", weight: "100 900", declarations: [{ prop: "font-stretch", value: "62% 125%" }] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),

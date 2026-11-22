@@ -5,11 +5,11 @@
 
 ## 1. The font as WOFF2 (D1)
 
-- [ ] 1.1 Convert `public/fonts/Archivo.ttf` to `public/fonts/Archivo.woff2` with a converter run through `npx`; write down its size. If it is over 100 kB, stop and report before going on
-- [ ] 1.2 Compare the two files: same axes and ranges (weight 100 to 900, width 62% to 125%) and the same glyph count
-- [ ] 1.3 Point `app/layout.tsx` and `app/global-error.tsx` at the WOFF2; leave the TTF in place for the tests and Conga
-- [ ] 1.4 On localhost, look at the front door's wide headline and a condensed label; check the font request is the WOFF2
-- [ ] 1.5 Run the tests that name the font file, `tsc --noEmit`, eslint on the changed files; commit by path
+- [x] 1.1 Convert `public/fonts/Archivo.ttf` to `public/fonts/Archivo.woff2` with a converter run through `npx`; write down its size. If it is over 100 kB, stop and report before going on (189 kB; the owner chose to ship it, limit 190 kB)
+- [x] 1.2 Compare the two files: same axes and ranges (weight 100 to 900, width 62% to 125%) and the same glyph count
+- [x] 1.3 Point `app/layout.tsx` and `app/global-error.tsx` at the WOFF2; leave the TTF in place for the tests and Conga
+- [x] 1.4 On localhost, look at the front door's wide headline and a condensed label; check the font request is the WOFF2
+- [x] 1.5 Run the tests that name the font file, `tsc --noEmit`, eslint on the changed files; commit by path
 
 ## 2. The framed mockups use the app's font (D5)
 

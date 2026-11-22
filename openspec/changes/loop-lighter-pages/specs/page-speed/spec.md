@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: The app's font is one compressed file
-Every page of the app SHALL load the Archivo font as a single WOFF2 file of at most 100 kB, holding the same weight range (100 to 900) and width range (62% to 125%) as before. A page SHALL NOT fetch a second copy of the font, from the app or from another site, including inside a frame the page shows.
+Every page of the app SHALL load the Archivo font as a single WOFF2 file of at most 190 kB, holding the same weight range (100 to 900) and width range (62% to 125%) as before. A page SHALL NOT fetch a second copy of the font, from the app or from another site, including inside a frame the page shows.
 
 #### Scenario: A first visit to any page
 - **WHEN** a visitor with an empty cache opens a page
-- **THEN** exactly one font file is downloaded, it is WOFF2, and it is at most 100 kB
+- **THEN** exactly one font file is downloaded, it is WOFF2, and it is at most 190 kB
 
 #### Scenario: The Ink page and the organizers page
 - **WHEN** a visitor opens `/c/ink` or `/organizers`
