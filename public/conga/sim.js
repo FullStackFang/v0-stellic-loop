@@ -41,8 +41,9 @@ const TAKEN = 6; // how many it takes. Over the head of the line it takes half t
 const SEATS = 40; // how many a car can carry: without it one car could hand a single line hundreds at once
 const SPARED = 1.5; // seconds before the same line is swept again, if the car is still over it
 // Pickups lie about the ground; a head that walks over one has it for a while (seconds here). The megaphone draws strays
-// from twice as far, coffee makes dashing free, and the whistle keeps the bus or tram from taking anyone off the line.
-export const POWERS = { megaphone: 10, coffee: 8, whistle: 15 };
+// from twice as far, coffee makes dashing free, and the whistle is safe passage: the head slips through other lines
+// without scattering (2026-11-22; it used to only keep the bus or tram off, which hardly ever mattered).
+export const POWERS = { megaphone: 10, coffee: 8, whistle: 8 };
 export const LOUD = PULL * 2; // how far a megaphone draws strays from
 const TAKE = 46; // a head this close to a pickup takes it
 const LYING = 50; // strays kept on the ground for each pickup lying there, so a bigger ground has more
@@ -277,9 +278,13 @@ function join(world, line, face, x, y, events) {
 /** A line owed a sack's or a car's animals takes them one after another at its head, each out of a puff ('pop'), quickly
  * while many are owed and slower as they run out: all at once they would pile up at the back of the line. */
 const OWE = 8, OWE_SHARE = 0.6; // animals a second at the least, and this share of those still owed on top
+const GIANT = 400; // the longest line a slow phone was measured to draw (see FULL)
 function owe(world, line, dt, events) {
   if (!line.owed.length) { line.owing = 0; return; }
   for (line.owing += (OWE + line.owed.length * OWE_SHARE) * dt; line.owing >= 1 && line.owed.length; line.owing--) {
+    // A line already past GIANT is too long to join: the animal goes home, as a shed one does, so one big sack cannot keep
+    // a line past what a slow phone can draw.
+    if (line.tail.length >= GIANT) { const face = line.owed.shift(); events.push({ type: 'home', x: line.x, y: line.y, face, a: line.a }); continue; }
     join(world, line, line.owed.shift(), line.x, line.y, events);
     events.push({ type: 'pop', line: line.id, x: line.x, y: line.y, left: line.owed.length });
   }
@@ -411,7 +416,7 @@ export function step(world, dt) {
   const hits = [];
   const touches = (tail, x, y) => { for (let i = 0; i < tail.length; i++) { const dx = tail[i].x - x, dy = tail[i].y - y; if (dx * dx + dy * dy < HIT * HIT) return true; } return false; };
   for (const line of world.lines) {
-    if (line.dead || line.safe > 0) continue;
+    if (line.dead || line.safe > 0 || line.powers.whistle > 0) continue; // the whistle: safe passage
     for (const other of world.lines) {
       if (other === line || other.dead) continue;
       const heads = Math.hypot(other.x - line.x, other.y - line.y) < HEAD_HIT && other.safe <= 0 && line.tail.length <= other.tail.length;
@@ -434,7 +439,7 @@ export function step(world, dt) {
     // Swept on the way in, they get off with the rest. Swept on the way out, they come back on the next car.
     const moving = car.clock < there || (car.clock >= leaves && car.clock < back);
     if (moving && inside(world, car.x, car.y)) for (const line of world.lines) {
-      if (line.dead || line.safe > 0 || line.spared > 0 || line.powers.whistle > 0 || !line.tail.length) continue;
+      if (line.dead || line.safe > 0 || line.spared > 0 || !line.tail.length) continue;
       const head = Math.hypot(line.x - car.x, line.y - car.y) < SWEEP * 0.75;
       if (!head && !line.tail.some(f => Math.hypot(f.x - car.x, f.y - car.y) < SWEEP)) continue;
       const off = line.tail.splice(-(head ? Math.max(TAKEN, Math.ceil(line.tail.length / 2)) : TAKEN)), taken = off.length, aboard = Math.min(taken, Math.max(0, SEATS - car.load));
