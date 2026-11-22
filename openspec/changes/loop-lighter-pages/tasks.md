@@ -51,6 +51,6 @@
 ## 7. Waiting for the owner (not part of this change until answered)
 
 - [ ] 7.1 Ask: look into sign-in scripts on Doodles, Ink and organizers for signed-out visitors (Open Question 1)
-- [ ] 7.2 Ask: a domain, so sign-in can move to a Clerk production instance and lose the "Development mode" label (Open Question 2)
-- [ ] 7.3 Ask: the "Mockup … placeholders" banner on `/c/ink` (Open Question 3)
+- [x] 7.2 Ask: a domain, so sign-in can move to a Clerk production instance and lose the "Development mode" label (Open Question 2) (has a domain; the Clerk switch is a dashboard step)
+- [x] 7.3 Ask: the "Mockup … placeholders" banner on `/c/ink` (Open Question 3) (undecided; left as is)
 - [ ] 7.4 Ask: the front door's headline at laptop width (Open Question 4)
