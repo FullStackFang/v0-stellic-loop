@@ -868,23 +868,30 @@ function cabs(thing, t) {
     ctx.save(); ctx.translate(thing.from[0] + dx * at - dy / far * lane, thing.from[1] + dy * at + dx / far * lane); ctx.rotate(a); box(20, 11, 3); inked(C.cab, 2); ctx.restore();
   }
 }
+/** A felt cloud: three soft bumps on a flat bottom, a shade under it and a little stitch along its top. */
+function cloud(x, y, w) {
+  const h = w * 0.42, bumps = [[-0.3, 0.05, 0.26], [-0.02, -0.12, 0.34], [0.28, 0.02, 0.25]];
+  const path = () => { ctx.beginPath(); for (const [bx, by, r] of bumps) { ctx.moveTo(x + bx * w + r * w, y + by * w); ctx.arc(x + bx * w, y + by * w, r * w, 0, 7); } ctx.roundRect(x - w * 0.5, y - h * 0.15, w, h * 0.55, h * 0.27); };
+  ctx.save(); ctx.translate(0, 3); path(); ctx.fillStyle = 'oklch(90% 0.02 70)'; ctx.fill(); ctx.restore();
+  path(); ctx.fillStyle = 'oklch(98% 0.008 80)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(x - 0.02 * w, y - 0.12 * w, 0.22 * w, Math.PI * 1.1, Math.PI * 1.7); ctx.strokeStyle = 'oklch(86% 0.03 70)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]);
+}
 // The tram goes over everyone's heads, so it is drawn last, with its shadow on the ground under it.
 // Its riders look out of the windows on the way in, and it goes back with the windows empty.
 function tram(car) {
   const { from, to, x, y } = car, dx = to[0] - from[0], dy = to[1] - from[1], far = Math.hypot(dx, dy);
   if (car.kind === 'bus') return bus(car, dx / far, dy / far);
-  // Its towers are felt squares sewn on, and its cable two strands of dark yarn.
-  for (const at of [0.36, 0.74]) { const tx = from[0] + dx * at, ty = from[1] + dy * at; ctx.beginPath(); ctx.roundRect(tx - 16, ty - 16, 32, 32, 8); feltPiece(FELT.road); ctx.beginPath(); ctx.roundRect(tx - 10, ty - 10, 20, 20, 5); stitch(FELT.thread, 1.8, [5, 4]); }
-  ctx.beginPath();
-  for (const side of [-7, 7]) { ctx.moveTo(from[0] - dy / far * side, from[1] + dx / far * side); ctx.lineTo(to[0] - dy / far * side, to[1] + dx / far * side); }
-  ctx.lineCap = 'round';
-  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .2)'; ctx.lineWidth = 6; ctx.stroke(); ctx.restore();
-  ctx.strokeStyle = 'oklch(45% 0.04 45)'; ctx.lineWidth = 4; ctx.stroke();
-  ctx.lineCap = 'butt'; ctx.setLineDash([3, 4]); ctx.strokeStyle = 'oklch(62% 0.04 50)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
   if (toysIn()) {
-    // The toy cabin hangs from the cable, its shadow on the ground below and to the side.
-    ctx.globalAlpha = 0.18; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 30, y + 70, 60, 20, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
-    toy('tram', x, y + 62, 140, dx < 0 === car.clock < car.ride + car.stay);
+    // No cable (/demo/mockups-conga-tram.html, A): the cabin floats on a little bank of felt clouds that rides along
+    // under it, bobbing gently, its shadow on the ground below. The arm on its roof is cropped off the picture, so
+    // nothing points at a cable that isn't there.
+    const bob = Math.sin(world.t * 2.2) * 5, top = y + bob, t = world.t;
+    ctx.globalAlpha = 0.16; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 24, y + 104, 58, 18, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    cloud(x - 46, top + 58 + Math.sin(t * 2.2 + 1) * 3, 70); cloud(x + 50, top + 60 + Math.sin(t * 2.2 + 2) * 3, 62);
+    const [sx, sy, sw, sh] = AT.tram, cut = Math.round(sh * 0.3), high = 140 * sh / sw;
+    ctx.save(); ctx.translate(x, top + 62); if (dx < 0 === car.clock < car.ride + car.stay) ctx.scale(-1, 1);
+    ctx.drawImage(toys, sx, sy + cut, sw, sh - cut, -70, -high + high * cut / sh, 140, high * (sh - cut) / sh); ctx.restore();
+    cloud(x + 2, top + 70 + Math.sin(t * 2.2 + 0.5) * 2, 84);
     return;
   }
   ctx.globalAlpha = 0.2; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 26, y + 40, 62, 30, Math.atan2(dy, dx), 0, 7); ctx.fill(); ctx.globalAlpha = 1;
