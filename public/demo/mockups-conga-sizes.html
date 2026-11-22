@@ -124,15 +124,15 @@ function ring(x, y, age, colour) {
 // Every moving or standing thing beside a line of animals, at today's size or the proposed one.
 const SAY = {
   sizes: {
-    b: 'Proposed. Everything measured against an animal in a line (42 across). A cab is a car, about two and a half animals long (40 → 100). The ferry is the biggest thing that moves (100 → 190), the tug a bit smaller (100 → 140), and the little bus on a road with no bus route is as big as the bus that stops (64 → 160). Trees grow about a third (one animal → one and a half). The bus (160), tram (140), buildings (150), sacks and pickups stay as they are.',
+    b: 'Proposed. Everything measured against an animal in a line (42 across). A cab is a small car, under half a building (40 → 70). Buildings grow a little (150 → 180). The bus is smaller than the tram (160 → 120, tram 140), and the little bus on a road with no bus route matches it (64 → 120). Ferry and tug stay as they are (100). Trees grow about a third.',
     now: 'Today. A cab is the size of one animal, the ferry and tug are smaller than the bus, the little bus is under half the size of the bus that stops, and trees are about one animal across.',
   },
 };
 Object.assign(AT, { cab: [904, 1166, 128, 128], bus: [1482, 638, 256, 256], tram: [1740, 638, 256, 256], ferry: [966, 638, 256, 256], tug: [1224, 638, 256, 256], tree: [644, 1166, 128, 128], blossom: [774, 1166, 128, 128], brickhall: [0, 1166, 320, 162], sack: [1034, 1166, 111, 128] });
 toys.src = '../conga/scenery.v4.webp';
 const SIZES = {
-  now: { cab: 40, ferry: 100, tug: 100, littlebus: 64, tree: [38, 63] },
-  b: { cab: 100, ferry: 190, tug: 140, littlebus: 160, tree: [52, 84] },
+  now: { cab: 40, ferry: 100, tug: 100, littlebus: 64, bus: 160, hall: 150, tree: [38, 63] },
+  b: { cab: 70, ferry: 100, tug: 100, littlebus: 120, bus: 120, hall: 180, tree: [52, 84] },
 };
 const WATER = { deep: 'oklch(64% 0.1 228)', shallow: 'oklch(75% 0.085 215)', thread: 'oklch(90% 0.04 210)' };
 function cloud(x, y, w) {
@@ -162,14 +162,14 @@ function sizesScene(look, t) {
   for (const [n, x] of [[0, W * 0.08], [1, W * 0.24], [2, W * 0.4]]) toy('cab', x + drift * 0.2, ry - 18 + 12, S.cab, n % 2 === 1);
   tag('Cabs', W * 0.24, ry + 32);
   toy('bus', W * 0.6, ry - 6 + 12, S.littlebus, true); tag('Little bus', W * 0.6, ry + 32);
-  toy('bus', W * 0.85, ry - 6 + 12, 160, true); tag('Bus', W * 0.85, ry + 32);
+  toy('bus', W * 0.85, ry - 6 + 12, S.bus, true); tag('Bus', W * 0.85, ry + 32);
   // A line of six animals on the grass, for scale.
   const pts = [0, 1, 2, 3, 4, 5].map(i => ({ x: W * 0.36 - i * 33, y: H * 0.84 - (0.5 - 0.5 * Math.cos(t * 7 - i * 0.7)) * 2.5, face: [4, 9, 14, 2, 22, 30][i], size: i ? 42 : 58 }));
   rope(pts, 'oklch(60% 0.2 305)');
   pts.slice().reverse().forEach(p => sprite(p.face, p.x, p.y, p.size));
   // Trees on the grass (smallest and biggest), a building and a sack.
   toy('tree', W * 0.06, H * 0.95, S.tree[0]); toy('blossom', W * 0.4, H * 0.96, S.tree[1]); tag('Trees', W * 0.23, H * 0.97);
-  toy('brickhall', W * 0.62, H * 0.94, 150); tag('Building', W * 0.62, H * 0.97);
+  toy('brickhall', W * 0.62, H * 0.94, S.hall); tag('Building', W * 0.62, H * 0.97);
   toy('sack', W * 0.86, H * 0.93, 55); tag('Sack of 10', W * 0.86, H * 0.97);
   // The tram over the road on its clouds.
   const tx = W * 0.5, ty = H * 0.4 + Math.sin(t * 2.2) * 4;
