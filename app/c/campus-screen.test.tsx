@@ -317,9 +317,11 @@ describe('who sees whom', () => {
       expect(models.asked).toEqual([{ text: expect.stringContaining('in exactly the style of the first picture'), images: 2 }]);
       expect(models.asked[0].text).toContain('The owner also asks: a red scarf. Only the animal');
       expect(card.getAllByRole('img', { name: 'Ana, has Ink' })[0]).toHaveAttribute('src', own);
-      // It is served as a 192px picture with the figure filling the frame.
+      // It is served as a 192px picture with the figure filling the frame: WebP, like the set (openspec
+      // loop-lighter-pages, D2), while the drawing kept is the PNG, the one later drawings start from.
       const served = await customFaceRoute(new Request('http://loop.test/'), { params: Promise.resolve({ token: row.token }) });
-      expect(served.headers.get('content-type')).toBe('image/png');
+      expect(served.headers.get('content-type')).toBe('image/webp');
+      expect((await sharp(Buffer.from((await customFaceImage(t.db, row.token))!)).metadata()).format).toBe('png');
       const meta = await sharp(Buffer.from(await served.arrayBuffer())).metadata(), figure = await sharp(Buffer.from((await customFaceImage(t.db, row.token))!)).trim().toBuffer({ resolveWithObject: true });
       expect([meta.width, meta.height, figure.info.width]).toEqual([192, 192, 168]);
       // Drawing it again comes with Ink+: on Ink it is still offered, marked, and the step shows the pet and Ink+ where the drawing would be.

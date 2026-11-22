@@ -7,6 +7,8 @@ import { subscribeAsks, subscribeInkPlus } from '@/lib/campus/ink';
 import { authenticate } from '@/lib/emba/access';
 import { askGroupPicture, ASKS, asksMade, groupPictureImage, groupPictures, keepGroupPicture, picturePane, waitingGroupPictures, type DrawGroup, type Pick } from '@/lib/emba/group-picture';
 import { startGroup } from '@/lib/emba/group-start';
+import { GET as tileRoute } from '@/app/animals/group/[token]/route';
+import { GET as wholeRoute } from '@/app/animals/group/[token]/full/route';
 
 let t: TestDb;
 beforeAll(async () => { t = await openTestDb(); });
@@ -52,6 +54,13 @@ it('draws the picked animals twice for whoever runs the group, and the group has
   expect(await size(await groupPictureImage(t.db, tokens[0], true))).toEqual([120, 80]);
   expect(await size(await groupPictureImage(t.db, tokens[0]))).toEqual([192, 192]);
   expect(await groupPictureImage(t.db, '00000000-0000-4000-8000-000000000000')).toBeNull();
+  // Served, the tile is WebP like the animals on the pages (openspec loop-lighter-pages, D2); the whole drawing stays a PNG to
+  // be kept, and what is kept is the PNG.
+  const params = { params: Promise.resolve({ token: tokens[0] }) }, tile = await tileRoute(new Request('http://loop.test/'), params), whole = await wholeRoute(new Request('http://loop.test/'), params);
+  expect([tile.headers.get('content-type'), (await sharp(Buffer.from(await tile.arrayBuffer())).metadata()).format]).toEqual(['image/webp', 'webp']);
+  expect(tile.headers.get('cache-control')).toContain('immutable');
+  expect([whole.headers.get('content-type'), (await sharp(Buffer.from(await whole.arrayBuffer())).metadata()).format]).toEqual(['image/png', 'png']);
+  expect((await sharp(Buffer.from((await groupPictureImage(t.db, tokens[0]))!)).metadata()).format).toBe('png');
 
   await keepGroupPicture(t.db, owner, at, tokens[1]);
   expect(await groupPictures(t.db, [at.loopId])).toEqual(new Map([[at.loopId, tokens[1]]]));
