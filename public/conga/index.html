@@ -961,17 +961,26 @@ function airborne(t) {
   }
 }
 // A bus is on the ground. It faces the way it is going.
+const HOP = 46; // road between the bus's hops
 function bus(car, ux, uy) {
   const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay;
   if (toysIn()) {
-    // It drives along the road leaving small felt clouds from its back end (/demo/mockups-conga-bus-boats.html, C), which
-    // sit on the road behind it, drift up and fade, so the trail runs along the road it follows. No shadow under it.
-    const flip = (back ? -ux : ux) < 0, high = 160 * AT.bus[3] / AT.bus[2], t = world.t, trail = car.exhaust ??= [];
-    const moved = car.px != null && Math.hypot(x - car.px, y - car.py) > 0.05; car.px = x; car.py = y;
-    if (moved && Math.abs(x - cam.x) < wide / cam.z && Math.abs(y - cam.y) < tall / cam.z && (trail.at(-1)?.t ?? -1) < t - 0.12) trail.push({ x: x + (flip ? 70 : -70), y: y + 18, t, s: 22 + Math.random() * 12 });
-    for (let i = trail.length - 1; i >= 0; i--) { const p = trail[i], age = (t - p.t) / 1.4; if (age > 1 || age < 0) { trail.splice(i, 1); continue; } cloud(p.x, p.y - age * 16, p.s * (0.7 + age * 0.6), (1 - age) * 0.95); }
-    toy('bus', x, y + 40, 160, flip);
-    pill(car.name, x, y + 40 - high - 14, C.ink, C.paper, 14);
+    // It hops along the road like a toy pushed by hand (/demo/mockups-conga-bus-boats.html, 1): a small bounce every HOP
+    // of road and a little squash as it lands, a soft shadow under each tyre only (smaller and fainter as it lifts), and
+    // two tiny cream felt clouds kicked out sideways from the wheels at each landing. No oval under it.
+    const flip = (back ? -ux : ux) < 0, high = 160 * AT.bus[3] / AT.bus[2], t = world.t, dust = car.dust ??= [], tyres = flip ? [-38, 52] : [-52, 38];
+    const moved = car.px == null ? 0 : Math.hypot(x - car.px, y - car.py); car.px = x; car.py = y;
+    const before = car.hop ?? 0; car.hop = before + moved;
+    const ph = (car.hop % HOP) / HOP, lift = moved > 0.05 ? Math.sin(ph * Math.PI) * 14 : 0, squash = moved > 0.05 && ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0;
+    if (Math.floor(car.hop / HOP) > Math.floor(before / HOP) && Math.abs(x - cam.x) < wide / cam.z && Math.abs(y - cam.y) < tall / cam.z) for (const side of tyres) dust.push({ x: x + side + Math.sign(side) * 8, y: y + 2, t, dir: Math.sign(side) });
+    for (let i = dust.length - 1; i >= 0; i--) { const p = dust[i], age = (t - p.t) / 0.6; if (age > 1 || age < 0) { dust.splice(i, 1); continue; } cloud(p.x + p.dir * age * 16, p.y - age * 10, 16 + age * 8, (1 - age) * 0.95); }
+    for (const side of tyres) {
+      const k = 1 - lift / 30, cx = x + side, cy = y + 1, g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 28 * k);
+      g.addColorStop(0, `oklch(25% 0.03 40 / ${0.5 * k})`); g.addColorStop(1, 'oklch(25% 0.03 40 / 0)');
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(1, 0.38); ctx.translate(-cx, -cy); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 28 * k, 0, 7); ctx.fill(); ctx.restore();
+    }
+    ctx.save(); ctx.translate(x, y + 40 - lift); ctx.scale(1 + 0.08 * squash, 1 - 0.1 * squash); toy('bus', 0, 0, 160, flip); ctx.restore();
+    pill(car.name, x, y + 40 - lift - high - 14, C.ink, C.paper, 14);
     return;
   }
   ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(uy, ux) + (back ? Math.PI : 0));

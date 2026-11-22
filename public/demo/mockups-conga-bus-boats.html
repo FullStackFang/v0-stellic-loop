@@ -30,7 +30,7 @@ h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px;
 
   <section data-part="bus">
     <h2>1 · The bus</h2>
-    <div class="bar"><button data-v="c">C · Exhaust puffs (built)</button><button data-v="s1">1 · Wheel shadows</button><button data-v="s2">2 · Soft drop shadow</button><button data-v="s3">3 · Felt shadow</button><button data-v="a">Built now</button><button data-v="b">B · On a cloud</button><button data-v="now">Today</button></div>
+    <div class="bar"><button data-v="s1">1 · Wheel shadows (built)</button><button data-v="s2">2 · Soft drop shadow</button><button data-v="s3">3 · Felt shadow</button><button data-v="a">Built now</button><button data-v="b">B · On a cloud</button><button data-v="c">C · Exhaust puffs</button><button data-v="now">Today</button></div>
     <div class="frame"><canvas></canvas></div>
     <p class="note"></p>
   </section>
@@ -162,12 +162,12 @@ const pt = (r, s, off = 0) => ({ x: r.cx + Math.cos(r.a) * s - Math.sin(r.a) * o
 // Both are side-on toy pictures moving along a slanted road or channel, so today they slide sideways across it.
 const SAY = {
   bus: {
-    s1: '1 · Wheel shadows. Only a small soft dark patch right under each tyre, the way a toy really sits on a table, getting smaller and fainter as the bus lifts on each hop. The dust is two tiny cream felt clouds kicked out sideways from the wheels.',
+    s1: '1 · Wheel shadows (built). Only a small soft dark patch right under each tyre, the way a toy really sits on a table, getting smaller and fainter as the bus lifts on each hop. The dust is two tiny cream felt clouds kicked out sideways from the wheels.',
     s2: '2 · Soft drop shadow. A blurred shadow made from the bus\'s own outline, laid flat on the road behind it as if lit from above and to the left, sliding away a little as the bus lifts. Felt dust from the wheels.',
     s3: '3 · Felt shadow. The bus\'s outline cut from a darker grey felt and laid on the road under and behind it, flat with a crisp edge like every other felt piece on the mat. Felt dust from the wheels.',
     a: 'Built now: the hop with no shadow at all, and grey dust dots under the wheels. The bus stays on the road and hops along it like a toy being pushed by hand: a little bounce and squash with each step, and a small puff of dust from under each wheel where it lands. No shadow under it.',
     b: 'B · On a cloud, like the tram. The bus floats just above the road on a small bank of felt clouds, bobbing gently, its shadow on the road under it. Bus and tram then look like one family.',
-    c: 'C · Exhaust puffs (built, no shadow). The bus drives smoothly along the road and leaves small felt clouds from its back end, which sit on the road behind it, drift up and fade. The trail of puffs runs along the road, so you see the bus following it.',
+    c: 'C · Exhaust puffs. The bus drives smoothly along the road and leaves small felt clouds from its back end, which sit on the road behind it, drift up and fade. The trail of puffs runs along the road, so you see the bus following it.',
     now: 'Today: the bus slides along the slanted road side-on, with nothing tying it to the road but its shadow.',
   },
   boats: {
