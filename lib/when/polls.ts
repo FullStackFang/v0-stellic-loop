@@ -32,7 +32,7 @@ export type PollView = {
 
 export const POLL_ID = /^[A-Za-z0-9_-]{12}$/;
 const PER_DAY = 10, DAY_MS = 86_400_000;
-const iso = (column: string) => `to_char(${column} at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`;
+export const iso = (column: string) => `to_char(${column} at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`;
 const instant = z.string().max(40).refine(value => !Number.isNaN(Date.parse(value))).transform(value => new Date(value).toISOString());
 const whole = (min: number, max: number) => z.coerce.number().int().min(min).max(max);
 const NewPoll = z.object({

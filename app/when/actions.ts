@@ -11,6 +11,7 @@ import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { drainWhen, whenSendingOn } from '@/lib/when/outbox';
 import { WhenError, createPoll, recordOpen, saveAnswer } from '@/lib/when/polls';
+import { repeatPoll } from '@/lib/when/repeat';
 import { sendPoll } from '@/lib/when/send';
 
 // The presses of Loopd When's pages. Each asks afresh who is signed in, and says what went wrong in plain words.
@@ -65,6 +66,15 @@ export async function sendPollAction(_: Said, data: FormData): Promise<Said> {
     await flush(pollId);
   } catch (error) { return said(error); }
   redirect(`/when/${pollId}`);
+}
+
+/** "Ask the group again": the next poll of the series, and on to it. If it cannot be made, back to the poll it came from. */
+export async function repeatPollAction(data: FormData): Promise<void> {
+  const who = await getSignedInPrincipal(), pollId = String(data.get('pollId') ?? '');
+  if (!who) redirect(signInHref('/when/new'));
+  let next = /^[A-Za-z0-9_-]{12}$/.test(pollId) ? `/when/${pollId}` : '/when/new';
+  try { next = `/when/${(await repeatPoll(db(), who, { pollId })).id}`; } catch (error) { if (!(error instanceof WhenError)) console.error('when repeat', error); }
+  redirect(next);
 }
 
 const VISITOR = 'wn_v';

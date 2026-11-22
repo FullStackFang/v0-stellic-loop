@@ -69,7 +69,10 @@ button.wn-cell { cursor: pointer; }
 .wn-rows li.now { background: color-mix(in oklab, var(--cs-field) 40%, var(--cs-paper)); }
 .wn-rows .cs-face { width: 34px; height: 34px; }
 .wn-rows b { font-weight: 640; overflow-wrap: anywhere; }
-.wn-rows .cs-pill { margin-left: auto; }
+.wn-rows .cs-pill, .wn-rows .cs-stack { margin-left: auto; }
+.wn-rows .cs-tile { min-width: 46px; min-height: 46px; padding: 5px 6px 6px; }
+.wn-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.wn-chips .cs-pill { font-size: 14px; font-weight: 640; padding: 6px 13px 7px; }
 .wn-rows li.out b { color: var(--cs-mute); font-weight: 520; }
 .wn-rows small { display: block; font-size: 13px; color: var(--cs-mute); }
 .wn-acts { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -83,6 +86,8 @@ button.wn-cell { cursor: pointer; }
 .wn-picks input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .wn-picks .cs-tile { min-width: 54px; min-height: 48px; }
 .wn-picks span > b { font-size: 17px; font-weight: 700; }
+.wn-picks .cs-stack { margin-left: auto; }
+.wn-picks label:has(input:checked) .cs-stack { --ring: var(--cs-ink); }
 .wn-picks small { display: block; font-size: 13px; color: var(--cs-mute); }
 .wn-picks label:has(input:checked) { background: var(--cs-ink); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-action); }
 .wn-picks label:has(input:checked) > span:not(.cs-tile) small { color: var(--cs-field); }

@@ -62,6 +62,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
       {(mine || view.isOrganizer) && <p className="wn-note">Also in your email, with the invite attached.</p>}
       <div className="wn-acts wn-mid">
         {who ? <a className="cs-btn sm" href={`${here}?edit=1`}>Update your answer</a> : <a className="cs-btn sm" href={signInHref(here)}>Sign in to add your times</a>}
+        {(mine || view.isOrganizer) && <a className="cs-btn sm" href={`${here}/again`}>Ask the group again</a>}
       </div>
       {view.isOrganizer && <PassOn tab="Tell the rest" view={view} />}
     </main>;
