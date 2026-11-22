@@ -82,13 +82,25 @@
 .cs-asst .cs-ft-ask-tab { top: auto; bottom: -12px; }
 /* On a phone a colour dot is big enough for a thumb. */
 @media (max-width: 700px) { .cs .cs-ft-kits button, .cs-ft-kits button > i { height: 32px; } .cs-ft-kits button > i { width: 32px; } }
-/* On a phone the foot is two even lines: the wordmark with the colours at the right, then the links with the year at
-   the right. */
+/* The colours on a laptop: the dots in a row, as ever. The one-dot button is for a phone only. */
+.cs-ft-look { display: contents; }
+.cs-ft-lookbtn { display: none; }
+/* On a phone the foot is one line (public/demo/mockups-footer-phone.html, D): the wordmark, Terms, Privacy, and the
+   colour worn as one dot at the end. Pressed, the dot opens the colours in a card above, each named, with "Every
+   school" under them for someone without Ink+. The year is left to a laptop. */
 @media (max-width: 560px) {
-  .cs-ft-bar { gap: 0 6px; padding: 14px 16px 16px; } .cs-ft-end { display: contents; }
-  .cs-ft-bar .cs-wm { order: 1; } .cs-ft-kits { order: 2; margin-left: auto; gap: 7px; padding: 4px 6px; }
-  .cs-ft-bar::after { content: ''; order: 3; flex-basis: 100%; height: 0; }
-  .cs-ft-bar > nav > * { order: 4; margin-top: 12px; } .cs-ft-end > small { order: 5; margin: 12px 0 0 auto; }
+  .cs-ft-bar { flex-wrap: nowrap; gap: 6px; padding: 14px 16px 16px; } .cs-ft-end { display: contents; } .cs-ft-end > small { display: none; }
+  .cs-ft-bar .cs-wm { padding-right: 4px; }
+  .cs .cs-ft-lookbtn { display: grid; place-items: center; flex: none; margin-left: auto; width: 42px; height: 42px; border-radius: 50%; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-field-shadow); }
+  .cs-ft-lookbtn > i { width: 32px; height: 32px; border-radius: 50%; background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink), inset 0 0 0 3px var(--cs-paper); }
+  .cs-ft-lookbtn[aria-expanded=true] { background: var(--cs-ink); }
+  .cs-ft-look { display: none; }
+  .cs-ft-look[data-open] { position: absolute; z-index: 8; right: 12px; bottom: calc(100% + 12px); display: grid; gap: 6px; padding: 6px; border-radius: 22px 22px 6px 22px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink), 4px 4px 0 var(--cs-ink); transform-origin: 100% 100%; animation: cs-ft-ask .35s var(--cs-expo); }
+  .cs-ft-look .cs-ft-kits { flex-direction: column; align-items: stretch; gap: 4px; padding: 0; box-shadow: none; }
+  .cs .cs-ft-look .cs-ft-kits button { height: 40px; padding-left: 4px; }
+  .cs-ft-look .cs-ft-kits button > span { grid-template-columns: 1fr; }
+  .cs-ft-look .cs-ft-inkpick .cs-ft-ask { right: 0; }
 }
-/* The narrowest phones: the mark alone, so the colours stay on its line. */
-@media (max-width: 380px) { .cs-ft-bar .cs-wm { gap: 0; padding-right: 0; font-size: 0; } }
+@media (max-width: 560px) and (prefers-reduced-motion: reduce) { .cs-ft-look[data-open] { animation: none; } }
+/* The narrowest phones: the mark alone, so everything stays on one line. */
+@media (max-width: 360px) { .cs-ft-bar .cs-wm { gap: 0; padding-right: 0; font-size: 0; } }
