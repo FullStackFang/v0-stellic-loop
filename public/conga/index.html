@@ -711,10 +711,36 @@ function sprite(face, x, y, size, tilt = 0, alpha = 1) {
   else ctx.drawImage(sheet, sx, sy, SHEET, SHEET, x - size / 2, y - size / 2, size, size);
   if (alpha !== 1) ctx.globalAlpha = 1;
 }
+// A five-point star with rounded points, as a path.
+function starPath(x, y, s, turn, round = 0.32) {
+  const pts = [];
+  for (let k = 0; k < 10; k++) { const a = turn - Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? s * 0.5 : s; pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]); }
+  ctx.beginPath();
+  for (let k = 0; k < 10; k++) {
+    const [ax, ay] = pts[k], [bx, by] = pts[(k + 1) % 10], [px, py] = pts[(k + 9) % 10];
+    const inx = ax + (px - ax) * round, iny = ay + (py - ay) * round;
+    if (k === 0) ctx.moveTo(inx, iny); else ctx.lineTo(inx, iny);
+    ctx.quadraticCurveTo(ax, ay, ax + (bx - ax) * round, ay + (by - ay) * round);
+  }
+  ctx.closePath();
+}
+// A star cut from yellow felt (/demo/mockups-conga-cloud-stars.html, A): its shadow, the darker felt underneath, the lit
+// face a little up and in, a highlight, and a running stitch like the map's.
+function feltStar(x, y, s, turn) {
+  starPath(x + s * 0.12, y + s * 0.22, s, turn); ctx.fillStyle = 'oklch(35% 0.04 50 / .18)'; ctx.fill();
+  starPath(x, y, s, turn); ctx.fillStyle = 'oklch(74% 0.15 92)'; ctx.fill();
+  starPath(x - s * 0.05, y - s * 0.09, s * 0.88, turn); ctx.fillStyle = 'oklch(88% 0.15 96)'; ctx.fill();
+  starPath(x - s * 0.18, y - s * 0.24, s * 0.34, turn); ctx.fillStyle = 'oklch(96% 0.07 98 / .7)'; ctx.fill();
+  if (s < 6) return; // too small to see a stitch
+  starPath(x - s * 0.05, y - s * 0.09, s * 0.66, turn, 0.4); ctx.setLineDash([s * 0.16, s * 0.13]); ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1, s * 0.07); ctx.strokeStyle = 'oklch(62% 0.13 86 / .8)'; ctx.stroke(); ctx.setLineDash([]);
+}
 // The dust cloud over animals heaped at the end of a rope: felt puffs round a full middle, each breathing, a shade under
-// them on the ground, a few stars wheeling round and wisps rising off the top. Bigger the more are under it.
+// them on the ground, three felt stars going round it and wisps rising off the top. Bigger the more are under it.
 function dustCloud({ x, y, n, seed }, t) {
   const r = Math.min(70, 24 + 4.5 * Math.sqrt(n)), puffs = 9, cy = y - r * 0.35;
+  // The stars go behind the cloud's top on the way up and in front of it on the way down.
+  const stars = [0, 1, 2].map(i => { const a = t * 2.1 + i * 2.1 + seed; return { x: x + Math.cos(a) * r * 1.08, y: cy + Math.sin(a) * r * 0.48 + Math.sin(t * 6 + i) * r * 0.04, s: r * 0.24 * (0.85 + 0.15 * Math.sin(a)), turn: Math.sin(t * 2 + i) * 0.35, front: Math.sin(a) > -0.2 }; });
+  for (const star of stars) if (!star.front) feltStar(star.x, star.y, star.s, star.turn);
   ctx.beginPath(); ctx.ellipse(x, y + 10, r * 1.15, r * 0.38, 0, 0, 7); ctx.fillStyle = 'oklch(40% 0.05 40 / .16)'; ctx.fill();
   for (const [shade, lift] of [['oklch(88% 0.02 65)', 0], ['oklch(97% 0.01 70)', 4]]) {
     ctx.fillStyle = shade; ctx.beginPath();
@@ -730,14 +756,7 @@ function dustCloud({ x, y, n, seed }, t) {
     const u = (t * 0.8 + i / 3 + seed * 0.13) % 1, wx = x + (i - 1) * r * 0.5 + Math.sin(t * 2 + i) * 6, wy = cy - r * 0.55 - u * r * 0.7;
     ctx.beginPath(); ctx.arc(wx, wy, r * 0.2 * (1 - u * 0.5), 0, 7); ctx.fillStyle = `oklch(97% 0.01 70 / ${0.8 * (1 - u)})`; ctx.fill();
   }
-  // stars wheeling round it, in front as they come down and behind the top as they go up
-  ctx.lineJoin = 'round';
-  for (let i = 0; i < 3; i++) {
-    const a = t * 2.4 + i * 2.1 + seed, sx = x + Math.cos(a) * r * 1.05, sy = cy + Math.sin(a) * r * 0.45, s = r * 0.17 * (0.85 + 0.15 * Math.sin(a));
-    ctx.beginPath();
-    for (let k = 0; k < 10; k++) { const b = t * 4 + i + k * Math.PI / 5, rr = k % 2 ? s * 0.45 : s; ctx.lineTo(sx + Math.cos(b) * rr, sy + Math.sin(b) * rr); }
-    ctx.closePath(); ctx.fillStyle = i === 1 ? C.paper : 'oklch(90% 0.17 98)'; ctx.fill(); ctx.lineWidth = Math.max(1.5, s * 0.16); ctx.strokeStyle = C.ink; ctx.stroke();
-  }
+  for (const star of stars) if (star.front) feltStar(star.x, star.y, star.s, star.turn);
 }
 // What an Ink+ line wears, on its own animal and nowhere else: a small spark beside it now and then, in one of three places,
 // in the two colours of a school in turn.
