@@ -46,3 +46,9 @@ next-env.d.ts
 index.pre-pulse-ds.html
 .playwright-mcp/
 /supabase/.temp/
+
+# Design mockups stay on the founder's machine (localhost:3000/demo) and off GitHub and the live site,
+# except the two the app shows inside its own pages (/c/ink, /organizers).
+public/demo/mockups-*.html
+!public/demo/mockups-premium.html
+!public/demo/mockups-imprint.html
