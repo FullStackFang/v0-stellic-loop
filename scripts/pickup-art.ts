@@ -19,6 +19,8 @@ const PICKUPS = {
   ferry: 'a small white passenger ferry boat with a blue cabin and big windows, seen from above at a slant',
   tug: 'a small red tugboat with a white cabin and a black funnel, seen from above at a slant',
   cab: 'a yellow New York taxi cab, seen from above at a slant',
+  // The same cab driving away, for cabs going up the screen (the front view would look like it was reversing).
+  cabback: 'a yellow New York taxi cab seen from behind and a little above, driving away from us and turned toward the upper left: its back bumper, red tail lights and rear window toward us, a small white TAXI sign on its roof, a checkered stripe along its side',
   clocktower: 'a tall slender stone clock tower with a pointed roof and a clock face, seen from above at a slant',
   lighthouse: 'a short grey stone lighthouse with eight sides and a yellow lamp at the top, seen from above at a slant',
   // The halls, each a small toy building seen from the front and a little above, as on a game map. One picture serves several halls.

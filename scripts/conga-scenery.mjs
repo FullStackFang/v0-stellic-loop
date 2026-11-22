@@ -4,10 +4,10 @@
 import sharp from 'sharp';
 import { writeFileSync } from 'node:fs';
 
-const VERSION = 5;
+const VERSION = 6;
 // Buildings are drawn 150 units across, which is about 360 pixels on a sharp laptop screen, so they are kept bigger than the small things.
 const BIG = ['stonehall', 'chapel', 'glasshall', 'brickhall', 'armory', 'rink', 'dome', 'museum', 'castle', 'dorm', 'cafe', 'bloomberg', 'tata', 'tower', 'station', 'subway', 'ruin', 'farmhouse', 'stonechapel', 'octagon', 'clocktower', 'lighthouse', 'pond', 'fourfreedoms'];
-const SMALL = ['tree', 'blossom', 'cab', 'sack'];
+const SMALL = ['tree', 'blossom', 'cab', 'cabback', 'sack'];
 const MIDDLE = ['ferry', 'tug', 'bus', 'tram']; // drawn 100 to 160 across
 const HUGE = ['queue']; // the stop's roped-off queue, drawn about 300 across
 const WIDE = 2048, GAP = 2;
