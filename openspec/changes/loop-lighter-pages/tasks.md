@@ -46,7 +46,8 @@
 - [x] 6.1 Make sure no dev server or other build is running, then run one production build; the route table marks `/terms` and `/privacy` static
 - [x] 6.2 Start the built app; load `/`, `/terms`, `/c/ink` and `/c/doodles` with an empty cache at 390 px and write the byte table (total, font, scripts, images) into design.md beside the numbers in the proposal
 - [x] 6.3 On `/terms`, check that no sign-in script is requested and the console is clean
-- [ ] 6.4 After the owner pushes: check the response headers of `/terms` in production (served from the cache) and that the production log shows no new errors
+- [x] 6.4 After the owner pushes: check the response headers of `/terms` in production (served from the cache) and that the production log shows no new errors
+  - 2026-11-22, deployment aa1053e: `/terms` `X-Vercel-Cache: HIT`, no Clerk on the page; the font is 189 kB WOFF2; the door serves `.webp` faces. One log entry: a database connection timeout while the pitch cache refreshed in the background, so visitors kept the cached pitch. The same timeout on `/` on 2026-11-20 had failed the page.
 
 ## 7. Waiting for the owner (not part of this change until answered)
 
