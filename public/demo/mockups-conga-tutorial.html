@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · teaching a new player</title>
+<style>
+/* How a new player learns Conga (public/conga/index.html). Each phone is the real game at 390 x 844
+   (conga-phone-ground.webp, from /demo/mockups-conga-phone.html); everything on it is placed in the phone's own pixels.
+   Your line's head is at (187, 405); a stray turtle stands at (140, 530). */
+@font-face { font-family: Archivo; src: url(../fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --field: oklch(82% 0.12 38); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --paper: oklch(99.2% 0.004 60); --mute: oklch(45% 0.016 40); --expo: cubic-bezier(.16, 1, .3, 1); }
+* { box-sizing: border-box; margin: 0; }
+html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; }
+body { background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 32px 16px 64px; }
+header, .part, .row { max-width: 1180px; margin-left: auto; margin-right: auto; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: 34px; letter-spacing: -.02em; }
+.lead { margin-top: 6px; font-size: 16px; line-height: 1.45; color: var(--mute); max-width: 72ch; }
+.part { display: flex; align-items: center; gap: 12px; margin-top: 44px; margin-bottom: 16px; }
+.part b { font-weight: 900; font-stretch: 108%; font-size: 22px; background: var(--ink); color: var(--paper); padding: 6px 16px 7px; border-radius: 14px 14px 14px 4px; }
+.part .pick { font-weight: 800; font-size: 14px; padding: 5px 12px; border-radius: 99px; background: var(--action); color: var(--paper); }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 28px; align-items: start; }
+.row + .note { max-width: 1180px; margin: 16px auto 0; }
+section { display: grid; gap: 12px; justify-items: start; }
+.name { padding: 5px 14px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 15px; }
+.note { font-size: 15px; line-height: 1.45; background: var(--paper); padding: 10px 14px; border-radius: 14px 14px 14px 4px; box-shadow: inset 0 0 0 2px var(--ink); max-width: 85ch; }
+
+.phone { width: 270px; aspect-ratio: 390 / 844; border-radius: 34px; padding: 8px; background: var(--ink); box-shadow: 6px 6px 0 oklch(24% 0.035 30 / .25); }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 27px; overflow: hidden; background: center / cover no-repeat url(conga-phone-ground.webp); container-type: inline-size; }
+.layer { position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform-origin: 0 0; transform: scale(calc(100cqw / 390px)); }
+@supports not (transform: scale(calc(100cqw / 390px))) { .layer { transform: scale(.651); } }
+
+/* A ghost finger: a soft ink dot with a halo. */
+.finger { position: absolute; width: 50px; height: 50px; margin: -25px 0 0 -25px; border-radius: 50%; background: oklch(24% 0.035 30 / .5); box-shadow: 0 0 0 9px oklch(24% 0.035 30 / .14); }
+.tap { position: absolute; width: 50px; height: 50px; margin: -25px 0 0 -25px; border-radius: 50%; box-shadow: inset 0 0 0 4px var(--paper); opacity: 0; }
+
+/* ---------- A: learn by doing ---------- */
+/* The coach: an ink card at the foot of the screen, overlapping a tab with the step. It waits until you have done it. */
+.coach { position: absolute; left: 22px; right: 22px; bottom: 132px; padding: 22px 18px 16px; border-radius: 22px 22px 22px 6px; background: var(--ink); color: var(--paper); box-shadow: 5px 5px 0 var(--action); }
+.coach .tab { position: absolute; left: 14px; top: -14px; display: flex; gap: 6px; align-items: center; padding: 4px 10px 5px; border-radius: 10px 10px 10px 3px; background: var(--field); color: var(--ink); font-weight: 800; font-size: 14px; }
+.coach .tab i { width: 9px; height: 9px; border-radius: 50%; background: oklch(24% 0.035 30 / .25); } .coach .tab i.on { background: var(--ink); }
+.coach h3 { font-weight: 800; font-stretch: 110%; font-size: 27px; letter-spacing: -.03em; line-height: 1.05; }
+.coach p { margin-top: 6px; font-size: 16px; font-weight: 550; color: oklch(84% 0.03 40); line-height: 1.3; }
+.coach .skip { position: absolute; right: 12px; top: -14px; padding: 4px 12px 5px; border-radius: 99px; background: var(--paper); color: var(--ink); font-weight: 750; font-size: 14px; box-shadow: inset 0 0 0 2px var(--ink); }
+.coach .done { position: absolute; right: 16px; bottom: 16px; width: 34px; height: 34px; border-radius: 50%; background: var(--action); display: grid; place-items: center; }
+/* Step 1: a finger drags in a slow arc and the line's head turns to follow. */
+.drag { left: 250px; top: 560px; animation: drag 2.6s var(--expo) infinite; }
+@keyframes drag { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 60% { transform: translate(-130px, -60px); opacity: 1; } 85%, 100% { transform: translate(-130px, -60px); opacity: 0; } }
+.trail { position: absolute; left: 120px; top: 490px; width: 140px; height: 80px; border-top: 4px dashed oklch(24% 0.035 30 / .35); border-radius: 100% 0 0 0; }
+/* Step 2: a ring pulses round the nearest stray, and a dotted path runs to it from the head. */
+.ring { position: absolute; left: 140px; top: 532px; width: 96px; height: 96px; margin: -48px 0 0 -48px; border-radius: 50%; box-shadow: inset 0 0 0 5px var(--action); animation: ring 1.4s var(--expo) infinite; }
+@keyframes ring { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+.path { position: absolute; left: 150px; top: 440px; width: 5px; height: 60px; background: repeating-linear-gradient(var(--action) 0 8px, transparent 8px 15px); transform: rotate(18deg); transform-origin: top; border-radius: 3px; }
+/* Step 3: tap, tap, then hold: two quick ripples, then the finger stays down and a ring fills round it. */
+.dbl { position: absolute; left: 240px; top: 505px; width: 50px; height: 50px; margin: -25px 0 0 -25px; }
+.dbl .tap { left: 25px; top: 25px; animation: tap 2.6s infinite; } .dbl .tap + .tap { animation-delay: .28s; }
+@keyframes tap { 0% { transform: scale(.7); opacity: 0; } 4% { opacity: 1; } 18%, 100% { transform: scale(1.9); opacity: 0; } }
+.dbl .hold { position: absolute; left: -9px; top: -9px; width: 68px; height: 68px; border-radius: 50%; background: conic-gradient(var(--action) var(--fill), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent 78%, #000 80%); mask: radial-gradient(closest-side, transparent 78%, #000 80%); animation: hold 2.6s linear infinite; }
+@property --fill { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+@keyframes hold { 0%, 30% { --fill: 0%; } 80%, 100% { --fill: 100%; } }
+.dbl .finger { left: 25px; top: 25px; animation: press 2.6s infinite; }
+@keyframes press { 0%, 8% { transform: scale(1); } 4% { transform: scale(.8); } 15% { transform: scale(.8); } 19% { transform: scale(1); } 26%, 85% { transform: scale(.8); } 90%, 100% { transform: scale(1); } }
+.zoom { position: absolute; left: 140px; top: 330px; width: 90px; height: 120px; }
+.zoom i { position: absolute; width: 4px; border-radius: 2px; background: oklch(99% 0.004 60 / .9); animation: zoom 2.6s infinite; }
+@keyframes zoom { 0%, 32% { opacity: 0; transform: translateY(0); } 40% { opacity: 1; } 85% { opacity: .8; transform: translateY(34px); } 100% { opacity: 0; transform: translateY(40px); } }
+
+/* ---------- B: before you play ---------- */
+.dim { position: absolute; inset: 0; background: oklch(24% 0.035 30 / .2); }
+.card { position: absolute; left: 18px; right: 18px; top: 150px; padding: 22px 18px 18px; border-radius: 26px 26px 26px 6px; background: var(--paper); box-shadow: 7px 7px 0 var(--ink), inset 0 0 0 2px var(--ink); display: grid; gap: 14px; }
+.card h3 { font-weight: 900; font-stretch: 112%; font-size: 36px; line-height: .98; letter-spacing: -.02em; }
+.how { display: grid; gap: 10px; }
+.how > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: center; padding: 8px; border-radius: 18px 18px 18px 5px; background: oklch(93% 0.03 45); }
+.how b { font-weight: 850; font-size: 18px; display: block; } .how span { font-size: 14.5px; font-weight: 550; color: var(--mute); line-height: 1.25; }
+.tile { position: relative; width: 76px; height: 76px; border-radius: 14px; background: var(--field); overflow: hidden; box-shadow: inset 0 0 0 2px var(--ink); }
+.tile .finger { width: 26px; height: 26px; margin: -13px 0 0 -13px; box-shadow: 0 0 0 5px oklch(24% 0.035 30 / .14); }
+.tile .tap { width: 26px; height: 26px; margin: -13px 0 0 -13px; box-shadow: inset 0 0 0 3px var(--paper); }
+.t-drag .finger { left: 58px; top: 52px; animation: tdrag 2.2s var(--expo) infinite; }
+@keyframes tdrag { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } 65% { transform: translate(-36px, -26px); opacity: 1; } 90%, 100% { transform: translate(-36px, -26px); opacity: 0; } }
+.tile .dot { position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); }
+.t-join .dot { animation: tjoin 2.2s var(--expo) infinite; }
+.t-join .dot:nth-child(1) { left: 20px; top: 38px; } .t-join .dot:nth-child(2) { left: 34px; top: 38px; animation-delay: 0s; } .t-join .dot:nth-child(3) { left: 62px; top: 38px; background: var(--action); animation-name: tstray; }
+@keyframes tjoin { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(8px); } }
+@keyframes tstray { 0%, 35% { transform: translateX(0) scale(1); } 55% { transform: translateX(-14px) scale(1.25); } 70%, 100% { transform: translateX(-14px) scale(1); background: var(--paper); } }
+.t-dash .finger { left: 38px; top: 40px; animation: press 2.6s infinite; } .t-dash .tap { left: 38px; top: 40px; animation: tap 2.6s infinite; } .t-dash .tap + .tap { animation-delay: .28s; }
+.go { justify-self: start; height: 52px; padding: 0 30px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; display: grid; place-items: center; box-shadow: 4px 4px 0 var(--ink); }
+
+/* ---------- C: a ghost hand ---------- */
+.hand { position: absolute; left: 262px; top: 520px; }
+.hand .finger, .hand .tap { left: 0; top: 0; } .hand .finger { animation: press 2.6s infinite; } .hand .tap { animation: tap 2.6s infinite; } .hand .tap + .tap { animation-delay: .28s; }
+.hand .label { position: absolute; left: -66px; top: 40px; padding: 7px 14px 8px; border-radius: 6px 99px 99px 99px; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 16px; white-space: nowrap; }
+.hand .label em { font-style: normal; color: var(--field); }
+.fade { position: absolute; left: 14px; right: 14px; bottom: 150px; display: flex; justify-content: center; }
+.fade span { padding: 8px 16px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 3px 3px 0 var(--ink); font-weight: 750; font-size: 15px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Conga · teaching a new player</h1>
+  <p class="lead">Today a new player on a phone gets one line at the top, "Drag to steer · double tap and hold to dash", for two seconds, so the dash is easy to miss. Three ways to teach it. Each shows only in a player's first game (and again from a small "How to play" in the start card); on a laptop the same steps say Mouse and Space.</p>
+</header>
+
+<div class="part"><b>A · Learn by doing</b><span class="pick">My pick</span></div>
+<div class="row">
+  <section>
+    <span class="name">Step 1 · steer</span>
+    <div class="phone"><div class="screen"><div class="layer">
+      <div class="trail"></div><div class="finger drag"></div>
+      <div class="coach"><span class="tab"><i class="on"></i><i></i><i></i></span><span class="skip">Skip</span><h3>Drag anywhere to steer</h3><p>Your line follows your thumb.</p></div>
+    </div></div></div>
+  </section>
+  <section>
+    <span class="name">Step 2 · gather</span>
+    <div class="phone"><div class="screen"><div class="layer">
+      <div class="path"></div><div class="ring"></div>
+      <div class="coach"><span class="tab"><i class="on"></i><i class="on"></i><i></i></span><span class="skip">Skip</span><h3>Walk into a stray</h3><p>It joins the back of your line.</p></div>
+    </div></div></div>
+  </section>
+  <section>
+    <span class="name">Step 3 · dash</span>
+    <div class="phone"><div class="screen"><div class="layer">
+      <div class="zoom"><i style="left:20px;top:0;height:30px"></i><i style="left:44px;top:14px;height:40px;animation-delay:.05s"></i><i style="left:68px;top:4px;height:30px;animation-delay:.1s"></i></div>
+      <div class="dbl"><div class="hold"></div><div class="tap"></div><div class="tap"></div><div class="finger"></div></div>
+      <div class="coach"><span class="tab"><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="skip">Skip</span><h3>Tap, tap and hold to dash</h3><p>Keep holding to keep going. Dashing drops an animal now and then.</p></div>
+    </div></div></div>
+  </section>
+</div>
+<p class="note">The game plays on under it. Each card waits until you have done the thing (steered, picked one up, dashed), ticks, then slides to the next; a ghost finger shows the move. Three steps and you are playing, about 20 seconds. Skip ends it, and it never comes back on its own.</p>
+
+<div class="part"><b>B · Before you play</b></div>
+<div class="row">
+  <section>
+    <span class="name">The start card</span>
+    <div class="phone"><div class="screen"><div class="layer">
+      <div class="dim"></div>
+      <div class="card"><h3>Longest line wins</h3>
+        <div class="how">
+          <div><div class="tile t-drag"><div class="finger"></div></div><p><b>Drag to steer</b><span>Your line follows your thumb</span></p></div>
+          <div><div class="tile t-join"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div><p><b>Walk into strays</b><span>They join your line. Run into another line and yours scatters</span></p></div>
+          <div><div class="tile t-dash"><div class="tap"></div><div class="tap"></div><div class="finger"></div></div><p><b>Tap, tap, hold</b><span>to dash</span></p></div>
+        </div>
+        <span class="go">Start</span>
+      </div>
+    </div></div></div>
+  </section>
+  <section>
+    <p class="note">Three little moving pictures in the start card, read before you play. Quick, and it warns about running into other lines too, but you read it instead of doing it, so the dash can still be forgotten once the game starts.</p>
+  </section>
+</div>
+
+<div class="part"><b>C · A ghost hand</b></div>
+<div class="row">
+  <section>
+    <span class="name">In the game</span>
+    <div class="phone"><div class="screen"><div class="layer">
+      <div class="hand"><div class="tap"></div><div class="tap"></div><div class="finger"></div><span class="label">tap, tap, <em>hold</em></span></div>
+    </div></div></div>
+  </section>
+  <section>
+    <p class="note">No cards. Steering needs no teaching (you touch the screen and the line moves), so only the dash is shown: a ghost finger beside your thumb does tap, tap, hold every few seconds until you have dashed once. The least in the way, but it does not explain strays or running into lines.</p>
+  </section>
+</div>
+</body>
+</html>
