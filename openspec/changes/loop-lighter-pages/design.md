@@ -82,6 +82,21 @@ A script under `scripts/` writes `NN.webp` beside each `public/animals/NN.png` w
 
 Order: D1, D5, D2, D3, D4. Each is its own commit. After all five, one production build, then the byte table in the proposal is measured again on a preview or production and written into this file. The measuring script loads a page with an empty cache at 390 px and sums transferred bytes by kind.
 
+### D7. Nothing here touches Conga
+
+`conga-smooth-followups` is in progress and edits `public/conga/index.html` only. This change shares no file with it and leaves alone everything the game reads (checked 2026-11-21):
+
+| What Conga uses | What this change does |
+|---|---|
+| `public/conga/**` (page, scripts, sprite sheets) | Never edited, never committed |
+| `/fonts/Archivo.ttf`, named in the page's own `@font-face`, and its `loadingdone` event | The TTF stays at the same address, unchanged; the WOFF2 is a new file beside it |
+| `public/animals/NN.png`, read by `scripts/conga-atlas.mjs` | The PNGs stay, same names. The script takes only names matching `NN.png`, so a `NN.webp` beside each is not picked up and the sheet's order does not move |
+| An animal's place on the sheet (`lib/campus/conga.ts`, a number, not an address) | Unchanged: `animal()`'s address is not used by the game |
+| A made animal's address (`customFace`, `/animals/custom/…`) | Unchanged |
+| `app/conga/route.ts`, `app/conga/*.test.ts`, `scripts/conga-*.mjs` | Not edited |
+
+`next.config.ts` is edited for the faces' cache header only; its Conga lines (the redirect, the sprite sheets' header, `outputFileTracingIncludes` for `/conga`) are not touched. If Conga later moves to the WOFF2, that is one line in its own page, for that work to make.
+
 ## Risks / Trade-offs
 
 - [The WOFF2 drops an axis or glyphs] → Compare axes and glyph counts before switching; look at the front door's wide headline and a condensed label.

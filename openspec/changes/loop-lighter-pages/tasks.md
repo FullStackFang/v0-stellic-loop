@@ -1,3 +1,8 @@
+## 0. Stay clear of Conga (D7)
+
+- [ ] 0.1 Before every commit of this change: `git diff --cached --name-only` lists nothing under `public/conga/`, `app/conga/` or `scripts/conga-*`, and `public/fonts/Archivo.ttf` and every `public/animals/NN.png` are unchanged
+- [ ] 0.2 After the faces' WebP files exist (3.1): `app/conga/sim.test.ts` and `app/conga/route.test.ts` pass, and `scripts/conga-atlas.mjs`'s file filter still finds the same list of faces (count the PNGs; do not run the script)
+
 ## 1. The font as WOFF2 (D1)
 
 - [ ] 1.1 Convert `public/fonts/Archivo.ttf` to `public/fonts/Archivo.woff2` with a converter run through `npx`; write down its size. If it is over 100 kB, stop and report before going on
