@@ -568,8 +568,8 @@ const SIZE = { stray: 40, tail: 42, head: 58 };
 // How wide a spilled line's sack is drawn: bigger the more it holds (10 → 55, 20 → 66, 40 → 81), by the square root so
 // a huge sack doesn't swamp the view. It shrinks as animals wander out of it.
 const sackWidth = count => Math.min(100, 30 + 8 * Math.sqrt(count));
-const VIEW = 920 * 575; // square units of ground on screen: 920 across on a laptop, closer in on a phone held upright
-const CLOSE = 1.25; // the least a unit is drawn, in pixels: on a phone a stray stays about 50 pixels across
+const VIEW = 1150 * 718.75; // square units of ground on screen: 1150 across on a laptop (was 920; the founder picked it on /demo/mockups-conga-zoom.html, 2026-11-22), closer in on a phone held upright
+const CLOSE = 1.15; // the least a unit is drawn, in pixels: about 340 across a phone (was 1.25), where a stray stays about 46 pixels across
 const closest = () => Math.max(CLOSE, Math.sqrt(wide * tall / VIEW)); // pixels to a unit at the closest the view comes: the same amount of ground on every screen, but never so far out that an animal is small on a phone
 // ---------- water, grass and trees ----------
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground: for looking at the drawing.
