@@ -28,7 +28,7 @@ export async function sendPoll(db: Db, who: Who, input: unknown, now = new Date(
     const answered = (await answersOf(q, poll.id)).filter(answer => !answer.draft);
     if (!answered.length || !slotsOf(frameOf(poll)).some(slot => slot.at === send.slot)) throw new WhenError('invalid');
     await q.query(`update when_poll set status='sent',chosen_slot=$2,note=$3,sent_at=$4,sent_via='loopd' where id=$1`, [poll.id, send.slot, send.note || null, now.toISOString()]);
-    for (const personId of new Set([poll.organizerId, ...answered.map(answer => answer.personId)])) await notify(q, poll.id, personId, 'invite');
+    for (const personId of new Set([poll.organizerId, ...answered.map(answer => answer.personId)])) await notify(q, poll.id, personId, 'invite', now);
     await logEvent(q, 'poll_sent', poll, { personId: who.personId });
     return { sent: true };
   });

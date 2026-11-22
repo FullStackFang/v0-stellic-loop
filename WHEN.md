@@ -14,6 +14,7 @@ Design: `docs/superpowers/specs/2026-11-22-loopd-when-design.md`. Approved look:
 - A first poll reminds nobody, because nobody is known yet. Reminders (48 and 24 hours before the deadline) go to the people of a series, from its second poll on.
 - "Ask the group again" makes next week's poll in the same series, with each person's usual times filled in as a draft. A draft counts only once that person saves.
 - Every email has a link that stops emails about that poll for that person.
+- Mail that waits more than three days, or an invite for an hour that has passed, is closed unsent. Turning sending on late does not release old mail.
 
 ## Routes
 

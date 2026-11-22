@@ -107,6 +107,7 @@ it('sends each invite from the organizer by name, with the calendar file for tha
   expect(toJosh.text).toContain(`Add to my calendar: https://loopd.test/when/${id}/calendar.ics`);
   expect(toJosh.text).not.toContain("can't make");
   expect(toDana.text).toContain("You said you can't make this one.");
+  expect(toDana.calendar).toBeUndefined();
   expect(toJosh.html).not.toContain('—');
   expect(await states()).toEqual(['Dana', 'Josh', 'Maya'].map(name => ({ name, kind: 'invite', state: 'sent', attempts: 1 })));
   expect(await drainWhen(t.db, c, { now: NOW })).toMatchObject({ sent: 0 });
@@ -156,4 +157,47 @@ it('stops reminders from the stop link, on a press and never on a look', async (
   expect(await off()).toBe(true);
   const pressed = await stopPost(new Request('https://loopd.test/x', { method: 'POST', headers: { accept: 'text/html' } }), params(token));
   expect(await pressed.text()).toContain('Stopped.');
+});
+
+it('still finds the poll that is ready when hundreds of polls died with no answers', async () => {
+  const maya = await who('Maya'), josh = await who('Josh'), id = await poll(maya), { it: c } = carrier();
+  await t.db.query(`insert into when_poll(id,series_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold)
+    select lpad(n::text,12,'a'),lpad(n::text,12,'a'),$1,'Dead','2026-11-30','2026-12-04',17,22,'America/New_York',7,'2026-11-25T00:00:00Z','majority' from generate_series(1,205) n`, [maya.personId]);
+  await saveAnswer(t.db, josh, { pollId: id, slots: [TUE7] }, NOW);
+  expect(await drainWhen(t.db, c, { now: AFTER })).toMatchObject({ readied: 1, sent: 1 });
+});
+
+it('lets mail that waited too long go unsent: an invite for an hour that has passed, anything queued days ago', async () => {
+  const maya = await who('Maya'), josh = await who('Josh'), id = await poll(maya), other = await poll(maya), { mails, it: c } = carrier();
+  await saveAnswer(t.db, josh, { pollId: id, slots: [TUE7] }, NOW);
+  await sendPoll(t.db, maya, { pollId: id, slot: TUE7 }, NOW);
+  await saveAnswer(t.db, josh, { pollId: other, slots: [TUE7] }, NOW);
+  await drainWhen(t.db, { ...c, email: null }, { now: AFTER });
+  expect((await states()).map(each => [each.kind, each.state])).toEqual([['invite', 'queued'], ['invite', 'queued'], ['ready', 'queued']]);
+  await t.db.query(`update when_message set created_at='2026-11-28T00:00:00Z' where kind='ready'`);
+  expect(await drainWhen(t.db, c, { now: new Date('2026-12-02T00:30:00Z') })).toMatchObject({ sent: 0 });
+  expect(mails).toEqual([]);
+  expect((await states()).map(each => each.state)).toEqual(['failed', 'failed', 'failed']);
+  expect(await drainWhen(t.db, c, { now: new Date('2026-12-02T00:45:00Z') })).toMatchObject({ queued: 0, sent: 0 });
+});
+
+it('sends no email about a poll to someone who pressed stop, whatever the kind', async () => {
+  const maya = await who('Maya'), josh = await who('Josh'), id = await poll(maya), { mails, it: c } = carrier();
+  await saveAnswer(t.db, maya, { pollId: id, slots: [TUE7] }, NOW);
+  await saveAnswer(t.db, josh, { pollId: id, slots: [TUE7] }, NOW);
+  await t.db.query('update when_answer set reminders_off=true where person_id=$1', [maya.personId]);
+  await drainWhen(t.db, c, { now: AFTER });
+  await sendPoll(t.db, maya, { pollId: id, slot: TUE7 }, AFTER);
+  await drainWhen(t.db, c, { now: AFTER });
+  expect(mails.map(mail => mail.to)).toEqual(['josh@cornell.edu']);
+});
+
+it('sends nothing, and fails nothing, while the site has no address for its links', async () => {
+  const maya = await who('Maya'), id = await poll(maya), { mails, it: c } = carrier();
+  await saveAnswer(t.db, maya, { pollId: id, slots: [TUE7] }, NOW);
+  await sendPoll(t.db, maya, { pollId: id, slot: TUE7 }, NOW);
+  vi.stubEnv('NEXT_PUBLIC_APP_URL', '');
+  try { expect(await drainWhen(t.db, c, { now: NOW })).toMatchObject({ sent: 0, failed: 0 }); } finally { vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://loopd.test'); }
+  expect(mails).toEqual([]);
+  expect(await states()).toEqual([{ name: 'Maya', kind: 'invite', state: 'queued', attempts: 0 }]);
 });

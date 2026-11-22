@@ -94,7 +94,7 @@ export async function markReady(q: Q, poll: PollRow, now: Date): Promise<boolean
   const { ready, met } = readiness({ threshold: poll.threshold, expectedSize: poll.expectedSize, answers, deadline: new Date(poll.deadline), now });
   if (!ready) return false;
   await q.query('update when_poll set ready_at=$2,ready_met=$3 where id=$1', [poll.id, now.toISOString(), met]);
-  await notify(q, poll.id, poll.organizerId, 'ready');
+  await notify(q, poll.id, poll.organizerId, 'ready', now);
   await logEvent(q, 'poll_ready', poll);
   return true;
 }
