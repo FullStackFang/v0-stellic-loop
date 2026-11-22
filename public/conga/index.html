@@ -221,7 +221,7 @@ window.conga = { get world() { return world; } }; // for poking at the game from
 const BOTS = 10; // lines played by the game; more fill the ground faster than it refills
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
 function open(id) {
-  where = id; map = MAPS[id]; me = null;
+  where = id; map = MAPS[id]; me = null; stale = true;
   world = createWorld(Math.random, map.rings, map.holes, map.shuttles ?? []);
   GROUPS[id].slice(0, BOTS).forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
   for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
@@ -334,7 +334,7 @@ function controls() {
 let paused = false;
 function pause(on) {
   if (!me || me.dead || on === paused) return;
-  paused = on;
+  paused = on; stale = true;
   $('paused').hidden = !on; $('pause').hidden = on;
   keys.clear(); dash = false; stick = null; $('dash').classList.remove('on');
 }
@@ -407,9 +407,10 @@ addEventListener('contextmenu', event => event.preventDefault());
 // The number of pixels is most of the cost of a frame, far more than the rules.
 const SHARP = [2, 1.5, 1];
 let quality = 0;
+let stale = true; // the picture must be drawn again even while paused: something it shows has changed (see frame)
 function fit() {
   dpr = Math.min(SHARP[quality], devicePixelRatio || 1); wide = innerWidth; tall = innerHeight;
-  canvas.width = wide * dpr; canvas.height = tall * dpr;
+  canvas.width = wide * dpr; canvas.height = tall * dpr; stale = true;
 }
 addEventListener('resize', fit); fit();
 
@@ -645,19 +646,48 @@ function pickup(kind, x, y, t, size = 50) {
 
 // The rope a line holds, in the line's own colour so lines can be told apart, twisted like yarn on the felt mat.
 // Drawn as one smooth curve through the animals. With the whistle, a yellow band runs round it.
-function rope(points, colour, band = false) {
-  const low = 13;
-  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
-  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
-  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
-  ctx.lineJoin = ctx.lineCap = 'round';
-  // Twisted yarn: a soft shadow on the mat, the colour, then the twist as short strands of a darker and a lighter shade.
-  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .25)'; ctx.lineWidth = band ? 28 : 15; ctx.stroke(); ctx.restore();
-  if (band) { ctx.strokeStyle = `oklch(${OWN.whistle})`; ctx.lineWidth = 25; ctx.stroke(); }
-  ctx.strokeStyle = colour; ctx.lineWidth = 13; ctx.stroke();
-  ctx.lineCap = 'butt'; ctx.setLineDash([3, 5]); ctx.globalAlpha = 0.55; ctx.strokeStyle = tone(colour, { light: -14 }); ctx.stroke();
-  ctx.lineDashOffset = 4; ctx.globalAlpha = 0.5; ctx.strokeStyle = tone(colour, { light: 20, chroma: 0.6 }); ctx.lineWidth = 7; ctx.stroke();
-  ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1;
+// The curve is made of pieces: piece j (1 to n-1) bends round animal j from where piece j-1 ended to halfway to the next
+// animal; the last piece is straight to the last animal. Only the pieces in `box` (the view) are stroked, in runs, and each
+// run's twist starts as far along as the pieces skipped before it, so the rope looks as it would stroked whole.
+const ropeEnd = (p, j) => j < p.length - 1 ? { x: (p[j].x + p[j + 1].x) / 2, y: (p[j].y + p[j + 1].y) / 2 } : p[j];
+const ropeStart = (p, j) => j === 1 ? p[0] : ropeEnd(p, j - 1);
+function ropeLength(p, j) {
+  const s = ropeStart(p, j), e = ropeEnd(p, j);
+  if (j === p.length - 1) return Math.hypot(e.x - s.x, e.y - s.y);
+  let length = 0, x = s.x, y = s.y; // the bend measured in four straight steps: close enough for where a dash falls
+  for (let k = 1; k <= 4; k++) {
+    const u = k / 4, v = 1 - u, nx = v * v * s.x + 2 * u * v * p[j].x + u * u * e.x, ny = v * v * s.y + 2 * u * v * p[j].y + u * u * e.y;
+    length += Math.hypot(nx - x, ny - y); x = nx; y = ny;
+  }
+  return length;
+}
+function rope(points, colour, band = false, box = null) {
+  const low = 13, last = points.length - 1;
+  // A piece lies inside the box round its three animals, so it is in view when that box meets the view.
+  const meets = j => {
+    if (!box) return true;
+    const a = points[j - 1], b = points[j], c = points[Math.min(j + 1, last)];
+    return Math.max(a.x, b.x, c.x) > box.x0 && Math.min(a.x, b.x, c.x) < box.x1 && Math.max(a.y, b.y, c.y) + low > box.y0 && Math.min(a.y, b.y, c.y) + low < box.y1;
+  };
+  const runs = []; let run = null, along = 0;
+  for (let j = 1; j <= last; j++) {
+    if (meets(j)) { if (run) run.to = j; else runs.push(run = { from: j, to: j, along }); } else run = null;
+    if (box) along += ropeLength(points, j);
+  }
+  const thread = tone(colour, { light: -14 }), light = tone(colour, { light: 20, chroma: 0.6 });
+  for (const { from, to, along } of runs) {
+    const s = ropeStart(points, from);
+    ctx.beginPath(); ctx.moveTo(s.x, s.y + low);
+    for (let j = from; j <= to; j++) { const e = ropeEnd(points, j); if (j < last) ctx.quadraticCurveTo(points[j].x, points[j].y + low, e.x, e.y + low); else ctx.lineTo(e.x, e.y + low); }
+    ctx.lineJoin = ctx.lineCap = 'round';
+    // Twisted yarn: a soft shadow on the mat, the colour, then the twist as short strands of a darker and a lighter shade.
+    ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .25)'; ctx.lineWidth = band ? 28 : 15; ctx.stroke(); ctx.restore();
+    if (band) { ctx.strokeStyle = `oklch(${OWN.whistle})`; ctx.lineWidth = 25; ctx.stroke(); }
+    ctx.strokeStyle = colour; ctx.lineWidth = 13; ctx.stroke();
+    ctx.lineCap = 'butt'; ctx.setLineDash([3, 5]); ctx.lineDashOffset = along % 8; ctx.globalAlpha = 0.55; ctx.strokeStyle = thread; ctx.stroke();
+    ctx.lineDashOffset = (along + 4) % 8; ctx.globalAlpha = 0.5; ctx.strokeStyle = light; ctx.lineWidth = 7; ctx.stroke();
+    ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1;
+  }
 }
 
 // ---------- the toys that stand on the ground ----------
@@ -768,7 +798,8 @@ function banks(cx, cy, reach) {
     // Where the view is on this bank, in the bank's own turned frame. Only the streets in view are drawn.
     const far = (off + Math.sign(off) * 3000) * k, rx = cx - Math.cos(a) * far, ry = cy - Math.sin(a) * far, vx = rx * Math.cos(a) + ry * Math.sin(a), vy = ry * Math.cos(a) - rx * Math.sin(a);
     if (Math.abs(vx) > half + reach) continue;
-    const west = Math.max(10 - half, vx - reach), east = Math.min(half - 10, vx + reach), top = vy - reach, foot = vy + reach;
+    // The top snaps to a whole number of the shore stitch's dashes (10 + 8), so the stitch is in step across squares of kept ground.
+    const west = Math.max(10 - half, vx - reach), east = Math.min(half - 10, vx + reach), top = Math.floor((vy - reach) / 18) * 18, foot = vy + reach;
     ctx.save(); ctx.translate(Math.cos(a) * far, Math.sin(a) * far); ctx.rotate(a);
     if (toysIn()) {
       const bank = new Path2D(), edge = new Path2D(); bank.rect(-half, top - 20, half * 2, reach * 2 + 40); edge.rect(-half - 50, top - 70, half * 2 + 100, reach * 2 + 140);
@@ -995,29 +1026,45 @@ function ground(t, cx, cy, hw, hh) {
 // comes and laid smaller as it pulls back. Another ground, sharpness, screen size or font throws them away.
 const PATCH = 512, kept = new Map();
 let keptAs = '';
-document.fonts?.addEventListener('loadingdone', () => kept.clear());
+// A square let go gives its memory back at once (Safari holds a canvas's pixels until its size is 0).
+const unkeep = key => { kept.get(key).width = 0; kept.delete(key); };
+const forget = () => { for (const key of [...kept.keys()]) unkeep(key); };
+document.fonts?.addEventListener('loadingdone', forget);
+/** Paints one square of ground, or gives nothing back when the browser has no room for another canvas. */
 function patch(px, py, span, scale) {
   const sheet = document.createElement('canvas'), screen = ctx; sheet.width = sheet.height = PATCH;
-  ctx = sheet.getContext('2d'); ctx.scale(scale, scale); ctx.translate(-px * span, -py * span);
+  const pen = sheet.getContext('2d');
+  if (!pen) { sheet.width = 0; return null; }
+  ctx = pen; ctx.scale(scale, scale); ctx.translate(-px * span, -py * span);
   try { ground(0, (px + 0.5) * span, (py + 0.5) * span, span / 2 + 300, span / 2 + 300); } finally { ctx = screen; }
   return sheet;
 }
+/** Lays the ground from kept squares. False when a square could not be made: the kept ones are let go, and the caller paints the ground itself this frame. */
 function carpet(halfW, halfH) {
-  const scale = closest() * dpr, span = PATCH / scale, as = `${where} ${scale} ${quality}`;
-  if (as !== keptAs) { kept.clear(); keptAs = as; }
+  // Painted at the closest the view comes, rounded up to a step of about 9%: dragging a window's edge then crosses a step
+  // now and then, instead of throwing every square away on each new size. Never softer than the screen needs.
+  const scale = 2 ** (Math.ceil(Math.log2(closest() * dpr) * 8) / 8), span = PATCH / scale, as = `${where} ${scale} ${quality}`;
+  if (as !== keptAs) { forget(); keptAs = as; }
   const k = cam.z * dpr, left = wide / 2 * dpr - cam.x * k, top = tall / 2 * dpr - cam.y * k; // where the ground's own (0, 0) falls on the canvas
   const west = Math.floor((cam.x - halfW) / span), east = Math.floor((cam.x + halfW) / span), north = Math.floor((cam.y - halfH) / span), south = Math.floor((cam.y + halfH) / span);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   for (let py = north; py <= south; py++) for (let px = west; px <= east; px++) {
     const key = px + ',' + py; let sheet = kept.get(key);
-    if (!sheet) kept.set(key, sheet = patch(px, py, span, scale));
+    if (!sheet) { sheet = patch(px, py, span, scale); if (!sheet) { ctx.restore(); forget(); return false; } kept.set(key, sheet); }
     // Each square's edges fall on whole pixels, so it meets its neighbours with no gap.
     const x = Math.round(left + px * span * k), y = Math.round(top + py * span * k);
     ctx.drawImage(sheet, x, y, Math.round(left + (px + 1) * span * k) - x, Math.round(top + (py + 1) * span * k) - y);
   }
   ctx.restore();
-  // Squares left far behind are let go.
-  if (kept.size > 120) for (const key of kept.keys()) { const [px, py] = key.split(',').map(Number); if (px < west - 2 || px > east + 2 || py < north - 2 || py > south + 2) kept.delete(key); }
+  // At most twice the squares in view are kept (at least 40): past that, the farthest from the view are let go first, so
+  // the ring round the view stays while there is room for it. A square in view is never let go.
+  const most = Math.max(40, 2 * (east - west + 1) * (south - north + 1));
+  if (kept.size > most) {
+    const off = key => { const [px, py] = key.split(',').map(Number); return Math.max(west - px, px - east, north - py, py - south); };
+    const far = [...kept.keys()].map(key => [off(key), key]).filter(([d]) => d > 0).sort((a, b) => b[0] - a[0]);
+    for (const [, key] of far.slice(0, kept.size - most)) unkeep(key);
+  }
+  return true;
 }
 
 function draw(t, dt) {
@@ -1034,13 +1081,14 @@ function draw(t, dt) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.translate(wide / 2, tall / 2); ctx.scale(cam.z, cam.z); ctx.translate(-cam.x, -cam.y);
   const halfW = wide / 2 / cam.z + 80, halfH = tall / 2 / cam.z + 80, seen = (x, y) => Math.abs(x - cam.x) < halfW && Math.abs(y - cam.y) < halfH;
+  const view = { x0: cam.x - halfW, x1: cam.x + halfW, y0: cam.y - halfH, y1: cam.y + halfH }; // with the 80 units round it, wider than a rope's shadow and caps
   standing.length = 0;
 
   const near = thing => Math.abs(thing.x - cam.x) < halfW + Math.max(thing.w, thing.h) && Math.abs(thing.y - cam.y) < halfH + Math.max(thing.w, thing.h);
   // The ground: laid from its kept squares once the toys are in, with what moves on it drawn after. Until then it is
   // painted the plain way each frame, since that water moves.
   if (toysIn()) {
-    carpet(halfW, halfH);
+    if (!carpet(halfW, halfH)) ground(t, cam.x, cam.y, halfW, halfH); // no room for a new square: painted whole this frame, as it was before
     if (map.axis != null) boats(t);
     for (const thing of map.things) if (thing.kind === 'road') roadBus(thing, t);
     // Every tree is the map's (maps.js), and solid: a toy standing up among the animals.
@@ -1090,7 +1138,7 @@ function draw(t, dt) {
         size: SIZE.tail * (1 + (world.t - f.born < 0.4 ? 0.35 * Math.sin((world.t - f.born) / 0.4 * Math.PI) : 0)) }); // a newcomer swells for a moment as it falls in
     });
     line.shown = shown; // kept so a spill can wink each animal out where it was last seen
-    if (line.tail.length && shown.some(each => seen(each.x, each.y))) rope(shown, colour(line.id), line.powers.whistle > 0);
+    if (line.tail.length && shown.some(each => seen(each.x, each.y))) rope(shown, colour(line.id), line.powers.whistle > 0, view);
     for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push(shown[i]);
     const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
     sprites.push({ ...shown[0], face: line.face, size: SIZE.head, tilt: dancing ? Math.sin(t * 8) * 0.3 : 0, alpha: blink, front: 1, ink: line.ink, kit: line.kit });
@@ -1098,17 +1146,18 @@ function draw(t, dt) {
   }
   for (const it of world.items) if (seen(it.x, it.y)) pickup(it.kind, it.x, it.y, t);
   // A mob is a sack (/demo/mockups-conga-pond.html, A), with how many it holds on a tag in the fallen line's colour.
-  // A sack from a burst line pops up out of the felt where it lies (/demo/mockups-conga-stops-spill.html, A): each a moment
-  // after the last, with a puff, growing a touch past full size and settling.
+  // A sack from a burst line rains down onto where it lies (/demo/mockups-conga-stops-spill.html, B): its shadow shows on
+  // the ground first, so you see where it will land, then it drops out of the sky, lands with a puff and a little squash.
+  // Each sack a moment after the last, all down within the time a sack cannot be taken (sim FLY).
   for (const mob of world.mobs) {
     const { x, y } = mob;
-    if (Math.abs(x - cam.x) > halfW + 80 || Math.abs(y - cam.y) > halfH + 160) continue;
-    const u = mob.ready > world.t ? 1 - (mob.ready - world.t) / mob.fly : 1, wait = 0.35 + (((x * 13 + y * 7) % 1 + 1) % 1) * 0.25, k = Math.max(0, (u - wait) / (1 - wait));
-    if (u < 1 && k <= 0) continue;
-    if (!mob.landed) { mob.landed = true; smoke.push({ x, y: y + 18, t, big: 1.5 }); }
-    const scale = u >= 1 ? 1 : Math.sin(Math.min(1, k * 1.15) * Math.PI * 0.62) / Math.sin(Math.PI * 0.62) * (1 + 0.18 * Math.sin(k * Math.PI));
-    if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width: SACK, scale });
-    if (u >= 1) mobTags.push({ x, y, text: `${mob.faces.length}`, c: colour(mob.from) });
+    if (Math.abs(x - cam.x) > halfW + 80 || Math.abs(y - cam.y) > halfH + 600) continue;
+    const u = mob.ready > world.t ? 1 - (mob.ready - world.t) / mob.fly : 1, start = (((x * 13 + y * 7) % 1 + 1) % 1) * 0.25 + 0.1;
+    const fall = Math.max(0, Math.min(1, (u - start) / 0.55)), landT = mob.ready - mob.fly * (1 - start - 0.55), b = (world.t - landT) / 0.22;
+    const squash = b > 0 && b < 1 ? Math.sin(b * Math.PI) : 0;
+    if (b >= 0 && !mob.landed) { mob.landed = true; smoke.push({ x, y: y + 18, t, big: 1.4 }, { x: x - 20, y: y + 22, t, big: 1 }, { x: x + 20, y: y + 22, t, big: 1 }); }
+    if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width: SACK, lift: 420 * (1 - fall * fall), shade: 0.3 + 0.7 * Math.min(1, u / (start + 0.55)), hidden: u < start, sx: 1 + 0.14 * squash, sy: 1 - 0.2 * squash });
+    if (b >= 0) mobTags.push({ x, y, text: `${mob.faces.length}`, c: colour(mob.from) });
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   // The toys that stand on the ground go in among the animals, each by where its foot is.
@@ -1116,8 +1165,9 @@ function draw(t, dt) {
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
   for (const s of sprites) {
     if (s.stands) {
-      const { x, y, name, width, flip, label, lift = 0, spin = 0, scale = 1 } = s.stands; foot(x, y, width * 0.42 * (1 - lift / 300) * Math.min(1, scale));
-      if (scale !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale); toy(name, 0, width * 0.04, width, flip); ctx.restore(); }
+      const { x, y, name, width, flip, label, lift = 0, spin = 0, sx = 1, sy = 1, shade, hidden } = s.stands; foot(x, y, width * 0.42 * (shade ?? 1 - lift / 300));
+      if (hidden) continue;
+      if (sx !== 1 || sy !== 1 || (lift && !spin)) { ctx.save(); ctx.translate(x, y - lift); ctx.scale(sx, sy); toy(name, 0, width * 0.04, width, flip); ctx.restore(); }
       else if (lift || spin) { ctx.save(); ctx.translate(x, y - lift - width * 0.4); ctx.rotate(spin); toy(name, 0, width * 0.44, width, flip); ctx.restore(); }
       else toy(name, x, y + width * 0.04, width, flip);
       if (label) {
@@ -1130,14 +1180,14 @@ function draw(t, dt) {
     sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t, s.kit); }
   for (const car of world.shuttles) tram(car);
   airborne(t);
-  // A spilled line's animals wink out where they stood, head first, each with one small plus-shaped twinkle in the line's
-  // colour (never the Ink+ four-point spark).
+  // A spilled line goes in one soft puff: its animals shrink away where they stood, and a few plus-shaped twinkles in the
+  // line's colour spread out from where its head was and fade (never the Ink+ four-point spark).
   for (let i = winks.length - 1; i >= 0; i--) {
-    const wink = winks[i], age = t - wink.t;
-    if (age > 0.45) { winks.splice(i, 1); continue; }
-    if (age < 0.12) sprite(wink.face, wink.x, wink.y - Math.max(0, age) * 60, SIZE.tail * (age < 0 ? 1 : 1 - age / 0.12));
-    if (age < 0) continue;
-    const u = age / 0.45, size = 9 * Math.sin(u * Math.PI), px = wink.x + Math.cos(wink.a) * 10 * u, py = wink.y - 6 - 14 * u;
+    const wink = winks[i], age = t - wink.t, life = wink.face ? 0.15 : 0.9;
+    if (age > life) { winks.splice(i, 1); continue; }
+    if (wink.face) { sprite(wink.face, wink.x, wink.y, SIZE.tail * (1 - age / life)); continue; }
+    const u = age / life, out = 1 - (1 - u) ** 3, size = wink.size * Math.sin(Math.min(1, u * 1.15) * Math.PI);
+    const px = wink.x + Math.cos(wink.a) * wink.far * out, py = wink.y + Math.sin(wink.a) * wink.far * 0.75 * out - u * 12;
     if (size < 0.4) continue;
     ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px - size, py); ctx.lineTo(px + size, py); ctx.moveTo(px, py - size); ctx.lineTo(px, py + size);
     ctx.strokeStyle = wink.c; ctx.lineWidth = size * 0.45; ctx.stroke();
@@ -1204,9 +1254,15 @@ function board() {
 
 // ---------- the loop ----------
 open(where);
+// A paused game is drawn once and then left alone, until a picture or the font it draws with comes in.
+for (const art of [sheet, pet, toys, ...Object.values(ART)]) art.addEventListener('load', () => stale = true);
+document.fonts?.addEventListener('loadingdone', () => stale = true);
 let last = performance.now(), ticks = 0, pace = 16, settled = 0, clock = 0;
 function frame(now) {
   const took = now - last, dt = paused ? 0 : Math.max(0, Math.min(0.05, took / 1000)), t = clock += dt; last = now; // the game's own clock, which stops with it
+  // Paused with nothing new to show: no drawing, and no frame counted toward the sharpness either.
+  if (paused && !stale) return requestAnimationFrame(frame);
+  stale = false;
   // `pace` is the usual time between frames. Two seconds of it staying over 24 ms, about 40 frames a second, is too slow.
   // One long frame (a game starting, new ground coming into view) counts as no more than 50 ms: alone it must not blur the picture for good.
   if (took < 250) pace += (Math.min(took, 50) - pace) * 0.05;
@@ -1219,10 +1275,11 @@ function frame(now) {
   for (const event of paused ? [] : step(world, dt)) {
     if (event.type === 'join' && event.line === ME) navigator.vibrate?.(8);
     if (event.type === 'spill') {
-      // Its animals wink out from the head back, all within about half a second however long the line was.
-      const shown = world.lines.find(one => one.id === event.line)?.shown ?? [], gap = Math.min(0.03, 0.5 / shown.length), c = colour(event.line);
-      spilt = event.line; // a spilled line winks out instead of the ring a small scatter gets
-      shown.forEach((p, i) => { if (i && Math.abs(p.x - cam.x) < wide / cam.z && Math.abs(p.y - cam.y) < tall / cam.z) winks.push({ x: p.x, y: p.y, face: p.face, c, a: i * 2.4, t: t + i * gap }); });
+      // The whole line goes at once in a soft puff, with a few twinkles from where its head was.
+      const shown = world.lines.find(one => one.id === event.line)?.shown ?? [], c = colour(event.line), near = p => Math.abs(p.x - cam.x) < wide / cam.z && Math.abs(p.y - cam.y) < tall / cam.z;
+      spilt = event.line; // a spilled line puffs away instead of the ring a small scatter gets
+      shown.forEach((p, i) => { if (i && near(p)) { winks.push({ x: p.x, y: p.y, face: p.face, t }); if (i % 4 === 1) smoke.push({ x: p.x, y: p.y + 4, t, big: 1.6 }); } });
+      if (near(event)) for (let k = 0; k < 10; k++) winks.push({ x: event.x, y: event.y - 10, c, a: k / 10 * Math.PI * 2 + Math.random() * 0.5, far: 60 + Math.random() * 90, size: 10 + Math.random() * 8, t });
     }
     if (event.type === 'scatter') {
       if (spilt !== event.line) puffs.push({ x: event.x, y: event.y, t, colour: colour(event.line) });
