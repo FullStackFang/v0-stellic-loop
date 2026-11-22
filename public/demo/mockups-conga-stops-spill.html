@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · stops and spill</title>
+<style>
+@font-face { font-family: Archivo; src: url(../fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --ink: oklch(21% 0.016 30); --paper: oklch(99.2% 0.004 60); }
+* { box-sizing: border-box; margin: 0; }
+body { background: oklch(96.8% 0.01 70); color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+section { display: grid; gap: 12px; margin-top: 26px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px; background: var(--ink); color: var(--paper); padding: 6px 16px 7px; border-radius: 14px 14px 14px 4px; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 72ch; margin-top: 10px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; }
+.bar button { font: 700 15px Archivo, system-ui, sans-serif; color: var(--ink); background: var(--paper); border: 0; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 999px; padding: 8px 16px 9px; cursor: pointer; }
+.bar button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.bar .slow { margin-left: auto; }
+.frame { position: relative; overflow: hidden; border-radius: 22px 22px 22px 6px; box-shadow: 5px 5px 0 oklch(68% 0.14 33); }
+.frame canvas { display: block; width: 100%; aspect-ratio: 16 / 9; background: oklch(80% 0.11 38); }
+@media (max-width: 640px) { .frame canvas { aspect-ratio: 3 / 4; } }
+.note { padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.45; max-width: 85ch; }
+</style>
+<main>
+  <header>
+    <h1>Conga · stops and spill</h1>
+    <p class="lead">New looks for the stop and the spill, on the wide felt road you picked. Every version is a few flat shapes and stitches drawn on the canvas, with no extra pictures, so none of them costs more to draw than today's.</p>
+  </header>
+
+  <section data-part="stops">
+    <h2>1 · The stop</h2>
+    <div class="bar"><button data-v="a">A · Sewn ring</button><button data-v="b">B · Felt badge</button><button data-v="c">C · Waiting spots</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
+
+  <section data-part="spill">
+    <h2>2 · The spill</h2>
+    <div class="bar"><button data-v="a">A · Twinkle out, pop up</button><button data-v="b">B · Rain of sacks</button><button data-v="now">Today</button><button class="slow" aria-pressed="false">Slow motion</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
+</main>
+<script>
+// Relative paths and no imports, so the page also works opened straight from the folder (file:///).
+// The drawing is the game's own (public/conga/index.html): the same felt, stitches, yarn ropes, toys and animal sheet.
+const AT = { tree: [0, 1128, 128, 128], sack: [390, 1128, 111, 128], bus: [838, 638, 256, 256], tram: [1096, 638, 256, 256] };
+const toys = Object.assign(new Image(), { src: '../conga/scenery.v3.webp' });
+const sheet = Object.assign(new Image(), { src: '../conga/animals-96.v1.webp' });
+const ok = img => img.complete && img.naturalWidth;
+const C = { ink: 'oklch(24% 0.035 30)', paper: 'oklch(99.2% 0.004 60)', lamp: '#ffe27a', twine: '#fbf7ec' };
+const FELT = { mat: 'oklch(80% 0.11 38)', grass: 'oklch(70% 0.12 145)', grassThread: 'oklch(90% 0.09 130)', road: 'oklch(72% 0.025 55)',
+  yellow: 'oklch(90% 0.15 95)', thread: 'oklch(94% 0.04 60)', under: 'oklch(35% 0.06 40 / .3)' };
+const BUS = 'oklch(72% 0.12 235)', TRAM = 'oklch(58% 0.2 27)';
+const PURPLE = 'oklch(60% 0.2 305)', TEAL = 'oklch(70% 0.13 195)', GOLD = 'oklch(80% 0.15 80)';
+const SAY = {
+  stops: {
+    a: 'A · Sewn ring. Nothing stands up off the mat. A ring of thick stitches in the car\'s colour marks where to wait, pale where it is still to be sewn, and it sews itself closed as the car comes: closed means the car is there. The name and the countdown are on a felt flag on a wooden peg.',
+    b: 'B · Felt badge. Every stop is a round felt badge sewn onto the mat, like a scout patch: a cream band with the stop\'s name set round it, and a disc in the car\'s colour in the middle where the animals wait. The countdown is a small pill in the car\'s colour under it.',
+    c: 'C · Waiting spots. A short row of felt squares sewn where the line stands, two shades of the car\'s colour, and a felt arrow pointing to where the car pulls in. The arrow pulses gently while the car is on its way. The name and the countdown are on a felt flag on a peg.',
+    now: 'Today: a see-through oval, black posts with yellow lamps and a cord outlined in ink, and the name on a dark pill underneath. That pill is the dark "The station" on Roosevelt Island.',
+  },
+  spill: {
+    a: 'A · Twinkle out, pop up. From the head back, each animal winks out where it stood with one small twinkle, quickly one after another. Then the sacks pop up out of the felt where they lie, one by one, each with a puff, and their counts appear. Nothing flies across the screen. About 1.2 seconds.',
+    b: 'B · Rain of sacks. The line goes in one soft puff with a few twinkles. The sacks\' shadows appear on the ground first, so you see where they will land, then the sacks drop out of the sky onto them and land with a small bounce. About 1.2 seconds.',
+    now: 'Today: the line vanishes at once with a ring in its colour, and the sacks fly out of where its head was.',
+  },
+};
+
+// ---------- shared drawing, from the game ----------
+const seeded = seed => () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; };
+const fibreTile = (() => { const c = document.createElement('canvas'); c.width = c.height = 160; const pen = c.getContext('2d'), r = seeded(11); pen.lineWidth = 0.8;
+  for (let i = 0; i < 900; i++) { const x = r() * 160, y = r() * 160, a = r() * Math.PI, l = 3 + r() * 7; pen.strokeStyle = r() < 0.5 ? 'rgba(255,255,255,.11)' : 'rgba(60,30,20,.08)'; pen.beginPath(); pen.moveTo(x, y); pen.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); pen.stroke(); }
+  return c; })();
+let ctx, W, H;
+const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
+const outCubic = u => 1 - (1 - u) ** 3, inQuad = u => u * u;
+function stitch(colour, width = 2.6, dash = [9, 7], path = null) {
+  const go = () => path ? ctx.stroke(path) : ctx.stroke();
+  ctx.save(); ctx.setLineDash(dash); ctx.lineCap = 'round'; ctx.lineWidth = width;
+  ctx.strokeStyle = 'rgba(40,25,20,.28)'; ctx.translate(0, 1.2); go(); ctx.translate(0, -1.2);
+  ctx.strokeStyle = colour; go(); ctx.restore();
+}
+function feltPiece(fill, drop = 3) { ctx.save(); ctx.translate(0, drop); ctx.fillStyle = FELT.under; ctx.fill(); ctx.restore(); ctx.fillStyle = fill; ctx.fill(); }
+function tone(colour, { light = 0, chroma = 1, alpha = 1 } = {}) {
+  const got = /oklch\(\s*([\d.]+)%?\s+([\d.]+)\s+([\d.]+)/.exec(colour);
+  return `oklch(${Math.min(97, Math.max(15, Number(got[1]) + light))}% ${(Number(got[2]) * chroma).toFixed(3)} ${got[3]} / ${alpha})`;
+}
+function mat() { ctx.fillStyle = FELT.mat; ctx.fillRect(0, 0, W, H); }
+function grain() { const p = ctx.createPattern(fibreTile, 'repeat'); p.setTransform(new DOMMatrix().scale(0.55)); ctx.fillStyle = p; ctx.fillRect(0, 0, W, H); }
+function lawn(x, y, w, h) { ctx.beginPath(); ctx.roundRect(x, y, w, h, 34); feltPiece(FELT.grass); ctx.beginPath(); ctx.roundRect(x + 12, y + 12, w - 24, h - 24, 24); stitch(FELT.grassThread); }
+function sprite(face, x, y, size, tilt = 0, alpha = 1) {
+  if (!ok(sheet) || size <= 0) return;
+  const sx = (face - 1) % 7 * 96, sy = Math.floor((face - 1) / 7) * 96;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(sheet, sx, sy, 96, 96, -size / 2, -size / 2, size, size); ctx.restore();
+}
+function toy(name, x, y, width, left = false) {
+  if (!ok(toys)) return 0;
+  const [sx, sy, sw, sh] = AT[name], height = width * sh / sw;
+  ctx.save(); ctx.translate(x, y); if (left) ctx.scale(-1, 1); ctx.drawImage(toys, sx, sy, sw, sh, -width / 2, -height, width, height); ctx.restore();
+  return height;
+}
+function foot(x, y, half, alpha = 0.2) { ctx.beginPath(); ctx.ellipse(x, y - half * 0.12, half, half * 0.3, 0, 0, 7); ctx.fillStyle = `oklch(24% 0.035 30 / ${alpha})`; ctx.fill(); }
+function pill(text, x, y, fill, ink, size = 15) {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const width = ctx.measureText(text).width + size * 1.4, high = size * 1.7;
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+  return width;
+}
+function groundName(text, x, y, size) {
+  ctx.font = `900 ${size}px Archivo, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'oklch(100% 0 0 / .2)'; ctx.fillText(text, x, y + size * 0.05);
+  ctx.fillStyle = 'oklch(24% 0.05 30 / .16)'; ctx.fillText(text, x, y);
+}
+/** The yarn a line holds: one smooth curve through the animals. */
+function rope(points, colour, width = 13, low = 13) {
+  if (points.length < 2) return;
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
+  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
+  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
+  yarn(colour, width);
+}
+/** Strokes the current path as twisted yarn on the felt. */
+function yarn(colour, width = 13) {
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .25)'; ctx.lineWidth = width + 2; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([3, 5]); ctx.globalAlpha = 0.55; ctx.strokeStyle = tone(colour, { light: -14 }); ctx.stroke();
+  ctx.lineDashOffset = 4; ctx.globalAlpha = 0.5; ctx.strokeStyle = tone(colour, { light: 20, chroma: 0.6 }); ctx.lineWidth = width * 0.54; ctx.stroke();
+  ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1; ctx.lineCap = 'round';
+}
+function puff(x, y, age, big = 1) {
+  if (age < 0 || age > 1) return;
+  ctx.beginPath(); ctx.arc(x, y - age * 14, (7 + age * 16) * big, 0, 7); ctx.fillStyle = `oklch(96% 0.008 60 / ${0.75 * (1 - age)})`; ctx.fill();
+}
+function ring(x, y, age, colour) {
+  if (age < 0 || age > 1) return;
+  ctx.strokeStyle = colour; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
+  ctx.beginPath(); ctx.arc(x, y, 30 + age * 130, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+}
+
+// ---------- 1 · roads ----------
+// A straight road across the frame, like the map's (two ends and a width). `pt` finds a spot `s` along it, `off` across.
+const ROAD_FILL = ['oklch(72% 0.025 55)', 'oklch(76.5% 0.022 62)', 'oklch(68.5% 0.028 50)'];
+function road(r, look) {
+  const along = (draw, drop = 0) => { ctx.save(); ctx.translate(r.cx, r.cy + drop); ctx.rotate(r.a); ctx.beginPath(); draw(); ctx.restore(); };
+  const band = (w, fill, drop = 3) => { ctx.save(); ctx.translate(r.cx, r.cy); ctx.rotate(r.a); ctx.beginPath(); ctx.rect(-r.L / 2, -w / 2, r.L, w); ctx.restore(); feltPiece(fill, drop); };
+  const line = (off, ...how) => along(() => { ctx.moveTo(-r.L / 2, off); ctx.lineTo(r.L / 2, off); stitch(...how); });
+  if (look === 'now') { band(r.w ?? 36, FELT.road); line(0, FELT.yellow, 4, [16, 14]); return; }
+  if (look === 'a') {
+    band(130, FELT.road); for (const side of [-1, 1]) line(side * 55, FELT.thread, 2.6, [10, 8]);
+    along(() => { for (let x = -r.L / 2; x < r.L / 2; x += 74) { ctx.beginPath(); ctx.roundRect(x, -5.5, 42, 11, 5.5); feltPiece(FELT.yellow, 2); ctx.beginPath(); ctx.roundRect(x + 4, -2, 34, 4, 2); stitch('oklch(74% 0.13 85)', 1.4, [3, 3]); } });
+  }
+  if (look === 'b') {
+    band(196, 'oklch(87% 0.03 75)', 4); for (const side of [-1, 1]) line(side * 89, FELT.thread, 2.6, [10, 8]);
+    band(128, FELT.road, 2); for (const side of [-1, 1]) line(side * 56, 'oklch(96% 0.01 80)', 2.2, [8, 7]);
+    line(0, FELT.yellow, 5, [20, 14]);
+    along(() => { for (const y of [-48, -24, 0, 24, 48]) { ctx.beginPath(); ctx.roundRect(r.zebra - 36, y - 7, 72, 14, 5); feltPiece('oklch(96% 0.012 80)', 2); } });
+  }
+  if (look === 'c') {
+    along(() => { let n = 0; for (let x = -r.L / 2; x < r.L / 2; x += 150, n++) { ctx.beginPath(); ctx.roundRect(x + 2, -65, 146, 130, 10); feltPiece(ROAD_FILL[n % 3]); } });
+    for (const side of [-1, 1]) line(side * 54, FELT.thread, 2.6, [10, 8]);
+    along(() => {
+      ctx.lineCap = 'round';
+      const cross = (x, y, k, colour, width) => { ctx.beginPath(); ctx.moveTo(x - k, y - k); ctx.lineTo(x + k, y + k); ctx.moveTo(x + k, y - k); ctx.lineTo(x - k, y + k); ctx.strokeStyle = 'rgba(40,25,20,.25)'; ctx.lineWidth = width; ctx.save(); ctx.translate(0, 1.2); ctx.stroke(); ctx.restore(); ctx.strokeStyle = colour; ctx.stroke(); };
+      for (let x = -r.L / 2 + 150; x < r.L / 2; x += 150) for (let y = -52; y <= 52; y += 17) cross(x, y, 4, FELT.thread, 2);
+      for (let x = -r.L / 2 + 75; x < r.L / 2; x += 50) cross(x, 0, 6, FELT.yellow, 3.4);
+    });
+  }
+}
+const pt = (r, s, off = 0) => ({ x: r.cx + Math.cos(r.a) * s - Math.sin(r.a) * off, y: r.cy + Math.sin(r.a) * s + Math.cos(r.a) * off });
+
+// ---------- 1 · stops ----------
+// One look for every stop. Each car runs a loop: on its way (0 to 5 s), at the stop (to 7), going back (to 9).
+const RIDE = 5, STAY = 2, AWAY = 2;
+/** A felt flag on a wooden peg: the stop's name, or how long until the car comes. */
+function flag(x, y, text, colour) {
+  ctx.beginPath(); ctx.ellipse(x, y, 10, 4, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .22)'; ctx.fill();
+  ctx.beginPath(); ctx.roundRect(x - 5, y - 92, 10, 92, 4); ctx.fillStyle = 'oklch(66% 0.08 62)'; ctx.fill();
+  ctx.fillStyle = 'oklch(76% 0.07 70)'; ctx.fillRect(x - 3.5, y - 90, 3, 88);
+  ctx.beginPath(); ctx.arc(x, y - 94, 8, 0, 7); ctx.fillStyle = 'oklch(70% 0.08 62)'; ctx.fill();
+  ctx.font = '800 19px Archivo, system-ui, sans-serif';
+  const w = ctx.measureText(text).width + 34, top = y - 92;
+  ctx.beginPath(); ctx.roundRect(x + 4, top, w, 40, [4, 16, 16, 4]); feltPiece(colour, 3);
+  ctx.beginPath(); ctx.roundRect(x + 10, top + 5, w - 12, 30, [3, 12, 12, 3]); stitch(tone(colour, { light: 26, chroma: 0.4 }), 1.8, [6, 5]);
+  ctx.fillStyle = C.paper; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + 4 + w / 2, top + 21);
+}
+/** Letters set round the top of an oval, like the name on a sewn badge. */
+function arcText(text, x, y, rx, ry, size, colour) {
+  ctx.font = `900 ${size}px Archivo, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const widths = [...text].map(ch => ctx.measureText(ch).width + size * 0.08), total = widths.reduce((a, b) => a + b, 0);
+  let s = -total / 2;
+  [...text].forEach((ch, n) => {
+    const a = -Math.PI / 2 + (s + widths[n] / 2) / ((rx + ry) / 2); s += widths[n];
+    ctx.save(); ctx.translate(x + Math.cos(a) * rx, y + Math.sin(a) * ry); ctx.rotate(a + Math.PI / 2);
+    ctx.fillStyle = FELT.under; ctx.fillText(ch, 0, 1.5); ctx.fillStyle = colour; ctx.fillText(ch, 0, 0); ctx.restore();
+  });
+}
+function stop(look, s, clock, stand) {
+  const { x, y, colour, name, car } = s, coming = clock < RIDE, due = coming ? clock / RIDE : clock < RIDE + STAY ? 1 : 0;
+  const left = Math.ceil(RIDE - clock), says = coming ? `${car} in ${left}` : name;
+  const ink = Number(/([\d.]+)%/.exec(colour)[1]) > 66 ? C.ink : C.paper;
+  if (look === 'now') {
+    const posts = 12, sag = 22 * (1 - due), at = n => { const a = n / posts * Math.PI * 2; return [x + Math.cos(a) * 130, y + Math.sin(a) * 91]; };
+    ctx.beginPath(); ctx.ellipse(x, y, 130, 91, 0, 0, 7); ctx.fillStyle = tone(colour, { alpha: 0.1 + due * 0.14 }); ctx.fill();
+    ctx.beginPath();
+    for (let n = 0; n < posts; n++) { const [px, py] = at(n), [qx, qy] = at(n + 1); if (!n) ctx.moveTo(px, py - 26); ctx.quadraticCurveTo((px + qx) / 2, (py + qy) / 2 - 26 + sag, qx, qy - 26); }
+    ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.lineWidth = 9; ctx.stroke(); ctx.strokeStyle = colour; ctx.lineWidth = 5.5; ctx.stroke();
+    for (let n = 0; n < posts; n++) { const [px, py] = at(n); ctx.fillStyle = C.ink; ctx.fillRect(px - 3, py - 30, 6, 30); ctx.beginPath(); ctx.arc(px, py - 31, 6, 0, 7); ctx.fillStyle = C.lamp; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke(); }
+    return () => pill(says, x, y + 91 + 30, C.ink, C.paper, 16);
+  }
+  if (look === 'a') {
+    // Sewn ring: nothing stands up. A ring of thick stitches in the car's colour marks where to wait, and it sews itself
+    // closed as the car comes; pale where it is still to be sewn.
+    ctx.beginPath(); ctx.ellipse(x, y, 140, 92, 0, 0, 7); stitch(tone(colour, { light: 22, chroma: 0.35, alpha: 0.7 }), 5, [14, 9]);
+    ctx.save(); ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, 400, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * due); ctx.closePath(); ctx.clip();
+    ctx.beginPath(); ctx.ellipse(x, y, 140, 92, 0, 0, 7); stitch(colour, 5, [14, 9]); ctx.restore();
+    return () => flag(x - 128, y - 30, says, colour);
+  }
+  if (look === 'b') {
+    // A felt badge sewn on the mat, like a scout patch: a cream band round a disc of the car's colour, the stop's name
+    // set round the band. The countdown is a pill under it.
+    ctx.beginPath(); ctx.ellipse(x, y, 150, 100, 0, 0, 7); feltPiece('oklch(95% 0.02 80)', 4);
+    ctx.beginPath(); ctx.ellipse(x, y, 143, 94, 0, 0, 7); stitch(tone(colour, { light: -6 }), 2.2, [7, 6]);
+    ctx.beginPath(); ctx.ellipse(x, y + 4, 112, 68, 0, 0, 7); feltPiece(tone(colour, { light: 10, chroma: 0.75 }), 2);
+    ctx.beginPath(); ctx.ellipse(x, y + 4, 104, 61, 0, 0, 7); stitch('oklch(95% 0.02 80)', 2.2, [7, 6]);
+    arcText(name.toUpperCase(), x, y + 2, 128, 82, 17, colour);
+    return () => pill(coming ? says : `${car} here`, x, y + 100 + 26, colour, ink, 16);
+  }
+  if (look === 'c') {
+    // Waiting spots: felt squares sewn in a row where the line stands, and a felt arrow pointing to where the car pulls in.
+    for (let n = 0; n < 6; n++) {
+      const sx = x - 100 + n * 40, sy = y + Math.sin(n * 0.7) * 6;
+      ctx.beginPath(); ctx.roundRect(sx - 17, sy - 13, 34, 30, 8); feltPiece(n % 2 ? colour : tone(colour, { light: 14, chroma: 0.6 }), 2);
+      ctx.beginPath(); ctx.roundRect(sx - 12, sy - 8, 24, 20, 5); stitch('oklch(95% 0.02 80)', 1.6, [4, 4]);
+    }
+    const ax = x + 160, ay = y + 4, k = 1 + 0.08 * Math.sin(clock * 6) * (coming ? 1 : 0);
+    ctx.save(); ctx.translate(ax, ay); ctx.scale(k, k);
+    ctx.beginPath(); ctx.moveTo(-22, -14); ctx.lineTo(4, -14); ctx.lineTo(4, -28); ctx.lineTo(30, 0); ctx.lineTo(4, 28); ctx.lineTo(4, 14); ctx.lineTo(-22, 14); ctx.closePath(); feltPiece(colour, 3);
+    ctx.beginPath(); ctx.moveTo(-16, -8); ctx.lineTo(9, -8); ctx.lineTo(9, -16); ctx.lineTo(23, 0); ctx.lineTo(9, 16); ctx.lineTo(9, 8); ctx.lineTo(-16, 8); ctx.closePath(); stitch('oklch(95% 0.02 80)', 1.6, [4, 4]);
+    ctx.restore();
+    return () => flag(x - 140, y - 14, says, colour);
+  }
+}
+function stopsScene(look, t) {
+  mat();
+  lawn(W * 0.66, H * 0.05, W * 0.24, H * 0.26);
+  const wide = W > 700;
+  const tramStop = { x: W * (wide ? 0.27 : 0.32), y: H * (wide ? 0.4 : 0.28), colour: TRAM, name: 'The station', car: 'Tram' };
+  const busStop = { x: W * (wide ? 0.6 : 0.36), y: H * (wide ? 0.72 : 0.7), colour: BUS, name: 'Statler', car: 'Bus' };
+  const end = { x: busStop.x + 235, y: busStop.y + 20 }, start = { x: busStop.x + 235, y: H + 200 }, r = { cx: (start.x + end.x) / 2, cy: (start.y + end.y) / 2 + 40, a: Math.atan2(end.y - start.y, end.x - start.x), L: Math.hypot(end.x - start.x, end.y - start.y) + 80 };
+  road(r, 'a');
+  const busClock = t % (RIDE + STAY + AWAY), tramClock = (t + 4) % (RIDE + STAY + AWAY);
+  const signs = [stop(look, busStop, busClock), stop(look, tramStop, tramClock)];
+  const cTo = { x: tramStop.x + 235, y: tramStop.y - 20 }, cFrom = { x: -160, y: -260 }, dx = cTo.x - cFrom.x, dy = cTo.y - cFrom.y, far = Math.hypot(dx, dy);
+  const tower = { x: cFrom.x + dx * 0.45, y: cFrom.y + dy * 0.45 };
+  ctx.beginPath(); ctx.roundRect(tower.x - 16, tower.y - 16, 32, 32, 8); feltPiece('oklch(70% 0.025 55)');
+  for (const side of [-7, 7]) { ctx.beginPath(); ctx.moveTo(cFrom.x - dy / far * side, cFrom.y + dx / far * side); ctx.lineTo(cTo.x - dy / far * side, cTo.y + dx / far * side); yarn('oklch(45% 0.04 45)', 4); }
+  grain();
+  const stand = [];
+  for (const [s, face, colour] of [[busStop, 5, GOLD], [tramStop, 11, TEAL]]) {
+    const pts = [0, 1, 2, 3].map(i => look === 'c'
+      ? { x: s.x + 20 - i * 40, y: s.y - 4 + Math.sin((3 - i) * 0.7) * 6 - (0.5 - 0.5 * Math.cos(t * 3 + i)) * 2.5, face: face + i * 3, size: i ? 42 : 58 }
+      : { x: s.x + 40 - i * 33, y: s.y - 4 + Math.sin(i) * 6 - (0.5 - 0.5 * Math.cos(t * 3 + i)) * 2.5, face: face + i * 3, size: i ? 42 : 58 });
+    rope(pts, colour);
+    pts.forEach(p => stand.push({ y: p.y, draw: () => sprite(p.face, p.x, p.y, p.size) }));
+  }
+  const where = clock => clock < RIDE ? outCubic(clock / RIDE) : clock < RIDE + STAY ? 1 : 1 - inQuad((clock - RIDE - STAY) / AWAY);
+  const bu = where(busClock), bx = start.x + (end.x - start.x) * bu, by = start.y + (end.y - start.y) * bu;
+  stand.push({ y: by + 34, draw: () => { foot(bx, by + 34, 66, 0.22); toy('bus', bx, by + 40, 160, busClock >= RIDE + STAY); } });
+  const tu = where(tramClock), tx = cFrom.x + dx * tu, ty = cFrom.y + dy * tu;
+  for (const s of stand.sort((a, b) => a.y - b.y)) s.draw();
+  ctx.globalAlpha = 0.18; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(tx + 30, ty + 70, 60, 20, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1; toy('tram', tx, ty + 62, 140, true);
+  for (const sign of signs) sign?.();
+}
+
+// ---------- 2 · the spill ----------
+// A long line walks into a line standing across its way and spills. Its animals end up in sacks lying round where it fell,
+// as now; what changes is how it goes from a line to sacks.
+const N = 24, PER = 8, FACES = Array.from({ length: N }, (_, i) => 1 + (i * 11 + 3) % 35);
+const WALK = 1.6, PLAY = 2.2, HOLD = 1.8, CYCLE = WALK + PLAY + HOLD;
+const pathY = x => H * 0.55 + 50 * Math.sin(x / 170);
+function spillScene(look, t) {
+  mat();
+  lawn(W * 0.03, H * 0.66, W * 0.2, H * 0.28);
+  grain();
+  const tau = (t % CYCLE) - WALK, hitX = W * 0.8, P = { x: hitX, y: pathY(hitX) };
+  const spots = [[-0.42 * W, -0.3 * H], [-0.2 * W, 0.3 * H], [0.1 * W, 0.36 * H]].map(([dx, dy]) => ({ x: clamp(P.x + dx, 60, W - 60), y: clamp(P.y + dy, 110, H - 40) }));
+  const headX = hitX + 150 * Math.min(0, tau), step = i => 0.5 - 0.5 * Math.cos((t * 7 - i * 0.7) * 2);
+  const at = (i, hx = headX) => { const x = hx - 33 * (i + 1); return { x, y: pathY(x) }; };
+  const frozen = Array.from({ length: N }, (_, i) => at(i, hitX));
+  const stand = [], over = [];
+  const block = Array.from({ length: 9 }, (_, i) => ({ x: hitX + 36 + Math.sin(i * 0.9) * 5, y: P.y - 150 + i * 34 - (0.5 - 0.5 * Math.cos(t * 3 + i)) * 2, face: 1 + (i * 7 + 20) % 35, size: i ? 42 : 58 }));
+  rope(block, TEAL);
+  block.forEach(p => stand.push({ y: p.y, draw: () => sprite(p.face, p.x, p.y, p.size) }));
+  const sackAt = (x, y, { lift = 0, spin = 0, sx = 1, sy = 1, count = null, tagPop = 0 } = {}) => {
+    stand.push({ y, draw: () => {
+      foot(x, y, 70 * 0.42 * (1 - lift / 500) * Math.min(1, sx));
+      ctx.save(); ctx.translate(x, y - lift); ctx.scale(sx, sy); ctx.translate(0, -28); ctx.rotate(spin); toy('sack', 0, 31, 70); ctx.restore();
+    } });
+    if (count != null) over.push(() => { ctx.save(); ctx.translate(x + 28, y - lift - 74); const k = 1 + 0.35 * tagPop; ctx.scale(k, k); pill(`${count}`, 0, 0, PURPLE, C.paper, 17); ctx.restore(); });
+  };
+  const fling = (from, to, u, high, side) => ({ x: from.x + (to.x - from.x) * u, y: from.y + (to.y - from.y) * u, lift: Math.sin(u * Math.PI) * high, spin: (1 - u) * 5 * side });
+  const landing = (x, y, age) => over.push(() => { puff(x, y + 4, age, 1.4); puff(x - 20, y + 8, age); puff(x + 20, y + 8, age); });
+
+  if (tau < 0) {
+    const pts = [{ x: headX, y: pathY(headX) - step(0) * 2.5, face: 23, size: 58 }, ...FACES.map((face, i) => { const p = at(i); return { x: p.x, y: p.y - step(i + 1) * 2.5, face, size: 42 }; })];
+    rope(pts, PURPLE); pts.forEach(p => stand.push({ y: p.y, draw: () => sprite(p.face, p.x, p.y, p.size) }));
+  } else if (look === 'now') {
+    over.push(() => ring(P.x, P.y, tau / 0.6, PURPLE));
+    spots.forEach(S => { const u = clamp(tau / 0.7), f = fling(P, S, u, 140, S.x > P.x ? 1 : -1); sackAt(f.x, f.y, { lift: f.lift, spin: f.spin, count: u >= 1 ? PER : null }); if (u > 0.92) landing(S.x, S.y, (tau - 0.64) / 0.7); });
+  } else if (look === 'a') {
+    // Twinkle out, pop up: from the head back, each animal winks out with a little twinkle where it stood, and the sacks
+    // pop up out of the felt where they lie, each with a puff, growing past full size and settling.
+    const GAP = 0.03, rope0 = [];
+    frozen.forEach((p, i) => {
+      const gone = 0.05 + i * GAP;
+      if (tau < gone) { rope0.push(p); stand.push({ y: p.y, draw: () => sprite(FACES[i], p.x, p.y, 42) }); return; }
+      const age = tau - gone; if (age < 0.12) stand.push({ y: p.y, draw: () => sprite(FACES[i], p.x, p.y - age * 60, 42 * (1 - age / 0.12)) });
+      over.push(() => miniTwinkle(p.x, p.y - 6, age / 0.45, PURPLE, i));
+    });
+    if (tau < 0.05) over.push(() => miniTwinkle(P.x, P.y - 10, tau / 0.45, PURPLE, 99));
+    rope(rope0, PURPLE);
+    spots.forEach((S, c) => {
+      const start = 0.35 + c * 0.14, u = (tau - start) / 0.34; if (u < 0) return;
+      const grow = u >= 1 ? 1 : Math.sin(Math.min(1, u) * Math.PI * 0.62) / Math.sin(Math.PI * 0.62) * (1 + 0.18 * Math.sin(u * Math.PI));
+      over.push(() => puff(S.x, S.y + 4, u / 1.6, 1.5));
+      sackAt(S.x, S.y, { sx: grow, sy: grow, count: u >= 1 ? PER : null, tagPop: clamp(1 - (u - 1) * 3) * (u >= 1 ? 1 : 0) });
+    });
+  } else if (look === 'b') {
+    // Rain of sacks: the line goes in one soft puff with a few twinkles, and the sacks drop out of the sky onto their spots,
+    // their shadows growing first so you see where they will land, then a bounce.
+    if (tau < 0.15) { const k = 1 - tau / 0.15; rope(frozen, PURPLE); frozen.forEach((p, i) => stand.push({ y: p.y, draw: () => sprite(FACES[i], p.x, p.y, 42 * k) })); }
+    over.push(() => { for (let i = 0; i < N; i += 4) puff(frozen[i].x, frozen[i].y + 4, tau / 0.6, 1.6); twinkles(P.x, P.y - 10, tau, PURPLE); });
+    spots.forEach((S, c) => {
+      const start = 0.2 + c * 0.16, u = (tau - start) / 0.5; if (u < -0.6) return;
+      if (u < 0) { stand.push({ y: S.y - 1, draw: () => foot(S.x, S.y, 30 * (1 + u / 0.6) , 0.12) }); return; }
+      const fall = clamp(u), lift = 420 * (1 - inQuad(fall)), b = (tau - start - 0.5) / 0.22, squash = b > 0 && b < 1 ? Math.sin(b * Math.PI) : 0;
+      sackAt(S.x, S.y, { lift, sy: 1 - 0.2 * squash, sx: 1 + 0.14 * squash, count: b >= 0 ? PER : null, tagPop: b > 0 && b < 1 ? 1 - b : 0 });
+      if (b > 0) landing(S.x, S.y, b / 3);
+    });
+  }
+  for (const s of stand.sort((a, b) => a.y - b.y)) s.draw();
+  for (const draw of over) draw();
+}
+/** A small plus-shaped twinkle, never the Ink+ four-point spark. */
+function miniTwinkle(x, y, u, colour, seed) {
+  if (u < 0 || u > 1) return;
+  const size = 9 * Math.sin(u * Math.PI), a = seed * 2.4;
+  if (size < 0.4) return;
+  const px = x + Math.cos(a) * 10 * u, py = y - 14 * u;
+  ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px - size, py); ctx.lineTo(px + size, py); ctx.moveTo(px, py - size); ctx.lineTo(px, py + size);
+  ctx.strokeStyle = seed % 3 ? colour : tone(colour, { light: 22, chroma: 0.5 }); ctx.lineWidth = size * 0.45; ctx.stroke();
+  ctx.beginPath(); ctx.arc(px, py, size * 0.22, 0, 7); ctx.fillStyle = 'oklch(98% 0.01 80)'; ctx.fill();
+}
+/** A few small twinkles thrown out from (x, y) and fading. */
+function twinkles(x, y, age, colour) {
+  if (age < 0 || age > 0.9) return;
+  const r = seeded(21), u = age / 0.9, out = 1 - (1 - u) ** 3;
+  for (let k = 0; k < 10; k++) {
+    const a = k / 10 * Math.PI * 2 + r() * 0.5, far = (60 + r() * 90) * out, size = (10 + r() * 8) * Math.sin(Math.min(1, u * 1.15) * Math.PI), px = x + Math.cos(a) * far, py = y + Math.sin(a) * far * 0.75 - u * 12;
+    if (size <= 0.3) continue;
+    ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px - size, py); ctx.lineTo(px + size, py); ctx.moveTo(px, py - size); ctx.lineTo(px, py + size);
+    ctx.strokeStyle = k % 3 ? colour : tone(colour, { light: 22, chroma: 0.5 }); ctx.lineWidth = size * 0.45; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px, py, size * 0.22, 0, 7); ctx.fillStyle = 'oklch(98% 0.01 80)'; ctx.fill();
+  }
+}
+
+// ---------- the page ----------
+const SCENES = { stops: stopsScene, spill: spillScene };
+const parts = [...document.querySelectorAll('section[data-part]')].map(section => {
+  const part = { name: section.dataset.part, canvas: section.querySelector('canvas'), note: section.querySelector('.note'), look: 'a', clock: 0, slow: false };
+  const pick = look => { part.look = look; part.clock = 0; section.querySelectorAll('.bar button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === look))); part.note.textContent = SAY[part.name][look]; };
+  section.querySelectorAll('.bar button[data-v]').forEach(b => b.onclick = () => pick(b.dataset.v));
+  const slow = section.querySelector('.slow'); if (slow) slow.onclick = () => { part.slow = !part.slow; slow.setAttribute('aria-pressed', String(part.slow)); };
+  pick('a');
+  new IntersectionObserver(([e]) => part.seen = e.isIntersecting).observe(part.canvas);
+  return part;
+});
+function fit(part) {
+  const box = part.canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  part.canvas.width = box.width * dpr; part.canvas.height = box.height * dpr;
+  part.w = box.width < 640 ? 600 : 920; part.k = box.width / part.w * dpr; part.h = box.height / box.width * part.w;
+}
+parts.forEach(part => new ResizeObserver(() => fit(part)).observe(part.canvas));
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  for (const part of parts) {
+    if (!part.seen || !part.canvas.width) continue;
+    part.clock += dt * (part.slow ? 0.3 : 1);
+    ctx = part.canvas.getContext('2d'); W = part.w; H = part.h;
+    ctx.setTransform(part.k, 0, 0, part.k, 0, 0);
+    SCENES[part.name](part.look, part.clock);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
