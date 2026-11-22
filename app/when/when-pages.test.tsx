@@ -47,8 +47,8 @@ const clean = (html: string) => { expect(html).not.toContain('—'); expect(html
 it('shows a visitor who has not signed in what is free so far, and one way in', async () => {
   const { id } = await fixture(), view = await open(null, id);
   expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
-  expect(view.container).toHaveTextContent('3 of 7 have answered');
-  expect(view.container).toHaveTextContent('Maya asks · 30 Nov to 4 Dec');
+  expect(view.container).toHaveTextContent('Maya asked · 3 of 7 answered · by Fri 27 Nov');
+  expect(view.container).toHaveTextContent('Best so far');
   expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toHaveAttribute('href', signInHref(`/when/${id}`));
   expect(screen.queryByRole('button', { name: 'Tue 1, 7 pm' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Save my times' })).toBeNull();
@@ -59,7 +59,7 @@ it('shows a visitor who has not signed in what is free so far, and one way in', 
 it('gives someone signed in the grid, with their own times painted and themselves counted once', async () => {
   const { id, priya, dana } = await fixture();
   let view = await open(priya, id);
-  expect(screen.getByRole('button', { name: 'Save my times' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Saved' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toHaveTextContent('3');
   expect(screen.getByRole('button', { name: 'Tue 1, 8 pm' })).toHaveAttribute('aria-pressed', 'false');
@@ -119,7 +119,7 @@ it('shows the result once it is sent: you first, then who is in, then who cannot
   expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toBeInTheDocument();
   cleanup();
   await open(josh, id, { edit: '1' });
-  expect(screen.getByRole('button', { name: 'Save my times' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Saved' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Back to the result' })).toBeInTheDocument();
 });
 

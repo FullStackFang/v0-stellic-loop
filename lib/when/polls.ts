@@ -24,6 +24,8 @@ export type PollView = {
   answered: Person[];
   /** How many people can make each time; times nobody picked are absent. */
   counts: Record<string, number>;
+  /** Who can make each time, in the order they answered. */
+  free: Record<string, Person[]>;
   /** The viewer's own answer. A draft is last week's, carried over and not yet counted. */
   mine: { slots: string[]; draft: boolean } | null;
   best: { at: string; people: Person[] }[];
@@ -127,14 +129,15 @@ export async function pollView(db: Db, who: Who | null, id: string): Promise<Pol
   const all = await answersOf(db, id), counted = all.filter(answer => !answer.draft), own = who && all.find(answer => answer.personId === who.personId);
   const person = (each: Person): Person => ({ personId: each.personId, name: each.name }), named = new Map(counted.map(each => [each.personId, person(each)]));
   const counts: Record<string, number> = {};
-  for (const answer of counted) for (const at of answer.slots) counts[at] = (counts[at] ?? 0) + 1;
+  const free: Record<string, Person[]> = {};
+  for (const answer of counted) for (const at of answer.slots) { counts[at] = (counts[at] ?? 0) + 1; (free[at] ??= []).push(person(answer)); }
   const size = sizeOf(poll.expectedSize, counted.length);
   // A meeting may start a quarter of an hour or more into its hour; the people who can make it are those who painted that hour.
   const set = poll.chosenSlot ? Date.parse(poll.chosenSlot) : null, hour = set === null ? null : slotsOf(frameOf(poll)).map(slot => slot.at).filter(at => Date.parse(at) <= set).pop() ?? poll.chosenSlot!;
   return {
     id: poll.id, seriesId: poll.seriesId, title: poll.title, frame: frameOf(poll), threshold: poll.threshold, deadline: poll.deadline, status: poll.status, ready: poll.readyAt !== null,
     organizer: { personId: poll.organizerId, name: poll.organizerName }, isOrganizer: who?.personId === poll.organizerId,
-    size, needed: needed(poll.threshold, size), answered: counted.map(person), counts,
+    size, needed: needed(poll.threshold, size), answered: counted.map(person), counts, free,
     mine: own ? { slots: own.slots, draft: own.draft } : null,
     best: bestSlots(counted).map(slot => ({ at: slot.at, people: slot.people.map(id => named.get(id)!) })),
     chosen: poll.chosenSlot ? { at: poll.chosenSlot, minutes: poll.durationMin, note: poll.note, in: counted.filter(each => each.slots.includes(hour!)).map(person), out: counted.filter(each => !each.slots.includes(hour!)).map(person) } : null,

@@ -11,7 +11,7 @@ const TUE7 = '2026-12-02T00:00:00.000Z', TUE8 = '2026-12-02T01:00:00.000Z';
 const cell = (name: string) => screen.getByRole('button', { name });
 function show(over: Partial<Parameters<typeof Grid>[0]> = {}) {
   const onSave = vi.fn<(slots: string[]) => Promise<null>>(async () => null);
-  render(<Grid slots={slots} others={{ [TUE7]: 2 }} mine={[]} onSave={onSave} after="Saved." {...over} />);
+  render(<Grid slots={slots} free={{ [TUE7]: [{ personId: 'a', name: 'Josh', face: '/animals/01.webp' }, { personId: 'b', name: 'Priya', face: '/animals/02.webp' }] }} size={7} mine={[]} onSave={onSave} after="Saved." {...over} />);
   return onSave;
 }
 

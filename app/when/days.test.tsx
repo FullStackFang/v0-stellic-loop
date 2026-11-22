@@ -44,12 +44,12 @@ it('moves the last day to answer ahead of the days when they are moved before it
 
 it('shows a long poll five days at a time, the first days first, and says the best of each set', () => {
   const slots = slotsOf({ startDate: '2026-11-25', endDate: '2026-12-07', hourStart: 17, hourEnd: 22, timezone: 'America/New_York' });
-  render(<Grid slots={slots} others={{ [TUE7]: 2 }} onSave={async () => null} after="Saved." size={7}
+  render(<Grid slots={slots} free={{ [TUE7]: [{ personId: 'a', name: 'Josh', face: '/animals/01.webp' }, { personId: 'b', name: 'Priya', face: '/animals/02.webp' }] }} onSave={async () => null} after="Saved." size={7}
     best={[{ at: TUE7, dow: 'Tue', date: '1 Dec', time: '7 pm', line: '2 of 7 can make it', people: [] }]} />);
   expect(day('Wed 25, 5 pm')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Mon 30, 5 pm' })).toBeNull();
   const sets = screen.getAllByRole('button', { name: /Best is/ });
-  expect(sets.map(set => set.textContent)).toEqual(['Best is 0 of 725 to 29 Nov', 'Best is 2 of 730 Nov to 4 Dec', 'Best is 0 of 75 to 7 Dec']);
+  expect(sets.map(set => set.textContent)).toEqual(['Best is 0 of 725 to 29 Nov', 'Best is 2 of 730 Nov to 4 Dec1', 'Best is 0 of 75 to 7 Dec']);
   fireEvent.click(sets[2]);
   expect(day('Mon 7, 5 pm')).toBeInTheDocument();
   fireEvent.click(day('Show Tue 1 Dec, 7 pm'));
@@ -57,12 +57,21 @@ it('shows a long poll five days at a time, the first days first, and says the be
   expect(sets[1]).toHaveAttribute('aria-pressed', 'true');
   fireEvent.click(day('Tue 1, 7 pm'));
   expect(sets[1]).toHaveTextContent('Best is 3 of 7');
+  expect(day('Tue 1, 7 pm')).toHaveTextContent('31');
+  expect(screen.getByText('3 of 7 can make it, you too')).toBeInTheDocument();
 });
 
 it('shows the grid to someone who cannot paint, with the action in place of Save', () => {
   const slots = slotsOf({ startDate: '2026-11-30', endDate: '2026-12-04', hourStart: 17, hourEnd: 22, timezone: 'America/New_York' });
-  render(<Grid slots={slots} others={{ [TUE7]: 2 }} won={TUE7} action={<a href="/in">Sign in to add your times</a>} />);
-  expect(screen.queryByRole('button')).toBeNull();
+  render(<Grid slots={slots} free={{ [TUE7]: [{ personId: 'a', name: 'Josh', face: '/animals/01.webp' }, { personId: 'b', name: 'Priya', face: '/animals/02.webp' }] }} size={7} won={TUE7} action={<a href="/in">Sign in to add your times</a>} />);
+  expect(screen.queryByRole('button', { name: 'Save my times' })).toBeNull();
+  expect(screen.getByText('Best so far')).toBeInTheDocument();
+  expect(screen.getByText('Tue 1 Dec, 7 pm')).toBeInTheDocument();
+  expect(screen.getByText('2 of 7 can make it')).toBeInTheDocument();
+  expect(screen.getAllByRole('img').map(each => each.getAttribute('alt'))).toEqual(['Josh', 'Priya']);
+  fireEvent.click(screen.getByLabelText('Mon 30, 5 pm: 0 free'));
+  expect(screen.getByText('This time')).toBeInTheDocument();
+  expect(screen.getByText('Nobody yet')).toBeInTheDocument();
   expect(screen.getByLabelText('Tue 1, 7 pm: 2 free')).toHaveClass('won');
   expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toBeInTheDocument();
 });

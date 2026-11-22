@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { dayNum, mon } from '@/lib/days';
+// (day helpers are used by the grid)
 import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { facesOf } from '@/lib/when/faces';
@@ -36,7 +36,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
   const { id } = await params, query = await searchParams ?? {}, who = await getSignedInPrincipal();
   const view = await pollView(db(), who, id);
   if (!view) notFound();
-  const zone = view.frame.timezone, here = `/when/${view.id}`, faces = await facesOf(db(), [...view.answered.map(each => each.personId), view.organizer.personId]);
+  const zone = view.frame.timezone, here = `/when/${view.id}`, faces = await facesOf(db(), [...view.answered.map(each => each.personId), view.organizer.personId, ...(who ? [who.personId] : [])]);
   const shown = (each: Person): Shown => ({ ...each, face: faces.get(each.personId) ?? '/animals/01.webp' }), answered = view.answered.map(shown);
   const count = <span><b>{view.answered.length} of {view.size}</b> have answered</span>;
   const top = view.best[0]?.people.length ?? 0, met = top >= view.needed;
@@ -80,14 +80,12 @@ export default async function WhenPage({ params, searchParams }: Props) {
     </main>;
   }
 
-  // Answering, or looking before signing in.
-  const slots = slotsOf(view.frame), by = slotLabel(view.deadline, zone), counted = view.mine && !view.mine.draft ? view.mine.slots : [];
-  const others = Object.fromEntries(Object.entries(view.counts).map(([at, n]) => [at, n - (counted.includes(at) ? 1 : 0)]));
-  const set = view.chosen && slotLabel(view.chosen.at, zone);
-  const head = <Ticket tile={set ? <Tile met top={set.dow} big={`${set.date} ${set.month}`} /> : <Tile top="Answer by" big={`${by.dow} ${by.date}`} />} stub={<><Seats people={answered} size={view.size} me={who?.personId} />{count}</>}>
-    <h1>{view.title}</h1>
-    <p>{view.organizer.name} asks · {dayNum(view.frame.startDate)} {mon(view.frame.startDate)} to {dayNum(view.frame.endDate)} {mon(view.frame.endDate)}{set ? ` · set for ${set.dow} ${set.time}` : ''}</p>
-  </Ticket>;
+  // Answering, or looking before signing in. The ticket says who asked; its stub, drawn by the grid, says who can make a time.
+  const slots = slotsOf(view.frame), by = slotLabel(view.deadline, zone), set = view.chosen && slotLabel(view.chosen.at, zone);
+  const free = Object.fromEntries(Object.entries(view.free).map(([at, people]) => [at, people.filter(each => each.personId !== who?.personId).map(shown)]));
+  const tile = <Face of={shown(view.organizer)} />;
+  const title = <><h1>{view.title}</h1>
+    <p>{view.organizer.name} asked · {view.answered.length} of {view.size} answered · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
   const best = view.best.map(slot => { const label = slotLabel(slot.at, zone); return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, line: `${slot.people.length} of ${view.size} can make it`, people: slot.people.map(shown) }; });
   const tail = <>
     {view.chosen && <div className="wn-acts wn-mid"><a className="cs-btn sm" href={here}>Back to the result</a></div>}
@@ -97,13 +95,13 @@ export default async function WhenPage({ params, searchParams }: Props) {
     </>}
   </>;
   const zonePill = <span className="cs-pill">Times are in {zoneName(zone)}</span>;
-  return <main className="wn wn-two">
+  return <main className="wn wn-two wn-fit">
     <Opened pollId={view.id} />
     {who
-      ? <Grid slots={slots} others={others} mine={view.mine?.slots ?? []} draft={view.mine?.draft ?? false} onSave={saveAnswerAction.bind(null, view.id)} head={head} best={best} tail={tail} size={view.size}
+      ? <Grid slots={slots} free={free} me={shown({ personId: who.personId, name: 'You' })} mine={view.mine?.slots ?? []} draft={view.mine?.draft ?? false} onSave={saveAnswerAction.bind(null, view.id)} tile={tile} title={title} best={best} tail={tail} size={view.size}
           tab={view.mine?.draft ? 'Your times from last time. Change them, then save' : undefined}
           after={view.chosen ? 'Saved. The time stays as it is.' : who.verifiedEmail ? `The result comes to ${who.verifiedEmail}` : 'Saved. You get an email when the time is set.'}>{zonePill}</Grid>
-      : <Grid slots={slots} others={view.counts} won={view.chosen?.at} head={head} best={best} tail={tail} size={view.size}
+      : <Grid slots={slots} free={free} won={view.chosen?.at} tile={tile} title={title} best={best} tail={tail} size={view.size}
           action={<><a className="cs-btn go wn-big" href={signInHref(here)}>Sign in to add your times</a><p className="wn-note">An email and a code. No password.</p></>}>{zonePill}</Grid>}
   </main>;
 }

@@ -9,7 +9,7 @@ Design: `docs/superpowers/specs/2026-11-22-loopd-when-design.md`. Approved look:
 ## Rules worth knowing
 
 - The one who asked picks the days on one calendar, and whether weekends are in the poll. "Answer by" is a day; the poll closes when that day ends on their clock.
-- The grid shows five days at a time on a phone and seven on a laptop, the first days first. Each set says its best count.
+- The grid shows five days at a time on a phone and seven on a laptop, the first days first. Each set says its best count, and the three best times carry a 1, 2 or 3. The stub of the ticket says who can make a time: the best so far, then whichever time was last touched. On a phone the screen fits without scrolling and Save stays at its foot (`public/demo/mockups-when-fit.html`, 3).
 - People paint whole hours. When the organizer picks an hour they may start it at :00, :15, :30 or :45 and say how long it runs (30 minutes to 2 hours). Who is "in" is who painted that hour.
 - Nothing is sent to the group until the organizer presses send. Send happens once.
 - Anyone with the link can see a poll. Answering needs a Loopd sign-in.
