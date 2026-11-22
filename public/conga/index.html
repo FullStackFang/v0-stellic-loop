@@ -5,15 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Conga · Loopd</title>
 <meta name="description" content="Walk your animal round campus and gather the longest line.">
-<link rel="modulepreload" href="./conga/sim.js"><link rel="modulepreload" href="./conga/maps.js">
+<link rel="modulepreload" href="./conga/sim.js"><link rel="modulepreload" href="./conga/maps.js"><link rel="modulepreload" href="./conga/scenery.js">
+<script>
+// The animals' sheet is asked for here, before the game's scripts have come, so it is on its way from the first moment.
+// A small screen takes the small sheet. The game below takes this same picture.
+var congaCell = Math.min(innerWidth, innerHeight * 1.25) / 760 * Math.min(2, devicePixelRatio || 1) > 1.4 ? 192 : 96;
+var congaSheet = Object.assign(new Image(), { fetchPriority: 'high', src: './conga/animals-' + congaCell + '.v2.webp' });
+</script>
 <style>
 @font-face { font-family: Archivo; src: url(/fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
 :root { --field: oklch(82% 0.12 38); --dot: oklch(77% 0.13 37); --ink: oklch(24% 0.035 30); --action: oklch(48.5% 0.185 27); --action-hover: oklch(54% 0.19 27);
   --paper: oklch(99.2% 0.004 60); --mute: oklch(45% 0.016 40); --line: oklch(88% 0.012 50); --expo: cubic-bezier(.16, 1, .3, 1); }
 * { box-sizing: border-box; margin: 0; }
 html, body { height: 100%; overflow: hidden; background: #f0e8d4; color: var(--ink); font-family: Archivo, system-ui, sans-serif; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; overscroll-behavior: none; }
-/* One animal's face, cut from the sheet all of them are on: seven across, six down. */
-.face { display: block; aspect-ratio: 1; background: var(--sheet) 0 0 / 700% 600% no-repeat; }
+/* One animal's face, cut from the sheet all of them are on: seven across, seven down. The sheet is named (--sheet) only once
+   it is whole, so no face is ever shown half come; until then each one is a faint ink blot. */
+.face { display: block; aspect-ratio: 1; background: var(--sheet) 0 0 / 700% 700% no-repeat; }
+.face.pet:not(.got) { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-68 -68 136 136'%3E%3Cpath fill='%233a2a24' fill-opacity='.16' d='M-8 -60C22 -66 52 -44 58 -14C66 18 46 54 10 60C-24 66 -58 44 -62 10C-66 -24 -40 -54 -8 -60Z'/%3E%3C/svg%3E") center / 62% no-repeat, var(--field) !important; }
+:root:not(.in) .face:not(.pet) { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-68 -68 136 136'%3E%3Cpath fill='%233a2a24' fill-opacity='.16' d='M-8 -60C22 -66 52 -44 58 -14C66 18 46 54 10 60C-24 66 -58 44 -62 10C-66 -24 -40 -54 -8 -60Z'/%3E%3C/svg%3E") center / 62% no-repeat !important; }
 canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
 .hud[hidden], .pause[hidden] { display: none; }
@@ -216,14 +225,17 @@ const $ = id => document.getElementById(id);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 // Outside the ground is the print map's paper, and its blue where there is water (components/campus/near.tsx).
 const C = { field: css('--field'), ink: css('--ink'), paper: css('--paper'), action: css('--action'), town: '#f0e8d4', twine: '#fbf7ec', water: '#3f86de', roof: '#f5eedc', trim: '#dccfae', green: 'oklch(87% 0.1 140)', tree: 'oklch(71% 0.14 148)', blossom: 'oklch(84% 0.1 0)', panel: '#c5d6ea', stone: '#d9d4c7', lamp: '#ffe27a', cab: '#fccc0a' };
-// Every animal is on one sheet (scripts/conga-atlas.mjs), seven across, with its ground shadow already under it.
-// A small screen takes the small sheet. The version is in the name so the file can be kept by the browser for good.
-const COLS = 7, SHEET = Math.min(innerWidth, innerHeight * 1.25) / 760 * Math.min(2, devicePixelRatio || 1) > 1.4 ? 192 : 96;
-const sheet = Object.assign(new Image(), { src: `./conga/animals-${SHEET}.v1.webp` });
-document.documentElement.style.setProperty('--sheet', `url(${sheet.src})`);
+// Every animal is on one sheet (scripts/conga-atlas.mjs), seven across and seven down, with its ground shadow already under it.
+// It was asked for in the page's head (congaSheet). The version is in the name so the file can be kept by the browser for good.
+// The faces on the cards take it only once it is whole (.face in the style); the field draws a blot in its place till then.
+const COLS = 7, ROWS = 7, SHEET = window.congaCell ?? 96;
+const sheet = window.congaSheet ?? Object.assign(new Image(), { src: `./conga/animals-${SHEET}.v2.webp` });
+sheet.decode().catch(() => {}).then(() => { document.documentElement.style.setProperty('--sheet', `url(${sheet.src})`); document.documentElement.classList.add('in'); stale = true; });
 // Who is playing, for someone signed in (app/conga): whether they have Ink (`ink`) or Ink+ (`plus`), their school, and the animals that are theirs to
 // play as, the one they wear on campus first. `chosen` is the one in their seat. Face 0 is a made pet, a picture apart from the sheet.
-let you = null, chosen = 0; const pet = new Image();
+let you = null, chosen = 0, pet = new Image();
+// A made pet is worn only once its picture is whole, so the head of the line never goes blank while a new one comes.
+const wear = src => { const next = new Image(); next.src = src; next.decode().then(() => { pet = next; stale = true; }).catch(() => {}); };
 const own = () => you.animals[chosen];
 const CORE = 36; // the animals anyone may play as; the rest are an Ink member's own
 // The Ink mark, in place of the plan's name: a feature that comes with Ink wears it.
@@ -231,8 +243,18 @@ const INK = '<svg class="mk" viewBox="-68 -68 136 136" role="img" aria-label="In
 // Each school's two colours (app/c/campus.css, [data-kit]): what an Ink+ line's sparkle wears.
 const KITS = { loop: ['oklch(96.4% 0.19 117)', 'oklch(47.6% 0.13 250)'], cornell: ['oklch(99.2% 0.004 60)', 'oklch(48.5% 0.185 27)'], columbia: ['oklch(87% 0.075 235)', 'oklch(46% 0.14 255)'],
   cuny: ['oklch(88% 0.13 88)', 'oklch(38% 0.18 264)'], nyu: ['oklch(85% 0.09 305)', 'oklch(40% 0.2 305)'] };
-const cut = (face, picture = pet.src) => !face ? `background: var(--field) url(${picture}) center / contain no-repeat; border-radius: 50%` : `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (Math.ceil(FACES / COLS) - 1) * 100}%`;
-const faceTag = (face, picture) => `<span class="face" style="${cut(face, picture)}"></span>`;
+const cut = (face, picture = you?.animals[chosen]?.picture ?? pet.src) => !face ? `background: var(--field) url(${picture}) center / contain no-repeat; border-radius: 50%` : `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (ROWS - 1) * 100}%`;
+// A made pet is its own picture. Its face shows the blot (.pet in the style) until that picture is whole, then shows it at once;
+// one already whole is shown straight away when the cards are drawn again.
+const whole = new Set();
+const faceTag = (face, picture) => face ? `<span class="face" style="${cut(face)}"></span>`
+  : `<span class="face pet${whole.has(picture) ? ' got' : ''}" data-picture="${picture}" style="${cut(face, picture)}"></span>`;
+function settle(root) {
+  for (const el of root.querySelectorAll('.face.pet:not(.got)')) {
+    const src = el.dataset.picture, img = new Image(); img.src = src;
+    img.decode().then(() => { whole.add(src); for (const same of document.querySelectorAll('.face.pet')) if (same.dataset.picture === src) same.classList.add('got'); }).catch(() => {});
+  }
+}
 // The pickups, drawn as toys in the animals' style (scripts/pickup-art.ts), and each one's own colour, for its light on the ground.
 const ART = Object.fromEntries(Object.keys(POWERS).map(kind => [kind, Object.assign(new Image(), { src: `./conga/pickups/${kind}.v1.webp` })]));
 const OWN = { megaphone: '62% 0.2 27', coffee: '62% 0.09 60', whistle: '84% 0.16 88' };
@@ -313,7 +335,7 @@ function offer() {
       card.lastChild.replaceChildren(...you.animals.map((animal, n) => {
         const button = Object.assign(document.createElement('button'), { className: 'pick', ariaLabel: `Your animal ${n + 1}`, innerHTML: faceTag(animal.face, animal.picture) });
         button.setAttribute('aria-pressed', n === chosen);
-        button.onclick = () => { chosen = n; keep.set('conga-own', n); if (animal.picture) pet.src = animal.picture; mine = true; offer(); };
+        button.onclick = () => { chosen = n; keep.set('conga-own', n); if (animal.picture) wear(animal.picture); mine = true; offer(); };
         return button;
       }));
       seat.onclick = () => { mine = true; press(seat); if (you.animals.length > 1) show(card.hidden); };
@@ -344,13 +366,14 @@ function offer() {
     return button;
   }), Object.assign(document.createElement('button'), { className: 'more', ariaLabel: 'Shuffle the animals', title: 'Shuffle', onclick: () => offer(),
     innerHTML: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h3.5c3.5 0 5.5 10 9 10H21M3 17h3.5c1.4 0 2.5-1.5 3.5-3.3M14 8.300C14.700 7.500 15.500 7 16.500 7H21M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>' }), ...(tray ? [tray] : []));
+  settle($('faces'));
 }
 offer();
 // Someone signed in gets their own seat, and with Ink starts in it unless they chose another animal last time.
 // The page arrives saying who is playing (app/conga writes `congaPlayer` into it), so a sign-in gone stale is renewed as on any page.
 Promise.resolve(window.congaPlayer ?? null).then(player => {
   if (!player) return;
-  you = player; chosen = Math.min(Number(keep.get('conga-own')) || 0, you.animals.length - 1); if (own().picture) pet.src = own().picture;
+  you = player; chosen = Math.min(Number(keep.get('conga-own')) || 0, you.animals.length - 1); if (own().picture) wear(own().picture);
   mine = you.ink && (mine || keep.get('conga-face') == null);
   offer();
 }).catch(() => {});
@@ -376,7 +399,9 @@ function begin() {
   // A player still learning is taught as the game starts; otherwise, on a touch screen, the controls are said once
   // (/demo/mockups-conga-phone.html, 2 B).
   if (!teach() && touched) say('Drag to steer · double tap and hold to dash');
-  $('mineFace').style.cssText = cut(face);
+  const worn = $('mineFace'), picture = animal?.picture ?? '';
+  worn.style.cssText = cut(face, picture || undefined); worn.dataset.picture = picture;
+  worn.classList.toggle('pet', !face); worn.classList.toggle('got', !face && whole.has(picture)); settle(worn.parentElement);
 }
 $('go').onclick = $('again').onclick = begin;
 
@@ -664,11 +689,14 @@ function canopy(x, y, r, fill) {
 }
 
 
+// While an animal's picture is still coming, its place holds the Ink mark's blot in faint ink, as the cards' faces do.
+const BLOT = new Path2D('M-8 -60C22 -66 52 -44 58 -14C66 18 46 54 10 60C-24 66 -58 44 -62 10C-66 -24 -40 -54 -8 -60Z');
+function blot(x, y, size) { const k = size * 0.62 / 136; ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.globalAlpha *= 0.16; ctx.fillStyle = C.ink; ctx.fill(BLOT); ctx.restore(); }
 function sprite(face, x, y, size, tilt = 0, alpha = 1) {
   const sx = (face - 1) % COLS * SHEET, sy = Math.floor((face - 1) / COLS) * SHEET;
   if (alpha !== 1) ctx.globalAlpha = alpha;
-  if (!face) { if (pet.complete && pet.naturalWidth) { ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(pet, -size / 2, -size / 2, size, size); ctx.restore(); } }
-  else if (!sheet.complete || !sheet.naturalWidth) { ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(x, y, size * 0.36, 0, 7); ctx.fill(); }
+  if (!face ? !pet.complete || !pet.naturalWidth : !sheet.complete || !sheet.naturalWidth) blot(x, y, size);
+  else if (!face) { ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(pet, -size / 2, -size / 2, size, size); ctx.restore(); }
   else if (tilt) { ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(sheet, sx, sy, SHEET, SHEET, -size / 2, -size / 2, size, size); ctx.restore(); }
   else ctx.drawImage(sheet, sx, sy, SHEET, SHEET, x - size / 2, y - size / 2, size, size);
   if (alpha !== 1) ctx.globalAlpha = 1;

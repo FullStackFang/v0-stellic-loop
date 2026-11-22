@@ -1,7 +1,8 @@
 // Builds the sprite sheets the Conga game draws its animals from: every face in public/animals on one image, so a
-// visit downloads one file in place of forty-two. Run it again whenever a face is added or changed, with a new
-// version, and set the same version in public/demo/mockups-conga.html:
-//   node scripts/conga-atlas.mjs 2
+// visit downloads one file in place of one per animal. Run it again whenever a face is added or changed, with a new
+// version, and set the same version (and ROWS, if the sheet grew a row) in public/conga/index.html:
+//   node scripts/conga-atlas.mjs 3
+// lib/__tests__/conga-sheet.test.ts fails while public/animals holds an animal the game's sheet does not.
 // Each cell holds the animal with its ground shadow already under it, so the game draws one image per animal.
 import { readdirSync, statSync } from 'node:fs';
 import sharp from 'sharp';
