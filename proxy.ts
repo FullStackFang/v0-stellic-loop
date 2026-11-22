@@ -21,7 +21,7 @@ export function leadsIntoGroups(path: string): boolean {
 }
 /** The campus app: the front door, the campus screen, share links and its sign-in. And the pages of the games Conga and Seats (app/conga, app/seats), which say who is playing: open to anyone, but the sign-in is read for it. */
 const isCampus = (path: string) => path === '/' || path === '/conga' || path === '/seats' || under(path, '/c') || under(path, '/o') || under(path, '/sign-in');
-const usesSignIn = (path: string) => under(path, '/emba') || under(path, '/groups') || path.startsWith('/e/') || path.startsWith('/a/') || path.startsWith('/api/emba/documents/');
+const usesSignIn = (path: string) => under(path, '/emba') || under(path, '/groups') || path.startsWith('/e/') || path.startsWith('/a/') || path.startsWith('/api/emba/documents/') || under(path, '/when');
 
 // Whether a signed-in account is the admin. LOOP_ADMIN may list an email address, which the session does not carry,
 // so the account is looked up, and the answer kept for a minute.
@@ -73,5 +73,5 @@ export function proxy(req: NextRequest,event:NextFetchEvent) {
 }
 
 export const config = {
-  matcher: ["/", "/b/:path*", "/p/:path*", "/emba/:path*", "/groups/:path*", "/e/:path*", "/a/:path*","/api/emba/documents/:path*", "/c/:path*", "/o/:path*", "/sign-in/:path*", "/conga", "/seats"],
+  matcher: ["/", "/b/:path*", "/p/:path*", "/emba/:path*", "/groups/:path*", "/e/:path*", "/a/:path*","/api/emba/documents/:path*", "/c/:path*", "/o/:path*", "/sign-in/:path*", "/conga", "/seats", "/when/:path*"],
 };

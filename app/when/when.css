@@ -1,0 +1,89 @@
+/* Loopd When (public/demo/mockups-when.html). Every page sits in .cs under the bar of the app, so the tokens and the pills,
+   tiles, faces and seats come from app/c/campus.css. What is new is here, every class starting wn-. */
+.wn { width: 100%; max-width: 520px; margin: 0 auto; display: grid; gap: 22px; padding: 22px 16px 34px; }
+.wn form { display: contents; }
+
+/* the ticket at the head of each screen: paper top, a tear, a stub */
+.wn-tk { overflow: hidden; margin-right: 6px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); }
+.wn-tk-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; padding: 18px; }
+.wn-tk-top.solo { grid-template-columns: minmax(0, 1fr); }
+.wn-tk h1 { font-size: 23px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.035em; line-height: 1.08; text-wrap: balance; overflow-wrap: anywhere; }
+.wn-tk h1.xl { font-size: 27px; font-weight: 740; font-stretch: 112%; letter-spacing: -0.045em; line-height: 1.02; }
+.wn-tk h1 em { font-style: normal; display: inline-block; padding: 0 7px 2px; margin: 3px 0 0 -3px; background: var(--cs-field); box-shadow: 3px 3px 0 var(--cs-ink); rotate: -2deg; white-space: nowrap; }
+.wn-tk-top p { margin-top: 4px; font-size: 14px; color: var(--cs-mute); }
+.wn-tk-stub { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; padding: 12px 18px 14px; background: var(--cs-stub); border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); font-size: 13.5px; font-weight: 580; color: var(--cs-on-field-2); }
+.wn-tk-stub b { color: var(--cs-ink); font-weight: 700; }
+.wn-tk-stub > span:last-child { margin-left: auto; }
+.wn-tk-stub.met { background: var(--cs-action); color: var(--cs-paper); }
+.wn-tk-stub.met b { color: var(--cs-paper); }
+.wn-tk-stub .cs-seats .cs-face, .wn-tk-stub .cs-seat { width: 30px; height: 30px; }
+
+/* a panel, named by a tab that overlaps it */
+.wn-panel { position: relative; margin-right: 6px; padding: 24px 14px 16px; border-radius: var(--cs-r); background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink), 6px 6px 0 var(--cs-field-shadow); }
+.wn-tab { position: absolute; top: -12px; left: 12px; display: inline-flex; align-items: center; height: 24px; margin: 0; padding: 0 11px; border-radius: 12px 12px 12px 3px; font-size: 12px; font-weight: 680; letter-spacing: .02em; background: var(--cs-ink); color: var(--cs-on-ink); box-shadow: 2px 2px 0 var(--cs-field-shadow); white-space: nowrap; }
+.wn-tab b { color: var(--cs-field); font-weight: 720; margin-left: 5px; }
+
+/* the form */
+.wn-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 10px; padding-top: 4px; }
+.wn-f { position: relative; display: block; min-width: 0; }
+.wn-f.wide { grid-column: 1 / -1; }
+.wn-f > span { position: absolute; z-index: 1; top: -10px; left: 10px; padding: 1px 8px 2px; border-radius: 9px 9px 9px 3px; font-size: 11.5px; font-weight: 680; background: var(--cs-ink); color: var(--cs-on-ink); white-space: nowrap; }
+.wn-f :is(input, select, textarea) { display: block; width: 100%; min-height: 48px; padding: 13px 14px 9px; border: 0; border-radius: 14px 14px 14px 4px; font: inherit; font-size: 15.5px; font-weight: 560; color: var(--cs-ink); background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); appearance: none; }
+.wn-f :is(input, select, textarea)::placeholder { color: var(--cs-mute); font-weight: 460; }
+.wn-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding-top: 14px; }
+.wn-three label { position: relative; display: grid; place-items: center; height: 38px; border-radius: 99px; font-size: 14px; font-weight: 580; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); cursor: pointer; }
+.wn-three input { position: absolute; inset: 0; opacity: 0; min-height: 0; cursor: pointer; }
+.wn-three label:has(input:checked) { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+.wn-three label:has(input:focus-visible) { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+
+/* the one action, and the line under it */
+.cs .cs-btn.wn-big { height: 54px; width: 100%; font-size: 17px; font-weight: 680; letter-spacing: -0.02em; }
+.cs .cs-btn.go.wn-big { box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 4px 4px 0 var(--cs-ink); }
+.wn-note { justify-self: center; display: inline-flex; align-items: center; min-height: 28px; margin-top: -8px; padding: 3px 12px; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 7%, var(--cs-paper)); font-size: 13px; text-align: center; }
+.wn-note.bad { margin-top: 0; background: var(--cs-action); color: var(--cs-on-ink); }
+
+/* the grid: days across, hours down */
+.wn-grid { display: grid; grid-template-columns: 40px repeat(var(--days), minmax(0, 1fr)); gap: 4px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.wn-grid + .wn-grid { margin-top: 18px; }
+.wn-d { text-align: center; font-size: 11.5px; font-weight: 600; line-height: 1.1; padding-bottom: 4px; color: var(--cs-mute); }
+.wn-d b { display: block; font-size: 17px; font-weight: 700; font-stretch: 108%; color: var(--cs-ink); }
+.wn-h { align-self: center; font-size: 12px; font-weight: 560; color: var(--cs-mute); text-align: right; padding-right: 4px; white-space: nowrap; }
+.cs .wn-cell, .wn-cell { display: grid; place-items: center; min-height: 46px; padding: 0; border: 0; border-radius: 12px 12px 12px 3px; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--cs-ink);
+  background: color-mix(in oklab, var(--cs-action) calc(var(--n) * 17%), var(--cs-page)); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-ink) 16%, transparent); }
+button.wn-cell { cursor: pointer; }
+.wn-cell[data-n="0"] { color: transparent; }
+.wn-cell:is([data-n="3"], [data-n="4"], [data-n="5"]) { color: var(--cs-paper); }
+.cs .wn-cell[aria-pressed=true], .cs .wn-cell.won { box-shadow: inset 0 0 0 3px var(--cs-ink), inset 0 0 0 5px var(--cs-paper); }
+.wn-none { min-height: 46px; }
+.wn-key { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; margin-top: 12px; }
+.wn-key .cs-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px 4px 6px; color: var(--cs-ink); }
+.wn-key i { display: inline-block; width: 16px; height: 16px; border-radius: 5px 5px 5px 2px; margin-right: -3px; }
+.wn-key .t1 { background: color-mix(in oklab, var(--cs-action) 17%, var(--cs-page)); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-ink) 16%, transparent); }
+.wn-key .t3 { background: color-mix(in oklab, var(--cs-action) 51%, var(--cs-page)); }
+.wn-key .t5 { background: color-mix(in oklab, var(--cs-action) 85%, var(--cs-page)); margin-right: 0; }
+.wn-key .mine { background: var(--cs-paper); box-shadow: inset 0 0 0 3px var(--cs-ink); margin-right: 0; }
+
+/* rows of people, and of past sessions */
+.wn-rows { display: grid; gap: 2px; margin: -4px -4px 0; padding: 0; list-style: none; }
+.wn-rows li { display: flex; align-items: center; gap: 11px; padding: 7px 8px; border-radius: 12px; min-width: 0; }
+.wn-rows li.now { background: color-mix(in oklab, var(--cs-field) 40%, var(--cs-paper)); }
+.wn-rows .cs-face { width: 34px; height: 34px; }
+.wn-rows b { font-weight: 640; overflow-wrap: anywhere; }
+.wn-rows .cs-pill { margin-left: auto; }
+.wn-rows li.out b { color: var(--cs-mute); font-weight: 520; }
+.wn-rows small { display: block; font-size: 13px; color: var(--cs-mute); }
+.wn-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.wn-acts .cs-btn { flex: 1; }
+.wn-acts.wn-mid { justify-self: center; } .wn-acts.wn-mid .cs-btn { flex: none; }
+.wn-msg { padding: 11px 13px; margin-bottom: 12px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); font-size: 14px; overflow-wrap: anywhere; }
+
+/* the organizer's pick: the best times, one chosen */
+.wn-picks { display: grid; gap: 8px; padding: 2px 0 16px; }
+.wn-picks label { position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 10px 8px 8px; border-radius: 16px 16px 16px 5px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); cursor: pointer; }
+.wn-picks input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.wn-picks .cs-tile { min-width: 54px; min-height: 48px; }
+.wn-picks span > b { font-size: 17px; font-weight: 700; }
+.wn-picks small { display: block; font-size: 13px; color: var(--cs-mute); }
+.wn-picks label:has(input:checked) { background: var(--cs-ink); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-action); }
+.wn-picks label:has(input:checked) > span:not(.cs-tile) small { color: var(--cs-field); }
+.wn-picks label:has(input:focus-visible) { outline: 2px solid var(--cs-action); outline-offset: 2px; }

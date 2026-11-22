@@ -14,7 +14,7 @@ export const whenSendingOn = (env: Record<string, string | undefined> = process.
 export type Carrier = { address: (personId: string) => Promise<string | null>; email: Sender | null; from?: string };
 export type DrainResult = { readied: number; queued: number; sent: number; failed: number; retrying: number };
 
-const HOUR = 3_600_000, ATTEMPTS = 4, BATCH = 50, CLAIM_MS = 120_000;
+const ATTEMPTS = 4, BATCH = 50, CLAIM_MS = 120_000;
 const cleanName = (name: string) => name.replace(/["<>\r\n\\]/g, '').trim() || 'Loopd';
 type Queued = { id: string; pollId: string; personId: string; name: string; kind: MessageKind; attempts: number };
 
