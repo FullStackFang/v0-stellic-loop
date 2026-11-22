@@ -21,14 +21,16 @@ const SPROUT = 9; // strays a second that turn up on a ground below its feed
 // The world has no cap. The ground always refills to `feed` strays, and a really long line sheds from its back as it goes,
 // each one shed a stray for anyone (agar.io's decay, slither.io's trail). Barely at first, then fast as it gets huge.
 // If the lines together still pass what a slow phone can draw, step() says so ('full') and the page starts a new round.
-const EASY = 40; // a line this long or shorter sheds nothing
-const SHED = 2; // animals a second shed at EASY + 100; an eighth of that at EASY + 50 and a sixty-fourth at EASY + 25
+// Lighter since the founder felt a line of 100+ "losing a few per second" (2026-11-22): a line of 140 sheds about 0.3 a
+// second (was 2), one of 200 about 1.6 (was 5.5).
+const EASY = 60; // a line this long or shorter sheds nothing
+const SHED = 0.6; // animals a second shed at EASY + 100; an eighth of that at EASY + 50 and a sixty-fourth at EASY + 25
 export const FULL = 800; // animals in all the lines together that a slow phone was measured to draw at 60 frames a second
 // A line that has picked nobody up for IDLE seconds gets restless: its back wanders off, slowly at first and faster the
 // longer the line (agar.io's decay is a share of size; slither.io has none). Picking anyone up settles it again.
 const IDLE = 15;
 const WANDER = 0.2; // animals a second off a restless line, at the least
-const WANDER_SHARE = 0.002; // and this share of the line a second on top
+const WANDER_SHARE = 0.001; // and this share of the line a second on top
 const DROP = 0.45; // seconds of dashing that cost one animal
 const DANCE = 4;
 const DAZE = 0.03; // chance, each time a bot looks, that it stops looking for a moment
