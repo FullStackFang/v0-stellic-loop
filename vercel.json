@@ -5,6 +5,7 @@
     { "path": "/api/cron/emba-documents", "schedule": "*/5 * * * *" },
     { "path": "/api/cron/reach", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/campus-feeds", "schedule": "7 * * * *" },
-    { "path": "/api/cron/team-feeds", "schedule": "37 * * * *" }
+    { "path": "/api/cron/team-feeds", "schedule": "37 * * * *" },
+    { "path": "/api/cron/when", "schedule": "*/15 * * * *" }
   ]
 }
