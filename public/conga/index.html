@@ -16,7 +16,7 @@ html, body { height: 100%; overflow: hidden; background: #f0e8d4; color: var(--i
 .face { display: block; aspect-ratio: 1; background: var(--sheet) 0 0 / 700% 600% no-repeat; }
 canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 button { font: inherit; color: inherit; border: 0; cursor: pointer; }
-.hud[hidden], .dash[hidden], .pause[hidden] { display: none; }
+.hud[hidden], .pause[hidden] { display: none; }
 body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still view of one place, for comparing looks */
 
 .hud { position: fixed; z-index: 2; pointer-events: none; background: var(--paper); box-shadow: 3px 3px 0 var(--ink), inset 0 0 0 2px var(--ink); }
@@ -26,15 +26,16 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .mine span { font-size: 13px; font-weight: 600; color: var(--mute); }
 
 /* The scoreboard, and under it the controls, always there in small. */
-.side { position: fixed; z-index: 2; top: max(14px, env(safe-area-inset-top)); right: 14px; display: grid; gap: 8px; justify-items: end; pointer-events: none; }
+/* The column sets the width; the scoreboard and the controls both fill it, in the same card and the same rows. */
+.side { position: fixed; z-index: 2; top: max(14px, env(safe-area-inset-top)); right: 14px; width: 190px; display: grid; gap: 8px; pointer-events: none; }
 .side .hud { position: static; }
-.hint { display: grid; gap: 4px; padding: 7px 10px 7px 7px; border-radius: 14px 14px 14px 4px; font-size: 12px; font-weight: 600; }
-.hint span { display: flex; align-items: center; gap: 6px; }
-.hint kbd { font: inherit; font-weight: 800; padding: 1px 8px; border-radius: 99px; background: var(--ink); color: var(--paper); }
+.hint { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 0; padding: 6px; border-radius: 16px 16px 16px 4px; font-size: 13px; font-weight: 600; }
+.hint span { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; column-gap: 7px; padding: 2px 8px 2px 3px; line-height: 1.25; }
+.hint kbd { justify-self: start; font: inherit; font-weight: 800; padding: 1px 8px; border-radius: 99px; background: var(--ink); color: var(--paper); }
 /* What each pickup does, under the controls: its picture and a few words. */
-.hint .it { gap: 5px; } .hint .it:first-of-type { margin-top: 4px; padding-top: 6px; box-shadow: 0 -1.5px 0 var(--line); }
-.hint .it img { width: 22px; height: 22px; margin: -2px 0; }
-.board { width: 190px; padding: 6px; border-radius: 16px 16px 16px 4px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.hint .it:first-of-type { margin-top: 4px; padding-top: 7px; box-shadow: 0 -1.5px 0 var(--line); }
+.hint .it img { justify-self: center; width: 24px; height: 24px; margin: -2px 0; }
+.board { padding: 6px; border-radius: 16px 16px 16px 4px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .board div { display: flex; align-items: center; gap: 7px; padding: 2px 8px 2px 3px; border-radius: 99px; font-size: 13px; font-weight: 600; }
 .board div.me { background: var(--ink); color: var(--paper); }
 .board .face { width: 24px; flex: none; }
@@ -44,9 +45,13 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .map { left: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 104px; height: 104px; border-radius: 50%; padding: 6px; }
 .map canvas { width: 100%; height: 100%; display: block; }
 
-.dash { position: fixed; z-index: 2; right: 18px; bottom: max(18px, env(safe-area-inset-bottom)); width: 92px; height: 92px; border-radius: 50%; background: var(--action); color: var(--paper);
-  font-weight: 900; font-size: 18px; font-stretch: 110%; box-shadow: 4px 4px 0 var(--ink); touch-action: none; transition: transform .12s var(--expo), box-shadow .12s var(--expo); }
-.dash:active, .dash.on { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); background: var(--action-hover); }
+/* On a touch screen (/demo/mockups-conga-phone.html, 2 B) the scoreboard folds into a chip with your place; a tap opens
+   the top of the board under it and another closes it. The controls are said once as the game starts instead. */
+.place { display: none; justify-self: end; pointer-events: auto; height: 40px; align-items: center; gap: 7px; padding: 0 6px 0 13px; border-radius: 99px; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+.place i { font-style: normal; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 11px; transition: rotate .25s var(--expo); }
+body.touch .place:not([hidden]) { display: flex; }
+body.touch .hint, body.touch .side:not(.open) .board { display: none; }
+body.touch .side.open .place i { rotate: 180deg; } body.touch .side.open { z-index: 4; } /* opened on purpose: over any notice */
 
 .pause { position: fixed; z-index: 2; left: 132px; bottom: max(14px, env(safe-area-inset-bottom)); width: 48px; height: 48px; border-radius: 50%; background: var(--paper); box-shadow: 3px 3px 0 var(--ink), inset 0 0 0 2px var(--ink); display: grid; place-items: center; }
 .pause:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink), inset 0 0 0 2px var(--ink); }
@@ -116,20 +121,20 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .score div + div { background: var(--ink); color: var(--paper); }
 .score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .score span { font-size: 13px; font-weight: 700; }
-@media (max-width: 560px) { .board { width: 142px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
+@media (max-width: 560px) { .side { width: 142px; } .board { padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
   .card { padding: 22px 16px 20px; } .row { gap: 6px; } .go { padding: 0 13px; font-size: 17px; } .where button { padding: 0 6px; font-size: 12.5px; } .quit { padding: 0 16px; }
-  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 124px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 11px; padding: 5px 8px 5px 5px; } .pause { left: 110px; } }
+  .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 58px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 12px; padding: 4px; } .hint span { column-gap: 5px; padding-right: 7px; } .hint .it img { width: 20px; height: 20px; } .pause { left: 110px; } }
 /* On a phone the animals to pick from are four to a row, each big enough for a thumb, and the scoreboard and controls
    step aside while a card is up so nothing sits over it. */
 @media (max-width: 560px) { .faces { flex-wrap: wrap; row-gap: 12px; } .faces > button { flex: 0 0 calc(25% - 6px); }
-  body:has(.card:not([hidden])) :is(.board, .hint) { visibility: hidden; } }
+  body:has(.card:not([hidden])) :is(.board, .hint, .place) { visibility: hidden; } }
 /* A long notice wraps rather than runs off a narrow screen. */
 .say { width: max-content; max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 /* A phone on its side: little height, so the scoreboard keeps its top three and you, and everything round the edge is
    smaller, leaving the middle of the screen to the game. */
-@media (max-height: 500px) { .board { width: 168px; padding: 4px; } .board div { font-size: 12px; gap: 5px; padding: 1px 7px 1px 3px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
-  .mine { padding: 4px 14px 4px 5px; } .mine .face { width: 32px; } .mine b { font-size: 22px; } .hint { font-size: 11px; padding: 5px 8px 5px 5px; }
-  .map { width: 84px; height: 84px; } .pause { left: 110px; } .dash { width: 78px; height: 78px; font-size: 16px; }
+@media (max-height: 500px) { .side { width: 168px; } .board { padding: 4px; } .board div { font-size: 12px; gap: 5px; padding: 1px 7px 1px 3px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
+  .mine { padding: 4px 14px 4px 5px; } .mine .face { width: 32px; } .mine b { font-size: 22px; } .hint { font-size: 12px; padding: 4px; } .hint span { column-gap: 5px; padding: 1px 7px 1px 3px; } .hint .it img { width: 20px; height: 20px; }
+  .map { width: 84px; height: 84px; } .pause { left: 110px; }
   .card { top: 50%; max-height: calc(100dvh - 24px); padding: 18px 22px; gap: 12px; } .card h1 { font-size: 34px; } .faces > button { max-width: 56px; } }
 </style>
 </head>
@@ -137,9 +142,8 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 <canvas id="game"></canvas>
 
 <div class="hud mine" id="mine" hidden><span class="face" id="mineFace"></span><b id="mineCount">1</b><span>in your line</span></div>
-<div class="side"><div class="hud board" id="board"></div><div class="hud hint" id="hint"></div></div>
+<div class="side"><button class="hud place" id="place" hidden aria-expanded="false"></button><div class="hud board" id="board"></div><div class="hud hint" id="hint"></div></div>
 <div class="hud map"><canvas id="map" width="184" height="184"></canvas></div>
-<button class="dash" id="dash" hidden>Dash</button>
 <button class="pause" id="pause" hidden aria-label="Pause"><svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="4.5" height="14" rx="1.5"/><rect x="10.5" y="2" width="4.5" height="14" rx="1.5"/></svg></button>
 <div class="say" id="say"></div>
 
@@ -334,7 +338,9 @@ function begin() {
   me.face = face;
   aim = me.a;
   $('start').hidden = $('over').hidden = true;
-  $('mine').hidden = $('pause').hidden = false; $('dash').hidden = !touched;
+  $('mine').hidden = $('pause').hidden = $('place').hidden = false; fold(false);
+  // On a touch screen the controls are said once, as the game starts (/demo/mockups-conga-phone.html, 2 B).
+  if (touched) say('Drag to steer · double tap and hold to dash');
   $('mineFace').style.cssText = cut(face);
 }
 $('go').onclick = $('again').onclick = begin;
@@ -343,7 +349,8 @@ $('go').onclick = $('again').onclick = begin;
 // Under them, what each pickup does, in a few words beside its picture.
 function controls() {
   const does = { megaphone: 'Pulls from twice as far', coffee: 'Dash for free', whistle: `The ${car()} can't take any` };
-  $('hint').innerHTML = (touched ? [['Drag', 'steer'], ['Dash', 'faster']] : [['Mouse', 'steer'], ['Space', 'dash'], ['P', 'pause']]).map(([key, does]) => `<span><kbd>${key}</kbd>${does}</span>`).join('')
+  document.body.classList.toggle('touch', touched);
+  $('hint').innerHTML = (touched ? [['Drag', 'steer'], ['Tap tap', 'hold to dash']] : [['Mouse', 'steer'], ['Space', 'dash'], ['P', 'pause']]).map(([key, does]) => `<span><kbd>${key}</kbd>${does}</span>`).join('')
     + Object.entries(does).map(([kind, words]) => `<span class="it"><img src="${ART[kind].src}" alt="${kind[0].toUpperCase() + kind.slice(1)}">${words}</span>`).join('');
 }
 
@@ -353,14 +360,14 @@ function pause(on) {
   if (!me || me.dead || on === paused) return;
   paused = on; stale = true;
   $('paused').hidden = !on; $('pause').hidden = on;
-  keys.clear(); dash = false; stick = null; $('dash').classList.remove('on');
+  keys.clear(); dash = false; stick = null;
 }
 $('pause').onclick = () => pause(true);
 $('resume').onclick = () => pause(false);
 // Quit: your animals stay behind as strays, and the first card comes back with its animals and places.
 $('quit').onclick = () => {
   paused = false; removeLine(world, ME); me = null;
-  $('paused').hidden = $('mine').hidden = $('dash').hidden = $('pause').hidden = true;
+  $('paused').hidden = $('mine').hidden = $('place').hidden = $('pause').hidden = true;
   offer(); $('start').querySelector('p').after($('faces')); $('go').after($('where'));
   $('start').hidden = false;
 };
@@ -373,7 +380,7 @@ function finish(event) {
   $('overHead').textContent = event.full ? 'The ground filled up. New round' : by ? `You walked into ${by.name}` : 'Scattered';
   $('overCount').textContent = event.size;
   $('overBest').textContent = best;
-  $('mine').hidden = $('dash').hidden = $('pause').hidden = true;
+  $('mine').hidden = $('place').hidden = $('pause').hidden = true;
   // The same animals and grounds as the first card, moved here: another go can be as someone else, or somewhere else.
   offer(); $('over').querySelector('.score').after($('faces')); $('again').after($('where'));
   setTimeout(() => { $('over').hidden = false; }, 900);
@@ -393,10 +400,18 @@ controls();
 const REACH = 46;
 const keys = new Set();
 function point(event) { if (me && !me.dead) aim = Math.atan2(event.clientY - tall / 2, event.clientX - wide / 2); }
-addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse' && !touched) { touched = true; controls(); if (me && !me.dead) $('dash').hidden = false; } }, true);
+addEventListener('pointerdown', event => { if (event.pointerType !== 'mouse' && !touched) { touched = true; controls(); } }, true);
+// A thumb dashes with a double tap held down (/demo/mockups-conga-phone.html, 1 C): a press that comes within TAP of
+// the last one lifting, near where it was, dashes for as long as it stays down, steering as usual.
+const TAP = 300, NEAR = 70;
+let lifted = null; // when and where the last thumb came up after a short press
 canvas.addEventListener('pointerdown', event => {
-  if (event.pointerType === 'mouse') { point(event); dash = true; }
-  else if (!stick) stick = { id: event.pointerId, x0: event.clientX, y0: event.clientY, x: event.clientX, y: event.clientY };
+  if (event.pointerType === 'mouse') { point(event); dash = true; return; }
+  if (stick) return;
+  const again = lifted && event.timeStamp - lifted.t < TAP && Math.hypot(event.clientX - lifted.x, event.clientY - lifted.y) < NEAR;
+  stick = { id: event.pointerId, x0: event.clientX, y0: event.clientY, x: event.clientX, y: event.clientY, t: event.timeStamp, dash: again };
+  if (again) dash = true;
+  lifted = null;
 });
 addEventListener('pointermove', event => {
   if (event.pointerType === 'mouse') return void (event.target === canvas && point(event));
@@ -406,10 +421,19 @@ addEventListener('pointermove', event => {
   if (far > 8 && me && !me.dead) aim = Math.atan2(dy, dx);
   if (far > REACH) { stick.x0 += dx * (1 - REACH / far); stick.y0 += dy * (1 - REACH / far); } // the stick is dragged along behind a thumb that goes further
 });
-for (const type of ['pointerup', 'pointercancel']) addEventListener(type, event => { if (event.pointerType === 'mouse') dash = false; else if (stick && event.pointerId === stick.id) stick = null; });
-// Leaving the window with a key or the button held would leave it held.
-addEventListener('blur', () => { keys.clear(); dash = false; stick = null; $('dash').classList.remove('on'); pause(true); });
-for (const [type, on] of [['pointerdown', true], ['pointerup', false], ['pointercancel', false], ['pointerleave', false]]) $('dash').addEventListener(type, event => { event.preventDefault(); dash = on; $('dash').classList.toggle('on', on); });
+for (const type of ['pointerup', 'pointercancel']) addEventListener(type, event => {
+  if (event.pointerType === 'mouse') return void (dash = false);
+  if (!stick || event.pointerId !== stick.id) return;
+  // A short press is the first half of a double tap.
+  lifted = !stick.dash && event.timeStamp - stick.t < TAP ? { t: event.timeStamp, x: event.clientX, y: event.clientY } : null;
+  if (stick.dash) dash = false;
+  stick = null;
+});
+// Leaving the window with a key or a thumb held would leave it held.
+addEventListener('blur', () => { keys.clear(); dash = false; stick = null; pause(true); });
+// The place chip on a touch screen: a tap opens the top of the board under it, another closes it.
+function fold(open) { $('place').parentElement.classList.toggle('open', open); $('place').setAttribute('aria-expanded', open); }
+$('place').onclick = () => fold(!$('place').parentElement.classList.contains('open'));
 addEventListener('keydown', event => {
   if ((event.code === 'KeyP' || event.code === 'Escape') && !event.repeat) return pause(!paused);
   keys.add(event.code);
@@ -1369,7 +1393,11 @@ function board() {
   const ranked = world.lines.filter(line => !line.dead).sort((a, b) => b.tail.length - a.tail.length), top = ranked.slice(0, 5);
   if (me && !me.dead && !top.includes(me)) top[4] = me;
   $('board').innerHTML = top.map(line => `<div class="${line === me ? 'me' : ''}">${faceTag(line.face)}<i>${ranked.indexOf(line) + 1}. ${line.name}</i><b>${line.tail.length + 1}</b></div>`).join('');
-  if (me && !me.dead) $('mineCount').textContent = me.tail.length + 1;
+  if (me && !me.dead) {
+    $('mineCount').textContent = me.tail.length + 1;
+    const n = ranked.indexOf(me) + 1, ord = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th';
+    $('place').innerHTML = `${n}${ord}<i aria-hidden="true">▼</i>`;
+  }
 }
 
 // ---------- the loop ----------
