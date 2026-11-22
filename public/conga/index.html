@@ -119,9 +119,10 @@ body.touch .side.open .place i { rotate: 180deg; } body.touch .side.open { z-ind
 .where { gap: 4px; padding: 4px; flex: 0 1 auto; min-width: 0; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
 .where button { height: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 0 14px; border-radius: 99px; background: none; font-weight: 700; font-size: 14px; white-space: nowrap; }
 .where button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-/* The way back to Loopd: the woven mark on an ink tile, at the end of the row. Only the page's own colours: paper rings, the top one
-   coral, and no second red beside Start. It lifts when pointed at. */
-.back { margin-left: auto; width: 48px; justify-content: center; border-radius: 13px 13px 13px 4px; background: var(--ink); color: var(--paper); transition: transform .2s var(--expo), box-shadow .2s var(--expo); }
+/* The way back to Loopd: the woven mark on an ink tile, at the end of the row: paper rings, the top one in the light colour
+   of the player's school on that school's ink (--tile, --ring, set when the player is known; Cornell's coral until then), so
+   no second red beside Start. It lifts when pointed at. */
+.back { margin-left: auto; width: 48px; justify-content: center; border-radius: 13px 13px 13px 4px; background: var(--tile, var(--ink)); color: var(--paper); transition: transform .2s var(--expo), box-shadow .2s var(--expo); }
 .back svg { width: 36px; height: 36px; }
 .back:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0 var(--field), 3px 3px 0 1.5px var(--ink); }
 .quit { text-decoration: none; color: inherit; padding: 0 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
@@ -192,10 +193,10 @@ body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { vis
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <path id="ra" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rb" d="M14.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rc" d="M43.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/>
-  <mask id="ma" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rc" stroke="#000" stroke-width="17"/></mask>
-  <mask id="mb" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#ra" stroke="#000" stroke-width="17"/></mask>
-  <mask id="mc" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rb" stroke="#000" stroke-width="17"/></mask>
-  <symbol id="loopd" viewBox="4 4 92 92"><g fill="none" stroke-width="10.5"><g mask="url(#ma)"><use href="#ra" stroke="var(--field)"/></g><g mask="url(#mb)"><use href="#rb" stroke="currentColor"/></g><g mask="url(#mc)"><use href="#rc" stroke="currentColor"/></g></g></symbol>
+  <mask id="ma" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rc" stroke="#000" stroke-width="20"/></mask>
+  <mask id="mb" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#ra" stroke="#000" stroke-width="20"/></mask>
+  <mask id="mc" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rb" stroke="#000" stroke-width="20"/></mask>
+  <symbol id="loopd" viewBox="4 4 92 92"><g fill="none" stroke-width="10.5"><g mask="url(#ma)"><use href="#ra" stroke="var(--ring, var(--field))"/></g><g mask="url(#mb)"><use href="#rb" stroke="currentColor"/></g><g mask="url(#mc)"><use href="#rc" stroke="currentColor"/></g></g></symbol>
 </defs></svg>
 
 <section class="card" id="start">
@@ -243,6 +244,9 @@ const INK = '<svg class="mk" viewBox="-68 -68 136 136" role="img" aria-label="In
 // Each school's two colours (app/c/campus.css, [data-kit]): what an Ink+ line's sparkle wears.
 const KITS = { loop: ['oklch(96.4% 0.19 117)', 'oklch(47.6% 0.13 250)'], cornell: ['oklch(99.2% 0.004 60)', 'oklch(48.5% 0.185 27)'], columbia: ['oklch(87% 0.075 235)', 'oklch(46% 0.14 255)'],
   cuny: ['oklch(88% 0.13 88)', 'oklch(38% 0.18 264)'], nyu: ['oklch(85% 0.09 305)', 'oklch(40% 0.2 305)'] };
+// Each school's light colour and ink (app/c/campus.css, --cs-field and --cs-ink): what the Loopd rings on the way back wear.
+const RINGS = { loop: ['oklch(96.4% 0.19 117)', 'oklch(25% 0.07 252)'], cornell: ['oklch(82% 0.12 38)', 'oklch(24% 0.035 30)'], columbia: ['oklch(87% 0.075 235)', 'oklch(25% 0.06 255)'],
+  cuny: ['oklch(88% 0.13 88)', 'oklch(24% 0.08 265)'], nyu: ['oklch(85% 0.09 305)', 'oklch(24% 0.08 305)'] };
 const cut = (face, picture = you?.animals[chosen]?.picture ?? pet.src) => !face ? `background: var(--field) url(${picture}) center / contain no-repeat; border-radius: 50%` : `background-position: ${(face - 1) % COLS / (COLS - 1) * 100}% ${Math.floor((face - 1) / COLS) / (ROWS - 1) * 100}%`;
 // A made pet is its own picture. Its face shows the blot (.pet in the style) until that picture is whole, then shows it at once;
 // one already whole is shown straight away when the cards are drawn again.
@@ -375,6 +379,8 @@ Promise.resolve(window.congaPlayer ?? null).then(player => {
   if (!player) return;
   you = player; chosen = Math.min(Number(keep.get('conga-own')) || 0, you.animals.length - 1); if (own().picture) wear(own().picture);
   mine = you.ink && (mine || keep.get('conga-face') == null);
+  const [ring, tile] = RINGS[you.kit] ?? RINGS.cornell; // the way back wears the player's school
+  document.documentElement.style.setProperty('--ring', ring); document.documentElement.style.setProperty('--tile', tile);
   offer();
 }).catch(() => {});
 $('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {

@@ -90,7 +90,9 @@ other two. `Rings` in `components/LoopGlyphs.tsx`.
   (team plate, home plate, signed-out page).
 - Where a ring passes under, it is masked by a slightly wider copy of the ring above it,
   so the mark sits on any background without setting a colour (`--lp-ring-bg` is no
-  longer read). `<Rings inline tight />` narrows those gaps for very large sizes.
+  longer read). The gap is 1.9 times the ring's width, the "open weave" picked on
+  2026-11-22 (`public/demo/mockups-loopd-mark.html`, A) so over and under still show at
+  button and tab sizes. `<Rings inline tight />` narrows those gaps for very large sizes.
 - Ring colour comes from `currentColor`: aqua on navy and teal, navy on light.
 - On light backgrounds at small sizes the lime ring is faint. Prefer putting the mark
   on a navy or teal tile there.

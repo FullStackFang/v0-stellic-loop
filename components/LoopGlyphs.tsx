@@ -28,7 +28,7 @@ function Ring({ i, width, inline }: { i: number; width: number; inline: boolean 
  * `tight` narrows the gap at each crossing to the spacing of the inline lines, for very large sizes.
  */
 export function Rings({ className, inline = false, tight = false }: { className?: string; inline?: boolean; tight?: boolean }) {
-  const id = useId().replace(/[^a-zA-Z0-9]/g, ''), width = inline ? 8.5 : 9, gap = round(width * (tight ? 1.42 : 1.7));
+  const id = useId().replace(/[^a-zA-Z0-9]/g, ''), width = inline ? 8.5 : 9, gap = round(width * (tight ? 1.42 : 1.9)); // 1.9: the open weave (/demo/mockups-loopd-mark.html, A), so over and under show even small
   return <svg className={className} viewBox="0 0 100 100" aria-hidden="true" fill="none">
     <defs>{[0, 1, 2].map(i => <mask key={i} id={`${id}m${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
       <rect width="100" height="100" fill="white" /><path d={ringPath(over(i))} stroke="black" strokeWidth={gap} />
