@@ -9,7 +9,7 @@ import { schoolOf } from '@/lib/campus/schools';
 import { DoorSignIn } from '@/components/campus/door-sign-in';
 import { facesOf } from '@/lib/when/faces';
 import { pollView, type Person, type PollView } from '@/lib/when/polls';
-import { meetingSpan, shareMessage } from '@/lib/when/send';
+import { dayText, meetingSpan, shareMessage } from '@/lib/when/send';
 import { lengthText, slotLabel, slotsOf, type Threshold } from '@/lib/when/slots';
 import { saveAnswerAction } from '../actions';
 import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
@@ -23,14 +23,17 @@ const zoneName = (zone: string) => new Intl.DateTimeFormat('en-US', { timeZone: 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const view = await pollView(db(), null, (await params).id).catch(() => null);
   // The address is the key to the poll, so it is kept out of search.
-  return { title: view ? `${view.title} · Loopd` : 'Loopd', description: view ? `${view.organizer.name} asks when you can make it.` : undefined, robots: { index: false } };
+  // What a chat app writes beside the poll's picture (opengraph-image.tsx) when the link is pasted.
+  const title = view ? `${view.title} · Loopd` : 'Loopd', zone = view?.frame.timezone ?? 'UTC';
+  const description = !view ? undefined : view.chosen ? `It is on: ${dayText(view.chosen.at, zone)}, ${meetingSpan(view.chosen, zone)}. Add it to your calendar.` : `${view.organizer.name} asks when you can make it. Add your times by ${dayText(view.deadline, zone)}.`;
+  return { title, description, robots: { index: false }, openGraph: { title: view?.title ?? 'Loopd', description, siteName: 'Loopd', type: 'website' }, twitter: { card: 'summary_large_image', title: view?.title ?? 'Loopd', description } };
 }
 
 /** The words to pass on by hand, with a way to send them and a way to copy them. */
 function PassOn({ tab, view }: { tab: string; view: PollView }) {
   const message = shareMessage(view);
   return <Panel tab={tab}><p className="wn-msg">{message}</p><div className="wn-acts">
-    <a className="cs-btn" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">Send on WhatsApp</a><Copy text={message} />
+    <Copy text={message} /><a className="cs-btn" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">Share on WhatsApp</a>
   </div></Panel>;
 }
 

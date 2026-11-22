@@ -70,8 +70,11 @@ export function pollIcs(view: PollView, mail?: { to: string; from: string }, now
   return mail ? memberInviteIcs({ method: 'REQUEST', entry, organizer: mail.from, attendee: mail.to, now }) : feedIcs({ name: view.title, entries: [entry], now });
 }
 
-/** The words the organizer passes on by hand: to get answers while it is open, to tell the rest once it is set. */
+/**
+ * The words the organizer passes on by hand: to get answers while it is open, to tell the rest once it is set.
+ * Three short lines, the link alone on the last: a chat app then draws the poll's picture under it (app/when/[id]/opengraph-image.tsx).
+ */
 export function shareMessage(view: PollView): string {
-  if (view.chosen) return `${view.title} is on: ${dayText(view.chosen.at, view.frame.timezone)}, ${meetingSpan(view.chosen, view.frame.timezone)}. Add it to your calendar: ${pollUrl(view.id)}`;
-  return `${view.title}: add the times you can make by ${dayText(view.deadline, view.frame.timezone)}. ${pollUrl(view.id)}`;
+  if (view.chosen) return `${view.title} is on: ${dayText(view.chosen.at, view.frame.timezone)}, ${meetingSpan(view.chosen, view.frame.timezone)}.\nAdd it to your calendar:\n${pollUrl(view.id)}`;
+  return `${view.title}\nWhen can you make it? Add your times by ${dayText(view.deadline, view.frame.timezone)}.\n${pollUrl(view.id)}`;
 }

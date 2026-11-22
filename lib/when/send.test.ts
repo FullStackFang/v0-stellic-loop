@@ -76,7 +76,7 @@ it('gives the hour as a calendar file once it is set, and words to pass on', asy
   const { id, maya } = await answered();
   let view = (await pollView(t.db, maya, id))!;
   expect(pollIcs(view)).toBeNull();
-  expect(shareMessage(view)).toBe('Problem set night: add the times you can make by Friday 27 Nov. https://loopd.test/when/' + id);
+  expect(shareMessage(view)).toBe('Problem set night\nWhen can you make it? Add your times by Friday 27 Nov.\nhttps://loopd.test/when/' + id);
   await sendPoll(t.db, maya, { pollId: id, slot: TUE7, note: 'Olin Library, room 301.' }, NOW);
   view = (await pollView(t.db, maya, id))!;
   const file = pollIcs(view)!, invite = pollIcs(view, { to: 'josh@cornell.edu', from: 'when@loopd.test' })!;
@@ -85,7 +85,7 @@ it('gives the hour as a calendar file once it is set, and words to pass on', asy
   expect(file).not.toContain('ATTENDEE');
   expect(invite).toContain('METHOD:REQUEST');
   expect(invite.replace(/\r\n /g, '')).toContain('mailto:josh@cornell.edu');
-  expect(shareMessage(view)).toBe('Problem set night is on: Tuesday 1 Dec, 7 to 8 pm. Add it to your calendar: https://loopd.test/when/' + id);
+  expect(shareMessage(view)).toBe('Problem set night is on: Tuesday 1 Dec, 7 to 8 pm.\nAdd it to your calendar:\nhttps://loopd.test/when/' + id);
 });
 
 it('starts a quarter past and runs for as long as the organizer said, with the same people in', async () => {

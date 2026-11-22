@@ -78,7 +78,7 @@ button.wn-cell { cursor: pointer; }
 .wn-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .wn-acts .cs-btn { flex: 1; }
 .wn-acts.wn-mid { justify-self: center; } .wn-acts.wn-mid .cs-btn { flex: none; }
-.wn-msg { padding: 11px 13px; margin-bottom: 12px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); font-size: 14px; overflow-wrap: anywhere; }
+.wn-msg { white-space: pre-line; padding: 11px 13px; margin-bottom: 12px; border-radius: 14px 14px 14px 4px; background: var(--cs-page); font-size: 14px; overflow-wrap: anywhere; }
 
 /* the organizer's pick: the best times, one chosen */
 .wn-picks { display: grid; gap: 8px; padding: 2px 0 16px; }

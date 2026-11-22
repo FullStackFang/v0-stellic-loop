@@ -46,5 +46,5 @@ export function Opened({ pollId }: { pollId: string }) {
 /** Copies the words to pass on. */
 export function Copy({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-  return <button type="button" className="cs-btn" onClick={() => { navigator.clipboard.writeText(text).then(() => setCopied(true), () => setCopied(false)); }}>{copied ? 'Copied' : 'Copy the message'}</button>;
+  return <button type="button" className="cs-btn go" onClick={() => { navigator.clipboard.writeText(text).then(() => setCopied(true), () => setCopied(false)); }}>{copied ? 'Copied' : 'Copy the message'}</button>;
 }
