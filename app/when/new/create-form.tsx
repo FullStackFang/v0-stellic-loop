@@ -1,13 +1,14 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState, useEffect, useState, type ReactNode } from 'react';
 import { addDays, dayNum, dow, mon, windowDays } from '@/lib/days';
-import { hourText, isWeekend } from '@/lib/when/slots';
-import { createPollAction } from '../actions';
+import { DURATIONS, hourText, isWeekend, lengthText } from '@/lib/when/slots';
+import { createPollAction, updatePollAction } from '../actions';
 import { Panel } from '../parts';
 
 const KEPT = 'wn-new', WEEKS = 5, STEP = 21;
-type Plan = { title: string; startDate: string; endDate: string; hourStart: string; hourEnd: string; expectedSize: string; /** The last day to answer. */ by: string; threshold: string; /** '1' when Saturdays and Sundays are in the poll. */ weekends: string };
+type Plan = { title: string; startDate: string; endDate: string; hourStart: string; hourEnd: string; expectedSize: string; /** The last day to answer. */ by: string; threshold: string; /** '1' when Saturdays and Sundays are in the poll. */ weekends: string; /** How many minutes the meeting runs. */ duration: string };
 const HOURS = Array.from({ length: 25 }, (_, hour) => hour);
 const monday = (day: string) => addDays(day, -((new Date(`${day}T00:00:00Z`).getUTCDay() + 6) % 7));
 const short = (day: string) => `${dayNum(day)} ${mon(day)}`, full = (day: string) => `${dow(day)} ${short(day)}`;
@@ -19,17 +20,19 @@ const Arrow = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" str
  * The plan for a new poll (public/demo/mockups-when-days.html). The days and the last day to answer are picked on one
  * calendar: a pill says which of the two a tap sets. What is typed is kept in this tab, so signing in on the way does not
  * lose it. The times are on the clock of whoever makes the poll: their browser says which.
+ *
+ * With `edit` it changes that poll in place of making one: the same fields, filled in, and nothing kept in the tab.
  */
-export function CreateForm({ signIn, first, today, head }: { /** Where a signed-out person signs in; null when signed in. */ signIn: string | null; first: Plan; today: string; /** What leads the first column. */ head: ReactNode }) {
-  const [plan, setPlan] = useState(first), [state, submit, pending] = useActionState(createPollAction, null);
+export function CreateForm({ signIn, first, today, head, edit }: { /** Where a signed-out person signs in; null when signed in. */ signIn: string | null; first: Plan; today: string; /** What leads the first column. */ head: ReactNode; /** The poll being changed. */ edit?: string }) {
+  const [plan, setPlan] = useState(first), [state, submit, pending] = useActionState(edit ? updatePollAction : createPollAction, null);
   const [mode, setMode] = useState<'days' | 'by'>('days'), [half, setHalf] = useState(false), [from, setFrom] = useState(() => monday(today));
   // After the first paint, so the page the server drew and the one the browser draws start the same.
   // eslint-disable-next-line react-hooks/set-state-in-effect -- read once from the tab's own storage
-  useEffect(() => { try { const kept = sessionStorage.getItem(KEPT); if (kept) setPlan(now => { const next = { ...now, ...JSON.parse(kept) as Partial<Plan> }; return { ...next, by: next.by.slice(0, 10) }; }); } catch {} }, []);
+  useEffect(() => { if (edit) return; try { const kept = sessionStorage.getItem(KEPT); if (kept) setPlan(now => { const next = { ...now, ...JSON.parse(kept) as Partial<Plan> }; return { ...next, by: next.by.slice(0, 10) }; }); } catch {} }, [edit]);
   const change = (patch: Partial<Plan>) => {
     const next = { ...plan, ...patch };
     setPlan(next);
-    try { sessionStorage.setItem(KEPT, JSON.stringify(next)); } catch {}
+    if (!edit) try { sessionStorage.setItem(KEPT, JSON.stringify(next)); } catch {}
   };
   const set = (key: keyof Plan) => (event: { target: { value: string } }) => change({ [key]: event.target.value });
   const closed = (day: string) => day < today || (mode === 'by' ? day > later(today, addDays(plan.startDate, -1)) : plan.weekends === '0' && isWeekend(day));
@@ -46,17 +49,20 @@ export function CreateForm({ signIn, first, today, head }: { /** Where a signed-
     const by = new Date(`${plan.by}T23:59:59`);
     data.set('deadline', Number.isNaN(by.getTime()) ? '' : by.toISOString());
     data.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
-    try { sessionStorage.removeItem(KEPT); } catch {}
+    if (!edit) try { sessionStorage.removeItem(KEPT); } catch {}
     submit(data);
   };
   const days = windowDays(from, addDays(from, WEEKS * 7 - 1)), last = addDays(from, STEP - 1);
   const look = (day: string) => day === plan.by ? ' by' : day === plan.startDate || day === plan.endDate ? ' end' : day > plan.startDate && day < plan.endDate ? ' in' : '';
   return <form action={send}>
-    <input type="hidden" name="startDate" value={plan.startDate} /><input type="hidden" name="endDate" value={plan.endDate} /><input type="hidden" name="weekends" value={plan.weekends} />
+    <input type="hidden" name="startDate" value={plan.startDate} /><input type="hidden" name="endDate" value={plan.endDate} /><input type="hidden" name="weekends" value={plan.weekends} />{edit && <input type="hidden" name="pollId" value={edit} />}
     <div className="wn-col">{head}<Panel tab="Your plan"><div className="wn-fields">
       <label className="wn-f wide"><span>What are you planning</span><input name="title" required maxLength={80} placeholder="Problem set night" value={plan.title} onChange={set('title')} /></label>
       <label className="wn-f"><span>From this hour</span><select name="hourStart" value={plan.hourStart} onChange={set('hourStart')}>{HOURS.slice(0, 24).map(hour => <option key={hour} value={hour}>{hourText(hour)}</option>)}</select></label>
       <label className="wn-f"><span>To this hour</span><select name="hourEnd" value={plan.hourEnd} onChange={set('hourEnd')}>{HOURS.slice(1).map(hour => <option key={hour} value={hour}>{hour === 24 ? 'Midnight' : hourText(hour)}</option>)}</select></label>
+      <div className="wn-f wide" role="radiogroup" aria-label="Runs for"><span>Runs for</span><div className="wn-three" style={{ '--n': DURATIONS.length } as React.CSSProperties}>
+        {DURATIONS.map(each => <label key={each}><input type="radio" name="duration" value={each} checked={plan.duration === String(each)} onChange={set('duration')} />{lengthText(each)}</label>)}
+      </div></div>
       <label className="wn-f wide"><span>How many people</span><input name="expectedSize" type="number" inputMode="numeric" required min={2} max={200} value={plan.expectedSize} onChange={set('expectedSize')} /></label>
       <div className="wn-f wide" role="radiogroup" aria-label="It's on when this many can make it"><span>It&apos;s on when this many can make it</span><div className="wn-three">
         {[['majority', 'Majority'], ['two_thirds', 'Two thirds'], ['everyone', 'Everyone']].map(([value, label]) => <label key={value}><input type="radio" name="threshold" value={value} checked={plan.threshold === value} onChange={set('threshold')} />{label}</label>)}
@@ -81,7 +87,8 @@ export function CreateForm({ signIn, first, today, head }: { /** Where a signed-
       </div></div>
     </div></Panel>
     {state?.error && <p className="wn-note bad" role="alert">{state.error}</p>}
-    {signIn ? <a className="cs-btn go wn-big" href={signIn}>Sign in to create the link</a> : <button className="cs-btn go wn-big" type="submit" disabled={pending}>{pending ? 'Creating' : 'Create the link'}</button>}
-    <p className="wn-note">Anyone with the link can see it. Answering takes a quick sign-in.</p></div>
+    {signIn ? <a className="cs-btn go wn-big" href={signIn}>Sign in to create the link</a> : <button className="cs-btn go wn-big" type="submit" disabled={pending}>{edit ? pending ? 'Saving' : 'Save the changes' : pending ? 'Creating' : 'Create the link'}</button>}
+    <p className="wn-note">{edit ? 'The link stays the same. Times people painted outside the new days or hours are dropped.' : 'Anyone with the link can see it. Answering takes a quick sign-in.'}</p>
+    {!signIn && <div className="wn-acts wn-mid">{edit && <a className="cs-btn sm" href={`/when/${edit}`}>Back to the poll</a>}<Link className="cs-btn sm" href="/when">Your polls</Link></div>}</div>
   </form>;
 }

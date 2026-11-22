@@ -82,11 +82,16 @@ button.wn-cell { cursor: pointer; }
 
 /* the organizer's pick: the best times, one chosen */
 .wn-picks { display: grid; gap: 8px; padding: 2px 0 16px; }
-.wn-picks :is(label, button) { position: relative; display: flex; width: 100%; border: 0; font: inherit; color: inherit; text-align: left; align-items: center; gap: 11px; padding: 8px 10px 8px 8px; border-radius: 16px 16px 16px 5px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); cursor: pointer; }
+.wn-picks :is(label, button, a) { position: relative; display: flex; width: 100%; border: 0; font: inherit; color: inherit; text-align: left; align-items: center; gap: 11px; padding: 8px 10px 8px 8px; border-radius: 16px 16px 16px 5px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-line); cursor: pointer; }
 .wn-picks input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .wn-picks .cs-tile { min-width: 54px; min-height: 48px; }
 .wn-picks span > b { font-size: 17px; font-weight: 700; }
 .wn-picks .cs-stack { margin-left: auto; }
+/* a line of "Your polls": its state is a pill over the top edge, so the title keeps the whole width */
+.wn-picks.wn-list { gap: 18px; padding-top: 10px; } .wn-list > a { padding-top: 16px; }
+.wn-picks > a > .cs-pill { position: absolute; top: -11px; right: 12px; box-shadow: 0 0 0 2px var(--cs-paper); }
+.wn-picks > a { text-decoration: none; } .wn-picks > a > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+.wn-picks a:focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
 .wn-picks label:has(input:checked) .cs-stack { --ring: var(--cs-ink); }
 .wn-picks small { display: block; font-size: 13px; color: var(--cs-mute); }
 .wn-picks label:has(input:checked) { background: var(--cs-ink); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-action); }

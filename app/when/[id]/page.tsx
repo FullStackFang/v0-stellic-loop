@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-// (day helpers are used by the grid)
 import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { facesOf } from '@/lib/when/faces';
 import { pollView, type Person, type PollView } from '@/lib/when/polls';
 import { meetingSpan, shareMessage } from '@/lib/when/send';
-import { slotLabel, slotsOf, type Threshold } from '@/lib/when/slots';
+import { lengthText, slotLabel, slotsOf, type Threshold } from '@/lib/when/slots';
 import { saveAnswerAction } from '../actions';
 import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
 import { Grid } from './grid';
@@ -63,6 +63,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
       <div className="wn-acts wn-mid">
         {who ? <a className="cs-btn sm" href={`${here}?edit=1`}>Update your answer</a> : <a className="cs-btn sm" href={signInHref(here)}>Sign in to add your times</a>}
         {(mine || view.isOrganizer) && <a className="cs-btn sm" href={`${here}/again`}>Ask the group again</a>}
+        {who && <Link className="cs-btn sm" href="/when">Your polls</Link>}
       </div>
       {view.isOrganizer && <PassOn tab="Tell the rest" view={view} />}
     </main>;
@@ -74,9 +75,9 @@ export default async function WhenPage({ params, searchParams }: Props) {
       <Ticket tile={<Tile met={met} top={view.ready ? 'Ready' : 'So far'} big={`${top} of ${view.size}`} />} stub={<><Seats people={answered} size={view.size} />{count}</>}>
         <h1 className="xl">{met ? 'Enough can make it.' : view.ready ? 'Answers are in.' : 'Not everyone has answered.'} <em>Pick the time.</em></h1>
       </Ticket>
-      <Pick pollId={view.id} goesTo={new Set([view.organizer.personId, ...view.answered.map(each => each.personId)]).size} as={view.organizer.name}
+      <Pick pollId={view.id} minutes={view.minutes} goesTo={new Set([view.organizer.personId, ...view.answered.map(each => each.personId)]).size} as={view.organizer.name}
         choices={view.best.map(slot => { const label = slotLabel(slot.at, zone), n = slot.people.length; return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, hour: label.hour, line: `${n} of ${view.size}${n >= view.needed ? ` · ${REACHED[view.threshold]}` : ''}`, people: slot.people.map(shown) }; })} />
-      <div className="wn-acts wn-mid"><a className="cs-btn sm" href={`${here}?edit=1`}>Change my times</a></div>
+      <div className="wn-acts wn-mid"><a className="cs-btn sm" href={`${here}?edit=1`}>Change my times</a><a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a><Link className="cs-btn sm" href="/when">Your polls</Link></div>
     </main>;
   }
 
@@ -85,14 +86,17 @@ export default async function WhenPage({ params, searchParams }: Props) {
   const free = Object.fromEntries(Object.entries(view.free).map(([at, people]) => [at, people.filter(each => each.personId !== who?.personId).map(shown)]));
   const tile = <Face of={shown(view.organizer)} />;
   const title = <><h1>{view.title}</h1>
-    <p>{view.organizer.name} asked · {view.answered.length} of {view.size} answered · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
+    <p>{view.organizer.name} asked for {lengthText(view.minutes)} · {view.answered.length} of {view.size} answered · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
   const best = view.best.map(slot => { const label = slotLabel(slot.at, zone); return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, line: `${slot.people.length} of ${view.size} can make it`, people: slot.people.map(shown) }; });
+  const mine = view.isOrganizer && !view.chosen;
   const tail = <>
-    {view.chosen && <div className="wn-acts wn-mid"><a className="cs-btn sm" href={here}>Back to the result</a></div>}
-    {view.isOrganizer && !view.chosen && <>
-      <PassOn tab="Pass it on" view={view} />
-      {view.best.length > 0 && <div className="wn-acts wn-mid"><a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a></div>}
-    </>}
+    {mine && <PassOn tab="Pass it on" view={view} />}
+    {(who || view.chosen) && <div className="wn-acts wn-mid">
+      {view.chosen && <a className="cs-btn sm" href={here}>Back to the result</a>}
+      {mine && view.best.length > 0 && <a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a>}
+      {mine && <a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a>}
+      {who && <Link className="cs-btn sm" href="/when">Your polls</Link>}
+    </div>}
   </>;
   const zonePill = <span className="cs-pill">Times are in {zoneName(zone)}</span>;
   return <main className="wn wn-two wn-fit">

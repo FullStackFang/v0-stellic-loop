@@ -5,7 +5,7 @@ import { Grid } from './[id]/grid';
 import { Pick } from './[id]/pick';
 import { CreateForm } from './new/create-form';
 
-vi.mock('./actions', () => ({ createPollAction: vi.fn(async () => null), sendPollAction: vi.fn(async () => null), openedAction: vi.fn() }));
+vi.mock('./actions', () => ({ createPollAction: vi.fn(async () => null), updatePollAction: vi.fn(async () => null), sendPollAction: vi.fn(async () => null), openedAction: vi.fn() }));
 afterEach(() => { cleanup(); sessionStorage.clear(); });
 
 const TUE7 = '2026-12-02T00:00:00.000Z';
@@ -14,7 +14,10 @@ const field = (name: string) => document.querySelector<HTMLInputElement>(`input[
 
 it('picks the days and the last day to answer on one calendar, with weekends left out until asked for', () => {
   render(<CreateForm signIn={null} today="2026-11-22" head={null}
-    first={{ title: '', startDate: '2026-11-25', endDate: '2026-11-27', hourStart: '17', hourEnd: '22', expectedSize: '7', by: '2026-11-24', threshold: 'two_thirds', weekends: '0' }} />);
+    first={{ title: '', startDate: '2026-11-25', endDate: '2026-11-27', hourStart: '17', hourEnd: '22', expectedSize: '7', by: '2026-11-24', threshold: 'two_thirds', weekends: '0', duration: '60' }} />);
+  expect(screen.getByRole('radio', { name: '1 hr' })).toBeChecked();
+  fireEvent.click(screen.getByRole('radio', { name: '45 min' }));
+  expect(screen.getByRole('radio', { name: '45 min' })).toBeChecked();
   expect(day('Sat 28 Nov')).toBeDisabled();
   expect(day('Sat 21 Nov')).toBeDisabled();
   fireEvent.click(day('Mon 30 Nov'));
@@ -37,7 +40,7 @@ it('picks the days and the last day to answer on one calendar, with weekends lef
 
 it('moves the last day to answer ahead of the days when they are moved before it', () => {
   render(<CreateForm signIn={null} today="2026-11-22" head={null}
-    first={{ title: '', startDate: '2026-11-30', endDate: '2026-12-04', hourStart: '17', hourEnd: '22', expectedSize: '7', by: '2026-11-27', threshold: 'two_thirds', weekends: '1' }} />);
+    first={{ title: '', startDate: '2026-11-30', endDate: '2026-12-04', hourStart: '17', hourEnd: '22', expectedSize: '7', by: '2026-11-27', threshold: 'two_thirds', weekends: '1', duration: '60' }} />);
   fireEvent.click(day('Tue 24 Nov'));
   expect(screen.getByRole('button', { name: /Answer by/ })).toHaveTextContent('Mon 23 Nov');
 });
@@ -76,11 +79,23 @@ it('shows the grid to someone who cannot paint, with the action in place of Save
   expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toBeInTheDocument();
 });
 
+it('changes a poll with the same form, filled in, and keeps nothing in the tab', () => {
+  render(<CreateForm signIn={null} today="2026-11-22" head={null} edit="abcdefghijkl"
+    first={{ title: 'Pitch practice', startDate: '2026-11-30', endDate: '2026-12-04', hourStart: '17', hourEnd: '22', expectedSize: '7', by: '2026-11-27', threshold: 'majority', weekends: '0', duration: '45' }} />);
+  expect(screen.getByLabelText('What are you planning')).toHaveValue('Pitch practice');
+  expect(screen.getByRole('radio', { name: '45 min' })).toBeChecked();
+  expect(field('pollId')).toBe('abcdefghijkl');
+  fireEvent.click(screen.getByRole('radio', { name: '1 hr 30' }));
+  expect(sessionStorage.getItem('wn-new')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Save the changes' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Back to the poll' })).toHaveAttribute('href', '/when/abcdefghijkl');
+});
+
 it('lets the organizer start a quarter past and say how long it runs', () => {
-  render(<Pick pollId="abcdefghijkl" goesTo={3} as="Maya" choices={[
+  render(<Pick pollId="abcdefghijkl" goesTo={3} as="Maya" minutes={90} choices={[
     { at: TUE7, dow: 'Tue', date: '1 Dec', time: '7 pm', hour: 19, line: '3 of 7', people: [] },
     { at: '2026-12-02T01:00:00.000Z', dow: 'Tue', date: '1 Dec', time: '8 pm', hour: 20, line: '2 of 7', people: [] }]} />);
-  expect(screen.getByRole('heading', { name: 'The meeting Tue 1 Dec, 7 to 8 pm' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'The meeting Tue 1 Dec, 7 to 8:30 pm' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('radio', { name: '7:15' }));
   fireEvent.click(screen.getByRole('radio', { name: '45 min' }));
   expect(screen.getByRole('heading', { name: 'The meeting Tue 1 Dec, 7:15 to 8 pm' })).toBeInTheDocument();

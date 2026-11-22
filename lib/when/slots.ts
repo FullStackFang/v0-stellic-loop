@@ -80,6 +80,8 @@ export function shiftWeek(at: string, tz: string): string {
 export const hourText = (hour: number, minute = 0) => `${hour % 12 || 12}${minute ? `:${String(minute).padStart(2, '0')}` : ''} ${hour % 24 < 12 ? 'am' : 'pm'}`;
 /** The minutes a meeting may start at within its hour, and how long it may run. */
 export const START_MINUTES = [0, 15, 30, 45], DURATIONS = [30, 45, 60, 90, 120];
+/** "45 min", "1 hr", "1 hr 30": how long a meeting runs. */
+export const lengthText = (minutes: number) => minutes < 60 ? `${minutes} min` : minutes % 60 ? `${Math.floor(minutes / 60)} hr ${minutes % 60}` : `${minutes / 60} hr`;
 /** "7:15 to 8 pm": a start, in minutes after midnight on the poll's clock, and how long it runs. */
 export function spanText(start: number, duration: number): string {
   const text = (minutes: number) => hourText(Math.floor(minutes / 60) % 24, minutes % 60), from = text(start), to = text(start + duration);

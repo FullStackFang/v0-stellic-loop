@@ -8,7 +8,9 @@ import { createPoll, saveAnswer } from '@/lib/when/polls';
 import { repeatPoll } from '@/lib/when/repeat';
 import { sendPoll } from '@/lib/when/send';
 import AgainPage from './[id]/again/page';
+import ChangeWhenPage from './[id]/change/page';
 import WhenPage from './[id]/page';
+import WhenListPage from './page';
 import { GET as calendar } from './[id]/calendar.ics/route';
 import NewWhenPage from './new/page';
 
@@ -47,7 +49,7 @@ const clean = (html: string) => { expect(html).not.toContain('—'); expect(html
 it('shows a visitor who has not signed in what is free so far, and one way in', async () => {
   const { id } = await fixture(), view = await open(null, id);
   expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
-  expect(view.container).toHaveTextContent('Maya asked · 3 of 7 answered · by Fri 27 Nov');
+  expect(view.container).toHaveTextContent('Maya asked for 1 hr · 3 of 7 answered · by Fri 27 Nov');
   expect(view.container).toHaveTextContent('Best so far');
   expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toHaveAttribute('href', signInHref(`/when/${id}`));
   expect(screen.queryByRole('button', { name: 'Tue 1, 7 pm' })).toBeNull();
@@ -121,6 +123,44 @@ it('shows the result once it is sent: you first, then who is in, then who cannot
   await open(josh, id, { edit: '1' });
   expect(screen.getByRole('button', { name: 'Saved' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Back to the result' })).toBeInTheDocument();
+});
+
+it('gives the organizer of an open poll a way to edit it, and nobody else', async () => {
+  const { id, maya, josh } = await fixture(), change = (who: Principal) => withPortalTestSession(who, () => ChangeWhenPage({ params: Promise.resolve({ id }) }));
+  await open(maya, id, { edit: '1' });
+  expect(screen.getByRole('link', { name: 'Edit the poll' })).toHaveAttribute('href', `/when/${id}/change`);
+  expect(screen.getByRole('link', { name: 'Your polls' })).toHaveAttribute('href', '/when');
+  cleanup();
+  await open(josh, id);
+  expect(screen.queryByRole('link', { name: 'Edit the poll' })).toBeNull();
+  cleanup();
+  await expect(change(josh)).rejects.toBe(missing);
+  const view = render(await change(maya));
+  expect(screen.getByRole('heading', { name: 'Change the poll.' })).toBeInTheDocument();
+  expect(screen.getByLabelText('What are you planning')).toHaveValue('Problem set night');
+  expect(screen.getByRole('radio', { name: '1 hr' })).toBeChecked();
+  expect(view.container).toHaveTextContent('3 of 7 have answered. Their times stay where the days and hours still fit.');
+  expect(screen.getByRole('button', { name: 'Save the changes' })).toBeInTheDocument();
+  clean(view.container.innerHTML);
+});
+
+it('lists your polls, open and set, each a way back to it', async () => {
+  const { id, maya, josh, dana } = await fixture(), list = (who: Principal) => withPortalTestSession(who, () => WhenListPage());
+  let view = render(await list(dana));
+  expect(screen.getByRole('heading', { name: 'No polls yet' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Find a time' })).toHaveAttribute('href', '/when/new');
+  cleanup();
+  view = render(await list(josh));
+  const line = screen.getByRole('link', { name: /Problem set night/ });
+  expect(line).toHaveAttribute('href', `/when/${id}`);
+  expect(line).toHaveTextContent('Maya asked · 3 of 7 answered · by Fri 27 Nov');
+  expect(line).toHaveTextContent('Open');
+  clean(view.container.innerHTML);
+  cleanup();
+  await sendPoll(t.db, maya, { pollId: id, slot: TUE7, duration: 45 });
+  render(await list(maya));
+  expect(screen.getByRole('heading', { name: 'Time is set' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /Problem set night/ })).toHaveTextContent('Tue 1 Dec, 7 to 7:45 pm');
 });
 
 it('has nothing at an address that names no poll', async () => {

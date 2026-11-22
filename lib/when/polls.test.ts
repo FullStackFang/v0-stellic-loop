@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
-import { createPoll, pollView, recordOpen, saveAnswer } from './polls';
+import { createPoll, myPolls, pollView, recordOpen, saveAnswer, updatePoll } from './polls';
+import { sendPoll } from './send';
 
 vi.mock('server-only', () => ({}));
 
@@ -112,4 +113,40 @@ it('leaves weekends out of a poll when asked, and refuses a poll with no days le
   expect((await pollView(t.db, maya, id))!.frame.weekends).toBe(false);
   await expect(saveAnswer(t.db, maya, { pollId: id, slots: ['2026-11-28T17:00:00.000Z'] })).rejects.toMatchObject({ code: 'invalid' });
   await expect(createPoll(t.db, maya, { ...base, startDate: '2026-11-28', endDate: '2026-11-29' }, new Date('2026-11-22T12:00:00Z'))).rejects.toMatchObject({ code: 'invalid' });
+});
+
+it('keeps how long the meeting runs, an hour unless said', async () => {
+  const maya = await who('Maya');
+  expect((await pollView(t.db, maya, await poll(maya)))!.minutes).toBe(60);
+  expect((await pollView(t.db, maya, await poll(maya, { duration: '45' })))!.minutes).toBe(45);
+  await expect(poll(maya, { duration: 50 })).rejects.toMatchObject({ code: 'invalid' });
+});
+
+it('lets the organizer change an open poll, and drops only the hours the new plan no longer has', async () => {
+  const maya = await who('Maya'), josh = await who('Josh'), id = await poll(maya);
+  await saveAnswer(t.db, josh, { pollId: id, slots: [TUE7, TUE8, THU7] }, NOW);
+  const next = { pollId: id, title: 'Pitch practice', startDate: '2026-11-30', endDate: '2026-12-02', hourStart: 19, hourEnd: 20, expectedSize: 4, deadline: '2026-11-28T23:00:00.000Z', threshold: 'majority', weekends: '0', duration: 45 };
+  await expect(updatePoll(t.db, josh, next, NOW)).rejects.toMatchObject({ code: 'forbidden' });
+  await expect(updatePoll(t.db, maya, { ...next, endDate: '2026-11-29' }, NOW)).rejects.toMatchObject({ code: 'invalid' });
+  await expect(updatePoll(t.db, maya, { ...next, pollId: 'AAAAAAAAAAAA' }, NOW)).rejects.toMatchObject({ code: 'not_found' });
+  await updatePoll(t.db, maya, next, NOW);
+  const view = await pollView(t.db, josh, id);
+  expect(view).toMatchObject({ id, title: 'Pitch practice', size: 4, needed: 3, minutes: 45, threshold: 'majority', deadline: '2026-11-28T23:00:00.000Z', mine: { slots: [TUE7], draft: false }, counts: { [TUE7]: 1 } });
+  expect(view!.frame).toEqual({ startDate: '2026-11-30', endDate: '2026-12-02', hourStart: 19, hourEnd: 20, timezone: 'America/New_York', weekends: false });
+});
+
+it('does not change a poll whose time is set', async () => {
+  const maya = await who('Maya'), id = await poll(maya);
+  await saveAnswer(t.db, maya, { pollId: id, slots: [TUE7] }, NOW);
+  await sendPoll(t.db, maya, { pollId: id, slot: TUE7 }, NOW);
+  await expect(updatePoll(t.db, maya, { ...BASE, pollId: id, title: 'Other' }, NOW)).rejects.toMatchObject({ code: 'sent' });
+});
+
+it('lists the polls a person made or answered, the newest first', async () => {
+  const maya = await who('Maya'), josh = await who('Josh'), dana = await who('Dana');
+  const first = (await createPoll(t.db, maya, { ...BASE }, NOW)).id, second = (await createPoll(t.db, maya, { ...BASE, title: 'Second' }, new Date(NOW.getTime() + 1000))).id;
+  await saveAnswer(t.db, josh, { pollId: first, slots: [TUE7] }, NOW);
+  expect((await myPolls(t.db, maya)).map(each => each.id)).toEqual([second, first]);
+  expect(await myPolls(t.db, josh)).toMatchObject([{ id: first, title: 'Problem set night', status: 'open', ready: false, isOrganizer: false, organizerName: 'Maya', answered: 1, size: 7, mine: true, chosenSlot: null, durationMin: 60 }]);
+  expect(await myPolls(t.db, dana)).toEqual([]);
 });

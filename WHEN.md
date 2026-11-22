@@ -66,3 +66,6 @@ It answers with what it did: polls made ready, messages queued, sent, failed, an
 
 - Sending from the organizer's own Google Calendar (step 2 of the design). It has its own plan.
 - "Next: where" and the streak panel (`WHEN_WHERE` in the design).
+- The poll says how long the meeting runs (an hour unless said), set on the create form and changeable when the time is picked.
+- The organizer can edit an open poll at `/when/<id>/change` (the create form, filled in). The link and the poll's clock stay the same; hours people painted that the new plan no longer has are dropped, the rest kept. Once the time is set the poll does not change.
+- `/when` lists the polls a person made or has an answer in, open ones first, each with its state as a pill.

@@ -18,6 +18,6 @@ export default async function NewWhenPage() {
   return <main className="wn wn-two">
     <CreateForm signIn={who ? null : signInHref('/when/new')} today={today}
       head={<Ticket stub="One link. It tells you when a time works, and you pick."><h1 className="xl">Find a time that works for <em>everyone.</em></h1></Ticket>}
-      first={{ title: '', startDate, endDate, hourStart: '17', hourEnd: '22', expectedSize: '7', by: addDays(today, 2), threshold: 'two_thirds', weekends: '0' }} />
+      first={{ title: '', startDate, endDate, hourStart: '17', hourEnd: '22', expectedSize: '7', by: addDays(today, 2), threshold: 'two_thirds', weekends: '0', duration: '60' }} />
   </main>;
 }

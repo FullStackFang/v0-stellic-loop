@@ -10,7 +10,7 @@ import { clerkEmailOf } from '@/lib/emba/clerk-identity';
 import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { drainWhen, whenSendingOn } from '@/lib/when/outbox';
-import { WhenError, createPoll, recordOpen, saveAnswer } from '@/lib/when/polls';
+import { POLL_ID, WhenError, createPoll, recordOpen, saveAnswer, updatePoll } from '@/lib/when/polls';
 import { repeatPoll } from '@/lib/when/repeat';
 import { sendPoll } from '@/lib/when/send';
 
@@ -22,6 +22,7 @@ const WORDS: Record<WhenError['code'], string> = {
   limit: 'That is ten polls today. Try again tomorrow.',
   not_found: 'This poll is gone.',
   forbidden: 'Only the person who asked can do that.',
+  sent: 'The time is already set, so the poll cannot change.',
 };
 const said = (error: unknown): { error: string } => {
   if (error instanceof WhenError) return { error: WORDS[error.code] };
@@ -34,15 +35,31 @@ async function flush(pollId: string): Promise<void> {
   await drainWhen(db(), { address: personId => clerkEmailOf(db(), personId), email: resendSender() }, { pollId, budgetMs: 8000 }).catch(error => console.error('when flush', error));
 }
 
+const PLAN = ['title', 'startDate', 'endDate', 'hourStart', 'hourEnd', 'timezone', 'expectedSize', 'deadline', 'threshold', 'weekends', 'duration'];
+const planOf = (data: FormData) => Object.fromEntries(PLAN.map(key => [key, data.get(key) ?? undefined]));
+
 /** "Create the link". */
 export async function createPollAction(_: Said, data: FormData): Promise<Said> {
   const who = await getSignedInPrincipal();
   if (!who) redirect(signInHref('/when/new'));
   let id: string;
   try {
-    ({ id } = await createPoll(db(), who, Object.fromEntries(['title', 'startDate', 'endDate', 'hourStart', 'hourEnd', 'timezone', 'expectedSize', 'deadline', 'threshold', 'weekends'].map(key => [key, data.get(key) ?? undefined]))));
+    ({ id } = await createPoll(db(), who, planOf(data)));
   } catch (error) { return said(error); }
   redirect(`/when/${id}`);
+}
+
+/** "Save the changes": the organizer changes an open poll's plan. */
+export async function updatePollAction(_: Said, data: FormData): Promise<Said> {
+  const who = await getSignedInPrincipal(), pollId = String(data.get('pollId') ?? '');
+  if (!who) return { error: 'Sign in to change it.' };
+  if (!POLL_ID.test(pollId)) return { error: WORDS.not_found };
+  try {
+    await updatePoll(db(), who, { ...planOf(data), pollId });
+    await flush(pollId);
+  } catch (error) { return said(error); }
+  revalidatePath(`/when/${pollId}`);
+  redirect(`/when/${pollId}`);
 }
 
 /** "Save my times". */
