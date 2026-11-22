@@ -366,7 +366,8 @@ let quiet = 0;
 function say(text) { $('say').textContent = text; $('say').classList.add('show'); clearTimeout(quiet); quiet = setTimeout(() => $('say').classList.remove('show'), 2400); }
 
 // ---------- steering ----------
-const canvas = $('game'), ctx = canvas.getContext('2d');
+const canvas = $('game');
+let ctx = canvas.getContext('2d'); // the pen everything draws with: the screen's, or for a moment that of a square of kept ground (see carpet)
 let dash = false, wide = 0, tall = 0, dpr = 1;
 // On a touch screen the thumb steers like a stick: the line heads the way the thumb has moved from where it went down,
 // so it can stay in a corner and never covers the animal. `stick` is that thumb. A mouse just points where to go.
@@ -413,11 +414,13 @@ function fit() {
 addEventListener('resize', fit); fit();
 
 // ---------- drawing ----------
-const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [];
+const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [], winks = [];
+let spilt = null; // the line that just burst into sacks, so its scatter skips the ring
 const SIZE = { stray: 40, tail: 42, head: 58 };
 const SACK = 70; // how wide a spilled line's sack is drawn
 const VIEW = 920 * 575; // square units of ground on screen: 920 across on a laptop, closer in on a phone held upright
 const CLOSE = 1.25; // the least a unit is drawn, in pixels: on a phone a stray stays about 50 pixels across
+const closest = () => Math.max(CLOSE, Math.sqrt(wide * tall / VIEW)); // pixels to a unit at the closest the view comes: the same amount of ground on every screen, but never so far out that an animal is small on a phone
 // ---------- water, grass and trees ----------
 // `?at=Name` holds the view still on one landmark with nothing over it, and `?map=` picks the ground: for looking at the drawing.
 const tile = (size, work) => { const sheet = document.createElement('canvas'); sheet.width = sheet.height = size; work(sheet.getContext('2d'), size); return ctx.createPattern(sheet, 'repeat'); };
@@ -759,11 +762,11 @@ const PAINT = {
 // for the island drawn at 2 units a metre, so they move with it when it is drawn bigger.
 const BANKS = [[-880, 'Manhattan'], [1080, 'Queens']];
 const across = () => map.scale / 2;
-function banks(reach) {
+function banks(cx, cy, reach) {
   const a = map.axis * Math.PI / 180, k = across(), half = 3000 * k, block = 170 * k, avenue = 420 * k;
   for (const [off] of BANKS) {
     // Where the view is on this bank, in the bank's own turned frame. Only the streets in view are drawn.
-    const far = (off + Math.sign(off) * 3000) * k, rx = cam.x - Math.cos(a) * far, ry = cam.y - Math.sin(a) * far, vx = rx * Math.cos(a) + ry * Math.sin(a), vy = ry * Math.cos(a) - rx * Math.sin(a);
+    const far = (off + Math.sign(off) * 3000) * k, rx = cx - Math.cos(a) * far, ry = cy - Math.sin(a) * far, vx = rx * Math.cos(a) + ry * Math.sin(a), vy = ry * Math.cos(a) - rx * Math.sin(a);
     if (Math.abs(vx) > half + reach) continue;
     const west = Math.max(10 - half, vx - reach), east = Math.min(half - 10, vx + reach), top = vy - reach, foot = vy + reach;
     ctx.save(); ctx.translate(Math.cos(a) * far, Math.sin(a) * far); ctx.rotate(a);
@@ -797,12 +800,22 @@ function boats(t) {
   }
 }
 // Main Street, and the island's red bus going up and down it.
-function road(thing, t) {
-  // Warm grey felt sewn on, with yellow stitches down the middle.
-  ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(...thing.from); ctx.lineTo(...thing.to);
-  ctx.save(); ctx.translate(0, 3); ctx.strokeStyle = FELT.under; ctx.lineWidth = thing.w; ctx.stroke(); ctx.restore();
-  ctx.strokeStyle = FELT.road; ctx.lineWidth = thing.w; ctx.stroke();
-  stitch(FELT.yellow, 4, [16, 14]);
+// A road (/demo/mockups-conga-roads.html, A): a strip of warm grey felt at least ROAD wide, so a line walks down it with room
+// either side, sewn on with a running stitch along both edges and little yellow felt dashes down the middle.
+const ROAD = 130;
+function feltRoad(from, to, w, cap = 'round') {
+  const along = Math.atan2(to[1] - from[1], to[0] - from[0]), far = Math.hypot(to[0] - from[0], to[1] - from[1]), nx = -Math.sin(along), ny = Math.cos(along);
+  const span = (off = 0) => { ctx.beginPath(); ctx.moveTo(from[0] + nx * off, from[1] + ny * off); ctx.lineTo(to[0] + nx * off, to[1] + ny * off); };
+  ctx.lineCap = cap;
+  span(); ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = FELT.under; ctx.lineWidth = w; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = FELT.road; ctx.lineWidth = w; ctx.stroke();
+  for (const side of [-1, 1]) { span(side * (w / 2 - 10)); stitch(FELT.thread, 2.6, [10, 8]); }
+  ctx.save(); ctx.translate(...from); ctx.rotate(along);
+  for (let x = 30; x < far - 50; x += 74) { ctx.beginPath(); ctx.roundRect(x, -5.5, 42, 11, 5.5); feltPiece(FELT.yellow); }
+  ctx.restore(); ctx.lineCap = 'butt';
+}
+function road(thing) { feltRoad(thing.from, thing.to, Math.max(ROAD, thing.w)); }
+function roadBus(thing, t) {
   if (world.shuttles.some(car => car.kind === 'bus')) return;
   const f = 0.5 - 0.5 * Math.cos(t * 0.1), going = Math.sin(t * 0.1) > 0 ? 0 : Math.PI;
   if (toysIn()) {
@@ -827,10 +840,14 @@ function cabs(thing, t) {
 function tram(car) {
   const { from, to, x, y } = car, dx = to[0] - from[0], dy = to[1] - from[1], far = Math.hypot(dx, dy);
   if (car.kind === 'bus') return bus(car, dx / far, dy / far);
-  ctx.lineCap = 'butt'; ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath();
+  // Its towers are felt squares sewn on, and its cable two strands of dark yarn.
+  for (const at of [0.36, 0.74]) { const tx = from[0] + dx * at, ty = from[1] + dy * at; ctx.beginPath(); ctx.roundRect(tx - 16, ty - 16, 32, 32, 8); feltPiece(FELT.road); ctx.beginPath(); ctx.roundRect(tx - 10, ty - 10, 20, 20, 5); stitch(FELT.thread, 1.8, [5, 4]); }
+  ctx.beginPath();
   for (const side of [-7, 7]) { ctx.moveTo(from[0] - dy / far * side, from[1] + dx / far * side); ctx.lineTo(to[0] - dy / far * side, to[1] + dx / far * side); }
-  ctx.stroke();
-  for (const at of [0.36, 0.74]) { box(22, 22, 3, from[0] + dx * at, from[1] + dy * at); inked(C.stone, 3); } // its towers
+  ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .2)'; ctx.lineWidth = 6; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = 'oklch(45% 0.04 45)'; ctx.lineWidth = 4; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([3, 4]); ctx.strokeStyle = 'oklch(62% 0.04 50)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
   if (toysIn()) {
     // The toy cabin hangs from the cable, its shadow on the ground below and to the side.
     ctx.globalAlpha = 0.18; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x + 30, y + 70, 60, 20, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
@@ -843,24 +860,30 @@ function tram(car) {
 }
 // Each car's own colour, the colour of its toy: the stop's cord, the count of riders it brings, and the count it takes.
 const carColour = car => `oklch(${car.kind === 'bus' ? '72% 0.12 235' : '58% 0.2 27'})`;
-// Where a car lets its riders off: roped off like a queue, little posts round it with a cord of the car's colour between
-// them. The cord hangs slack while the car is far off and pulls taut as it comes, and the stop's name says how long it will be.
+// Where a car lets its riders off: a round felt badge sewn onto the mat like a scout patch (/demo/mockups-conga-stops-spill.html, B).
+// A cream band with the stop's name set round it, and a disc of the car's colour in the middle where lines wait. A pill in
+// the car's colour under it says how long until the car comes, then that it is here.
+const BADGE_CREAM = 'oklch(95% 0.02 80)';
+function arcText(text, x, y, rx, ry, size, colour) {
+  ctx.font = `900 ${size}px Archivo, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const letters = [...text], widths = letters.map(ch => ctx.measureText(ch).width + size * 0.08), r = (rx + ry) / 2;
+  let s = -widths.reduce((a, b) => a + b, 0) / 2;
+  letters.forEach((ch, n) => {
+    const a = -Math.PI / 2 + (s + widths[n] / 2) / r; s += widths[n];
+    ctx.save(); ctx.translate(x + Math.cos(a) * rx, y + Math.sin(a) * ry); ctx.rotate(a + Math.PI / 2);
+    ctx.fillStyle = FELT.under; ctx.fillText(ch, 0, 1.5); ctx.fillStyle = colour; ctx.fillText(ch, 0, 0); ctx.restore();
+  });
+}
 function stop(car) {
-  const [x, y] = car.off, coming = car.clock < car.ride, due = coming ? car.clock / car.ride : car.clock < car.ride + car.stay ? 1 : 0, posts = 12, sag = 22 * (1 - due);
-  const at = n => { const a = n / posts * Math.PI * 2; return [x + Math.cos(a) * PLAZA, y + Math.sin(a) * PLAZA * 0.7]; };
-  ctx.beginPath(); ctx.ellipse(x, y, PLAZA, PLAZA * 0.7, 0, 0, 7); ctx.fillStyle = carColour(car).replace(')', ` / ${0.1 + due * 0.14})`); ctx.fill();
-  ctx.beginPath();
-  for (let n = 0; n < posts; n++) { const [px, py] = at(n), [qx, qy] = at(n + 1); if (!n) ctx.moveTo(px, py - 26); ctx.quadraticCurveTo((px + qx) / 2, (py + qy) / 2 - 26 + sag, qx, qy - 26); }
-  ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.lineWidth = 9; ctx.stroke(); ctx.strokeStyle = carColour(car); ctx.lineWidth = 5.5; ctx.stroke();
-  ctx.lineCap = 'butt'; ctx.setLineDash([3, 6]); ctx.globalAlpha = 0.55; ctx.strokeStyle = C.twine; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
-  for (let n = 0; n < posts; n++) {
-    const [px, py] = at(n);
-    ctx.beginPath(); ctx.ellipse(px, py, 8, 3.5, 0, 0, 7); ctx.fillStyle = 'oklch(24% 0.035 30 / .25)'; ctx.fill();
-    ctx.fillStyle = C.ink; ctx.fillRect(px - 3, py - 30, 6, 30);
-    ctx.beginPath(); ctx.arc(px, py - 31, 6, 0, 7); ctx.fillStyle = C.lamp; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
-  }
-  const left = Math.ceil(car.ride - car.clock);
-  pill(coming && left <= 20 ? `${car.name} in ${left}` : car.stop, x, y + PLAZA * 0.7 + 30, C.ink, C.paper, 16);
+  const [x, y] = car.off, fill = carColour(car), rx = PLAZA + 20, ry = rx * 0.66;
+  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 7); feltPiece(BADGE_CREAM, 4);
+  ctx.beginPath(); ctx.ellipse(x, y, rx - 7, ry - 6, 0, 0, 7); stitch(tone(fill, { light: -6 }), 2.2, [7, 6]);
+  ctx.beginPath(); ctx.ellipse(x, y + 4, rx - 38, ry - 32, 0, 0, 7); feltPiece(tone(fill, { light: 10, chroma: 0.75 }), 2);
+  ctx.beginPath(); ctx.ellipse(x, y + 4, rx - 46, ry - 39, 0, 0, 7); stitch(BADGE_CREAM, 2.2, [7, 6]);
+  arcText(car.stop.toUpperCase(), x, y + 2, rx - 22, ry - 18, 17, fill);
+  const left = Math.ceil(car.ride - car.clock), here = car.clock >= car.ride && car.clock < car.ride + car.stay;
+  const says = car.clock < car.ride && left <= 20 ? `${car.name} in ${left}` : here ? `${car.name} here` : null;
+  if (says) pill(says, x, y + ry + 26, fill, Number(/([\d.]+)%/.exec(fill)[1]) > 66 ? C.ink : C.paper, 16);
 }
 // Riders in the air: from a car onto a line waiting at the stop, or up off the back of a line into a car. Each goes in a
 // little arc, a touch bigger at the top. `to` is followed as it moves, so a rider lands on its line wherever the line has got to.
@@ -938,22 +961,70 @@ function solid(thing, t) {
   if (thing.kind === 'tower') { ctx.fillStyle = C.action; ctx.beginPath(); ctx.arc(thing.x, thing.y, thing.w * 0.24, 0, 7); ctx.fill(); ctx.lineWidth = 3; ctx.stroke(); }
 }
 function bridge(thing) {
-  // A strip of grey felt laid over the water, stitched along both sides.
-  const along = Math.atan2(thing.to[1] - thing.from[1], thing.to[0] - thing.from[0]), nx = -Math.sin(along), ny = Math.cos(along);
-  const span = (off = 0) => { ctx.beginPath(); ctx.moveTo(thing.from[0] + nx * off, thing.from[1] + ny * off); ctx.lineTo(thing.to[0] + nx * off, thing.to[1] + ny * off); };
-  ctx.lineCap = 'butt';
-  span(); ctx.save(); ctx.translate(0, 6); ctx.strokeStyle = FELT.under; ctx.lineWidth = thing.w; ctx.stroke(); ctx.restore();
-  ctx.strokeStyle = FELT.road; ctx.lineWidth = thing.w; ctx.stroke();
-  for (const side of [-1, 1]) { span(side * (thing.w / 2 - 8)); stitch(FELT.thread); }
-  span(); stitch(FELT.yellow, 4, [16, 14]);
+  // The same felt road, laid over the water.
+  feltRoad(thing.from, thing.to, Math.max(ROAD, thing.w), 'butt');
 }
 const SOLID = ['hall', 'tower', 'water'];
+
+/** Paints the ground in the box round (cx, cy), `hw` and `hh` each way: the water or the table, the mat, and what is sewn and painted onto it. */
+function ground(t, cx, cy, hw, hh) {
+  if (map.water) sea(t, cx - hw, cy - hh, hw * 2, hh * 2);
+  else { ctx.fillStyle = FELT.table; ctx.fillRect(cx - hw, cy - hh, hw * 2, hh * 2); }
+  if (map.axis != null) { if (!toysIn()) boats(t); banks(cx, cy, Math.hypot(hw, hh)); }
+  // The mat, with the felt's thickness under it, on the table or on the felt water alike.
+  ctx.save(); ctx.translate(0, 6); ctx.fillStyle = FELT.under; ctx.fill(land); ctx.restore();
+  ctx.fillStyle = FELT.mat; ctx.fill(land);
+  ctx.save(); ctx.clip(land);
+  // Where one area is sewn to the next, a darker seam; the running stitch round each area runs either side of it.
+  if (map.rings.length > 1) { ctx.strokeStyle = FELT.seam; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.stroke(land); }
+  stitch(FELT.thread, 2.6, [10, 8], hem);
+  for (const thing of map.things) if (thing.kind === 'road') { road(thing); if (!toysIn()) roadBus(thing, t); }
+  const near = thing => Math.abs(thing.x - cx) < hw + Math.max(thing.w, thing.h) && Math.abs(thing.y - cy) < hh + Math.max(thing.w, thing.h);
+  for (const thing of map.things) if ((thing.kind === 'green' || thing.kind === 'field') && near(thing)) painted(thing);
+  // Until the toys are in, a tree is a drawn crown.
+  if (!toysIn()) for (const each of map.trees) if (Math.abs(each.x - cx) < hw + 60 && Math.abs(each.y - cy) < hh + 120) tree(each.x, each.y, each.r, each.kind === 'blossom' ? C.blossom : C.tree);
+  // Names painted into the ground: the areas big, and a place with no toy (a lawn, a field) smaller at its middle.
+  for (const zone of map.zones) if (Math.abs(zone.at[0] - cx) < hw + 300 && Math.abs(zone.at[1] - cy) < hh + 60) groundName(zone.name, zone.at[0], zone.at[1], 40);
+  for (const thing of map.things) if (!thing.from && !(toysIn() && thing.toy) && near(thing)) groundName(thing.name, ...(thing.label ?? [thing.x, thing.y]), 22);
+  ctx.restore();
+}
+
+// ---------- the ground, kept ----------
+// Nothing on the felt ground moves, and painting it afresh was most of the cost of a frame. So it is painted once, in
+// squares, as each comes into view, and a frame only lays the squares it can see. They are painted at the closest the view
+// comes and laid smaller as it pulls back. Another ground, sharpness, screen size or font throws them away.
+const PATCH = 512, kept = new Map();
+let keptAs = '';
+document.fonts?.addEventListener('loadingdone', () => kept.clear());
+function patch(px, py, span, scale) {
+  const sheet = document.createElement('canvas'), screen = ctx; sheet.width = sheet.height = PATCH;
+  ctx = sheet.getContext('2d'); ctx.scale(scale, scale); ctx.translate(-px * span, -py * span);
+  try { ground(0, (px + 0.5) * span, (py + 0.5) * span, span / 2 + 300, span / 2 + 300); } finally { ctx = screen; }
+  return sheet;
+}
+function carpet(halfW, halfH) {
+  const scale = closest() * dpr, span = PATCH / scale, as = `${where} ${scale} ${quality}`;
+  if (as !== keptAs) { kept.clear(); keptAs = as; }
+  const k = cam.z * dpr, left = wide / 2 * dpr - cam.x * k, top = tall / 2 * dpr - cam.y * k; // where the ground's own (0, 0) falls on the canvas
+  const west = Math.floor((cam.x - halfW) / span), east = Math.floor((cam.x + halfW) / span), north = Math.floor((cam.y - halfH) / span), south = Math.floor((cam.y + halfH) / span);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (let py = north; py <= south; py++) for (let px = west; px <= east; px++) {
+    const key = px + ',' + py; let sheet = kept.get(key);
+    if (!sheet) kept.set(key, sheet = patch(px, py, span, scale));
+    // Each square's edges fall on whole pixels, so it meets its neighbours with no gap.
+    const x = Math.round(left + px * span * k), y = Math.round(top + py * span * k);
+    ctx.drawImage(sheet, x, y, Math.round(left + (px + 1) * span * k) - x, Math.round(top + (py + 1) * span * k) - y);
+  }
+  ctx.restore();
+  // Squares left far behind are let go.
+  if (kept.size > 120) for (const key of kept.keys()) { const [px, py] = key.split(',').map(Number); if (px < west - 2 || px > east + 2 || py < north - 2 || py > south + 2) kept.delete(key); }
+}
 
 function draw(t, dt) {
   // Before a game the view stays with one line, the longest when it was chosen, and moves on only when that line is scattered.
   if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : followed);
-  const size = watch.dead ? 0 : watch.tail.length, fitTo = Math.max(CLOSE, Math.sqrt(wide * tall / VIEW)); // the same amount of ground on every screen, but never so far out that an animal is small on a phone
+  const size = watch.dead ? 0 : watch.tail.length, fitTo = closest();
   let zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007));
   // With the megaphone the view pulls back until its whole reach fits on the screen.
   if (!watch.dead && watch.powers?.megaphone > 0) zoom = Math.min(zoom, Math.min(wide, tall) / 2 / (LOUD + 60));
@@ -965,28 +1036,16 @@ function draw(t, dt) {
   const halfW = wide / 2 / cam.z + 80, halfH = tall / 2 / cam.z + 80, seen = (x, y) => Math.abs(x - cam.x) < halfW && Math.abs(y - cam.y) < halfH;
   standing.length = 0;
 
-  if (map.water) sea(t, cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2);
-  else { ctx.fillStyle = FELT.table; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
-  if (map.axis != null) { boats(t); banks(Math.hypot(halfW, halfH)); }
-  // The mat, with the felt's thickness under it, on the table or on the felt water alike.
-  ctx.save(); ctx.translate(0, 6); ctx.fillStyle = FELT.under; ctx.fill(land); ctx.restore();
-  ctx.fillStyle = FELT.mat; ctx.fill(land);
-  ctx.save(); ctx.clip(land);
-  // Where one area is sewn to the next, a darker seam; the running stitch round each area runs either side of it.
-  if (map.rings.length > 1) { ctx.strokeStyle = FELT.seam; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.stroke(land); }
-  stitch(FELT.thread, 2.6, [10, 8], hem);
-  for (const thing of map.things) if (thing.kind === 'road') road(thing, t);
   const near = thing => Math.abs(thing.x - cam.x) < halfW + Math.max(thing.w, thing.h) && Math.abs(thing.y - cam.y) < halfH + Math.max(thing.w, thing.h);
-  for (const thing of map.things) if ((thing.kind === 'green' || thing.kind === 'field') && near(thing)) painted(thing);
-  // Every tree is the map's (maps.js), and solid: a toy standing up once the sheet is in, a drawn crown until then.
-  for (const each of map.trees) if (Math.abs(each.x - cam.x) < halfW + 60 && Math.abs(each.y - cam.y) < halfH + 120) {
-    if (toysIn()) standing.push({ x: each.x, y: each.y + each.r * 0.6, name: each.kind, width: treeWidth(each.r) });
-    else tree(each.x, each.y, each.r, each.kind === 'blossom' ? C.blossom : C.tree);
-  }
-  // Names painted into the ground: the areas big, and a place with no toy (a lawn, a field) smaller at its middle.
-  for (const zone of map.zones) if (Math.abs(zone.at[0] - cam.x) < halfW + 300 && Math.abs(zone.at[1] - cam.y) < halfH + 60) groundName(zone.name, zone.at[0], zone.at[1], 40);
-  for (const thing of map.things) if (!thing.from && !(toysIn() && thing.toy) && near(thing)) groundName(thing.name, ...(thing.label ?? [thing.x, thing.y]), 22);
-  ctx.restore();
+  // The ground: laid from its kept squares once the toys are in, with what moves on it drawn after. Until then it is
+  // painted the plain way each frame, since that water moves.
+  if (toysIn()) {
+    carpet(halfW, halfH);
+    if (map.axis != null) boats(t);
+    for (const thing of map.things) if (thing.kind === 'road') roadBus(thing, t);
+    // Every tree is the map's (maps.js), and solid: a toy standing up among the animals.
+    for (const each of map.trees) if (Math.abs(each.x - cam.x) < halfW + 60 && Math.abs(each.y - cam.y) < halfH + 120) standing.push({ x: each.x, y: each.y + each.r * 0.6, name: each.kind, width: treeWidth(each.r) });
+  } else ground(t, cam.x, cam.y, halfW, halfH);
   for (const thing of map.things) if (thing.kind === 'bridge') bridge(thing);
   // The felt's fibres over all of it, fixed to the ground so they slide by as you walk.
   if (quality < 2) { fibres.setTransform(new DOMMatrix().scale(0.55)); ctx.fillStyle = fibres; ctx.fillRect(cam.x - halfW, cam.y - halfH, halfW * 2, halfH * 2); }
@@ -1030,6 +1089,7 @@ function draw(t, dt) {
       shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - step(i + 1) * (dancing ? 8 : 2.5), face: f.face, tilt: dancing ? beat * 0.35 : 0,
         size: SIZE.tail * (1 + (world.t - f.born < 0.4 ? 0.35 * Math.sin((world.t - f.born) / 0.4 * Math.PI) : 0)) }); // a newcomer swells for a moment as it falls in
     });
+    line.shown = shown; // kept so a spill can wink each animal out where it was last seen
     if (line.tail.length && shown.some(each => seen(each.x, each.y))) rope(shown, colour(line.id), line.powers.whistle > 0);
     for (let i = shown.length - 1; i > 0; i--) if (seen(shown[i].x, shown[i].y)) sprites.push(shown[i]);
     const blink = line.safe > 0 && Math.sin(t * 22) > 0 ? 0.45 : 1;
@@ -1038,14 +1098,17 @@ function draw(t, dt) {
   }
   for (const it of world.items) if (seen(it.x, it.y)) pickup(it.kind, it.x, it.y, t);
   // A mob is a sack (/demo/mockups-conga-pond.html, A), with how many it holds on a tag in the fallen line's colour.
-  // A sack just flung from a burst line flies in an arc from where the line fell, spinning a little, its shadow on the ground.
+  // A sack from a burst line pops up out of the felt where it lies (/demo/mockups-conga-stops-spill.html, A): each a moment
+  // after the last, with a puff, growing a touch past full size and settling.
   for (const mob of world.mobs) {
-    const u = mob.ready > world.t ? 1 - (mob.ready - world.t) / mob.fly : 1, x = mob.fx == null ? mob.x : mob.fx + (mob.x - mob.fx) * u, y = mob.fy == null ? mob.y : mob.fy + (mob.y - mob.fy) * u;
+    const { x, y } = mob;
     if (Math.abs(x - cam.x) > halfW + 80 || Math.abs(y - cam.y) > halfH + 160) continue;
-    const lift = u < 1 ? Math.sin(u * Math.PI) * 140 : 0, spin = u < 1 ? (1 - u) * 5 * (mob.x > mob.fx ? 1 : -1) : 0;
-    if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width: SACK, lift, spin });
+    const u = mob.ready > world.t ? 1 - (mob.ready - world.t) / mob.fly : 1, wait = 0.35 + (((x * 13 + y * 7) % 1 + 1) % 1) * 0.25, k = Math.max(0, (u - wait) / (1 - wait));
+    if (u < 1 && k <= 0) continue;
+    if (!mob.landed) { mob.landed = true; smoke.push({ x, y: y + 18, t, big: 1.5 }); }
+    const scale = u >= 1 ? 1 : Math.sin(Math.min(1, k * 1.15) * Math.PI * 0.62) / Math.sin(Math.PI * 0.62) * (1 + 0.18 * Math.sin(k * Math.PI));
+    if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width: SACK, scale });
     if (u >= 1) mobTags.push({ x, y, text: `${mob.faces.length}`, c: colour(mob.from) });
-    else if (u > 0.92 && !mob.landed) { mob.landed = true; smoke.push({ x, y: y + 18, t, big: 1.4 }, { x: x - 20, y: y + 22, t, big: 1 }, { x: x + 20, y: y + 22, t, big: 1 }); }
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   // The toys that stand on the ground go in among the animals, each by where its foot is.
@@ -1053,8 +1116,9 @@ function draw(t, dt) {
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);
   for (const s of sprites) {
     if (s.stands) {
-      const { x, y, name, width, flip, label, lift = 0, spin = 0 } = s.stands; foot(x, y, width * 0.42 * (1 - lift / 300));
-      if (lift || spin) { ctx.save(); ctx.translate(x, y - lift - width * 0.4); ctx.rotate(spin); toy(name, 0, width * 0.44, width, flip); ctx.restore(); }
+      const { x, y, name, width, flip, label, lift = 0, spin = 0, scale = 1 } = s.stands; foot(x, y, width * 0.42 * (1 - lift / 300) * Math.min(1, scale));
+      if (scale !== 1) { ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale); toy(name, 0, width * 0.04, width, flip); ctx.restore(); }
+      else if (lift || spin) { ctx.save(); ctx.translate(x, y - lift - width * 0.4); ctx.rotate(spin); toy(name, 0, width * 0.44, width, flip); ctx.restore(); }
       else toy(name, x, y + width * 0.04, width, flip);
       if (label) {
         // How near you are (or, watching, the middle of the view), eased so the plate pops out rather than creeps.
@@ -1066,6 +1130,19 @@ function draw(t, dt) {
     sprite(s.face, s.x, s.y, s.size, s.tilt, s.alpha); if (s.ink && quality < 2) sparkle(s.x, s.y, s.size, t, s.kit); }
   for (const car of world.shuttles) tram(car);
   airborne(t);
+  // A spilled line's animals wink out where they stood, head first, each with one small plus-shaped twinkle in the line's
+  // colour (never the Ink+ four-point spark).
+  for (let i = winks.length - 1; i >= 0; i--) {
+    const wink = winks[i], age = t - wink.t;
+    if (age > 0.45) { winks.splice(i, 1); continue; }
+    if (age < 0.12) sprite(wink.face, wink.x, wink.y - Math.max(0, age) * 60, SIZE.tail * (age < 0 ? 1 : 1 - age / 0.12));
+    if (age < 0) continue;
+    const u = age / 0.45, size = 9 * Math.sin(u * Math.PI), px = wink.x + Math.cos(wink.a) * 10 * u, py = wink.y - 6 - 14 * u;
+    if (size < 0.4) continue;
+    ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px - size, py); ctx.lineTo(px + size, py); ctx.moveTo(px, py - size); ctx.lineTo(px, py + size);
+    ctx.strokeStyle = wink.c; ctx.lineWidth = size * 0.45; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px, py, size * 0.22, 0, 7); ctx.fillStyle = C.paper; ctx.fill();
+  }
 
   for (let i = puffs.length - 1; i >= 0; i--) {
     const puff = puffs[i], age = (t - puff.t) / 0.6;
@@ -1131,7 +1208,8 @@ let last = performance.now(), ticks = 0, pace = 16, settled = 0, clock = 0;
 function frame(now) {
   const took = now - last, dt = paused ? 0 : Math.max(0, Math.min(0.05, took / 1000)), t = clock += dt; last = now; // the game's own clock, which stops with it
   // `pace` is the usual time between frames. Two seconds of it staying over 24 ms, about 40 frames a second, is too slow.
-  if (took < 250) pace += (took - pace) * 0.05;
+  // One long frame (a game starting, new ground coming into view) counts as no more than 50 ms: alone it must not blur the picture for good.
+  if (took < 250) pace += (Math.min(took, 50) - pace) * 0.05;
   if (++settled > 120 && pace > 24 && quality < SHARP.length - 1) { quality++; settled = 0; pace = 16; fit(); }
   if (me && !me.dead && !paused) {
     if (keys.has('ArrowLeft') || keys.has('KeyA')) aim = me.a - 1.2;
@@ -1140,8 +1218,14 @@ function frame(now) {
   }
   for (const event of paused ? [] : step(world, dt)) {
     if (event.type === 'join' && event.line === ME) navigator.vibrate?.(8);
+    if (event.type === 'spill') {
+      // Its animals wink out from the head back, all within about half a second however long the line was.
+      const shown = world.lines.find(one => one.id === event.line)?.shown ?? [], gap = Math.min(0.03, 0.5 / shown.length), c = colour(event.line);
+      spilt = event.line; // a spilled line winks out instead of the ring a small scatter gets
+      shown.forEach((p, i) => { if (i && Math.abs(p.x - cam.x) < wide / cam.z && Math.abs(p.y - cam.y) < tall / cam.z) winks.push({ x: p.x, y: p.y, face: p.face, c, a: i * 2.4, t: t + i * gap }); });
+    }
     if (event.type === 'scatter') {
-      puffs.push({ x: event.x, y: event.y, t, colour: colour(event.line) });
+      if (spilt !== event.line) puffs.push({ x: event.x, y: event.y, t, colour: colour(event.line) });
       if (event.line === ME) { navigator.vibrate?.(60); finish(event); }
       else if (event.by === ME) say(`${world.lines.find(line => line.id === event.line).name} scattered on your line`);
     }
