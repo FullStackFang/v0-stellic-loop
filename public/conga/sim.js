@@ -74,8 +74,27 @@ function within(ring, x, y) {
 const areaOf = ring => Math.abs(ring.reduce((twice, p, i) => { const q = ring[(i + 1) % ring.length]; return twice + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
 /** Whether a point is on the ground: inside any of the map's outlines, and not inside anything that stands on it. */
 // A ground can hold hundreds of things that stand on it (every tree is one), so each is first tried against the box round it.
-export const inside = (world, x, y) => world.rings.some(ring => within(ring, x, y)) && !world.holes.some((ring, i) => { const box = world.boxes[i]; return x > box[0] && x < box[2] && y > box[1] && y < box[3] && within(ring, x, y); });
+// This is asked several hundred times a step, so the ground is also cut into squares (`world.cells`), each listing the few
+// things that reach into it: a point is tried against those only.
+export function inside(world, x, y) {
+  let on = false;
+  for (const ring of world.rings) if (within(ring, x, y)) { on = true; break; }
+  if (!on) return false;
+  for (const i of world.cells[Math.floor((y - world.box.north) / CELL) * world.cols + Math.floor((x - world.box.west) / CELL)]) {
+    const box = world.boxes[i];
+    if (x > box[0] && x < box[2] && y > box[1] && y < box[3] && within(world.holes[i], x, y)) return false;
+  }
+  return true;
+}
 const boxOf = ring => ring.reduce((box, [x, y]) => [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x), Math.max(box[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+const CELL = 150; // how wide each of those squares is
+/** For each square of the ground, which of the things standing on it (by their boxes) reach into it. */
+function squares(world) {
+  const { west, east, north, south } = world.box, cols = Math.floor((east - west) / CELL) + 1, rows = Math.floor((south - north) / CELL) + 1;
+  const cells = Array.from({ length: cols * rows }, () => []), col = x => Math.max(0, Math.min(cols - 1, Math.floor((x - west) / CELL))), row = y => Math.max(0, Math.min(rows - 1, Math.floor((y - north) / CELL)));
+  world.boxes.forEach((box, i) => { for (let r = row(box[1]); r <= row(box[3]); r++) for (let c = col(box[0]); c <= col(box[2]); c++) cells[r * cols + c].push(i); });
+  Object.assign(world, { cols, cells });
+}
 
 // Somewhere on the ground, with `room` clear on each side when asked.
 function spot(world, room = 0) {
@@ -112,6 +131,7 @@ export function createWorld(random = Math.random, rings = round(), holes = [], s
   // A bigger ground keeps more strays on it. Outlines that overlap are counted twice, which is near enough.
   const area = rings.reduce((sum, ring) => sum + areaOf(ring), 0) - holes.reduce((sum, ring) => sum + areaOf(ring), 0);
   const world = { t: 0, lines: [], strays: [], random, rings, holes, boxes: holes.map(boxOf), feed: Math.round(Math.min(400, Math.max(60, area / ROOMY))), shuttles: shuttles.map(each => ({ ...each, clock: 0, load: each.riders, kept: 0, hop: 0, x: each.from[0], y: each.from[1] })), box: { west: Math.min(...xs), east: Math.max(...xs), north: Math.min(...ys), south: Math.max(...ys) } };
+  squares(world);
   while (world.strays.length < world.feed) world.strays.push(stray(world));
   world.mobs = []; world.items = []; world.lay = Math.max(2, Math.round(world.feed / LYING)); world.later = 0;
   while (world.items.length < world.lay) world.items.push(item(world));
@@ -359,15 +379,17 @@ export function step(world, dt) {
   }
 
   const slow = Math.exp(-3 * dt);
+  // Every stray is tried against every head, every step: the heads are listed once, and distances are compared squared.
+  const alive = world.lines.filter(line => !line.dead), reaches = alive.map(reachOf);
   for (let i = world.strays.length - 1; i >= 0; i--) {
     const s = world.strays[i];
     // Each head draws strays from its own reach, twice as far with a megaphone; the nearest head that reaches one has it.
     let head = null, close = Infinity, span = PULL;
-    for (const line of world.lines) {
-      if (line.dead) continue;
-      const d = Math.hypot(line.x - s.x, line.y - s.y), r = reachOf(line);
-      if (d < r && d < close) { close = d; head = line; span = r; }
+    for (let h = 0; h < alive.length; h++) {
+      const dx = alive[h].x - s.x, dy = alive[h].y - s.y, d = dx * dx + dy * dy, r = reaches[h];
+      if (d < r * r && d < close) { close = d; head = alive[h]; span = r; }
     }
+    close = Math.sqrt(close);
     if (head && close < JOIN) {
       world.strays.splice(i, 1);
       join(world, head, s.face, s.x, s.y, events);
@@ -385,12 +407,13 @@ export function step(world, dt) {
 
   // Everyone who walked into someone is found first and scattered after, so two heads meeting is fair to both.
   const hits = [];
+  const touches = (tail, x, y) => { for (let i = 0; i < tail.length; i++) { const dx = tail[i].x - x, dy = tail[i].y - y; if (dx * dx + dy * dy < HIT * HIT) return true; } return false; };
   for (const line of world.lines) {
     if (line.dead || line.safe > 0) continue;
     for (const other of world.lines) {
       if (other === line || other.dead) continue;
       const heads = Math.hypot(other.x - line.x, other.y - line.y) < HEAD_HIT && other.safe <= 0 && line.tail.length <= other.tail.length;
-      if (heads || other.tail.some(f => Math.hypot(f.x - line.x, f.y - line.y) < HIT)) { hits.push([line, other]); break; }
+      if (heads || touches(other.tail, line.x, line.y)) { hits.push([line, other]); break; }
     }
   }
   for (const [line, by] of hits) scatter(world, line, by, events);
