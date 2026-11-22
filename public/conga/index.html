@@ -156,7 +156,16 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .coach p span { display: flex; align-items: center; gap: 8px; margin-top: 3px; } .coach p img { width: 24px; height: 24px; flex: none; }
 @media (max-width: 560px) { .coach { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 100px); } .coach h3 { font-size: 23px; } }
 body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { visibility: hidden; }
-#paused .row { flex-wrap: wrap; row-gap: 10px; }
+/* The pause card (B of /demo/mockups-conga-pause-zoom.html, with three steps): the logo beside the title, so the buttons keep one line. */
+#paused .top { display: flex; align-items: center; gap: 12px; }
+#paused .top h1 { flex: 1; }
+#paused .top .back { height: 48px; flex: none; display: inline-flex; align-items: center; }
+#paused .zoom { position: relative; padding-top: 10px; }
+#paused .zoom .tab { position: absolute; left: 14px; top: 0; z-index: 1; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 12px; border-radius: 99px; padding: 3px 10px 4px; }
+#paused .step { display: flex; align-items: center; height: 52px; padding: 4px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
+#paused .step button { width: 56px; height: 100%; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 900; font-size: 24px; line-height: 1; }
+#paused .step button:disabled { opacity: .25; }
+#paused .step b { flex: 1; text-align: center; font-weight: 800; font-size: 16px; }
 /* The ghost thumb: where a thumb usually rests, low on the right. Drag: it slides in an arc. Dash: tap, tap, then held
    while a ring fills round it. */
 .ghost { position: fixed; z-index: 3; right: 70px; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 270px); width: 50px; height: 50px; pointer-events: none; }
@@ -216,8 +225,9 @@ body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { vis
 </section>
 
 <section class="card" id="paused" hidden>
-  <h1>Paused</h1>
-  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><button class="quit" id="howto">How to play</button><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
+  <div class="top"><h1>Paused</h1><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
+  <div class="zoom"><span class="tab">Zoom</span><div class="step"><button id="closer" aria-label="Closer">−</button><b id="zoomName" aria-live="polite">Normal</b><button id="further" aria-label="Further out">+</button></div></div>
+  <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><button class="quit" id="howto">How to play</button></div>
 </section>
 
 <script type="module">
@@ -430,6 +440,18 @@ function pause(on) {
   keys.clear(); dash = false; stick = null;
 }
 $('pause').onclick = () => pause(true);
+// Each player's own zoom, chosen on the pause card and kept for next time: a share of the zoom their screen would have.
+const ZOOMS = [['Close', 1.15], ['Normal', 1], ['Far', 0.85]];
+const keptZoom = Number(keep.get('conga-zoom') ?? 1);
+let zoomAt = Number.isInteger(keptZoom) ? Math.max(0, Math.min(ZOOMS.length - 1, keptZoom)) : 1;
+function showZoom() { $('zoomName').textContent = ZOOMS[zoomAt][0]; $('closer').disabled = zoomAt === 0; $('further').disabled = zoomAt === ZOOMS.length - 1; }
+function zoomTo(at) {
+  zoomAt = Math.max(0, Math.min(ZOOMS.length - 1, at)); keep.set('conga-zoom', zoomAt); showZoom();
+  cam.z = closest() * ZOOMS[zoomAt][1]; stale = true; // seen at once behind the card, though the game is paused
+}
+$('closer').onclick = () => zoomTo(zoomAt - 1);
+$('further').onclick = () => zoomTo(zoomAt + 1);
+showZoom();
 $('resume').onclick = () => pause(false);
 
 // ---------- learning to play ----------
@@ -1370,7 +1392,7 @@ function draw(t, dt) {
   if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : followed);
   // The view stays at one zoom however long the line grows (the founder, 2026-11-22: it used to pull back with each animal).
-  let zoom = closest();
+  let zoom = closest() * ZOOMS[zoomAt][1];
   // With the megaphone the view pulls back until its whole reach fits on the screen.
   if (!watch.dead && watch.powers?.megaphone > 0) zoom = Math.min(zoom, Math.min(wide, tall) / 2 / (LOUD + 60));
   const slide = 1 - Math.exp(-dt * (watch === me ? 9 : 2.5));
