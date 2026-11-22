@@ -44,6 +44,7 @@ Convert `public/fonts/Archivo.ttf` to `public/fonts/Archivo.woff2` once, with a 
 
 - Why: WOFF2 is a lossless container for the same tables, so both axes (weight 100 to 900, width 62% to 125%) and every glyph survive. Every browser the app supports reads it.
 - Proof: the converted file is under 100 kB on disk. If it is not, stop and report: Google's build of the family is 88 kB, but it may be subsetted to Latin, so the full file could be larger. Compare the axes and the glyph count of the two files before switching.
+- Found (2026-11-21): converted with `wawoff2` (from a scratch folder, not the repo), the WOFF2 is **189 kB**, over the limit. Same axes, 834 glyphs and 653 characters in both; only the `DSIG` signature table is dropped. The font is all Latin (basic, Latin-1, Extended A/B, Vietnamese, symbols); there is no other script to drop. Google's 88 kB is the basic-Latin slice of the family, with the other slices fetched only when a page uses one of their letters. Stopped for the owner: ship the 189 kB file (235 kB → 189 kB on the wire), or split it the same way.
 - Alternative considered: subsetting to Latin. Rejected for now: names in other scripts would fall back to a system font, which is a visible change.
 - Alternative considered: `next/font/google`. Rejected: it fetches at build time and the family is already in the repo under its licence.
 
@@ -53,6 +54,7 @@ A script under `scripts/` writes `NN.webp` beside each `public/animals/NN.png` w
 
 - Why one function: every face on every page gets its address from `animal()`; there is no second place to change.
 - Check before switching: a page under `/demo/` that draws each face twice at the sizes the app uses (26, 32, 38 and 96 px, on the light and dark grounds), PNG beside WebP, for the owner to look at. If any face shows a difference, raise the quality or use lossless for that face.
+- Made (2026-11-21) by `scripts/animals-webp.mjs` at quality 85, alpha lossless: the 48 faces go from 1477 kB to 317 kB (3 to 12 kB each). Against its PNG, weighting colour by opacity, each face differs by under 2 of 255 on average; the largest single-pixel difference is 52 to 74, on the premium faces' edges (39 to 46). Side by side at `/demo/mockups-faces-webp.html`, waiting for the owner.
 - When a face is redrawn, its WebP must be made again: the script is run as part of the same recipe, and a test fails when a PNG has no WebP or is newer in content than its WebP (compare by decoding both, not by date).
 - Alternative considered: `next/image`. Rejected: it adds an optimizer request per face and per size, and a spend, for pictures that never change size.
 
@@ -62,6 +64,7 @@ A script under `scripts/` writes `NN.webp` beside each `public/animals/NN.png` w
 
 - Why: with no cookie read, the two pages can be built once. With no provider, they load no sign-in scripts.
 - What changes for a person: someone signed in who opens Terms sees it in Loopd's own colours, or the colours their browser last wore, not colours looked up from their school on the server. To be confirmed while building: what `Kit` does on its own in the browser. If a signed-in person would see a different colour than today, that is a look change and goes to the owner first (Open Question 5).
+- Found (2026-11-21): there is a difference. `Kit` and its pre-paint script (`lib/campus/kit-script.ts`) show the pick kept in the browser if there is one, or else `own`. Today `own` is the member's school's colours; on a page built once it can only be `loop`. So a signed-in member who never picked colours sees their school's colours on Terms today, and Loopd's after this change. Someone who picked colours sees them either way. A way to keep today's look: on these two pages only, fall back to the colours the browser last wore (`loop-kit-worn`, which the script already writes) before Loopd's. Stopped for the owner (Open Question 5).
 - Proof: after the one build, the route table marks `/terms` and `/privacy` static, the response is served from the CDN, and the page's requests include no Clerk script.
 - To check first: nothing else in the tree (`SiteFoot`, `LegalSpy`, the root layout's `FreshWait`, `SeatsEnding`, `Seen`) reads cookies or headers on the server or uses a Clerk hook.
 
@@ -70,6 +73,7 @@ A script under `scripts/` writes `NN.webp` beside each `public/animals/NN.png` w
 `DoorPage` builds one example ticket per school from `listCampuses`, `weekListings` and `campusRewards`. That result (titles, times, reward words; no person) is kept for 60 seconds across requests. The page itself stays per request: `FrontDoor` still calls `campusViewer()` first and redirects a signed-in person.
 
 - Which API: decided after reading the caching guide in `node_modules/next/dist/docs/` for this version (`'use cache'` needs a config flag that would touch every page; the older `unstable_cache` may be the smaller step). Only the data function is wrapped, with the minute as its lifetime.
+- Chosen (2026-11-21): `unstable_cache(pitchTickets, ['door-pitch'], { revalidate: 60 })` in `app/door.tsx`. The app has no `cacheComponents` flag, and the guide (`caching-without-cache-components.md`, `unstable_cache.md`) keeps `unstable_cache` for non-`fetch` data in that model. Its value is stored as JSON; a `DoorSchool` is strings, numbers and nulls, so it survives unchanged (a test checks). Outside a Next server it throws, so `app/campus-door.test.tsx` puts a stand-in in its place. After the minute, the first visitor is still shown the kept tickets while they are read again, so a cancelled event can show for a little over a minute: one more visit, not one more minute.
 - Why a minute: an event posted or cancelled shows on the pitch within a minute, and a burst of visitors costs one read.
 - `ticket()` formats times with `now`; the kept value includes those words, so a label such as "Today" can be up to a minute stale at midnight. Accepted.
 - Alternative considered: making `/` static for signed-out visitors. Rejected: the same address must redirect a signed-in person, and that needs the request.

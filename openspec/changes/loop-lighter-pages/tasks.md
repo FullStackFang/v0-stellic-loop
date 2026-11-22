@@ -18,7 +18,7 @@
 
 ## 3. Faces as WebP (D2)
 
-- [ ] 3.1 Add a script under `scripts/` that writes `NN.webp` beside each `public/animals/NN.png` with `sharp` (192 px, alpha kept); run it and write down the total size before and after
+- [x] 3.1 Add a script under `scripts/` that writes `NN.webp` beside each `public/animals/NN.png` with `sharp` (192 px, alpha kept); run it and write down the total size before and after
 - [ ] 3.2 Build `/demo/mockups-faces-webp.html`: each face as PNG beside WebP at 26, 32, 38 and 96 px on the light and dark grounds. Stop and hand it to the owner; go on after his yes
 - [ ] 3.3 Test first: every PNG in the set has a WebP that decodes to the same picture within a small tolerance; `animal()` returns a `.webp` address
 - [ ] 3.4 Change `animal()` in `lib/campus/animals.ts`; widen the faces' cache header in `next.config.ts` to both endings; leave `outputFileTracingIncludes` on the PNGs
@@ -28,7 +28,7 @@
 
 ## 4. Static legal pages (D3)
 
-- [ ] 4.1 Confirm by reading that nothing in `Legal`'s tree other than `CampusShell` reads cookies or headers on the server or uses a Clerk hook (`TopBar` with `account={null}`, `SiteFoot`, `LegalSpy`, and the root layout's `FreshWait`, `SeatsEnding`, `Seen`)
+- [x] 4.1 Confirm by reading that nothing in `Legal`'s tree other than `CampusShell` reads cookies or headers on the server or uses a Clerk hook (`TopBar` with `account={null}`, `SiteFoot`, `LegalSpy`, and the root layout's `FreshWait`, `SeatsEnding`, `Seen`)
 - [ ] 4.2 Find what `Kit` shows on its own in the browser for a signed-in person given the signed-out defaults. If the colours would differ from today, stop and ask the owner (design.md, Open Question 5)
 - [ ] 4.3 Test first: rendering `Legal` makes no call to `campusViewer` and renders no `ClerkProvider`
 - [ ] 4.4 Give `Legal` a shell that asks nothing: the campus stylesheet and `Kit` with the signed-out defaults
@@ -36,10 +36,10 @@
 
 ## 5. The pitch's data kept for a minute (D4)
 
-- [ ] 5.1 Read the caching guide for this Next.js under `node_modules/next/dist/docs/` and choose the API that wraps one data function for 60 seconds without changing how other pages render; note the choice in design.md
-- [ ] 5.2 Test first: two renders of `DoorPage` inside a minute read the schools' weeks once; a signed-in person with a campus is still redirected by `FrontDoor`
-- [ ] 5.3 Move the read of the example tickets into one function and keep its result for a minute
-- [ ] 5.4 Run `app/front-door.test.tsx` and `app/campus-door.test.tsx`, type check, lint; commit by path
+- [x] 5.1 Read the caching guide for this Next.js under `node_modules/next/dist/docs/` and choose the API that wraps one data function for 60 seconds without changing how other pages render; note the choice in design.md
+- [x] 5.2 Test first: two renders of `DoorPage` inside a minute read the schools' weeks once; a signed-in person with a campus is still redirected by `FrontDoor`
+- [x] 5.3 Move the read of the example tickets into one function and keep its result for a minute
+- [x] 5.4 Run `app/front-door.test.tsx` and `app/campus-door.test.tsx`, type check, lint; commit by path
 
 ## 6. Proof
 
