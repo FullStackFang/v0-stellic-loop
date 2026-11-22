@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { INK_PAGE } from '@/lib/campus/ink';
-import { kitScript } from '@/lib/campus/kit-script';
+import { kitScript, WORN } from '@/lib/campus/kit-script';
 import { InkMark } from './ink-mark';
 import { JoinPlan } from './join-plan';
 import './foot.css';
@@ -22,6 +22,7 @@ export const KITS = [
 const KEY = 'loop-kit';
 /** The kit this person picked on this browser, if any. */
 export function pickedKit(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
+const lastWorn = (): string | null => { try { return localStorage.getItem(WORN); } catch { return null; } };
 /** The kit showing now. */
 export const kitNow = () => (typeof document === 'undefined' ? null : document.documentElement.dataset.kit) ?? 'loop';
 /** Show a kit without keeping it (the sign-in card, as an email is typed). */
@@ -36,19 +37,21 @@ export const mayWear = (slug: string, yours: readonly string[] | null, any: bool
 
 /** Keeps the colours right when a campus page is reached without a page load (lib/campus/kit-script.ts does it before the
     first paint): the pick kept on this browser if it may be worn, or else `own`. It also leaves on the page who may
-    wear what, as data-kits and data-any-kit, for the foot, which is not handed it. */
-export function Kit({ own, yours, any }: { own: string; yours: string[] | null; any: boolean }) {
+    wear what, as data-kits and data-any-kit, for the foot, which is not handed it. With `worn`, the colours this browser
+    last wore come before `own` (a page that is the same for everyone, lib/campus/kit-script.ts). */
+export function Kit({ own, yours, any, worn = false }: { own: string; yours: string[] | null; any: boolean; worn?: boolean }) {
   const list = yours?.join(' ') ?? null;
   useEffect(() => {
     const root = document.documentElement, mine = list === null ? null : list.split(' '), picked = pickedKit();
     if (mine) root.dataset.kits = list!; else delete root.dataset.kits;
     if (any) root.dataset.anyKit = ''; else delete root.dataset.anyKit;
-    showKit(picked && KITS.some(each => each.slug === picked) && mayWear(picked, mine, any) ? picked : own);
-  }, [own, list, any]);
+    const last = worn ? lastWorn() : null, fallback = last && KITS.some(each => each.slug === last) ? last : own;
+    showKit(picked && KITS.some(each => each.slug === picked) && mayWear(picked, mine, any) ? picked : fallback);
+  }, [own, list, any, worn]);
   // The script is drawn by the server and kept while the page hydrates. Reached without a page load, a script React
   // draws never runs (and React warns of it), so there is none then: the effect above does its work.
   const served = useSyncExternalStore(never, () => false, () => true);
-  return served ? <script dangerouslySetInnerHTML={{ __html: kitScript(own, yours, any) }} /> : null;
+  return served ? <script dangerouslySetInnerHTML={{ __html: kitScript(own, yours, any, worn) }} /> : null;
 }
 const never = () => () => {};
 

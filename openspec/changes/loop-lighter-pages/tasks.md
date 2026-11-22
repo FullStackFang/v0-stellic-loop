@@ -29,10 +29,10 @@
 ## 4. Static legal pages (D3)
 
 - [x] 4.1 Confirm by reading that nothing in `Legal`'s tree other than `CampusShell` reads cookies or headers on the server or uses a Clerk hook (`TopBar` with `account={null}`, `SiteFoot`, `LegalSpy`, and the root layout's `FreshWait`, `SeatsEnding`, `Seen`)
-- [ ] 4.2 Find what `Kit` shows on its own in the browser for a signed-in person given the signed-out defaults. If the colours would differ from today, stop and ask the owner (design.md, Open Question 5)
-- [ ] 4.3 Test first: rendering `Legal` makes no call to `campusViewer` and renders no `ClerkProvider`
-- [ ] 4.4 Give `Legal` a shell that asks nothing: the campus stylesheet and `Kit` with the signed-out defaults
-- [ ] 4.5 Run the affected tests, type check, lint; commit by path
+- [x] 4.2 Find what `Kit` shows on its own in the browser for a signed-in person given the signed-out defaults. If the colours would differ from today, stop and ask the owner (design.md, Open Question 5)
+- [x] 4.3 Test first: rendering `Legal` makes no call to `campusViewer` and renders no `ClerkProvider`
+- [x] 4.4 Give `Legal` a shell that asks nothing: the campus stylesheet and `Kit` with the signed-out defaults
+- [x] 4.5 Run the affected tests, type check, lint; commit by path
 
 ## 5. The pitch's data kept for a minute (D4)
 

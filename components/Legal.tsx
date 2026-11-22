@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SiteFoot } from "@/components/campus/foot";
-import { CampusShell } from "@/components/campus/shell";
+import { PlainShell } from "@/components/campus/shell";
 import { TopBar } from "@/components/campus/top-bar";
 import { LegalSpy } from "./legal-spy";
 import "./legal.css";
@@ -16,7 +16,7 @@ export type LegalPart = { id: string; name: string; short: string; full: ReactNo
  */
 export function Legal({ title, updated, gist, parts }: { title: string; updated: string; /** One line under the title. */ gist: string; parts: LegalPart[] }) {
   return (
-    <CampusShell>
+    <PlainShell>
       <div className="cs cs-lg">
         <TopBar account={null} />
         <main>
@@ -40,6 +40,6 @@ export function Legal({ title, updated, gist, parts }: { title: string; updated:
       </div>
       <SiteFoot />
       <LegalSpy />
-    </CampusShell>
+    </PlainShell>
   );
 }

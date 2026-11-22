@@ -15,3 +15,12 @@ export async function CampusShell({ children }: { children: ReactNode }) {
   const inside = <><Kit own={own} yours={yours} any={any} />{children}</>;
   return clerkPortalConfigured() ? <ClerkProvider signInUrl="/sign-in" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" telemetry={{ disabled: true }}>{inside}</ClerkProvider> : inside;
 }
+
+/**
+ * What a page that is the same for everyone sits in (Terms, Privacy): the campus stylesheet and the colours, and nothing
+ * that asks who is looking, so the page can be built once (openspec loop-lighter-pages, D3). With nothing picked it wears
+ * the colours this browser last wore, which for a member are usually their school's.
+ */
+export function PlainShell({ children }: { children: ReactNode }) {
+  return <><Kit own="loop" yours={null} any worn />{children}</>;
+}

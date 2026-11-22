@@ -58,6 +58,36 @@ it('keeps that pick with Ink+, and signed out', () => {
   expect(root.dataset.kits).toBeUndefined();
 });
 
+// A page that is the same for everyone (Terms, Privacy) cannot know the person's school: there, with nothing picked,
+// it wears the colours this browser last wore, and Loopd's own only on a first visit (openspec loop-lighter-pages, D3).
+it('where asked, falls back to the colours this browser last wore before its own', () => {
+  localStorage.setItem('loop-kit-worn', 'cornell');
+  const { unmount } = render(<Kit own="loop" yours={null} any worn />);
+  expect(root.dataset.kit).toBe('cornell');
+  unmount(); reset(); localStorage.setItem('loop-kit-worn', 'cornell'); localStorage.setItem('loop-kit', 'nyu');
+  const picked = render(<Kit own="loop" yours={null} any worn />);
+  expect(root.dataset.kit).toBe('nyu');
+  picked.unmount(); reset(); localStorage.setItem('loop-kit-worn', 'cornell');
+  render(<Kit own="loop" yours={null} any />);
+  expect(root.dataset.kit).toBe('loop');
+});
+
+it('the script before the first paint falls back the same way', () => {
+  const run = (script: string) => new Function(script)();
+  localStorage.setItem('loop-kit-worn', 'cornell');
+  run(kitScript('loop', null, true, true));
+  expect(root.dataset.kit).toBe('cornell');
+  reset(); localStorage.setItem('loop-kit-worn', 'cornell'); localStorage.setItem('loop-kit', 'nyu');
+  run(kitScript('loop', null, true, true));
+  expect(root.dataset.kit).toBe('nyu');
+  reset();
+  run(kitScript('loop', null, true, true));
+  expect([root.dataset.kit, localStorage.getItem('loop-kit-worn')]).toEqual(['loop', 'loop']);
+  reset(); localStorage.setItem('loop-kit-worn', 'cornell');
+  run(kitScript('loop', null, true));
+  expect(root.dataset.kit).toBe('loop');
+});
+
 it('the script before the first paint is drawn by the server only, never when Kit is reached without a page load', () => {
   expect(renderToString(<Kit own="cornell" yours={['loop', 'cornell']} any={false} />)).toContain(`<script>${kitScript('cornell', ['loop', 'cornell'], false)}</script>`);
   const { container } = render(<Kit own="cornell" yours={['loop', 'cornell']} any={false} />);
