@@ -162,14 +162,14 @@ const pt = (r, s, off = 0) => ({ x: r.cx + Math.cos(r.a) * s - Math.sin(r.a) * o
 // Both are side-on toy pictures moving along a slanted road or channel, so today they slide sideways across it.
 const SAY = {
   bus: {
-    a: 'A · Hops along. The bus stays on the road and hops along it like a toy being pushed by hand: a little bounce with each step, and a soft felt puff where it lands. The hops make the slant read as "going along the road" instead of sliding sideways.',
+    a: 'A · Hops along (built). The bus stays on the road and hops along it like a toy being pushed by hand: a little bounce and squash with each step, and a small puff of dust from under each wheel where it lands. No shadow under it.',
     b: 'B · On a cloud, like the tram. The bus floats just above the road on a small bank of felt clouds, bobbing gently, its shadow on the road under it. Bus and tram then look like one family.',
     c: 'C · Exhaust puffs. The bus drives smoothly along the road and leaves small felt clouds from its back end, which sit on the road behind it, drift up and fade. The trail of puffs runs along the road, so you see the bus following it.',
     now: 'Today: the bus slides along the slanted road side-on, with nothing tying it to the road but its shadow.',
   },
   boats: {
     a: 'A · On felt waves. Each boat bobs and rocks a little on two scalloped felt waves under its hull, in a lighter blue, that ride along with it. The straight wake lines are gone.',
-    b: 'B · Foam trail. Each boat bobs gently and leaves small white felt foam puffs on the water behind it, along the channel, which spread and fade, like the bus in C.',
+    b: 'B · Foam trail (built). Each boat bobs gently and leaves small white felt foam puffs on the water behind it, along the channel, which spread and fade, like the bus in C.',
     now: 'Today: white wake lines in a V along the channel, and the boat upright on top of them, sliding.',
   },
 };
@@ -203,8 +203,8 @@ function busScene(look, t) {
   grain();
   const from = pt(r, -H * 0.34, 0), to = pt(r, H * 0.42, 0), s = shuttle(t, from, to);
   let { x, y } = s, lift = 0, squash = 0;
-  if (look === 'a' && s.moving) { const ph = (s.d / 46) % 1; lift = Math.sin(ph * Math.PI) * 14; squash = ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0; if (ph < 0.06 && (puffs.bus.at(-1)?.t ?? -1) < t - 0.15) puffs.bus.push({ x, y: y + 34, t, s: 1 }); }
-  if (look === 'a') trailOf(puffs.bus, t, 99, null, 0.6, (p, age) => puff(p.x, p.y, age, 1.2));
+  if (look === 'a' && s.moving) { const ph = (s.d / 46) % 1; lift = Math.sin(ph * Math.PI) * 14; squash = ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0; if (ph < 0.06 && (puffs.bus.at(-1)?.t ?? -1) < t - 0.15) for (const side of [-46, 46]) puffs.bus.push({ x: x + side, y: y + 36, t, s: 1 }); }
+  if (look === 'a') trailOf(puffs.bus, t, 99, null, 0.7, (p, age) => puff(p.x, p.y, age, 0.7));
   if (look === 'c') { const back = s.left ? 1 : -1; trailOf(puffs.bus, t, 0.12, s.moving ? { x: x + back * 70, y: y + 18, s: 22 + Math.random() * 12 } : null, 1.4, (p, age) => cloud(p.x, p.y - age * 16, p.s * (0.7 + age * 0.6), (1 - age) * 0.95)); }
   if (look === 'b') {
     const bob = Math.sin(t * 2.2) * 5, top = y - 46 + bob;
@@ -213,7 +213,7 @@ function busScene(look, t) {
     toy('bus', x, top + 40, 160, s.left);
     cloud(x, top + 50 + Math.sin(t * 2.2 + 0.5) * 2, 96);
   } else {
-    foot(x, y + 34, 66 * (1 - lift / 60), 0.22);
+    if (look !== 'a') foot(x, y + 34, 66 * (1 - lift / 60), 0.22); // the built bus (A) has no shadow under it
     ctx.save(); ctx.translate(x, y + 40 - lift); ctx.scale(1 + 0.08 * squash, 1 - 0.1 * squash); toy('bus', 0, 0, 160, s.left); ctx.restore();
   }
   for (const [tx, ty] of [[W * 0.1, H * 0.16], [W * 0.22, H * 0.3], [W * 0.88, H * 0.74]]) { foot(tx, ty, 26, 0.2); toy('tree', tx, ty + 4, 60); }
