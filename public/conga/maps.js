@@ -17,7 +17,10 @@ export const TOYS = { 'Willard Straight': 'stonehall', 'Sage Chapel': 'chapel', 
   'Bailey Hall': 'dome', 'Mann Library': 'brickhall', 'Johnson Museum': 'museum', 'Risley': 'castle', 'Donlon': 'dorm', 'RPCC': 'dorm', 'Noyes': 'dorm', 'Becker House': 'brickhall',
   'CTB': 'cafe', 'McGraw Tower': 'clocktower', 'Bloomberg Center': 'bloomberg', 'Tata': 'tata', 'The House': 'tower', 'Verizon Center': 'glasshall', 'Graduate': 'tower',
   'Tram': 'station', 'Subway': 'subway', 'Smallpox Hospital': 'ruin', 'Blackwell House': 'farmhouse', 'Good Shepherd': 'stonechapel', 'The Octagon': 'octagon', 'Lighthouse': 'lighthouse', 'Beebe Lake': 'pond' };
-const POND = 220; // a pond's toy is drawn this wide
+const POND = 320; // a pond's toy is drawn this wide: a lake is bigger than any building, and its picture is 320 across
+// A lawn or field is at least this much each way (about two road widths), so none is thinner than the road beside it or
+// smaller than the buildings round it, however small the real one is.
+const OPEN = 260;
 // Buildings come in two sizes on every ground (/demo/mockups-conga-sizes.html, A): a LANDMARK stands out at
 // LANDMARK_HALL across, every other building is HALL, both bigger than the bus (120). A toy taller than it is wide is
 // drawn narrower, so none stands more than 1.25 times its width high. Kept small enough that the packed pictures stay
@@ -123,6 +126,7 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
     }
     // A pond is a toy too, standing like a big hall: what it stands on is the oval of its stones.
     if (kind === 'water' && TOYS[label]) return { kind, name: label, toy: TOYS[label], x, y, w: POND, h: POND * 0.47, turn: 0 };
+    if (kind === 'green' || kind === 'field') return { kind, name: label, toy: TOYS[label], x, y, w: Math.max(OPEN, size[0]), h: Math.max(OPEN, size[1]), turn };
     return { kind, name: label, toy: TOYS[label], x, y, w: size[0], h: size[1], turn };
   });
   const outline = ({ kind, x, y, w, h, turn, toy }) => {
