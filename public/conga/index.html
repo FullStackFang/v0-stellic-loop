@@ -839,9 +839,8 @@ const PAINT = {
 function trace(points) { ctx.beginPath(); points.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); }
 /** A lake sewn into the mat (/demo/mockups-conga-ithaca-sizes.html, A "Layered"): felt cut to its shore and stacked like a
  * contour map, each piece smaller and a deeper blue and sewn on with its own stitch, a couple of waves stitched on top.
- * It does not move, so it is painted with the ground. Beebe Lake also spills west into its gorge, over Triphammer Falls. */
+ * It does not move, so it is painted with the ground. */
 function feltLake(thing) {
-  if (thing.name === 'Beebe Lake') falls(thing);
   for (const [sx, sy, fill] of [[1, 1, 'oklch(84% 0.06 205)'], [0.93, 0.8, WATER.shallow], [0.84, 0.56, WATER.deep], [0.7, 0.3, 'oklch(55% 0.1 238)']]) {
     trace(shoreline(thing, 0, sx, sy)); feltPiece(fill);
     trace(shoreline(thing, 0, sx, sy).map(([px, py]) => [thing.x + (px - thing.x) * (1 - 8 / (thing.w * sx / 2)), thing.y + (py - thing.y) * (1 - 8 / (thing.h * sy / 2))]));
@@ -849,27 +848,6 @@ function feltLake(thing) {
   }
   for (const [fx, wx] of [[-0.17, 0], [0.22, -0.12]]) { const x = thing.x + fx * thing.w, y = thing.y + wx * thing.h, r = 14;
     ctx.beginPath(); ctx.arc(x - r, y, r, Math.PI * 1.1, Math.PI * 1.9); ctx.moveTo(x + r + r * Math.cos(Math.PI * 1.1), y + r * Math.sin(Math.PI * 1.1)); ctx.arc(x + r, y, r, Math.PI * 1.1, Math.PI * 1.9); stitch(WATER.thread, 2.4, [6, 5]); }
-}
-/** Triphammer Falls: the lake spills west down a gorge of stone felt, over a white felt step, under a plank footbridge. It is
- * painted on the mat, so lines walk over it. */
-function falls(thing) {
-  const k = thing.w / 690, tip = thing.x - 340 * k, gy = thing.y - 18 * thing.h / 260, len = 320;
-  // The stone ends round about the lake's tip, so the lake looks to drain into the gorge; the creek runs on under the lake.
-  const course = (from = tip + 10) => { ctx.beginPath(); ctx.moveTo(from, gy); ctx.lineTo(tip - 20, gy); ctx.quadraticCurveTo(tip - len * 0.5, gy - 6, tip - len, gy + 50); };
-  ctx.lineCap = 'butt';
-  ctx.save(); ctx.translate(0, 4); course(); ctx.strokeStyle = FELT.under; ctx.lineWidth = 96; ctx.stroke(); ctx.beginPath(); ctx.arc(tip + 10, gy, 48, 0, 7); ctx.fillStyle = FELT.under; ctx.fill(); ctx.restore();
-  course(); ctx.strokeStyle = 'oklch(62% 0.035 55)'; ctx.lineWidth = 96; ctx.stroke(); ctx.beginPath(); ctx.arc(tip + 10, gy, 48, 0, 7); ctx.fillStyle = 'oklch(62% 0.035 55)'; ctx.fill();
-  course(); stitch('oklch(80% 0.02 60)', 2.2, [8, 7]);
-  course(tip + 80); ctx.strokeStyle = WATER.shallow; ctx.lineWidth = 46; ctx.stroke();
-  const fx = tip - 50;
-  ctx.beginPath(); ctx.roundRect(fx - 14, gy - 30, 28, 60, 8); feltPiece('oklch(97% 0.012 220)');
-  ctx.beginPath(); for (const dy of [-18, -6, 6, 18]) { ctx.moveTo(fx + 9, gy + dy); ctx.lineTo(fx - 9, gy + dy); } stitch('oklch(80% 0.05 220)', 2, [4, 4]);
-  for (const [dx, dy, r] of [[-26, -10, 10], [-40, 8, 12], [-60, -2, 8]]) { ctx.beginPath(); ctx.arc(fx + dx, gy + dy, r, 0, 7); ctx.fillStyle = 'oklch(97% 0.012 220 / .7)'; ctx.fill(); } // its foam
-  ctx.save(); ctx.translate(tip - 200, gy + 8); ctx.rotate(0.12);
-  ctx.beginPath(); ctx.roundRect(-26, -74, 52, 148, 6); feltPiece('oklch(68% 0.08 62)');
-  ctx.beginPath(); for (let py = -60; py < 70; py += 17) { ctx.moveTo(-22, py); ctx.lineTo(22, py); } stitch('oklch(52% 0.07 50)', 2, [5, 4]);
-  ctx.lineCap = 'round'; for (const side of [-24, 24]) { ctx.beginPath(); ctx.moveTo(side, -72); ctx.lineTo(side, 72); ctx.strokeStyle = 'oklch(55% 0.09 45)'; ctx.lineWidth = 6; ctx.stroke(); stitch('oklch(45% 0.08 40)', 1.6, [3, 5]); }
-  ctx.restore(); ctx.lineCap = 'butt';
 }
 
 // The far banks, with their street grids: Manhattan to the west and Queens to the east. These and the boats were placed
