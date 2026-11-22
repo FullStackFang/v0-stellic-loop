@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conga · bus and boats</title>
+<style>
+@font-face { font-family: Archivo; src: url(../fonts/Archivo.ttf); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --ink: oklch(21% 0.016 30); --paper: oklch(99.2% 0.004 60); }
+* { box-sizing: border-box; margin: 0; }
+body { background: oklch(96.8% 0.01 70); color: var(--ink); font-family: Archivo, system-ui, sans-serif; padding: 28px 16px 60px; }
+main { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+section { display: grid; gap: 12px; margin-top: 26px; }
+h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.02em; line-height: 1; }
+h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px; background: var(--ink); color: var(--paper); padding: 6px 16px 7px; border-radius: 14px 14px 14px 4px; }
+.lead { font-size: 17px; font-weight: 500; line-height: 1.4; max-width: 72ch; margin-top: 10px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; }
+.bar button { font: 700 15px Archivo, system-ui, sans-serif; color: var(--ink); background: var(--paper); border: 0; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 999px; padding: 8px 16px 9px; cursor: pointer; }
+.bar button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.bar .slow { margin-left: auto; }
+.frame { position: relative; overflow: hidden; border-radius: 22px 22px 22px 6px; box-shadow: 5px 5px 0 oklch(68% 0.14 33); }
+.frame canvas { display: block; width: 100%; aspect-ratio: 16 / 9; background: oklch(80% 0.11 38); }
+@media (max-width: 640px) { .frame canvas { aspect-ratio: 3 / 4; } }
+.note { padding: 10px 16px; border-radius: 16px 16px 16px 4px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); font-size: 15px; font-weight: 500; line-height: 1.45; max-width: 85ch; }
+</style>
+<main>
+  <header>
+    <h1>Conga · bus and boats</h1>
+    <p class="lead">The bus and the boats are side-on toys moving along a slanted road or channel, so today they slide sideways. Each version ties them to where they go, in the same felt-and-cloud family as the floating tram. Pick one of each.</p>
+  </header>
+
+  <section data-part="bus">
+    <h2>1 · The bus</h2>
+    <div class="bar"><button data-v="a">A · Hops along</button><button data-v="b">B · On a cloud</button><button data-v="c">C · Exhaust puffs</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
+
+  <section data-part="boats">
+    <h2>2 · The boats</h2>
+    <div class="bar"><button data-v="a">A · On felt waves</button><button data-v="b">B · Foam trail</button><button data-v="now">Today</button></div>
+    <div class="frame"><canvas></canvas></div>
+    <p class="note"></p>
+  </section>
+</main>
+<script>
+// Relative paths and no imports, so the page also works opened straight from the folder (file:///).
+// The drawing is the game's own (public/conga/index.html): the same felt, stitches, yarn ropes, toys and animal sheet.
+const AT = { tree: [0, 1128, 128, 128], sack: [390, 1128, 111, 128], bus: [838, 638, 256, 256], tram: [1096, 638, 256, 256] };
+const toys = Object.assign(new Image(), { src: '../conga/scenery.v3.webp' });
+const sheet = Object.assign(new Image(), { src: '../conga/animals-96.v1.webp' });
+const ok = img => img.complete && img.naturalWidth;
+const C = { ink: 'oklch(24% 0.035 30)', paper: 'oklch(99.2% 0.004 60)', lamp: '#ffe27a', twine: '#fbf7ec' };
+const FELT = { mat: 'oklch(80% 0.11 38)', grass: 'oklch(70% 0.12 145)', grassThread: 'oklch(90% 0.09 130)', road: 'oklch(72% 0.025 55)',
+  yellow: 'oklch(90% 0.15 95)', thread: 'oklch(94% 0.04 60)', under: 'oklch(35% 0.06 40 / .3)' };
+const BUS = 'oklch(72% 0.12 235)', TRAM = 'oklch(58% 0.2 27)';
+const PURPLE = 'oklch(60% 0.2 305)', TEAL = 'oklch(70% 0.13 195)', GOLD = 'oklch(80% 0.15 80)';
+// ---------- shared drawing, from the game ----------
+const seeded = seed => () => { seed = seed + 0x6d2b79f5 | 0; let v = Math.imul(seed ^ seed >>> 15, 1 | seed); v = v + Math.imul(v ^ v >>> 7, 61 | v) ^ v; return ((v ^ v >>> 14) >>> 0) / 4294967296; };
+const fibreTile = (() => { const c = document.createElement('canvas'); c.width = c.height = 160; const pen = c.getContext('2d'), r = seeded(11); pen.lineWidth = 0.8;
+  for (let i = 0; i < 900; i++) { const x = r() * 160, y = r() * 160, a = r() * Math.PI, l = 3 + r() * 7; pen.strokeStyle = r() < 0.5 ? 'rgba(255,255,255,.11)' : 'rgba(60,30,20,.08)'; pen.beginPath(); pen.moveTo(x, y); pen.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); pen.stroke(); }
+  return c; })();
+let ctx, W, H;
+const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
+const outCubic = u => 1 - (1 - u) ** 3, inQuad = u => u * u;
+function stitch(colour, width = 2.6, dash = [9, 7], path = null) {
+  const go = () => path ? ctx.stroke(path) : ctx.stroke();
+  ctx.save(); ctx.setLineDash(dash); ctx.lineCap = 'round'; ctx.lineWidth = width;
+  ctx.strokeStyle = 'rgba(40,25,20,.28)'; ctx.translate(0, 1.2); go(); ctx.translate(0, -1.2);
+  ctx.strokeStyle = colour; go(); ctx.restore();
+}
+function feltPiece(fill, drop = 3) { ctx.save(); ctx.translate(0, drop); ctx.fillStyle = FELT.under; ctx.fill(); ctx.restore(); ctx.fillStyle = fill; ctx.fill(); }
+function tone(colour, { light = 0, chroma = 1, alpha = 1 } = {}) {
+  const got = /oklch\(\s*([\d.]+)%?\s+([\d.]+)\s+([\d.]+)/.exec(colour);
+  return `oklch(${Math.min(97, Math.max(15, Number(got[1]) + light))}% ${(Number(got[2]) * chroma).toFixed(3)} ${got[3]} / ${alpha})`;
+}
+function mat() { ctx.fillStyle = FELT.mat; ctx.fillRect(0, 0, W, H); }
+function grain() { const p = ctx.createPattern(fibreTile, 'repeat'); p.setTransform(new DOMMatrix().scale(0.55)); ctx.fillStyle = p; ctx.fillRect(0, 0, W, H); }
+function lawn(x, y, w, h) { ctx.beginPath(); ctx.roundRect(x, y, w, h, 34); feltPiece(FELT.grass); ctx.beginPath(); ctx.roundRect(x + 12, y + 12, w - 24, h - 24, 24); stitch(FELT.grassThread); }
+function sprite(face, x, y, size, tilt = 0, alpha = 1) {
+  if (!ok(sheet) || size <= 0) return;
+  const sx = (face - 1) % 7 * 96, sy = Math.floor((face - 1) / 7) * 96;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(tilt); ctx.drawImage(sheet, sx, sy, 96, 96, -size / 2, -size / 2, size, size); ctx.restore();
+}
+function toy(name, x, y, width, left = false) {
+  if (!ok(toys)) return 0;
+  const [sx, sy, sw, sh] = AT[name], height = width * sh / sw;
+  ctx.save(); ctx.translate(x, y); if (left) ctx.scale(-1, 1); ctx.drawImage(toys, sx, sy, sw, sh, -width / 2, -height, width, height); ctx.restore();
+  return height;
+}
+function foot(x, y, half, alpha = 0.2) { ctx.beginPath(); ctx.ellipse(x, y - half * 0.12, half, half * 0.3, 0, 0, 7); ctx.fillStyle = `oklch(24% 0.035 30 / ${alpha})`; ctx.fill(); }
+function pill(text, x, y, fill, ink, size = 15) {
+  ctx.font = `700 ${size}px Archivo, system-ui, sans-serif`;
+  const width = ctx.measureText(text).width + size * 1.4, high = size * 1.7;
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x - width / 2, y - high / 2, width, high, high / 2); ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+  return width;
+}
+function groundName(text, x, y, size) {
+  ctx.font = `900 ${size}px Archivo, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'oklch(100% 0 0 / .2)'; ctx.fillText(text, x, y + size * 0.05);
+  ctx.fillStyle = 'oklch(24% 0.05 30 / .16)'; ctx.fillText(text, x, y);
+}
+/** The yarn a line holds: one smooth curve through the animals. */
+function rope(points, colour, width = 13, low = 13) {
+  if (points.length < 2) return;
+  ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y + low);
+  for (let i = 1; i < points.length - 1; i++) ctx.quadraticCurveTo(points[i].x, points[i].y + low, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2 + low);
+  ctx.lineTo(points.at(-1).x, points.at(-1).y + low);
+  yarn(colour, width);
+}
+/** Strokes the current path as twisted yarn on the felt. */
+function yarn(colour, width = 13) {
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = 'oklch(35% 0.08 35 / .25)'; ctx.lineWidth = width + 2; ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.stroke();
+  ctx.lineCap = 'butt'; ctx.setLineDash([3, 5]); ctx.globalAlpha = 0.55; ctx.strokeStyle = tone(colour, { light: -14 }); ctx.stroke();
+  ctx.lineDashOffset = 4; ctx.globalAlpha = 0.5; ctx.strokeStyle = tone(colour, { light: 20, chroma: 0.6 }); ctx.lineWidth = width * 0.54; ctx.stroke();
+  ctx.setLineDash([]); ctx.lineDashOffset = 0; ctx.globalAlpha = 1; ctx.lineCap = 'round';
+}
+function puff(x, y, age, big = 1) {
+  if (age < 0 || age > 1) return;
+  ctx.beginPath(); ctx.arc(x, y - age * 14, (7 + age * 16) * big, 0, 7); ctx.fillStyle = `oklch(96% 0.008 60 / ${0.75 * (1 - age)})`; ctx.fill();
+}
+function ring(x, y, age, colour) {
+  if (age < 0 || age > 1) return;
+  ctx.strokeStyle = colour; ctx.globalAlpha = 1 - age; ctx.lineWidth = 10 * (1 - age) + 2;
+  ctx.beginPath(); ctx.arc(x, y, 30 + age * 130, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+}
+
+// ---------- 1 · roads ----------
+// A straight road across the frame, like the map's (two ends and a width). `pt` finds a spot `s` along it, `off` across.
+const ROAD_FILL = ['oklch(72% 0.025 55)', 'oklch(76.5% 0.022 62)', 'oklch(68.5% 0.028 50)'];
+function road(r, look) {
+  const along = (draw, drop = 0) => { ctx.save(); ctx.translate(r.cx, r.cy + drop); ctx.rotate(r.a); ctx.beginPath(); draw(); ctx.restore(); };
+  const band = (w, fill, drop = 3) => { ctx.save(); ctx.translate(r.cx, r.cy); ctx.rotate(r.a); ctx.beginPath(); ctx.rect(-r.L / 2, -w / 2, r.L, w); ctx.restore(); feltPiece(fill, drop); };
+  const line = (off, ...how) => along(() => { ctx.moveTo(-r.L / 2, off); ctx.lineTo(r.L / 2, off); stitch(...how); });
+  if (look === 'now') { band(r.w ?? 36, FELT.road); line(0, FELT.yellow, 4, [16, 14]); return; }
+  if (look === 'a') {
+    band(130, FELT.road); for (const side of [-1, 1]) line(side * 55, FELT.thread, 2.6, [10, 8]);
+    along(() => { for (let x = -r.L / 2; x < r.L / 2; x += 74) { ctx.beginPath(); ctx.roundRect(x, -5.5, 42, 11, 5.5); feltPiece(FELT.yellow, 2); ctx.beginPath(); ctx.roundRect(x + 4, -2, 34, 4, 2); stitch('oklch(74% 0.13 85)', 1.4, [3, 3]); } });
+  }
+  if (look === 'b') {
+    band(196, 'oklch(87% 0.03 75)', 4); for (const side of [-1, 1]) line(side * 89, FELT.thread, 2.6, [10, 8]);
+    band(128, FELT.road, 2); for (const side of [-1, 1]) line(side * 56, 'oklch(96% 0.01 80)', 2.2, [8, 7]);
+    line(0, FELT.yellow, 5, [20, 14]);
+    along(() => { for (const y of [-48, -24, 0, 24, 48]) { ctx.beginPath(); ctx.roundRect(r.zebra - 36, y - 7, 72, 14, 5); feltPiece('oklch(96% 0.012 80)', 2); } });
+  }
+  if (look === 'c') {
+    along(() => { let n = 0; for (let x = -r.L / 2; x < r.L / 2; x += 150, n++) { ctx.beginPath(); ctx.roundRect(x + 2, -65, 146, 130, 10); feltPiece(ROAD_FILL[n % 3]); } });
+    for (const side of [-1, 1]) line(side * 54, FELT.thread, 2.6, [10, 8]);
+    along(() => {
+      ctx.lineCap = 'round';
+      const cross = (x, y, k, colour, width) => { ctx.beginPath(); ctx.moveTo(x - k, y - k); ctx.lineTo(x + k, y + k); ctx.moveTo(x + k, y - k); ctx.lineTo(x - k, y + k); ctx.strokeStyle = 'rgba(40,25,20,.25)'; ctx.lineWidth = width; ctx.save(); ctx.translate(0, 1.2); ctx.stroke(); ctx.restore(); ctx.strokeStyle = colour; ctx.stroke(); };
+      for (let x = -r.L / 2 + 150; x < r.L / 2; x += 150) for (let y = -52; y <= 52; y += 17) cross(x, y, 4, FELT.thread, 2);
+      for (let x = -r.L / 2 + 75; x < r.L / 2; x += 50) cross(x, 0, 6, FELT.yellow, 3.4);
+    });
+  }
+}
+const pt = (r, s, off = 0) => ({ x: r.cx + Math.cos(r.a) * s - Math.sin(r.a) * off, y: r.cy + Math.sin(r.a) * s + Math.cos(r.a) * off });
+
+// ---------- the bus and the boats ----------
+// Both are side-on toy pictures moving along a slanted road or channel, so today they slide sideways across it.
+const SAY = {
+  bus: {
+    a: 'A · Hops along. The bus stays on the road and hops along it like a toy being pushed by hand: a little bounce with each step, and a soft felt puff where it lands. The hops make the slant read as "going along the road" instead of sliding sideways.',
+    b: 'B · On a cloud, like the tram. The bus floats just above the road on a small bank of felt clouds, bobbing gently, its shadow on the road under it. Bus and tram then look like one family.',
+    c: 'C · Exhaust puffs. The bus drives smoothly along the road and leaves small felt clouds from its back end, which sit on the road behind it, drift up and fade. The trail of puffs runs along the road, so you see the bus following it.',
+    now: 'Today: the bus slides along the slanted road side-on, with nothing tying it to the road but its shadow.',
+  },
+  boats: {
+    a: 'A · On felt waves. Each boat bobs and rocks a little on two scalloped felt waves under its hull, in a lighter blue, that ride along with it. The straight wake lines are gone.',
+    b: 'B · Foam trail. Each boat bobs gently and leaves small white felt foam puffs on the water behind it, along the channel, which spread and fade, like the bus in C.',
+    now: 'Today: white wake lines in a V along the channel, and the boat upright on top of them, sliding.',
+  },
+};
+Object.assign(AT, { bus: [1482, 638, 256, 256], ferry: [966, 638, 256, 256], tug: [1224, 638, 256, 256], tree: [644, 1166, 128, 128] });
+toys.src = '../conga/scenery.v4.webp';
+const WATER = { deep: 'oklch(64% 0.1 228)', shallow: 'oklch(75% 0.085 215)', thread: 'oklch(90% 0.04 210)', crest: 'oklch(82% 0.06 215)' };
+function cloud(x, y, w, alpha = 1, fill = 'oklch(98% 0.008 80)', shade = 'oklch(90% 0.02 70)') {
+  ctx.save(); ctx.globalAlpha = alpha;
+  const h = w * 0.42, bumps = [[-0.3, 0.05, 0.26], [-0.02, -0.12, 0.34], [0.28, 0.02, 0.25]];
+  const path = () => { ctx.beginPath(); for (const [bx, by, r] of bumps) { ctx.moveTo(x + bx * w + r * w, y + by * w); ctx.arc(x + bx * w, y + by * w, r * w, 0, 7); } ctx.roundRect(x - w * 0.5, y - h * 0.15, w, h * 0.55, h * 0.27); };
+  ctx.save(); ctx.translate(0, 3); path(); ctx.fillStyle = shade; ctx.fill(); ctx.restore();
+  path(); ctx.fillStyle = fill; ctx.fill();
+  ctx.restore();
+}
+/** Along a slanted strip: there and back, eased at the ends. */
+function shuttle(t, from, to, leg = 4.5, rest = 1.2) {
+  const cycle = 2 * (leg + rest), c = t % cycle, out = c < leg + rest, k = out ? Math.min(1, c / leg) : Math.min(1, (c - leg - rest) / leg);
+  const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2, a = out ? from : to, b = out ? to : from;
+  return { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e, left: b.x < a.x, moving: k > 0 && k < 1, d: k * Math.hypot(b.x - a.x, b.y - a.y) };
+}
+const puffs = { bus: [], boats: [] };
+function trailOf(list, t, every, add, life, draw) {
+  if (add && (list.at(-1)?.t ?? -1) < t - every) list.push({ ...add, t });
+  for (let i = list.length - 1; i >= 0; i--) { const p = list[i], age = (t - p.t) / life; if (age > 1 || age < 0) { list.splice(i, 1); continue; } draw(p, age); }
+}
+function busScene(look, t) {
+  mat();
+  lawn(W * 0.04, H * 0.06, W * 0.24, H * 0.3); lawn(W * 0.7, H * 0.62, W * 0.26, H * 0.32);
+  const r = { cx: W * 0.5, cy: H * 0.52, a: -0.95, L: Math.hypot(W, H) * 1.4 };
+  road(r, 'a');
+  grain();
+  const from = pt(r, -H * 0.34, 0), to = pt(r, H * 0.42, 0), s = shuttle(t, from, to);
+  let { x, y } = s, lift = 0, squash = 0;
+  if (look === 'a' && s.moving) { const ph = (s.d / 46) % 1; lift = Math.sin(ph * Math.PI) * 14; squash = ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0; if (ph < 0.06 && (puffs.bus.at(-1)?.t ?? -1) < t - 0.15) puffs.bus.push({ x, y: y + 34, t, s: 1 }); }
+  if (look === 'a') trailOf(puffs.bus, t, 99, null, 0.6, (p, age) => puff(p.x, p.y, age, 1.2));
+  if (look === 'c') { const back = s.left ? 1 : -1; trailOf(puffs.bus, t, 0.12, s.moving ? { x: x + back * 70, y: y + 18, s: 22 + Math.random() * 12 } : null, 1.4, (p, age) => cloud(p.x, p.y - age * 16, p.s * (0.7 + age * 0.6), (1 - age) * 0.95)); }
+  if (look === 'b') {
+    const bob = Math.sin(t * 2.2) * 5, top = y - 46 + bob;
+    ctx.globalAlpha = 0.18; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.ellipse(x, y + 34, 70, 18, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    cloud(x - 56, top + 40 + Math.sin(t * 2.2 + 1) * 3, 76); cloud(x + 58, top + 42 + Math.sin(t * 2.2 + 2) * 3, 70);
+    toy('bus', x, top + 40, 160, s.left);
+    cloud(x, top + 50 + Math.sin(t * 2.2 + 0.5) * 2, 96);
+  } else {
+    foot(x, y + 34, 66 * (1 - lift / 60), 0.22);
+    ctx.save(); ctx.translate(x, y + 40 - lift); ctx.scale(1 + 0.08 * squash, 1 - 0.1 * squash); toy('bus', 0, 0, 160, s.left); ctx.restore();
+  }
+  for (const [tx, ty] of [[W * 0.1, H * 0.16], [W * 0.22, H * 0.3], [W * 0.88, H * 0.74]]) { foot(tx, ty, 26, 0.2); toy('tree', tx, ty + 4, 60); }
+}
+/** A scalloped felt wave crest, `n` bumps wide. */
+function crest(x, y, w, n, fill) {
+  ctx.beginPath(); const r = w / n / 2; ctx.moveTo(x - w / 2, y + r * 0.6);
+  for (let i = 0; i < n; i++) ctx.arc(x - w / 2 + r + i * 2 * r, y, r, Math.PI, 0);
+  ctx.lineTo(x + w / 2, y + r * 0.6); ctx.closePath();
+  ctx.save(); ctx.translate(0, 2); ctx.fillStyle = 'oklch(45% 0.08 230 / .35)'; ctx.fill(); ctx.restore(); ctx.fillStyle = fill; ctx.fill();
+}
+function boatsScene(look, t) {
+  mat();
+  // The channel: a wide strip of felt water across the frame, its shallows edged in a lighter blue with a running stitch.
+  const r = { cx: W * 0.5, cy: H * 0.5, a: -0.55, L: Math.hypot(W, H) * 1.4 };
+  const band = (w, fill) => { ctx.save(); ctx.translate(r.cx, r.cy); ctx.rotate(r.a); ctx.beginPath(); ctx.rect(-r.L / 2, -w / 2, r.L, w); ctx.restore(); ctx.fillStyle = fill; ctx.fill(); };
+  band(H * 0.95, WATER.shallow); band(H * 0.78, WATER.deep);
+  for (const side of [-1, 1]) { ctx.save(); ctx.translate(r.cx, r.cy); ctx.rotate(r.a); ctx.beginPath(); ctx.moveTo(-r.L / 2, side * H * 0.43); ctx.lineTo(r.L / 2, side * H * 0.43); ctx.restore(); stitch(WATER.thread, 2.4, [9, 7]); }
+  grain();
+  const lanes = [{ name: 'ferry', off: -H * 0.15, speed: 1, leg: 6 }, { name: 'tug', off: H * 0.1, speed: -1, leg: 7.5 }];
+  for (const [n, lane] of lanes.entries()) {
+    const a = pt(r, -W * 0.5, lane.off), b = pt(r, W * 0.5, lane.off), s = shuttle(t + n * 3, lane.speed > 0 ? a : b, lane.speed > 0 ? b : a, lane.leg, 0.6);
+    const { x, y } = s, ux = Math.cos(r.a) * (s.left ? -1 : 1), uy = Math.sin(r.a) * (s.left ? -1 : 1), list = puffs.boats[n] ??= [];
+    if (look === 'now') {
+      ctx.save(); ctx.translate(x, y + 20); ctx.rotate(Math.atan2(uy, ux) + Math.PI / 2);
+      ctx.strokeStyle = C.paper; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.globalAlpha = 0.75; ctx.beginPath();
+      ctx.moveTo(-14, 20); ctx.quadraticCurveTo(-40, 60, -80, 110); ctx.moveTo(14, 20); ctx.quadraticCurveTo(40, 60, 80, 110); ctx.stroke(); ctx.globalAlpha = 1; ctx.restore();
+      foot(x, y + 20, 40, 0.16); toy(lane.name, x, y + 26, 100, s.left); continue;
+    }
+    const bob = Math.sin(t * 2.4 + n) * 3, rock = Math.sin(t * 1.7 + n * 2) * 0.05;
+    if (look === 'b') trailOf(list, t, 0.14, s.moving ? { x: x - ux * 56, y: y + 18 - uy * 56, s: 18 + Math.random() * 10 } : null, 1.6,
+      (p, age) => cloud(p.x, p.y, p.s * (0.8 + age * 0.9), (1 - age) * 0.9, 'oklch(97% 0.012 215)', 'oklch(80% 0.05 220)'));
+    if (look === 'a') crest(x - 6, y + 6 + Math.sin(t * 2.4 + n + 1) * 2, 120, 5, WATER.crest);
+    ctx.save(); ctx.translate(x, y + 26 + bob); ctx.rotate(rock); toy(lane.name, 0, 0, 100, s.left); ctx.restore();
+    if (look === 'a') crest(x + 6, y + 20 + Math.sin(t * 2.4 + n + 2.5) * 2, 128, 6, 'oklch(88% 0.045 212)');
+  }
+}
+
+// ---------- the page ----------
+const SCENES = { bus: busScene, boats: boatsScene };
+const parts = [...document.querySelectorAll('section[data-part]')].map(section => {
+  const part = { name: section.dataset.part, canvas: section.querySelector('canvas'), note: section.querySelector('.note'), look: 'a', clock: 0, slow: false };
+  const pick = look => { part.look = look; part.clock = 0; section.querySelectorAll('.bar button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === look))); part.note.textContent = SAY[part.name][look]; };
+  section.querySelectorAll('.bar button[data-v]').forEach(b => b.onclick = () => pick(b.dataset.v));
+  const slow = section.querySelector('.slow'); if (slow) slow.onclick = () => { part.slow = !part.slow; slow.setAttribute('aria-pressed', String(part.slow)); };
+  pick('a');
+  new IntersectionObserver(([e]) => part.seen = e.isIntersecting).observe(part.canvas);
+  return part;
+});
+function fit(part) {
+  const box = part.canvas.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  part.canvas.width = box.width * dpr; part.canvas.height = box.height * dpr;
+  part.w = box.width < 640 ? 600 : 920; part.k = box.width / part.w * dpr; part.h = box.height / box.width * part.w;
+}
+parts.forEach(part => new ResizeObserver(() => fit(part)).observe(part.canvas));
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  for (const part of parts) {
+    if (!part.seen || !part.canvas.width) continue;
+    part.clock += dt * (part.slow ? 0.3 : 1);
+    ctx = part.canvas.getContext('2d'); W = part.w; H = part.h;
+    ctx.setTransform(part.k, 0, 0, part.k, 0, 0);
+    SCENES[part.name](part.look, part.clock);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
