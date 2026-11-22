@@ -860,6 +860,10 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs .cs-lvl .cs-pets:has(.cs-pets-grid) { flex: 1 1 auto; min-height: 0; max-height: none; display: flex; flex-direction: column; overflow: hidden; }
 .cs-pets:has(.cs-pets-grid) > .seats-pics { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none; margin: 12px -4px 0; padding: 4px 4px 24px; -webkit-mask: linear-gradient(#000 calc(100% - 28px), #0000); mask: linear-gradient(#000 calc(100% - 28px), #0000); }
 .cs-pets:has(.cs-pets-grid) > .seats-pics::-webkit-scrollbar { display: none; }
+/* "Start from another pet" (components/campus/own-face.tsx): its animals sit inside the dark plate, not in .seats-pics, so the rule
+   above clipped them on a phone. The whole plate scrolls instead, no bar drawn. */
+.cs .cs-lvl .cs-own.cs-pets:has(.cs-pets-grid) { display: block; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.cs .cs-lvl .cs-own.cs-pets:has(.cs-pets-grid)::-webkit-scrollbar { display: none; }
 /* Every pane of the account card stops above the window's bottom edge too (public/demo/mockups-account-card-height.html): the bar it hangs
    from stays put while the page scrolls, so a long card (levels, groups, Admin, Sign out) was cut off. The top stays; the rest scrolls, no bar, fading at its foot. */
 .cs-lvl { display: flex; flex-direction: column; max-height: calc(100dvh - 120px); } .cs-lvl > .cs-lvl-top { flex: none; }
