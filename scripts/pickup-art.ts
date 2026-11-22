@@ -45,6 +45,8 @@ const PICKUPS = {
   // Water that stands on the ground like a building: a small pond model, nothing moving on it.
   pond: 'a small round pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, a clump of reeds with brown cattails at one side, and a little white duck, seen from the front and a little above',
   pondlong: 'a long oval pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, reeds with brown cattails at one end and a small wooden jetty at the other, seen from the front and a little above',
+  // Where a car lets its riders off: one roped-off queue that stands on every stop's felt platform.
+  queue: 'a wide oval roped-off queue area, like at a cinema: ten short round wooden posts with round brass knob tops standing in an oval, joined by a thick soft cream plush cord hanging in gentle loops between them, the middle of the oval empty, seen from the front and a little above',
   // What a scattered line leaves on the ground; the game draws its count on it.
   sack: 'a plush drawstring sack, cream coloured and bulging full, tied at the top with a red cord, a small round tag with a paw print hanging from the cord',
   medal: 'a round gold medal with a star on its face, hanging from a short red and white ribbon',

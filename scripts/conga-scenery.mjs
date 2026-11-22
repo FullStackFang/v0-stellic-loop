@@ -4,14 +4,15 @@
 import sharp from 'sharp';
 import { writeFileSync } from 'node:fs';
 
-const VERSION = 3;
+const VERSION = 4;
 // Buildings are drawn 150 units across, which is about 360 pixels on a sharp laptop screen, so they are kept bigger than the small things.
 const BIG = ['stonehall', 'chapel', 'glasshall', 'brickhall', 'armory', 'rink', 'dome', 'museum', 'castle', 'dorm', 'cafe', 'bloomberg', 'tata', 'tower', 'station', 'subway', 'ruin', 'farmhouse', 'stonechapel', 'octagon', 'clocktower', 'lighthouse', 'pond'];
 const SMALL = ['tree', 'blossom', 'cab', 'sack'];
 const MIDDLE = ['ferry', 'tug', 'bus', 'tram']; // drawn 100 to 160 across
+const HUGE = ['queue']; // the stop's roped-off queue, drawn about 300 across
 const WIDE = 2048, GAP = 2;
 
-const pieces = await Promise.all([...BIG.map(name => [name, 320]), ...MIDDLE.map(name => [name, 256]), ...SMALL.map(name => [name, 128])].map(async ([name, most]) => {
+const pieces = await Promise.all([...HUGE.map(name => [name, 512]), ...BIG.map(name => [name, 320]), ...MIDDLE.map(name => [name, 256]), ...SMALL.map(name => [name, 128])].map(async ([name, most]) => {
   const { data, info } = await sharp(`public/demo/pickup-art/${name}.png`).resize(most, most, { fit: 'inside' }).png().toBuffer({ resolveWithObject: true });
   return { name, data, w: info.width, h: info.height };
 }));
