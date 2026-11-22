@@ -418,7 +418,9 @@ addEventListener('resize', fit); fit();
 const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [], winks = [];
 let spilt = null; // the line that just burst into sacks, so its scatter skips the ring
 const SIZE = { stray: 40, tail: 42, head: 58 };
-const SACK = 70; // how wide a spilled line's sack is drawn
+// How wide a spilled line's sack is drawn: bigger the more it holds (10 → 55, 20 → 66, 40 → 81), by the square root so
+// a huge sack doesn't swamp the view. It shrinks as animals wander out of it.
+const sackWidth = count => Math.min(100, 30 + 8 * Math.sqrt(count));
 const VIEW = 920 * 575; // square units of ground on screen: 920 across on a laptop, closer in on a phone held upright
 const CLOSE = 1.25; // the least a unit is drawn, in pixels: on a phone a stray stays about 50 pixels across
 const closest = () => Math.max(CLOSE, Math.sqrt(wide * tall / VIEW)); // pixels to a unit at the closest the view comes: the same amount of ground on every screen, but never so far out that an animal is small on a phone
@@ -1156,8 +1158,9 @@ function draw(t, dt) {
     const fall = Math.max(0, Math.min(1, (u - start) / 0.55)), landT = mob.ready - mob.fly * (1 - start - 0.55), b = (world.t - landT) / 0.22;
     const squash = b > 0 && b < 1 ? Math.sin(b * Math.PI) : 0;
     if (b >= 0 && !mob.landed) { mob.landed = true; smoke.push({ x, y: y + 18, t, big: 1.4 }, { x: x - 20, y: y + 22, t, big: 1 }, { x: x + 20, y: y + 22, t, big: 1 }); }
-    if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width: SACK, lift: 420 * (1 - fall * fall), shade: 0.3 + 0.7 * Math.min(1, u / (start + 0.55)), hidden: u < start, sx: 1 + 0.14 * squash, sy: 1 - 0.2 * squash });
-    if (b >= 0) mobTags.push({ x, y, text: `${mob.faces.length}`, c: colour(mob.from) });
+    const width = sackWidth(mob.faces.length);
+    if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width, lift: 420 * (1 - fall * fall), shade: 0.3 + 0.7 * Math.min(1, u / (start + 0.55)), hidden: u < start, sx: 1 + 0.14 * squash, sy: 1 - 0.2 * squash });
+    if (b >= 0) mobTags.push({ x, y, w: width, text: `${mob.faces.length}`, c: colour(mob.from) });
   }
   for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
   // The toys that stand on the ground go in among the animals, each by where its foot is.
@@ -1204,7 +1207,7 @@ function draw(t, dt) {
   // count alone marks where the sack lies.
   for (const tag of mobTags) {
     const ink = Number(/([\d.]+)%/.exec(tag.c)?.[1] ?? 60) > 66 ? C.ink : C.paper;
-    pill(tag.text, tag.x + SACK * 0.4, tag.y + 22 - SACK * 1.05, tag.c, ink, 17);
+    pill(tag.text, tag.x + tag.w * 0.4, tag.y + 22 - tag.w * 1.05, tag.c, ink, 17);
   }
   for (const line of heads) {
     if (!seen(line.x, line.y)) continue;
