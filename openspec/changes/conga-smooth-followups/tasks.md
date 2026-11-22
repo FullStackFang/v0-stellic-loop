@@ -39,6 +39,6 @@
 
 ## 7. Close
 
-- [ ] 7.1 Run `app/conga/sim.test.ts` and `app/conga/route.test.ts`
-- [ ] 7.2 Re-run both scripts on both grounds and set the figures beside the baseline from 1.2
-- [ ] 7.3 Commit by path on local main
+- [x] 7.1 Run `app/conga/sim.test.ts` and `app/conga/route.test.ts` (15 passed)
+- [x] 7.2 Re-run both scripts on both grounds and set the figures beside the baseline from 1.2 (frozen scene at 2880×1800: Roosevelt Island 14.3 → 12.1 ms, Cornell 10.0 → 6.1 ms; real play within noise, the machine at 70-100% CPU from other sessions both times)
+- [x] 7.3 Commit by path on local main (the page's code went into f7247d0 with another session's spill work; this change's files committed by path)
