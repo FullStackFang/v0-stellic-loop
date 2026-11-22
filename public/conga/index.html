@@ -1369,8 +1369,8 @@ function draw(t, dt) {
   // Before a game the view stays with one line, the longest when it was chosen, and moves on only when that line is scattered.
   if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
   const watch = held ?? (me && (!me.dead || $('start').hidden) ? me : followed);
-  const size = watch.dead ? 0 : watch.tail.length, fitTo = closest();
-  let zoom = Math.max(fitTo * 0.75, fitTo / (1 + size * 0.007));
+  // The view stays at one zoom however long the line grows (the founder, 2026-11-22: it used to pull back with each animal).
+  let zoom = closest();
   // With the megaphone the view pulls back until its whole reach fits on the screen.
   if (!watch.dead && watch.powers?.megaphone > 0) zoom = Math.min(zoom, Math.min(wide, tall) / 2 / (LOUD + 60));
   const slide = 1 - Math.exp(-dt * (watch === me ? 9 : 2.5));
