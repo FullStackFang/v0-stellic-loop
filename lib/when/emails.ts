@@ -1,6 +1,6 @@
 import type { MessageKind } from './notify';
 import type { Person, PollView } from './polls';
-import { pollUrl, whenText } from './send';
+import { dayText, meetingSpan, pollUrl, whenText } from './send';
 import { slotLabel } from './slots';
 
 // The words of every email Loopd When sends (public/demo/mockups-when.html, screens 4 and 6). Plain text and HTML say the same.
@@ -29,13 +29,13 @@ const text = (p: Parts, stopUrl: string) => [p.headline, '', ...p.lines, '', `${
 const names = (people: Person[]) => people.map(each => each.name).join(', ');
 /** One email, for one person, about one poll. */
 export function renderWhenEmail(kind: MessageKind, d: { view: PollView; to: Person; stopUrl: string }): WhenEmail {
-  const { view } = d, zone = view.frame.timezone, url = pollUrl(view.id), by = whenText(view.deadline, zone), asked = view.organizer.name;
+  const { view } = d, zone = view.frame.timezone, url = pollUrl(view.id), by = dayText(view.deadline, zone), asked = view.organizer.name;
   const top = view.best[0], topLine = top ? `${whenText(top.at, zone)} works for ${top.people.length} of ${view.size}.` : 'Nobody has picked a time yet.';
   const parts = ((): Parts => {
     if (kind === 'invite' && view.chosen) {
-      const label = slotLabel(view.chosen.at, zone), isIn = view.chosen.in.some(each => each.personId === d.to.personId), answered = view.chosen.in.length + view.chosen.out.length;
-      return { subject: `${view.title} is on: ${label.dow} ${label.date} ${label.month}, ${label.time}`, fromName: `${asked} via Loopd`, tile: [label.dow, `${label.date} ${label.month}`],
-        headline: `${label.dowLong} at ${label.time}. It's on.`,
+      const label = slotLabel(view.chosen.at, zone), span = meetingSpan(view.chosen, zone), isIn = view.chosen.in.some(each => each.personId === d.to.personId), answered = view.chosen.in.length + view.chosen.out.length;
+      return { subject: `${view.title} is on: ${label.dow} ${label.date} ${label.month}, ${span}`, fromName: `${asked} via Loopd`, tile: [label.dow, `${label.date} ${label.month}`],
+        headline: `${label.dowLong}, ${span}. It's on.`,
         lines: [view.title, ...(view.chosen.note ? [`${asked}: ${view.chosen.note}`] : []), `${view.chosen.in.length} of ${Math.max(view.size, answered)} can make it${view.chosen.in.length ? `: ${names(view.chosen.in)}` : ''}.`,
           ...(isIn || d.to.personId === view.organizer.personId ? [] : ['You said you can\'t make this one. If that changes, update your answer on the page.'])],
         button: ['Add to my calendar', `${url}/calendar.ics`], foot: `You get this because you answered ${asked}'s poll.` };

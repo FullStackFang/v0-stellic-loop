@@ -99,10 +99,10 @@ it('sends each invite from the organizer by name, with the calendar file for tha
   expect(await drainWhen(t.db, c, { now: NOW, pollId: id })).toMatchObject({ sent: 3, failed: 0 });
   expect(mails.map(mail => mail.to).sort()).toEqual(['dana@cornell.edu', 'josh@cornell.edu', 'maya@cornell.edu']);
   const toJosh = mails.find(mail => mail.to === 'josh@cornell.edu')!, toDana = mails.find(mail => mail.to === 'dana@cornell.edu')!;
-  expect(toJosh).toMatchObject({ from: '"Maya via Loopd" <when@loopd.test>', replyTo: 'maya@cornell.edu', subject: 'Problem set night is on: Tue 1 Dec, 7 pm' });
+  expect(toJosh).toMatchObject({ from: '"Maya via Loopd" <when@loopd.test>', replyTo: 'maya@cornell.edu', subject: 'Problem set night is on: Tue 1 Dec, 7 to 8 pm' });
   expect(toJosh.calendar!.content.replace(/\r\n /g, '')).toContain('mailto:josh@cornell.edu');
   expect(toJosh.calendar!.content).toContain('DTSTART:20261202T000000Z');
-  expect(toJosh.text).toContain("Tuesday at 7 pm. It's on.");
+  expect(toJosh.text).toContain("Tuesday, 7 to 8 pm. It's on.");
   expect(toJosh.text).toContain('Maya: Olin Library, room 301.');
   expect(toJosh.text).toContain(`Add to my calendar: https://loopd.test/when/${id}/calendar.ics`);
   expect(toJosh.text).not.toContain("can't make");

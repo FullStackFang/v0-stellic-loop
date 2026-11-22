@@ -48,7 +48,7 @@ export async function seriesView(db: Db, who: Who, pollId: string): Promise<Seri
   const named = new Map(people.map(each => [each.personId, each]));
   const { rows } = await db.query<{ id: string; at: string; size: number; in: string[] }>(`select w.id,${iso('w.chosen_slot')} as at,
     greatest(w.expected_size,(select count(*)::int from when_answer a where a.poll_id=w.id and not a.draft)) as size,
-    array(select a.person_id::text from when_answer a where a.poll_id=w.id and not a.draft and w.chosen_slot=any(a.slots) order by a.updated_at,a.person_id) as "in"
+    array(select a.person_id::text from when_answer a where a.poll_id=w.id and not a.draft and exists(select 1 from unnest(a.slots) s where s<=w.chosen_slot and w.chosen_slot<s+interval '1 hour') order by a.updated_at,a.person_id) as "in"
     from when_poll w where w.series_id=$1 and w.status='sent' order by w.chosen_slot desc limit 6`, [poll.seriesId]);
   const mine = (await lastAnswers(db, poll.seriesId)).find(each => each.personId === who.personId);
   return { poll, people, usual: usualLabels(mine?.slots ?? [], poll.frame.timezone), next: { ...poll.frame, startDate: addDays(poll.frame.startDate, 7), endDate: addDays(poll.frame.endDate, 7) },
@@ -75,8 +75,8 @@ export async function repeatPoll(db: Db, who: Who, input: unknown, now = new Dat
     if (Date.parse(deadline) <= now.getTime()) deadline = slots.length ? new Date(Date.parse(slots[0].at) - 24 * HOUR).toISOString() : deadline;
     if (Date.parse(deadline) <= now.getTime()) throw new WhenError('invalid');
     const id = randomBytes(9).toString('base64url');
-    await q.query(`insert into when_poll(id,series_id,previous_poll_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-      [id, poll.seriesId, poll.id, who.personId, poll.title, frame.startDate, frame.endDate, frame.hourStart, frame.hourEnd, frame.timezone, Math.max(2, people.length), deadline, poll.threshold, now.toISOString()]);
+    await q.query(`insert into when_poll(id,series_id,previous_poll_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at,weekends) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+      [id, poll.seriesId, poll.id, who.personId, poll.title, frame.startDate, frame.endDate, frame.hourStart, frame.hourEnd, frame.timezone, Math.max(2, people.length), deadline, poll.threshold, now.toISOString(), poll.weekends]);
     for (const answer of await lastAnswers(q, poll.seriesId)) {
       const usual = new Set(answer.slots.map(at => usualKey(at, poll.timezone))), carried = slots.filter(slot => usual.has(usualKey(slot.at, poll.timezone))).map(slot => slot.at);
       if (carried.length) await q.query('insert into when_answer(poll_id,person_id,slots,draft,updated_at) values($1,$2,$3::timestamptz[],true,$4)', [id, answer.personId, carried, now.toISOString()]);

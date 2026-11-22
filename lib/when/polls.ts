@@ -27,7 +27,8 @@ export type PollView = {
   /** The viewer's own answer. A draft is last week's, carried over and not yet counted. */
   mine: { slots: string[]; draft: boolean } | null;
   best: { at: string; people: Person[] }[];
-  chosen: { at: string; note: string | null; in: Person[]; out: Person[] } | null;
+  /** The time that was set: its start, how many minutes it runs, and who can make the hour it starts in. */
+  chosen: { at: string; minutes: number; note: string | null; in: Person[]; out: Person[] } | null;
 };
 
 export const POLL_ID = /^[A-Za-z0-9_-]{12}$/;
@@ -40,6 +41,7 @@ const NewPoll = z.object({
   startDate: z.string().refine(isValidDay), endDate: z.string().refine(isValidDay),
   hourStart: whole(0, 23), hourEnd: whole(1, 24), timezone: z.string().max(64).refine(validZone),
   expectedSize: whole(2, 200), deadline: instant, threshold: z.enum(['majority', 'two_thirds', 'everyone']),
+  weekends: z.union([z.boolean(), z.enum(['0', '1']).transform(value => value === '1')]).default(true),
 });
 const NewAnswer = z.object({ pollId: z.string().regex(POLL_ID), slots: z.array(instant).max(336) });
 export function read<T>(schema: z.ZodType<T>, input: unknown): T {
@@ -55,27 +57,27 @@ export async function logEvent(q: Q, kind: string, poll: { id: string; seriesId:
 /** Makes a poll and returns its id, which is its address. A person makes at most ten a day. */
 export async function createPoll(db: Db, who: Who, input: unknown, now = new Date()): Promise<{ id: string }> {
   const poll = read(NewPoll, input), days = (Date.parse(poll.endDate) - Date.parse(poll.startDate)) / DAY_MS, until = Date.parse(poll.deadline) - now.getTime();
-  if (days < 0 || days > 13 || poll.hourEnd <= poll.hourStart || until <= 0 || until > 60 * DAY_MS) throw new WhenError('invalid');
+  if (days < 0 || days > 13 || poll.hourEnd <= poll.hourStart || until <= 0 || until > 60 * DAY_MS || !slotsOf(poll).length) throw new WhenError('invalid');
   return db.tx(async q => {
     const { rows: [made] } = await q.query<{ n: number }>('select count(*)::int as n from when_poll where organizer_id=$1 and created_at>$2', [who.personId, new Date(now.getTime() - DAY_MS).toISOString()]);
     if (made.n >= PER_DAY) throw new WhenError('limit');
     const id = randomBytes(9).toString('base64url');
-    await q.query(`insert into when_poll(id,series_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at) values($1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-      [id, who.personId, poll.title, poll.startDate, poll.endDate, poll.hourStart, poll.hourEnd, poll.timezone, poll.expectedSize, poll.deadline, poll.threshold, now.toISOString()]);
+    await q.query(`insert into when_poll(id,series_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at,weekends) values($1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      [id, who.personId, poll.title, poll.startDate, poll.endDate, poll.hourStart, poll.hourEnd, poll.timezone, poll.expectedSize, poll.deadline, poll.threshold, now.toISOString(), poll.weekends]);
     await logEvent(q, 'poll_created', { id, seriesId: id }, { personId: who.personId });
     return { id };
   });
 }
 
 export type PollRow = { id: string; seriesId: string; organizerId: string; organizerName: string; title: string; startDate: string; endDate: string; hourStart: number; hourEnd: number; timezone: string;
-  expectedSize: number; deadline: string; threshold: Threshold; status: 'open' | 'sent'; readyAt: string | null; chosenSlot: string | null; note: string | null };
+  expectedSize: number; deadline: string; threshold: Threshold; status: 'open' | 'sent'; readyAt: string | null; chosenSlot: string | null; note: string | null; weekends: boolean; durationMin: number };
 const POLL = `select w.id,w.series_id as "seriesId",w.organizer_id as "organizerId",o.name as "organizerName",w.title,w.start_date as "startDate",w.end_date as "endDate",w.hour_start as "hourStart",w.hour_end as "hourEnd",w.timezone,
-  w.expected_size as "expectedSize",${iso('w.deadline')} as deadline,w.threshold,w.status,${iso('w.ready_at')} as "readyAt",${iso('w.chosen_slot')} as "chosenSlot",w.note from when_poll w join person o on o.id=w.organizer_id where w.id=$1`;
+  w.expected_size as "expectedSize",${iso('w.deadline')} as deadline,w.threshold,w.status,${iso('w.ready_at')} as "readyAt",${iso('w.chosen_slot')} as "chosenSlot",w.note,w.weekends,w.duration_min as "durationMin" from when_poll w join person o on o.id=w.organizer_id where w.id=$1`;
 /** The poll's row; `lock` holds it for the rest of the transaction, so two writers take turns. */
 export async function pollRow(q: Q, id: string, lock = false): Promise<PollRow | null> {
   return (await q.query<PollRow>(POLL + (lock ? ' for update of w' : ''), [id])).rows[0] ?? null;
 }
-export const frameOf = (poll: PollRow): Frame => ({ startDate: poll.startDate, endDate: poll.endDate, hourStart: poll.hourStart, hourEnd: poll.hourEnd, timezone: poll.timezone });
+export const frameOf = (poll: PollRow): Frame => ({ startDate: poll.startDate, endDate: poll.endDate, hourStart: poll.hourStart, hourEnd: poll.hourEnd, timezone: poll.timezone, weekends: poll.weekends });
 
 export type AnswerRow = Person & { slots: string[]; draft: boolean };
 /** Every answer to a poll, drafts too, in the order they were last saved. */
@@ -127,13 +129,15 @@ export async function pollView(db: Db, who: Who | null, id: string): Promise<Pol
   const counts: Record<string, number> = {};
   for (const answer of counted) for (const at of answer.slots) counts[at] = (counts[at] ?? 0) + 1;
   const size = sizeOf(poll.expectedSize, counted.length);
+  // A meeting may start a quarter of an hour or more into its hour; the people who can make it are those who painted that hour.
+  const set = poll.chosenSlot ? Date.parse(poll.chosenSlot) : null, hour = set === null ? null : slotsOf(frameOf(poll)).map(slot => slot.at).filter(at => Date.parse(at) <= set).pop() ?? poll.chosenSlot!;
   return {
     id: poll.id, seriesId: poll.seriesId, title: poll.title, frame: frameOf(poll), threshold: poll.threshold, deadline: poll.deadline, status: poll.status, ready: poll.readyAt !== null,
     organizer: { personId: poll.organizerId, name: poll.organizerName }, isOrganizer: who?.personId === poll.organizerId,
     size, needed: needed(poll.threshold, size), answered: counted.map(person), counts,
     mine: own ? { slots: own.slots, draft: own.draft } : null,
     best: bestSlots(counted).map(slot => ({ at: slot.at, people: slot.people.map(id => named.get(id)!) })),
-    chosen: poll.chosenSlot ? { at: poll.chosenSlot, note: poll.note, in: counted.filter(each => each.slots.includes(poll.chosenSlot!)).map(person), out: counted.filter(each => !each.slots.includes(poll.chosenSlot!)).map(person) } : null,
+    chosen: poll.chosenSlot ? { at: poll.chosenSlot, minutes: poll.durationMin, note: poll.note, in: counted.filter(each => each.slots.includes(hour!)).map(person), out: counted.filter(each => !each.slots.includes(hour!)).map(person) } : null,
   };
 }
 

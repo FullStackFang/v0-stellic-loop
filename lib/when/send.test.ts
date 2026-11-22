@@ -76,7 +76,7 @@ it('gives the hour as a calendar file once it is set, and words to pass on', asy
   const { id, maya } = await answered();
   let view = (await pollView(t.db, maya, id))!;
   expect(pollIcs(view)).toBeNull();
-  expect(shareMessage(view)).toBe('Problem set night: add the times you can make by Friday 27 Nov at 6 pm. https://loopd.test/when/' + id);
+  expect(shareMessage(view)).toBe('Problem set night: add the times you can make by Friday 27 Nov. https://loopd.test/when/' + id);
   await sendPoll(t.db, maya, { pollId: id, slot: TUE7, note: 'Olin Library, room 301.' }, NOW);
   view = (await pollView(t.db, maya, id))!;
   const file = pollIcs(view)!, invite = pollIcs(view, { to: 'josh@cornell.edu', from: 'when@loopd.test' })!;
@@ -85,5 +85,19 @@ it('gives the hour as a calendar file once it is set, and words to pass on', asy
   expect(file).not.toContain('ATTENDEE');
   expect(invite).toContain('METHOD:REQUEST');
   expect(invite.replace(/\r\n /g, '')).toContain('mailto:josh@cornell.edu');
-  expect(shareMessage(view)).toBe('Problem set night is on: Tuesday 1 Dec at 7 pm. Add it to your calendar: https://loopd.test/when/' + id);
+  expect(shareMessage(view)).toBe('Problem set night is on: Tuesday 1 Dec, 7 to 8 pm. Add it to your calendar: https://loopd.test/when/' + id);
+});
+
+it('starts a quarter past and runs for as long as the organizer said, with the same people in', async () => {
+  const { id, maya, josh } = await answered();
+  await expect(sendPoll(t.db, maya, { pollId: id, slot: TUE7, minute: 20 }, NOW)).rejects.toMatchObject({ code: 'invalid' });
+  await expect(sendPoll(t.db, maya, { pollId: id, slot: TUE7, duration: 600 }, NOW)).rejects.toMatchObject({ code: 'invalid' });
+  expect(await sendPoll(t.db, maya, { pollId: id, slot: TUE7, minute: '15', duration: '45' }, NOW)).toEqual({ sent: true });
+  const view = (await pollView(t.db, josh, id))!;
+  expect(view.chosen).toMatchObject({ at: '2026-12-02T00:15:00.000Z', minutes: 45 });
+  expect(view.chosen!.in.map(each => each.name).sort()).toEqual(['Josh', 'Maya', 'Priya']);
+  expect(view.chosen!.out.map(each => each.name)).toEqual(['Dana']);
+  expect(shareMessage(view)).toContain('is on: Tuesday 1 Dec, 7:15 to 8 pm.');
+  const file = pollIcs(view, undefined, NOW)!;
+  for (const line of ['DTSTART:20261202T001500Z', 'DTEND:20261202T010000Z']) expect(file).toContain(line);
 });

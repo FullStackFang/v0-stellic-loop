@@ -4,7 +4,7 @@ import { addDays, windowDays } from '../days';
 
 export type Threshold = 'majority' | 'two_thirds' | 'everyone';
 /** The days and hours a poll covers. Dates are YYYY-MM-DD; `hourEnd` is the hour the last slot ends at, 1 to 24. */
-export type Frame = { startDate: string; endDate: string; hourStart: number; hourEnd: number; timezone: string };
+export type Frame = { startDate: string; endDate: string; hourStart: number; hourEnd: number; timezone: string; /** False leaves Saturdays and Sundays out of the poll. */ weekends?: boolean };
 export type Slot = { day: string; hour: number; at: string };
 export type Answer = { personId: string; slots: string[] };
 
@@ -36,10 +36,11 @@ function instantOf(day: string, hour: number, tz: string): number | null {
   return null;
 }
 
+export const isWeekend = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay() % 6 === 0;
 /** Every hour of every day of the poll, in day then hour order. */
 export function slotsOf(frame: Frame): Slot[] {
   const slots: Slot[] = [];
-  for (const day of windowDays(frame.startDate, frame.endDate)) for (let hour = frame.hourStart; hour < frame.hourEnd; hour++) {
+  for (const day of windowDays(frame.startDate, frame.endDate)) if (frame.weekends !== false || !isWeekend(day)) for (let hour = frame.hourStart; hour < frame.hourEnd; hour++) {
     const at = instantOf(day, hour, frame.timezone);
     if (at !== null) slots.push({ day, hour, at: new Date(at).toISOString() });
   }
@@ -76,9 +77,16 @@ export function shiftWeek(at: string, tz: string): string {
   return new Date(instantOf(addDays(seen.day, 7), seen.hour, tz) ?? then + 7 * 24 * HOUR).toISOString();
 }
 
-export const hourText = (hour: number) => `${hour % 12 || 12} ${hour % 24 < 12 ? 'am' : 'pm'}`;
+export const hourText = (hour: number, minute = 0) => `${hour % 12 || 12}${minute ? `:${String(minute).padStart(2, '0')}` : ''} ${hour % 24 < 12 ? 'am' : 'pm'}`;
+/** The minutes a meeting may start at within its hour, and how long it may run. */
+export const START_MINUTES = [0, 15, 30, 45], DURATIONS = [30, 45, 60, 90, 120];
+/** "7:15 to 8 pm": a start, in minutes after midnight on the poll's clock, and how long it runs. */
+export function spanText(start: number, duration: number): string {
+  const text = (minutes: number) => hourText(Math.floor(minutes / 60) % 24, minutes % 60), from = text(start), to = text(start + duration);
+  return `${from.slice(-2) === to.slice(-2) ? from.slice(0, -3) : from} to ${to}`;
+}
 /** A time as the poll's people read it. */
-export function slotLabel(at: string, tz: string): { day: string; dow: string; dowLong: string; date: number; month: string; time: string } {
+export function slotLabel(at: string, tz: string): { day: string; dow: string; dowLong: string; date: number; month: string; time: string; hour: number; minute: number } {
   const then = new Date(at), seen = wall(then.getTime(), tz), word = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-US', { timeZone: tz, ...options }).format(then);
-  return { day: seen.day, dow: word({ weekday: 'short' }), dowLong: word({ weekday: 'long' }), date: Number(seen.day.slice(8)), month: word({ month: 'short' }), time: hourText(seen.hour) };
+  return { day: seen.day, dow: word({ weekday: 'short' }), dowLong: word({ weekday: 'long' }), date: Number(seen.day.slice(8)), month: word({ month: 'short' }), time: hourText(seen.hour, seen.minute), hour: seen.hour, minute: seen.minute };
 }

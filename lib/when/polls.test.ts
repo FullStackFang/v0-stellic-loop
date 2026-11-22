@@ -21,7 +21,7 @@ it('makes a poll with a 12 character address, and shows it to its maker and to a
   expect(id).toMatch(/^[A-Za-z0-9_-]{12}$/);
   const mine = await pollView(t.db, maya, id), theirs = await pollView(t.db, null, id);
   expect(mine).toMatchObject({ id, seriesId: id, title: 'Problem set night', status: 'open', ready: false, size: 7, needed: 5, answered: [], counts: {}, mine: null, best: [], chosen: null, isOrganizer: true, organizer: { name: 'Maya' }, deadline: '2026-11-27T23:00:00.000Z' });
-  expect(mine!.frame).toEqual({ startDate: '2026-11-30', endDate: '2026-12-04', hourStart: 17, hourEnd: 22, timezone: 'America/New_York' });
+  expect(mine!.frame).toEqual({ startDate: '2026-11-30', endDate: '2026-12-04', hourStart: 17, hourEnd: 22, timezone: 'America/New_York', weekends: true });
   expect(theirs!.isOrganizer).toBe(false);
   expect(await count(`when_event where kind='poll_created' and poll_id=$1`, [id])).toBe(1);
 });
@@ -104,4 +104,12 @@ it('lets a deleted account take its polls and answers with it', async () => {
   await t.db.query('delete from person where id=$1', [josh.personId]);
   expect((await pollView(t.db, maya, id))!.answered).toEqual([]);
   expect(await pollView(t.db, maya, other)).toBeNull();
+});
+
+it('leaves weekends out of a poll when asked, and refuses a poll with no days left', async () => {
+  const maya = { personId: (await makePerson(t.db, 'Maya')).id }, base = { title: 'Lunch', hourStart: 12, hourEnd: 13, timezone: 'America/New_York', expectedSize: 3, deadline: '2026-11-25T23:00:00.000Z', threshold: 'majority', weekends: '0' };
+  const { id } = await createPoll(t.db, maya, { ...base, startDate: '2026-11-27', endDate: '2026-11-30' }, new Date('2026-11-22T12:00:00Z'));
+  expect((await pollView(t.db, maya, id))!.frame.weekends).toBe(false);
+  await expect(saveAnswer(t.db, maya, { pollId: id, slots: ['2026-11-28T17:00:00.000Z'] })).rejects.toMatchObject({ code: 'invalid' });
+  await expect(createPoll(t.db, maya, { ...base, startDate: '2026-11-28', endDate: '2026-11-29' }, new Date('2026-11-22T12:00:00Z'))).rejects.toMatchObject({ code: 'invalid' });
 });

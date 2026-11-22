@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bestSlots, needed, readiness, shiftWeek, sizeOf, slotLabel, slotsOf, validZone } from './slots';
+import { bestSlots, needed, readiness, shiftWeek, sizeOf, slotLabel, slotsOf, spanText, validZone } from './slots';
 
 const NY = 'America/New_York';
 describe('needed', () => {
@@ -38,5 +38,7 @@ describe('readiness', () => {
   it('is not ready at the deadline with no answers', () => expect(readiness({ threshold: 'majority', expectedSize: 7, answers: [], deadline, now: after })).toEqual({ ready: false, met: false }));
 });
 it('moves a time seven days on by the local clock, across a clock change', () => expect(shiftWeek('2027-03-09T00:00:00.000Z', NY)).toBe('2027-03-15T23:00:00.000Z'));
-it('labels a time in the poll zone', () => expect(slotLabel('2026-12-02T00:00:00.000Z', NY)).toEqual({ day: '2026-12-01', dow: 'Tue', dowLong: 'Tuesday', date: 1, month: 'Dec', time: '7 pm' }));
+it('labels a time in the poll zone', () => expect(slotLabel('2026-12-02T00:00:00.000Z', NY)).toEqual({ day: '2026-12-01', dow: 'Tue', dowLong: 'Tuesday', date: 1, month: 'Dec', time: '7 pm', hour: 19, minute: 0 }));
+it('leaves weekends out when asked', () => expect([...new Set(slotsOf({ startDate: '2026-11-27', endDate: '2026-11-30', hourStart: 17, hourEnd: 18, timezone: NY, weekends: false }).map(slot => slot.day))]).toEqual(['2026-11-27', '2026-11-30']));
+it('says a start and a length as a span', () => { expect(spanText(19 * 60 + 15, 45)).toBe('7:15 to 8 pm'); expect(spanText(11 * 60 + 30, 60)).toBe('11:30 am to 12:30 pm'); expect(slotLabel('2026-12-02T00:15:00.000Z', NY).time).toBe('7:15 pm'); });
 it('knows a real zone from a made-up one', () => { expect(validZone(NY)).toBe(true); expect(validZone('Mars/Olympus')).toBe(false); expect(validZone('')).toBe(false); });
