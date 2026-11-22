@@ -1,6 +1,6 @@
 # Loopd When: design
 
-*2026-11-22. Status: waiting for the founder's approval. Source: the founder's
+*2026-11-22. Status: look approved by the founder ("love this", /demo/mockups-when.html, round two); waiting for his go-ahead to build. Source: the founder's
 "Loopd When (v1)" build prompt, changed by the decisions below.*
 
 ## Intent
@@ -61,16 +61,24 @@ records the response, and Resend for email. A is my reading of that.
 
 ## Screens
 
-As in the prompt, in the look `DESIGN.md` describes: wrapped in `.lp`, classes
-from `app/loop.css`, one teal plate, lime once per screen. Only the grid gets
-new CSS (`app/when/when.css`).
+In the look of the campus pages, not the teal look the prompt describes
+(founder, 2026-11-22: "this isn't using the style of the rest of the app, and I
+would like it to"). The approved mockup is `/demo/mockups-when.html`: the
+school's bar and foot, a ticket (paper top, tear, stub) at the head of each
+screen with seats that fill as people answer, panels named by an ink tab,
+`cs-btn go` for the one action, the school's kit for colour. Pages sit in
+`.cs` and reuse `app/c/campus.css` classes; only the grid and the few new
+pieces get new CSS (`app/when/when.css`).
 
 - `/when/new`: the create form. Signed out, the lime button reads "Sign in to
   create the link" and returns to the filled form.
 - `/when/[id]` open: plate, grid, "Save my times". Signed out, the grid shows
   the counts and one lime "Sign in to add your times".
-- `/when/[id]` resolved: date block, "It's on.", facts strip, people list,
-  "Add to my calendar" (`/when/[id]/calendar.ics`), "Update your answer".
+- `/when/[id]` resolved: the ticket with the date tile and "It's on.", people
+  list, "Add to my calendar" (`/when/[id]/calendar.ics`), "Update your answer".
+  The organizer also sees "Sent by itself" (how many people got the email) and
+  "Tell anyone who did not answer": a ready message with Send to WhatsApp and
+  Copy. No box for typing other people's email addresses in v1.
 - `/when/[id]/again`: usual times, past sessions, "Ask the group again".
 - "Next: where" and the streak panel render only when `WHEN_WHERE=on`.
 - `/when/stats?key=`: three numbers, compared with `WHEN_STATS_SECRET`.
@@ -135,8 +143,12 @@ Row level security on, nothing granted to anon or authenticated, as elsewhere.
   `lib/email/resend.ts`.
 - `notify(person, message)` in `lib/when/notify.ts` is the only thing callers
   use; it writes the `when_message` row. The scheduled run sends.
-- The result email carries a timed calendar invite built with the existing
-  `memberInviteIcs`, attached as `invite.ics`.
+- The result email goes by itself, the moment the poll resolves, to everyone
+  who answered (in or not) and the organizer. It says the time, who is in, and
+  has an "Add to my calendar" button. It carries a timed calendar invite built
+  with the existing `memberInviteIcs`, both as a `text/calendar` part (so mail
+  apps show it as an invite) and attached as `invite.ics`. Loopd never emails
+  an address its owner did not sign in with.
 - Sending happens only when `WHEN_SENDING=on` and `RESEND_API_KEY` is set;
   otherwise messages stay queued and a log line says what would have gone.
 - Not in this change: wiring the same adapter into club reach's
