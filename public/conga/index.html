@@ -61,7 +61,16 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .card[hidden] { display: grid; opacity: 0; transform: translate(-50%, -42%) scale(.96); pointer-events: none; }
 .card h1 { font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 8vw, 44px); line-height: .98; letter-spacing: -.02em; }
 .card p { font-size: 16px; line-height: 1.4; font-weight: 500; }
-.faces { display: flex; gap: 8px; align-items: center; position: relative; }
+.faces { display: flex; flex-wrap: wrap; row-gap: 12px; gap: 8px; align-items: center; position: relative; }
+/* Your animals, opened from your seat: a tray on its own line under the row, inside the card. */
+.tray { flex: 0 0 100%; display: grid; gap: 10px; padding: 12px; border-radius: 18px; background: oklch(93% 0.03 45); box-shadow: inset 0 0 0 2px var(--ink); }
+.tray[hidden] { display: none; }
+.tray .top { display: flex; align-items: center; justify-content: space-between; font-weight: 800; font-size: 14px; }
+.tray .done { padding: 4px 12px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 13px; }
+.tray > div:last-child { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.tray .pick { aspect-ratio: 1; padding: 2px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); } .tray .pick .face { width: 100%; }
+@media (max-width: 560px) { .tray > div:last-child { grid-template-columns: repeat(6, 1fr); } }
+.tray .pick[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 3px var(--action), 2px 2px 0 var(--ink); }
 .faces > button { flex: 1; position: relative; aspect-ratio: 1; min-width: 0; padding: 4px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--ink); transition: transform .15s var(--expo); }
 .faces > button .face { width: 100%; }
 .faces > button[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 4px var(--action), 3px 3px 0 var(--ink); transform: translateY(-4px); }
@@ -248,14 +257,18 @@ function offer() {
   while (set.size < 6) set.add(1 + Math.floor(Math.random() * CORE));
   const press = button => { for (const other of $('faces').children) if (other.tagName === 'BUTTON') other.setAttribute('aria-pressed', other === button); };
   const row = [];
+  let tray = null; // your animals, on the line under the row
   if (you) {
     // Your own seat. With Ink it is picked like any other, and opens your animals to choose one; without, it opens the card that says what Ink gives.
     const seat = Object.assign(document.createElement('button'), { className: 'own', ariaLabel: 'Play as your own animal', innerHTML: faceTag(own().face, own().picture) + `<span class="plus">${you.ink ? 'You' : INK}</span>` });
     seat.setAttribute('aria-pressed', mine);
-    const card = Object.assign(document.createElement('div'), { className: 'ask', hidden: true });
+    // With Ink, your animals open in a tray inside the card under the row, so nothing is covered
+    // (/demo/mockups-conga-own-picker.html, B); picking one or Done closes it.
+    const card = Object.assign(document.createElement('div'), { className: you.ink ? 'tray' : 'ask', hidden: true });
     const show = open => { card.hidden = !open; seat.setAttribute('aria-expanded', open); };
     if (you.ink) {
-      card.innerHTML = '<span class="tab">' + INK + '</span><h3>Your animals</h3><p>Pick the one that leads your line.</p><div></div>';
+      card.innerHTML = '<div class="top">Your animals<button class="done">Done</button></div><div></div>';
+      card.querySelector('.done').onclick = () => show(false);
       // The card is hidden until it is opened, and a hidden card's pictures are not fetched; fetch them now, so they are
       // all there when it opens instead of coming in one by one.
       for (const animal of you.animals) if (animal.picture) new Image().src = animal.picture;
@@ -281,7 +294,8 @@ function offer() {
       };
       seat.onclick = () => show(card.hidden);
     }
-    row.push(seat, card);
+    row.push(seat);
+    if (!you.ink) row.push(card); else tray = card;
   }
   $('faces').replaceChildren(...row, ...[...set].slice(0, you ? 5 : 6).map(face => {
     const button = document.createElement('button');
@@ -291,7 +305,7 @@ function offer() {
     button.onclick = () => { picked = face; mine = false; press(button); };
     return button;
   }), Object.assign(document.createElement('button'), { className: 'more', ariaLabel: 'Shuffle the animals', title: 'Shuffle', onclick: () => offer(),
-    innerHTML: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h3.5c3.5 0 5.5 10 9 10H21M3 17h3.5c1.4 0 2.5-1.5 3.5-3.3M14 8.300C14.700 7.500 15.500 7 16.500 7H21M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>' }));
+    innerHTML: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h3.5c3.5 0 5.5 10 9 10H21M3 17h3.5c1.4 0 2.5-1.5 3.5-3.3M14 8.300C14.700 7.500 15.500 7 16.500 7H21M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>' }), ...(tray ? [tray] : []));
 }
 offer();
 // Someone signed in gets their own seat, and with Ink starts in it unless they chose another animal last time.
