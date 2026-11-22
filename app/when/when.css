@@ -1,6 +1,6 @@
 /* Loopd When (public/demo/mockups-when.html). Every page sits in .cs under the bar of the app, so the tokens and the pills,
    tiles, faces and seats come from app/c/campus.css. What is new is here, every class starting wn-. */
-.wn { width: 100%; max-width: 520px; margin: 0 auto; display: grid; gap: 22px; padding: 22px 16px 34px; }
+.wn { flex: 1 0 auto; align-content: start; width: 100%; max-width: 520px; margin: 0 auto; display: grid; gap: 22px; padding: 22px 16px 34px; }
 .wn form { display: contents; }
 
 /* the ticket at the head of each screen: paper top, a tear, a stub */
@@ -26,7 +26,7 @@
 /* the form */
 .wn-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 10px; padding-top: 4px; }
 .wn-f { position: relative; display: block; min-width: 0; }
-.wn-f.wide { grid-column: 1 / -1; }
+.wn-f.wide, .wn-f.wn-half { grid-column: 1 / -1; }
 .wn-f > span { position: absolute; z-index: 1; top: -10px; left: 10px; padding: 1px 8px 2px; border-radius: 9px 9px 9px 3px; font-size: 11.5px; font-weight: 680; background: var(--cs-ink); color: var(--cs-on-ink); white-space: nowrap; }
 .wn-f :is(input, select, textarea) { display: block; width: 100%; min-height: 48px; padding: 13px 14px 9px; border: 0; border-radius: 14px 14px 14px 4px; font: inherit; font-size: 15.5px; font-weight: 560; color: var(--cs-ink); background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); appearance: none; }
 .wn-f :is(input, select, textarea)::placeholder { color: var(--cs-mute); font-weight: 460; }
@@ -111,6 +111,36 @@ button.wn-cell { cursor: pointer; }
   .wn-two .wn-cal-d { height: 46px; }
 }
 
+/* making or changing a poll on a laptop: one screen. The ticket lies across the top, the plan and the days stand side by
+   side at one height, and the action is a line across the foot. On a phone it is the one column above. */
+@media (min-width: 900px) {
+  .wn.wn-make { max-width: 1180px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px 26px; padding: 20px 32px 14px; align-items: stretch; }
+  .wn-make .wn-tk, .wn-make .wn-foot { grid-column: 1 / -1; }
+  .wn-make .wn-tk { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+  .wn-make .wn-tk-top { padding: 12px 26px 14px 20px; }
+  .wn-make .wn-tk-stub { padding: 8px 20px; border-top: 0; border-left: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); font-size: 14.5px; }
+  .wn-make .wn-panel { display: grid; }
+  .wn-make .wn-fields { align-content: space-between; }
+  .wn-make .wn-f.wn-half { grid-column: auto; }
+  .wn-make .wn-fields > .wn-cal { order: 3; margin-top: 0; }
+  .wn-make .wn-half .wn-three label { height: 50px; border-radius: 16px 16px 16px 5px; }
+  .wn.wn-make .wn-cal-d { height: 36px; }
+  .wn-make .wn-foot { display: flex; align-items: center; gap: 10px; margin-right: 6px; }
+  .wn-make .wn-foot .wn-note { order: 1; margin: 0 auto 0 0; text-align: left; }
+  .wn-make .wn-foot:has(.bad) .wn-note:not(.bad) { display: none; }
+  .wn-make .wn-foot .wn-acts { order: 2; flex-wrap: nowrap; }
+  .cs .wn-make .wn-foot .cs-btn.sm { height: 50px; padding: 0 20px; }
+  .cs .wn-make .wn-foot .cs-btn.wn-big { order: 3; width: auto; height: 50px; padding: 0 46px; }
+}
+
+/* a narrower laptop window: the two day pills need the whole line, so Weekends goes back under the calendar */
+@media (min-width: 900px) and (max-width: 1149px) {
+  .wn-make .wn-f.wn-half { grid-column: 1 / -1; }
+  .wn-make .wn-fields > .wn-cal { order: 0; }
+  .wn.wn-make .wn-cal-d { height: 32px; }
+  .wn-make .wn-half .wn-three label { height: 38px; border-radius: 99px; }
+}
+
 /* two things one calendar sets, and the sets of days of a grid: a pill each, the one in hand in ink */
 .wn-modes { display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 5px; padding-top: 14px; }
 .wn-modes.wn-sets { padding-top: 4px; }
@@ -125,6 +155,8 @@ button.wn-cell { cursor: pointer; }
 
 /* the calendar: weeks running on from this one, never taller or shorter than it starts */
 .wn-cal { display: grid; gap: 6px; padding-top: 10px; }
+.wn-fields > .wn-cal { grid-column: 1 / -1; padding-top: 0; margin-top: -10px; }
+.wn-foot { display: contents; }
 .wn-cal-head { display: flex; align-items: center; gap: 6px; }
 .wn-cal-month { margin-right: auto; display: inline-flex; align-items: center; height: 32px; padding: 0 13px; border-radius: 99px; background: var(--cs-field); font-size: 14px; font-weight: 680; white-space: nowrap; }
 .wn-sets .wn-cal-month { margin: 0; flex: 1; justify-content: center; }

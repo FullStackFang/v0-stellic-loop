@@ -18,7 +18,7 @@ export default async function ChangeWhenPage({ params }: { params: Promise<{ id:
   if (!view || !view.isOrganizer) notFound();
   if (view.chosen) redirect(`/when/${view.id}`);
   const today = new Date().toISOString().slice(0, 10), by = slotLabel(view.deadline, view.frame.timezone).day, n = view.answered.length;
-  return <main className="wn wn-two">
+  return <main className="wn wn-make">
     <CreateForm signIn={null} today={today} edit={view.id}
       head={<Ticket stub={n ? `${n} of ${view.size} have answered. Their times stay where the days and hours still fit.` : 'Nobody has answered yet, so nothing is lost.'}><h1 className="xl">Change <em>the poll.</em></h1></Ticket>}
       first={{ title: view.title, startDate: view.frame.startDate, endDate: view.frame.endDate, hourStart: String(view.frame.hourStart), hourEnd: String(view.frame.hourEnd), expectedSize: String(view.size),

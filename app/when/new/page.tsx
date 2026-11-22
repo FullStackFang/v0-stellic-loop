@@ -15,7 +15,7 @@ export default async function NewWhenPage() {
   let startDate = addDays(today, 3), endDate: string;
   while (isWeekend(startDate)) startDate = addDays(startDate, 1);
   for (endDate = addDays(startDate, 4); isWeekend(endDate);) endDate = addDays(endDate, -1);
-  return <main className="wn wn-two">
+  return <main className="wn wn-make">
     <CreateForm signIn={who ? null : signInHref('/when/new')} today={today}
       head={<Ticket stub="One link. It tells you when a time works, and you pick."><h1 className="xl">Find a time that works for <em>everyone.</em></h1></Ticket>}
       first={{ title: '', startDate, endDate, hourStart: '17', hourEnd: '22', expectedSize: '7', by: addDays(today, 2), threshold: 'two_thirds', weekends: '0', duration: '60' }} />
