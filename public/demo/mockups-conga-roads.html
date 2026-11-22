@@ -44,7 +44,7 @@ h2 { justify-self: start; font-weight: 900; font-stretch: 108%; font-size: 22px;
 
   <section data-part="spill">
     <h2>3 · The spill</h2>
-    <div class="bar"><button data-v="a">A · Bagged where they stand</button><button data-v="b">B · Reel in and pop</button><button data-v="c">C · Unravel into sacks</button><button data-v="now">Today</button><button class="slow" aria-pressed="false">Slow motion</button></div>
+    <div class="bar"><button data-v="a">A · Bagged where they stand</button><button data-v="b">B · Reel in and pop</button><button data-v="b2">B2 · Reel in, sparkle</button><button data-v="c">C · Unravel into sacks</button><button data-v="now">Today</button><button class="slow" aria-pressed="false">Slow motion</button></div>
     <div class="frame"><canvas></canvas></div>
     <p class="note"></p>
   </section>
@@ -78,6 +78,7 @@ const SAY = {
     a: 'A · Bagged where they stand. The line stops dead and its rope snaps. A sack drops out of the air over each part of the line, the animals hop into it one after another from the ends inwards, and its count goes up with each one. The sack cinches shut with a squash, then gets flung away to where it lands. You can see where each sack\'s animals came from. About 2 seconds.',
     b: 'B · Reel in and pop. The line reels into the head like a tape measure snapping back, whipping along its own path, and piles up in a heap that wobbles and squashes. Then it pops: a ring in the line\'s colour, a burst of felt confetti, and the sacks fly out like a fountain. The loudest of the three. About 1.6 seconds.',
     c: 'C · Unravel into sacks. Empty sacks are flung out first and land with a 0. Then the rope unravels from the head back: each animal pops off it with a puff and jumps in an arc straight into its sack, and each sack bounces and counts up as they land. You can follow your animals to where they went. A very long line sends them in batches, so it costs about the same as a short one. About 1.8 seconds.',
+    b2: 'B2 · Reel in, sparkle. B made calmer. The line reels into its head quickly and smoothly, with no whipping and no wobbling heap. A soft puff, a few small twinkles in the line\'s colour spread out and fade, and the sacks hop out lower. No ring, no confetti. About 1.1 seconds. The twinkles are plus-shaped on purpose, so they never look like the Ink+ spark.',
     now: 'Today: the line vanishes at once with a ring in its colour, and the sacks fly out of where its head was.',
   },
 };
@@ -378,19 +379,19 @@ function spillScene(look, t) {
         if (u > 0.92) landing(S.x, S.y, (tau - fc - 0.64) / 0.7);
       }
     }
-  } else if (look === 'b') {
-    const POP = 0.85, pile = [], r = seeded(4);
+  } else if (look === 'b' || look === 'b2') {
+    const soft = look === 'b2', POP = soft ? 0.42 : 0.85, pile = [], r = seeded(4);
     const offs = Array.from({ length: N + 1 }, (_, k) => { const a = r() * Math.PI * 2, d = 6 + Math.sqrt(k) * 9; return { x: Math.cos(a) * d * 1.3, y: Math.sin(a) * d * 0.6 - Math.sqrt(k) * 7 }; });
     if (tau < POP) {
       const left = [];
       FACES.forEach((face, i) => {
-        const d0 = hitX - frozen[i].x, d = 2400 * tau * tau;
-        if (d < d0) { const x = frozen[i].x + d; left.push({ x, y: pathY(x), face, tilt: Math.sin(tau * 30 + i) * 0.3 }); }
+        const d0 = hitX - frozen[i].x, d = (soft ? 5200 : 2400) * tau * tau;
+        if (d < d0) { const x = frozen[i].x + d; left.push({ x, y: pathY(x), face, tilt: soft ? 0 : Math.sin(tau * 30 + i) * 0.3 }); }
         else pile.push({ face, k: pile.length + 1 });
       });
       rope([{ x: P.x, y: P.y }, ...left.slice().sort((a, b) => b.x - a.x)], PURPLE);
       left.forEach(p => stand.push({ y: p.y, draw: () => sprite(p.face, p.x, p.y, 42, p.tilt) }));
-      const squeeze = clamp((tau - 0.62) / (POP - 0.62)), wobble = tau > 0.5 ? Math.sin(tau * 55) * 0.06 : 0;
+      const squeeze = soft ? 0 : clamp((tau - 0.62) / (POP - 0.62)), wobble = !soft && tau > 0.5 ? Math.sin(tau * 55) * 0.06 : 0;
       stand.push({ y: P.y + 10, draw: () => {
         ctx.save(); ctx.translate(P.x, P.y + 20); ctx.scale(1 + wobble + squeeze * 0.25, 1 - wobble - squeeze * 0.3); ctx.translate(-P.x, -P.y - 20);
         sprite(23, P.x, P.y, 58);
@@ -399,6 +400,10 @@ function spillScene(look, t) {
       } });
     } else {
       const age = tau - POP;
+      if (soft) {
+        over.push(() => { puff(P.x, P.y + 4, age / 0.6, 2); twinkles(P.x, P.y - 10, age, PURPLE); });
+        spots.forEach(S => { const u = clamp(age / 0.6), f = fling(P, S, u, 120, S.x > P.x ? 0.5 : -0.5); sackAt(f.x, f.y, { lift: f.lift, spin: f.spin * 0.08, count: u >= 1 ? PER : null }); if (u > 0.92) landing(S.x, S.y, (age - 0.55) / 0.7); });
+      } else {
       over.push(() => { ring(P.x, P.y, age / 0.6, PURPLE); for (let k = 0; k < 6; k++) puff(P.x + Math.cos(k) * 30, P.y + Math.sin(k) * 14, age / 0.8, 1.8); });
       // Felt confetti in the line's colours, thrown up and falling.
       const cr = seeded(9), shades = [PURPLE, tone(PURPLE, { light: 18, chroma: 0.6 }), tone(PURPLE, { light: -12 }), 'oklch(96% 0.012 80)'];
@@ -408,6 +413,7 @@ function spillScene(look, t) {
         ctx.save(); ctx.globalAlpha = Math.min(1, (life - age) * 4); ctx.translate(x, y); ctx.rotate(spin * age); ctx.fillStyle = shade; ctx.beginPath(); ctx.roundRect(-6, -3.5, 12, 7, 2.5); ctx.fill(); ctx.restore();
       } });
       spots.forEach(S => { const u = clamp(age / 0.75), f = fling(P, S, u, 220, S.x > P.x ? 1 : -1); sackAt(f.x, f.y, { lift: f.lift, spin: f.spin * 1.4, count: u >= 1 ? PER : null }); if (u > 0.92) landing(S.x, S.y, (age - 0.69) / 0.7); });
+      }
     }
   } else if (look === 'c') {
     over.push(() => { ring(P.x, P.y, tau / 0.6, PURPLE); puff(P.x, P.y + 6, tau / 0.7, 2); });
@@ -433,6 +439,20 @@ function spillScene(look, t) {
   }
   for (const s of stand.sort((a, b) => a.y - b.y)) s.draw();
   for (const draw of over) draw();
+}
+
+/** A few small twinkles thrown out from (x, y) and fading: plus-shaped glints in the line's colour with a light middle. */
+function twinkles(x, y, age, colour) {
+  if (age < 0 || age > 0.9) return;
+  const r = seeded(21), u = age / 0.9, out = 1 - (1 - u) ** 3;
+  for (let k = 0; k < 10; k++) {
+    const a = k / 10 * Math.PI * 2 + r() * 0.5, far = (60 + r() * 90) * out, size = (10 + r() * 8) * Math.sin(Math.min(1, u * 1.15) * Math.PI), px = x + Math.cos(a) * far, py = y + Math.sin(a) * far * 0.75 - u * 12;
+    if (size <= 0.3) continue;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(px - size, py); ctx.lineTo(px + size, py); ctx.moveTo(px, py - size); ctx.lineTo(px, py + size);
+    ctx.strokeStyle = k % 3 ? colour : tone(colour, { light: 22, chroma: 0.5 }); ctx.lineWidth = size * 0.45; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px, py, size * 0.22, 0, 7); ctx.fillStyle = 'oklch(98% 0.01 80)'; ctx.fill();
+  }
 }
 
 // ---------- the page ----------
