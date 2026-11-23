@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** The words to pass on by hand, with a way to send them and a way to copy them. */
 function PassOn({ tab, view }: { tab: string; view: PollView }) {
   const message = shareMessage(view);
-  return <Panel tab={tab}><p className="wn-msg">{message}</p><div className="wn-acts">
+  return <Panel tab={tab}><p className="wn-msg" title={message}>{message}</p><div className="wn-acts">
     <Copy text={message} /><a className="cs-btn" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">Share on WhatsApp</a>
   </div></Panel>;
 }
@@ -108,16 +108,17 @@ export default async function WhenPage({ params, searchParams }: Props) {
   // The sign-in card beside the poll's ticket at ?in=1. The usual way in is the bar's "Sign in", which opens over the poll.
   const schools = who ? [] : (await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(({ slug, name, domains }) => ({ slug, name, domains }));
   const door = <DoorSignIn schools={schools} routing="hash" configured={clerkPortalConfigured()} back={here} />;
-  const tail = <>
+  const tail = <CopyLink />;
+  // Under both columns, on one line on a laptop: the message to pass on, then the other places to go.
+  const band = (mine || view.chosen || who) && <div className="wn-band">
     {mine && <PassOn tab="Pass it on" view={view} />}
-    <CopyLink />
     <div className="wn-acts wn-mid">
       {view.chosen && <a className="cs-btn sm" href={here}>Back to the result</a>}
       {mine && view.best.length > 0 && <a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a>}
       {mine && <a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a>}
       {who && <Link className="cs-btn sm" href="/when">Your polls</Link>}
     </div>
-  </>;
+  </div>;
   // Signing in, without leaving the poll: its ticket, the sign-in card, and straight back here afterwards.
   if (!who && query.in) {
     return <main className="wn wn-in">
@@ -135,5 +136,6 @@ export default async function WhenPage({ params, searchParams }: Props) {
           after={view.chosen ? 'Saved. The time stays as it is.' : who.verifiedEmail ? `The result comes to ${who.verifiedEmail}` : 'Saved. You get an email when the time is set.'}>{zonePill}</Grid>
       : <Grid slots={slots} free={free} me={{ personId: guest?.personId ?? 'guest', name: guest?.name ?? '', face: '' }} mine={view.mine?.slots ?? []} onSave={saveAnswerAction.bind(null, view.id)} tile={tile} title={title} best={best} tail={tail} size={view.size}
           guest={{ name: guest?.name ?? '', email: guest ? guests.get(guest.personId)?.email ?? null : null }} onEmail={inviteEmailAction.bind(null, view.id)} ways={<Ways back={here} configured={clerkPortalConfigured()} />}>{zonePill}</Grid>}
+    {band}
   </main>;
 }

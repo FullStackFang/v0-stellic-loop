@@ -100,7 +100,7 @@ button.wn-cell { cursor: pointer; }
 
 /* two columns where there is room (public/demo/mockups-when-days.html). On a phone the columns dissolve, and the ticket
    of the second one leads the page. */
-.wn-col, .wn-tail { display: contents; }
+.wn-col, .wn-tail, .wn-band { display: contents; }
 .wn-col.side > .wn-tk { order: -1; }
 @media (min-width: 900px) {
   .wn.wn-two { max-width: 980px; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 26px 30px; align-items: start; padding-top: 32px; }
@@ -110,6 +110,11 @@ button.wn-cell { cursor: pointer; }
   .wn-two .wn-col { grid-row: 1 / span 3; grid-template-rows: subgrid; row-gap: 22px; }
   .wn-two .wn-col:not(.side) > .wn-panel { grid-row: 1 / span 2; } .wn-two .wn-col:not(.side) > .wn-save { grid-row: 3; }
   .wn-two .wn-col.side > .wn-tk { grid-row: 1; } .wn-two .wn-col.side > .wn-best { grid-row: 2; display: grid; } .wn-two .wn-col.side > .wn-tail { grid-row: 3; align-self: start; display: grid; gap: 22px; min-width: 0; }
+  /* under both columns, one line: the message to pass on with its two buttons, then the other places to go */
+  .wn-two > .wn-band { grid-column: 1 / -1; grid-row: 4; display: flex; align-items: center; justify-content: center; gap: 14px; min-width: 0; }
+  .wn-band > .wn-panel { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 58px; padding: 0 8px; }
+  .wn-band .wn-msg { flex: 1; min-width: 0; margin: 0; padding: 0 13px; line-height: 42px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wn-band .wn-acts { flex: none; flex-wrap: nowrap; } .wn-band .wn-acts .cs-btn { flex: none; }
   .wn-two .wn-cell { min-height: 50px; font-size: 14.5px; }
   .wn-two .wn-d b { font-size: 19px; }
   .wn-two .wn-cal-d { height: 46px; }
@@ -292,9 +297,13 @@ button.wn-cell { cursor: pointer; }
   .wn-fit .wn-cell, .cs .wn-fit .wn-cell { min-height: 38px; } .wn-fit .wn-d b { font-size: 15px; } .wn-fit .wn-d { padding-bottom: 2px; }
   .wn-fit .wn-key { margin-top: 9px; gap: 5px; } .wn-fit .wn-key .cs-pill { font-size: 12px; padding: 3px 9px 3px 5px; }
   .wn-fit .wn-best { display: none; }
+  /* the message to pass on is one line, its two buttons share the next, and the other places to go share one more */
+  .wn-band .wn-msg { margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wn-band > * { min-width: 0; } .wn-band .wn-acts { flex-wrap: nowrap; gap: 6px; } .wn-band > .wn-acts.wn-mid { justify-self: stretch; }
+  .cs .wn-band .wn-acts .cs-btn { flex: 1 1 auto; min-width: 0; padding: 0 8px; font-size: 13.5px; white-space: nowrap; }
   /* Save rides the foot of the screen; what it would have said under itself is on the button */
   .wn-fit .wn-save { position: sticky; bottom: 0; z-index: 3; gap: 8px; margin: 0 -14px; padding: 10px 14px 12px; background: var(--cs-page); box-shadow: 0 -1.5px 0 var(--cs-ink); }
   .wn-fit .wn-save .wn-note:not(.bad) { display: none; }
   .wn-fit .wn-save .wn-big, .cs .wn-fit .wn-save .cs-btn.wn-big { height: 50px; }
-  .wn-fit > .wn-col > :last-child, .wn-fit > .wn-col > .wn-tail > :last-child { margin-bottom: 20px; } .wn-fit > .wn-col > .wn-save:last-child { margin-bottom: 0; }
+  .wn-fit > .wn-col > :last-child, .wn-fit > .wn-col > .wn-tail > :last-child, .wn-fit > .wn-band > :last-child { margin-bottom: 20px; } .wn-fit:has(> .wn-band) > .wn-col > .wn-tail > :last-child { margin-bottom: 0; } .wn-fit > .wn-col > .wn-save:last-child { margin-bottom: 0; }
 }
