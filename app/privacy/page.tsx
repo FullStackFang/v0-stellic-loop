@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Privacy · Loopd" };
 const MAIL = <a href="mailto:xwf2@cornell.edu">xwf2@cornell.edu</a>;
 const PARTS: LegalPart[] = [
   { id: "keep", name: "What we keep", short: "Your name, your email, and what you save.",
-    full: <>Loopd keeps a group’s plan in one place: who has what, the decisions, the links and files, when things are due. Each member can ask their own AI assistant about it. This page says what we keep and who sees it. Your name and the email address you sign in with. The teams you belong to. What you or your assistant save to a team: claims, decisions, asks, links, announcements and the files your team uploads. The assistants you connect, the access you grant each one, and a log of what each one did. A cookie keeps you signed in on your device. When you open a page we keep which part of Loopd it belongs to and when, with your account if you are signed in, to see how Loopd is used; the page’s own address is not kept. A second cookie holds a random number, so that a visitor who is not signed in is counted once. Our hosting provider also counts visitors and the pages they open, without a cookie and without knowing who they are.</> },
+    full: <>Loopd keeps a group’s plan in one place: who has what, the decisions, the links and files, when things are due. Each member can ask their own AI assistant about it. This page says what we keep and who sees it. Your name and the email address you sign in with. The teams you belong to. What you or your assistant save to a team: claims, decisions, asks, links, announcements and the files your team uploads. The assistants you connect, the access you grant each one, and a log of what each one did. A cookie keeps you signed in on your device. When you open a page we keep which part of Loopd it belongs to and when, with your account if you are signed in, to see how Loopd is used; the page’s own address is not kept. A second cookie holds a random number, so that a visitor who is not signed in is counted once. Our hosting provider also counts visitors and the pages they open, without a cookie and without knowing who they are. If you sign up for Ink, we keep your email, the plan you picked and when. If you weren’t signed in, we keep the same without an email.</> },
   { id: "see", name: "Who sees it", short: "Your group sees it. Nothing is public.",
     full: <>What you save to a team is seen by the people on that team, and by the assistants they have given access to that team. Your email address is seen only by the people who manage the team, since they invite you with it. Nothing you save is public.</> },
   { id: "assistant", name: "Your assistant", short: "It sees only the groups you grant.",
@@ -27,5 +27,5 @@ const PARTS: LegalPart[] = [
 ];
 
 export default function Privacy() {
-  return <Legal title="Privacy" updated="November 22, 2026" gist="What we keep, and who sees it." parts={PARTS} />;
+  return <Legal title="Privacy" updated="November 23, 2026" gist="What we keep, and who sees it." parts={PARTS} />;
 }

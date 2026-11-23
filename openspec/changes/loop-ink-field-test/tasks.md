@@ -23,9 +23,9 @@
 
 ## 4. Legal pages (after the founder's yes to the words)
 
-- [ ] 4.1 Founder approves the Terms part and the Privacy sentence in the spec, and says whether "invitation only" stays
-- [ ] 4.2 `app/terms/page.tsx`: the Ink part, and the new date
-- [ ] 4.3 `app/privacy/page.tsx`: the sentence, and the new date
+- [x] 4.1 Founder approves the Terms part and the Privacy sentence in the spec, and says whether "invitation only" stays
+- [x] 4.2 `app/terms/page.tsx`: the Ink part, and the new date
+- [x] 4.3 `app/privacy/page.tsx`: the sentence, and the new date
 
 ## 5. Check and land
 

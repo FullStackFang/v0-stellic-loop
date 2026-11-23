@@ -13,6 +13,8 @@ const PARTS: LegalPart[] = [
     full: <>When you connect an assistant, you let it read and save to the teams you grant it, on your behalf. Its answers come from what your team saved, and it can still get things wrong. Check anything that matters, like a deadline or a file version, against the source it links to.</> },
   { id: "texts", name: "Texts", short: "One text: your sign‑in code.",
     full: <>On the cohort trip board, when you enter your mobile number, we text it a sign-in code to confirm it is yours. That is the only text Loopd sends. No marketing. Msg &amp; data rates may apply. Carriers are not liable for delayed or undelivered messages. US numbers only for now.</> },
+  { id: "ink", name: "Ink", short: "Free for now.",
+    full: <>Ink is free for now. Signing up costs nothing. The plans and prices may change.</> },
   { id: "none", name: "No guarantees", short: "As is. It may change or stop.",
     full: <>Loopd is provided as is, and as a pilot it may change or stop. It keeps track of a plan; it does not do the work, book, pay for, or guarantee anything.</> },
   { id: "info", name: "Your information", short: "What we keep is in Privacy.",

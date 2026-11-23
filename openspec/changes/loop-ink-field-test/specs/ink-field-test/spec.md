@@ -60,15 +60,15 @@ The Premium tab SHALL list presses made signed out with no email apart from the 
 - **THEN** that list and its line are not shown
 
 ### Requirement: The legal pages say what signing up does
-The Terms SHALL have a part about Ink that says signing up for Ink or Ink+ charges nothing, that it is a test of interest, and that the plan may change or end. Privacy SHALL say that a sign-up keeps the email, the plan, the button pressed and when, and that a press made signed out keeps the same without an email. Both pages SHALL carry the date they were changed. The words SHALL be the ones the founder approved.
+The Terms SHALL have a part about Ink that says Ink is free for now, signing up costs nothing, and the plans and prices may change. Privacy SHALL say that a sign-up keeps the email, the plan and when, and that one made signed out keeps the same without an email. Both pages SHALL carry the date they were changed. The Terms SHALL no longer call Loopd invitation only. The words SHALL be the ones the founder approved.
 
-Proposed words, for his yes:
-- Terms, part "Ink", short: "Signing up for Ink charges nothing." Full: "Ink and Ink+ are not for sale yet. When you sign up we charge nothing and take no card: we give you the plan for now and write to you when it is ready. It is a test of interest, so what a plan holds and its price may change, and it may end."
-- Privacy, added to what we keep: "When you sign up for Ink or Ink+ we keep your email, the plan, the button you pressed and when. If you press one while signed out, we keep the same without an email."
+Approved words (2026-11-23):
+- Terms, part "Ink", short: "Free for now." Full: "Ink is free for now. Signing up costs nothing. The plans and prices may change."
+- Privacy, added to what we keep: "If you sign up for Ink, we keep your email, the plan you picked and when. If you weren't signed in, we keep the same without an email."
 
 #### Scenario: Reading the Terms
 - **WHEN** anyone opens the Terms
-- **THEN** a part named Ink says signing up charges nothing and that the plan may change or end
+- **THEN** a part named Ink says signing up costs nothing and that the plans and prices may change
 
 #### Scenario: Reading Privacy
 - **WHEN** anyone opens Privacy
