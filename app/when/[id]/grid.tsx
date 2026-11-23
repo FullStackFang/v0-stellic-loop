@@ -188,18 +188,18 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
           <div className="cs-over-card wn-card"><button type="button" className="cs-btn sm cs-over-x" onClick={shut}>Close</button>
             <div className="wn-card-top"><h2>Whose times are these?</h2><Rings /></div>
             <div className="wn-halves">
+              {/* Each half is one capsule: the name is typed into the first, and the ways into Loopd sit in the second. */}
               <div className="wn-half">
-                <span className="wn-tag"><i key={name.trim().charAt(0)} className={`cs-face wn-ini${name.trim() ? '' : ' none'}`} aria-hidden="true">{name.trim().charAt(0).toUpperCase() || '?'}</i><b>Just a name</b></span>
-                {error && <p className="wn-note bad" role="alert">{error}</p>}
-                <div className="wn-ask">
-                  <label className={`wn-f${miss ? ' miss' : ''}`}><span>Your name</span><input ref={who} autoFocus value={name} maxLength={40} autoComplete="name" placeholder="Type your name" onChange={event => { setName(event.target.value); setMiss(false); }} onKeyDown={enter(named)} /></label>
-                  <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={named}>{busy ? 'Saving' : picked.size > 0 ? 'Save my times' : 'Pick my times'}</button>
+                <div className={`wn-cap${miss ? ' miss' : ''}`}>
+                  <i key={name.trim().charAt(0)} className={`cs-face wn-ini${name.trim() ? '' : ' none'}`} aria-hidden="true">{name.trim().charAt(0).toUpperCase() || '?'}</i>
+                  <input ref={who} autoFocus aria-label="Your name" value={name} maxLength={40} autoComplete="name" placeholder="Your name" onChange={event => { setName(event.target.value); setMiss(false); }} onKeyDown={enter(named)} />
+                  <button className="cs-btn wn-go" type="button" disabled={busy} onClick={named}>{busy ? 'Saving' : picked.size > 0 ? 'Save my times' : 'Pick my times'}</button>
                 </div>
+                {error && <p className="wn-note bad" role="alert">{error}</p>}
               </div>
               {ways && <div className="wn-half lo">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <span className="wn-tag lime"><span className="wn-pets" aria-hidden="true">{PETS.map(pet => <img key={pet} className="cs-face" src={`/animals/${pet}.webp`} alt="" />)}</span><b>Have Loopd?</b></span>
-                {ways}
+                <div className="wn-cap lime"><span className="wn-pets" aria-hidden="true">{PETS.map(pet => <img key={pet} className="cs-face" src={`/animals/${pet}.webp`} alt="" />)}</span>{ways}</div>
               </div>}
             </div>
           </div>

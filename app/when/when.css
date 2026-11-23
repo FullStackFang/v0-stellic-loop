@@ -213,15 +213,37 @@ button.wn-cell { cursor: pointer; }
 .wn-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 15px 22px; border-radius: 22px 22px 0 0; background: var(--cs-field); border-bottom: 1.5px dashed var(--cs-ink); }
 .wn-card-top h2 { margin: 0; font-size: 23px; font-weight: 720; letter-spacing: -.03em; line-height: 1.1; }
 .wn-card-top svg { flex: none; width: 42px; height: 42px; padding: 6px; border-radius: 13px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); --lime: var(--cs-action); }
-.wn-halves { display: grid; } .wn-half { display: grid; gap: 14px; align-content: start; justify-items: start; min-width: 0; padding: 18px 18px 20px; } .wn-half > * { max-width: 100%; } .wn-half > .wn-ask, .wn-half > .wn-ways, .wn-half > .wn-note { width: 100%; }
+.wn-halves { display: grid; } .wn-half { display: grid; gap: 10px; align-content: start; justify-items: start; min-width: 0; padding: 18px 18px 20px; } .wn-half > * { max-width: 100%; } .wn-half > .wn-ask, .wn-half > .wn-ways, .wn-half > .wn-note { width: 100%; }
 .wn-half.lo { border-radius: 0 0 22px 22px; background: var(--cs-ink); }
-.wn-tag { display: inline-flex; align-items: center; gap: 11px; height: 48px; padding: 0 20px 0 5px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-field); font-size: 17px; letter-spacing: -.02em; } .wn-tag b { font-weight: 700; }
-.wn-tag.lime { background: var(--cs-field); color: var(--cs-ink); }
-.wn-tag .cs-face { width: 38px; height: 38px; } .wn-tag .cs-face.wn-ini { display: inline-grid; place-items: center; font-size: 18px; font-style: normal; background: var(--cs-field); color: var(--cs-ink); box-shadow: none; animation: wn-pop .28s cubic-bezier(.16, 1, .3, 1); }
-.wn-tag .cs-face.wn-ini.none { background: transparent; color: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-field); }
 @keyframes wn-pop { from { scale: .6; rotate: -14deg; } }
-.wn-pets { display: inline-flex; } .wn-pets .cs-face { background: var(--cs-paper); box-shadow: 0 0 0 2.5px var(--cs-field); } .wn-pets .cs-face + .cs-face { margin-left: -13px; }
-.wn-card .wn-ask { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding-top: 6px; } .cs .wn-card .wn-ask .cs-btn.wn-big { width: auto; height: 50px; padding: 0 18px; font-size: 16px; }
+/* a capsule: one line that is both the label and the control. The name is typed into the ink one; the lime one holds the animals and the ways in. */
+.wn-cap { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; height: 58px; padding: 0 6px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-field); }
+.wn-cap:not(.lime):focus-within, .wn-cap.miss { box-shadow: 0 0 0 3px var(--cs-action); } .cs .wn-cap > input, .cs .wn-cap > input:focus-visible { outline: 0; box-shadow: none; }
+.wn-cap > .cs-face.wn-ini { flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; font-size: 20px; font-style: normal; background: var(--cs-field); color: var(--cs-ink); box-shadow: none; animation: wn-pop .28s cubic-bezier(.16, 1, .3, 1); }
+.wn-cap > .cs-face.wn-ini.none { background: transparent; color: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-field); }
+.wn-cap > input { flex: 1; min-width: 0; height: 46px; padding: 0 4px; border: 0; outline: 0; background: transparent; color: var(--cs-paper); font: inherit; font-size: 17px; font-weight: 600; }
+.wn-cap > input::placeholder { color: color-mix(in oklch, var(--cs-field) 75%, transparent); }
+.cs .wn-cap > .cs-btn.wn-go { flex: none; height: 46px; padding: 0 18px; border-radius: 99px; background: var(--cs-field); color: var(--cs-ink); box-shadow: none; font-size: 15.5px; font-weight: 700; }
+.wn-cap.lime { background: var(--cs-field); color: var(--cs-ink); }
+.wn-pets { flex: none; display: inline-flex; } .wn-pets .cs-face { width: 44px; height: 44px; background: var(--cs-paper); box-shadow: 0 0 0 2.5px var(--cs-field); } .wn-pets .cs-face + .cs-face { margin-left: -16px; }
+.wn-cap:has(.wn-ways[data-email]) .wn-pets { display: none; }
+.wn-cap .wn-ways { flex: 1; min-width: 0; align-items: center; } .wn-cap .wn-ways[data-email] .wn-way { margin-top: 0; }
+/* the form's own line about who keeps sign-in safe goes under the capsule, on the ink */
+.wn-half.lo:has(.cl-footer) { padding-bottom: 40px; } .cs .wn-cap .wn-ways .cl-footer { position: absolute; top: calc(100% + 8px); left: 14px; margin: 0; }
+/* Email pressed: the form's box and Continue on the capsule's one line */
+.cs .wn-ways[data-email] .cl-form { display: flex !important; flex-direction: row !important; align-items: center; gap: 8px; } .cs .wn-ways[data-email] .cl-form > div:first-of-type { flex: 1; min-width: 0; }
+.cs .wn-ways[data-email] .cl-formFieldLabelRow, .cs .wn-ways[data-email] .cl-formFieldRow__password { display: none !important; } .cs .wn-ways[data-email] .cl-form > div:last-of-type { flex: none; width: auto; }
+/* a phone: the capsule is narrow, so the animals shrink and the three ways in say only their names */
+@media (max-width: 779px) {
+  .wn-cap { gap: 6px; } .wn-pets .cs-face { width: 34px; height: 34px; } .wn-pets .cs-face + .cs-face { margin-left: -20px; }
+  .wn-cap .wn-ways:not([data-email]) { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+  .cs .wn-ways:not([data-email]) .cl-socialButtonsRoot, .cs .wn-ways .cl-socialButtons { gap: 6px; } .cs .wn-ways .cl-socialButtons { grid-auto-columns: auto; justify-content: stretch; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: row; }
+  .cs .wn-ways .cl-socialButtonsProviderIcon, .cs .wn-ways:not([data-email]) .wn-way svg { display: none; }
+  .cs .wn-ways .cl-socialButtonsBlockButton, .cs .wn-ways .cs-btn.wn-way { padding: 0 7px; font-size: 13.5px; } .cs .wn-ways .cl-socialButtonsBlockButtonText::after { font-size: 13.5px !important; } .cs .wn-ways .cl-socialButtonsBlockButton > span { gap: 0; }
+  .cs .wn-cap > .cs-btn.wn-go { padding: 0 14px; font-size: 15px; } .wn-cap > input { font-size: 16px; }
+  .cs .wn-cap .wn-ways .cl-footer { left: 0; right: 0; display: flex; justify-content: center; overflow: hidden; }
+}
+.cs .wn-ways[data-email] .cl-formButtonPrimary { width: auto; padding: 0 16px; background: var(--cs-ink); color: var(--cs-field); } .cs .wn-ways[data-email] .cl-formFieldInput { border-radius: 99px; padding: 0 14px; }
 /* the ways in: the sign-in form's own Google and LinkedIn, and our Email, on one line */
 .wn-ways { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 8px; align-items: start; } .wn-ways[data-email] { grid-template-columns: minmax(0, 1fr) auto; }
 .wn-ways-wait { display: grid; place-items: center; height: 46px; }
@@ -235,7 +257,7 @@ button.wn-cell { cursor: pointer; }
 .cs .wn-ways .cl-footer { margin-top: 2px; } .cs .wn-ways .cl-footer * { font-size: 11px; } .cs .wn-ways .cl-socialButtonsBlockButton { height: 46px; border: 0; border-radius: 99px; background: var(--cs-paper); color: var(--cs-ink); box-shadow: none; font-size: 14.5px; font-weight: 600; }
 .cs .wn-ways .cl-socialButtonsBlockButtonText { color: var(--cs-ink); font-size: 14.5px; font-weight: 600; } .cs .wn-ways .cl-lastAuthenticationStrategyBadge { display: none; }
 .cs .wn-ways .cl-formButtonPrimary { height: 46px; border-radius: 99px; background: var(--cs-field); color: var(--cs-ink); box-shadow: none; font-weight: 700; } .cs .wn-ways .cl-formFieldInput { height: 46px; border-radius: 14px; }
-@media (min-width: 780px) { .cs-over-card.wn-card { width: 720px; } .wn-halves { grid-template-columns: 1fr 1fr; } .wn-half { padding: 22px 22px 24px; } .wn-half.lo { border-radius: 0 0 22px 0; } }
+@media (min-width: 780px) { .cs-over-card.wn-card { width: min(100%, 920px); } .wn-halves { grid-template-columns: 1fr 1fr; } .wn-half { padding: 22px 22px 24px; } .wn-half.lo { border-radius: 0 0 22px 0; } }
 .wn-done .cs-pill { font-size: 12.5px; } .wn-done > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .cs-face.wn-ini { background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); font-weight: 740; }
 .cs-stack .cs-face.wn-ini { box-shadow: inset 0 0 0 1.5px var(--cs-ink), 0 0 0 2px var(--ring); }
