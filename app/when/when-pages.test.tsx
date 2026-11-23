@@ -252,7 +252,7 @@ it('knows a guest by the mark in their browser, draws them as their initial, and
   expect(view.container).toHaveTextContent('4 of 7 answered');
   expect(view.container).toHaveTextContent('Saved as Aaron');
   expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByLabelText('Want the invite when the time is set?')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Email me the invite' })).toBeInTheDocument();
   expect(screen.getAllByRole('img', { name: 'Aaron' })[0]).toHaveTextContent('A');
   clean(view.container.innerHTML);
   cleanup();

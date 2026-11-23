@@ -56,7 +56,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   // A guest says who they are before painting: the card is open on arrival for someone this browser does not know,
   // and `ready` is whether they have given a name since.
   const [asking, setAsking] = useState(!!onSave && !!guest && !guest.name), [ready, setReady] = useState(!!guest?.name), who = useRef<HTMLInputElement>(null);
-  const [name, setName] = useState(guest?.name ?? ''), [email, setEmail] = useState(''), [sentTo, setSentTo] = useState(guest?.email ?? null), [miss, setMiss] = useState(false);
+  const [name, setName] = useState(guest?.name ?? ''), [email, setEmail] = useState(''), [sentTo, setSentTo] = useState(guest?.email ?? null), [miss, setMiss] = useState(false), [inviting, setInviting] = useState(false);
   // A guest is drawn as the initial of the name they are typing.
   const me = guest && given ? { ...given, name: name.trim() || '?' } : given;
   useEffect(() => { const stop = () => { painting.current = null; }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
@@ -151,15 +151,17 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   </span>;
   // Once a guest's times are saved, who they are saved as and the offer of the invite: one strip, across the top on a laptop and at the foot on a phone.
   const strip = onSave && guest && !changed && kept ? <div className="wn-save wn-who wn-top">
-          <div className="wn-done" role="status"><span className="wn-as"><i className="cs-face wn-ini" aria-hidden="true">{name.trim().charAt(0).toUpperCase()}</i><span className="cs-pill yes">Saved as {name.trim()}</span></span>
-            <button type="button" className="cs-btn sm" onClick={ask}>Not {name.trim()}?</button>{sentTo && <span>The invite goes to {sentTo}</span>}</div>
-          {!sentTo && onEmail && <div className="wn-ask">
-            <label className={`wn-f${miss ? ' miss' : ''}`}><span>Want the invite when the time is set?</span><input ref={field} type="email" value={email} maxLength={254} autoComplete="email" placeholder="you@email.com" onChange={event => { setEmail(event.target.value); setMiss(false); }} onKeyDown={enter(send)} /></label>
-            <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={send}>{busy ? 'Sending' : 'Send it to me'}</button>
-          </div>}
+    {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
+    {inviting && !sentTo && onEmail ? <div className="wn-ask wn-inv">
+      <label className={`wn-f${miss ? ' miss' : ''}`}><span>Email for the invite</span><input ref={field} autoFocus type="email" value={email} maxLength={254} autoComplete="email" placeholder="you@email.com" onChange={event => { setEmail(event.target.value); setMiss(false); }} onKeyDown={enter(send)} /></label>
+      <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={send}>{busy ? 'Sending' : 'Send it to me'}</button>
+      <button className="cs-btn wn-big" type="button" onClick={() => { setInviting(false); setMiss(false); }}>Back</button>
+    </div> : <div className="wn-done" role="status">
+      <span className="wn-as"><i className="cs-face wn-ini" aria-hidden="true">{name.trim().charAt(0).toUpperCase()}</i><span className="cs-pill yes">Saved as {name.trim()}</span>{sentTo && <span className="cs-pill">The invite goes to {sentTo}</span>}</span>
+      <span className="wn-as">{!sentTo && onEmail && <button type="button" className="cs-btn sm" onClick={() => setInviting(true)}>Email me the invite</button>}<button type="button" className="cs-btn sm" onClick={ask}>Not {name.trim()}?</button></span>
+    </div>}
   </div> : null;
   return <>
-    {strip}
     <div className="wn-col"><Panel tab={tab ?? (onSave ? 'Paint the times you can make' : 'When people are free so far')}>{pager}
       <div ref={box} className="wn-grid" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per } as React.CSSProperties}>
         <span />{shown.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
@@ -176,11 +178,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
             onClick={event => { if (event.detail === 0) paint(slot, !on); }}>{total}{badge}</button>;
         }), ...pad.map((_, n) => <span key={`pad${hour}${n}`} />)])}
       </div>
-      <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />More people free</span>{onSave && <span className="cs-pill"><i className="mine" />Yours</span>}{children}</div></Panel></div>
-    <div className="wn-col side"><Ticket tile={tile} stub={stub}>{title}</Ticket>
-      {best.length > 0 && <div className="wn-best"><Panel tab="Best so far, all days"><div className="wn-picks">{best.map(each => <button key={each.at} type="button" aria-label={`Show ${each.dow} ${each.date}, ${each.time}`}
-        onClick={() => { setTurned(Math.max(0, pages.findIndex(set => set.includes(slotOf.get(each.at)?.day ?? '')))); setTouched(each.at); }}>
-        <Tile top={each.dow} big={each.date} /><span><b>{each.time}</b><small>{each.line}</small></span><Stack people={each.people} /></button>)}</div></Panel></div>}
+      <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />More people free</span>{onSave && <span className="cs-pill"><i className="mine" />Yours</span>}{children}</div></Panel>
+      {strip}
       {onSave && guest ? <div className="wn-save wn-who">
         {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
         {/* Someone this browser already knows saves straight away; anyone else is asked who they are first. */}
@@ -209,7 +208,13 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
         {error && <p className="wn-note bad" role="alert">{error}</p>}
         <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => void save()}>{busy ? 'Saving' : changed || !kept ? 'Save my times' : 'Saved'}</button>
         <p className="wn-note" role="status">{changed ? 'Not saved yet.' : after}</p>
-      </div> : action}
+      </div> : null}
+    </div>
+    <div className="wn-col side"><Ticket tile={tile} stub={stub}>{title}</Ticket>
+      {best.length > 0 && <div className="wn-best"><Panel tab="Best so far, all days"><div className="wn-picks">{best.map(each => <button key={each.at} type="button" aria-label={`Show ${each.dow} ${each.date}, ${each.time}`}
+        onClick={() => { setTurned(Math.max(0, pages.findIndex(set => set.includes(slotOf.get(each.at)?.day ?? '')))); setTouched(each.at); }}>
+        <Tile top={each.dow} big={each.date} /><span><b>{each.time}</b><small>{each.line}</small></span><Stack people={each.people} /></button>)}</div></Panel></div>}
+      {!onSave && action}
       {tail}</div>
   </>;
 }

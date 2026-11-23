@@ -99,11 +99,12 @@ it('asks someone with no account who they are on one card, a name or Loopd, and 
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(sessionStorage.getItem(`wn-keep:${location.pathname}`)).toBeNull();
   expect(screen.getByRole('button', { name: 'Not Aaron?' })).toBeInTheDocument();
-  // The invite is an offer: a bad address is not sent, a good one is.
-  fireEvent.change(screen.getByLabelText('Want the invite when the time is set?'), { target: { value: 'aaron' } });
+  // The invite is an offer behind one pill: a bad address is not sent, a good one is.
+  fireEvent.click(screen.getByRole('button', { name: 'Email me the invite' }));
+  fireEvent.change(screen.getByLabelText('Email for the invite'), { target: { value: 'aaron' } });
   fireEvent.click(screen.getByRole('button', { name: 'Send it to me' }));
   expect(onEmail).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText('Want the invite when the time is set?'), { target: { value: 'Aaron@Email.com' } });
+  fireEvent.change(screen.getByLabelText('Email for the invite'), { target: { value: 'Aaron@Email.com' } });
   fireEvent.click(screen.getByRole('button', { name: 'Send it to me' }));
   await waitFor(() => expect(screen.getByText('The invite goes to aaron@email.com')).toBeInTheDocument());
   expect(onEmail).toHaveBeenCalledWith('aaron@email.com');

@@ -43,15 +43,16 @@ export function Opened({ pollId }: { pollId: string }) {
   return null;
 }
 
-/** The poll's link, for anyone to pass on: the phone's own share sheet where there is one, or else the link is copied. */
-export function Share({ title }: { title: string }) {
+/** The poll's link, for anyone to pass on: one press copies it. */
+export function CopyLink() {
   const [copied, setCopied] = useState(false);
-  const share = async () => {
+  const copy = async () => {
     const url = location.origin + location.pathname;
-    if (navigator.share) { await navigator.share({ title, url }).catch(() => {}); return; }
-    await navigator.clipboard.writeText(url).then(() => setCopied(true), () => setCopied(false));
+    const done = await navigator.clipboard.writeText(url).then(() => true, () => false);
+    // A browser that refuses the clipboard still gets the link, in a box to copy from.
+    if (done) { setCopied(true); setTimeout(() => setCopied(false), 2500); } else window.prompt('Copy this link', url);
   };
-  return <button type="button" className="cs-btn sm" onClick={share}>{copied ? 'Link copied' : 'Share'}</button>;
+  return <button type="button" className="cs-btn sm" onClick={copy}>{copied ? 'Link copied' : 'Copy link'}</button>;
 }
 
 /** Copies the words to pass on. */
