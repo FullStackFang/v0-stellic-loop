@@ -11,7 +11,9 @@ import { campusViewer } from '@/lib/campus/session';
 // The page is not inside the app, so it says itself that it was opened (app/c/seen, for the admin's Activity section): on the live site only.
 const SEEN = process.env.NODE_ENV === 'production' ? `<script>fetch('/c/seen', { method: 'POST', keepalive: true, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: '/conga' }) }).catch(() => {});</script>\n` : '';
 // Vercel Web Analytics counts it the same way (components/analytics.tsx): its script, as a plain page carries it.
-const COUNTED = process.env.NODE_ENV === 'production' ? `<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>\n<script defer src="/_vercel/insights/script.js"></script>\n` : '';
+// Vercel may give a project its own path for the script, at build time; the app's component reads the same name.
+const INSIGHTS = process.env.NEXT_PUBLIC_VERCEL_OBSERVABILITY_BASEPATH ? `${process.env.NEXT_PUBLIC_VERCEL_OBSERVABILITY_BASEPATH}/insights` : '/_vercel/insights';
+const COUNTED = process.env.NODE_ENV === 'production' ? `<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>\n<script defer src="${INSIGHTS}/script.js" data-endpoint="${INSIGHTS}"></script>\n` : '';
 // Read once where the page cannot change under the server, and afresh while it is being worked on.
 let kept: Promise<string> | undefined;
 const read = () => readFile(path.join(process.cwd(), 'public', 'conga', 'index.html'), 'utf8');
