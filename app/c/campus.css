@@ -539,8 +539,15 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm-grid { grid-auto-flow: dense; } .cs-adm-card { display: none; }
 .cs-adm-pick[data-picked="1"] .cs-adm-grid li:has(:checked) { grid-column: span 5; grid-row: span 2; display: grid; grid-template-columns: 136px minmax(0, 1fr); align-items: center; gap: 14px; padding: 12px 14px 12px 10px; border-radius: 20px 20px 20px 6px; background: var(--cs-paper); box-shadow: inset 0 0 0 2px var(--cs-ink), 4px 4px 0 var(--cs-field-shadow); }
 .cs-adm-pick[data-picked="1"] .cs-adm-grid li:has(:checked) > label { background: none; box-shadow: none; } .cs-adm-pick[data-picked="1"] .cs-adm-grid li:has(:checked) > label > img { width: 116px; height: 116px; } .cs-adm-pick[data-picked="1"] .cs-adm-grid li:has(:checked) > label > span { display: none; }
-.cs-adm-pick[data-picked="1"] .cs-adm-grid li:has(:checked) > .cs-adm-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
-.cs-adm-row { display: flex; align-items: center; gap: 8px; } .cs-adm .cs-adm-row > input { flex: 1; height: 36px; border-radius: 99px; font-weight: 600; }
+/* The card: the name, the words and where it stands each take a whole line, and Delete, Save and Close share the last one, Delete
+   on the left. On one line with the buttons, the name box was squeezed to nothing and Close ran off the card on a phone. */
+.cs-adm-pick[data-picked="1"] .cs-adm-grid li:has(:checked) > .cs-adm-card { display: flex; flex-wrap: wrap; align-content: center; gap: 8px; min-width: 0; }
+.cs-adm .cs-adm-card > *, .cs-adm .cs-adm-card .cs-adm-row > input { flex: 1 1 100%; min-width: 0; } .cs-adm-card .cs-adm-row { display: contents; }
+.cs-adm-card .cs-adm-row > input { order: 0; } .cs-adm-card .cs-adm-words { order: 1; } .cs-adm-card .cs-adm-stand { order: 2; }
+.cs-adm-card .cs-adm-row > :not(input) { order: 3; flex: none; white-space: nowrap; } .cs-adm-card .cs-adm-row > .go { margin-left: auto; }
+/* Delete pressed asks "Delete for good" in its place; Save steps out meanwhile, so the line still fits, and Close backs out. */
+.cs-adm-card:has(details[open]) .cs-adm-row > .go { display: none; } .cs-adm-card:has(details[open]) .cs-adm-row > [type=reset] { margin-left: auto; }
+.cs-adm-row { display: flex; align-items: center; gap: 8px; } .cs-adm .cs-adm-row > input { height: 36px; border-radius: 99px; font-weight: 600; }
 .cs-adm-card .cs-adm-words { flex-wrap: nowrap; min-height: 36px; padding: 0 5px; border-radius: 99px; overflow: hidden; } .cs-adm-card .cs-adm-words > span { flex: none; }
 .cs-adm .cs-adm-card .cs-adm-words > input { min-width: 90px; }
 /* Where it stands: one rail, the place it is now pressed. */
