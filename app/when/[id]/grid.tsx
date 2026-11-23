@@ -189,7 +189,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   };
   const enter = (run: () => void) => (event: KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter') { event.preventDefault(); run(); } };
   const here = slots.filter(slot => shown.includes(slot.day)), first = here.find(slot => picked.has(slot.at))?.at ?? here[0]?.at;
-  const pad = Array.from({ length: per - shown.length }, (_, n) => <span key={`pad${n}`} />);
+  // A poll that fits one set of days uses the whole width, however few days it has. Only a poll shown a set at a time keeps every set to the same columns.
+  const cols = pages.length > 1 ? per : shown.length, pad = Array.from({ length: cols - shown.length }, (_, n) => <span key={`pad${n}`} />);
   const ranks = (set: string[]) => { const inSet = top.filter(slot => set.includes(slot.day)); return inSet.length > 0 && <span className="wn-rks" aria-hidden="true">{inSet.map(slot => <i key={slot.at} className="wn-rk">{rank.get(slot.at)}</i>)}</span>; };
   const pager = pages.length < 2 ? null : pages.length <= 3
     ? <div className="wn-modes wn-sets" style={{ '--n': pages.length } as React.CSSProperties}>{pages.map((set, n) => <button key={set[0]} type="button" aria-pressed={n === page} onClick={() => setTurned(n)}><small>Best is {most(set)} of {size}</small><b>{span(set)}</b>{ranks(set)}</button>)}</div>
@@ -228,8 +229,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   const on = touched ? slotOf.get(touched) : undefined;
   const said = !fine ? '' : live ? `${live.on ? '' : 'Clearing '}${live.c0 === live.c1 ? `${dow(shown[live.c0])} ${dayNum(shown[live.c0])}` : `${dow(shown[live.c0])} to ${dow(shown[live.c1])} ${dayNum(shown[live.c1])}`}, ${half(timeOf(live.from))} to ${half(timeOf(live.to))}`
     : on ? `${dow(on.day)} ${dayNum(on.day)}, ${half(on.hour * 60 + on.minute)} · ${count(on.at) ? `${count(on.at)} free` : 'nobody yet'}` : '';
-  const strips = fine && <div ref={box} className="wn-grid fine" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': shown.length, '--tall': tall } as React.CSSProperties}>
-    <span />{shown.map((day, col) => <span key={day} className={`wn-d${live && col >= live.c0 && col <= live.c1 ? ' lit' : ''}`}>{dow(day)}<b>{dayNum(day)}</b></span>)}
+  const strips = fine && <div ref={box} className="wn-grid fine" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': cols, '--tall': tall } as React.CSSProperties}>
+    <span />{shown.map((day, col) => <span key={day} className={`wn-d${live && col >= live.c0 && col <= live.c1 ? ' lit' : ''}`}>{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
     <span className="wn-hs" aria-hidden="true">{Array.from({ length: tall + 1 }, (_, n) => <span key={n} className="wn-h" style={{ top: `${n / tall * 100}%` }}>{hourText(firstHour + n)}</span>)}</span>
     <div className="wn-sheet" style={{ gridColumn: `2 / span ${shown.length}`, '--cols': shown.length } as React.CSSProperties} onPointerDown={press} onPointerMove={glide} onPointerUp={lift} onPointerCancel={lift} onLostPointerCapture={lift}>
       {shown.map((day, col) => {
@@ -246,11 +247,11 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
           {cells}{runs.map(([from, to]) => <span key={from} className={`wn-blk${(to - from) * step >= 45 ? ' ends' : ''}`} style={{ top: `calc(${pct(from)} + 2px)`, height: `calc(${pct(to - from)} - 3px)` }}>{label(from, to)}</span>)}
         </div>;
       })}
-    </div>
+    </div>{pad.map((_, n) => <span key={`after${n}`} />)}
   </div>;
   return <>
     <div className="wn-col"><Panel tab={said ? <span className="wn-said" aria-live="polite">{said}</span> : tab ?? (onSave ? fine ? 'Drag over the times you can make' : 'Paint the times you can make' : 'When people are free so far')}>{pager}
-      {strips || <div ref={box} className="wn-grid" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per } as React.CSSProperties}>
+      {strips || <div ref={box} className="wn-grid" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': cols } as React.CSSProperties}>
         <span />{shown.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
         {hours.map((hour, row) => [<span key={hour} className="wn-h">{clock(hour)}</span>, ...shown.map((day, col) => {
           const slot = at.get(`${day} ${hour}`);
