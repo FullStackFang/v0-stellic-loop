@@ -145,6 +145,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .week li b { font-weight: 900; font-size: 16px; font-variant-numeric: tabular-nums; }
 .week li.me { background: var(--ink); color: var(--paper); } .week li.me .n { color: var(--field); }
 .week li.unsaved { background: oklch(93% 0.03 45); color: var(--ink); outline: 2px dashed var(--ink); outline-offset: -2px; } .week li.unsaved .n { color: var(--mute); }
+.week li.none { justify-content: center; color: var(--mute); font-weight: 700; font-size: 14px; }
 .week li.gap { height: 14px; justify-content: center; color: var(--mute); font-weight: 900; letter-spacing: .2em; }
 .week .join { justify-self: start; height: 44px; padding: 0 18px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 15px; white-space: nowrap; box-shadow: 3px 3px 0 var(--action); }
 .week { display: grid; gap: 10px; }
@@ -568,7 +569,7 @@ function week(card, round) {
   if (mine && at < TOP) list = [...others.slice(0, at), mine, ...others.slice(at)].slice(0, TOP).map((row, n) => li(row, n + 1, row === mine)).join('');
   else list = others.slice(0, TOP).map((row, n) => li(row, n + 1)).join('') + (mine ? `<li class="gap">···</li>${li(mine, mine.place, true)}` : '');
   const box = Object.assign(document.createElement('div'), { className: 'week' });
-  box.innerHTML = `<span class="tab">This week · ${plain(MAPS[where].name)}</span><ol>${list || '<li class="gap">Nobody yet this week</li>'}</ol>`
+  box.innerHTML = `<span class="tab">This week · ${plain(MAPS[where].name)}</span><ol>${list || '<li class="none">Nobody yet this week. Be the first</li>'}</ol>`
     + (round && !you ? '<button class="join">Sign in to go on the board</button>' : '');
   box.querySelector('.join')?.addEventListener('click', () => {
     // Kept for after signing in, which comes back to a fresh page: it is put on the board then.
