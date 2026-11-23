@@ -132,6 +132,23 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .score div + div { background: var(--ink); color: var(--paper); }
 .score b { font-weight: 900; font-stretch: 112%; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
 .score span { font-size: 13px; font-weight: 700; }
+/* This week's board on this map (/demo/mockups-conga-board.html, A): the top five, you in ink; you further down after a gap.
+   Someone signed out sees where they would be, outlined, and a pill to sign in. */
+.week { position: relative; padding-top: 10px; }
+.week > .tab { position: absolute; left: 14px; top: 0; z-index: 1; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 12px; border-radius: 99px; padding: 3px 10px 4px; }
+.week ol { list-style: none; padding: 14px 6px 6px; border-radius: 18px; box-shadow: inset 0 0 0 2px var(--ink); display: grid; gap: 1px; }
+.week li { display: flex; align-items: center; gap: 9px; height: 34px; padding: 0 14px 0 4px; border-radius: 99px; font-weight: 650; font-size: 15px; }
+.week li .n { width: 30px; flex: none; text-align: right; font-weight: 800; font-size: 13px; color: var(--mute); font-variant-numeric: tabular-nums; }
+.week .face { width: 28px; flex: none; border-radius: 50%; background-color: var(--field); }
+.week li i { flex: 1; min-width: 0; font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.week .sc { flex: none; font-size: 10.5px; font-weight: 800; padding: 1px 6px 2px; border-radius: 99px; color: var(--ink); }
+.week li b { font-weight: 900; font-size: 16px; font-variant-numeric: tabular-nums; }
+.week li.me { background: var(--ink); color: var(--paper); } .week li.me .n { color: var(--field); }
+.week li.unsaved { background: oklch(93% 0.03 45); color: var(--ink); outline: 2px dashed var(--ink); outline-offset: -2px; } .week li.unsaved .n { color: var(--mute); }
+.week li.gap { height: 14px; justify-content: center; color: var(--mute); font-weight: 900; letter-spacing: .2em; }
+.week .join { justify-self: start; height: 44px; padding: 0 18px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 15px; white-space: nowrap; box-shadow: 3px 3px 0 var(--action); }
+.week { display: grid; gap: 10px; }
+#over .faces { display: none; } /* the animals to pick stay on the first card, so the board has the room */
 @media (max-width: 560px) { .side { width: 142px; } .board { padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
   .card { padding: 22px 16px 20px; } .row { gap: 6px; } .go { padding: 0 13px; font-size: 17px; } .where button { padding: 0 6px; font-size: 12.5px; } .quit { padding: 0 16px; }
   .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 58px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 12px; padding: 4px; } .hint span { column-gap: 5px; padding-right: 7px; } .hint .it img { width: 20px; height: 20px; } .pause { left: 110px; } }
@@ -361,9 +378,9 @@ function offer() {
       const join = card.querySelector('[data-join]');
       join.onclick = async () => {
         join.disabled = true;
-        const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place: 'conga: Get Ink', back: location.pathname }) }).catch(() => null);
+        const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place: 'conga: Get Ink', back: '/conga' }) }).catch(() => null);
         const got = await answer?.json().catch(() => null);
-        if (got?.signIn) return location.assign(got.signIn);
+        if (got?.signIn) return top.location.assign(got.signIn); // the whole window, not the frame the game is in
         card.querySelector('p').textContent = got?.ok ? got.said : 'That did not go through. Try again.';
         if (got?.ok) join.remove(); else join.disabled = false;
       };
@@ -393,6 +410,10 @@ Promise.resolve(window.congaPlayer ?? null).then(player => {
   const [ring, tile] = RINGS[you.kit] ?? RINGS.cornell; // the way back wears the player's school
   document.documentElement.style.setProperty('--ring', ring); document.documentElement.style.setProperty('--tile', tile);
   offer();
+  // A round ended before signing in ("Sign in to go on the board") goes on the board now, as the animal they wear.
+  let waiting = null;
+  try { waiting = JSON.parse(sessionStorage.getItem('conga-round') ?? 'null'); sessionStorage.removeItem('conga-round'); } catch {}
+  if (waiting) save({ ...waiting, face: own().face, picture: own().picture }).then(kept => { if (kept) say(`Your ${waiting.best} is on this week's board`); });
 }).catch(() => {});
 $('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {
   const button = Object.assign(document.createElement('button'), { textContent: each.name, onclick: () => { keep.set('conga-map', id); open(id); } });
@@ -407,6 +428,7 @@ function begin() {
   // them all back at their starting sizes.
   open(where);
   me = addLine(world, { id: ME, face, name: 'You' });
+  began = world.t; tell('playing');
   me.ink = !!you?.plus || ask.has('ink'); // someone with Ink+ sparkles, whichever animal they play; `?ink` shows it to anyone, `?ink=nyu` in a school's colours
   me.kit = animal?.kit ?? (KITS[ask.get('ink')] ? ask.get('ink') : you?.kit ?? 'cornell'); // the colours it sparkles in: the school of the animal, else the player's
   me.face = face;
@@ -436,7 +458,8 @@ let paused = false;
 function pause(on) {
   if (!me || me.dead || on === paused) return;
   paused = on; stale = true;
-  $('paused').hidden = !on; $('pause').hidden = on;
+  if (on) week($('paused'), null);
+  $('paused').hidden = !on; $('pause').hidden = on; tell(on ? 'stopped' : 'playing');
   keys.clear(); dash = false; stick = null;
 }
 $('pause').onclick = () => pause(true);
@@ -494,7 +517,7 @@ $('coachSkip').onclick = () => { for (const step of LESSONS) learnt.add(step); k
 $('howto').onclick = () => { learnt.clear(); keep.set('conga-learnt', ''); pause(false); teach(); };
 // Quit: your animals stay behind as strays, and the first card comes back with its animals and places.
 $('quit').onclick = () => {
-  paused = false; removeLine(world, ME); me = null;
+  paused = false; removeLine(world, ME); me = null; tell('stopped');
   $('paused').hidden = $('mine').hidden = $('place').hidden = $('pause').hidden = true;
   offer(); $('start').querySelector('p').after($('faces')); $('go').after($('where'));
   $('start').hidden = false;
@@ -511,7 +534,58 @@ function finish(event) {
   $('mine').hidden = $('place').hidden = $('pause').hidden = true;
   // The same animals and grounds as the first card, moved here: another go can be as someone else, or somewhere else.
   offer(); $('over').querySelector('.score').after($('faces')); $('again').after($('where'));
-  setTimeout(() => { $('over').hidden = false; }, 900);
+  // The round goes on this week's board: kept for someone signed in, shown where it would be for anyone else.
+  const round = { map: where, best: event.size, seconds: world.t - began, face: me?.face ?? picked, picture: me && !me.face && you ? own().picture : null };
+  week($('over'), round);
+  if (you) save(round).then(kept => { if (kept && !$('over').hidden) week($('over'), null); });
+  setTimeout(() => { $('over').hidden = false; tell('stopped'); }, 900);
+}
+
+// ---------- this week's board ----------
+// This week's best lines on each map (/demo/mockups-conga-board.html, A), written into the page as `congaBoard`
+// (app/conga/play), null before the database has the board. The card it is on shows this map's top five, and you.
+let boards = window.congaBoard ?? null, began = 0;
+/** Tells the app page round the game whether it is being played, so its bar and foot slide away or back (app/conga/frame.tsx). */
+const tell = conga => { if (parent !== window) parent.postMessage({ conga }, location.origin); };
+const SCHOOLS = { loop: 'Loopd', cornell: 'Cornell', columbia: 'Columbia', cuny: 'CUNY', nyu: 'NYU' };
+const ordinal = n => `${n}${n % 100 > 10 && n % 100 < 14 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
+const plain = text => String(text).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+/** Draws the board onto a card, after its score (or above its buttons). `round`: the round just ended, not yet on it. */
+function week(card, round) {
+  card.querySelector('.week')?.remove();
+  const rows = boards?.[where];
+  if (!rows) return;
+  const others = rows.filter(row => !row.you);
+  let mine = rows.find(row => row.you) ?? null;
+  if (round && !you) mine = { face: round.face, picture: null, kit: null, best: round.best, unsaved: true };
+  else if (round && (!mine || round.best > mine.best)) mine = { kit: you.kit, ...mine, face: round.face, picture: round.picture, best: round.best, place: null };
+  // Where you stand among the top: before the first of them you beat.
+  let at = mine ? others.findIndex(row => row.best < mine.best) : -1;
+  if (mine && at < 0) at = others.length;
+  const li = (row, place, me) => `<li class="${me ? (row.unsaved ? 'me unsaved' : 'me') : ''}"><span class="n">${place ? ordinal(place) : '–'}</span>${faceTag(row.face, row.picture ?? undefined)}`
+    + `<i>${me ? (row.unsaved ? 'You, once signed in' : 'You') : plain(row.name)}</i>${row.kit ? `<span class="sc" style="background:${(RINGS[row.kit] ?? RINGS.loop)[0]}">${SCHOOLS[row.kit] ?? ''}</span>` : ''}<b>${row.best}</b></li>`;
+  let list;
+  if (mine && at < TOP) list = [...others.slice(0, at), mine, ...others.slice(at)].slice(0, TOP).map((row, n) => li(row, n + 1, row === mine)).join('');
+  else list = others.slice(0, TOP).map((row, n) => li(row, n + 1)).join('') + (mine ? `<li class="gap">···</li>${li(mine, mine.place, true)}` : '');
+  const box = Object.assign(document.createElement('div'), { className: 'week' });
+  box.innerHTML = `<span class="tab">This week · ${plain(MAPS[where].name)}</span><ol>${list || '<li class="gap">Nobody yet this week</li>'}</ol>`
+    + (round && !you ? '<button class="join">Sign in to go on the board</button>' : '');
+  box.querySelector('.join')?.addEventListener('click', () => {
+    // Kept for after signing in, which comes back to a fresh page: it is put on the board then.
+    try { sessionStorage.setItem('conga-round', JSON.stringify(round)); } catch {}
+    if (parent !== window) tell('signin'); else top.location.assign('/conga');
+  });
+  const score = card.querySelector('.score');
+  if (score) score.after(box); else card.querySelector('.row').before(box);
+  settle(box);
+}
+const TOP = 5;
+/** Keeps a round on the board, for someone signed in; the board comes back as it now stands. */
+async function save(round) {
+  const answer = await fetch('/conga/score', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(round) }).catch(() => null);
+  const got = answer?.ok ? await answer.json().catch(() => null) : null;
+  if (got?.boards) boards = got.boards;
+  return !!got?.boards;
 }
 
 let quiet = 0;

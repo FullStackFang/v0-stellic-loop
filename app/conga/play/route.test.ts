@@ -24,10 +24,24 @@ async function person(email: string, name = 'Ana Lopez') {
   await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]);
   return (await authenticate(t.db, 'test', async () => ({ issuer: 'https://issuer.test', subject: row.id, expiresAt: Date.parse('2099-01-01'), verifiedEmail: email })))!;
 }
-const ask = async (who: Principal | null) => { const page = await (await (who ? withPortalTestSession(who, GET) : GET())).text(); expect(page).toContain('<canvas id="game"'); return JSON.parse(/<script>window.congaPlayer = (.*);<\/script>/.exec(page)![1]); };
+const read = async (who: Principal | null) => { const page = await (await (who ? withPortalTestSession(who, GET) : GET())).text(); expect(page).toContain('<canvas id="game"'); return page; };
+const told = (page: string) => /<script>window.congaPlayer = (.*); window.congaBoard = (.*);<\/script>/.exec(page)!.slice(1).map(each => JSON.parse(each));
+const ask = async (who: Principal | null) => told(await read(who))[0];
 
 it('tells the game nothing about someone signed out', async () => {
   expect(await ask(null)).toBeNull();
+});
+
+// The page is read inside the app page at /conga, from /conga/play.
+it('reads its scripts from the site\'s root and opens its links in the whole window', async () => {
+  expect(await read(null)).toContain('<base href="/" target="_top">');
+});
+
+it('gives the game this week\'s board, with the reader\'s own row', async () => {
+  const ana = await person('ana@cornell.edu', 'Ana Lopez');
+  await t.db.query(`insert into conga_best(person_id,map,week,best,face,kit) values ($1,'cornell',(date_trunc('week', now() at time zone 'America/New_York'))::date,401,12,'cornell')`, [ana.personId]);
+  expect(told(await read(null))[1].cornell).toEqual([{ place: 1, name: 'Ana L.', face: 12, picture: null, kit: 'cornell', best: 401, you: false }]);
+  expect(told(await read(ana))[1].cornell[0].you).toBe(true);
 });
 
 it('gives the animal a person wears, by its place on the sheet, in their school\'s colours, and no more without Ink+', async () => {

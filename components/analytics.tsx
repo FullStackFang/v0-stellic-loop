@@ -12,8 +12,8 @@ export function redact(event: BeforeSendEvent): BeforeSendEvent {
 
 /**
  * Vercel Web Analytics: visitors and pages opened, signed in or not, read in the Vercel dashboard. It sets no cookie
- * and sends nothing from a developer's machine. The Conga page is not inside the app and carries the script itself
- * (app/conga/route.ts).
+ * and sends nothing from a developer's machine. Conga is counted as the app page it is (app/conga/page.tsx); the game in
+ * its frame (app/conga/play) carries no script of its own.
  */
 export function SiteAnalytics() {
   return <Analytics beforeSend={redact} />;
