@@ -153,13 +153,15 @@ export function OwnFace({ asked, left, current, bases = [], plus = false, wearin
       </form></>
     : state === 'base' ? <><div className="cs-prem-perks"><span>{plus ? 'Pick one, and say what should change. We’ll draw it again with that.' : 'Pick one of these, say what should change, and we draw it again with that. It comes with Ink+, $9.99 a month.'}</span></div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); if (!base) return setSaid('Pick a pet first.'); if (!note.trim()) return setSaid('Say what should change.'); setSaid(''); setFrom('base'); setState('sure'); }}>
-        {/* Above the animals: a long list would push it out of sight. */}
+        {/* Only the animals scroll; the box and Draw it stay pinned at the card's foot (public/demo/mockups-pet-base-pick.html, B). */}
+        <div className="cs-own-scroll"><div className="cs-pets-grid cs-own-bases" role="group" aria-label="Start from">{bases.map(one => <button key={one.src} type="button" className="cs-pet" aria-pressed={base === one.src} aria-label={one.name} onClick={() => setBase(one.src)}><img src={one.src} alt="" /></button>)}</div></div>
+        <div className="cs-own-foot">
         {said && <p role="alert">{said}</p>}
-        <div className="cs-pets-grid cs-own-bases" role="group" aria-label="Start from">{bases.map(one => <button key={one.src} type="button" className="cs-pet" aria-pressed={base === one.src} aria-label={one.name} onClick={() => setBase(one.src)}><img src={one.src} alt="" /></button>)}</div>
-        {plus ? <><div className="cs-prem-join"><input value={note} onChange={event => setNote(event.target.value)} maxLength={60} aria-label="What should change" placeholder="What should change: add a red scarf…" autoComplete="off" /></div>
+        {plus ? <><div className="cs-prem-join">{base ? <img src={base} alt="" /> : <i aria-hidden="true">?</i>}<input value={note} onChange={event => setNote(event.target.value)} maxLength={60} aria-label="What should change" placeholder={base ? 'What should change: add a red scarf…' : 'Pick a pet above first'} autoComplete="off" /></div>
         <button className="cs-btn go">Draw it</button>
         <p className="cs-prem-small">{note.length} of 60 letters.</p></>
         : <JoinPlan plan="plus" place="pets: Start from another pet" className="cs-btn go"><InkMark plus />Get Ink+ · $9.99</JoinPlan>}
+        </div>
       </form></>
     : state === 'pick' ? <><div className="cs-two" role="group" aria-label="Pick your favorite">{[own, second].map((one, at) => <button key={one} aria-pressed={pick === at} aria-label={at ? 'Second drawing' : 'First drawing'} onClick={() => setPick(at)}><img src={one} alt="" /><span>{at ? 'Second' : 'First'}</span></button>)}</div>
       <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void keep()}><SeatsWord on={wait} word="Keeping" plate>Keep this one</SeatsWord></button><p className="cs-prem-small">The other one is let go.</p>{said && <p role="alert">{said}</p>}</div></>

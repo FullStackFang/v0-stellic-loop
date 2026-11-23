@@ -867,10 +867,17 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs .cs-lvl .cs-pets:has(.cs-pets-grid) { flex: 1 1 auto; min-height: 0; max-height: none; display: flex; flex-direction: column; overflow: hidden; }
 .cs-pets:has(.cs-pets-grid) > .seats-pics { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none; margin: 12px -4px 0; padding: 4px 4px 24px; -webkit-mask: linear-gradient(#000 calc(100% - 28px), #0000); mask: linear-gradient(#000 calc(100% - 28px), #0000); }
 .cs-pets:has(.cs-pets-grid) > .seats-pics::-webkit-scrollbar { display: none; }
-/* "Start from another pet" (components/campus/own-face.tsx): its animals sit inside the dark plate, not in .seats-pics, so the rule
-   above clipped them on a phone. The whole plate scrolls instead, no bar drawn. */
-.cs .cs-lvl .cs-own.cs-pets:has(.cs-pets-grid) { display: block; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
-.cs .cs-lvl .cs-own.cs-pets:has(.cs-pets-grid)::-webkit-scrollbar { display: none; }
+/* "Start from another pet" (components/campus/own-face.tsx; public/demo/mockups-pet-base-pick.html, B): the box and Draw it stay
+   pinned at the card's foot and only the animals scroll, no bar drawn, fading at their foot. The picked pet sits at the start of the box. */
+.cs .cs-lvl .cs-own.cs-pets:has(.cs-own-scroll) { display: flex; flex-direction: column; overflow: hidden; scrollbar-gutter: auto; }
+.cs-own:has(.cs-own-scroll) > .cs-prem { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; } .cs-own:has(.cs-own-scroll) > .cs-prem > * { flex: none; }
+.cs-own .cs-prem > .cs-prem-stub:has(.cs-own-scroll) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 0; padding-bottom: 0; }
+.cs-own-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; margin: 0 -16px; padding: 4px 16px 26px; -webkit-mask: linear-gradient(#000 calc(100% - 26px), #0000); mask: linear-gradient(#000 calc(100% - 26px), #0000); }
+.cs-own-scroll::-webkit-scrollbar { display: none; }
+.cs-own-foot { flex: none; display: grid; gap: 8px; margin: 0 -16px; padding: 12px 16px 16px; border-top: 1.5px solid var(--cs-ink); background: var(--cs-field); }
+.cs .cs-own-foot > .cs-btn { justify-self: stretch; height: 46px; font-size: 15.5px; } .cs-own .cs-own-foot [role=alert] { color: var(--cs-ink); font-weight: 620; }
+.cs-own-foot .cs-prem-join { padding-left: 5px; gap: 10px; } .cs-own-foot .cs-prem-join > :is(img, i) { flex: none; width: 36px; height: 36px; border-radius: 50%; object-fit: contain; background: color-mix(in oklch, var(--cs-ink) 10%, var(--cs-paper)); box-shadow: 0 0 0 2px var(--cs-action); }
+.cs-own-foot .cs-prem-join > i { display: grid; place-items: center; font-style: normal; font-size: 13px; font-weight: 700; color: var(--cs-mute); box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--cs-ink) 35%, transparent); }
 /* Every pane of the account card stops above the window's bottom edge too (public/demo/mockups-account-card-height.html): the bar it hangs
    from stays put while the page scrolls, so a long card (levels, groups, Admin, Sign out) was cut off. The top stays; the rest scrolls, no bar, fading at its foot. */
 .cs-lvl { display: flex; flex-direction: column; max-height: calc(100dvh - 120px); } .cs-lvl > .cs-lvl-top { flex: none; }
