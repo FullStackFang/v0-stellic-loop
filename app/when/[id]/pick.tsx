@@ -43,6 +43,17 @@ export function Opened({ pollId }: { pollId: string }) {
   return null;
 }
 
+/** The poll's link, for anyone to pass on: the phone's own share sheet where there is one, or else the link is copied. */
+export function Share({ title }: { title: string }) {
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    const url = location.origin + location.pathname;
+    if (navigator.share) { await navigator.share({ title, url }).catch(() => {}); return; }
+    await navigator.clipboard.writeText(url).then(() => setCopied(true), () => setCopied(false));
+  };
+  return <button type="button" className="cs-btn sm" onClick={share}>{copied ? 'Link copied' : 'Share'}</button>;
+}
+
 /** Copies the words to pass on. */
 export function Copy({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);

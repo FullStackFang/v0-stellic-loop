@@ -53,7 +53,9 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [touched, setTouched] = useState<string | null>(null);
   const [turned, setTurned] = useState(0), page = Math.min(turned, pages.length - 1), shown = pages[page];
   const painting = useRef<boolean | null>(null), box = useRef<HTMLDivElement>(null), field = useRef<HTMLInputElement>(null);
-  const [asking, setAsking] = useState(false), who = useRef<HTMLInputElement>(null);
+  // A guest says who they are before painting: the card is open on arrival for someone this browser does not know,
+  // and `ready` is whether they have given a name since.
+  const [asking, setAsking] = useState(!!onSave && !!guest && !guest.name), [ready, setReady] = useState(!!guest?.name), who = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(guest?.name ?? ''), [email, setEmail] = useState(''), [sentTo, setSentTo] = useState(guest?.email ?? null), [miss, setMiss] = useState(false);
   // A guest is drawn as the initial of the name they are typing.
   const me = guest && given ? { ...given, name: name.trim() || '?' } : given;
@@ -62,7 +64,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   // The three times most people can make, the most first and among equals the earliest.
   const top = slots.filter(slot => count(slot.at) > 0).sort((a, b) => count(b.at) - count(a.at) || (a.at < b.at ? -1 : 1)).slice(0, 3), rank = new Map(top.map((slot, n) => [slot.at, n + 1]));
   const most = (set: string[]) => Math.max(0, ...slots.filter(slot => set.includes(slot.day)).map(slot => count(slot.at)));
-  const paint = (slot: string, on: boolean) => { setTouched(slot); setPicked(now => { if (now.has(slot) === on) return now; const next = new Set(now); if (on) next.add(slot); else next.delete(slot); return next; }); };
+  const paint = (slot: string, on: boolean) => { if (guest && !ready) { painting.current = null; ask(); return; } setTouched(slot); setPicked(now => { if (now.has(slot) === on) return now; const next = new Set(now); if (on) next.add(slot); else next.delete(slot); return next; }); };
   const down = (slot: string) => (event: PointerEvent<HTMLButtonElement>) => {
     // A finger holds on to the cell it first touched: let go, so the cells it then crosses hear it too.
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -94,6 +96,12 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   // this tab while it is open, so signing in from it, which loads the page again, does not lose it.
   const ask = () => { try { sessionStorage.setItem(keepKey(), JSON.stringify([...picked])); } catch { /* a browser that keeps nothing */ } setMiss(false); setError(''); setAsking(true); };
   const shut = () => { try { sessionStorage.removeItem(keepKey()); } catch { /* nothing kept */ } setAsking(false); };
+  /** The name half's button: the name is taken, and what is painted already is saved under it. With nothing painted the card only closes, to paint. */
+  const named = async () => {
+    if (!name.trim()) { setMiss(true); who.current?.focus(); return; }
+    setReady(true);
+    if (picked.size === 0 || await save()) shut();
+  };
   // The bar's "Sign in" opens this card too on a poll a guest can answer, in place of its own.
   useEffect(() => {
     if (!onSave || !guest) return;
@@ -166,7 +174,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
       {onSave && guest ? <div className="wn-save wn-who">
         {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
         {/* Someone this browser already knows saves straight away; anyone else is asked who they are first. */}
-        {changed || !kept ? <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => { if (kept || guest.name) void save(); else ask(); }}>{busy && !asking ? 'Saving' : 'Save my times'}</button> : <>
+        {changed || !kept ? <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => { if (kept || ready) void save(); else ask(); }}>{busy && !asking ? 'Saving' : 'Save my times'}</button> : <>
           <div className="wn-done" role="status"><span className="wn-as"><i className="cs-face wn-ini" aria-hidden="true">{name.trim().charAt(0).toUpperCase()}</i><span className="cs-pill yes">Saved as {name.trim()}</span></span>
             <button type="button" className="cs-btn sm" onClick={ask}>Not {name.trim()}?</button>{sentTo && <span>The invite goes to {sentTo}</span>}</div>
           {!sentTo && onEmail && <div className="wn-ask">
@@ -182,8 +190,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
                 <span className="wn-tag"><i key={name.trim().charAt(0)} className={`cs-face wn-ini${name.trim() ? '' : ' none'}`} aria-hidden="true">{name.trim().charAt(0).toUpperCase() || '?'}</i><b>Just a name</b></span>
                 {error && <p className="wn-note bad" role="alert">{error}</p>}
                 <div className="wn-ask">
-                  <label className={`wn-f${miss ? ' miss' : ''}`}><span>Your name</span><input ref={who} autoFocus value={name} maxLength={40} autoComplete="name" placeholder="Type your name" onChange={event => { setName(event.target.value); setMiss(false); }} onKeyDown={enter(async () => { if (await save()) shut(); })} /></label>
-                  <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={async () => { if (await save()) shut(); }}>{busy ? 'Saving' : 'Save my times'}</button>
+                  <label className={`wn-f${miss ? ' miss' : ''}`}><span>Your name</span><input ref={who} autoFocus value={name} maxLength={40} autoComplete="name" placeholder="Type your name" onChange={event => { setName(event.target.value); setMiss(false); }} onKeyDown={enter(named)} /></label>
+                  <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={named}>{busy ? 'Saving' : picked.size > 0 ? 'Save my times' : 'Pick my times'}</button>
                 </div>
               </div>
               {ways && <div className="wn-half lo">

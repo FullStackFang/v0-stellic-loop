@@ -17,7 +17,7 @@ import { guestKey } from '../guest-key';
 import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
 import { Grid } from './grid';
 import { Ways } from './ways';
-import { Copy, Opened, Pick } from './pick';
+import { Copy, Opened, Pick, Share } from './pick';
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string; in?: string }> };
 const REACHED: Record<Threshold, string> = { majority: 'majority reached', two_thirds: 'two thirds reached', everyone: 'everyone can' };
@@ -111,6 +111,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
   const tail = <>
     {mine && <PassOn tab="Pass it on" view={view} />}
     <div className="wn-acts wn-mid">
+      <Share title={view.title} />
       {view.chosen && <a className="cs-btn sm" href={here}>Back to the result</a>}
       {mine && view.best.length > 0 && <a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a>}
       {mine && <a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a>}

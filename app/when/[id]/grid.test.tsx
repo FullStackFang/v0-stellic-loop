@@ -75,22 +75,25 @@ it('says so when the save fails, and shows carried-over times as not yet saved',
 it('asks someone with no account who they are on one card, a name or Loopd, and offers the invite once their times are saved', async () => {
   const onEmail = vi.fn<(email: string) => Promise<null>>(async () => null);
   const onSave = show({ me: { personId: 'guest', name: '', face: '' }, guest: { name: '', email: null }, onEmail, ways: <button>Google</button> });
-  fireEvent.click(cell('Tue 1, 7 pm'));
-  // The page asks for no name. Save opens the card: a name on one half, the ways into Loopd on the other.
-  expect(screen.queryByLabelText('Your name')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
-  expect(onSave).not.toHaveBeenCalled();
-  const card = within(screen.getByRole('dialog', { name: 'Whose times are these?' }));
+  // Who they are comes first: the card is open on arrival, a name on one half and the ways into Loopd on the other.
+  let card = within(screen.getByRole('dialog', { name: 'Whose times are these?' }));
   expect(card.getByRole('button', { name: 'Google' })).toBeInTheDocument();
-  // What is painted is kept in the tab, so signing in from the card does not lose it.
-  expect(sessionStorage.getItem(`wn-keep:${location.pathname}`)).toBe(JSON.stringify([TUE7]));
-  // No name yet: nothing is sent, and the box is where the cursor goes.
-  fireEvent.click(card.getByRole('button', { name: 'Save my times' }));
-  expect(onSave).not.toHaveBeenCalled();
+  // Closed without a name, the poll can be looked at; painting asks again and paints nothing.
+  fireEvent.click(card.getByRole('button', { name: 'Close' }));
+  fireEvent.click(cell('Tue 1, 7 pm'));
+  expect(cell('Tue 1, 7 pm')).toHaveAttribute('aria-pressed', 'false');
+  card = within(screen.getByRole('dialog', { name: 'Whose times are these?' }));
+  // No name yet: the card stays, and the box is where the cursor goes.
+  fireEvent.click(card.getByRole('button', { name: 'Pick my times' }));
   expect(card.getByLabelText('Your name')).toHaveFocus();
   fireEvent.change(card.getByLabelText('Your name'), { target: { value: ' Aaron ' } });
+  fireEvent.click(card.getByRole('button', { name: 'Pick my times' }));
+  // With a name the card goes, nothing is sent yet, and painting works.
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(onSave).not.toHaveBeenCalled();
+  fireEvent.click(cell('Tue 1, 7 pm'));
   expect(screen.getByRole('img', { name: 'Aaron' })).toHaveTextContent('A');
-  fireEvent.click(card.getByRole('button', { name: 'Save my times' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
   await waitFor(() => expect(screen.getByText('Saved as Aaron')).toBeInTheDocument());
   expect(onSave).toHaveBeenCalledWith([TUE7], 'Aaron');
   expect(screen.queryByRole('dialog')).toBeNull();
@@ -113,8 +116,18 @@ it('asks someone with no account who they are on one card, a name or Loopd, and 
 });
 
 it('opens the card for the bar\'s "Sign in", and paints and saves what was kept once someone has signed in', async () => {
+  show({ me: { personId: 'guest', name: 'Aaron', face: '' }, guest: { name: 'Aaron', email: null } });
+  // Someone this browser knows by name is not asked on arrival, and paints straight away.
+  expect(screen.queryByRole('dialog')).toBeNull();
+  fireEvent.click(cell('Tue 1, 7 pm'));
+  expect(cell('Tue 1, 7 pm')).toHaveAttribute('aria-pressed', 'true');
+  // What is painted is kept in the tab while the card is open, so signing in from it does not lose it.
+  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
+  cleanup(); sessionStorage.clear();
   show({ me: { personId: 'guest', name: '', face: '' }, guest: { name: '', email: null } });
   // The bar asks before opening its own card: a poll's guest card answers and opens.
+  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
   expect(window.dispatchEvent(new CustomEvent(WHO, { cancelable: true }))).toBe(false);
   expect(await screen.findByRole('dialog', { name: 'Whose times are these?' })).toBeInTheDocument();
   cleanup();
