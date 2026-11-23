@@ -117,15 +117,53 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 /* A card's controls: one line, every one the same height. */
 .row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .row > * { height: 48px; flex: none; display: inline-flex; align-items: center; }
-.where { gap: 4px; padding: 4px; flex: 0 1 auto; min-width: 0; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
-.where button { height: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 0 14px; border-radius: 99px; background: none; font-weight: 700; font-size: 14px; white-space: nowrap; }
-.where button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-/* The way back to Loopd: the woven mark on an ink tile, at the end of the row: paper rings, the top one in the light colour
-   of the player's school on that school's ink (--tile, --ring, set when the player is known; Cornell's coral until then), so
-   no second red beside Start. It lifts when pointed at. */
-.back { margin-left: auto; width: 48px; justify-content: center; border-radius: 13px 13px 13px 4px; background: var(--tile, var(--ink)); color: var(--paper); transition: transform .2s var(--expo), box-shadow .2s var(--expo); }
-.back svg { width: 36px; height: 36px; }
-.back:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0 var(--field), 3px 3px 0 1.5px var(--ink); }
+/* Where you play (/demo/mockups-conga-where.html, A): one ticket naming the ground, after Start. It opens a sheet over the
+   card, so nothing under it moves: schools on one side, that school's grounds on the other; on a phone the schools run
+   across the top. A school that is not yours wears the Ink mark, and pressing it opens the ink card beside it. */
+.card .row { position: relative; }
+.where { flex: 1 1 auto; min-width: 0; }
+.ticket { width: 100%; height: 100%; display: flex; align-items: center; gap: 9px; padding: 0 8px 0 6px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink); text-align: left; }
+.ticket .t { min-width: 0; display: grid; line-height: 1.05; }
+.ticket .t small { font-size: 11.5px; font-weight: 700; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket .t b { font-size: 16px; font-weight: 850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket .chev { margin-left: auto; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper); display: grid; place-items: center; }
+.ticket .chev svg { width: 14px; transition: rotate .3s var(--expo); }
+.ticket[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--ink), 3px 3px 0 var(--action); }
+.ticket[aria-expanded="true"] .chev svg { rotate: 180deg; }
+.mascot { flex: none; width: 34px; height: 34px; padding: 1px; border-radius: 50%; background: var(--k1, var(--field)); box-shadow: inset 0 0 0 2px var(--k2, var(--ink)); }
+.mascot .face { width: 100%; border-radius: 50%; }
+.sheet { position: absolute; z-index: 6; left: 0; right: 0; bottom: calc(100% + 12px); display: grid; grid-template-columns: .9fr 1.1fr; border-radius: 20px 20px 20px 6px; background: var(--paper); box-shadow: 6px 6px 0 var(--ink), inset 0 0 0 2px var(--ink); overflow: hidden; }
+.sheet[hidden] { display: none; }
+.sheet .col { display: grid; align-content: start; gap: 6px; padding: 12px; }
+.sheet .schools { background: oklch(93% 0.03 45); box-shadow: inset -2px 0 0 var(--ink); }
+.sheet .cap { justify-self: start; padding: 2px 10px 3px; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 12px; font-weight: 800; margin-bottom: 2px; }
+.school { display: flex; align-items: center; gap: 8px; padding: 5px 8px 5px 5px; border-radius: 99px; text-align: left; font-weight: 800; font-size: 15px; background: none; }
+.school > span:nth-child(2) { flex: 1; }
+.school[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink), 2px 2px 0 var(--ink); }
+.school.locked { color: var(--mute); }
+.lock { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 3px; border-radius: 99px; background: var(--ink); color: var(--paper); font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.lock .mk { width: 12px; height: 12px; }
+.yours { padding: 2px 8px 3px; border-radius: 99px; background: var(--field); font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.ground { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 8px; padding: 9px 12px; border-radius: 14px 14px 14px 4px; text-align: left; background: oklch(93% 0.03 45); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.ground b { font-size: 16px; font-weight: 850; } .ground small { grid-column: 1; font-size: 12.5px; color: var(--mute); font-weight: 600; }
+.ground .tick { grid-row: 1 / 3; grid-column: 2; width: 26px; height: 26px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--ink); background: var(--paper); }
+.ground[aria-pressed="true"] { background: var(--ink); color: var(--paper); } .ground[aria-pressed="true"] small { color: oklch(82% 0.03 40); }
+.ground[aria-pressed="true"] .tick { background: var(--action); box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 7px var(--action); }
+.ground.locked { opacity: .55; }
+/* The ink card for another school's ground: beside the school pressed, running past the card if it must; no arrow. */
+.ask.away { left: auto; bottom: auto; width: 340px; }
+.ask.away::after { display: none; }
+.ask.away .tab { display: flex; align-items: center; gap: 5px; } .ask.away .tab .mk { width: 15px; height: 15px; }
+.ask .peek { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 12px 6px 6px; border-radius: 99px; background: oklch(32% 0.04 30); font-weight: 750; font-size: 14px; }
+.ask .peek .mascot { width: 28px; height: 28px; }
+@media (max-width: 560px) {
+  .sheet { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .sheet .schools { grid-auto-flow: column; grid-auto-columns: 1fr; box-shadow: inset 0 -2px 0 var(--ink); }
+  .sheet .schools .cap, .sheet .schools .yours { display: none; }
+  .school { flex-direction: column; gap: 3px; padding: 6px 4px; border-radius: 16px; font-size: 13px; text-align: center; }
+  .school .mascot { width: 42px; height: 42px; }
+  .ask.away { left: 0 !important; right: 0; width: auto; }
+}
 .quit { text-decoration: none; color: inherit; padding: 0 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
 .score { display: flex; gap: 10px; align-items: stretch; }
 .score div { flex: 1; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: var(--field); display: grid; gap: 2px; }
@@ -151,7 +189,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .week { display: grid; gap: 10px; }
 #over .faces { display: none; } /* the animals to pick stay on the first card, so the board has the room */
 @media (max-width: 560px) { .side { width: 142px; } .board { padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
-  .card { padding: 22px 16px 20px; } .row { gap: 6px; } .go { padding: 0 13px; font-size: 17px; } .where button { padding: 0 6px; font-size: 12.5px; } .quit { padding: 0 16px; }
+  .card { padding: 22px 16px 20px; } .row { gap: 6px; } .go { padding: 0 13px; font-size: 17px; } .quit { padding: 0 16px; }
   .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 58px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 12px; padding: 4px; } .hint span { column-gap: 5px; padding-right: 7px; } .hint .it img { width: 20px; height: 20px; } .pause { left: 110px; } }
 /* On a phone the animals to pick from are four to a row, each big enough for a thumb, and the scoreboard and controls
    step aside while a card is up so nothing sits over it. */
@@ -174,10 +212,9 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .coach p span { display: flex; align-items: center; gap: 8px; margin-top: 3px; } .coach p img { width: 24px; height: 24px; flex: none; }
 @media (max-width: 560px) { .coach { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 100px); } .coach h3 { font-size: 23px; } }
 body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { visibility: hidden; }
-/* The pause card (B of /demo/mockups-conga-pause-zoom.html, with three steps): the logo beside the title, so the buttons keep one line. */
+/* The pause card (B of /demo/mockups-conga-pause-zoom.html, with three steps). */
 #paused .top { display: flex; align-items: center; gap: 12px; }
 #paused .top h1 { flex: 1; }
-#paused .top .back { height: 48px; flex: none; display: inline-flex; align-items: center; }
 #paused .zoom { position: relative; padding-top: 10px; }
 #paused .zoom .tab { position: absolute; left: 14px; top: 0; z-index: 1; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 12px; border-radius: 99px; padding: 3px 10px 4px; }
 #paused .step { display: flex; align-items: center; height: 52px; padding: 4px; border-radius: 99px; box-shadow: inset 0 0 0 2px var(--ink); }
@@ -221,36 +258,29 @@ body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { vis
 <div class="coach" id="coach" hidden aria-live="polite"><span class="dots" id="coachDots"></span><button class="skip" id="coachSkip">Skip</button><h3 id="coachHead"></h3><p id="coachSay"></p><span class="tick"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5l3.200 3L14 5.500"/></svg></span></div>
 <div class="ghost" id="ghost" hidden aria-hidden="true"><s></s><i></i><i></i><b></b></div>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <path id="ra" d="M29 35a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rb" d="M14.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/><path id="rc" d="M43.500 60a21 21 0 1 0 42 0a21 21 0 1 0 -42 0"/>
-  <mask id="ma" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rc" stroke="#000" stroke-width="20"/></mask>
-  <mask id="mb" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#ra" stroke="#000" stroke-width="20"/></mask>
-  <mask id="mc" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><use href="#rb" stroke="#000" stroke-width="20"/></mask>
-  <symbol id="loopd" viewBox="4 4 92 92"><g fill="none" stroke-width="10.5"><g mask="url(#ma)"><use href="#ra" stroke="var(--ring, var(--field))"/></g><g mask="url(#mb)"><use href="#rb" stroke="currentColor"/></g><g mask="url(#mc)"><use href="#rc" stroke="currentColor"/></g></g></symbol>
-</defs></svg>
 
 <section class="card" id="start">
   <h1>Longest line wins</h1>
   <p>Walk into a stray and it joins your line. Walk into another line and yours scatters for anyone to grab.</p>
   <div class="faces" id="faces"></div>
-  <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
+  <div class="row"><button class="go" id="go">Start</button><div class="where" id="where"></div></div>
 </section>
 
 <section class="card" id="over" hidden>
   <h1 id="overHead">Scattered</h1>
   <div class="score"><div><b id="overCount">1</b><span>in your line</span></div><div><b id="overBest">1</b><span>your best</span></div></div>
-  <div class="row"><button class="go" id="again">Again</button><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
+  <div class="row"><button class="go" id="again">Again</button></div>
 </section>
 
 <section class="card" id="paused" hidden>
-  <div class="top"><h1>Paused</h1><a class="back" href="/" aria-label="Back to Loopd" title="Back to Loopd"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loopd"/></svg></a></div>
+  <div class="top"><h1>Paused</h1></div>
   <div class="zoom"><span class="tab">Zoom</span><div class="step"><button id="closer" aria-label="Closer">−</button><b id="zoomName" aria-live="polite">Normal</b><button id="further" aria-label="Further out">+</button></div></div>
   <div class="row"><button class="go" id="resume">Resume</button><button class="quit" id="quit">Quit</button><button class="quit" id="howto">How to play</button></div>
 </section>
 
 <script type="module">
 import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD, GAP } from './conga/sim.js';
-import { MAPS, shore, shoreline, TALL, treeWidth } from './conga/maps.js';
+import { MAPS, GROUPS, PLACES, MASCOTS, shore, shoreline, TALL, treeWidth } from './conga/maps.js';
 import { SHEET as SCENERY, AT } from './conga/scenery.js';
 
 const $ = id => document.getElementById(id);
@@ -295,10 +325,6 @@ const ART = Object.fromEntries(Object.keys(POWERS).map(kind => [kind, Object.ass
 const OWN = { megaphone: '62% 0.2 27', coffee: '62% 0.09 60', whistle: '84% 0.16 88' };
 const keep = { get: key => { try { return localStorage.getItem(key); } catch { return null; } }, set: (key, value) => { try { localStorage.setItem(key, value); } catch {} } };
 
-// The other lines. In live play these are people; here each one is a bot with its own nerve and temper.
-// The grounds grew half again (maps.js ROOM), so each has more lines on it.
-const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'Big Red Band', 'Club Frisbee', 'Glee Club', 'West Campus', 'Olin late shift', 'Slope Day crew', 'Ag Quad lab', 'Collegetown', 'Rowing', 'Hotelies', 'Mews Hall', 'Dairy Bar line', 'Physics 1112'],
-  'cornell-tech': ['Bloomberg 2F', 'Tata studio', 'The House 12', 'Studio team 4', 'Johnson MBA', 'Tram regulars', 'Jacobs', 'Health Tech', 'Connective Media', 'Urban Tech', 'Cafe line', 'Runway', 'Startup Studio', 'Ferry crew', 'Bloomberg 3F', 'Run club', 'Verizon EC'] };
 // Each line's rope colour, one for every line on a ground, told apart by hue and by lightness, and kept off the coral ground and your own red.
 const TINTS = ['88% 0.17 98', '62% 0.2 262', '74% 0.2 140', '62% 0.24 320', '76% 0.13 195', '55% 0.2 290', '82% 0.16 125', '66% 0.22 350', '62% 0.13 225', '72% 0.17 305', '58% 0.14 165',
   '46% 0.13 150', '88% 0.08 230', '45% 0.17 300', '90% 0.11 165', '72% 0.13 85', '42% 0.06 260'];
@@ -319,12 +345,15 @@ function inward(ring, by) {
 let hem, shallowsEdge;
 let world, map, land, me = null, aim = 0, followed = null;
 const ask = new URLSearchParams(location.search);
-let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 1 + Math.floor(Math.random() * CORE), mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
+let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 0, mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
+// Nothing kept: you start as the ground's mascot.
+if (!picked || !mine && MAPS[keep.get('conga-map')] && PLACES[keep.get('conga-map')].school !== PLACES[where].school) picked = MASCOTS[PLACES[where].school] ?? (picked || 1 + Math.floor(Math.random() * CORE));
 window.conga = { get world() { return world; } }; // for poking at the game from the console
 
 const BOTS = 10; // lines played by the game; more fill the ground faster than it refills
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
 function open(id) {
+  if (where && PLACES[where].school !== PLACES[id].school && !mine) picked = MASCOTS[PLACES[id].school] ?? picked;
   where = id; map = MAPS[id]; me = null; stale = true;
   world = createWorld(Math.random, map.rings, map.holes, map.shuttles ?? []);
   GROUPS[id].slice(0, BOTS).forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
@@ -341,12 +370,12 @@ function open(id) {
   held = pin ? { x: pin.x + Number(ask.get('dx') ?? 0), y: pin.y + Number(ask.get('dy') ?? 0), dead: true, tail: [] } : null;
   document.body.classList.toggle('bare', !!held);
   followed = lead; cam.x = (held ?? lead).x; cam.y = (held ?? lead).y;
-  for (const button of $('where').children) button.setAttribute('aria-pressed', button.dataset.map === id);
+  places();
 }
 
 // ---------- the cards ----------
 function offer() {
-  const set = new Set([picked]);
+  const set = new Set([MASCOTS[PLACES[where].school], picked].filter(Boolean));
   while (set.size < 6) set.add(1 + Math.floor(Math.random() * CORE));
   const press = button => { for (const other of $('faces').children) if (other.tagName === 'BUTTON') other.setAttribute('aria-pressed', other === button); };
   const row = [];
@@ -408,19 +437,79 @@ Promise.resolve(window.congaPlayer ?? null).then(player => {
   if (!player) return;
   you = player; chosen = Math.min(Number(keep.get('conga-own')) || 0, you.animals.length - 1); if (own().picture) wear(own().picture);
   mine = you.ink && (mine || keep.get('conga-face') == null);
-  const [ring, tile] = RINGS[you.kit] ?? RINGS.cornell; // the way back wears the player's school
-  document.documentElement.style.setProperty('--ring', ring); document.documentElement.style.setProperty('--tile', tile);
+  if (!free(where)) open(Object.keys(MAPS).find(free) ?? where); // a ground kept from before that is no longer theirs
   offer();
   // A round ended before signing in ("Sign in to go on the board") goes on the board now, as the animal they wear.
   let waiting = null;
   try { waiting = JSON.parse(sessionStorage.getItem('conga-round') ?? 'null'); sessionStorage.removeItem('conga-round'); } catch {}
   if (waiting) save({ ...waiting, face: own().face, picture: own().picture }).then(kept => { if (kept) say(`Your ${waiting.best} is on this week's board`); });
 }).catch(() => {});
-$('where').replaceChildren(...Object.entries(MAPS).map(([id, each]) => {
-  const button = Object.assign(document.createElement('button'), { textContent: each.name, onclick: () => { keep.set('conga-map', id); open(id); } });
-  button.dataset.map = id;
-  return button;
-}));
+// ---------- where you play (/demo/mockups-conga-where.html, A) ----------
+// One ticket after Start names the ground, and opens a sheet over the card: schools, then that school's grounds. A
+// player's own schools' grounds are free; another school's come with Ink+ (the admin has it). Signed out, every ground
+// is open, as every school's colours are.
+
+const grounded = () => you.schools.filter(school => Object.values(PLACES).some(place => place.school === school));
+const mineSchool = school => !you || you.plus || !grounded().length || grounded().includes(school);
+const free = id => mineSchool(PLACES[id].school);
+const picker = { on: false, school: null, asking: false };
+const narrow = () => matchMedia('(max-width: 560px)').matches;
+const named = school => SCHOOLS[school] ?? school;
+const MARK = INK.replace('role="img" aria-label="Ink"', 'aria-hidden="true"');
+const mascot = school => { const [k1, k2] = KITS[school] ?? KITS.cornell; return `<span class="mascot" style="--k1:${k1};--k2:${k2}">${faceTag(MASCOTS[school] ?? 1)}</span>`; };
+const CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function places() {
+  // Your own schools first.
+  const schools = [...new Set(Object.values(PLACES).map(each => each.school))].sort((x, y) => mineSchool(y) - mineSchool(x));
+  const at = PLACES[where].school, shown = picker.school ?? at, grounds = Object.keys(MAPS).filter(id => PLACES[id].school === shown);
+  const names = grounds.map(id => MAPS[id].name);
+  $('where').innerHTML = `<button class="ticket" aria-expanded="${picker.on}" aria-label="Where you play: ${map.name}, ${named(at)}">${mascot(at)}<span class="t"><small>${named(at)}</small><b>${map.name}</b></span><span class="chev">${CHEV}</span></button>`
+    + `<div class="sheet"${picker.on ? '' : ' hidden'}><div class="col schools"><span class="cap">School</span>${schools.map(school => `<button class="school${mineSchool(school) ? '' : ' locked'}" data-school="${school}" aria-pressed="${school === shown && mineSchool(school)}">${mascot(school)}<span>${named(school)}</span>${mineSchool(school) ? (you?.schools.includes(school) ? '<span class="yours">Yours</span>' : '') : `<span class="lock">${MARK} Ink+</span>`}</button>`).join('')}</div>`
+    + `<div class="col"><span class="cap">${narrow() ? named(shown) : 'Place'}</span>${grounds.map(id => `<button class="ground${free(id) ? '' : ' locked'}" data-map="${id}" aria-pressed="${id === where}"><b>${MAPS[id].name}</b><small>${PLACES[id].line}</small><span class="tick"></span></button>`).join('')}</div></div>`
+    + `<div class="ask away"${picker.asking ? '' : ' hidden'}><span class="tab">${INK} Ink+</span><div class="peek">${mascot(shown)} ${named(shown)} · ${names.join(', ')}</div><h3>Every school's grounds come with Ink+</h3><p>Play ${names.join(' and ')} and every campus we draw next. Yours stay free.</p><div><button class="pl see" data-join>See Ink+ · $9.99</button><button class="pl" data-shut>Not now</button></div></div>`;
+  // The sheet reaches the card's own top, so it covers the title whole instead of cutting through it.
+  const card = $('where').closest('.card'), open = $('where').querySelector('.sheet:not([hidden])');
+  if (open) open.style.minHeight = `${$('where').getBoundingClientRect().top - card.getBoundingClientRect().top - 12 - parseFloat(getComputedStyle(card).paddingTop) + 8}px`;
+  if (!picker.asking) return;
+  // Beside the school pressed, over the grounds it would open; on a phone, over the sheet itself.
+  const ask = $('where').querySelector('.ask'), row = ask.offsetParent.getBoundingClientRect();
+  if (narrow()) ask.style.top = `${$('where').querySelector('.sheet').getBoundingClientRect().top - row.top + 14}px`;
+  else {
+    const r = $('where').querySelector(`[data-school="${shown}"]`).getBoundingClientRect();
+    ask.style.left = `${r.right - row.left + 8}px`; ask.style.top = `${r.top - row.top + r.height / 2 - ask.offsetHeight / 2}px`;
+  }
+}
+const shut = () => { picker.on = false; picker.school = null; picker.asking = false; };
+$('where').onclick = async event => {
+  const t = event.target.closest('button'); if (!t) return;
+  if (t.matches('.ticket')) { const on = !picker.on; shut(); picker.on = on; }
+  else if (t.dataset.school) { picker.school = t.dataset.school; picker.asking = !mineSchool(t.dataset.school); }
+  else if (t.dataset.map) {
+    if (!free(t.dataset.map)) picker.asking = true;
+    else { keep.set('conga-map', t.dataset.map); shut(); open(t.dataset.map); return offer(); }
+  }
+  else if (t.hasAttribute('data-shut')) { picker.asking = false; picker.school = null; }
+  else if (t.hasAttribute('data-join')) {
+    // Signing up for Ink+ from here (openspec loop-ink-tiers): the same route as every ask in the app, then its thanks.
+    t.disabled = true;
+    const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'plus', place: 'conga: Get Ink+', back: `/conga?map=${where}` }) }).catch(() => null);
+    const got = await answer?.json().catch(() => null);
+    if (got?.signIn) return top.location.assign(got.signIn); // the whole window, not the frame the game is in
+    const said = $('where').querySelector('.ask p');
+    if (!got?.ok) { said.textContent = 'That did not go through. Try again.'; t.disabled = false; return; }
+    you.plus = you.ink = true; said.textContent = got.said; t.remove();
+    setTimeout(() => { picker.asking = false; places(); offer(); }, 2600);
+    return;
+  }
+  else return;
+  places();
+  // Drawn again from scratch: put the focus back on what was pressed, or the nearest thing to it.
+  const again = t.dataset.school ? `[data-school="${t.dataset.school}"]` : t.dataset.map ? `[data-map="${t.dataset.map}"]` : picker.asking ? '.ask .pl' : '.ticket';
+  ($('where').querySelector(again) ?? $('where').querySelector('.ticket'))?.focus();
+};
+addEventListener('keydown', event => { if (event.key === 'Escape' && picker.on) { shut(); places(); $('where').querySelector('.ticket').focus(); } });
+// Pressing anywhere off the ticket and its sheet closes them.
+addEventListener('pointerdown', event => { if (picker.on && !event.target.closest('#where')) { shut(); places(); } });
 
 function begin() {
   const animal = mine && you?.ink ? own() : null, face = animal ? animal.face : picked;
@@ -995,7 +1084,7 @@ const toysIn = () => toys.complete && toys.naturalWidth > 0;
 // The toys that were drawn facing left; the rest face right.
 const LEFTWARD = new Set(['cab', 'cabback']);
 // Where a toy has writing on it, in its picture's own pixels [x, y, w, h]: the cab's roof sign, from the front and behind.
-const SIGN = { cab: [50, 12, 42, 32], cabback: [40, 0, 34, 17] };
+const SIGN = { cab: [50, 12, 42, 32], cabback: [40, 0, 34, 17], train: [275, 54, 24, 29] }; // the train's red "1"
 /** Stands a toy with the middle of its foot at (x, y), `width` across. A vehicle is turned to face left when `left`. */
 function toy(name, x, y, width, left = false, alpha = 1) {
   const [sx, sy, sw, sh] = AT[name], height = width * sh / sw, flip = left !== LEFTWARD.has(name);
@@ -1189,7 +1278,7 @@ function feltRoad(from, to, w, cap = 'round') {
 }
 function road(thing) { feltRoad(thing.from, thing.to, Math.max(ROAD, thing.w)); }
 function roadBus(thing, t) {
-  if (world.shuttles.some(car => car.kind === 'bus')) return;
+  if (world.shuttles.some(car => car.kind === 'bus' || car.road === thing.name)) return; // a shuttle running along a road keeps it to itself
   const f = 0.5 - 0.5 * Math.cos(t * 0.1), going = Math.sin(t * 0.1) > 0 ? 0 : Math.PI;
   if (toysIn()) {
     const x = thing.from[0] + (thing.to[0] - thing.from[0]) * f, y = thing.from[1] + (thing.to[1] - thing.from[1]) * f;
@@ -1224,7 +1313,8 @@ function cloud(x, y, w, alpha = 1, fill = 'oklch(98% 0.008 80)', shade = 'oklch(
 // Its riders look out of the windows on the way in, and it goes back with the windows empty.
 function tram(car) {
   const { from, to, x, y } = car, dx = to[0] - from[0], dy = to[1] - from[1], far = Math.hypot(dx, dy);
-  if (car.kind === 'bus') return bus(car, dx / far, dy / far);
+  if (car.kind === 'bus' || car.kind === 'train' && !toysIn()) return bus(car, dx / far, dy / far);
+  if (car.kind === 'train') return train(car, dx / far);
   if (toysIn()) {
     // No cable (/demo/mockups-conga-tram.html, A): the cabin floats on a little bank of felt clouds that rides along
     // under it, bobbing gently, its shadow on the ground below. The arm on its roof is cropped off the picture, so
@@ -1348,6 +1438,14 @@ function beam(thing, t, seen) {
     let behind = (th - p.a) % (Math.PI * 2); if (behind < 0) behind += Math.PI * 2;
     const age = behind / GLINT.turn - p.seed * 0.25, far = 1 - p.d / GLINT.reach;
     if (age < 0 || age > GLINT.life || far <= 0 || !seen(p.x, p.y)) continue;
+// A subway car (Columbia's 1 train): it slides along its rails with no hop and no shadow, rocking a little while it runs.
+// Until its own toy is drawn (scripts/pickup-art.ts 'train') the bus stands in for it.
+const TRAIN = 150;
+function train(car, ux) {
+  const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay, running = back || car.clock < car.ride;
+  const art = AT.train ? 'train' : 'bus', high = toy(art, x, y + 40 + (running ? Math.sin(world.t * 11) * 1.5 : 0), TRAIN, (back ? -ux : ux) < 0);
+  pill(car.name, x, y + 40 - high - 14, C.ink, C.paper, 14);
+}
     const u = age / GLINT.life, pop = Math.min(1, age / 0.08), r = GLINT.size * p.size * pop * (1 - u * 0.5) * (0.5 + far * 0.7);
     const a = Math.min(1, (1 - u) ** 1.6 * (0.65 + 0.35 * Math.sin(t * 14 + p.seed * 50)) * (0.35 + far));
     // A soft glow under it, then the star solid, so it shows on the felt as well as the water.
@@ -1699,7 +1797,7 @@ function frame(now) {
     }
     if (event.type === 'arrive') {
       // Its riders hop off into each line waiting; with nobody waiting they hop down round the stop.
-      const ride = world.shuttles.find(each => each.name === event.name), from = { x: ride.x, y: ride.y + (ride.kind === 'bus' ? -20 : 20) }, fill = carColour(ride);
+      const ride = world.shuttles.find(each => each.name === event.name), from = { x: ride.x, y: ride.y + (ride.kind ? -20 : 20) }, fill = carColour(ride);
       for (const each of event.onto) {
         const line = world.lines.find(one => one.id === each.line);
         if (!line || !each.count) continue;
@@ -1716,7 +1814,7 @@ function frame(now) {
       const ride = world.shuttles.find(each => each.name === event.name), line = world.lines.find(one => one.id === event.line);
       if (ride && line) {
         const end = line.tail.at(-1) ?? line;
-        hopping(event.count, { x: end.x, y: end.y }, () => ({ x: ride.x, y: ride.y + (ride.kind === 'bus' ? -20 : 20) }), t);
+        hopping(event.count, { x: end.x, y: end.y }, () => ({ x: ride.x, y: ride.y + (ride.kind ? -20 : 20) }), t);
         counts.push({ line, text: `−${event.count}`, fill: C.ink, ink: C.paper, t });
       }
       if (event.line === ME) { navigator.vibrate?.(30); say(event.head ? `The ${event.name.toLowerCase()} hit you and took ${event.count}` : `The ${event.name.toLowerCase()} took ${event.count} off the back of your line`); } }

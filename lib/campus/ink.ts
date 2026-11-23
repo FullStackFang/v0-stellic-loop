@@ -59,7 +59,7 @@ export const subscribeInkPlus = (q: Q, personId: string, email: string, place: A
  * The sign-ups a person can press outside the asks that take an email of their own: each names the feature, then the
  * button. They come in from the browser (app/c/ink/join), so only these are kept.
  */
-export const JOIN_PLACES = ['ink page: Get Ink', 'ink page: Get Ink+', 'ink page: Move to Ink+', 'colours: Sign up', 'account: Get Ink+', 'pets: Get Ink+', 'pets: Start from another pet', 'pets: Redraw your pet', 'seats: Get Ink', 'conga: Get Ink'] as const;
+export const JOIN_PLACES = ['ink page: Get Ink', 'ink page: Get Ink+', 'ink page: Move to Ink+', 'colours: Sign up', 'account: Get Ink+', 'pets: Get Ink+', 'pets: Start from another pet', 'pets: Redraw your pet', 'seats: Get Ink', 'conga: Get Ink', 'conga: Get Ink+'] as const;
 export type JoinPlace = (typeof JOIN_PLACES)[number];
 /** What every sign-up says once it is done. */
 /** The thanks after signing up. With the email it was kept under, it says so, so the person knows it was received. */

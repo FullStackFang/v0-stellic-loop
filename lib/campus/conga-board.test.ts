@@ -11,7 +11,7 @@ beforeAll(async () => { t = await openTestDb(); });
 afterAll(async () => { await t?.close(); });
 beforeEach(async () => { await t.reset(); });
 
-const PLAYER: CongaPlayer = { ink: true, plus: false, kit: 'cornell', animals: [{ face: 12, picture: null, kit: 'cornell' }, { face: 0, picture: '/animals/custom/73303245-8d46-4363-8cdc-cd8b156359eb', kit: 'cornell' }] };
+const PLAYER: CongaPlayer = { ink: true, plus: false, kit: 'cornell', schools: ['cornell'], animals: [{ face: 12, picture: null, kit: 'cornell' }, { face: 0, picture: '/animals/custom/73303245-8d46-4363-8cdc-cd8b156359eb', kit: 'cornell' }] };
 const round = (best: number, more: Partial<{ map: string; seconds: number; face: number; picture: string | null }> = {}) => ({ map: 'cornell', best, seconds: 120, face: 12, picture: null, ...more });
 const person = async (name: string) => (await makePerson(t.db, name)).id;
 
@@ -19,6 +19,15 @@ it('shortens a name to a first name and an initial', () => {
   expect(shortName('Maya Rodriguez')).toBe('Maya R.');
   expect(shortName('  Josh  ')).toBe('Josh');
   expect(shortName('ana de la cruz')).toBe('ana C.');
+});
+
+it('keeps no round on another school\'s ground without Ink+, as the game plays it', async () => {
+  const id = await person('Maya Rodriguez');
+  expect(await saveBest(t.db, id, PLAYER, round(40, { map: 'columbia' }))).toBe(false);
+  expect(await saveBest(t.db, id, { ...PLAYER, plus: true }, round(40, { map: 'columbia' }))).toBe(true);
+  // With no school that has a ground yet, every ground is open, as it is signed out.
+  expect(await saveBest(t.db, await person('Josh Donlon'), { ...PLAYER, schools: [] }, round(40, { map: 'columbia' }))).toBe(true);
+  expect(await saveBest(t.db, await person('Priya Shah'), { ...PLAYER, schools: ['nyu'] }, round(40, { map: 'columbia' }))).toBe(true);
 });
 
 it('keeps each player\'s best of the week on a map, and ranks the top with the reader after them', async () => {

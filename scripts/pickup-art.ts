@@ -46,6 +46,16 @@ const PICKUPS = {
   octagon: 'an eight-sided domed stone building with two long wings, seen from the front and a little above',
   // Four Freedoms Park at Roosevelt Island's south tip: the granite room at the point of the lawn.
   fourfreedoms: 'a memorial park at the tip of an island: a pale granite plaza open to the sky, walled on three sides by tall plain granite blocks, a big bronze head sculpture set in a granite niche at the back wall, a few round trees and a strip of green lawn leading up to it, seen from the front and a little above',
+  // Columbia's Morningside campus and Manhattanville (maps.js 'columbia'); the founder said yes 2026-11-23.
+  lowlibrary: 'a grand pale grey stone library with a wide low dome on top, a row of tall columns across its front and a broad flight of steps leading up to it, seen from the front and a little above',
+  butler: 'a long pale stone library with a row of tall columns all along its front and names carved in a band above them, a flat roof, seen from the front and a little above',
+  cathedral: 'a huge grey stone gothic cathedral with a big round rose window over its front doors and two short square towers, seen from the front and a little above',
+  train: 'a New York subway car, silver with a red band along its side, a round red "1" sign on its front, seen from the side and a little above',
+  almamater: 'a dark bronze statue with a soft green-brown patina of a seated robed woman with her arms held open, a laurel wreath on her head and an open book on her lap, on a square pale grey granite pedestal with a few steps, seen from the front and a little above',
+  riverside: 'a massive square grey stone gothic church tower, much taller than it is wide, with tall narrow pointed windows up its sides and four small pinnacles at its top corners and no spire, a long low church nave at its foot, seen from the front and a little above',
+  // Columbia Business School, at Manhattanville: two glass halls across a small square.
+  kravis: 'a modern eleven-storey building of clear glass wrapped in thin white horizontal fins, slightly twisting floors, seen from the front and a little above',
+  geffen: 'a modern eight-storey building of glass and white stone bands, its floors stacked a little out of line with each other, seen from the front and a little above',
   // Water that stands on the ground like a building: a small pond model, nothing moving on it.
   pond: 'a small round pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, a clump of reeds with brown cattails at one side, and a little white duck, seen from the front and a little above',
   pondlong: 'a long oval pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, reeds with brown cattails at one end and a small wooden jetty at the other, seen from the front and a little above',

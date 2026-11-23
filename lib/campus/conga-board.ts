@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Q } from '../db';
 import { UNNAMED } from '../emba/member-name';
-import { MAPS } from '@/public/conga/maps.js';
+import { MAPS, PLACES } from '@/public/conga/maps.js';
 import { GIANT } from '@/public/conga/sim.js';
 import type { CongaPlayer } from './conga';
 
@@ -49,6 +49,9 @@ export async function saveBest(q: Q, personId: string, player: CongaPlayer, roun
   const { map, best, seconds } = round;
   if (!congaMaps().includes(map) || !Number.isInteger(best) || best < 1 || best > GIANT + 1) return false;
   if (!Number.isFinite(seconds) || seconds <= 0 || seconds > LONGEST_ROUND || best > CHEAT_START + CHEAT_RATE * seconds) return false;
+  // As the game plays it: another school's ground takes Ink+; with no school that has a ground yet, every ground is open.
+  const grounded = player.schools.filter(school => Object.values(PLACES).some(place => place.school === school));
+  if (!player.plus && grounded.length && !grounded.includes((PLACES as Record<string, { school: string }>)[map].school)) return false;
   const worn = player.animals.find(animal => round.face ? animal.face === round.face : animal.picture === round.picture) ?? player.animals[0];
   await q.query(
     `insert into conga_best(person_id, map, week, best, face, picture, kit) values ($1, $2, ${WEEK}, $3, $4, $5, $6)

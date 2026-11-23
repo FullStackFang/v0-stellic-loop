@@ -228,6 +228,22 @@ it('lets a line with the whistle walk through another line without scattering', 
   expect(run(true)).toBe(false);
 });
 
+// A campus's ground is one entry in maps.js MAPS, keyed by the campus slug. It needs bots to play against, and the
+// campus's Doodles page leads to it (lib/campus/doodles.ts MAPPED), so each new ground is found from its campus.
+it('gives every ground its bots and its way in from the campus', async () => {
+  const { MAPS, GROUPS, PLACES, MASCOTS } = await import('@/public/conga/maps.js');
+  const { MAPPED } = await import('@/lib/campus/doodles');
+  const { schoolOf } = await import('@/lib/campus/schools');
+  expect([...MAPPED].sort()).toEqual(Object.keys(MAPS).sort());
+  for (const id of Object.keys(MAPS)) {
+    expect((GROUPS as Record<string, string[]>)[id]?.length).toBeGreaterThanOrEqual(10);
+    // Whose it is decides who plays it free: the school the campus belongs to.
+    expect((PLACES as Record<string, { school: string; line: string }>)[id]?.school).toBe(schoolOf(id));
+    // and that school's mascot leads the animals on it.
+    expect((MASCOTS as Record<string, number>)[schoolOf(id)]).toBeGreaterThan(0);
+  }
+});
+
 // A name painted into the ground is read from above, so no tree or building may stand on it.
 it('keeps every name painted into the ground clear of trees and buildings', async () => {
   const { MAPS, ZONE_NAME, PLACE_NAME, treeWidth, TALL } = await import('@/public/conga/maps.js');
