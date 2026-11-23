@@ -158,3 +158,19 @@ it('draws a poll of half hours as strips: Space paints where the arrows have mov
   // The two half hours touch, so they are one block: its start along the top, its end along the foot.
   expect([...strip.querySelectorAll('.wn-blk b')].map(each => each.textContent)).toEqual(['7', '8 pm']);
 });
+
+it('marks a poll of half hours with a press on the table, and the stroke ends when the press does', async () => {
+  const fine = slotsOf({ startDate: '2026-11-30', endDate: '2026-12-04', hourStart: 17, hourEnd: 22, timezone: 'America/New_York', step: 30 }), onSave = vi.fn().mockResolvedValue({});
+  const { container } = render(<Grid slots={fine} free={{}} size={4} onSave={onSave} />);
+  const sheet = container.querySelector('.wn-sheet')!;
+  fireEvent.pointerDown(sheet, { pointerId: 1 });
+  expect(container.querySelectorAll('.wn-blk')).toHaveLength(1);
+  expect(container.querySelector('.wn-said')!.textContent).toMatch(/ to /);
+  fireEvent.pointerUp(sheet, { pointerId: 1 });
+  // With the press over, moving the pointer over the table marks nothing more.
+  fireEvent.pointerMove(sheet, { pointerId: 1, pointerType: 'mouse' });
+  expect(container.querySelectorAll('.wn-blk')).toHaveLength(1);
+  // A press that starts on a person's own time clears it.
+  fireEvent.pointerDown(sheet, { pointerId: 1 }); fireEvent.pointerUp(sheet, { pointerId: 1 });
+  expect(container.querySelectorAll('.wn-blk')).toHaveLength(0);
+});

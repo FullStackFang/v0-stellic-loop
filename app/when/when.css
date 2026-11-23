@@ -45,21 +45,22 @@
 /* the grid: days across, hours down */
 .wn-grid { display: grid; grid-template-columns: 40px repeat(var(--days), minmax(0, 1fr)); gap: 4px; touch-action: none; user-select: none; -webkit-user-select: none; }
 .wn-grid + .wn-grid { margin-top: 18px; }
-/* times smaller than an hour: no squares. Each day is one strip as tall as its hours, and a drag down it draws a block (grid.tsx). */
-.wn-grid.fine { --wn-row: 50px; }
-.wn-hs { display: grid; grid-auto-rows: var(--wn-row); } .wn-hs .wn-h { align-self: start; padding-top: 1px; }
-.wn-trk { position: relative; height: calc(var(--tall) * var(--wn-row) - 4px); border-radius: 12px 12px 12px 3px; overflow: hidden; background: var(--cs-page); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-ink) 16%, transparent); cursor: crosshair; touch-action: none; }
-.wn-trk:focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
-.wn-trk > i { position: absolute; left: 0; right: 0; pointer-events: none; }
-.wn-trk .b { background: color-mix(in oklab, var(--cs-action) calc(var(--n) * 17%), var(--cs-page)); }
-.wn-trk .l { height: 1px; background: color-mix(in oklab, var(--cs-ink) 20%, transparent); } .wn-trk .l.half { opacity: .4; }
-.wn-trk .at { box-shadow: inset 0 0 0 2px var(--cs-ink); z-index: 2; } .wn-trk .won { box-shadow: inset 0 0 0 3px var(--cs-ink), inset 0 0 0 5px var(--cs-paper); z-index: 2; }
-.wn-trk .n { position: absolute; left: 0; right: 0; display: grid; place-items: center; font-size: 13.5px; font-weight: 700; color: var(--cs-ink); pointer-events: none; } .wn-trk .n:is([data-n="3"], [data-n="4"], [data-n="5"]) { color: var(--cs-paper); }
-.wn-blk { position: absolute; left: 3px; right: 3px; z-index: 1; display: grid; place-items: center; align-content: center; border-radius: 10px 10px 10px 3px; background: var(--cs-ink); color: var(--cs-field); box-shadow: 0 0 0 1.5px var(--cs-paper); font-size: 11.5px; font-weight: 700; line-height: 1.1; text-align: center; white-space: nowrap; overflow: hidden; pointer-events: none; }
-.wn-blk.ends { align-content: space-between; padding: 4px 0 3px; } .wn-blk b { font-weight: 700; }
-/* the day's name while its strip is drawn on: the same box, saying the time */
-.wn-d.live { border-radius: 99px; background: var(--cs-ink); color: var(--cs-field); } .wn-d.live b { color: var(--cs-field); white-space: nowrap; } .wn-d.live b span { display: inline-block; font-size: 11.5px; line-height: 1; vertical-align: middle; letter-spacing: -.02em; }
-.wn-d.live.off { background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .wn-d.live.off b { color: var(--cs-ink); }
+/* times smaller than an hour: one plain table (grid.tsx; public/demo/mockups-when-simple.html, B). An hour is as tall as a square is, ruled into its parts; a person's own time lies on it as blocks. */
+.wn-grid.fine { --wn-row: 50px; column-gap: 0; }
+.wn-grid.fine .wn-d { border-radius: 10px; } .wn-grid.fine .wn-d.lit { background: var(--cs-field); color: var(--cs-ink); }
+.wn-hs { position: relative; height: calc(var(--tall) * var(--wn-row)); }
+.wn-hs .wn-h { position: absolute; right: 3px; padding: 0; line-height: 1; transform: translateY(-50%); } .wn-hs .wn-h:first-child { transform: translateY(-10%); } .wn-hs .wn-h:last-child { transform: translateY(-90%); }
+.wn-sheet { position: relative; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); height: calc(var(--tall) * var(--wn-row)); border-radius: 10px; overflow: hidden; background: var(--cs-page); cursor: cell; touch-action: none; }
+.wn-sheet::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1.5px var(--cs-ink); pointer-events: none; }
+.wn-trk { position: relative; display: grid; grid-auto-rows: minmax(0, 1fr); min-width: 0; border-left: 1px solid color-mix(in oklab, var(--cs-ink) 42%, transparent); } .wn-trk:first-child { border-left: 0; }
+.wn-trk:focus-visible { outline: 2px solid var(--cs-action); outline-offset: -3px; }
+.wn-trk .c { border-top: 1px solid color-mix(in oklab, var(--cs-ink) 12%, transparent); background: color-mix(in oklab, var(--cs-action) calc(var(--n, 0) * 17%), var(--cs-page)); pointer-events: none; }
+.wn-trk .c.h { border-top-color: color-mix(in oklab, var(--cs-ink) 42%, transparent); } .wn-trk .c:first-child { border-top: 0; }
+.wn-trk .c.at { box-shadow: inset 0 0 0 2px var(--cs-ink); } .wn-trk .c.won { box-shadow: inset 0 0 0 3px var(--cs-ink), inset 0 0 0 5px var(--cs-paper); }
+.wn-blk { position: absolute; left: 3px; right: 3px; display: grid; place-items: center; border-radius: 7px; background: var(--cs-ink); color: var(--cs-field); font-size: 11.5px; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; overflow: hidden; pointer-events: none; }
+.wn-blk.ends { align-content: space-between; padding: 5px 0 4px; } .wn-blk b { font-weight: 700; }
+.wn-key:has(.wn-said) { flex-wrap: nowrap; } .wn-key:has(.wn-said) .cs-pill { flex: none; } .wn-key:has(.wn-said) .mine { background: var(--cs-ink); box-shadow: none; border-radius: 4px; }
+.wn-key:has(.wn-said) .cs-pill.wn-said { flex: 1 1 0; width: 0; min-width: 0; text-align: center; font-size: 12.5px; padding: 4px 8px; background: var(--cs-ink); color: var(--cs-field); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 .wn-d { text-align: center; font-size: 11.5px; font-weight: 600; line-height: 1.1; padding-bottom: 4px; color: var(--cs-mute); }
 .wn-d b { display: block; font-size: 17px; font-weight: 700; font-stretch: 108%; color: var(--cs-ink); }
 .wn-h { align-self: center; font-size: 12px; font-weight: 560; color: var(--cs-mute); text-align: right; padding-right: 4px; white-space: nowrap; }
