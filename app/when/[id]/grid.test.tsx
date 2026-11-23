@@ -52,16 +52,20 @@ it('moves with the arrow keys', () => {
   expect(document.activeElement).toBe(cell('Tue 1, 6 pm'));
 });
 
-it('keeps nothing until Save, then hands over the painted times', async () => {
+it('saves what is painted by itself, a moment after the painting stops', async () => {
   const onSave = show({ mine: [TUE8] });
   expect(cell('Tue 1, 8 pm')).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByRole('status')).toHaveTextContent('Saved.');
   fireEvent.click(cell('Tue 1, 7 pm'));
-  expect(screen.getByRole('status')).toHaveTextContent('Not saved yet.');
+  expect(screen.getByRole('status')).toHaveTextContent('Saving as you paint.');
   expect(onSave).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved.'));
+  expect(onSave).toHaveBeenCalledTimes(1);
   expect(onSave.mock.calls[0][0].sort()).toEqual([TUE7, TUE8]);
+  // A stroke is saved once, when it ends, not time by time.
+  fireEvent.pointerDown(cell('Mon 30, 5 pm')); fireEvent.pointerEnter(cell('Mon 30, 6 pm')); fireEvent.pointerUp(window);
+  await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+  expect(onSave.mock.calls[1][0]).toHaveLength(4);
 });
 
 it('says so when the save fails, and shows carried-over times as not yet saved', async () => {
@@ -70,6 +74,8 @@ it('says so when the save fails, and shows carried-over times as not yet saved',
   expect(screen.getByRole('status')).toHaveTextContent('Not saved yet.');
   fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('This poll is gone.');
+  // A refused save is not tried again by itself: Save is there for it.
+  expect(screen.getByRole('button', { name: 'Save my times' })).toBeEnabled();
 });
 
 it('asks someone with no account who they are on one card, a name or Loopd, and offers the invite once their times are saved', async () => {
@@ -93,7 +99,6 @@ it('asks someone with no account who they are on one card, a name or Loopd, and 
   expect(onSave).not.toHaveBeenCalled();
   fireEvent.click(cell('Tue 1, 7 pm'));
   expect(screen.getByRole('img', { name: 'Aaron' })).toHaveTextContent('A');
-  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
   await waitFor(() => expect(screen.getByText((_, el) => el?.className === 'wn-who-name' && el.textContent === 'Saved as Aaron')).toBeInTheDocument());
   expect(onSave).toHaveBeenCalledWith([TUE7], 'Aaron');
   expect(screen.queryByRole('dialog')).toBeNull();
@@ -109,21 +114,19 @@ it('asks someone with no account who they are on one card, a name or Loopd, and 
   await waitFor(() => expect(screen.getByText('The invite goes to aaron@email.com')).toBeInTheDocument());
   expect(onEmail).toHaveBeenCalledWith('aaron@email.com');
   expect(screen.queryByRole('button', { name: 'Send it to me' })).toBeNull();
-  // Painting again brings Save back, and it saves under the same name without asking.
+  // Painting again saves under the same name without asking.
   fireEvent.click(cell('Tue 1, 8 pm'));
-  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
 it('opens the card for the bar\'s "Sign in", and paints and saves what was kept once someone has signed in', async () => {
-  show({ me: { personId: 'guest', name: 'Aaron', face: '' }, guest: { name: 'Aaron', email: null } });
+  const first = show({ me: { personId: 'guest', name: 'Aaron', face: '' }, guest: { name: 'Aaron', email: null } });
   // Someone this browser knows by name is not asked on arrival, and paints straight away.
   expect(screen.queryByRole('dialog')).toBeNull();
   fireEvent.click(cell('Tue 1, 7 pm'));
   expect(cell('Tue 1, 7 pm')).toHaveAttribute('aria-pressed', 'true');
-  // What is painted is kept in the tab while the card is open, so signing in from it does not lose it.
-  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
+  await waitFor(() => expect(first).toHaveBeenCalledWith([TUE7], 'Aaron'));
   cleanup(); sessionStorage.clear();
   show({ me: { personId: 'guest', name: '', face: '' }, guest: { name: '', email: null } });
   // The bar asks before opening its own card: a poll's guest card answers and opens.

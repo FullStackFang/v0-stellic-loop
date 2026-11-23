@@ -27,6 +27,8 @@ export const WHO = 'loopd:who';
 const keepKey = () => `wn-keep:${location.pathname}`;
 // The animals on "Have Loopd?": signing in is what brings yours.
 const PETS = ['07', '03', '12'];
+/** How long after the last painted time the times save themselves. */
+const AUTO_MS = 500;
 
 /**
  * The grid of a poll, under its ticket (public/demo/mockups-when-fit.html, 3). A few days show at a time, the first
@@ -35,7 +37,7 @@ const PETS = ['07', '03', '12'];
  *
  * With `onSave` a person paints their times: press and drag to paint, starting on a painted time to rub out; the arrow
  * keys move and Space paints. Each time shows how many can make it, the person included, and nothing is kept until
- * Save. Without `onSave` it is only to look at, and `action` stands where Save would.
+ * Save. What is painted saves by itself a moment after the painting stops, once it is known whose times they are. Without `onSave` it is only to look at, and `action` stands where Save would.
  */
 export function Grid({ slots, free, me: given = null, mine = [], draft = false, onSave, guest, onEmail, ways, tab, after = '', children, tile, title, best = [], action, tail, won = null, size }: {
   slots: Slot[]; /** Who else can make each time. */ free: Record<string, Shown[]>; /** The person painting. */ me?: Shown | null; mine?: string[];
@@ -59,12 +61,14 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   const [name, setName] = useState(guest?.name ?? ''), [email, setEmail] = useState(''), [sentTo, setSentTo] = useState(guest?.email ?? null), [miss, setMiss] = useState(false), [inviting, setInviting] = useState(false);
   // A guest is drawn as the initial of the name they are typing.
   const me = guest && given ? { ...given, name: name.trim() || '?' } : given;
-  useEffect(() => { const stop = () => { painting.current = null; }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
+  // `lifted` counts the times the pointer has come up, so what was painted in one stroke is saved when the stroke ends.
+  const [lifted, setLifted] = useState(0), [dirty, setDirty] = useState(false), [refused, setRefused] = useState<Set<string> | null>(null);
+  useEffect(() => { const stop = () => { painting.current = null; setLifted(n => n + 1); }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
   const count = (slot: string) => (free[slot]?.length ?? 0) + (picked.has(slot) ? 1 : 0);
   // The three times most people can make, the most first and among equals the earliest.
   const top = slots.filter(slot => count(slot.at) > 0).sort((a, b) => count(b.at) - count(a.at) || (a.at < b.at ? -1 : 1)).slice(0, 3), rank = new Map(top.map((slot, n) => [slot.at, n + 1]));
   const most = (set: string[]) => Math.max(0, ...slots.filter(slot => set.includes(slot.day)).map(slot => count(slot.at)));
-  const paint = (slot: string, on: boolean) => { if (guest && !ready) { painting.current = null; ask(); return; } setTouched(slot); setPicked(now => { if (now.has(slot) === on) return now; const next = new Set(now); if (on) next.add(slot); else next.delete(slot); return next; }); };
+  const paint = (slot: string, on: boolean) => { if (guest && !ready) { painting.current = null; ask(); return; } setTouched(slot); setDirty(true); setPicked(now => { if (now.has(slot) === on) return now; const next = new Set(now); if (on) next.add(slot); else next.delete(slot); return next; }); };
   const down = (slot: string) => (event: PointerEvent<HTMLButtonElement>) => {
     // A finger holds on to the cell it first touched: let go, so the cells it then crosses hear it too.
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -89,9 +93,18 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
     setBusy(true); setError(''); if (these) setPicked(new Set(these));
     const now = these ?? [...picked], result = await onSave(now, guest ? name.trim() : undefined).catch(() => ({ error: 'That did not save. Try again.' }));
     setBusy(false);
-    if (result?.error) { setError(result.error); return false; }
+    if (result?.error) { setError(result.error); setRefused(picked); return false; }
     setSaved(new Set(now)); setKept(true); return true;
   };
+  // Painting saves itself: half a second after the last change, with no stroke under way. Only what this person
+  // painted here (times carried over from another poll wait for a press), and only once it is known whose they are.
+  // A save that was refused is not tried again until something changes; Save is there for it.
+  const auto = !!onSave && (!guest || ready), saving = auto && changed && dirty && refused !== picked;
+  useEffect(() => {
+    if (!saving || busy) return;
+    const soon = setTimeout(() => { if (painting.current === null) void save_.current(); }, AUTO_MS);
+    return () => clearTimeout(soon);
+  }, [saving, busy, picked, lifted]);
   // The card that asks a guest who they are (public/demo/mockups-when-one-card-4.html). What is painted is kept in
   // this tab while it is open, so signing in from it, which loads the page again, does not lose it.
   const ask = () => { try { sessionStorage.setItem(keepKey(), JSON.stringify([...picked])); } catch { /* a browser that keeps nothing */ } setMiss(false); setError(''); setAsking(true); };
@@ -150,7 +163,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
     <Stack people={can} />
   </span>;
   // Once a guest's times are saved, who they are saved as and the offer of the invite: one strip, across the top on a laptop and at the foot on a phone.
-  const strip = onSave && guest && !changed && kept ? <div className="wn-save wn-who wn-top">
+  const strip = onSave && guest && kept && (!changed || saving) ? <div className="wn-save wn-who wn-top">
     {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
     {/* One raised paper capsule (public/demo/mockups-when-saved-row.html, C): who the times are saved as, and the invite on the same line. */}
     <div className={`wn-cap wn-me${miss ? ' miss' : ''}`} role="status">
@@ -160,7 +173,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
         <button className="cs-btn wn-go" type="button" disabled={busy} onClick={send}>{busy ? 'Sending' : 'Send it to me'}</button>
         <button className="cs-btn wn-alt" type="button" onClick={() => { setInviting(false); setMiss(false); }}>Back</button>
       </> : <>
-        <span className="wn-who-name"><small>Saved as </small><b>{name.trim()}</b></span>
+        <span className="wn-who-name"><small>{changed ? 'Saving as ' : 'Saved as '}</small><b>{name.trim()}</b></span>
         {sentTo && <span className="cs-pill wn-sent">{`The invite goes to ${sentTo}`}</span>}
         {!sentTo && onEmail && <button type="button" className="cs-btn wn-go" aria-label="Email me the invite" onClick={() => setInviting(true)}><span>Email <span className="wn-lg">me the </span>invite</span></button>}
         <button type="button" className="cs-btn wn-alt" onClick={ask}>Not you?</button>
@@ -189,7 +202,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
       {onSave && guest ? <div className="wn-save wn-who">
         {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
         {/* Someone this browser already knows saves straight away; anyone else is asked who they are first. */}
-        {(changed || !kept) && <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => { if (kept || ready) void save(); else ask(); }}>{busy && !asking ? 'Saving' : 'Save my times'}</button>}
+        {(changed || !kept) && !(saving && kept) && <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => { if (kept || ready) void save(); else ask(); }}>{(busy && !asking) || saving ? 'Saving' : 'Save my times'}</button>}
         {asking && <div className="cs-over" role="dialog" aria-modal="true" aria-label="Whose times are these?" onClick={event => { if (event.target === event.currentTarget) shut(); }}>
           <div className="cs-over-card wn-card"><button type="button" className="cs-btn sm cs-over-x" onClick={shut}>Close</button>
             <div className="wn-card-top"><h2>Whose times are these?</h2><Rings /></div>
@@ -212,8 +225,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
         </div>}
       </div> : onSave ? <div className="wn-save">
         {error && <p className="wn-note bad" role="alert">{error}</p>}
-        <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => void save()}>{busy ? 'Saving' : changed || !kept ? 'Save my times' : 'Saved'}</button>
-        <p className="wn-note" role="status">{changed ? 'Not saved yet.' : after}</p>
+        <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => void save()}>{busy || saving ? 'Saving' : changed || !kept ? 'Save my times' : 'Saved'}</button>
+        <p className="wn-note" role="status">{saving ? 'Saving as you paint.' : changed ? 'Not saved yet.' : after}</p>
       </div> : null}
     </div>
     <div className="wn-col side"><Ticket tile={tile} stub={stub}>{title}</Ticket>
