@@ -5,8 +5,8 @@ import { TopBar } from '@/components/campus/top-bar';
 import { WAIT } from './fresh-wait';
 import { lastBar } from './last-bar';
 
-/** The pages that wear the app's top bar outside /groups: the front door and everything under /c. */
-const barred = (path: string | null) => path === '/' || !!path?.startsWith('/c/');
+/** The pages that wear the app's top bar outside /groups: the front door, everything under /c, and Conga. */
+const barred = (path: string | null) => path === '/' || !!path?.startsWith('/c/') || path === '/conga';
 
 /**
  * What a page shows while it loads (openspec loop-loading-seats). After a page that had the top bar, the bar stays: the

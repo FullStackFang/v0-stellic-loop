@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { playAt, type Doodle } from '@/lib/campus/doodles';
 
-const Go = ({ href, ...rest }: { href: string; className: string; 'aria-label': string; children: React.ReactNode }) => href.startsWith('/c/') ? <Link href={href} {...rest} /> : <a href={href} {...rest} />;
-
 /**
  * What a game looks like: a few silent seconds recorded from a real game (public/doodles). Its first frame shows at once, as
  * a small picture; the recording is fetched only once the tile is on screen, plays while it stays there, and stops when it
@@ -39,8 +37,8 @@ function Tile({ doodle, campus }: { doodle: Doodle; campus: { slug: string } }) 
     <Clip doodle={doodle} />
     <div className="cs-dd-foot">
       <h2>{doodle.name}</h2>
-      {/* A game that is a page of the app is moved to as any page is, so the bar stays and the loader stands under it. A plain page of its own (Conga) is an ordinary link. */}
-      <Go href={playAt(doodle, campus)} className={doodle.live ? 'cs-dd-go' : 'cs-dd-go try'} aria-label={`${doodle.live ? 'Play' : 'Try'} ${doodle.name}`}>{doodle.live ? 'Play' : 'Try'}</Go>
+      {/* Every game is a page of the app, moved to as any page is, so the bar stays and the loader stands under it. */}
+      <Link href={playAt(doodle, campus)} className={doodle.live ? 'cs-dd-go' : 'cs-dd-go try'} aria-label={`${doodle.live ? 'Play' : 'Try'} ${doodle.name}`}>{doodle.live ? 'Play' : 'Try'}</Link>
     </div>
   </li>;
 }

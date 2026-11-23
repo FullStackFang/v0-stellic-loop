@@ -13,7 +13,7 @@ it('shows everyone what is out, each with its recording and a way to play it, an
   expect(doodlesFor(false)).toEqual(DOODLES.filter(each => each.live));
   render(<DoodleShelf doodles={doodlesFor(false)} campus={columbia} />);
   expect(names()).toEqual(['Conga', 'Seats']);
-  expect(screen.getByRole('link', { name: 'Play Conga' })).toHaveAttribute('href', '/conga');
+  expect(screen.getByRole('link', { name: 'Play Conga' })).toHaveAttribute('href', '/conga?map=columbia');
   expect(screen.getByRole('link', { name: 'Play Seats' })).toHaveAttribute('href', '/c/doodles/seats');
   expect(screen.queryByText(/Staged/)).toBeNull();
   expect(screen.queryByText(/learn|Credits|Enrol|1010|1020/)).toBeNull();

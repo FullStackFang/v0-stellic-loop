@@ -53,6 +53,13 @@ describe('changing page', () => {
     expect(lastBar().going).toBeNull();
     expect(lastBar().bar?.on).toBe('ink');
   });
+  it('to Conga, which wears the bar too, keeps the bar', () => {
+    path = '/conga';
+    render(<TopBar home="/c/cornell" on="doodles" account={<a href="/sign-in">Sign in</a>} />).unmount();
+    const { container } = render(<PageWait />);
+    expect(container.querySelector('.seats-screen')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Doodles' })).not.toBeNull();
+  });
   it('to a page with no bar of its own (a shared link) shows the ticket alone', () => {
     path = '/e/abc';
     render(<TopBar home="/c/cornell" on="week" account={<a href="/sign-in">Sign in</a>} />).unmount();
