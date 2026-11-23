@@ -27,7 +27,9 @@ it('keeps no round on another school\'s ground without Ink+, as the game plays i
   expect(await saveBest(t.db, id, { ...PLAYER, plus: true }, round(40, { map: 'columbia' }))).toBe(true);
   // With no school that has a ground yet, every ground is open, as it is signed out.
   expect(await saveBest(t.db, await person('Josh Donlon'), { ...PLAYER, schools: [] }, round(40, { map: 'columbia' }))).toBe(true);
-  expect(await saveBest(t.db, await person('Priya Shah'), { ...PLAYER, schools: ['nyu'] }, round(40, { map: 'columbia' }))).toBe(true);
+  expect(await saveBest(t.db, await person('Priya Shah'), { ...PLAYER, schools: ['cuny'] }, round(40, { map: 'columbia' }))).toBe(true);
+  // NYU has its own ground, so its people play Columbia's with Ink+ like anyone else's.
+  expect(await saveBest(t.db, await person('Sam Lee'), { ...PLAYER, schools: ['nyu'] }, round(40, { map: 'columbia' }))).toBe(false);
 });
 
 it('keeps each player\'s best of the week on a map, and ranks the top with the reader after them', async () => {

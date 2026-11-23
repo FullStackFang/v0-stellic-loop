@@ -21,7 +21,11 @@ export const TOYS = { 'Willard Straight': 'stonehall', 'Sage Chapel': 'chapel', 
   // Columbia, with its own toys (drawn 2026-11-23, /demo/mockups-conga-columbia-art.html), and Manhattanville's.
   'Low Library': 'lowlibrary', 'Butler Library': 'butler', 'Cathedral': 'cathedral', 'Alma Mater': 'almamater', 'Kravis Hall': 'kravis', 'Geffen Hall': 'geffen', 'The Forum': 'glasshall',
   'St. Paul\'s Chapel': 'chapel', 'Pupin Hall': 'brickhall', 'Lerner Hall': 'glasshall', 'John Jay Hall': 'dorm', 'Barnard Hall': 'brickhall', 'Milstein Center': 'glasshall',
-  'East Campus': 'tower', '116 St': 'subway', 'Riverside Church': 'riverside' };
+  'East Campus': 'tower', '116 St': 'subway', 'Riverside Church': 'riverside',
+  // NYU, with its own toys (drawn 2026-11-23, /demo/mockups-conga-nyu-art.html); the rest are stand-ins.
+  'Washington Square Arch': 'wsqarch', 'The Fountain': 'wsqfountain', 'Bobst Library': 'bobst', 'Judson Church': 'judson', 'Silver Center': 'silver', 'Kimmel Center': 'kimmel',
+  'Stern': 'stern', 'Paulson Center': 'paulson', 'Vanderbilt Hall': 'brickhall', 'Lipton Hall': 'dorm', 'W 4 St': 'subway', 'Silver Towers': 'tower', 'Hayden Hall': 'dorm',
+  'Tisch School': 'glasshall', '8 St': 'subway', 'Brittany Hall': 'dorm', 'Founders Hall': 'tower', 'Palladium': 'dorm' };
 // A lake with a shore drawn by hand, on a box 690 by 260: Beebe Lake, traced from the real one (/demo/mockups-conga-ithaca-sizes.html).
 // Narrow at the west end where it spills into the gorge, the south shore bellying out towards the wider east end.
 const SHORES = { 'Beebe Lake': [[-345, -18], [-305, -44], [-230, -58], [-130, -74], [-20, -94], [100, -110], [210, -116], [300, -96], [345, -46], [348, 16], [312, 70], [240, 106], [140, 122], [40, 110], [-50, 84], [-150, 58], [-250, 38], [-322, 22]] };
@@ -46,7 +50,7 @@ const OPEN = 260;
 // sharp on screen.
 const HALL = 150, LANDMARK_HALL = 195;
 const LANDMARKS = new Set(['McGraw Tower', 'Sage Chapel', 'Willard Straight', 'Barton Hall', 'Bailey Hall', 'Johnson Museum', 'Bloomberg Center', 'Lighthouse', 'Smallpox Hospital', 'FDR Four Freedoms',
-  'Low Library', 'Butler Library', 'Cathedral', 'Riverside Church', 'Kravis Hall']);
+  'Low Library', 'Butler Library', 'Cathedral', 'Riverside Church', 'Kravis Hall', 'Washington Square Arch', 'Bobst Library', 'Paulson Center']);
 // A statue stands smaller than a hall, in front of the building it belongs to.
 const STATUE = 100, STATUES = new Set(['Alma Mater']);
 const toyWidth = label => { const [, , w, h] = AT[TOYS[label]], size = LANDMARKS.has(label) ? LANDMARK_HALL : STATUES.has(label) ? STATUE : HALL; return h / w > 1.25 ? size * 1.25 / (h / w) : size; };
@@ -68,7 +72,10 @@ function treesOn(thing) {
     return spots;
   }
   // Round the edge, as round a quad, leaving the lawn open. On the Arts Quad, none stands on the paths crossing it corner to corner.
-  const round = 2 * (w + h), onPath = (px, py) => thing.name === 'Arts Quad' && Math.min(Math.abs(px * h - py * w), Math.abs(px * h + py * w)) / Math.hypot(w, h) < 45;
+  // On Washington Square, none stands on its paths, on the one up to the Arch, or on the plaza round the fountain.
+  const crossed = ['Arts Quad', 'Washington Square Park'].includes(thing.name), square = thing.name === 'Washington Square Park';
+  const round = 2 * (w + h), onPath = (px, py) => crossed && Math.min(Math.abs(px * h - py * w), Math.abs(px * h + py * w)) / Math.hypot(w, h) < 45
+    || square && (Math.abs(px) < 45 && py < 0 || Math.hypot(px, py) < h * 0.26 + 40);
   for (let k = 0; k < 8 + round / 60; k++) { // plenty of tries: the gap between trees decides how many stand
     let d = chance(thing, k) * round, x, y;
     const deep = 20 + chance(thing, k + 50) * 16;
@@ -195,6 +202,13 @@ const morningside = cut({ a: [-73.97068, 40.80844], b: [-73.96704, 40.80691], h:
   l: [-73.96355, 40.80294], m: [-73.96168, 40.80215], n: [-73.95708, 40.80848], q: [-73.95662, 40.80912], o: [-73.95877, 40.80093], p: [-73.95371, 40.80789],
   u: [-73.96164, 40.81041], r: [-73.95560, 40.81865], s: [-73.95964, 40.82037] });
 const AVENUES = 29; // Manhattan's grid runs this many degrees east of north
+// NYU round Washington Square, cut along the same grid, counted in metres from the Arch: across the grid (east-ish) and up
+// it (uptown). The park's square and the halls round it; the law school's corner west and south of it; Bobst, Stern and
+// Paulson south; Broadway and Astor Place east, with a strip up to Palladium; University Place north to Union Square.
+const village = cut({ a: [-74.00212, 40.73067], b: [-73.99880, 40.72927], c: [-74.00041, 40.72707], d: [-73.99668, 40.72551], e: [-73.99438, 40.72865],
+  f: [-73.99168, 40.72752], g: [-73.98743, 40.73333], h: [-73.98930, 40.73411], i: [-73.98775, 40.73624], j: [-73.99148, 40.73780], k: [-73.99743, 40.73188],
+  l: [-73.99868, 40.73241], m: [-74.00034, 40.73310], n: [-73.99977, 40.73091], p: [-73.99645, 40.72952], q: [-73.99536, 40.73101], r: [-73.99484, 40.73172],
+  s: [-73.99194, 40.73050], t: [-73.99811, 40.73022] });
 
 export const MAPS = {
   cornell: ground('Ithaca', 1.15 * ROOM, [
@@ -289,6 +303,35 @@ export const MAPS = {
     // The 1 train comes up Broadway from 114th, lets its riders off at 116 St, and goes back down empty. Its stop is a
     // little north of the station, so the badge sits between Broadway's felt and Low Library, clear of South Lawn's trees.
     at => ({ shuttles: [{ name: '1 train', kind: 'train', road: 'Broadway', stop: '116 St', from: at([-73.96482, 40.80679]), to: at([-73.96316, 40.80907]), off: at([-73.96250, 40.80879]), riders: 18, ride: 8 * ROOM, stay: 5, away: 5 }] })), // quicker than the Ithaca bus, over a shorter run
+  // NYU round Washington Square (scripts/conga-osm.mjs, 2026-11-23). Its own toys drawn 2026-11-23 (/demo/mockups-conga-nyu-art.html).
+  nyu: ground('Washington Square', 2.4 * ROOM, [
+    village('', 'npqkl', [-73.99763, 40.73084]), // no name of its own: the park's says it
+    village('Law School', 'abtnlm', [-74.00095, 40.73079]), village('South', 'bcdept', [-73.99751, 40.72770]),
+    village('Broadway', 'pefghsrq', [-73.99212, 40.72914]), village('University Place', 'kqrshij', [-73.99211, 40.73324])], [
+    ['road', 'University Place', 40.73121, -73.99535, 40.73538, -73.99230, 20], // from Washington Square to Union Square; placed by hand on the grid
+    ['green', 'Washington Square Park', 40.73084, -73.99763, 300, 150, AVENUES], // a little shallower than OSM's, so the Arch stands clear at its north edge
+    ['green', 'Union Square', 40.73604, -73.99046, 120, 200, AVENUES], // placed by hand: OSM names no park here
+    ['green', 'Washington Square Village', 40.72824, -73.99780, 72, 130, AVENUES], // the garden between its two slabs, placed by hand
+    ['hall', 'Washington Square Arch', 40.73156, -73.99710, 19, 8], // just north of the lawn, where Fifth Avenue ends, on the path up from the fountain
+    ['hall', 'The Fountain', 40.73084, -73.99763, 23, 23], // on the plaza in the middle of the park
+    ['hall', 'Bobst Library', 40.72943, -73.99722, 61, 66],
+    ['hall', 'Kimmel Center', 40.72978, -73.99792, 39, 66],
+    ['hall', 'Stern', 40.72878, -73.99622, 50, 22], // Tisch Hall, Stern's undergraduate hall
+    ['hall', 'Judson Church', 40.73019, -73.99867, 22, 32], // 15 metres west of OSM's, clear of Kimmel
+    ['hall', 'Vanderbilt Hall', 40.73030, -73.99941, 60, 60], // the law school, placed by hand: OSM gives it no name
+    ['hall', 'Lipton Hall', 40.73163, -73.99954, 47, 23],
+    ['hall', 'W 4 St', 40.73163, -74.00074, 0, 0], // the station's entrance on Sixth Avenue
+    ['hall', 'Paulson Center', 40.72657, -73.99748, 59, 114],
+    ['hall', 'Silver Towers', 40.72728, -73.99796, 30, 30], // placed by hand
+    ['hall', 'Hayden Hall', 40.72770, -73.99547, 56, 59],
+    ['hall', 'Silver Center', 40.73034, -73.99559, 37, 60],
+    ['hall', 'Tisch School', 40.72961, -73.99384, 61, 31],
+    ['hall', '8 St', 40.73033, -73.99263, 0, 0], // 8th Street–NYU, on Broadway
+    ['hall', 'Brittany Hall', 40.73210, -73.99174, 50, 28],
+    ['hall', 'Founders Hall', 40.73206, -73.98932, 38, 43],
+    ['hall', 'Palladium', 40.73331, -73.98840, 46, 60]],
+    // The NYU bus comes down University Place from Union Square, lets its riders off beside Washington Square, and goes back up empty.
+    at => ({ shuttles: [{ name: 'NYU bus', kind: 'bus', road: 'University Place', stop: 'Washington Sq', from: at([-73.99230, 40.73538]), to: at([-73.99535, 40.73121]), off: at([-73.99432, 40.73104]), riders: 18, ride: 20 * ROOM, stay: 5, away: 5 }] })),
 };
 
 // The other lines on each ground (index.html plays BOTS of them). In live play these are people; here each one is a bot
@@ -296,7 +339,9 @@ export const MAPS = {
 export const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'Big Red Band', 'Club Frisbee', 'Glee Club', 'West Campus', 'Olin late shift', 'Slope Day crew', 'Ag Quad lab', 'Collegetown', 'Rowing', 'Hotelies', 'Mews Hall', 'Dairy Bar line', 'Physics 1112'],
   'cornell-tech': ['Bloomberg 2F', 'Tata studio', 'The House 12', 'Studio team 4', 'Johnson MBA', 'Tram regulars', 'Jacobs', 'Health Tech', 'Connective Media', 'Urban Tech', 'Cafe line', 'Runway', 'Startup Studio', 'Ferry crew', 'Bloomberg 3F', 'Run club', 'Verizon EC'],
   columbia: ['John Jay 9', 'Lit Hum', 'CU Band', 'Butler 209', 'Core crew', 'Barnard Bears', 'Spectator', 'Varsity Show', 'Lerner late night', 'Ferris line', 'SEAS 1st years',
-    'SIPA', 'Bacchanal crew', 'Carman 5', 'Frontiers', 'Hartley 4', 'Lightweight crew'] };
+    'SIPA', 'Bacchanal crew', 'Carman 5', 'Frontiers', 'Hartley 4', 'Lightweight crew'],
+  nyu: ['Bobst 4F', 'Stern UG', 'Tisch Drama', 'Weinstein 9', 'Rubin 6', 'Third North', 'Palladium gym', 'Courant CS', 'Gallatin', 'WSN', 'Brittany 3', 'Kimmel late night',
+    'Founders 11', 'Lipton crew', 'NYU Swim', 'Writing the Essay', 'Violets fans'] };
 
 // The school each ground belongs to (a campus's slug, as lib/campus/schools.ts schoolOf gives it), and the line the
 // place picker says about it (index.html, /demo/mockups-conga-where.html A). A player's own schools' grounds are free;
@@ -305,4 +350,4 @@ export const GROUPS = { cornell: ['Donlon 2F', 'CS 2110', 'Team 4', 'Risley', 'B
 // start card's row on that school's ground, and the animal you play as there unless you picked your own seat.
 export const MASCOTS = { cornell: 38, columbia: 39, nyu: 40, cuny: 41 };
 export const PLACES = { cornell: { school: 'cornell', line: 'The hill, Collegetown, downtown' }, 'cornell-tech': { school: 'cornell', line: 'Cornell Tech and the tram' },
-  columbia: { school: 'columbia', line: 'College Walk, Barnard, Manhattanville' } };
+  columbia: { school: 'columbia', line: 'College Walk, Barnard, Manhattanville' }, nyu: { school: 'nyu', line: 'Washington Square, Bobst, Union Square' } };

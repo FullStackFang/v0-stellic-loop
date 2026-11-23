@@ -56,6 +56,15 @@ const PICKUPS = {
   // Columbia Business School, at Manhattanville: two glass halls across a small square.
   kravis: 'a modern eleven-storey building of clear glass wrapped in thin white horizontal fins, slightly twisting floors, seen from the front and a little above',
   geffen: 'a modern eight-storey building of glass and white stone bands, its floors stacked a little out of line with each other, seen from the front and a little above',
+  // NYU round Washington Square (maps.js 'nyu'); the founder said yes 2026-11-23.
+  wsqarch: 'a white marble triumphal arch with one tall round archway, carved figures standing against its two front piers and a carved band along its flat top, seen from the front and a little above',
+  wsqfountain: 'a round stone fountain: a wide shallow round basin with a pale grey stone rim, a tall jet of water spraying up from its middle and falling back into the water, seen from the front and a little above',
+  bobst: 'a big plain square twelve-storey library block of red sandstone, flat walls with tall narrow vertical window slots running up them, a flat roof, seen from the front and a little above',
+  judson: 'a yellow brick and pale stone romanesque church with round-arched windows and a tall square bell tower with a small open arcade at its top, seen from the front and a little above',
+  silver: 'a ten-storey pale grey stone college building in the gothic style with tall narrow windows, purple flags hanging over its arched front door, seen from the front and a little above',
+  kimmel: 'a modern ten-storey college student centre of reddish brown stone, a tall glass front showing a wide staircase climbing inside, purple banners at its door, seen from the front and a little above',
+  stern: 'a modern business school building of brown brick with long horizontal bands of windows and a glass entrance, purple banners at its door, seen from the front and a little above',
+  paulson: 'a tall new college building of glass and pale terracotta panels: a wide base with two towers of different heights rising from it, seen from the front and a little above',
   // Water that stands on the ground like a building: a small pond model, nothing moving on it.
   pond: 'a small round pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, a clump of reeds with brown cattails at one side, and a little white duck, seen from the front and a little above',
   pondlong: 'a long oval pond diorama: soft teal water edged with round pale stones, green lily pads with one pink flower, reeds with brown cattails at one end and a small wooden jetty at the other, seen from the front and a little above',

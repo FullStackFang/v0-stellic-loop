@@ -27,7 +27,7 @@ export const DOODLES: readonly Doodle[] = [
 ];
 
 /** The campuses Conga has a map of (public/conga/maps.js). From one of them, Play goes to that map. */
-export const MAPPED = new Set(['cornell', 'cornell-tech', 'columbia']);
+export const MAPPED = new Set(['cornell', 'cornell-tech', 'columbia', 'nyu']);
 /** Where Play leads, from the campus the page is drawn for. */
 export const playAt = (doodle: Doodle, campus: { slug: string }) => doodle.slug === 'conga' && MAPPED.has(campus.slug) ? `${doodle.href}?map=${campus.slug}` : doodle.href;
 

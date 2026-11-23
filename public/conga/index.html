@@ -1186,6 +1186,17 @@ const PAINT = {
       ctx.strokeStyle = FELT.road; ctx.lineWidth = 30; ctx.stroke(); stitch(FELT.thread, 2.2, [8, 7]);
     }
     ctx.restore(); }); },
+  // Washington Square: paths from its corners and from the Arch to a round plaza in the middle, where the fountain toy
+  // stands (maps.js 'The Fountain').
+  'Washington Square Park': thing => { lawn(thing); turned(thing, (w, h) => {
+    ctx.save(); ctx.beginPath(); ctx.roundRect(-w / 2 + 12, -h / 2 + 12, w - 24, h - 24, 20); ctx.clip(); ctx.lineCap = 'butt';
+    const path = () => { ctx.save(); ctx.translate(0, 3); ctx.strokeStyle = FELT.under; ctx.lineWidth = 30; ctx.stroke(); ctx.restore();
+      ctx.strokeStyle = FELT.road; ctx.lineWidth = 30; ctx.stroke(); stitch(FELT.thread, 2.2, [8, 7]); };
+    for (const s of [1, -1]) { ctx.beginPath(); ctx.moveTo(-w / 2, -s * h / 2); ctx.lineTo(w / 2, s * h / 2); path(); }
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -h / 2); path();
+    ctx.restore();
+    ctx.beginPath(); ctx.ellipse(0, 0, h * 0.26, h * 0.26, 0, 0, Math.PI * 2); feltPiece(FELT.road);
+    ctx.beginPath(); ctx.ellipse(0, 0, h * 0.26 - 8, h * 0.26 - 8, 0, 0, Math.PI * 2); stitch(FELT.thread, 2.2, [8, 7]); }); },
   // Libe Slope is a hill: its low west side in darker felt, and contour lines stitched down it.
   'Libe Slope': thing => { lawn(thing); turned(thing, (w, h) => {
     ctx.save(); ctx.beginPath(); ctx.roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6, 24); ctx.clip();
