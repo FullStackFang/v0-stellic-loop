@@ -18,6 +18,7 @@ import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
 import { Grid } from './grid';
 import { Ways } from './ways';
 import { Copy, CopyLink, Opened, Pick } from './pick';
+import { pollGroup } from '@/lib/when/groups';
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string; in?: string }> };
 const REACHED: Record<Threshold, string> = { majority: 'majority reached', two_thirds: 'two thirds reached', everyone: 'everyone can' };
@@ -100,9 +101,10 @@ export default async function WhenPage({ params, searchParams }: Props) {
   // Answering, or looking before signing in. The ticket says who asked; its stub, drawn by the grid, says who can make a time.
   const slots = slotsOf(view.frame), by = slotLabel(view.deadline, zone), set = view.chosen && slotLabel(view.chosen.at, zone);
   const free = Object.fromEntries(Object.entries(view.free).map(([at, people]) => [at, people.filter(each => each.personId !== viewer?.personId).map(shown)]));
+  const group = await pollGroup(db(), who, view.id);
   const tile = <Face of={shown(view.organizer)} />;
   const title = <><h1>{view.title}</h1>
-    <p>{view.organizer.name} asked for {lengthText(view.minutes)} · {view.answered.length} of {view.size} answered · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
+    <p>{view.organizer.name} asked for {lengthText(view.minutes)} · {view.answered.length} of {view.size} answered{group && group.guests > 0 ? ` (${group.guests} from outside ${group.name})` : ''} · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
   const best = view.best.map(slot => { const label = slotLabel(slot.at, zone); return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, line: `${slot.people.length} of ${view.size} can make it`, people: slot.people.map(shown) }; });
   const mine = view.isOrganizer && !view.chosen;
   // The sign-in card beside the poll's ticket at ?in=1. The usual way in is the bar's "Sign in", which opens over the poll.
@@ -116,6 +118,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
       {view.chosen && <a className="cs-btn sm" href={here}>Back to the result</a>}
       {mine && view.best.length > 0 && <a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a>}
       {mine && <a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a>}
+      {group && <Link className="cs-btn sm" href={group.href}>{group.name}</Link>}
       {who && <Link className="cs-btn sm" href="/when">Your polls</Link>}
     </div>
   </div>;

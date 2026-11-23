@@ -66,8 +66,11 @@ export async function logEvent(q: Q, kind: string, poll: { id: string; seriesId:
   await q.query('insert into when_event(kind,poll_id,series_id,person_id,visitor) values($1,$2,$3,$4,$5)', [kind, poll.id, poll.seriesId, o.personId ?? null, o.visitor ?? null]);
 }
 
-/** Makes a poll and returns its id, which is its address. A person makes at most ten a day. */
-export async function createPoll(db: Db, who: Who, input: unknown, now = new Date()): Promise<{ id: string }> {
+/**
+ * Makes a poll and returns its id, which is its address. A person makes at most ten a day.
+ * `group` is the group it is for; the caller has checked that its maker may post there.
+ */
+export async function createPoll(db: Db, who: Who, input: unknown, now = new Date(), group?: { orgId: string; loopId: string }): Promise<{ id: string }> {
   const poll = read(NewPoll, input);
   if (!sound(poll, now)) throw new WhenError('invalid');
   return db.tx(async q => {
@@ -76,6 +79,7 @@ export async function createPoll(db: Db, who: Who, input: unknown, now = new Dat
     const id = randomBytes(9).toString('base64url');
     await q.query(`insert into when_poll(id,series_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at,weekends,duration_min) values($1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [id, who.personId, poll.title, poll.startDate, poll.endDate, poll.hourStart, poll.hourEnd, poll.timezone, poll.expectedSize, poll.deadline, poll.threshold, now.toISOString(), poll.weekends, poll.duration]);
+    if (group) await q.query('insert into when_poll_group(poll_id,org_id,loop_id) values($1,$2,$3)', [id, group.orgId, group.loopId]);
     await logEvent(q, 'poll_created', { id, seriesId: id }, { personId: who.personId });
     return { id };
   });

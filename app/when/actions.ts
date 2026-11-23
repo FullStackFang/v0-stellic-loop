@@ -11,6 +11,7 @@ import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { saveGuestAnswer, saveInviteEmail } from '@/lib/when/guests';
 import { drainWhen, whenSendingOn } from '@/lib/when/outbox';
+import { groupByRef } from '@/lib/when/groups';
 import { POLL_ID, WhenError, createPoll, recordOpen, saveAnswer, updatePoll } from '@/lib/when/polls';
 import { repeatPoll } from '@/lib/when/repeat';
 import { sendPoll } from '@/lib/when/send';
@@ -43,11 +44,14 @@ const planOf = (data: FormData) => Object.fromEntries(PLAN.map(key => [key, data
 
 /** "Create the link". */
 export async function createPollAction(_: Said, data: FormData): Promise<Said> {
-  const who = await getSignedInPrincipal();
-  if (!who) redirect(signInHref('/when/new'));
+  const who = await getSignedInPrincipal(), ref = String(data.get('group') ?? '');
+  if (!who) redirect(signInHref(ref ? `/when/new?group=${encodeURIComponent(ref)}` : '/when/new'));
   let id: string;
   try {
-    ({ id } = await createPoll(db(), who, planOf(data)));
+    // A poll started from a group belongs to it, if its maker may post there.
+    const group = ref ? await groupByRef(db(), who, ref) : null;
+    if (ref && !group) return { error: 'You cannot start a poll for that group. Open it from the group\'s page.' };
+    ({ id } = await createPoll(db(), who, planOf(data), new Date(), group?.scope));
   } catch (error) { return said(error); }
   redirect(`/when/${id}`);
 }

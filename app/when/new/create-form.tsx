@@ -26,12 +26,12 @@ const Arrow = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" str
  * On a laptop (.wn-make in when.css) it is one screen: the ticket across the top, the plan and the days side by side at
  * one height, and the action on a line across the foot.
  */
-export function CreateForm({ signIn, first, today, head, edit }: { /** Where a signed-out person signs in; null when signed in. */ signIn: string | null; first: Plan; today: string; /** What leads the first column. */ head: ReactNode; /** The poll being changed. */ edit?: string }) {
+export function CreateForm({ signIn, first, today, head, edit, group }: { /** The group the poll is for, when it was started from one. */ group?: { ref: string; name: string; size: number; href: string }; /** Where a signed-out person signs in; null when signed in. */ signIn: string | null; first: Plan; today: string; /** What leads the first column. */ head: ReactNode; /** The poll being changed. */ edit?: string }) {
   const [plan, setPlan] = useState(first), [state, submit, pending] = useActionState(edit ? updatePollAction : createPollAction, null);
   const [mode, setMode] = useState<'days' | 'by'>('days'), [half, setHalf] = useState(false), [from, setFrom] = useState(() => monday(today));
   // After the first paint, so the page the server drew and the one the browser draws start the same.
   // eslint-disable-next-line react-hooks/set-state-in-effect -- read once from the tab's own storage
-  useEffect(() => { if (edit) return; try { const kept = sessionStorage.getItem(KEPT); if (kept) setPlan(now => { const next = { ...now, ...JSON.parse(kept) as Partial<Plan> }; return { ...next, by: next.by.slice(0, 10) }; }); } catch {} }, [edit]);
+  useEffect(() => { if (edit || group) return; try { const kept = sessionStorage.getItem(KEPT); if (kept) setPlan(now => { const next = { ...now, ...JSON.parse(kept) as Partial<Plan> }; return { ...next, by: next.by.slice(0, 10) }; }); } catch {} }, [edit, group]);
   const change = (patch: Partial<Plan>) => {
     const next = { ...plan, ...patch };
     setPlan(next);
@@ -58,7 +58,7 @@ export function CreateForm({ signIn, first, today, head, edit }: { /** Where a s
   const days = windowDays(from, addDays(from, WEEKS * 7 - 1)), last = addDays(from, STEP - 1);
   const look = (day: string) => day === plan.by ? ' by' : day === plan.startDate || day === plan.endDate ? ' end' : day > plan.startDate && day < plan.endDate ? ' in' : '';
   return <form action={send}>
-    <input type="hidden" name="startDate" value={plan.startDate} /><input type="hidden" name="endDate" value={plan.endDate} /><input type="hidden" name="weekends" value={plan.weekends} />{edit && <input type="hidden" name="pollId" value={edit} />}
+    <input type="hidden" name="startDate" value={plan.startDate} /><input type="hidden" name="endDate" value={plan.endDate} /><input type="hidden" name="weekends" value={plan.weekends} />{edit && <input type="hidden" name="pollId" value={edit} />}{group && <input type="hidden" name="group" value={group.ref} />}
     {head}<Panel tab="Your plan"><div className="wn-fields">
       <label className="wn-f wide"><span>What are you planning</span><input name="title" required maxLength={80} placeholder="Problem set night" value={plan.title} onChange={set('title')} /></label>
       <label className="wn-f"><span>From this hour</span><select name="hourStart" value={plan.hourStart} onChange={set('hourStart')}>{HOURS.slice(0, 24).map(hour => <option key={hour} value={hour}>{hourText(hour)}</option>)}</select></label>
@@ -92,6 +92,6 @@ export function CreateForm({ signIn, first, today, head, edit }: { /** Where a s
     <div className="wn-foot">{state?.error && <p className="wn-note bad" role="alert">{state.error}</p>}
     {signIn ? <a className="cs-btn go wn-big" href={signIn}>Sign in to create the link</a> : <button className="cs-btn go wn-big" type="submit" disabled={pending}>{edit ? pending ? 'Saving' : 'Save the changes' : pending ? 'Creating' : 'Create the link'}</button>}
     <p className="wn-note">{edit ? 'The link stays the same. Times people painted outside the new days or hours are dropped.' : 'Anyone with the link can see it. Answering takes a quick sign-in.'}</p>
-    {!signIn && <div className="wn-acts wn-mid">{edit && <a className="cs-btn sm" href={`/when/${edit}`}>Back to the poll</a>}<Link className="cs-btn sm" href="/when">Your polls</Link></div>}</div>
+    {!signIn && <div className="wn-acts wn-mid">{edit && <a className="cs-btn sm" href={`/when/${edit}`}>Back to the poll</a>}{group && <Link className="cs-btn sm" href={group.href}>Back to {group.name}</Link>}<Link className="cs-btn sm" href="/when">Your polls</Link></div>}</div>
   </form>;
 }

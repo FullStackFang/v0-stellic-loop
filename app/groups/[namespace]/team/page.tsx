@@ -30,6 +30,7 @@ import { CopyLink } from '@/components/emba/copy-link';
 import { Arrow } from '@/components/LoopGlyphs';
 import { Alert, Via } from '../../glyphs';
 import { listResources } from '@/lib/emba/team-resources';
+import { groupPolls } from '@/lib/when/groups';
 import type { Described, LinkView, TextView } from '@/lib/emba/team-resources';
 import { ResourceBox } from '@/components/emba/resource-box';
 import { addResource, removeResource, removeTeamLink, retryResource } from '../../resource-actions';
@@ -68,15 +69,17 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
     teamState(db(), principal, scope), teamBrief(db(), principal, scope), listTeamEvents(db(), principal, scope), can('manage'),
     // The shown tab. Followers read the upcoming list and the asks but cannot mark interest or ask.
     shown(['all', 'plans'], () => upcomingEvents(db(), principal, { ...scope, people: true })), shown(['plans'], () => managersOnly(listTeamEvents(db(), principal, { ...scope, archived: true }))),
-    shown(['all', 'asks'], () => listAsks(db(), principal, scope)), shown(['all', 'plans', 'asks', 'resources'], () => can('post')),
+    shown(['all', 'asks'], () => listAsks(db(), principal, scope)), can('post'),
     shown(['all', 'plans'], () => whatsOn(db(), principal, scope)), shown(['plans'], () => feedAddress(db(), principal, scope)), shown(['all', 'plans'], () => arrivals(db(), principal, scope)),
     shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope)), shown(['resources'], () => listResources(db(), principal, scope)),
     // Nearby is listed to everyone in the group; the feeds, with their last results, only to owners and organizers.
-    shown(['plans'], () => nearby(db(), principal, scope)), shown(['plans'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : []), groupTile(db(), principal, scope)]);
+    shown(['plans'], () => nearby(db(), principal, scope)), shown(['plans'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : []), groupTile(db(), principal, scope),
+    // Loopd When: the group's open polls, and the ones whose time is set.
+    shown(['all', 'plans'], () => groupPolls(db(), principal, scope))]);
   });
   if (!opened) return null;
-  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds, tile] } = opened;
-  return { group, scope, state, brief, events, manager, upcoming, archived: archived ?? [], asks, canPost: canPost ?? false, on, feed, travel, history: history ?? [], mine: mine ?? [], resources, near, feeds: feeds ?? [], tile, inside: await groupPictureMap(db(), group.inside.map(inner => inner.loopId)) };
+  const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds, tile, polls] } = opened;
+  return { group, scope, state, brief, events, manager, upcoming, polls, archived: archived ?? [], asks, canPost, on, feed, travel, history: history ?? [], mine: mine ?? [], resources, near, feeds: feeds ?? [], tile, inside: await groupPictureMap(db(), group.inside.map(inner => inner.loopId)) };
 }
 
 const who = (person: PersonView) => person.isYou ? 'you' : person.handle ?? (person.former ? 'a former teammate' : 'a teammate');
@@ -114,7 +117,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   const tab: Tab = TABS.find(([key]) => key === asked)?.[0] ?? 'all';
   const data = await load(principal, route, tab).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
-  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel, resources, near, feeds } = data;
+  const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel, resources, near, feeds, polls } = data;
   const href = (to: Tab, record?: number) => `${base}/team?tab=${to}${record ? `#r${record}` : ''}`;
 
   const Act = ({ record, action, label }: { record: RecordView; action: string; label: string }) => <ActionForm action={amendTeamRecord} label={label}>
@@ -175,7 +178,15 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   const dayIn = (instant: string) => new Date(instant).toLocaleDateString('sv-SE', { timeZone: state.timezone });
   /** Only a claim can be overdue. Anything else that began before today and is still listed is happening now. */
   const fromToday = (day: string | null) => day && day < today ? today : day;
+  const clock = (instant: string) => new Date(instant).toLocaleTimeString('en-US', { timeZone: state.timezone, hour: 'numeric', minute: '2-digit' }).replace(':00', '').toLowerCase();
+  const findTime = `/when/new?group=${encodeURIComponent(route.slug ? `${route.namespace}/${route.slug}` : route.namespace)}`;
   const cards: Card[] = tab !== 'all' ? [] : [
+    // A poll for a time: on today while it waits for the reader's times, then on its last day to answer, then on the day that was set.
+    ...(polls ?? []).map((poll): Card => { const set = poll.chosenSlot, wants = !set && !poll.mine;
+      return { key: `w${poll.id}`, day: set ? fromToday(dayIn(set)) : wants ? today : fromToday(dayIn(poll.deadline)), you: wants ? 'Needs your times' : undefined, cls: 'gt-ask', body: <>
+        <p className="gt-kind"><span>{set ? 'Time set' : 'Find a time'}</span><i>{set ? clock(set) : `Answer by ${shortDay(dayIn(poll.deadline))}`}</i></p><p className="gt-stmt"><Link href={`/when/${poll.id}`}>{poll.title}</Link></p>
+        {!set && <p className="gt-meter" style={{ '--p': poll.size ? poll.answered / poll.size : 0 } as React.CSSProperties}><i /></p>}
+        <div className="gt-foot"><span>{poll.organizerName} · {poll.answered} of {poll.size} answered</span>{wants && <Link className="gt-go" href={`/when/${poll.id}`}>Add your times</Link>}</div></> }; }),
     // A decision of yours that an output is marked as conflicting with.
     ...state.conflicts.items.filter(flag => flag.state === 'flagged').flatMap(flag => { const item = state.decisions.items.find(each => each.number === flag.decision); return item?.by.isYou ? [{ flag, item }] : []; })
       .map(({ flag, item }): Card => ({ key: `d${item.number}-${flag.output}`, day: today, you: `Output #${flag.output} disagrees`, cls: 'gt-decision', body: <>
@@ -249,8 +260,9 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
 
     <nav className="gt-bar" aria-label="Team sections">{TABS.filter(([key]) => BAR.includes(key)).map(tabLink)}<Link href={base}>Members</Link>
       <span className="gt-sp" />
+      {canPost && <Link className="go" href={findTime}>Find a time</Link>}
       <details className="gt-more" data-on={MORE.includes(tab) || undefined}><summary>{MORE.includes(tab) ? TABS.find(([key]) => key === tab)![1] : 'More'}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg></summary>
-        <div>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}
+        <div>{canPost && <Link className="go" href={findTime}>Find a time</Link>}{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}
           {manager && <Link href={`${href('brief')}#post`}>Post an announcement</Link>}
           {manager && <Link href={`${base}/organize`} title="Interest in each event by day, and how each open ask is filling.">Organizer view</Link>}
           <Link href="/groups/connections" title="Connect Claude or another assistant once, and it reads this record before it drafts anything for the team.">Connect an assistant</Link></div></details></nav>
@@ -270,6 +282,13 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
             </section>; })}</DaysRow>
           {settledList.length > 0 && <><h3 className="gt-dl gt-dl-row">Settled lately<span>newest first</span></h3>
             <ul className="gt-minis">{settledList.map(item => <li key={item.key} className="gt-mini"><i className={`gt-g ${item.kind}`} /><span><b><Link href={item.href}>{item.text}</Link></b><small>{item.sub}</small></span><time>{shortDay(dayIn(item.at))}</time></li>)}</ul></>}
+        </section>}
+
+        {tab === 'plans' && polls && <section id="times" aria-label="Finding a time"><h3>Finding a time</h3>
+          {polls.length ? <ul className="lp-list">{polls.map(poll => <li key={poll.id} className="lp-event"><span className="lp-topic">{poll.chosenSlot ? `${shortDay(dayIn(poll.chosenSlot))}, ${clock(poll.chosenSlot)}` : `By ${shortDay(dayIn(poll.deadline))}`}</span>
+            <div className="lp-what"><p className="lp-stmt"><Link href={`/when/${poll.id}`}>{poll.title}</Link>{!poll.chosenSlot && !poll.mine && <span className="lp-chip lp-chip-open">Needs your times</span>}</p>
+              <p className="lp-sub"><span>{poll.chosenSlot ? 'Time set' : 'Open'}</span><span>{poll.organizerName} asked</span><span>{poll.answered} of {poll.size} answered</span></p></div></li>)}</ul>
+            : <p className="lp-empty">No poll is open. &quot;Find a time&quot; asks the group when it can meet, and the time you pick shows here.</p>}
         </section>}
 
         {tab === 'decisions' && <section id="decisions" aria-label="Current decisions">
