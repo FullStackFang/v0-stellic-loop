@@ -38,7 +38,7 @@ const AUTO_MS = 500;
  * With `onSave` a person paints their times: press and drag to paint, starting on a painted time to rub out; the arrow
  * keys move and Space paints. Each time shows how many can make it, the person included, and nothing is kept until
  * Save. A poll whose squares are smaller than an hour has more rows: the grid keeps the height it has by the hour, the
- * days stay on top and the times scroll under them (public/demo/mockups-when-steps.html, B). What is painted saves by itself a moment after the painting stops, once it is known whose times they are. Without `onSave` it is only to look at, and `action` stands where Save would.
+ * days stay on top and the times scroll under them a whole row at a time, so no row is ever cut; a line of two pills under the grid turns to the earlier and later times (public/demo/mockups-when-steps.html, B). What is painted saves by itself a moment after the painting stops, once it is known whose times they are. Without `onSave` it is only to look at, and `action` stands where Save would.
  */
 export function Grid({ slots, free, me: given = null, mine = [], draft = false, onSave, guest, onEmail, ways, tab, after = '', children, tile, title, best = [], action, tail, won = null, size }: {
   slots: Slot[]; /** Who else can make each time. */ free: Record<string, Shown[]>; /** The person painting. */ me?: Shown | null; mine?: string[];
@@ -67,13 +67,13 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   // `lifted` counts the times the pointer has come up, so what was painted in one stroke is saved when the stroke ends.
   const [lifted, setLifted] = useState(0), [dirty, setDirty] = useState(false), [refused, setRefused] = useState<Set<string> | null>(null);
   useEffect(() => { const stop = () => { painting.current = null; setLifted(n => n + 1); }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
-  // The window a fine grid scrolls in: as tall as the same poll by the hour. `below` is whether there are later times under it.
-  const [below, setBelow] = useState(false);
+  // The window a fine grid scrolls in: as tall as the same poll by the hour, to the pixel, so it holds whole rows. `above` and `below` are whether there are times out of sight.
+  const [below, setBelow] = useState(false), [above, setAbove] = useState(false), turn = (way: number) => box.current?.scrollBy({ top: way * (box.current.clientHeight - (box.current.querySelector<HTMLElement>('.wn-d')?.offsetHeight ?? 0)), behavior: 'smooth' });
   useEffect(() => {
     const el = box.current;
     if (!fine || !el) return;
-    const tell = () => setBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 8);
-    const fit = () => { const cell = el.querySelector<HTMLElement>('.wn-cell'), head = el.querySelector<HTMLElement>('.wn-d'); if (cell && head) el.style.maxHeight = `${head.offsetHeight + tall * (cell.offsetHeight + 4)}px`; tell(); };
+    const tell = () => { setBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 8); setAbove(el.scrollTop > 8); };
+    const fit = () => { const cell = el.querySelector<HTMLElement>('.wn-cell'), head = el.querySelector<HTMLElement>('.wn-d'); if (cell && head) { el.style.maxHeight = `${head.offsetHeight + tall * (cell.offsetHeight + 4) - 4}px`; el.style.scrollPaddingTop = `${head.offsetHeight}px`; } tell(); };
     fit(); window.addEventListener('resize', fit); el.addEventListener('scroll', tell);
     return () => { window.removeEventListener('resize', fit); el.removeEventListener('scroll', tell); };
   }, [fine, tall, page, per]);
@@ -210,7 +210,10 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
             onClick={event => { if (event.detail === 0) paint(slot, !on); }}>{total}{badge}</button>;
         }), ...pad.map((_, n) => <span key={`pad${hour}${n}`} />)])}
       </div>
-      {fine && below && <div className="wn-more"><button type="button" onClick={() => box.current?.scrollBy({ top: 180, behavior: 'smooth' })}>Later times</button></div>}
+      {fine && <div className="wn-more">
+        <button type="button" disabled={!above} onClick={() => turn(-1)}><Arrow d="M3 10l5-5 5 5" />Earlier times</button>
+        <button type="button" disabled={!below} onClick={() => turn(1)}>Later times<Arrow d="M3 6l5 5 5-5" /></button>
+      </div>}
       <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />More people free</span>{onSave && <span className="cs-pill"><i className="mine" />Yours</span>}{children}</div></Panel>
       {strip}
       {onSave && guest ? <div className="wn-save wn-who">
