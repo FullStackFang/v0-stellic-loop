@@ -1076,8 +1076,18 @@ describe('the pages', () => {
     expect(screen.getByRole('button', { name: 'Blitz night is shown' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('textbox', { name: 'Good-for words of Blitz night' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /^Animals ?48$/ })).toHaveAttribute('href', '/c/admin?campus=cornell&tab=animals');
+    // Two sign-ups, one of them the admin's own, and a press made signed out (openspec loop-ink-field-test).
+    await t.db.query("insert into campus_subscribe_ask(person_id,email,plan,place) values($1,'ana@cornell.edu','ink','seats: Get Ink'),($1,'ben@cornell.edu','ink_plus','conga: Get Ink+')", [ana.personId]);
+    await t.db.query("insert into campus_ink_waitlist(plan,place) values('ink','seats: Get Ink')");
     for (const [tab, section] of Object.entries({ rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', campus: 'Campus' })) {
       cleanup(); render(await withPortalTestSession(ana, () => admin(tab)));
+      if (tab === 'premium') {
+        // The admin's own is marked and not counted; times are New York time; the signed-out press is its own list.
+        expect(screen.getByText(/^1 sign-up, newest first, with where each was pressed, not counting yours\. Times are New York time\./)).toBeInTheDocument();
+        expect(screen.getByText(/^Ink · seats: Get Ink · [0-9: -]+ · Yours$/)).toBeInTheDocument();
+        expect(screen.getByText(/^Ink\+ · conga: Get Ink\+ · [0-9: -]+$/)).toBeInTheDocument();
+        expect(screen.getByText('1 press made signed out, newest first. Each was shown the sign-in card and gave no email.')).toBeInTheDocument();
+      }
       expect(screen.getByRole('heading', { level: 1, name: section })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: new RegExp(`^${section} ?[0-9]+$`) })).toHaveAttribute('aria-current', 'page');
       for (const field of document.querySelectorAll('input[name=tab]')) expect(field).toHaveValue(tab);

@@ -25,4 +25,4 @@ export async function recordClubAsk(q: Q, ask: { personId: string | null; club: 
   return true;
 }
 /** For the admin: every claim, newest first. */
-export const clubAsks = async (q: Q) => (await q.query<ClubAsk>(`select club,email,plan,place,to_char(asked_at,'YYYY-MM-DD HH24:MI') as asked from campus_club_ask order by asked_at desc,id desc limit 500`)).rows;
+export const clubAsks = async (q: Q) => (await q.query<ClubAsk>(`select club,email,plan,place,to_char(asked_at at time zone 'America/New_York','YYYY-MM-DD HH24:MI') as asked from campus_club_ask order by asked_at desc,id desc limit 500`)).rows;

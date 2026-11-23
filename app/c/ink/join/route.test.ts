@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
-import { planOf, signedOutAsks, subscribeAsks } from '@/lib/campus/ink';
+import { planOf, pressSignedOut, signedOutAsks, signedOutPresses, subscribeAsks } from '@/lib/campus/ink';
 import { GET, POST } from './route';
 
 // Spec: openspec/changes/loop-ink-tiers/specs/ink-tiers ("Every ask signs you up").
@@ -20,8 +20,8 @@ async function person(email: string) {
   await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]);
   return (await authenticate(t.db, 'test', async () => ({ issuer: 'https://issuer.test', subject: row.id, expiresAt: Date.parse('2099-01-01'), verifiedEmail: email })))!;
 }
-const join = async (who: Principal | null, body: object, origin: string | null = 'http://loop.test') => {
-  const run = async () => { const answer = await POST(new Request('http://loop.test/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json', ...origin ? { origin } : {} }, body: JSON.stringify(body) })); return { status: answer.status, body: await answer.json() }; };
+const join = async (who: Principal | null, body: object, origin: string | null = 'http://loop.test', cookie = '') => {
+  const run = async () => { const answer = await POST(new Request('http://loop.test/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json', ...origin ? { origin } : {}, ...cookie ? { cookie } : {} }, body: JSON.stringify(body) })); return { status: answer.status, body: await answer.json() }; };
   return who ? withPortalTestSession(who, run) : run();
 };
 
@@ -68,4 +68,34 @@ it('gives someone signed out the sign-in card to sign in where they are, and ref
   expect((await join(ana, { plan: 'plus', place: 'anywhere' })).status).toBe(400);
   expect((await join(ana, { plan: 'gold', place: 'ink page: Get Ink+' })).status).toBe(400);
   expect([await planOf(t.db, ana.personId), await subscribeAsks(t.db)]).toEqual(['free', []]);
+});
+
+// Spec: openspec/changes/loop-ink-field-test/specs/ink-field-test ("A signed-out press is kept").
+it('keeps a press made signed out with no email, once, and gives nobody a plan for it', async () => {
+  const visitor = 'a'.repeat(32);
+  expect((await join(null, { plan: 'plus', place: 'conga: Get Ink+', back: '/conga' }, 'http://loop.test', `x=1; lp_v=${visitor}`)).status).toBe(401);
+  expect((await join(null, { plan: 'ink', place: 'seats: Get Ink' })).status).toBe(401);
+  // The top bar asking again for the plan it holds is not a press.
+  expect((await join(null, { plan: 'plus', place: 'conga: Get Ink+', again: true }, 'http://loop.test', `lp_v=${visitor}`)).status).toBe(401);
+  expect((await signedOutPresses(t.db)).map(({ plan, place }) => [plan, place])).toEqual([['ink', 'seats: Get Ink'], ['ink_plus', 'conga: Get Ink+']]);
+  expect((await t.db.query<{ visitor: string | null }>('select visitor from campus_ink_waitlist order by id')).rows.map(row => row.visitor)).toEqual([visitor, null]);
+  // They are not the Ink page's email sign-ups, and signing in gives no plan for them.
+  expect(await signedOutAsks(t.db)).toEqual([]);
+  const ana = await person('ana@cornell.edu');
+  await withPortalTestSession(ana, () => GET());
+  expect([await planOf(t.db, ana.personId), await subscribeAsks(t.db)]).toEqual(['free', []]);
+});
+
+it('still opens the sign-in card when the press cannot be kept', async () => {
+  const failing = { query: () => Promise.reject(Object.assign(new Error('null value in column "email"'), { code: '23502' })) };
+  expect(await pressSignedOut(failing, 'ink', 'seats: Get Ink', null)).toBe(false);
+});
+
+it('shows sign-up times in New York time', async () => {
+  const ana = await person('ana@cornell.edu');
+  await join(ana, { plan: 'ink', place: 'seats: Get Ink' });
+  await join(null, { plan: 'ink', place: 'seats: Get Ink' });
+  await t.db.query("update campus_subscribe_ask set asked_at='2026-11-24T01:30:00Z'");
+  await t.db.query("update campus_ink_waitlist set asked_at='2026-11-24T01:30:00Z'");
+  expect([(await subscribeAsks(t.db))[0].asked, (await signedOutPresses(t.db))[0].asked]).toEqual(['2026-11-23 20:30', '2026-11-23 20:30']);
 });

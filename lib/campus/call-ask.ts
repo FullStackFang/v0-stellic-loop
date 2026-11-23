@@ -21,4 +21,4 @@ export async function askForCall(q: Q, personId: string | null, email: string, a
   return true;
 }
 /** For the admin: every ask for a call, newest first. */
-export const callAsks = async (q: Q) => (await q.query<CallAsk>(`select email,role,times,note,to_char(asked_at,'YYYY-MM-DD HH24:MI') as asked from campus_call_ask order by asked_at desc,id desc limit 500`)).rows;
+export const callAsks = async (q: Q) => (await q.query<CallAsk>(`select email,role,times,note,to_char(asked_at at time zone 'America/New_York','YYYY-MM-DD HH24:MI') as asked from campus_call_ask order by asked_at desc,id desc limit 500`)).rows;

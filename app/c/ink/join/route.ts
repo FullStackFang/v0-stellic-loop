@@ -1,10 +1,11 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { claimSignedOut, JOIN_PLACES, joinPlan, joinSignedOut, joinedWords, planOf, type JoinPlace } from '@/lib/campus/ink';
+import { claimSignedOut, JOIN_PLACES, joinPlan, joinSignedOut, joinedWords, planOf, pressSignedOut, type JoinPlace } from '@/lib/campus/ink';
 import { campusViewer, signInHref } from '@/lib/campus/session';
 import { listCampuses } from '@/lib/campus/listings';
 import { schoolOf } from '@/lib/campus/schools';
 import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
+import { limited } from '@/lib/ratelimit';
 
 // Signing up for Ink or Ink+ from an ask that takes no email of its own (openspec loop-ink-tiers): the Ink page's plan
 // cards, the colours card, the account row, the pet maker, and the games. A route and not a server action, so the plain
@@ -41,6 +42,8 @@ export async function POST(request: Request) {
   }
   // Signed out: what the sign-in card needs to open where the button was (components/campus/join-plan.tsx), so nobody leaves the page to sign up.
   if (!viewer) {
+    // The press itself is kept, with no email (openspec loop-ink-field-test). Not the top bar asking again for a plan it holds.
+    if ((body as { again?: unknown }).again !== true && !await limited('join').catch(() => false)) await pressSignedOut(db(), plan, place, /(?:^|;\s*)lp_v=([0-9a-f]{32})(?:;|$)/.exec(request.headers.get('cookie') ?? '')?.[1] ?? null);
     const schools = (await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(({ slug, name, domains }) => ({ slug, name, domains }));
     return no(401, { ok: false, signIn: signInHref(back), schools, configured: clerkPortalConfigured() });
   }

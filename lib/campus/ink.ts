@@ -34,8 +34,8 @@ export type AskPlace = 'own animal' | 'group picture' | 'save picture' | 'assist
 export const recordAsk = (q: Q, personId: string, email: string, plan: 'ink' | 'ink_plus', place: AskPlace) =>
   q.query('insert into campus_subscribe_ask(person_id,email,plan,place) values($1,$2,$3,$4)', [personId, email, plan, place]);
 export type SubscribeAsk = { email: string; plan: 'ink' | 'ink_plus'; place: string; asked: string };
-/** For the admin: every press of Subscribe, newest first. */
-export const subscribeAsks = async (q: Q) => (await q.query<SubscribeAsk>(`select email,plan,place,to_char(asked_at,'YYYY-MM-DD HH24:MI') as asked from campus_subscribe_ask order by asked_at desc,id desc limit 500`)).rows;
+/** For the admin: every press of Subscribe, newest first. Times are New York time. */
+export const subscribeAsks = async (q: Q) => (await q.query<SubscribeAsk>(`select email,plan,place,to_char(asked_at at time zone 'America/New_York','YYYY-MM-DD HH24:MI') as asked from campus_subscribe_ask order by asked_at desc,id desc limit 500`)).rows;
 
 /** Whether a person has Ink+. As with Ink, it means they asked to subscribe: nothing is charged. Ink+ holds Ink, so hasInk is true for them too. */
 export const hasInkPlus = async (q: Q, personId: string) => (await q.query('select 1 from campus_ink_plus where person_id=$1', [personId])).rows.length > 0;
@@ -81,7 +81,16 @@ export async function joinSignedOut(q: Q, email: unknown, plan: 'ink' | 'plus', 
  * migration that makes the list, there is nothing to give.
  */
 /** For the admin: every sign-up made signed out, newest first, and whether that email has signed in since. Empty before its migration. */
-export const signedOutAsks = async (q: Q) => (await q.query<{ email: string; plan: 'ink' | 'ink_plus'; place: string; asked: string; claimed: boolean }>(`select email,plan,place,to_char(asked_at,'YYYY-MM-DD HH24:MI') as asked,claimed_at is not null as claimed from campus_ink_waitlist order by asked_at desc,id desc limit 500`)).rows;
+export const signedOutAsks = async (q: Q) => (await q.query<{ email: string; plan: 'ink' | 'ink_plus'; place: string; asked: string; claimed: boolean }>(`select email,plan,place,to_char(asked_at at time zone 'America/New_York','YYYY-MM-DD HH24:MI') as asked,claimed_at is not null as claimed from campus_ink_waitlist where email is not null order by asked_at desc,id desc limit 500`)).rows;
+/**
+ * A press of a sign-up button by someone signed out who gave no email (openspec loop-ink-field-test): the plan, the
+ * button, the time and the browser's visitor number, if it has one. It gives nobody a plan. Before its migration, or on
+ * any other failure, nothing is kept: the press must still open the sign-in card.
+ */
+export const pressSignedOut = (q: Q, plan: 'ink' | 'plus', place: JoinPlace, visitor: string | null) =>
+  q.query('insert into campus_ink_waitlist(plan,place,visitor) values($1,$2,$3)', [plan === 'plus' ? 'ink_plus' : 'ink', place, visitor && /^[0-9a-f]{32}$/.test(visitor) ? visitor : null]).then(() => true, () => false);
+/** For the admin: those presses, newest first. Times are New York time. Empty before its migration. */
+export const signedOutPresses = async (q: Q) => (await q.query<{ plan: 'ink' | 'ink_plus'; place: string; asked: string }>(`select plan,place,to_char(asked_at at time zone 'America/New_York','YYYY-MM-DD HH24:MI') as asked from campus_ink_waitlist where email is null order by asked_at desc,id desc limit 500`)).rows;
 export async function claimSignedOut(q: Q, personId: string, email: string | null): Promise<void> {
   if (!email) return;
   const { rows } = await q.query<{ plan: 'ink' | 'ink_plus'; place: string }>(`update campus_ink_waitlist set claimed_at=now(),person_id=$2 where lower(email)=lower($1) and claimed_at is null returning plan,place`, [email, personId])

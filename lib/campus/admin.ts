@@ -3,6 +3,8 @@
  * With the variable empty nobody is the admin, and nothing inside the app can make someone one.
  * No 'server-only' here: proxy.ts asks this too.
  */
+/** The email addresses LOOP_ADMIN lists, in small letters: how the admin's own rows are told apart in a list of emails. */
+export const adminEmails = () => (process.env.LOOP_ADMIN ?? '').split(/[\s,]+/).filter(entry => entry.includes('@')).map(entry => entry.toLowerCase());
 export function isAdmin(who: { subject: string; verifiedEmail: string | null } | null | undefined): boolean {
   if (!who) return false;
   const listed = (process.env.LOOP_ADMIN ?? '').split(/[\s,]+/).filter(Boolean);

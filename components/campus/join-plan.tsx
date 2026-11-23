@@ -32,8 +32,8 @@ type Joined = { said: string } | { message: string } | { door: { schools: School
  * press, the account's email, and the place recorded (app/c/ink/join). Someone signed out gets what the sign-in card
  * needs, to sign in right there.
  */
-export async function joinPlan(plan: Plan, place: JoinPlace): Promise<Joined> {
-  const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan, place, back: location.pathname + location.search }) }).catch(() => null);
+export async function joinPlan(plan: Plan, place: JoinPlace, again = false): Promise<Joined> {
+  const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan, place, back: location.pathname + location.search, ...again ? { again } : {} }) }).catch(() => null);
   const got = await answer?.json().catch(() => null) as { ok?: boolean; said?: string; signIn?: string; message?: string; schools?: School[]; configured?: boolean } | null;
   if (got?.signIn) return { door: { schools: got.schools ?? [], configured: !!got.configured } };
   return got?.ok && got.said ? { said: got.said } : { message: got?.message ?? 'That did not go through. Try again.' };
@@ -98,7 +98,8 @@ export function HeldInk() {
   const [said, setSaid] = useState<{ plan: Plan; said: string } | null>(null);
   useEffect(() => {
     const was = held(); if (!was) return;
-    void joinPlan(was.plan, was.place).then(got => { if ('door' in got) return; localStorage.removeItem(HELD); if ('said' in got) setSaid({ plan: was.plan, said: got.said }); });
+    // Asking again for a held plan is not a press: the route keeps no signed-out press for it.
+    void joinPlan(was.plan, was.place, true).then(got => { if ('door' in got) return; localStorage.removeItem(HELD); if ('said' in got) setSaid({ plan: was.plan, said: got.said }); });
   }, []);
   return said && <Held plan={said.plan} said={said.said} onDone={() => setSaid(null)} />;
 }

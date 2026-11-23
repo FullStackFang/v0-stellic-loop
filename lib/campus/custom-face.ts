@@ -223,7 +223,7 @@ export async function subscribe(q: Q, personId: string, email: string, place: As
 export type PremiumAsk = { email: string; asked: string; pictures: string[] };
 /** For the admin: everyone who asked to subscribe, newest first, each with the tokens of the animals they had made. */
 export async function premiumAsks(q: Q): Promise<PremiumAsk[]> {
-  return (await q.query<PremiumAsk>(`select f.email,to_char(f.asked_at,'YYYY-MM-DD') as asked,
+  return (await q.query<PremiumAsk>(`select f.email,to_char(f.asked_at at time zone 'America/New_York','YYYY-MM-DD') as asked,
     coalesce((select array_agg(p.token::text order by p.made_at) from campus_custom_picture p where p.person_id=f.person_id),'{}'::text[]) as pictures
     from campus_custom_face f order by f.asked_at desc limit 500`)).rows;
 }
