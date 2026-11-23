@@ -60,6 +60,9 @@ const MOB_LEAK = 3; // animals a second it loses after that, as strays
 export const mobReach = () => 40;
 
 const wrap = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
+// How far apart, for two numbers. Not Math.hypot: the browser's makes a list of what it is given on every call, and this is
+// asked thousands of times a step (an eighth of all the memory the game made, measured 2026-11-23; openspec conga-smooth-motion).
+const hyp = (x, y) => Math.sqrt(x * x + y * y);
 
 /** A round ground, for when no map is given. */
 export const round = (r = 1500) => [Array.from({ length: 48 }, (_, n) => [Math.cos(n * Math.PI / 24) * r, Math.sin(n * Math.PI / 24) * r])];
@@ -147,7 +150,7 @@ export function createWorld(random = Math.random, rings = round(), holes = [], s
 export function place(world, line, start = 0) {
   let at = spot(world, 120);
   for (let tries = 0; tries < 30; tries++) {
-    if (world.lines.every(other => other === line || other.dead || Math.hypot(other.x - at.x, other.y - at.y) > 380)) break;
+    if (world.lines.every(other => other === line || other.dead || hyp(other.x - at.x, other.y - at.y) > 380)) break;
     at = spot(world, 120);
   }
   const a = world.random() * Math.PI * 2;
@@ -183,7 +186,7 @@ function follow(line, dt) {
   // An animal that has just joined stands at the head, and `slack` is how far the line has still to move back to make room.
   let px = line.x, py = line.y, walked = 0, need = GAP - line.slack, i = 0, k = 0;
   for (; k < path.length && i < tail.length; k++) {
-    const q = path[k], length = Math.hypot(q.x - px, q.y - py);
+    const q = path[k], length = hyp(q.x - px, q.y - py);
     while (i < tail.length && walked + length >= need) {
       const u = length ? Math.max(0, need - walked) / length : 0, f = tail[i++];
       f.x += (px + (q.x - px) * u - f.x) * ease;
@@ -197,6 +200,8 @@ function follow(line, dt) {
 }
 
 const SECTORS = 12; // slices of the ring round a bot's head it checks for lines closing in
+const AROUND = new Uint8Array(SECTORS); // which slices are filled, for the bot thinking now: made once, cleared each time
+const SLIDE = [0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.5, -1.5]; // the headings a line tries at the edge of the ground, nearest first
 const WRAP = 260; // how far out it checks
 // A bot looks ahead for trouble first, then for a way out of a line circling it, then for a smaller line to cut off, then
 // for the nearest stray.
@@ -222,7 +227,7 @@ function think(world, line, dt) {
   };
   // In the same pass, which way round it other lines stand close by, in SECTORS slices: a bot being circled (slither.io's
   // trap) sees most of them filled and makes for the widest gap left, dashing if it can. A less skilled bot notices later.
-  const around = new Uint8Array(SECTORS);
+  const around = AROUND.fill(0);
   const mark = (x, y) => {
     const rx = x - line.x, ry = y - line.y;
     if (rx * rx + ry * ry < WRAP * WRAP) around[Math.floor((Math.atan2(ry, rx) + Math.PI) / (Math.PI * 2) * SECTORS) % SECTORS] = 1;
@@ -249,7 +254,7 @@ function think(world, line, dt) {
   if (near < Infinity) { line.want = line.a - Math.sign(side || 1) * 1.6; return; }
 
   for (const car of world.shuttles) {
-    const dx = car.off[0] - line.x, dy = car.off[1] - line.y, far = Math.hypot(dx, dy);
+    const dx = car.off[0] - line.x, dy = car.off[1] - line.y, far = hyp(dx, dy);
     if (car.clock < car.ride && car.clock > car.ride - 8 && far < 1100) { line.want = far > 60 ? Math.atan2(dy, dx) : line.a + 1; return; }
   }
 
@@ -257,7 +262,7 @@ function think(world, line, dt) {
     let prey = null, close = 420;
     for (const other of world.lines) {
       if (other === line || other.dead || other.safe > 0) continue;
-      const d = Math.hypot(other.x - line.x, other.y - line.y);
+      const d = hyp(other.x - line.x, other.y - line.y);
       if (d < close) { close = d; prey = other; }
     }
     if (prey) {
@@ -272,14 +277,14 @@ function think(world, line, dt) {
 
   // A mob is worth going a long way for.
   let pick = null, far = 1000;
-  for (const mob of world.mobs) { const d = Math.hypot(mob.x - line.x, mob.y - line.y); if (d < far) { far = d; pick = mob; } }
+  for (const mob of world.mobs) { const d = hyp(mob.x - line.x, mob.y - line.y); if (d < far) { far = d; pick = mob; } }
   if (pick) { line.want = Math.atan2(pick.y - line.y, pick.x - line.x); return; }
   // A pickup close by is worth a short detour.
   far = 600;
-  for (const it of world.items) { const d = Math.hypot(it.x - line.x, it.y - line.y); if (d < 260 + bot.skill * 140 && d < far) { far = d; pick = it; } }
+  for (const it of world.items) { const d = hyp(it.x - line.x, it.y - line.y); if (d < 260 + bot.skill * 140 && d < far) { far = d; pick = it; } }
   if (pick) { line.want = Math.atan2(pick.y - line.y, pick.x - line.x); return; }
   for (const s of world.strays) {
-    const d = Math.hypot(s.x - line.x, s.y - line.y);
+    const d = hyp(s.x - line.x, s.y - line.y);
     if (d < far) { far = d; pick = s; }
   }
   if (pick) { line.want = Math.atan2(pick.y - line.y, pick.x - line.x); return; }
@@ -359,11 +364,11 @@ export function step(world, dt) {
     line.a = wrap(line.a + Math.max(-turn, Math.min(turn, wrap(line.want - line.a))));
     const v = (dashing ? DASH : SPEED) * dt;
     // At the edge of the ground a line slides along it: it takes the nearest heading that stays on.
-    for (const turn of [0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.5, -1.5]) {
+    for (const turn of SLIDE) {
       const x = line.x + Math.cos(line.a + turn) * v, y = line.y + Math.sin(line.a + turn) * v;
       if (inside(world, x, y)) { line.x = x; line.y = y; break; }
     }
-    if (Math.hypot(line.x - line.path[0].x, line.y - line.path[0].y) >= STEP) line.path.unshift({ x: line.x, y: line.y });
+    if (hyp(line.x - line.path[0].x, line.y - line.path[0].y) >= STEP) line.path.unshift({ x: line.x, y: line.y });
     line.slack *= Math.exp(-7 * dt);
     follow(line, dt);
     owe(world, line, dt, events);
@@ -381,7 +386,7 @@ export function step(world, dt) {
     for (const kind of KINDS) line.powers[kind] = Math.max(0, line.powers[kind] - dt);
     for (let i = world.items.length - 1; i >= 0; i--) {
       const it = world.items[i];
-      if (Math.hypot(it.x - line.x, it.y - line.y) >= TAKE) continue;
+      if (hyp(it.x - line.x, it.y - line.y) >= TAKE) continue;
       world.items.splice(i, 1);
       line.powers[it.kind] = POWERS[it.kind];
       events.push({ type: 'power', line: line.id, kind: it.kind, x: it.x, y: it.y });
@@ -396,7 +401,7 @@ export function step(world, dt) {
     let head = null, close = Infinity;
     for (const line of world.lines) {
       if (line.dead || world.t < (mob.ready ?? 0)) continue; // still in the air
-      const d = Math.hypot(line.x - mob.x, line.y - mob.y);
+      const d = hyp(line.x - mob.x, line.y - mob.y);
       if (d < r + JOIN && d < close) { close = d; head = line; }
     }
     if (head) {
@@ -447,7 +452,7 @@ export function step(world, dt) {
     if (line.dead || line.safe > 0 || line.powers.whistle > 0) continue; // the whistle: safe passage
     for (const other of world.lines) {
       if (other === line || other.dead) continue;
-      const heads = Math.hypot(other.x - line.x, other.y - line.y) < HEAD_HIT && other.safe <= 0 && line.tail.length <= other.tail.length;
+      const heads = hyp(other.x - line.x, other.y - line.y) < HEAD_HIT && other.safe <= 0 && line.tail.length <= other.tail.length;
       if (heads || touches(other.tail, line.x, line.y)) { hits.push([line, other]); break; }
     }
   }
@@ -468,8 +473,8 @@ export function step(world, dt) {
     const moving = car.clock < there || (car.clock >= leaves && car.clock < back);
     if (moving && inside(world, car.x, car.y)) for (const line of world.lines) {
       if (line.dead || line.safe > 0 || line.spared > 0 || !line.tail.length) continue;
-      const head = Math.hypot(line.x - car.x, line.y - car.y) < SWEEP * 0.75;
-      if (!head && !line.tail.some(f => Math.hypot(f.x - car.x, f.y - car.y) < SWEEP)) continue;
+      const head = hyp(line.x - car.x, line.y - car.y) < SWEEP * 0.75;
+      if (!head && !line.tail.some(f => hyp(f.x - car.x, f.y - car.y) < SWEEP)) continue;
       const off = line.tail.splice(-(head ? Math.max(TAKEN, Math.ceil(line.tail.length / 2)) : TAKEN)), taken = off.length, aboard = Math.min(taken, Math.max(0, SEATS - car.load));
       // Those there is no seat for are left where they stood, as strays.
       for (const f of off.slice(aboard)) world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
@@ -479,7 +484,7 @@ export function step(world, dt) {
     }
     if (was < there && car.clock >= there && car.load > 0) {
       // Whoever is waiting where it stops gets its riders straight onto their line, dealt round. With nobody there they scatter.
-      const count = car.load, waiting = world.lines.filter(line => !line.dead && Math.hypot(line.x - car.off[0], line.y - car.off[1]) < PLAZA), onto = waiting.map(line => ({ line: line.id, count: 0 }));
+      const count = car.load, waiting = world.lines.filter(line => !line.dead && hyp(line.x - car.off[0], line.y - car.off[1]) < PLAZA), onto = waiting.map(line => ({ line: line.id, count: 0 }));
       for (let n = 0; car.load > 0; n++) {
         if (!waiting.length) { out(car.off[0], car.off[1], 210); continue; }
         waiting[n % waiting.length].owed.push(face(world)); onto[n % waiting.length].count++; car.load--;

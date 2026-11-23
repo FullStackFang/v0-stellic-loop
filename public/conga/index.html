@@ -337,8 +337,8 @@ function inward(ring, by) {
   const n = ring.length, turn = ring.reduce((sum, [x, y], i) => { const [u, v] = ring[(i + 1) % n]; return sum + x * v - u * y; }, 0) > 0 ? 1 : -1;
   return ring.map(([x, y], i) => {
     const [px, py] = ring[(i - 1 + n) % n], [qx, qy] = ring[(i + 1) % n];
-    const a = Math.hypot(x - px, y - py) || 1, b = Math.hypot(qx - x, qy - y) || 1;
-    let nx = -(y - py) / a - (qy - y) / b, ny = (x - px) / a + (qx - x) / b; const l = Math.hypot(nx, ny) || 1;
+    const a = hyp(x - px, y - py) || 1, b = hyp(qx - x, qy - y) || 1;
+    let nx = -(y - py) / a - (qy - y) / b, ny = (x - px) / a + (qx - x) / b; const l = hyp(nx, ny) || 1;
     return [x + turn * nx / l * by, y + turn * ny / l * by];
   });
 }
@@ -705,7 +705,7 @@ function say(text) { $('say').textContent = text; $('say').classList.add('show')
 
 // ---------- steering ----------
 const canvas = $('game');
-let ctx = canvas.getContext('2d'); // the pen everything draws with: the screen's, or for a moment that of a square of kept ground (see carpet)
+let ctx = canvas.getContext('2d', { alpha: false }); // opaque: every frame paints all of it, so the browser need not blend it with the page; the pen everything draws with: the screen's, or for a moment that of a square of kept ground (see carpet)
 let dash = false, wide = 0, tall = 0, dpr = 1;
 // On a touch screen the thumb steers like a stick: the line heads the way the thumb has moved from where it went down,
 // so it can stay in a corner and never covers the animal. `stick` is that thumb. A mouse just points where to go.
@@ -722,7 +722,7 @@ let lifted = null; // when and where the last thumb came up after a short press
 canvas.addEventListener('pointerdown', event => {
   if (event.pointerType === 'mouse') { point(event); dash = true; return; }
   if (stick) return;
-  const again = lifted && event.timeStamp - lifted.t < TAP && Math.hypot(event.clientX - lifted.x, event.clientY - lifted.y) < NEAR;
+  const again = lifted && event.timeStamp - lifted.t < TAP && hyp(event.clientX - lifted.x, event.clientY - lifted.y) < NEAR;
   stick = { id: event.pointerId, x0: event.clientX, y0: event.clientY, x: event.clientX, y: event.clientY, t: event.timeStamp, dash: again };
   if (again) dash = true;
   lifted = null;
@@ -731,7 +731,7 @@ addEventListener('pointermove', event => {
   if (event.pointerType === 'mouse') return void (event.target === canvas && point(event));
   if (!stick || event.pointerId !== stick.id) return;
   stick.x = event.clientX; stick.y = event.clientY;
-  const dx = stick.x - stick.x0, dy = stick.y - stick.y0, far = Math.hypot(dx, dy);
+  const dx = stick.x - stick.x0, dy = stick.y - stick.y0, far = hyp(dx, dy);
   if (far > 8 && me && !me.dead) { aim = Math.atan2(dy, dx); learn('steer'); }
   if (far > REACH) { stick.x0 += dx * (1 - REACH / far); stick.y0 += dy * (1 - REACH / far); } // the stick is dragged along behind a thumb that goes further
 });
@@ -746,7 +746,7 @@ for (const type of ['pointerup', 'pointercancel']) addEventListener(type, event 
 // Leaving the window with a key or a thumb held would leave it held.
 addEventListener('blur', () => { keys.clear(); dash = false; stick = null; pause(true); });
 // The place chip on a touch screen: a tap opens the top of the board under it, another closes it.
-function fold(open) { $('place').parentElement.classList.toggle('open', open); $('place').setAttribute('aria-expanded', open); }
+function fold(open) { $('place').parentElement.classList.toggle('open', open); $('place').setAttribute('aria-expanded', open); if (open && world) board(); }
 $('place').onclick = () => fold(!$('place').parentElement.classList.contains('open'));
 addEventListener('keydown', event => {
   if ((event.code === 'KeyP' || event.code === 'Escape') && !event.repeat) return pause(!paused);
@@ -771,6 +771,8 @@ addEventListener('resize', fit); fit();
 
 // ---------- drawing ----------
 const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [], winks = [];
+// How far apart, for two numbers. Not Math.hypot, which makes a list of what it is given on every call (see sim.js).
+const hyp = (x, y) => Math.sqrt(x * x + y * y);
 let spilt = null; // the line that just burst into sacks, so its scatter skips the ring
 const SIZE = { stray: 40, big: 62, tail: 42, head: 58 }; // a big stray (worth 3) is a size above even a head
 // How wide a spilled line's sack is drawn: bigger the more it holds (10 → 55, 20 → 66, 40 → 81), by the square root so
@@ -1060,11 +1062,11 @@ const ropeEnd = (p, j) => j < p.length - 1 ? { x: (p[j].x + p[j + 1].x) / 2, y: 
 const ropeStart = (p, j) => j === 1 ? p[0] : ropeEnd(p, j - 1);
 function ropeLength(p, j) {
   const s = ropeStart(p, j), e = ropeEnd(p, j);
-  if (j === p.length - 1) return Math.hypot(e.x - s.x, e.y - s.y);
+  if (j === p.length - 1) return hyp(e.x - s.x, e.y - s.y);
   let length = 0, x = s.x, y = s.y; // the bend measured in four straight steps: close enough for where a dash falls
   for (let k = 1; k <= 4; k++) {
     const u = k / 4, v = 1 - u, nx = v * v * s.x + 2 * u * v * p[j].x + u * u * e.x, ny = v * v * s.y + 2 * u * v * p[j].y + u * u * e.y;
-    length += Math.hypot(nx - x, ny - y); x = nx; y = ny;
+    length += hyp(nx - x, ny - y); x = nx; y = ny;
   }
   return length;
 }
@@ -1101,7 +1103,10 @@ function rope(points, colour, band = false, box = null) {
 // Buildings, towers, trees, boats and cars, made as toys in the animals' style (scripts/pickup-art.ts) and packed on one
 // sheet (scripts/conga-scenery.mjs). Until the sheet has come, the ground is drawn the plain way below.
 const toys = Object.assign(new Image(), { src: SCENERY, decoding: 'async' });
-const toysIn = () => toys.complete && toys.naturalWidth > 0;
+// Counted as in only once decoded, as the animals' sheet is: its first draw would otherwise decode it in the middle of a frame.
+let toysDecoded = false;
+toys.decode().catch(() => {}).then(() => { toysDecoded = true; stale = true; });
+const toysIn = () => toysDecoded && toys.complete && toys.naturalWidth > 0;
 // Which toy each landmark is comes with it from the map (maps.js TOYS).
 // The toys that were drawn facing left; the rest face right.
 const LEFTWARD = new Set(['cab', 'cabback']);
@@ -1299,7 +1304,7 @@ function boats(t) {
 // either side, sewn on with a running stitch along both edges and little yellow felt dashes down the middle.
 const ROAD = 130;
 function feltRoad(from, to, w, cap = 'round') {
-  const along = Math.atan2(to[1] - from[1], to[0] - from[0]), far = Math.hypot(to[0] - from[0], to[1] - from[1]), nx = -Math.sin(along), ny = Math.cos(along);
+  const along = Math.atan2(to[1] - from[1], to[0] - from[0]), far = hyp(to[0] - from[0], to[1] - from[1]), nx = -Math.sin(along), ny = Math.cos(along);
   const span = (off = 0) => { ctx.beginPath(); ctx.moveTo(from[0] + nx * off, from[1] + ny * off); ctx.lineTo(to[0] + nx * off, to[1] + ny * off); };
   ctx.lineCap = cap;
   span(); ctx.save(); ctx.translate(0, 4); ctx.strokeStyle = FELT.under; ctx.lineWidth = w; ctx.stroke(); ctx.restore();
@@ -1323,7 +1328,7 @@ function roadBus(thing, t) {
 }
 // Yellow cabs over the bridge, one lane each way.
 function cabs(thing, t) {
-  const dx = thing.to[0] - thing.from[0], dy = thing.to[1] - thing.from[1], far = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+  const dx = thing.to[0] - thing.from[0], dy = thing.to[1] - thing.from[1], far = hyp(dx, dy), a = Math.atan2(dy, dx);
   for (let k = 0; k < 8; k++) {
     const back = k % 2, f = (t * 0.03 + k / 8 + chance({ x: k, y: 1 }, 3) * 0.08) % 1, at = back ? 1 - f : f, lane = (back ? -1 : 1) * Math.max(ROAD, thing.w) * 0.24;
     if (toysIn()) { const x = thing.from[0] + dx * at - dy / far * lane, y = thing.from[1] + dy * at + dx / far * lane; foot(x, y + 8, 28, 0.18);
@@ -1345,7 +1350,7 @@ function cloud(x, y, w, alpha = 1, fill = 'oklch(98% 0.008 80)', shade = 'oklch(
 // The tram goes over everyone's heads, so it is drawn last, with its shadow on the ground under it.
 // Its riders look out of the windows on the way in, and it goes back with the windows empty.
 function tram(car) {
-  const { from, to, x, y } = car, dx = to[0] - from[0], dy = to[1] - from[1], far = Math.hypot(dx, dy);
+  const { from, to, x, y } = car, dx = to[0] - from[0], dy = to[1] - from[1], far = hyp(dx, dy);
   if (car.kind === 'bus' || car.kind === 'train' && !toysIn()) return bus(car, dx / far, dy / far);
   if (car.kind === 'train') return train(car, dx / far);
   if (toysIn()) {
@@ -1431,7 +1436,7 @@ const BUS = 120; // the bus across: smaller than the tram (140) and the building
 // the bus that drives the roads between times both go this way; `car` keeps its hop and dust. Gives how high it is.
 function hopBus(car, x, y, flip) {
     const t = world.t, dust = car.dust ??= [], s = BUS / 160, tyres = (flip ? [-38, 52] : [-52, 38]).map(v => v * s), ground = y + 40 - 39 * s;
-    const moved = car.px == null ? 0 : Math.hypot(x - car.px, y - car.py); car.px = x; car.py = y;
+    const moved = car.px == null ? 0 : hyp(x - car.px, y - car.py); car.px = x; car.py = y;
     const before = car.hop ?? 0; car.hop = before + moved;
     const ph = (car.hop % HOP) / HOP, lift = moved > 0.05 ? Math.sin(ph * Math.PI) * 14 * s : 0, squash = moved > 0.05 && ph < 0.12 ? Math.sin(ph / 0.12 * Math.PI) : 0;
     if (Math.floor(car.hop / HOP) > Math.floor(before / HOP) && Math.abs(x - cam.x) < wide / cam.z && Math.abs(y - cam.y) < tall / cam.z) for (const side of tyres) dust.push({ x: x + side + Math.sign(side) * 8, y: ground + 1, t, dir: Math.sign(side) });
@@ -1543,7 +1548,7 @@ const SOLID = ['hall', 'tower', 'water'];
 function ground(t, cx, cy, hw, hh) {
   if (map.water) sea(t, cx - hw, cy - hh, hw * 2, hh * 2);
   else { ctx.fillStyle = FELT.table; ctx.fillRect(cx - hw, cy - hh, hw * 2, hh * 2); }
-  if (map.axis != null) { if (!toysIn()) boats(t); banks(cx, cy, Math.hypot(hw, hh)); }
+  if (map.axis != null) { if (!toysIn()) boats(t); banks(cx, cy, hyp(hw, hh)); }
   // The mat, with the felt's thickness under it, on the table or on the felt water alike.
   ctx.save(); ctx.translate(0, 6); ctx.fillStyle = FELT.under; ctx.fill(land); ctx.restore();
   ctx.fillStyle = FELT.mat; ctx.fill(land);
@@ -1578,7 +1583,7 @@ document.fonts?.addEventListener('loadingdone', forget);
 /** Paints one square of ground, or gives nothing back when the browser has no room for another canvas. */
 function patch(px, py, span, scale) {
   const sheet = document.createElement('canvas'), screen = ctx; sheet.width = sheet.height = PATCH;
-  const pen = sheet.getContext('2d');
+  const pen = sheet.getContext('2d', { alpha: false }); // a square is painted all over
   if (!pen) { sheet.width = 0; return null; }
   ctx = pen; ctx.scale(scale, scale); ctx.translate(-px * span, -py * span);
   try { ground(0, (px + 0.5) * span, (py + 0.5) * span, span / 2 + 300, span / 2 + 300); } finally { ctx = screen; }
@@ -1612,6 +1617,7 @@ function carpet(halfW, halfH) {
   return true;
 }
 
+const NONE = []; // what a line out of view shows
 function draw(t, dt) {
   // Before a game the view stays with one line, the longest when it was chosen, and moves on only when that line is scattered.
   if (!followed || followed.dead) followed = world.lines.reduce((a, b) => (!a.dead && a.tail.length >= b.tail.length) || b.dead ? a : b);
@@ -1645,8 +1651,8 @@ function draw(t, dt) {
   for (const thing of map.things) if (SOLID.includes(thing.kind) && near(thing)) solid(thing, t);
   // The bus between times, drawn where the shuttle bus is (after the fibres), so it hops the same way.
   if (toysIn()) for (const thing of map.things) if (thing.kind === 'road') roadBus(thing, t);
-  for (const car of world.shuttles) stop(car);
-  for (const thing of map.things) if (thing.name === 'Lighthouse') beam(thing, t, seen);
+  for (const car of world.shuttles) if (Math.abs(car.off[0] - cam.x) < halfW + PLAZA + 60 && Math.abs(car.off[1] - cam.y) < halfH + PLAZA + 60) stop(car);
+  for (const thing of map.things) if (thing.name === 'Lighthouse' && Math.abs(thing.x - cam.x) < halfW + GLINT.reach && Math.abs(thing.y - cam.y) < halfH + GLINT.reach) beam(thing, t, seen);
   // A road or bridge's name, and the banks a bridge joins, painted on after it is drawn. Buildings carry theirs on a plaque.
   for (const thing of map.things) {
     if (!thing.from) continue;
@@ -1677,9 +1683,13 @@ function draw(t, dt) {
   const sprites = [], heads = [], mobTags = [], dusts = [];
   for (const line of world.lines) {
     if (line.dead) continue;
+    // A line with nobody in view is not worked out at all: no place for each animal, no rope, no name.
+    let inView = seen(line.x, line.y);
+    for (let i = 0; !inView && i < line.tail.length; i++) inView = seen(line.tail[i].x, line.tail[i].y);
+    if (!inView) { line.shown = NONE; continue; }
     const dancing = line.dance > 0, step = i => 0.5 - 0.5 * Math.cos((t * 7 - i * 0.7) * 2), shown = [{ x: line.x, y: line.y - step(0) * 2.5 }];
     line.tail.forEach((f, i) => {
-      const before = shown[i], dx = before.x - f.x, dy = before.y - f.y, far = Math.hypot(dx, dy) || 1, beat = Math.sin(t * 8 - i * 0.8), sway = dancing ? beat * 13 : 0;
+      const before = shown[i], dx = before.x - f.x, dy = before.y - f.y, far = hyp(dx, dy) || 1, beat = Math.sin(t * 8 - i * 0.8), sway = dancing ? beat * 13 : 0;
       shown.push({ x: f.x - dy / far * sway, y: f.y + dx / far * sway - step(i + 1) * (dancing ? 8 : 2.5), face: f.face, tilt: dancing ? beat * 0.35 : 0,
         size: SIZE.tail * (1 + (world.t - f.born < 0.4 ? 0.35 * Math.sin((world.t - f.born) / 0.4 * Math.PI) : 0)) }); // a newcomer swells for a moment as it falls in
     });
@@ -1687,7 +1697,7 @@ function draw(t, dt) {
     // Animals that join faster than the line can walk (a sack, a car) have no path behind yet, so they stand in one heap
     // at the end of the rope. The heap goes under a dust cloud, and they march out of it as the line walks on (2026-11-22).
     let end = shown.length;
-    while (end > 2 && Math.hypot(line.tail[end - 2].x - line.tail[end - 3].x, line.tail[end - 2].y - line.tail[end - 3].y) < GAP * 0.45) end--;
+    while (end > 2 && hyp(line.tail[end - 2].x - line.tail[end - 3].x, line.tail[end - 2].y - line.tail[end - 3].y) < GAP * 0.45) end--;
     const heap = shown.length - end + 1 >= 3 ? shown.length - end + 1 : 0;
     if (heap) dusts.push({ x: line.tail[end - 2].x, y: line.tail[end - 2].y, n: heap, seed: String(line.id).length + line.face });
     const kept = heap ? shown.slice(0, end) : shown;
@@ -1728,7 +1738,7 @@ function draw(t, dt) {
       if (name === 'wsqfountain' && quality < 2) spout(x, y + width * 0.04 - width * AT[name][3] / AT[name][2] * 0.97, width, t);
       if (label) {
         // How near you are (or, watching, the middle of the view), eased so the plate pops out rather than creeps.
-        const high = width * AT[name][3] / AT[name][2], from = me && !me.dead ? me : cam, u = Math.max(0, Math.min(1, (360 - Math.hypot(from.x - x, from.y - (y - high / 2))) / 110));
+        const high = width * AT[name][3] / AT[name][2], from = me && !me.dead ? me : cam, u = Math.max(0, Math.min(1, (360 - hyp(from.x - x, from.y - (y - high / 2))) / 110));
         if (u > 0) plaque(label, x, y - high * 0.1, 0.4 + 0.6 * (1 - (1 - u) ** 3));
       }
       continue;
@@ -1802,14 +1812,21 @@ function chart() {
   }
 }
 
+// Looked over every twelfth frame. The rows are built only while the scoreboard is open (it is folded shut until its chip is
+// pressed), and the page is written only when what it would show has changed.
+const wrote = new Map();
+const write = (id, html) => { if (wrote.get(id) !== html) { wrote.set(id, html); $(id).innerHTML = html; } };
 function board() {
-  const ranked = world.lines.filter(line => !line.dead).sort((a, b) => b.tail.length - a.tail.length), top = ranked.slice(0, 5);
-  if (me && !me.dead && !top.includes(me)) top[4] = me;
-  $('board').innerHTML = top.map(line => `<div class="${line === me ? 'me' : ''}">${faceTag(line.face)}<i>${ranked.indexOf(line) + 1}. ${line.name}</i><b>${line.tail.length + 1}</b></div>`).join('');
+  const ranked = world.lines.filter(line => !line.dead).sort((a, b) => b.tail.length - a.tail.length);
+  if ($('place').parentElement.classList.contains('open')) {
+    const top = ranked.slice(0, 5);
+    if (me && !me.dead && !top.includes(me)) top[4] = me;
+    write('board', top.map(line => `<div class="${line === me ? 'me' : ''}">${faceTag(line.face)}<i>${ranked.indexOf(line) + 1}. ${line.name}</i><b>${line.tail.length + 1}</b></div>`).join(''));
+  }
   if (me && !me.dead) {
-    $('mineCount').textContent = me.tail.length + 1;
+    write('mineCount', String(me.tail.length + 1));
     const n = ranked.indexOf(me) + 1, ord = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th';
-    $('place').innerHTML = `${n}${ord}<i aria-hidden="true">▼</i>`;
+    write('place', `${n}${ord}<i aria-hidden="true">▼</i>`);
   }
 }
 
@@ -1889,7 +1906,7 @@ function frame(now) {
     }
     if (event.type === 'dance' && event.line === ME) say(`${event.size} in line. Everybody dance`);
     // Someone else's big spill is news everywhere; a small one only near you.
-    if (event.type === 'spill' && event.line !== ME && me && !me.dead && event.by !== ME && (event.size >= 15 || Math.hypot(event.x - me.x, event.y - me.y) < 1200)) say(`${event.name} spilled ${event.size}`);
+    if (event.type === 'spill' && event.line !== ME && me && !me.dead && event.by !== ME && (event.size >= 15 || hyp(event.x - me.x, event.y - me.y) < 1200)) say(`${event.name} spilled ${event.size}`);
     if (event.type === 'power' && event.line === ME) {
       navigator.vibrate?.(20);
       say({ megaphone: 'Megaphone! Strays come from twice as far', coffee: 'Coffee! Dash for free', whistle: 'Whistle! Slip through other lines, turn sharper' }[event.kind]);
@@ -1901,7 +1918,7 @@ function frame(now) {
   // held at the edge of the screen while it is off it, so it points the way.
   if ((lesson === 'gather' || lesson === 'pickup') && me && !me.dead && !paused) {
     let near = null, gap = Infinity;
-    for (const s of lesson === 'gather' ? world.strays : world.items) { const d = Math.hypot(s.x - me.x, s.y - me.y); if (d < gap) { gap = d; near = s; } }
+    for (const s of lesson === 'gather' ? world.strays : world.items) { const d = hyp(s.x - me.x, s.y - me.y); if (d < gap) { gap = d; near = s; } }
     if (near) {
       const k = (t * 0.7) % 1, edge = 60 * cam.z + 10, x = Math.min(wide - edge, Math.max(edge, (near.x - cam.x) * cam.z + wide / 2)), y = Math.min(tall - edge, Math.max(edge, (near.y - cam.y) * cam.z + tall / 2));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 1 - k; ctx.strokeStyle = C.action; ctx.lineWidth = 5;
