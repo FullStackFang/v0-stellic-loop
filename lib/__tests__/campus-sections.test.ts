@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bounds, held, hops, isSolo, landOf, LINE, metres, middle, nearestCampus, reach, sectionAt, soloOf, stopNear, walkMinutes, wayOn, type Point } from '@/lib/campus/sections';
+import { bounds, held, hops, isSolo, landOf, LINE, metres, middle, nearestCampus, nextStops, reach, rides, sectionAt, soloOf, stopNear, walkMinutes, wayOn, type Point } from '@/lib/campus/sections';
 
 const land = landOf('cornell')!;
 const sec = (id: string) => land.find(each => each.id === id)!;
@@ -110,6 +110,20 @@ describe('New York: one stop is one section', () => {
     expect(wayOn(city, 'roosevelt', 'roosevelt', [-.01, 0], on)).toMatchObject({ id: 'lex63', kind: 'go' });
     expect(wayOn(city, 'roosevelt', 'roosevelt', [.01, -.004], on)).toMatchObject({ id: 'queensbridge', kind: 'empty' });
     expect(wayOn(city, 'roosevelt', 'roosevelt', [0, .01], on)).toMatchObject({ id: null, kind: 'none' });
+  });
+
+  it('the next stops are counted from where you stand, not from the section on screen, and run west to east', () => {
+    const ids = (view: string, standing = 'roosevelt') => nextStops(city, standing, view).map(each => each.id);
+    expect(rides(city)).toBe(true); expect(rides(landOf('cornell')!)).toBe(false);
+    expect(ids('roosevelt')).toEqual(['lex63', 'queensbridge']);
+    // Looking at the Upper East Side: back home, and Long Island City, which is one stop from you though two from there.
+    expect(ids('lex63')).toEqual(['roosevelt', 'queensbridge']);
+    expect(ids('queensbridge')).toEqual(['lex63', 'roosevelt']);
+    // On a place off the map, every one of them.
+    expect(ids(soloOf('Cornell Club', [-73.9793717, 40.7542822]).id)).toEqual(['lex63', 'roosevelt', 'queensbridge']);
+    // Standing in Long Island City, the Upper East Side is two stops away and is not on the board.
+    expect(ids('queensbridge', 'queensbridge')).toEqual(['roosevelt']);
+    expect(nextStops(city, 'nowhere', 'roosevelt')).toEqual([]);
   });
 
   it('the Cornell Club and ILR are off the map: in no section, each by a stop of its own', () => {

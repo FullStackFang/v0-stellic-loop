@@ -405,40 +405,66 @@ describe('One day on the map', () => {
   });
 });
 
-describe('New York: the way on is a station sign', () => {
-  // One plan on Roosevelt Island and one a stop west, on the Upper East Side.
-  const town = [ticket('Tram ride', '3pm', 1, -73.9552, 40.7562), ticket('Museum night', '6pm', 4, -73.9665, 40.7647)];
+// The ways on in New York are a departure board under the map, always there (public/demo/mockups-map-ring.html, 2).
+describe('New York: the next stops are a board under the map', () => {
+  // Two plans on Roosevelt Island and one a stop west, on the Upper East Side. Nothing in Long Island City.
+  const town = [ticket('Tram ride', '3pm', 1, -73.9552, 40.7562), ticket('Market', '5pm', 2, -73.94687, 40.76489), ticket('Museum night', '6pm', 4, -73.9665, 40.7647)];
+  const board = () => screen.getByRole('navigation', { name: 'Next stops' });
+  const stops = () => [...board().querySelectorAll('button')].map(each => [each.querySelector('b')!.textContent, each.querySelector(':scope > i:not(.go)')!.textContent]);
 
-  it('by train: the stop, its lines and what is on there, and it takes you there', async () => {
+  it('is there from the start, without a push: every stop one ride from you, west to east, with what is on there', async () => {
+    locate(null);
+    await near(town, 'cornell-tech');
+    expect(screen.getByRole('heading', { level: 2, name: 'Roosevelt Island' })).toBeTruthy();
+    expect(stops()).toEqual([['Upper East Side', '1'], ['Long Island City', '0']]);
+    // A stop with nothing on this week is faded, but it still goes there.
+    expect(within(board()).getByRole('button', { name: /^Go to Long Island City/ }).className).toContain('empty');
+    expect(document.querySelector('.cs-near')!.className).toContain('rides');
+  });
+
+  it('a stop takes you there, and the board then leads back, still counting from where you are', async () => {
+    locate(null);
+    await near(town, 'cornell-tech');
+    fireEvent.click(within(board()).getByRole('button', { name: /^Go to Upper East Side: 1 stop from you, 1 on this week/ }));
+    expect(screen.getByRole('heading', { level: 2, name: 'Upper East Side' })).toBeTruthy();
+    expect(document.querySelector('.cs-near-band p')?.textContent).toContain('1 stop from the start');
+    // Long Island City is two stops from there but one from you, so it stays on the board.
+    expect(stops()).toEqual([['Roosevelt Island', '2'], ['Long Island City', '0']]);
+    expect(within(board()).getByRole('button', { name: /^Go to Roosevelt Island: where you started/ })).toBeTruthy();
+    fireEvent.click(within(board()).getByRole('button', { name: /^Go to Roosevelt Island/ }));
+    expect(screen.getByRole('heading', { level: 2, name: 'Roosevelt Island' })).toBeTruthy();
+  });
+
+  it('pushing the map toward a stop lights it on the board; no sign floats over the map', async () => {
     locate(null);
     const map = await near(town, 'cornell-tech');
-    expect(screen.getByRole('heading', { level: 2, name: 'Roosevelt Island' })).toBeTruthy();
     await wholeSection();
     act(() => map.drag(-.01, 0));
-    const sign = await screen.findByRole('button', { name: 'Go to Upper East Side' });
-    expect(sign.className).toContain('sign');
-    expect(within(sign).getByText('Lexington Av/63 St')).toBeTruthy();
-    expect(within(sign).getByText('Upper East Side · 1 on')).toBeTruthy();
-    expect([...sign.querySelectorAll('.cs-lines i')].map(each => each.textContent)).toEqual(['F', 'M', 'Q']);
-    fireEvent.click(sign);
-    expect(screen.getByRole('heading', { level: 2, name: 'Upper East Side' })).toBeTruthy();
+    await waitFor(() => expect(within(board()).getByRole('button', { name: /^Go to Upper East Side/ }).className).toContain('pushed'));
+    expect(document.querySelector('.cs-way')).toBeNull();
+    expect(within(board()).getByRole('button', { name: /^Go to Long Island City/ }).className).not.toContain('pushed');
   });
 
-  it('a stop with nothing on is a greyed sign that goes nowhere', async () => {
+  it('beside the list, the list follows the map: it holds the section on screen', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-width'), addEventListener() {}, removeEventListener() {} }));
     locate(null);
-    const map = await near(town, 'cornell-tech');
-    await wholeSection();
-    act(() => map.drag(.01, -.004));
-    const shut = await screen.findByRole('status');
-    expect(shut.className).toContain('sign');
-    expect(within(shut).getByText('21 St–Queensbridge')).toBeTruthy();
-    expect(within(shut).getByText('Nothing on yet. Coming soon')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^Go to/ })).toBeNull();
+    render(<CampusScreen screen={model('cornell-tech', [...town, ticket('Somewhere', '1pm', 3, null)])} signInHref="/sign-in" />);
+    await waitFor(() => expect(maps).toHaveLength(1));
+    const titles = () => screen.queryAllByRole('heading', { level: 3 }).map(each => each.textContent);
+    // Where you are, the list also holds what has no spot.
+    await waitFor(() => expect(titles()).toEqual(['Tram ride', 'Market', 'Somewhere']));
+    expect(screen.getByRole('heading', { level: 2, name: '3 in Roosevelt Island' })).toBeTruthy();
+    fireEvent.click(within(board()).getByRole('button', { name: /^Go to Upper East Side/ }));
+    await waitFor(() => expect(titles()).toEqual(['Museum night']));
+    expect(screen.getByRole('heading', { level: 2, name: '1 in Upper East Side' })).toBeTruthy();
+    fireEvent.click(within(board()).getByRole('button', { name: /^Go to Long Island City/ }));
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: 'Nothing in Long Island City this week' })).toBeTruthy());
   });
 
-  it('Ithaca keeps its arrow', async () => {
+  it('Ithaca keeps its arrow at the wall and has no board', async () => {
     locate(null);
     const map = await near();
+    expect(screen.queryByRole('navigation', { name: 'Next stops' })).toBeNull();
     await wholeSection();
     act(() => map.drag(0, .01));
     const way = await screen.findByRole('button', { name: 'Go to Central Campus' });
@@ -460,7 +486,8 @@ describe('A place on its own, off the map', () => {
     return maps[0];
   }
   const card = (title: string) => screen.getByRole('heading', { level: 3, name: title }).closest('article')!;
-  const sheet = () => screen.getByRole('heading', { level: 2, name: /Roosevelt Island|The Cornell Club/ }).textContent;
+  // The map's own band: the list beside it now has a heading that names the section too.
+  const sheet = () => document.querySelector('.cs-near-band h2')?.textContent;
 
   it('the map starts on the campus, not on the place off it, and the card of a plan off the map says so', async () => {
     await wide();

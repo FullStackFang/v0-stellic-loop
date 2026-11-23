@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { createPortal } from 'react-dom';
 import type { GeoJSONSource, Map as GlMap, MapLibreEvent, MapMouseEvent, Marker, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { bounds, held, hops, inside, isSolo, LINE, middle, sectionAt, soloOf, stopNear, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Stop, type Way } from '@/lib/campus/sections';
+import { bounds, held, hops, inside, isSolo, LINE, middle, nextStops, rides, sectionAt, soloOf, stopNear, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Stop, type Way } from '@/lib/campus/sections';
 import type { Face, Ticket } from '@/lib/campus/view';
 import { FaceDot } from './screen';
 import { Swap, visiting, type SwapCampus } from './swap';
@@ -18,7 +18,8 @@ import { LINE as WAIT_LINE, SeatsSmall } from '@/components/loading/seats';
 // plans that repeat at one address does not pile up on it. Plans at one address on one day share one stamp. A plan at a place
 // that lies in no section is shown at that place alone, on a round sheet of its own (public/demo/mockups-map-solo.html);
 // the dial and the day pills never lead there, only picking that plan does, and one pill leads back. The view cannot leave the section (lib/campus/sections.ts, "The wall"). Pushing
-// against the wall shows the way on at that edge. Streets are OpenStreetMap data drawn by MapLibre GL from OpenFreeMap
+// against the wall shows the way on at that edge. In New York the ways on are instead a departure board, the pane's own
+// bottom row, always there (public/demo/mockups-map-ring.html, 2): the stops one ride from where you stand. Streets are OpenStreetMap data drawn by MapLibre GL from OpenFreeMap
 // tiles, which need no key. The map library is loaded only when this view is opened.
 
 const CLOSE = 17.2;   // as close as the view goes by itself
@@ -179,9 +180,11 @@ export type NearProps = {
   hot?: string | null; onHover?: (id: string | null) => void;
   /** Told where the person stands once the browser says, so the list can say how far each plan is. */
   onYou?: (at: Point | null) => void;
+  /** Told which section is on screen and which one you stand in, so the list beside the map can hold what is there. */
+  onView?: (view: string, standing: string) => void;
 };
 
-export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou, swap = [] }: NearProps) {
+export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou, onView, swap = [] }: NearProps) {
   // `all` is the campus's sections and, after them, a sheet for each place off the map that has a plan.
   const { spots, all } = useMemo(() => {
     const solos = new Map<string, Section>();
@@ -219,6 +222,9 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   // Plans at one address stand on one stamp, so no stamp is ever pushed off its spot.
   const pins = useMemo(() => typeof document === 'undefined' ? [] : [...new Set(list.map(spot => spot.at.join()))].map(key => { const same = list.filter(spot => spot.at.join() === key); return { id: key, at: same[0].at, same, el: document.createElement('div') }; }), [list]);
   const youEl = useMemo(() => you && view === standing && typeof document !== 'undefined' ? document.createElement('div') : null, [you, view, standing]);
+  // In New York the ways on are a departure board, the pane's own bottom row: the map ends above it (campus.css, .rides).
+  const board = useMemo(() => rides(land) ? nextStops(land, standing, view) : null, [land, standing, view]);
+  useEffect(() => { onView?.(view, standing); }, [view, standing, onView]);
 
   const host = useRef<HTMLDivElement>(null), canvas = useRef<HTMLDivElement>(null), band = useRef<HTMLDivElement>(null), sheet = useRef<HTMLDivElement>(null), way = useRef<HTMLElement>(null), rule = useRef<HTMLDivElement>(null);
   const lib = useRef<{ Marker: typeof Marker } | null>(null), wallAt = useRef<Wall | null>(null), marks = useRef<{ el: HTMLElement; at: Point }[]>([]), framed = useRef(false);
@@ -232,7 +238,8 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   /** Where the view should be. `floor` is the whole section in view: as far out as it goes. */
   const cam = useCallback(() => {
     const s = live.current, box = bounds(s.here.ring), k = Math.cos(box.centre[1] * Math.PI / 180);
-    const w = host.current?.clientWidth ?? 400, h = host.current?.clientHeight ?? 600, top = band.current?.offsetHeight ?? 0, low = sheet.current?.offsetHeight ?? s.low;
+    // The map's own box: under a departure board it ends above the board.
+    const w = canvas.current?.clientWidth || host.current?.clientWidth || 400, h = canvas.current?.clientHeight || host.current?.clientHeight || 600, top = band.current?.offsetHeight ?? 0, low = sheet.current?.offsetHeight ?? s.low;
     const zoomFor = (mpp: number) => Math.log2(40075016.686 * k / (512 * mpp));
     const floor = zoomFor(Math.max((box.east - box.west) * 111320 * k / Math.max(160, w - 36), (box.north - box.south) * 110540 / Math.max(160, h - top - s.low - 110))) - .1;
     // It starts as close as it can: you and the plan that is on just fit, and the map travels as the dial turns.
@@ -298,7 +305,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     const bub = host.current?.querySelector<HTMLElement>('.cs-bub'), frame = host.current?.getBoundingClientRect();
     if (!bub || !frame) return;
     const rect = (el: Element) => { const r = el.getBoundingClientRect(); return [r.left - frame.left, r.top - frame.top, r.right - frame.left, r.bottom - frame.top]; };
-    const pin = rect(bub.parentElement!), w = bub.offsetWidth, h = bub.offsetHeight, top = band.current?.offsetHeight ?? 0, low = frame.height - (sheet.current?.offsetHeight ?? live.current.low);
+    const pin = rect(bub.parentElement!), w = bub.offsetWidth, h = bub.offsetHeight, top = band.current?.offsetHeight ?? 0, low = (canvas.current?.offsetHeight || frame.height) - (sheet.current?.offsetHeight ?? live.current.low);
     const others = [...host.current!.querySelectorAll('.cs-pin, .cs-you, .cs-way, .cs-rose, .cs-zoom, .cs-scale')].filter(el => el !== bub.parentElement).map(rect);
     const hits = (x: number, y: number) => others.filter(o => x < o[2] && o[0] < x + w && y < o[3] && o[1] < y + h).length + (x < 4 || x + w > frame.width - 4 || y < top + 4 || y + h > low - 4 ? 100 : 0);
     const corners: [string, number, number][] = [['', pin[0], pin[1] - 24 - h], ['r', pin[2] - w, pin[1] - 24 - h], ['low', pin[0], pin[3] + 14], ['low r', pin[2] - w, pin[3] + 14]];
@@ -433,9 +440,12 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   const locate = () => { if (where !== 'here' && navigator.geolocation) setWhere('wait'); setTold(true); find(); recenter(); };
 
   const away = solo ? 0 : hops(land, standing, view), walk = (to: Point) => you ? walkMinutes(you, to) : null;
-  const kicker = solo ? 'Off the map' : away ? [`${away} ${away === 1 ? 'step' : 'steps'} from ${you ? 'you' : 'the start'}`, you ? `${walk(middle(here.ring))} min walk` : null].filter(Boolean).join(' · ')
+  const unit = board ? ['stop', 'stops'] : ['step', 'steps'];
+  const kicker = solo ? 'Off the map' : away ? [`${away} ${away === 1 ? unit[0] : unit[1]} from ${you ? 'you' : 'the start'}`, you ? `${walk(middle(here.ring))} min walk` : null].filter(Boolean).join(' · ')
     : where === 'here' ? 'You are here' : visiting(swap) ? 'Visiting' : where === 'away' ? 'You are away from campus' : where === 'off' ? 'Your location is off' : 'Finding you';
   const shown = wall && !up && wall.view === view ? wall : null, there = shown?.id ? land.find(each => each.id === shown.id) : undefined;
+  /** Which way a stop on the board lies from the sheet on screen, as an angle on the page (north is up). */
+  const toward = (to: Section) => { const from = solo ? here.rest : middle(here.ring), at = middle(to.ring); return Math.atan2(-(at[1] - from[1]), (at[0] - from[0]) * Math.cos(from[1] * Math.PI / 180)); };
 
   const pin = (same: Spot[], nth: number) => {
     // Of the plans at this address, the stamp shows the one that is on, or the first. `next` is the one after it.
@@ -456,7 +466,7 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     </button>;
   };
 
-  return <div className={`cs-near ${up ? 'picked' : ''}`} ref={host}>
+  return <div className={`cs-near ${up ? 'picked' : ''} ${board ? 'rides' : ''}`} ref={host}>
     <svg className="cs-near-defs" width={0} height={0} aria-hidden="true"><defs><path id="cs-arc-over" d="M-21 0a21 21 0 0 1 42 0" /><path id="cs-arc-under" d="M-22 0a22 22 0 0 0 44 0" /></defs>
       <filter id="cs-rough" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves={2} seed={7} /><feDisplacementMap in="SourceGraphic" scale={2.4} /></filter></svg>
     <div className="cs-near-map" ref={canvas} /><i className="cs-near-tooth" /><i className="cs-near-age" />
@@ -465,14 +475,12 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
       {/* Off the map, the stop the place is by hangs from the band as a platform sign. It says where; it leads nowhere. */}
       {stop && !up && <div className="cs-way sign stop" role="note" aria-label="Nearest stop"><span><b>{stop.name}</b>Nearest stop</span><Lines stop={stop} /></div>}</div>
     <Swap campuses={swap} />
-    {shown && (shown.kind === 'go' && there
-      // Where the section next door is a subway stop, the way on is that stop's platform sign (public/demo/mockups-nyc-stops.html, A).
-      ? there.stop ? <button className="cs-way sign" ref={el => { way.current = el; if (el && map) place(map); }} aria-label={`Go to ${there.name}`} onClick={() => step(there.id)}>
-          <span><b>{there.stop.name}</b>{`${there.name} · ${on[there.id]} on`}</span><Lines stop={there.stop} /><Arrow /></button>
-      : <button className="cs-way" ref={el => { way.current = el; if (el && map) place(map); }} aria-label={`Go to ${there.name}`} onClick={() => step(there.id)}>
+    {/* Under a departure board a push against the wall lights that stop on the board instead (below). */}
+    {shown && !board && (shown.kind === 'go' && there
+      ? <button className="cs-way" ref={el => { way.current = el; if (el && map) place(map); }} aria-label={`Go to ${there.name}`} onClick={() => step(there.id)}>
           <span><b>{there.name}</b>{[there.id === standing ? (you ? 'Where you stand' : 'Where you started') : you ? `${walk(middle(there.ring))} min walk` : null, `${on[there.id]} on`].filter(Boolean).join(' · ')}</span><Arrow /></button>
-      : <div className={`cs-way none ${there?.stop ? 'sign' : ''}`} role="status" key={`${shown.id}|${shown.kind}`} ref={el => { way.current = el; if (el && map) place(map); }}>
-          <span><b>{there?.stop?.name ?? there?.name ?? 'Coming soon'}</b>{shown.kind === 'far' ? 'Not open from here yet' : shown.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>{there?.stop && <Lines stop={there.stop} />}{there && <Arrow />}</div>)}
+      : <div className="cs-way none" role="status" key={`${shown.id}|${shown.kind}`} ref={el => { way.current = el; if (el && map) place(map); }}>
+          <span><b>{there?.name ?? 'Coming soon'}</b>{shown.kind === 'far' ? 'Not open from here yet' : shown.kind === 'empty' ? 'Nothing on yet. Coming soon' : 'Nothing this way yet'}</span>{there && <Arrow />}</div>)}
     {!up && <>
       {/* The compass rose is the map's printed ornament, not a button: north is up. Under it, the map's own controls
           in one pill: find where you are, then in and out. The locate mark shows what the
@@ -483,10 +491,16 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
         <button aria-label="Zoom in" title="Zoom in" onClick={() => zoom(1)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></button>
         <button aria-label="Zoom out" title="Zoom out" onClick={() => zoom(-1)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" /></svg></button></div>
       {told && where !== 'here' && <p className="cs-loc-note" role="status">{where === 'wait' ? <span className="seats-hold"><SeatsSmall />{WAIT_LINE}</span> : where === 'away' ? 'You are away from this campus, so you are not on its map' : 'Your location is off. Allow it in your browser to see yourself here'}</p>}
-      <div className="cs-scale" ref={rule} style={{ bottom: beside ? (list.length ? 16 : 100) : (lit ? DIAL : 84) + 16 }} aria-hidden="true"><i /></div></>}
+      <div className="cs-scale" ref={rule} style={{ bottom: `calc(var(--strip, 0px) + ${beside ? (list.length ? 16 : 100) : (lit ? DIAL : 84) + 16}px)` }} aria-hidden="true"><i /></div></>}
     {(!beside || !list.length) && <div className={`cs-near-sheet ${up ? 'open' : lit ? 'dial' : ''}`} ref={sheet}>
       {up ? children : lit ? <Dial list={list} at={at} onTurn={to => setLitId(list[to].ticket.id)} onOpen={() => onPick(lit.ticket.id)} />
-        : <p className="cs-near-none"><b>{asked ? `Nothing in ${here.name} for “${asked}”` : `Nothing on in ${here.name} yet`}</b>{asked ? 'Try another word, or push the edge of the map to look next door.' : 'Push the edge of the map to look next door.'}</p>}</div>}
+        : <p className="cs-near-none"><b>{asked ? `Nothing in ${here.name} for “${asked}”` : `Nothing on in ${here.name} yet`}</b>{board ? (asked ? 'Try another word, or a stop below.' : 'Try a stop below.') : asked ? 'Try another word, or push the edge of the map to look next door.' : 'Push the edge of the map to look next door.'}</p>}</div>}
+    {/* The departure board (public/demo/mockups-map-ring.html, 2): fixed height, one slot per stop, west to east. It never moves;
+        only its words change. Pushing the map toward a stop lights that slot, colour only. */}
+    {board && <nav className="cs-stops" aria-label="Next stops" style={{ '--n': Math.max(1, board.length) } as CSSProperties}><small>Next stops</small>
+      {board.map(each => <button key={each.id} className={`${on[each.id] ? '' : 'empty'} ${shown?.id === each.id ? 'pushed' : ''}`} style={{ '--a': `${toward(each)}rad` } as CSSProperties}
+        aria-label={`Go to ${each.name}: ${each.id === standing ? (you ? 'where you are' : 'where you started') : '1 stop from you'}, ${on[each.id] ?? 0} on this week`} onClick={() => step(each.id)}>
+        <Arrow /><b>{each.name}</b><i>{on[each.id] ?? 0}</i></button>)}</nav>}
     {pins.map((each, nth) => createPortal(pin(each.same, nth), each.el, each.id))}
     {youEl && createPortal(<span className="cs-you">{me ? <FaceDot face={{ ...me, me: true }} /> : <i />}<b>YOU</b></span>, youEl)}
   </div>;

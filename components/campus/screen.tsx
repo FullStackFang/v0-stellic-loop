@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { SignInHere, type Door } from './sign-in-here';
-import { useEffect, useLayoutEffect, useMemo, useOptimistic, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useOptimistic, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { changeCampusAction, checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import type { BarGroup } from '@/lib/campus/bar-groups';
@@ -11,7 +11,7 @@ import { animal, CUSTOM, NAMES, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { Kits } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
-import { landOf, sectionAt, walkMinutes, type Point } from '@/lib/campus/sections';
+import { isSolo, landOf, rides, sectionAt, walkMinutes, type Point } from '@/lib/campus/sections';
 import type { SwapCampus } from './swap';
 import { Composer, type Soon } from './composer';
 import { Near } from './near';
@@ -101,7 +101,18 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
   const onMap = useMemo(() => { const left = new Set([...picked.best, ...picked.rest]); return tickets.filter(ticket => ticket.map && left.has(ticket.id)); }, [tickets, picked]);
   /** Whether a spot lies in one of the campus's sections. A plan at a place off the map is shown at that place alone, and only when it is picked. */
   const drawn = (spot: { lon: number; lat: number } | null | undefined) => !!spot && !!land && !!sectionAt(land, [spot.lon, spot.lat]);
-  const lit = !wide || sel === null ? null : sel && shown.includes(sel) ? sel : shown.find(id => drawn(byId.get(id)?.map)) ?? null;
+  // In New York the list beside the map follows the map (public/demo/mockups-map-ring.html): it holds the section on screen.
+  // Where you stand it also holds what has no spot, or a spot off the map; the stops next door show only as counts on the board.
+  const [seeing, setSeeing] = useState<{ view: string; standing: string } | null>(null);
+  const onView = useCallback((view: string, standing: string) => setSeeing(was => was?.view === view && was.standing === standing ? was : { view, standing }), []);
+  const follow = wide && !!land && rides(land) && !!seeing, sectionOf = (id: string) => { const spot = byId.get(id)?.map; return spot && land ? sectionAt(land, [spot.lon, spot.lat])?.id ?? null : null; };
+  const atHome = !!seeing && (seeing.view === seeing.standing || isSolo(seeing.view));
+  const inSight = (id: string) => !follow || (sectionOf(id) ?? (atHome ? seeing!.standing : null)) === (atHome ? seeing!.standing : seeing!.view);
+  const listBest = picked.best.filter(inSight), listRest = picked.rest.filter(inSight);
+  const seenName = follow ? land!.find(each => each.id === (atHome ? seeing!.standing : seeing!.view))?.name ?? '' : '';
+  // Until the map has said which section it shows, New York lights nothing, so the map is not pulled next door before it starts.
+  const pool = wide && land && rides(land) ? follow ? [...listBest, ...listRest] : [] : shown;
+  const lit = !wide || sel === null ? null : sel && shown.includes(sel) ? sel : pool.find(id => drawn(byId.get(id)?.map)) ?? null;
   // The ink thumb of the sources sits under the one that is on.
   useLayoutEffect(() => {
     const bar = srcs.current;
@@ -251,16 +262,18 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
       {postSheet && <div className="cs-wide-post">{postSheet}</div>}
       <div className="cs-split">
         <div className="cs-col">
-          <div className="cs-tally">{post}<h2 aria-live="polite"><b>{picked.line}</b>{shown.length > 0 && <span>{onMap.length === shown.length ? 'All' : onMap.length} on the map</span>}</h2></div>
+          <div className="cs-tally">{post}<h2 aria-live="polite">{follow
+            ? <b>{listBest.length + listRest.length ? `${listBest.length + listRest.length} in ${seenName}` : `Nothing in ${seenName}${typed.trim() ? ` for “${typed.trim()}”` : ' this week'}`}</b>
+            : <><b>{picked.line}</b>{shown.length > 0 && <span>{onMap.length === shown.length ? 'All' : onMap.length} on the map</span>}</>}</h2></div>
           <div className="cs-scroll" ref={rail}>
-            <div className="cs-grid">{picked.nothing ? nothing : <>
-              {picked.best.map(row)}
-              {picked.rest.length > 0 && <div className="cs-then"><b>{count}</b><span>{words.join(' ')}</span></div>}
-              {picked.rest.map((id, at) => row(id, picked.best.length + 1 + at))}</>}</div>
+            <div className="cs-grid">{picked.nothing || (follow && !listBest.length && !listRest.length) ? nothing : <>
+              {listBest.map(row)}
+              {listRest.length > 0 && <div className="cs-then"><b>{follow ? listRest.length : count}</b><span>{words.join(' ')}</span></div>}
+              {listRest.map((id, at) => row(id, listBest.length + 1 + at))}</>}</div>
             {shelf}
           </div>
         </div>
-        <Near beside swap={swap} land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} />
+        <Near beside swap={swap} land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} onView={onView} />
       </div>
     </section></main>
   </div>;

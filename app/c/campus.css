@@ -680,8 +680,26 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-way.sign::before { content: ''; position: absolute; inset: 5px 0 auto; border-top: 1.5px solid var(--card); }
 .cs-way.sign > span:first-child { font-size: 11.5px; font-weight: 500; white-space: nowrap; } .cs-way.sign b { font-stretch: 100%; font-size: 17px; font-weight: 720; letter-spacing: -0.015em; line-height: 1.15; }
 .cs-way > .cs-lines { flex: none; display: flex; gap: 3px; } .cs-lines i { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; font-style: normal; font-size: 15px; font-weight: 800; line-height: 1; color: var(--card); } .cs-lines i.dark { color: #17120f; }
-.cs-way.sign .go { width: 26px; height: 26px; margin: 0; background: none; box-shadow: none; } .cs-way.sign .go svg { width: 22px; height: 22px; stroke: var(--card); }
-.cs .cs-way.sign.none { color: var(--card); background: #8d857b; box-shadow: none; } .cs-way.sign.none .cs-lines i { background: #5e5750 !important; color: var(--card); } .cs-way.sign.none .go { background: none; }
+/* New York's ways on: a departure board that is the map pane's own bottom row (public/demo/mockups-map-ring.html, 2). The map,
+   the sheet and the scale all stand on top of it, so nothing slides under it. Fixed height, one slot of one width per stop,
+   and nothing in it moves: a push toward a stop lights that slot, colour only. */
+.cs-near.rides { --strip: 56px; }
+.cs-near.rides .cs-near-map { inset: 0 0 var(--strip); }
+.cs-near.rides .cs-near-sheet { bottom: var(--strip); }
+.cs-stops { position: absolute; inset: auto 0 0; z-index: 5; display: grid; grid-template-columns: auto repeat(var(--n, 2), minmax(0, 1fr)); align-items: center; gap: 8px; height: var(--strip); padding: 10px 12px 8px 18px; color: var(--card); background: #17120f; border-top: 1.5px solid var(--cs-ink); }
+.cs-stops::before { content: ''; position: absolute; inset: 5px 0 auto; border-top: 1.5px solid var(--card); pointer-events: none; }
+.cs-stops small { margin-right: 4px; font-stretch: 86%; font-size: 10.5px; font-weight: 720; letter-spacing: .13em; text-transform: uppercase; opacity: .7; }
+.cs-stops button { display: flex; align-items: center; gap: 7px; min-width: 0; height: 34px; padding: 0 7px 0 4px; border-radius: 99px; color: var(--card); background: color-mix(in oklab, var(--card) 9%, #17120f); box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--card) 30%, #17120f); transition: background-color .15s var(--cs-ease), color .15s var(--cs-ease); }
+.cs-stops button:hover, .cs-stops button.pushed { color: var(--cs-ink); background: var(--second); }
+.cs-stops button.empty:not(:hover, .pushed) { opacity: .6; }
+.cs-stops .go { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--second); rotate: var(--a, 0rad); }
+.cs-stops .go svg { width: 16px; height: 16px; fill: none; stroke: var(--cs-ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.cs-stops button:hover .go, .cs-stops button.pushed .go { background: var(--cs-ink); } .cs-stops button:hover .go svg, .cs-stops button.pushed .go svg { stroke: var(--second); }
+.cs-stops b { flex: 1; min-width: 0; overflow: hidden; font-size: 13.5px; font-weight: 720; letter-spacing: -0.01em; white-space: nowrap; text-overflow: ellipsis; }
+.cs-stops i { display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; font-style: normal; font-size: 11.5px; font-weight: 800; color: var(--cs-ink); background: var(--second); }
+.cs-stops button:hover i, .cs-stops button.pushed i { background: var(--card); }
+/* On a phone the board keeps its slots and drops its label. */
+@media (max-width: 560px) { .cs-stops { padding-left: 10px; gap: 6px; } .cs-stops small { display: none; } }
 /* the compass is the one button on the map: back to where you are. The bar measures in minutes of walking. */
 /* the compass rose: the map's printed ornament, not a button. Under it and centred on it, the map's own controls in one pill */
 /* The compass and the controls hang under the band by its height, which near.tsx measures (--band): the band never lies over them. */

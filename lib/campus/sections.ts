@@ -93,6 +93,18 @@ export const walkMinutes = (a: Point, b: Point) => Math.max(1, Math.round(metres
 const byId = (land: readonly Section[], id: string) => land.find(each => each.id === id);
 /** You can open the section you stand in and the ones touching it. */
 export const reach = (land: readonly Section[], standing: string, id: string) => id === standing || !!byId(land, standing)?.next.includes(id);
+/** A land whose sections are subway stops (New York). Its ways on are a departure board under the map. */
+export const rides = (land: readonly Section[]) => land.some(each => !!each.stop);
+/**
+ * The departure board under the map (public/demo/mockups-map-ring.html, 2): every section one stop from where you stand,
+ * counted from you and not from the section on screen, so nobody hops board to board across the city. The one on screen
+ * is left off. West to east, the way they lie.
+ */
+export function nextStops(land: readonly Section[], standing: string, view: string): Section[] {
+  const home = byId(land, standing);
+  if (!home) return [];
+  return [home, ...home.next.flatMap(id => byId(land, id) ?? [])].filter(each => each.id !== view).sort((a, b) => middle(a.ring)[0] - middle(b.ring)[0]);
+}
 /** How many steps from one section to another. */
 export function hops(land: readonly Section[], from: string, to: string): number {
   const seen = new Set([from]);
