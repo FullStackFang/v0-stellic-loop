@@ -60,6 +60,7 @@
 .cs-gr-sec { justify-self: start; margin: 4px 0 -2px; padding: 3px 11px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-on-ink); font-size: 12px; font-weight: 680; }
 .cs-gr-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 1px 12px; align-items: center; padding: 10px 12px; border-radius: 14px 14px 14px 4px; background: var(--cs-stub); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); scroll-snap-align: start; transition: translate .15s var(--cs-ease), box-shadow .15s var(--cs-ease); }
 .cs-gr-row:hover { translate: -1px -1px; box-shadow: inset 0 0 0 1.5px var(--cs-ink), 3px 3px 0 var(--cs-ink); }
+.cs-gr-row:active, .cs-gr-row[data-going] { translate: 1px 1px; box-shadow: inset 0 0 0 2.5px var(--cs-ink); }
 .cs-gr-row.in { margin-left: 26px; background: var(--cs-paper); }
 .cs-gr-mk { grid-row: span 2; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px 8px 8px 2px; background: var(--cs-action); color: var(--cs-paper); font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 14px; }
 .cs-gr-row.in .cs-gr-mk { background: var(--cs-ink); color: var(--cs-field); } .cs-gr-row.out .cs-gr-mk { background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }

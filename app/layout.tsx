@@ -7,6 +7,7 @@ import "@/components/loading/seats.css";
 // The error page is drawn where no page of its own has loaded its styles, so the root layout brings them.
 import "@/app/c/campus.css";
 import "@/components/errors/spill.css";
+import { PressWait } from "@/components/loading/press-wait";
 import { FreshWait } from "@/components/loading/fresh-wait";
 import { SeatsEnding } from "@/components/loading/seats-ending";
 import { Seen } from "@/components/seen";
@@ -27,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // The campus pages set data-kit on <html> before React loads (components/campus/shell.tsx), so it differs from what the server sent.
     // Pages opened are counted on the live site only (components/seen.tsx), so work on a developer's machine is not traffic.
     <html lang="en" className={archivo.variable} suppressHydrationWarning>
-      <body>{children}<SiteNav /><FreshWait /><SeatsEnding />{process.env.NODE_ENV === "production" && <Seen />}<SiteAnalytics /></body>
+      <body>{children}<SiteNav /><FreshWait /><PressWait /><SeatsEnding />{process.env.NODE_ENV === "production" && <Seen />}<SiteAnalytics /></body>
     </html>
   );
 }

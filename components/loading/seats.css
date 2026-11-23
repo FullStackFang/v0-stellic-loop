@@ -64,6 +64,8 @@ body:has([data-seats-wait]) .cs.seats-screen.seats-fresh { display: block; }
 /* a pressed link holds it on its corner, like a badge, so the link never changes width */
 .cs-links a { position: relative; }
 .seats-linkwait { position: absolute; top: -9px; right: -7px; width: 18px; height: 18px; pointer-events: none; } .seats-linkwait .seats-sm { margin: 0; }
+/* The same small one for any other link in the app, drawn once over the page on the corner of what was pressed (press-wait.tsx). */
+.seats-press { position: fixed; z-index: 2147483000; width: 18px; height: 18px; pointer-events: none; } .seats-press .seats-sm { margin: 0; animation-delay: 0s; } [data-going] { cursor: progress; }
 
 /* ---- the ending: the splat lands on the stub, the ticket takes the knock and drops away ---- */
 .seats-end { position: fixed; z-index: 2147483000; pointer-events: none; display: block; animation: seats-knock .8s both; }
