@@ -73,7 +73,7 @@ it('lets a full line pick nobody more up', () => {
   const world = createWorld(seeded(3), round(), []);
   world.strays.length = 0; world.feed = 0;
   const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 400 }) as Line;
-  world.strays.push({ x: line.x + 10, y: line.y, face: 1, a: 0, vx: 0, vy: 0 });
+  (world.strays as unknown[]).push({ x: line.x + 10, y: line.y, face: 1, a: 0, vx: 0, vy: 0 });
   step(world, 1 / 30);
   expect(line.tail.length).toBe(400);
   expect(world.strays).toHaveLength(1);
