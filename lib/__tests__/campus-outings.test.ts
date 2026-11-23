@@ -5,6 +5,7 @@ import {CampusError} from '@/lib/campus/errors';
 import {knownTo} from '@/lib/campus/knows';
 import {findCampus,weekListings} from '@/lib/campus/listings';
 import {addFeed,addHandListing} from '@/lib/campus/manage';
+import {savePlace} from '@/lib/campus/places';
 import {checkIn,imIn,invite,inviteChoices,joinByToken,leave,outingByToken,outingsOn,uninvite} from '@/lib/campus/outings';
 import {cancelPlan,changePlan,editablePlan,postPlan} from '@/lib/campus/plans';
 import {zoned} from '@/lib/campus/time';
@@ -171,6 +172,33 @@ describe('checking in',()=>{
   const {a,listing}=await setUp(hours(1));
   const first=await checkIn(t.db,a,listing,hours(1));
   expect(await checkIn(t.db,a,listing,hours(1.5))).toEqual(first);
+ });
+ describe('at an event with a known place',()=>{
+  // Granny Annie's, Roosevelt Island. 0.001 of a degree of latitude is about 111 m.
+  const BAR={lat:40.7617,lon:-73.9497},off=(metres:number,accuracy=10)=>({lat:BAR.lat+metres/110540,lon:BAR.lon,accuracy});
+  let bar:string|null=null;beforeEach(async()=>{bar=null;await t.db.query('delete from campus_place');});
+  const placed=async()=>{const s=await setUp(hours(1));const id=bar??=(await savePlace(t.db,{campusId:(await cornell()).id,name:"Granny Annie's",otherNames:[],...BAR})).id;
+   await t.db.query('update campus_listing set place_id=$2 where id=$1',[s.listing,id]);return s;};
+  it('needs where the person is, and says why',async()=>{
+   const {a,listing}=await placed();
+   await expect(checkIn(t.db,a,listing,hours(1))).rejects.toThrow(/location/i);
+  });
+  it('works within 150 metres of the place, and not further',async()=>{
+   const near=await placed();
+   expect(await checkIn(t.db,near.a,near.listing,hours(1),off(120))).toEqual({at:hours(1).toISOString()});
+   const far=await placed();
+   await expect(checkIn(t.db,far.a,far.listing,hours(1),off(600))).rejects.toThrow(/600 m from Granny Annie's/);
+  });
+  it('allows for a rough reading, up to 100 metres of it',async()=>{
+   const rough=await placed();
+   expect(await checkIn(t.db,rough.a,rough.listing,hours(1),off(220,80))).toEqual({at:hours(1).toISOString()});
+   const tooRough=await placed();
+   await refusal(checkIn(t.db,tooRough.a,tooRough.listing,hours(1),off(300,2000)));
+  });
+ });
+ it('at an event with no known place, needs no location',async()=>{
+  const {a,listing}=await setUp(hours(1));
+  expect(await checkIn(t.db,a,listing,hours(1))).toEqual({at:hours(1).toISOString()});
  });
 });
 

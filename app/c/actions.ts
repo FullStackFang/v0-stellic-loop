@@ -64,8 +64,10 @@ export async function joinAction(token: string): Promise<ActResult> {
 export async function leaveAction(listingId: string): Promise<ActResult> {
   return act(async viewer => { await onMyCampus(viewer, listingId); await leave(db(), viewer.personId, listingId); });
 }
-export async function checkInAction(listingId: string): Promise<ActResult> {
-  return act(async viewer => { await onMyCampus(viewer, listingId); await checkIn(db(), viewer.personId, listingId); });
+/** "Check in", with where the browser says the person is when the event has a known place (null when it gave nothing). */
+export async function checkInAction(listingId: string, at: { lat: number; lon: number; accuracy: number } | null = null): Promise<ActResult> {
+  const spot = at && [at.lat, at.lon, at.accuracy].every(Number.isFinite) ? { lat: Number(at.lat), lon: Number(at.lon), accuracy: Number(at.accuracy) } : null;
+  return act(async viewer => { await onMyCampus(viewer, listingId); await checkIn(db(), viewer.personId, listingId, new Date(), spot); });
 }
 /** "Invite" beside a person's name, and "Invited" to take it back. */
 export async function inviteAction(listingId: string, personId: string, on: boolean): Promise<ActResult> {

@@ -40,6 +40,11 @@ const WIDE = '(min-width: 1100px)';
 const wideNow = () => typeof matchMedia === 'function' && matchMedia(WIDE).matches;
 const onWide = (changed: () => void) => { if (typeof matchMedia !== 'function') return () => {}; const query = matchMedia(WIDE); query.addEventListener('change', changed); return () => query.removeEventListener('change', changed); };
 /** Runs a change as one move, where the browser can: each ticket travels to where it lands instead of the list being redrawn. */
+/** Where the browser says you are, asked only when you check in at a known place. Null when it is off or refused: the server then says to turn it on. */
+const whereNow = () => new Promise<{ lat: number; lon: number; accuracy: number } | null>(done => {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return done(null);
+  navigator.geolocation.getCurrentPosition(({ coords }) => done({ lat: coords.latitude, lon: coords.longitude, accuracy: coords.accuracy }), () => done(null), { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+});
 function glide(change: () => void) {
   const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (still || typeof document.startViewTransition !== 'function') change(); else document.startViewTransition(() => flushSync(change));
@@ -163,7 +168,7 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
       case 'in': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `in ${ticket.id}`} onClick={() => run(`in ${ticket.id}`, () => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: true }), true)}>I&rsquo;m in</button>;
       case 'join': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `join ${ticket.id}`} onClick={() => run(`join ${ticket.id}`, () => joinAction(ticket.joinToken!), undefined, true)}>Join</button>;
       case 'register': return <button className="cs-btn sm go" onClick={() => setOpen({ id: ticket.id, pane: 'more', fresh: open?.id !== ticket.id })}>Register</button>;
-      case 'checkin': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `checkin ${ticket.id}`} onClick={() => run(`checkin ${ticket.id}`, () => checkInAction(ticket.id))}>{say(`checkin ${ticket.id}`, 'Check in')}</button>;
+      case 'checkin': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `checkin ${ticket.id}`} onClick={() => run(`checkin ${ticket.id}`, async () => checkInAction(ticket.id, ticket.map ? await whereNow() : null))}>{say(`checkin ${ticket.id}`, 'Check in')}</button>;
       case 'use': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `use ${ticket.id}`} onClick={() => run(`use ${ticket.id}`, () => markRewardUsed(ticket.id))}>{say(`use ${ticket.id}`, 'Mark as used')}</button>;
       default: return ticket.status ? <span className={`cs-pill ${ticket.status.startsWith('Used') ? 'yes' : 'hot'}`}>{ticket.status}</span> : null;
     }

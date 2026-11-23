@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import type { Db, Q } from '../db';
 import { CampusError } from './errors';
 import { knownTo } from './knows';
+import { metres } from './sections';
 import { checkInOpen, endOf } from './time';
 
 // An outing is one group's visit to one event (design D6). Saying "I'm in" or "Register me" puts a person in one.
@@ -117,13 +118,29 @@ export async function leave(db: Db, personId: string, listingId: string): Promis
   });
 }
 
-/** "Check in": nothing but the press, inside the window. A second press keeps the first time. */
-export async function checkIn(db: Db, personId: string, listingId: string, now: Date = new Date()): Promise<{ at: string }> {
+/** Where the browser says the person is. `accuracy` is its own guess of how far off that is, in metres. */
+export type Spot = { lat: number; lon: number; accuracy: number };
+/** How close to an event's place a check-in must be, and how much of a rough reading is allowed for on top. */
+export const NEAR = 150, ROUGH = 100;
+
+/**
+ * "Check in", inside the window. At an event with a known place the person must be there: within NEAR metres of it,
+ * allowing up to ROUGH metres for the reading's own error. Where they are is checked and not kept. At an event with
+ * no known place the press is enough. A second press keeps the first time.
+ */
+export async function checkIn(db: Db, personId: string, listingId: string, now: Date = new Date(), at: Spot | null = null): Promise<{ at: string }> {
   return db.tx(async q => {
-    const { rows: [row] } = await q.query<{ outingId: string; startsAt: string; endsAt: string | null }>(`select m.outing_id as "outingId",l.starts_at as "startsAt",l.ends_at as "endsAt"
-      from campus_outing_member m join campus_listing l on l.id=m.listing_id where m.listing_id=$1 and m.person_id=$2 and l.cancelled_at is null for update of m`, [listingId, personId]);
+    const { rows: [row] } = await q.query<{ outingId: string; startsAt: string; endsAt: string | null; placeName: string | null; lat: number | null; lon: number | null; here: boolean }>(
+      `select m.outing_id as "outingId",l.starts_at as "startsAt",l.ends_at as "endsAt",p.name as "placeName",p.lat,p.lon,m.checked_in_at is not null as here
+      from campus_outing_member m join campus_listing l on l.id=m.listing_id left join campus_place p on p.id=l.place_id
+      where m.listing_id=$1 and m.person_id=$2 and l.cancelled_at is null for update of m`, [listingId, personId]);
     if (!row) throw new CampusError('Say you are in before checking in.');
     if (!checkInOpen(row.startsAt, row.endsAt, now)) throw new CampusError('Checking in opens 30 minutes before the start and closes when the event ends.');
+    if (!row.here && row.placeName !== null && row.lat !== null && row.lon !== null) {
+      if (!at || !Number.isFinite(at.lat) || !Number.isFinite(at.lon)) throw new CampusError(`Turn on location to check in: it only checks that you are at ${row.placeName}.`);
+      const away = metres([at.lon, at.lat], [row.lon, row.lat]);
+      if (away - Math.min(Math.max(at.accuracy, 0) || 0, ROUGH) > NEAR) throw new CampusError(`You look about ${Math.round(away / 50) * 50} m from ${row.placeName}. Check in when you get there.`);
+    }
     const { rows: [saved] } = await q.query<{ at: string }>('update campus_outing_member set checked_in_at=coalesce(checked_in_at,$3) where outing_id=$1 and person_id=$2 returning checked_in_at as at', [row.outingId, personId, now.toISOString()]);
     return saved;
   });

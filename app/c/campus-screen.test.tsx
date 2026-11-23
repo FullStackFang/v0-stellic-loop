@@ -14,6 +14,7 @@ import { GET as customFaceRoute } from '@/app/animals/custom/[token]/route';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { campusOf, pickFace } from '@/lib/campus/people';
 import { addHandListing } from '@/lib/campus/manage';
+import { savePlace } from '@/lib/campus/places';
 import { checkIn, imIn, joinByToken, outingByToken } from '@/lib/campus/outings';
 import { postPlan } from '@/lib/campus/plans';
 import { saveReward } from '@/lib/campus/rewards';
@@ -782,6 +783,27 @@ describe('rewards on the screen', () => {
     expect(screen.getByRole('heading', { name: 'Rewards you are earning' })).toBeInTheDocument();
     expect(screen.getByText('$5 off any order')).toBeInTheDocument();
     expect(screen.getByText('1 of 3 outings')).toBeInTheDocument();
+  });
+  it('"Check in" at a known place sends where you are, and only counts you when you are there', async () => {
+    const { ana } = await world();
+    const bar = await event('Happy hour', { place: "Granny Annie's", hours: 0.2 });
+    await savePlace(t.db, { campusId: cornell.id, name: "Granny Annie's", otherNames: [], lat: 40.7617, lon: -73.9497 });
+    await imIn(t.db, ana.personId, bar);
+    const here = (lat: number) => vi.stubGlobal('navigator', { ...navigator, geolocation: { getCurrentPosition: (found: (at: { coords: { latitude: number; longitude: number; accuracy: number } }) => void) => found({ coords: { latitude: lat, longitude: -73.9497, accuracy: 20 } }) } });
+    const checked = async () => (await t.db.query<{ at: string | null }>('select checked_in_at as at from campus_outing_member where listing_id=$1 and person_id=$2', [bar, ana.personId])).rows[0].at;
+    try {
+      await withPortalTestSession(ana, async () => {
+        here(40.7617 + 600 / 110540);
+        await show(as(ana));
+        fireEvent.click(screen.getAllByRole('button', { name: 'Check in' })[0]);
+        expect(await screen.findByText(/You look about 600 m from Granny Annie's/)).toBeInTheDocument();
+        expect(await checked()).toBeNull();
+        here(40.7617 + 50 / 110540);
+        await vi.waitFor(() => expect(screen.getAllByRole('button', { name: 'Check in' })[0]).toBeEnabled());
+        fireEvent.click(screen.getAllByRole('button', { name: 'Check in' })[0]);
+        await vi.waitFor(async () => expect(await checked()).not.toBeNull() );
+      });
+    } finally { vi.unstubAllGlobals(); }
   });
   it('an unlocked group reward shows at the counter in the top bar, and is marked used once', async () => {
     const { ana, ben } = await world();
