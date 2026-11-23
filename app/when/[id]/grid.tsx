@@ -214,7 +214,6 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
       {best.length > 0 && <div className="wn-best"><Panel tab="Best so far, all days"><div className="wn-picks">{best.map(each => <button key={each.at} type="button" aria-label={`Show ${each.dow} ${each.date}, ${each.time}`}
         onClick={() => { setTurned(Math.max(0, pages.findIndex(set => set.includes(slotOf.get(each.at)?.day ?? '')))); setTouched(each.at); }}>
         <Tile top={each.dow} big={each.date} /><span><b>{each.time}</b><small>{each.line}</small></span><Stack people={each.people} /></button>)}</div></Panel></div>}
-      {!onSave && action}
-      {tail}</div>
+      <div className="wn-tail">{!onSave && action}{tail}</div></div>
   </>;
 }

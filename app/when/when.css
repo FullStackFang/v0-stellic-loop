@@ -100,12 +100,16 @@ button.wn-cell { cursor: pointer; }
 
 /* two columns where there is room (public/demo/mockups-when-days.html). On a phone the columns dissolve, and the ticket
    of the second one leads the page. */
-.wn-col { display: contents; }
+.wn-col, .wn-tail { display: contents; }
 .wn-col.side > .wn-tk { order: -1; }
 @media (min-width: 900px) {
   .wn.wn-two { max-width: 980px; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 26px 30px; align-items: start; padding-top: 32px; }
   .wn-two .wn-col { display: grid; gap: 22px; min-width: 0; align-content: start; }
   .wn-two .wn-col.side > .wn-tk { order: 0; }
+  /* the two columns share three rows, so "Best so far" ends where the grid's panel ends, and Save and the links sit on one row under both */
+  .wn-two .wn-col { grid-row: 1 / span 3; grid-template-rows: subgrid; row-gap: 22px; }
+  .wn-two .wn-col:not(.side) > .wn-panel { grid-row: 1 / span 2; } .wn-two .wn-col:not(.side) > .wn-save { grid-row: 3; }
+  .wn-two .wn-col.side > .wn-tk { grid-row: 1; } .wn-two .wn-col.side > .wn-best { grid-row: 2; display: grid; } .wn-two .wn-col.side > .wn-tail { grid-row: 3; align-self: start; display: grid; gap: 22px; min-width: 0; }
   .wn-two .wn-cell { min-height: 50px; font-size: 14.5px; }
   .wn-two .wn-d b { font-size: 19px; }
   .wn-two .wn-cal-d { height: 46px; }
@@ -280,5 +284,5 @@ button.wn-cell { cursor: pointer; }
   .wn-fit .wn-save { position: sticky; bottom: 0; z-index: 3; gap: 8px; margin: 0 -14px; padding: 10px 14px 12px; background: var(--cs-page); box-shadow: 0 -1.5px 0 var(--cs-ink); }
   .wn-fit .wn-save .wn-note:not(.bad) { display: none; }
   .wn-fit .wn-save .wn-big, .cs .wn-fit .wn-save .cs-btn.wn-big { height: 50px; }
-  .wn-fit > .wn-col > :last-child { margin-bottom: 20px; } .wn-fit > .wn-col > .wn-save:last-child { margin-bottom: 0; }
+  .wn-fit > .wn-col > :last-child, .wn-fit > .wn-col > .wn-tail > :last-child { margin-bottom: 20px; } .wn-fit > .wn-col > .wn-save:last-child { margin-bottom: 0; }
 }
