@@ -5,8 +5,8 @@ import { Legal, type LegalPart } from "@/components/Legal";
 export const metadata: Metadata = { title: "Terms · Loopd" };
 
 const PARTS: LegalPart[] = [
-  { id: "pilot", name: "The pilot", short: "A pilot, by invitation.",
-    full: <>Loopd is a free pilot that connects the AI assistants your group already uses to one shared plan. It is invitation only: use it with the teams you were invited to.</> },
+  { id: "pilot", name: "The pilot", short: "A free pilot.",
+    full: <>Loopd is a free pilot that connects the AI assistants your group already uses to one shared plan.</> },
   { id: "save", name: "What you save", short: "You answer for what you save.",
     full: <>You are responsible for what you save to a team, whether you write it or your assistant saves it for you. Upload only files you are allowed to share with that team. Do not post anything unlawful, or anything about someone that they would not want shared with the team. The people who manage a team can remove members, and we may remove content or teams that break these terms.</> },
   { id: "assistant", name: "Your assistant", short: "It acts for you, and it can be wrong.",
@@ -20,5 +20,5 @@ const PARTS: LegalPart[] = [
 ];
 
 export default function Terms() {
-  return <Legal title="Terms" updated="November 12, 2026" gist="What you agree to when you use Loopd." parts={PARTS} />;
+  return <Legal title="Terms" updated="November 23, 2026" gist="What you agree to when you use Loopd." parts={PARTS} />;
 }

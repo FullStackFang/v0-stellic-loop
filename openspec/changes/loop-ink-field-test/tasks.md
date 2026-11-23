@@ -1,7 +1,7 @@
 ## 1. Migration
 
 - [x] 1.1 Write `supabase/migrations/20261123020000_campus_ink_press.sql`: `campus_ink_waitlist.email` may be empty; add `visitor text` with the same check as `site_open.visitor`. Additive, with `lock_timeout`, a rollback note, and "the code works before this is applied"
-- [ ] 1.2 Paste the SQL in the reply for the founder to run on production before publishing
+- [x] 1.2 Paste the SQL in the reply for the founder to run on production before publishing
 
 ## 2. Keep the signed-out press
 
