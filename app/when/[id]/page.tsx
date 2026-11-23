@@ -16,7 +16,7 @@ import { inviteEmailAction, saveAnswerAction } from '../actions';
 import { guestKey } from '../guest-key';
 import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
 import { Grid } from './grid';
-import { Copy, Opened, Pick, SignInHere } from './pick';
+import { Copy, Opened, Pick } from './pick';
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string; in?: string }> };
 const REACHED: Record<Threshold, string> = { majority: 'majority reached', two_thirds: 'two thirds reached', everyone: 'everyone can' };
@@ -104,13 +104,12 @@ export default async function WhenPage({ params, searchParams }: Props) {
     <p>{view.organizer.name} asked for {lengthText(view.minutes)} · {view.answered.length} of {view.size} answered · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
   const best = view.best.map(slot => { const label = slotLabel(slot.at, zone); return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, line: `${slot.people.length} of ${view.size} can make it`, people: slot.people.map(shown) }; });
   const mine = view.isOrganizer && !view.chosen;
-  // What the sign-in card offers. It opens over the poll, or stands beside its ticket at ?in=1, and lands back here either way.
+  // The sign-in card beside the poll's ticket at ?in=1. The usual way in is the bar's "Sign in", which opens over the poll.
   const schools = who ? [] : (await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(({ slug, name, domains }) => ({ slug, name, domains }));
   const door = <DoorSignIn schools={schools} routing="hash" configured={clerkPortalConfigured()} back={here} />;
   const tail = <>
     {mine && <PassOn tab="Pass it on" view={view} />}
     <div className="wn-acts wn-mid">
-      {!who && <SignInHere>{door}</SignInHere>}
       {view.chosen && <a className="cs-btn sm" href={here}>Back to the result</a>}
       {mine && view.best.length > 0 && <a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a>}
       {mine && <a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a>}

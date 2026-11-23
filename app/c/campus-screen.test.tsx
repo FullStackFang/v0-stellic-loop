@@ -811,7 +811,12 @@ describe('the pages', () => {
     render(await InkPage());
     expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'This week' })).not.toHaveAttribute('aria-current');
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/sign-in?redirect_url=%2Fc%2Fink');
+    // "Sign in" opens the sign-in card over the page, and Close puts it away: no other page.
+    expect(screen.queryByRole('dialog', { name: 'Sign in' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    expect(within(screen.getByRole('dialog', { name: 'Sign in' })).getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Sign in' })).toBeNull();
     expect(screen.getByTitle('Loopd Ink')).toHaveAttribute('src', '/demo/mockups-premium.html');
     cleanup();
     // Signed in, it is the person's own bar: their account, on their own campus.

@@ -71,12 +71,8 @@ it('lets a visitor who has not signed in paint their times and save under a name
   expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
   expect(view.container).toHaveTextContent('Maya asked for 1 hr · 3 of 7 answered · by Fri 27 Nov');
   expect(view.container).toHaveTextContent('Best so far');
-  // Signing in opens over the poll: no other page, and it lands back here.
-  expect(screen.queryByTestId('sign-in')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Have Loopd? Sign in' }));
-  expect(screen.getByTestId('sign-in')).toHaveAttribute('data-back', `/when/${id}`);
-  expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+  // The page has no sign-in of its own: the bar's "Sign in" is the one way in.
+  expect(screen.queryByText('Have Loopd? Sign in')).toBeNull();
   expect(screen.queryByTestId('sign-in')).toBeNull();
   expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toHaveTextContent('3');
   expect(screen.getByLabelText('Your name')).toHaveValue('');

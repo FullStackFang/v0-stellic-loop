@@ -60,6 +60,14 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 /* Nothing clickable is bare text: a link that is not the current page is an outlined pill on paper, the current one is filled ink. */
 .cs-links { gap: 6px; } .cs-links a { display: flex; align-items: center; gap: 10px; border-radius: 99px; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs-links a[aria-current] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+/* a pressed pill answers at once: it fills with ink while held and until the next page arrives, and the small blot comes with no wait */
+.cs-nav .cs-links a:active, .cs-nav .cs-org:active, .cs-nav .cs-links a:has(.seats-linkwait[data-on]), .cs-nav .cs-org:has(.seats-linkwait[data-on]) { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; }
+.cs-nav .cs-wm:active { opacity: .6; } .cs-nav .seats-linkwait .seats-sm { animation-delay: 0s; }
+/* the bar's "Sign in": the sign-in card over the page it was pressed on */
+.cs-over { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 56px 16px 28px; overflow-y: auto; scrollbar-width: none; background: color-mix(in oklch, var(--cs-ink) 50%, transparent); animation: cs-over-in .18s cubic-bezier(.16, 1, .3, 1); }
+.cs-over::-webkit-scrollbar { display: none; } @keyframes cs-over-in { from { opacity: 0; } }
+.cs-over-card { position: relative; width: min(100%, 440px); font-size: 16px; font-weight: 400; letter-spacing: normal; }
+.cs .cs-btn.cs-over-x { position: absolute; z-index: 2; top: -40px; right: 6px; background: var(--cs-paper); }
 .cs-links a:has(i) { padding: 6px 12px 6px 6px; }
 .cs-links i { width: 22px; height: 22px; border-radius: 7px 7px 7px 2px; display: grid; place-items: center; flex: none; font-style: normal; font-weight: 800; font-stretch: 75%; font-size: 12px; color: var(--cs-paper); background: linear-gradient(135deg, var(--cs-action), var(--cs-action-hover) 60%, var(--cs-action-deep)); }
 .cs-nav-end { margin-left: auto; display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }

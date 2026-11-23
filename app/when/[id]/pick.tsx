@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, type ReactNode } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { DURATIONS, START_MINUTES, lengthText, spanText } from '@/lib/when/slots';
 import { openedAction, sendPollAction } from '../actions';
 import { Panel, Stack, Tile, type Shown } from '../parts';
@@ -41,26 +41,6 @@ export function Pick({ pollId, choices, goesTo, as, minutes = 60 }: { pollId: st
 export function Opened({ pollId }: { pollId: string }) {
   useEffect(() => { void openedAction(pollId); }, [pollId]);
   return null;
-}
-
-/**
- * "Have Loopd? Sign in", without leaving the poll: the sign-in card opens over the page, and Close or Escape puts it
- * away. Nothing loads until it is pressed. The card is the caller's, so it comes already knowing where to land.
- */
-export function SignInHere({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!open) return;
-    const key = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
-    window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
-  }, [open]);
-  return <>
-    <button type="button" className="cs-btn sm" aria-expanded={open} onClick={() => setOpen(true)}>Have Loopd? Sign in</button>
-    {open && <div className="wn-over" role="dialog" aria-modal="true" aria-label="Sign in" onClick={event => { if (event.target === event.currentTarget) setOpen(false); }}>
-      <div className="wn-over-card"><button type="button" className="cs-btn sm wn-over-x" onClick={() => setOpen(false)}>Close</button>{children}</div>
-    </div>}
-  </>;
 }
 
 /** Copies the words to pass on. */

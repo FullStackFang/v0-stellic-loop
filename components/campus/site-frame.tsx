@@ -12,7 +12,7 @@ import '@/app/groups/campus-look.css';
  * Ink page: from the campus the person was last looking at, or else their own, or else the first one. If that cannot
  * be read the page is shown without them, never an error in its place.
  */
-export async function SiteFrame({ back = '/', children }: { /** Where signing in from the bar leads back to. */ back?: string; children: ReactNode }) {
+export async function SiteFrame({ back, children }: { /** Where signing in from the bar leads back to: the page it was pressed on, when not said. */ back?: string; children: ReactNode }) {
   const frame = await (async () => {
     const viewer = await campusViewer(), campus = await lookingAt() ?? viewer?.campus ?? await findCampus(db(), DEFAULT_CAMPUS);
     return campus ? siteBar({ campus, viewer, back }) : null;
