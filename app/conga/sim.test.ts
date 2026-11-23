@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { addLine, BIG, createWorld, FULL, POWERS, round, steer, step, WHISTLE_TURN } from '@/public/conga/sim.js';
+import { addLine, BIG, createWorld, FULL, GIANT, POWERS, round, steer, step, WHISTLE_TURN } from '@/public/conga/sim.js';
 
 // The same game every run.
 function seeded(seed: number) {
@@ -8,10 +8,11 @@ function seeded(seed: number) {
 }
 
 // What a frame costs follows how many animals there are and how much of its path each line remembers. The ground always
-// refills; what keeps a game drawable is that a line of 400 is full and picks nobody more up, and that a crowded ground
-// pushes back (fewer new strays and riders, the bots shed) so one game can go on and on.
+// refills; what keeps a game drawable is that the page draws only what is in view, and that a crowded ground pushes back
+// (fewer new strays and riders, the bots shed) so one game can go on and on. A line of GIANT is full, a guard on memory.
 // The limits here are what a browser was measured to carry (2026-11-20): with the processor slowed four times, the page
-// kept 60 frames a second with 800 animals in lines and 250 strays, and fell to 30 with a single line of 400.
+// kept 60 frames a second with 800 animals in lines and 250 strays. A single line's length past a screenful costs
+// nothing more to draw (800 and 1600 wound tight drew alike, 2026-11-22).
 // A rule that lets a game past them needs measuring again before it ships.
 it('keeps the lines, the strays and the remembered paths within what a slow phone can draw, through a long game', () => {
   const random = seeded(7);
@@ -28,13 +29,13 @@ it('keeps the lines, the strays and the remembered paths within what a slow phon
     let inLines = 0, top = 0;
     for (const line of world.lines as { tail: unknown[]; path: unknown[] }[]) { inLines += line.tail.length; top = Math.max(top, line.tail.length); most.path = Math.max(most.path, line.path.length); }
     most.line = Math.max(most.line, top);
-    longFor = top > 400 ? longFor + 1 / 30 : 0; most.longFor = Math.max(most.longFor, longFor);
+    longFor = top > GIANT ? longFor + 1 / 30 : 0; most.longFor = Math.max(most.longFor, longFor);
     most.inLines = Math.max(most.inLines, inLines); most.strays = Math.max(most.strays, world.strays.length); most.aboard = Math.max(most.aboard, world.shuttles[0].load);
     expect(events.some(event => event.type === 'full')).toBe(false); // the round never ends for being full
     overFor = inLines > FULL ? overFor + 1 / 30 : 0; most.overFor = Math.max(most.overFor, overFor);
   }
   expect(most.line).toBeGreaterThan(30); // the game did go on long enough for lines to grow
-  // No line ever passes 400: a full one draws no strays, and a sack's animals go home.
+  // No line ever passes GIANT: a full one draws no strays, and a sack's animals go home.
   expect(most.longFor).toBe(0);
   // One game, never reset, stays drawable: past FULL now and then by a few, for a moment, when a big sack lands.
   expect(most.inLines).toBeLessThan(FULL + 60);
@@ -68,14 +69,19 @@ it('never shrinks a line on its own, however long it goes without picking anyone
   expect(line.tail.length).toBe(200);
 });
 
-// A line of 400 is full: what a slow phone can draw. It draws no more strays, and they stay for someone else.
-it('lets a full line pick nobody more up', () => {
+// A line of GIANT is full. It draws no more strays, and they stay for someone else; one of 400 keeps growing.
+it('lets a line grow past 400, and a full line pick nobody more up', () => {
   const world = createWorld(seeded(3), round(), []);
   world.strays.length = 0; world.feed = 0;
-  const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 400 }) as Line;
+  const grown = addLine(world, { id: 'grown', face: 1, name: 'Grown', start: 400 }) as Line;
+  (world.strays as unknown[]).push({ x: grown.x + 10, y: grown.y, face: 1, a: 0, vx: 0, vy: 0 });
+  step(world, 1 / 30);
+  expect(grown.tail.length).toBe(401);
+  world.lines.length = 0;
+  const line = addLine(world, { id: 'me', face: 1, name: 'You', start: GIANT }) as Line;
   (world.strays as unknown[]).push({ x: line.x + 10, y: line.y, face: 1, a: 0, vx: 0, vy: 0 });
   step(world, 1 / 30);
-  expect(line.tail.length).toBe(400);
+  expect(line.tail.length).toBe(GIANT);
   expect(world.strays).toHaveLength(1);
 });
 

@@ -303,7 +303,10 @@ function join(world, line, face, x, y, events) {
 /** A line owed a sack's or a car's animals takes them one after another at its head, each out of a puff ('pop'), quickly
  * while many are owed and slower as they run out: all at once they would pile up at the back of the line. */
 const OWE = 8, OWE_SHARE = 0.6; // animals a second at the least, and this share of those still owed on top
-const GIANT = 400; // the longest line a slow phone was measured to draw (see FULL)
+// The longest a line gets: only a guard on memory, far past what anyone reaches. The page draws only what is in view, so
+// length past a screenful costs nothing to draw: wound tight round the head, a line of 800 and one of 1600 drew at the
+// same rate on a phone slowed four times (2026-11-22). It was 400, measured before the page left out what is off screen.
+export const GIANT = 2000;
 function owe(world, line, dt, events) {
   if (!line.owed.length) { line.owing = 0; return; }
   for (line.owing += (OWE + line.owed.length * OWE_SHARE) * dt; line.owing >= 1 && line.owed.length; line.owing--) {
