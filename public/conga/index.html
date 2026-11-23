@@ -1480,6 +1480,23 @@ function beam(thing, t, seen) {
   }
 }
 
+// The Washington Square fountain's spout (/demo/mockups-conga-fountain.html, round four, A): soft puffs of mist leave the
+// top of its jet, open out and fall back all round it, swelling and thinning as they go. The numbers are for the toy drawn
+// 174 wide, as in the mockup, and scale with it.
+const SPOUT = { life: 1.8, fall: 150, wide: 174 };
+let spoutPuffs = null;
+function spout(x, top, width, t) {
+  const rand = n => chance({ x: n, y: 11 }, 3), k = width / SPOUT.wide;
+  spoutPuffs ??= Array.from({ length: 110 }, (_, n) => { const a = rand(n * 4) * Math.PI * 2, out = 18 + rand(n * 4 + 1) * 46; return { seed: rand(n * 4 + 2), vx: Math.cos(a) * out, vy: -55 - rand(n * 4 + 3) * 60, sink: Math.sin(a) * out * 0.35, size: 0.7 + rand(n * 4 + 2) * 0.6 }; });
+  for (const p of spoutPuffs) {
+    const age = (t / SPOUT.life + p.seed) % 1 * SPOUT.life, u = age / SPOUT.life;
+    const px = x + p.vx * age * k, py = top + (p.vy * age + p.sink * age + SPOUT.fall * age * age / 2) * k;
+    const r = (7 + u * 24) * p.size * k, a = Math.min(1, age / 0.15) * (1 - u) ** 1.4;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, r); g.addColorStop(0, `rgba(240, 249, 255, ${a * 0.78})`); g.addColorStop(0.5, `rgba(225, 241, 255, ${a * 0.36})`); g.addColorStop(1, 'rgba(225, 241, 255, 0)');
+    ctx.fillStyle = g; ctx.fillRect(px - r, py - r, r * 2, r * 2);
+  }
+}
+
 // What stands on the ground. Greens and fields are painted on it; halls, towers and water are walked around.
 function shape(thing, inset = 0) {
   ctx.translate(thing.x, thing.y); ctx.rotate(thing.turn);
@@ -1695,6 +1712,8 @@ function draw(t, dt) {
       if (sx !== 1 || sy !== 1 || (lift && !spin)) { ctx.save(); ctx.translate(x, y - lift); ctx.scale(sx, sy); toy(name, 0, width * 0.04, width, flip); ctx.restore(); }
       else if (lift || spin) { ctx.save(); ctx.translate(x, y - lift - width * 0.4); ctx.rotate(spin); toy(name, 0, width * 0.44, width, flip); ctx.restore(); }
       else toy(name, x, y + width * 0.04, width, flip);
+      // The fountain's mist, over the toy and under its name. Its jet reaches the top of the toy's picture.
+      if (name === 'wsqfountain' && quality < 2) spout(x, y + width * 0.04 - width * AT[name][3] / AT[name][2] * 0.97, width, t);
       if (label) {
         // How near you are (or, watching, the middle of the view), eased so the plate pops out rather than creeps.
         const high = width * AT[name][3] / AT[name][2], from = me && !me.dead ? me : cam, u = Math.max(0, Math.min(1, (360 - Math.hypot(from.x - x, from.y - (y - high / 2))) / 110));
