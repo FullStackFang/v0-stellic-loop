@@ -23,10 +23,11 @@ import { campusViewer, signInHref } from '@/lib/campus/session';
 import { siteBar } from '../site-bar';
 import { WordsField } from '@/components/campus/words-field';
 import { PickCount } from '@/components/campus/pick-count';
+import { AnimalForm } from './animal-form';
 import { WaitButton } from '@/components/campus/wait-button';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, deletePictureAction, joinTagAction, setAnimalNameAction, setTierAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, joinTagAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 import { Activity, People, SPANS, type Span } from './stats';
 
 export const dynamic = 'force-dynamic';
@@ -160,15 +161,16 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       <nav className="cs-adm-seg" aria-label="Show">{SHOW.map(each => <Link key={each} href={`${at('animals')}&show=${each}`} aria-current={each === show ? 'true' : undefined}>{each === 'all' ? 'All' : TIER[each]} {within(each).length}</Link>)}</nav>
       {/* One animal is picked at a time (PickCount): it opens where it is in the grid
           (public/demo/mockups-admin-animal-card.html, C): its name, the words the picker finds it by, and where it stands. Close, Escape or tapping its face folds it back. */}
-      <form action={setTierAction} className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} /><PickCount />
-        <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key} style={{ viewTransitionName: `pet-${pet.key}` }}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" /><span>{TIER[pet.now]}</span></label>
+      {/* Every press stays on the page (AnimalForm): the grid is drawn again where it is, with the card still open. */}
+      <AnimalForm className="cs-adm-pick">{keep}<input type="hidden" name="show" value={show} /><PickCount />
+        <ul className="cs-adm-grid">{within(show).map(pet => <li key={pet.key} style={{ viewTransitionName: `pet-${pet.key}` }}><label className={pet.now} title={pet.name}><input type="checkbox" name={pet.field} value={pet.value} aria-label={pet.name} /><img src={pet.src} alt="" loading="lazy" decoding="async" /><span>{TIER[pet.now]}</span></label>
           <div className="cs-adm-card">
-            <span className="cs-adm-row"><input name={`name-${pet.value}`} defaultValue={pet.named} placeholder="Made animal" maxLength={40} aria-label={`Name of ${pet.name}`} />{pet.field === 'picture' && <details><summary>Delete</summary><button formAction={deletePictureAction}>Delete for good</button></details>}<WaitButton className="cs-btn sm go" formAction={setAnimalNameAction} word="Saving" plate>Save</WaitButton><button type="reset" className="cs-btn sm">Close</button></span>
+            <span className="cs-adm-row"><input name={`name-${pet.value}`} defaultValue={pet.named} placeholder="Made animal" maxLength={40} aria-label={`Name of ${pet.name}`} />{pet.field === 'picture' && <details><summary>Delete</summary><WaitButton name="step" value="delete" word="Deleting">Delete for good</WaitButton></details>}<WaitButton className="cs-btn sm go" name="step" value="name" word="Saving" plate>Save</WaitButton><button type="reset" className="cs-btn sm">Close</button></span>
             <WordsField name={`words-${pet.value}`} words={pet.words} />
             {/* Where it stands, pressed; another moves it there. School makes it the own animal of this campus's school. */}
             <span className="cs-adm-stand" role="group" aria-label="Where it stands">{MOVES.map(tier => <button key={tier} name="tier" value={tier} aria-pressed={tier === pet.now || (tier === 'off' && pet.now === 'own')}>{TIER[tier]}</button>)}</span></div></li>)}</ul>
         <p className="cs-adm-lede">Tap an animal to open it: its name, the words it is found by, and where it stands. Whoever already has one keeps it.</p>
-      </form>
+      </AnimalForm>
     </section>;
     /* eslint-enable @next/next/no-img-element */
   }

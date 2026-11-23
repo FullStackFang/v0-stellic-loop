@@ -27,8 +27,8 @@ const list = (typed: string) => typed.split(/[,\n]+/).map(part => part.trim()).f
 const uuid = (value: string) => /^[0-9a-f-]{36}$/i.test(value) ? value : '';
 const number = (typed: string) => typed === '' ? NaN : Number(typed);
 
-/** Runs one admin step on the campus the form names, then returns to the page with a line about it. */
-async function admin(data: FormData, run: (campus: Campus) => Promise<string>): Promise<never> {
+/** Runs one admin step on the campus the form names, and says what happened. The pages are drawn afresh. */
+async function step(data: FormData, run: (campus: Campus) => Promise<string>): Promise<{ said: string; slug: string }> {
   const viewer = await campusViewer();
   if (!viewer?.admin) redirect('/');
   const slug = text(data, 'campus'), campus = await findCampus(db(), slug);
@@ -41,9 +41,15 @@ async function admin(data: FormData, run: (campus: Campus) => Promise<string>): 
     said = `Not saved. ${error instanceof Error ? error.message.slice(0, 240) : 'Try again.'}`;
   }
   revalidatePath('/c', 'layout'); revalidatePath('/o', 'layout');
+  return { said, slug: campus?.slug ?? slug };
+}
+
+/** Runs one admin step, then returns to the page with a line about it. */
+async function admin(data: FormData, run: (campus: Campus) => Promise<string>): Promise<never> {
+  const { said, slug } = await step(data, run);
   // Back to the section the form was on.
   const back = ['tab', 'show'].map(key => /^[a-z]+$/.test(text(data, key)) ? `&${key}=${text(data, key)}` : '').join('');
-  redirect(`/c/admin?campus=${encodeURIComponent(campus?.slug ?? slug)}${back}&said=${encodeURIComponent(said)}`);
+  redirect(`/c/admin?campus=${encodeURIComponent(slug)}${back}&said=${encodeURIComponent(said)}`);
 }
 
 export async function addCampusAction(data: FormData): Promise<void> {
@@ -129,9 +135,23 @@ export async function splitTagAction(data: FormData): Promise<void> {
 
 const MOVED: Record<string, string> = { core: 'Core now: it is in everyone’s picker.', premium: 'Premium now: people who subscribed can pick it.', school: 'School now: free to people of its school, and nobody else.', off: 'Off: it is in nobody’s picker. Whoever has it keeps it.', own: 'Its maker’s alone again. Whoever else uses it keeps it.' };
 /** Core, Premium or Off on the animals that were picked: ones shipped with the app, by number, and ones people had made. Off, for a made one, is its maker's alone. */
-export async function setTierAction(data: FormData): Promise<void> {
-  await admin(data, async campus => {
-    const tier = text(data, 'tier'), faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String);
+/**
+ * The Animals tab's one form (app/c/admin/animal-form.tsx). It stays on the page: the page is drawn again where it is,
+ * with the card still open, and the line about it is returned. Which press it was is the button's `step`: "name" is the
+ * card's Save, "delete" is "Delete for good", and a tier button moves the picked animal.
+ */
+export async function animalAction(data: FormData): Promise<string> {
+  const faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String), key = faces[0] ?? pictures[0];
+  return (await step(data, async campus => {
+    // "Save" on the card of the one picked animal: its name, and the words the picker finds it by. The card's fields carry the animal's number or token in their names.
+    if (text(data, 'step') === 'name') {
+      if (faces.length + pictures.length !== 1) throw new Error('Pick one animal to name');
+      const words = await setAnimalName(db(), faces.length ? { face: number(key) } : { token: key }, text(data, `name-${key}`), list(text(data, `words-${key}`)));
+      return `Saved. The picker finds it by its name${words.length ? ` and by: ${words.join(', ')}` : ' alone'}.`;
+    }
+    // "Delete for good" on the picked animals that people had made. The ones shipped with the app cannot be deleted, only turned off.
+    if (text(data, 'step') === 'delete') { for (const picture of pictures) await deletePicture(db(), picture); return `Deleted ${pictures.length}. Anyone who used one is shown their own animal again.`; }
+    const tier = text(data, 'tier');
     if (!faces.length && !pictures.length) throw new Error('Pick an animal first');
     // School makes it the own animal of the school of the campus the page is on. A mascot keeps its own school.
     const school = schoolOf(campus.slug);
@@ -139,20 +159,7 @@ export async function setTierAction(data: FormData): Promise<void> {
     for (const picture of pictures) await setPictureTier(db(), picture, tier === 'off' ? 'own' : tier, school);
     const many = faces.length + pictures.length;
     return many === 1 ? MOVED[tier] ?? 'Saved.' : `${many} animals moved to ${tier}. Whoever has one keeps it.`;
-  });
-}
-/** "Save" on the card of the one picked animal: its name, and the words the picker finds it by. The card's fields carry the animal's number or token in their names. */
-export async function setAnimalNameAction(data: FormData): Promise<void> {
-  await admin(data, async () => {
-    const faces = data.getAll('face').map(String), pictures = data.getAll('picture').map(String), key = faces[0] ?? pictures[0];
-    if (faces.length + pictures.length !== 1) throw new Error('Pick one animal to name');
-    const words = await setAnimalName(db(), faces.length ? { face: number(key) } : { token: key }, text(data, `name-${key}`), list(text(data, `words-${key}`)));
-    return `Saved. The picker finds it by its name${words.length ? ` and by: ${words.join(', ')}` : ' alone'}.`;
-  });
-}
-/** "Delete for good" on the picked animals that people had made. The ones shipped with the app cannot be deleted, only turned off. */
-export async function deletePictureAction(data: FormData): Promise<void> {
-  await admin(data, async () => { const pictures = data.getAll('picture').map(String); for (const picture of pictures) await deletePicture(db(), picture); return `Deleted ${pictures.length}. Anyone who used one is shown their own animal again.`; });
+  })).said;
 }
 
 export async function saveRewardAction(data: FormData): Promise<void> {

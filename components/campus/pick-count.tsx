@@ -28,8 +28,13 @@ export function PickCount() {
       event.preventDefault();
       document.startViewTransition(settle);
     };
-    // Escape closes the open one, as its Close button does.
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && boxes().some(box => box.checked)) form.reset(); };
+    // Escape closes the open one, as its Close button does. Enter in its name saves it: left to the browser, Enter presses
+    // the form's first submit button, which is the first card's "Delete for good", acting on the open animal.
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && boxes().some(box => box.checked)) form.reset();
+      const field = event.target as Element;
+      if (event.key === 'Enter' && field instanceof HTMLInputElement && field.closest('.cs-adm-row')) { event.preventDefault(); field.closest('li')?.querySelector<HTMLButtonElement>('.cs-adm-card .go')?.click(); }
+    };
     count(); form.addEventListener('change', count); form.addEventListener('reset', reset); form.addEventListener('click', tick); form.addEventListener('keydown', escape);
     return () => { form.removeEventListener('change', count); form.removeEventListener('reset', reset); form.removeEventListener('click', tick); form.removeEventListener('keydown', escape); };
   }, []);
