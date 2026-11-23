@@ -9,7 +9,7 @@ Conga's script takes about 2 ms of each 16.7 ms frame, and the stutter at the st
 - The canvas is asked for opaque (`alpha: false`), so the browser does not blend it with the page behind.
 - The scoreboard's HTML is built only while it is open and written only when it has changed.
 - The toys' sheet is decoded before its first draw, as the animals' sheet already is.
-- Waiting on the founder, not built: a budget of pixels for large sharp screens, which softens the picture a little there.
+- A cap on pixels for the largest sharp screens only: never more than a 4K screen's worth. Laptops, phones and a 4K monitor at 150% are not touched.
 - Dropped after review (design.md, After the review): the trail as a ring buffer, a text width cache, quality stepping back up, a fixed step for the rules.
 
 Nothing in the rules of the game or the look changes.

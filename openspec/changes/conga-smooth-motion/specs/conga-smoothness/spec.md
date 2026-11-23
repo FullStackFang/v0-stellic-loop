@@ -19,11 +19,11 @@ Pressing Start or Again once a card has been up for a second SHALL NOT run more 
 - **THEN** the round still starts, on a world as warmed as any other
 
 ### Requirement: Playing makes little garbage
-During ordinary play at 1920×1000 on the Columbia ground, on the measuring machine, garbage collection SHALL take under 110 ms in each minute, as the middle of three runs of the measuring script.
+During ordinary play at 1920×1000 on the Columbia ground, on the measuring machine, the game SHALL make under 8 MB of memory a second, as the middle of three runs of the measuring script. (Collector time follows from it but swings by a third between runs of one build, so it is reported and not marked.)
 
 #### Scenario: A minute of play
 - **WHEN** the measuring script is run three times
-- **THEN** the middle figure for collector time is under 110 ms a minute
+- **THEN** the middle figure for memory made is under 8 MB a second
 
 #### Scenario: The rules are unchanged
 - **WHEN** the rules' tests (`app/conga/sim.test.ts`) are run

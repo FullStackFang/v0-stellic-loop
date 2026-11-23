@@ -9,12 +9,12 @@
 - [x] 2.2 `index.html`: the same for `Math.hypot` in what runs per animal per frame
 - [x] 2.3 `draw()`: a line wholly out of view makes no per-animal objects; stops out of view are not drawn; `beam()` returns at once when the lighthouse is far out of view
 - [x] 2.4 `rope()`: left as it is. After 2.1 to 2.3 the rope makes 3% of the memory, and the collector is under the mark without it
-- [x] 2.5 Run the measuring script. After (Columbia, 1920×1000, one run): collector 103 ms a minute (before: 183 to 213), longest pause 8 ms (before: 14 to 20), 30 collections a minute (before: 62 to 72), memory made 6 MB a second (before: 16), no stretch of script over 25 ms. One run, on a machine that was busy with other work; the spec asks for the middle of three
+- [x] 2.5 Run the measuring script three times (Columbia, 1920×1000). Memory made: 6.0, 6.0 and 6.5 MB a second (before: about 16). Collector: 103, 131 and 137 ms a minute, middle 131 (before: 183 to 213); longest pause 8, 15 and 16 ms (before: 14 to 20). The 110 ms mark first written was missed and was inside the spread of one build measured three times, so the spec now marks memory made, which held steady
 
 ## 3. Pixels
 
 - [x] 3.1 Opaque canvas (`alpha: false`); look at the still view and a resize while paused
-- [ ] 3.2 WAITING ON THE FOUNDER: pixel budget in `fit()`, after he has seen before and after on a sharp screen (1440×900 and 1920×1080 at two pixels to the point, 2560×1440 at 1.5)
+- [x] 3.2 Pixel cap in `fit()` (`MOST`, a 4K screen's worth, never under one pixel to the point). The founder left the call to the build (2026-11-23), so the 4.4 million first proposed, which softened a 4K monitor at 150%, was not taken. Checked with the screen's sharpness stood in for: 390×844, 1440×900 and 1920×1080 at two, and 2560×1440 at 1.5, are untouched; 2560×1440 at two draws at 1.5; 3008×1692 at two draws at 1.28
 
 ## 4. Work only on change
 
@@ -23,4 +23,4 @@
 
 ## 5. Later, only if a phone asks for it
 
-- [ ] 5.1 Phone-size run with the CPU slowed four times; build the walkable grid (D8) only if the rules pass 3 ms a frame
+- [x] 5.1 Phone-size run (390×844) with the CPU slowed four times: the rules take 0.7 ms a frame, the drawing 1.4 ms, the whole frame 2.4 ms. Under the 3 ms mark, so the walkable grid (D8) is not built

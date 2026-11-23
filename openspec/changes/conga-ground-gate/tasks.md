@@ -14,7 +14,7 @@
 - [x] 3.2 The ground at load is settled where `where` is first set, from the player written into the page; the picker opens on a ground that was asked for and may not be played
 - [x] 3.3 The ask card: names the ground pressed; signed out, Sign in first and Ink+ second; the school row's chip says Sign in when signed out; the way back from joining names the ground pressed
 - [x] 3.4 In the browser, signed out: the hill plays, each other ground shows its card, `/conga/play?map=columbia` lands on the hill with Columbia's card showing
-- [ ] 3.5 The founder looks at the locked card's words on localhost, phone and laptop
+- [x] 3.5 The locked card's words: the founder left the call to the build (2026-11-23). Kept as checked on phone and laptop: "Morningside is Columbia's. At Columbia? Sign in and it's yours, free. Or play every school's grounds with Ink+", Sign in first, Ink+ second
 
 ## 4. Finish
 

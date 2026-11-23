@@ -761,10 +761,15 @@ addEventListener('contextmenu', event => event.preventDefault());
 // How sharp the picture is drawn. A device that cannot keep up steps down: fewer pixels first, then plain water too.
 // The number of pixels is most of the cost of a frame, far more than the rules.
 const SHARP = [2, 1.5, 1];
+// The most pixels the picture is ever drawn at: a 4K screen's worth, and never under one pixel to the point. Phones, laptops,
+// a 1920×1080 screen at two to the point and a 4K monitor at 150% are all under it and untouched. Only a bigger sharp screen
+// is held back (2560×1440 at two draws at 1.5, which is where the first step down would have put it after two slow seconds).
+const MOST = 3840 * 2160;
 let quality = 0;
 let stale = true; // the picture must be drawn again even while paused: something it shows has changed (see frame)
 function fit() {
-  dpr = Math.min(SHARP[quality], devicePixelRatio || 1); wide = innerWidth; tall = innerHeight;
+  wide = innerWidth; tall = innerHeight;
+  dpr = Math.min(SHARP[quality], devicePixelRatio || 1, Math.max(1, Math.sqrt(MOST / (wide * tall))));
   canvas.width = wide * dpr; canvas.height = tall * dpr; stale = true;
 }
 addEventListener('resize', fit); fit();
