@@ -16,6 +16,7 @@ import { inviteEmailAction, saveAnswerAction } from '../actions';
 import { guestKey } from '../guest-key';
 import { Face, Panel, Seats, Ticket, Tile, type Shown } from '../parts';
 import { Grid } from './grid';
+import { Ways } from './ways';
 import { Copy, Opened, Pick } from './pick';
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string; in?: string }> };
@@ -132,6 +133,6 @@ export default async function WhenPage({ params, searchParams }: Props) {
           tab={view.mine?.draft ? 'Your times from last time. Change them, then save' : undefined}
           after={view.chosen ? 'Saved. The time stays as it is.' : who.verifiedEmail ? `The result comes to ${who.verifiedEmail}` : 'Saved. You get an email when the time is set.'}>{zonePill}</Grid>
       : <Grid slots={slots} free={free} me={{ personId: guest?.personId ?? 'guest', name: guest?.name ?? '', face: '' }} mine={view.mine?.slots ?? []} onSave={saveAnswerAction.bind(null, view.id)} tile={tile} title={title} best={best} tail={tail} size={view.size}
-          guest={{ name: guest?.name ?? '', email: guest ? guests.get(guest.personId)?.email ?? null : null }} onEmail={inviteEmailAction.bind(null, view.id)}>{zonePill}</Grid>}
+          guest={{ name: guest?.name ?? '', email: guest ? guests.get(guest.personId)?.email ?? null : null }} onEmail={inviteEmailAction.bind(null, view.id)} ways={<Ways back={here} configured={clerkPortalConfigured()} />}>{zonePill}</Grid>}
   </main>;
 }

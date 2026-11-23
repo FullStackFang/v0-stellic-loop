@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { Rings } from '@/components/LoopGlyphs';
 import { dayNum, dow, mon } from '@/lib/days';
 import { hourText, type Slot } from '@/lib/when/slots';
 import type { Said } from '../actions';
@@ -20,6 +21,13 @@ const dayLabel = (day: string) => `${dow(day)} ${dayNum(day)}`;
 const span = (days: string[]) => { const a = days[0], b = days[days.length - 1]; return a === b ? `${dayLabel(a)} ${mon(a)}` : mon(a) === mon(b) ? `${dayNum(a)} to ${dayNum(b)} ${mon(b)}` : `${dayNum(a)} ${mon(a)} to ${dayNum(b)} ${mon(b)}`; };
 const Arrow = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 
+/** The event the bar's "Sign in" sends before opening its own card: a poll's guest card answers it and opens instead. */
+export const WHO = 'loopd:who';
+/** Where what is painted is kept in this tab while someone signs in: one place per poll. */
+const keepKey = () => `wn-keep:${location.pathname}`;
+// The animals on "Have Loopd?": signing in is what brings yours.
+const PETS = ['07', '03', '12'];
+
 /**
  * The grid of a poll, under its ticket (public/demo/mockups-when-fit.html, 3). A few days show at a time, the first
  * ones first; each set's pill says its best count, and the three best times of all carry a 1, 2 or 3. The stub of the
@@ -29,12 +37,12 @@ const Arrow = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" str
  * keys move and Space paints. Each time shows how many can make it, the person included, and nothing is kept until
  * Save. Without `onSave` it is only to look at, and `action` stands where Save would.
  */
-export function Grid({ slots, free, me: given = null, mine = [], draft = false, onSave, guest, onEmail, tab, after = '', children, tile, title, best = [], action, tail, won = null, size }: {
+export function Grid({ slots, free, me: given = null, mine = [], draft = false, onSave, guest, onEmail, ways, tab, after = '', children, tile, title, best = [], action, tail, won = null, size }: {
   slots: Slot[]; /** Who else can make each time. */ free: Record<string, Shown[]>; /** The person painting. */ me?: Shown | null; mine?: string[];
   /** The times are carried over from an earlier poll and not yet this one's: shown painted, kept only on Save. */ draft?: boolean;
   onSave?: (slots: string[], name?: string) => Promise<Said>;
   /** The person has no account: they save under a name, and may leave an address for the invite. `name` and `email` are what this browser already gave. */
-  guest?: { name: string; email: string | null }; onEmail?: (email: string) => Promise<Said>; tab?: string; /** The line under the action once nothing is unsaved. */ after?: string; /** Pills for the key, after the ones that are always there. */ children?: ReactNode;
+  guest?: { name: string; email: string | null }; onEmail?: (email: string) => Promise<Said>; /** The ways to sign in, for the card that asks a guest who they are. */ ways?: ReactNode; tab?: string; /** The line under the action once nothing is unsaved. */ after?: string; /** Pills for the key, after the ones that are always there. */ children?: ReactNode;
   /** The ticket's tile and what is written on it. */ tile?: ReactNode; title?: ReactNode; best?: Best[]; /** In place of Save, for someone who cannot paint. */ action?: ReactNode; /** After the action. */ tail?: ReactNode;
   /** The time that was set. */ won?: string | null; /** The size of the group. */ size: number;
 }) {
@@ -45,6 +53,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [touched, setTouched] = useState<string | null>(null);
   const [turned, setTurned] = useState(0), page = Math.min(turned, pages.length - 1), shown = pages[page];
   const painting = useRef<boolean | null>(null), box = useRef<HTMLDivElement>(null), field = useRef<HTMLInputElement>(null);
+  const [asking, setAsking] = useState(false), who = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(guest?.name ?? ''), [email, setEmail] = useState(''), [sentTo, setSentTo] = useState(guest?.email ?? null), [miss, setMiss] = useState(false);
   // A guest is drawn as the initial of the name they are typing.
   const me = guest && given ? { ...given, name: name.trim() || '?' } : given;
@@ -71,14 +80,39 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
     }
   };
   const changed = picked.size !== saved.size || [...picked].some(slot => !saved.has(slot));
-  const save = async () => {
-    if (!onSave) return;
-    if (guest && !name.trim()) { setMiss(true); field.current?.focus(); return; }
-    setBusy(true); setError('');
-    const now = [...picked], result = await onSave(now, guest ? name.trim() : undefined).catch(() => ({ error: 'That did not save. Try again.' }));
+  /** Saves the painted times, or `these`. Says whether it did. */
+  const save = async (these?: string[]) => {
+    if (!onSave) return false;
+    if (guest && !name.trim()) { setMiss(true); who.current?.focus(); return false; }
+    setBusy(true); setError(''); if (these) setPicked(new Set(these));
+    const now = these ?? [...picked], result = await onSave(now, guest ? name.trim() : undefined).catch(() => ({ error: 'That did not save. Try again.' }));
     setBusy(false);
-    if (result?.error) setError(result.error); else { setSaved(new Set(now)); setKept(true); }
+    if (result?.error) { setError(result.error); return false; }
+    setSaved(new Set(now)); setKept(true); return true;
   };
+  // The card that asks a guest who they are (public/demo/mockups-when-one-card-4.html). What is painted is kept in
+  // this tab while it is open, so signing in from it, which loads the page again, does not lose it.
+  const ask = () => { try { sessionStorage.setItem(keepKey(), JSON.stringify([...picked])); } catch { /* a browser that keeps nothing */ } setMiss(false); setError(''); setAsking(true); };
+  const shut = () => { try { sessionStorage.removeItem(keepKey()); } catch { /* nothing kept */ } setAsking(false); };
+  // The bar's "Sign in" opens this card too on a poll a guest can answer, in place of its own.
+  useEffect(() => {
+    if (!onSave || !guest) return;
+    const open = (event: Event) => { event.preventDefault(); ask(); }, key = (event: globalThis.KeyboardEvent) => { if (event.key === 'Escape') shut(); };
+    window.addEventListener(WHO, open); if (asking) window.addEventListener('keydown', key);
+    return () => { window.removeEventListener(WHO, open); window.removeEventListener('keydown', key); };
+  });
+  // Signed in from the card: the times painted before are painted again and saved.
+  const save_ = useRef(save); useEffect(() => { save_.current = save; });
+  useEffect(() => {
+    if (!onSave || guest) return;
+    let kept_: string | null = null;
+    try { kept_ = sessionStorage.getItem(keepKey()); sessionStorage.removeItem(keepKey()); } catch { return; }
+    if (!kept_) return;
+    const known = new Set(slots.map(slot => slot.at)), these = (JSON.parse(kept_) as string[]).filter(slot => known.has(slot));
+    if (these.length === 0) return;
+    void save_.current(these);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const send = async () => {
     if (!onEmail) return;
     const to = email.trim().toLowerCase();
@@ -130,20 +164,39 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
         onClick={() => { setTurned(Math.max(0, pages.findIndex(set => set.includes(slotOf.get(each.at)?.day ?? '')))); setTouched(each.at); }}>
         <Tile top={each.dow} big={each.date} /><span><b>{each.time}</b><small>{each.line}</small></span><Stack people={each.people} /></button>)}</div></Panel></div>}
       {onSave && guest ? <div className="wn-save wn-who">
-        {error && <p className="wn-note bad" role="alert">{error}</p>}
-        {changed || !kept ? <div className="wn-ask">
-          <label className={`wn-f${miss ? ' miss' : ''}`}><span>Your name</span><input ref={field} value={name} maxLength={40} autoComplete="name" placeholder="Type your name" onChange={event => { setName(event.target.value); setMiss(false); }} onKeyDown={enter(save)} /></label>
-          <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={save}>{busy ? 'Saving' : 'Save my times'}</button>
-        </div> : <>
-          <p className="wn-done" role="status"><span className="cs-pill yes">Saved as {name.trim()}</span><span>{sentTo ? `The invite goes to ${sentTo}` : 'Change them here any time'}</span></p>
+        {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
+        {/* Someone this browser already knows saves straight away; anyone else is asked who they are first. */}
+        {changed || !kept ? <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => { if (kept || guest.name) void save(); else ask(); }}>{busy && !asking ? 'Saving' : 'Save my times'}</button> : <>
+          <div className="wn-done" role="status"><span className="wn-as"><i className="cs-face wn-ini" aria-hidden="true">{name.trim().charAt(0).toUpperCase()}</i><span className="cs-pill yes">Saved as {name.trim()}</span></span>
+            <button type="button" className="cs-btn sm" onClick={ask}>Not {name.trim()}?</button>{sentTo && <span>The invite goes to {sentTo}</span>}</div>
           {!sentTo && onEmail && <div className="wn-ask">
             <label className={`wn-f${miss ? ' miss' : ''}`}><span>Want the invite when the time is set?</span><input ref={field} type="email" value={email} maxLength={254} autoComplete="email" placeholder="you@email.com" onChange={event => { setEmail(event.target.value); setMiss(false); }} onKeyDown={enter(send)} /></label>
             <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={send}>{busy ? 'Sending' : 'Send it to me'}</button>
           </div>}
         </>}
+        {asking && <div className="cs-over" role="dialog" aria-modal="true" aria-label="Whose times are these?" onClick={event => { if (event.target === event.currentTarget) shut(); }}>
+          <div className="cs-over-card wn-card"><button type="button" className="cs-btn sm cs-over-x" onClick={shut}>Close</button>
+            <div className="wn-card-top"><h2>Whose times are these?</h2><Rings /></div>
+            <div className="wn-halves">
+              <div className="wn-half">
+                <span className="wn-tag"><i key={name.trim().charAt(0)} className={`cs-face wn-ini${name.trim() ? '' : ' none'}`} aria-hidden="true">{name.trim().charAt(0).toUpperCase() || '?'}</i><b>Just a name</b></span>
+                {error && <p className="wn-note bad" role="alert">{error}</p>}
+                <div className="wn-ask">
+                  <label className={`wn-f${miss ? ' miss' : ''}`}><span>Your name</span><input ref={who} autoFocus value={name} maxLength={40} autoComplete="name" placeholder="Type your name" onChange={event => { setName(event.target.value); setMiss(false); }} onKeyDown={enter(async () => { if (await save()) shut(); })} /></label>
+                  <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={async () => { if (await save()) shut(); }}>{busy ? 'Saving' : 'Save my times'}</button>
+                </div>
+              </div>
+              {ways && <div className="wn-half lo">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <span className="wn-tag lime"><span className="wn-pets" aria-hidden="true">{PETS.map(pet => <img key={pet} className="cs-face" src={`/animals/${pet}.webp`} alt="" />)}</span><b>Have Loopd?</b></span>
+                {ways}
+              </div>}
+            </div>
+          </div>
+        </div>}
       </div> : onSave ? <div className="wn-save">
         {error && <p className="wn-note bad" role="alert">{error}</p>}
-        <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={save}>{busy ? 'Saving' : changed || !kept ? 'Save my times' : 'Saved'}</button>
+        <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => void save()}>{busy ? 'Saving' : changed || !kept ? 'Save my times' : 'Saved'}</button>
         <p className="wn-note" role="status">{changed ? 'Not saved yet.' : after}</p>
       </div> : action}
       {tail}</div>

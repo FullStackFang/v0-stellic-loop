@@ -9,7 +9,8 @@ export type Door = { schools: School[]; configured: boolean; back?: string };
 
 /**
  * The bar's "Sign in": the app's one way in from any page. The sign-in card opens over the page it was pressed on, and
- * Close, Escape or a press outside puts it away. Nothing of the card loads until it is pressed.
+ * Close, Escape or a press outside puts it away. Nothing of the card loads until it is pressed. A page with its own
+ * card for who someone is (a poll a guest can answer, app/when/[id]/grid.tsx) answers the press and opens that instead.
  */
 export function SignInHere({ schools, configured, back }: Door) {
   const [open, setOpen] = useState(false), here = usePathname();
@@ -20,7 +21,7 @@ export function SignInHere({ schools, configured, back }: Door) {
     return () => window.removeEventListener('keydown', key);
   }, [open]);
   return <>
-    <button type="button" className="cs-btn sm go" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>Sign in</button>
+    <button type="button" className="cs-btn sm go" aria-haspopup="dialog" aria-expanded={open} onClick={() => { if (window.dispatchEvent(new CustomEvent('loopd:who', { cancelable: true }))) setOpen(true); }}>Sign in</button>
     {open && <div className="cs-over" role="dialog" aria-modal="true" aria-label="Sign in" onClick={event => { if (event.target === event.currentTarget) setOpen(false); }}>
       <div className="cs-over-card"><button type="button" className="cs-btn sm cs-over-x" onClick={() => setOpen(false)}>Close</button>
         <DoorSignIn schools={schools} routing="hash" configured={configured} back={back ?? here ?? undefined} /></div>

@@ -75,7 +75,13 @@ it('lets a visitor who has not signed in paint their times and save under a name
   expect(screen.queryByText('Have Loopd? Sign in')).toBeNull();
   expect(screen.queryByTestId('sign-in')).toBeNull();
   expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toHaveTextContent('3');
-  expect(screen.getByLabelText('Your name')).toHaveValue('');
+  // Who they are is asked on one card, opened by Save: a name, or the ways into Loopd, which land back on this poll.
+  expect(screen.queryByLabelText('Your name')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
+  const card = within(screen.getByRole('dialog', { name: 'Whose times are these?' }));
+  expect(card.getByLabelText('Your name')).toHaveValue('');
+  expect(card.getByTestId('sign-in')).toHaveAttribute('data-back', `/when/${id}`);
+  fireEvent.click(card.getByRole('button', { name: 'Close' }));
   expect(screen.getByRole('button', { name: 'Save my times' })).toBeInTheDocument();
   expect(screen.queryByRole('link', { name: 'Your polls' })).toBeNull();
   clean(view.container.innerHTML);

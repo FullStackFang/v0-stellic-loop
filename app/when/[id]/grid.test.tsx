@@ -1,10 +1,10 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { slotsOf } from '@/lib/when/slots';
-import { Grid } from './grid';
+import { Grid, WHO } from './grid';
 
 vi.mock('../actions', () => ({}));
-afterEach(cleanup);
+afterEach(() => { cleanup(); sessionStorage.clear(); });
 
 const slots = slotsOf({ startDate: '2026-11-30', endDate: '2026-12-04', hourStart: 17, hourEnd: 22, timezone: 'America/New_York' });
 const TUE7 = '2026-12-02T00:00:00.000Z', TUE8 = '2026-12-02T01:00:00.000Z';
@@ -72,20 +72,30 @@ it('says so when the save fails, and shows carried-over times as not yet saved',
   expect(await screen.findByRole('alert')).toHaveTextContent('This poll is gone.');
 });
 
-it('asks someone with no account for only a name, and offers the invite once their times are saved', async () => {
+it('asks someone with no account who they are on one card, a name or Loopd, and offers the invite once their times are saved', async () => {
   const onEmail = vi.fn<(email: string) => Promise<null>>(async () => null);
-  const onSave = show({ me: { personId: 'guest', name: '', face: '' }, guest: { name: '', email: null }, onEmail });
+  const onSave = show({ me: { personId: 'guest', name: '', face: '' }, guest: { name: '', email: null }, onEmail, ways: <button>Google</button> });
   fireEvent.click(cell('Tue 1, 7 pm'));
-  // No name yet: nothing is sent, and the box is where the cursor goes.
+  // The page asks for no name. Save opens the card: a name on one half, the ways into Loopd on the other.
+  expect(screen.queryByLabelText('Your name')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
   expect(onSave).not.toHaveBeenCalled();
-  expect(screen.getByLabelText('Your name')).toHaveFocus();
-  fireEvent.change(screen.getByLabelText('Your name'), { target: { value: ' Aaron ' } });
+  const card = within(screen.getByRole('dialog', { name: 'Whose times are these?' }));
+  expect(card.getByRole('button', { name: 'Google' })).toBeInTheDocument();
+  // What is painted is kept in the tab, so signing in from the card does not lose it.
+  expect(sessionStorage.getItem(`wn-keep:${location.pathname}`)).toBe(JSON.stringify([TUE7]));
+  // No name yet: nothing is sent, and the box is where the cursor goes.
+  fireEvent.click(card.getByRole('button', { name: 'Save my times' }));
+  expect(onSave).not.toHaveBeenCalled();
+  expect(card.getByLabelText('Your name')).toHaveFocus();
+  fireEvent.change(card.getByLabelText('Your name'), { target: { value: ' Aaron ' } });
   expect(screen.getByRole('img', { name: 'Aaron' })).toHaveTextContent('A');
-  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
+  fireEvent.click(card.getByRole('button', { name: 'Save my times' }));
   await waitFor(() => expect(screen.getByText('Saved as Aaron')).toBeInTheDocument());
   expect(onSave).toHaveBeenCalledWith([TUE7], 'Aaron');
-  expect(screen.getByText('Change them here any time')).toBeInTheDocument();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(sessionStorage.getItem(`wn-keep:${location.pathname}`)).toBeNull();
+  expect(screen.getByRole('button', { name: 'Not Aaron?' })).toBeInTheDocument();
   // The invite is an offer: a bad address is not sent, a good one is.
   fireEvent.change(screen.getByLabelText('Want the invite when the time is set?'), { target: { value: 'aaron' } });
   fireEvent.click(screen.getByRole('button', { name: 'Send it to me' }));
@@ -95,7 +105,23 @@ it('asks someone with no account for only a name, and offers the invite once the
   await waitFor(() => expect(screen.getByText('The invite goes to aaron@email.com')).toBeInTheDocument());
   expect(onEmail).toHaveBeenCalledWith('aaron@email.com');
   expect(screen.queryByRole('button', { name: 'Send it to me' })).toBeNull();
-  // Painting again brings the name and Save back.
+  // Painting again brings Save back, and it saves under the same name without asking.
   fireEvent.click(cell('Tue 1, 8 pm'));
-  expect(screen.getByLabelText('Your name')).toHaveValue(' Aaron ');
+  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
+  await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it('opens the card for the bar\'s "Sign in", and paints and saves what was kept once someone has signed in', async () => {
+  show({ me: { personId: 'guest', name: '', face: '' }, guest: { name: '', email: null } });
+  // The bar asks before opening its own card: a poll's guest card answers and opens.
+  expect(window.dispatchEvent(new CustomEvent(WHO, { cancelable: true }))).toBe(false);
+  expect(await screen.findByRole('dialog', { name: 'Whose times are these?' })).toBeInTheDocument();
+  cleanup();
+  // Signed in, the page loads again: the times kept in the tab are painted and saved, once.
+  sessionStorage.setItem(`wn-keep:${location.pathname}`, JSON.stringify([TUE7, 'not a time']));
+  const onSave = show({});
+  await waitFor(() => expect(onSave).toHaveBeenCalledWith([TUE7], undefined));
+  expect(cell('Tue 1, 7 pm')).toHaveAttribute('aria-pressed', 'true');
+  expect(sessionStorage.getItem(`wn-keep:${location.pathname}`)).toBeNull();
 });
