@@ -154,7 +154,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .ground[aria-pressed="true"] .tick { background: var(--action); box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 7px var(--action); }
 .ground.locked { opacity: .55; }
 /* The ink card for another school's ground: beside the school pressed, running past the card if it must; no arrow. */
-.ask.away { left: auto; bottom: auto; width: 340px; }
+.ask.away { left: auto; bottom: auto; width: 376px; } .ask.away div { flex-wrap: nowrap; }
 .ask.away::after { display: none; }
 .ask.away .tab { display: flex; align-items: center; gap: 5px; } .ask.away .tab .mk { width: 15px; height: 15px; }
 .ask .peek { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 12px 6px 6px; border-radius: 99px; background: oklch(32% 0.04 30); font-weight: 750; font-size: 14px; }
@@ -165,7 +165,7 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
   .sheet .schools .cap, .sheet .schools .yours { display: none; }
   .school { flex-direction: column; gap: 3px; padding: 6px 4px; border-radius: 16px; font-size: 13px; text-align: center; }
   .school .mascot { width: 42px; height: 42px; }
-  .ask.away { left: 0 !important; right: 0; width: auto; }
+  .ask.away { left: 0 !important; right: 0; width: auto; } .ask.away div { flex-wrap: wrap; }
 }
 .quit { text-decoration: none; color: inherit; padding: 0 22px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 2px var(--ink); font-weight: 700; font-size: 15px; }
 .score { display: flex; gap: 10px; align-items: stretch; }
