@@ -129,6 +129,28 @@ it('turns up a big stray now and then, and gives a line all it is worth', () => 
   expect(line.tail.length).toBe(20 + BIG);
 });
 
+// Slither.io's trap: a bot being circled makes for the gap that is left, and dashes for it.
+it('sends a bot being circled for the gap, dashing', () => {
+  const circled = (ring: boolean) => {
+    const world = createWorld(seeded(4), round(), []) as never as { strays: unknown[]; feed: number; items: unknown[]; lay: number; shuttles: unknown[] };
+    world.strays.length = 0; world.feed = 0; world.items.length = 0; world.lay = 0; world.shuttles.length = 0;
+    // Added first, so it thinks before the ring moves.
+    const bot = addLine(world as never, { id: 'bot', face: 1, name: 'Bot', bot: { skill: 1, aggro: 0 } as never, start: 5 }) as Line & { want: number; dash: boolean };
+    Object.assign(bot, { x: 0, y: 0, a: Math.PI, want: Math.PI });
+    const big = addLine(world as never, { id: 'big', face: 2, name: 'Big', start: 28 }) as Line;
+    // The big line stands round the bot from 45° to 315°, leaving a gap to the east (0°).
+    (big.tail as { x: number; y: number }[]).forEach((f, i) => { const a = Math.PI / 4 + i * (Math.PI * 1.5) / 27; Object.assign(f, { x: Math.cos(a) * 200, y: Math.sin(a) * 200 }); });
+    Object.assign(big, { x: Math.cos(Math.PI / 4) * 200, y: Math.sin(Math.PI / 4) * 200 - 40 });
+    if (!ring) Object.assign(big, { x: 3000, y: 3000 }), (big.tail as { x: number; y: number }[]).forEach(f => Object.assign(f, { x: 3000, y: 3000 }));
+    step(world as never, 1 / 30);
+    return bot;
+  };
+  const trapped = circled(true);
+  expect(Math.abs(Math.atan2(Math.sin(trapped.want), Math.cos(trapped.want)))).toBeLessThan(0.4); // east, through the gap
+  expect(trapped.dash).toBe(true);
+  expect(circled(false).dash).toBe(false);
+});
+
 it('lets a line turn sharper with the whistle', () => {
   const turned = (whistle: boolean) => {
     const { world, line } = alone();

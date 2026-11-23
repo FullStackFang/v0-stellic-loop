@@ -196,7 +196,10 @@ function follow(line, dt) {
   if (path.length > k + 2) path.length = k + 2;
 }
 
-// A bot looks ahead for trouble first, then for a smaller line to cut off, then for the nearest stray.
+const SECTORS = 12; // slices of the ring round a bot's head it checks for lines closing in
+const WRAP = 260; // how far out it checks
+// A bot looks ahead for trouble first, then for a way out of a line circling it, then for a smaller line to cut off, then
+// for the nearest stray.
 function think(world, line, dt) {
   const bot = line.bot;
   bot.chase -= dt;
@@ -217,10 +220,31 @@ function think(world, line, dt) {
     const across = dx * ry - dy * rx;
     if (Math.abs(across) < 34 + ahead * 0.3) { near = ahead; side = across; }
   };
+  // In the same pass, which way round it other lines stand close by, in SECTORS slices: a bot being circled (slither.io's
+  // trap) sees most of them filled and makes for the widest gap left, dashing if it can. A less skilled bot notices later.
+  const around = new Uint8Array(SECTORS);
+  const mark = (x, y) => {
+    const rx = x - line.x, ry = y - line.y;
+    if (rx * rx + ry * ry < WRAP * WRAP) around[Math.floor((Math.atan2(ry, rx) + Math.PI) / (Math.PI * 2) * SECTORS) % SECTORS] = 1;
+  };
   for (const other of world.lines) {
     if (other === line || other.dead) continue;
     if (other.tail.length >= n) look(other.x, other.y);
-    for (const f of other.tail) look(f.x, f.y);
+    mark(other.x, other.y);
+    for (const f of other.tail) { look(f.x, f.y); mark(f.x, f.y); }
+  }
+  // A way out comes before turning from what is ahead: turning away inside a ring only keeps a bot going round in it.
+  const filled = around.reduce((sum, one) => sum + one, 0);
+  if (filled < SECTORS && filled >= SECTORS * (0.45 + (1 - bot.skill) * 0.3)) {
+    // The middle of the longest run of empty slices, going round past the end.
+    let best = 0, from = 0;
+    for (let s = 0, run = 0; s < SECTORS * 2; s++) {
+      if (around[s % SECTORS]) { run = 0; continue; }
+      if (++run > best && run <= SECTORS) { best = run; from = s - run + 1; }
+    }
+    line.want = (from + best / 2) / SECTORS * Math.PI * 2 - Math.PI;
+    line.dash = n > 0;
+    return;
   }
   if (near < Infinity) { line.want = line.a - Math.sign(side || 1) * 1.6; return; }
 
