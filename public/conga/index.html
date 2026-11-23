@@ -586,7 +586,7 @@ addEventListener('resize', fit); fit();
 // ---------- drawing ----------
 const cam = { x: 0, y: 0, z: 1 }, puffs = [], smoke = [], winks = [];
 let spilt = null; // the line that just burst into sacks, so its scatter skips the ring
-const SIZE = { stray: 40, tail: 42, head: 58 };
+const SIZE = { stray: 40, big: 62, tail: 42, head: 58 }; // a big stray (worth 3) is a size above even a head
 // How wide a spilled line's sack is drawn: bigger the more it holds (10 → 55, 20 → 66, 40 → 81), by the square root so
 // a huge sack doesn't swamp the view. It shrinks as animals wander out of it.
 const sackWidth = count => Math.min(100, 30 + 8 * Math.sqrt(count));
@@ -1488,7 +1488,7 @@ function draw(t, dt) {
     if (toysIn()) standing.push({ x, y: y + 22, name: 'sack', width, lift: 420 * (1 - fall * fall), shade: 0.3 + 0.7 * Math.min(1, u / (start + 0.55)), hidden: u < start, sx: 1 + 0.14 * squash, sy: 1 - 0.2 * squash });
     if (b >= 0) mobTags.push({ x, y, w: width, text: `${mob.faces.length}`, c: colour(mob.from) });
   }
-  for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: SIZE.stray });
+  for (const s of world.strays) if (seen(s.x, s.y)) sprites.push({ x: s.x, y: s.y - (0.5 - 0.5 * Math.cos(t * 3 + s.a * 9)) * 2, face: s.face, size: s.worth ? SIZE.big : SIZE.stray });
   // The toys that stand on the ground go in among the animals, each by where its foot is.
   for (const each of standing) if (Math.abs(each.x - cam.x) < halfW + each.width && each.y - cam.y > -halfH && each.y - cam.y < halfH + each.width * 2) sprites.push({ y: each.y, stands: each });
   sprites.sort((a, b) => (a.front || 0) - (b.front || 0) || a.y - b.y);

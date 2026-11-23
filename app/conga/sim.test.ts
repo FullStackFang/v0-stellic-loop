@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { addLine, createWorld, FULL, POWERS, round, steer, step, WHISTLE_TURN } from '@/public/conga/sim.js';
+import { addLine, BIG, createWorld, FULL, POWERS, round, steer, step, WHISTLE_TURN } from '@/public/conga/sim.js';
 
 // The same game every run.
 function seeded(seed: number) {
@@ -115,6 +115,18 @@ it('lets a line dash for free with coffee', () => {
   line.powers.coffee = 0;
   for (let n = 0; n < 60; n++) { steer(line as never, line.a + 1, true); step(world, 1 / 30); }
   expect(line.tail.length).toBeLessThan(20);
+});
+
+// Some strays on the ground are big ones, worth BIG: the line gets that many.
+it('turns up a big stray now and then, and gives a line all it is worth', () => {
+  const world = createWorld(seeded(9), round(), []) as never as { strays: { worth?: number }[] };
+  const big = world.strays.filter(s => s.worth === BIG).length;
+  expect(big).toBeGreaterThan(0);
+  expect(big).toBeLessThan(world.strays.length / 4);
+  const { world: w, line } = alone();
+  w.strays.push({ x: line.x + 10, y: line.y, face: 1, a: 0, vx: 0, vy: 0, worth: BIG } as never);
+  for (let n = 0; n < 30; n++) step(w as never, 1 / 30);
+  expect(line.tail.length).toBe(20 + BIG);
 });
 
 it('lets a line turn sharper with the whistle', () => {

@@ -115,7 +115,11 @@ function outTo(world, x, y) {
   return spot(world);
 }
 const face = world =>1 + Math.floor(world.random() * FACES);
-const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
+// Now and then a stray that turns up on the ground is a big one, drawn bigger and worth BIG: slither.io's big pellets,
+// read at a glance by size alone. Taken, it brings BIG − 1 more of its kind, who step in after it.
+export const BIG = 3;
+const BIG_CHANCE = 0.1;
+const stray = (world, at = spot(world)) => ({ ...at, face: face(world), a: world.random() * Math.PI * 2, vx: 0, vy: 0, ...(world.random() < BIG_CHANCE && { worth: BIG }) });
 const KINDS = Object.keys(POWERS);
 const item = world => ({ ...spot(world, 40), kind: KINDS[Math.floor(world.random() * KINDS.length)] });
 const reachOf = line => line.powers.megaphone > 0 ? LOUD : PULL;
@@ -396,6 +400,7 @@ export function step(world, dt) {
     if (head && close < JOIN) {
       world.strays.splice(i, 1);
       join(world, head, s.face, s.x, s.y, events);
+      for (let n = 1; n < (s.worth ?? 1); n++) head.owed.push(s.face);
       continue;
     }
     // One that landed somewhere no head can reach (spilled or dropped into a building, a tree or the water) steps out to the
