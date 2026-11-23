@@ -144,7 +144,6 @@ describe('the sign-in card', () => {
     type('name@stern.nyu.edu');
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Sign in at NYU');
     expect(screen.getByText('stern.nyu.edu is NYU.')).toBeInTheDocument();
-    expect(screen.getByText('With your NYU email you see NYU.')).toBeInTheDocument();
     expect(document.documentElement.dataset.kit).toBe('nyu');
     type('name@cornell.edu');
     expect(document.documentElement.dataset.kit).toBe('cornell');

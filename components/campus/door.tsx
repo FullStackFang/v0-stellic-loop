@@ -148,7 +148,7 @@ export function Door({ schools, start, routing, configured }: { schools: DoorSch
         {school && <p className="cs-tip">Try it: take a seat to see a reward unlock.{many && ' Flick the ticket, or tap a school behind it, for the next one.'}</p>}
         {school && <p className="cs-credit">Animal icons by <a href="https://www.figma.com/community/file/1514963172455082116" target="_blank" rel="noreferrer">Tran Mau Tri Tam</a>, CC BY 4.0.</p>}
       </div>
-      <div onFocusCapture={() => { hold.current = Infinity; }}>
+      <div className="cs-door-slot" onFocusCapture={() => { hold.current = Infinity; }}>
         <DoorSignIn routing={routing} configured={configured} schools={schools.map(({ slug, name, domains }) => ({ slug, name, domains }))} kit={school?.slug} onSpot={spot} />
       </div>
     </main>

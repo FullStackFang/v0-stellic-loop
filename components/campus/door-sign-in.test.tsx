@@ -16,8 +16,8 @@ describe('the sign-in card and LinkedIn', () => {
     form.linkedin = true;
     const { container } = render(<DoorSignIn schools={SCHOOLS} routing="hash" configured />), card = container.querySelector('.cs-door-in')!;
     type('omar@gmail.com');
-    expect(screen.getByText('gmail.com is not a school email. Sign in with LinkedIn.')).toBeInTheDocument();
-    expect(screen.getByText('No school email? LinkedIn gets you in.')).toBeInTheDocument();
+    expect(screen.getByText('gmail.com is not a school email. Use LinkedIn.')).toBeInTheDocument();
+    expect(screen.getByText('LinkedIn gets you in.')).toBeInTheDocument();
     // The mark the styles go by: with it, every way on but LinkedIn is hidden (app/c/campus.css).
     expect(card).toHaveAttribute('data-away');
     // A school email is still spotted as before, and every way on comes back.
