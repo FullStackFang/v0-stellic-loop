@@ -191,6 +191,20 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .week .join { justify-self: start; height: 44px; padding: 0 18px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 800; font-size: 15px; white-space: nowrap; box-shadow: 3px 3px 0 var(--action); }
 .week { display: grid; gap: 10px; }
 #over .faces { display: none; } /* the animals to pick stay on the first card, so the board has the room */
+/* The Conga app is coming (/demo/mockups-conga-early.html, C): an ink band on the card after a round. Ink and Ink+ play the app
+   first, so it offers both; someone who has Ink is told they are in, with no button. */
+.early { position: relative; margin-top: 6px; padding: 22px 16px 14px; border-radius: 18px 18px 18px 6px; background: var(--ink); color: var(--paper); display: grid; gap: 12px; box-shadow: 4px 4px 0 var(--action); }
+.early[hidden] { display: none; }
+.early > .tab { position: absolute; left: 14px; top: -12px; display: flex; align-items: center; gap: 5px; padding: 3px 11px 4px; border-radius: 9px 9px 9px 3px; font-size: 13px; font-weight: 750; background: var(--field); color: var(--ink); }
+.early > .tab .mk { width: 15px; height: 15px; }
+.card .early p { font-size: 17px; font-weight: 720; line-height: 1.25; letter-spacing: -.01em; }
+.card .early p small { display: block; font-size: 14px; font-weight: 520; color: oklch(80% 0.03 40); margin-top: 2px; }
+.early .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.early .pl { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px 0 10px; border-radius: 99px; font-size: 14.5px; font-weight: 720; white-space: nowrap; background: var(--field); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--action); }
+.early .pl .mk { width: 18px; height: 18px; } .early .pl .price { font-weight: 560; opacity: .8; }
+.early.in { grid-template-columns: 1fr auto; align-items: center; }
+.early .yes { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px 0 10px; border-radius: 99px; background: var(--paper); color: var(--ink); font-weight: 780; font-size: 14px; }
+.early .yes svg { width: 18px; height: 18px; color: var(--action); }
 @media (max-width: 560px) { .side { width: 142px; } .board { padding: 4px; } .board div { font-size: 12px; gap: 5px; padding-right: 7px; } .board .face { width: 20px; } .board div:nth-child(n+4):not(.me) { display: none; }
   .card { padding: 22px 16px 20px; } .row { gap: 6px; } .go { padding: 0 13px; font-size: 17px; } .quit { padding: 0 16px; }
   .mine span:not(.face) { display: none; } .say { top: calc(max(14px, env(safe-area-inset-top)) + 58px); font-size: 14px; } .map { width: 84px; height: 84px; } .hint { font-size: 12px; padding: 4px; } .hint span { column-gap: 5px; padding-right: 7px; } .hint .it img { width: 20px; height: 20px; } .pause { left: 110px; } }
@@ -273,6 +287,7 @@ body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { vis
   <h1 id="overHead">Scattered</h1>
   <div class="score"><div><b id="overCount">1</b><span>in your line</span></div><div><b id="overBest">1</b><span>your best</span></div></div>
   <div class="row"><button class="go" id="again">Again</button></div>
+  <div class="early" id="early" hidden></div>
 </section>
 
 <section class="card" id="paused" hidden>
@@ -307,11 +322,11 @@ const CORE = 36; // the animals anyone may play as; the rest are an Ink member's
 // The one Get button of every plan, as in the app (components/campus/join-plan.tsx), and what pressing it does from here:
 // signed in, one press; signed out, the plan is held and the app page round the game opens its sign-in card over it, so
 // nobody leaves the game to sign up. The app's top bar gives the held plan once they are back.
-const getInk = async (place, back) => {
-  const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place, back }) }).catch(() => null);
+const getInk = async (place, back, plan = 'ink') => {
+  const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan, place, back }) }).catch(() => null);
   const got = await answer?.json().catch(() => null);
   if (!got?.signIn) return got;
-  try { localStorage.setItem('loopd-held-ink', JSON.stringify({ plan: 'ink', place, at: Date.now() })); } catch {}
+  try { localStorage.setItem('loopd-held-ink', JSON.stringify({ plan, place, at: Date.now() })); } catch {}
   if (parent !== window) tell('signin'); else top.location.assign(got.signIn);
   return { signIn: true };
 };
@@ -649,6 +664,28 @@ $('quit').onclick = () => {
 };
 addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
 
+// The Conga app is coming, on the card after a round (/demo/mockups-conga-early.html, C). Ink and Ink+ play it first: someone
+// with either is told so; anyone else gets both Get buttons, each pressed as every ask in the app is, then its thanks.
+const PLUS = INK.replace('role="img" aria-label="Ink"', 'aria-hidden="true"').replace('"/>', 'M0 -27Q3.5 -3.5 27 0Q3.5 3.5 0 27Q-3.5 3.5 -27 0Q-3.5 -3.5 0 -27Z" fill-rule="evenodd"/>');
+const TICK = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5l3.2 3L14 5.5"/></svg>';
+function early() {
+  const band = $('early'), tab = `<span class="tab">${MARK} Conga app</span>`;
+  band.hidden = false;
+  if (you?.ink) { band.className = 'early in'; band.innerHTML = `${tab}<p>The Conga app is coming<small>You play it first. We'll email you the day it's out.</small></p><span class="yes">${TICK} ${you.plus ? 'Ink+' : 'Ink'}</span>`; return; }
+  band.className = 'early';
+  band.innerHTML = `${tab}<p>The Conga app is coming<small>Ink and Ink+ members play it first.</small></p><div class="btns">`
+    + `<button class="pl" data-plan="ink">${MARK}Get Ink <span class="price">· $2.99</span></button><button class="pl" data-plan="plus">${PLUS}Get Ink+ <span class="price">· $9.99</span></button></div>`;
+  for (const button of band.querySelectorAll('[data-plan]')) button.onclick = async () => {
+    const plan = button.dataset.plan;
+    band.querySelectorAll('button').forEach(each => { each.disabled = true; });
+    const got = await getInk(`conga app: Get ${plan === 'plus' ? 'Ink+' : 'Ink'}`, '/conga', plan);
+    if (got?.signIn) { band.querySelectorAll('button').forEach(each => { each.disabled = false; }); return; }
+    if (!got?.ok) { band.querySelector('small').textContent = 'That did not go through. Try again.'; band.querySelectorAll('button').forEach(each => { each.disabled = false; }); return; }
+    if (you) { you.ink = true; you.plus ||= plan === 'plus'; }
+    band.querySelector('small').textContent = got.said; band.querySelector('.btns').remove();
+  };
+}
+
 function finish(event) {
   best = Math.max(best, event.size);
   keep.set('conga-best', best);
@@ -662,6 +699,7 @@ function finish(event) {
   // The round goes on this week's board: kept for someone signed in, shown where it would be for anyone else.
   const round = { map: where, best: event.size, seconds: world.t - began, face: me?.face ?? picked, picture: me && !me.face && you ? own().picture : null };
   week($('over'), round);
+  early();
   if (you) save(round).then(kept => { if (kept && !$('over').hidden) week($('over'), null); });
   setTimeout(() => { $('over').hidden = false; tell('stopped'); }, 900);
 }
