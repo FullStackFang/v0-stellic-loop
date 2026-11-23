@@ -4,7 +4,8 @@ import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate, type Principal } from '@/lib/emba/access';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
-import { createPoll, saveAnswer } from '@/lib/when/polls';
+import { guestOf, saveGuestAnswer } from '@/lib/when/guests';
+import { createPoll, pollView, saveAnswer } from '@/lib/when/polls';
 import { repeatPoll } from '@/lib/when/repeat';
 import { sendPoll } from '@/lib/when/send';
 import AgainPage from './[id]/again/page';
@@ -17,13 +18,16 @@ import NewWhenPage from './new/page';
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@/lib/emba/clerk-identity', async original => ({ ...await original<typeof import('@/lib/emba/clerk-identity')>(), clerkPortalConfigured: () => true }));
 vi.mock('@clerk/nextjs', () => ({ SignIn: (props: { forceRedirectUrl?: string }) => <div data-testid="sign-in" data-back={props.forceRedirectUrl} /> }));
+/** What the visitor's browser keeps. */
+const jar = new Map<string, string>();
+vi.mock('next/headers', () => ({ headers: async () => new Headers(), cookies: async () => ({ get: (name: string) => jar.has(name) ? { name, value: jar.get(name)! } : undefined, set: (name: string, value: string) => { jar.set(name, value); } }) }));
 const missing = new Error('NEXT_NOT_FOUND');
 vi.mock('next/navigation', () => ({ notFound: () => { throw missing; }, redirect: vi.fn() }));
 
 let t: TestDb;
 beforeAll(async () => { t = await openTestDb(); vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://loopd.test'); });
 afterAll(async () => { vi.unstubAllEnvs(); await t?.close(); });
-beforeEach(async () => { await t.reset(); });
+beforeEach(async () => { await t.reset(); jar.clear(); });
 afterEach(cleanup);
 
 const TUE7 = '2026-12-02T00:00:00.000Z', TUE8 = '2026-12-02T01:00:00.000Z', THU7 = '2026-12-04T00:00:00.000Z';
@@ -53,7 +57,7 @@ it('signs a visitor in on the poll itself, and brings them back to it', async ()
   expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
   expect(screen.getByTestId('sign-in')).toHaveAttribute('data-back', `/when/${id}`);
   expect(screen.getByRole('link', { name: 'Back to the poll' })).toHaveAttribute('href', `/when/${id}`);
-  expect(screen.queryByLabelText('Tue 1, 7 pm: 3 free')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Tue 1, 7 pm' })).toBeNull();
   clean(view.container.innerHTML);
   cleanup();
   // Someone already signed in has nothing to sign in to: they get the poll.
@@ -62,15 +66,16 @@ it('signs a visitor in on the poll itself, and brings them back to it', async ()
   expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toBeInTheDocument();
 });
 
-it('shows a visitor who has not signed in what is free so far, and one way in', async () => {
+it('lets a visitor who has not signed in paint their times and save under a name', async () => {
   const { id } = await fixture(), view = await open(null, id);
   expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
   expect(view.container).toHaveTextContent('Maya asked for 1 hr · 3 of 7 answered · by Fri 27 Nov');
   expect(view.container).toHaveTextContent('Best so far');
-  expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toHaveAttribute('href', `/when/${id}?in=1`);
-  expect(screen.queryByRole('button', { name: 'Tue 1, 7 pm' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Save my times' })).toBeNull();
-  expect(screen.getByLabelText('Tue 1, 7 pm: 3 free')).toHaveTextContent('3');
+  expect(screen.getByRole('link', { name: 'Have Loopd? Sign in' })).toHaveAttribute('href', `/when/${id}?in=1`);
+  expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toHaveTextContent('3');
+  expect(screen.getByLabelText('Your name')).toHaveValue('');
+  expect(screen.getByRole('button', { name: 'Save my times' })).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Your polls' })).toBeNull();
   clean(view.container.innerHTML);
 });
 
@@ -134,7 +139,9 @@ it('shows the result once it is sent: you first, then who is in, then who cannot
   clean(view.container.innerHTML);
   cleanup();
   await open(null, id);
-  expect(screen.getByRole('link', { name: 'Sign in to add your times' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Add your times' })).toHaveAttribute('href', `/when/${id}?edit=1`);
+  expect(screen.getByRole('link', { name: 'Find a time for your own group' })).toHaveAttribute('href', '/when/new');
+  expect(screen.queryByText(/Also in your email/)).toBeNull();
   cleanup();
   await open(josh, id, { edit: '1' });
   expect(screen.getByRole('button', { name: 'Saved' })).toBeInTheDocument();
@@ -231,4 +238,34 @@ it('offers the people of a series the same plan next week, and nobody else', asy
   expect(screen.getByRole('heading', { name: 'Your times from last time. Change them, then save' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Tue 8, 7 pm' })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByRole('status')).toHaveTextContent('Not saved yet.');
+});
+
+it('knows a guest by the mark in their browser, draws them as their initial, and gives their answer to their account once they sign in', async () => {
+  const { id, maya, dana } = await fixture(), { key } = await saveGuestAnswer(t.db, undefined, { pollId: id, slots: [TUE7], name: 'Aaron' });
+  jar.set('wn_g', key);
+  const guest = (await guestOf(t.db, key))!, view = await open(null, id);
+  expect(view.container).toHaveTextContent('4 of 7 answered');
+  expect(view.container).toHaveTextContent('Saved as Aaron');
+  expect(screen.getByRole('button', { name: 'Tue 1, 7 pm' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByLabelText('Want the invite when the time is set?')).toBeInTheDocument();
+  expect(screen.getAllByRole('img', { name: 'Aaron' })[0]).toHaveTextContent('A');
+  clean(view.container.innerHTML);
+  cleanup();
+  // Others see the guest as an initial too, and the organizer is told the invite reaches only those with an address.
+  jar.clear();
+  await open(maya, id, { pick: '1' });
+  expect(screen.getAllByRole('img', { name: 'Aaron' })[0]).toHaveTextContent('A');
+  expect(document.body).toHaveTextContent('Goes to the 3 who answered');
+  cleanup();
+  await sendPoll(t.db, maya, { pollId: id, slot: TUE7, note: '' });
+  jar.set('wn_g', key);
+  await open(null, id);
+  expect(within(screen.getByRole('heading', { name: 'Problem set night' }).parentElement!).getAllByRole('listitem')[0]).toHaveTextContent("AYouYou're in");
+  expect(screen.getByRole('link', { name: 'Update your answer' })).toBeInTheDocument();
+  cleanup();
+  // Dana signs in on the same browser: the answer is hers now, and the guest is gone.
+  await open(dana, id);
+  expect((await pollView(t.db, dana, id))!.mine).toEqual({ slots: [TUE7], draft: false });
+  expect(await guestOf(t.db, key)).toBeNull();
+  expect((await t.db.query('select 1 from person where id=$1', [guest.personId])).rows).toHaveLength(0);
 });

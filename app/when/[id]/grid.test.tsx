@@ -71,3 +71,31 @@ it('says so when the save fails, and shows carried-over times as not yet saved',
   fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('This poll is gone.');
 });
+
+it('asks someone with no account for only a name, and offers the invite once their times are saved', async () => {
+  const onEmail = vi.fn<(email: string) => Promise<null>>(async () => null);
+  const onSave = show({ me: { personId: 'guest', name: '', face: '' }, guest: { name: '', email: null }, onEmail });
+  fireEvent.click(cell('Tue 1, 7 pm'));
+  // No name yet: nothing is sent, and the box is where the cursor goes.
+  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
+  expect(onSave).not.toHaveBeenCalled();
+  expect(screen.getByLabelText('Your name')).toHaveFocus();
+  fireEvent.change(screen.getByLabelText('Your name'), { target: { value: ' Aaron ' } });
+  expect(screen.getByRole('img', { name: 'Aaron' })).toHaveTextContent('A');
+  fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
+  await waitFor(() => expect(screen.getByText('Saved as Aaron')).toBeInTheDocument());
+  expect(onSave).toHaveBeenCalledWith([TUE7], 'Aaron');
+  expect(screen.getByText('Change them here any time')).toBeInTheDocument();
+  // The invite is an offer: a bad address is not sent, a good one is.
+  fireEvent.change(screen.getByLabelText('Want the invite when the time is set?'), { target: { value: 'aaron' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Send it to me' }));
+  expect(onEmail).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText('Want the invite when the time is set?'), { target: { value: 'Aaron@Email.com' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Send it to me' }));
+  await waitFor(() => expect(screen.getByText('The invite goes to aaron@email.com')).toBeInTheDocument());
+  expect(onEmail).toHaveBeenCalledWith('aaron@email.com');
+  expect(screen.queryByRole('button', { name: 'Send it to me' })).toBeNull();
+  // Painting again brings the name and Save back.
+  fireEvent.click(cell('Tue 1, 8 pm'));
+  expect(screen.getByLabelText('Your name')).toHaveValue(' Aaron ');
+});

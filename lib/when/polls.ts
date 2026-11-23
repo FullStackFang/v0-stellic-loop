@@ -8,9 +8,9 @@ import { DURATIONS, bestSlots, needed, readiness, sizeOf, slotsOf, validZone, ty
 // Loopd When: making a poll, answering it, and reading it (docs/superpowers/specs/2026-11-22-loopd-when-design.md).
 
 export class WhenError extends Error {
-  constructor(public readonly code: 'invalid' | 'not_found' | 'forbidden' | 'limit' | 'sent') { super(code); }
+  constructor(public readonly code: 'invalid' | 'not_found' | 'forbidden' | 'limit' | 'sent' | 'full') { super(code); }
 }
-/** Who is acting: a signed-in person. A Principal is one. */
+/** Who is acting: a signed-in person (a Principal is one), or a guest who answered with only a name (lib/when/guests.ts). */
 export type Who = { personId: string };
 export type Person = { personId: string; name: string };
 export type PollView = {

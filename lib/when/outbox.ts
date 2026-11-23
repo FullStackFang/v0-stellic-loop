@@ -69,7 +69,9 @@ export async function drainWhen(db: Db, carrier: Carrier, o: { now?: Date; pollI
     if (row.stale || stopped || (view.chosen && row.kind === 'invite' && new Date(view.chosen.at) < now)) { await finish(id, `state='failed',claimed_at=null`); continue; }
     let to: string | null;
     // The sign-in provider could not be asked: try again later. It answered that there is no address: that is final.
-    try { to = await carrier.address(row.personId); } catch { await again(); continue; }
+    // A guest has no account: their invite goes to the address they typed on this poll, and nothing else is sent to it.
+    const { rows: [typed] } = await db.query<{ email: string | null }>('select invite_email as email from when_answer where poll_id=$1 and person_id=$2', [row.pollId, row.personId]).catch(() => ({ rows: [] }));
+    try { to = (row.kind === 'invite' ? typed?.email : null) ?? await carrier.address(row.personId); } catch { await again(); continue; }
     if (!to) { await finish(id, `state='failed',claimed_at=null`); result.failed++; continue; }
     // Everyone written to has a row for the poll, so everyone has a stop link.
     await db.query('insert into when_answer(poll_id,person_id,draft) values($1,$2,true) on conflict(poll_id,person_id) do nothing', [row.pollId, row.personId]);

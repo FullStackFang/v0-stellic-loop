@@ -9,10 +9,12 @@ import { resendSender } from '@/lib/email/resend';
 import { clerkEmailOf } from '@/lib/emba/clerk-identity';
 import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
+import { saveGuestAnswer, saveInviteEmail } from '@/lib/when/guests';
 import { drainWhen, whenSendingOn } from '@/lib/when/outbox';
 import { POLL_ID, WhenError, createPoll, recordOpen, saveAnswer, updatePoll } from '@/lib/when/polls';
 import { repeatPoll } from '@/lib/when/repeat';
 import { sendPoll } from '@/lib/when/send';
+import { GUEST } from './guest-key';
 
 // The presses of Loopd When's pages. Each asks afresh who is signed in, and says what went wrong in plain words.
 
@@ -23,6 +25,7 @@ const WORDS: Record<WhenError['code'], string> = {
   not_found: 'This poll is gone.',
   forbidden: 'Only the person who asked can do that.',
   sent: 'The time is already set, so the poll cannot change.',
+  full: 'This poll has all the answers it can take.',
 };
 const said = (error: unknown): { error: string } => {
   if (error instanceof WhenError) return { error: WORDS[error.code] };
@@ -62,14 +65,32 @@ export async function updatePollAction(_: Said, data: FormData): Promise<Said> {
   redirect(`/when/${pollId}`);
 }
 
-/** "Save my times". */
-export async function saveAnswerAction(pollId: string, slots: string[]): Promise<Said> {
+const kept = { httpOnly: true, sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production', path: '/when', maxAge: 31_536_000 };
+
+/** "Save my times". Someone signed in saves as themselves; anyone else saves under the name they typed. */
+export async function saveAnswerAction(pollId: string, slots: string[], name?: string): Promise<Said> {
   const who = await getSignedInPrincipal();
-  if (!who) return { error: 'Sign in to save your times.' };
   try {
-    const { ready } = await saveAnswer(db(), who, { pollId, slots });
+    let ready: boolean;
+    if (who) ({ ready } = await saveAnswer(db(), who, { pollId, slots }));
+    else {
+      if (!name?.trim()) return { error: 'Type your name, then save.' };
+      const jar = await cookies(), made = await saveGuestAnswer(db(), jar.get(GUEST)?.value, { pollId, slots, name });
+      jar.set(GUEST, made.key, kept);
+      ready = made.ready;
+    }
     if (ready) await flush(pollId);
   } catch (error) { return said(error); }
+  revalidatePath(`/when/${pollId}`);
+  return null;
+}
+
+/** "Send it to me": a guest leaves the address this poll's invite goes to. */
+export async function inviteEmailAction(pollId: string, email: string): Promise<Said> {
+  try {
+    await saveInviteEmail(db(), (await cookies()).get(GUEST)?.value, { pollId, email });
+    await flush(pollId);
+  } catch (error) { return error instanceof WhenError && error.code === 'invalid' ? { error: 'That does not look like an email.' } : said(error); }
   revalidatePath(`/when/${pollId}`);
   return null;
 }
