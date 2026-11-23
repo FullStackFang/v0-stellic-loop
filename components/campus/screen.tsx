@@ -320,10 +320,9 @@ export const atSchool = (viewer: Screen['viewer']) => !viewer || viewer.admin ||
 
 export function CampusBar({ screen, groups = [], signInHref, door, signOut = null, on, swap, children }: { screen: Screen; /** The person's groups, named in the bar as on the groups pages. */ groups?: BarGroup[]; signInHref: string; /** With it, "Sign in" opens the sign-in card over the page in place of going to the sign-in page. */ door?: Door; signOut?: ReactNode; on?: 'week' | 'ink' | 'doodles' | 'organizers'; swap?: SwapCampus[]; children?: ReactNode }) {
   const { campus, viewer } = screen;
-  // The groups pages' links are in the card for anyone who has a group, as they are on those pages. The admin's own list already has "How we got here".
-  const more = viewer && groups.length > 0 ? <nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!viewer.admin} /></nav> : null;
+  // The groups pages' links are in the card for anyone who has a group, as they are on those pages.
   return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0} plus={viewer?.plan === 'plus' || viewer?.admin} school={atSchool(viewer)}
-    account={viewer ? <Account screen={screen} signOut={signOut} swap={swap} more={more} /> : door ? <SignInHere {...door} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}>{children}</TopBar>;
+    account={viewer ? <Account screen={screen} signOut={signOut} swap={swap} groups={groups.length > 0} /> : door ? <SignInHere {...door} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}>{children}</TopBar>;
 }
 
 function CouponRow({ coupon, showing, busy, waiting, onShow, onUse }: { coupon: Coupon; showing: boolean; busy: boolean; /** This row's own press is being answered. */ waiting: boolean; onShow: () => void; onUse: () => void }) {
@@ -333,9 +332,13 @@ function CouponRow({ coupon, showing, busy, waiting, onShow, onUse }: { coupon: 
     {ready && showing && <div className="show"><span>Show at the counter · <Clock /></span><button disabled={busy} aria-busy={waiting} onClick={onUse}><SeatsWord on={waiting} word="Mark as used" plate>Mark as used</SeatsWord></button></div>}</li>;
 }
 
-/** The avatar with its level badge, and the card under it: the level, and for the admin alone, "Admin". The groups pages show the same one (app/groups/bar.tsx), with their own links as `more`. */
-export function Account({ screen, signOut, swap = [], more = null }: { screen: Screen; signOut: ReactNode; swap?: SwapCampus[]; /** Links of the pages this bar is on, above the way out. */ more?: ReactNode }) {
-  const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null);
+/**
+ * The avatar with its level badge, and the card under it (public/demo/mockups-account-card-trim.html, B): the level, whose
+ * bar opens the three levels; three lines (picture, schools, colours); and one line of pills, the rest under "More".
+ * The groups pages show the same one (app/groups/bar.tsx).
+ */
+export function Account({ screen, signOut, swap = [], groups = false }: { screen: Screen; signOut: ReactNode; swap?: SwapCampus[]; /** The person has a group, so the groups pages' links are in the card. */ groups?: boolean }) {
+  const viewer = screen.viewer!, [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null), [levels, setLevels] = useState(false), [extra, setExtra] = useState(false);
   // The pick shows at once, and goes back if it could not be kept.
   const [face, setFace] = useState(viewer.face), [picking, setPicking] = useState(false), [moved, setMoved] = useState(false), [keeping, save] = useTransition(), [schooling, setSchooling] = useState(false);
   // Their own campus, for a school with more than one, and the move to another.
@@ -375,24 +378,13 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
     onClick={() => locked ? setMaking(true) : one.face === null ? chooseOwn(one.src) : choose(one.face)}><img src={one.src} alt="" />{premium ? <InkMark /> : school && <SchoolMark />}{keeping && (one.face === null ? face === CUSTOM && own === one.src : face === one.face) && <span className="seats-over"><SeatsSmall size={20} face={one.src} /></span>}</button>;
   const avatar = (big = false) => <span className={`cs-ava ${big ? 'big' : ''}`}><FaceDot key={big ? face : 0} face={me} className={big && moved ? 'new' : ''} /><b className="cs-lvb">{level + 1}</b>{viewer.admin && <i className="cs-crown" title="Admin"><svg viewBox="0 0 24 20" aria-hidden="true"><path d="M3 16.5 1.5 5.5l5.6 4.2L12 2l4.9 7.7 5.6-4.2L21 16.5z" /><circle cx="1.8" cy="4.6" r="1.6" /><circle cx="12" cy="2" r="1.7" /><circle cx="22.2" cy="4.6" r="1.6" /></svg></i>}</span>;
   return <div className="cs-acct" ref={box}>
-    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setPicking(false); setSchooling(false); setMoved(false); setOpen(!open); }}>{avatar()}</button>
+    <button aria-expanded={open} aria-label={`${viewer.name}, ${LEVELS[level].name}. Show your level`} onClick={() => { setPicking(false); setSchooling(false); setMoved(false); setLevels(false); setExtra(false); setOpen(!open); }}>{avatar()}</button>
     {open && <div className="cs-lvl" role="dialog" aria-label="Your level">
-      <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => { setPicking(saving || !picking); setMaking(false); setSchooling(false); setSaving(false); }}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · level {level + 1} of {LEVELS.length}</span></div>
-        <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
-        <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
-      {/* The plan's one row. It steps aside for the picker, where an Ink animal opens the plan for someone without it. */}
-      {!picking && (me.plan === 'plus' ? <div className="cs-inkrow"><InkMark plus /><span><b>You have Ink+</b><small>Everything in Ink, plus your own AI and insights on your groups.</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>
-        : me.plan === 'ink' ? <div className="cs-inkrow"><InkMark /><span><b>You have Ink</b><small>Every Ink animal, your pets, any school’s colours and Conga grounds.</small></span><GetInk plan="plus" place="account: Get Ink+" small /></div>
-        : <div className="cs-inkrow"><InkMark /><span><b>Loopd Ink</b><small>Make it yours: Ink animals, pets from your photos, any school’s colours.</small></span><GetInk plan="ink" place="account: Get Ink" small /></div>)}
-      {!picking && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" /></svg><span><b>Save your picture</b><small>A profile picture, a lock screen or a sticker.</small></span><button className="cs-btn sm" onClick={() => { setPicking(true); setSaving(true); setSchooling(false); }}>Save it</button></div>}
-      {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
-      {!picking && home && swap.filter(each => !each.home).map(each => <div className="cs-inkrow cs-camprow" key={each.slug}><span><b>Your campus is {home.title}</b><small>{moveNote ?? 'You can look at the other one any time from the map.'}</small></span>
-        <button className="cs-btn sm" disabled={moving} onClick={() => move(async () => { const done = await changeCampusAction(each.slug); if (done.ok) window.location.assign(`/c/${each.slug}`); else setMoveNote(done.message); })}><SeatsWord on={moving} word={`Change to ${each.title}`}>{`Change to ${each.title}`}</SeatsWord></button></div>)}
-      {/* The schools the person has. Adding their LinkedIn profile unlocks the others they have been at: their animals, and their campuses. */}
-      {!picking && !schooling && <div className="cs-inkrow cs-camprow"><SchoolMark /><span><b>Your schools</b><small>{[viewer.schools.home, ...viewer.schools.added].flatMap(slug => viewer.schools.all.find(each => each.slug === slug)?.name ?? []).join(', ') || 'Unlock the ones you have been at.'}</small></span>
-        <button className="cs-btn sm" onClick={() => setSchooling(true)}>Add a school</button></div>}
-      {/* The organizers' door. The bar has it too, where there is room. */}
-      {!picking && !schooling && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M8 12.5l2.8 2.8L16 9.5" /></svg><span><b>Run a club?</b><small>One home for every event you run.</small></span><a className="cs-btn sm" href={IMPRINT_PAGE}>Claim your club</a></div>}
+      <div className="cs-lvl-top"><button className="cs-ava-pick" aria-expanded={picking} aria-label="Change your picture" onClick={() => { setPicking(saving || !picking); setMaking(false); setSchooling(false); setSaving(false); }}>{avatar(true)}<i><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7L5.6 13.1 2.5 13.5l.4-3.1z" /></svg></i></button><div><strong>{viewer.name}</strong><span>{LEVELS[level].name} · {next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></div>
+        {/* The bar is the button that opens the three levels, and what an outing is. */}
+        <button className="cs-lvbar" aria-expanded={levels} aria-label={`${viewer.outings} of ${top} outings. What the levels give`} onClick={() => setLevels(!levels)} style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</button>
+        {levels && <div className="cs-lvls"><ul>{LEVELS.map((each, at) => <li key={each.name} className={at === level ? 'now' : ''}><b>{each.name}</b><small>{at === level ? 'You' : at < level ? 'Passed' : `${each.from - viewer.outings} to go`}</small><span>{each.gets}</span></li>)}</ul>
+          <p>An outing is any time you check in with at least one other person.</p></div>}</div>
       {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
       {picking && saving ? <SaveFace face={me.photo ?? ''} onBack={() => { setSaving(false); setPicking(false); }} />
       : picking && making ? <OwnFace asked={asked} left={left} bases={bases} plus={me.plan === 'plus' || viewer.admin} ink={canBase} wearing={me.photo} current={owns.includes(own ?? '') ? own ?? '' : owns[owns.length - 1] ?? ''} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
@@ -416,11 +408,25 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
       : schooling ? <div className="cs-lvl-body cs-sch-pane"><AddSchools schools={viewer.schools} onDone={() => setSchooling(false)} />
         <p>Add your LinkedIn profile and tick the schools you have been at. Their animals join your picker. A school that is not here yet is coming soon.</p>
         <div className="cs-sch-open">{viewer.schools.added.flatMap(slug => viewer.schools.all.filter(each => each.slug === slug)).map(each => <a key={each.slug} className="cs-btn sm" href={`/c/${each.slug}`}>Open {each.name}</a>)}<button className="cs-btn sm" onClick={() => setSchooling(false)}>Back</button></div></div>
-      : <div className="cs-lvl-body"><p>An outing is any time you check in with at least one other person.</p>
-        <ul>{LEVELS.map((each, at) => <li key={each.name} className={at === level ? 'now' : ''}><b>{at + 1}</b><div><strong>{each.name}</strong><span>{each.gets}</span></div><small>{at === level ? 'You' : at < level ? 'Passed' : `${each.from - viewer.outings} to go`}</small></li>)}</ul>
-        <Kits yours={['loop', ...(viewer.schools.home ? [viewer.schools.home] : []), ...viewer.schools.added]} any={viewer.anyKit} />
-        {viewer.admin && <nav className="cs-lvl-more" aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}
-        {more}
-        {signOut && <div className="cs-lvl-more">{signOut}</div>}</div>}</div>}
+      : <><div className="cs-lvl-lines">
+        <div className="cs-lvl-line"><b>Picture</b><span>{face === PHOTO ? 'Your photo' : face === CUSTOM ? 'Your own animal' : `Your ${NAMES[face] ?? 'animal'}`}</span><button className="cs-btn sm" onClick={() => { setPicking(true); setSaving(true); setSchooling(false); }}>Save it</button></div>
+        {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
+        {home && swap.filter(each => !each.home).map(each => <div className="cs-lvl-line" key={each.slug}><b>Campus</b><span>{moveNote ?? home.title}</span>
+          <button className="cs-btn sm" disabled={moving} onClick={() => move(async () => { const done = await changeCampusAction(each.slug); if (done.ok) window.location.assign(`/c/${each.slug}`); else setMoveNote(done.message); })}><SeatsWord on={moving} word={`Change to ${each.title}`}>{`Change to ${each.title}`}</SeatsWord></button></div>)}
+        {/* The schools the person has. Adding their LinkedIn profile unlocks the others they have been at: their animals, and their campuses. */}
+        <div className="cs-lvl-line"><b>Schools</b><span>{[viewer.schools.home, ...viewer.schools.added].flatMap(slug => viewer.schools.all.find(each => each.slug === slug)?.name ?? []).join(', ') || 'None yet'}</span>
+          <button className="cs-btn sm" aria-label="Add a school" onClick={() => setSchooling(true)}>+ Add</button></div>
+        <Kits className="cs-lvl-line" yours={['loop', ...(viewer.schools.home ? [viewer.schools.home] : []), ...viewer.schools.added]} any={viewer.anyKit} /></div>
+        {/* One line of pills: the plan, the groups pages, everything else under More, the way out. */}
+        <div className="cs-lvl-foot">
+          {me.plan === 'plus' ? <a className="cs-btn sm" href={INK_PAGE} aria-label="You have Ink+"><InkMark plus />Ink+</a> : <GetInk plan={me.plan === 'ink' ? 'plus' : 'ink'} place={me.plan === 'ink' ? 'account: Get Ink+' : 'account: Get Ink'} small />}
+          {groups && <nav className="cs-lvl-links" aria-label="Groups"><GroupLinks all={false} /></nav>}
+          {/* More and the way out stay together at the end, so on a phone they wrap as one and the menu opens over the card. */}
+          <span className="cs-lvl-end"><span className="cs-lvl-extra"><button className="cs-btn sm" aria-expanded={extra} onClick={() => setExtra(!extra)}>More<Chevron /></button>
+            {extra && <span className="cs-lvl-pop">
+              <a href={IMPRINT_PAGE}>Claim your club</a>
+              {groups && !viewer.admin && <Link href="/groups/archive">How we got here</Link>}
+              {viewer.admin && <nav aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}</span>}</span>
+          {signOut && <span className="cs-lvl-out">{signOut}</span>}</span></div></>}</div>}
   </div>;
 }

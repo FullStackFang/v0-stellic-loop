@@ -31,11 +31,11 @@ async function person(name: string, email: string): Promise<Principal> {
   await t.db.query("insert into emba_identity(issuer,subject,person_id,verified_at) values('https://issuer.test',$1,$2,now())", [row.id, row.id]);
   return (await authenticate(t.db, 'test', async () => ({ issuer: 'https://issuer.test', subject: row.id, expiresAt: Date.parse('2099-01-01'), verifiedEmail: email })))!;
 }
-/** The avatar button and the top of the open card: face, name, level, outings, and the plan's row. */
+/** The avatar button and the top of the open card: face, name, level, outings, and the plan's pill. */
 function card() {
   fireEvent.click(screen.getByRole('button', { name: /Show your level/ }));
   const dialog = screen.getByRole('dialog', { name: 'Your level' });
-  const html = { avatar: screen.getByRole('button', { name: /Show your level/ }).innerHTML, top: dialog.querySelector('.cs-lvl-top')!.innerHTML, plan: dialog.querySelector('.cs-inkrow')?.outerHTML ?? null };
+  const html = { avatar: screen.getByRole('button', { name: /Show your level/ }).innerHTML, top: dialog.querySelector('.cs-lvl-top')!.innerHTML, plan: dialog.querySelector('.cs-lvl-foot > :first-child')?.outerHTML ?? null };
   cleanup();
   return html;
 }
@@ -64,7 +64,7 @@ it('a groups page and a campus page draw the same account card as the week page,
   render(<CampusBar screen={week} signInHref="/sign-in" />);
   const expected = card();
   expect(expected.top).toContain('Ana Lopez');
-  expect(expected.top).toContain('<b>2</b>');
+  expect(expected.top).toContain('2 of 15 outings');
 
   // A groups page: the layout, signed in.
   render(await withPortalTestSession(ana, () => GroupsLayout({ children: <p>The page</p> })));

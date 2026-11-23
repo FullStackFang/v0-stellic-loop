@@ -66,7 +66,7 @@ describe('"Change campus" in the account card', () => {
   it('names your campus and moves you to the other one with one press', async () => {
     const assign = vi.fn(); vi.stubGlobal('location', { ...window.location, assign });
     card([ithaca, newYork]);
-    expect(screen.getByText('Your campus is Ithaca')).toBeTruthy();
+    expect(screen.getByText('Campus').nextElementSibling?.textContent).toBe('Ithaca');
     fireEvent.click(screen.getByRole('button', { name: 'Change to New York' }));
     await waitFor(() => expect(assign).toHaveBeenCalledWith('/c/cornell-tech'));
     expect(actions.changeCampusAction).toHaveBeenCalledWith('cornell-tech');

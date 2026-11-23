@@ -142,16 +142,19 @@ describe('who sees whom', () => {
     const card = async (admin: boolean) => { cleanup(); render(<Bar groups={[]} face={null} account={<button>Sign out</button>} screen={await campusScreen(t.db, cornell, as(ana, admin), { photos: noPhotos })} />); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); return within(screen.getByRole('dialog', { name: 'Your level' })); };
     const shown = await card(false);
     // The level, the picture and its picker, Ink and the colours, as on the campus screen.
-    expect(shown.getByText(/level 1 of 3/)).toBeInTheDocument();
+    expect(shown.getByText('Member · 5 more to Regular')).toBeInTheDocument();
     expect(shown.getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
     expect(shown.getByRole('group', { name: 'Colours' })).toBeInTheDocument();
-    // Under them the groups pages' own links, and the way out.
-    expect(within(shown.getByRole('navigation', { name: 'Groups' })).getAllByRole('link').map(each => each.getAttribute('href'))).toEqual(['/groups/connections', '/groups/reach', '/groups/archive']);
+    // In the foot the groups pages' own links, the rest under More, and the way out.
+    expect(within(shown.getByRole('navigation', { name: 'Groups' })).getAllByRole('link').map(each => each.getAttribute('href'))).toEqual(['/groups/connections', '/groups/reach']);
     expect(shown.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    fireEvent.click(shown.getByRole('button', { name: 'More' }));
+    expect(shown.getByRole('link', { name: 'How we got here' })).toHaveAttribute('href', '/groups/archive');
     fireEvent.click(shown.getByRole('button', { name: 'Change your picture' }));
     expect(screen.getByRole('group', { name: 'Pick your picture' })).toBeInTheDocument();
     // The admin's own list already leads to "How we got here".
     const admin = await card(true);
+    fireEvent.click(admin.getByRole('button', { name: 'More' }));
     expect(admin.getAllByRole('link', { name: 'How we got here' })).toHaveLength(1);
     // With no screen to draw it from, the bar keeps a plain card.
     cleanup(); render(<Bar groups={[]} face={null} account={null} />);
@@ -203,13 +206,12 @@ describe('who sees whom', () => {
       await show(as(ana));
       fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
       const card = within(screen.getByRole('dialog', { name: 'Your level' }));
-      expect(card.getByText('Save your picture')).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Save it' }));
       expect(card.getByRole('group', { name: 'Shape' })).toBeInTheDocument();
       expect(card.getByRole('img', { name: 'The picture as a profile' })).toHaveAttribute('src', expect.stringMatching(/^\/c\/save\?shape=profile&ground=school&small=1&face=%2Fanimals%2F\d+\.webp$/)); // the face worn is part of the address
       expect(card.getByRole('button', { name: 'No mark, with Ink+' })).not.toHaveTextContent('Ink+');
       // The rows stepped aside, as they do for the picker.
-      expect(card.queryByText('Loopd Ink')).toBeNull();
+      expect(card.queryByRole('button', { name: 'Get Ink · $2.99' })).toBeNull();
       expect(card.queryByRole('button', { name: 'Save it' })).toBeNull();
       // The pencil on the picture still leads to the picker.
       fireEvent.click(card.getByRole('button', { name: 'Change your picture' }));
@@ -217,7 +219,7 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Done' }));
       fireEvent.click(card.getByRole('button', { name: 'Save it' }));
       fireEvent.click(card.getByRole('button', { name: 'Done' }));
-      expect(card.getByText('Loopd Ink')).toBeInTheDocument();
+      expect(card.getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
       expect(card.queryByRole('group', { name: 'Shape' })).toBeNull();
     } finally { vi.unstubAllGlobals(); }
   });
@@ -568,29 +570,25 @@ describe('Loopd Ink', () => {
     await show(as(ana));
     expect(screen.getByRole('link', { name: 'Ink' })).toHaveAttribute('href', INK);
   });
-  it('has one row in the account card, which says so once the person has Ink', async () => {
+  it('has one plan pill in the account card, which says so once the person has Ink+', async () => {
     const { ana } = await world();
     await show(as(ana));
     let shown = card(/Ana Lopez, Member/);
-    expect(shown.getByText('Loopd Ink')).toBeInTheDocument();
-    expect(shown.queryByText('You have Ink')).toBeNull();
-    // The one Get button for Ink, and the row says only what Ink gives.
+    // The one Get button for Ink.
     expect(shown.getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
-    expect(shown.getByText(/Make it yours/)).toBeInTheDocument();
     cleanup();
     await subscribe(t.db, ana.personId, 'ana@cornell.edu');
     await show(as(ana));
     shown = card(/Ana Lopez, Member/);
-    expect(shown.getByText('You have Ink')).toBeInTheDocument();
-    // On Ink, the row offers Ink+, and pressing it signs them up (openspec loop-ink-tiers).
+    // On Ink, the pill offers Ink+, and pressing it signs them up (openspec loop-ink-tiers).
     expect(shown.getByRole('button', { name: 'Get Ink+ · $9.99' })).toBeInTheDocument();
+    expect(shown.queryByRole('button', { name: 'Get Ink · $2.99' })).toBeNull();
     expect(shown.queryByText(/Premium/)).toBeNull();
     cleanup();
     await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
     await show(as(ana));
     shown = card(/Ana Lopez, Member/);
-    expect(shown.getByText('You have Ink+')).toBeInTheDocument();
-    expect(shown.getByRole('link', { name: 'See it' })).toHaveAttribute('href', INK);
+    expect(shown.getByRole('link', { name: 'You have Ink+' })).toHaveAttribute('href', INK);
   });
   it('marks the animals that come with it in the picker, and is never called Premium', async () => {
     const { ana } = await world();
@@ -668,8 +666,14 @@ describe('levels on the screen', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Ana Lopez, Member/ }));
     const card = screen.getByRole('dialog', { name: 'Your level' });
-    expect(card).toHaveTextContent('Member · level 1 of 3');
-    expect(card).toHaveTextContent('5 more to Regular');
+    expect(card).toHaveTextContent('Member · 5 more to Regular');
+    // The bar opens the three levels, and what an outing is.
+    expect(within(card).queryByText('Regular')).toBeNull();
+    fireEvent.click(within(card).getByRole('button', { name: '0 of 15 outings. What the levels give' }));
+    expect(within(card).getByText('Regular').nextElementSibling).toHaveTextContent('5 to go');
+    expect(card).toHaveTextContent('An outing is any time you check in');
+    fireEvent.click(within(card).getByRole('button', { name: 'More' }));
+    expect(within(card).getByRole('link', { name: 'Claim your club' })).toBeInTheDocument();
     expect(within(card).queryByText('Admin')).toBeNull();
     expect(within(card).queryByRole('link', { name: 'The groups site' })).toBeNull();
     // The card also picks whose colours the screen wears. Loopd's and your schools' are free; another school's is an
@@ -691,6 +695,7 @@ describe('levels on the screen', () => {
     expect(localStorage.getItem('loop-kit')).toBe('columbia');
     await vi.waitFor(() => expect(theirs.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true'));
     delete document.documentElement.dataset.kit; localStorage.clear();
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
     const admin = within(screen.getByRole('navigation', { name: 'Admin' }));
     expect(admin.getByRole('link', { name: 'Run the campus' })).toHaveAttribute('href', '/c/admin');
     expect(admin.getByRole('link', { name: 'The groups site' })).toHaveAttribute('href', '/groups');
@@ -933,7 +938,7 @@ describe('the pages', () => {
     await campusOf(t.db, { personId: ana.personId, verifiedEmail: 'ana@cornell.edu' });
     const open = async () => { cleanup(); await show(as(ana)); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); return within(screen.getByRole('dialog', { name: 'Your level' })); };
     let card = await open();
-    expect(card.getByText('Your schools').nextElementSibling).toHaveTextContent('Cornell');
+    expect(card.getByText('Schools').nextElementSibling).toHaveTextContent('Cornell');
     fireEvent.click(card.getByRole('button', { name: 'Add a school' }));
     // Their own school is ticked and stays so.
     expect(card.getByRole('button', { name: 'Cornell' })).toBeDisabled();
@@ -943,7 +948,7 @@ describe('the pages', () => {
     await withPortalTestSession(ana, async () => { fireEvent.click(card.getByRole('button', { name: 'Unlock' })); await card.findByRole('button', { name: 'Add a school' }); });
     // Coming back: both schools, NYU's animal beside Cornell's, and a way to NYU's campus.
     card = await open();
-    expect(card.getByText('Your schools').nextElementSibling).toHaveTextContent('Cornell, NYU');
+    expect(card.getByText('Schools').nextElementSibling).toHaveTextContent('Cornell, NYU');
     fireEvent.click(card.getByRole('button', { name: 'Add a school' }));
     expect(card.getByRole('textbox', { name: 'Your LinkedIn profile' })).toHaveValue('linkedin.com/in/ana-lopez');
     expect(card.getByRole('button', { name: 'NYU' })).toHaveAttribute('aria-pressed', 'true');

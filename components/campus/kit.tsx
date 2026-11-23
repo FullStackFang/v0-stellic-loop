@@ -95,7 +95,7 @@ export function Kits({ yours, any, className = '' }: { yours: string[]; any: boo
   const found = rest.filter(each => each.name.toLowerCase().includes(find.trim().toLowerCase()));
   const choose = (slug: string) => { setOpen(false); setFind(''); if (mayWear(slug, yours, any)) pickKit(slug); else setAsking(slug); };
   return <div className={`cs-kits ${className}`} role="group" aria-label="Colours"><h4>Colours</h4><div>
-    {shown.map(each => <button key={each.slug} type="button" className="cs-kit" data-kit={each.slug} aria-pressed={kit === each.slug} onClick={() => { setAsking(null); pickKit(each.slug); }}><i />{each.name}</button>)}
+    {shown.map(each => <button key={each.slug} type="button" className="cs-kit" data-kit={each.slug} title={each.name} aria-pressed={kit === each.slug} onClick={() => { setAsking(null); pickKit(each.slug); }}><i />{each.name}</button>)}
     {rest.length > 0 && <span className="cs-kit-any"><button type="button" className="cs-kit" aria-expanded={open} onClick={() => { setOpen(!open); setAsking(null); }}>Any school<Chevron /></button>
       {open && <div className="cs-kit-menu">
         {rest.length > FIND_PAST && <input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Find a school" placeholder="Find a school" />}

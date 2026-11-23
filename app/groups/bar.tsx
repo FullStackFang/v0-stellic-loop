@@ -31,8 +31,7 @@ export function Bar({ groups, face, plan = 'free', kits = ['loop'], anyKit = fal
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals
   const you = face ? <img className="cs-face pet" src={face} alt="" /> : <span className="cs-face">You</span>;
   return <TopBar member={groups.length > 0} plus={plan === 'plus'} school={atSchool(screen?.viewer ?? null)} account={screen?.viewer
-      // The admin's own list already has "How we got here".
-      ? <Account screen={screen} signOut={account} more={<nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!screen.viewer.admin} /></nav>} />
+      ? <Account screen={screen} signOut={account} groups />
       : <div className="cs-acct" ref={box}>
       <button aria-expanded={open} aria-label={`Your account and colours${plan === 'plus' ? '. You have Ink+' : plan === 'ink' ? '. You have Ink' : ''}`} onClick={() => setOpen(!open)}>
         <span className="cs-ava">{plan !== 'free' ? <span className="cs-inked"><InkBlot seed={face ?? 'You'} />{you}{plan === 'plus' && <InkSparks />}</span> : you}</span></button>
