@@ -21,21 +21,22 @@ it('shortens a name to a first name and an initial', () => {
   expect(shortName('ana de la cruz')).toBe('ana C.');
 });
 
-it('keeps no round on another school\'s ground without Ink+, as the game plays it', async () => {
-  const id = await person('Maya Rodriguez');
-  expect(await saveBest(t.db, id, PLAYER, round(40, { map: 'columbia' }))).toBe(false);
-  expect(await saveBest(t.db, id, { ...PLAYER, plus: true }, round(40, { map: 'columbia' }))).toBe(true);
+it('keeps no round on another school\'s ground without Ink, as the game plays it', async () => {
+  // Every school's ground comes with Ink (public/demo/mockups-ink-buttons.html): a player without it.
+  const id = await person('Maya Rodriguez'), plain: CongaPlayer = { ...PLAYER, ink: false };
+  expect(await saveBest(t.db, id, plain, round(40, { map: 'columbia' }))).toBe(false);
+  expect(await saveBest(t.db, id, PLAYER, round(40, { map: 'columbia' }))).toBe(true);
   // With no school that has a ground, the open ground (Cornell's hill) is theirs and no other (openspec conga-ground-gate).
   const josh = await person('Josh Donlon'), priya = await person('Priya Shah'), sam = await person('Sam Lee');
-  expect(await saveBest(t.db, josh, { ...PLAYER, schools: [] }, round(40, { map: 'columbia' }))).toBe(false);
-  expect(await saveBest(t.db, priya, { ...PLAYER, schools: ['cuny'] }, round(40, { map: 'columbia' }))).toBe(false);
-  expect(await saveBest(t.db, josh, { ...PLAYER, schools: [] }, round(40, { map: 'cornell' }))).toBe(true);
-  expect(await saveBest(t.db, priya, { ...PLAYER, schools: ['cuny'] }, round(40, { map: 'cornell' }))).toBe(true);
-  expect(await saveBest(t.db, priya, { ...PLAYER, schools: ['cuny'] }, round(40, { map: 'cornell-tech' }))).toBe(false);
-  // NYU has its own ground, so its people play Columbia's with Ink+ like anyone else's; the open ground is theirs too.
-  expect(await saveBest(t.db, sam, { ...PLAYER, schools: ['nyu'] }, round(40, { map: 'columbia' }))).toBe(false);
-  expect(await saveBest(t.db, sam, { ...PLAYER, schools: ['nyu'] }, round(40, { map: 'nyu' }))).toBe(true);
-  expect(await saveBest(t.db, sam, { ...PLAYER, schools: ['nyu'] }, round(40, { map: 'cornell' }))).toBe(true);
+  expect(await saveBest(t.db, josh, { ...plain, schools: [] }, round(40, { map: 'columbia' }))).toBe(false);
+  expect(await saveBest(t.db, priya, { ...plain, schools: ['cuny'] }, round(40, { map: 'columbia' }))).toBe(false);
+  expect(await saveBest(t.db, josh, { ...plain, schools: [] }, round(40, { map: 'cornell' }))).toBe(true);
+  expect(await saveBest(t.db, priya, { ...plain, schools: ['cuny'] }, round(40, { map: 'cornell' }))).toBe(true);
+  expect(await saveBest(t.db, priya, { ...plain, schools: ['cuny'] }, round(40, { map: 'cornell-tech' }))).toBe(false);
+  // NYU has its own ground, so its people play Columbia's with Ink like anyone else's; the open ground is theirs too.
+  expect(await saveBest(t.db, sam, { ...plain, schools: ['nyu'] }, round(40, { map: 'columbia' }))).toBe(false);
+  expect(await saveBest(t.db, sam, { ...plain, schools: ['nyu'] }, round(40, { map: 'nyu' }))).toBe(true);
+  expect(await saveBest(t.db, sam, { ...plain, schools: ['nyu'] }, round(40, { map: 'cornell' }))).toBe(true);
 });
 
 it('keeps each player\'s best of the week on a map, and ranks the top with the reader after them', async () => {

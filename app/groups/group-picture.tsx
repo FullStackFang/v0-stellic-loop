@@ -8,9 +8,10 @@ import { SaveFace } from '@/components/campus/save-face';
 import { joinedWords } from '@/lib/campus/ink';
 import type { Choice, Pick, PicturePane, TileProps } from '@/lib/emba/group-picture';
 import { groupPictureSrc } from '@/lib/emba/group-picture-src';
-import { drawGroupPictureAction, keepGroupPictureAction, subscribeInkPlusAction } from './picture-actions';
+import { drawGroupPictureAction, keepGroupPictureAction } from './picture-actions';
+import { GetInk } from '@/components/campus/join-plan';
 import './group-picture.css';
-import { SeatsTicket, SeatsWord } from '@/components/loading/seats';
+import { SeatsTicket } from '@/components/loading/seats';
 import { PicturesWait } from '@/components/loading/pictures-wait';
 
 // A group's tile, and the card that draws its picture (openspec loop-group-picture; the look and the steps are
@@ -83,7 +84,7 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
   const [picked, setPicked] = useState<Choice[]>([]), [only, setOnly] = useState<Choice['kind'] | null>(null), [find, setFind] = useState('');
   const [drawn, setDrawn] = useState(pane.waiting), [kept, setKept] = useState(pane.kept), [all, setAll] = useState(pane.drawn);
   const [plus, setPlus] = useState(pane.plus), [thanked, setThanked] = useState(false);
-  const [email, setEmail] = useState(''), [note, setNote] = useState(''), [said, setSaid] = useState(''), [busy, setBusy] = useState(false);
+  const [note, setNote] = useState(''), [said, setSaid] = useState(''), [busy, setBusy] = useState(false);
   // Where "Back" on the asking step returns to, and how many more times this person may ask (null: no limit).
   const [from, setFrom] = useState<'pick' | 'two'>('pick'), [left, setLeft] = useState(pane.asksLeft);
   const ask = (back: 'pick' | 'two') => { setSaid(''); setFrom(back); setStep('sure'); };
@@ -98,14 +99,6 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
     const got = await drawGroupPictureAction(scope, picked.map(one => one.pick), note).catch(() => FAILED);
     if (!got.ok) { setSaid(got.message); setStep('sure'); return; }
     setDrawn(got.tokens ?? []); setAll([...(got.tokens ?? []), ...all]); setLeft(left === null ? null : Math.max(0, left - 1)); setStep('two');
-  };
-  const subscribe = async () => {
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setSaid('Enter the email to subscribe with.');
-    setBusy(true); setSaid('');
-    const got = await subscribeInkPlusAction(email.trim()).catch(() => FAILED);
-    setBusy(false);
-    if (!got.ok) return setSaid(got.message);
-    setPlus(true); setThanked(true); ask('pick');
   };
   const keep = async (token: string) => {
     setBusy(true); setSaid('');
@@ -159,10 +152,8 @@ function PictureCard({ scope, pane, onKept, onClose }: { scope: TileProps['scope
       <div className="cs-prem-figs" aria-hidden="true">{picked.slice(0, 2).map(one => <img key={one.src} src={one.src} alt="" />)}</div>
       <div className="cs-prem-perks"><span>Your group, drawn together from the animals you pick</span><span>Say what should change, and it is drawn again</span>
         <small>Groups of more than {pane.most}, and saving a picture without the Loopd mark, are not here yet.</small></div>
-      <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
-        <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={busy}><SeatsWord on={busy} word="Subscribing" plate>Subscribe</SeatsWord></button></div>
-        {alert}
-      </form></>
+      {/* The one Get button (public/demo/mockups-ink-buttons.html): one press, the account's email, then on to drawing. */}
+      <div className="cs-prem-stub"><GetInk plan="plus" place="group picture: Get Ink+" onJoined={() => { setPlus(true); setThanked(true); ask('pick'); }} />{alert}</div></>
     : step === 'sure' ? <>
       <button className="cs-prem-back" onClick={() => { setSaid(''); setStep(from); }}>Back</button>
       <p className="cs-prem-kick">Loopd Ink+</p>

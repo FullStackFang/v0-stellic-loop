@@ -227,7 +227,7 @@ export async function accountViewer(db: Db, viewer: ScreenViewer, options: { pho
   return { first: self?.first ?? 'You', name: self?.name ?? 'You', photo: picture(me), face: faceOf(me), ownPhoto: read.photos[me] ?? null,
     own: mine?.token ? customFace(mine.token) : null, owns: (mine?.all ?? []).map(customFace), personal: (mine?.personal ?? []).map(customFace), picks: shown,
     schools: { profile: linked.profile, added: linked.added, home, all: campuses.filter(each => schoolOf(each.slug) === each.slug).map(each => ({ slug: each.slug, name: each.name })) },
-    asked: plan !== 'free', makesLeft: viewer.admin || plan === 'plus' ? null : mine?.left ?? 0, plan, anyKit: viewer.admin || plan === 'plus',
+    asked: plan !== 'free', makesLeft: viewer.admin || plan === 'plus' ? null : mine?.left ?? 0, plan, anyKit: viewer.admin || plan !== 'free',
     level: levelOf(read.counted.length), outings: read.counted.length, admin: viewer.admin, groups: viewer.groups ?? [] };
 }
 

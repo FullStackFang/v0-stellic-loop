@@ -5,7 +5,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { INK_PAGE } from '@/lib/campus/ink';
 import { kitScript, WORN } from '@/lib/campus/kit-script';
 import { InkMark } from './ink-mark';
-import { JoinPlan } from './join-plan';
+import { InkAsk } from './join-plan';
 import './foot.css';
 import './kits.css';
 
@@ -31,7 +31,7 @@ export function showKit(slug: string) { document.documentElement.dataset.kit = s
 export function pickKit(slug: string) { try { localStorage.setItem(KEY, slug); } catch { /* shown, not kept */ } showKit(slug); }
 
 // Who may wear what (public/demo/mockups-ink-colours.html, "My pick"): Loopd's colours and the person's own schools'
-// are free; every other school's come with Ink+. Signed out there is no one to hold to it, and any may be worn.
+// are free; every other school's come with Ink. Signed out there is no one to hold to it, and any may be worn.
 /** Whether `slug` may be worn by someone whose own kits are `yours` (null: signed out), with every kit when `any`. */
 export const mayWear = (slug: string, yours: readonly string[] | null, any: boolean) => any || !yours || yours.includes(slug);
 
@@ -69,23 +69,17 @@ export function useLook(): { kit: string | null; yours: string[] | null; any: bo
 const Chevron = () => <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" /></svg>;
 
 /**
- * The card that says another school's colours come with Ink+: on top what it does here (the other schools' colours,
- * `wanted` lit when one was asked for), then what Ink+ is. It grows out of the foot's pill, or stands in the account card
- * (`inside`). Escape or "Not now" closes it.
+ * The card that says another school's colours come with Ink: wearing any school's is making it yours, so it is Ink, and
+ * Ink+ holds it (public/demo/mockups-ink-buttons.html). It is the one ask card (InkAsk), with the other schools' swatches
+ * (`wanted` lit when one was asked for). It grows out of the foot's pill, or stands in the account card (`inside`).
  */
 export function InkColours({ wanted = null, yours, onClose, inside = false }: { wanted?: string | null; yours: readonly string[]; onClose: () => void; inside?: boolean }) {
-  useEffect(() => { const key = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); }, [onClose]);
   const others = KITS.filter(each => !yours.includes(each.slug)), name = KITS.find(each => each.slug === wanted)?.name;
-  return <div className={`cs-ft-ask cs-kit-ask${inside ? ' in' : ''}`} role="dialog" aria-label={name ? `${name}'s colours come with Ink+` : "Every school's colours come with Ink+"}>
-    <span className="cs-ft-ask-tab"><InkMark plus named /></span>
-    <h3>{name ? <>Wear <em>{name}&apos;s</em> colours</> : <>Every school&apos;s <em>colours</em></>}</h3>
+  return <InkAsk plan="ink" place="colours: Get Ink" onClose={onClose} className={`cs-kit-ask${inside ? ' in' : ''}`} label={name ? `${name}'s colours come with Ink` : "Every school's colours come with Ink"}
+    title={name ? <>Wear <em>{name}&apos;s</em> colours</> : <>Every school&apos;s <em>colours</em></>}
+    line={`Yours and Loopd's are free. The other ${others.length} come with Ink, with every Ink animal and pets from your photos.`}>
     <div className="cs-kit-ask-sw">{others.map(each => <i key={each.slug} data-kit={each.slug} title={each.name} className={each.slug === wanted ? 'on' : undefined} />)}</div>
-    <p>Yours and Loopd&apos;s are free. The other {others.length} come with Ink+.</p>
-    <span className="cs-kit-ask-gives">What Ink+ gives you</span>
-    <ul><li>Everything in Ink</li><li>Every school&apos;s colours, not just yours</li><li>Your own AI, answering from your groups</li><li>As many of your own animals as you like</li></ul>
-    <p className="cs-kit-ask-price"><b>$9.99</b> a month</p>
-    <div className="cs-kit-ask-acts"><JoinPlan plan="plus" place="colours: Sign up">Sign up for Ink+</JoinPlan><button type="button" className="cs-btn sm" onClick={onClose}>Not now</button></div>
-  </div>;
+  </InkAsk>;
 }
 
 /** Past this many other schools, the drop-down has a box to find one. */
@@ -93,7 +87,7 @@ const FIND_PAST = 6;
 
 /**
  * The colours of the account card: Loopd's, the person's schools', and the one they wear if it is another; every other
- * school is in "Any school". Without Ink+ those wear the Ink mark, and picking one opens the Ink+ card in its place.
+ * school is in "Any school". Without Ink those wear the Ink mark, and picking one opens the Ink card in its place.
  */
 export function Kits({ yours, any, className = '' }: { yours: string[]; any: boolean; className?: string }) {
   const kit = useLook().kit ?? 'loop', [open, setOpen] = useState(false), [find, setFind] = useState(''), [asking, setAsking] = useState<string | null>(null);
@@ -105,7 +99,7 @@ export function Kits({ yours, any, className = '' }: { yours: string[]; any: boo
     {rest.length > 0 && <span className="cs-kit-any"><button type="button" className="cs-kit" aria-expanded={open} onClick={() => { setOpen(!open); setAsking(null); }}>Any school<Chevron /></button>
       {open && <div className="cs-kit-menu">
         {rest.length > FIND_PAST && <input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Find a school" placeholder="Find a school" />}
-        <ul>{found.map(each => { const locked = !mayWear(each.slug, yours, any); return <li key={each.slug}><button type="button" data-kit={each.slug} className={locked ? 'locked' : undefined} aria-label={locked ? `${each.name}, with Ink+` : each.name} onClick={() => choose(each.slug)}><i />{each.name}{locked && <InkMark plus />}</button></li>; })}</ul>
-        {!any && <Link className="cs-kit-menu-ink" href={INK_PAGE}><InkMark plus />Every school comes with Ink+</Link>}</div>}</span>}
+        <ul>{found.map(each => { const locked = !mayWear(each.slug, yours, any); return <li key={each.slug}><button type="button" data-kit={each.slug} className={locked ? 'locked' : undefined} aria-label={locked ? `${each.name}, with Ink` : each.name} onClick={() => choose(each.slug)}><i />{each.name}{locked && <InkMark />}</button></li>; })}</ul>
+        {!any && <Link className="cs-kit-menu-ink" href={INK_PAGE}><InkMark />Every school comes with Ink</Link>}</div>}</span>}
   </div>{asking && <InkColours wanted={asking} yours={yours} inside onClose={() => setAsking(null)} />}</div>;
 }

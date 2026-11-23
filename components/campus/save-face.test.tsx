@@ -7,8 +7,8 @@ import { SaveFace } from './save-face';
 
 // Spec: openspec/changes/loop-save-picture/specs/save-picture. The server (app/c/save/route.test.ts) is what makes the
 // picture and decides about the mark; here it is stood in for, and the pane's own steps are what is checked.
-const act = vi.hoisted(() => ({ subscribe: vi.fn() }));
-vi.mock('@/app/c/actions', () => ({ subscribeToSaveAction: act.subscribe }));
+/** Each sign-up the one Get button sent (app/c/ink/join): what it asked for. */
+const joins: unknown[] = [];
 
 const SWATCHES = [{ key: 'school', name: 'Your school', colour: 'red' }, { key: 'ink', name: 'Ink', colour: 'black' }, { key: 'cream', name: 'Cream', colour: 'beige' }];
 /** The server: whether this person has Ink+, and whether they wear an animal. Every address asked for is kept. */
@@ -17,11 +17,12 @@ const saved: { name: string; href: string }[] = [];
 /** The pictures the pane asked for ahead of a press. */
 const ahead: string[] = [];
 beforeEach(() => {
-  Object.assign(server, { plus: false, animal: true, asked: [] }); saved.length = 0; act.subscribe.mockReset();
-  vi.stubGlobal('fetch', vi.fn(async (href: string) => {
+  Object.assign(server, { plus: false, animal: true, asked: [] }); saved.length = 0; joins.length = 0;
+  vi.stubGlobal('fetch', vi.fn(async (href: string, init?: RequestInit) => {
     server.asked.push(href);
     // As much of an answer as the pane reads. (A real Response cannot carry the test browser's Blob.)
     const answer = (status: number, body: unknown) => ({ ok: status < 300, status, json: async () => body, text: async () => String(body), blob: async () => new Blob(['png'], { type: 'image/png' }) });
+    if (href === '/c/ink/join') { joins.push(JSON.parse(String(init?.body))); server.plus = true; return answer(200, { ok: true, said: 'Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink+ for now.' }); }
     if (href.includes('grounds=1')) return answer(200, SWATCHES);
     if (!server.animal) return answer(409, 'Pick an animal as your picture to save it.');
     if (href.includes('mark=0') && !server.plus) return answer(403, 'Saving without the Loopd mark comes with Loopd Ink+.');
@@ -79,22 +80,18 @@ it('shows the picture as it will be saved, in the shape and on the ground picked
   expect(back).toHaveBeenCalled();
 });
 
-it('shows the Ink+ plan for "No mark", takes an email, charges nothing and then saves without the mark', async () => {
-  act.subscribe.mockImplementation(async () => { server.plus = true; return { ok: true }; });
+it('shows the Ink+ plan for "No mark", signs up in one press, charges nothing and then saves without the mark', async () => {
   render(<SaveFace onBack={() => {}} />);
   press(/No mark/);
   expect(await screen.findByText('$9.99')).toBeInTheDocument();
   expect(screen.getByText('Your picture, no mark')).toBeInTheDocument();
   preview('pane-plan', 'profile');
   expect(saved).toEqual([]);
-  press('Subscribe to Loopd Ink+');
-  press('Subscribe');
-  expect(screen.getByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
-  expect(act.subscribe).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'ana@cornell.edu' } });
-  press('Subscribe');
+  // The one Get button: one press, the account's email, no box to type it in.
+  expect(screen.queryByRole('textbox', { name: 'Email' })).toBeNull();
+  press('Get Ink+ · $9.99');
   expect(await screen.findByText('You’re in. The mark is off.')).toBeInTheDocument();
-  expect(act.subscribe).toHaveBeenCalledWith('ana@cornell.edu');
+  expect(joins).toEqual([{ plan: 'plus', place: 'save picture: Get Ink+', back: '/' }]);
   expect(screen.getByText(/This isn’t ready yet, so we’ve upgraded you to Ink\+ for now/)).toBeInTheDocument();
   preview('pane-joined', 'profile');
   press('Save without the mark');

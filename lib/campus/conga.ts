@@ -18,7 +18,7 @@ import { planOf } from './ink';
 export type CongaAnimal = { face: number; picture: string | null; kit: string };
 /**
  * `animals` starts with the one the person wears on campus. Without Ink that is the only one. `ink`: they have Ink or Ink+;
- * `plus`: Ink+, and their animal sparkles, and every school's ground is theirs to play. `schools`: their own schools
+ * `plus`: Ink+, and their animal sparkles. With Ink every school's ground is theirs to play (maps.js mayPlay). `schools`: their own schools
  * (the one they are at, then the ones LinkedIn added), whose grounds they play free.
  */
 export type CongaPlayer = { ink: boolean; plus: boolean; kit: string; schools: string[]; animals: CongaAnimal[] };

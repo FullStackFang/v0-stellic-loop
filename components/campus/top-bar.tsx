@@ -7,6 +7,7 @@ import { DOODLES_PAGE } from '@/lib/campus/doodles';
 import { IMPRINT_PAGE } from '@/lib/campus/imprint';
 import { INK_PAGE } from '@/lib/campus/ink';
 import { AssistantsLink } from './assistants-link';
+import { HeldInk } from './join-plan';
 import { InkMark } from './ink-mark';
 import { pressed, rememberBar } from '@/components/loading/last-bar';
 import { LinkWait } from '@/components/loading/link-wait';
@@ -43,6 +44,8 @@ export function TopBar({ home = '/', on, member = false, plus = false, going, ac
       {/* The organizers' door (public/demo/mockups-organizer-flow.html), then what the page adds. They sit at the bar's far end, and on a phone they are in the menu with the links. */}
       <Link className="cs-org" href={IMPRINT_PAGE} aria-current={at(IMPRINT_PAGE, on === 'organizers')}>Claim your club<LinkWait on={going === IMPRINT_PAGE} /></Link>{children}</div>
     <div className="cs-nav-end">{account}</div>
+    {/* A sign-up pressed signed out, given here once the person is back signed in. Not in a loading state's copy. */}
+    {going === undefined && <HeldInk />}
   </header>;
 }
 

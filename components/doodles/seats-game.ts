@@ -42,11 +42,19 @@ const BOARD: Record<Mode, string> = {
 const animal = (n: number) => `/animals/${String(n).padStart(2, '0')}.webp`;
 const rand = (low: number, high: number) => low + Math.random() * (high - low);
 const mixed = (n: number) => { const order = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } return order; };
-/** Signs the player up for Ink (app/c/ink/join), and gives back the thanks to show. Someone signed out is sent to sign in. */
-async function signUp(): Promise<string | null> {
+/**
+ * Signs the player up for Ink (app/c/ink/join), and gives back the thanks to show. Someone signed out stays on the page:
+ * the plan is held (components/campus/join-plan.tsx, HELD) and the bar's sign-in card opens over the game; the bar gives
+ * the plan once they are back. Then `held` comes back, and there is nothing to say.
+ */
+async function signUp(): Promise<string | null | 'held'> {
   const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place: 'seats: Get Ink', back: location.pathname }) }).catch(() => null);
   const got = await answer?.json().catch(() => null) as { ok?: boolean; said?: string; signIn?: string } | null;
-  if (got?.signIn) location.assign(got.signIn);
+  if (got?.signIn) {
+    try { localStorage.setItem('loopd-held-ink', JSON.stringify({ plan: 'ink', place: 'seats: Get Ink', at: Date.now() })); } catch {}
+    window.dispatchEvent(new CustomEvent('loopd:sign-in'));
+    return 'held';
+  }
   return got?.ok && got.said ? got.said : null;
 }
 /** Lets an animation that has played be played again. */
@@ -241,12 +249,12 @@ export function mountSeats(root: HTMLElement, player: SeatsPlayer): () => void {
   for (const pill of pills) { const box = Object.assign(make('div', 'pick'), { hidden: true }); boxes.push(box); pill.after(box); pill.setAttribute('aria-expanded', 'false'); pill.setAttribute('aria-label', ink ? 'You: choose your animal' : 'You: play as your own animal with Ink');
     pill.addEventListener('click', event => { event.stopPropagation(); if (!box.hidden) return shut(); shut(); box.classList.toggle('ask', !ink);
       box.innerHTML = ink ? '<span class="tag">Your animal</span>' + player!.animals.map((each, n) => `<button type="button" data-n="${n}" aria-pressed="${n === chosen}" aria-label="Your animal ${n + 1}"><img src="${picture(each)}" alt=""></button>`).join('')
-        : `<span class="tag mark" role="img" aria-label="Ink">${inkMark()}</span><p>Play as your own animal, in every mode.</p><button type="button" data-join>Get Ink · $2.99</button>`;
+        : `<span class="tag mark" role="img" aria-label="Ink">${inkMark()}</span><p>Play as your own animal, in every mode. It comes with Ink.</p><button type="button" data-join>${inkMark()}Get Ink <span class="price">· $2.99</span></button>`;
       box.hidden = false; pill.setAttribute('aria-expanded', 'true'); });
     box.addEventListener('click', event => { event.stopPropagation();
       // Signing up for Ink from here (openspec loop-ink-tiers): the same route as every ask in the app, then its thanks.
       const join = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-join]');
-      if (join) { join.disabled = true; void signUp().then(said => { if (said) { find(box, 'p').textContent = said; join.remove(); } else { find(box, 'p').textContent = 'That did not go through. Try again.'; join.disabled = false; } }); return; }
+      if (join) { join.disabled = true; void signUp().then(said => { if (said === 'held') { join.disabled = false; return; } if (said) { find(box, 'p').textContent = said; join.remove(); } else { find(box, 'p').textContent = 'That did not go through. Try again.'; join.disabled = false; } }); return; }
       const button = (event.target as HTMLElement).closest<HTMLElement>('[data-n]'); if (!button) return;
       chosen = Number(button.dataset.n); keep('seats-own', String(chosen)); fill(); for (const each of games) each.game.fresh(); shut(); }); }
   document.addEventListener('click', shut);

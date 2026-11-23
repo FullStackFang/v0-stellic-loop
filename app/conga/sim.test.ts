@@ -245,18 +245,18 @@ it('gives every ground its bots and its way in from the campus', async () => {
 });
 
 // Who may play which ground (openspec conga-ground-gate): one rule, read by the game's picker and by the board.
-it('opens one ground to everyone, a school\'s grounds to its people, and every ground with Ink+', async () => {
+it('opens one ground to everyone, a school\'s grounds to its people, and every ground with Ink', async () => {
   const { MAPS, OPEN_GROUND, mayPlay } = await import('@/public/conga/maps.js');
-  const grounds = Object.keys(MAPS), may = (player: { schools: string[]; plus: boolean } | null) => grounds.filter(id => mayPlay(player, id)).sort();
+  const grounds = Object.keys(MAPS), may = (player: { schools: string[]; ink: boolean } | null) => grounds.filter(id => mayPlay(player, id)).sort();
   expect(OPEN_GROUND).toBe('cornell');
   expect(may(null)).toEqual(['cornell']); // signed out
-  expect(may({ schools: [], plus: false })).toEqual(['cornell']);
-  expect(may({ schools: ['cuny'], plus: false })).toEqual(['cornell']); // a school with no ground yet
-  expect(may({ schools: ['cornell'], plus: false })).toEqual(['cornell', 'cornell-tech']);
-  expect(may({ schools: ['columbia'], plus: false })).toEqual(['columbia', 'cornell']); // signing in takes nothing away
-  expect(may({ schools: ['cuny', 'nyu', 'columbia'], plus: false })).toEqual(['columbia', 'cornell', 'nyu']);
-  expect(may({ schools: [], plus: true })).toEqual([...grounds].sort()); // Ink+, and an admin
-  for (const player of [null, { schools: ['cornell'], plus: true }]) expect(mayPlay(player, 'nowhere')).toBe(false);
+  expect(may({ schools: [], ink: false })).toEqual(['cornell']);
+  expect(may({ schools: ['cuny'], ink: false })).toEqual(['cornell']); // a school with no ground yet
+  expect(may({ schools: ['cornell'], ink: false })).toEqual(['cornell', 'cornell-tech']);
+  expect(may({ schools: ['columbia'], ink: false })).toEqual(['columbia', 'cornell']); // signing in takes nothing away
+  expect(may({ schools: ['cuny', 'nyu', 'columbia'], ink: false })).toEqual(['columbia', 'cornell', 'nyu']);
+  expect(may({ schools: [], ink: true })).toEqual([...grounds].sort()); // Ink (and Ink+, which holds it), and an admin
+  for (const player of [null, { schools: ['cornell'], ink: true }]) expect(mayPlay(player, 'nowhere')).toBe(false);
 });
 
 // A name painted into the ground is read from above, so no tree or building may stand on it.

@@ -353,7 +353,7 @@ export const PLACES = { cornell: { school: 'cornell', line: 'The hill, Collegeto
   columbia: { school: 'columbia', line: 'College Walk, Barnard, Manhattanville' }, nyu: { school: 'nyu', line: 'Washington Square, Bobst, Union Square' } };
 // Who may play which ground (openspec conga-ground-gate), read by the game's picker and by the board (lib/campus/conga-board.ts)
 // so the two cannot disagree. One ground is open to everyone, signed in or not: Cornell's hill, where Loopd began. A
-// school's grounds are its own people's. Every ground comes with Ink+ (an admin has it).
+// school's grounds are its own people's. Every ground comes with Ink, and Ink+ which holds it (an admin has it).
 export const OPEN_GROUND = 'cornell';
-/** Whether `player` may play the ground `id`. `player`: { schools, plus }, or null for someone signed out. */
-export const mayPlay = (player, id) => !!PLACES[id] && (!!player?.plus || id === OPEN_GROUND || (player?.schools ?? []).includes(PLACES[id].school));
+/** Whether `player` may play the ground `id`. `player`: { schools, ink }, or null for someone signed out. */
+export const mayPlay = (player, id) => !!PLACES[id] && (!!player?.ink || id === OPEN_GROUND || (player?.schools ?? []).includes(PLACES[id].school));

@@ -15,20 +15,23 @@ beforeEach(reset);
 afterEach(() => { cleanup(); reset(); });
 const pills = () => within(screen.getByRole('group', { name: 'Colours' })).getAllByRole('button').map(pill => pill.textContent);
 
-it('shows Loopd, your school and "Any school"; another school opens the Ink+ card, named for it', () => {
+it('shows Loopd, your school and "Any school"; another school opens the Ink card, named for it', () => {
   root.dataset.kit = 'cornell';
   render(<Kits yours={['loop', 'cornell']} any={false} />);
   expect(pills()).toEqual(['Loopd', 'Cornell', 'Any school']);
   fireEvent.click(screen.getByRole('button', { name: 'Any school' }));
-  expect(screen.getByRole('link', { name: 'Every school comes with Ink+' })).toHaveAttribute('href', '/c/ink');
-  fireEvent.click(screen.getByRole('button', { name: 'NYU, with Ink+' }));
-  expect(screen.getByRole('dialog', { name: "NYU's colours come with Ink+" })).toHaveTextContent("Wear NYU's colours");
+  expect(screen.getByRole('link', { name: 'Every school comes with Ink' })).toHaveAttribute('href', '/c/ink');
+  fireEvent.click(screen.getByRole('button', { name: 'NYU, with Ink' }));
+  // The one ask card, for Ink: wearing another school's colours is making it yours.
+  const card = screen.getByRole('dialog', { name: "NYU's colours come with Ink" });
+  expect(card).toHaveTextContent("Wear NYU's colours");
+  expect(within(card).getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
   // Nothing was put on.
   expect(root.dataset.kit).toBe('cornell');
   expect(localStorage.getItem('loop-kit')).toBeNull();
 });
 
-it('with Ink+, any school may be picked from the list, and then shows beside yours', async () => {
+it('with Ink, any school may be picked from the list, and then shows beside yours', async () => {
   root.dataset.kit = 'cornell';
   render(<Kits yours={['loop', 'cornell']} any />);
   fireEvent.click(screen.getByRole('button', { name: 'Any school' }));

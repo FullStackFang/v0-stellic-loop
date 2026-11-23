@@ -17,7 +17,7 @@ export type { BarGroup };
  * screen's own card (level, picture, Ink, colours), drawn from `screen`, with the groups pages' links added. Without a
  * screen (it could not be read) there is a plain card: colours, the links, the way out.
  */
-export function Bar({ groups, face, plan = 'free', kits = ['loop'], anyKit = false, account, screen = null, children }: { /** The colours they may wear, and whether every school's (Ink+), for the plain card. */ kits?: string[]; anyKit?: boolean; /** The person's campus screen, for the account card. */ screen?: Screen | null; /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** The person's plan: with Ink their avatar sits on its blot, with Ink+ on the blot with sparks. */ plan?: Plan; account: ReactNode }) {
+export function Bar({ groups, face, plan = 'free', kits = ['loop'], anyKit = false, account, screen = null, children }: { /** The colours they may wear, and whether every school's (Ink), for the plain card. */ kits?: string[]; anyKit?: boolean; /** The person's campus screen, for the account card. */ screen?: Screen | null; /** The "Groups" and "On you" counters, as on the campus screen. */ children?: ReactNode; groups: BarGroup[]; face: string | null; /** The person's plan: with Ink their avatar sits on its blot, with Ink+ on the blot with sparks. */ plan?: Plan; account: ReactNode }) {
   const [open, setOpen] = useState(false), box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -30,7 +30,7 @@ export function Bar({ groups, face, plan = 'free', kits = ['loop'], anyKit = fal
   useEffect(() => { if (!carded) rememberMe({ face, plan, seed: face ?? 'You' }); }, [carded, face, plan]);
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals
   const you = face ? <img className="cs-face pet" src={face} alt="" /> : <span className="cs-face">You</span>;
-  return <TopBar member={groups.length > 0} plus={anyKit} account={screen?.viewer
+  return <TopBar member={groups.length > 0} plus={plan === 'plus'} account={screen?.viewer
       // The admin's own list already has "How we got here".
       ? <Account screen={screen} signOut={account} more={<nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!screen.viewer.admin} /></nav>} />
       : <div className="cs-acct" ref={box}>

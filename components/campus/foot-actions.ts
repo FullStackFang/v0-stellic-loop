@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { hasAssistants, planOf, subscribeInkPlus, type Plan } from '@/lib/campus/ink';
+import { hasAssistants, planOf, type Plan } from '@/lib/campus/ink';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 
 // "Assistants" at the foot of every page is part of Ink+ (components/campus/foot.tsx). Each press finds out again who is asking.
@@ -15,9 +15,4 @@ export async function hasInkPlusAction(): Promise<boolean> {
 export async function planHereAction(): Promise<Plan> {
   const principal = await getPortalPrincipal();
   return principal ? planOf(db(), principal.personId) : 'free';
-}
-/** "Subscribe" on the card at the foot. Nothing is charged: the ask is kept, with when it was made and that it was made here. False for an email that is not one, or for nobody signed in. */
-export async function subscribeAtFootAction(email: string): Promise<boolean> {
-  const principal = await getPortalPrincipal();
-  return !!principal && subscribeInkPlus(db(), principal.personId, String(email), 'footer');
 }

@@ -125,7 +125,7 @@ export async function makeCustomFace(db: Db, personId: string, upload: Uint8Arra
   return made;
 }
 
-const NEEDS_PLUS = 'Starting from another pet comes with Ink+.';
+const NEEDS_INK = 'Starting from another pet comes with Ink.';
 const NOT_A_BASE = 'That one can’t be drawn again. Pick one of your own pets, or an Ink one.';
 const SAY = 'Say what should change.';
 
@@ -151,12 +151,13 @@ export const drawFromBase: Draw = async (base, changes = [], note = '') => {
 };
 
 /**
- * The picture a new animal may be drawn from, by its address (`/animals/NN.webp`, or `.png`, or `/animals/custom/<token>`). Ink+ only.
+ * The picture a new animal may be drawn from, by its address (`/animals/NN.webp`, or `.png`, or `/animals/custom/<token>`). Ink, and Ink+ which holds it:
+ * making your animal yours is Ink (public/demo/mockups-ink-buttons.html).
  * A person may start from one of their own made animals while it is theirs alone (no tier), or from an Ink (premium)
  * one; never a core one, a school's own, or one that is off, even one they made. The admin may start from any. Returns the largest picture Loopd has of it.
  */
 export async function baseOf(q: Q, personId: string, src: string, admin = false): Promise<Uint8Array> {
-  if (!admin && (await planOf(q, personId)) !== 'plus') throw new CampusError(NEEDS_PLUS);
+  if (!admin && (await planOf(q, personId)) === 'free') throw new CampusError(NEEDS_INK);
   const built = /^\/animals\/(\d{2})\.(?:webp|png)$/.exec(src), token = /^\/animals\/custom\/([^/?#]+)$/.exec(src)?.[1];
   if (built) {
     const face = Number(built[1]) - 1, { tiers } = await builtAnimals(q);
@@ -170,7 +171,7 @@ export async function baseOf(q: Q, personId: string, src: string, admin = false)
 }
 
 /**
- * "Start from another pet" (Ink+): an animal drawn again from one the person may start from (baseOf), changed as they
+ * "Start from another pet" (Ink): an animal drawn again from one the person may start from (baseOf), changed as they
  * said. It is made as a pet from a photo is (makeCustomFace): a new animal of their own, and their face.
  */
 export async function makeFromBase(db: Db, personId: string, src: string, note: string, email: string | null, admin = false, draw: Draw = drawFromBase): Promise<{ token: string; left: number | null }> {

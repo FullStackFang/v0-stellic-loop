@@ -19,7 +19,7 @@ import { AddSchools } from './add-schools';
 import { OwnFace } from './own-face';
 import { SaveFace } from './save-face';
 import { InkBlot, InkMark, InkSparks, SchoolMark } from './ink-mark';
-import { JoinPlan } from './join-plan';
+import { GetInk } from './join-plan';
 import { rememberMe } from '@/components/loading/last-bar';
 import { SeatsSmall, SeatsWord } from '@/components/loading/seats';
 import { PicturesWait } from '@/components/loading/pictures-wait';
@@ -314,7 +314,7 @@ export function CampusBar({ screen, groups = [], signInHref, door, signOut = nul
   const { campus, viewer } = screen;
   // The groups pages' links are in the card for anyone who has a group, as they are on those pages. The admin's own list already has "How we got here".
   const more = viewer && groups.length > 0 ? <nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!viewer.admin} /></nav> : null;
-  return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0} plus={viewer?.anyKit}
+  return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0} plus={viewer?.plan === 'plus' || viewer?.admin}
     account={viewer ? <Account screen={screen} signOut={signOut} swap={swap} more={more} /> : door ? <SignInHere {...door} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}>{children}</TopBar>;
 }
 
@@ -340,9 +340,9 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
   const me: Face = { first: viewer.first, photo: face === PHOTO ? viewer.ownPhoto : face === CUSTOM ? own : animal(face), plan: viewer.plan === 'plus' ? 'plus' : asked ? 'ink' : 'free' }, level = viewer.level, top = LEVELS[LEVELS.length - 1].from, next = LEVELS[level + 1];
   // Every loader shows this face on this blot (components/loading): the last seat of the ticket, and the small one.
   useEffect(() => { rememberMe({ face: me.photo, plan: me.plan, seed: `${viewer.first}${me.photo ?? ''}` }); }, [me.photo, me.plan, viewer.first]);
-  // What a new animal may be drawn from (Ink+): their own made ones still theirs alone (no tier, or made on this visit), and the Ink ones. The admin may start from any. The server checks it again (baseOf).
-  // Everyone is shown them: without Ink+ the step offers Ink+ where the drawing would be (canBase).
-  const canBase = me.plan === 'plus' || viewer.admin, bases = [...new Map([...owns.flatMap((src, at) => viewer.personal.includes(src) || !viewer.owns.includes(src) ? [{ src, name: `Your own animal ${at + 1}` }] : []), ...viewer.picks.premium, ...(viewer.admin ? [...viewer.picks.school, ...viewer.picks.core] : [])].map(one => [one.src, { src: one.src, name: one.name }])).values()];
+  // What a new animal may be drawn from (Ink: making it yours): their own made ones still theirs alone (no tier, or made on this visit), and the Ink ones. The admin may start from any. The server checks it again (baseOf).
+  // Everyone is shown them: without Ink the step offers Ink where the drawing would be (canBase).
+  const canBase = me.plan !== 'free' || viewer.admin, bases = [...new Map([...owns.flatMap((src, at) => viewer.personal.includes(src) || !viewer.owns.includes(src) ? [{ src, name: `Your own animal ${at + 1}` }] : []), ...viewer.picks.premium, ...(viewer.admin ? [...viewer.picks.school, ...viewer.picks.core] : [])].map(one => [one.src, { src: one.src, name: one.name }])).values()];
   /** One of the animals they had made, which may not be the one in use. */
   const chooseOwn = (next: string) => { const before = { face, own }; setOwn(next); setFace(CUSTOM); setMoved(true); save(async () => { if (!(await ownFaceAction(next)).ok) { setOwn(before.own); setFace(before.face); } }); };
   useEffect(() => {
@@ -373,9 +373,9 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
         <div className="cs-lvbar" style={{ '--to': Math.min(1, viewer.outings / top) } as React.CSSProperties}><i />{LEVELS.slice(1).map(each => <em key={each.name} style={{ left: `${each.from / top * 100}%` }} className={viewer.outings >= each.from ? 'hit' : ''} />)}</div>
         <p><span><b>{viewer.outings}</b> / {top} outings</span><span>{next ? `${next.from - viewer.outings} more to ${next.name}` : 'Top level'}</span></p></div>
       {/* The plan's one row. It steps aside for the picker, where an Ink animal opens the plan for someone without it. */}
-      {!picking && (me.plan === 'plus' ? <div className="cs-inkrow"><InkMark plus /><span><b>You have Ink+</b><small>Everything in Ink, your AI, any school’s colours, no limits.</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>
-        : me.plan === 'ink' ? <div className="cs-inkrow"><InkMark /><span><b>You have Ink</b><small>Every Ink animal is yours, and 3 pets from a photo.</small></span><JoinPlan plan="plus" place="account: Get Ink+" className="cs-btn sm"><InkMark plus />Ink+ · $9.99</JoinPlan></div>
-        : <div className="cs-inkrow"><InkMark /><span><b>Loopd Ink</b><small>More animals, and 3 pets drawn from your photos.</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>)}
+      {!picking && (me.plan === 'plus' ? <div className="cs-inkrow"><InkMark plus /><span><b>You have Ink+</b><small>Everything in Ink, plus your own AI and insights on your groups.</small></span><a className="cs-btn sm" href={INK_PAGE}>See it</a></div>
+        : me.plan === 'ink' ? <div className="cs-inkrow"><InkMark /><span><b>You have Ink</b><small>Every Ink animal, your pets, any school’s colours and Conga grounds.</small></span><GetInk plan="plus" place="account: Get Ink+" small /></div>
+        : <div className="cs-inkrow"><InkMark /><span><b>Loopd Ink</b><small>Make it yours: Ink animals, pets from your photos, any school’s colours.</small></span><GetInk plan="ink" place="account: Get Ink" small /></div>)}
       {!picking && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" /></svg><span><b>Save your picture</b><small>A profile picture, a lock screen or a sticker.</small></span><button className="cs-btn sm" onClick={() => { setPicking(true); setSaving(true); setSchooling(false); }}>Save it</button></div>}
       {/* Which campus of the school is the person's own, for a school with more than one. The other is one press away. */}
       {!picking && home && swap.filter(each => !each.home).map(each => <div className="cs-inkrow cs-camprow" key={each.slug}><span><b>Your campus is {home.title}</b><small>{moveNote ?? 'You can look at the other one any time from the map.'}</small></span>
@@ -387,7 +387,7 @@ export function Account({ screen, signOut, swap = [], more = null }: { screen: S
       {!picking && !schooling && <div className="cs-inkrow cs-saverow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M8 12.5l2.8 2.8L16 9.5" /></svg><span><b>Run a club?</b><small>One home for every event you run.</small></span><a className="cs-btn sm" href={IMPRINT_PAGE}>Claim your club</a></div>}
       {/* eslint-disable @next/next/no-img-element -- icons from public/animals, and the sign-in account's photo at its own address */}
       {picking && saving ? <SaveFace face={me.photo ?? ''} onBack={() => { setSaving(false); setPicking(false); }} />
-      : picking && making ? <OwnFace asked={asked} left={left} bases={bases} plus={canBase} wearing={me.photo} current={owns.includes(own ?? '') ? own ?? '' : owns[owns.length - 1] ?? ''} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
+      : picking && making ? <OwnFace asked={asked} left={left} bases={bases} plus={me.plan === 'plus' || viewer.admin} ink={canBase} wearing={me.photo} current={owns.includes(own ?? '') ? own ?? '' : owns[owns.length - 1] ?? ''} onAsked={() => setAsked(true)} onBack={() => setMaking(false)} onKept={(kept, dropped) => { setOwn(kept); setOwns(had => [...had.filter(one => one !== kept && one !== dropped), kept]); }} onMade={(made, more) => { setOwn(made); setOwns(had => [...had, made]); setLeft(more); setAsked(true); setFace(CUSTOM); setMoved(true); }} />
       : picking ? <div className="cs-lvl-body cs-pets">
         {/* Search on its own line, the two filters under it with how many each shows; Shuffle and Done in the foot (public/demo/mockups-picture-card-height.html, C) */}
         <div className="cs-pets-top"><input type="search" value={find} onChange={event => setFind(event.target.value)} aria-label="Search animals" placeholder="Search animals" />

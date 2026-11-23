@@ -13,8 +13,8 @@ import './foot.css';
  * ticket that stood above it lived on in Seats for a while (a doodle; it is three games now, components/doodles). The ways around are the top bar's, Assistants
  * among them (components/campus/assistants-link.tsx). `home` is where the wordmark leads.
  * The colours are a dot for each school the person may wear, named: the one on always, another while it is pointed at
- * (public/demo/mockups-school-labels.html, foot C). The tag a face shows when pointed at is mounted here too (face-tag.tsx). Someone signed in without Ink+ has their own, and one pill,
- * "Every school" with the Ink+ mark, whose card says the rest come with it (public/demo/mockups-ink-colours.html, "My pick").
+ * (public/demo/mockups-school-labels.html, foot C). The tag a face shows when pointed at is mounted here too (face-tag.tsx). Someone signed in without Ink has their own, and one pill,
+ * "Every school" with the Ink mark, whose card says the rest come with it (public/demo/mockups-ink-colours.html, "My pick").
  */
 export function SiteFoot({ home = '/', kit: worn }: { home?: string; /** The colours the page it ends has put on (the front door, which turns from school to school). Then the foot wears them too, and has no colours of its own to pick. */ kit?: string }) {
   const { kit, yours, any } = useLook(), [asking, setAsking] = useState(false), [open, setOpen] = useState(false), locked = !!yours && !any;
@@ -27,7 +27,7 @@ export function SiteFoot({ home = '/', kit: worn }: { home?: string; /** The col
         {!worn && <button type="button" className="cs-ft-lookbtn" data-kit={kit} aria-label={`Colours: ${KITS.find(each => each.slug === kit)?.name ?? ''}`} aria-expanded={open} onClick={() => setOpen(!open)}><i /></button>}
         {!worn && <div className="cs-ft-look" data-open={open || undefined}>
           <div className="cs-ft-kits" role="group" aria-label="Colours">{KITS.filter(each => mayWear(each.slug, yours, any)).map(each => <button key={each.slug} data-kit={each.slug} aria-label={`${each.name} colours`} aria-pressed={kit === each.slug} onClick={() => { pickKit(each.slug); setOpen(false); }}><i /><span><b>{each.name}</b></span></button>)}</div>
-          {locked && <span className="cs-ft-inkpick"><button type="button" className="cs-ft-asst" aria-label="Every school, with Ink+" aria-expanded={asking} data-open={asking || undefined} onClick={() => setAsking(!asking)}><InkMark plus />Every school</button>
+          {locked && <span className="cs-ft-inkpick"><button type="button" className="cs-ft-asst" aria-label="Every school, with Ink" aria-expanded={asking} data-open={asking || undefined} onClick={() => setAsking(!asking)}><InkMark />Every school</button>
             {asking && <InkColours yours={yours} onClose={() => setAsking(false)} />}</span>}</div>}</div></div>
     <FaceTags />
   </footer>;

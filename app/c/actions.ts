@@ -9,8 +9,8 @@ import { readLine } from '@/lib/campus/line';
 import { findCampus, findListing } from '@/lib/campus/listings';
 import { checkIn, imIn, invite, joinByToken, leave, outingByToken, uninvite } from '@/lib/campus/outings';
 import { customFace } from '@/lib/campus/animals';
-import { keepPicture, makeCustomFace, makeFromBase, retryCustomFace, subscribe, useCustomFace } from '@/lib/campus/custom-face';
-import { planOf as inkPlan, subscribeInkPlus } from '@/lib/campus/ink';
+import { keepPicture, makeCustomFace, makeFromBase, retryCustomFace, useCustomFace } from '@/lib/campus/custom-face';
+import { planOf as inkPlan } from '@/lib/campus/ink';
 import { pickFace, placeAt } from '@/lib/campus/people';
 import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
@@ -123,9 +123,6 @@ export async function keepFaceAction(keep: string): Promise<ActResult> {
 }
 
 /** "Subscribe" to Loopd Premium in the account card. Nothing is charged; the ask and its email are kept. */
-export async function subscribeAction(email: string): Promise<ActResult> {
-  return act(async viewer => { await subscribe(db(), viewer.personId, String(email)); });
-}
 
 /** What the "Sign up my school" box shows as someone types: the US colleges it could be. Nothing for someone signed out. */
 export async function findSchoolsAction(typed: string): Promise<{ found: FoundSchool[]; total: number }> {
@@ -255,6 +252,3 @@ export async function askGroupAction(scope: GroupScope, ask: { question: string;
 }
 
 /** "Subscribe" on the Ink+ plate of "Save your picture": what takes the Loopd mark off. Nothing is charged: the ask is kept, with where it was made. */
-export async function subscribeToSaveAction(email: string): Promise<ActResult> {
-  return act(async viewer => { if (!await subscribeInkPlus(db(), viewer.personId, String(email), 'save picture')) throw new CampusError('Enter the email to subscribe with.'); });
-}

@@ -107,6 +107,19 @@ it('signs up for Ink from the box, recording where, and thanks them', async () =
   vi.unstubAllGlobals();
 });
 
+it('signed out, holds the plan and opens the bar\'s sign-in over the game, in place of leaving it', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ ok: false, signIn: '/sign-in' }), { status: 401 })));
+  const asked = vi.fn(); window.addEventListener('loopd:sign-in', asked);
+  open({ ink: false, animals: [{ face: 12, picture: null }] });
+  root.querySelector<HTMLElement>('.side .you')!.click();
+  root.querySelector<HTMLElement>('.side .pick [data-join]')!.click();
+  await vi.waitFor(() => expect(asked).toHaveBeenCalled());
+  expect(JSON.parse(localStorage.getItem('loopd-held-ink')!)).toMatchObject({ plan: 'ink', place: 'seats: Get Ink' });
+  expect(root.querySelector('.side .pick p')!.textContent).not.toContain('did not go through');
+  expect(root.querySelector<HTMLButtonElement>('.side .pick [data-join]')!.disabled).toBe(false);
+  window.removeEventListener('loopd:sign-in', asked); localStorage.clear(); vi.unstubAllGlobals();
+});
+
 it('with Ink+ the page says so, for the sparkle', () => {
   open({ ink: true, plus: true, animals: [{ face: 12, picture: null }] });
   expect(root.dataset.ink).toBe('plus');

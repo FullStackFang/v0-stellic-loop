@@ -2,6 +2,9 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { claimSignedOut, JOIN_PLACES, joinPlan, joinSignedOut, joinedWords, planOf, type JoinPlace } from '@/lib/campus/ink';
 import { campusViewer, signInHref } from '@/lib/campus/session';
+import { listCampuses } from '@/lib/campus/listings';
+import { schoolOf } from '@/lib/campus/schools';
+import { clerkPortalConfigured } from '@/lib/emba/clerk-identity';
 
 // Signing up for Ink or Ink+ from an ask that takes no email of its own (openspec loop-ink-tiers): the Ink page's plan
 // cards, the colours card, the account row, the pet maker, and the games. A route and not a server action, so the plain
@@ -36,7 +39,11 @@ export async function POST(request: Request) {
     if (!await joinSignedOut(db(), body.email, plan, place)) return no(400, { ok: false, message: 'Enter the email to sign up with.' });
     return Response.json({ ok: true, signedOut: true }, { headers: { 'cache-control': 'private, no-store' } });
   }
-  if (!viewer) return no(401, { ok: false, signIn: signInHref(back) });
+  // Signed out: what the sign-in card needs to open where the button was (components/campus/join-plan.tsx), so nobody leaves the page to sign up.
+  if (!viewer) {
+    const schools = (await listCampuses(db())).filter(campus => schoolOf(campus.slug) === campus.slug).map(({ slug, name, domains }) => ({ slug, name, domains }));
+    return no(401, { ok: false, signIn: signInHref(back), schools, configured: clerkPortalConfigured() });
+  }
   if (!await joinPlan(db(), viewer.personId, viewer.principal.verifiedEmail ?? '', plan, place)) return no(400, { ok: false, message: 'Your account has no email to sign up with.' });
   revalidatePath('/c', 'layout'); revalidatePath('/groups', 'layout');
   return Response.json({ ok: true, said: joinedWords(plan, viewer.principal.verifiedEmail ?? undefined) }, { headers: { 'cache-control': 'private, no-store' } });

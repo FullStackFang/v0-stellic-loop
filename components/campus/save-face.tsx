@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { subscribeToSaveAction } from '@/app/c/actions';
 import { GROUNDS_HREF, saveHref as hrefOf, SHAPES, type Shape, type Swatch } from '@/lib/campus/save-shapes';
 import '@/app/c/save-face.css';
 import { SeatsOver, SeatsWord } from '@/components/loading/seats';
 import { joinedWords } from '@/lib/campus/ink';
 import { InkMark } from './ink-mark';
+import { GetInk } from './join-plan';
 
 /** What Ink+ gives here. Nothing is charged for it yet, and the plate says so once the person has subscribed. */
 const PERKS = ['Your picture, no mark', 'Everything in Ink'];
@@ -24,8 +24,8 @@ export function SaveFace({ of = null, face = '', onBack }: { of?: { orgId: strin
   const saveHref = (...args: Parameters<typeof hrefOf>) => `${hrefOf(...args)}${face ? `&face=${encodeURIComponent(face)}` : ''}`;
   const [shape, setShape] = useState<Shape>('profile'), [ground, setGround] = useState('school'), [mark, setMark] = useState(true);
   const [swatches, setSwatches] = useState<Swatch[]>([]);
-  // `plan` is the Ink+ plate, in the pane's place. `asking` is the email field in the button's place, `joined` whether they subscribed on this visit.
-  const [plan, setPlan] = useState(false), [asking, setAsking] = useState(false), [joined, setJoined] = useState(false), [email, setEmail] = useState('');
+  // `plan` is the Ink+ plate, in the pane's place. `joined`: whether they signed up on this visit.
+  const [plan, setPlan] = useState(false), [joined, setJoined] = useState(false);
   // `none` is why there is nothing to save: the server's own sentence.
   const [wait, setWait] = useState(false), [said, setSaid] = useState(''), [none, setNone] = useState('');
   useEffect(() => { fetch(GROUNDS_HREF).then(got => got.ok ? got.json() : []).then(setSwatches, () => {}); }, []);
@@ -50,14 +50,6 @@ export function SaveFace({ of = null, face = '', onBack }: { of?: { orgId: strin
     setWait(false);
     if (got?.ok) setMark(false); else if (got?.status === 403) setPlan(true); else setSaid(NOT_NOW);
   };
-  const subscribe = async () => {
-    if (!asking) return setAsking(true);
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setSaid('Enter the email to subscribe with.');
-    setSaid(''); setWait(true);
-    const got = await subscribeToSaveAction(email.trim()).catch(() => ({ ok: false as const, message: NOT_NOW }));
-    setWait(false);
-    if (got.ok) { setJoined(true); setMark(false); } else setSaid(got.message);
-  };
   /** Hands over the file: on a phone through its share sheet, which is where "Save Image" is; elsewhere as a download. */
   const save = async () => {
     setSaid(''); setWait(true);
@@ -75,18 +67,17 @@ export function SaveFace({ of = null, face = '', onBack }: { of?: { orgId: strin
   };
 
   if (plan) return <div className="cs-lvl-body cs-pets cs-own cs-save"><div className="cs-prem">
-    <button className="cs-prem-back" onClick={() => { setPlan(false); setAsking(false); setSaid(''); }}>Back</button>
+    <button className="cs-prem-back" onClick={() => { setPlan(false); setSaid(''); }}>Back</button>
     <p className="cs-prem-kick">Loopd Ink+</p>
     {joined ? <><p className="cs-prem-big said">You’re in. The mark is off.</p>
       <p className="cs-own-thanks">{joinedWords('plus')}</p></>
     : <><p className="cs-prem-big">$9.99 <small>a month</small></p>
       <div className="cs-prem-perks">{PERKS.map(perk => <span key={perk}>{perk}</span>)}</div></>}
-    <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void subscribe(); }}>
+    <div className="cs-prem-stub">
       {joined ? <button type="button" className="cs-btn go" disabled={wait} onClick={() => void save()}><SeatsWord on={wait} word="Saving" plate>{DOWN}Save without the mark</SeatsWord></button>
-      : asking ? <div className="cs-prem-join"><input type="email" value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" autoFocus /><button className="cs-btn go" disabled={wait}><SeatsWord on={wait} word="Subscribing" plate>Subscribe</SeatsWord></button></div>
-      : <button className="cs-btn go">Subscribe to Loopd Ink+</button>}
+      : <GetInk plan="plus" place="save picture: Get Ink+" onJoined={() => { setJoined(true); setMark(false); }} />}
       {said && <p role="alert">{said}</p>}
-    </form>
+    </div>
   </div></div>;
 
   return <div className="cs-lvl-body cs-pets cs-own cs-save"><div className="cs-prem">

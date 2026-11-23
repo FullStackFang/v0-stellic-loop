@@ -50,7 +50,7 @@ export default async function GroupsLayout({ children }: { children: React.React
     startOnYou();
     const seen = campusViewer().catch(() => null);
     const [groups, { screen, ...look }, viewer] = await Promise.all([barGroups(principal), seen.then(account), seen]);
-    // The colours they may wear: Loopd's and their schools', or every school's with Ink+ (components/campus/kit.tsx).
+    // The colours they may wear: Loopd's and their schools', or every school's with Ink (components/campus/kit.tsx).
     const yours = viewer?.kits ?? ['loop', look.kit], any = viewer?.anyKit ?? false;
     content = <div className="cs gb"><Kit own={look.kit} yours={yours} any={any} />
       <Bar groups={groups} kits={yours} anyKit={any} face={look.face} plan={look.plan} screen={screen} account={configured ? <SignOut /> : null}><Suspense fallback={<SeatsSmall size={16} first />}><OnYou /></Suspense></Bar>

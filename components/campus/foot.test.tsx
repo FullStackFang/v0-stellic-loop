@@ -5,11 +5,11 @@ import { SiteFoot } from './foot';
 
 // The foot has the small print only. Assistants, which first stood there (public/demo/mockups-foot-legal.html), is in
 // the top bar, and is part of Ink+.
-const server = vi.hoisted(() => ({ plan: vi.fn(async () => 'free'), plus: vi.fn<() => Promise<boolean>>(), subscribe: vi.fn<(email: string) => Promise<boolean>>(), push: vi.fn() }));
-vi.mock('./foot-actions', () => ({ planHereAction: server.plan, hasInkPlusAction: server.plus, subscribeAtFootAction: server.subscribe }));
+const server = vi.hoisted(() => ({ plan: vi.fn(async () => 'free'), plus: vi.fn<() => Promise<boolean>>(), push: vi.fn() }));
+vi.mock('./foot-actions', () => ({ planHereAction: server.plan, hasInkPlusAction: server.plus }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: server.push, refresh: vi.fn() }) }));
 
-beforeEach(() => { server.plus.mockReset(); server.subscribe.mockReset(); server.push.mockReset(); });
+beforeEach(() => { server.plus.mockReset(); server.push.mockReset(); });
 afterEach(cleanup);
 const links = () => screen.getAllByRole('link').map(link => link.textContent);
 
@@ -61,22 +61,21 @@ it('signed out, every school is a dot and nothing asks for Ink+', () => {
   expect(screen.queryByRole('button', { name: /Every school/ })).toBeNull();
 });
 
-it('without Ink+, the dots are Loopd and your school, and one pill opens the Ink+ card', () => {
+it('without Ink, the dots are Loopd and your school, and one pill opens the Ink card', () => {
   lookAs('loop cornell');
   render(<SiteFoot />);
   expect(dots()).toEqual(['Loopd', 'Cornell']);
-  // The pill wears the Ink+ mark in place of the plan's name (openspec loop-ink-tiers).
-  const pill = screen.getByRole('button', { name: 'Every school, with Ink+' });
-  expect(pill).not.toHaveTextContent('Ink+');
+  // Wearing any school's colours is making it yours: Ink (public/demo/mockups-ink-buttons.html). The pill wears the Ink mark.
+  const pill = screen.getByRole('button', { name: 'Every school, with Ink' });
+  expect(pill).not.toHaveTextContent('Ink');
   fireEvent.click(pill);
-  const card = screen.getByRole('dialog', { name: "Every school's colours come with Ink+" });
+  const card = screen.getByRole('dialog', { name: "Every school's colours come with Ink" });
   expect(pill).toHaveAttribute('aria-expanded', 'true');
-  // What it does here, then what Ink+ is, and its price.
-  expect(card).toHaveTextContent('The other 3 come with Ink+.');
-  expect(card).toHaveTextContent('What Ink+ gives you');
-  expect(card).toHaveTextContent('$9.99 a month');
-  expect(card).not.toHaveTextContent('$2.99');
-  expect(within(card).getByRole('button', { name: 'Sign up for Ink+' })).toBeInTheDocument();
+  // The one ask card names its plan and says only what that plan gives: no Ink+, and the price is on the one Get button.
+  expect(card).toHaveTextContent('The other 3 come with Ink');
+  expect(card).not.toHaveTextContent('Ink+');
+  expect(card).not.toHaveTextContent('$9.99');
+  expect(within(card).getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
   fireEvent.click(within(card).getByRole('button', { name: 'Not now' }));
   expect(screen.queryByRole('dialog')).toBeNull();
   fireEvent.click(pill);
@@ -85,21 +84,39 @@ it('without Ink+, the dots are Loopd and your school, and one pill opens the Ink
   lookAs(null);
 });
 
-it('signs up for Ink+ from the colours card, recording where, and thanks them', async () => {
+it('signs up for Ink from the colours card, recording where, and thanks them', async () => {
   lookAs('loop cornell');
-  const posted = vi.fn(async (_: string, init: RequestInit) => new Response(JSON.stringify({ ok: true, said: 'Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink+ for now.', sent: init.body })));
+  const posted = vi.fn(async (_: string, init: RequestInit) => new Response(JSON.stringify({ ok: true, said: 'Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now.', sent: init.body })));
   vi.stubGlobal('fetch', posted);
   render(<SiteFoot />);
-  fireEvent.click(screen.getByRole('button', { name: 'Every school, with Ink+' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Sign up for Ink+' }));
-  expect(await screen.findByRole('status')).toHaveTextContent('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink+ for now.');
+  fireEvent.click(screen.getByRole('button', { name: 'Every school, with Ink' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Get Ink · $2.99' }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now.');
   expect(posted).toHaveBeenCalledWith('/c/ink/join', expect.objectContaining({ method: 'POST' }));
-  expect(JSON.parse(String(posted.mock.calls[0][1].body))).toMatchObject({ plan: 'plus', place: 'colours: Sign up' });
+  expect(JSON.parse(String(posted.mock.calls[0][1].body))).toMatchObject({ plan: 'ink', place: 'colours: Get Ink' });
+  // Signed up, Not now steps aside for the thanks.
   vi.unstubAllGlobals();
   lookAs(null);
 });
 
-it('with Ink+, every school is a dot and there is no pill', () => {
+it('signed out, opens the sign-in card in the colours card itself, and holds the plan until they are back', async () => {
+  lookAs('loop cornell');
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ ok: false, signIn: '/sign-in', schools: [], configured: false }), { status: 401 })));
+  render(<SiteFoot />);
+  fireEvent.click(screen.getByRole('button', { name: 'Every school, with Ink' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Get Ink · $2.99' }));
+  const card = screen.getByRole('dialog');
+  expect(await within(card).findByText('held for you')).toBeInTheDocument();
+  expect(card).toHaveTextContent('Sign in');
+  expect(JSON.parse(localStorage.getItem('loopd-held-ink')!)).toMatchObject({ plan: 'ink', place: 'colours: Get Ink' });
+  // Back gives the Get button again; the plan stays held.
+  fireEvent.click(within(card).getByRole('button', { name: 'Back' }));
+  expect(within(card).getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
+  localStorage.clear(); vi.unstubAllGlobals();
+  lookAs(null);
+});
+
+it('with Ink, every school is a dot and there is no pill', () => {
   lookAs('loop cornell', true);
   render(<SiteFoot />);
   expect(dots()).toHaveLength(5);
@@ -130,28 +147,27 @@ it('tells someone on Ink what Ink+ adds, and what it costs in place of Ink', asy
   render(<AssistantsLink />);
   fireEvent.click(screen.getByRole('link', { name: /Assistants/ }));
   const card = await screen.findByRole('dialog');
-  await vi.waitFor(() => expect(card).toHaveTextContent('You have Ink. Ink+ adds your own AI'));
-  expect(card).toHaveTextContent('$9.99 a month, in place of $2.99');
-  expect(within(card).getByRole('button', { name: 'Move to Ink+ · $9.99' })).toBeInTheDocument();
+  await vi.waitFor(() => expect(card).toHaveTextContent('in place of Ink’s $2.99. Your Ink stays.'));
+  expect(within(card).getByRole('button', { name: 'Get Ink+ · $9.99' })).toBeInTheDocument();
 });
 
-it('subscribes from the card with the email given, and then opens Assistants', async () => {
+it('signs up from the card in one press, with no email to type, and then opens Assistants', async () => {
   server.plus.mockResolvedValue(false);
+  const posted = vi.fn(async () => new Response(JSON.stringify({ ok: true, said: 'Thanks for your interest.' })));
+  vi.stubGlobal('fetch', posted);
   render(<AssistantsLink />);
   fireEvent.click(screen.getByRole('link', { name: /Assistants/ }));
   const card = await screen.findByRole('dialog');
-  // An email the server does not take is said so, and the card stays.
-  server.subscribe.mockResolvedValueOnce(false);
-  fireEvent.change(within(card).getByLabelText('Email'), { target: { value: 'ana@cornell.edu' } });
-  fireEvent.click(within(card).getByRole('button', { name: 'Subscribe · $9.99' }));
-  expect(await within(card).findByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
+  expect(within(card).queryByLabelText('Email')).toBeNull();
+  fireEvent.click(within(card).getByRole('button', { name: 'Get Ink+ · $9.99' }));
+  expect(await within(card).findByRole('status')).toHaveTextContent('Thanks for your interest.');
+  expect(JSON.parse(String((posted.mock.calls[0] as unknown as [string, RequestInit])[1].body))).toMatchObject({ plan: 'plus', place: 'assistants: Get Ink+' });
   expect(server.push).not.toHaveBeenCalled();
-  server.subscribe.mockResolvedValueOnce(true);
-  fireEvent.click(within(card).getByRole('button', { name: 'Subscribe · $9.99' }));
-  await vi.waitFor(() => expect(server.push).toHaveBeenCalledWith('/groups/connections'));
-  expect(server.subscribe).toHaveBeenLastCalledWith('ana@cornell.edu');
+  fireEvent.click(within(card).getByRole('button', { name: 'Open Assistants' }));
+  expect(server.push).toHaveBeenCalledWith('/groups/connections');
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(links()).toEqual(['Assistants']);
+  vi.unstubAllGlobals();
 });
 
 it('takes a member with Ink+ to Assistants, and drops the tag', async () => {

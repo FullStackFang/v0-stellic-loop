@@ -49,7 +49,7 @@ export async function saveBest(q: Q, personId: string, player: CongaPlayer, roun
   const { map, best, seconds } = round;
   if (!congaMaps().includes(map) || !Number.isInteger(best) || best < 1 || best > GIANT + 1) return false;
   if (!Number.isFinite(seconds) || seconds <= 0 || seconds > LONGEST_ROUND || best > CHEAT_START + CHEAT_RATE * seconds) return false;
-  // As the game plays it (maps.js mayPlay): the open ground is anyone's, a school's grounds its own people's, the rest take Ink+.
+  // As the game plays it (maps.js mayPlay): the open ground is anyone's, a school's grounds its own people's, the rest take Ink.
   if (!mayPlay(player, map)) return false;
   const worn = player.animals.find(animal => round.face ? animal.face === round.face : animal.picture === round.picture) ?? player.animals[0];
   await q.query(

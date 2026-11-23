@@ -5,7 +5,7 @@ import { db } from '../db';
 import type { Principal } from '../emba/access';
 import { getSignedInPrincipal } from '../emba/portal-session';
 import { isAdmin } from './admin';
-import { hasInkPlus } from './ink';
+import { hasInk } from './ink';
 import { findCampus, listCampuses, type Campus } from './listings';
 import { addedSchools } from './linkedin';
 import { campusOf } from './people';
@@ -17,7 +17,7 @@ import type { Point } from './sections';
  * `visits` is the other campuses of their school, and the campuses of the schools their LinkedIn profile unlocked, by id:
  * places they may look at and join things without moving there.
  */
-export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null; kit: string; /** The colours they may wear: Loopd's, and their schools'. */ kits: string[]; /** Whether they may wear every school's: an Ink+ perk, and the admin's. */ anyKit: boolean; visits: string[] };
+export type CampusViewer = { principal: Principal; personId: string; admin: boolean; campus: Campus | null; kit: string; /** The colours they may wear: Loopd's, and their schools'. */ kits: string[]; /** Whether they may wear every school's: an Ink perk (Ink+ holds it), and the admin's. */ anyKit: boolean; visits: string[] };
 
 /**
  * Where the person seems to be: the host's own guess from the request (Vercel's location headers), not the browser's
@@ -49,11 +49,11 @@ export const campusViewer = cache(async (): Promise<CampusViewer | null> => {
   const school = await campusOf(db(), principal, await seemsAt());
   const admin = isAdmin(principal);
   // What follows waits only on the school: read together, not one after the other.
-  const [added, campuses, start, inkPlus] = await Promise.all([school ? addedSchools(db(), principal.personId) : null, school ? listCampuses(db()) : [], !school && admin ? findCampus(db(), DEFAULT_CAMPUS) : null, admin || hasInkPlus(db(), principal.personId)]);
+  const [added, campuses, start, inked] = await Promise.all([school ? addedSchools(db(), principal.personId) : null, school ? listCampuses(db()) : [], !school && admin ? findCampus(db(), DEFAULT_CAMPUS) : null, admin || hasInk(db(), principal.personId)]);
   const theirs = school ? [schoolOf(school.slug), ...added!.added] : [];
   const visits = school ? campuses.filter(each => each.id !== school.id && theirs.includes(schoolOf(each.slug))).map(each => each.id) : [];
   // Loopd is for people at a school: an email at none has no campus. The admin, who may open any, starts at the default one.
-  return { principal, personId: principal.personId, admin, campus: school ?? start, kit: school ? schoolOf(school.slug) : 'loop', kits: ['loop', ...theirs], anyKit: inkPlus, visits };
+  return { principal, personId: principal.personId, admin, campus: school ?? start, kit: school ? schoolOf(school.slug) : 'loop', kits: ['loop', ...theirs], anyKit: inked, visits };
 });
 
 /** Whether this viewer may use a campus's screen: it is their own, or another campus of a school they have, or they are the admin, who may open any. */

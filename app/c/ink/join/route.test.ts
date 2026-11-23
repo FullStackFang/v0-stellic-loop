@@ -56,8 +56,11 @@ it('on the Ink page, signs someone signed out up with the email they give, and g
   expect((await signedOutAsks(t.db)).every(ask => ask.claimed)).toBe(true);
 });
 
-it('sends someone signed out to sign in and back, and refuses another site, an unknown place and a made-up plan', async () => {
-  expect(await join(null, { plan: 'ink', place: 'ink page: Get Ink', back: '/c/ink' })).toEqual({ status: 401, body: { ok: false, signIn: '/sign-in?redirect_url=%2Fc%2Fink' } });
+it('gives someone signed out the sign-in card to sign in where they are, and refuses another site, an unknown place and a made-up plan', async () => {
+  // The card opens where the button was (components/campus/join-plan.tsx): the schools it knows, and whether sign-in is set up here.
+  const out = await join(null, { plan: 'ink', place: 'ink page: Get Ink', back: '/c/ink' });
+  expect(out).toMatchObject({ status: 401, body: { ok: false, signIn: '/sign-in?redirect_url=%2Fc%2Fink', configured: expect.any(Boolean) } });
+  expect(Array.isArray(out.body.schools)).toBe(true);
   expect((await join(null, { plan: 'ink', place: 'ink page: Get Ink', back: '//evil.test' })).body.signIn).toBe('/sign-in?redirect_url=%2Fc%2Fink');
   const ana = await person('ana@cornell.edu');
   expect((await join(ana, { plan: 'plus', place: 'ink page: Get Ink+' }, 'https://evil.test')).status).toBe(403);

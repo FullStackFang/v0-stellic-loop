@@ -10,6 +10,7 @@ import { startGroup } from '@/lib/emba/group-start';
 import { withPortalTestSession } from '@/lib/emba/portal-session';
 import { createInnerGroup } from '@/lib/emba/group-tree';
 import { askGroupPicture, keepGroupPicture } from '@/lib/emba/group-picture';
+import { joinedWords, joinPlan as givePlan, type JoinPlace } from '@/lib/campus/ink';
 import GroupsPage from './page';
 import MembersPage from './[namespace]/page';
 import TeamPage from './[namespace]/team/page';
@@ -24,7 +25,7 @@ const looking = vi.hoisted(() => ({ who: null as unknown }));
 vi.mock('./picture-actions', async original => {
   const real = await original<typeof import('./picture-actions')>(), { withPortalTestSession: as } = await import('@/lib/emba/portal-session');
   const wrap = <A extends unknown[], R>(run: (...args: A) => R) => (...args: A) => as(looking.who as Principal, () => run(...args));
-  return { subscribeInkPlusAction: wrap(real.subscribeInkPlusAction), drawGroupPictureAction: wrap(real.drawGroupPictureAction), keepGroupPictureAction: wrap(real.keepGroupPictureAction) };
+  return { drawGroupPictureAction: wrap(real.drawGroupPictureAction), keepGroupPictureAction: wrap(real.keepGroupPictureAction) };
 });
 
 // PREVIEW_DIR=… writes each state as a static page for screenshots, with the app's own style sheets and the pictures of a running dev server.
@@ -80,17 +81,17 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   preview('picture-pick');
   expect(card.getByRole('button', { name: 'Animal 5' })).toHaveAttribute('aria-pressed', 'true');
 
-  // No Ink+ yet: the plate first, and an email that is one.
+  // No Ink+ yet: the plate first, and the one Get button: one press, the account's email, no box to type it in
+  // (app/c/ink/join, which the browser calls; here it signs the person looking up).
+  vi.stubGlobal('fetch', vi.fn(async (_: string, init: RequestInit) => { const { plan, place } = JSON.parse(String(init.body)) as { plan: 'ink' | 'plus'; place: JoinPlace }; await givePlan(t.db, owner.personId, 'owner@example.test', plan, place); return new Response(JSON.stringify({ ok: true, said: joinedWords(plan, 'owner@example.test') })); }));
   fireEvent.click(go);
   expect(card.getByText('$9.99')).toBeInTheDocument();
+  expect(card.queryByRole('textbox', { name: 'Email' })).toBeNull();
   preview('picture-plate');
-  fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
-  expect(card.getByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
   expect(model.asked).toEqual([]);
-  fireEvent.change(card.getByRole('textbox', { name: 'Email' }), { target: { value: 'owner@example.test' } });
-  fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
+  fireEvent.click(card.getByRole('button', { name: 'Get Ink+ · $9.99' }));
 
-  // Subscribing draws nothing: the card asks first, with a line of the person's own and how long it may be.
+  // Signing up draws nothing: the card asks first, with a line of the person's own and how long it may be.
   expect(await card.findByText('Draw these 2 together?')).toBeInTheDocument();
   expect(card.getByText(/Thanks for your interest\. This isn’t ready yet, so we’ve upgraded you to Ink\+ for now\./)).toBeInTheDocument();
   expect(model.asked).toEqual([]);
@@ -105,7 +106,8 @@ it('draws a group picture from the tile: pick, the Ink+ plate, two drawings, kee
   expect(card.getAllByRole('img', { name: /^Drawing/ })).toHaveLength(2);
   preview('picture-two');
   expect(model.asked).toHaveLength(2);
-  expect((await t.db.query('select plan,place from campus_subscribe_ask')).rows).toEqual([{ plan: 'ink_plus', place: 'group picture' }]);
+  expect((await t.db.query('select plan,place from campus_subscribe_ask')).rows).toEqual([{ plan: 'ink_plus', place: 'group picture: Get Ink+' }]);
+  vi.unstubAllGlobals();
   expect(await groupPictures(t.db, [group.loopId])).toEqual(new Map());
 
   // The person's own line goes to the next drawing.

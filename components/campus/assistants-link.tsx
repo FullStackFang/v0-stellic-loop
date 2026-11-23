@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { LinkWait } from '@/components/loading/link-wait';
-import { SeatsWord } from '@/components/loading/seats';
-import { hasInkPlusAction, planHereAction, subscribeAtFootAction } from './foot-actions';
+import { hasInkPlusAction, planHereAction } from './foot-actions';
 import { InkMark } from './ink-mark';
+import { InkAsk } from './join-plan';
 import './foot.css';
 
 /**
  * "Assistants" in the top bar, for someone in a group. Assistants is part of Ink+: for someone without it, pressing the
- * link opens a card under it that says so, in place of going there (the pill and the card are the ones picked in
+ * link opens the one ask card (InkAsk) under it, in place of going there (the pill and the card are the ones picked in
  * public/demo/mockups-foot-legal.html, where the link first stood at the foot of the page).
  *
  * `plus` is what the page already knows: the person has Ink+. The link is then a plain link from the start. Without it
@@ -19,29 +19,18 @@ import './foot.css';
  */
 export function AssistantsLink({ plus: known = false }: { plus?: boolean } = {}) {
   const router = useRouter(), asked = useRef<Promise<boolean> | null>(known ? Promise.resolve(true) : null), [plus, setPlus] = useState(known), [ask, setAsk] = useState(false);
-  const [email, setEmail] = useState(''), [busy, setBusy] = useState(false), [said, setSaid] = useState('');
   // Someone on Ink is told what Ink+ adds, and what it costs in place of Ink (openspec loop-ink-tiers).
   const [onInk, setOnInk] = useState(false);
   // While a press waits for the server's answer, the link shows the small one, as every link of the bar does while its page is on its way.
   const [asking, setAsking] = useState(false);
-  // Subscribe on the card: the press is kept (when, and where it was made), and then Assistants opens.
-  const subscribe = async () => {
-    setBusy(true); setSaid('');
-    const got = await subscribeAtFootAction(email.trim()).catch(() => null);
-    setBusy(false);
-    if (!got) return setSaid(got === false ? 'Enter the email to subscribe with.' : 'That did not go through. Try again.');
-    asked.current = Promise.resolve(true); setPlus(true); setAsk(false); router.push('/groups/connections');
-  };
   // Asked once, when the link is first pointed at. If it cannot be asked, the link stays a link.
   const knows = () => asked.current ??= hasInkPlusAction().catch(() => true).then(has => { setPlus(has); return has; });
   const press = async (event: React.MouseEvent<HTMLAnchorElement>) => { if (plus) return; event.preventDefault(); if (ask) return setAsk(false); setAsking(true); const has = await knows(); setAsking(false); if (has) router.push('/groups/connections'); else { setAsk(true); setOnInk((await planHereAction().catch(() => 'free')) === 'ink'); } };
-  useEffect(() => { if (!ask) return; const key = (event: KeyboardEvent) => { if (event.key === 'Escape') setAsk(false); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); }, [ask]);
   return <span className="cs-asst">
     <Link className="cs-ft-asst" href="/groups/connections" data-open={ask || undefined} onPointerEnter={knows} onFocus={knows} onClick={press} aria-label={plus ? undefined : 'Assistants, with Ink+'}><InkMark plus />Assistants<LinkWait on={asking} /></Link>
-    {ask && <div className="cs-ft-ask" role="dialog" aria-label="Assistants come with Ink+">
-      <span className="cs-ft-ask-tab"><InkMark plus named /></span><h3>Assistants come with Ink+</h3><p>{onInk ? 'You have Ink. Ink+ adds your own AI, answering from your groups, any school’s colours, and no limits: $9.99 a month, in place of $2.99.' : 'Your own AI, answering from your groups.'}</p>
-      <form onSubmit={event => { event.preventDefault(); void subscribe(); }}><input type="email" required value={email} onChange={event => setEmail(event.target.value)} aria-label="Email" placeholder="Email to subscribe with" autoComplete="email" />
-        <button className="cs-btn sm go" disabled={busy}><SeatsWord on={busy} word="Subscribing" plate>{onInk ? 'Move to Ink+ · $9.99' : 'Subscribe · $9.99'}</SeatsWord></button><button type="button" className="cs-btn sm" onClick={() => setAsk(false)}>Not now</button></form>
-      {said && <p role="alert">{said}</p>}</div>}
+    {/* The one ask card. Signing up opens Assistants: the plan is theirs, and the link is a plain link from then on. */}
+    {ask && <InkAsk plan="plus" place="assistants: Get Ink+" title="Assistants come with Ink+" onClose={() => setAsk(false)} then="Open Assistants"
+      onDone={() => { asked.current = Promise.resolve(true); setPlus(true); setAsk(false); router.push('/groups/connections'); }}
+      line={onInk ? 'Your own AI on your groups, and insights on them: $9.99 a month, in place of Ink’s $2.99. Your Ink stays.' : 'Your own AI on your groups: what was decided, who has what, and what is due. Insights on them come with it.'} />}
   </span>;
 }

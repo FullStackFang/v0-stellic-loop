@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { CampusError } from '@/lib/campus/errors';
-import { subscribeInkPlus } from '@/lib/campus/ink';
 import { askGroupPicture, keepGroupPicture, type Pick } from '@/lib/emba/group-picture';
 import { getPortalPrincipal } from '@/lib/emba/portal-session';
 
@@ -24,10 +23,6 @@ async function act(run: (principal: NonNullable<Awaited<ReturnType<typeof getPor
     // A CampusError is a sentence written for the person. Anything else says only that it did not work.
     return { ok: false, message: error instanceof CampusError ? error.message : 'That did not go through. Check your access and try again.' };
   }
-}
-/** "Subscribe" on the Ink+ plate of the card. Nothing is charged: the ask is kept, with where it was made. */
-export async function subscribeInkPlusAction(email: string): Promise<PictureResult> {
-  return act(async principal => { if (!await subscribeInkPlus(db(), principal.personId, String(email), 'group picture')) throw new CampusError('Enter the email to subscribe with.'); });
 }
 /** "Draw us together": the picked animals, and a short line of the person's own for what should change. */
 export async function drawGroupPictureAction(scope: Scope, picks: Pick[], note = ''): Promise<PictureResult> {

@@ -111,6 +111,9 @@ body.bare .hud, body.bare .card, body.bare .say { display: none; } /* a still vi
 .ask .pick { width: 48px; height: 48px; padding: 3px; border-radius: 50%; background: var(--field); box-shadow: inset 0 0 0 2px var(--paper); } .ask .pick .face { width: 100%; }
 .ask .pick[aria-pressed="true"] { background: var(--paper); box-shadow: inset 0 0 0 4px var(--action); }
 .ask .pl.see { background: var(--action); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--field); }
+/* The one Get button (components/campus/join-plan.tsx): the field colour, an ink edge, the mark first, then the price. */
+.ask .pl.get { display: inline-flex; align-items: center; gap: 7px; padding-left: 10px; font-weight: 720; background: var(--field); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink), 3px 3px 0 var(--action); }
+.ask .pl.get .mk { width: 18px; height: 18px; } .ask .pl.get .price { font-weight: 560; opacity: .8; }
 .go { justify-self: start; padding: 0 30px; border-radius: 99px; background: var(--action); color: var(--paper); font-weight: 900; font-stretch: 110%; font-size: 19px; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s var(--expo), box-shadow .12s var(--expo), background .12s; }
 .go:hover { background: var(--action-hover); }
 .go:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
@@ -301,7 +304,19 @@ const wear = src => { const next = new Image(); next.src = src; next.decode().th
 const own = () => you.animals[chosen];
 const CORE = 36; // the animals anyone may play as; the rest are an Ink member's own
 // The Ink mark, in place of the plan's name: a feature that comes with Ink wears it.
+// The one Get button of every plan, as in the app (components/campus/join-plan.tsx), and what pressing it does from here:
+// signed in, one press; signed out, the plan is held and the app page round the game opens its sign-in card over it, so
+// nobody leaves the game to sign up. The app's top bar gives the held plan once they are back.
+const getInk = async (place, back) => {
+  const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place, back }) }).catch(() => null);
+  const got = await answer?.json().catch(() => null);
+  if (!got?.signIn) return got;
+  try { localStorage.setItem('loopd-held-ink', JSON.stringify({ plan: 'ink', place, at: Date.now() })); } catch {}
+  if (parent !== window) tell('signin'); else top.location.assign(got.signIn);
+  return { signIn: true };
+};
 const INK = '<svg class="mk" viewBox="-68 -68 136 136" role="img" aria-label="Ink"><path d="M-8 -60C22 -66 52 -44 58 -14C66 18 46 54 10 60C-24 66 -58 44 -62 10C-66 -24 -40 -54 -8 -60Z"/><circle cx="56" cy="-50" r="9"/><circle cx="-58" cy="46" r="6"/></svg>';
+const GET_INK = `<button class="pl get" data-join>${INK.replace('role="img" aria-label="Ink"', 'aria-hidden="true"')}Get Ink <span class="price">· $2.99</span></button>`;
 // Each school's two colours (app/c/campus.css, [data-kit]): what an Ink+ line's sparkle wears.
 const KITS = { loop: ['oklch(96.4% 0.19 117)', 'oklch(47.6% 0.13 250)'], cornell: ['oklch(99.2% 0.004 60)', 'oklch(48.5% 0.185 27)'], columbia: ['oklch(87% 0.075 235)', 'oklch(46% 0.14 255)'],
   cuny: ['oklch(88% 0.13 88)', 'oklch(38% 0.18 264)'], nyu: ['oklch(85% 0.09 305)', 'oklch(40% 0.2 305)'] };
@@ -418,15 +433,14 @@ function offer() {
       }));
       seat.onclick = () => { mine = true; press(seat); if (you.animals.length > 1) show(card.hidden); };
     } else {
-      card.innerHTML = '<span class="tab">' + INK + '</span><h3>Play as your own pet</h3><p>Your pet leads the line.</p><div><button class="pl see" data-join>Get Ink · $2.99</button><button class="pl" data-shut>Not now</button></div>';
+      card.innerHTML = '<span class="tab">' + INK + ' Ink</span><h3>Play as your own pet</h3><p>Your pet leads the line. It comes with Ink, with every Ink animal.</p><div>' + GET_INK + '<button class="pl" data-shut>Not now</button></div>';
       card.querySelector('[data-shut]').onclick = () => show(false);
-      // Signing up for Ink from here (openspec loop-ink-tiers): the same route as every ask in the app, then its thanks.
+      // Signing up for Ink from here: the one Get button, as every ask in the app, then its thanks.
       const join = card.querySelector('[data-join]');
       join.onclick = async () => {
         join.disabled = true;
-        const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'ink', place: 'conga: Get Ink', back: '/conga' }) }).catch(() => null);
-        const got = await answer?.json().catch(() => null);
-        if (got?.signIn) return top.location.assign(got.signIn); // the whole window, not the frame the game is in
+        const got = await getInk('conga: Get Ink', '/conga');
+        if (got?.signIn) { join.disabled = false; return; }
         card.querySelector('p').textContent = got?.ok ? got.said : 'That did not go through. Try again.';
         if (got?.ok) join.remove(); else join.disabled = false;
       };
@@ -462,9 +476,9 @@ Promise.resolve(window.congaPlayer ?? null).then(player => {
 // ---------- where you play (/demo/mockups-conga-where.html, A) ----------
 // One ticket after Start names the ground, and opens a sheet over the card: schools, then that school's grounds. Who may
 // play which is maps.js mayPlay (openspec conga-ground-gate): Cornell's hill is open to everyone, a player's own schools'
-// grounds are free, and another school's come with Ink+ (the admin has it). A ground that may not be played is shown
-// locked, never left out; pressing it says the way in: signing in, for someone signed out, since it is free if it is their
-// school, and Ink+.
+// grounds are free, and another school's come with Ink, and Ink+ which holds it (the admin has it). A ground that may not
+// be played is shown locked, never left out; pressing it says the way in: signing in, for someone signed out, since it is
+// free if it is their school, and Ink.
 
 const free = id => mayPlay(you ?? window.congaPlayer ?? null, id);
 const groundsOf = school => Object.keys(MAPS).filter(id => PLACES[id].school === school);
@@ -483,10 +497,10 @@ function places() {
   const asked = picker.ground && PLACES[picker.ground].school === shown ? [picker.ground] : grounds.filter(id => !free(id)), names = asked.map(id => MAPS[id].name);
   const out = !(you ?? window.congaPlayer);
   $('where').innerHTML = `<button class="ticket" aria-expanded="${picker.on}" aria-label="Where you play: ${map.name}, ${named(at)}">${mascot(at)}<span class="t"><small>${named(at)}</small><b>${map.name}</b></span><span class="chev">${CHEV}</span></button>`
-    + `<div class="sheet"${picker.on ? '' : ' hidden'}><div class="col schools"><span class="cap">School</span>${schools.map(school => `<button class="school${mineSchool(school) ? '' : ' locked'}" data-school="${school}" aria-pressed="${school === shown && mineSchool(school)}">${mascot(school)}<span>${named(school)}</span>${mineSchool(school) ? (you?.schools.includes(school) ? '<span class="yours">Yours</span>' : '') : `<span class="lock">${out ? 'Sign in' : `${MARK} Ink+`}</span>`}</button>`).join('')}</div>`
+    + `<div class="sheet"${picker.on ? '' : ' hidden'}><div class="col schools"><span class="cap">School</span>${schools.map(school => `<button class="school${mineSchool(school) ? '' : ' locked'}" data-school="${school}" aria-pressed="${school === shown && mineSchool(school)}">${mascot(school)}<span>${named(school)}</span>${mineSchool(school) ? (you?.schools.includes(school) ? '<span class="yours">Yours</span>' : '') : `<span class="lock">${out ? 'Sign in' : `${MARK} Ink`}</span>`}</button>`).join('')}</div>`
     + `<div class="col"><span class="cap">${narrow() ? named(shown) : 'Place'}</span>${grounds.map(id => `<button class="ground${free(id) ? '' : ' locked'}" data-map="${id}" aria-pressed="${id === where}"><b>${MAPS[id].name}</b><small>${PLACES[id].line}</small><span class="tick"></span></button>`).join('')}</div></div>`
-    + `<div class="ask away"${picker.asking ? '' : ' hidden'}><span class="tab">${INK} Ink+</span><div class="peek">${mascot(shown)} ${named(shown)} · ${names.join(', ')}</div>${out ? `<h3>${names.join(' and ')} ${names.length > 1 ? 'are' : 'is'} ${named(shown)}'s</h3><p>At ${named(shown)}? Sign in and ${names.length > 1 ? "they're" : "it's"} yours, free. Or play every school's grounds with Ink+.</p><div><button class="pl see" data-signin>Sign in</button><button class="pl" data-join>Ink+ · $9.99</button><button class="pl" data-shut>Not now</button></div>`
-      : `<h3>Every school's grounds come with Ink+</h3><p>Play ${names.join(' and ')} and every campus we draw next.${you?.schools.some(school => groundsOf(school).length) ? ' Yours stay free.' : ''}</p><div><button class="pl see" data-join>See Ink+ · $9.99</button><button class="pl" data-shut>Not now</button></div>`}</div>`;
+    + `<div class="ask away"${picker.asking ? '' : ' hidden'}><span class="tab">${INK} Ink</span><div class="peek">${mascot(shown)} ${named(shown)} · ${names.join(', ')}</div>${out ? `<h3>${names.join(' and ')} ${names.length > 1 ? 'are' : 'is'} ${named(shown)}'s</h3><p>At ${named(shown)}? Sign in and ${names.length > 1 ? "they're" : "it's"} yours, free. Or play every school's grounds with Ink.</p><div><button class="pl see" data-signin>Sign in</button>${GET_INK}<button class="pl" data-shut>Not now</button></div>`
+      : `<h3>Every school's grounds come with Ink</h3><p>Play ${names.join(' and ')} and every campus we draw next, with every Ink animal.${you?.schools.some(school => groundsOf(school).length) ? ' Yours stay free.' : ''}</p><div>${GET_INK}<button class="pl" data-shut>Not now</button></div>`}</div>`;
   // The sheet reaches the card's own top, so it covers the title whole instead of cutting through it.
   const card = $('where').closest('.card'), open = $('where').querySelector('.sheet:not([hidden])');
   if (open) open.style.minHeight = `${$('where').getBoundingClientRect().top - card.getBoundingClientRect().top - 12 - parseFloat(getComputedStyle(card).paddingTop) + 8}px`;
@@ -512,14 +526,13 @@ $('where').onclick = async event => {
   // Signing in, as from the board's "Sign in to go on the board": the app page round the game opens its sign-in card.
   else if (t.hasAttribute('data-signin')) { if (parent !== window) tell('signin'); else top.location.assign('/conga'); return; }
   else if (t.hasAttribute('data-join')) {
-    // Signing up for Ink+ from here (openspec loop-ink-tiers): the same route as every ask in the app, then its thanks.
+    // Signing up for Ink from here: the one Get button, as every ask in the app, then its thanks.
     t.disabled = true;
-    const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'plus', place: 'conga: Get Ink+', back: `/conga?map=${picker.ground ?? groundsOf(picker.school ?? PLACES[where].school).find(id => !free(id)) ?? where}` }) }).catch(() => null);
-    const got = await answer?.json().catch(() => null);
-    if (got?.signIn) return top.location.assign(got.signIn); // the whole window, not the frame the game is in
+    const got = await getInk('conga: Every ground', `/conga?map=${picker.ground ?? groundsOf(picker.school ?? PLACES[where].school).find(id => !free(id)) ?? where}`);
+    if (got?.signIn) { t.disabled = false; return; }
     const said = $('where').querySelector('.ask p');
     if (!got?.ok) { said.textContent = 'That did not go through. Try again.'; t.disabled = false; return; }
-    you.plus = you.ink = true; said.textContent = got.said; t.remove();
+    you.ink = true; said.textContent = got.said; t.remove();
     setTimeout(() => { picker.asking = false; places(); offer(); }, 2600);
     return;
   }

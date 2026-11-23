@@ -12,7 +12,8 @@ import { ActionForm } from '@/components/emba/portal-forms';
 import { CopyLink, CopyText } from '@/components/emba/copy-link';
 import { dayNum, mon } from '@/lib/days';
 import { Via } from '../glyphs';
-import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead, subscribeForAssistants } from '../connection-actions';
+import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead } from '../connection-actions';
+import { GetInk } from '@/components/campus/join-plan';
 
 export const dynamic = 'force-dynamic';
 // Calendar days are UTC: no team timezone is loaded on this page.
@@ -33,8 +34,9 @@ export default async function ConnectionsPage({ searchParams }: { searchParams?:
   const [, may] = await Promise.all([noteConnectView(db(), principal), hasAssistants(db(), principal)]);
   if (!may) return <>
     <h1>Connect your assistant</h1>
-    <section className="lt-editor"><h2>Assistants come with Ink+</h2><p>Your own AI, answering from your groups: what was decided, who has what, and what is due. Ink+ is $9.99 a month.</p>
-      <ActionForm action={subscribeForAssistants} label="Subscribe"><label>Email to subscribe with<input type="email" name="email" required autoComplete="email" defaultValue={principal.verifiedEmail ?? ''}/></label></ActionForm></section>
+    <section className="lt-editor"><h2>Assistants come with Ink+</h2><p>Your own AI on your groups: what was decided, who has what, and what is due. Insights on them come with it.</p>
+      {/* The one Get button: one press, the account's email; Done shows this page again, open. */}
+      <GetInk plan="plus" place="assistants: Get Ink+" then="Connect your assistant" /></section>
   </>;
   let config: ReturnType<typeof authConfig> | null = null;
   try { config = authConfig(); } catch { /* Explain missing configuration below. */ }

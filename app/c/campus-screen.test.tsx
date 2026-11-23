@@ -8,7 +8,7 @@ import { CampusScreen } from '@/components/campus/screen';
 import { animal, animalOf, CUSTOM, PHOTO } from '@/lib/campus/animals';
 import { Bar } from '@/app/groups/bar';
 import { catalogue, setBuiltTier, setPictureTier } from '@/lib/campus/animal-tiers';
-import { hasInk, INK_PAGE, subscribeInkPlus } from '@/lib/campus/ink';
+import { hasInk, INK_PAGE, joinedWords, joinPlan as givePlan, subscribeInkPlus, type JoinPlace } from '@/lib/campus/ink';
 import { customFaceImage, deletePicture, makeCustomFace, INK_MAKES, premiumAsks, subscribe } from '@/lib/campus/custom-face';
 import { GET as customFaceRoute } from '@/app/animals/custom/[token]/route';
 import { findCampus, type Campus } from '@/lib/campus/listings';
@@ -139,7 +139,7 @@ describe('who sees whom', () => {
     const shown = await card(false);
     // The level, the picture and its picker, Ink and the colours, as on the campus screen.
     expect(shown.getByText(/level 1 of 3/)).toBeInTheDocument();
-    expect(shown.getByRole('link', { name: 'See it' })).toHaveAttribute('href', '/c/ink');
+    expect(shown.getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
     expect(shown.getByRole('group', { name: 'Colours' })).toBeInTheDocument();
     // Under them the groups pages' own links, and the way out.
     expect(within(shown.getByRole('navigation', { name: 'Groups' })).getAllByRole('link').map(each => each.getAttribute('href'))).toEqual(['/groups/connections', '/groups/reach', '/groups/archive']);
@@ -274,16 +274,17 @@ describe('who sees whom', () => {
       expect(card.getByText('a month')).toBeInTheDocument();
       expect(card.getByText('Join at any school')).toBeInTheDocument();
       expect(card.queryByLabelText('Photo of an animal')).toBeNull();
-      // Subscribe asks for an email in its own place. Without one nothing is kept.
-      fireEvent.click(card.getByRole('button', { name: 'Subscribe to Loopd Ink' }));
-      fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
-      expect(card.getByRole('alert')).toHaveTextContent('Enter the email to subscribe with.');
+      // The one Get button: one press, the account's email, no box to type it in (app/c/ink/join, which the browser
+      // calls; here it signs the person looking up).
+      expect(card.queryByLabelText('Email')).toBeNull();
       expect((await t.db.query('select 1 from campus_custom_face')).rows).toEqual([]);
-      fireEvent.change(card.getByLabelText('Email'), { target: { value: 'Ana@Cornell.edu' } });
-      fireEvent.click(card.getByRole('button', { name: 'Subscribe' }));
+      vi.stubGlobal('fetch', vi.fn(async (_: string, init: RequestInit) => { const { plan, place } = JSON.parse(String(init.body)) as { plan: 'ink' | 'plus'; place: JoinPlace }; await givePlan(t.db, ana.personId, 'Ana@Cornell.edu', plan, place); return new Response(JSON.stringify({ ok: true, said: joinedWords(plan) })); }));
+      fireEvent.click(card.getByRole('button', { name: 'Get Ink · $2.99' }));
       // Subscribed: thanked as every sign-up is (openspec loop-ink-tiers), their face wears the mark, and only now is a photo asked for.
       expect(await card.findByText('Thanks for your interest. This isn’t ready yet, so we’ve upgraded you to Ink for now. Enjoy your avatar.')).toBeInTheDocument();
       expect((await t.db.query('select email,makes from campus_custom_face where person_id=$1', [ana.personId])).rows).toEqual([{ email: 'ana@cornell.edu', makes: 0 }]);
+      expect((await t.db.query('select place from campus_subscribe_ask where person_id=$1', [ana.personId])).rows).toEqual([{ place: 'pets: Get Ink' }]);
+      vi.unstubAllGlobals();
       // The pane is the Loopd Ink plate, and nothing in the card says Premium.
       expect(card.queryByText(/Premium/)).toBeNull();
       expect(card.getByText('Bring your own pet.')).toBeInTheDocument();
@@ -346,11 +347,11 @@ describe('who sees whom', () => {
       fireEvent.click(card.getByRole('button', { name: 'Create your own' }));
       expect(card.getByText('Bring your own pet.')).toBeInTheDocument();
       expect(card.getByText('2 of 3 left.')).toBeInTheDocument();
-      // "Start from another pet" is offered without Ink+ too: it shows the animals, and Ink+ where the drawing would be.
-      fireEvent.click(card.getByRole('button', { name: 'Start from another pet · Ink+' }));
+      // "Start from another pet" is making it yours, so it comes with Ink, which she has now: no tag, and the step draws.
+      fireEvent.click(card.getByRole('button', { name: 'Start from another pet' }));
       expect(within(card.getByRole('group', { name: 'Start from' })).getAllByRole('button').length).toBeGreaterThan(0);
-      expect(card.getByRole('button', { name: 'Get Ink+ · $9.99' })).toBeInTheDocument();
-      expect(card.queryByRole('button', { name: 'Draw it' })).toBeNull();
+      expect(card.queryByRole('button', { name: /Get Ink/ })).toBeNull();
+      expect(card.getByRole('button', { name: 'Draw it' })).toBeInTheDocument();
       fireEvent.click(card.getByRole('button', { name: 'Back' }));
       expect((await t.db.query('select count(*)::int as n from campus_custom_picture where person_id=$1 and let_go_at is null', [ana.personId])).rows).toEqual([{ n: 1 }]);
       fireEvent.click(card.getByRole('button', { name: 'Back' }));
@@ -451,14 +452,17 @@ describe('who sees whom', () => {
       expect((await campusScreen(t.db, cornell, as(ana), { photos: noPhotos }))!.viewer).toMatchObject({ plan: 'plus', asked: true, makesLeft: null });
     });
   });
-  it('Ink+ draws a new animal from one of their own or an Ink one, never a core one or a mascot', async () => {
+  it('Ink draws a new animal from one of their own or an Ink one, never a core one or a mascot', async () => {
     const { ana, ben } = await world(), sharp = (await import('sharp')).default;
     models.drawn = await sharp({ create: { width: 64, height: 64, channels: 4, background: '#b5651d' } }).png().toBuffer(); models.asked = [];
     const ask = (base: string, note = 'add a red scarf') => { const data = new FormData(); data.set('base', base); data.set('note', note); return makeFaceAction(data); };
     const NOT_A_BASE = { ok: false, message: 'That one can’t be drawn again. Pick one of your own pets, or an Ink one.' };
     let made = '';
     await withPortalTestSession(ana, async () => {
-      expect(await ask('/animals/37.png')).toEqual({ ok: false, message: 'Starting from another pet comes with Ink+.' });
+      expect(await ask('/animals/37.png')).toEqual({ ok: false, message: 'Starting from another pet comes with Ink.' });
+      // Making it yours is Ink (public/demo/mockups-ink-buttons.html): with Ink the plan lets it through, and only the base is judged.
+      await subscribe(t.db, ana.personId, 'ana@cornell.edu');
+      expect(await ask('/animals/05.png')).toEqual(NOT_A_BASE);
       await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
       // A core animal, Cornell's own bear, a made animal that is nobody's, and nothing said: nothing is drawn.
       expect(await ask('/animals/05.png')).toEqual(NOT_A_BASE);
@@ -566,14 +570,16 @@ describe('Loopd Ink', () => {
     let shown = card(/Ana Lopez, Member/);
     expect(shown.getByText('Loopd Ink')).toBeInTheDocument();
     expect(shown.queryByText('You have Ink')).toBeNull();
-    expect(shown.getByRole('link', { name: 'See it' })).toHaveAttribute('href', INK);
+    // The one Get button for Ink, and the row says only what Ink gives.
+    expect(shown.getByRole('button', { name: 'Get Ink · $2.99' })).toBeInTheDocument();
+    expect(shown.getByText(/Make it yours/)).toBeInTheDocument();
     cleanup();
     await subscribe(t.db, ana.personId, 'ana@cornell.edu');
     await show(as(ana));
     shown = card(/Ana Lopez, Member/);
     expect(shown.getByText('You have Ink')).toBeInTheDocument();
     // On Ink, the row offers Ink+, and pressing it signs them up (openspec loop-ink-tiers).
-    expect(shown.getByRole('button', { name: 'Ink+ · $9.99' })).toBeInTheDocument();
+    expect(shown.getByRole('button', { name: 'Get Ink+ · $9.99' })).toBeInTheDocument();
     expect(shown.queryByText(/Premium/)).toBeNull();
     cleanup();
     await subscribeInkPlus(t.db, ana.personId, 'ana@cornell.edu');
@@ -663,12 +669,12 @@ describe('levels on the screen', () => {
     expect(within(card).queryByText('Admin')).toBeNull();
     expect(within(card).queryByRole('link', { name: 'The groups site' })).toBeNull();
     // The card also picks whose colours the screen wears. Loopd's and your schools' are free; another school's is an
-    // Ink+ perk: in "Any school" it wears the Ink mark and opens the Ink+ card (public/demo/mockups-ink-colours.html).
+    // Ink perk: in "Any school" it wears the Ink mark and opens the Ink card (public/demo/mockups-ink-buttons.html).
     const colours = within(within(card).getByRole('group', { name: 'Colours' }));
     expect(colours.getAllByRole('button').map(button => button.textContent)).toEqual(['Loopd', 'Any school']);
     fireEvent.click(colours.getByRole('button', { name: 'Any school' }));
-    fireEvent.click(colours.getByRole('button', { name: 'Columbia, with Ink+' }));
-    expect(within(card).getByRole('dialog', { name: "Columbia's colours come with Ink+" })).toBeInTheDocument();
+    fireEvent.click(colours.getByRole('button', { name: 'Columbia, with Ink' }));
+    expect(within(card).getByRole('dialog', { name: "Columbia's colours come with Ink" })).toBeInTheDocument();
     expect(localStorage.getItem('loop-kit')).toBeNull();
     cleanup();
     // The admin may wear any, and the pick is kept on this browser.
