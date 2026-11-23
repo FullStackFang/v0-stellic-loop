@@ -8,6 +8,7 @@ import { IMPRINT_PAGE } from '@/lib/campus/imprint';
 import { INK_PAGE } from '@/lib/campus/ink';
 import { AssistantsLink } from './assistants-link';
 import { HeldInk } from './join-plan';
+import { SchoolsOnlyLink } from './schools-only';
 import { InkMark } from './ink-mark';
 import { pressed, rememberBar } from '@/components/loading/last-bar';
 import { LinkWait } from '@/components/loading/link-wait';
@@ -16,12 +17,13 @@ import { LinkWait } from '@/components/loading/link-wait';
  * The one top bar of the app, the same on every page: the wordmark, "This week", Doodles (the page that holds the games,
  * Conga among them), Ink, and for someone in a group Assistants; then what the page puts at the end (`children`: the "Groups" and "On you" counters, which are the way to
  * every group) and the account (`account`), after "Claim your club", the way to the organizers page. `home` is where "This week" leads. `on` is the page this is: 'week', 'doodles', 'ink' or 'organizers'.
+ * Someone signed in at no school (`school` false) gets "This week" with a lock, which says why in place of going there.
  *
  * The bar tells the loading state what it shows (components/loading/last-bar.ts), so the next page's loading state can
  * draw it again. `going` is for that copy: the address of the link that was pressed, which is marked in place of `on`.
  */
-export function TopBar({ home = '/', on, member = false, plus = false, going, account, children }: { home?: string; on?: string; going?: string; /** Whether the person is in a group, and so has assistants to connect. */ member?: boolean; /** Whether they have Ink+, which Assistants is part of: the link then goes straight there. */ plus?: boolean; /** The end of the bar: the account card, or the way in. */ account: ReactNode; /** What a page puts before the account. */ children?: ReactNode }) {
-  useEffect(() => { if (going === undefined) rememberBar({ home, on, member, plus, account }); });
+export function TopBar({ home = '/', on, member = false, plus = false, school = true, going, account, children }: { home?: string; on?: string; going?: string; /** Whether the campus is theirs: false for someone signed in with an email at no school. */ school?: boolean; /** Whether the person is in a group, and so has assistants to connect. */ member?: boolean; /** Whether they have Ink+, which Assistants is part of: the link then goes straight there. */ plus?: boolean; /** The end of the bar: the account card, or the way in. */ account: ReactNode; /** What a page puts before the account. */ children?: ReactNode }) {
+  useEffect(() => { if (going === undefined) rememberBar({ home, on, member, plus, school, account }); });
   // On a phone the links fold into a menu (app/c/campus.css). It closes when a link is pressed, on Escape, and on a press anywhere else.
   const [menu, setMenu] = useState(false);
   useEffect(() => {
@@ -37,7 +39,7 @@ export function TopBar({ home = '/', on, member = false, plus = false, going, ac
     <button className="cs-burger" aria-label="Menu" aria-expanded={menu} aria-controls="cs-menu" onClick={() => setMenu(now => !now)}><i /></button>
     <div className="cs-menu" id="cs-menu" data-open={menu || undefined} onClickCapture={event => { const href = (event.target as Element).closest('a')?.getAttribute('href'); if (href) { pressed(href); setMenu(false); } }}>
     <nav className="cs-links" aria-label="Loopd">
-      <Link href={home} aria-current={at(home, on === 'week')}>This week<LinkWait on={going === home} /></Link>
+      {school ? <Link href={home} aria-current={at(home, on === 'week')}>This week<LinkWait on={going === home} /></Link> : <SchoolsOnlyLink href={home} current={at(home, on === 'week')} />}
       <Link href={DOODLES_PAGE} aria-current={at(DOODLES_PAGE, on === 'doodles')}>Doodles<LinkWait on={going === DOODLES_PAGE} /></Link>
       <Link className="cs-inktab" href={INK_PAGE} aria-label="Ink" aria-current={at(INK_PAGE, on === 'ink')}><InkMark /><span>Ink</span><LinkWait on={going === INK_PAGE} /></Link>
       {member && <AssistantsLink plus={plus} />}</nav>

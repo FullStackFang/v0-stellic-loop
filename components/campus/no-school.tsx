@@ -138,7 +138,7 @@ export function SchoolAsk({ asked, email, lined }: { asked: string | null; email
       {other && pill(other, <>Other: “{other}”</>, 'other')}
     </div>}
     <p role="status">{message
-      || (here ? `Loopd is already at ${here}. Use the way in above.`
+      || (here ? `Loopd is already at ${here}. Sign in with your ${here} email.`
         : pick ? `We will email ${email ?? 'you'} when Loopd opens at ${pick}.`
         : other ? 'No US college by that name on our list. Check the spelling, or add it as Other.'
         : sure && sure.total > found.length ? `${sure.total} schools match. Keep typing to narrow it down.`

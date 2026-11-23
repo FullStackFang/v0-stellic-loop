@@ -6,7 +6,7 @@ import type { Me } from './ending';
 // A plain module variable and not sessionStorage: it must be empty on a fresh load, so the first paint agrees with what
 // the server sent.
 
-export type LastBar = { home: string; on?: string; member: boolean; plus?: boolean; /** The end of the bar as it was drawn: the account card, or the way in. */ account: ReactNode };
+export type LastBar = { home: string; on?: string; member: boolean; plus?: boolean; school?: boolean; /** The end of the bar as it was drawn: the account card, or the way in. */ account: ReactNode };
 let bar: LastBar | null = null, me: Me = {}, going: string | null = null;
 
 /** The bar says what it shows each time it is drawn. Whatever link was pressed has now arrived. */

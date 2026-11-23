@@ -9,7 +9,7 @@ import { schoolOf } from '@/lib/campus/schools';
 import { campusRewards, groupRewardFor } from '@/lib/campus/rewards';
 import { campusViewer, lookingAt } from '@/lib/campus/session';
 import { dayLabel, timeLabel } from '@/lib/campus/time';
-import { NoSchool } from './c/week';
+import { DOODLES_PAGE } from '@/lib/campus/doodles';
 
 /**
  * One school's ticket for the pitch: an event of this week, the first that has a group reward if any has, with that
@@ -43,11 +43,13 @@ export async function DoorPage({ routing }: { routing: 'hash' | 'path' }) {
 
 /**
  * The front door when the campus screen is the front of the site (the default). Signed out: the pitch and the
- * sign-in card. Signed in: on to the campus they were last looking at, or else their own. Someone at no school is told where Loopd is; the admin goes to the default campus.
+ * sign-in card. Signed in: on to the campus they were last looking at, or else their own. Someone at no school goes to the games; the admin goes to the default campus.
  */
 export async function FrontDoor() {
   const viewer = await campusViewer();
   if (viewer?.campus) redirect(`/c/${(await lookingAt() ?? viewer.campus).slug}`);
   if (viewer?.admin) { const [first] = await listCampuses(db()); if (first) redirect(`/c/${first.slug}`); }
-  return <CampusShell>{viewer ? <NoSchool /> : <DoorPage routing="hash" />}</CampusShell>;
+  // Signed in at no school: the games are theirs, and the thanks is there (public/demo/mockups-any-email.html, B).
+  if (viewer) redirect(DOODLES_PAGE);
+  return <CampusShell><DoorPage routing="hash" /></CampusShell>;
 }

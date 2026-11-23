@@ -22,6 +22,9 @@ import { approveLinkedin } from '@/lib/campus/linkedin';
 import { askForSchool, OPEN_AT, schoolAsked, schoolsAsked, schoolStanding } from '@/lib/campus/school-ask';
 import { againFaceAction, askSchoolAction, setSchoolsAction, checkInAction, imInAction, joinAction, makeFaceAction, ownFaceAction, useRewardAction as markUsed } from './actions';
 import CampusPage from './[campus]/page';
+import DoodlesPage from './doodles/page';
+import { jar } from '@/test/jar';
+import { THANKED } from '@/components/campus/thanks-card';
 import InkPage from './ink/page';
 import PostPlanPage from './[campus]/post/page';
 import CampusAdminPage from './admin/page';
@@ -807,6 +810,9 @@ describe('the pages', () => {
   // A page hands back the async part that draws the week; a test has to run it, as the server would.
   const drawn = async (node: Promise<React.ReactElement>) => { const element = await node as React.ReactElement<object, (props: object) => Promise<React.ReactElement>>; return typeof element.type === 'function' ? element.type(element.props) : element; };
   const page = (slug: string) => drawn(CampusPage({ params: Promise.resolve({ campus: slug }) }));
+  const doodles = () => DoodlesPage();
+  /** The thanks card on Doodles, for someone at no school. */
+  const thanks = () => screen.getByRole('region', { name: 'Signed up' });
   const linked = (token: string) => drawn(OutingLinkPage({ params: Promise.resolve({ token }) }));
   const sentTo = (path: string) => expect.objectContaining({ digest: expect.stringContaining(`;${path};`) });
   it('an unknown campus is not found', async () => {
@@ -842,49 +848,45 @@ describe('the pages', () => {
     expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
     expect(await withPortalTestSession(nyu, async () => imInAction((await world()).blitz))).toMatchObject({ ok: false, message: expect.stringContaining("another school's list") });
   });
-  it('a person at no school is shown no campus, only where Loopd is, and the admin opens any campus', async () => {
-    const { blitz } = await world();
+  it('a person at no school is sent to the games, thanked, shown why the campus is shut, and the admin opens any campus', async () => {
+    const { blitz, ana } = await world();
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
-    for (const slug of ['cornell', 'cornell-tech', 'columbia']) {
-      render(await withPortalTestSession(outsider, () => page(slug)));
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loopd is only for schools right now. If that changes, we’ll let you know.');
-      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('omar@gmail.com is not a school email');
-      expect(screen.queryByRole('heading', { name: 'Blitz night' })).toBeNull();
-      expect(screen.queryByRole('button', { name: 'Post a plan' })).toBeNull();
-      cleanup();
-    }
+    // public/demo/mockups-any-email.html, B: no campus, the games instead.
+    for (const slug of ['cornell', 'cornell-tech', 'columbia']) await expect(withPortalTestSession(outsider, () => page(slug))).rejects.toEqual(sentTo('/c/doodles'));
     expect(await withPortalTestSession(outsider, () => imInAction(blitz))).toMatchObject({ ok: false });
+    jar.cookies.delete(THANKED);
+    render(await withPortalTestSession(outsider, () => doodles()));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Doodles');
+    expect(thanks()).toHaveTextContent('Thanks for your interest.Loopd is only at schools for now. We’ll let you know when it’s yours. Meanwhile the games are open.');
+    // "This week" is there, with a lock, and says why in place of going to a campus.
+    fireEvent.click(screen.getByRole('link', { name: 'This week, for schools only' }));
+    const why = screen.getByRole('dialog', { name: 'The campus opens with a school email' });
+    expect(within(why).getByRole('link', { name: 'Sign up my school' })).toHaveAttribute('href', '/c/doodles#school');
+    fireEvent.click(within(why).getByRole('button', { name: 'Not now' }));
+    expect(screen.queryByRole('dialog', { name: 'The campus opens with a school email' })).toBeNull();
+    // "Got it" puts the card away, and it stays away (the cookie it leaves).
+    fireEvent.click(within(thanks()).getByRole('button', { name: 'Got it' }));
+    expect(screen.queryByRole('region', { name: 'Signed up' })).toBeNull();
+    cleanup();
+    jar.cookies.set(THANKED, '1');
+    render(await withPortalTestSession(outsider, () => doodles()));
+    expect(screen.queryByRole('region', { name: 'Signed up' })).toBeNull();
+    cleanup(); jar.cookies.delete(THANKED);
+    // Someone with a school has the plain link, and no thanks.
+    render(await withPortalTestSession(ana, () => doodles()));
+    expect(screen.getByRole('link', { name: 'This week' })).toHaveAttribute('href', '/c/cornell');
+    expect(screen.queryByRole('region', { name: 'Signed up' })).toBeNull();
+    cleanup();
     vi.stubEnv('LOOP_ADMIN', 'omar@gmail.com');
     render(await withPortalTestSession(outsider, () => page('columbia')));
     expect(screen.getByRole('button', { name: 'Post a plan' })).toBeInTheDocument();
   });
-  it('a person at no school adds their LinkedIn profile, picks a school, waits, and is let in there once approved', async () => {
+  it('someone already sent for a LinkedIn check waits, and is let in at that school once the admin approves', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
-    render(await withPortalTestSession(outsider, () => page('cornell')));
-    const schools = within(screen.getByRole('group', { name: 'Your schools' }));
-    expect(schools.getAllByRole('button').map(each => [each.textContent, each.getAttribute('aria-pressed')]).sort()).toEqual([['CUNY', 'false'], ['Columbia', 'false'], ['Cornell', 'false'], ['NYU', 'false']]);
-    // An address that is not a profile's is refused, in words, and nobody is let in.
-    fireEvent.change(screen.getByRole('textbox', { name: 'Your LinkedIn profile' }), { target: { value: 'omar reyes' } });
-    fireEvent.click(schools.getByRole('button', { name: 'Columbia' }));
-    expect(schools.getByRole('button', { name: 'Columbia' })).toHaveAttribute('aria-pressed', 'true');
-    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Send for a check' })); await screen.findByRole('alert'); });
-    expect(screen.getByRole('alert')).toHaveTextContent('Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.');
+    // The page no longer offers the check (LinkedIn is off the sign-in card); the action still holds its rules for anyone mid-way.
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', []))).toEqual({ ok: false, message: 'Pick at least one school.' });
-    cleanup();
-    // With a profile and a school they wait: the page says so and shows what they sent. It is final: nothing to change it with, and sending again is refused.
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['columbia']))).toEqual({ ok: true });
-    render(await withPortalTestSession(outsider, () => page('columbia')));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loopd is only for schools right now.');
-    expect(screen.getByText('Waiting').previousElementSibling).toHaveTextContent('Columbia');
-    expect(screen.queryByRole('button', { name: 'Unlock' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Change it' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Send for a check' })).toBeNull();
-    expect(screen.queryByRole('textbox')).toBeNull();
     expect(await withPortalTestSession(outsider, () => setSchoolsAction('linkedin.com/in/omar-reyes', ['nyu']))).toEqual({ ok: false, message: 'Your school is already with us for a check.' });
-    // The page has the same top bar and foot as every other.
-    expect(screen.getByRole('link', { name: 'This week' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Terms' })).toBeInTheDocument();
-    cleanup();
     // The admin sees them waiting and approves. Then that school's campus is theirs, with its animal in their picker.
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
     const admin = await person('Ana Lopez');
@@ -893,7 +895,6 @@ describe('the pages', () => {
     expect(screen.getByText('Pasted an address only: the LinkedIn account is not proven theirs')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Review/ })).toHaveTextContent('1 waiting');
     expect(screen.getByRole('button', { name: 'Turn down' })).toBeInTheDocument();
-    // Someone waiting is in the queue and not yet among the people let in.
     expect(screen.getByRole('link', { name: /LinkedIn/ })).toHaveTextContent('LinkedIn0');
     expect(screen.getByRole('link', { name: 'Open profile' })).toHaveAttribute('href', 'https://www.linkedin.com/in/omar-reyes');
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
@@ -930,39 +931,17 @@ describe('the pages', () => {
     render(await withPortalTestSession(ana, () => page('nyu')));
     expect(screen.getAllByRole('button', { name: 'Post a plan' }).length).toBeGreaterThan(0);
   });
-  it('a person who signed in with LinkedIn is shown the account is theirs, has one step left, and the admin sees the name', async () => {
+  it('someone signed in with LinkedIn before it left the card is checked by name, and the admin finds them that way', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
-    // Without LinkedIn there is one ticket, and it says the email is not a school's.
-    render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['omar@gmail.com is not a school email']);
-    cleanup();
     linkedinOf.account = { name: 'Omar Reyes', photo: 'https://img.test/omar.jpg' };
-    render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['Pick your school']);
-    expect(screen.getByRole('button', { name: 'Send for a check' })).toBeInTheDocument();
-    expect(screen.getByText('Signed in with LinkedIn').previousElementSibling).toHaveTextContent('Omar Reyes');
-    expect(screen.getByText('Yours')).toBeInTheDocument();
-    // Signed in with LinkedIn, they are not asked for the address of their profile as well: they tick a school and send.
-    expect(screen.queryByRole('textbox', { name: 'Your LinkedIn profile' })).toBeNull();
-    expect(screen.getByText('Pick the school you are at. We look you up on LinkedIn by your name to check it.')).toBeInTheDocument();
-    cleanup();
-    // On a database that still requires the address (the migration is run by hand), the box is still there.
+    // On a database that still requires the address (the migration is run by hand), the action asks for it.
     await t.db.query('alter table campus_linkedin alter column profile set not null');
-    try {
-      render(await withPortalTestSession(outsider, () => page('cornell')));
-      expect(screen.getByRole('textbox', { name: 'Your LinkedIn profile' })).toBeInTheDocument();
-      expect(await withPortalTestSession(outsider, () => setSchoolsAction('', ['nyu']))).toEqual({ ok: false, message: 'Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.' });
-      cleanup();
-    } finally { await t.db.query('alter table campus_linkedin alter column profile drop not null'); }
+    try { expect(await withPortalTestSession(outsider, () => setSchoolsAction('', ['nyu']))).toEqual({ ok: false, message: 'Paste the address of your LinkedIn profile, like linkedin.com/in/your-name.' }); }
+    finally { await t.db.query('alter table campus_linkedin alter column profile drop not null'); }
     // Sending keeps the name on the LinkedIn account, and they still wait for the admin.
-    render(await withPortalTestSession(outsider, () => page('cornell')));
-    fireEvent.click(screen.getByRole('button', { name: 'NYU' }));
-    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Send for a check' })); await vi.waitFor(async () => expect((await t.db.query('select profile,schools,owner_name from campus_linkedin where person_id=$1', [outsider.personId])).rows).toEqual([{ profile: null, schools: ['nyu'], owner_name: 'Omar Reyes' }])); });
-    cleanup();
-    render(await withPortalTestSession(outsider, () => page('cornell')));
-    expect(screen.getByText('Waiting')).toBeInTheDocument();
-    expect(screen.getAllByRole('heading', { level: 2 }).map(each => each.textContent)).toEqual(['We are checking']);
-    cleanup(); linkedinOf.account = null;
+    expect(await withPortalTestSession(outsider, () => setSchoolsAction('', ['nyu']))).toEqual({ ok: true });
+    expect((await t.db.query('select profile,schools,owner_name from campus_linkedin where person_id=$1', [outsider.personId])).rows).toEqual([{ profile: null, schools: ['nyu'], owner_name: 'Omar Reyes' }]);
+    linkedinOf.account = null;
     vi.stubEnv('LOOP_ADMIN', 'ana@cornell.edu');
     render(await withPortalTestSession(await person('Ana Lopez'), () => CampusAdminPage({ searchParams: Promise.resolve({ tab: 'review' }) })));
     expect(screen.getByText('Signed in with LinkedIn as Omar Reyes')).toBeInTheDocument();
@@ -1004,9 +983,10 @@ describe('the pages', () => {
     await withPortalTestSession(await person('Maya', 'maya@gmail.com'), () => removeSchoolAskAction(form)).catch(() => {});
     expect((await schoolsAsked(t.db)).map(each => each.school)).toEqual(['University of Michigan-Ann Arbor', 'Rutgers University-Newark']);
   });
-  it('a person at no school picks their school from the list, and it is kept for when they come back', async () => {
+  it('a person at no school picks their school from the list in the thanks card, and it is kept for when they come back', async () => {
     const outsider = await person('Omar Reyes', 'omar@gmail.com');
-    render(await withPortalTestSession(outsider, () => page('cornell')));
+    render(await withPortalTestSession(outsider, () => doodles()));
+    fireEvent.click(within(thanks()).getByRole('button', { name: 'Sign up my school' }));
     expect(screen.getByRole('status')).toHaveTextContent('We will email omar@gmail.com when Loopd opens there.');
     // Nothing is signed up until a school is picked; the action refuses an empty name by itself.
     expect(screen.getByRole('button', { name: 'Sign up my school' })).toBeDisabled();
@@ -1022,21 +1002,22 @@ describe('the pages', () => {
     expect(screen.getByText('University of Michigan-Ann Arbor')).toBeInTheDocument();
     expect((await t.db.query('select school,email from campus_school_ask where person_id=$1', [outsider.personId])).rows).toEqual([{ school: 'University of Michigan-Ann Arbor', email: 'omar@gmail.com' }]);
     cleanup();
-    // Coming back, and changing it: a school Loopd is at cannot be signed up, and one the list has not is "Other".
-    render(await withPortalTestSession(outsider, () => page('cornell')));
+    // Coming back, the card says where it stands; changing it: a school Loopd is at cannot be signed up, and one the list has not is "Other".
+    render(await withPortalTestSession(outsider, () => doodles()));
+    expect(thanks()).toHaveTextContent('University of Michigan-Ann Arbor is #1 in line.');
+    fireEvent.click(within(thanks()).getByRole('button', { name: 'Change school' }));
     expect(screen.getByText('University of Michigan-Ann Arbor')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Change school' }));
     expect(screen.getByRole('textbox', { name: 'Your school' })).toHaveValue('University of Michigan-Ann Arbor');
     const cornell = await withPortalTestSession(outsider, async () => { fireEvent.change(screen.getByRole('textbox', { name: 'Your school' }), { target: { value: 'cornell university' } }); return screen.findByRole('button', { name: /^Cornell University/ }); });
     expect(cornell).toHaveTextContent('Loopd is here');
     fireEvent.click(cornell);
-    expect(screen.getByRole('status')).toHaveTextContent('Loopd is already at Cornell. Use the way in above.');
+    expect(screen.getByRole('status')).toHaveTextContent('Loopd is already at Cornell. Sign in with your Cornell email.');
     expect(screen.getByRole('button', { name: 'Sign up my school' })).toBeDisabled();
     const other = await withPortalTestSession(outsider, async () => { fireEvent.change(screen.getByRole('textbox', { name: 'Your school' }), { target: { value: 'McGill  University' } }); return screen.findByRole('button', { name: 'Other: “McGill University”' }); });
     expect(screen.getByRole('status')).toHaveTextContent('No US college by that name on our list. Check the spelling, or add it as Other.');
     fireEvent.click(other);
-    // Beside its place in line, a school signed up shows only the way to change it again.
-    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Sign up my school' })); await screen.findByRole('button', { name: 'Change school' }); });
+    await withPortalTestSession(outsider, async () => { fireEvent.click(screen.getByRole('button', { name: 'Sign up my school' })); await screen.findByText('On the list'); });
     expect((await t.db.query('select school from campus_school_ask')).rows).toEqual([{ school: 'McGill University' }]);
     // The action holds the same line by itself: no short name as "Other", and no school Loopd is already at.
     expect(await withPortalTestSession(outsider, () => askSchoolAction('Rutgers'))).toEqual({ ok: false, message: 'Pick your school from the ones found.' });
@@ -1046,7 +1027,7 @@ describe('the pages', () => {
     await t.db.query('alter table campus_school_ask rename to campus_school_ask_gone');
     try { expect(await schoolAsked(t.db, outsider.personId)).toBeNull(); } finally { await t.db.query('alter table campus_school_ask_gone rename to campus_school_ask'); }
   });
-  it('a person whose school is signed up sees its place in line, its seats, and how to move it up', async () => {
+  it('a person whose school is signed up sees its place in line in the thanks card', async () => {
     const asks: [string, string, string][] = [['Ana', 'a@mail.test', 'Rutgers University-Newark'], ['Bo', 'b@mail.test', 'Rutgers University-Newark'], ['Cy', 'c@mail.test', 'Rutgers University-Newark'],
       ['Di', 'd@mail.test', 'University of Michigan-Ann Arbor'], ['Ed', 'e@mail.test', 'university of michigan-ann arbor'], ['Fa', 'f@mail.test', 'McGill University']];
     for (const [name, email, school] of asks) await askForSchool(t.db, (await person(name, email)).personId, school, email);
@@ -1057,16 +1038,13 @@ describe('the pages', () => {
     const standing = (await schoolStanding(t.db, omar.personId))!;
     expect({ ...standing, faces: standing.faces.length }).toEqual({ school: 'University of Michigan-Ann Arbor', people: 3, place: 2, ahead: { school: 'Rutgers University-Newark', people: 3 }, behind: { school: 'McGill University', people: 1 }, faces: 3, mine: 2 });
     expect(standing.faces.every(face => /^\/animals\/\d+\.webp$/.test(face))).toBe(true);
-    render(await withPortalTestSession(omar, () => page('cornell')));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('University of Michigan-Ann Arbor is #2 in line.');
-    expect(screen.getByText(`${OPEN_AT - 3} more and it opens there.`, { exact: false })).toBeInTheDocument();
-    expect(screen.getByText('1 more to pass')).toBeInTheDocument();
-    expect(screen.getByText(`3 of ${OPEN_AT}`)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Send the email' }).getAttribute('href')).toMatch(/^mailto:\?subject=Bring%20Loopd%20to%20University%20of%20Michigan-Ann%20Arbor&body=.*3%20of%20us%20have%20already%20signed%20up/);
-    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
+    // The thanks card says where it stands, and how many more it takes.
+    render(await withPortalTestSession(omar, () => doodles()));
+    expect(thanks()).toHaveTextContent(`University of Michigan-Ann Arbor is #2 in line. ${OPEN_AT - 3} more and Loopd opens there.`);
     // Its name is not asked again: only the way to change it, and the box comes back with it.
     expect(screen.queryByRole('textbox', { name: 'Your school' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Change school' }));
+    fireEvent.click(within(thanks()).getByRole('button', { name: 'Change school' }));
+    fireEvent.click(within(thanks()).getByRole('button', { name: 'Change school' }));
     expect(screen.getByRole('textbox', { name: 'Your school' })).toHaveValue('University of Michigan-Ann Arbor');
   });
   it('an unknown share link is not found, and a real one opens its event', async () => {

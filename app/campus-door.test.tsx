@@ -94,9 +94,8 @@ describe('the door', () => {
     vi.stubEnv('LOOP_ADMIN', 'user_fay'); jar.at = 'cornell-tech';
     await expect(withPortalTestSession(await signedIn('Fay', 'fay@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/cornell-tech'));
   });
-  it('signed in from no school, is told where Loopd is and goes no further', async () => {
-    render(await drawn(withPortalTestSession(await signedIn('Omar', 'omar@gmail.com'), () => FrontDoor())));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Loopd is only for schools right now. If that changes, we’ll let you know.');
+  it('signed in from no school, goes to the games (public/demo/mockups-any-email.html, B)', async () => {
+    await expect(withPortalTestSession(await signedIn('Omar', 'omar@gmail.com'), () => FrontDoor())).rejects.toEqual(sentTo('/c/doodles'));
   });
   it('/sign-in is the same door', async () => {
     render(await DoorPage({ routing: 'path' }));
@@ -157,12 +156,12 @@ describe('the sign-in card', () => {
       expect(document.documentElement.dataset.kit).toBe('cornell');
     } finally { vi.useRealTimers(); }
   });
-  it('says an address is from no school and that it still signs in, and stays quiet until there is an address', () => {
+  it('says an address is from no school and that it still signs up, and stays quiet until there is an address', () => {
     render(<DoorSignIn schools={schools} routing="hash" configured />);
     type('some');
-    expect(screen.queryByText(/Not an email at/)).toBeNull();
+    expect(screen.queryByText(/school email\./)).toBeNull();
     type('someone@gmail.com');
-    expect(screen.getByText('Not an email at Cornell or NYU. You can still sign in with it.')).toBeInTheDocument();
+    expect(screen.getByText('gmail.com isn’t a school email. You can still sign up.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/^Sign in$/);
   });
   it('goes back to the picked colours, or Loopd\'s own, when the email is at no school', () => {

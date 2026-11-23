@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { InkBlot, InkSparks } from '@/components/campus/ink-mark';
 import type { Plan } from '@/lib/campus/ink';
 import { Kits } from '@/components/campus/kit';
-import { Account } from '@/components/campus/screen';
+import { Account, atSchool } from '@/components/campus/screen';
 import { GroupLinks, TopBar } from '@/components/campus/top-bar';
 import type { BarGroup } from '@/lib/campus/bar-groups';
 import type { Screen } from '@/lib/campus/view';
@@ -30,7 +30,7 @@ export function Bar({ groups, face, plan = 'free', kits = ['loop'], anyKit = fal
   useEffect(() => { if (!carded) rememberMe({ face, plan, seed: face ?? 'You' }); }, [carded, face, plan]);
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals
   const you = face ? <img className="cs-face pet" src={face} alt="" /> : <span className="cs-face">You</span>;
-  return <TopBar member={groups.length > 0} plus={plan === 'plus'} account={screen?.viewer
+  return <TopBar member={groups.length > 0} plus={plan === 'plus'} school={atSchool(screen?.viewer ?? null)} account={screen?.viewer
       // The admin's own list already has "How we got here".
       ? <Account screen={screen} signOut={account} more={<nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!screen.viewer.admin} /></nav>} />
       : <div className="cs-acct" ref={box}>

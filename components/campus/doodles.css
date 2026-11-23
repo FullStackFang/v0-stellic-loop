@@ -30,3 +30,11 @@
   .cs-dd-foot { margin-top: -20px; } .cs-dd-foot h2, .cs-dd.tall .cs-dd-foot h2 { padding: 3px 14px 6px; font-size: 27px; } .cs-dd-go, .cs-dd.tall .cs-dd-go { height: 44px; padding: 0 22px; font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .cs-dd, .cs-dd-go { transition: none; } }
+
+/* The thanks for someone signed in at no school (components/campus/thanks-card.tsx): the ask card's look, beside the name. */
+.cs-dd-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 40px; }
+.cs-dd-top .cs-dd-head { margin-bottom: 0; }
+.cs .cs-ft-ask.cs-dd-thanks { position: relative; bottom: auto; flex: none; width: min(420px, 100%); margin-top: 12px; border-radius: 20px 20px 6px 20px; transform-origin: 100% 0; }
+.cs .cs-dd-thanks::after { display: none; }
+.cs .cs-dd-thanks .cs-dd-school { display: grid; gap: 10px; margin: 8px 0 14px; padding: 12px; border-radius: 14px; background: var(--cs-paper); color: var(--cs-ink); }
+@media (max-width: 720px) { .cs-dd-top { flex-direction: column-reverse; align-items: stretch; gap: 30px; } .cs .cs-ft-ask.cs-dd-thanks { width: 100%; } }

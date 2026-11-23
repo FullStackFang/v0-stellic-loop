@@ -310,11 +310,14 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
  * The top bar of the campus pages: the app's one bar (./top-bar.tsx), led back to this campus, with the account card
  * or the way in. `on` is which of the bar's own pages this is, and `children` is what a page puts before the avatar.
  */
+/** Whether a campus is open to the person: signed out (to look), the admin, or anyone with a school. Someone signed in with an email at no school has the games alone. */
+export const atSchool = (viewer: Screen['viewer']) => !viewer || viewer.admin || !!viewer.schools.home || viewer.schools.added.length > 0;
+
 export function CampusBar({ screen, groups = [], signInHref, door, signOut = null, on, swap, children }: { screen: Screen; /** The person's groups, named in the bar as on the groups pages. */ groups?: BarGroup[]; signInHref: string; /** With it, "Sign in" opens the sign-in card over the page in place of going to the sign-in page. */ door?: Door; signOut?: ReactNode; on?: 'week' | 'ink' | 'doodles' | 'organizers'; swap?: SwapCampus[]; children?: ReactNode }) {
   const { campus, viewer } = screen;
   // The groups pages' links are in the card for anyone who has a group, as they are on those pages. The admin's own list already has "How we got here".
   const more = viewer && groups.length > 0 ? <nav className="cs-lvl-more" aria-label="Groups"><h4>Groups</h4><GroupLinks all={!viewer.admin} /></nav> : null;
-  return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0} plus={viewer?.plan === 'plus' || viewer?.admin}
+  return <TopBar home={`/c/${campus.slug}`} on={on} member={groups.length > 0} plus={viewer?.plan === 'plus' || viewer?.admin} school={atSchool(viewer)}
     account={viewer ? <Account screen={screen} signOut={signOut} swap={swap} more={more} /> : door ? <SignInHere {...door} /> : <Link className="cs-btn sm go" href={signInHref}>Sign in</Link>}>{children}</TopBar>;
 }
 
