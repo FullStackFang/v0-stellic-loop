@@ -28,7 +28,6 @@ const keepKey = () => `wn-keep:${location.pathname}`;
 // The animals on "Have Loopd?": signing in is what brings yours.
 const PETS = ['07', '03', '12'];
 /** How long after the last painted time the times save themselves. */
-const AUTO_MS = 500;
 
 /**
  * The grid of a poll, under its ticket (public/demo/mockups-when-fit.html, 3). A few days show at a time, the first
@@ -67,9 +66,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   const [name, setName] = useState(guest?.name ?? ''), [email, setEmail] = useState(''), [sentTo, setSentTo] = useState(guest?.email ?? null), [miss, setMiss] = useState(false), [inviting, setInviting] = useState(false);
   // A guest is drawn as the initial of the name they are typing.
   const me = guest && given ? { ...given, name: name.trim() || '?' } : given;
-  // `lifted` counts the times the pointer has come up, so what was painted in one stroke is saved when the stroke ends.
-  const [lifted, setLifted] = useState(0), [dirty, setDirty] = useState(false), [refused, setRefused] = useState<Set<string> | null>(null);
-  useEffect(() => { const stop = () => { painting.current = null; setLifted(n => n + 1); }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => { const stop = () => { painting.current = null; }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
   // A fine poll's strips. A day is `rows` steps of `step` minutes from its first hour; a place on a strip is a row.
   const step = !fine ? 60 : slots.some(slot => slot.minute % 30) ? 15 : 30, perHour = 60 / step, rows = tall * perHour, firstHour = Math.min(...slots.map(slot => slot.hour));
   // A fine poll words every time the same way: hours and minutes, "6:30", "8:00". A block never says am or pm (the hours down the side do); the tab says it on both ends.
@@ -137,18 +135,18 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
     setBusy(true); setError(''); if (these) setPicked(new Set(these));
     const now = these ?? [...picked], result = await onSave(now, guest ? name.trim() : undefined).catch(() => ({ error: 'That did not save. Try again.' }));
     setBusy(false);
-    if (result?.error) { setError(result.error); setRefused(picked); return false; }
+    if (result?.error) { setError(result.error); return false; }
     setSaved(new Set(now)); setKept(true); return true;
   };
-  // Painting saves itself: half a second after the last change, with no stroke under way. Only what this person
-  // painted here (times carried over from another poll wait for a press), and only once it is known whose they are.
-  // A save that was refused is not tried again until something changes; Save is there for it.
-  const auto = !!onSave && (!guest || ready), saving = auto && changed && dirty && refused !== picked;
+  // Nothing saves by itself: the person presses Save. Until they do the button asks for it, and leaving the page with
+  // times of their own painting unsaved asks first.
+  const due = !!onSave && changed;
   useEffect(() => {
-    if (!saving || busy) return;
-    const soon = setTimeout(() => { if (painting.current === null) void save_.current(); }, AUTO_MS);
-    return () => clearTimeout(soon);
-  }, [saving, busy, picked, lifted]);
+    if (!due || !dirty) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [due, dirty]);
   // The card that asks a guest who they are (public/demo/mockups-when-one-card-4.html). What is painted is kept in
   // this tab while it is open, so signing in from it, which loads the page again, does not lose it.
   const ask = () => { try { sessionStorage.setItem(keepKey(), JSON.stringify([...picked])); } catch { /* a browser that keeps nothing */ } setMiss(false); setError(''); setAsking(true); };
@@ -189,8 +187,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   };
   const enter = (run: () => void) => (event: KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter') { event.preventDefault(); run(); } };
   const here = slots.filter(slot => shown.includes(slot.day)), first = here.find(slot => picked.has(slot.at))?.at ?? here[0]?.at;
-  // A poll that fits one set of days uses the whole width, however few days it has. Only a poll shown a set at a time keeps every set to the same columns.
-  const cols = pages.length > 1 ? per : shown.length, pad = Array.from({ length: cols - shown.length }, (_, n) => <span key={`pad${n}`} />);
+  // The days shown use the whole width, however few they are: one day is one wide column, and so is the last set of a long poll.
+  const cols = shown.length;
   const ranks = (set: string[]) => { const inSet = top.filter(slot => set.includes(slot.day)); return inSet.length > 0 && <span className="wn-rks" aria-hidden="true">{inSet.map(slot => <i key={slot.at} className="wn-rk">{rank.get(slot.at)}</i>)}</span>; };
   const pager = pages.length < 2 ? null : pages.length <= 3
     ? <div className="wn-modes wn-sets" style={{ '--n': pages.length } as React.CSSProperties}>{pages.map((set, n) => <button key={set[0]} type="button" aria-pressed={n === page} onClick={() => setTurned(n)}><small>Best is {most(set)} of {size}</small><b>{span(set)}</b>{ranks(set)}</button>)}</div>
@@ -208,7 +206,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
     <Stack people={can} />
   </span>;
   // Once a guest's times are saved, who they are saved as and the offer of the invite: one strip, across the top on a laptop and at the foot on a phone.
-  const strip = onSave && guest && kept && (!changed || saving) ? <div className="wn-save wn-who wn-top">
+  const strip = onSave && guest && kept && !changed ? <div className="wn-save wn-who wn-top">
     {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
     {/* One raised paper capsule (public/demo/mockups-when-saved-row.html, C): who the times are saved as, and the invite on the same line. */}
     <div className={`wn-cap wn-me${miss ? ' miss' : ''}`} role="status">
@@ -230,7 +228,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   const said = !fine ? '' : live ? `${live.on ? '' : 'Clearing '}${live.c0 === live.c1 ? `${dow(shown[live.c0])} ${dayNum(shown[live.c0])}` : `${dow(shown[live.c0])} to ${dow(shown[live.c1])} ${dayNum(shown[live.c1])}`}, ${half(timeOf(live.from))} to ${half(timeOf(live.to))}`
     : on ? `${dow(on.day)} ${dayNum(on.day)}, ${half(on.hour * 60 + on.minute)} · ${count(on.at) ? `${count(on.at)} free` : 'nobody yet'}` : '';
   const strips = fine && <div ref={box} className="wn-grid fine" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': cols, '--tall': tall } as React.CSSProperties}>
-    <span />{shown.map((day, col) => <span key={day} className={`wn-d${live && col >= live.c0 && col <= live.c1 ? ' lit' : ''}`}>{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
+    <span />{shown.map((day, col) => <span key={day} className={`wn-d${live && col >= live.c0 && col <= live.c1 ? ' lit' : ''}`}>{dow(day)}<b>{dayNum(day)}</b></span>)}
     <span className="wn-hs" aria-hidden="true">{Array.from({ length: tall + 1 }, (_, n) => <span key={n} className="wn-h" style={{ top: `${n / tall * 100}%` }}>{hourText(firstHour + n)}</span>)}</span>
     <div className="wn-sheet" style={{ gridColumn: `2 / span ${shown.length}`, '--cols': shown.length } as React.CSSProperties} onPointerDown={press} onPointerMove={glide} onPointerUp={lift} onPointerCancel={lift} onLostPointerCapture={lift}>
       {shown.map((day, col) => {
@@ -247,12 +245,12 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
           {cells}{runs.map(([from, to]) => <span key={from} className={`wn-blk${(to - from) * step >= 45 ? ' ends' : ''}`} style={{ top: `calc(${pct(from)} + 2px)`, height: `calc(${pct(to - from)} - 3px)` }}>{label(from, to)}</span>)}
         </div>;
       })}
-    </div>{pad.map((_, n) => <span key={`after${n}`} />)}
+    </div>
   </div>;
   return <>
     <div className="wn-col"><Panel tab={said ? <span className="wn-said" aria-live="polite">{said}</span> : tab ?? (onSave ? fine ? 'Drag over the times you can make' : 'Paint the times you can make' : 'When people are free so far')}>{pager}
       {strips || <div ref={box} className="wn-grid" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': cols } as React.CSSProperties}>
-        <span />{shown.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
+        <span />{shown.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}
         {hours.map((hour, row) => [<span key={hour} className="wn-h">{clock(hour)}</span>, ...shown.map((day, col) => {
           const slot = at.get(`${day} ${hour}`);
           if (!slot) return <span key={day} className="wn-none" />;
@@ -264,14 +262,15 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
             onPointerDown={down(slot)} onPointerEnter={() => { if (painting.current !== null) paint(slot, painting.current); }} onKeyDown={keys} onFocus={() => setTouched(slot)}
             // A press already painted on the way down. A click that no pointer made is the keyboard's.
             onClick={event => { if (event.detail === 0) paint(slot, !on); }}>{total}{badge}</button>;
-        }), ...pad.map((_, n) => <span key={`pad${hour}${n}`} />)])}
+        })])}
       </div>}
       <div className={`wn-key${fine ? ' fine' : ''}`}><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />{fine ? 'More free' : 'More people free'}</span>{onSave && <span className="cs-pill"><i className="mine" />{fine ? 'You' : 'Yours'}</span>}{children}</div></Panel>
       {strip}
       {onSave && guest ? <div className="wn-save wn-who">
         {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
         {/* Someone this browser already knows saves straight away; anyone else is asked who they are first. */}
-        {(changed || !kept) && !(saving && kept) && <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => { if (kept || ready) void save(); else ask(); }}>{(busy && !asking) || saving ? 'Saving' : 'Save my times'}</button>}
+        {(changed || !kept) && <button className={`cs-btn go wn-big${due ? ' due' : ''}`} type="button" disabled={busy} onClick={() => { if (kept || ready) void save(); else ask(); }}>{busy && !asking ? 'Saving' : 'Save my times'}</button>}
+        {due && !asking && <p className="wn-note due" role="status">Not saved yet. Press Save my times to send them.</p>}
         {asking && <div className="cs-over" role="dialog" aria-modal="true" aria-label="Whose times are these?" onClick={event => { if (event.target === event.currentTarget) shut(); }}>
           <div className="cs-over-card wn-card"><button type="button" className="cs-btn sm cs-over-x" onClick={shut}>Close</button>
             <div className="wn-card-top"><h2>Whose times are these?</h2><Rings /></div>
@@ -294,8 +293,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
         </div>}
       </div> : onSave ? <div className="wn-save">
         {error && <p className="wn-note bad" role="alert">{error}</p>}
-        <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={() => void save()}>{busy || saving ? 'Saving' : changed || !kept ? 'Save my times' : 'Saved'}</button>
-        <p className="wn-note" role="status">{saving ? 'Saving as you paint.' : changed ? 'Not saved yet.' : after}</p>
+        <button className={`cs-btn go wn-big${due ? ' due' : ''}`} type="button" disabled={busy || (kept && !changed)} onClick={() => void save()}>{busy ? 'Saving' : changed || !kept ? 'Save my times' : 'Saved'}</button>
+        <p className={`wn-note${due ? ' due' : ''}`} role="status">{changed ? 'Not saved yet. Press Save my times to send them.' : after}</p>
       </div> : null}
     </div>
     <div className="wn-col side"><Ticket tile={tile} stub={stub}>{title}</Ticket>

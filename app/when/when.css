@@ -39,6 +39,11 @@
 /* the one action, and the line under it */
 .cs .cs-btn.wn-big { height: 54px; width: 100%; font-size: 17px; font-weight: 680; letter-spacing: -0.02em; }
 .cs .cs-btn.go.wn-big { box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 4px 4px 0 var(--cs-ink); }
+/* times painted and not saved: the Save button asks for the press. A ring of the field colour breathes round it, and the line under it says so on ink. */
+.cs .cs-btn.go.wn-big.due { animation: wn-due 1.6s ease-in-out infinite; }
+@keyframes wn-due { 0%, 100% { box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 4px 4px 0 var(--cs-ink), 0 0 0 0 var(--cs-field-shadow); } 50% { box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 4px 4px 0 var(--cs-ink), 0 0 0 7px var(--cs-field-shadow); } }
+.wn-note.due { background: var(--cs-ink); color: var(--cs-field); font-weight: 640; }
+@media (prefers-reduced-motion: reduce) { .cs .cs-btn.go.wn-big.due { animation: none; box-shadow: 0 0 0 1.5px var(--cs-ink) inset, 4px 4px 0 var(--cs-ink), 0 0 0 5px var(--cs-field-shadow); } }
 .wn-note { justify-self: center; display: inline-flex; align-items: center; min-height: 28px; margin-top: -8px; padding: 3px 12px; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 7%, var(--cs-paper)); font-size: 13px; text-align: center; }
 .wn-note.bad { margin-top: 0; background: var(--cs-action); color: var(--cs-on-ink); }
 
