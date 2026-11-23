@@ -425,7 +425,7 @@ $('go').onclick = $('again').onclick = begin;
 // What the controls are, in a word each, for a mouse and keys or a thumb (kept, but hidden on every screen since the scoreboard folded).
 // Under them, what each pickup does, in a few words beside its picture.
 function controls() {
-  const does = { megaphone: 'Pulls from twice as far', coffee: 'Dash for free', whistle: 'Slip through other lines' };
+  const does = { megaphone: 'Pulls from twice as far', coffee: 'Dash for free', whistle: 'Slip through, turn sharper' };
   document.body.classList.toggle('touch', touched);
   $('hint').innerHTML = (touched ? [['Drag', 'steer'], ['Tap tap', 'hold to dash']] : [['Mouse', 'steer'], ['Space', 'dash'], ['P', 'pause']]).map(([key, does]) => `<span><kbd>${key}</kbd>${does}</span>`).join('')
     + Object.entries(does).map(([kind, words]) => `<span class="it"><img src="${ART[kind].src}" alt="${kind[0].toUpperCase() + kind.slice(1)}">${words}</span>`).join('');
@@ -466,7 +466,7 @@ let lesson = null, shownAt = 0, dashed = 0;
 function lessonWords(step) {
   if (step === 'steer') return touched ? ['Drag anywhere to steer', 'Your line follows your thumb.'] : ['Point to steer', 'Your line heads for the mouse.'];
   if (step === 'gather') return ['Walk into a stray', 'It joins the back of your line.'];
-  if (step === 'pickup') return ['Grab a pickup', [['megaphone', 'Megaphone: pulls strays from twice as far'], ['coffee', 'Coffee: dash for free'], ['whistle', 'Whistle: slip through other lines']]
+  if (step === 'pickup') return ['Grab a pickup', [['megaphone', 'Megaphone: pulls strays from twice as far'], ['coffee', 'Coffee: dash for free'], ['whistle', 'Whistle: slip through lines, turn sharper']]
     .map(([kind, words]) => `<span><img src="${ART[kind].src}" alt="">${words}</span>`).join('')];
   return touched ? ['Tap, tap and hold to dash', 'Keep holding to keep going. Each half second costs an animal.']
     : ['Hold <kbd>Space</kbd> to dash', 'Or hold the mouse button. Each half second costs an animal.'];
@@ -1663,10 +1663,9 @@ function frame(now) {
     if (event.type === 'spill' && event.line !== ME && me && !me.dead && event.by !== ME && (event.size >= 15 || Math.hypot(event.x - me.x, event.y - me.y) < 1200)) say(`${event.name} spilled ${event.size}`);
     if (event.type === 'power' && event.line === ME) {
       navigator.vibrate?.(20);
-      say({ megaphone: 'Megaphone! Strays come from twice as far', coffee: 'Coffee! Dash for free', whistle: 'Whistle! Slip through other lines' }[event.kind]);
+      say({ megaphone: 'Megaphone! Strays come from twice as far', coffee: 'Coffee! Dash for free', whistle: 'Whistle! Slip through other lines, turn sharper' }[event.kind]);
       learn('pickup');
     }
-    if (event.type === 'restless' && event.line === ME) say('Nobody new for a while. The back of your line is wandering off');
   }
   draw(t, dt);
   // Learning to gather: a ring pulses round the stray nearest your head. Learning the pickups: round the nearest pickup,

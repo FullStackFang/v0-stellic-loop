@@ -18,23 +18,15 @@ const STEP = 5; // distance between remembered points of a head's path
 const ROOMY = 30000; // square units of ground for each stray kept on it: the grounds grew 1.5 times across, so this came down to keep them as busy
 const STRAY_CAP = 420;
 const SPROUT = 9; // strays a second that turn up on a ground below its feed
-// The world has no cap. The ground always refills to `feed` strays, and a really long line sheds from its back as it goes,
-// each one shed a stray for anyone (agar.io's decay, slither.io's trail). Barely at first, then fast as it gets huge.
+// The ground always refills to `feed` strays. As in slither.io, a line never shrinks on its own: only dashing, a car over
+// it, or being scattered costs it animals (the founder dropped the size shed and the idle wander, 2026-11-22: players
+// could not tell why their back was leaving). A line of GIANT is full and picks nobody more up.
 // The game never ends a round for being full (it used to, and the founder found 'The ground filled up' unclear, 2026-11-22).
 // Instead, once the lines together pass CROWD of what a slow phone can draw, the ground pushes back, harder the fuller it is:
 // fewer new strays turn up, the cars bring fewer riders, and the bots' lines (never the player's) lose animals home.
-// Lighter since the founder felt a line of 100+ "losing a few per second" (2026-11-22): a line of 140 sheds about 0.3 a
-// second (was 2), one of 200 about 1.6 (was 5.5).
-const EASY = 60; // a line this long or shorter sheds nothing
-const SHED = 0.6; // animals a second shed at EASY + 100; an eighth of that at EASY + 50 and a sixty-fourth at EASY + 25
 export const FULL = 800; // animals in all the lines together that a slow phone was measured to draw at 60 frames a second
 const CROWD = 0.6; // the share of FULL in lines past which the ground starts to push back
 const CROWDED = 0.05; // share of a bot's line a second that goes home when the lines together reach FULL, and more past it
-// A line that has picked nobody up for IDLE seconds gets restless: its back wanders off, slowly at first and faster the
-// longer the line (agar.io's decay is a share of size; slither.io has none). Picking anyone up settles it again.
-const IDLE = 15;
-const WANDER = 0.2; // animals a second off a restless line, at the least
-const WANDER_SHARE = 0.001; // and this share of the line a second on top
 const DROP = 0.45; // seconds of dashing that cost one animal
 const DANCE = 4;
 const DAZE = 0.03; // chance, each time a bot looks, that it stops looking for a moment
@@ -46,7 +38,9 @@ const SEATS = 40; // how many a car can carry: without it one car could hand a s
 const SPARED = 1.5; // seconds before the same line is swept again, if the car is still over it
 // Pickups lie about the ground; a head that walks over one has it for a while (seconds here). The megaphone draws strays
 // from twice as far, coffee makes dashing free, and the whistle is safe passage: the head slips through other lines
-// without scattering (2026-11-22; it used to only keep the bus or tram off, which hardly ever mattered).
+// without scattering (2026-11-22; it used to only keep the bus or tram off, which hardly ever mattered) and turns
+// WHISTLE_TURN times as sharp, so it can thread the gaps it is let through.
+export const WHISTLE_TURN = 1.6;
 export const POWERS = { megaphone: 10, coffee: 8, whistle: 8 };
 export const LOUD = PULL * 2; // how far a megaphone draws strays from
 const TAKE = 46; // a head this close to a pickup takes it
@@ -153,7 +147,7 @@ export function place(world, line, start = 0) {
     at = spot(world, 120);
   }
   const a = world.random() * Math.PI * 2;
-  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, owed: [], owing: 0, safe: SAFE, dance: 0, drop: 0, idle: 0, wander: 0, powers: { megaphone: 0, coffee: 0, whistle: 0 }, top: 0, slack: 0, spared: 0, path: [{ ...at }] });
+  Object.assign(line, { ...at, a, want: a, dash: false, dead: 0, owed: [], owing: 0, safe: SAFE, dance: 0, drop: 0, wander: 0, powers: { megaphone: 0, coffee: 0, whistle: 0 }, top: 0, slack: 0, spared: 0, path: [{ ...at }] });
   line.tail = Array.from({ length: start }, () => ({ face: face(world), ...at }));
   return line;
 }
@@ -269,7 +263,6 @@ function think(world, line, dt) {
 function join(world, line, face, x, y, events) {
   line.tail.unshift({ face, x, y, born: world.t });
   line.slack += GAP;
-  line.idle = 0; line.wander = 0;
   events.push({ type: 'join', line: line.id, size: line.tail.length + 1 });
   // A line dances the first time it reaches each size, not every time it gets back there.
   if (MILESTONES.includes(line.tail.length) && line.tail.length > line.top) {
@@ -317,7 +310,7 @@ function scatter(world, line, by, events) {
   line.dead = line.bot ? BACK : Infinity;
 }
 
-/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'restless' | 'power' | 'spill' | 'grab' | 'pop', ... }. */
+/** Moves the world on by dt seconds. Returns what happened: { type: 'join' | 'dance' | 'scatter' | 'arrive' | 'lift' | 'power' | 'spill' | 'grab' | 'pop', ... }. */
 export function step(world, dt) {
   const events = [];
   world.t += dt;
@@ -331,7 +324,7 @@ export function step(world, dt) {
       continue;
     }
     if (line.bot) think(world, line, dt);
-    const turn = TURN * dt, dashing = line.dash && line.tail.length > 0;
+    const turn = TURN * (line.powers.whistle > 0 ? WHISTLE_TURN : 1) * dt, dashing = line.dash && line.tail.length > 0;
     line.a = wrap(line.a + Math.max(-turn, Math.min(turn, wrap(line.want - line.a))));
     const v = (dashing ? DASH : SPEED) * dt;
     // At the edge of the ground a line slides along it: it takes the nearest heading that stays on.
@@ -343,16 +336,10 @@ export function step(world, dt) {
     line.slack *= Math.exp(-7 * dt);
     follow(line, dt);
     owe(world, line, dt, events);
-    // Dashing costs animals off the back, and so does a line that has gone a while without picking anyone up.
-    const was = line.idle;
-    line.idle += dt;
-    if (was < IDLE && line.idle >= IDLE && line.tail.length) events.push({ type: 'restless', line: line.id });
-    if (line.idle >= IDLE) line.wander += (WANDER + line.tail.length * WANDER_SHARE) * dt;
-    if (line.tail.length > EASY) line.wander += SHED * ((line.tail.length - EASY) / 100) ** 3 * dt;
-    if (line.bot && crowd > 0) line.wander += CROWDED * crowd * line.tail.length * dt; // a crowded ground thins the bots
-    // One dropped by dashing is an ordinary stray, anyone's to pick up, its own line's too. One that wanders off a line too
-    // long or too idle goes home: it leaves the game ('home', for the page to show it walking off), so a line cannot
-    // undo its shedding by circling, and nothing lies on the ground that cannot be picked up.
+    // Dashing costs animals off the back. A crowded ground thins the bots (never the player).
+    if (line.bot && crowd > 0) line.wander += CROWDED * crowd * line.tail.length * dt;
+    // One dropped by dashing is an ordinary stray, anyone's to pick up, its own line's too. One that wanders off a bot on a
+    // crowded ground goes home: it leaves the game ('home', for the page to show it walking off).
     if (dashing && line.powers.coffee <= 0 && (line.drop += dt) >= DROP && line.tail.length) {
       line.drop = 0; const f = line.tail.pop(); world.strays.push({ x: f.x, y: f.y, face: f.face, a: world.random() * Math.PI * 2, vx: 0, vy: 0 });
     }
@@ -401,6 +388,7 @@ export function step(world, dt) {
     // Each head draws strays from its own reach, twice as far with a megaphone; the nearest head that reaches one has it.
     let head = null, close = Infinity, span = PULL;
     for (let h = 0; h < alive.length; h++) {
+      if (alive[h].tail.length >= GIANT) continue; // a full line draws nobody
       const dx = alive[h].x - s.x, dy = alive[h].y - s.y, d = dx * dx + dy * dy, r = reaches[h];
       if (d < r * r && d < close) { close = d; head = alive[h]; span = r; }
     }

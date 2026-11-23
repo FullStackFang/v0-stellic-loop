@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { addLine, createWorld, FULL, POWERS, round, steer, step } from '@/public/conga/sim.js';
+import { addLine, createWorld, FULL, POWERS, round, steer, step, WHISTLE_TURN } from '@/public/conga/sim.js';
 
 // The same game every run.
 function seeded(seed: number) {
@@ -8,8 +8,8 @@ function seeded(seed: number) {
 }
 
 // What a frame costs follows how many animals there are and how much of its path each line remembers. The ground always
-// refills and has no cap; what keeps a game drawable is that a really long line sheds from its back, faster the longer it
-// is, and that a crowded ground pushes back (fewer new strays and riders, the bots shed) so one game can go on and on.
+// refills; what keeps a game drawable is that a line of 400 is full and picks nobody more up, and that a crowded ground
+// pushes back (fewer new strays and riders, the bots shed) so one game can go on and on.
 // The limits here are what a browser was measured to carry (2026-11-20): with the processor slowed four times, the page
 // kept 60 frames a second with 800 animals in lines and 250 strays, and fell to 30 with a single line of 400.
 // A rule that lets a game past them needs measuring again before it ships.
@@ -34,8 +34,8 @@ it('keeps the lines, the strays and the remembered paths within what a slow phon
     overFor = inLines > FULL ? overFor + 1 / 30 : 0; most.overFor = Math.max(most.overFor, overFor);
   }
   expect(most.line).toBeGreaterThan(30); // the game did go on long enough for lines to grow
-  // A line can jump past 400 for a moment by taking a big sack, but sheds so fast up there that it never stays.
-  expect(most.longFor).toBeLessThan(2);
+  // No line ever passes 400: a full one draws no strays, and a sack's animals go home.
+  expect(most.longFor).toBe(0);
   // One game, never reset, stays drawable: past FULL now and then by a few, for a moment, when a big sack lands.
   expect(most.inLines).toBeLessThan(FULL + 60);
   expect(most.overFor).toBeLessThan(3);
@@ -58,18 +58,25 @@ it('thins the bots, never the player, once the ground is crowded', () => {
   expect(lines[0].tail.length).toBeGreaterThanOrEqual(50); // and the player lost none
 });
 
-// A line that keeps gathering never shrinks on its own. One that goes ten seconds without picking anyone up starts to lose
-// its back: those go home, so walking in circles where they were does not win them back.
-it('lets a line keep its animals while it gathers, and lets the back wander off once it stops', () => {
+// As in slither.io, a line never shrinks on its own: not for picking nobody up, not for being long.
+it('never shrinks a line on its own, however long it goes without picking anyone up, however long it is', () => {
   const world = createWorld(seeded(3), round(), []);
   world.strays.length = 0; world.feed = 0; // nothing to pick up
-  const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 40 }) as { a: number; tail: unknown[] };
-  const run = (seconds: number) => { for (let n = 0; n < seconds * 30; n++) { steer(line as never, line.a + 1, false); step(world, 1 / 30); } };
-  run(9.5);
-  expect(line.tail.length).toBe(40);
-  run(20.5);
-  expect(line.tail.length).toBeLessThan(40);
-  expect(line.tail.length).toBeGreaterThan(20); // slowly: about 0.56 a second at this length
+  (world as never as { shuttles: unknown[] }).shuttles.length = 0;
+  const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 200 }) as { a: number; tail: unknown[] };
+  for (let n = 0; n < 60 * 30; n++) { steer(line as never, line.a + 1, false); step(world, 1 / 30); }
+  expect(line.tail.length).toBe(200);
+});
+
+// A line of 400 is full: what a slow phone can draw. It draws no more strays, and they stay for someone else.
+it('lets a full line pick nobody more up', () => {
+  const world = createWorld(seeded(3), round(), []);
+  world.strays.length = 0; world.feed = 0;
+  const line = addLine(world, { id: 'me', face: 1, name: 'You', start: 400 }) as Line;
+  world.strays.push({ x: line.x + 10, y: line.y, face: 1, a: 0, vx: 0, vy: 0 });
+  step(world, 1 / 30);
+  expect(line.tail.length).toBe(400);
+  expect(world.strays).toHaveLength(1);
 });
 
 // The three pickups: walked over, each does its one thing for a while, then wears off.
@@ -108,6 +115,17 @@ it('lets a line dash for free with coffee', () => {
   line.powers.coffee = 0;
   for (let n = 0; n < 60; n++) { steer(line as never, line.a + 1, true); step(world, 1 / 30); }
   expect(line.tail.length).toBeLessThan(20);
+});
+
+it('lets a line turn sharper with the whistle', () => {
+  const turned = (whistle: boolean) => {
+    const { world, line } = alone();
+    if (whistle) line.powers.whistle = POWERS.whistle;
+    steer(line as never, Math.PI / 2, false);
+    step(world, 1 / 10);
+    return line.a;
+  };
+  expect(turned(true)).toBeCloseTo(turned(false) * WHISTLE_TURN, 5);
 });
 
 // A long line scattered leaves its animals as one mob where it fell; a head that reaches it draws the whole mob in.
