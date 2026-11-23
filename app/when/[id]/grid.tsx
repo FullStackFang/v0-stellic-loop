@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { dayNum, dow, mon } from '@/lib/days';
-import { hourText, type Slot } from '@/lib/when/slots';
+import { hourText, spanText, type Slot } from '@/lib/when/slots';
 import type { Said } from '../actions';
 import { Panel, Stack, Ticket, Tile, type Shown } from '../parts';
 
@@ -37,8 +37,10 @@ const AUTO_MS = 500;
  *
  * With `onSave` a person paints their times: press and drag to paint, starting on a painted time to rub out; the arrow
  * keys move and Space paints. Each time shows how many can make it, the person included, and nothing is kept until
- * Save. A poll whose squares are smaller than an hour has more rows: the grid keeps the height it has by the hour, the
- * days stay on top and the times scroll under them a whole row at a time, so no row is ever cut; a line of two pills under the grid turns to the earlier and later times (public/demo/mockups-when-steps.html, B). What is painted saves by itself a moment after the painting stops, once it is known whose times they are. Without `onSave` it is only to look at, and `action` stands where Save would.
+ * Save. A poll whose times are smaller than an hour has no squares: each day is one strip as tall as its hours, and a
+ * press and drag down it draws the time a person is free, a block that snaps to the poll's minutes; a drag that starts
+ * on a block rubs out. While it is drawn the day's name says the exact time. The arrow keys move along a strip and
+ * Space paints (public/demo/mockups-when-fine.html, B). What is painted saves by itself a moment after the painting stops, once it is known whose times they are. Without `onSave` it is only to look at, and `action` stands where Save would.
  */
 export function Grid({ slots, free, me: given = null, mine = [], draft = false, onSave, guest, onEmail, ways, tab, after = '', children, tile, title, best = [], action, tail, won = null, size }: {
   slots: Slot[]; /** Who else can make each time. */ free: Record<string, Shown[]>; /** The person painting. */ me?: Shown | null; mine?: string[];
@@ -50,7 +52,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   /** The time that was set. */ won?: string | null; /** The size of the group. */ size: number;
 }) {
   const per = usePer(), days = [...new Set(slots.map(slot => slot.day))], hours = [...new Set(slots.map(slot => slot.hour * 60 + slot.minute))].sort((a, b) => a - b);
-  // Rows are times of day, in minutes after midnight. `fine` is a poll with squares smaller than an hour; `tall` is how many rows it would have by the hour.
+  // Rows are times of day, in minutes after midnight. `fine` is a poll with times smaller than an hour; `tall` is how many hours a day has.
   const fine = slots.some(slot => slot.minute > 0), tall = new Set(slots.map(slot => slot.hour)).size, clock = (time: number) => hourText(Math.floor(time / 60), time % 60);
   const at = new Map(slots.map(slot => [`${slot.day} ${slot.hour * 60 + slot.minute}`, slot.at])), slotOf = new Map(slots.map(slot => [slot.at, slot]));
   const pages = Array.from({ length: Math.max(1, Math.ceil(days.length / per)) }, (_, page) => days.slice(page * per, (page + 1) * per));
@@ -67,16 +69,11 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   // `lifted` counts the times the pointer has come up, so what was painted in one stroke is saved when the stroke ends.
   const [lifted, setLifted] = useState(0), [dirty, setDirty] = useState(false), [refused, setRefused] = useState<Set<string> | null>(null);
   useEffect(() => { const stop = () => { painting.current = null; setLifted(n => n + 1); }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
-  // The window a fine grid scrolls in: as tall as the same poll by the hour, to the pixel, so it holds whole rows. `above` and `below` are whether there are times out of sight.
-  const [below, setBelow] = useState(false), [above, setAbove] = useState(false), turn = (way: number) => box.current?.scrollBy({ top: way * (box.current.clientHeight - (box.current.querySelector<HTMLElement>('.wn-d')?.offsetHeight ?? 0)), behavior: 'smooth' });
-  useEffect(() => {
-    const el = box.current;
-    if (!fine || !el) return;
-    const tell = () => { setBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 8); setAbove(el.scrollTop > 8); };
-    const fit = () => { const cell = el.querySelector<HTMLElement>('.wn-cell'), head = el.querySelector<HTMLElement>('.wn-d'); if (cell && head) { el.style.maxHeight = `${head.offsetHeight + tall * (cell.offsetHeight + 4) - 4}px`; el.style.scrollPaddingTop = `${head.offsetHeight}px`; } tell(); };
-    fit(); window.addEventListener('resize', fit); el.addEventListener('scroll', tell);
-    return () => { window.removeEventListener('resize', fit); el.removeEventListener('scroll', tell); };
-  }, [fine, tall, page, per]);
+  // A fine poll's strips. A day is `rows` steps of `step` minutes from its first hour; a place on a strip is a row.
+  const step = !fine ? 60 : slots.some(slot => slot.minute % 30) ? 15 : 30, perHour = 60 / step, rows = tall * perHour, firstHour = Math.min(...slots.map(slot => slot.hour));
+  const timeOf = (row: number) => firstHour * 60 + row * step, slotAt = (day: string, row: number) => at.get(`${day} ${timeOf(row)}`), pct = (n: number) => `${n / rows * 100}%`;
+  // The stroke under way: where it began, whether it paints or rubs out, and what was painted before it. `live` is what the day's name says meanwhile.
+  const drag = useRef<{ from: number; on: boolean; base: Set<string> } | null>(null), [live, setLive] = useState<{ day: string; on: boolean; from: number; to: number } | null>(null);
   const count = (slot: string) => (free[slot]?.length ?? 0) + (picked.has(slot) ? 1 : 0);
   // The three times most people can make, the most first and among equals the earliest.
   const top = slots.filter(slot => count(slot.at) > 0).sort((a, b) => count(b.at) - count(a.at) || (a.at < b.at ? -1 : 1)).slice(0, 3), rank = new Map(top.map((slot, n) => [slot.at, n + 1]));
@@ -87,6 +84,33 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     painting.current = !picked.has(slot);
     paint(slot, painting.current);
+  };
+  const rowAt = (event: PointerEvent<HTMLDivElement>) => { const size = event.currentTarget.getBoundingClientRect(); return size.height ? Math.max(0, Math.min(rows - 1, Math.floor((event.clientY - size.top) / size.height * rows))) : 0; };
+  /** Paints, or rubs out, every time from where the stroke began to `row`, on top of what was there before it. */
+  const sweep = (day: string, row: number) => {
+    const now = drag.current;
+    if (!now) return;
+    const lo = Math.min(now.from, row), hi = Math.max(now.from, row), next = new Set(now.base);
+    for (let each = lo; each <= hi; each++) { const slot = slotAt(day, each); if (slot) { if (now.on) next.add(slot); else next.delete(slot); } }
+    setPicked(next); setDirty(true); setLive({ day, on: now.on, from: lo, to: hi + 1 });
+  };
+  const press = (day: string) => (event: PointerEvent<HTMLDivElement>) => {
+    const row = rowAt(event), slot = slotAt(day, row);
+    if (!slot) return;
+    setTouched(slot);
+    if (!onSave) return;
+    if (guest && !ready) { ask(); return; }
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    painting.current = !picked.has(slot); drag.current = { from: row, on: painting.current, base: new Set(picked) };
+    sweep(day, row);
+  };
+  const glide = (day: string) => (event: PointerEvent<HTMLDivElement>) => { const row = rowAt(event), slot = slotAt(day, row); if (slot && (drag.current || event.pointerType === 'mouse')) setTouched(slot); sweep(day, row); };
+  const lift = () => { drag.current = null; setLive(null); };
+  const stripKeys = (day: string, col: number) => (event: KeyboardEvent<HTMLDivElement>) => {
+    const on = touched ? slotOf.get(touched) : undefined, here = on?.day === day ? (on.hour - firstHour) * perHour + on.minute / step : 0, move = ({ ArrowDown: 1, ArrowUp: -1 } as Record<string, number>)[event.key];
+    if (move) { event.preventDefault(); const slot = slotAt(day, Math.max(0, Math.min(rows - 1, on?.day === day ? here + move : 0))); if (slot) setTouched(slot); }
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); box.current?.querySelectorAll<HTMLElement>('.wn-trk')[col + (event.key === 'ArrowLeft' ? -1 : 1)]?.focus(); }
+    else if (onSave && (event.key === ' ' || event.key === 'Enter')) { event.preventDefault(); const slot = slotAt(day, here); if (slot) paint(slot, !picked.has(slot)); }
   };
   const keys = (event: KeyboardEvent<HTMLButtonElement>) => {
     const step = ({ ArrowRight: [0, 1], ArrowLeft: [0, -1], ArrowDown: [1, 0], ArrowUp: [-1, 0] } as Record<string, [number, number]>)[event.key];
@@ -193,11 +217,40 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
       </>}
     </div>
   </div> : null;
+  const strips = fine && <div ref={box} className="wn-grid fine" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per, '--tall': tall } as React.CSSProperties}>
+    <span />{shown.map(day => live?.day === day
+      ? <span key={day} className={`wn-d live${live.on ? '' : ' off'}`}>{live.on ? 'Free' : 'Rubbing out'}<b><span>{spanText(timeOf(live.from), (live.to - live.from) * step).replace(/ [ap]m$/, '')}</span></b></span>
+      : <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
+    <span className="wn-hs" aria-hidden="true">{Array.from({ length: tall }, (_, n) => <span key={n} className="wn-h">{hourText(firstHour + n)}</span>)}</span>
+    {shown.map((day, col) => {
+      const marks: ReactNode[] = [], runs: [number, number][] = [];
+      for (let row = 0; row < rows; row++) {
+        const slot = slotAt(day, row), place = { top: pct(row), height: `calc(${pct(1)} + .5px)` };
+        if (!slot) continue;
+        const total = count(slot);
+        if (total) marks.push(<i key={`b${row}`} className="b" style={{ ...place, '--n': Math.min(total, 5) } as React.CSSProperties} />);
+        if (slot === won) marks.push(<i key="won" className="won" style={place} />);
+        if (slot === touched) marks.push(<i key="at" className="at" style={place} />);
+        if (picked.has(slot)) { const last = runs[runs.length - 1]; if (last?.[1] === row) last[1] = row + 1; else runs.push([row, row + 1]); }
+      }
+      for (let line = 1; line < tall * 2; line++) marks.push(<i key={`l${line}`} className={`l${line % 2 ? ' half' : ''}`} style={{ top: `${line / (tall * 2) * 100}%` }} />);
+      for (let hour = 0; hour < tall; hour++) {
+        const most = Math.max(0, ...Array.from({ length: perHour }, (_, n) => { const slot = slotAt(day, hour * perHour + n); return slot ? count(slot) : 0; }));
+        if (most) marks.push(<b key={`n${hour}`} className="n" data-n={Math.min(most, 5)} style={{ top: pct(hour * perHour), height: pct(perHour) }}>{most}</b>);
+      }
+      // A block says when it starts along its top edge and when it ends along its foot; a short one says both on one line, and a quarter of an hour says nothing.
+      const said = (from: number, to: number) => { const text = spanText(timeOf(from), (to - from) * step), cut = text.indexOf(' to '); return (to - from) * step >= 45 ? <><b>{text.slice(0, cut)}</b><b>{text.slice(cut + 4)}</b></> : (to - from) * step >= 30 ? text.replace(/ [ap]m$/, '') : null; };
+      return <div key={day} className="wn-trk" tabIndex={0} aria-label={`${dayLabel(day)}${onSave ? ': drag to paint, or use the arrow keys and Space' : ''}`}
+        onPointerDown={press(day)} onPointerMove={glide(day)} onPointerUp={lift} onPointerCancel={lift} onKeyDown={stripKeys(day, col)}>
+        {marks}{runs.map(([from, to]) => <span key={from} className={`wn-blk${(to - from) * step >= 45 ? ' ends' : ''}`} style={{ top: pct(from), height: pct(to - from) }}>{said(from, to)}</span>)}
+      </div>;
+    })}{pad.map((_, n) => <span key={`strip${n}`} />)}
+  </div>;
   return <>
     <div className="wn-col"><Panel tab={tab ?? (onSave ? 'Paint the times you can make' : 'When people are free so far')}>{pager}
-      <div ref={box} className={`wn-grid${fine ? ' roll' : ''}`} role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per } as React.CSSProperties}>
+      {strips || <div ref={box} className="wn-grid" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per } as React.CSSProperties}>
         <span />{shown.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
-        {hours.map((hour, row) => [<span key={hour} className={`wn-h${hour % 60 ? ' sub' : ''}`}>{hour % 60 ? clock(hour).slice(0, -3) : clock(hour)}</span>, ...shown.map((day, col) => {
+        {hours.map((hour, row) => [<span key={hour} className="wn-h">{clock(hour)}</span>, ...shown.map((day, col) => {
           const slot = at.get(`${day} ${hour}`);
           if (!slot) return <span key={day} className="wn-none" />;
           const on = picked.has(slot), total = count(slot), badge = rank.has(slot) && <i className="wn-rk" aria-hidden="true">{rank.get(slot)}</i>;
@@ -209,10 +262,6 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
             // A press already painted on the way down. A click that no pointer made is the keyboard's.
             onClick={event => { if (event.detail === 0) paint(slot, !on); }}>{total}{badge}</button>;
         }), ...pad.map((_, n) => <span key={`pad${hour}${n}`} />)])}
-      </div>
-      {fine && <div className="wn-more">
-        <button type="button" disabled={!above} onClick={() => turn(-1)}><Arrow d="M3 10l5-5 5 5" />Earlier times</button>
-        <button type="button" disabled={!below} onClick={() => turn(1)}>Later times<Arrow d="M3 6l5 5 5-5" /></button>
       </div>}
       <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />More people free</span>{onSave && <span className="cs-pill"><i className="mine" />Yours</span>}{children}</div></Panel>
       {strip}

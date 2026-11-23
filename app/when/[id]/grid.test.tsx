@@ -142,3 +142,19 @@ it('opens the card for the bar\'s "Sign in", and paints and saves what was kept 
   expect(cell('Tue 1, 7 pm')).toHaveAttribute('aria-pressed', 'true');
   expect(sessionStorage.getItem(`wn-keep:${location.pathname}`)).toBeNull();
 });
+
+it('draws a poll of half hours as strips: Space paints where the arrows have moved to', async () => {
+  const half = ['2026-12-02T00:00:00.000Z', '2026-12-02T00:30:00.000Z', '2026-12-02T01:00:00.000Z', '2026-12-02T01:30:00.000Z'];
+  const onSave = vi.fn().mockResolvedValue({});
+  render(<Grid slots={half.map((at, n) => ({ day: '2026-12-01', hour: 19 + Math.floor(n / 2), minute: n % 2 * 30, at }))} free={{ [half[1]]: [{ personId: 'a', name: 'Ana', face: '' }] }} size={4} onSave={onSave} />);
+  const strip = screen.getByLabelText(/^Tue 1: drag to paint/);
+  expect(screen.queryByRole('button', { name: /Tue 1, 7 pm/ })).toBeNull();
+  strip.focus();
+  fireEvent.keyDown(strip, { key: ' ' });
+  fireEvent.keyDown(strip, { key: 'ArrowDown' });
+  fireEvent.keyDown(strip, { key: ' ' });
+  await waitFor(() => expect(onSave).toHaveBeenCalled());
+  expect(onSave.mock.calls.at(-1)![0].sort()).toEqual(half.slice(0, 2));
+  // The two half hours touch, so they are one block: its start along the top, its end along the foot.
+  expect([...strip.querySelectorAll('.wn-blk b')].map(each => each.textContent)).toEqual(['7', '8 pm']);
+});

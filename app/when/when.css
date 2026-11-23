@@ -45,18 +45,21 @@
 /* the grid: days across, hours down */
 .wn-grid { display: grid; grid-template-columns: 40px repeat(var(--days), minmax(0, 1fr)); gap: 4px; touch-action: none; user-select: none; -webkit-user-select: none; }
 .wn-grid + .wn-grid { margin-top: 18px; }
-/* squares smaller than an hour: the grid keeps the height it has by the hour (set in grid.tsx), the days stay on top and the times scroll under them. A finger on a square paints; a finger on the times scrolls. */
-.wn-grid.roll { overflow-y: auto; scrollbar-width: none; touch-action: pan-y; overscroll-behavior: contain; scroll-snap-type: y mandatory; }
-.wn-grid.roll .wn-h { scroll-snap-align: start; }
-.wn-grid.roll::-webkit-scrollbar { display: none; }
-.wn-grid.roll .wn-cell { touch-action: none; }
-.wn-grid.roll .wn-d, .wn-grid.roll > span:first-child { position: sticky; top: 0; z-index: 2; background: var(--cs-paper); }
-.wn-h.sub { font-size: 10.5px; opacity: .8; }
-/* its own line under the grid, so it never covers a square */
-.wn-more { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-.cs .wn-more button, .wn-more button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 14px; border: 0; border-radius: 99px; background: var(--cs-ink); color: var(--cs-field); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
-.cs .wn-more button:disabled, .wn-more button:disabled { background: var(--cs-paper); color: color-mix(in oklab, var(--cs-ink) 35%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--cs-ink) 22%, transparent); cursor: default; }
-.wn-more svg { width: 14px; height: 14px; flex: none; }
+/* times smaller than an hour: no squares. Each day is one strip as tall as its hours, and a drag down it draws a block (grid.tsx). */
+.wn-grid.fine { --wn-row: 50px; }
+.wn-hs { display: grid; grid-auto-rows: var(--wn-row); } .wn-hs .wn-h { align-self: start; padding-top: 1px; }
+.wn-trk { position: relative; height: calc(var(--tall) * var(--wn-row) - 4px); border-radius: 12px 12px 12px 3px; overflow: hidden; background: var(--cs-page); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-ink) 16%, transparent); cursor: crosshair; touch-action: none; }
+.wn-trk:focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+.wn-trk > i { position: absolute; left: 0; right: 0; pointer-events: none; }
+.wn-trk .b { background: color-mix(in oklab, var(--cs-action) calc(var(--n) * 17%), var(--cs-page)); }
+.wn-trk .l { height: 1px; background: color-mix(in oklab, var(--cs-ink) 20%, transparent); } .wn-trk .l.half { opacity: .4; }
+.wn-trk .at { box-shadow: inset 0 0 0 2px var(--cs-ink); z-index: 2; } .wn-trk .won { box-shadow: inset 0 0 0 3px var(--cs-ink), inset 0 0 0 5px var(--cs-paper); z-index: 2; }
+.wn-trk .n { position: absolute; left: 0; right: 0; display: grid; place-items: center; font-size: 13.5px; font-weight: 700; color: var(--cs-ink); pointer-events: none; } .wn-trk .n:is([data-n="3"], [data-n="4"], [data-n="5"]) { color: var(--cs-paper); }
+.wn-blk { position: absolute; left: 3px; right: 3px; z-index: 1; display: grid; place-items: center; align-content: center; border-radius: 10px 10px 10px 3px; background: var(--cs-ink); color: var(--cs-field); box-shadow: 0 0 0 1.5px var(--cs-paper); font-size: 11.5px; font-weight: 700; line-height: 1.1; text-align: center; white-space: nowrap; overflow: hidden; pointer-events: none; }
+.wn-blk.ends { align-content: space-between; padding: 4px 0 3px; } .wn-blk b { font-weight: 700; }
+/* the day's name while its strip is drawn on: the same box, saying the time */
+.wn-d.live { border-radius: 99px; background: var(--cs-ink); color: var(--cs-field); } .wn-d.live b { color: var(--cs-field); white-space: nowrap; } .wn-d.live b span { display: inline-block; font-size: 11.5px; line-height: 1; vertical-align: middle; letter-spacing: -.02em; }
+.wn-d.live.off { background: var(--cs-paper); color: var(--cs-ink); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .wn-d.live.off b { color: var(--cs-ink); }
 .wn-d { text-align: center; font-size: 11.5px; font-weight: 600; line-height: 1.1; padding-bottom: 4px; color: var(--cs-mute); }
 .wn-d b { display: block; font-size: 17px; font-weight: 700; font-stretch: 108%; color: var(--cs-ink); }
 .wn-h { align-self: center; font-size: 12px; font-weight: 560; color: var(--cs-mute); text-align: right; padding-right: 4px; white-space: nowrap; }
@@ -127,7 +130,7 @@ button.wn-cell { cursor: pointer; }
   .wn-band > .wn-panel { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 58px; padding: 0 8px; }
   .wn-band .wn-msg { flex: 1; min-width: 0; margin: 0; padding: 0 13px; line-height: 42px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .wn-band .wn-acts { flex: none; flex-wrap: nowrap; } .wn-band .wn-acts .cs-btn { flex: none; }
-  .wn-two .wn-cell { min-height: 50px; font-size: 14.5px; }
+  .wn-two .wn-cell { min-height: 50px; font-size: 14.5px; } .wn-two .wn-grid.fine { --wn-row: 54px; }
   .wn-two .wn-d b { font-size: 19px; }
   .wn-two .wn-cal-d { height: 46px; }
 }
@@ -306,7 +309,7 @@ button.wn-cell { cursor: pointer; }
   .wn-fit .wn-panel { padding: 20px 12px 12px; }
   .wn-fit .wn-modes button { height: 42px; } .wn-fit .wn-modes b { font-size: 13px; } .wn-fit .wn-modes small { font-size: 10.5px; }
   .wn-fit .wn-sets { margin-bottom: 10px; }
-  .wn-fit .wn-cell, .cs .wn-fit .wn-cell { min-height: 38px; } .wn-fit .wn-d b { font-size: 15px; } .wn-fit .wn-d { padding-bottom: 2px; }
+  .wn-fit .wn-cell, .cs .wn-fit .wn-cell { min-height: 38px; } .wn-fit .wn-grid.fine { --wn-row: 42px; } .wn-fit .wn-d b { font-size: 15px; } .wn-fit .wn-d { padding-bottom: 2px; }
   .wn-fit .wn-key { margin-top: 9px; gap: 5px; } .wn-fit .wn-key .cs-pill { font-size: 12px; padding: 3px 9px 3px 5px; }
   .wn-fit .wn-best { display: none; }
   /* the message to pass on is one line, its two buttons share the next, and the other places to go share one more */
