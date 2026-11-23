@@ -351,13 +351,23 @@ if (!picked || !mine && MAPS[keep.get('conga-map')] && PLACES[keep.get('conga-ma
 window.conga = { get world() { return world; } }; // for poking at the game from the console
 
 const BOTS = 10; // lines played by the game; more fill the ground faster than it refills
+// The bots spread out before anyone looks: WARM steps of the game, about a tenth of a second of work. Done all at once
+// when Start or Again was pressed, that was a stutter at the start of every round. So the next game's world is made while
+// a card is up and warmed a few steps each frame (see frame); open() takes it, and finishes whatever warming is left.
+const WARM = 240;
+let spare = null;
+function fresh(id) {
+  const next = createWorld(Math.random, MAPS[id].rings, MAPS[id].holes, MAPS[id].shuttles ?? []);
+  GROUPS[id].slice(0, BOTS).forEach((name, i) => addLine(next, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
+  return { id, world: next, left: WARM };
+}
 /** Opens a ground: its own world, with the bots already walking it. In the app this is the campus you are on. */
 function open(id) {
   if (where && PLACES[where].school !== PLACES[id].school && !mine) picked = MASCOTS[PLACES[id].school] ?? picked;
   where = id; map = MAPS[id]; me = null; stale = true;
-  world = createWorld(Math.random, map.rings, map.holes, map.shuttles ?? []);
-  GROUPS[id].slice(0, BOTS).forEach((name, i) => addLine(world, { id: i, face: 1 + Math.floor(Math.random() * FACES), name, bot: { skill: 0.35 + Math.random() * 0.65, aggro: Math.random() }, start: 3 + Math.floor(Math.random() * 14) }));
-  for (let i = 0; i < 240; i++) step(world, 1 / 30); // let the bots spread out before anyone looks
+  const ready = spare?.id === id ? spare : fresh(id); spare = null;
+  for (; ready.left > 0; ready.left--) step(ready.world, 1 / 30);
+  world = ready.world;
   land = new Path2D();
   for (const ring of map.rings) { ring.forEach(([x, y], i) => i ? land.lineTo(x, y) : land.moveTo(x, y)); land.closePath(); }
   // The running stitch just inside each area's edge: round the mat, and two rows where two areas are sewn together.
@@ -1528,6 +1538,8 @@ function ground(t, cx, cy, hw, hh) {
 // Nothing on the felt ground moves, and painting it afresh was most of the cost of a frame. So it is painted once, in
 // squares, as each comes into view, and a frame only lays the squares it can see. They are painted at the closest the view
 // comes and laid smaller as it pulls back. Another ground, sharpness, screen size or font throws them away.
+// A step down in quality throws them away only when it changes what is painted: the sharpness (in `scale`) or the plain water.
+// On a screen of one pixel to the point a step changes neither, and repainting every square then was a stutter for nothing.
 const PATCH = 512, kept = new Map();
 let keptAs = '';
 // A square let go gives its memory back at once (Safari holds a canvas's pixels until its size is 0).
@@ -1547,7 +1559,7 @@ function patch(px, py, span, scale) {
 function carpet(halfW, halfH) {
   // Painted at the closest the view comes, rounded up to a step of about 9%: dragging a window's edge then crosses a step
   // now and then, instead of throwing every square away on each new size. Never softer than the screen needs.
-  const scale = 2 ** (Math.ceil(Math.log2(closest() * dpr) * 8) / 8), span = PATCH / scale, as = `${where} ${scale} ${quality}`;
+  const scale = 2 ** (Math.ceil(Math.log2(closest() * dpr) * 8) / 8), span = PATCH / scale, as = `${where} ${scale} ${quality < 2}`;
   if (as !== keptAs) { forget(); keptAs = as; }
   const k = cam.z * dpr, left = wide / 2 * dpr - cam.x * k, top = tall / 2 * dpr - cam.y * k; // where the ground's own (0, 0) falls on the canvas
   const west = Math.floor((cam.x - halfW) / span), east = Math.floor((cam.x + halfW) / span), north = Math.floor((cam.y - halfH) / span), south = Math.floor((cam.y + halfH) / span);
@@ -1785,6 +1797,8 @@ function frame(now) {
   // One long frame (a game starting, new ground coming into view) counts as no more than 50 ms: alone it must not blur the picture for good.
   if (took < 250) pace += (Math.min(took, 50) - pace) * 0.05;
   if (++settled > 120 && pace > 24 && quality < SHARP.length - 1) { quality++; settled = 0; pace = 16; fit(); }
+  // With no game on, the next game's world is got ready, a few steps a frame.
+  if (!me || me.dead) { if (spare?.id !== where) spare = fresh(where); for (let n = 0; n < 6 && spare.left > 0; n++, spare.left--) step(spare.world, 1 / 30); }
   if (me && !me.dead && !paused) {
     if (keys.has('ArrowLeft') || keys.has('KeyA')) aim = me.a - 1.2;
     if (keys.has('ArrowRight') || keys.has('KeyD')) aim = me.a + 1.2;
