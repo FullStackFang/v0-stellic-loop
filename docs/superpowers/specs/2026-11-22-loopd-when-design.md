@@ -19,7 +19,8 @@ Goals
 - Create a poll, share one link, answer on a phone.
 - The organizer decides: Loopd says "it's ready", they pick the time, add a
   line, and send.
-- Every answer belongs to a signed-in Loopd person with a verified email.
+- An answer belongs to a signed-in Loopd person, or (changed 2026-11-22, see `WHEN.md`) to a
+  guest who typed only a name.
 - "Ask the group again" makes next week's poll with the same people.
 - Three numbers: open-to-answer rate, share of polls that reach their
   threshold, share of series with a second poll within 30 days.
