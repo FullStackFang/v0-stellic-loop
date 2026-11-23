@@ -280,7 +280,7 @@ body:has(.card:not([hidden])) .coach, body:has(.card:not([hidden])) .ghost { vis
 
 <script type="module">
 import { createWorld, addLine, steer, step, removeLine, FACES, PLAZA, POWERS, LOUD, GAP } from './conga/sim.js';
-import { MAPS, GROUPS, PLACES, MASCOTS, shore, shoreline, TALL, treeWidth } from './conga/maps.js';
+import { MAPS, GROUPS, PLACES, MASCOTS, OPEN_GROUND, mayPlay, shore, shoreline, TALL, treeWidth } from './conga/maps.js';
 import { SHEET as SCENERY, AT } from './conga/scenery.js';
 
 const $ = id => document.getElementById(id);
@@ -345,7 +345,13 @@ function inward(ring, by) {
 let hem, shallowsEdge;
 let world, map, land, me = null, aim = 0, followed = null;
 const ask = new URLSearchParams(location.search);
-let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 0, mine = keep.get('conga-face') === 'mine', where = MAPS[ask.get('map')] ? ask.get('map') : MAPS[keep.get('conga-map')] ? keep.get('conga-map') : 'cornell';
+let held = null, best = Number(keep.get('conga-best')) || 1, picked = Number(keep.get('conga-face')) || 0, mine = keep.get('conga-face') === 'mine';
+// The ground: the one asked for, else the one kept from last time, else the open one. One the player may not play (maps.js
+// mayPlay; who is playing is written into the page before this runs) gives way to the next, and the picker then opens on
+// the school that was asked for, with what it takes to play there (`wanted`). The kept choice is left alone, so it comes back
+// once they sign in as someone who may play it.
+const wanted = MAPS[ask.get('map')] && !mayPlay(window.congaPlayer ?? null, ask.get('map')) ? ask.get('map') : null;
+let where = [ask.get('map'), keep.get('conga-map')].find(id => MAPS[id] && mayPlay(window.congaPlayer ?? null, id)) ?? OPEN_GROUND;
 // Nothing kept: you start as the ground's mascot.
 if (!picked || !mine && MAPS[keep.get('conga-map')] && PLACES[keep.get('conga-map')].school !== PLACES[where].school) picked = MASCOTS[PLACES[where].school] ?? (picked || 1 + Math.floor(Math.random() * CORE));
 window.conga = { get world() { return world; } }; // for poking at the game from the console
@@ -447,7 +453,6 @@ Promise.resolve(window.congaPlayer ?? null).then(player => {
   if (!player) return;
   you = player; chosen = Math.min(Number(keep.get('conga-own')) || 0, you.animals.length - 1); if (own().picture) wear(own().picture);
   mine = you.ink && (mine || keep.get('conga-face') == null);
-  if (!free(where)) open(Object.keys(MAPS).find(free) ?? where); // a ground kept from before that is no longer theirs
   offer();
   // A round ended before signing in ("Sign in to go on the board") goes on the board now, as the animal they wear.
   let waiting = null;
@@ -455,14 +460,16 @@ Promise.resolve(window.congaPlayer ?? null).then(player => {
   if (waiting) save({ ...waiting, face: own().face, picture: own().picture }).then(kept => { if (kept) say(`Your ${waiting.best} is on this week's board`); });
 }).catch(() => {});
 // ---------- where you play (/demo/mockups-conga-where.html, A) ----------
-// One ticket after Start names the ground, and opens a sheet over the card: schools, then that school's grounds. A
-// player's own schools' grounds are free; another school's come with Ink+ (the admin has it). Signed out, every ground
-// is open, as every school's colours are.
+// One ticket after Start names the ground, and opens a sheet over the card: schools, then that school's grounds. Who may
+// play which is maps.js mayPlay (openspec conga-ground-gate): Cornell's hill is open to everyone, a player's own schools'
+// grounds are free, and another school's come with Ink+ (the admin has it). A ground that may not be played is shown
+// locked, never left out; pressing it says the way in: signing in, for someone signed out, since it is free if it is their
+// school, and Ink+.
 
-const grounded = () => you.schools.filter(school => Object.values(PLACES).some(place => place.school === school));
-const mineSchool = school => !you || you.plus || !grounded().length || grounded().includes(school);
-const free = id => mineSchool(PLACES[id].school);
-const picker = { on: false, school: null, asking: false };
+const free = id => mayPlay(you ?? window.congaPlayer ?? null, id);
+const groundsOf = school => Object.keys(MAPS).filter(id => PLACES[id].school === school);
+const mineSchool = school => groundsOf(school).some(free); // a school with any ground you may play opens to show them
+const picker = { on: !!wanted, school: wanted ? PLACES[wanted].school : null, asking: !!wanted, ground: wanted };
 const narrow = () => matchMedia('(max-width: 560px)').matches;
 const named = school => SCHOOLS[school] ?? school;
 const MARK = INK.replace('role="img" aria-label="Ink"', 'aria-hidden="true"');
@@ -471,12 +478,15 @@ const CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"
 function places() {
   // Your own schools first.
   const schools = [...new Set(Object.values(PLACES).map(each => each.school))].sort((x, y) => mineSchool(y) - mineSchool(x));
-  const at = PLACES[where].school, shown = picker.school ?? at, grounds = Object.keys(MAPS).filter(id => PLACES[id].school === shown);
-  const names = grounds.map(id => MAPS[id].name);
+  const at = PLACES[where].school, shown = picker.school ?? at, grounds = groundsOf(shown);
+  // What the ask is for: the ground pressed, else the grounds of the school pressed that are not yours yet.
+  const asked = picker.ground && PLACES[picker.ground].school === shown ? [picker.ground] : grounds.filter(id => !free(id)), names = asked.map(id => MAPS[id].name);
+  const out = !(you ?? window.congaPlayer);
   $('where').innerHTML = `<button class="ticket" aria-expanded="${picker.on}" aria-label="Where you play: ${map.name}, ${named(at)}">${mascot(at)}<span class="t"><small>${named(at)}</small><b>${map.name}</b></span><span class="chev">${CHEV}</span></button>`
-    + `<div class="sheet"${picker.on ? '' : ' hidden'}><div class="col schools"><span class="cap">School</span>${schools.map(school => `<button class="school${mineSchool(school) ? '' : ' locked'}" data-school="${school}" aria-pressed="${school === shown && mineSchool(school)}">${mascot(school)}<span>${named(school)}</span>${mineSchool(school) ? (you?.schools.includes(school) ? '<span class="yours">Yours</span>' : '') : `<span class="lock">${MARK} Ink+</span>`}</button>`).join('')}</div>`
+    + `<div class="sheet"${picker.on ? '' : ' hidden'}><div class="col schools"><span class="cap">School</span>${schools.map(school => `<button class="school${mineSchool(school) ? '' : ' locked'}" data-school="${school}" aria-pressed="${school === shown && mineSchool(school)}">${mascot(school)}<span>${named(school)}</span>${mineSchool(school) ? (you?.schools.includes(school) ? '<span class="yours">Yours</span>' : '') : `<span class="lock">${out ? 'Sign in' : `${MARK} Ink+`}</span>`}</button>`).join('')}</div>`
     + `<div class="col"><span class="cap">${narrow() ? named(shown) : 'Place'}</span>${grounds.map(id => `<button class="ground${free(id) ? '' : ' locked'}" data-map="${id}" aria-pressed="${id === where}"><b>${MAPS[id].name}</b><small>${PLACES[id].line}</small><span class="tick"></span></button>`).join('')}</div></div>`
-    + `<div class="ask away"${picker.asking ? '' : ' hidden'}><span class="tab">${INK} Ink+</span><div class="peek">${mascot(shown)} ${named(shown)} · ${names.join(', ')}</div><h3>Every school's grounds come with Ink+</h3><p>Play ${names.join(' and ')} and every campus we draw next. Yours stay free.</p><div><button class="pl see" data-join>See Ink+ · $9.99</button><button class="pl" data-shut>Not now</button></div></div>`;
+    + `<div class="ask away"${picker.asking ? '' : ' hidden'}><span class="tab">${INK} Ink+</span><div class="peek">${mascot(shown)} ${named(shown)} · ${names.join(', ')}</div>${out ? `<h3>${names.join(' and ')} ${names.length > 1 ? 'are' : 'is'} ${named(shown)}'s</h3><p>At ${named(shown)}? Sign in and ${names.length > 1 ? "they're" : "it's"} yours, free. Or play every school's grounds with Ink+.</p><div><button class="pl see" data-signin>Sign in</button><button class="pl" data-join>Ink+ · $9.99</button><button class="pl" data-shut>Not now</button></div>`
+      : `<h3>Every school's grounds come with Ink+</h3><p>Play ${names.join(' and ')} and every campus we draw next.${you?.schools.some(school => groundsOf(school).length) ? ' Yours stay free.' : ''}</p><div><button class="pl see" data-join>See Ink+ · $9.99</button><button class="pl" data-shut>Not now</button></div>`}</div>`;
   // The sheet reaches the card's own top, so it covers the title whole instead of cutting through it.
   const card = $('where').closest('.card'), open = $('where').querySelector('.sheet:not([hidden])');
   if (open) open.style.minHeight = `${$('where').getBoundingClientRect().top - card.getBoundingClientRect().top - 12 - parseFloat(getComputedStyle(card).paddingTop) + 8}px`;
@@ -489,20 +499,22 @@ function places() {
     ask.style.left = `${r.right - row.left + 8}px`; ask.style.top = `${r.top - row.top + r.height / 2 - ask.offsetHeight / 2}px`;
   }
 }
-const shut = () => { picker.on = false; picker.school = null; picker.asking = false; };
+const shut = () => { picker.on = false; picker.school = null; picker.asking = false; picker.ground = null; };
 $('where').onclick = async event => {
   const t = event.target.closest('button'); if (!t) return;
   if (t.matches('.ticket')) { const on = !picker.on; shut(); picker.on = on; }
-  else if (t.dataset.school) { picker.school = t.dataset.school; picker.asking = !mineSchool(t.dataset.school); }
+  else if (t.dataset.school) { picker.school = t.dataset.school; picker.asking = !mineSchool(t.dataset.school); picker.ground = null; }
   else if (t.dataset.map) {
-    if (!free(t.dataset.map)) picker.asking = true;
+    if (!free(t.dataset.map)) { picker.asking = true; picker.ground = t.dataset.map; }
     else { keep.set('conga-map', t.dataset.map); shut(); open(t.dataset.map); return offer(); }
   }
-  else if (t.hasAttribute('data-shut')) { picker.asking = false; picker.school = null; }
+  else if (t.hasAttribute('data-shut')) { picker.asking = false; picker.ground = null; if (!mineSchool(picker.school ?? PLACES[where].school)) picker.school = null; }
+  // Signing in, as from the board's "Sign in to go on the board": the app page round the game opens its sign-in card.
+  else if (t.hasAttribute('data-signin')) { if (parent !== window) tell('signin'); else top.location.assign('/conga'); return; }
   else if (t.hasAttribute('data-join')) {
     // Signing up for Ink+ from here (openspec loop-ink-tiers): the same route as every ask in the app, then its thanks.
     t.disabled = true;
-    const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'plus', place: 'conga: Get Ink+', back: `/conga?map=${where}` }) }).catch(() => null);
+    const answer = await fetch('/c/ink/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'plus', place: 'conga: Get Ink+', back: `/conga?map=${picker.ground ?? groundsOf(picker.school ?? PLACES[where].school).find(id => !free(id)) ?? where}` }) }).catch(() => null);
     const got = await answer?.json().catch(() => null);
     if (got?.signIn) return top.location.assign(got.signIn); // the whole window, not the frame the game is in
     const said = $('where').querySelector('.ask p');

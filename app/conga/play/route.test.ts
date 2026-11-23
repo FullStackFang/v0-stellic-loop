@@ -46,7 +46,7 @@ it('gives the game this week\'s board, with the reader\'s own row', async () => 
 
 it('gives the animal a person wears, by its place on the sheet, in their school\'s colours, and no more without Ink+', async () => {
   const ana = await person('ana@cornell.edu');
-  expect(await ask(ana)).toEqual({ ink: false, plus: false, kit: 'cornell', animals: [{ face: animalOf(ana.personId) + 1, picture: null, kit: 'cornell' }] });
+  expect(await ask(ana)).toEqual({ ink: false, plus: false, kit: 'cornell', schools: ['cornell'], animals: [{ face: animalOf(ana.personId) + 1, picture: null, kit: 'cornell' }] });
   await pickFace(t.db, ana.personId, 11);
   expect((await ask(ana)).animals).toEqual([{ face: 12, picture: null, kit: 'cornell' }]);
 });

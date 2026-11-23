@@ -244,6 +244,21 @@ it('gives every ground its bots and its way in from the campus', async () => {
   }
 });
 
+// Who may play which ground (openspec conga-ground-gate): one rule, read by the game's picker and by the board.
+it('opens one ground to everyone, a school\'s grounds to its people, and every ground with Ink+', async () => {
+  const { MAPS, OPEN_GROUND, mayPlay } = await import('@/public/conga/maps.js');
+  const grounds = Object.keys(MAPS), may = (player: { schools: string[]; plus: boolean } | null) => grounds.filter(id => mayPlay(player, id)).sort();
+  expect(OPEN_GROUND).toBe('cornell');
+  expect(may(null)).toEqual(['cornell']); // signed out
+  expect(may({ schools: [], plus: false })).toEqual(['cornell']);
+  expect(may({ schools: ['cuny'], plus: false })).toEqual(['cornell']); // a school with no ground yet
+  expect(may({ schools: ['cornell'], plus: false })).toEqual(['cornell', 'cornell-tech']);
+  expect(may({ schools: ['columbia'], plus: false })).toEqual(['columbia', 'cornell']); // signing in takes nothing away
+  expect(may({ schools: ['cuny', 'nyu', 'columbia'], plus: false })).toEqual(['columbia', 'cornell', 'nyu']);
+  expect(may({ schools: [], plus: true })).toEqual([...grounds].sort()); // Ink+, and an admin
+  for (const player of [null, { schools: ['cornell'], plus: true }]) expect(mayPlay(player, 'nowhere')).toBe(false);
+});
+
 // A name painted into the ground is read from above, so no tree or building may stand on it.
 it('keeps every name painted into the ground clear of trees and buildings', async () => {
   const { MAPS, ZONE_NAME, PLACE_NAME, treeWidth, TALL } = await import('@/public/conga/maps.js');
