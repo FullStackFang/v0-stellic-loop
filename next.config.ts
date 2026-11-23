@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // The default corner (bottom-left) covers the account button at the foot of the side menu.
   devIndicators: { position: 'bottom-right' },
+  // A temporary public address for the dev server (a Cloudflare quick tunnel), so a link can be tried in a chat app from a phone.
+  allowedDevOrigins: ['*.trycloudflare.com'],
   // Restored Turbopack build caches have reused stale CSS across deployments.
   experimental: { turbopackFileSystemCacheForBuild: false, serverActions: { bodySizeLimit: '4mb' } },
   // A person's own animal is drawn after one of the set's, read from disk by the campus screen's action (lib/campus/custom-face.ts).
