@@ -262,7 +262,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
       <span className="gt-sp" />
       {canPost && <Link className="go" href={findTime}>Find a time</Link>}
       <details className="gt-more" data-on={MORE.includes(tab) || undefined}><summary>{MORE.includes(tab) ? TABS.find(([key]) => key === tab)![1] : 'More'}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg></summary>
-        <div>{canPost && <Link className="go" href={findTime}>Find a time</Link>}{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}
+        <div>{canPost && <Link className="go" href={findTime}>Find a time</Link>}<Link href="/when">Your polls</Link>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}
           {manager && <Link href={`${href('brief')}#post`}>Post an announcement</Link>}
           {manager && <Link href={`${base}/organize`} title="Interest in each event by day, and how each open ask is filling.">Organizer view</Link>}
           <Link href="/groups/connections" title="Connect Claude or another assistant once, and it reads this record before it drafts anything for the team.">Connect an assistant</Link></div></details></nav>
