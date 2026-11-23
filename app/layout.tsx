@@ -10,6 +10,7 @@ import "@/components/errors/spill.css";
 import { FreshWait } from "@/components/loading/fresh-wait";
 import { SeatsEnding } from "@/components/loading/seats-ending";
 import { Seen } from "@/components/seen";
+import { SiteAnalytics } from "@/components/analytics";
 
 const archivo = localFont({ src: "../public/fonts/Archivo.woff2", variable: "--font-archivo", weight: "100 900", declarations: [{ prop: "font-stretch", value: "62% 125%" }] });
 
@@ -26,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // The campus pages set data-kit on <html> before React loads (components/campus/shell.tsx), so it differs from what the server sent.
     // Pages opened are counted on the live site only (components/seen.tsx), so work on a developer's machine is not traffic.
     <html lang="en" className={archivo.variable} suppressHydrationWarning>
-      <body>{children}<SiteNav /><FreshWait /><SeatsEnding />{process.env.NODE_ENV === "production" && <Seen />}</body>
+      <body>{children}<SiteNav /><FreshWait /><SeatsEnding />{process.env.NODE_ENV === "production" && <Seen />}<SiteAnalytics /></body>
     </html>
   );
 }

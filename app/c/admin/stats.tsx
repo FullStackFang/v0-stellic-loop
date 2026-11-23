@@ -37,7 +37,7 @@ export async function Activity({ tz, span, href, top, now = new Date() }: { tz: 
       <div className="cs-st-pn num lead"><h2>People signed up</h2><b>{count(sum.people)}</b><span>{span === 'all' ? 'since the start' : <><i>+{count(sum.joined)}</i>new in this time</>}</span></div>
       <div className="cs-st-pn num"><h2>On the site today</h2><b>{count(here(today))}</b><span><i>{count(here(yesterday))}</i>yesterday</span></div>
       <div className="cs-st-pn num"><h2>Active{span === 'all' ? ', ever' : ', this time'}</h2><b>{count(sum.active)}</b><span><i>{sum.people ? Math.round(sum.active / sum.people * 100) : 0}%</i>of everyone</span></div>
-      <div className="cs-st-pn num"><h2>Pages opened</h2><b>{count(opens.total)}</b><span><i>{count(opens.people)}</i>people signed in</span></div>
+      <div className="cs-st-pn num"><h2>Pages opened</h2><b>{count(opens.total)}</b><span><i>{count(opens.people)}</i>signed in<i>{count(opens.visitors)}</i>not</span></div>
     </div>
     <div className="cs-st-grid wide">
       <div className="cs-st-pn"><h2>People on the site, by day<em>{span === 'all' ? `last ${days.length} ${days.length === 1 ? 'day' : 'days'}` : `last ${SPANS[span]}`}</em></h2>

@@ -32,11 +32,23 @@ export function areaOf(path: string): string | null {
   return 'Other';
 }
 
-/** Counts one page opened. `subject` is the signed-in account, if any; an account Loopd has no person for counts as a visitor. Returns whether it was counted. */
-export async function recordOpen(q: Q, path: string, issuer: string | null, subject: string | null): Promise<boolean> {
+/** 42703: the visitor column is not there yet (its migration is run by hand). Until it is, pages are counted with no visitor on them. */
+const noVisitor = (error: unknown) => (error as { code?: string })?.code === '42703';
+/**
+ * Counts one page opened. `subject` is the signed-in account, if any; an account Loopd has no person for counts as a
+ * visitor. `visitor` is the random number the browser carries (app/c/seen), which tells one visitor from another.
+ * Returns whether it was counted.
+ */
+export async function recordOpen(q: Q, path: string, issuer: string | null, subject: string | null, visitor: string | null = null): Promise<boolean> {
   const area = areaOf(path);
   if (!area) return false;
-  await q.query(`insert into site_open(person_id,area) values((select person_id from emba_identity where issuer=$1 and subject=$2 and revoked_at is null),$3)`, [issuer, subject, area]);
+  const person = '(select person_id from emba_identity where issuer=$1 and subject=$2 and revoked_at is null)';
+  try {
+    await q.query(`insert into site_open(person_id,area,visitor) values(${person},$3,$4)`, [issuer, subject, area, visitor]);
+  } catch (error) {
+    if (!noVisitor(error)) throw error;
+    await q.query(`insert into site_open(person_id,area) values(${person},$3)`, [issuer, subject, area]);
+  }
   return true;
 }
 
@@ -46,21 +58,29 @@ export function lastDays(today: string, count: number): string[] {
   return Array.from({ length: count }, (_, at) => new Date(end - (count - 1 - at) * DAY).toISOString().slice(0, 10));
 }
 
-export type Opens = { total: number; people: number; areas: { area: string; opens: number }[]; days: Map<string, { people: number; opens: number }>; since: string | null };
-const NO_OPENS: Opens = { total: 0, people: 0, areas: [], days: new Map(), since: null };
+/** `people`: signed in. `visitors`: browsers that opened a page signed out. A day's `people` is both together. */
+export type Opens = { total: number; people: number; visitors: number; areas: { area: string; opens: number }[]; days: Map<string, { people: number; opens: number }>; since: string | null };
+const NO_OPENS: Opens = { total: 0, people: 0, visitors: 0, areas: [], days: new Map(), since: null };
 /**
- * Pages opened since `since` (null: ever): how many, by how many signed-in people, by part of the site, and by day in
- * `tz`. `since` in the answer is the day counting began. With the table not there yet, nothing was opened.
+ * Pages opened since `since` (null: ever): how many, by how many signed-in people and signed-out visitors, by part of
+ * the site, and by day in `tz`. `since` in the answer is the day counting began. With the table not there yet,
+ * nothing was opened.
  */
 export async function siteOpens(q: Q, since: Date | null, tz: string): Promise<Opens> {
-  try {
-    const from = since?.toISOString() ?? null;
+  const from = since?.toISOString() ?? null;
+  // A person on a day is their account, else the browser they opened the page on.
+  const read = async (visitor: 'visitor' | 'null::text'): Promise<Opens> => {
     const [areas, days, all] = await Promise.all([
       q.query<{ area: string; opens: number }>(`select area,count(*)::int as opens from site_open where $1::timestamptz is null or opened_at>=$1 group by area order by opens desc,area`, [from]),
-      q.query<{ day: string; people: number; opens: number }>(`select to_char((opened_at at time zone $2)::date,'YYYY-MM-DD') as day,count(distinct person_id)::int as people,count(*)::int as opens from site_open where $1::timestamptz is null or opened_at>=$1 group by 1`, [from, tz]),
-      q.query<{ people: number; since: string | null }>(`select (select count(distinct person_id)::int from site_open where $1::timestamptz is null or opened_at>=$1) as people,(select to_char((min(opened_at) at time zone $2)::date,'YYYY-MM-DD') from site_open) as since`, [from, tz]),
+      q.query<{ day: string; people: number; opens: number }>(`select to_char((opened_at at time zone $2)::date,'YYYY-MM-DD') as day,count(distinct coalesce(person_id::text,${visitor}))::int as people,count(*)::int as opens from site_open where $1::timestamptz is null or opened_at>=$1 group by 1`, [from, tz]),
+      q.query<{ people: number; visitors: number; since: string | null }>(`select (select count(distinct person_id)::int from site_open where $1::timestamptz is null or opened_at>=$1) as people,
+        (select count(distinct ${visitor})::int from site_open where person_id is null and ($1::timestamptz is null or opened_at>=$1)) as visitors,
+        (select to_char((min(opened_at) at time zone $2)::date,'YYYY-MM-DD') from site_open) as since`, [from, tz]),
     ]);
-    return { total: areas.rows.reduce((sum, row) => sum + row.opens, 0), people: all.rows[0].people, areas: areas.rows, days: new Map(days.rows.map(row => [row.day, { people: row.people, opens: row.opens }])), since: all.rows[0].since };
+    return { total: areas.rows.reduce((sum, row) => sum + row.opens, 0), people: all.rows[0].people, visitors: all.rows[0].visitors, areas: areas.rows, days: new Map(days.rows.map(row => [row.day, { people: row.people, opens: row.opens }])), since: all.rows[0].since };
+  };
+  try {
+    return await read('visitor').catch(error => { if (!noVisitor(error)) throw error; return read('null::text'); });
   } catch (error) {
     if ((error as { code?: string }).code !== '42P01' && !/site_open/.test(String((error as Error)?.message))) throw error;
     return NO_OPENS;

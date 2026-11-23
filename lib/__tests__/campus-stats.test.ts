@@ -57,6 +57,20 @@ describe('counting pages opened',()=>{
   expect(week.since).toBe('2026-10-01');
   expect((await siteOpens(t.db,null,TZ)).total).toBe(5);
  });
+ it('counts someone not signed in once, by the number their browser carries',async()=>{
+  const a=await signedUp('user_a'),one='a'.repeat(32),two='b'.repeat(32);
+  expect(await recordOpen(t.db,'/conga',null,null,one)).toBe(true);
+  await recordOpen(t.db,'/conga',null,null,one);await recordOpen(t.db,'/',null,null,two);await recordOpen(t.db,'/',ISSUER,'user_a',one);await recordOpen(t.db,'/',null,null);
+  const all=await siteOpens(t.db,null,TZ),[day]=[...all.days.values()];
+  expect(all).toMatchObject({total:5,people:1,visitors:2});
+  expect(day).toEqual({people:3,opens:5});
+  expect((await t.db.query('select 1 from site_open where person_id=$1 and visitor=$2',[a,one])).rows).toHaveLength(1);
+ });
+ it('counts as before while the visitor column is not there',async()=>{
+  const old={query:async(sql:string,values?:unknown[])=>{if(/\bvisitor\b/.test(sql))throw Object.assign(new Error('column "visitor" does not exist'),{code:'42703'});return t.db.query(sql,values);}} as typeof t.db;
+  expect(await recordOpen(old,'/conga',null,null,'a'.repeat(32))).toBe(true);
+  expect(await siteOpens(old,null,TZ)).toMatchObject({total:1,people:0,visitors:0});
+ });
  it('says nothing was opened while the table is not there',async()=>{
   const missing={query:async()=>{throw Object.assign(new Error('relation "site_open" does not exist'),{code:'42P01'});}};
   expect(await siteOpens(missing,null,TZ)).toMatchObject({total:0,people:0,areas:[],since:null});

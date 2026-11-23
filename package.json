@@ -21,6 +21,7 @@
     "@clerk/nextjs": "7.9.25",
     "@modelcontextprotocol/sdk": "1.32.2",
     "@supabase/supabase-js": "^2.118.0",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^7.0.164",
     "ical.js": "^2.2.1",
     "jose": "6.2.15",
