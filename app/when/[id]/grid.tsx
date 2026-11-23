@@ -152,14 +152,20 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   // Once a guest's times are saved, who they are saved as and the offer of the invite: one strip, across the top on a laptop and at the foot on a phone.
   const strip = onSave && guest && !changed && kept ? <div className="wn-save wn-who wn-top">
     {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
-    {inviting && !sentTo && onEmail ? <div className="wn-ask wn-inv">
-      <label className={`wn-f${miss ? ' miss' : ''}`}><span>Email for the invite</span><input ref={field} autoFocus type="email" value={email} maxLength={254} autoComplete="email" placeholder="you@email.com" onChange={event => { setEmail(event.target.value); setMiss(false); }} onKeyDown={enter(send)} /></label>
-      <button className="cs-btn go wn-big" type="button" disabled={busy} onClick={send}>{busy ? 'Sending' : 'Send it to me'}</button>
-      <button className="cs-btn wn-big" type="button" onClick={() => { setInviting(false); setMiss(false); }}>Back</button>
-    </div> : <div className="wn-done" role="status">
-      <span className="wn-as"><i className="cs-face wn-ini" aria-hidden="true">{name.trim().charAt(0).toUpperCase()}</i><span className="cs-pill yes">Saved as {name.trim()}</span>{sentTo && <span className="cs-pill">The invite goes to {sentTo}</span>}</span>
-      <span className="wn-as">{!sentTo && onEmail && <button type="button" className="cs-btn sm" onClick={() => setInviting(true)}>Email me the invite</button>}<button type="button" className="cs-btn sm" onClick={ask}>Not {name.trim()}?</button></span>
-    </div>}
+    {/* One raised paper capsule (public/demo/mockups-when-saved-row.html, C): who the times are saved as, and the invite on the same line. */}
+    <div className={`wn-cap wn-me${miss ? ' miss' : ''}`} role="status">
+      <i className="cs-face wn-ini" aria-hidden="true">{name.trim().charAt(0).toUpperCase()}</i>
+      {inviting && !sentTo && onEmail ? <>
+        <input ref={field} autoFocus type="email" aria-label="Email for the invite" value={email} maxLength={254} autoComplete="email" placeholder="you@email.com" onChange={event => { setEmail(event.target.value); setMiss(false); }} onKeyDown={enter(send)} />
+        <button className="cs-btn wn-go" type="button" disabled={busy} onClick={send}>{busy ? 'Sending' : 'Send it to me'}</button>
+        <button className="cs-btn wn-alt" type="button" onClick={() => { setInviting(false); setMiss(false); }}>Back</button>
+      </> : <>
+        <span className="wn-who-name"><small>Saved as </small><b>{name.trim()}</b></span>
+        {sentTo && <span className="cs-pill wn-sent">{`The invite goes to ${sentTo}`}</span>}
+        {!sentTo && onEmail && <button type="button" className="cs-btn wn-go" aria-label="Email me the invite" onClick={() => setInviting(true)}><span>Email <span className="wn-lg">me the </span>invite</span></button>}
+        <button type="button" className="cs-btn wn-alt" onClick={ask}>Not you?</button>
+      </>}
+    </div>
   </div> : null;
   return <>
     <div className="wn-col"><Panel tab={tab ?? (onSave ? 'Paint the times you can make' : 'When people are free so far')}>{pager}

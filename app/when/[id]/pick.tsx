@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useSyncExternalStore } from 'react';
 import { DURATIONS, START_MINUTES, lengthText, spanText } from '@/lib/when/slots';
 import { openedAction, sendPollAction } from '../actions';
 import { Panel, Stack, Tile, type Shown } from '../parts';
@@ -43,16 +43,19 @@ export function Opened({ pollId }: { pollId: string }) {
   return null;
 }
 
-/** The poll's link, for anyone to pass on: one press copies it. */
+const still = () => () => {};
+/** The poll's link, for anyone to pass on: the page's one big button, with the address it copies beside the words. */
 export function CopyLink() {
   const [copied, setCopied] = useState(false);
+  // The address is the browser's, so the server draws the button without it.
+  const shown = useSyncExternalStore(still, () => location.host + location.pathname, () => '');
   const copy = async () => {
     const url = location.origin + location.pathname;
     const done = await navigator.clipboard.writeText(url).then(() => true, () => false);
     // A browser that refuses the clipboard still gets the link, in a box to copy from.
     if (done) { setCopied(true); setTimeout(() => setCopied(false), 2500); } else window.prompt('Copy this link', url);
   };
-  return <button type="button" className="cs-btn sm" onClick={copy}>{copied ? 'Link copied' : 'Copy link'}</button>;
+  return <button type="button" className="cs-btn go wn-copy" onClick={copy}><span>{copied ? 'Link copied' : 'Copy link'}</span>{shown && <small aria-hidden="true">{shown}</small>}</button>;
 }
 
 /** Copies the words to pass on. */

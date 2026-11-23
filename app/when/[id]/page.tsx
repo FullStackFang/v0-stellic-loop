@@ -110,8 +110,8 @@ export default async function WhenPage({ params, searchParams }: Props) {
   const door = <DoorSignIn schools={schools} routing="hash" configured={clerkPortalConfigured()} back={here} />;
   const tail = <>
     {mine && <PassOn tab="Pass it on" view={view} />}
+    <CopyLink />
     <div className="wn-acts wn-mid">
-      <CopyLink />
       {view.chosen && <a className="cs-btn sm" href={here}>Back to the result</a>}
       {mine && view.best.length > 0 && <a className="cs-btn sm" href={`${here}?pick=1`}>Pick the time now</a>}
       {mine && <a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a>}

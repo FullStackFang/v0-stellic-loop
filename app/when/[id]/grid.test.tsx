@@ -94,11 +94,11 @@ it('asks someone with no account who they are on one card, a name or Loopd, and 
   fireEvent.click(cell('Tue 1, 7 pm'));
   expect(screen.getByRole('img', { name: 'Aaron' })).toHaveTextContent('A');
   fireEvent.click(screen.getByRole('button', { name: 'Save my times' }));
-  await waitFor(() => expect(screen.getByText('Saved as Aaron')).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText((_, el) => el?.className === 'wn-who-name' && el.textContent === 'Saved as Aaron')).toBeInTheDocument());
   expect(onSave).toHaveBeenCalledWith([TUE7], 'Aaron');
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(sessionStorage.getItem(`wn-keep:${location.pathname}`)).toBeNull();
-  expect(screen.getByRole('button', { name: 'Not Aaron?' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Not you?' })).toBeInTheDocument();
   // The invite is an offer behind one pill: a bad address is not sent, a good one is.
   fireEvent.click(screen.getByRole('button', { name: 'Email me the invite' }));
   fireEvent.change(screen.getByLabelText('Email for the invite'), { target: { value: 'aaron' } });
