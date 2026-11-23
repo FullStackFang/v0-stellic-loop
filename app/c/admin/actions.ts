@@ -12,7 +12,7 @@ import { approveLinkedin, removeLinkedin } from '@/lib/campus/linkedin';
 import { removeAskedSchool } from '@/lib/campus/school-ask';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
-import { savePlace } from '@/lib/campus/places';
+import { campusPlaces, savePlace } from '@/lib/campus/places';
 import { saveReward, setRewardHidden } from '@/lib/campus/rewards';
 import { campusViewer } from '@/lib/campus/session';
 import { schoolOf } from '@/lib/campus/schools';
@@ -104,6 +104,16 @@ export async function savePlaceAction(data: FormData): Promise<void> {
   await admin(data, async campus => {
     await savePlace(db(), { campusId: campus.id, id: uuid(text(data, 'place')) || undefined, name: text(data, 'name'), otherNames: list(text(data, 'otherNames')), lat: number(text(data, 'lat')), lon: number(text(data, 'lon')) });
     return 'Place saved. Events were matched again.';
+  });
+}
+
+/** A name people type for a place joins that place's other names, so typing it finds the place. */
+export async function addPlaceNameAction(data: FormData): Promise<void> {
+  await admin(data, async campus => {
+    const name = text(data, 'name').slice(0, 120), place = (await campusPlaces(db(), campus.id)).find(each => each.id === uuid(text(data, 'place')));
+    if (!name || !place) throw new Error('Pick the place this name is for');
+    await savePlace(db(), { campusId: campus.id, id: place.id, name: place.name, otherNames: [...place.otherNames, name], lat: place.lat, lon: place.lon });
+    return `"${name}" now finds ${place.name}.`;
   });
 }
 

@@ -19,6 +19,7 @@ import { Grid } from './grid';
 import { Ways } from './ways';
 import { Copy, CopyLink, Opened, Pick } from './pick';
 import { pollGroup } from '@/lib/when/groups';
+import { placeSpot } from '@/lib/when/places';
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ edit?: string; pick?: string; in?: string }> };
 const REACHED: Record<Threshold, string> = { majority: 'majority reached', two_thirds: 'two thirds reached', everyone: 'everyone can' };
@@ -58,7 +59,9 @@ export default async function WhenPage({ params, searchParams }: Props) {
 
   // The result: the time is set.
   // Where it is, as a pill that opens the place on a map.
-  const place = view.place && <a className="cs-pill wn-place" href={mapUrl(view.place)} target="_blank" rel="noreferrer">{view.place}</a>;
+  // A place the campus list knows opens at its own spot, under the name the list has for it; any other is searched for by the words typed.
+  const spot = view.place ? await placeSpot(db(), view.organizer.personId, view.place).catch(() => null) : null;
+  const place = view.place && <a className="cs-pill wn-place" href={spot ? mapUrl(spot.name, spot) : mapUrl(view.place)} target="_blank" rel="noreferrer">{view.place}</a>;
   if (view.chosen && !query.edit) {
     const label = slotLabel(view.chosen.at, zone), isIn = view.chosen.in.map(shown), out = view.chosen.out.map(shown), me = viewer?.personId ?? null, sentTo = guest ? guests.get(guest.personId)?.email : null;
     const size = Math.max(view.size, isIn.length + out.length), mine = [...isIn, ...out].find(each => each.personId === me);

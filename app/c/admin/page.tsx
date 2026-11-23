@@ -15,6 +15,7 @@ import { linkedinPeople, type LinkedinPerson } from '@/lib/campus/linkedin';
 import { listCampuses } from '@/lib/campus/listings';
 import { adminListings, campusFeeds } from '@/lib/campus/manage';
 import { campusPlaces } from '@/lib/campus/places';
+import { typedPlaces } from '@/lib/when/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
 import { WAYS, type Way } from '@/lib/campus/stats';
 import { schoolsAsked } from '@/lib/campus/school-ask';
@@ -27,7 +28,7 @@ import { AnimalForm } from './animal-form';
 import { WaitButton } from '@/components/campus/wait-button';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, joinTagAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, addPlaceNameAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, joinTagAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 import { Activity, People, SPANS, type Span } from './stats';
 
 export const dynamic = 'force-dynamic';
@@ -54,6 +55,8 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
   const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs, claims] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => []), clubClaims(db()).catch((): AdminClaim[] => [])]);
+  // The names typed for a poll's place that the list does not have. Read only on the Places tab.
+  const typedNames = tab === 'places' ? await typedPlaces(db(), campus.id).catch(() => []) : [];
   // Every sign-up, with the button pressed, and every ask for a call (app/c/ink). Read only on the Premium tab.
   const [signUps, calls, outs, presses] = tab === 'premium' ? await Promise.all([subscribeAsks(db()).catch(() => []), callAsks(db()).catch(() => []), signedOutAsks(db()).catch(() => []), signedOutPresses(db()).catch(() => [])]) : [[], [], [], []];
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
@@ -124,6 +127,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   }
 
   function places() {
+    const typed = typedNames;
     return <section>{top(<details><summary>Add place</summary><form action={savePlaceAction} className="cs-adm-form">{keep}<div className="three">
         <label>Name<input name="name" required placeholder="Willard Straight Hall" /></label><label>Latitude<input name="lat" required inputMode="decimal" placeholder="42.4466" /></label><label>Longitude<input name="lon" required inputMode="decimal" placeholder="-76.4857" /></label></div>
         <label>Other names <small>separated by commas</small><input name="otherNames" placeholder="The Straight, WSH" /></label><button className="cs-btn sm go">Add place</button></form></details>)}
@@ -132,6 +136,9 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
             <label>Name<input name="name" required defaultValue={place.name} /></label><label>Latitude<input name="lat" required inputMode="decimal" defaultValue={place.lat} /></label><label>Longitude<input name="lon" required inputMode="decimal" defaultValue={place.lon} /></label></div>
             <label>Other names <small>separated by commas</small><input name="otherNames" defaultValue={place.otherNames.join(', ')} /></label><button className="cs-btn sm">Save</button></form></details></li>)}
         {!allPlaces.length && <li className="off"><span>No places yet. An event whose place text names one gets a map.</span></li>}</ul>
+      {typed.length > 0 && <><p className="cs-adm-lede">Names people here type for a poll&apos;s place that this list does not have, the most used first. Tie one to a place and typing it finds that place. For a place that is not listed yet, add it above with the name as another name.</p>
+        <ul className="cs-adm-rows">{typed.map(each => <li key={each.name}><div><b>{each.name}</b><span>{each.people === 1 ? '1 person' : `${each.people} people`}</span></div>
+          {allPlaces.length > 0 && <form action={addPlaceNameAction} className="cs-adm-form">{keep}<input type="hidden" name="name" value={each.name} /><label>Is another name for<select name="place" required defaultValue=""><option value="" disabled>Pick a place</option>{allPlaces.map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label><button className="cs-btn sm">Add the name</button></form>}</li>)}</ul></>}
     </section>;
   }
 

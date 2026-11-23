@@ -5,6 +5,7 @@ import { getSignedInPrincipal } from '@/lib/emba/portal-session';
 import { signInHref } from '@/lib/campus/session';
 import { db } from '@/lib/db';
 import { groupByRef } from '@/lib/when/groups';
+import { placeIdeas } from '@/lib/when/places';
 import { Ticket } from '../parts';
 import { CreateForm } from './create-form';
 
@@ -20,8 +21,9 @@ export default async function NewWhenPage({ searchParams }: { searchParams?: Pro
   let startDate = addDays(today, 3), endDate: string;
   while (isWeekend(startDate)) startDate = addDays(startDate, 1);
   for (endDate = addDays(startDate, 4); isWeekend(endDate);) endDate = addDays(endDate, -1);
+  const ideas = who ? await placeIdeas(db(), who.personId).catch(() => []) : [];
   return <main className="wn wn-make">
-    <CreateForm signIn={who ? null : signInHref(here)} today={today} group={group ? { ref: group.ref, name: group.name, size: group.size, href: group.href } : undefined}
+    <CreateForm places={ideas} signIn={who ? null : signInHref(here)} today={today} group={group ? { ref: group.ref, name: group.name, size: group.size, href: group.href } : undefined}
       head={<Ticket stub={group ? `For ${group.name}. It shows on the group's page, and anyone with the link can answer.` : 'One link. It tells you when a time works, and you pick.'}><h1 className="xl">Find a time that works for <em>{group ? group.name : 'everyone'}.</em></h1></Ticket>}
       first={{ title: '', startDate, endDate, hourStart: '17', hourEnd: '22', expectedSize: String(group ? Math.min(200, Math.max(2, group.size)) : 7), by: addDays(today, 2), threshold: 'two_thirds', weekends: '0', duration: '60', place: '' }} />
   </main>;

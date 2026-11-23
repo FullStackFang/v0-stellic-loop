@@ -53,8 +53,8 @@ export function meetingSpan(chosen: { at: string; minutes: number }, timezone: s
   return spanText(label.hour * 60 + label.minute, chosen.minutes);
 }
 export const pollUrl = (id: string) => appUrl(`/when/${id}`);
-/** Where a poll's place opens on a map: a search for the organizer's words, so a real place is found by its name. */
-export const mapUrl = (place: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
+/** Where a poll's place opens on a map: a search for its name, so a real place is found by it. With `at`, the search is made around that spot. */
+export const mapUrl = (place: string, at?: { lat: number; lon: number }) => at ? `https://www.google.com/maps/search/${encodeURIComponent(place)}/@${at.lat},${at.lon},17z` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
 
 const host = () => { try { return new URL(process.env.NEXT_PUBLIC_APP_URL ?? '').hostname || 'loopd'; } catch { return 'loopd'; } };
 function entryOf(view: PollView): CalendarEntry | null {

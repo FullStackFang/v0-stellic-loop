@@ -26,7 +26,7 @@ const Arrow = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" str
  * On a laptop (.wn-make in when.css) it is one screen: the ticket across the top, the plan and the days side by side at
  * one height, and the action on a line across the foot.
  */
-export function CreateForm({ signIn, first, today, head, edit, group }: { /** The group the poll is for, when it was started from one. */ group?: { ref: string; name: string; size: number; href: string }; /** Where a signed-out person signs in; null when signed in. */ signIn: string | null; first: Plan; today: string; /** What leads the first column. */ head: ReactNode; /** The poll being changed. */ edit?: string }) {
+export function CreateForm({ signIn, first, today, head, edit, group, places = [] }: { /** Names to offer as the place is typed: the person's own, then their campus's (lib/when/places.ts). */ places?: string[]; /** The group the poll is for, when it was started from one. */ group?: { ref: string; name: string; size: number; href: string }; /** Where a signed-out person signs in; null when signed in. */ signIn: string | null; first: Plan; today: string; /** What leads the first column. */ head: ReactNode; /** The poll being changed. */ edit?: string }) {
   const [plan, setPlan] = useState(first), [state, submit, pending] = useActionState(edit ? updatePollAction : createPollAction, null);
   const [mode, setMode] = useState<'days' | 'by'>('days'), [half, setHalf] = useState(false), [from, setFrom] = useState(() => monday(today));
   // After the first paint, so the page the server drew and the one the browser draws start the same.
@@ -62,7 +62,8 @@ export function CreateForm({ signIn, first, today, head, edit, group }: { /** Th
     <input type="hidden" name="startDate" value={plan.startDate} /><input type="hidden" name="endDate" value={plan.endDate} /><input type="hidden" name="weekends" value={plan.weekends} />{edit && <input type="hidden" name="pollId" value={edit} />}{group && <input type="hidden" name="group" value={group.ref} />}
     {head}<Panel tab="Your plan"><div className="wn-fields">
       <label className="wn-f"><span>What are you planning</span><input name="title" required maxLength={80} placeholder="Problem set night" value={plan.title} onChange={set('title')} /></label>
-      <label className="wn-f"><span>Where, if you know</span><input name="place" maxLength={120} placeholder="City Hops" value={plan.place ?? ''} onChange={set('place')} /></label>
+      <label className="wn-f"><span>Where, if you know</span><input name="place" maxLength={120} placeholder="City Hops" autoComplete="off" list={places.length ? 'wn-places' : undefined} value={plan.place ?? ''} onChange={set('place')} />
+        {places.length > 0 && <datalist id="wn-places">{places.map(name => <option key={name} value={name} />)}</datalist>}</label>
       <label className="wn-f"><span>From this hour</span><select name="hourStart" value={plan.hourStart} onChange={set('hourStart')}>{HOURS.slice(0, 24).map(hour => <option key={hour} value={hour}>{hourText(hour)}</option>)}</select></label>
       <label className="wn-f"><span>To this hour</span><select name="hourEnd" value={plan.hourEnd} onChange={set('hourEnd')}>{HOURS.slice(1).map(hour => <option key={hour} value={hour}>{hour === 24 ? 'Midnight' : hourText(hour)}</option>)}</select></label>
       <div className="wn-f wide" role="radiogroup" aria-label="Runs for"><span>Runs for</span><div className="wn-three" style={{ '--n': DURATIONS.length } as React.CSSProperties}>
