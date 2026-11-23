@@ -30,7 +30,9 @@ export function Bar({ groups, face, plan = 'free', kits = ['loop'], anyKit = fal
   useEffect(() => { if (!carded) rememberMe({ face, plan, seed: face ?? 'You' }); }, [carded, face, plan]);
   // eslint-disable-next-line @next/next/no-img-element -- an icon from public/animals
   const you = face ? <img className="cs-face pet" src={face} alt="" /> : <span className="cs-face">You</span>;
-  return <TopBar member={groups.length > 0} plus={plan === 'plus'} school={atSchool(screen?.viewer ?? null)} account={screen?.viewer
+  // "This week" goes straight to the campus the card is drawn for. Left at the front door, a signed-in press loaded "/"
+  // and was sent on to the campus from there: two loads, and the ticket drawn twice.
+  return <TopBar home={screen ? `/c/${screen.campus.slug}` : undefined} member={groups.length > 0} plus={plan === 'plus'} school={atSchool(screen?.viewer ?? null)} account={screen?.viewer
       ? <Account screen={screen} signOut={account} groups />
       : <div className="cs-acct" ref={box}>
       <button aria-expanded={open} aria-label={`Your account and colours${plan === 'plus' ? '. You have Ink+' : plan === 'ink' ? '. You have Ink' : ''}`} onClick={() => setOpen(!open)}>

@@ -156,6 +156,8 @@ describe('who sees whom', () => {
     const admin = await card(true);
     fireEvent.click(admin.getByRole('button', { name: 'More' }));
     expect(admin.getAllByRole('link', { name: 'How we got here' })).toHaveLength(1);
+    // "This week" goes straight to the campus, not to the front door, which would send it on there: two loads, two tickets.
+    expect(screen.getByRole('link', { name: 'This week' })).toHaveAttribute('href', `/c/${cornell.slug}`);
     // With no screen to draw it from, the bar keeps a plain card.
     cleanup(); render(<Bar groups={[]} face={null} account={null} />);
     expect(screen.getByRole('button', { name: 'Your account and colours' })).toBeInTheDocument();
