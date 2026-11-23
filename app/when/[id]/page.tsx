@@ -10,7 +10,7 @@ import { DoorSignIn } from '@/components/campus/door-sign-in';
 import { facesOf } from '@/lib/when/faces';
 import { claimGuest, guestOf, guestsOn } from '@/lib/when/guests';
 import { pollView, type Person, type PollView } from '@/lib/when/polls';
-import { dayText, meetingSpan, shareMessage } from '@/lib/when/send';
+import { dayText, mapUrl, meetingSpan, shareMessage } from '@/lib/when/send';
 import { lengthText, slotLabel, slotsOf, type Threshold } from '@/lib/when/slots';
 import { inviteEmailAction, saveAnswerAction } from '../actions';
 import { guestKey } from '../guest-key';
@@ -57,6 +57,8 @@ export default async function WhenPage({ params, searchParams }: Props) {
   const top = view.best[0]?.people.length ?? 0, met = top >= view.needed;
 
   // The result: the time is set.
+  // Where it is, as a pill that opens the place on a map.
+  const place = view.place && <a className="cs-pill wn-place" href={mapUrl(view.place)} target="_blank" rel="noreferrer">{view.place}</a>;
   if (view.chosen && !query.edit) {
     const label = slotLabel(view.chosen.at, zone), isIn = view.chosen.in.map(shown), out = view.chosen.out.map(shown), me = viewer?.personId ?? null, sentTo = guest ? guests.get(guest.personId)?.email : null;
     const size = Math.max(view.size, isIn.length + out.length), mine = [...isIn, ...out].find(each => each.personId === me);
@@ -68,6 +70,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
       <Ticket met={isIn.length >= view.needed} tile={<Tile met top={label.dow} big={`${label.date} ${label.month}`} />}
         stub={<><Seats people={isIn} size={size} me={me} /><span><b>{isIn.length} of {size}</b> can make it{isIn.length >= view.needed ? ` · ${REACHED[view.threshold]}` : ''}</span></>}>
         <h1 className="xl">{label.dowLong}, {meetingSpan(view.chosen, zone)}. <em>It&apos;s on.</em></h1>
+        {place && <p>At {place}</p>}
       </Ticket>
       {view.chosen.note && <Panel tab={`${view.organizer.name} says`}><p className="wn-msg">{view.chosen.note}</p></Panel>}
       <Panel tab={view.title}><ul className="wn-rows">
@@ -104,7 +107,7 @@ export default async function WhenPage({ params, searchParams }: Props) {
   const group = await pollGroup(db(), who, view.id);
   const tile = <Face of={shown(view.organizer)} />;
   const title = <><h1>{view.title}</h1>
-    <p>{view.organizer.name} asked for {lengthText(view.minutes)} · {view.answered.length} of {view.size} answered{group && group.guests > 0 ? ` (${group.guests} from outside ${group.name})` : ''} · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
+    <p>{view.organizer.name} asked for {lengthText(view.minutes)}{place && <> at {place}</>} · {view.answered.length} of {view.size} answered{group && group.guests > 0 ? ` (${group.guests} from outside ${group.name})` : ''} · {set ? `set for ${set.dow} ${set.time}` : `by ${by.dow} ${by.date} ${by.month}`}</p></>;
   const best = view.best.map(slot => { const label = slotLabel(slot.at, zone); return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, line: `${slot.people.length} of ${view.size} can make it`, people: slot.people.map(shown) }; });
   const mine = view.isOrganizer && !view.chosen;
   // The sign-in card beside the poll's ticket at ?in=1. The usual way in is the bar's "Sign in", which opens over the poll.

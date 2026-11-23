@@ -23,6 +23,8 @@ export type PollView = {
   size: number; needed: number;
   /** How long the meeting runs, in minutes. */
   minutes: number;
+  /** Where it is, in the organizer's words; null when the poll does not say. */
+  place: string | null;
   /** Everyone whose answer counts, in the order they answered. */
   answered: Person[];
   /** How many people can make each time; times nobody picked are absent. */
@@ -48,6 +50,7 @@ const NewPoll = z.object({
   expectedSize: whole(2, 200), deadline: instant, threshold: z.enum(['majority', 'two_thirds', 'everyone']),
   weekends: z.union([z.boolean(), z.enum(['0', '1']).transform(value => value === '1')]).default(true),
   duration: z.coerce.number().refine(value => DURATIONS.includes(value)).default(60),
+  place: z.string().max(400).nullish().transform(value => (value ?? '').replace(/\s+/g, ' ').trim()).pipe(z.string().max(120)).transform(value => value || null),
 });
 /** A change to a poll. Its clock stays the one it was made on. */
 const EditPoll = NewPoll.omit({ timezone: true }).extend({ pollId: z.string().regex(/^[A-Za-z0-9_-]{12}$/) });
@@ -81,6 +84,7 @@ export async function createPoll(db: Db, who: Who, input: unknown, now = new Dat
     await q.query(`insert into when_poll(id,series_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at,weekends,duration_min) values($1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [id, who.personId, poll.title, poll.startDate, poll.endDate, poll.hourStart, poll.hourEnd, poll.timezone, poll.expectedSize, poll.deadline, poll.threshold, now.toISOString(), poll.weekends, poll.duration]);
     if (await steps(q)) await q.query('update when_poll set step_min=$2 where id=$1', [id, stepOf(poll.duration)]);
+    if (poll.place && await places(q)) await q.query('update when_poll set place=$2 where id=$1', [id, poll.place]);
     if (group) await q.query('insert into when_poll_group(poll_id,org_id,loop_id) values($1,$2,$3)', [id, group.orgId, group.loopId]);
     await logEvent(q, 'poll_created', { id, seriesId: id }, { personId: who.personId });
     return { id };
@@ -88,14 +92,16 @@ export async function createPoll(db: Db, who: Who, input: unknown, now = new Dat
 }
 
 export type PollRow = { id: string; seriesId: string; organizerId: string; organizerName: string; title: string; startDate: string; endDate: string; hourStart: number; hourEnd: number; timezone: string;
-  expectedSize: number; deadline: string; threshold: Threshold; status: 'open' | 'sent'; readyAt: string | null; chosenSlot: string | null; note: string | null; weekends: boolean; durationMin: number; /** How many minutes one square is. */ stepMin: number };
+  expectedSize: number; deadline: string; threshold: Threshold; status: 'open' | 'sent'; readyAt: string | null; chosenSlot: string | null; note: string | null; weekends: boolean; durationMin: number; /** How many minutes one square is. */ stepMin: number; place: string | null };
 /** Whether polls can have squares smaller than an hour yet: the column is added by a migration run by hand (20261123020000_when_step.sql). */
 export const steps = (q: Q) => there(q, 'when_poll.step_min', `select exists(select 1 from information_schema.columns where table_schema='public' and table_name='when_poll' and column_name='step_min') as ok`);
+/** Whether a poll can say where it is yet: the column is added by a migration run by hand (20261123030000_when_place.sql). */
+export const places = (q: Q) => there(q, 'when_poll.place', `select exists(select 1 from information_schema.columns where table_schema='public' and table_name='when_poll' and column_name='place') as ok`);
 const POLL = `select w.id,w.series_id as "seriesId",w.organizer_id as "organizerId",o.name as "organizerName",w.title,w.start_date as "startDate",w.end_date as "endDate",w.hour_start as "hourStart",w.hour_end as "hourEnd",w.timezone,
   w.expected_size as "expectedSize",${iso('w.deadline')} as deadline,w.threshold,w.status,${iso('w.ready_at')} as "readyAt",${iso('w.chosen_slot')} as "chosenSlot",w.note,w.weekends,w.duration_min as "durationMin" from when_poll w join person o on o.id=w.organizer_id where w.id=$1`;
 /** The poll's row; `lock` holds it for the rest of the transaction, so two writers take turns. */
 export async function pollRow(q: Q, id: string, lock = false): Promise<PollRow | null> {
-  const sql = POLL.replace(' from when_poll w', `,${await steps(q) ? 'w.step_min' : '60'}::int as "stepMin" from when_poll w`);
+  const sql = POLL.replace(' from when_poll w', `,${await steps(q) ? 'w.step_min' : '60'}::int as "stepMin",${await places(q) ? 'w.place' : 'null::text'} as place from when_poll w`);
   return (await q.query<PollRow>(sql + (lock ? ' for update of w' : ''), [id])).rows[0] ?? null;
 }
 export const frameOf = (poll: PollRow): Frame => ({ startDate: poll.startDate, endDate: poll.endDate, hourStart: poll.hourStart, hourEnd: poll.hourEnd, timezone: poll.timezone, weekends: poll.weekends, ...(poll.stepMin === 60 ? {} : { step: poll.stepMin }) });
@@ -157,6 +163,7 @@ export async function updatePoll(db: Db, who: Who, input: unknown, now = new Dat
     await q.query('update when_poll set title=$2,start_date=$3,end_date=$4,hour_start=$5,hour_end=$6,expected_size=$7,deadline=$8,threshold=$9,weekends=$10,duration_min=$11 where id=$1',
       [poll.id, next.title, next.startDate, next.endDate, next.hourStart, next.hourEnd, next.expectedSize, next.deadline, next.threshold, next.weekends, next.duration]);
     if (fine) await q.query('update when_poll set step_min=$2 where id=$1', [poll.id, step]);
+    if (await places(q)) await q.query('update when_poll set place=$2 where id=$1', [poll.id, next.place]);
     const has = slotsOf(plan).map(slot => slot.at);
     for (const answer of await answersOf(q, poll.id)) {
       const kept = restep(answer.slots, has, poll.stepMin, step);
@@ -194,7 +201,7 @@ export async function pollView(db: Db, who: Who | null, id: string): Promise<Pol
   return {
     id: poll.id, seriesId: poll.seriesId, title: poll.title, frame: frameOf(poll), threshold: poll.threshold, deadline: poll.deadline, status: poll.status, ready: poll.readyAt !== null,
     organizer: { personId: poll.organizerId, name: poll.organizerName }, isOrganizer: who?.personId === poll.organizerId,
-    size, needed: needed(poll.threshold, size), minutes: poll.durationMin, answered: counted.map(person), counts, free,
+    size, needed: needed(poll.threshold, size), minutes: poll.durationMin, place: poll.place, answered: counted.map(person), counts, free,
     mine: own ? { slots: own.slots, draft: own.draft } : null,
     best: bestSlots(counted).map(slot => ({ at: slot.at, people: slot.people.map(id => named.get(id)!) })),
     chosen: poll.chosenSlot ? { at: poll.chosenSlot, minutes: poll.durationMin, note: poll.note, in: counted.filter(each => each.slots.includes(hour!)).map(person), out: counted.filter(each => !each.slots.includes(hour!)).map(person) } : null,

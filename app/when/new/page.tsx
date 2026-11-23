@@ -23,6 +23,6 @@ export default async function NewWhenPage({ searchParams }: { searchParams?: Pro
   return <main className="wn wn-make">
     <CreateForm signIn={who ? null : signInHref(here)} today={today} group={group ? { ref: group.ref, name: group.name, size: group.size, href: group.href } : undefined}
       head={<Ticket stub={group ? `For ${group.name}. It shows on the group's page, and anyone with the link can answer.` : 'One link. It tells you when a time works, and you pick.'}><h1 className="xl">Find a time that works for <em>{group ? group.name : 'everyone'}.</em></h1></Ticket>}
-      first={{ title: '', startDate, endDate, hourStart: '17', hourEnd: '22', expectedSize: String(group ? Math.min(200, Math.max(2, group.size)) : 7), by: addDays(today, 2), threshold: 'two_thirds', weekends: '0', duration: '60' }} />
+      first={{ title: '', startDate, endDate, hourStart: '17', hourEnd: '22', expectedSize: String(group ? Math.min(200, Math.max(2, group.size)) : 7), by: addDays(today, 2), threshold: 'two_thirds', weekends: '0', duration: '60', place: '' }} />
   </main>;
 }

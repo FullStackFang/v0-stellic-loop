@@ -39,7 +39,7 @@ async function flush(pollId: string): Promise<void> {
   await drainWhen(db(), { address: personId => clerkEmailOf(db(), personId), email: resendSender() }, { pollId, budgetMs: 8000 }).catch(error => console.error('when flush', error));
 }
 
-const PLAN = ['title', 'startDate', 'endDate', 'hourStart', 'hourEnd', 'timezone', 'expectedSize', 'deadline', 'threshold', 'weekends', 'duration'];
+const PLAN = ['title', 'startDate', 'endDate', 'hourStart', 'hourEnd', 'timezone', 'expectedSize', 'deadline', 'threshold', 'weekends', 'duration', 'place'];
 const planOf = (data: FormData) => Object.fromEntries(PLAN.map(key => [key, data.get(key) ?? undefined]));
 
 /** "Create the link". */

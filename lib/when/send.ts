@@ -53,11 +53,13 @@ export function meetingSpan(chosen: { at: string; minutes: number }, timezone: s
   return spanText(label.hour * 60 + label.minute, chosen.minutes);
 }
 export const pollUrl = (id: string) => appUrl(`/when/${id}`);
+/** Where a poll's place opens on a map: a search for the organizer's words, so a real place is found by its name. */
+export const mapUrl = (place: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
 
 const host = () => { try { return new URL(process.env.NEXT_PUBLIC_APP_URL ?? '').hostname || 'loopd'; } catch { return 'loopd'; } };
 function entryOf(view: PollView): CalendarEntry | null {
   if (!view.chosen) return null;
-  return { uid: `when-${view.id}@${host()}`, sequence: 0, start: new Date(view.chosen.at), end: new Date(Date.parse(view.chosen.at) + view.chosen.minutes * 60_000), summary: view.title, location: null,
+  return { uid: `when-${view.id}@${host()}`, sequence: 0, start: new Date(view.chosen.at), end: new Date(Date.parse(view.chosen.at) + view.chosen.minutes * 60_000), summary: view.title, location: view.place,
     description: [view.chosen.note, `Set by ${view.organizer.name} on Loopd.`].filter(Boolean).join('\n'), url: pollUrl(view.id) };
 }
 /**
@@ -75,6 +77,6 @@ export function pollIcs(view: PollView, mail?: { to: string; from: string }, now
  * Three short lines, the link alone on the last: a chat app then draws the poll's picture under it (app/when/[id]/opengraph-image.tsx).
  */
 export function shareMessage(view: PollView): string {
-  if (view.chosen) return `${view.title} is on: ${dayText(view.chosen.at, view.frame.timezone)}, ${meetingSpan(view.chosen, view.frame.timezone)}.\nAdd it to your calendar:\n${pollUrl(view.id)}`;
-  return `${view.title}\nWhen can you make it? Add your times by ${dayText(view.deadline, view.frame.timezone)}.\n${pollUrl(view.id)}`;
+  if (view.chosen) return `${view.title} is on: ${dayText(view.chosen.at, view.frame.timezone)}, ${meetingSpan(view.chosen, view.frame.timezone)}${view.place ? `, at ${view.place}` : ''}.\nAdd it to your calendar:\n${pollUrl(view.id)}`;
+  return `${view.title}${view.place ? ` at ${view.place}` : ''}\nWhen can you make it? Add your times by ${dayText(view.deadline, view.frame.timezone)}.\n${pollUrl(view.id)}`;
 }

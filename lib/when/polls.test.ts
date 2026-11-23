@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { createPoll, myPolls, pollView, recordOpen, saveAnswer, updatePoll } from './polls';
-import { sendPoll } from './send';
+import { pollIcs, sendPoll, shareMessage } from './send';
 
 vi.mock('server-only', () => ({}));
 
@@ -167,4 +167,27 @@ it('paints a half-hour meeting in half hours, and carries answers when the lengt
   view = await pollView(t.db, sam, id);
   expect(view!.frame.step).toBe(15);
   expect(view!.mine!.slots).toEqual([TUE7, '2026-12-02T00:15:00.000Z', HALF, '2026-12-02T00:45:00.000Z']);
+});
+
+it('lets a poll say where it is: kept tidy, changed by an edit, and passed on in the words and the calendar file', async () => {
+  const maya = await who('Maya');
+  expect((await pollView(t.db, maya, await poll(maya)))!.place).toBeNull();
+  expect((await pollView(t.db, maya, await poll(maya, { place: '   ' })))!.place).toBeNull();
+  await expect(poll(maya, { place: 'x'.repeat(121) })).rejects.toMatchObject({ code: 'invalid' });
+  const id = await poll(maya, { place: '  City   Hops ' });
+  let view = (await pollView(t.db, maya, id))!;
+  expect(view.place).toBe('City Hops');
+  expect(shareMessage(view).split('\n')[0]).toBe('Problem set night at City Hops');
+  const plan = { pollId: id, title: BASE.title, startDate: BASE.startDate, endDate: BASE.endDate, hourStart: 17, hourEnd: 22, expectedSize: 7, deadline: BASE.deadline, threshold: 'two_thirds' };
+  await updatePoll(t.db, maya, { ...plan, place: 'Olin Library' }, NOW);
+  expect((await pollView(t.db, maya, id))!.place).toBe('Olin Library');
+  await saveAnswer(t.db, maya, { pollId: id, slots: [TUE7] }, NOW);
+  await sendPoll(t.db, maya, { pollId: id, slot: TUE7 }, NOW);
+  view = (await pollView(t.db, maya, id))!;
+  expect(pollIcs(view)).toContain('LOCATION:Olin Library');
+  expect(shareMessage(view)).toContain('7 to 8 pm, at Olin Library.');
+  // An edit that leaves the place empty takes it away.
+  const other = await poll(maya, { place: 'City Hops' });
+  await updatePoll(t.db, maya, { ...plan, pollId: other, place: '' }, NOW);
+  expect((await pollView(t.db, maya, other))!.place).toBeNull();
 });

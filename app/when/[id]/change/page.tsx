@@ -22,6 +22,6 @@ export default async function ChangeWhenPage({ params }: { params: Promise<{ id:
     <CreateForm signIn={null} today={today} edit={view.id}
       head={<Ticket stub={n ? `${n} of ${view.size} have answered. Their times stay where the days and hours still fit.` : 'Nobody has answered yet, so nothing is lost.'}><h1 className="xl">Change <em>the poll.</em></h1></Ticket>}
       first={{ title: view.title, startDate: view.frame.startDate, endDate: view.frame.endDate, hourStart: String(view.frame.hourStart), hourEnd: String(view.frame.hourEnd), expectedSize: String(view.size),
-        by: by > today ? by : today, threshold: view.threshold, weekends: view.frame.weekends === false ? '0' : '1', duration: String(view.minutes) }} />
+        by: by > today ? by : today, threshold: view.threshold, weekends: view.frame.weekends === false ? '0' : '1', duration: String(view.minutes), place: view.place ?? '' }} />
   </main>;
 }

@@ -8,7 +8,7 @@ import { createPollAction, updatePollAction } from '../actions';
 import { Panel } from '../parts';
 
 const KEPT = 'wn-new', WEEKS = 5, STEP = 21;
-type Plan = { title: string; startDate: string; endDate: string; hourStart: string; hourEnd: string; expectedSize: string; /** The last day to answer. */ by: string; threshold: string; /** '1' when Saturdays and Sundays are in the poll. */ weekends: string; /** How many minutes the meeting runs. */ duration: string };
+type Plan = { title: string; startDate: string; endDate: string; hourStart: string; hourEnd: string; expectedSize: string; /** The last day to answer. */ by: string; threshold: string; /** '1' when Saturdays and Sundays are in the poll. */ weekends: string; /** Where it is; empty when the poll does not say. */ place?: string; /** How many minutes the meeting runs. */ duration: string };
 const HOURS = Array.from({ length: 25 }, (_, hour) => hour);
 const monday = (day: string) => addDays(day, -((new Date(`${day}T00:00:00Z`).getUTCDay() + 6) % 7));
 const short = (day: string) => `${dayNum(day)} ${mon(day)}`, full = (day: string) => `${dow(day)} ${short(day)}`;
@@ -61,7 +61,8 @@ export function CreateForm({ signIn, first, today, head, edit, group }: { /** Th
   return <form action={send}>
     <input type="hidden" name="startDate" value={plan.startDate} /><input type="hidden" name="endDate" value={plan.endDate} /><input type="hidden" name="weekends" value={plan.weekends} />{edit && <input type="hidden" name="pollId" value={edit} />}{group && <input type="hidden" name="group" value={group.ref} />}
     {head}<Panel tab="Your plan"><div className="wn-fields">
-      <label className="wn-f wide"><span>What are you planning</span><input name="title" required maxLength={80} placeholder="Problem set night" value={plan.title} onChange={set('title')} /></label>
+      <label className="wn-f"><span>What are you planning</span><input name="title" required maxLength={80} placeholder="Problem set night" value={plan.title} onChange={set('title')} /></label>
+      <label className="wn-f"><span>Where, if you know</span><input name="place" maxLength={120} placeholder="City Hops" value={plan.place ?? ''} onChange={set('place')} /></label>
       <label className="wn-f"><span>From this hour</span><select name="hourStart" value={plan.hourStart} onChange={set('hourStart')}>{HOURS.slice(0, 24).map(hour => <option key={hour} value={hour}>{hourText(hour)}</option>)}</select></label>
       <label className="wn-f"><span>To this hour</span><select name="hourEnd" value={plan.hourEnd} onChange={set('hourEnd')}>{HOURS.slice(1).map(hour => <option key={hour} value={hour}>{hour === 24 ? 'Midnight' : hourText(hour)}</option>)}</select></label>
       <div className="wn-f wide" role="radiogroup" aria-label="Runs for"><span>Runs for</span><div className="wn-three" style={{ '--n': DURATIONS.length } as React.CSSProperties}>

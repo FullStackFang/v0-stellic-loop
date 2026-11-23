@@ -36,7 +36,7 @@ export function renderWhenEmail(kind: MessageKind, d: { view: PollView; to: Pers
       const label = slotLabel(view.chosen.at, zone), span = meetingSpan(view.chosen, zone), isIn = view.chosen.in.some(each => each.personId === d.to.personId), answered = view.chosen.in.length + view.chosen.out.length;
       return { subject: `${view.title} is on: ${label.dow} ${label.date} ${label.month}, ${span}`, fromName: `${asked} via Loopd`, tile: [label.dow, `${label.date} ${label.month}`],
         headline: `${label.dowLong}, ${span}. It's on.`,
-        lines: [view.title, ...(view.chosen.note ? [`${asked}: ${view.chosen.note}`] : []), `${view.chosen.in.length} of ${Math.max(view.size, answered)} can make it${view.chosen.in.length ? `: ${names(view.chosen.in)}` : ''}.`,
+        lines: [view.place ? `${view.title}, at ${view.place}` : view.title, ...(view.chosen.note ? [`${asked}: ${view.chosen.note}`] : []), `${view.chosen.in.length} of ${Math.max(view.size, answered)} can make it${view.chosen.in.length ? `: ${names(view.chosen.in)}` : ''}.`,
           ...(isIn || d.to.personId === view.organizer.personId ? [] : ['You said you can\'t make this one. If that changes, update your answer on the page.'])],
         button: ['Add to my calendar', `${url}/calendar.ics`], foot: `You get this because you answered ${asked}'s poll.` };
     }

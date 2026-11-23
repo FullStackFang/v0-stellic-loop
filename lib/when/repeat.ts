@@ -79,6 +79,7 @@ export async function repeatPoll(db: Db, who: Who, input: unknown, now = new Dat
     await q.query(`insert into when_poll(id,series_id,previous_poll_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at,weekends,duration_min) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
       [id, poll.seriesId, poll.id, who.personId, poll.title, frame.startDate, frame.endDate, frame.hourStart, frame.hourEnd, frame.timezone, Math.max(2, people.length), deadline, poll.threshold, now.toISOString(), poll.weekends, poll.durationMin]);
     if (poll.stepMin !== 60) await q.query('update when_poll set step_min=$2 where id=$1', [id, poll.stepMin]);
+    if (poll.place) await q.query('update when_poll set place=$2 where id=$1', [id, poll.place]);
     for (const answer of await lastAnswers(q, poll.seriesId)) {
       const usual = new Set(answer.slots.map(at => usualKey(at, poll.timezone))), carried = slots.filter(slot => usual.has(usualKey(slot.at, poll.timezone))).map(slot => slot.at);
       if (carried.length) await q.query('insert into when_answer(poll_id,person_id,slots,draft,updated_at) values($1,$2,$3::timestamptz[],true,$4)', [id, answer.personId, carried, now.toISOString()]);
