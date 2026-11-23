@@ -137,8 +137,8 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
             <label>Other names <small>separated by commas</small><input name="otherNames" defaultValue={place.otherNames.join(', ')} /></label><button className="cs-btn sm">Save</button></form></details></li>)}
         {!allPlaces.length && <li className="off"><span>No places yet. An event whose place text names one gets a map.</span></li>}</ul>
       {typed.length > 0 && <><p className="cs-adm-lede">Names people here type for a poll&apos;s place that this list does not have, the most used first. Tie one to a place and typing it finds that place. For a place that is not listed yet, add it above with the name as another name.</p>
-        <ul className="cs-adm-rows">{typed.map(each => <li key={each.name}><div><b>{each.name}</b><span>{each.people === 1 ? '1 person' : `${each.people} people`}</span></div>
-          {allPlaces.length > 0 && <form action={addPlaceNameAction} className="cs-adm-form">{keep}<input type="hidden" name="name" value={each.name} /><label>Is another name for<select name="place" required defaultValue=""><option value="" disabled>Pick a place</option>{allPlaces.map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label><button className="cs-btn sm">Add the name</button></form>}</li>)}</ul></>}
+        <ul className="cs-adm-rows">{typed.map(each => <li key={each.name}><details><summary><div><b>{each.name}</b><span>{each.people === 1 ? 'Typed by 1 person' : `Typed by ${each.people} people`}</span></div>{allPlaces.length > 0 && <i className="b">Tie to a place</i>}</summary>
+          {allPlaces.length > 0 && <form action={addPlaceNameAction} className="cs-adm-form">{keep}<input type="hidden" name="name" value={each.name} /><label>Is another name for<select name="place" required defaultValue=""><option value="" disabled>Pick a place</option>{allPlaces.map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label><button className="cs-btn sm">Add the name</button></form>}</details></li>)}</ul></>}
     </section>;
   }
 
