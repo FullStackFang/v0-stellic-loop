@@ -197,6 +197,9 @@ button.wn-cell { cursor: pointer; }
 .wn-save { display: grid; gap: 22px; }
 /* answering with only a name: the name beside Save, then the offer of the invite (public/demo/mockups-when-name.html) */
 .wn-save.wn-who { gap: 8px; } .wn-who > .wn-ask { padding-top: 8px; }
+/* a guest's saved strip: last on a phone, where it is the bar at the foot; one line across the top on a laptop */
+.wn-save:empty { display: none; } .wn-save.wn-top { order: 1; }
+@media (min-width: 900px) { .wn-two > .wn-save.wn-top { order: -1; grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; } .wn-top > .wn-done { flex: none; justify-content: flex-start; gap: 10px; } .wn-top > .wn-ask { flex: 0 1 470px; padding-top: 8px; } }
 .wn-ask { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; padding-top: 10px; }
 .wn-ask .wn-f input { height: 50px; min-height: 0; background: var(--cs-paper); outline: 0; }
 .wn-ask .wn-f input:focus-visible, .wn-ask .wn-f.miss input { box-shadow: inset 0 0 0 2.5px var(--cs-action); }
