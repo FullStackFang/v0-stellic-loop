@@ -1427,6 +1427,14 @@ function bus(car, ux, uy) {
   for (let n = 0; n < Math.min(3, car.load); n++) sprite(1 + (n * 11 + Math.floor(world.t / (car.ride * 2 + car.stay + car.away)) * 7) % FACES, x + ((n - 1) * 28 - 12 * (back ? -1 : 1)) * ux, y + ((n - 1) * 28 - 12 * (back ? -1 : 1)) * uy - 2, 36);
   pill(car.name, x, y - 52, C.ink, C.paper, 14);
 }
+// A subway car (Columbia's 1 train): it slides along its rails with no hop and no shadow, rocking a little while it runs.
+// Its toy is 'train' (scripts/pickup-art.ts); the bus stands in only while the toys are coming.
+const TRAIN = 150;
+function train(car, ux) {
+  const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay, running = back || car.clock < car.ride;
+  const art = AT.train ? 'train' : 'bus', high = toy(art, x, y + 40 + (running ? Math.sin(world.t * 11) * 1.5 : 0), TRAIN, (back ? -ux : ux) < 0);
+  pill(car.name, x, y + 40 - high - 14, C.ink, C.paper, 14);
+}
 // The lighthouse lamp turning, shown by no beam (/demo/mockups-conga-lighthouse.html, B): where its light passes, white
 // four-point glints pop up on the ground and water and shrink away behind it, sweeping round like a clock hand.
 const GLINT = { turn: 0.6, life: 0.8, reach: 760, size: 20 };
@@ -1438,14 +1446,6 @@ function beam(thing, t, seen) {
     let behind = (th - p.a) % (Math.PI * 2); if (behind < 0) behind += Math.PI * 2;
     const age = behind / GLINT.turn - p.seed * 0.25, far = 1 - p.d / GLINT.reach;
     if (age < 0 || age > GLINT.life || far <= 0 || !seen(p.x, p.y)) continue;
-// A subway car (Columbia's 1 train): it slides along its rails with no hop and no shadow, rocking a little while it runs.
-// Until its own toy is drawn (scripts/pickup-art.ts 'train') the bus stands in for it.
-const TRAIN = 150;
-function train(car, ux) {
-  const { x, y } = car, back = car.clock >= car.ride + car.stay && car.clock < car.ride * 2 + car.stay, running = back || car.clock < car.ride;
-  const art = AT.train ? 'train' : 'bus', high = toy(art, x, y + 40 + (running ? Math.sin(world.t * 11) * 1.5 : 0), TRAIN, (back ? -ux : ux) < 0);
-  pill(car.name, x, y + 40 - high - 14, C.ink, C.paper, 14);
-}
     const u = age / GLINT.life, pop = Math.min(1, age / 0.08), r = GLINT.size * p.size * pop * (1 - u * 0.5) * (0.5 + far * 0.7);
     const a = Math.min(1, (1 - u) ** 1.6 * (0.65 + 0.35 * Math.sin(t * 14 + p.seed * 50)) * (0.35 + far));
     // A soft glow under it, then the star solid, so it shows on the felt as well as the water.
