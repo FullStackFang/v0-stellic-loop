@@ -59,8 +59,7 @@
 .wn-trk .c.at { box-shadow: inset 0 0 0 2px var(--cs-ink); } .wn-trk .c.won { box-shadow: inset 0 0 0 3px var(--cs-ink), inset 0 0 0 5px var(--cs-paper); }
 .wn-blk { position: absolute; left: 3px; right: 3px; display: grid; place-items: center; border-radius: 7px; background: var(--cs-ink); color: var(--cs-field); font-size: 11.5px; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; overflow: hidden; pointer-events: none; }
 .wn-blk.ends { align-content: space-between; padding: 5px 0 4px; } .wn-blk b { font-weight: 700; }
-.wn-key:has(.wn-said) { flex-wrap: nowrap; } .wn-key:has(.wn-said) .cs-pill { flex: none; } .wn-key:has(.wn-said) .mine { background: var(--cs-ink); box-shadow: none; border-radius: 4px; }
-.wn-key:has(.wn-said) .cs-pill.wn-said { flex: 1 1 0; width: 0; min-width: 0; text-align: center; font-size: 12.5px; padding: 4px 8px; background: var(--cs-ink); color: var(--cs-field); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.wn-key.fine .mine { background: var(--cs-ink); box-shadow: none; border-radius: 4px; } .wn-said { color: var(--cs-field); font-variant-numeric: tabular-nums; }
 .wn-d { text-align: center; font-size: 11.5px; font-weight: 600; line-height: 1.1; padding-bottom: 4px; color: var(--cs-mute); }
 .wn-d b { display: block; font-size: 17px; font-weight: 700; font-stretch: 108%; color: var(--cs-ink); }
 .wn-h { align-self: center; font-size: 12px; font-weight: 560; color: var(--cs-mute); text-align: right; padding-right: 4px; white-space: nowrap; }

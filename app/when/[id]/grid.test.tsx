@@ -156,7 +156,7 @@ it('draws a poll of half hours as strips: Space paints where the arrows have mov
   await waitFor(() => expect(onSave).toHaveBeenCalled());
   expect(onSave.mock.calls.at(-1)![0].sort()).toEqual(half.slice(0, 2));
   // The two half hours touch, so they are one block: its start along the top, its end along the foot.
-  expect([...strip.querySelectorAll('.wn-blk b')].map(each => each.textContent)).toEqual(['7', '8 pm']);
+  expect([...strip.querySelectorAll('.wn-blk b')].map(each => each.textContent)).toEqual(['7:00', '8:00']);
 });
 
 it('marks a poll of half hours with a press on the table, and the stroke ends when the press does', async () => {

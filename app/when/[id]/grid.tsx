@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { Rings } from '@/components/LoopGlyphs';
 import { dayNum, dow, mon } from '@/lib/days';
-import { hourText, spanText, type Slot } from '@/lib/when/slots';
+import { hourText, type Slot } from '@/lib/when/slots';
 import type { Said } from '../actions';
 import { Panel, Stack, Ticket, Tile, type Shown } from '../parts';
 
@@ -40,7 +40,7 @@ const AUTO_MS = 500;
  * Save. A poll whose times are smaller than an hour is one plain table: an hour is as tall as ever and is ruled into
  * its halves or quarters. A press and drag marks a box of time, across days too; one that starts on a person's own
  * time clears. Their time is drawn as blocks that say when they start and end, the days under the stroke light up, and
- * a pill in the key says the exact time. The arrow keys move down a day and Space paints
+ * the panel's tab says the exact time. The arrow keys move down a day and Space paints
  * (public/demo/mockups-when-simple.html, B). What is painted saves by itself a moment after the painting stops, once it is known whose times they are. Without `onSave` it is only to look at, and `action` stands where Save would.
  */
 export function Grid({ slots, free, me: given = null, mine = [], draft = false, onSave, guest, onEmail, ways, tab, after = '', children, tile, title, best = [], action, tail, won = null, size }: {
@@ -72,6 +72,8 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
   useEffect(() => { const stop = () => { painting.current = null; setLifted(n => n + 1); }; window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop); return () => { window.removeEventListener('pointerup', stop); window.removeEventListener('pointercancel', stop); }; }, []);
   // A fine poll's strips. A day is `rows` steps of `step` minutes from its first hour; a place on a strip is a row.
   const step = !fine ? 60 : slots.some(slot => slot.minute % 30) ? 15 : 30, perHour = 60 / step, rows = tall * perHour, firstHour = Math.min(...slots.map(slot => slot.hour));
+  // A fine poll words every time the same way: hours and minutes, "6:30", "8:00". A block never says am or pm (the hours down the side do); the tab says it on both ends.
+  const hm = (minutes: number) => `${Math.floor(minutes / 60) % 12 || 12}:${String(minutes % 60).padStart(2, '0')}`, half = (minutes: number) => `${hm(minutes)} ${minutes % 1440 < 720 ? 'am' : 'pm'}`;
   const timeOf = (row: number) => firstHour * 60 + row * step, slotAt = (day: string, row: number) => at.get(`${day} ${timeOf(row)}`), pct = (n: number) => `${n / rows * 100}%`;
   // The stroke under way: where it began, whether it marks or clears, and what was marked before it. `live` is the box it covers so far: columns of the days shown, and rows.
   const drag = useRef<{ col: number; row: number; on: boolean; base: Set<string> } | null>(null), [live, setLive] = useState<{ on: boolean; c0: number; c1: number; from: number; to: number } | null>(null);
@@ -222,12 +224,12 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
       </>}
     </div>
   </div> : null;
-  // What the pill in a fine poll's key says: the box being marked, else the time last touched.
+  // What a fine poll's tab says once it is touched: the box being marked, else the time last touched.
   const on = touched ? slotOf.get(touched) : undefined;
-  const said = live ? `${live.on ? '' : 'Clearing '}${live.c0 === live.c1 ? `${dow(shown[live.c0])} ${dayNum(shown[live.c0])}` : `${dow(shown[live.c0])} to ${dow(shown[live.c1])} ${dayNum(shown[live.c1])}`}, ${spanText(timeOf(live.from), (live.to - live.from) * step)}`
-    : on ? `${dow(on.day)} ${dayNum(on.day)}, ${hourText(on.hour, on.minute)} · ${count(on.at) ? `${count(on.at)} free` : 'nobody yet'}` : onSave ? 'Drag to mark' : 'Touch a time';
-  const strips = fine && <div ref={box} className="wn-grid fine" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per, '--tall': tall } as React.CSSProperties}>
-    <span />{shown.map((day, col) => <span key={day} className={`wn-d${live && col >= live.c0 && col <= live.c1 ? ' lit' : ''}`}>{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
+  const said = !fine ? '' : live ? `${live.on ? '' : 'Clearing '}${live.c0 === live.c1 ? `${dow(shown[live.c0])} ${dayNum(shown[live.c0])}` : `${dow(shown[live.c0])} to ${dow(shown[live.c1])} ${dayNum(shown[live.c1])}`}, ${half(timeOf(live.from))} to ${half(timeOf(live.to))}`
+    : on ? `${dow(on.day)} ${dayNum(on.day)}, ${half(on.hour * 60 + on.minute)} · ${count(on.at) ? `${count(on.at)} free` : 'nobody yet'}` : '';
+  const strips = fine && <div ref={box} className="wn-grid fine" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': shown.length, '--tall': tall } as React.CSSProperties}>
+    <span />{shown.map((day, col) => <span key={day} className={`wn-d${live && col >= live.c0 && col <= live.c1 ? ' lit' : ''}`}>{dow(day)}<b>{dayNum(day)}</b></span>)}
     <span className="wn-hs" aria-hidden="true">{Array.from({ length: tall + 1 }, (_, n) => <span key={n} className="wn-h" style={{ top: `${n / tall * 100}%` }}>{hourText(firstHour + n)}</span>)}</span>
     <div className="wn-sheet" style={{ gridColumn: `2 / span ${shown.length}`, '--cols': shown.length } as React.CSSProperties} onPointerDown={press} onPointerMove={glide} onPointerUp={lift} onPointerCancel={lift} onLostPointerCapture={lift}>
       {shown.map((day, col) => {
@@ -239,15 +241,15 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
           if (picked.has(slot)) { const last = runs[runs.length - 1]; if (last?.[1] === row) last[1] = row + 1; else runs.push([row, row + 1]); }
         }
         // A block says when it starts along its top edge and when it ends along its foot; a short one says both on one line, and a quarter of an hour says nothing.
-        const label = (from: number, to: number) => { const text = spanText(timeOf(from), (to - from) * step), at = text.indexOf(' to '); return (to - from) * step >= 45 ? <><b>{text.slice(0, at)}</b><b>{text.slice(at + 4)}</b></> : (to - from) * step >= 30 ? text.replace(/ [ap]m$/, '') : null; };
+        const label = (from: number, to: number) => (to - from) * step >= 45 ? <><b>{hm(timeOf(from))}</b><b>{hm(timeOf(to))}</b></> : (to - from) * step >= 30 ? `${hm(timeOf(from))} to ${hm(timeOf(to))}` : null;
         return <div key={day} className="wn-trk" tabIndex={0} aria-label={`${dayLabel(day)}${onSave ? ': drag to paint, or use the arrow keys and Space' : ''}`} onKeyDown={stripKeys(day, col)}>
           {cells}{runs.map(([from, to]) => <span key={from} className={`wn-blk${(to - from) * step >= 45 ? ' ends' : ''}`} style={{ top: `calc(${pct(from)} + 2px)`, height: `calc(${pct(to - from)} - 3px)` }}>{label(from, to)}</span>)}
         </div>;
       })}
-    </div>{pad.map((_, n) => <span key={`strip${n}`} />)}
+    </div>
   </div>;
   return <>
-    <div className="wn-col"><Panel tab={tab ?? (onSave ? 'Paint the times you can make' : 'When people are free so far')}>{pager}
+    <div className="wn-col"><Panel tab={said ? <span className="wn-said" aria-live="polite">{said}</span> : tab ?? (onSave ? fine ? 'Drag over the times you can make' : 'Paint the times you can make' : 'When people are free so far')}>{pager}
       {strips || <div ref={box} className="wn-grid" role="group" aria-label={onSave ? 'Times you can make' : 'When people are free'} style={{ '--days': per } as React.CSSProperties}>
         <span />{shown.map(day => <span key={day} className="wn-d">{dow(day)}<b>{dayNum(day)}</b></span>)}{pad}
         {hours.map((hour, row) => [<span key={hour} className="wn-h">{clock(hour)}</span>, ...shown.map((day, col) => {
@@ -263,7 +265,7 @@ export function Grid({ slots, free, me: given = null, mine = [], draft = false, 
             onClick={event => { if (event.detail === 0) paint(slot, !on); }}>{total}{badge}</button>;
         }), ...pad.map((_, n) => <span key={`pad${hour}${n}`} />)])}
       </div>}
-      <div className="wn-key"><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />{fine ? 'More free' : 'More people free'}</span>{onSave && <span className="cs-pill"><i className="mine" />{fine ? 'You' : 'Yours'}</span>}{children}{fine && <span className="cs-pill wn-said" aria-live="polite">{said}</span>}</div></Panel>
+      <div className={`wn-key${fine ? ' fine' : ''}`}><span className="cs-pill"><i className="t1" /><i className="t3" /><i className="t5" />{fine ? 'More free' : 'More people free'}</span>{onSave && <span className="cs-pill"><i className="mine" />{fine ? 'You' : 'Yours'}</span>}{children}</div></Panel>
       {strip}
       {onSave && guest ? <div className="wn-save wn-who">
         {error && !asking && <p className="wn-note bad" role="alert">{error}</p>}
