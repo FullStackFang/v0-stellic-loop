@@ -64,7 +64,7 @@ it('opens a group inside a group at its own address, under its own name, with cr
   expect(screen.getByRole('link', { name: 'Team 1' })).toHaveAttribute('href', '/groups/emba-2027/in/team-1/team');
   expect(screen.getByRole('link', { name: 'EMBA 2027' })).toHaveAttribute('href', '/groups/emba-2027/team');
   // Its tabs stay inside it.
-  expect(screen.getByRole('link', { name: /Events/ })).toHaveAttribute('href', expect.stringMatching(/^\/groups\/emba-2027\/in\/nbae-6830\/team\?tab=events/));
+  expect(screen.getByRole('link', { name: 'Plans' })).toHaveAttribute('href', expect.stringMatching(/^\/groups\/emba-2027\/in\/nbae-6830\/team\?tab=plans/));
 });
 
 it('stops the crumbs at the highest group a person can open and never names the group above', async () => {

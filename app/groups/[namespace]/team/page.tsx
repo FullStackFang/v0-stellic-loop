@@ -39,12 +39,17 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
 // The record is one section at a time, chosen by ?tab=. Every tab is a link, so a view can be shared and nothing depends on script.
-// "All" opens first: what is coming up, a column a day, with what waits on the reader marked.
-// The bar leads with Members, then what people do together; the record's own kinds sit under "More", since the counts in the head already link to them.
-const TABS = [['all', 'All'], ['events', 'Events'], ['ideas', 'Ideas'], ['asks', 'Asks'], ['resources', 'Resources'], ['travel', 'Travel'], ['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
+// "This week" opens first: what is coming up, a column a day, with what waits on the reader marked.
+// The bar is one row of pills (public/demo/mockups-group-bar.html, A): what people do together, then Members. Events, ideas and travel are one
+// place, "Plans". Decisions, claims and outputs are opened from the counts in the head, and the rest sits under "More".
+const TABS = [['all', 'This week'], ['plans', 'Plans'], ['asks', 'Asks'], ['resources', 'Resources'], ['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
 type Tab = typeof TABS[number][0];
+/** The sections with a pill in the bar. */
+const BAR: readonly Tab[] = ['all', 'plans', 'asks', 'resources'];
 /** The sections kept under "More". */
-const MORE: readonly Tab[] = ['decisions', 'claims', 'outputs', 'brief', 'mine'];
+const MORE: readonly Tab[] = ['brief', 'mine'];
+/** Addresses from before events, ideas and travel were one place. */
+const WAS: Record<string, Tab> = { events: 'plans', ideas: 'plans', travel: 'plans' };
 /** How many days past today get a column of their own on "All"; anything further is under Later. */
 const DAYS_AHEAD = 6;
 /** How many settled things "All" lists. */
@@ -62,12 +67,12 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
     // The header and the tab bar: where the team stands, its brief and counts, its event tags, and whether to show the editing controls.
     teamState(db(), principal, scope), teamBrief(db(), principal, scope), listTeamEvents(db(), principal, scope), can('manage'),
     // The shown tab. Followers read the upcoming list and the asks but cannot mark interest or ask.
-    shown(['all', 'events'], () => upcomingEvents(db(), principal, { ...scope, people: true })), shown(['events'], () => managersOnly(listTeamEvents(db(), principal, { ...scope, archived: true }))),
-    shown(['all', 'asks'], () => listAsks(db(), principal, scope)), shown(['all', 'events', 'asks', 'ideas', 'travel', 'resources'], () => can('post')),
-    shown(['all', 'ideas'], () => whatsOn(db(), principal, scope)), shown(['ideas'], () => feedAddress(db(), principal, scope)), shown(['all', 'travel'], () => arrivals(db(), principal, scope)),
+    shown(['all', 'plans'], () => upcomingEvents(db(), principal, { ...scope, people: true })), shown(['plans'], () => managersOnly(listTeamEvents(db(), principal, { ...scope, archived: true }))),
+    shown(['all', 'asks'], () => listAsks(db(), principal, scope)), shown(['all', 'plans', 'asks', 'resources'], () => can('post')),
+    shown(['all', 'plans'], () => whatsOn(db(), principal, scope)), shown(['plans'], () => feedAddress(db(), principal, scope)), shown(['all', 'plans'], () => arrivals(db(), principal, scope)),
     shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope)), shown(['resources'], () => listResources(db(), principal, scope)),
     // Nearby is listed to everyone in the group; the feeds, with their last results, only to owners and organizers.
-    shown(['events'], () => nearby(db(), principal, scope)), shown(['events'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : []), groupTile(db(), principal, scope)]);
+    shown(['plans'], () => nearby(db(), principal, scope)), shown(['plans'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : []), groupTile(db(), principal, scope)]);
   });
   if (!opened) return null;
   const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds, tile] } = opened;
@@ -80,7 +85,6 @@ const claimStatus = { open: 'Open', proposed: 'Proposed, waiting for its owner',
 /** "Nov 20" from a date or timestamp that starts YYYY-MM-DD. */
 const shortDay = (value: string) => `${mon(value.slice(0, 10))} ${dayNum(value.slice(0, 10))}`;
 /** "New York time" from America/New_York. */
-const zoneName = (timezone: string) => `${timezone.split("/").pop()!.replace(/_/g, " ")} time`;
 const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
 /** A card on "All": the day it falls on (null for no day), whether its date has passed, and what it wants from the reader, if anything. */
@@ -106,7 +110,8 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   if (!principal) return <section className="lt-editor"><h1>Group unavailable</h1><Link href={`/groups/sign-in?redirect_url=${encodeURIComponent(`${groupPath((await params).namespace, (await params).slug)}/team`)}`}>Sign in</Link></section>;
   const route = await params, base = groupPath(route.namespace, route.slug);
   const requested = (await searchParams)?.tab;
-  const tab: Tab = TABS.find(([key]) => key === requested)?.[0] ?? 'all';
+  const asked = typeof requested === 'string' ? WAS[requested] ?? requested : requested;
+  const tab: Tab = TABS.find(([key]) => key === asked)?.[0] ?? 'all';
   const data = await load(principal, route, tab).catch(() => null);
   if (!data) return <section className="lt-editor"><h1>Group unavailable</h1><p role="alert">This private group is unavailable or your access changed.</p></section>;
   const { group, scope, state, brief, events, manager, mine, history, upcoming, canPost, archived, asks, on, feed, travel, resources, near, feeds } = data;
@@ -143,7 +148,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     </div></li>;
   };
 
-  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, resources: brief.resources.links.items.length + brief.resources.links.more + brief.resources.texts.items.length + brief.resources.texts.more, events: events.length, asks: brief.asks.open };
+  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, resources: brief.resources.links.items.length + brief.resources.links.more + brief.resources.texts.items.length + brief.resources.texts.more, asks: brief.asks.open };
   const pastDue = state.claims.items.filter(item => item.pastDue).length, waiting = state.claims.items.filter(item => item.claimStatus === 'proposed').length;
   const flagged = state.conflicts.items.length + state.conflicts.more;
   const latest = state.decisions.items.reduce<RecordView | null>((best, item) => !best || item.createdAt > best.createdAt ? item : best, null);
@@ -186,7 +191,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     ...(upcoming?.events.items ?? []).map((event): Card => { const day = event.startsAt ? dayIn(event.startsAt) : null;
       return { key: `e${event.slug}`, day: fromToday(day), cls: 'gt-event', body: <>
         <span className="gt-day">{day ? <><small>{dow(day)}</small><b>{dayNum(day)}</b><small>{mon(day)}</small></> : <small>No date</small>}</span>
-        <div className="gt-in"><p className="gt-kind"><span>{event.idea ? 'Plan' : 'Event'}</span><i>@{group.namespace}/{event.slug}</i></p><p className="gt-stmt"><Link href={href('events')}>{event.name}</Link></p>
+        <div className="gt-in"><p className="gt-kind"><span>{event.idea ? 'Plan' : 'Event'}</span><i>@{group.namespace}/{event.slug}</i></p><p className="gt-stmt"><Link href={href('plans')}>{event.name}</Link></p>
           {(event.starts || event.place) && <p className="gt-note">{[event.starts, event.place].filter(Boolean).join(' · ')}</p>}
           <div className="gt-foot"><span>{event.interested} {event.idea ? 'in' : 'interested'}</span>{event.youAreInterested && <span>You are in</span>}</div></div></> }; }),
     ...(asks?.open.items ?? []).map((ask): Card => { const wants = canPost && !ask.yourAnswer && !ask.forThoseIn;
@@ -197,7 +202,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     ...(on?.ideas.items ?? []).flatMap((event): Card[] => { const idea = event.idea; if (!idea) return [];
       const short = idea.needs === 1 && !event.youAreInterested && canPost;
       return [{ key: `i${event.slug}`, day: fromToday(idea.day ?? (event.startsAt ? dayIn(event.startsAt) : null)), you: short ? 'One more makes it a plan' : undefined, cls: `gt-idea${idea.needs === 1 ? ' near' : ''}`, body: <>
-        <p className="gt-kind"><span>Idea</span><i>{event.starts ?? idea.day ?? 'No day yet'}</i></p><p className="gt-stmt"><Link href={href('ideas')}>{event.name}</Link></p>
+        <p className="gt-kind"><span>Idea</span><i>{event.starts ?? idea.day ?? 'No day yet'}</i></p><p className="gt-stmt"><Link href={href('plans')}>{event.name}</Link></p>
         <p className="gt-seats">{Array.from({ length: Math.min(idea.needed, 8) }, (_, at) => <i key={at} className={at < event.interested ? 'in' : at === event.interested ? 'next' : undefined} />)}<small>{idea.needs ? `${idea.needs} more and it is a plan` : 'Has the people it needs'}</small></p>
         <div className="gt-foot">{event.youAreInterested ? <span>You are in</span> : canPost && <ActionForm action={setTeamInterest} label="I'm in">{scopeFields}<input type="hidden" name="event" value={event.slug} /><input type="hidden" name="interested" value="true" /><input type="hidden" name="route" value="site" /></ActionForm>}</div></> }]; }),
     ...(travel?.entries.items ?? []).flatMap((entry, at): Card[] => { const arrival = entry.arrival; if (!arrival || dayIn(arrival.at) < today) return [];
@@ -220,7 +225,8 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     ...(asks?.closed.items ?? []).map(ask => ({ key: `a${ask.number}`, kind: 'ask', text: ask.question, sub: `Ask, closed · ${nameOf(ask.by)}`, at: ask.closesAt, href: askPath(ask) })),
   ].sort((a, b) => a.at < b.at ? 1 : -1).slice(0, SETTLED);
   const fact = (count: number, one: string) => <b>{count} <small>{count === 1 ? one : `${one}s`}</small></b>;
-  const tabLink = ([key, label]: readonly [Tab, string]) => <Link key={key} href={href(key)} scroll={false} aria-current={key === tab ? 'page' : undefined}>{label}{key in counts && <span>{counts[key as keyof typeof counts]}</span>}</Link>;
+  const tabLink = ([key, label]: readonly [Tab, string]) => <Link key={key} href={href(key)} scroll={false} aria-current={key === tab ? 'page' : undefined} aria-label={key === 'all' ? label : undefined}>{key === 'all' ? <><i className="gt-lg">{label}</i><i className="gt-sm">Week</i></> : label}{key in counts && counts[key as keyof typeof counts] > 0 && <span>{counts[key as keyof typeof counts]}</span>}</Link>;
+  const at = (key: Tab) => key === tab ? 'page' as const : undefined;
 
   return <div className="gt">
     {group.trail.length > 1 && <Crumbs trail={group.trail} />}
@@ -233,26 +239,25 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
           <p>{purpose ?? 'No brief has been written yet.'}</p></div>
       </header>
       <nav className="gt-facts" aria-label="Where the team stands">
-        <Link href={href('decisions')} scroll={false}>{fact(counts.decisions, 'decision')}<span>{latest ? `Latest ${shortDay(latest.createdAt)} · ${latest.topic}` : 'None recorded yet'}</span></Link>
-        <Link href={href('claims')} scroll={false}>{fact(counts.claims, 'open claim')}<span>{pastDue > 0 && <span className="lp-warn"><Alert />{pastDue} past due</span>}{pastDue > 0 && waiting > 0 && ' · '}{waiting > 0 && `${waiting} waiting on owner`}{pastDue + waiting === 0 && (counts.claims ? 'None past due' : 'Nothing taken on yet')}</span></Link>
-        <Link href={href('outputs')} scroll={false}>{fact(counts.outputs, 'output')}<span>{flagged > 0 ? <><span className="lp-warn"><Alert />{flagged} flagged</span> against a decision</> : counts.outputs ? 'No conflicts flagged' : 'Nothing filed yet'}</span></Link>
-        <Link href={href('events')} scroll={false}>{fact(counts.events, 'event')}<span>{events.length ? events.slice(0, 2).map(event => event.name).join(' · ') : 'Labels for deliverables'}</span></Link>
+        <Link href={href('decisions')} scroll={false} aria-current={at('decisions')}>{fact(counts.decisions, 'decision')}<span>{latest ? `Latest ${shortDay(latest.createdAt)} · ${latest.topic}` : 'None recorded yet'}</span></Link>
+        <Link href={href('claims')} scroll={false} aria-current={at('claims')}>{fact(counts.claims, 'open claim')}<span>{pastDue > 0 && <span className="lp-warn"><Alert />{pastDue} past due</span>}{pastDue > 0 && waiting > 0 && ' · '}{waiting > 0 && `${waiting} waiting on owner`}{pastDue + waiting === 0 && (counts.claims ? 'None past due' : 'Nothing taken on yet')}</span></Link>
+        <Link href={href('outputs')} scroll={false} aria-current={at('outputs')}>{fact(counts.outputs, 'output')}<span>{flagged > 0 ? <><span className="lp-warn"><Alert />{flagged} flagged</span> against a decision</> : counts.outputs ? 'No conflicts flagged' : 'Nothing filed yet'}</span></Link>
       </nav>
     </div></section>
 
     <Inside group={group} pictures={data.inside} />
 
-    <nav className="gt-tabs" aria-label="Team sections"><Link href={base}>Members</Link>{TABS.filter(([key]) => !MORE.includes(key)).map(tabLink)}
+    <nav className="gt-bar" aria-label="Team sections">{TABS.filter(([key]) => BAR.includes(key)).map(tabLink)}<Link href={base}>Members</Link>
+      <span className="gt-sp" />
       <details className="gt-more" data-on={MORE.includes(tab) || undefined}><summary>{MORE.includes(tab) ? TABS.find(([key]) => key === tab)![1] : 'More'}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg></summary>
-        <div>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}</div></details>
-      <time dateTime={today}>{shortDay(today)} · {zoneName(state.timezone)}</time></nav>
+        <div>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}
+          {manager && <Link href={`${href('brief')}#post`}>Post an announcement</Link>}
+          {manager && <Link href={`${base}/organize`} title="Interest in each event by day, and how each open ask is filling.">Organizer view</Link>}
+          <Link href="/groups/connections" title="Connect Claude or another assistant once, and it reads this record before it drafts anything for the team.">Connect an assistant</Link></div></details></nav>
 
-    <div className="gt-strip">
+    {brief.announcements.length > 0 && <div className="gt-strip">
       <div className="gt-pins">{brief.announcements.map(item => <section key={item.number} className="gt-pin"><h2>Announcement</h2><p className="lp-stmt">{item.text}</p><Person person={item.by} clientId={item.assistant} /><span className="gt-date">#{item.number} · {shortDay(item.createdAt)}</span>{manager && <Act record={item} action="withdraw" label="Withdraw" />}</section>)}</div>
-      {manager && <details className="gt-post"><summary>Post an announcement</summary><div><ActionForm action={announceToTeam} label="Post announcement">{scopeFields}<label>Announcement (at most 600 characters)<textarea name="text" required maxLength={600} /></label>{sendingOn() ? <><label className="lt-check"><input type="checkbox" name="send" value="true" />Send to members</label><p>It appears in the brief and in what is new. Ticked, it also goes to each member the way they chose, and to nobody who chose not to be messaged.</p></> : <p>It appears in the brief and in what is new. No message is sent to anyone.</p>}</ActionForm></div></details>}
-      {manager && <Link className="gt-btn" href={`${base}/organize`} title="Interest in each event by day, and how each open ask is filling.">Organizer view</Link>}
-      <Link className="gt-btn" href="/groups/connections" title="Connect Claude or another assistant once, and it reads this record before it drafts anything for the team.">Connect an assistant</Link>
-    </div>
+    </div>}
 
     <div>
       <div>
@@ -309,7 +314,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
             : <p className="lp-empty">No texts yet.</p>}{more(resources.texts.more)}
         </section>}
 
-        {tab === 'events' && upcoming && <section id="events" aria-label="Events"><p className="emba-meta">An event is a label under the team, such as a deliverable. Outputs and claims can be filed to it as <strong>@{group.namespace}/event</strong>.</p>
+        {tab === 'plans' && upcoming && <section id="events" aria-label="Events"><p className="emba-meta">An event is a label under the team, such as a deliverable. Outputs and claims can be filed to it as <strong>@{group.namespace}/event</strong>.</p>
           <h3>Upcoming events</h3><p className="emba-meta">Times are in {state.timezone}.</p>
           {canPost && <div className="lt-editor"><LinkBox action={linkTeamEvent} orgId={scope.orgId} loopId={scope.loopId} timezone={state.timezone} /></div>}
           {upcoming.events.items.length ? <ul className="lp-list">{upcoming.events.items.map(event => <EventCard key={event.slug} event={event as EventWithWho} scope={scope} route="site" canPost={canPost} />)}</ul> : <p className="lp-empty">No upcoming events.</p>}{more(upcoming.events.more)}
@@ -331,7 +336,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
           {manager && archived.length > 0 && <div className="lt-editor"><h3>Archived events</h3><ul className="lp-plain">{archived.map(event => <li key={event.id}>@{group.namespace}/{event.slug} · {event.name}<ActionForm action={restoreTeamEvent} label="Restore"><input type="hidden" name="orgId" value={scope.orgId} /><input type="hidden" name="eventId" value={event.id} /></ActionForm></li>)}</ul></div>}
         </section>}
 
-        {tab === 'ideas' && on && <section id="ideas" aria-label="Ideas and plans"><p className="emba-meta">An idea is something a member proposes, with the number of people it needs. Once it has them, a start time and a place, it is a plan and goes to the calendars of those who are in. Times are in {state.timezone}.</p>
+        {tab === 'plans' && on && <section id="ideas" aria-label="Ideas and plans"><p className="emba-meta">An idea is something a member proposes, with the number of people it needs. Once it has them, a start time and a place, it is a plan and goes to the calendars of those who are in. Times are in {state.timezone}.</p>
           <h3>Plans</h3>
           {on.plans.length ? <ul className="lp-list">{on.plans.map(event => <IdeaItem key={event.slug} event={event} />)}</ul> : <p className="lp-empty">No plans yet.</p>}
           <h3>Ideas</h3><p className="emba-meta">Those closest to the number they need come first.</p>
@@ -343,7 +348,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
             <ActionForm action={newCalendarAddress} label={feed ? 'Replace the address' : 'Make my calendar address'}>{scopeFields}{feed && <p>The address above stops working at once.</p>}</ActionForm></div>
         </section>}
 
-        {tab === 'travel' && travel && <section id="travel" aria-label="Travel"><p className="emba-meta">When and where each member said they arrive and leave. It is what members stated; Loopd checks no flight. Times are in {state.timezone}.</p>
+        {tab === 'plans' && travel && <section id="travel" aria-label="Travel"><p className="emba-meta">When and where each member said they arrive and leave. It is what members stated; Loopd checks no flight. Times are in {state.timezone}.</p>
           {travel.entries.items.length ? <ul className="lp-list">{travel.entries.items.map((entry, index) => <li key={index} className="lp-event"><span className="lp-topic">{entry.arrival?.when ?? 'No arrival stated'}</span><div className="lp-what">
             <p className="lp-stmt">{entry.who.isYou ? 'You' : entry.who.name ?? entry.who.handle ?? 'A teammate'}{(entry.nearYourArrival || entry.nearYourDeparture) && <span className="lp-chip lp-chip-open">{entry.nearYourArrival ? 'Arrives near you' : 'Leaves near you'}</span>}</p>
             <p className="lp-sub">{entry.arrival && <span>Arrives{entry.arrival.place ? ` ${entry.arrival.place}` : ''}{entry.arrival.flight ? ` · ${entry.arrival.flight}` : ''}</span>}{entry.departure && <span>Leaves {entry.departure.when}{entry.departure.place ? ` · ${entry.departure.place}` : ''}{entry.departure.flight ? ` · ${entry.departure.flight}` : ''}</span>}{entry.stay && <span>Staying: {entry.stay}</span>}<span>changed {entry.changedOn}</span></p>
@@ -367,6 +372,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
           <p className="emba-meta">{deadline ? <>Deadline: <strong>{deadline}</strong></> : 'No deadline is set.'}</p>
           {brief.brief?.body ? brief.brief.body.split('\n').map((line, index) => <p key={index}>{line || ' '}</p>) : <p>No brief has been written yet.</p>}
           {manager ? <details><summary>Edit the brief</summary><BriefForm action={saveTeamBrief} orgId={scope.orgId} loopId={scope.loopId} version={brief.brief?.version ?? 0} body={brief.brief?.body ?? ''} deadline={brief.brief?.deadline ?? ''} timezone={state.timezone} />{history.length > 1 && <details><summary>Earlier versions</summary><ul className="lp-plain">{history.slice(1).map(item => <li key={item.version}>Version {item.version} · {item.editedAt.slice(0, 10)}{item.deadline ? ` · deadline ${item.deadline}` : ''}<br />{item.body.split('\n').map((line, index) => <span key={index}>{line}<br /></span>)}</li>)}</ul></details>}</details> : <p className="emba-meta">Owners and organizers edit the brief.</p>}
+          {manager && <div id="post"><h3>Post an announcement</h3><ActionForm action={announceToTeam} label="Post announcement">{scopeFields}<label>Announcement (at most 600 characters)<textarea name="text" required maxLength={600} /></label>{sendingOn() ? <><label className="lt-check"><input type="checkbox" name="send" value="true" />Send to members</label><p>It appears in the brief and in what is new. Ticked, it also goes to each member the way they chose, and to nobody who chose not to be messaged.</p></> : <p>It appears in the brief and in what is new. No message is sent to anyone.</p>}</ActionForm></div>}
         </section>}
 
         {tab === 'mine' && <section id="mine" aria-label="Your recent saves"><p className="emba-meta">Everything saved under your name, with the assistant that saved it. Withdrawing removes the text and link for everyone.</p>

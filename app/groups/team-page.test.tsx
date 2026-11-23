@@ -115,7 +115,7 @@ it('shows a member the team as their assistant would see it, with only the contr
 
   // An owner sees the curation controls and can withdraw anything.
   let withdrawable = 0;
-  for (const [tab, names] of Object.entries({ decisions: ['Post announcement'], claims: [], outputs: [], brief: ['Save brief'], events: ['Create event', 'Rename', 'Archive'] })) {
+  for (const [tab, names] of Object.entries({ decisions: [], claims: [], outputs: [], brief: ['Save brief', 'Post announcement'], events: ['Create event', 'Rename', 'Archive'] })) {
     const owner = await view(f.owner, tab);
     for (const name of names) expect(screen.getByRole('button', { name }), name).toBeInTheDocument();
     // The announcement's own Withdraw sits beside every tab; count it once.
@@ -186,9 +186,9 @@ it('shows the editing controls to an owner or organizer only, and the asking for
   const join = async (email: string, role: string) => { const p = await person(email); await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)', [f.scope.orgId, p.personId]); await t.db.query('insert into emba_role(org_id,loop_id,person_id,role) values($1,$2,$3,$4)', [f.scope.orgId, f.scope.loopId, p.personId, role]); return p; };
   const organizer = await join('organizer@example.test', 'organizer'), follower = await join('follower@example.test', 'follower');
   expect((await act(f.owner, () => addTeamEvent(idle, form({ ...f.ids, slug: 'final-deck', name: 'Final deck' })))).status).toBe('success');
-  const controls = { decisions: 'Post announcement', brief: 'Save brief', events: 'Create event' };
+  const controls = [['brief', 'Post announcement'], ['brief', 'Save brief'], ['events', 'Create event']] as const;
   for (const [who, manages, posts] of [[organizer, true, true], [f.ana, false, true], [follower, false, false]] as const) {
-    for (const [tab, name] of Object.entries(controls)) {
+    for (const [tab, name] of controls) {
       const page = await view(who, tab);
       expect(screen.queryAllByRole('button', { name }).length > 0, `${tab} for ${who.verifiedEmail}`).toBe(manages);
       page.unmount();
