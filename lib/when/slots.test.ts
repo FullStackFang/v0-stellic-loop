@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bestSlots, needed, readiness, shiftWeek, sizeOf, slotLabel, slotsOf, spanText, validZone } from './slots';
+import { bestSlots, needed, readiness, shiftWeek, sizeOf, slotLabel, slotsOf, spanText, validZone, restep, stepOf } from './slots';
 
 const NY = 'America/New_York';
 describe('needed', () => {
@@ -42,3 +42,24 @@ it('labels a time in the poll zone', () => expect(slotLabel('2026-12-02T00:00:00
 it('leaves weekends out when asked', () => expect([...new Set(slotsOf({ startDate: '2026-11-27', endDate: '2026-11-30', hourStart: 17, hourEnd: 18, timezone: NY, weekends: false }).map(slot => slot.day))]).toEqual(['2026-11-27', '2026-11-30']));
 it('says a start and a length as a span', () => { expect(spanText(19 * 60 + 15, 45)).toBe('7:15 to 8 pm'); expect(spanText(11 * 60 + 30, 60)).toBe('11:30 am to 12:30 pm'); expect(slotLabel('2026-12-02T00:15:00.000Z', NY).time).toBe('7:15 pm'); });
 it('knows a real zone from a made-up one', () => { expect(validZone(NY)).toBe(true); expect(validZone('Mars/Olympus')).toBe(false); expect(validZone('')).toBe(false); });
+
+describe('squares smaller than an hour', () => {
+  const plan = { startDate: '2026-12-01', endDate: '2026-12-01', hourStart: 19, hourEnd: 21, timezone: 'America/New_York' };
+  const at = (frame: typeof plan & { step?: number }) => slotsOf(frame).map(slot => slot.at.slice(11, 16));
+  it('draws halves and quarters of an hour', () => {
+    expect(at({ ...plan, step: 30 })).toEqual(['00:00', '00:30', '01:00', '01:30']);
+    expect(slotsOf({ ...plan, step: 15 }).map(slot => slot.minute)).toEqual([0, 15, 30, 45, 0, 15, 30, 45]);
+    expect(slotsOf(plan).map(slot => slot.minute)).toEqual([0, 0]);
+  });
+  it('sizes the squares by how long the meeting runs', () => expect([15, 30, 45, 60, 90, 120].map(stepOf)).toEqual([15, 30, 15, 60, 60, 60]));
+  const hours = slotsOf(plan).map(slot => slot.at), halves = slotsOf({ ...plan, step: 30 }).map(slot => slot.at), quarters = slotsOf({ ...plan, step: 15 }).map(slot => slot.at);
+  it('carries a painted hour to both of its halves, and to all four quarters', () => {
+    expect(restep([hours[0]], halves, 60, 30)).toEqual(halves.slice(0, 2));
+    expect(restep([hours[1]], quarters, 60, 15)).toEqual(quarters.slice(4));
+  });
+  it('keeps a bigger square only when all of it was painted', () => {
+    expect(restep([halves[0], halves[2], halves[3]], hours, 30, 60)).toEqual([hours[1]]);
+    expect(restep(quarters.slice(0, 3), halves, 15, 30)).toEqual([halves[0]]);
+  });
+  it('leaves out times the plan no longer has, at the same size', () => expect(restep(hours, [hours[1]], 60, 60)).toEqual([hours[1]]));
+});

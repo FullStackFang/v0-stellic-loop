@@ -125,13 +125,13 @@ it('keeps how long the meeting runs, an hour unless said', async () => {
 it('lets the organizer change an open poll, and drops only the hours the new plan no longer has', async () => {
   const maya = await who('Maya'), josh = await who('Josh'), id = await poll(maya);
   await saveAnswer(t.db, josh, { pollId: id, slots: [TUE7, TUE8, THU7] }, NOW);
-  const next = { pollId: id, title: 'Pitch practice', startDate: '2026-11-30', endDate: '2026-12-02', hourStart: 19, hourEnd: 20, expectedSize: 4, deadline: '2026-11-28T23:00:00.000Z', threshold: 'majority', weekends: '0', duration: 45 };
+  const next = { pollId: id, title: 'Pitch practice', startDate: '2026-11-30', endDate: '2026-12-02', hourStart: 19, hourEnd: 20, expectedSize: 4, deadline: '2026-11-28T23:00:00.000Z', threshold: 'majority', weekends: '0', duration: 90 };
   await expect(updatePoll(t.db, josh, next, NOW)).rejects.toMatchObject({ code: 'forbidden' });
   await expect(updatePoll(t.db, maya, { ...next, endDate: '2026-11-29' }, NOW)).rejects.toMatchObject({ code: 'invalid' });
   await expect(updatePoll(t.db, maya, { ...next, pollId: 'AAAAAAAAAAAA' }, NOW)).rejects.toMatchObject({ code: 'not_found' });
   await updatePoll(t.db, maya, next, NOW);
   const view = await pollView(t.db, josh, id);
-  expect(view).toMatchObject({ id, title: 'Pitch practice', size: 4, needed: 3, minutes: 45, threshold: 'majority', deadline: '2026-11-28T23:00:00.000Z', mine: { slots: [TUE7], draft: false }, counts: { [TUE7]: 1 } });
+  expect(view).toMatchObject({ id, title: 'Pitch practice', size: 4, needed: 3, minutes: 90, threshold: 'majority', deadline: '2026-11-28T23:00:00.000Z', mine: { slots: [TUE7], draft: false }, counts: { [TUE7]: 1 } });
   expect(view!.frame).toEqual({ startDate: '2026-11-30', endDate: '2026-12-02', hourStart: 19, hourEnd: 20, timezone: 'America/New_York', weekends: false });
 });
 
@@ -149,4 +149,22 @@ it('lists the polls a person made or answered, the newest first', async () => {
   expect((await myPolls(t.db, maya)).map(each => each.id)).toEqual([second, first]);
   expect(await myPolls(t.db, josh)).toMatchObject([{ id: first, title: 'Problem set night', status: 'open', ready: false, isOrganizer: false, organizerName: 'Maya', answered: 1, size: 7, mine: true, chosenSlot: null, durationMin: 60 }]);
   expect(await myPolls(t.db, dana)).toEqual([]);
+});
+
+it('paints a half-hour meeting in half hours, and carries answers when the length changes', async () => {
+  const maya = await who('Maya'), sam = await who('Sam'), id = await poll(maya, { duration: 30 });
+  expect((await pollView(t.db, maya, id))!.frame.step).toBe(30);
+  const HALF = '2026-12-02T00:30:00.000Z', LATER = '2026-12-02T01:30:00.000Z';
+  await saveAnswer(t.db, sam, { pollId: id, slots: [TUE7, HALF, LATER] }, NOW);
+  // Longer squares: 7 pm was painted in full, 8 pm only in its second half.
+  await updatePoll(t.db, maya, { ...BASE, pollId: id, duration: 60 }, NOW);
+  let view = await pollView(t.db, sam, id);
+  expect(view!.frame.step).toBeUndefined();
+  expect(view!.mine!.slots).toEqual([TUE7]);
+  await expect(saveAnswer(t.db, sam, { pollId: id, slots: [HALF] }, NOW)).rejects.toMatchObject({ code: 'invalid' });
+  // Shorter squares: the hour becomes its quarters.
+  await updatePoll(t.db, maya, { ...BASE, pollId: id, duration: 15 }, NOW);
+  view = await pollView(t.db, sam, id);
+  expect(view!.frame.step).toBe(15);
+  expect(view!.mine!.slots).toEqual([TUE7, '2026-12-02T00:15:00.000Z', HALF, '2026-12-02T00:45:00.000Z']);
 });

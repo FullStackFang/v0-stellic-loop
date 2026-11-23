@@ -92,8 +92,8 @@ export default async function WhenPage({ params, searchParams }: Props) {
       <Ticket tile={<Tile met={met} top={view.ready ? 'Ready' : 'So far'} big={`${top} of ${view.size}`} />} stub={<><Seats people={answered} size={view.size} />{count}</>}>
         <h1 className="xl">{met ? 'Enough can make it.' : view.ready ? 'Answers are in.' : 'Not everyone has answered.'} <em>Pick the time.</em></h1>
       </Ticket>
-      <Pick pollId={view.id} minutes={view.minutes} goesTo={new Set([view.organizer.personId, ...view.answered.map(each => each.personId).filter(each => guests.get(each)?.email !== null)]).size} as={view.organizer.name}
-        choices={view.best.map(slot => { const label = slotLabel(slot.at, zone), n = slot.people.length; return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, hour: label.hour, line: `${n} of ${view.size}${n >= view.needed ? ` · ${REACHED[view.threshold]}` : ''}`, people: slot.people.map(shown) }; })} />
+      <Pick pollId={view.id} minutes={view.minutes} step={view.frame.step} goesTo={new Set([view.organizer.personId, ...view.answered.map(each => each.personId).filter(each => guests.get(each)?.email !== null)]).size} as={view.organizer.name}
+        choices={view.best.map(slot => { const label = slotLabel(slot.at, zone), n = slot.people.length; return { at: slot.at, dow: label.dow, date: `${label.date} ${label.month}`, time: label.time, hour: label.hour, minute: label.minute, line: `${n} of ${view.size}${n >= view.needed ? ` · ${REACHED[view.threshold]}` : ''}`, people: slot.people.map(shown) }; })} />
       <div className="wn-acts wn-mid"><a className="cs-btn sm" href={`${here}?edit=1`}>Change my times</a><a className="cs-btn sm" href={`${here}/change`}>Edit the poll</a><Link className="cs-btn sm" href="/when">Your polls</Link></div>
     </main>;
   }

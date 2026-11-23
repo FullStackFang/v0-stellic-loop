@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useActionState, useEffect, useState, type ReactNode } from 'react';
 import { addDays, dayNum, dow, mon, windowDays } from '@/lib/days';
-import { DURATIONS, hourText, isWeekend, lengthText } from '@/lib/when/slots';
+import { DURATIONS, hourText, isWeekend, lengthText, stepOf } from '@/lib/when/slots';
 import { createPollAction, updatePollAction } from '../actions';
 import { Panel } from '../parts';
 
@@ -91,7 +91,7 @@ export function CreateForm({ signIn, first, today, head, edit, group }: { /** Th
     </div></Panel>
     <div className="wn-foot">{state?.error && <p className="wn-note bad" role="alert">{state.error}</p>}
     {signIn ? <a className="cs-btn go wn-big" href={signIn}>Sign in to create the link</a> : <button className="cs-btn go wn-big" type="submit" disabled={pending}>{edit ? pending ? 'Saving' : 'Save the changes' : pending ? 'Creating' : 'Create the link'}</button>}
-    <p className="wn-note">{edit ? 'The link stays the same. Times people painted outside the new days or hours are dropped.' : 'Anyone with the link can see it. Answering takes a quick sign-in.'}</p>
+    <p className="wn-note">{edit ? stepOf(Number(plan.duration)) > stepOf(Number(first.duration)) ? 'Longer means bigger squares: a time someone painted is kept only where they painted all of it.' : 'The link stays the same. Times people painted outside the new days or hours are dropped.' : 'Anyone with the link can see it. Answering takes a quick sign-in.'}</p>
     {!signIn && <div className="wn-acts wn-mid">{edit && <a className="cs-btn sm" href={`/when/${edit}`}>Back to the poll</a>}{group && <Link className="cs-btn sm" href={group.href}>Back to {group.name}</Link>}<Link className="cs-btn sm" href="/when">Your polls</Link></div>}</div>
   </form>;
 }

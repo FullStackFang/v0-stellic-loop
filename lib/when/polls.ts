@@ -3,7 +3,8 @@ import { z } from 'zod';
 import type { Db, Q } from '../db';
 import { isValidDay } from '../days';
 import { notify } from './notify';
-import { DURATIONS, bestSlots, needed, readiness, sizeOf, slotsOf, validZone, type Frame, type Threshold } from './slots';
+import { there } from '../campus/there';
+import { DURATIONS, bestSlots, needed, readiness, restep, sizeOf, slotsOf, stepOf, validZone, type Frame, type Threshold } from './slots';
 
 // Loopd When: making a poll, answering it, and reading it (docs/superpowers/specs/2026-11-22-loopd-when-design.md).
 
@@ -55,7 +56,7 @@ function sound(plan: Frame & { deadline: string }, now: Date): boolean {
   const days = (Date.parse(plan.endDate) - Date.parse(plan.startDate)) / DAY_MS, until = Date.parse(plan.deadline) - now.getTime();
   return days >= 0 && days <= 13 && plan.hourEnd > plan.hourStart && until > 0 && until <= 60 * DAY_MS && slotsOf(plan).length > 0;
 }
-const NewAnswer = z.object({ pollId: z.string().regex(POLL_ID), slots: z.array(instant).max(336) });
+const NewAnswer = z.object({ pollId: z.string().regex(POLL_ID), slots: z.array(instant).max(1344) });
 export function read<T>(schema: z.ZodType<T>, input: unknown): T {
   const parsed = schema.safeParse(input);
   if (!parsed.success) throw new WhenError('invalid');
@@ -79,6 +80,7 @@ export async function createPoll(db: Db, who: Who, input: unknown, now = new Dat
     const id = randomBytes(9).toString('base64url');
     await q.query(`insert into when_poll(id,series_id,organizer_id,title,start_date,end_date,hour_start,hour_end,timezone,expected_size,deadline,threshold,created_at,weekends,duration_min) values($1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [id, who.personId, poll.title, poll.startDate, poll.endDate, poll.hourStart, poll.hourEnd, poll.timezone, poll.expectedSize, poll.deadline, poll.threshold, now.toISOString(), poll.weekends, poll.duration]);
+    if (await steps(q)) await q.query('update when_poll set step_min=$2 where id=$1', [id, stepOf(poll.duration)]);
     if (group) await q.query('insert into when_poll_group(poll_id,org_id,loop_id) values($1,$2,$3)', [id, group.orgId, group.loopId]);
     await logEvent(q, 'poll_created', { id, seriesId: id }, { personId: who.personId });
     return { id };
@@ -86,14 +88,17 @@ export async function createPoll(db: Db, who: Who, input: unknown, now = new Dat
 }
 
 export type PollRow = { id: string; seriesId: string; organizerId: string; organizerName: string; title: string; startDate: string; endDate: string; hourStart: number; hourEnd: number; timezone: string;
-  expectedSize: number; deadline: string; threshold: Threshold; status: 'open' | 'sent'; readyAt: string | null; chosenSlot: string | null; note: string | null; weekends: boolean; durationMin: number };
+  expectedSize: number; deadline: string; threshold: Threshold; status: 'open' | 'sent'; readyAt: string | null; chosenSlot: string | null; note: string | null; weekends: boolean; durationMin: number; /** How many minutes one square is. */ stepMin: number };
+/** Whether polls can have squares smaller than an hour yet: the column is added by a migration run by hand (20261123020000_when_step.sql). */
+export const steps = (q: Q) => there(q, 'when_poll.step_min', `select exists(select 1 from information_schema.columns where table_schema='public' and table_name='when_poll' and column_name='step_min') as ok`);
 const POLL = `select w.id,w.series_id as "seriesId",w.organizer_id as "organizerId",o.name as "organizerName",w.title,w.start_date as "startDate",w.end_date as "endDate",w.hour_start as "hourStart",w.hour_end as "hourEnd",w.timezone,
   w.expected_size as "expectedSize",${iso('w.deadline')} as deadline,w.threshold,w.status,${iso('w.ready_at')} as "readyAt",${iso('w.chosen_slot')} as "chosenSlot",w.note,w.weekends,w.duration_min as "durationMin" from when_poll w join person o on o.id=w.organizer_id where w.id=$1`;
 /** The poll's row; `lock` holds it for the rest of the transaction, so two writers take turns. */
 export async function pollRow(q: Q, id: string, lock = false): Promise<PollRow | null> {
-  return (await q.query<PollRow>(POLL + (lock ? ' for update of w' : ''), [id])).rows[0] ?? null;
+  const sql = POLL.replace(' from when_poll w', `,${await steps(q) ? 'w.step_min' : '60'}::int as "stepMin" from when_poll w`);
+  return (await q.query<PollRow>(sql + (lock ? ' for update of w' : ''), [id])).rows[0] ?? null;
 }
-export const frameOf = (poll: PollRow): Frame => ({ startDate: poll.startDate, endDate: poll.endDate, hourStart: poll.hourStart, hourEnd: poll.hourEnd, timezone: poll.timezone, weekends: poll.weekends });
+export const frameOf = (poll: PollRow): Frame => ({ startDate: poll.startDate, endDate: poll.endDate, hourStart: poll.hourStart, hourEnd: poll.hourEnd, timezone: poll.timezone, weekends: poll.weekends, ...(poll.stepMin === 60 ? {} : { step: poll.stepMin }) });
 
 export type AnswerRow = Person & { slots: string[]; draft: boolean };
 /** Every answer to a poll, drafts too, in the order they were last saved. */
@@ -137,7 +142,8 @@ export async function saveAnswer(db: Db, who: Who, input: unknown, now = new Dat
 
 /**
  * Changes an open poll's plan. Only its organizer may, and only until the time is set. Its address stays the same.
- * Hours people painted that the new plan no longer has are dropped from their answers; the rest are kept.
+ * Hours people painted that the new plan no longer has are dropped from their answers; the rest are kept. When the
+ * length changes the size of the squares, what people painted is carried to the new ones (`restep`).
  */
 export async function updatePoll(db: Db, who: Who, input: unknown, now = new Date()): Promise<void> {
   const next = read(EditPoll, input);
@@ -146,12 +152,16 @@ export async function updatePoll(db: Db, who: Who, input: unknown, now = new Dat
     if (!poll) throw new WhenError('not_found');
     if (poll.organizerId !== who.personId) throw new WhenError('forbidden');
     if (poll.status !== 'open') throw new WhenError('sent');
-    const plan = { ...next, timezone: poll.timezone };
+    const fine = await steps(q), step = fine ? stepOf(next.duration) : 60, plan = { ...next, timezone: poll.timezone, step };
     if (!sound(plan, now)) throw new WhenError('invalid');
     await q.query('update when_poll set title=$2,start_date=$3,end_date=$4,hour_start=$5,hour_end=$6,expected_size=$7,deadline=$8,threshold=$9,weekends=$10,duration_min=$11 where id=$1',
       [poll.id, next.title, next.startDate, next.endDate, next.hourStart, next.hourEnd, next.expectedSize, next.deadline, next.threshold, next.weekends, next.duration]);
+    if (fine) await q.query('update when_poll set step_min=$2 where id=$1', [poll.id, step]);
     const has = slotsOf(plan).map(slot => slot.at);
-    await q.query('update when_answer a set slots=array(select s from unnest(a.slots) s where s=any($2::timestamptz[]) order by s) where a.poll_id=$1 and not a.slots <@ $2::timestamptz[]', [poll.id, has]);
+    for (const answer of await answersOf(q, poll.id)) {
+      const kept = restep(answer.slots, has, poll.stepMin, step);
+      if (kept.length !== answer.slots.length || kept.some((at, n) => at !== answer.slots[n])) await q.query('update when_answer set slots=$3::timestamptz[] where poll_id=$1 and person_id=$2', [poll.id, answer.personId, kept]);
+    }
     await markReady(q, (await pollRow(q, poll.id))!, now);
   });
 }

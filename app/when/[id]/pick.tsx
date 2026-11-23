@@ -5,13 +5,13 @@ import { DURATIONS, START_MINUTES, lengthText, spanText } from '@/lib/when/slots
 import { openedAction, sendPollAction } from '../actions';
 import { Panel, Stack, Tile, type Shown } from '../parts';
 
-export type Choice = { at: string; dow: string; date: string; time: string; /** The hour it starts in, on the poll's clock. */ hour: number; line: string; people: Shown[] };
+export type Choice = { at: string; dow: string; date: string; time: string; /** The hour it starts in, on the poll's clock, and how far into it the square starts. */ hour: number; minute?: number; line: string; people: Shown[] };
 
 /**
  * The organizer's part: the times that work best, one chosen; when in that hour it starts and how long it runs; a line
  * of their own; and send. Nothing leaves until they press.
  */
-export function Pick({ pollId, choices, goesTo, as, minutes = 60 }: { pollId: string; choices: Choice[]; /** How long the poll said it runs. */ minutes?: number; /** How many people the invite goes to. */ goesTo: number; /** The name it is sent under. */ as: string }) {
+export function Pick({ pollId, choices, goesTo, as, minutes = 60, step = 60 }: { pollId: string; choices: Choice[]; /** The minutes in one square: under an hour, the square already says when it starts. */ step?: number; /** How long the poll said it runs. */ minutes?: number; /** How many people the invite goes to. */ goesTo: number; /** The name it is sent under. */ as: string }) {
   const [state, submit, pending] = useActionState(sendPollAction, null);
   const [slot, setSlot] = useState(choices[0]?.at), [minute, setMinute] = useState(0), [duration, setDuration] = useState(minutes), chosen = choices.find(choice => choice.at === slot) ?? choices[0];
   return <form action={submit}>
@@ -22,10 +22,10 @@ export function Pick({ pollId, choices, goesTo, as, minutes = 60 }: { pollId: st
         <Tile top={choice.dow} big={choice.date} /><span><b>{choice.time}</b><small>{choice.line}</small></span><Stack people={choice.people} />
       </label>)}
     </div></Panel>
-    <Panel tab={<>The meeting <b>{chosen.dow} {chosen.date}, {spanText(chosen.hour * 60 + minute, duration)}</b></>}><div className="wn-fields">
-      <div className="wn-f wide" role="radiogroup" aria-label="Starts at"><span>Starts at</span><div className="wn-three" style={{ '--n': START_MINUTES.length } as React.CSSProperties}>
+    <Panel tab={<>The meeting <b>{chosen.dow} {chosen.date}, {spanText(chosen.hour * 60 + (chosen.minute ?? 0) + minute, duration)}</b></>}><div className="wn-fields">
+      {step === 60 && <div className="wn-f wide" role="radiogroup" aria-label="Starts at"><span>Starts at</span><div className="wn-three" style={{ '--n': START_MINUTES.length } as React.CSSProperties}>
         {START_MINUTES.map(each => <label key={each}><input type="radio" name="minute" value={each} checked={each === minute} onChange={() => setMinute(each)} />{chosen.hour % 12 || 12}:{String(each).padStart(2, '0')}</label>)}
-      </div></div>
+      </div></div>}
       <div className="wn-f wide" role="radiogroup" aria-label="Runs for"><span>Runs for</span><div className="wn-three" style={{ '--n': DURATIONS.length } as React.CSSProperties}>
         {DURATIONS.map(each => <label key={each}><input type="radio" name="duration" value={each} checked={each === duration} onChange={() => setDuration(each)} />{lengthText(each)}</label>)}
       </div></div>

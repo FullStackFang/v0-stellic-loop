@@ -4,8 +4,8 @@ import { addDays, windowDays } from '../days';
 
 export type Threshold = 'majority' | 'two_thirds' | 'everyone';
 /** The days and hours a poll covers. Dates are YYYY-MM-DD; `hourEnd` is the hour the last slot ends at, 1 to 24. */
-export type Frame = { startDate: string; endDate: string; hourStart: number; hourEnd: number; timezone: string; /** False leaves Saturdays and Sundays out of the poll. */ weekends?: boolean };
-export type Slot = { day: string; hour: number; at: string };
+export type Frame = { startDate: string; endDate: string; hourStart: number; hourEnd: number; timezone: string; /** False leaves Saturdays and Sundays out of the poll. */ weekends?: boolean; /** How many minutes one square is: 15, 30 or 60. An hour when left out. */ step?: number };
+export type Slot = { day: string; hour: number; /** How far into the hour the square starts. */ minute: number; at: string };
 export type Answer = { personId: string; slots: string[] };
 
 const HOUR = 3_600_000;
@@ -28,23 +28,34 @@ function offset(at: number, tz: string): number {
   return Date.UTC(y, m - 1, d, hour, minute) - Math.floor(at / 60_000) * 60_000;
 }
 /** The instant a day and hour on the zone's clock happen: the earlier one for an hour that happens twice, null for an hour that never does. */
-function instantOf(day: string, hour: number, tz: string): number | null {
-  const [y, m, d] = day.split('-').map(Number), naive = Date.UTC(y, m - 1, d, hour);
+function instantOf(day: string, hour: number, tz: string, minute = 0): number | null {
+  const [y, m, d] = day.split('-').map(Number), naive = Date.UTC(y, m - 1, d, hour, minute);
   // The offsets a day before and a day after are the two a clock change on this day can be between.
   const tries = [...new Set([naive - offset(naive - 24 * HOUR, tz), naive - offset(naive + 24 * HOUR, tz)])].sort((a, b) => a - b);
-  for (const at of tries) { const seen = wall(at, tz); if (seen.day === day && seen.hour === hour && seen.minute === 0) return at; }
+  for (const at of tries) { const seen = wall(at, tz); if (seen.day === day && seen.hour === hour && seen.minute === minute) return at; }
   return null;
 }
 
 export const isWeekend = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay() % 6 === 0;
-/** Every hour of every day of the poll, in day then hour order. */
+/** Every square of every day of the poll, in day then time order: one an hour, or one each half or quarter of an hour. */
 export function slotsOf(frame: Frame): Slot[] {
-  const slots: Slot[] = [];
-  for (const day of windowDays(frame.startDate, frame.endDate)) if (frame.weekends !== false || !isWeekend(day)) for (let hour = frame.hourStart; hour < frame.hourEnd; hour++) {
-    const at = instantOf(day, hour, frame.timezone);
-    if (at !== null) slots.push({ day, hour, at: new Date(at).toISOString() });
+  const slots: Slot[] = [], step = frame.step ?? 60;
+  for (const day of windowDays(frame.startDate, frame.endDate)) if (frame.weekends !== false || !isWeekend(day)) for (let hour = frame.hourStart; hour < frame.hourEnd; hour++) for (let minute = 0; minute < 60; minute += step) {
+    const at = instantOf(day, hour, frame.timezone, minute);
+    if (at !== null) slots.push({ day, hour, minute, at: new Date(at).toISOString() });
   }
   return slots;
+}
+/** The size of the squares a meeting of that length is painted in: its own length under an hour (a quarter for 45 minutes), else an hour. */
+export const stepOf = (duration: number) => duration >= 60 ? 60 : duration % 30 ? 15 : 30;
+/**
+ * What a person painted, carried from squares of `from` minutes to a plan whose squares, `slots`, are `to` minutes.
+ * To smaller squares, every part of a painted one is painted. To bigger ones, a square is painted only when all of it
+ * was. Times the plan no longer has are left out.
+ */
+export function restep(painted: string[], slots: string[], from: number, to: number): string[] {
+  const had = new Set(painted.map(at => Date.parse(at))), MIN = 60_000, parts = Array.from({ length: Math.max(from, to) / Math.min(from, to) }, (_, n) => n);
+  return slots.filter(at => { const then = Date.parse(at); return to <= from ? parts.some(n => had.has(then - n * to * MIN)) : parts.every(n => had.has(then + n * from * MIN)); });
 }
 
 /** How many people it takes. */
@@ -79,7 +90,7 @@ export function shiftWeek(at: string, tz: string): string {
 
 export const hourText = (hour: number, minute = 0) => `${hour % 12 || 12}${minute ? `:${String(minute).padStart(2, '0')}` : ''} ${hour % 24 < 12 ? 'am' : 'pm'}`;
 /** The minutes a meeting may start at within its hour, and how long it may run. */
-export const START_MINUTES = [0, 15, 30, 45], DURATIONS = [30, 45, 60, 90, 120];
+export const START_MINUTES = [0, 15, 30, 45], DURATIONS = [15, 30, 45, 60, 90, 120];
 /** "45 min", "1 hr", "1 hr 30": how long a meeting runs. */
 export const lengthText = (minutes: number) => minutes < 60 ? `${minutes} min` : minutes % 60 ? `${Math.floor(minutes / 60)} hr ${minutes % 60}` : `${minutes / 60} hr`;
 /** "7:15 to 8 pm": a start, in minutes after midnight on the poll's clock, and how long it runs. */
