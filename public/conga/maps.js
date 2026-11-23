@@ -102,16 +102,18 @@ function clearOf(standing, rings, text, x, y, size) {
   return [x, y];
 }
 const SPREAD = 60; // the least room between any two landmarks as drawn, so a line can pass between them
+// Ithaca's central campus stands close together; there the least room is wide enough for a long line to turn in, not just pass.
+const ITHACA_SPREAD = 200;
 const onLand = (rings, x, y) => rings.some(ring => { let hit = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit; } return hit; });
 /** Moves landmarks that crowd each other apart, a little at a time, until each has room round it; one that would leave the
  * ground stays put and its neighbour moves the whole way instead. Positions stay near the real ones. */
-function spread(things, rings) {
+function spread(things, rings, room) {
   const stand = things.filter(thing => SOLID.includes(thing.kind));
   for (let round = 0; round < 80; round++) {
     let moved = false;
     for (let i = 0; i < stand.length; i++) for (let j = i + 1; j < stand.length; j++) {
       const a = stand[i], b = stand[j], A = cover(a), B = cover(b);
-      const across = Math.min(A[2], B[2]) - Math.max(A[0], B[0]) + SPREAD, down = Math.min(A[3], B[3]) - Math.max(A[1], B[1]) + SPREAD;
+      const across = Math.min(A[2], B[2]) - Math.max(A[0], B[0]) + room, down = Math.min(A[3], B[3]) - Math.max(A[1], B[1]) + room;
       if (across <= 0 || down <= 0) continue;
       const [dx, dy] = across < down ? [Math.sign(b.x - a.x || 1) * across, 0] : [0, Math.sign((B[3] - A[3]) || 1) * down];
       const aFree = onLand(rings, a.x - dx / 2, a.y - dy / 2), bFree = onLand(rings, b.x + dx / 2, b.y + dy / 2);
@@ -128,7 +130,7 @@ const ROOM = 1.5; // every ground is drawn this much bigger than it first was, f
 export const shore = a => 1 + 0.09 * Math.sin(3 * a + 1) + 0.05 * Math.sin(5 * a + 2.3);
 
 /** `scale` is game units to a metre: it sets how much room the lines have, not the shape. */
-function ground(name, scale, sections, landmarks = [], more = () => ({})) {
+function ground(name, scale, sections, landmarks = [], more = () => ({}), room = SPREAD) {
   const all = sections.flatMap(section => section.ring), lons = all.map(p => p[0]), lats = all.map(p => p[1]);
   const lon0 = (Math.min(...lons) + Math.max(...lons)) / 2, lat0 = (Math.min(...lats) + Math.max(...lats)) / 2, east = 111320 * Math.cos(lat0 * Math.PI / 180) * scale, north = 110540 * scale;
   const at = ([lon, lat]) => [(lon - lon0) * east, (lat0 - lat) * north];
@@ -154,7 +156,7 @@ function ground(name, scale, sections, landmarks = [], more = () => ({})) {
     return corners.map(([px, py]) => [x + px * cos - py * sin, y + px * sin + py * cos]);
   };
   const extra = more(at, scale), rings = sections.map(section => section.ring.map(at));
-  spread(things, rings);
+  spread(things, rings, room);
   const trees = things.filter(thing => thing.kind === 'green').flatMap(treesOn);
   // Roosevelt Island's cherry trees: a row just in from the west shore.
   if (extra.axis != null) {
@@ -212,7 +214,7 @@ export const MAPS = {
     ['hall', 'Becker House', 42.44824, -76.48947, 97, 92],
     ['hall', 'CTB', 42.44225, -76.48547, 40, 40]],
     // The bus climbs slowly from the Commons, lets its riders off by Statler, and rolls back down empty.
-    at => ({ shuttles: [{ name: 'Bus', kind: 'bus', stop: 'Statler', from: at([-76.49790, 42.43960]), to: at([-76.48400, 42.44602]), off: at([-76.48340, 42.44650]), riders: 18, ride: 36 * ROOM, stay: 5, away: 5 }] })),
+    at => ({ shuttles: [{ name: 'Bus', kind: 'bus', stop: 'Statler', from: at([-76.49790, 42.43960]), to: at([-76.48400, 42.44602]), off: at([-76.48340, 42.44650]), riders: 18, ride: 36 * ROOM, stay: 5, away: 5 }] }), ITHACA_SPREAD),
   // One section, tip to tip, so it carries no section name.
   'cornell-tech': ground('Roosevelt Island', 2 * ROOM, [island('', 'abcdefgh', [-73.9552, 40.7562])], [
     // From the Manhattan end, over the island beside the tram station, and on the same line to Queens.
