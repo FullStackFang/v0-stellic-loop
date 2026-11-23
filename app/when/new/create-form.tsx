@@ -18,7 +18,7 @@ const Arrow = ({ d }: { d: string }) => <svg viewBox="0 0 16 16" fill="none" str
 
 /**
  * The plan for a new poll (public/demo/mockups-when-days.html). The days and the last day to answer are picked on one
- * calendar: a pill says which of the two a tap sets. What is typed is kept in this tab, so signing in on the way does not
+ * calendar: a pill says which of the two a tap sets, and says what to tap. The Sat Sun header leaves weekends out or in (direction A). What is typed is kept in this tab, so signing in on the way does not
  * lose it. The times are on the clock of whoever makes the poll: their browser says which.
  *
  * With `edit` it changes that poll in place of making one: the same fields, filled in, and nothing kept in the tab.
@@ -41,7 +41,7 @@ export function CreateForm({ signIn, first, today, head, edit, group }: { /** Th
   const closed = (day: string) => day < today || (mode === 'by' ? day > later(today, addDays(plan.startDate, -1)) : plan.weekends === '0' && isWeekend(day));
   const tap = (day: string) => {
     if (closed(day)) return;
-    if (mode === 'by') return change({ by: day });
+    if (mode === 'by') { setMode('days'); return change({ by: day }); }
     // The first tap starts the run of days; the second ends it, if it is later and within two weeks.
     const ends = half && day >= plan.startDate && windowDays(plan.startDate, day).length <= 14, startDate = ends ? plan.startDate : day;
     setHalf(!ends);
@@ -55,7 +55,8 @@ export function CreateForm({ signIn, first, today, head, edit, group }: { /** Th
     if (!edit) try { sessionStorage.removeItem(KEPT); } catch {}
     submit(data);
   };
-  const days = windowDays(from, addDays(from, WEEKS * 7 - 1)), last = addDays(from, STEP - 1);
+  const days = windowDays(from, addDays(from, WEEKS * 7 - 1));
+  const range = plan.startDate === plan.endDate ? full(plan.startDate) : `${mon(plan.startDate) === mon(plan.endDate) ? dayNum(plan.startDate) : short(plan.startDate)} to ${short(plan.endDate)}`;
   const look = (day: string) => day === plan.by ? ' by' : day === plan.startDate || day === plan.endDate ? ' end' : day > plan.startDate && day < plan.endDate ? ' in' : '';
   return <form action={send}>
     <input type="hidden" name="startDate" value={plan.startDate} /><input type="hidden" name="endDate" value={plan.endDate} /><input type="hidden" name="weekends" value={plan.weekends} />{edit && <input type="hidden" name="pollId" value={edit} />}{group && <input type="hidden" name="group" value={group.ref} />}
@@ -72,22 +73,20 @@ export function CreateForm({ signIn, first, today, head, edit, group }: { /** Th
       </div></div>
     </div></Panel>
     <Panel tab="The days"><div className="wn-fields">
-      <div className="wn-f wn-half"><span role="status">{mode === 'by' ? 'Tap the last day to answer' : half ? 'Now tap the last day' : 'Tap the first day, then the last'}</span>
+      <div className="wn-line">
         <div className="wn-modes">
-          <button type="button" aria-pressed={mode === 'days'} onClick={() => { setMode('days'); setHalf(false); }}><small>The days</small><b>{plan.startDate === plan.endDate ? full(plan.startDate) : `${mon(plan.startDate) === mon(plan.endDate) ? dayNum(plan.startDate) : short(plan.startDate)} to ${short(plan.endDate)}`}</b></button>
-          <button type="button" aria-pressed={mode === 'by'} onClick={() => { setMode('by'); setHalf(false); }}><small>Answer by</small><b>{full(plan.by)}</b></button>
-        </div></div>
-        <div className="wn-cal">
-          <div className="wn-cal-head"><span className="wn-cal-month">{mon(from) === mon(last) ? mon(from) : `${mon(from)} to ${mon(last)}`} {last.slice(0, 4)}</span>
-            <button type="button" className="wn-cal-nav" aria-label="Earlier" disabled={from <= monday(today)} onClick={() => setFrom(later(monday(today), addDays(from, -STEP)))}><Arrow d={LEFT} /></button>
-            <button type="button" className="wn-cal-nav" aria-label="Later" disabled={from > addDays(today, 60)} onClick={() => setFrom(addDays(from, STEP))}><Arrow d={RIGHT} /></button></div>
-          <div className="wn-cal-wk" aria-hidden="true">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(name => <span key={name}>{name}</span>)}</div>
-          <div className="wn-cal-days">{days.map((day, at) => <button key={day} type="button" className={`wn-cal-d${look(day)}`} disabled={closed(day)} aria-label={full(day)} aria-pressed={look(day) !== ''} onClick={() => tap(day)}>
-            {(at === 0 || dayNum(day) === 1) && <small>{mon(day)}</small>}{dayNum(day)}</button>)}</div>
+          <button type="button" aria-label={`The days: ${range}`} aria-pressed={mode === 'days'} onClick={() => { setMode('days'); setHalf(false); }}><small role={mode === 'days' ? 'status' : undefined}>{mode !== 'days' ? 'The days' : half ? 'Now tap the last day' : 'Tap first day, then last'}</small><b>{range}</b></button>
+          <button type="button" className="by" aria-label={`Answer by ${full(plan.by)}`} aria-pressed={mode === 'by'} onClick={() => { setMode('by'); setHalf(false); }}><small role={mode === 'by' ? 'status' : undefined}>{mode === 'by' ? 'Tap the last day to answer' : 'Answer by'}</small><b>{full(plan.by)}</b></button>
         </div>
-      <div className="wn-f wn-half" role="radiogroup" aria-label="Weekends"><span>Weekends</span><div className="wn-three" style={{ '--n': 2 } as React.CSSProperties}>
-        {[['0', 'Leave them out'], ['1', 'Include them']].map(([value, label]) => <label key={value}><input type="radio" value={value} checked={plan.weekends === value} onChange={set('weekends')} />{label}</label>)}
-      </div></div>
+        <button type="button" className="wn-cal-nav" aria-label="Earlier" disabled={from <= monday(today)} onClick={() => setFrom(later(monday(today), addDays(from, -STEP)))}><Arrow d={LEFT} /></button>
+        <button type="button" className="wn-cal-nav" aria-label="Later" disabled={from > addDays(today, 60)} onClick={() => setFrom(addDays(from, STEP))}><Arrow d={RIGHT} /></button>
+      </div>
+      <div className="wn-cal">
+        <div className="wn-cal-wk tap">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map(name => <span key={name} aria-hidden="true">{name}</span>)}
+          <button type="button" className="wn-cal-we" aria-label={`Weekends: ${plan.weekends === '1' ? 'in the poll' : 'left out'}`} aria-pressed={plan.weekends === '1'} onClick={() => change({ weekends: plan.weekends === '1' ? '0' : '1' })}>Sat Sun<i>{plan.weekends === '1' ? 'in' : 'out'}</i></button></div>
+        <div className="wn-cal-days">{days.map((day, at) => <button key={day} type="button" className={`wn-cal-d${look(day)}`} disabled={closed(day)} aria-label={full(day)} aria-pressed={look(day) !== ''} onClick={() => tap(day)}>
+          {(at === 0 || dayNum(day) === 1) && <small>{mon(day)}</small>}{dayNum(day)}</button>)}</div>
+      </div>
     </div></Panel>
     <div className="wn-foot">{state?.error && <p className="wn-note bad" role="alert">{state.error}</p>}
     {signIn ? <a className="cs-btn go wn-big" href={signIn}>Sign in to create the link</a> : <button className="cs-btn go wn-big" type="submit" disabled={pending}>{edit ? pending ? 'Saving' : 'Save the changes' : pending ? 'Creating' : 'Create the link'}</button>}

@@ -29,7 +29,7 @@ it('picks the days and the last day to answer on one calendar, with weekends lef
   fireEvent.click(day('Mon 30 Nov')); fireEvent.click(day('Wed 16 Dec'));
   expect([field('startDate'), field('endDate')]).toEqual(['2026-12-16', '2026-12-16']);
   fireEvent.click(day('Mon 30 Nov')); fireEvent.click(day('Fri 4 Dec'));
-  fireEvent.click(screen.getByRole('radio', { name: 'Include them' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Weekends: left out' }));
   expect(day('Sat 28 Nov')).toBeEnabled();
   expect(field('weekends')).toBe('1');
   fireEvent.click(screen.getByRole('button', { name: /Answer by/ }));

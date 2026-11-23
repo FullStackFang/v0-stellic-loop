@@ -185,6 +185,13 @@ button.wn-cell { cursor: pointer; }
 .wn-modes button:focus-visible, .wn-cal button:focus-visible, .wn-cal-nav:focus-visible, .wn-picks button:focus-visible { outline: 2px solid var(--cs-action); outline-offset: 2px; }
 
 /* the calendar: weeks running on from this one, never taller or shorter than it starts */
+/* the days panel, direction A (public/demo/mockups-when-days.html): one line above the calendar holds the two pills and the arrows; the Sat Sun header is the weekends switch */
+.wn-line { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; min-width: 0; } .wn-line .wn-modes { flex: 1; min-width: 0; padding-top: 0; } .cs .wn-line .wn-cal-nav, .wn-line .wn-cal-nav { height: 50px; width: 40px; }
+.cs .wn-modes button.by[aria-pressed=true], .wn-modes button.by[aria-pressed=true] { background: var(--cs-action); color: var(--cs-paper); box-shadow: 3px 3px 0 var(--cs-ink); } .wn-modes button.by[aria-pressed=true] b { color: var(--cs-paper); }
+.wn-cal-wk.tap { padding: 0; background: none; } .wn-cal-wk.tap span { display: grid; place-items: center; height: 26px; border-radius: 99px; background: var(--cs-ink); color: var(--cs-on-ink); }
+.cs .wn-cal-we, .wn-cal-we { grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 6px; height: 26px; padding: 0; border: 0; border-radius: 99px; font: inherit; font-size: 11.5px; font-weight: 680; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); cursor: pointer; }
+.cs .wn-cal-we[aria-pressed=true], .wn-cal-we[aria-pressed=true] { background: var(--cs-ink); color: var(--cs-field); box-shadow: none; } .wn-cal-we i { font-style: normal; font-weight: 560; opacity: .75; }
+@media (min-width: 900px) { .wn-make .wn-fields:has(> .wn-line) { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; gap: 12px 10px; } .wn-make .wn-fields > .wn-cal { grid-template-rows: auto minmax(0, 1fr); } .wn-make .wn-cal-days { grid-auto-rows: minmax(32px, 1fr); } .wn.wn-make .wn-cal-days .wn-cal-d { height: auto; } }
 .wn-cal { display: grid; gap: 6px; padding-top: 10px; }
 .wn-fields > .wn-cal { grid-column: 1 / -1; padding-top: 0; margin-top: -10px; }
 .wn-foot { display: contents; }
