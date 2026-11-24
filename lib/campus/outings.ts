@@ -2,7 +2,7 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import type { Db, Q } from '../db';
 import { CampusError } from './errors';
-import { knownTo } from './knows';
+import { knownTo, timesOut } from './knows';
 import { metres } from './sections';
 import { checkInOpen, endOf } from './time';
 
@@ -28,17 +28,21 @@ export async function outingsOn(q: Q, listingIds: readonly string[]): Promise<Ou
 
 /**
  * The outing of one event that a person is in, or would join by pressing "I'm in": the one they were invited to, else
- * the plan's open outing, else the one holding the most people they know. Null when they would start a new one.
+ * the plan's open outing, else the one whose people they have been out with most: each person they know scores one
+ * plus the times the two have been out together. A tie goes to more people they know, then to the older outing.
+ * Null when they would start a new one.
  */
-export function pickOuting(outings: readonly Outing[], personId: string | null, known: { has(id: string): boolean }, invitedTo: { has(id: string): boolean }): { outing: Outing | null; mine: boolean } {
+export function pickOuting(outings: readonly Outing[], personId: string | null, known: { has(id: string): boolean }, invitedTo: { has(id: string): boolean }, times: ReadonlyMap<string, number> = new Map()): { outing: Outing | null; mine: boolean } {
   const mine = personId ? outings.find(outing => outing.members.some(member => member.personId === personId)) : undefined;
   if (mine) return { outing: mine, mine: true };
   const invited = outings.find(outing => invitedTo.has(outing.id)), open = outings.find(outing => outing.open);
   if (invited || open) return { outing: invited ?? open!, mine: false };
-  let best: Outing | null = null, most = 0;
+  // Outings come oldest first, so keeping the first of equals gives the older one.
+  let best: Outing | null = null, top = 0, most = 0;
   for (const outing of outings) {
-    const count = outing.members.filter(member => known.has(member.personId)).length;
-    if (count > most) { best = outing; most = count; }
+    const people = outing.members.filter(member => known.has(member.personId));
+    const score = people.reduce((sum, member) => sum + 1 + (times.get(member.personId) ?? 0), 0);
+    if (score > top || (score === top && people.length > most)) { best = outing; top = score; most = people.length; }
   }
   return { outing: best, mine: false };
 }
@@ -67,7 +71,7 @@ export async function imIn(db: Db, personId: string, listingId: string, now: Dat
   return db.tx(async q => {
     const listing = await hold(q, listingId, now), outings = await outingsOn(q, [listingId]);
     const { rows: invites } = await q.query<{ id: string }>('select outing_id as id from campus_invite where invitee_id=$1 and outing_id=any($2::uuid[])', [personId, outings.map(outing => outing.id)]);
-    const picked = pickOuting(outings, personId, await knownTo(q, personId), new Set(invites.map(row => row.id)));
+    const picked = pickOuting(outings, personId, await knownTo(q, personId), new Set(invites.map(row => row.id)), await timesOut(q, personId));
     if (picked.mine) return { token: picked.outing!.token, joined: false };
     const outing = picked.outing ?? (await q.query<{ id: string; listingId: string; token: string }>('insert into campus_outing(listing_id,token,started_by) values($1,$2,$3) returning id,listing_id as "listingId",token', [listingId, newToken(), personId])).rows[0];
     await add(q, outing, personId, listing.origin === 'feed');
@@ -149,13 +153,14 @@ export async function checkIn(db: Db, personId: string, listingId: string, now: 
 
 /**
  * Who to suggest in "Invite people": up to four people the person knows who are not in their outing, each with how
- * they are known and whether they have been invited. People already invited come first, so an invite stays in view.
+ * they are known and whether they have been invited. People already invited come first, so an invite stays in view;
+ * then the people they have been out with most.
  */
-export async function inviteChoices(q: Q, personId: string, outing: Outing, known: ReadonlyMap<string, string>): Promise<{ personId: string; why: string; invited: boolean }[]> {
+export async function inviteChoices(q: Q, personId: string, outing: Outing, known: ReadonlyMap<string, string>, times: ReadonlyMap<string, number> = new Map()): Promise<{ personId: string; why: string; invited: boolean }[]> {
   const { rows } = await q.query<{ id: string }>('select invitee_id as id from campus_invite where outing_id=$1 and inviter_id=$2', [outing.id, personId]);
-  const invited = new Set(rows.map(row => row.id)), inside = new Set(outing.members.map(member => member.personId));
+  const invited = new Set(rows.map(row => row.id)), inside = new Set(outing.members.map(member => member.personId)), out = (id: string) => times.get(id) ?? 0;
   return [...known].filter(([id]) => !inside.has(id)).map(([id, why]) => ({ personId: id, why, invited: invited.has(id) }))
-    .sort((a, b) => Number(b.invited) - Number(a.invited) || a.why.localeCompare(b.why) || a.personId.localeCompare(b.personId)).slice(0, 4);
+    .sort((a, b) => Number(b.invited) - Number(a.invited) || out(b.personId) - out(a.personId) || a.why.localeCompare(b.why) || a.personId.localeCompare(b.personId)).slice(0, 4);
 }
 
 async function myOuting(q: Q, personId: string, listingId: string): Promise<string> {

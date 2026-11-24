@@ -2,7 +2,7 @@
 import {afterAll,beforeAll,beforeEach,describe,expect,it} from 'vitest';
 import {makePerson,openTestDb,type TestDb} from '@/test/db';
 import {CampusError} from '@/lib/campus/errors';
-import {knownTo} from '@/lib/campus/knows';
+import {knownTo,timesOut} from '@/lib/campus/knows';
 import {findCampus,weekListings} from '@/lib/campus/listings';
 import {addFeed,addHandListing} from '@/lib/campus/manage';
 import {savePlace} from '@/lib/campus/places';
@@ -26,6 +26,13 @@ async function group(name:string,...people:string[]) {
  for(const id of people)await t.db.query('insert into emba_membership(org_id,person_id) values($1,$2)',[org.id,id]);
  return org.id;
 }
+/** An outing on a past event, with the people in it; those in `here` (all, by default) checked in. */
+async function wentOut(people:string[],here:string[]=people) {
+ const listing=await event({startsAt:hours(-30),endsAt:hours(-28)});
+ const {rows:[outing]}=await t.db.query<{id:string}>('insert into campus_outing(listing_id,token) values($1,$2) returning id',[listing,`past${crypto.randomUUID().replace(/-/g,'')}`]);
+ for(const id of people)await t.db.query('insert into campus_outing_member(outing_id,listing_id,person_id,checked_in_at) values($1,$2,$3,$4)',[outing.id,listing,id,here.includes(id)?hours(-29).toISOString():null]);
+}
+const timesWith=async(a:string,b:string,n:number)=>{for(let i=0;i<n;i++)await wentOut([a,b]);};
 const membersOf=async(listingId:string)=>(await outingsOn(t.db,[listingId])).map(outing=>outing.members.map(member=>member.personId).sort());
 const refusal=(run:Promise<unknown>)=>expect(run).rejects.toBeInstanceOf(CampusError);
 
@@ -52,7 +59,45 @@ describe('who a person knows',()=>{
  });
 });
 
+describe('times out together',()=>{
+ it('counts two outings together as 2, both ways',async()=>{
+  const [a,d]=[await person('Ana'),await person('Dev')];
+  await timesWith(a,d,2);
+  expect((await timesOut(t.db,a)).get(d)).toBe(2);
+  expect((await timesOut(t.db,d)).get(a)).toBe(2);
+ });
+ it('does not count an outing where only one of the two checked in',async()=>{
+  const [a,b]=[await person('Ana'),await person('Bea')];
+  await wentOut([a,b],[a]);
+  expect((await timesOut(t.db,a)).get(b)??0).toBe(0);
+  expect((await timesOut(t.db,b)).get(a)??0).toBe(0);
+ });
+ it('counts one outing once per pair, however many were in it',async()=>{
+  const people=[await person('Ana'),await person('Ben'),await person('Cy'),await person('Di'),await person('Eve')];
+  await wentOut(people);
+  const [a,...rest]=people,times=await timesOut(t.db,a);
+  expect(times.size).toBe(4);
+  for(const id of rest)expect(times.get(id)).toBe(1);
+ });
+});
+
 describe("saying I'm in",()=>{
+ it('joins the outing holding a regular over one holding three group mates',async()=>{
+  const [a,b,k,l,d]=[await person('Ana'),await person('Bea'),await person('Kai'),await person('Lu'),await person('Dev')],listing=await event();
+  await group('Team 4',a,b,k,l);await timesWith(a,d,6);
+  const mates=await imIn(t.db,b,listing,NOW);await imIn(t.db,k,listing,NOW);await imIn(t.db,l,listing,NOW);
+  const regular=await imIn(t.db,d,listing,NOW);
+  expect(regular.token).not.toBe(mates.token);
+  expect((await imIn(t.db,a,listing,NOW)).token).toBe(regular.token);
+ });
+ it('on an even score, joins the one holding more people they know',async()=>{
+  // Dev scores 1 + 1; Bea and Kai score 1 each.
+  const [a,b,k,d]=[await person('Ana'),await person('Bea'),await person('Kai'),await person('Dev')],listing=await event();
+  await group('Team 4',a,b,k);await timesWith(a,d,1);
+  const regular=await imIn(t.db,d,listing,NOW),mates=await imIn(t.db,b,listing,NOW);await imIn(t.db,k,listing,NOW);
+  expect(regular.token).not.toBe(mates.token);
+  expect((await imIn(t.db,a,listing,NOW)).token).toBe(mates.token);
+ });
  it('starts a new outing when nobody they know is going',async()=>{
   const [a,stranger]=[await person('Ana'),await person('Sam')],listing=await event();
   await imIn(t.db,stranger,listing,NOW);
@@ -207,9 +252,24 @@ describe('inviting',()=>{
   const me=await person('Ana'),friends=[await person('Ben'),await person('Cy'),await person('Di'),await person('Eve'),await person('Fay')],stranger=await person('Sam'),listing=await event();
   await group('Team 4',me,...friends);
   const {token}=await imIn(t.db,me,listing,NOW);
-  const choices=async()=>{const [outing]=(await outingsOn(t.db,[listing])).filter(o=>o.token===token);return inviteChoices(t.db,me,outing,await knownTo(t.db,me));};
+  const choices=async()=>{const [outing]=(await outingsOn(t.db,[listing])).filter(o=>o.token===token);return inviteChoices(t.db,me,outing,await knownTo(t.db,me),await timesOut(t.db,me));};
   return {me,friends,stranger,listing,token,choices};
  };
+ const mineNow=async(me:string)=>{const listing=await event();const {token}=await imIn(t.db,me,listing,NOW);const [outing]=(await outingsOn(t.db,[listing])).filter(o=>o.token===token);
+  return async()=>(await inviteChoices(t.db,me,outing,await knownTo(t.db,me),await timesOut(t.db,me))).map(choice=>choice.personId);};
+ it('lists the people they have been out with most first, then group mates',async()=>{
+  const [a,b,k,d,n]=[await person('Ana'),await person('Bea'),await person('Kai'),await person('Dev'),await person('Noor')];
+  await group('Team 4',a,b,k);await timesWith(a,d,6);await timesWith(a,n,3);
+  const shown=await (await mineNow(a))();
+  expect(shown.slice(0,2)).toEqual([d,n]);
+  expect(shown.slice(2).sort()).toEqual([b,k].sort());
+ });
+ it('with six people, shows the four they have been out with most',async()=>{
+  const [a,b,k,...out]=[await person('Ana'),await person('Bea'),await person('Kai'),await person('Cy'),await person('Di'),await person('Eve'),await person('Fay')];
+  await group('Team 4',a,b,k);
+  for(const [i,id] of out.entries())await timesWith(a,id,i+1);
+  expect(await (await mineNow(a))()).toEqual([...out].reverse());
+ });
  it('suggests up to four people they know who are not in, with how they are known',async()=>{
   const {friends,stranger,token,choices}=await setUp();
   await joinByToken(t.db,friends[0],token,NOW);await joinByToken(t.db,stranger,token,NOW);

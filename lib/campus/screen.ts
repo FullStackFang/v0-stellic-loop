@@ -1,6 +1,6 @@
 import 'server-only';
 import type { Db } from '../db';
-import { knownTo } from './knows';
+import { knownTo, timesOut } from './knows';
 import { LEVELS, levelOf, textFor } from './levels';
 import { addedSchools } from './linkedin';
 import { ensureDealDays } from './deals';
@@ -72,8 +72,10 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   for (const outing of outings) on.set(outing.listingId, [...(on.get(outing.listingId) ?? []), outing]);
 
   const openIds = listings.filter(listing => listing.timeOpen).map(listing => listing.id);
-  const [known, invited, groupUses, used, timePicks] = await Promise.all([
+  const [known, times, invited, groupUses, used, timePicks] = await Promise.all([
     me ? knownTo(db, me) : new Map<string, string>(),
+    // How many times the viewer has been out with each person: it orders things and is never shown (openspec campus-going-together).
+    me ? timesOut(db, me) : new Map<string, number>(),
     me && outingIds.length ? db.query<{ id: string }>('select outing_id as id from campus_invite where invitee_id=$1 and outing_id=any($2::uuid[])', [me, outingIds]).then(result => new Set(result.rows.map(row => row.id))) : new Set<string>(),
     outingIds.length ? db.query<{ rewardId: string; outingId: string; usedAt: string }>('select reward_id as "rewardId",outing_id as "outingId",used_at as "usedAt" from campus_reward_use where outing_id=any($1::uuid[])', [outingIds]).then(result => result.rows) : [],
     me ? db.query<{ id: string; usedAt: string }>('select reward_id as id,used_at as "usedAt" from campus_reward_use where person_id=$1 and outing_id is null', [me]).then(result => new Map(result.rows.map(row => [row.id, row.usedAt]))) : new Map<string, string>(),
@@ -84,7 +86,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   const mineOn = new Map<string, Outing>();
   if (me) for (const outing of outings) if (outing.members.some(member => member.personId === me)) mineOn.set(outing.listingId, outing);
   const choices = new Map<string, Awaited<ReturnType<typeof inviteChoices>>>();
-  for (const outing of mineOn.values()) choices.set(outing.id, await inviteChoices(db, me!, outing, known));
+  for (const outing of mineOn.values()) choices.set(outing.id, await inviteChoices(db, me!, outing, known, times));
 
   // The only people whose names are read: the viewer, people they know, the people in their own outings, and who posted a plan.
   const shown = new Set<string>();
@@ -111,14 +113,16 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   let live: Live | null = null;
   const tickets = listings.map((listing): Ticket => {
     const here = on.get(listing.id) ?? [], feed = listing.origin === 'feed', open = !listing.timeOpen && checkInOpen(listing.startsAt, listing.endsAt, now);
-    const picked = pickOuting(here, me, known, invited), mine = picked.mine ? picked.outing! : null;
+    const picked = pickOuting(here, me, known, invited, times), mine = picked.mine ? picked.outing! : null;
     const linked = link?.listingId === listing.id ? here.find(outing => outing.id === link.outingId) : undefined;
     const joinToken = linked && linked !== mine ? link!.token : null;
     // The outing whose seats the ticket shows: the viewer's, else the link's, else the one "I'm in" would join.
     // A signed-out visitor is shown the plan's own outing, or the fullest one, as taken seats with no faces.
     const target = mine ?? linked ?? picked.outing ?? (me ? null : here.find(outing => outing.open) ?? [...here].sort((a, b) => b.members.length - a.members.length)[0] ?? null);
     const inMine = !!mine && target === mine, self = mine?.members.find(member => member.personId === me), iAmHere = !!self?.here;
-    const knownGoing = [...new Map(here.flatMap(outing => outing.members).filter(member => member.personId !== me && known.has(member.personId)).map(member => [member.personId, member])).values()];
+    const knownGoing = [...new Map(here.flatMap(outing => outing.members).filter(member => member.personId !== me && known.has(member.personId)).map(member => [member.personId, member])).values()]
+      .sort((a, b) => (times.get(b.personId) ?? 0) - (times.get(a.personId) ?? 0));
+    const regular = knownGoing.some(member => (times.get(member.personId) ?? 0) >= 2);
     const faces = (inMine ? mine!.members.filter(member => member.personId !== me) : knownGoing).map(member => face(member.personId, { here: member.here }));
 
     let found: { reward: Reward; text: string } | null = groupRewardFor(rewards, listing, level);
@@ -199,7 +203,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
       by: listing.origin === 'member' ? (me && listing.postedBy ? `Posted by ${names.get(listing.postedBy)?.first ?? 'Someone'}` : null) : listing.host,
       place: listing.placeText ?? listing.place?.name ?? null, about: listing.about, link: listing.link, tags: listing.tags, map: listing.place,
       words: [...listing.words, ...(listing.timeOpen ? [] : timeWords(tz, listing.startsAt, now)), ...listing.tags],
-      pull: (mine || picked.outing && invited.has(picked.outing.id) ? 4 : 0) + Math.min(knownGoing.length, 2) + (stub.kind === 'none' ? 0 : 2) + (short ? 2 : 0) + (today ? 1 : 0),
+      pull: (mine || picked.outing && invited.has(picked.outing.id) ? 4 : 0) + Math.min(knownGoing.length, 2) + (regular ? 1 : 0) + (stub.kind === 'none' ? 0 : 2) + (short ? 2 : 0) + (today ? 1 : 0),
       going: listing.going, stub, how,
       known: knownGoing.map(member => ({ ...face(member.personId, { here: member.here }), why: known.get(member.personId)! })),
       mine: mine && self ? {

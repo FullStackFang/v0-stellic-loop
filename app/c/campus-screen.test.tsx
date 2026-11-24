@@ -776,6 +776,47 @@ describe('search on the screen', () => {
   });
 });
 
+// Spec: openspec/changes/campus-going-together. The times two people have been out together order things and are never shown.
+describe('people the viewer goes out with', () => {
+  /** Outings on an event three days ago that everyone given checked in on. */
+  async function wentOut(times: number, ...people: Principal[]) {
+    for (let i = 0; i < times; i++) {
+      const listing = (await addHandListing(t.db, { campusId: cornell.id, title: 'Long ago', startsAt: soon(-72) })).id;
+      const { rows: [outing] } = await t.db.query<{ id: string }>('insert into campus_outing(listing_id,token) values($1,$2) returning id', [listing, `past${crypto.randomUUID().replace(/-/g, '')}`]);
+      for (const each of people) await t.db.query("insert into campus_outing_member(outing_id,listing_id,person_id,checked_in_at) values($1,$2,$3,now()-interval '72 hours')", [outing.id, listing, each.personId]);
+    }
+  }
+  const crew = async () => {
+    const [ana, bea, dev] = [await person('Ana Lopez'), await person('Bea Moss'), await person('Dev Rao')];
+    await group('Team 4', ana, bea); await wentOut(6, ana, dev);
+    return { ana, bea, dev };
+  };
+  it('puts the faces of the people the viewer has been out with most first', async () => {
+    const { ana, bea, dev } = await crew(), quiz = await event('Quiz night', { hours: 4 });
+    const { token } = await imIn(t.db, bea.personId, quiz); await joinByToken(t.db, dev.personId, token);
+    const { model } = await show(as(ana));
+    expect(model.tickets.find(ticket => ticket.id === quiz)!.known.map(each => each.first)).toEqual(['Dev', 'Bea']);
+    const shown = screen.getAllByRole('img').map(img => img.getAttribute('alt')).filter(name => name === 'Dev' || name === 'Bea');
+    expect(shown.slice(0, 2)).toEqual(['Dev', 'Bea']);
+  });
+  it('gives more pull to an event a regular is going to than to its twin with a group mate', async () => {
+    const { ana, bea, dev } = await crew(), withDev = await event('Quiz night', { hours: 4 }), withBea = await event('Quiz night', { hours: 4 });
+    await imIn(t.db, dev.personId, withDev); await imIn(t.db, bea.personId, withBea);
+    const { model } = await show(as(ana)), pull = (id: string) => model.tickets.find(ticket => ticket.id === id)!.pull;
+    expect(pull(withDev)).toBe(pull(withBea) + 1);
+  });
+  it('shows no number and no new words, on the ticket or in "Invite people"', async () => {
+    const { ana, bea, dev } = await crew(), quiz = await event('Quiz night', { hours: 4 }), other = await event('Pub trivia', { hours: 5 });
+    await imIn(t.db, ana.personId, quiz); await imIn(t.db, dev.personId, other); await imIn(t.db, bea.personId, other);
+    const { model, container } = await show(as(ana));
+    expect(model.tickets.find(ticket => ticket.id === quiz)!.mine!.choices.map(choice => [choice.first, choice.why])).toEqual([['Dev', 'Went out with you'], ['Bea', 'In Team 4']]);
+    expect(container.textContent).toContain('Dev and Bea are going');
+    fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
+    expect(container.textContent).toContain('Went out with you');
+    expect(container.textContent).not.toMatch(/\b6\s*(times|x)\b|times out|on repeat|regular|often|usual|×/i);
+  });
+});
+
 describe('rewards on the screen', () => {
   it('has no shelf with nothing being earned, and coupons with progress once there is', async () => {
     const { ana, ben } = await world();
