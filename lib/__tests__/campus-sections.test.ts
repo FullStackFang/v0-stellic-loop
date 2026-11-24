@@ -165,6 +165,33 @@ describe('the nearer campus', () => {
 
   it('is nobody when nothing says where the person is, or no campus is drawn', () => {
     expect(nearestCampus(both, null)).toBeNull();
-    expect(nearestCampus([{ slug: 'nyu' }], BROOKLYN)).toBeNull();
+    expect(nearestCampus([{ slug: 'cuny' }], BROOKLYN)).toBeNull();
+  });
+});
+
+describe('Columbia and NYU: one stop each, the campus first', () => {
+  const places: Record<string, Point> = {
+    'Low Library': [-73.9617, 40.8077], 'Butler Library': [-73.9632, 40.8064], 'Cathedral of St. John the Divine': [-73.9618, 40.8038],
+    'Washington Square Arch': [-73.9971, 40.7312], 'Bobst Library': [-73.9972, 40.7295], 'Cooper Union': [-73.9905, 40.7290],
+  };
+  const home = { columbia: ['Low Library', 'Butler Library'], nyu: ['Washington Square Arch', 'Bobst Library'] };
+
+  it.each(['columbia', 'nyu'] as const)('%s: rests inside each section, touches both ways, signs every stop, and overlaps nothing', slug => {
+    const city = landOf(slug)!, at = (id: string) => city.find(each => each.id === id)!;
+    expect(city.length).toBe(3);
+    for (const each of city) {
+      expect(sectionAt(city, each.rest)?.id).toBe(each.id);
+      for (const id of each.next) expect(at(id).next).toContain(each.id);
+      expect(each.stop?.lines.length).toBeGreaterThan(0);
+      for (const line of each.stop!.lines) expect(LINE[line]?.fill).toMatch(/^#/);
+    }
+    // Sections next door share corners, so what must not overlap is the ground: no section's resting spot lies in another.
+    for (const a of city) for (const b of city) if (a !== b) expect(sectionAt([b], a.rest)).toBeNull();
+    for (const name of home[slug]) expect(sectionAt(city, places[name])?.id).toBe(city[0].id);
+  });
+
+  it('puts the cathedral south of Columbia and Cooper Union east of Washington Square', () => {
+    expect(sectionAt(landOf('columbia')!, places['Cathedral of St. John the Divine'])?.id).toBe('cathedral');
+    expect(sectionAt(landOf('nyu')!, places['Cooper Union'])?.id).toBe('astor');
   });
 });

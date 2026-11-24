@@ -18,7 +18,9 @@ export type Section = {
 export type Stop = { name: string; lines: string[] };
 /** The colour of each line's bullet, as on the subway map, and whether its letter is printed dark. */
 export const LINE: Record<string, { fill: string; dark?: boolean }> = { F: { fill: '#ff6319' }, M: { fill: '#ff6319' }, Q: { fill: '#fccc0a', dark: true },
-  E: { fill: '#0039a6' }, 4: { fill: '#00933c' }, 5: { fill: '#00933c' }, 6: { fill: '#00933c' }, 7: { fill: '#b933ad' } };
+  E: { fill: '#0039a6' }, 4: { fill: '#00933c' }, 5: { fill: '#00933c' }, 6: { fill: '#00933c' }, 7: { fill: '#b933ad' },
+  A: { fill: '#0039a6' }, C: { fill: '#0039a6' }, B: { fill: '#ff6319' }, D: { fill: '#ff6319' }, L: { fill: '#a7a9ac' },
+  N: { fill: '#fccc0a', dark: true }, R: { fill: '#fccc0a', dark: true }, W: { fill: '#fccc0a', dark: true }, 1: { fill: '#ee352e' } };
 
 const section = (corners: Record<string, Point>) => (id: string, name: string, ring: string, rest: Point, next: string[], stop?: Stop): Section => ({ id, name, ring: [...ring].map(key => corners[key]), rest, next, ...(stop ? { stop } : {}) });
 
@@ -36,7 +38,33 @@ const island = section({ a: [-73.9622, 40.7492], b: [-73.9570, 40.7500], c: [-73
   // 21 St-Queensbridge: the river to 24th Street, 38th Avenue down to Queens Plaza.
   m: [-73.9462, 40.7572], n: [-73.9392, 40.7598], o: [-73.9362, 40.7528], p: [-73.9448, 40.7506] });
 
+// Morningside Heights, one stop of the 1 train each, from Riverside Park (a block west of Riverside Drive) to Frederick
+// Douglass Boulevard: 107th to 113th (Manhattan Avenue below 110th, where the park is), 113th to 120th (the Columbia
+// campus), and 120th to 125th, then up Amsterdam to 130th (Manhattanville). Corners are where the streets meet in
+// OpenStreetMap, looked up 2026-11-24, the east ones a little past the boulevard so its own corners are inside. The
+// stations sit on Broadway at the edge of their blocks, so each section rests a block inside.
+const morningside = section({ a: [-73.9722, 40.8040], p: [-73.9610, 40.7993], b: [-73.9596, 40.8012], q: [-73.9578, 40.8006], r: [-73.9564, 40.8025],
+  c: [-73.9699, 40.8080], s: [-73.9531, 40.8070], e: [-73.9666, 40.8125], t: [-73.9508, 40.8102], i: [-73.9563, 40.8134], u: [-73.9545, 40.8157],
+  v: [-73.9603, 40.8182], g: [-73.9632, 40.8170] });
+
+// Around Washington Square: west of Broadway, from Prince Street (Houston at Varick) up to 10th Street, is West 4 St;
+// Broadway to Second Avenue, Prince and Houston up to 10th, is Astor Place; 10th to 14th Street from Seventh Avenue, and on
+// to 17th from Fifth Avenue to Second so the square itself is in, is Union Square. OpenStreetMap, 2026-11-24.
+const village = section({ a: [-74.0053, 40.7286], k: [-74.0034, 40.7270], b: [-73.9978, 40.7242], c: [-73.9933, 40.7224], m: [-73.9910, 40.7237],
+  d: [-73.9868, 40.7298], e: [-73.9915, 40.7317], f: [-73.9987, 40.7348], g: [-74.0024, 40.7343], h: [-73.9997, 40.7386], n: [-73.9936, 40.7360],
+  o: [-73.9922, 40.7379], x: [-73.9835, 40.7343] });
+
 const LANDS: Record<string, Section[]> = {
+  columbia: [
+    morningside('columbia', 'Morningside Heights', 'crse', [-73.9639, 40.8082], ['cathedral', 'manhattanville'], { name: '116 St–Columbia University', lines: ['1'] }),
+    morningside('cathedral', 'Cathedral Parkway', 'apbqrc', [-73.9660, 40.8052], ['columbia'], { name: 'Cathedral Pkwy (110 St)', lines: ['1'] }),
+    morningside('manhattanville', 'Manhattanville', 'estiuvg', [-73.9606, 40.8126], ['columbia'], { name: '125 St', lines: ['1'] }),
+  ],
+  nyu: [
+    village('washsq', 'Washington Square', 'akbefg', [-74.0005, 40.7323], ['astor', 'union'], { name: 'West 4 St–Washington Sq', lines: ['A', 'C', 'E', 'B', 'D', 'F', 'M'] }),
+    village('astor', 'Astor Place', 'bcmde', [-73.9911, 40.7301], ['washsq', 'union'], { name: 'Astor Pl', lines: ['6'] }),
+    village('union', 'Union Square', 'gfedxonh', [-73.9905, 40.7340], ['washsq', 'astor'], { name: '14 St–Union Sq', lines: ['4', '5', '6', 'L', 'N', 'Q', 'R', 'W'] }),
+  ],
   'cornell-tech': [
     island('roosevelt', 'Roosevelt Island', 'abcdefgh', [-73.9552, 40.7562], ['lex63', 'queensbridge'], { name: 'Roosevelt Island', lines: ['F', 'M'] }),
     island('lex63', 'Upper East Side', 'ijkl', [-73.9665, 40.7647], ['roosevelt'], { name: 'Lexington Av/63 St', lines: ['F', 'M', 'Q'] }),
