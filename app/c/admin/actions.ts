@@ -14,6 +14,7 @@ import { removeAskedSchool } from '@/lib/campus/school-ask';
 import { findCampus, type Campus } from '@/lib/campus/listings';
 import { addCampus, addFeed, addHandListing, reviewListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
 import { campusPlaces, savePlace } from '@/lib/campus/places';
+import { recordLink, recordPath, renewRecordLink, setRecordPublic } from '@/lib/campus/record';
 import { saveReward, setRewardHidden } from '@/lib/campus/rewards';
 import { campusViewer } from '@/lib/campus/session';
 import { schoolOf } from '@/lib/campus/schools';
@@ -199,6 +200,27 @@ export async function saveRewardAction(data: FormData): Promise<void> {
 }
 export async function setRewardHiddenAction(data: FormData): Promise<void> {
   await admin(data, async () => { const hidden = text(data, 'hidden') === 'true'; await setRewardHidden(db(), uuid(text(data, 'reward')), hidden); return hidden ? 'Reward hidden. What was already used stays used.' : 'Reward showing again.'; });
+}
+
+/**
+ * A place's record link on the Places tab (app/c/admin/record-controls.tsx, openspec campus-venue-record). `step` is
+ * the pressed button: "copy" makes the key the first time and hands back the address, "renew" makes a new key, so the
+ * old link stops opening the record, and "public" or "private" sets the switch.
+ */
+export async function recordAction(data: FormData): Promise<{ said: string; path?: string }> {
+  let path: string | undefined;
+  const { said } = await step(data, async campus => {
+    const place = (await campusPlaces(db(), campus.id)).find(each => each.id === uuid(text(data, 'place'))), pressed = text(data, 'step');
+    if (!place) throw new Error('No such place');
+    if (pressed === 'public' || pressed === 'private') {
+      await setRecordPublic(db(), place.id, pressed === 'public');
+      return pressed === 'public' ? `${place.name}'s record is public: its address opens without a key.` : `${place.name}'s record is private: only its link opens it.`;
+    }
+    const key = pressed === 'renew' ? await renewRecordLink(db(), place.id) : await recordLink(db(), place.id);
+    path = recordPath(campus.slug, place, key);
+    return pressed === 'renew' ? `New link for ${place.name}. The old one no longer opens the record.` : `Record link for ${place.name}.`;
+  });
+  return { said, path };
 }
 
 /**

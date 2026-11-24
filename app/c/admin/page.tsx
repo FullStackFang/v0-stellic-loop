@@ -27,6 +27,8 @@ import { WordsField } from '@/components/campus/words-field';
 import { PickCount } from '@/components/campus/pick-count';
 import { AnimalForm } from './animal-form';
 import { DealForm } from './deal-form';
+import { RecordControls } from './record-controls';
+import { RECORD_MIGRATION, recordReady, recordStates } from '@/lib/campus/record';
 import { WaitButton } from '@/components/campus/wait-button';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
@@ -64,6 +66,8 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const allRewards = everyReward.filter(reward => !fromDeals.has(reward.id));
   // The names typed for a poll's place that the list does not have. Read only on the Places tab.
   const typedNames = tab === 'places' ? await typedPlaces(db(), campus.id).catch(() => []) : [];
+  // Each place's record link and switch (openspec campus-venue-record). Read only on the Places tab.
+  const [recordsOn, records] = tab === 'places' ? await Promise.all([recordReady(db()), recordStates(db(), campus.id)]) : [false, new Map<string, { key: string | null; public: boolean }>()];
   // Every sign-up, with the button pressed, and every ask for a call (app/c/ink). Read only on the Premium tab.
   const [signUps, calls, outs, presses] = tab === 'premium' ? await Promise.all([subscribeAsks(db()).catch(() => []), callAsks(db()).catch(() => []), signedOutAsks(db()).catch(() => []), signedOutPresses(db()).catch(() => [])]) : [[], [], [], []];
   const when = (at: string) => { const parts = localParts(tz, new Date(at)); return `${dayLabel(tz, at, now)} ${parts.date.slice(5)} · ${timeLabel(tz, at)}`; };
@@ -178,8 +182,11 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
       <ul className="cs-adm-rows">{allPlaces.map(place => <li key={place.id}><details><summary><div><b>{place.name}</b><span>{place.lat}, {place.lon}{place.otherNames.length ? ` · also ${place.otherNames.join(', ')}` : ''}</span></div><i className="b">Edit</i></summary>
           <form action={savePlaceAction} className="cs-adm-form">{keep}<input type="hidden" name="place" value={place.id} /><div className="three">
             <label>Name<input name="name" required defaultValue={place.name} /></label><label>Latitude<input name="lat" required inputMode="decimal" defaultValue={place.lat} /></label><label>Longitude<input name="lon" required inputMode="decimal" defaultValue={place.lon} /></label></div>
-            <label>Other names <small>separated by commas</small><input name="otherNames" defaultValue={place.otherNames.join(', ')} /></label><button className="cs-btn sm">Save</button></form></details></li>)}
+            <label>Other names <small>separated by commas</small><input name="otherNames" defaultValue={place.otherNames.join(', ')} /></label><button className="cs-btn sm">Save</button></form></details>
+          {recordsOn && <RecordControls campus={campus.slug} place={place.id} name={place.name} open={records.get(place.id)?.public ?? false} />}</li>)}
         {!allPlaces.length && <li className="off"><span>No places yet. An event whose place text names one gets a map.</span></li>}</ul>
+      {recordsOn ? <p className="cs-adm-lede">Each place has a record: the groups that said they were coming, showed up and came back, counted, never who. Copy its private link for the venue, or make it public. A new link stops the old one.</p>
+        : <p className="cs-adm-lede">Record pages for places need the migration {RECORD_MIGRATION}. Run it, then each place gets a record link here.</p>}
       {typed.length > 0 && <><p className="cs-adm-lede">Names people type for a poll&apos;s place that this list lacks, most used first. Pick the place a name belongs to, or add a new place above with it as another name.</p>
         <ul className="cs-adm-rows">{typed.map(each => <li key={each.name}><div><b>{each.name}</b></div><span style={{ flex: 'none' }}>{each.people === 1 ? '1 person' : `${each.people} people`}</span>
           {allPlaces.length > 0 && <form action={addPlaceNameAction} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>{keep}<input type="hidden" name="name" value={each.name} /><select name="place" required defaultValue="" aria-label={`The place ${each.name} is another name for`}><option value="" disabled>Is another name for…</option>{allPlaces.map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select><button className="cs-btn sm">Add the name</button></form>}</li>)}</ul></>}
