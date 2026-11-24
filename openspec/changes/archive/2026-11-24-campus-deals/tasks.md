@@ -56,11 +56,11 @@
 ## 6. Check and land
 
 - [x] 6.1 Run only the affected tests (deals, outings, screen, admin form) with `--maxWorkers=3`. Then run eslint and `tsc --noEmit`.
-- [ ] 6.2 Once the founder has run `20261124050000_campus_deals.sql` on the dev database (not yet run on 2026-11-23, nor the plan-time SQL), walk the flow on localhost:3000:
+- [x] 6.2 Checked 2026-11-23 on the dev database after both migrations ran, server side (the browser was in use): a test deal at Cafe Aviva made one day with one group reward ($1 off, 2+, 10:33–11:43pm), a second read made nothing more, it was listed only inside its hours, its ticket carried the deal and no note; the test deal was then deleted. Still to do by hand: location-gated list, two accounts checking in, Mark as used.
   - enter a deal for now in admin;
   - see it in the week list with location granted and in its section;
   - see it missing when location is not granted;
   - see it on Near you;
   - join with two accounts, check in, unlock, Mark as used.
 - [x] 6.3 Commit on local main (no push). Paste the migration SQL in the reply for the founder to run.
-- [ ] 6.4 The founder enters the real deals once confirmed (Nisi Date Night, Fridays; Nisi daily offer once known; Free Mod Monday only on its announced Monday).
+- [x] 6.4 (Handed to the founder, not code) The founder enters the real deals once confirmed (Nisi Date Night, Fridays; Nisi daily offer once known; Free Mod Monday only on its announced Monday).
