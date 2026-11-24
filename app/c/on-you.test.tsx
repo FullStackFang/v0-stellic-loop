@@ -224,7 +224,12 @@ it('shows a group its drawn picture in place of the faces, with how many people 
   const f = await fixture(), token = '6fbabc67-2e01-4e24-b12c-ee135e4d7055';
   await t.db.query("insert into emba_group_picture(token,org_id,loop_id,made_by,ask,picks,image,small,kept_at) values($1,$2,$3,$4,gen_random_uuid(),'[]','\\x00','\\x00',now())", [token, f.club.orgId, f.club.loopId, f.ana.personId]);
   session.who = f.ben;
+  // The picture is fetched with the page, before the panel opens, so it is there when it does.
+  const asked: string[] = [];
+  vi.stubGlobal('Image', class { set src(value: string) { asked.push(value); } });
   render((await withPortalTestSession(f.ben, () => OnYou({ going: [] })))!);
+  vi.unstubAllGlobals();
+  expect(asked).toContain(`/animals/group/${token}`);
   fireEvent.click(screen.getByRole('button', { name: /^Groups/ }));
   const club = within(screen.getByRole('region', { name: 'Your groups' })).getByRole('link', { name: /Hiking club/ });
   const pictures = club.querySelectorAll('img');

@@ -34,6 +34,10 @@ export function OnYouPanel({ view, going = [] }: { view: OnYouView; going?: Goin
   const [finished, setFinished] = useState<string[]>([]), listed = <T extends { id: string }>(all: T[]) => all.filter(each => !finished.includes(each.id) || leaving.some(one => one.id === each.id));
   const box = useRef<HTMLDivElement>(null), timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  // The Groups panel draws its rows only when it opens, so their pictures are fetched with the page: open, they are already
+  // in the browser (their addresses never change, and are cached for a year), not still on their way.
+  const pictures = [...view.mine.flatMap(group => group.picture ? [group.picture] : group.faces), ...going.flatMap(each => each.faces)].join(' ');
+  useEffect(() => { for (const src of new Set(pictures.split(' ').filter(Boolean))) new Image().src = src; }, [pictures]);
   useEffect(() => {
     if (!open) return;
     const away = (event: MouseEvent | KeyboardEvent) => { if (event instanceof KeyboardEvent ? event.key === 'Escape' : !box.current?.contains(event.target as Node)) setOpen(null); };
