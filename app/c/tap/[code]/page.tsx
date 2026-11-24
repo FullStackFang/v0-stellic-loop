@@ -7,7 +7,8 @@ import { campusViewer, signInHref } from '@/lib/campus/session';
 import { checkedInOf, closable, readTap, wouldBeWith } from '@/lib/campus/tap';
 import { dayLabel, timeLabel } from '@/lib/campus/time';
 import { siteBar } from '../../site-bar';
-import { TAP_SAYS, TapPress } from './tap-press';
+import { TAP_SAYS } from './says';
+import { TapPress } from './tap-press';
 import '../../no-school.css';
 
 export const dynamic = 'force-dynamic';

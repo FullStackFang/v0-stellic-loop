@@ -2,15 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { tapAction } from './actions';
-
-/** What a press can come back with, in the person's words. */
-export const TAP_SAYS: Record<string, string> = {
-  unknown: 'This link does not lead anywhere. Ask your assistant again.',
-  not_yours: 'This was made for someone else. Ask your own assistant.',
-  used: 'This was already done.',
-  expired: 'This ran out after ten minutes. Ask your assistant again.',
-  sign_in: 'Sign in to continue.',
-};
+import { TAP_SAYS } from './says';
 
 /** The one button that does the step, and "Not now", which leads back without doing anything. */
 export function TapPress({ code, label, back, done }: { code: string; label: string; back: string; done: string }) {
