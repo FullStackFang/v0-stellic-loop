@@ -26,4 +26,4 @@
 
 - [x] 5.1 Run only the affected tests with `--maxWorkers=3`, then eslint and `tsc --noEmit`.
 - [x] 5.2 On the dev database, open the record for a place with real outings on a laptop and a phone width, and compare with the mockup.
-- [ ] 5.3 Commit on local main (no push). Paste the migration SQL in the reply for the founder to run.
+- [x] 5.3 Commit on local main (no push). Paste the migration SQL in the reply for the founder to run.
