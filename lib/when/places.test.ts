@@ -81,3 +81,14 @@ it('loads the Cornell places file, twice over, without touching a place the camp
   expect(rows.some(row => row.name.includes("'"))).toBe(true);
   expect((await placeSpot(t.db, (await who('Maya', 'cornell')).personId, 'drinks at the big red barn'))?.name).toBe('Big Red Barn');
 });
+
+it.each(['columbia', 'nyu'])('loads the %s places file twice, each place once', async slug => {
+  const id = await campusId(slug), seed = readFileSync(`supabase/optional-migrations/campus-places/${slug}.sql`, 'utf8');
+  await t.db.query('delete from campus_place where campus_id=$1', [id]);
+  await t.db.query(seed); const once = (await t.db.query('select 1 from campus_place where campus_id=$1', [id])).rows.length;
+  await t.db.query(seed);
+  const names = (await t.db.query<{ name: string }>('select lower(name) as name from campus_place where campus_id=$1', [id])).rows.map(row => row.name);
+  expect(once).toBeGreaterThan(100);
+  expect(names.length).toBe(once);
+  expect(new Set(names).size).toBe(once);
+});
