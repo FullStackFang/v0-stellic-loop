@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { againFaceAction, keepFaceAction, makeFaceAction } from '@/app/c/actions';
 import { animal, CHANGES } from '@/lib/campus/animals';
-import { SeatsTicket, SeatsWord } from '@/components/loading/seats';
+import { SeatsOver, SeatsTicket, SeatsWord } from '@/components/loading/seats';
 import { INK_MAKES, joinedWords } from '@/lib/campus/ink';
 import { GetInk } from './join-plan';
 import { InkMark } from './ink-mark';
@@ -17,6 +17,13 @@ async function small(file: File): Promise<Blob> {
     pen.fillStyle = '#fff'; pen.fillRect(0, 0, canvas.width, canvas.height); pen.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     return await new Promise<Blob>((done, fail) => canvas.toBlob(blob => (blob ? done(blob) : fail(new Error('no picture'))), 'image/jpeg', 0.9));
   } catch { return file; }
+}
+
+/** A drawing just made, which takes a moment to arrive: the small seats wait over it until it has (as in save-face.tsx). Keyed by its src, so a new one waits again. */
+function Drawn({ src, alt }: { src: string; alt: string }) {
+  const [ready, setReady] = useState(false);
+  return <div className="cs-drawn"><SeatsOver on={!ready} plate />
+    <img className={ready ? '' : 'wait'} src={src} alt={alt} onLoad={() => setReady(true)} ref={img => { if (img?.complete && img.naturalWidth) setReady(true); }} /></div>;
 }
 
 /** What the Ink page leads with. None of the four can be used yet, and the pane says so under them, with what Ink gives today. */
@@ -117,7 +124,7 @@ export function OwnFace({ asked, left, current, bases = [], plus = false, ink = 
     <p className="cs-prem-kick">Loopd Ink</p>
     <p className="cs-prem-big said" role={state === 'busy' ? 'status' : undefined}>{head}</p>
     {thanks}
-    {state === 'done' ? <><div className="cs-prem-made"><img src={own} alt="Your own animal" /></div>
+    {state === 'done' ? <><div className="cs-prem-made"><Drawn key={own} src={own} alt="Your own animal" /></div>
       <div className="cs-prem-stub"><button className="cs-btn" onClick={() => { setSaid(''); setNote(''); setChanges([]); setState('ask'); }}>{!plus && <InkMark plus />}Redraw your pet{!plus && ' · Ink+'}</button><p className="cs-prem-small">A new drawing, set beside this one. You keep one.</p></div></>
     : state === 'sure' ? <><div className="cs-prem-made">{from === 'base' ? <img src={base} alt="The pet you start from" /> : shown ? <img src={shown} alt="The photo you chose" /> : from === 'ask' && mine && <img src={mine} alt="The pet drawn again" />}{from === 'base' && <p>{note.trim()}</p>}</div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); void (from === 'ask' ? again() : from === 'base' ? fromBase() : make()); }}>
@@ -151,7 +158,7 @@ export function OwnFace({ asked, left, current, bases = [], plus = false, ink = 
         : <GetInk plan="ink" place="pets: Start from another pet" />}
         </div>
       </form></>
-    : state === 'pick' ? <><div className="cs-two" role="group" aria-label="Pick your favorite">{[own, second].map((one, at) => <button key={one} aria-pressed={pick === at} aria-label={at ? 'Second drawing' : 'First drawing'} onClick={() => setPick(at)}><img src={one} alt="" /><span>{at ? 'Second' : 'First'}</span></button>)}</div>
+    : state === 'pick' ? <><div className="cs-two" role="group" aria-label="Pick your favorite">{[own, second].map((one, at) => <button key={one} aria-pressed={pick === at} aria-label={at ? 'Second drawing' : 'First drawing'} onClick={() => setPick(at)}><Drawn key={one} src={one} alt="" /><span>{at ? 'Second' : 'First'}</span></button>)}</div>
       <div className="cs-prem-stub"><button className="cs-btn go" disabled={wait} onClick={() => void keep()}><SeatsWord on={wait} word="Keeping" plate>Keep this one</SeatsWord></button><p className="cs-prem-small">The other one is let go.</p>{said && <p role="alert">{said}</p>}</div></>
     : <><div className="cs-prem-perks"><span>Grab your favorite photo of your favorite pet, and we’ll do the rest.</span>{left !== null && <small>{left} of {INK_MAKES} left.</small>}</div>
       <form className="cs-prem-stub" onSubmit={event => { event.preventDefault(); sure('photo'); }}>
