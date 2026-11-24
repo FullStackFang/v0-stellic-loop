@@ -42,4 +42,4 @@
 - [x] 7.1 Run only the affected tests with `--maxWorkers=3`, then eslint and `tsc --noEmit`.
 - [ ] 7.2 Connect the dev address in Claude: find, who's in, interested, join with a tap, join by the link, close the loop. Note what each looked like.
 - [x] 7.3 One production build at the end, with the dev server stopped.
-- [ ] 7.4 Commit on local main (no push). Paste the migration SQL in the reply for the founder to run.
+- [x] 7.4 Commit on local main (no push). Paste the migration SQL in the reply for the founder to run.
