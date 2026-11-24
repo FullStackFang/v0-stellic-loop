@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { KITS } from './kit';
 
 type Shown = { who: string; school: string | null; kit: string | null; x: number; y: number };
@@ -31,8 +31,15 @@ export function FaceTags() {
       window.removeEventListener('scroll', gone, true);
     };
   }, []);
+  // A face near the window's edge would put half its tag past it: the tag moves back inside, and its point stays on the face.
+  const tag = useRef<HTMLSpanElement>(null), [nudge, setNudge] = useState(0);
+  useLayoutEffect(() => {
+    if (!shown || !tag.current) return;
+    const half = tag.current.offsetWidth / 2, edge = 8, width = document.documentElement.clientWidth;
+    setNudge(shown.x - half < edge ? edge - (shown.x - half) : shown.x + half > width - edge ? width - edge - (shown.x + half) : 0);
+  }, [shown]);
   if (!shown) return null;
-  return <span className="cs-facetag" role="tooltip" style={{ left: shown.x, top: shown.y }}>
+  return <span ref={tag} className="cs-facetag" role="tooltip" style={{ left: shown.x + nudge, top: shown.y, '--point': `${-nudge}px` } as CSSProperties}>
     {shown.kit && <i data-kit={shown.kit} aria-hidden="true" />}{shown.who}{shown.school && <small>{shown.school}</small>}
   </span>;
 }

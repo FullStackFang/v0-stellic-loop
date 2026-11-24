@@ -63,7 +63,7 @@
 .cs-facetag { position: fixed; z-index: 60; translate: -50% 10px; display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 6px; border-radius: 99px; white-space: nowrap; pointer-events: none;
   font-size: 13.5px; font-weight: 680; line-height: 1.2; letter-spacing: -0.012em; background: var(--cs-ink); color: var(--cs-paper); animation: cs-facetag .3s var(--cs-expo); }
 .cs-facetag:has(> i) { padding-left: 6px; }
-.cs-facetag::before { content: ''; position: absolute; left: 50%; top: -5px; width: 11px; height: 11px; translate: -50% 0; rotate: 45deg; border-radius: 2px; background: var(--cs-ink); }
+.cs-facetag::before { content: ''; position: absolute; left: calc(50% + var(--point, 0px)); top: -5px; width: 11px; height: 11px; translate: -50% 0; rotate: 45deg; border-radius: 2px; background: var(--cs-ink); }
 .cs-facetag > i { width: 16px; height: 16px; border-radius: 50%; background: var(--cs-field); box-shadow: 0 0 0 1.5px var(--cs-paper); }
 .cs-facetag > small { font-size: 12px; font-weight: 560; opacity: .72; }
 @keyframes cs-facetag { from { opacity: 0; scale: .7; } }
