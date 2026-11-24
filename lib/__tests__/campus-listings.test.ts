@@ -6,7 +6,7 @@ import {makePerson,openTestDb,type TestDb} from '@/test/db';
 import {isAdmin} from '@/lib/campus/admin';
 import {parseFeed,readFeeds} from '@/lib/campus/import';
 import {findCampus,weekListings} from '@/lib/campus/listings';
-import {addCampus,addFeed,addHandListing,setFeedOn,setHidden,setWords} from '@/lib/campus/manage';
+import {addCampus,addFeed,addHandListing,reviewListing,setFeedOn,setHidden,setWords,waitingListings} from '@/lib/campus/manage';
 import {matchPlace,savePlace} from '@/lib/campus/places';
 import {localParts,zoned} from '@/lib/campus/time';
 import {goodFor} from '@/lib/campus/words';
@@ -264,6 +264,32 @@ describe('reading a feed',()=>{
   await readFeeds(t.db,{now:NOW,fetch:feeds({[url]:calendar(event('e1','Sunset run, new route','20261120T230000Z'))})});
   expect(await listed()).toMatchObject([{title:'Sunset run, new route',words:['chill','slow','pace']}]);
   await expect(setWords(t.db,row.id,Array.from({length:13},(_,i)=>`w${i}`).join(' '))).rejects.toThrow('twelve');
+ });
+ it('on a reviewed feed, keeps a new event waiting until the admin pins its place and shows it, and keeps that place on the next read',async()=>{
+  const campus=await cornell(),url='https://feeds.test/a.ics';
+  const island=await savePlace(t.db,{campusId:campus.id,name:'Cornell Tech',otherNames:[],lat:40.7554,lon:-73.9563});
+  await savePlace(t.db,{campusId:campus.id,name:'Sage Hall',otherNames:[],lat:42.4457,lon:-76.4831});
+  await addFeed(t.db,{campusId:campus.id,source:'CampusGroups',url,review:true});
+  const read=()=>readFeeds(t.db,{now:NOW,fetch:feeds({[url]:calendar(event('e1','Connect & Converse','20261120T230000Z',['LOCATION: Sign in to download the location']),event('e2','Hockey at the Garden','20261121T170000Z'))})});
+  await read();
+  expect(await titles()).toEqual([]);
+  const waiting=await waitingListings(t.db,campus.id,NOW);
+  expect(waiting.map(row=>[row.title,row.source,row.placeText])).toEqual([['Connect & Converse','CampusGroups',null],['Hockey at the Garden','CampusGroups',null]]);
+  await reviewListing(t.db,campus.id,waiting[0].id,{placeId:island.id,placeText:'',show:true});
+  await reviewListing(t.db,campus.id,waiting[1].id,{placeId:null,placeText:'Madison Square Garden',show:false});
+  expect(await waitingListings(t.db,campus.id,NOW)).toEqual([]);
+  expect((await weekListings(t.db,campus,NOW)).map(row=>[row.title,row.placeText,row.place?.name])).toEqual([['Connect & Converse','Cornell Tech','Cornell Tech']]);
+  const {rows}=await t.db.query('select title,place_text,hidden_at is not null as hidden from campus_listing order by starts_at');
+  expect(rows).toEqual([{title:'Connect & Converse',place_text:'Cornell Tech',hidden:false},{title:'Hockey at the Garden',place_text:'Madison Square Garden',hidden:true}]);
+  // The feed still withholds the place, and a place added later whose name is in the text does not move it.
+  await read();
+  await savePlace(t.db,{campusId:campus.id,name:'Tech',otherNames:[],lat:40.7555,lon:-73.9564});
+  await reviewListing(t.db,campus.id,waiting[0].id,{placeId:island.id,placeText:'Tech lobby',show:true});
+  expect((await weekListings(t.db,campus,NOW)).map(row=>[row.placeText,row.place?.name])).toEqual([['Tech lobby','Cornell Tech']]);
+  await read();
+  await savePlace(t.db,{campusId:campus.id,name:'Lobby',otherNames:[],lat:40.7556,lon:-73.9565});
+  expect((await weekListings(t.db,campus,NOW)).map(row=>[row.placeText,row.place?.name])).toEqual([['Tech lobby','Cornell Tech']]);
+  await expect(reviewListing(t.db,campus.id,waiting[0].id,{placeId:'00000000-0000-0000-0000-000000000000',placeText:null,show:true})).rejects.toThrow('No such place');
  });
 });
 

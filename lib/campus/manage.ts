@@ -1,5 +1,6 @@
 import 'server-only';
 import type { Q } from '../db';
+import { reviewReady } from './listings';
 import { campusPlaces, matchPlace } from './places';
 import { validTimezone } from './time';
 import { cleanWords, goodFor } from './words';
@@ -16,10 +17,24 @@ export async function addCampus(q: Q, input: { slug: string; name: string; tz: s
   return (await q.query<{ id: string }>('insert into campus(slug,name,tz,domains,list_source) values($1,$2,$3,$4,$5) returning id', [input.slug.trim().toLowerCase(), input.name.trim(), input.tz, domains, input.listSource?.trim() || 'CampusGroups'])).rows[0];
 }
 
-export async function addFeed(q: Q, input: { campusId: string; source: string; url: string }): Promise<{ id: string }> {
+/** Adds a feed. With `review`, each new event from it waits, hidden, until the admin shows it (reviewListing). */
+export async function addFeed(q: Q, input: { campusId: string; source: string; url: string; review?: boolean }): Promise<{ id: string }> {
   // webcal: is how calendar apps write the same https address.
-  const url = input.url.trim().replace(/^webcal:/i, 'https:');
-  return (await q.query<{ id: string }>('insert into campus_feed(campus_id,source,url) values($1,$2,$3) returning id', [input.campusId, input.source.trim(), url])).rows[0];
+  const url = input.url.trim().replace(/^webcal:/i, 'https:'), review = !!input.review && await reviewReady(q);
+  return (await q.query<{ id: string }>(`insert into campus_feed(campus_id,source,url${review ? ',review' : ''}) values($1,$2,$3${review ? ',true' : ''}) returning id`, [input.campusId, input.source.trim(), url])).rows[0];
+}
+
+/**
+ * The admin's review of a waiting feed event: its place is pinned (one of the campus's places, or none, with the words
+ * to show for it), and it is shown or kept hidden. Either way it no longer waits, and a later read of the feed keeps the place.
+ */
+export async function reviewListing(q: Q, campusId: string, listingId: string, input: { placeId: string | null; placeText: string | null; show: boolean }) {
+  const place = input.placeId ? (await campusPlaces(q, campusId)).find(each => each.id === input.placeId) : null;
+  if (input.placeId && !place) throw new Error('No such place');
+  const placeText = text(input.placeText) ?? place?.name ?? null;
+  const { rows } = await q.query(`update campus_listing set place_id=$3,place_text=$4,place_by_hand=true,waiting=false,hidden_at=case when $5 then null else coalesce(hidden_at,now()) end
+    where id=$1 and campus_id=$2 returning id`, [listingId, campusId, place?.id ?? null, placeText, input.show]);
+  if (!rows.length) throw new Error('No such event');
 }
 export async function setFeedOn(q: Q, feedId: string, on: boolean) {
   await q.query('update campus_feed set is_on=$2 where id=$1', [feedId, on]);
@@ -61,12 +76,25 @@ export async function campusFeeds(q: Q, campusId: string): Promise<Feed[]> {
 }
 
 export type AdminListing = { id: string; title: string; origin: string; source: string | null; host: string | null; placeText: string | null; matched: boolean; startsAt: string; words: string[]; hidden: boolean };
-/** The events the admin can edit: everything not yet over, hidden ones included, soonest first. `search` narrows by title or host. */
+/**
+ * The events the admin can edit: everything not yet over, hidden ones included, soonest first. `search` narrows by title or
+ * host. Feed events waiting for review are not among them: waitingListings has those.
+ */
 export async function adminListings(q: Q, campusId: string, search: string, limit = 60): Promise<{ rows: AdminListing[]; total: number }> {
-  const where = `l.campus_id=$1 and l.cancelled_at is null and l.left_feed_at is null and coalesce(l.ends_at,l.starts_at+interval '2 hours')>now() and ($2='' or l.title ilike '%'||$2||'%' or l.host_name ilike '%'||$2||'%')`;
+  const where = `l.campus_id=$1 and l.cancelled_at is null and l.left_feed_at is null and coalesce(l.ends_at,l.starts_at+interval '2 hours')>now() and ($2='' or l.title ilike '%'||$2||'%' or l.host_name ilike '%'||$2||'%')${await reviewReady(q) ? ' and not l.waiting' : ''}`;
   const like = search.trim().replace(/[%_\\]/g, '\\$&');
   const { rows } = await q.query<AdminListing>(`select l.id,l.title,l.origin,f.source,l.host_name as host,l.place_text as "placeText",l.place_id is not null as matched,l.starts_at as "startsAt",l.words,l.hidden_at is not null as hidden
     from campus_listing l left join campus_feed f on f.id=l.feed_id where ${where} order by l.starts_at,l.title limit $3`, [campusId, like, limit]);
   const { rows: [{ total }] } = await q.query<{ total: number }>(`select count(*)::int as total from campus_listing l where ${where}`, [campusId, like]);
   return { rows, total };
+}
+
+export type WaitingListing = { id: string; title: string; source: string | null; host: string | null; about: string | null; placeText: string | null; placeId: string | null; startsAt: string; endsAt: string | null };
+/** Feed events not yet over that wait for the admin's review, soonest first. */
+export async function waitingListings(q: Q, campusId: string, now: Date = new Date()): Promise<WaitingListing[]> {
+  if (!await reviewReady(q)) return [];
+  return (await q.query<WaitingListing>(`select l.id,l.title,f.source,l.host_name as host,l.about,l.place_text as "placeText",l.place_id as "placeId",l.starts_at as "startsAt",l.ends_at as "endsAt"
+    from campus_listing l left join campus_feed f on f.id=l.feed_id
+    where l.campus_id=$1 and l.waiting and l.cancelled_at is null and l.left_feed_at is null and coalesce(l.ends_at,l.starts_at+interval '2 hours')>$2::timestamptz
+    order by l.starts_at,l.title`, [campusId, now.toISOString()])).rows;
 }

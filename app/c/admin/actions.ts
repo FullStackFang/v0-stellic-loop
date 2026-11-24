@@ -12,7 +12,7 @@ import { readFeeds } from '@/lib/campus/import';
 import { approveLinkedin, removeLinkedin } from '@/lib/campus/linkedin';
 import { removeAskedSchool } from '@/lib/campus/school-ask';
 import { findCampus, type Campus } from '@/lib/campus/listings';
-import { addCampus, addFeed, addHandListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
+import { addCampus, addFeed, addHandListing, reviewListing, setCampus, setFeedOn, setHidden, setWords } from '@/lib/campus/manage';
 import { campusPlaces, savePlace } from '@/lib/campus/places';
 import { saveReward, setRewardHidden } from '@/lib/campus/rewards';
 import { campusViewer } from '@/lib/campus/session';
@@ -92,7 +92,19 @@ export async function decideClubClaimAction(data: FormData): Promise<void> {
 }
 
 export async function addFeedAction(data: FormData): Promise<void> {
-  await admin(data, async campus => { await addFeed(db(), { campusId: campus.id, source: text(data, 'source'), url: text(data, 'url') }); return 'Feed added. Press "Read now" to bring its events in.'; });
+  await admin(data, async campus => {
+    const review = data.get('review') === 'on';
+    await addFeed(db(), { campusId: campus.id, source: text(data, 'source'), url: text(data, 'url'), review });
+    return `Feed added. Press "Read now" to bring its events in${review ? '; each waits under Events until you show it' : ''}.`;
+  });
+}
+/** "Show" or "Hide" on a feed event waiting for review, with the place the admin pinned for it. */
+export async function reviewListingAction(data: FormData): Promise<void> {
+  await admin(data, async campus => {
+    const show = text(data, 'step') === 'show';
+    await reviewListing(db(), campus.id, uuid(text(data, 'listing')), { placeId: uuid(text(data, 'place')) || null, placeText: text(data, 'placeText').slice(0, 300), show });
+    return show ? 'Shown on the campus page.' : 'Hidden. It stays hidden when the feed is read again.';
+  });
 }
 export async function setFeedOnAction(data: FormData): Promise<void> {
   await admin(data, async () => { const on = text(data, 'on') === 'true'; await setFeedOn(db(), uuid(text(data, 'feed')), on); return on ? 'Feed on.' : 'Feed off. Its events stay as they are.'; });

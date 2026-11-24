@@ -46,6 +46,13 @@ export async function dealsReady(q: Q): Promise<boolean> {
   return dealsMigrated;
 }
 
+/** Whether the feed-review migration (20261124060000) has been run. Until it has, feed events show as they arrive. */
+let reviewMigrated = false;
+export async function reviewReady(q: Q): Promise<boolean> {
+  if (!reviewMigrated) reviewMigrated = !!(await q.query<{ ok: boolean }>("select exists(select 1 from information_schema.columns where table_name='campus_listing' and column_name='place_by_hand') as ok")).rows[0]?.ok;
+  return reviewMigrated;
+}
+
 type Row = Omit<Listing, 'place'> & { placeName: string | null; lat: number | null; lon: number | null };
 const listing = (deals: boolean) => `l.id,l.origin,${deals ? 'l.deal_id' : 'null::uuid'} as "dealId",f.source,l.title,l.about,l.host_name as host,l.place_text as "placeText",p.name as "placeName",p.lat,p.lon,
   l.starts_at as "startsAt",l.ends_at as "endsAt",l.time_open as "timeOpen",l.time_set_at as "timeSetAt",l.words,l.posted_by as "postedBy",l.link,g.slug as tag,

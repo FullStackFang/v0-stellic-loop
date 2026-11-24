@@ -14,7 +14,7 @@ import { LEVELS } from '@/lib/campus/levels';
 import { linkedinPeople, type LinkedinPerson } from '@/lib/campus/linkedin';
 import { dealsReady, listCampuses } from '@/lib/campus/listings';
 import { campusDeals, dealRewardIds, type Deal } from '@/lib/campus/deals';
-import { adminListings, campusFeeds } from '@/lib/campus/manage';
+import { adminListings, campusFeeds, waitingListings } from '@/lib/campus/manage';
 import { campusPlaces } from '@/lib/campus/places';
 import { typedPlaces } from '@/lib/when/places';
 import { campusRewards, type Reward } from '@/lib/campus/rewards';
@@ -30,7 +30,7 @@ import { DealForm } from './deal-form';
 import { WaitButton } from '@/components/campus/wait-button';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
-import { addCampusAction, addEventAction, addPlaceNameAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, joinTagAction, readFeedAction, removeLinkedinAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
+import { addCampusAction, addEventAction, addPlaceNameAction, approveLinkedinAction, addFeedAction, decideClubClaimAction, joinTagAction, readFeedAction, removeLinkedinAction, reviewListingAction, removeSchoolAskAction, saveRewardAction, savePlaceAction, setCampusAction, setFeedOnAction, setHiddenAction, setRewardHiddenAction, setTagKindAction, setWordsAction, splitTagAction } from './actions';
 import { Activity, People, SPANS, type Span } from './stats';
 
 export const dynamic = 'force-dynamic';
@@ -60,7 +60,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const now = new Date(), tz = campus.tz;
   const [found, everyReward, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs, claims] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => []), clubClaims(db()).catch((): AdminClaim[] => [])]);
   // Deals, and the rewards made for their days, which the Rewards list leaves out (openspec campus-deals, design D7).
-  const [ready, deals, fromDeals] = await Promise.all([dealsReady(db()), campusDeals(db(), campus.id), dealRewardIds(db(), campus.id)]);
+  const [ready, deals, fromDeals, toReview] = await Promise.all([dealsReady(db()), campusDeals(db(), campus.id), dealRewardIds(db(), campus.id), waitingListings(db(), campus.id)]);
   const allRewards = everyReward.filter(reward => !fromDeals.has(reward.id));
   // The names typed for a poll's place that the list does not have. Read only on the Places tab.
   const typedNames = tab === 'places' ? await typedPlaces(db(), campus.id).catch(() => []) : [];
@@ -75,7 +75,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const claimsWaiting = claims.filter(each => each.state === 'waiting').length;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
   // Activity and People are about the whole site and carry no count.
-  const counts: Partial<Record<Tab, number>> = { review: waiting, clubs: claims.length, schools: wanted_.length, events: found.total, deals: deals.length, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
+  const counts: Partial<Record<Tab, number>> = { review: waiting, clubs: claims.length, schools: wanted_.length, events: found.total + toReview.length, deals: deals.length, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
   const top = (beside?: ReactNode) => <div className="cs-adm-top"><h1>{TABS[tab]}</h1>{beside}</div>;
 
@@ -87,6 +87,16 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
           <div className="three"><label>Starts <small>{tz}</small><input name="starts" type="datetime-local" required /></label><label>Ends <small>optional</small><input name="ends" type="datetime-local" /></label><label>Host <small>optional</small><input name="host" maxLength={200} /></label></div>
           <label>Place <small>optional</small><input name="place" maxLength={300} /></label><label>About <small>optional</small><input name="about" maxLength={1000} /></label>
           <button className="cs-btn sm go">Add event</button></form></details></>)}
+      {toReview.length > 0 && <><h2>Waiting for review · {toReview.length}</h2>
+        <p className="cs-adm-lede">From a reviewed feed. Nobody sees these until you show them. Read where each one is, pin its place, then show it, or hide it if it is not on campus.</p>
+        <ul className="cs-adm-rows">{toReview.map(event => <li key={event.id}><div><b>{event.title}</b>
+          <span>{when(event.startsAt)}{event.source ? ` · ${event.source}` : ''}{event.host ? ` · ${event.host}` : ''}{event.placeText ? ` · The feed says: ${event.placeText}` : ' · The feed gives no place'}</span>
+          {event.about && <span>{event.about}</span>}
+          <form action={reviewListingAction} className="cs-adm-form">{keep}<input type="hidden" name="listing" value={event.id} />
+            <div className="three"><label>Place on the map<select name="place" defaultValue={event.placeId ?? ''}><option value="">Not on the map</option>{allPlaces.map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>
+              <label>Where, as students read it <small>the place name if empty</small><input name="placeText" maxLength={300} defaultValue={event.placeText ?? ''} /></label>
+              <div><button className="cs-btn sm go" name="step" value="show">Show</button> <button className="cs-btn sm" name="step" value="hide">Hide</button></div></div></form></div></li>)}</ul>
+        <h2>Shown and hidden</h2></>}
       {found.rows.length < found.total && <p className="cs-adm-lede">The next {found.rows.length} of {found.total}. Search to narrow.</p>}
       <table className="cs-adm-table"><thead><tr><th>When</th><th>Event</th><th>Words a search finds</th><th>Shown</th></tr></thead>
         <tbody>{found.rows.map(event => <tr key={event.id} className={event.hidden ? 'off' : ''}><td>{when(event.startsAt)}</td>
@@ -151,6 +161,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
     return <section>{top(<details><summary>Add feed</summary><form action={addFeedAction} className="cs-adm-form">{keep}
         <label>Source <small>shown on its events, such as CampusGroups or Luma</small><input name="source" required maxLength={60} defaultValue={campus.listSource} /></label>
         <label>Calendar address <small>https, ending in .ics or a Luma calendar link</small><input name="url" type="url" required placeholder="https://" /></label>
+        <label><span><input type="checkbox" name="review" defaultChecked /> Review each event before it shows</span></label>
         <button className="cs-btn sm go">Add feed</button></form></details>)}
       <ul className="cs-adm-rows">{allFeeds.map(feed => <li key={feed.id} className={feed.on ? '' : 'off'}><div><b>{feed.source}</b><span>{feed.url}</span><span className={feed.lastOk === false ? 'warn' : ''}>{feed.lastReadAt ? `${feed.lastOk ? '' : 'Failed: '}${feed.lastResult ?? ''} · ${when(feed.lastReadAt)}` : 'Not read yet'}</span></div>
           <form action={readFeedAction}>{keep}<input type="hidden" name="feed" value={feed.id} /><button className="b">Read now</button></form>

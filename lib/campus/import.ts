@@ -1,6 +1,7 @@
 import 'server-only';
 import ICAL from 'ical.js';
 import type { Db } from '../db';
+import { reviewReady } from './listings';
 import { campusPlaces, matchPlace } from './places';
 import { zoned } from './time';
 import { goodFor } from './words';
@@ -72,9 +73,9 @@ async function download(url: string): Promise<string> {
  * recorded on it, and does not stop the others.
  */
 export async function readFeeds(db: Db, options: { fetch?: Fetcher; now?: Date; feedId?: string } = {}): Promise<{ feeds: number; failed: number }> {
-  const read = options.fetch ?? download, now = options.now ?? new Date();
-  const { rows: feeds } = await db.query<{ id: string; campusId: string; url: string; tz: string }>(
-    `select f.id,f.campus_id as "campusId",f.url,c.tz from campus_feed f join campus c on c.id=f.campus_id where ${options.feedId ? 'f.id=$1' : 'f.is_on'} order by f.created_at,f.id`, options.feedId ? [options.feedId] : []);
+  const read = options.fetch ?? download, now = options.now ?? new Date(), ready = await reviewReady(db);
+  const { rows: feeds } = await db.query<{ id: string; campusId: string; url: string; tz: string; review: boolean }>(
+    `select f.id,f.campus_id as "campusId",f.url,c.tz,${ready ? 'f.review' : 'false'} as review from campus_feed f join campus c on c.id=f.campus_id where ${options.feedId ? 'f.id=$1' : 'f.is_on'} order by f.created_at,f.id`, options.feedId ? [options.feedId] : []);
   let failed = 0;
   for (const feed of feeds) {
     try {
@@ -93,11 +94,12 @@ export async function readFeeds(db: Db, options: { fetch?: Fetcher; now?: Date; 
           const start = Date.parse(item.startsAt), wanted = Date.parse(item.endsAt ?? item.startsAt) >= now.getTime() && start < now.getTime() + WINDOW;
           if (wanted) inWindow++;
           const id = known.get(item.id), placeId = matchPlace(places, item.place)?.id ?? null, words = goodFor(item.title, item.about, item.host);
-          // An event Loopd already holds follows its item wherever it moved; a new one is taken only inside the 30 days.
-          if (id) await q.query(`update campus_listing set title=$2,about=$3,host_name=$4,place_text=$5,place_id=$6,starts_at=$7,ends_at=$8,left_feed_at=null,
+          // An event Loopd already holds follows its item wherever it moved, except for a place the admin set; a new one
+          // is taken only inside the 30 days. On a reviewed feed a new one waits, hidden, for the admin.
+          if (id) await q.query(`update campus_listing set title=$2,about=$3,host_name=$4,${ready ? 'place_text=case when place_by_hand then place_text else $5 end,place_id=case when place_by_hand then place_id else $6 end' : 'place_text=$5,place_id=$6'},starts_at=$7,ends_at=$8,left_feed_at=null,
             words=case when words_by_hand then words else $9 end where id=$1`, [id, item.title, item.about, item.host, item.place, placeId, item.startsAt, item.endsAt, words]);
-          else if (wanted) await q.query(`insert into campus_listing(campus_id,origin,feed_id,feed_item_id,title,about,host_name,place_text,place_id,starts_at,ends_at,words)
-            values($1,'feed',$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [feed.campusId, feed.id, item.id, item.title, item.about, item.host, item.place, placeId, item.startsAt, item.endsAt, words]);
+          else if (wanted) await q.query(`insert into campus_listing(campus_id,origin,feed_id,feed_item_id,title,about,host_name,place_text,place_id,starts_at,ends_at,words${feed.review ? ',waiting,hidden_at' : ''})
+            values($1,'feed',$2,$3,$4,$5,$6,$7,$8,$9,$10,$11${feed.review ? ',true,$12' : ''})`, [feed.campusId, feed.id, item.id, item.title, item.about, item.host, item.place, placeId, item.startsAt, item.endsAt, words, ...feed.review ? [now.toISOString()] : []]);
           else continue;
           seen.add(item.id);
         }

@@ -1,5 +1,6 @@
 import 'server-only';
 import type { Q } from '../db';
+import { reviewReady } from './listings';
 import type { PlaceKind } from './place-tags';
 
 export { PLACE_KINDS, PLACES_REQUIRED, placeFor, placeTag, type PlaceKind } from './place-tags';
@@ -39,10 +40,13 @@ export async function savePlace(q: Q, input: { campusId: string; id?: string; na
   return row;
 }
 
-/** Matches the campus's events to its places as they now stand. Past events too: there are only ever a few weeks of them. */
+/**
+ * Matches the campus's events to its places as they now stand. Past events too: there are only ever a few weeks of them.
+ * A place the admin pinned by hand is left alone.
+ */
 async function rematch(q: Q, campusId: string) {
   const places = await campusPlaces(q, campusId);
-  const { rows } = await q.query<{ id: string; text: string | null; placeId: string | null }>('select id,place_text as text,place_id as "placeId" from campus_listing where campus_id=$1 and place_text is not null', [campusId]);
+  const { rows } = await q.query<{ id: string; text: string | null; placeId: string | null }>(`select id,place_text as text,place_id as "placeId" from campus_listing where campus_id=$1 and place_text is not null${await reviewReady(q) ? ' and not place_by_hand' : ''}`, [campusId]);
   for (const row of rows) {
     const match = matchPlace(places, row.text)?.id ?? null;
     if (match !== row.placeId) await q.query('update campus_listing set place_id=$2 where id=$1', [row.id, match]);
