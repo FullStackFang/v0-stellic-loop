@@ -20,6 +20,22 @@ const signedUp = async (subject: string) => { const { id } = await makePerson(t.
 const tile = (name: string | RegExp) => within(screen.getByRole('heading', { name }).parentElement!);
 
 describe('Activity', () => {
+  it('counts Conga: players signed in and guests, their rounds, and how many who opened it played', async () => {
+    const priya = await signedUp('priya'), [g1, g2, g3] = ['1', '2', '3'].map(each => each.repeat(32));
+    clerk.all = [account('priya')];
+    await t.db.query('truncate conga_round');
+    await t.db.query(`insert into conga_round(person_id,visitor,map,line,seconds,at) values($1,null,'cornell',300,200,'2026-11-20T15:00:00Z'),($1,null,'nyu',90,60,'2026-11-20T15:10:00Z'),
+      (null,$2,'cornell',412,250,'2026-11-20T16:00:00Z'),(null,$2,'cornell',20,30,'2026-11-20T16:05:00Z'),(null,$3,'cornell',15,20,'2026-11-20T16:10:00Z')`, [priya, g1, g2]);
+    await t.db.query(`insert into site_open(person_id,area,visitor,opened_at) values($1,'Conga',null,'2026-11-20T14:59:00Z'),(null,'Conga',$2,'2026-11-20T15:59:00Z'),(null,'Conga',$3,'2026-11-20T16:09:00Z'),(null,'Conga',$4,'2026-11-20T16:20:00Z')`, [priya, g1, g2, g3]);
+    render(await Activity({ tz: TZ, span: '7', top, href: to => `/c/admin?tab=activity&days=${to}`, now: NOW }));
+    expect(tile('Conga players').getByText('3')).toBeTruthy(); expect(tile('Conga players').getByText('2')).toBeTruthy();
+    expect(tile('Conga rounds').getByText('5')).toBeTruthy(); expect(tile('Conga rounds').getByText('3')).toBeTruthy();
+    expect(tile('Opened Conga').getByText('4')).toBeTruthy(); expect(tile('Opened Conga').getByText('75%')).toBeTruthy();
+    expect(tile('Longest line').getByText('412')).toBeTruthy();
+    expect(tile(/^Conga rounds, by map/).getAllByRole('listitem').map(each => each.textContent)).toEqual(['cornell4', 'nyu1']);
+    expect(tile(/^Conga rounds, by who/).getAllByRole('listitem').map(each => each.textContent)).toEqual(['Signed in2', 'Guests3']);
+  });
+
   it('shows the numbers for the time picked, with a link to each other time', async () => {
     const priya = await signedUp('priya'), marcus = await signedUp('marcus');
     clerk.all = [account('priya'), account('marcus', { ways: ['email', 'linkedin'], lastActive: Date.parse('2026-10-01T00:00:00Z') }), account('old', { joined: Date.parse('2026-09-01T00:00:00Z'), lastActive: null, lastSignIn: null })];

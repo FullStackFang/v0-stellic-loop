@@ -486,7 +486,7 @@ Promise.resolve(window.congaPlayer ?? null).then(player => {
   // A round ended before signing in ("Sign in to go on the board") goes on the board now, as the animal they wear.
   let waiting = null;
   try { waiting = JSON.parse(sessionStorage.getItem('conga-round') ?? 'null'); sessionStorage.removeItem('conga-round'); } catch {}
-  if (waiting) save({ ...waiting, face: own().face, picture: own().picture }).then(kept => { if (kept) say(`Your ${waiting.best} is on this week's board`); });
+  if (waiting) save({ ...waiting, face: own().face, picture: own().picture, again: true }).then(kept => { if (kept) say(`Your ${waiting.best} is on this week's board`); });
 }).catch(() => {});
 // ---------- where you play (/demo/mockups-conga-where.html, A) ----------
 // One ticket after Start names the ground, and opens a sheet over the card: schools, then that school's grounds. Who may
@@ -700,7 +700,8 @@ function finish(event) {
   const round = { map: where, best: event.size, seconds: world.t - began, face: me?.face ?? picked, picture: me && !me.face && you ? own().picture : null };
   week($('over'), round);
   early();
-  if (you) save(round).then(kept => { if (kept && !$('over').hidden) week($('over'), null); });
+  // Sent signed out too, where it is only counted (app/conga/score), and the board stays as it was.
+  save(round).then(kept => { if (kept && !$('over').hidden) week($('over'), null); });
   setTimeout(() => { $('over').hidden = false; tell('stopped'); }, 900);
 }
 

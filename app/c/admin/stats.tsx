@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { db } from '@/lib/db';
 import { accounts, lastDays, personFacts, siteActions, siteOpens, summarise, WAYS, type Way } from '@/lib/campus/stats';
+import { congaStats } from '@/lib/campus/conga-stats';
 import { localParts } from '@/lib/campus/time';
 import './stats.css';
 
@@ -26,7 +27,7 @@ function Rank({ rows, none }: { rows: { name: string; n: number }[]; none: strin
 /** How busy the site is over 7 days, 30 days or all time. `href` is the address of this section for another span. */
 export async function Activity({ tz, span, href, top, now = new Date() }: { tz: string; span: Span; href: (span: Span) => string; top: Top; now?: Date }) {
   const since = span === 'all' ? null : new Date(now.getTime() - Number(span) * DAY), today = localParts(tz, now).date;
-  const [all, opens, did] = await Promise.all([accounts(), siteOpens(db(), since, tz), siteActions(db(), since)]);
+  const [all, opens, did, conga] = await Promise.all([accounts(), siteOpens(db(), since, tz), siteActions(db(), since), congaStats(db(), since, tz)]);
   const sum = summarise(all, since), yesterday = lastDays(today, 2)[0];
   // All time is drawn as the days since counting began, the last 90 at most.
   const days = span === 'all' ? lastDays(today, 90).filter(day => day === today || (opens.since !== null && day >= opens.since)) : lastDays(today, Number(span));
@@ -55,6 +56,16 @@ export async function Activity({ tz, span, href, top, now = new Date() }: { tz: 
     <div className="cs-st-grid two">
       <div className="cs-st-pn"><h2>Where people go<em>pages opened</em></h2><Rank rows={opens.areas.map(each => ({ name: each.area, n: each.opens }))} none="Nothing counted yet." /></div>
       <div className="cs-st-pn"><h2>What people do<em>times</em></h2><Rank rows={did.map(each => ({ name: each.name, n: each.times }))} none="Nothing yet." /></div>
+    </div>
+    <div className="cs-st-grid four">
+      <div className="cs-st-pn num lead"><h2>Conga players</h2><b>{count(conga.players + conga.guests)}</b><span><i>{count(conga.players)}</i>signed in<i>{count(conga.guests)}</i>guests</span></div>
+      <div className="cs-st-pn num"><h2>Conga rounds</h2><b>{count(conga.rounds)}</b><span><i>{count(conga.guestRounds)}</i>by guests</span></div>
+      <div className="cs-st-pn num"><h2>Opened Conga</h2><b>{count(conga.opened)}</b><span><i>{conga.opened ? Math.round(conga.played / conga.opened * 100) : 0}%</i>played a round</span></div>
+      <div className="cs-st-pn num"><h2>Longest line</h2><b>{conga.longest ? count(conga.longest.line) : '–'}</b><span>{conga.longest ? <><i>{conga.longest.map}</i>map</> : 'no rounds yet'}</span></div>
+    </div>
+    <div className="cs-st-grid two">
+      <div className="cs-st-pn"><h2>Conga rounds, by map<em>{conga.since ? `counted since ${short(conga.since)}` : 'not counted yet'}</em></h2><Rank rows={conga.maps.map(each => ({ name: each.map, n: each.rounds }))} none="No rounds counted yet. Each round that ends is counted from the day counting starts." /></div>
+      <div className="cs-st-pn"><h2>Conga rounds, by who<em>rounds</em></h2><Rank rows={[{ name: 'Signed in', n: conga.rounds - conga.guestRounds }, { name: 'Guests', n: conga.guestRounds }].filter(each => each.n)} none="No rounds counted yet." /></div>
     </div>
   </section>;
 }

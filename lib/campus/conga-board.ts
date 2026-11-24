@@ -45,10 +45,14 @@ export async function congaBoards(q: Q, personId: string | null): Promise<Boards
  * The animal must be one of the player's own, else their first is kept. False when it was refused.
  */
 const CHEAT_START = 30, CHEAT_RATE = 15, LONGEST_ROUND = 6 * 3600;
-export async function saveBest(q: Q, personId: string, player: CongaPlayer, round: { map: string; best: number; seconds: number; face: number; picture: string | null }): Promise<boolean> {
-  const { map, best, seconds } = round;
+/** Whether a round the browser reports could have happened: a known map, a line no longer than a line can be, gathered in that time. */
+export function plausible({ map, best, seconds }: { map: string; best: number; seconds: number }): boolean {
   if (!congaMaps().includes(map) || !Number.isInteger(best) || best < 1 || best > GIANT + 1) return false;
-  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > LONGEST_ROUND || best > CHEAT_START + CHEAT_RATE * seconds) return false;
+  return Number.isFinite(seconds) && seconds > 0 && seconds <= LONGEST_ROUND && best <= CHEAT_START + CHEAT_RATE * seconds;
+}
+export async function saveBest(q: Q, personId: string, player: CongaPlayer, round: { map: string; best: number; seconds: number; face: number; picture: string | null }): Promise<boolean> {
+  const { map, best } = round;
+  if (!plausible(round)) return false;
   // As the game plays it (maps.js mayPlay): the open ground is anyone's, a school's grounds its own people's, the rest take Ink.
   if (!mayPlay(player, map)) return false;
   const worn = player.animals.find(animal => round.face ? animal.face === round.face : animal.picture === round.picture) ?? player.animals[0];
