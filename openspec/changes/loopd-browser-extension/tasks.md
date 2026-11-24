@@ -34,5 +34,5 @@
 - [ ] 5.2 *(Waits on the migration and a real Chrome: the API answers state 4 with no count until the SQL is run.)* Load the extension from the folder against the dev server. On one real page of each of the four sites, walk the four states and note what happened for each.
 - [ ] 5.3 With the browser's network panel open, confirm the only thing sent is the page address and the token, and only on event pages.
 - [ ] 5.4 *(Not run: the dev server on :3000 was up, and it is not mine to stop.)* One production build at the end, with the dev server stopped, since app routes ship.
-- [ ] 5.5 Commit on local main (no push). Paste the migration SQL in the reply for the founder to run.
+- [x] 5.5 Commit on local main (no push). Paste the migration SQL in the reply for the founder to run.
 - [ ] 5.6 (Founder) Publish to the Chrome Web Store from `extension/STORE.md`, if and when wanted.
