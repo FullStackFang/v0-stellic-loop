@@ -247,7 +247,7 @@ async function spotsOf(db: Db, campusId: string): Promise<Spot[]> {
 /** What is read of people to draw their faces: names, picked animals, photos, made animals and plans, by person. */
 type People = { names: Map<string, { first: string; name: string }>; picks: Map<string, number>; photos: Record<string, string>; made: Map<string, CustomFace>; plans: Map<string, Plan> };
 /** A person's face: the animal they picked, their photo or the animal they had made, else the animal their id works out to. */
-function facesOf({ picks, photos, made }: Pick<People, 'picks' | 'photos' | 'made'>) {
+export function facesOf({ picks, photos, made }: Pick<People, 'picks' | 'photos' | 'made'>) {
   const faceOf = (id: string) => { const pick = picks.get(id); return pick === PHOTO && photos[id] ? PHOTO : pick === CUSTOM && made.get(id)?.token ? CUSTOM : pick === undefined || pick < 0 ? animalOf(id) : pick; };
   const picture = (id: string) => { const pick = faceOf(id); return pick === PHOTO ? photos[id] : pick === CUSTOM ? customFace(made.get(id)!.token!) : animal(pick); };
   return { faceOf, picture };

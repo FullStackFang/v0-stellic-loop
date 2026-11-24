@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Loopd",
+  "version": "0.1.0",
+  "description": "See who you know is going, on Luma, Posh, Eventbrite and CampusGroups event pages.",
+  "minimum_chrome_version": "116",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.getloopdin.social/*",
+    "https://getloopdin.social/*",
+    "http://localhost:3000/*"
+  ],
+  "background": { "service_worker": "worker.js" },
+  "action": { "default_title": "Show the Loopd card" },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://lu.ma/*",
+        "https://luma.com/*",
+        "https://posh.vip/*",
+        "https://eventbrite.com/*",
+        "https://www.eventbrite.com/*",
+        "https://*.campusgroups.com/*"
+      ],
+      "js": ["pages.js", "card.js", "content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.getloopdin.social/ext/connect*",
+        "https://getloopdin.social/ext/connect*",
+        "http://localhost:3000/ext/connect*"
+      ],
+      "js": ["connect.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

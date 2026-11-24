@@ -28,7 +28,7 @@ export const PUBLIC_PLACE_DAYS = 14;
 const DAY = 86400000;
 
 /** The rule for a public event (design D1), on campus_listing as `l`. `$now` is the parameter holding now. */
-async function publicRule(q: Q, now: string) {
+export async function publicRule(q: Q, now: string) {
   const [deals, review] = await Promise.all([dealsReady(q), reviewReady(q)]);
   return `l.origin in ('feed','hand') and l.hidden_at is null and l.cancelled_at is null and l.left_feed_at is null
     and coalesce(l.ends_at,l.starts_at+interval '2 hours')>${now}::timestamptz${deals ? ' and l.deal_id is null' : ''}${review ? ' and not l.waiting' : ''}`;

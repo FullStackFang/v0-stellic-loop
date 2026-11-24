@@ -13,7 +13,7 @@ export const isShape = (given: unknown): given is Shape => typeof given === 'str
 type Lch = readonly [l: number, c: number, h: number];
 const PAPER: Lch = [0.993, 0.004, 117], ON_INK: Lch = [0.994, 0.003, 230];
 /** Each school's colours, as in app/c/campus.css under [data-kit]. */
-const KIT: Record<string, { field: Lch; ink: Lch; action: Lch }> = {
+export const KIT: Record<string, { field: Lch; ink: Lch; action: Lch }> = {
   loop: { field: [0.964, 0.19, 117], ink: [0.25, 0.07, 252], action: [0.476, 0.13, 250] },
   cornell: { field: [0.82, 0.12, 38], ink: [0.24, 0.035, 30], action: [0.485, 0.185, 27] },
   columbia: { field: [0.87, 0.075, 235], ink: [0.25, 0.06, 255], action: [0.46, 0.14, 255] },

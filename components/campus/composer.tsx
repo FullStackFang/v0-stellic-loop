@@ -116,6 +116,10 @@ export function Composer({ campus, tags, soon, onDone, onReview, spots = [], you
       box.current?.focus();
     });
   };
+  // A line the panel opens with is read as if just typed, so a link in it is read at once (the browser extension's
+  // "Finish in Loopd" opens the panel with the event page's link, openspec loopd-browser-extension, design D6).
+  const opened = useRef(false);
+  useEffect(() => { if (!opened.current) { opened.current = true; if (initial) queueMicrotask(() => typed(initial)); } });
   // A picked tag finishes the @ being typed, or is added to the line when the line does not have it.
   const pick = (slug: string) => {
     setText(now => `${/@[a-z0-9-]*$/i.test(now) ? now.replace(/@[a-z0-9-]*$/i, `@${slug}`) : read.tags.includes(slug) ? now.trimEnd() : `${now.trimEnd()} @${slug}`.trimStart()} `.replace(/ +$/, ' '));

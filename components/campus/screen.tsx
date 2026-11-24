@@ -99,14 +99,14 @@ function Seats({ seats }: { seats: Seat[] }) {
 }
 
 type Pane = 'more' | 'invite';
-export type ScreenProps = { screen: Screen; /** The person's groups, for the top bar. */ groups?: BarGroup[]; signInHref: string; /** What the bar's "Sign in" opens over the page. */ door?: Door; openId?: string | null; signOut?: ReactNode; /** The "On you" counter (openspec loop-on-you), read on the server beside the week. */ onYou?: ReactNode; /** The campuses of this school, when it has more than one. */ swap?: SwapCampus[] };
+export type ScreenProps = { screen: Screen; /** The person's groups, for the top bar. */ groups?: BarGroup[]; signInHref: string; /** What the bar's "Sign in" opens over the page. */ door?: Door; openId?: string | null; signOut?: ReactNode; /** The "On you" counter (openspec loop-on-you), read on the server beside the week. */ onYou?: ReactNode; /** The campuses of this school, when it has more than one. */ swap?: SwapCampus[]; /** An event page link to start a plan from: the posting panel opens with it (the browser extension's "Finish in Loopd"). */ postLink?: string | null };
 
-export function CampusScreen({ screen, groups, signInHref, door, openId = null, signOut = null, onYou = null, swap }: ScreenProps) {
+export function CampusScreen({ screen, groups, signInHref, door, openId = null, signOut = null, onYou = null, swap, postLink = null }: ScreenProps) {
   const { campus, viewer, tickets, earning, live } = screen;
   const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'people' | 'all' | 'near'>('best');
   const [open, setOpen] = useState<{ id: string; pane: Pane; fresh: boolean } | null>(openId ? { id: openId, pane: 'more', fresh: false } : null);
   const [entering, setEntering] = useState(false), [message, setMessage] = useState(''), [copied, setCopied] = useState(false), [showing, setShowing] = useState<string | null>(null);
-  const [busy, start] = useTransition(), [posting, setPosting] = useState(false);
+  const [busy, start] = useTransition(), [posting, setPosting] = useState(!!postLink && !!screen.viewer);
   const rail = useRef<HTMLDivElement>(null), [ends, setEnds] = useState({ left: true, right: true });
 
   // "Near you" is the week on a map (components/campus/near.tsx), for a campus whose sections are drawn. It searches as "Best for you" does.
@@ -122,7 +122,7 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
   // While posting where places are required: what the panel has picked and shows, and a dot pressed on the map.
   const [picking, setPicking] = useState<Picking>({ tag: null, shown: [] }), [mapPick, setMapPick] = useState<{ tag: string; n: number } | null>(null);
   // The line being typed, kept while the panel moves between the list and the map on a phone.
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(postLink ? `${postLink} ` : '');
   const keep = useCallback((text: string) => setDraft(text), []);
   // The time a poster pressed in "Pick a time", by plan, over the one most marked.
   const [chosen, setChosen] = useState<Record<string, string | undefined>>({}), [cancelling, setCancelling] = useState<string | null>(null);
@@ -485,6 +485,7 @@ export function Account({ screen, signOut, swap = [], groups = false }: { screen
           <span className="cs-lvl-end"><span className="cs-lvl-extra"><button className="cs-btn sm" aria-expanded={extra} onClick={() => setExtra(!extra)}>More<Chevron /></button>
             {extra && <span className="cs-lvl-pop">
               <a href={IMPRINT_PAGE}>Claim your club</a>
+              <Link href="/ext/connect">Browser extension</Link>
               {groups && !viewer.admin && <Link href="/groups/archive">How we got here</Link>}
               {viewer.admin && <nav aria-label="Admin"><h4>Admin</h4><Link href="/c/admin">Run the campus</Link><Link href="/groups">The groups site</Link><Link href="/groups/archive">How we got here</Link></nav>}</span>}</span>
           {signOut && <span className="cs-lvl-out">{signOut}</span>}</span></div></>}</div>}

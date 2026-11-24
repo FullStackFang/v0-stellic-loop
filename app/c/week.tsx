@@ -19,9 +19,10 @@ import { barDoor } from './site-bar';
 /**
  * "This week" for one campus, as the person looking may see it. A signed-in person belongs to one school: another
  * school's address sends them to their own, and someone at no school goes to the games (Doodles). The admin opens any.
- * `back` is where sign-in returns to. `link` is the share link the page was opened from, if any.
+ * `back` is where sign-in returns to. `link` is the share link the page was opened from, if any. `post` opens the
+ * posting panel with an event page's link in it.
  */
-export async function Week({ campus, back, link }: { campus: Campus; back: string; link?: ShareLink }) {
+export async function Week({ campus, back, link, post }: { campus: Campus; back: string; link?: ShareLink; /** A link to start a plan from (?post=). */ post?: string }) {
   const viewer = await campusViewer();
   if (viewer && !mayUse(viewer, campus)) {
     if (viewer.campus) redirect(`/c/${viewer.campus.slug}`);
@@ -33,5 +34,5 @@ export async function Week({ campus, back, link }: { campus: Campus; back: strin
   const parts = (await listCampuses(db())).filter(each => schoolOf(each.slug) === schoolOf(campus.slug) && SWAP_TICKET[each.slug]);
   const swap = parts.length < 2 ? [] : await Promise.all(parts.map(async each => ({ slug: each.slug, ...SWAP_TICKET[each.slug], count: (await weekListings(db(), each)).length, home: !!viewer && !viewer.admin && viewer.campus?.id === each.id, here: each.id === campus.id })));
   const door = viewer ? undefined : await barDoor(back);
-  return <><LookingAt slug={campus.slug} /><CampusScreen screen={screen} groups={groups} swap={swap} signInHref={signInHref(back)} door={door} openId={link?.listingId ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={<SeatsSmall size={16} first />}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} /><SiteFoot home={`/c/${campus.slug}`} /></>;
+  return <><LookingAt slug={campus.slug} /><CampusScreen screen={screen} groups={groups} swap={swap} signInHref={signInHref(back)} door={door} openId={link?.listingId ?? null} postLink={post ?? null} signOut={viewer && clerkPortalConfigured() ? <SignOut /> : null} onYou={viewer ? <Suspense fallback={<SeatsSmall size={16} first />}><OnYou going={screen.tickets.filter(ticket => ticket.mine).map(ticket => ({ id: ticket.id, title: ticket.title, when: `${ticket.day} ${ticket.time}`, href: `/o/${ticket.mine!.token}`, place: ticket.place, people: ticket.going, faces: ticket.mine!.members.flatMap(member => member.photo ? [member.photo] : []).slice(0, 4) }))} /></Suspense> : null} /><SiteFoot home={`/c/${campus.slug}`} /></>;
 }

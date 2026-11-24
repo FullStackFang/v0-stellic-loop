@@ -61,3 +61,14 @@ describe('picking where to meet', () => {
     expect(post()).toBeEnabled();
   });
 });
+
+// Spec: openspec/changes/loopd-browser-extension/specs/browser-extension, "An event Loopd has not seen" ("Finish in Loopd").
+describe('opened with a link', () => {
+  it('reads the link at once, as if it had just been pasted', async () => {
+    const { readPlanLinkAction } = await import('@/app/c/actions');
+    vi.mocked(readPlanLinkAction).mockResolvedValue({ ok: true, link: 'https://posh.vip/e/rooftop', filled: { title: 'Rooftop Closing Party', starts: '2026-11-28T21:00', ends: '', place: '', about: '' }, note: 'Read from posh.vip.' });
+    render(<Composer campus={tech} tags={[]} soon={[]} onDone={() => {}} onReview={() => {}} spots={SPOTS} initial="https://posh.vip/e/rooftop " />);
+    await screen.findByText(/Read from posh\.vip/);
+    expect(readPlanLinkAction).toHaveBeenCalledWith('cornell-tech', 'https://posh.vip/e/rooftop');
+  });
+});
